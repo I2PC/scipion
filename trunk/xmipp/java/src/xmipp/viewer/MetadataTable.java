@@ -45,6 +45,7 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	public Object getValueAt(int row, int column) {
+		//DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)", row, column));
 		try {
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
@@ -53,7 +54,7 @@ public class MetadataTable extends MetadataGallery {
 				// return super.getValueAt(row, col);
 			}
 			int label = ci.getLabel();
-			long id = ids[row];
+			long id = data.ids[row];
 			int type = MetaData.getLabelType(label);
 			MetaData md = data.md;
 			switch (type) {
@@ -73,7 +74,7 @@ public class MetadataTable extends MetadataGallery {
 			case MetaData.LABEL_STRING:
 			case MetaData.LABEL_VECTOR:
 			case MetaData.LABEL_VECTOR_LONG:
-				return md.getValueString(ci.getLabel(), ids[row]);
+				return md.getValueString(ci.getLabel(), data.ids[row]);
 
 			}
 			return null;
@@ -153,7 +154,7 @@ public class MetadataTable extends MetadataGallery {
 		public void adjustColumnsWidth(JTable table) {
 			try {
 				calculateCellSize();
-				// String[] row = md.getRowValues(ids[0]);
+				// String[] row = md.getRowValues(data.ids[0]);
 				// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 				int width = 0;
 				for (int i = 0; i < visibleLabels.size(); ++i) {
@@ -162,9 +163,9 @@ public class MetadataTable extends MetadataGallery {
 						width = cellDim.width;
 						DEBUG.printMessage("is render -->");
 					} else {
-						TableCellRenderer rend = table.getCellRenderer(3, i);
+						TableCellRenderer rend = table.getCellRenderer(0, i);
 						Component comp = rend.getTableCellRendererComponent(
-								table, getValueAt(3, i), false, false, 0, 0);
+								table, getValueAt(0, i), false, false, 0, 0);
 						width = comp.getPreferredSize().width + 10;
 					}
 					getColumn(i).setPreferredWidth(width);

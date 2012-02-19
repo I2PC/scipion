@@ -17,7 +17,7 @@ public class VolumeGallery extends ImageGallery {
 
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
-		ImageGeneric image = new ImageGeneric(filename); // read image header
+		ImageGeneric image = new ImageGeneric(data.selectedVol); // read image header
 		ImageDimension dim = new ImageDimension(image);
 		image.destroy();
 		return dim;
@@ -26,7 +26,7 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	protected double[] getMinAndMax() {
 		try {
-			ImageGeneric image = new ImageGeneric(filename);
+			ImageGeneric image = new ImageGeneric(data.selectedVol);
 			image.read(ImageGeneric.FIRST_IMAGE);
 			double[] stats = image.getStatistics();
 			image.destroy();
@@ -44,12 +44,12 @@ public class VolumeGallery extends ImageGallery {
 	
 	@Override
 	public String getTitle() {
-		return String.format("Volume: %s (%d x %d x %d)", filename, image_width, image_height, n);
+		return String.format("Volume: %s (%d x %d x %d)", data.selectedVol, image_width, image_height, n);
 	}
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImageGeneric image = new ImageGeneric(filename);
+		ImageGeneric image = new ImageGeneric(data.selectedVol);
 		ImagePlus imp = XmippImageConverter.convertToImageJ(image, thumb_width,
 				thumb_height, index + 1, ImageGeneric.FIRST_IMAGE);
 		image.destroy();

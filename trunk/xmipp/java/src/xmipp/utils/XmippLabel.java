@@ -224,8 +224,10 @@ public class XmippLabel {
     public final static String LABEL_TAB_PROFILE = "Profiles";
     public final static String LABEL_TAB_RADIAL_AVERAGE = "Radial Average";
     public final static String LABEL_ZOOM = "Zoom (%): ";
-    public final static String LABEL_ROWS = "Rows: ";
-    public final static String LABEL_COLUMNS = "Cols: ";
+    public final static String LABEL_ROWS = "  Rows";
+    public final static String LABEL_COLUMNS = "  Cols";
+    public final static String LABEL_BLOCK = "  Block";
+    public final static String LABEL_VOLUME = "  Volume";
     public final static String LABEL_GOTO_ITEM = "Go to item";
     //public final static String LABEL_FLIP = "Flip: ";
     //public final static String LABEL_ROTATE = "Rotate: ";

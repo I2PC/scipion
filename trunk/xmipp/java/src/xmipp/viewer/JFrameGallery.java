@@ -327,7 +327,7 @@ public class JFrameGallery extends JFrame {
 		update_counter++;
 		DEBUG.printMessage(" *** Updating table: " + update_counter);// System.currentTimeMillis()
 																		// );
-		DEBUG.printStackTrace();
+		//DEBUG.printStackTrace();
 
 		// FIXME:gallery.updateSort();
 
@@ -593,12 +593,18 @@ public class JFrameGallery extends JFrame {
 	}
 
 	/** Reload table data */
-	protected void reloadTableData() throws Exception {
-		table.removeAll();
-		createModel();
-		// gallery.setShowLabels(menu.getShowLabel());
-		createTable();
-		adjustColumns();
+	protected void reloadTableData() {
+		try {
+			table.removeAll();
+			createModel();
+			// gallery.setShowLabels(menu.getShowLabel());
+			createTable();
+			adjustColumns();
+			updateCombos();
+			setTitle(gallery.getTitle());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/***
@@ -615,14 +621,9 @@ public class JFrameGallery extends JFrame {
 		btnChangeView.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
-				try {
-					data.galleryMode = !data.galleryMode;
-					updateViewState();
-					reloadTableData();
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
+				data.galleryMode = !data.galleryMode;
+				updateViewState();
+				reloadTableData();				
 			}
 		});
 
@@ -756,7 +757,7 @@ public class JFrameGallery extends JFrame {
 		cbPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
 		// Add blocks selector combo
-		jlBlocks = new JLabel("Blocks: ");
+		jlBlocks = new JLabel(XmippLabel.LABEL_BLOCK);
 		cbPanel.add(jlBlocks);
 		jcbBlocks = new JComboBox();
 		jcbBlocks.setModel(new ComboBoxModel() {
@@ -774,15 +775,8 @@ public class JFrameGallery extends JFrame {
 			@Override
 			public void setSelectedItem(Object item) {
 				String block = (String) item;
-				DEBUG.printMessage("Selected: " + block);
-				DEBUG.printMessage(data.filename);
 				data.selectBlock((String) item);
-				try {
-					reloadTableData();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				reloadTableData();
 			}
 
 			@Override
@@ -801,15 +795,50 @@ public class JFrameGallery extends JFrame {
 		});
 		cbPanel.add(jcbBlocks);
 		// Add volumes selector combo
-		jlVolumes = new JLabel("Volumes: ");
+		jlVolumes = new JLabel(XmippLabel.LABEL_VOLUME);
 		cbPanel.add(jlVolumes);
 		jcbVolumes = new JComboBox();
+		jcbVolumes.setModel(new ComboBoxModel() {
+
+			@Override
+			public int getSize() {
+				return data.getNumberOfVols();
+			}
+
+			@Override
+			public Object getElementAt(int index) {
+				return data.getVolumeAt(index);
+			}
+
+			@Override
+			public void setSelectedItem(Object anItem) {
+				data.selectVolume((String) anItem);
+				reloadTableData();
+			}
+
+			@Override
+			public Object getSelectedItem() {
+				return data.selectedVol;
+			}
+
+			@Override
+			public void addListDataListener(ListDataListener arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void removeListDataListener(ListDataListener arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 		cbPanel.add(jcbVolumes);
 	}
 
 	protected void updateCombos() {
 		boolean showBlocks = data.getNumberOfBlocks() > 1;
-		boolean showVols = data.numberOfVols > 1;
+		boolean showVols = data.getNumberOfVols() > 1 && data.galleryMode;
 		jcbBlocks.setVisible(showBlocks);
 		jcbVolumes.setVisible(showVols);
 		jlBlocks.setVisible(showBlocks);

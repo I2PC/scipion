@@ -45,12 +45,6 @@ public class MetadataGallery extends ImageGallery {
 	// Also store the visible ones to fast access
 	ArrayList<ColumnInfo> visibleLabels;
 	
-//	int[] labels;
-//	String[] labelStr;
-
-	// Ids of objects stored in metadata
-	long[] ids;
-
 	public MetadataGallery(GalleryData data) throws Exception {
 		super(data);
 	}
@@ -87,13 +81,11 @@ public class MetadataGallery extends ImageGallery {
 
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
-		//md = new MetaData(filename);
-		ids = data.md.findObjects();
 		renderLabel = MDLabel.MDL_IMAGE;
 		displayLabel = MDLabel.MDL_IMAGE;
 		ImageGeneric image = getImage(0, renderLabel);
 		ImageDimension dim = new ImageDimension(image);
-		dim.setZDim(ids.length);
+		dim.setZDim(data.ids.length);
 		//Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
 		renderLabels = false;
@@ -116,9 +108,9 @@ public class MetadataGallery extends ImageGallery {
 	 * @throws Exception */
 	protected ImageItem createImageItem(int index, int renderLabel, int displayLabel, String key) throws Exception{
 		ImageGeneric image = getImage(index, renderLabel);
-		image.readApplyGeo(data.md, ids[index], thumb_width, thumb_height);
+		image.readApplyGeo(data.md, data.ids[index], thumb_width, thumb_height);
 		ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);
-		String labelStr = data.md.getValueString(displayLabel, ids[index]);
+		String labelStr = data.md.getValueString(displayLabel, data.ids[index]);
 		return new ImageItem(key, labelStr, imp);		
 	}
 
@@ -130,7 +122,7 @@ public class MetadataGallery extends ImageGallery {
 	/** Return a key string using label 
 	 * @throws Exception */
 	protected String getItemKey(int index, int label) throws Exception{
-		String filename = data.md.getValueString(label, ids[index]);
+		String filename = data.md.getValueString(label, data.ids[index]);
 		return String.format("%s(%d,%d)", filename, thumb_width, thumb_height);
 	}
 	
@@ -149,7 +141,7 @@ public class MetadataGallery extends ImageGallery {
 	 *             if can not load image
 	 */
 	protected ImageGeneric getImage(int index, int label) throws Exception {
-		String imgFn = data.md.getValueString(label, ids[index]);
+		String imgFn = data.md.getValueString(label, data.ids[index]);
 		return new ImageGeneric(imgFn);
 	}
 

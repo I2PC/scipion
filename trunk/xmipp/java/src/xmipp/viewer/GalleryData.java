@@ -12,14 +12,20 @@ import xmipp.utils.Param;
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
 	public MetaData md;
+	public long[] ids;
 	public String[] mdBlocks;
 	public String selectedBlock;
+	// The following is only used in VolumeGallery mode
+	public String selectedVol = "";
+	public String[] volumes = null;
+	
 	public ArrayList<ColumnInfo> labels;
 	public int zoom;
 	public String filename;
 	public boolean galleryMode = true; // if false, is table model
+	public boolean volumeMode = false; 
 	public boolean showLabel = false;
-	public int numberOfVols = 0;
+	private int numberOfVols = 0;
 
 	/** The constructor receive the filename of a metadata */
 	public GalleryData(String fn, Param param) {
@@ -35,9 +41,13 @@ public class GalleryData {
 			else 
 				filename = fn;
 			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
+			
+			if (mdBlocks.length > 1 && selectedBlock.isEmpty())
+				selectedBlock = mdBlocks[0];
 
-			md = new MetaData(fn);
-			labels = ColumnInfo.createListFromMd(md);
+			md = new MetaData();
+			readMetadata(fn);
+			
 			galleryMode = param.mode.equalsIgnoreCase(Param.OPENING_MODE_GALLERY);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -53,38 +63,57 @@ public class GalleryData {
 		return String.format("%s@%s", selectedBlock, filename);
 	}
 	
-	/** Select one of the blocks*/
-	public void selectBlock(String block){
-		selectedBlock = block; //FIXME: validate block exists
+	/** Read metadata and store ids */
+	private void readMetadata(String fn){
 		try {
-			md.read(getMdFilename());
+			md.read(fn);
+			ids = md.findObjects();
+		    volumeMode = false;
+		    //if (galleryMode)
+			if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+				String imageFn = md.getValueString(MDLabel.MDL_IMAGE,
+						md.firstObject());
+				ImageGeneric image = new ImageGeneric(imageFn);
+				if (image.isVolume()) { // We are assuming all are volumes
+										// or images, dont mix it
+					volumeMode = true;
+					numberOfVols = md.size();
+					volumes = new String[numberOfVols];
+					for (int i = 0; i < numberOfVols; ++i)
+						volumes[i] = md.getValueString(MDLabel.MDL_IMAGE, ids[i]);
+					if (selectedVol.isEmpty())
+						selectedVol = volumes[0];
+				}
+				image.destroy();
+			}
+		    
+		    if (!volumeMode){
+		    	numberOfVols = 0;
+		    	volumes = null;
+		    	//selectedVol = "";
+		    	
+		    }
+			labels = ColumnInfo.createListFromMd(md);
+				
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			md = null;
+			ids = null;
 		}
-//		for (int i = 0; i < mdBlocks.length; ++i)
-//			if (block.equalsIgnoreCase(mdBlocks[i])){
-//				selectedBlock = i;
-//				break;
-//			}
+	}
+	
+	/** Select one of the blocks*/
+	public void selectBlock(String block){
+		selectedBlock = block; //FIXME: validate block exists
+		readMetadata(getMdFilename());
 	}
 
 	public ImageGallery createModel() {
 		ImageGallery gallery = null;
 		try {
 			if (galleryMode) {
-				boolean volGallery = false;
-				if (md.containsLabel(MDLabel.MDL_IMAGE)) {
-					String fn = md.getValueString(MDLabel.MDL_IMAGE,
-							md.firstObject());
-					ImageGeneric image = new ImageGeneric(fn);
-					if (image.isVolume()) { // We are assuming all are volumes
-											// or images, dont mix it
-						volGallery = true;
-						numberOfVols = md.size();
-					}
-				}
-				gallery = (volGallery ? new VolumeGallery(this)
+				gallery = (volumeMode ? new VolumeGallery(this)
 						: new MetadataGallery(this));
 			} else
 				gallery = new MetadataTable(this);
@@ -111,5 +140,18 @@ public class GalleryData {
 
 	public int getNumberOfBlocks() {
 		return mdBlocks.length;
+	}
+	
+	public int getNumberOfVols(){
+		return numberOfVols;
+	}
+	
+	/** following function only should be used in VolumeGallery mode */
+	public String getVolumeAt(int index){
+		return volumes[index];
+	}
+	
+	public void selectVolume(String vol){
+		selectedVol = vol; //FIXME: Check it is valid
 	}
 }// class GalleryData
