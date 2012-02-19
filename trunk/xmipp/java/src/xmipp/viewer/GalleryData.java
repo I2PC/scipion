@@ -13,6 +13,7 @@ import xmipp.utils.Param;
 public class GalleryData {
 	public MetaData md;
 	public String[] mdBlocks;
+	public String selectedBlock;
 	public ArrayList<ColumnInfo> labels;
 	public int zoom;
 	public String filename;
@@ -21,21 +22,52 @@ public class GalleryData {
 	public int numberOfVols = 0;
 
 	/** The constructor receive the filename of a metadata */
-	public GalleryData(String filename, Param param) {
+	public GalleryData(String fn, Param param) {
 		try {
-			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
-			md = new MetaData(filename);
-			labels = ColumnInfo.createListFromMd(md);
+			selectedBlock = "";			
 			zoom = param.zoom;
-			this.filename = filename;
-			galleryMode = param.mode
-					.equalsIgnoreCase(Param.OPENING_MODE_GALLERY);
+			//this should be moved to other place
+			if (fn.contains("@")){
+				String[] parts = fn.split("@");
+				selectedBlock = parts[0]; //FIXME: validate block exists
+				filename = parts[1];
+			}
+			else 
+				filename = fn;
+			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
+
+			md = new MetaData(fn);
+			labels = ColumnInfo.createListFromMd(md);
+			galleryMode = param.mode.equalsIgnoreCase(Param.OPENING_MODE_GALLERY);
 		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
 		}
 
 	}// constructor GalleryData
+	
+	/** Return the name of the selected md block */
+	public String getMdFilename(){
+		if (selectedBlock.isEmpty())
+			return filename;
+		return String.format("%s@%s", selectedBlock, filename);
+	}
+	
+	/** Select one of the blocks*/
+	public void selectBlock(String block){
+		selectedBlock = block; //FIXME: validate block exists
+		try {
+			md.read(getMdFilename());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//		for (int i = 0; i < mdBlocks.length; ++i)
+//			if (block.equalsIgnoreCase(mdBlocks[i])){
+//				selectedBlock = i;
+//				break;
+//			}
+	}
 
 	public ImageGallery createModel() {
 		ImageGallery gallery = null;
