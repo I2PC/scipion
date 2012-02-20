@@ -566,7 +566,7 @@ public class JFrameMetaData extends JFrame {
     }//GEN-LAST:event_bHideColumnsActionPerformed
 
 private void jbSend2GalleryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSend2GalleryActionPerformed
-    ImagesWindowFactory.openFileAsGallery(tableModel.getPath());
+   //FIXME ImagesWindowFactory.openFileAsGallery(tableModel.getPath());
 }//GEN-LAST:event_jbSend2GalleryActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bHideColumns;

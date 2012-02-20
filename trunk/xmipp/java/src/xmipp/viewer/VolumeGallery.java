@@ -2,14 +2,19 @@ package xmipp.viewer;
 
 import ij.ImagePlus;
 import xmipp.ij.XmippImageConverter;
+import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
 public class VolumeGallery extends ImageGallery {
+	protected String volFn;
+	protected long volNumber;
 	
 	public VolumeGallery(GalleryData data) throws Exception {
 		super(data);
 		normalize = true; // volumes are displayed with global normalization by
 							// default
+		volFn = Filename.getFilename(data.selectedVol);
+		volNumber = Filename.getNimage(data.selectedVol);
 		calculateMinAndMax();
 	}
 
@@ -26,8 +31,8 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	protected double[] getMinAndMax() {
 		try {
-			ImageGeneric image = new ImageGeneric(data.selectedVol);
-			image.read(ImageGeneric.FIRST_IMAGE);
+			ImageGeneric image = new ImageGeneric(volFn);
+			image.read(volNumber);
 			double[] stats = image.getStatistics();
 			image.destroy();
 			return stats;
@@ -49,9 +54,9 @@ public class VolumeGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImageGeneric image = new ImageGeneric(data.selectedVol);
+		ImageGeneric image = new ImageGeneric(volFn);
 		ImagePlus imp = XmippImageConverter.convertToImageJ(image, thumb_width,
-				thumb_height, index + 1, ImageGeneric.FIRST_IMAGE);
+				thumb_height, index + 1, volNumber);
 		image.destroy();
 		String label = String.format("%d", index + 1);
 		return new ImageItem(key, label, imp);

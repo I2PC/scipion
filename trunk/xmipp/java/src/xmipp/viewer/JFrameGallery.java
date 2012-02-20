@@ -12,6 +12,7 @@ package xmipp.viewer;
 
 import xmipp.viewer.windows.ImagesWindowFactory;
 
+import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.Param;
@@ -89,7 +90,6 @@ public class JFrameGallery extends JFrame {
 	private boolean autoAdjustColumns = false;
 	private JPopUpMenuGallery jpopUpMenuTable;
 	private JMenuBarTable menu;
-	Param parameters;
 	JFileChooser fc = new JFileChooser();
 
 	private JLabel jlZoom;
@@ -124,22 +124,26 @@ public class JFrameGallery extends JFrame {
 		TOP_Y, RIGHT_X
 	}
 
-	/** Constructors */
-	public JFrameGallery(String filename, Param parameters) {
-		super();
-
+	/** Initialization function after GalleryData structure is created */
+	private void init(GalleryData data){
 		try {
-
-			this.parameters = parameters;
-			data = new GalleryData(filename, parameters);
-			createModel();
-			createGUI();
-			// createGUI(new MetadataGallery(filename, parameters.zoom),
-			// parameters);
+		this.data = data;
+		createModel();
+		createGUI();
 		} catch (Exception e) {
 			DEBUG.printException(e);
 			IJ.error(e.getMessage());
 		}
+	}
+	/** Constructors */
+	public JFrameGallery(String filename, Param parameters) {
+		super();
+		init(new GalleryData(filename, parameters, null));
+	}
+	
+	public JFrameGallery(String filename, MetaData md, Param parameters){
+		super();
+		init(new GalleryData(filename, parameters, md));
 	}
 
 	public JFrameGallery(String filenames[], Param parameters) {
@@ -237,10 +241,10 @@ public class JFrameGallery extends JFrame {
 
 	private void setInitialValues() {
 		boolean adjust = false;
-		if (parameters.columns > 0)
-			gallery.setColumns(parameters.columns);
-		else if (parameters.rows > 0)
-			gallery.setRows(parameters.rows);
+		if (data.parameters.columns > 0)
+			gallery.setColumns(data.parameters.columns);
+		else if (data.parameters.rows > 0)
+			gallery.setRows(data.parameters.rows);
 		else {
 			adjustColumns();
 			adjust = true;
@@ -637,7 +641,7 @@ public class JFrameGallery extends JFrame {
 		toolBar.add(jlZoom);
 
 		jsZoom.setModel(new javax.swing.SpinnerNumberModel(Integer
-				.valueOf(parameters.zoom), Integer.valueOf(1), null, Integer
+				.valueOf(data.zoom), Integer.valueOf(1), null, Integer
 				.valueOf(1)));
 		jsZoom.addChangeListener(new javax.swing.event.ChangeListener() {
 			public void stateChanged(javax.swing.event.ChangeEvent evt) {

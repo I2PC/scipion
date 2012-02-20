@@ -41,6 +41,7 @@ public class MetaData {
         MDLabel.MDL_SHIFTX,
         MDLabel.MDL_SHIFTY, //        MDLabel.MDL_SHIFTZ
     };
+    
     public static final int MD_OVERWRITE = 0;
     public static final int MD_APPEND = 1;
     private String filename;

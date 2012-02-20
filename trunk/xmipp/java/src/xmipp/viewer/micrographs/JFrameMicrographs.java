@@ -600,7 +600,12 @@ private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event
 
         private void extractColumn(int column, boolean onlyenabled) {
             if (onlyenabled) {
-                ImagesWindowFactory.openFilesAsGallery(tableModel.extractColumn(column, onlyenabled), true);
+                try {
+					ImagesWindowFactory.openFilesAsGallery(tableModel.extractColumn(column, onlyenabled), true);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             } else {
                 ImagesWindowFactory.openGallery(
                         tableModel.extractColumn(column, onlyenabled),

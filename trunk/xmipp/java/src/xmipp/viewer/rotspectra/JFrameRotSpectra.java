@@ -291,9 +291,15 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
 
                     String array[] = filenames.toArray(new String[filenames.size()]);
 
-                    JFrameGallery frame = ImagesWindowFactory.openFilesAsGallery(array, true);
-                    frame.setTitle(tableModel.getSelectedItems().get(0).block
-                            + "...: " + filenames.size() + " images.");
+                    JFrameGallery frame;
+					try {
+						frame = ImagesWindowFactory.openFilesAsGallery(array, true);
+						frame.setTitle(tableModel.getSelectedItems().get(0).block
+								+ "...: " + filenames.size() + " images.");
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
                 }
             });
         }

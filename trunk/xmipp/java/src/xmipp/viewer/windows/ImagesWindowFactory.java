@@ -37,6 +37,7 @@ import xmipp.viewer.micrographs.ctf.tasks.TasksEngine;
 import xmipp.viewer.rotspectra.JFrameRotSpectra;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.ij.XmippImageConverter;
 
@@ -61,27 +62,27 @@ public class ImagesWindowFactory {
         progressPanel.setVisible(false);
     }
 
-    public static void openFilesAsDefault(String filenames[], Param parameters) {
+    public static void openFilesAsDefault(String filenames[], Param parameters) throws Exception {
         for (int i = 0; i < filenames.length; i++) {
             openFileAsDefault(filenames[i], parameters);
         }
     }
 
-    public static void openFileAsDefault(String filenames) {
+    public static void openFileAsDefault(String filenames) throws Exception {
         openFileAsDefault(filenames, new Param());
     }
 
-    public static void openFileAsDefault(String filename, Param parameters) {
+    public static void openFileAsDefault(String filename, Param parameters) throws Exception {
         if (Filename.isMetadata(filename)) {
-            openFileAsMetadata(filename, parameters);
+            openMetadata(filename, parameters, Param.OPENING_MODE_GALLERY);
         } else {
             try {
                 ImageGeneric img = new ImageGeneric(filename);
 
                 if (img.isSingleImage()) {
                     openFileAsImage(filename, parameters);
-                } else if (img.isStackOrVolume()) {
-                    openFileAsGallery(filename, parameters);
+                } else if (img.isStack()) {
+                    openMetadata(filename, parameters,Param.OPENING_MODE_GALLERY);
                 } else {
                     openFileAsImage(filename, parameters);
                 }
@@ -149,56 +150,63 @@ public class ImagesWindowFactory {
         return iw;
     }
 
-    public static void openFilesAsMetadata(String filenames[]) {
-        openFilesAsMetadata(filenames, new Param());
-    }
+//    public static void openFilesAsMetadata(String filenames[]) {
+//        openFilesAsMetadata(filenames, new Param());
+//    }
+//
+//    public static void openFilesAsMetadata(String filenames[], Param parameters) {
+//        for (int i = 0; i < filenames.length; i++) {
+//            openFileAsMetadata(filenames[i], parameters);
+//        }
+//    }
+//
+//    public static void openFileAsMetadata(String filename) {
+//        openFileAsMetadata(filename, new Param());
+//    }
+//
+//    public static void openFileAsMetadata(String filename, MetaData md, Param parameters) {
+//    	parameters.mode = Param.OPENING_MODE_METADATA;
+//    	openFileAsGallery(filename, parameters);
+//    }
+//
+//    public static void openMetadataAsGallery(String filename, MetaData md) {
+//        openFileAsGallery(filename, md, new Param(), Param.OPENING_MODE_GALLERY);
+//    }
 
-    public static void openFilesAsMetadata(String filenames[], Param parameters) {
-        for (int i = 0; i < filenames.length; i++) {
-            openFileAsMetadata(filenames[i], parameters);
-        }
-    }
-
-    public static void openFileAsMetadata(String filename) {
-        openFileAsMetadata(filename, new Param());
-    }
-
-    public static void openFileAsMetadata(String filename, Param parameters) {
-    	parameters.mode = Param.OPENING_MODE_METADATA;
-    	openFileAsGallery(filename, parameters);
-    }
-
-    public static void openFileAsGallery(String filename) {
-        openFileAsGallery(filename, new Param());
-    }
-
-    public static JFrameGallery openFileAsGallery(String filename, Param parameters) {
+    /** Before calling this method be sure you have constructed
+     * the proper metadata with files to be shown, mode passed
+     * will be override in parameters
+     */
+    public static JFrameGallery openMetadata(String filename, MetaData md, 
+    		Param parameters, String mode) {
     	if (parameters.debug)
     		DEBUG.enableDebug(true);
-        return new JFrameGallery(filename, parameters);
+    	if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_DEFAULT))
+    		parameters.mode = mode;
+        return new JFrameGallery(filename, md, parameters);
+    }
+    
+    public static JFrameGallery openMetadata(String filename, Param parameters,
+    		String mode) throws Exception{
+    	return openMetadata(filename, new MetaData(filename), parameters, mode);
     }
 
-    public static JFrameGallery openFilesAsGallery(String filenames[], boolean useSameTable) {
+    public static JFrameGallery openFilesAsGallery(String filenames[], boolean useSameTable) throws Exception {
         return openFilesAsGallery(filenames, useSameTable, new Param());
     }
 
     public static JFrameGallery openFilesAsGallery(String filenames[],
-            boolean useSameTable, Param parameters) {
+            boolean useSameTable, Param parameters) throws Exception {
         JFrameGallery gallery = null;
 
         if (useSameTable) {
-            gallery = new JFrameGallery(filenames, parameters);
-            setConvenientSize(gallery);
-
-            if (parameters.rows < 1 && parameters.columns < 1) {
-                gallery.setAutoAdjustColumns(true);
-            } else {
-                //gallery.setDimensions(parameters.rows, parameters.columns);
-            }
-            gallery.setVisible(true);
+        	MetaData md = new MetaData();
+        	for (int i = 0; i < filenames.length; ++i)
+        		md.setValueString(MDLabel.MDL_IMAGE, filenames[i], md.addObject());
+        	openMetadata(null, md, parameters, null);
         } else {
             for (int i = 0; i < filenames.length; i++) {
-                gallery = openFileAsGallery(filenames[i], parameters);
+                gallery = openMetadata(filenames[i], parameters, Param.OPENING_MODE_GALLERY);
             }
         }
 
@@ -277,7 +285,7 @@ public class ImagesWindowFactory {
                 XmippImageConverter.saveImage(imp, file.getAbsolutePath());
             }
 
-            openFileAsGallery(file.getAbsolutePath());
+            openMetadata(file.getAbsolutePath(), new Param(), Param.OPENING_MODE_GALLERY);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             DEBUG.printException(ex);
