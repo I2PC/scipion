@@ -682,9 +682,9 @@ if int(env['java']):
     env.Default(cmd)
     AddJavaLibrary('XmippJNI', 'jni', ['ij'])
     AddJavaLibrary('XmippIJ', 'ij', ['ij'])
-    xmippUtils=AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
-    AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'ij'])
-    xmippViewer=AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
+    xmippUtils = AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
+    AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils','ij'])
+    xmippViewer = AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
     javaClassPath=['java/build','java/lib/ij.jar']
     if CYGWIN:
         javaClassPath=';'.join(javaClassPath)
