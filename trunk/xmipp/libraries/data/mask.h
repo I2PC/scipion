@@ -334,28 +334,28 @@ void mask3D_26neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
  * To generate a geometric mask within a program do the following:
  *
  * @code
- * Mask_Params Mask;
+ * Mask mask;
  *
  * // Define an spherical mask of radius 32 (the active part is
  * // within the sphere)
- * Mask.type = BINARY_CIRCULAR_MASK;
- * Mask.mode = INNER_MASK;
- * Mask.R1 = 32;
+ * mask.type = BINARY_CIRCULAR_MASK;
+ * mask.mode = INNER_MASK;
+ * mask.R1 = 32;
  *
  * // resize the mask after this pattern
- * Mask.resize(input_Matrix2D);
+ * mask.resize(input_Matrix2D);
  *
  * // Really generate the mask. It is stored internally
- * Mask.generate_2Dmask();
+ * mask.generate_2Dmask();
  *
  * // Apply the mask to some image
- * Mask.apply_mask(input_Matrix2D, output_Matrix2D);
+ * mask.apply_mask(input_Matrix2D, output_Matrix2D);
  * @endcode
  *
  * To read a mask from the command line:
  *
  * @code
- * Mask_Params mask;
+ * Mask mask;
  * mask.read(argc, argv);
  * mask.resize(Ydim, Xdim);
  * mask.generate_2Dmask();
