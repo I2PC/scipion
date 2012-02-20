@@ -106,7 +106,7 @@ class ProtProjMatch(XmippProtocol):
 #        if self.DoShowReferences:
 #            self.visualizeVar('DoShowReferences')
         if len(plots):
-            self.launchML2DPlots(plots)
+            self.launchProjmatchPlots(plots)
          
 #    def visualizeReferences(self):
 #        refs = self.getFilename('iter_refs')
@@ -123,11 +123,10 @@ class ProtProjMatch(XmippProtocol):
 #        if varName == 'DoShowReferences':
 #            self.visualizeReferences()
 #        else:
-        self.launchML2DPlots([varName])
+        self.launchProjmatchPlots([varName])
         
-    def launchML2DPlots(self, selectedPlots):
-        ''' Launch some plot for an ML2D protocol run '''
-        #import matplotlib
+    def launchProjmatchPlots(self, selectedPlots):
+        ''' Launch some plots for a Projection Matching protocol run '''
         import numpy as np
         from protlib_gui_figure import XmippPlotter
     
@@ -143,23 +142,33 @@ class ProtProjMatch(XmippProtocol):
             ref3Ds = getListFromVector(self.DisplayRef3DNo)
 
             #gridsize1 = [len(iterations), len(ref3Ds)]
-            gridsize1 = [1, len(ref3Ds)]
+            if(len(ref3Ds) == 1):
+                gridsize1 = [1, 1]
+            elif (len(ref3Ds) == 2):
+                gridsize1 = [2, 1]
+            else:
+                gridsize1 = [(len(ref3Ds)+1)/2, 2]
             xplotter1 = XmippPlotter(*gridsize1)
+            print 'gridsize1: ', gridsize1
             colours = ['green','blue','red', 'black']
             print 'iterations: ', iterations
             print 'ref3Ds: ', ref3Ds
             
             for ref3d in ref3Ds:
                 plot_title = 'Ref3D_'+ ref3d
-                a = xplotter1.createSubPlot(plot_title, 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=True)
+                a = xplotter1.createSubPlot(plot_title, 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=False)
+                legendName=[]
                 for it in iterations:
                     print 'it: ',it
                     file_name = self.getFilename('ResolutionXmdFile', iter=int(it), ref=int(ref3d))
                     print 'file_name:',file_name
                     md = MetaData(file_name)
                     resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-                    frc_rnoise = [md.getValue(MDL_RESOLUTION_FRCRANDOMNOISE, id) for id in md]
-                    a.plot(resolution_inv, frc_rnoise, color=colours[int(it)-1])
+                    frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
+                    #a.plot(resolution_inv, frc_rnoise, color=colours[int(it)-1])
+                    a.plot(resolution_inv, frc)
+                    legendName.append('Iter_'+str(it))
+                xplotter1.showLegend(legendName)
             
             xplotter1.show()
         
