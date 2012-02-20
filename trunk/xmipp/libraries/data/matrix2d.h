@@ -471,6 +471,7 @@ public:
 
         // Copy needed elements, fill with 0 if necessary
         if (!noCopy)
+        {
             for (int i = 0; i < Ydim; i++)
                 for (int j = 0; j < Xdim; j++)
                 {
@@ -483,6 +484,9 @@ public:
                         val = mdata[i*mdimx + j];
                     new_mdata[i*Xdim+j] = val;
                 }
+        }
+        else
+            memset(new_mdata,0,YXdim*sizeof(T));
 
         // deallocate old vector
         coreDeallocate();
@@ -1494,15 +1498,15 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
 template<typename T1>
 void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T1>& v2)
 {
-	v2=v1;
+    v2=v1;
 }
 
 /** Helper class for solving linear systems */
 class PseudoInverseHelper
 {
 public:
-	Matrix2D<double> A, AtA, AtAinv;
-	Matrix1D<double> Atb, b, bpredicted;
+    Matrix2D<double> A, AtA, AtAinv;
+    Matrix1D<double> Atb, b, bpredicted;
 };
 
 /** Solve Linear system Ax=b with pseudoinverse.
