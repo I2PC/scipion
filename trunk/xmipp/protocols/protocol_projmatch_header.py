@@ -692,7 +692,7 @@ MaxRes=12
 CorrectBfactorExtraCommand='--auto'
 
 
-# {list}|x|y|z|surface| Display volumes as slices or surface rendering
+# {list}(x, y, z, surface) Display volumes as slices or surface rendering
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
     z -> Visualize volumes in slices along z
