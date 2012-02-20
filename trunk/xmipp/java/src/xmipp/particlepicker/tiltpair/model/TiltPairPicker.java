@@ -322,21 +322,19 @@ public class TiltPairPicker extends ParticlePicker
 	@Override
 	public void importParticlesXmipp24(Family family, String projectdir)
 	{
-			String suffix = ".raw.Common.pos";
-			String ppdir = String.format("%s%s%s", projectdir, File.separator, "Preprocessing");
-			String ufile, tfile;
+		String suffix = ".raw.Common.pos";
+		String ppdir = String.format("%s%s%s", projectdir, File.separator, "Preprocessing");
+		String ufile, tfile;
 
-			for (UntiltedMicrograph um : micrographs)
-			{
-				ufile = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, um.getName(), suffix);
-				tfile = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, um.getTiltedMicrograph().getName(), suffix);
-				if (!new File(ufile).exists() || !new File(tfile).exists())
-					continue;
-				importParticlesFromXmipp24Files(um, ufile, tfile);
-			}
+		for (UntiltedMicrograph um : micrographs)
+		{
+			ufile = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, um.getName(), suffix);
+			tfile = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, um.getTiltedMicrograph().getName(), suffix);
+			importParticlesFromXmipp24Files(um, ufile, tfile, false);
+		}
 	}
 
-	public void importParticlesFromXmipp24Files(UntiltedMicrograph um, String ufile, String tfile)
+	public void importParticlesFromXmipp24Files(UntiltedMicrograph um, String ufile, String tfile, boolean checkfiles)
 	{
 		try
 		{
@@ -348,8 +346,13 @@ public class TiltPairPicker extends ParticlePicker
 			TiltedMicrograph tm;
 
 			um.getParticles().clear();
-			if (!new File(ufile).exists() || !new File(tfile).exists())
-				throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", ufile));
+			if (!new File(ufile).exists())
+			{
+				if(checkfiles)
+					throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", ufile));
+				else 
+					return;
+			}
 			md.readPlain(ufile, "Xcoor Ycoor");
 			ids = md.findObjects();
 			for (long id : ids)
@@ -362,7 +365,13 @@ public class TiltPairPicker extends ParticlePicker
 
 			tm = um.getTiltedMicrograph();
 			tm.getParticles().clear();
-			
+			if (!new File(tfile).exists())
+			{
+				if(checkfiles)
+					throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", tfile));
+				else 
+					return;
+			}
 			md.readPlain(tfile, "Xcoor Ycoor");
 			int i = 0;
 			ids = md.findObjects();
@@ -385,5 +394,4 @@ public class TiltPairPicker extends ParticlePicker
 		}
 
 	}
-
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.logging.Level;
 
 import xmipp.particlepicker.Family;
+import xmipp.particlepicker.Micrograph;
 
 
 
@@ -92,8 +93,59 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		}
 	}
 
+	public String getCorrectCommandLineArgs(MicrographFamilyData mfd)
+	{
+		Family family = mfd.getFamily();
+		Micrograph micrograph = mfd.getMicrograph();
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train ", micrograph.getFile(),// -i
+				family.getSize(), // --particleSize
+				getOutputPath(family.getName()),// --model
+				getOutputPath(micrograph.getName())// --outputRoot
+		);
 
+		if (mfd.getManualParticles().size() > 0)
+			args += family.getName() + "@" + getOutputPath(micrograph.getOFilename());
+		if (isFastMode())
+			args += " --fast";
+		if (isIncore())
+			args += " --in_core";
+		return args;
+	}
 	
+	public String getAutopickCommandLineArgs(MicrographFamilyData mfd)
+	{
+		Family family = mfd.getFamily();
+		Micrograph micrograph = mfd.getMicrograph();
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s", micrograph.getFile(),// -i
+				family.getSize(), // --particleSize
+				getOutputPath(family.getName()),// --model
+				getOutputPath(micrograph.getName()),// --outputRoot
+				getThreads()// --thr
+		);
+
+		if (isFastMode())
+			args += " --fast";
+		if (isIncore())
+			args += " --in_core";
+		return args;
+	}
+	
+	public String getTrainCommandLineArgs(MicrographFamilyData mfd)
+	{
+		Family family = mfd.getFamily();
+		Micrograph micrograph = mfd.getMicrograph();
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train %s", micrograph.getFile(),// -i
+				family.getSize(), // --particleSize
+				getOutputPath(family.getName()),// --model
+				getOutputPath(micrograph.getName()), // --outputRoot
+				family.getName() + "@" + getOutputPath(micrograph.getOFilename()));// train
+		// parameter
+		if (isFastMode())
+			args += " --fast";
+		if (isIncore())
+			args += " --in_core";
+		return args;
+	}
 
 
 }

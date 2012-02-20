@@ -81,8 +81,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
 
-	
-
 	@Override
 	public TrainingPicker getParticlePicker()
 	{
@@ -146,7 +144,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
-		
+
 		JMenu windowmn = new JMenu("Window");
 		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
@@ -163,7 +161,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		// Setting menu item listeners
 
-		
 		editfamiliesmn.addActionListener(new ActionListener()
 		{
 
@@ -604,23 +601,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
 		saveChanges();// persist changes
-		String args;
 		for (TrainingMicrograph micrograph : ppicker.getMicrographs())
 		{
 			if (!micrograph.getFamilyData(family).isEmpty())
 			{
 
-				args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train %s", micrograph.getFile(),// -i
-						family.getSize(), // --particleSize
-						ppicker.getOutputPath(family.getName()),// --model
-						ppicker.getOutputPath(micrograph.getName()), // --outputRoot
-						family.getName() + "@" + ppicker.getOutputPath(micrograph.getOFilename()));// train
-				// parameter
-				if (((SupervisedParticlePicker) ppicker).isFastMode())
-					args += " --fast";
-				if (((SupervisedParticlePicker) ppicker).isIncore())
-					args += " --in_core";
-				final String fargs = args;
+				final String fargs = ((SupervisedParticlePicker) ppicker).getTrainCommandLineArgs(getFamilyData());
 				try
 				{
 					final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("training picker...");
@@ -634,17 +620,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 						public void run()
 						{
-
-							try
-							{
-
-								Program.runByName("xmipp_micrograph_automatic_picking", fargs);
-							}
-							catch (Exception e)
-							{
-								TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-								throw new IllegalArgumentException(e);
-							}
+							runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 							glassPane.stop();
 							TrainingPickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
 							canvas.setEnabled(true);
@@ -669,19 +645,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private void autopick()
 	{
 		setState(MicrographFamilyState.Autopick);
-		String args;
-		args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s", micrograph.getFile(),// -i
-				family.getSize(), // --particleSize
-				ppicker.getOutputPath(family.getName()),// --model
-				ppicker.getOutputPath(micrograph.getName()),// --outputRoot
-				((SupervisedParticlePicker) ppicker).getThreads()// --thr
-		);
 
-		if (((SupervisedParticlePicker) ppicker).isFastMode())
-			args += " --fast";
-		if (((SupervisedParticlePicker) ppicker).isIncore())
-			args += " --in_core";
-		final String fargs = args;
+		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
 		try
 		{
 			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("autopicking...");
@@ -695,16 +660,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 				public void run()
 				{
-					try
-					{
-
-						Program.runByName("xmipp_micrograph_automatic_picking", fargs);
-					}
-					catch (Exception e)
-					{
-						TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-						throw new IllegalArgumentException(e);
-					}
+					runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 					glassPane.stop();
 					TrainingPickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
 					ppicker.loadAutomaticParticles(micrograph);
@@ -729,19 +685,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setState(MicrographFamilyState.ReadOnly);
 		ppicker.persistAutomaticParticles(getFamilyData());
 
-		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train ", micrograph.getFile(),// -i
-				family.getSize(), // --particleSize
-				ppicker.getOutputPath(family.getName()),// --model
-				ppicker.getOutputPath(micrograph.getName())// --outputRoot
-		);
-
-		if (micrograph.getFamilyData(family).getManualParticles().size() > 0)
-			args += family.getName() + "@" + ppicker.getOutputPath(micrograph.getOFilename());
-		if (((SupervisedParticlePicker) ppicker).isFastMode())
-			args += " --fast";
-		if (((SupervisedParticlePicker) ppicker).isIncore())
-			args += " --in_core";
-		final String fargs = args;
+		final String fargs = ((SupervisedParticlePicker) ppicker).getCorrectCommandLineArgs(getFamilyData());
 		try
 		{
 			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("correcting...");
@@ -753,18 +697,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			{
 				public void run()
 				{
-					try
-					{
-						Program.runByName("xmipp_micrograph_automatic_picking", fargs);
-					}
-					catch (Exception e)
-					{
-						TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-						throw new IllegalArgumentException(e);
-					}
-
+					runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
+					
 					glassPane.stop();
-
 					TrainingPickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
 					int next = ppicker.getNextFreeMicrograph(family);
 					if (next != -1)
@@ -784,6 +719,19 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			throw new IllegalArgumentException(e.getMessage());
 		}
 
+	}
+
+	private void runXmippProgram(String program, String args)
+	{
+		try
+		{
+			Program.runByName(program, args);
+		}
+		catch (Exception e)
+		{
+			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	public double getThreshold()

@@ -413,7 +413,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	
 	public void importParticlesFromXmipp24Files(String ufile, String tfile)
 	{
-		getParticlePicker().importParticlesFromXmipp24Files(untiltedmic, ufile, tfile);
+		getParticlePicker().importParticlesFromXmipp24Files(untiltedmic, ufile, tfile, true);
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();
