@@ -129,6 +129,9 @@ public class ImageGeneric {
         read(Filename.getFilename(filename), width, height, slice, image);
     }
 
+    public void read(int width, int height) throws Exception {
+        read(filename, width, height, MID_SLICE, ALL_IMAGES);//image in filename will be used
+    }
     private native void read(String filename, int width, int height, int slice, long nimage) throws Exception;
 
     public void readApplyGeo(String filename, MetaData metadata, long id) throws Exception {

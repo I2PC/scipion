@@ -18,68 +18,72 @@ public class GalleryData {
 	// The following is only used in VolumeGallery mode
 	public String selectedVol = "";
 	public String[] volumes = null;
-	
+
 	public ArrayList<ColumnInfo> labels;
 	public int zoom;
 	public String filename;
 	public boolean galleryMode = true; // if false, is table model
-	public boolean volumeMode = false; 
+	public boolean volumeMode = false;
 	public boolean showLabel = false;
 	public Param parameters;
 	private int numberOfVols = 0;
 	
+	//flag to perform global normalization
+	public boolean normalize = false;
+	//flag to use geometry info
+	public boolean useGeo = true;
 
-	/** The constructor receive the filename of a metadata 
-	 * The metadata can also be passed, if null, it will be readed from filename
+	/**
+	 * The constructor receive the filename of a metadata The metadata can also
+	 * be passed, if null, it will be readed from filename
 	 */
 	public GalleryData(String fn, Param param, MetaData md) {
 		try {
-			selectedBlock = "";	
+			selectedBlock = "";
 			parameters = param;
 			zoom = param.zoom;
-			galleryMode = param.mode.equalsIgnoreCase(Param.OPENING_MODE_GALLERY);
-			
-			//this should be moved to other place
-			if (fn.contains("@")){
-				String[] parts = fn.split("@");
-				selectedBlock = parts[0]; //FIXME: validate block exists
-				filename = parts[1];
-			}
-			else 
-				filename = fn;
+			galleryMode = param.mode
+					.equalsIgnoreCase(Param.OPENING_MODE_GALLERY);
+
+			filename = fn;
+			if (Filename.hasPrefix(fn)) {
+				if (Filename.isMetadata(fn)) {
+					selectedBlock = Filename.getPrefix(fn); // FIXME: validate block exists
+					filename = Filename.getFilename(fn);
+				}
+			} 
 			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
-			
+
 			if (mdBlocks.length > 1 && selectedBlock.isEmpty())
 				selectedBlock = mdBlocks[0];
 
-			if (md == null){
+			if (md == null) {
 				this.md = new MetaData();
 				readMetadata(fn);
-			}
-			else {
+			} else {
 				this.md = md;
 				loadMd();
-			}			
-			
+			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
 		}
 
 	}// constructor GalleryData
-	
+
 	/** Return the name of the selected md block */
-	public String getMdFilename(){
+	public String getMdFilename() {
 		if (selectedBlock.isEmpty())
 			return filename;
 		return String.format("%s@%s", selectedBlock, filename);
-	}//function getMdFilename
-	
+	}// function getMdFilename
+
 	/** Load contents from a metadata already read */
-	private void loadMd() throws Exception{
+	private void loadMd() throws Exception {
 		ids = md.findObjects();
-	    volumeMode = false;
-	    //if (galleryMode)
+		volumeMode = false;
+		// if (galleryMode)
 		if (md.containsLabel(MDLabel.MDL_IMAGE)) {
 			String imageFn = md.getValueString(MDLabel.MDL_IMAGE,
 					md.firstObject());
@@ -96,20 +100,20 @@ public class GalleryData {
 			}
 			image.destroy();
 		}
-	    
-	    if (!volumeMode){
-	    	numberOfVols = 0;
-	    	volumes = null;
-	    }
+
+		if (!volumeMode) {
+			numberOfVols = 0;
+			volumes = null;
+		}
 		labels = ColumnInfo.createListFromMd(md);
-	}//function loadMd
-	
+	}// function loadMd
+
 	/** Read metadata and store ids */
-	private void readMetadata(String fn){
+	private void readMetadata(String fn) {
 		try {
 			md.read(fn);
 			loadMd();
-			
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -117,10 +121,10 @@ public class GalleryData {
 			ids = null;
 		}
 	}
-	
-	/** Select one of the blocks*/
-	public void selectBlock(String block){
-		selectedBlock = block; //FIXME: validate block exists
+
+	/** Select one of the blocks */
+	public void selectBlock(String block) {
+		selectedBlock = block; // FIXME: validate block exists
 		readMetadata(getMdFilename());
 	}
 
@@ -156,17 +160,27 @@ public class GalleryData {
 	public int getNumberOfBlocks() {
 		return mdBlocks.length;
 	}
-	
-	public int getNumberOfVols(){
+
+	public int getNumberOfVols() {
 		return numberOfVols;
 	}
-	
+
 	/** following function only should be used in VolumeGallery mode */
-	public String getVolumeAt(int index){
+	public String getVolumeAt(int index) {
 		return volumes[index];
 	}
+
+	public void selectVolume(String vol) {
+		selectedVol = vol; // FIXME: Check it is valid
+	}
 	
-	public void selectVolume(String vol){
-		selectedVol = vol; //FIXME: Check it is valid
+	//Check if the underlying data has geometrical information
+	public boolean containsGeometryInfo(){
+		try {
+			return md.containsGeometryInfo();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 }// class GalleryData

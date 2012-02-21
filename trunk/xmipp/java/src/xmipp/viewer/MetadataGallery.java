@@ -47,6 +47,7 @@ public class MetadataGallery extends ImageGallery {
 	
 	public MetadataGallery(GalleryData data) throws Exception {
 		super(data);
+		data.normalize = false;
 	}
 	
 	/** Update the columns display information */
@@ -108,7 +109,10 @@ public class MetadataGallery extends ImageGallery {
 	 * @throws Exception */
 	protected ImageItem createImageItem(int index, int renderLabel, int displayLabel, String key) throws Exception{
 		ImageGeneric image = getImage(index, renderLabel);
-		image.readApplyGeo(data.md, data.ids[index], thumb_width, thumb_height);
+		if (data.useGeo)
+			image.readApplyGeo(data.md, data.ids[index], thumb_width, thumb_height);
+		else
+			image.read(thumb_width, thumb_height);
 		ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);
 		String labelStr = data.md.getValueString(displayLabel, data.ids[index]);
 		return new ImageItem(key, labelStr, imp);		
@@ -122,8 +126,12 @@ public class MetadataGallery extends ImageGallery {
 	/** Return a key string using label 
 	 * @throws Exception */
 	protected String getItemKey(int index, int label) throws Exception{
-		String filename = data.md.getValueString(label, data.ids[index]);
-		return String.format("%s(%d,%d)", filename, thumb_width, thumb_height);
+		String format = data.md.getValueString(label, data.ids[index]) + "(%d,%d)";
+		if (data.useGeo)
+			format += "_geo";
+		String key = String.format(format, thumb_width, thumb_height);
+		DEBUG.printMessage(String.format("key: %s", key));
+		return String.format(format, thumb_width, thumb_height);
 	}
 	
 	@Override
@@ -153,5 +161,14 @@ public class MetadataGallery extends ImageGallery {
 			DEBUG.printException(ex);
 		}
 		return null;
+	}
+	
+	
+	/** Change the use of geometry info */
+	public void setUseGeometry(boolean value){
+		if (data.useGeo != value){
+			data.useGeo = value;
+			fireTableDataChanged();
+		}
 	}
 }

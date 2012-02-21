@@ -71,7 +71,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	// Store the selection state for each item
 	protected boolean[] selection;
 	// Flags and variables to control global normalization
-	protected boolean normalize = false, normalize_calculated = false;
+	protected boolean normalize_calculated = false;
 	protected double normalize_min = Double.POSITIVE_INFINITY,
 			normalize_max = Double.NEGATIVE_INFINITY;
 	
@@ -155,7 +155,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 				item.showLabel = data.showLabel;
 				item.cellDim = cellDim;
 				ImagePlus imp = item.getImage();
-				if (normalize)
+				if (data.normalize)
 					imp.getProcessor().setMinAndMax(normalize_min,
 							normalize_max);
 				else
@@ -362,8 +362,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 	/** Normalization utils */
 	public void setNormalized(boolean normalize) {
 
-		if (normalize != this.normalize) {
-			this.normalize = normalize;
+		if (normalize != data.normalize) {
+			data.normalize = normalize;
 			if (normalize)
 				calculateMinAndMax();
 			fireTableDataChanged();
@@ -372,7 +372,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	
 	/** Check normalized state */
 	public boolean getNormalized(){
-		return normalize;
+		return data.normalize;
 	}
 
 	/** Calculate min and max if needed for normalization */

@@ -11,8 +11,7 @@ public class VolumeGallery extends ImageGallery {
 	
 	public VolumeGallery(GalleryData data) throws Exception {
 		super(data);
-		normalize = true; // volumes are displayed with global normalization by
-							// default
+		data.normalize = true; // volumes are displayed with global normalization by default
 		volFn = Filename.getFilename(data.selectedVol);
 		volNumber = Filename.getNimage(data.selectedVol);
 		calculateMinAndMax();
