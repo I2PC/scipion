@@ -753,10 +753,8 @@ AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 AddXmippProgram('ctf_enhance_psd', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
-
 if not int(env['release']):
 	AddXmippProgram('ctf_estimate_from_psd_zernike', ['XmippRecons'])
-
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('ctf_phase_flip', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
@@ -867,7 +865,7 @@ AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_
 AddBatch('browser', 'applications/scripts/browser', '.py')
 AddBatch('rot_spectraj', 'applications/scripts/rot_spectraj', '.py')
 #AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
-AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
+#AddBatch('stitchingj', 'applications/scripts/stitchingj', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')
 AddBatch('viewer', 'applications/scripts/viewer', '.py')
 
@@ -875,19 +873,15 @@ AddBatch('viewer', 'applications/scripts/viewer', '.py')
 if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-    
     if not int(env['release']):
         AddXmippMPIProgram('mpi_angular_gcar_commonlines', ['XmippRecons'])
-
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
     AddProgramLink('classify_CL2D','mpi_classify_CL2D')
-    
     if not int(env['release']):
         AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
         AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
-    
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_operate')
     AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
@@ -911,7 +905,6 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_transform_geometry', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
-
     if not int(env['release']):
         ('mpi_write_test', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
