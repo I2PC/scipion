@@ -188,7 +188,25 @@ class ProtProjMatch(XmippProtocol):
             return
             
         if doPlot('DisplayProjectionMatchingAlign2d'):
-            return
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            ref3Ds = getListFromVector(self.DisplayRef3DNo)
+            
+            MD = MetaData()
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
+                    print 'ref3d: ',ref3d , ' | it: ',it, ' | file_name:',file_name
+                    if exists(file_name):
+                        MD.read(file_name)
+                        if MD.size()==0:
+                            print "Empty metadata: ", file_name
+                        else:
+                            try:
+                                runShowJ(file_name)
+                            except Exception, e:
+                                from protlib_gui_ext import showError
+                                showError("Error launching java app", str(e))
+
             
         if doPlot('DisplayDiscardedImages'):
             iterations = getListFromVector(self.DisplayIterationsNo)
@@ -203,7 +221,7 @@ class ProtProjMatch(XmippProtocol):
                         print "Empty metadata: ", file_name
                     else:
                         try:
-                            runShowJ(file_name, "512m", "--mode metadata --render")
+                            runShowJ(file_name)
                         except Exception, e:
                             from protlib_gui_ext import showError
                             showError("Error launching java app", str(e))
