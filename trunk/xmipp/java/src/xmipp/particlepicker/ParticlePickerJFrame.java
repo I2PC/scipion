@@ -513,7 +513,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	
 	public  void importParticlesXmipp24(String projectdir)
 	{
-		getParticlePicker().importParticlesXmipp24(getFamily(), projectdir);
+		getParticlePicker().importParticlesFromXmipp24Project(getFamily(), projectdir);
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();

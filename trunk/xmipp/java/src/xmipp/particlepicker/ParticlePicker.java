@@ -35,6 +35,15 @@ public abstract class ParticlePicker
 	private FamilyState mode;
 	private List<Filter> filters;
 	protected String selfile;
+	private String projectdir;
+	
+	public String getPosFileFromXmipp24Project(String projectdir, String mname)
+	{
+		String suffix = ".raw.Common.pos";
+		return String.format("%1$s%2$sPreprocessing%2$s%3$s%2$s%3$s%4$s", projectdir, File.separator, mname, suffix);
+	}
+
+
 
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
 	{
@@ -346,7 +355,7 @@ public abstract class ParticlePicker
 
 	public abstract void importParticlesXmipp30(Family family, String absolutePath);
 
-	public abstract void importParticlesXmipp24(Family family, String path);
+	public abstract void importParticlesFromXmipp24Project(Family family, String path);
 	{
 		// TODO Auto-generated method stub
 		

@@ -21,6 +21,8 @@ public class TiltPairPicker extends ParticlePicker
 
 	protected List<UntiltedMicrograph> micrographs;
 	private Family family;
+	
+	
 
 	public TiltPairPicker(String selfile, String outputdir)
 	{
@@ -320,16 +322,14 @@ public class TiltPairPicker extends ParticlePicker
 	}
 
 	@Override
-	public void importParticlesXmipp24(Family family, String projectdir)
+	public void importParticlesFromXmipp24Project(Family family, String projectdir)
 	{
-		String suffix = ".raw.Common.pos";
-		String ppdir = String.format("%s%s%s", projectdir, File.separator, "Preprocessing");
 		String ufile, tfile;
 
 		for (UntiltedMicrograph um : micrographs)
 		{
-			ufile = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, um.getName(), suffix);
-			tfile = String.format("%1$s%2$s%3$s%2$s%3$s%4$s", ppdir, File.separator, um.getTiltedMicrograph().getName(), suffix);
+			ufile = getPosFileFromXmipp24Project(projectdir, um.getName());
+			tfile = getPosFileFromXmipp24Project(projectdir, um.getTiltedMicrograph().getName());
 			importParticlesFromXmipp24Files(um, ufile, tfile, false);
 		}
 	}
@@ -353,6 +353,7 @@ public class TiltPairPicker extends ParticlePicker
 				else 
 					return;
 			}
+			um.setPosFileFromXmipp24(ufile);
 			md.readPlain(ufile, "Xcoor Ycoor");
 			ids = md.findObjects();
 			for (long id : ids)
@@ -372,6 +373,7 @@ public class TiltPairPicker extends ParticlePicker
 				else 
 					return;
 			}
+			tm.setPosFileFromXmipp24(tfile);
 			md.readPlain(tfile, "Xcoor Ycoor");
 			int i = 0;
 			ids = md.findObjects();

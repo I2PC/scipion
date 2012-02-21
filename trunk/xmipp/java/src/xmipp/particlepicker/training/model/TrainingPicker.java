@@ -453,7 +453,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 	
 	@Override
-	public void importParticlesXmipp24(Family family, String path)
+	public void importParticlesFromXmipp24Project(Family family, String path)
 	{
 		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
 		

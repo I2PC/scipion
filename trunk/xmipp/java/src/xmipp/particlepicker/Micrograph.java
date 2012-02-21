@@ -14,7 +14,20 @@ public abstract class Micrograph
 	private String name;
 	private ImagePlus image;
 	private String ofilename;
+	private String posfile;
 	public static final String ext = ".pos";
+	
+
+	
+	public void setPosFileFromXmipp24(String posfile)
+	{
+		this.posfile = posfile;
+	}
+	
+	public String getPosFileFromXmipp24()
+	{
+		return posfile;
+	}
 
 	public Micrograph(String file)
 	{

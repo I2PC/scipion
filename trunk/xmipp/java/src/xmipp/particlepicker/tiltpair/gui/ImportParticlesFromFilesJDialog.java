@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -55,6 +56,7 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		add(sourcepn, WindowUtil.getConstraints(constraints, 1, 0, 2));
 		add(new JLabel("Untilted:"), WindowUtil.getConstraints(constraints, 0, 1, 1));
 		untiltedtf = new JTextField(20);
+
 		add(untiltedtf, WindowUtil.getConstraints(constraints, 1, 1, 1));
 		BrowseListener bl = new BrowseListener();
 		browseubt = new JButton("Browse");
@@ -66,6 +68,11 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		browsetbt = new JButton("Browse");
 		add(browsetbt, WindowUtil.getConstraints(constraints, 2, 2, 1));
 		browsetbt.addActionListener(bl);
+
+		fc = new JFileChooser();
+		setFile(untiltedtf, parent.getMicrograph().getPosFileFromXmipp24());
+		setFile(tiltedtf, parent.getMicrograph().getTiltedMicrograph().getPosFileFromXmipp24());
+
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JButton okbt = new JButton("OK");
 		okbt.addActionListener(new ActionListener()
@@ -101,19 +108,32 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		actionspn.add(okbt);
 		actionspn.add(cancelbt);
 		add(actionspn, WindowUtil.getConstraints(constraints, 0, 3, 3));
-		fc = new JFileChooser();
+
 		pack();
 		WindowUtil.setLocation(0.8f, 0.5f, this);
 		setVisible(true);
 
 	}
-	
-	class BrowseListener implements ActionListener{
+
+	private void setFile(JTextField tf, String filepath)
+	{
+		if(filepath == null)
+			return;
+		File file = new File(filepath);
+		if (file.exists())
+		{
+			tf.setText(filepath);
+			fc.setSelectedFile(file);
+		}
+	}
+
+	class BrowseListener implements ActionListener
+	{
 
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			JTextField tf = (e.getSource().equals(browseubt))? untiltedtf: tiltedtf;
+			JTextField tf = (e.getSource().equals(browseubt)) ? untiltedtf : tiltedtf;
 			browseDirectory(tf);
 		}
 
@@ -121,7 +141,7 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 
 	private void browseDirectory(JTextField tf)
 	{
-		
+
 		int returnVal = fc.showOpenDialog(ImportParticlesFromFilesJDialog.this);
 
 		try
@@ -189,7 +209,6 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		case Xmipp30:
 			parent.importParticlesFromXmipp30Files(ufile, tfile);
 			break;
-		
 
 		}
 		JOptionPane.showMessageDialog(ImportParticlesFromFilesJDialog.this, "Import successful");
