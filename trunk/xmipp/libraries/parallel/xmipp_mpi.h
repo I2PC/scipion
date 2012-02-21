@@ -55,16 +55,6 @@ public:
     /** Check if the node is master */
     bool isMaster() const;
 
-    /** The given rank creates a filename so that the rest can wait for him */
-    void prepareFileBarrierWaiting(FileName &fnToWaitOn);
-
-    /** Barrier wait.
-     * It first waits for the existence of a file, then it makes a barrierWait.
-     * It checks for the existence of the file every sleepTime seconds.
-     * This is much more efficient than the active polling of the standard MPI barrier wait.
-     * The master deletes the file that everybody is waiting upon.*/
-    void barrierWait(const FileName &fnToWaitOn, int sleepTime=15);
-
     /** Wait on a barrier for the other MPI nodes */
     void barrierWait();
 

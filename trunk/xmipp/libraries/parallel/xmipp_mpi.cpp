@@ -256,25 +256,6 @@ bool MpiNode::isMaster() const
     return rank == 0;
 }
 
-void MpiNode::prepareFileBarrierWaiting(FileName &fnToWaitOn)
-{
-    char tempFileName[L_tmpnam];
-    if (isMaster())
-        std::tmpnam(tempFileName);
-    MPI_Bcast(tempFileName, L_tmpnam, MPI_CHAR, 0, MPI_COMM_WORLD);
-    fnToWaitOn=tempFileName;
-}
-
-void MpiNode::barrierWait(const FileName &fnToWaitOn, int sleepTime)
-{
-    while (!fnToWaitOn.exists())
-        sleep(sleepTime);
-    barrierWait();
-    if (isMaster())
-        unlink(fnToWaitOn.c_str());
-    barrierWait();
-}
-
 void MpiNode::barrierWait()
 {
     MPI_Barrier(*comm);
