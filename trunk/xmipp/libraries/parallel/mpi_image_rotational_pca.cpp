@@ -510,15 +510,13 @@ int ProgImageRotationalPCA::QR()
 // Copy H to F ============================================================
 void ProgImageRotationalPCA::copyHtoF(int block)
 {
-    FileName fnSync = fnRoot + ".sync";
     if (node->isMaster())
     {
         size_t Hidx=block*MAT_XSIZE(H);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
         MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
-        fnSync.createEmptyFileWithGivenLength();
     }
-    node->barrierWait(fnSync,1);
+    node->barrierWait();
 }
 
 // Run ====================================================================
@@ -542,14 +540,12 @@ void ProgImageRotationalPCA::run()
 
     // QR decomposition of matrix F
     int qrDim;
-    FileName fnSync=fnRoot+".sync";
     if (node->isMaster())
     {
         std::cerr << "Performing QR decomposition ..." << std::endl;
         qrDim=QR();
-        fnSync.createEmptyFileWithGivenLength();
     }
-    node->barrierWait(fnSync,10);
+    node->barrierWait();
     MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
     if (qrDim==0)
         REPORT_ERROR(ERR_VALUE_INCORRECT,"No subspace have been found");
@@ -561,12 +557,11 @@ void ProgImageRotationalPCA::run()
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
         MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
-        fnSync.createEmptyFileWithGivenLength();
-        node->barrierWait(fnSync,2);
+        node->barrierWait();
     }
     else
     {
-        node->barrierWait(fnSync,2);
+        node->barrierWait();
         H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
     }
     F.clear();
@@ -608,9 +603,8 @@ void ProgImageRotationalPCA::run()
             MD.setValue(MDL_WEIGHT,VEC_ELEM(S,eig),id);
         }
         MD.write(fnRoot+".xmd");
-        fnSync.createEmptyFileWithGivenLength();
     }
-    node->barrierWait(fnSync,15);
+    node->barrierWait();
 
     // Clean files
     if (node->isMaster())

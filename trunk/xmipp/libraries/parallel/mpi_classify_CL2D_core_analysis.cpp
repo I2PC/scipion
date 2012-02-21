@@ -288,10 +288,7 @@ void ProgClassifyCL2DCore::computeStableCores()
 
 void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
 {
-    FileName fnSync=fnRoot+".sync";
-    if (node->rank==0)
-        fnSync.createEmptyFileWithGivenLength(0);
-    node->barrierWait(fnSync,1);
+    node->barrierWait();
     if (node->rank==0)
     {
         FileName fnBlock, fnClass, fnSummary;
@@ -345,9 +342,8 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
                 MD.write(blocks[idx].block+"@"+fnSummary+".xmd",MD_APPEND);
             }
         }
-        fnSync.createEmptyFileWithGivenLength(0);
     }
-    node->barrierWait(fnSync,1);
+    node->barrierWait();
 }
 
 // Run ====================================================================
