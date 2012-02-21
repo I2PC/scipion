@@ -52,8 +52,10 @@ void ProgReconsART::defineParams()
 
     ARTReconsBase::defineParams(this, isMpi);
 
+#ifndef RELEASE_MODE
     addParamsLine(" == Special Parameters for X-rays == ");
     XrayARTRecons::defineParams(this);
+#endif
 
     //    addParamsLine(" == Special Parameters for crystals == ");
     //    CrystalARTRecons::defineParams(this);
@@ -116,9 +118,12 @@ void ProgReconsART::readParams()
     //    if (checkParam("--crystal"))
     //        artRecons = new CrystalARTRecons;
     //    else
+
+#ifndef RELEASE_MODE
     if (checkParam("--xray"))
         artRecons = new XrayARTRecons;
     else
+#endif
         artRecons = new SinPartARTRecons;
 
     artRecons->readParams(this);
