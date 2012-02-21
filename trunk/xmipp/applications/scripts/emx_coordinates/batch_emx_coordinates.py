@@ -2,23 +2,14 @@
 import CifFile
 from protlib_emx import *
 class convertParticlePickingClass:    
-    needed_itemsXMIPP =  [
+    needed_itemsXMIPP =  (
           "_Xcoor",
           "_Ycoor"
-          ]
-    needed_itemsEMX = [
+          )
+    needed_itemsEMX = (
           "_emx_particle.coordinate_x",
           "_emx_particle.coordinate_y"
-          ]
-
-#    needed_itemsXMIPP = (
-#          "_Xcoor",
-#          "_Ycoor"
-#      )
-#    needed_itemsEMX = [[
-#          "_emx_particle.coordinate_x",
-#          "_emx_particle.coordinate_y"
-#      ]]
+          )
 
     
     def __init__(self,
@@ -55,7 +46,11 @@ class convertParticlePickingClass:
             self.cbOut = self.outMetadata[micrographName]
             self.cbOut['_emx_micrograph.url'] = micrographName
             self.createDataHeaderXMIPP2EMX(micrographName)
-            self.convertLoop(micrographName)
+            self.convertLoopXMIPP2EMX(micrographName)
+            
+    def createDataHeaderXMIPP2EMX(self,micrographName):
+        """Data header is the xmipp data block name with the right label"""
+        self.cbOut['_emx_micrograph.url'] = micrographName
 
     def convertLoopEMX2XMIPP(self,micrographName):
     
@@ -76,9 +71,9 @@ class convertParticlePickingClass:
         self.cbOut.AddCifItem(([self.needed_itemsXMIPP],[[_XList,_YList]])) 
         
     def convertLoopXMIPP2EMX(self,micrographName):
-        loopitems = self.inMetadata[micrographName].GetLoop(self.needed_itemsXMIPP)  #get item names and values
+        loopitems = self.inMetadata[micrographName].GetLoop((self.needed_itemsXMIPP[0]))  #get item names and values
         self.cbOut.AddCifItem(([self.needed_itemsEMX],\
-              [[loopitems[[self.needed_itemsXMIPP[0]]],loopitems[[self.needed_itemsXMIPP[1]]]]]))
+              [[loopitems[self.needed_itemsXMIPP[0]],loopitems[self.needed_itemsXMIPP[1]]]]))
 
     def saveFile(self):
         comment  =   "# XMIPP_STAR_1 *"
