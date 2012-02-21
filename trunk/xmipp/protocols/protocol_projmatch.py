@@ -139,7 +139,21 @@ class ProtProjMatch(XmippProtocol):
             return plotName in selectedPlots
         
         if doPlot('DisplayReference'):
-                
+            
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            ref3Ds = getListFromVector(self.DisplayRef3DNo)
+            VisualizationReferenceFileNames = [None] + getListFromVector(self.ReferenceFileNames)
+            print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
+            for ref3d in ref3Ds:
+                file_name = VisualizationReferenceFileNames[int(ref3d)]
+                print 'ref3d: ',ref3d, ' | file_name:',file_name
+                if exists(file_name):
+                    try:
+                        runShowJ(file_name)
+                    except Exception, e:
+                        from protlib_gui_ext import showError
+                        showError("Error launching java app", str(e))
+            
         if doPlot('DisplayReconstruction'):
             
             iterations = getListFromVector(self.DisplayIterationsNo)
@@ -155,17 +169,21 @@ class ProtProjMatch(XmippProtocol):
                         except Exception, e:
                             from protlib_gui_ext import showError
                             showError("Error launching java app", str(e))
-                
-
+                            
         if doPlot('DisplayFilteredReconstruction'):
+            return
                 
         if doPlot('DisplayBFactorCorrectedVolume'):
+            return
             
         if doPlot('DisplayProjectionMatchingAlign2d'):
+            return
             
         if doPlot('DisplayDiscardedImages'):
+            return
             
         if doPlot('DisplayAngularDistribution'):
+            return
             
         
         if doPlot('DisplayResolutionPlots'):
@@ -250,7 +268,6 @@ class ProtProjMatch(XmippProtocol):
                 'IterDir': IterDir,
                 'ProjMatchDirs': ProjMatchDirs,
                 'DocfileInputAnglesIters': join(IterDir, '%(Docfile_with_current_angles)s.doc'),
-                #'LibraryDirs': join(IterDir, '%(LibraryDir)s.doc'),
                 'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
                 'ProjectLibraryRootNames': ProjLibRootNames,
                 'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.doc'),
