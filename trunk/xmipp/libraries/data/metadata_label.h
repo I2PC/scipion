@@ -151,6 +151,7 @@ enum MDLabel
 
     MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
     MDL_FLIP, ///< Flip the image? (bool)
+    MDL_FOM, ///< Figure of Merit in 0-1 range (double)
     MDL_IDX, ///< Index within a list (size_t)
     MDL_IMAGE_CLASS_COUNT, ///< Number of images assigned to the same class as this image
     MDL_IMAGE_CLASS_GROUP, ///< Name of the class group for this image (metadata with all the images assigned to that class)
@@ -651,6 +652,7 @@ private:
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", TAGLABEL_NOTAG, "Flip");
+        MDL::addLabel(MDL_FOM, LABEL_DOUBLE, "fom");
         MDL::addLabel(MDL_IDX, LABEL_LONG, "index");
         MDL::addLabel(MDL_IMAGE_CLASS_COUNT, LABEL_INT, "class_count");
         MDL::addLabel(MDL_IMAGE_CLASS_GROUP, LABEL_STRING, "class_group");
