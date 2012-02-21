@@ -56,12 +56,6 @@ class convertParticlePickingClass:
 
     def convertLoopEMX2XMIPP(self,micrographName):
     
-        #loopitems = self.inMetadata[micrographName].GetLoop(self.needed_itemsEMX[0][0])  #get item names and values
-        # It is possible to create the metadata without loops but...
-        # since xmipp can only use integer values we need to loop and cast
-        # if no casting is need the next to lines are the way to go
-        #self.cbOut.AddCifItem((self.needed_itemsXMIPP,\
-        #      [[loopitems[self.needed_itemsEMX[0][0]],loopitems[self.needed_itemsEMX[0][1]]]])) 
         _auxXList=self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[0])
         _auxYList=self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[1])
         _XList =[]
