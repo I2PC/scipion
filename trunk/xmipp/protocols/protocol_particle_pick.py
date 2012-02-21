@@ -74,7 +74,10 @@ class ProtParticlePicking(XmippProtocol):
                 else:
                     total_manual += particles
                     N_manual += 1
-        summary.append("Number of particles manually picked: <%d> (from <%d> micrographs)" % (total_manual, N_manual))
+        if self.TiltPairs:
+            summary.append("Number of pairs manually picked: <%d> (from <%d> micrographs)" % (total_manual/2, N_manual/2))
+        else:
+            summary.append("Number of particles manually picked: <%d> (from <%d> micrographs)" % (total_manual, N_manual))
         if N_auto > 0:
             summary.append("Number of particles automatically picked: <%d> (from <%d> micrographs)" % (total_auto, N_auto))
         fnFamilies = self.getFilename('families')
@@ -84,7 +87,10 @@ class ProtParticlePicking(XmippProtocol):
             if Nfamilies > 1:
                 summary.append("Number of families: <%u>" % Nfamilies)
         for block in Nblock.keys():
-            summary.append("Family <%s>: <%u> particles" % (block, Nblock[block]))
+            if self.TiltPairs:
+                summary.append("Family <%s>: <%u> pairs" % (block, Nblock[block]/2))
+            else:
+                summary.append("Family <%s>: <%u> particles" % (block, Nblock[block]))
         return summary
     
     def validate(self):
