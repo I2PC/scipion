@@ -35,7 +35,6 @@ public abstract class ParticlePicker
 	private FamilyState mode;
 	private List<Filter> filters;
 	protected String selfile;
-	private String projectdir;
 	
 	public String getPosFileFromXmipp24Project(String projectdir, String mname)
 	{

@@ -178,36 +178,36 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 	{
 		int width = imp.getWidth();
 		int height = imp.getHeight();
-		int c1, c2, x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-		int pos = (int)(alpha/(Math.PI/4))%4;
-		c2 = (pos == 0 || pos == 3)? height/2: width/2;
+		int c1, c2, x1 = 0, x2 = 0, y1 = 0, y2 = 0;//c1 is catet for x axis, c2 is catet for y axis
+		int pos = (int)(alpha/(Math.PI/4))%4;//piece in wich falls alpha
+		c2 = (pos == 0 || pos == 3)? height/2: width/2;//if alpha piece is acute catet c2 is height/2 sized, width/2 otherwise
 		c1 = (int) (c2 * Math.tan( alpha - pos * Math.PI/4));
 		if(pos == 0)
 		{
-			x1 = width/2 - c1;
+			x1 = width/2 + c1;
 			y1 = 0;
-			x2 = width/2 + c1;
+			x2 = width/2 - c1;
 			y2 = height - 1;
 		}
 		else if(pos == 1)
 		{
-			x1 = 0;
+			x1 = width - 1;
 			y1 = height/2 - c1;
-			x2 = width - 1;
+			x2 = 0;
 			y2 = height/2 + c1;
 		}
 		else if(pos == 2)
 		{
-			x1 = 0;
+			x1 = width - 1;
 			y1 = height/2 + c1;
-			x2 = width - 1;
+			x2 = 0;
 			y2 = height/2 - c1;
 		}
 		else if(pos == 3)
 		{
-			x1 = width/2 - c1;
+			x1 = width/2 + c1;
 			y1 = height - 1;
-			x2 = width/2 + c1;
+			x2 = width/2 - c1;
 			y2 = 0;
 		}
 		x1 = (int)(x1 * magnification);
