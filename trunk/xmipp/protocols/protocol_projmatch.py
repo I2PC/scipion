@@ -93,18 +93,21 @@ class ProtProjMatch(XmippProtocol):
             summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
         else:
             summary += ['Resolution is <%s>' % 'not available']            
+        
+        if(self.DoCtfCorrection):
+           summaryNumberOfCtfGroups = self.NumberOfCtfGroups
+        else:
+           summaryNumberOfCtfGroups = 0
         summary += ['Number of CTFgroups and References is <%d> and <%d> respectively'
-                        % (self.NumberOfCtfGroups, self.numberOfReferences)]
+                        % (summaryNumberOfCtfGroups, self.numberOfReferences)]
 
         return summary
     
     def visualize(self):
-#        import numpy as np
-#        from protlib_gui_figure import XmippPlotter
-#        
-        plots = [k for k in ['DisplayResolutionPlots'] if self.ParamsDict[k]]
-#        if self.DoShowReferences:
-#            self.visualizeVar('DoShowReferences')
+        
+        plots = [k for k in ['DisplayReference', 'DisplayReconstruction', 'DisplayFilteredReconstruction', 
+                             'DisplayBFactorCorrectedVolume', 'DisplayProjectionMatchingAlign2d', 'DisplayDiscardedImages',
+                             'DisplayDiscardedImages', 'DisplayAngularDistribution', 'DisplayResolutionPlots'] if self.ParamsDict[k]]
         if len(plots):
             self.launchProjmatchPlots(plots)
          
@@ -135,7 +138,36 @@ class ProtProjMatch(XmippProtocol):
         def doPlot(plotName):
             return plotName in selectedPlots
         
+        if doPlot('DisplayReference'):
                 
+        if doPlot('DisplayReconstruction'):
+            
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            ref3Ds = getListFromVector(self.DisplayRef3DNo)
+            
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    file_name = self.getFilename('ReconstructedFileNamesIters', iter=int(it), ref=int(ref3d))
+                    print 'it: ',it, ' | file_name:',file_name
+                    if exists(file_name):
+                        try:
+                            runShowJ(file_name)
+                        except Exception, e:
+                            from protlib_gui_ext import showError
+                            showError("Error launching java app", str(e))
+                
+
+        if doPlot('DisplayFilteredReconstruction'):
+                
+        if doPlot('DisplayBFactorCorrectedVolume'):
+            
+        if doPlot('DisplayProjectionMatchingAlign2d'):
+            
+        if doPlot('DisplayDiscardedImages'):
+            
+        if doPlot('DisplayAngularDistribution'):
+            
+        
         if doPlot('DisplayResolutionPlots'):
 
             iterations = getListFromVector(self.DisplayIterationsNo)
@@ -150,7 +182,6 @@ class ProtProjMatch(XmippProtocol):
                 gridsize1 = [(len(ref3Ds)+1)/2, 2]
             xplotter1 = XmippPlotter(*gridsize1)
             print 'gridsize1: ', gridsize1
-            colours = ['green','blue','red', 'black']
             print 'iterations: ', iterations
             print 'ref3Ds: ', ref3Ds
             
@@ -159,19 +190,19 @@ class ProtProjMatch(XmippProtocol):
                 a = xplotter1.createSubPlot(plot_title, 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=False)
                 legendName=[]
                 for it in iterations:
-                    print 'it: ',it
                     file_name = self.getFilename('ResolutionXmdFile', iter=int(it), ref=int(ref3d))
-                    print 'file_name:',file_name
+                    print 'it: ',it, ' | file_name:',file_name
                     md = MetaData(file_name)
                     resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
                     frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
-                    #a.plot(resolution_inv, frc_rnoise, color=colours[int(it)-1])
                     a.plot(resolution_inv, frc)
                     legendName.append('Iter_'+str(it))
                 xplotter1.showLegend(legendName)
             
             xplotter1.show()
-        
+    
+    
+    
     
     def createFilenameTemplates(self):  
         #Some class variables

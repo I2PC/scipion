@@ -643,35 +643,33 @@ ViewVerifyedFiles=True
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization
 #------------------------------------------------------------------------------------------------
-# {view} Visualize last iter references
-#show results for iterations
+
+# Show results for iterations
 """ You may specify more than one iteration here 
     This can be done by a sequence of numbers (for instance, "2 8" 
     specifies iteration 2 and 8 (but not 3, 4, 5, 6 and 7)
 """
 DisplayIterationsNo='1 2 3'
 
-#show results for reference 3D volumes
+# Show results for reference 3D volumes
 """ 
 """
 DisplayRef3DNo='1 2'
 
-
-#display reference volume
+# {view} Display reference volume
 """ Volume after filtration and masking
 """
 DisplayReference=False
-#display reconstructed volume
+# {view} Display reconstructed volume
 """ Volume as given by the reconstruction algorithm
 """
 DisplayReconstruction=False
-#display reconstructed volume after filtration
+# {view} Display reconstructed volume after filtration
 """ Volume after filtration
 """
 DisplayFilteredReconstruction=True
 
-
-# Display a b_factor corrected volume
+# {view} Display a b_factor corrected volume
 """ This utility boost up the high frequencies. Do not use the automated 
     mode [default] for maps with resolutions lower than 12-15 Angstroms.
     It does not make sense to apply the Bfactor to the firsts iterations
@@ -681,10 +679,12 @@ DisplayFilteredReconstruction=True
 """
 DisplayBFactorCorrectedVolume=False
 
-#Sampling rate (only needed for b_factor)
+#{condition}(DisplayBFactorCorrectedVolume) Sampling rate
 SamplingRate=5.6
-#Maximum resolution to apply B-factor (in Angstrom)
+
+#{condition}(DisplayBFactorCorrectedVolume) Maximum resolution to apply B-factor (in Angstrom)
 MaxRes=12
+
 # {expert} User defined flags for the correct_bfactor program 
 """ See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
     for details. DEFAULT behaviour is --auto
@@ -692,7 +692,7 @@ MaxRes=12
 CorrectBfactorExtraCommand='--auto'
 
 
-# {list}(x, y, z, surface) Display volumes as slices or surface rendering
+# {view} {list}(x, y, z, surface) Display volumes as slices or surface rendering
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
     z -> Visualize volumes in slices along z
@@ -706,22 +706,22 @@ DisplayVolumeSlicesAlong='z'
 """
 MatrixWidth=3
 
-
-#Show projection matching library and aligned classes
+# {view} Show projection matching library and aligned classes
 DisplayProjectionMatchingAlign2d=False
 
+# {view} Show discarded images
+DisplayDiscardedImages=False
 
-#display angular distribution
+# {view} Display angular distribution
 DisplayAngularDistribution=True
 
-# {view} Display resolution plots (FSC)
-DisplayResolutionPlots=True
-
-
-#{list}|2D|3D| Display Angular distribution with
+# {condition}(DisplayAngularDistribution) {list} (2D, 3D) Display Angular distribution with
 """ 2D option uses gnuplot while 3D chimera
 """
 DisplayAngularDistributionWith='2D'
+
+# {view} Display resolution plots (FSC)
+DisplayResolutionPlots=True
 
 
 #-----------------------------------------------------------------------------
