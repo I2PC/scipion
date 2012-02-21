@@ -66,13 +66,23 @@ public class Filename {
         EXTENSION_MRCS,
         EXTENSION_STK
     };
+    
     private final static String[] METADATAS = new String[]{
         EXTENSION_SEL,
         EXTENSION_XMD
     };
+    
+    private final static String[] SPIDER = new String[] {
+    	EXTENSION_SPI,
+    	EXTENSION_VOL
+    };
 
     public static boolean isPSD(String filename) {
         return filename != null && filename.endsWith(EXTENSION_PSD);
+    }
+    
+    public static boolean isSpiderVolume(String filename){
+    	return filename != null && isFileType(filename, SPIDER);
     }
 //
 //    public static boolean isSingleImage(String filename) {

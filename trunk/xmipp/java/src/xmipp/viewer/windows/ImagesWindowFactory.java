@@ -81,10 +81,8 @@ public class ImagesWindowFactory {
 
                 if (img.isSingleImage()) {
                     openFileAsImage(filename, parameters);
-                } else if (img.isStack()) {
+                } else if (img.isStackOrVolume()) {
                     openMetadata(filename, parameters,Param.OPENING_MODE_GALLERY);
-                } else {
-                    openFileAsImage(filename, parameters);
                 }
             } catch (Exception e) {
                 IJ.open(filename);

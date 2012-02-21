@@ -12,6 +12,7 @@ package xmipp.viewer;
 
 import xmipp.viewer.windows.ImagesWindowFactory;
 
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippLabel;
@@ -1080,8 +1081,11 @@ public class JFrameGallery extends JFrame {
 			}	
 			else if (jmi == jmiOpenWithChimera){
 				try {
+					String args = data.selectedVol;
+					if (Filename.isSpiderVolume(data.selectedBlock))
+						args = "spider:" + args;
 					//FIXME: Check chimera is installed and volume is on spider format
-					    Process p = new ProcessBuilder("chimera", "spider:"+data.selectedVol).start();
+					    Process p = new ProcessBuilder("chimera",args).start();
 					} catch (Exception ex) {
 					     ex.printStackTrace();
 					}
