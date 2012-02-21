@@ -86,6 +86,10 @@ public:
     /// Reconstructed volume
     Image<double> reconstructedVolume;
 public:
+
+    ProgRecWbp();
+    ~ProgRecWbp();
+
     /// Read arguments from command line
     void readParams();
 
