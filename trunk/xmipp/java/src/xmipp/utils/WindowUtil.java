@@ -1,3 +1,27 @@
+/***************************************************************************
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+ *				Airen Zaldivar Peraza  (airenzp@cnb.csic.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
 package xmipp.utils;
 
 import java.awt.Container;
@@ -5,6 +29,9 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionListener;
+
+import javax.swing.JButton;
 
 
 public class WindowUtil {
@@ -32,17 +59,42 @@ public class WindowUtil {
 	public static void centerWindows(Container w, Container parent){
 		setLocation(0.5f, 0.5f, w, parent.getSize(), parent.getLocation());		
 	}	
-
+	
+	public static GridBagConstraints getConstraints(
+			GridBagConstraints constraints, int x, int y) {
+		return getConstraints(constraints, x, y, 1, 1);
+	}
+	
 	public static GridBagConstraints getConstraints(
 			GridBagConstraints constraints, int x, int y, int columns) {
+		return getConstraints(constraints, x, y, columns, 1);
+	}
+	
+	public static JButton getIconButton(String icon, ActionListener listener){
+		JButton btn = new JButton();
+		btn.setIcon(XmippResource.getIcon(icon));
+		btn.addActionListener(listener);
+		return btn;
+	}
+	
+	public static JButton getTextButton(String text, ActionListener listener){
+		JButton btn = new JButton(text);
+		btn.addActionListener(listener);
+		return btn;
+	}	
+	
+	public static GridBagConstraints getConstraints(GridBagConstraints constraints, 
+			int x, int y, int columns, int rows){
 		constraints.gridx = x;
 		constraints.gridy = y;
 		constraints.gridwidth = columns;
+		constraints.gridheight = rows;
 		constraints.fill = (columns > 1) ? GridBagConstraints.HORIZONTAL
 				: GridBagConstraints.NONE;
 		return constraints;
 	}
-
+			
+			
 	public static void openURI(String uri) {
 
 		if (!java.awt.Desktop.isDesktopSupported())

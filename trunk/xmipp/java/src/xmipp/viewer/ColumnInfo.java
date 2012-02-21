@@ -54,18 +54,4 @@ public class ColumnInfo {
 		return visible == col.visible && render == col.render;
 	}
 	
-	/** Create an array list of column info given the md */
-	public static ArrayList<ColumnInfo> createListFromMd(MetaData md){
-		ArrayList<ColumnInfo> labels = null;
-		try {
-		int [] lab = md.getActiveLabels();
-		labels = new ArrayList<ColumnInfo>(lab.length);
-		for (int i = 0; i < lab.length; ++i) 
-			labels.add(new ColumnInfo(lab[i]));
-		} catch (Exception e){
-			e.printStackTrace();
-		}
-		return labels; 
-	}//function createListFromMd
-	
-}
+}//class ColumnInfo

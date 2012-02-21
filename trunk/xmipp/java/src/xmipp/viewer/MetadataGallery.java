@@ -41,41 +41,52 @@ public class MetadataGallery extends ImageGallery {
 	protected int renderLabel;
 	boolean renderLabels;
 	protected int displayLabel;
-	
+
 	// Also store the visible ones to fast access
 	ArrayList<ColumnInfo> visibleLabels;
-	
+
 	public MetadataGallery(GalleryData data) throws Exception {
 		super(data);
 		data.normalize = false;
 	}
-	
+
 	/** Update the columns display information */
-	public void updateColumnInfo(ArrayList<ColumnInfo> newInfo){
+	public void updateColumnInfo(ArrayList<ColumnInfo> newInfo) {
 		int n = newInfo.size();
 		boolean changed = false;
 		renderLabels = false;
-		visibleLabels.clear();
-		for (int i = 0; i < n; ++i){
-			ColumnInfo ci1 = data.labels.get(i);
-			ColumnInfo ci2 = newInfo.get(i);
-			if (ci1.visible != ci2.visible){
-				ci1.visible = ci2.visible;
-				changed = true;
+
+		for (int i = 0; i < n; ++i)
+			for (int j = 0; j < n; ++j) {
+				ColumnInfo ci1 = data.labels.get(i);
+				ColumnInfo ci2 = newInfo.get(j);
+				if (ci1.label == ci2.label) {
+					if (ci1.visible != ci2.visible) {
+						ci1.visible = ci2.visible;
+						changed = true;
+					}
+					if (ci1.render != ci2.render) {
+						ci1.render = ci2.render;
+						changed = true;
+					}
+					if (ci1.visible)
+						visibleLabels.add(ci1);
+					if (ci1.render)
+						renderLabels = true;
+					if (i != j)
+						changed = true;
+				}
 			}
-			if (ci1.render != ci2.render){
-				ci1.render = ci2.render;
-				changed = true;
-			}
-			if (ci1.visible) 
-				visibleLabels.add(ci1);
-			if (ci1.render)
-				renderLabels = true;
-		}
+		
 		if (changed) {
+			data.labels = newInfo;
+			visibleLabels.clear();
+			for (ColumnInfo ci: data.labels)
+				if (ci.visible)
+					visibleLabels.add(ci);
 			calculateCellSize();
 			cols = visibleLabels.size();
-			//	fireTableDataChanged();
+			// fireTableDataChanged();
 			fireTableStructureChanged();
 		}
 	}
@@ -87,10 +98,10 @@ public class MetadataGallery extends ImageGallery {
 		ImageGeneric image = getImage(0, renderLabel);
 		ImageDimension dim = new ImageDimension(image);
 		dim.setZDim(data.ids.length);
-		//Set information about columns
+		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
 		renderLabels = false;
-		for (ColumnInfo ci: data.labels) {
+		for (ColumnInfo ci : data.labels) {
 			if (ci.visible)
 				visibleLabels.add(ci);
 			if (ci.render)
@@ -99,41 +110,50 @@ public class MetadataGallery extends ImageGallery {
 		image.destroy();
 		return dim;
 	}
-	
+
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
 		return createImageItem(index, renderLabel, displayLabel, key);
 	}
-	
-	/** Function to create an image item 
-	 * @throws Exception */
-	protected ImageItem createImageItem(int index, int renderLabel, int displayLabel, String key) throws Exception{
+
+	/**
+	 * Function to create an image item
+	 * 
+	 * @throws Exception
+	 */
+	protected ImageItem createImageItem(int index, int renderLabel,
+			int displayLabel, String key) throws Exception {
 		ImageGeneric image = getImage(index, renderLabel);
 		if (data.useGeo)
-			image.readApplyGeo(data.md, data.ids[index], thumb_width, thumb_height);
+			image.readApplyGeo(data.md, data.ids[index], thumb_width,
+					thumb_height);
 		else
 			image.read(thumb_width, thumb_height);
 		ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);
 		String labelStr = data.md.getValueString(displayLabel, data.ids[index]);
-		return new ImageItem(key, labelStr, imp);		
+		return new ImageItem(key, labelStr, imp);
 	}
 
 	@Override
 	protected String getItemKey(int index) throws Exception {
 		return getItemKey(index, renderLabel);
 	}
-	
-	/** Return a key string using label 
-	 * @throws Exception */
-	protected String getItemKey(int index, int label) throws Exception{
-		String format = data.md.getValueString(label, data.ids[index]) + "(%d,%d)";
+
+	/**
+	 * Return a key string using label
+	 * 
+	 * @throws Exception
+	 */
+	protected String getItemKey(int index, int label) throws Exception {
+		String format = data.md.getValueString(label, data.ids[index])
+				+ "(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
 		String key = String.format(format, thumb_width, thumb_height);
-		DEBUG.printMessage(String.format("key: %s", key));
+		//DEBUG.printMessage(String.format("key: %s", key));
 		return String.format(format, thumb_width, thumb_height);
 	}
-	
+
 	@Override
 	public String getTitle() {
 		return String.format("Metadata: %s (%d)", filename, n);
@@ -162,11 +182,10 @@ public class MetadataGallery extends ImageGallery {
 		}
 		return null;
 	}
-	
-	
+
 	/** Change the use of geometry info */
-	public void setUseGeometry(boolean value){
-		if (data.useGeo != value){
+	public void setUseGeometry(boolean value) {
+		if (data.useGeo != value) {
 			data.useGeo = value;
 			fireTableDataChanged();
 		}

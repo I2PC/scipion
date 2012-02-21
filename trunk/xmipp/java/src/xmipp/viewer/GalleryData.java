@@ -19,7 +19,7 @@ public class GalleryData {
 	public String selectedVol = "";
 	public String[] volumes = null;
 
-	public ArrayList<ColumnInfo> labels;
+	public ArrayList<ColumnInfo> labels = null;
 	public int zoom;
 	public String filename;
 	public boolean galleryMode = true; // if false, is table model
@@ -105,8 +105,33 @@ public class GalleryData {
 			numberOfVols = 0;
 			volumes = null;
 		}
-		labels = ColumnInfo.createListFromMd(md);
+		loadLabels();
 	}// function loadMd
+	
+	/** Load labels info in md, 
+	 * try to keep previous settings of render and visible
+	 * on same columns */
+	public void loadLabels(){
+		ColumnInfo ci;
+		try {
+		int [] lab = md.getActiveLabels();
+		ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(lab.length);
+		for (int i = 0; i < lab.length; ++i) {
+			ci = new ColumnInfo(lab[i]);
+			if (labels != null)
+				for (ColumnInfo ci2: labels)
+					if (ci.label == ci2.label){
+						ci.visible = ci2.visible;
+						ci.render = ci2.render;
+					}
+			newLabels.add(ci);
+			
+		}
+		labels = newLabels;
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+	}//function loadLabels
 
 	/** Read metadata and store ids */
 	private void readMetadata(String fn) {
@@ -183,4 +208,5 @@ public class GalleryData {
 			return false;
 		}
 	}
+
 }// class GalleryData
