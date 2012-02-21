@@ -176,9 +176,10 @@ if (ARGUMENTS['mode'] == 'configure'):
         config_log = base_dir + 'config.log'
 
     # release?
-    if int(env['release']):
-        AppendIfNotExists(CCFLAGS='-DRELEASE_MODE')
-        AppendIfNotExists(CXXFLAGS='-DRELEASE_MODE')
+    # This is done in compile mode
+#    if int(env['release']):
+#        AppendIfNotExists(CCFLAGS='-DRELEASE_MODE')
+#        AppendIfNotExists(CXXFLAGS='-DRELEASE_MODE')
 
     # static?
     if int(env['static']):
@@ -342,6 +343,12 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CXXFLAGS=['-D__XMIPP_DEBUG__'])
         AppendIfNotExists(CXXFLAGS=dpFlags)
         #required for print stack trace
+    
+    # Activate release version when compiling
+    if int(env['release']):
+        AppendIfNotExists(CCFLAGS=['-DRELEASE_MODE'])
+        AppendIfNotExists(CXXFLAGS=['-DRELEASE_MODE'])
+        
 	if not int(env['cuda']):
 	   AppendIfNotExists(CXXFLAGS=['-rdynamic'])
         AppendIfNotExists(CXXFLAGS=['-O0'])
