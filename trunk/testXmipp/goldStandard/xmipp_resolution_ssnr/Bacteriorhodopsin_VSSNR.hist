@@ -1,0 +1,1179 @@
+ ============================================================
+ ART RECONSTRUCTION HISTORY: 
+ ============================================================
+
+ Parameters -------------------------------------------------
+ Projections file     : individualSSNR.xmd
+ CTF file             : 
+ Goldmask             : 1e+06
+ Unmatched projectors : 0
+ Sampling             : 1
+ Blobs:         radius=2 pixels alpha=10.4 order=2
+
+ Grid Type: BCC  Shifted tomograms:0
+ Ray length: 2
+
+ Radius of the interest sphere= 21 pixels
+ Grid unit=1.41 pixels
+ No Projection extension
+ Output volume size as input images
+ Iterations:    lambda=
+       0.1 
+                No. Iter=5
+ Parallel mode: ART
+ Equation mode: ARTK
+ Projections: Ydim x Xdim = 64 x 64
+ Surface mask: 
+ POCS freq: 1
+ Known volume: -1
+ Positivity: 0
+ Apply shifts in images headers: 1
+ Symmetry file: 
+ Force Symmetry each: 0 projections
+ Maximun absolute tilt angle: 1e+07 degrees
+ Generating symmetry group: 1
+ Do not use symmetrized projections: 1
+ Number of total projections (including symmetrized): 181
+ Number of different projections: 181
+ Forcing symmetry: 0
+ Stop at: 0
+ Sort with last 2 images
+ Variability analysis: 0
+ Refine projections: 0
+ Sparsity epsilon: -1
+ Diffusion weight: -1
+ Saving intermidiate at every 0 projections
+ Projection angles -----------------------------------------
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+rot= 0 tilt= 0 psi= 0
+ -----------------------------------------------------------
+ Starting from a zero volume
+ Grid structure ------
+Complex Grid -------------------------------------
+   Simple Grid -----
+   Vector 1: 
+       0.5
+       0.5
+      -0.5
+
+   Vector 2: 
+       0.5
+      -0.5
+       0.5
+
+   Vector 3: 
+      -0.5
+       0.5
+       0.5
+
+   Relative size:         1.41
+   Interest radius:       441
+   Origin (univ.coords)   
+         0
+         0
+         0
+
+   Highest (grid. coord)  
+        21
+        21
+        21
+
+   Lowest (grid. coord)   
+       -21
+       -21
+       -21
+
+ Extra: 000001@individualSSNR.stk, sym=-1		486.583
+000002@individualSSNR.stk, sym=-1		685.623
+000003@individualSSNR.stk, sym=-1		502.823
+000004@individualSSNR.stk, sym=-1		541.804
+000005@individualSSNR.stk, sym=-1		712.763
+000006@individualSSNR.stk, sym=-1		504.372
+000007@individualSSNR.stk, sym=-1		695.351
+000008@individualSSNR.stk, sym=-1		720.778
+000009@individualSSNR.stk, sym=-1		521.726
+000010@individualSSNR.stk, sym=-1		685.765
+000011@individualSSNR.stk, sym=-1		500.21
+000012@individualSSNR.stk, sym=-1		666.179
+000013@individualSSNR.stk, sym=-1		489.202
+000014@individualSSNR.stk, sym=-1		497.336
+000015@individualSSNR.stk, sym=-1		638.648
+000016@individualSSNR.stk, sym=-1		539.771
+000017@individualSSNR.stk, sym=-1		656.464
+000018@individualSSNR.stk, sym=-1		645.647
+000019@individualSSNR.stk, sym=-1		508.733
+000020@individualSSNR.stk, sym=-1		510.199
+000021@individualSSNR.stk, sym=-1		665.645
+000022@individualSSNR.stk, sym=-1		666.542
+000023@individualSSNR.stk, sym=-1		505.82
+000024@individualSSNR.stk, sym=-1		657.033
+000025@individualSSNR.stk, sym=-1		499.137
+000026@individualSSNR.stk, sym=-1		667.802
+000027@individualSSNR.stk, sym=-1		486.887
+000028@individualSSNR.stk, sym=-1		670.598
+000029@individualSSNR.stk, sym=-1		501.409
+000030@individualSSNR.stk, sym=-1		657.476
+000031@individualSSNR.stk, sym=-1		526.012
+000032@individualSSNR.stk, sym=-1		671.002
+000033@individualSSNR.stk, sym=-1		535.672
+000034@individualSSNR.stk, sym=-1		686.987
+000035@individualSSNR.stk, sym=-1		513.537
+000036@individualSSNR.stk, sym=-1		683.521
+000037@individualSSNR.stk, sym=-1		523.715
+000038@individualSSNR.stk, sym=-1		675.402
+000039@individualSSNR.stk, sym=-1		514.696
+000040@individualSSNR.stk, sym=-1		680.711
+000041@individualSSNR.stk, sym=-1		531.165
+000042@individualSSNR.stk, sym=-1		537.535
+000043@individualSSNR.stk, sym=-1		672.005
+000044@individualSSNR.stk, sym=-1		537.088
+000045@individualSSNR.stk, sym=-1		688.568
+000046@individualSSNR.stk, sym=-1		664.564
+000047@individualSSNR.stk, sym=-1		534.897
+000048@individualSSNR.stk, sym=-1		677.248
+000049@individualSSNR.stk, sym=-1		548.707
+000050@individualSSNR.stk, sym=-1		550.019
+000051@individualSSNR.stk, sym=-1		691.555
+000052@individualSSNR.stk, sym=-1		551.879
+000053@individualSSNR.stk, sym=-1		714.194
+000054@individualSSNR.stk, sym=-1		567.79
+000055@individualSSNR.stk, sym=-1		699.685
+000056@individualSSNR.stk, sym=-1		696.83
+000057@individualSSNR.stk, sym=-1		573.153
+000058@individualSSNR.stk, sym=-1		710.582
+000059@individualSSNR.stk, sym=-1		585.221
+000060@individualSSNR.stk, sym=-1		581.654
+000061@individualSSNR.stk, sym=-1		718.218
+000062@individualSSNR.stk, sym=-1		574.407
+000063@individualSSNR.stk, sym=-1		686.511
+000064@individualSSNR.stk, sym=-1		692.148
+000065@individualSSNR.stk, sym=-1		572.402
+000066@individualSSNR.stk, sym=-1		591.903
+000067@individualSSNR.stk, sym=-1		674.665
+000068@individualSSNR.stk, sym=-1		565.47
+000069@individualSSNR.stk, sym=-1		661.893
+000070@individualSSNR.stk, sym=-1		556.963
+000071@individualSSNR.stk, sym=-1		685.644
+000072@individualSSNR.stk, sym=-1		553.245
+000073@individualSSNR.stk, sym=-1		667.613
+000074@individualSSNR.stk, sym=-1		671.601
+000075@individualSSNR.stk, sym=-1		579.238
+000076@individualSSNR.stk, sym=-1		574.599
+000077@individualSSNR.stk, sym=-1		674.456
+000078@individualSSNR.stk, sym=-1		686.543
+000079@individualSSNR.stk, sym=-1		602.796
+000080@individualSSNR.stk, sym=-1		678.73
+000081@individualSSNR.stk, sym=-1		628.289
+000082@individualSSNR.stk, sym=-1		634.348
+000083@individualSSNR.stk, sym=-1		721.042
+000084@individualSSNR.stk, sym=-1		639.046
+000085@individualSSNR.stk, sym=-1		718.5
+000086@individualSSNR.stk, sym=-1		732.276
+000087@individualSSNR.stk, sym=-1		684.326
+000088@individualSSNR.stk, sym=-1		697.922
+000089@individualSSNR.stk, sym=-1		711.76
+000090@individualSSNR.stk, sym=-1		725.442
+000091@individualSSNR.stk, sym=-1		686.894
+000092@individualSSNR.stk, sym=-1		698.371
+000093@individualSSNR.stk, sym=-1		687.692
+000094@individualSSNR.stk, sym=-1		701.122
+000095@individualSSNR.stk, sym=-1		688.513
+000096@individualSSNR.stk, sym=-1		696.023
+000097@individualSSNR.stk, sym=-1		692.708
+000098@individualSSNR.stk, sym=-1		700.912
+000099@individualSSNR.stk, sym=-1		690.894
+000100@individualSSNR.stk, sym=-1		690.787
+000101@individualSSNR.stk, sym=-1		682.358
+000102@individualSSNR.stk, sym=-1		687.644
+000103@individualSSNR.stk, sym=-1		701.732
+000104@individualSSNR.stk, sym=-1		673.215
+000105@individualSSNR.stk, sym=-1		670.409
+000106@individualSSNR.stk, sym=-1		647.707
+000107@individualSSNR.stk, sym=-1		677.601
+000108@individualSSNR.stk, sym=-1		658.246
+000109@individualSSNR.stk, sym=-1		649.496
+000110@individualSSNR.stk, sym=-1		622.922
+000111@individualSSNR.stk, sym=-1		638.326
+000112@individualSSNR.stk, sym=-1		582.824
+000113@individualSSNR.stk, sym=-1		649.009
+000114@individualSSNR.stk, sym=-1		584.901
+000115@individualSSNR.stk, sym=-1		644.271
+000116@individualSSNR.stk, sym=-1		588.864
+000117@individualSSNR.stk, sym=-1		659.142
+000118@individualSSNR.stk, sym=-1		648.357
+000119@individualSSNR.stk, sym=-1		610.916
+000120@individualSSNR.stk, sym=-1		677.663
+000121@individualSSNR.stk, sym=-1		611.679
+000122@individualSSNR.stk, sym=-1		599.727
+000123@individualSSNR.stk, sym=-1		687.707
+000124@individualSSNR.stk, sym=-1		603.786
+000125@individualSSNR.stk, sym=-1		695.943
+000126@individualSSNR.stk, sym=-1		690.557
+000127@individualSSNR.stk, sym=-1		580.451
+000128@individualSSNR.stk, sym=-1		702.719
+000129@individualSSNR.stk, sym=-1		580.611
+000130@individualSSNR.stk, sym=-1		583.896
+000131@individualSSNR.stk, sym=-1		710.352
+000132@individualSSNR.stk, sym=-1		707.016
+000133@individualSSNR.stk, sym=-1		564.428
+000134@individualSSNR.stk, sym=-1		546.614
+000135@individualSSNR.stk, sym=-1		719.77
+000136@individualSSNR.stk, sym=-1		547.257
+000137@individualSSNR.stk, sym=-1		720.225
+000138@individualSSNR.stk, sym=-1		719.326
+000139@individualSSNR.stk, sym=-1		519.294
+000140@individualSSNR.stk, sym=-1		542.824
+000141@individualSSNR.stk, sym=-1		726.995
+000142@individualSSNR.stk, sym=-1		562.756
+000143@individualSSNR.stk, sym=-1		740.299
+000144@individualSSNR.stk, sym=-1		723.351
+000145@individualSSNR.stk, sym=-1		555.012
+000146@individualSSNR.stk, sym=-1		556.991
+000147@individualSSNR.stk, sym=-1		709.129
+000148@individualSSNR.stk, sym=-1		523.062
+000149@individualSSNR.stk, sym=-1		701.117
+000150@individualSSNR.stk, sym=-1		700.477
+000151@individualSSNR.stk, sym=-1		509.995
+000152@individualSSNR.stk, sym=-1		523.437
+000153@individualSSNR.stk, sym=-1		708.888
+000154@individualSSNR.stk, sym=-1		508.127
+000155@individualSSNR.stk, sym=-1		715.18
+000156@individualSSNR.stk, sym=-1		531.637
+000157@individualSSNR.stk, sym=-1		709.922
+000158@individualSSNR.stk, sym=-1		526.824
+000159@individualSSNR.stk, sym=-1		695.064
+000160@individualSSNR.stk, sym=-1		715.362
+000161@individualSSNR.stk, sym=-1		521.055
+000162@individualSSNR.stk, sym=-1		726.718
+000163@individualSSNR.stk, sym=-1		521.669
+000164@individualSSNR.stk, sym=-1		523.03
+000165@individualSSNR.stk, sym=-1		726.172
+000166@individualSSNR.stk, sym=-1		506.682
+000167@individualSSNR.stk, sym=-1		693.324
+000168@individualSSNR.stk, sym=-1		694.744
+000169@individualSSNR.stk, sym=-1		534.545
+000170@individualSSNR.stk, sym=-1		490.59
+000171@individualSSNR.stk, sym=-1		671.224
+000172@individualSSNR.stk, sym=-1		493.396
+000173@individualSSNR.stk, sym=-1		707.644
+000174@individualSSNR.stk, sym=-1		676.563
+000175@individualSSNR.stk, sym=-1		496.371
+000176@individualSSNR.stk, sym=-1		534.683
+000177@individualSSNR.stk, sym=-1		727.944
+000178@individualSSNR.stk, sym=-1		536.07
+000179@individualSSNR.stk, sym=-1		696.927
+000180@individualSSNR.stk, sym=-1		712.206
+000181@individualSSNR.stk, sym=-1		555.646
+Finished - Iteration 0
+   Global mean squared error: 627.019
+000001@individualSSNR.stk, sym=-1		444.301
+000002@individualSSNR.stk, sym=-1		617.264
+000003@individualSSNR.stk, sym=-1		461.093
+000004@individualSSNR.stk, sym=-1		541.105
+000005@individualSSNR.stk, sym=-1		691.689
+000006@individualSSNR.stk, sym=-1		505.997
+000007@individualSSNR.stk, sym=-1		684.732
+000008@individualSSNR.stk, sym=-1		712.881
+000009@individualSSNR.stk, sym=-1		524.291
+000010@individualSSNR.stk, sym=-1		681.519
+000011@individualSSNR.stk, sym=-1		501.911
+000012@individualSSNR.stk, sym=-1		662.342
+000013@individualSSNR.stk, sym=-1		489.282
+000014@individualSSNR.stk, sym=-1		497.07
+000015@individualSSNR.stk, sym=-1		635.787
+000016@individualSSNR.stk, sym=-1		539.433
+000017@individualSSNR.stk, sym=-1		654.019
+000018@individualSSNR.stk, sym=-1		643.847
+000019@individualSSNR.stk, sym=-1		508.26
+000020@individualSSNR.stk, sym=-1		509.085
+000021@individualSSNR.stk, sym=-1		663.958
+000022@individualSSNR.stk, sym=-1		664.879
+000023@individualSSNR.stk, sym=-1		505.466
+000024@individualSSNR.stk, sym=-1		655.65
+000025@individualSSNR.stk, sym=-1		498.309
+000026@individualSSNR.stk, sym=-1		666.441
+000027@individualSSNR.stk, sym=-1		486.501
+000028@individualSSNR.stk, sym=-1		669.092
+000029@individualSSNR.stk, sym=-1		500.44
+000030@individualSSNR.stk, sym=-1		656.635
+000031@individualSSNR.stk, sym=-1		525.36
+000032@individualSSNR.stk, sym=-1		669.705
+000033@individualSSNR.stk, sym=-1		535.605
+000034@individualSSNR.stk, sym=-1		686.236
+000035@individualSSNR.stk, sym=-1		512.951
+000036@individualSSNR.stk, sym=-1		682.819
+000037@individualSSNR.stk, sym=-1		523.404
+000038@individualSSNR.stk, sym=-1		674.82
+000039@individualSSNR.stk, sym=-1		514.221
+000040@individualSSNR.stk, sym=-1		679.812
+000041@individualSSNR.stk, sym=-1		530.909
+000042@individualSSNR.stk, sym=-1		537.284
+000043@individualSSNR.stk, sym=-1		671.186
+000044@individualSSNR.stk, sym=-1		536.639
+000045@individualSSNR.stk, sym=-1		687.507
+000046@individualSSNR.stk, sym=-1		663.614
+000047@individualSSNR.stk, sym=-1		534.504
+000048@individualSSNR.stk, sym=-1		676.165
+000049@individualSSNR.stk, sym=-1		548.258
+000050@individualSSNR.stk, sym=-1		549.94
+000051@individualSSNR.stk, sym=-1		690.575
+000052@individualSSNR.stk, sym=-1		551.46
+000053@individualSSNR.stk, sym=-1		713.166
+000054@individualSSNR.stk, sym=-1		567.687
+000055@individualSSNR.stk, sym=-1		698.661
+000056@individualSSNR.stk, sym=-1		695.898
+000057@individualSSNR.stk, sym=-1		573.044
+000058@individualSSNR.stk, sym=-1		709.633
+000059@individualSSNR.stk, sym=-1		584.968
+000060@individualSSNR.stk, sym=-1		581.481
+000061@individualSSNR.stk, sym=-1		717.341
+000062@individualSSNR.stk, sym=-1		574.297
+000063@individualSSNR.stk, sym=-1		685.959
+000064@individualSSNR.stk, sym=-1		691.56
+000065@individualSSNR.stk, sym=-1		571.943
+000066@individualSSNR.stk, sym=-1		591.779
+000067@individualSSNR.stk, sym=-1		674.502
+000068@individualSSNR.stk, sym=-1		565.464
+000069@individualSSNR.stk, sym=-1		661.807
+000070@individualSSNR.stk, sym=-1		556.959
+000071@individualSSNR.stk, sym=-1		685.139
+000072@individualSSNR.stk, sym=-1		552.97
+000073@individualSSNR.stk, sym=-1		666.903
+000074@individualSSNR.stk, sym=-1		671.314
+000075@individualSSNR.stk, sym=-1		579.02
+000076@individualSSNR.stk, sym=-1		574.527
+000077@individualSSNR.stk, sym=-1		674.088
+000078@individualSSNR.stk, sym=-1		686.299
+000079@individualSSNR.stk, sym=-1		602.661
+000080@individualSSNR.stk, sym=-1		678.372
+000081@individualSSNR.stk, sym=-1		628.045
+000082@individualSSNR.stk, sym=-1		634.085
+000083@individualSSNR.stk, sym=-1		720.89
+000084@individualSSNR.stk, sym=-1		638.811
+000085@individualSSNR.stk, sym=-1		718.011
+000086@individualSSNR.stk, sym=-1		731.994
+000087@individualSSNR.stk, sym=-1		684.003
+000088@individualSSNR.stk, sym=-1		697.691
+000089@individualSSNR.stk, sym=-1		711.373
+000090@individualSSNR.stk, sym=-1		725.009
+000091@individualSSNR.stk, sym=-1		686.517
+000092@individualSSNR.stk, sym=-1		697.92
+000093@individualSSNR.stk, sym=-1		687.411
+000094@individualSSNR.stk, sym=-1		700.677
+000095@individualSSNR.stk, sym=-1		688.119
+000096@individualSSNR.stk, sym=-1		695.761
+000097@individualSSNR.stk, sym=-1		692.301
+000098@individualSSNR.stk, sym=-1		700.604
+000099@individualSSNR.stk, sym=-1		690.749
+000100@individualSSNR.stk, sym=-1		690.812
+000101@individualSSNR.stk, sym=-1		682.206
+000102@individualSSNR.stk, sym=-1		687.311
+000103@individualSSNR.stk, sym=-1		701.513
+000104@individualSSNR.stk, sym=-1		673.178
+000105@individualSSNR.stk, sym=-1		670.056
+000106@individualSSNR.stk, sym=-1		647.145
+000107@individualSSNR.stk, sym=-1		677.579
+000108@individualSSNR.stk, sym=-1		657.861
+000109@individualSSNR.stk, sym=-1		649.363
+000110@individualSSNR.stk, sym=-1		622.572
+000111@individualSSNR.stk, sym=-1		638.234
+000112@individualSSNR.stk, sym=-1		582.528
+000113@individualSSNR.stk, sym=-1		649.28
+000114@individualSSNR.stk, sym=-1		584.571
+000115@individualSSNR.stk, sym=-1		644.336
+000116@individualSSNR.stk, sym=-1		588.46
+000117@individualSSNR.stk, sym=-1		659.187
+000118@individualSSNR.stk, sym=-1		648.36
+000119@individualSSNR.stk, sym=-1		610.739
+000120@individualSSNR.stk, sym=-1		677.75
+000121@individualSSNR.stk, sym=-1		611.616
+000122@individualSSNR.stk, sym=-1		599.479
+000123@individualSSNR.stk, sym=-1		687.576
+000124@individualSSNR.stk, sym=-1		603.673
+000125@individualSSNR.stk, sym=-1		695.852
+000126@individualSSNR.stk, sym=-1		690.561
+000127@individualSSNR.stk, sym=-1		580.145
+000128@individualSSNR.stk, sym=-1		702.55
+000129@individualSSNR.stk, sym=-1		580.51
+000130@individualSSNR.stk, sym=-1		583.748
+000131@individualSSNR.stk, sym=-1		710.398
+000132@individualSSNR.stk, sym=-1		707.129
+000133@individualSSNR.stk, sym=-1		564.248
+000134@individualSSNR.stk, sym=-1		546.504
+000135@individualSSNR.stk, sym=-1		719.738
+000136@individualSSNR.stk, sym=-1		547.17
+000137@individualSSNR.stk, sym=-1		720.339
+000138@individualSSNR.stk, sym=-1		719.261
+000139@individualSSNR.stk, sym=-1		519.273
+000140@individualSSNR.stk, sym=-1		542.773
+000141@individualSSNR.stk, sym=-1		726.979
+000142@individualSSNR.stk, sym=-1		562.546
+000143@individualSSNR.stk, sym=-1		740.325
+000144@individualSSNR.stk, sym=-1		723.376
+000145@individualSSNR.stk, sym=-1		554.781
+000146@individualSSNR.stk, sym=-1		556.84
+000147@individualSSNR.stk, sym=-1		709.073
+000148@individualSSNR.stk, sym=-1		522.934
+000149@individualSSNR.stk, sym=-1		700.956
+000150@individualSSNR.stk, sym=-1		700.268
+000151@individualSSNR.stk, sym=-1		509.946
+000152@individualSSNR.stk, sym=-1		523.346
+000153@individualSSNR.stk, sym=-1		708.808
+000154@individualSSNR.stk, sym=-1		508.045
+000155@individualSSNR.stk, sym=-1		715.236
+000156@individualSSNR.stk, sym=-1		531.585
+000157@individualSSNR.stk, sym=-1		709.97
+000158@individualSSNR.stk, sym=-1		526.707
+000159@individualSSNR.stk, sym=-1		694.997
+000160@individualSSNR.stk, sym=-1		715.284
+000161@individualSSNR.stk, sym=-1		520.961
+000162@individualSSNR.stk, sym=-1		726.648
+000163@individualSSNR.stk, sym=-1		521.542
+000164@individualSSNR.stk, sym=-1		522.883
+000165@individualSSNR.stk, sym=-1		726.011
+000166@individualSSNR.stk, sym=-1		506.674
+000167@individualSSNR.stk, sym=-1		693.204
+000168@individualSSNR.stk, sym=-1		694.613
+000169@individualSSNR.stk, sym=-1		534.359
+000170@individualSSNR.stk, sym=-1		490.397
+000171@individualSSNR.stk, sym=-1		671.047
+000172@individualSSNR.stk, sym=-1		493.235
+000173@individualSSNR.stk, sym=-1		707.544
+000174@individualSSNR.stk, sym=-1		676.38
+000175@individualSSNR.stk, sym=-1		496.337
+000176@individualSSNR.stk, sym=-1		534.595
+000177@individualSSNR.stk, sym=-1		727.827
+000178@individualSSNR.stk, sym=-1		536.003
+000179@individualSSNR.stk, sym=-1		696.82
+000180@individualSSNR.stk, sym=-1		712.07
+000181@individualSSNR.stk, sym=-1		555.59
+Finished - Iteration 1
+   Global mean squared error: 625.613
+000001@individualSSNR.stk, sym=-1		444.25
+000002@individualSSNR.stk, sym=-1		617.118
+000003@individualSSNR.stk, sym=-1		461.001
+000004@individualSSNR.stk, sym=-1		541.085
+000005@individualSSNR.stk, sym=-1		691.632
+000006@individualSSNR.stk, sym=-1		505.919
+000007@individualSSNR.stk, sym=-1		684.574
+000008@individualSSNR.stk, sym=-1		712.672
+000009@individualSSNR.stk, sym=-1		524.3
+000010@individualSSNR.stk, sym=-1		681.434
+000011@individualSSNR.stk, sym=-1		501.857
+000012@individualSSNR.stk, sym=-1		662.222
+000013@individualSSNR.stk, sym=-1		489.149
+000014@individualSSNR.stk, sym=-1		496.999
+000015@individualSSNR.stk, sym=-1		635.611
+000016@individualSSNR.stk, sym=-1		539.38
+000017@individualSSNR.stk, sym=-1		653.79
+000018@individualSSNR.stk, sym=-1		643.728
+000019@individualSSNR.stk, sym=-1		508.243
+000020@individualSSNR.stk, sym=-1		509.034
+000021@individualSSNR.stk, sym=-1		663.865
+000022@individualSSNR.stk, sym=-1		664.747
+000023@individualSSNR.stk, sym=-1		505.486
+000024@individualSSNR.stk, sym=-1		655.563
+000025@individualSSNR.stk, sym=-1		498.292
+000026@individualSSNR.stk, sym=-1		666.347
+000027@individualSSNR.stk, sym=-1		486.525
+000028@individualSSNR.stk, sym=-1		668.942
+000029@individualSSNR.stk, sym=-1		500.403
+000030@individualSSNR.stk, sym=-1		656.558
+000031@individualSSNR.stk, sym=-1		525.374
+000032@individualSSNR.stk, sym=-1		669.587
+000033@individualSSNR.stk, sym=-1		535.695
+000034@individualSSNR.stk, sym=-1		686.205
+000035@individualSSNR.stk, sym=-1		512.892
+000036@individualSSNR.stk, sym=-1		682.782
+000037@individualSSNR.stk, sym=-1		523.436
+000038@individualSSNR.stk, sym=-1		674.779
+000039@individualSSNR.stk, sym=-1		514.227
+000040@individualSSNR.stk, sym=-1		679.744
+000041@individualSSNR.stk, sym=-1		530.937
+000042@individualSSNR.stk, sym=-1		537.328
+000043@individualSSNR.stk, sym=-1		671.144
+000044@individualSSNR.stk, sym=-1		536.637
+000045@individualSSNR.stk, sym=-1		687.389
+000046@individualSSNR.stk, sym=-1		663.504
+000047@individualSSNR.stk, sym=-1		534.499
+000048@individualSSNR.stk, sym=-1		676.057
+000049@individualSSNR.stk, sym=-1		548.226
+000050@individualSSNR.stk, sym=-1		549.98
+000051@individualSSNR.stk, sym=-1		690.469
+000052@individualSSNR.stk, sym=-1		551.437
+000053@individualSSNR.stk, sym=-1		713.076
+000054@individualSSNR.stk, sym=-1		567.729
+000055@individualSSNR.stk, sym=-1		698.565
+000056@individualSSNR.stk, sym=-1		695.805
+000057@individualSSNR.stk, sym=-1		573.059
+000058@individualSSNR.stk, sym=-1		709.523
+000059@individualSSNR.stk, sym=-1		584.969
+000060@individualSSNR.stk, sym=-1		581.503
+000061@individualSSNR.stk, sym=-1		717.228
+000062@individualSSNR.stk, sym=-1		574.331
+000063@individualSSNR.stk, sym=-1		685.927
+000064@individualSSNR.stk, sym=-1		691.496
+000065@individualSSNR.stk, sym=-1		571.921
+000066@individualSSNR.stk, sym=-1		591.82
+000067@individualSSNR.stk, sym=-1		674.512
+000068@individualSSNR.stk, sym=-1		565.489
+000069@individualSSNR.stk, sym=-1		661.842
+000070@individualSSNR.stk, sym=-1		556.982
+000071@individualSSNR.stk, sym=-1		685.088
+000072@individualSSNR.stk, sym=-1		552.967
+000073@individualSSNR.stk, sym=-1		666.831
+000074@individualSSNR.stk, sym=-1		671.316
+000075@individualSSNR.stk, sym=-1		579.033
+000076@individualSSNR.stk, sym=-1		574.561
+000077@individualSSNR.stk, sym=-1		674.057
+000078@individualSSNR.stk, sym=-1		686.288
+000079@individualSSNR.stk, sym=-1		602.673
+000080@individualSSNR.stk, sym=-1		678.364
+000081@individualSSNR.stk, sym=-1		628.038
+000082@individualSSNR.stk, sym=-1		634.069
+000083@individualSSNR.stk, sym=-1		720.898
+000084@individualSSNR.stk, sym=-1		638.814
+000085@individualSSNR.stk, sym=-1		717.965
+000086@individualSSNR.stk, sym=-1		731.987
+000087@individualSSNR.stk, sym=-1		683.978
+000088@individualSSNR.stk, sym=-1		697.69
+000089@individualSSNR.stk, sym=-1		711.347
+000090@individualSSNR.stk, sym=-1		724.983
+000091@individualSSNR.stk, sym=-1		686.473
+000092@individualSSNR.stk, sym=-1		697.882
+000093@individualSSNR.stk, sym=-1		687.37
+000094@individualSSNR.stk, sym=-1		700.63
+000095@individualSSNR.stk, sym=-1		688.057
+000096@individualSSNR.stk, sym=-1		695.736
+000097@individualSSNR.stk, sym=-1		692.261
+000098@individualSSNR.stk, sym=-1		700.579
+000099@individualSSNR.stk, sym=-1		690.734
+000100@individualSSNR.stk, sym=-1		690.846
+000101@individualSSNR.stk, sym=-1		682.213
+000102@individualSSNR.stk, sym=-1		687.274
+000103@individualSSNR.stk, sym=-1		701.497
+000104@individualSSNR.stk, sym=-1		673.2
+000105@individualSSNR.stk, sym=-1		670.016
+000106@individualSSNR.stk, sym=-1		647.065
+000107@individualSSNR.stk, sym=-1		677.609
+000108@individualSSNR.stk, sym=-1		657.817
+000109@individualSSNR.stk, sym=-1		649.37
+000110@individualSSNR.stk, sym=-1		622.528
+000111@individualSSNR.stk, sym=-1		638.252
+000112@individualSSNR.stk, sym=-1		582.5
+000113@individualSSNR.stk, sym=-1		649.371
+000114@individualSSNR.stk, sym=-1		584.533
+000115@individualSSNR.stk, sym=-1		644.369
+000116@individualSSNR.stk, sym=-1		588.399
+000117@individualSSNR.stk, sym=-1		659.194
+000118@individualSSNR.stk, sym=-1		648.371
+000119@individualSSNR.stk, sym=-1		610.729
+000120@individualSSNR.stk, sym=-1		677.78
+000121@individualSSNR.stk, sym=-1		611.642
+000122@individualSSNR.stk, sym=-1		599.452
+000123@individualSSNR.stk, sym=-1		687.561
+000124@individualSSNR.stk, sym=-1		603.676
+000125@individualSSNR.stk, sym=-1		695.848
+000126@individualSSNR.stk, sym=-1		690.587
+000127@individualSSNR.stk, sym=-1		580.112
+000128@individualSSNR.stk, sym=-1		702.519
+000129@individualSSNR.stk, sym=-1		580.509
+000130@individualSSNR.stk, sym=-1		583.731
+000131@individualSSNR.stk, sym=-1		710.396
+000132@individualSSNR.stk, sym=-1		707.159
+000133@individualSSNR.stk, sym=-1		564.217
+000134@individualSSNR.stk, sym=-1		546.496
+000135@individualSSNR.stk, sym=-1		719.734
+000136@individualSSNR.stk, sym=-1		547.175
+000137@individualSSNR.stk, sym=-1		720.381
+000138@individualSSNR.stk, sym=-1		719.25
+000139@individualSSNR.stk, sym=-1		519.29
+000140@individualSSNR.stk, sym=-1		542.781
+000141@individualSSNR.stk, sym=-1		726.985
+000142@individualSSNR.stk, sym=-1		562.508
+000143@individualSSNR.stk, sym=-1		740.338
+000144@individualSSNR.stk, sym=-1		723.408
+000145@individualSSNR.stk, sym=-1		554.748
+000146@individualSSNR.stk, sym=-1		556.815
+000147@individualSSNR.stk, sym=-1		709.08
+000148@individualSSNR.stk, sym=-1		522.91
+000149@individualSSNR.stk, sym=-1		700.931
+000150@individualSSNR.stk, sym=-1		700.231
+000151@individualSSNR.stk, sym=-1		509.934
+000152@individualSSNR.stk, sym=-1		523.334
+000153@individualSSNR.stk, sym=-1		708.8
+000154@individualSSNR.stk, sym=-1		508.037
+000155@individualSSNR.stk, sym=-1		715.262
+000156@individualSSNR.stk, sym=-1		531.584
+000157@individualSSNR.stk, sym=-1		709.992
+000158@individualSSNR.stk, sym=-1		526.702
+000159@individualSSNR.stk, sym=-1		694.979
+000160@individualSSNR.stk, sym=-1		715.27
+000161@individualSSNR.stk, sym=-1		520.949
+000162@individualSSNR.stk, sym=-1		726.636
+000163@individualSSNR.stk, sym=-1		521.508
+000164@individualSSNR.stk, sym=-1		522.859
+000165@individualSSNR.stk, sym=-1		725.983
+000166@individualSSNR.stk, sym=-1		506.675
+000167@individualSSNR.stk, sym=-1		693.191
+000168@individualSSNR.stk, sym=-1		694.593
+000169@individualSSNR.stk, sym=-1		534.319
+000170@individualSSNR.stk, sym=-1		490.363
+000171@individualSSNR.stk, sym=-1		671.017
+000172@individualSSNR.stk, sym=-1		493.2
+000173@individualSSNR.stk, sym=-1		707.536
+000174@individualSSNR.stk, sym=-1		676.346
+000175@individualSSNR.stk, sym=-1		496.334
+000176@individualSSNR.stk, sym=-1		534.584
+000177@individualSSNR.stk, sym=-1		727.814
+000178@individualSSNR.stk, sym=-1		535.995
+000179@individualSSNR.stk, sym=-1		696.801
+000180@individualSSNR.stk, sym=-1		712.037
+000181@individualSSNR.stk, sym=-1		555.58
+Finished - Iteration 2
+   Global mean squared error: 625.586
+000001@individualSSNR.stk, sym=-1		444.25
+000002@individualSSNR.stk, sym=-1		617.085
+000003@individualSSNR.stk, sym=-1		460.993
+000004@individualSSNR.stk, sym=-1		541.09
+000005@individualSSNR.stk, sym=-1		691.624
+000006@individualSSNR.stk, sym=-1		505.915
+000007@individualSSNR.stk, sym=-1		684.542
+000008@individualSSNR.stk, sym=-1		712.634
+000009@individualSSNR.stk, sym=-1		524.299
+000010@individualSSNR.stk, sym=-1		681.409
+000011@individualSSNR.stk, sym=-1		501.834
+000012@individualSSNR.stk, sym=-1		662.201
+000013@individualSSNR.stk, sym=-1		489.12
+000014@individualSSNR.stk, sym=-1		496.986
+000015@individualSSNR.stk, sym=-1		635.576
+000016@individualSSNR.stk, sym=-1		539.373
+000017@individualSSNR.stk, sym=-1		653.752
+000018@individualSSNR.stk, sym=-1		643.715
+000019@individualSSNR.stk, sym=-1		508.236
+000020@individualSSNR.stk, sym=-1		509.033
+000021@individualSSNR.stk, sym=-1		663.847
+000022@individualSSNR.stk, sym=-1		664.714
+000023@individualSSNR.stk, sym=-1		505.488
+000024@individualSSNR.stk, sym=-1		655.548
+000025@individualSSNR.stk, sym=-1		498.292
+000026@individualSSNR.stk, sym=-1		666.325
+000027@individualSSNR.stk, sym=-1		486.536
+000028@individualSSNR.stk, sym=-1		668.914
+000029@individualSSNR.stk, sym=-1		500.407
+000030@individualSSNR.stk, sym=-1		656.538
+000031@individualSSNR.stk, sym=-1		525.375
+000032@individualSSNR.stk, sym=-1		669.552
+000033@individualSSNR.stk, sym=-1		535.71
+000034@individualSSNR.stk, sym=-1		686.199
+000035@individualSSNR.stk, sym=-1		512.872
+000036@individualSSNR.stk, sym=-1		682.774
+000037@individualSSNR.stk, sym=-1		523.438
+000038@individualSSNR.stk, sym=-1		674.77
+000039@individualSSNR.stk, sym=-1		514.223
+000040@individualSSNR.stk, sym=-1		679.741
+000041@individualSSNR.stk, sym=-1		530.925
+000042@individualSSNR.stk, sym=-1		537.334
+000043@individualSSNR.stk, sym=-1		671.15
+000044@individualSSNR.stk, sym=-1		536.631
+000045@individualSSNR.stk, sym=-1		687.37
+000046@individualSSNR.stk, sym=-1		663.481
+000047@individualSSNR.stk, sym=-1		534.496
+000048@individualSSNR.stk, sym=-1		676.037
+000049@individualSSNR.stk, sym=-1		548.215
+000050@individualSSNR.stk, sym=-1		549.991
+000051@individualSSNR.stk, sym=-1		690.452
+000052@individualSSNR.stk, sym=-1		551.429
+000053@individualSSNR.stk, sym=-1		713.06
+000054@individualSSNR.stk, sym=-1		567.732
+000055@individualSSNR.stk, sym=-1		698.557
+000056@individualSSNR.stk, sym=-1		695.789
+000057@individualSSNR.stk, sym=-1		573.053
+000058@individualSSNR.stk, sym=-1		709.499
+000059@individualSSNR.stk, sym=-1		584.96
+000060@individualSSNR.stk, sym=-1		581.514
+000061@individualSSNR.stk, sym=-1		717.205
+000062@individualSSNR.stk, sym=-1		574.34
+000063@individualSSNR.stk, sym=-1		685.925
+000064@individualSSNR.stk, sym=-1		691.472
+000065@individualSSNR.stk, sym=-1		571.917
+000066@individualSSNR.stk, sym=-1		591.833
+000067@individualSSNR.stk, sym=-1		674.5
+000068@individualSSNR.stk, sym=-1		565.483
+000069@individualSSNR.stk, sym=-1		661.851
+000070@individualSSNR.stk, sym=-1		556.976
+000071@individualSSNR.stk, sym=-1		685.078
+000072@individualSSNR.stk, sym=-1		552.966
+000073@individualSSNR.stk, sym=-1		666.824
+000074@individualSSNR.stk, sym=-1		671.32
+000075@individualSSNR.stk, sym=-1		579.035
+000076@individualSSNR.stk, sym=-1		574.567
+000077@individualSSNR.stk, sym=-1		674.049
+000078@individualSSNR.stk, sym=-1		686.278
+000079@individualSSNR.stk, sym=-1		602.674
+000080@individualSSNR.stk, sym=-1		678.369
+000081@individualSSNR.stk, sym=-1		628.039
+000082@individualSSNR.stk, sym=-1		634.064
+000083@individualSSNR.stk, sym=-1		720.899
+000084@individualSSNR.stk, sym=-1		638.823
+000085@individualSSNR.stk, sym=-1		717.958
+000086@individualSSNR.stk, sym=-1		731.986
+000087@individualSSNR.stk, sym=-1		683.974
+000088@individualSSNR.stk, sym=-1		697.693
+000089@individualSSNR.stk, sym=-1		711.345
+000090@individualSSNR.stk, sym=-1		724.986
+000091@individualSSNR.stk, sym=-1		686.457
+000092@individualSSNR.stk, sym=-1		697.875
+000093@individualSSNR.stk, sym=-1		687.347
+000094@individualSSNR.stk, sym=-1		700.618
+000095@individualSSNR.stk, sym=-1		688.034
+000096@individualSSNR.stk, sym=-1		695.728
+000097@individualSSNR.stk, sym=-1		692.255
+000098@individualSSNR.stk, sym=-1		700.571
+000099@individualSSNR.stk, sym=-1		690.723
+000100@individualSSNR.stk, sym=-1		690.854
+000101@individualSSNR.stk, sym=-1		682.217
+000102@individualSSNR.stk, sym=-1		687.264
+000103@individualSSNR.stk, sym=-1		701.493
+000104@individualSSNR.stk, sym=-1		673.209
+000105@individualSSNR.stk, sym=-1		670.007
+000106@individualSSNR.stk, sym=-1		647.046
+000107@individualSSNR.stk, sym=-1		677.624
+000108@individualSSNR.stk, sym=-1		657.808
+000109@individualSSNR.stk, sym=-1		649.377
+000110@individualSSNR.stk, sym=-1		622.517
+000111@individualSSNR.stk, sym=-1		638.265
+000112@individualSSNR.stk, sym=-1		582.494
+000113@individualSSNR.stk, sym=-1		649.4
+000114@individualSSNR.stk, sym=-1		584.524
+000115@individualSSNR.stk, sym=-1		644.376
+000116@individualSSNR.stk, sym=-1		588.381
+000117@individualSSNR.stk, sym=-1		659.185
+000118@individualSSNR.stk, sym=-1		648.366
+000119@individualSSNR.stk, sym=-1		610.73
+000120@individualSSNR.stk, sym=-1		677.781
+000121@individualSSNR.stk, sym=-1		611.658
+000122@individualSSNR.stk, sym=-1		599.443
+000123@individualSSNR.stk, sym=-1		687.554
+000124@individualSSNR.stk, sym=-1		603.674
+000125@individualSSNR.stk, sym=-1		695.844
+000126@individualSSNR.stk, sym=-1		690.599
+000127@individualSSNR.stk, sym=-1		580.105
+000128@individualSSNR.stk, sym=-1		702.502
+000129@individualSSNR.stk, sym=-1		580.505
+000130@individualSSNR.stk, sym=-1		583.723
+000131@individualSSNR.stk, sym=-1		710.377
+000132@individualSSNR.stk, sym=-1		707.157
+000133@individualSSNR.stk, sym=-1		564.2
+000134@individualSSNR.stk, sym=-1		546.485
+000135@individualSSNR.stk, sym=-1		719.724
+000136@individualSSNR.stk, sym=-1		547.176
+000137@individualSSNR.stk, sym=-1		720.393
+000138@individualSSNR.stk, sym=-1		719.241
+000139@individualSSNR.stk, sym=-1		519.293
+000140@individualSSNR.stk, sym=-1		542.781
+000141@individualSSNR.stk, sym=-1		726.982
+000142@individualSSNR.stk, sym=-1		562.489
+000143@individualSSNR.stk, sym=-1		740.338
+000144@individualSSNR.stk, sym=-1		723.425
+000145@individualSSNR.stk, sym=-1		554.736
+000146@individualSSNR.stk, sym=-1		556.799
+000147@individualSSNR.stk, sym=-1		709.087
+000148@individualSSNR.stk, sym=-1		522.894
+000149@individualSSNR.stk, sym=-1		700.921
+000150@individualSSNR.stk, sym=-1		700.217
+000151@individualSSNR.stk, sym=-1		509.919
+000152@individualSSNR.stk, sym=-1		523.326
+000153@individualSSNR.stk, sym=-1		708.794
+000154@individualSSNR.stk, sym=-1		508.03
+000155@individualSSNR.stk, sym=-1		715.269
+000156@individualSSNR.stk, sym=-1		531.581
+000157@individualSSNR.stk, sym=-1		709.998
+000158@individualSSNR.stk, sym=-1		526.704
+000159@individualSSNR.stk, sym=-1		694.964
+000160@individualSSNR.stk, sym=-1		715.26
+000161@individualSSNR.stk, sym=-1		520.942
+000162@individualSSNR.stk, sym=-1		726.627
+000163@individualSSNR.stk, sym=-1		521.484
+000164@individualSSNR.stk, sym=-1		522.85
+000165@individualSSNR.stk, sym=-1		725.972
+000166@individualSSNR.stk, sym=-1		506.669
+000167@individualSSNR.stk, sym=-1		693.19
+000168@individualSSNR.stk, sym=-1		694.587
+000169@individualSSNR.stk, sym=-1		534.301
+000170@individualSSNR.stk, sym=-1		490.35
+000171@individualSSNR.stk, sym=-1		671.008
+000172@individualSSNR.stk, sym=-1		493.184
+000173@individualSSNR.stk, sym=-1		707.536
+000174@individualSSNR.stk, sym=-1		676.335
+000175@individualSSNR.stk, sym=-1		496.329
+000176@individualSSNR.stk, sym=-1		534.58
+000177@individualSSNR.stk, sym=-1		727.813
+000178@individualSSNR.stk, sym=-1		535.991
+000179@individualSSNR.stk, sym=-1		696.793
+000180@individualSSNR.stk, sym=-1		712.021
+000181@individualSSNR.stk, sym=-1		555.573
+Finished - Iteration 3
+   Global mean squared error: 625.579
+000001@individualSSNR.stk, sym=-1		444.255
+000002@individualSSNR.stk, sym=-1		617.07
+000003@individualSSNR.stk, sym=-1		460.994
+000004@individualSSNR.stk, sym=-1		541.094
+000005@individualSSNR.stk, sym=-1		691.621
+000006@individualSSNR.stk, sym=-1		505.921
+000007@individualSSNR.stk, sym=-1		684.531
+000008@individualSSNR.stk, sym=-1		712.624
+000009@individualSSNR.stk, sym=-1		524.293
+000010@individualSSNR.stk, sym=-1		681.395
+000011@individualSSNR.stk, sym=-1		501.818
+000012@individualSSNR.stk, sym=-1		662.195
+000013@individualSSNR.stk, sym=-1		489.109
+000014@individualSSNR.stk, sym=-1		496.98
+000015@individualSSNR.stk, sym=-1		635.566
+000016@individualSSNR.stk, sym=-1		539.371
+000017@individualSSNR.stk, sym=-1		653.746
+000018@individualSSNR.stk, sym=-1		643.717
+000019@individualSSNR.stk, sym=-1		508.229
+000020@individualSSNR.stk, sym=-1		509.035
+000021@individualSSNR.stk, sym=-1		663.841
+000022@individualSSNR.stk, sym=-1		664.699
+000023@individualSSNR.stk, sym=-1		505.484
+000024@individualSSNR.stk, sym=-1		655.545
+000025@individualSSNR.stk, sym=-1		498.292
+000026@individualSSNR.stk, sym=-1		666.315
+000027@individualSSNR.stk, sym=-1		486.54
+000028@individualSSNR.stk, sym=-1		668.908
+000029@individualSSNR.stk, sym=-1		500.413
+000030@individualSSNR.stk, sym=-1		656.529
+000031@individualSSNR.stk, sym=-1		525.372
+000032@individualSSNR.stk, sym=-1		669.534
+000033@individualSSNR.stk, sym=-1		535.709
+000034@individualSSNR.stk, sym=-1		686.195
+000035@individualSSNR.stk, sym=-1		512.86
+000036@individualSSNR.stk, sym=-1		682.769
+000037@individualSSNR.stk, sym=-1		523.433
+000038@individualSSNR.stk, sym=-1		674.766
+000039@individualSSNR.stk, sym=-1		514.218
+000040@individualSSNR.stk, sym=-1		679.744
+000041@individualSSNR.stk, sym=-1		530.909
+000042@individualSSNR.stk, sym=-1		537.332
+000043@individualSSNR.stk, sym=-1		671.159
+000044@individualSSNR.stk, sym=-1		536.623
+000045@individualSSNR.stk, sym=-1		687.366
+000046@individualSSNR.stk, sym=-1		663.475
+000047@individualSSNR.stk, sym=-1		534.493
+000048@individualSSNR.stk, sym=-1		676.032
+000049@individualSSNR.stk, sym=-1		548.209
+000050@individualSSNR.stk, sym=-1		549.995
+000051@individualSSNR.stk, sym=-1		690.45
+000052@individualSSNR.stk, sym=-1		551.425
+000053@individualSSNR.stk, sym=-1		713.056
+000054@individualSSNR.stk, sym=-1		567.728
+000055@individualSSNR.stk, sym=-1		698.562
+000056@individualSSNR.stk, sym=-1		695.787
+000057@individualSSNR.stk, sym=-1		573.044
+000058@individualSSNR.stk, sym=-1		709.492
+000059@individualSSNR.stk, sym=-1		584.951
+000060@individualSSNR.stk, sym=-1		581.52
+000061@individualSSNR.stk, sym=-1		717.198
+000062@individualSSNR.stk, sym=-1		574.342
+000063@individualSSNR.stk, sym=-1		685.927
+000064@individualSSNR.stk, sym=-1		691.458
+000065@individualSSNR.stk, sym=-1		571.915
+000066@individualSSNR.stk, sym=-1		591.84
+000067@individualSSNR.stk, sym=-1		674.487
+000068@individualSSNR.stk, sym=-1		565.473
+000069@individualSSNR.stk, sym=-1		661.854
+000070@individualSSNR.stk, sym=-1		556.967
+000071@individualSSNR.stk, sym=-1		685.075
+000072@individualSSNR.stk, sym=-1		552.966
+000073@individualSSNR.stk, sym=-1		666.826
+000074@individualSSNR.stk, sym=-1		671.322
+000075@individualSSNR.stk, sym=-1		579.034
+000076@individualSSNR.stk, sym=-1		574.566
+000077@individualSSNR.stk, sym=-1		674.045
+000078@individualSSNR.stk, sym=-1		686.269
+000079@individualSSNR.stk, sym=-1		602.672
+000080@individualSSNR.stk, sym=-1		678.373
+000081@individualSSNR.stk, sym=-1		628.041
+000082@individualSSNR.stk, sym=-1		634.06
+000083@individualSSNR.stk, sym=-1		720.898
+000084@individualSSNR.stk, sym=-1		638.83
+000085@individualSSNR.stk, sym=-1		717.958
+000086@individualSSNR.stk, sym=-1		731.987
+000087@individualSSNR.stk, sym=-1		683.972
+000088@individualSSNR.stk, sym=-1		697.695
+000089@individualSSNR.stk, sym=-1		711.346
+000090@individualSSNR.stk, sym=-1		724.993
+000091@individualSSNR.stk, sym=-1		686.449
+000092@individualSSNR.stk, sym=-1		697.873
+000093@individualSSNR.stk, sym=-1		687.33
+000094@individualSSNR.stk, sym=-1		700.615
+000095@individualSSNR.stk, sym=-1		688.021
+000096@individualSSNR.stk, sym=-1		695.724
+000097@individualSSNR.stk, sym=-1		692.255
+000098@individualSSNR.stk, sym=-1		700.567
+000099@individualSSNR.stk, sym=-1		690.715
+000100@individualSSNR.stk, sym=-1		690.857
+000101@individualSSNR.stk, sym=-1		682.219
+000102@individualSSNR.stk, sym=-1		687.26
+000103@individualSSNR.stk, sym=-1		701.491
+000104@individualSSNR.stk, sym=-1		673.215
+000105@individualSSNR.stk, sym=-1		670.004
+000106@individualSSNR.stk, sym=-1		647.039
+000107@individualSSNR.stk, sym=-1		677.634
+000108@individualSSNR.stk, sym=-1		657.806
+000109@individualSSNR.stk, sym=-1		649.382
+000110@individualSSNR.stk, sym=-1		622.513
+000111@individualSSNR.stk, sym=-1		638.274
+000112@individualSSNR.stk, sym=-1		582.492
+000113@individualSSNR.stk, sym=-1		649.415
+000114@individualSSNR.stk, sym=-1		584.522
+000115@individualSSNR.stk, sym=-1		644.379
+000116@individualSSNR.stk, sym=-1		588.372
+000117@individualSSNR.stk, sym=-1		659.176
+000118@individualSSNR.stk, sym=-1		648.359
+000119@individualSSNR.stk, sym=-1		610.732
+000120@individualSSNR.stk, sym=-1		677.777
+000121@individualSSNR.stk, sym=-1		611.67
+000122@individualSSNR.stk, sym=-1		599.439
+000123@individualSSNR.stk, sym=-1		687.549
+000124@individualSSNR.stk, sym=-1		603.672
+000125@individualSSNR.stk, sym=-1		695.841
+000126@individualSSNR.stk, sym=-1		690.608
+000127@individualSSNR.stk, sym=-1		580.104
+000128@individualSSNR.stk, sym=-1		702.49
+000129@individualSSNR.stk, sym=-1		580.502
+000130@individualSSNR.stk, sym=-1		583.717
+000131@individualSSNR.stk, sym=-1		710.359
+000132@individualSSNR.stk, sym=-1		707.151
+000133@individualSSNR.stk, sym=-1		564.187
+000134@individualSSNR.stk, sym=-1		546.477
+000135@individualSSNR.stk, sym=-1		719.716
+000136@individualSSNR.stk, sym=-1		547.177
+000137@individualSSNR.stk, sym=-1		720.398
+000138@individualSSNR.stk, sym=-1		719.234
+000139@individualSSNR.stk, sym=-1		519.293
+000140@individualSSNR.stk, sym=-1		542.781
+000141@individualSSNR.stk, sym=-1		726.979
+000142@individualSSNR.stk, sym=-1		562.476
+000143@individualSSNR.stk, sym=-1		740.336
+000144@individualSSNR.stk, sym=-1		723.436
+000145@individualSSNR.stk, sym=-1		554.73
+000146@individualSSNR.stk, sym=-1		556.788
+000147@individualSSNR.stk, sym=-1		709.091
+000148@individualSSNR.stk, sym=-1		522.882
+000149@individualSSNR.stk, sym=-1		700.916
+000150@individualSSNR.stk, sym=-1		700.21
+000151@individualSSNR.stk, sym=-1		509.907
+000152@individualSSNR.stk, sym=-1		523.32
+000153@individualSSNR.stk, sym=-1		708.79
+000154@individualSSNR.stk, sym=-1		508.025
+000155@individualSSNR.stk, sym=-1		715.273
+000156@individualSSNR.stk, sym=-1		531.579
+000157@individualSSNR.stk, sym=-1		710.001
+000158@individualSSNR.stk, sym=-1		526.707
+000159@individualSSNR.stk, sym=-1		694.953
+000160@individualSSNR.stk, sym=-1		715.252
+000161@individualSSNR.stk, sym=-1		520.937
+000162@individualSSNR.stk, sym=-1		726.619
+000163@individualSSNR.stk, sym=-1		521.466
+000164@individualSSNR.stk, sym=-1		522.846
+000165@individualSSNR.stk, sym=-1		725.965
+000166@individualSSNR.stk, sym=-1		506.663
+000167@individualSSNR.stk, sym=-1		693.192
+000168@individualSSNR.stk, sym=-1		694.584
+000169@individualSSNR.stk, sym=-1		534.29
+000170@individualSSNR.stk, sym=-1		490.344
+000171@individualSSNR.stk, sym=-1		671.004
+000172@individualSSNR.stk, sym=-1		493.173
+000173@individualSSNR.stk, sym=-1		707.537
+000174@individualSSNR.stk, sym=-1		676.329
+000175@individualSSNR.stk, sym=-1		496.325
+000176@individualSSNR.stk, sym=-1		534.577
+000177@individualSSNR.stk, sym=-1		727.813
+000178@individualSSNR.stk, sym=-1		535.989
+000179@individualSSNR.stk, sym=-1		696.789
+000180@individualSSNR.stk, sym=-1		712.01
+000181@individualSSNR.stk, sym=-1		555.567
+Finished - Iteration 4
+   Global mean squared error: 625.576

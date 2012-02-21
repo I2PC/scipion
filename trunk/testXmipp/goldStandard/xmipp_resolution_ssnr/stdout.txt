@@ -1,0 +1,48 @@
+Signal Volume:     input/Bacteriorhodopsin_rec_art.vol
+Noise  Volume:     input/rec_art_noise.vol
+Signal selfile:    input/rec_art_signal_proj.sel
+Noise  selfile:    input/rec_art_noise_proj.sel
+Volumetric SSNR:   tmpLink/xmipp_resolution_ssnr/Bacteriorhodopsin_VSSNR.vol
+Output images:     tmpLink/xmipp_resolution_ssnr/Bacteriorhodopsin_SSNR.txt
+Ring width:        4
+Sampling rate:     1
+Generate VSSNR:    1
+Radial average:    0
+ =====================================================================
+ ART reconstruction method 
+ =====================================================================
+ Projections file             : individualSSNR.xmd
+ Output rootname              : tmpLink/xmipp_resolution_ssnr/Bacteriorhodopsin_VSSNR
+ Iterations                   : 5
+ Lambda                       : 0.1
+
+ More info in the history file: tmpLink/xmipp_resolution_ssnr/Bacteriorhodopsin_VSSNR.hist
+ ---------------------------------------------------------------------
+
+Reading angle information ...
+Sorting projections ...
+
+ ---------------------------------------------------------------------
+ Projections                  : 181
+ ---------------------------------------------------------------------
+Running iteration 0 with lambda= 0.1
+
+   Global mean squared error: 627.019
+Running iteration 1 with lambda= 0.1
+
+   Global mean squared error: 625.613
+Running iteration 2 with lambda= 0.1
+
+   Global mean squared error: 625.586
+Running iteration 3 with lambda= 0.1
+
+   Global mean squared error: 625.579
+Running iteration 4 with lambda= 0.1
+
+   Global mean squared error: 625.576
+
+Time of 5 iterations: 
+Elapsed time: User(40.14) System(0.02)
+INIT_TIME: 0.030926
+PROCESS_TIME: 40.1857
+FINISH_TIME: 0.254516
