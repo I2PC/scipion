@@ -1,4 +1,6 @@
 #!/usr/bin/env xmipp_python
+#cat Test/particlePicking.xmd | ./batch_emx_coordinates.py
+#cat Test/particlePicking.emx | ./batch_emx_coordinates.py
 import CifFile
 from protlib_emx import *
 class convertParticlePickingClass:    
