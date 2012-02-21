@@ -140,7 +140,6 @@ class ProtProjMatch(XmippProtocol):
         
         if doPlot('DisplayReference'):
             
-            iterations = getListFromVector(self.DisplayIterationsNo)
             ref3Ds = getListFromVector(self.DisplayRef3DNo)
             VisualizationReferenceFileNames = [None] + getListFromVector(self.ReferenceFileNames)
             print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
@@ -192,7 +191,22 @@ class ProtProjMatch(XmippProtocol):
             return
             
         if doPlot('DisplayDiscardedImages'):
-            return
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            
+            MD = MetaData()
+            for it in iterations:
+                file_name = self.getFilename('OutClassesDiscarded', iter=int(it))
+                print 'it: ',it, ' | file_name:',file_name
+                if exists(file_name):
+                    MD.read(file_name)
+                    if MD.size()==0:
+                        print "Empty metadata: ", file_name
+                    else:
+                        try:
+                            runShowJ(file_name, "512m", "--mode metadata --render")
+                        except Exception, e:
+                            from protlib_gui_ext import showError
+                            showError("Error launching java app", str(e))
             
         if doPlot('DisplayAngularDistribution'):
             return
