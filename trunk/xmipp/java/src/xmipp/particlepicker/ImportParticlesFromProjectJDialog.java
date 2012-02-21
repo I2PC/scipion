@@ -183,7 +183,6 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 			break;
 
 		}
-		JOptionPane.showMessageDialog(ImportParticlesFromProjectJDialog.this, "Import successful");
 
 	}
 }

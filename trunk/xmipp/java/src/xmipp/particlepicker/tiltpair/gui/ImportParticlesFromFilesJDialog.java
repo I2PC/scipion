@@ -211,7 +211,6 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 			break;
 
 		}
-		JOptionPane.showMessageDialog(ImportParticlesFromFilesJDialog.this, "Import successful");
 
 	}
 }

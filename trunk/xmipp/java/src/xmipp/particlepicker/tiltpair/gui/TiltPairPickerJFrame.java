@@ -150,12 +150,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		helpmn.add(hcontentsmi);
 	}
 
-	protected void importParticlesXmipp30(String path)
-	{
-		super.importParticlesXmipp30(path);
-		untiltedmic.initAligner();
-		tiltedcanvas.repaint();
-	}
+
 
 
 	private void initParticlesPane()
@@ -411,9 +406,17 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		
 	}
 	
+	protected void importParticlesXmipp30(String path)
+	{
+		super.importParticlesXmipp30(path);
+		untiltedmic.initAligner();
+		tiltedcanvas.repaint();
+	}
+	
 	public void importParticlesFromXmipp24Files(String ufile, String tfile)
 	{
 		getParticlePicker().importParticlesFromXmipp24Files(untiltedmic, ufile, tfile, true);
+		untiltedmic.initAligner();
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();
