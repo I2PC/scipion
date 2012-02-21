@@ -17,8 +17,13 @@ class convertParticlePickingClass(emxBase):
     
     def __init__(self):
 
+    
         self.command_line_options()
         emx2xmipp=self.checkVersion()
+        #next two lines should go after checkVersion
+        self.inMetadata     = CifFile.CifFile(self.inputFileName)
+        self.outMetadata    = CifFile.CifFile()
+
         if emx2xmipp:
             self.convertAllBlocksEMX2XMIPP()
             self.saveFileEMX2XMIPP()
@@ -69,5 +74,9 @@ class convertParticlePickingClass(emxBase):
               [[loopitems[self.needed_itemsXMIPP[0]],loopitems[self.needed_itemsXMIPP[1]]]]))
         
 if __name__ == '__main__':
-
+    
+#    fin = open("/dev/stdin", "r",0)
+#    firstLine = fin.readline()
+#    print "filename first line", "/dev/stdin", firstLine
+#    exit(0)
     convertParticlePickingClass()
