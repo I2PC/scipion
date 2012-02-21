@@ -2,8 +2,9 @@
 #cat Test/particlePicking.xmd | ./batch_emx_coordinates.py
 #cat Test/particlePicking.emx | ./batch_emx_coordinates.py
 import CifFile
-from protlib_emx import *
-class convertParticlePickingClass:    
+from protlib_emx import emxBase
+
+class convertParticlePickingClass(emxBase):    
     needed_itemsXMIPP =  (
           "_Xcoor",
           "_Ycoor"
@@ -14,20 +15,16 @@ class convertParticlePickingClass:
           )
 
     
-    def __init__(self,
-                inputFileName, outputFileName):
+    def __init__(self):
 
-        self.inputFileName  = inputFileName
-        self.outputFileName = outputFileName
-        emx2xmipp=checkVersion(self.inputFileName)
-        self.inMetadata     = CifFile.CifFile(self.inputFileName)
-        self.outMetadata    = CifFile.CifFile()
+        self.command_line_options()
+        emx2xmipp=self.checkVersion()
         if emx2xmipp:
             self.convertAllBlocksEMX2XMIPP()
+            self.saveFileEMX2XMIPP()
         else:
             self.convertAllBlocksXMIPP2EMX()
-        self.saveFile()
-                     
+            self.saveFileXMIPP2EMX()                     
     def convertAllBlocksEMX2XMIPP(self):
         """loop over the blocks and write them"""
         for blockName in self.inMetadata.keys():
@@ -70,20 +67,7 @@ class convertParticlePickingClass:
         loopitems = self.inMetadata[micrographName].GetLoop((self.needed_itemsXMIPP[0]))  #get item names and values
         self.cbOut.AddCifItem(([self.needed_itemsEMX],\
               [[loopitems[self.needed_itemsXMIPP[0]],loopitems[self.needed_itemsXMIPP[1]]]]))
-
-    def saveFile(self):
-        comment  =   "# XMIPP_STAR_1 *"
-        comment += "\n##########################################################################"         
-        comment +=  "\n#  Converted from " + emxVersion + " to " + xmippStartVersion
-        comment +=  "\n#  Inputfile: " + self.inputFileName
-        comment += "\n##########################################################################" 
-        outfile = open(self.outputFileName,"w")
-        outfile.write(self.outMetadata.WriteOut(comment=comment,_email=contactMail))
-        
-
         
 if __name__ == '__main__':
 
-    
-    inputFileName,outputFileName  = command_line_options()
-    instance = convertParticlePickingClass(inputFileName,outputFileName)
+    convertParticlePickingClass()
