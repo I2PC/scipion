@@ -135,7 +135,8 @@ VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.1.0
 VPIL=Imaging-1.1.7
 PYMPI=mpi4py-1.2.2
-
+#read star files
+PYCIFRW=PyCifRW-3.3
 ################# HELPER FUNCTIONS ##################
 TIMESTAMP=""
 
@@ -374,6 +375,7 @@ if $DO_PYTHON; then
 	fi
     #compile_pymodule $PYMPI
     #compile_pymodule $VPIL
+    compile_pymodule $PYCIFRW
 fi
 
 #################### ARPACK ###########################
