@@ -332,6 +332,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
     env['prepend'] = env['prepend'] + '_'
 
     dp = False #debug or profile?
+    dpFlags = ""
     if int(env['profile']):
         dp = True
         dpFlags = ['-g', '-pg']
