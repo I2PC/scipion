@@ -171,7 +171,19 @@ class ProtProjMatch(XmippProtocol):
                             showError("Error launching java app", str(e))
                             
         if doPlot('DisplayFilteredReconstruction'):
-            return
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            ref3Ds = getListFromVector(self.DisplayRef3DNo)
+            
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    file_name = self.getFilename('ReconstructedFilteredFileNamesIters', iter=int(it), ref=int(ref3d))
+                    print 'it: ',it, ' | file_name:',file_name
+                    if exists(file_name):
+                        try:
+                            runShowJ(file_name)
+                        except Exception, e:
+                            from protlib_gui_ext import showError
+                            showError("Error launching java app", str(e))
                 
         if doPlot('DisplayBFactorCorrectedVolume'):
             return
