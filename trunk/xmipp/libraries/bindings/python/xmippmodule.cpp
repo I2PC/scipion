@@ -1010,7 +1010,7 @@ Program_addUsageLine(PyObject *obj, PyObject *args, PyObject *kwargs)
                     Py_RETURN_NONE;
                 }
                 else
-                    PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
+                    PyErr_SetString(PyExc_TypeError, "Program::addUsageLine: Expecting boolean value");
             }
             catch (XmippError &xe)
             {
@@ -1040,7 +1040,7 @@ Program_addExampleLine(PyObject *obj, PyObject *args, PyObject *kwargs)
                     Py_RETURN_NONE;
                 }
                 else
-                    PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
+                    PyErr_SetString(PyExc_TypeError, "Program::addExampleLine: Expecting boolean value");
             }
             catch (XmippError &xe)
             {
