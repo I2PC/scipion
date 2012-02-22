@@ -1,4 +1,3 @@
-#!/usr/bin/env xmipp_python
 import CifFile
 class emxBase:
     xmippStartVersion = 'XMIPP_STAR_1'
@@ -6,8 +5,8 @@ class emxBase:
     contactMail       = 'xmipp@cnb.csic.es'
     smallNumber       = 0.00001
     
-    def __init__(self, runWithoutArgs=False):
-        a=0
+#    def __init__(self, runWithoutArgs=False):
+#        a=0
     def command_line_options(self):
         """ add command line options here"""
         import optparse
@@ -24,57 +23,36 @@ class emxBase:
         
         self.inputFileName  = options.inputFileName
         self.outputFileName = options.outputFileName
-        self.inMetadata     = CifFile.CifFile(self.inputFileName)
-        self.outMetadata    = CifFile.CifFile()
 
+    
     def checkVersion(self):
-        """read first 7 characters. If different from #EMX1.0
-           then abort """
+        """read first line: check IPP magic word. Abort otherwise"""
         import os
         if not os.path.exists(self.inputFileName):
             print "File: ", self.inputFileName, "does not exists."
             exit(0)
         #set buffering size to 0 otherwise stdin is read in a buffer
-        #and it is inavailable dor the next open
+        #and it is unavailable for the next open
         fin = open(self.inputFileName, "r",0)
         firstLine = fin.readline()
-        print "kk",firstLine,"kk"
+        print "filename first line", self.inputFileName, firstLine
+        
         result = firstLine.find(self.emxVersion)
-        if (result==-1):
-            print "Error: EMX Metadata Files should contain the string ",\
-                   self.emxVersion,\
-                    " in the first line.  Exiting program.", firstLine
-            exit(1)
-        fin.close()
-  
-#    def checkVersion(self):
-#        """read first line: check IPP magic word. Abort otherwise"""
-#        import os
-#        if not os.path.exists(self.inputFileName):
-#            print "File: ", self.inputFileName, "does not exists."
-#            exit(0)
-#        #set buffering size to 0 otherwise stdin is read in a buffer
-#        #and it is unavailable for the next open
-#        fin = open(self.inputFileName, "r",0)
-#        firstLine = fin.readline()
-#        print "filename first line", self.inputFileName, firstLine
-#        
-#        result = firstLine.find(self.emxVersion)
-#        if result != -1:
-#            fin.close()
-#            #is EMX
-#            return (True)
-#        
-#        result = firstLine.find(self.xmippStartVersion)
-#        if result != -1:
-#            fin.close()
-#            return (False) # isEMX
-#        
-#        print "Error: Metadata Files should contain the string ",\
-#               self.emxVersion, "or", self.xmippStartVersion, \
-#            " in the first line.  Exiting program.\n", \
-#            "First line: ", firstLine
-#        exit(1)
+        if result != -1:
+            fin.close()
+            #is EMX
+            return (True)
+        
+        result = firstLine.find(self.xmippStartVersion)
+        if result != -1:
+            fin.close()
+            return (False) # isEMX
+        
+        print "Error: Metadata Files should contain the string ",\
+               self.emxVersion, "or", self.xmippStartVersion, \
+            " in the first line.  Exiting program.\n", \
+            "First line: ", firstLine
+        exit(1)
     
     def saveFileEMX2XMIPP(self):
         comment  =   "# XMIPP_STAR_1 *"
