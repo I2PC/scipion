@@ -547,7 +547,12 @@ class ParticleClassConverter(EmxBase):
             myblock = CifFile.CifBlock()
             self.outMetadata[blockNameEmx] = myblock
             self.cbOut = self.outMetadata[blockNameEmx]#for emx
+            self.createDataHeaderXMIPP2EMX(blockNameEmx)
             self.convertLoopXMIPP2EMX(blockNameXmipp,blockNameEmx)#for xmipp
+
+    def createDataHeaderXMIPP2EMX(self,class_id):
+        """Data header is the xmipp data block name with the right label"""
+        self.cbOut['_emx_class.id'] = class_id
             
     def convertLoopEMX2XMIPP(self,blockName,ref):
          _imageList = self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX)
