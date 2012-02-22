@@ -1179,6 +1179,12 @@ class XmippBrowser():
         self.dim = previewDim
         from protlib_filesystem import findProjectInPathTree
         self.projectDir = findProjectInPathTree('.')
+        # Check if matplotlib is available
+        try: 
+            import protlib_gui_figure
+            self.matplotlibEnabled = True            
+        except ImportError:
+            self.matplotlibEnabled = False
         
     def addFileManager(self, key, icon, extensions, 
                        fillMenu=defaultFillMenu, 
@@ -1414,25 +1420,26 @@ class XmippBrowser():
         self.unpostMenu()
        
     def updatePreview(self, filename):
-        if not self.preview:
-            from protlib_gui_figure import ImagePreview
-            self.preview = ImagePreview(self.detailstop, self.dim)
-        
-        from xmipp import FileName
-        fn = FileName(filename)
-       
-        if not fn.exists():
-            filename = getXmippPath('resources', 'no-image.png')
+        if self.matplotlibEnabled:
+            if not self.preview:
+                from protlib_gui_figure import ImagePreview
+                self.preview = ImagePreview(self.detailstop, self.dim)
             
-        if not filename.endswith('.png'):
-            self.image.readPreview(filename, self.dim)
-            from protlib_xmipp import getImageData
-            Z = getImageData(self.image)
-        else:
-            from protlib_gui_figure import getPngData
-            Z = getPngData(filename)
-            
-        self.preview.updateData(Z)
+            from xmipp import FileName
+            fn = FileName(filename)
+           
+            if not fn.exists():
+                filename = getXmippPath('resources', 'no-image.png')
+                
+            if not filename.endswith('.png'):
+                self.image.readPreview(filename, self.dim)
+                from protlib_xmipp import getImageData
+                Z = getImageData(self.image)
+            else:
+                from protlib_gui_figure import getPngData
+                Z = getPngData(filename)
+                
+            self.preview.updateData(Z)
     
     def filterResults(self, e=None):
         self.pattern = self.filterVar.get().split()

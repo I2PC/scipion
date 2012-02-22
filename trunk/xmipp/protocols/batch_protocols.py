@@ -28,7 +28,7 @@
 
 import os
 import Tkinter as tk
-import protlib_gui_figure
+#import protlib_gui_figure
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTree, \
     showBrowseDialog, showTextfileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
