@@ -31,6 +31,7 @@
 #include <external/bilib/headers/kernel.h>
 #include "xmipp_strings.h"
 #include "matrix1d.h"
+#include "matrix2d.h"
 
 
 extern int bestPrecision(float F, int _width);
@@ -4718,6 +4719,26 @@ public:
                 resizeNoCopy(op1);
             memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
         }
+        return *this;
+    }
+
+    /** Assignment.
+     *
+     * You can build as complex assignment expressions as you like. Multiple
+     * assignment is allowed.
+     *
+     * @code
+     * v1 = v2 + v3;
+     * v1 = v2 = v3;
+     * @endcode
+     *
+     * This function is ported to Python as assign.
+     */
+    MultidimArray<T>& operator=(const Matrix2D<T>& op1)
+    {
+    	resizeNoCopy(MAT_YSIZE(op1), MAT_XSIZE(op1));
+        memcpy(data,MATRIX2D_ARRAY(op1), MAT_SIZE(op1)*sizeof(T));
+
         return *this;
     }
 
