@@ -151,17 +151,17 @@ if __name__ == '__main__':
         (options, args) = parser.parse_args()
         return(options.inputFn,options.outputFn,options.type)
         
-    inputFn,outputFn,type=command_line_options()
-    if type == 'coordinates':
+    inputFn,outputFn,convType=command_line_options()
+    if convType == 'coordinates':
         ParticlePickingConverter(inputFn, outputFn).run()  
-    elif type == 'alignment':
+    elif convType == 'alignment':
         ParticleAlignmentConverter(inputFn, outputFn).run()  
-    elif type == 'class':
+    elif convType == 'class':
         ParticleClassConverter(inputFn, outputFn).run()  
-    elif type == 'ctf':
+    elif convType == 'ctf':
         CtfConverter(inputFn, outputFn).run()  
     else:
-        print "ERROR: Wrong mode: ", type
+        print "ERROR: Wrong mode: ", convType
         exit(0)
     
     

@@ -34,25 +34,25 @@ class ScriptEmxConverter(XmippScript):
         XmippScript.__init__(self)
         
     def defineParams(self):
-        self.addUsageLine('Plot some values from metadata.')
+        self.addUsageLine('Conversion utilities for Electron Microscopy exchange.')
         ## params
-        self.addParamsLine(' -i <filename="/dev/stdin">          : Input file')
+        self.addParamsLine(' -i <filename>                   : Input file')
         self.addParamsLine('   alias --input_filename;')
-        self.addParamsLine(' -o <filename="/dev/stdout">         : Output file')
+        self.addParamsLine('[ -o <filename="/dev/stdout"> ]    : Output file')
         self.addParamsLine('   alias --output_filename;')
-        self.addParamsLine(' -t <mode="coordinates">             : Conversion type')
+        self.addParamsLine('[ -t <mode=coordinates>]       : Conversion type')
         self.addParamsLine('     where <mode> coordinates alignment class ctf')
         self.addParamsLine('   alias --conversion_type;')
 
         ## examples
-        self.addExampleLine('convert to and from EMX format for data interchange', False)
-        self.addExampleLine('cat Test/particlePicking.emx | ./xmipp_emx_convert.py')
+        self.addExampleLine('Convert coordinates file from EMX to Xmipp', False)
+        self.addExampleLine('xmipp_emx_convert -i particlePicking.emx -o particlePicking.xmd -t coordinates')
         
     def run(self):   
         inputFn = self.getParam('-i')
         outputFn = self.getParam('-o')        
-        type = self.getParam('-t')
-        if type == 'coordinates':
+        convType = self.getParam('-t')
+        if convType == 'coordinates':
             ParticlePickingConverter(inputFn, outputFn).run()  
 
 
