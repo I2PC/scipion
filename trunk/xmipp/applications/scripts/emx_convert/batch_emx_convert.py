@@ -28,6 +28,7 @@
 import os
 from protlib_xmipp import XmippScript
 from protlib_emx import ParticlePickingConverter
+from protlib_emx import ParticleAlignmentConverter
 
 class ScriptEmxConverter(XmippScript):
     def __init__(self):
@@ -54,7 +55,15 @@ class ScriptEmxConverter(XmippScript):
         convType = self.getParam('-t')
         if convType == 'coordinates':
             ParticlePickingConverter(inputFn, outputFn).run()  
-
+        elif convType == 'alignment':
+            ParticleAlignmentConverter(inputFn, outputFn).run()  
+        elif convType == 'class':
+            ParticleClassConverter(inputFn, outputFn).run()  
+        elif convType == 'ctf':
+            CtfConverter(inputFn, outputFn).run()  
+        else:
+            print "ERROR: Wrong mode: ", type
+            exit(0)
 
 if __name__ == '__main__':
     ScriptEmxConverter().tryRun()
