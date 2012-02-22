@@ -1,82 +1,62 @@
 #!/usr/bin/env xmipp_python
-#cat Test/particlePicking.xmd | ./batch_emx_coordinates.py
-#cat Test/particlePicking.emx | ./batch_emx_coordinates.py
-import CifFile
-from protlib_emx import emxBase
+"""/***************************************************************************
+ *
+ * Authors:     Roberto Marabini
+ *              J. M. de la Rosa Trevin
+ *
+ * Universidad Autonoma de Madrid
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+"""
+import os
+from protlib_xmipp import XmippScript
+from protlib_emx import ParticlePickingConverter
 
-class convertParticlePickingClass(emxBase):    
-    needed_itemsXMIPP =  (
-          "_Xcoor",
-          "_Ycoor"
-          )
-    needed_itemsEMX = (
-          "_emx_particle.coordinate_x",
-          "_emx_particle.coordinate_y"
-          )
-
-    
+class ScriptEmxConverter(XmippScript):
     def __init__(self):
-
-    
-        self.command_line_options()
-        emx2xmipp=self.checkVersion()
-        #next two lines should go after checkVersion
-        self.inMetadata     = CifFile.CifFile(self.inputFileName)
-        self.outMetadata    = CifFile.CifFile()
-
-        if emx2xmipp:
-            self.convertAllBlocksEMX2XMIPP()
-            self.saveFileEMX2XMIPP()
-        else:
-            self.convertAllBlocksXMIPP2EMX()
-            self.saveFileXMIPP2EMX()                     
-    def convertAllBlocksEMX2XMIPP(self):
-        """loop over the blocks and write them"""
-        for blockName in self.inMetadata.keys():
-            #create output block
-            myblock = CifFile.CifBlock()
-            #read micrograph.url field
-            micrographName = self.inMetadata[blockName]['_emx_micrograph.url'] 
-            self.outMetadata[micrographName] = myblock
-            self.cbOut = self.outMetadata[micrographName]#alias
-            self.convertLoopEMX2XMIPP(blockName)
-            
-    def convertAllBlocksXMIPP2EMX(self):
-        """loop over the blocks and write them"""
-        for micrographName in self.inMetadata.keys():
-            #create output block
-            myblock = CifFile.CifBlock()
-            self.outMetadata[micrographName] = myblock
-            self.cbOut = self.outMetadata[micrographName]
-            self.cbOut['_emx_micrograph.url'] = micrographName
-            self.createDataHeaderXMIPP2EMX(micrographName)
-            self.convertLoopXMIPP2EMX(micrographName)
-            
-    def createDataHeaderXMIPP2EMX(self,micrographName):
-        """Data header is the xmipp data block name with the right label"""
-        self.cbOut['_emx_micrograph.url'] = micrographName
-
-    def convertLoopEMX2XMIPP(self,micrographName):
-    
-        _auxXList=self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[0])
-        _auxYList=self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[1])
-        _XList =[]
-        _YList =[]
-        for _item in range (len(_auxXList)): 
-            _XList.append(str(int(round(float(_auxXList[_item]),0))))
-            _YList.append(str(int(round(float(_auxYList[_item]),0))))
-            
-        self.cbOut.AddCifItem(([self.needed_itemsXMIPP],[[_XList,_YList]])) 
+        XmippScript.__init__(self)
         
-    def convertLoopXMIPP2EMX(self,micrographName):
-        loopitems = self.inMetadata[micrographName].GetLoop((self.needed_itemsXMIPP[0]))  #get item names and values
-        self.cbOut.AddCifItem(([self.needed_itemsEMX],\
-              [[loopitems[self.needed_itemsXMIPP[0]],loopitems[self.needed_itemsXMIPP[1]]]]))
+    def defineParams(self):
+        self.addUsageLine('Plot some values from metadata.')
+        ## params
+        self.addParamsLine(' -i <filename=/dev/stdin>          : Input file')
+        self.addParamsLine('   alias --input_filename;')
+        self.addParamsLine(' -o <filename=/dev/stdout>         : Output file')
+        self.addParamsLine('   alias --output_filename;')
+        self.addParamsLine(' -t <mode=coordinates>             : Conversion type')
+        self.addParamsLine('     where <mode> coordinates alignment class ctf')
+        self.addParamsLine('   alias --conversion_type;')
+
+        ## examples
+        self.addExampleLine('Simple plot of label "sigmaNoise" from metadata', False)
+        self.addExampleLine('xmipp_metadata_plot -i results.xmd -y sigmaNoise')
+        self.addExampleLine('Additionally take values for X from other label and set title', False)
         
+    def run(self):   
+        inputFn = self.getParam('-i')
+        outputFn = self.getParam('-o')        
+        type = self.getParam('-t')
+        if type == 'coordinates':
+            ParticlePickingConverter(inputFn, outputFn).run()  
+
+
 if __name__ == '__main__':
-    
-#    fin = open("/dev/stdin", "r",0)
-#    firstLine = fin.readline()
-#    print "filename first line", "/dev/stdin", firstLine
-#    exit(0)
-    convertParticlePickingClass()
+    ScriptEmxConverter().tryRun()
+
