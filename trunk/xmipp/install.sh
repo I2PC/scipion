@@ -56,7 +56,7 @@ for param in $@; do
 			DO_SQLITE=false
 			DO_TCLTK=false
 			DO_PYTHON=false
-			DO_PYMOD=false;;
+			DO_PYMOD=false
 			DO_FFTW=false
 			DO_TIFF=false
 			DO_JPEG=false
