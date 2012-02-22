@@ -30,6 +30,7 @@ from protlib_xmipp import XmippScript
 from protlib_emx import ParticlePickingConverter
 from protlib_emx import ParticleAlignmentConverter
 from protlib_emx import ParticleClassConverter
+from protlib_emx import CtfConverter
 
 class ScriptEmxConverter(XmippScript):
     def __init__(self):
