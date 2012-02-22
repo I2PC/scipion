@@ -48,15 +48,14 @@ class ProtCL2DAlignment(XmippProtocol):
                 runShowJ("%s %s" % (self.workingDirPath("results_level_00_classes.stk"),self.workingDirPath("results_level_00_classes.xmd")))
     
     def insertCl2dStep(self):
-    #log,Selfile,WorkingDir,ReferenceImage,MaxShift,NumberOfIterations,Nproc):
-        params= '-i %s --oroot %s/results --nref 1 --iter %d --maxShift %d' % 
+        params= '-i %s --oroot %s/results --nref 1 --iter %d --maxShift %d' % \
                 (self.InSelFile, self.WorkingDir, self.NumberOfIterations, self.MaxShift)
                 
         if self.ReferenceImage!="":
             params += " --ref0 " + self.ReferenceImage
         else:
             params += " --nref0 1"
-        self.insertRunJobStep("xmipp_classify_CL2D", params, [self.workingDirPath("results_images.xmd"))
+        self.insertRunJobStep("xmipp_classify_CL2D", params, [self.workingDirPath("results_images.xmd")])
 
 def gatherResults(log, WorkingDir):
     wdPath = lambda path: os.path.join(WorkingDir, path)
