@@ -88,7 +88,6 @@ public class TiltPairPicker extends ParticlePicker
 			}
 			filename = getOutputPath(micrograph.getTiltedMicrograph().getOFilename());
 			md = new MetaData(filename);
-			System.out.printf("filename: %s\n", filename);
 			int i = 0;
 			long[] ids = md.findObjects();
 			for (long id : ids)

@@ -178,47 +178,45 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 	{
 		int width = imp.getWidth();
 		int height = imp.getHeight();
-		int c1, c2, x1 = 0, x2 = 0, y1 = 0, y2 = 0;//c1 is catet for x axis, c2 is catet for y axis
-		int pos = (int)(alpha/(Math.PI/4))%4;//piece in wich falls alpha
-		c2 = (pos == 0 || pos == 3)? height/2: width/2;//if alpha piece is acute catet c2 is height/2 sized, width/2 otherwise
-		c1 = (int) (c2 * Math.tan( alpha - pos * Math.PI/4));
-		if(pos == 0)
+		double m = 0;
+		if(alpha != Math.PI/2)
+			m = Math.tan(Math.PI/2 - alpha);
+		double y = height/2.f;
+		double x = y / m;
+		double x1, y1, x2, y2;
+		if(Math.abs(x) > width/2.f)//cuts in image sides
 		{
-			x1 = width/2 + c1;
+			x1 = width;//on image
+			y1 = getYOnImage(m, width/2.f)  ;
+			x2 = 0;
+			y2 = getYOnImage(m, -width/2.f)  ;
+		
+		}
+		else//cuts in image top and bottom
+		{
 			y1 = 0;
-			x2 = width/2 - c1;
-			y2 = height - 1;
+			x1 = getXOnImage(m, height/2.f);
+			y2 = height ;
+			x2 = getXOnImage(m, -height/2.f);
+		
 		}
-		else if(pos == 1)
-		{
-			x1 = width - 1;
-			y1 = height/2 - c1;
-			x2 = 0;
-			y2 = height/2 + c1;
-		}
-		else if(pos == 2)
-		{
-			x1 = width - 1;
-			y1 = height/2 + c1;
-			x2 = 0;
-			y2 = height/2 - c1;
-		}
-		else if(pos == 3)
-		{
-			x1 = width/2 + c1;
-			y1 = height - 1;
-			x2 = width/2 - c1;
-			y2 = 0;
-		}
-		x1 = (int)(x1 * magnification);
-		x2 = (int)(x2 * magnification);
-		y1 = (int)(y1 * magnification);
-		y2 = (int)(y2 * magnification);
-		System.out.printf("pos: %s alpha: %.2f x1: %s y1:%s x2:%s y2:%s\n", pos, Math.toDegrees(alpha)%360, x1, y1, x2, y2);
+		System.out.printf("m: %.2f x1: %.2f y1:%.2f x2:%.2f y2:%.2f\n",  m, x1, y1, x2, y2);
 		Color ccolor = g2.getColor();
 		g2.setColor(Color.yellow);
-		g2.drawLine(x1, y1, x2, y2);
+		g2.drawLine((int)(x1 * magnification), (int)(y1 * magnification), (int)(x2 * magnification), (int)(y2 * magnification));
 		g2.setColor(ccolor);
+	}
+	
+	private double getYOnImage(double m, double x)
+	{
+		int height = imp.getHeight();
+		return height/2.f - m * x ;
+	}
+	
+	private double getXOnImage(double m, double y)
+	{
+		int width = imp.getWidth();
+		return y / m  + width/2.f ;
 	}
 	
 	
