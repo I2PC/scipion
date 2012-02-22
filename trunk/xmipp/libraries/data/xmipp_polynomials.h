@@ -35,18 +35,20 @@ class Polynomials
 protected :
 
 	//Number of polynomials
-	int numPol;
+	//int numPol;
 	// Auxiliary and temporal data to store the generated polynomials
-	MultidimArray<double> imPols;
+	//MultidimArray<double> imPols;
+	//Fitted coefficients
+	Matrix1D<double> fittedCoeffs;
 	// Pointer to the image to be fitted
-	MultidimArray<double> * im;
+	MultidimArray<double> reconstructed;
 
 public:
-	// fitting a surface given by member im by the polynomials
+	// fitting a surface given by member im using the polynomials
 	virtual void fit(const Matrix1D<int> & coef, MultidimArray<double> & im)=0;
 
 protected:
-
+	// Create the polynomials
 	virtual void create(const Matrix1D<int> & coef)=0;
 
 private:
@@ -59,10 +61,17 @@ private:
 class PolyZernikes: public Polynomials
 {
 private:
-	std::vector<Matrix2D< int> > fMatV;
+	std::vector<Matrix2D<int> > fMatV;
 
 public:
+	//Create not really the polynomials, This function creates a set of coefficient matrix that are efficient
+	// to be stored in memory that give us the analytical expression of the polynomials
+	//NOTE: take a look to:
+	//"Efficient Cartesian representation of Zernike polynomials in computer memory
+	//SPIE Vol. 3190 pp. 382 to get more details about the implementation"
 	void create(const Matrix1D<int> & coef);
+	//This function obtains the Zernike coefficients from the matrix 1D coeff. This array is formed by zeros and ones.
+	// If the value of one element of coef is
 	void fit(const Matrix1D<int> & coef, MultidimArray<double> & im);
 };
 
