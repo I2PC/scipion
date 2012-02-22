@@ -1,10 +1,16 @@
 import CifFile
+from transformations import *
+import numpy
+smallNumber       = 0.00001
+
+##########################################################################
+#   General Class for Star data handling
+##########################################################################
 
 class EmxBase:
     xmippStartVersion = 'XMIPP_STAR_1'
     emxVersion        = 'EMX1.0'
     contactMail       = 'xmipp@cnb.csic.es'
-    smallNumber       = 0.00001
     
 #    def __init__(self, runWithoutArgs=False):
 #        a=0
@@ -20,7 +26,6 @@ class EmxBase:
         #and it is unavailable for the next open
         fin = open(self.inputFileName, "r",0)
         firstLine = fin.readline()
-        print "filename first line", self.inputFileName, firstLine
         
         result = firstLine.find(self.emxVersion)
         if result != -1:
@@ -57,6 +62,9 @@ class EmxBase:
         outfile.write(self.outMetadata.WriteOut(_add=True,comment=comment,_email=self.contactMail))
 
 
+##########################################################################
+#   Class Related to Particle Picking Conversion
+##########################################################################
 class ParticlePickingConverter(EmxBase):    
     needed_itemsXMIPP =  (
           "_Xcoor",
@@ -98,14 +106,12 @@ class ParticlePickingConverter(EmxBase):
             
     def convertAllBlocksXMIPP2EMX(self):
         """loop over the blocks and write them"""
-        for micrographName in self.inMetadata.keys():
+        for blockName in self.inMetadata.keys():
             #create output block
             myblock = CifFile.CifBlock()
-            self.outMetadata[micrographName] = myblock
-            self.cbOut = self.outMetadata[micrographName]
-            self.cbOut['_emx_micrograph.url'] = micrographName
-            self.createDataHeaderXMIPP2EMX(micrographName)
-            self.convertLoopXMIPP2EMX(micrographName)
+            self.outMetadata[blockName] = myblock
+            self.cbOut = self.outMetadata[blockName]
+            self.convertLoopXMIPP2EMX(blockName)
             
     def createDataHeaderXMIPP2EMX(self,micrographName):
         """Data header is the xmipp data block name with the right label"""
@@ -124,9 +130,486 @@ class ParticlePickingConverter(EmxBase):
         self.cbOut.AddCifItem(([self.needed_itemsXMIPP],[[_XList,_YList]])) 
         
     def convertLoopXMIPP2EMX(self,micrographName):
-        loopitems = self.inMetadata[micrographName].GetLoop((self.needed_itemsXMIPP[0]))  #get item names and values
-        self.cbOut.AddCifItem(([self.needed_itemsEMX],\
-              [[loopitems[self.needed_itemsXMIPP[0]],loopitems[self.needed_itemsXMIPP[1]]]]))
+        #get item names and values
+        loopitems = self.inMetadata[blockName].GetLoop(self.needed_itemsXMIPP[0])  
+        #get block list
+        ListBlockKeys = loopitems.keys()
+        #get loop length
+        blockLenght = len (self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[0]))        
+        #image is compulsory 
+        _imageUrl   = self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[0])
+        #store intermediate results here
+        shift=[]
+        angle=[]
+        scale=[]
+
+        _x=[]
+        _y=[]
+        _z=[]
+        for loopitem in range(blockLenght):
+            _x.append(0)
+            _y.append(0)
+            _z.append(0)
+        
+        #fill shifts
+        if (self.needed_itemsXMIPP[4]  in ListBlockKeys):
+            _x= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[4])
+        if (self.needed_itemsXMIPP[5]  in ListBlockKeys):
+            _y= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[5])
+        if (self.needed_itemsXMIPP[6]  in ListBlockKeys):
+            _z= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[6])
+        for loopitem in range(blockLenght):
+            shift.append((_x[loopitem],_y[loopitem],_z[loopitem]))
+
+        _rot=[]
+        _tilt=[]
+        _psi=[]
+        
+        for loopitem in range(blockLenght):
+            _rot.append(0)
+            _tilt.append(0)
+            _psi.append(0)
+        #fill rotations
+        if (self.needed_itemsXMIPP[1]  in ListBlockKeys):
+            _rot= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[1])
+        if (self.needed_itemsXMIPP[2]  in ListBlockKeys):
+            _tilt= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[2])
+        if (self.needed_itemsXMIPP[3]  in ListBlockKeys):
+            _psi= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[3])
+        for loopitem in range(blockLenght):
+            angle.append( 
+                          (
+                           (float(_rot[loopitem] )) *math.pi/180.,\
+                           (float(_tilt[loopitem])) *math.pi/180.,\
+                           (float(_psi[loopitem] )) *math.pi/180.
+                          )  
+                        )
+                        
+                        
+
+        _scale=[]
+        
+        for loopitem in range(blockLenght):
+            _scale.append(1.)
+        #fill scale
+        if (self.needed_itemsXMIPP[8]  in ListBlockKeys):
+            _scale= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[8])
+        for loopitem in range(blockLenght):
+            scale.append((_scale[loopitem],_scale[loopitem],_scale[loopitem]))
+        #enable
+        _enable=[]
+        for loopitem in range(blockLenght):
+            _enable.append(1)
+        if (self.needed_itemsXMIPP[9]  in ListBlockKeys):
+            _enable= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[9])
+        #fom
+        _fom=[]
+        for loopitem in range(blockLenght):
+            _fom.append(1.)
+        if (self.needed_itemsXMIPP[10]  in ListBlockKeys):
+            _fom= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[10])
+        
+        #convert this in matrices
+        #store matrices here
+        ListEulerMatrices = []
+
+        for loopitem in range(blockLenght):
+            ListEulerMatrices.append(compose_matrix(scale=scale[loopitem],
+                    angles=angle[loopitem],
+                    translate=shift[loopitem]))
+
+        #Convert matrices to emx
+        _emx_particle_url = _imageUrl
+        _emx_particle_transformation_matrix_offset_x = _x
+        _emx_particle_transformation_matrix_offset_y = _y
+        _emx_particle_transformation_matrix_offset_z = _z
+        _emx_particle_transformation_matrix_1_1=[]
+        _emx_particle_transformation_matrix_1_2=[]
+        _emx_particle_transformation_matrix_1_3=[]
+        _emx_particle_transformation_matrix_2_1=[]
+        _emx_particle_transformation_matrix_2_2=[]
+        _emx_particle_transformation_matrix_2_3=[]
+        _emx_particle_transformation_matrix_3_1=[]
+        _emx_particle_transformation_matrix_3_2=[]
+        _emx_particle_transformation_matrix_3_3=[]
+        
+        for loopitem in range(blockLenght):
+            _emx_particle_transformation_matrix_1_1.append(ListEulerMatrices[loopitem][0][0])
+            _emx_particle_transformation_matrix_1_2.append(ListEulerMatrices[loopitem][0][1])
+            _emx_particle_transformation_matrix_1_3.append(ListEulerMatrices[loopitem][0][2])
+            _emx_particle_transformation_matrix_2_1.append(ListEulerMatrices[loopitem][1][0])
+            _emx_particle_transformation_matrix_2_2.append(ListEulerMatrices[loopitem][1][1])
+            _emx_particle_transformation_matrix_2_3.append(ListEulerMatrices[loopitem][1][2])
+            _emx_particle_transformation_matrix_3_1.append(ListEulerMatrices[loopitem][2][0])
+            _emx_particle_transformation_matrix_3_2.append(ListEulerMatrices[loopitem][2][1])
+            _emx_particle_transformation_matrix_3_3.append(ListEulerMatrices[loopitem][2][2])
+        
+        _emx_particle_enable  = _enable
+        _emx_particle_FOM     = _fom
+        self.cbOut.AddCifItem((self.needed_itemsEMX, [
+                               [
+                                _emx_particle_url,
+                                _emx_particle_transformation_matrix_1_1,
+                                _emx_particle_transformation_matrix_1_2,
+                                _emx_particle_transformation_matrix_1_3,
+                                _emx_particle_transformation_matrix_offset_x,
+                                _emx_particle_transformation_matrix_2_1,
+                                _emx_particle_transformation_matrix_2_2,
+                                _emx_particle_transformation_matrix_2_3,
+                                _emx_particle_transformation_matrix_offset_y,
+                                _emx_particle_transformation_matrix_3_1,
+                                _emx_particle_transformation_matrix_3_2,
+                                _emx_particle_transformation_matrix_3_3,
+                                _emx_particle_transformation_matrix_offset_z,
+                                _emx_particle_enable,
+                                _emx_particle_FOM
+                                ]
+                              ])) 
+
+##########################################################################
+#   Class Related to Alignment Conversion
+##########################################################################
+class ParticleAlignmentConverter(EmxBase):    
+
+    needed_itemsXMIPP = (
+         "_image",
+         "_angleRot",
+         "_angleTilt",
+         "_anglePsi",
+         "_shiftX",
+         "_shiftY",
+         "_shiftZ",
+         "_flip",
+         "_scale",
+         "_enable",
+         "_fom"
+        )
+    
+    needed_itemsEMX = (
+            "_emx_particle.url",
+            "_emx_particle.transformation_matrix_1_1",
+            "_emx_particle.transformation_matrix_1_2",
+            "_emx_particle.transformation_matrix_1_3",
+            "_emx_particle.transformation_matrix_offset_x",
+            "_emx_particle.transformation_matrix_2_1",
+            "_emx_particle.transformation_matrix_2_2",
+            "_emx_particle.transformation_matrix_2_3",
+            "_emx_particle.transformation_matrix_offset_y",
+            "_emx_particle.transformation_matrix_3_1",
+            "_emx_particle.transformation_matrix_3_2",
+            "_emx_particle.transformation_matrix_3_3",
+            "_emx_particle.transformation_matrix_offset_z",
+            "_emx_particle.enable",
+            "_emx_particle.FOM"
+            )
+    
+    def __init__(self, inputFn, outputFn):
+        self.inputFileName  = inputFn
+        self.outputFileName = outputFn       
+        #next two lines should go after checkVersion
+    
+    def run(self):
+        emx2xmipp = self.checkVersion()
+        self.inMetadata     = CifFile.CifFile(self.inputFileName)
+        self.outMetadata    = CifFile.CifFile()
+
+        if emx2xmipp:
+            self.convertAllBlocksEMX2XMIPP()
+            self.saveFileEMX2XMIPP()
+        else:
+            self.convertAllBlocksXMIPP2EMX()
+            self.saveFileXMIPP2EMX()          
+                       
+    def convertAllBlocksEMX2XMIPP(self):
+        """loop over the blocks and write them"""
+        for blockName in self.inMetadata.keys():
+            #create output block
+            myblock = CifFile.CifBlock()
+            self.outMetadata[blockName] = myblock
+            self.cbOut = self.outMetadata[blockName]
+            self.convertLoopEMX2XMIPP(blockName)
+            
+    def convertAllBlocksXMIPP2EMX(self):
+        """loop over the blocks and write them"""
+        for micrographName in self.inMetadata.keys():
+            #create output block
+            myblock = CifFile.CifBlock()
+            self.outMetadata[micrographName] = myblock
+            self.cbOut = self.outMetadata[micrographName]
+            self.cbOut['_emx_micrograph.url'] = micrographName
+            self.createDataHeaderXMIPP2EMX(micrographName)
+            self.convertLoopXMIPP2EMX(micrographName)
+            
+    def createDataHeaderXMIPP2EMX(self,micrographName):
+        """Data header is the xmipp data block name with the right label"""
+        self.cbOut['_emx_micrograph.url'] = micrographName
+
+    def convertLoopEMX2XMIPP(self,blockName):
+        #get item names and values
+        loopitems = self.inMetadata[blockName].GetLoop(self.needed_itemsEMX[0])  
+        #get block list
+        ListBlockKeys = loopitems.keys()
+        #get loop length
+        blockLenght = len (self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[1]))
+        #image is compulsory 
+        _imageUrl   = self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[0])
+        #store matrices here
+        ListEulerMatrices = []
+        for loopitem in range(blockLenght):
+            ListEulerMatrices.append(numpy.identity(4))
+        #fill shifts
+        if (self.needed_itemsEMX[4]  in ListBlockKeys):
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[4])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][0][3]=aux[loopitem]
+        
+        if (self.needed_itemsEMX[8]  in ListBlockKeys):
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[8])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][1][3]=aux[loopitem]
+        
+        if (self.needed_itemsEMX[12]  in ListBlockKeys):
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[12])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][2][3]=aux[loopitem]
+        # fill 3D rotations
+        _2Dmatrix=True
+        if (self.needed_itemsEMX[3]  in ListBlockKeys):
+            _2Dmatrix=False
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[3])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][0][2]=aux[loopitem]
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[7])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][1][2]=aux[loopitem]
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[9])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][2][0]=aux[loopitem]
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[10])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][2][1]=aux[loopitem]
+            aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[11])
+            for loopitem in range(blockLenght):
+                ListEulerMatrices[loopitem][2][2]=aux[loopitem]
+        #2D rotations
+        aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[1])
+        for loopitem in range(blockLenght):
+            ListEulerMatrices[loopitem][0][0]=aux[loopitem]
+        aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[2])
+        for loopitem in range(blockLenght):
+            ListEulerMatrices[loopitem][0][1]=aux[loopitem]
+        aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[5])
+        for loopitem in range(blockLenght):
+            ListEulerMatrices[loopitem][1][0]=aux[loopitem]
+        aux= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[6])
+        for loopitem in range(blockLenght):
+            ListEulerMatrices[loopitem][1][1]=aux[loopitem]
+
+        #handle enable
+        _enable = [1]*blockLenght
+        if (self.needed_itemsEMX[13]  in ListBlockKeys):
+            _enable= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[13])#enable
+        #handle FOM
+        _fom = [1.]*blockLenght
+        if (self.needed_itemsEMX[14]  in ListBlockKeys):
+            _fom= self.inMetadata[blockName].GetLoopItem(self.needed_itemsEMX[14])#enable
+        
+        #availabel in _imageUrl
+        #_image     = []
+        _angleRot  = []
+        _angleTilt = []
+        _anglePsi  = []
+        _shiftX    = []
+        _shiftY    = []
+        _shiftZ    = []
+        _flip      = [0]*blockLenght
+        _scale     = []
+
+        for loopitem in range(blockLenght):
+            #create 4x4 matrix
+            scale, shear, angles, trans, persp = decompose_matrix(ListEulerMatrices[loopitem])
+            #images should not present shear or persp
+            if (math.fabs(numpy.linalg.norm(shear))>smallNumber):
+                print "The input matrix ", ListEulerMatrices[loopitem],\
+                "presents shear. This is not supported"
+                exit(1)
+            if (math.fabs(numpy.linalg.norm(persp)-1.)>smallNumber):
+                print "The input matrix ", ListEulerMatrices[loopitem],\
+                "presents perpective. This is not supported"
+                exit(1)
+
+            _angleRot.append ("%0.4f" % (angles[0]* 180./math.pi))
+            _angleTilt.append("%0.4f" % (angles[1]* 180./math.pi))
+            _anglePsi.append ("%0.4f" % (angles[2]* 180./math.pi))
+            _shiftX.append ("%0.4f" % (trans[0]))
+            _shiftY.append ("%0.4f" % (trans[1]))
+            _shiftZ.append ("%0.4f" % (trans[2]))
+            #flip only in 2D
+            if(_2Dmatrix):
+                if (numpy.linalg.det()< 0):
+                    _flip[loopitem] = 1
+            #check if different in each direction
+            scaleAverage = (scale[0]+scale[1]+scale[2])/3.
+            if(math.fabs(scaleAverage-scale[0])>smallNumber):
+                print "Reading Iamge:", _imageUrl[loopitem], 
+                print "Different scale factor in each axis.", scale, "This is not supported", 
+                print "scale along x axis will be assigned"
+            _scale.append ("%0.4f" % (scaleAverage))
+
+#        self.cbOut.AddCifItem(([self.needed_itemsXMIPP],[[_XList,_YList]])) 
+            
+        self.cbOut.AddCifItem(( [self.needed_itemsXMIPP], 
+                                [[
+                                _imageUrl,
+                                _angleRot,
+                                _angleTilt,
+                                _anglePsi,
+                                _shiftX,
+                                _shiftY,
+                                _shiftZ,
+                                _flip,
+                                _scale,
+                                _enable,
+                                _fom
+                                ]]
+                              )) 
+       
+    def convertLoopXMIPP2EMX(self,blockName):
+        #get item names and values
+        loopitems = self.inMetadata[blockName].GetLoop(self.needed_itemsXMIPP[0])  
+        #get block list
+        ListBlockKeys = loopitems.keys()
+        #get loop length
+        blockLenght = len (self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[0]))        
+        #image is compulsory 
+        _imageUrl   = self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[0])
+        #store intermediate results here
+        shift=[]
+        angle=[]
+        scale=[]
+
+        _x=[]
+        _y=[]
+        _z=[]
+        for loopitem in range(blockLenght):
+            _x.append(0)
+            _y.append(0)
+            _z.append(0)
+        
+        #fill shifts
+        if (self.needed_itemsXMIPP[4]  in ListBlockKeys):
+            _x= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[4])
+        if (self.needed_itemsXMIPP[5]  in ListBlockKeys):
+            _y= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[5])
+        if (self.needed_itemsXMIPP[6]  in ListBlockKeys):
+            _z= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[6])
+        for loopitem in range(blockLenght):
+            shift.append((_x[loopitem],_y[loopitem],_z[loopitem]))
+
+        _rot=[]
+        _tilt=[]
+        _psi=[]
+        
+        for loopitem in range(blockLenght):
+            _rot.append(0)
+            _tilt.append(0)
+            _psi.append(0)
+        #fill rotations
+        if (self.needed_itemsXMIPP[1]  in ListBlockKeys):
+            _rot= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[1])
+        if (self.needed_itemsXMIPP[2]  in ListBlockKeys):
+            _tilt= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[2])
+        if (self.needed_itemsXMIPP[3]  in ListBlockKeys):
+            _psi= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[3])
+        for loopitem in range(blockLenght):
+            angle.append( 
+                          (
+                           (float(_rot[loopitem] )) *math.pi/180.,\
+                           (float(_tilt[loopitem])) *math.pi/180.,\
+                           (float(_psi[loopitem] )) *math.pi/180.
+                          )  
+                        )
+                        
+                        
+
+        _scale=[]
+        
+        for loopitem in range(blockLenght):
+            _scale.append(1.)
+        #fill scale
+        if (self.needed_itemsXMIPP[8]  in ListBlockKeys):
+            _scale= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[8])
+        for loopitem in range(blockLenght):
+            scale.append((_scale[loopitem],_scale[loopitem],_scale[loopitem]))
+        #enable
+        _enable=[]
+        for loopitem in range(blockLenght):
+            _enable.append(1)
+        if (self.needed_itemsXMIPP[9]  in ListBlockKeys):
+            _enable= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[9])
+        #fom
+        _fom=[]
+        for loopitem in range(blockLenght):
+            _fom.append(1.)
+        if (self.needed_itemsXMIPP[10]  in ListBlockKeys):
+            _fom= self.inMetadata[blockName].GetLoopItem(self.needed_itemsXMIPP[10])
+        
+        #convert this in matrices
+        #store matrices here
+        ListEulerMatrices = []
+
+        for loopitem in range(blockLenght):
+            ListEulerMatrices.append(compose_matrix(scale=scale[loopitem],
+                    angles=angle[loopitem],
+                    translate=shift[loopitem]))
+
+        #Convert matrices to emx
+        _emx_particle_url = _imageUrl
+        _emx_particle_transformation_matrix_offset_x = _x
+        _emx_particle_transformation_matrix_offset_y = _y
+        _emx_particle_transformation_matrix_offset_z = _z
+        _emx_particle_transformation_matrix_1_1=[]
+        _emx_particle_transformation_matrix_1_2=[]
+        _emx_particle_transformation_matrix_1_3=[]
+        _emx_particle_transformation_matrix_2_1=[]
+        _emx_particle_transformation_matrix_2_2=[]
+        _emx_particle_transformation_matrix_2_3=[]
+        _emx_particle_transformation_matrix_3_1=[]
+        _emx_particle_transformation_matrix_3_2=[]
+        _emx_particle_transformation_matrix_3_3=[]
+        
+        for loopitem in range(blockLenght):
+            _emx_particle_transformation_matrix_1_1.append(ListEulerMatrices[loopitem][0][0])
+            _emx_particle_transformation_matrix_1_2.append(ListEulerMatrices[loopitem][0][1])
+            _emx_particle_transformation_matrix_1_3.append(ListEulerMatrices[loopitem][0][2])
+            _emx_particle_transformation_matrix_2_1.append(ListEulerMatrices[loopitem][1][0])
+            _emx_particle_transformation_matrix_2_2.append(ListEulerMatrices[loopitem][1][1])
+            _emx_particle_transformation_matrix_2_3.append(ListEulerMatrices[loopitem][1][2])
+            _emx_particle_transformation_matrix_3_1.append(ListEulerMatrices[loopitem][2][0])
+            _emx_particle_transformation_matrix_3_2.append(ListEulerMatrices[loopitem][2][1])
+            _emx_particle_transformation_matrix_3_3.append(ListEulerMatrices[loopitem][2][2])
+        
+        _emx_particle_enable  = _enable
+        _emx_particle_FOM     = _fom
+        self.cbOut.AddCifItem(( [self.needed_itemsEMX], [
+                               [
+                                _emx_particle_url,
+                                _emx_particle_transformation_matrix_1_1,
+                                _emx_particle_transformation_matrix_1_2,
+                                _emx_particle_transformation_matrix_1_3,
+                                _emx_particle_transformation_matrix_offset_x,
+                                _emx_particle_transformation_matrix_2_1,
+                                _emx_particle_transformation_matrix_2_2,
+                                _emx_particle_transformation_matrix_2_3,
+                                _emx_particle_transformation_matrix_offset_y,
+                                _emx_particle_transformation_matrix_3_1,
+                                _emx_particle_transformation_matrix_3_2,
+                                _emx_particle_transformation_matrix_3_3,
+                                _emx_particle_transformation_matrix_offset_z,
+                                _emx_particle_enable,
+                                _emx_particle_FOM
+                                ]
+                              ])) 
 
 #Example usage
 #cat Test/particlePicking.xmd | ./batch_emx_coordinates.py
