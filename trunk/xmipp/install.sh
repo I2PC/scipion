@@ -6,6 +6,7 @@ DO_UNTAR=true
 DO_SQLITE=true
 DO_TCLTK=true
 DO_PYTHON=true
+DO_PYMOD=true
 DO_FFTW=true
 DO_TIFF=true
 DO_JPEG=true
@@ -55,10 +56,11 @@ for param in $@; do
 			DO_SQLITE=false
 			DO_TCLTK=false
 			DO_PYTHON=false
+			DO_PYMOD=false;;
 			DO_FFTW=false
 			DO_TIFF=false
 			DO_JPEG=false
-			DO_ARPACK=false;;        
+			DO_ARPACK=false;;			
         "-j")             TAKE_CPU=true;;
         "untar=true")   DO_UNTAR=true;;
         "untar=false")   DO_UNTAR=false;;
@@ -66,8 +68,10 @@ for param in $@; do
         "sqlite=false")   DO_SQLITE=false;;
         "tcltk=true")   DO_TCLTK=true;;
         "tcltk=false")   DO_TCLTK=false;;
-        "python=true")   DO_PYTHON=true;;
-        "python=false")   DO_PYTHON=false;;
+        "python=true")   DO_PYTHON=true;DO_PYMOD=true;;
+        "python=false")   DO_PYTHON=false;DO_PYMOD=false;;
+        "pymodules=true")   DO_PYMOD=true;;
+        "pymodules=false")   DO_PYMOD=false;;
         "fftw=true")   DO_FFTW=true;;
         "fftw=false")   DO_FFTW=false;;
         "tiff=true")   DO_TIFF=true;;
@@ -133,10 +137,9 @@ VJPEG=jpeg-8c
 VARPACK=arpack++-2.3
 VNUMPY=numpy-1.6.1
 VMATLIBPLOT=matplotlib-1.1.0
-VPIL=Imaging-1.1.7
-PYMPI=mpi4py-1.2.2
+VPYMPI=mpi4py-1.2.2
 #read star files
-PYCIFRW=PyCifRW-3.3
+VPYCIFRW=PyCifRW-3.3
 ################# HELPER FUNCTIONS ##################
 TIMESTAMP=""
 
@@ -337,7 +340,8 @@ if $DO_PYTHON; then
     #cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
     #echo "--> cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h"
     
-	compile_library $VPYTHON python "." ""
+
+   compile_library $VPYTHON python "." ""
 
     # Create the python launch script with necessary environment variable settings
     PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
@@ -362,8 +366,11 @@ if $DO_PYTHON; then
 		printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
 	fi
 	
-    echoExec "chmod u+x $PYTHON_BIN"
-    
+    echoExec "chmod u+x $PYTHON_BIN"    
+fi    
+
+#################### PYTHON MODULES ###########################
+if $DO_PYMOD; then
     compile_pymodule $VNUMPY
 	
 	if $IS_MAC; then
@@ -373,9 +380,8 @@ if $DO_PYTHON; then
 	else
 			compile_pymodule $VMATLIBPLOT
 	fi
-    #compile_pymodule $PYMPI
-    #compile_pymodule $VPIL
-    compile_pymodule $PYCIFRW
+    compile_pymodule $VPYMPI
+    compile_pymodule $VPYCIFRW
 fi
 
 #################### ARPACK ###########################
