@@ -133,7 +133,7 @@ class ParticlePickingConverter(EmxBase):
 #cat Test/particlePicking.emx | ./batch_emx_coordinates.py        
 if __name__ == '__main__':
     
-    def command_line_options(self):
+    def command_line_options():
         """ add command line options here"""
         import optparse
         _usage = "usage: %prog [options] Example:   %prog -i input.xmd -o out.emx"
@@ -149,9 +149,20 @@ if __name__ == '__main__':
                           help="Possible types of conversion: coordinates, alignment, class, ctf")                          
        
         (options, args) = parser.parse_args()
+        return(options.inputFn,options.outputFn,options.type)
         
-        if options.type == "coordinates":
-            ParticlePickingConverter(options.inputFn, options.outputFn).run()
+    inputFn,outputFn,type=command_line_options()
+    if type == 'coordinates':
+        ParticlePickingConverter(inputFn, outputFn).run()  
+    elif type == 'alignment':
+        ParticleAlignmentConverter(inputFn, outputFn).run()  
+    elif type == 'class':
+        ParticleClassConverter(inputFn, outputFn).run()  
+    elif type == 'ctf':
+        CtfConverter(inputFn, outputFn).run()  
+    else:
+        print "ERROR: Wrong mode: ", type
+        exit(0)
     
     
     
