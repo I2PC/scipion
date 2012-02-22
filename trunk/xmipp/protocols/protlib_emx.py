@@ -582,6 +582,109 @@ class ParticleClassConverter(EmxBase):
 
         self.cbOut.AddCifItem((self.needed_itemsEMX, _imageList )) 
 
+##########################################################################
+#   Class Related to CTF conversion, second case with CTF per image is pending
+##########################################################################
+class CtfConverter(EmxBase):    
+    needed_itemsXMIPP =  (
+            "image",
+            "CTF_Sampling_rate",
+            "CTF_Defocus_U",
+            "CTF_Defocus_V",
+            "CTF_Defocus_angle",
+            "CTF_Voltage",
+            "CTF_Spherical_aberration",
+            "CTF_Q0"
+          )
+    needed_itemsEMX = (
+            "_emx_micrograph.url",                     
+            "_emx_micrograph.magnification",    
+            "_emx_micrograph.scanner_pixel_size",    
+            "_emx_micrograph.defocusU",
+            "_emx_micrograph.defocusV",
+            "_emx_micrograph.astigmatism_angle",
+            "_emx_micrograph.voltage",
+            "_emx_micrograph.Cs",
+            "_emx_micrograph.amplitude_contrast"
+          )
+
+    
+    def __init__(self, inputFn, outputFn):
+        self.inputFileName  = inputFn
+        self.outputFileName = outputFn       
+    
+    def run(self):
+        emx2xmipp = self.checkVersion()
+        #do not change the order: first checkversion then ciffile
+        #otherwise stdin will be lost
+        self.inMetadata     = CifFile.CifFile(self.inputFileName)
+        self.outMetadata    = CifFile.CifFile()
+
+        if emx2xmipp:
+            self.convertAllBlocksEMX2XMIPP()
+            self.saveFileEMX2XMIPP()
+        else:
+            self.convertAllBlocksXMIPP2EMX()
+            self.saveFileXMIPP2EMX()          
+                       
+    def convertAllBlocksEMX2XMIPP(self):
+        """loop over the blocks and write them"""
+        for blockName in self.inMetadata.keys():
+            #create output block
+            myblock = CifFile.CifBlock()
+            #read micrograph.url field
+            blockname = self.inMetadata[blockName]['_emx_micrograph.url'] 
+            self.outMetadata[blockname] = myblock
+            self.cbOut = self.outMetadata[blockname]#alias
+            self.convertLoopEMX2XMIPP(blockName)
+            
+    def convertAllBlocksXMIPP2EMX(self):
+        """loop over the blocks and write them"""
+        for blockName in self.inMetadata.keys():
+            #create output block
+            myblock = CifFile.CifBlock()
+            self.outMetadata[blockName] = myblock
+            self.cbOut = self.outMetadata[blockName]
+            self.createDataHeaderXMIPP2EMX(blockName)
+            self.convertLoopXMIPP2EMX(blockName)
+            
+    def createDataHeaderXMIPP2EMX(self,micrographName):
+        """emx requires micrograph.url"""
+        self.cbOut['_emx_micrograph.url'] = micrographName
+
+    def convertLoopEMX2XMIPP(self,micrographName):
+        _emx_micrograph.url = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[0])
+        _emx_micrograph.magnification = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[1])
+        _emx_micrograph.scanner_pixel_size = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[2])
+        _emx_micrograph.defocusU = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[3])
+        _emx_micrograph.defocusV = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[4])
+        _emx_micrograph.astigmatism_angle = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[5])
+        _emx_micrograph.voltage = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[6])
+        _emx_micrograph.Cs = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[7])
+        _emx_micrograph.amplitude_contrast = self.inMetadata[micrographName].GetLoopItem(self.needed_itemsEMX[8])
+
+        CTF_Sampling_rate =[]
+        for _item in range (len(_emx_micrograph.magnification)): 
+            CTF_Sampling_rate.append(str( 10000000*float(_emx_micrograph.scanner_pixel_size[_item])
+                                        / float(_emx_micrograph.magnification[_item]))
+                                    )
+                        
+        self.cbOut.AddCifItem(([self.needed_itemsXMIPP],[[
+                                                          _emx_micrograph.url,
+                                                          CTF_Sampling_rate,
+                                                          _emx_micrograph.defocusU,
+                                                         _emx_micrograph.defocusV,
+                                                         _emx_micrograph.astigmatism_angle,
+                                                         _emx_micrograph.voltage,
+                                                         _emx_micrograph.Cs,
+                                                         _emx_micrograph.amplitude_contrast
+                                                          ]])) 
+
+    def convertLoopXMIPP2EMX(self,micrographName):
+        loopitems = self.inMetadata[micrographName].GetLoop((self.needed_itemsXMIPP[0])) #get item names and values
+        self.cbOut.AddCifItem(([self.needed_itemsEMX],\
+        [[loopitems[self.needed_itemsXMIPP[0]],loopitems[self.needed_itemsXMIPP[1]]]]))    
+
 #Example usage
 #cat Test/particlePicking.xmd | ./batch_emx_coordinates.py
 #cat Test/particlePicking.emx | ./batch_emx_coordinates.py        
