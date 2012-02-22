@@ -663,8 +663,8 @@ if int(env['java']):
     # Update enums from c++ headers, if not exist, generate it
     for (class_name, class_list) in javaEnumDict.iteritems():
         java_file = "java/src/xmipp/jni/%s.java" % class_name
-        if not os.path.exists(java_file):
-            WriteJavaEnum(class_name, class_list[0], class_list[1], None)
+        #if not os.path.exists(java_file):
+        WriteJavaEnum(class_name, class_list[0], class_list[1], None)
 
     env.Alias('javaEnums', env.Command("libraries/bindings/java/src/xmipp/jni/enums.changelog",
                             ["libraries/data/xmipp_image_base.h", "libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
@@ -849,6 +849,7 @@ if int(env['arpack']):
 # Batches (apps)
 #
 AddBatch('apropos', 'applications/scripts/apropos', '.py')
+AddBatch('emx_convert', 'applications/scripts/emx_convert', '.py')
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
 AddBatch('metadata_plot', 'applications/scripts/metadata_plot', '.py')
 AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
