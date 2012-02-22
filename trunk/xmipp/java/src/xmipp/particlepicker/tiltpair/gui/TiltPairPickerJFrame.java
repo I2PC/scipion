@@ -229,7 +229,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(120);
 		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(120);
 		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(335, 304));
+		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(60);
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(395, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
@@ -370,25 +371,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		return anglesmi.isSelected();
 	}
 	
-	public double getUntiltedAngle()
-	{
-		if(untiltedmic.getAddedCount() < 4)
-			return Math.PI/2;
-		double [] alphas = untiltedmic.getAngles();
-		double alpha = Math.toRadians(alphas[0]);
-		return alpha;
-	}
 	
-	public double getTiltedAngle()
-	{
-		if(untiltedmic.getAddedCount() < 4)
-			return  Math.PI/2;
-		double [] alphas = untiltedmic.getAngles();
-		double alpha = Math.toRadians(alphas[1]);
-		return alpha;
-	}
-
-
 
 	@Override
 	public void changeShapes()

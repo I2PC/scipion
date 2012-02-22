@@ -170,7 +170,6 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		super.saveData();
 		long id;
-		double[] angles = new double[3];
 
 		try
 		{
@@ -191,12 +190,10 @@ public class TiltPairPicker extends ParticlePicker
 
 					md = new MetaData();
 					md2 = new MetaData();
-					if (m.anglesAvailable())
-						angles = m.getAngles();
 					id = micrographsDict.get(m.getFile());
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) angles[0], id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) angles[1], id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLETILT, (double) angles[2], id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) m.getUntiltedAngle(), id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLETILT, (double) m.getTiltAngle(), id);
 
 					for (UntiltedParticle p : m.getParticles())
 					{

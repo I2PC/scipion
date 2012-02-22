@@ -12,7 +12,7 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 	
 	
 	private List<UntiltedMicrograph> micrographs;
-	private String[] columns = new String[]{"", "Name", "Pair Name", "Particles"};
+	private String[] columns = new String[]{"", "Name", "Pair Name", "Particles", "Tilt Angle"};
 
 	public MicrographPairsTableModel(TiltPairPickerJFrame frame)
 	{
@@ -45,6 +45,8 @@ public class MicrographPairsTableModel extends AbstractTableModel {
 			return m.getTiltedMicrograph().getName();
 		if(columnIndex == 3)
 			return m.getParticles().size();
+		if(columnIndex == 4)
+			return String.format("%.2f", m.getTiltAngle());
 		return null;
 	}
 	

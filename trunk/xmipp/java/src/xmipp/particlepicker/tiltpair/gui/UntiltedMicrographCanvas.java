@@ -199,7 +199,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			drawShape(g2, active, true);
 		}
 		if (frame.drawAngles())
-			drawLine(frame.getUntiltedAngle(), g2);
+			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);
 	}
 
 	private void addParticle(int x, int y)

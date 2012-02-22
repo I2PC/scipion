@@ -107,9 +107,30 @@ public class UntiltedMicrograph extends Micrograph
 		return !(added < 4);
 	}
 
-	public double[] getAngles()
+//	public double[] getAngles()
+//	{
+//		return angles;
+//	}
+	
+	public double getUntiltedAngle()
 	{
-		return angles;
+		if(angles == null)
+			return 0;
+		return angles[0];
+	}
+	
+	public double getTiltedAngle()
+	{
+		if(angles == null)
+			return 0;
+		return angles[1];
+	}
+	
+	public double getTiltAngle()
+	{
+		if(angles == null)
+			return 0;
+		return angles[2];
 	}
 
 	public Particle getAlignerTiltedParticle(int x, int y)
