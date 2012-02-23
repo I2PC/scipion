@@ -42,7 +42,6 @@ TEST( MultidimTest, CopyFromMatrix2D)
     EXPECT_EQ(dMn(mSource, 1),DIRECT_MULTIDIM_ELEM(mdTarget,1)) << "MultidimArray: copy from Matrix2D operator failed";
     EXPECT_EQ(dMn(mSource, 2),DIRECT_MULTIDIM_ELEM(mdTarget,2)) << "MultidimArray: copy from Matrix2D operator failed";
     EXPECT_EQ(dMn(mSource, 3),DIRECT_MULTIDIM_ELEM(mdTarget,3)) << "MultidimArray: copy from Matrix2D operator failed";
-    EXPECT_EQ(dMn(mSource, 4),DIRECT_MULTIDIM_ELEM(mdTarget,4)) << "MultidimArray: copy from Matrix2D operator failed";
 }
 
 GTEST_API_ int main(int argc, char **argv) {
