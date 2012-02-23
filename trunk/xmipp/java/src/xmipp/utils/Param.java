@@ -52,7 +52,7 @@ public class Param {
     public String selectionType = SELECTION_TYPE_ANY;
     public String mode;
     public boolean poll;
-    public int zoom = 100;
+    public int zoom = 0;
     public boolean renderImages;
     public boolean debug = false;
     public int rows = -1, columns = -1;

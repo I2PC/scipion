@@ -20,10 +20,23 @@ public class GalleryData {
 	public String[] volumes = null;
 
 	public ArrayList<ColumnInfo> labels = null;
+	//First label that can be rendered
+	ColumnInfo ciFirstRender = null;
 	public int zoom;
 	public String filename;
-	public boolean galleryMode = true; // if false, is table model
-	public boolean volumeMode = false;
+//	public boolean galleryMode = true; // if false, is table model
+//	public boolean volumeMode = false;
+	public static final int MODE_GALLERY_MD = 1;
+	public static final int MODE_GALLERY_VOL = 2;
+	public static final int MODE_TABLE_MD = 3;
+	
+	//define min and max render dimensions
+	public static final int MIN_SIZE = 16;
+	public static final int MAX_SIZE = 256;
+	
+	//max dimension allowed to render images
+	
+	private int mode;
 	public boolean showLabel = false;
 	public Param parameters;
 	private int numberOfVols = 0;
@@ -42,8 +55,9 @@ public class GalleryData {
 			selectedBlock = "";
 			parameters = param;
 			zoom = param.zoom;
-			galleryMode = param.mode
-					.equalsIgnoreCase(Param.OPENING_MODE_GALLERY);
+			mode = MODE_GALLERY_MD;
+			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
+					mode = MODE_TABLE_MD;
 
 			filename = fn;
 			if (Filename.hasPrefix(fn)) {
@@ -82,30 +96,38 @@ public class GalleryData {
 	/** Load contents from a metadata already read */
 	private void loadMd() throws Exception {
 		ids = md.findObjects();
-		volumeMode = false;
-		// if (galleryMode)
-		if (md.containsLabel(MDLabel.MDL_IMAGE)) {
-			String imageFn = md.getValueString(MDLabel.MDL_IMAGE,
-					md.firstObject());
+		loadLabels();
+
+		if (ciFirstRender != null) {
+			String imageFn = md.getValueString(ciFirstRender.getLabel(), md.firstObject());
 			ImageGeneric image = new ImageGeneric(imageFn);
+			
+			if (zoom == 0){ //default value
+				int xdim = image.getXDim();
+				int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
+				float scale = (float)x / xdim;
+				zoom = (int) Math.ceil(scale * 100);
+				DEBUG.printMessage(String.format("xdim: %d, x: %d, scale: %f, zoom: %d", xdim, x, scale, zoom));
+			}
+				
 			if (image.isVolume()) { // We are assuming all are volumes
 									// or images, dont mix it
-				volumeMode = true;
+				mode = MODE_GALLERY_VOL;
 				numberOfVols = md.size();
 				volumes = new String[numberOfVols];
 				for (int i = 0; i < numberOfVols; ++i)
-					volumes[i] = md.getValueString(MDLabel.MDL_IMAGE, ids[i]);
+					volumes[i] = md.getValueString(ciFirstRender.getLabel(), ids[i]);
 				if (selectedVol.isEmpty())
 					selectedVol = volumes[0];
 			}
 			image.destroy();
 		}
 
-		if (!volumeMode) {
+		if (!isVolumeMode()) {
 			numberOfVols = 0;
 			volumes = null;
 		}
-		loadLabels();
+		
 	}// function loadMd
 	
 	/** Load labels info in md, 
@@ -116,6 +138,9 @@ public class GalleryData {
 		try {
 		int [] lab = md.getActiveLabels();
 		ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(lab.length);
+		ciFirstRender = null;
+		ColumnInfo ciFirstRenderVisible = null;
+		
 		for (int i = 0; i < lab.length; ++i) {
 			ci = new ColumnInfo(lab[i]);
 			if (labels != null)
@@ -125,8 +150,14 @@ public class GalleryData {
 						ci.render = ci2.render;
 					}
 			newLabels.add(ci);
-			
+			if (ciFirstRender == null && ci.allowRender)
+				ciFirstRender = ci;
+			if (ciFirstRenderVisible == null && ci.allowRender && ci.visible)
+				ciFirstRenderVisible = ci;			
 		}
+		if (ciFirstRenderVisible != null)
+			ciFirstRender = ciFirstRenderVisible;
+		
 		labels = newLabels;
 		} catch (Exception e){
 			e.printStackTrace();
@@ -154,17 +185,19 @@ public class GalleryData {
 	}
 
 	public ImageGallery createModel() {
-		ImageGallery gallery = null;
 		try {
-			if (galleryMode) {
-				gallery = (volumeMode ? new VolumeGallery(this)
-						: new MetadataGallery(this));
-			} else
-				gallery = new MetadataTable(this);
+			switch (mode){
+			case MODE_GALLERY_VOL:
+				return new VolumeGallery(this);
+			case MODE_GALLERY_MD:
+				 return new MetadataGallery(this);
+			case MODE_TABLE_MD:
+				return new MetadataTable(this);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return gallery;
+		return null;
 
 		// if (Filename.isVolume(filename))
 		// gallery = new VolumeGallery(data);
@@ -188,6 +221,23 @@ public class GalleryData {
 
 	public int getNumberOfVols() {
 		return numberOfVols;
+	}
+	
+	//Return the mode of the gallery
+	public int getMode(){
+		return mode;
+	}
+	
+	//some mode shortcuts
+	public boolean isGalleryMode(){return mode == MODE_GALLERY_MD || mode == MODE_GALLERY_VOL; }
+	public boolean isVolumeMode() {return mode == MODE_GALLERY_VOL; }
+	public boolean isTableMode() { return mode ==  MODE_TABLE_MD; }
+	//utility function to change of mode
+	public void changeMode() {
+		if (isGalleryMode())
+			mode = MODE_TABLE_MD;
+		else
+			mode = MODE_GALLERY_MD;
 	}
 
 	/** following function only should be used in VolumeGallery mode */

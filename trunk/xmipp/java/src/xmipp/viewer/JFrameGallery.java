@@ -292,7 +292,7 @@ public class JFrameGallery extends JFrame {
 			}
 		});
 
-		updateTable();
+		updateTable();	
 
 		// int WIDTH = getPreferredSize().width;
 		// double scale = tableModel.getInitialZoomScale(
@@ -338,6 +338,7 @@ public class JFrameGallery extends JFrame {
 			// repaint();
 		}
 
+		jsZoom.setValue(data.zoom);
 		isUpdating = updatingState;
 		// }
 	}// function updateTable
@@ -356,8 +357,8 @@ public class JFrameGallery extends JFrame {
 	private void adjustColumns() {
 		int w = getSize().width;
 		gallery.adjustColumn(w - 50);
-		DEBUG.printMessage(String.format(
-				"==>> JFrameGallery.autoAdjust: width: %d", w));
+//		DEBUG.printMessage(String.format(
+//				"==>> JFrameGallery.autoAdjust: width: %d", w));
 		// int rw = rowHeader.getWidth();
 		// DEBUG.printStackTrace();
 		// FIXME
@@ -557,7 +558,7 @@ public class JFrameGallery extends JFrame {
 	private void updateViewState() {
 		ImageIcon icon;
 		String text;
-		if (!data.galleryMode) {
+		if (!data.isGalleryMode()) {
 			icon = XmippResource.VIEW_GALLERY_ICON;
 			text = XmippLabel.LABEL_VIEW_GALLERY;
 		} else {
@@ -598,7 +599,7 @@ public class JFrameGallery extends JFrame {
 		btnChangeView.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				data.galleryMode = !data.galleryMode;
+				data.changeMode();
 				updateViewState();
 				reloadTableData();
 			}
@@ -614,7 +615,7 @@ public class JFrameGallery extends JFrame {
 		toolBar.add(jlZoom);
 
 		jsZoom.setModel(new javax.swing.SpinnerNumberModel(Integer
-				.valueOf(data.zoom), Integer.valueOf(1), null, Integer
+				.valueOf(1), Integer.valueOf(1), null, Integer
 				.valueOf(1)));
 		jsZoom.addChangeListener(new javax.swing.event.ChangeListener() {
 			public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -814,7 +815,7 @@ public class JFrameGallery extends JFrame {
 
 	protected void updateCombos() {
 		boolean showBlocks = data.getNumberOfBlocks() > 1;
-		boolean showVols = data.getNumberOfVols() > 1 && data.galleryMode;
+		boolean showVols = data.getNumberOfVols() > 1 && data.isGalleryMode();
 		jcbBlocks.setVisible(showBlocks);
 		jcbVolumes.setVisible(showVols);
 		jlBlocks.setVisible(showBlocks);
@@ -1166,21 +1167,23 @@ public class JFrameGallery extends JFrame {
 		}
 		
 		public void update(){
-			jmStatistics.setEnabled(!data.volumeMode);
-			jmReslice.setEnabled(data.volumeMode);
+			boolean galMode = data.isGalleryMode();
+			boolean volMode = data.isVolumeMode();
+			jmStatistics.setEnabled(!volMode);
+			jmReslice.setEnabled(volMode);
 			// jmTopAxis.setEnabled(isVolume);
-			jmiOpenWithChimera.setEnabled(data.volumeMode);
+			jmiOpenWithChimera.setEnabled(volMode);
 			// jmiOpenAs3D.setEnabled(!isMetaData);
 			// jmiOpenAsMetadata.setEnabled(!isVolume);
 
 			// Volumes can't be saved as metadata.
-			jmiSaveAsMetadata.setEnabled(!data.volumeMode);
-			jmiSaveSelectionAsMetadata.setEnabled(!data.volumeMode);
+			jmiSaveAsMetadata.setEnabled(!volMode);
+			jmiSaveSelectionAsMetadata.setEnabled(!volMode);
 			jmiApplyGeo.setEnabled(data.containsGeometryInfo());
 			jmiApplyGeo.setSelected(data.useGeo);
 			jmiNormalize.setEnabled(gallery.getNormalized());
-			jmiRenderImage.setEnabled(!data.galleryMode);
-			jmiColumns.setEnabled(!data.galleryMode);
+			jmiRenderImage.setEnabled(!galMode);
+			jmiColumns.setEnabled(!galMode);
 		}
 	}
 

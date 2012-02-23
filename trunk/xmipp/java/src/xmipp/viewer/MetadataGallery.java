@@ -77,11 +77,11 @@ public class MetadataGallery extends ImageGallery {
 						changed = true;
 				}
 			}
-		
+
 		if (changed) {
 			data.labels = newInfo;
 			visibleLabels.clear();
-			for (ColumnInfo ci: data.labels)
+			for (ColumnInfo ci : data.labels)
 				if (ci.visible)
 					visibleLabels.add(ci);
 			calculateCellSize();
@@ -93,21 +93,34 @@ public class MetadataGallery extends ImageGallery {
 
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
-		renderLabel = MDLabel.MDL_IMAGE;
-		displayLabel = MDLabel.MDL_IMAGE;
-		ImageGeneric image = getImage(0, renderLabel);
-		ImageDimension dim = new ImageDimension(image);
-		dim.setZDim(data.ids.length);
 		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
 		renderLabels = false;
+		
 		for (ColumnInfo ci : data.labels) {
 			if (ci.visible)
 				visibleLabels.add(ci);
 			if (ci.render)
 				renderLabels = true;
 		}
-		image.destroy();
+		ImageDimension dim;
+		
+		 if (data.ciFirstRender != null) {
+			renderLabel = data.ciFirstRender.label;
+			displayLabel = renderLabel;
+			// if (renderLabels) {
+			ImageGeneric image = getImage(0, renderLabel);
+			dim = new ImageDimension(image);
+			dim.setZDim(data.ids.length);
+			image.destroy();
+//		 }
+//		else
+//			throw new Exception(
+//					"No renderizable label to be used in Gallery Mode");
+		 }
+		 else {
+		 dim = new ImageDimension(30, 30, data.ids.length, 0);
+		 }
 		return dim;
 	}
 
@@ -150,7 +163,7 @@ public class MetadataGallery extends ImageGallery {
 		if (data.useGeo)
 			format += "_geo";
 		String key = String.format(format, thumb_width, thumb_height);
-		//DEBUG.printMessage(String.format("key: %s", key));
+		// DEBUG.printMessage(String.format("key: %s", key));
 		return String.format(format, thumb_width, thumb_height);
 	}
 
