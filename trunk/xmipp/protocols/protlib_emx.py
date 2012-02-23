@@ -1,5 +1,6 @@
 import CifFile
 import StarFile
+import sys
 from transformations import *
 import numpy
 smallNumber       = 0.00001
@@ -23,7 +24,7 @@ class EmxBase:
         neither of these two words are available"""
         import os
         if not os.path.exists(self.inputFileName):
-            print "File: ", self.inputFileName, "does not exists."
+            print >> sys.stderr, "File: ", self.inputFileName, "does not exists."
             exit(0)
         #set buffering size to 0 otherwise stdin is read in a buffer
         #and it is unavailable for the next open
@@ -40,7 +41,7 @@ class EmxBase:
             fin.close()
             return (False) # isEMX
         #if not emx or xmipp abort
-        print "Error: Metadata Files should contain the string ",\
+        print >> sys.stderr,  "Error: Metadata Files should contain the string ",\
                self.emxVersion, "or", self.xmippStartVersion, \
             " in the first line.  Exiting program.\n", \
             "First line: ", firstLine
@@ -305,11 +306,11 @@ class ParticleAlignmentConverter(EmxBase):
             scale, shear, angles, trans, persp = decompose_matrix(ListEulerMatrices[loopitem])
             #images should not present shear or persp
             if (math.fabs(numpy.linalg.norm(shear))>smallNumber):
-                print "The input matrix ", ListEulerMatrices[loopitem],\
+                print >> sys.stderr,  "The input matrix ", ListEulerMatrices[loopitem],\
                 "presents shear. This is not supported"
                 exit(1)
             if (math.fabs(numpy.linalg.norm(persp)-1.)>smallNumber):
-                print "The input matrix ", ListEulerMatrices[loopitem],\
+                print >> sys.stderr,  "The input matrix ", ListEulerMatrices[loopitem],\
                 "presents perpective. This is not supported"
                 exit(1)
 
@@ -326,9 +327,9 @@ class ParticleAlignmentConverter(EmxBase):
             #check if different in each direction
             scaleAverage = (scale[0]+scale[1]+scale[2])/3.
             if(math.fabs(scaleAverage-scale[0])>smallNumber):
-                print "Reading Iamge:", _imageUrl[loopitem], 
-                print "Different scale factor in each axis.", scale, "This is not supported", 
-                print "scale along x axis will be assigned"
+                print >> sys.stderr,  "Reading Iamge:", _imageUrl[loopitem], 
+                print >> sys.stderr,  "Different scale factor in each axis.", scale, "This is not supported", 
+                print >> sys.stderr,  "scale along x axis will be assigned"
             _scale.append ("%0.4f" % (scaleAverage))
 
 #        self.cbOut.AddCifItem(([self.needed_itemsXMIPP],[[_XList,_YList]])) 
@@ -565,15 +566,11 @@ class ParticleClassConverter(EmxBase):
         #get item names and values
         loopimages  = self.inMetadata[blockNameXmipp].GetLoopItem(self.needed_itemsXMIPP[0])  
         loopclasses = self.inMetadata[blockNameXmipp].GetLoopItem(self.needed_itemsXMIPP[1])  
-        print "loopimages",loopimages
-        print "loopclasses",loopclasses
-        print "blockNameEmx",blockNameEmx
         #get block list
         _imageList = []
         for imageItem in range (len(loopclasses)):
             if(loopclasses[imageItem]==blockNameEmx):
                 _imageList.append(loopimages[imageItem])
-        print "_imageList",_imageList
         
 #        print [(self.needed_itemsEMX)], [
 #                               [_imageList
@@ -734,7 +731,7 @@ if __name__ == '__main__':
     elif convType == 'ctf':
         CtfConverter(inputFn, outputFn).run()  
     else:
-        print "ERROR: Wrong mode: ", convType
+        print >> sys.stderr,  "ERROR: Wrong mode: ", convType
         exit(0)
     
     
