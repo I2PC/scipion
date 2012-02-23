@@ -317,9 +317,9 @@ if $DO_TCLTK; then
 fi
 
 #################### PYTHON ###########################
+    EXT_PYTHON=$EXT_PATH/python
 if $DO_PYTHON; then
     echoGreen "PYTHON SETUP"
-    EXT_PYTHON=$EXT_PATH/python
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
     export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
     export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
@@ -374,9 +374,11 @@ if $DO_PYMOD; then
     compile_pymodule $VNUMPY
 	
 	if $IS_MAC; then
+	        echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
 			echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
 			echoExec "make -f make.osx clean"
 			echoExec "make -f make.osx PREFIX=$XMIPP_HOME PYVERSION=2.7 fetch deps mpl_install"
+			echoExec "rm $XMIPP_HOME/bin/python2.7"
 	else
 			compile_pymodule $VMATLIBPLOT
 	fi
