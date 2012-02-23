@@ -290,7 +290,7 @@ public:
 
     /** Convert the datatype of the object and cast the image
      */
-    void convert2Datatype(DataType datatype);
+    void convert2Datatype(DataType datatype, CastWriteMode castMode=CW_CONVERT);
 
     /**
      * equal operator

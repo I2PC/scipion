@@ -281,10 +281,13 @@ void ImageGeneric::applyGeo(const MetaData &md, size_t objId, bool only_apply_sh
 }
 
 
-void ImageGeneric::convert2Datatype(DataType _datatype)
+void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
 {
     if (_datatype == datatype || _datatype == Unknown_Type)
         return;
+
+    ArrayDim aDim;
+    image->getDimensions(aDim);
 
     ImageBase * newImage;
     MultidimArrayGeneric * newMAG;
@@ -296,13 +299,19 @@ void ImageGeneric::convert2Datatype(DataType _datatype)
         newMAG = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), _datatype);\
         MultidimArray<type>* pMAG;\
         newMAG->getMultidimArrayPointer(pMAG);\
-        data->getImage(*pMAG);
+        if (castMode == CW_CAST)\
+         data->getImage(*pMAG);\
+        else\
+        {\
+         pMAG->resize(aDim);\
+         double min, max;\
+         data->computeDoubleMinMax(min, max);\
+         ((Image<double>*) image)->getCastConvertPageFromT(0, (char*)pMAG->data, _datatype, aDim.zyxdim, min, max, castMode);\
+        }\
 
     SWITCHDATATYPE(_datatype, CONVERTTYPE)
 
 #undef CONVERTTYPE
-    ArrayDim aDim;
-    image->getDimensions(aDim);
 
     // aDimFile must be set in order to movePointer2Slice can be used
     newImage->setADimFile(aDim);
