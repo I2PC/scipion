@@ -919,6 +919,7 @@ if int(env['gtest']):
      AddXmippCTest('test_image')
      AddXmippCTest('test_image_generic')
      AddXmippCTest('test_matrix')
+     AddXmippCTest('test_polynomials')         
      AddXmippCTest('test_metadata')
      AddXmippCTest('test_multidim')
      AddXmippCTest('test_polar')

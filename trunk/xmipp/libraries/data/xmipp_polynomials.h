@@ -32,12 +32,11 @@
 // This class performs all the work related with Polynomials. This is a base class
 class Polynomials
 {
-protected :
 
-	//Number of polynomials
-	//int numPol;
-	// Auxiliary and temporal data to store the generated polynomials
-	//MultidimArray<double> imPols;
+#define COEFFICIENTS(poly) (poly.fittedCoeffs)
+
+public :
+
 	//Fitted coefficients
 	Matrix1D<double> fittedCoeffs;
 	// Pointer to the image to be fitted
@@ -45,7 +44,7 @@ protected :
 
 public:
 	// fitting a surface given by member im using the polynomials
-	virtual void fit(const Matrix1D<int> & coef, MultidimArray<double> & im)=0;
+	virtual void fit(const Matrix1D<int> & coef, MultidimArray<double> & im, const double thrs=0)=0;
 
 protected:
 	// Create the polynomials
@@ -60,6 +59,7 @@ private:
 //SPIE Vol. 3190 pp. 382
 class PolyZernikes: public Polynomials
 {
+
 private:
 	std::vector<Matrix2D<int> > fMatV;
 
@@ -72,7 +72,7 @@ public:
 	void create(const Matrix1D<int> & coef);
 	//This function obtains the Zernike coefficients from the matrix 1D coeff. This array is formed by zeros and ones.
 	// If the value of one element of coef is
-	void fit(const Matrix1D<int> & coef, MultidimArray<double> & im);
+	void fit(const Matrix1D<int> & coef, MultidimArray<double> & im, const double thrs=0);
 };
 
 #endif /* POLYNOMIALS_H_ */
