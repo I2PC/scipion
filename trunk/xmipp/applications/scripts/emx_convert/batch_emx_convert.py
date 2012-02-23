@@ -26,6 +26,7 @@
  ***************************************************************************/
 """
 import os
+import sys
 from protlib_xmipp import XmippScript
 from protlib_emx import ParticlePickingConverter
 from protlib_emx import ParticleAlignmentConverter
@@ -64,7 +65,7 @@ class ScriptEmxConverter(XmippScript):
         elif convType == 'ctf':
             CtfConverter(inputFn, outputFn).run()  
         else:
-            print "ERROR: Wrong mode: ", type
+            print >> sys.stderr, "ERROR: Wrong mode: ", type
             exit(0)
 
 if __name__ == '__main__':
