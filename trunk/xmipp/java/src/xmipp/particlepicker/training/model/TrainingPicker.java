@@ -79,7 +79,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			for (long id : ids)
 			{
 
-				file = md.getValueString(MDLabel.MDL_IMAGE, id);
+				file = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				micrograph = new TrainingMicrograph(file, ctf, families, getMode());
