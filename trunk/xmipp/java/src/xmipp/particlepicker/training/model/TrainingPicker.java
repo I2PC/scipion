@@ -78,8 +78,13 @@ public abstract class TrainingPicker extends ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-
-				file = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				if (md.containsLabel(MDLabel.MDL_MICROGRAPH))
+					file = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				else if (md.containsLabel(MDLabel.MDL_IMAGE))
+					file = md.getValueString(MDLabel.MDL_IMAGE, id);
+				else
+					throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
+				
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				micrograph = new TrainingMicrograph(file, ctf, families, getMode());
