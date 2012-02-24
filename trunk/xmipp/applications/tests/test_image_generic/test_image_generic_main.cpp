@@ -183,6 +183,49 @@ TEST_F( ImageGenericTest, getMultidimArrayPointer)
 
     EXPECT_TRUE(img == img2);
 }
+
+/* check if an image declared as one kind of datatype is correctly
+ * converted and/or casted to another datatype
+ */
+TEST_F( ImageGenericTest, convert2Datatype)
+{
+    ImageGeneric img;
+    img.read(imageName);
+    MultidimArray<float> * ma;
+    MultidimArray<float> auxMa;
+    img().getMultidimArrayPointer(ma);
+
+    // Let's be sure any element is nonzero and higher than 255
+    (*ma) += 1024;
+    // No copy it as reference and normalize
+    auxMa = *ma;
+    auxMa.rangeAdjust(0, 255);
+
+    // Checking of bot arrays are different
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            unsigned int p = (unsigned int) img.getPixel(i,j);
+            unsigned int q = (unsigned int) auxMa(i,j);
+            EXPECT_NE(p,q);
+        }
+    }
+
+    // Change of datatype and conversion of values
+    img.convert2Datatype(UChar, CW_CONVERT);
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            unsigned int p = (unsigned int) img.getPixel(i,j);
+            unsigned int q = (unsigned int) auxMa(i,j);
+            EXPECT_EQ(p,q);
+        }
+    }
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
