@@ -32,6 +32,8 @@ void ProgCTFShow::defineParams()
     addParamsLine(" -i <file>               : parametric_CTF");
     addParamsLine(" -o <file>               : image CTF");
     addParamsLine(" --dim <xdim>               : image size");
+    addExampleLine("Create CTF image from parametric CTF file ctf.param and with dimension 256 pixels:", false);
+    addExampleLine("xmipp_ctf_show -i 20.ctfparam -o 20.mrc --dim 256");
 }
 
 void ProgCTFShow::readParams()
