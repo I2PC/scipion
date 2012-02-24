@@ -430,18 +430,21 @@ public:
         return filename;
     }
 
+/** Get dimensions of the multidimArray inside image.
+ *  TODO: This method must be changed to return the size
+ *  of the image read from file, i.e. aDimFile, and where this is used
+ *  should be used instead the imageBase::mda->getDimensions
+ */
+    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const;
     /** Get Image dimensions
      */
-    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const = 0;
     void getDimensions(ArrayDim &aDim)
     {
-        getDimensions(aDim.xdim, aDim.ydim, aDim.zdim, aDim.ndim);
+    	aDim = aDimFile;
     }
     ArrayDim getDimensions()
     {
-        ArrayDim aDim;
-        getDimensions(aDim.xdim, aDim.ydim, aDim.zdim, aDim.ndim);
-        return aDim;
+        return aDimFile;
     }
 
     /** Get basic information from already read image file

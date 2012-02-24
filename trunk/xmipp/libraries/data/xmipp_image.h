@@ -880,13 +880,13 @@ public:
 
     /** Get Image dimensions
      */
-    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
-    {
-        Xdim = XSIZE(data);
-        Ydim = YSIZE(data);
-        Zdim = ZSIZE(data);
-        Ndim = NSIZE(data);
-    }
+//    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
+//    {
+//        Xdim = XSIZE(data);
+//        Ydim = YSIZE(data);
+//        Zdim = ZSIZE(data);
+//        Ndim = NSIZE(data);
+//    }
 
     size_t getSize() const
     {

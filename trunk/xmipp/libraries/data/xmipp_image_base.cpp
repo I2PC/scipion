@@ -442,6 +442,16 @@ void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t
     MD[n].getValue(MDL_SHIFTZ, zoff);
 }
 
+void ImageBase::getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
+{
+    Xdim = XSIZE(*mdaBase);
+    Ydim = YSIZE(*mdaBase);
+    Zdim = ZSIZE(*mdaBase);
+    Ndim = NSIZE(*mdaBase);
+}
+
+/** Get Image dimensions
+ */
 void ImageBase::getInfo(ImageInfo &imgInfo) const
 {
     imgInfo.datatype = datatype();
