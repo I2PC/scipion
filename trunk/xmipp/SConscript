@@ -757,6 +757,7 @@ if not int(env['release']):
 	AddXmippProgram('ctf_estimate_from_psd_zernike', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('ctf_phase_flip', ['XmippRecons'])
+AddXmippProgram('ctf_show', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('image_align', ['XmippRecons'])
