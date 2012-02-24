@@ -85,7 +85,6 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-
 public class JFrameGallery extends JFrame {
 	private static final long serialVersionUID = -8957336972082018823L;
 
@@ -292,7 +291,8 @@ public class JFrameGallery extends JFrame {
 			}
 		});
 
-		updateTable();	
+		updateTable();
+		updateViewState();
 
 		// int WIDTH = getPreferredSize().width;
 		// double scale = tableModel.getInitialZoomScale(
@@ -357,8 +357,8 @@ public class JFrameGallery extends JFrame {
 	private void adjustColumns() {
 		int w = getSize().width;
 		gallery.adjustColumn(w - 50);
-//		DEBUG.printMessage(String.format(
-//				"==>> JFrameGallery.autoAdjust: width: %d", w));
+		// DEBUG.printMessage(String.format(
+		// "==>> JFrameGallery.autoAdjust: width: %d", w));
 		// int rw = rowHeader.getWidth();
 		// DEBUG.printStackTrace();
 		// FIXME
@@ -567,6 +567,13 @@ public class JFrameGallery extends JFrame {
 		}
 		btnChangeView.setIcon(icon);
 		btnChangeView.setToolTipText(text);
+		if (data.isTableMode()) { // if we are in table mode only allow change
+									// if exist render label
+			boolean hasRender = data.hasRenderLabel();
+			btnChangeView.setEnabled(hasRender);
+			jsZoom.setEnabled(hasRender);
+			jlZoom.setEnabled(hasRender);
+		}
 	}
 
 	/** Reload table data */
@@ -579,6 +586,7 @@ public class JFrameGallery extends JFrame {
 			adjustColumns();
 			menu.update();
 			updateCombos();
+
 			setTitle(gallery.getTitle());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -595,12 +603,11 @@ public class JFrameGallery extends JFrame {
 		toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
 
 		btnChangeView = new JButton();
-		updateViewState();
+		// updateViewState();
 		btnChangeView.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				data.changeMode();
-				updateViewState();
 				reloadTableData();
 			}
 		});
@@ -614,9 +621,8 @@ public class JFrameGallery extends JFrame {
 		jlZoom.setToolTipText(XmippLabel.LABEL_ZOOM);
 		toolBar.add(jlZoom);
 
-		jsZoom.setModel(new javax.swing.SpinnerNumberModel(Integer
-				.valueOf(1), Integer.valueOf(1), null, Integer
-				.valueOf(1)));
+		jsZoom.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1),
+				Integer.valueOf(1), null, Integer.valueOf(1)));
 		jsZoom.addChangeListener(new javax.swing.event.ChangeListener() {
 			public void stateChanged(javax.swing.event.ChangeEvent evt) {
 				Integer zoom = (Integer) jsZoom.getValue();
@@ -815,7 +821,7 @@ public class JFrameGallery extends JFrame {
 
 	protected void updateCombos() {
 		boolean showBlocks = data.getNumberOfBlocks() > 1;
-		boolean showVols = data.getNumberOfVols() > 1 && data.isGalleryMode();
+		boolean showVols = data.getNumberOfVols() > 1 && data.isVolumeMode();
 		jcbBlocks.setVisible(showBlocks);
 		jcbVolumes.setVisible(showVols);
 		jlBlocks.setVisible(showBlocks);
@@ -1004,41 +1010,41 @@ public class JFrameGallery extends JFrame {
 		protected JRadioButtonMenuItem jmiAxisY = new JRadioButtonMenuItem("Y");
 		protected JRadioButtonMenuItem jmiAxisZ = new JRadioButtonMenuItem("Z");
 
-//		public void enableNormalize(boolean value) {
-//			jmiNormalize.setEnabled(value);
-//		}
-//
-//		public void selectNormalize(boolean value) {
-//			jmiNormalize.setSelected(value);
-//		}
+		// public void enableNormalize(boolean value) {
+		// jmiNormalize.setEnabled(value);
+		// }
+		//
+		// public void selectNormalize(boolean value) {
+		// jmiNormalize.setSelected(value);
+		// }
 
 		public boolean getNormalize() {
 			return jmiNormalize.isSelected();
 		}
 
-//		public void enableApplyGeo(boolean value) {
-//			jmiApplyGeo.setEnabled(value);
-//		}
-//
-//		public void selectApplyGeo(boolean value) {
-//			jmiApplyGeo.setSelected(value);
-//		}
+		// public void enableApplyGeo(boolean value) {
+		// jmiApplyGeo.setEnabled(value);
+		// }
+		//
+		// public void selectApplyGeo(boolean value) {
+		// jmiApplyGeo.setSelected(value);
+		// }
 
 		public boolean getApplyGeo() {
 			return jmiApplyGeo.isSelected();
 		}
 
-//		public void enableShowLabel(boolean value) {
-//			jmiShowLabel.setEnabled(value);
-//		}
+		// public void enableShowLabel(boolean value) {
+		// jmiShowLabel.setEnabled(value);
+		// }
 
 		public boolean getShowLabel() {
 			return jmiShowLabel.isSelected();
 		}
 
-//		public void enableRenderImages(boolean value) {
-//			jmiRenderImage.setEnabled(value);
-//		}
+		 public void enableRenderImages(boolean value) {
+		 jmiRenderImage.setEnabled(value);
+		 }
 
 		public boolean getRenderImages() {
 			return jmiRenderImage.isSelected();
@@ -1066,8 +1072,11 @@ public class JFrameGallery extends JFrame {
 						true);
 				ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
 				if (columns != null) {
+					isUpdating = true;
 					((MetadataGallery) gallery).updateColumnInfo(columns);
 					gallery.fireTableDataChanged();
+					menu.enableRenderImages(data.globalRender);
+					isUpdating = false;
 				}
 			} else if (jmi == jmiAVG)
 				avgImage();
@@ -1077,34 +1086,29 @@ public class JFrameGallery extends JFrame {
 				pca();
 			else if (jmi == jmiFSC)
 				fsc();
-			else if (jmi == jmiSaveAsMetadata){
+			else if (jmi == jmiSaveAsMetadata) {
 				saveAsMetadata(true);
-			}
-			else if (jmi == jmiSaveSelectionAsMetadata){
-				saveAsMetadata(false);				
-			}
-			else if (jmi == jmiSaveAsStack){
+			} else if (jmi == jmiSaveSelectionAsMetadata) {
+				saveAsMetadata(false);
+			} else if (jmi == jmiSaveAsStack) {
 				saveAsStack(true);
-			}
-			else if (jmi == jmiSaveSelectionAsStack){
+			} else if (jmi == jmiSaveSelectionAsStack) {
 				saveAsStack(false);
-			}
-			else if (jmi == jmiExit){
+			} else if (jmi == jmiExit) {
 				System.exit(0);
-			}	
-			else if (jmi == jmiOpenWithChimera){
+			} else if (jmi == jmiOpenWithChimera) {
 				try {
 					String args = data.selectedVol;
-					if (Filename.isSpiderVolume(data.selectedBlock))
+					if (Filename.isSpiderVolume(args))
 						args = "spider:" + args;
-					//FIXME: Check chimera is installed and volume is on spider format
-					    Process p = new ProcessBuilder("chimera",args).start();
-					} catch (Exception ex) {
-					     ex.printStackTrace();
-					}
-			}
-			else if (jmi == jmiOpenWithImageJ){
-				
+					// FIXME: Check chimera is installed and volume is on spider
+					// format
+					Process p = new ProcessBuilder("chimera", args).start();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			} else if (jmi == jmiOpenWithImageJ) {
+
 			}
 		}
 
@@ -1162,11 +1166,11 @@ public class JFrameGallery extends JFrame {
 
 			jmiOpenWithChimera.addActionListener(this);
 			jmiOpenWithImageJ.addActionListener(this);
-			
+
 			update();
 		}
-		
-		public void update(){
+
+		public void update() {
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = data.isVolumeMode();
 			jmStatistics.setEnabled(!volMode);
@@ -1182,7 +1186,8 @@ public class JFrameGallery extends JFrame {
 			jmiApplyGeo.setEnabled(data.containsGeometryInfo());
 			jmiApplyGeo.setSelected(data.useGeo);
 			jmiNormalize.setEnabled(gallery.getNormalized());
-			jmiRenderImage.setEnabled(!galMode);
+			jmiRenderImage.setEnabled(!galMode && data.hasRenderLabel());
+			jmiRenderImage.setSelected(data.globalRender);
 			jmiColumns.setEnabled(!galMode);
 		}
 	}

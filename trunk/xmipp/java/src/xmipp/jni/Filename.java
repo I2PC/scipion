@@ -20,31 +20,36 @@ public class Filename {
     private final static String EXTENSION_MRC = ".mrc";
     private final static String EXTENSION_MRCS = ".mrcs";
     private final static String EXTENSION_STK = ".stk";
-    private final static String EXTENSION_SEL = ".sel";
-    private final static String EXTENSION_VOL = ".vol";
+    //metadata extensions
     private final static String EXTENSION_XMD = ".xmd";
+    private final static String EXTENSION_SEL = ".sel";
+    private final static String EXTENSION_DOC = ".doc";
+    private final static String EXTENSION_CTFPARAM = ".ctfparam";
+    private final static String EXTENSION_CTFDAT = ".ctfdat";
+    private final static String EXTENSION_POS = ".pos";
+    private final static String EXTENSION_VOL = ".vol";
     private final static String EXTENSION_SPI = ".spi";
     private final static String EXTENSION_TIF = ".tif";
     // Types of images contained by each file type.
-    private final static String[] XMIPP_TYPES = new String[]{
-        EXTENSION_XMP,
-        EXTENSION_IMG,
-        EXTENSION_HED,
-        EXTENSION_PSD,
-        EXTENSION_SER,
-        EXTENSION_DM3,
-        EXTENSION_RAW,
-        EXTENSION_INF,
-        EXTENSION_SPE,
-        EXTENSION_MRC,
-        EXTENSION_MRCS,
-        EXTENSION_STK,
-        EXTENSION_SEL,
-        EXTENSION_VOL,
-        EXTENSION_XMD,
-        EXTENSION_SPI,
-        EXTENSION_TIF
-    };
+//    private final static String[] XMIPP_TYPES = new String[]{
+//        EXTENSION_XMP,
+//        EXTENSION_IMG,
+//        EXTENSION_HED,
+//        EXTENSION_PSD,
+//        EXTENSION_SER,
+//        EXTENSION_DM3,
+//        EXTENSION_RAW,
+//        EXTENSION_INF,
+//        EXTENSION_SPE,
+//        EXTENSION_MRC,
+//        EXTENSION_MRCS,
+//        EXTENSION_STK,
+//        EXTENSION_SEL,
+//        EXTENSION_VOL,
+//        EXTENSION_XMD,
+//        EXTENSION_SPI,
+//        EXTENSION_TIF
+//    };
     private final static String[] SINGLE_IMAGES = new String[]{
         EXTENSION_XMP,
         EXTENSION_IMG,
@@ -68,8 +73,12 @@ public class Filename {
     };
     
     private final static String[] METADATAS = new String[]{
+    	EXTENSION_XMD,
         EXTENSION_SEL,
-        EXTENSION_XMD
+        EXTENSION_DOC,
+        EXTENSION_CTFPARAM,
+        EXTENSION_CTFDAT,
+        EXTENSION_POS
     };
     
     private final static String[] SPIDER = new String[] {
@@ -137,10 +146,10 @@ public class Filename {
     public static boolean isMetadata(String filename) {
         return filename != null && isFileType(filename, METADATAS);
     }
-
-    public static boolean isXmippType(String filename) {
-        return isFileType(filename, XMIPP_TYPES);
-    }
+//
+//    public static boolean isXmippType(String filename) {
+//        return isFileType(filename, XMIPP_TYPES);
+//    }
 
     private static boolean isFileType(String filename, String filetypes[]) {
         for (int i = 0; i < filetypes.length; i++) {

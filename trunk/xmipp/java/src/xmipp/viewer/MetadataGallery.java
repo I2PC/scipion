@@ -39,7 +39,6 @@ public class MetadataGallery extends ImageGallery {
 
 	// Label to be rendered
 	protected int renderLabel;
-	boolean renderLabels;
 	protected int displayLabel;
 
 	// Also store the visible ones to fast access
@@ -54,7 +53,7 @@ public class MetadataGallery extends ImageGallery {
 	public void updateColumnInfo(ArrayList<ColumnInfo> newInfo) {
 		int n = newInfo.size();
 		boolean changed = false;
-		renderLabels = false;
+		data.globalRender = false;
 
 		for (int i = 0; i < n; ++i)
 			for (int j = 0; j < n; ++j) {
@@ -72,7 +71,7 @@ public class MetadataGallery extends ImageGallery {
 					if (ci1.visible)
 						visibleLabels.add(ci1);
 					if (ci1.render)
-						renderLabels = true;
+						data.globalRender = true;
 					if (i != j)
 						changed = true;
 				}
@@ -95,17 +94,17 @@ public class MetadataGallery extends ImageGallery {
 	protected ImageDimension loadDimension() throws Exception {
 		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
-		renderLabels = false;
+		data.globalRender = false;
 		
 		for (ColumnInfo ci : data.labels) {
 			if (ci.visible)
 				visibleLabels.add(ci);
 			if (ci.render)
-				renderLabels = true;
+				data.globalRender = true;
 		}
 		ImageDimension dim;
 		
-		 if (data.ciFirstRender != null) {
+		 if (data.hasRenderLabel()) {
 			renderLabel = data.ciFirstRender.label;
 			displayLabel = renderLabel;
 			// if (renderLabels) {

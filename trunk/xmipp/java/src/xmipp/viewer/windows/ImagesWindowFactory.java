@@ -11,6 +11,7 @@ import xmipp.viewer.JFrameGallery;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageWindow;
@@ -136,7 +137,8 @@ public class ImagesWindowFactory {
 
     private static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
         ImageWindow iw = null;
-
+        ImageJ ij = new ImageJ(); //IJ.getInstance();
+        ij.run();
         if (imp != null) {
             if (imp.getStackSize() > 1) {
                 iw = new StackWindowOperations(imp, poll);

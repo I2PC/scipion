@@ -38,6 +38,7 @@ public class GalleryData {
 	
 	private int mode;
 	public boolean showLabel = false;
+	public boolean globalRender = false;
 	public Param parameters;
 	private int numberOfVols = 0;
 	
@@ -97,22 +98,27 @@ public class GalleryData {
 	private void loadMd() throws Exception {
 		ids = md.findObjects();
 		loadLabels();
-
-		if (ciFirstRender != null) {
+		numberOfVols = 0;
+		volumes = null;
+		if (isGalleryMode())
+			mode = MODE_GALLERY_MD;
+		
+		if (hasRenderLabel()) {
 			String imageFn = md.getValueString(ciFirstRender.getLabel(), md.firstObject());
 			ImageGeneric image = new ImageGeneric(imageFn);
 			
-			if (zoom == 0){ //default value
+			//if (zoom == 0){ //default value
 				int xdim = image.getXDim();
 				int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
 				float scale = (float)x / xdim;
 				zoom = (int) Math.ceil(scale * 100);
 				DEBUG.printMessage(String.format("xdim: %d, x: %d, scale: %f, zoom: %d", xdim, x, scale, zoom));
-			}
+			//}
 				
 			if (image.isVolume()) { // We are assuming all are volumes
 									// or images, dont mix it
-				mode = MODE_GALLERY_VOL;
+				if (isGalleryMode())
+					mode = MODE_GALLERY_VOL;
 				numberOfVols = md.size();
 				volumes = new String[numberOfVols];
 				for (int i = 0; i < numberOfVols; ++i)
@@ -122,11 +128,8 @@ public class GalleryData {
 			}
 			image.destroy();
 		}
-
-		if (!isVolumeMode()) {
-			numberOfVols = 0;
-			volumes = null;
-		}
+		else //force this mode when there aren't render label
+			mode = MODE_TABLE_MD;
 		
 	}// function loadMd
 	
@@ -190,8 +193,11 @@ public class GalleryData {
 			case MODE_GALLERY_VOL:
 				return new VolumeGallery(this);
 			case MODE_GALLERY_MD:
-				 return new MetadataGallery(this);
+				if (hasRenderLabel())
+					return new MetadataGallery(this);
+				//else fall in the next case
 			case MODE_TABLE_MD:
+				mode = MODE_TABLE_MD; //this is necessary when coming from previous case
 				return new MetadataTable(this);
 			}
 		} catch (Exception e) {
@@ -223,19 +229,27 @@ public class GalleryData {
 		return numberOfVols;
 	}
 	
-	//Return the mode of the gallery
+	/** Return the mode of the gallery */
 	public int getMode(){
 		return mode;
+	}
+	
+	/** Return true if there is a renderizable label in the metadata */
+	public boolean hasRenderLabel(){
+		return ciFirstRender != null;
 	}
 	
 	//some mode shortcuts
 	public boolean isGalleryMode(){return mode == MODE_GALLERY_MD || mode == MODE_GALLERY_VOL; }
 	public boolean isVolumeMode() {return mode == MODE_GALLERY_VOL; }
 	public boolean isTableMode() { return mode ==  MODE_TABLE_MD; }
+	
 	//utility function to change of mode
 	public void changeMode() {
 		if (isGalleryMode())
 			mode = MODE_TABLE_MD;
+		else if (numberOfVols > 0)
+			mode = MODE_GALLERY_VOL;
 		else
 			mode = MODE_GALLERY_MD;
 	}
