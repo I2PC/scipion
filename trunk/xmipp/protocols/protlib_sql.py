@@ -532,9 +532,10 @@ class XmippProtocolDb(SqliteDb):
         
     def runParallelSteps(self, fromStep, toStep, mpiForParallelSteps):
         '''This should run in parallel steps from fromStep and to toStep-1'''
-        numberOfMpi = min(mpiForParallelSteps, toStep - fromStep)
+        numberOfMpi = min(mpiForParallelSteps, toStep - fromStep+1)
+        numberOfMpi = max(numberOfMpi,2)
         script = self.protocolScript
-        retcode = runJob(self.Log, "xmipp_mpi_steps_runner", 
+        retcode = runJob(self.Log, "xmipp_steps_runner", 
                          "--script %(script)s --range %(fromStep)d %(toStep)d" % locals(), numberOfMpi)
         if retcode != 0:
             raise Exception('xmipp_mpi_steps_runner execution failed')
