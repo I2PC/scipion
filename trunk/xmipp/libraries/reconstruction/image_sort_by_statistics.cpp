@@ -263,7 +263,7 @@ void ProgSortByStatistics::run()
     if (verbose==2)
         fh_zind.close();
     if (fn_out!="")
-        SFout.write(fn_out + ".xmd",MD_APPEND);
+        SFout.write(fn_out,MD_APPEND);
     if (addToInput)
         SF.write(fn,MD_APPEND);
 }
