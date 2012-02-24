@@ -71,7 +71,7 @@ class ProtExtractParticles(XmippProtocol):
                 self.insertStep("createExtractList",Family=self.Family,fnMicrographsSel=self.pickingMicrographs,pickingDir=self.pickingDir,
                                    fnExtractList=destFnExtractList)
                 micrographs = self.createBlocksInExtractFile(self.pickingMicrographs)
-        
+                        
         for micrograph in micrographs:
             parent_id = XmippProjectDb.FIRST_STEP
             micrographName = micrograph[4:] # Remove "mic_" from the name
@@ -239,6 +239,7 @@ def phaseFlip(log, micrograph, ctf, fnOut):
 
 def extractParticles(log,WorkingDir,micrographName, ctf,originalMicrograph, micrographToExtract, fnExtractList,
                      particleSize, doFlip, doNorm, doLog, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
+    print "---->Extracting",micrographName
     fnBlock = _getFilename('mic_block_fn', micName=micrographName, fn=fnExtractList)
     md = MetaData(fnBlock)
     printLog( 'Metadata block: %s' % fnBlock, log)
@@ -324,6 +325,6 @@ def avgZscore(log,WorkingDir,family,micrographSelfile):
     oldMicrographsSel.removeLabel(MDL_ZSCORE)
     newMicrographsSel = MetaData()
     # Make copy of metadata because removeLabel leaves the values in the table
-    newMicrographsSel.join(MetaData(oldMicrographsSel),mdavgZscore,MDL_IMAGE,MDL_MICROGRAPH,LEFT)
+    newMicrographsSel.join(oldMicrographsSel,mdavgZscore,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT)
     newMicrographsSel.write(micrographSelfile)
 
