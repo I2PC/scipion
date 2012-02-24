@@ -61,7 +61,6 @@ class ScriptParallelStepRunner(XmippScript):
             self.db = protocol.Db
             # All nodes retrieve parallel steps to work on 
             self.steps = self.db.getStepsRange(fromStep, toStep)
-            
 
             comm = MPI.COMM_WORLD
             self.rank = comm.Get_rank()
