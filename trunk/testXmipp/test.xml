@@ -239,6 +239,13 @@
 			<FILE filename="micrographFlipped.mrc" />
 		</CASE>
 	</PROGRAM>
+	<PROGRAM name="xmipp_ctf_show" mpi="FALSE">
+		<CASE
+			arguments="-i input/Protocol_Projection_Matching/CTFs/20.ctfparam -o %o/ctf.mrc --dim 256"
+			changeDir="FALSE">
+			<FILE filename="ctf.mrc" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_ctf_sort_psds" mpi="FALSE">
 		<CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
 			<PRERUN
