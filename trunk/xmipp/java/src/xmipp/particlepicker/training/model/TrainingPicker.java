@@ -378,7 +378,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 	@Override
-	public void importParticlesXmipp30(Family family, String path)
+	public void importParticlesXmipp30(Family family, String file)
 	{
 		try
 		{
@@ -386,7 +386,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			long[] ids;
 			int x, y;
 			double cost;
-			String file = String.format("%s_extract_list.xmd", path + File.separator + family.getName());
+			
 			List<String> blocks = Arrays.asList(MetaData.getBlocksInMetaDataFile(file));
 			String block;
 			for (TrainingMicrograph m : micrographs)

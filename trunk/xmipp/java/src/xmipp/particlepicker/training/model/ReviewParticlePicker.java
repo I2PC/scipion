@@ -65,7 +65,7 @@ public class ReviewParticlePicker extends TrainingPicker
 			for (long id : ids)
 			{
 
-				filename = md.getValueString(MDLabel.MDL_IMAGE, id);
+				filename = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				micrograph = new TrainingMicrograph(filename, ctf, families, getMode());

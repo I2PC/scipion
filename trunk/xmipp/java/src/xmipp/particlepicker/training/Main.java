@@ -1,5 +1,6 @@
- 	package xmipp.particlepicker.training;
+package xmipp.particlepicker.training;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
@@ -33,32 +34,39 @@ class Main
 			@Override
 			public void run()
 			{
-				TrainingPicker ppicker = null;
-				String selfile = myargs[0];
-				String outputdir = myargs[1];
-				FamilyState mode = FamilyState.getFamilyState(myargs[2]);
-
-				if (mode == FamilyState.Manual)
-					ppicker = new ManualParticlePicker(selfile, outputdir, mode);
-
-				if (mode == FamilyState.Supervised)
+				try
 				{
-					int threads = Integer.parseInt(myargs[3]);
-					boolean fastmode = Boolean.parseBoolean(myargs[4]);
-					boolean incore = Boolean.parseBoolean(myargs[5]);
-					ppicker = new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore);
-				}
+					TrainingPicker ppicker = null;
+					String selfile = myargs[0];
+					String outputdir = myargs[1];
+					FamilyState mode = FamilyState.getFamilyState(myargs[2]);
 
-				else if (mode == FamilyState.Review)
+					if (mode == FamilyState.Manual)
+						ppicker = new ManualParticlePicker(selfile, outputdir, mode);
+
+					if (mode == FamilyState.Supervised)
+					{
+						int threads = Integer.parseInt(myargs[3]);
+						boolean fastmode = Boolean.parseBoolean(myargs[4]);
+						boolean incore = Boolean.parseBoolean(myargs[5]);
+						ppicker = new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore);
+					}
+
+					else if (mode == FamilyState.Review)
+					{
+						String reviewfile = myargs[3];
+						ppicker = new ReviewParticlePicker(selfile, outputdir, reviewfile);
+
+					}
+					new TrainingPickerJFrame(ppicker);
+				}
+				catch (Exception e)
 				{
-					String reviewfile = myargs[3];
-					ppicker = new ReviewParticlePicker(selfile, outputdir, reviewfile);
-
+					JOptionPane.showMessageDialog(null, e.getMessage());
 				}
-				new TrainingPickerJFrame(ppicker);
-
 			}
 		});
+
 	}
 
 }

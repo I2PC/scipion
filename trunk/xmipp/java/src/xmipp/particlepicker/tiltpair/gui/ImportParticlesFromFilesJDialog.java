@@ -206,9 +206,6 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		case Xmipp24:
 			parent.importParticlesFromXmipp24Files(ufile, tfile);
 			break;
-		case Xmipp30:
-			parent.importParticlesFromXmipp30Files(ufile, tfile);
-			break;
 
 		}
 

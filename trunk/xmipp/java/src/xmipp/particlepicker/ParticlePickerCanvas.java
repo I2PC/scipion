@@ -190,7 +190,6 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 			y1 = getYOnImage(m, width/2.f)  ;
 			x2 = 0;
 			y2 = getYOnImage(m, -width/2.f)  ;
-		
 		}
 		else//cuts in image top and bottom
 		{
@@ -198,7 +197,6 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 			x1 = getXOnImage(m, height/2.f);
 			y2 = height ;
 			x2 = getXOnImage(m, -height/2.f);
-		
 		}
 		System.out.printf("m: %.2f x1: %.2f y1:%.2f x2:%.2f y2:%.2f\n",  m, x1, y1, x2, y2);
 		Color ccolor = g2.getColor();

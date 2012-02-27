@@ -46,6 +46,7 @@ import javax.swing.event.MenuListener;
 
 import xmipp.particlepicker.tiltpair.gui.ImportParticlesFromFilesJDialog;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
+import xmipp.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
@@ -75,6 +76,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	private String command;
 	private List<JCheckBoxMenuItem> mifilters;
 	protected JMenu filemn;
+	protected JMenuItem importffmi;
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
@@ -164,6 +166,18 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		
+		importffmi = new JMenuItem("Import from Files...");
+		filemn.add(importffmi);
+		importffmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				displayImportDialog();
+				
+			}
+		});
 		
 		exportmi = new JMenuItem("Export Particles...");
 		filemn.add(exportmi);
@@ -284,6 +298,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
 	}
+
+	protected abstract void displayImportDialog();
 
 	private JCheckBoxMenuItem addFilterMenuItem(String command, boolean defaultlistener, ParticlePicker picker)
 	{
@@ -528,11 +544,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 
 
-	public void importParticlesFromXmipp30Files(String ufile, String tfile)
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	
 
 
 }

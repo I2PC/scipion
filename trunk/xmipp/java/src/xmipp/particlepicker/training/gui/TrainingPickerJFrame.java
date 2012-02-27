@@ -40,6 +40,8 @@ import javax.swing.event.ListSelectionListener;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
+import xmipp.particlepicker.tiltpair.gui.ImportParticlesFromFilesJDialog;
+import xmipp.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.MicrographFamilyState;
@@ -151,6 +153,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb.add(filtersmn);
 		mb.add(windowmn);
 		mb.add(helpmn);
+		importffmi.setText("Import from File...");
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
@@ -758,6 +761,23 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		canvas.repaint();
 
+	}
+
+	public void importParticlesFromXmipp30File(String file)
+	{
+		ppicker.importParticlesXmipp30(getFamily(), file);
+		setChanged(true);
+		getCanvas().repaint();
+		updateMicrographsModel();
+		canvas.setActive(null);
+		
+	}
+
+	@Override
+	protected void displayImportDialog()
+	{
+		new ImportParticlesFromFileJDialog(TrainingPickerJFrame.this, true);
+		
 	}
 
 }

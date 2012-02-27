@@ -55,7 +55,7 @@ public class UntiltedMicrograph extends Micrograph
 	@Override
 	public void reset()
 	{
-
+		angles = null;
 		getParticles().clear();
 		getTiltedMicrograph().reset();
 		initAligner();
