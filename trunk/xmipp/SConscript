@@ -230,6 +230,9 @@ def AddXmippPythonTest(name):
 
 
 def AddXmippJavaTest(name):
+    #javac xmipp/ImageGeneric_Test.java -classpath ~/xmipp_svn/java/lib/XmippJNI.jar:/usr/share/java/junit4.jar
+    #mv xmipp/ImageGeneric_Test.class xmipp/jni/.
+    #java  -classpath :/usr/share/java/junit4.jar:xmipp:/home/roberto/xmipp_svn/java/lib/XmippJNI.jar   org.junit.runner.JUnitCore xmipp.jni.ImageGeneric_Test  
     pass
 
     #env.Default(test)
