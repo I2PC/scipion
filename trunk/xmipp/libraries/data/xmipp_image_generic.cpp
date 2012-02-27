@@ -292,8 +292,6 @@ void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
     ImageBase * newImage;
     MultidimArrayGeneric * newMAG;
 
-
-
 #define CONVERTTYPE(type) Image<type> *imT = new Image<type>; \
         newImage = imT;\
         newMAG = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), _datatype);\
