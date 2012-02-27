@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import java.util.Arrays;
 
 /**
  *
@@ -25,6 +26,8 @@ public class ImageGeneric_Test {
     String filenames[] = new String[]{
         "singleImage.spi"
     };
+    String filename  = "singleImage.spi";
+    String filename2 = "singleImage2.spi";
     // Indexes for arrays.
     final static int X = 0;
     final static int Y = 1;
@@ -77,6 +80,8 @@ public class ImageGeneric_Test {
         for (int i = 0; i < filenames.length; i++) {
             filenames[i] = XMIPP_HOME + filenames[i];
         }
+        filename  = XMIPP_HOME + filename;
+        filename2 = XMIPP_HOME + filename2;
     }
 
     @After
@@ -93,33 +98,33 @@ public class ImageGeneric_Test {
     /**
      * Test of setDimensions method, of class ImageGeneric.
      */
-    @Test
-    public void testtestResize() {
-        for (int i = 0; i < dimensions.length; i++) {
-            try {
-                int xDim = dimensions[i][0];
-                int yDim = dimensions[i][1];
-                int zDim = dimensions[i][2];
-
-                testResize(xDim, yDim, zDim);
-            } catch (Exception ex) {
-                fail("testGetFilename(): " + filenames[i]);
-            }
-        }
-    }
-
-    void testResize(int xDim, int yDim, int zDim) throws Exception {
-        ImageGeneric instance = new ImageGeneric();
-        instance.resize(xDim, yDim, zDim);
-
-        int xResult = instance.getXDim();
-        int yResult = instance.getYDim();
-        int zResult = instance.getZDim();
-
-        assertEquals(xResult, xDim);
-        assertEquals(yResult, yDim);
-        assertEquals(zResult, zDim);
-    }
+//     @Test
+//     public void testtestResize() {
+//         for (int i = 0; i < dimensions.length; i++) {
+//             try {
+//                 int xDim = dimensions[i][0];
+//                 int yDim = dimensions[i][1];
+//                 int zDim = dimensions[i][2];
+// 
+//                 testResize(xDim, yDim, zDim);
+//             } catch (Exception ex) {
+//                 fail("testGetFilename(): " + filenames[i]);
+//             }
+//         }
+//     }
+// 
+//     void testResize(int xDim, int yDim, int zDim) throws Exception {
+//         ImageGeneric instance = new ImageGeneric();
+//         instance.resize(xDim, yDim, zDim);
+// 
+//         int xResult = instance.getXDim();
+//         int yResult = instance.getYDim();
+//         int zResult = instance.getZDim();
+// 
+//         assertEquals(xResult, xDim);
+//         assertEquals(yResult, yDim);
+//         assertEquals(zResult, zDim);
+//     }
 
     /**
      * Test of getFilename method, of class ImageGeneric.
@@ -238,6 +243,7 @@ public class ImageGeneric_Test {
      */
     @Test
     public void testGetDataType() {
+        System.out.println("testGetDataType");
         for (int i = 0; i < filenames.length; i++) {
             try {
                 testGetDataType(filenames[i], dataType[i]);
@@ -254,7 +260,44 @@ public class ImageGeneric_Test {
 
         assertEquals(dataType, result);
     }
-//
+
+      /**
+       * Test of getArrayFloat method, of class ImageGeneric.
+       */
+      @Test
+      public void testGetArrayFloat() throws Exception {
+          System.out.println("getArrayFloat");
+          int slice = 1;
+          ImageGeneric instance = new ImageGeneric(filename);
+          instance.read(slice);
+          float[] expResult = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
+          float[] result = instance.getArrayFloat(slice);
+          //System.out.println(Arrays.toString(result));
+          //may be there is a better way but I do not know it
+          for (int i = 0; i < expResult.length; i++)
+        	  assertEquals(expResult[i], result[i],0.001);
+
+      }
+
+    /**
+     * Test of getDataType method, of class ImageGeneric.
+     */
+    @Test
+    public void testEqual() {
+         try {
+             System.out.println("testEqual");
+             int slice = 1;
+             ImageGeneric instance = new ImageGeneric(filename);
+             ImageGeneric instance2 = new ImageGeneric(filename2);
+             instance.read(slice);
+             instance2.read(slice);
+             assertTrue(instance.equal(instance));
+         } catch (Exception ex) {
+             fail("testGetDataType(): " + filename);
+             //Logger.getLogger(ImageGenericTest.class.getName()).log(Level.SEVERE, null, ex);
+         }
+    }
+
 //    /**
 //     * Test of read method, of class ImageGeneric.
 //     */
@@ -267,7 +310,7 @@ public class ImageGeneric_Test {
 //        // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
 //    }
-//
+// 
 //    /**
 //     * Test of read method, of class ImageGeneric.
 //     */
@@ -282,169 +325,156 @@ public class ImageGeneric_Test {
 //        // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
 //    }
-//
-//    /**
-//     * Test of read method, of class ImageGeneric.
-//     */
-//    @Test
-//    public void testRead_int_long() throws Exception {
-//        System.out.println("read");
-//        int slice = 0;
-//        long image = 0L;
-//        ImageGeneric instance = new ImageGeneric(filename);
-//        instance.read(slice, image);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of read method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testRead_long() throws Exception {
-//        System.out.println("read");
-//        long image = 0L;
-//        ImageGeneric instance = new ImageGeneric();
-//        instance.read(image);
-//        // TODO review the generated test code and remlove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of read method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testRead_3args_2() throws Exception {
-//        System.out.println("read");
-//        int width = 0;
-//        int height = 0;
-//        long image = 0L;
-//        ImageGeneric instance = new ImageGeneric();
-//        instance.read(width, height, image);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of read method, of class ImageGeneric.
-//     */
-//    @Test
-//    public void testRead_4args() throws Exception {
-//        System.out.println("read");
-//        int width = 0;
-//        int height = 0;
-//        int slice = 0;
-//        long image = 0L;
-//        ImageGeneric instance = new ImageGeneric(filename);
-//        instance.read(width, height, slice, image);
-//        int xDim = instance.getXDim();
-//        int yDim = instance.getYDim();
-//
-//
-//        // TODO review the generated test code and remove the default call to fail.
-//        ///fail("The test case is a prototype.");
-//        assertNotNull(instance);
-//        assert xDim > 0;
-//        assert yDim > 0;
-//
-//    }
-//
-//    /**
-//     * Test of getArrayByte method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testGetArrayByte() throws Exception {
-//        System.out.println("getArrayByte");
-//        int slice = 0;
-//        ImageGeneric instance = new ImageGeneric();
-//        byte[] expResult = null;
-//        byte[] result = instance.getArrayByte(slice);
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of getArrayShort method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testGetArrayShort() throws Exception {
-//        System.out.println("getArrayShort");
-//        int slice = 0;
-//        ImageGeneric instance = new ImageGeneric();
-//        short[] expResult = null;
-//        short[] result = instance.getArrayShort(slice);
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of getArrayFloat method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testGetArrayFloat() throws Exception {
-//        System.out.println("getArrayFloat");
-//        int slice = 0;
-//        ImageGeneric instance = new ImageGeneric();
-//        float[] expResult = null;
-//        float[] result = instance.getArrayFloat(slice);
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of write method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testWrite() throws Exception {
-//        System.out.println("write");
-//        String filename = "";
-//        ImageGeneric instance = new ImageGeneric();
-//        instance.write(filename);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of setArrayByte method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testSetArrayByte() throws Exception {
-//        System.out.println("setArrayByte");
-//        byte[] data = null;
-//        ImageGeneric instance = new ImageGeneric();
-//        instance.setArrayByte(data);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of setArrayShort method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testSetArrayShort() throws Exception {
-//        System.out.println("setArrayShort");
-//        short[] data = null;
-//        ImageGeneric instance = new ImageGeneric();
-//        instance.setArrayShort(data);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of setArrayFloat method, of class ImageGeneric.
-//     */
-//    ///@Test
-//    public void testSetArrayFloat() throws Exception {
-//        System.out.println("setArrayFloat");
-//        float[] data = null;
-//        ImageGeneric instance = new ImageGeneric();
-//        instance.setArrayFloat(data);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
+// //
+// //    /**
+// //     * Test of read method, of class ImageGeneric.
+// //     */
+// //    @Test
+// //    public void testRead_int_long() throws Exception {
+// //        System.out.println("read");
+// //        int slice = 0;
+// //        long image = 0L;
+// //        ImageGeneric instance = new ImageGeneric(filename);
+// //        instance.read(slice, image);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+// //    /**
+// //     * Test of read method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testRead_long() throws Exception {
+// //        System.out.println("read");
+// //        long image = 0L;
+// //        ImageGeneric instance = new ImageGeneric();
+// //        instance.read(image);
+// //        // TODO review the generated test code and remlove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+// //    /**
+// //     * Test of read method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testRead_3args_2() throws Exception {
+// //        System.out.println("read");
+// //        int width = 0;
+// //        int height = 0;
+// //        long image = 0L;
+// //        ImageGeneric instance = new ImageGeneric();
+// //        instance.read(width, height, image);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+// //    /**
+// //     * Test of read method, of class ImageGeneric.
+// //     */
+// //    @Test
+// //    public void testRead_4args() throws Exception {
+// //        System.out.println("read");
+// //        int width = 0;
+// //        int height = 0;
+// //        int slice = 0;
+// //        long image = 0L;
+// //        ImageGeneric instance = new ImageGeneric(filename);
+// //        instance.read(width, height, slice, image);
+// //        int xDim = instance.getXDim();
+// //        int yDim = instance.getYDim();
+// //
+// //
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        ///fail("The test case is a prototype.");
+// //        assertNotNull(instance);
+// //        assert xDim > 0;
+// //        assert yDim > 0;
+// //
+// //    }
+// //
+// //    /**
+// //     * Test of getArrayByte method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testGetArrayByte() throws Exception {
+// //        System.out.println("getArrayByte");
+// //        int slice = 0;
+// //        ImageGeneric instance = new ImageGeneric();
+// //        byte[] expResult = null;
+// //        byte[] result = instance.getArrayByte(slice);
+// //        assertEquals(expResult, result);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+// //    /**
+// //     * Test of getArrayShort method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testGetArrayShort() throws Exception {
+// //        System.out.println("getArrayShort");
+// //        int slice = 0;
+// //        ImageGeneric instance = new ImageGeneric();
+// //        short[] expResult = null;
+// //        short[] result = instance.getArrayShort(slice);
+// //        assertEquals(expResult, result);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+
+// //
+// //    /**
+// //     * Test of write method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testWrite() throws Exception {
+// //        System.out.println("write");
+// //        String filename = "";
+// //        ImageGeneric instance = new ImageGeneric();
+// //        instance.write(filename);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+// //    /**
+// //     * Test of setArrayByte method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testSetArrayByte() throws Exception {
+// //        System.out.println("setArrayByte");
+// //        byte[] data = null;
+// //        ImageGeneric instance = new ImageGeneric();
+// //        instance.setArrayByte(data);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+// //    /**
+// //     * Test of setArrayShort method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testSetArrayShort() throws Exception {
+// //        System.out.println("setArrayShort");
+// //        short[] data = null;
+// //        ImageGeneric instance = new ImageGeneric();
+// //        instance.setArrayShort(data);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
+// //
+// //    /**
+// //     * Test of setArrayFloat method, of class ImageGeneric.
+// //     */
+// //    ///@Test
+// //    public void testSetArrayFloat() throws Exception {
+// //        System.out.println("setArrayFloat");
+// //        float[] data = null;
+// //        ImageGeneric instance = new ImageGeneric();
+// //        instance.setArrayFloat(data);
+// //        // TODO review the generated test code and remove the default call to fail.
+// //        fail("The test case is a prototype.");
+// //    }
 
     /**
      * Test of getStatistics method, of class ImageGeneric.
