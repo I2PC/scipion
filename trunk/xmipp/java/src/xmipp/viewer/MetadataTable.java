@@ -45,7 +45,8 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	public Object getValueAt(int row, int column) {
-		//DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)", row, column));
+		// DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)",
+		// row, column));
 		try {
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
@@ -60,7 +61,7 @@ public class MetadataTable extends MetadataGallery {
 			switch (type) {
 			case MetaData.LABEL_INT:
 				int value = md.getValueInt(label, id);
-				//treat special case of MDL_ENABLED
+				// treat special case of MDL_ENABLED
 				if (label == MDLabel.MDL_ENABLED)
 					return (value != -1);
 				return value;
@@ -80,11 +81,59 @@ public class MetadataTable extends MetadataGallery {
 			return null;
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		return null;
+	}
+
+	@Override
+	public void setValueAt(Object value, int row, int column) {
+		try {
+			ColumnInfo ci = visibleLabels.get(column);
+			if (!ci.render) {
+				int label = ci.getLabel();
+				long id = data.ids[row];
+				int type = MetaData.getLabelType(label);
+				MetaData md = data.md;
+				switch (type) {
+				case MetaData.LABEL_BOOL:
+					md.setValueBoolean(label, (Boolean) value, id);
+					break;
+				case MetaData.LABEL_INT:
+					if (label == MDLabel.MDL_ENABLED) {
+						int intValue = ((Boolean) value).booleanValue() ? 1 : -1;
+						md.setValueInt(label, intValue, id);
+					} else
+						md.setValueInt(label, ((Integer) value).intValue(), id);
+					break;
+				case MetaData.LABEL_FLOAT:
+				case MetaData.LABEL_DOUBLE:
+					md.setValueDouble(label, ((Double) value).doubleValue(), id);
+					break;
+				case MetaData.LABEL_LONG:
+					md.setValueInt(label, ((Integer) value).intValue(), id);
+					break;
+				case MetaData.LABEL_STRING:
+				case MetaData.LABEL_VECTOR:
+				case MetaData.LABEL_VECTOR_LONG:
+					// TODO: Implement a better editor for vectors
+					md.setValueString(label, value.toString(), id);
+					break;
+				}
+				fireTableRowsUpdated(row, row);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}// function setValueAt
+
+	@Override
+	public boolean isCellEditable(int row, int column) {
+		ColumnInfo ci = visibleLabels.get(column);
+		return ci.allowEdit && !ci.render;
 	}
 
 	@Override
@@ -115,8 +164,7 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	protected void calculateCellSize() {
-		DEBUG.printMessage(String.format(
-			"MetadataTable:calculateSize"));
+		DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
 		if (data.globalRender) {
 			super.calculateCellSize();
 			DEBUG.printMessage(String.format(
@@ -136,7 +184,7 @@ public class MetadataTable extends MetadataGallery {
 	public void setupTable(JTable table) {
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.setDefaultRenderer(ImageItem.class, renderer);
-		table.setDefaultRenderer(Double.class, new TestRenderer());		
+		table.setDefaultRenderer(Double.class, new TestRenderer());
 	}
 
 	@Override

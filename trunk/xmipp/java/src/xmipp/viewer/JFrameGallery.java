@@ -27,12 +27,16 @@ package xmipp.viewer;
 
 import xmipp.viewer.windows.ImagesWindowFactory;
 
+import xmipp.ij.XmippImageConverter;
 import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.Param;
 import ij.IJ;
+import ij.ImagePlus;
 import xmipp.utils.XmippResource;
 
 import java.awt.Component;
@@ -100,7 +104,7 @@ public class JFrameGallery extends JFrame {
 	// this flag will be used to avoid firing properties change events
 	// when the change is from our code and not external user interaction
 	private boolean autoAdjustColumns = false;
-	private JPopUpMenuGallery jpopUpMenuTable;
+	private GalleryPopupMenu jpopUpMenuTable;
 	private GalleryMenu menu;
 	JFileChooser fc = new JFileChooser();
 
@@ -228,7 +232,7 @@ public class JFrameGallery extends JFrame {
 		// Create the menu for table
 		menu = new GalleryMenu();
 		setJMenuBar(menu);
-		jpopUpMenuTable = new JPopUpMenuGallery();
+		jpopUpMenuTable = new GalleryPopupMenu();
 		menu.update();
 
 		pack();
@@ -413,7 +417,19 @@ public class JFrameGallery extends JFrame {
 		// ImagesWindowFactory.openGalleryAs3D(gallery);
 	}
 
-	private void saveAsMetadata(boolean all) {
+	private void save() {
+		SaveJDialog dlg = new SaveJDialog(this);
+		if (dlg.showDialog())
+		{
+			try {
+				String path = dlg.getData();
+				DEBUG.printMessage(path);
+				data.md.write(path);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		// Sets path and filename automatically.
 		// String filename = gallery.getFilename() != null ? gallery
 		// .getFilename() : "";
@@ -475,20 +491,15 @@ public class JFrameGallery extends JFrame {
 	}
 
 	public void pca() {
-		// String filename = gallery.getFilename();
-		//
-		// try {
-		// MetaData md = new MetaData(filename);
-		// ImageGeneric image = new ImageGeneric();
-		//
-		// md.getPCAbasis(image);
-		//
-		// ImagePlus imp = XmippImageConverter.convertToImageJ(image);
-		// imp.setTitle("PCA: " + filename);
-		// ImagesWindowFactory.captureFrame(imp);
-		// } catch (Exception ex) {
-		// DEBUG.printException(ex);
-		// }
+		 try {
+		 ImageGeneric image = new ImageGeneric();		
+		 data.md.getPCAbasis(image);		
+		 ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);
+		 imp.setTitle("PCA: " + data.filename);
+		 ImagesWindowFactory.captureFrame(imp);
+		 } catch (Exception ex) {
+		 DEBUG.printException(ex);
+		 }
 	}
 
 	public void fsc() {
@@ -964,17 +975,17 @@ public class JFrameGallery extends JFrame {
 
 	class GalleryMenu extends JMenuBar implements ActionListener {
 		protected JMenu jmFile = new JMenu(XmippLabel.LABEL_GALLERY_FILE);
-		protected JMenu jmSave = new JMenu(XmippLabel.LABEL_GALLERY_SAVE);
+		protected JMenu jmSave222 = new JMenu(XmippLabel.LABEL_GALLERY_SAVE);
 		protected JMenu jmDisplay = new JMenu("Display");
 
-		protected JMenuItem jmiSaveAsMetadata = new JMenuItem(
-				XmippLabel.LABEL_GALLERY_SAVE_AS_METADATA);
-		protected JMenuItem jmiSaveAsStack = new JMenuItem(
-				XmippLabel.LABEL_GALLERY_SAVE_AS_IMAGE);
-		protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(
-				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_METADATA);
-		protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(
-				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
+		protected JMenuItem jmiSave = new JMenuItem(
+				XmippLabel.LABEL_GALLERY_SAVE, XmippResource.getIcon("save.gif"));
+		protected JMenuItem jmiSaveAs = new JMenuItem(
+				XmippLabel.LABEL_GALLERY_SAVEAS, XmippResource.getIcon("save_as.gif"));
+//		protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(
+//				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_METADATA);
+//		protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(
+//				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
 		protected JMenuItem jmiExit = new JMenuItem(
 				XmippLabel.LABEL_GALLERY_EXIT);
 		protected JMenu jmStatistics = new JMenu(XmippLabel.MENU_STATS);
@@ -1068,10 +1079,13 @@ public class JFrameGallery extends JFrame {
 			} else if (jmi == jmiRenderImage) {
 				gallery.setRenderImages(jmiRenderImage.isSelected());
 			} else if (jmi == jmiColumns) {
-				ColumnsJDialog dialog = new ColumnsJDialog(JFrameGallery.this,
-						true);
-				ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
-				if (columns != null) {
+				ColumnsJDialog dialog = new ColumnsJDialog(JFrameGallery.this);
+				DEBUG.printMessage("Before showing dialog");
+				boolean result = dialog.showDialog();
+				DEBUG.printMessage("result:" + (result ? "True": "False"));
+				if (result) {
+					DEBUG.printMessage("AFter showing dialog");
+					ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
 					isUpdating = true;
 					((MetadataGallery) gallery).updateColumnInfo(columns);
 					gallery.fireTableDataChanged();
@@ -1086,14 +1100,14 @@ public class JFrameGallery extends JFrame {
 				pca();
 			else if (jmi == jmiFSC)
 				fsc();
-			else if (jmi == jmiSaveAsMetadata) {
-				saveAsMetadata(true);
-			} else if (jmi == jmiSaveSelectionAsMetadata) {
-				saveAsMetadata(false);
-			} else if (jmi == jmiSaveAsStack) {
+			else if (jmi == jmiSave) {
+				save();
+//			} else if (jmi == jmiSaveSelectionAsMetadata) {
+//				saveAsMetadata(false);
+			} else if (jmi == jmiSaveAs) {
 				saveAsStack(true);
-			} else if (jmi == jmiSaveSelectionAsStack) {
-				saveAsStack(false);
+//			} else if (jmi == jmiSaveSelectionAsStack) {
+//				saveAsStack(false);
 			} else if (jmi == jmiExit) {
 				System.exit(0);
 			} else if (jmi == jmiOpenWithChimera) {
@@ -1108,64 +1122,69 @@ public class JFrameGallery extends JFrame {
 					ex.printStackTrace();
 				}
 			} else if (jmi == jmiOpenWithImageJ) {
-
+				
 			}
 		}
 
+		private void addMenuItem(JMenu parent, JMenuItem item){
+			parent.add(item);
+			item.addActionListener(this);
+		}
+		
 		public GalleryMenu() {
 			super();
 
 			// File menu
-			jmSave.add(jmiSaveAsMetadata);
-			jmSave.add(jmiSaveAsStack);
-			jmSave.addSeparator();
-			jmSave.add(jmiSaveSelectionAsMetadata);
-			jmSave.add(jmiSaveSelectionAsStack);
+//			jmSave222.addSeparator();
+//			jmSave222.add(jmiSaveSelectionAsMetadata);
+//			jmSave222.add(jmiSaveSelectionAsStack);
 
 			add(jmFile);
-			jmFile.add(jmSave);
+			addMenuItem(jmFile, jmiSave);
+			addMenuItem(jmFile, jmiSaveAs);
+			//addMenuItem(jmFile, jmSave222);
 			jmFile.addSeparator();
-			jmFile.add(jmiExit);
+			addMenuItem(jmFile, jmiExit);
 
 			// Display menu
 			add(jmDisplay);
-			jmDisplay.add(jmiNormalize);
-			jmDisplay.add(jmiShowLabel);
+			addMenuItem(jmDisplay, jmiNormalize);
+			addMenuItem(jmDisplay, jmiShowLabel);
 			jmDisplay.addSeparator();
-			jmDisplay.add(jmiRenderImage);
-			jmDisplay.add(jmiApplyGeo);
-			jmDisplay.add(jmiColumns);
+			addMenuItem(jmDisplay, jmiRenderImage);
+			addMenuItem(jmDisplay, jmiApplyGeo);
+			addMenuItem(jmDisplay, jmiColumns);
 			jmDisplay.addSeparator();
-			jmDisplay.add(jmReslice);
-			jmReslice.add(jmiAxisX);
-			jmReslice.add(jmiAxisY);
-			jmReslice.add(jmiAxisZ);
+			addMenuItem(jmDisplay, jmReslice);
+			addMenuItem(jmReslice, jmiAxisX);
+			addMenuItem(jmReslice, jmiAxisY);
+			addMenuItem(jmReslice, jmiAxisZ);
 			ButtonGroup group = new ButtonGroup();
 			group.add(jmiAxisX);
 			group.add(jmiAxisY);
 			group.add(jmiAxisZ);
 
-			jmiNormalize.addActionListener(this);
-			jmiApplyGeo.addActionListener(this);
-			jmiShowLabel.addActionListener(this);
-			jmiRenderImage.addActionListener(this);
-			jmiColumns.addActionListener(this);
+//			jmiNormalize.addActionListener(this);
+//			jmiApplyGeo.addActionListener(this);
+//			jmiShowLabel.addActionListener(this);
+//			jmiRenderImage.addActionListener(this);
+//			jmiColumns.addActionListener(this);
 
 			// Statistics menu
 			add(jmStatistics);
-			jmStatistics.add(jmiAVG);
-			jmStatistics.add(jmiSTDEV);
-			jmStatistics.add(jmiPCA);
-			jmStatistics.add(jmiFSC);
+			addMenuItem(jmStatistics, jmiAVG);
+			addMenuItem(jmStatistics, jmiSTDEV);
+			addMenuItem(jmStatistics, jmiPCA);
+			addMenuItem(jmStatistics, jmiFSC);
 
 			// Open with menu
 			add(jmOpenWith);
-			jmOpenWith.add(jmiOpenWithChimera);
-			jmOpenWith.add(jmiOpenWithImageJ);
-			// jmOpenWith.add(jmiOpenAsStack);
+			addMenuItem(jmOpenWith, jmiOpenWithChimera);
+			addMenuItem(jmOpenWith, jmiOpenWithImageJ);
+			// addMenuItem(jmOpenWith, jmiOpenAsStack);
 
-			jmiOpenWithChimera.addActionListener(this);
-			jmiOpenWithImageJ.addActionListener(this);
+//			jmiOpenWithChimera.addActionListener(this);
+//			jmiOpenWithImageJ.addActionListener(this);
 
 			update();
 		}
@@ -1181,8 +1200,9 @@ public class JFrameGallery extends JFrame {
 			// jmiOpenAsMetadata.setEnabled(!isVolume);
 
 			// Volumes can't be saved as metadata.
-			jmiSaveAsMetadata.setEnabled(!volMode);
-			jmiSaveSelectionAsMetadata.setEnabled(!volMode);
+			jmiSave.setEnabled(!volMode);
+			jmiSaveAs.setEnabled(!volMode);
+			//jmiSaveSelectionAsMetadata.setEnabled(!volMode);
 			jmiApplyGeo.setEnabled(data.containsGeometryInfo());
 			jmiApplyGeo.setSelected(data.useGeo);
 			jmiNormalize.setEnabled(gallery.getNormalized());
@@ -1192,7 +1212,7 @@ public class JFrameGallery extends JFrame {
 		}
 	}
 
-	class JPopUpMenuGallery extends JPopupMenu {
+	class GalleryPopupMenu extends JPopupMenu {
 
 		protected Point location;
 		protected JMenuItem jmiEnable = new JMenuItem(
@@ -1212,7 +1232,7 @@ public class JFrameGallery extends JFrame {
 		protected JMenuItem jmiDisableTo = new JMenuItem(
 				XmippLabel.LABEL_GALLERY_DISABLE_TO);
 
-		public JPopUpMenuGallery() {
+		public GalleryPopupMenu() {
 			add(jmiEnable);
 			add(jmiDisable);
 			addSeparator();

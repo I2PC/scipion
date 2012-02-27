@@ -50,7 +50,7 @@ public class Filename {
 //        EXTENSION_SPI,
 //        EXTENSION_TIF
 //    };
-    private final static String[] SINGLE_IMAGES = new String[]{
+    public final static String[] SINGLE_IMAGES = new String[]{
         EXTENSION_XMP,
         EXTENSION_IMG,
         EXTENSION_HED,
@@ -63,16 +63,16 @@ public class Filename {
         EXTENSION_SPI,
         EXTENSION_TIF
     };
-    private final static String[] VOLUMES = new String[]{
+    public final static String[] VOLUMES = new String[]{
         EXTENSION_MRC,
         EXTENSION_VOL
     };
-    private final static String[] STACKS = new String[]{
+    public final static String[] STACKS = new String[]{
         EXTENSION_MRCS,
         EXTENSION_STK
     };
     
-    private final static String[] METADATAS = new String[]{
+    public final static String[] METADATAS = new String[]{
     	EXTENSION_XMD,
         EXTENSION_SEL,
         EXTENSION_DOC,
@@ -81,7 +81,7 @@ public class Filename {
         EXTENSION_POS
     };
     
-    private final static String[] SPIDER = new String[] {
+    public final static String[] SPIDER = new String[] {
     	EXTENSION_SPI,
     	EXTENSION_VOL
     };

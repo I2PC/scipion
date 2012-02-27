@@ -93,7 +93,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             ImageGeneric image = new ImageGeneric(PSDFilename);
             image.setUseLogarithm(false);
 
-            psdimage = XmippImageConverter.convertToImageJ(image);
+            psdimage = XmippImageConverter.readImageGenericToImageJ(image);
             psdimage.setTitle(PSDFilename);
 
             removeAll();

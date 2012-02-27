@@ -54,7 +54,7 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
 		ImageGeneric image = new ImageGeneric(volFn);
-		ImagePlus imp = XmippImageConverter.convertToImageJ(image, thumb_width,
+		ImagePlus imp = XmippImageConverter.readImageGenericToImageJ(image, thumb_width,
 				thumb_height, index + 1, volNumber);
 		image.destroy();
 		String label = String.format("%d", index + 1);

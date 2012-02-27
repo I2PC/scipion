@@ -10,6 +10,7 @@ public class ColumnInfo {
 	public boolean visible; 
 	public boolean render;
 	public boolean allowRender = false;
+	public boolean allowEdit = true;
 	
 	/** Constructors */
 	public ColumnInfo(int label, String name, boolean visible, boolean render){
@@ -35,6 +36,18 @@ public class ColumnInfo {
 	public ColumnInfo(int label, boolean visible, boolean render){
 		this(label, MetaData.getLabelName(label), visible, render);
 	}	
+	
+	/** Update the column information with the provided one
+	 * return true if some field has changed
+	 */
+	public boolean updateInfo(ColumnInfo ci){
+		boolean result = visible != ci.visible 
+				|| render != ci.render || allowEdit != ci.allowEdit;
+		visible = ci.visible;
+		render = ci.render;
+		allowEdit = ci.allowEdit;
+		return result;
+	}
 	
 	public int getLabel(){
 		return label;

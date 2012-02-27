@@ -46,14 +46,11 @@ import javax.swing.table.AbstractTableModel;
 
 import xmipp.jni.MetaData;
 import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippDialog;
 
-public class ColumnsJDialog extends JDialog implements ActionListener {
+public class ColumnsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
-	
-	private JFrameGallery parent;
 	private JTable tableColumns;
-	private JButton btnCancel;
-	private JButton btnOk;
 	private JButton btnUp;
 	private JButton btnDown;
 	private ColumnsTableModel model;
@@ -61,21 +58,19 @@ public class ColumnsJDialog extends JDialog implements ActionListener {
 	private ArrayList<ColumnInfo> rows;
 	boolean fireEvent = true;
 
-	public ColumnsJDialog(JFrameGallery parent, boolean modal) {
-		super(parent, modal);
+	public ColumnsJDialog(JFrameGallery parent) {
+		super(parent, "Columns", true);
 		this.parent = parent;
-		initComponents();
 	}// constructor ColumnsJDialog
 
 	public ArrayList<ColumnInfo> getColumnsResult() {
 		return rows;
 	}
 
-	private void initComponents() {
+	@Override
+	protected void createContent(JPanel panel){
 		setResizable(false);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setTitle("Columns");
-		setLayout(new GridBagLayout());
+		panel.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(10, 10, 10, 10);
 		gbc.anchor = GridBagConstraints.WEST;
@@ -86,29 +81,21 @@ public class ColumnsJDialog extends JDialog implements ActionListener {
 				.createTitledBorder("Column properties"));
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
-		model = new ColumnsTableModel(parent.getData().labels);
+		model = new ColumnsTableModel(((JFrameGallery)parent).getData().labels);
 		tableColumns = new JTable(model);
 		tableColumns
 				.setPreferredScrollableViewportSize(new Dimension(350, 200));
-		tableColumns
-				.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		sp.setViewportView(tableColumns);
-		add(groupstbpn, WindowUtil.getConstraints(gbc, 0, 0, 3, 3));
-		btnCancel = WindowUtil.getTextButton("Cancel", this);
-		btnOk = WindowUtil.getTextButton("Ok", this);
-		JPanel panel = new JPanel();
-		panel.setLayout(new GridBagLayout());
+		panel.add(groupstbpn, WindowUtil.getConstraints(gbc, 0, 0));
+
+		JPanel panelUpDown = new JPanel();
+		panelUpDown.setLayout(new GridBagLayout());
+		gbc.insets = new Insets(0, 0, 5, 5);
 		btnUp = WindowUtil.getIconButton("up.gif", this);
-
-		panel.add(btnUp, WindowUtil.getConstraints(gbc, 0, 0));
+		panelUpDown.add(btnUp, WindowUtil.getConstraints(gbc, 0, 0));
 		btnDown = WindowUtil.getIconButton("down.gif", this);
-		panel.add(btnDown, WindowUtil.getConstraints(gbc, 0, 1));
-		add(panel, WindowUtil.getConstraints(gbc, 3, 2));
-		add(btnCancel, WindowUtil.getConstraints(gbc, 3, 3));
-		gbc.anchor = GridBagConstraints.LINE_END;
-		add(btnOk, WindowUtil.getConstraints(gbc, 2, 3));
-		getRootPane().setDefaultButton(btnOk);
-
+		panelUpDown.add(btnDown, WindowUtil.getConstraints(gbc, 0, 1));
+		panel.add(panelUpDown, WindowUtil.getConstraints(gbc, 1, 0));
 		// this buttons will be enabled after selection
 		enableUpDown(false);
 		// listen to selection changes (only one row selected)
@@ -120,21 +107,12 @@ public class ColumnsJDialog extends JDialog implements ActionListener {
 						enableUpDown(true);
 					}
 				});
-
-		pack();
-		WindowUtil.centerWindows(this, parent);
-		setVisible(true);
 	}// function initComponents
 
 	private void enableUpDown(boolean value) {
 		btnUp.setEnabled(value);
 		btnDown.setEnabled(value);
 	}// function enableUpDown
-
-	private void close() {
-		setVisible(false);
-		dispose();
-	}// function close
 
 	// move the selection on the table, -1 up, 0 down
 	private void moveSelection(int deltha) {
@@ -147,25 +125,19 @@ public class ColumnsJDialog extends JDialog implements ActionListener {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		JButton btn = (JButton) e.getSource();
-
+	public void handleActionPerformed(ActionEvent evt){		
+		JButton btn = (JButton) evt.getSource();
+		
 		if (btn == btnUp && tableColumns.getSelectedRow() > 0)
 			moveSelection(-1);
 		else if (btn == btnDown && tableColumns.getSelectedRow() < rows.size() - 1)
 			moveSelection(1);
-		else if (btn == btnOk)
-			close();
-		else if (btn == btnCancel) {
-			rows = null;
-			close();
-		}
 	}// function actionPerformed
 
 	class ColumnsTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = 1L;
 
-		private String[] columns = { "Label", "Visible", "Render" };
+		private String[] columns = { "Label", "Visible", "Render", "Edit" };
 
 		public ColumnsTableModel(int[] labels) {
 			rows = new ArrayList<ColumnInfo>(labels.length);
@@ -224,6 +196,9 @@ public class ColumnsJDialog extends JDialog implements ActionListener {
 			case 2:
 				col.render = (Boolean) value;
 				break;
+			case 3:
+				col.allowEdit = (Boolean) value;
+				break;
 			}
 
 		}
@@ -238,6 +213,8 @@ public class ColumnsJDialog extends JDialog implements ActionListener {
 				return col.visible;
 			case 2:
 				return col.render;
+			case 3:
+				return col.allowEdit;
 			}
 			return null;
 		}

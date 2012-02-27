@@ -60,14 +60,9 @@ public class MetadataGallery extends ImageGallery {
 				ColumnInfo ci1 = data.labels.get(i);
 				ColumnInfo ci2 = newInfo.get(j);
 				if (ci1.label == ci2.label) {
-					if (ci1.visible != ci2.visible) {
-						ci1.visible = ci2.visible;
+					if (ci1.updateInfo(ci2))
 						changed = true;
-					}
-					if (ci1.render != ci2.render) {
-						ci1.render = ci2.render;
-						changed = true;
-					}
+					
 					if (ci1.visible)
 						visibleLabels.add(ci1);
 					if (ci1.render)
@@ -89,7 +84,7 @@ public class MetadataGallery extends ImageGallery {
 			fireTableStructureChanged();
 		}
 	}
-
+	
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
 		// Set information about columns

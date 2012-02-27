@@ -149,8 +149,7 @@ public class GalleryData {
 			if (labels != null)
 				for (ColumnInfo ci2: labels)
 					if (ci.label == ci2.label){
-						ci.visible = ci2.visible;
-						ci.render = ci2.render;
+						ci.updateInfo(ci2);
 					}
 			newLabels.add(ci);
 			if (ciFirstRender == null && ci.allowRender)

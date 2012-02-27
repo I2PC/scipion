@@ -619,7 +619,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
     {
         MetaData * MDin = GET_INTERNAL_METADATA(jmetadata);
         ImageGeneric *basis= GET_INTERNAL_IMAGE_GENERIC(jbasis);
-
+        basis->setDatatype(Double);
+        std::cerr << "DEBUG_JM: after getting image" <<std::endl;
         MultidimArray<double> *mdArray;
         MULTIDIM_ARRAY_GENERIC(*basis).getMultidimArrayPointer(mdArray);
 
@@ -631,6 +632,10 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
         program.produceSideInfo();
         program.pcaAnalyzer.evaluateZScore(program.NPCA, program.Niter);
         program.produceBasis(*mdArray);
+        //Notify the real dimensions to image generic
+        ArrayDim adim;
+        mdArray->getDimensions(adim);
+        basis->image->setADimFile(adim);
     }
     XMIPP_CATCH;
 }

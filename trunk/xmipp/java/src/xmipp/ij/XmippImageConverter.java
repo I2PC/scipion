@@ -15,6 +15,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.DEBUG;
 
 
 /*
@@ -46,37 +47,40 @@ public class XmippImageConverter {
         image = new ImageGeneric(name);
         imp = convertToImageJ(image, nimage);
         } else {*/
-        imp = convertToImageJ(image, w, h);
+        imp = readImageGenericToImageJ(image, w, h);
         // }
 
         return imp;
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image) throws Exception {
-        return convertToImageJ(image, ImageGeneric.ALL_SLICES);
+    public static ImagePlus readImageGenericToImageJ(ImageGeneric image) throws Exception {
+        return readImageGenericToImageJ(image, ImageGeneric.ALL_SLICES);
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image, int nslice) throws Exception {
-        return convertToImageJ(image, image.getXDim(), image.getYDim(), nslice);
+    public static ImagePlus readImageGenericToImageJ(ImageGeneric image, int nslice) throws Exception {
+        return readImageGenericToImageJ(image, image.getXDim(), image.getYDim(), nslice);
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image, long nimage) throws Exception {
-        return convertToImageJ(image, image.getXDim(), image.getYDim(), nimage);
+    public static ImagePlus readImageGenericToImageJ(ImageGeneric image, long nimage) throws Exception {
+        return readImageGenericToImageJ(image, image.getXDim(), image.getYDim(), nimage);
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height) throws Exception {
-        return convertToImageJ(image, width, height, ImageGeneric.ALL_SLICES, ImageGeneric.ALL_IMAGES);
+    public static ImagePlus readImageGenericToImageJ(ImageGeneric image, int width, int height) throws Exception {
+        return readImageGenericToImageJ(image, width, height, ImageGeneric.ALL_SLICES, ImageGeneric.ALL_IMAGES);
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, int nslice) throws Exception {
-        return convertToImageJ(image, width, height, nslice, ImageGeneric.ALL_IMAGES);
+    public static ImagePlus readImageGenericToImageJ(ImageGeneric image, int width, int height, int nslice) throws Exception {
+        return readImageGenericToImageJ(image, width, height, nslice, ImageGeneric.ALL_IMAGES);
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, long nimage) throws Exception {
-        return convertToImageJ(image, width, height, ImageGeneric.ALL_SLICES, nimage);
+    public static ImagePlus readImageGenericToImageJ(ImageGeneric image, int width, int height, long nimage) throws Exception {
+        return readImageGenericToImageJ(image, width, height, ImageGeneric.ALL_SLICES, nimage);
     }
 
-    public static ImagePlus convertToImageJ(ImageGeneric image, int width, int height, int slice, long select_image) throws Exception {
+    /** In this function is suposed the the ImageGeneric is read
+     * only the header and the data will be read from disk
+     */
+    public static ImagePlus readImageGenericToImageJ(ImageGeneric image, int width, int height, int slice, long select_image) throws Exception {
         ImageStack is = new ImageStack(width, height);
         ProcessorCreator pc = createProcessorCreator(image);
         long lastImage = select_image;
@@ -99,9 +103,6 @@ public class XmippImageConverter {
     /**
      * Converts an ImageGeneric to ImageJ
      * WARNING!: Use this when converting images from memory.
-     * @param image
-     * @return
-     * @throws Exception 
      */
     public static ImagePlus convertImageGenericToImageJ(ImageGeneric image) throws Exception {
         return convertImageGenericToImageJ(image, ImageGeneric.ALL_SLICES);
@@ -110,10 +111,6 @@ public class XmippImageConverter {
     /**
      * Converts an ImageGeneric to ImageJ
      * WARNING!: Use this when converting images from memory.
-     * @param image
-     * @param slice
-     * @return
-     * @throws Exception 
      */
     static ImagePlus convertImageGenericToImageJ(ImageGeneric image, int slice) throws Exception {
         int width = image.getXDim();
@@ -155,7 +152,7 @@ public class XmippImageConverter {
                     long n = Filename.getNimage(filename);
 
                     ImageGeneric image = new ImageGeneric(name);
-                    ImagePlus slice = convertToImageJ(image, n);
+                    ImagePlus slice = readImageGenericToImageJ(image, n);
 
                     if (is == null) {
                         is = new ImageStack(slice.getWidth(), slice.getHeight());
@@ -354,7 +351,10 @@ class ProcessorCreatorFloat extends ProcessorCreator {
 
     @Override
     public ImageProcessor getProcessor(ImageGeneric image, int slice) throws Exception {
-        return new FloatProcessor(image.getXDim(), image.getYDim(), image.getArrayFloat(slice), null);
+    	float [] array = image.getArrayFloat(slice);
+    	DEBUG.printMessage(String.format("xdim: %d, ydim: %d, array.lenght: %d", 
+    			image.getXDim(), image.getYDim(), array.length));
+        return new FloatProcessor(image.getXDim(), image.getYDim(), array, null);
     }
 }
 

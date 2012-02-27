@@ -202,6 +202,7 @@ public class XmippLabel {
     public final static String LABEL_GALLERY_DISABLE_TO = "Disable to here";
     public final static String LABEL_GALLERY_FILE = "File";
     public final static String LABEL_GALLERY_SAVE = "Save";
+    public final static String LABEL_GALLERY_SAVEAS = "Save as";
     public final static String LABEL_GALLERY_EXIT = "Exit";
     public final static String LABEL_VIEW_MD = "Go to TABLE view";
     public final static String LABEL_VIEW_GALLERY = "Go to GALLERY view";

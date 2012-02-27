@@ -54,7 +54,7 @@ public class MetadataImageItem extends AbstractImageItem {
             int h_ = (int) Math.ceil(getHeight() / factor);
 
             image.read( w_, h_);
-            ip = XmippImageConverter.convertToImageJ(image);
+            ip = XmippImageConverter.readImageGenericToImageJ(image);
         } catch (Exception ex) {
             System.err.println(" >>> Error loading preview: " + getKey());
 //            ex.printStackTrace();

@@ -24,6 +24,7 @@
  ***************************************************************************/
 package xmipp.utils;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -36,6 +37,8 @@ import javax.swing.JButton;
 
 public class WindowUtil {
 
+	/** Some colors contants */
+	public static final Color LIGHT_BLUE = new Color(173, 216, 230);
 	/** This function will be used to place the location of 
 	 * a windows relative to another windows or screen
 	 */
@@ -73,12 +76,16 @@ public class WindowUtil {
 	public static JButton getIconButton(String icon, ActionListener listener){
 		JButton btn = new JButton();
 		btn.setIcon(XmippResource.getIcon(icon));
+		Dimension dim = btn.getPreferredSize();
+		dim.width = dim.height;
+		btn.setPreferredSize(dim);
 		btn.addActionListener(listener);
 		return btn;
 	}
 	
 	public static JButton getTextButton(String text, ActionListener listener){
 		JButton btn = new JButton(text);
+		btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;
 	}	
@@ -89,8 +96,15 @@ public class WindowUtil {
 		constraints.gridy = y;
 		constraints.gridwidth = columns;
 		constraints.gridheight = rows;
-		constraints.fill = (columns > 1) ? GridBagConstraints.HORIZONTAL
-				: GridBagConstraints.NONE;
+		if (columns > 1 && rows > 1){
+			constraints.fill = GridBagConstraints.BOTH;
+		}
+		else if (columns > 1){
+			constraints.fill = GridBagConstraints.HORIZONTAL;}
+		else if (rows > 1){
+			constraints.fill = GridBagConstraints.VERTICAL;}
+		else {
+			constraints.fill = GridBagConstraints.NONE;}
 		return constraints;
 	}
 			
