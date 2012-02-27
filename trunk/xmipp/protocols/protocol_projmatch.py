@@ -254,7 +254,36 @@ class ProtProjMatch(XmippProtocol):
                             showError("Error launching java app", str(e))
             
         if doPlot('DisplayAngularDistribution'):
-            return                         
+
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            ref3Ds = getListFromVector(self.DisplayRef3DNo)
+            
+            if(self.DisplayAngularDistributionWith == '3D'):
+                for ref3d in ref3Ds:
+                    for it in iterations:
+                        
+                        file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
+                        file_name_bild = file_name + '.bild'
+    
+                        parameters =  ' -i ' + file_name + \
+                            ' -o ' + file_name_bild + \
+                            ' chimera ' + int(OuterRadius + OuterRadius * 0.1)
+                            
+                        runJob(_log,
+                               'xmipp_angular_distribution_show',
+                               parameters
+                               )
+                        
+                        parameters =  ' ' + file_name_bild + ' ' + \
+                        ' -i ' + file_name + \
+                            ' -o ' + file_name_bild + \
+                            ' chimera ' + int(OuterRadius + OuterRadius * 0.1)
+                            
+                        runJob(_log,
+                               'chimera',
+                               parameters
+                               )
+
         else: #DisplayAngularDistributionWith == '2D'
             return
 
