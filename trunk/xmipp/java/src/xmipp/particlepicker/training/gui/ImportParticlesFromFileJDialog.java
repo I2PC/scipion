@@ -195,6 +195,9 @@ public class ImportParticlesFromFileJDialog extends JDialog
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("file"));
 		switch (format)
 		{
+		case Xmipp24:
+			parent.importParticlesFromXmipp24File(file);
+			break;
 		case Xmipp30:
 			parent.importParticlesFromXmipp30File(file);
 			break;

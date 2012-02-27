@@ -780,4 +780,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		
 	}
 
+	public void importParticlesFromXmipp24File(String file)
+	{
+		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		
+	}
+
 }

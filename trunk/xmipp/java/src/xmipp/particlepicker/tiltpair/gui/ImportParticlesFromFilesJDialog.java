@@ -69,7 +69,7 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		add(browsetbt, WindowUtil.getConstraints(constraints, 2, 2, 1));
 		browsetbt.addActionListener(bl);
 
-		fc = new JFileChooser();
+		fc = new JFileChooser(new File(parent.getParticlePicker().getOutputDir()));
 		setFile(untiltedtf, parent.getMicrograph().getPosFileFromXmipp24());
 		setFile(tiltedtf, parent.getMicrograph().getTiltedMicrograph().getPosFileFromXmipp24());
 
