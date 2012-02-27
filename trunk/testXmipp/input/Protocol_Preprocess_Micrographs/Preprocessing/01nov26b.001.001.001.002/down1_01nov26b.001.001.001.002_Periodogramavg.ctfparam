@@ -3,8 +3,8 @@
 data_
  _CTF_Sampling_rate 1.4
  _CTF_Voltage 200
- _CTF_Defocus_U -7351.92
- _CTF_Defocus_V -14833.9
+ _CTF_Defocus_U 7351.92
+ _CTF_Defocus_V 14833.9
  _CTF_Defocus_angle 11.5833
  _CTF_Spherical_aberration 2.26
  _CTF_Chromatic_aberration 0.512189
@@ -13,7 +13,7 @@ data_
  _CTF_Convergence_cone 1e-10
  _CTF_Longitudinal_displacement 0
  _CTF_Transversal_displacement 0
- _CTF_Q0 -0.07
+ _CTF_Q0 0.07
  _CTF_K 0.658805
  _CTFBG_Gaussian_K 1.32442
  _CTFBG_Gaussian_SigmaU 73600.9

@@ -1,11 +1,11 @@
 # XMIPP_STAR_1 * 
 #  CTF converted from Preprocessing/A14642/down2_A14642_Periodogramavg.ctfparam
 data_ 
- _CTF_Defocus_U -17396.77
- _CTF_Defocus_V -17811.01
+ _CTF_Defocus_U 17396.77
+ _CTF_Defocus_V 17811.01
  _CTF_Defocus_angle 32.06
  _CTF_Sampling_rate 2.8
  _CTF_Voltage 200
  _CTF_Spherical_aberration 2.26
- _CTF_Q0 -0.1
+ _CTF_Q0 0.1
  _CTF_K 1.
