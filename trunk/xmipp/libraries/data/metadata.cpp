@@ -948,7 +948,7 @@ void MetaData::read(const FileName &_filename,
     BlockName = _filename.getBlockName();
     //filename is global, so we can write the filename when reporting errors
     filename  = _filename.removeBlockName();
-    _read(filename,desiredLabels,BlockName,decomposeStack);
+    _read(filename,desiredLabels,BlockName+"$",decomposeStack);
     //_read calls clean so I cannot use eFilename as filename ROB
     // since eFilename is reset in clean
     eFilename = filename;
@@ -1136,7 +1136,6 @@ void MetaData::_read(const FileName &filename,
             BLOCK_NAME(block, blockName);
             if (blockRegExp.size() == 0 || regexec(&re, blockName.c_str(), (size_t) 0, NULL, 0)==0)
             {
-
                 //Read column labels from the datablock that starts at firstData
                 //Label ends at firstloop
                 if ((isColumnFormat = (block.loop != NULL)))
