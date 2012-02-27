@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Sjors Scheres           scheres@cnb.csic.es (2002)
+ *             Carlos Oscar Sorzano          (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -39,14 +40,11 @@
 /** Centilt parameters. */
 class ProgAlignTiltPairs: public XmippProgram
 {
-protected:
-    /** MetaData for untilted and tilted images */
-	MetaData mdU, mdT;
-	/** Object id for current image pair */
-	size_t idU, idT;
-    MDRow              rowU, rowT;
+public:
+    /**  Filename input document file */
+    FileName fnIn;
     /**  Filename output document file */
-    FileName mdOut;
+    FileName fnOut;
     /** Discard images that shift more than max_shift*/
     double max_shift;
     /** Force x-shift to be zero */
@@ -55,16 +53,26 @@ protected:
     bool do_stretch;
     /** Perform centering */
     bool do_center;
-
+public:
+    /// Define parameters in the command line
     void defineParams();
+
+    /// Read parameters from the command line
     void readParams();
-    void processImage();
-    void run();
 
     /// Show
     void show();
 
+    /// Process a single image
+    void processImage();
+
+    /// Run over the whole input metadata
+    void run();
+
     /// Center one tilted image
-    bool centerTiltedImage(const Image<double> &Iu, Image<double> &It);
+    bool centerTiltedImage(const MultidimArray<double> &imgU,
+    		double tilt, MultidimArray<double> &imgT,
+    		double alphaT,
+    		double &shiftX, double &shiftY, double &crossCorrelation);
 };
 //@}

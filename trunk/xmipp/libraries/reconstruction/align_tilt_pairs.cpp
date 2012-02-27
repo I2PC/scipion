@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Sjors Scheres                 (scheres@cnb.csic.es)
+ *             Carlos Oscar Sorzano          (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -29,14 +30,11 @@ void ProgAlignTiltPairs::defineParams()
 {
     //Usage
     addUsageLine("Center the tilted images of all tilted-untilted image pairs.");
-    addUsageLine("+This program receives as input a metadata with attwo sets of images, untilted and tilted. In the first one, a metadata");
-    addUsageLine("+is required with values for: *angleRot*,the angle between y-axis and tilt axis taken from micrographs.");
-    addUsageLine("+Also the in-plane translations (*shiftX* and *shiftY*) and rotation(*anglePsi*) are expected from a");
-    addUsageLine("+previous alignment step. In the tilted metadata should be provided the angle between y-axis and tilt");
-    addUsageLine("+axis, *anglePsi* and the tilt angle taken from the experiment.");
-    addUsageLine("+As output, the first euler angle *angleRot* of tilted images is set with *anglePsi* of untilted ones.");
-    addUsageLine("+The in-plane translations *shiftX* and *shiftY* of tilted images are calculated using cross-correlation");
-    addUsageLine("+yielding also the cross-correlation coeficient *maxCC*");
+    addUsageLine("+This program receives as input a metadata with two sets of images, untilted and tilted.");
+    addUsageLine("+Untilted images must have been previously classified and aligned. Then, the tilted images");
+    addUsageLine("+are aligned to their untilted versions. The alignment parameters from the classification plus");
+    addUsageLine("+the alignment parameters from the tilted-untilted comparison are used to deduce the");
+    addUsageLine("+3D alignment parameters for the tilted images.");
     addUsageLine("+* If the particles under study are disc-shaped and lying flat on the micrograph (i.e. the have a relatively");
     addUsageLine("+  low height (Z) and are more-or-less spherically shaped in XY), this program is expected to give good results");
     addUsageLine("+  using the default options.");
@@ -47,14 +45,12 @@ void ProgAlignTiltPairs::defineParams()
     addUsageLine("+    --skip_centering will skip the entire centering, so that only the Psi angle of the tilted images will be modified.");
 
     //Examples
-    addExampleLine("To center tilted images g0t.sel allowing a maximum shift of 10 pixels:",false);
-    addExampleLine("xmipp_align_tilt_pairs -u g0u.sel -t g0t.sel -o g0t_aligned.doc --max_shift 10");
+    addExampleLine("To center tilted images allowing a maximum shift of 10 pixels:",false);
+    addExampleLine("xmipp_align_tilt_pairs -i class_00001@classes.xmd -o alignedImages.xmd --max_shift 10");
+
     // Params
-    addParamsLine(" -u <metadata>                : Input metadata with untilted images");
-    addParamsLine(" -t <metadata>                : Input metadata with tilted images. Both metadatas should");
-    addParamsLine("                              : have same number of entries, and the same order is assumed for image pairs).");
-    addParamsLine(" [-o <metadata>]              : Output metadata file with rotations & translations.");
-    addParamsLine(" alias --odoc;");
+    addParamsLine("  -i <metadata>              : Input metadata with untilted and tilted images");
+    addParamsLine("  -o <metadata>              : Output metadata file with rotations & translations for 3D reconstruction.");
     addParamsLine(" [--max_shift <value=0.0>]   : Discard images which shift more (in pixels).");
     addParamsLine(" [--force_x_zero]            : Force x-shift to be zero.");
     addParamsLine(" [--skip_stretching]         : Default action is to stretch the tilted images in X direction by");
@@ -66,202 +62,176 @@ void ProgAlignTiltPairs::defineParams()
 //Read params
 void ProgAlignTiltPairs::readParams()
 {
-    FileName fn_sel;
-
-    // metaData File with untilted images
-    fn_sel = getParam("-u");
-    mdU.read(fn_sel);
-    // metaData file with tilted images
-    fn_sel = getParam("-t");
-    mdT.read(fn_sel);
-
-    if (mdU.size() != mdT.size())
-        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Unequal number of active images in untilted and tilted metadata files");
-    // Write out document file?
-    mdOut = getParam("-o");
-    // Maximum shift (discard images that shift more in last iteration)
+    fnIn = getParam("-i");
+    fnOut = getParam("-o");
     max_shift = getDoubleParam("--max_shift");
-    // Force x-shift to be zero?
     force_x_zero = checkParam("--force_x_zero");
-    // Perform centering?
     do_center = !checkParam("--skip_centering");
-    // Perform cosine stretching?
     do_stretch = !checkParam("--skip_stretching");
 }
 
 // Show ====================================================================
 void ProgAlignTiltPairs::show()
 {
-    std::cerr << " MetaData file with untilted images   : " <<  mdU.getFilename() << std::endl;
-    std::cerr << " MetaData file with tilted images     : " <<  mdT.getFilename() << std::endl;
-    if (!mdOut.empty())
-        std::cerr << " Output document file (tilted images) : " << mdOut << std::endl;
+    std::cerr
+    << "Input metadata: " <<  fnIn << std::endl
+    << "Output metadata: " <<  fnOut << std::endl;
     if (max_shift != 0)
-        std::cerr << " Discard images that shift more than  : " << max_shift << std::endl;
+        std::cerr << "Discard images that shift more than: " << max_shift << std::endl;
     if (force_x_zero)
-        std::cerr << " Force x-shift to be zero " << std::endl;
+        std::cerr << "Force x-shift to be zero " << std::endl;
     if (!do_stretch)
-        std::cerr << " Skip cosine stretching " << std::endl;
+        std::cerr << "Skip cosine stretching " << std::endl;
     if (!do_center)
-        std::cerr << " Skip centering " << std::endl;
-
+        std::cerr << "Skip centering " << std::endl;
 }
 
 // Center one tilted image  =====================================================
-bool ProgAlignTiltPairs::centerTiltedImage(const Image<double> &imgU, Image<double> &imgT)
+bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
+		double tilt, MultidimArray<double> &imgT,
+		double alphaT,
+		double &shiftX, double &shiftY, double &crossCorrelation)
 {
+    Image<double> save;
+    save()=imgU;
+    save.write("PPPuntilted.xmp");
+    save()=imgT;
+    save.write("PPPtilted.xmp");
 
-    Matrix2D<double> A(3, 3);
-    MultidimArray<double> Maux(imgT()), Mcorr(imgT());
-    double maxcorr, aux;
-    float xshift, yshift, shift;
-    int imax, jmax;
-
-    double cos_tilt, imgT_psi;
-    rowT.getValue(MDL_ANGLETILT, cos_tilt);
-    cos_tilt = COSD(cos_tilt);
-    rowT.getValue(MDL_ANGLEPSI, imgT_psi);
-
+    // Cosine stretching, store stretched image in imgTaux
+    double cos_tilt = COSD(tilt);
+    MultidimArray<double> imgTaux;
     if (do_stretch)
     {
-        // Cosine stretching, store stretched image in Maux
+        Matrix2D<double> A(3, 3);
         A.initIdentity();
-
         A(0, 0) = cos_tilt;
-        Maux.initZeros();
-        applyGeometry(LINEAR, Maux, imgT(), A, IS_INV, DONT_WRAP);
+    	std::cout << "Tilt=" << tilt << " A=\n" << A << std::endl;
+        applyGeometry(LINEAR, imgTaux, imgT, A, IS_INV, WRAP);
     }
     else
-        Maux = imgT();
+    	imgTaux = imgT;
+
+    save()=imgTaux;
+    save.write("PPPtiltedStretched.xmp");
 
     // Calculate cross-correlation
+    MultidimArray<double> Mcorr;
     CorrelationAux auxCorr;
-    correlation_matrix(Maux, imgU(), Mcorr, auxCorr);
+    correlation_matrix(imgU, imgTaux, Mcorr, auxCorr);
 
+    // Look for maximum
     if (force_x_zero)
-    {
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mcorr)
-        {
             if (j != 0)
                 A2D_ELEM(Mcorr, i, j) = 0.;
-        }
-    }
 
+    int imax,jmax;
     Mcorr.maxIndex(imax, jmax);
-    maxcorr = A2D_ELEM(Mcorr, imax, jmax);
-    xshift = (float) jmax;
-    yshift = (float) imax;
+    crossCorrelation = A2D_ELEM(Mcorr, imax, jmax);
+    shiftX = jmax;
+    shiftY = imax;
 
-    // Calculate correlation coefficient
-    A.initIdentity();
-    A(0, 2) = xshift;
-    A(1, 2) = yshift;
-    selfApplyGeometry(LINEAR, Maux, A, IS_INV, DONT_WRAP);
-    Maux.setXmippOrigin();
-    // ccf = correlationIndex(imgU(), Maux);
-
+    // Readjust shift
     if (do_stretch)
-        xshift *= cos_tilt;
-    shift = sqrt(xshift * xshift + yshift * yshift);
+    	shiftX *= cos_tilt;
+    double shift = sqrt(shiftX * shiftX + shiftY * shiftY);
+    std::cout << "shiftX=" << shiftX << " shiftY=" << shiftY << std::endl;
+    std::cout << "Press any key\n";
+    char c; std::cin >> c;
 
-    if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
+    if ((max_shift==0) || (shift < max_shift))
     {
-        // Store shift in the header of the image
-        // Take rotation into account for shifts
-        double cos_psi = COSD(imgT_psi), sin_psi = SIND(imgT_psi);
-        rowT.setValue(MDL_SHIFTX, (-xshift * cos_psi - yshift * sin_psi));
-        rowT.setValue(MDL_SHIFTY, (xshift * sin_psi - yshift * cos_psi));
-        aux = correlationIndex(imgU(), Maux);
-        rowT.setValue(MDL_MAXCC, aux);
+    	// Accept shift
+        double cos_alphaT = COSD(alphaT), sin_alphaT = SIND(alphaT);
+        double correctedShiftX=(-shiftX * cos_alphaT - shiftY * sin_alphaT);
+        double correctedShiftY=( shiftX * sin_alphaT - shiftY * cos_alphaT);
+        shiftX=correctedShiftX;
+        shiftY=correctedShiftY;
         return true;
     }
-
-    return false;
+    else
+    	// Reject shift
+    	return false;
 }
 
 // Main program  ===============================================================
 void ProgAlignTiltPairs::run()
 {
-
-    FileName          fn;
     Image<double>     imgU, imgT;
     MultidimArray<double> Maux;
     Matrix2D<double>  A(3, 3);
-    double            ccf, outside, aux;
-    bool              OK;
-    int               imgno, barf, n_images, n_discarded;
 
-
-    n_images = mdT.size();
-    n_discarded = 0;
+    MetaData MDin, MDout;
+    MDin.read(fnIn);
+    size_t stepBar;
     if (verbose)
     {
-        std::cout << "  Centering of " << n_images << " tilted images" << std::endl;
-        init_progress_bar(n_images);
-        barf = XMIPP_MAX(1, (int)(1 + (n_images / 60)));
+    	size_t N=MDin.size();
+        init_progress_bar(N);
+        stepBar = XMIPP_MAX(1, (int)(1 + (N/60)));
     }
 
-    imgno = 0;
-    FileName file_name;
+    size_t imgno = 0;
+    FileName fnTilted;
 
-    FOR_ALL_OBJECTS_IN_METADATA2(mdU, mdT)
+    double alphaU, alphaT, gamma;
+    MultidimArray<double> verticalU, verticalT;
+    size_t nDiscarded=0;
+    FOR_ALL_OBJECTS_IN_METADATA(MDin)
     {
-        idU = __iter.objId;
-        idT = __iter2.objId;
-        mdU.getRow(rowU, idU);
-        mdT.getRow(rowT, idT);
+    	bool flip;
+    	MDin.getValue(MDL_FLIP,flip,__iter.objId);
+    	if (flip)
+    		continue;
 
-        // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
-        rowU.getValue(MDL_IMAGE, fn);
-        imgU.read(fn);
-        imgU().setXmippOrigin();
-        rowU.getValue(MDL_ANGLEROT, aux);
-        Euler_angles2matrix(aux, 0., 0., A);
-        rowU.getValue(MDL_SHIFTX, aux);
-        A(0, 2) = -aux;
-        rowU.getValue(MDL_SHIFTY, aux);
-        A(1, 2) = -aux;
-        outside = dAij(imgU(), 0, 0);
-        selfApplyGeometry(LINEAR, imgU(), A, IS_INV, DONT_WRAP, outside);
+    	// Read untilted and tilted images
+    	double inPlaneU;
+    	MDin.getValue(MDL_ANGLEPSI,inPlaneU,__iter.objId);
+    	imgU.readApplyGeo(MDin,__iter.objId);
+    	imgU().setXmippOrigin();
+    	MDin.getValue(MDL_IMAGE_TILTED,fnTilted,__iter.objId);
+    	imgT.read(fnTilted);
+    	imgT().setXmippOrigin();
 
-        // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
-        rowT.getValue(MDL_IMAGE, fn);
-        imgT.read(fn);
-        rowT.getValue(MDL_ANGLEPSI, aux);
-        Euler_angles2matrix(0., 0., aux, A);
-        outside = dAij(imgT(), 0, 0);
-        selfApplyGeometry(LINEAR, imgT(), A, IS_INV, DONT_WRAP, outside);
-        imgT().setXmippOrigin();
+    	// Correct their orientation
+    	MDin.getValue(MDL_ANGLE_Y,alphaU,__iter.objId);
+    	MDin.getValue(MDL_ANGLE_Y2,alphaT,__iter.objId);
+    	MDin.getValue(MDL_ANGLETILT,gamma,__iter.objId);
+    	std::cout << "AlphaU=" << alphaU << " alphaT=" << alphaT << " gamma=" << gamma << std::endl;
 
-        //Always set Psi of tilted image with Rot of untilted
-        rowU.getValue(MDL_ANGLEROT, aux);
-        rowT.setValue(MDL_ANGLEPSI, aux);
-        rowT.setValue(MDL_MAXCC, 1.);
-        rowT.setValue(MDL_ENABLED, 1);
+    	// Align tilt axis with Y
+    	rotate(BSPLINE3,verticalU,imgU(),-alphaU,'Z',WRAP);
+    	rotate(BSPLINE3,verticalT,imgT(),-alphaT,'Z',WRAP);
 
-        if (do_center && !centerTiltedImage(imgU, imgT))//something went wrong with this image
-        {
-            rowT.setValue( MDL_ENABLED, -1);
-            rowT.setValue( MDL_SHIFTX, 0. );
-            rowT.setValue( MDL_SHIFTY, 0. );
-            rowT.setValue( MDL_MAXCC, 0. );
-            n_discarded++;
-        }
+    	// Align tilt and untilted projections
+    	double shiftX=0, shiftY=0, crossCorrelation=0;
+    	bool enable=true;
+        if (do_center)
+        	enable=centerTiltedImage(verticalU, gamma, verticalT, alphaT, shiftX, shiftY, crossCorrelation);
+        if (!enable)
+        	++nDiscarded;
 
-        mdT.setRow(rowT, idT);
+        // Write results
+        size_t idOut=MDout.addObject();
+        MDout.setValue(MDL_IMAGE,fnTilted,idOut);
+        MDout.setValue(MDL_ANGLEROT,alphaT,idOut);
+        MDout.setValue(MDL_ANGLETILT,gamma,idOut);
+        MDout.setValue(MDL_ANGLEPSI,inPlaneU,idOut);
+        MDout.setValue(MDL_SHIFTX,shiftX,idOut);
+        MDout.setValue(MDL_SHIFTY,shiftY,idOut);
 
-        if (++imgno % barf == 0)
+        if (++imgno % stepBar == 0)
             progress_bar(imgno);
     }
 
-
     if (verbose && max_shift > 0)
     {
-        progress_bar(n_images);
-        std::cout << "  Discarded " << n_discarded << " tilted images that shifted too much" << std::endl;
+        progress_bar(MDin.size());
+        std::cout << "  Discarded " << nDiscarded << " tilted images that shifted too much" << std::endl;
     }
 
     // Write out selfile
-    mdT.write(mdOut);
+    MDout.write(fnOut);
 }
 

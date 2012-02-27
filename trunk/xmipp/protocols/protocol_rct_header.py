@@ -34,7 +34,7 @@ If you have images outside the <ProjectDir> you should import them first.
 """
 TiltPairsMd = "tilted_pairs.xmd"
 
-# {file}(result*classes.xmd){validate}(PathExists) 2D Classification metadata:
+# {file}(result*classes*.xmd){validate}(PathExists) 2D Classification metadata:
 """
 You should provide a metadata where all images in the dataset are
 grouped into 2D classes. For more details about this file, see:
@@ -55,26 +55,8 @@ the corresponding tilted pair.
 SelectedClasses = ''
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} Prepare images
+# {section}{expert} Prepare images
 #------------------------------------------------------------------------------------------------
-
-# Prepare local copies of all images?
-""" 
-This will make local copies of all untilted images and generate corresponding selfiles. 
-This has to be done at least once.
-"""
-DoImagePreparation=True
-# Set untilted image headers?
-"""
-This will re-align the untilted particles and set the RCT angles correctly
-"""
-DoUntiltedHeaders=True
-
-# Set tilted image headers?
-""" This will center the tilted particles and set the RCT angles correctly
-"""
-DoTiltedHeaders=True
-
 # Maximum allowed shift for tilted particles (pixels):
 """ 
 Particles that shift more will be discarded. A value larger than the 
@@ -82,7 +64,7 @@ image size will not discard any particle.
 """
 CenterMaxShift=999
 
-# {expert} Additional alignment parameters
+# Additional alignment parameters
 """
 This are additional parameters for the program: <xmipp_image_align_tilt_pairs>
 For example:
@@ -97,26 +79,11 @@ For more details see:
 AlignTiltPairsAdditionalParams = ""
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} Reconstruction
+# {section} Reconstruction
 #------------------------------------------------------------------------------------------------
-
-# Reconstruct 3D-classes
-DoReconstruct = True
-
-# {list}(fourier,art,wbp) Reconstruction method
-""" 
-The <art> method is very slow, and the relaxation parameter (-l ) needs 
-to be carefully tuned. The <wbp> and <fourier> methods are much faster, 
-but <wbp> may give significantly worse results. 
-Therefore, the <fourier> method is the recommended one.
-"""
-ReconstructMethod = 'fourier'
-
 # {expert} Additional reconstruction parameters
 """
-For <fourier> see: [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier]
-For <art> see: [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Art]
-For <wbp> see: [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp]
+See: [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Fourier]
 """
 ReconstructAdditionalParams = ""
 
@@ -130,8 +97,7 @@ DoLowPassFilter = True
 # {condition}(DoLowPassFilter) Resolution of the low-pass filter (Ang):
 LowPassFilter = 50
 
-# {condition}(DoLowPassFilter) Pixel size (Ang):
-PixelSize = 5.6
+# {eval} expandParallel(threads=0,hours=12)
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
