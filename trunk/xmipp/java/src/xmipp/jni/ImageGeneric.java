@@ -148,6 +148,8 @@ public class ImageGeneric {
         readApplyGeo_(filename, metadata, id, w, h);
     }
 
+    public native boolean equal(ImageGeneric ig1, double accuracy);
+    
     private native void readApplyGeo_(String filename, MetaData metadata, long id, int w, int h) throws Exception;
 
     // Getters for data arrays.
