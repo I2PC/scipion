@@ -4736,7 +4736,7 @@ public:
      */
     MultidimArray<T>& operator=(const Matrix2D<T>& op1)
     {
-    	resizeNoCopy(MAT_YSIZE(op1), MAT_XSIZE(op1));
+        resizeNoCopy(MAT_YSIZE(op1), MAT_XSIZE(op1));
         memcpy(data,MATRIX2D_ARRAY(op1), MAT_SIZE(op1)*sizeof(T));
 
         return *this;
@@ -4793,9 +4793,11 @@ public:
         if (!sameShape(op) || data==NULL || op.data == NULL)
             return false;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
-        if (ABS(DIRECT_MULTIDIM_ELEM(*this,n) -
-                DIRECT_MULTIDIM_ELEM(op,n)) > accuracy)
-            return false;
+        {
+            if (ABS(DIRECT_MULTIDIM_ELEM(*this,n) -
+                    DIRECT_MULTIDIM_ELEM(op,n)) > accuracy)
+                return false;
+        }
         return true;
     }
     //@}

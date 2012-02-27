@@ -29,13 +29,28 @@ protected:
 };
 
 
-TEST_F( ImageGenericTest, equals)
+TEST_F( ImageGenericTest, equalsOperator)
 {
     ImageGeneric auxImageG;
     auxImageG.readMapped(imageName);
     ASSERT_TRUE(myImageGeneric==myImageGeneric);
     ASSERT_TRUE(myImageGeneric==auxImageG);
     ASSERT_FALSE(myImageGeneric==myImageGeneric2);
+}
+
+TEST_F( ImageGenericTest, equalsFunction)
+{
+    ImageGeneric auxImageG;
+    auxImageG.read(imageName);
+    ASSERT_TRUE (myImageGeneric.equal(auxImageG) );
+    double f = auxImageG.getPixel(1,1);
+    auxImageG.setPixel(1,1,f+XMIPP_EQUAL_ACCURACY/2.);
+    ASSERT_TRUE (myImageGeneric.equal(auxImageG)      );
+    auxImageG.setPixel(1,1,f+(XMIPP_EQUAL_ACCURACY));
+    //std::cerr << *((MultidimArray<float>*)myImageGeneric.data->im) <<std::endl;
+    //std::cerr << *((MultidimArray<float>*)auxImageG.data->im) <<std::endl;
+    ASSERT_FALSE(myImageGeneric.equal(auxImageG));
+    ASSERT_TRUE(myImageGeneric.equal(auxImageG,XMIPP_EQUAL_ACCURACY*4.));
 }
 
 TEST_F( ImageGenericTest, copy)

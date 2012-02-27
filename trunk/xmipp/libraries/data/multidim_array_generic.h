@@ -380,6 +380,14 @@ public:
      */
     bool operator==(const MultidimArrayGeneric &mdA) const;
 
+    /** Equality.
+     *
+     * Returns true if this object has got the same shape (origin and size)
+     * than the argument and the same values (within accuracy).
+     */
+    bool equal(const MultidimArrayGeneric &op,
+               double accuracy = XMIPP_EQUAL_ACCURACY) const;
+
     /** Get constant access */
     double operator()(int i, int j) const
     {

@@ -144,6 +144,22 @@ bool MultidimArrayGeneric::operator==(const MultidimArrayGeneric &mdA) const
 #undef COMPARE
 }
 
+
+bool MultidimArrayGeneric::equal(const MultidimArrayGeneric &op,
+           double accuracy) const
+{
+	if (datatype != op.datatype)
+	{
+		return false;
+	}
+
+#define COMPARE(type) return ((MultidimArray<type>*)im)->equal(*(MultidimArray<type>*)op.im,accuracy);
+    SWITCHDATATYPE(datatype,COMPARE)
+#undef COMPARE
+}
+
+
+
 void MultidimArrayGeneric::aliasSlice(MultidimArrayGeneric &mdim, int select_slice)
 {
     setDatatype(mdim.datatype);
