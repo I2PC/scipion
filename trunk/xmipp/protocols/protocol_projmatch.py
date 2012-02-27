@@ -10,11 +10,10 @@
 #        Rewritten by Roberto Marabini
 #
 
-
 import os
 from os.path import join, exists
 from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
-MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE
+MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE, MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_WEIGHT
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector, runShowJ
 from protlib_sql import XmippProjectDb, SqliteDb
@@ -185,7 +184,35 @@ class ProtProjMatch(XmippProtocol):
                             showError("Error launching java app", str(e))
                 
         if doPlot('DisplayBFactorCorrectedVolume'):
-            return
+            
+            #if(self.DisplayVolumeSlicesAlong == 'surface'):
+            
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    file_name = self.getFilename('ReconstructedFileNamesIters', iter=int(it), ref=int(ref3d))
+                    file_name_bfactor = file_name + '.bfactor'
+                    print 'it: ',it, ' | file_name:',file_name
+                    print 'it: ',it, ' | file_name_bfactor:',file_name_bfactor
+                    
+                    parameters = ' -i ' + file_name + \
+                        ' --sampling ' + self.SamplingRate + \
+                        ' --maxres ' + self.MaxR + \
+                        ' -o ' + file_name_bfactor
+                        
+                    parameters +=  ' ' + self.CorrectBfactorExtraCommand
+                    
+                    runJob(_log,
+                           'xmipp_volume_correct_bfactor',
+                           parameters
+                           )
+
+                    if exists(file_name_bfactor):
+                        try:
+                            runShowJ(file_name_bfactor)
+                        except Exception, e:
+                            from protlib_gui_ext import showError
+                            showError("Error launching java app", str(e))
+
             
         if doPlot('DisplayProjectionMatchingAlign2d'):
             iterations = getListFromVector(self.DisplayIterationsNo)
@@ -227,9 +254,11 @@ class ProtProjMatch(XmippProtocol):
                             showError("Error launching java app", str(e))
             
         if doPlot('DisplayAngularDistribution'):
+            return                         
+        else: #DisplayAngularDistributionWith == '2D'
             return
-            
-        
+
+                        
         if doPlot('DisplayResolutionPlots'):
 
             iterations = getListFromVector(self.DisplayIterationsNo)

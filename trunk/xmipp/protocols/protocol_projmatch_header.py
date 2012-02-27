@@ -656,6 +656,20 @@ DisplayIterationsNo='1 2 3'
 """
 DisplayRef3DNo='1 2'
 
+# {list}(x, y, z, surface) Display volumes as slices or surface rendering
+""" x -> Visualize volumes in slices along x
+    y -> Visualize volumes in slices along y
+    z -> Visualize volumes in slices along z
+    For surface rendering to work, you need to have chimera installed!
+"""
+DisplayVolumeSlicesAlong='z'
+
+# {expert} Width of projection galleries
+""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
+    classes was performed and multiplied by 2 otherwise.
+"""
+MatrixWidth=3
+
 # {view} Display reference volume
 """ Volume after filtration and masking
 """
@@ -690,21 +704,6 @@ MaxRes=12
     for details. DEFAULT behaviour is --auto
 """
 CorrectBfactorExtraCommand='--auto'
-
-
-# {view} {list}(x, y, z, surface) Display volumes as slices or surface rendering
-""" x -> Visualize volumes in slices along x
-    y -> Visualize volumes in slices along y
-    z -> Visualize volumes in slices along z
-    For surface rendering to work, you need to have chimera installed!
-"""
-DisplayVolumeSlicesAlong='z'
-
-# {expert} Width of projection galleries
-""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
-    classes was performed and multiplied by 2 otherwise.
-"""
-MatrixWidth=3
 
 # {view} Show projection matching library and aligned classes
 DisplayProjectionMatchingAlign2d=False
