@@ -283,9 +283,41 @@ class ProtProjMatch(XmippProtocol):
                                'chimera',
                                parameters
                                )
-
         else: #DisplayAngularDistributionWith == '2D'
-            return
+            for ref3d in ref3Ds:
+                print 'a1'
+    
+                if(len(iterations) == 1):
+                    gridsize1 = [1, 1]
+                elif (len(iterations) == 2):
+                    gridsize1 = [2, 1]
+                else:
+                    gridsize1 = [(len(iterations)+1)/2, 2]
+                
+                print 'a2'
+    
+                xplotter_polar = XmippPlotter(*gridsize1)
+                print 'gridsize1: ', gridsize1
+                print 'iterations: ', iterations
+                print 'ref3Ds: ', ref3Ds
+    
+                for it in iterations:
+                    file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
+                    md = MetaData(file_name)
+                    rot = [md.getValue(MDL_ANGLEROT, id) for id in md]
+                    tilt = [md.getValue(MDL_ANGLETILT, id) for id in md]
+                    weight = [md.getValue(MDL_WEIGHT, id) for id in md]
+                    
+                    plot_title = 'Iter_'+ it
+                    a = xplotter_polar.createSubPlot(plot_title, 'XX', 'YY', yformat=False, projection='polar')
+                    
+                    for id in md:
+                        a.plot(md.getValue(MDL_ANGLEROT, id), md.getValue(MDL_ANGLETILT, id))
+                        
+                print 'a3'
+                xplotter_polar.show()
+                print 'a4'
+                    
 
                         
         if doPlot('DisplayResolutionPlots'):
