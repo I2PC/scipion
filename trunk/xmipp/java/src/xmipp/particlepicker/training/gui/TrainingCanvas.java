@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -59,11 +60,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		
 	}
 
-	/**
-	 * Adds particle or updates its position if onpick. If ondeletepick removes
-	 * particle. Considers owner for selection to the first particle containing
-	 * point. Sets dragged if onpick
-	 */
 
 	public void mousePressed(MouseEvent e)
 	{
@@ -88,9 +84,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 						active = null;
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
-				{
 					active = p;
-				}
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && TrainingParticle.fits(x, y, frame.getFamily().getSize(), imp.getWidth(), imp.getHeight()))
 			{
@@ -129,15 +123,14 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				micrograph.addManualParticle(active);
 			}
 			else
-			{
-				active.setPosition(x, y);
-				if (frame.getParticlesJDialog() != null)
-					active.getParticleCanvas(frame).repaint();
-			}
+				moveActiveParticle(x, y);
 			frame.setChanged(true);
 			repaint();
 		}
 	}
+	
+	
+	
 
 	public void paint(Graphics g)
 	{
@@ -194,6 +187,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		return micrograph;
 	}
 
+	@Override
+	public TrainingParticle getActive()
+	{
+		return active;
+	}
 
+	
 
 }

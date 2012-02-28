@@ -172,7 +172,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 		if (active != null && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
 		{
-			active.setPosition(x, y);
+			moveActiveParticle(x, y);
 			if (active.getUntiltedParticle().isAdded())
 				reload = true;
 		}
@@ -198,6 +198,12 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	public Micrograph getMicrograph()
 	{
 		return um.getTiltedMicrograph();
+	}
+
+	@Override
+	public TrainingParticle getActive()
+	{
+		return active;
 	}
 	
 

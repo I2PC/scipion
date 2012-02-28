@@ -153,10 +153,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 		if (active != null && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
 		{
-			active.setPosition(x, y);
-
-			if (frame.getParticlesJDialog() != null)
-				active.getParticleCanvas(frame).repaint();
+			moveActiveParticle(x, y);
 			if (active.isAdded())
 				reload = true;
 		}
@@ -264,6 +261,12 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 		repaint();
 		frame.getTiltedCanvas().repaint();
+	}
+
+	@Override
+	public TrainingParticle getActive()
+	{
+		return active;
 	}
 
 }

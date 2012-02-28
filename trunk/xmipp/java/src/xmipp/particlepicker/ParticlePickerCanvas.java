@@ -11,6 +11,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Stroke;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -31,7 +33,45 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public ParticlePickerCanvas(ImagePlus imp)
 	{
 		super(imp);
-		// TODO Auto-generated constructor stub
+		addKeyListener(new KeyListener()
+		{
+			
+			@Override
+			public void keyTyped(KeyEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+				
+				TrainingParticle active = getActive();
+				if(active == null)
+					return;
+				int step = 10;
+				int code = e.getKeyCode();
+				System.out.println("Key Code " + code);
+				if(code == KeyEvent.VK_UP)
+					moveActiveParticle(active.getX(), active.getY() - step);
+				else if (code == KeyEvent.VK_DOWN)
+					moveActiveParticle(active.getX(), active.getY() + step);
+				else if (code == KeyEvent.VK_LEFT)
+					moveActiveParticle(active.getX() - step, active.getY());
+				else if (code == KeyEvent.VK_RIGHT)
+					moveActiveParticle(active.getX() + step, active.getY());
+				repaint();
+				
+			}
+		});
 	}
 
 	public void moveTo(TrainingParticle p)
@@ -57,17 +97,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 	
 	
-	
-
-	
-	/**
-	 * Adds particle or updates its position if onpick. If ondeletepick removes
-	 * particle. Considers owner for selection to the first particle containing
-	 * point. Sets dragged if onpick
-	 */
-
-	
-	
 	public void mouseEntered(MouseEvent e)
 	{
 		if (getTool() != Tool.PICKER)
@@ -90,10 +119,9 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	
 	
 
-	
-
-	
 	public abstract void setActive(TrainingParticle p);
+	
+	public abstract TrainingParticle getActive();
 	
 	public abstract ParticlePickerJFrame getFrame();
 	
@@ -184,7 +212,20 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	
 	public abstract Micrograph getMicrograph();
 	
+	protected void moveActiveParticle(int x, int y)
+	{
+		TrainingParticle active = getActive();
+		if(active == null)
+			return;
+		active.setPosition(x, y);
+		System.out.println(active);
+		if (getFrame().getParticlesJDialog() != null)
+			active.getParticleCanvas(getFrame()).repaint();
+	}
 	
+	
+
+
 	
 
 
