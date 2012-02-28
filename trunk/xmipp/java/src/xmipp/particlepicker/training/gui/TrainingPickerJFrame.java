@@ -10,6 +10,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.Menu;
+import java.awt.MenuBar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -763,6 +765,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
+	
+	
 	public void importParticlesFromXmipp30File(String file)
 	{
 		ppicker.importParticlesXmipp30(getFamily(), file);

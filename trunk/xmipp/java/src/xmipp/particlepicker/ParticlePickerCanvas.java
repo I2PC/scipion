@@ -17,10 +17,11 @@ import java.awt.event.MouseWheelListener;
 
 import javax.swing.SwingUtilities;
 
+import xmipp.ij.XmippImageCanvas;
 import xmipp.particlepicker.training.model.AutomaticParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 
-public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseWheelListener
+public abstract class ParticlePickerCanvas extends XmippImageCanvas 
 {
 
 	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
@@ -64,27 +65,11 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 	 * point. Sets dragged if onpick
 	 */
 
-	public void mousePressed(MouseEvent e)
-	{
-		if (getFrame().getTool() != Tool.PICKER)
-		{
-			super.mousePressed(e);
-			return;
-		}
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
-
-		if (SwingUtilities.isRightMouseButton(e))
-		{
-			setupScroll(x, y);
-			return;
-		}
-		
-	}
+	
 	
 	public void mouseEntered(MouseEvent e)
 	{
-		if (getFrame().getTool() != Tool.PICKER)
+		if (getTool() != Tool.PICKER)
 		{
 			super.mouseEntered(e);
 			return;
@@ -94,7 +79,7 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 
 	public void mouseMoved(MouseEvent e)
 	{
-		if (getFrame().getTool() != Tool.PICKER)
+		if (getTool() != Tool.PICKER)
 		{
 			super.mouseMoved(e);
 			return;
@@ -103,30 +88,9 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 	}
 	
 	
-	public void mouseDragged(MouseEvent e)
-	{
 
-		if (getFrame().getTool() != Tool.PICKER)
-		{
-			super.mouseDragged(e);
-			return;
-		}
-		if (SwingUtilities.isRightMouseButton(e))
-		{
-			scroll(e.getX(), e.getY());
-			return;
-		}
-	}
 	
-	public void mouseReleased(MouseEvent e)
-	{
-		if (getFrame().getTool() != Tool.PICKER)
-		{
-			super.mouseReleased(e);
-			return;
-		}
-		
-	}
+
 	
 	public abstract void setActive(TrainingParticle p);
 	
@@ -158,21 +122,7 @@ public abstract class ParticlePickerCanvas extends ImageCanvas implements MouseW
 		g2.setStroke(previous);
 	}
 	
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e)
-	{
-		int x = e.getX();
-		int y = e.getY();
 
-		int rotation = e.getWheelRotation();
-		if (rotation < 0)
-			zoomIn(x, y);
-		else
-			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
-			imp.repaintWindow();
-
-	}
 	
 	protected void drawLine(double alpha, Graphics2D g2)
 	{

@@ -57,7 +57,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 {
 
 	protected ParticlesJDialog particlesdialog;
-	private String tool = "Particle Picker Tool";
+	
 	protected JMenuItem ijmi;
 	protected JCheckBox circlechb;
 	protected JCheckBox rectanglechb;
@@ -217,8 +217,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				{
 
 					new ImageJ();
-					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("external/imagej/macros/ParticlePicker.txt"));
-					IJ.setTool(tool);
+					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
+					IJ.setTool(Tool.getTool(Tool.PICKER));
 				}
 			}
 		});
@@ -386,19 +386,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract List<? extends TrainingParticle> getParticles();
 
-	public Tool getTool()
-	{
 
-		if (IJ.getInstance() == null)
-			return Tool.PICKER;
-		if (IJ.getToolName().equalsIgnoreCase(tool))
-			return Tool.PICKER;
-		return Tool.IMAGEJ;
-	}
 
 	public boolean isPickingAvailable(MouseEvent e)
 	{
-		if (getTool() != Tool.PICKER)
+		if (getCanvas().getTool() != Tool.PICKER)
 			return false;
 		if (SwingUtilities.isRightMouseButton(e))
 			return false;
