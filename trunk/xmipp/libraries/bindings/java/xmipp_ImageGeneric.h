@@ -232,8 +232,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_printShape
    * Method:    equal
    * Signature: bool
    */
-  JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_equal
-    (JNIEnv *, jobject);
+  JNIEXPORT jboolean JNICALL Java_xmipp_jni_ImageGeneric_equal
+    (JNIEnv *env, jobject jobj1,jobject jobj2, jdouble accuracy);
 
 /*
  * Class:     xmipp_ImageGeneric
