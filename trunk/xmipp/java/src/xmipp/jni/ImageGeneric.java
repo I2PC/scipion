@@ -148,7 +148,6 @@ public class ImageGeneric {
         readApplyGeo_(filename, metadata, id, w, h);
     }
 
-    public native boolean equal(ImageGeneric ig1, double accuracy) throws Exception;
     
     private native void readApplyGeo_(String filename, MetaData metadata, long id, int w, int h) throws Exception;
 
@@ -169,6 +168,7 @@ public class ImageGeneric {
 //    }
 
     public native float[] getArrayFloat(int slice) throws Exception;
+    public native boolean equal(ImageGeneric ig1, double accuracy) throws Exception;
 
     // Setters for data arrays.
     public native void setArrayByte(byte data[], int slice) throws Exception;
