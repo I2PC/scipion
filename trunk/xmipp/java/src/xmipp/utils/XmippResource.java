@@ -20,7 +20,6 @@ public class XmippResource {
     public static int DEFAULT_PREVIEW_HEIGHT = 80;
     
     //Path to resource folder    
-    //FIXME: Now hard coded
     public static String PATH_ICONS;
     //Icon names    
     public final static String MISSING = "missing.png";
@@ -39,6 +38,8 @@ public class XmippResource {
     public static ImagePlus MISSING_ITEM;
     public static ImageIcon VIEW_MD_ICON;
     public static ImageIcon VIEW_GALLERY_ICON;
+    public static ImageIcon MISSING_ICON;
+    
 
     static { //this block will be called just once, at class initialization
     	try {
@@ -54,8 +55,8 @@ public class XmippResource {
     	VIEW_GALLERY_ICON = getIcon(VIEW_GALLERY);
     	
     	// For missing items.
-    	ImageIcon missingIcon = getIcon(MISSING);
-    	MISSING_ITEM = new ImagePlus("X", missingIcon.getImage());
+    	MISSING_ICON = getIcon(MISSING);
+    	MISSING_ITEM = new ImagePlus("X", MISSING_ICON.getImage());
     }
     
     // Create an icon using the xmipp resource path

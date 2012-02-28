@@ -1,6 +1,7 @@
 package xmipp.viewer;
 
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippResource;
 import xmipp.viewer.ImageItem;
 import ij.ImagePlus;
 import java.awt.Component;
@@ -56,13 +57,16 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			// table.getModel();
 
 			setPreferredSize(item.cellDim);
-			// Loads image...
-			ImagePlus imp = item.getImage();
 
 			// ... and sets it.
 			setEnabled(item.isEnabled);
 
-			setIcon(new ImageIcon(imp.getImage()));
+			// Loads image...
+			ImagePlus imp = item.getImage();
+			if (imp != null)
+				setIcon(new ImageIcon(imp.getImage()));
+			else
+				setIcon(XmippResource.MISSING_ICON);
 
 			// Tooltip.
 			setToolTipText(item.getLabel());

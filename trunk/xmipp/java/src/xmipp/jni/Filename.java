@@ -210,6 +210,11 @@ public class Filename {
 
         return fixed;
     }
+    
+    public static boolean exists(String path){
+    	File f = new File(Filename.getFilename(path));
+    	return f.exists();
+    }
 
     public String findProjectDir(String metadata) {
         File f = new File(metadata);

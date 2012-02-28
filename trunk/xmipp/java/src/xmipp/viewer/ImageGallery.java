@@ -155,12 +155,14 @@ public abstract class ImageGallery extends AbstractTableModel {
 				item.showLabel = data.showLabel;
 				item.cellDim = cellDim;
 				ImagePlus imp = item.getImage();
+				if (imp != null){ //When image is missing this will be null
 				if (data.normalize)
 					imp.getProcessor().setMinAndMax(normalize_min,
 							normalize_max);
 				else
 					imp.getProcessor().resetMinAndMax();
 				imp.updateImage();
+				}
 
 				return item;
 			} catch (Exception e) {

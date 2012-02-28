@@ -29,6 +29,7 @@ import java.util.ArrayList;
 
 import ij.ImagePlus;
 import xmipp.ij.XmippImageConverter;
+import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -62,7 +63,7 @@ public class MetadataGallery extends ImageGallery {
 				if (ci1.label == ci2.label) {
 					if (ci1.updateInfo(ci2))
 						changed = true;
-					
+
 					if (ci1.visible)
 						visibleLabels.add(ci1);
 					if (ci1.render)
@@ -84,37 +85,39 @@ public class MetadataGallery extends ImageGallery {
 			fireTableStructureChanged();
 		}
 	}
-	
+
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
 		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
 		data.globalRender = false;
-		
+
 		for (ColumnInfo ci : data.labels) {
 			if (ci.visible)
 				visibleLabels.add(ci);
 			if (ci.render)
 				data.globalRender = true;
 		}
-		ImageDimension dim;
-		
-		 if (data.hasRenderLabel()) {
+		ImageDimension dim = null;
+
+		if (data.hasRenderLabel()) {
 			renderLabel = data.ciFirstRender.label;
 			displayLabel = renderLabel;
 			// if (renderLabels) {
-			ImageGeneric image = getImage(0, renderLabel);
-			dim = new ImageDimension(image);
-			dim.setZDim(data.ids.length);
-			image.destroy();
-//		 }
-//		else
-//			throw new Exception(
-//					"No renderizable label to be used in Gallery Mode");
-		 }
-		 else {
-		 dim = new ImageDimension(30, 30, data.ids.length, 0);
-		 }
+			for (int i = 0; i < data.ids.length; ++i) {
+				ImageGeneric image = getImage(i, renderLabel);
+				if (image != null) {
+					dim = new ImageDimension(image);
+					image.destroy();
+					break;
+				}
+			}
+		}
+
+		if (dim == null)
+			dim = new ImageDimension(30, 30, 0, 0);
+		dim.setZDim(data.ids.length);
+
 		return dim;
 	}
 
@@ -131,13 +134,17 @@ public class MetadataGallery extends ImageGallery {
 	protected ImageItem createImageItem(int index, int renderLabel,
 			int displayLabel, String key) throws Exception {
 		ImageGeneric image = getImage(index, renderLabel);
-		if (data.useGeo)
-			image.readApplyGeo(data.md, data.ids[index], thumb_width,
-					thumb_height);
-		else
-			image.read(thumb_width, thumb_height);
-		ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);
 		String labelStr = data.md.getValueString(displayLabel, data.ids[index]);
+		ImagePlus imp = null;
+		if (image != null) {
+			if (data.useGeo)
+				image.readApplyGeo(data.md, data.ids[index], thumb_width,
+						thumb_height);
+			else
+				image.read(thumb_width, thumb_height);
+			imp = XmippImageConverter.convertImageGenericToImageJ(image);
+			
+		}
 		return new ImageItem(key, labelStr, imp);
 	}
 
@@ -175,9 +182,17 @@ public class MetadataGallery extends ImageGallery {
 	 * @throws Exception
 	 *             if can not load image
 	 */
-	protected ImageGeneric getImage(int index, int label) throws Exception {
-		String imgFn = data.md.getValueString(label, data.ids[index]);
-		return new ImageGeneric(imgFn);
+	protected ImageGeneric getImage(int index, int label) {
+		try {
+			String imgFn = data.md.getValueString(label, data.ids[index]);
+			if (Filename.exists(imgFn)){
+				ImageGeneric image = new ImageGeneric(imgFn);
+				return image;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	@Override

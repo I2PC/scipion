@@ -20,31 +20,31 @@ public class GalleryData {
 	public String[] volumes = null;
 
 	public ArrayList<ColumnInfo> labels = null;
-	//First label that can be rendered
+	// First label that can be rendered
 	ColumnInfo ciFirstRender = null;
 	public int zoom;
 	public String filename;
-//	public boolean galleryMode = true; // if false, is table model
-//	public boolean volumeMode = false;
+	// public boolean galleryMode = true; // if false, is table model
+	// public boolean volumeMode = false;
 	public static final int MODE_GALLERY_MD = 1;
 	public static final int MODE_GALLERY_VOL = 2;
 	public static final int MODE_TABLE_MD = 3;
-	
-	//define min and max render dimensions
+
+	// define min and max render dimensions
 	public static final int MIN_SIZE = 16;
 	public static final int MAX_SIZE = 256;
-	
-	//max dimension allowed to render images
-	
+
+	// max dimension allowed to render images
+
 	private int mode;
 	public boolean showLabel = false;
 	public boolean globalRender = false;
 	public Param parameters;
 	private int numberOfVols = 0;
-	
-	//flag to perform global normalization
+
+	// flag to perform global normalization
 	public boolean normalize = false;
-	//flag to use geometry info
+	// flag to use geometry info
 	public boolean useGeo = true;
 
 	/**
@@ -58,15 +58,16 @@ public class GalleryData {
 			zoom = param.zoom;
 			mode = MODE_GALLERY_MD;
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
-					mode = MODE_TABLE_MD;
+				mode = MODE_TABLE_MD;
 
 			filename = fn;
 			if (Filename.hasPrefix(fn)) {
 				if (Filename.isMetadata(fn)) {
-					selectedBlock = Filename.getPrefix(fn); // FIXME: validate block exists
+					selectedBlock = Filename.getPrefix(fn); // FIXME: validate
+															// block exists
 					filename = Filename.getFilename(fn);
 				}
-			} 
+			}
 			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
 
 			if (mdBlocks.length > 1 && selectedBlock.isEmpty())
@@ -102,69 +103,82 @@ public class GalleryData {
 		volumes = null;
 		if (isGalleryMode())
 			mode = MODE_GALLERY_MD;
-		
+
 		if (hasRenderLabel()) {
-			String imageFn = md.getValueString(ciFirstRender.getLabel(), md.firstObject());
-			ImageGeneric image = new ImageGeneric(imageFn);
-			
-			//if (zoom == 0){ //default value
+			int renderLabel = ciFirstRender.getLabel();
+			ImageGeneric image = null;
+			String imageFn;
+			for (int i = 0; i < ids.length && image == null; ++i) {
+				imageFn = md.getValueString(renderLabel, ids[i]);
+				if (Filename.exists(imageFn))
+					image = new ImageGeneric(imageFn);
+			}
+			if (image != null) {
+				// if (zoom == 0){ //default value
 				int xdim = image.getXDim();
 				int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
-				float scale = (float)x / xdim;
+				float scale = (float) x / xdim;
 				zoom = (int) Math.ceil(scale * 100);
-				DEBUG.printMessage(String.format("xdim: %d, x: %d, scale: %f, zoom: %d", xdim, x, scale, zoom));
-			//}
-				
-			if (image.isVolume()) { // We are assuming all are volumes
-									// or images, dont mix it
-				if (isGalleryMode())
-					mode = MODE_GALLERY_VOL;
-				numberOfVols = md.size();
-				volumes = new String[numberOfVols];
-				for (int i = 0; i < numberOfVols; ++i)
-					volumes[i] = md.getValueString(ciFirstRender.getLabel(), ids[i]);
-				if (selectedVol.isEmpty())
-					selectedVol = volumes[0];
+//				DEBUG.printMessage(String.format(
+//						"xdim: %d, x: %d, scale: %f, zoom: %d", xdim, x, scale,
+//						zoom));
+				// }
+
+				if (image.isVolume()) { // We are assuming all are volumes
+										// or images, dont mix it
+					if (isGalleryMode())
+						mode = MODE_GALLERY_VOL;
+					numberOfVols = md.size();
+					volumes = new String[numberOfVols];
+					for (int i = 0; i < numberOfVols; ++i)
+						volumes[i] = md.getValueString(
+								ciFirstRender.getLabel(), ids[i]);
+					if (selectedVol.isEmpty())
+						selectedVol = volumes[0];
+				}
+				image.destroy();
 			}
-			image.destroy();
-		}
-		else //force this mode when there aren't render label
+		} else
+			// force this mode when there aren't render label
 			mode = MODE_TABLE_MD;
-		
+
 	}// function loadMd
-	
-	/** Load labels info in md, 
-	 * try to keep previous settings of render and visible
-	 * on same columns */
-	public void loadLabels(){
+
+	/**
+	 * Load labels info in md, try to keep previous settings of render and
+	 * visible on same columns
+	 */
+	public void loadLabels() {
 		ColumnInfo ci;
 		try {
-		int [] lab = md.getActiveLabels();
-		ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(lab.length);
-		ciFirstRender = null;
-		ColumnInfo ciFirstRenderVisible = null;
-		
-		for (int i = 0; i < lab.length; ++i) {
-			ci = new ColumnInfo(lab[i]);
-			if (labels != null)
-				for (ColumnInfo ci2: labels)
-					if (ci.label == ci2.label){
-						ci.updateInfo(ci2);
-					}
-			newLabels.add(ci);
-			if (ciFirstRender == null && ci.allowRender)
-				ciFirstRender = ci;
-			if (ciFirstRenderVisible == null && ci.allowRender && ci.visible)
-				ciFirstRenderVisible = ci;			
-		}
-		if (ciFirstRenderVisible != null)
-			ciFirstRender = ciFirstRenderVisible;
-		
-		labels = newLabels;
-		} catch (Exception e){
+			int[] lab = md.getActiveLabels();
+			ArrayList<ColumnInfo> newLabels = new ArrayList<ColumnInfo>(
+					lab.length);
+			ciFirstRender = null;
+			ColumnInfo ciFirstRenderVisible = null;
+
+			for (int i = 0; i < lab.length; ++i) {
+				ci = new ColumnInfo(lab[i]);
+				if (labels != null)
+					for (ColumnInfo ci2 : labels)
+						if (ci.label == ci2.label) {
+							ci.updateInfo(ci2);
+						}
+				newLabels.add(ci);
+				if (ciFirstRender == null && ci.allowRender)
+					ciFirstRender = ci;
+				if (ciFirstRenderVisible == null && ci.allowRender
+						&& ci.visible)
+					ciFirstRenderVisible = ci;
+			}
+			if (ciFirstRenderVisible != null)
+				ciFirstRender = ciFirstRenderVisible;
+
+			labels = newLabels;
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}//function loadLabels
+	}// function loadLabels
 
 	/** Read metadata and store ids */
 	private void readMetadata(String fn) {
@@ -188,15 +202,16 @@ public class GalleryData {
 
 	public ImageGallery createModel() {
 		try {
-			switch (mode){
+			switch (mode) {
 			case MODE_GALLERY_VOL:
 				return new VolumeGallery(this);
 			case MODE_GALLERY_MD:
 				if (hasRenderLabel())
 					return new MetadataGallery(this);
-				//else fall in the next case
+				// else fall in the next case
 			case MODE_TABLE_MD:
-				mode = MODE_TABLE_MD; //this is necessary when coming from previous case
+				mode = MODE_TABLE_MD; // this is necessary when coming from
+										// previous case
 				return new MetadataTable(this);
 			}
 		} catch (Exception e) {
@@ -227,23 +242,31 @@ public class GalleryData {
 	public int getNumberOfVols() {
 		return numberOfVols;
 	}
-	
+
 	/** Return the mode of the gallery */
-	public int getMode(){
+	public int getMode() {
 		return mode;
 	}
-	
+
 	/** Return true if there is a renderizable label in the metadata */
-	public boolean hasRenderLabel(){
+	public boolean hasRenderLabel() {
 		return ciFirstRender != null;
 	}
-	
-	//some mode shortcuts
-	public boolean isGalleryMode(){return mode == MODE_GALLERY_MD || mode == MODE_GALLERY_VOL; }
-	public boolean isVolumeMode() {return mode == MODE_GALLERY_VOL; }
-	public boolean isTableMode() { return mode ==  MODE_TABLE_MD; }
-	
-	//utility function to change of mode
+
+	// some mode shortcuts
+	public boolean isGalleryMode() {
+		return mode == MODE_GALLERY_MD || mode == MODE_GALLERY_VOL;
+	}
+
+	public boolean isVolumeMode() {
+		return mode == MODE_GALLERY_VOL;
+	}
+
+	public boolean isTableMode() {
+		return mode == MODE_TABLE_MD;
+	}
+
+	// utility function to change of mode
 	public void changeMode() {
 		if (isGalleryMode())
 			mode = MODE_TABLE_MD;
@@ -261,9 +284,9 @@ public class GalleryData {
 	public void selectVolume(String vol) {
 		selectedVol = vol; // FIXME: Check it is valid
 	}
-	
-	//Check if the underlying data has geometrical information
-	public boolean containsGeometryInfo(){
+
+	// Check if the underlying data has geometrical information
+	public boolean containsGeometryInfo() {
 		try {
 			return md.containsGeometryInfo();
 		} catch (Exception e) {
