@@ -15,10 +15,10 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import xmipp.ij.Tool;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.particlepicker.Tool;
 import xmipp.particlepicker.training.model.AutomaticParticle;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;

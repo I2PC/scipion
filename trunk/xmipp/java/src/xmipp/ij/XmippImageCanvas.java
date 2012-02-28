@@ -6,7 +6,6 @@ import java.awt.event.MouseWheelListener;
 
 import javax.swing.SwingUtilities;
 
-import xmipp.particlepicker.Tool;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;

@@ -15,7 +15,6 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 
 /*
  * To change this template, choose Tools | Templates

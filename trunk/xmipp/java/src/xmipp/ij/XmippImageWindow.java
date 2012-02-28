@@ -1,21 +1,15 @@
 package xmipp.ij;
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
-import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
-
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Menu;
 import java.awt.MenuBar;
-
-import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import xmipp.particlepicker.Tool;
-import xmipp.utils.WindowUtil;
+import xmipp.jni.Filename;
+
 
 public class XmippImageWindow extends ImageWindow
 {
@@ -31,7 +25,7 @@ public class XmippImageWindow extends ImageWindow
 				try
 				{
 					ImagePlus imp = new ImagePlus("/home/airen/CellClassifier_/images/8254.tif");
-					XmippImageWindow frame = new XmippImageWindow(new XmippImageCanvas(imp));
+					XmippImageWindow frame = new XmippImageWindow(imp);
 					
 				}
 				catch (Exception e)
@@ -46,26 +40,36 @@ public class XmippImageWindow extends ImageWindow
 
 	private MenuBar mb;
 
-	public XmippImageWindow(ImageCanvas canvas)
+	public XmippImageWindow(ImagePlus imp) {
+		this(imp, imp.getFileInfo().fileName);
+	}
+	
+	public XmippImageWindow(ImagePlus imp, String title)
 	{
-		super(canvas.getImage(), canvas);
-		
-		
+		super(imp, new XmippImageCanvas(imp));
+		setTitle(title);
 		initComponents();
 	}
 	
 	private void initComponents()
 	{
-		setTitle("Xmipp Micrograph Viewer");
 		initMenuBar();
 		setMenuBar(mb);
-		
 	}
 	
 	private void initMenuBar()
 	{
 		mb = new MenuBar();
 		mb.add(new Menu("File"));
+	}
+	
+	public static void openImageJ(Tool tool){
+		if (IJ.getInstance() == null)
+		{
+			new ImageJ();
+			IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
+			IJ.setTool(Tool.getTool(tool));
+		}		
 	}
 
 	

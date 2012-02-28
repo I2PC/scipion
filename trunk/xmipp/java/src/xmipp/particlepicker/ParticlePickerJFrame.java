@@ -42,6 +42,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
+import xmipp.ij.Tool;
+import xmipp.jni.Filename;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -213,7 +215,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				{
 
 					new ImageJ();
-					IJ.run("Install...", "install=" + TrainingPicker.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
+					IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
 					IJ.setTool(Tool.getTool(Tool.PICKER));
 				}
 			}

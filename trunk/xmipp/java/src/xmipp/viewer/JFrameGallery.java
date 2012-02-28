@@ -28,6 +28,7 @@ package xmipp.viewer;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 import xmipp.ij.XmippImageConverter;
+import xmipp.ij.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
@@ -879,8 +880,9 @@ public class JFrameGallery extends JFrame {
 				Object item = table.getValueAt(view_row, view_col);
 
 				if (item instanceof ImageItem) {
-					ImagesWindowFactory.captureFrame(((ImageItem) item)
-							.getImage());
+//					ImagesWindowFactory.captureFrame(((ImageItem) item)
+//							.getImage());
+					new XmippImageWindow(((ImageItem) item).getImage());
 				}
 			} else {
 				// Ctrl adds items to selection, otherwise previous ones are

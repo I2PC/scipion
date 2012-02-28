@@ -1,4 +1,4 @@
-package xmipp.particlepicker;
+package xmipp.ij;
 
 public enum Tool
 {

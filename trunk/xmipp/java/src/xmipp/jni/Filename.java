@@ -118,6 +118,16 @@ public class Filename {
     public static native String compose(int slice,String path) throws Exception;
     
     public static native String getXmippPath() throws Exception;
+    
+    public static String getXmippPath(String relpath){
+    	try {
+			return getXmippPath() + File.separator + relpath;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return null;
+    }
 
     public static boolean isSingleImage(String filename) throws Exception {
         try {
