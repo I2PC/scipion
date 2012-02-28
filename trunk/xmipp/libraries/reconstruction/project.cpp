@@ -58,6 +58,7 @@ void ProgProject::readParams()
     else //doAngles = true
     {
         singleProjection = true;
+        only_create_angles = false;
         projSize = getIntParam("--xdim");
         rotSingle  = getDoubleParam("--angles",0);
         tiltSingle = getDoubleParam("--angles",1);
