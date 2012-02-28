@@ -290,7 +290,8 @@ public class ImageGeneric_Test {
              ImageGeneric instance2 = new ImageGeneric(filename2);
              instance.read(slice);
              instance2.read(slice);
-             assertTrue(instance.equal(instance2));
+             assertTrue(instance.equal(instance,0.001));
+             assertFalse(instance.equal(instance2,0.001));
          } catch (Exception ex) {
              fail("testGetDataType(): " + filename);
              //Logger.getLogger(ImageGenericTest.class.getName()).log(Level.SEVERE, null, ex);
