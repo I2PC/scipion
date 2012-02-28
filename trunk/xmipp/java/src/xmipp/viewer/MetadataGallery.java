@@ -197,4 +197,14 @@ public class MetadataGallery extends ImageGallery {
 			fireTableDataChanged();
 		}
 	}
+
+	@Override
+	public ImagePlus getImagePlus() {
+		try {
+			return XmippImageConverter.readMetadataToImageJ(data.md);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

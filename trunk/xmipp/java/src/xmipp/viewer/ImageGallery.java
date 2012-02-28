@@ -410,6 +410,11 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 * Return the main title to be used on windows
 	 */
 	public abstract String getTitle();
+	
+	/** 
+	 * Return the ImagePlus representation of this gallery
+	 */
+	public abstract ImagePlus getImagePlus();
 
 	
 	/**

@@ -37,6 +37,7 @@ import xmipp.utils.XmippLabel;
 import xmipp.utils.Param;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.ImageWindow;
 import xmipp.utils.XmippResource;
 
 import java.awt.Component;
@@ -393,7 +394,7 @@ public class JFrameGallery extends JFrame {
 		// Gets current selected cell bounds.
 		Rectangle rect = table.getCellRect(coords[0], coords[1], true);
 
-		// Ensures item is visible.
+		// Ensures item is visible
 		Point pos = jspContent.getViewport().getViewPosition();
 		rect.translate(-pos.x, -pos.y);
 		jspContent.getViewport().scrollRectToVisible(rect);
@@ -1122,7 +1123,13 @@ public class JFrameGallery extends JFrame {
 					ex.printStackTrace();
 				}
 			} else if (jmi == jmiOpenWithImageJ) {
-				
+				try {
+					ImagePlus imp = gallery.getImagePlus();
+					ImagesWindowFactory.captureFrame(imp);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 		}
 

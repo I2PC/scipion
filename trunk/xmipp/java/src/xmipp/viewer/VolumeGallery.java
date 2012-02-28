@@ -8,6 +8,7 @@ import xmipp.jni.ImageGeneric;
 public class VolumeGallery extends ImageGallery {
 	protected String volFn;
 	protected long volNumber;
+	ImageGeneric volHeader;
 	
 	public VolumeGallery(GalleryData data) throws Exception {
 		super(data);
@@ -21,9 +22,8 @@ public class VolumeGallery extends ImageGallery {
 
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
-		ImageGeneric image = new ImageGeneric(data.selectedVol); // read image header
-		ImageDimension dim = new ImageDimension(image);
-		image.destroy();
+		volHeader = new ImageGeneric(data.selectedVol); // read image header
+		ImageDimension dim = new ImageDimension(volHeader);
 		return dim;
 	}
 
@@ -53,12 +53,20 @@ public class VolumeGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImageGeneric image = new ImageGeneric(volFn);
-		ImagePlus imp = XmippImageConverter.readImageGenericToImageJ(image, thumb_width,
+		ImagePlus imp = XmippImageConverter.readImageGenericToImageJ(volHeader, thumb_width,
 				thumb_height, index + 1, volNumber);
-		image.destroy();
 		String label = String.format("%d", index + 1);
 		return new ImageItem(key, label, imp);
+	}
+
+	@Override
+	public ImagePlus getImagePlus() {
+		try {
+			return XmippImageConverter.readImageGenericToImageJ(volHeader);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

@@ -128,18 +128,20 @@ public class ImagesWindowFactory {
         if (Filename.isMetadata(path)) {
             MetaData md = new MetaData(path);
 
-            imp = XmippImageConverter.convertToImageJ(md);
+            imp = XmippImageConverter.readMetadataToImageJ(md);
         } else {
             imp = XmippImageConverter.loadImage(path, parameters.zoom);
         }
         return imp;
     }
 
-    private static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
+    public static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
         ImageWindow iw = null;
-        ImageJ ij = new ImageJ(); //IJ.getInstance();
-        ij.run();
+        //ImageJ ij = new ImageJ(); //IJ.getInstance();
+        //ij.run();
         if (imp != null) {
+        	if (IJ.getInstance() == null)
+        		new ImageJ();
             if (imp.getStackSize() > 1) {
                 iw = new StackWindowOperations(imp, poll);
             } else {
