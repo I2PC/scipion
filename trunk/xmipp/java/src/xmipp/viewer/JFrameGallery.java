@@ -412,10 +412,8 @@ public class JFrameGallery extends JFrame {
 			ImagePlus impStd =  XmippImageConverter.convertImageGenericToImageJ(imgStd);
 			imgAvg.destroy();
 			imgStd.destroy();
-			impAvg.setTitle("AVG: " + data.filename);
-			impStd.setTitle("STD: " + data.filename);
-			 ImagesWindowFactory.captureFrame(impAvg);
-			 ImagesWindowFactory.captureFrame(impStd);
+			new XmippImageWindow(impAvg, "AVG: " + data.filename);
+			new XmippImageWindow(impStd, "STD: " + data.filename);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
