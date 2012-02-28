@@ -21,10 +21,13 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			return Tool.PICKER;
 		return Tool.getTool(IJ.getToolName());
 	}
+	
+	
 
 	public XmippImageCanvas(ImagePlus imp)
 	{
 		super(imp);
+		addMouseWheelListener(this);
 	}
 
 	public void mousePressed(MouseEvent e)

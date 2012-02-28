@@ -73,7 +73,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.um = frame.getMicrograph();
 
 		this.frame = frame;
-		addMouseWheelListener(this);
+		
 		this.pppicker = frame.getParticlePicker();
 		iw = new ImageWindow(imp, this);
 		WindowUtil.setLocation(0, 0, iw);

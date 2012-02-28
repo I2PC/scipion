@@ -40,7 +40,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		super(frame.getMicrograph().getImagePlus());
 		this.micrograph = frame.getMicrograph();
 		this.frame = frame;
-		addMouseWheelListener(this);
 		this.ppicker = frame.getParticlePicker();
 		if(!frame.getFamilyData().getParticles().isEmpty())
 			active = frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);

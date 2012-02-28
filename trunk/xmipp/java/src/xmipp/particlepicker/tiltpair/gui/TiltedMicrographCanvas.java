@@ -41,7 +41,6 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		this.uc = (UntiltedMicrographCanvas)frame.getCanvas();
 		iw = new ImageWindow(imp, this);
 		WindowUtil.setLocation(0.7f, 0, iw);
-		addMouseWheelListener(this);
 
 	}
 
