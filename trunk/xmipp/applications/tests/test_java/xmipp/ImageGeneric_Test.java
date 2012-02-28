@@ -276,7 +276,6 @@ public class ImageGeneric_Test {
           //may be there is a better way but I do not know it
           for (int i = 0; i < expResult.length; i++)
         	  assertEquals(expResult[i], result[i],0.001);
-
       }
 
     /**
