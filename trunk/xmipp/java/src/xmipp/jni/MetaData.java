@@ -224,7 +224,7 @@ public class MetaData {
 
     public native double[] getColumnValues(int label) throws Exception;
 
-    //set values
+    //set functions conection with MetaData class in C++
     public native boolean setValueInt(int label, int value, long objId) throws Exception;
 
     public native boolean setValueDouble(int label, double value, long objId) throws Exception;
@@ -233,19 +233,27 @@ public class MetaData {
 
     public native boolean setValueBoolean(int label, boolean value, long objId) throws Exception;
 
+    /** Obtain all the objects ids in the MetaData */
     public native long[] findObjects() throws Exception;
 
+    /** Import objects from other MetaData */
     public native void importObjects(MetaData from, long ids[]) throws Exception;
 
+    /** Return the id of the first object */
     public native long firstObject() throws Exception;
 
+    /** Add a new object entry and return new id */
     public native long addObject() throws Exception;
 
+    /** Add new column to MetaData */
     public native void addLabel(int label) throws Exception;
 
+    /** Get the average image, result is left on input image */
+    public native void getAverageImage(ImageGeneric image, boolean applyGeo) throws Exception;
+    
     public native void getPCAbasis(ImageGeneric basis) throws Exception;
 
-    public native void computeFourierStatistics(String filename) throws Exception;
+    public native void computeFourierStatistics(MetaData mdIn) throws Exception;
 
     public native void enableDebug() throws Exception;
 

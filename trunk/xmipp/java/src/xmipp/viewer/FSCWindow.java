@@ -1,6 +1,7 @@
-package xmipp.viewer.micrographs;
+package xmipp.viewer;
 
 import xmipp.utils.DEBUG;
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippLabel;
 import java.awt.BorderLayout;
 import java.awt.Button;
@@ -8,6 +9,8 @@ import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.List;
+
 import javax.swing.JFrame;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -33,14 +36,15 @@ import xmipp.jni.MetaData;
  */
 public class FSCWindow extends JFrame {
 
-    public FSCWindow(String filename) {
-        super(XmippLabel.TITLE_FSC + filename);
+    public FSCWindow(MetaData md) {
+        super(XmippLabel.TITLE_FSC + md.getFilename());
 
         try {
+        	setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             setLayout(new BorderLayout());
 
             MetaData mdout = new MetaData();
-            mdout.computeFourierStatistics(filename);
+            mdout.computeFourierStatistics(md);
 
             double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);
             double y1s[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FRC);
@@ -77,21 +81,8 @@ public class FSCWindow extends JFrame {
             plot.setRenderer(1, new StandardXYItemRenderer());
 
             add(createChartPanel(chart), BorderLayout.CENTER);
-
-            Button bOk = new Button(XmippLabel.BUTTON_OK);
-            bOk.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent ae) {
-                    dispose();
-                }
-            });
-
-            Panel pButtons = new Panel();
-            pButtons.add(bOk);
-            add(pButtons, BorderLayout.SOUTH);
-
             pack();
-            setLocationRelativeTo(null);
+            WindowUtil.centerWindows(this);
         } catch (Exception e) {
             DEBUG.printException(e);
         }
@@ -101,10 +92,7 @@ public class FSCWindow extends JFrame {
         XYPlot plot = (XYPlot) chart.getPlot();
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
-
-        java.util.List list = Arrays.asList(new Integer[]{
-                    new Integer(0), new Integer(1)
-                });
+        List<Integer> list = Arrays.asList(0, 1);
         plot.mapDatasetToDomainAxes(0, list);
         plot.mapDatasetToRangeAxes(0, list);
         ChartUtilities.applyCurrentTheme(chart);

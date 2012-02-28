@@ -7,6 +7,7 @@ package xmipp.viewer.windows;
 import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
+import xmipp.viewer.FSCWindow;
 import xmipp.viewer.JFrameGallery;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
@@ -33,7 +34,6 @@ import xmipp.viewer.metadata.JFrameMetaData;
 import xmipp.viewer.micrographs.JFrameMicrographs;
 import xmipp.viewer.micrographs.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.micrographs.CTFProfileWindow;
-import xmipp.viewer.micrographs.FSCWindow;
 import xmipp.viewer.micrographs.ctf.tasks.TasksEngine;
 import xmipp.viewer.rotspectra.JFrameRotSpectra;
 import xmipp.jni.Filename;
@@ -354,8 +354,8 @@ public class ImagesWindowFactory {
         ctfView.setVisible(true);
     }
 
-    public static void openFSCWindow(String filename) {
-        FSCWindow frame = new FSCWindow(filename);
+    public static void openFSCWindow(MetaData md) {
+        FSCWindow frame = new FSCWindow(md);
         frame.setVisible(true);
     }
 

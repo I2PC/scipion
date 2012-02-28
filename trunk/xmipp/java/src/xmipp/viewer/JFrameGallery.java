@@ -507,13 +507,11 @@ public class JFrameGallery extends JFrame {
 	public void fsc() {
 		// String filename = gallery.getFilename();
 		//
-		// try {
-		// MetaData md = new MetaData(filename);
-		//
-		// ImagesWindowFactory.openFSCWindow(filename);
-		// } catch (Exception ex) {
-		// DEBUG.printException(ex);
-		// }
+		 try {
+		 ImagesWindowFactory.openFSCWindow(data.md);
+		 } catch (Exception ex) {
+		 DEBUG.printException(ex);
+		 }
 	}
 
 	private void reslice(RESLICE_MODE mode) throws Exception {
