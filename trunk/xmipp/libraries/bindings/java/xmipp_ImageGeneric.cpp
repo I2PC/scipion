@@ -614,7 +614,7 @@ Java_xmipp_jni_ImageGeneric_printShape(JNIEnv *env, jobject jobj)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_xmipp_jni_ImageGeneric_equal(JNIEnv *env, jobject jobj1,jobject jobj2, jdouble accuracy)
+Java_xmipp_jni_ImageGeneric_equal(JNIEnv *env, jobject jobj1, jobject jobj2, jdouble accuracy)
 {
   XMIPP_TRY
   {

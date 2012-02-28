@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package xmipp.jni;
+package xmipp.test;
 
 import java.io.File;
 import org.junit.After;
@@ -10,6 +10,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
 import static org.junit.Assert.*;
 import java.util.Arrays;
 
@@ -17,11 +20,11 @@ import java.util.Arrays;
  *
  * @author Juanjo Vega
  */
-public class ImageGeneric_Test {
+public class ImageGenericTest {
 
     // Xmipp dir
-    static String XMIPP_HOME;
-    final static String TESTS_PATH = "applications/tests/test_java/";
+    //static String XMIPP_HOME = File;
+    final static String TESTS_PATH = Filename.getXmippPath("java/src/xmipp/tests/");
     // Filenames to test.
     String filenames[] = new String[]{
         "singleImage.spi"
@@ -49,7 +52,7 @@ public class ImageGeneric_Test {
         8
     };
 
-    public ImageGeneric_Test() {
+    public ImageGenericTest() {
     }
 
     @BeforeClass
@@ -61,32 +64,25 @@ public class ImageGeneric_Test {
     }
 
     @Before
-    public void setUp() {
-        findXmippHome();
+    public void setUp() {        
         fixFilenamesPaths();
     }
-
-    void findXmippHome() {
-        XMIPP_HOME = System.getenv("XMIPP_HOME");
-
-        if (XMIPP_HOME == null) {
-            XMIPP_HOME = System.getProperty("xmipp_home");
-        }
-
-        XMIPP_HOME += File.separator + TESTS_PATH;
+    
+    /** Return the filename relative to tests folder */
+    private String getTestFilename(String file){
+    	return TESTS_PATH + file;
     }
 
     void fixFilenamesPaths() {
         for (int i = 0; i < filenames.length; i++) {
-            filenames[i] = XMIPP_HOME + filenames[i];
+            filenames[i] = getTestFilename(filenames[i]);
         }
-        filename  = XMIPP_HOME + filename;
-        filename2 = XMIPP_HOME + filename2;
+        filename  = getTestFilename(filename);
+        filename2 = getTestFilename(filename2);
     }
 
     @After
-    public void tearDown() {
-        findXmippHome();
+    public void tearDown() {        
         fixFilenamesPaths();
 
         for (int i = 0; i < filenames.length; i++) {
@@ -182,7 +178,7 @@ public class ImageGeneric_Test {
                 testGetYDim(filenames[i], dimensions[i][Y]);
             } catch (Exception ex) {
                 fail("testGetYDim(): " + filenames[i]);
-                //Logger.getLogger(ImageGenericTest.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(ImageGeneric.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -204,7 +200,7 @@ public class ImageGeneric_Test {
                 testGetZDim(filenames[i], dimensions[i][Z]);
             } catch (Exception ex) {
                 fail("testGetZDim(): " + filenames[i]);
-                //Logger.getLogger(ImageGenericTest.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(ImageGeneric.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -226,7 +222,7 @@ public class ImageGeneric_Test {
                 testGetNDim(filenames[i], N[i]);
             } catch (Exception ex) {
                 fail("testGetNDim(): " + filenames[i]);
-                //Logger.getLogger(ImageGenericTest.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(ImageGeneric.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -249,7 +245,7 @@ public class ImageGeneric_Test {
                 testGetDataType(filenames[i], dataType[i]);
             } catch (Exception ex) {
                 fail("testGetDataType(): " + filenames[i]);
-                //Logger.getLogger(ImageGenericTest.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(ImageGeneric.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -294,7 +290,7 @@ public class ImageGeneric_Test {
              assertFalse(instance.equal(instance2,0.001));
          } catch (Exception ex) {
              fail("testGetDataType(): " + filename);
-             //Logger.getLogger(ImageGenericTest.class.getName()).log(Level.SEVERE, null, ex);
+             //Logger.getLogger(ImageGeneric.class.getName()).log(Level.SEVERE, null, ex);
          }
     }
 
