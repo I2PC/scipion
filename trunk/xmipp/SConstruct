@@ -350,8 +350,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CCFLAGS=['-DRELEASE_MODE'])
         AppendIfNotExists(CXXFLAGS=['-DRELEASE_MODE'])
         
-	if not int(env['cuda']):
-	   AppendIfNotExists(CXXFLAGS=['-rdynamic'])
+    if not int(env['cuda']):
+        AppendIfNotExists(CXXFLAGS=['-rdynamic'])
         AppendIfNotExists(CXXFLAGS=['-O0'])
         AppendIfNotExists(CCFLAGS=dpFlags)
         AppendIfNotExists(LINKFLAGS=dpFlags)
