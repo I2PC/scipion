@@ -302,5 +302,8 @@ class XmippPlotter():
     def show(self):
         plt.tight_layout()
         plt.show()
-        
+
+    def draw(self):
+        plt.tight_layout()
+        plt.draw()
         
