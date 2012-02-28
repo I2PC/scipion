@@ -404,6 +404,23 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void avgImage() {
+		try {
+			ImageGeneric imgAvg = new ImageGeneric();
+			ImageGeneric imgStd = new ImageGeneric();
+			data.md.getStatsImages(imgAvg, imgStd, true);
+			ImagePlus impAvg = XmippImageConverter.convertImageGenericToImageJ(imgAvg);
+			ImagePlus impStd =  XmippImageConverter.convertImageGenericToImageJ(imgStd);
+			imgAvg.destroy();
+			imgStd.destroy();
+			impAvg.setTitle("AVG: " + data.filename);
+			impStd.setTitle("STD: " + data.filename);
+			 ImagesWindowFactory.captureFrame(impAvg);
+			 ImagesWindowFactory.captureFrame(impStd);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// ImagesWindowFactory.captureFrame(ImageOperations.mean(tableModel.getAllItems()));
 	}
 

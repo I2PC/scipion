@@ -248,8 +248,9 @@ public class MetaData {
     /** Add new column to MetaData */
     public native void addLabel(int label) throws Exception;
 
-    /** Get the average image, result is left on input image */
-    public native void getAverageImage(ImageGeneric image, boolean applyGeo) throws Exception;
+    /** Get the average and std images, result is left on input image */
+    public native void getStatsImages(ImageGeneric imageAvg, ImageGeneric imageStd
+    		, boolean applyGeo) throws Exception;
     
     public native void getPCAbasis(ImageGeneric basis) throws Exception;
 

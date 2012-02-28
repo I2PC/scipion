@@ -312,6 +312,15 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_addLabel
  * Method:    getPCAbasis
  * Signature: (Lxmipp/ImageGeneric;)V
  */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
+  (JNIEnv *, jobject, jobject, jobject, jboolean);
+
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    getPCAbasis
+ * Signature: (Lxmipp/ImageGeneric;)V
+ */
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
   (JNIEnv *, jobject, jobject);
 
@@ -321,7 +330,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     xmipp_MetaData

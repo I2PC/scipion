@@ -612,12 +612,33 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_addLabel(JNIEnv *env, jobject job
     XMIPP_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
+(JNIEnv *env, jobject jmetadata,
+		jobject jimageAvg, jobject jimageStd, jboolean)
+{
+    XMIPP_TRY
+    {
+        MetaData * md = GET_INTERNAL_METADATA(jmetadata);
+        ImageGeneric *avg = GET_INTERNAL_IMAGE_GENERIC(jimageAvg);
+        ImageGeneric *std = GET_INTERNAL_IMAGE_GENERIC(jimageStd);
+        avg->setDatatype(Double);
+        std->setDatatype(Double);
+        Image<double> * imgAvg = (Image<double>*)avg->image;
+        Image<double> * imgStd = (Image<double>*)std->image;
+        double dum;
+        getStatistics(*md, *imgAvg, *imgStd, dum, dum, true);
+        //FIXME: call getStatistics on md
+    }
+    XMIPP_CATCH;
+}
+
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
 (JNIEnv *env, jobject jmetadata, jobject jbasis)
 {
     XMIPP_TRY
     {
-        MetaData * MDin = GET_INTERNAL_METADATA(jmetadata);
+        MetaData * mdIn = GET_INTERNAL_METADATA(jmetadata);
         ImageGeneric *basis= GET_INTERNAL_IMAGE_GENERIC(jbasis);
         basis->setDatatype(Double);
         std::cerr << "DEBUG_JM: after getting image" <<std::endl;
@@ -628,7 +649,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
         program.NPCA=4;
         program.Niter=10;
         program.dontMask=false;
-        program.SFin=*MDin;
+        program.SFin=*mdIn;
         program.produceSideInfo();
         program.pcaAnalyzer.evaluateZScore(program.NPCA, program.Niter);
         program.produceBasis(*mdArray);
@@ -641,17 +662,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
-(JNIEnv *env, jobject jobj, jstring filename)
+(JNIEnv *env, jobject jobj, jobject jmetadata)
 {
-    MetaData * MDout = GET_INTERNAL_METADATA(jobj);
+    MetaData * mdOut = GET_INTERNAL_METADATA(jobj);
 
     XMIPP_TRY
     {
-        const char * fn = env->GetStringUTFChars(filename, false);
-        MetaData MDin(fn);
-        getFourierStatistics(MDin, 1, *MDout, true, 2);
-
-        env->ReleaseStringUTFChars(filename, fn);
+        MetaData * mdIn = GET_INTERNAL_METADATA(jmetadata);
+        getFourierStatistics(*mdIn, 1, *mdOut, true, 2);
     }
     XMIPP_CATCH;
 }
