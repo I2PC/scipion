@@ -398,7 +398,7 @@ def CompileJava(name, dependencies=[]):
     source = javaSrcName(name + '.java')
     target = javaBuildName(name + '.class')
     buildDir = javaBuildName()
-    cmd = env['JAVAC'] + ' -cp ""java/lib/*"'
+    cmd = env['JAVAC'] + ' -cp "java/lib/*"'
     compileCmd = env.Command(target, source,'%(cmd)s -d %(buildDir)s %(source)s' %locals())
     dependencies.append('XmippJNI') # XmippJNI dependency is added by default
     deps = [javaLibName(name + '.jar') for name in dependencies]
