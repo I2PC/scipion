@@ -441,12 +441,15 @@ def AddJavaLibrary(name, src, dependencies=[]):#, sourceList, includes, libpath=
         env.Depends(buildJar, s)
     for lib in deps:
         env.Depends(buildJar, lib)
-    env.Alias(name, buildJar)
+    env.Alias(name + '.jar', buildJar)
     # Group all jar targets under 'java' alias
     env.Alias('java', buildJar)
     env.Default(buildJar)
     return buildJar
 
+def RunJavaTest(className):
+    cmd = 'java -cp "java/lib/*" org.junit.runner.JUnitCore xmipp.test.' + className
+    runTest = env.Command(target, source, cmd)
 
 def removeAll(basedir, regexp):
 	import glob
@@ -683,22 +686,23 @@ if int(env['java']):
     if int(env['arpack']):
         JavaDependLibraries += ['arpack++','arpack','lapack','blas']
     # Compilation of the c code needed for java jni binding
-    javaJni = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources,
+    javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources,
     ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
     # Create some jar links
     cmd = env.Command(join(libDir, 'ij.jar'), 'external/imagej/ij.jar', SymLink)
     env.Default(cmd)
-    AddJavaLibrary('XmippJNI', 'jni', ['ij'])
+    javaJni = AddJavaLibrary('XmippJNI', 'jni', ['ij'])
+    env.Depends(javaJni, javaJniC)
     AddJavaLibrary('XmippIJ', 'ij', ['ij'])
-    xmippUtils = AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
+    AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils','ij'])
-    xmippViewer = AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
-
-    compileHEFT = CompileJava('HandleExtraFileTypes', ['XmippIJ', 'XmippUtils', 'ij'])
-    env.Install()
+    AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
+    AddJavaLibrary('XmippTest', 'test', ['XmippViewer', 'junit4-4.8.2'])
+    # Compile the HandleExtraFileTypes for ImageJ I/O
+    compileHEFT = CompileJava('HandleExtraFileTypes', ['XmippViewer'])
     copyHandleExtraFileTypes = env.Install('external/imagej/plugins/', javaBuildName('HandleExtraFileTypes.class'))
-    
+    env.Alias('java', copyHandleExtraFileTypes) # Add copy of this class as a Java dependency
 
 #    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
