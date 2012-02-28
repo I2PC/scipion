@@ -229,7 +229,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_printShape
 
 /*
    * Class:     xmipp_ImageGeneric
-   * Method:    equals
+   * Method:    equal
    * Signature: bool
    */
   JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_equal
