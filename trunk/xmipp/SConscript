@@ -4,6 +4,7 @@ Import('env')
 
 # Required for custom functions
 import os
+from os.path import join
 
 FFTWDir = "external/fftw-3.2.2"
 FFTWLibs = ['fftw3', 'fftw3_threads']
@@ -38,12 +39,12 @@ def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     import fnmatch
     for file in fnmatch.filter(files, pattern):
         if file not in blacklist:
-           # DBG print 'Adding ' + os.path.join(directory, file)
-           sources.append(os.path.join(directory, file))
+           # DBG print 'Adding ' + join(directory, file)
+           sources.append(join(directory, file))
 
 def Glob(dir, pattern, blacklist):
     ''' Custom made globbing '''
-    import os
+    
     sources = []
     os.path.walk(dir, AddMatchingFiles, (pattern, blacklist, sources))
     return sources
@@ -75,10 +76,10 @@ def SymLink(target, source, env=None):
         os.symlink(source, link)
 
 def AddProgramLink(target, source, PrependXmipp=True):
-    binprefix = os.path.join(env['prefix'], 'bin')
-    bintarget = os.path.join(binprefix, env['prepend'] + target)
+    binprefix = join(env['prefix'], 'bin')
+    bintarget = join(binprefix, env['prepend'] + target)
     if PrependXmipp:
-        binsource = os.path.join(binprefix, env['prepend'] + source)
+        binsource = join(binprefix, env['prepend'] + source)
     else:
         binsource = source
     command = env.Command(bintarget, binsource,
@@ -91,11 +92,11 @@ def AddBatch(name, basedir, extension=''):
     # setup
     basedir = AddLastSlash(basedir)
     fullname = env['prepend'] + name
-    binprefix = os.path.join(env['prefix'], 'bin')
+    binprefix = join(env['prefix'], 'bin')
 
     # action
-    source = os.path.join(basedir, 'batch_' + name + extension)
-    target = os.path.join(binprefix, fullname)
+    source = join(basedir, 'batch_' + name + extension)
+    target = join(binprefix, fullname)
     command = env.Command(target, source,
         [Chmod('$SOURCE', 0755), SymLink])
 
@@ -116,7 +117,7 @@ def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     basedir = AddLastSlash(basedir)
     fullname = env['prepend'] + name
     sources = Glob(basedir, sources_pattern, skip_list)
-    binprefix = os.path.join(env['prefix'], 'bin')
+    binprefix = join(env['prefix'], 'bin')
 
     # FIXME fix for static executables
     if env['static']:
@@ -125,7 +126,7 @@ def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
 
     # action
     program = env.Program(
-        os.path.join(basedir, fullname),
+        join(basedir, fullname),
         sources,
         CPPPATH=includes + [env['CPPPATH']],
         LIBPATH=libpath + [env['LIBPATH']],
@@ -148,7 +149,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     basedir = AddLastSlash(basedir)
     fullname = env['prepend'] + name
     sources = Glob(basedir, sources_pattern, skip_list)
-    binprefix = os.path.join(env['prefix'], 'bin')
+    binprefix = join(env['prefix'], 'bin')
 
     # FIXME fix for static executables
     if env['static']:
@@ -157,7 +158,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
 
     # action
     program = env.Program(
-        os.path.join(basedir, fullname),
+        join(basedir, fullname),
         sources,
         CC=env['MPI_CC'],
         CXX=env['MPI_CXX'],
@@ -266,7 +267,7 @@ def AddXmippMPIProgram(name, libs=[]):
 def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     # setup
     basedir = AddLastSlash(basedir)
-    libprefix = os.path.join(env['prefix'], 'lib')
+    libprefix = join(env['prefix'], 'lib')
     #for x in sources:
     #    sources[sources.index(x)] = basedir + x
 
@@ -308,7 +309,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     shlibprefix='lib',shlibsuffix=env['SHLIBSUFFIX'], useCudaEnvironment=False):
     # setup
     basedir = AddLastSlash(basedir)
-    libprefix = os.path.join(env['prefix'], 'lib')
+    libprefix = join(env['prefix'], 'lib')
     cudaFiles=False
     for x in sources:
         if x.find(basedir) == -1:
@@ -383,30 +384,38 @@ def Cmd(cmd):
     print cmd
     os.system(cmd)
     
-def CompileJava(source,buildDir,target,classPath):
-    cmd = env['JAVAC'] + ' -cp "' + classPath + '"'
-    compileCmd=env.Command(target,source,'%(cmd)s -d %(buildDir)s %(source)s' %locals())
-    env.Depends(compileCmd,source)
+def javaBuildName(*args):
+    return join(env['JAVADIR'], 'build', *args)
+ 
+def javaLibName(*args):   
+    return join(env['JAVADIR'], 'lib', *args)
+
+def javaSrcName(*args):
+    return join(env['JAVADIR'], 'src', 'xmipp', *args)
+
+def CompileJava(name, dependencies=[]):
+    ''' name parameter is expected without .java extension '''
+    source = javaSrcName(name + '.java')
+    target = javaBuildName(name + '.class')
+    buildDir = javaBuildName()
+    cmd = env['JAVAC'] + ' -cp ""java/lib/*"'
+    compileCmd = env.Command(target, source,'%(cmd)s -d %(buildDir)s %(source)s' %locals())
+    dependencies.append('XmippJNI') # XmippJNI dependency is added by default
+    deps = [javaLibName(name + '.jar') for name in dependencies]
+    for lib in deps:
+        env.Depends(compileCmd, lib)
     env.Default(compileCmd)
     return compileCmd
 
-def CompileJavaJar(target, source, env):
-    from os.path import join
+def CompileJavaJar(target, source, env):    
     srcDir = str(source[0])
-    buildDir = env['JAVABUILDPATH']
+    buildDir = javaBuildName()
     jarfile = str(target[0])
     name = os.path.basename(jarfile)
-    listfile = join(buildDir, name + '_source.txt')
-    classfile = join(buildDir, name + '_classes.txt')
+    listfile = javaBuildName(name + '_source.txt')
+    classfile = javaBuildName(name + '_classes.txt')
     CreateFileList(srcDir, '*.java', listfile)
-    cmd = env['JAVAC']
-    cp = ':'.join([str(s) for s in source[1:]])
-    if len(cp):
-    	if CYGWIN:
-            cmd += ' -cp "' + cp + ';java/lib/*"'
-	else:
-            cmd += ' -cp "' + cp + ':java/lib/*"'
-    Cmd('%(cmd)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
+    Cmd(env['JAVAC'] + ' -cp "java/lib/*" -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
     classDir = join(buildDir, 'xmipp', os.path.basename(srcDir))
     # We need to create a txt file with the list of all .class files 
     # with the following format:
@@ -418,23 +427,20 @@ def CompileJavaJar(target, source, env):
     Cmd('%(cmd)s %(jarfile)s @%(classfile)s' % locals())
     
 def AddJavaLibrary(name, src, dependencies=[]):#, sourceList, includes, libpath=[], libs=[]):
-    #name = 'XmippJNI'
-    javaDir = env['JAVADIR']
-    from os.path import join
-    srcDir = join(javaDir, 'src', 'xmipp', src)
-    buildDir = env['JAVABUILDPATH']
-    # Create filenames
-    listfile = join(buildDir, name + '_source.txt')
-    classfile = join(buildDir, name + '_classes.txt')    
-    jarfile = join(javaDir, 'lib', name + '.jar')
-    if name != 'XmippJNI':
+    srcDir = javaSrcName(src)
+#    listfile = javaBuildName(name + '_source.txt')
+#    classfile = javaBuildName(name + '_classes.txt')    
+    jarfile = javaLibName(name + '.jar')
+    if name != 'XmippJNI': # XmippJNI dependency is added by default
         dependencies.append('XmippJNI')
-    deps = [join(javaDir, 'lib', name + '.jar') for name in dependencies]
+    deps = [javaLibName(name + '.jar') for name in dependencies]
     buildJar = env.Command(jarfile, [srcDir] + deps, CompileJavaJar)
     #Add sources dependencies, not handled now by Scons
     sources = Glob(srcDir, '*.java', [])
     for s in sources:
         env.Depends(buildJar, s)
+    for lib in deps:
+        env.Depends(buildJar, lib)
     env.Alias(name, buildJar)
     # Group all jar targets under 'java' alias
     env.Alias('java', buildJar)
@@ -450,24 +456,24 @@ def removeAll(basedir, regexp):
 
 def AddJavaApp(name, appDir, outDir):
     import shutil
-    sourceDir = os.path.join(appDir, 'src')
-    resourcesDir = os.path.join(sourceDir, 'resources')
-    libsDir = os.path.join(appDir , 'libs')
-    metainfDir = os.path.join(sourceDir, 'META-INF')
-    buildDir = os.path.join(appDir , 'build')
-    buildResourcesDir = os.path.join(buildDir, 'resources')
-    buildMetainf = os.path.join(buildDir, 'META-INF')
-    outLibsDir = os.path.join(outDir, 'libs')
+    sourceDir = join(appDir, 'src')
+    resourcesDir = join(sourceDir, 'resources')
+    libsDir = join(appDir , 'libs')
+    metainfDir = join(sourceDir, 'META-INF')
+    buildDir = join(appDir , 'build')
+    buildResourcesDir = join(buildDir, 'resources')
+    buildMetainf = join(buildDir, 'META-INF')
+    outLibsDir = join(outDir, 'libs')
     # Clears "buildDir"
     if not os.path.exists(buildDir):
         os.mkdir(buildDir)
         #os.mkdir(buildResourcesDir)
 
-    env.Append(JAVACLASSPATH=os.path.join(libsDir, '*'))
+    env.Append(JAVACLASSPATH=join(libsDir, '*'))
     buildClasses = env.Java(buildDir, sourceDir, JAVAVERSION='1.6')
     # Copies MANIFEST
     copyMetainf = env.Install(buildMetainf, Glob(metainfDir, "MANIFEST.MF", []))
-    buildJar = env.Jar(os.path.join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
+    buildJar = env.Jar(join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
 
     appLibs = {}
     jarList = Glob(libsDir, "*.jar", [])
@@ -487,12 +493,12 @@ def AddJavaApp(name, appDir, outDir):
 
 def AddImageJPlugin(name, pluginDir, outDir, requiredPlugins=[]):
     import shutil
-    sourceDir = os.path.join(pluginDir, 'src')
-    resourcesDir = os.path.join(sourceDir, 'resources')
-    libsDir = os.path.join(pluginDir , 'libs')
-    macrosDir = os.path.join(pluginDir , 'macros')
-    buildDir = os.path.join(pluginDir , 'build')
-    buildResourcesDir = os.path.join(buildDir, 'resources')
+    sourceDir = join(pluginDir, 'src')
+    resourcesDir = join(sourceDir, 'resources')
+    libsDir = join(pluginDir , 'libs')
+    macrosDir = join(pluginDir , 'macros')
+    buildDir = join(pluginDir , 'build')
+    buildResourcesDir = join(buildDir, 'resources')
     # Clears "buildDir"
     if not os.path.exists(buildDir):
         os.mkdir(buildDir)
@@ -500,8 +506,8 @@ def AddImageJPlugin(name, pluginDir, outDir, requiredPlugins=[]):
     # Copies 'plugins.config' to build dir...
     buildClasses = env.Java(buildDir, sourceDir, JAVAVERSION='1.6')
     env.Depends(buildClasses, requiredPlugins)
-    copyPluginConfig = env.Install(buildDir, os.path.join(sourceDir, 'plugins.config'))#Glob(sourceDir, 'plugins.config', []))
-    buildJar = env.Jar(os.path.join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
+    copyPluginConfig = env.Install(buildDir, join(sourceDir, 'plugins.config'))#Glob(sourceDir, 'plugins.config', []))
+    buildJar = env.Jar(join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
 
     jarList = Glob(libsDir, "*.jar", [])
     for l in jarList:
@@ -516,7 +522,7 @@ def AddImageJPlugin(name, pluginDir, outDir, requiredPlugins=[]):
     pluginAlias = env.Alias(name, buildJar)
     env.Depends(buildClasses, copyJar)
 
-    outMacrosDir = os.path.join(outDir, "..", "macros")
+    outMacrosDir = join(outDir, "..", "macros")
     env.Alias('copyMacros', env.Install(outMacrosDir, Glob(macrosDir, "*?.???", [])))
     return pluginAlias
 
@@ -548,7 +554,7 @@ AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 #import distutils.sysconfig
 pythonLibName = 'xmipp'
-pythonIncludes = ["#" + os.path.join(PythonDir, dir) for dir in [".", "Include"]]
+pythonIncludes = ["#" + join(PythonDir, dir) for dir in [".", "Include"]]
 libpath = ['lib']
 libraries = ['XmippData', 'XmippRecons', 'XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
 if CYGWIN or MACOSX:
@@ -681,24 +687,17 @@ if int(env['java']):
     ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
     # Create some jar links
-    cmd = env.Command(os.path.join(libDir, 'ij.jar'), 'external/imagej/ij.jar', SymLink)
+    cmd = env.Command(join(libDir, 'ij.jar'), 'external/imagej/ij.jar', SymLink)
     env.Default(cmd)
     AddJavaLibrary('XmippJNI', 'jni', ['ij'])
     AddJavaLibrary('XmippIJ', 'ij', ['ij'])
     xmippUtils = AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils','ij'])
     xmippViewer = AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
-    javaClassPath=['java/build','java/lib/ij.jar']
-    if CYGWIN:
-        javaClassPath=';'.join(javaClassPath)
-    else:
-        javaClassPath=':'.join(javaClassPath)
-    compileHEFT=CompileJava('java/src/HandleExtraFileTypes.java', 'java/build', 'java/build/HandleExtraFileTypes.class',javaClassPath)
-    env.Depends(compileHEFT,xmippUtils)
-    env.Depends(compileHEFT,xmippViewer)
-    copyHandleExtraFileTypes = env.InstallAs(target='external/imagej/plugins/HandleExtraFileTypes.class', source='java/build/HandleExtraFileTypes.class')
-    env.Depends(copyHandleExtraFileTypes,'java/build/HandleExtraFileTypes.class')
-    env.Default(copyHandleExtraFileTypes)
+
+    compileHEFT = CompileJava('HandleExtraFileTypes', ['XmippIJ', 'XmippUtils', 'ij'])
+    env.Install()
+    copyHandleExtraFileTypes = env.Install('external/imagej/plugins/', javaBuildName('HandleExtraFileTypes.class'))
     
 
 #    lib2 = AddJavaLibrary('XmippIJInterface', 'libraries/bindings/java/src', 'xmippij')
@@ -969,7 +968,7 @@ if int(env['qt']):
         # setup
         basedir = AddLastSlash(basedir)
         fullname = env['prepend'] + name
-        binprefix = os.path.join(env['prefix'], 'bin')
+        binprefix = join(env['prefix'], 'bin')
 
         extra = []
 
@@ -1033,7 +1032,7 @@ if int(env['qt']):
             )
 
     graphics_alias = env.Alias(graphics_name, graphics)
-    graphics_install = env.Install(os.path.join(env['prefix'], 'lib'),
+    graphics_install = env.Install(join(env['prefix'], 'lib'),
         graphics)
     env.Alias(graphics_name, graphics_install)
     env.Default(graphics_alias)
@@ -1059,7 +1058,7 @@ if int(env['qt']):
     AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
 
 if int(env['matlab']):
-    import os
+    
 
     def AddMatlabBinding(name):
         print 'compiling Matlab wrapper for ' + name
