@@ -113,7 +113,7 @@ public:
             double x=getDoubleParam("--operation",1);
             double y=getDoubleParam("--operation",2);
             double z=getDoubleParam("--operation",3);
-            double ang=getDoubleParam("--operation",4);
+            ang=getDoubleParam("--operation",4);
             axis=vectorR3(x,y,z);
             rotation3DMatrix(ang, axis, A3D);
         }
