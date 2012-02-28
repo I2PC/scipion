@@ -19,6 +19,7 @@ from protlib_utils import getListFromVector, getBoolListFromVector, getComponent
 from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning
+from protlib_gui_figure import XmippPlotter
 
 
 class ProtProjMatch(XmippProtocol):
@@ -109,7 +110,7 @@ class ProtProjMatch(XmippProtocol):
                              'DisplayDiscardedImages', 'DisplayAngularDistribution', 'DisplayResolutionPlots'] if self.ParamsDict[k]]
         if len(plots):
             self.launchProjmatchPlots(plots)
-         
+
 #    def visualizeReferences(self):
 #        refs = self.getFilename('iter_refs')
 #        if exists(refs):
@@ -130,8 +131,7 @@ class ProtProjMatch(XmippProtocol):
     def launchProjmatchPlots(self, selectedPlots):
         ''' Launch some plots for a Projection Matching protocol run '''
         import numpy as np
-        from protlib_gui_figure import XmippPlotter
-    
+        xplotter=None
         self._plot_count = 0
         
         def doPlot(plotName):
@@ -285,8 +285,7 @@ class ProtProjMatch(XmippProtocol):
                                )
             else: #DisplayAngularDistributionWith == '2D'
                 for it in iterations:
-                    print 'a1'
-        
+                    
                     if(len(ref3Ds) == 1):
                         gridsize1 = [1, 1]
                     elif (len(ref3Ds) == 2):
@@ -294,9 +293,7 @@ class ProtProjMatch(XmippProtocol):
                     else:
                         gridsize1 = [(len(ref3Ds)+1)/2, 2]
                     
-                    print 'a2'
-        
-                    xplotter_polar = XmippPlotter(*gridsize1)
+                    xplotter = XmippPlotter(*gridsize1)
                     print 'gridsize1: ', gridsize1
                     print 'iterations: ', iterations
                     print 'ref3Ds: ', ref3Ds
@@ -309,35 +306,31 @@ class ProtProjMatch(XmippProtocol):
                         weight = [md.getValue(MDL_WEIGHT, id) for id in md]
                         
                         plot_title = 'Ref3D_'+ ref3d
-                        a = xplotter_polar.createSubPlot(plot_title, 'XX', 'YY', yformat=False, projection='polar')
+                        a = xplotter.createSubPlot(plot_title, 'XX', 'YY', yformat=False, projection='polar')
                         a.plot(rot, tilt)
                         
-                    print 'a3'
-                    xplotter_polar.show()
-                    print 'a4'
-                        
-
-                        
+                    xplotter.draw()
+                    
+                    
         if doPlot('DisplayResolutionPlots'):
 
             iterations = getListFromVector(self.DisplayIterationsNo)
             ref3Ds = getListFromVector(self.DisplayRef3DNo)
 
-            #gridsize1 = [len(iterations), len(ref3Ds)]
             if(len(ref3Ds) == 1):
                 gridsize1 = [1, 1]
             elif (len(ref3Ds) == 2):
                 gridsize1 = [2, 1]
             else:
                 gridsize1 = [(len(ref3Ds)+1)/2, 2]
-            xplotter1 = XmippPlotter(*gridsize1)
+            xplotter = XmippPlotter(*gridsize1)
             print 'gridsize1: ', gridsize1
             print 'iterations: ', iterations
             print 'ref3Ds: ', ref3Ds
             
             for ref3d in ref3Ds:
                 plot_title = 'Ref3D_'+ ref3d
-                a = xplotter1.createSubPlot(plot_title, 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=False)
+                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=False)
                 legendName=[]
                 for it in iterations:
                     file_name = self.getFilename('ResolutionXmdFile', iter=int(it), ref=int(ref3d))
@@ -347,10 +340,12 @@ class ProtProjMatch(XmippProtocol):
                     frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
                     a.plot(resolution_inv, frc)
                     legendName.append('Iter_'+str(it))
-                xplotter1.showLegend(legendName)
+                xplotter.showLegend(legendName)
             
-            xplotter1.show()
+            xplotter.draw()
     
+        if xplotter:
+            xplotter.show()
     
     
     
