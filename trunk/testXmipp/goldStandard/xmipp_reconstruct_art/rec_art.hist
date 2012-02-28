@@ -1,0 +1,663 @@
+ ============================================================
+ ART RECONSTRUCTION HISTORY: 
+ ============================================================
+
+ Parameters -------------------------------------------------
+ Projections file     : input/projectionsBacteriorhodopsin.xmd
+ CTF file             : 
+ Goldmask             : 1e+06
+ Unmatched projectors : 0
+ Sampling             : 1
+ Blobs:         radius=2 pixels alpha=10.4 order=2
+
+ Grid Type: BCC  Shifted tomograms:0
+ Ray length: -1
+
+ Radius of the interest sphere= -1 pixels
+ Grid unit=1.41 pixels
+ No Projection extension
+ Output volume size as input images
+ Iterations:    lambda=
+      0.01 
+                No. Iter=2
+ Parallel mode: ART
+ Equation mode: ARTK
+ Projections: Ydim x Xdim = 64 x 64
+ Surface mask: 
+ POCS freq: 1
+ Known volume: -1
+ Positivity: 0
+ Apply shifts in images headers: 1
+ Symmetry file: 
+ Force Symmetry each: 0 projections
+ Maximun absolute tilt angle: 1e+07 degrees
+ Generating symmetry group: 1
+ Do not use symmetrized projections: 1
+ Number of total projections (including symmetrized): 181
+ Number of different projections: 181
+ Forcing symmetry: 0
+ Stop at: 0
+ Sort with last 2 images
+ Variability analysis: 0
+ Refine projections: 0
+ Sparsity epsilon: -1
+ Diffusion weight: -1
+ Saving intermidiate at every 0 projections
+ Projection angles -----------------------------------------
+rot= 180 tilt= 90 psi= 180
+rot= 180 tilt= 89 psi= 180
+rot= 180 tilt= 88 psi= 180
+rot= 180 tilt= 87 psi= 180
+rot= 180 tilt= 86 psi= 180
+rot= 180 tilt= 85 psi= 180
+rot= 180 tilt= 84 psi= 180
+rot= 180 tilt= 83 psi= 180
+rot= 180 tilt= 82 psi= 180
+rot= 180 tilt= 81 psi= 180
+rot= 180 tilt= 80 psi= 180
+rot= 180 tilt= 79 psi= 180
+rot= 180 tilt= 78 psi= 180
+rot= 180 tilt= 77 psi= 180
+rot= 180 tilt= 76 psi= 180
+rot= 180 tilt= 75 psi= 180
+rot= 180 tilt= 74 psi= 180
+rot= 180 tilt= 73 psi= 180
+rot= 180 tilt= 72 psi= 180
+rot= 180 tilt= 71 psi= 180
+rot= 180 tilt= 70 psi= 180
+rot= 180 tilt= 69 psi= 180
+rot= 180 tilt= 68 psi= 180
+rot= 180 tilt= 67 psi= 180
+rot= 180 tilt= 66 psi= 180
+rot= 180 tilt= 65 psi= 180
+rot= 180 tilt= 64 psi= 180
+rot= 180 tilt= 63 psi= 180
+rot= 180 tilt= 62 psi= 180
+rot= 180 tilt= 61 psi= 180
+rot= 180 tilt= 60 psi= 180
+rot= 180 tilt= 59 psi= 180
+rot= 180 tilt= 58 psi= 180
+rot= 180 tilt= 57 psi= 180
+rot= 180 tilt= 56 psi= 180
+rot= 180 tilt= 55 psi= 180
+rot= 180 tilt= 54 psi= 180
+rot= 180 tilt= 53 psi= 180
+rot= 180 tilt= 52 psi= 180
+rot= 180 tilt= 51 psi= 180
+rot= 180 tilt= 50 psi= 180
+rot= 180 tilt= 49 psi= 180
+rot= 180 tilt= 48 psi= 180
+rot= 180 tilt= 47 psi= 180
+rot= 180 tilt= 46 psi= 180
+rot= 180 tilt= 45 psi= 180
+rot= 180 tilt= 44 psi= 180
+rot= 180 tilt= 43 psi= 180
+rot= 180 tilt= 42 psi= 180
+rot= 180 tilt= 41 psi= 180
+rot= 180 tilt= 40 psi= 180
+rot= 180 tilt= 39 psi= 180
+rot= 180 tilt= 38 psi= 180
+rot= 180 tilt= 37 psi= 180
+rot= 180 tilt= 36 psi= 180
+rot= 180 tilt= 35 psi= 180
+rot= 180 tilt= 34 psi= 180
+rot= 180 tilt= 33 psi= 180
+rot= 180 tilt= 32 psi= 180
+rot= 180 tilt= 31 psi= 180
+rot= 180 tilt= 30 psi= 180
+rot= 180 tilt= 29 psi= 180
+rot= 180 tilt= 28 psi= 180
+rot= 180 tilt= 27 psi= 180
+rot= 180 tilt= 26 psi= 180
+rot= 180 tilt= 25 psi= 180
+rot= 180 tilt= 24 psi= 180
+rot= 180 tilt= 23 psi= 180
+rot= 180 tilt= 22 psi= 180
+rot= 180 tilt= 21 psi= 180
+rot= 180 tilt= 20 psi= 180
+rot= 180 tilt= 19 psi= 180
+rot= 180 tilt= 18 psi= 180
+rot= 180 tilt= 17 psi= 180
+rot= 180 tilt= 16 psi= 180
+rot= 180 tilt= 15 psi= 180
+rot= 180 tilt= 14 psi= 180
+rot= 180 tilt= 13 psi= 180
+rot= 180 tilt= 12 psi= 180
+rot= 180 tilt= 11 psi= 180
+rot= 180 tilt= 10 psi= 180
+rot= 180 tilt= 9 psi= 180
+rot= 180 tilt= 8 psi= 180
+rot= 180 tilt= 7 psi= 180
+rot= 180 tilt= 6 psi= 180
+rot= 180 tilt= 5 psi= 180
+rot= 180 tilt= 4 psi= 180
+rot= 180 tilt= 3 psi= 180
+rot= 180 tilt= 2 psi= 180
+rot= 180 tilt= 1 psi= 180
+rot= 0 tilt= 0 psi= 0
+rot= 360 tilt= 1 psi= 3.53897e-15
+rot= 360 tilt= 2 psi= 3.56959e-15
+rot= 360 tilt= 3 psi= 3.60022e-15
+rot= 360 tilt= 4 psi= 3.63087e-15
+rot= 360 tilt= 5 psi= 3.66153e-15
+rot= 360 tilt= 6 psi= 3.69222e-15
+rot= 360 tilt= 7 psi= 3.72293e-15
+rot= 360 tilt= 8 psi= 3.75368e-15
+rot= 360 tilt= 9 psi= 3.78447e-15
+rot= 360 tilt= 10 psi= 3.8153e-15
+rot= 360 tilt= 11 psi= 3.84617e-15
+rot= 360 tilt= 12 psi= 3.8771e-15
+rot= 360 tilt= 13 psi= 3.90808e-15
+rot= 360 tilt= 14 psi= 3.93913e-15
+rot= 360 tilt= 15 psi= 3.97024e-15
+rot= 360 tilt= 16 psi= 4.00142e-15
+rot= 360 tilt= 17 psi= 4.03268e-15
+rot= 360 tilt= 18 psi= 4.06402e-15
+rot= 360 tilt= 19 psi= 4.09545e-15
+rot= 360 tilt= 20 psi= 4.12697e-15
+rot= 360 tilt= 21 psi= 4.15859e-15
+rot= 360 tilt= 22 psi= 4.19031e-15
+rot= 360 tilt= 23 psi= 4.22214e-15
+rot= 360 tilt= 24 psi= 4.25408e-15
+rot= 360 tilt= 25 psi= 4.28614e-15
+rot= 360 tilt= 26 psi= 4.31832e-15
+rot= 360 tilt= 27 psi= 4.35064e-15
+rot= 360 tilt= 28 psi= 4.38309e-15
+rot= 360 tilt= 29 psi= 4.41568e-15
+rot= 360 tilt= 30 psi= 4.44841e-15
+rot= 360 tilt= 31 psi= 4.48131e-15
+rot= 360 tilt= 32 psi= 4.51436e-15
+rot= 360 tilt= 33 psi= 4.54758e-15
+rot= 360 tilt= 34 psi= 4.58097e-15
+rot= 360 tilt= 35 psi= 4.61454e-15
+rot= 360 tilt= 36 psi= 4.64829e-15
+rot= 360 tilt= 37 psi= 4.68223e-15
+rot= 360 tilt= 38 psi= 4.71638e-15
+rot= 360 tilt= 39 psi= 4.75073e-15
+rot= 360 tilt= 40 psi= 4.78529e-15
+rot= 360 tilt= 41 psi= 4.82008e-15
+rot= 360 tilt= 42 psi= 4.85509e-15
+rot= 360 tilt= 43 psi= 4.89033e-15
+rot= 360 tilt= 44 psi= 4.92582e-15
+rot= 360 tilt= 45 psi= 4.96156e-15
+rot= 360 tilt= 46 psi= 4.99756e-15
+rot= 360 tilt= 47 psi= 5.03383e-15
+rot= 360 tilt= 48 psi= 5.07038e-15
+rot= 360 tilt= 49 psi= 5.1072e-15
+rot= 360 tilt= 50 psi= 5.14433e-15
+rot= 360 tilt= 51 psi= 5.18175e-15
+rot= 360 tilt= 52 psi= 5.21949e-15
+rot= 360 tilt= 53 psi= 5.25756e-15
+rot= 360 tilt= 54 psi= 5.29595e-15
+rot= 360 tilt= 55 psi= 5.33469e-15
+rot= 360 tilt= 56 psi= 5.37378e-15
+rot= 360 tilt= 57 psi= 5.41324e-15
+rot= 360 tilt= 58 psi= 5.45307e-15
+rot= 360 tilt= 59 psi= 5.49329e-15
+rot= 360 tilt= 60 psi= 5.5339e-15
+rot= 360 tilt= 61 psi= 5.57493e-15
+rot= 360 tilt= 62 psi= 5.61639e-15
+rot= 360 tilt= 63 psi= 5.65828e-15
+rot= 360 tilt= 64 psi= 5.70062e-15
+rot= 360 tilt= 65 psi= 5.74342e-15
+rot= 360 tilt= 66 psi= 5.78671e-15
+rot= 360 tilt= 67 psi= 5.83048e-15
+rot= 360 tilt= 68 psi= 5.87477e-15
+rot= 360 tilt= 69 psi= 5.91958e-15
+rot= 360 tilt= 70 psi= 5.96493e-15
+rot= 360 tilt= 71 psi= 6.01084e-15
+rot= 360 tilt= 72 psi= 6.05732e-15
+rot= 360 tilt= 73 psi= 6.1044e-15
+rot= 360 tilt= 74 psi= 6.15209e-15
+rot= 360 tilt= 75 psi= 6.20041e-15
+rot= 360 tilt= 76 psi= 6.24938e-15
+rot= 360 tilt= 77 psi= 6.29903e-15
+rot= 360 tilt= 78 psi= 6.34936e-15
+rot= 360 tilt= 79 psi= 6.40042e-15
+rot= 360 tilt= 80 psi= 6.45221e-15
+rot= 360 tilt= 81 psi= 6.50477e-15
+rot= 360 tilt= 82 psi= 6.55812e-15
+rot= 360 tilt= 83 psi= 6.61229e-15
+rot= 360 tilt= 84 psi= 6.66729e-15
+rot= 360 tilt= 85 psi= 6.72317e-15
+rot= 360 tilt= 86 psi= 6.77995e-15
+rot= 360 tilt= 87 psi= 6.83766e-15
+rot= 360 tilt= 88 psi= 6.89633e-15
+rot= 360 tilt= 89 psi= 6.95601e-15
+rot= 0 tilt= 90 psi= 7.01671e-15
+ -----------------------------------------------------------
+ Starting from a zero volume
+ Grid structure ------
+Complex Grid -------------------------------------
+   Simple Grid -----
+   Vector 1: 
+         1
+         0
+         0
+
+   Vector 2: 
+         0
+         1
+         0
+
+   Vector 3: 
+         0
+         0
+         1
+
+   Relative size:         1.41
+   Interest radius:       -1
+   Origin (univ.coords)   
+         0
+         0
+         0
+
+   Highest (grid. coord)  
+        23
+        23
+        23
+
+   Lowest (grid. coord)   
+       -23
+       -23
+       -23
+
+   Simple Grid -----
+   Vector 1: 
+         1
+         0
+         0
+
+   Vector 2: 
+         0
+         1
+         0
+
+   Vector 3: 
+         0
+         0
+         1
+
+   Relative size:         1.41
+   Interest radius:       -1
+   Origin (univ.coords)   
+     0.705
+     0.705
+     0.705
+
+   Highest (grid. coord)  
+        23
+        23
+        23
+
+   Lowest (grid. coord)   
+       -24
+       -24
+       -24
+
+ Extra: 000001@input/projectionsBacteriorhodopsin.stk, sym=-1		16.0909
+000091@input/projectionsBacteriorhodopsin.stk, sym=-1		13.8734
+000181@input/projectionsBacteriorhodopsin.stk, sym=-1		14.5888
+000002@input/projectionsBacteriorhodopsin.stk, sym=-1		13.5512
+000092@input/projectionsBacteriorhodopsin.stk, sym=-1		12.1473
+000003@input/projectionsBacteriorhodopsin.stk, sym=-1		12.2735
+000093@input/projectionsBacteriorhodopsin.stk, sym=-1		10.9798
+000094@input/projectionsBacteriorhodopsin.stk, sym=-1		10.257
+000004@input/projectionsBacteriorhodopsin.stk, sym=-1		10.8539
+000095@input/projectionsBacteriorhodopsin.stk, sym=-1		9.33457
+000005@input/projectionsBacteriorhodopsin.stk, sym=-1		9.86622
+000096@input/projectionsBacteriorhodopsin.stk, sym=-1		8.50251
+000006@input/projectionsBacteriorhodopsin.stk, sym=-1		8.99223
+000007@input/projectionsBacteriorhodopsin.stk, sym=-1		8.38638
+000097@input/projectionsBacteriorhodopsin.stk, sym=-1		7.5705
+000008@input/projectionsBacteriorhodopsin.stk, sym=-1		7.64987
+000098@input/projectionsBacteriorhodopsin.stk, sym=-1		6.92627
+000099@input/projectionsBacteriorhodopsin.stk, sym=-1		6.49484
+000009@input/projectionsBacteriorhodopsin.stk, sym=-1		6.84342
+000010@input/projectionsBacteriorhodopsin.stk, sym=-1		6.38325
+000100@input/projectionsBacteriorhodopsin.stk, sym=-1		5.84843
+000101@input/projectionsBacteriorhodopsin.stk, sym=-1		5.49773
+000011@input/projectionsBacteriorhodopsin.stk, sym=-1		5.74735
+000102@input/projectionsBacteriorhodopsin.stk, sym=-1		5.07048
+000012@input/projectionsBacteriorhodopsin.stk, sym=-1		5.28599
+000103@input/projectionsBacteriorhodopsin.stk, sym=-1		4.68963
+000013@input/projectionsBacteriorhodopsin.stk, sym=-1		4.87331
+000104@input/projectionsBacteriorhodopsin.stk, sym=-1		4.35249
+000014@input/projectionsBacteriorhodopsin.stk, sym=-1		4.50533
+000105@input/projectionsBacteriorhodopsin.stk, sym=-1		4.04683
+000015@input/projectionsBacteriorhodopsin.stk, sym=-1		4.17371
+000106@input/projectionsBacteriorhodopsin.stk, sym=-1		3.77369
+000016@input/projectionsBacteriorhodopsin.stk, sym=-1		3.87898
+000107@input/projectionsBacteriorhodopsin.stk, sym=-1		3.53015
+000017@input/projectionsBacteriorhodopsin.stk, sym=-1		3.61445
+000108@input/projectionsBacteriorhodopsin.stk, sym=-1		3.30851
+000018@input/projectionsBacteriorhodopsin.stk, sym=-1		3.3745
+000109@input/projectionsBacteriorhodopsin.stk, sym=-1		3.11113
+000019@input/projectionsBacteriorhodopsin.stk, sym=-1		3.15971
+000110@input/projectionsBacteriorhodopsin.stk, sym=-1		2.93376
+000020@input/projectionsBacteriorhodopsin.stk, sym=-1		2.96328
+000021@input/projectionsBacteriorhodopsin.stk, sym=-1		2.80572
+000111@input/projectionsBacteriorhodopsin.stk, sym=-1		2.75094
+000022@input/projectionsBacteriorhodopsin.stk, sym=-1		2.64135
+000112@input/projectionsBacteriorhodopsin.stk, sym=-1		2.60929
+000113@input/projectionsBacteriorhodopsin.stk, sym=-1		2.48943
+000023@input/projectionsBacteriorhodopsin.stk, sym=-1		2.4885
+000114@input/projectionsBacteriorhodopsin.stk, sym=-1		2.37159
+000024@input/projectionsBacteriorhodopsin.stk, sym=-1		2.36064
+000115@input/projectionsBacteriorhodopsin.stk, sym=-1		2.26609
+000025@input/projectionsBacteriorhodopsin.stk, sym=-1		2.24758
+000026@input/projectionsBacteriorhodopsin.stk, sym=-1		2.15486
+000116@input/projectionsBacteriorhodopsin.stk, sym=-1		2.16912
+000027@input/projectionsBacteriorhodopsin.stk, sym=-1		2.06699
+000117@input/projectionsBacteriorhodopsin.stk, sym=-1		2.08913
+000028@input/projectionsBacteriorhodopsin.stk, sym=-1		1.99217
+000118@input/projectionsBacteriorhodopsin.stk, sym=-1		2.01978
+000119@input/projectionsBacteriorhodopsin.stk, sym=-1		1.96111
+000029@input/projectionsBacteriorhodopsin.stk, sym=-1		1.92729
+000120@input/projectionsBacteriorhodopsin.stk, sym=-1		1.91019
+000030@input/projectionsBacteriorhodopsin.stk, sym=-1		1.87257
+000031@input/projectionsBacteriorhodopsin.stk, sym=-1		1.82285
+000121@input/projectionsBacteriorhodopsin.stk, sym=-1		1.8673
+000122@input/projectionsBacteriorhodopsin.stk, sym=-1		1.82717
+000032@input/projectionsBacteriorhodopsin.stk, sym=-1		1.78582
+000033@input/projectionsBacteriorhodopsin.stk, sym=-1		1.74701
+000123@input/projectionsBacteriorhodopsin.stk, sym=-1		1.79749
+000034@input/projectionsBacteriorhodopsin.stk, sym=-1		1.71991
+000124@input/projectionsBacteriorhodopsin.stk, sym=-1		1.76936
+000125@input/projectionsBacteriorhodopsin.stk, sym=-1		1.74141
+000035@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7024
+000036@input/projectionsBacteriorhodopsin.stk, sym=-1		1.68099
+000126@input/projectionsBacteriorhodopsin.stk, sym=-1		1.72631
+000037@input/projectionsBacteriorhodopsin.stk, sym=-1		1.66957
+000127@input/projectionsBacteriorhodopsin.stk, sym=-1		1.71155
+000038@input/projectionsBacteriorhodopsin.stk, sym=-1		1.66303
+000128@input/projectionsBacteriorhodopsin.stk, sym=-1		1.70148
+000039@input/projectionsBacteriorhodopsin.stk, sym=-1		1.6605
+000129@input/projectionsBacteriorhodopsin.stk, sym=-1		1.6957
+000130@input/projectionsBacteriorhodopsin.stk, sym=-1		1.68846
+000040@input/projectionsBacteriorhodopsin.stk, sym=-1		1.66712
+000041@input/projectionsBacteriorhodopsin.stk, sym=-1		1.6645
+000131@input/projectionsBacteriorhodopsin.stk, sym=-1		1.69499
+000042@input/projectionsBacteriorhodopsin.stk, sym=-1		1.67131
+000132@input/projectionsBacteriorhodopsin.stk, sym=-1		1.69906
+000043@input/projectionsBacteriorhodopsin.stk, sym=-1		1.67832
+000133@input/projectionsBacteriorhodopsin.stk, sym=-1		1.70555
+000044@input/projectionsBacteriorhodopsin.stk, sym=-1		1.68627
+000134@input/projectionsBacteriorhodopsin.stk, sym=-1		1.71413
+000135@input/projectionsBacteriorhodopsin.stk, sym=-1		1.71589
+000045@input/projectionsBacteriorhodopsin.stk, sym=-1		1.70099
+000136@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7455
+000046@input/projectionsBacteriorhodopsin.stk, sym=-1		1.72553
+000137@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7427
+000047@input/projectionsBacteriorhodopsin.stk, sym=-1		1.72331
+000048@input/projectionsBacteriorhodopsin.stk, sym=-1		1.72114
+000138@input/projectionsBacteriorhodopsin.stk, sym=-1		1.75836
+000139@input/projectionsBacteriorhodopsin.stk, sym=-1		1.76637
+000049@input/projectionsBacteriorhodopsin.stk, sym=-1		1.73078
+000140@input/projectionsBacteriorhodopsin.stk, sym=-1		1.781
+000050@input/projectionsBacteriorhodopsin.stk, sym=-1		1.73131
+000141@input/projectionsBacteriorhodopsin.stk, sym=-1		1.79437
+000051@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7303
+000052@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7205
+000142@input/projectionsBacteriorhodopsin.stk, sym=-1		1.80981
+000143@input/projectionsBacteriorhodopsin.stk, sym=-1		1.81424
+000053@input/projectionsBacteriorhodopsin.stk, sym=-1		1.72111
+000144@input/projectionsBacteriorhodopsin.stk, sym=-1		1.8193
+000054@input/projectionsBacteriorhodopsin.stk, sym=-1		1.71422
+000145@input/projectionsBacteriorhodopsin.stk, sym=-1		1.82124
+000055@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7045
+000146@input/projectionsBacteriorhodopsin.stk, sym=-1		1.81957
+000056@input/projectionsBacteriorhodopsin.stk, sym=-1		1.69358
+000147@input/projectionsBacteriorhodopsin.stk, sym=-1		1.81448
+000057@input/projectionsBacteriorhodopsin.stk, sym=-1		1.68143
+000148@input/projectionsBacteriorhodopsin.stk, sym=-1		1.80567
+000058@input/projectionsBacteriorhodopsin.stk, sym=-1		1.6669
+000059@input/projectionsBacteriorhodopsin.stk, sym=-1		1.6482
+000149@input/projectionsBacteriorhodopsin.stk, sym=-1		1.79859
+000150@input/projectionsBacteriorhodopsin.stk, sym=-1		1.77985
+000060@input/projectionsBacteriorhodopsin.stk, sym=-1		1.63592
+000151@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7623
+000061@input/projectionsBacteriorhodopsin.stk, sym=-1		1.61988
+000152@input/projectionsBacteriorhodopsin.stk, sym=-1		1.74221
+000062@input/projectionsBacteriorhodopsin.stk, sym=-1		1.60234
+000153@input/projectionsBacteriorhodopsin.stk, sym=-1		1.7193
+000063@input/projectionsBacteriorhodopsin.stk, sym=-1		1.5834
+000064@input/projectionsBacteriorhodopsin.stk, sym=-1		1.56297
+000154@input/projectionsBacteriorhodopsin.stk, sym=-1		1.69589
+000065@input/projectionsBacteriorhodopsin.stk, sym=-1		1.54176
+000155@input/projectionsBacteriorhodopsin.stk, sym=-1		1.66586
+000066@input/projectionsBacteriorhodopsin.stk, sym=-1		1.5195
+000156@input/projectionsBacteriorhodopsin.stk, sym=-1		1.63216
+000157@input/projectionsBacteriorhodopsin.stk, sym=-1		1.59187
+000067@input/projectionsBacteriorhodopsin.stk, sym=-1		1.4979
+000158@input/projectionsBacteriorhodopsin.stk, sym=-1		1.55
+000068@input/projectionsBacteriorhodopsin.stk, sym=-1		1.47215
+000159@input/projectionsBacteriorhodopsin.stk, sym=-1		1.5067
+000069@input/projectionsBacteriorhodopsin.stk, sym=-1		1.44444
+000160@input/projectionsBacteriorhodopsin.stk, sym=-1		1.47338
+000070@input/projectionsBacteriorhodopsin.stk, sym=-1		1.42385
+000161@input/projectionsBacteriorhodopsin.stk, sym=-1		1.42209
+000071@input/projectionsBacteriorhodopsin.stk, sym=-1		1.39381
+000162@input/projectionsBacteriorhodopsin.stk, sym=-1		1.38148
+000072@input/projectionsBacteriorhodopsin.stk, sym=-1		1.36749
+000163@input/projectionsBacteriorhodopsin.stk, sym=-1		1.3434
+000073@input/projectionsBacteriorhodopsin.stk, sym=-1		1.34229
+000164@input/projectionsBacteriorhodopsin.stk, sym=-1		1.30671
+000074@input/projectionsBacteriorhodopsin.stk, sym=-1		1.31473
+000165@input/projectionsBacteriorhodopsin.stk, sym=-1		1.27614
+000075@input/projectionsBacteriorhodopsin.stk, sym=-1		1.29042
+000166@input/projectionsBacteriorhodopsin.stk, sym=-1		1.23931
+000076@input/projectionsBacteriorhodopsin.stk, sym=-1		1.2578
+000077@input/projectionsBacteriorhodopsin.stk, sym=-1		1.22189
+000167@input/projectionsBacteriorhodopsin.stk, sym=-1		1.2069
+000168@input/projectionsBacteriorhodopsin.stk, sym=-1		1.17851
+000078@input/projectionsBacteriorhodopsin.stk, sym=-1		1.19146
+000169@input/projectionsBacteriorhodopsin.stk, sym=-1		1.14395
+000079@input/projectionsBacteriorhodopsin.stk, sym=-1		1.15236
+000080@input/projectionsBacteriorhodopsin.stk, sym=-1		1.11665
+000170@input/projectionsBacteriorhodopsin.stk, sym=-1		1.11057
+000081@input/projectionsBacteriorhodopsin.stk, sym=-1		1.08462
+000171@input/projectionsBacteriorhodopsin.stk, sym=-1		1.07622
+000082@input/projectionsBacteriorhodopsin.stk, sym=-1		1.05051
+000172@input/projectionsBacteriorhodopsin.stk, sym=-1		1.04165
+000083@input/projectionsBacteriorhodopsin.stk, sym=-1		1.01093
+000173@input/projectionsBacteriorhodopsin.stk, sym=-1		1.0065
+000174@input/projectionsBacteriorhodopsin.stk, sym=-1		0.970686
+000084@input/projectionsBacteriorhodopsin.stk, sym=-1		0.97258
+000175@input/projectionsBacteriorhodopsin.stk, sym=-1		0.927096
+000085@input/projectionsBacteriorhodopsin.stk, sym=-1		0.941714
+000086@input/projectionsBacteriorhodopsin.stk, sym=-1		0.909461
+000176@input/projectionsBacteriorhodopsin.stk, sym=-1		0.884918
+000087@input/projectionsBacteriorhodopsin.stk, sym=-1		0.859873
+000177@input/projectionsBacteriorhodopsin.stk, sym=-1		0.844067
+000088@input/projectionsBacteriorhodopsin.stk, sym=-1		0.80972
+000178@input/projectionsBacteriorhodopsin.stk, sym=-1		0.796838
+000089@input/projectionsBacteriorhodopsin.stk, sym=-1		0.772052
+000179@input/projectionsBacteriorhodopsin.stk, sym=-1		0.751808
+000090@input/projectionsBacteriorhodopsin.stk, sym=-1		0.764566
+000180@input/projectionsBacteriorhodopsin.stk, sym=-1		0.726563
+Finished - Iteration 0
+   Global mean squared error: 2.83737
+000001@input/projectionsBacteriorhodopsin.stk, sym=-1		0.711839
+000091@input/projectionsBacteriorhodopsin.stk, sym=-1		0.756489
+000181@input/projectionsBacteriorhodopsin.stk, sym=-1		0.668036
+000002@input/projectionsBacteriorhodopsin.stk, sym=-1		0.58965
+000092@input/projectionsBacteriorhodopsin.stk, sym=-1		0.670421
+000003@input/projectionsBacteriorhodopsin.stk, sym=-1		0.532298
+000093@input/projectionsBacteriorhodopsin.stk, sym=-1		0.593877
+000094@input/projectionsBacteriorhodopsin.stk, sym=-1		0.550672
+000004@input/projectionsBacteriorhodopsin.stk, sym=-1		0.493695
+000095@input/projectionsBacteriorhodopsin.stk, sym=-1		0.524606
+000005@input/projectionsBacteriorhodopsin.stk, sym=-1		0.455149
+000096@input/projectionsBacteriorhodopsin.stk, sym=-1		0.498824
+000006@input/projectionsBacteriorhodopsin.stk, sym=-1		0.424068
+000007@input/projectionsBacteriorhodopsin.stk, sym=-1		0.392147
+000097@input/projectionsBacteriorhodopsin.stk, sym=-1		0.470138
+000008@input/projectionsBacteriorhodopsin.stk, sym=-1		0.363865
+000098@input/projectionsBacteriorhodopsin.stk, sym=-1		0.442184
+000099@input/projectionsBacteriorhodopsin.stk, sym=-1		0.422334
+000009@input/projectionsBacteriorhodopsin.stk, sym=-1		0.336581
+000010@input/projectionsBacteriorhodopsin.stk, sym=-1		0.31309
+000100@input/projectionsBacteriorhodopsin.stk, sym=-1		0.407311
+000101@input/projectionsBacteriorhodopsin.stk, sym=-1		0.393627
+000011@input/projectionsBacteriorhodopsin.stk, sym=-1		0.29392
+000102@input/projectionsBacteriorhodopsin.stk, sym=-1		0.378205
+000012@input/projectionsBacteriorhodopsin.stk, sym=-1		0.278367
+000103@input/projectionsBacteriorhodopsin.stk, sym=-1		0.364395
+000013@input/projectionsBacteriorhodopsin.stk, sym=-1		0.265097
+000104@input/projectionsBacteriorhodopsin.stk, sym=-1		0.356619
+000014@input/projectionsBacteriorhodopsin.stk, sym=-1		0.258112
+000105@input/projectionsBacteriorhodopsin.stk, sym=-1		0.342518
+000015@input/projectionsBacteriorhodopsin.stk, sym=-1		0.246107
+000106@input/projectionsBacteriorhodopsin.stk, sym=-1		0.331955
+000016@input/projectionsBacteriorhodopsin.stk, sym=-1		0.239845
+000107@input/projectionsBacteriorhodopsin.stk, sym=-1		0.329323
+000017@input/projectionsBacteriorhodopsin.stk, sym=-1		0.235586
+000108@input/projectionsBacteriorhodopsin.stk, sym=-1		0.315651
+000018@input/projectionsBacteriorhodopsin.stk, sym=-1		0.224046
+000109@input/projectionsBacteriorhodopsin.stk, sym=-1		0.306165
+000019@input/projectionsBacteriorhodopsin.stk, sym=-1		0.217035
+000110@input/projectionsBacteriorhodopsin.stk, sym=-1		0.295365
+000020@input/projectionsBacteriorhodopsin.stk, sym=-1		0.209444
+000021@input/projectionsBacteriorhodopsin.stk, sym=-1		0.201191
+000111@input/projectionsBacteriorhodopsin.stk, sym=-1		0.283901
+000022@input/projectionsBacteriorhodopsin.stk, sym=-1		0.192009
+000112@input/projectionsBacteriorhodopsin.stk, sym=-1		0.279082
+000113@input/projectionsBacteriorhodopsin.stk, sym=-1		0.260223
+000023@input/projectionsBacteriorhodopsin.stk, sym=-1		0.186366
+000114@input/projectionsBacteriorhodopsin.stk, sym=-1		0.248357
+000024@input/projectionsBacteriorhodopsin.stk, sym=-1		0.17861
+000115@input/projectionsBacteriorhodopsin.stk, sym=-1		0.238278
+000025@input/projectionsBacteriorhodopsin.stk, sym=-1		0.172134
+000026@input/projectionsBacteriorhodopsin.stk, sym=-1		0.16738
+000116@input/projectionsBacteriorhodopsin.stk, sym=-1		0.229949
+000027@input/projectionsBacteriorhodopsin.stk, sym=-1		0.164267
+000117@input/projectionsBacteriorhodopsin.stk, sym=-1		0.222428
+000028@input/projectionsBacteriorhodopsin.stk, sym=-1		0.163465
+000118@input/projectionsBacteriorhodopsin.stk, sym=-1		0.217456
+000119@input/projectionsBacteriorhodopsin.stk, sym=-1		0.213314
+000029@input/projectionsBacteriorhodopsin.stk, sym=-1		0.163063
+000120@input/projectionsBacteriorhodopsin.stk, sym=-1		0.210953
+000030@input/projectionsBacteriorhodopsin.stk, sym=-1		0.163714
+000031@input/projectionsBacteriorhodopsin.stk, sym=-1		0.164538
+000121@input/projectionsBacteriorhodopsin.stk, sym=-1		0.209231
+000122@input/projectionsBacteriorhodopsin.stk, sym=-1		0.207818
+000032@input/projectionsBacteriorhodopsin.stk, sym=-1		0.165968
+000033@input/projectionsBacteriorhodopsin.stk, sym=-1		0.167045
+000123@input/projectionsBacteriorhodopsin.stk, sym=-1		0.206511
+000034@input/projectionsBacteriorhodopsin.stk, sym=-1		0.170567
+000124@input/projectionsBacteriorhodopsin.stk, sym=-1		0.205347
+000125@input/projectionsBacteriorhodopsin.stk, sym=-1		0.204089
+000035@input/projectionsBacteriorhodopsin.stk, sym=-1		0.173666
+000036@input/projectionsBacteriorhodopsin.stk, sym=-1		0.177957
+000126@input/projectionsBacteriorhodopsin.stk, sym=-1		0.20292
+000037@input/projectionsBacteriorhodopsin.stk, sym=-1		0.183352
+000127@input/projectionsBacteriorhodopsin.stk, sym=-1		0.203065
+000038@input/projectionsBacteriorhodopsin.stk, sym=-1		0.189186
+000128@input/projectionsBacteriorhodopsin.stk, sym=-1		0.203407
+000039@input/projectionsBacteriorhodopsin.stk, sym=-1		0.196074
+000129@input/projectionsBacteriorhodopsin.stk, sym=-1		0.204797
+000130@input/projectionsBacteriorhodopsin.stk, sym=-1		0.206927
+000040@input/projectionsBacteriorhodopsin.stk, sym=-1		0.202327
+000041@input/projectionsBacteriorhodopsin.stk, sym=-1		0.210175
+000131@input/projectionsBacteriorhodopsin.stk, sym=-1		0.209097
+000042@input/projectionsBacteriorhodopsin.stk, sym=-1		0.21787
+000132@input/projectionsBacteriorhodopsin.stk, sym=-1		0.211717
+000043@input/projectionsBacteriorhodopsin.stk, sym=-1		0.225166
+000133@input/projectionsBacteriorhodopsin.stk, sym=-1		0.214117
+000044@input/projectionsBacteriorhodopsin.stk, sym=-1		0.23197
+000134@input/projectionsBacteriorhodopsin.stk, sym=-1		0.216499
+000135@input/projectionsBacteriorhodopsin.stk, sym=-1		0.21711
+000045@input/projectionsBacteriorhodopsin.stk, sym=-1		0.239394
+000136@input/projectionsBacteriorhodopsin.stk, sym=-1		0.224811
+000046@input/projectionsBacteriorhodopsin.stk, sym=-1		0.25295
+000137@input/projectionsBacteriorhodopsin.stk, sym=-1		0.21904
+000047@input/projectionsBacteriorhodopsin.stk, sym=-1		0.253542
+000048@input/projectionsBacteriorhodopsin.stk, sym=-1		0.258938
+000138@input/projectionsBacteriorhodopsin.stk, sym=-1		0.220205
+000139@input/projectionsBacteriorhodopsin.stk, sym=-1		0.222553
+000049@input/projectionsBacteriorhodopsin.stk, sym=-1		0.263309
+000140@input/projectionsBacteriorhodopsin.stk, sym=-1		0.226039
+000050@input/projectionsBacteriorhodopsin.stk, sym=-1		0.266283
+000141@input/projectionsBacteriorhodopsin.stk, sym=-1		0.229266
+000051@input/projectionsBacteriorhodopsin.stk, sym=-1		0.26953
+000052@input/projectionsBacteriorhodopsin.stk, sym=-1		0.271633
+000142@input/projectionsBacteriorhodopsin.stk, sym=-1		0.232275
+000143@input/projectionsBacteriorhodopsin.stk, sym=-1		0.23432
+000053@input/projectionsBacteriorhodopsin.stk, sym=-1		0.275108
+000144@input/projectionsBacteriorhodopsin.stk, sym=-1		0.235361
+000054@input/projectionsBacteriorhodopsin.stk, sym=-1		0.278016
+000145@input/projectionsBacteriorhodopsin.stk, sym=-1		0.235971
+000055@input/projectionsBacteriorhodopsin.stk, sym=-1		0.280454
+000146@input/projectionsBacteriorhodopsin.stk, sym=-1		0.235893
+000056@input/projectionsBacteriorhodopsin.stk, sym=-1		0.283094
+000147@input/projectionsBacteriorhodopsin.stk, sym=-1		0.236399
+000057@input/projectionsBacteriorhodopsin.stk, sym=-1		0.28607
+000148@input/projectionsBacteriorhodopsin.stk, sym=-1		0.236532
+000058@input/projectionsBacteriorhodopsin.stk, sym=-1		0.288703
+000059@input/projectionsBacteriorhodopsin.stk, sym=-1		0.291595
+000149@input/projectionsBacteriorhodopsin.stk, sym=-1		0.23895
+000150@input/projectionsBacteriorhodopsin.stk, sym=-1		0.239055
+000060@input/projectionsBacteriorhodopsin.stk, sym=-1		0.295268
+000151@input/projectionsBacteriorhodopsin.stk, sym=-1		0.240224
+000061@input/projectionsBacteriorhodopsin.stk, sym=-1		0.299451
+000152@input/projectionsBacteriorhodopsin.stk, sym=-1		0.241907
+000062@input/projectionsBacteriorhodopsin.stk, sym=-1		0.303682
+000153@input/projectionsBacteriorhodopsin.stk, sym=-1		0.243677
+000063@input/projectionsBacteriorhodopsin.stk, sym=-1		0.307615
+000064@input/projectionsBacteriorhodopsin.stk, sym=-1		0.312307
+000154@input/projectionsBacteriorhodopsin.stk, sym=-1		0.245302
+000065@input/projectionsBacteriorhodopsin.stk, sym=-1		0.315507
+000155@input/projectionsBacteriorhodopsin.stk, sym=-1		0.24603
+000066@input/projectionsBacteriorhodopsin.stk, sym=-1		0.318587
+000156@input/projectionsBacteriorhodopsin.stk, sym=-1		0.245284
+000157@input/projectionsBacteriorhodopsin.stk, sym=-1		0.242646
+000067@input/projectionsBacteriorhodopsin.stk, sym=-1		0.321032
+000158@input/projectionsBacteriorhodopsin.stk, sym=-1		0.238494
+000068@input/projectionsBacteriorhodopsin.stk, sym=-1		0.322865
+000159@input/projectionsBacteriorhodopsin.stk, sym=-1		0.234381
+000069@input/projectionsBacteriorhodopsin.stk, sym=-1		0.324844
+000160@input/projectionsBacteriorhodopsin.stk, sym=-1		0.241224
+000070@input/projectionsBacteriorhodopsin.stk, sym=-1		0.33276
+000161@input/projectionsBacteriorhodopsin.stk, sym=-1		0.229265
+000071@input/projectionsBacteriorhodopsin.stk, sym=-1		0.33124
+000162@input/projectionsBacteriorhodopsin.stk, sym=-1		0.22833
+000072@input/projectionsBacteriorhodopsin.stk, sym=-1		0.335192
+000163@input/projectionsBacteriorhodopsin.stk, sym=-1		0.229758
+000073@input/projectionsBacteriorhodopsin.stk, sym=-1		0.339738
+000164@input/projectionsBacteriorhodopsin.stk, sym=-1		0.231713
+000074@input/projectionsBacteriorhodopsin.stk, sym=-1		0.343345
+000165@input/projectionsBacteriorhodopsin.stk, sym=-1		0.240336
+000075@input/projectionsBacteriorhodopsin.stk, sym=-1		0.351215
+000166@input/projectionsBacteriorhodopsin.stk, sym=-1		0.23873
+000076@input/projectionsBacteriorhodopsin.stk, sym=-1		0.348442
+000077@input/projectionsBacteriorhodopsin.stk, sym=-1		0.345821
+000167@input/projectionsBacteriorhodopsin.stk, sym=-1		0.24167
+000168@input/projectionsBacteriorhodopsin.stk, sym=-1		0.24934
+000078@input/projectionsBacteriorhodopsin.stk, sym=-1		0.348153
+000169@input/projectionsBacteriorhodopsin.stk, sym=-1		0.248777
+000079@input/projectionsBacteriorhodopsin.stk, sym=-1		0.342188
+000080@input/projectionsBacteriorhodopsin.stk, sym=-1		0.339403
+000170@input/projectionsBacteriorhodopsin.stk, sym=-1		0.250811
+000081@input/projectionsBacteriorhodopsin.stk, sym=-1		0.339351
+000171@input/projectionsBacteriorhodopsin.stk, sym=-1		0.25219
+000082@input/projectionsBacteriorhodopsin.stk, sym=-1		0.339059
+000172@input/projectionsBacteriorhodopsin.stk, sym=-1		0.25293
+000083@input/projectionsBacteriorhodopsin.stk, sym=-1		0.333053
+000173@input/projectionsBacteriorhodopsin.stk, sym=-1		0.251259
+000174@input/projectionsBacteriorhodopsin.stk, sym=-1		0.251641
+000084@input/projectionsBacteriorhodopsin.stk, sym=-1		0.328023
+000175@input/projectionsBacteriorhodopsin.stk, sym=-1		0.245868
+000085@input/projectionsBacteriorhodopsin.stk, sym=-1		0.328526
+000086@input/projectionsBacteriorhodopsin.stk, sym=-1		0.32817
+000176@input/projectionsBacteriorhodopsin.stk, sym=-1		0.239977
+000087@input/projectionsBacteriorhodopsin.stk, sym=-1		0.312685
+000177@input/projectionsBacteriorhodopsin.stk, sym=-1		0.233473
+000088@input/projectionsBacteriorhodopsin.stk, sym=-1		0.297747
+000178@input/projectionsBacteriorhodopsin.stk, sym=-1		0.22203
+000089@input/projectionsBacteriorhodopsin.stk, sym=-1		0.291926
+000179@input/projectionsBacteriorhodopsin.stk, sym=-1		0.215842
+000090@input/projectionsBacteriorhodopsin.stk, sym=-1		0.308949
+000180@input/projectionsBacteriorhodopsin.stk, sym=-1		0.221335
+Finished - Iteration 1
+   Global mean squared error: 0.2832
