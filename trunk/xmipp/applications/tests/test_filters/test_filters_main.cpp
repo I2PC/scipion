@@ -159,9 +159,9 @@ TEST_F( FiltersTest, alignImages)
     Image<double> Ialigned4;
     Ialigned4.readApplyGeo(baseName+"/test2_transformed.spi", row);
 
-    EXPECT_TRUE(Ialigned1() == Ialigned2);
-    EXPECT_TRUE(Ialigned1() == Ialigned3);
-    EXPECT_TRUE(Ialigned1() == Ialigned4());
+    EXPECT_TRUE(Ialigned1 == Ialigned2);
+    EXPECT_TRUE(Ialigned1 == Ialigned3);
+    EXPECT_TRUE(Ialigned1 == Ialigned4());
 }
 GTEST_API_ int main(int argc, char **argv)
 {
