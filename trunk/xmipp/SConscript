@@ -391,7 +391,7 @@ def javaLibName(*args):
     return join(env['JAVADIR'], 'lib', *args)
 
 def javaSrcName(*args):
-    return join(env['JAVADIR'], 'src', 'xmipp', *args)
+    return join(env['JAVADIR'], 'src', *args)
 
 def CompileJava(name, dependencies=[]):
     ''' name parameter is expected without .java extension '''
@@ -427,7 +427,8 @@ def CompileJavaJar(target, source, env):
     Cmd('%(cmd)s %(jarfile)s @%(classfile)s' % locals())
     
 def AddJavaLibrary(name, src, dependencies=[]):#, sourceList, includes, libpath=[], libs=[]):
-    srcDir = javaSrcName(src)
+    # all libraries are assumed to be inside xmipp
+    srcDir = javaSrcName('xmipp', src)
 #    listfile = javaBuildName(name + '_source.txt')
 #    classfile = javaBuildName(name + '_classes.txt')    
     jarfile = javaLibName(name + '.jar')
