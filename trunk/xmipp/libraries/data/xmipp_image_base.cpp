@@ -43,7 +43,8 @@ void ImageBase::init()
     swap = swapWrite = 0;
     replaceNsize = 0;
     mmapOnRead = mmapOnWrite = false;
-    mappedSize = mappedOffset = mappedSlice = 0;
+    mappedSize = mappedOffset = virtualOffset = 0;
+    coordPointer.n = coordPointer.z = coordPointer.x = coordPointer.y = 0;
     mFd        = NULL;
 }
 
@@ -109,7 +110,7 @@ int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int s
     {
         int ret = read(name, DATA, select_img, mapData);
         if (select_slice != ALL_SLICES)
-            movePointerToSlice(select_slice);
+            movePointerTo(select_slice);
         return ret;
     }
 
@@ -626,10 +627,10 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
     int err = 0;
     dataMode = datamode;
 
-    // If MultidimArray pointer has been moved to a slice different from zero, then reset it.
+    // If MultidimArray pointer has been moved to a slice/image different from zero, then reset it.
     // This check must be done prior to mappedSize check, since mappedSlice is a trick over data pointer
-    if (mappedSlice != 0)
-        movePointerToSlice(ALL_SLICES);
+    if ( virtualOffset != 0)
+        movePointerTo(ALL_SLICES);
     // If Image has been previously used with mmap, then close the previous file
     if (mappedSize != 0)
         munmapFile();

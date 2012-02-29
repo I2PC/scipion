@@ -233,7 +233,8 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
-    int     mappedSlice; // Slice number when mapped single slice
+    size_t    virtualOffset;// MDA Offset when movePointerTo is used
+    ArrayCoord         coordPointer; // Values of image and slice when changing the pointer of the inner MDA
 
 public:
 
@@ -389,11 +390,29 @@ public:
     void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
                int mode=WRITE_OVERWRITE,CastWriteMode castMode = CW_CAST, int _swapWrite = 0);
 
-    /** It changes the behavior of the internal multidimarray so it points to a specific slice of
-     *  the initial volume. No information is deallocated from memory, so it is also possible to
-     *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
-     */
-    virtual void movePointerToSlice(int select_slice = ALL_SLICES) = 0;
+    /** It changes the behavior of the internal multidimarray so it points to a specific slice/image
+      *  from a stack, volume or stack of volumes. No information is deallocated from memory, so it is
+      *  also possible to repoint to the whole stack,volume... (passing select_slice = ALL_SLICES and
+      *  selec_img = ALL_IMAGES).
+      *
+      *  The options for select_slice are:
+      *
+      *    - a slice number,
+      *    - CENTRAL_SLICE, to automatically select the central slice of the volume,
+      *    - ALL_SLICES, to recover the whole volume.
+      *
+      *  The options for selec_img are:
+      *
+      *    - a image number of the stack,
+      *    - ALL_IMAGES, to recover the whole stack.
+      *
+      *  If a specific slice number is selected, then a specific image from the stack must be
+      *  also selected. Otherwise, FIRST_IMAGE is proposed.
+      *
+      *  If Image Object is read using readPreview method, movePointerTo only works when rescaling
+      *  the image in X-Y plane only, but all slices must be read.
+      */
+    virtual void movePointerTo(int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES) = 0;
 
     /** Check file Datatype is same as T type to use mmap.
      */
@@ -430,17 +449,17 @@ public:
         return filename;
     }
 
-/** Get dimensions of the multidimArray inside image.
- *  TODO: This method must be changed to return the size
- *  of the image read from file, i.e. aDimFile, and where this is used
- *  should be used instead the imageBase::mda->getDimensions
- */
+    /** Get dimensions of the multidimArray inside image.
+     *  TODO: This method must be changed to return the size
+     *  of the image read from file, i.e. aDimFile, and where this is used
+     *  should be used instead the imageBase::mda->getDimensions
+     */
     void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const;
     /** Get Image dimensions
      */
     void getDimensions(ArrayDim &aDim)
     {
-    	aDim = aDimFile;
+        aDim = aDimFile;
     }
     ArrayDim getDimensions()
     {

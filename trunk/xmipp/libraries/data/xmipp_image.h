@@ -144,8 +144,8 @@ public:
     {
         // If MultidimArray pointer has been moved to a slice different from zero, then reset it.
         // This check must be done prior to mappedSize check, since mappedSlice is a trick over data pointer
-        if (mappedSlice != 0)
-            movePointerToSlice(ALL_SLICES);
+        if (virtualOffset != 0)
+            movePointerTo(ALL_SLICES);
         if(mmapOnRead || mmapOnWrite)
             munmapFile();
 
@@ -443,7 +443,7 @@ public:
 
                 for( n=0; n<pageSize; n++)
                     ptr[n] = static_cast< unsigned char >(minF + (slope *
-                             static_cast< double >(srcPtr[n] - min0)));
+                                                          static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -468,7 +468,7 @@ public:
 
                 for( n=0; n<pageSize; n++)
                 ptr[n] = static_cast< char >(minF + (slope *
-                                             static_cast< double >(srcPtr[n] - min0)));
+                                                     static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -497,7 +497,7 @@ public:
 
                 for( n=0; n<pageSize; n++)
                 ptr[n] = static_cast< unsigned short >(minF + (slope *
-                         static_cast< double >(srcPtr[n] - min0)));
+                                                       static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -526,7 +526,7 @@ public:
 
                 for( n=0; n<pageSize; n++)
                 ptr[n] = static_cast< short >(minF + (slope *
-                                              static_cast< double >(srcPtr[n] - min0)));
+                                                      static_cast< double >(srcPtr[n] - min0)));
 
                 break;
             }
@@ -557,7 +557,7 @@ public:
 
                 for( n=0; n<pageSize; n++)
                 ptr[n] = static_cast< unsigned int >(minF + (slope *
-                         static_cast< double >(srcPtr[n] - min0)));
+                                                     static_cast< double >(srcPtr[n] - min0)));
                 break;
             }
         case Int:
@@ -587,7 +587,7 @@ public:
 
                 for( n=0; n<pageSize; n++)
                 ptr[n] = static_cast< int >(minF + (slope *
-                                            static_cast< double >(srcPtr[n] - min0)));
+                                                    static_cast< double >(srcPtr[n] - min0)));
                 break;
             }
         default:
@@ -764,21 +764,47 @@ public:
         return err;
     }
 
-    /** It changes the behavior of the internal multidimarray so it points to a specific slice of
-     *  the initial volume. No information is deallocated from memory, so it is also possible to
-     *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
+    /** It changes the behavior of the internal multidimarray so it points to a specific slice/image
+     *  from a stack, volume or stack of volumes. No information is deallocated from memory, so it is
+     *  also possible to repoint to the whole stack,volume... (passing select_slice = ALL_SLICES and
+     *  selec_img = ALL_IMAGES).
+     *
+     *  The options for select_slice are:
+     *
+     *    - a slice number,
+     *    - CENTRAL_SLICE, to automatically select the central slice of the volume,
+     *    - ALL_SLICES, to recover the whole volume.
+     *
+     *  The options for selec_img are:
+     *
+     *    - a image number of the stack,
+     *    - ALL_IMAGES, to recover the whole stack.
+     *
+     *  If a specific slice number is selected, then a specific image from the stack must be
+     *  also selected. Otherwise, FIRST_IMAGE is proposed.
+     *
+     *  If Image Object is read using readPreview method, movePointerTo only works when rescaling
+     *  the image in X-Y plane only, but all slices must be read.
      */
-    void movePointerToSlice(int select_slice = ALL_SLICES)
+    void movePointerTo(int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES)
     {
         if (MULTIDIM_ARRAY(VOLMATRIX(*this)) == NULL)
-            REPORT_ERROR(ERR_MULTIDIM_EMPTY, "Image::movePointerToSlice: Image is empty");
+            REPORT_ERROR(ERR_MULTIDIM_EMPTY, "Image::movePointerTo: Image is empty");
         if (select_slice > aDimFile.zdim)
-            REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerToSlice: Selected slice %4d cannot be higher than Z size %4d.",
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerTo: Selected slice %4d cannot be higher than Z size %4d.",
                          select_slice,aDimFile.zdim));
+        else if (select_img > aDimFile.ndim)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerTo: Selected image %4d cannot be higher than N size %4d.",
+                         select_img, aDimFile.ndim));
 
         ArrayDim newDim;
         VOLMATRIX(*this).getDimensions(newDim);
+
+        /* Restore the real dimensions from the MDA, as it may be
+         * X-Y dimensioned different from file (readPreview). */
         newDim.zdim = aDimFile.zdim;
+        newDim.ndim = aDimFile.ndim;
+
         int phys_slice;
 
         switch (select_slice)
@@ -796,9 +822,19 @@ public:
             break;
         }
 
+        /* If we select a single slice, we are forced to chose also an image.
+         * as at this moment we cannot select the same slice from different images at a time.
+         */
+        if (newDim.zdim == 1 && select_img == ALL_IMAGES)
+            select_img = FIRST_IMAGE;
+        if (select_img > ALL_IMAGES)
+            newDim.ndim = 1;
+
         VOLMATRIX(*this).setDimensions(newDim);
-        MULTIDIM_ARRAY(VOLMATRIX(*this)) += YXSIZE(VOLMATRIX(*this)) * (phys_slice - SLICE_INDEX(mappedSlice));
-        mappedSlice = (select_slice == CENTRAL_SLICE)? phys_slice + 1 : select_slice;
+
+        size_t newVirtualOffset = YXSIZE(VOLMATRIX(*this)) * ( aDimFile.zdim * IMG_INDEX(select_img) + phys_slice);
+        MULTIDIM_ARRAY(VOLMATRIX(*this)) += (newVirtualOffset - virtualOffset);
+        virtualOffset = newVirtualOffset;
     }
 
     /** Write an entire page as datatype
@@ -880,13 +916,13 @@ public:
 
     /** Get Image dimensions
      */
-//    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
-//    {
-//        Xdim = XSIZE(data);
-//        Ydim = YSIZE(data);
-//        Zdim = ZSIZE(data);
-//        Ndim = NSIZE(data);
-//    }
+    //    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
+    //    {
+    //        Xdim = XSIZE(data);
+    //        Ydim = YSIZE(data);
+    //        Zdim = ZSIZE(data);
+    //        Ndim = NSIZE(data);
+    //    }
 
     size_t getSize() const
     {

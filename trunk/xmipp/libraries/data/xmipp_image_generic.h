@@ -38,355 +38,373 @@
  else\
  {\
   op\
- }\
-
+ }
 
 /**
-*  ImageGeneric class to handle images with independence of data type
-            **/
-            class ImageGeneric
+ * ImageGeneric class to handle images with independence of data type
+ */
+
+class ImageGeneric
+{
+
+public:
+    ImageBase* image;
+    DataType datatype;
+    MultidimArrayGeneric * data;
+
+protected:
+
+    bool    swap; // To store the swap mode of the image when the datatype is read.
+
+public:
+
+    /** Empty constructor.
+     *
+     * No internal image class is declared.
+     */
+    ImageGeneric()
     {
+        init();
+    }
+    /** Constructor passing the data type of the image.
+     *
+     * Defines the data type of the image and then declares the internal image class.
+     */
+    ImageGeneric(DataType _datatype);
 
-    public:
-        ImageBase* image;
-        DataType datatype;
-        MultidimArrayGeneric * data;
+    /** Constructor for reading the image
+     *
+     * This constructor will be useful for perfom construction and read in a single step.
+     */
+    ImageGeneric(const FileName &filename);
 
-    protected:
+    /** Copy Constructor */
+    ImageGeneric(const ImageGeneric &img);
 
-        bool    swap; // To store the swap mode of the image when the datatype is read.
+    /** Destructor.
+     */
+    ~ImageGeneric();
 
-    public:
+    /** Initialize the parameters.
+     */
+    void init();
 
-        /** Empty constructor.
-         *
-         * No internal image class is declared.
-         */
-        ImageGeneric()
+    /** Clear the parameters and initialize them.
+     */
+    void clear();
+
+    /** Copy data from other ImageGeneric */
+    void copy(const ImageGeneric &img);
+
+    /** Clear the image header
+     */
+    void clearHeader()
+    {
+        image->clearHeader();
+    }
+
+    /** Init geometry transformation with defaults values
+     */
+    void initGeometry(const size_t n = 0)
+    {
+        image->MD[n]=MDL::emptyHeader;
+    }
+
+    /** Return geometry row
+     */
+    MDRow& getGeometry(const size_t n = 0)
+    {
+        return image->MD[n];
+    }
+
+    /** Get Image dimensions
+    */
+    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const;
+    void getDimensions(int &Xdim, int &Ydim, int &Zdim) const;
+    void getDimensions(ArrayDim &aDim) const;
+
+    /** Get number of elements in image
+     */
+    size_t getSize() const
+    {
+        return NZYXSIZE(*(data->im));
+    }
+
+    /** Get Euler angles from image header
+    */
+    void getEulerAngles(double &rot, double &tilt, double &psi,
+                        size_t n = 0)
+    {
+        image->getEulerAngles(rot, tilt, psi, n);
+    }
+
+    /** Get Tilt angle from image header
+    */
+    double tilt(const size_t n = 0) const
+    {
+        return image->tilt(n);
+    }
+
+    /** Resizes image dimensions
+     */
+    void resize(int Xdim, int Ydim, int Zdim, size_t Ndim, bool copy=true)
+    {
+        image->setDimensions(Xdim, Ydim, Zdim, Ndim);
+        data->resize(Ndim, Zdim, Ydim, Xdim, copy);
+    }
+
+    /** Set the data type for the generic image
+     */
+    void setDatatype(DataType _datatype);
+
+    /** Set image dataMode */
+    void setDataMode(DataMode mode)
+    {
+        image->setDataMode(mode);
+    }
+
+    /** Get the data type
+     */
+    DataType getDatatype()const
+    {
+        return datatype;
+    }
+
+    /** Get basic information from already read image file
+     */
+    void getInfo(ImageInfo &imgInfo) const;
+
+    /** Get the data type
+     */
+    int getDatatypeDepth()const
+    {
+        switch (datatype)
         {
-            init();
+        case Float:
+        case UInt:
+            return 32;
+        case Int:
+            return 31;
+        case Short:
+            return 15;
+        case UShort:
+            return 16;
+        case SChar:
+            return 7;
+        case UChar:
+            return 8;
         }
-        /** Constructor passing the data type of the image.
-         *
-         * Defines the data type of the image and then declares the internal image class.
-         */
-        ImageGeneric(DataType _datatype);
+    }
 
-        /** Constructor for reading the image
-         *
-         * This constructor will be useful for perfom construction and read in a single step.
-         */
-        ImageGeneric(const FileName &filename);
+    /** Check if image is mapped on file
+      */
+    inline bool isMapped()
+    {
+        return image->isMapped();
+    }
 
-        /** Copy Constructor */
-        ImageGeneric(const ImageGeneric &img);
+    /** Read image from file.
+     */
+    int read(const FileName &name, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
+             bool mapData = false);
 
-        /** Destructor.
-         */
-        ~ImageGeneric();
+    /** Read image from file with a header applied.
+     */
+    int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false,
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
-        /** Initialize the parameters.
-         */
-        void init();
+    /** Read image from file.
+     */
+    int readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts = false,
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
-        /** Clear the parameters and initialize them.
-         */
-        void clear();
+    /** Read an image from metadata, filename is taken from MDL_IMAGE */
+    int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
 
-        /** Copy data from other ImageGeneric */
-        void copy(const ImageGeneric &img);
+    /** Apply geometry in refering metadata to the image */
+    void applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false, bool wrap = WRAP);
 
-        /** Clear the image header
-         */
-        void clearHeader()
-        {
-            image->clearHeader();
-        }
+    /** Read image mapped from file.
+     */
+    int readMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
 
-        /** Init geometry transformation with defaults values
-         */
-        void initGeometry(const size_t n = 0)
-        {
-            image->MD[n]=MDL::emptyHeader;
-        }
+    /* Initially try to read normally, but if there is a memory allocation problem, then
+     * try to read from the mapped file.*/
+    int readOrReadMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
 
-        /** Return geometry row
-         */
-        MDRow& getGeometry(const size_t n = 0)
-        {
-            return image->MD[n];
-        }
+    /* Read an image with a lower resolution as a preview image.
+    * If Zdim parameter is not passed, then all slices are rescaled.
+    * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
+    */
+    int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
 
-        /** Get Image dimensions
-        */
-        void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const;
-        void getDimensions(int &Xdim, int &Ydim, int &Zdim) const;
-        void getDimensions(ArrayDim &aDim) const;
+    /** This function allows to read the original image or a preview of it also allowing to select either
+     *  a specific image from the stack or a slice from a volume.
+     *
+     *  In the case of reading images in its real dimensions it is also possible to image map from file.
+     */
+    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
 
-        /** Get number of elements in image
-         */
-        size_t getSize() const
-        {
-            return NZYXSIZE(*(data->im));
-        }
+    /** Write image to file.
+    */
+    inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
+                      int mode=WRITE_OVERWRITE, CastWriteMode castMode = CW_CAST, int _swapWrite = 0)
+    {
+        image->write(name,select_img,isStack,mode,castMode,_swapWrite);
+    }
 
-        /** Get Euler angles from image header
-        */
-        void getEulerAngles(double &rot, double &tilt, double &psi,
-                            size_t n = 0)
-        {
-            image->getEulerAngles(rot, tilt, psi, n);
-        }
+    /* Create an empty image file of format given by filename and map it to memory.
+     */
+    void mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
+                       bool createTempFile=false, size_t select_img = APPEND_IMAGE,
+                       bool isStack=false, int mode=WRITE_OVERWRITE, int _swapWrite = 0);
 
-        /** Get Tilt angle from image header
-        */
-        double tilt(const size_t n = 0) const
-        {
-            return image->tilt(n);
-        }
-
-        /** Resizes image dimensions
-         */
-        void resize(int Xdim, int Ydim, int Zdim, size_t Ndim, bool copy=true)
-        {
-            image->setDimensions(Xdim, Ydim, Zdim, Ndim);
-            data->resize(Ndim, Zdim, Ydim, Xdim, copy);
-        }
-
-        /** Set the data type for the generic image
-         */
-        void setDatatype(DataType _datatype);
-
-        /** Set image dataMode */
-        void setDataMode(DataMode mode)
-        {
-            image->setDataMode(mode);
-        }
-
-        /** Get the data type
-         */
-        DataType getDatatype()const
-        {
-            return datatype;
-        }
-
-        /** Get basic information from already read image file
-         */
-        void getInfo(ImageInfo &imgInfo) const;
-
-        /** Get the data type
-         */
-        int getDatatypeDepth()const
-        {
-            switch (datatype)
-            {
-            case Float:
-            case UInt:
-                return 32;
-            case Int:
-                return 31;
-            case Short:
-                return 15;
-            case UShort:
-                return 16;
-            case SChar:
-                return 7;
-            case UChar:
-                return 8;
-            }
-        }
-
-        /** Check if image is mapped on file
-          */
-        inline bool isMapped()
-        {
-            return image->isMapped();
-        }
-
-        /** Read image from file.
-         */
-        int read(const FileName &name, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
-                 bool mapData = false);
-
-        /** Read image from file with a header applied.
-         */
-        int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false,
-                         DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
-
-        /** Read image from file.
-         */
-        int readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                         DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
-
-        /** Read an image from metadata, filename is taken from MDL_IMAGE */
-        int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                         DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
-
-        /** Apply geometry in refering metadata to the image */
-        void applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false, bool wrap = WRAP);
-
-        /** Read image mapped from file.
-         */
-        int readMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
-
-        /* Initially try to read normally, but if there is a memory allocation problem, then
-         * try to read from the mapped file.*/
-        int readOrReadMapped(const FileName &name, size_t select_img = ALL_IMAGES, int mode = WRITE_READONLY);
-
-        /* Read an image with a lower resolution as a preview image.
-        * If Zdim parameter is not passed, then all slices are rescaled.
-        * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
-        */
-        int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
-
-        /** This function allows to read the original image or a preview of it also allowing to select either
-         *  a specific image from the stack or a slice from a volume.
-         *
-         *  In the case of reading images in its real dimensions it is also possible to image map from file.
-         */
-        int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
-
-        /** Write image to file.
-        */
-        inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
-                          int mode=WRITE_OVERWRITE, CastWriteMode castMode = CW_CAST, int _swapWrite = 0)
-        {
-            image->write(name,select_img,isStack,mode,castMode,_swapWrite);
-        }
-
-        /* Create an empty image file of format given by filename and map it to memory.
-         */
-        void mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
-                           bool createTempFile=false, size_t select_img = APPEND_IMAGE,
-                           bool isStack=false, int mode=WRITE_OVERWRITE, int _swapWrite = 0);
-
-        /** It changes the behavior of the internal multidimarray so it points to a specific slice of
-         *  the initial volume. No information is deallocated from memory, so it is also possible to
-         *  repoint to the whole volume (passing select_slice = ALL_SLICES), or CENTRAL_SLICE.
-         */
-        void movePointerToSlice(int select_slice = ALL_SLICES)
-        {
-            image->movePointerToSlice(select_slice);
-        }
+    /** It changes the behavior of the internal multidimarray so it points to a specific slice/image
+      *  from a stack, volume or stack of volumes. No information is deallocated from memory, so it is
+      *  also possible to repoint to the whole stack,volume... (passing select_slice = ALL_SLICES and
+      *  selec_img = ALL_IMAGES).
+      *
+      *  The options for select_slice are:
+      *
+      *    - a slice number,
+      *    - CENTRAL_SLICE, to automatically select the central slice of the volume,
+      *    - ALL_SLICES, to recover the whole volume.
+      *
+      *  The options for selec_img are:
+      *
+      *    - a image number of the stack,
+      *    - ALL_IMAGES, to recover the whole stack.
+      *
+      *  If a specific slice number is selected, then a specific image from the stack must be
+      *  also selected. Otherwise, FIRST_IMAGE is proposed.
+      *
+      *  If Image Object is read using readPreview method, movePointerTo only works when rescaling
+      *  the image in X-Y plane only, but all slices must be read.
+      */
+    void movePointerTo(int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES)
+    {
+        image->movePointerTo(select_slice, select_img);
+    }
 
 
-        /* MultidimArrayGeneric data access
-         */
-        inline MultidimArrayGeneric& operator()()
-        {
-            return *data;
-        }
+    /* MultidimArrayGeneric data access
+     */
+    inline MultidimArrayGeneric& operator()()
+    {
+        return *data;
+    }
 
-        inline const MultidimArrayGeneric& operator()() const
-        {
-            return *data;
-        }
+    inline const MultidimArrayGeneric& operator()() const
+    {
+        return *data;
+    }
 
-        /**
-         * assign operator
-         */
-        ImageGeneric& operator=(const ImageGeneric &img);
+    /**
+     * assign operator
+     */
+    ImageGeneric& operator=(const ImageGeneric &img);
 
 
-        /** Convert the datatype of the object and cast the image
-         */
-        void convert2Datatype(DataType datatype, CastWriteMode castMode=CW_CONVERT);
+    /** Convert the datatype of the object and cast the image
+     */
+    void convert2Datatype(DataType datatype, CastWriteMode castMode=CW_CONVERT);
 
-        /**
-         * equal operator
-         */
-        bool operator==(const ImageGeneric &i1) const;
+    /**
+     * equal operator
+     */
+    bool operator==(const ImageGeneric &i1) const;
 
-        /**
-         * equal for doubles
-         */
-        bool equal(const ImageGeneric &i1, double accuracy=XMIPP_EQUAL_ACCURACY) const
-        {
-            return data->equal(MULTIDIM_ARRAY_GENERIC(i1),accuracy);
-        }
-        /** Get pixel value
-         */
-        inline double getPixel(unsigned long n, int k, int i, int j) const
-        {
+    /**
+     * equal for doubles
+     */
+    bool equal(const ImageGeneric &i1, double accuracy=XMIPP_EQUAL_ACCURACY) const
+    {
+        return data->equal(MULTIDIM_ARRAY_GENERIC(i1),accuracy);
+    }
+    /** Get pixel value
+     */
+    inline double getPixel(unsigned long n, int k, int i, int j) const
+    {
 #define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j);
-            SWITCHDATATYPE(datatype,GETVALUE)
+        SWITCHDATATYPE(datatype,GETVALUE)
 #undef GETVALUE
-
-        }
-
-        /** Get pixel value
-         */
-        inline double getPixel(int i, int j) const
-        {
-#define GETVALUE(type) return (double) A2D_ELEM(*(MultidimArray<type>*)data->im,i,j);
-            SWITCHDATATYPE(datatype,GETVALUE)
-#undef GETVALUE
-
-        }
-
-        /** Set pixel value
-         */
-        inline void setPixel(unsigned long n, int k, int i, int j, double value) const
-        {
-#define SETVALUE(type) NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j) = (type) value;
-            SWITCHDATATYPE(datatype,SETVALUE)
-#undef SETVALUE
-
-        }
-
-        /** Set pixel value
-         */
-        inline void setPixel(int i, int j, double value) const
-        {
-
-#define SETVALUE(type) A2D_ELEM(*(MultidimArray<type>*)data->im,i,j) = (type) value;
-            CHECK_IMG(SWITCHDATATYPE(datatype,SETVALUE))
-#undef SETVALUE
-
-        }
-
-        /** Init constant
-         */
-        inline void initConstant(double value) const
-        {
-#define INITCONS(type) (*(MultidimArray<type>*)(data->im)).initConstant((type) value);
-            CHECK_IMG(SWITCHDATATYPE(datatype,INITCONS))
-#undef INITCONS
-
-        }
-
-        /** Init random
-         */
-        inline void initRandom(double op1, double op2, RandomMode mode = RND_Uniform) const
-        {
-#define INITRND(type) (*(MultidimArray<type>*)(data->im)).initRandom(op1, op2, mode);
-            CHECK_IMG(SWITCHDATATYPE(datatype,INITRND))
-#undef INITRND
-
-        }
-
-        /** Print image information
-         */
-        void print() const;
-
-        /** Add to string the image information
-         */
-        void toString(String &s) const;
-
-        friend std::ostream& operator<<(std::ostream& o, const ImageGeneric& I)
-        {
-            o << I.image;
-        }
-
-        /** Addition of the passed image to the internal's
-         */
-        void add(const ImageGeneric &img);
-
-        /** Subtraction of the passed image to the internal's
-         */
-        void subtract(const ImageGeneric &img);
 
     }
+
+    /** Get pixel value
+     */
+    inline double getPixel(int i, int j) const
+    {
+#define GETVALUE(type) return (double) A2D_ELEM(*(MultidimArray<type>*)data->im,i,j);
+        SWITCHDATATYPE(datatype,GETVALUE)
+#undef GETVALUE
+
+    }
+
+    /** Set pixel value
+     */
+    inline void setPixel(unsigned long n, int k, int i, int j, double value) const
+    {
+#define SETVALUE(type) NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j) = (type) value;
+        SWITCHDATATYPE(datatype,SETVALUE)
+#undef SETVALUE
+
+    }
+
+    /** Set pixel value
+     */
+    inline void setPixel(int i, int j, double value) const
+    {
+
+#define SETVALUE(type) A2D_ELEM(*(MultidimArray<type>*)data->im,i,j) = (type) value;
+        CHECK_IMG(SWITCHDATATYPE(datatype,SETVALUE))
+#undef SETVALUE
+
+    }
+
+    /** Init constant
+     */
+    inline void initConstant(double value) const
+    {
+#define INITCONS(type) (*(MultidimArray<type>*)(data->im)).initConstant((type) value);
+        CHECK_IMG(SWITCHDATATYPE(datatype,INITCONS))
+#undef INITCONS
+
+    }
+
+    /** Init random
+     */
+    inline void initRandom(double op1, double op2, RandomMode mode = RND_Uniform) const
+    {
+#define INITRND(type) (*(MultidimArray<type>*)(data->im)).initRandom(op1, op2, mode);
+        CHECK_IMG(SWITCHDATATYPE(datatype,INITRND))
+#undef INITRND
+
+    }
+
+    /** Print image information
+     */
+    void print() const;
+
+    /** Add to string the image information
+     */
+    void toString(String &s) const;
+
+    friend std::ostream& operator<<(std::ostream& o, const ImageGeneric& I)
+    {
+        o << I.image;
+    }
+
+    /** Addition of the passed image to the internal's
+     */
+    void add(const ImageGeneric &img);
+
+    /** Subtraction of the passed image to the internal's
+     */
+    void subtract(const ImageGeneric &img);
+
+}
 ;
 
 //@}
