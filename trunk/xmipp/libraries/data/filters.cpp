@@ -1180,7 +1180,7 @@ double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
         I=Imirror;
         M=Mmirror;
         MAT_ELEM(M,0,0)*=-1;
-        MAT_ELEM(M,0,1)*=-1;
+        MAT_ELEM(M,1,0)*=-1;
     }
     return bestCorr;
 }
