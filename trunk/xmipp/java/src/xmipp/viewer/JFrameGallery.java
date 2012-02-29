@@ -403,7 +403,7 @@ public class JFrameGallery extends JFrame {
 		repaint();
 	}
 
-	private void avgImage() {
+	private void computeStatsImages() {
 		try {
 			ImageGeneric imgAvg = new ImageGeneric();
 			ImageGeneric imgStd = new ImageGeneric();
@@ -1011,9 +1011,7 @@ public class JFrameGallery extends JFrame {
 		protected JMenuItem jmiExit = new JMenuItem(
 				XmippLabel.LABEL_GALLERY_EXIT);
 		protected JMenu jmStatistics = new JMenu(XmippLabel.MENU_STATS);
-		protected JMenuItem jmiAVG = new JMenuItem(XmippLabel.BUTTON_MEAN);
-		protected JMenuItem jmiSTDEV = new JMenuItem(
-				XmippLabel.BUTTON_STD_DEVIATION);
+		protected JMenuItem jmiAvgStd = new JMenuItem(XmippLabel.BUTTON_IMAGE_STATS);
 		protected JMenuItem jmiPCA = new JMenuItem(XmippLabel.BUTTON_PCA);
 		protected JMenuItem jmiFSC = new JMenuItem(XmippLabel.BUTTON_FSC);
 		protected JMenu jmOpenWith = new JMenu(XmippLabel.MENU_OPEN_WITH);
@@ -1114,10 +1112,8 @@ public class JFrameGallery extends JFrame {
 					menu.enableRenderImages(data.globalRender);
 					isUpdating = false;
 				}
-			} else if (jmi == jmiAVG)
-				avgImage();
-			else if (jmi == jmiSTDEV)
-				stdDevImage();
+			} else if (jmi == jmiAvgStd)
+				computeStatsImages();
 			else if (jmi == jmiPCA)
 				pca();
 			else if (jmi == jmiFSC)
@@ -1200,8 +1196,7 @@ public class JFrameGallery extends JFrame {
 
 			// Statistics menu
 			add(jmStatistics);
-			addMenuItem(jmStatistics, jmiAVG);
-			addMenuItem(jmStatistics, jmiSTDEV);
+			addMenuItem(jmStatistics, jmiAvgStd);
 			addMenuItem(jmStatistics, jmiPCA);
 			addMenuItem(jmStatistics, jmiFSC);
 

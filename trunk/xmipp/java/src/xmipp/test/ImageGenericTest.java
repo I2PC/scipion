@@ -44,12 +44,9 @@ import java.util.Arrays;
  */
 public class ImageGenericTest {
 
-	// Xmipp Tests dir
-	static String TESTS_PATH = Filename.getXmippPath("java/src/xmipp/test/");
-	static double EQUAL_ACCURACY = 0.001;
 	// Filenames to test.
-	static String filename = getTestFilename("singleImage.spi");
-	static String filename2 = getTestFilename("singleImage2.spi");
+	static String filename = XmippTest.getTestFilename("singleImage.spi");
+	static String filename2 = XmippTest.getTestFilename("singleImage2.spi");
 	// Indexes for arrays.
 	final static int X = 0;
 	final static int Y = 1;
@@ -74,7 +71,6 @@ public class ImageGenericTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		System.out.format("Using image: %s", filename);
 	}
 
 	@AfterClass
@@ -83,18 +79,6 @@ public class ImageGenericTest {
 
 	@Before
 	public void setUp() {
-	}
-
-	/** Return the filename relative to tests folder */
-	private static String getTestFilename(String file) {
-		return TESTS_PATH + file;
-	}
-	
-	/** Create and read the image generic */
-	private static ImageGeneric getImageGeneric(String filename) throws Exception {
-		ImageGeneric image = new ImageGeneric(filename);
-		image.read(ImageGeneric.FIRST_SLICE);
-		return image;
 	}
 
 	@After
@@ -137,11 +121,11 @@ public class ImageGenericTest {
 	 */
 	@Test
 	public void testGetArrayFloat() throws Exception {
-		ImageGeneric image = getImageGeneric(filename);
+		ImageGeneric image = XmippTest.getImageGeneric(filename);
 
 		float[] result = image.getArrayFloat((int)ImageGeneric.FIRST_IMAGE);
 		for (int i = 0; i < imagePixels.length; i++)
-			assertEquals(imagePixels[i], result[i], EQUAL_ACCURACY);
+			assertEquals(imagePixels[i], result[i], XmippTest.EQUAL_ACCURACY);
 	}
 
 	/**
@@ -149,11 +133,11 @@ public class ImageGenericTest {
 	 */
 	@Test
 	public void testEqual() throws Exception  {
-		ImageGeneric image = getImageGeneric(filename);
-		ImageGeneric image2 = getImageGeneric(filename2);
+		ImageGeneric image = XmippTest.getImageGeneric(filename);
+		ImageGeneric image2 = XmippTest.getImageGeneric(filename2);
 
-		assertTrue(image.equal(image, EQUAL_ACCURACY));
-		assertFalse(image.equal(image2, EQUAL_ACCURACY));
+		assertTrue(image.equal(image, XmippTest.EQUAL_ACCURACY));
+		assertFalse(image.equal(image2, XmippTest.EQUAL_ACCURACY));
 	}
 
 	/**
@@ -161,10 +145,10 @@ public class ImageGenericTest {
 	 */
 	@Test
 	public void testGetStatistics() throws Exception {
-		ImageGeneric image = getImageGeneric(filename);
+		ImageGeneric image = XmippTest.getImageGeneric(filename);
 		double[] stats = image.getStatistics();
 		for (int i = 0; i < stats.length; i++) {
-			assertEquals(imageStats[i], stats[i], EQUAL_ACCURACY);
+			assertEquals(imageStats[i], stats[i], XmippTest.EQUAL_ACCURACY);
 		}
 	}
 

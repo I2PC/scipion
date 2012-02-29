@@ -1,0 +1,114 @@
+/***************************************************************************
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+ * 				Roberto Marabini       (roberto@cnb.csic.es)
+ *
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+package xmipp.test;
+
+
+import org.junit.After;
+ import org.junit.AfterClass;
+ import org.junit.Before;
+ import org.junit.BeforeClass;
+ import org.junit.Test;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
+import static org.junit.Assert.*;
+
+/**
+ *
+ * Test metadata 
+ * 
+ * sample metadata:
+ * data_
+loop_
+ _image
+ _enabled
+ _shiftX
+ _ref
+ 000001@tux.stk          1     0.000000   3 
+ 000002@tux.stk          1     1.404060   4 
+ 000003@tux.stk          1     1.715445   1 
+ 000004@tux.stk          1     1.266333   2 
+ */
+ 
+public class MetadataTest {
+	static String mdFn = XmippTest.getTestFilename("tux.xmd");
+	//Values expected from the metadata
+	String[] imageValues = {  "000001@tux.stk"
+                             ,"000002@tux.stk"
+			                 ,"000003@tux.stk"
+			                 ,"000004@tux.stk"};
+	
+	double[] shiftXValues = {  0.000000, 1.404060, 1.715445, 1.266333};
+	double[] shiftXSorted = {  0.000000, 1.266333, 1.404060, 1.715445};
+	int[] refValues = { 3, 4, 1, 2};
+	int[] refSorted = { 4, 3, 2, 1};		
+			
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Before
+    public void setUp() {        
+    }
+
+
+    @After
+    public void tearDown() {        
+    }
+
+    @Test
+    public void testRead() throws Exception{
+    	MetaData md = new MetaData(mdFn);
+    	long[] ids = md.findObjects();
+    	long id;
+    	for (int i=0; i < ids.length; ++i){
+    		id = ids[i];
+    		assertEquals(imageValues[i], md.getValueString(MDLabel.MDL_IMAGE, id));
+    		assertEquals(shiftXValues[i], md.getValueDouble(MDLabel.MDL_SHIFTX, id), XmippTest.EQUAL_ACCURACY);
+    		assertEquals(refValues[i], md.getValueInt(MDLabel.MDL_REF, id));
+    	}
+    }//function testRead
+    
+
+    @Test
+    public void testSort() throws Exception{
+    	MetaData md = new MetaData(mdFn);
+    	//Sort by MDL_SHIFTX ascending
+    	md.sort(MDLabel.MDL_SHIFTX, true);
+    	long [] ids = md.findObjects();
+    	for (int i=0; i < ids.length; ++i)
+    		assertEquals(shiftXSorted[i], md.getValueDouble(MDLabel.MDL_SHIFTX, ids[i]), XmippTest.EQUAL_ACCURACY);
+    	//Sort by MDL_REF descending
+    	md.sort(MDLabel.MDL_REF, false);
+    	ids = md.findObjects();
+    	for (int i=0; i < ids.length; ++i)
+    		assertEquals(refSorted[i], md.getValueInt(MDLabel.MDL_REF, ids[i]));
+    }//function testSort
+
+}//class MetadataTest

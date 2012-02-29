@@ -198,7 +198,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public void adjustColumn(int width) {
 		last_width = width;
 		adjustColumns = true;
-		int new_cols = width / cellDim.width;
+		int new_cols = Math.min(width / cellDim.width, n);
 		if (new_cols != cols) {
 			setColumnsValue(new_cols);
 		}

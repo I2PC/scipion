@@ -34,7 +34,7 @@ public class XmippLabel {
     /**
      * Buttons labels
      */
-    public final static String BUTTON_MEAN = "Mean";
+    public final static String BUTTON_IMAGE_STATS = "Mean & Std";
     public final static String BUTTON_CANCEL = "Cancel";
     //public final static String BUTTON_CAPTURE_WINDOW = "Capture";
     public final static String BUTTON_INVERT_SELECTION = "Invert Selection";

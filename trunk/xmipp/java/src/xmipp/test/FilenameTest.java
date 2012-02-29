@@ -25,7 +25,6 @@
  ***************************************************************************/
 package xmipp.test;
 
- import java.io.File;
  import org.junit.After;
  import org.junit.AfterClass;
  import org.junit.Before;
@@ -33,10 +32,7 @@ package xmipp.test;
  import org.junit.Test;
 
  import xmipp.jni.Filename;
- import xmipp.jni.ImageGeneric;
- import xmipp.jni.MetaData;
  import static org.junit.Assert.*;
- import java.util.Arrays;
 
 /**
  *

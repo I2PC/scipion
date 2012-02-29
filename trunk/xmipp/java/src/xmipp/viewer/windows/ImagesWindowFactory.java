@@ -7,7 +7,7 @@ package xmipp.viewer.windows;
 import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
-import xmipp.viewer.FSCWindow;
+import xmipp.viewer.JFrameFSC;
 import xmipp.viewer.JFrameGallery;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
@@ -355,7 +355,7 @@ public class ImagesWindowFactory {
     }
 
     public static void openFSCWindow(MetaData md) {
-        FSCWindow frame = new FSCWindow(md);
+        JFrameFSC frame = new JFrameFSC(md);
         frame.setVisible(true);
     }
 

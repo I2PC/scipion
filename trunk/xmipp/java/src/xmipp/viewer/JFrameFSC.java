@@ -34,9 +34,9 @@ import xmipp.jni.MetaData;
  *
  * @author Juanjo Vega
  */
-public class FSCWindow extends JFrame {
+public class JFrameFSC extends JFrame {
 
-    public FSCWindow(MetaData md) {
+    public JFrameFSC(MetaData md) {
         super(XmippLabel.TITLE_FSC + md.getFilename());
 
         try {

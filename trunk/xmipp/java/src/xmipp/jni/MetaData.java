@@ -235,6 +235,11 @@ public class MetaData {
 
     /** Obtain all the objects ids in the MetaData */
     public native long[] findObjects() throws Exception;
+    
+    /** Order the metadata by some label.
+     * You can order ASCending or DESCending.
+     */
+    public native void sort(int sortLabel, boolean ascending) throws Exception;
 
     /** Import objects from other MetaData */
     public native void importObjects(MetaData from, long ids[]) throws Exception;
