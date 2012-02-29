@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 # {dir} Micrographs directory
 """Directory name from where to process all scanned micrographs"""
-DirMicrographs = 'Micrographs'
+DirMicrographs = 'InputData'
 
 # Files to process
 """ 
