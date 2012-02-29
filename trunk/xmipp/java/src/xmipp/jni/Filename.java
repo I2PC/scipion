@@ -19,6 +19,7 @@ public class Filename {
     private final static String EXTENSION_SPE = ".spe";
     private final static String EXTENSION_MRC = ".mrc";
     private final static String EXTENSION_MRCS = ".mrcs";
+    private final static String EXTENSION_MRCS2 = ".st";
     private final static String EXTENSION_STK = ".stk";
     //metadata extensions
     private final static String EXTENSION_XMD = ".xmd";
@@ -30,6 +31,12 @@ public class Filename {
     private final static String EXTENSION_VOL = ".vol";
     private final static String EXTENSION_SPI = ".spi";
     private final static String EXTENSION_TIF = ".tif";
+    
+    // Initialize library.
+    static {
+        System.loadLibrary("XmippJNI");
+        //storeIds();
+    }
     // Types of images contained by each file type.
 //    private final static String[] XMIPP_TYPES = new String[]{
 //        EXTENSION_XMP,
@@ -69,6 +76,7 @@ public class Filename {
     };
     public final static String[] STACKS = new String[]{
         EXTENSION_MRCS,
+        EXTENSION_MRCS2,
         EXTENSION_STK
     };
     
