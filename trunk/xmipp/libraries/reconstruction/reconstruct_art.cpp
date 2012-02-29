@@ -37,7 +37,9 @@ ProgReconsART::ProgReconsART()
     isMpi = false;
 }
 ProgReconsART::~ProgReconsART()
-{}
+{
+    delete artRecons;
+}
 
 void ProgReconsART::setIO(const FileName &fn_in, const FileName &fn_out)
 {}
@@ -53,6 +55,7 @@ void ProgReconsART::defineParams()
     ARTReconsBase::defineParams(this, isMpi);
 
 #ifndef RELEASE_MODE
+
     addParamsLine(" == Special Parameters for X-rays == ");
     XrayARTRecons::defineParams(this);
 #endif
@@ -124,6 +127,7 @@ void ProgReconsART::readParams()
         artRecons = new XrayARTRecons;
     else
 #endif
+
         artRecons = new SinPartARTRecons;
 
     artRecons->readParams(this);

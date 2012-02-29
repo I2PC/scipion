@@ -33,6 +33,17 @@
 #include "fourier_filter.h"
 #include "recons_misc.h"
 
+/* Desctructor */
+BasicARTParameters::~BasicARTParameters()
+{
+    delete fh_hist;
+    delete[] IMG_Inf;
+    delete D;
+    delete Dinv;
+    delete GVNeq;
+    delete surface_mask;
+}
+
 /* Default values ========================================================== */
 void BasicARTParameters::defaultValues()
 {
@@ -438,15 +449,15 @@ void BasicARTParameters::readParams(XmippProgram * program)
     }
 
     // Measures are given in pixels, independent of pixel size
-//    //divide by the sampling rate
-//    if (sampling != 1.)
-//    {
-//        basis.setSamplingRate(sampling);
-//        grid_relative_size /= sampling;
-//        if (R != -1.)
-//            R /= sampling;
-//        ref_trans_step /= sampling;
-//    }
+    //    //divide by the sampling rate
+    //    if (sampling != 1.)
+    //    {
+    //        basis.setSamplingRate(sampling);
+    //        grid_relative_size /= sampling;
+    //        if (R != -1.)
+    //            R /= sampling;
+    //        ref_trans_step /= sampling;
+    //    }
 
 
 }

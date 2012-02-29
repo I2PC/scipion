@@ -378,6 +378,9 @@ public:
     GridVolumeT<int> *GVNeq;
     //@}
 public:
+
+    ~BasicARTParameters();
+
     /** Generate default values for ART parameters.
         Compulsory parameters are not filled and must be given externally.
         See Manual help (ART) to see which ones are compulsory. */
