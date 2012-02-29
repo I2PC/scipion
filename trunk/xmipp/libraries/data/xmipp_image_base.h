@@ -218,7 +218,7 @@ protected:
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
     ImageFHandler*      hFile;       // Image File handler information structure
-    ArrayDim   aDimFile;   // Image header file information structure (original info from file)
+    ArrayDim   			aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
@@ -226,15 +226,13 @@ protected:
     int                 swapWrite;   // Perform byte swapping upon writing
     TransformType       transform;   // Transform type
     size_t              replaceNsize;// Stack size in the replace case
-    bool                _exists;     // does target file exists?
-    // equal 0 is not exists or not a stack
+    bool                _exists;     // does target file exists?  // equal 0 is not exists or not a stack
     bool                mmapOnRead;  // Mapping when reading from file
     bool                mmapOnWrite; // Mapping when writing to file
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
-    size_t    virtualOffset;// MDA Offset when movePointerTo is used
-    ArrayCoord         coordPointer; // Values of image and slice when changing the pointer of the inner MDA
+    size_t   			virtualOffset;// MDA Offset when movePointerTo is used
 
 public:
 
