@@ -518,35 +518,53 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getColumnValues(JNIEnv *e
     return NULL;
 }
 
+//Utility function to create jlongArray from std::vector<size_t>
+jlongArray createLongArray(JNIEnv *env, const std::vector<size_t> & ids){
+    // Copies vector into array.
+    size_t size = ids.size();
+    jlong *body = new jlong[size];
+    for (int i = 0; i < size; i++)
+    {
+        body[i] = ids[i];
+    }
+
+    // Sets array value
+    jlongArray array = env->NewLongArray(size);
+    env->SetLongArrayRegion(array, 0, size, body);
+
+    return array;
+}
+
 JNIEXPORT jlongArray JNICALL Java_xmipp_jni_MetaData_findObjects(JNIEnv *env,
         jobject jobj)
 {
-    std::string msg = "";
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
     XMIPP_TRY
     {
         std::vector < size_t > ids;
         md->findObjects(ids);
-
-        // Copies vector into array.
-        size_t size = ids.size();
-        jlong *body = new jlong[size];
-        for (int i = 0; i < size; i++)
-        {
-            body[i] = ids[i];
-        }
-
-        // Sets array value
-        jlongArray array = env->NewLongArray(size);
-        env->SetLongArrayRegion(array, 0, size, body);
-
-        return array;
+        return createLongArray(env, ids);
     }
     XMIPP_CATCH;
 
     return NULL;
 }
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_sort
+  (JNIEnv * env, jobject jobj, jint label, jboolean ascending){
+
+  MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+    XMIPP_TRY
+    {
+        MetaData mdSorted;
+        mdSorted.sort(*md, (MDLabel)label, ascending);
+        *md = mdSorted;
+    }
+    XMIPP_CATCH;
+}
+
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_importObjects
 (JNIEnv *env, jobject jobj, jobject from, jlongArray jids)

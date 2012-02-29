@@ -277,6 +277,14 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_jni_MetaData_findObjects
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    findObjects
+ * Signature: ()[J
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_sort
+  (JNIEnv *, jobject, jint, jboolean);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    importObjects
  * Signature: (Lxmipp/MetaData;[J)V
  */
