@@ -269,7 +269,9 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
     {
         // COSS: Check that this is correct
         MAT_ELEM(ARS,0,0) *= -1;
+        MAT_ELEM(ARS,1,0) *= -1;
         MAT_ELEM(ASR,0,0) *= -1;
+        MAT_ELEM(ASR,1,0) *= -1;
     }
 
     CL2DAssignment candidateRS, candidateSR;
@@ -1460,9 +1462,12 @@ void ProgClassifyCL2D::run()
 
     // Run all iterations
     int level = 0;
+    int Q = vq.P.size();
+    bool originalClassicalMultiref=classicalMultiref;
+    if (Q==1)
+    	classicalMultiref=true;
     vq.run(fnOut, level);
 
-    int Q = vq.P.size();
     while (Q < Ncodes)
     {
         if (node->rank == 0)
@@ -1481,6 +1486,7 @@ void ProgClassifyCL2D::run()
 
         Q = vq.P.size();
         level++;
+        classicalMultiref=originalClassicalMultiref || Q==1;
         vq.run(fnOut, level);
     }
     if (node->rank == 0)
