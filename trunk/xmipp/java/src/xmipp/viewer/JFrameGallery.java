@@ -274,7 +274,7 @@ public class JFrameGallery extends JFrame {
 		table = new JTable();
 		// Create column model
 		table.setColumnModel(gallery.getColumnModel());
-		table.setModel(gallery);
+		table.setModel(gallery);		
 		// int h = 25;
 		// table.setRowHeight(h);
 		// rowHeader.setFixedCellHeight(h);

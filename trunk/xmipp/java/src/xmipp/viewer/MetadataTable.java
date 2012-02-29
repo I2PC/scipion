@@ -185,6 +185,7 @@ public class MetadataTable extends MetadataGallery {
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.setDefaultRenderer(ImageItem.class, renderer);
 		table.setDefaultRenderer(Double.class, new TestRenderer());
+		table.setAutoCreateRowSorter(true);
 	}
 
 	@Override
