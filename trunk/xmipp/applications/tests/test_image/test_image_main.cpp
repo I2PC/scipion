@@ -15,6 +15,7 @@ protected:
     {
         //get example images/staks
         baseName = getenv("XMIPP_HOME");
+        testBaseName = baseName + "/resources/test";
         imageName = baseName + "/applications/tests/test_image/singleImage.spi";
         stackName = baseName + "/applications/tests/test_image/smallStack.stk";
         myImage.read(imageName);
@@ -27,6 +28,7 @@ protected:
     FileName imageName;
     FileName stackName;
     FileName baseName;
+    FileName testBaseName;
 
 };
 
@@ -213,27 +215,29 @@ TEST_F( ImageTest, mapFile2Write)
 
     EXPECT_TRUE(img1 == img2);
 }
-TEST_F( ImageTest, movePointerToSlice)
+TEST_F( ImageTest, movePointerTo)
 {
-    FileName auxFilename(baseName + "/applications/tests/test_image/smallVolume.vol");
+    FileName auxFilename(testBaseName + "/smallVolumeStack.stk");
     Image<double> img1, img2;
     img1.read(auxFilename);
-    img1().setXmippOrigin();
-    selfScaleToSize(NEAREST, img1(),32,32,4);
 
     ArrayDim aDim;
     img1().getDimensions(aDim);
-    img2.readPreview(auxFilename, 32,32, ALL_SLICES);
 
-    for (int k = 1; k <= aDim.zdim; ++k)
+    for (size_t n = 1; +n <= aDim.ndim; ++n)
     {
-        img1.movePointerToSlice(k);
-        img2.movePointerToSlice(k);
+        img2.read(auxFilename, DATA, n);
 
-        img1().setXmippOrigin();
-        img2().setXmippOrigin();
+        for (int k = 1; k <= aDim.zdim; ++k)
+        {
+            img1.movePointerTo(k, n);
+            img2.movePointerTo(k);
 
-        EXPECT_TRUE(img1 == img2);
+            img1().setXmippOrigin();
+            img2().setXmippOrigin();
+
+            EXPECT_TRUE(img1 == img2);
+        }
     }
 }
 
