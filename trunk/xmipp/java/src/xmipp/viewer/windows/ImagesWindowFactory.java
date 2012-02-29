@@ -145,8 +145,8 @@ public class ImagesWindowFactory {
             if (imp.getStackSize() > 1) {
                 iw = new StackWindowOperations(imp, poll);
             } else {
-                //iw = new ImageWindowOperations(imp, poll);
-            	new XmippImageWindow(imp);
+                iw = new ImageWindowOperations(imp, poll);
+            	//new XmippImageWindow(imp);
             }
         }
 

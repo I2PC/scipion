@@ -238,5 +238,20 @@ public class MicrographFamilyData
 		result.addAll(autoparticles);
 		return result;
 	}
+	
+	public TrainingParticle getLastAvailableParticle()
+	{
+		AutomaticParticle ap;
+		for(int i = autoparticles.size() - 1; i >= 0; i --)
+		{
+			ap = autoparticles.get(i);
+			if(!ap.isDeleted())
+				return ap;
+		}
+		if(!manualparticles.isEmpty())
+			return manualparticles.get(manualparticles.size() - 1);
+		return null;
+		
+	}
 
 }

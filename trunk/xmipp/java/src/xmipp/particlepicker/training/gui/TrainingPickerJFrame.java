@@ -502,6 +502,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		return micrograph.getFamilyData(family);
 	}
+	
+	
 
 	private void setStep(FamilyState step)
 	{

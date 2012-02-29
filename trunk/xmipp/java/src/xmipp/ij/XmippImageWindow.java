@@ -24,7 +24,7 @@ public class XmippImageWindow extends ImageWindow
 			{
 				try
 				{
-					ImagePlus imp = new ImagePlus("/home/airen/CellClassifier_/images/8254.tif");
+					ImagePlus imp = XmippImageConverter.loadImage("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1387.mrc");
 					XmippImageWindow frame = new XmippImageWindow(imp);
 					
 				}
@@ -38,10 +38,10 @@ public class XmippImageWindow extends ImageWindow
 		});
 	}
 
-	private MenuBar mb;
+	private XmippMenuBar mb;
 
 	public XmippImageWindow(ImagePlus imp) {
-		this(imp, imp.getFileInfo().fileName);
+		this(imp, "");
 	}
 	
 	public XmippImageWindow(ImagePlus imp, String title)
@@ -53,14 +53,8 @@ public class XmippImageWindow extends ImageWindow
 	
 	private void initComponents()
 	{
-		initMenuBar();
+		mb = new XmippMenuBar();
 		setMenuBar(mb);
-	}
-	
-	private void initMenuBar()
-	{
-		mb = new MenuBar();
-		mb.add(new Menu("File"));
 	}
 	
 	public static void openImageJ(Tool tool){

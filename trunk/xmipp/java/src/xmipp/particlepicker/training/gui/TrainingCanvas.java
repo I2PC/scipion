@@ -78,10 +78,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				{
 					micrograph.removeParticle(p, ppicker);
 					frame.updateMicrographsModel();
-					if(!frame.getParticles().isEmpty())
-						active = frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
-					else
-						active = null;
+					active = frame.getFamilyData().getLastAvailableParticle();
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
 					active = p;
