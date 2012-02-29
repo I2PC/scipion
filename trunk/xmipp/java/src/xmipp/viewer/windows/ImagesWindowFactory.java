@@ -41,6 +41,7 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.ij.XmippImageConverter;
+import xmipp.ij.XmippImageWindow;
 
 /**
  *
@@ -109,9 +110,8 @@ public class ImagesWindowFactory {
 
     public static void openFileAsImage(String path, Param parameters) {
         try {
-            ImagePlus imp;
-
-            imp=openFileAsImagePlus(path, parameters);
+        	DEBUG.printMessage(String.format("openFileAsImage(%s)", path));
+            ImagePlus imp = openFileAsImagePlus(path, parameters);
 
             // Normalize image stack.
             //XmippImageConverter.normalizeImagePlus(imp);
@@ -130,7 +130,7 @@ public class ImagesWindowFactory {
 
             imp = XmippImageConverter.readMetadataToImageJ(md);
         } else {
-            imp = XmippImageConverter.loadImage(path, parameters.zoom);
+            imp = XmippImageConverter.loadImage(path, parameters.zoom > 0?  parameters.zoom : 100);
         }
         return imp;
     }
@@ -145,7 +145,8 @@ public class ImagesWindowFactory {
             if (imp.getStackSize() > 1) {
                 iw = new StackWindowOperations(imp, poll);
             } else {
-                iw = new ImageWindowOperations(imp, poll);
+                //iw = new ImageWindowOperations(imp, poll);
+            	new XmippImageWindow(imp);
             }
         }
 
@@ -181,8 +182,7 @@ public class ImagesWindowFactory {
      */
     public static JFrameGallery openMetadata(String filename, MetaData md, 
     		Param parameters, String mode) {
-    	if (parameters.debug)
-    		DEBUG.enableDebug(true);
+    	
     	if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_DEFAULT))
     		parameters.mode = mode;
         return new JFrameGallery(filename, md, parameters);

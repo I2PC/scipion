@@ -893,9 +893,15 @@ public class JFrameGallery extends JFrame {
 				Object item = table.getValueAt(view_row, view_col);
 
 				if (item instanceof ImageItem) {
-//					ImagesWindowFactory.captureFrame(((ImageItem) item)
-//							.getImage());
+					try {
+						DEBUG.printMessage(Filename.getXmippPath());
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					new XmippImageWindow(((ImageItem) item).getImage());
+					ImagesWindowFactory.captureFrame(((ImageItem) item)
+							.getImage());
 				}
 			} else {
 				// Ctrl adds items to selection, otherwise previous ones are

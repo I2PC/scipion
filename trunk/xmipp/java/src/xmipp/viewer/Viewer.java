@@ -25,6 +25,9 @@ public class Viewer {
 //        });
 		Param parameters = new Param(args);
 		try{
+			if (parameters.debug)
+	    		DEBUG.enableDebug(true);
+			
 	        if (parameters.files != null) {
 	        	//DEBUG.enableDebug(true);
 	            openFiles(parameters);	    
@@ -37,6 +40,7 @@ public class Viewer {
 	}
 
     static void openFiles(Param parameters) throws Exception {
+    	DEBUG.printMessage(String.format("Viewer.openFiles"));
     	ImagesWindowFactory.openFilesAsDefault(parameters.files, parameters);
 //        if (parameters.mode.trim().toLowerCase().compareTo(Param.OPENING_MODE_DEFAULT) == 0) {
 //            ImagesWindowFactory.openFilesAsDefault(parameters.files, parameters);

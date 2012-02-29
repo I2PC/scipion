@@ -128,8 +128,6 @@ public class MetadataGallery extends ImageGallery {
 
 	/**
 	 * Function to create an image item
-	 * 
-	 * @throws Exception
 	 */
 	protected ImageItem createImageItem(int index, int renderLabel,
 			int displayLabel, String key) throws Exception {
@@ -155,8 +153,6 @@ public class MetadataGallery extends ImageGallery {
 
 	/**
 	 * Return a key string using label
-	 * 
-	 * @throws Exception
 	 */
 	protected String getItemKey(int index, int label) throws Exception {
 		String format = data.md.getValueString(label, data.ids[index])
