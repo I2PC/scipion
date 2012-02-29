@@ -343,6 +343,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
     if dp:
         AppendIfNotExists(CXXFLAGS=['-D__XMIPP_DEBUG__'])
         AppendIfNotExists(CXXFLAGS=dpFlags)
+        AppendIfNotExists(CCFLAGS=dpFlags)
+        AppendIfNotExists(LINKFLAGS=dpFlags)
         #required for print stack trace
     
     # Activate release version when compiling
@@ -353,8 +355,6 @@ elif (ARGUMENTS['mode'] == 'compile'):
     if not int(env['cuda']):
         AppendIfNotExists(CXXFLAGS=['-rdynamic'])
         AppendIfNotExists(CXXFLAGS=['-O0'])
-        AppendIfNotExists(CCFLAGS=dpFlags)
-        AppendIfNotExists(LINKFLAGS=dpFlags)
     else:
         # "safe" optimization
         AppendIfNotExists(CXXFLAGS=['-O2'])
@@ -367,7 +367,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
 #        env.Append(LINKFLAGS=['-m64'])
         AppendIfNotExists(CXXFLAGS=['-m64'])
         AppendIfNotExists(CCFLAGS=['-m64'])
-        AppendIfNotExists(LINKFLAGS=['-m64'])        
+        AppendIfNotExists(LINKFLAGS=['-m64'])
 
 
 # stdout_handle = os.popen('svnversion -n .')
