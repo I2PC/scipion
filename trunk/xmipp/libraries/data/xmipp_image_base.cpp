@@ -44,7 +44,6 @@ void ImageBase::init()
     replaceNsize = 0;
     mmapOnRead = mmapOnWrite = false;
     mappedSize = mappedOffset = virtualOffset = 0;
-    coordPointer.n = coordPointer.z = coordPointer.x = coordPointer.y = 0;
     mFd        = NULL;
 }
 
