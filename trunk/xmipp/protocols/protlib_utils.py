@@ -539,7 +539,7 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     javaLib = getXmippPath('java', 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
 
-    cmd = "java -cp %(plugins_dir)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(args)s" % locals()
+    cmd = "java -Dplugins.dir=%(plugins_dir)s -cp %(imagej_home)s/*:%(javaLib)s/* %(appName)s %(args)s" % locals()
     if batchMode:
         cmd += " &"
     return cmd

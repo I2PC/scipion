@@ -56,7 +56,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		Rectangle source = new Rectangle(particle.getX0(), particle.getY0(), size, size); 
 		setSourceRect(source);
 		super.paint(g);
-		g.setColor(Color.black);
+		g.setColor(Color.white);
 		g.drawRect(0, 0, side - 1, side - 1);
 	}
 

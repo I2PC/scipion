@@ -57,7 +57,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 				TrainingParticle active = getActive();
 				if(active == null)
 					return;
-				int step = 10;
+				int step = 1;
 				int code = e.getKeyCode();
 				System.out.println("Key Code " + code);
 				if(code == KeyEvent.VK_UP)

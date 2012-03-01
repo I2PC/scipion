@@ -11,6 +11,9 @@ import java.awt.MenuBar;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+
+import javax.swing.JCheckBoxMenuItem;
 
 /**
  * 
@@ -35,18 +38,23 @@ public class XmippMenuBar extends MenuBar
 	private Menu processmn;
 	private Menu drawmn;
 	private MenuItem propertiesmi;
-	private MenuItem histogrammi;
+	private MenuItem meanshiftmi;
 	private MenuItem plotprofilemi;
 	private MenuItem imagejmi;
 	private MenuItem imageinfomi;
 	private MenuItem fliphmi;
 	private MenuItem flipvmi;
-	private MenuItem flipzmi;
+	private MenuItem cropmi;
 	private MenuItem rotate90leftmi;
 	private MenuItem rotate90rightmi;
+	private ArrayList<String> requireij;
+	private MenuItem bandpassmi;
+	private MenuItem admi;
 
 	public XmippMenuBar()
 	{
+		
+		requireij = new ArrayList<String>();
 		// menubar menus
 		filemn = new Menu("File");
 		imagemn = new Menu("Image");
@@ -69,7 +77,7 @@ public class XmippMenuBar extends MenuBar
 		infomn = new Menu("Info");
 		adjustmn = new Menu("Adjust");
 		transformmn = new Menu("Transform");
-		filtersmn = new Menu("Filter");
+		filtersmn = new Menu("Filters");
 		maskmn = new Menu("Mask");
 
 		imagemn.add(infomn);
@@ -83,31 +91,48 @@ public class XmippMenuBar extends MenuBar
 		addCommand(imageinfomi, "Show Info...");
 		propertiesmi = new MenuItem("Properties");
 		addCommand(propertiesmi, "Properties...");
-		histogrammi = new MenuItem("Histogram");
-		addCommand(histogrammi, "Histogram");// works only if imagej shown
+		meanshiftmi = new MenuItem("Histogram");
+		addCommand(meanshiftmi, "Histogram", true);// works only if imagej shown
 		plotprofilemi = new MenuItem("Plot Profile");
 		addCommand(plotprofilemi, "Plot Profile");// requires selection
 
 		infomn.add(imageinfomi);
 		infomn.add(propertiesmi);
-		infomn.add(histogrammi);
+		infomn.add(meanshiftmi);
 		infomn.add(plotprofilemi);
+		
+		
+		// image filters menu
+		bandpassmi = new MenuItem("Bandpass Filter");
+		addCommand(imageinfomi, "Bandpass Filter...");
+		admi = new MenuItem("Anisotropic Diffussion");
+		addCommand(admi, "Anisotropic Diffussion...");
+		meanshiftmi = new MenuItem("Mean Shift");
+		addCommand(meanshiftmi, "Mean Shift");
+
+		filtersmn.add(bandpassmi);
+		filtersmn.add(admi);
+		filtersmn.add(meanshiftmi);
+		
+		
 
 		// image transform menu
+		cropmi = new MenuItem("Crop");
+		addCommand(cropmi, "Crop", true);// works only if stack
 		fliphmi = new MenuItem("Flip Horizontally");
 		addCommand(fliphmi, "Flip Horizontally");
 		flipvmi = new MenuItem("Flip Vertically");
 		addCommand(flipvmi, "Flip Vertically");
-		flipzmi = new MenuItem("Flip Z");
-		addCommand(flipzmi, "Flip Z");// works only if stack
+		
+		
 		rotate90leftmi = new MenuItem("Rotate 90 Degrees Left");
 		addCommand(rotate90leftmi, "Rotate 90 Degrees Left");
 		rotate90rightmi = new MenuItem("Rotate 90 Degrees Right");
 		addCommand(rotate90rightmi, "Rotate 90 Degrees Right");
 
+		transformmn.add(cropmi);
 		transformmn.add(fliphmi);
 		transformmn.add(flipvmi);
-		transformmn.add(flipzmi);
 		transformmn.add(rotate90leftmi);
 		transformmn.add(rotate90rightmi);
 
@@ -123,7 +148,18 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(binarymn);
 		advancedmn.add(processmn);
 		advancedmn.add(drawmn);
+		
+		
+		//advanced threshold menu
+		
+		//advanced binary menu
+		
+		//advanced process menu
+		
+		//advanced drawn menu
 
+		
+		
 		imagejmi.addActionListener(new ActionListener()
 		{
 
@@ -138,6 +174,14 @@ public class XmippMenuBar extends MenuBar
 
 	protected void addCommand(MenuItem mi, String command)
 	{
+		addCommand(mi, command, false);
+	}
+	
+	
+	protected void addCommand(MenuItem mi, String command, boolean isrequiredij)
+	{
+		if(isrequiredij)
+			requireij.add(command);
 		mi.setActionCommand(command);
 		mi.addActionListener(new ActionListener()
 		{
@@ -147,8 +191,10 @@ public class XmippMenuBar extends MenuBar
 			{
 				
 				String command = ((MenuItem) e.getSource()).getActionCommand();
-				if(command.equals("Histogram"))
+				if(requireij.contains(command))
 					XmippImageWindow.openImageJ(Tool.VIEWER);
+				if(command.equals("Anisotropic Diffusion..."))
+					IJ.run("8-bit");
 				IJ.run(command);
 			}
 		});
