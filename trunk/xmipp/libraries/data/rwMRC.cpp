@@ -158,8 +158,11 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         _nDim = (select_img == ALL_IMAGES) ? (size_t) _zDim : 1;
         _zDim = 1;
     }
-    else
+    else // If the reading is not like a stack, then the select_img is not taken into account and must be selected the only image
+    {
+    	select_img = ALL_IMAGES;
         _nDim = 1;
+    }
 
     replaceNsize = _nDim;
     setDimensions(_xDim, _yDim, _zDim, _nDim);
