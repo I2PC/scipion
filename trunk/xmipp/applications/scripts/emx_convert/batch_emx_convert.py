@@ -54,6 +54,8 @@ class ScriptEmxConverter(XmippScript):
         
     def run(self):   
         inputFn = self.getParam('-i')
+	##next line will make life easier for java programmers
+	inputFn = inputFn.replace('//','/')
         outputFn = self.getParam('-o')        
         convType = self.getParam('-t')
         if convType == 'coordinates':
