@@ -123,7 +123,7 @@ public class ImageGenericTest {
 	public void testGetArrayFloat() throws Exception {
 		ImageGeneric image = XmippTest.getImageGeneric(filename);
 
-		float[] result = image.getArrayFloat((int)ImageGeneric.FIRST_IMAGE);
+		float[] result = image.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
 		for (int i = 0; i < imagePixels.length; i++)
 			assertEquals(imagePixels[i], result[i], XmippTest.EQUAL_ACCURACY);
 	}

@@ -60,7 +60,7 @@ public class GalleryImageItem extends AbstractGalleryImageItem {
                     ImageGeneric image = new ImageGeneric();
                     image.readApplyGeo(getAbsoluteFileName(), md, id, w, h);
 
-                    imp = XmippImageConverter.convertImageGenericToImageJ(image);
+                    imp = XmippImageConverter.convertToImagePlus(image);
                     imp.setTitle(getOriginalValue());
                 } catch (Exception ex) {
                     DEBUG.printException(ex);

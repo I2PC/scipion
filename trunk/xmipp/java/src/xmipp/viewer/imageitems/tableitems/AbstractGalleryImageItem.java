@@ -127,7 +127,7 @@ public abstract class AbstractGalleryImageItem {
                 //DEBUG.printMessage(" *** Reading ImagePlus [from disk]: " + getKey());
                 ImageGeneric image = new ImageGeneric(getPath());
 
-                ip = XmippImageConverter.readImageGenericToImageJ(image, getWidth(), getHeight(), getNSlice(), getNImage());
+                ip = XmippImageConverter.readToImagePlus(image, getWidth(), getHeight(), getNSlice(), getNImage());
                 ip.setTitle(getTitle());
             } catch (Exception ex) {
                 IJ.error(ex.getMessage());
@@ -189,7 +189,7 @@ public abstract class AbstractGalleryImageItem {
                 //		getPath(), w_ , h_ , factor, getNSlice(), getNImage()));
 
                 ImageGeneric image = new ImageGeneric(path);
-                ip = XmippImageConverter.readImageGenericToImageJ(image, w_, h_, getNSlice(), getNImage());//,w_, h_, getNSlice(), getNImage());
+                ip = XmippImageConverter.readToImagePlus(image, w_, h_, getNSlice(), getNImage());//,w_, h_, getNSlice(), getNImage());
                 //DEBUG.printMessage(String.format(" ***    size: %d", ip.getImageStackSize()));
                 image.destroy();
             } catch (Exception ex) {

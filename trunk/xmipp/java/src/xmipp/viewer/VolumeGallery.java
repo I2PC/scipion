@@ -53,7 +53,7 @@ public class VolumeGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImagePlus imp = XmippImageConverter.readImageGenericToImageJ(volHeader, thumb_width,
+		ImagePlus imp = XmippImageConverter.readToImagePlus(volHeader, thumb_width,
 				thumb_height, index + 1, volNumber);
 		String label = String.format("%d", index + 1);
 		return new ImageItem(key, label, imp);
@@ -62,7 +62,7 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	public ImagePlus getImagePlus() {
 		try {
-			return XmippImageConverter.readImageGenericToImageJ(volHeader);
+			return XmippImageConverter.readToImagePlus(volHeader);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

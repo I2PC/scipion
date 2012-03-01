@@ -152,31 +152,20 @@ public class ImageGeneric {
     private native void readApplyGeo_(String filename, MetaData metadata, long id, int w, int h) throws Exception;
 
     // Getters for data arrays.
-//    public byte[] getArrayByte(int slice) throws Exception {
-//        return getArrayByte(slice, dataType);
-//    }
-    public native byte[] getArrayByte(int slice) throws Exception;
-//
-//    public short[] getArrayShort(int slice) throws Exception {
-//        return getArrayShort(slice, dataType);
-//    }
+    public native byte[] getArrayByte(long select_image, int slice) throws Exception;
 
-    public native short[] getArrayShort(int slice) throws Exception;
-//
-//    public float[] getArrayFloat(int slice) throws Exception {
-//        return getArrayFloat(slice, dataType);
-//    }
+    public native short[] getArrayShort(long select_image, int slice) throws Exception;
 
-    public native float[] getArrayFloat(int slice) throws Exception;
-    public native boolean equal(ImageGeneric img, double accuracy) throws Exception;
+    public native float[] getArrayFloat(long select_image, int slice) throws Exception;    
 
     // Setters for data arrays.
-    public native void setArrayByte(byte data[], int slice) throws Exception;
+    public native void setArrayByte(byte data[], long select_image, int slice) throws Exception;
 
-    public native void setArrayShort(short data[], int slice) throws Exception;
+    public native void setArrayShort(short data[], long select_image, int slice) throws Exception;
 
-    public native void setArrayFloat(float data[], int slice) throws Exception;
+    public native void setArrayFloat(float data[], long select_image, int slice) throws Exception;
 
+    //Some others image generic utilities
     public final native void setDataType(int dataType) throws Exception;
 
     public final native void convert2Datatype(int dataType) throws Exception;
@@ -192,6 +181,9 @@ public class ImageGeneric {
     public native void setXmippOrigin() throws Exception;
 
     public native void convertPSD(boolean useLogarithm) throws Exception;
+
+    //Check if two images have same values to some accuracy
+    public native boolean equal(ImageGeneric img, double accuracy) throws Exception;
 
     public boolean isPSD() {
         return Filename.isPSD(filename);

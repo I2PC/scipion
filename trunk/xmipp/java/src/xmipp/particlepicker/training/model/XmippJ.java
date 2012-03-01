@@ -58,7 +58,7 @@ public class XmippJ {
 						ipstack.getHeight(), 
 						ipstack.getStackSize(),
 						Tools.toDouble((float[])ipstack.getProcessor().getPixels()));*/
-				ImageGeneric idouble = XmippImageConverter.convertToXmipp(ipstack);
+				ImageGeneric idouble = XmippImageConverter.convertToImageGeneric(ipstack);
 				File dir = new File(System.getProperty("user.dir"));
 				
 				File file = File.createTempFile("xmipp", ".stk", dir);

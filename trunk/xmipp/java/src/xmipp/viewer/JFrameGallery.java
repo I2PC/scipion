@@ -408,8 +408,8 @@ public class JFrameGallery extends JFrame {
 			ImageGeneric imgAvg = new ImageGeneric();
 			ImageGeneric imgStd = new ImageGeneric();
 			data.md.getStatsImages(imgAvg, imgStd, true);
-			ImagePlus impAvg = XmippImageConverter.convertImageGenericToImageJ(imgAvg);
-			ImagePlus impStd =  XmippImageConverter.convertImageGenericToImageJ(imgStd);
+			ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
+			ImagePlus impStd =  XmippImageConverter.convertToImagePlus(imgStd);
 			imgAvg.destroy();
 			imgStd.destroy();
 			new XmippImageWindow(impAvg, "AVG: " + data.filename);
@@ -511,7 +511,8 @@ public class JFrameGallery extends JFrame {
 		 try {
 		 ImageGeneric image = new ImageGeneric();		
 		 data.md.getPCAbasis(image);		
-		 ImagePlus imp = XmippImageConverter.convertImageGenericToImageJ(image);
+		 ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
+		 //new XmippImageWindow(imp, "PCA: " + data.filename);
 		 imp.setTitle("PCA: " + data.filename);
 		 ImagesWindowFactory.captureFrame(imp);
 		 } catch (Exception ex) {

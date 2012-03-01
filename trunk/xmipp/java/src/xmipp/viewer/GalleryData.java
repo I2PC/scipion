@@ -101,6 +101,8 @@ public class GalleryData {
 		loadLabels();
 		numberOfVols = 0;
 		volumes = null;
+		useGeo = containsGeometryInfo();
+		
 		if (isGalleryMode())
 			mode = MODE_GALLERY_MD;
 

@@ -145,7 +145,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_readApplyGeo_1
  * Signature: (I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayByte
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jlong, jint);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -153,7 +153,7 @@ JNIEXPORT jbyteArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayByte
  * Signature: (I)[S
  */
 JNIEXPORT jshortArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayShort
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jlong, jint);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -161,7 +161,7 @@ JNIEXPORT jshortArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayShort
  * Signature: (I)[F
  */
 JNIEXPORT jfloatArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayFloat
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jlong, jint);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -169,7 +169,7 @@ JNIEXPORT jfloatArray JNICALL Java_xmipp_jni_ImageGeneric_getArrayFloat
  * Signature: ([BI)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayByte
-  (JNIEnv *, jobject, jbyteArray, jint);
+  (JNIEnv *, jobject, jbyteArray, jlong, jint);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -177,7 +177,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayByte
  * Signature: ([SI)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayShort
-  (JNIEnv *, jobject, jshortArray, jint);
+  (JNIEnv *, jobject, jshortArray, jlong, jint);
 
 /*
  * Class:     xmipp_ImageGeneric
@@ -185,7 +185,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayShort
  * Signature: ([FI)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setArrayFloat
-  (JNIEnv *, jobject, jfloatArray, jint);
+  (JNIEnv *, jobject, jfloatArray, jlong, jint);
 
 /*
  * Class:     xmipp_ImageGeneric

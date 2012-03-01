@@ -140,7 +140,7 @@ public class MetadataGallery extends ImageGallery {
 						thumb_height);
 			else
 				image.read(thumb_width, thumb_height);
-			imp = XmippImageConverter.convertImageGenericToImageJ(image);
+			imp = XmippImageConverter.convertToImagePlus(image);
 			
 		}
 		return new ImageItem(key, labelStr, imp);
@@ -212,7 +212,7 @@ public class MetadataGallery extends ImageGallery {
 	@Override
 	public ImagePlus getImagePlus() {
 		try {
-			return XmippImageConverter.readMetadataToImageJ(data.md);
+			return XmippImageConverter.readMetadataToImagePlus(data.md);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

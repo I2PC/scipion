@@ -30,7 +30,6 @@ Java_xmipp_jni_ImageGeneric_resize(JNIEnv *env, jobject jobj, jint w, jint h,
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-
     image->resize(w, h, d, (size_t) n, false);
   }
   XMIPP_CATCH;
@@ -42,7 +41,6 @@ Java_xmipp_jni_ImageGeneric_getXDim(JNIEnv *env, jobject jobj)
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-
     return XSIZE(* image->data->im);
   }
   XMIPP_CATCH;
@@ -154,14 +152,14 @@ Java_xmipp_jni_ImageGeneric_readApplyGeo_1(JNIEnv *env, jobject jimage,
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jint nslice)
+Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select_image, jint nslice)
 {
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     // Go to slice.
-    image->movePointerTo(nslice);
+    image->movePointerTo(nslice, select_image);
 
     size_t size = image->getSize();
     jbyteArray array = env->NewByteArray(size);
@@ -220,14 +218,14 @@ Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jint nslice)
 
 JNIEXPORT jshortArray JNICALL
 Java_xmipp_jni_ImageGeneric_getArrayShort(JNIEnv *env, jobject jobj,
-    jint nslice)
+    jlong select_image, jint nslice)
 {
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     // Go to slice.
-    image->movePointerTo(nslice);
+    image->movePointerTo(nslice, select_image);
 
     size_t size = image->getSize();
     jshortArray array = env->NewShortArray(size);
@@ -287,14 +285,14 @@ Java_xmipp_jni_ImageGeneric_getArrayShort(JNIEnv *env, jobject jobj,
 
 JNIEXPORT jfloatArray JNICALL
 Java_xmipp_jni_ImageGeneric_getArrayFloat(JNIEnv *env, jobject jobj,
-    jint nslice)
+    jlong select_image, jint nslice)
 {
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     // Go to slice.
-    image->movePointerTo(nslice);
+    image->movePointerTo(nslice, select_image);
 
     size_t size = image->getSize();
     jfloatArray array = env->NewFloatArray(size);
@@ -344,14 +342,14 @@ Java_xmipp_jni_ImageGeneric_getArrayFloat(JNIEnv *env, jobject jobj,
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
-    jbyteArray data, jint nslice)
+    jbyteArray data, jlong select_image, jint nslice)
 {
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     // Go to slice.
-    image->movePointerTo(nslice);
+    image->movePointerTo(nslice, select_image);
 
     size_t size = image->getSize();
     jbyteArray array = env->NewByteArray(size);
@@ -420,14 +418,14 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
-    jshortArray data, jint nslice)
+    jshortArray data, jlong select_image, jint nslice)
 {
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     // Go to slice.
-    image->movePointerTo(nslice);
+    image->movePointerTo(nslice, select_image);
 
     size_t size = image->getSize();
 
@@ -504,14 +502,14 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
-    jfloatArray data, jint nslice)
+    jfloatArray data, jlong select_image, jint nslice)
 {
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
     // Go to slice.
-    image->movePointerTo(nslice);
+    image->movePointerTo(nslice, select_image);
 
     size_t size = image->getSize();
     //jfloatArray array = env->NewFloatArray(size);

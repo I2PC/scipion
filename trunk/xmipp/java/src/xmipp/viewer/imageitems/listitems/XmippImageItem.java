@@ -47,7 +47,7 @@ public class XmippImageItem extends AbstractImageItem {
             int h_ = (int) Math.ceil(getHeight() / factor);
 
             image.read(w_, h_, slice, nimage);
-            ip = XmippImageConverter.readImageGenericToImageJ(image);
+            ip = XmippImageConverter.readToImagePlus(image);
         } catch (Exception ex) {
             System.out.println("ERROR: loading preview: " + getKey());
         }
@@ -90,7 +90,7 @@ public class XmippImageItem extends AbstractImageItem {
 
                 //image.readPreview(path, getWidth(), getHeight(), nslice, nimage);
                 image.read(nimage);
-                imp = XmippImageConverter.readImageGenericToImageJ(image);
+                imp = XmippImageConverter.readToImagePlus(image);
                 imp.setTitle(getLabel());
                 //getPreview(getWidth(), getHeight());
             } catch (Exception ex) {

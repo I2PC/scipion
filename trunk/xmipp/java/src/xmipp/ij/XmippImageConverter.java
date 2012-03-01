@@ -48,44 +48,48 @@ public class XmippImageConverter {
 		 * image = new ImageGeneric(name); imp = convertToImageJ(image, nimage);
 		 * } else {
 		 */
-		imp = readImageGenericToImageJ(image, w, h);
+		imp = readToImagePlus(image, w, h);
 		// }
 
 		return imp;
 	}
 
-	public static ImagePlus readImageGenericToImageJ(ImageGeneric image)
+	/** 
+	 * These set of functions will read from disk an ImageGeneric that
+	 * had read the header previously. The result is an ImagePlus
+	 */
+	public static ImagePlus readToImagePlus(ImageGeneric image)
 			throws Exception {
-		return readImageGenericToImageJ(image, ImageGeneric.ALL_SLICES);
+		return readToImagePlus(image, ImageGeneric.ALL_SLICES);
 	}
 
-	public static ImagePlus readImageGenericToImageJ(ImageGeneric image,
+	public static ImagePlus readToImagePlus(ImageGeneric image,
 			int nslice) throws Exception {
-		return readImageGenericToImageJ(image, image.getXDim(),
+		return readToImagePlus(image, image.getXDim(),
 				image.getYDim(), nslice);
 	}
 
-	public static ImagePlus readImageGenericToImageJ(ImageGeneric image,
+	public static ImagePlus readToImagePlus(ImageGeneric image,
 			long nimage) throws Exception {
-		return readImageGenericToImageJ(image, image.getXDim(),
+		return readToImagePlus(image, image.getXDim(),
 				image.getYDim(), nimage);
 	}
 
-	public static ImagePlus readImageGenericToImageJ(ImageGeneric image,
+	public static ImagePlus readToImagePlus(ImageGeneric image,
 			int width, int height) throws Exception {
-		return readImageGenericToImageJ(image, width, height,
+		return readToImagePlus(image, width, height,
 				ImageGeneric.ALL_SLICES, ImageGeneric.ALL_IMAGES);
 	}
 
-	public static ImagePlus readImageGenericToImageJ(ImageGeneric image,
+	public static ImagePlus readToImagePlus(ImageGeneric image,
 			int width, int height, int nslice) throws Exception {
-		return readImageGenericToImageJ(image, width, height, nslice,
+		return readToImagePlus(image, width, height, nslice,
 				ImageGeneric.ALL_IMAGES);
 	}
 
-	public static ImagePlus readImageGenericToImageJ(ImageGeneric image,
+	public static ImagePlus readToImagePlus(ImageGeneric image,
 			int width, int height, long nimage) throws Exception {
-		return readImageGenericToImageJ(image, width, height,
+		return readToImagePlus(image, width, height,
 				ImageGeneric.ALL_SLICES, nimage);
 	}
 
@@ -93,7 +97,7 @@ public class XmippImageConverter {
 	 * In this function is suposed the the ImageGeneric is read only the header
 	 * and the data will be read from disk
 	 */
-	public static ImagePlus readImageGenericToImageJ(ImageGeneric image,
+	public static ImagePlus readToImagePlus(ImageGeneric image,
 			int width, int height, int slice, long select_image)
 			throws Exception {
 		ImageStack is = new ImageStack(width, height);
@@ -109,7 +113,7 @@ public class XmippImageConverter {
 			if (image.isPSD()) {
 				image.convertPSD(image.getUseLogarithm());
 			}
-			addSlicesToStack(image, slice, is, pc);
+			addSlicesToStack(image, ImageGeneric.FIRST_IMAGE, slice, is, pc);
 		}
 
 		return buildImagePlus(image.getFilename(), is);
@@ -119,9 +123,9 @@ public class XmippImageConverter {
 	 * Converts an ImageGeneric to ImageJ WARNING!: Use this when converting
 	 * images from memory.
 	 */
-	public static ImagePlus convertImageGenericToImageJ(ImageGeneric image)
+	public static ImagePlus convertToImagePlus(ImageGeneric image)
 			throws Exception {
-		return convertImageGenericToImageJ(image, ImageGeneric.ALL_SLICES);
+		return convertToImagePlus(image, ImageGeneric.ALL_IMAGES, ImageGeneric.ALL_SLICES);
 	}
 	
 	
@@ -130,11 +134,11 @@ public class XmippImageConverter {
 	 * Converts an ImageGeneric to ImageJ WARNING!: Use this when converting
 	 * images from memory.
 	 */
-	static ImagePlus convertImageGenericToImageJ(ImageGeneric image, int slice) throws Exception {
-		return convertImageGenericToImageJ(image, slice, ImageGeneric.ALL_IMAGES);
+	static ImagePlus convertToImagePlus(ImageGeneric image, long select_image) throws Exception {
+		return convertToImagePlus(image, select_image, ImageGeneric.ALL_SLICES);
 	}
 	
-	static ImagePlus convertImageGenericToImageJ(ImageGeneric image, int slice, long select_image)
+	static ImagePlus convertToImagePlus(ImageGeneric image, long select_image, int slice)
 			throws Exception {
 		int width = image.getXDim();
 		int height = image.getYDim();
@@ -148,12 +152,13 @@ public class XmippImageConverter {
 			lastImage = image.getNDim();
 		}
 		for (; select_image <= lastImage; select_image++) {
-			addSlicesToStack(image, slice, is, pc);
+			addSlicesToStack(image, select_image, slice, is, pc);
 		}
 		return buildImagePlus(image.getFilename(), is);
 	}
 
-	static void addSlicesToStack(ImageGeneric image, int slice, ImageStack is,
+	/** Internal function to add the slices to ImageStack to build the ImagePlus */
+	private static void addSlicesToStack(ImageGeneric image, long select_image, int slice, ImageStack is,
 			ProcessorCreator pc) throws Exception {
 		int lastSlice = slice;
 		if (slice == ImageGeneric.ALL_SLICES) {
@@ -161,11 +166,12 @@ public class XmippImageConverter {
 			lastSlice = image.getZDim();
 		}
 		for (; slice <= lastSlice; slice++)
-			is.addSlice("", pc.getProcessor(image, slice));
+			is.addSlice("", pc.getProcessor(image, select_image, slice));
 
 	}
 
-	public static ImagePlus readMetadataToImageJ(MetaData md) throws Exception {
+	/** Read the entries on the metadata and create an ImagePlus */
+	public static ImagePlus readMetadataToImagePlus(MetaData md) throws Exception {
 		LinkedList<String> missing = new LinkedList<String>();
 		ImagePlus imp = null;
 
@@ -183,7 +189,7 @@ public class XmippImageConverter {
 					long n = Filename.getNimage(filename);
 
 					ImageGeneric image = new ImageGeneric(name);
-					ImagePlus slice = readImageGenericToImageJ(image, n);
+					ImagePlus slice = readToImagePlus(image, n);
 
 					if (is == null) {
 						is = new ImageStack(slice.getWidth(), slice.getHeight());
@@ -242,22 +248,23 @@ public class XmippImageConverter {
 		imp.setStack(imp.getTitle(), imp2.getImageStack());
 	}
 
-	public static ImageGeneric convertToXmipp(ImagePlus imp) throws Exception {
+	/** This will convert an ImagePlus to ImageGeneric.
+	 * NOTE: This can be used now with images or volumes
+	 */
+	public static ImageGeneric convertToImageGeneric(ImagePlus imp) throws Exception {
 		ImageGeneric image = new ImageGeneric();
-
 		DataSetter ds = createDataSetter(image, imp.getType());
-
 		image.resize(imp.getWidth(), imp.getHeight(), imp.getStackSize());
 
 		ImageStack is = imp.getStack();
 		for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= is.getSize(); nslice++) {
-			ds.setArray(image, is.getProcessor(nslice).getPixels(), nslice);
+			ds.setArray(image, is.getProcessor(nslice).getPixels(), ImageGeneric.FIRST_IMAGE, nslice);
 		}
 
 		return image;
 	}
 
-	public static boolean saveImage(ImagePlus imp, String filename)
+	public static boolean writeImagePlus(ImagePlus imp, String filename)
 			throws Exception {
 		ImageGeneric image = new ImageGeneric();
 
@@ -283,11 +290,10 @@ public class XmippImageConverter {
 
 			// Store volume.
 			for (int nslice = ImageGeneric.FIRST_SLICE; nslice <= depth; nslice++) {
-				Object data = imp.getStack()
-						.getProcessor((int) nimage * nslice).getPixels();
+				Object data = imp.getStack().getProcessor((int) nimage * nslice).getPixels();
 
 				// image.setData...
-				ds.setArray(image, data, nslice);
+				ds.setArray(image, data, ImageGeneric.FIRST_IMAGE, nslice);
 
 				// If just one image, breaks loop.
 				if (!storeAllSlices) {
@@ -365,72 +371,68 @@ public class XmippImageConverter {
 
 abstract class ProcessorCreator {
 
-	public abstract ImageProcessor getProcessor(ImageGeneric image, int slice)
+	public abstract ImageProcessor getProcessor(ImageGeneric image, long select_image, int slice)
 			throws Exception;
 }
 
 class ProcessorCreatorByte extends ProcessorCreator {
 
 	@Override
-	public ImageProcessor getProcessor(ImageGeneric image, int slice)
+	public ImageProcessor getProcessor(ImageGeneric image, long select_image, int slice)
 			throws Exception {
 		return new ByteProcessor(image.getXDim(), image.getYDim(),
-				image.getArrayByte(slice), null);
+				image.getArrayByte(select_image, slice), null);
 	}
 }
 
 class ProcessorCreatorShort extends ProcessorCreator {
 
 	@Override
-	public ImageProcessor getProcessor(ImageGeneric image, int slice)
+	public ImageProcessor getProcessor(ImageGeneric image, long select_image, int slice)
 			throws Exception {
 		return new ShortProcessor(image.getXDim(), image.getYDim(),
-				image.getArrayShort(slice), null);
+				image.getArrayShort(select_image, slice), null);
 	}
 }
 
 class ProcessorCreatorFloat extends ProcessorCreator {
 
 	@Override
-	public ImageProcessor getProcessor(ImageGeneric image, int slice)
+	public ImageProcessor getProcessor(ImageGeneric image, long select_image, int slice)
 			throws Exception {
-		float[] array = image.getArrayFloat(slice);
-//		DEBUG.printMessage(String.format(
-//				"xdim: %d, ydim: %d, array.lenght: %d", image.getXDim(),
-//				image.getYDim(), array.length));
-		return new FloatProcessor(image.getXDim(), image.getYDim(), array, null);
+		return new FloatProcessor(image.getXDim(), image.getYDim(), image.getArrayFloat(select_image, slice), null);
 	}
 }
 
 abstract class DataSetter {
 
-	public abstract void setArray(ImageGeneric image, Object data, int slice)
+	public abstract void setArray(ImageGeneric image, Object data, long select_image, int slice)
 			throws Exception;
 }
 
 class DataSetterByte extends DataSetter {
 
 	@Override
-	public void setArray(ImageGeneric image, Object data, int slice)
+	public void setArray(ImageGeneric image, Object data, long select_image, int slice)
 			throws Exception {
-		image.setArrayByte((byte[]) data, slice);
+		image.setArrayByte((byte[]) data, select_image, slice);
 	}
 }
 
 class DataSetterShort extends DataSetter {
 
 	@Override
-	public void setArray(ImageGeneric image, Object data, int slice)
+	public void setArray(ImageGeneric image, Object data, long select_image, int slice)
 			throws Exception {
-		image.setArrayShort((short[]) data, slice);
+		image.setArrayShort((short[]) data, select_image, slice);
 	}
 }
 
 class DataSetterFloat extends DataSetter {
 
 	@Override
-	public void setArray(ImageGeneric image, Object data, int slice)
+	public void setArray(ImageGeneric image, Object data, long select_image, int slice)
 			throws Exception {
-		image.setArrayFloat((float[]) data, slice);
+		image.setArrayFloat((float[]) data, select_image, slice);
 	}
 }

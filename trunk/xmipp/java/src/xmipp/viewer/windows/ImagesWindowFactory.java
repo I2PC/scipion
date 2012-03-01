@@ -128,7 +128,7 @@ public class ImagesWindowFactory {
         if (Filename.isMetadata(path)) {
             MetaData md = new MetaData(path);
 
-            imp = XmippImageConverter.readMetadataToImageJ(md);
+            imp = XmippImageConverter.readMetadataToImagePlus(md);
         } else {
             imp = XmippImageConverter.loadImage(path, parameters.zoom > 0?  parameters.zoom : 100);
         }
@@ -284,7 +284,7 @@ public class ImagesWindowFactory {
                 file = File.createTempFile("stackToTable_", ".stk");
                 file.deleteOnExit();
                 
-                XmippImageConverter.saveImage(imp, file.getAbsolutePath());
+                XmippImageConverter.writeImagePlus(imp, file.getAbsolutePath());
             }
 
             openMetadata(file.getAbsolutePath(), new Param(), Param.OPENING_MODE_GALLERY);
