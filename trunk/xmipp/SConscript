@@ -705,7 +705,7 @@ if int(env['java']):
     AddJavaTest('FilenameTest')
     AddJavaTest('ImageGenericTest')
     AddJavaTest('MetadataTest')
-    env.Default('run_java_tests')
+    #env.Default('run_java_tests')
     # Compile the HandleExtraFileTypes for ImageJ I/O
     compileHEFT = CompileJava('HandleExtraFileTypes', ['XmippViewer'])
     copyHandleExtraFileTypes = env.Install('external/imagej/plugins/', javaBuildName('HandleExtraFileTypes.class'))
