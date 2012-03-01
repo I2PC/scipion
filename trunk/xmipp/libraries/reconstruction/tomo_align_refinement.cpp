@@ -74,10 +74,9 @@ void ProgTomoAlignRefinement::show()
 // usage ===================================================================
 void ProgTomoAlignRefinement::defineParams()
 {
-    addUsageLine("Realign a tilt series");
-    addUsageLine("A tilt series is realigned with respect to a volume following a");
-    addUsageLine("single particles approach (the volume is reprojected and the alignment");
-    addUsageLine("parameters are reoptimized");
+    addUsageLine("Realign a tilt series with respect to a volume following a single ");
+    addUsageLine("particles approach, i.e., the volume is reprojected and the alignment");
+    addUsageLine("parameters are reoptimized.");
     addParamsLine("   --ref <volume>             : Reference volume");
     addParamsLine("   --sel <selfile>            : Images to align");
     addParamsLine("   --oroot <rootname>         : rootname for the output");
