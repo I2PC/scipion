@@ -430,6 +430,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     single_image = input_is_stack = output_is_stack = false;
     iter = NULL;
     zdimOut = ydimOut = xdimOut = 0;
+    image_label = MDL_IMAGE;
 }
 
 void XmippMetadataProgram::initComments()

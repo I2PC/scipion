@@ -19,31 +19,31 @@
 /** Get the image statistics of a metadata.
  * Note that the mean and stddev are images, not values.*/
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
-                   double& _max, bool apply_geo);
+                   double& _max, bool apply_geo, MDLabel image_label=MDL_IMAGE);
 
 /** Get the average of a Metadata applying the header.
  * The MD is not cleaned from disabled images (this option makes the call faster).
  */
-void getAverageApplyGeo(const MetaData &MD, MultidimArray<double> & _ave);
+void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image_label=MDL_IMAGE);
 
 /** Get the image statistics of a metadata.
  */
 void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
-                   double& _max, bool apply_geo);
+                   double& _max, bool apply_geo, MDLabel image_label=MDL_IMAGE);
 
 /** Get Fourier statistics */
 void getFourierStatistics(MetaData &MDin, double sam, MetaData &Mdout,
-                          bool do_dpr, double max_sam);
+                          bool do_dpr, double max_sam, MDLabel image_label=MDL_IMAGE);
 
 /** Get image size
  */
-void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
+void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label=MDL_IMAGE);
 
 /** Get image size and data type */
-void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype);
+void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype, MDLabel image_label=MDL_IMAGE);
 
 /** Get image size and data type of a Metadata file */
-void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
+void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label=MDL_IMAGE);
 
 /// compare two image files
 bool compareImage(const FileName &filename1, const FileName &filename2);

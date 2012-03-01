@@ -14,16 +14,16 @@
 
 
 /*----------   Statistics --------------------------------------- */
+//Copy of the Metadata is required to remove disabled objects before computing stats
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
-                   double& _max, bool apply_geo)
+                   double& _max, bool apply_geo, MDLabel image_label)
 {
     _min = MAXDOUBLE;
     _max = -MAXDOUBLE;
     bool first = true;
     int n = 0;
     //Remove disabled images if present
-    if (MD.containsLabel(MDL_ENABLED))
-        MD.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    MD.removeDisabled();
     // Calculate Mean
     if (MD.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
@@ -33,13 +33,11 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
+    	MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(MD,__iter.objId);
+            image.readApplyGeo(fnImg, MD,__iter.objId);
         else
-        {
-            MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
             image.read(fnImg);
-        }
         image().computeStats(avg, stddev, min, max);
         if (min < _min)
             _min = min;
@@ -64,13 +62,11 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     // Calculate SD
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
+		MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(MD,__iter.objId);
+            image.readApplyGeo(fnImg, MD,__iter.objId);
         else
-        {
-            MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
             image.read(fnImg);
-        }
         tmpImg() = ((image() - _ave()));
         tmpImg() *= tmpImg();
         _sd() += tmpImg();
@@ -79,18 +75,24 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     _sd().selfSQRT();
 }
 
-void getAverageApplyGeo(const MetaData &MD, MultidimArray<double> & _ave)
+//Copy of the Metadata is required to remove disabled objects before computing stats
+void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image_label)
 {
     bool first = true;
     int n = 0;
+    MD.removeDisabled();
     // Calculate Mean
     if (MD.isEmpty())
         return;
 
     Image<double> image;
+    FileName fnImg;
+
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-        image.readApplyGeo(MD,__iter.objId);
+    	MD.getValue(image_label,fnImg,__iter.objId);
+        image.readApplyGeo(fnImg, MD,__iter.objId);
+
         if (first)
         {
             _ave = image();
@@ -105,16 +107,16 @@ void getAverageApplyGeo(const MetaData &MD, MultidimArray<double> & _ave)
 }
 
 /*----------   Statistics --------------------------------------- */
+//Copy of the Metadata is required to remove disabled objects before computing stats
 void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
-                   double& _max, bool apply_geo)
+                   double& _max, bool apply_geo, MDLabel image_label)
 {
     _min = MAXDOUBLE;
     _max = -MAXDOUBLE;
     _ave = _sd = 0;
     int n = 0;
     //Remove disabled images if present
-    if (MD.containsLabel(MDL_ENABLED))
-        MD.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+   MD.removeDisabled();
     // Calculate Mean
     if (MD.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
@@ -124,13 +126,11 @@ void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
+		MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
-            image.readApplyGeo(MD,__iter.objId);
+            image.readApplyGeo(fnImg, MD,__iter.objId);
         else
-        {
-            MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
             image.read(fnImg, DATA, ALL_IMAGES, true);
-        }
         image().computeStats(avg, stddev, min, max);
 
         if (min < _min)
@@ -150,19 +150,19 @@ void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
 
 /* Get Fourier statistics ------------------------------------------------- */
 void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
-                          bool do_dpr, double max_sam)
+                          bool do_dpr, double max_sam, MDLabel image_label)
 {
     MetaData MDaux;
     std::vector<MetaData> vMD;
     MDaux.randomize(MDin);
-    MDaux.split(2,vMD,MDL_IMAGE);
+    MDaux.split(2,vMD,image_label);
     MetaData &MD1 = vMD.at(0);
     MetaData &MD2 = vMD.at(1);
 
     Image<double> I1, I2, Id;
     double dummy;
-    getStatistics(MD1,I1,Id,dummy,dummy,true);
-    getStatistics(MD2,I2,Id,dummy,dummy,true);
+    getStatistics(MD1,I1,Id,dummy,dummy,true, image_label);
+    getStatistics(MD2,I2,Id,dummy,dummy,true, image_label);
     I1().setXmippOrigin();
     I2().setXmippOrigin();
 
@@ -192,12 +192,12 @@ void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
     }
 }
 
-void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
+void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label)
 {
     if (!MD.isEmpty())
     {
         FileName fn_img;
-        MD.getValue(MDL_IMAGE, fn_img, MD.firstObject());
+        MD.getValue(image_label, fn_img, MD.firstObject());
         getImageSize(fn_img, Xdim, Ydim, Zdim, Ndim);
 
     }
@@ -205,12 +205,12 @@ void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &N
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype)
+void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype, MDLabel image_label)
 {
     if (!MD.isEmpty())
     {
         FileName fn_img;
-        MD.getValue(MDL_IMAGE, fn_img, MD.firstObject());
+        MD.getValue(image_label, fn_img, MD.firstObject());
         getImageInfo(fn_img, Xdim, Ydim, Zdim, Ndim, datatype);
 
     }
@@ -218,12 +218,12 @@ void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &N
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
-void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
+void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label)
 {
     if (filename.hasImageExtension())
         getImageSize(filename, Xdim, Ydim, Zdim, Ndim);
     else
-        getImageSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
+        getImageSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim, image_label);
 }
 
 bool compareImage(const FileName &filename1, const FileName &filename2)
@@ -314,7 +314,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
     if (MDorig.containsLabel(MDL_ENABLED))
         MDorig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     StringVector filesOrig;
-    MDorig.getColumnValues(MDL_IMAGE,filesOrig);
+    MDorig.getColumnValues(MDL_IMAGE, filesOrig);
     MDorig.clear(); // Save memory
 
     // Read the blocks available
