@@ -99,6 +99,7 @@ protected:
         addParamsLine("   count  <label>             : for each value of a given label create new metadata with the number of times the value appears");
         addParamsLine("   sum  <label1> <label2>   : group metadata by label1 and add quantities in label2");
         addParamsLine("   size                       : print Metadata size");
+        addParamsLine("   blocks                     : print blocks in Metadata");
         addParamsLine("           alias -q;                                             ");
 
         addParamsLine("or --fill <labels> <fill_mode>                  : Fill a column values(should be of same type)");
@@ -298,6 +299,15 @@ protected:
         {
             doWrite = false;
             std::cout << fn_in + " size is: " << mdIn.size() << std::endl;
+        }
+        else if (operation == "blocks")
+        {
+          doWrite = false;
+          StringVector blocks;
+          std::cout << "Blocks in " << fn_in << ": " << std::endl;
+          getBlocksInMetaDataFile(fn_in, blocks);
+          for (int i = 0; i < blocks.size(); ++i)
+            std::cout << blocks[i] << std::endl;
         }
     }//end of function doQuery
 

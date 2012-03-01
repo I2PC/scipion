@@ -35,7 +35,7 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
     if (!inFile.isMetaData())
         return;
 
-    MetaData MDaux;
+    MetaData MDaux(inFile);
     blockList.clear();
     //map file
     int fd;
@@ -1452,7 +1452,6 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc, int limit,
     }
     else
         *this=MDin;
-    firstObject();
 }
 
 void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit, int offset)

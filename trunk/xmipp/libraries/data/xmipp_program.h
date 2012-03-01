@@ -257,6 +257,9 @@ protected:
     //FileName        fnImg, fnImgOut;
     /// Output extension and root
     FileName oext, oroot;
+    /// MDLabel to be used to read/write images, usually will be MDL_IMAGE
+    MDLabel image_label;
+
 
     // BEHAVIOR CONTROL FLAGS //
 

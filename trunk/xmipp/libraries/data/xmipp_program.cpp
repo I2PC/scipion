@@ -458,6 +458,7 @@ void XmippMetadataProgram::defineParams()
     addParamsLine("    where <mode>");
     addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
     addParamsLine("     append      : Write the Metadata as a new block, removing the old one");
+    addParamsLine(" [--label+ <image_label=image>]   : Label to be used to read/write images.");
 
     if (produces_a_metadata)
         produces_an_output = true;
@@ -478,6 +479,7 @@ void XmippMetadataProgram::defineParams()
     {
         addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
     }
+
 }
 
 void XmippMetadataProgram::readParams()
@@ -510,6 +512,9 @@ void XmippMetadataProgram::readParams()
         else
             input_is_stack = true;
     }
+
+    image_label = MDL::str2Label(getParam("--label"));
+
     /* Output is stack if, given a filename in fn_out, mdIn has multiple images.
      * In case no output name is given, then input is overwritten and we have to
      * check if it is stack. */
@@ -645,7 +650,7 @@ void XmippMetadataProgram::run()
         ++objIndex; //increment for composing starting at 1
 
         mdIn.getRow(rowIn, objId);
-        rowIn.getValue(MDL_IMAGE, fnImg);
+        rowIn.getValue(image_label, fnImg);
 
         if (fnImg.empty())
             break;
@@ -681,13 +686,13 @@ void XmippMetadataProgram::run()
             else
                 rowOut.clear();
 
-            rowOut.setValue(MDL_IMAGE, fnImgOut);
+            rowOut.setValue(image_label, fnImgOut);
             rowOut.setValue(MDL_ENABLED, 1);
 
         }
         else if (produces_a_metadata)
         {
-            rowOut.setValue(MDL_IMAGE, fnImgOut);
+            rowOut.setValue(image_label, fnImgOut);
             rowOut.setValue(MDL_ENABLED, 1);
         }
 
