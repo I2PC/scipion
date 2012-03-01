@@ -25,7 +25,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 """
-#!/usr/bin/env xmipp_python
 
 import os
 from protlib_xmipp import XmippScript
@@ -89,9 +88,9 @@ class ScriptPlotMetadata(XmippScript):
         if self.checkParam('--colors'):
             colors = self.getParam('--colors').split()
         else:
-            colors = ['g', 'b', 'r', 'y']    
+            colors = ['g', 'b', 'r', 'y']
         if self.checkParam('--nbins'):
-            nBins = int(self.getParam('--nbins'))
+            nBins = self.getIntParam('--nbins')
         else:
             nBins = None
             
@@ -102,7 +101,7 @@ class ScriptPlotMetadata(XmippScript):
         
         for i, l in enumerate(ylabels):
             if nBins:
-                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i], nbins=nBins)#if nbins presnts do an histogram
+                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i], nbins=nBins)#if nbins is present do an histogram
             else:
                 xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i])#if nbins presnts do an histogram
         xplotter.showLegend(ylabels)
