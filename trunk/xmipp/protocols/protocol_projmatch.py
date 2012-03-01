@@ -298,16 +298,31 @@ class ProtProjMatch(XmippProtocol):
                     print 'iterations: ', iterations
                     print 'ref3Ds: ', ref3Ds
                     
+                    max_p = 40
+                    min_p = 5
+                    
                     for ref3d in ref3Ds:
                         file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
                         md = MetaData(file_name)
                         rot = [md.getValue(MDL_ANGLEROT, id) for id in md]
                         tilt = [md.getValue(MDL_ANGLETILT, id) for id in md]
                         weight = [md.getValue(MDL_WEIGHT, id) for id in md]
-                        
+                        max_w = 2
+                        min_w = 1
+                        if (len(weight) > 0):
+                            max_w = max(weight)
+                            min_w = min(weight)
+                            
                         plot_title = 'Ref3D_'+ ref3d
                         a = xplotter.createSubPlot(plot_title, 'XX', 'YY', yformat=False, projection='polar')
-                        a.plot(rot, tilt)
+                        i = 0
+                        
+                        for id in md:
+                            pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
+                            print 'weight[i]: ', weight[i], ' | pointsize: ', pointsize
+                            print 'min_w: ', min_w, ' | max_w: ', max_w, ' | min_p: ', min_p, ' | max_p: ', max_p
+                            a.plot(rot[i], tilt[i], markerfacecolor='blue', marker='.', markersize=pointsize)
+                            i = i + 1
                         
                     xplotter.draw()
                     
