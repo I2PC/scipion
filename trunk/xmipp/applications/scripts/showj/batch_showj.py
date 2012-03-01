@@ -1,5 +1,6 @@
 #!/usr/bin/env xmipp_python
 
+import os
 from protlib_xmipp import ScriptAppIJ
 from xmipp import Program, FileName
 import xmipp
@@ -26,24 +27,7 @@ class ScriptShowJ(ScriptAppIJ):
 		
 	def readOtherParams(self):
 		if self.checkParam('--mode'):
-			''' When opening a gallery, checks if ALL files contain MDL_IMAGE, otherwise opens it as metadata'''
-			mode = self.getParam("--mode")
-			if mode == "gallery":
-				inputFiles = self.getListParam('-i')
-				for filename in inputFiles:
-					if '@' in filename:
-						trueFn = filename.split('@')[1]
-					else:
-						trueFn = filename
-
-					fn = FileName(trueFn)
-					if fn.isMetaData():
-						md = xmipp.MetaData(filename)
-						if not md.containsLabel(xmipp.MDL_IMAGE):
-							mode = "metadata"
-							break
-			self.args += " --mode %s" % mode
-		
+			self.args += " --mode %s" % mode		
 		if self.checkParam('--poll'):
 			self.args += " --poll"
 		if self.checkParam('--render'):

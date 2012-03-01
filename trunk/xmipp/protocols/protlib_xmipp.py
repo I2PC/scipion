@@ -104,21 +104,32 @@ class ScriptIJBase(XmippScript):
         pass
     
     def defineParams(self):
-        self.addParamsLine('  --input <...>                         : Input files to show');
+        self.addParamsLine('  --input <...>                 : Input files to show');
         self.addParamsLine('         alias -i;');
-        self.addParamsLine('  [--memory <mem>]              : Memory ammount for JVM');
+        self.addParamsLine('  [--memory <mem="1g">]              : Memory ammount for JVM');
         self.addParamsLine('         alias -m;');
         self.defineOtherParams()
     
     def readParams(self):
         inputFiles = self.getListParam('-i')
-        if self.checkParam('--memory'):
-            self.memory = self.getParam('--memory')
-        else:
-            self.memory = convertBytes(2 * estimateFilenamesListMemory(inputFiles))
-            print "No memory size provided. Estimated: " + self.memory
+        #if self.checkParam('--memory'):
+        self.memory = self.getParam('--memory')
+        #else:
+        #    self.memory = "1gb"
+            #self.memory = convertBytes(2 * estimateFilenamesListMemory(inputFiles))
+            #print "No memory size provided. Estimated: " + self.memory
 
-        self.args = "-i %s" % ' '.join(inputFiles)
+        files = []
+        missingFiles = []
+        for f in inputFiles:
+            if FileName(f).exists():
+                files.append(f)
+            else:
+                missingFiles.append(f)
+        self.inputFiles = files
+        if len(missingFiles):
+            print "Missing files: \n %s" % '  \n'.join(missingFiles) 
+        self.args = "-i %s" % ' '.join(self.inputFiles)
         self.readOtherParams()
  
 class ScriptPluginIJ(ScriptIJBase):
@@ -133,7 +144,10 @@ class ScriptAppIJ(ScriptIJBase):
         ScriptIJBase.__init__(self, name)
                   
     def run(self):
-        runJavaIJapp(self.memory, self.name, self.args, batchMode=False)
+        if len(self.inputFiles) > 0:
+            runJavaIJapp(self.memory, self.name, self.args, batchMode=False)
+        else:
+            print "No input files. Exiting..."
         
 #------------- FUNCTION TO WORK WITH PROGRAMS META-INFORMATION -----------------    
 def getImageData(img):
