@@ -151,6 +151,8 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " MetaData error.";
     case ERR_MD_BADLABEL:
         return " Unexpected label.";
+    case ERR_MD_MISSINGLABEL:
+        return " Missing expected label";
     case ERR_MD_BADTYPE:
         return " Bad label type.";
     case ERR_MD_NOACTIVE:
@@ -163,7 +165,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " Bad number of objects in MetaData";
     case ERR_MD_UNDEFINED:
         return " Undefined label.";
-    case ERR_MD_WRONGDATABLOCK:
+    case ERR_MD_BADBLOCK:
         return " Block not existing.";
 
     case ERR_MEM_BADREQUEST:

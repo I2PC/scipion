@@ -1161,7 +1161,7 @@ void MetaData::_read(const FileName &filename,
         unmapFile(bufferMap.begin, bufferMap.size, fd);
         regfree(&re);
         if (firstBlock)
-            REPORT_ERROR(ERR_MD_WRONGDATABLOCK, formatString("Block: '%s': %s",
+            REPORT_ERROR(ERR_MD_BADBLOCK, formatString("Block: '%s': %s",
                          blockRegExp.c_str(), filename.c_str()));
     }
     else if (line.find("Headerinfo columns:") != String::npos)

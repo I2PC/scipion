@@ -499,6 +499,9 @@ void XmippMetadataProgram::readParams()
 
     mdIn.read(fn_in, NULL, decompose_stacks);
 
+    if (remove_disabled)
+        mdIn.removeDisabled();
+
     if (mdIn.isEmpty())
         REPORT_ERROR(ERR_MD_NOOBJ, "Empty input Metadata.");
 
@@ -514,7 +517,15 @@ void XmippMetadataProgram::readParams()
             input_is_stack = true;
     }
 
-    image_label = MDL::str2Label(getParam("--label"));
+    String labelStr = getParam("--label");
+    image_label = MDL::str2Label(labelStr);
+
+    if (image_label == MDL_UNDEFINED)
+      REPORT_ERROR(ERR_MD_BADLABEL, formatString("Unknown image label '%s'.", labelStr.c_str()));
+
+    if (!mdIn.containsLabel(image_label))
+      REPORT_ERROR(ERR_MD_MISSINGLABEL,
+          formatString("Image label '%s' is missing. See option --label.", labelStr.c_str()));
 
     /* Output is stack if, given a filename in fn_out, mdIn has multiple images.
      * In case no output name is given, then input is overwritten and we have to
@@ -522,9 +533,6 @@ void XmippMetadataProgram::readParams()
     output_is_stack = mdInSize > 1 && oroot.empty() && (!fn_out.empty() || input_is_stack);
 
     save_metadata_stack = save_metadata_stack && inputIsMetaData && output_is_stack;
-
-    if (remove_disabled)
-        mdIn.removeDisabled();
 
     // if input is volume do not apply geo
     if (allow_apply_geo && zdimOut == 1)
@@ -538,7 +546,7 @@ void XmippMetadataProgram::readParams()
     create_empty_stackfile = (each_image_produces_an_output && output_is_stack && !fn_out.empty());
 
     // if create, then we need to read the dimensions of the input stack
-    getImageSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut);
+    getImageSize(mdIn, xdimOut, ydimOut, zdimOut, ndimOut, image_label);
 
 }
 
