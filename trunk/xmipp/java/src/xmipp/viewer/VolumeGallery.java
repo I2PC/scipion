@@ -26,6 +26,16 @@ public class VolumeGallery extends ImageGallery {
 		ImageDimension dim = new ImageDimension(volHeader);
 		return dim;
 	}
+	
+	@Override
+	protected void setZoomValue(int z) {
+		super.setZoomValue(z);
+		try {
+			volHeader.read(thumb_width, thumb_height, volNumber);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	protected double[] getMinAndMax() {
@@ -53,8 +63,7 @@ public class VolumeGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImagePlus imp = XmippImageConverter.readToImagePlus(volHeader, thumb_width,
-				thumb_height, index + 1, volNumber);
+		ImagePlus imp = XmippImageConverter.convertToImagePlus(volHeader, ImageGeneric.FIRST_IMAGE, index + 1);
 		String label = String.format("%d", index + 1);
 		return new ImageItem(key, label, imp);
 	}

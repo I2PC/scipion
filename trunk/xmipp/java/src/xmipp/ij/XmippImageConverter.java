@@ -134,11 +134,11 @@ public class XmippImageConverter {
 	 * Converts an ImageGeneric to ImageJ WARNING!: Use this when converting
 	 * images from memory.
 	 */
-	static ImagePlus convertToImagePlus(ImageGeneric image, long select_image) throws Exception {
+	public static ImagePlus convertToImagePlus(ImageGeneric image, long select_image) throws Exception {
 		return convertToImagePlus(image, select_image, ImageGeneric.ALL_SLICES);
 	}
 	
-	static ImagePlus convertToImagePlus(ImageGeneric image, long select_image, int slice)
+	public static ImagePlus convertToImagePlus(ImageGeneric image, long select_image, int slice)
 			throws Exception {
 		int width = image.getXDim();
 		int height = image.getYDim();
