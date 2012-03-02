@@ -23,7 +23,40 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+#ifndef IMAGE_CONVERT_H_
+#define IMAGE_CONVERT_H_
 
-#include <data/xmipp_image_convert.h>
+#include "xmipp_program.h"
 
-RUN_XMIPP_PROGRAM(ProgConvImg);
+typedef enum
+{
+    MD2MD,
+    MD2VOL,
+    VOL2MD
+} ImageConv;
+
+class ProgConvImg: public XmippMetadataProgram
+{
+private:
+    std::string  type;       // Type of output conversion
+    std::string  depth;
+    ImageGeneric imIn, *imOut;
+    DataType     outDataT;
+    MDRow        row;
+    ImageConv    convMode;
+    CastWriteMode  castMode;
+    size_t        k;
+    int         writeMode;
+    bool        appendToStack;
+    bool        swap;
+
+protected:
+    void defineParams();
+    void readParams();
+    void preProcess();
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
+    void finishProcessing();
+    void show();
+};//class ProgConvImg
+
+#endif /* IMAGE_CONVERT_H_ */
