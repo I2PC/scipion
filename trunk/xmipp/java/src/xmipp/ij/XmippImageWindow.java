@@ -49,6 +49,7 @@ public class XmippImageWindow extends ImageWindow
 		super(imp, new XmippImageCanvas(imp));
 		setTitle(title);
 		initComponents();
+		this.setVisible(false); //doesn't show by default
 	}
 	
 	private void initComponents()

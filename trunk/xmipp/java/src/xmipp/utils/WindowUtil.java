@@ -53,6 +53,10 @@ public class WindowUtil {
 		setLocation(positionx, positiony, w, w.getToolkit().getScreenSize(), new Point(0, 0));
 	}
 	
+	public static void setLocation(float positionx, float positiony, Container w, Container parent){
+		setLocation(positionx, positiony, w, parent.getSize(), parent.getLocation());
+	}
+	
 	/** Center the component in the screen */
 	public static void centerWindows(Container w){
 		setLocation(0.5f, 0.5f, w);		

@@ -254,6 +254,11 @@ public class GalleryData {
 	public boolean hasRenderLabel() {
 		return ciFirstRender != null;
 	}
+	
+	/** Return the label that is used for rendering */
+	public int getRenderLabel(){
+		return ciFirstRender.getLabel();
+	}
 
 	// some mode shortcuts
 	public boolean isGalleryMode() {

@@ -136,20 +136,21 @@ public class ImagesWindowFactory {
     }
 
     public static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
-        ImageWindow iw = null;
-        //ImageJ ij = new ImageJ(); //IJ.getInstance();
-        //ij.run();
-        if (imp != null) {
-        	if (IJ.getInstance() == null)
-        		new ImageJ();
-            if (imp.getStackSize() > 1) {
-                iw = new StackWindowOperations(imp, poll);
-            } else {
-                iw = new ImageWindowOperations(imp, poll);
-            	//new XmippImageWindow(imp);
-            }
-        }
-
+//        ImageWindow iw = null;
+//        //ImageJ ij = new ImageJ(); //IJ.getInstance();
+//        //ij.run();
+//        if (imp != null) {
+//        	if (IJ.getInstance() == null)
+//        		new ImageJ();
+//            if (imp.getStackSize() > 1) {
+//                iw = new StackWindowOperations(imp, poll);
+//            } else {
+//                iw = new ImageWindowOperations(imp, poll);
+//            	//new XmippImageWindow(imp);
+//            }
+//        }
+    	ImageWindow iw = new XmippImageWindow(imp);
+    	iw.setVisible(true);
         return iw;
     }
 
@@ -354,10 +355,10 @@ public class ImagesWindowFactory {
         ctfView.setVisible(true);
     }
 
-    public static void openFSCWindow(MetaData md) {
-        JFrameFSC frame = new JFrameFSC(md);
-        frame.setVisible(true);
-    }
+//    public static void openFSCWindow(MetaData md) {
+//        JFrameFSC frame = new JFrameFSC(md);
+//        frame.setVisible(true);
+//    }
 
     public static String getSortTitle(String title, int width, FontMetrics fontMetrics) {
         String sort = title;

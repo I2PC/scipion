@@ -36,15 +36,15 @@ import xmipp.jni.MetaData;
  */
 public class JFrameFSC extends JFrame {
 
-    public JFrameFSC(MetaData md) {
-        super(XmippLabel.TITLE_FSC + md.getFilename());
+    public JFrameFSC(GalleryData data) {
+        super(XmippLabel.TITLE_FSC + data.md.getFilename());
 
         try {
         	setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             setLayout(new BorderLayout());
 
             MetaData mdout = new MetaData();
-            mdout.computeFourierStatistics(md);
+            mdout.computeFourierStatistics(data.md, data.getRenderLabel());
 
             double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);
             double y1s[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FRC);

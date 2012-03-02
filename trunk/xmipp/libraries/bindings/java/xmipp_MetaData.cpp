@@ -632,7 +632,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_addLabel(JNIEnv *env, jobject job
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
 (JNIEnv *env, jobject jmetadata,
-		jobject jimageAvg, jobject jimageStd, jboolean)
+		jobject jimageAvg, jobject jimageStd, jboolean applyGeo, jint label)
 {
     XMIPP_TRY
     {
@@ -644,8 +644,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
         Image<double> * imgAvg = (Image<double>*)avg->image;
         Image<double> * imgStd = (Image<double>*)std->image;
         double dum;
-        getStatistics(*md, *imgAvg, *imgStd, dum, dum, true);
-        //FIXME: call getStatistics on md
+        getStatistics(*md, *imgAvg, *imgStd, dum, dum, applyGeo, (MDLabel)label);
     }
     XMIPP_CATCH;
 }
@@ -680,14 +679,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
-(JNIEnv *env, jobject jobj, jobject jmetadata)
+(JNIEnv *env, jobject jobj, jobject jmetadata, jint label)
 {
     MetaData * mdOut = GET_INTERNAL_METADATA(jobj);
 
     XMIPP_TRY
     {
         MetaData * mdIn = GET_INTERNAL_METADATA(jmetadata);
-        getFourierStatistics(*mdIn, 1, *mdOut, true, 2);
+        getFourierStatistics(*mdIn, 1, *mdOut, true, 2, (MDLabel)label);
     }
     XMIPP_CATCH;
 }

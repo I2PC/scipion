@@ -33,6 +33,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.Param;
@@ -274,7 +275,7 @@ public class JFrameGallery extends JFrame {
 		table = new JTable();
 		// Create column model
 		table.setColumnModel(gallery.getColumnModel());
-		table.setModel(gallery);		
+		table.setModel(gallery);
 		// int h = 25;
 		// table.setRowHeight(h);
 		// rowHeader.setFixedCellHeight(h);
@@ -407,23 +408,24 @@ public class JFrameGallery extends JFrame {
 		try {
 			ImageGeneric imgAvg = new ImageGeneric();
 			ImageGeneric imgStd = new ImageGeneric();
-			data.md.getStatsImages(imgAvg, imgStd, true);
+			data.md.getStatsImages(imgAvg, imgStd, data.useGeo,
+					data.getRenderLabel());
 			ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
-			ImagePlus impStd =  XmippImageConverter.convertToImagePlus(imgStd);
+			ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
 			imgAvg.destroy();
 			imgStd.destroy();
-			new XmippImageWindow(impAvg, "AVG: " + data.filename);
-			new XmippImageWindow(impStd, "STD: " + data.filename);
+			XmippImageWindow winAvg = new XmippImageWindow(impAvg, "AVG: " + data.filename);
+			WindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
+			winAvg.setVisible(true);
+			XmippImageWindow winStd = new XmippImageWindow(impStd, "STD: " + data.filename);
+			WindowUtil.setLocation(0.8f, 0.5f, winStd, this);
+			winStd.setVisible(true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		// ImagesWindowFactory.captureFrame(ImageOperations.mean(tableModel.getAllItems()));
-	}
 
-	private void stdDevImage() {
-		// ImagesWindowFactory.captureFrame(ImageOperations.std_deviation(tableModel.getAllItems()));
+		// ImagesWindowFactory.captureFrame(ImageOperations.mean(tableModel.getAllItems()));
 	}
 
 	private void openAsStack() {
@@ -436,8 +438,7 @@ public class JFrameGallery extends JFrame {
 
 	private void save() {
 		SaveJDialog dlg = new SaveJDialog(this);
-		if (dlg.showDialog())
-		{
+		if (dlg.showDialog()) {
 			try {
 				String path = dlg.getData();
 				DEBUG.printMessage(path);
@@ -508,26 +509,28 @@ public class JFrameGallery extends JFrame {
 	}
 
 	public void pca() {
-		 try {
-		 ImageGeneric image = new ImageGeneric();		
-		 data.md.getPCAbasis(image);		
-		 ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-		 //new XmippImageWindow(imp, "PCA: " + data.filename);
-		 imp.setTitle("PCA: " + data.filename);
-		 ImagesWindowFactory.captureFrame(imp);
-		 } catch (Exception ex) {
-		 DEBUG.printException(ex);
-		 }
+		try {
+			ImageGeneric image = new ImageGeneric();
+			data.md.getPCAbasis(image);
+			ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
+			// new XmippImageWindow(imp, "PCA: " + data.filename);
+			imp.setTitle("PCA: " + data.filename);
+			ImagesWindowFactory.captureFrame(imp);
+		} catch (Exception ex) {
+			DEBUG.printException(ex);
+		}
 	}
 
 	public void fsc() {
 		// String filename = gallery.getFilename();
 		//
-		 try {
-		 ImagesWindowFactory.openFSCWindow(data.md);
-		 } catch (Exception ex) {
-		 DEBUG.printException(ex);
-		 }
+		try {
+			JFrameFSC frame = new JFrameFSC(data);
+			frame.setVisible(true);
+			//ImagesWindowFactory.openFSCWindow(data.md);
+		} catch (Exception ex) {
+			DEBUG.printException(ex);
+		}
 	}
 
 	private void reslice(RESLICE_MODE mode) throws Exception {
@@ -1002,17 +1005,20 @@ public class JFrameGallery extends JFrame {
 		protected JMenu jmDisplay = new JMenu("Display");
 
 		protected JMenuItem jmiSave = new JMenuItem(
-				XmippLabel.LABEL_GALLERY_SAVE, XmippResource.getIcon("save.gif"));
+				XmippLabel.LABEL_GALLERY_SAVE,
+				XmippResource.getIcon("save.gif"));
 		protected JMenuItem jmiSaveAs = new JMenuItem(
-				XmippLabel.LABEL_GALLERY_SAVEAS, XmippResource.getIcon("save_as.gif"));
-//		protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(
-//				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_METADATA);
-//		protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(
-//				XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
+				XmippLabel.LABEL_GALLERY_SAVEAS,
+				XmippResource.getIcon("save_as.gif"));
+		// protected JMenuItem jmiSaveSelectionAsMetadata = new JMenuItem(
+		// XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_METADATA);
+		// protected JMenuItem jmiSaveSelectionAsStack = new JMenuItem(
+		// XmippLabel.LABEL_GALLERY_SAVE_SELECTION_AS_IMAGE);
 		protected JMenuItem jmiExit = new JMenuItem(
 				XmippLabel.LABEL_GALLERY_EXIT);
 		protected JMenu jmStatistics = new JMenu(XmippLabel.MENU_STATS);
-		protected JMenuItem jmiAvgStd = new JMenuItem(XmippLabel.BUTTON_IMAGE_STATS);
+		protected JMenuItem jmiAvgStd = new JMenuItem(
+				XmippLabel.BUTTON_IMAGE_STATS);
 		protected JMenuItem jmiPCA = new JMenuItem(XmippLabel.BUTTON_PCA);
 		protected JMenuItem jmiFSC = new JMenuItem(XmippLabel.BUTTON_FSC);
 		protected JMenu jmOpenWith = new JMenu(XmippLabel.MENU_OPEN_WITH);
@@ -1074,9 +1080,9 @@ public class JFrameGallery extends JFrame {
 			return jmiShowLabel.isSelected();
 		}
 
-		 public void enableRenderImages(boolean value) {
-		 jmiRenderImage.setEnabled(value);
-		 }
+		public void enableRenderImages(boolean value) {
+			jmiRenderImage.setEnabled(value);
+		}
 
 		public boolean getRenderImages() {
 			return jmiRenderImage.isSelected();
@@ -1103,7 +1109,7 @@ public class JFrameGallery extends JFrame {
 				ColumnsJDialog dialog = new ColumnsJDialog(JFrameGallery.this);
 				DEBUG.printMessage("Before showing dialog");
 				boolean result = dialog.showDialog();
-				DEBUG.printMessage("result:" + (result ? "True": "False"));
+				DEBUG.printMessage("result:" + (result ? "True" : "False"));
 				if (result) {
 					DEBUG.printMessage("AFter showing dialog");
 					ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
@@ -1121,12 +1127,12 @@ public class JFrameGallery extends JFrame {
 				fsc();
 			else if (jmi == jmiSave) {
 				save();
-//			} else if (jmi == jmiSaveSelectionAsMetadata) {
-//				saveAsMetadata(false);
+				// } else if (jmi == jmiSaveSelectionAsMetadata) {
+				// saveAsMetadata(false);
 			} else if (jmi == jmiSaveAs) {
 				saveAsStack(true);
-//			} else if (jmi == jmiSaveSelectionAsStack) {
-//				saveAsStack(false);
+				// } else if (jmi == jmiSaveSelectionAsStack) {
+				// saveAsStack(false);
 			} else if (jmi == jmiExit) {
 				System.exit(0);
 			} else if (jmi == jmiOpenWithChimera) {
@@ -1151,23 +1157,23 @@ public class JFrameGallery extends JFrame {
 			}
 		}
 
-		private void addMenuItem(JMenu parent, JMenuItem item){
+		private void addMenuItem(JMenu parent, JMenuItem item) {
 			parent.add(item);
 			item.addActionListener(this);
 		}
-		
+
 		public GalleryMenu() {
 			super();
 
 			// File menu
-//			jmSave222.addSeparator();
-//			jmSave222.add(jmiSaveSelectionAsMetadata);
-//			jmSave222.add(jmiSaveSelectionAsStack);
+			// jmSave222.addSeparator();
+			// jmSave222.add(jmiSaveSelectionAsMetadata);
+			// jmSave222.add(jmiSaveSelectionAsStack);
 
 			add(jmFile);
 			addMenuItem(jmFile, jmiSave);
 			addMenuItem(jmFile, jmiSaveAs);
-			//addMenuItem(jmFile, jmSave222);
+			// addMenuItem(jmFile, jmSave222);
 			jmFile.addSeparator();
 			addMenuItem(jmFile, jmiExit);
 
@@ -1189,11 +1195,11 @@ public class JFrameGallery extends JFrame {
 			group.add(jmiAxisY);
 			group.add(jmiAxisZ);
 
-//			jmiNormalize.addActionListener(this);
-//			jmiApplyGeo.addActionListener(this);
-//			jmiShowLabel.addActionListener(this);
-//			jmiRenderImage.addActionListener(this);
-//			jmiColumns.addActionListener(this);
+			// jmiNormalize.addActionListener(this);
+			// jmiApplyGeo.addActionListener(this);
+			// jmiShowLabel.addActionListener(this);
+			// jmiRenderImage.addActionListener(this);
+			// jmiColumns.addActionListener(this);
 
 			// Statistics menu
 			add(jmStatistics);
@@ -1207,8 +1213,8 @@ public class JFrameGallery extends JFrame {
 			addMenuItem(jmOpenWith, jmiOpenWithImageJ);
 			// addMenuItem(jmOpenWith, jmiOpenAsStack);
 
-//			jmiOpenWithChimera.addActionListener(this);
-//			jmiOpenWithImageJ.addActionListener(this);
+			// jmiOpenWithChimera.addActionListener(this);
+			// jmiOpenWithImageJ.addActionListener(this);
 
 			update();
 		}
@@ -1226,7 +1232,7 @@ public class JFrameGallery extends JFrame {
 			// Volumes can't be saved as metadata.
 			jmiSave.setEnabled(!volMode);
 			jmiSaveAs.setEnabled(!volMode);
-			//jmiSaveSelectionAsMetadata.setEnabled(!volMode);
+			// jmiSaveSelectionAsMetadata.setEnabled(!volMode);
 			jmiApplyGeo.setEnabled(data.containsGeometryInfo());
 			jmiApplyGeo.setSelected(data.useGeo);
 			jmiNormalize.setEnabled(gallery.getNormalized());

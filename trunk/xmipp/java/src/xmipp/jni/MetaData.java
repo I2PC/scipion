@@ -255,11 +255,11 @@ public class MetaData {
 
     /** Get the average and std images, result is left on input image */
     public native void getStatsImages(ImageGeneric imageAvg, ImageGeneric imageStd
-    		, boolean applyGeo) throws Exception;
+    		, boolean applyGeo, int label) throws Exception;
     
     public native void getPCAbasis(ImageGeneric basis) throws Exception;
 
-    public native void computeFourierStatistics(MetaData mdIn) throws Exception;
+    public native void computeFourierStatistics(MetaData mdIn, int label) throws Exception;
 
     public native void enableDebug() throws Exception;
 
