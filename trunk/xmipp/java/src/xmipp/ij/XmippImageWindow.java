@@ -25,8 +25,7 @@ public class XmippImageWindow extends ImageWindow
 				try
 				{
 					ImagePlus imp = XmippImageConverter.loadImage("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1387.mrc");
-					XmippImageWindow frame = new XmippImageWindow(imp);
-					
+					XmippImageWindow frame = new XmippImageWindow(imp);					
 				}
 				catch (Exception e)
 				{
@@ -48,8 +47,9 @@ public class XmippImageWindow extends ImageWindow
 	{
 		super(imp, new XmippImageCanvas(imp));
 		setTitle(title);
+		//this.setVisible(false); //doesn't show by default
+		//setImage(imp);
 		initComponents();
-		this.setVisible(false); //doesn't show by default
 	}
 	
 	private void initComponents()
