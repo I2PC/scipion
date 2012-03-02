@@ -107,7 +107,7 @@ protected:
     {
         DF_stats.setComment((std::string)"Statistics of " + fn_in);
         // Get maximum filename size ---------------------------------------------
-        max_length = mdIn.getMaxStringLength(MDL_IMAGE);
+        max_length = mdIn.getMaxStringLength(image_label);
 
         // Process each file -----------------------------------------------------
         mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
@@ -122,7 +122,7 @@ protected:
         }
 
         // get xdim, ydim,zdim
-        getImageSize(mdIn, xDim, yDim, zDim, nDim);
+        getImageSize(mdIn, xDim, yDim, zDim, nDim, image_label);
         averageArray.resize(nDim,zDim,yDim,xDim);
         stdArray.resize(nDim,zDim,yDim,xDim);
         averageArray.setXmippOrigin();
@@ -183,7 +183,7 @@ protected:
 
         size_t id;
         id = DF_stats.addObject();
-        DF_stats.setValue(MDL_IMAGE,fnImg,id);
+        DF_stats.setValue(image_label,fnImg,id);
         DF_stats.setValue(MDL_MIN,min_val,id);
         DF_stats.setValue(MDL_MAX,max_val,id);
         DF_stats.setValue(MDL_AVG,avg,id);
