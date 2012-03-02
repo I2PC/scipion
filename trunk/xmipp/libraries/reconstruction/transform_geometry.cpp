@@ -117,7 +117,7 @@ void ProgTransformGeometry::preProcess()
         (checkParam("--shift") || checkParam("--rotate") || isVol))
         REPORT_ERROR(ERR_ARG_INCORRECT, "Fourier interpolation is only allowed for scale in 2D");
 
-    applyTransform = applyTransform || isVol || mdIn.size() == 1;
+    applyTransform = applyTransform || isVol || mdInSize == 1;
     S.initIdentity(dim + 1);
     R.initIdentity(dim + 1);
     T.initIdentity(dim + 1);

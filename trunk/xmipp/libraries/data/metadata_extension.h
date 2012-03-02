@@ -52,7 +52,7 @@ bool compareImage(const FileName &filename1, const FileName &filename2);
 bool compareImageSize(const FileName &filename1, const FileName &filename2);
 
 /** Maximum length of the filenames inside */
-int maxFileNameLength(MetaData &MD);
+int maxFileNameLength(const MetaData &MD, MDLabel image_label=MDL_IMAGE);
 
 /** Choose a part of the metadata for MPI */
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);

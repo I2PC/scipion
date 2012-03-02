@@ -33,21 +33,22 @@ void ProgSimulateMicroscope::readParams()
     XmippMetadataProgram::readParams();
 
     fn_ctf = "";//initialize empty, force recalculation of first time
+    pmdIn = getInputMd();
     if (checkParam("--ctf"))
     {
         //Fill the input metadata with the value of 'fn_ctf'
         MDConstGenerator generator(getParam("--ctf"));
         generator.label = MDL_CTFMODEL;
-        generator.fill(mdIn);
+        generator.fill(*pmdIn);
     }
     else
     {
-        if (mdIn.containsLabel(MDL_CTFMODEL))
+        if (pmdIn->containsLabel(MDL_CTFMODEL))
         {
             //sort the images according to the ctf to avoid the recaculation of it
             //beeten images of the same ctf group
-            MetaData md(mdIn);
-            mdIn.sort(md, MDL_CTFMODEL);
+            MetaData md(*pmdIn);
+            pmdIn->sort(md, MDL_CTFMODEL);
         }
         else
             REPORT_ERROR(ERR_ARG_MISSING, "You should provide param --ctf or it should be present on input metadata");
@@ -122,7 +123,7 @@ void ProgSimulateMicroscope::estimateSigma()
     ctf.ctf.read(getParam("--ctf"));
     ctf.ctf.Produce_Side_Info();
 
-    size_t N_stats=mdIn.size();
+    size_t N_stats = pmdIn->size();
 
     MultidimArray<double> proj_power(N_stats);
     MultidimArray<double> proj_area(N_stats);
@@ -135,9 +136,9 @@ void ProgSimulateMicroscope::estimateSigma()
     FileName fnImg;
     Image<double> proj;
     size_t nImg=0;
-    FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+    FOR_ALL_OBJECTS_IN_METADATA(*pmdIn)
     {
-        mdIn.getValue(MDL_IMAGE,fnImg,__iter.objId);
+        pmdIn->getValue(image_label, fnImg,__iter.objId);
         proj.read(fnImg);
         MultidimArray<double> mProj=proj();
 
@@ -228,7 +229,7 @@ void ProgSimulateMicroscope::preProcess()
 {
     int dum;
     size_t dum2;
-    getImageSize(mdIn, Xdim, Ydim, dum, dum2);
+    getImageSize(*pmdIn, Xdim, Ydim, dum, dum2);
 
     if (low_pass_before_CTF < 0.5)
     {

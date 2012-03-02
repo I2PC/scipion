@@ -51,11 +51,8 @@ protected:
 
     double min_val, max_val, avg, stddev;
     double mean_min_val, mean_max_val, mean_avg, mean_stddev;
-    size_t N;
     int max_length;
 
-    int xDim, yDim, zDim;
-    size_t nDim;
 
     FileName maskFileName, statFileNameRoot;
 
@@ -107,11 +104,10 @@ protected:
     {
         DF_stats.setComment((std::string)"Statistics of " + fn_in);
         // Get maximum filename size ---------------------------------------------
-        max_length = mdIn.getMaxStringLength(image_label);
+        max_length = getInputMd()->getMaxStringLength(image_label);
 
         // Process each file -----------------------------------------------------
         mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
-        N = 0;
 
         if (short_format)
         {
@@ -122,15 +118,15 @@ protected:
         }
 
         // get xdim, ydim,zdim
-        getImageSize(mdIn, xDim, yDim, zDim, nDim, image_label);
-        averageArray.resize(nDim,zDim,yDim,xDim);
-        stdArray.resize(nDim,zDim,yDim,xDim);
+        //getImageSize(mdIn, xDim, yDim, zDim, nDim, image_label);
+        averageArray.resize(ndimOut, zdimOut, ydimOut, xdimOut);
+        stdArray.resize(ndimOut,zdimOut,ydimOut,xdimOut);
         averageArray.setXmippOrigin();
         stdArray.setXmippOrigin();
 
         // Generate mask if necessary
         if (apply_mask)
-            mask.generate_mask(zDim, yDim, xDim);
+            mask.generate_mask(zdimOut, ydimOut, xdimOut);
 
     }
 
@@ -165,10 +161,10 @@ protected:
 
         // Show information
         std::cout << stringToString(fnImg, max_length + 1);
-        if (zDim > 1)
-            formatString("%4dx%4dx%4d ", zDim, yDim, xDim);
+        if (zdimOut > 1)
+            formatString("%4dx%4dx%4d ", zdimOut, ydimOut, xdimOut);
         else
-            formatString("%4dx%4d", yDim, xDim);
+            formatString("%4dx%4d", ydimOut, xdimOut);
 
         if (!short_format)
         {
@@ -190,7 +186,6 @@ protected:
         DF_stats.setValue(MDL_STDDEV,stddev,id);
 
         // Total statistics
-        N++;
         mean_min_val += min_val;
         mean_max_val += max_val;
         mean_avg     += avg;
@@ -203,15 +198,15 @@ protected:
     void postProcess()
     {
 
-        if (N > 1)
+        if (mdInSize > 1)
         {
             // Show total statistics ------------------------------------------------
             std::cout << "==================================================\n";
-            std::cout << "Total number of images/volumes: " << N << std::endl;
-            mean_min_val /= N;
-            mean_max_val /= N;
-            mean_avg     /= N;
-            mean_stddev  /= N;
+            std::cout << "Total number of images/volumes: " << mdInSize << std::endl;
+            mean_min_val /= mdInSize;
+            mean_max_val /= mdInSize;
+            mean_avg     /= mdInSize;
+            mean_stddev  /= mdInSize;
 
             std::cout << stringToString(" ", max_length + 13);
             if (!short_format)
@@ -222,11 +217,11 @@ protected:
             std::cout << std::endl;
             if(save_image_stats)
             {
-                averageArray /= N;
-                if (N > 1)
+                averageArray /= mdInSize;
+                if (mdInSize > 1)
                 {
-                    stdArray= stdArray / N - averageArray * averageArray;
-                    stdArray *= N / (N - 1);
+                    stdArray= stdArray / mdInSize - averageArray * averageArray;
+                    stdArray *= mdInSize / (mdInSize - 1);
                     //Do this as an image since it is not define for arrays
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(stdArray)
                     DIRECT_MULTIDIM_ELEM(stdArray,n) = sqrt(fabs(DIRECT_MULTIDIM_ELEM(stdArray,n)));

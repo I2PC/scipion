@@ -124,8 +124,9 @@ ProgNmaAlignment *global_NMA_prog;
 
 void ProgNmaAlignment::createWorkFiles()
 {
+    MetaData *pmdIn = getInputMd();
     MetaData mdTodo, mdDone;
-    mdTodo = mdIn;
+    mdTodo = *pmdIn;
     FileName fn("nmaDone.xmd");
     if (fn.exists() && resume)
     {
@@ -145,7 +146,7 @@ void ProgNmaAlignment::createWorkFiles()
         mdDone.addLabel(MDL_COST);
         mdDone.write(fn);
     }
-    mdIn = mdTodo;
+    *pmdIn = mdTodo;
 }
 
 void ProgNmaAlignment::preProcess()
@@ -155,7 +156,8 @@ void ProgNmaAlignment::preProcess()
     // Get the size of the images in the selfile
     int ydim, zdim;
     size_t ndim;
-    getImageSize(mdIn, imgSize, ydim, zdim, ndim);
+    imgSize = xdimOut;
+    //getImageSize(mdIn, imgSize, ydim, zdim, ndim);
     // Set the pointer of the program to this object
     global_NMA_prog = this;
     //create some neededs files

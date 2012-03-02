@@ -58,6 +58,8 @@ public:
     void createWorkFiles()
     {
         //Master node should prepare some stuff before start working
+        MetaData &mdIn = *getInputMd(); //get a reference to input metadata
+
         if (node->isMaster())
         {
             ProgNmaAlignment::createWorkFiles();
@@ -94,7 +96,7 @@ public:
             objId = imgsId[first];
             return true;
         }
-        time_bar_done = mdIn.size();
+        time_bar_done = getInputMd()->size();
         objId = BAD_OBJID;
         objIndex = BAD_INDEX;
         return false;

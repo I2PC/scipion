@@ -191,7 +191,7 @@ public:
 
     /** Finish processing.
         Close all output files. */
-    void postProcess();
+//    void postProcess();
 };
 //@}
 #endif

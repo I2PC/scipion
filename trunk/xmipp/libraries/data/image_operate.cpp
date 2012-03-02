@@ -355,13 +355,7 @@ void ProgOperate::readParams()
         {
             isValue = true;
             value = textToFloat(file_or_value);
-            int xdim, ydim, zdim;
-            size_t ndim;
-            if (fn_in.isMetaData())
-                getImageSize(mdIn, xdim, ydim, zdim, ndim);
-            else
-                getImageSize(fn_in, xdim, ydim, zdim, ndim);
-            img2().resizeNoCopy(zdim, ydim, xdim);
+            img2().resizeNoCopy(zdimOut, ydimOut, xdimOut);
             img2().initConstant(value);
         }
         else
@@ -371,7 +365,7 @@ void ProgOperate::readParams()
             if (fn2.isMetaData())
             {
                 md2.read(fn2);
-                if (mdIn.size() != md2.size())
+                if (mdInSize != md2.size())
                     REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
                 md2Iterator = MDIterator(md2);
             }

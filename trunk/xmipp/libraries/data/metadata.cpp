@@ -89,7 +89,8 @@ void MetaData::init(const std::vector<MDLabel> *labelsVector)
         this->activeLabels = *labelsVector;
     //Create table in database
     myMDSql->createMd();
-    precision=100;
+    precision = 100;
+    isMetadataFile = false;
 }//close init
 
 void MetaData::copyInfo(const MetaData &md)
@@ -103,6 +104,7 @@ void MetaData::copyInfo(const MetaData &md)
     this->fastStringSearchLabel = md.fastStringSearchLabel;
     this->activeLabels = md.activeLabels;
     this->ignoreLabels = md.ignoreLabels;
+    this->isMetadataFile = md.isMetadataFile;
 
 }//close copyInfo
 
@@ -1061,7 +1063,7 @@ void MetaData::_read(const FileName &filename,
 
     size_t id;
 
-    if (!filename.isMetaData())//if not a metadata, try to read as image or stack
+    if (!(isMetadataFile = filename.isMetaData()))//if not a metadata, try to read as image or stack
     {
         Image<char> image;
         image.read(filename, HEADER);

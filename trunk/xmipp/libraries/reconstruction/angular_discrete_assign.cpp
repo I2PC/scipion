@@ -36,8 +36,7 @@
 // Empty constructor =======================================================
 ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
 {
-    produces_an_output = true;
-    each_image_produces_an_output = false;
+    produces_a_metadata = true;
 }
 
 // Read arguments ==========================================================
@@ -1055,7 +1054,7 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
 #undef DEBUG
 
 // Finish processing ---------------------------------------------------------
-void ProgAngularDiscreteAssign::postProcess()
-{
-    mdOut.write(fn_out);
-}
+//void ProgAngularDiscreteAssign::postProcess()
+//{
+//    mdOut.write(fn_out);
+//}

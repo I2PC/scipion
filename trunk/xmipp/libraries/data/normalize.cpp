@@ -660,12 +660,15 @@ void ProgNormalize::preProcess()
         FileName bestImage;
         FileName fn_img;
         ImageGeneric Ig;
-        FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+        MetaData * md = getInputMd();
+        FOR_ALL_OBJECTS_IN_METADATA(*md)
         {
-            mdIn.getValue(MDL_IMAGE,fn_img,__iter.objId);
-            if (fn_img=="")
+            md->getValue(image_label, fn_img, __iter.objId);
+
+            if (fn_img.empty())
                 break;
-            if (!mdIn.getValue(MDL_ANGLETILT,tiltTemp,__iter.objId))
+
+            if (!md->getValue(MDL_ANGLETILT,tiltTemp,__iter.objId))
             {
                 Ig.readMapped(fn_img);
                 tiltTemp = ABS(Ig.tilt());

@@ -204,14 +204,11 @@ void ProgConvImg::preProcess()
     {
         convMode = MD2VOL;
 
-        int Xdim, Ydim, Zdim;
-        size_t Ndim;
-        getImageInfo(mdIn, Xdim, Ydim, Zdim, Ndim, outDataT);
-        if (Zdim!=1)
+        if (zdimOut != 1)
             REPORT_ERROR(ERR_MULTIDIM_DIM,
                          "Only 2D images can be converted into volumes");
-        imOut = new ImageGeneric(outDataT);
-        imOut->mapFile2Write(Xdim, Ydim, mdIn.size(), fn_out);
+        imOut = new ImageGeneric(datatypeOut);
+        imOut->mapFile2Write(xdimOut, ydimOut, mdInSize, fn_out);
         k = 0;
     }
     else if (single_image)
@@ -222,19 +219,19 @@ void ProgConvImg::preProcess()
             convMode = VOL2MD;
             single_image = false;
 
-            mdIn.clear();
+            MetaData * md = getInputMd();
+            md->clear();
 
             FileName fnTemp;
 
             /* Fill mdIn to allow XmippMetaDataProgram create the fnImgOut,
             but not used to read input images. Input volume is read here. */
-            for (k = 1;k <= zdimOut; k++)
+            for (k = 1; k <= zdimOut; k++)
             {
                 fnTemp.compose(k, fn_in);
-
-                size_t id = mdIn.addObject();
-                mdIn.setValue(MDL_IMAGE, fnTemp, id);
-                mdIn.setValue(MDL_ENABLED, 1, id);
+                size_t id = md->addObject();
+                md->setValue(MDL_IMAGE, fnTemp, id);
+                md->setValue(MDL_ENABLED, 1, id);
             }
             imIn.read(fn_in, DATA, ALL_IMAGES, true);
             imOut = new ImageGeneric(imIn.getDatatype());

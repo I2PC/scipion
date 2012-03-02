@@ -463,6 +463,7 @@ public:
      *
      */
     FileName eFilename;
+    bool isMetadataFile;
 
     //public:
 

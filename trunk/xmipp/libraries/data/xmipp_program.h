@@ -233,7 +233,24 @@ public:
  */
 class XmippMetadataProgram: public virtual XmippProgram
 {
+private:
+    /// Input and output metadatas
+    MetaData * mdIn;
+    MetaData mdOut; //TODO: can be treated by reference as mdIn for
+    // uses from another programs...
 protected:
+    /// The input metadata should not be used
+    /// if there is a very very special case
+    /// you can use this function
+    MetaData * getInputMd()
+    {
+        return mdIn;
+    }
+    MetaData * getOutputMd()
+    {
+      return &mdOut;
+    }
+
 public:
     //Image<double>   img;
     /// Filenames of input and output Metadata
@@ -243,14 +260,17 @@ public:
     /// Output dimensions
     int zdimOut, ydimOut, xdimOut;
     size_t ndimOut;
+    DataType datatypeOut;
     /// Number of input elements
     size_t mdInSize;
 
 protected:
+
+
+
     /// Metadata writing mode: OVERWRITE, APPEND
     WriteModeMetaData mode;
-    /// Input and output metadatas
-    MetaData     mdIn, mdOut;
+
     /// Iterator over input metadata
     MDIterator * iter;
     /// Filenames of input and output Images
@@ -294,6 +314,8 @@ protected:
     bool output_is_stack;
     // Create empty output stack file prior to process images
     bool create_empty_stackfile; //
+    //check whether to delete or not the input metadata
+    bool delete_mdIn;
 
     /// Some time bar related counters
     size_t time_bar_step, time_bar_size, time_bar_done;
@@ -321,11 +343,19 @@ protected:
 
 public:
     XmippMetadataProgram();
+    /// Before call this function the mdIn should be set
+    /// the two choices for set it is calling from readParams or calling setMd
+    virtual void setup(MetaData *md, const FileName &o="", const FileName &oroot="",
+                       bool applyGeo=false, MDLabel label=MDL_IMAGE);
+
+
 
     /** Destructor
      */
     virtual ~XmippMetadataProgram()
     {
+        if (delete_mdIn)
+            delete mdIn;
     }
 
     void setMode(WriteModeMetaData _mode)

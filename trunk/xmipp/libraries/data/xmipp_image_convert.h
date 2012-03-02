@@ -41,7 +41,6 @@ private:
     std::string  type;       // Type of output conversion
     std::string  depth;
     ImageGeneric imIn, *imOut;
-    DataType     outDataT;
     MDRow        row;
     ImageConv    convMode;
     CastWriteMode  castMode;

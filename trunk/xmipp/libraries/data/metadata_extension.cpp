@@ -244,13 +244,13 @@ bool compareImageSize(const FileName &filename1, const FileName &filename2)
     return (x==X && y == Y && z == Z && n == N);
 }
 
-int maxFileNameLength(MetaData &MD)
+int maxFileNameLength(const MetaData &MD, MDLabel image_label)
 {
     int maxLength=0;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         FileName fnImg;
-        MD.getValue(MDL_IMAGE, fnImg, __iter.objId);
+        MD.getValue(image_label, fnImg, __iter.objId);
         int length=fnImg.length();
         maxLength=XMIPP_MAX(length,maxLength);
     }

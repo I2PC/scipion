@@ -248,6 +248,7 @@ public:\
     void preProcess()\
     {\
         baseClassName::preProcess();\
+        MetaData &mdIn = *getInputMd();\
         createTaskDistributor(mdIn, blockSize);\
     }\
     void startProcessing()\
@@ -270,7 +271,7 @@ public:\
     }\
     void finishProcessing()\
     {\
-        node->gatherMetadatas(mdOut, fn_out);\
+        node->gatherMetadatas(*getOutputMd(), fn_out);\
         if (node->isMaster())\
             baseClassName::finishProcessing();\
     }\
