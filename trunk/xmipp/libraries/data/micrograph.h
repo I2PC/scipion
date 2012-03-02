@@ -597,7 +597,9 @@ public:
 	/// Compute gamma
 	void computeGamma();
 
-	/// Compute alphas
+	/** Compute alphas.
+	 * Make sure of calling computeGamma before calling this function.
+	 */
 	void computeAngles(double &ualpha, double &talpha, double &ogamma);
 public:
     // For tilted-untilted correspondance
