@@ -56,7 +56,8 @@ void ProgTomoExtractSubvolume::defineParams()
     addParamsLine("[-o <filename=\"\">]         : Name of output metadata (\"oroot\".xmd by default)");
     addParamsLine("--sym  <sym=\"c1\">     : Symmetry group");
     addParamsLine("--size     <dim>        : size output subvolumes");
-    addParamsLine("--mindist  <distance>   : minimum distance between subvolume centers, usefull to avoid repetition of subvolumes place at simmetry axis");
+    addParamsLine("[--mindist  <distance=-1>] : Minimum distance between subvolume centers, usefull to avoid repetition of subvolumes place at simmetry axis");
+    addParamsLine("                           : If set to -1 minsdist will be size/4");
     addParamsLine("--center  <x> <y> <z>   :  position of center of subvolume to be extracted");
     addExampleLine("Extract 12 vertices (subvolumes) in boxes of size 21x21x21 pixels from each subtomogram in the data set: ", false);
     addExampleLine("xmipp_extract_subvolume -i align/mltomo_1deg_it000001.doc -center 0 0 59 -size 21 -sym i3 -o vertices");
@@ -129,6 +130,8 @@ void ProgTomoExtractSubvolume::readParams()
     YY(center_ref) = getIntParam( "--center",1);
     ZZ(center_ref) = getIntParam( "--center",2);
     mindist = getDoubleParam("--mindist");
+    if (mindist == -1)
+      mindist = size/4.;
 }
 
 // Usage ===================================================================
@@ -223,6 +226,7 @@ void ProgTomoExtractSubvolume::produceSideInfo()
 }
 void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+
 #ifdef  DEBUG
     std::cerr<<"Start processImages"<<std::endl;
 #endif
@@ -265,7 +269,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
         //vol().translate(-center, volout(), DONT_WRAP);
         //4. Window operation and write subvolume to disc
         volout().selfWindow(x0,x0,x0,xF,xF,xF);
-        fn_aux=fnImg.removeLastExtension();
+        fn_aux=fnImgOut.removeLastExtension();
         fn_aux+="_sub";
         fn_aux.compose(fn_aux,i+1,"vol");
         volout.write(fn_aux);
