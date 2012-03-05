@@ -3087,7 +3087,8 @@ public:
 
         // Sort indexes
         double* temp_array = MULTIDIM_ARRAY(temp)-1;
-        qcksrt(NZYXSIZE(*this), temp_array);
+        qcksrt(NZYXSIZE(*this), temp_array); //FIXME: Valgrind:: Invalid read of size 8: qcksrt(int, double*) (numerical_recipes.cpp:266)
+
 
         // Get median
         if (NZYXSIZE(*this)%2==0)
