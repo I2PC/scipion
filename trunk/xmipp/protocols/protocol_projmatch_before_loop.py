@@ -82,7 +82,7 @@ def executeCtfGroups (_log,
     MDctfdata.write(tmpCtfdat)
     command = \
               ' --ctfdat ' + tmpCtfdat + \
-              ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
+              ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + ':stk'\
               ' --wiener --wc ' + str(WienerConstant) + \
               ' --pad ' + str(PaddingFactor)
 
