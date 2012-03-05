@@ -77,34 +77,31 @@ public class UntiltedMicrograph extends Micrograph
 		return particles;
 	}
 
-	public void addParticleToAligner(UntiltedParticle up)
+	public void addParticleToAligner(UntiltedParticle up, boolean recalculateAngles)
 	{
 		if (up.getTiltedParticle() == null)
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("TiltedParticle"));
 		tpa.addParticleToAligner(up.getX(), up.getY(), up.getTiltedParticle().getX(), up.getTiltedParticle().getY());
 		up.setAdded(true);
 		added++;
-		if (anglesAvailable())
-		{
+		if (anglesAvailable() && recalculateAngles)
 			angles = tpa.computeAngles();
-			System.out.printf("untilted: %.2f tilted: %.2f deviation: %.2f\n", angles[0], angles[1], angles[2]);
-		}
 	}
 
 	public void initAligner()
 	{
-
 		tpa.clear();
 		added = 0;
 		for (UntiltedParticle p : particles)
 			if (p.getTiltedParticle() != null)
-				addParticleToAligner(p);
-
+				addParticleToAligner(p,false);
+		if (anglesAvailable())
+			angles = tpa.computeAngles();
 	}
 
 	public boolean anglesAvailable()
 	{
-		return !(added < 4);
+		return !(added < 10);
 	}
 
 //	public double[] getAngles()
