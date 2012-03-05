@@ -93,6 +93,14 @@ JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_label2Str
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    label2Str
+ * Signature: (I)Ljava/lang/String;
+ */
+JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_str2Label
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    getBlocksInMetaDataFile
  * Signature: (Ljava/lang/String;)[Ljava/lang/String;
  */
@@ -170,6 +178,14 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMicrograph
  */
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isPSD
   (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    isMetadataFile
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMetadataFile
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_MetaData
@@ -355,6 +371,13 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_enableDebug
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
   (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    writeImages
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
+  (JNIEnv *, jobject, jstring, jboolean, jint);
 
 #ifdef __cplusplus
 }

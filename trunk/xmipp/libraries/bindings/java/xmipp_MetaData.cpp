@@ -135,12 +135,27 @@ JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_label2Str(JNIEnv *env,
     return NULL;
 }
 
+JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_str2Label
+  (JNIEnv * env, jclass class_, jstring jlabelName)
+{
+    XMIPP_TRY
+    {
+        const char * labelName = env->GetStringUTFChars(jlabelName, false);
+        MDLabel label = MDL::str2Label(labelName);
+        env->ReleaseStringUTFChars(jlabelName, labelName);
+        return (jint) label;
+    }
+    XMIPP_CATCH;
+
+    return NULL;
+}
+
 JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_MetaData_getBlocksInMetaDataFile(
     JNIEnv *env, jclass class_, jstring filename)
 {
     XMIPP_TRY
     {
-        std::vector < std::string > blocks;
+        StringVector blocks;
 
         const char * fn = env->GetStringUTFChars(filename, false);
 
@@ -298,6 +313,21 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isPSD(JNIEnv *env,
     XMIPP_TRY
     {
         result = MDL::isPSD((MDLabel) label);
+    }
+    XMIPP_CATCH;
+
+    return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMetadataFile(JNIEnv *env,
+		jobject jobj)
+{
+    bool result = false;
+
+    XMIPP_TRY
+    {
+    	 MetaData * md = GET_INTERNAL_METADATA(jobj);
+        result =  md->isMetadataFile;
     }
     XMIPP_CATCH;
 
@@ -707,9 +737,21 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
         const char * ncolumns = env->GetStringUTFChars(jcolumns, false);
         MetaData * metadata = GET_INTERNAL_METADATA(jobj);
         metadata->readPlain(nfile, ncolumns);
-
         env->ReleaseStringUTFChars(jfile, nfile);
         env->ReleaseStringUTFChars(jcolumns, ncolumns);
+    }
+    XMIPP_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
+(JNIEnv * env, jobject jobj, jstring joutput, jboolean independent, jint image_label)
+{
+    XMIPP_TRY
+    {
+        MetaData * md = GET_INTERNAL_METADATA(jobj);
+        const char * output = env->GetStringUTFChars(joutput, false);
+        copyImages(*md, output, independent, (MDLabel) image_label);
+        env->ReleaseStringUTFChars(joutput, output);
     }
     XMIPP_CATCH;
 }

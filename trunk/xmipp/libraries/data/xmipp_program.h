@@ -343,11 +343,9 @@ protected:
 
 public:
     XmippMetadataProgram();
-    /// Before call this function the mdIn should be set
-    /// the two choices for set it is calling from readParams or calling setMd
+
     virtual void setup(MetaData *md, const FileName &o="", const FileName &oroot="",
                        bool applyGeo=false, MDLabel label=MDL_IMAGE);
-
 
 
     /** Destructor

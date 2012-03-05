@@ -7,6 +7,7 @@
 #include "metadata_extension.h"
 #include "xmipp_image_extension.h"
 #include "xmipp_fftw.h"
+#include "xmipp_image_convert.h"
 
 #ifndef __linux__
 #define MAXDOUBLE __DBL_MAX__
@@ -242,6 +243,18 @@ bool compareImageSize(const FileName &filename1, const FileName &filename2)
     getImageSizeFromFilename(filename1,x,y,z,n);
     getImageSizeFromFilename(filename2,X,Y,Z,N);
     return (x==X && y == Y && z == Z && n == N);
+}
+
+void copyImages(const MetaData &md, const char * output, bool independent, MDLabel image_label)
+{
+	ProgConvImg conv;
+	FileName out, oroot;
+	if (independent)
+		oroot = output;
+	else
+		out = output;
+	conv.setup(new MetaData(md), out, oroot, true, image_label);
+	conv.run();
 }
 
 int maxFileNameLength(const MetaData &MD, MDLabel image_label)
