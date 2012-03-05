@@ -86,7 +86,7 @@ void ProgSSNR::defineParams()
     addParamsLine("                             : this threshold (it must always be positive) ");
     addParamsLine("   [--gen_VSSNR]             : (Allowed global options: --ring, --sampling_rate, --min_power)");
     addParamsLine("                             :+++ %BR%");
-    addParamsLine("                             : Generate the individual estimations of the SSNR for each particle and builds an ");
+    addParamsLine("                             : Generate the individual estimations of the SSNR for each particle and build an ");
     addParamsLine("                             : interpolation volume (VSSNR) that is compatible with the individual SSNRs.");
     addParamsLine("                             :+ In fact, the VSSNR is stored as 10*log10(1+SSNR). Thus, after interpolating the threshold");
     addParamsLine("                             :+ at SSNR = 1 must be shown as the threshold of the output interpolated volume at 3.01 ");
