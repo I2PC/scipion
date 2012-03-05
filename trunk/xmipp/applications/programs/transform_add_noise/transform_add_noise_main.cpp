@@ -51,6 +51,8 @@ protected:
         //Examples
         addExampleLine("Add noise to a single image, writing in different image:", false);
         addExampleLine("xmipp_transform_add_noise -i cleanImage.spi --type gaussian 10 5 -o noisyGaussian.spi");
+        addExampleLine("+++Following =cleanImage.spi= at left and =noisyGaussian.spi= at right: %BR%", false);
+        addExampleLine("+++%ATTACHURL%/cleanImage.jpg %ATTACHURL%/noisyGaussian.jpg  %BR%", false);
         addExampleLine("Add uniform noise to a volume, overriding input volume:", false);
         addExampleLine("xmipp_transform_add_noise -i g0ta.vol -uniform -0.1 0.1");
 
