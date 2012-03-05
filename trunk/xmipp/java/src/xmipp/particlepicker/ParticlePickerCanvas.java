@@ -1,6 +1,5 @@
 package xmipp.particlepicker;
 
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
@@ -24,7 +23,7 @@ import xmipp.ij.XmippImageCanvas;
 import xmipp.particlepicker.training.model.AutomaticParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 
-public abstract class ParticlePickerCanvas extends XmippImageCanvas 
+public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 
 	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
@@ -35,32 +34,28 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		super(imp);
 		addKeyListener(new KeyListener()
 		{
-			
+
 			@Override
 			public void keyTyped(KeyEvent arg0)
 			{
-				// TODO Auto-generated method stub
-				
 			}
-			
+
 			@Override
 			public void keyReleased(KeyEvent arg0)
 			{
-				// TODO Auto-generated method stub
-				
 			}
-			
+
 			@Override
 			public void keyPressed(KeyEvent e)
 			{
-				
+
 				TrainingParticle active = getActive();
-				if(active == null)
+				if (active == null)
 					return;
 				int step = 1;
 				int code = e.getKeyCode();
 				System.out.println("Key Code " + code);
-				if(code == KeyEvent.VK_UP)
+				if (code == KeyEvent.VK_UP)
 					moveActiveParticle(active.getX(), active.getY() - step);
 				else if (code == KeyEvent.VK_DOWN)
 					moveActiveParticle(active.getX(), active.getY() + step);
@@ -69,7 +64,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 				else if (code == KeyEvent.VK_RIGHT)
 					moveActiveParticle(active.getX() + step, active.getY());
 				repaint();
-				
+
 			}
 		});
 	}
@@ -79,14 +74,14 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int width = (int) getSrcRect().getWidth();
 		int height = (int) getSrcRect().getHeight();
 		int x0 = p.getX() - width / 2;
-		if(x0 < 0)
+		if (x0 < 0)
 			x0 = 0;
-		if(x0 + width > imp.getWidth())
+		if (x0 + width > imp.getWidth())
 			x0 = imp.getWidth() - width;
 		int y0 = p.getY() - height / 2;
-		if(y0 < 0)
+		if (y0 < 0)
 			y0 = 0;
-		if(y0 + height > imp.getHeight())
+		if (y0 + height > imp.getHeight())
 			y0 = imp.getHeight() - height;
 		Rectangle r = new Rectangle(x0, y0, width, height);
 		if (!getSrcRect().contains(r))
@@ -95,41 +90,29 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			repaint();
 		}
 	}
-	
-	
+
 	public void mouseEntered(MouseEvent e)
 	{
-		if (getTool() != Tool.PICKER)
-		{
-			super.mouseEntered(e);
-			return;
-		}
+		super.mouseEntered(e);
 		setCursor(crosshairCursor);
 	}
 
 	public void mouseMoved(MouseEvent e)
 	{
-		if (getTool() != Tool.PICKER)
-		{
-			super.mouseMoved(e);
-			return;
-		}
+		super.mouseMoved(e);
 		setCursor(crosshairCursor);
 	}
-	
-	
 
 	public abstract void setActive(TrainingParticle p);
-	
+
 	public abstract TrainingParticle getActive();
-	
+
 	public abstract ParticlePickerJFrame getFrame();
-	
-	
+
 	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all)
 	{
 		Stroke previous = g2.getStroke();
-		if(p instanceof AutomaticParticle)
+		if (p instanceof AutomaticParticle)
 			g2.setStroke(dashedst);
 		int x0 = (int) getSrcRect().getX();
 		int y0 = (int) getSrcRect().getY();
@@ -150,53 +133,51 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		}
 		g2.setStroke(previous);
 	}
-	
 
-	
 	protected void drawLine(double alpha, Graphics2D g2)
 	{
 		int width = imp.getWidth();
 		int height = imp.getHeight();
 		double m = 0;
-		if(alpha != Math.PI/2)
-			m = Math.tan(Math.PI/2 - alpha);
-		double y = height/2.f;
+		if (alpha != Math.PI / 2)
+			m = Math.tan(Math.PI / 2 - alpha);
+		double y = height / 2.f;
 		double x = y / m;
 		double x1, y1, x2, y2;
-		if(Math.abs(x) > width/2.f)//cuts in image sides
+		if (Math.abs(x) > width / 2.f)// cuts in image sides
 		{
-			x1 = width;//on image
-			y1 = getYOnImage(m, width/2.f)  ;
+			x1 = width;// on image
+			y1 = getYOnImage(m, width / 2.f);
 			x2 = 0;
-			y2 = getYOnImage(m, -width/2.f)  ;
+			y2 = getYOnImage(m, -width / 2.f);
 		}
-		else//cuts in image top and bottom
+		else
+		// cuts in image top and bottom
 		{
 			y1 = 0;
-			x1 = getXOnImage(m, height/2.f);
-			y2 = height ;
-			x2 = getXOnImage(m, -height/2.f);
+			x1 = getXOnImage(m, height / 2.f);
+			y2 = height;
+			x2 = getXOnImage(m, -height / 2.f);
 		}
-		System.out.printf("m: %.2f x1: %.2f y1:%.2f x2:%.2f y2:%.2f\n",  m, x1, y1, x2, y2);
+		System.out.printf("m: %.2f x1: %.2f y1:%.2f x2:%.2f y2:%.2f\n", m, x1, y1, x2, y2);
 		Color ccolor = g2.getColor();
 		g2.setColor(Color.yellow);
-		g2.drawLine((int)(x1 * magnification), (int)(y1 * magnification), (int)(x2 * magnification), (int)(y2 * magnification));
+		g2.drawLine((int) (x1 * magnification), (int) (y1 * magnification), (int) (x2 * magnification), (int) (y2 * magnification));
 		g2.setColor(ccolor);
 	}
-	
+
 	private double getYOnImage(double m, double x)
 	{
 		int height = imp.getHeight();
-		return height/2.f - m * x ;
+		return height / 2.f - m * x;
 	}
-	
+
 	private double getXOnImage(double m, double y)
 	{
 		int width = imp.getWidth();
-		return y / m  + width/2.f ;
+		return y / m + width / 2.f;
 	}
-	
-	
+
 	public void updateMicrographData()
 	{
 		Micrograph m = getMicrograph();
@@ -205,28 +186,22 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		iw.setImage(imp);
 		iw.updateImage(imp);
 		iw.setTitle(m.getName());
-		
-		if(!getFrame().getParticlePicker().getFilters().isEmpty())
+
+		if (!getFrame().getParticlePicker().getFilters().isEmpty())
 			IJ.runMacro(getFrame().getParticlePicker().getFiltersMacro());
 	}
-	
+
 	public abstract Micrograph getMicrograph();
-	
+
 	protected void moveActiveParticle(int x, int y)
 	{
 		TrainingParticle active = getActive();
-		if(active == null)
+		if (active == null)
 			return;
 		active.setPosition(x, y);
 		System.out.println(active);
 		if (getFrame().getParticlesJDialog() != null)
 			active.getParticleCanvas(getFrame()).repaint();
 	}
-	
-	
-
-
-	
-
 
 }

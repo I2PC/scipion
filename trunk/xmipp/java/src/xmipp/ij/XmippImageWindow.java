@@ -13,6 +13,23 @@ import xmipp.jni.Filename;
 
 public class XmippImageWindow extends ImageWindow
 {
+	
+	
+	public static void main(String[] args)
+	{
+		try
+		{
+			ImagePlus imp = XmippImageConverter.loadImage("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+			new XmippImageWindow(imp);
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public XmippImageWindow(ImagePlus imp) {
 		this(imp, "");
 	}
@@ -29,7 +46,8 @@ public class XmippImageWindow extends ImageWindow
 		{
 			new ImageJ();
 			IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
-			IJ.setTool(Tool.getTool(tool));
 		}		
+		boolean recognized = IJ.setTool(Tool.getTool(tool));
+		System.out.println(recognized);
 	}
 }//class XmippImageWindow

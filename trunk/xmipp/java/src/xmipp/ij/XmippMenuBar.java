@@ -6,6 +6,7 @@ package xmipp.ij;
 
 import ij.IJ;
 
+import java.awt.CheckboxMenuItem;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
@@ -27,12 +28,11 @@ public class XmippMenuBar extends MenuBar
 	private Menu advancedmn;
 	private MenuItem savemi;
 	private MenuItem saveasmi;
-	private MenuItem openwithmi;
+	private MenuItem openwith3dmi;
 	private Menu infomn;
 	private Menu adjustmn;
 	private Menu transformmn;
 	private Menu filtersmn;
-	private Menu maskmn;
 	private Menu thresholdingmn;
 	private Menu binarymn;
 	private Menu processmn;
@@ -50,6 +50,41 @@ public class XmippMenuBar extends MenuBar
 	private ArrayList<String> requireij;
 	private MenuItem bandpassmi;
 	private MenuItem admi;
+	private MenuItem openwithvv3ds;
+	private MenuItem openwithvolumej;
+	private MenuItem maskmi;
+	private MenuItem thresholdmi;
+	private MenuItem otsuthresholdmi;
+	private MenuItem multiotsuthresholdmi;
+	private MenuItem maxentropythresholdmi;
+	private MenuItem mixturemodthresholdmi;
+	private MenuItem voxelcountermi;
+	private MenuItem erodemi;
+	private MenuItem dilatemi;
+	private MenuItem openmi;
+	private MenuItem closemi;
+	private MenuItem floatmorphomi;
+	private MenuItem outlinemi;
+	private MenuItem skeletonizemi;
+	private MenuItem fillholesmi;
+	private MenuItem distancemapmi;
+	private MenuItem ultimatepointsmi;
+	private MenuItem watershedmi;
+	private MenuItem voronoimi;
+	private Menu profilemn;
+	private MenuItem lineanalyzermi;
+	private MenuItem ovalpplotmi;
+	private MenuItem radialpplotanglemi;
+	private MenuItem radialpplotheightmi;
+	private MenuItem contourplottermi;
+	private MenuItem brightcontrastmi;
+	private MenuItem enhancecontrastmi;
+	private MenuItem substractbgmi;
+	private MenuItem gaussianblurmi;
+	private MenuItem convolvemi;
+	private MenuItem medianmi;
+	private MenuItem fftmi;
+	private CheckboxMenuItem pollmi;
 
 	public XmippMenuBar()
 	{
@@ -67,24 +102,43 @@ public class XmippMenuBar extends MenuBar
 		// menubar file menu
 		savemi = new MenuItem("Save");
 		saveasmi = new MenuItem("Save As...");
-		openwithmi = new MenuItem("Open with...");
+		openwith3dmi = new MenuItem("Open with 3D Viewer");
+		openwithvv3ds = new MenuItem("Open with Volume Viewer/3D Slicer");
+		openwithvolumej = new MenuItem("Open with VolumeJ");
+		pollmi = new CheckboxMenuItem("Poll");
+		pollmi.addActionListener(new ActionListener()
+		{
+			
+			private boolean poll;
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				poll = pollmi.getState();
+				
+			}
+		});
 
 		filemn.add(savemi);
 		filemn.add(saveasmi);
-		filemn.add(openwithmi);
+		filemn.add(openwith3dmi);
+		filemn.add(openwithvv3ds);
+		filemn.add(openwithvolumej);
+		filemn.add(pollmi);
 
 		// menubar image menu
 		infomn = new Menu("Info");
 		adjustmn = new Menu("Adjust");
 		transformmn = new Menu("Transform");
 		filtersmn = new Menu("Filters");
-		maskmn = new Menu("Mask");
+		maskmi = new MenuItem("Mask Tool Bar");
+		addCommand(maskmi, "Mask Tool Bar");
 
 		imagemn.add(infomn);
 		imagemn.add(adjustmn);
 		imagemn.add(transformmn);
 		imagemn.add(filtersmn);
-		imagemn.add(maskmn);
+		imagemn.add(maskmi);
 
 		// image info menu
 		imageinfomi = new MenuItem("Image Info");
@@ -104,9 +158,9 @@ public class XmippMenuBar extends MenuBar
 		
 		// image filters menu
 		bandpassmi = new MenuItem("Bandpass Filter");
-		addCommand(imageinfomi, "Bandpass Filter...");
-		admi = new MenuItem("Anisotropic Diffussion");
-		addCommand(admi, "Anisotropic Diffussion...");
+		addCommand(bandpassmi, "Bandpass Filter...");
+		admi = new MenuItem("Anisotropic Diffusion");
+		addCommand(admi, "Anisotropic Diffusion...");
 		meanshiftmi = new MenuItem("Mean Shift");
 		addCommand(meanshiftmi, "Mean Shift");
 
@@ -142,22 +196,91 @@ public class XmippMenuBar extends MenuBar
 		binarymn = new Menu("Binary");
 		processmn = new Menu("Process");
 		drawmn = new Menu("Draw");
+		profilemn = new Menu("Profile");
 
 		advancedmn.add(imagejmi);
 		advancedmn.add(thresholdingmn);
 		advancedmn.add(binarymn);
 		advancedmn.add(processmn);
 		advancedmn.add(drawmn);
+		advancedmn.add(profilemn);
 		
 		
 		//advanced threshold menu
+		thresholdmi = new MenuItem("Threshold");
+		otsuthresholdmi = new MenuItem("Otsu Threshold");
+		multiotsuthresholdmi = new MenuItem("Multi Otsu Threshold");
+		maxentropythresholdmi = new MenuItem("Maximum Entropy Threshold");
+		mixturemodthresholdmi =  new MenuItem("Mixture Modeling Threshold");
+		
+		thresholdingmn.add(thresholdmi);
+		thresholdingmn.add(otsuthresholdmi);
+		thresholdingmn.add(multiotsuthresholdmi);
+		thresholdingmn.add(maxentropythresholdmi);
+		thresholdingmn.add(mixturemodthresholdmi);
 		
 		//advanced binary menu
+		voxelcountermi = new MenuItem("Voxel Counter");
+		addCommand(voxelcountermi, "Voxel Counter");
+		erodemi = new MenuItem("Erode");
+		addCommand(erodemi, "Erode");
+		dilatemi = new MenuItem("Dilate");
+		openmi = new MenuItem("Open");
+		closemi = new MenuItem("Close");
+		floatmorphomi = new MenuItem("Float Morphology");
+		outlinemi = new MenuItem("Outline");
+		fillholesmi = new MenuItem("Fill Holes");
+		skeletonizemi = new MenuItem("Skeletonize");
+		distancemapmi = new MenuItem("Distance Map");
+		ultimatepointsmi = new MenuItem("Ultimate Points");
+		watershedmi = new MenuItem("Water Shed");
+		voronoimi = new MenuItem("Voronoi");
+		
+		
+		
+		binarymn.add(voxelcountermi);
+		binarymn.add(erodemi);
+		binarymn.add(dilatemi);
+		binarymn.add(openmi);
+		binarymn.add(closemi);
+		binarymn.add(floatmorphomi);
+		binarymn.add(outlinemi);
+		binarymn.add(fillholesmi);
+		binarymn.add(skeletonizemi);
+		binarymn.add(watershedmi);
+		binarymn.add(voronoimi);
 		
 		//advanced process menu
+		brightcontrastmi = new MenuItem("Brightness/Contrast");
+		enhancecontrastmi = new MenuItem("Enhance Contrast");
+		substractbgmi = new MenuItem("Substract Background");
+		gaussianblurmi = new MenuItem("Gaussian Blur");
+		convolvemi = new MenuItem("Convolve");
+		medianmi = new MenuItem("Median");
+		fftmi = new MenuItem("FFT");
+		
+		processmn.add(brightcontrastmi);
+		processmn.add(enhancecontrastmi);
+		processmn.add(substractbgmi);
+		processmn.add(gaussianblurmi);
+		processmn.add(convolvemi);
+		processmn.add(medianmi);
+		processmn.add(fftmi);
 		
 		//advanced drawn menu
 
+		//advanced profile menu
+		lineanalyzermi = new MenuItem("Line Analyzer");
+		ovalpplotmi = new MenuItem("Oval Profile Plot");
+		radialpplotanglemi = new MenuItem("Radial Profile Plot Angle");
+		radialpplotheightmi = new MenuItem("Radial Profile Plot Height");
+		contourplottermi = new MenuItem("Contour Plotter");
+		
+		profilemn.add(lineanalyzermi);
+		profilemn.add(ovalpplotmi);
+		profilemn.add(radialpplotanglemi);
+		profilemn.add(radialpplotheightmi);
+		profilemn.add(contourplottermi);
 		
 		
 		imagejmi.addActionListener(new ActionListener()
