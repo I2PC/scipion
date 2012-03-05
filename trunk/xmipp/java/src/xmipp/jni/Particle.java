@@ -95,8 +95,4 @@ public class Particle implements Comparable<Particle> {
 		}
 		return -1;
 	}
-	
-	
-
-
 }
