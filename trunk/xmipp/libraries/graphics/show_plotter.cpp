@@ -138,7 +138,7 @@ Plotter::Plotter(QWidget *parent, const char *name) : QMainWindow(parent, name)
 #else
     QMimeSourceFactory::defaultFactory()->addFilePath(
 #endif
-        (FileName::getXmippPath() + "/libraries/graphics/images").c_str());
+        formatString("%s/libraries/graphics/images", getXmippPath()).c_str());
 
     // Initialize save button
     saveButton = new QToolButton(this);

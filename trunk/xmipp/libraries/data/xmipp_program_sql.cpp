@@ -41,7 +41,7 @@ ProgramDb::ProgramDb(const FileName &dbName)
 
 ProgramDb::ProgramDb()
 {
-  init(FileName::getXmippPath().append("/.xmipp_programs.sqlite"));
+  init(formatString("%s/.xmipp_programs.sqlite", getXmippPath()));
 }
 
 bool ProgramDb::execStmt(const String &stmt, const String &error)

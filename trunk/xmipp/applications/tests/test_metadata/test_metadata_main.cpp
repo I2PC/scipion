@@ -877,6 +877,12 @@ TEST_F( MetadataTest, setGetValue)
     EXPECT_THROW(auxMetadata.getValue(MDL_ORDER, i, id), XmippError);
 }
 
+//Copy images on metadata using ImageConvert logic
+TEST_F( MetadataTest, copyImages)
+{
+
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

@@ -253,7 +253,8 @@ void copyImages(const MetaData &md, const char * output, bool independent, MDLab
 		oroot = output;
 	else
 		out = output;
-	conv.setup(new MetaData(md), out, oroot, true, image_label);
+	//Image convert dont use applyGeo
+	conv.setup(new MetaData(md), out, oroot, false, image_label);
 	conv.run();
 }
 

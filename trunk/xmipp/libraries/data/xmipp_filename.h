@@ -650,13 +650,12 @@ public:
      * This function is not ported to Python.
      */
     void assertExists();
-
-    /** Returns the base directory of the Xmipp installation
-     */
-    static FileName getXmippPath();
-
     //@}
 };
+
+/** Returns the base directory of the Xmipp installation
+ */
+char* getXmippPath();
 
 /** Check if the file exists using the stat function
  */
@@ -672,6 +671,9 @@ inline bool fileExists( const FileName &filename )
 {
     return fileExists(filename.c_str());
 }
+
+/** Macro to be used on tests */
+#define TEST_FILENAME(fnStr) (formatString("%s/resources/test/%s", getXmippPath(), fnStr))
 
 /** Copy one image
  */

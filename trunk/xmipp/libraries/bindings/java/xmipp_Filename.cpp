@@ -49,8 +49,7 @@ JNIEXPORT jstring JNICALL Java_xmipp_jni_Filename_getXmippPath
   (JNIEnv *env, jclass class_){
     XMIPP_TRY
     {
-      //just coment
-        return env->NewStringUTF(FileName::getXmippPath().c_str());
+        return env->NewStringUTF(getXmippPath());
     }
     XMIPP_CATCH;
 }

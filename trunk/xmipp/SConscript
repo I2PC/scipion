@@ -942,7 +942,7 @@ if int(env['gtest']):
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
-     AddXmippPythonTest('test_projectionmatching')
+     #AddXmippPythonTest('test_projectionmatching')
      AddXmippPythonTest('test_pysqlite')
      env.Depends(test, pythonbinding)
      env.Depends('run_tests', 'xmipp_programs')

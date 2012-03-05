@@ -14,10 +14,10 @@ protected:
     virtual void SetUp()
     {
         //get example images/staks
-        baseName = getenv("XMIPP_HOME");
-        testBaseName = baseName + "/resources/test";
-        imageName = baseName + "/applications/tests/test_image/singleImage.spi";
-        stackName = baseName + "/applications/tests/test_image/smallStack.stk";
+        xmippPath = getXmippPath();
+       // testBaseName = xmippPath + "/resources/test";
+        imageName = TEST_FILENAME("singleImage.spi");
+        stackName = TEST_FILENAME("smallStack.stk");
         myImage.read(imageName);
         myStack.read(stackName);
     }
@@ -27,8 +27,7 @@ protected:
     Image<double> myStack;
     FileName imageName;
     FileName stackName;
-    FileName baseName;
-    FileName testBaseName;
+    FileName xmippPath;
 
 };
 
@@ -52,17 +51,17 @@ TEST_F( ImageTest, getEulerAngles)
 
 TEST_F( ImageTest, readApplyGeo)
 {
-    FileName auxFilename(baseName + "/applications/tests/test_image/test2.spi");
+    FileName auxFn = TEST_FILENAME("test2.spi");
     MetaData MD;
     size_t id = MD.addObject();
-    MD.setValue(MDL_IMAGE, auxFilename, id);
+    MD.setValue(MDL_IMAGE, auxFn, id);
     MD.setValue(MDL_ANGLEPSI, 45., id);
     Image<double> auxImage, auxImage2;
     auxImage.readApplyGeo(MD,id, false, DATA, ALL_IMAGES, false);
-    auxImage2.read(auxFilename.removeAllExtensions()+"_wrap_false.spi");
+    auxImage2.read(auxFn.insertBeforeExtension("_wrap_false"));
     EXPECT_TRUE(auxImage == auxImage2);
     auxImage.readApplyGeo(MD,id, false, DATA, ALL_IMAGES, true);
-    auxImage2.read(auxFilename.removeAllExtensions()+"_wrap_true.spi");
+    auxImage2.read(auxFn.insertBeforeExtension("_wrap_true"));
     EXPECT_TRUE(auxImage == auxImage2);
 }
 
@@ -105,92 +104,92 @@ TEST_F( ImageTest, saveImageinStackwithHeaderAngleRot)
 
 TEST_F( ImageTest, writeIMAGICimage)
 {
-    FileName auxFilename(imageName);
-    auxFilename=auxFilename.removeExtension((String)"spi");
-    auxFilename=auxFilename.addExtension("img");
-    myImage.write(auxFilename);
+    FileName auxFn(imageName);
+    auxFn=auxFn.removeExtension((String)"spi");
+    auxFn=auxFn.addExtension("img");
+    myImage.write(auxFn);
     Image<double> auxImage;
-    auxImage.read(auxFilename);
+    auxImage.read(auxFn);
     EXPECT_EQ(myImage,auxImage);
 }
 
 TEST_F( ImageTest, writeIMAGICstack)
 {
-    FileName auxFilename(stackName);
-    auxFilename=auxFilename.removeExtension((String)"stk");
-    auxFilename=auxFilename.addExtension("img");
-    myStack.write(auxFilename);
+    FileName auxFn(stackName);
+    auxFn=auxFn.removeExtension((String)"stk");
+    auxFn=auxFn.addExtension("img");
+    myStack.write(auxFn);
     Image<double> auxStack;
-    auxStack.read(auxFilename);
+    auxStack.read(auxFn);
     EXPECT_EQ(myStack,auxStack);
 }
 
 TEST_F( ImageTest, writeMRCimage)
 {
-    FileName auxFilename(imageName);
-    auxFilename=auxFilename.removeExtension((String)"spi");
-    auxFilename=auxFilename.addExtension("mrc");
-    myImage.write(auxFilename);
+    FileName auxFn(imageName);
+    auxFn=auxFn.removeExtension((String)"spi");
+    auxFn=auxFn.addExtension("mrc");
+    myImage.write(auxFn);
     Image<double> auxImage;
-    auxImage.read(auxFilename);
+    auxImage.read(auxFn);
     EXPECT_EQ(myImage,auxImage);
 }
 
 TEST_F( ImageTest, writeMRCstack)//show -i kk.mrcs for stacks fails for mrc
 //ml_tomo anotate bugs
 {
-    FileName auxFilename(stackName);
-    auxFilename=auxFilename.removeExtension((String)"stk");
-    auxFilename=auxFilename.addExtension("mrcs");
-    myStack.write(auxFilename);
+    FileName auxFn(stackName);
+    auxFn=auxFn.removeExtension((String)"stk");
+    auxFn=auxFn.addExtension("mrcs");
+    myStack.write(auxFn);
     Image<double> auxStack;
-    auxStack.read(auxFilename);
+    auxStack.read(auxFn);
     EXPECT_EQ(myStack,auxStack);
 }
 
 TEST_F( ImageTest, writeTIFimage)
 {
-    FileName auxFilename(imageName);
-    auxFilename=auxFilename.removeExtension((String)"spi");
-    auxFilename=auxFilename.addExtension("tif");
-    myImage.write(auxFilename);
+    FileName auxFn(imageName);
+    auxFn=auxFn.removeExtension((String)"spi");
+    auxFn=auxFn.addExtension("tif");
+    myImage.write(auxFn);
     Image<double> auxImage;
-    auxImage.read(auxFilename);
+    auxImage.read(auxFn);
     EXPECT_EQ(myImage,auxImage);
 }
 
 TEST_F( ImageTest, writeINFimage)
 {
-    FileName auxFilename(imageName);
-    auxFilename=auxFilename.removeExtension((String)"spi");
-    auxFilename=auxFilename.addExtension("inf");
-    myImage.write(auxFilename);
+    FileName auxFn(imageName);
+    auxFn=auxFn.removeExtension((String)"spi");
+    auxFn=auxFn.addExtension("inf");
+    myImage.write(auxFn);
     Image<double> auxImage;
-    auxImage.read(auxFilename);
+    auxImage.read(auxFn);
     EXPECT_EQ(myImage,auxImage);
 }
 
 TEST_F( ImageTest, writeRAWimage)
 {
-    FileName auxFilename(imageName);
-    auxFilename=auxFilename.removeExtension((String)"spi");
-    auxFilename=auxFilename.addExtension("raw#3,3");
-    myImage.write(auxFilename);
+    FileName auxFn(imageName);
+    auxFn=auxFn.removeExtension((String)"spi");
+    auxFn=auxFn.addExtension("raw#3,3");
+    myImage.write(auxFn);
     Image<double> auxImage;
-    auxImage.read(auxFilename);
+    auxImage.read(auxFn);
     EXPECT_EQ(myImage,auxImage);
 }
 
 TEST_F( ImageTest, readPreview)
 {
-    FileName auxFilename(baseName + "/applications/tests/test_image/smallVolume.vol");
+    FileName auxFn = TEST_FILENAME("smallVolume.vol");
     Image<double> img1, img2;
-    img1.read(auxFilename);
+    img1.read(auxFn);
 
     img1().setXmippOrigin();
     selfScaleToSize(NEAREST, img1(),32,32,4);
 
-    img2.readPreview(auxFilename, 32,32, ALL_SLICES);
+    img2.readPreview(auxFn, 32,32, ALL_SLICES);
     img1().setXmippOrigin();
     img2().setXmippOrigin();
 
@@ -199,10 +198,10 @@ TEST_F( ImageTest, readPreview)
 
 TEST_F( ImageTest, mapFile2Write)
 {
-    FileName auxFilename(baseName + "/applications/tests/test_image/smallVolume.vol");
-    FileName auxMappedFilename(baseName + "/applications/tests/test_image/mappedFile.vol");
+     FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    FileName auxMappedFilename = TEST_FILENAME("mappedFile.vol");
     Image<float> img1, img2;
-    img1.read(auxFilename);
+    img1.read(auxFn);
     ArrayDim aDim;
     img1().getDimensions(aDim);
 
@@ -217,16 +216,16 @@ TEST_F( ImageTest, mapFile2Write)
 }
 TEST_F( ImageTest, movePointerTo)
 {
-    FileName auxFilename(testBaseName + "/smallVolumeStack.stk");
+    FileName auxFn= TEST_FILENAME("smallVolumeStack.stk");
     Image<double> img1, img2;
-    img1.read(auxFilename);
+    img1.read(auxFn);
 
     ArrayDim aDim;
     img1().getDimensions(aDim);
 
     for (size_t n = 1; +n <= aDim.ndim; ++n)
     {
-        img2.read(auxFilename, DATA, n);
+        img2.read(auxFn, DATA, n);
 
         for (int k = 1; k <= aDim.zdim; ++k)
         {

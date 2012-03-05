@@ -186,7 +186,7 @@ void ConsolePrinter::printCommentList(const CommentList &comments, int v)
 
 TkPrinter::TkPrinter()
 {
-    FileName dir = FileName::getXmippPath();
+    FileName dir = getXmippPath();
     dir.append("/applications/scripts/program_gui/program_gui.py");
     output = popen(dir.c_str(), "w");
 }
