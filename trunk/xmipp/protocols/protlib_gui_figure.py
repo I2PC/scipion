@@ -223,6 +223,8 @@ class XmippPlotter():
         self.gridy = y  
         self.figure = plt.figure(figsize=figsize, dpi=dpi)
         self.mainTitle = mainTitle
+        if (mainTitle):
+            self.figure.suptitle(mainTitle)
         self.plot_count = 0
         self.plot_axis_fontsize = 10
         self.plot_text_fontsize = 8
