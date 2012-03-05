@@ -1209,6 +1209,8 @@ public class JFrameGallery extends JFrame {
 
 			add(jmFile);
 			addMenuItem(jmFile, jmiSave);
+			jmiSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, 
+					ActionEvent.CTRL_MASK));			
 			addMenuItem(jmFile, jmiSaveAs);
 			// addMenuItem(jmFile, jmSave222);
 			jmFile.addSeparator();
@@ -1217,11 +1219,21 @@ public class JFrameGallery extends JFrame {
 			// Display menu
 			add(jmDisplay);
 			addMenuItem(jmDisplay, jmiNormalize);
+			jmiNormalize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, 
+					ActionEvent.CTRL_MASK));
 			addMenuItem(jmDisplay, jmiShowLabel);
+			jmiShowLabel.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, 
+					ActionEvent.CTRL_MASK));
 			jmDisplay.addSeparator();
 			addMenuItem(jmDisplay, jmiRenderImage);
+			jmiRenderImage.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, 
+					ActionEvent.CTRL_MASK));
 			addMenuItem(jmDisplay, jmiApplyGeo);
+			jmiApplyGeo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, 
+					ActionEvent.CTRL_MASK));
 			addMenuItem(jmDisplay, jmiColumns);
+			jmiColumns.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, 
+					ActionEvent.CTRL_MASK));			
 			jmDisplay.addSeparator();
 			addMenuItem(jmDisplay, jmReslice);
 			addMenuItem(jmReslice, jmiAxisX);
@@ -1254,7 +1266,7 @@ public class JFrameGallery extends JFrame {
 			// jmiOpenWithImageJ.addActionListener(this);
 
 			update();
-		}
+		}//constructor GalleryMenu
 
 		public void update() {
 			boolean galMode = data.isGalleryMode();
@@ -1276,8 +1288,8 @@ public class JFrameGallery extends JFrame {
 			jmiRenderImage.setEnabled(!galMode && data.hasRenderLabel());
 			jmiRenderImage.setSelected(data.globalRender);
 			jmiColumns.setEnabled(!galMode);
-		}
-	}
+		}//function update
+	}//class GalleryMenu
 
 	class GalleryPopupMenu extends JPopupMenu {
 

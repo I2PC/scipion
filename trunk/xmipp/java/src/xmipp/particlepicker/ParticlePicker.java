@@ -128,7 +128,7 @@ public abstract class ParticlePicker
 //
 //	public static String getXmippPath()
 //	{
-//		return Program.getXmippPath();
+//		return Filename.getXmippPath();
 //	}
 //
 //	public static String getXmippPath(String relpath)

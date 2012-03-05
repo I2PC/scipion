@@ -60,7 +60,7 @@ public class ColumnsJDialog extends XmippDialog {
 
 	public ColumnsJDialog(JFrameGallery parent) {
 		super(parent, "Columns", true);
-		this.parent = parent;
+		initComponents();
 	}// constructor ColumnsJDialog
 
 	public ArrayList<ColumnInfo> getColumnsResult() {

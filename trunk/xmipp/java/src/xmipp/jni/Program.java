@@ -5,5 +5,4 @@ package xmipp.jni;
  */
 public class Program {
     public static native int runByName(String progName, String args) throws Exception;
-    public static native String getXmippPath();
 }
