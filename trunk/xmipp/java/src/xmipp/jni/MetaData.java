@@ -98,6 +98,8 @@ public class MetaData {
 
     public static native String label2Str(int label) throws Exception;
     
+    public static native int str2Label(String labelName) throws Exception;
+    
     /** Same of before but handling the exception */
     public static String getLabelName(int label){
     	try {
@@ -149,6 +151,8 @@ public class MetaData {
     public static native boolean isMicrograph(int label) throws Exception;
 
     public static native boolean isPSD(int label) throws Exception;
+    
+    public native boolean isMetadataFile() throws Exception;
 
     public native void makeAbsPath(int label) throws Exception;
     
@@ -282,4 +286,6 @@ public class MetaData {
     }
 
     public native void readPlain(String file, String columns) throws Exception;
+    
+    public native void writeImages(String output, boolean independent, int image_label) throws Exception;
 }

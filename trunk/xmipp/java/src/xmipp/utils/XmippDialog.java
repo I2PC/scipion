@@ -28,15 +28,20 @@
 package xmipp.utils;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 /** This class serve as a simple JDialog extension.
  * The Ok and Cancel buttons are added and the dispose
@@ -52,25 +57,39 @@ public class XmippDialog extends JDialog  implements ActionListener {
 	protected JButton btnOk;
 	protected String okText = "Ok";
 	protected String cancelText = "Cancel";
+	protected JPanel panelBtn;
+	protected boolean disposeOnClose;
 	
 	public XmippDialog(JFrame parent, String title, boolean modal){
 		super(parent, title, modal);
 		this.parent = parent;
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		disposeOnClose = true;
 		setTitle(title);
+	}
+	
+	/** this is the general method to init the components.
+	 * It should be called from every subclass constructor
+	 * after some settings of values
+	 */
+	protected void initComponents() {
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		Container content = getContentPane();
 		JPanel panel = new JPanel();
 		createContent(panel);
 		content.add(panel, BorderLayout.CENTER);
+		createButtons();
+		content.add(panelBtn, BorderLayout.PAGE_END);
+		pack();
+		WindowUtil.centerWindows(this, parent);
+	}
+	
+	protected void createButtons(){
 		//Create panel for Ok and Cancel buttons
-		JPanel panelBtn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+		panelBtn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		btnOk = WindowUtil.getTextButton(okText, this);
 		panelBtn.add(btnOk);
 		btnCancel = WindowUtil.getTextButton(cancelText, this);
 		panelBtn.add(btnCancel);
-		content.add(panelBtn, BorderLayout.PAGE_END);
-		pack();
-		WindowUtil.centerWindows(this, parent);
 	}
 	
 	/** Function to display the Dialog and return the result state */
@@ -108,7 +127,67 @@ public class XmippDialog extends JDialog  implements ActionListener {
 	protected void close(boolean result) {
 		this.result = result;
 		setVisible(false);
-		dispose();
+		if (disposeOnClose)
+			dispose();	
 	}// function close
 	
-}
+	/** Change the default dispose on close behavior */
+	public void setDisposeOnClose(boolean value){
+		disposeOnClose = value;
+	}
+	
+	/** Some static methods to display some message dialogs */
+	public static void showInfo(JFrame parent, String message){
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "INFO", message, "info.gif");
+		dlg.showDialog();
+	}
+	public static void showWarning(JFrame parent, String message){
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "WARNING", message, "warning.gif");
+		dlg.showDialog();
+	}
+	public static void showError(JFrame parent, String message){
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR", message, "error.gif");
+		dlg.showDialog();
+	}
+	
+}//class XmippDialog
+
+/** Special case of XmippDialog to display message (info, error, warning) */
+class XmippMessageDialog extends XmippDialog {
+
+	String message;
+	String iconPath;
+	
+	public XmippMessageDialog(JFrame parent, String title, String message, String iconPath) {
+		super(parent, title, true);
+		this.message = message;
+		this.iconPath = iconPath;
+		initComponents();
+	}
+	
+	@Override
+	protected void createContent(JPanel panel){
+		panel.setLayout(new BorderLayout());
+		JPanel iconPanel = new JPanel();
+		iconPanel.add(WindowUtil.getIconLabel(iconPath));
+		iconPanel.setBackground(Color.white);
+		panel.add(iconPanel, BorderLayout.LINE_START);
+		JTextArea text = new JTextArea(message, 5, 40);
+		text.setEditable(false);
+		text.setBackground(Color.white);
+		text.setBorder(BorderFactory.createEmptyBorder());
+		text.setLineWrap(true);
+		text.setWrapStyleWord(true);
+		//text
+		JScrollPane scrollPane = new JScrollPane(text); 
+		scrollPane.setBorder(BorderFactory.createEmptyBorder());
+		scrollPane.setBackground(Color.white);
+		panel.add(scrollPane, BorderLayout.CENTER);
+	}
+	
+	@Override
+	protected void createButtons(){
+		super.createButtons();
+		panelBtn.setLayout(new FlowLayout());
+	}
+}//class XmippMessageDialog

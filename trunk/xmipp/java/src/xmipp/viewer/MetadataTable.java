@@ -218,8 +218,8 @@ public class MetadataTable extends MetadataGallery {
 						width = comp.getPreferredSize().width + 10;
 					}
 					getColumn(i).setPreferredWidth(width);
-					DEBUG.printMessage(String.format("col: %d, width: %d", i,
-							width));
+//					DEBUG.printMessage(String.format("col: %d, width: %d", i,
+//							width));
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

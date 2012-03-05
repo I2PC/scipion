@@ -55,6 +55,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippDialog;
@@ -82,10 +83,10 @@ public class SaveJDialog extends XmippDialog {
 	protected JPanel panelImg;
 	protected JPanel panelMd;
 	protected GalleryData data;	
-	protected String mdPath;
 	
 	public SaveJDialog(JFrameGallery parent) {
 		super(parent, "Save", true);
+		initComponents();
 	}// constructor SaveJDialog
 
 	@Override
@@ -155,10 +156,10 @@ public class SaveJDialog extends XmippDialog {
 //		btnBrowseMd = WindowUtil.getIconButton("folderopen.gif", this);
 //		panelMd.add(btnBrowseMd,  WindowUtil.getConstraints(gbc, 2, 0));
 		panelMd.add(panelBrowse,  WindowUtil.getConstraints(gbc, 0, 0, 3));
-		rbMdOverride = new JRadioButton("Override", true);
+		rbMdOverride = new JRadioButton("Override");
 		panelMd.add(rbMdOverride, WindowUtil.getConstraints(gbc, 0, 1));
 		gbc.anchor = GridBagConstraints.WEST;	
-		rbMdAppend = new JRadioButton("Append");
+		rbMdAppend = new JRadioButton("Append", true);
 		panelMd.add(rbMdAppend, WindowUtil.getConstraints(gbc, 1, 1));
 		ButtonGroup group = new ButtonGroup();
 	    group.add(rbMdOverride);
@@ -185,11 +186,6 @@ public class SaveJDialog extends XmippDialog {
 		panelImg.add(new JLabel("Output stack filename:"), 
 				WindowUtil.getConstraints(gbc, 0, 1, 5));
 		panelImg.add(panelBrowse,  WindowUtil.getConstraints(gbc, 0, 2, 5));
-//		tbImg = new JTextField(30);
-//		gbc.anchor = GridBagConstraints.CENTER;	
-//		panelImg.add(tbImg, WindowUtil.getConstraints(gbc, 0, 1, 2));
-//		btnBrowseImg = WindowUtil.getIconButton("folderopen.gif", this);
-//		panelImg.add(btnBrowseImg, WindowUtil.getConstraints(gbc, 2, 1));
 		rbStack = new JRadioButton("Stack", true);
 		panelImg.add(rbStack, WindowUtil.getConstraints(gbc, 2, 0));
 		rbIndependent = new JRadioButton("Separate images");
@@ -198,14 +194,16 @@ public class SaveJDialog extends XmippDialog {
 		ButtonGroup group = new ButtonGroup();
 	    group.add(rbStack);
 	    group.add(rbIndependent);
-//		gbc.anchor = GridBagConstraints.EAST;		
-//		panelImg.add(new JLabel("Extension  "), WindowUtil.getConstraints(gbc, 0, 3));
-//		cbExtension = new JComboBox();
-//		for (String ext: Filename.SINGLE_IMAGES)
-//			cbExtension.addItem(ext);
-//		
-//		gbc.anchor = GridBagConstraints.WEST;		
-//		panelImg.add(cbExtension, WindowUtil.getConstraints(gbc, 1, 3));
+	}//function createImageOptions
+	
+	/** Reset all controls values to initial values */
+	public void setInitialValues(){
+		browseMd.tb.setText("");
+		browseImg.tb.setText("");
+		rbMdAppend.setSelected(true);
+		chbImg.setSelected(false);
+		rbStack.setSelected(true);
+		
 	}
 	
 	
@@ -233,14 +231,46 @@ public class SaveJDialog extends XmippDialog {
         }
 	}
 	
-	public String getData(){
-		return browseMd.tb.getText();
-	}
-	
 	public class BrowseField {
 		public JTextField tb;
 		public JButton btn;
 	}
-
 	
+	/** Getters and setters */
+	public String getMdFilename(){
+		return browseMd.tb.getText();
+	}
+	
+	public void setMdFilename(String value){
+		browseMd.tb.setText(value);
+	}
+	
+	public boolean isAppendMode(){
+		return rbMdAppend.isSelected();
+	}
+	
+	public void setAppendMode(boolean value){
+		rbMdAppend.setSelected(value);
+	}
+	
+	public boolean doSaveImages(){
+		return chbImg.isSelected();
+	}
+	
+	public boolean isOutputIndependent(){
+		return rbIndependent.isSelected();
+	}
+	
+	public String getOutput(){
+		return browseImg.tb.getText();
+	}
+	
+	public int getImageLabel(){
+		try {
+			return MetaData.str2Label(cbLabel.getSelectedItem().toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return MDLabel.MDL_UNDEFINED;
+		}
+	}
 }// class SaveJDialog

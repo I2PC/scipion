@@ -42,6 +42,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.ij.XmippImageConverter;
 import xmipp.ij.XmippImageWindow;
+import xmipp.ij.XmippStackWindow;
 
 /**
  *
@@ -149,7 +150,11 @@ public class ImagesWindowFactory {
 //            	//new XmippImageWindow(imp);
 //            }
 //        }
-    	ImageWindow iw = new XmippImageWindow(imp);
+    	ImageWindow iw;
+    		if (imp.getStackSize() > 1)
+    			iw = new XmippStackWindow(imp);
+    		else
+    			iw = new XmippImageWindow(imp);
     	iw.setVisible(true);
         return iw;
     }

@@ -33,6 +33,7 @@ import java.awt.Rectangle;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 
 
 public class WindowUtil {
@@ -92,7 +93,13 @@ public class WindowUtil {
 		btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;
-	}	
+	}
+	
+	public static JLabel getIconLabel(String icon){
+		JLabel label = new JLabel();
+		label.setIcon(XmippResource.getIcon(icon));
+		return label;
+	}
 	
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, 
 			int x, int y, int columns, int rows){

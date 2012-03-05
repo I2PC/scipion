@@ -37,9 +37,11 @@ import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.Param;
+import xmipp.utils.XmippMessage;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
+import ij.io.SaveDialog;
 import xmipp.utils.XmippResource;
 
 import java.awt.Component;
@@ -109,7 +111,8 @@ public class JFrameGallery extends JFrame {
 	private boolean autoAdjustColumns = false;
 	private GalleryPopupMenu jpopUpMenuTable;
 	private GalleryMenu menu;
-	JFileChooser fc = new JFileChooser();
+	private JFileChooser fc = new JFileChooser();
+	private SaveJDialog dlgSave = null;
 
 	private JLabel jlZoom;
 	private JLabel jlGoto;
@@ -404,28 +407,76 @@ public class JFrameGallery extends JFrame {
 		repaint();
 	}
 
-	private void computeStatsImages() {
-		try {
-			ImageGeneric imgAvg = new ImageGeneric();
-			ImageGeneric imgStd = new ImageGeneric();
-			data.md.getStatsImages(imgAvg, imgStd, data.useGeo,
-					data.getRenderLabel());
-			ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
-			ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
-			imgAvg.destroy();
-			imgStd.destroy();
-			XmippImageWindow winAvg = new XmippImageWindow(impAvg, "AVG: " + data.filename);
-			WindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
-			winAvg.setVisible(true);
-			XmippImageWindow winStd = new XmippImageWindow(impStd, "STD: " + data.filename);
-			WindowUtil.setLocation(0.8f, 0.5f, winStd, this);
-			winStd.setVisible(true);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public class Worker implements Runnable {
+		public static final int STATS = 0;
+		public static final int PCA = 1;
+		public static final int FSC = 2;
+		public String message;
+		/** Constructor selecting operation */
+		private int op; // store operation
+
+		public Worker(int operation) {
+			op = operation;
 		}
 
-		// ImagesWindowFactory.captureFrame(ImageOperations.mean(tableModel.getAllItems()));
+		public void run() {
+			try {
+				switch (op) {
+				case STATS:
+					computeStatsImages();
+					break;
+				case PCA:
+					pca();
+					break;
+				case FSC:
+					fsc();
+					break;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			ImagesWindowFactory.releaseGUI(JFrameGallery.this.getRootPane());
+		}
+
+		public String getMessage() {
+			switch (op) {
+			case STATS:
+				return "Computing average and std images...";
+			case PCA:
+				return "Computing PCA...";
+			case FSC:
+				return "Computing FSC...";
+			}
+			return "";
+		}
+
+	}
+
+	/** Function to create and launch the worker, blocking the gui */
+	public void runInBackground(int operation) {
+		Worker w = new Worker(operation);
+		ImagesWindowFactory.blockGUI(getRootPane(), w.getMessage());
+		Thread thr = new Thread(w);
+		thr.start();
+	}
+
+	private void computeStatsImages() throws Exception {
+		ImageGeneric imgAvg = new ImageGeneric();
+		ImageGeneric imgStd = new ImageGeneric();
+		data.md.getStatsImages(imgAvg, imgStd, data.useGeo,
+				data.getRenderLabel());
+		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
+		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
+		imgAvg.destroy();
+		imgStd.destroy();
+		XmippImageWindow winAvg = new XmippImageWindow(impAvg, "AVG: "
+				+ data.filename);
+		WindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
+		winAvg.setVisible(true);
+		XmippImageWindow winStd = new XmippImageWindow(impStd, "STD: "
+				+ data.filename);
+		WindowUtil.setLocation(0.8f, 0.5f, winStd, this);
+		winStd.setVisible(true);
 	}
 
 	private void openAsStack() {
@@ -437,15 +488,20 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void save() {
-		SaveJDialog dlg = new SaveJDialog(this);
-		if (dlg.showDialog()) {
+		if (dlgSave == null) {
+			dlgSave = new SaveJDialog(this);			
+			saveAs();
+		} else {
 			try {
-				String path = dlg.getData();
-				DEBUG.printMessage(path);
-				data.md.write(path);
+				String path = dlgSave.getMdFilename();
+				if (dlgSave.isAppendMode())
+					data.md.writeBlock(path);
+				else
+					data.md.write(path);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
 			}
 		}
 		// Sets path and filename automatically.
@@ -473,9 +529,24 @@ public class JFrameGallery extends JFrame {
 		// }
 		// }
 		// }
-	}
 
-	private void saveAsStack(boolean all) {
+	private void saveAs() {
+		dlgSave.setMdFilename(data.getMdFilename());
+		if (dlgSave.showDialog()) {
+			try {
+				String path = dlgSave.getMdFilename();
+				DEBUG.printMessage(path);
+				if (dlgSave.isAppendMode())
+					data.md.writeBlock(path);
+				else
+					data.md.write(path);
+				if (dlgSave.doSaveImages()){
+					data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
+				}
+			} catch (Exception e) {
+				XmippDialog.showError(this, e.getMessage());
+			}
+		}
 		// Sets path and filename automatically.
 		// String filename = gallery.getFilename() != null ? gallery
 		// .getFilename() : "";
@@ -517,17 +588,15 @@ public class JFrameGallery extends JFrame {
 			imp.setTitle("PCA: " + data.filename);
 			ImagesWindowFactory.captureFrame(imp);
 		} catch (Exception ex) {
-			DEBUG.printException(ex);
+			ex.printStackTrace();
 		}
 	}
 
 	public void fsc() {
-		// String filename = gallery.getFilename();
-		//
 		try {
 			JFrameFSC frame = new JFrameFSC(data);
+			WindowUtil.centerWindows(frame, this);
 			frame.setVisible(true);
-			//ImagesWindowFactory.openFSCWindow(data.md);
 		} catch (Exception ex) {
 			DEBUG.printException(ex);
 		}
@@ -616,7 +685,8 @@ public class JFrameGallery extends JFrame {
 			adjustColumns();
 			menu.update();
 			updateCombos();
-
+			if (dlgSave != null)
+				dlgSave.setInitialValues();
 			setTitle(gallery.getTitle());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -661,40 +731,7 @@ public class JFrameGallery extends JFrame {
 		});
 
 		toolBar.add(jsZoom);
-
 		toolBar.addSeparator();
-
-		// TODO: MOVE THIS TO MENU OPTION
-		// jcbShowLabels = new javax.swing.JCheckBox();
-		// jcbMDLabels = new javax.swing.JComboBox();
-		// jcbShowLabels.setText(Labels.LABEL_SHOW_LABELS);
-		// jcbShowLabels.addActionListener(new java.awt.event.ActionListener() {
-		// public void actionPerformed(java.awt.event.ActionEvent evt) {
-		// jcbShowLabelsActionPerformed(evt);
-		// }
-		// });
-		// toolBar.add(jcbShowLabels);
-		//
-		// jcbMDLabels.addItemListener(new java.awt.event.ItemListener() {
-		// public void itemStateChanged(java.awt.event.ItemEvent evt) {
-		// jcbMDLabelsItemStateChanged(evt);
-		// }
-		// });
-		// toolBar.add(jcbMDLabels);
-		//
-		// jcbSortByLabel.setText(Labels.LABEL_SORT_BY_LABEL);
-		// jcbSortByLabel.addActionListener(new java.awt.event.ActionListener()
-		// {
-		// public void actionPerformed(java.awt.event.ActionEvent evt) {
-		// jcbSortByLabelActionPerformed(evt);
-		// }
-		// });
-		// Set comboBox items.
-		// String labels[] = tableModel.getLabels();
-		// for (int i = 0; i < labels.length; i++) {
-		// jcbMDLabels.addItem(labels[i]);
-		// }
-		// toolBar.add(jcbSortByLabel);
 
 		jlGoto = new javax.swing.JLabel();
 		jsGoToImage = new javax.swing.JSpinner();
@@ -1120,17 +1157,17 @@ public class JFrameGallery extends JFrame {
 					isUpdating = false;
 				}
 			} else if (jmi == jmiAvgStd)
-				computeStatsImages();
+				runInBackground(Worker.STATS);
 			else if (jmi == jmiPCA)
-				pca();
+				runInBackground(Worker.PCA);
 			else if (jmi == jmiFSC)
-				fsc();
+				runInBackground(Worker.FSC);
 			else if (jmi == jmiSave) {
 				save();
 				// } else if (jmi == jmiSaveSelectionAsMetadata) {
 				// saveAsMetadata(false);
 			} else if (jmi == jmiSaveAs) {
-				saveAsStack(true);
+				saveAs();
 				// } else if (jmi == jmiSaveSelectionAsStack) {
 				// saveAsStack(false);
 			} else if (jmi == jmiExit) {

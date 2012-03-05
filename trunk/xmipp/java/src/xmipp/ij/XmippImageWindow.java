@@ -13,32 +13,6 @@ import xmipp.jni.Filename;
 
 public class XmippImageWindow extends ImageWindow
 {
-	
-	public static void main(String[] args)
-	{
-		SwingUtilities.invokeLater(new Runnable()
-		{
-
-			@Override
-			public void run()
-			{
-				try
-				{
-					ImagePlus imp = XmippImageConverter.loadImage("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1387.mrc");
-					XmippImageWindow frame = new XmippImageWindow(imp);					
-				}
-				catch (Exception e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					System.exit(0);
-				}
-			}
-		});
-	}
-
-	private XmippMenuBar mb;
-
 	public XmippImageWindow(ImagePlus imp) {
 		this(imp, "");
 	}
@@ -47,15 +21,7 @@ public class XmippImageWindow extends ImageWindow
 	{
 		super(imp, new XmippImageCanvas(imp));
 		setTitle(title);
-		//this.setVisible(false); //doesn't show by default
-		//setImage(imp);
-		initComponents();
-	}
-	
-	private void initComponents()
-	{
-		mb = new XmippMenuBar();
-		setMenuBar(mb);
+		setMenuBar(new XmippMenuBar());
 	}
 	
 	public static void openImageJ(Tool tool){
@@ -66,7 +32,4 @@ public class XmippImageWindow extends ImageWindow
 			IJ.setTool(Tool.getTool(tool));
 		}		
 	}
-
-	
-	
-}
+}//class XmippImageWindow
