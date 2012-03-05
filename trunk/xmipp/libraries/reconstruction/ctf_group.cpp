@@ -125,7 +125,7 @@ void ProgCtfGroup::defineParams()
 
     //    addParamsLine("   -i <sel_file>              : Input selfile");
     addParamsLine("   --ctfdat <ctfdat_file>     : Input CTFdat file for all data");
-    addParamsLine("   [-o <oext=\"ctf\">]        : Output root name, you may force format ctf:mrc");
+    addParamsLine("   [-o <oext=\"ctf:stk\">]        : Output root name, you may force format ctf:mrc");
     addParamsLine("   [--pad <float=1>]          : Padding factor ");
     addParamsLine("   [--phase_flipped]          : Output filters for phase-flipped data");
     addParamsLine("   [--discard_anisotropy]     : Exclude anisotropic CTFs from groups");
