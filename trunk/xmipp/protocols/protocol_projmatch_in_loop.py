@@ -23,7 +23,7 @@ def executeMask(_log,
         if DoSphericalMask:
             command += ' --mask circular -' + str(maskRadius)
         else:
-            command += ' --mask ' + userSuppliedMask
+            command += ' --mask binary_file ' + userSuppliedMask
         runJob(_log,"xmipp_transform_mask", command)
     else:
         copyFile(_log, ReconstructedFilteredVolume, maskedFileName)
