@@ -766,7 +766,7 @@ void TiltPairAligner::computeGamma()
 double matrix_fitness(double *p, void *prm)
 {
     TiltPairAligner *aligner = (TiltPairAligner *) prm;
-    Euler_angles2matrix(p[1], p[3], -p[2], aligner->pair_E);
+    Euler_angles2matrix(p[2], p[3], -p[1], aligner->pair_E);
     double retval = 0;
     for (int i = 0; i < 2; i++)
         for (int j = 0; j < 2; j++)
