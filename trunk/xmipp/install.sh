@@ -101,7 +101,7 @@ export XMIPP_HOME=$PWD
 export PATH=$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
 if $IS_MAC; then
-	export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH
+	export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH
 fi
 
 #create file to include from BASH this Xmipp installation
@@ -110,7 +110,7 @@ echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 if $IS_MAC; then
-	echo 'export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH' >> $INC_FILE
+	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi	
 chmod u+x $INC_FILE
 
@@ -120,7 +120,7 @@ echo "setenv XMIPP_HOME $PWD" > $INC_FILE
 echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 if $IS_MAC; then
-	echo 'setenv DYLD_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_LIBRARY_PATH' >> $INC_FILE
+	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
 chmod u+x $INC_FILE
 
@@ -329,8 +329,8 @@ if $DO_PYTHON; then
     if $IS_CYGWIN; then
         export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
 	elif $IS_MAC; then
-		export DYLD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$DYLD_LIBRARY_PATH"
-	    echo "--> export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
+		export DYLD_FALLBACK_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$DYLD_FALLBACK_LIBRARY_PATH"
+	    echo "--> export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH"
     fi
     echoGreen "Copying our custom python files ..."
     echoExec "cd $EXT_PYTHON"
@@ -360,7 +360,7 @@ if $DO_PYTHON; then
 		printf 'export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
 		printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
 	elif $IS_MAC; then
-		printf 'export DYLD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$DYLD_LIBRARY_PATH \n' >> $PYTHON_BIN	
+		printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
 		printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
 	else
 		printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
@@ -378,8 +378,10 @@ if $DO_PYMOD; then
 	if $IS_MAC; then
 	        echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
 			echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
+			echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/pythonXmipp" 
 			echoExec "make -f make.osx clean"
-			echoExec "make -f make.osx PREFIX=$XMIPP_HOME PYVERSION=2.7 fetch deps mpl_install"
+			echoExec "make -f make.osx PREFIX=$XMIPP_HOME PYVERSION=Xmipp fetch deps mpl_install"
+			echoExec "rm $XMIPP_HOME/bin/pythonXmipp"
 			echoExec "rm $XMIPP_HOME/bin/python2.7"
 	else
 			compile_pymodule $VMATLIBPLOT
