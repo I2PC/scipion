@@ -49,6 +49,7 @@ public:
         addSeeAlsoLine("phantom_create, volume_from_pdb");
         addParamsLine(" -i <file>       : Phantom description file (.descr) or PDB (.pdb)");
         addParamsLine("[-o <file=\"\">] : Phantom description file (.descr) or PDB (.pdb)");
+        addParamsLine("                 : For PDB files, you must explicitly give an output file, different from input");
         addParamsLine(" --operation <op>: Operation to perform");
         addParamsLine("      where <op>");
         addParamsLine("            shift <x> <y> <z> : Shift vector");
@@ -153,6 +154,7 @@ public:
         else if (Axis_mode)
             std::cout << "Rotating " << ang << " degrees around "
             << axis.transpose() << std::endl;
+        std::cout << "Transformation matrix\n" << A3D << std::endl;
     }
 
     void run()
