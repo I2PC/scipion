@@ -293,11 +293,12 @@ class ProtProjMatch(XmippProtocol):
                     else:
                         gridsize1 = [(len(ref3Ds)+1)/2, 2]
                     
-                    xplotter = XmippPlotter(*gridsize1)
+                    xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_' + it)
                     print 'gridsize1: ', gridsize1
                     print 'iterations: ', iterations
                     print 'ref3Ds: ', ref3Ds
                     
+                    #Fixed plot markersize limits
                     max_p = 40
                     min_p = 5
                     
@@ -314,11 +315,18 @@ class ProtProjMatch(XmippProtocol):
                             min_w = min(weight)
                             
                         plot_title = 'Ref3D_'+ ref3d
-                        a = xplotter.createSubPlot(plot_title, 'XX', 'YY', yformat=False, projection='polar')
+                        if (len(weight) > 0):
+                            a = xplotter.createSubPlot(plot_title, 'Min weight='+str(min_w)+', Max weight='+str(max_w), '', yformat=False, projection='polar')
+                        else:
+                            a = xplotter.createSubPlot(plot_title, 'Empty plot', '', yformat=False, projection='polar')
+                      
                         i = 0
                         
                         for id in md:
-                            pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
+                            if (len(weight) > 0):
+                                pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
+                            else:
+                                pointsize = 1
                             print 'weight[i]: ', weight[i], ' | pointsize: ', pointsize
                             print 'min_w: ', min_w, ' | max_w: ', max_w, ' | min_p: ', min_p, ' | max_p: ', max_p
                             a.plot(rot[i], tilt[i], markerfacecolor='blue', marker='.', markersize=pointsize)
