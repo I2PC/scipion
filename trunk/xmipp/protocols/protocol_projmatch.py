@@ -15,7 +15,7 @@ from os.path import join, exists
 from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
 MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE, MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_WEIGHT
 from protlib_base import XmippProtocol, protocolMain
-from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector, runShowJ
+from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector, runShowJ, runJob
 from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning
@@ -131,6 +131,8 @@ class ProtProjMatch(XmippProtocol):
     def launchProjmatchPlots(self, selectedPlots):
         ''' Launch some plots for a Projection Matching protocol run '''
         import numpy as np
+        _log = self.Log
+
         xplotter=None
         self._plot_count = 0
         
@@ -146,11 +148,22 @@ class ProtProjMatch(XmippProtocol):
                 file_name = VisualizationReferenceFileNames[int(ref3d)]
                 print 'ref3d: ',ref3d, ' | file_name:',file_name
                 if exists(file_name):
-                    try:
-                        runShowJ(file_name)
-                    except Exception, e:
-                        from protlib_gui_ext import showError
-                        showError("Error launching java app", str(e))
+                    #Chimera
+                    if(self.DisplayVolumeSlicesAlong == 'surface'):
+                        parameters =  ' spider:' + file_name 
+                        print 'parameters: ',parameters
+                        runJob(_log,
+                               'chimera',
+                               parameters
+                               )
+                    else:
+                    #Xmipp_showj (x,y and z shows the same)
+                        try:
+                            runShowJ(file_name)
+                        except Exception, e:
+                            from protlib_gui_ext import showError
+                            showError("Error launching java app", str(e))
+                        
             
         if doPlot('DisplayReconstruction'):
             
@@ -162,11 +175,21 @@ class ProtProjMatch(XmippProtocol):
                     file_name = self.getFilename('ReconstructedFileNamesIters', iter=int(it), ref=int(ref3d))
                     print 'it: ',it, ' | file_name:',file_name
                     if exists(file_name):
-                        try:
-                            runShowJ(file_name)
-                        except Exception, e:
-                            from protlib_gui_ext import showError
-                            showError("Error launching java app", str(e))
+                        #Chimera
+                        if(self.DisplayVolumeSlicesAlong == 'surface'):
+                            parameters =  ' spider:' + file_name 
+                            print 'parameters: ',parameters
+                            runJob(_log,
+                                   'chimera',
+                                   parameters
+                                   )
+                        else:
+                        #Xmipp_showj (x,y and z shows the same)
+                            try:
+                                runShowJ(file_name)
+                            except Exception, e:
+                                from protlib_gui_ext import showError
+                                showError("Error launching java app", str(e))
                             
         if doPlot('DisplayFilteredReconstruction'):
             iterations = getListFromVector(self.DisplayIterationsNo)
@@ -177,14 +200,27 @@ class ProtProjMatch(XmippProtocol):
                     file_name = self.getFilename('ReconstructedFilteredFileNamesIters', iter=int(it), ref=int(ref3d))
                     print 'it: ',it, ' | file_name:',file_name
                     if exists(file_name):
-                        try:
-                            runShowJ(file_name)
-                        except Exception, e:
-                            from protlib_gui_ext import showError
-                            showError("Error launching java app", str(e))
+                                                #Chimera
+                        if(self.DisplayVolumeSlicesAlong == 'surface'):
+                            parameters =  ' spider:' + file_name 
+                            print 'parameters: ',parameters
+                            runJob(_log,
+                                   'chimera',
+                                   parameters
+                                   )
+                        else:
+                        #Xmipp_showj (x,y and z shows the same)
+
+                            try:
+                                runShowJ(file_name)
+                            except Exception, e:
+                                from protlib_gui_ext import showError
+                                showError("Error launching java app", str(e))
                 
         if doPlot('DisplayBFactorCorrectedVolume'):
             
+            iterations = getListFromVector(self.DisplayIterationsNo)
+            ref3Ds = getListFromVector(self.DisplayRef3DNo)
             #if(self.DisplayVolumeSlicesAlong == 'surface'):
             
             for ref3d in ref3Ds:
@@ -195,8 +231,8 @@ class ProtProjMatch(XmippProtocol):
                     print 'it: ',it, ' | file_name_bfactor:',file_name_bfactor
                     
                     parameters = ' -i ' + file_name + \
-                        ' --sampling ' + self.SamplingRate + \
-                        ' --maxres ' + self.MaxR + \
+                        ' --sampling ' + str(self.SamplingRate) + \
+                        ' --maxres ' + str(self.MaxRes) + \
                         ' -o ' + file_name_bfactor
                         
                     parameters +=  ' ' + self.CorrectBfactorExtraCommand
@@ -207,11 +243,23 @@ class ProtProjMatch(XmippProtocol):
                            )
 
                     if exists(file_name_bfactor):
-                        try:
-                            runShowJ(file_name_bfactor)
-                        except Exception, e:
-                            from protlib_gui_ext import showError
-                            showError("Error launching java app", str(e))
+                        
+                                                                        #Chimera
+                        if(self.DisplayVolumeSlicesAlong == 'surface'):
+                            parameters =  ' spider:' + file_name_bfactor 
+                            print 'parameters: ',parameters
+                            runJob(_log,
+                                   'chimera',
+                                   parameters
+                                   )
+                        else:
+                        #Xmipp_showj (x,y and z shows the same)
+
+                            try:
+                                runShowJ(file_name_bfactor)
+                            except Exception, e:
+                                from protlib_gui_ext import showError
+                                showError("Error launching java app", str(e))
 
             
         if doPlot('DisplayProjectionMatchingAlign2d'):
@@ -261,23 +309,24 @@ class ProtProjMatch(XmippProtocol):
             if(self.DisplayAngularDistributionWith == '3D'):
                 for ref3d in ref3Ds:
                     for it in iterations:
-                        
+                        _OuterRadius = getComponentFromVector(self.OuterRadius, int(it))
+                        _InnerRadius = getComponentFromVector(self.InnerRadius, int(it))
+
                         file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
                         file_name_bild = file_name + '.bild'
     
                         parameters =  ' -i ' + file_name + \
                             ' -o ' + file_name_bild + \
-                            ' chimera ' + int(OuterRadius + OuterRadius * 0.1)
+                            ' chimera ' + str(float(_OuterRadius) * 1.1)
                             
                         runJob(_log,
                                'xmipp_angular_distribution_show',
                                parameters
                                )
                         
-                        parameters =  ' ' + file_name_bild + ' ' + \
-                        ' -i ' + file_name + \
-                            ' -o ' + file_name_bild + \
-                            ' chimera ' + int(OuterRadius + OuterRadius * 0.1)
+                        file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=int(it), ref=int(ref3d))
+                        
+                        parameters =  ' ' + file_name_bild + ' spider:' + file_name_rec_filt 
                             
                         runJob(_log,
                                'chimera',
