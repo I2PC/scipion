@@ -10,11 +10,9 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-        FileName xmippPath;
-        xmippPath = getenv("XMIPP_HOME");
-        //get example images/staks
-        source1 = xmippPath + "/applications/tests/test_funcs/singleImage.spi";
-        source2 = xmippPath + "/applications/tests/test_funcs/singleImage.mrc";
+       //get example images/staks
+        source1 = TEST_FILENAME("singleImage.spi");
+        source2 = TEST_FILENAME("singleImage.mrc");
     }
 
     // virtual void TearDown() {}//Destructor

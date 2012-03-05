@@ -759,7 +759,7 @@ TEST_F( MetadataTest, ReadWriteAppendBlock)
     mDsource.write((String)"two@"+sfn,MD_APPEND);
     mDsource.write((String)"three@"+sfn,MD_APPEND);
     MetaData auxMetadata;
-    FileName sfn2(localDir+ "/applications/tests/test_metadata/ReadWriteAppendBlock.xmd");
+    FileName sfn2 = TEST_FILENAME("ReadWriteAppendBlock.xmd");
     auxMetadata.read(sfn);
     EXPECT_TRUE(compareTwoFiles(sfn,sfn2,0));
     unlink(sfn);
