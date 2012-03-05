@@ -492,6 +492,7 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
     this->fn_out = out;
     this->oroot = oroot;
     this->image_label = image_label;
+    this->doRun = true;
 
     if (remove_disabled)
             mdIn->removeDisabled();
@@ -509,8 +510,7 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
                 input_is_stack = true;
         }
 
-        String labelStr = getParam("--label");
-        image_label = MDL::str2Label(labelStr);
+        String labelStr = MDL::label2Str(image_label);
 
         if (image_label == MDL_UNDEFINED)
           REPORT_ERROR(ERR_MD_BADLABEL, formatString("Unknown image label '%s'.", labelStr.c_str()));
@@ -562,7 +562,7 @@ void XmippMetadataProgram::readParams()
     md->read(fn_in, NULL, decompose_stacks);
     delete_mdIn = true;
 
-    setup(md, fn_out, oroot, apply_geo, image_label);
+    setup(md, fn_out, oroot, apply_geo, MDL::str2Label(getParam("--label")));
 }//function readParams
 
 void XmippMetadataProgram::show()
@@ -650,6 +650,7 @@ void XmippMetadataProgram::run()
     FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
     size_t objId , outId;
     MDRow rowIn, rowOut;
+    mdOut.clear(); //this allows multiple runs of the same Program object
 
     //Perform particular preprocessing
     preProcess();
@@ -686,7 +687,12 @@ void XmippMetadataProgram::run()
             if (!oroot.empty()) // Compose out name to save as independent images
             {
                 if (oext.empty()) // If oext is still empty, then use ext of indep input images
+                {
+                  if (input_is_stack)
+                    oextBaseName = "spi";
+                  else
                     oextBaseName = fnImg.getFileFormat();
+                }
 
                 if (!baseName.empty() )
                     fnImgOut.compose(fullBaseName, objIndex, oextBaseName);

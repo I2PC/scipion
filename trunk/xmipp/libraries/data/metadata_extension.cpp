@@ -255,7 +255,7 @@ void copyImages(const MetaData &md, const char * output, bool independent, MDLab
 		out = output;
 	//Image convert dont use applyGeo
 	conv.setup(new MetaData(md), out, oroot, false, image_label);
-	conv.run();
+	conv.tryRun();
 }
 
 int maxFileNameLength(const MetaData &MD, MDLabel image_label)

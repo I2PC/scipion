@@ -238,7 +238,7 @@ private:
     MetaData * mdIn;
     MetaData mdOut; //TODO: can be treated by reference as mdIn for
     // uses from another programs...
-protected:
+public:
     /// The input metadata should not be used
     /// if there is a very very special case
     /// you can use this function
@@ -265,9 +265,6 @@ public:
     size_t mdInSize;
 
 protected:
-
-
-
     /// Metadata writing mode: OVERWRITE, APPEND
     WriteModeMetaData mode;
 

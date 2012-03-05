@@ -694,6 +694,7 @@ public:
     /** Write metadata to out stream
      */
     void write(std::ostream &os, const String & blockName="",WriteModeMetaData mode=MD_OVERWRITE) const;
+    void print() const;
 
     /** Append data lines to file.
      * This function can be used to add new data to

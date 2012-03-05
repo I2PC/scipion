@@ -37,6 +37,7 @@ typedef enum
 
 class ProgConvImg: public XmippMetadataProgram
 {
+
 private:
     std::string  type;       // Type of output conversion
     std::string  depth;
@@ -49,7 +50,11 @@ private:
     bool        appendToStack;
     bool        swap;
 
+public:
+    /** Constructor */
+//    ProgConvImg();
 protected:
+    void init();
     void defineParams();
     void readParams();
     void preProcess();

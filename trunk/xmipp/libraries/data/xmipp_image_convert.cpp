@@ -28,12 +28,35 @@
 #include "xmipp_image_generic.h"
 #include "xmipp_image_convert.h"
 
-void  ProgConvImg::defineParams()
+//ProgConvImg::ProgConvImg()
+//{
+//    init();
+//}
+
+void ProgConvImg::init()
 {
     each_image_produces_an_output = true;
     save_metadata_stack = false;
     keep_input_columns = true;
     delete_output_stack = false;
+
+    castMode = CW_CONVERT;
+    appendToStack = false;
+    // output extension
+    oext = "";
+    // output type
+    type = "auto";
+    // Set default write mode
+    writeMode = WRITE_OVERWRITE;
+    delete_output_stack = false;
+    depth = "";
+    swap = false;
+}
+
+
+void  ProgConvImg::defineParams()
+{
+    init();
     CommentList &comments = defaultComments["-i"];
     comments.addComment("++ Supported read formats are:");
     comments.addComment("++ dm3 : Digital Micrograph 3");
@@ -132,7 +155,7 @@ void ProgConvImg::readParams()
 {
     XmippMetadataProgram::readParams();
 
-    fn_out = (checkParam("-o"))? getParam("-o") : "";
+    //fn_out = (checkParam("-o"))? getParam("-o") : "";
     castMode = (checkParam("--rangeAdjust"))? CW_ADJUST: \
                (checkParam("--dont_convert"))? CW_CAST: CW_CONVERT;
 
@@ -146,6 +169,14 @@ void ProgConvImg::readParams()
 
     // Check output type
     type = getParam("--type");
+    depth = (checkParam("--depth"))? "%" + (String)getParam("--depth") : "";
+    swap = checkParam("--swap");
+
+}
+
+void ProgConvImg::preProcess()
+{
+    init();
     if (type == "auto")
     {
         if (oroot.empty())
@@ -171,7 +202,7 @@ void ProgConvImg::readParams()
     // Set write mode
     if (single_image && fn_out.isInStack()) // Replace a single image in a stack
     {
-        type == "img";
+        type = "img";
         writeMode = WRITE_REPLACE;
     }
     else if (type == "stk" && appendToStack)
@@ -182,13 +213,6 @@ void ProgConvImg::readParams()
         delete_output_stack = true;
     }
 
-    depth = (checkParam("--depth"))? "%" + (String)getParam("--depth") : "";
-
-    swap = checkParam("--swap");
-}
-
-void ProgConvImg::preProcess()
-{
     if (delete_output_stack)
     {
         FileName fn_stack_plain = fn_out.removeFileFormat();
@@ -243,7 +267,7 @@ void ProgConvImg::preProcess()
         createEmptyFile(fn_out+depth, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE, swap);
 
     create_empty_stackfile = false;
-}
+}//function preprocess
 
 void ProgConvImg::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
@@ -281,7 +305,7 @@ void ProgConvImg::processImage(const FileName &fnImg, const FileName &fnImgOut, 
             break;
         }
     }
-}
+}//function processImage
 
 void ProgConvImg::finishProcessing()
 {
@@ -304,7 +328,7 @@ void ProgConvImg::show()
     XmippMetadataProgram::show();
     if (each_image_produces_an_output)
     {
-        if (oext != "")
+        if (!oext.empty())
             std::cout << "Output Extension: " << oext << std::endl;
     }
 }
