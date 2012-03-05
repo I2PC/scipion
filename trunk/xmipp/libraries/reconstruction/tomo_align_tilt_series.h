@@ -162,6 +162,9 @@ public:
     // iteration counter as a progress measure
     int iteration;
 
+    /// Destructor
+    ~ProgTomographAlignment();
+
     /// Usage
     void defineParams();
 

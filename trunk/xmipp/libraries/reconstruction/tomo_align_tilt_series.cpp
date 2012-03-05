@@ -394,7 +394,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
                 // Initialize with cross correlation
                 double tx, ty;
                 pthread_mutex_lock( &globalAffineMutex );
-            	CorrelationAux aux;
+                CorrelationAux aux;
                 if (!isMirror)
                     bestShift(I1d,I2d,tx,ty,aux);
                 else
@@ -684,8 +684,7 @@ void ProgTomographAlignment::computeAffineTransformations(
     globalAffine=globalAffineToUse;
 
     pthread_t * th_ids = new pthread_t[numThreads];
-    ThreadComputeTransformParams * th_args=
-        new ThreadComputeTransformParams[numThreads];
+    ThreadComputeTransformParams * th_args = new ThreadComputeTransformParams[numThreads];
 
     for( int nt = 0 ; nt < numThreads ; nt ++ )
     {
@@ -700,8 +699,8 @@ void ProgTomographAlignment::computeAffineTransformations(
         pthread_join(*(th_ids+nt), NULL);
 
     // Threads structures are not needed any more
-    delete( th_ids );
-    delete( th_args );
+    delete[] th_ids;
+    delete[] th_args;
     globalAffine=oldglobalAffine;
 }
 
@@ -768,7 +767,7 @@ void ProgTomographAlignment::produceSideInfo()
     if (Nimg!=0)
     {
         // Clear the list of images if not empty
-        if (img.size()!=0)
+        if (!img.empty())
         {
             for (int i=0; i<img.size(); i++)
                 delete img[i];
@@ -776,7 +775,7 @@ void ProgTomographAlignment::produceSideInfo()
         }
 
         // Clear the list of masks if not empty
-        if (maskImg.size()!=0)
+        if (!maskImg.empty())
         {
             for (int i=0; i<maskImg.size(); i++)
                 delete maskImg[i];
@@ -1631,6 +1630,24 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 }
 #undef DEBUG
 
+ProgTomographAlignment::~ProgTomographAlignment()
+{
+    // Clear the list of images if not empty
+    if (!img.empty())
+    {
+        for (int i=0; i<img.size(); i++)
+            delete img[i];
+        img.clear();
+    }
+
+    if (!maskImg.empty())
+    {
+        for (int i=0; i<maskImg.size(); i++)
+            delete maskImg[i];
+        maskImg.clear();
+    }
+}
+
 void ProgTomographAlignment::generateLandmarkSet()
 {
     FileName fn_tmp = fnRoot+"_landmarks.txt";
@@ -2120,7 +2137,7 @@ bool ProgTomographAlignment::refineChain(LandmarkChain &chain,
                 chain=refinedChain;
                 double tilt0=tiltList[chain[0].imgIdx];
                 double tiltF=tiltList[chain[chain.size()-1].imgIdx];
-                double lengthThreshold=XMIPP_MAX(3,FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF)))));
+                double lengthThreshold=XMIPP_MAX(3.,FLOOR(seqLength*cos(DEG2RAD(0.5*(tilt0+tiltF)))));
                 if (chain.size()<lengthThreshold && !useCriticalPoints)
                     return false;
             }
@@ -2227,7 +2244,7 @@ void ProgTomographAlignment::writeTransformations(
     }
     if (counter==imax-1)
     {
-    	fhOut << tiltList[tiltList.size()-1] << "\t0.0\t1.0\t0.0\t0.0\t1.0\t0.0\t0.0\n";
+        fhOut << tiltList[tiltList.size()-1] << "\t0.0\t1.0\t0.0\t0.0\t1.0\t0.0\t0.0\n";
         fhOut << "1 0 0 1 0 0\n";
     }
     fhOut.close();
@@ -2286,6 +2303,8 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
     MultidimArray<int> iMask;
     Image<double> I;
     Matrix2D<double> M, M1, M2, M3;
+    FileName fn_corrected;
+
     for (int i=0;i<Nimg; i++)
     {
         // Align the normal image
@@ -2313,7 +2332,7 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
         double tilt=tiltList[i];
         double psi=0;
         I.setEulerAngles(rot, tilt, psi);
-        FileName fn_corrected=fnRoot+"_corrected_"+integerToString(i,3)+".xmp";
+        fn_corrected.compose(i+1, fnRoot+"_corrected_", "stk");
         I.write(fn_corrected);
 
         // Align the original image
@@ -2347,7 +2366,7 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
             else if (!dontNormalize)
                 Iorig(i,j)-=avg;
             Iorig.setEulerAngles(rot, tilt, psi);
-            fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
+            fn_corrected.compose(i+1, fnRoot+"_corrected_originalsize_", "stk");
             Iorig.write(fn_corrected);
         }
 
@@ -2534,6 +2553,7 @@ void ProgTomographAlignment::run()
             *bestPreviousAlignment=*alignment;
         }
     }
+    delete alignment;
     std::cout << "Best rot=" << bestRot
     << " Best error=" << bestError << std::endl;
 
@@ -2589,6 +2609,7 @@ void ProgTomographAlignment::run()
     // Correct the input images
     alignImages(*bestPreviousAlignment);
     writeLandmarkSet(fnRoot+"_good_landmarks_corrected.txt");
+    delete bestPreviousAlignment;
 }
 #undef DEBUG
 
