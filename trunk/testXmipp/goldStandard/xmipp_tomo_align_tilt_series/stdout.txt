@@ -1,0 +1,73 @@
+Cost for [0] - [1] = 0.0944189
+Cost for [1] - [2] = 0.0741582
+Cost for [3] - [4] = 0.0628187
+Cost for [2] - [3] = 0.05423
+Cost for [4] - [5] = 0.0515306
+Image 0 Average correlation forward=0.892183 backward=1
+Image 1 Average correlation forward=0.919686 backward=0.904072
+Image 2 Average correlation forward=0.925574 backward=0.916719
+Image 3 Average correlation forward=0.92499 backward=0.930181
+Image 4 Average correlation forward=0.914455 backward=0.925828
+Image 5 Average correlation forward=1 backward=0.913687
+Cost distribution= 0.0684885 +- 0.0156082
+Cost for [1] - [2] = 0.0741582
+Cost for [0] - [1] = 0.0944189
+Cost for [3] - [4] = 0.0628187
+Cost for [2] - [3] = 0.05423
+Cost for [4] - [5] = 0.0515306
+Cost distribution= 0.0684885 +- 0.0156082
+ Number of points=3011 Number of chains=517 ( 5.82398 )
+rot= 0 error= 0.74971
+rot= 5 error= 0.74242
+rot= 10 error= 0.736761
+rot= 15 error= 0.731847
+rot= 20 error= 0.72842
+rot= 25 error= 0.726607
+rot= 30 error= 0.726474
+rot= 35 error= 0.728026
+rot= 40 error= 0.731206
+rot= 45 error= 0.735897
+rot= 50 error= 0.74193
+rot= 55 error= 0.74909
+rot= 60 error= 0.757132
+rot= 65 error= 0.765789
+rot= 70 error= 0.77478
+rot= 75 error= 0.783826
+rot= 80 error= 0.792655
+rot= 85 error= 0.80101
+rot= 90 error= 0.808656
+rot= 95 error= 0.815383
+rot= 100 error= 0.821011
+rot= 105 error= 0.825395
+rot= 110 error= 0.82842
+rot= 115 error= 0.830012
+rot= 120 error= 0.830128
+rot= 125 error= 0.828767
+rot= 130 error= 0.825963
+rot= 135 error= 0.821786
+rot= 140 error= 0.816344
+rot= 145 error= 0.809778
+rot= 150 error= 0.802264
+rot= 155 error= 0.794005
+rot= 160 error= 0.78463
+rot= 165 error= 0.775589
+rot= 170 error= 0.766569
+rot= 175 error= 0.757849
+Best rot=30 Best error=0.726474
+1 (30,90)--->0.725215
+   (***27.2938,90)--->0.724963
+Removing outliers ...
+54 out of 517 landmarks have been removed
+1 (27.2938,90)--->0.600759
+   (***3.89897,90)--->0.560795
+2 (3.89897,90)--->0.560795
+   (***3.89919,90)--->0.560795
+Removing outliers ...
+47 out of 463 landmarks have been removed
+1 (3.89919,90)--->0.475093
+   (***-1.30305,90)--->0.471917
+Removing outliers ...
+46 out of 416 landmarks have been removed
+1 (-1.30305,90)--->0.451376
+   (***-0.820901,90)--->0.451347
+Average height of the landmarks at 0 degrees=14.4889
