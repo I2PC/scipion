@@ -289,4 +289,5 @@ void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
     for (int i = 0; i < Ypdim; i++)
         for (int j = 0; j < Xpdim; j++)
             Mp.setPixel(i, j, result[i*Xpdim+j]);
+    free(result);
 }
