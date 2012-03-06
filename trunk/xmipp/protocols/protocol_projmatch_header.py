@@ -575,7 +575,7 @@ DoLowPassFilter = True
 """
 UseFscForFilter = True
 
-# {condition}(DoLowPassFilter) Constant to by added to the estimated resolution
+# {condition}(DoLowPassFilter) Constant to be added to the estimated resolution
 """ The meaning of this field depends on the previous flag.
     If set to true, then the volume will be filtered at a frecuency equal to
     the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
@@ -584,7 +584,8 @@ UseFscForFilter = True
     provided in this field 
     This value is in digital frequency, or pixel^-1: minimum 0, maximum 0.5
 
-    If you detect correlation between noisy regions decrease this value (even to negative values)
+    If you detect correlation between noisy regions decrease this value 
+    (even to negative values)
     
     You can specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, ".15 .15 .1 .1" 
@@ -595,9 +596,9 @@ UseFscForFilter = True
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration ='0.1'
+ConstantToAddToFiltration ='-0.05'
 
-# Constant to by added to the estimated resolution
+# Constant to be added to the reconstruction maximum frequency
 """ The meaning of this field depends on the UseFscForFilter flag.
     If set to true, then the volume will be reconstructed up to the frequency equal to
     the resolution computed with resolution_fsc (FSC=0.5) plus the value 
@@ -721,6 +722,9 @@ DisplayAngularDistributionWith='2D'
 
 # {view} Display resolution plots (FSC)
 DisplayResolutionPlots=True
+
+# {expert} Display a threshold in resolution plots (FSC)
+ResolutionThreshold=0.5
 
 
 #-----------------------------------------------------------------------------
