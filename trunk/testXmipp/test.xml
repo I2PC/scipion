@@ -734,7 +734,7 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_transform_adjust_volume_grey_levels" mpi="FALSE">
 		<CASE
-			arguments="-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %o/adjusted.vol"
+			arguments="-i input/phantomBacteriorhodopsin.vol -m input/projectionsBacteriorhodopsin.xmd -o %o/adjusted.vol"
 			changeDir="FALSE">
 			<FILE filename="adjusted.vol" />
 		</CASE>

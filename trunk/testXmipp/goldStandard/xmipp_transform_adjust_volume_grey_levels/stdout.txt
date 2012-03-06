@@ -1,2 +1,2 @@
 
-First Linear transformation: y=9.00375*x+-1.12822e+06
+First Linear transformation: y=4.55036*x+-0.108379
