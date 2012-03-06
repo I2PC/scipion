@@ -40,7 +40,7 @@ void ProgTomoRemoveFluctuations::readParams()
 // Usage -------------------------------------------------------------------
 void ProgTomoRemoveFluctuations::defineParams()
 {
-	addUsageLine("Removes the flickering in a tilt series. This is a phenomenon rather ");
+	addUsageLine("Remove the flickering in a tilt series. This is a phenomenon rather ");
 	addUsageLine("common in X-ray microscopy. For doing so, a low-pass filter of a given ");
 	addUsageLine("frequency (normalized to 0.5) is applied across the time series, i.e., a ");
 	addUsageLine("line is formed with all the lines at the same position along the tilt series. ");
