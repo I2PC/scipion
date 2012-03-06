@@ -263,7 +263,8 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
 void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
 {
     if (Mp.datatype!=UChar)
-        REPORT_ERROR(ERR_ARG_INCORRECT,"Smooth downsampling is only valid for 8 bit images");
+        REPORT_ERROR(ERR_ARG_INCORRECT,formatString("Smooth downsampling is only valid for 8 bit images. \n"
+        		"Choose a supporting 8bit file format different from %s",Mp.image->name().c_str()));
 
     int Ydim, Xdim, Ypdim, Xpdim;
     M().getDimensions(Xdim, Ydim);
