@@ -761,7 +761,6 @@
 		<CASE arguments="-i input/header.doc --apply_transform -o %o/images.stk"
 			changeDir="FALSE">
 			<FILE filename="images.stk" />
-			<FILE filename="images.xmd" />
 		</CASE>
 		<CASE
 			arguments="-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap"
