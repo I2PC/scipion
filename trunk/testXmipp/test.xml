@@ -752,9 +752,9 @@
 			<FILE filename="downsampledFourier.xmp" />
 		</CASE>
 		<CASE
-			arguments="-i input/micrograph8bits.tif -o %o/downsampledSmooth.xmp --step 2 --method smooth"
+			arguments="-i input/micrograph8bits.tif -o %o/downsampledSmooth.mrc --step 2 --method smooth"
 			changeDir="FALSE">
-			<FILE filename="downsampledSmooth.xmp" />
+			<FILE filename="downsampledSmooth.mrc" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_transform_geometry" mpi="FALSE">

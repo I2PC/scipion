@@ -1,3 +1,0 @@
-2: Incorrect argument received
-Smooth downsampling is only valid for 8 bit images
-File: libraries/reconstruction/transform_downsample.cpp line: 266
