@@ -40,7 +40,8 @@ import static org.junit.Assert.*;
  * Test metadata 
  * 
  * sample metadata:
- * data_
+ * 
+data_
 loop_
  _image
  _enabled
@@ -109,6 +110,15 @@ public class MetadataTest {
     	ids = md.findObjects();
     	for (int i=0; i < ids.length; ++i)
     		assertEquals(refSorted[i], md.getValueInt(MDLabel.MDL_REF, ids[i]));
+    }//function testSort
+    
+    @Test
+    public void testMakeAbsPath() throws Exception{
+    	MetaData md = new MetaData(mdFn);
+    	md.print();
+    	md.makeAbsPath(MDLabel.MDL_IMAGE);
+    	md.print();
+    	
     }//function testSort
 
 }//class MetadataTest

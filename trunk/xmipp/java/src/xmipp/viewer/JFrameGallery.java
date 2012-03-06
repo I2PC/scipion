@@ -25,24 +25,8 @@
  ***************************************************************************/
 package xmipp.viewer;
 
-import xmipp.viewer.windows.ImagesWindowFactory;
-
-import xmipp.ij.XmippImageConverter;
-import xmipp.ij.XmippImageWindow;
-import xmipp.jni.Filename;
-import xmipp.jni.ImageGeneric;
-import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
-import xmipp.utils.WindowUtil;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippLabel;
-import xmipp.utils.Param;
-import xmipp.utils.XmippMessage;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.ImageWindow;
-import ij.io.SaveDialog;
-import xmipp.utils.XmippResource;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -57,20 +41,25 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
 import javax.swing.ComboBoxModel;
 import javax.swing.ImageIcon;
+import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -93,6 +82,19 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+
+import xmipp.ij.XmippImageConverter;
+import xmipp.ij.XmippImageWindow;
+import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MetaData;
+import xmipp.utils.DEBUG;
+import xmipp.utils.Param;
+import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippLabel;
+import xmipp.utils.XmippResource;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class JFrameGallery extends JFrame {
 	private static final long serialVersionUID = -8957336972082018823L;
@@ -224,7 +226,7 @@ public class JFrameGallery extends JFrame {
 		container.add(cbPanel, c);
 		updateCombos();
 
-		jspContent = new javax.swing.JScrollPane();
+		jspContent = new GalleryScroll();
 		setInitialValues();
 		// Create table
 		createTable();
@@ -265,6 +267,10 @@ public class JFrameGallery extends JFrame {
 		setAutoAdjustColumns(adjust);
 	}
 
+	/** Some tweaks over traditional JTable */
+	public class GalleryScroll extends JScrollPane {
+	}// class GalleryTable
+
 	private void createTable() {
 		// Create row header for enumerate rows
 		rowHeaderModel = new GalleryRowHeaderModel(gallery.getRowCount(), 1);
@@ -283,6 +289,7 @@ public class JFrameGallery extends JFrame {
 		// table.setRowHeight(h);
 		// rowHeader.setFixedCellHeight(h);
 		jspContent.setViewportView(table);
+
 		gallery.setupTable(table);
 
 		// DEBUG.printMessage("WIDTH: " + jspContent.getVisibleRect().width);
@@ -301,6 +308,38 @@ public class JFrameGallery extends JFrame {
 			}
 		});
 
+		//Zoom with Ctrl + MouseWeel
+		table.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent evt) {
+				if (evt.isControlDown())
+					zoomChange(evt.getWheelRotation() < 0);
+				else
+					table.getParent().dispatchEvent(evt);
+			}
+		});
+		
+		//Zoom in with Ctrl + P
+		InputMap imap = table.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		ActionMap amap = table.getActionMap();
+		imap.put(KeyStroke.getKeyStroke("ctrl released P"), "zoomIn");
+		amap.put("zoomIn", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				zoomChange(true);
+			}
+
+		});
+		//Zoom in with Ctrl + O
+		imap.put(KeyStroke.getKeyStroke("ctrl released M"), "zoomOut");
+		amap.put("zoomOut", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				zoomChange(false);
+			}
+
+		});
+
 		updateTable();
 		updateViewState();
 
@@ -311,6 +350,11 @@ public class JFrameGallery extends JFrame {
 		// table.getIntercellSpacing().width);
 		// setZoom((int) (scale * 100));
 	}// function createTable
+
+	private void zoomChange(boolean increase) {
+		int deltha = increase ? 10 : -10;
+		jsZoom.setValue((Integer) jsZoom.getValue() + deltha);
+	}
 
 	private void updateTable() {
 		// if (table.isShowing()) {
@@ -489,7 +533,7 @@ public class JFrameGallery extends JFrame {
 
 	private void save() {
 		if (dlgSave == null) {
-			dlgSave = new SaveJDialog(this);			
+			dlgSave = new SaveJDialog(this);
 			saveAs();
 		} else {
 			try {
@@ -502,33 +546,34 @@ public class JFrameGallery extends JFrame {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			}
 		}
-		// Sets path and filename automatically.
-		// String filename = gallery.getFilename() != null ? gallery
-		// .getFilename() : "";
-		// fc.setSelectedFile(new File(forceExtension(filename, ".xmd")));
-		//
-		// if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
-		// boolean response = true;
-		// if (fc.getSelectedFile().exists()) {
-		// response = JOptionPane.showConfirmDialog(null,
-		// Labels.MESSAGE_OVERWRITE_FILE,
-		// Labels.MESSAGE_OVERWRITE_FILE_TITLE,
-		// JOptionPane.OK_CANCEL_OPTION,
-		// JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION;
-		// }
-		//
-		// if (response) {
-		// String path = fc.getSelectedFile().getAbsolutePath();
-		// if (gallery.saveAsMetadata(path, all)) {
-		// JOptionPane.showMessageDialog(this,
-		// Labels.MESSAGE_FILE_SAVED + path,
-		// Labels.MESSAGE_FILE_SAVED_TITLE,
-		// JOptionPane.INFORMATION_MESSAGE);
-		// }
-		// }
-		// }
+	}
+
+	// Sets path and filename automatically.
+	// String filename = gallery.getFilename() != null ? gallery
+	// .getFilename() : "";
+	// fc.setSelectedFile(new File(forceExtension(filename, ".xmd")));
+	//
+	// if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
+	// boolean response = true;
+	// if (fc.getSelectedFile().exists()) {
+	// response = JOptionPane.showConfirmDialog(null,
+	// Labels.MESSAGE_OVERWRITE_FILE,
+	// Labels.MESSAGE_OVERWRITE_FILE_TITLE,
+	// JOptionPane.OK_CANCEL_OPTION,
+	// JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION;
+	// }
+	//
+	// if (response) {
+	// String path = fc.getSelectedFile().getAbsolutePath();
+	// if (gallery.saveAsMetadata(path, all)) {
+	// JOptionPane.showMessageDialog(this,
+	// Labels.MESSAGE_FILE_SAVED + path,
+	// Labels.MESSAGE_FILE_SAVED_TITLE,
+	// JOptionPane.INFORMATION_MESSAGE);
+	// }
+	// }
+	// }
 
 	private void saveAs() {
 		dlgSave.setMdFilename(data.getMdFilename());
@@ -540,8 +585,10 @@ public class JFrameGallery extends JFrame {
 					data.md.writeBlock(path);
 				else
 					data.md.write(path);
-				if (dlgSave.doSaveImages()){
-					data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
+				if (dlgSave.doSaveImages()) {
+					data.md.writeImages(dlgSave.getOutput(),
+							dlgSave.isOutputIndependent(),
+							dlgSave.getImageLabel());
 				}
 			} catch (Exception e) {
 				XmippDialog.showError(this, e.getMessage());
@@ -1209,8 +1256,8 @@ public class JFrameGallery extends JFrame {
 
 			add(jmFile);
 			addMenuItem(jmFile, jmiSave);
-			jmiSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, 
-					ActionEvent.CTRL_MASK));			
+			jmiSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,
+					ActionEvent.CTRL_MASK));
 			addMenuItem(jmFile, jmiSaveAs);
 			// addMenuItem(jmFile, jmSave222);
 			jmFile.addSeparator();
@@ -1219,21 +1266,21 @@ public class JFrameGallery extends JFrame {
 			// Display menu
 			add(jmDisplay);
 			addMenuItem(jmDisplay, jmiNormalize);
-			jmiNormalize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, 
+			jmiNormalize.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N,
 					ActionEvent.CTRL_MASK));
 			addMenuItem(jmDisplay, jmiShowLabel);
-			jmiShowLabel.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, 
+			jmiShowLabel.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,
 					ActionEvent.CTRL_MASK));
 			jmDisplay.addSeparator();
 			addMenuItem(jmDisplay, jmiRenderImage);
-			jmiRenderImage.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, 
+			jmiRenderImage.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,
 					ActionEvent.CTRL_MASK));
 			addMenuItem(jmDisplay, jmiApplyGeo);
-			jmiApplyGeo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, 
+			jmiApplyGeo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G,
 					ActionEvent.CTRL_MASK));
 			addMenuItem(jmDisplay, jmiColumns);
-			jmiColumns.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, 
-					ActionEvent.CTRL_MASK));			
+			jmiColumns.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U,
+					ActionEvent.CTRL_MASK));
 			jmDisplay.addSeparator();
 			addMenuItem(jmDisplay, jmReslice);
 			addMenuItem(jmReslice, jmiAxisX);
@@ -1266,7 +1313,7 @@ public class JFrameGallery extends JFrame {
 			// jmiOpenWithImageJ.addActionListener(this);
 
 			update();
-		}//constructor GalleryMenu
+		}// constructor GalleryMenu
 
 		public void update() {
 			boolean galMode = data.isGalleryMode();
@@ -1288,8 +1335,8 @@ public class JFrameGallery extends JFrame {
 			jmiRenderImage.setEnabled(!galMode && data.hasRenderLabel());
 			jmiRenderImage.setSelected(data.globalRender);
 			jmiColumns.setEnabled(!galMode);
-		}//function update
-	}//class GalleryMenu
+		}// function update
+	}// class GalleryMenu
 
 	class GalleryPopupMenu extends JPopupMenu {
 
@@ -1341,32 +1388,6 @@ public class JFrameGallery extends JFrame {
 			// InputEvent.SHIFT_DOWN_MASK));
 			// jmiDisableTo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T,
 			// InputEvent.CTRL_DOWN_MASK));
-
-			table.addKeyListener(new KeyListener() {
-
-				public void keyTyped(KeyEvent e) {
-				}
-
-				public void keyPressed(KeyEvent e) {
-				}
-
-				public void keyReleased(KeyEvent e) {
-					// if (e.isControlDown()) {
-					// if (e.getKeyCode() == KeyEvent.VK_E) {
-					// gallery.enableSelectedItems();
-					// }
-					// if (e.getKeyCode() == KeyEvent.VK_D) {
-					// gallery.disableSelectedItems();
-					// }
-					// if (e.getKeyCode() == KeyEvent.VK_A) {
-					// gallery.enableAllItems();
-					// }
-					// if (e.getKeyCode() == KeyEvent.VK_N) {
-					// gallery.disableAllItems();
-					// }
-					// }
-				}
-			});
 
 			// jmiEnable.addActionListener(new ActionListener() {
 			//
@@ -1452,5 +1473,4 @@ public class JFrameGallery extends JFrame {
 			show(cmpnt, location.x, location.y);
 		}// function show
 	}// class JPopUpMenuGallery
-
 }// class JFrameGallery
