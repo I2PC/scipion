@@ -413,6 +413,9 @@ class ProtProjMatch(XmippProtocol):
                     a.plot(resolution_inv, frc)
                     legendName.append('Iter_'+str(it))
                 xplotter.showLegend(legendName)
+                
+                if (self.ResolutionThreshold < max(frc)):
+                    a.plot([min(resolution_inv), max(resolution_inv)], [self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
             
             xplotter.draw()
     
@@ -655,8 +658,9 @@ class ProtProjMatch(XmippProtocol):
                 #Files: projections, projection_angles, sampling_points and neighbourhood
                 _VerifyFiles = [self.getFilename('ProjectLibrary' + e, iter=iterN, ref=refN)
                                      for e in ['Stk', 'Doc', 'Sampling']]
+                #Ask only for first and last, if we ask for all ctfgroup files the sql command max lenght is reached
                 _VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
-                                     for g in range (1, self.NumberOfCtfGroups + 1)]
+                                     for g in (1, self.NumberOfCtfGroups)]
                 projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
                          
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
