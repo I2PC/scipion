@@ -552,10 +552,13 @@ int main(int argc, char *argv[])
     }
     catch (XmippError XE)
     {
+    	std::cerr << "Error!" <<std::endl;
         std::cerr << XE;
         exit(1);
     }
 
+    if (program.rank == 0)
+    	std::cerr << "Done!" <<std::endl;
     exit(0);
 
 
