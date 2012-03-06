@@ -4,23 +4,23 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-import java.awt.Menu;
-import java.awt.MenuBar;
-import javax.swing.SwingUtilities;
+import ij.io.FileSaver;
+
+import java.io.File;
 
 import xmipp.jni.Filename;
 
 
-public class XmippImageWindow extends ImageWindow
+public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
 	
 	
+
 	public static void main(String[] args)
 	{
 		try
 		{
-			ImagePlus imp = XmippImageConverter.loadImage("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
-			new XmippImageWindow(imp);
+			new XmippImageWindow("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 		}
 		catch (Exception e)
 		{
@@ -28,6 +28,13 @@ public class XmippImageWindow extends ImageWindow
 			e.printStackTrace();
 		}
 		
+	}
+
+	private String file;
+	
+	public XmippImageWindow(String file) throws Exception
+	{
+		this(XmippImageConverter.loadImage(file), file);
 	}
 	
 	public XmippImageWindow(ImagePlus imp) {
@@ -37,8 +44,9 @@ public class XmippImageWindow extends ImageWindow
 	public XmippImageWindow(ImagePlus imp, String title)
 	{
 		super(imp, new XmippImageCanvas(imp));
+		file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
 		setTitle(title);
-		setMenuBar(new XmippMenuBar());
+		setMenuBar(new XmippMenuBar(this));
 	}
 	
 	public static void openImageJ(Tool tool){
@@ -48,6 +56,33 @@ public class XmippImageWindow extends ImageWindow
 			IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
 		}		
 		boolean recognized = IJ.setTool(Tool.getTool(tool));
-		System.out.println(recognized);
+		//System.out.println(recognized);
+	}
+
+	@Override
+	public void loadData()
+	{
+		
+		ImagePlus imp = new ImagePlus(file);
+		setImage(imp);//second alone does not work
+		updateImage(imp);//first one alone does not work
+		
+		
+	}
+
+	
+
+	@Override
+	public void saveDataAs(String file) throws Exception
+	{
+		XmippImageConverter.writeImagePlus(imp, file);
+	}
+
+	@Override
+	public void saveData() throws Exception
+	{
+		System.out.println(imp.getTitle());
+		saveDataAs(imp.getTitle());
+		
 	}
 }//class XmippImageWindow

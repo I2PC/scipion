@@ -12,9 +12,18 @@ import java.awt.MenuBar;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+
+import xmipp.particlepicker.ParticlePickerJFrame;
 
 /**
  * 
@@ -85,10 +94,14 @@ public class XmippMenuBar extends MenuBar
 	private MenuItem medianmi;
 	private MenuItem fftmi;
 	private CheckboxMenuItem pollmi;
+	protected Object timer;
+	private final XmippIJWindow xw;
+	private PollTimer polltimer;
+	private MenuItem refreshmi;
 
-	public XmippMenuBar()
+	public XmippMenuBar(XmippIJWindow xw)
 	{
-		
+		this.xw = xw;
 		requireij = new ArrayList<String>();
 		// menubar menus
 		filemn = new Menu("File");
@@ -101,30 +114,88 @@ public class XmippMenuBar extends MenuBar
 
 		// menubar file menu
 		savemi = new MenuItem("Save");
-		saveasmi = new MenuItem("Save As...");
-		openwith3dmi = new MenuItem("Open with 3D Viewer");
-		openwithvv3ds = new MenuItem("Open with Volume Viewer/3D Slicer");
-		openwithvolumej = new MenuItem("Open with VolumeJ");
-		pollmi = new CheckboxMenuItem("Poll");
-		pollmi.addActionListener(new ActionListener()
+		savemi.addActionListener(new ActionListener()
 		{
 			
-			private boolean poll;
-
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				poll = pollmi.getState();
+				try
+				{
+					XmippMenuBar.this.xw.saveData();
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+				}
 				
 			}
 		});
+		saveasmi = new MenuItem("Save As...");
+		saveasmi.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				JFileChooser fc = new JFileChooser();
+				int returnVal = fc.showOpenDialog(null);
+
+				try
+				{
+					if (returnVal == JFileChooser.APPROVE_OPTION)
+					{
+						File file = fc.getSelectedFile();
+						XmippMenuBar.this.xw.saveDataAs(file.getAbsolutePath());
+					}
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+				}
+				
+			}
+		});
+		openwith3dmi = new MenuItem("Open with 3D Viewer");
+		openwithvv3ds = new MenuItem("Open with Volume Viewer/3D Slicer");
+		openwithvolumej = new MenuItem("Open with VolumeJ");
+		refreshmi = new MenuItem("Refresh");
+		refreshmi.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				XmippMenuBar.this.xw.loadData();
+				
+			}
+		});
+		
+		pollmi = new CheckboxMenuItem("Poll");
+		pollmi.addItemListener(new ItemListener()
+		{
+			
+			@Override
+			public void itemStateChanged(ItemEvent e)
+			{
+				boolean poll = pollmi.getState();
+				if (poll)
+					poll();
+				else
+					polltimer.stop();
+			}
+		});
+		
+		
 
 		filemn.add(savemi);
 		filemn.add(saveasmi);
 		filemn.add(openwith3dmi);
 		filemn.add(openwithvv3ds);
 		filemn.add(openwithvolumej);
+		filemn.add(refreshmi);
 		filemn.add(pollmi);
+		
 
 		// menubar image menu
 		infomn = new Menu("Info");
@@ -154,8 +225,7 @@ public class XmippMenuBar extends MenuBar
 		infomn.add(propertiesmi);
 		infomn.add(meanshiftmi);
 		infomn.add(plotprofilemi);
-		
-		
+
 		// image filters menu
 		bandpassmi = new MenuItem("Bandpass Filter");
 		addCommand(bandpassmi, "Bandpass Filter...");
@@ -167,8 +237,6 @@ public class XmippMenuBar extends MenuBar
 		filtersmn.add(bandpassmi);
 		filtersmn.add(admi);
 		filtersmn.add(meanshiftmi);
-		
-		
 
 		// image transform menu
 		cropmi = new MenuItem("Crop");
@@ -177,8 +245,7 @@ public class XmippMenuBar extends MenuBar
 		addCommand(fliphmi, "Flip Horizontally");
 		flipvmi = new MenuItem("Flip Vertically");
 		addCommand(flipvmi, "Flip Vertically");
-		
-		
+
 		rotate90leftmi = new MenuItem("Rotate 90 Degrees Left");
 		addCommand(rotate90leftmi, "Rotate 90 Degrees Left");
 		rotate90rightmi = new MenuItem("Rotate 90 Degrees Right");
@@ -204,22 +271,21 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(processmn);
 		advancedmn.add(drawmn);
 		advancedmn.add(profilemn);
-		
-		
-		//advanced threshold menu
+
+		// advanced threshold menu
 		thresholdmi = new MenuItem("Threshold");
 		otsuthresholdmi = new MenuItem("Otsu Threshold");
 		multiotsuthresholdmi = new MenuItem("Multi Otsu Threshold");
 		maxentropythresholdmi = new MenuItem("Maximum Entropy Threshold");
-		mixturemodthresholdmi =  new MenuItem("Mixture Modeling Threshold");
-		
+		mixturemodthresholdmi = new MenuItem("Mixture Modeling Threshold");
+
 		thresholdingmn.add(thresholdmi);
 		thresholdingmn.add(otsuthresholdmi);
 		thresholdingmn.add(multiotsuthresholdmi);
 		thresholdingmn.add(maxentropythresholdmi);
 		thresholdingmn.add(mixturemodthresholdmi);
-		
-		//advanced binary menu
+
+		// advanced binary menu
 		voxelcountermi = new MenuItem("Voxel Counter");
 		addCommand(voxelcountermi, "Voxel Counter");
 		erodemi = new MenuItem("Erode");
@@ -235,9 +301,7 @@ public class XmippMenuBar extends MenuBar
 		ultimatepointsmi = new MenuItem("Ultimate Points");
 		watershedmi = new MenuItem("Water Shed");
 		voronoimi = new MenuItem("Voronoi");
-		
-		
-		
+
 		binarymn.add(voxelcountermi);
 		binarymn.add(erodemi);
 		binarymn.add(dilatemi);
@@ -249,8 +313,8 @@ public class XmippMenuBar extends MenuBar
 		binarymn.add(skeletonizemi);
 		binarymn.add(watershedmi);
 		binarymn.add(voronoimi);
-		
-		//advanced process menu
+
+		// advanced process menu
 		brightcontrastmi = new MenuItem("Brightness/Contrast");
 		enhancecontrastmi = new MenuItem("Enhance Contrast");
 		substractbgmi = new MenuItem("Substract Background");
@@ -258,7 +322,7 @@ public class XmippMenuBar extends MenuBar
 		convolvemi = new MenuItem("Convolve");
 		medianmi = new MenuItem("Median");
 		fftmi = new MenuItem("FFT");
-		
+
 		processmn.add(brightcontrastmi);
 		processmn.add(enhancecontrastmi);
 		processmn.add(substractbgmi);
@@ -266,23 +330,22 @@ public class XmippMenuBar extends MenuBar
 		processmn.add(convolvemi);
 		processmn.add(medianmi);
 		processmn.add(fftmi);
-		
-		//advanced drawn menu
 
-		//advanced profile menu
+		// advanced drawn menu
+
+		// advanced profile menu
 		lineanalyzermi = new MenuItem("Line Analyzer");
 		ovalpplotmi = new MenuItem("Oval Profile Plot");
 		radialpplotanglemi = new MenuItem("Radial Profile Plot Angle");
 		radialpplotheightmi = new MenuItem("Radial Profile Plot Height");
 		contourplottermi = new MenuItem("Contour Plotter");
-		
+
 		profilemn.add(lineanalyzermi);
 		profilemn.add(ovalpplotmi);
 		profilemn.add(radialpplotanglemi);
 		profilemn.add(radialpplotheightmi);
 		profilemn.add(contourplottermi);
-		
-		
+
 		imagejmi.addActionListener(new ActionListener()
 		{
 
@@ -294,16 +357,26 @@ public class XmippMenuBar extends MenuBar
 		});
 
 	}
+	
+
+
+	private void poll()
+	{
+		{
+			if(timer == null)
+				polltimer = new PollTimer(xw);
+			polltimer.start();
+		}
+	}
 
 	protected void addCommand(MenuItem mi, String command)
 	{
 		addCommand(mi, command, false);
 	}
-	
-	
+
 	protected void addCommand(MenuItem mi, String command, boolean isrequiredij)
 	{
-		if(isrequiredij)
+		if (isrequiredij)
 			requireij.add(command);
 		mi.setActionCommand(command);
 		mi.addActionListener(new ActionListener()
@@ -312,17 +385,15 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				
+
 				String command = ((MenuItem) e.getSource()).getActionCommand();
-				if(requireij.contains(command))
+				if (requireij.contains(command))
 					XmippImageWindow.openImageJ(Tool.VIEWER);
-				if(command.equals("Anisotropic Diffusion..."))
+				if (command.equals("Anisotropic Diffusion..."))
 					IJ.run("8-bit");
 				IJ.run(command);
 			}
 		});
 	}
-	
-	
 
 }
