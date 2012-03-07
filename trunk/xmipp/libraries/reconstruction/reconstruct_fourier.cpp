@@ -286,6 +286,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     std::vector<size_t> objId;
 
     threadParams->selFile->findObjects(objId);
+    ApplyGeoParams params;
+    params.only_apply_shifts = true;
 
     do
     {
@@ -307,7 +309,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                     //Read projection from selfile, read also angles and shifts if present
                     //but only apply shifts
-                    proj.readApplyGeo(*(threadParams->selFile), objId[threadParams->imageIndex], true);
+
+                    proj.readApplyGeo(*(threadParams->selFile), objId[threadParams->imageIndex], params);
                     rot  = proj.rot();
                     tilt = proj.tilt();
                     psi  = proj.psi();
