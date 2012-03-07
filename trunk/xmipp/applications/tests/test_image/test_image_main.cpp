@@ -57,10 +57,13 @@ TEST_F( ImageTest, readApplyGeo)
     MD.setValue(MDL_IMAGE, auxFn, id);
     MD.setValue(MDL_ANGLEPSI, 45., id);
     Image<double> auxImage, auxImage2;
-    auxImage.readApplyGeo(MD,id, false, DATA, ALL_IMAGES, false);
+    ApplyGeoParams params;
+    params.wrap = false;
+    auxImage.readApplyGeo(MD,id, params);
     auxImage2.read(auxFn.insertBeforeExtension("_wrap_false"));
     EXPECT_TRUE(auxImage == auxImage2);
-    auxImage.readApplyGeo(MD,id, false, DATA, ALL_IMAGES, true);
+    params.wrap = true;
+    auxImage.readApplyGeo(MD,id, params);
     auxImage2.read(auxFn.insertBeforeExtension("_wrap_true"));
     EXPECT_TRUE(auxImage == auxImage2);
 }
