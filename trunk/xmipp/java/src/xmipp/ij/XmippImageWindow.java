@@ -9,6 +9,7 @@ import ij.io.FileSaver;
 import java.io.File;
 
 import xmipp.jni.Filename;
+import xmipp.utils.XmippDialog;
 
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
@@ -35,6 +36,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public XmippImageWindow(String file) throws Exception
 	{
 		this(XmippImageConverter.loadImage(file), file);
+		this.file = file;
 	}
 	
 	public XmippImageWindow(ImagePlus imp) {
@@ -44,7 +46,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public XmippImageWindow(ImagePlus imp, String title)
 	{
 		super(imp, new XmippImageCanvas(imp));
-		file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+		//file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
 		setTitle(title);
 		setMenuBar(new XmippMenuBar(this));
 	}
@@ -62,12 +64,15 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	@Override
 	public void loadData()
 	{
-		
-		ImagePlus imp = new ImagePlus(file);
+		if (file != null){
+			try{
+		ImagePlus imp = XmippImageConverter.loadImage(file);
 		setImage(imp);//second alone does not work
 		updateImage(imp);//first one alone does not work
-		
-		
+			}catch (Exception e){
+				XmippDialog.showError(null, e.getMessage());
+			}
+		}
 	}
 
 	
@@ -75,6 +80,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	@Override
 	public void saveDataAs(String file) throws Exception
 	{
+		this.file = file;
 		XmippImageConverter.writeImagePlus(imp, file);
 	}
 

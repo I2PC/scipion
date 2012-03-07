@@ -207,11 +207,14 @@ public class MetadataGallery extends ImageGallery {
 	}
 
 	/** Change the use of geometry info */
-	public void setUseGeometry(boolean value) {
-		if (data.useGeo != value) {
-			data.useGeo = value;
+	public void setUseGeometry(boolean geo, boolean wrap) {
+		if (!geo)
+			wrap = false;
+		boolean changed = data.useGeo != geo || data.wrap != wrap;
+		data.useGeo = geo;
+		data.wrap = wrap;
+		if (changed) 
 			fireTableDataChanged();
-		}
 	}
 
 	@Override

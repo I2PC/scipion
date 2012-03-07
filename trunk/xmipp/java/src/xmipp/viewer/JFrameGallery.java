@@ -1076,6 +1076,7 @@ public class JFrameGallery extends JFrame {
 		public final String DISPLAY_SHOWLABELS = "Display.ShowLabels_cb";
 		public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
 		public final String DISPLAY_APPLYGEO = "Display.ApplyGeo_cb";
+		public final String DISPLAY_WRAP = "Display.Wrap_cb";
 		public final String DISPLAY_COLUMNS = "Display.Columns_mi";
 		public final String DISPLAY_RESLICE = "Display.Reslice";
 		public final String DISPLAY_RESLICE_X = "Display.Reslice.X_rb";
@@ -1099,7 +1100,10 @@ public class JFrameGallery extends JFrame {
 			setItemEnabled(FILE_SAVEAS, !volMode);
 			setItemEnabled(DISPLAY_NORMALIZE, gallery.getNormalized());
 			setItemEnabled(DISPLAY_APPLYGEO, data.containsGeometryInfo());
+			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo);
+			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
+			setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
@@ -1127,6 +1131,7 @@ public class JFrameGallery extends JFrame {
 			addSeparator(DISPLAY);
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
+			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			addItem(DISPLAY_RESLICE, "Reslice");
 			addItem(DISPLAY_RESLICE_X, "X");
@@ -1145,10 +1150,12 @@ public class JFrameGallery extends JFrame {
 			
 			if (cmd.equals(DISPLAY_NORMALIZE)) {
 				gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
-			} else if (cmd.equals(DISPLAY_APPLYGEO)) {
+			} else if (cmd.equals(DISPLAY_APPLYGEO) || cmd.equals(DISPLAY_WRAP)) {
 				if (data.containsGeometryInfo()) {
-					((MetadataGallery) gallery).setUseGeometry(getItemSelected(DISPLAY_APPLYGEO));
-				}
+					((MetadataGallery) gallery).setUseGeometry(getItemSelected(DISPLAY_APPLYGEO),
+							getItemSelected(DISPLAY_WRAP));
+							setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo);
+				}	
 			} else if (cmd.equals(DISPLAY_SHOWLABELS)) {
 				gallery.setShowLabels(getItemSelected(DISPLAY_SHOWLABELS));
 			} else if (cmd.equals(DISPLAY_RENDERIMAGES)) {
@@ -1179,28 +1186,6 @@ public class JFrameGallery extends JFrame {
 						XmippDialog.showError(JFrameGallery.this, 
 								String.format("File: '%s' doesn't exist.", fc.getSelectedFile().getPath()));
 				}
-				// String filename = gallery.getFilename() != null ? gallery
-				// .getFilename() : "";
-				// fc.setSelectedFile(new File(forceExtension(filename, ".stk")));
-				//
-				// if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
-				// boolean response = true;
-				// if (fc.getSelectedFile().exists()) {
-				// response = JOptionPane.showConfirmDialog(null,
-				// Labels.MESSAGE_OVERWRITE_FILE,
-				// Labels.MESSAGE_OVERWRITE_FILE_TITLE,
-				// JOptionPane.OK_CANCEL_OPTION,
-				// JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION;
-				// }
-				//
-				// if (response) {
-				// String path = fc.getSelectedFile().getAbsolutePath();
-				// if (gallery.saveAsStack(path, all)) {
-				// JOptionPane.showMessageDialog(this,
-				// Labels.MESSAGE_FILE_SAVED + path,
-				// Labels.MESSAGE_FILE_SAVED_TITLE,
-				// JOptionPane.INFORMATION_MESSAGE);
-				// }
 			}
 			else if (cmd.equals(FILE_SAVE)) {
 				save();
