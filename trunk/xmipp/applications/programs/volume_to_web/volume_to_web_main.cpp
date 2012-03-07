@@ -81,7 +81,7 @@ public:
     	MultidimArray<double> &mV=V();
 
     	Image<double> I;
-    	if (fnCentralSlices!="")
+    	if (!fnCentralSlices.empty())
     	{
     		// Choose the starting and finishing slice
     		if (Nslices==-1)

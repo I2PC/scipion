@@ -134,7 +134,7 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
 	    }
 
     ArrayDim aDim;
-    getDimensions(aDim);
+    mdaBase->getDimensions(aDim);
 
     // Volumes are not supported
     if (aDim.zdim > 1)

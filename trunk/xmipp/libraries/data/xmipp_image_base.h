@@ -450,7 +450,7 @@ public:
     /** Get dimensions of the multidimArray inside image.
      *  TODO: This method must be changed to return the size
      *  of the image read from file, i.e. aDimFile, and where this is used
-     *  should be used instead the imageBase::mda->getDimensions
+     *  should be used the imageBase::mda->getDimensions instead.
      */
     void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const;
     /** Get Image dimensions
