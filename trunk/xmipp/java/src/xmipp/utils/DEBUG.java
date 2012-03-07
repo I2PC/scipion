@@ -21,6 +21,12 @@ public class DEBUG {
             System.out.println(message);
         }
     }
+    
+    public static void printFormat(String format, Object...objects){
+    	if (DEBUG){
+    		System.out.format(format, objects);
+    	}
+    }
 
     public static void printException(Exception ex) {
         if (DEBUG) {

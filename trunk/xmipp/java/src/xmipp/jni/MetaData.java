@@ -229,6 +229,14 @@ public class MetaData {
     public native double[] getColumnValues(int label) throws Exception;
 
     //set functions conection with MetaData class in C++
+    public boolean setEnabled(boolean value, long objId) throws Exception{
+    	return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1, objId);
+    }
+    
+    public boolean getEnabled(long objId) throws Exception{
+    	return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
+    }
+    
     public native boolean setValueInt(int label, int value, long objId) throws Exception;
 
     public native boolean setValueDouble(int label, double value, long objId) throws Exception;

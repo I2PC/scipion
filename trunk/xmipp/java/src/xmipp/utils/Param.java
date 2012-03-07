@@ -50,10 +50,10 @@ public class Param {
     public String filter;
     public boolean singleSelection;
     public String selectionType = SELECTION_TYPE_ANY;
-    public String mode;
+    public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
     public int zoom = 0;
-    public boolean renderImages;
+    public boolean renderImages = false;
     public boolean debug = false;
     public int rows = -1, columns = -1;
     public double bad_pixels_factor;

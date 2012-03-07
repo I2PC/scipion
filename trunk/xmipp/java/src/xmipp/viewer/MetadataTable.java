@@ -63,7 +63,7 @@ public class MetadataTable extends MetadataGallery {
 				int value = md.getValueInt(label, id);
 				// treat special case of MDL_ENABLED
 				if (label == MDLabel.MDL_ENABLED)
-					return (value != -1);
+					return (value > 0);
 				return value;
 			case MetaData.LABEL_BOOL:
 				return md.getValueBoolean(label, id);
@@ -102,8 +102,7 @@ public class MetadataTable extends MetadataGallery {
 					break;
 				case MetaData.LABEL_INT:
 					if (label == MDLabel.MDL_ENABLED) {
-						int intValue = ((Boolean) value).booleanValue() ? 1 : -1;
-						md.setValueInt(label, intValue, id);
+						md.setEnabled((Boolean)value, id);
 					} else
 						md.setValueInt(label, ((Integer) value).intValue(), id);
 					break;

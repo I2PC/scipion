@@ -46,6 +46,8 @@ public class GalleryData {
 	public boolean normalize = false;
 	// flag to use geometry info
 	public boolean useGeo = true;
+	// flag to wrapping
+	public boolean wrap = false;
 
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also

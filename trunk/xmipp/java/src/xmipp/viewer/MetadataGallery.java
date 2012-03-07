@@ -132,18 +132,21 @@ public class MetadataGallery extends ImageGallery {
 	protected ImageItem createImageItem(int index, int renderLabel,
 			int displayLabel, String key) throws Exception {
 		ImageGeneric image = getImage(index, renderLabel);
-		String labelStr = data.md.getValueString(displayLabel, data.ids[index]);
+		long objId = data.ids[index];
+		String labelStr = data.md.getValueString(displayLabel, objId);
 		ImagePlus imp = null;
 		if (image != null) {
 			if (data.useGeo)
-				image.readApplyGeo(data.md, data.ids[index], thumb_width,
-						thumb_height);
+				image.readApplyGeo(data.md, objId, thumb_width,
+						thumb_height, data.wrap);
 			else
 				image.read(thumb_width, thumb_height);
 			imp = XmippImageConverter.convertToImagePlus(image);
 			
 		}
-		return new ImageItem(key, labelStr, imp);
+		ImageItem ii = new ImageItem(key, labelStr, imp);
+		ii.isEnabled = data.md.getEnabled(objId);
+		return ii;
 	}
 
 	@Override
@@ -159,6 +162,8 @@ public class MetadataGallery extends ImageGallery {
 				+ "(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
+		if (data.wrap)
+			format += "_wrap";
 		String key = String.format(format, thumb_width, thumb_height);
 		// DEBUG.printMessage(String.format("key: %s", key));
 		return String.format(format, thumb_width, thumb_height);

@@ -80,7 +80,8 @@ public class XmippDialog extends JDialog  implements ActionListener {
 		createButtons();
 		content.add(panelBtn, BorderLayout.PAGE_END);
 		pack();
-		WindowUtil.centerWindows(this, parent);
+		if (parent != null)
+			WindowUtil.centerWindows(this, parent);
 	}
 	
 	protected void createButtons(){

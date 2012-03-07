@@ -335,6 +335,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 			selection[i] = !selection[i];
 		fireTableDataChanged();
 	}
+	
+	/** Set the selection state of an element give row and col */
+	public void touchItem(int row, int col) {
+		int i = getIndex(row, col);
+		selection[i] = !selection[i];
+		fireTableCellUpdated(row, col);
+	}
 
 	/** Goto and select specified item, if there is a selection
 	 * it will be cleared*/
@@ -343,13 +350,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 		selection[i] = !selection[i];
 		int[] coords = getCoords(i);
 		fireTableCellUpdated(coords[0], coords[1]);		
-	}
-	
-	/** Set the selection state of an element give row and col */
-	public void touchItem(int row, int col) {
-		int i = getIndex(row, col);
-		selection[i] = !selection[i];
-		fireTableCellUpdated(row, col);
 	}
 
 	/** Return the number of selected elements */
