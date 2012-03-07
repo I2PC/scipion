@@ -74,7 +74,7 @@ private:
     {
         show();
 
-        imgIn.readMapped(fnImgIn);
+        imgIn.read(fnImgIn);
 
         int xDim, yDim, zDim, XdimOut, yDimOut, zDimOut;
         imgIn.getDimensions(xDim, yDim, zDim);
@@ -114,8 +114,10 @@ private:
             index = k + (zDimOut - 1 - 2*k) * (int)reverse;
             imgIn().getSlice(index, &imTemp, axis, !reverse);
 
-            progress_bar(k+1);
+            progress_bar(k);
         }
+        progress_bar(zDimOut);
+
         imgOut.write(fnImgOut);
     }
 };
