@@ -110,7 +110,7 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
 	//j -> for interior columns o X
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-    	A2D_ELEM(H,i,j) = (std::complex<double>(j,i))/std::sqrt(std::pow(i,2)+(std::pow(j,2)));
+    	A2D_ELEM(H,i,j) = (std::complex<double>(j,i))/std::sqrt(std::pow((double)i,2)+(std::pow((double)j,2)));
     	//We subtract the singular value in i=0, j=0
     	if ( (i==0) && (j==0) )
     		A2D_ELEM(H,i,j) = 0;
