@@ -5,7 +5,7 @@ data_
  _CTF_Xray_lambda 2.43
  _CTF_Xray_OuterZoneWidth 40
  _CTF_Xray_ZonesN 560
- _CTF_Xray_Magnification 2304
+ _Magnification 2304
  _CTF_Sampling_rate 0.5
  _CTF_Sampling_rate_z 100
  _CTF_Longitudinal_displacement 0
