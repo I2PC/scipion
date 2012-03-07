@@ -53,7 +53,7 @@ public:
     // Define parameters
     void defineParams()
     {
-        addUsageLine("Finds a symmetry rotational axis.");
+        addUsageLine("Find a symmetry rotational axis.");
         addUsageLine("+The output is of the form");
         addUsageLine("+Symmetry axis (rot,tilt)= 10 20 -->    0.33682   0.059391    0.93969",true);
         addUsageLine("+The angles represent the rot and tilt angles of the symmetry axis ");
@@ -65,7 +65,9 @@ public:
         addSeeAlsoLine("volume_center, transform_geometry");
         addParamsLine(" -i <volumeFile>                : Volume to process");
         addParamsLine("[-o+ <file=\"\">]               : Metadata with the orientation of the symmetry axis");
-        addParamsLine("                                : In helical mode, there is a file called output.xmp with the correlation map (vertical axis is the rotation, horizontal axis is the translation)");
+        addParamsLine("                                : In helical mode, there is a file called output.xmp ");
+        addParamsLine("                                : with the correlation map (vertical axis is the rotation, ");
+        addParamsLine("                                : horizontal axis is the translation)");
         addParamsLine("[--thr <N=1>]                   : Number of threads");
         addParamsLine("--sym <mode>                    : Symmetry mode");
         addParamsLine("    where <mode>");
