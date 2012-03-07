@@ -73,6 +73,8 @@ public:
 	//This function obtains the Zernike coefficients from the matrix 1D coeff. This array is formed by zeros and ones.
 	// If the value of one element of coef is
 	void fit(const Matrix1D<int> & coef, MultidimArray<double> & im, const double thrs=0);
+	//Gives the zernike polynomio of index zerIndex that it is stored in im
+	void zernikePols(const Matrix1D<int> coef, MultidimArray<double> & im);
 };
 
 #endif /* POLYNOMIALS_H_ */

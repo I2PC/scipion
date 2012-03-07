@@ -41,9 +41,11 @@ void PolyZernikes::create(const Matrix1D<int> & coef)
 
     for (int nZ = 0; nZ < VEC_XSIZE(coef); ++nZ)
     {
-        if (VEC_ELEM(coef,nZ) == 0)
-            fMatT = NULL;
-
+        if (VEC_ELEM(coef,nZ) == 0){
+        	fMatT = new Matrix2D<int>(1,1);
+        	dMij(*fMatT,0,0)=0;
+        	//*fMatT = 0;
+        }
         else
         {
             // Note that the paper starts in n=1 and we start in n=0
@@ -85,9 +87,6 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, c
 	bool DEBUG = false;
 
     this->create(coef);
-
-    double avg, std, min, max;
-    im.computeStats(avg, std, min, max);
 
     int xdim = XSIZE(im);
     int ydim = YSIZE(im);
@@ -149,6 +148,7 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, c
             {
                 fMat = &fMatV[k];
 
+
                 if (fMat == NULL)
                     continue;
 
@@ -206,5 +206,72 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, c
 
         zerMat.write("zerMat.txt");
         pseudoInverter.b.write("b.txt");
+    }
+}
+
+void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> & im)
+{
+	bool DEBUG = true;
+
+	this->create(coef);
+
+    int polOrder=ZERNIKE_ORDER(coef.size());
+    int numZer = coef.size();
+
+    int xdim = XSIZE(im);
+    int ydim = YSIZE(im);
+
+    im.setXmippOrigin();
+
+    Matrix2D<double> polValue(polOrder,polOrder);
+    double iMaxDim2 = 2./std::max(xdim,ydim);
+
+    double temp = 0;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    {
+        //For one i we swap the different j
+        double y=i*iMaxDim2;
+        double x=j*iMaxDim2;
+
+        //polValue = [ 0    y   y2    y3   ...
+        //             x   xy  xy2    xy3  ...
+        //             x2  x2y x2y2   x2y3 ]
+        //dMij(polValue,py,px) py es fila, px es columna
+        for (int py = 0; py < polOrder; ++py)
+        {
+            double ypy=std::pow(y,py);
+            for (int px = 0; px < polOrder; ++px)
+                dMij(polValue,px,py) = ypy*std::pow(x,px);
+        }
+
+        Matrix2D<int> *fMat;
+        //We generate the representation of the Zernike polynomials
+
+        for (int k=0; k < numZer; ++k)
+        {
+            fMat = &fMatV[k];
+
+            if ( (dMij(*fMat,0,0) == 0) && MAT_SIZE(*fMat) == 1 )
+                continue;
+
+            for (int px = 0; px < (*fMat).Xdim(); ++px)
+                for (int py = 0; py < (*fMat).Ydim(); ++py)
+                    temp += dMij(*fMat,py,px)*dMij(polValue,py,px)*VEC_ELEM(coef,k);
+        }
+
+        A2D_ELEM(im,i,j) = temp;
+        temp = 0;
+    }
+
+    STARTINGX(im)=STARTINGY(im)=0;
+
+    if (DEBUG)
+    {
+        Image<double> save;
+        save().resizeNoCopy(im);
+        FileName name;
+        save() = im;
+        name.compose("ZernikePol",1,"xmp");
+        save.write(name);
     }
 }

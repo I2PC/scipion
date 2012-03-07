@@ -35,6 +35,7 @@ protected:
         //get example down1_42_Periodogramavg.psd
         baseName = getenv("XMIPP_HOME");
         imageName = baseName + "/applications/tests/test_polynomials/down1_42_Periodogramavg.psd";
+        testName = baseName + "/applications/tests/test_polynomials/test.txt";
         im.read(imageName);
     }
 
@@ -47,10 +48,11 @@ protected:
     //File name of the image to process
     FileName imageName;
     FileName baseName;
+    FileName testName;
 };
 
 
-TEST_F( PolynomialsTest, ZERNIKE)
+TEST_F( PolynomialsTest, ZERNIKE_FIT)
 {
     CenterFFT(MULTIDIM_ARRAY(im), true);
 	PolyZernikes polynom;
@@ -67,6 +69,25 @@ TEST_F( PolynomialsTest, ZERNIKE)
     	ASSERT_TRUE(std::abs(VEC_ELEM(error,i))<0.01) << "Zernike fit: no correspondence between matlab and xmipp zernike coefficients";;
     }
 
+}
+
+TEST_F( PolynomialsTest, ZERNIKE_POLS)
+{
+    CenterFFT(MULTIDIM_ARRAY(im), true);
+	Matrix1D<int> coefs(4);
+	coefs.initConstant(0);
+
+	VEC_ELEM(coefs,1)=1;
+	VEC_ELEM(coefs,2)=0;
+
+	PolyZernikes polynom;
+
+	polynom.zernikePols(coefs,MULTIDIM_ARRAY(im));
+
+	ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,0)+       1)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";;
+	ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,1)+0.996094)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";;
+	ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),1,0)+1)       <0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";;
+	ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),1,1)+0.996094)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";;
 }
 
 GTEST_API_ int main(int argc, char **argv)

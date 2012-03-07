@@ -26,6 +26,10 @@
 #include <data/xmipp_polynomials.h>
 #include <data/xmipp_program.h>
 
+#include <data/multidim_array.h>
+#include <data/fringeprocessing.h>
+#include <data/xmipp_image.h>
+
 class ProgCTFEstimateFromPSDZernike: public XmippProgram
 {
 public:
@@ -68,12 +72,31 @@ public:
     void run()
     {
 
-    	produce_side_info();
-    	PolyZernikes polynom;
-    	Matrix1D<int> coefs(10);
-    	coefs.initConstant(1);
+    	//produce_side_info();
+    	//PolyZernikes polynom;
+    	//Matrix1D<int> coefs(4);
+    	//coefs.initConstant(0);
+    	//VEC_ELEM(coefs,2)=1;
+    	//polynom.fit(coefs,ctftomodel());
+    	//polynom.zernikePols(coefs,ctftomodel());
 
-    	polynom.fit(coefs,ctftomodel());
+    	FringeProcessing fp;
+
+    	MultidimArray<double> imProc;
+    	MultidimArray<double> im;
+
+    	int nx = 311;
+        int ny = 312;
+        double noiseLevel = 0.0;
+        double freq = 20;
+        Matrix1D<int> coefs(10);
+
+        fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+        imProc.resizeNoCopy(im);
+
+        fp.SPTH(im, imProc);
+
+
     }
 };
 

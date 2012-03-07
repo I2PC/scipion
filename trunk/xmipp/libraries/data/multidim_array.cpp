@@ -388,6 +388,7 @@ void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const
         stddev = 0;
 }
 
+
 template<>
 bool operator==(const MultidimArray< std::complex< double > >& op1, const MultidimArray< std::complex< double > >& op2)
 {
@@ -404,6 +405,79 @@ bool operator==(const MultidimArray< std::complex< double > >& op1, const Multid
         return false;
     return true;
 }
+
+template<>
+void MultidimArray< std::complex< double > >::getReal(MultidimArray<double> & realImg) const
+{
+    if (NZYXSIZE(*this) == 0)
+    {
+        realImg.clear();
+        return;
+    }
+
+    realImg.resizeNoCopy(*this);
+    double* ptr2 = MULTIDIM_ARRAY(realImg);
+    double * ptr1 = (double*) MULTIDIM_ARRAY(*this);
+
+    // Unroll the loop
+    const size_t unroll=4;
+    size_t nmax=(NZYXSIZE(*this)/unroll)*unroll;
+    for (size_t n=0; n<nmax; n+=unroll)
+    {
+        DIRECT_MULTIDIM_ELEM(realImg, n)   = static_cast<double>(*ptr1++);
+        ptr1++;
+        DIRECT_MULTIDIM_ELEM(realImg, n+1) = static_cast<double>(*(ptr1++));
+        ptr1++;
+        DIRECT_MULTIDIM_ELEM(realImg, n+2) = static_cast<double>(*(ptr1++));
+        ptr1++;
+        DIRECT_MULTIDIM_ELEM(realImg, n+3) = static_cast<double>(*(ptr1++));
+        ptr1++;
+    }
+    // Do the remaining elements
+    for (size_t n=nmax; n<NZYXSIZE(*this); ++n)
+    {
+        DIRECT_MULTIDIM_ELEM(realImg, n) = static_cast<double>(*ptr1++);
+        ptr1++;
+    }
+
+}
+
+template<>
+void MultidimArray< std::complex< double > >::getImag(MultidimArray<double> & imagImg) const
+{
+    if (NZYXSIZE(*this) == 0)
+    {
+    	imagImg.clear();
+        return;
+    }
+
+    imagImg.resizeNoCopy(*this);
+    double* ptr2 = MULTIDIM_ARRAY(imagImg);
+    double * ptr1 = (double*) MULTIDIM_ARRAY(*this);
+
+    // Unroll the loop
+    const size_t unroll=4;
+    size_t nmax=(NZYXSIZE(*this)/unroll)*unroll;
+    for (size_t n=0; n<nmax; n+=unroll)
+    {
+        DIRECT_MULTIDIM_ELEM(imagImg, n)   = static_cast<double>(*(++ptr1));
+        ptr1++;
+        DIRECT_MULTIDIM_ELEM(imagImg, n+1) = static_cast<double>(*(++ptr1));
+        ptr1++;
+        DIRECT_MULTIDIM_ELEM(imagImg, n+2) = static_cast<double>(*(++ptr1));
+        ptr1++;
+        DIRECT_MULTIDIM_ELEM(imagImg, n+3) = static_cast<double>(*(++ptr1));
+        ptr1++;
+    }
+    // Do the remaining elements
+    for (size_t n=nmax; n<NZYXSIZE(*this); ++n)
+    {
+        DIRECT_MULTIDIM_ELEM(imagImg, n) = static_cast<double>(*(++ptr1));
+        ptr1++;
+    }
+
+}
+
 
 template<>
 double MultidimArray<double>::interpolatedElement2D(double x, double y, double outside_value) const

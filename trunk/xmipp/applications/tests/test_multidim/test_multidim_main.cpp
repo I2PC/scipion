@@ -44,6 +44,67 @@ TEST( MultidimTest, CopyFromMatrix2D)
     EXPECT_EQ(dMn(mSource, 3),DIRECT_MULTIDIM_ELEM(mdTarget,3)) << "MultidimArray: copy from Matrix2D operator failed";
 }
 
+TEST( MultidimTest, typeCastComplex)
+{
+    MultidimArray<std::complex <double> > mdTarget;
+    MultidimArray<double> mSource(2,2);
+
+    mSource(0,0) = 1;
+    mSource(0,1) = 2;
+    mSource(1,0) = 3;
+    mSource(1,1) = 4;
+
+    typeCast(mSource,mdTarget);
+
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 0),DIRECT_MULTIDIM_ELEM(mdTarget,0).real());
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 1),DIRECT_MULTIDIM_ELEM(mdTarget,1).real());
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 2),DIRECT_MULTIDIM_ELEM(mdTarget,2).real());
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 3),DIRECT_MULTIDIM_ELEM(mdTarget,3).real());
+
+    EXPECT_EQ(0,DIRECT_MULTIDIM_ELEM(mdTarget,0).imag()) ;
+    EXPECT_EQ(0,DIRECT_MULTIDIM_ELEM(mdTarget,1).imag()) ;
+    EXPECT_EQ(0,DIRECT_MULTIDIM_ELEM(mdTarget,2).imag()) ;
+    EXPECT_EQ(0,DIRECT_MULTIDIM_ELEM(mdTarget,3).imag()) ;
+
+}
+
+TEST( MultidimTest, getRealFromComplex)
+{
+    MultidimArray<std::complex <double> > mSource(2,2);
+    MultidimArray<double> mdTarget;
+
+    A2D_ELEM(mSource,0,0) = (std::complex<double>(0,0));
+    A2D_ELEM(mSource,1,0) = (std::complex<double>(1,0));
+    A2D_ELEM(mSource,0,1) = (std::complex<double>(2,0));
+    A2D_ELEM(mSource,1,1) = (std::complex<double>(3,0));
+
+    mSource.getReal(mdTarget);
+
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 0).real(),DIRECT_MULTIDIM_ELEM(mdTarget,0));
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 1).real(),DIRECT_MULTIDIM_ELEM(mdTarget,1));
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 2).real(),DIRECT_MULTIDIM_ELEM(mdTarget,2));
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 3).real(),DIRECT_MULTIDIM_ELEM(mdTarget,3));
+}
+
+TEST( MultidimTest, getImagFromComplex)
+{
+    MultidimArray<std::complex <double> > mSource(2,2);
+    MultidimArray<double> mdTarget;
+
+    A2D_ELEM(mSource,0,0) = (std::complex<double>(0,0));
+    A2D_ELEM(mSource,1,0) = (std::complex<double>(0,1));
+    A2D_ELEM(mSource,0,1) = (std::complex<double>(0,2));
+    A2D_ELEM(mSource,1,1) = (std::complex<double>(0,3));
+
+    mSource.getImag(mdTarget);
+
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 0).imag(),DIRECT_MULTIDIM_ELEM(mdTarget,0));
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 1).imag(),DIRECT_MULTIDIM_ELEM(mdTarget,1));
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 2).imag(),DIRECT_MULTIDIM_ELEM(mdTarget,2));
+    EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 3).imag(),DIRECT_MULTIDIM_ELEM(mdTarget,3));
+}
+
+
 GTEST_API_ int main(int argc, char **argv) {
 
   testing::InitGoogleTest(&argc, argv);

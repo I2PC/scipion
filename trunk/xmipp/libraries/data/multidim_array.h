@@ -2125,6 +2125,17 @@ public:
         memcpy(&A2D_ELEM(*this,i,0),&A1D_ELEM(v,0),xdim*sizeof(double));
     }
 
+    void getReal(MultidimArray< double > & realImg) const
+    {
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "MultidimArray: Non complex datatype.");
+    }
+
+    void getImag(MultidimArray< double > & imagImg) const
+    {
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "MultidimArray: Non complex datatype.");
+    }
+
+
     /** 3D Logical to physical index translation.
      *
      * This function returns the physical position of a logical one.
@@ -4723,6 +4734,10 @@ public:
         return *this;
     }
 
+    template<typename T1>
+    MultidimArray<T>& operator=(const MultidimArray<T1>& op1)
+{}
+
     /** Assignment.
      *
      * You can build as complex assignment expressions as you like. Multiple
@@ -4838,6 +4853,41 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2)
     // Do the remaining elements
     for (size_t n=nmax; n<NZYXSIZE(v1); ++n, ++ptr1)
         DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
+}
+
+template<typename T1>
+void typeCast(const MultidimArray<T1>& v1,  MultidimArray<std::complex<double> >& v2)
+{
+    if (NZYXSIZE(v1) == 0)
+    {
+        v2.clear();
+        return;
+    }
+
+    v2.resizeNoCopy(v1);
+    T1* ptr1 = MULTIDIM_ARRAY(v1);
+    double * ptr2 = (double*) MULTIDIM_ARRAY(v2);
+
+    // Unroll the loop
+    const size_t unroll=4;
+    size_t nmax=(NZYXSIZE(v1)/unroll)*unroll;
+    for (size_t n=0; n<nmax; n+=unroll, ptr1+=unroll)
+    {
+        *(ptr2++) = static_cast<double>(*ptr1);
+        *(ptr2++) = 0;
+        *(ptr2++) = static_cast< double >(*(ptr1+1));
+        *(ptr2++) = 0;
+        *(ptr2++) = static_cast< double >(*(ptr1+2));
+        *(ptr2++) = 0;
+        *(ptr2++) = static_cast< double >(*(ptr1+3));
+        *(ptr2++) = 0;
+    }
+    // Do the remaining elements
+    for (size_t n=nmax; n<NZYXSIZE(v1); ++n, ++ptr1)
+    {
+        *(ptr2++) = static_cast< double >(*ptr1);
+        *(ptr2++) = 0;
+    }
 }
 
 /** Conversion from one type to another.
@@ -4979,6 +5029,10 @@ bool operator==(const MultidimArray< std::complex< double > >& op1,
                 const MultidimArray< std::complex< double > >& op2);
 template<>
 double MultidimArray<double>::interpolatedElement2D(double x, double y, double outside_value) const;
+template<>
+void MultidimArray< std::complex< double > >::getReal(MultidimArray<double> & realImg) const;
+template<>
+void MultidimArray< std::complex< double > >::getImag(MultidimArray<double> & imagImg) const;
 
 //@}
 #endif
