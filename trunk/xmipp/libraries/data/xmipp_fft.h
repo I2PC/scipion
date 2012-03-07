@@ -276,6 +276,8 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > &
 void centerFFT2(MultidimArray<double> &v);
 
 /** CenterFFT
+ * Relation with Matlab fftshift: forward true is equals to fftshift and forward false
+ * equals to ifftshift
  */
 template <typename T>
 void CenterFFT(MultidimArray< T >& v, bool forward)
