@@ -746,8 +746,8 @@ if int(env['java']):
 
 # Src (apps)
 
-#AddXmippProgram('angular_class_average', ['XmippRecons'])
-AddXmippProgram('angular_commonline', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 AddXmippProgram('angular_distance', ['XmippRecons'])
