@@ -222,7 +222,8 @@ int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int sele
     return image->readPreview(name, Xdim, Ydim, select_slice, select_img);
 }
 
-int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img, bool mapData)
+int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img,
+    bool mapData, bool wrap)
 {
     ImageInfo imInf;
     getImageInfo(name, imInf);
@@ -250,34 +251,35 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
     }
 }
 
-int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts,
-                               DataMode datamode, size_t select_img, bool wrap)
+int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row,
+    const ApplyGeoParams &params)
 {
     setDatatype(getImageDatatype(name));
-    return image->readApplyGeo(name, row, only_apply_shifts, datamode, select_img, wrap);
+    return image->readApplyGeo(name, row, params);
 }
 
-int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode,
-                               size_t select_img, bool wrap)
+int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
+    const ApplyGeoParams &params)
 {
     setDatatype(getImageDatatype(name));
-    return image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
+    return image->readApplyGeo(name, md, objId, params);
 }
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE */
-int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts,
-                               DataMode datamode, size_t select_img, bool wrap)
+int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
+    const ApplyGeoParams &params)
 {
     FileName name;
     md.getValue(MDL_IMAGE, name, objId/*md.firstObject()*/);
     setDatatype(getImageDatatype(name));
-    return image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img, wrap);
+    return image->readApplyGeo(name, md, objId, params);
 }
 
 /** Apply geometry in refering metadata to the image */
-void ImageGeneric::applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, bool wrap)
+void ImageGeneric::applyGeo(const MetaData &md, size_t objId,
+    const ApplyGeoParams &params)
 {
-    image->applyGeo(md, objId, only_apply_shifts, wrap);
+    image->applyGeo(md, objId, params);
 }
 
 

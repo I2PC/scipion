@@ -132,7 +132,7 @@ Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_readApplyGeo_1(JNIEnv *env, jobject jimage,
-    jstring filename, jobject jmetadata, jlong id, jint w, jint h)
+    jstring filename, jobject jmetadata, jlong id, jint w, jint h, jboolean wrap)
 {
   XMIPP_TRY
   {
@@ -140,7 +140,9 @@ Java_xmipp_jni_ImageGeneric_readApplyGeo_1(JNIEnv *env, jobject jimage,
     MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
 
     const char *fnStr = env->GetStringUTFChars(filename, false);
-    image->readApplyGeo(fnStr, *metadata, (size_t) id);
+    ApplyGeoParams params;
+    params.wrap = wrap;
+    image->readApplyGeo(fnStr, *metadata, (size_t) id, params);
 
 #define SELF_SCALE_TO_SIZE(type) MultidimArray<type> *mdaFloat; \
  MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(mdaFloat); \

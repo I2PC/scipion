@@ -137,7 +137,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_read
  * Signature: (Ljava/lang/String;Lxmipp/MetaData;JII)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_readApplyGeo_1
-  (JNIEnv *, jobject, jstring, jobject, jlong, jint, jint);
+  (JNIEnv *, jobject, jstring, jobject, jlong, jint, jint, jboolean);
 
 /*
  * Class:     xmipp_ImageGeneric

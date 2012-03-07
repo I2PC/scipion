@@ -36,6 +36,7 @@ protected:
     HeaderOperation operation;
     bool round_shifts;
     MDRow row;
+    ApplyGeoParams params;
 
     void defineParams()
     {
@@ -87,6 +88,7 @@ protected:
         round_shifts = checkParam("--round_shifts");
         if (operation != HEADER_EXTRACT && checkParam("-o"))
             REPORT_ERROR(ERR_PARAM_INCORRECT, "Argument -o is not valid for this operation");
+        params.datamode = HEADER;
     }
 
     void show()
@@ -151,7 +153,7 @@ protected:
             rowOut = rowIn;
             if (round_shifts)
                 roundShifts(rowOut);
-            img.readApplyGeo(fnImg, rowOut, HEADER);
+            img.readApplyGeo(fnImg, rowOut, params);
             img.setDataMode(_HEADER_ALL);
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;

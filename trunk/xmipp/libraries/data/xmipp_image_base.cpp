@@ -96,7 +96,8 @@ int ImageBase::readOrReadMapped(const FileName &name, size_t select_img, int mod
     }
 }
 
-int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img, bool mapData)
+int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img,
+    bool mapData)
 {
     read(name, HEADER);
     int imXdim, imYdim, imZdim;
@@ -152,28 +153,30 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_fil
 #define GET_ROW()               MDRow row; md.getRow(row, objId)
 
 #define READ_AND_RETURN()        ImageFHandler* hFile = openFile(name);\
-                                  int err = _read(name, hFile, datamode, select_img); \
-                                  applyGeo(row, only_apply_shifts, wrap); \
+                                  int err = _read(name, hFile, params.datamode, params.select_img); \
+                                  applyGeo(row, params.only_apply_shifts, params.wrap); \
                                   closeFile(hFile); \
                                   return err
 
 #define APPLY_GEO()        MDRow row; md.getRow(row, objId); \
-                           applyGeo(row, only_apply_shifts, wrap) \
+                           applyGeo(row, params.only_apply_shifts, params.wrap) \
 
-void ImageBase::applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, bool wrap)
+void ImageBase::applyGeo(const MetaData &md, size_t objId,
+    const ApplyGeoParams &params)
 {
     APPLY_GEO();
 }
 
-int ImageBase::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts, DataMode datamode, size_t select_img, bool wrap)
+int ImageBase::readApplyGeo(const FileName &name, const MDRow &row,
+    const ApplyGeoParams &params)
 {
     READ_AND_RETURN();
 }
 
 /** Read an image from metadata, filename is provided
 */
-int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode,
-                            size_t select_img, bool wrap)
+int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
+    const ApplyGeoParams &params)
 {
     GET_ROW();
     READ_AND_RETURN();
@@ -181,7 +184,8 @@ int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t obj
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE
  */
-int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode, size_t select_img, bool wrap)
+int ImageBase::readApplyGeo(const MetaData &md, size_t objId,
+    const ApplyGeoParams &params)
 {
     GET_ROW();
     FileName name;

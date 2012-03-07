@@ -3042,11 +3042,7 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *md = NULL;
         PyObject *only_apply_shifts = Py_False;
-        PyObject *wrap ;
-        if (WRAP)
-            wrap = Py_True;
-        else
-            wrap = Py_False;
+        PyObject *wrap = (WRAP ? Py_True : Py_False);
         size_t objectId = BAD_OBJID;
         bool boolOnly_apply_shifts = false;
         bool boolWrap = WRAP;
@@ -3065,8 +3061,12 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
                     boolWrap = (wrap == Py_True);
                 else
                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
-                self->image->readApplyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts,
-                                          (DataMode)datamode, select_img,boolWrap);
+                ApplyGeoParams params;
+                params.only_apply_shifts = boolOnly_apply_shifts;
+                params.datamode = (DataMode)datamode;
+                params.select_img = select_img;
+                params.wrap = boolWrap;
+                self->image->readApplyGeo(MetaData_Value(md), objectId, params);
                 Py_RETURN_NONE;
             }
             catch (XmippError &xe)
@@ -3087,11 +3087,7 @@ Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *md = NULL;
         PyObject *only_apply_shifts = Py_False;
-        PyObject *wrap ;
-        if (WRAP)
-            wrap = Py_True;
-        else
-            wrap = Py_False;
+        PyObject *wrap = (WRAP ? Py_True : Py_False);
         size_t objectId = BAD_OBJID;
         bool boolOnly_apply_shifts = false;
         bool boolWrap = WRAP;
@@ -3108,7 +3104,10 @@ Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
                     boolWrap = (wrap == Py_True);
                 else
                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
-                self->image->applyGeo(MetaData_Value(md), objectId, boolOnly_apply_shifts,boolWrap);
+                ApplyGeoParams params;
+                params.only_apply_shifts = boolOnly_apply_shifts;
+                params.wrap = boolWrap;
+                self->image->applyGeo(MetaData_Value(md), objectId, params);
                 Py_RETURN_NONE;
             }
             catch (XmippError &xe)

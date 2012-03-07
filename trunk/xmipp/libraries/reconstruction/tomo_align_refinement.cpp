@@ -106,11 +106,14 @@ void ProgTomoAlignRefinement::produce_side_info()
     MetaData SF(fn_sel);
     Image<double> I;
     FileName fnImg;
+    ApplyGeoParams params;
+    params.datamode = HEADER;
+
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         AlignmentTomography dummy;
         SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
-        I.readApplyGeo(fnImg,SF,__iter.objId,HEADER);
+        I.readApplyGeo(fnImg,SF,__iter.objId, params);
         I().setXmippOrigin();
         dummy.rot=I.rot();
         dummy.tilt=I.tilt();

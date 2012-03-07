@@ -33,6 +33,7 @@ public:
     String action,ang1,ang2,ang3;
     bool new_style;
     int currentImage;
+    ApplyGeoParams params;
 
     void defineParams()
     {
@@ -68,6 +69,7 @@ public:
             ang2=getParam("--action",2);
             ang3=getParam("--action",3);
         }
+        params.datamode = HEADER;
     }
 
     void show()
@@ -123,7 +125,7 @@ public:
         else if (action=="extract_angles")
         {
             Image<double> img;
-            img.readApplyGeo(fnImg,rowIn, false, HEADER);
+            img.readApplyGeo(fnImg,rowIn, params);
             DF_out.append_angles(img.rot(), img.tilt(), img.psi(),
                                  ang1, ang2, ang3);
 
@@ -145,9 +147,4 @@ public:
 }
 ;//end of class ProgSpiderTranslate
 
-int main(int argc, char *argv[])
-{
-    ProgSpiderTranslate program;
-    program.read(argc, argv);
-    program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgSpiderTranslate);

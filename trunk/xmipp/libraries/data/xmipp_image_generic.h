@@ -210,20 +210,21 @@ public:
 
     /** Read image from file with a header applied.
      */
-    int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
+    int readApplyGeo(const FileName &name, const MDRow &row,
+        const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read image from file.
      */
-    int readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
+    int readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
+        const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
-    int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
-                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES, bool wrap = WRAP);
+    int readApplyGeo(const MetaData &md, size_t objId,
+        const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Apply geometry in refering metadata to the image */
-    void applyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false, bool wrap = WRAP);
+    void applyGeo(const MetaData &md, size_t objId,
+        const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read image mapped from file.
      */
@@ -244,7 +245,8 @@ public:
      *
      *  In the case of reading images in its real dimensions it is also possible to image map from file.
      */
-    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE, bool mapData = false);
+    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE,
+        bool mapData = false, bool wrap = true);
 
     /** Write image to file.
     */
