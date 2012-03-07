@@ -366,8 +366,8 @@ void ProgXrayImport::run()
     createEmptyFile(fnOut, Xdim-2*cropSize, Ydim-2*cropSize, 1, filenames.size());
 
     // Process images
-    td=new ThreadTaskDistributor(filenames.size(),XMIPP_MAX(1,filenames.size()/30));
-    tm=new ThreadManager(thrNum,this);
+    td = new ThreadTaskDistributor(filenames.size(),XMIPP_MAX(1,filenames.size()/30));
+    tm = new ThreadManager(thrNum,this);
     std::cerr << "Getting data from " << fnDirData << " ...\n";
     init_progress_bar(filenames.size());
     tm->run(runThread);
@@ -388,4 +388,6 @@ void ProgXrayImport::run()
         fhTlt << tilt << std::endl;
     }
     fhTlt.close();
+    delete td;
+    delete tm;
 }
