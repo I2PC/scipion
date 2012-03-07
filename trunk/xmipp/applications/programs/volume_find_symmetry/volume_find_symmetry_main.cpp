@@ -222,8 +222,8 @@ public:
                 vbest_rot.initZeros(numberOfThreads);
                 vbest_tilt.initZeros(numberOfThreads);
                 td = new ThreadTaskDistributor(rotVector.size(), 5);
-                ThreadManager * thMgr =  new ThreadManager(numberOfThreads,this);
-                thMgr->run(globalThreadEvaluateSymmetry);
+                ThreadManager thMgr(numberOfThreads,this);
+                thMgr.run(globalThreadEvaluateSymmetry);
                 best_corr=-1e38;
                 FOR_ALL_ELEMENTS_IN_ARRAY1D(vbest_corr)
                 if (vbest_corr(i)>best_corr)
@@ -291,8 +291,8 @@ public:
                 vbest_z.initZeros(numberOfThreads);
                 helicalCorrelation().initZeros(ydim,xdim);
                 td = new ThreadTaskDistributor(rotVector.size(), 5);
-                ThreadManager * thMgr =  new ThreadManager(numberOfThreads,this);
-                thMgr->run(globalThreadEvaluateSymmetry);
+                ThreadManager thMgr(numberOfThreads,this);
+                thMgr.run(globalThreadEvaluateSymmetry);
                 best_corr=-1e38;
                 FOR_ALL_ELEMENTS_IN_ARRAY1D(vbest_corr)
                 if (vbest_corr(i)>best_corr)
@@ -327,9 +327,10 @@ public:
                 MD.setValue(MDL_SHIFTZ,best_z,id);
                 MD.write(fn_output);
                 if (!local)
-                	helicalCorrelation.write(fn_output+".xmp");
+                    helicalCorrelation.write(fn_output+".xmp");
             }
         }
+        delete td;
     }
 
     Image<double> volume;
@@ -395,7 +396,7 @@ public:
                 if (DIRECT_MULTIDIM_ELEM(originalMask,n)==0)
                     DIRECT_MULTIDIM_ELEM(mask_aux,n)=0;
                 double corr=correlationIndex(mVolume, volume_sym, &mask_aux);
-//#define DEBUG
+                //#define DEBUG
 #ifdef DEBUG
 
                 Image<double> save;
