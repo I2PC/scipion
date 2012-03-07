@@ -27,7 +27,7 @@
 #include <data/xmipp_program.h>
 
 #include <data/multidim_array.h>
-#include <data/fringeprocessing.h>
+#include <data/fringe_processing.h>
 #include <data/xmipp_image.h>
 
 class ProgCTFEstimateFromPSDZernike: public XmippProgram
@@ -82,7 +82,7 @@ public:
 
     	FringeProcessing fp;
 
-    	MultidimArray<double> imProc;
+    	MultidimArray< std::complex <double> > imProc;
     	MultidimArray<double> im;
 
     	int nx = 311;
