@@ -73,8 +73,8 @@ void applyTransformation(const MultidimArray<double> &V2,
 
     applyGeometry(LINEAR, Vaux, V2, A, IS_NOT_INV, WRAP);
     if (greyScale!=1 || greyShift!=0)
-    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
-    	DIRECT_MULTIDIM_ELEM(Vaux,n)=DIRECT_MULTIDIM_ELEM(Vaux,n)*greyScale+greyShift;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
+        DIRECT_MULTIDIM_ELEM(Vaux,n)=DIRECT_MULTIDIM_ELEM(Vaux,n)*greyScale+greyShift;
 }
 
 
@@ -257,7 +257,7 @@ public:
         params.V2().setXmippOrigin();
 
         // Initialize best_fit
-        double best_fit;
+        double best_fit = 1e38;
         Matrix1D<double> best_align(8);
         bool first = true;
 
@@ -327,8 +327,7 @@ public:
                                                 trial(8) = XX(r);
 
                                                 // Evaluate
-                                                double fit =
-                                                    fitness(MATRIX1D_ARRAY(trial));
+                                                double fit = fitness(MATRIX1D_ARRAY(trial));
 
                                                 // The best?
                                                 if (fit < best_fit || first)
@@ -359,7 +358,7 @@ public:
             if (onlyShift)
                 steps(0)=steps(1)=steps(2)=steps(3)=steps(4)=steps(5)=0;
             if (params.alignment_method == COVARIANCE)
-            	steps(0)=steps(1)=0;
+                steps(0)=steps(1)=0;
             x(0)=grey_scale0;
             x(1)=grey_shift0;
             x(2)=rot0;
