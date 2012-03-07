@@ -1,0 +1,3 @@
+Input File: input/1FFKfull_reconstructed.vol
+Output File: tmpLink/xmipp_volume_center/centered.vol
+Mask type: No mask
