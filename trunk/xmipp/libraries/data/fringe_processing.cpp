@@ -116,11 +116,11 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
     		A2D_ELEM(H,i,j) = 0;
     }
 
-    CenterFFT(H,true);
-    //fftIm *= H;
+    //CenterFFT(H,true);
+    CenterFFT(H,false);
+    fftIm *= H;
     ftrans.inverseFourierTransform();
     //Here in the Matlab code there is a complex conjugate s
-    //imProc = imComplex;
-    imProc = fftIm;
+    imProc = imComplex;
 }
 
