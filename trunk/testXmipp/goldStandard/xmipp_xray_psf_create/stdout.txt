@@ -8,7 +8,7 @@ zones_number =     560
 outer_zone_width = 40 nm
 magnification =    2304
 sampling_rate =    0.5 nm
-z_sampling_rate =  100 nm
+z_sampling_rate =  500 nm
 z_axis_shift =     0 um
 
 focal_length =     1.4749 mm
@@ -24,12 +24,11 @@ dxiMax =           92.2 um
 ----------------------
 XrayPSF::Param adjust:
 ----------------------
-(Nox,Noy,Nz) = (201,201,10)
-Larger volume Z plane to be calculated = 0.45 um
+(Nox,Noy,Nz) = (201,201,20)
+Larger volume Z plane to be calculated = 4.5 um
 Larger allowed discrete Z plane (x,y) = (1.6569, 1.6569) um
 XrayPSF: Image plane size too small: increasing size
-New slice dimensions:  (Nix, Niy) = (401, 401)
-(dxl, dyl) = (17.8831, 17.8831) um
-Pupile Diameter in pixels (NpX, NpY) = (6, 6)
-
+New slice dimensions:  (Nix, Niy) = (610, 610)
+(dxl, dyl) = (11.7559, 11.7559) um
+Pupile Diameter in pixels (NpX, NpY) = (8, 8)
 
