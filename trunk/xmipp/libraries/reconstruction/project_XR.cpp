@@ -492,7 +492,7 @@ void threadXrayProject(ThreadArgument &thArg)
 
     if (thread_id==0)
     {
-        MULTIDIM_ARRAY(imOutGlobal) = 1.0- MULTIDIM_ARRAY(imOutGlobal);
+        MULTIDIM_ARRAY(imOutGlobal) = 1- MULTIDIM_ARRAY(imOutGlobal);
 
         switch (psf.AdjustType)
         {
