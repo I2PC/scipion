@@ -1,5 +1,7 @@
 package xmipp.ij;
 
+import java.io.File;
+
 import xmipp.jni.Filename;
 import ij.IJ;
 import ij.ImageJ;
@@ -30,21 +32,24 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	@Override
 	public void loadData()
 	{
-		// TODO Auto-generated method stub
-		
+		String file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+		ImagePlus imp = new ImagePlus(file);
+		setImage(imp);//second alone does not work
+		updateImage(imp);//first one alone does not work
+	}
+
+	
+
+	@Override
+	public void saveDataAs(String file) throws Exception
+	{
+		XmippImageConverter.writeImagePlus(imp, file);
 	}
 
 	@Override
-	public void saveData()
+	public void saveData() throws Exception
 	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void saveDataAs(String file)
-	{
-		// TODO Auto-generated method stub
+		saveDataAs(imp.getTitle());
 		
 	}
 }

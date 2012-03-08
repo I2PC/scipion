@@ -5,6 +5,7 @@
 package xmipp.ij;
 
 import ij.IJ;
+import ij.WindowManager;
 
 import java.awt.CheckboxMenuItem;
 import java.awt.Menu;
@@ -46,25 +47,11 @@ public class XmippMenuBar extends MenuBar
 	private Menu binarymn;
 	private Menu processmn;
 	private Menu drawmn;
-	private MenuItem propertiesmi;
-	private MenuItem meanshiftmi;
-	private MenuItem plotprofilemi;
 	private MenuItem imagejmi;
-	private MenuItem imageinfomi;
-	private MenuItem fliphmi;
-	private MenuItem flipvmi;
-	private MenuItem cropmi;
-	private MenuItem rotate90leftmi;
-	private MenuItem rotate90rightmi;
 	private ArrayList<String> requireij;
-	private MenuItem bandpassmi;
-	private MenuItem admi;
 	private MenuItem openwithvv3ds;
 	private MenuItem openwithvolumej;
 	private MenuItem maskmi;
-	private MenuItem thresholdmi;
-	private MenuItem otsuthresholdmi;
-	private MenuItem multiotsuthresholdmi;
 	private MenuItem maxentropythresholdmi;
 	private MenuItem mixturemodthresholdmi;
 	private MenuItem voxelcountermi;
@@ -99,10 +86,15 @@ public class XmippMenuBar extends MenuBar
 	private PollTimer polltimer;
 	private MenuItem refreshmi;
 
+	enum IJRequirement
+	{
+		BINARY, EIGHTBIT, IMAGEJ, STACK
+		
+	};
+
 	public XmippMenuBar(XmippIJWindow xw)
 	{
 		this.xw = xw;
-		requireij = new ArrayList<String>();
 		// menubar menus
 		filemn = new Menu("File");
 		imagemn = new Menu("Image");
@@ -116,25 +108,26 @@ public class XmippMenuBar extends MenuBar
 		savemi = new MenuItem("Save");
 		savemi.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
 				try
 				{
 					XmippMenuBar.this.xw.saveData();
+
 				}
 				catch (Exception ex)
 				{
 					JOptionPane.showMessageDialog(null, ex.getMessage());
 				}
-				
+
 			}
 		});
 		saveasmi = new MenuItem("Save As...");
 		saveasmi.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
@@ -153,7 +146,7 @@ public class XmippMenuBar extends MenuBar
 				{
 					JOptionPane.showMessageDialog(null, ex.getMessage());
 				}
-				
+
 			}
 		});
 		openwith3dmi = new MenuItem("Open with 3D Viewer");
@@ -162,19 +155,19 @@ public class XmippMenuBar extends MenuBar
 		refreshmi = new MenuItem("Refresh");
 		refreshmi.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
 				XmippMenuBar.this.xw.loadData();
-				
+
 			}
 		});
-		
+
 		pollmi = new CheckboxMenuItem("Poll");
 		pollmi.addItemListener(new ItemListener()
 		{
-			
+
 			@Override
 			public void itemStateChanged(ItemEvent e)
 			{
@@ -185,8 +178,6 @@ public class XmippMenuBar extends MenuBar
 					polltimer.stop();
 			}
 		});
-		
-		
 
 		filemn.add(savemi);
 		filemn.add(saveasmi);
@@ -195,67 +186,44 @@ public class XmippMenuBar extends MenuBar
 		filemn.add(openwithvolumej);
 		filemn.add(refreshmi);
 		filemn.add(pollmi);
-		
 
 		// menubar image menu
 		infomn = new Menu("Info");
 		adjustmn = new Menu("Adjust");
 		transformmn = new Menu("Transform");
 		filtersmn = new Menu("Filters");
-		maskmi = new MenuItem("Mask Tool Bar");
-		addCommand(maskmi, "Mask Tool Bar");
+		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar");//missing plugin
 
 		imagemn.add(infomn);
 		imagemn.add(adjustmn);
 		imagemn.add(transformmn);
 		imagemn.add(filtersmn);
-		imagemn.add(maskmi);
-
+		
+		
 		// image info menu
-		imageinfomi = new MenuItem("Image Info");
-		addCommand(imageinfomi, "Show Info...");
-		propertiesmi = new MenuItem("Properties");
-		addCommand(propertiesmi, "Properties...");
-		meanshiftmi = new MenuItem("Histogram");
-		addCommand(meanshiftmi, "Histogram", true);// works only if imagej shown
-		plotprofilemi = new MenuItem("Plot Profile");
-		addCommand(plotprofilemi, "Plot Profile");// requires selection
+		addIJMenuItem(infomn, "Show Info", "Show Info...");
+		addIJMenuItem(infomn, "Properties", "Properties...");
+		addIJMenuItem(infomn, "Histogram", "Show Info...", IJRequirement.IMAGEJ);
+		addIJMenuItem(infomn, "Plot Profile", "Plot Profile",  IJRequirement.IMAGEJ);
 
-		infomn.add(imageinfomi);
-		infomn.add(propertiesmi);
-		infomn.add(meanshiftmi);
-		infomn.add(plotprofilemi);
-
-		// image filters menu
-		bandpassmi = new MenuItem("Bandpass Filter");
-		addCommand(bandpassmi, "Bandpass Filter...");
-		admi = new MenuItem("Anisotropic Diffusion");
-		addCommand(admi, "Anisotropic Diffusion...");
-		meanshiftmi = new MenuItem("Mean Shift");
-		addCommand(meanshiftmi, "Mean Shift");
-
-		filtersmn.add(bandpassmi);
-		filtersmn.add(admi);
-		filtersmn.add(meanshiftmi);
+		// image adjust menu
+		addIJMenuItem(adjustmn, "Duplicate", "Duplicate...", IJRequirement.IMAGEJ);
+		addIJMenuItem(adjustmn, "Crop", "Crop", IJRequirement.IMAGEJ);
+		addIJMenuItem(adjustmn, "Scale", "Scale...");
+		addIJMenuItem(adjustmn, "Untilt Stack", "Untilt Stack", IJRequirement.STACK);
+		addIJMenuItem(adjustmn, "Straighten Curved Objects", "Straighten...", IJRequirement.IMAGEJ);
+		addIJMenuItem(adjustmn, "Reslice", "Reslice [/]...");
 
 		// image transform menu
-		cropmi = new MenuItem("Crop");
-		addCommand(cropmi, "Crop", true);// works only if stack
-		fliphmi = new MenuItem("Flip Horizontally");
-		addCommand(fliphmi, "Flip Horizontally");
-		flipvmi = new MenuItem("Flip Vertically");
-		addCommand(flipvmi, "Flip Vertically");
+		addIJMenuItem(transformmn, "Flip Horizontally", "Flip Horizontally");
+		addIJMenuItem(transformmn, "Flip Vertically", "Flip Vertically");
+		addIJMenuItem(transformmn, "Rotate 90 Degrees Left", "Rotate 90 Degrees Left");
+		addIJMenuItem(transformmn, "Rotate 90 Degrees Right", "Rotate 90 Degrees Right");
 
-		rotate90leftmi = new MenuItem("Rotate 90 Degrees Left");
-		addCommand(rotate90leftmi, "Rotate 90 Degrees Left");
-		rotate90rightmi = new MenuItem("Rotate 90 Degrees Right");
-		addCommand(rotate90rightmi, "Rotate 90 Degrees Right");
-
-		transformmn.add(cropmi);
-		transformmn.add(fliphmi);
-		transformmn.add(flipvmi);
-		transformmn.add(rotate90leftmi);
-		transformmn.add(rotate90rightmi);
+		// image filters menu
+		addIJMenuItem(filtersmn, "Bandpass Filter", "Bandpass Filter...");
+		addIJMenuItem(filtersmn, "Anisotropic Diffusion", "Anisotropic Diffusion...");
+		addIJMenuItem(filtersmn, "Mean Shift", "Mean Shift");
 
 		// menubar advanced menu
 		imagejmi = new MenuItem("ImageJ");
@@ -273,78 +241,49 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(profilemn);
 
 		// advanced threshold menu
-		thresholdmi = new MenuItem("Threshold");
-		otsuthresholdmi = new MenuItem("Otsu Threshold");
-		multiotsuthresholdmi = new MenuItem("Multi Otsu Threshold");
-		maxentropythresholdmi = new MenuItem("Maximum Entropy Threshold");
-		mixturemodthresholdmi = new MenuItem("Mixture Modeling Threshold");
-
-		thresholdingmn.add(thresholdmi);
-		thresholdingmn.add(otsuthresholdmi);
-		thresholdingmn.add(multiotsuthresholdmi);
-		thresholdingmn.add(maxentropythresholdmi);
-		thresholdingmn.add(mixturemodthresholdmi);
+		addIJMenuItem(thresholdingmn, "Threshold", "Threshold");
+		addIJMenuItem(thresholdingmn, "Otsu Threshold", "Otsu Thresholding", IJRequirement.IMAGEJ);
+		addIJMenuItem(thresholdingmn, "Multi Otsu Threshold", "Multi Otsu Threshold");
+		addIJMenuItem(thresholdingmn, "Maximum Entropy Threshold", "Entropy Threshold");
+		addIJMenuItem(thresholdingmn, "Mixture Modeling Threshold", "Mixture Modeling");
+		addIJMenuItem(thresholdingmn, "Robust Automatic Threshold Selection", "RATS ");
+		addIJMenuItem(thresholdingmn, "Simple Iterative Object Extraction", "SIOX Segmentation");
+		
 
 		// advanced binary menu
-		voxelcountermi = new MenuItem("Voxel Counter");
-		addCommand(voxelcountermi, "Voxel Counter");
-		erodemi = new MenuItem("Erode");
-		addCommand(erodemi, "Erode");
-		dilatemi = new MenuItem("Dilate");
-		openmi = new MenuItem("Open");
-		closemi = new MenuItem("Close");
-		floatmorphomi = new MenuItem("Float Morphology");
-		outlinemi = new MenuItem("Outline");
-		fillholesmi = new MenuItem("Fill Holes");
-		skeletonizemi = new MenuItem("Skeletonize");
-		distancemapmi = new MenuItem("Distance Map");
-		ultimatepointsmi = new MenuItem("Ultimate Points");
-		watershedmi = new MenuItem("Water Shed");
-		voronoimi = new MenuItem("Voronoi");
-
-		binarymn.add(voxelcountermi);
-		binarymn.add(erodemi);
-		binarymn.add(dilatemi);
-		binarymn.add(openmi);
-		binarymn.add(closemi);
-		binarymn.add(floatmorphomi);
-		binarymn.add(outlinemi);
-		binarymn.add(fillholesmi);
-		binarymn.add(skeletonizemi);
-		binarymn.add(watershedmi);
-		binarymn.add(voronoimi);
+		addIJMenuItem(binarymn, "Voxel Counter", "Voxel Counter", IJRequirement.STACK);//stack required
+		addIJMenuItem(binarymn, "Erode", "Erode", IJRequirement.BINARY);
+		addIJMenuItem(binarymn, "Dilate", "Dilate", IJRequirement.BINARY);
+		addIJMenuItem(binarymn, "Open", "Open", IJRequirement.BINARY);
+		addIJMenuItem(binarymn, "Close", "Close", IJRequirement.BINARY);
+		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology");// missing plugin
+		addIJMenuItem(binarymn, "Outline", "Outline", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
+		addIJMenuItem(binarymn, "Fill Holes", "Fill Holes", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
+		addIJMenuItem(binarymn, "Skeletonize", "Skeletonize", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
+		addIJMenuItem(binarymn, "Distance Map", "Distance Map", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
+		addIJMenuItem(binarymn, "Ultimate Points", "Ultimate Points", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
+		addIJMenuItem(binarymn, "Watershed", "Watershed");
+		addIJMenuItem(binarymn, "Voronoi", "Voronoi", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 
 		// advanced process menu
-		brightcontrastmi = new MenuItem("Brightness/Contrast");
-		enhancecontrastmi = new MenuItem("Enhance Contrast");
-		substractbgmi = new MenuItem("Substract Background");
-		gaussianblurmi = new MenuItem("Gaussian Blur");
-		convolvemi = new MenuItem("Convolve");
-		medianmi = new MenuItem("Median");
-		fftmi = new MenuItem("FFT");
+		addIJMenuItem(processmn, "Brightness/Contrast", "Brightness/Contrast...");
+		addIJMenuItem(processmn, "Enhance Contrast", "Enhance Contrast");
+		addIJMenuItem(processmn, "Subtract Background", "Subtract Background...");
+		addIJMenuItem(processmn, "Gaussian Blur", "Gaussian Blur...");
+		addIJMenuItem(processmn, "Convolve", "Convolve...");
+		addIJMenuItem(processmn, "Median", "Median...");
+		addIJMenuItem(processmn, "FFT", "FFT");//memory error
 
-		processmn.add(brightcontrastmi);
-		processmn.add(enhancecontrastmi);
-		processmn.add(substractbgmi);
-		processmn.add(gaussianblurmi);
-		processmn.add(convolvemi);
-		processmn.add(medianmi);
-		processmn.add(fftmi);
 
 		// advanced drawn menu
 
 		// advanced profile menu
-		lineanalyzermi = new MenuItem("Line Analyzer");
-		ovalpplotmi = new MenuItem("Oval Profile Plot");
-		radialpplotanglemi = new MenuItem("Radial Profile Plot Angle");
-		radialpplotheightmi = new MenuItem("Radial Profile Plot Height");
-		contourplottermi = new MenuItem("Contour Plotter");
-
-		profilemn.add(lineanalyzermi);
-		profilemn.add(ovalpplotmi);
-		profilemn.add(radialpplotanglemi);
-		profilemn.add(radialpplotheightmi);
-		profilemn.add(contourplottermi);
+		addIJMenuItem(profilemn, "Line Analyzer", "Line Analyzer", IJRequirement.IMAGEJ);
+		addIJMenuItem(profilemn, "Oval Profile Plot", "Oval Profile", IJRequirement.IMAGEJ);
+		addIJMenuItem(profilemn, "Radial Profile Plot Angle", "Radial Profile Angle", IJRequirement.IMAGEJ);
+		addIJMenuItem(profilemn, "Radial Profile Plot Height", "Radial Profile Height", IJRequirement.IMAGEJ);
+		addIJMenuItem(profilemn, "Contour Plotter", "ContourPlotter");
+		
 
 		imagejmi.addActionListener(new ActionListener()
 		{
@@ -357,27 +296,28 @@ public class XmippMenuBar extends MenuBar
 		});
 
 	}
-	
 
+	private void addIJMenuItem(Menu mn, String name, String command, IJRequirement ... requirements)
+	{
+		MenuItem mi = new MenuItem(name);
+		addCommand(mi, command, requirements);
+		mn.add(mi);
+
+	}
 
 	private void poll()
 	{
 		{
-			if(timer == null)
+			if (timer == null)
 				polltimer = new PollTimer(xw);
 			polltimer.start();
 		}
 	}
 
-	protected void addCommand(MenuItem mi, String command)
-	{
-		addCommand(mi, command, false);
-	}
+	
 
-	protected void addCommand(MenuItem mi, String command, boolean isrequiredij)
+	protected void addCommand(MenuItem mi, String command, final IJRequirement ... requirements )
 	{
-		if (isrequiredij)
-			requireij.add(command);
 		mi.setActionCommand(command);
 		mi.addActionListener(new ActionListener()
 		{
@@ -387,10 +327,24 @@ public class XmippMenuBar extends MenuBar
 			{
 
 				String command = ((MenuItem) e.getSource()).getActionCommand();
-				if (requireij.contains(command))
-					XmippImageWindow.openImageJ(Tool.VIEWER);
-				if (command.equals("Anisotropic Diffusion..."))
-					IJ.run("8-bit");
+				if (requirements != null)
+					for (IJRequirement requirement : requirements)
+						switch (requirement)
+						{
+						case IMAGEJ:
+							XmippImageWindow.openImageJ(Tool.VIEWER);
+							break;
+						case BINARY:
+							IJ.run("Make Binary");
+							break;
+						case EIGHTBIT:
+							IJ.run("8-bit");
+							break;
+						case STACK:
+							if(WindowManager.getCurrentImage().getImageStackSize() == 1)
+								JOptionPane.showMessageDialog(null, "Only for Stack");
+								return;
+						}
 				IJ.run(command);
 			}
 		});

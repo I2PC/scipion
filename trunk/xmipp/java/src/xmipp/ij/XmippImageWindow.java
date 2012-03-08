@@ -3,6 +3,7 @@ package xmipp.ij;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.WindowManager;
 import ij.gui.ImageWindow;
 import ij.io.FileSaver;
 
@@ -21,7 +22,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		try
 		{
-			new XmippImageWindow("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+			//openImageJ(Tool.VIEWER);
+			XmippImageWindow w = new XmippImageWindow("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+			
 		}
 		catch (Exception e)
 		{
@@ -69,10 +72,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		ImagePlus imp = XmippImageConverter.loadImage(file);
 		setImage(imp);//second alone does not work
 		updateImage(imp);//first one alone does not work
-			}catch (Exception e){
-				XmippDialog.showError(null, e.getMessage());
-			}
-		}
 	}
 
 	
