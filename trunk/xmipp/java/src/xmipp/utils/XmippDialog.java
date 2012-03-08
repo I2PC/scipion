@@ -138,17 +138,17 @@ public class XmippDialog extends JDialog  implements ActionListener {
 	}
 	
 	/** Some static methods to display some message dialogs */
-	public static void showInfo(JFrame parent, String message){
+	public static boolean showInfo(JFrame parent, String message){
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "INFO", message, "info.gif");
-		dlg.showDialog();
+		return dlg.showDialog();
 	}
-	public static void showWarning(JFrame parent, String message){
+	public static boolean showWarning(JFrame parent, String message){
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "WARNING", message, "warning.gif");
-		dlg.showDialog();
+		return dlg.showDialog();
 	}
-	public static void showError(JFrame parent, String message){
+	public static boolean showError(JFrame parent, String message){
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR", message, "error.gif");
-		dlg.showDialog();
+		return dlg.showDialog();
 	}
 	
 }//class XmippDialog

@@ -107,7 +107,7 @@ public class GalleryData {
 		volumes = null;
 		useGeo = containsGeometryInfo();
 		selection = new boolean[ids.length];
-		
+
 		if (isGalleryMode())
 			mode = MODE_GALLERY_MD;
 
@@ -120,16 +120,13 @@ public class GalleryData {
 				if (Filename.exists(imageFn))
 					image = new ImageGeneric(imageFn);
 			}
-			if (image != null) {
-				// if (zoom == 0){ //default value
-				int xdim = image.getXDim();
-				int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
-				float scale = (float) x / xdim;
-				zoom = (int) Math.ceil(scale * 100);
-//				DEBUG.printMessage(String.format(
-//						"xdim: %d, x: %d, scale: %f, zoom: %d", xdim, x, scale,
-//						zoom));
-				// }
+			if (image != null) { // Image file was found to render
+				if (zoom == 0) { // if default value, calculate zoom
+					int xdim = image.getXDim();
+					int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
+					float scale = (float) x / xdim;
+					zoom = (int) Math.ceil(scale * 100);
+				}
 
 				if (image.isVolume()) { // We are assuming all are volumes
 										// or images, dont mix it
@@ -178,8 +175,14 @@ public class GalleryData {
 						&& ci.visible)
 					ciFirstRenderVisible = ci;
 			}
-			if (ciFirstRenderVisible != null)
+			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
+				//Add MDL_ENABLED
+				if (!md.containsLabel(MDLabel.MDL_ENABLED)){
+					md.addLabel(MDLabel.MDL_ENABLED);
+					
+				}
+			}
 
 			labels = newLabels;
 		} catch (Exception e) {
@@ -259,9 +262,9 @@ public class GalleryData {
 	public boolean hasRenderLabel() {
 		return ciFirstRender != null;
 	}
-	
+
 	/** Return the label that is used for rendering */
-	public int getRenderLabel(){
+	public int getRenderLabel() {
 		return ciFirstRender.getLabel();
 	}
 

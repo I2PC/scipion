@@ -36,6 +36,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -109,9 +110,9 @@ public class JFrameGallery extends JFrame {
 	private JList rowHeader;
 	private Timer updateTimer = new Timer(true); // Timer for zoom.
 	private TableUpdater tableUpdaterTask; // Associated task for zoom timer.
-	private boolean isUpdating;
 	// this flag will be used to avoid firing properties change events
 	// when the change is from our code and not external user interaction
+	private boolean isUpdating;
 	private boolean autoAdjustColumns = false;
 	private GalleryPopupMenu jpopUpMenuTable;
 	private GalleryMenu menu;
@@ -143,6 +144,24 @@ public class JFrameGallery extends JFrame {
 	private javax.swing.JToolBar toolBar;
 	private int width;
 
+	protected static final float MAX_HEIGHT_RATE = 2.0f / 3.0f;
+	// this rate is width/height
+	protected static final float DIM_RATE = 4.0f / 3.0f;
+	protected static final int MIN_WIDTH = 600;
+	protected static int MIN_HEIGHT;
+	protected static int MAX_HEIGHT;
+	protected static int MAX_WIDTH;
+
+	/** Some static initialization for fancy default dimensions */
+	static {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		float aux = (float) screenSize.height * MAX_HEIGHT_RATE;
+		MAX_HEIGHT = Math.round(aux);
+		aux = (float) MIN_WIDTH / DIM_RATE;
+		MIN_HEIGHT = Math.round(aux);
+		aux = (float) MAX_HEIGHT * DIM_RATE;
+		MAX_WIDTH = Math.round(aux);
+	}
 	/** Store data about visualization */
 	GalleryData data;
 
@@ -209,17 +228,13 @@ public class JFrameGallery extends JFrame {
 
 		setTitle(gallery.getTitle());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setMinimumSize(new Dimension(600, 400));
-		width = 800;
-		setPreferredSize(new Dimension(width, 600));
-
-		ImagesWindowFactory.setConvenientSize(this);
+		setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));		
 
 		// Get main pane and set layout
-		Container pane = getContentPane();		
+		Container pane = getContentPane();
 		JPanel container = new JPanel(new GridBagLayout());
 		pane.add(container);
-		//container.setLayout(new GridBagLayout());
+		// container.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 
 		// Create toolbar buttons
@@ -228,6 +243,7 @@ public class JFrameGallery extends JFrame {
 		c.gridx = 0;
 		c.gridy = 0;
 		container.add(toolBar, c);
+		setInitialValues();
 
 		// Create combos for selection of blocks and/or volumes
 		createCombos();
@@ -238,7 +254,6 @@ public class JFrameGallery extends JFrame {
 		updateCombos();
 
 		jspContent = new GalleryScroll();
-		setInitialValues();
 		// Create table
 		createTable();
 		c.fill = GridBagConstraints.BOTH;
@@ -256,9 +271,10 @@ public class JFrameGallery extends JFrame {
 
 		pack();
 		isUpdating = false;
-		
+
 		// Zoom in with Ctrl + P
-		InputMap imap = container.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		InputMap imap = container
+				.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 		ActionMap amap = container.getActionMap();
 		imap.put(KeyStroke.getKeyStroke("ctrl released P"), "zoomIn");
 		amap.put("zoomIn", new AbstractAction() {
@@ -277,7 +293,7 @@ public class JFrameGallery extends JFrame {
 			}
 
 		});
-		
+
 		// Change view with Ctrl + Tab
 		imap.put(KeyStroke.getKeyStroke("ctrl released I"), "changeView");
 		amap.put("changeView", new AbstractAction() {
@@ -288,11 +304,14 @@ public class JFrameGallery extends JFrame {
 			}
 		});
 
+		pack();
+		WindowUtil.centerWindows(this);
 		setVisible(true);
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				addComponentListener(new java.awt.event.ComponentAdapter() {
-					public void componentResized(java.awt.event.ComponentEvent evt) {
+					public void componentResized(
+							java.awt.event.ComponentEvent evt) {
 						formComponentResized(evt);
 					}
 				});
@@ -306,10 +325,13 @@ public class JFrameGallery extends JFrame {
 			gallery.setColumns(data.parameters.columns);
 		else if (data.parameters.rows > 0)
 			gallery.setRows(data.parameters.rows);
-		else {
-			//adjustColumns(600);
+		else 
 			adjust = true;
-		}
+		int desiredCols = adjust ? (int) Math.ceil(Math.sqrt(gallery.getSize())) 
+				: gallery.getColumnCount(); 
+		int desiredWidth = desiredCols * gallery.cellDim.width + 50;
+		width = Math.min(Math.max(desiredWidth, MIN_WIDTH), MAX_WIDTH);
+		setPreferredSize(new Dimension(width, MAX_HEIGHT));
 		setAutoAdjustColumns(adjust);
 	}
 
@@ -367,8 +389,8 @@ public class JFrameGallery extends JFrame {
 
 		updateViewState();
 		if (!adjustColumns())
-			updateTable(); //update table if columns have not changed 
-		
+			updateTable(); // update table if columns have not changed
+
 		// int WIDTH = getPreferredSize().width;
 		// double scale = tableModel.getInitialZoomScale(
 		// //jspContent.getVisibleRect().width,
@@ -387,7 +409,7 @@ public class JFrameGallery extends JFrame {
 		boolean updatingState = isUpdating;
 		isUpdating = true;
 		update_counter++;
-		DEBUG.printMessage(" *** Updating table: " + update_counter);																		// );
+		DEBUG.printMessage(" *** Updating table: " + update_counter); // );
 		DEBUG.printStackTrace();
 
 		// FIXME:gallery.updateSort();
@@ -440,10 +462,11 @@ public class JFrameGallery extends JFrame {
 	 * Adjust the columns depending on the current windows width and cell width
 	 */
 	private boolean adjustColumns() {
-		//int w = getSize().width;
-		return gallery.adjustColumn(width - 50);
-//		 DEBUG.printMessage(String.format(
-//		 "==>> JFrameGallery.autoAdjust: width: %d", width));
+		if (autoAdjustColumns)
+			return gallery.adjustColumn(width - 50);
+		return false;
+		// DEBUG.printMessage(String.format(
+		// "==>> JFrameGallery.autoAdjust: width: %d", width));
 		// int rw = rowHeader.getWidth();
 		// DEBUG.printStackTrace();
 		// FIXME
@@ -701,7 +724,7 @@ public class JFrameGallery extends JFrame {
 			createModel();
 			// gallery.setShowLabels(menu.getShowLabel());
 			createTable();
-			
+
 			menu.update();
 			updateCombos();
 			if (dlgSave != null)
@@ -937,9 +960,6 @@ public class JFrameGallery extends JFrame {
 	}
 
 	private void formComponentResized(java.awt.event.ComponentEvent evt) {
-		// Dimension dim = evt.getComponent().getSize();
-		// DEBUG.printMessage(dim.toString());
-		// DEBUG.printMessage(evt.getComponent().getName());
 		width = getSize().width;
 		if (!isUpdating && autoAdjustColumns)
 			adjustColumns();
@@ -962,20 +982,34 @@ public class JFrameGallery extends JFrame {
 			} else {
 				// Ctrl adds items to selection, otherwise previous ones are
 				// removed.
-				if (!evt.isControlDown()) {
-					gallery.clearSelection();
-				}
+				boolean move = true;
+				if (!evt.isControlDown() && !evt.isShiftDown()) {
+					if (gallery.getSelectedCount() > 1) {
+						if (XmippDialog
+								.showWarning(this,
+										"You will lose previous selection.\nDo you want to proceed?")) {
+							gallery.clearSelection();
+							table.invalidate();
+							table.repaint();
+						} else
+							move = false;
+					}
 
-				if (evt.isShiftDown()) {
-					gallery.selectRange(previousSelectedRow,
-							previousSelectedCol, view_row, view_col, true);
 				} else {
-					gallery.touchItem(view_row, view_col);
+
+					if (evt.isShiftDown()) {
+						gallery.selectRange(previousSelectedRow,
+								previousSelectedCol, view_row, view_col, true);
+					} else if (evt.isControlDown()) {
+						gallery.touchItem(view_row, view_col);
+					}
 				}
-				isUpdating = true;
-				jsGoToImage.setValue(gallery.getIndex(view_row, view_col) + 1);
-				isUpdating = false;
-				// table.repaint();
+				if (move) {
+					isUpdating = true;
+					jsGoToImage
+							.setValue(gallery.getIndex(view_row, view_col) + 1);
+					isUpdating = false;
+				}
 			}
 
 			if (!evt.isShiftDown()) {
@@ -986,11 +1020,8 @@ public class JFrameGallery extends JFrame {
 			if (gallery.getSelectedCount() < 2) {
 				gallery.clearSelection();
 				gallery.touchItem(view_row, view_col);
-
 				table.setRowSelectionInterval(view_row, view_row);
 				table.setColumnSelectionInterval(view_col, view_col);
-
-				// table.repaint();
 			}
 
 			final MouseEvent me = evt;
@@ -1000,14 +1031,11 @@ public class JFrameGallery extends JFrame {
 				}
 			});
 		}
-		// gallery.updateTableSelection(table);
 	}
 
 	private void autoAdjustColumns(boolean value) {
 		setAutoAdjustColumns(value);
-		if (value) {
-			adjustColumns();
-		}
+		adjustColumns();
 	}
 
 	class TableUpdater extends TimerTask {
