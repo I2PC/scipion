@@ -34,7 +34,8 @@ import tkFont
 
 from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
     getScriptFromRunName
-from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse
+from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse,\
+    runShowJ
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage
 from protlib_filesystem import getXmippPath
@@ -1095,7 +1096,7 @@ class ProtocolGUI(BasicGUI):
         showInfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
         
     def wizardShowJ(self, var):
-        runImageJPlugin("512m", "xmippBrowser.txt", "-i %s" % var.tkvar.get())
+        runShowJ(var.tkvar.get())
         
     def wizardBrowse(self, var):
         if 'file' in var.tags.keys():
