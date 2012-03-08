@@ -141,8 +141,8 @@ public class MetadataTable extends MetadataGallery {
 	}
 
 	@Override
-	public void adjustColumn(int width) {
-
+	public boolean adjustColumn(int width) {
+		return false;
 	}
 
 	@Override
@@ -185,6 +185,17 @@ public class MetadataTable extends MetadataGallery {
 		table.setDefaultRenderer(ImageItem.class, renderer);
 		table.setDefaultRenderer(Double.class, new TestRenderer());
 		table.setAutoCreateRowSorter(true);
+		updateTableSelection(table);
+	}
+	
+	/** Update the table selection according with data selection */
+	@Override
+	public void updateTableSelection(JTable table){
+		table.clearSelection();
+		for (int i = 0; i < n; ++i)
+			if (data.selection[i]) {
+				table.addRowSelectionInterval(i, i);
+			}
 	}
 
 	@Override

@@ -115,7 +115,7 @@ public class JFrameGallery extends JFrame {
 	private boolean autoAdjustColumns = false;
 	private GalleryPopupMenu jpopUpMenuTable;
 	private GalleryMenu menu;
-	private JFileChooser fc; 
+	private JFileChooser fc;
 	private SaveJDialog dlgSave = null;
 
 	private JLabel jlZoom;
@@ -141,6 +141,7 @@ public class JFrameGallery extends JFrame {
 	// private javax.swing.JToggleButton jtbUseGeometry;
 	private javax.swing.JTable table;
 	private javax.swing.JToolBar toolBar;
+	private int width;
 
 	/** Store data about visualization */
 	GalleryData data;
@@ -200,21 +201,25 @@ public class JFrameGallery extends JFrame {
 	 * functions to create different components of the GUI
 	 */
 	private void createGUI() {
-		//Create file chooser and set current dir
+		// Create file chooser and set current dir
 		fc = new JFileChooser();
 		fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
-		
+
 		isUpdating = true; // avoid handling some changes events
 
 		setTitle(gallery.getTitle());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setMinimumSize(new Dimension(600, 400));
-		setPreferredSize(new Dimension(800, 600));
+		width = 800;
+		setPreferredSize(new Dimension(width, 600));
+
 		ImagesWindowFactory.setConvenientSize(this);
 
 		// Get main pane and set layout
-		Container container = getContentPane();
-		container.setLayout(new GridBagLayout());
+		Container pane = getContentPane();		
+		JPanel container = new JPanel(new GridBagLayout());
+		pane.add(container);
+		//container.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 
 		// Create toolbar buttons
@@ -251,13 +256,48 @@ public class JFrameGallery extends JFrame {
 
 		pack();
 		isUpdating = false;
+		
+		// Zoom in with Ctrl + P
+		InputMap imap = container.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		ActionMap amap = container.getActionMap();
+		imap.put(KeyStroke.getKeyStroke("ctrl released P"), "zoomIn");
+		amap.put("zoomIn", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				zoomChange(true);
+			}
 
-		addComponentListener(new java.awt.event.ComponentAdapter() {
-			public void componentResized(java.awt.event.ComponentEvent evt) {
-				formComponentResized(evt);
+		});
+		// Zoom in with Ctrl + O
+		imap.put(KeyStroke.getKeyStroke("ctrl released M"), "zoomOut");
+		amap.put("zoomOut", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				zoomChange(false);
+			}
+
+		});
+		
+		// Change view with Ctrl + Tab
+		imap.put(KeyStroke.getKeyStroke("ctrl released I"), "changeView");
+		amap.put("changeView", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				data.changeMode();
+				reloadTableData();
 			}
 		});
+
 		setVisible(true);
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				addComponentListener(new java.awt.event.ComponentAdapter() {
+					public void componentResized(java.awt.event.ComponentEvent evt) {
+						formComponentResized(evt);
+					}
+				});
+			}
+		});
 	}
 
 	private void setInitialValues() {
@@ -267,7 +307,7 @@ public class JFrameGallery extends JFrame {
 		else if (data.parameters.rows > 0)
 			gallery.setRows(data.parameters.rows);
 		else {
-			adjustColumns();
+			//adjustColumns(600);
 			adjust = true;
 		}
 		setAutoAdjustColumns(adjust);
@@ -297,7 +337,7 @@ public class JFrameGallery extends JFrame {
 		jspContent.setViewportView(table);
 
 		gallery.setupTable(table);
-
+		table.setRowSelectionAllowed(true);
 		// DEBUG.printMessage("WIDTH: " + jspContent.getVisibleRect().width);
 		// DEBUG.printMessage("preferred: " + getPreferredSize().toString());
 		gallery.addTableModelListener(new TableModelListener() {
@@ -314,7 +354,7 @@ public class JFrameGallery extends JFrame {
 			}
 		});
 
-		//Zoom with Ctrl + MouseWeel
+		// Zoom with Ctrl + MouseWeel
 		table.addMouseWheelListener(new MouseWheelListener() {
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent evt) {
@@ -324,31 +364,11 @@ public class JFrameGallery extends JFrame {
 					table.getParent().dispatchEvent(evt);
 			}
 		});
-		
-		//Zoom in with Ctrl + P
-		InputMap imap = table.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-		ActionMap amap = table.getActionMap();
-		imap.put(KeyStroke.getKeyStroke("ctrl released P"), "zoomIn");
-		amap.put("zoomIn", new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				zoomChange(true);
-			}
 
-		});
-		//Zoom in with Ctrl + O
-		imap.put(KeyStroke.getKeyStroke("ctrl released M"), "zoomOut");
-		amap.put("zoomOut", new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				zoomChange(false);
-			}
-
-		});
-
-		updateTable();
 		updateViewState();
-
+		if (!adjustColumns())
+			updateTable(); //update table if columns have not changed 
+		
 		// int WIDTH = getPreferredSize().width;
 		// double scale = tableModel.getInitialZoomScale(
 		// //jspContent.getVisibleRect().width,
@@ -367,9 +387,8 @@ public class JFrameGallery extends JFrame {
 		boolean updatingState = isUpdating;
 		isUpdating = true;
 		update_counter++;
-		DEBUG.printMessage(" *** Updating table: " + update_counter);// System.currentTimeMillis()
-																		// );
-		// DEBUG.printStackTrace();
+		DEBUG.printMessage(" *** Updating table: " + update_counter);																		// );
+		DEBUG.printStackTrace();
 
 		// FIXME:gallery.updateSort();
 
@@ -400,6 +419,12 @@ public class JFrameGallery extends JFrame {
 
 		jsZoom.setValue(data.zoom);
 		isUpdating = updatingState;
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				gallery.updateTableSelection(table);
+			}
+		});
+
 		// }
 	}// function updateTable
 
@@ -414,11 +439,11 @@ public class JFrameGallery extends JFrame {
 	/**
 	 * Adjust the columns depending on the current windows width and cell width
 	 */
-	private void adjustColumns() {
-		int w = getSize().width;
-		gallery.adjustColumn(w - 50);
-		// DEBUG.printMessage(String.format(
-		// "==>> JFrameGallery.autoAdjust: width: %d", w));
+	private boolean adjustColumns() {
+		//int w = getSize().width;
+		return gallery.adjustColumn(width - 50);
+//		 DEBUG.printMessage(String.format(
+//		 "==>> JFrameGallery.autoAdjust: width: %d", width));
 		// int rw = rowHeader.getWidth();
 		// DEBUG.printStackTrace();
 		// FIXME
@@ -529,14 +554,6 @@ public class JFrameGallery extends JFrame {
 		winStd.setVisible(true);
 	}
 
-	private void openAsStack() {
-		// ImagesWindowFactory.openGalleryAsImagePlus(gallery);
-	}
-
-	private void openAs3D() {
-		// ImagesWindowFactory.openGalleryAs3D(gallery);
-	}
-
 	private void save() {
 		if (dlgSave == null) {
 			dlgSave = new SaveJDialog(this);
@@ -554,32 +571,6 @@ public class JFrameGallery extends JFrame {
 			}
 		}
 	}
-
-	// Sets path and filename automatically.
-	// String filename = gallery.getFilename() != null ? gallery
-	// .getFilename() : "";
-	// fc.setSelectedFile(new File(forceExtension(filename, ".xmd")));
-	//
-	// if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
-	// boolean response = true;
-	// if (fc.getSelectedFile().exists()) {
-	// response = JOptionPane.showConfirmDialog(null,
-	// Labels.MESSAGE_OVERWRITE_FILE,
-	// Labels.MESSAGE_OVERWRITE_FILE_TITLE,
-	// JOptionPane.OK_CANCEL_OPTION,
-	// JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION;
-	// }
-	//
-	// if (response) {
-	// String path = fc.getSelectedFile().getAbsolutePath();
-	// if (gallery.saveAsMetadata(path, all)) {
-	// JOptionPane.showMessageDialog(this,
-	// Labels.MESSAGE_FILE_SAVED + path,
-	// Labels.MESSAGE_FILE_SAVED_TITLE,
-	// JOptionPane.INFORMATION_MESSAGE);
-	// }
-	// }
-	// }
 
 	private void saveAs() {
 		dlgSave.setMdFilename(data.getMdFilename());
@@ -600,31 +591,6 @@ public class JFrameGallery extends JFrame {
 				XmippDialog.showError(this, e.getMessage());
 			}
 		}
-		// Sets path and filename automatically.
-		// String filename = gallery.getFilename() != null ? gallery
-		// .getFilename() : "";
-		// fc.setSelectedFile(new File(forceExtension(filename, ".stk")));
-		//
-		// if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
-		// boolean response = true;
-		// if (fc.getSelectedFile().exists()) {
-		// response = JOptionPane.showConfirmDialog(null,
-		// Labels.MESSAGE_OVERWRITE_FILE,
-		// Labels.MESSAGE_OVERWRITE_FILE_TITLE,
-		// JOptionPane.OK_CANCEL_OPTION,
-		// JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION;
-		// }
-		//
-		// if (response) {
-		// String path = fc.getSelectedFile().getAbsolutePath();
-		// if (gallery.saveAsStack(path, all)) {
-		// JOptionPane.showMessageDialog(this,
-		// Labels.MESSAGE_FILE_SAVED + path,
-		// Labels.MESSAGE_FILE_SAVED_TITLE,
-		// JOptionPane.INFORMATION_MESSAGE);
-		// }
-		// }
-		// }
 	}
 
 	static String forceExtension(String filename, String ext) {
@@ -735,7 +701,7 @@ public class JFrameGallery extends JFrame {
 			createModel();
 			// gallery.setShowLabels(menu.getShowLabel());
 			createTable();
-			adjustColumns();
+			
 			menu.update();
 			updateCombos();
 			if (dlgSave != null)
@@ -780,6 +746,7 @@ public class JFrameGallery extends JFrame {
 			public void stateChanged(javax.swing.event.ChangeEvent evt) {
 				Integer zoom = (Integer) jsZoom.getValue();
 				gallery.setZoom(zoom);
+				// gallery.updateTableSelection(table);
 			}
 		});
 
@@ -807,7 +774,7 @@ public class JFrameGallery extends JFrame {
 				XmippLabel.MSG_ADJUST_COLS,
 				new java.awt.event.ActionListener() {
 					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jcbAutoAdjustColumnsStateChanged(evt);
+						autoAdjustColumns(jcbAutoAdjustColumns.isSelected());
 					}
 				});
 		jcbAutoAdjustColumns.setSelected(true);
@@ -973,6 +940,7 @@ public class JFrameGallery extends JFrame {
 		// Dimension dim = evt.getComponent().getSize();
 		// DEBUG.printMessage(dim.toString());
 		// DEBUG.printMessage(evt.getComponent().getName());
+		width = getSize().width;
 		if (!isUpdating && autoAdjustColumns)
 			adjustColumns();
 	}
@@ -987,12 +955,6 @@ public class JFrameGallery extends JFrame {
 				Object item = table.getValueAt(view_row, view_col);
 
 				if (item instanceof ImageItem) {
-					try {
-						DEBUG.printMessage(Filename.getXmippPath());
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 					new XmippImageWindow(((ImageItem) item).getImage());
 					ImagesWindowFactory.captureFrame(((ImageItem) item)
 							.getImage());
@@ -1005,8 +967,8 @@ public class JFrameGallery extends JFrame {
 				}
 
 				if (evt.isShiftDown()) {
-					gallery.touchRange(previousSelectedRow,
-							previousSelectedCol, view_row, view_col);
+					gallery.selectRange(previousSelectedRow,
+							previousSelectedCol, view_row, view_col, true);
 				} else {
 					gallery.touchItem(view_row, view_col);
 				}
@@ -1038,11 +1000,12 @@ public class JFrameGallery extends JFrame {
 				}
 			});
 		}
+		// gallery.updateTableSelection(table);
 	}
 
-	private void jcbAutoAdjustColumnsStateChanged(ActionEvent evt) {// GEN-FIRST:event_jcbAutoAdjustColumnsStateChanged
-		setAutoAdjustColumns(jcbAutoAdjustColumns.isSelected());
-		if (autoAdjustColumns) {
+	private void autoAdjustColumns(boolean value) {
+		setAutoAdjustColumns(value);
+		if (value) {
 			adjustColumns();
 		}
 	}
@@ -1087,7 +1050,7 @@ public class JFrameGallery extends JFrame {
 		public final String STATS_PCA = "Stats.Pca_mi";
 		public final String STATS_FSC = "Stats.Fsc_mi";
 
-		public GalleryMenu() {	
+		public GalleryMenu() {
 			super(MenuType.JMENUBAR);
 			update();
 		}// constructor GalleryMenu
@@ -1100,62 +1063,71 @@ public class JFrameGallery extends JFrame {
 			setItemEnabled(FILE_SAVEAS, !volMode);
 			setItemEnabled(DISPLAY_NORMALIZE, gallery.getNormalized());
 			setItemEnabled(DISPLAY_APPLYGEO, data.containsGeometryInfo());
-			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo);
+			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo()
+					&& data.useGeo);
 			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
-			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
+			setItemEnabled(DISPLAY_RENDERIMAGES,
+					!galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
 			setItemEnabled(STATS, !volMode);
 		}// function update
 
-		
 		@Override
 		protected void createItems() throws Exception {
-			//File
+			// File
 			addItem(FILE, "File");
 			addItem(FILE_OPEN, "Open ...", null, "control released O");
-			addItem(FILE_OPENWITH_IJ, "Open with ImageJ", "ij.gif", "control released J");
-			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
+			addItem(FILE_OPENWITH_IJ, "Open with ImageJ", "ij.gif",
+					"control released J");
+			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif",
+					"control released H");
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
-			//Display
+			// Display
 			addItem(DISPLAY, "Display");
-			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(DISPLAY_SHOWLABELS, "Show labels", null, "control released L");
+			addItem(DISPLAY_NORMALIZE, "Global normalization", null,
+					"control released N");
+			addItem(DISPLAY_SHOWLABELS, "Show labels", null,
+					"control released L");
 			addSeparator(DISPLAY);
-			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
-			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
+			addItem(DISPLAY_RENDERIMAGES, "Render images", null,
+					"control released R");
+			addItem(DISPLAY_APPLYGEO, "Apply geometry", null,
+					"control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			addItem(DISPLAY_RESLICE, "Reslice");
 			addItem(DISPLAY_RESLICE_X, "X");
 			addItem(DISPLAY_RESLICE_Y, "Y");
 			addItem(DISPLAY_RESLICE_Z, "Z");
-			//Statistics
+			// Statistics
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
-			addItem(STATS_FSC, "FSC");			
-		}//function createItems
-		
+			addItem(STATS_FSC, "FSC");
+		}// function createItems
+
 		@Override
 		protected void handleActionPerformed(ActionEvent e) {
 			String cmd = e.getActionCommand();
-			
+
 			if (cmd.equals(DISPLAY_NORMALIZE)) {
 				gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
 			} else if (cmd.equals(DISPLAY_APPLYGEO) || cmd.equals(DISPLAY_WRAP)) {
 				if (data.containsGeometryInfo()) {
-					((MetadataGallery) gallery).setUseGeometry(getItemSelected(DISPLAY_APPLYGEO),
+					((MetadataGallery) gallery).setUseGeometry(
+							getItemSelected(DISPLAY_APPLYGEO),
 							getItemSelected(DISPLAY_WRAP));
-							setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo);
-				}	
+					setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo()
+							&& data.useGeo);
+				}
 			} else if (cmd.equals(DISPLAY_SHOWLABELS)) {
 				gallery.setShowLabels(getItemSelected(DISPLAY_SHOWLABELS));
 			} else if (cmd.equals(DISPLAY_RENDERIMAGES)) {
@@ -1167,9 +1139,9 @@ public class JFrameGallery extends JFrame {
 					ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
 					isUpdating = true;
 					((MetadataGallery) gallery).updateColumnInfo(columns);
-					gallery.fireTableDataChanged();	
+					gallery.fireTableDataChanged();
 					setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
-					//menu.enableRenderImages(data.globalRender);
+					// menu.enableRenderImages(data.globalRender);
 					isUpdating = false;
 				}
 			} else if (cmd.equals(STATS_AVGSTD))
@@ -1178,16 +1150,17 @@ public class JFrameGallery extends JFrame {
 				runInBackground(Worker.PCA);
 			else if (cmd.equals(STATS_FSC))
 				runInBackground(Worker.FSC);
-			else if (cmd.equals(FILE_OPEN)){
-				if (fc.showOpenDialog(JFrameGallery.this) != JFileChooser.CANCEL_OPTION){
+			else if (cmd.equals(FILE_OPEN)) {
+				if (fc.showOpenDialog(JFrameGallery.this) != JFileChooser.CANCEL_OPTION) {
 					if (fc.getSelectedFile().exists())
-						ImagesWindowFactory.openFileAsDefault(fc.getSelectedFile().getPath());
-					else 
-						XmippDialog.showError(JFrameGallery.this, 
-								String.format("File: '%s' doesn't exist.", fc.getSelectedFile().getPath()));
+						ImagesWindowFactory.openFileAsDefault(fc
+								.getSelectedFile().getPath());
+					else
+						XmippDialog.showError(JFrameGallery.this, String
+								.format("File: '%s' doesn't exist.", fc
+										.getSelectedFile().getPath()));
 				}
-			}
-			else if (cmd.equals(FILE_SAVE)) {
+			} else if (cmd.equals(FILE_SAVE)) {
 				save();
 			} else if (cmd.equals(FILE_SAVEAS)) {
 				saveAs();
@@ -1198,7 +1171,7 @@ public class JFrameGallery extends JFrame {
 					String args = data.selectedVol;
 					if (Filename.isSpiderVolume(args))
 						args = "spider:" + args;
-					// FIXME: Check chimera is installed 
+					// FIXME: Check chimera is installed
 					Process p = new ProcessBuilder("chimera", args).start();
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -1211,19 +1184,19 @@ public class JFrameGallery extends JFrame {
 					e1.printStackTrace();
 				}
 			}
-		}//function handleActionPerformed
+		}// function handleActionPerformed
 	}// class GalleryMenu
 
 	class GalleryPopupMenu extends XmippMenuCreator {
-		protected Point location;
-		
+		protected int row;
+		protected int col;
+
 		public final static String ENABLED = "Enabled_mi";
 		public final static String DISABLED = "Disabled_mi";
 		public final static String SELECT = "Select";
 		public final static String SELECT_ALL = "Select.All_mi";
 		public final static String SELECT_TOHERE = "Select.ToHere_mi";
 		public final static String SELECT_FROMHERE = "Select.FromHere_mi";
-
 
 		@Override
 		protected void createItems() throws Exception {
@@ -1233,118 +1206,41 @@ public class JFrameGallery extends JFrame {
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
-			addItem(SELECT_FROMHERE, "From here");			
-		}//function createItems
-		
+			addItem(SELECT_FROMHERE, "From here");
+		}// function createItems
+
 		public GalleryPopupMenu() {
 			super(MenuType.JPOPUPMENU);
-//			add(jmiEnable);
-//			add(jmiDisable);
-//			addSeparator();
-//			add(jmiSelectFrom);
-//			add(jmiSelectTo);
-//
-//			jmiEnable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E,
-//					InputEvent.CTRL_DOWN_MASK));
-//			jmiDisable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D,
-//					InputEvent.CTRL_DOWN_MASK));
-			// jmiEnableFrom.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F,
-			// InputEvent.SHIFT_DOWN_MASK));
-			// jmiDisableFrom.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F,
-			// InputEvent.CTRL_DOWN_MASK));
-			// jmiEnableTo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T,
-			// InputEvent.SHIFT_DOWN_MASK));
-			// jmiDisableTo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T,
-			// InputEvent.CTRL_DOWN_MASK));
-
-			// jmiEnable.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// gallery.enableSelectedItems();
-			// }
-			// });
-			//
-			// jmiDisable.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// gallery.disableSelectedItems();
-			// }
-			// });
-			//
-			// jmiEnableAll.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// gallery.enableAllItems();
-			// }
-			// });
-			//
-			// jmiDisableAll.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// gallery.disableAllItems();
-			// }
-			// });
-			//
-			// jmiEnableFrom.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// int row = table.rowAtPoint(location);
-			// int col = table.columnAtPoint(location);
-			//
-			// gallery.setEnabledFrom(row, col, true);
-			// }
-			// });
-			//
-			// jmiEnableTo.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// int row = table.rowAtPoint(location);
-			// int col = table.columnAtPoint(location);
-			//
-			// gallery.setEnabledTo(row, col, true);
-			// }
-			// });
-			//
-			// jmiDisableFrom.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// int row = table.rowAtPoint(location);
-			// int col = table.columnAtPoint(location);
-			//
-			// gallery.setEnabledFrom(row, col, false);
-			// }
-			// });
-			//
-			// jmiDisableTo.addActionListener(new ActionListener() {
-			//
-			// public void actionPerformed(ActionEvent e) {
-			// int row = table.rowAtPoint(location);
-			// int col = table.columnAtPoint(location);
-			//
-			// gallery.setEnabledTo(row, col, false);
-			// }
-			// });
 		}// constructor JPopUpMenuGallery
 
 		public void show(Component cmpnt, Point location) {
-			this.location = location;
-
 			// Update menu items status depending on item.
-			int row = table.rowAtPoint(location);
-			int col = table.columnAtPoint(location);
-			// boolean enabled = ((I) table.getValueAt(row,
-			// col)).isEnabled();
-
-			// jmiDisable.setEnabled(enabled);
-			// jmiEnable.setEnabled(!enabled);
-
+			row = table.rowAtPoint(location);
+			col = table.columnAtPoint(location);
 			getPopupMenu().show(cmpnt, location.x, location.y);
 		}// function show
 
+		private void selectRange(int first, int last) {
+			gallery.selectRange(first, last, true);
+		}
+
 		@Override
 		protected void handleActionPerformed(ActionEvent evt) {
-			// TODO Auto-generated method stub
-			
+			String cmd = evt.getActionCommand();
+			if (cmd.equals(SELECT_ALL)) {
+				selectRange(0, gallery.getSize() - 1);
+			} else if (cmd.equals(SELECT_TOHERE)) {
+				selectRange(0, gallery.getIndex(row, col));
+			} else if (cmd.equals(SELECT_FROMHERE)) {
+				selectRange(gallery.getIndex(row, col), gallery.getSize() - 1);
+			} else if (cmd.equals(ENABLED)) {
+				gallery.setSelectionEnabled(true);
+				gallery.clearSelection();
+			} else if (cmd.equals(DISABLED)) {
+				gallery.setSelectionEnabled(false);
+				gallery.clearSelection();
+			}
+
 		}
 
 	}// class JPopUpMenuGallery

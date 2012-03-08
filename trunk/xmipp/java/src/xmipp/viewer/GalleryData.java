@@ -48,6 +48,8 @@ public class GalleryData {
 	public boolean useGeo = true;
 	// flag to wrapping
 	public boolean wrap = true;
+	// Store the selection state for each item
+	protected boolean[] selection;
 
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
@@ -104,6 +106,7 @@ public class GalleryData {
 		numberOfVols = 0;
 		volumes = null;
 		useGeo = containsGeometryInfo();
+		selection = new boolean[ids.length];
 		
 		if (isGalleryMode())
 			mode = MODE_GALLERY_MD;

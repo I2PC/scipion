@@ -33,7 +33,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 		setOpaque(true);
 		setHorizontalAlignment(JLabel.CENTER);
 		setHorizontalTextPosition(JLabel.CENTER);
-		setVerticalTextPosition(JLabel.BOTTOM);
+		setVerticalTextPosition(JLabel.BOTTOM);		
 	}
 
 	public ImageItemRenderer(boolean hackBorders) {
@@ -97,17 +97,6 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 		}
 
 		return this;
-	}
-
-	private void normalize(ImagePlus image, AbstractXmippTableModel tableModel) {
-		if (tableModel.isNormalizing()) {
-			image.getProcessor().setMinAndMax(tableModel.getNormalizeMin(),
-					tableModel.getNormalizeMax());
-		} else {
-			image.getProcessor().resetMinAndMax();
-		}
-
-		image.updateImage(); // Repaint
 	}
 
 	protected String cutString(String string, int columnWidth) {

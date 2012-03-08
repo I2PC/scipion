@@ -35,6 +35,7 @@ import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import xmipp.viewer.GalleryColumnModel;
 import xmipp.utils.Cache;
+import xmipp.utils.DEBUG;
 
 public abstract class ImageGallery extends AbstractTableModel {
 
@@ -53,7 +54,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	// Relation between real dimensions and thumbnails dimensions
 	// scale = image_width / thumb_width
 	protected float scale = (float) 1.;
-	//protected int zoom = 100;
+	// protected int zoom = 100;
 	// Cache class to reuse of already loaded items
 	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
 	// Filename
@@ -65,17 +66,15 @@ public abstract class ImageGallery extends AbstractTableModel {
 	// Column model
 	protected GalleryColumnModel columnModel;
 	// Where to show labels
-	//protected boolean showLabel = false;
+	// protected boolean showLabel = false;
 	// Whether to autoadjust columns
 	protected boolean adjustColumns = false;
-	// Store the selection state for each item
-	protected boolean[] selection;
 	// Flags and variables to control global normalization
 	protected boolean normalize_calculated = false;
 	protected double normalize_min = Double.POSITIVE_INFINITY,
 			normalize_max = Double.NEGATIVE_INFINITY;
-	
-	protected GalleryData data; //information about the gallery
+
+	protected GalleryData data; // information about the gallery
 
 	// Initiazation function
 	public ImageGallery(GalleryData data) throws Exception {
@@ -85,7 +84,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 		columnModel = createColumnModel();
 		// Zdim will always be used as number of elements to display
 		n = dimension.getZDim();
-		selection = new boolean[n];
 		image_width = dimension.getXDim();
 		image_height = dimension.getYDim();
 		setZoomValue(data.zoom);
@@ -94,7 +92,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		cols = 1;
 		rows = n;
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
-		resizeCache();		
+		resizeCache();
 	}
 
 	// Load initial dimensions
@@ -141,7 +139,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 		if (index < n) {
 			try {
 				String key = getItemKey(index);
-				// DEBUG.printMessage(String.format("with key %s", key));
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
@@ -151,17 +148,18 @@ public abstract class ImageGallery extends AbstractTableModel {
 					item = createItem(index, key);
 					cache.put(key, item);
 				}
-				item.isSelected = selection[index];
+				item.isSelected = data.selection[index];
 				item.showLabel = data.showLabel;
 				item.cellDim = cellDim;
+				item.isEnabled = data.md.getEnabled(data.ids[index]);
 				ImagePlus imp = item.getImage();
-				if (imp != null){ //When image is missing this will be null
-				if (data.normalize)
-					imp.getProcessor().setMinAndMax(normalize_min,
-							normalize_max);
-				else
-					imp.getProcessor().resetMinAndMax();
-				imp.updateImage();
+				if (imp != null) { // When image is missing this will be null
+					if (data.normalize)
+						imp.getProcessor().setMinAndMax(normalize_min,
+								normalize_max);
+					else
+						imp.getProcessor().resetMinAndMax();
+					imp.updateImage();
 				}
 
 				return item;
@@ -195,13 +193,16 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 	}
 
-	public void adjustColumn(int width) {
+	//Return True if columns were changed
+	public boolean adjustColumn(int width) {
 		last_width = width;
 		adjustColumns = true;
 		int new_cols = Math.min(width / cellDim.width, n);
 		if (new_cols != cols) {
 			setColumnsValue(new_cols);
+			return true;
 		}
+		return false;
 	}
 
 	public int getSize() {
@@ -243,19 +244,23 @@ public abstract class ImageGallery extends AbstractTableModel {
 				* borderHeight + font_height);
 		adjustColumnsWidth();
 	}
-	
-	/** This method will be used to set renderers and other 
-	 * table configurations
+
+	/**
+	 * This method will be used to set renderers and other table configurations
 	 */
-	public void setupTable(JTable table){
+	public void setupTable(JTable table) {
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-    	table.setDefaultRenderer(ImageItem.class, renderer);
-    	//table.setDefaultRenderer(Object.class, new TestRenderer());
+		table.setDefaultRenderer(ImageItem.class, renderer);
 	}
-	
+
+	/** Update the table selection according with data selection */
+	public void updateTableSelection(JTable table) {
+		// For now do nothing, overrided in MetadataTable
+	}
+
 	/** Ajust the width of columns and headers */
-	protected void adjustColumnsWidth(){
-		//renderer.setPreferredSize(cellDim);
+	protected void adjustColumnsWidth() {
+		// renderer.setPreferredSize(cellDim);
 		columnModel.setWidth(cellDim.width);
 	}
 
@@ -263,18 +268,17 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public ImageItemRenderer getRenderer() {
 		return renderer;
 	}
-	
-	
+
 	/** Return the column model to be used with this table model */
-	public GalleryColumnModel getColumnModel(){
+	public GalleryColumnModel getColumnModel() {
 		return columnModel;
 	}
-	
+
 	/** Internal method to create the column model */
-	protected GalleryColumnModel createColumnModel(){
+	protected GalleryColumnModel createColumnModel() {
 		return new GalleryColumnModel(cellDim.width);
 	}
-	
+
 	protected void setZoomValue(int z) {
 		data.zoom = z;
 		scale = (float) (data.zoom / 100.0);
@@ -318,45 +322,79 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	/** Functions to handle selections */
 
+	/** Set enable/disable to selected items */
+	public void setSelectionEnabled(boolean value) {
+		try {
+			for (int i = 0; i < n; ++i)
+				if (data.selection[i])
+					data.md.setEnabled(value, data.ids[i]);
+			fireTableDataChanged();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	/** Clear selection list */
 	public void clearSelection() {
 		for (int i = 0; i < n; ++i)
-			selection[i] = false;
+			data.selection[i] = false;
 	}
 
-	/** Select a range of elements */
-	public void touchRange(int first_row, int first_col, int last_row,
-			int last_col) {
+	/** Select a range of elements given the indexes */
+	public void selectRange(int first_index, int last_index, boolean value) {
+		for (int i = first_index; i <= last_index; ++i)
+			data.selection[i] = value;
+		fireTableDataChanged();
+	}
+
+	/** Select a range of elements given the coordinates */
+	public void selectRange(int first_row, int first_col, int last_row,
+			int last_col, boolean value) {
 		int i1 = getIndex(first_row, first_col);
 		int i2 = getIndex(last_row, last_col);
 		int i = Math.min(i1, i2);
 		i2 = Math.max(i1, i2);
 		for (; i <= i2; ++i)
-			selection[i] = !selection[i];
+			data.selection[i] = value;
 		fireTableDataChanged();
 	}
-	
+
+	/** Invert selection on a range of elements */
+	// public void touchRange(int first_row, int first_col, int last_row,
+	// int last_col) {
+	// int i1 = getIndex(first_row, first_col);
+	// int i2 = getIndex(last_row, last_col);
+	// int i = Math.min(i1, i2);
+	// i2 = Math.max(i1, i2);
+	// for (; i <= i2; ++i)
+	// selection[i] = !selection[i];
+	// fireTableDataChanged();
+	// }
+
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
 		int i = getIndex(row, col);
-		selection[i] = !selection[i];
+		data.selection[i] = !data.selection[i];
 		fireTableCellUpdated(row, col);
 	}
 
-	/** Goto and select specified item, if there is a selection
-	 * it will be cleared*/
-	public void gotoItem(int i){
+	/**
+	 * Goto and select specified item, if there is a selection it will be
+	 * cleared
+	 */
+	public void gotoItem(int i) {
 		clearSelection();
-		selection[i] = !selection[i];
+		data.selection[i] = !data.selection[i];
 		int[] coords = getCoords(i);
-		fireTableCellUpdated(coords[0], coords[1]);		
+		fireTableCellUpdated(coords[0], coords[1]);
 	}
 
 	/** Return the number of selected elements */
 	public int getSelectedCount() {
 		int count = 0;
 		for (int i = 0; i < n; ++i)
-			if (selection[i])
+			if (data.selection[i])
 				++count;
 		return count;
 	}
@@ -371,9 +409,9 @@ public abstract class ImageGallery extends AbstractTableModel {
 			fireTableDataChanged();
 		}
 	}
-	
+
 	/** Check normalized state */
-	public boolean getNormalized(){
+	public boolean getNormalized() {
 		return data.normalize;
 	}
 
@@ -395,7 +433,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 			fireTableDataChanged();
 		}
 	}
-	
+
 	/** Whether to display the labels */
 	public void setRenderImages(boolean value) {
 	}
@@ -412,13 +450,12 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 * Return the main title to be used on windows
 	 */
 	public abstract String getTitle();
-	
-	/** 
+
+	/**
 	 * Return the ImagePlus representation of this gallery
 	 */
 	public abstract ImagePlus getImagePlus();
 
-	
 	/**
 	 * Function to create the image item. this should be implemented in
 	 * subclasses of ImageGallery
