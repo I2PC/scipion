@@ -25,7 +25,7 @@ dxiMax =           92.2 um
 XrayPSF::Param adjust:
 ----------------------
 (Nox,Noy,Nz) = (64,64,64)
-Larger volume Z plane to be calculated = 0.315 um
+Larger volume Z plane to be calculated = 0.31 um
 Larger allowed discrete Z plane (x,y) = (10.6154, 10.6154) um
 (dxl, dyl) = (5.60243, 5.60243) um
 Pupile Diameter in pixels (NpX, NpY) = (16, 16)
