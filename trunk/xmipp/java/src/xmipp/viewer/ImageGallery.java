@@ -148,10 +148,12 @@ public abstract class ImageGallery extends AbstractTableModel {
 					item = createItem(index, key);
 					cache.put(key, item);
 				}
-				item.isSelected = data.selection[index];
 				item.showLabel = data.showLabel;
 				item.cellDim = cellDim;
-				item.isEnabled = data.md.getEnabled(data.ids[index]);
+				if (!data.isVolumeMode()) {
+					item.isSelected = data.selection[index];
+					item.isEnabled = data.md.getEnabled(data.ids[index]);
+				}
 				ImagePlus imp = item.getImage();
 				if (imp != null) { // When image is missing this will be null
 					if (data.normalize)
