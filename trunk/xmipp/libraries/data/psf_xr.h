@@ -126,7 +126,8 @@ public:
     Matrix2D<double>  T;
 
     /// Lens shape Mask
-    MultidimArray<double> *mask;
+    MultidimArray<double> *mask; //TODO: As in threadXrayProject a copy of this class is done, this pointer is never deleted. This class should use
+    // applyOTF simultaneously from several threads
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
