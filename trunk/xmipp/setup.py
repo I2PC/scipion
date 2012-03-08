@@ -291,6 +291,9 @@ class ArgDict():
         
     def addArgument(self, argument):
         self.arguments.append(argument)
+    
+    def getNumberOfOptions(self):
+        return len(self.options)
 
 import sys
 options = ArgDict(sys.argv)
@@ -345,9 +348,12 @@ run(nb)
 nb.proc.wait()
 if nb.proc.returncode != 0:
     print "Errors on Xmipp compilation, see '%s' for more details" % OUTPUT
-else:
+elif options.hasOption('compile'):
     print "Xmipp has been successfully compiled"
     if options.hasOption('install'):
         print "INSTALLATION FINISHED!!!"
         print "Include file .xmipp.bashrc or .xmipp.csh to your startup shell file"
+elif options.getNumberOfOptions() == 1: # Script name is passed as argument, so at least is 1
+    print "Xmipp has successfully remained equal"
+        
         
