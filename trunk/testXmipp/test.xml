@@ -944,7 +944,13 @@
 			<FILE filename="pseudo.pdb" />
 		</CASE>
 	</PROGRAM>
-	<PROGRAM name="xmipp_xray_import" mpi="FALSE">
+	   <PROGRAM name="xmipp_volume_to_web" mpi="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --central_slices %o/imgOut.jpg"
+            changeDir="FALSE">
+            <FILE filename="imgOut.jpg" />
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_xray_import" mpi="FALSE">
 		<CASE
 			arguments="--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30"
 			changeDir="FALSE">
