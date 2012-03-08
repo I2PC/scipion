@@ -9,3 +9,4 @@ Threshold    : -1
 Otsu         : 1
 Wang radius  : -1
 Probabilistic: 0
+Threshold 0.0124307
