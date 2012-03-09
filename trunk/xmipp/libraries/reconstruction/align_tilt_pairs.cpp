@@ -173,11 +173,14 @@ void ProgAlignTiltPairs::run()
     }
 
     size_t imgno = 0;
-    FileName fnTilted;
+    FileName fnTilted, fnUntilted;
 
     double alphaU, alphaT, gamma;
     MultidimArray<double> verticalU, verticalT;
     size_t nDiscarded=0;
+	Matrix2D<double> E, Tu, Tup;
+	Matrix1D<double> vShift(3);
+	vShift.initZeros();
     FOR_ALL_OBJECTS_IN_METADATA(MDin)
     {
     	bool flip;
@@ -188,24 +191,35 @@ void ProgAlignTiltPairs::run()
     	// Read untilted and tilted images
     	double inPlaneU;
     	MDin.getValue(MDL_ANGLEPSI,inPlaneU,__iter.objId);
-    	imgU.readApplyGeo(MDin,__iter.objId);
+    	MDin.getValue(MDL_IMAGE,fnUntilted,__iter.objId);
+    	imgU.read(fnUntilted);
     	imgU().setXmippOrigin();
     	MDin.getValue(MDL_IMAGE_TILTED,fnTilted,__iter.objId);
     	imgT.read(fnTilted);
     	imgT().setXmippOrigin();
+    	std::cout << "Reading " << fnTilted << std::endl;
 
-    	// Correct their orientation
+    	// Get alignment parameters
+    	double shiftXu, shiftYu;
     	MDin.getValue(MDL_ANGLE_Y,alphaU,__iter.objId);
     	MDin.getValue(MDL_ANGLE_Y2,alphaT,__iter.objId);
     	MDin.getValue(MDL_ANGLETILT,gamma,__iter.objId);
-    	std::cout << "AlphaU=" << alphaU << " alphaT=" << alphaT << " gamma=" << gamma << std::endl;
+    	MDin.getValue(MDL_SHIFTX,shiftXu,__iter.objId);
+    	MDin.getValue(MDL_SHIFTX,shiftYu,__iter.objId);
+
+    	// Correct untilted alignment
+    	Euler_angles2matrix(-inPlaneU,gamma,alphaT,E,true);
+    	XX(vShift)=shiftXu;
+    	YY(vShift)=shiftYu;
+    	translation3DMatrix(vShift,Tu);
+    	Tup=E*Tu*E.inv();
 
     	// Align tilt axis with Y
     	rotate(BSPLINE3,verticalU,imgU(),-alphaU,'Z',WRAP);
     	rotate(BSPLINE3,verticalT,imgT(),-alphaT,'Z',WRAP);
 
     	// Align tilt and untilted projections
-    	double shiftX=0, shiftY=0, crossCorrelation=0;
+    	double shiftX=-MAT_ELEM(Tup,0,3), shiftY=-MAT_ELEM(Tup,1,3), crossCorrelation=0;
     	bool enable=true;
         if (do_center)
         	enable=centerTiltedImage(verticalU, gamma, verticalT, alphaT, shiftX, shiftY, crossCorrelation);
@@ -215,9 +229,9 @@ void ProgAlignTiltPairs::run()
         // Write results
         size_t idOut=MDout.addObject();
         MDout.setValue(MDL_IMAGE,fnTilted,idOut);
-        MDout.setValue(MDL_ANGLEROT,alphaT,idOut);
+        MDout.setValue(MDL_ANGLEROT,-inPlaneU,idOut);
         MDout.setValue(MDL_ANGLETILT,gamma,idOut);
-        MDout.setValue(MDL_ANGLEPSI,inPlaneU,idOut);
+        MDout.setValue(MDL_ANGLEPSI,alphaT,idOut);
         MDout.setValue(MDL_SHIFTX,shiftX,idOut);
         MDout.setValue(MDL_SHIFTY,shiftY,idOut);
 
