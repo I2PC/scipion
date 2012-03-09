@@ -1219,6 +1219,7 @@ public class JFrameGallery extends JFrame {
 
 		public final static String ENABLED = "Enabled_mi";
 		public final static String DISABLED = "Disabled_mi";
+		public final static String OPEN = "Open_mi";
 		public final static String SELECT = "Select";
 		public final static String SELECT_ALL = "Select.All_mi";
 		public final static String SELECT_TOHERE = "Select.ToHere_mi";
@@ -1228,22 +1229,31 @@ public class JFrameGallery extends JFrame {
 		protected void createItems() throws Exception {
 			addItem(ENABLED, "Enable");
 			addItem(DISABLED, "Disable");
+			addItem(OPEN, "Open");
 			addSeparator();
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
 			addItem(SELECT_FROMHERE, "From here");
+			initItems();
 		}// function createItems
 
 		public void show(Component cmpnt, Point location) {
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
-			getPopupMenu().show(cmpnt, location.x, location.y);
+			getPopupMenu().show(cmpnt, location.x, location.y);			
+			
 		}// function show
 
 		private void selectRange(int first, int last) {
 			gallery.selectRange(first, last, true);
+		}
+		
+		/** Set values to defaults */
+		@Override
+		public void initItems(){
+			setItemVisible(OPEN, false);
 		}
 
 		@Override
@@ -1261,8 +1271,12 @@ public class JFrameGallery extends JFrame {
 			} else if (cmd.equals(DISABLED)) {
 				gallery.setSelectionEnabled(false);
 				gallery.clearSelection();
+			} 
+			else if (cmd.equals(OPEN)){
+				String file = gallery.getValueAt(row, col).toString();
+				ImagesWindowFactory.openFileAsDefault(file);
 			}
-
+			initItems();
 		}
 
 	}// class JPopUpMenuGallery

@@ -52,14 +52,13 @@ public abstract class XmippMenuCreator implements ActionListener {
 	 * @return the created MenuItem, null if an error occurs
 	 * @throws Exception
 	 */
-	public JMenuItem addItem(String key, String text, String... values)
-			throws Exception {
-
+	public JMenuItem addItem(String key, String text, String... values){
 		String name = key;
 		JMenuItem item = null;
 		JMenu parent = null;
 		boolean isMenu = false;
 
+		try {
 		if (key.contains(".")) {
 			int pos = key.lastIndexOf(".");
 			name = key.substring(pos + 1);
@@ -111,7 +110,9 @@ public abstract class XmippMenuCreator implements ActionListener {
 			menu.add(item);
 		else
 			parent.add(item);
-
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 		return item;
 	}
 	
@@ -144,6 +145,10 @@ public abstract class XmippMenuCreator implements ActionListener {
 		else if (key.endsWith("cb"))
 			((JCheckBoxMenuItem)getItem(key)).setSelected(value);		
 	}
+	
+	public void setItemVisible(String key, boolean value){
+		getItem(key).setVisible(value);
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent evt) {
@@ -153,6 +158,12 @@ public abstract class XmippMenuCreator implements ActionListener {
 	/** Abstract methods */
 	abstract protected void handleActionPerformed(ActionEvent evt);
 
+	/** This abstract method will be called from constructor
+	 * to create the items 
+	 */
 	abstract protected void createItems() throws Exception;
+	
+	/** Method to initialize items state */
+	public void initItems() { }
 
 }

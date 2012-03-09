@@ -27,14 +27,13 @@
 package xmipp.viewer;
 
 import java.awt.Component;
-import java.util.ArrayList;
 
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
+import xmipp.utils.XmippPopupMenuCreator;
 
 public class MetadataTable extends MetadataGallery {
 	private static final long serialVersionUID = 1L;
@@ -189,12 +188,12 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	protected void calculateCellSize() {
-		DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
+		//DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
 		if (data.globalRender) {
 			super.calculateCellSize();
-			DEBUG.printMessage(String.format(
-					"MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
-					cellDim.height));
+//			DEBUG.printMessage(String.format(
+//					"MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
+//					cellDim.height));
 
 		} else {
 			int font_height;
@@ -223,12 +222,21 @@ public class MetadataTable extends MetadataGallery {
 				table.addRowSelectionInterval(i, i);
 			}
 	}
+	
+	@Override
+	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
+		xpopup.initItems();
+		if (data.isFile(col))
+			xpopup.setItemVisible("Open_mi", true);
+		return true;
+	}
 
 	@Override
 	/** Return the column model to be used with this table model */
 	public GalleryColumnModel createColumnModel() {
 		return new MetadataColumnModel();
 	}
+	
 
 	public class MetadataColumnModel extends GalleryColumnModel {
 		public MetadataColumnModel() {
@@ -260,7 +268,8 @@ public class MetadataTable extends MetadataGallery {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
+		}//function adjustColumnsWidth
 
-	}
-}
+	}//class MetadataColumnModel
+
+}//class MetadataTable

@@ -165,12 +165,11 @@ public class GalleryData {
 
 			for (int i = 0; i < lab.length; ++i) {
 				ci = new ColumnInfo(lab[i]);
-				if (labels != null){
+				if (labels != null) {
 					for (ColumnInfo ci2 : labels)
-						if (ci.label == ci2.label) 
+						if (ci.label == ci2.label)
 							ci.updateInfo(ci2);
-				}
-				else if (ci.allowRender)
+				} else if (ci.allowRender)
 					ci.render = globalRender;
 				newLabels.add(ci);
 				if (ciFirstRender == null && ci.allowRender)
@@ -183,9 +182,9 @@ public class GalleryData {
 				ciFirstRender = ciFirstRenderVisible;
 				// Add MDL_ENABLED if not present
 				if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
-					newLabels.add(0, new ColumnInfo(MDLabel.MDL_IMAGE));
+					newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
 					md.addLabel(MDLabel.MDL_ENABLED);
-					for (long id: ids)
+					for (long id : ids)
 						md.setEnabled(true, id);
 				}
 			}
@@ -326,15 +325,25 @@ public class GalleryData {
 		}
 		return true;
 	}
-	
+
 	/** Set enabled state */
-	public void setEnabled(int index, boolean value){
+	public void setEnabled(int index, boolean value) {
 		try {
 			if (!isVolumeMode()) // slices in a volume are always enabled
 				md.setEnabled(value, ids[index]);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	/** This is only needed for metadata table galleries */
+	public boolean isFile(int col) {
+		try {
+			return MetaData.isPathField(labels.get(col).getLabel());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 }// class GalleryData
