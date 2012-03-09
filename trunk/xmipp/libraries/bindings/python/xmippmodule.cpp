@@ -165,7 +165,7 @@ FileName_exists(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     FileNameObject *self = (FileNameObject*) obj;
 
-    if (self->filename->exists())
+    if (self->filename->existsTrim())
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
