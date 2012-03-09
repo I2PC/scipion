@@ -112,7 +112,7 @@ echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
-echo 'test -s .xmipp.alias && . .xmipp.alias || true' >> $INC_FILE
+echo 'test -s $XMIPP_HOME/.xmipp.alias && . $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
 chmod u+x $INC_FILE
 
 # for CSH or TCSH
@@ -123,7 +123,7 @@ echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 if $IS_MAC; then
 	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
-echo 'test -s .xmipp.alias && . .xmipp.alias || true' >> $INC_FILE
+echo 'test -s $XMIPP_HOME/.xmipp.alias && . $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
 chmod u+x $INC_FILE
 
 
