@@ -36,6 +36,7 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippPopupMenuCreator;
 
 public class MetadataGallery extends ImageGallery {
 	private static final long serialVersionUID = 1L;
@@ -92,13 +93,13 @@ public class MetadataGallery extends ImageGallery {
 	protected ImageDimension loadDimension() throws Exception {
 		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
-		data.globalRender = false;
+//		data.globalRender = false;
 
 		for (ColumnInfo ci : data.labels) {
 			if (ci.visible)
 				visibleLabels.add(ci);
-			if (ci.render)
-				data.globalRender = true;
+//			if (ci.render)
+//				data.globalRender = true;
 		}
 		ImageDimension dim = null;
 
@@ -230,7 +231,7 @@ public class MetadataGallery extends ImageGallery {
 	}
 
 	@Override
-	public boolean handleRightClick(int row, int col, JPopupMenu menu) {
+	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
 		return true;
 	}
 }

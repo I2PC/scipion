@@ -412,7 +412,7 @@ public class JFrameGallery extends JFrame {
 		isUpdating = true;
 		update_counter++;
 		DEBUG.printMessage(" *** Updating table: " + update_counter); // );
-		DEBUG.printStackTrace();
+		//DEBUG.printStackTrace();
 
 		// FIXME:gallery.updateSort();
 
@@ -1022,7 +1022,7 @@ public class JFrameGallery extends JFrame {
 
 			final MouseEvent me = evt;
 			if (gallery.handleRightClick(view_row, view_col,
-					jpopUpMenuTable.getPopupMenu())) {
+					jpopUpMenuTable)) {
 				if (gallery.getSelectedCount() < 2) {
 					gallery.clearSelection();
 					gallery.touchItem(view_row, view_col);

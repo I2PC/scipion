@@ -176,9 +176,7 @@ public class ColumnsJDialog extends XmippDialog {
 		@Override
 		public boolean isCellEditable(int row, int column) {
 			try {
-				if (column == 0
-						|| (column == 2 && !MetaData.isImage(rows.get(row)
-								.getLabel())))
+				if (column == 2 && !MetaData.isImage(rows.get(row).getLabel()))
 					return false;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -190,6 +188,9 @@ public class ColumnsJDialog extends XmippDialog {
 		public void setValueAt(Object value, int row, int column) {
 			ColumnInfo col = rows.get(row);
 			switch (column) {
+			case 0:
+				col.changeLabelName((String)value);
+				break;
 			case 1:
 				col.visible = (Boolean) value;
 				break;

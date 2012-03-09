@@ -38,7 +38,7 @@ public class GalleryData {
 
 	private int mode;
 	public boolean showLabel = false;
-	public boolean globalRender = false;
+	public boolean globalRender;
 	public Param parameters;
 	private int numberOfVols = 0;
 
@@ -60,6 +60,7 @@ public class GalleryData {
 			selectedBlock = "";
 			parameters = param;
 			zoom = param.zoom;
+			globalRender = param.renderImages;
 			mode = MODE_GALLERY_MD;
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = MODE_TABLE_MD;
@@ -164,11 +165,13 @@ public class GalleryData {
 
 			for (int i = 0; i < lab.length; ++i) {
 				ci = new ColumnInfo(lab[i]);
-				if (labels != null)
+				if (labels != null){
 					for (ColumnInfo ci2 : labels)
-						if (ci.label == ci2.label) {
+						if (ci.label == ci2.label) 
 							ci.updateInfo(ci2);
-						}
+				}
+				else if (ci.allowRender)
+					ci.render = globalRender;
 				newLabels.add(ci);
 				if (ciFirstRender == null && ci.allowRender)
 					ciFirstRender = ci;
@@ -178,10 +181,12 @@ public class GalleryData {
 			}
 			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
-				// Add MDL_ENABLED
+				// Add MDL_ENABLED if not present
 				if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
+					newLabels.add(0, new ColumnInfo(MDLabel.MDL_IMAGE));
 					md.addLabel(MDLabel.MDL_ENABLED);
-
+					for (long id: ids)
+						md.setEnabled(true, id);
 				}
 			}
 

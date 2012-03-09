@@ -37,6 +37,7 @@ import javax.swing.table.AbstractTableModel;
 import xmipp.viewer.GalleryColumnModel;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippPopupMenuCreator;
 
 public abstract class ImageGallery extends AbstractTableModel {
 
@@ -433,7 +434,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 * before showing or event not show at all if the
 	 * return is false
 	 */
-	public abstract boolean handleRightClick(int row, int col, JPopupMenu menu);
+	public abstract boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup);
 	
 	/** Whether to display the labels */
 	public void setShowLabels(boolean value) {

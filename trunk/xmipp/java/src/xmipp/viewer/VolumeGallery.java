@@ -31,6 +31,7 @@ import ij.ImagePlus;
 import xmipp.ij.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.XmippPopupMenuCreator;
 
 public class VolumeGallery extends ImageGallery {
 	protected String volFn;
@@ -106,7 +107,7 @@ public class VolumeGallery extends ImageGallery {
 	}
 
 	@Override
-	public boolean handleRightClick(int row, int col, JPopupMenu menu) {
+	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
 		return false;
 	}
 

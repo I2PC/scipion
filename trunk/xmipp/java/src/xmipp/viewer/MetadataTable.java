@@ -246,14 +246,13 @@ public class MetadataTable extends MetadataGallery {
 					ColumnInfo col = visibleLabels.get(i);
 					if (col.render) {
 						width = cellDim.width;
-						DEBUG.printMessage("is render -->");
 					} else {
 						TableCellRenderer rend = table.getCellRenderer(0, i);
 						Component comp = rend.getTableCellRendererComponent(
 								table, getValueAt(0, i), false, false, 0, 0);
 						width = comp.getPreferredSize().width + 10;
 					}
-					getColumn(i).setPreferredWidth(width);
+					//getColumn(i).setPreferredWidth(width);
 //					DEBUG.printMessage(String.format("col: %d, width: %d", i,
 //							width));
 				}

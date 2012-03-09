@@ -41,11 +41,12 @@ public class ColumnInfo {
 	 * return true if some field has changed
 	 */
 	public boolean updateInfo(ColumnInfo ci){
-		boolean result = visible != ci.visible 
+		boolean result = labelName != ci.labelName || visible != ci.visible 
 				|| render != ci.render || allowEdit != ci.allowEdit;
 		visible = ci.visible;
 		render = ci.render;
 		allowEdit = ci.allowEdit;
+		labelName = ci.labelName;
 		return result;
 	}
 	
@@ -53,8 +54,14 @@ public class ColumnInfo {
 		return label;
 	}
 	
+	/** Return the name of the label */
 	public String getLabelName(){
 		return labelName;
+	}
+	
+	/** Change display name of the label */
+	public void changeLabelName(String newName){
+		labelName = newName;
 	}
 	
 	public ColumnInfo clone(){
