@@ -499,15 +499,15 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
     sc = sb * ca;
     ss = sb * sa;
 
-    A(0, 0) =  cg * cc - sg * sa;
-    A(0, 1) =  cg * cs + sg * ca;
-    A(0, 2) = -cg * sb;
-    A(1, 0) = -sg * cc - cg * sa;
-    A(1, 1) = -sg * cs + cg * ca;
-    A(1, 2) = sg * sb;
-    A(2, 0) =  sc;
-    A(2, 1) =  ss;
-    A(2, 2) = cb;
+    MAT_ELEM(A, 0, 0) =  cg * cc - sg * sa;
+    MAT_ELEM(A, 0, 1) =  cg * cs + sg * ca;
+    MAT_ELEM(A, 0, 2) = -cg * sb;
+    MAT_ELEM(A, 1, 0) = -sg * cc - cg * sa;
+    MAT_ELEM(A, 1, 1) = -sg * cs + cg * ca;
+    MAT_ELEM(A, 1, 2) = sg * sb;
+    MAT_ELEM(A, 2, 0) =  sc;
+    MAT_ELEM(A, 2, 1) =  ss;
+    MAT_ELEM(A, 2, 2) = cb;
 }
 
 /* Euler distance ---------------------------------------------------------- */
