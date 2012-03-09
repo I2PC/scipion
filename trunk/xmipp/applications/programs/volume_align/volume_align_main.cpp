@@ -304,6 +304,7 @@ public:
             int itime = 0;
             int step_time = CEIL((double)times / 60.0);
             Matrix1D<double> r(3);
+            Matrix1D<double> trial(9);
             for (double grey_scale = grey_scale0; grey_scale <= grey_scaleF ; grey_scale += step_grey)
                 for (double grey_shift = grey_shift0; grey_shift <= grey_shiftF ; grey_shift += step_grey_shift)
                     for (double rot = rot0; rot <= rotF ; rot += step_rot)
@@ -315,7 +316,6 @@ public:
                                             for (XX(r) = x0; XX(r) <= xF ; XX(r) += step_x)
                                             {
                                                 // Form trial vector
-                                                Matrix1D<double> trial(9);
                                                 trial(0) = grey_scale;
                                                 trial(1) = grey_shift;
                                                 trial(2) = rot;
@@ -335,12 +335,13 @@ public:
                                                     best_fit = fit;
                                                     best_align = trial;
                                                     first = false;
+                                                    if (tell)
+                                                    	std::cout << "Best so far\n";
                                                 }
 
                                                 // Show fit
                                                 if (tell)
-                                                    std::cout << trial.transpose()
-                                                    << fit << std::endl;
+                                                    std::cout << trial << " " << fit << std::endl;
                                                 else
                                                     if (++itime % step_time == 0)
                                                         progress_bar(itime);
