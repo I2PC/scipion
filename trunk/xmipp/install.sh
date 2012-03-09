@@ -111,7 +111,8 @@ echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
-fi	
+fi
+echo 'test -s .xmipp.alias && . .xmipp.alias || true' >> $INC_FILE
 chmod u+x $INC_FILE
 
 # for CSH or TCSH
@@ -122,7 +123,37 @@ echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 if $IS_MAC; then
 	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
+echo 'test -s .xmipp.alias && . .xmipp.alias || true' >> $INC_FILE
 chmod u+x $INC_FILE
+
+
+#Create aliases file
+ALIAS_FILE=.xmipp.alias
+
+echo "# Xmipp Aliases 						 "    >> $ALIAS_FILE
+echo "## Interface ##                        "    >> $ALIAS_FILE
+echo "alias xa='xmipp_apropos'               "    >> $ALIAS_FILE
+echo "alias xb='xmipp_browser'               "    >> $ALIAS_FILE
+echo "alias xp='xmipp_protocols'             "    >> $ALIAS_FILE
+echo "alias xs='xmipp_show'                  "    >> $ALIAS_FILE
+echo "alias xsj='xmipp_showj'                "    >> $ALIAS_FILE
+echo "## Image ##                            "    >> $ALIAS_FILE
+echo "alias xic='xmipp_image_convert'        "    >> $ALIAS_FILE
+echo "alias xih='xmipp_image_header'         "    >> $ALIAS_FILE
+echo "alias xio='xmipp_image_operate'        "    >> $ALIAS_FILE
+echo "alias xis='xmipp_image_statistics'     "    >> $ALIAS_FILE
+echo "## Metadata ##                         "    >> $ALIAS_FILE
+echo "alias xmu='xmipp_metadata_utilities'   "    >> $ALIAS_FILE
+echo "alias xmp='xmipp_metadata_plot'        "    >> $ALIAS_FILE
+echo "## Transformation ##                   "    >> $ALIAS_FILE
+echo "alias xtg='xmipp_transform_geometry'   "    >> $ALIAS_FILE
+echo "alias xtf='xmipp_transform_filter'     "    >> $ALIAS_FILE
+echo "alias xtn='xmipp_transform_normalize'  "    >> $ALIAS_FILE
+echo "## Other ##                            "    >> $ALIAS_FILE
+echo "alias xrf='xmipp_resolution_fsc'       "    >> $ALIAS_FILE
+echo "alias xrs='xmipp_resolution_ssnr'      "    >> $ALIAS_FILE
+
+
 
 EXT_PATH=$XMIPP_HOME/external
 BUILD_PATH=$XMIPP_HOME/build
