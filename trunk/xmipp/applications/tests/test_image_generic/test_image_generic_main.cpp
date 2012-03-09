@@ -24,7 +24,7 @@ protected:
     Image<float> myImageFloat;
     FileName imageName;
     FileName stackName;
-   // FileName filename;
+    // FileName filename;
 
 };
 
@@ -209,7 +209,7 @@ TEST_F( ImageGenericTest, convert2Datatype)
 
     // Let's be sure any element is nonzero and higher than 255
     (*ma) += 1024;
-    // No copy it as reference and normalize
+    // Now copy it as reference and normalize
     auxMa = *ma;
     auxMa.rangeAdjust(0, 255);
 
@@ -236,6 +236,32 @@ TEST_F( ImageGenericTest, convert2Datatype)
             EXPECT_EQ(p,q);
         }
     }
+
+    ArrayDim befAdim, aftAdim;
+    // Checking that convert2Datatype works after movePointer2
+    FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    myImageGeneric.readMapped(auxFn);
+    myImageGeneric.getDimensions(befAdim);
+    // Slices number when working with multidimarrays start in zero
+    MULTIDIM_ARRAY_GENERIC(myImageGeneric).getSlice(2, auxMa);
+    // Slices number when working with Images class start in FIRST_SLICE (1)
+    myImageGeneric.movePointerTo(3);
+    // Now It should keep the information of the slice only
+    myImageGeneric.convert2Datatype(UChar);
+    myImageGeneric.movePointerTo(ALL_SLICES);
+    myImageGeneric.getDimensions(aftAdim);
+
+    EXPECT_NE(befAdim.zdim, aftAdim.zdim);
+
+    // Now, lets check images are equals
+    MultidimArray<unsigned char> *uintMaP;
+    MultidimArray<unsigned char> uintMa;
+
+    auxMa.rangeAdjust(0, 255);
+    typeCast(auxMa, uintMa);
+    MULTIDIM_ARRAY_GENERIC(myImageGeneric).getMultidimArrayPointer(uintMaP);
+
+    EXPECT_EQ(*uintMaP, uintMa);
 }
 
 GTEST_API_ int main(int argc, char **argv)

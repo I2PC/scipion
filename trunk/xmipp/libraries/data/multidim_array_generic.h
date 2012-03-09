@@ -99,7 +99,7 @@ public:
     MultidimArrayBase *im;
 
 protected:
-    // Flag to allow destroy im data.
+    // Flag to allow destroy MultidimArrayBase im data.
     bool destroyData;
 
 public:
@@ -133,10 +133,12 @@ public:
      */
     void clear();
 
-
+    /* Set the datatype of the multidimarray object
+     */
     void setDatatype(DataType imgType);
 
-
+    /* Return mdim pointing to a specific slice inside this mda generic
+     */
     void aliasSlice(MultidimArrayGeneric &mdim, int select_slice);
 
     /**

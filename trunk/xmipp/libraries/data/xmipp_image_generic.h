@@ -409,6 +409,8 @@ public:
 }
 ;
 
+
+
 //@}
 
 /** Create an empty image file

@@ -289,7 +289,8 @@ void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
         return;
 
     ArrayDim aDim;
-    image->getDimensions(aDim);
+//    image->getDimensions(aDim);
+    data->getDimensions(aDim);
 
     ImageBase * newImage;
     MultidimArrayGeneric * newMAG;
@@ -313,7 +314,10 @@ void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
 
 #undef CONVERTTYPE
 
-    // aDimFile must be set in order to movePointer2Slice can be used
+    /* aDimFile must be set in order to movePointerTo can be used.
+     * If movePointerTo has been used before convert2Datatype, then
+     * only the pointed image/slice is converted, and the images/slices left
+     * are lost. This is why we set the new dimensions to the new ImageGeneric Object*/
     newImage->setADimFile(aDim);
 
     clear();
