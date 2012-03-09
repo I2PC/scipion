@@ -459,7 +459,7 @@ double matrix_fitness(double *p, void *prm)
     for (int i = 0; i < 2; i++)
         for (int j = 0; j < 2; j++)
         {
-            double error = ABS(pair_E(i, j) - (*pair_Put)(i, j));
+            double error = fabs(pair_E(i, j) - (*pair_Put)(i, j));
             retval += error * error;
         }
     return retval;
