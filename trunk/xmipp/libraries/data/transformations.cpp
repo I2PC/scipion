@@ -475,7 +475,7 @@ void selfPyramidExpand(int SplineDegree,
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
 * that this image is a set of B-spline coefficients. And making the diff
 * of x, such->  V=sum(Coef diff(Bx) By Bz)
-* ��Only for BSplines of degree 3!!
+* Only for BSplines of degree 3!!
 * @ingroup VolumesMemory
 *
 * (x,y,z) are in logical coordinates.
