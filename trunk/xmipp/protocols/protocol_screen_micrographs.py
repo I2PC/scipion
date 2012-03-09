@@ -142,7 +142,7 @@ class ProtScreenMicrographs(XmippProtocol):
         return message
     
     def visualize(self):
-        summaryFile = self.micrographs
+        summaryFile = self.getFilename('micrographs')
         if exists(summaryFile):
             os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % summaryFile)
         else:
