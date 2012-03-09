@@ -8,8 +8,6 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
-import xmipp.viewer.JFrameFSC;
-import xmipp.viewer.JFrameGallery;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
 import ij.IJ;

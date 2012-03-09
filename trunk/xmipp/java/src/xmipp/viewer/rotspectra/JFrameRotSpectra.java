@@ -12,10 +12,10 @@ package xmipp.viewer.rotspectra;
 
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippLabel;
-import xmipp.viewer.JFrameGallery;
 import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 import xmipp.viewer.gallery.renderers.RowHeaderRenderer;
 import xmipp.viewer.windows.ImagesWindowFactory;
+import xmipp.viewer.windows.JFrameGallery;
 import ij.IJ;
 import java.awt.Component;
 import java.awt.Dimension;
