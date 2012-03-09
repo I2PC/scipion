@@ -131,6 +131,10 @@ chmod u+x $INC_FILE
 ALIAS_FILE=.xmipp.alias
 
 echo "# Xmipp Aliases 						 "    >> $ALIAS_FILE
+echo "## Setup ##                        "    >> $ALIAS_FILE
+echo "alias xconfigure='./setup.py -j $NUMBER_OF_CPU configure compile ' " >> $ALIAS_FILE
+echo "alias xcompile='./setup.py -j $NUMBER_OF_CPU compile ' "             >> $ALIAS_FILE
+echo "alias xupdate='./setup.py -j $NUMBER_OF_CPU update compile ' "       >> $ALIAS_FILE
 echo "## Interface ##                        "    >> $ALIAS_FILE
 echo "alias xa='xmipp_apropos'               "    >> $ALIAS_FILE
 echo "alias xb='xmipp_browser'               "    >> $ALIAS_FILE
