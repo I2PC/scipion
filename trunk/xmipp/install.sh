@@ -135,6 +135,7 @@ echo "## Interface ##                        "    >> $ALIAS_FILE
 echo "alias xa='xmipp_apropos'               "    >> $ALIAS_FILE
 echo "alias xb='xmipp_browser'               "    >> $ALIAS_FILE
 echo "alias xp='xmipp_protocols'             "    >> $ALIAS_FILE
+echo "alias xmipp='xmipp_protocols'          "    >> $ALIAS_FILE
 echo "alias xs='xmipp_show'                  "    >> $ALIAS_FILE
 echo "alias xsj='xmipp_showj'                "    >> $ALIAS_FILE
 echo "## Image ##                            "    >> $ALIAS_FILE
