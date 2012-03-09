@@ -8,9 +8,10 @@
 from protlib_base import *
 import xmipp
 import os
-from protlib_utils import runJob, runImageJPlugin
+from protlib_utils import runJob, runShowJ
 from protlib_filesystem import deleteFile
 import glob
+from protlib_gui_ext import showError
 
 class ProtPreprocessParticles(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -69,9 +70,9 @@ class ProtPreprocessParticles(XmippProtocol):
 
     def visualize(self):
         if not os.path.exists(self.OutSelFile):
-            import tkMessageBox
-            tkMessageBox.showerror("Error", "There is no result yet")                    
-        runShowJ(self.OutSelFile)
+            showError("Error", "There is no result yet")
+        else:
+            runShowJ(self.OutSelFile)
 
 def copyFiles(log,InputFile,OutputFile):
     runJob(log,"xmipp_image_convert","-i "+InputFile+" -o "+OutputFile)
