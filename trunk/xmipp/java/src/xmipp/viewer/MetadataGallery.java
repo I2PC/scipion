@@ -27,6 +27,8 @@ package xmipp.viewer;
 
 import java.util.ArrayList;
 
+import javax.swing.JPopupMenu;
+
 import ij.ImagePlus;
 import xmipp.ij.XmippImageConverter;
 import xmipp.jni.Filename;
@@ -225,5 +227,10 @@ public class MetadataGallery extends ImageGallery {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	@Override
+	public boolean handleRightClick(int row, int col, JPopupMenu menu) {
+		return true;
 	}
 }

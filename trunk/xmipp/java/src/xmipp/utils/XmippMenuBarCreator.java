@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     Airen Zaldivar (airen@cnb.csic.es)
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -25,43 +25,23 @@
 
 package xmipp.utils;
 
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 
-/** This class will contains methods to return formatted text messages */
-public class XmippMessage {
-	
+public abstract class XmippMenuBarCreator extends XmippMenuCreator {
 
-	/** Particle Picker messages */
-	public static String getIllegalDeleteMsg(String item)
-	{
-		return String.format("There it must be at least one %s defined", item);
+	public XmippMenuBarCreator() {
+		super(new JMenuBar());
 	}
 	
-	public static String getAlreadyExistsGroupNameMsg(String name)
-	{
-		return String.format("Group %s already exists", name);
-	}
-
-	public static String getEmptyFieldMsg(String field) {
-		return String.format("Must specify %s", field);
-	}
-
-	public static String getAssociatedDataMsg(String field) {
-		return String.format("%s has associated data. Can not be removed");
-	}
-
-	public static String getNoSuchFieldValueMsg(String field, Object value) {
-		return String.format("No such %s %s exists", field, value);
-	}
-
-	public static String getOutOfBoundsMsg(Object o)
-	{
-		return String.format("%s out of bounds", o);
+	public JMenuBar getMenuBar(){
+		return (JMenuBar)menu;
 	}
 	
-	public static String getNotImplementedYetMsg()
-	{
-		return "Not implemented yet";
+	public void addSeparator(String key) {
+		JMenu menu = (JMenu) items.get(key);
+		menu.addSeparator();
+		group = null; //defines a new group
 	}
-	
-	
+
 }

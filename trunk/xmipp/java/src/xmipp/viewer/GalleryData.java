@@ -134,6 +134,7 @@ public class GalleryData {
 						mode = MODE_GALLERY_VOL;
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
+					selection = new boolean[image.getZDim()];
 					for (int i = 0; i < numberOfVols; ++i)
 						volumes[i] = md.getValueString(
 								ciFirstRender.getLabel(), ids[i]);
@@ -177,10 +178,10 @@ public class GalleryData {
 			}
 			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
-				//Add MDL_ENABLED
-				if (!md.containsLabel(MDLabel.MDL_ENABLED)){
+				// Add MDL_ENABLED
+				if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
 					md.addLabel(MDLabel.MDL_ENABLED);
-					
+
 				}
 			}
 
@@ -307,6 +308,27 @@ public class GalleryData {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	/** Check if an item is enabled or not */
+	public boolean isEnabled(int index) {
+		try {
+			if (!isVolumeMode()) // slices in a volume are always enabled
+				return md.getEnabled(ids[index]);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
+	/** Set enabled state */
+	public void setEnabled(int index, boolean value){
+		try {
+			if (!isVolumeMode()) // slices in a volume are always enabled
+				md.setEnabled(value, ids[index]);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

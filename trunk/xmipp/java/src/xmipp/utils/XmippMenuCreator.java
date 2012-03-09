@@ -1,3 +1,5 @@
+
+
 package xmipp.utils;
 
 import java.awt.event.ActionEvent;
@@ -19,23 +21,19 @@ import javax.swing.KeyStroke;
  * It will allow creation of JMenuBar and JPopupMenu
  * */
 public abstract class XmippMenuCreator implements ActionListener {
-	public enum MenuType {JMENUBAR, JPOPUPMENU};
-	
-	private Map<String, JMenuItem> items;
+
+	protected Map<String, JMenuItem> items;
 	/** This will be used to group Radiobuttons under a Menu
 	 * A new menu defines a new group and also a separator 
 	 * in the same menu defines a new group;
 	 */
-	private ButtonGroup group; 
-	private JComponent menu;
+	protected ButtonGroup group; 
+	protected JComponent menu;
 	
 	/** Constructor */
-	public XmippMenuCreator(MenuType type){
+	public XmippMenuCreator(JComponent menu){
 		try {
-			if (type == MenuType.JMENUBAR)
-				menu = new JMenuBar();
-			else if (type == MenuType.JPOPUPMENU)
-				menu = new JPopupMenu();
+			this.menu = menu;
 			items = new Hashtable<String, JMenuItem>();
 			group = null;
 			createItems();
@@ -116,18 +114,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 
 		return item;
 	}
-
-	public void addSeparator(String key) {
-		JMenu menu = (JMenu) items.get(key);
-		menu.addSeparator();
-		group = null; //defines a new group
-	}
 	
-	public void addSeparator(){
-		getPopupMenu().addSeparator();
-		group = null;
-	}
-
 	public JMenuItem getItem(String key) {
 		return items.get(key);
 	}
@@ -161,14 +148,6 @@ public abstract class XmippMenuCreator implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		handleActionPerformed(evt);
-	}
-
-	public JMenuBar getMenuBar(){
-		return (JMenuBar)menu;
-	}
-	
-	public JPopupMenu getPopupMenu(){
-		return (JPopupMenu)menu;
 	}
 	
 	/** Abstract methods */

@@ -30,6 +30,7 @@ import ij.ImagePlus;
 import java.awt.Dimension;
 import java.awt.Insets;
 
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
@@ -150,10 +151,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 				}
 				item.showLabel = data.showLabel;
 				item.cellDim = cellDim;
-				if (!data.isVolumeMode()) {
-					item.isSelected = data.selection[index];
-					item.isEnabled = data.md.getEnabled(data.ids[index]);
-				}
+				item.isSelected = data.selection[index];
+				item.isEnabled = data.isEnabled(index);
 				ImagePlus imp = item.getImage();
 				if (imp != null) { // When image is missing this will be null
 					if (data.normalize)
@@ -195,7 +194,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 	}
 
-	//Return True if columns were changed
+	// Return True if columns were changed
 	public boolean adjustColumn(int width) {
 		last_width = width;
 		adjustColumns = true;
@@ -329,7 +328,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		try {
 			for (int i = 0; i < n; ++i)
 				if (data.selection[i])
-					data.md.setEnabled(value, data.ids[i]);
+					data.setEnabled(i, value);
 			fireTableDataChanged();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -426,7 +425,16 @@ public abstract class ImageGallery extends AbstractTableModel {
 			normalize_calculated = true;
 		}
 	}
-
+	
+	/** This function will be called when a right click
+	 * is fired from the UI, the col and row of cell
+	 * where the event was produced and also the JPopupMenu
+	 * This function will serve to personalize the menu
+	 * before showing or event not show at all if the
+	 * return is false
+	 */
+	public abstract boolean handleRightClick(int row, int col, JPopupMenu menu);
+	
 	/** Whether to display the labels */
 	public void setShowLabels(boolean value) {
 		if (data.showLabel != value) {

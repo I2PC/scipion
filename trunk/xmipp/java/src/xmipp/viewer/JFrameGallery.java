@@ -95,7 +95,9 @@ import xmipp.utils.Param;
 import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
+import xmipp.utils.XmippMenuBarCreator;
 import xmipp.utils.XmippMenuCreator;
+import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippResource;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
@@ -228,7 +230,7 @@ public class JFrameGallery extends JFrame {
 
 		setTitle(gallery.getTitle());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));		
+		setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 
 		// Get main pane and set layout
 		Container pane = getContentPane();
@@ -325,10 +327,10 @@ public class JFrameGallery extends JFrame {
 			gallery.setColumns(data.parameters.columns);
 		else if (data.parameters.rows > 0)
 			gallery.setRows(data.parameters.rows);
-		else 
+		else
 			adjust = true;
-		int desiredCols = adjust ? (int) Math.ceil(Math.sqrt(gallery.getSize())) 
-				: gallery.getColumnCount(); 
+		int desiredCols = adjust ? (int) Math
+				.ceil(Math.sqrt(gallery.getSize())) : gallery.getColumnCount();
 		int desiredWidth = desiredCols * gallery.cellDim.width + 50;
 		width = Math.min(Math.max(desiredWidth, MIN_WIDTH), MAX_WIDTH);
 		setPreferredSize(new Dimension(width, MAX_HEIGHT));
@@ -1017,19 +1019,20 @@ public class JFrameGallery extends JFrame {
 				previousSelectedCol = view_col;
 			}
 		} else if (evt.getButton() == MouseEvent.BUTTON3) { // Right click.
-			if (gallery.getSelectedCount() < 2) {
-				gallery.clearSelection();
-				gallery.touchItem(view_row, view_col);
-				table.setRowSelectionInterval(view_row, view_row);
-				table.setColumnSelectionInterval(view_col, view_col);
-			}
 
 			final MouseEvent me = evt;
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					jpopUpMenuTable.show(me.getComponent(), p);
+			if (gallery.handleRightClick(view_row, view_col,
+					jpopUpMenuTable.getPopupMenu())) {
+				if (gallery.getSelectedCount() < 2) {
+					gallery.clearSelection();
+					gallery.touchItem(view_row, view_col);
 				}
-			});
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						jpopUpMenuTable.show(me.getComponent(), p);
+					}
+				});
+			}
 		}
 	}
 
@@ -1054,7 +1057,7 @@ public class JFrameGallery extends JFrame {
 		}
 	}
 
-	class GalleryMenu extends XmippMenuCreator {
+	class GalleryMenu extends XmippMenuBarCreator {
 		public final String FILE = "File";
 		public final String FILE_OPEN = "File.Open_mi";
 		public final String FILE_OPENWITH_IJ = "File.OpenWithIJ_mi";
@@ -1077,11 +1080,6 @@ public class JFrameGallery extends JFrame {
 		public final String STATS_AVGSTD = "Stats.AvgStd_mi";
 		public final String STATS_PCA = "Stats.Pca_mi";
 		public final String STATS_FSC = "Stats.Fsc_mi";
-
-		public GalleryMenu() {
-			super(MenuType.JMENUBAR);
-			update();
-		}// constructor GalleryMenu
 
 		public void update() {
 			boolean galMode = data.isGalleryMode();
@@ -1215,7 +1213,7 @@ public class JFrameGallery extends JFrame {
 		}// function handleActionPerformed
 	}// class GalleryMenu
 
-	class GalleryPopupMenu extends XmippMenuCreator {
+	class GalleryPopupMenu extends XmippPopupMenuCreator {
 		protected int row;
 		protected int col;
 
@@ -1236,10 +1234,6 @@ public class JFrameGallery extends JFrame {
 			addItem(SELECT_TOHERE, "To here");
 			addItem(SELECT_FROMHERE, "From here");
 		}// function createItems
-
-		public GalleryPopupMenu() {
-			super(MenuType.JPOPUPMENU);
-		}// constructor JPopUpMenuGallery
 
 		public void show(Component cmpnt, Point location) {
 			// Update menu items status depending on item.
