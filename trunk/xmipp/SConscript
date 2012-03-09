@@ -279,19 +279,26 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     # action
     # FIXME Exclusive may not be what users want
     if int(env['static']):
-        libFunc = env.StaticLibrary
-    else:
-        libFunc = env.SharedLibrary
-        
-    library = libFunc(
+        library = env.StaticLibrary(
             basedir + name,
             sources,
-            CPPPATH = includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
-            CC = env['MPI_CC'],
-            CXX = env['MPI_CXX'],
-            LIBPATH = libpath + [env['MPI_LIBDIR']],
-            LIBS = libs + [env['MPI_LIB']]
+            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CC=env['MPI_CC'],
+            CXX=env['MPI_CXX'],
+            LIBPATH=[env['MPI_LIBDIR']] + libpath,
+            LIBS=[env['MPI_LIB']] + libs
             )
+    else:
+        library = env.SharedLibrary(
+            basedir + name,
+            sources,
+            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CC=env['MPI_CC'],
+            CXX=env['MPI_CXX'],
+            LIBPATH=[env['MPI_LIBDIR']] + libpath,
+            LIBS=[env['MPI_LIB']] + libs
+            )
+
     # alias
     alias = env.Alias(name, library)
     install = env.Install(libprefix, library)
