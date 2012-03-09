@@ -27,7 +27,7 @@ class ScriptShowJ(ScriptAppIJ):
 		
 	def readOtherParams(self):
 		if self.checkParam('--mode'):
-			self.args += " --mode %s" % mode		
+			self.args += " --mode %s" % self.getParam('--mode') 
 		if self.checkParam('--poll'):
 			self.args += " --poll"
 		if self.checkParam('--render'):
