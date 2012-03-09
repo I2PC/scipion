@@ -345,80 +345,51 @@ FileName FileName::withoutRoot() const
 // Insert before extension .................................................
 FileName FileName::insertBeforeExtension(const String &str) const
 {
-    int point = -1;
-    bool done = false;
-    do
-    {
-        point = find(".", point + 1);
-        if (point == -1)
-        {
-            point = length();
-            done = true;
-        }
-        else if (point == length() - 1)
-            done = true;
-        else if ((*this)[point + 1] == '.' || (*this)[point + 1] == '/')
-            done = false;
-        else
-            done = true;
-    }
-    while (!done);
     FileName retval = *this;
-    return retval.insert(point, str);
+    size_t pos = find_last_of('.');
+    return  pos != npos ? retval.insert(pos, str) : retval.append(str);
 }
 
 // Remove an extension wherever it is ......................................
 FileName FileName::removeExtension(const String &ext) const
 {
-    int first = find((String) "." + ext);
-    if (first == -1)
-        return *this;
-    else
-    {
-        FileName retval = *this;
-        return retval.erase(first, 1 + ext.length());
-    }
+    FileName retval = *this;
+    size_t first = find((String) "." + ext);
+    return (first == npos) ? retval: retval.erase(first, 1 + ext.length());
 }
 
 // Remove the last extension ................................................
 FileName FileName::removeLastExtension() const
 {
-    int first = rfind(".");
-    if (first == -1)
-        return *this;
-    else
-        return substr(0, first);
+	FileName retval = *this;
+    size_t first = find_last_of('.');
+    return (first == npos) ? retval : retval.substr(0, first);
 }
 
 // Remove all extensions....................................................
 FileName FileName::removeAllExtensions() const
 {
-    int first = rfind("/");
-    first = find(".", first + 1);
-    if (first == -1)
-        return *this;
-    else
-        return substr(0, first);
+	FileName retval = *this;
+    size_t first = find_last_of('/');
+    first = find_first_of('.', first + 1);
+    return (first == npos) ? retval: retval.substr(0, first);
 }
 
 FileName FileName::removeFilename() const
 {
-    int first = rfind("/");
-    if (first == -1)
-        return "";
-    else
-        return substr(0, first);
+    size_t first = find_last_of('/');
+    return (first == npos) ? "" : substr(0, first);
 }
 
 FileName FileName::getFileFormat() const
 {
-    int first;
+    size_t first;
     FileName result;
-    if (find("#") != String::npos)
+    if (find("#") != npos)
         return "raw";
-    else if ((first = rfind(":")) != String::npos)
+    else if ((first = rfind(":")) != npos)
         result = substr(first + 1);
-    else if ((first = rfind(".")) != String::npos)
+    else if ((first = rfind(".")) != npos)
         result = substr(first + 1);
     return result.toLowercase();
 }
@@ -773,29 +744,29 @@ void FileName::assertExists()
 /* Get the Xmipp Base directory -------------------------------------------- */
 char * getXmippPath()
 {
-  char* path = getenv("XMIPP_HOME");
-  if (path == NULL)
-      REPORT_ERROR(ERR_VALUE_EMPTY, "getXmippPath::Variable XMIPP_HOME is not defined");
-  return path;
-//    String path = getenv("PATH");
-//    StringVector directories;
-//    int number_directories = splitString(path, ":", directories);
-//    if (number_directories == 0)
-//        REPORT_ERROR(ERR_IO_NOPATH, "getXmippPath::Cannot find Xmipp Base directory");
-//    bool found = false;
-//    int i;
-//    for (i = 0; i < number_directories; i++)
-//    {
-//        if (fileExists(directories[i] + "/xmipp_reconstruct_art"))
-//        {
-//            found = true;
-//            break;
-//        }
-//    }
-//    if (found)
-//        return directories[i].substr(0, directories[i].length() - 4); //Remove '/bin'
-//    else
-//        REPORT_ERROR(ERR_IO_NOPATH, "getXmippPath::Cannot find Xmipp Base directory");
+    char* path = getenv("XMIPP_HOME");
+    if (path == NULL)
+        REPORT_ERROR(ERR_VALUE_EMPTY, "getXmippPath::Variable XMIPP_HOME is not defined");
+    return path;
+    //    String path = getenv("PATH");
+    //    StringVector directories;
+    //    int number_directories = splitString(path, ":", directories);
+    //    if (number_directories == 0)
+    //        REPORT_ERROR(ERR_IO_NOPATH, "getXmippPath::Cannot find Xmipp Base directory");
+    //    bool found = false;
+    //    int i;
+    //    for (i = 0; i < number_directories; i++)
+    //    {
+    //        if (fileExists(directories[i] + "/xmipp_reconstruct_art"))
+    //        {
+    //            found = true;
+    //            break;
+    //        }
+    //    }
+    //    if (found)
+    //        return directories[i].substr(0, directories[i].length() - 4); //Remove '/bin'
+    //    else
+    //        REPORT_ERROR(ERR_IO_NOPATH, "getXmippPath::Cannot find Xmipp Base directory");
 }
 
 void copyImage(const FileName & source, const FileName & target)
