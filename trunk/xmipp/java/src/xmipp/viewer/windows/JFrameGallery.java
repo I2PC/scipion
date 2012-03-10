@@ -25,7 +25,6 @@
  ***************************************************************************/
 package xmipp.viewer.windows;
 
-import ij.IJ;
 import ij.ImagePlus;
 
 import java.awt.Component;
@@ -39,39 +38,27 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
-import javax.swing.ButtonGroup;
 import javax.swing.ComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
@@ -89,6 +76,7 @@ import xmipp.ij.XmippImageConverter;
 import xmipp.ij.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
@@ -96,7 +84,6 @@ import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
-import xmipp.utils.XmippMenuCreator;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippResource;
 import xmipp.viewer.ImageItem;
@@ -1197,6 +1184,7 @@ public class JFrameGallery extends JFrame {
 		public final static String DISABLED = "Disabled_mi";
 		public final static String OPEN = "Open_mi";
 		public final static String OPEN_ASTEXT = "OpenAsText_mi";
+		public final static String SHOW_CTFPROFILE = "ShowCTF_mi";
 		public final static String SELECT = "Select";
 		public final static String SELECT_ALL = "Select.All_mi";
 		public final static String SELECT_TOHERE = "Select.ToHere_mi";
@@ -1206,8 +1194,10 @@ public class JFrameGallery extends JFrame {
 		protected void createItems() throws Exception {
 			addItem(ENABLED, "Enable");
 			addItem(DISABLED, "Disable");
+			addSeparator();
 			addItem(OPEN, "Open");
 			addItem(OPEN_ASTEXT, "Open as text");
+			addItem(SHOW_CTFPROFILE, "Show CTF profile");
 			addSeparator();
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
@@ -1228,10 +1218,27 @@ public class JFrameGallery extends JFrame {
 			gallery.selectRange(first, last, true);
 		}
 		
+        private void showCTFProfile() {
+        	try{
+            String ctfModel = data.md.getValueString(MDLabel.MDL_CTFMODEL, data.ids[row]);
+            String displayFilename = data.md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, data.ids[row]);
+            String psdFile =  data.md.getValueString(MDLabel.MDL_PSD, data.ids[row]);
+
+            ImageGeneric img = new ImageGeneric(displayFilename);
+            ImagePlus imp = XmippImageConverter.readToImagePlus(img);
+
+            ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
+        	} catch (Exception e){
+        		XmippDialog.showError(JFrameGallery.this, e.getMessage());
+        	}
+        }
+		
 		/** Set values to defaults */
 		@Override
 		public void initItems(){
 			setItemVisible(OPEN, false);
+			setItemVisible(OPEN_ASTEXT, false);
+			setItemVisible(SHOW_CTFPROFILE, false);			
 		}
 
 		@Override
@@ -1257,6 +1264,9 @@ public class JFrameGallery extends JFrame {
 			else if(cmd.equals(OPEN_ASTEXT)){
 				String file = gallery.getValueAt(row, col).toString();
 				ImagesWindowFactory.openFileAsText(file, null);
+			}
+			else if (cmd.equals(SHOW_CTFPROFILE)){
+				showCTFProfile();
 			}
 			initItems();
 		}

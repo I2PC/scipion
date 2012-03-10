@@ -40,24 +40,10 @@ public class MetaData {
 			MDLabel.MDL_SHIFTY
 	};
 	
-    public final static int MD_LABELS[] = {
-        MDLabel.MDL_ENABLED,
-        MDLabel.MDL_IMAGE,
+    public final static int MICROGRAPH_BASIC_LABELS[] = {
+        MDLabel.MDL_MICROGRAPH,
         MDLabel.MDL_PSD,
-        MDLabel.MDL_ASSOCIATED_IMAGE1,
-        MDLabel.MDL_ASSOCIATED_IMAGE2,
-        MDLabel.MDL_ASSOCIATED_IMAGE3,
-        MDLabel.MDL_CTF_CRITERION_DAMPING,
-        MDLabel.MDL_CTF_CRITERION_FIRSTZEROAVG,
-        MDLabel.MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,
-        MDLabel.MDL_CTF_CRITERION_FIRSTZERORATIO,
-        MDLabel.MDL_CTF_CRITERION_FITTINGSCORE,
-        MDLabel.MDL_CTF_CRITERION_FITTINGCORR13,
-        MDLabel.MDL_CTF_CRITERION_PSDCORRELATION90,
-        MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL,
-        MDLabel.MDL_CTF_CRITERION_PSDVARIANCE,
-        MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST,
-        MDLabel.MDL_ZSCORE
+        MDLabel.MDL_CTFMODEL
     };
 
 	public static final int MD_OVERWRITE = 0;
@@ -118,13 +104,14 @@ public class MetaData {
 	
 	public boolean containsMicrographsInfo() {
 		try {
-			for (int i = 0; i < GEOMETRY_LABELS.length; i++)
-				if (containsLabel(GEOMETRY_LABELS[i]))
-					return true;
+			//Should contain some micrographs labels
+			for (int i = 0; i < MICROGRAPH_BASIC_LABELS.length; i++)
+				if (!containsLabel(MICROGRAPH_BASIC_LABELS[i]))
+					return false;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return false;
+		return true;
 	}
 	
 	public static native String label2Str(int label) throws Exception;

@@ -27,14 +27,8 @@ package xmipp.viewer.models;
 
 import javax.swing.JTable;
 
-import xmipp.jni.MDLabel;
-import xmipp.jni.MetaData;
-import xmipp.utils.XmippPopupMenuCreator;
-import xmipp.viewer.ImageItem;
-import xmipp.viewer.TestRenderer;
-import xmipp.viewer.models.MetadataTable.MetadataColumnModel;
-
 /** This is a data model designed for Row metadatas */
+@SuppressWarnings("serial")
 public class MetadataRow extends MetadataTable {
 	protected long id;
 	

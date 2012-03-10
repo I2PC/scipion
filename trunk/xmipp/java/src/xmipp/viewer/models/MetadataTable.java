@@ -79,7 +79,6 @@ public class MetadataTable extends MetadataGallery {
 			if (ci.render) {
 				String key = getItemKey(row, ci.getLabel());
 				return createImageItem(row, ci.getLabel(), ci.getLabel(), key);
-				// return super.getValueAt(row, col);
 			}
 			int label = ci.getLabel();
 			long id = data.ids[row];
@@ -214,7 +213,8 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	public void setupTable(JTable table) {
-		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		//table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		table.setDefaultRenderer(ImageItem.class, renderer);
 		table.setDefaultRenderer(Double.class, new TestRenderer());
 		table.setAutoCreateRowSorter(true);
@@ -270,7 +270,7 @@ public class MetadataTable extends MetadataGallery {
 								table, getValueAt(0, i), false, false, 0, 0);
 						width = comp.getPreferredSize().width + 10;
 					}
-					//getColumn(i).setPreferredWidth(width);
+					getColumn(i).setPreferredWidth(width);
 //					DEBUG.printMessage(String.format("col: %d, width: %d", i,
 //							width));
 				}

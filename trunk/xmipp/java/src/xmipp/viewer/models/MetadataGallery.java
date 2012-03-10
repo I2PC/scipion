@@ -92,6 +92,7 @@ public class MetadataGallery extends ImageGallery {
 	}
 
 	// Load initial dimensions
+	@Override
 	protected ImageDimension loadDimension() throws Exception {
 		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();

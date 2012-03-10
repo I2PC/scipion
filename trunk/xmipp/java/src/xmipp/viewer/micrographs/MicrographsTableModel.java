@@ -29,7 +29,7 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
     public final static int ENABLED_COLUMN_INDEX = 1;
     public final static int MD_LABELS[] = {
         MDLabel.MDL_ENABLED,
-        MDLabel.MDL_IMAGE,
+        MDLabel.MDL_MICROGRAPH,
         MDLabel.MDL_PSD,
         MDLabel.MDL_ASSOCIATED_IMAGE1,
         MDLabel.MDL_ASSOCIATED_IMAGE2,
@@ -125,7 +125,7 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
 
     void setCacheSize(MetaData md) throws Exception {
         // Calculates cache elements size.
-        String firstImage = md.getValueString(MDLabel.MDL_IMAGE, md.firstObject(), true);
+        String firstImage = md.getValueString(MDLabel.MDL_MICROGRAPH, md.firstObject(), true);
         ImageGeneric image = new ImageGeneric(firstImage);
 
         int imageSize = image.getXDim() * image.getYDim() * Cache.MAXPXSIZE;
@@ -168,7 +168,7 @@ public class MicrographsTableModel extends XmippTableModelRowDisabler implements
                                 Integer enabled = md.getValueInt(label, id);
                                 row[col] = enabled > 0;
                                 break;
-                            case MDLabel.MDL_IMAGE:
+                            case MDLabel.MDL_MICROGRAPH:
                             case MDLabel.MDL_PSD:
                             case MDLabel.MDL_ASSOCIATED_IMAGE1:
                             case MDLabel.MDL_ASSOCIATED_IMAGE2:

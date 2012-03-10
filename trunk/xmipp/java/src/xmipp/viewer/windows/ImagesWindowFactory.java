@@ -7,12 +7,10 @@ package xmipp.viewer.windows;
 import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
-import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageWindow;
@@ -30,7 +28,7 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JRootPane;
 import javax.vecmath.Color3f;
-import xmipp.viewer.metadata.JFrameMetaData;
+
 import xmipp.viewer.micrographs.JFrameMicrographs;
 import xmipp.viewer.micrographs.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.micrographs.CTFProfileWindow;
@@ -82,7 +80,11 @@ public class ImagesWindowFactory {
 	public static void openFileAsDefault(String filename, Param parameters){
 		try {
 			if (Filename.isMetadata(filename)) {
-				openMetadata(filename, parameters, Param.OPENING_MODE_GALLERY);
+//				MetaData md = new MetaData(filename);
+//				if (md.containsMicrographsInfo())
+//					openMicrograph(filename);
+//				else
+					openMetadata(filename, parameters, Param.OPENING_MODE_GALLERY);
 			} else {
 				ImageGeneric img = new ImageGeneric(filename);
 
@@ -417,24 +419,24 @@ public class ImagesWindowFactory {
 		frame.setLocationRelativeTo(null);
 	}
 
-	public static ImagePlus convertToImageJ(
-			ArrayList<AbstractGalleryImageItem> items) {
-		ImageStack is = null;
-
-		for (int i = 0; i < items.size(); i++) {
-			AbstractGalleryImageItem item = items.get(i);
-
-			if (item.isEnabled() && item.exists()) {
-				ImagePlus ipslice = item.getImagePlus();
-
-				if (is == null) {
-					is = new ImageStack(ipslice.getWidth(), ipslice.getHeight());
-				}
-
-				is.addSlice(ipslice.getTitle(), ipslice.getProcessor());
-			}
-		}
-
-		return new ImagePlus("", is);
-	}
+//	public static ImagePlus convertToImageJ(
+//			ArrayList<AbstractGalleryImageItem> items) {
+//		ImageStack is = null;
+//
+//		for (int i = 0; i < items.size(); i++) {
+//			AbstractGalleryImageItem item = items.get(i);
+//
+//			if (item.isEnabled() && item.exists()) {
+//				ImagePlus ipslice = item.getImagePlus();
+//
+//				if (is == null) {
+//					is = new ImageStack(ipslice.getWidth(), ipslice.getHeight());
+//				}
+//
+//				is.addSlice(ipslice.getTitle(), ipslice.getProcessor());
+//			}
+//		}
+//
+//		return new ImagePlus("", is);
+//	}
 }

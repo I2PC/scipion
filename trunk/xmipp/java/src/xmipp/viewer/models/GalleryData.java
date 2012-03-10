@@ -31,8 +31,8 @@ public class GalleryData {
 	public static final int MODE_TABLE_MD = 3;
 
 	// define min and max render dimensions
-	public static final int MIN_SIZE = 16;
-	public static final int MAX_SIZE = 256;
+	public static int MIN_SIZE = 16;
+	public static int MAX_SIZE = 256;
 
 	// max dimension allowed to render images
 
@@ -123,6 +123,9 @@ public class GalleryData {
 			}
 			if (image != null) { // Image file was found to render
 				if (zoom == 0) { // if default value, calculate zoom
+					//If in micrograph mode, reduce the MAX_SIZE constant
+					if (md.containsMicrographsInfo())
+						MAX_SIZE /= 2;
 					int xdim = image.getXDim();
 					int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
 					float scale = (float) x / xdim;
@@ -135,7 +138,7 @@ public class GalleryData {
 						mode = MODE_GALLERY_VOL;
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
-					
+
 					for (int i = 0; i < numberOfVols; ++i)
 						volumes[i] = md.getValueString(
 								ciFirstRender.getLabel(), ids[i]);
@@ -227,8 +230,11 @@ public class GalleryData {
 			case MODE_TABLE_MD:
 				mode = MODE_TABLE_MD; // this is necessary when coming from
 				// previous case
-				return md.isColumnFormat() ? 
-						new MetadataTable(this) : new MetadataRow(this);
+				if (!md.isColumnFormat())
+					return new MetadataRow(this);
+				if (md.containsMicrographsInfo())
+					return new MicrographsTable(this);
+				return new MetadataTable(this);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
