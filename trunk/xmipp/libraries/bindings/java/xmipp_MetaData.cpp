@@ -108,6 +108,20 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_print
     XMIPP_CATCH;
 }
 
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isColumnFormat(JNIEnv *env,
+        jobject jobj)
+{
+    MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+    XMIPP_TRY
+    {
+        return md->isColumnFormat();
+    }
+    XMIPP_CATCH;
+
+    return false;
+}
+
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_containsLabel(JNIEnv *env,
         jobject jobj, jint label)
 {

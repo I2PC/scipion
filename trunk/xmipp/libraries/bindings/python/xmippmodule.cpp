@@ -1803,7 +1803,7 @@ MetaData_getColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
     try
     {
         MetaDataObject *self = (MetaDataObject*) obj;
-        if (self->metadata->getColumnFormat())
+        if (self->metadata->isColumnFormat())
             Py_RETURN_TRUE;
         else
             Py_RETURN_FALSE;

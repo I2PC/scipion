@@ -69,7 +69,7 @@ void MetaData::_clear(bool onlyData)
 
         activeLabels.clear();
         ignoreLabels.clear();
-        isColumnFormat = true;
+        _isColumnFormat = true;
         inFile = FileName();
         myMDSql->clearMd();
     }
@@ -99,7 +99,7 @@ void MetaData::copyInfo(const MetaData &md)
         return;
     this->setComment(md.getComment());
     this->setPath(md.getPath());
-    this->isColumnFormat = md.isColumnFormat;
+    this->_isColumnFormat = md._isColumnFormat;
     this->inFile = md.inFile;
     this->fastStringSearchLabel = md.fastStringSearchLabel;
     this->activeLabels = md.activeLabels;
@@ -264,9 +264,9 @@ MetaData::~MetaData()
 
 //-------- Getters and Setters ----------
 
-bool MetaData::getColumnFormat() const
+bool MetaData::isColumnFormat() const
 {
-    return isColumnFormat;
+    return _isColumnFormat;
 }
 /* Set to false for row format (parameter files)
  *  @ingroup GettersAndSetters
@@ -275,7 +275,7 @@ bool MetaData::getColumnFormat() const
  */
 void MetaData::setColumnFormat(bool column)
 {
-    isColumnFormat = column;
+    _isColumnFormat = column;
 }
 String MetaData::getPath()   const
 {
@@ -677,7 +677,7 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
     //write data block
     String _szBlockName = (String)("data_") + blockName;
 
-    if (isColumnFormat)
+    if (_isColumnFormat)
     {
         //write md columns in 3rd comment line of the header
         os << _szBlockName << std::endl;
@@ -791,7 +791,7 @@ char * MetaData::_readColumnsStar(mdBlock &block,
     bool found_column;
     MDLabel label;
     char * iter = block.loop;
-    if (!isColumnFormat)
+    if (!_isColumnFormat)
     {
         iter = block.begin;
         iter = END_OF_LINE() + 1; //this should point at first label, after data_XXX
@@ -833,7 +833,7 @@ char * MetaData::_readColumnsStar(mdBlock &block,
             {
                 MDObject * _mdObject = new MDObject(label);
                 columnValues.push_back(_mdObject);//add the value here with a char
-                if(!isColumnFormat)
+                if(!_isColumnFormat)
                     _parseObject(ss, *_mdObject, id);
             }
             iter = newline + 1;//go to next line character
@@ -1064,7 +1064,7 @@ void MetaData::_read(const FileName &filename,
     //First try to open the file as a metadata
     _clear();
     myMDSql->createMd();
-    isColumnFormat = true;
+    _isColumnFormat = true;
 
     size_t id;
 
@@ -1145,7 +1145,7 @@ void MetaData::_read(const FileName &filename,
             {
                 //Read column labels from the datablock that starts at firstData
                 //Label ends at firstloop
-                if ((isColumnFormat = (block.loop != NULL)))
+                if ((_isColumnFormat = (block.loop != NULL)))
                 {
                     _readColumnsStar(block, columnValues, desiredLabels, firstBlock);
                     // If block is empty, makes block.loop and block.end equal
@@ -1800,7 +1800,7 @@ bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
     if (md.getValue(label, fn, objId))
     {
         expMd.read(fn);
-        if (expMd.getColumnFormat() || expMd.isEmpty())
+        if (expMd.isColumnFormat() || expMd.isEmpty())
             REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
         expMd.getRow(row, expMd.firstObject());
         md.setRow(row, objId);

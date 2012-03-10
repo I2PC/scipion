@@ -78,6 +78,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_print
 /*
  * Class:     xmipp_MetaData
  * Method:    containsLabel
+ * Signature: (V)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isColumnFormat
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    containsLabel
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_containsLabel
