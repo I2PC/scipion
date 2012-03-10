@@ -118,43 +118,49 @@ public class MetadataTable extends MetadataGallery {
 	public void setValueAt(Object value, int row, int column) {
 		try {
 			ColumnInfo ci = visibleLabels.get(column);
-			if (!ci.render) {
-				int label = ci.getLabel();
-				long id = data.ids[row];
-				int type = MetaData.getLabelType(label);
-				MetaData md = data.md;
-				switch (type) {
-				case MetaData.LABEL_BOOL:
-					md.setValueBoolean(label, (Boolean) value, id);
-					break;
-				case MetaData.LABEL_INT:
-					if (label == MDLabel.MDL_ENABLED) {
-						md.setEnabled((Boolean)value, id);
-					} else
-						md.setValueInt(label, ((Integer) value).intValue(), id);
-					break;
-				case MetaData.LABEL_FLOAT:
-				case MetaData.LABEL_DOUBLE:
-					md.setValueDouble(label, ((Double) value).doubleValue(), id);
-					break;
-				case MetaData.LABEL_LONG:
-					md.setValueInt(label, ((Integer) value).intValue(), id);
-					break;
-				case MetaData.LABEL_STRING:
-				case MetaData.LABEL_VECTOR:
-				case MetaData.LABEL_VECTOR_LONG:
-					// TODO: Implement a better editor for vectors
-					md.setValueString(label, value.toString(), id);
-					break;
-				}
-				fireTableRowsUpdated(row, row);
-			}
-
+			long id = data.ids[row];
+			setMdValueAt(value, row, column, ci, id);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 	}// function setValueAt
+	
+	/** Helper function to set the value of a cell 
+	 * @throws Exception */
+	protected void setMdValueAt(Object value, int row, int column,
+			ColumnInfo ci, long id) throws Exception{
+		if (!ci.render) {
+			int label = ci.getLabel();
+			int type = MetaData.getLabelType(label);
+			MetaData md = data.md;
+			switch (type) {
+			case MetaData.LABEL_BOOL:
+				md.setValueBoolean(label, (Boolean) value, id);
+				break;
+			case MetaData.LABEL_INT:
+				if (label == MDLabel.MDL_ENABLED) {
+					md.setEnabled((Boolean)value, id);
+				} else
+					md.setValueInt(label, ((Integer) value).intValue(), id);
+				break;
+			case MetaData.LABEL_FLOAT:
+			case MetaData.LABEL_DOUBLE:
+				md.setValueDouble(label, ((Double) value).doubleValue(), id);
+				break;
+			case MetaData.LABEL_LONG:
+				md.setValueInt(label, ((Integer) value).intValue(), id);
+				break;
+			case MetaData.LABEL_STRING:
+			case MetaData.LABEL_VECTOR:
+			case MetaData.LABEL_VECTOR_LONG:
+				// TODO: Implement a better editor for vectors
+				md.setValueString(label, value.toString(), id);
+				break;
+			}
+			fireTableRowsUpdated(row, row);
+		}
+	}
 
 	@Override
 	public boolean isCellEditable(int row, int column) {
@@ -202,7 +208,7 @@ public class MetadataTable extends MetadataGallery {
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
 			font_height += renderer.getIconTextGap(); // Adds the extra gap.
-			cellDim.setSize(cellDim.width, font_height + 5);
+			cellDim.setSize(100, font_height + 5);
 		}
 	}
 
@@ -228,8 +234,10 @@ public class MetadataTable extends MetadataGallery {
 	@Override
 	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
 		xpopup.initItems();
-		if (data.isFile(col))
+		if (data.isFile(col)){
 			xpopup.setItemVisible("Open_mi", true);
+			xpopup.setItemVisible("OpenAsText_mi", true);
+		}
 		return true;
 	}
 

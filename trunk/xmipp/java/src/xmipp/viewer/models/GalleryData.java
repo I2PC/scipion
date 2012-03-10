@@ -135,12 +135,12 @@ public class GalleryData {
 						mode = MODE_GALLERY_VOL;
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
-					selection = new boolean[image.getZDim()];
+					
 					for (int i = 0; i < numberOfVols; ++i)
 						volumes[i] = md.getValueString(
 								ciFirstRender.getLabel(), ids[i]);
 					if (selectedVol.isEmpty())
-						selectedVol = volumes[0];
+						selectVolume(volumes[0]);
 				}
 				image.destroy();
 			}
@@ -226,8 +226,9 @@ public class GalleryData {
 				// else fall in the next case
 			case MODE_TABLE_MD:
 				mode = MODE_TABLE_MD; // this is necessary when coming from
-										// previous case
-				return new MetadataTable(this);
+				// previous case
+				return md.isColumnFormat() ? 
+						new MetadataTable(this) : new MetadataRow(this);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

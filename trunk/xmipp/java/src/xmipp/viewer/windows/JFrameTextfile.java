@@ -11,28 +11,31 @@
 package xmipp.viewer.windows;
 
 import ij.IJ;
+
+import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
+
+import xmipp.utils.XmippDialog;
 
 /**
  *
  * @author Juanjo Vega
  */
-public class JFrameTextFile extends JDialog {
+public class JFrameTextfile extends JFrame {
 
     /** Creates new form JFrameTextFile */
-    public JFrameTextFile(String filename) {
-        super();
-
+    public JFrameTextfile(String filename) {
+    	super(filename);
+    	setPreferredSize(new Dimension(600, 400));
+    	setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         initComponents();
-
-        setTitle(ImagesWindowFactory.getSortTitle(filename, getWidth(),
-                getGraphics().getFontMetrics()));
-
         loadFile(filename);
+        pack();
     }
 
     private void loadFile(String filename) {
@@ -65,46 +68,19 @@ public class JFrameTextFile extends JDialog {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
         jspEditor = new javax.swing.JScrollPane();
         jepEditorPane = new javax.swing.JEditorPane();
-        jpButtons = new javax.swing.JPanel();
-        jbOk = new javax.swing.JButton();
-
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowOpened(java.awt.event.WindowEvent evt) {
-                formWindowOpened(evt);
-            }
-        });
-
         jepEditorPane.setEditable(false);
-        jepEditorPane.setPreferredSize(new java.awt.Dimension(300, 300));
+        //jepEditorPane.setPreferredSize(new java.awt.Dimension(300, 300));
         jspEditor.setViewportView(jepEditorPane);
-
         getContentPane().add(jspEditor, java.awt.BorderLayout.CENTER);
-
-        jbOk.setText("Ok");
-        jbOk.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbOkActionPerformed(evt);
-            }
-        });
-        jpButtons.add(jbOk);
-
-        getContentPane().add(jpButtons, java.awt.BorderLayout.SOUTH);
-
-        pack();
+        
     }// </editor-fold>//GEN-END:initComponents
 
     private void jbOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbOkActionPerformed
         setVisible(false);
     }//GEN-LAST:event_jbOkActionPerformed
 
-    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        jbOk.requestFocus();
-    }//GEN-LAST:event_formWindowOpened
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jbOk;
     private javax.swing.JEditorPane jepEditorPane;
     private javax.swing.JPanel jpButtons;
     private javax.swing.JScrollPane jspEditor;

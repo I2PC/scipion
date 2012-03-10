@@ -10,35 +10,30 @@ import javax.swing.border.Border;
 
 public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
 
-    protected Border border;
+	protected Border border;
 
-    public RowHeaderRenderer() {
-        super();
+	public RowHeaderRenderer() {
+		super();
 
-        setOpaque(true);
+		setOpaque(true);
 
-        border = BorderFactory.createCompoundBorder(
-                UIManager.getBorder("TableHeader.cellBorder"),
-                BorderFactory.createEmptyBorder(0, 0, 0, 2));
+		border = BorderFactory.createCompoundBorder(
+				UIManager.getBorder("TableHeader.cellBorder"),
+				BorderFactory.createEmptyBorder(0, 0, 0, 2));
 
-        // Border to show the entire label and with the same look and feel as columns.
-        setBorder(border);
-    }
+		// Border to show the entire label and with the same look and feel as
+		// columns.
+		setBorder(border);
+	}
 
-    public Component getListCellRendererComponent(JList list, Object value, int index,
-            boolean selected, boolean hasFocus) {
+	public Component getListCellRendererComponent(JList list, Object value,
+			int index, boolean selected, boolean hasFocus) {
 
-        Integer rowNumber = (Integer) value;
+		setEnabled(list.isEnabled());
 
-        if (rowNumber != null) {
-            setEnabled(list.isEnabled());
+		setFont(list.getFont());
+		setText(value.toString());
 
-            setFont(list.getFont());
-            setText(String.valueOf(rowNumber));
-
-            return this;
-        } else {
-            return null;
-        }
-    }
+		return this;
+	}
 }

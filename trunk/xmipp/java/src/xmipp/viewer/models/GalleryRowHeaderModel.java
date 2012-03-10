@@ -31,6 +31,7 @@ import javax.swing.event.ListDataListener;
 public class GalleryRowHeaderModel implements ListModel {
     private int first_index = 0;
     private int n = 0;
+    private GalleryData data = null;
 
     public GalleryRowHeaderModel(int n, int first_index) {        
         this.first_index = first_index;
@@ -40,8 +41,14 @@ public class GalleryRowHeaderModel implements ListModel {
     public GalleryRowHeaderModel(int n) {
        this.n = n;
     }
+    
+    public GalleryRowHeaderModel(GalleryData data){
+    	this.data = data;
+    }
 
     public int getSize() {
+    	if (data != null)
+    		return data.labels.size();
         return n;
     }
 
@@ -50,6 +57,8 @@ public class GalleryRowHeaderModel implements ListModel {
     }
     
     public Object getElementAt(int i) {
+    	if (data != null)
+    		return data.labels.get(i).labelName;
         return new Integer(first_index + i);
     }
 

@@ -184,7 +184,6 @@ public class JFrameGallery extends JFrame {
 			createGUI();
 		} catch (Exception e) {
 			DEBUG.printException(e);
-			IJ.error(e.getMessage());
 		}
 	}
 
@@ -337,7 +336,6 @@ public class JFrameGallery extends JFrame {
 				.ceil(Math.sqrt(gallery.getSize())) : gallery.getColumnCount();
 		int desiredWidth = desiredCols * gallery.cellDim.width + 50;
 		width = Math.min(Math.max(desiredWidth, MIN_WIDTH), MAX_WIDTH);
-		setPreferredSize(new Dimension(width, MAX_HEIGHT));
 		setAutoAdjustColumns(adjust);
 	}
 
@@ -347,7 +345,14 @@ public class JFrameGallery extends JFrame {
 
 	private void createTable() {
 		// Create row header for enumerate rows
-		rowHeaderModel = new GalleryRowHeaderModel(gallery.getRowCount(), 1);
+		try {
+			rowHeaderModel = data.md.isColumnFormat() ? 
+					new GalleryRowHeaderModel(gallery.getRowCount(), 1):
+					new GalleryRowHeaderModel(data);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		rowHeader = new JList();
 		rowHeader.setModel(rowHeaderModel);
 		LookAndFeel.installColorsAndFont(rowHeader, "TableHeader.background",
@@ -1191,6 +1196,7 @@ public class JFrameGallery extends JFrame {
 		public final static String ENABLED = "Enabled_mi";
 		public final static String DISABLED = "Disabled_mi";
 		public final static String OPEN = "Open_mi";
+		public final static String OPEN_ASTEXT = "OpenAsText_mi";
 		public final static String SELECT = "Select";
 		public final static String SELECT_ALL = "Select.All_mi";
 		public final static String SELECT_TOHERE = "Select.ToHere_mi";
@@ -1201,6 +1207,7 @@ public class JFrameGallery extends JFrame {
 			addItem(ENABLED, "Enable");
 			addItem(DISABLED, "Disable");
 			addItem(OPEN, "Open");
+			addItem(OPEN_ASTEXT, "Open as text");
 			addSeparator();
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
@@ -1246,6 +1253,10 @@ public class JFrameGallery extends JFrame {
 			else if (cmd.equals(OPEN)){
 				String file = gallery.getValueAt(row, col).toString();
 				ImagesWindowFactory.openFileAsDefault(file);
+			}
+			else if(cmd.equals(OPEN_ASTEXT)){
+				String file = gallery.getValueAt(row, col).toString();
+				ImagesWindowFactory.openFileAsText(file, null);
 			}
 			initItems();
 		}

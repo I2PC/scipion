@@ -37,26 +37,7 @@ public class Filename {
         System.loadLibrary("XmippJNI");
         //storeIds();
     }
-    // Types of images contained by each file type.
-//    private final static String[] XMIPP_TYPES = new String[]{
-//        EXTENSION_XMP,
-//        EXTENSION_IMG,
-//        EXTENSION_HED,
-//        EXTENSION_PSD,
-//        EXTENSION_SER,
-//        EXTENSION_DM3,
-//        EXTENSION_RAW,
-//        EXTENSION_INF,
-//        EXTENSION_SPE,
-//        EXTENSION_MRC,
-//        EXTENSION_MRCS,
-//        EXTENSION_STK,
-//        EXTENSION_SEL,
-//        EXTENSION_VOL,
-//        EXTENSION_XMD,
-//        EXTENSION_SPI,
-//        EXTENSION_TIF
-//    };
+
     public final static String[] SINGLE_IMAGES = new String[]{
         EXTENSION_XMP,
         EXTENSION_IMG,
@@ -92,6 +73,10 @@ public class Filename {
     public final static String[] SPIDER = new String[] {
     	EXTENSION_SPI,
     	EXTENSION_VOL
+    };
+    
+    public final static String[] TEXT = new String[]{
+    	".txt", ".log", ".out"
     };
 
     public static boolean isPSD(String filename) {
@@ -164,10 +149,10 @@ public class Filename {
     public static boolean isMetadata(String filename) {
         return filename != null && isFileType(filename, METADATAS);
     }
-//
-//    public static boolean isXmippType(String filename) {
-//        return isFileType(filename, XMIPP_TYPES);
-//    }
+    
+    public static boolean isTextfile(String filename){
+    	return isMetadata(filename) || isFileType(filename, TEXT);
+    }
 
     private static boolean isFileType(String filename, String filetypes[]) {
         for (int i = 0; i < filetypes.length; i++) {

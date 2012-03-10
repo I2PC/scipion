@@ -100,6 +100,8 @@ public class MetaData {
 	public native void writeBlock(String filename) throws Exception;
 
 	public native void print() throws Exception;
+	
+	public native boolean isColumnFormat() throws Exception;
 
 	public native boolean containsLabel(int label) throws Exception;
 

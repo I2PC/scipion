@@ -7,6 +7,7 @@ package xmipp.viewer.windows;
 import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
@@ -374,9 +375,10 @@ public class ImagesWindowFactory {
 	}
 
 	public static void openFileAsText(String filename, Component parent) {
-		JFrameTextFile frameCTF = new JFrameTextFile(filename);
-		frameCTF.setLocationRelativeTo(parent);
-		frameCTF.setVisible(true);
+		JFrameTextfile frameText = new JFrameTextfile(filename);
+		if (parent != null)
+			frameText.setLocationRelativeTo(null);
+		frameText.setVisible(true);
 	}
 
 	public static void openCTFWindow(ImagePlus imp, String CTFFilename,
