@@ -388,6 +388,22 @@ public:
             << "Best grey scale       : " << best_align(0) << std::endl
             << "Best grey shift       : " << best_align(1) << std::endl
             << "Fitness value         : " << best_fit << std::endl;
+        Matrix1D<double> r(3);
+        XX(r)            = best_align(8);
+        YY(r)            = best_align(7);
+        ZZ(r)            = best_align(6);
+        Matrix2D<double> A,Aaux;
+        Euler_angles2matrix(best_align(2), best_align(3), best_align(4),
+                            A, true);
+        translation3DMatrix(r,Aaux);
+        A = A * Aaux;
+        scale3DMatrix(vectorR3(best_align(5), best_align(5), best_align(5)),Aaux);
+        A = A * Aaux;
+        std::cout << "xmipp_transform_geometry will require the following values"
+                  << "\n   Angles: " << best_align(2) << " " 
+                  << best_align(3) << " " << best_align(4) 
+                  << "\n   Shifts: " << A(0,3) << " " << A(1,3) << " " << A(2,3)
+                  << std::endl;
         if (apply)
         {
             applyTransformation(params.V2(),params.Vaux(),MATRIX1D_ARRAY(best_align));
