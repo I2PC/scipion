@@ -890,7 +890,11 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
         else
         {
-            FileName stackName = prm.fnOut.removeAllExtensions() + ".stk";
+            FileName stackName;
+            if (prm.fnOut.hasStackExtension())
+            	stackName = prm.fnOut;
+            else
+            	stackName = prm.fnOut.removeAllExtensions() + ".stk";
             FileName mdName = prm.fnOut.removeAllExtensions() + ".sel";
             ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection, prm.shears,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
