@@ -895,7 +895,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
             	stackName = prm.fnOut;
             else
             	stackName = prm.fnOut.removeAllExtensions() + ".stk";
-            FileName mdName = prm.fnOut.removeAllExtensions() + ".sel";
+            FileName mdName = prm.fnOut.removeAllExtensions() + ".xmd";
             ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection, prm.shears,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
             SF.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
@@ -904,6 +904,6 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     }
     else
         if (!prm.singleProjection)
-            side.DF.write(prm.fnOut.removeAllExtensions()+".sel");
+            side.DF.write(prm.fnOut.removeAllExtensions()+".xmd");
     return ProjNo;
 }
