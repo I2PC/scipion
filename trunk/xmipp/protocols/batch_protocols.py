@@ -32,7 +32,7 @@ import Tkinter as tk
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTree, \
     showBrowseDialog, showTextfileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
-    FlashMessage
+    FlashMessage, showWarning, YesNoDialog
 from config_protocols import *
 from protlib_base import XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
@@ -93,9 +93,9 @@ class XmippProjectGUI():
     def deleteTmpFiles(self):
         try:
             self.project.deleteTmpFiles()
-            showInfo("Operation success", "All temporary files have been successfully removed")
+            showInfo("Operation success", "All temporary files have been successfully removed", self.root)
         except Exception, e:
-            showError("Operation error ", str(e))
+            showError("Operation error ", str(e), self.root)
     
     def browseFiles(self):
         showBrowseDialog(parent=self.root, seltype="none", selmode="browse")
@@ -655,24 +655,19 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("   alias --clean;"); 
         
     def confirm(self, msg, default=True):
-        if default:
-            msg += ' [Y/n]'
-        else:
-            msg += ' [y/N]'            
-        answer = raw_input(msg)
-        if not answer:
-            return default
-        if answer.lower() == 'y':
-            return True
-        return False           
+        centerWindows(self.root)
+        result = askYesNo("NEW PROJECT", msg, self.root)
+        return result
     
     def run(self):
         proj_dir = os.getcwd()
         project = XmippProject(proj_dir)
+        self.root = tk.Tk()
+        self.root.withdraw()
         launch = True
         if self.checkParam('--clean'):
-            msg = 'You are in project: %s\n' % greenStr(proj_dir)
-            msg += 'ALL RESULTS will be DELETED, are you sure to CLEAN?'
+            msg = 'You are in project: %s\n' % proj_dir
+            msg += '<ALL RESULTS> will be <DELETED>, are you sure to <CLEAN>?'
             launch = self.confirm(msg, False)
             if launch:
                 project.clean()
@@ -680,11 +675,11 @@ class ScriptProtocols(XmippScript):
                 print "CLEAN aborted."
                 
         else: #lauch project     
-            if not project.exists():
-                msg = 'You are in directory: %s\n' % greenStr(proj_dir)
-                msg += 'Do you want to CREATE a NEW PROJECT in this folder?'
+            if not project.exists():    
+                msg = 'You are in directory: <%s>\n' % proj_dir
+                msg += 'Do you want to <CREATE> a <NEW PROJECT> in this folder?'
                 launch = self.confirm(msg)
-                if launch:
+                if (launch):
                     project.create()
                 else:
                     print "PROJECT CREATION aborted."
@@ -692,7 +687,7 @@ class ScriptProtocols(XmippScript):
                 project.load()
         if launch:
             gui = XmippProjectGUI(project)
-            gui.createGUI()
+            gui.createGUI(self.root)
             gui.launchGUI()
 
 if __name__ == '__main__':

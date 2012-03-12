@@ -33,6 +33,7 @@ from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
 from protlib_filesystem import getXmippPath
+from Tkinter import TclError
 
 RESOURCES = getXmippPath('resources')
 
@@ -59,11 +60,16 @@ def configDefaults(opts, defaults):
             
 def openLink(link):
     ''' Open a link in default web browser '''
-    if os.path.isdir(link):
+    if os.path.isfile(link):
+        showj(link)
+    elif os.path.isdir(link):
         showBrowseDialog(link, link, seltype="none", selmode="browse")
     else:
         from  webbrowser import open
         open(link)
+    
+def openFile(filename):
+    openLink(filename)
     
 def changeFontSizeByDeltha(font, deltha, min=-999, max=999):
     size = font['size']
@@ -485,7 +491,14 @@ class XmippText(tk.Text):
         scrollbar.config(command=self.yview)
         self.grid(row=0, column=0, sticky='nsew')
         self.frame = frame
-        self.scrollbar = scrollbar        
+        self.scrollbar = scrollbar 
+        # create a popup menu
+        self.menu = tk.Menu(master, tearoff=0, postcommand=self.updateMenu)
+        self.menu.add_command(label="Copy to clipboard", command=self.copyToClipboard)
+        self.menu.add_command(label="Open", command=self.openFile)
+        # Associate with right click
+        self.bind("<Button-1>", self.onClick)
+        self.bind("<Button-3>", self.onRightClick)
         
     def getDefaults(self):
         '''This should be implemented in subclasses to provide defaults'''
@@ -516,7 +529,33 @@ class XmippText(tk.Text):
         self.config(state=tk.NORMAL)
         for line in text.splitlines():
             self.addLine(line)
-        self.config(state=tk.DISABLED)     
+        self.config(state=tk.DISABLED)   
+        
+    def onClick(self, e=None): 
+        self.selection = None
+        self.selection_clear()
+        self.menu.unpost()
+        
+    def onRightClick(self, e):
+        try:
+            self.selection = self.selection_get()
+            #print "right click, selection:", text
+            self.menu.post(e.x_root, e.y_root)    
+        except TclError, e:
+            pass
+    
+    def copyToClipboard(self, e=None):
+        self.clipboard_clear()
+        self.clipboard_append(self.selection)
+        
+    def openFile(self):
+        openFile(self.selection)
+        
+    def updateMenu(self, e=None):
+        state = 'normal'
+        if not os.path.exists(self.selection):
+            state = 'disabled'#self.menu.entryconfig(1, background="green")
+        self.menu.entryconfig(1, state=state)
 
 class TaggedText(XmippText):  
     '''
@@ -781,10 +820,11 @@ if __name__ == '__main__':
             
 '''Implementation of our own dialog to display messages'''
 class ShowDialog(Dialog):
-    def __init__(self, master, title, msg, type):
+    def __init__(self, master, title, msg, type, defaultResult=[]):
         self.msg = msg
         self.type = type
-        Dialog.__init__(self, master, title)        
+        self.result = defaultResult
+        Dialog.__init__(self, master, title) 
         
     def body(self, master):
         try:
@@ -792,7 +832,7 @@ class ShowDialog(Dialog):
             self.image = tk.PhotoImage(file=join(getXmippPath('resources'), self.type + '.gif'))
         except tk.TclError:
             self.image = None
-        self.result = []
+        
         self.frame = tk.Frame(master, bg="white", bd=2)
         self.text = TaggedText(self.frame)
         # Insert image
@@ -823,9 +863,10 @@ class ShowDialog(Dialog):
 '''Implementation of our own version of Yes/No dialog'''
 class YesNoDialog(ShowDialog):
     def __init__(self, master, title, msg, DefaultNo=True):
+        self.root = master  
         self.defaultNo = DefaultNo
-        self.result = False
-        ShowDialog.__init__(self, master, title, msg, 'warning')        
+        ShowDialog.__init__(self, master, title, msg, 'warning', False)        
+        
         
     def buttonbox(self):
         box = tk.Frame(self)    
@@ -833,7 +874,7 @@ class YesNoDialog(ShowDialog):
         self.btnYes.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
         self.btnNo = XmippButton(box, text="No", width=7, command=self.cancel)
         self.btnNo.pack(side=tk.LEFT, padx=5, pady=5, anchor='e')
-        box.pack()
+        box.pack()        
         if self.defaultNo:
             self.btnNo.focus_set()
         else: 
@@ -843,8 +884,14 @@ class YesNoDialog(ShowDialog):
         self.bind("<Left>", lambda e: self.btnYes.focus_set())
         self.bind("<Right>", lambda e: self.btnNo.focus_set())
 
-    def apply(self):
+    def ok(self, e=None):
         self.result = True
+        self.destroy()
+        #self.root.destroy()
+        
+    def cancel(self, e=None):
+        self.result = False
+        self.destroy()
         
     def handleReturn(self, event=None):
         w = self.focus_get()
@@ -1009,7 +1056,7 @@ class AutoCompleteEntry(tk.Entry):
 
 '''**************  Implementation of Xmipp Browser *************'''
 # Some helper functions for the browser
-def showj(filename, mode):
+def showj(filename, mode="default"):
     from protlib_utils import runShowJ
     runShowJ(filename, extraParams="--mode %s" % mode)
     
@@ -1207,7 +1254,7 @@ class XmippBrowser():
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc', '.raw'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc', '.raw', '.dm3'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
