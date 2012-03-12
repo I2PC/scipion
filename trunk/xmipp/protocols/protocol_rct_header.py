@@ -66,7 +66,7 @@ ThinObject=True
 Particles that shift more will be discarded. A value larger than the 
 image size will not discard any particle.
 """
-CenterMaxShift=999
+CenterMaxShift=10
 
 #{expert} Skip tilted translation alignment
 """ If the tilted image quality is very low, then this alignment might result in poor estimates."""
