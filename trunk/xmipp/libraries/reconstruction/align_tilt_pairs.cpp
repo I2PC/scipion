@@ -95,8 +95,8 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	bestShift(imgU, imgTaux, shiftX, shiftY, auxCorr);
 	std::cout << shiftX << " " << shiftY << std::endl;
 	Matrix1D<double> vShift(3);
-	XX(vShift)=-shiftX;
-	YY(vShift)=-shiftY;
+	XX(vShift)=shiftX;
+	YY(vShift)=shiftY;
 	ZZ(vShift)=0;
 	Matrix2D<double> Tt, Ttp;
 	translation3DMatrix(vShift, Tt);
@@ -154,6 +154,8 @@ void ProgAlignTiltPairs::run() {
 	FOR_ALL_OBJECTS_IN_METADATA(MDin) {
 		bool flip;
 		MDin.getValue(MDL_FLIP, flip, __iter.objId);
+		if (flip)
+			continue;
 
 		// Read untilted and tilted images
 		double inPlaneU;
