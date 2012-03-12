@@ -85,7 +85,7 @@ void ProgProject::defineParams()
     addExampleLine("+ ",false);
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection.param",false);
     addExampleLine("Creating a 2D crystal",false);
-    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRC_projection.param --crystal MRC_crystal_projection.param");
+    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr -o imgs.stk --params MRC_projection.param --crystal MRC_crystal_projection.param");
     addExampleLine("+In the following links you can find some examples of projection parameter files",false);
     addExampleLine("+ ",false);
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_projection.param",false);
