@@ -43,16 +43,16 @@ class ProgAlignTiltPairs: public XmippProgram
 public:
     /**  Filename input document file */
     FileName fnIn;
+    /**  Filename untilted average */
+    FileName fnRef;
     /**  Filename output document file */
     FileName fnOut;
     /** Discard images that shift more than max_shift*/
     double max_shift;
-    /** Force x-shift to be zero */
-    bool force_x_zero;
-    /** Perform cosine stretching */
+    /** Do stretch */
     bool do_stretch;
-    /** Perform centering */
-    bool do_center;
+    /** Do not align tilted */
+    bool do_not_align_tilted;
 public:
     /// Define parameters in the command line
     void defineParams();
@@ -71,8 +71,8 @@ public:
 
     /// Center one tilted image
     bool centerTiltedImage(const MultidimArray<double> &imgU,
-    		double tilt, MultidimArray<double> &imgT,
-    		double alphaT,
-    		double &shiftX, double &shiftY, double &crossCorrelation);
+    		double inPlaneU, double alphaT, double alphaU, double tilt,
+    		MultidimArray<double> &imgT,
+    		double &shiftX, double &shiftY, CorrelationAux &auxCorr);
 };
 //@}

@@ -1,7 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Sjors Scheres                 (scheres@cnb.csic.es)
- *             Carlos Oscar Sorzano          (coss@cnb.csic.es)
+ * Authors:    Carlos Oscar Sorzano          (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -26,226 +25,212 @@
 #include "align_tilt_pairs.h"
 
 //Define Program parameters
-void ProgAlignTiltPairs::defineParams()
-{
-    //Usage
-    addUsageLine("Center the tilted images of all tilted-untilted image pairs.");
-    addUsageLine("+This program receives as input a metadata with two sets of images, untilted and tilted.");
-    addUsageLine("+Untilted images must have been previously classified and aligned. Then, the tilted images");
-    addUsageLine("+are aligned to their untilted versions. The alignment parameters from the classification plus");
-    addUsageLine("+the alignment parameters from the tilted-untilted comparison are used to deduce the");
-    addUsageLine("+3D alignment parameters for the tilted images.");
-    addUsageLine("+* If the particles under study are disc-shaped and lying flat on the micrograph (i.e. the have a relatively");
-    addUsageLine("+  low height (Z) and are more-or-less spherically shaped in XY), this program is expected to give good results");
-    addUsageLine("+  using the default options.");
-    addUsageLine("+* If the particles have a different shape, the centering may be poor, since especially in the X direction the");
-    addUsageLine("+  shift becomes poorly defined. In these cases, three alternative options may be tried:");
-    addUsageLine("+    --skip_stretching  will skip the cosine-stretching prior to centering.");
-    addUsageLine("+    --force_x_zero will force the shift in the X direction to be zero, and will only center the images in the Y direction");
-    addUsageLine("+    --skip_centering will skip the entire centering, so that only the Psi angle of the tilted images will be modified.");
+void ProgAlignTiltPairs::defineParams() {
+	//Usage
+	addUsageLine("Center the tilted images of all tilted-untilted image pairs.");
+	addUsageLine("+This program receives as input a metadata with two sets of images, untilted and tilted.");
+	addUsageLine("+Untilted images must have been previously classified and aligned. Then, the tilted images");
+	addUsageLine("+are aligned to their untilted versions. The alignment parameters from the classification plus");
+	addUsageLine("+the alignment parameters from the tilted-untilted comparison are used to deduce the");
+	addUsageLine("+3D alignment parameters for the tilted images.");
 
-    //Examples
-    addExampleLine("To center tilted images allowing a maximum shift of 10 pixels:",false);
-    addExampleLine("xmipp_align_tilt_pairs -i class_00001@classes.xmd -o alignedImages.xmd --max_shift 10");
+	//Examples
+	addExampleLine("To center tilted images allowing a maximum shift of 10 pixels:",false);
+	addExampleLine("xmipp_align_tilt_pairs -i class_00001@classes.xmd -o alignedImages.xmd --max_shift 10");
 
-    // Params
-    addParamsLine("  -i <metadata>              : Input metadata with untilted and tilted images");
-    addParamsLine("  -o <metadata>              : Output metadata file with rotations & translations for 3D reconstruction.");
-    addParamsLine(" [--max_shift <value=0.0>]   : Discard images which shift more (in pixels).");
-    addParamsLine(" [--force_x_zero]            : Force x-shift to be zero.");
-    addParamsLine(" [--skip_stretching]         : Default action is to stretch the tilted images in X direction by");
-    addParamsLine("                             : 1/cos(tilt_angle), before centering them. Use this option to skip it.");
-    addParamsLine(" [--skip_centering]          : Default action is to center tilted images based on cross-correlation with");
-    addParamsLine("                             : the untilted pairs. Use this option to skip it.");
+	// Params
+	addParamsLine("  -i <metadata>              : Input metadata with untilted and tilted images");
+	addParamsLine("  -o <metadata>              : Output metadata file with rotations & translations for 3D reconstruction.");
+	addParamsLine("  --ref <file>               : 2D average of the untilted images");
+	addParamsLine(" [--max_shift <value=0.0>]   : Discard images shifting more than a given threshold (in pixels).");
+	addParamsLine("                             :+Set it to 0 for no shift estimate between tilted and untilted images");
+	addParamsLine(" [--do_stretch]              : Stretch tilted image to fit into the untilted one.");
+	addParamsLine("                             :+Do it only with thin particles");
+	addParamsLine(" [--do_not_align_tilted]     : Do not align tilted images to untilted ones.");
+	addParamsLine("                             :+Do not align if the quality of the tilted images is low.");
 }
 
 //Read params
-void ProgAlignTiltPairs::readParams()
-{
-    fnIn = getParam("-i");
-    fnOut = getParam("-o");
-    max_shift = getDoubleParam("--max_shift");
-    force_x_zero = checkParam("--force_x_zero");
-    do_center = !checkParam("--skip_centering");
-    do_stretch = !checkParam("--skip_stretching");
+void ProgAlignTiltPairs::readParams() {
+	fnIn = getParam("-i");
+	fnOut = getParam("-o");
+	fnRef = getParam("--ref");
+	max_shift = getDoubleParam("--max_shift");
+	do_stretch = checkParam("--do_stretch");
+	do_not_align_tilted = checkParam("--do_not_align_tilted");
 }
 
 // Show ====================================================================
-void ProgAlignTiltPairs::show()
-{
-    std::cerr
-    << "Input metadata: " <<  fnIn << std::endl
-    << "Output metadata: " <<  fnOut << std::endl;
-    if (max_shift != 0)
-        std::cerr << "Discard images that shift more than: " << max_shift << std::endl;
-    if (force_x_zero)
-        std::cerr << "Force x-shift to be zero " << std::endl;
-    if (!do_stretch)
-        std::cerr << "Skip cosine stretching " << std::endl;
-    if (!do_center)
-        std::cerr << "Skip centering " << std::endl;
+void ProgAlignTiltPairs::show() {
+	std::cout << "Input metadata:  " << fnIn << std::endl << "Output metadata: "
+			<< fnOut << std::endl << "Reference image: " << fnRef << std::endl;
+	if (max_shift != 0)
+		std::cout << "Discard images that shift more than: " << max_shift
+				<< std::endl;
+	if (do_stretch)
+		std::cout << "Stretching tilted images\n";
 }
 
 // Center one tilted image  =====================================================
 bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
-		double tilt, MultidimArray<double> &imgT,
-		double alphaT,
-		double &shiftX, double &shiftY, double &crossCorrelation)
-{
-    Image<double> save;
-    save()=imgU;
-    save.write("PPPuntilted.xmp");
-    save()=imgT;
-    save.write("PPPtilted.xmp");
+		double inPlaneU, double alphaT, double alphaU,
+		double tilt, MultidimArray<double> &imgT, double &shiftX,
+		double &shiftY, CorrelationAux &auxCorr) {
+	// Cosine stretching, store stretched image in imgTaux
+	double cos_tilt = COSD(tilt);
+	MultidimArray<double> imgTaux;
+	Matrix2D<double> E, E2D;
+	if (!do_stretch)
+		tilt=0.;
+	Euler_angles2matrix(-alphaU-inPlaneU,tilt,alphaT,E,true);
+	E2D.initIdentity(3);
+	MAT_ELEM(E2D,0,0)=MAT_ELEM(E,0,0);
+	MAT_ELEM(E2D,0,1)=MAT_ELEM(E,0,1);
+	MAT_ELEM(E2D,1,0)=MAT_ELEM(E,1,0);
+	MAT_ELEM(E2D,1,1)=MAT_ELEM(E,1,1);
+	applyGeometry(LINEAR, imgTaux, imgT, E2D, IS_INV, WRAP);
 
-    // Cosine stretching, store stretched image in imgTaux
-    double cos_tilt = COSD(tilt);
-    MultidimArray<double> imgTaux;
-    if (do_stretch)
-    {
-        Matrix2D<double> A(3, 3);
-        A.initIdentity();
-        A(0, 0) = cos_tilt;
-    	std::cout << "Tilt=" << tilt << " A=\n" << A << std::endl;
-        applyGeometry(LINEAR, imgTaux, imgT, A, IS_INV, WRAP);
-    }
-    else
-    	imgTaux = imgT;
+	// Calculate best shift
+	CorrelationAux aux;
+	bestShift(imgU, imgTaux, shiftX, shiftY, auxCorr);
+	std::cout << shiftX << " " << shiftY << std::endl;
+	Matrix1D<double> vShift(3);
+	XX(vShift)=-shiftX;
+	YY(vShift)=-shiftY;
+	ZZ(vShift)=0;
+	Matrix2D<double> Tt, Ttp;
+	translation3DMatrix(vShift, Tt);
+	Ttp=E.inv()*Tt*E;
 
-    save()=imgTaux;
-    save.write("PPPtiltedStretched.xmp");
+	// Readjust shift
+	shiftX=MAT_ELEM(Ttp,0,3);
+	shiftY=MAT_ELEM(Ttp,1,3);
+	double shift = sqrt(shiftX * shiftX + shiftY * shiftY);
 
-    // Calculate cross-correlation
-    MultidimArray<double> Mcorr;
-    CorrelationAux auxCorr;
-    correlation_matrix(imgU, imgTaux, Mcorr, auxCorr);
+	Image<double> save;
+	save() = imgT;
+	save.write("PPPtilted.xmp");
+	save() = imgU;
+	save.write("PPPuntiltedRef.xmp");
+	save() = imgTaux;
+	save.write("PPPtiltedAdjusted.xmp");
+	std::cout << shiftX << " " << shiftY << std::endl;
+	std::cout << "Press any key\n";
+	char c;
+	//std::cin >> c;
 
-    // Look for maximum
-    if (force_x_zero)
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mcorr)
-            if (j != 0)
-                A2D_ELEM(Mcorr, i, j) = 0.;
-
-    int imax,jmax;
-    Mcorr.maxIndex(imax, jmax);
-    crossCorrelation = A2D_ELEM(Mcorr, imax, jmax);
-    shiftX = jmax;
-    shiftY = imax;
-
-    // Readjust shift
-    if (do_stretch)
-    	shiftX *= cos_tilt;
-    double shift = sqrt(shiftX * shiftX + shiftY * shiftY);
-    std::cout << "shiftX=" << shiftX << " shiftY=" << shiftY << std::endl;
-    std::cout << "Press any key\n";
-    char c; std::cin >> c;
-
-    if ((max_shift==0) || (shift < max_shift))
-    {
-    	// Accept shift
-        double cos_alphaT = COSD(alphaT), sin_alphaT = SIND(alphaT);
-        double correctedShiftX=(-shiftX * cos_alphaT - shiftY * sin_alphaT);
-        double correctedShiftY=( shiftX * sin_alphaT - shiftY * cos_alphaT);
-        shiftX=correctedShiftX;
-        shiftY=correctedShiftY;
-        return true;
-    }
-    else
-    	// Reject shift
-    	return false;
+	return (shift < max_shift);
 }
 
 // Main program  ===============================================================
-void ProgAlignTiltPairs::run()
-{
-    Image<double>     imgU, imgT;
-    MultidimArray<double> Maux;
-    Matrix2D<double>  A(3, 3);
+void ProgAlignTiltPairs::run() {
+	Image<double> imgU, imgT;
+	MultidimArray<double> Maux;
+	Matrix2D<double> A(3, 3);
 
-    MetaData MDin, MDout;
-    MDin.read(fnIn);
-    size_t stepBar;
-    if (verbose)
-    {
-    	size_t N=MDin.size();
-        init_progress_bar(N);
-        stepBar = XMIPP_MAX(1, (int)(1 + (N/60)));
-    }
+	MetaData MDin, MDout;
+	MDin.read(fnIn);
+	MDin.removeDisabled();
+	size_t stepBar;
+	if (verbose) {
+		size_t N = MDin.size();
+		init_progress_bar(N);
+		stepBar = XMIPP_MAX(1, (int)(1 + (N/60)));
+	}
 
-    size_t imgno = 0;
-    FileName fnTilted, fnUntilted;
+	Image<double> imgRef;
+	imgRef.read(fnRef);
+	imgRef().setXmippOrigin();
 
-    double alphaU, alphaT, gamma;
-    MultidimArray<double> verticalU, verticalT;
-    size_t nDiscarded=0;
+	size_t imgno = 0;
+	FileName fnTilted, fnUntilted;
+
+	double alphaU, alphaT, gamma;
+	size_t nDiscarded = 0;
 	Matrix2D<double> E, Tu, Tup;
 	Matrix1D<double> vShift(3);
 	vShift.initZeros();
-    FOR_ALL_OBJECTS_IN_METADATA(MDin)
-    {
-    	bool flip;
-    	MDin.getValue(MDL_FLIP,flip,__iter.objId);
-    	if (flip)
-    		continue;
+	CorrelationAux auxCorr;
+	FOR_ALL_OBJECTS_IN_METADATA(MDin) {
+		bool flip;
+		MDin.getValue(MDL_FLIP, flip, __iter.objId);
 
-    	// Read untilted and tilted images
-    	double inPlaneU;
-    	MDin.getValue(MDL_ANGLEPSI,inPlaneU,__iter.objId);
-    	MDin.getValue(MDL_IMAGE,fnUntilted,__iter.objId);
-    	imgU.read(fnUntilted);
-    	imgU().setXmippOrigin();
-    	MDin.getValue(MDL_IMAGE_TILTED,fnTilted,__iter.objId);
-    	imgT.read(fnTilted);
-    	imgT().setXmippOrigin();
-    	std::cout << "Reading " << fnTilted << std::endl;
+		// Read untilted and tilted images
+		double inPlaneU;
+		MDin.getValue(MDL_ANGLEPSI, inPlaneU, __iter.objId);
+		MDin.getValue(MDL_IMAGE, fnUntilted, __iter.objId);
+		imgU.read(fnUntilted);
+		imgU().setXmippOrigin();
+		MDin.getValue(MDL_IMAGE_TILTED, fnTilted, __iter.objId);
+		imgT.read(fnTilted);
+		imgT().setXmippOrigin();
 
-    	// Get alignment parameters
-    	double shiftXu, shiftYu;
-    	MDin.getValue(MDL_ANGLE_Y,alphaU,__iter.objId);
-    	MDin.getValue(MDL_ANGLE_Y2,alphaT,__iter.objId);
-    	MDin.getValue(MDL_ANGLETILT,gamma,__iter.objId);
-    	MDin.getValue(MDL_SHIFTX,shiftXu,__iter.objId);
-    	MDin.getValue(MDL_SHIFTX,shiftYu,__iter.objId);
+		Image<double> save;
+		save() = imgU();
+		save.write("PPPuntilted.xmp");
+		Matrix2D<double> E;
+		rotation2DMatrix(-inPlaneU,E);
+		applyGeometry(LINEAR, save(), imgU(), E, IS_INV, WRAP);
+		save.write("PPPuntiltedAligned.xmp");
 
-    	// Correct untilted alignment
-    	Euler_angles2matrix(-inPlaneU,gamma,alphaT,E,true);
-    	XX(vShift)=shiftXu;
-    	YY(vShift)=shiftYu;
-    	translation3DMatrix(vShift,Tu);
-    	Tup=E*Tu*E.inv();
+		// Get alignment parameters
+		double shiftXu, shiftYu;
+		MDin.getValue(MDL_ANGLE_Y, alphaU, __iter.objId);
+		MDin.getValue(MDL_ANGLE_Y2, alphaT, __iter.objId);
+		MDin.getValue(MDL_ANGLETILT, gamma, __iter.objId);
+		MDin.getValue(MDL_SHIFTX, shiftXu, __iter.objId);
+		MDin.getValue(MDL_SHIFTX, shiftYu, __iter.objId);
 
-    	// Align tilt axis with Y
-    	rotate(BSPLINE3,verticalU,imgU(),-alphaU,'Z',WRAP);
-    	rotate(BSPLINE3,verticalT,imgT(),-alphaT,'Z',WRAP);
+		// Correct untilted alignment
+		if (flip)
+			Euler_angles2matrix(-inPlaneU, gamma, -alphaT, E, true);
+		else
+			Euler_angles2matrix(-inPlaneU, gamma, alphaT, E, true);
+		XX(vShift) = shiftXu;
+		YY(vShift) = shiftYu;
+		translation3DMatrix(vShift, Tu);
+		Tup = E * Tu * E.inv();
 
-    	// Align tilt and untilted projections
-    	double shiftX=-MAT_ELEM(Tup,0,3), shiftY=-MAT_ELEM(Tup,1,3), crossCorrelation=0;
-    	bool enable=true;
-        if (do_center)
-        	enable=centerTiltedImage(verticalU, gamma, verticalT, alphaT, shiftX, shiftY, crossCorrelation);
-        if (!enable)
-        	++nDiscarded;
+		// Align tilt and untilted projections
+		double shiftX = 0, shiftY = 0;
+		bool enable = true;
+		if (max_shift > 0)
+			enable = centerTiltedImage(imgRef(), inPlaneU, alphaT, alphaU, gamma, imgT(), shiftX, shiftY, auxCorr);
+		if (!enable) {
+			++nDiscarded;
+			shiftX = shiftY = 0;
+		}
 
-        // Write results
-        size_t idOut=MDout.addObject();
-        MDout.setValue(MDL_IMAGE,fnTilted,idOut);
-        MDout.setValue(MDL_ANGLEROT,-inPlaneU,idOut);
-        MDout.setValue(MDL_ANGLETILT,gamma,idOut);
-        MDout.setValue(MDL_ANGLEPSI,alphaT,idOut);
-        MDout.setValue(MDL_SHIFTX,shiftX,idOut);
-        MDout.setValue(MDL_SHIFTY,shiftY,idOut);
+		// Write results
+		size_t idOut = MDout.addObject();
+		MDout.setValue(MDL_IMAGE, fnTilted, idOut);
+		if (flip) {
+			MDout.setValue(MDL_ANGLEROT, -inPlaneU, idOut);
+			MDout.setValue(MDL_ANGLETILT, gamma + 180, idOut);
+			MDout.setValue(MDL_ANGLEPSI, alphaT, idOut);
+			MDout.setValue(MDL_SHIFTX, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
+			MDout.setValue(MDL_SHIFTY, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
+		} else {
+			MDout.setValue(MDL_ANGLEROT, -inPlaneU, idOut);
+			MDout.setValue(MDL_ANGLETILT, gamma, idOut);
+			MDout.setValue(MDL_ANGLEPSI, alphaT, idOut);
+			MDout.setValue(MDL_SHIFTX, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
+			MDout.setValue(MDL_SHIFTY, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
+		}
+		MDout.setValue(MDL_ENABLED, (int) enable, idOut);
 
-        if (++imgno % stepBar == 0)
-            progress_bar(imgno);
-    }
+		if (++imgno % stepBar == 0)
+			progress_bar(imgno);
+	}
 
-    if (verbose && max_shift > 0)
-    {
-        progress_bar(MDin.size());
-        std::cout << "  Discarded " << nDiscarded << " tilted images that shifted too much" << std::endl;
-    }
+	if (verbose && max_shift > 0) {
+		progress_bar(MDin.size());
+		if (nDiscarded>0)
+			std::cout << "  Discarded " << nDiscarded
+			<< " tilted images that shifted too much" << std::endl;
+	}
 
-    // Write out selfile
-    MDout.write(fnOut);
+	// Write out selfile
+	MDout.write(fnOut);
 }
 
