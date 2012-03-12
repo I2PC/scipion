@@ -176,7 +176,6 @@ void ProgConvImg::readParams()
 
 void ProgConvImg::preProcess()
 {
-    init();
     if (type == "auto")
     {
         if (oroot.empty())
@@ -321,6 +320,11 @@ void ProgConvImg::finishProcessing()
     }
 
     XmippMetadataProgram::finishProcessing();
+}
+
+void ProgConvImg::postProcess()
+{
+	init();
 }
 
 void ProgConvImg::show()

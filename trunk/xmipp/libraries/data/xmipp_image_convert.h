@@ -60,6 +60,7 @@ protected:
     void preProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
     void finishProcessing();
+    void postProcess();
     void show();
 };//class ProgConvImg
 
