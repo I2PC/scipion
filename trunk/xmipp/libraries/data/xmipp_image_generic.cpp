@@ -223,7 +223,7 @@ int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int sele
 }
 
 int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img,
-    bool mapData, bool wrap)
+                                    bool mapData, bool wrap)
 {
     ImageInfo imInf;
     getImageInfo(name, imInf);
@@ -252,14 +252,14 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row,
-    const ApplyGeoParams &params)
+                               const ApplyGeoParams &params)
 {
     setDatatype(getImageDatatype(name));
     return image->readApplyGeo(name, row, params);
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
-    const ApplyGeoParams &params)
+                               const ApplyGeoParams &params)
 {
     setDatatype(getImageDatatype(name));
     return image->readApplyGeo(name, md, objId, params);
@@ -267,7 +267,7 @@ int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t 
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE */
 int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
-    const ApplyGeoParams &params)
+                               const ApplyGeoParams &params)
 {
     FileName name;
     md.getValue(MDL_IMAGE, name, objId/*md.firstObject()*/);
@@ -277,7 +277,7 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
 
 /** Apply geometry in refering metadata to the image */
 void ImageGeneric::applyGeo(const MetaData &md, size_t objId,
-    const ApplyGeoParams &params)
+                            const ApplyGeoParams &params)
 {
     image->applyGeo(md, objId, params);
 }
@@ -289,7 +289,6 @@ void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
         return;
 
     ArrayDim aDim;
-//    image->getDimensions(aDim);
     data->getDimensions(aDim);
 
     ImageBase * newImage;
@@ -324,6 +323,56 @@ void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
     datatype = _datatype;
     image = newImage;
     data = newMAG;
+}
+
+
+void ImageGeneric::reslice(Face face)
+{
+    ArrayDim aDim, aDimOut;
+    data->getDimensions(aDim);
+
+    char axis;
+    bool reverse;
+
+    aDimOut = aDim;
+
+    if (face == TOP || face == BOTTOM)
+    {
+        axis = 'Y';
+        aDimOut.ydim = aDim.zdim;
+        aDimOut.zdim = aDim.ydim;
+        reverse = (face == TOP);
+    }
+    else if (face == LEFT || face == RIGHT)
+    {
+        axis = 'X';
+        aDimOut.xdim = aDim.zdim;
+        aDimOut.zdim = aDim.xdim;
+        reverse = (face == LEFT);
+    }
+
+    DataType dtype = getDatatype();
+    ImageGeneric imgOut(dtype);
+    imgOut().resize(aDimOut, false);
+
+    MultidimArrayGeneric imTemp;
+
+    int index;
+
+    for (int k = 0; k < aDimOut.zdim; k++)
+    {
+        imTemp.aliasSlice(MULTIDIM_ARRAY_GENERIC(imgOut), k);
+        index = k + (aDimOut.zdim - 1 - 2*k) * (int)reverse;
+        MULTIDIM_ARRAY_GENERIC(*this).getSlice(index, &imTemp, axis, !reverse);
+    }
+
+    clear();
+
+    datatype = dtype;
+    image = imgOut.image;
+    data = imgOut.data;
+    imgOut.image = NULL;
+    imgOut.data = NULL;
 }
 
 ImageGeneric& ImageGeneric::operator=(const ImageGeneric &img)

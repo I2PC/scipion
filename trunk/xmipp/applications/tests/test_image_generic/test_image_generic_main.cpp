@@ -205,6 +205,8 @@ TEST_F( ImageGenericTest, convert2Datatype)
     img.read(imageName);
     MultidimArray<float> * ma;
     MultidimArray<float> auxMa;
+    MultidimArray<unsigned char> *uintMaP;
+    MultidimArray<unsigned char> uintMa;
     img().getMultidimArrayPointer(ma);
 
     // Let's be sure any element is nonzero and higher than 255
@@ -213,32 +215,19 @@ TEST_F( ImageGenericTest, convert2Datatype)
     auxMa = *ma;
     auxMa.rangeAdjust(0, 255);
 
-    // Checking of bot arrays are different
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            unsigned int p = (unsigned int) img.getPixel(i,j);
-            unsigned int q = (unsigned int) auxMa(i,j);
-            EXPECT_NE(p,q);
-        }
-    }
+    // Checking of both arrays are different
+    EXPECT_NE(auxMa, *ma);
 
     // Change of datatype and conversion of values
     img.convert2Datatype(UChar, CW_CONVERT);
+    typeCast(auxMa, uintMa);
+    img().getMultidimArrayPointer(uintMaP);
 
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            unsigned int p = (unsigned int) img.getPixel(i,j);
-            unsigned int q = (unsigned int) auxMa(i,j);
-            EXPECT_EQ(p,q);
-        }
-    }
+    // Now both arrays are equal
+    EXPECT_EQ(*uintMaP, uintMa);
 
-    ArrayDim befAdim, aftAdim;
     // Checking that convert2Datatype works after movePointer2
+    ArrayDim befAdim, aftAdim;
     FileName auxFn = TEST_FILENAME("smallVolume.vol");
     myImageGeneric.readMapped(auxFn);
     myImageGeneric.getDimensions(befAdim);
@@ -251,17 +240,53 @@ TEST_F( ImageGenericTest, convert2Datatype)
     myImageGeneric.movePointerTo(ALL_SLICES);
     myImageGeneric.getDimensions(aftAdim);
 
+    // Dimensions after convert2Datatype never will be the same
     EXPECT_NE(befAdim.zdim, aftAdim.zdim);
 
     // Now, lets check images are equals
-    MultidimArray<unsigned char> *uintMaP;
-    MultidimArray<unsigned char> uintMa;
-
     auxMa.rangeAdjust(0, 255);
     typeCast(auxMa, uintMa);
     MULTIDIM_ARRAY_GENERIC(myImageGeneric).getMultidimArrayPointer(uintMaP);
 
     EXPECT_EQ(*uintMaP, uintMa);
+}
+
+// check the reslicing is right
+TEST_F( ImageGenericTest, reslice)
+{
+    FileName fnVol = TEST_FILENAME("progVol.vol");
+    ImageGeneric imgSliced, imgRef;
+    imgSliced.read(fnVol);
+    imgRef.read(fnVol);
+
+    MultidimArray<float> * dataS, *dataR;
+    imgRef().getMultidimArrayPointer(dataR);
+
+    imgSliced.reslice(ImageGeneric::TOP);
+    imgSliced().getMultidimArrayPointer(dataS);
+    imgSliced.write("slice.vol");
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
+    {
+        EXPECT_EQ(DIRECT_ZYX_ELEM(*dataR,k,i,j), DIRECT_ZYX_ELEM(*dataS,ZSIZE(*dataS)-1-i,k,j));
+    }
+
+    imgSliced.reslice(ImageGeneric::BOTTOM);
+    imgSliced().getMultidimArrayPointer(dataS);
+
+    EXPECT_EQ(*dataR, *dataS);
+
+    imgSliced.reslice(ImageGeneric::LEFT);
+    imgSliced().getMultidimArrayPointer(dataS);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
+    {
+        EXPECT_EQ(DIRECT_ZYX_ELEM(*dataR,k,i,j), DIRECT_ZYX_ELEM(*dataS,ZSIZE(*dataS)-1-j,i,k));
+    }
+    imgSliced.reslice(ImageGeneric::RIGHT);
+    imgSliced().getMultidimArrayPointer(dataS);
+
+    EXPECT_EQ(*dataR, *dataS);
 }
 
 GTEST_API_ int main(int argc, char **argv)

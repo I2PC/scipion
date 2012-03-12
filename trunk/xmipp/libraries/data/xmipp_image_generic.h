@@ -211,20 +211,20 @@ public:
     /** Read image from file with a header applied.
      */
     int readApplyGeo(const FileName &name, const MDRow &row,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                     const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read image from file.
      */
     int readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                     const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int readApplyGeo(const MetaData &md, size_t objId,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                     const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Apply geometry in refering metadata to the image */
     void applyGeo(const MetaData &md, size_t objId,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                  const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read image mapped from file.
      */
@@ -246,7 +246,7 @@ public:
      *  In the case of reading images in its real dimensions it is also possible to image map from file.
      */
     int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE,
-        bool mapData = false, bool wrap = true);
+                          bool mapData = false, bool wrap = true);
 
     /** Write image to file.
     */
@@ -307,15 +307,29 @@ public:
      */
     ImageGeneric& operator=(const ImageGeneric &img);
 
-
-    /** Convert the datatype of the object and cast the image
-     */
-    void convert2Datatype(DataType datatype, CastWriteMode castMode=CW_CONVERT);
-
     /**
      * equal operator
      */
     bool operator==(const ImageGeneric &i1) const;
+
+    /** Convert the datatype of the object and cast the image
+    */
+    void convert2Datatype(DataType datatype, CastWriteMode castMode=CW_CONVERT);
+
+    /* Reslice the volume according to the new front face
+     */
+
+    typedef enum
+    {
+        TOP,    // Align -Y axis to Z axis, rotating 90 degrees around X axis");
+        LEFT,   // Align -X axis to Z axis, rotating -90 degrees around Y axis");
+        BOTTOM, // Align Y axis to Z axis, rotating -90 degrees around X axis");
+        RIGHT   // Align X axis to Z axis, rotating 90 degrees around Y axis");
+    } Face;
+
+    /* Reslice a volume aligning any X or Y direction with Z axis.
+     */
+    void reslice(Face face);
 
     /**
      * equal for doubles
