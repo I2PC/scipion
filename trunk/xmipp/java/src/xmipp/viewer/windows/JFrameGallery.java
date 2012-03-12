@@ -72,8 +72,8 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import xmipp.ij.XmippImageConverter;
-import xmipp.ij.XmippImageWindow;
+import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;

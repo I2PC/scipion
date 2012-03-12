@@ -13,7 +13,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippLabel;
 import ij.ImagePlus;
 import xmipp.jni.ImageGeneric;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 
 /**
  *

@@ -13,7 +13,7 @@ import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 
 /**
  *

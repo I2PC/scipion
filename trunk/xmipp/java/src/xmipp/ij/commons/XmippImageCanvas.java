@@ -1,4 +1,4 @@
-package xmipp.ij;
+package xmipp.ij.commons;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;

@@ -18,7 +18,7 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 
 /**
  *

@@ -1,4 +1,4 @@
-package xmipp.ij;
+package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -15,7 +15,6 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 
 /*
  * To change this template, choose Tools | Templates

@@ -1,7 +1,7 @@
 package xmipp.particlepicker;
 
 import ij.ImagePlus;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.utils.XmippMessage;
 
 import java.io.File;

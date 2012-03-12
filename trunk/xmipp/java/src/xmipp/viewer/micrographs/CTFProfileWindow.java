@@ -45,7 +45,7 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 
 /*
  * To change this template, choose Tools | Templates

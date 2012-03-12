@@ -16,7 +16,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
-import xmipp.ij.Tool;
+import xmipp.ij.commons.Tool;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;

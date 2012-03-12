@@ -13,7 +13,7 @@ import ij.ImagePlus;
 import ij.process.ImageStatistics;
 import java.io.File;
 import xmipp.jni.ImageGeneric;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 
 /**
  *

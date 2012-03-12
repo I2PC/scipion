@@ -1,4 +1,4 @@
-package xmipp.ij;
+package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImageJ;

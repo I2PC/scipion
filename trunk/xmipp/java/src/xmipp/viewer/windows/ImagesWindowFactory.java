@@ -38,9 +38,9 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.ij.XmippImageConverter;
-import xmipp.ij.XmippImageWindow;
-import xmipp.ij.XmippStackWindow;
+import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippImageWindow;
+import xmipp.ij.commons.XmippStackWindow;
 
 /**
  * 

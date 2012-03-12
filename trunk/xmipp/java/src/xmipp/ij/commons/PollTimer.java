@@ -1,9 +1,10 @@
-package xmipp.ij;
+package xmipp.ij.commons;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.Timer;
+
 
 
 

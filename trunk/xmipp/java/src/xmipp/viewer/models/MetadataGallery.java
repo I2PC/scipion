@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import javax.swing.JPopupMenu;
 
 import ij.ImagePlus;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;

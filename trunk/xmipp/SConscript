@@ -414,9 +414,11 @@ def CompileJavaJar(target, source, env):
     name = os.path.basename(jarfile)
     listfile = javaBuildName(name + '_source.txt')
     classfile = javaBuildName(name + '_classes.txt')
+    print "srcDir: ", srcDir
     CreateFileList(srcDir, '*.java', listfile)
     Cmd(env['JAVAC'] + ' -cp "java/lib/*" -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
-    classDir = join(buildDir, 'xmipp', os.path.basename(srcDir))
+    
+    classDir = join(buildDir, os.path.relpath(srcDir, javaSrcName()))
     # We need to create a txt file with the list of all .class files 
     # with the following format:
     # -C java/build xmipp/package/A.class
@@ -696,7 +698,7 @@ if int(env['java']):
     env.Default(cmd)
     javaJni = AddJavaLibrary('XmippJNI', 'jni', ['ij'])
     env.Depends(javaJni, javaJniC)
-    AddJavaLibrary('XmippIJ', 'ij', ['ij'])
+    AddJavaLibrary('XmippIJ', 'ij/commons')
     AddJavaLibrary('XmippUtils', 'utils', ['XmippIJ', 'ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils','ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])

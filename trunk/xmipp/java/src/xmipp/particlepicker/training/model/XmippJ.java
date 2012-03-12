@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.List;
 
 import xmipp.jni.ImageGeneric;
-import xmipp.ij.XmippImageConverter;
+import xmipp.ij.commons.XmippImageConverter;
 
 public class XmippJ {
 	

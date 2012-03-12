@@ -17,7 +17,8 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JPanel;
-import xmipp.ij.XmippImageConverter;
+
+import xmipp.ij.commons.XmippImageConverter;
 
 /**
  *

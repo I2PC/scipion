@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and openTableFileImageItem the template in the editor.
  */
-package xmipp.ij;
+package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.WindowManager;
@@ -17,14 +17,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-
-import xmipp.particlepicker.ParticlePickerJFrame;
 
 /**
  * 

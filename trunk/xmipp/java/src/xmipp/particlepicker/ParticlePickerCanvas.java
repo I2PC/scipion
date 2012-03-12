@@ -18,8 +18,8 @@ import java.awt.event.MouseWheelListener;
 
 import javax.swing.SwingUtilities;
 
-import xmipp.ij.Tool;
-import xmipp.ij.XmippImageCanvas;
+import xmipp.ij.commons.Tool;
+import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.particlepicker.training.model.AutomaticParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 
