@@ -54,8 +54,12 @@ the corresponding tilted pair.
 """
 SelectedClasses = ''
 
+# Thin Object
+""" If the object is thin, then the tilted projections can be stretched to match the untilted projections"""
+ThinObject=True
+
 #------------------------------------------------------------------------------------------------
-# {section}{expert} Prepare images
+# {section}{expert} Alignment parameters
 #------------------------------------------------------------------------------------------------
 # Maximum allowed shift for tilted particles (pixels):
 """ 
@@ -64,19 +68,9 @@ image size will not discard any particle.
 """
 CenterMaxShift=999
 
-# Additional alignment parameters
-"""
-This are additional parameters for the program: <xmipp_image_align_tilt_pairs>
-For example:
-<--skip_stretching> will skip the cosine-stretching prior to centering
-<--skip_centering>  will skip the entire centering, so that only the RCT 
-                    angles will be set.
-<--force_x_zero>    will force the shift in the X direction to be zero, 
-                    and will only center in the Y direction
-For more details see: 
-[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Image_align_tilt_pairs_v3]
-"""
-AlignTiltPairsAdditionalParams = ""
+# Skip tilted translation alignment
+""" If the tilted image quality is very low, then this alignment might result in poor estimates."""
+SkipTiltedTranslations=False
 
 #------------------------------------------------------------------------------------------------
 # {section} Reconstruction
@@ -94,8 +88,8 @@ contribute to the reconstruction.
 """
 DoLowPassFilter = True
 
-# {condition}(DoLowPassFilter) Resolution of the low-pass filter (Ang):
-LowPassFilter = 50
+# {condition}(DoLowPassFilter) Resolution of the low-pass filter (dig.freq):
+LowPassFilter = 0.2
 
 # {eval} expandParallel(threads=0,hours=12)
 

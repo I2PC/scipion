@@ -25,14 +25,30 @@ class ProtRCT(XmippProtocol):
                                WorkingDir=self.WorkingDir,ClassNumbers=classNumbers,
                                ClassFile=self.ClassifMd,ExtractRootName=extractRootName,
                                PickingDir=pickingDir)
+        from xmipp import MetaData, MDL_REF, MDL_IMAGE
+        MDrepresentatives=MetaData("classes@"+self.ClassifMd)
         for classNo in classNumbers:
-            classNameIn="class_%06d@%s"%(classNo,self.workingDirPath("classes.xmd"))
-            classNameOut=self.workingDirPath("rct_%06d.xmd"%classNo)
-            self.insertParallelStep('reconstructClass',verifyfiles=[classNameOut],
-                               WorkingDir=self.WorkingDir,
-                               ClassNameIn=classNameIn, ClassNameOut=classNameOut,
-                               CenterMaxShift=self.CenterMaxShift,
-                               AlignTiltPairsAdditionalParams=self.AlignTiltPairsAdditionalParams)
+            # Locate class representative
+            classRepresentative=""
+            for id in MDrepresentatives:
+                if MDrepresentatives.getValue(MDL_REF,id)==classNo:
+                    classRepresentative=MDrepresentatives.getValue(MDL_IMAGE,id)
+            if classRepresentative!="":
+                classNameIn="class_%06d@%s"%(classNo,self.workingDirPath("classes.xmd"))
+                classNameOut=self.workingDirPath("rct_%06d.xmd"%classNo)
+                classVolumeOut=self.workingDirPath("rct_%06d.vol"%classNo)
+                self.insertParallelStep('reconstructClass',verifyfiles=[classNameOut,classVolumeOut],
+                                   WorkingDir=self.WorkingDir,
+                                   ClassNameIn=classNameIn, ClassNameOut=classNameOut,
+                                   ClassRepresentative=classRepresentative,
+                                   CenterMaxShift=self.CenterMaxShift,
+                                   ThinObject=self.ThinObject,
+                                   SkipTiltedTranslations=self.SkipTiltedTranslations,
+                                   ClassVolumeOut=classVolumeOut,
+                                   ReconstructAdditionalParams=self.ReconstructAdditionalParams,
+                                   DoLowPassFilter=self.DoLowPassFilter,LowPassFilter=self.LowPassFilter)
+            else:
+                self.Log.error("Cannot find representative for class %d"%classNo)
                 
     def execute_reconstruction(self):
         import os
@@ -99,6 +115,17 @@ def gatherPairs(log,WorkingDir,ClassNumbers,ClassFile,ExtractRootName,PickingDir
         MDjoin4.join(MDjoin3,MDtiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
         MDjoin4.write("class_%06d@%s"%(classNo,fnOut),MD_APPEND)
 
-def reconstructClass(log,WorkingDir,ClassNameIn,ClassNameOut,CenterMaxShift,AlignTiltPairsAdditionalParams):
-    runJob(log,"xmipp_image_align_tilt_pairs","-i %s -o %s --max_shift %d %s"%\
-           (ClassNameIn,ClassNameOut,CenterMaxShift,AlignTiltPairsAdditionalParams))
+def reconstructClass(log,WorkingDir,ClassNameIn,ClassNameOut,ClassRepresentative,
+                     CenterMaxShift,ThinObject,SkipTiltedTranslations,ClassVolumeOut,
+                     ReconstructAdditionalParams,DoLowPassFilter,LowPassFilter):
+    alignmentParameters="-i %s -o %s --ref %s --max_shift %d"%(ClassNameIn,ClassNameOut,ClassRepresentative,CenterMaxShift)
+    if ThinObject:
+        alignmentParameters+=" --do_stretch"
+    if SkipTiltedTranslations:
+        alignmentParameters+=" --do_not_align_tilted"
+    runJob(log,"xmipp_image_align_tilt_pairs",alignmentParameters)
+    runJob(log,"xmipp_reconstruct_fourier","-i %s -o %s %s"%(ClassNameOut,ClassVolumeOut,ReconstructAdditionalParams))
+    if DoLowPassFilter:
+        if os.path.exists(ClassVolumeOut):
+            filteredVolume=ClassVolumeOut.replace('.vol','_filtered.vol')
+            runJob(log,"xmipp_transform_filter","-i %s -o %s --fourier low_pass %f"%(ClassVolumeOut,filteredVolume,LowPassFilter))
