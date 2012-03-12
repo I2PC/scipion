@@ -455,6 +455,15 @@ def AddJavaTest(testName):
     runTest = env.Command(testName, javaLibName('XmippTest.jar'), cmd)
     env.Alias('run_java_tests', runTest)
 
+def AddJavaIJPlugin(name, src, dependencies=[]):
+    ''' this function does the same of AddJavaLibrary and 
+    add a link to the .jar from ij/plugins'''
+    jarfile = name + '.jar'
+    buildJar = AddJavaLibrary(name, src, dependencies)
+    copyIJPlugin = env.Command(join('external/imagej/plugins', jarfile), buildJar, SymLink)
+    env.Alias('java', copyIJPlugin)
+    env.Default(copyIJPlugin)    
+    
 def removeAll(basedir, regexp):
 	import glob
 	files = glob.glob(basedir + regexp)
@@ -703,6 +712,7 @@ if int(env['java']):
     AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils','ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
     AddJavaLibrary('XmippTest', 'test', ['XmippViewer', 'junit4-4.8.2', 'core-1.1'])
+    AddJavaIJPlugin('XmippIJPlugin_MasksToolbar', 'ij/plugins/maskstoolbar', [])
     #Add java tests
     AddJavaTest('FilenameTest')
     AddJavaTest('ImageGenericTest')
