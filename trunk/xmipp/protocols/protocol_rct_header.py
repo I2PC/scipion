@@ -54,21 +54,21 @@ the corresponding tilted pair.
 """
 SelectedClasses = ''
 
+#------------------------------------------------------------------------------------------------
+# {section} Alignment parameters
+#------------------------------------------------------------------------------------------------
 # Thin Object
 """ If the object is thin, then the tilted projections can be stretched to match the untilted projections"""
 ThinObject=True
 
-#------------------------------------------------------------------------------------------------
-# {section}{expert} Alignment parameters
-#------------------------------------------------------------------------------------------------
-# Maximum allowed shift for tilted particles (pixels):
+#{expert} Maximum allowed shift for tilted particles (pixels):
 """ 
 Particles that shift more will be discarded. A value larger than the 
 image size will not discard any particle.
 """
 CenterMaxShift=999
 
-# Skip tilted translation alignment
+#{expert} Skip tilted translation alignment
 """ If the tilted image quality is very low, then this alignment might result in poor estimates."""
 SkipTiltedTranslations=False
 
