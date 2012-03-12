@@ -1625,7 +1625,16 @@ class XmippBrowserCTF(XmippBrowserPreview):
     '''
     def __init__(self, **args):
         XmippBrowserPreview.__init__(self, **args)
+        # If metadata was provided, populate file list from there
+        if hasattr(self, 'md'): 
+            self.insertFiles =  self.insertFilesFromMd
     
+    def insertFilesFromMd(self, path):
+        from xmipp import MDL_MICROGRAPH
+        for objId in self.md:
+            fn = self.md.getValue(MDL_MICROGRAPH, objId)
+            self.insertElement('', fn)
+                    
     def createResultPreview(self):
         self.lf, self.hf = 0, 0
         if self.freqs:

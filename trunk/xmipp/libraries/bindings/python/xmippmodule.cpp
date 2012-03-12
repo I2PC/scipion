@@ -548,6 +548,7 @@ Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
+          self->image->data->im->resetOrigin();
             double value = self->image->getPixel(i, j);
             return PyFloat_FromDouble(value);
         }
@@ -673,7 +674,7 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             int xdim, ydim, zdim;
             size_t ndim;
-            self->image->image->getDimensions(xdim, ydim, zdim, ndim);
+            MULTIDIM_ARRAY_GENERIC(*self->image).getDimensions(xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
         catch (XmippError &xe)
@@ -3584,6 +3585,7 @@ else if (y > x)\
   w = x * (dim/y);\
 selfScaleToSize(LINEAR, data, w, h);\
 Image_Value(pyImage).setDatatype(Double);\
+data.resetOrigin();\
 MULTIDIM_ARRAY_GENERIC(Image_Value(pyImage)).setImage(data);\
 Py_RETURN_NONE;\
 }} catch (XmippError &xe)\

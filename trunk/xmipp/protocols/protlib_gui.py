@@ -1110,12 +1110,12 @@ class ProtocolGUI(BasicGUI):
             var.tkvar.set(', '.join([relpath(f) for f in files]))
     
     #Helper function to select Downsampling wizards
-    def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None):  
+    def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None, md=None):  
         from protlib_gui_ext import XmippBrowserCTF
         results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,title="Select Downsampling", 
                                         seltype="file", selmode="browse", filter=filterExt, previewDim=256, 
                                         extra={'freqs':freqs, 'downsampling':value, 'previewLabel': 'Micrograph', \
-                                               'computingMessage': 'Estimating PSD...'}) # a list is returned
+                                               'computingMessage': 'Estimating PSD...', 'md':md}) # a list is returned
         if results:
             self.setVarValue('DownsampleFactor', results[0])
         return results
@@ -1144,7 +1144,7 @@ class ProtocolGUI(BasicGUI):
                     if image:         
                         filterExt = "*" + os.path.splitext(image)[1]
                         value = self.getVarValue('DownsampleFactor')
-                        results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs)
+                        results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs, md)
                         if results:
                             self.setVarlistValue(vList, results[1:])
                     else:
