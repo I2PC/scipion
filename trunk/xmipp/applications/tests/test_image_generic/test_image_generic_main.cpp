@@ -264,7 +264,6 @@ TEST_F( ImageGenericTest, reslice)
 
     imgSliced.reslice(ImageGeneric::TOP);
     imgSliced().getMultidimArrayPointer(dataS);
-    imgSliced.write("slice.vol");
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
     {
