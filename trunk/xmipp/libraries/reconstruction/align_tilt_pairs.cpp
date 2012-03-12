@@ -24,6 +24,8 @@
  ***************************************************************************/
 #include "align_tilt_pairs.h"
 
+//#define DEBUG
+
 //Define Program parameters
 void ProgAlignTiltPairs::defineParams() {
 	//Usage
@@ -42,7 +44,7 @@ void ProgAlignTiltPairs::defineParams() {
 	addParamsLine("  -i <metadata>              : Input metadata with untilted and tilted images");
 	addParamsLine("  -o <metadata>              : Output metadata file with rotations & translations for 3D reconstruction.");
 	addParamsLine("  --ref <file>               : 2D average of the untilted images");
-	addParamsLine(" [--max_shift <value=0.0>]   : Discard images shifting more than a given threshold (in pixels).");
+	addParamsLine(" [--max_shift <value=10>]    : Discard images shifting more than a given threshold (in percentage of the image size).");
 	addParamsLine("                             :+Set it to 0 for no shift estimate between tilted and untilted images");
 	addParamsLine(" [--do_stretch]              : Stretch tilted image to fit into the untilted one.");
 	addParamsLine("                             :+Do it only with thin particles");
@@ -73,16 +75,25 @@ void ProgAlignTiltPairs::show() {
 
 // Center one tilted image  =====================================================
 bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
+		bool flip,
 		double inPlaneU, double alphaT, double alphaU,
 		double tilt, MultidimArray<double> &imgT, double &shiftX,
 		double &shiftY, CorrelationAux &auxCorr) {
 	// Cosine stretching, store stretched image in imgTaux
-	double cos_tilt = COSD(tilt);
 	MultidimArray<double> imgTaux;
 	Matrix2D<double> E, E2D;
 	if (!do_stretch)
 		tilt=0.;
 	Euler_angles2matrix(-alphaU-inPlaneU,tilt,alphaT,E,true);
+	if (flip)
+	{
+		MAT_ELEM(E,0,0)*=-1;
+		MAT_ELEM(E,1,0)*=-1;
+		MAT_ELEM(E,2,0)*=-1;
+		MAT_ELEM(E,0,2)*=-1;
+		MAT_ELEM(E,1,2)*=-1;
+		MAT_ELEM(E,2,2)*=-1;
+	}
 	E2D.initIdentity(3);
 	MAT_ELEM(E2D,0,0)=MAT_ELEM(E,0,0);
 	MAT_ELEM(E2D,0,1)=MAT_ELEM(E,0,1);
@@ -93,7 +104,9 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	// Calculate best shift
 	CorrelationAux aux;
 	bestShift(imgU, imgTaux, shiftX, shiftY, auxCorr);
+#ifdef DEBUG
 	std::cout << shiftX << " " << shiftY << std::endl;
+#endif
 	Matrix1D<double> vShift(3);
 	XX(vShift)=shiftX;
 	YY(vShift)=shiftY;
@@ -107,6 +120,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	shiftY=MAT_ELEM(Ttp,1,3);
 	double shift = sqrt(shiftX * shiftX + shiftY * shiftY);
 
+#ifdef DEBUG
 	Image<double> save;
 	save() = imgT;
 	save.write("PPPtilted.xmp");
@@ -117,9 +131,10 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	std::cout << shiftX << " " << shiftY << std::endl;
 	std::cout << "Press any key\n";
 	char c;
-	//std::cin >> c;
+	std::cin >> c;
+#endif
 
-	return (shift < max_shift);
+	return (shift < max_shift/100.0*XSIZE(imgT));
 }
 
 // Main program  ===============================================================
@@ -154,8 +169,6 @@ void ProgAlignTiltPairs::run() {
 	FOR_ALL_OBJECTS_IN_METADATA(MDin) {
 		bool flip;
 		MDin.getValue(MDL_FLIP, flip, __iter.objId);
-		if (flip)
-			continue;
 
 		// Read untilted and tilted images
 		double inPlaneU;
@@ -167,6 +180,7 @@ void ProgAlignTiltPairs::run() {
 		imgT.read(fnTilted);
 		imgT().setXmippOrigin();
 
+#ifdef DEBUG
 		Image<double> save;
 		save() = imgU();
 		save.write("PPPuntilted.xmp");
@@ -174,6 +188,7 @@ void ProgAlignTiltPairs::run() {
 		rotation2DMatrix(-inPlaneU,E);
 		applyGeometry(LINEAR, save(), imgU(), E, IS_INV, WRAP);
 		save.write("PPPuntiltedAligned.xmp");
+#endif
 
 		// Get alignment parameters
 		double shiftXu, shiftYu;
@@ -197,7 +212,7 @@ void ProgAlignTiltPairs::run() {
 		double shiftX = 0, shiftY = 0;
 		bool enable = true;
 		if (max_shift > 0)
-			enable = centerTiltedImage(imgRef(), inPlaneU, alphaT, alphaU, gamma, imgT(), shiftX, shiftY, auxCorr);
+			enable = centerTiltedImage(imgRef(), flip, inPlaneU, alphaT, alphaU, gamma, imgT(), shiftX, shiftY, auxCorr);
 		if (!enable) {
 			++nDiscarded;
 			shiftX = shiftY = 0;
