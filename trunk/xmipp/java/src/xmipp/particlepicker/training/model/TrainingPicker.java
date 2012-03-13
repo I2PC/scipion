@@ -385,7 +385,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			MetaData md;
 			long[] ids;
 			int x, y;
-			double cost;
+			Double cost;
 			
 			List<String> blocks = Arrays.asList(MetaData.getBlocksInMetaDataFile(file));
 			String block;
@@ -403,7 +403,7 @@ public abstract class TrainingPicker extends ParticlePicker
 						x = md.getValueInt(MDLabel.MDL_XINT, id);
 						y = md.getValueInt(MDLabel.MDL_YINT, id);
 						cost = md.getValueDouble(MDLabel.MDL_COST, id);
-						if (cost > 1)
+						if ( cost == null || cost == 0 || cost > 1)
 							m.addManualParticle(new TrainingParticle(x, y, family, m, cost));
 						else
 							m.addAutomaticParticle(new AutomaticParticle(x, y, family, m, cost, false));

@@ -18,9 +18,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 	public static void main(String[] args) {
 		try {
 			// openImageJ(Tool.VIEWER);
-//			XmippImageWindow w = new XmippImageWindow(
-//					"/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
-			IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+			XmippImageWindow w = new XmippImageWindow(
+					"/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+//			IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -56,7 +56,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 			IJ.run("Install...",
 					"install="
 							+ Filename
-									.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
+									.getXmippPath("java/src/xmipp/ij/commons/XmippMacros.txt"));
 		}
 		boolean recognized = IJ.setTool(Tool.getTool(tool));
 		// System.out.println(recognized);

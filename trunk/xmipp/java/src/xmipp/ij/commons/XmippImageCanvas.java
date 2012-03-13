@@ -5,7 +5,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import javax.swing.SwingUtilities;
 
-import xmipp.ij.Tool;
+import xmipp.ij.commons.Tool;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
