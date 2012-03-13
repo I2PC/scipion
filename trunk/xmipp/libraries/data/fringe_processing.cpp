@@ -94,26 +94,26 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
 //demodulation of two-dimensional fringe patterns. I. General background of the spiral phase quadrature transform," J. Opt. Soc. Am. A 18, 1862-1870 (2001)
 void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::complex <double> > & imProc)
 {
-	im.setXmippOrigin();
-	MultidimArray<std::complex<double> > H, fftIm, imComplex;
-	typeCast(im, imComplex);
+    im.setXmippOrigin();
+    MultidimArray<std::complex<double> > H, fftIm, imComplex;
+    typeCast(im, imComplex);
 
     // Fourier Transformer
     FourierTransformer ftrans(FFTW_BACKWARD);
     ftrans.FourierTransform(imComplex, fftIm, false);
 
-	H.resizeNoCopy(fftIm);
-	H.setXmippOrigin();
+    H.resizeNoCopy(fftIm);
+    H.setXmippOrigin();
 
-	//std::complex<double> compTemp(0, 0);
-	//i -> for exterior filas o Y
-	//j -> for interior columns o X
+    //std::complex<double> compTemp(0, 0);
+    //i -> for exterior filas o Y
+    //j -> for interior columns o X
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-    	A2D_ELEM(H,i,j) = (std::complex<double>(j,i))/std::sqrt(std::pow((double)i,2)+(std::pow((double)j,2)));
-    	//We subtract the singular value in i=0, j=0
-    	if ( (i==0) && (j==0) )
-    		A2D_ELEM(H,i,j) = 0;
+        A2D_ELEM(H,i,j) = (std::complex<double>(j,i))/std::sqrt(std::pow((double)i,2)+(std::pow((double)j,2)));
+        //We subtract the singular value in i=0, j=0
+        if ( (i==0) && (j==0) )
+            A2D_ELEM(H,i,j) = 0;
     }
 
     //CenterFFT(H,true);
@@ -122,5 +122,76 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
     ftrans.inverseFourierTransform();
     //Here in the Matlab code there is a complex conjugate s
     imProc = imComplex;
+}
+
+void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, MultidimArray<double > & orModMap, int wSize)
+{
+    int NR, NC,NZ;
+    size_t NDim;
+    im.getDimensions(NC,NR,NZ,NDim);
+
+    if ( (NZ!=1) || (NDim!=1) )
+        REPORT_ERROR(ERR_MULTIDIM_DIM,(std::string)"ZDim and NDim has to be equals to one");
+
+    MultidimArray<double > d0,d45,d90,d135,mask,orn,ornMod;
+    d0.resizeNoCopy(im);
+    d45.resizeNoCopy(im);
+    d90.resizeNoCopy(im);
+    d135.resizeNoCopy(im);
+    mask.resizeNoCopy(im);
+    orn.resizeNoCopy(im);
+    ornMod.resizeNoCopy(im);
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    {
+        A2D_ELEM(mask,i,j)  = 0;
+
+        if ( (i==0) || (i== (NR-1)) || (j == 0) || (j== (NC-1)) )
+        {
+            A2D_ELEM(d0,i,j)  = 0;
+            A2D_ELEM(d45,i,j) = 0;
+            A2D_ELEM(d90,i,j) = 0;
+            A2D_ELEM(d135,i,j)= 0;
+        }
+        else
+        {
+            A2D_ELEM(d0,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(im,i+1,j)-A2D_ELEM(im,i-1,j));
+            A2D_ELEM(d45,i,j) = std::abs(A2D_ELEM(im,i+1,j-1)-A2D_ELEM(im,i-1,j+1));
+            A2D_ELEM(d90,i,j) = std::sqrt(2)*std::abs(A2D_ELEM(im,i,j+1)-A2D_ELEM(im,i,j-1));
+            A2D_ELEM(d135,i,j)= std::abs(A2D_ELEM(im,i+1,j+1)-A2D_ELEM(im,i-1,j-1));
+        }
+    }
+
+    mask.setXmippOrigin();
+
+    for (int i = -std::abs(wSize); i <= std::abs(wSize); i++ )
+        for (int j = -std::abs(wSize); j <= std::abs(wSize); j++ )
+            A2D_ELEM(mask,i,j) = double(1)/ double(wSize*wSize+1);
+
+
+    convolutionFFT(d0,mask,d0);
+    convolutionFFT(d45,mask,d45);
+    convolutionFFT(d135,mask,d135);
+    convolutionFFT(d90,mask,d90);
+
+    /*
+     *     b=0.5*(D0-D90);
+     *     c=-0.5*(D45-D135); %hay que tener en cuenta que la "y" esta downwards
+     *     Or=0.5*atan2(c,b);
+     *     orn = mod(Or+pi/2,pi);
+     *    ornMod=mat2gray(abs(c+1i*b));
+     */
+    double tempx = 0;
+    double tempy = 0;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    {
+        tempx =  0.5*(A2D_ELEM(d0,i,j)-A2D_ELEM(d90,i,j));
+        tempy = -0.5*(A2D_ELEM(d45,i,j)-A2D_ELEM(d135,i,j));
+        A2D_ELEM(orn,i,j)   =  std::fmod((0.5*std::atan2(tempy,tempx))+double(PI)/2,double(PI));
+        A2D_ELEM(ornMod,i,j) = std::sqrt(std::pow(tempx,2)+std::pow(tempy,2));
+    }
+
+    orMap = orn;
+    orModMap = ornMod;
 }
 

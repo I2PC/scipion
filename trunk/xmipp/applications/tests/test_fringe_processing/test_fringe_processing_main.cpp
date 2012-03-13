@@ -127,6 +127,43 @@ TEST_F( FringeProcessingTests, SPTH)
 
 }
 
+TEST_F( FringeProcessingTests, orMinDer)
+{
+
+	//FileName fpName;
+	//fpName = baseName + "/applications/tests/test_fringe_processing/fp.txt";
+
+	FringeProcessing fp;
+	MultidimArray<double> im, orMap, orModMap;
+
+	int nx = 311;
+    int ny = 311;
+    double noiseLevel = 0.0;
+    double freq = 20;
+    Matrix1D<int> coefs(10);
+
+    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    orMap.resizeNoCopy(im);
+
+    //im.write(fpName);
+
+    int wSize = 2;
+    fp.orMinDer(im,orMap,orModMap, wSize);
+
+    ASSERT_TRUE(XSIZE(im) == XSIZE(orMap));
+    ASSERT_TRUE(YSIZE(im) == YSIZE(orMap));
+    ASSERT_TRUE(XSIZE(im) == XSIZE(orModMap));
+    ASSERT_TRUE(YSIZE(im) == YSIZE(orModMap));
+
+    ASSERT_TRUE( std::abs(A2D_ELEM(orMap,1,1) -  2.3562)<0.01);
+    ASSERT_TRUE( std::abs(A2D_ELEM(orMap,1,5) -  2.3483)<0.01);
+
+    ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,1) -  0.0690)<0.01);
+    ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,5) -  0.3364)<0.01);
+
+}
+
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

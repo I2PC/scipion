@@ -49,6 +49,13 @@ public:
 	//demodulation of two-dimensional fringe patterns. I. General background of the spiral phase quadrature transform," J. Opt. Soc. Am. A 18, 1862-1870 (2001)
     void SPTH(MultidimArray<double> & im, MultidimArray< std::complex <double> > & imProc);
 
+    //Orientation by minimun diference fit. This method computes the orientation using a window size. The default
+    //value are wSize=5.
+    //A reference to the current method can be found in:
+    //Yang, Xia; Yu, Qifeng, and Fu, Sihua. An algorithm for estimating both fringe orientation and fringe density. Optics Communications.
+    //2007 Jun 15; 274(2):286-292
+    void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap,  MultidimArray<double > & orModMap, int wSize);
+
 protected:
 
     void direction(const MultidimArray<double> & im, double lambda, int size);
