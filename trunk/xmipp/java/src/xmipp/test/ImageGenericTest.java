@@ -141,6 +141,21 @@ public class ImageGenericTest {
 	}
 
 	/**
+	 * Test of subtract method, of class ImageGeneric.
+	 */
+	@Test
+	public void testSubtract() throws Exception  {
+		ImageGeneric image = XmippTest.getImageGeneric(filename);
+		ImageGeneric image2 = XmippTest.getImageGeneric(filename2);
+		ImageGeneric image3 = new ImageGeneric();
+		image2.subtract(image,image3);
+		float[] result = image3.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
+		for (int i = 0; i < imagePixels.length -1; i++)
+			assertEquals(result[i],0., XmippTest.EQUAL_ACCURACY);
+		assertEquals(result[8],27.0, XmippTest.EQUAL_ACCURACY);
+	}
+
+	/**
 	 * Test of getStatistics method, of class ImageGeneric.
 	 */
 	@Test

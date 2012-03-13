@@ -234,7 +234,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_printShape
    */
   JNIEXPORT jboolean JNICALL Java_xmipp_jni_ImageGeneric_equal
     (JNIEnv *, jobject ,jobject , jdouble );
+/*
+   * Class:     xmipp_ImageGeneric
+   * Method:    subtract
+   * Signature: void 
+   */
 
+   JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_subtract
+     (JNIEnv *, jobject, jobject, jobject);
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    getStatistics

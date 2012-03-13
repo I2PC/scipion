@@ -625,6 +625,20 @@ Java_xmipp_jni_ImageGeneric_equal(JNIEnv *env, jobject jobj1, jobject jobj2, jdo
   XMIPP_CATCH;
 }
 
+JNIEXPORT void JNICALL
+Java_xmipp_jni_ImageGeneric_subtract(JNIEnv *env, jobject jobj1, jobject jobj2, jobject jobj3)
+{
+  XMIPP_TRY
+  {
+	   ImageGeneric *image1 = GET_INTERNAL_IMAGE_GENERIC(jobj1);
+	   ImageGeneric *image2 = GET_INTERNAL_IMAGE_GENERIC(jobj2);
+	   ImageGeneric *image3 = GET_INTERNAL_IMAGE_GENERIC(jobj3);
+           *image3 = *image1;
+	   image3->subtract(*image2);
+  }
+  XMIPP_CATCH;
+}
+
 JNIEXPORT jdoubleArray JNICALL
 Java_xmipp_jni_ImageGeneric_getStatistics(JNIEnv *env, jobject jobj)
 {
