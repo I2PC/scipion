@@ -73,7 +73,10 @@ class ProtImportMicrographs(XmippProtocol):
         if self.SamplingRateMode == "From image":
             AngPix = self.SamplingRate
         else:
-            AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+            if self.DoDownsample:
+                AngPix = (10000. * self.ScannedPixelSize * self.DownsampleFactor) / self.Magnification
+            else:
+                AngPix = (10000. * self.ScannedPixelSize) / self.Magnification
         fnOut = self.getFilename('microscope')
         self.insertStep("createMicroscope", verifyfiles=[fnOut], fnOut=fnOut, Voltage=self.Voltage,
                         SphericalAberration=self.SphericalAberration,SamplingRate=AngPix,
