@@ -50,40 +50,37 @@ class ProtRCT(XmippProtocol):
             else:
                 self.Log.error("Cannot find representative for class %d"%classNo)
                 
-    def execute_reconstruction(self):
-        import os
-        import launch_job
-        for ref in self.untiltclasslist:
-            til_selfile=self.untiltclasslist[ref][2]
-            outname=til_selfile.replace('.sel','')
-            if (self.ReconstructMethod=='fourier'):
-                program='xmipp_reconstruct_fourier'
-                command=' -i ' + til_selfile + \
-                        ' -o ' + outname+'.vol'
-            if not self.ReconstructAdditionalParams=="":
-                command += ' ' + self.ReconstructAdditionalParams
+    def summary(self):
+        message=[]
+        classNumbers = getListFromRangeString(self.SelectedClasses)
+        message.append("Random conical tilt reconstruction of "+str(len(classNumbers))+" classes of "+self.ClassifMd)
+        import glob
+        reconstructedFiles=glob.glob(self.WorkingDir+"/rct_??????.vol")
+        if not reconstructedFiles:
+            message.append("No reconstruction has been generated")
+        else:
+            message.append(str(len(reconstructedFiles))+" reconstructions have finished")
+        return message
+    
+    def validate(self):
+        errors = []
+        classNumbers = getListFromRangeString(self.SelectedClasses)
+        from xmipp import MetaData
+        for classNo in classNumbers:
+            try:
+                blockName="class_%06d"%classNo
+                mD=MetaData(blockName+"@"+self.ClassifMd)
+            except:
+                errors.append(blockName+" cannot be found at "+self.ClassifMd)
+        if self.CenterMaxShift>100 or self.CenterMaxShift<0:
+            errors.append("Maximum shift must be in the range 0-100")
+        if self.LowPassFilter>0.5 or self.LowPassFilter<0:
+            errors.append("Low pass filter must be in the range 0-0.5")
+        return errors    
 
-            launchJob(program,
-                                  command,
-                                  self.log,
-                                  False,1,1,'')
-
-    def execute_filter(self):
-        import os
-        import launch_job
-        for ref in self.untiltclasslist:
-            til_selfile=self.untiltclasslist[ref][2]
-            volname=til_selfile.replace('.sel','.vol')
-            if os.path.exists(volname):
-                filname=volname.replace('.vol','_filtered.vol')
-                command=' -o ' + filname + \
-                 ' -i ' + volname  + \
-                 ' -sampling ' + str(self.PixelSize) + \
-                 ' -low_pass ' + str(self.LowPassFilter)
-                launchJob("xmipp_fourier_filter",
-                                      command,
-                                      self.log,
-                                      False,1,1,'')
+    def visualize(self):
+        # Still to do
+        pass
 
 def gatherPairs(log,WorkingDir,ClassNumbers,ClassFile,ExtractRootName,PickingDir):
     from xmipp import MetaData, MDL_IMAGE, MDL_IMAGE_TILTED, \
