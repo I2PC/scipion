@@ -375,18 +375,23 @@ class FlashMessage():
         self.root.destroy()
         
 ##---------demo code-----------------------------------##
-
+def getXmippImage(imagePath):
+    ''' Return a Tk image from the 'resources' folder.
+    None is returned if an error occurs '''
+    image = None
+    if imagePath:
+        try:
+            imgPath = join(RESOURCES, imagePath)
+            image = tk.PhotoImage(file=imgPath)
+        except tk.TclError:
+            pass
+    return image
+    
 class XmippButton(tk.Button):
     def __init__(self, master, text, imagePath=None, **opts):
         defaults = {'activebackground': ButtonActiveBgColor, 'bg':ButtonBgColor}
         defaults.update(opts)
-        btnImage = None
-        if imagePath:
-            try:
-                imgPath = join(RESOURCES, imagePath)
-                btnImage = tk.PhotoImage(file=imgPath)
-            except tk.TclError:
-                pass
+        btnImage = getXmippImage(imagePath)
         
         if btnImage:
             #height=28, width=28,
@@ -1254,7 +1259,7 @@ class XmippBrowser():
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc', '.raw', '.dm3'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc', '.raw', '.dm3', '.psd'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
@@ -1427,6 +1432,7 @@ class XmippBrowser():
         
     #Functions for handling events
     def onDoubleClick(self, e=None):
+        print "double Click"
         item, fm = self.getSelection()
         if fm:
             fm.onDoubleClick(item, self)

@@ -32,7 +32,7 @@ import Tkinter as tk
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
 from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTree, \
     showBrowseDialog, showTextfileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
-    FlashMessage, showWarning, YesNoDialog
+    FlashMessage, showWarning, YesNoDialog, getXmippImage
 from config_protocols import *
 from protlib_base import XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
@@ -108,6 +108,16 @@ class XmippProjectGUI():
         self.Frames = {}
         self.historyRefresh = None
         self.historyRefreshRate = 4 # Refresh rate will be 1, 2, 4 or 8 seconds
+        ## Create some icons
+        self.images = {}
+        ## This are images icons for each run_state
+        paths = ['save_small', 'select_run', 'progress_none', 
+                 'progress_ok', 'progress_error', 'level_warning']
+        for i, path in enumerate(paths):
+            self.images[i] = getXmippImage(path + '.gif')
+            
+    def getImage(self, path):
+        return self.images[path]
               
     def addBindings(self):
         self.root.bind('<Configure>', self.unpostMenu)
@@ -363,10 +373,10 @@ class XmippProjectGUI():
                     #else:
                     #    self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
                     #    stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
-                 
-                tree.insert('', 'end', text= getExtendedRunName(run),
-                            values=(stateStr, run['last_modified']))   
-            
+                #if state == SqliteDb.RUN_STARTED:
+                tree.insert('', 'end', text = '  ' +  getExtendedRunName(run), 
+                            image=self.getImage(state),
+                            values=(stateStr, run['last_modified']))  
             
             for c in tree.get_children(''):
                 if selectFirst or tree.item(c, 'text') == runName:
@@ -495,7 +505,12 @@ class XmippProjectGUI():
     def createToolbarFrame(self, parent):
         #Configure toolbar frame
         toolbar = tk.Frame(parent, bd=2, relief=tk.RIDGE)
+        
         self.Frames['toolbar'] = toolbar
+        self.logo = getXmippImage('xmipp2.gif')
+        label = tk.Label(toolbar, image=self.logo)
+        label.pack()
+        
         #Create toolbar buttons
         #i = 1
         section = None
