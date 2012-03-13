@@ -21,7 +21,10 @@
 """
 InSelFile=''
 
-# {file} Reference image:
+# Use reference image
+UseReferenceImage=False
+
+# {file}{condition}(UseReferenceImage) Reference image:
 """ The reference is optional. If no reference is provided the algorithm computes one of its own. """
 ReferenceImage=""
 
