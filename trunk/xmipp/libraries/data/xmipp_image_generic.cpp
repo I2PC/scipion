@@ -332,7 +332,7 @@ void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
 }
 
 
-void ImageGeneric::reslice(Face face)
+void ImageGeneric::reslice(AxisView face, ImageGeneric &imgOut)
 {
     ArrayDim aDim, aDimOut;
     data->getDimensions(aDim);
@@ -342,24 +342,25 @@ void ImageGeneric::reslice(Face face)
 
     aDimOut = aDim;
 
-    if (face == TOP || face == BOTTOM)
+    if (face == Y_NEG || face == Y_POS)
     {
         axis = 'Y';
         aDimOut.ydim = aDim.zdim;
         aDimOut.zdim = aDim.ydim;
-        reverse = (face == TOP);
+        reverse = (face == Y_NEG);
     }
-    else if (face == LEFT || face == RIGHT)
+    else if (face == X_NEG || face == X_POS)
     {
         axis = 'X';
         aDimOut.xdim = aDim.zdim;
         aDimOut.zdim = aDim.xdim;
-        reverse = (face == LEFT);
+        reverse = (face == X_NEG);
     }
 
     DataType dtype = getDatatype();
-    ImageGeneric imgOut(dtype);
+    imgOut.setDatatype(dtype);
     imgOut().resize(aDimOut, false);
+    imgOut.image->setADimFile(aDimOut);
 
     MultidimArrayGeneric imTemp;
 
@@ -372,14 +373,20 @@ void ImageGeneric::reslice(Face face)
         MULTIDIM_ARRAY_GENERIC(*this).getSlice(index, &imTemp, axis, !reverse);
     }
 
-    clear();
+}
 
-    datatype = dtype;
+void ImageGeneric::reslice(AxisView face)
+{
+    ImageGeneric imgOut;
+    reslice(face, imgOut);
+    clear();
+    datatype = imgOut.getDatatype();
     image = imgOut.image;
     data = imgOut.data;
     imgOut.image = NULL;
     imgOut.data = NULL;
 }
+
 
 ImageGeneric& ImageGeneric::operator=(const ImageGeneric &img)
 {

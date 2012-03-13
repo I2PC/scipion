@@ -26,6 +26,13 @@ public class ImageGeneric {
     public final static int ComplexDouble = 13;     // Complex floating point (16-byte)
     public final static int Bool = 14;              // Boolean (1-byte?)
     public final static int LastEntry = 15;         // This must be the last entry
+    
+    //AxisView constants for volume reslice
+    public final static int Y_NEG = 0;    // Align -Y axis to Z axis, rotating 90 degrees around X axis");
+    public final static int Y_POS = 1; // Align Y axis to Z axis, rotating -90 degrees around X axis");
+    public final static int X_NEG = 2;   // Align -X axis to Z axis, rotating -90 degrees around Y axis");
+    public final static int X_POS = 3;  // Align X axis to Z axis, rotating 90 degrees around Y axis");
+    
     // Associated filename.
     private String filename;
     private boolean useLogarithm = true;   // To convert PSD images.
@@ -184,6 +191,8 @@ public class ImageGeneric {
     public native void setXmippOrigin() throws Exception;
 
     public native void convertPSD(boolean useLogarithm) throws Exception;
+    
+    public native void reslice(ImageGeneric imgOut, int view) throws Exception;
 
     //Check if two images have same values to some accuracy
     public native boolean equal(ImageGeneric img, double accuracy) throws Exception;

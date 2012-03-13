@@ -327,15 +327,18 @@ public:
 
     typedef enum
     {
-        TOP,    // Align -Y axis to Z axis, rotating 90 degrees around X axis");
-        LEFT,   // Align -X axis to Z axis, rotating -90 degrees around Y axis");
-        BOTTOM, // Align Y axis to Z axis, rotating -90 degrees around X axis");
-        RIGHT   // Align X axis to Z axis, rotating 90 degrees around Y axis");
-    } Face;
+        Y_NEG,    // Align -Y axis to Z axis, rotating 90 degrees around X axis");
+        Y_POS, // Align Y axis to Z axis, rotating -90 degrees around X axis");
+        X_NEG,   // Align -X axis to Z axis, rotating -90 degrees around Y axis");
+        X_POS   // Align X axis to Z axis, rotating 90 degrees around Y axis");
+    } AxisView;
 
     /* Reslice a volume aligning any X or Y direction with Z axis.
      */
-    void reslice(Face face);
+    void reslice(AxisView view);
+    /* The resliced volume is returned in out
+    */
+    void reslice(AxisView view, ImageGeneric &out);
 
     /**
      * equal for doubles

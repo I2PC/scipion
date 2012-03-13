@@ -197,6 +197,14 @@ public:
 
     }
 
+    void * getArrayPointer()
+    {
+#define GETMULTIDIMARRAY(type) return (void *) (((MultidimArray<type>*) im)->data);
+        SWITCHDATATYPE(datatype,GETMULTIDIMARRAY)
+#undef GETMULTIDIMARRAY
+
+    }
+
     /**
      *  Return a pointer to internal multidimarray casted to template T.
      */

@@ -38,7 +38,7 @@ import xmipp.viewer.ImageItem;
 public class VolumeGallery extends ImageGallery {
 	protected String volFn;
 	protected long volNumber;
-	ImageGeneric volHeader;
+	ImageGeneric volume;
 	
 	public VolumeGallery(GalleryData data) throws Exception {
 		super(data);
@@ -53,8 +53,8 @@ public class VolumeGallery extends ImageGallery {
 
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
-		volHeader = new ImageGeneric(data.selectedVol); // read image header
-		ImageDimension dim = new ImageDimension(volHeader);
+		volume = new ImageGeneric(data.selectedVol); // read image header
+		ImageDimension dim = new ImageDimension(volume);
 		return dim;
 	}
 	
@@ -62,7 +62,7 @@ public class VolumeGallery extends ImageGallery {
 	protected void setZoomValue(int z) {
 		super.setZoomValue(z);
 		try {
-			volHeader.read(thumb_width, thumb_height, volNumber);
+			volume.read(thumb_width, thumb_height, volNumber);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -71,10 +71,10 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	protected double[] getMinAndMax() {
 		try {
-			ImageGeneric image = new ImageGeneric(volFn);
-			image.read(volNumber);
-			double[] stats = image.getStatistics();
-			image.destroy();
+			//ImageGeneric image = new ImageGeneric(volFn);
+			//image.read(volNumber);
+			double[] stats = volume.getStatistics();
+			//image.destroy();
 			return stats;
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -94,7 +94,7 @@ public class VolumeGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImagePlus imp = XmippImageConverter.convertToImagePlus(volHeader, ImageGeneric.FIRST_IMAGE, index + 1);
+		ImagePlus imp = XmippImageConverter.convertToImagePlus(volume, ImageGeneric.FIRST_IMAGE, index + 1);
 		String label = String.format("%d", index + 1);
 		return new ImageItem(key, label, imp);
 	}
@@ -102,7 +102,7 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	public ImagePlus getImagePlus() {
 		try {
-			return XmippImageConverter.readToImagePlus(volHeader);
+			return XmippImageConverter.readToImagePlus(volume);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

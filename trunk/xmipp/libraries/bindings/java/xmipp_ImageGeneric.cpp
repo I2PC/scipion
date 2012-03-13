@@ -685,18 +685,25 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
   XMIPP_TRY
   {
     ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-
-    MultidimArray<double> out(image->getSize());
-
     image->convert2Datatype(Double);
     MultidimArray<double> *in;
     MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
-
-    xmipp2PSD(*in, out, useLogarithm);
-
-    image->clear(); // Frees memory.
-    image->setDatatype(Float);
-    MULTIDIM_ARRAY_GENERIC(*image).setImage(out);
+    xmipp2PSD(*in, *in, useLogarithm);
   }
   XMIPP_CATCH;
 }
+
+JNIEXPORT void JNICALL
+Java_xmipp_jni_ImageGeneric_reslice(JNIEnv *env, jobject jobj, jobject jimgOut,
+   jint view)
+{
+  XMIPP_TRY
+  {
+    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+    ImageGeneric *imageOut = GET_INTERNAL_IMAGE_GENERIC(jimgOut);
+    image->reslice((ImageGeneric::AxisView)view, *imageOut);
+  }
+  XMIPP_CATCH;
+}
+
+

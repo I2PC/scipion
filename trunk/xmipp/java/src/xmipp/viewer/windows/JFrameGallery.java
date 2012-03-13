@@ -1036,9 +1036,12 @@ public class JFrameGallery extends JFrame {
 		public final String DISPLAY_WRAP = "Display.Wrap_cb";
 		public final String DISPLAY_COLUMNS = "Display.Columns_mi";
 		public final String DISPLAY_RESLICE = "Display.Reslice";
-		public final String DISPLAY_RESLICE_X = "Display.Reslice.X_rb";
-		public final String DISPLAY_RESLICE_Y = "Display.Reslice.Y_rb";
-		public final String DISPLAY_RESLICE_Z = "Display.Reslice.Z_rb";
+		public final String DISPLAY_RESLICE_FRONT = "Display.Reslice.Front_rb";
+		public final String DISPLAY_RESLICE_TOP = "Display.Reslice.Top_rb";
+		public final String DISPLAY_RESLICE_BOTTOM = "Display.Reslice.Bottom_rb";
+		public final String DISPLAY_RESLICE_LEFT = "Display.Reslice.Left_rb";
+		public final String DISPLAY_RESLICE_RIGHT = "Display.Reslice.Right_rb";
+		
 		public final String STATS = "Stats";
 		public final String STATS_AVGSTD = "Stats.AvgStd_mi";
 		public final String STATS_PCA = "Stats.Pca_mi";
@@ -1093,9 +1096,12 @@ public class JFrameGallery extends JFrame {
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			addItem(DISPLAY_RESLICE, "Reslice");
-			addItem(DISPLAY_RESLICE_X, "X");
-			addItem(DISPLAY_RESLICE_Y, "Y");
-			addItem(DISPLAY_RESLICE_Z, "Z");
+			addItem(DISPLAY_RESLICE_FRONT, "Front (Default)");
+			setItemSelected(DISPLAY_RESLICE_FRONT, true);
+			addItem(DISPLAY_RESLICE_TOP, "Top");
+			addItem(DISPLAY_RESLICE_BOTTOM, "Botton");
+			addItem(DISPLAY_RESLICE_LEFT, "Left");
+			addItem(DISPLAY_RESLICE_RIGHT, "Right");
 			// Statistics
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
@@ -1172,7 +1178,17 @@ public class JFrameGallery extends JFrame {
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-			}
+			} else if (cmd.equals(DISPLAY_RESLICE_FRONT)){
+				
+			} else if (cmd.equals(DISPLAY_RESLICE_TOP)){
+				
+			} else if (cmd.equals(DISPLAY_RESLICE_BOTTOM)){
+				
+			} else if (cmd.equals(DISPLAY_RESLICE_LEFT)){
+				
+			} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)){
+				
+			} 
 		}// function handleActionPerformed
 	}// class GalleryMenu
 

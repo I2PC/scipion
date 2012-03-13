@@ -3,16 +3,13 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
-import ij.WindowManager;
 import ij.gui.ImageWindow;
 import ij.io.FileSaver;
-
 import java.io.File;
 import java.util.Date;
-
 import xmipp.jni.Filename;
-import xmipp.utils.XmippDialog;
 
+@SuppressWarnings("serial")
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 
 	public static void main(String[] args) {

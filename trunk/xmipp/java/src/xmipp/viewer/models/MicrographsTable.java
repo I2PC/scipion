@@ -1,5 +1,6 @@
 package xmipp.viewer.models;
 
+import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 
 @SuppressWarnings("serial")
@@ -23,4 +24,11 @@ public class MicrographsTable extends MetadataTable {
 		return super.loadDimension();
 		
 	}//function loadDimension
+
+    @Override
+    public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
+        super.handleRightClick(row, col, xpopup);
+        xpopup.setItemVisible("ShowCTF_mi", true);
+        return true;
+    }
 }//class MetadataTable

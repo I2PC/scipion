@@ -109,9 +109,6 @@ public class XmippImageConverter {
 		}
 		for (; select_image <= lastImage; select_image++) {
 			image.read(width, height, select_image);
-			if (image.isPSD()) {
-				image.convertPSD(image.getUseLogarithm());
-			}
 			addSlicesToStack(image, ImageGeneric.FIRST_IMAGE, slice, is, pc);
 		}
 
@@ -159,6 +156,9 @@ public class XmippImageConverter {
 	/** Internal function to add the slices to ImageStack to build the ImagePlus */
 	private static void addSlicesToStack(ImageGeneric image, long select_image, int slice, ImageStack is,
 			ProcessorCreator pc) throws Exception {
+		if (image.isPSD()) {
+			image.convertPSD(image.getUseLogarithm());
+		}
 		int lastSlice = slice;
 		if (slice == ImageGeneric.ALL_SLICES) {
 			slice = ImageGeneric.FIRST_SLICE;
