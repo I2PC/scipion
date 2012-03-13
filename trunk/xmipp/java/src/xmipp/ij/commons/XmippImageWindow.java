@@ -8,6 +8,7 @@ import ij.gui.ImageWindow;
 import ij.io.FileSaver;
 
 import java.io.File;
+import java.util.Date;
 
 import xmipp.jni.Filename;
 import xmipp.utils.XmippDialog;
@@ -17,8 +18,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 	public static void main(String[] args) {
 		try {
 			// openImageJ(Tool.VIEWER);
-			XmippImageWindow w = new XmippImageWindow(
-					"/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+//			XmippImageWindow w = new XmippImageWindow(
+//					"/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+			IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -28,10 +30,12 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 	}
 
 	private String file;
+	private long modified;
 
 	public XmippImageWindow(String file) throws Exception {
 		this(XmippImageConverter.loadImage(file), file);
 		this.file = file;
+		this.modified = new File(file).lastModified();
 	}
 
 	public XmippImageWindow(ImagePlus imp) {
@@ -61,7 +65,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 	@Override
 	public void loadData() {
 		try {
-			if (file != null) {
+			if (file != null && new File(file).lastModified() > modified) {
 				ImagePlus imp = XmippImageConverter.loadImage(file);
 				setImage(imp);// second alone does not work
 				updateImage(imp);// first one alone does not work
@@ -79,7 +83,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 
 	@Override
 	public void saveData() throws Exception {
-		System.out.println(imp.getTitle());
 		saveDataAs(imp.getTitle());
 	}
 }// class XmippImageWindow

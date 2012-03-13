@@ -3,9 +3,7 @@ package xmipp.ij.commons;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-
 import javax.swing.SwingUtilities;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
