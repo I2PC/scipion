@@ -4,6 +4,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import javax.swing.SwingUtilities;
+
+import xmipp.ij.Tool;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
@@ -86,5 +88,18 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			imp.repaintWindow();
 
 	}
+	
+	public void mouseMoved(MouseEvent e)
+	{
+
+
+		if (getTool() == Tool.IMAGEJ)
+			super.mouseMoved(e);
+		int x = offScreenX(e.getX());
+		int y = offScreenY(e.getY());
+		imp.mouseMoved(x, y);
+		imp.updateStatusbarValue();
+	}
+
 
 }
