@@ -88,6 +88,9 @@
 #define MULTIDIM_ARRAY_GENERIC(v) (*((v).data))
 #endif
 
+#ifndef MULTIDIM_ARRAY_TYPE
+#define MULTIDIM_ARRAY_TYPE(v, type) (*((MultidimArray<type>*)(v.im)))
+#endif
 
 /**
  * MultidimArrayGeneric class to handle arrays with independence of the data type

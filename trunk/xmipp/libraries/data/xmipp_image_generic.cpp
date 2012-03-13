@@ -232,6 +232,12 @@ int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, in
     return image->readOrReadPreview(name, Xdim, Ydim, select_slice, select_img, !imInf.swap && mapData);
 }
 
+void ImageGeneric::getPreview(ImageGeneric &imgOut, int Xdim, int Ydim, int select_slice, size_t select_img)
+{
+	imgOut.setDatatype(getDatatype());
+	image->getPreview(imgOut.image, Xdim, Ydim, select_slice, select_img);
+}
+
 
 void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                                   bool createTempFile, size_t select_img, bool isStack,int mode, int swapWrite)

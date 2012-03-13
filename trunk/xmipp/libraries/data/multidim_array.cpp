@@ -125,7 +125,20 @@ void MultidimArrayBase::getDimensions(ArrayDim &adim) const
     adim.yxdim = yxdim;
     adim.zyxdim = zyxdim;
     adim.nzyxdim = nzyxdim;
+}
 
+ArrayDim MultidimArrayBase::getDimensions() const
+{
+    ArrayDim adim;
+    adim.xdim = xdim;
+    adim.ydim = ydim;
+    adim.zdim = zdim;
+    adim.ndim = ndim;
+    adim.yxdim = yxdim;
+    adim.zyxdim = zyxdim;
+    adim.nzyxdim = nzyxdim;
+
+    return adim;
 }
 
 /** Get dimensions.
@@ -447,7 +460,7 @@ void MultidimArray< std::complex< double > >::getImag(MultidimArray<double> & im
 {
     if (NZYXSIZE(*this) == 0)
     {
-    	imagImg.clear();
+        imagImg.clear();
         return;
     }
 

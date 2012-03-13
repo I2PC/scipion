@@ -199,6 +199,22 @@ TEST_F( ImageTest, readPreview)
     EXPECT_TRUE(img1 == img2);
 }
 
+TEST_F( ImageTest, getPreview)
+{
+    FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    Image<double> img1, img2;
+    img1.read(auxFn);
+
+    img1.getPreview(&img2, 32,32, ALL_SLICES);
+
+    img1().setXmippOrigin();
+    selfScaleToSize(NEAREST, img1(),32,32,4);
+
+    img1().setXmippOrigin();
+    img2().setXmippOrigin();
+    EXPECT_TRUE(img1 == img2);
+}
+
 TEST_F( ImageTest, mapFile2Write)
 {
      FileName auxFn = TEST_FILENAME("smallVolume.vol");

@@ -745,6 +745,8 @@ public:
      */
     void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const;
     void getDimensions(ArrayDim &idim) const;
+    ArrayDim getDimensions() const;
+
 
     /** Get dimensions.
      *

@@ -264,6 +264,7 @@ TEST_F( ImageGenericTest, reslice)
 
     imgSliced.reslice(ImageGeneric::TOP);
     imgSliced().getMultidimArrayPointer(dataS);
+    imgSliced.write("slice.vol");
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
     {
@@ -286,6 +287,28 @@ TEST_F( ImageGenericTest, reslice)
     imgSliced().getMultidimArrayPointer(dataS);
 
     EXPECT_EQ(*dataR, *dataS);
+}
+
+TEST_F( ImageGenericTest, getPreview)
+{
+    FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    ImageGeneric img1, img2, imgTemp;
+    imgTemp.read(auxFn);
+
+    imgTemp.getPreview(img1, 32,32, ALL_SLICES);
+    img2.readPreview(auxFn, 32,32, ALL_SLICES);
+    img1().setXmippOrigin();
+    img2().setXmippOrigin();
+    EXPECT_EQ(img1, img2) << "getPreview the whole volume.";
+
+    for (int k = 1; k <= 4; ++k)
+    {
+        imgTemp.getPreview(img1, 32,32, k);
+        img2.readPreview(auxFn, 32,32, k);
+        img1().setXmippOrigin();
+        img2().setXmippOrigin();
+        EXPECT_EQ(img1, img2) << "getPreview a specific slice";
+    }
 }
 
 GTEST_API_ int main(int argc, char **argv)

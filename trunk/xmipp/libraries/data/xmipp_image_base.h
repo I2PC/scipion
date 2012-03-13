@@ -121,18 +121,18 @@ struct ImageInfo
 
 struct ApplyGeoParams
 {
-  bool only_apply_shifts;
-  DataMode datamode;
-  size_t select_img;
-  bool wrap;
+    bool only_apply_shifts;
+    DataMode datamode;
+    size_t select_img;
+    bool wrap;
 
-  ApplyGeoParams()
-  {
-    only_apply_shifts = false;
-    datamode = DATA;
-    select_img = ALL_IMAGES;
-    wrap = WRAP;
-  }
+    ApplyGeoParams()
+    {
+        only_apply_shifts = false;
+        datamode = DATA;
+        select_img = ALL_IMAGES;
+        wrap = WRAP;
+    }
 };
 
 const ApplyGeoParams DefaultApplyGeoParams;
@@ -236,7 +236,7 @@ protected:
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
     ImageFHandler*      hFile;       // Image File handler information structure
-    ArrayDim   			aDimFile;   // Image header file information structure (original info from file)
+    ArrayDim      aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
@@ -250,7 +250,7 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
-    size_t   			virtualOffset;// MDA Offset when movePointerTo is used
+    size_t      virtualOffset;// MDA Offset when movePointerTo is used
 
 public:
 
@@ -360,19 +360,19 @@ public:
      * This function can apply geometrical transformations, but cannot map the image in disk
      */
     int readApplyGeo(const FileName &name, const MDRow &row,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                     const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read an image from metadata, filename is provided*/
     int readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                     const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int readApplyGeo(const MetaData &md, size_t objId,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                     const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /** Apply geometry in refering metadata to the image */
     void applyGeo(const MetaData &md, size_t objId,
-        const ApplyGeoParams &params = DefaultApplyGeoParams);
+                  const ApplyGeoParams &params = DefaultApplyGeoParams);
 
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
@@ -391,6 +391,12 @@ public:
      * This function is intended for previews of great image files as the image is not copy to memory.
      */
     virtual int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
+
+    /** Returns an image with a lower resolution as a preview image.
+      * If Zdim parameter is not passed, then all slices are rescaled.
+      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
+      */
+    virtual void getPreview(ImageBase *imgOut, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
 
     /** This function allows to read the original image or a preview of it also allowing to select either
      *  a specific image from the stack or a slice from a volume.

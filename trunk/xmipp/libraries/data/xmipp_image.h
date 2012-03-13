@@ -764,6 +764,59 @@ public:
         return err;
     }
 
+    /** Returns an image with a lower resolution as a preview image.
+      * If Zdim parameter is not passed, then all slices are rescaled.
+      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
+      */
+    void getPreview(ImageBase *imgBOut, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
+    {
+        // Zdim is used to choose the slices: -1 = CENTRAL_SLICE, 0 = ALL_SLICES, else This Slice
+
+        int Zdim;
+        ArrayDim imAdim;
+        MULTIDIM_ARRAY(*this).getDimensions(imAdim);
+        MULTIDIM_ARRAY(*this).setXmippOrigin();
+
+        double scale;
+
+        // If only Xdim is passed, it is the higher allowable size, for any dimension
+        if (Ydim == -1 && imAdim.xdim < imAdim.ydim)
+        {
+            Ydim = Xdim;
+            scale = ((double) Ydim)/((double) imAdim.ydim);
+            Xdim = (int)(scale*imAdim.xdim);
+        }
+        else
+        {
+            scale = ((double) Xdim)/((double) imAdim.xdim);
+            if (Ydim == -1)
+                Ydim = (int)(scale*imAdim.ydim);
+        }
+
+        Image<T> &imgOut = *((Image<T>*) imgBOut);
+
+        int mode = (scale <= 1)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
+
+        if (select_slice > ALL_SLICES) // In this case a specific slice number has been chosen (Not central slice)
+        {
+            movePointerTo(select_slice, select_img);
+            scaleToSize(mode, IMGMATRIX(imgOut), IMGMATRIX(*this), Xdim, Ydim);
+        }
+        else // Otherwise, All slices or Central slice is selected
+        {
+            movePointerTo(ALL_SLICES, select_img);
+            Zdim = (select_slice == ALL_SLICES)? imAdim.zdim: 1;
+            scaleToSize(mode, IMGMATRIX(imgOut), IMGMATRIX(*this), Xdim, Ydim, Zdim);
+        }
+
+        movePointerTo();
+        IMGMATRIX(*this).resetOrigin();
+
+        // We set the actual dimesions of th MDA to the imageOut as if it were read from file.
+        imgOut.setADimFile(IMGMATRIX(imgOut).getDimensions());
+    }
+
+
     /** It changes the behavior of the internal multidimarray so it points to a specific slice/image
      *  from a stack, volume or stack of volumes. No information is deallocated from memory, so it is
      *  also possible to repoint to the whole stack,volume... (passing select_slice = ALL_SLICES and

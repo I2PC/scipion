@@ -1044,6 +1044,26 @@ inline void scaleToSize(int SplineDegree,
 /** Scales to a new size.
  * @ingroup GeometricalTransformations
  *
+ * The volume is scaled (resampled) to fill a new size.
+ * Same as previous, but in this case the input is a MultidimArrayGeneric.
+ *
+ * @code
+ * scaleToSize(VolumeOut, VolumeGenericInput, 128, 128, 128);
+ * @endcode
+ */
+template<typename T>
+inline void scaleToSize(int SplineDegree,
+                        MultidimArrayGeneric &V2,
+                        const MultidimArray<T> &V1,int Xdim, int Ydim, int Zdim = 1)
+{
+#define SCALETOSIZE(type) scaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),V1,Xdim,Ydim,Zdim);
+    SWITCHDATATYPE(V1.datatype,SCALETOSIZE)
+#undef SCALETOSIZE
+}
+
+/** Scales to a new size.
+ * @ingroup GeometricalTransformations
+ *
  * The same as the previous function, but input array is overwritten
  */
 template<typename T>
