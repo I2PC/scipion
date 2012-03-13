@@ -1264,7 +1264,7 @@ class ProtocolGUI(BasicGUI):
 
     #Select family from extraction run
     def wizardChooseFamilyToExtract(self, var):
-        from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE
+        from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTFMODEL
         from protlib_gui_ext import ListboxDialog
         pickingRun = self.getVarValue('PickingRun')
         pickingProt = self.project.getProtocolFromRunName(pickingRun)
@@ -1290,6 +1290,11 @@ class ProtocolGUI(BasicGUI):
                 if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
                     particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
                     self.setVarValue("ParticleSize", str(particleSize))
+            if pickingProt.TiltPairs:
+                self.setVarValue("DoFlip", str(False))
+            else:
+                md=MetaData(pickingProt.getFilename("micrographs"))
+                self.setVarValue("DoFlip", md.containsLabel(MDL_CTFMODEL))
 
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
