@@ -365,5 +365,22 @@ public class GalleryData {
 		}
 		return false;
 	}
-
+	
+	public String getValueFromCol(int index, int col){
+		try {
+			return md.getValueString(labels.get(col).getLabel(), ids[index]);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public String getValueFromLabel(int index, int label){
+		try {
+			return md.getValueString(label, ids[index]);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }// class GalleryData

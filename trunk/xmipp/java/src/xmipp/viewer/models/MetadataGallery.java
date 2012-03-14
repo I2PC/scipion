@@ -46,6 +46,7 @@ public class MetadataGallery extends ImageGallery {
 	// Label to be rendered
 	protected int renderLabel;
 	protected int displayLabel;
+	protected ImageGeneric image;
 
 	// Also store the visible ones to fast access
 	ArrayList<ColumnInfo> visibleLabels;
@@ -111,10 +112,11 @@ public class MetadataGallery extends ImageGallery {
 			displayLabel = renderLabel;
 			// if (renderLabels) {
 			for (int i = 0; i < data.ids.length; ++i) {
-				ImageGeneric image = getImage(i, renderLabel);
-				if (image != null) {
+				String imageFn = getImageFilename(i, renderLabel);
+				if (imageFn != null && Filename.exists(imageFn)) {
+					image = new ImageGeneric(imageFn); 
 					dim = new ImageDimension(image);
-					image.destroy();
+					//image.destroy();
 					break;
 				}
 			}
@@ -137,17 +139,18 @@ public class MetadataGallery extends ImageGallery {
 	 */
 	protected ImageItem createImageItem(int index, int renderLabel,
 			int displayLabel, String key) throws Exception {
-		ImageGeneric image = getImage(index, renderLabel);
+		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		String labelStr = data.md.getValueString(displayLabel, objId);
 		ImagePlus imp = null;
-		if (image != null) {
+		if (imageFn != null) {
 			if (data.useGeo)
-				image.readApplyGeo(data.md, objId, thumb_width,
+				image.readApplyGeo(imageFn, data.md, objId, thumb_width,
 						thumb_height, data.wrap);
 			else
-				image.read(thumb_width, thumb_height);
+				image.read(imageFn, thumb_width, thumb_height);
 			imp = XmippImageConverter.convertToImagePlus(image);
+			//image.destroy();
 			
 		}
 		ImageItem ii = new ImageItem(key, labelStr, imp);
@@ -189,17 +192,24 @@ public class MetadataGallery extends ImageGallery {
 	 * @throws Exception
 	 *             if can not load image
 	 */
-	protected ImageGeneric getImage(int index, int label) {
+	public String getImageFilename(int index, int label) {
 		try {
-			String imgFn = data.md.getValueString(label, data.ids[index]);
-			if (Filename.exists(imgFn)){
-				ImageGeneric image = new ImageGeneric(imgFn);
-				return image;
-			}
+			return data.getValueFromLabel(index, label);
+//			if (Filename.exists(imgFn)){
+//				ImageGeneric image = new ImageGeneric(imgFn);
+//				return image;
+//			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	@Override
+	public String getImageFilenameAt(int row, int col){
+		if (data.isImageFile(col))
+			return data.getValueFromCol(row, col);
+		return null;		
 	}
 
 	@Override

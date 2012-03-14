@@ -1,21 +1,20 @@
 package xmipp.viewer;
 
-import xmipp.utils.DEBUG;
-import xmipp.utils.XmippResource;
-import xmipp.viewer.ImageItem;
 import ij.ImagePlus;
+
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
+
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
-import xmipp.viewer.gallery.models.AbstractXmippTableModel;
-import xmipp.viewer.gallery.renderers.StrokeBorder;
-
-import java.awt.Color;
-import java.awt.Font;
-import javax.swing.BorderFactory;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
+
+import xmipp.utils.XmippResource;
+import xmipp.viewer.gallery.renderers.StrokeBorder;
 
 /**
  * 

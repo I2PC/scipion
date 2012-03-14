@@ -1,5 +1,6 @@
 package xmipp.viewer.windows;
 
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippLabel;
 import ij.IJ;
 import ij.ImagePlus;
@@ -13,6 +14,9 @@ import java.awt.Button;
 import java.awt.Checkbox;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Panel;
 import java.awt.Point;
 import java.awt.Scrollbar;
@@ -26,8 +30,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Arrays;
+import java.util.List;
+
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
@@ -72,12 +81,12 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private Point centerDisplay, centerPSD;
     private int displayLength, samples;
     private double angle;
-    private Checkbox cbBgNoise, cbEnvelope, cbPSD, cbCTF;
+    private JCheckBox cbBgNoise, cbEnvelope, cbPSD, cbCTF;
     private JPanel panelPlot, panelPlotAVG;
     private XYSeriesCollection datasetProfile, datasetAVG;
     private ChartPanel chartPanelProfile, chartPanelAVG;
     private JFileChooser fc = new JFileChooser();
-    private Button bExportProfile, bExportAVG;
+    private JButton bExportProfile, bExportAVG;
     private double xValues[];
     private double Tm;
 
@@ -98,7 +107,8 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             psdimage.setTitle(PSDFilename);
 
             removeAll();
-            setLayout(new FlowLayout());
+            GridBagConstraints gc = new GridBagConstraints();
+            setLayout(new GridBagLayout());
 
             scrollbar = new Scrollbar(Scrollbar.HORIZONTAL);
             scrollbar.setMaximum(MAX_VALUE + scrollbar.getVisibleAmount());
@@ -140,35 +150,43 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             pCenter.add(jtpPlots);
 
             // Check boxes for plots
-            cbBgNoise = new Checkbox(XmippLabel.CB_PLOT_BGNOISE, false);
-            cbEnvelope = new Checkbox(XmippLabel.CB_PLOT_ENVELOPE, false);
-            cbPSD = new Checkbox(XmippLabel.CB_PLOT_PSD, true);
-            cbCTF = new Checkbox(XmippLabel.CB_PLOT_CTF, true);
+            cbBgNoise = new JCheckBox(XmippLabel.CB_PLOT_BGNOISE, false);
+            cbEnvelope = new JCheckBox(XmippLabel.CB_PLOT_ENVELOPE, false);
+            cbPSD = new JCheckBox(XmippLabel.CB_PLOT_PSD, true);
+            cbCTF = new JCheckBox(XmippLabel.CB_PLOT_CTF, true);
 
             cbBgNoise.addItemListener(this);
             cbEnvelope.addItemListener(this);
             cbPSD.addItemListener(this);
             cbCTF.addItemListener(this);
 
-            bExportProfile = new Button(XmippLabel.BUTTON_EXPORT_PROFILE);
-            bExportAVG = new Button(XmippLabel.BUTTON_EXPORT_RADIAL_AVERAGE);
-            bExportProfile.addActionListener(this);
-            bExportAVG.addActionListener(this);
+            bExportProfile = WindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_PROFILE, this);
+            bExportAVG = WindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_RADIAL_AVERAGE, this);
 
-            Panel panelCBoxes = new Panel();
-            panelCBoxes.setLayout(new BoxLayout(panelCBoxes, BoxLayout.PAGE_AXIS));
-            panelCBoxes.add(cbBgNoise);
-            panelCBoxes.add(cbEnvelope);
-            panelCBoxes.add(cbPSD);
-            panelCBoxes.add(cbCTF);
-            panelCBoxes.add(bExportProfile);
-            panelCBoxes.add(bExportAVG);
+            JPanel panelCBoxes = new JPanel(new GridBagLayout());
+            //BoxLayout layout = new BoxLayout(panelCBoxes, BoxLayout.PAGE_AXIS);
+            //layout.
+            
+
+            gc.anchor = GridBagConstraints.WEST;
+            panelCBoxes.add(cbBgNoise, WindowUtil.getConstraints(gc, 0, 0));
+            panelCBoxes.add(cbEnvelope, WindowUtil.getConstraints(gc, 0, 1));
+            panelCBoxes.add(cbPSD, WindowUtil.getConstraints(gc, 0, 2));
+            panelCBoxes.add(cbCTF, WindowUtil.getConstraints(gc, 0, 3));
+            gc.weightx = 1.0;
+            gc.insets = new Insets(0, 0, 5, 5);
+            panelCBoxes.add(bExportProfile, WindowUtil.getConstraints(gc, 0, 4, 2));
+            panelCBoxes.add(bExportAVG, WindowUtil.getConstraints(gc, 0, 5, 2));
 
             // Adds panels.
-            setLayout(new BorderLayout());
-            add(panelImage, BorderLayout.WEST);
-            add(pCenter, BorderLayout.CENTER);
-            add(panelCBoxes, BorderLayout.EAST);
+            //setLayout(new BorderLayout());
+            add(panelImage, WindowUtil.getConstraints(gc, 0, 0));
+            add(pCenter, WindowUtil.getConstraints(gc, 1, 0, 2, 2));
+            gc.anchor = GridBagConstraints.EAST;
+            add(panelCBoxes,WindowUtil.getConstraints(gc, 0, 1));
+//          add(panelImage);
+//          add(pCenter);
+//          add(panelCBoxes);           
 
             // Store initial values.
             centerDisplay = new Point(imp.getWidth() / 2, imp.getHeight() / 2);
@@ -228,9 +246,9 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     }
 
     private void setCBEnableStatus() {
-        cbBgNoise.setEnabled(!cbCTF.getState());
-        cbEnvelope.setEnabled(!cbCTF.getState());
-        cbPSD.setEnabled(!cbCTF.getState());
+        cbBgNoise.setEnabled(!cbCTF.isEnabled());
+        cbEnvelope.setEnabled(!cbCTF.isEnabled());
+        cbPSD.setEnabled(!cbCTF.isEnabled());
 
         cbBgNoise.setForeground(cbBgNoise.isEnabled() ? COLOR_BACKGROUND_NOISE : COLOR_DISABLED);
         cbEnvelope.setForeground(cbEnvelope.isEnabled() ? COLOR_ENVELOPE : COLOR_DISABLED);
@@ -239,19 +257,19 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     }
 
     private boolean showBGNoise() {
-        return cbBgNoise.isEnabled() && cbBgNoise.getState();
+        return cbBgNoise.isEnabled() && cbBgNoise.isEnabled();
     }
 
     private boolean showEnvelope() {
-        return cbEnvelope.isEnabled() && cbEnvelope.getState();
+        return cbEnvelope.isEnabled() && cbEnvelope.isEnabled();
     }
 
     private boolean showPSD() {
-        return cbPSD.isEnabled() && cbPSD.getState();
+        return cbPSD.isEnabled() && cbPSD.isEnabled();
     }
 
     private boolean showCTF() {
-        return cbCTF.isEnabled() && cbCTF.getState();
+        return cbCTF.isEnabled() && cbCTF.isEnabled();
     }
 
     private void updatePlots() {
@@ -326,7 +344,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
 
-        java.util.List list = Arrays.asList(new Integer[]{
+        List<Integer> list = Arrays.asList(new Integer[]{
                     new Integer(0), new Integer(1)
                 });
         plot.mapDatasetToDomainAxes(0, list);

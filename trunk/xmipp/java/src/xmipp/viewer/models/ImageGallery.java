@@ -454,6 +454,9 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	/** Retrieve the mininum and maximum of data */
 	protected abstract double[] getMinAndMax();
+	
+	/** Retrieve the image filename, return null if error */
+	public abstract String getImageFilenameAt(int row, int col);
 
 	/**
 	 * Function to create the key of the item knowing the item index

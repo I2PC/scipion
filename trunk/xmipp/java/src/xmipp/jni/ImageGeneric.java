@@ -135,20 +135,31 @@ public class ImageGeneric {
     public void read(int width, int height, int slice, long image) throws Exception {
         read(Filename.getFilename(filename), width, height, slice, image);
     }
-
+    
+    public void read(String filename, int width, int height) throws Exception {
+        this.filename = filename;
+    	read(filename, width, height, MID_SLICE, ALL_IMAGES);//image in filename will be used
+    }
+    
     public void read(int width, int height) throws Exception {
         read(filename, width, height, MID_SLICE, ALL_IMAGES);//image in filename will be used
     }
+    
     private native void read(String filename, int width, int height, int slice, long nimage) throws Exception;
 
     public void readApplyGeo(String filename, MetaData metadata, long id) throws Exception {
         ImageGeneric image = new ImageGeneric(filename);
         readApplyGeo(filename, metadata, id, image.getXDim(), image.getYDim());
     }
-
+    
     public void readApplyGeo(String filename, MetaData metadata, long id, int w, int h) throws Exception {
         this.filename = filename;
         readApplyGeo_(filename, metadata, id, w, h, true);
+    }
+    
+    public void readApplyGeo(String filename, MetaData metadata, long id, int w, int h, boolean wrap) throws Exception {
+        this.filename = filename;
+        readApplyGeo_(filename, metadata, id, w, h, wrap);
     }
     
     public void readApplyGeo(MetaData metadata, long id, int w, int h) throws Exception {

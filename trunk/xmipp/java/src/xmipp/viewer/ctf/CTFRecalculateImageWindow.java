@@ -4,6 +4,7 @@
  */
 package xmipp.viewer.ctf;
 
+import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippLabel;
 import ij.IJ;
 import ij.ImagePlus;
@@ -22,13 +23,15 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import javax.swing.JButton;
+
 /**
  *
  * @author Juanjo Vega
  */
-public class CTFRecalculateImageWindow extends ImageWindow {
+public class CTFRecalculateImageWindow extends ImageWindow implements ActionListener{
 
-    private Button button = new Button(XmippLabel.LABEL_RECALCULATE_CTF);
+    private JButton button;
     protected EllipseFitter ellipseFitter = new EllipseFitter();
     private EllipseCTF ellipseCTF;
     private TasksEngine tasksEngine;
@@ -45,6 +48,7 @@ public class CTFRecalculateImageWindow extends ImageWindow {
 
         ellipseCTF = new EllipseCTF(CTFFilename, imp.getWidth());
 
+        button = WindowUtil.getTextButton("Recalculate CTF", this);
         button.setEnabled(false);
 
         imp.getCanvas().addMouseListener(new MouseListener() {
@@ -86,13 +90,6 @@ public class CTFRecalculateImageWindow extends ImageWindow {
 
         setMaximumSize(getPreferredSize());
 
-        button.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                recalculateCTF();
-            }
-        });
-
         pack();
         imp.updateImage();
     }
@@ -132,14 +129,16 @@ public class CTFRecalculateImageWindow extends ImageWindow {
 
     private void recalculateCTF() {
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
-
         // Add "estimate..." to tasks.
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF,
-                90 - ellipseFitter.angle, PSDFilename, imp.getWidth(), tasksEngine, row);
-
+                ellipseCTF, 90 - ellipseFitter.angle, 
+                PSDFilename, imp.getWidth(), tasksEngine, row);
         tasksEngine.add(estimateFromCTFTask);
-
         dispose();
     }
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		recalculateCTF();
+	}
 }

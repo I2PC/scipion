@@ -960,13 +960,23 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 		if (evt.getButton() == MouseEvent.BUTTON1) { // Left click.
 			if (evt.getClickCount() > 1) {
-				Object item = table.getValueAt(view_row, view_col);
-
-				if (item instanceof ImageItem) {
-					new XmippImageWindow(((ImageItem) item).getImage());
-					ImagesWindowFactory.captureFrame(((ImageItem) item)
-							.getImage());
+				ColumnInfo ci = data.labels.get(view_col);
+				if (ci.render){
+					try {
+						String imageFn = gallery.getImageFilenameAt(view_row, view_col);
+						if (imageFn != null)
+							new XmippImageWindow(imageFn);
+					} catch (Exception e) {
+						XmippDialog.showError(this, e.getMessage());
+					}
 				}
+//				Object item = table.getValueAt(view_row, view_col);
+//
+//				if (item instanceof ImageItem) {
+//					new XmippImageWindow(((ImageItem) item).getImage());
+//					ImagesWindowFactory.captureFrame(((ImageItem) item)
+//							.getImage());
+//				}
 			} else {
 				// Ctrl adds items to selection, otherwise previous ones are
 				// removed.
@@ -1267,13 +1277,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	@Override
 	public void setRunning(boolean running) {
-		// TODO Auto-generated method stub
-		
+		XmippDialog.showInfo(this, String.format("Calculating ctf"));
+		//ImagesWindowFactory.blockGUI(getRootPane(), "Calculating CTF");
 	}
 
 	@Override
 	public void setRowBusy(int row) {
-		// TODO Auto-generated method stub
+		XmippDialog.showInfo(this, String.format("busy row %d" , row));
 		
 	}
 
@@ -1285,13 +1295,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	@Override
 	public String getFilename() {
-		// TODO Auto-generated method stub
-		return null;
+		return data.getMdFilename();
 	}
 
 	@Override
 	public void done() {
-		// TODO Auto-generated method stub
+		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 		
 	}
 }// class JFrameGallery

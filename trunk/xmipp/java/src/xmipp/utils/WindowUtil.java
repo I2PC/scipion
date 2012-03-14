@@ -24,6 +24,7 @@
  ***************************************************************************/
 package xmipp.utils;
 
+import java.awt.Button;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -78,29 +79,6 @@ public class WindowUtil {
 		return getConstraints(constraints, x, y, columns, 1);
 	}
 	
-	public static JButton getIconButton(String icon, ActionListener listener){
-		JButton btn = new JButton();
-		btn.setIcon(XmippResource.getIcon(icon));
-		Dimension dim = btn.getPreferredSize();
-		dim.width = dim.height;
-		btn.setPreferredSize(dim);
-		btn.addActionListener(listener);
-		return btn;
-	}
-	
-	public static JButton getTextButton(String text, ActionListener listener){
-		JButton btn = new JButton(text);
-		btn.setBackground(LIGHT_BLUE);
-		btn.addActionListener(listener);
-		return btn;
-	}
-	
-	public static JLabel getIconLabel(String icon){
-		JLabel label = new JLabel();
-		label.setIcon(XmippResource.getIcon(icon));
-		return label;
-	}
-	
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, 
 			int x, int y, int columns, int rows){
 		constraints.gridx = x;
@@ -118,6 +96,37 @@ public class WindowUtil {
 			constraints.fill = GridBagConstraints.NONE;}
 		return constraints;
 	}
+	
+	public static JButton getIconButton(String icon, ActionListener listener){
+		JButton btn = new JButton();
+		btn.setIcon(XmippResource.getIcon(icon));
+		Dimension dim = btn.getPreferredSize();
+		dim.width = dim.height;
+		btn.setPreferredSize(dim);
+		btn.addActionListener(listener);
+		return btn;
+	}
+	
+	public static JButton getTextButton(String text, ActionListener listener){
+		JButton btn = new JButton(text);
+		btn.setBackground(LIGHT_BLUE);
+		btn.addActionListener(listener);
+		return btn;
+	}
+	
+	public static Button getTextAWTButton(String text, ActionListener listener){
+		Button btn = new Button(text);
+		//btn.setBackground(LIGHT_BLUE);
+		btn.addActionListener(listener);
+		return btn;
+	}	
+	
+	public static JLabel getIconLabel(String icon){
+		JLabel label = new JLabel();
+		label.setIcon(XmippResource.getIcon(icon));
+		return label;
+	}
+
 			
 			
 	public static void openURI(String uri) {

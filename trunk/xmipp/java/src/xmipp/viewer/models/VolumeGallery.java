@@ -114,4 +114,9 @@ public class VolumeGallery extends ImageGallery {
 		return false;
 	}
 
+	@Override
+	public String getImageFilenameAt(int row, int col) {
+		return null;
+	}
+
 }
