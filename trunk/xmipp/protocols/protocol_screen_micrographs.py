@@ -123,9 +123,14 @@ class ProtScreenMicrographs(XmippProtocol):
         if not exists(self.importMicroscope):
             errors.append("Cannot find imported microscopy file:\n   <%s>" % self.importMicroscope)
         
-        # Check that Q0 is negative
-        if self.AmplitudeContrast > 0:
-            errors.append("Q0 should be negative ")
+        if self.AmplitudeContrast < 0:
+            errors.append("Q0 should be positive")
+        
+        if self.MinFocus < 0 or self.MaxFocus<0:
+            errors.append("Defoci range must be positive (minFocus, maxFocus)>0")
+            
+        if self.MaxFocus < self.MinFocus:
+            errors.append("maxFocus must be larger than minFocus")
         
         # Check CTFFIND is available
         if self.DoCtffind and self.CtffindExec=="":
