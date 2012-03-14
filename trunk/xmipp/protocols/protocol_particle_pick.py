@@ -120,14 +120,14 @@ class ProtParticlePicking(XmippProtocol):
         return errors
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.getFilename("micrographs"), self.WorkingDir, self.TiltPairs)
+        launchParticlePickingGUI(None, self.micrographs, self.WorkingDir, self.TiltPairs)
 
 # Execute protocol in the working directory
 def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,
                              TiltPairs=False,
                              AutomaticPicking=False, NumberOfThreads=1, Fast=True, InCore=False):
     if TiltPairs:
-        runJob(log,"xmipp_micrograph_tiltpair_picking", "-i %(MicrographSelfile)s -o %(WorkingDir)s" % locals())
+        runJob(log,"xmipp_micrograph_tiltpair_picking", "-i %(MicrographSelfile)s -o %(WorkingDir)s" % locals(), RunInBackground=True)
     else:
         mode = "manual"
         if AutomaticPicking:
