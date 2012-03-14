@@ -4,42 +4,39 @@
  */
 package xmipp.viewer.windows;
 
-import xmipp.utils.DEBUG;
-import xmipp.utils.InfiniteProgressPanel;
-import xmipp.utils.Param;
-import xmipp.utils.XmippDialog;
-import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
-import xmipp.viewer.ctf.CTFRecalculateImageWindow;
-import xmipp.viewer.ctf.TasksEngine;
-import xmipp.viewer.gallery.models.AbstractXmippTableModel;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.gui.ImageWindow;
 import ij.gui.Toolbar;
 import ij.io.FileInfo;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
+
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Toolkit;
 import java.io.File;
-import java.util.ArrayList;
+
 import javax.swing.JFrame;
 import javax.swing.JRootPane;
 import javax.vecmath.Color3f;
 
-import xmipp.viewer.micrographs.JFrameMicrographs;
-import xmipp.viewer.rotspectra.JFrameRotSpectra;
+import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippImageWindow;
+import xmipp.ij.commons.XmippStackWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
-import xmipp.ij.commons.XmippStackWindow;
+import xmipp.utils.DEBUG;
+import xmipp.utils.InfiniteProgressPanel;
+import xmipp.utils.Param;
+import xmipp.utils.XmippDialog;
+import xmipp.viewer.ctf.CTFRecalculateImageWindow;
+import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.rotspectra.JFrameRotSpectra;
 
 /**
  * 
@@ -249,53 +246,53 @@ public class ImagesWindowFactory {
 		openXmippImageWindow(ip, false);
 	}
 
-	public static void openGalleryAs3D(AbstractXmippTableModel tableModel) {
-		try {
-			// ArrayList<AbstractGalleryImageItem> items =
-			// tableModel.getAllItems();
-			// ImagePlus ip = ImagesWindowFactory.convertToImageJ(items);
-			// ip.setTitle(tableModel.getFilename());
+//	public static void openGalleryAs3D(AbstractXmippTableModel tableModel) {
+//		try {
+//			// ArrayList<AbstractGalleryImageItem> items =
+//			// tableModel.getAllItems();
+//			// ImagePlus ip = ImagesWindowFactory.convertToImageJ(items);
+//			// ip.setTitle(tableModel.getFilename());
+//
+//			// openImagePlusAs3D(ip);
+//		} catch (Exception ex) {
+//			IJ.error(ex.getMessage());
+//			DEBUG.printException(ex);
+//		}
+//	}
 
-			// openImagePlusAs3D(ip);
-		} catch (Exception ex) {
-			IJ.error(ex.getMessage());
-			DEBUG.printException(ex);
-		}
-	}
-
-	public static void openGalleryAsImagePlus(AbstractXmippTableModel tableModel) {
-		try {
-			String path = tableModel.getFilename();
-
-			// If file exists, uses it...
-			File file = new File(Filename.getFilename(path));
-			if (file.exists()) {
-				// System.err.println(" +++ EXISTS");
-				openFileAsImage(path, new Param());
-			} else {
-				// System.err.println(" !!! EXISTS");
-				// ...otherwise, stores it in a temporary file.
-				File tempFile = File.createTempFile("tableToStack_", ".stk");
-				tempFile.deleteOnExit();
-
-				// ArrayList<AbstractGalleryImageItem> items =
-				// tableModel.getAllItems();
-				// ImagePlus imp = ImagesWindowFactory.convertToImageJ(items);
-				// IJ.run(imp, "Xmipp writer", "save=" +
-				// tempFile.getAbsolutePath());
-
-				// System.err.println(" >>> TMP Saved at: " +
-				// file.getAbsolutePath());
-				//
-				// imp.setTitle(tempFile.getName());
-				//
-				// captureFrame(imp);
-			}
-		} catch (Exception ex) {
-			IJ.error(ex.getMessage());
-			DEBUG.printException(ex);
-		}
-	}
+//	public static void openGalleryAsImagePlus(AbstractXmippTableModel tableModel) {
+//		try {
+//			String path = tableModel.getFilename();
+//
+//			// If file exists, uses it...
+//			File file = new File(Filename.getFilename(path));
+//			if (file.exists()) {
+//				// System.err.println(" +++ EXISTS");
+//				openFileAsImage(path, new Param());
+//			} else {
+//				// System.err.println(" !!! EXISTS");
+//				// ...otherwise, stores it in a temporary file.
+//				File tempFile = File.createTempFile("tableToStack_", ".stk");
+//				tempFile.deleteOnExit();
+//
+//				// ArrayList<AbstractGalleryImageItem> items =
+//				// tableModel.getAllItems();
+//				// ImagePlus imp = ImagesWindowFactory.convertToImageJ(items);
+//				// IJ.run(imp, "Xmipp writer", "save=" +
+//				// tempFile.getAbsolutePath());
+//
+//				// System.err.println(" >>> TMP Saved at: " +
+//				// file.getAbsolutePath());
+//				//
+//				// imp.setTitle(tempFile.getName());
+//				//
+//				// captureFrame(imp);
+//			}
+//		} catch (Exception ex) {
+//			IJ.error(ex.getMessage());
+//			DEBUG.printException(ex);
+//		}
+//	}
 
 	public static void openImagePlusAsGallery(ImagePlus imp) {
 		try {
@@ -354,16 +351,16 @@ public class ImagesWindowFactory {
 				tasksEngine, row);
 	}
 
-	public static void openMicrograph(String filename) {
-		File f = new File(filename);
-
-		if (f.exists()) {
-			JFrameMicrographs frame = new JFrameMicrographs(filename);
-			frame.setVisible(true);
-		} else {
-			IJ.error("File is missing", filename + " not found.");
-		}
-	}
+//	public static void openMicrograph(String filename) {
+//		File f = new File(filename);
+//
+//		if (f.exists()) {
+//			JFrameMicrographs frame = new JFrameMicrographs(filename);
+//			frame.setVisible(true);
+//		} else {
+//			IJ.error("File is missing", filename + " not found.");
+//		}
+//	}
 
 	public static void openRotSpectraWindow(String filenameVectors,
 			String filenameClasses, String filenameData) {
