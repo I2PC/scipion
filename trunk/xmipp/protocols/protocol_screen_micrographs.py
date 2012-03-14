@@ -106,7 +106,8 @@ class ProtScreenMicrographs(XmippProtocol):
                            WorkingDir=self.WorkingDir,
                            summaryFile=self.micrographs,
                            importMicrographs=self.importMicrographs,
-                           DoCtffind=self.DoCtffind)
+                           DoCtffind=self.DoCtffind,
+                           Downsampling=self.DownsampleFactor)
     
     def createFilenameTemplates(self):
         return _templateDict
@@ -232,9 +233,11 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
     MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
     MD.write(fnOut)
 
-def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,DoCtffind):
+def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,DoCtffind,Downsampling):
     buildSummaryMetadata(WorkingDir, DoCtffind, importMicrographs, summaryFile)
     runJob(log,"xmipp_ctf_sort_psds","-i " + summaryFile)
+    if Downsampling!=1:
+        runJob(log,"rm","-f "+TmpDir+"/*")
 
 def buildSummaryMetadata(WorkingDir,DoCtffind,importMicrographs,summaryFile):
     md = xmipp.MetaData()
