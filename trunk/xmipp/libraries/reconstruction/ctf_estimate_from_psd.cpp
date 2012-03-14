@@ -463,6 +463,7 @@ void assign_parameters_from_CTF(CTFDescription &ctfmodel, double *p,
 
 /* Read parameters --------------------------------------------------------- */
 void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program) {
+    downsampleFactor=program->getDoubleParam("--downSamplingPerformed");
     show_optimization = program->checkParam("--show_optimization");
     min_freq = program->getDoubleParam("--min_freq");
     max_freq = program->getDoubleParam("--max_freq");
@@ -506,6 +507,7 @@ void ProgCTFEstimateFromPSD::show()
 {
     std::cout
     << "PSD file:            " << fn_psd              << std::endl
+    << "Downsampling:        " << downsampleFactor    << std::endl
     << "Min Freq.:           " << min_freq            << std::endl
     << "Max Freq.:           " << max_freq            << std::endl
     << "Sampling:            " << Tm                  << std::endl
@@ -524,6 +526,10 @@ void ProgCTFEstimateFromPSD::show()
 void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
 {
     program->addSeeAlsoLine("ctf_enhance_psd");
+	program->addParamsLine("== Downsampling");
+	program->addParamsLine("  [--downSamplingPerformed <F=1>] : Downsampling performed to produce this PSD");
+	program->addParamsLine("                                  : Note that the output CTF model is referred to the original sampling rate");
+	program->addParamsLine("                                  : not the one of the downsampled image.");
 	program->addParamsLine("== CTF fit: Optimization constraints");
     program->addParamsLine("   [--min_freq <fmin=0.03>]     : Minimum digital frequency (<0.5) to use in adjust. Its value");
     program->addParamsLine("                                : should be a little lower than the dig. freq. of the first ");
@@ -2301,6 +2307,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmo
         // Save results
         FileName fn_root = prm.fn_psd.withoutExtension();
         save_intermediate_results(fn_root, false);
+        global_ctfmodel.Tm/=prm.downsampleFactor;
         global_ctfmodel.write(fn_root + ".ctfparam");
         MetaData MD;
         MD.read(fn_root + ".ctfparam");

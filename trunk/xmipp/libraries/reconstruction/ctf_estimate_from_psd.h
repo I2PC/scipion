@@ -38,6 +38,8 @@ class ProgCTFEstimateFromPSD: public XmippProgram
 public:
     /// CTF filename
     FileName             fn_psd;
+    /// Downsample performed
+    double				 downsampleFactor;
     /// CTF amplitude to model
     Image<double>        ctftomodel;
     /// CTF amplitude to model
