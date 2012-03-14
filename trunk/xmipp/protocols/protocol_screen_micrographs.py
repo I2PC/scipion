@@ -75,7 +75,8 @@ class ProtScreenMicrographs(XmippProtocol):
                                      " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
                                      " --kV "+str(Voltage)+\
                                      " --Cs "+str(SphericalAberration)+\
-                                     " --sampling_rate "+str(AngPix)+\
+                                     " --sampling_rate "+str(AngPix*self.DownsampleFactor)+\
+                                     " --downSamplingPerformed "+str(self.DownsampleFactor)+\
                                      " --ctfmodelSize 256"+\
                                      " --Q0 "+str(self.AmplitudeContrast)+\
                                      " --min_freq "+str(self.LowResolCutoff)+\
