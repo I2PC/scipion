@@ -26,8 +26,8 @@ ImportRun = ''
 DownsampleFactor = 1
 
 # Amplitude Contrast
-""" It should be a negative number, typically between -0.05 and -0.3."""
-AmplitudeContrast = -0.1
+""" It should be a positive number, typically between 0.05 and 0.3."""
+AmplitudeContrast = 0.1
 
 # {wizard}(wizardBrowseCTF2) Lowest resolution for CTF estimation
 """ Give a value in digital frequency (i.e. between 0.0 and 0.5)
@@ -45,12 +45,12 @@ LowResolCutoff = 0.05
 HighResolCutoff = 0.35
 
 # {expert} Minimum defocus to search (in microns)
-""" Minimum defocus value (in microns) to include in defocus search
+""" Minimum defocus value (in microns) to include in defocus search. Underfocus is represented by a positive number.
 """
 MinFocus = 0.5
 
 # {expert} Maximum defocus to search (in microns)
-""" Maximum defocus value (in microns) to include in defocus search
+""" Maximum defocus value (in microns) to include in defocus search. Underfocus is represented by a positive number.
 """
 MaxFocus = 10
 
