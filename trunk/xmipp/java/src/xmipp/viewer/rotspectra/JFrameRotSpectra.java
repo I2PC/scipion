@@ -50,22 +50,21 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
     private JList rowHeader;
     private RotSpectraRenderer renderer = new RotSpectraRenderer(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     private JPopUpMenuTable jpopUpMenuTable;
-//
-//    public static void main(String args[]) {
-//        try {
-//            String dir = "/data2/MicrographPreprocessing/2D/RotSpectra/run_001/";
-//            String filenameClasses = dir + "results_classes.xmd";
-//            String filenameVectors = dir + "results_vectors.xmd";
-//            String vectorsData = dir + "results_vectors.xmd.raw";
-//
-//            JFrameRotSpectra frame = new JFrameRotSpectra(filenameVectors, filenameClasses, vectorsData);
-//            ImagesWindowFactory.setConvenientSize(frame);
-//            frame.setLocationRelativeTo(null);
-//            frame.setVisible(true);
-//        } catch (Exception ex) {
-//            DEBUG.printException(ex);
-//        }
-//    }
+
+    public static void main(String args[]) {
+        try {
+            String filenameClasses = args[0];
+            String filenameVectors = args[1];
+            String vectorsData = args[2];
+
+            JFrameRotSpectra frame = new JFrameRotSpectra(filenameVectors, filenameClasses, vectorsData);
+            ImagesWindowFactory.setConvenientSize(frame);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        } catch (Exception ex) {
+            DEBUG.printException(ex);
+        }
+    }
 
     public JFrameRotSpectra(String fnVectors, String fnClasses, String fnData) {
         super();

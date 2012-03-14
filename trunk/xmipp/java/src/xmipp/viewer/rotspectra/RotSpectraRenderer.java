@@ -4,7 +4,8 @@
  */
 package xmipp.viewer.rotspectra;
 
-import xmipp.viewer.gallery.renderers.StrokeBorder;
+import xmipp.viewer.StrokeBorder;
+
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.BorderFactory;

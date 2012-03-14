@@ -1,4 +1,4 @@
-package xmipp.viewer.gallery.renderers;
+package xmipp.viewer;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

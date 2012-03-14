@@ -14,7 +14,6 @@ import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import xmipp.utils.XmippResource;
-import xmipp.viewer.gallery.renderers.StrokeBorder;
 
 /**
  * 
