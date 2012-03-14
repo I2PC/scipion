@@ -6,6 +6,8 @@ package xmipp.ij.plugins.maskstoolbar;
  */
 import javax.swing.ImageIcon;
 
+import xmipp.jni.Filename;
+
 /**
  *
  * @author Juanjo Vega
@@ -13,7 +15,7 @@ import javax.swing.ImageIcon;
 @SuppressWarnings("ResultOfObjectAllocationIgnored")
 public class ICONS {
 
-    public final static String PATH_ICONS = "/resources/";
+    public final static String PATH_ICONS = Filename.getXmippPath("resources/");
     public final static String PATH_TOOL_RECTANGLE = PATH_ICONS + "rectangle.png";
     public final static String PATH_TOOL_ROUNDRECTANGLE = PATH_ICONS + "roundrectangle.png";
     public final static String PATH_TOOL_ELLIPSE = PATH_ICONS + "ellipse.png";
@@ -50,20 +52,36 @@ public class ICONS {
     }
 
     public ICONS() {
-        TOOL_RECTANGLE = new ImageIcon(getClass().getResource(PATH_TOOL_RECTANGLE));
-        TOOL_ROUNDRECTANGLE = new ImageIcon(getClass().getResource(PATH_TOOL_ROUNDRECTANGLE));
-        TOOL_ELLIPSE = new ImageIcon(getClass().getResource(PATH_TOOL_ELLIPSE));
-        TOOL_OVAL = new ImageIcon(getClass().getResource(PATH_TOOL_OVAL));
-        TOOL_POLYGON = new ImageIcon(getClass().getResource(PATH_TOOL_POLYGON));
-        TOOL_FREEHAND = new ImageIcon(getClass().getResource(PATH_TOOL_FREEHAND));
-        TOOL_BRUSH = new ImageIcon(getClass().getResource(PATH_TOOL_BRUSH));
-        ACTION_CREATEMASK = new ImageIcon(getClass().getResource(PATH_ACTION_CREATEMASK));
-        ACTION_CREATESELECTION = new ImageIcon(getClass().getResource(PATH_ACTION_CREATESELECTION));
-        ACTION_INVERTSELECTION = new ImageIcon(getClass().getResource(PATH_ACTION_INVERTSELECTION));
-        ACTION_INVERTMASK = new ImageIcon(getClass().getResource(PATH_ACTION_INVERTMASK));
-        ACTION_SPECIFYSELECTION = new ImageIcon(getClass().getResource(PATH_ACTION_SPECIFYSELECTION));
-        ACTION_BRUSHSIZE = new ImageIcon(getClass().getResource(PATH_ACTION_BRUSHSIZE));
-        MASK_LOCKED = new ImageIcon(getClass().getResource(PATH_MASK_LOCKED));
-        MASK_UNLOCKED = new ImageIcon(getClass().getResource(PATH_MASK_UNLOCKED));
+//        TOOL_RECTANGLE = new ImageIcon(getClass().getResource(PATH_TOOL_RECTANGLE));
+//        TOOL_ROUNDRECTANGLE = new ImageIcon(getClass().getResource(PATH_TOOL_ROUNDRECTANGLE));
+//        TOOL_ELLIPSE = new ImageIcon(getClass().getResource(PATH_TOOL_ELLIPSE));
+//        TOOL_OVAL = new ImageIcon(getClass().getResource(PATH_TOOL_OVAL));
+//        TOOL_POLYGON = new ImageIcon(getClass().getResource(PATH_TOOL_POLYGON));
+//        TOOL_FREEHAND = new ImageIcon(getClass().getResource(PATH_TOOL_FREEHAND));
+//        TOOL_BRUSH = new ImageIcon(getClass().getResource(PATH_TOOL_BRUSH));
+//        ACTION_CREATEMASK = new ImageIcon(getClass().getResource(PATH_ACTION_CREATEMASK));
+//        ACTION_CREATESELECTION = new ImageIcon(getClass().getResource(PATH_ACTION_CREATESELECTION));
+//        ACTION_INVERTSELECTION = new ImageIcon(getClass().getResource(PATH_ACTION_INVERTSELECTION));
+//        ACTION_INVERTMASK = new ImageIcon(getClass().getResource(PATH_ACTION_INVERTMASK));
+//        ACTION_SPECIFYSELECTION = new ImageIcon(getClass().getResource(PATH_ACTION_SPECIFYSELECTION));
+//        ACTION_BRUSHSIZE = new ImageIcon(getClass().getResource(PATH_ACTION_BRUSHSIZE));
+//        MASK_LOCKED = new ImageIcon(getClass().getResource(PATH_MASK_LOCKED));
+//        MASK_UNLOCKED = new ImageIcon(getClass().getResource(PATH_MASK_UNLOCKED));
+    	 TOOL_RECTANGLE = new ImageIcon(PATH_TOOL_RECTANGLE);
+         TOOL_ROUNDRECTANGLE = new ImageIcon(PATH_TOOL_ROUNDRECTANGLE);
+         TOOL_ELLIPSE = new ImageIcon(PATH_TOOL_ELLIPSE);
+         TOOL_OVAL = new ImageIcon(PATH_TOOL_OVAL);
+         TOOL_POLYGON = new ImageIcon(PATH_TOOL_POLYGON);
+         TOOL_FREEHAND = new ImageIcon(PATH_TOOL_FREEHAND);
+         TOOL_BRUSH = new ImageIcon(PATH_TOOL_BRUSH);
+         ACTION_CREATEMASK = new ImageIcon(PATH_ACTION_CREATEMASK);
+         ACTION_CREATESELECTION = new ImageIcon(PATH_ACTION_CREATESELECTION);
+         ACTION_INVERTSELECTION = new ImageIcon(PATH_ACTION_INVERTSELECTION);
+         ACTION_INVERTMASK = new ImageIcon(PATH_ACTION_INVERTMASK);
+         ACTION_SPECIFYSELECTION = new ImageIcon(PATH_ACTION_SPECIFYSELECTION);
+         ACTION_BRUSHSIZE = new ImageIcon(PATH_ACTION_BRUSHSIZE);
+         MASK_LOCKED = new ImageIcon(PATH_MASK_LOCKED);
+         MASK_UNLOCKED = new ImageIcon(PATH_MASK_UNLOCKED);
     }
 }
+         

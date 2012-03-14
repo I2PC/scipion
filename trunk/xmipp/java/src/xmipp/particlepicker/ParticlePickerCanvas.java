@@ -136,7 +136,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected void drawLine(double alpha, Graphics2D g2)
 	{
-		System.out.println(Math.toDegrees(alpha));
 		int width = imp.getWidth();
 		int height = imp.getHeight();
 		double m = 0;
@@ -171,7 +170,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			x2 = width;
 			
 		}
-		System.out.printf("m: %.2f x1: %.2f y1:%.2f x2:%.2f y2:%.2f\n", m, x1, y1, x2, y2);
 		Color ccolor = g2.getColor();
 		g2.setColor(Color.yellow);
 		g2.drawLine((int) (x1 * magnification), (int) (y1 * magnification), (int) (x2 * magnification), (int) (y2 * magnification));
