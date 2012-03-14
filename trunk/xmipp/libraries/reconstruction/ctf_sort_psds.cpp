@@ -131,10 +131,11 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     CTFDescription CTF1, CTF2;
     CTF1.read(fnCTF);
     CTF1.Produce_Side_Info();
+    evaluation.defocusU=CTF1.DeltafU;
+    evaluation.defocusV=CTF1.DeltafV;
 
     if (!fnCTF2.empty() && fnCTF2 != "NA")
     {
-
     	CTF2.read(fnCTF2);
     	CTF2.Produce_Side_Info();
     }
@@ -239,17 +240,19 @@ void ProgPSDSort::run()
     PSDEvaluation evaluation;
     init_progress_bar(SF.size());
     int idx=0;
+    FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
         SF.getValue(MDL_MICROGRAPH,fnMicrograph,__iter.objId);
         SF.getValue(MDL_PSD,fnPSD,__iter.objId);
         SF.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
         if (SF.containsLabel(MDL_CTFMODEL2))
         	SF.getValue(MDL_CTFMODEL2,fnCTF2,__iter.objId);
         evaluate(fnMicrograph, fnPSD, fnCTF, fnCTF2, evaluation);
-        SF.setValue(MDL_CTF_CRITERION_DAMPING,evaluation.maxDampingAtBorder,__iter.objId);
+        SF.setValue(MDL_CTF_DEFOCUSU,evaluation.defocusU,__iter.objId);
+        SF.setValue(MDL_CTF_DEFOCUSV,evaluation.defocusV,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FIRSTZEROAVG,evaluation.firstZeroAvg,__iter.objId);
+        SF.setValue(MDL_CTF_CRITERION_DAMPING,evaluation.maxDampingAtBorder,__iter.objId);
         if (evaluation.firstZeroDisagreement>0)
         	SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FIRSTZERORATIO,evaluation.firstZeroRatio,__iter.objId);

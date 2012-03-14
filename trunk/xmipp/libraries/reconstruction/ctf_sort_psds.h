@@ -38,6 +38,8 @@
 /** Results of an evaluation of a PSD */
 class PSDEvaluation {
 public:
+	double defocusU;
+	double defocusV;
 	double PSDcorrelation90;
 	double firstZeroRatio;
 	double firstZeroAvg;
