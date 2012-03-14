@@ -4,7 +4,7 @@
 
 #from config_protocols import protDict
 from protlib_base import *
-from protlib_utils import which, runJob
+from protlib_utils import which, runJob, runShowJ
 from protlib_filesystem import deleteFile, exists, replaceFilenameExt
 import xmipp
 from protlib_gui_ext import showError
@@ -144,12 +144,12 @@ class ProtScreenMicrographs(XmippProtocol):
     def visualize(self):
         summaryFile = self.getFilename('micrographs')
         if exists(summaryFile):
-            os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % summaryFile)
+            runShowJ(summaryFile,extraParams="--mode metadata")
         else:
             summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
             buildSummaryMetadata(self.WorkingDir, self.DoCtffind, self.importMicrographs, summaryFile)
             if exists(summaryFile):
-                os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % summaryFile)
+                runShowJ(summaryFile,extraParams="--mode metadata")
             else:
                 showError('Error', 'There are not results yet')
     
