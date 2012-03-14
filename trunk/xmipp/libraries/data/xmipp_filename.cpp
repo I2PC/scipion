@@ -445,13 +445,13 @@ bool FileName::isMetaData(bool failIfNotExists) const
     //check empty string
     if (empty())
         REPORT_ERROR(ERR_ARG_INCORRECT, "FileName::isMetaData: Empty string is not a MetaData");
-    //file names containing @, : or % are not metadatas
-    size_t found = this->find('@');
-    if (find_first_of("@:#") != npos)
+    //file names containing : or % are not metadatas
+    //size_t found = this->find('@');
+    if (find_first_of(":#") != npos)
         return false;
 
     //check if file exists
-    if (!exists())
+    if (!existsTrim())
         REPORT_ERROR(ERR_IO_NOTFILE, formatString("FileName::isMetaData: File: '%s' does not exist", c_str()));
     //This is dangerous and should be removed
     //in next version. only star1 files should be OK
@@ -468,7 +468,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-    std::ifstream infile(data(), std::ios_base::in);
+    std::ifstream infile( this->removeBlockName().data(), std::ios_base::in);
     String line;
 
     if (infile.fail())
