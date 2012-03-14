@@ -136,28 +136,40 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected void drawLine(double alpha, Graphics2D g2)
 	{
+		System.out.println(Math.toDegrees(alpha));
 		int width = imp.getWidth();
 		int height = imp.getHeight();
 		double m = 0;
-		if (alpha != Math.PI / 2)
-			m = Math.tan(Math.PI / 2 - alpha);
-		double y = height / 2.f;
-		double x = y / m;
 		double x1, y1, x2, y2;
-		if (Math.abs(x) > width / 2.f)// cuts in image sides
+		if (alpha != Math.PI / 2)
 		{
-			x1 = width;// on image
-			y1 = getYOnImage(m, width / 2.f);
-			x2 = 0;
-			y2 = getYOnImage(m, -width / 2.f);
+			m = Math.tan(alpha - Math.PI/2);
+
+			double y = height / 2.f;
+			double x = y / m;
+
+			if (Math.abs(x) > width / 2.f)// cuts in image sides
+			{
+				x1 = width;// on image
+				y1 = getYOnImage(m, width / 2.f);
+				x2 = 0;
+				y2 = getYOnImage(m, -width / 2.f);
+			}
+			else
+			// cuts in image top and bottom
+			{
+				y1 = 0;
+				x1 = getXOnImage(m, height / 2.f);
+				y2 = height;
+				x2 = getXOnImage(m, -height / 2.f);
+			}
 		}
 		else
-		// cuts in image top and bottom
 		{
-			y1 = 0;
-			x1 = getXOnImage(m, height / 2.f);
-			y2 = height;
-			x2 = getXOnImage(m, -height / 2.f);
+			x1 = 0;
+			y1 = y2 = height / 2.f;
+			x2 = width;
+			
 		}
 		System.out.printf("m: %.2f x1: %.2f y1:%.2f x2:%.2f y2:%.2f\n", m, x1, y1, x2, y2);
 		Color ccolor = g2.getColor();

@@ -159,7 +159,7 @@ public class XmippMenuBar extends MenuBar
 		adjustmn = new Menu("Adjust");
 		transformmn = new Menu("Transform");
 		filtersmn = new Menu("Filters");
-		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar");//missing plugin
+		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);//missing plugin
 
 		imagemn.add(infomn);
 		imagemn.add(adjustmn);
