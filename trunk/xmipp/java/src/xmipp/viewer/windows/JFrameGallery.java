@@ -88,13 +88,15 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippResource;
 import xmipp.viewer.ImageItem;
 import xmipp.viewer.RowHeaderRenderer;
+import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.ctf.iCTFGUI;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGallery;
 import xmipp.viewer.models.MetadataGallery;
 
-public class JFrameGallery extends JFrame {
+public class JFrameGallery extends JFrame implements iCTFGUI {
 	private static final long serialVersionUID = -8957336972082018823L;
 
 	private final static int DELAY_TO_UPDATE = 500;
@@ -135,7 +137,7 @@ public class JFrameGallery extends JFrame {
 	// private javax.swing.JToggleButton jtbUseGeometry;
 	private javax.swing.JTable table;
 	private javax.swing.JToolBar toolBar;
-	private int width;
+	private int width = -1;
 
 	protected static final float MAX_HEIGHT_RATE = 2.0f / 3.0f;
 	// this rate is width/height
@@ -319,10 +321,16 @@ public class JFrameGallery extends JFrame {
 			gallery.setRows(data.parameters.rows);
 		else
 			adjust = true;
-		int desiredCols = adjust ? (int) Math
-				.ceil(Math.sqrt(gallery.getSize())) : gallery.getColumnCount();
-		int desiredWidth = desiredCols * gallery.cellDim.width + 50;
-		width = Math.min(Math.max(desiredWidth, MIN_WIDTH), MAX_WIDTH);
+		if (data.isMicrographsMode()){
+			setExtendedState(JFrame.MAXIMIZED_BOTH);
+			width = getSize().width;
+		}
+		else{
+			int desiredCols = adjust ? (int) Math.ceil(Math.sqrt(gallery
+					.getSize())) : gallery.getColumnCount();
+			int desiredWidth = desiredCols * gallery.cellDim.width + 50;
+			width = Math.min(Math.max(desiredWidth, MIN_WIDTH), MAX_WIDTH);
+		}
 		setAutoAdjustColumns(adjust);
 	}
 
@@ -333,9 +341,8 @@ public class JFrameGallery extends JFrame {
 	private void createTable() {
 		// Create row header for enumerate rows
 		try {
-			rowHeaderModel = data.md.isColumnFormat() ? 
-					new GalleryRowHeaderModel(gallery.getRowCount(), 1):
-					new GalleryRowHeaderModel(data);
+			rowHeaderModel = data.md.isColumnFormat() ? new GalleryRowHeaderModel(
+					gallery.getRowCount(), 1) : new GalleryRowHeaderModel(data);
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -401,7 +408,7 @@ public class JFrameGallery extends JFrame {
 		isUpdating = true;
 		update_counter++;
 		DEBUG.printMessage(" *** Updating table: " + update_counter); // );
-		//DEBUG.printStackTrace();
+		// DEBUG.printStackTrace();
 
 		// FIXME:gallery.updateSort();
 
@@ -426,7 +433,7 @@ public class JFrameGallery extends JFrame {
 
 			rowHeader.revalidate();
 			rowHeader.repaint();
-			//table.revalidate();
+			// table.revalidate();
 			// repaint();
 		}
 
@@ -441,7 +448,7 @@ public class JFrameGallery extends JFrame {
 		// }
 	}// function updateTable
 
-	/** Adjust the columns depending on the current windows width and cell width*/
+	/** Adjust the columns depending on the current windows width and cell width */
 	private boolean adjustColumns() {
 		if (autoAdjustColumns)
 			return gallery.adjustColumn(width - 50);
@@ -1000,8 +1007,7 @@ public class JFrameGallery extends JFrame {
 		} else if (evt.getButton() == MouseEvent.BUTTON3) { // Right click.
 
 			final MouseEvent me = evt;
-			if (gallery.handleRightClick(view_row, view_col,
-					jpopUpMenuTable)) {
+			if (gallery.handleRightClick(view_row, view_col, jpopUpMenuTable)) {
 				if (gallery.getSelectedCount() < 2) {
 					gallery.clearSelection();
 					gallery.touchItem(view_row, view_col);
@@ -1021,31 +1027,6 @@ public class JFrameGallery extends JFrame {
 	}
 
 	class GalleryMenu extends XmippMenuBarCreator {
-		public final String FILE = "File";
-		public final String FILE_OPEN = "File.Open_mi";
-		public final String FILE_OPENWITH_IJ = "File.OpenWithIJ_mi";
-		public final String FILE_OPENWITH_CHIMERA = "File.OpenWithChimera_mi";
-		public final String FILE_SAVE = "File.Save_mi";
-		public final String FILE_SAVEAS = "File.SaveAs_mi";
-		public final String FILE_EXIT = "File.Exit_mi";
-		public final String DISPLAY = "Display";
-		public final String DISPLAY_NORMALIZE = "Display.Normalize_cb";
-		public final String DISPLAY_SHOWLABELS = "Display.ShowLabels_cb";
-		public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
-		public final String DISPLAY_APPLYGEO = "Display.ApplyGeo_cb";
-		public final String DISPLAY_WRAP = "Display.Wrap_cb";
-		public final String DISPLAY_COLUMNS = "Display.Columns_mi";
-		public final String DISPLAY_RESLICE = "Display.Reslice";
-		public final String DISPLAY_RESLICE_FRONT = "Display.Reslice.Front_rb";
-		public final String DISPLAY_RESLICE_TOP = "Display.Reslice.Top_rb";
-		public final String DISPLAY_RESLICE_BOTTOM = "Display.Reslice.Bottom_rb";
-		public final String DISPLAY_RESLICE_LEFT = "Display.Reslice.Left_rb";
-		public final String DISPLAY_RESLICE_RIGHT = "Display.Reslice.Right_rb";
-		
-		public final String STATS = "Stats";
-		public final String STATS_AVGSTD = "Stats.AvgStd_mi";
-		public final String STATS_PCA = "Stats.Pca_mi";
-		public final String STATS_FSC = "Stats.Fsc_mi";
 
 		public void update() {
 			boolean galMode = data.isGalleryMode();
@@ -1096,12 +1077,10 @@ public class JFrameGallery extends JFrame {
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			addItem(DISPLAY_RESLICE, "Reslice");
-			addItem(DISPLAY_RESLICE_FRONT, "Front (Default)");
-			setItemSelected(DISPLAY_RESLICE_FRONT, true);
-			addItem(DISPLAY_RESLICE_TOP, "Top");
-			addItem(DISPLAY_RESLICE_BOTTOM, "Botton");
-			addItem(DISPLAY_RESLICE_LEFT, "Left");
-			addItem(DISPLAY_RESLICE_RIGHT, "Right");
+			addItem(DISPLAY_RESLICE_TOP, "Top (Y negative)");
+			addItem(DISPLAY_RESLICE_BOTTOM, "Bottom (Y positive)");
+			addItem(DISPLAY_RESLICE_LEFT, "Left (X negative)");
+			addItem(DISPLAY_RESLICE_RIGHT, "Right (X positive)");
 			// Statistics
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
@@ -1178,33 +1157,21 @@ public class JFrameGallery extends JFrame {
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-			} else if (cmd.equals(DISPLAY_RESLICE_FRONT)){
-				
-			} else if (cmd.equals(DISPLAY_RESLICE_TOP)){
-				
-			} else if (cmd.equals(DISPLAY_RESLICE_BOTTOM)){
-				
-			} else if (cmd.equals(DISPLAY_RESLICE_LEFT)){
-				
-			} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)){
-				
-			} 
+			} else if (cmd.equals(DISPLAY_RESLICE_TOP)) {
+
+			} else if (cmd.equals(DISPLAY_RESLICE_BOTTOM)) {
+
+			} else if (cmd.equals(DISPLAY_RESLICE_LEFT)) {
+
+			} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)) {
+
+			}
 		}// function handleActionPerformed
 	}// class GalleryMenu
 
 	class GalleryPopupMenu extends XmippPopupMenuCreator {
 		protected int row;
 		protected int col;
-
-		public final static String ENABLED = "Enabled_mi";
-		public final static String DISABLED = "Disabled_mi";
-		public final static String OPEN = "Open_mi";
-		public final static String OPEN_ASTEXT = "OpenAsText_mi";
-		public final static String SHOW_CTFPROFILE = "ShowCTF_mi";
-		public final static String SELECT = "Select";
-		public final static String SELECT_ALL = "Select.All_mi";
-		public final static String SELECT_TOHERE = "Select.ToHere_mi";
-		public final static String SELECT_FROMHERE = "Select.FromHere_mi";
 
 		@Override
 		protected void createItems() throws Exception {
@@ -1213,7 +1180,8 @@ public class JFrameGallery extends JFrame {
 			addSeparator();
 			addItem(OPEN, "Open");
 			addItem(OPEN_ASTEXT, "Open as text");
-			addItem(SHOW_CTFPROFILE, "Show CTF profile");
+			addItem(CTF_PROFILE, "Show CTF profile");
+			addItem(CTF_RECALCULATE, "Recalculate CTF");
 			addSeparator();
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
@@ -1226,35 +1194,44 @@ public class JFrameGallery extends JFrame {
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
-			getPopupMenu().show(cmpnt, location.x, location.y);			
-			
+			getPopupMenu().show(cmpnt, location.x, location.y);
+
 		}// function show
 
 		private void selectRange(int first, int last) {
 			gallery.selectRange(first, last, true);
 		}
-		
-        private void showCTFProfile() {
-        	try{
-            String ctfModel = data.md.getValueString(MDLabel.MDL_CTFMODEL, data.ids[row]);
-            String displayFilename = data.md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, data.ids[row]);
-            String psdFile =  data.md.getValueString(MDLabel.MDL_PSD, data.ids[row]);
 
-            ImageGeneric img = new ImageGeneric(displayFilename);
-            ImagePlus imp = XmippImageConverter.readToImagePlus(img);
+		private void showCTF(boolean profile) {
+			try {
+				String ctfModel = data.md.getValueString(MDLabel.MDL_CTFMODEL,
+						data.ids[row]);
+				String displayFilename = data.md.getValueString(
+						MDLabel.MDL_ASSOCIATED_IMAGE2, data.ids[row]);
+				String psdFile = data.md.getValueString(MDLabel.MDL_PSD,
+						data.ids[row]);
 
-            ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
-        	} catch (Exception e){
-        		XmippDialog.showError(JFrameGallery.this, e.getMessage());
-        	}
-        }
-		
+				ImageGeneric img = new ImageGeneric(displayFilename);
+				ImagePlus imp = XmippImageConverter.readToImagePlus(img);
+				
+				if (profile)
+					ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
+				else 
+					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, 
+							new TasksEngine(JFrameGallery.this), data.md.getFilename(), row);
+					
+			} catch (Exception e) {
+				XmippDialog.showError(JFrameGallery.this, e.getMessage());
+			}
+		}
+
 		/** Set values to defaults */
 		@Override
-		public void initItems(){
+		public void initItems() {
 			setItemVisible(OPEN, false);
 			setItemVisible(OPEN_ASTEXT, false);
-			setItemVisible(SHOW_CTFPROFILE, false);			
+			setItemVisible(CTF_PROFILE, false);
+			setItemVisible(CTF_RECALCULATE, false);
 		}
 
 		@Override
@@ -1272,20 +1249,49 @@ public class JFrameGallery extends JFrame {
 			} else if (cmd.equals(DISABLED)) {
 				gallery.setSelectionEnabled(false);
 				gallery.clearSelection();
-			} 
-			else if (cmd.equals(OPEN)){
+			} else if (cmd.equals(OPEN)) {
 				String file = gallery.getValueAt(row, col).toString();
 				ImagesWindowFactory.openFileAsDefault(file);
-			}
-			else if(cmd.equals(OPEN_ASTEXT)){
+			} else if (cmd.equals(OPEN_ASTEXT)) {
 				String file = gallery.getValueAt(row, col).toString();
 				ImagesWindowFactory.openFileAsText(file, null);
-			}
-			else if (cmd.equals(SHOW_CTFPROFILE)){
-				showCTFProfile();
+			} else if (cmd.equals(CTF_PROFILE)) {
+				showCTF(true);
+			} else if (cmd.equals(CTF_RECALCULATE)) {
+				showCTF(false);
 			}
 			initItems();
 		}
 
 	}// class JPopUpMenuGallery
+
+	@Override
+	public void setRunning(boolean running) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setRowBusy(int row) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setRowIdle(int row) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String getFilename() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void done() {
+		// TODO Auto-generated method stub
+		
+	}
 }// class JFrameGallery

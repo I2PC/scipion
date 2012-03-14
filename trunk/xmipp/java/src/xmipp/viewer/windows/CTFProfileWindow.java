@@ -1,4 +1,4 @@
-package xmipp.viewer.micrographs;
+package xmipp.viewer.windows;
 
 import xmipp.utils.XmippLabel;
 import ij.IJ;
@@ -55,6 +55,7 @@ import xmipp.ij.commons.XmippImageConverter;
  *
  * @author Juanjo Vega
  */
+@SuppressWarnings("serial")
 public class CTFProfileWindow extends ImageWindow implements ItemListener, ActionListener {
 
     private final static BasicStroke plotsStroke = new BasicStroke(2.0f);

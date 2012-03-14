@@ -13,6 +13,8 @@ package xmipp.viewer.micrographs;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippLabel;
+import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.ctf.iCTFGUI;
 import xmipp.viewer.gallery.models.GalleryRowHeaderModel;
 import xmipp.viewer.gallery.renderers.RowHeaderRenderer;
 import xmipp.viewer.imageitems.tableitems.GalleryImageItem;
@@ -47,8 +49,6 @@ import xmipp.viewer.metadata.renderers.MetaDataFileItemRenderer;
 import xmipp.viewer.metadata.renderers.MetaDataImageRenderer;
 import xmipp.viewer.metadata.renderers.MetaDataIntegerRenderer;
 import xmipp.viewer.metadata.renderers.MetaDataStringRenderer;
-import xmipp.viewer.micrographs.ctf.tasks.TasksEngine;
-import xmipp.viewer.micrographs.ctf.tasks.iCTFGUI;
 import xmipp.viewer.micrographs.filters.EnableFilter;
 
 /**

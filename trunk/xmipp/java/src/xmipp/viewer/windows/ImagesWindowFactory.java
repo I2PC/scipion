@@ -9,6 +9,8 @@ import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.imageitems.tableitems.AbstractGalleryImageItem;
+import xmipp.viewer.ctf.CTFRecalculateImageWindow;
+import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.gallery.models.AbstractXmippTableModel;
 import ij.IJ;
 import ij.ImagePlus;
@@ -30,9 +32,6 @@ import javax.swing.JRootPane;
 import javax.vecmath.Color3f;
 
 import xmipp.viewer.micrographs.JFrameMicrographs;
-import xmipp.viewer.micrographs.ctf.CTFRecalculateImageWindow;
-import xmipp.viewer.micrographs.CTFProfileWindow;
-import xmipp.viewer.micrographs.ctf.tasks.TasksEngine;
 import xmipp.viewer.rotspectra.JFrameRotSpectra;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -350,8 +349,7 @@ public class ImagesWindowFactory {
 	public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
 			String PSDfilename, TasksEngine tasksEngine,
 			String MicrographFilename, int row) {
-		IJ.setTool(Toolbar.FREEROI);
-
+		XmippImageWindow.openImageJ(Toolbar.FREEROI);
 		return new CTFRecalculateImageWindow(ip, CTFfilename, PSDfilename,
 				tasksEngine, row);
 	}

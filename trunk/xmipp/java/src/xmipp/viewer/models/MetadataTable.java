@@ -235,8 +235,9 @@ public class MetadataTable extends MetadataGallery {
 	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
 		xpopup.initItems();
 		if (data.isFile(col)){
-			xpopup.setItemVisible("Open_mi", true);
-			xpopup.setItemVisible("OpenAsText_mi", true);
+			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
+			if (!data.isImageFile(col))
+				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
 		}
 		return true;
 	}

@@ -47,16 +47,24 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow {
 		setMenuBar(new XmippMenuBar(this));
 	}
 
-	public static void openImageJ(Tool tool) {
+	public static void openImageJ(){
 		if (IJ.getInstance() == null) {
 			new ImageJ();
 			IJ.run("Install...",
 					"install="
 							+ Filename
-									.getXmippPath("java/src/xmipp/ij/commons/XmippMacros.txt"));
+							.getXmippPath("java/src/xmipp/ij/commons/XmippMacros.txt"));
 		}
-		boolean recognized = IJ.setTool(Tool.getTool(tool));
-		// System.out.println(recognized);
+	}//function openImageJ
+	
+	public static void openImageJ(Tool tool) {
+		openImageJ();
+		IJ.setTool(Tool.getTool(tool));
+	}
+	
+	public static void openImageJ(int tool){
+		openImageJ();
+		IJ.setTool(tool);		
 	}
 
 	@Override

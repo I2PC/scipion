@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package xmipp.viewer.micrographs.ctf;
+package xmipp.viewer.ctf;
 
 import ij.IJ;
 import xmipp.jni.MDLabel;

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package xmipp.viewer.micrographs.ctf.tasks;
+package xmipp.viewer.ctf;
 
 import xmipp.utils.DEBUG;
 import ij.IJ;

@@ -96,7 +96,9 @@ public class ColumnInfo {
 	@Override
 	public boolean equals(Object o){
 		ColumnInfo col = (ColumnInfo)o;
-		return visible == col.visible && render == col.render;
+		return label == col.label && 
+				visible == col.visible && 
+				render == col.render;
 	}
 	
 }//class ColumnInfo

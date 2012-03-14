@@ -165,5 +165,44 @@ public abstract class XmippMenuCreator implements ActionListener {
 	
 	/** Method to initialize items state */
 	public void initItems() { }
+	
+	
+	/** Public menu items constants */
+	public final String FILE = "File";
+	public final String FILE_OPEN = "File.Open_mi";
+	public final String FILE_OPENWITH_IJ = "File.OpenWithIJ_mi";
+	public final String FILE_OPENWITH_CHIMERA = "File.OpenWithChimera_mi";
+	public final String FILE_SAVE = "File.Save_mi";
+	public final String FILE_SAVEAS = "File.SaveAs_mi";
+	public final String FILE_EXIT = "File.Exit_mi";
+	public final String DISPLAY = "Display";
+	public final String DISPLAY_NORMALIZE = "Display.Normalize_cb";
+	public final String DISPLAY_SHOWLABELS = "Display.ShowLabels_cb";
+	public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
+	public final String DISPLAY_APPLYGEO = "Display.ApplyGeo_cb";
+	public final String DISPLAY_WRAP = "Display.Wrap_cb";
+	public final String DISPLAY_COLUMNS = "Display.Columns_mi";
+	public final String DISPLAY_RESLICE = "Display.Reslice";
+	public final String DISPLAY_RESLICE_TOP = "Display.Reslice.Top_mi";
+	public final String DISPLAY_RESLICE_BOTTOM = "Display.Reslice.Bottom_mi";
+	public final String DISPLAY_RESLICE_LEFT = "Display.Reslice.Left_mi";
+	public final String DISPLAY_RESLICE_RIGHT = "Display.Reslice.Right_mi";
+
+	public final String STATS = "Stats";
+	public final String STATS_AVGSTD = "Stats.AvgStd_mi";
+	public final String STATS_PCA = "Stats.Pca_mi";
+	public final String STATS_FSC = "Stats.Fsc_mi";
+	
+
+	public final static String ENABLED = "Enabled_mi";
+	public final static String DISABLED = "Disabled_mi";
+	public final static String OPEN = "Open_mi";
+	public final static String OPEN_ASTEXT = "OpenAsText_mi";
+	public final static String CTF_PROFILE = "CTFProfile_mi";
+	public final static String CTF_RECALCULATE = "CTFRecalculate_mi"; 
+	public final static String SELECT = "Select";
+	public final static String SELECT_ALL = "Select.All_mi";
+	public final static String SELECT_TOHERE = "Select.ToHere_mi";
+	public final static String SELECT_FROMHERE = "Select.FromHere_mi";
 
 }

@@ -232,7 +232,7 @@ public class GalleryData {
 				// previous case
 				if (!md.isColumnFormat())
 					return new MetadataRow(this);
-				if (md.containsMicrographsInfo())
+				if (md.containsMicrographsInfo()) 
 					return new MicrographsTable(this);
 				return new MetadataTable(this);
 			}
@@ -292,6 +292,10 @@ public class GalleryData {
 	public boolean isTableMode() {
 		return mode == MODE_TABLE_MD;
 	}
+	
+	public boolean isMicrographsMode(){
+		return md.containsMicrographsInfo();
+	}
 
 	// utility function to change of mode
 	public void changeMode() {
@@ -347,6 +351,15 @@ public class GalleryData {
 	public boolean isFile(int col) {
 		try {
 			return MetaData.isPathField(labels.get(col).getLabel());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public boolean isImageFile(int col) {
+		try {
+			return MetaData.isImage(labels.get(col).getLabel());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

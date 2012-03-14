@@ -29,7 +29,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 
 public abstract class XmippMenuBarCreator extends XmippMenuCreator {
-
+	
 	public XmippMenuBarCreator() {
 		super(new JMenuBar());
 	}

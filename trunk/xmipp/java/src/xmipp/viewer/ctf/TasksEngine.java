@@ -1,4 +1,4 @@
-package xmipp.viewer.micrographs.ctf.tasks;
+package xmipp.viewer.ctf;
 
 /*
  * To change this template, choose Tools | Templates
