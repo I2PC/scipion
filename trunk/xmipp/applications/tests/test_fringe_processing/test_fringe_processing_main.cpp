@@ -163,6 +163,37 @@ TEST_F( FringeProcessingTests, orMinDer)
 
 }
 
+TEST_F( FringeProcessingTests, normalize)
+{
+	FileName fpName, Iname;
+	fpName = baseName + "/applications/tests/test_fringe_processing/fp.txt";
+	Iname = baseName + "/applications/tests/test_fringe_processing/IN.txt";
+
+	FringeProcessing fp;
+	MultidimArray<double> im, imN, imNMod;
+
+	int nx = 311;
+    int ny = 311;
+    double noiseLevel = 0.0;
+    double freq = 20;
+    Matrix1D<int> coefs(10);
+
+    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+
+    im.write(fpName);
+
+    imN.resizeNoCopy(im);
+    imNMod.resizeNoCopy(im);
+
+    int fmin,fmax,num;
+    fp.normalize(im,imN,imNMod, fmin, fmax, num);
+
+    //imN.write(Iname);
+
+	ASSERT_TRUE(true);
+
+}
+
 
 GTEST_API_ int main(int argc, char **argv)
 {

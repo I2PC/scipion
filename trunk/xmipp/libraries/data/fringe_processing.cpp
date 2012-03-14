@@ -87,7 +87,7 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
 }
 
 //Function to simulate some test fringe patterns.
-//sd=SPHT(c) computes the quadrture term of c still affected by the
+//sd=SPHT(c) computes the quadrature term of c still affected by the
 //direction phase factor. Therefore for a real c=b*cos(phi)
 //sd=SPHT(c)=i*exp(i*dir)*b*sin(phi)
 //Ref: Kieran G. Larkin, Donald J. Bone, and Michael A. Oldfield, "Natural
@@ -116,7 +116,6 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
             A2D_ELEM(H,i,j) = 0;
     }
 
-    //CenterFFT(H,true);
     CenterFFT(H,false);
     fftIm *= H;
     ftrans.inverseFourierTransform();
@@ -194,4 +193,50 @@ void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<
     orMap = orn;
     orModMap = ornMod;
 }
+
+void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, int fmin, int fmax, int num)
+{
+	// H is an Annular filter with radius=R and sigma=S and a Gaussian DC filter with sigma=1
+	MultidimArray< std::complex<double> > H;
+	H.resizeNoCopy(im);
+
+	im.setXmippOrigin();
+	H.setXmippOrigin();
+
+	double S = 5;
+	double R = 10;
+
+	double temp = 0;
+	std::complex<double> tempCpx;
+
+	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+	{
+		temp= std::exp(-std::pow((std::sqrt(std::pow(i,2)+std::pow(j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
+		tempCpx.real(temp);
+		tempCpx.imag(temp);
+		A2D_ELEM(H,i,j) = tempCpx;
+	}
+
+    MultidimArray<std::complex<double> > fftIm, imComplex;
+    typeCast(im, imComplex);
+
+    //Fourier Transformer
+    FourierTransformer ftrans(FFTW_BACKWARD);
+    ftrans.FourierTransform(imComplex, fftIm, false);
+
+    CenterFFT(H,false);
+    fftIm *= H;
+    ftrans.inverseFourierTransform();
+
+    //output of the program
+    imN.setXmippOrigin();
+	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+	{
+		A2D_ELEM(imN,i,j) = A2D_ELEM(imComplex,i,j).real();
+	}
+
+    SPTH(imN,H);
+
+}
+
 

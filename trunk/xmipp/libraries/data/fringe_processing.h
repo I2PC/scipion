@@ -56,6 +56,14 @@ public:
     //2007 Jun 15; 274(2):286-292
     void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap,  MultidimArray<double > & orModMap, int wSize);
 
+    //This function computes the normalized version of the fringe pattern im = a+m*cos(phi) that it is
+    //imN = cos(phi) and computes also the modulation map m that it is called imModMap; fmin and fmax are
+    //rough estimations of the maximun and minimun frequency of the fringes and num is the number of
+    //Gabor filters used.
+    //Ref: Juan Antonio Quiroga, Manuel Servin, "Isotropic n-dimensional fringe
+    //pattern normalization", Optics Communications, 224, Pages 221-227 (2003)
+    void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, int fmin, int fmax, int num);
+
 protected:
 
     void direction(const MultidimArray<double> & im, double lambda, int size);
