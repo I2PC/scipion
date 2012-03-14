@@ -8,7 +8,7 @@
 # Author: Sjors Scheres, March 2007
 #
 from protlib_base import *
-from protlib_utils import getListFromRangeString, runJob
+from protlib_utils import getListFromRangeString, runJob, runShowJ
 
 class ProtRCT(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -79,8 +79,11 @@ class ProtRCT(XmippProtocol):
         return errors    
 
     def visualize(self):
-        # Still to do
-        pass
+        classNumbers = getListFromRangeString(self.SelectedClasses)
+        for classNo in classNumbers:
+            fnVol=self.workingDirPath("rct_%06d.vol"%classNo)
+            if os.path.exists(fnVol):
+                runShowJ(fnVol)
 
 def gatherPairs(log,WorkingDir,ClassNumbers,ClassFile,ExtractRootName,PickingDir):
     from xmipp import MetaData, MDL_IMAGE, MDL_IMAGE_TILTED, \
