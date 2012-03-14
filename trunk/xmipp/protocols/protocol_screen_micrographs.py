@@ -82,7 +82,7 @@ class ProtScreenMicrographs(XmippProtocol):
                                      " --max_freq "+str(self.HighResolCutoff)+\
                                      " --pieceDim "+str(self.WinSize)+\
                                      " --defocus_range "+str((self.MaxFocus-self.MinFocus)*10000/2)+\
-                                     " --defocusU "+str(-(self.MaxFocus+self.MinFocus)*10000/2),
+                                     " --defocusU "+str((self.MaxFocus+self.MinFocus)*10000/2),
                                      verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],parent_step_id=parent_id)
 
             # CTF estimation with Ctffind
@@ -223,8 +223,8 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
     objId = MD.addObject()
     MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE, float(AngPix), objId)
     MD.setValue(xmipp.MDL_CTF_VOLTAGE,       float(Voltage), objId)
-    MD.setValue(xmipp.MDL_CTF_DEFOCUSU,      float(-DF2), objId)
-    MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      float(-DF1), objId)
+    MD.setValue(xmipp.MDL_CTF_DEFOCUSU,      float(DF2), objId)
+    MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      float(DF1), objId)
     MD.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, float(Angle), objId)
     MD.setValue(xmipp.MDL_CTF_CS,            float(SphericalAberration), objId)
     MD.setValue(xmipp.MDL_CTF_Q0,            float(-AmplitudeContrast), objId)
