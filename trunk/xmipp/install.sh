@@ -371,6 +371,7 @@ if $DO_PYTHON; then
     echoGreen "Copying our custom python files ..."
     echoExec "cd $EXT_PYTHON"
     echoExec "cp ./xmipp_setup.py $VPYTHON/setup.py"
+    echoExec "chmod a+x $VPYTHON/setup.py"
     #cp ./xmipp_setup.py $VPYTHON/setup.py
     #I thick these two are not needed
     #cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
