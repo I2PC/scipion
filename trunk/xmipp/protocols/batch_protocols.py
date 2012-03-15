@@ -36,13 +36,19 @@ from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTre
 from config_protocols import *
 from protlib_base import XmippProject, getExtendedRunName
 from protlib_utils import ProcessManager,  getHostname
-from protlib_xmipp import greenStr
 from protlib_sql import SqliteDb, ProgramDb
 from protlib_filesystem import getXmippPath
 
 # Redefine BgColor
 BgColor = "white"
 
+ACTION_DELETE = 'Delete'
+ACTION_EDIT = 'Edit'
+ACTION_COPY = 'Copy'
+ACTION_REFRESH = 'Refresh'
+ACTION_DEFAULT = 'Default'
+GROUP_ALL = 'All'
+GROUP_XMIPP = protDict.xmipp.title
         
 class ProjectSection(tk.Frame):
     def __init__(self, master, label_text, **opts):
@@ -62,6 +68,11 @@ class ProjectSection(tk.Frame):
         btn = XmippButton(self.frameButtons, text, imagePath, **opts)
         btn.pack(side=tk.LEFT, padx=5)
         return btn
+    
+    def addWidget(self, Widget, **opts):
+        w = Widget(self.frameButtons, **opts)
+        w.pack(side=tk.LEFT, padx=5)
+        return w
     
     def displayButtons(self, show=True):
         if show:
@@ -103,8 +114,9 @@ class XmippProjectGUI():
     def initVariables(self):
         self.ToolbarButtonsDict = {}
         self.runButtonsDict = {}
-        self.lastSelected = None
+        self.lastDisplayGroup = None
         self.lastRunSelected = None
+        self.lastMenu = None
         self.Frames = {}
         self.historyRefresh = None
         self.historyRefreshRate = 4 # Refresh rate will be 1, 2, 4 or 8 seconds
@@ -120,12 +132,17 @@ class XmippProjectGUI():
         return self.images[path]
               
     def addBindings(self):
-        self.root.bind('<Configure>', self.unpostMenu)
-        self.root.bind("<Unmap>", self.unpostMenu)
-        self.root.bind("<Map>", self.unpostMenu)
-        self.root.bind('<Return>', lambda e: self.runButtonClick('Edit'))
-        self.root.bind('<Control_L><Return>', lambda e: self.runButtonClick('Copy'))
-        self.root.bind('<Delete>', lambda e: self.runButtonClick('Delete'))
+        #self.root.bind('<Configure>', self.unpostMenu)
+        #self.root.bind("<Unmap>", self.unpostMenu)
+        #self.root.bind("<Map>", self.unpostMenu)
+        #self.Frames['main'].bind("<Leave>", self.unpostMenu)
+        self.root.bind('<FocusOut>', self.unpostMenu)
+        self.root.bind('<Button-1>', self.unpostMenu)
+        self.root.bind('<Return>', lambda e: self.runButtonClick(ACTION_DEFAULT))
+        self.root.bind('<Control_L><Return>', lambda e: self.runButtonClick(ACTION_COPY))
+        self.root.bind('<Alt_L><e>', lambda e: self.runButtonClick(ACTION_EDIT))
+        self.root.bind('<Alt_L><d>', lambda e: self.runButtonClick(ACTION_COPY))
+        self.root.bind('<Delete>', lambda e: self.runButtonClick(ACTION_DELETE))
         self.root.bind('<Up>', self.lbHist.selection_up)
         self.root.bind('<Down>', self.lbHist.selection_down)
         self.root.bind('<Alt_L><c>', self.close )
@@ -177,10 +194,10 @@ class XmippProjectGUI():
     #GUI for launching Xmipp Programs as Protocols        
     def launchProgramsGUI(self, event=None):
         text = protDict.xmipp.title
-        last = self.lastSelected
-        self.selectToolbarButton(text, False)
-        if text != last and len(self.runs)>0:
-            return
+#        last = self.lastDisplayGroup
+#        self.clickToolbarButton(text, False)
+#        if text != last and len(self.runs)>0:
+#            return
         db = ProgramDb()        
         root = tk.Toplevel()
         root.withdraw()
@@ -204,7 +221,8 @@ class XmippProjectGUI():
             tmp_script = self.project.projectTmpPath('protocol_program_header.py')
             os.system(program_name + " --xmipp_write_protocol %(tmp_script)s " % locals())
             self.launchProtocolGUI(self.project.createRunFromScript(protDict.xmipp.name, 
-                                                                    tmp_script, program_name))            
+                                                                    tmp_script, program_name))
+            root.destroy();           
         
         def showSelection(event):
             #lb = event.widget
@@ -284,7 +302,7 @@ class XmippProjectGUI():
             self.project.projectDb.updateRunState(state, run['run_id'])
             root.destroy()
             self.historyRefreshRate = 1
-            self.updateRunHistory(self.lastSelected)
+            self.updateRunHistory(self.lastDisplayGroup)
             
         def stopRun():
             if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
@@ -329,7 +347,7 @@ class XmippProjectGUI():
         
         
     def launchProtocolGUI(self, run, visualizeMode=False):
-        run['group_name'] = self.lastSelected
+        run['group_name'] = self.lastDisplayGroup
         top = tk.Toplevel()
         gui = ProtocolGUI()
         gui.createGUI(self.project, run, top, 
@@ -337,10 +355,10 @@ class XmippProjectGUI():
         gui.launchGUI()
         
     def protocolSaveCallback(self, run):
-        self.selectToolbarButton(run['group_name'], False)
-        if self.lastSelected == run['group_name']:
+        #self.selectToolbarButton(run['group_name'], False)
+        if self.lastDisplayGroup in [GROUP_ALL, run['group_name']]:
             self.historyRefreshRate = 1
-            self.updateRunHistory(self.lastSelected)
+            self.updateRunHistory(self.lastDisplayGroup)
 
     def updateRunHistory(self, protGroup, selectFirst=True):
         #Cancel if there are pending refresh
@@ -356,7 +374,8 @@ class XmippProjectGUI():
         childs = tree.get_children('')
         for c in childs:
             tree.delete(c)
-        if protGroup == 'All':
+        print "updateRunHistory, group:", protGroup
+        if protGroup == GROUP_ALL:
             self.runs = self.project.projectDb.selectRuns()
         else:
             self.runs = self.project.projectDb.selectRuns(protGroup)
@@ -390,41 +409,51 @@ class XmippProjectGUI():
             self.updateRunSelection(-1)
 
     #---------------- Functions related with Popup menu ----------------------   
-    def lastPair(self):
-        if self.lastSelected:
-            return  self.ToolbarButtonsDict[self.lastSelected]
-        return None
+#    def lastPair(self):
+#        if self.lastDisplayGroup:
+#            return  self.ToolbarButtonsDict[self.lastDisplayGroup]
+#        return None
         
     def unpostMenu(self, event=None):
-        try: #I'm getting here a weird Tk exception
-            menu = self.lastPair()[1]
-            menu.unpost()
-        except Exception:
-            pass
+        if self.lastMenu:
+            self.lastMenu.unpost()
+            self.lastMenu = None
+        
+    def clickToolbarButton(self, index, showMenu=True):
+        key, btn, menu = self.ToolbarButtonsDict[index]
+        if menu:
+            # Post menu
+            x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
+            xroot, yroot = self.root.winfo_x() + btn.master.winfo_x(), self.root.winfo_y()+ btn.master.winfo_y()
+            menu.post(xroot + x + w + 10, yroot + y)
+            self.lastMenu = menu
+#        if self.lastDisplayGroup and self.lastDisplayGroup != key:
+#            lastBtn, lastMenu = self.lastPair()
+#            lastBtn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+#            if lastMenu:
+#                lastMenu.unpost()            
+#            
+#        if self.lastDisplayGroup and showMenu:
             
-    def postMenu(self, btn, menu):
-        x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
-        xroot, yroot = self.root.winfo_x() + btn.master.winfo_x(), self.root.winfo_y()+ btn.master.winfo_y()
-        menu.post(xroot + x + w + 10, yroot + y)
+    def cbDisplayGroupChanged(self, e=None):
+        index = self.cbDisplayGroup.current()
+        key, btn, menu = self.ToolbarButtonsDict[index]                
+        self.selectDisplayGroup(key)
         
-    def selectToolbarButton(self, key, showMenu=True):
-        btn, menu = self.ToolbarButtonsDict[key]
-
-        if self.lastSelected and self.lastSelected != key:
-            lastBtn, lastMenu = self.lastPair()
-            lastBtn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
-            if lastMenu:
-                lastMenu.unpost()            
-        
-        if self.lastSelected != key:
-            self.project.config.set('project', 'lastselected', key)
+    def selectDisplayGroup(self, group=GROUP_ALL):
+        '''Change the display group for runs list'''
+        #self.selectToolbarButton(group, showMenu=False)
+        if not self.lastDisplayGroup or group != self.lastDisplayGroup:
+            self.project.config.set('project', 'lastselected', group)
             self.project.writeConfig()
-            self.updateRunHistory(key)            
-            self.lastSelected = key  
-            btn.config(bg=ButtonSelectColor, activebackground=ButtonSelectColor)
-            
-        if self.lastSelected and showMenu:
-            self.postMenu(btn, menu)
+            self.updateRunHistory(group)
+#            if self.lastDisplayGroup:
+#                btn, menu = self.ToolbarButtonsDict[self.lastDisplayGroup]
+#                btn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+#            if group != GROUP_ALL: # Update buttons backgroud if different from ALL
+#                btn, menu = self.ToolbarButtonsDict[group]
+#                btn.config(bg=ButtonBgColor, activebackground=ButtonSelectColor)
+            self.lastDisplayGroup = group
             
     def updateRunSelection(self, index):
         state = tk.NORMAL
@@ -481,26 +510,30 @@ class XmippProjectGUI():
         run = self.getLastRunDict()
         if run:
             state = run['run_state']
-            if event == 'Edit':
+            if event == ACTION_DEFAULT:
                 if state == SqliteDb.RUN_STARTED:
                     self.launchRunJobMonitorGUI(run)
                 else:
                     self.launchProtocolGUI(run)
-                #self.launchRunJobMonitorGUI(run)
-            elif event == 'Copy':
+            elif event == ACTION_EDIT:
+                self.launchProtocolGUI(run)
+            elif event == ACTION_COPY:
                 self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
-            elif event == "Delete":
-                if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
-                    error = self.project.deleteRun(run)
-                    if error is None:
-                        self.updateRunHistory(self.lastSelected)
-                    else: 
-                        showError("Error on deleteRun", error, parent=self.root)
+            elif event == ACTION_DELETE:
+                if state in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
+                    showWarning("Delete warning", "This RUN is LAUNCHED or RUNNING, you need to stopped it before delete", parent=self.root) 
+                else:
+                    if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
+                        error = self.project.deleteRun(run)
+                        if error is None:
+                            self.updateRunHistory(self.lastDisplayGroup)
+                        else: 
+                            showError("Error deleting RUN", error, parent=self.root)
             elif event == "Visualize":
                 pass
-            elif event == 'Refresh':
+            elif event == ACTION_REFRESH:
                 self.historyRefreshRate = 1
-                self.updateRunHistory(self.lastSelected)
+                self.updateRunHistory(self.lastDisplayGroup)
         
     def createToolbarFrame(self, parent):
         #Configure toolbar frame
@@ -514,6 +547,8 @@ class XmippProjectGUI():
         #Create toolbar buttons
         #i = 1
         section = None
+        self.ToolbarButtonsDict[0] = (GROUP_ALL, None, None)
+        index = 1
         for k, v in sections:
             section = ProjectButtonMenu(toolbar, k)
             section.pack(fill=tk.X, pady=5)
@@ -521,19 +556,19 @@ class XmippProjectGUI():
                 text = o[0]
                 key = "%s_%s" % (k, text)
                 opts = o[1:]
-                def btn_command(key): 
+                def btn_command(index): 
                     def new_command(): 
-                        self.selectToolbarButton(key)
+                        self.clickToolbarButton(index)
                     return new_command 
-                btn = section.addButton(text, command=btn_command(key))
+                btn = section.addButton(text, command=btn_command(index))
                 menu = self.createToolbarMenu(section, opts)
-                self.ToolbarButtonsDict[key] = (btn, menu)
-        text = protDict.xmipp.title
-        btn = section.addButton(text, command=self.launchProgramsGUI)
-        self.ToolbarButtonsDict[text] = (btn, None)
-        text = "All"
-        btn = section.addButton(text, command=lambda: self.selectToolbarButton(text, False))
-        self.ToolbarButtonsDict[text] = (btn, None)        
+                self.ToolbarButtonsDict[index] = (key, btn, menu)
+                index = index + 1
+        section.addButton(GROUP_XMIPP, command=self.launchProgramsGUI)
+        self.ToolbarButtonsDict[index] = (GROUP_XMIPP, None, None)
+#        text = GROUP_ALL
+#        btn = section.addButton(text, command=lambda: self.selectToolbarButton(text, False))
+#        self.ToolbarButtonsDict[text] = (btn, None)        
         return toolbar
                 
     def addRunButton(self, frame, text, col, imageFilename=None):
@@ -557,18 +592,32 @@ class XmippProjectGUI():
         ToolTip(btn, text, 500)
         self.runButtonsDict[text] = btn
     
+    
     def createHistoryFrame(self, parent):
         history = ProjectSection(parent, 'History')
         self.Frames['history'] = history
-        list = [('Edit', 'edit.gif'), ('Copy', 'copy.gif'),
-                ('Refresh', 'refresh.gif'), ('Delete', 'delete.gif')]
-        def setupButton(k, v):
-            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor)
-            ToolTip(btn, k, 500)
-            self.runButtonsDict[k] = btn
-        for k, v in list:
-            setupButton(k, v)
+        
+        history.addWidget(tk.Label, text="Display group")
         import ttk
+        values = [GROUP_ALL]
+        for k, v in sections:
+            for o in v:
+                values.append(o[0])
+        self.cbDisplayGroup = history.addWidget(ttk.Combobox, values=values, state='readonly')
+        self.cbDisplayGroup.bind('<<ComboboxSelected>>', self.cbDisplayGroupChanged)
+        #cb.set(GROUP_ALL)
+        
+        aList = [(ACTION_EDIT, 'edit.gif', 'Edit    Alt-E/(Enter)'), 
+                (ACTION_COPY, 'copy.gif', 'Duplicate   Alt-D/Ctrl-Enter'),
+                (ACTION_REFRESH, 'refresh.gif', 'Refresh   F5'), 
+                (ACTION_DELETE, 'delete.gif', 'Delete    Del')]
+        def setupButton(k, v, t):
+            btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor)
+            ToolTip(btn, t, 500)
+            self.runButtonsDict[k] = btn
+        for k, v, t in aList:
+            setupButton(k, v, t)
+        
         columns = ('State', 'Modified')
         tree = XmippTree(history.frameContent, columns=columns)
         for c in columns:
@@ -577,7 +626,7 @@ class XmippProjectGUI():
         tree.column('#0', width=300)
         tree.heading('#0', text='Run')
         tree.bind('<<TreeviewSelect>>', self.runSelectCallback)
-        tree.bind('<Double-1>', lambda e:self.runButtonClick("Edit"))
+        tree.bind('<Double-1>', lambda e:self.runButtonClick(ACTION_DEFAULT))
         tree.grid(row=0, column=0, sticky='nsew')
         history.frameContent.columnconfigure(0, weight=1)
         history.frameContent.rowconfigure(0, weight=1)
@@ -631,10 +680,17 @@ class XmippProjectGUI():
         
         self.root.config(menu=self.menubar)
         #select lastSelected
+        lastGroup = GROUP_ALL
         if self.project.config.has_option('project', 'lastselected'):
-            self.selectToolbarButton(self.project.config.get('project', 'lastselected'), False)
-        else:
-            self.Frames['details'].grid_remove()
+            lastGroup = self.project.config.get('project', 'lastselected')
+            #self.selectToolbarButton(self.project.config.get('project', 'lastselected'), False)
+        self.selectDisplayGroup(lastGroup)
+        for k, v in self.ToolbarButtonsDict.iteritems():
+            if lastGroup == v[0]:
+                self.cbDisplayGroup.current(k)
+                break
+#        else:
+#            self.Frames['details'].grid_remove()
     
         self.addBindings()
                 

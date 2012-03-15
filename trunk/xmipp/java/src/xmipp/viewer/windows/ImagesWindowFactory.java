@@ -64,9 +64,12 @@ public class ImagesWindowFactory {
 	}
 
 	public static void openFilesAsDefault(String filenames[], Param parameters) {
-		for (int i = 0; i < filenames.length; i++) {
-			openFileAsDefault(filenames[i], parameters);
-		}
+		if (parameters.mode.equalsIgnoreCase("rotspectra"))
+			openRotSpectraWindow(filenames);
+		else
+			for (int i = 0; i < filenames.length; i++) {
+				openFileAsDefault(filenames[i], parameters);
+			}
 	}
 
 	public static void openFileAsDefault(String filename) {
@@ -362,11 +365,10 @@ public class ImagesWindowFactory {
 //		}
 //	}
 
-	public static void openRotSpectraWindow(String filenameVectors,
-			String filenameClasses, String filenameData) {
-		JFrameRotSpectra frame = new JFrameRotSpectra(filenameVectors,
-				filenameClasses, filenameData);
-		ImagesWindowFactory.setConvenientSize(frame);
+	public static void openRotSpectraWindow(String filenames[]) {
+		JFrameRotSpectra frame = new JFrameRotSpectra(filenames[0],
+									filenames[1], filenames[2]);
+		//ImagesWindowFactory.setConvenientSize(frame);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 	}

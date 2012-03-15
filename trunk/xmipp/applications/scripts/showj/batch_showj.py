@@ -11,7 +11,7 @@ class ScriptShowJ(ScriptAppIJ):
 		
 	def defineOtherParams(self):
 		self.addParamsLine('  [--mode <mode_value=image>]           : List of params ')
-		self.addParamsLine('     where <mode_value> image gallery metadata')
+		self.addParamsLine('     where <mode_value> image gallery metadata rotspectra')
 		self.addParamsLine('         alias -d;')
 		self.addParamsLine('  [--poll]                            : Keeps checking for changes on input files  (for image mode only!)')
 		self.addParamsLine('         alias -p;')
@@ -25,9 +25,16 @@ class ScriptShowJ(ScriptAppIJ):
 		self.addParamsLine('         alias -z;')
 		self.addParamsLine('  [--debug] : debug')
 		
-	def readOtherParams(self):
+	def readInputFiles(self):
 		if self.checkParam('--mode'):
-			self.args += " --mode %s" % self.getParam('--mode') 
+			mode = self.getParam('--mode') 
+			if mode == 'rotspectra':
+				prefix = self.getParam('-i')
+				self.inputFiles = [prefix + s for s in ['_classes.xmd', '_vectors.xmd', '_vectors.xmd.raw']]
+		
+	def readOtherParams(self):	
+		if self.checkParam('--mode'):
+			self.args += " --mode %s" % self.getParam('--mode') 	
 		if self.checkParam('--poll'):
 			self.args += " --poll"
 		if self.checkParam('--render'):

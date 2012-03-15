@@ -1632,7 +1632,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
     def __init__(self, **args):
         XmippBrowserPreview.__init__(self, **args)
         # If metadata was provided, populate file list from there
-        if hasattr(self, 'md'): 
+        if hasattr(self, 'md') and self.md: 
             self.insertFiles =  self.insertFilesFromMd
     
     def insertFilesFromMd(self, path):

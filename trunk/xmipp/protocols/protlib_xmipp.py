@@ -110,18 +110,15 @@ class ScriptIJBase(XmippScript):
         self.addParamsLine('         alias -m;');
         self.defineOtherParams()
     
+    def readInputFiles(self):
+        self.inputFiles = self.getListParam('-i')
+        
     def readParams(self):
-        inputFiles = self.getListParam('-i')
-        #if self.checkParam('--memory'):
+        self.readInputFiles()
         self.memory = self.getParam('--memory')
-        #else:
-        #    self.memory = "1gb"
-            #self.memory = convertBytes(2 * estimateFilenamesListMemory(inputFiles))
-            #print "No memory size provided. Estimated: " + self.memory
-
         files = []
         missingFiles = []
-        for f in inputFiles:
+        for f in self.inputFiles:
             if FileName(f).exists():
                 files.append(f)
             else:
@@ -131,6 +128,7 @@ class ScriptIJBase(XmippScript):
             print "Missing files: \n %s" % '  \n'.join(missingFiles) 
         self.args = "-i %s" % ' '.join(self.inputFiles)
         self.readOtherParams()
+        print "self.args:", self.args
  
 class ScriptPluginIJ(ScriptIJBase):
     def __init__(self, macro):

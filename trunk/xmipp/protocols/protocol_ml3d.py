@@ -34,8 +34,10 @@ class ProtML3D(XmippProtocol):
         lines = [('Input images            ', "%s (%u)" % (self.ImgMd, md.size())),
                  ('Reference image', self.RefMd)]
         
-        logs = self.getFilename('iter_logs')    
+        logs = self.getFilename('iter_logs')   
+        print "logs: ", logs 
         if exists(logs):
+            print "exits"
             md = MetaData(logs)
             objId = md.lastObject()
             iteration = md.getValue(MDL_ITER, objId)

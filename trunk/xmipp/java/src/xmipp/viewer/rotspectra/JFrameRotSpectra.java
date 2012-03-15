@@ -11,12 +11,12 @@
 package xmipp.viewer.rotspectra;
 
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.windows.ImagesWindowFactory;
 import xmipp.viewer.windows.JFrameGallery;
-import ij.IJ;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -39,7 +39,8 @@ import javax.swing.table.TableColumn;
  *
  * @author Juanjo Vega
  */
-public class JFrameRotSpectra extends javax.swing.JFrame {
+@SuppressWarnings("serial")
+public class JFrameRotSpectra extends JFrame {
 
     final static int DEFAULT_WIDTH = 128;
     final static int DEFAULT_HEIGHT = 128;
@@ -53,11 +54,11 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
 
     public static void main(String args[]) {
         try {
-            String filenameClasses = args[0];
-            String filenameVectors = args[1];
-            String vectorsData = args[2];
+            String classes = args[0];
+            String vectors = args[1];
+            String data = args[2];
 
-            JFrameRotSpectra frame = new JFrameRotSpectra(filenameVectors, filenameClasses, vectorsData);
+            JFrameRotSpectra frame = new JFrameRotSpectra(classes, vectors, data);
             ImagesWindowFactory.setConvenientSize(frame);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
@@ -66,41 +67,35 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
         }
     }
 
-    public JFrameRotSpectra(String fnVectors, String fnClasses, String fnData) {
-        super();
+    public JFrameRotSpectra(String fnClasses, String fnVectors,  String fnData) {        
 
         try {
+        	setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             tableModel = new RotSpectraTableModel(fnClasses, fnVectors, fnData);
-
             initComponents();
-
             setTitle(fnVectors + ": " + tableModel.getSize() + " vectors.");
-
             table.setDefaultRenderer(RotSpectraVector.class, renderer);
-
             setRowHeader();
-
             packColumns();
             packRows();
-
             jpopUpMenuTable = new JPopUpMenuTable();
+            Dimension dim = table.getPreferredSize();
+            dim.width += 50;
+            setPreferredSize(dim);
+            pack();
         } catch (Exception e) {
             DEBUG.printException(e);
-            IJ.error(e.getMessage());
+            XmippDialog.showError(this, e.getMessage());
         }
     }
 
     private void setRowHeader() {
         rowHeaderModel = new GalleryRowHeaderModel(tableModel.getRowCount(), 1);
-
         rowHeader = new JList();
         rowHeader.setModel(rowHeaderModel);
-
         LookAndFeel.installColorsAndFont(rowHeader, "TableHeader.background",
                 "TableHeader.foreground", "TableHeader.font");
-
         rowHeader.setCellRenderer(new RowHeaderRenderer());
-
         jspTable.setRowHeaderView(rowHeader);
 //        rowHeader.repaint();
     }
@@ -108,7 +103,6 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
     private void packRows() {
         //  Row header.
         rowHeader.setFixedCellHeight(renderer.getHeight());
-
         for (int row = 0; row < table.getRowCount(); row++) {
             table.setRowHeight(row, renderer.getHeight());
         }
@@ -199,10 +193,8 @@ public class JFrameRotSpectra extends javax.swing.JFrame {
             }
         });
         jspTable.setViewportView(table);
-
         getContentPane().add(jspTable, java.awt.BorderLayout.CENTER);
-
-        pack();
+       
     }// </editor-fold>//GEN-END:initComponents
 
     private void tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseClicked

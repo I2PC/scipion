@@ -6,6 +6,7 @@
 # Author:Roberto Marabini, March 2007
 #        Carlos Oscar Sorzano, January 2011
 
+from os.path import join
 from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob
@@ -17,12 +18,12 @@ class ProtRotSpectra(XmippProtocol):
         self.Import = 'from protocol_rotspectra import *'    
        
     def defineSteps(self):
-        self.Db.insertStep('findCenter', [os.path.join(self.WorkingDir, "center2d_center.xmd")],
+        self.Db.insertStep('findCenter', [join(self.WorkingDir, "center2d_center.xmd")],
                            HowCenter=self.HowCenter,
                            Selfile=self.InSelFile, WorkingDir=self.WorkingDir,
                            SpectraInnerRadius=self.SpectraInnerRadius,
                            SpectraOuterRadius=self.SpectraOuterRadius)
-        self.Db.insertStep('calculateSpectra', [os.path.join(self.WorkingDir, "rotSpectra.xmd")],
+        self.Db.insertStep('calculateSpectra', [join(self.WorkingDir, "rotSpectra.xmd")],
                            Selfile=self.InSelFile, WorkingDir=self.WorkingDir,
                            SpectraInnerRadius=self.SpectraInnerRadius,
                            SpectraOuterRadius=self.SpectraOuterRadius,
@@ -73,18 +74,18 @@ def findCenter(log, HowCenter, Selfile, WorkingDir, SpectraInnerRadius, SpectraO
         id = MD.addObject()
         MD.setValue(MDL_X, float(dims[0] / 2), id)
         MD.setValue(MDL_Y, float(dims[1] / 2), id)
-        MD.write(os.path.join(WorkingDir, "center2d_center.xmd"))
+        MD.write(join(WorkingDir, "center2d_center.xmd"))
 
 def calculateSpectra(log, Selfile, WorkingDir, SpectraInnerRadius, SpectraOuterRadius,
                      SpectraLowHarmonic, SpectraHighHarmonic):
-    MD = MetaData(os.path.join(WorkingDir, "center2d_center.xmd"))
+    MD = MetaData(join(WorkingDir, "center2d_center.xmd"))
     id = MD.firstObject()
     xOffset=MD.getValue(MDL_X, id)
     yOffset=MD.getValue(MDL_Y, id)
     
     runJob(log, "xmipp_image_rotational_spectra",
          ' -i ' + Selfile + \
-         ' -o ' + os.path.join(WorkingDir,"rotSpectra.xmd") + \
+         ' -o ' + join(WorkingDir,"rotSpectra.xmd") + \
          ' --x0 ' + str(xOffset) + \
          ' --y0 ' + str(yOffset) + \
          ' --r1 ' + str(SpectraInnerRadius) + \
@@ -93,12 +94,12 @@ def calculateSpectra(log, Selfile, WorkingDir, SpectraInnerRadius, SpectraOuterR
          ' --high ' + str(SpectraHighHarmonic))
 
 def kerdensom(log,WorkingDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomExtraCommand):
-    args='-i '+os.path.join(WorkingDir,"rotSpectra.xmd")+\
-         ' --oroot '+os.path.join(WorkingDir,"results")+\
+    args='-i '+join(WorkingDir,"rotSpectra.xmd")+\
+         ' --oroot '+join(WorkingDir,"results")+\
          ' --xdim ' + str(SomXdim) + \
          ' --ydim ' + str(SomYdim) + \
          ' --deterministic_annealing %f %f %f'%(SomSteps,SomReg0,SomReg1) + \
          ' '+ str(KerdensomExtraCommand)
     runJob(log,"xmipp_classify_kerdensom",args)
-    deleteFiles(log, [os.path.join(WorkingDir,"rotSpectra.xmd"),os.path.join(WorkingDir,"rotSpectra.xmd.raw")], True)
+    deleteFiles(log, [join(WorkingDir,"rotSpectra.xmd"),join(WorkingDir,"rotSpectra.xmd.raw")], True)
    
