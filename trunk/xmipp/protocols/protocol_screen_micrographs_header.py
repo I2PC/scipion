@@ -63,8 +63,9 @@ MaxFocus = 10
 
 # {expert} Window size
 """ 
-The PSD is estimated from small patches of this size. Bigger patches allow identifying more details.
-However, since there are fewer windows, estimations are noisier.
+The PSD is estimated from small patches of this size. Bigger patches 
+allow identifying more details. However, since there are fewer windows, 
+estimations are noisier.
 """
 WinSize = 256
 
