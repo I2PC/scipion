@@ -203,15 +203,15 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
 	im.setXmippOrigin();
 	H.setXmippOrigin();
 
-	double S = 5;
-	double R = 10;
+	double S = 25;
+	double R = 2;
 
 	double temp = 0;
 	std::complex<double> tempCpx;
 
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
 	{
-		temp= std::exp(-std::pow((std::sqrt(std::pow(i,2)+std::pow(j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
+		temp= std::exp(-std::pow((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
 		tempCpx.real(temp);
 		tempCpx.imag(temp);
 		A2D_ELEM(H,i,j) = tempCpx;
@@ -236,6 +236,12 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
 	}
 
     SPTH(imN,H);
+
+	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+	{
+		temp = std::abs(A2D_ELEM(H,i,j));
+		A2D_ELEM(imN,i,j) = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
+	}
 
 }
 
