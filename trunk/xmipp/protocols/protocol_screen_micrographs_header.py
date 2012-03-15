@@ -29,34 +29,42 @@ DownsampleFactor = 1
 """ It should be a positive number, typically between 0.05 and 0.3."""
 AmplitudeContrast = 0.1
 
-# {wizard}(wizardBrowseCTF2) Lowest resolution for CTF estimation
-""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
-    This cut-off prevents the typically peak at the center of the PSD to interfere with CTF estimation.  
-    The default value is 0.05, but for micrographs with a very fine sampling this may be lowered towards 0.0
+# {wizard}(wizardBrowseCTF2) Lowest resolution
+""" 
+Give a value in digital frequency (i.e. between 0.0 and 0.5)
+This cut-off prevents the typically peak at the center of the PSD 
+to interfere with CTF estimation. The default value is 0.05, but for 
+micrographs with a very fine sampling this may be lowered towards 0.0
 """
 LowResolCutoff = 0.05
 
-# {wizard}(wizardBrowseCTF2) Highest resolution for CTF estimation
-""" Give a value in digital frequency (i.e. between 0.0 and 0.5)
-    This cut-off prevents high-resolution terms where only noise exists to interfere with CTF estimation.  
-    The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value.
-    However, if your micrographs extend further than 0.35, you should consider sampling them at a finer rate.
+# {wizard}(wizardBrowseCTF2) Highest resolution
+""" 
+Give a value in digital frequency (i.e. between 0.0 and 0.5)
+This cut-off prevents high-resolution terms where only noise exists 
+to interfere with CTF estimation. The default value is 0.35, but it should
+ be increased for micrographs with signals extending beyond this value.
+However, if your micrographs extend further than 0.35, you should consider
+sampling them at a finer rate.
 """
 HighResolCutoff = 0.35
 
 # {expert} Minimum defocus to search (in microns)
-""" Minimum defocus value (in microns) to include in defocus search. Underfocus is represented by a positive number.
+""" Minimum defocus value (in microns) to include in defocus search. 
+Underfocus is represented by a positive number.
 """
 MinFocus = 0.5
 
 # {expert} Maximum defocus to search (in microns)
-""" Maximum defocus value (in microns) to include in defocus search. Underfocus is represented by a positive number.
+""" Maximum defocus value (in microns) to include in defocus search. 
+Underfocus is represented by a positive number.
 """
 MaxFocus = 10
 
 # {expert} Window size
-""" The PSD is estimated from small patches of this size. Bigger patches allow identifying more details.
-    However, since there are fewer windows, estimations are noisier.
+""" 
+The PSD is estimated from small patches of this size. Bigger patches allow identifying more details.
+However, since there are fewer windows, estimations are noisier.
 """
 WinSize = 256
 
