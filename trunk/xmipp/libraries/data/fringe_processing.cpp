@@ -203,21 +203,6 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
 	im.setXmippOrigin();
 	H.setXmippOrigin();
 
-	double S = 25;
-	double R = 2;
-
-	double temp = 0;
-	std::complex<double> tempCpx;
-
-	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
-	{
-		temp= std::exp(-std::pow((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
-		tempCpx = std::complex<double>(temp,temp);
-//		tempCpx.real(temp);
-//		tempCpx.imag(temp);
-		A2D_ELEM(H,i,j) = tempCpx;
-	}
-
     MultidimArray<std::complex<double> > fftIm, imComplex;
     typeCast(im, imComplex);
 
@@ -225,12 +210,28 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
     FourierTransformer ftrans(FFTW_BACKWARD);
     ftrans.FourierTransform(imComplex, fftIm, false);
 
+    double S = 25;
+	double R = 60;
+
+	double temp = 0;
+	std::complex<double> tempCpx;
+
+
+	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+	{
+		temp= std::exp(-std::pow((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
+		tempCpx = std::complex<double>(temp,temp);
+		A2D_ELEM(H,i,j) = tempCpx;
+	}
+
     CenterFFT(H,false);
     fftIm *= H;
     ftrans.inverseFourierTransform();
 
     //output of the program
     imN.setXmippOrigin();
+    imModMap.setXmippOrigin();
+
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
 	{
 		A2D_ELEM(imN,i,j) = A2D_ELEM(imComplex,i,j).real();
@@ -241,9 +242,9 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
 	{
 		temp = std::abs(A2D_ELEM(H,i,j));
-		A2D_ELEM(imN,i,j) = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
+		A2D_ELEM(imModMap,i,j) = std::sqrt(std::pow(temp,2)+std::pow(A2D_ELEM(imN,i,j),2));
+		A2D_ELEM(imN,i,j)      = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
 	}
-
 }
 
 
