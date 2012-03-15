@@ -29,9 +29,9 @@ import os
 import sys
 from protlib_xmipp import XmippScript
 from protlib_emx import ParticlePickingConverter
-from protlib_emx import ParticleAlignmentConverter
-from protlib_emx import ParticleClassConverter
-from protlib_emx import CtfConverter
+#from protlib_emx import ParticleAlignmentConverter
+#from protlib_emx import ParticleClassConverter
+#from protlib_emx import CtfMicrographConverter
 
 class ScriptEmxConverter(XmippScript):
     def __init__(self):
@@ -45,7 +45,7 @@ class ScriptEmxConverter(XmippScript):
         self.addParamsLine('[ -o <filename="/dev/stdout"> ]    : Output file')
         self.addParamsLine('   alias --output_filename;')
         self.addParamsLine('[ -t <mode=coordinates>]       : Conversion type')
-        self.addParamsLine('     where <mode> coordinates alignment class ctf')
+        self.addParamsLine('     where <mode> coordinates alignment class ctfMicrograph ctfParticle')
         self.addParamsLine('   alias --conversion_type;')
 
         ## examples
@@ -60,12 +60,14 @@ class ScriptEmxConverter(XmippScript):
         convType = self.getParam('-t')
         if convType == 'coordinates':
             ParticlePickingConverter(inputFn, outputFn).run()  
-        elif convType == 'alignment':
-            ParticleAlignmentConverter(inputFn, outputFn).run()  
-        elif convType == 'class':
-            ParticleClassConverter(inputFn, outputFn).run()  
-        elif convType == 'ctf':
-            CtfConverter(inputFn, outputFn).run()  
+#        elif convType == 'alignment':
+#            ParticleAlignmentConverter(inputFn, outputFn).run()  
+#        elif convType == 'class':
+#            ParticleClassConverter(inputFn, outputFn).run()  
+#        elif convType == 'ctfMicrograph':
+#            CtfMicrographConverter(inputFn, outputFn).run()  
+#        elif convType == 'ctfParticle':
+#            CtfParticleConverter(inputFn, outputFn).run()  
         else:
             print >> sys.stderr, "ERROR: Wrong mode: ", type
             exit(0)
