@@ -212,8 +212,9 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
 	{
 		temp= std::exp(-std::pow((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-R),2)/(2*std::pow(S,2)))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(2*1))));
-		tempCpx.real(temp);
-		tempCpx.imag(temp);
+		tempCpx = std::complex<double>(temp,temp);
+//		tempCpx.real(temp);
+//		tempCpx.imag(temp);
 		A2D_ELEM(H,i,j) = tempCpx;
 	}
 
