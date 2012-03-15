@@ -342,7 +342,7 @@ fi
 
 #################### TIFF ###########################
 if $DO_TIFF; then
-  compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$EXT_PATH/$VJPEG/.libs"
+  compile_library $VTIFF "." "." "CPPFLAGS=-w --with-jpeg-include-dir=$EXT_PATH/$VJPEG --with-jpeg-lib-dir=$XMIPP_HOME/lib"
   install_libs $VTIFF/libtiff/.libs libtiff 3
 fi
 
