@@ -577,6 +577,8 @@ PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 #import distutils.sysconfig
 pythonLibName = 'xmipp'
 pythonIncludes = ["#" + join(PythonDir, dir) for dir in [".", "Include"]]
+pythonIncludes.append("#lib/python2.7/site-packages/numpy/core/include") 
+
 libpath = ['lib']
 libraries = ['XmippData', 'XmippRecons', 'XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
 if CYGWIN or MACOSX:
