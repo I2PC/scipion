@@ -38,6 +38,16 @@ TEST_F( ImageTest, similarTo)
     ASSERT_FALSE(myImage==myStack);
 }
 
+TEST_F( ImageTest, copy)
+{
+    Image<double> img2 = myImage;
+    ASSERT_TRUE(img2==myImage);
+    Image<double> empty;
+    empty().initZeros(32, 32);
+    Image<double> empty2(empty);
+    ASSERT_TRUE(empty==empty2);
+}
+
 TEST_F( ImageTest, getEulerAngles)
 {
     Image<double> auxImage;
