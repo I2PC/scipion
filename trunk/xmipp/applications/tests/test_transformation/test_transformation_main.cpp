@@ -117,6 +117,23 @@ TEST_F(TransformationTest, selfApplyGeometry)
     translate(BSPLINE3,volout,vol,center);
     EXPECT_EQ(volref,volout);
 }
+
+TEST_F(TransformationTest, scaleToSizeNearest)
+{
+    MultidimArray<double> imOut, auxMul;
+    auxMul.resize(2,2);
+
+    DIRECT_A2D_ELEM(auxMul,0,0) = DIRECT_A2D_ELEM(mulDouble,0,0);
+    DIRECT_A2D_ELEM(auxMul,0,1) = DIRECT_A2D_ELEM(mulDouble,0,1);
+    DIRECT_A2D_ELEM(auxMul,1,0) = DIRECT_A2D_ELEM(mulDouble,1,0);
+    DIRECT_A2D_ELEM(auxMul,1,1) = DIRECT_A2D_ELEM(mulDouble,1,1);
+
+    mulDouble.setXmippOrigin();
+    scaleToSize(NEAREST, imOut, mulDouble, 2, 2);
+
+    EXPECT_EQ(auxMul, imOut);
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

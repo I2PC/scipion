@@ -605,7 +605,7 @@ void applyGeometry(int SplineDegree,
                     {
                         if (SplineDegree==0)
                         {
-                            dAkij(V2, k, i, j)=A3D_ELEM(V1,(int)nearbyint(zp),(int)nearbyint(yp),(int)nearbyint(xp));
+                            dAkij(V2, k, i, j)=A3D_ELEM(V1,(int)trunc(zp),(int)trunc(yp),(int)trunc(xp));
                         }
                         else if (SplineDegree == 1)
                         {
