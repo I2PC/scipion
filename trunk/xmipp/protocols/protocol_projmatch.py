@@ -663,7 +663,7 @@ class ProtProjMatch(XmippProtocol):
                                      for e in ['Stk', 'Doc', 'Sampling']]
                 #Ask only for first and last, if we ask for all ctfgroup files the sql command max lenght is reached
                 _VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
-                                     for g in (1, self.NumberOfCtfGroups)]
+                                     for g in range (1, self.numberofctfgroups+1)]
                 projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
                          
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
