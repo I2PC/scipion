@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/projectTomography.h>
+#include <reconstruction/project_tomography.h>
 
 int main(int argc, char *argv[])
 {

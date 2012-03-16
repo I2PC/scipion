@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "projectTomography.h"
+#include "project_tomography.h"
 #include "directions.h"
 
 #include <data/args.h>
