@@ -92,7 +92,7 @@ void ProgMakeSpectra::run()
     MD.read(fn_in);
     std::ofstream fhOutRaw;
     MultidimArray<float> spectrum;
-    FileName fnOutRaw=fn_out+".raw";
+    FileName fnOutRaw=fn_out+".vec";
     fnOutRaw.deleteFile();
 
     // Convert the radii from percentages to actual pixels

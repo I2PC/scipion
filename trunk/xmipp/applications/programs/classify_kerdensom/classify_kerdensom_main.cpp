@@ -257,14 +257,14 @@ public:
         vectorHeaderIn.getValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idIn);
         vectorHeaderOut.setValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idOut);
         vectorHeaderOut.write(formatString("vectorHeader@%s_vectors.xmd",fn_root.c_str()),MD_APPEND);
-        FileName fnVectorsRaw=fn_root+"_vectors.xmd.raw";
+        FileName fnVectorsRaw=fn_root+"_vectors.vec";
         std::ofstream fhVectorsRaw(fnVectorsRaw.c_str(),std::ios::binary);
         if (!fhVectorsRaw)
             REPORT_ERROR(ERR_IO_NOWRITE,fnVectorsRaw);
         for (size_t i = 0; i < myMap->size(); i++)
         {
         	id=vectorContentOut.addObject();
-        	vectorContentOut.setValue(MDL_IMAGE,formatString("class_%06lu",i),id);
+        	vectorContentOut.setValue(MDL_REF,(int)i,id);
         	vectorContentOut.setValue(MDL_ORDER,i,id);
         	fhVectorsRaw.write((char*)&(myMap->theItems[i][0]),vectorSize*sizeof(float));
         }

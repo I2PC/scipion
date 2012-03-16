@@ -191,7 +191,7 @@ void ClassicTrainingVectors::read(const FileName& fnIn)
     theTargets.reserve(Nvectors);
 
     // Read the data
-    FileName fnInRaw=formatString("%s.raw",fnIn.c_str());
+    FileName fnInRaw=formatString("%s.vec",fnIn.c_str());
     std::ifstream fhInRaw(fnInRaw.c_str(),std::ios::binary);
     if (!fhInRaw)
         REPORT_ERROR(ERR_IO_NOTEXIST,fnInRaw);
