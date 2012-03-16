@@ -572,7 +572,7 @@ void ProgCtfGroup::writeOutputToDisc()
     ctfInfo.aggregate(sortedCtfMD,aggregateOperations,operateLabels,resultLabels);
     ctfInfo.setComment("N. of micrographs, N. of particles, min defocus, max defocus and avg defocus");
     ctfInfo.write("groups@"+fn_root+"Info.xmd");
-    int numberDefGroups=ctfInfo.size();
+    size_t numberDefGroups=ctfInfo.size();
     MetaData MD;
     size_t idctf = MD.addObject();
     MD.setValue(MDL_COUNT,numberDefGroups,idctf);
