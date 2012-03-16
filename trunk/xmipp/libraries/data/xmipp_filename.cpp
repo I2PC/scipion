@@ -473,7 +473,6 @@ bool FileName::isStar1(bool failIfNotExists) const
     if (infile.fail())
     {
         if (failIfNotExists)
-        	std::cerr << "Cano " <<std::endl;
             REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", c_str()));
         else
             return false;
