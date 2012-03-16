@@ -47,6 +47,16 @@ class ProtImportMicrographs(XmippProtocol):
         # Check that there are any micrograph to process
         if len(self.getMicrographs()) == 0:
             errors.append("There are no micrographs to process in " + self.PatternMicrographs)
+        if self.SamplingRateMode == "From image":
+            try:
+                AngPix = float(self.SamplingRate)
+            except:
+                errors.append("Sampling rate is not correctly set")
+        else:
+            try:
+                scannedPixelSize=float(self.ScannedPixelSize)
+            except:
+                errors.append("Sampling rate is not correctly set")
         return errors
 
     def summary(self):
@@ -71,12 +81,13 @@ class ProtImportMicrographs(XmippProtocol):
 
     def insertCreateMicroscope(self):    
         if self.SamplingRateMode == "From image":
-            AngPix = self.SamplingRate
+            AngPix = float(self.SamplingRate)
         else:
+            scannedPixelSize=float(self.ScannedPixelSize)
             if self.DoDownsample:
-                AngPix = (10000. * self.ScannedPixelSize * self.DownsampleFactor) / self.Magnification
+                AngPix = (10000. * scannedPixelSize * self.DownsampleFactor) / self.Magnification
             else:
-                AngPix = (10000. * self.ScannedPixelSize) / self.Magnification
+                AngPix = (10000. * scannedPixelSize) / self.Magnification
         fnOut = self.getFilename('microscope')
         self.insertStep("createMicroscope", verifyfiles=[fnOut], fnOut=fnOut, Voltage=self.Voltage,
                         SphericalAberration=self.SphericalAberration,SamplingRate=AngPix,

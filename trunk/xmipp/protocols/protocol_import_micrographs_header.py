@@ -87,10 +87,10 @@ Magnification = 60000
 SamplingRateMode="From image"
 
 # {condition}(SamplingRateMode=="From image") Sampling rate (A/pixel)
-SamplingRate = 1
+SamplingRate = ""
 
 # {condition}(SamplingRateMode=="From scanner") Scanned pixel size (in um/pixel)
-ScannedPixelSize = 15
+ScannedPixelSize = ""
 
 # {eval} expandParallel(threads=0,hours=6)
 
