@@ -1223,6 +1223,24 @@ class ProtocolGUI(BasicGUI):
         if len(msg)>0:
             var.tkvar.set(fnMask)            
 
+    #Select micrograph extension
+    def wizardMicrographExtension(self,var):
+        dirMicrographs = self.getVarValue('DirMicrographs')
+        files=glob(join(dirMicrographs,"*"))
+        extensions={}
+        bestCount=0
+        bestExt=""
+        for fn in files:
+            ext=os.path.splitext(fn)[1]
+            if ext in extensions.keys():
+                extensions[ext]+=1
+            else:
+                extensions[ext]=1
+            if extensions[ext]>bestCount:
+                bestCount=extensions[ext]
+                bestExt=ext
+        self.setVarValue("ExtMicrographs", "*"+bestExt)
+
     #Select Tilt pairs
     def wizardTiltPairs(self, var):
         dirMicrographs = self.getVarValue('DirMicrographs')
