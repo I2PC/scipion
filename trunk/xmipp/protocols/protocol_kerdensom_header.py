@@ -20,7 +20,10 @@
 """
 InSelFile=''
 
-# {file} Mask file 
+# Use mask
+UseMask=False
+
+# {file}{condition}(UseMask) Mask file 
 Mask=''
 
 # X-dimension of the map:
