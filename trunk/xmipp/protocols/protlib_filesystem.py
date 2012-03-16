@@ -187,4 +187,6 @@ def findRealFile(path, recursive=True):
         path = readlink(path)
     return path
 
-
+def xmippExists(path):
+    from xmipp import FileName
+    return FileName(path).exists()
