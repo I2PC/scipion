@@ -640,7 +640,16 @@ struct ArrayDim
     size_t zyxdim;
     // Number of elements in NZYX
     size_t nzyxdim;
-};
+
+    bool operator==(ArrayDim &adim)
+    {
+        return (this->ndim == adim.ndim &&
+                this->zdim == adim.zdim &&
+                this->ydim == adim.ydim &&
+                this->xdim == adim.xdim );
+    }
+}
+;
 
 /**
  *  Structure to define random generation mode
