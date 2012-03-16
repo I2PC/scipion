@@ -474,7 +474,7 @@ bool FileName::isStar1(bool failIfNotExists) const
     if (infile.fail())
     {
         if (failIfNotExists)
-            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", this->removeBlockName().c_str()));
+            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("Ffile '%s' does not exist.", this->removeBlockName().c_str()));
         else
             return false;
     }
