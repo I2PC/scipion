@@ -16,7 +16,6 @@ protocols = {
         'cl2d_align': ('Only align', '2D/Alignment'),
         'kerdensom': ('KerDenSOM',  '2D/KerDenSOM'),
         'rotspectra': ('Rotational Spectra', '2D/RotSpectra'),
-        'commonlines': ('Common Lines', '3D/CommonLines'),
         'rct': ('Random Conical Tilt', '3D/RCT'),
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
@@ -38,7 +37,7 @@ sections = [
    [['Align+Classify', 'ml2d', 'cl2d', 'cl2d_align'], 
     ['Tools', 'kerdensom', 'rotspectra']]),
 ('3D', 
-   [['Initial Model', 'commonlines', 'rct'], 
+   [['Initial Model', 'rct'], 
     ['Model Refinement', 'projmatch', 'ml3d']])
 ,
 ('Other',
