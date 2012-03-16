@@ -31,6 +31,8 @@ class ScriptShowJ(ScriptAppIJ):
 			if mode == 'rotspectra':
 				prefix = self.getParam('-i')
 				self.inputFiles = [prefix + s for s in ['_classes.xmd', '_vectors.xmd', '_vectors.xmd.raw']]
+		else:
+			ScriptAppIJ.readInputFiles(self)
 		
 	def readOtherParams(self):	
 		if self.checkParam('--mode'):
