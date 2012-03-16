@@ -38,7 +38,7 @@ from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithRe
     runShowJ
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage
-from protlib_filesystem import getXmippPath
+from protlib_filesystem import getXmippPath, xmippExists
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
@@ -1313,7 +1313,7 @@ def validatorPathExists(var):
         pathList = var.tkvar.get().split()
         err = ''
         for p in pathList:
-            if not exists(p):
+            if not xmippExists(p):
                 err += "\n<%s>" % p
         if len(err):
             err = "Following path: %s\ndoesn't exist\nFor input <%s>" % (err, var.comment)
