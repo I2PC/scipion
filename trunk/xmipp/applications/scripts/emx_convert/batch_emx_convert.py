@@ -29,9 +29,9 @@ import os
 import sys
 from protlib_xmipp import XmippScript
 from protlib_emx import ParticlePickingConverter
-#from protlib_emx import ParticleAlignmentConverter
+from protlib_emx import ParticleAlignmentConverter
 #from protlib_emx import ParticleClassConverter
-#from protlib_emx import CtfMicrographConverter
+from protlib_emx import CtfMicrographConverter
 
 class ScriptEmxConverter(XmippScript):
     def __init__(self):
@@ -64,8 +64,8 @@ class ScriptEmxConverter(XmippScript):
 #            ParticleAlignmentConverter(inputFn, outputFn).run()  
 #        elif convType == 'class':
 #            ParticleClassConverter(inputFn, outputFn).run()  
-#        elif convType == 'ctfMicrograph':
-#            CtfMicrographConverter(inputFn, outputFn).run()  
+        elif convType == 'ctfMicrograph':
+            CtfMicrographConverter(inputFn, outputFn).run()  
 #        elif convType == 'ctfParticle':
 #            CtfParticleConverter(inputFn, outputFn).run()  
         else:
