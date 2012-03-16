@@ -103,10 +103,10 @@ def executeCtfGroups (_log,
     
     if runJob(_log,"xmipp_ctf_group",command):
         return 1
-    fn = CtfGroupDirectory + '/'+\
-                  CtfGroupRootName+\
-                 'Info.xmd'
-    MD = MetaData(fn)
+#    fn = CtfGroupDirectory + '/'+\
+#                  CtfGroupRootName+\
+#                 'Info.xmd'
+#    MD = MetaData(fn)
 
 def checkOptionsCompatibility(_log, DoAlign2D, DoCtfCorrection):
     # Never allow DoAlign2D and DoCtfCorrection together

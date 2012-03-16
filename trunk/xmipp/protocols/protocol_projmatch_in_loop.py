@@ -129,7 +129,13 @@ def projection_matching(_log
     _DoCtfCorrection    = DoCtfCorrection
     _ProjMatchRootName  = ProjMatchRootName
     refname = str(ProjectLibraryRootName)
-    NumberOfCtfGroups=NumberOfCtfGroups
+    file_name = join(CtfGroupDirectory, CtfGroupRootName) +'Info.xmd'
+    if exists(file_name):
+        auxMD = MetaData("numberGroups@"+file_name)
+        NumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
+    else:
+        NumberOfCtfGroups = 1
+
     
     CtfGroupName = CtfGroupRootName #,ictf+1,'')
     CtfGroupName = CtfGroupDirectory + '/' + CtfGroupName
@@ -186,14 +192,22 @@ def projection_matching(_log
         
 def assign_images_to_references(_log
                          , BlockWithAllExpImages
+                         , CtfGroupDirectory
+                         , CtfGroupRootName
                          , DocFileInputAngles #outputfile
-                         , NumberOfCtfGroups
                          , ProjMatchRootName #input file
                          , NumberOfReferences
                          ):
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
+    file_name = join(CtfGroupDirectory, CtfGroupRootName) +'Info.xmd'
+    if exists(file_name):
+        auxMD = MetaData("numberGroups@"+file_name)
+        NumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
+    else:
+        NumberOfCtfGroups = 1
+
     #!a
     #DocFileInputAngles  = DocFileInputAngles
     #ProjMatchRootName   = ProjMatchRootName#

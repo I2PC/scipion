@@ -75,11 +75,8 @@ class ProtProjMatch(XmippProtocol):
         
         file_name = join(self.CtfGroupDirectory, self.CtfGroupRootName) +'Info.xmd'
         if exists(file_name):
-            auxMD1 = MetaData(file_name)
-            auxMD2 = MetaData()
-            auxMD2.aggregate(auxMD1, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT)
-        
-            summaryNumberOfCtfGroups = auxMD2.size()
+            auxMD = MetaData("numberGroups@"+file_name)
+            summaryNumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
         else:
             summaryNumberOfCtfGroups = 1
             
@@ -563,13 +560,14 @@ class ProtProjMatch(XmippProtocol):
         _VerifyFiles = []
 
         _dataBase = self.Db
-        if self.DoCtfCorrection:
-            auxMD1 = MetaData(self.CTFDatName)
-            auxMD2 = MetaData()
-            auxMD2.aggregate(auxMD1, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT)
-            self.NumberOfCtfGroups = auxMD2.size()
-            print "self.NumberOfCtfGroups: ", self.NumberOfCtfGroups
-            
+        
+        file_name = join(self.CtfGroupDirectory, self.CtfGroupRootName) +'Info.xmd'
+        if exists(file_name):
+            auxMD = MetaData("numberGroups@"+file_name)
+            self.NumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
+        else:
+            self.NumberOfCtfGroups = 1
+
         #create dir for iteration 1 (This need to be 0 or 1? ROB FIXME
         #!a _dataBase.insertStep('createDir', path = self.getIterDirName(0))
     
@@ -663,7 +661,7 @@ class ProtProjMatch(XmippProtocol):
                                      for e in ['Stk', 'Doc', 'Sampling']]
                 #Ask only for first and last, if we ask for all ctfgroup files the sql command max lenght is reached
                 _VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
-                                     for g in range (1, self.numberofctfgroups+1)]
+                                     for g in range (1, self.NumberOfCtfGroups+1)]
                 projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
                          
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
@@ -705,7 +703,6 @@ class ProtProjMatch(XmippProtocol):
                                     , InnerRadius=self.InnerRadius[iterN]
                                     , MaxChangeOffset=self.MaxChangeOffset[iterN]
                                     , MpiJobSize=self.MpiJobSize
-                                    , NumberOfCtfGroups=self.NumberOfCtfGroups
                                     , NumberOfMpi=self.NumberOfMpi
                                     , NumberOfThreads=self.NumberOfThreads
                                     , OuterRadius=self.OuterRadius[iterN]
@@ -725,7 +722,8 @@ class ProtProjMatch(XmippProtocol):
             _dataBase.insertStep('assign_images_to_references', verifyfiles=[self.DocFileInputAngles[iterN]]
                                      , BlockWithAllExpImages = self.BlockWithAllExpImages
                                      , DocFileInputAngles=self.DocFileInputAngles[iterN]#Output file with angles
-                                     , NumberOfCtfGroups=self.NumberOfCtfGroups
+                                     , CtfGroupDirectory = self.CtfGroupDirectory
+                                     , CtfGroupRootName = self.CtfGroupRootName                           
                                      , ProjMatchRootName=ProjMatchRootNameList#LIST
                                      , NumberOfReferences=self.numberOfReferences
                          )
