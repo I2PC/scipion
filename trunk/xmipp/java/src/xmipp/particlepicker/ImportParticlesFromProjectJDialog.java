@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippIJUtil;
 import xmipp.utils.XmippMessage;
 
 public class ImportParticlesFromProjectJDialog extends JDialog
@@ -46,13 +46,13 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 		constraints.insets = new Insets(5, 5, 5, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 		initSourcePane();
-		add(new JLabel("Format:"), WindowUtil.getConstraints(constraints, 0, 0, 1));
-		add(sourcepn, WindowUtil.getConstraints(constraints, 1, 0, 2));
-		add(new JLabel("Source:"), WindowUtil.getConstraints(constraints, 0, 1, 1));
+		add(new JLabel("Format:"), XmippIJUtil.getConstraints(constraints, 0, 0, 1));
+		add(sourcepn, XmippIJUtil.getConstraints(constraints, 1, 0, 2));
+		add(new JLabel("Source:"), XmippIJUtil.getConstraints(constraints, 0, 1, 1));
 		sourcetf = new JTextField(20);
-		add(sourcetf, WindowUtil.getConstraints(constraints, 1, 1, 1));
+		add(sourcetf, XmippIJUtil.getConstraints(constraints, 1, 1, 1));
 		JButton browsebt = new JButton("Browse");
-		add(browsebt, WindowUtil.getConstraints(constraints, 2, 1, 1));
+		add(browsebt, XmippIJUtil.getConstraints(constraints, 2, 1, 1));
 		browsebt.addActionListener(new ActionListener()
 		{
 
@@ -97,9 +97,9 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 		});
 		actionspn.add(okbt);
 		actionspn.add(cancelbt);
-		add(actionspn, WindowUtil.getConstraints(constraints, 0, 2, 3));
+		add(actionspn, XmippIJUtil.getConstraints(constraints, 0, 2, 3));
 		pack();
-		WindowUtil.setLocation(0.8f, 0.5f, this);
+		XmippIJUtil.setLocation(0.8f, 0.5f, this);
 		setVisible(true);
 
 	}

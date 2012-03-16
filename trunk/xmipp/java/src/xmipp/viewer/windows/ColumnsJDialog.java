@@ -45,7 +45,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.jni.MetaData;
-import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippIJUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.models.ColumnInfo;
 
@@ -87,16 +87,16 @@ public class ColumnsJDialog extends XmippDialog {
 		tableColumns
 				.setPreferredScrollableViewportSize(new Dimension(350, 200));
 		sp.setViewportView(tableColumns);
-		panel.add(groupstbpn, WindowUtil.getConstraints(gbc, 0, 0));
+		panel.add(groupstbpn, XmippIJUtil.getConstraints(gbc, 0, 0));
 
 		JPanel panelUpDown = new JPanel();
 		panelUpDown.setLayout(new GridBagLayout());
 		gbc.insets = new Insets(0, 0, 5, 5);
-		btnUp = WindowUtil.getIconButton("up.gif", this);
-		panelUpDown.add(btnUp, WindowUtil.getConstraints(gbc, 0, 0));
-		btnDown = WindowUtil.getIconButton("down.gif", this);
-		panelUpDown.add(btnDown, WindowUtil.getConstraints(gbc, 0, 1));
-		panel.add(panelUpDown, WindowUtil.getConstraints(gbc, 1, 0));
+		btnUp = XmippIJUtil.getIconButton("up.gif", this);
+		panelUpDown.add(btnUp, XmippIJUtil.getConstraints(gbc, 0, 0));
+		btnDown = XmippIJUtil.getIconButton("down.gif", this);
+		panelUpDown.add(btnDown, XmippIJUtil.getConstraints(gbc, 0, 1));
+		panel.add(panelUpDown, XmippIJUtil.getConstraints(gbc, 1, 0));
 		// this buttons will be enabled after selection
 		enableUpDown(false);
 		// listen to selection changes (only one row selected)

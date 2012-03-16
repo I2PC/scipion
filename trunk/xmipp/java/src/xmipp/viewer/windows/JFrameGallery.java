@@ -80,7 +80,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
-import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippIJUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
@@ -299,7 +299,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		});
 
 		pack();
-		WindowUtil.centerWindows(this);
+		XmippIJUtil.centerWindows(this);
 		setVisible(true);
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -557,11 +557,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		imgStd.destroy();
 		XmippImageWindow winAvg = new XmippImageWindow(impAvg, "AVG: "
 				+ data.filename);
-		WindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
+		XmippIJUtil.setLocation(0.2f, 0.5f, winAvg, this);
 		winAvg.setVisible(true);
 		XmippImageWindow winStd = new XmippImageWindow(impStd, "STD: "
 				+ data.filename);
-		WindowUtil.setLocation(0.8f, 0.5f, winStd, this);
+		XmippIJUtil.setLocation(0.8f, 0.5f, winStd, this);
 		winStd.setVisible(true);
 	}
 
@@ -625,7 +625,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	public void fsc() {
 		try {
 			JFrameFSC frame = new JFrameFSC(data);
-			WindowUtil.centerWindows(frame, this);
+			XmippIJUtil.centerWindows(frame, this);
 			frame.setVisible(true);
 		} catch (Exception ex) {
 			DEBUG.printException(ex);

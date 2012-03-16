@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import xmipp.utils.XmippIJUtil;
+
 /**
  * 
  * @author Juanjo Vega
@@ -159,13 +161,13 @@ public class XmippMenuBar extends MenuBar
 		adjustmn = new Menu("Adjust");
 		transformmn = new Menu("Transform");
 		filtersmn = new Menu("Filters");
-		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);//missing plugin
+		
 
 		imagemn.add(infomn);
 		imagemn.add(adjustmn);
 		imagemn.add(transformmn);
 		imagemn.add(filtersmn);
-		
+		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);//missing plugin
 		
 		// image info menu
 		addIJMenuItem(infomn, "Show Info", "Show Info...");
@@ -262,7 +264,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippImageWindow.openImageJ(Tool.VIEWER);
+				XmippIJUtil.showImageJ(Tool.VIEWER);
 			}
 		});
 
@@ -303,7 +305,7 @@ public class XmippMenuBar extends MenuBar
 						switch (requirement)
 						{
 						case IMAGEJ:
-							XmippImageWindow.openImageJ(Tool.VIEWER);
+							XmippIJUtil.showImageJ(Tool.VIEWER);
 							break;
 						case BINARY:
 							IJ.run("Make Binary");

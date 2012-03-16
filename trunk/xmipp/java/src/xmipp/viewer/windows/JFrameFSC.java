@@ -1,7 +1,7 @@
 package xmipp.viewer.windows;
 
 import xmipp.utils.DEBUG;
-import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippIJUtil;
 import xmipp.utils.XmippLabel;
 import xmipp.viewer.models.GalleryData;
 
@@ -84,7 +84,7 @@ public class JFrameFSC extends JFrame {
 
             add(createChartPanel(chart), BorderLayout.CENTER);
             pack();
-            WindowUtil.centerWindows(this);
+            XmippIJUtil.centerWindows(this);
         } catch (Exception e) {
             DEBUG.printException(e);
         }

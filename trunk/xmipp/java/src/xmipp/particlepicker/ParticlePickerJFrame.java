@@ -48,7 +48,7 @@ import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
-import xmipp.utils.WindowUtil;
+import xmipp.utils.XmippIJUtil;
 import xmipp.utils.XmippMessage;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
@@ -230,7 +230,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				try
 				{
-					WindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
+					XmippIJUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
 				}
 				catch (Exception ex)
 				{

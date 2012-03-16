@@ -24,7 +24,8 @@
  ***************************************************************************/
 package xmipp.utils;
 
-import java.awt.Button;
+import ij.IJ;
+
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -36,8 +37,14 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
+import xmipp.ij.commons.Tool;
+import xmipp.ij.commons.XmippImageJ;
+import xmipp.jni.Filename;
 
-public class WindowUtil {
+
+public class XmippIJUtil {
+	
+	private static XmippImageJ xij;
 
 	/** Some colors contants */
 	public static final Color LIGHT_BLUE = new Color(173, 216, 230);
@@ -79,24 +86,6 @@ public class WindowUtil {
 		return getConstraints(constraints, x, y, columns, 1);
 	}
 	
-	public static GridBagConstraints getConstraints(GridBagConstraints constraints, 
-			int x, int y, int columns, int rows){
-		constraints.gridx = x;
-		constraints.gridy = y;
-		constraints.gridwidth = columns;
-		constraints.gridheight = rows;
-		if (columns > 1 && rows > 1){
-			constraints.fill = GridBagConstraints.BOTH;
-		}
-		else if (columns > 1){
-			constraints.fill = GridBagConstraints.HORIZONTAL;}
-		else if (rows > 1){
-			constraints.fill = GridBagConstraints.VERTICAL;}
-		else {
-			constraints.fill = GridBagConstraints.NONE;}
-		return constraints;
-	}
-	
 	public static JButton getIconButton(String icon, ActionListener listener){
 		JButton btn = new JButton();
 		btn.setIcon(XmippResource.getIcon(icon));
@@ -114,19 +103,29 @@ public class WindowUtil {
 		return btn;
 	}
 	
-	public static Button getTextAWTButton(String text, ActionListener listener){
-		Button btn = new Button(text);
-		//btn.setBackground(LIGHT_BLUE);
-		btn.addActionListener(listener);
-		return btn;
-	}	
-	
 	public static JLabel getIconLabel(String icon){
 		JLabel label = new JLabel();
 		label.setIcon(XmippResource.getIcon(icon));
 		return label;
 	}
-
+	
+	public static GridBagConstraints getConstraints(GridBagConstraints constraints, 
+			int x, int y, int columns, int rows){
+		constraints.gridx = x;
+		constraints.gridy = y;
+		constraints.gridwidth = columns;
+		constraints.gridheight = rows;
+		if (columns > 1 && rows > 1){
+			constraints.fill = GridBagConstraints.BOTH;
+		}
+		else if (columns > 1){
+			constraints.fill = GridBagConstraints.HORIZONTAL;}
+		else if (rows > 1){
+			constraints.fill = GridBagConstraints.VERTICAL;}
+		else {
+			constraints.fill = GridBagConstraints.NONE;}
+		return constraints;
+	}
 			
 			
 	public static void openURI(String uri) {
@@ -153,4 +152,22 @@ public class WindowUtil {
 			throw new IllegalArgumentException(e);
 		}
 	}
+	
+	public static XmippImageJ showImageJ(Tool tool)
+	{
+		if (IJ.getInstance() == null)
+		{
+			xij = new XmippImageJ();
+			IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/commons/XmippMacros.txt"));
+		}
+		else if (!xij.isVisible())
+			xij.setVisible(true);
+		return xij;
+	}
+	
+	public static XmippImageJ getXmippImageJ()
+	{
+		return xij;
+	}
+
 }
