@@ -470,10 +470,11 @@ bool FileName::isStar1(bool failIfNotExists) const
 {
     std::ifstream infile( this->removeBlockName().data(), std::ios_base::in);
     String line;
+
     if (infile.fail())
     {
         if (failIfNotExists)
-            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", c_str()));
+            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", this->removeBlockName().c_str()));
         else
             return false;
     }
