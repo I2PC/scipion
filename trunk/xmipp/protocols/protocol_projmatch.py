@@ -72,10 +72,17 @@ class ProtProjMatch(XmippProtocol):
 
         super(ProtProjMatch, self).summary()
         
-        auxMD1 = MetaData(self.CTFDatName)
-        auxMD2 = MetaData()
-        auxMD2.aggregate(auxMD1, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT)
-        self.NumberOfCtfGroups = auxMD2.size()
+        
+        file_name = join(self.CtfGroupDirectory, self.CtfGroupRootName) +'Info.xmd'
+        if exists(file_name):
+            auxMD1 = MetaData(file_name)
+            auxMD2 = MetaData()
+            auxMD2.aggregate(auxMD1, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT)
+        
+            summaryNumberOfCtfGroups = auxMD2.size()
+        else:
+            summaryNumberOfCtfGroups = 1
+            
 
         self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)
@@ -94,10 +101,6 @@ class ProtProjMatch(XmippProtocol):
         else:
             summary += ['Resolution is <%s>' % 'not available']            
         
-        if(self.DoCtfCorrection):
-           summaryNumberOfCtfGroups = self.NumberOfCtfGroups
-        else:
-           summaryNumberOfCtfGroups = 0
         summary += ['Number of CTFgroups and References is <%d> and <%d> respectively'
                         % (summaryNumberOfCtfGroups, self.numberOfReferences)]
 
