@@ -374,7 +374,6 @@ class XmippProjectGUI():
         childs = tree.get_children('')
         for c in childs:
             tree.delete(c)
-        print "updateRunHistory, group:", protGroup
         if protGroup == GROUP_ALL:
             self.runs = self.project.projectDb.selectRuns()
         else:
