@@ -95,7 +95,7 @@ public:
             size_t order=0;
             FileName fnImg;
             float *buffer=NULL;
-            FileName fnOutRaw=formatString("%s.vec",fnOut.c_str());
+            FileName fnOutRaw=formatString("%s.vec",fnOut.withoutExtension().c_str());
             std::ofstream fhOutRaw(fnOutRaw.c_str(),std::ios::binary);
             if (!fhOutRaw)
                 REPORT_ERROR(ERR_IO_NOWRITE,fnOutRaw);
@@ -179,7 +179,7 @@ public:
             const MultidimArray<double> &mimg=img();
             FileName fnImg, fnIdx;
             float *buffer=new float[vectorSize];
-            FileName fnInRaw=formatString("%s.vec",fnIn.c_str());
+            FileName fnInRaw=formatString("%s.vec",fnIn.withoutExtension().c_str());
             std::ifstream fhInRaw(fnInRaw.c_str(),std::ios::binary);
             if (!fhInRaw)
                 REPORT_ERROR(ERR_IO_NOTEXIST,fnInRaw);
