@@ -32,7 +32,7 @@ import Tkinter as tk
 from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
-from protlib_filesystem import getXmippPath
+from protlib_filesystem import getXmippPath, xmippExists
 from Tkinter import TclError
 
 RESOURCES = getXmippPath('resources')
@@ -60,10 +60,10 @@ def configDefaults(opts, defaults):
             
 def openLink(link):
     ''' Open a link in default web browser '''
-    if os.path.isfile(link):
-        showj(link)
-    elif os.path.isdir(link):
+    if os.path.isdir(link):
         showBrowseDialog(link, link, seltype="none", selmode="browse")
+    elif xmippExists(link):
+        showj(link)
     else:
         from  webbrowser import open
         open(link)
@@ -558,7 +558,7 @@ class XmippText(tk.Text):
         
     def updateMenu(self, e=None):
         state = 'normal'
-        if not os.path.exists(self.selection):
+        if not xmippExists(self.selection):
             state = 'disabled'#self.menu.entryconfig(1, background="green")
         self.menu.entryconfig(1, state=state)
 
