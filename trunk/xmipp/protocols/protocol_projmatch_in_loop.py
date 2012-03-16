@@ -110,7 +110,6 @@ def projection_matching(_log
                             , InnerRadius
                             , MaxChangeOffset
                             , MpiJobSize
-                            , NumberOfCtfGroups
                             , NumberOfMpi
                             , NumberOfThreads
                             , OuterRadius
