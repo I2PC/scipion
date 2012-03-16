@@ -571,6 +571,12 @@
 			<FILE filename="rec_art.vol" />
 		</CASE>
 	</PROGRAM>
+	   <PROGRAM name="xmipp_mpi_reconstruct_fourier" mpi="TRUE">
+        <CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol "
+            changeDir="FALSE">
+            <FILE filename="recon.vol" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_mpi_reconstruct_wbp" mpi="TRUE">
 		<CASE
 			arguments="-i input/projectionsBacteriorhodopsin.xmd --use_each_image -o  %o/recon.vol "
