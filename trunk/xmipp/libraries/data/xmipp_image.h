@@ -107,6 +107,13 @@ public:
         MD.resize(Ndim);
     }
 
+    Image(const Image<T> &im)
+    {
+        mdaBase = (MultidimArrayBase*) &data;
+        init();
+        *this = im;
+    }
+
     /** Constructor with MultidimArray alias
      *
      *  An image is created directly with its multidimarray aliased to im.
@@ -902,6 +909,21 @@ public:
         castPage2Datatype(MULTIDIM_ARRAY(data), fdata, datatype, datasize_n);
         fwrite( fdata, datasize, 1, fimg );
         freeMemory(fdata, datasize);
+    }
+
+    /** Copy the MDA and the fields related to the (possible) original file
+     */
+    Image<T>& operator=(const Image<T> &op1)
+    {
+        MD = op1.MD;
+        MDMainHeader = op1.MDMainHeader;
+        filename = op1.filename;
+        transform = op1.transform;
+
+        aDimFile = op1.aDimFile;
+        data = op1.data;
+
+        return *this;
     }
 
     /** Data access

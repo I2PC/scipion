@@ -40,12 +40,21 @@ TEST_F( ImageTest, similarTo)
 
 TEST_F( ImageTest, copy)
 {
-    Image<double> img2 = myImage;
+    Image<double> img2(myImage);
     ASSERT_TRUE(img2==myImage);
+    ArrayDim aDim1, aDim2;
+    myImage.getDimensions(aDim1);
+    img2.getDimensions(aDim2);
+    ASSERT_TRUE(aDim1 == aDim2);
+
     Image<double> empty;
     empty().initZeros(32, 32);
-    Image<double> empty2(empty);
-    ASSERT_TRUE(empty==empty2);
+    img2 = empty;
+    ASSERT_TRUE(empty==img2);
+
+    empty.getDimensions(aDim1);
+    img2.getDimensions(aDim2);
+    ASSERT_TRUE(aDim1 == aDim2);
 }
 
 TEST_F( ImageTest, getEulerAngles)
