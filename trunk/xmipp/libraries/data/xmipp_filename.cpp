@@ -440,6 +440,14 @@ FileName FileName::removeSliceNumber() const
     return *this;
 }
 
+FileName FileName::removeBlockNameOrSliceNumber() const
+{
+    size_t first = rfind("@");
+    if (first != npos)
+        return substr(first + 1);
+    return *this;
+}
+
 bool FileName::isMetaData(bool failIfNotExists) const
 {
     //check empty string
@@ -468,13 +476,13 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-    std::ifstream infile( this->removeBlockName().data(), std::ios_base::in);
+    std::ifstream infile( this->removeBlockNameOrSliceNumber().data(), std::ios_base::in);
     String line;
 
     if (infile.fail())
     {
         if (failIfNotExists)
-            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("Ffile '%s' does not exist.", this->removeBlockName().c_str()));
+            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("Ffile '%s' does not exist.", this->removeBlockNameOrSliceNumber().c_str()));
         else
             return false;
     }
