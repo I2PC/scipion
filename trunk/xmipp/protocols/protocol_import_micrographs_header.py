@@ -11,13 +11,13 @@
 """Directory name from where to process all scanned micrographs"""
 DirMicrographs = 'InputData'
 
-# Files to process
+# {wizard}(wizardMicrographExtension) Files to process
 """ 
 This is the micrographs files pattern, typically <*.tif> or <*.ser>, 
 but may also be <*.mrc> or <*.spi> 
 <Note:> you can use any wildcard like in shell expansion, e.g. <*3[1,2].tif>
 """
-ExtMicrographs = '*.mrc'
+ExtMicrographs = ''
 
 # Are micrographs tilt pairs?
 TiltPairs = False
