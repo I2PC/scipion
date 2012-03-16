@@ -1,4 +1,6 @@
 import os, shutil, string, glob, math
+from os.path import join, exists
+
 #import launch_job, utils_xmipp
 from distutils.dir_util import mkpath
 from xmipp import *
