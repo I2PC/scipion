@@ -1,5 +1,6 @@
 package xmipp.viewer.windows;
 
+import xmipp.utils.DEBUG;
 import xmipp.utils.WindowUtil;
 import xmipp.utils.XmippLabel;
 import ij.IJ;
@@ -32,12 +33,15 @@ import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import org.jfree.chart.ChartFactory;
@@ -81,7 +85,8 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private Point centerDisplay, centerPSD;
     private int displayLength, samples;
     private double angle;
-    private JCheckBox cbBgNoise, cbEnvelope, cbPSD, cbCTF;
+    private JCheckBox cbBgNoise, cbEnvelope, cbPSDTheo;
+    private JRadioButton rbPSD, rbCTF;
     private JPanel panelPlot, panelPlotAVG;
     private XYSeriesCollection datasetProfile, datasetAVG;
     private ChartPanel chartPanelProfile, chartPanelAVG;
@@ -119,7 +124,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
                 }
             });
 
-            Panel panelImage = new Panel(new BorderLayout());
+            JPanel panelImage = new JPanel(new BorderLayout());
             panelImage.add(imc, BorderLayout.CENTER);
             panelImage.add(scrollbar, BorderLayout.SOUTH);
             addMouseWheelListener(new MouseWheelListener() {
@@ -146,48 +151,46 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             jtpPlots.add(XmippLabel.LABEL_TAB_PROFILE, panelPlot);
             jtpPlots.add(XmippLabel.LABEL_TAB_RADIAL_AVERAGE, panelPlotAVG);
 
-            Panel pCenter = new Panel(new BorderLayout());
+            JPanel pCenter = new JPanel(new BorderLayout());
             pCenter.add(jtpPlots);
 
             // Check boxes for plots
+            rbCTF = new JRadioButton(XmippLabel.CB_PLOT_CTF, true);
+            rbPSD = new JRadioButton(XmippLabel.CB_PLOT_PSD, false);
+            ButtonGroup bg = new ButtonGroup();
+            bg.add(rbCTF);
+            bg.add(rbPSD);
+            cbPSDTheo = new JCheckBox("PSD (Theoretical)", true);
             cbBgNoise = new JCheckBox(XmippLabel.CB_PLOT_BGNOISE, false);
             cbEnvelope = new JCheckBox(XmippLabel.CB_PLOT_ENVELOPE, false);
-            cbPSD = new JCheckBox(XmippLabel.CB_PLOT_PSD, true);
-            cbCTF = new JCheckBox(XmippLabel.CB_PLOT_CTF, true);
-
+            
+            cbPSDTheo.addItemListener(this);
             cbBgNoise.addItemListener(this);
             cbEnvelope.addItemListener(this);
-            cbPSD.addItemListener(this);
-            cbCTF.addItemListener(this);
+            rbPSD.addItemListener(this);
+            rbCTF.addItemListener(this);
 
             bExportProfile = WindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_PROFILE, this);
             bExportAVG = WindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_RADIAL_AVERAGE, this);
 
-            JPanel panelCBoxes = new JPanel(new GridBagLayout());
-            //BoxLayout layout = new BoxLayout(panelCBoxes, BoxLayout.PAGE_AXIS);
+            JPanel panelCBoxes = new  JPanel(new GridBagLayout());
             //layout.
-            
-
             gc.anchor = GridBagConstraints.WEST;
-            panelCBoxes.add(cbBgNoise, WindowUtil.getConstraints(gc, 0, 0));
-            panelCBoxes.add(cbEnvelope, WindowUtil.getConstraints(gc, 0, 1));
-            panelCBoxes.add(cbPSD, WindowUtil.getConstraints(gc, 0, 2));
-            panelCBoxes.add(cbCTF, WindowUtil.getConstraints(gc, 0, 3));
+            panelCBoxes.add(rbCTF, WindowUtil.getConstraints(gc, 0, 0));
+            panelCBoxes.add(rbPSD, WindowUtil.getConstraints(gc, 1, 0));
+            panelCBoxes.add(cbPSDTheo, WindowUtil.getConstraints(gc, 1, 1));
+            panelCBoxes.add(cbBgNoise, WindowUtil.getConstraints(gc, 1, 2));
+            gc.insets = new Insets(0, 0, 10, 10);
+            panelCBoxes.add(cbEnvelope, WindowUtil.getConstraints(gc, 1, 3));
             gc.weightx = 1.0;
-            gc.insets = new Insets(0, 0, 5, 5);
             panelCBoxes.add(bExportProfile, WindowUtil.getConstraints(gc, 0, 4, 2));
             panelCBoxes.add(bExportAVG, WindowUtil.getConstraints(gc, 0, 5, 2));
-
             // Adds panels.
             //setLayout(new BorderLayout());
             add(panelImage, WindowUtil.getConstraints(gc, 0, 0));
             add(pCenter, WindowUtil.getConstraints(gc, 1, 0, 2, 2));
             gc.anchor = GridBagConstraints.EAST;
             add(panelCBoxes,WindowUtil.getConstraints(gc, 0, 1));
-//          add(panelImage);
-//          add(pCenter);
-//          add(panelCBoxes);           
-
             // Store initial values.
             centerDisplay = new Point(imp.getWidth() / 2, imp.getHeight() / 2);
             centerPSD = new Point(psdimage.getWidth() / 2, psdimage.getHeight() / 2);
@@ -215,7 +218,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
      * so there is no need to recalculate anything.
      */
     public void itemStateChanged(ItemEvent ie) {
-        if (ie.getSource() == cbCTF) {
+        if (ie.getSource() == rbCTF) {
             setCBEnableStatus();
         }
 
@@ -246,30 +249,26 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     }
 
     private void setCBEnableStatus() {
-        cbBgNoise.setEnabled(!cbCTF.isEnabled());
-        cbEnvelope.setEnabled(!cbCTF.isEnabled());
-        cbPSD.setEnabled(!cbCTF.isEnabled());
-
-        cbBgNoise.setForeground(cbBgNoise.isEnabled() ? COLOR_BACKGROUND_NOISE : COLOR_DISABLED);
-        cbEnvelope.setForeground(cbEnvelope.isEnabled() ? COLOR_ENVELOPE : COLOR_DISABLED);
-        cbPSD.setForeground(cbPSD.isEnabled() ? COLOR_PSD : COLOR_DISABLED);
-        cbCTF.setForeground(cbCTF.isEnabled() ? COLOR_CTF : COLOR_DISABLED);
+    	boolean showPSD = !rbCTF.isSelected();
+    	cbPSDTheo.setEnabled(showPSD);
+        cbBgNoise.setEnabled(showPSD);
+        cbEnvelope.setEnabled(showPSD);
     }
 
     private boolean showBGNoise() {
-        return cbBgNoise.isEnabled() && cbBgNoise.isEnabled();
+        return cbBgNoise.isEnabled() && cbBgNoise.isSelected();
     }
 
     private boolean showEnvelope() {
-        return cbEnvelope.isEnabled() && cbEnvelope.isEnabled();
+        return cbEnvelope.isEnabled() && cbEnvelope.isSelected();
     }
 
     private boolean showPSD() {
-        return cbPSD.isEnabled() && cbPSD.isEnabled();
+        return rbPSD.isSelected() && cbPSDTheo.isSelected();
     }
 
     private boolean showCTF() {
-        return cbCTF.isEnabled() && cbCTF.isEnabled();
+        return rbCTF.isSelected();
     }
 
     private void updatePlots() {
