@@ -1175,8 +1175,6 @@ def imgOnClick(filename, browser):
 def imgFillMenu( filename, browser):
     menu = browser.menu
     menu.add_command(label="Open", command=lambda: showj(filename, 'image'))
-    menu.add_separator()
-    menu.add_command(label="Delete file", command=None) 
     return True
 
 def imgOnDoubleClick(filename, browser):
@@ -1187,8 +1185,6 @@ def stackFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
     menu.add_command(label="Open in ImageJ", command=lambda:showj(filename, 'image'))
     menu.add_command(label="Open as MetaData", command=lambda: showj(filename, 'metadata'))
-    menu.add_separator()
-    menu.add_command(label="Delete file", command=None) 
     return True
 
 def stackOnDoubleClick(filename, browser):
@@ -1199,8 +1195,6 @@ def volFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda:showj(filename, 'image'))
     menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
-    menu.add_separator()
-    menu.add_command(label="Delete file", command=None) 
     return True
 
 def volOnDoubleClick(filename, browser):
