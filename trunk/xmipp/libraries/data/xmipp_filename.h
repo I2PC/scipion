@@ -325,6 +325,15 @@ public:
 
     FileName removeBlockName() const;
 
+    /** Remove blockName or slice number from filename
+    * @code
+    * fn_meta="block1@md1.doc"
+    * String blockName;
+    * filename=removeBlockNameOrSliceNumber();//filename="md1.doc"
+    * @endcode
+    */
+    FileName removeBlockNameOrSliceNumber() const;
+
     /** Random name
      *
      * Generate a random name of the desired length.
