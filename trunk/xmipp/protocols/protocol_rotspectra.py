@@ -101,5 +101,5 @@ def kerdensom(log,WorkingDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomE
          ' --deterministic_annealing %f %f %f'%(SomSteps,SomReg0,SomReg1) + \
          ' '+ str(KerdensomExtraCommand)
     runJob(log,"xmipp_classify_kerdensom",args)
-    deleteFiles(log, [join(WorkingDir,"rotSpectra.xmd"),join(WorkingDir,"rotSpectra.xmd.raw")], True)
-   
+    deleteFiles(log, [os.path.join(WorkingDir,"rotSpectra.xmd"),os.path.join(WorkingDir,"rotSpectra.vec")], True)
+    

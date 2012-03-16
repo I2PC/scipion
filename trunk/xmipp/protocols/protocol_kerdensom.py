@@ -65,7 +65,7 @@ def kerdensom(log,WorkingDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomE
          ' --deterministic_annealing %f %f %f'%(SomSteps,SomReg0,SomReg1) + \
          ' '+ str(KerdensomExtraCommand)
     runJob(log,"xmipp_classify_kerdensom",args)
-    deleteFiles(log, [os.path.join(WorkingDir,"vectors.xmd"),os.path.join(WorkingDir,"vectors.xmd.raw")], True)
+    deleteFiles(log, [os.path.join(WorkingDir,"vectors.xmd"),os.path.join(WorkingDir,"vectors.vec")], True)
    
 def vector2img(log, Mask, WorkingDir):
     args=' -i ' + os.path.join(WorkingDir,"results_vectors.xmd")+\
@@ -73,7 +73,7 @@ def vector2img(log, Mask, WorkingDir):
     if Mask != '':
         args += ' --mask binary_file ' + Mask
     runJob(log,"xmipp_image_vectorize", args)
-    deleteFiles(log, [os.path.join(WorkingDir,"results_vectors.xmd"),os.path.join(WorkingDir,"results_vectors.xmd.raw")], True)
+    deleteFiles(log, [os.path.join(WorkingDir,"results_vectors.xmd"),os.path.join(WorkingDir,"results_vectors.vec")], True)
 
 def rewriteClassBlock(log,WorkingDir):
     fnClass="classes@%s"%os.path.join(WorkingDir,"results_classes.xmd")
