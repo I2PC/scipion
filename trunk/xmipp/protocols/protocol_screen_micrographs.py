@@ -20,7 +20,7 @@ _templateDict = {
         'enhanced_psd': _prefix + '_enhanced_psd.xmp',
         'ctfmodel_quadrant': _prefix + '_ctfmodel_quadrant.xmp',
         'ctfmodel_halfplane': _prefix + '_ctfmodel_halfplane.xmp',
-        'ctffind_ctfparam': join('%(micrographDir)s', 'ctfind.ctfparam'),
+        'ctffind_ctfparam': join('%(micrographDir)s', 'ctffind.ctfparam'),
         'ctffind_spectrum': join('%(micrographDir)s', 'ctffind_spectrum.mrc')
         }
 
@@ -88,7 +88,7 @@ class ProtScreenMicrographs(XmippProtocol):
 
             # CTF estimation with Ctffind
             if self.DoCtffind:
-                CtfFindActions.append([dict(verifyfiles=[_getFilename('ctffind_ctfparam', micrographDir=micrographDir)],
+                CtfFindActions.append(dict(verifyfiles=[_getFilename('ctffind_ctfparam', micrographDir=micrographDir)],
                                      parent_step_id=parent_id,
                                      CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                      tmpDir=self.TmpDir,
@@ -96,9 +96,9 @@ class ProtScreenMicrographs(XmippProtocol):
                                      AngPix=AngPix,Magnification=Magnification,AmplitudeContrast=self.AmplitudeContrast,
                                      LowResolCutoff=self.LowResolCutoff,HighResolCutoff=self.HighResolCutoff,
                                      MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,
-                                     StepFocus=self.StepFocus,WinSize=self.WinSize)])
+                                     StepFocus=self.StepFocus,WinSize=self.WinSize))
         for action in CtfFindActions:
-            self.insertParallelStep('estimateCtfCtffind',action)
+            self.insertParallelStep('estimateCtfCtffind',**action)
         
         # Gather results after external actions
         self.insertStep('gatherResults',verifyfiles=[self.micrographs],
@@ -166,7 +166,8 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
     if not micrograph.endswith('.mrc'):
         import uuid
         deleteTempMicrograph = True
-        mrcMicrograph =  join(tmpDir,os.path.splitext(micrograph)[0]+"_"+str(uuid.uuid4())+'.mrc')
+        fnMicrograph=os.path.split(micrograph)[1]
+        mrcMicrograph =  join(tmpDir,os.path.splitext(fnMicrograph)[0]+"_"+str(uuid.uuid4())+'.mrc')
         runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
     else:
         deleteTempMicrograph = False
@@ -174,7 +175,7 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
 
     # Prepare parameters for CTFTILT
     params = '  << eof > ' + micrographDir + '/ctffind.log\n'
-    params += join(micrographDir,mrcMicrograph) + "\n"
+    params += mrcMicrograph + "\n"
     params += micrographDir + '/ctffind_spectrum.mrc\n'
     params += str(SphericalAberration) + ',' + \
               str(Voltage) + ',' + \
@@ -259,10 +260,10 @@ def buildSummaryMetadata(WorkingDir,DoCtffind,importMicrographs,summaryFile):
             values = ['NA' for i in range(len(labels))]
 
         if DoCtffind:
-            ctffindCTF = _getFilename('ctffind_ctfparam')
+            ctffindCTF = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
             labels += [xmipp.MDL_CTFMODEL2, xmipp.MDL_ASSOCIATED_IMAGE3]
             if exists(ctffindCTF):
-                values += [ctffindCTF, _getFilename('ctffind_spectrum')]
+                values += [ctffindCTF, _getFilename('ctffind_spectrum', micrographDir=micrographDir)]
             else:
                 values += ['NA', 'NA']
         # Set values in metadata
