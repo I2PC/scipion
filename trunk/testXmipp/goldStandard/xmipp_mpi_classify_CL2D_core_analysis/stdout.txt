@@ -1,0 +1,3 @@
+CL2D rootname:        input/CL2DBacteriorhodopsin/results
+Tolerance:            0
+Threshold Zscore:     3

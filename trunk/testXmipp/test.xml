@@ -548,6 +548,13 @@
 			<FILE filename="class_level_01_classes.xmd" />
 		</CASE>
 	</PROGRAM>
+	<PROGRAM name="xmipp_mpi_classify_CL2D_core_analysis" mpi="TRUE">
+		<CASE
+			arguments=" -i input/CL2DBacteriorhodopsin/results --computeCore 3.000000 3.000000"
+			changeDir="TRUE">
+			<PRERUN command="mkdir %o/input ; cp -r input/CL2DBacteriorhodopsin %o/input ; rm -rf %o/input/CL2DBacteriorhodopsin/.svn ; cp input/projectionsBacteriorhodopsin.stk %o/input" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_ctf_correct_idr" mpi="TRUE">
 		<CASE
 			arguments="-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk"
