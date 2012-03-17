@@ -1,0 +1,179 @@
+Input File: 2tbv_prj00001.xmp
+Output File: output.txt
+PDB:                 2tbv.pdb
+Resume:              1
+Mode list:           modelist.xmd
+Amplitude scale:     1000
+Sampling rate:       6.4
+Mask:                
+Gaussian Fourier:    0.5
+Gaussian Real:       0.5
+Zero-frequency weight:0
+Center PDB:          0
+Filter PDB volume    0
+Use fixed Gaussian:  0
+Sigma of Gaussian:   -1
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_rxfmHn.xmp --ref ref_node2_img1_rxfmHn/ref_node2_img1_rxfmHn.doc -o angledisc__node2_img1_rxfmHn.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_rxfmHn.txt --ref deformedPDB__node2_img1_rxfmHn.vol -o anglecont__node2_img1_rxfmHn.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_H8ntaA.xmp --ref ref_node2_img1_H8ntaA/ref_node2_img1_H8ntaA.doc -o angledisc__node2_img1_H8ntaA.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_H8ntaA.txt --ref deformedPDB__node2_img1_H8ntaA.vol -o anglecont__node2_img1_H8ntaA.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_p0y61T.xmp --ref ref_node2_img1_p0y61T/ref_node2_img1_p0y61T.doc -o angledisc__node2_img1_p0y61T.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_p0y61T.txt --ref deformedPDB__node2_img1_p0y61T.vol -o anglecont__node2_img1_p0y61T.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_YVYT3k.xmp --ref ref_node2_img1_YVYT3k/ref_node2_img1_YVYT3k.doc -o angledisc__node2_img1_YVYT3k.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_YVYT3k.txt --ref deformedPDB__node2_img1_YVYT3k.vol -o anglecont__node2_img1_YVYT3k.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_0QCIFV.xmp --ref ref_node2_img1_0QCIFV/ref_node2_img1_0QCIFV.doc -o angledisc__node2_img1_0QCIFV.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_0QCIFV.txt --ref deformedPDB__node2_img1_0QCIFV.vol -o anglecont__node2_img1_0QCIFV.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_AUQeyD.xmp --ref ref_node2_img1_AUQeyD/ref_node2_img1_AUQeyD.doc -o angledisc__node2_img1_AUQeyD.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_AUQeyD.txt --ref deformedPDB__node2_img1_AUQeyD.vol -o anglecont__node2_img1_AUQeyD.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_LRpDxt.xmp --ref ref_node2_img1_LRpDxt/ref_node2_img1_LRpDxt.doc -o angledisc__node2_img1_LRpDxt.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_LRpDxt.txt --ref deformedPDB__node2_img1_LRpDxt.vol -o anglecont__node2_img1_LRpDxt.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_LcCe6q.xmp --ref ref_node2_img1_LcCe6q/ref_node2_img1_LcCe6q.doc -o angledisc__node2_img1_LcCe6q.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_LcCe6q.txt --ref deformedPDB__node2_img1_LcCe6q.vol -o anglecont__node2_img1_LcCe6q.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_irQ7Sv.xmp --ref ref_node2_img1_irQ7Sv/ref_node2_img1_irQ7Sv.doc -o angledisc__node2_img1_irQ7Sv.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_irQ7Sv.txt --ref deformedPDB__node2_img1_irQ7Sv.vol -o anglecont__node2_img1_irQ7Sv.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_XBsbsI.xmp --ref ref_node2_img1_XBsbsI/ref_node2_img1_XBsbsI.doc -o angledisc__node2_img1_XBsbsI.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_XBsbsI.txt --ref deformedPDB__node2_img1_XBsbsI.vol -o anglecont__node2_img1_XBsbsI.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_Jk9nm3.xmp --ref ref_node2_img1_Jk9nm3/ref_node2_img1_Jk9nm3.doc -o angledisc__node2_img1_Jk9nm3.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_Jk9nm3.txt --ref deformedPDB__node2_img1_Jk9nm3.vol -o anglecont__node2_img1_Jk9nm3.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_GhZCDv.xmp --ref ref_node2_img1_GhZCDv/ref_node2_img1_GhZCDv.doc -o angledisc__node2_img1_GhZCDv.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_GhZCDv.txt --ref deformedPDB__node2_img1_GhZCDv.vol -o anglecont__node2_img1_GhZCDv.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_vE71u5.xmp --ref ref_node2_img1_vE71u5/ref_node2_img1_vE71u5.doc -o angledisc__node2_img1_vE71u5.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_vE71u5.txt --ref deformedPDB__node2_img1_vE71u5.vol -o anglecont__node2_img1_vE71u5.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_eLY10N.xmp --ref ref_node2_img1_eLY10N/ref_node2_img1_eLY10N.doc -o angledisc__node2_img1_eLY10N.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_eLY10N.txt --ref deformedPDB__node2_img1_eLY10N.vol -o anglecont__node2_img1_eLY10N.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_BMUceE.xmp --ref ref_node2_img1_BMUceE/ref_node2_img1_BMUceE.doc -o angledisc__node2_img1_BMUceE.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_BMUceE.txt --ref deformedPDB__node2_img1_BMUceE.vol -o anglecont__node2_img1_BMUceE.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_1CIJOz.xmp --ref ref_node2_img1_1CIJOz/ref_node2_img1_1CIJOz.doc -o angledisc__node2_img1_1CIJOz.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_1CIJOz.txt --ref deformedPDB__node2_img1_1CIJOz.vol -o anglecont__node2_img1_1CIJOz.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_yvraPA.xmp --ref ref_node2_img1_yvraPA/ref_node2_img1_yvraPA.doc -o angledisc__node2_img1_yvraPA.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_yvraPA.txt --ref deformedPDB__node2_img1_yvraPA.vol -o anglecont__node2_img1_yvraPA.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_yFMveH.xmp --ref ref_node2_img1_yFMveH/ref_node2_img1_yFMveH.doc -o angledisc__node2_img1_yFMveH.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_yFMveH.txt --ref deformedPDB__node2_img1_yFMveH.vol -o anglecont__node2_img1_yFMveH.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_FJY5dT.xmp --ref ref_node2_img1_FJY5dT/ref_node2_img1_FJY5dT.doc -o angledisc__node2_img1_FJY5dT.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_FJY5dT.txt --ref deformedPDB__node2_img1_FJY5dT.vol -o anglecont__node2_img1_FJY5dT.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_I0vrFa.xmp --ref ref_node2_img1_I0vrFa/ref_node2_img1_I0vrFa.doc -o angledisc__node2_img1_I0vrFa.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_I0vrFa.txt --ref deformedPDB__node2_img1_I0vrFa.vol -o anglecont__node2_img1_I0vrFa.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_1x9Iay.xmp --ref ref_node2_img1_1x9Iay/ref_node2_img1_1x9Iay.doc -o angledisc__node2_img1_1x9Iay.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_1x9Iay.txt --ref deformedPDB__node2_img1_1x9Iay.vol -o anglecont__node2_img1_1x9Iay.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=1
+RunningDisc: xmipp_angular_discrete_assign -i downimg__node2_img1_Q5dcA3.xmp --ref ref_node2_img1_Q5dcA3/ref_node2_img1_Q5dcA3.doc -o angledisc__node2_img1_Q5dcA3.txt --psi_step 5 --max_shift_change 0.000000 --search5D -v 0
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_Q5dcA3.txt --ref deformedPDB__node2_img1_Q5dcA3.vol -o anglecont__node2_img1_Q5dcA3.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_O4uOQG.txt --ref deformedPDB__node2_img1_O4uOQG.vol -o anglecont__node2_img1_O4uOQG.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_nO9V9r.txt --ref deformedPDB__node2_img1_nO9V9r.vol -o anglecont__node2_img1_nO9V9r.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_ClKqxl.txt --ref deformedPDB__node2_img1_ClKqxl.vol -o anglecont__node2_img1_ClKqxl.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_Hdm9Qm.txt --ref deformedPDB__node2_img1_Hdm9Qm.vol -o anglecont__node2_img1_Hdm9Qm.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_zzbq9v.txt --ref deformedPDB__node2_img1_zzbq9v.vol -o anglecont__node2_img1_zzbq9v.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_IpIerN.txt --ref deformedPDB__node2_img1_IpIerN.vol -o anglecont__node2_img1_IpIerN.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_NlGqOb.txt --ref deformedPDB__node2_img1_NlGqOb.vol -o anglecont__node2_img1_NlGqOb.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_EE22yF.txt --ref deformedPDB__node2_img1_EE22yF.vol -o anglecont__node2_img1_EE22yF.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_J6w5Ge.txt --ref deformedPDB__node2_img1_J6w5Ge.vol -o anglecont__node2_img1_J6w5Ge.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_4UiWgT.txt --ref deformedPDB__node2_img1_4UiWgT.vol -o anglecont__node2_img1_4UiWgT.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_ouEkfD.txt --ref deformedPDB__node2_img1_ouEkfD.vol -o anglecont__node2_img1_ouEkfD.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_GVOzFs.txt --ref deformedPDB__node2_img1_GVOzFs.vol -o anglecont__node2_img1_GVOzFs.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_PcaY3p.txt --ref deformedPDB__node2_img1_PcaY3p.vol -o anglecont__node2_img1_PcaY3p.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_C7I9ev.txt --ref deformedPDB__node2_img1_C7I9ev.vol -o anglecont__node2_img1_C7I9ev.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_M1HBxI.txt --ref deformedPDB__node2_img1_M1HBxI.vol -o anglecont__node2_img1_M1HBxI.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_H22IW3.txt --ref deformedPDB__node2_img1_H22IW3.vol -o anglecont__node2_img1_H22IW3.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_DMxkqx.txt --ref deformedPDB__node2_img1_DMxkqx.vol -o anglecont__node2_img1_DMxkqx.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_Sbdr18.txt --ref deformedPDB__node2_img1_Sbdr18.vol -o anglecont__node2_img1_Sbdr18.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_cliI6S.txt --ref deformedPDB__node2_img1_cliI6S.vol -o anglecont__node2_img1_cliI6S.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_5UJMeL.txt --ref deformedPDB__node2_img1_5UJMeL.vol -o anglecont__node2_img1_5UJMeL.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_gMvZtL.txt --ref deformedPDB__node2_img1_gMvZtL.vol -o anglecont__node2_img1_gMvZtL.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_lUyEES.txt --ref deformedPDB__node2_img1_lUyEES.vol -o anglecont__node2_img1_lUyEES.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_M7Q6n6.txt --ref deformedPDB__node2_img1_M7Q6n6.vol -o anglecont__node2_img1_M7Q6n6.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_Bz0H3q.txt --ref deformedPDB__node2_img1_Bz0H3q.vol -o anglecont__node2_img1_Bz0H3q.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_o8facR.txt --ref deformedPDB__node2_img1_o8facR.vol -o anglecont__node2_img1_o8facR.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_7AEerp.txt --ref deformedPDB__node2_img1_7AEerp.vol -o anglecont__node2_img1_7AEerp.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_403Bi5.txt --ref deformedPDB__node2_img1_403Bi5.vol -o anglecont__node2_img1_403Bi5.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_3d8sWS.txt --ref deformedPDB__node2_img1_3d8sWS.vol -o anglecont__node2_img1_3d8sWS.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_0gr49L.txt --ref deformedPDB__node2_img1_0gr49L.vol -o anglecont__node2_img1_0gr49L.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_looaLK.txt --ref deformedPDB__node2_img1_looaLK.vol -o anglecont__node2_img1_looaLK.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_f1imJO.txt --ref deformedPDB__node2_img1_f1imJO.vol -o anglecont__node2_img1_f1imJO.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_Et4xtY.txt --ref deformedPDB__node2_img1_Et4xtY.vol -o anglecont__node2_img1_Et4xtY.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_5GIzBd.txt --ref deformedPDB__node2_img1_5GIzBd.vol -o anglecont__node2_img1_5GIzBd.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_JgPycy.txt --ref deformedPDB__node2_img1_JgPycy.vol -o anglecont__node2_img1_JgPycy.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_4l5tbY.txt --ref deformedPDB__node2_img1_4l5tbY.vol -o anglecont__node2_img1_4l5tbY.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_tCB2pu.txt --ref deformedPDB__node2_img1_tCB2pu.vol -o anglecont__node2_img1_tCB2pu.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_HFOPF6.txt --ref deformedPDB__node2_img1_HFOPF6.vol -o anglecont__node2_img1_HFOPF6.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_X9Z6kO.txt --ref deformedPDB__node2_img1_X9Z6kO.vol -o anglecont__node2_img1_X9Z6kO.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_JPIOVB.txt --ref deformedPDB__node2_img1_JPIOVB.vol -o anglecont__node2_img1_JPIOVB.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_Otj2wx.txt --ref deformedPDB__node2_img1_Otj2wx.vol -o anglecont__node2_img1_Otj2wx.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_SkpP8A.txt --ref deformedPDB__node2_img1_SkpP8A.vol -o anglecont__node2_img1_SkpP8A.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_qDOXMM.txt --ref deformedPDB__node2_img1_qDOXMM.vol -o anglecont__node2_img1_qDOXMM.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_HXe5u6.txt --ref deformedPDB__node2_img1_HXe5u6.vol -o anglecont__node2_img1_HXe5u6.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_UtmeMx.txt --ref deformedPDB__node2_img1_UtmeMx.vol -o anglecont__node2_img1_UtmeMx.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_9eUbu4.txt --ref deformedPDB__node2_img1_9eUbu4.vol -o anglecont__node2_img1_9eUbu4.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_bh4WUH.txt --ref deformedPDB__node2_img1_bh4WUH.vol -o anglecont__node2_img1_bh4WUH.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_EbuJur.txt --ref deformedPDB__node2_img1_EbuJur.vol -o anglecont__node2_img1_EbuJur.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_P23aRi.txt --ref deformedPDB__node2_img1_P23aRi.vol -o anglecont__node2_img1_P23aRi.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0
+stage=2
+Running: xmipp_angular_continuous_assign -i angledisc__node2_img1_k2jdki.txt --ref deformedPDB__node2_img1_k2jdki.vol -o anglecont__node2_img1_k2jdki.txt --gaussian_Fourier 0.500000 --gaussian_Real 0.500000 --zerofreq_weight 0.000000 -v 0

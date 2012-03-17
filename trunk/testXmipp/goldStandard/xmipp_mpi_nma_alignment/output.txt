@@ -1,0 +1,14 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _shiftX
+ _shiftY
+ _NMADisplacements
+ _cost
+ 2tbv_prj00001.xmp          1  -120.448824    32.621069    97.390631    -0.652582     1.516201 [ -1270.600000 ]     0.087767 
