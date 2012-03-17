@@ -572,7 +572,7 @@ void XmippMetadataProgram::show()
     std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo)
         std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
-    if (each_image_produces_an_output)
+    if (each_image_produces_an_output || produces_an_output)
     {
         if (!fn_out.empty())
             std::cout << "Output File: " << fn_out << std::endl;
@@ -613,7 +613,7 @@ void XmippMetadataProgram::finishProcessing()
     if (allow_time_bar && verbose && !single_image)
         progress_bar(time_bar_size);
 
-    if (!single_image && !mdOut.isEmpty()&& !fn_out.empty())
+    if (!single_image && !mdOut.isEmpty() && !fn_out.empty())
     {
         if (produces_an_output || produces_a_metadata || !oroot.empty()) // Out as independent images
             mdOut.write(fn_out);
