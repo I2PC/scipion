@@ -1,24 +1,27 @@
 #define data structures
 from ctypes import c_int, c_float, c_char_p
 from ctypes import Structure
+prefix_micrograph = "_emx_micrograph."
+prefix_particle   = "_emx_particle."
+
 class ParticlePickingStructEmx(Structure):
     _fields_ = [("coordinate_x", c_float),
                 ("coordinate_y", c_float),
-                ("BlockName",c_char_p)
+                ("url",c_char_p)
                ]
-    prefix = "_emx_particle."
-    def __init__(self, coordinate_x=-1., coordinate_y=-1.,BlockName="dummyBlock"):
-        super(ParticlePickingStructEmx, self).__init__( coordinate_x, coordinate_y,BlockName)
+    prefix = prefix_particle
+    def __init__(self, coordinate_x=-1., coordinate_y=-1.,url="dummyMic"):
+        super(ParticlePickingStructEmx, self).__init__( coordinate_x, coordinate_y,url)
 
 class ParticlePickingStructXmd(Structure):
     _fields_ = [("Xcoor", c_int),
                 ("Ycoor", c_int),
-                ("BlockName",c_char_p)
+                ("MicName",c_char_p)
                ]
     prefix = "_"
     
-    def __init__(self, Xcoor=-1, Ycoor=-1,BlockName="dumyBlock"):
-        super(ParticlePickingStructXmd, self).__init__( Xcoor, Ycoor,BlockName)
+    def __init__(self, Xcoor=-1, Ycoor=-1,MicName="dummyMic"):
+        super(ParticlePickingStructXmd, self).__init__( Xcoor, Ycoor,MicName)
             
 
 class CtfMicrographStructEmx(Structure):
@@ -34,7 +37,7 @@ class CtfMicrographStructEmx(Structure):
             ("amplitude_contrast",c_float),
             ("BlockName",c_char_p)
             ]
-    prefix = "_emx_micrograph."
+    prefix = prefix_micrograph
     def __init__(self, 
             url="",
             magnification=1.,
@@ -98,80 +101,122 @@ class CtfMicrographStructXmd(Structure):
             BlockName
             )
 ###############Aligment
+
 class ParticleAlignmentEMX(Structure):
     _fields_ = [
-            ("url", c_char_p),
-            ("magnification",c_float),
-            ("scanner_pixel_size",c_float),
-            ("defocusU",c_float),
-            ("defocusV",c_float),
-            ("astigmatism_angle",c_float),
-            ("voltage",c_float),
-            ("Cs",c_float),
-            ("amplitude_contrast",c_float),
-            ("BlockName",c_char_p)
-            ]
-    prefix = "_emx_micrograph."
+                ("url",c_char_p),
+                ("transformation_matrix_1_1",c_float),
+                ("transformation_matrix_1_2",c_float),
+                ("transformation_matrix_1_3",c_float),
+                ("transformation_matrix_offset_x",c_float),
+                ("transformation_matrix_2_1",c_float),
+                ("transformation_matrix_2_2",c_float),
+                ("transformation_matrix_2_3",c_float),
+                ("transformation_matrix_offset_y",c_float),
+                ("transformation_matrix_3_1",c_float),
+                ("transformation_matrix_3_2",c_float),
+                ("transformation_matrix_3_3",c_float),
+                ("transformation_matrix_offset_z",c_float),
+                ("enable",c_int),
+                ("FOM",c_float),
+                ("BlockName",c_char_p)
+                ]
+    prefix = prefix_particle
     def __init__(self, 
             url="",
-            magnification=1.,
-            scanner_pixel_size=1.,
-            defocusU=0.,
-            defocusV=0.,
-            astigmatism_angle=0.,
-            voltage=0.,
-            Cs=0.,
-            amplitude_contrast=0.,
+            transformation_matrix_1_1=1.,
+            transformation_matrix_1_2=0.,
+            transformation_matrix_1_3=0.,
+            transformation_matrix_offset_x=0.,
+            transformation_matrix_2_1=0.,
+            transformation_matrix_2_2=1.,
+            transformation_matrix_2_3=0.,
+            transformation_matrix_offset_y=0.,
+            transformation_matrix_3_1=0.,
+            transformation_matrix_3_2=0.,
+            transformation_matrix_3_3=1.,
+            transformation_matrix_offset_z=0.,
+            enable=1,
+            FOM=1.,
             BlockName="dummyBlock"
                  ):
         super(ParticleAlignmentEMX, self).__init__( 
-            url,
-            magnification,
-            scanner_pixel_size,
-            defocusU,
-            defocusV,
-            astigmatism_angle,
-            voltage,
-            Cs,
-            amplitude_contrast,
-            BlockName
+                url,
+                transformation_matrix_1_1,
+                transformation_matrix_1_2,
+                transformation_matrix_1_3,
+                transformation_matrix_offset_x,
+                transformation_matrix_2_1,
+                transformation_matrix_2_2,
+                transformation_matrix_2_3,
+                transformation_matrix_offset_y,
+                transformation_matrix_3_1,
+                transformation_matrix_3_2,
+                transformation_matrix_3_3,
+                transformation_matrix_offset_z,
+                enable,
+                FOM,
+                BlockName
             )
 
 
+#    needed_itemsXMIPP = (
+#         "_image",
+#         "_angleRot",
+#         "_angleTilt",
+#         "_anglePsi",
+#         "_shiftX",
+#         "_shiftY",
+#         "_shiftZ",
+#         "_flip",
+#         "_scale",
+#         "_enabled",
+#         "_fom"
+#        )
 class ParticleAlignmentXmd(Structure):
-    _fields_ = [("image", c_char_p),
-                ("CTF_Sampling_rate", c_float),
-                ("CTF_Defocus_U",c_float),
-                ("CTF_Defocus_V",c_float),
-                ("CTF_Defocus_angle",c_float),
-                ("CTF_Voltage",c_float),
-                ("CTF_Spherical_aberration",c_float),
-                ("CTF_Q0",c_float),
+    _fields_ = [
+                ("image",c_char_p),
+                ("angleRot",c_float),
+                ("angleTilt",c_float),
+                ("anglePsi",c_float),
+                ("shiftX",c_float),
+                ("shiftY",c_float),
+                ("shiftZ",c_float),
+                ("flip",c_int),
+                ("scale",c_float),
+                ("enabled",c_float),
+                ("fom",c_float),
                 ("BlockName",c_char_p)
                ]
     prefix = "_"
     
     def __init__(self, 
             image="",
-            CTF_Sampling_rate=1.,
-            CTF_Defocus_U=0.,
-            CTF_Defocus_V=0.,
-            CTF_Defocus_angle=0.,
-            CTF_Voltage=0.,
-            CTF_Spherical_aberration=0.,
-            CTF_Q0=0.,
+            angleRot=0.,
+            angleTilt=0.,
+            anglePsi=0.,
+            shiftX=0.,
+            shiftY=0.,
+            shiftZ=0.,
+            flip=0,
+            scale=1.,
+            enabled=1,
+            fom=1.,
             BlockName="dumyBlock"
             ):
         
         super(ParticleAlignmentXmd, self).__init__(
             image,
-            CTF_Sampling_rate,
-            CTF_Defocus_U,
-            CTF_Defocus_V,
-            CTF_Defocus_angle,
-            CTF_Voltage,
-            CTF_Spherical_aberration,
-            CTF_Q0,
+            angleRot,
+            angleTilt,
+            anglePsi,
+            shiftX,
+            shiftY,
+            shiftZ,
+            flip,
+            scale,
+            enabled,
+            fom,
             BlockName
             )
 ##################aligment

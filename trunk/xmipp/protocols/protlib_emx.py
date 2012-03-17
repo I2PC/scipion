@@ -23,41 +23,34 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 '''
-"""
-1) read star file in star object
-2) parse star object an assign to data structure EMX/XMIPP
-3) convert EMX to XMIPP (or vice versa)
-4) parse XMIPP/EMX data structure to star object 
-5) save star file
-"""
 import CifFile
 import StarFile
 import sys
 from transformations import *
 import numpy
-from emx_struct import ParticlePickingStructEmx,\
-                       ParticlePickingStructXmd,\
-                       CtfMicrographStructEmx,\
-                       CtfMicrographStructXmd,\
-                       BlockNamesEMX,\
-                       BlockNamesXMD
+#from emx_struct import ParticlePickingStructEmx,\
+#                       ParticlePickingStructXmd,\
+#                       CtfMicrographStructEmx,\
+#                       CtfMicrographStructXmd,\
+#                       BlockNamesEMX,\
+#                       BlockNamesXMD
                        
-smallNumber       = 0.00001
 
 ##########################################################################
 #   General Class for Star data handling
 ##########################################################################
 
 class EmxBase:
+    
+    blockNameListEMX=[]
+    blockNameListXMD=[]
+    itemNameListEMX=[]
+    itemNameListXMD=[]
     """some constants"""
     xmippStartVersion = 'XMIPP_STAR_1'
     emxVersion        = 'EMX1.0'
     contactMail       = 'xmipp@cnb.csic.es'
-    
-#    def __init__(self, runWithoutArgs=False):
-#        a=0
-
-    
+        
     def checkVersion(self):
         """ Check first line for EMX or XMIPP magic word. Abort if
         neither of these two words are available"""
@@ -154,20 +147,6 @@ class EmxBase:
         comment += "\n##########################################################################"
         outfile.write(self.outMetadata.WriteOut(_add=True,comment=comment,_email=self.contactMail))
 
-
-##########################################################################
-#   Class Related to Particle Picking Conversion
-##########################################################################
-class ParticlePickingConverter(EmxBase):    
-    
-    def __init__(self, inputFn, outputFn):
-        self.inputFileName  = inputFn
-        self.outputFileName = outputFn       
-        self.blockNameListEMX=[]
-        self.blockNameListXMD=[]
-        self.itemNameListEMX=[]
-        self.itemNameListXMD=[]
-    
     def run(self):
         self.emx2xmipp = self.checkVersion()
         #do not change the order: first checkversion then ciffile
@@ -198,6 +177,51 @@ class ParticlePickingConverter(EmxBase):
             self.EMX2startObject()
             #save file
             self.saveFileEMX()
+
+
+
+###########################################################################
+##   Class Related to Alignment Conversion
+###########################################################################
+class ParticleAlignmentConverter(EmxBase):    
+    def __init__(self, inputFn, outputFn):
+        self.inputFileName  = inputFn
+        self.outputFileName = outputFn       
+        self.blockNameListEMX=[]
+        self.blockNameListXMD=[]
+        self.itemNameListEMX=[]
+        self.itemNameListXMD=[]
+    
+    def run(self):
+        self.emx2xmipp = self.checkVersion()
+        #do not change the order: first checkversion then ciffile
+        #otherwise stdin will be lost
+        #1 read star file in star object
+        self.inMetadata     = CifFile.CifFile(self.inputFileName)
+        self.outMetadata    = CifFile.CifFile()
+
+        if self.emx2xmipp:
+            #2 parse star object to EMX struct
+            self.readBlocksEMX()
+            #2bis parse star object to EMX struct
+            self.startObject2EMX()
+#            #3 convert from EMX to XMIPP
+#            self.EMX2XMD()
+#            #convert xmipp to star object- this time save as xmipp star format 1
+#            self.XMD2startObject()
+#            #save file
+#            self.saveFileXMD()
+#        else:
+            #2 parse star object to EMX struct
+#            self.readBlocksXMD()
+#            #2bis parse star object to EMX struct
+#            self.startObject2XMD()
+#            #3 convert from EMX to XMIPP
+#            self.XMD2EMX()
+#            #convert xmipp to star object- this time save as xmipp star format 1
+#            self.EMX2startObject()
+#            #save file
+#            self.saveFileEMX()
                        
     def readBlocksEMX(self):
         self.myStructEMX = ParticlePickingStructEmx()
@@ -216,14 +240,51 @@ class ParticlePickingConverter(EmxBase):
             _auxList=self.inMetadata[blockName].GetLoopItem(label)
             self.blockNameListXMD.append(BlockNamesXMD(BlockName=blockName,
                                                     size=len(_auxList)))
-
     def startObject2EMX(self):
         for blockName in self.inMetadata.keys():
            #for i in range(len(self.myStruct._fields_)-1):
-            self.coordinate_x = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
-            _auxCoordenateX=self.inMetadata[blockName].GetLoopItem(self.coordinate_x)
-            self.coordinate_y = self.myStructEMX.prefix + self.myStructEMX._fields_[1][0]
-            _auxCoordenateY=self.inMetadata[blockName].GetLoopItem(self.coordinate_y)
+            url = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _url=self.inMetadata[blockName].GetLoopItem(url)
+
+            transformation_matrix_1_1 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_1_1=self.inMetadata[blockName].GetLoopItem(transformation_matrix_1_1)
+            transformation_matrix_1_2 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_1_2=self.inMetadata[blockName].GetLoopItem(transformation_matrix_1_2)
+            transformation_matrix_1_3 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_1_3=self.inMetadata[blockName].GetLoopItem(transformation_matrix_1_3)
+            transformation_matrix_offset_x = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_offset_x=self.inMetadata[blockName].GetLoopItem(transformation_matrix_offset_x)
+
+            transformation_matrix_2_1 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_2_1=self.inMetadata[blockName].GetLoopItem(transformation_matrix_2_1)
+            transformation_matrix_2_2 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_2_2=self.inMetadata[blockName].GetLoopItem(transformation_matrix_2_2)
+            transformation_matrix_2_3 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_2_3=self.inMetadata[blockName].GetLoopItem(transformation_matrix_2_3)
+            transformation_matrix_offset_y = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_offset_y=self.inMetadata[blockName].GetLoopItem(transformation_matrix_offset_y)
+
+            transformation_matrix_3_1 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_3_1=self.inMetadata[blockName].GetLoopItem(transformation_matrix_3_1)
+            transformation_matrix_3_2 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_3_2=self.inMetadata[blockName].GetLoopItem(transformation_matrix_3_2)
+            transformation_matrix_3_3 = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_3_3=self.inMetadata[blockName].GetLoopItem(transformation_matrix_3_3)
+            transformation_matrix_offset_z = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _transformation_matrix_offset_z=self.inMetadata[blockName].GetLoopItem(transformation_matrix_offset_z)
+#enable,
+#FOM,
+#BlockName
+
+            url = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _url=self.inMetadata[blockName].GetLoopItem(url)
+
+            url = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _url=self.inMetadata[blockName].GetLoopItem(url)
+
+            url = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
+            _url=self.inMetadata[blockName].GetLoopItem(url)
+
             for i in range(len(_auxCoordenateX)):
                 self.itemNameListEMX.append(ParticlePickingStructEmx
                                            (
@@ -331,43 +392,8 @@ class ParticlePickingConverter(EmxBase):
                     XcoorList.append(str(item.coordinate_x))
                     YcoorList.append(str(item.coordinate_y))
             self.outMetadata[block.BlockName].AddCifItem(([[_Xcorr_,_Ycoor_]],[[XcoorList,YcoorList]]))
-
-###########################################################################
-##   Class Related to Alignment Conversion
-###########################################################################
-#class ParticleAlignmentConverter(EmxBase):    
 #
-#    needed_itemsXMIPP = (
-#         "_image",
-#         "_angleRot",
-#         "_angleTilt",
-#         "_anglePsi",
-#         "_shiftX",
-#         "_shiftY",
-#         "_shiftZ",
-#         "_flip",
-#         "_scale",
-#         "_enabled",
-#         "_fom"
-#        )
-#    
-#    needed_itemsEMX = (
-#            "_emx_particle.url",
-#            "_emx_particle.transformation_matrix_1_1",
-#            "_emx_particle.transformation_matrix_1_2",
-#            "_emx_particle.transformation_matrix_1_3",
-#            "_emx_particle.transformation_matrix_offset_x",
-#            "_emx_particle.transformation_matrix_2_1",
-#            "_emx_particle.transformation_matrix_2_2",
-#            "_emx_particle.transformation_matrix_2_3",
-#            "_emx_particle.transformation_matrix_offset_y",
-#            "_emx_particle.transformation_matrix_3_1",
-#            "_emx_particle.transformation_matrix_3_2",
-#            "_emx_particle.transformation_matrix_3_3",
-#            "_emx_particle.transformation_matrix_offset_z",
-#            "_emx_particle.enable",
-#            "_emx_particle.FOM"
-#            )
+
 #    
 #    def __init__(self, inputFn, outputFn):
 #        self.inputFileName  = inputFn
