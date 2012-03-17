@@ -572,15 +572,17 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_nma_alignment" mpi="FALSE">
 		<CASE
-			arguments="-i input/2tbv_prj00001.xmp  --pdb input/2tbv.pdb --modes input/modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o %o/output.txt --resume"
-			changeDir="FALSE">
+			arguments="-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o output.txt --resume"
+			changeDir="TRUE">
+			<PRERUN command="cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" />
 			<FILE filename="output.txt" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_nma_alignment" mpi="TRUE">
 		<CASE
-			arguments="-i input/2tbv_prj00001.xmp  --pdb input/2tbv.pdb --modes input/modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o %o/output.txt --resume"
-			changeDir="FALSE">
+			arguments="-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o output.txt --resume"
+			changeDir="TRUE">
+			<PRERUN command="cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" />
 			<FILE filename="output.txt" />
 		</CASE>
 	</PROGRAM>
