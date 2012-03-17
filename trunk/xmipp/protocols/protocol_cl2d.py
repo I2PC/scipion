@@ -77,10 +77,10 @@ class ProtCL2D(XmippProtocol):
             levelFiles.sort()
             if self.DoShowLast:
                 lastLevelFile=levelFiles[-1]
-                runShowJ(lastLevelFile)
+                runShowJ("classes@"+lastLevelFile)
             else:
                 listOfLevels = getListFromRangeString(self.LevelsToShow)
-                files = " ".join([levelFiles[level] for level in listOfLevels])
+                files = " ".join(["classes@"+levelFiles[level] for level in listOfLevels])
                 if files!="":
                     runShowJ(files)
         if self.DoShowHierarchy:
