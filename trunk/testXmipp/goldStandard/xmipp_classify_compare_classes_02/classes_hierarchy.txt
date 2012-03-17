@@ -1,0 +1,111 @@
+Comparison of input/CL2D/results_level_00_classes.xmd and input/CL2D/results_level_01_classes.xmd
+Analysis of input/CL2D/results_level_00_classes.xmd =======================
+Class class_000001@input/CL2D/results_level_00_classes.xmd: 593 images
+   17.8752% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   15.0084% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   28.8364% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   37.6054% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000002@input/CL2D/results_level_00_classes.xmd: 1013 images
+   41.7572% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   31.2932% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   11.7473% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   15.1037% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+
+
+Analysis of input/CL2D/results_level_01_classes.xmd =======================
+Class class_000001@input/CL2D/results_level_01_classes.xmd: 540 images
+   19.6296% are in class class_000001@input/CL2D/results_level_00_classes.xmd
+   78.3333% are in class class_000002@input/CL2D/results_level_00_classes.xmd
+Class class_000002@input/CL2D/results_level_01_classes.xmd: 417 images
+   21.3429% are in class class_000001@input/CL2D/results_level_00_classes.xmd
+   76.0192% are in class class_000002@input/CL2D/results_level_00_classes.xmd
+Class class_000003@input/CL2D/results_level_01_classes.xmd: 310 images
+   55.1613% are in class class_000001@input/CL2D/results_level_00_classes.xmd
+   38.3871% are in class class_000002@input/CL2D/results_level_00_classes.xmd
+Class class_000004@input/CL2D/results_level_01_classes.xmd: 389 images
+   57.3265% are in class class_000001@input/CL2D/results_level_00_classes.xmd
+   39.3316% are in class class_000002@input/CL2D/results_level_00_classes.xmd
+
+
+------------------------------------------------------------------------
+Comparison of input/CL2D/results_level_01_classes.xmd and input/CL2D/results_level_02_classes.xmd
+Analysis of input/CL2D/results_level_01_classes.xmd =======================
+Class class_000001@input/CL2D/results_level_01_classes.xmd: 540 images
+   1.48148% are in class class_000001@input/CL2D/results_level_02_classes.xmd
+   22.037% are in class class_000002@input/CL2D/results_level_02_classes.xmd
+   8.33333% are in class class_000003@input/CL2D/results_level_02_classes.xmd
+   19.8148% are in class class_000004@input/CL2D/results_level_02_classes.xmd
+   8.33333% are in class class_000005@input/CL2D/results_level_02_classes.xmd
+   12.7778% are in class class_000006@input/CL2D/results_level_02_classes.xmd
+   3.88889% are in class class_000007@input/CL2D/results_level_02_classes.xmd
+   23.3333% are in class class_000008@input/CL2D/results_level_02_classes.xmd
+Class class_000002@input/CL2D/results_level_01_classes.xmd: 417 images
+   1.19904% are in class class_000001@input/CL2D/results_level_02_classes.xmd
+   4.31655% are in class class_000002@input/CL2D/results_level_02_classes.xmd
+   7.67386% are in class class_000003@input/CL2D/results_level_02_classes.xmd
+   43.8849% are in class class_000004@input/CL2D/results_level_02_classes.xmd
+   35.4916% are in class class_000005@input/CL2D/results_level_02_classes.xmd
+   2.39808% are in class class_000006@input/CL2D/results_level_02_classes.xmd
+   1.91847% are in class class_000007@input/CL2D/results_level_02_classes.xmd
+   3.11751% are in class class_000008@input/CL2D/results_level_02_classes.xmd
+Class class_000003@input/CL2D/results_level_01_classes.xmd: 310 images
+   15.1613% are in class class_000001@input/CL2D/results_level_02_classes.xmd
+   5.16129% are in class class_000002@input/CL2D/results_level_02_classes.xmd
+   16.4516% are in class class_000003@input/CL2D/results_level_02_classes.xmd
+   11.6129% are in class class_000004@input/CL2D/results_level_02_classes.xmd
+   6.77419% are in class class_000005@input/CL2D/results_level_02_classes.xmd
+   4.83871% are in class class_000006@input/CL2D/results_level_02_classes.xmd
+   36.129% are in class class_000007@input/CL2D/results_level_02_classes.xmd
+   3.87097% are in class class_000008@input/CL2D/results_level_02_classes.xmd
+Class class_000004@input/CL2D/results_level_01_classes.xmd: 389 images
+   2.31362% are in class class_000001@input/CL2D/results_level_02_classes.xmd
+   4.37018% are in class class_000002@input/CL2D/results_level_02_classes.xmd
+   55.7841% are in class class_000003@input/CL2D/results_level_02_classes.xmd
+   7.71208% are in class class_000004@input/CL2D/results_level_02_classes.xmd
+   3.08483% are in class class_000005@input/CL2D/results_level_02_classes.xmd
+   15.6812% are in class class_000006@input/CL2D/results_level_02_classes.xmd
+   5.9126% are in class class_000007@input/CL2D/results_level_02_classes.xmd
+   4.88432% are in class class_000008@input/CL2D/results_level_02_classes.xmd
+
+
+Analysis of input/CL2D/results_level_02_classes.xmd =======================
+Class class_000001@input/CL2D/results_level_02_classes.xmd: 70 images
+   11.4286% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   7.14286% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   67.1429% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   12.8571% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000002@input/CL2D/results_level_02_classes.xmd: 171 images
+   69.5906% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   10.5263% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   9.35673% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   9.94152% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000003@input/CL2D/results_level_02_classes.xmd: 346 images
+   13.0058% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   9.24855% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   14.7399% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   62.7168% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000004@input/CL2D/results_level_02_classes.xmd: 357 images
+   29.972% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   51.2605% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   10.084% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   8.40336% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000005@input/CL2D/results_level_02_classes.xmd: 228 images
+   19.7368% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   64.9123% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   9.21053% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   5.26316% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000006@input/CL2D/results_level_02_classes.xmd: 160 images
+   43.125% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   6.25% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   9.375% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   38.125% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000007@input/CL2D/results_level_02_classes.xmd: 165 images
+   12.7273% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   4.84848% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   67.8788% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   13.9394% are in class class_000004@input/CL2D/results_level_01_classes.xmd
+Class class_000008@input/CL2D/results_level_02_classes.xmd: 170 images
+   74.1176% are in class class_000001@input/CL2D/results_level_01_classes.xmd
+   7.64706% are in class class_000002@input/CL2D/results_level_01_classes.xmd
+   7.05882% are in class class_000003@input/CL2D/results_level_01_classes.xmd
+   11.1765% are in class class_000004@input/CL2D/results_level_01_classes.xmd
