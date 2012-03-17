@@ -122,6 +122,9 @@ public:
     /** Produce side info. */
     void preProcess();
 
+    /** Write output metadata */
+    void postProcess();
+
     /** Produce library.*/
     void produce_library();
 

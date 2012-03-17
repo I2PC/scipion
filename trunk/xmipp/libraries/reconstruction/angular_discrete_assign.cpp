@@ -37,6 +37,7 @@
 ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
 {
     produces_a_metadata = true;
+    produces_an_output = true;
 }
 
 // Read arguments ==========================================================
@@ -199,6 +200,13 @@ void ProgAngularDiscreteAssign::preProcess()
 
     // Save a little space
     SF_ref.clear();
+}
+
+// PostProcess ---------------------------------------------------------------
+void ProgAngularDiscreteAssign::postProcess()
+{
+	if (single_image)
+		getOutputMd()->write(fn_out);
 }
 
 // Produce library -----------------------------------------------------------
