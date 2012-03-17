@@ -81,15 +81,15 @@ public class XmippDialog extends JDialog  implements ActionListener {
 		content.add(panelBtn, BorderLayout.PAGE_END);
 		pack();
 		if (parent != null)
-			XmippIJUtil.centerWindows(this, parent);
+			XmippWindowUtil.centerWindows(this, parent);
 	}
 	
 	protected void createButtons(){
 		//Create panel for Ok and Cancel buttons
 		panelBtn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-		btnOk = XmippIJUtil.getTextButton(okText, this);
+		btnOk = XmippWindowUtil.getTextButton(okText, this);
 		panelBtn.add(btnOk);
-		btnCancel = XmippIJUtil.getTextButton(cancelText, this);
+		btnCancel = XmippWindowUtil.getTextButton(cancelText, this);
 		panelBtn.add(btnCancel);
 	}
 	
@@ -170,7 +170,7 @@ class XmippMessageDialog extends XmippDialog {
 	protected void createContent(JPanel panel){
 		panel.setLayout(new BorderLayout());
 		JPanel iconPanel = new JPanel();
-		iconPanel.add(XmippIJUtil.getIconLabel(iconPath));
+		iconPanel.add(XmippWindowUtil.getIconLabel(iconPath));
 		iconPanel.setBackground(Color.white);
 		panel.add(iconPanel, BorderLayout.LINE_START);
 		JTextArea text = new JTextArea(message, 5, 40);

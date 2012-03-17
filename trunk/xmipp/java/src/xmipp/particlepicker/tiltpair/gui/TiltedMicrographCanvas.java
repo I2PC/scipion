@@ -19,7 +19,7 @@ import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.jni.Particle;
 
 public class TiltedMicrographCanvas extends ParticlePickerCanvas
@@ -40,7 +40,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		this.frame = frame;
 		this.uc = (UntiltedMicrographCanvas)frame.getCanvas();
 		iw = new ImageWindow(imp, this);
-		XmippIJUtil.setLocation(0.7f, 0, iw);
+		XmippWindowUtil.setLocation(0.7f, 0, iw);
 
 	}
 

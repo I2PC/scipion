@@ -31,7 +31,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 		setOpaque(true);
 		setHorizontalAlignment(JLabel.CENTER);
 		setHorizontalTextPosition(JLabel.CENTER);
-		setVerticalTextPosition(JLabel.BOTTOM);		
+		setVerticalTextPosition(JLabel.BOTTOM);
 	}
 
 	public ImageItemRenderer(boolean hackBorders) {
@@ -60,11 +60,17 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			setEnabled(item.isEnabled);
 
 			// Loads image...
-			ImagePlus imp = item.getImage();
-			if (imp != null)
-				setIcon(new ImageIcon(imp.getImage()));
-			else
+			if (item.isBusy)
 				setIcon(XmippResource.MISSING_ICON);
+			else {
+
+				ImagePlus imp = item.getImagePlus();
+
+				if (imp != null)
+					setIcon(new ImageIcon(imp.getImage()));
+				else
+					setIcon(XmippResource.MISSING_ICON);
+			}
 
 			// Tooltip.
 			setToolTipText(item.getLabel());
@@ -84,9 +90,9 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 					setBorder(BORDER_SELECTED);
 				}
 
-				if (hasFocus) {
-					setBorder(BORDER_FOCUSED);
-				}
+//				if (hasFocus) {
+//					setBorder(BORDER_FOCUSED);
+//				}
 			}
 		} else {
 			setIcon(null);

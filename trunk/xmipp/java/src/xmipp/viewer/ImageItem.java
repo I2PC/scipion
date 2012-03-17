@@ -26,6 +26,7 @@
 package xmipp.viewer;
 
 import java.awt.Dimension;
+import java.awt.Image;
 
 import ij.ImagePlus;
 
@@ -43,6 +44,8 @@ public class ImageItem {
 	public boolean isEnabled = true;
 	//Flag to mark if display label
 	public boolean showLabel = false;
+	//Marks some items as busy
+	public boolean isBusy = false;
 	// Cell dimension on table
 	public Dimension cellDim;
 	
@@ -53,8 +56,12 @@ public class ImageItem {
 		label = l;
 	}
 	
-	public ImagePlus getImage() {
+	public ImagePlus getImagePlus() {
 		return image;
+	}
+	
+	public Image getImage(){
+		return image.getImage();
 	}
 	
 	public String getLabel() {
@@ -63,5 +70,23 @@ public class ImageItem {
 	
 	public String getKey() {
 		return key;
+	}
+	
+	public boolean isSelected() {
+		return isSelected;
+	}
+	
+	public boolean isEnabled(){
+		return isEnabled;
+	}
+	
+	public boolean isBusy(){
+		return isBusy();
+	}
+	
+	@Override
+	public String toString(){
+		return image != null ? 
+				image.getFileInfo().fileName: null;
 	}
 }

@@ -8,7 +8,7 @@ import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
 public class TiltPairParticlesJDialog extends ParticlesJDialog
@@ -64,10 +64,10 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 				p = particles.get(index);
 				c = p.getParticleCanvas(frame);
 				up = (UntiltedParticle) p;
-				particlespn.add(c, XmippIJUtil.getConstraints(constraints, j, i, 1));
+				particlespn.add(c, XmippWindowUtil.getConstraints(constraints, j, i, 1));
 				
 				if (up.getTiltedParticle() != null)
-					particlespn.add(up.getTiltedParticle().getParticleCanvas(frame), XmippIJUtil.getConstraints(constraints, j + 1, i, 1));
+					particlespn.add(up.getTiltedParticle().getParticleCanvas(frame), XmippWindowUtil.getConstraints(constraints, j + 1, i, 1));
 			}
 		if (resize)
 			pack();

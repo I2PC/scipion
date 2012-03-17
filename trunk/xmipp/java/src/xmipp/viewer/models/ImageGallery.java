@@ -153,19 +153,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 					item = createItem(index, key);
 					cache.put(key, item);
 				}
-				item.showLabel = data.showLabel;
-				item.cellDim = cellDim;
-				item.isSelected = data.selection[index];
-				item.isEnabled = data.isEnabled(index);
-				ImagePlus imp = item.getImage();
-				if (imp != null) { // When image is missing this will be null
-					if (data.normalize)
-						imp.getProcessor().setMinAndMax(normalize_min,
-								normalize_max);
-					else
-						imp.getProcessor().resetMinAndMax();
-					imp.updateImage();
-				}
+				setupItem(item, index);
 
 				return item;
 			} catch (Exception e) {
@@ -174,6 +162,22 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 
 		return null;
+	}
+	
+	protected void setupItem(ImageItem item, int index){
+		item.showLabel = data.showLabel;
+		item.cellDim = cellDim;
+		item.isSelected = data.selection[index];
+		item.isEnabled = data.isEnabled(index);
+		ImagePlus imp = item.getImagePlus();
+		if (imp != null) { // When image is missing this will be null
+			if (data.normalize)
+				imp.getProcessor().setMinAndMax(normalize_min,
+						normalize_max);
+			else
+				imp.getProcessor().resetMinAndMax();
+			imp.updateImage();
+		}
 	}
 
 	public void setRows(int rows) {
@@ -313,7 +317,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	}
 
 	/**
-	 * Return the x and y given an index
+	 * Return the row and col given an index
 	 * 
 	 * @param index
 	 * @return

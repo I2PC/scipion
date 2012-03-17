@@ -1,15 +1,10 @@
 package xmipp.ij.commons;
 
-import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-import ij.io.FileSaver;
+
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.Date;
-import xmipp.jni.Filename;
-import xmipp.utils.XmippIJUtil;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {

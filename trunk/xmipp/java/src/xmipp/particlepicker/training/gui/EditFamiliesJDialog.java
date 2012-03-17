@@ -22,7 +22,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.particlepicker.Family;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
 
@@ -64,19 +64,19 @@ public class EditFamiliesJDialog extends JDialog {
 		groupstb.setDefaultRenderer(Color.class, new ColorRenderer());
 		groupstb.setDefaultEditor(Color.class, new ColorEditor(position));
 		sp.setViewportView(groupstb);
-		add(groupstbpn, XmippIJUtil.getConstraints(constraints, 0, 0, 3));
+		add(groupstbpn, XmippWindowUtil.getConstraints(constraints, 0, 0, 3));
 		addbt = new JButton("Add");
 		deletebt = new JButton("Delete");
 		deletebt.setEnabled(false);
 		okbt = new JButton("Ok");
 
-		add(addbt, XmippIJUtil.getConstraints(constraints, 0, 1, 1));
-		add(deletebt, XmippIJUtil.getConstraints(constraints, 1, 1, 1));
-		add(okbt, XmippIJUtil.getConstraints(constraints, 2, 1, 1));
+		add(addbt, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
+		add(deletebt, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));
+		add(okbt, XmippWindowUtil.getConstraints(constraints, 2, 1, 1));
 		getRootPane().setDefaultButton(addbt);
 		setListeners();
 		pack();
-		XmippIJUtil.setLocation(position, 0.5f, this);
+		XmippWindowUtil.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 

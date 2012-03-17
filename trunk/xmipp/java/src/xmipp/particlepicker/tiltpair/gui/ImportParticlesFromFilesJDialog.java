@@ -22,7 +22,7 @@ import javax.swing.JTextField;
 
 import xmipp.particlepicker.Format;
 import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
 public class ImportParticlesFromFilesJDialog extends JDialog
@@ -52,21 +52,21 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		constraints.insets = new Insets(5, 5, 5, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 		initSourcePane();
-		add(new JLabel("Format:"), XmippIJUtil.getConstraints(constraints, 0, 0, 1));
-		add(sourcepn, XmippIJUtil.getConstraints(constraints, 1, 0, 2));
-		add(new JLabel("Untilted:"), XmippIJUtil.getConstraints(constraints, 0, 1, 1));
+		add(new JLabel("Format:"), XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+		add(sourcepn, XmippWindowUtil.getConstraints(constraints, 1, 0, 2));
+		add(new JLabel("Untilted:"), XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		untiltedtf = new JTextField(20);
 
-		add(untiltedtf, XmippIJUtil.getConstraints(constraints, 1, 1, 1));
+		add(untiltedtf, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));
 		BrowseListener bl = new BrowseListener();
 		browseubt = new JButton("Browse");
-		add(browseubt, XmippIJUtil.getConstraints(constraints, 2, 1, 1));
+		add(browseubt, XmippWindowUtil.getConstraints(constraints, 2, 1, 1));
 		browseubt.addActionListener(bl);
-		add(new JLabel("Tilted:"), XmippIJUtil.getConstraints(constraints, 0, 2, 1));
+		add(new JLabel("Tilted:"), XmippWindowUtil.getConstraints(constraints, 0, 2, 1));
 		tiltedtf = new JTextField(20);
-		add(tiltedtf, XmippIJUtil.getConstraints(constraints, 1, 2, 1));
+		add(tiltedtf, XmippWindowUtil.getConstraints(constraints, 1, 2, 1));
 		browsetbt = new JButton("Browse");
-		add(browsetbt, XmippIJUtil.getConstraints(constraints, 2, 2, 1));
+		add(browsetbt, XmippWindowUtil.getConstraints(constraints, 2, 2, 1));
 		browsetbt.addActionListener(bl);
 
 		fc = new JFileChooser(new File(parent.getParticlePicker().getOutputDir()));
@@ -107,10 +107,10 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		});
 		actionspn.add(okbt);
 		actionspn.add(cancelbt);
-		add(actionspn, XmippIJUtil.getConstraints(constraints, 0, 3, 3));
+		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
 
 		pack();
-		XmippIJUtil.setLocation(0.8f, 0.5f, this);
+		XmippWindowUtil.setLocation(0.8f, 0.5f, this);
 		setVisible(true);
 
 	}

@@ -358,22 +358,30 @@ public class GalleryData {
 	}
 	
 	public boolean isImageFile(int col) {
+		return isImageFile(labels.get(col));		
+	}
+	
+	public boolean isImageFile(ColumnInfo ci) {
 		try {
-			return MetaData.isImage(labels.get(col).getLabel());
+			return MetaData.isImage(ci.getLabel());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
-	}
+	}	
 	
 	public String getValueFromCol(int index, int col){
+		return getValueFromCol(index, labels.get(col));
+	}
+	
+	public String getValueFromCol(int index, ColumnInfo ci){
 		try {
-			return md.getValueString(labels.get(col).getLabel(), ids[index]);
+			return md.getValueString(ci.getLabel(), ids[index]);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
-	}
+	}	
 	
 	public String getValueFromLabel(int index, int label){
 		try {

@@ -24,8 +24,6 @@
  ***************************************************************************/
 package xmipp.utils;
 
-import ij.IJ;
-
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -37,14 +35,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
-import xmipp.ij.commons.Tool;
-import xmipp.ij.commons.XmippImageJ;
-import xmipp.jni.Filename;
 
-
-public class XmippIJUtil {
-	
-	private static XmippImageJ xij;
+public class XmippWindowUtil {
 
 	/** Some colors contants */
 	public static final Color LIGHT_BLUE = new Color(173, 216, 230);
@@ -151,23 +143,6 @@ public class XmippIJUtil {
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e);
 		}
-	}
-	
-	public static XmippImageJ showImageJ(Tool tool)
-	{
-		if (IJ.getInstance() == null)
-		{
-			xij = new XmippImageJ();
-			IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/commons/XmippMacros.txt"));
-		}
-		else if (!xij.isVisible())
-			xij.setVisible(true);
-		return xij;
-	}
-	
-	public static XmippImageJ getXmippImageJ()
-	{
-		return xij;
 	}
 
 }

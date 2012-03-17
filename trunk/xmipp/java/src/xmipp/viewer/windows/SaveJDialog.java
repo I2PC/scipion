@@ -57,7 +57,7 @@ import javax.swing.table.AbstractTableModel;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
@@ -116,21 +116,21 @@ public class SaveJDialog extends XmippDialog {
 		//chbMd = new JCheckBox("Save metadata", true);
 		//chbMd.addActionListener(this);
 		group.add(new JLabel("Metadata filename:"),  
-				XmippIJUtil.getConstraints(gbc, 0, 0));
+				XmippWindowUtil.getConstraints(gbc, 0, 0));
 		
 		createMdOptions();
-		group.add(panelMd, XmippIJUtil.getConstraints(gbc, 0, 1, 2));
+		group.add(panelMd, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 		
 		//Checkbox to save images
 		chbImg = new JCheckBox("Save images", false);
 		chbImg.addActionListener(this);
-		group.add(chbImg,  XmippIJUtil.getConstraints(gbc, 0, 2));
+		group.add(chbImg,  XmippWindowUtil.getConstraints(gbc, 0, 2));
 		
 		createImageOptions();
-		group.add(panelImg, XmippIJUtil.getConstraints(gbc, 0, 3, 2));
+		group.add(panelImg, XmippWindowUtil.getConstraints(gbc, 0, 3, 2));
 		
 		gbc.anchor = GridBagConstraints.PAGE_START;
-		panel.add(group, XmippIJUtil.getConstraints(gbc, 0, 0, 2));
+		panel.add(group, XmippWindowUtil.getConstraints(gbc, 0, 0, 2));
 		//Change default Ok text button
 		okText = "Save";
 
@@ -141,7 +141,7 @@ public class SaveJDialog extends XmippDialog {
 		JPanel panel = new JPanel();
 		browse.tb = new JTextField(30);
 		panel.add(browse.tb);
-		browse.btn = XmippIJUtil.getIconButton("folderopen.gif", this);
+		browse.btn = XmippWindowUtil.getIconButton("folderopen.gif", this);
 		panel.add(browse.btn);
 		return panel;
 	}
@@ -157,12 +157,12 @@ public class SaveJDialog extends XmippDialog {
 //		panelMd.add(tbMd, WindowUtil.getConstraints(gbc, 0, 0, 2));
 //		btnBrowseMd = WindowUtil.getIconButton("folderopen.gif", this);
 //		panelMd.add(btnBrowseMd,  WindowUtil.getConstraints(gbc, 2, 0));
-		panelMd.add(panelBrowse,  XmippIJUtil.getConstraints(gbc, 0, 0, 3));
+		panelMd.add(panelBrowse,  XmippWindowUtil.getConstraints(gbc, 0, 0, 3));
 		rbMdOverride = new JRadioButton("Override");
-		panelMd.add(rbMdOverride, XmippIJUtil.getConstraints(gbc, 0, 1));
+		panelMd.add(rbMdOverride, XmippWindowUtil.getConstraints(gbc, 0, 1));
 		gbc.anchor = GridBagConstraints.WEST;	
 		rbMdAppend = new JRadioButton("Append", true);
-		panelMd.add(rbMdAppend, XmippIJUtil.getConstraints(gbc, 1, 1));
+		panelMd.add(rbMdAppend, XmippWindowUtil.getConstraints(gbc, 1, 1));
 		ButtonGroup group = new ButtonGroup();
 	    group.add(rbMdOverride);
 	    group.add(rbMdAppend);
@@ -176,23 +176,23 @@ public class SaveJDialog extends XmippDialog {
 		//panelImg.setBackground(Color.red);
 		panelImg.setVisible(false);		
 		gbc.anchor = GridBagConstraints.EAST;	
-		panelImg.add(new JLabel("Label  "), XmippIJUtil.getConstraints(gbc, 0, 0));
+		panelImg.add(new JLabel("Label  "), XmippWindowUtil.getConstraints(gbc, 0, 0));
 		cbLabel = new JComboBox();
 		for (ColumnInfo ci: data.labels)
 			if (ci.allowRender)
 				cbLabel.addItem(ci.labelName);
 		gbc.anchor = GridBagConstraints.WEST;	
-		panelImg.add(cbLabel, XmippIJUtil.getConstraints(gbc, 1, 0));
+		panelImg.add(cbLabel, XmippWindowUtil.getConstraints(gbc, 1, 0));
 		browseImg = new BrowseField();
 		JPanel panelBrowse = createBrowse(browseImg);
 		panelImg.add(new JLabel("Output stack filename:"), 
-				XmippIJUtil.getConstraints(gbc, 0, 1, 5));
-		panelImg.add(panelBrowse,  XmippIJUtil.getConstraints(gbc, 0, 2, 5));
+				XmippWindowUtil.getConstraints(gbc, 0, 1, 5));
+		panelImg.add(panelBrowse,  XmippWindowUtil.getConstraints(gbc, 0, 2, 5));
 		rbStack = new JRadioButton("Stack", true);
-		panelImg.add(rbStack, XmippIJUtil.getConstraints(gbc, 2, 0));
+		panelImg.add(rbStack, XmippWindowUtil.getConstraints(gbc, 2, 0));
 		rbIndependent = new JRadioButton("Separate images");
 		//gbc.anchor = GridBagConstraints.WEST;		
-		panelImg.add(rbIndependent, XmippIJUtil.getConstraints(gbc, 3, 0));
+		panelImg.add(rbIndependent, XmippWindowUtil.getConstraints(gbc, 3, 0));
 		ButtonGroup group = new ButtonGroup();
 	    group.add(rbStack);
 	    group.add(rbIndependent);

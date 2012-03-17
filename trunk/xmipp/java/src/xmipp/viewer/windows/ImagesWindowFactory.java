@@ -24,6 +24,7 @@ import javax.swing.JRootPane;
 import javax.vecmath.Color3f;
 
 import xmipp.ij.commons.Tool;
+import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippStackWindow;
@@ -35,7 +36,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.rotspectra.JFrameRotSpectra;

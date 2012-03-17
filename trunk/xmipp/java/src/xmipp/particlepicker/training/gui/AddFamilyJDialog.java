@@ -21,7 +21,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import xmipp.particlepicker.Family;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 
 public class AddFamilyJDialog extends JDialog implements ActionListener
 {
@@ -50,29 +50,29 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 		constraints.insets = new Insets(5, 5, 5, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 
-		add(new JLabel("Name"), XmippIJUtil.getConstraints(constraints, 0, 0, 1));
+		add(new JLabel("Name"), XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 		nametf = new JTextField(20);
-		add(nametf, XmippIJUtil.getConstraints(constraints, 1, 0, 1));
-		add(new JLabel("Color"), XmippIJUtil.getConstraints(constraints, 0, 1, 1));
+		add(nametf, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
+		add(new JLabel("Color"), XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		colorbt = new JButton();
 		color = Family.getNextColor();
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
-		add(colorbt, XmippIJUtil.getConstraints(constraints, 1, 1, 1));
+		add(colorbt, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));
 
-		add(new JLabel("Size"), XmippIJUtil.getConstraints(constraints, 0, 2, 1));
+		add(new JLabel("Size"), XmippWindowUtil.getConstraints(constraints, 0, 2, 1));
 		initSizePane();
 
-		add(sizepn, XmippIJUtil.getConstraints(constraints, 1, 2, 1));
+		add(sizepn, XmippWindowUtil.getConstraints(constraints, 1, 2, 1));
 		addbt = new JButton("Add");
 		getRootPane().setDefaultButton(addbt);
 		cancelbt = new JButton("Cancel");
 
-		add(addbt, XmippIJUtil.getConstraints(constraints, 0, 3, 1));
-		add(cancelbt, XmippIJUtil.getConstraints(constraints, 1, 3, 1));
+		add(addbt, XmippWindowUtil.getConstraints(constraints, 0, 3, 1));
+		add(cancelbt, XmippWindowUtil.getConstraints(constraints, 1, 3, 1));
 		setListeners();
 		pack();
-		XmippIJUtil.setLocation(position, 0.5f, this);
+		XmippWindowUtil.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 
@@ -175,7 +175,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 					}
 				}, // OK button handler
 				null); // no CANCEL button handler
-		XmippIJUtil.setLocation(AddFamilyJDialog.this.position, 0.5f, dialog);
+		XmippWindowUtil.setLocation(AddFamilyJDialog.this.position, 0.5f, dialog);
 		dialog.setVisible(true);
 	}
 

@@ -41,7 +41,7 @@ import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.gui.ColorIcon;
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.utils.XmippIJUtil;
+import xmipp.utils.XmippWindowUtil;
 
 
 
@@ -94,13 +94,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		setLayout(new GridBagLayout());
 
 		initParticlesPane();
-		add(particlespn, XmippIJUtil.getConstraints(constraints, 0, 1, 3));
+		add(particlespn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
 		initMicrographsPane();
-		add(micrographpn, XmippIJUtil.getConstraints(constraints, 0, 2, 3));
+		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 
 		pack();
 		position = 0.95f;
-		XmippIJUtil.setLocation(position, 0.5f, this);
+		XmippWindowUtil.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 	
@@ -196,7 +196,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 						}
 					}, // OK button handler
 					null); // no CANCEL button handler
-			XmippIJUtil.setLocation(position, 0.5f, dialog);
+			XmippWindowUtil.setLocation(position, 0.5f, dialog);
 			dialog.setVisible(true);
 		}
 	}
@@ -222,16 +222,16 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		sp.setViewportView(micrographstb);
-		micrographpn.add(sp, XmippIJUtil.getConstraints(constraints, 0, 0, 1));
+		micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 		JPanel infopn = new JPanel();
 		upslb = new JLabel(Integer.toString(pppicker.getUntiltedNumber()));
 		infopn.add(new JLabel("Particles:"));
 		infopn.add(upslb);
-		micrographpn.add(infopn, XmippIJUtil.getConstraints(constraints, 0, 1, 1));
+		micrographpn.add(infopn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		resetbt = new JButton("Reset");
 		buttonspn.add(resetbt);
-		micrographpn.add(buttonspn, XmippIJUtil.getConstraints(constraints, 0, 2, 2));
+		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 		resetbt.addActionListener(new ActionListener()
 		{
 

@@ -44,8 +44,8 @@ public class MetadataGallery extends ImageGallery {
 	private static final long serialVersionUID = 1L;
 
 	// Label to be rendered
-	protected int renderLabel;
-	protected int displayLabel;
+	protected ColumnInfo renderLabel;
+	protected ColumnInfo displayLabel;
 	protected ImageGeneric image;
 
 	// Also store the visible ones to fast access
@@ -108,11 +108,11 @@ public class MetadataGallery extends ImageGallery {
 		ImageDimension dim = null;
 
 		if (data.hasRenderLabel()) {
-			renderLabel = data.ciFirstRender.label;
+			renderLabel = data.ciFirstRender;
 			displayLabel = renderLabel;
 			// if (renderLabels) {
 			for (int i = 0; i < data.ids.length; ++i) {
-				String imageFn = getImageFilename(i, renderLabel);
+				String imageFn = getImageFilename(i, renderLabel.getLabel());
 				if (imageFn != null && Filename.exists(imageFn)) {
 					image = new ImageGeneric(imageFn); 
 					dim = new ImageDimension(image);
@@ -131,7 +131,7 @@ public class MetadataGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		return createImageItem(index, renderLabel, displayLabel, key);
+		return createImageItem(index, renderLabel.getLabel(), displayLabel.getLabel(), key);
 	}
 
 	/**
@@ -160,7 +160,7 @@ public class MetadataGallery extends ImageGallery {
 
 	@Override
 	protected String getItemKey(int index) throws Exception {
-		return getItemKey(index, renderLabel);
+		return getItemKey(index, renderLabel.getLabel());
 	}
 
 	/**
@@ -173,7 +173,7 @@ public class MetadataGallery extends ImageGallery {
 			format += "_geo";
 		if (data.wrap)
 			format += "_wrap";
-		String key = String.format(format, thumb_width, thumb_height);
+		//String key = String.format(format, thumb_width, thumb_height);
 		// DEBUG.printMessage(String.format("key: %s", key));
 		return String.format(format, thumb_width, thumb_height);
 	}
@@ -183,22 +183,9 @@ public class MetadataGallery extends ImageGallery {
 		return String.format("Metadata: %s (%d)", filename, n);
 	}
 
-	/**
-	 * Create and returns the image generic from a given an index
-	 * 
-	 * @param index
-	 *            Index of the image
-	 * @return ImageGeneric created
-	 * @throws Exception
-	 *             if can not load image
-	 */
 	public String getImageFilename(int index, int label) {
 		try {
 			return data.getValueFromLabel(index, label);
-//			if (Filename.exists(imgFn)){
-//				ImageGeneric image = new ImageGeneric(imgFn);
-//				return image;
-//			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -207,9 +194,7 @@ public class MetadataGallery extends ImageGallery {
 	
 	@Override
 	public String getImageFilenameAt(int row, int col){
-		if (data.isImageFile(col))
-			return data.getValueFromCol(row, col);
-		return null;		
+		return data.isImageFile(renderLabel) ? data.getValueFromCol(row, renderLabel) : null;
 	}
 
 	@Override

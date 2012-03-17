@@ -30,6 +30,7 @@ import java.awt.Component;
 
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -69,7 +70,7 @@ public class MetadataTable extends MetadataGallery {
 	public int getIndex(int row, int col) {
 		return row;
 	}
-
+	
 	@Override
 	public Object getValueAt(int row, int column) {
 		// DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)",
@@ -78,7 +79,17 @@ public class MetadataTable extends MetadataGallery {
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
 				String key = getItemKey(row, ci.getLabel());
-				return createImageItem(row, ci.getLabel(), ci.getLabel(), key);
+				ImageItem item;
+				// If the element is on cache, just return it
+				if (cache.containsKey(key))
+					item = cache.get(key);
+				else {
+					// If not, create the item and store it for future
+					item = createImageItem(row, ci.getLabel(), ci.getLabel(), key);
+					cache.put(key, item);
+				}
+				setupItem(item, row);
+				return item;
 			}
 			int label = ci.getLabel();
 			long id = data.ids[row];
@@ -111,7 +122,7 @@ public class MetadataTable extends MetadataGallery {
 		}
 
 		return null;
-	}
+	}//function getValueAt
 
 	@Override
 	public void setValueAt(Object value, int row, int column) {
@@ -167,6 +178,13 @@ public class MetadataTable extends MetadataGallery {
 		return ci.allowEdit && !ci.render;
 	}
 
+	@Override
+	public String getImageFilenameAt(int row, int col){
+		ColumnInfo ci = visibleLabels.get(col);
+		return (ci.render && data.isImageFile(ci))
+				? data.getValueFromCol(row, ci) : null;
+	}
+	
 	@Override
 	public void setColumns(int cols) {
 
@@ -261,16 +279,28 @@ public class MetadataTable extends MetadataGallery {
 				// String[] row = md.getRowValues(data.ids[0]);
 				// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 				int width = 0;
+				TableCellRenderer rend;
+				Component comp;
 				for (int i = 0; i < visibleLabels.size(); ++i) {
 					ColumnInfo col = visibleLabels.get(i);
+					//Calculate width of the cell 
 					if (col.render) {
 						width = cellDim.width;
 					} else {
-						TableCellRenderer rend = table.getCellRenderer(0, i);
-						Component comp = rend.getTableCellRendererComponent(
+						rend = table.getCellRenderer(0, i);
+						comp = rend.getTableCellRendererComponent(
 								table, getValueAt(0, i), false, false, 0, 0);
 						width = comp.getPreferredSize().width + 10;
 					}
+					//Calculate width of the header
+					TableColumn tc = getColumn(i);
+					rend = tc.getHeaderRenderer();
+					if (rend == null)
+						rend = table.getTableHeader().getDefaultRenderer();
+					Object value = tc.getHeaderValue();
+					comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
+					//Take max width
+					width = Math.max(width, comp.getPreferredSize().width);
 					getColumn(i).setPreferredWidth(width);
 //					DEBUG.printMessage(String.format("col: %d, width: %d", i,
 //							width));
