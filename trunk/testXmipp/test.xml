@@ -148,6 +148,20 @@
 			<FILE filename="pca.xmd" />
 		</CASE>
 	</PROGRAM>
+    <PROGRAM name="xmipp_classify_compare_classes" mpi="FALSE">
+        <CASE arguments="--i1 input/CL2D/results_level_00_classes.xmd --i2 input/CL2D/results_level_01_classes.xmd -o %o/classes_hierarchy.txt" changeDir="FALSE">
+             <FILE filename="classes_hierarchy.txt"/>
+        </CASE>
+        <CASE arguments="--i1 input/CL2D/results_level_01_classes.xmd --i2 input/CL2D/results_level_02_classes.xmd -o %o/classes_hierarchy.txt --append" changeDir="FALSE">
+	         <PRERUN command="cp input/CL2D/classes_hierarchy.txt %o"/>
+             <FILE filename="classes_hierarchy.txt"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_classify_evaluate_classes" mpi="FALSE">
+        <CASE arguments="-i input/CL2DBacteriorhodopsin/results_level_00_classes.xmd -o %o/evaluated_classes.xmd" changeDir="FALSE">
+             <FILE filename="evaluated_classes.xmd"/>
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_classify_kerdensom" mpi="FALSE">
 		<CASE
 			arguments="-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1"
@@ -185,7 +199,6 @@
 			<FILE filename="output000002.ctfparam" />
 		</CASE>
 	</PROGRAM>
-
 	<PROGRAM name="xmipp_ctf_enhance_psd" mpi="FALSE">
 		<CASE
 			arguments="-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp"
