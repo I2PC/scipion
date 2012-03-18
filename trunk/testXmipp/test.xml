@@ -493,6 +493,13 @@
 			<FILE filename="out8.doc" />
 		</CASE>
 	</PROGRAM>
+	<PROGRAM name="xmipp_micrograph_automatic_picking" mpi="FALSE">
+		<CASE
+			arguments="input/micrograph8bits.tif --particleSize 233 --model input/Default --outputRoot %o/automatically_selected --mode autoselect"
+			changeDir="FALSE">
+			<FILE filename="automatically_selected_auto.pos" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_micrograph_scissor" mpi="FALSE">
 		<CASE
 			arguments="-i input/micrograph8bits.tif --pos input/micrograph8bits.tif.Common.pos --oroot %o/images --Xdim 256"
