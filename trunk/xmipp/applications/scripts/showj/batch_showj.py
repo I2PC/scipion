@@ -25,14 +25,14 @@ class ScriptShowJ(ScriptAppIJ):
 		self.addParamsLine('         alias -z;')
 		self.addParamsLine('  [--debug] : debug')
 		
-	def readInputFiles(self):
-		if self.checkParam('--mode'):
-			mode = self.getParam('--mode') 
-			if mode == 'rotspectra':
-				prefix = self.getParam('-i')
-				self.inputFiles = [prefix + s for s in ['_classes.xmd', '_vectors.xmd', '_vectors.xmd.raw']]
-		else:
-			ScriptAppIJ.readInputFiles(self)
+#	def readInputFiles(self):
+#		if self.checkParam('--mode'):
+#			mode = self.getParam('--mode') 
+#			if mode == 'rotspectra':
+#				prefix = self.getParam('-i')
+#				self.inputFiles = [prefix + s for s in ['_classes.xmd', '_vectors.xmd', '_vectors.xmd.raw']]
+#		else:
+#			ScriptAppIJ.readInputFiles(self)
 		
 	def readOtherParams(self):	
 		if self.checkParam('--mode'):

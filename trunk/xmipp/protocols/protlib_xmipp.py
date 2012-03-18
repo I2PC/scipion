@@ -30,7 +30,7 @@ import os
 import xmipp
 from xmipp import Program, FileName
 from protlib_utils import runImageJPlugin, runJavaIJapp
-from protlib_filesystem import getXmippPath
+from protlib_filesystem import getXmippPath, xmippExists
 
 
 class XmippScript():
@@ -119,7 +119,7 @@ class ScriptIJBase(XmippScript):
         files = []
         missingFiles = []
         for f in self.inputFiles:
-            if FileName(f).exists():
+            if xmippExists(f):
                 files.append(f)
             else:
                 missingFiles.append(f)

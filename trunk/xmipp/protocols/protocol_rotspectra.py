@@ -9,7 +9,7 @@
 from os.path import join
 from protlib_base import *
 from config_protocols import protDict
-from protlib_utils import runJob
+from protlib_utils import runJob, runShowJ
 from xmipp import MetaData, MDL_X, MDL_Y
 
 class ProtRotSpectra(XmippProtocol):
@@ -39,19 +39,26 @@ class ProtRotSpectra(XmippProtocol):
     def validate(self):
         errors = []
         if self.SomReg0 < self.SomReg1:
-            errors.append("Regularization must decrease over iterations: Initial regularization must be larger than final")
+            errors.append("Regularization must decrease over iterations:")
+            errors.append("    Initial regularization must be larger than final")
         return errors
     
     def summary(self):
         message = []
-        message.append("Classification of the rotational spectra of " + self.InSelFile + " into a map of size " + str(self.SomYdim) + "x" + str(self.SomXdim))
+        message.append("Classification of the rotational spectra")
+        message.append("  Input classes: [%s]" % self.InSelFile)
+        message.append("  Map size: <%(SomYdim)d> x <%(SomXdim)d>" % self.ParamsDict)
+        
         if self.getRunState() == SqliteDb.RUN_STARTED:
             lines = []
             for line in open(self.LogPrefix + ".err").readlines():
                 if "Training Deterministic Annealing" in line:
                     lines.append(line)
-            message.append("Currently at iteration " + str(len(lines)) + " out of " + str(self.SomSteps))
+            message.append("Currently at iteration <%d> out of <%d>" % (len(lines), self.SomSteps))
         return message
+    
+    def visualize(self):
+        runShowJ("classes@%s" % self.workingDirPath("results_classes.xmd"), extraParams="--mode rotspectra")
   
 def findCenter(log, HowCenter, Selfile, WorkingDir, SpectraInnerRadius, SpectraOuterRadius):
     if HowCenter == 'Minimize first harmonic':
