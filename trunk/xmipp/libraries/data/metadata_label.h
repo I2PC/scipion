@@ -583,7 +583,7 @@ private:
         MDL::addLabel(MDL_COUNT2, LABEL_LONG, "count2");
         MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams", TAGLABEL_TEXTFILE);
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel", TAGLABEL_CTFPARAM);
-        MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2", TAGLABEL_CTFPARAM);
         MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "CTF_Sampling_rate");
         MDL::addLabel(MDL_CTF_SAMPLING_RATE_Z, LABEL_DOUBLE, "CTF_Sampling_rate_z");
         MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "CTF_Voltage");
