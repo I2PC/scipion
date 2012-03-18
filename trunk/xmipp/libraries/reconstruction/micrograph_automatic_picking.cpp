@@ -924,9 +924,9 @@ void * automaticallySelectParticlesThread(void * args)
                 std::cerr << ".";
 #ifdef DEBUG_MORE_AUTO
 
-            std::cerr << "thread " << idThread
+            std::cout << "thread " << idThread
             << " processing piece " << N << "...\n";
-            std::cerr << "    (top,left)=" << top << "," << left
+            std::cout << "    (top,left)=" << top << "," << left
             << " skip y,x=" << next_skip_y << "," << next_skip_x
             << " next=" << next_top << "," << next_left << std::endl;
 #endif
@@ -946,7 +946,7 @@ void * automaticallySelectParticlesThread(void * args)
             skip_y /= autoPicking->__reduction;
 #ifdef DEBUG_MORE_AUTO
 
-            std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
+            std::cout << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
 #endif
 
             // Scan this piece
@@ -961,7 +961,7 @@ void * automaticallySelectParticlesThread(void * args)
                 // if (rnd_unif(0,1)<0.98) continue;
 
 #ifdef DEBUG_MORE_AUTO
-                std::cerr << "Pos(y,x)=" << posy << "," << posx
+                std::cout << "Pos(y,x)=" << posy << "," << posx
                 << " Micro(y,x)=" << posy*autoPicking->__reduction + top
                 << "," << posx*autoPicking->__reduction + left
                 << " Next pos(y,x)=" << next_posy << "," << next_posx
@@ -973,13 +973,16 @@ void * automaticallySelectParticlesThread(void * args)
                 {
                     double cost;
                     int votes = autoPicking->__selection_model.isParticle(v,cost,aux1,aux2);
+#ifdef DEBUG_MORE_AUTO
+                    std::cout << "votes= " << votes << " cost= " << cost << std::endl;
+#endif
                     if (votes > thVotes)
                     {
 #ifdef DEBUG_MORE_AUTO
                         std::cout << "Particle Found: "
                         << left + posx * autoPicking->__reduction << ","
                         << top + posy *autoPicking->__reduction
-                        << " votes=" << votes
+                        << " votes=" << votes << " cost=" << cost
                         << std::endl;
                         std::cout << "Press any key to continue...\n";
                         char c;
