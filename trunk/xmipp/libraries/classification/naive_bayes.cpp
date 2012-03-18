@@ -314,7 +314,9 @@ NaiveBayes::NaiveBayes(
 #endif
 
     }
-    __weights *= 1.0/__weights.computeMax();
+    double norm=__weights.computeMax();
+    if (norm>0)
+    	__weights *= 1.0/norm;
 
     // Set default cost matrix
     __cost.resizeNoCopy(K,K);
@@ -406,7 +408,7 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures, double &co
             classesProbs(k)=log10(classesProbs(k));
         std::cout << "Class probababilities=" << classesProbs.transpose()
         << "\n  costs=" << allCosts.transpose()
-        << "  best class=" << bestk << std::endl;
+        << "  best class=" << bestk << " cost=" << cost << std::endl;
         char c;
         // COSS std::cin >> c;
         // if (c=='q') debugging = false;
