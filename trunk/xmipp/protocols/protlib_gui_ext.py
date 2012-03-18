@@ -1480,6 +1480,8 @@ class XmippBrowser():
                 
             if not filename.endswith('.png'):
                 self.image.readPreview(filename, self.dim)
+                if filename.endswith('.psd'):
+                    self.image.convertPSD()
                 from protlib_xmipp import getImageData
                 Z = getImageData(self.image)
             else:

@@ -23,7 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <external/python/Python-2.7.2/Include/Python.h>
+#include "Python.h"
+#include "numpy/ndarraytypes.h"
+#include "numpy/ndarrayobject.h"
 
 #include <data/xmipp_program.h>
 #include <data/metadata_extension.h>
@@ -524,8 +526,33 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}
+}//function Image_readPreview
 
+/* convert to psd */
+static PyObject *
+Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  ImageObject *self = (ImageObject*) obj;
+
+  if (self != NULL)
+  {
+    try
+    {
+        ImageGeneric *image = self->image;
+        image->convert2Datatype(Double);
+        MultidimArray<double> *in;
+        MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
+        xmipp2PSD(*in, *in, true);
+
+        Py_RETURN_NONE;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}//function convertPSD
 
 /* readApplyGeo */
 //int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
@@ -536,6 +563,89 @@ Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+static NPY_TYPES datatype2NpyType(DataType dt){
+  switch (dt){
+    case Float:
+      return NPY_FLOAT;
+    case Double:
+      return NPY_DOUBLE;
+    case Int:
+      return NPY_INT;
+    case UInt:
+      return NPY_UINT;
+    case Short:
+      return NPY_SHORT;
+    case UShort:
+      return NPY_USHORT;
+    case SChar:
+      return NPY_BYTE;
+    case UChar:
+      return NPY_UBYTE;
+    case Bool:
+      return NPY_BOOL;
+    case ComplexFloat:
+      return NPY_CFLOAT;
+    case ComplexDouble:
+      return NPY_CDOUBLE;
+    default:
+      return NPY_NOTYPE;
+  }
+}
+
+/* getData */
+static PyObject *
+Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs){
+  ImageObject *self = (ImageObject*) obj;
+
+  if (self != NULL)
+  {
+      ArrayDim adim;
+      ImageGeneric & image = Image_Value(self);
+      int nd = image.image->mdaBase->getDim();
+      MULTIDIM_ARRAY_GENERIC(image).getDimensions(adim);
+      npy_intp dims[3];
+      dims[0] = adim.xdim;
+      dims[1] = adim.ydim;
+      dims[2] = adim.zdim;
+//
+//      size_t size;
+      //Get the pointer to data
+      void *mymem = image().getArrayPointer();
+      //float * data = (float *)mymem;
+//      for (int i = 0; i < adim.zyxdim; ++i)
+//        std::cerr << "DEBUG_JM: data[" << i << "]: " << data[i] << std::endl;
+//      std::cerr << "DEBUG_JM: adim.xdim: " << adim.xdim << std::endl;
+//      std::cerr << "DEBUG_JM: adim.ydim: " << adim.ydim << std::endl;
+//      std::cerr << "DEBUG_JM: adim.zdim: " << adim.zdim << std::endl;
+//      std::cerr << "DEBUG_JM: adim.zyxdim: " << adim.zyxdim << std::endl;
+      //Convert our datatype to NumPy type
+      NPY_TYPES type = datatype2NpyType(image.getDatatype());
+
+      float * data = (float*) malloc(256 * sizeof(float));
+      for (int i = 0; i < 256; ++i)
+        data[i] = i;
+
+      for (int i = 0; i < 16; ++i){
+        for (int j = 0; i < 16; ++j){
+          int index = j * 16 + i;
+          std::cerr << "DEBUG_JM: data[index]: " << data[index] << std::endl;
+        }
+      }
+      npy_intp dims2[2]={16, 16};
+      PyObject * arr = PyArray_SimpleNewFromData(2, dims2, NPY_FLOAT, data);
+      PyArray_BASE(arr) = obj;
+      Py_INCREF(obj);
+      std::cerr << "DEBUG_JM: after PyArray_SimpleNewFromData" <<std::endl;
+      return arr;
+      //Create the NumPy array
+//      std::cerr << "DEBUG_JM: nd: " << nd << std::endl;
+//      std::cerr << "DEBUG_JM: dims[0]: " << dims[0] << std::endl;
+//      std::cerr << "DEBUG_JM: dims[1]: " << dims[1] << std::endl;
+//      std::cerr << "DEBUG_JM: type: " << type << std::endl;
+      //return PyArray_SimpleNewFromData(nd, dims, type, mymem);
+//      Py_RETURN_NONE;
+  }
+}
 
 /* getPixel */
 static PyObject *
@@ -801,10 +911,14 @@ static PyMethodDef Image_methods[] =
           "Read image from disk" },
         { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
           "Read image preview" },
+        { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
+          "Convert to PSD: center FFT and use logarithm" },
         { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
           "Read image from disk applying geometry in refering metadata" },
         { "write", (PyCFunction) Image_write, METH_VARARGS,
           "Write image to disk" },
+        { "getData", (PyCFunction) Image_getData, METH_VARARGS,
+            "Return a NumPy matrix with image data" },
         { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
           "Return a pixel value" },
         { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
