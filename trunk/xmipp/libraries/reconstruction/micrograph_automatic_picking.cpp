@@ -695,7 +695,7 @@ int AutoParticlePicking::automaticallySelectParticles()
 
 #ifdef DEBUG_AUTO
 
-    std::cerr << "Number of automatically selected particles = "
+    std::cout << "Number of automatically selected particles = "
     << __auto_candidates.size() << std::endl;
 #endif
 
@@ -705,8 +705,8 @@ int AutoParticlePicking::automaticallySelectParticles()
 
 #ifdef DEBUG_AUTO
 
-    std::cerr << "Number of automatically selected particles after distance rejection = "
-    << __auto_candidates.size() << std::endl;
+    std::cout << "Number of automatically selected particles after distance rejection = "
+    << Nalive << std::endl;
 #endif
 
     // Apply a second classifier for classifying between particle
@@ -838,16 +838,17 @@ int AutoParticlePicking::automaticallySelectParticles()
         for (int i = 0; i < imax; i++)
             if (__auto_candidates[i].status == 1)
             {
-                if (!ISINF(__auto_candidates[i].cost))
+            	double cost=__auto_candidates[i].cost;
+                if (!ISINF(cost) && !ISNAN(cost))
                 {
-                    if (first || __auto_candidates[i].cost < minCost)
+                    if (first || cost < minCost)
                     {
-                        minCost = __auto_candidates[i].cost;
+                        minCost = cost;
                         first = false;
                     }
-                    if (first || __auto_candidates[i].cost > maxCost)
+                    if (first || cost > maxCost)
                     {
-                        maxCost = __auto_candidates[i].cost;
+                        maxCost = cost;
                         first = false;
                     }
                 }
@@ -857,17 +858,16 @@ int AutoParticlePicking::automaticallySelectParticles()
         for (int i = 0; i < imax; i++)
             if (__auto_candidates[i].status == 1)
             {
-#ifdef DEBUG_AUTO
-
-                std::cout << "Particle coords " << __auto_candidates[i].x << ", "
-                << __auto_candidates[i].y << std::endl;
-#endif
-
-                if (ISINF(__auto_candidates[i].cost))
+                if (ISINF(__auto_candidates[i].cost) || ISNAN(__auto_candidates[i].cost))
                     __auto_candidates[i].cost = 1;
                 else
                     __auto_candidates[i].cost = (__auto_candidates[i].cost
                                                  - maxCost) / (minCost - maxCost);
+#ifdef DEBUG_AUTO
+
+                std::cout << "Particle coords " << __auto_candidates[i].x << ", "
+                << __auto_candidates[i].y << " cost= " << __auto_candidates[i].cost << std::endl;
+#endif
             }
             else
                 __auto_candidates[i].status = 0;
