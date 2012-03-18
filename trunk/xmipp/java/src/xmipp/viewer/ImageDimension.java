@@ -40,6 +40,18 @@ public class ImageDimension {
     public ImageDimension() {
     }
 
+    public ImageDimension(int x){
+    	this(x, x);
+    }
+    
+    public ImageDimension(int x, int y){
+    	this(x, y, 1, 1);
+    }
+    
+    public ImageDimension(int x, int y, int z){
+    	this(x, y, z, 1);
+    }
+    
     public ImageDimension(int x, int y, int z, long n) {
         this.xdim = x;
         this.ydim = y;

@@ -123,7 +123,7 @@ public class MetadataGallery extends ImageGallery {
 		}
 
 		if (dim == null)
-			dim = new ImageDimension(30, 30, 0, 0);
+			dim = new ImageDimension(30);
 		dim.setZDim(data.ids.length);
 
 		return dim;

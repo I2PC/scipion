@@ -26,6 +26,7 @@ public class Param {
     public final static String OPENING_MODE_IMAGE = "image";
     public final static String OPENING_MODE_GALLERY = "gallery";
     public final static String OPENING_MODE_METADATA = "metadata";
+    public final static String OPENING_MODE_ROTSPECTRA = "rotspectra";
     public final static String RENDER_IMAGES = "render";
     public final static String SINGLE_SELECTION = "singlesel";
     public final static String SELECTION_TYPE = "seltype";

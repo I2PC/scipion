@@ -67,9 +67,9 @@ public class ImagesWindowFactory {
 	}
 
 	public static void openFilesAsDefault(String filenames[], Param parameters) {
-		if (parameters.mode.equalsIgnoreCase("rotspectra"))
-			openRotSpectraWindow(filenames);
-		else
+//		if (parameters.mode.equalsIgnoreCase("rotspectra"))
+//			openRotSpectraWindow(filenames);
+//		else
 			for (int i = 0; i < filenames.length; i++) {
 				openFileAsDefault(filenames[i], parameters);
 			}
@@ -86,6 +86,9 @@ public class ImagesWindowFactory {
 //				if (md.containsMicrographsInfo())
 //					openMicrograph(filename);
 //				else
+//				if (parameters.mode.equalsIgnoreCase("rotspectra"))
+//				openRotSpectraWindow(filenames);
+//			else
 					openMetadata(filename, parameters, Param.OPENING_MODE_GALLERY);
 			} else {
 				ImageGeneric img = new ImageGeneric(filename);

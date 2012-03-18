@@ -85,6 +85,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public ImageGallery(GalleryData data) throws Exception {
 		filename = data.filename;
 		this.data = data;
+		cols = -1;
 		dimension = loadDimension();
 		columnModel = createColumnModel();
 		// Zdim will always be used as number of elements to display
@@ -94,8 +95,10 @@ public abstract class ImageGallery extends AbstractTableModel {
 		setZoomValue(data.zoom);
 		// This should be changed later after a call to
 		// setColumns or adjustColumns
-		cols = 1;
-		rows = n;
+		if (cols < -1) {
+			cols = 1;
+			rows = n;
+		}
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
 		resizeCache();
 	}
@@ -116,14 +119,11 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	@Override
 	public int getColumnCount() {
-		// DEBUG.printMessage(String.format("count requested: cols:%d", cols));
 		return cols;
 	}
 
 	@Override
 	public int getRowCount() {
-		// DEBUG.printMessage(String.format("count requested: rows:%d", rows));
-		// DEBUG.printStackTrace();
 		return rows;
 	}
 
@@ -163,8 +163,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 		return null;
 	}
-	
-	protected void setupItem(ImageItem item, int index){
+
+	protected void setupItem(ImageItem item, int index) {
 		item.showLabel = data.showLabel;
 		item.cellDim = cellDim;
 		item.isSelected = data.selection[index];
@@ -172,8 +172,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		ImagePlus imp = item.getImagePlus();
 		if (imp != null) { // When image is missing this will be null
 			if (data.normalize)
-				imp.getProcessor().setMinAndMax(normalize_min,
-						normalize_max);
+				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
 			else
 				imp.getProcessor().resetMinAndMax();
 			imp.updateImage();
@@ -433,16 +432,16 @@ public abstract class ImageGallery extends AbstractTableModel {
 			normalize_calculated = true;
 		}
 	}
-	
-	/** This function will be called when a right click
-	 * is fired from the UI, the col and row of cell
-	 * where the event was produced and also the JPopupMenu
-	 * This function will serve to personalize the menu
-	 * before showing or event not show at all if the
-	 * return is false
+
+	/**
+	 * This function will be called when a right click is fired from the UI, the
+	 * col and row of cell where the event was produced and also the JPopupMenu
+	 * This function will serve to personalize the menu before showing or event
+	 * not show at all if the return is false
 	 */
-	public abstract boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup);
-	
+	public abstract boolean handleRightClick(int row, int col,
+			XmippPopupMenuCreator xpopup);
+
 	/** Whether to display the labels */
 	public void setShowLabels(boolean value) {
 		if (data.showLabel != value) {
@@ -458,7 +457,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	/** Retrieve the mininum and maximum of data */
 	protected abstract double[] getMinAndMax();
-	
+
 	/** Retrieve the image filename, return null if error */
 	public abstract String getImageFilenameAt(int row, int col);
 

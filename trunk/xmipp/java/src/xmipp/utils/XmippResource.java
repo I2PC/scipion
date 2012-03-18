@@ -34,6 +34,8 @@ public class XmippResource {
     public final static String VIEW_GALLERY = "table_view.gif";
     
     public static ImageIcon WAIT_ICON;
+    public static ImageIcon LOCK_ICON;
+    public static ImageIcon DELETE_ICON;
     public static ImageIcon WAIT_MENU_ICON;
     public static ImagePlus MISSING_ITEM;
     public static ImageIcon VIEW_MD_ICON;
@@ -50,6 +52,8 @@ public class XmippResource {
     	}
     	DEBUG.printMessage(PATH_ICONS);
     	WAIT_ICON = getIcon(WAIT);
+    	LOCK_ICON = getIcon("locked.png");
+    	DELETE_ICON = getIcon("delete_item.png");
     	WAIT_MENU_ICON = getIcon(WAIT_MENU);
     	VIEW_MD_ICON = getIcon(VIEW_MD);
     	VIEW_GALLERY_ICON = getIcon(VIEW_GALLERY);

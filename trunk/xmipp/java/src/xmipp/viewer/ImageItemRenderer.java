@@ -2,17 +2,22 @@ package xmipp.viewer;
 
 import ij.ImagePlus;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Image;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import xmipp.utils.CompoundIcon;
+import xmipp.utils.DEBUG;
 import xmipp.utils.XmippResource;
 
 /**
@@ -56,22 +61,28 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 
 			setPreferredSize(item.cellDim);
 
-			// ... and sets it.
-			setEnabled(item.isEnabled);
-
 			// Loads image...
-			if (item.isBusy)
-				setIcon(XmippResource.MISSING_ICON);
-			else {
-
-				ImagePlus imp = item.getImagePlus();
-
-				if (imp != null)
-					setIcon(new ImageIcon(imp.getImage()));
-				else
-					setIcon(XmippResource.MISSING_ICON);
+			Image image = item.getImage();
+			Icon icon;
+			
+			if (image != null)
+				icon = new ImageIcon(image);
+			else
+				icon = XmippResource.MISSING_ICON;
+			
+			if (!item.isEnabled){
+				icon = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, 
+						CompoundIcon.RIGHT, CompoundIcon.BOTTOM, 
+						icon, XmippResource.DELETE_ICON);			
 			}
 
+			if (item.isBusy) {
+				DEBUG.printMessage("drawing busy item...");
+				icon = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, 
+						CompoundIcon.RIGHT, CompoundIcon.BOTTOM, 
+						icon, XmippResource.LOCK_ICON);			
+			}
+			setIcon(icon);
 			// Tooltip.
 			setToolTipText(item.getLabel());
 
@@ -90,9 +101,9 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 					setBorder(BORDER_SELECTED);
 				}
 
-//				if (hasFocus) {
-//					setBorder(BORDER_FOCUSED);
-//				}
+				// if (hasFocus) {
+				// setBorder(BORDER_FOCUSED);
+				// }
 			}
 		} else {
 			setIcon(null);

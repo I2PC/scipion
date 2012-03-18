@@ -44,6 +44,7 @@ public class MetadataTable extends MetadataGallery {
 	public MetadataTable(GalleryData data) throws Exception {
 		super(data);
 		cols = visibleLabels.size();
+		rows = n;
 	}
 
 	@Override
@@ -301,7 +302,7 @@ public class MetadataTable extends MetadataGallery {
 					comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
 					//Take max width
 					width = Math.max(width, comp.getPreferredSize().width);
-					getColumn(i).setPreferredWidth(width);
+					getColumn(i).setPreferredWidth(width + 10);
 //					DEBUG.printMessage(String.format("col: %d, width: %d", i,
 //							width));
 				}

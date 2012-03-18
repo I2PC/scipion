@@ -35,7 +35,7 @@ import ij.ImagePlus;
  */
 public class ImageItem {
 	
-	protected ImagePlus image;
+	protected ImagePlus image = null;
 	protected String key; //This will be used as id for store in cache
 	protected String label;
 	//Flag to check selection
@@ -48,8 +48,14 @@ public class ImageItem {
 	public boolean isBusy = false;
 	// Cell dimension on table
 	public Dimension cellDim;
+	//Reference to the gallery
+	
 	
 	//Constructor
+	public ImageItem(String k, String l){
+		key = k;
+		label = l;
+	}
 	public ImageItem(String k, String l, ImagePlus imp){
 		key = k;
 		image = imp;

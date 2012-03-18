@@ -26,9 +26,11 @@ public class GalleryData {
 	public String filename;
 	// public boolean galleryMode = true; // if false, is table model
 	// public boolean volumeMode = false;
-	public static final int MODE_GALLERY_MD = 1;
-	public static final int MODE_GALLERY_VOL = 2;
-	public static final int MODE_TABLE_MD = 3;
+	public enum Mode { GALLERY_MD, GALLERY_VOL, 
+		                 TABLE_MD, GALLERY_ROTSPECTRA};
+//	public static final int Mode.GALLERYGALLERY_MD = 1;
+//	public static final int MODE_GALLERY_VOL = 2;
+//	public static final int Mode.GALLERY_MD = 3;
 
 	// define min and max render dimensions
 	public static int MIN_SIZE = 16;
@@ -36,7 +38,7 @@ public class GalleryData {
 
 	// max dimension allowed to render images
 
-	private int mode;
+	private Mode mode;
 	public boolean showLabel = false;
 	public boolean globalRender;
 	public Param parameters;
@@ -61,9 +63,12 @@ public class GalleryData {
 			parameters = param;
 			zoom = param.zoom;
 			globalRender = param.renderImages;
-			mode = MODE_GALLERY_MD;
+			mode = Mode.GALLERY_MD;
+			
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
-				mode = MODE_TABLE_MD;
+				mode = Mode.TABLE_MD;
+			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
+				mode = Mode.GALLERY_ROTSPECTRA;
 
 			filename = fn;
 			if (Filename.hasPrefix(fn)) {
@@ -109,8 +114,15 @@ public class GalleryData {
 		useGeo = containsGeometryInfo();
 		selection = new boolean[ids.length];
 
+		if (isRotSpectraMode())
+		{
+			if (zoom == 0)
+				zoom = 100;
+			return;
+		}
+		
 		if (isGalleryMode())
-			mode = MODE_GALLERY_MD;
+			mode = Mode.GALLERY_MD;
 
 		if (hasRenderLabel()) {
 			int renderLabel = ciFirstRender.getLabel();
@@ -135,7 +147,7 @@ public class GalleryData {
 				if (image.isVolume()) { // We are assuming all are volumes
 										// or images, dont mix it
 					if (isGalleryMode())
-						mode = MODE_GALLERY_VOL;
+						mode = Mode.GALLERY_VOL;
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
 
@@ -147,9 +159,10 @@ public class GalleryData {
 				}
 				image.destroy();
 			}
-		} else
+		} else {
 			// force this mode when there aren't render label
-			mode = MODE_TABLE_MD;
+				mode = Mode.TABLE_MD;
+		}
 
 	}// function loadMd
 
@@ -221,40 +234,27 @@ public class GalleryData {
 	public ImageGallery createModel() {
 		try {
 			switch (mode) {
-			case MODE_GALLERY_VOL:
+			case GALLERY_VOL:
 				return new VolumeGallery(this);
-			case MODE_GALLERY_MD:
+			case GALLERY_MD:
 				if (hasRenderLabel())
 					return new MetadataGallery(this);
 				// else fall in the next case
-			case MODE_TABLE_MD:
-				mode = MODE_TABLE_MD; // this is necessary when coming from
+			case TABLE_MD:
+				mode = Mode.TABLE_MD; // this is necessary when coming from
 				// previous case
 				if (!md.isColumnFormat())
 					return new MetadataRow(this);
 				if (md.containsMicrographsInfo()) 
 					return new MicrographsTable(this);
 				return new MetadataTable(this);
+			case GALLERY_ROTSPECTRA:
+				return new RotSpectraGallery(this);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
-
-		// if (Filename.isVolume(filename))
-		// gallery = new VolumeGallery(data);
-		// else {
-		// DEBUG.printMessage(parameters.mode);
-		// if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_GALLERY))
-		// {//if (Filename.isStack(filename))
-		// DEBUG.printMessage("creatingMetadataGallery ");
-		// gallery = new MetadataGallery(data);
-		// }
-		// //else (Filename.isMetadata(filename))
-		// else if
-		// (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
-		//
-		// }
 	}
 
 	public int getNumberOfBlocks() {
@@ -266,7 +266,7 @@ public class GalleryData {
 	}
 
 	/** Return the mode of the gallery */
-	public int getMode() {
+	public Mode getMode() {
 		return mode;
 	}
 
@@ -279,18 +279,29 @@ public class GalleryData {
 	public int getRenderLabel() {
 		return ciFirstRender.getLabel();
 	}
+	
+	/** Return true if the gallery mode is allowed */
+	public boolean allowGallery(){
+		return hasRenderLabel() || isRotSpectraFile();
+	}
 
 	// some mode shortcuts
 	public boolean isGalleryMode() {
-		return mode == MODE_GALLERY_MD || mode == MODE_GALLERY_VOL;
+		return mode == Mode.GALLERY_MD || 
+				mode == Mode.GALLERY_VOL ||
+				mode == Mode.GALLERY_ROTSPECTRA;
 	}
 
 	public boolean isVolumeMode() {
-		return mode == MODE_GALLERY_VOL;
+		return mode == Mode.GALLERY_VOL;
 	}
 
 	public boolean isTableMode() {
-		return mode == MODE_TABLE_MD;
+		return mode == Mode.TABLE_MD;
+	}
+	
+	public boolean isRotSpectraMode(){
+		return mode == Mode.GALLERY_ROTSPECTRA;
 	}
 	
 	public boolean isMicrographsMode(){
@@ -300,11 +311,13 @@ public class GalleryData {
 	// utility function to change of mode
 	public void changeMode() {
 		if (isGalleryMode())
-			mode = MODE_TABLE_MD;
+			mode = Mode.TABLE_MD;
+		else if (isRotSpectraFile())
+			mode = Mode.GALLERY_ROTSPECTRA;
 		else if (numberOfVols > 0)
-			mode = MODE_GALLERY_VOL;
+			mode = Mode.GALLERY_VOL;
 		else
-			mode = MODE_GALLERY_MD;
+			mode = Mode.GALLERY_MD;
 	}
 
 	/** following function only should be used in VolumeGallery mode */
@@ -368,7 +381,17 @@ public class GalleryData {
 			e.printStackTrace();
 		}
 		return false;
-	}	
+	}
+	
+	public boolean isRotSpectraFile(){
+		String fnVectors = filename.replace("classes", "vectors");
+		String fnVectorsData = fnVectors.replace(".xmd", ".vec");
+		//TODO: CHECK if is a classification md
+		if (Filename.exists(fnVectors) && 
+			Filename.exists(fnVectorsData))
+			return true;
+		return false;
+	}
 	
 	public String getValueFromCol(int index, int col){
 		return getValueFromCol(index, labels.get(col));

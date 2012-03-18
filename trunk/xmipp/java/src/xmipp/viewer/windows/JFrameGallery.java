@@ -23,6 +23,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+
 package xmipp.viewer.windows;
 
 import ij.ImagePlus;
@@ -134,10 +135,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	protected JComboBox jcbVolumes;
 	protected JLabel jlBlocks;
 	protected JLabel jlVolumes;
+	protected TasksEngine ctfTasks;
 	// private javax.swing.JToggleButton jtbNormalize;
 	// private javax.swing.JToggleButton jtbUseGeometry;
-	private javax.swing.JTable table;
-	private javax.swing.JToolBar toolBar;
+	private JTable table;
+	private JToolBar toolBar;
 	private int width = -1;
 
 	protected static final float MAX_HEIGHT_RATE = 2.0f / 3.0f;
@@ -218,6 +220,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		// Create file chooser and set current dir
 		fc = new JFileChooser();
 		fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		ctfTasks = new TasksEngine(JFrameGallery.this);
 
 		isUpdating = true; // avoid handling some changes events
 
@@ -320,7 +323,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			gallery.setColumns(data.parameters.columns);
 		else if (data.parameters.rows > 0)
 			gallery.setRows(data.parameters.rows);
-		else
+		else if (!data.isRotSpectraMode())
 			adjust = true;
 		if (data.isMicrographsMode()){
 			setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -699,7 +702,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		btnChangeView.setToolTipText(text);
 		if (data.isTableMode()) { // if we are in table mode only allow change
 									// if exist render label
-			boolean hasRender = data.hasRenderLabel();
+			boolean hasRender = data.allowGallery();
 			btnChangeView.setEnabled(hasRender);
 			jsZoom.setEnabled(hasRender);
 			jlZoom.setEnabled(hasRender);
@@ -1215,11 +1218,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				ImageGeneric img = new ImageGeneric(displayFilename);
 				ImagePlus imp = XmippImageConverter.readToImagePlus(img);
 				
+				
 				if (profile)
 					ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
 				else 
 					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, 
-							new TasksEngine(JFrameGallery.this), data.md.getFilename(), row);
+							ctfTasks, data.md.getFilename(), row);
 					
 			} catch (Exception e) {
 				XmippDialog.showError(JFrameGallery.this, e.getMessage());
