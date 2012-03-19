@@ -34,8 +34,7 @@ class CtfMicrographStructEmx(Structure):
             ("astigmatism_angle",c_float),
             ("voltage",c_float),
             ("Cs",c_float),
-            ("amplitude_contrast",c_float),
-            ("BlockName",c_char_p)
+            ("amplitude_contrast",c_float)
             ]
     prefix = prefix_micrograph
     def __init__(self, 
@@ -47,8 +46,7 @@ class CtfMicrographStructEmx(Structure):
             astigmatism_angle=0.,
             voltage=0.,
             Cs=0.,
-            amplitude_contrast=0.,
-            BlockName="dummyBlock"
+            amplitude_contrast=0.
                  ):
         super(CtfMicrographStructEmx, self).__init__( 
             url,
@@ -59,8 +57,7 @@ class CtfMicrographStructEmx(Structure):
             astigmatism_angle,
             voltage,
             Cs,
-            amplitude_contrast,
-            BlockName
+            amplitude_contrast
             )
 
 
@@ -102,7 +99,7 @@ class CtfMicrographStructXmd(Structure):
             )
 ###############Aligment
 
-class ParticleAlignmentEMX(Structure):
+class ParticleAlignmentStructEmx(Structure):
     _fields_ = [
                 ("url",c_char_p),
                 ("transformation_matrix_1_1",c_float),
@@ -118,8 +115,7 @@ class ParticleAlignmentEMX(Structure):
                 ("transformation_matrix_3_3",c_float),
                 ("transformation_matrix_offset_z",c_float),
                 ("enable",c_int),
-                ("FOM",c_float),
-                ("BlockName",c_char_p)
+                ("FOM",c_float)
                 ]
     prefix = prefix_particle
     def __init__(self, 
@@ -137,10 +133,9 @@ class ParticleAlignmentEMX(Structure):
             transformation_matrix_3_3=1.,
             transformation_matrix_offset_z=0.,
             enable=1,
-            FOM=1.,
-            BlockName="dummyBlock"
+            FOM=1.
                  ):
-        super(ParticleAlignmentEMX, self).__init__( 
+        super(ParticleAlignmentStructEmx, self).__init__( 
                 url,
                 transformation_matrix_1_1,
                 transformation_matrix_1_2,
@@ -155,25 +150,10 @@ class ParticleAlignmentEMX(Structure):
                 transformation_matrix_3_3,
                 transformation_matrix_offset_z,
                 enable,
-                FOM,
-                BlockName
+                FOM
             )
 
-
-#    needed_itemsXMIPP = (
-#         "_image",
-#         "_angleRot",
-#         "_angleTilt",
-#         "_anglePsi",
-#         "_shiftX",
-#         "_shiftY",
-#         "_shiftZ",
-#         "_flip",
-#         "_scale",
-#         "_enabled",
-#         "_fom"
-#        )
-class ParticleAlignmentXmd(Structure):
+class ParticleAlignmentStructXmd(Structure):
     _fields_ = [
                 ("image",c_char_p),
                 ("angleRot",c_float),
@@ -184,9 +164,8 @@ class ParticleAlignmentXmd(Structure):
                 ("shiftZ",c_float),
                 ("flip",c_int),
                 ("scale",c_float),
-                ("enabled",c_float),
-                ("fom",c_float),
-                ("BlockName",c_char_p)
+                ("enable",c_int),
+                ("fom",c_float)
                ]
     prefix = "_"
     
@@ -200,12 +179,11 @@ class ParticleAlignmentXmd(Structure):
             shiftZ=0.,
             flip=0,
             scale=1.,
-            enabled=1,
-            fom=1.,
-            BlockName="dumyBlock"
+            enable=1,
+            fom=1.
             ):
         
-        super(ParticleAlignmentXmd, self).__init__(
+        super(ParticleAlignmentStructXmd, self).__init__(
             image,
             angleRot,
             angleTilt,
@@ -215,11 +193,10 @@ class ParticleAlignmentXmd(Structure):
             shiftZ,
             flip,
             scale,
-            enabled,
-            fom,
-            BlockName
+            enable,
+            fom
             )
-##################aligment
+##################aligment_end
 class BlockNamesEMX(Structure):
     _fields_ = [("BlockName", c_char_p),
                 ("size", c_int)]
