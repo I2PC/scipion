@@ -199,6 +199,7 @@ void MDObject::copy(const MDObject &obj)
 {
     label = obj.label;
     type = obj.type;
+    chr = obj.chr;
     if (type == LABEL_STRING)
     {
         delete data.stringValue;
@@ -273,6 +274,7 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
 MDObject::MDObject(MDLabel label)
 {
     this->label = label;
+    chr = _SPACE;
     if (label != MDL_UNDEFINED)
     {
         type = MDL::labelType(label);
@@ -452,11 +454,11 @@ void MDObject::setValue(const size_t &lv)
 }
 void MDObject::setValue(const float &floatvalue)
 {
-	setValue((double) floatvalue);
+    setValue((double) floatvalue);
 }
 void MDObject::setValue(const char*  &charvalue)
 {
-	setValue(String(charvalue));
+    setValue(String(charvalue));
 }
 
 #define DOUBLE2STREAM(d) \
@@ -471,12 +473,6 @@ void MDObject::setValue(const char*  &charvalue)
 
 void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
 {
-    String c = (isSql) ? "'" : "";
-    size_t size;
-    double v;
-    std::vector<size_t> &vector = *(data.vectorValueLong);
-    std::vector<double> &vectorDouble = *(data.vectorValue);
-
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << data.stringValue;
     else
@@ -495,25 +491,44 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
             DOUBLE2STREAM(data.doubleValue);
             break;
         case LABEL_STRING:
-            os << c << *(data.stringValue) << c;
+            {
+                char c = _SPACE;
+                if (isSql || data.stringValue->find_first_of(_DQUOT) != String::npos)
+                    c = _QUOT;
+                else if (data.stringValue->find_first_of(_QUOT) != String::npos)
+                    c = _DQUOT;
+                else if (data.stringValue->find_first_of(_SPACE) != String::npos)
+                    c = _QUOT;
+
+                if (c == _SPACE)
+                    os << *(data.stringValue);
+                else
+                    os << c << *(data.stringValue) << c;
+            }
             break;
         case LABEL_VECTOR:
-            os << "[ ";
-            size = vectorDouble.size();
-            for (int i = 0; i < size; i++)
             {
-                v = vectorDouble[i];
-                DOUBLE2STREAM(v);
-                os << " ";
+                std::vector<double> &vectorDouble = *(data.vectorValue);
+                os << _QUOT << " ";
+                size_t size = vectorDouble.size();
+                for (size_t i = 0; i < size; i++)
+                {
+                    double v = vectorDouble[i];
+                    DOUBLE2STREAM(v);
+                    os << " ";
+                }
+                os << _QUOT;
             }
-            os << "]";
             break;
         case LABEL_VECTOR_LONG:
-            os << "[ ";
-            size = vector.size();
-            for (int i = 0; i < size; i++)
-                os << vector[i] << " ";
-            os << "]";
+            {
+                std::vector<size_t> &vector = *(data.vectorValueLong);
+                os << _QUOT << " ";
+                size_t size = vector.size();
+                for (size_t i = 0; i < size; i++)
+                    os << vector[i] << " ";
+                os << _QUOT;
+            }
             break;
 
         }//close switch
@@ -570,29 +585,45 @@ bool MDObject::fromStream(std::istream &is)
             is >> data.doubleValue;
             break;
         case LABEL_STRING:
-            //if (data.stringValue == NULL)
-            //    data.stringValue = new std::string;
-            is >> *(data.stringValue);
+            {
+                data.stringValue->clear();
+                String s;
+                is >> s;
+                char chr = s[0];
+                if (chr == _QUOT || chr == _DQUOT)
+                {
+                    s = s.substr(1, s.size() - 1); //remove first char '
+                    while (s.find_last_of(chr) == String::npos)
+                    {
+                        data.stringValue->append(s + " ");
+                        is >> s;
+                    }
+                    s = s.substr(0, s.size() - 1); //remove last char '
+                }
+                else
+                    chr = _SPACE;
+                data.stringValue->append(s);
+            }
             break;
         case LABEL_VECTOR:
-            is.ignore(256, '[');
+            is.ignore(256, _QUOT);
             //if (data.vectorValue == NULL)
             //  data.vectorValue = new std::vector<double>;
             data.vectorValue->clear();
             while (is >> d) //This will stop at ending "]"
                 data.vectorValue->push_back(d);
             is.clear(); //this is for clear the fail state after found ']'
-            is.ignore(256, ']'); //ignore the ending ']'
+            is.ignore(256, _QUOT); //ignore the ending ']'
             break;
         case LABEL_VECTOR_LONG:
-            is.ignore(256, '[');
+            is.ignore(256, _QUOT);
             //if (data.vectorValue == NULL)
             //  data.vectorValue = new std::vector<double>;
             data.vectorValueLong->clear();
             while (is >> value) //This will stop at ending "]"
                 data.vectorValueLong->push_back(value);
             is.clear(); //this is for clear the fail state after found ']'
-            is.ignore(256, ']'); //ignore the ending ']'
+            is.ignore(256, _QUOT); //ignore the ending ']'
             break;
         }
     }
@@ -747,7 +778,7 @@ void MDRow::copy(const MDRow &row)
             if (*ptrObjectsLabel == NULL)
                 *ptrObjectsLabel = new MDObject(*(*ptrRowObjectsLabel));
             else
-            	(*ptrObjectsLabel)->copy(*(*ptrRowObjectsLabel));
+                (*ptrObjectsLabel)->copy(*(*ptrRowObjectsLabel));
         }
         ++ptrObjectsLabel;
         ++ptrRowObjectsLabel;
