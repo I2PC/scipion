@@ -1230,15 +1230,17 @@ class ProtocolGUI(BasicGUI):
         extensions={}
         bestCount=0
         bestExt=""
+        imgExt=['.raw','.tif','.mrc','.dm3','.ser','.spi','.xmp']
         for fn in files:
             ext=os.path.splitext(fn)[1]
-            if ext in extensions.keys():
-                extensions[ext]+=1
-            else:
-                extensions[ext]=1
-            if extensions[ext]>bestCount:
-                bestCount=extensions[ext]
-                bestExt=ext
+            if ext in imgExt:                
+                if ext in extensions.keys():
+                    extensions[ext]+=1
+                else:
+                    extensions[ext]=1
+                if extensions[ext]>bestCount:
+                    bestCount=extensions[ext]
+                    bestExt=ext
         self.setVarValue("ExtMicrographs", "*"+bestExt)
 
     #Select Tilt pairs
