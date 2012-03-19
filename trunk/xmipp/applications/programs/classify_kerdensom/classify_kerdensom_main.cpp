@@ -205,7 +205,7 @@ public:
         for (unsigned i = 0; i < myMap->size(); i++)
         {
         	id=MDsummary.addObject();
-        	MDsummary.setValue(MDL_REF,(int)i,id);
+        	MDsummary.setValue(MDL_REF,(int)i+1,id);
         	MDsummary.setValue(MDL_CLASSIFICATION_INTRACLASS_DISTANCE,myMap->aveDistances[i],id);
         	MDsummary.setValue(MDL_COUNT,(size_t)myMap->classifSizeAt(i),id);
         }
@@ -228,10 +228,10 @@ public:
             	MD.setValue(MDL_IMAGE,fn,MD.addObject());
             	size_t id=MDimages.addObject();
             	MDimages.setValue(MDL_IMAGE,fn,id);
-            	MDimages.setValue(MDL_REF,(int) i,id);
+            	MDimages.setValue(MDL_REF,(int) i+1,id);
             }
             if (MD.size()>0)
-            	MD.write(formatString("class_%06d@%s",i,fnClasses.c_str()),MD_APPEND);
+            	MD.write(formatString("class_%06d@%s",i+1,fnClasses.c_str()),MD_APPEND);
         }
         MDimages.write(fn_root+"_images.xmd");
 
@@ -264,7 +264,7 @@ public:
         for (size_t i = 0; i < myMap->size(); i++)
         {
         	id=vectorContentOut.addObject();
-        	vectorContentOut.setValue(MDL_REF,(int)i,id);
+        	vectorContentOut.setValue(MDL_REF,(int)i+1,id);
         	vectorContentOut.setValue(MDL_ORDER,i,id);
         	fhVectorsRaw.write((char*)&(myMap->theItems[i][0]),vectorSize*sizeof(float));
         }
