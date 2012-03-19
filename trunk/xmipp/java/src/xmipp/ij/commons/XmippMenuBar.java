@@ -54,7 +54,7 @@ public class XmippMenuBar extends MenuBar
 
 	enum IJRequirement
 	{
-		BINARY, EIGHTBIT, IMAGEJ, STACK
+		BINARY, EIGHTBIT, IMAGEJ, STACK, THIRTYTWOBIT
 		
 	};
 
@@ -191,7 +191,7 @@ public class XmippMenuBar extends MenuBar
 
 		// image filters menu
 		addIJMenuItem(filtersmn, "Bandpass Filter", "Bandpass Filter...");
-		addIJMenuItem(filtersmn, "Anisotropic Diffusion", "Anisotropic Diffusion...");
+		addIJMenuItem(filtersmn, "Anisotropic Diffusion", "Anisotropic Diffusion...", IJRequirement.EIGHTBIT);
 		addIJMenuItem(filtersmn, "Mean Shift", "Mean Shift");
 
 		// menubar advanced menu
@@ -211,10 +211,10 @@ public class XmippMenuBar extends MenuBar
 
 		// advanced threshold menu
 		addIJMenuItem(thresholdingmn, "Threshold", "Threshold");
-		addIJMenuItem(thresholdingmn, "Otsu Threshold", "Otsu Thresholding");
+		addIJMenuItem(thresholdingmn, "Otsu Threshold", "Otsu Thresholding", IJRequirement.EIGHTBIT);
 		addIJMenuItem(thresholdingmn, "Multi Otsu Threshold", "Multi OtsuThreshold");
-		addIJMenuItem(thresholdingmn, "Maximum Entropy Threshold", "Entropy Threshold");
-		addIJMenuItem(thresholdingmn, "Mixture Modeling Threshold", "Mixture Modeling");
+		addIJMenuItem(thresholdingmn, "Maximum Entropy Threshold", "Entropy Threshold", IJRequirement.EIGHTBIT);
+		addIJMenuItem(thresholdingmn, "Mixture Modeling Threshold", "Mixture Modeling", IJRequirement.EIGHTBIT);
 		addIJMenuItem(thresholdingmn, "Robust Automatic Threshold Selection", "RATS ");
 		addIJMenuItem(thresholdingmn, "Simple Iterative Object Extraction", "SIOX Segmentation");
 		
@@ -225,7 +225,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(binarymn, "Dilate", "Dilate", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Open", "Open", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Close", "Close", IJRequirement.BINARY);
-		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology");// missing plugin
+		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology", IJRequirement.THIRTYTWOBIT);// missing plugin
 		addIJMenuItem(binarymn, "Outline", "Outline", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Fill Holes", "Fill Holes", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Skeletonize", "Skeletonize", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
@@ -253,7 +253,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(profilemn, "Oval Profile Plot", "Oval Profile", IJRequirement.IMAGEJ);
 		addIJMenuItem(profilemn, "Radial Profile Plot Angle", "Radial Profile Angle", IJRequirement.IMAGEJ);
 		addIJMenuItem(profilemn, "Radial Profile Plot Height", "Radial Profile Height", IJRequirement.IMAGEJ);
-		addIJMenuItem(profilemn, "Contour Plotter", "ContourPlotter");
+		addIJMenuItem(profilemn, "Contour Plotter", "ContourPlotter", IJRequirement.IMAGEJ);
 		
 
 		imagejmi.addActionListener(new ActionListener()
@@ -310,6 +310,9 @@ public class XmippMenuBar extends MenuBar
 							break;
 						case EIGHTBIT:
 							IJ.run("8-bit");
+							break;
+						case THIRTYTWOBIT:
+							IJ.run("32-bit");
 							break;
 						case STACK:
 							if(WindowManager.getCurrentImage().getImageStackSize() == 1)
