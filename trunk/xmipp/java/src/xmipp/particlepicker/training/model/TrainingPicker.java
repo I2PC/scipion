@@ -415,7 +415,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
-		}n 
+		}
 
 	}
 
