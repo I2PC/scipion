@@ -841,7 +841,6 @@ AddXmippProgram('volume_to_web')
 AddXmippProgram('xray_import', ['XmippRecons'])
 AddXmippProgram('xray_psf_create')
 AddXmippProgram('xray_project', ['XmippRecons'])
-env.Default(env.Command(join(env['prefix'], 'bin', 'xmipp'), join('protocols','batch_protocols.py'), SymLink))
 
 #if not int(env['release']):
 	#AddXmippProgram('xray_volume_correct', ['XmippRecons'])	
