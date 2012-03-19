@@ -132,6 +132,8 @@ void ProgAnalyzeCluster::produceSideInfo()
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         I.readApplyGeo( SFin, __iter.objId );
+        if (XSIZE(I())!=Xdim || YSIZE(I())!=Ydim)
+        	REPORT_ERROR(ERR_MULTIDIM_SIZE,"All images must be of the same size");
         I().setXmippOrigin();
         int idx=0;
         if (subtractRef)
