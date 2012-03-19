@@ -188,10 +188,12 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String DISPLAY_RESLICE_LEFT = "Display.Reslice.Left_mi";
 	public final String DISPLAY_RESLICE_RIGHT = "Display.Reslice.Right_mi";
 
-	public final String STATS = "Stats";
-	public final String STATS_AVGSTD = "Stats.AvgStd_mi";
-	public final String STATS_PCA = "Stats.Pca_mi";
-	public final String STATS_FSC = "Stats.Fsc_mi";
+	public final String METADATA = "Metadata";
+	public final String CLASSES = "Metadata.Classes";
+	public final String STATS = "Metadata.Stats";
+	public final String STATS_AVGSTD = "Metadata.Stats.AvgStd_mi";
+	public final String STATS_PCA = "Metadata.Stats.Pca_mi";
+	public final String STATS_FSC = "Metadata.Stats.Fsc_mi";
 	
 
 	public final static String ENABLED = "Enabled_mi";

@@ -1026,28 +1026,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	}
 
 	class GalleryMenu extends XmippMenuBarCreator {
-
-		public void update() {
-			boolean galMode = data.isGalleryMode();
-			boolean volMode = data.isVolumeMode();
-			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
-			setItemEnabled(FILE_SAVE, !volMode);
-			setItemEnabled(FILE_SAVEAS, !volMode);
-			setItemSelected(DISPLAY_NORMALIZE, gallery.getNormalized());
-			setItemEnabled(DISPLAY_APPLYGEO, data.containsGeometryInfo());
-			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo()
-					&& data.useGeo);
-			setItemSelected(DISPLAY_WRAP, data.wrap);
-			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
-			setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
-			setItemEnabled(DISPLAY_RENDERIMAGES,
-					!galMode && data.hasRenderLabel());
-			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
-			setItemEnabled(DISPLAY_COLUMNS, !galMode);
-			setItemEnabled(DISPLAY_RESLICE, volMode);
-			setItemEnabled(STATS, !volMode);
-		}// function update
-
+		
 		@Override
 		protected void createItems() throws Exception {
 			// File
@@ -1080,12 +1059,36 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(DISPLAY_RESLICE_BOTTOM, "Bottom (Y positive)");
 			addItem(DISPLAY_RESLICE_LEFT, "Left (X negative)");
 			addItem(DISPLAY_RESLICE_RIGHT, "Right (X positive)");
-			// Statistics
+			//Metadata operations
+			addItem(METADATA, "Metadata");
+			addItem(CLASSES, "Classes");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
 			addItem(STATS_FSC, "FSC");
 		}// function createItems
+
+		public void update() {
+			boolean galMode = data.isGalleryMode();
+			boolean volMode = data.isVolumeMode();
+			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
+			setItemEnabled(FILE_SAVE, !volMode);
+			setItemEnabled(FILE_SAVEAS, !volMode);
+			setItemSelected(DISPLAY_NORMALIZE, gallery.getNormalized());
+			setItemEnabled(DISPLAY_APPLYGEO, data.containsGeometryInfo());
+			setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo()
+					&& data.useGeo);
+			setItemSelected(DISPLAY_WRAP, data.wrap);
+			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
+			setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
+			setItemEnabled(DISPLAY_RENDERIMAGES,
+					!galMode && data.hasRenderLabel());
+			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
+			setItemEnabled(DISPLAY_COLUMNS, !galMode);
+			setItemEnabled(DISPLAY_RESLICE, volMode);
+			setItemEnabled(METADATA, data.is2DClassificationMd());
+			setItemEnabled(STATS, !volMode);
+		}// function update
 
 		@Override
 		protected void handleActionPerformed(ActionEvent e) {

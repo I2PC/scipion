@@ -114,8 +114,9 @@ public class GalleryData {
 		useGeo = containsGeometryInfo();
 		selection = new boolean[ids.length];
 
-		if (isRotSpectraMode())
+		if (isRotSpectraMd())
 		{
+			mode = Mode.GALLERY_ROTSPECTRA;
 			if (zoom == 0)
 				zoom = 100;
 			return;
@@ -282,7 +283,7 @@ public class GalleryData {
 	
 	/** Return true if the gallery mode is allowed */
 	public boolean allowGallery(){
-		return hasRenderLabel() || isRotSpectraFile();
+		return hasRenderLabel() || isRotSpectraMd();
 	}
 
 	// some mode shortcuts
@@ -312,7 +313,7 @@ public class GalleryData {
 	public void changeMode() {
 		if (isGalleryMode())
 			mode = Mode.TABLE_MD;
-		else if (isRotSpectraFile())
+		else if (isRotSpectraMd())
 			mode = Mode.GALLERY_ROTSPECTRA;
 		else if (numberOfVols > 0)
 			mode = Mode.GALLERY_VOL;
@@ -383,13 +384,40 @@ public class GalleryData {
 		return false;
 	}
 	
-	public boolean isRotSpectraFile(){
+	/** Return true if current metadata comes from 2d classification */
+	public boolean is2DClassificationMd(){
+		try {
+			if (!selectedBlock.equalsIgnoreCase("classes"))
+				return false;
+			int n = md.size();
+
+			for (int i = 1; i <= n; ++i)
+				if (!containsBlock(String.format("class_%06d", i)))
+					return false;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
+	/** Return true if current metadata is a rotspectra classes */
+	public boolean isRotSpectraMd(){
 		String fnVectors = filename.replace("classes", "vectors");
 		String fnVectorsData = fnVectors.replace(".xmd", ".vec");
 		//TODO: CHECK if is a classification md
-		if (Filename.exists(fnVectors) && 
+		if (is2DClassificationMd() &&
+			Filename.exists(fnVectors) && 
 			Filename.exists(fnVectorsData))
 			return true;
+		return false;
+	}
+	
+	/** Check if a block is present, ignore case */
+	public boolean containsBlock(String block){
+		for (String b: mdBlocks)
+			if (b.equalsIgnoreCase(block))
+				return true;
 		return false;
 	}
 	

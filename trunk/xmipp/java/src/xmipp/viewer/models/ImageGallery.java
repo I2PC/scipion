@@ -85,7 +85,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public ImageGallery(GalleryData data) throws Exception {
 		filename = data.filename;
 		this.data = data;
-		cols = -1;
+		cols = 0;
 		dimension = loadDimension();
 		columnModel = createColumnModel();
 		// Zdim will always be used as number of elements to display
@@ -95,7 +95,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		setZoomValue(data.zoom);
 		// This should be changed later after a call to
 		// setColumns or adjustColumns
-		if (cols < -1) {
+		if (cols < 1) {
 			cols = 1;
 			rows = n;
 		}
