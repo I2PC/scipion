@@ -63,7 +63,6 @@ class ParticlePickingConverter(EmxBase):
                                                     size=len(_auxList)))
 #        for item in self.blockNameListEMX:
 #            print item.BlockName, item.size
-#        exit(1)
 
     def readBlocksXMD(self):
         """ This function is pretty useless, think in removing it.
@@ -101,7 +100,7 @@ class ParticlePickingConverter(EmxBase):
                                         )
 #        for item in self.itemNameListEMX:
 #            print item.coordinate_x, item.coordinate_y, item.url
-#        exit(1)
+
     def startObject2XMD(self):
         for item in self.blockNameListXMD:
             blockName = item.BlockName   
@@ -182,70 +181,17 @@ class ParticlePickingConverter(EmxBase):
             self.outMetadata[block.BlockName] = myblock
         #get labels
         xmdStruct = ParticlePickingStructXmd()
-        _image_    = xmdStruct.prefix + xmdStruct._fields_[0][0]
-        _angleRot_ = xmdStruct.prefix + xmdStruct._fields_[1][0]
-        _angleTilt_= xmdStruct.prefix + xmdStruct._fields_[2][0]
-        _anglePsi_ = xmdStruct.prefix + xmdStruct._fields_[3][0]
-        _shiftX_   = xmdStruct.prefix + xmdStruct._fields_[4][0]
-        _shiftY_   = xmdStruct.prefix + xmdStruct._fields_[5][0]
-        _shiftZ_   = xmdStruct.prefix + xmdStruct._fields_[6][0]
-        _flip_     = xmdStruct.prefix + xmdStruct._fields_[7][0]
-        _scale_    = xmdStruct.prefix + xmdStruct._fields_[8][0]
-        _enable_   = xmdStruct.prefix + xmdStruct._fields_[9][0]
-        _fom_      = xmdStruct.prefix + xmdStruct._fields_[10][0]
-        
+        _Xcorr_ = xmdStruct.prefix + xmdStruct._fields_[0][0]
+        _Ycoor_ = xmdStruct.prefix + xmdStruct._fields_[1][0]
         #fill block
         for block in self.blockNameListXMD:
-            imageList    =[]
-            angleRotList =[]
-            angleTiltList=[]
-            anglePsiList =[]
-            shiftXList   =[]
-            shiftYList   =[]
-            shiftZList   =[]
-            flipList     =[]
-            scaleList    =[]
-            enableList   =[]
-            fomList      =[]
-
+            XcoorList =[]
+            YcoorList =[]
             for item in self.itemNameListXMD:
-                imageList.append(item.image)
-                angleRotList.append(str(item.angleRot)) 
-                angleTiltList.append(str(item.angleTilt))
-                anglePsiList.append(str(item.anglePsi)) 
-                shiftXList.append(str(item.shiftX))   
-                shiftYList.append(str(item.shiftY))   
-                shiftZList.append(str(item.shiftZ))   
-                flipList.append(str(item.flip))     
-                scaleList.append(str(item.scale))    
-                enableList.append(str(item.enable))   
-                fomList.append(str(item.fom))      
-            self.outMetadata[block.BlockName].AddCifItem(([[
-                                                            _image_,    
-                                                            _angleRot_, 
-                                                            _angleTilt_,
-                                                            _anglePsi_, 
-                                                            _shiftX_,   
-                                                            _shiftY_,   
-                                                            _shiftZ_,   
-                                                            _flip_,     
-                                                            _scale_,    
-                                                            _enable_,   
-                                                            _fom_      
-                                                            ]],
-                                                          [[
-                                                            imageList,    
-                                                            angleRotList, 
-                                                            angleTiltList,
-                                                            anglePsiList, 
-                                                            shiftXList,   
-                                                            shiftYList,   
-                                                            shiftZList,   
-                                                            flipList,     
-                                                            scaleList,    
-                                                            enableList,   
-                                                            fomList
-                                                        ]]))
+                if block.BlockName == item.MicName:
+                    XcoorList.append(str(item.Xcoor))
+                    YcoorList.append(str(item.Ycoor))
+            self.outMetadata[block.BlockName].AddCifItem(([[_Xcorr_,_Ycoor_]],[[XcoorList,YcoorList]]))
 
     def EMX2startObject(self):
         #create blocks in empty star file
