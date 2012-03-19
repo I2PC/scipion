@@ -26,8 +26,9 @@
 #ifndef XMIPP_ERROR_H
 #define XMIPP_ERROR_H
 
-#include <string>
 #include <iostream>
+#include "xmipp_strings.h"
+
 #ifdef LINUX
 #include <execinfo.h>
 #endif
@@ -202,8 +203,8 @@ enum ErrorType
  * This function is called when no exceptions are allowed.
  *
  */
-void _Xmipp_error(const ErrorType nerr, const std::string& what,
-                  const std::string &file, const long line);
+void _Xmipp_error(const ErrorType nerr, const String& what,
+                  const String &file, const long line);
 
 /** Show message and throw exception
  *
@@ -237,33 +238,38 @@ public:
     ErrorType __errno;
 
     /** Message shown */
-    std::string msg;
+    String msg;
 
     /** File producing the error */
-    std::string file;
+    String file;
 
     /** Line number */
     long line;
 
     /** Constructor */
-    XmippError(const ErrorType nerr, const std::string& what,
-               const std::string &fileArg, const long lineArg);
+    XmippError(const ErrorType nerr, const String& what,
+               const String &fileArg, const long lineArg);
     /** Destructor */
     ~XmippError();
 
     /** Show an error */
     friend std::ostream& operator<<(std::ostream& o, XmippError& XE);
 
+    /** Get message */
+    String getMessage() const;
+
     /** Get Default message */
-    char * getDefaultMessage();
+    char * getDefaultMessage() const;
 
     /** Get default message */
     static char * getDefaultMessage(ErrorType e);
+
+
 };
 
 /** Print a report warning and continue the execution.
  */
-void reportWarning(const std::string& what);
+void reportWarning(const String& what);
 
 /* @} */
 #endif

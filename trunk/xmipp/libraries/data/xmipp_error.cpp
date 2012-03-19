@@ -28,8 +28,8 @@
 #include "xmipp_color.h"
 
 /* Exception handling ------------------------------------------------------ */
-void _Xmipp_error(const ErrorType nerr, const std::string &what,
-                  const std::string &file, const long line)
+void _Xmipp_error(const ErrorType nerr, const String &what,
+                  const String &file, const long line)
 {
     XmippError xe(nerr, what, file, line);
     std::cerr << xe << std::endl;
@@ -39,8 +39,8 @@ void _Xmipp_error(const ErrorType nerr, const std::string &what,
 }
 
 // Object Constructor
-XmippError::XmippError(const ErrorType nerr, const std::string &what,
-                       const std::string &fileArg, const long lineArg)
+XmippError::XmippError(const ErrorType nerr, const String &what,
+                       const String &fileArg, const long lineArg)
 {
     __errno = nerr;
     msg = colorString(what.c_str(), RED);
@@ -73,10 +73,19 @@ std::ostream& operator << (std::ostream& o, XmippError& xe)
     return o;
 }
 
-char * XmippError::getDefaultMessage()
+String XmippError::getMessage() const
+{
+      String error = formatString("XMIPP_ERROR %d: %s\n   ", __errno, getDefaultMessage());
+      error += msg;
+      error += formatString("\n   File: %s line: %ld\n", file.c_str(), line);
+      return error;
+}
+
+char * XmippError::getDefaultMessage() const
 {
     return getDefaultMessage(__errno);
 }
+
 char * XmippError::getDefaultMessage(ErrorType e)
 {
     switch (e)
@@ -227,7 +236,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
     }
 }
 
-void reportWarning(const std::string& what)
+void reportWarning(const String& what)
 {
     String error = formatString("=== XMIPP_WARNING ===\n%s", what.c_str());
     std::cerr << colorString(error.c_str(), RED) << std::endl;

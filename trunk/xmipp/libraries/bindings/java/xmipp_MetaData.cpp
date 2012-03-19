@@ -707,6 +707,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
         MULTIDIM_ARRAY_GENERIC(*basis).getMultidimArrayPointer(mdArray);
 
         ProgAnalyzeCluster program;
+        program.verbose = 1;
         program.NPCA=4;
         program.Niter=10;
         program.dontMask=false;
