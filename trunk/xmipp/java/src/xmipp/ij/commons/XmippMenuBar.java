@@ -16,12 +16,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import xmipp.utils.XmippWindowUtil;
 
 /**
  * 
@@ -264,7 +262,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippWindowUtil.showImageJ(Tool.VIEWER);
+				XmippIJUtil.showImageJ(Tool.VIEWER);
 			}
 		});
 
@@ -305,7 +303,7 @@ public class XmippMenuBar extends MenuBar
 						switch (requirement)
 						{
 						case IMAGEJ:
-							XmippWindowUtil.showImageJ(Tool.VIEWER);
+							XmippIJUtil.showImageJ(Tool.VIEWER);
 							break;
 						case BINARY:
 							IJ.run("Make Binary");

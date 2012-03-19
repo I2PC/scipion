@@ -325,11 +325,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			gallery.setRows(data.parameters.rows);
 		else if (!data.isRotSpectraMode())
 			adjust = true;
-		if (data.isMicrographsMode()){
+		if (data.isMicrographsMode()) {
 			setExtendedState(JFrame.MAXIMIZED_BOTH);
 			width = getSize().width;
-		}
-		else{
+		} else {
 			int desiredCols = adjust ? (int) Math.ceil(Math.sqrt(gallery
 					.getSize())) : gallery.getColumnCount();
 			int desiredWidth = desiredCols * gallery.cellDim.width + 50;
@@ -523,7 +522,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					break;
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				XmippDialog.showException(JFrameGallery.this, e);
 			}
 			ImagesWindowFactory.releaseGUI(JFrameGallery.this.getRootPane());
 		}
@@ -613,27 +612,20 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		return filename.substring(0, dot) + ext;
 	}
 
-	public void pca() {
-		try {
-			ImageGeneric image = new ImageGeneric();
-			data.md.getPCAbasis(image,data.getRenderLabel());
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-			// new XmippImageWindow(imp, "PCA: " + data.filename);
-			imp.setTitle("PCA: " + data.filename);
-			ImagesWindowFactory.captureFrame(imp);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+	public void pca() throws Exception {
+		ImageGeneric image = new ImageGeneric();
+		data.md.getPCAbasis(image, data.getRenderLabel());
+		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
+		// new XmippImageWindow(imp, "PCA: " + data.filename);
+		imp.setTitle("PCA: " + data.filename);
+		ImagesWindowFactory.captureFrame(imp);
+
 	}
 
-	public void fsc() {
-		try {
-			JFrameFSC frame = new JFrameFSC(data);
-			XmippWindowUtil.centerWindows(frame, this);
-			frame.setVisible(true);
-		} catch (Exception ex) {
-			DEBUG.printException(ex);
-		}
+	public void fsc() throws Exception {
+		JFrameFSC frame = new JFrameFSC(data);
+		XmippWindowUtil.centerWindows(frame, this);
+		frame.setVisible(true);
 	}
 
 	private void reslice(RESLICE_MODE mode) throws Exception {
@@ -965,26 +957,28 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		if (evt.getButton() == MouseEvent.BUTTON1) { // Left click.
 			if (evt.getClickCount() > 1) {
 				try {
-					String imageFn = gallery.getImageFilenameAt(view_row, view_col);
+					String imageFn = gallery.getImageFilenameAt(view_row,
+							view_col);
 					if (imageFn != null)
 						new XmippImageWindow(imageFn);
-					} catch (Exception e) {
-						XmippDialog.showError(this, e.getMessage());
+				} catch (Exception e) {
+					XmippDialog.showError(this, e.getMessage());
 				}
-			}
-			else {
+			} else {
 				// Ctrl adds items to selection, otherwise previous ones are
 				// removed.
 				boolean move = true;
 				if (!evt.isControlDown() && !evt.isShiftDown()) {
-					if (gallery.getSelectedCount() <= 1 || XmippDialog.showWarning(this,
-										"You will lose previous selection.\nDo you want to proceed?")) {
-							gallery.clearSelection();
-							gallery.touchItem(view_row, view_col);
+					if (gallery.getSelectedCount() <= 1
+							|| XmippDialog
+									.showWarning(this,
+											"You will lose previous selection.\nDo you want to proceed?")) {
+						gallery.clearSelection();
+						gallery.touchItem(view_row, view_col);
 
-						} else
-							move = false;
-					}
+					} else
+						move = false;
+				}
 
 				else {
 
@@ -997,7 +991,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				}
 				if (move) {
 					isUpdating = true;
-					jsGoToImage.setValue(gallery.getIndex(view_row, view_col) + 1);
+					jsGoToImage
+							.setValue(gallery.getIndex(view_row, view_col) + 1);
 					isUpdating = false;
 				}
 				if (!evt.isShiftDown()) {
@@ -1023,7 +1018,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		}
 		table.invalidate();
 		table.repaint();
-	}//function tableMouseClicked 
+	}// function tableMouseClicked
 
 	private void autoAdjustColumns(boolean value) {
 		setAutoAdjustColumns(value);
@@ -1217,14 +1212,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 				ImageGeneric img = new ImageGeneric(displayFilename);
 				ImagePlus imp = XmippImageConverter.readToImagePlus(img);
-				
-				
+
 				if (profile)
 					ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
-				else 
-					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, 
+				else
+					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile,
 							ctfTasks, data.md.getFilename(), row);
-					
+
 			} catch (Exception e) {
 				XmippDialog.showError(JFrameGallery.this, e.getMessage());
 			}
@@ -1272,20 +1266,20 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	@Override
 	public void setRunning(boolean running) {
-		//XmippDialog.showInfo(this, String.format("Calculating ctf"));
-		//ImagesWindowFactory.blockGUI(getRootPane(), "Calculating CTF");
+		// XmippDialog.showInfo(this, String.format("Calculating ctf"));
+		// ImagesWindowFactory.blockGUI(getRootPane(), "Calculating CTF");
 	}
 
 	@Override
 	public void setRowBusy(int row) {
 		DEBUG.printFormat("setting busy row: %d\n", row);
-		((MicrographsTable)gallery).setRowBusy(row);
+		((MicrographsTable) gallery).setRowBusy(row);
 	}
 
 	@Override
 	public void setRowIdle(int row) {
 		DEBUG.printFormat("setting idle row: %d\n", row);
-		((MicrographsTable)gallery).setRowIdle(row);
+		((MicrographsTable) gallery).setRowIdle(row);
 	}
 
 	@Override
@@ -1296,6 +1290,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	@Override
 	public void done() {
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
-		
+
 	}
 }// class JFrameGallery

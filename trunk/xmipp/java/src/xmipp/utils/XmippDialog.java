@@ -149,6 +149,13 @@ public class XmippDialog extends JDialog  implements ActionListener {
 	public static boolean showError(JFrame parent, String message){
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR", message, "error.gif");
 		return dlg.showDialog();
+	}	
+	
+	public static boolean showException(JFrame parent, Exception e){
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR", e.getMessage(), "error.gif");
+		//TODO: Integrate the stack trace into the dialog
+		e.printStackTrace();
+		return dlg.showDialog();
 	}
 	
 }//class XmippDialog
