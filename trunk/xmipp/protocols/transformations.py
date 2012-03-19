@@ -778,7 +778,7 @@ def decompose_matrix(matrix):
         gamma = math.atan2(row[2,1], -row[2,0]);
         alpha = math.atan2(row[1,2],  row[0,2]);
         if (math.fabs(math.sin(gamma)) < FLT_EPSILON):
-            sign_sb = math.copysign(1., -row(0, 2) / math.cos(gamma));
+            sign_sb = math.copysign(1., -row[0, 2] / math.cos(gamma));
         else:
 	    if(math.sin(gamma) > 0):
 	         sign_sb = math.copysign(1.,row[2,1])
