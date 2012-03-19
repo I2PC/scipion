@@ -23,7 +23,7 @@ public class MicrographsTable extends MetadataTable {
 		ColumnInfo ctfModel = null;
 		ColumnInfo ctfModel2 = null;
 		for (ColumnInfo ci: data.labels){
-			if (ci.allowRender)
+			if (ci.allowRender && ci.getLabel() != MDLabel.MDL_MICROGRAPH)
 				ci.render = true;
 			if (ci.getLabel() == MDLabel.MDL_CTFMODEL)
 				ctfModel = ci;
