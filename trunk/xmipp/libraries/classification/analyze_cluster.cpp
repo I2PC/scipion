@@ -78,7 +78,7 @@ void ProgAnalyzeCluster::defineParams()
 
 // Produce side info  ======================================================
 //#define DEBUG
-void ProgAnalyzeCluster::produceSideInfo()
+void ProgAnalyzeCluster::produceSideInfo(MDLabel image_label)
 {
     basis = fnOutBasis!="";
 
@@ -103,7 +103,7 @@ void ProgAnalyzeCluster::produceSideInfo()
     // Prepare mask
     int Xdim,Ydim,Zdim;
     size_t Ndim;
-    getImageSize(SFin,Xdim,Ydim,Zdim,Ndim);
+    getImageSize(SFin,Xdim,Ydim,Zdim,Ndim,image_label);
     mask.resize(Ydim,Xdim);
     mask.setXmippOrigin();
     if (dontMask)
@@ -129,9 +129,11 @@ void ProgAnalyzeCluster::produceSideInfo()
     AlignmentAux aux;
     CorrelationAux aux2;
     RotationalCorrelationAux aux3;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
-        I.readApplyGeo( SFin, __iter.objId );
+    	SFin.getValue(image_label,fnImg,__iter.objId);
+        I.readApplyGeo( fnImg, SFin, __iter.objId );
         if (XSIZE(I())!=Xdim || YSIZE(I())!=Ydim)
         	REPORT_ERROR(ERR_MULTIDIM_SIZE,"All images must be of the same size");
         I().setXmippOrigin();

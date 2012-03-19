@@ -85,7 +85,7 @@ public:
     void defineParams();
 
     /// Produce side info
-    void produceSideInfo();
+    void produceSideInfo(MDLabel image_label=MDL_IMAGE);
 
     /// Produce basis
     void produceBasis(MultidimArray<double> &basis);

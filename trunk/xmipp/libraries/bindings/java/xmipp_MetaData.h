@@ -354,7 +354,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
  * Signature: (Lxmipp/ImageGeneric;)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jobject, jint);
 
 /*
  * Class:     xmipp_MetaData

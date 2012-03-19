@@ -616,7 +616,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	public void pca() {
 		try {
 			ImageGeneric image = new ImageGeneric();
-			data.md.getPCAbasis(image);
+			data.md.getPCAbasis(image,data.getRenderLabel());
 			ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
 			// new XmippImageWindow(imp, "PCA: " + data.filename);
 			imp.setTitle("PCA: " + data.filename);
