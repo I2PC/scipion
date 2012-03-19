@@ -36,10 +36,8 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.TasksEngine;
-import xmipp.viewer.rotspectra.JFrameRotSpectra;
 
 /**
  * 
@@ -371,13 +369,13 @@ public class ImagesWindowFactory {
 //		}
 //	}
 
-	public static void openRotSpectraWindow(String filenames[]) {
-		JFrameRotSpectra frame = new JFrameRotSpectra(filenames[0],
-									filenames[1], filenames[2]);
-		//ImagesWindowFactory.setConvenientSize(frame);
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
-	}
+//	public static void openRotSpectraWindow(String filenames[]) {
+//		JFrameRotSpectra frame = new JFrameRotSpectra(filenames[0],
+//									filenames[1], filenames[2]);
+//		//ImagesWindowFactory.setConvenientSize(frame);
+//		frame.setLocationRelativeTo(null);
+//		frame.setVisible(true);
+//	}
 
 	public static void openFileAsText(String filename, Component parent) {
 		JFrameTextfile frameText = new JFrameTextfile(filename);
