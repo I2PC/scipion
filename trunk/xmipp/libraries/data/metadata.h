@@ -928,6 +928,18 @@ public:
      */
     void fillConstant(MDLabel label, const String &value);
 
+    /** Fill column with random value
+     * mode should be: uniform, gaussian or student
+     * op1, op2 and op2 are interpreted for each mode:
+     * uniform: op1 and op2 are the limits of the interval
+     * gaussian: op1 and op2 are mean and std
+     * student: same as gaussian and use op3
+     */
+    void fillRandom(MDLabel label, const String &mode, double op1, double op2, double op3=0.);
+
+    /** Fill lineal, starting at some value and with some step */
+    void fillLineal(MDLabel label, double initial, double step);
+
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
 }

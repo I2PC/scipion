@@ -1219,18 +1219,30 @@ void MetaData::merge(const MetaData &md2)
     }
 }
 
+#define SET_AND_FILL() generator.label=label; generator.fill(*this)
+
 void MetaData::fillExpand(MDLabel label)
 {
     MDExpandGenerator generator;
-    generator.label=label;
-    generator.fill(*this);
+    SET_AND_FILL();
 }
 
 void MetaData::fillConstant(MDLabel label, const String &value)
 {
     MDConstGenerator generator(value);
-    generator.label=label;
-    generator.fill(*this);
+    SET_AND_FILL();
+}
+
+void MetaData::fillRandom(MDLabel label, const String &mode, double op1, double op2, double op3)
+{
+    MDRandGenerator generator(op1, op2, mode, op3);
+    SET_AND_FILL();
+}
+
+void MetaData::fillLineal(MDLabel label, double initial, double step)
+{
+   MDLinealGenerator generator(initial, step);
+   SET_AND_FILL();
 }
 
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,

@@ -320,13 +320,19 @@ typedef union
     std::vector<size_t> * vectorValueLong;
 } ObjectData;
 
+#define _SPACE ' '
+#define _QUOT '\''
+#define _DQUOT '"'
+
 /** Class to hold the labels values and type
  *
  */
 class MDObject
 {
 public:
+
     ObjectData data;
+    char chr; //literal char for string, could be SPACE, QUOT or DQUOT
 
     void labelTypeCheck(MDLabelType checkingType) const;
     void copy(const MDObject &obj);
