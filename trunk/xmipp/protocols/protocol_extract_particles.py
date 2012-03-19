@@ -155,12 +155,12 @@ class ProtExtractParticles(XmippProtocol):
         selfile = self.getFilename("family")
         if not exists(selfile):
             showError("Error", "There is no result yet")
-        if not self.TiltPairs:
-            if exists(self.micrographs):                    
-                os.system("xmipp_visualize_preprocessing_micrographj -i %s --memory 2048m &" % self.micrographs)
-        if exists(selfile):
+        else:
             from protlib_utils import runShowJ
-            runShowJ(selfile, memory="1024m")
+            if self.TiltPairs:
+                runShowJ(selfile,extraParams="--mode metadata --render")
+            else:
+                runShowJ(selfile)
     
     def createBlocksInExtractFile(self,fnMicrographsSel):
         md = MetaData(fnMicrographsSel)
