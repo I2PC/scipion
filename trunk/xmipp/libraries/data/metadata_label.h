@@ -166,6 +166,7 @@ enum MDLabel
     MDL_KERDENSOM_FUNCTIONAL, ///< Functional value (double)
     MDL_KERDENSOM_REGULARIZATION, ///< Regularization value (double)
     MDL_KERDENSOM_SIGMA, ///< Sigma value (double)
+    MDL_KEYWORDS, ///< Keywords associated to this line, should be a single string block (do not use spaces as separators)
     MDL_KSTEST, ///<KS-test statistics
     MDL_LL, ///< contribution of an image to log-likelihood value
     MDL_MAPTOPOLOGY, ///< Map topology (KerDenSOM, ...)
@@ -667,6 +668,7 @@ private:
         MDL::addLabel(MDL_KERDENSOM_FUNCTIONAL, LABEL_DOUBLE, "KerDenSOM_Functional");
         MDL::addLabel(MDL_KERDENSOM_REGULARIZATION, LABEL_DOUBLE, "KerDenSOM_Regularization");
         MDL::addLabel(MDL_KERDENSOM_SIGMA, LABEL_DOUBLE, "KerDenSOM_Sigma");
+        MDL::addLabel(MDL_KEYWORDS, LABEL_STRING, "Keywords");
         MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "KStest");
         MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood", TAGLABEL_NOTAG, "LL");
         MDL::addLabel(MDL_MAGNIFICATION, LABEL_DOUBLE, "Magnification");
