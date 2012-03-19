@@ -58,7 +58,7 @@ class ProtScreenMicrographs(XmippProtocol):
             micrographName = os.path.basename(inputFile)
             shortname = os.path.splitext(micrographName)[0]
             micrographDir = self.workingDirPath(shortname)                    
-            parent_id = self.insertParallelStep('createDir',verifyfiles=[micrographDir],path=micrographDir)
+            parent_id = self.insertParallelStep('createDir',verifyfiles=[micrographDir],path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP)
 
             # Downsample if necessary
             if self.DownsampleFactor != 1:
