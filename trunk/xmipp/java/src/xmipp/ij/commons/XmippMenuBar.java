@@ -170,7 +170,7 @@ public class XmippMenuBar extends MenuBar
 		// image info menu
 		addIJMenuItem(infomn, "Show Info", "Show Info...");
 		addIJMenuItem(infomn, "Properties", "Properties...");
-		addIJMenuItem(infomn, "Histogram", "Show Info...", IJRequirement.IMAGEJ);
+		addIJMenuItem(infomn, "Histogram", "Histogram", IJRequirement.IMAGEJ);
 		addIJMenuItem(infomn, "Plot Profile", "Plot Profile",  IJRequirement.IMAGEJ);
 
 		// image adjust menu
@@ -211,8 +211,8 @@ public class XmippMenuBar extends MenuBar
 
 		// advanced threshold menu
 		addIJMenuItem(thresholdingmn, "Threshold", "Threshold");
-		addIJMenuItem(thresholdingmn, "Otsu Threshold", "Otsu Thresholding", IJRequirement.IMAGEJ);
-		addIJMenuItem(thresholdingmn, "Multi Otsu Threshold", "Multi Otsu Threshold");
+		addIJMenuItem(thresholdingmn, "Otsu Threshold", "Otsu Thresholding");
+		addIJMenuItem(thresholdingmn, "Multi Otsu Threshold", "Multi OtsuThreshold");
 		addIJMenuItem(thresholdingmn, "Maximum Entropy Threshold", "Entropy Threshold");
 		addIJMenuItem(thresholdingmn, "Mixture Modeling Threshold", "Mixture Modeling");
 		addIJMenuItem(thresholdingmn, "Robust Automatic Threshold Selection", "RATS ");

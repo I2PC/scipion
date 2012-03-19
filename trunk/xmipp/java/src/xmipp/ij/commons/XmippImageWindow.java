@@ -87,6 +87,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	
 	public void windowClosing(WindowEvent e) {
 		super.windowClosing(e);
-		XmippIJUtil.getXmippImageJ().close();
+		if(XmippIJUtil.getXmippImageJ() != null)
+			XmippIJUtil.getXmippImageJ().close();
 	}
 }// class XmippImageWindow

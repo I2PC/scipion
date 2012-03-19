@@ -4,8 +4,6 @@
  */
 package xmipp.viewer.ctf;
 
-import xmipp.utils.WindowUtil;
-import xmipp.utils.XmippLabel;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -13,8 +11,8 @@ import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.process.EllipseFitter;
 import ij.process.ImageStatistics;
+
 import java.awt.BorderLayout;
-import java.awt.Button;
 import java.awt.Component;
 import java.awt.Panel;
 import java.awt.Rectangle;
@@ -24,6 +22,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
+
+import xmipp.utils.XmippWindowUtil;
 
 /**
  *
@@ -48,7 +48,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 
         ellipseCTF = new EllipseCTF(CTFFilename, imp.getWidth());
 
-        button = WindowUtil.getTextButton("Recalculate CTF", this);
+        button = XmippWindowUtil.getTextButton("Recalculate CTF", this);
         button.setEnabled(false);
 
         imp.getCanvas().addMouseListener(new MouseListener() {

@@ -1,24 +1,18 @@
 package xmipp.viewer.windows;
 
-import xmipp.utils.DEBUG;
-import xmipp.utils.WindowUtil;
-import xmipp.utils.XmippLabel;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.Line;
 import ij.gui.ProfilePlot;
+
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
-import java.awt.Button;
-import java.awt.Checkbox;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Panel;
 import java.awt.Point;
 import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
@@ -33,17 +27,15 @@ import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
@@ -54,11 +46,14 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.ij.commons.XmippImageConverter;
+import xmipp.utils.XmippLabel;
+import xmipp.utils.XmippWindowUtil;
 
 /*
  * To change this template, choose Tools | Templates
@@ -170,27 +165,27 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             rbPSD.addItemListener(this);
             rbCTF.addItemListener(this);
 
-            bExportProfile = WindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_PROFILE, this);
-            bExportAVG = WindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_RADIAL_AVERAGE, this);
+            bExportProfile = XmippWindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_PROFILE, this);
+            bExportAVG = XmippWindowUtil.getTextButton(XmippLabel.BUTTON_EXPORT_RADIAL_AVERAGE, this);
 
             JPanel panelCBoxes = new  JPanel(new GridBagLayout());
             //layout.
             gc.anchor = GridBagConstraints.WEST;
-            panelCBoxes.add(rbCTF, WindowUtil.getConstraints(gc, 0, 0));
-            panelCBoxes.add(rbPSD, WindowUtil.getConstraints(gc, 1, 0));
-            panelCBoxes.add(cbPSDTheo, WindowUtil.getConstraints(gc, 1, 1));
-            panelCBoxes.add(cbBgNoise, WindowUtil.getConstraints(gc, 1, 2));
+            panelCBoxes.add(rbCTF, XmippWindowUtil.getConstraints(gc, 0, 0));
+            panelCBoxes.add(rbPSD, XmippWindowUtil.getConstraints(gc, 1, 0));
+            panelCBoxes.add(cbPSDTheo, XmippWindowUtil.getConstraints(gc, 1, 1));
+            panelCBoxes.add(cbBgNoise, XmippWindowUtil.getConstraints(gc, 1, 2));
             gc.insets = new Insets(0, 0, 10, 10);
-            panelCBoxes.add(cbEnvelope, WindowUtil.getConstraints(gc, 1, 3));
+            panelCBoxes.add(cbEnvelope, XmippWindowUtil.getConstraints(gc, 1, 3));
             gc.weightx = 1.0;
-            panelCBoxes.add(bExportProfile, WindowUtil.getConstraints(gc, 0, 4, 2));
-            panelCBoxes.add(bExportAVG, WindowUtil.getConstraints(gc, 0, 5, 2));
+            panelCBoxes.add(bExportProfile, XmippWindowUtil.getConstraints(gc, 0, 4, 2));
+            panelCBoxes.add(bExportAVG, XmippWindowUtil.getConstraints(gc, 0, 5, 2));
             // Adds panels.
             //setLayout(new BorderLayout());
-            add(panelImage, WindowUtil.getConstraints(gc, 0, 0));
-            add(pCenter, WindowUtil.getConstraints(gc, 1, 0, 2, 2));
+            add(panelImage, XmippWindowUtil.getConstraints(gc, 0, 0));
+            add(pCenter, XmippWindowUtil.getConstraints(gc, 1, 0, 2, 2));
             gc.anchor = GridBagConstraints.EAST;
-            add(panelCBoxes,WindowUtil.getConstraints(gc, 0, 1));
+            add(panelCBoxes,XmippWindowUtil.getConstraints(gc, 0, 1));
             // Store initial values.
             centerDisplay = new Point(imp.getWidth() / 2, imp.getHeight() / 2);
             centerPSD = new Point(psdimage.getWidth() / 2, psdimage.getHeight() / 2);
