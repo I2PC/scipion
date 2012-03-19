@@ -334,7 +334,8 @@ class XmippProtocolDb(SqliteDb):
         self.runBehavior = getattr(protocol, 'Behavior', 'Resume')
         self.dbName = protocol.project.dbName
         self.Import = protocol.Import  
-        self.Log = protocol.Log             
+        self.Log = protocol.Log  
+        self.NumberOfMpi = getattr(protocol, 'NumberOfMpi', 1) 
         self.sqlDict = projectDefaults
         self.connection = sqlite.Connection(self.dbName)
         self.connection.row_factory = sqlite.Row
@@ -511,7 +512,7 @@ class XmippProtocolDb(SqliteDb):
                 while i < n and steps[i]['execution_mode'] > SqliteDb.EXEC_MAINLOOP:
                     i += 1
                 if first < i: # There are parallel steps
-                    mpiForParallelSteps = steps[first]["execution_mode"]
+                    mpiForParallelSteps = self.NumberOfMpi
                     fromStep = steps[first]['step_id']
                     if i < n: 
                         toStep = steps[i]['step_id']
