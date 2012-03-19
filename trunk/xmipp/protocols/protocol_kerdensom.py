@@ -26,8 +26,10 @@ class ProtKerdensom(XmippProtocol):
         self.Db.insertStep('rewriteClassBlock',WorkingDir=self.WorkingDir)
 
     def summary(self):
-        message=[]
-        message.append("Classification of "+self.InSelFile+" into a map of size "+str(self.SomYdim)+"x"+str(self.SomXdim))
+        message = ["KerdenSOM classification"]
+        message.append("  Input classes: [%s]" % self.InSelFile)
+        message.append("  Map size: <%(SomYdim)d> x <%(SomXdim)d>" % self.ParamsDict)
+
         if self.getRunState()==SqliteDb.RUN_STARTED:
             lines=[]
             for line in open(self.LogPrefix+".err").readlines():
@@ -38,8 +40,9 @@ class ProtKerdensom(XmippProtocol):
     
     def validate(self):
         errors = []
-        if self.SomReg0<self.SomReg1:
-            errors.append("Regularization must decrease over iterations: Initial regularization must be larger than final")
+        if self.SomReg0 < self.SomReg1:
+            errors.append("Regularization must decrease over iterations:")
+            errors.append("    Initial regularization must be larger than final")
         return errors
     
     def visualize(self):

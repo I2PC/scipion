@@ -44,8 +44,7 @@ class ProtRotSpectra(XmippProtocol):
         return errors
     
     def summary(self):
-        message = []
-        message.append("Classification of the rotational spectra")
+        message = ["Classification of the rotational spectra"]
         message.append("  Input classes: [%s]" % self.InSelFile)
         message.append("  Map size: <%(SomYdim)d> x <%(SomXdim)d>" % self.ParamsDict)
         
