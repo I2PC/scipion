@@ -2258,13 +2258,12 @@ static PyObject *
 MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label, pos = -1;
-    PyObject *pyValue;
     if (PyArg_ParseTuple(args, "i|i", &label, &pos))
     {
         try
         {
             MetaDataObject *self = (MetaDataObject*) obj;
-            self->metadata->addLabel((MDLabel) label);
+            self->metadata->addLabel((MDLabel) label, pos);
             Py_RETURN_TRUE;
         }
         catch (XmippError &xe)
@@ -2274,6 +2273,37 @@ MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* addLabel */
+static PyObject *
+MetaData_fillConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyValue = NULL, *pyStr = NULL;
+    if (PyArg_ParseTuple(args, "i|O", &label, &pyValue))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            if ((pyStr = PyObject_Str(pyValue)) != NULL)
+            {
+                char * str = PyString_AsString(pyStr);
+                if (str != NULL)
+                {
+                  self->metadata->fillConstant((MDLabel) label, str);
+                  Py_RETURN_TRUE;
+                }
+            }
+            PyErr_SetString(PyXmippError, "MetaData.fillConstant: couldn't convert second argument to string");
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* removeObjects */
 static PyObject *
 MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -2502,6 +2532,8 @@ MetaData_methods[] =
           "True if this metadata contains this label" },
         { "addLabel", (PyCFunction) MetaData_addLabel,
           METH_VARARGS, "Add a new label to MetaData" },
+        { "fillConstant", (PyCFunction) MetaData_fillConstant,
+          METH_VARARGS, "Fill a column with constant value" },
         { "makeAbsPath", (PyCFunction) MetaData_makeAbsPath,
           METH_VARARGS,
           "Make filenames with absolute paths" },
