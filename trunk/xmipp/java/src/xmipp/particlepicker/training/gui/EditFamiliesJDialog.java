@@ -22,6 +22,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.particlepicker.Family;
+import xmipp.utils.ColorEditor;
+import xmipp.utils.ColorRenderer;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
@@ -65,10 +67,10 @@ public class EditFamiliesJDialog extends JDialog {
 		groupstb.setDefaultEditor(Color.class, new ColorEditor(position));
 		sp.setViewportView(groupstb);
 		add(groupstbpn, XmippWindowUtil.getConstraints(constraints, 0, 0, 3));
-		addbt = new JButton("Add");
-		deletebt = new JButton("Delete");
+		addbt = XmippWindowUtil.getTextButton("Add", null);
+		deletebt = XmippWindowUtil.getTextButton("Delete", null);
 		deletebt.setEnabled(false);
-		okbt = new JButton("Ok");
+		okbt = XmippWindowUtil.getTextButton("Ok", null);
 
 		add(addbt, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		add(deletebt, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));

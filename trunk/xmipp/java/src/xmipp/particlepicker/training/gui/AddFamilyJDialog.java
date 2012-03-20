@@ -21,6 +21,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import xmipp.particlepicker.Family;
+import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippWindowUtil;
 
 public class AddFamilyJDialog extends JDialog implements ActionListener

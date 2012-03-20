@@ -51,6 +51,8 @@ import xmipp.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.ColorIcon;
+import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 import xmipp.jni.Program;

@@ -1,4 +1,4 @@
-package xmipp.particlepicker.training.gui;
+package xmipp.utils;
 
 import java.awt.Color;
 import java.awt.Component;

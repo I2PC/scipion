@@ -39,8 +39,8 @@ import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
-import xmipp.particlepicker.training.gui.ColorIcon;
 import xmipp.particlepicker.training.model.TrainingParticle;
+import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippWindowUtil;
 
 

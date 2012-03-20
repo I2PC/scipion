@@ -29,7 +29,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-package xmipp.particlepicker.training.gui;
+package xmipp.utils;
 
 /* 
  * ColorEditor.java (compiles with releases 1.3 and 1.4) is used by 
@@ -43,7 +43,6 @@ import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JTable;
 
-import xmipp.utils.XmippWindowUtil;
 
 import java.awt.Color;
 import java.awt.Component;
