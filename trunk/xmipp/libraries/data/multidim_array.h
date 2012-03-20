@@ -4745,10 +4745,6 @@ public:
         return *this;
     }
 
-    template<typename T1>
-    MultidimArray<T>& operator=(const MultidimArray<T1>& op1)
-{}
-
     /** Assignment.
      *
      * You can build as complex assignment expressions as you like. Multiple
