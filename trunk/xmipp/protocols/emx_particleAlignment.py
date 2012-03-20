@@ -293,11 +293,14 @@ class ParticleAlignmentConverter(EmxBase):
                                 ])
 #            ListEulerMatrices.append(_matrix)
             _scale, _shear, _angles, _trans, _persp = decompose_matrix(_matrix)
-            if ((_scale[0]!=_scale[1]) or (_scale[1]!=_scale[2]) or (_scale[0]!=_scale[2])):
+            if (   (math.fabs(_scale[0] - _scale[1]) > 0.001) 
+                or (math.fabs(_scale[1] - _scale[2]) > 0.001) 
+                or (math.fabs(_scale[0] - _scale[2]) > 0.001)
+                ):
                 print "Scale is not equal in all directions"
                 print "XMIPP cannot handle different scales in each direction"
                 print "scale in x direction will be used"
-                
+                print _scale[0],_scale[1],_scale[2]
             self.itemNameListXMD.append(ParticleAlignmentStructXmd
                                            (image     = item.url,
                                             angleRot  = _angles[0]*180./_pi,
