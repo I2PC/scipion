@@ -53,7 +53,8 @@ class CtfMicrographStructEmx(Structure):
             ("astigmatism_angle",c_float),
             ("voltage",c_float),
             ("Cs",c_float),
-            ("amplitude_contrast",c_float)
+            ("amplitude_contrast",c_float),
+            ("BlockName",c_char_p)
             ]
     prefix = prefix_micrograph
     def __init__(self, 
@@ -65,7 +66,8 @@ class CtfMicrographStructEmx(Structure):
             astigmatism_angle=0.,
             voltage=0.,
             Cs=0.,
-            amplitude_contrast=0.
+            amplitude_contrast=0.,
+            BlockName="defaultBlockName"
                  ):
         super(CtfMicrographStructEmx, self).__init__( 
             url,
@@ -76,7 +78,8 @@ class CtfMicrographStructEmx(Structure):
             astigmatism_angle,
             voltage,
             Cs,
-            amplitude_contrast
+            amplitude_contrast,
+            BlockName,
             )
 
 
