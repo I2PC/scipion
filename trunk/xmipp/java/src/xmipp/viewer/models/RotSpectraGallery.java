@@ -26,18 +26,25 @@
 
 package xmipp.viewer.models;
 
-import java.awt.Dimension;
+import java.awt.Image;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.ArrayList;
+
+import javax.swing.JFrame;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.viewer.ImageDimension;
-import xmipp.viewer.RotSpectraItem;
 
 public class RotSpectraGallery extends MetadataGallery {
 
@@ -84,15 +91,9 @@ public class RotSpectraGallery extends MetadataGallery {
 		double vectors[][] = loadVectors(filenameData, nvectors, vectorsSize);
 
 		vectorItems = new ArrayList<RotSpectraItem>(nvectors);
-		String key;
-		RotSpectraItem item;
 		
-		for (int i = 0; i < vectors.length; i++) {
-			key = String.format("class %d", i);
-			item = new RotSpectraItem(key, key, vectors[i]);
-			item.cellDim = new Dimension();
-			vectorItems.add(item);
-		}
+		for (int i = 0; i < vectors.length; i++) 
+			vectorItems.add(new RotSpectraItem(i, vectors[i]));
 	}
 
 	static double[][] loadVectors(String filename, int nvectors, int size)
@@ -116,8 +117,7 @@ public class RotSpectraGallery extends MetadataGallery {
 		int index = getIndex(row, col);
 		if (index < n) {
 			RotSpectraItem item = vectorItems.get(index);
-			item.showLabel = data.showLabel;
-			item.cellDim.setSize(thumb_width, thumb_height);
+			//item.cellDim.setSize(thumb_width, thumb_height);
 			return item;
 		}
 		return null;
@@ -127,4 +127,54 @@ public class RotSpectraGallery extends MetadataGallery {
 	public boolean adjustColumn(int width) {
 		return false;
 	}
+	
+	public class RotSpectraItem extends ImageItem{
+
+	    JFreeChart chart;
+	    double vector[];
+
+	    public RotSpectraItem(int index, double vector[]) {
+	        super(index);
+	        this.vector = vector;
+	        chart = createChart();
+	    }
+
+	    /** Create chart based on vector data */
+	    private JFreeChart createChart() {
+	        XYSeries series = new XYSeries(getLabel());
+
+	        for (int i = 0; i < vector.length; i++) 
+	            series.add((double) i, vector[i]);
+
+	        XYSeriesCollection dataset = new XYSeriesCollection(series);
+
+	        JFreeChart chart = ChartFactory.createXYLineChart(
+	                "", "", "",
+	                dataset, PlotOrientation.VERTICAL,
+	                true, true, false);
+
+	        chart.removeLegend();
+
+	        return chart;
+	    }//function createChart
+
+	    @Override
+	    public Image getImage() {
+	        return chart.createBufferedImage(cellDim.width, cellDim.height);
+	    }
+
+	    public JFrame getChart() {
+	        ChartPanel panel = new ChartPanel(chart);
+	        JFrame frame = new JFrame();
+	        frame.setTitle(getLabel());
+	        frame.getContentPane().add(panel);
+	        frame.pack();
+	        return frame;
+	    }
+		
+		@Override
+		public String getLabel(){
+			return String.format("class %d", index);
+		}
+	}//class RotSpectraItem
 }// class RotSpectraGallery

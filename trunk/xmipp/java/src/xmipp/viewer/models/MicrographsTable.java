@@ -6,7 +6,6 @@ import xmipp.jni.MDLabel;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
-import xmipp.viewer.ImageItem;
 
 @SuppressWarnings("serial")
 public class MicrographsTable extends MetadataTable {
@@ -49,18 +48,6 @@ public class MicrographsTable extends MetadataTable {
 		return super.loadDimension();
 		
 	}//function loadDimension
-	
-	
-	@Override
-	public Object getValueAt(int row, int col) {
-		Object obj = super.getValueAt(row, col);
-		
-		if (visibleLabels.get(col).render && busyRows.contains(row)) {
-			ImageItem ii  = (ImageItem) obj;
-			ii.isBusy = true;
-		}
-		return obj;
-	}
 
     @Override
     public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
@@ -69,6 +56,11 @@ public class MicrographsTable extends MetadataTable {
         xpopup.setItemVisible(XmippPopupMenuCreator.CTF_RECALCULATE, true);
         return true;
     }
+    
+	/** Check if the item is busy */
+	public boolean isBusy(int row, int col){
+		return busyRows.contains(row);
+	}
     
 	public void setRowBusy(int row) {
 		busyRows.add(row);
@@ -79,6 +71,6 @@ public class MicrographsTable extends MetadataTable {
 		busyRows.remove(new Integer(row));		
 		fireTableRowsUpdated(row, row);
 	}
-    
+   
     
 }//class MetadataTable

@@ -25,20 +25,17 @@
 
 package xmipp.viewer.models;
 
+import ij.ImagePlus;
+
 import java.util.ArrayList;
 
-import javax.swing.JPopupMenu;
-
-import ij.ImagePlus;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
-import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
-import xmipp.viewer.ImageItem;
 
 public class MetadataGallery extends ImageGallery {
 	private static final long serialVersionUID = 1L;
@@ -97,13 +94,13 @@ public class MetadataGallery extends ImageGallery {
 	protected ImageDimension loadDimension() throws Exception {
 		// Set information about columns
 		visibleLabels = new ArrayList<ColumnInfo>();
-//		data.globalRender = false;
+		// data.globalRender = false;
 
 		for (ColumnInfo ci : data.labels) {
 			if (ci.visible)
 				visibleLabels.add(ci);
-//			if (ci.render)
-//				data.globalRender = true;
+			// if (ci.render)
+			// data.globalRender = true;
 		}
 		ImageDimension dim = null;
 
@@ -114,9 +111,9 @@ public class MetadataGallery extends ImageGallery {
 			for (int i = 0; i < data.ids.length; ++i) {
 				String imageFn = getImageFilename(i, renderLabel.getLabel());
 				if (imageFn != null && Filename.exists(imageFn)) {
-					image = new ImageGeneric(imageFn); 
+					image = new ImageGeneric(imageFn);
 					dim = new ImageDimension(image);
-					//image.destroy();
+					// image.destroy();
 					break;
 				}
 			}
@@ -131,7 +128,25 @@ public class MetadataGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		return createImageItem(index, renderLabel.getLabel(), displayLabel.getLabel(), key);
+		return createImageItem(index, renderLabel.getLabel(),
+				displayLabel.getLabel(), key);
+	}
+
+	public String getLabel(int row, int col) {
+		try {
+			int index = getIndex(row, col);
+			long objId = data.ids[index];
+			if (data.is2dClassification){
+				int ref = data.md.getValueInt(MDLabel.MDL_REF, objId);
+				int count = data.md.getValueInt(MDLabel.MDL_CLASS_COUNT, objId);
+				return String.format("class %d (%d images)", ref, count);
+			}
+			else
+				return data.md.getValueString(displayLabel.getLabel(), objId);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	/**
@@ -150,16 +165,16 @@ public class MetadataGallery extends ImageGallery {
 			else
 				image.read(imageFn, thumb_width, thumb_height);
 			imp = XmippImageConverter.convertToImagePlus(image);
-			//image.destroy();
-			
+			// image.destroy();
+
 		}
-		ImageItem ii = new ImageItem(key, labelStr, imp);
-		ii.isEnabled = data.md.getEnabled(objId);
-		return ii;
+		ImageItem item = new ImageItem(index);
+		item.setImagePlus(imp);
+		return item;
 	}
 
 	@Override
-	protected String getItemKey(int index) throws Exception {
+	public String getItemKey(int index) throws Exception {
 		return getItemKey(index, renderLabel.getLabel());
 	}
 
@@ -173,7 +188,7 @@ public class MetadataGallery extends ImageGallery {
 			format += "_geo";
 		if (data.wrap)
 			format += "_wrap";
-		//String key = String.format(format, thumb_width, thumb_height);
+		// String key = String.format(format, thumb_width, thumb_height);
 		// DEBUG.printMessage(String.format("key: %s", key));
 		return String.format(format, thumb_width, thumb_height);
 	}
@@ -191,10 +206,11 @@ public class MetadataGallery extends ImageGallery {
 		}
 		return null;
 	}
-	
+
 	@Override
-	public String getImageFilenameAt(int row, int col){
-		return data.isImageFile(renderLabel) ? data.getValueFromCol(row, renderLabel) : null;
+	public String getImageFilenameAt(int row, int col) {
+		return data.isImageFile(renderLabel) ? data.getValueFromCol(row,
+				renderLabel) : null;
 	}
 
 	@Override
@@ -214,7 +230,7 @@ public class MetadataGallery extends ImageGallery {
 		boolean changed = data.useGeo != geo || data.wrap != wrap;
 		data.useGeo = geo;
 		data.wrap = wrap;
-		if (changed) 
+		if (changed)
 			fireTableDataChanged();
 	}
 
@@ -229,7 +245,8 @@ public class MetadataGallery extends ImageGallery {
 	}
 
 	@Override
-	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
+	public boolean handleRightClick(int row, int col,
+			XmippPopupMenuCreator xpopup) {
 		return true;
 	}
 }

@@ -8,6 +8,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
+import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -24,13 +25,16 @@ public class GalleryData {
 	ColumnInfo ciFirstRender = null;
 	public int zoom;
 	public String filename;
+
 	// public boolean galleryMode = true; // if false, is table model
 	// public boolean volumeMode = false;
-	public enum Mode { GALLERY_MD, GALLERY_VOL, 
-		                 TABLE_MD, GALLERY_ROTSPECTRA};
-//	public static final int Mode.GALLERYGALLERY_MD = 1;
-//	public static final int MODE_GALLERY_VOL = 2;
-//	public static final int Mode.GALLERY_MD = 3;
+	public enum Mode {
+		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
+	};
+
+	// public static final int Mode.GALLERYGALLERY_MD = 1;
+	// public static final int MODE_GALLERY_VOL = 2;
+	// public static final int Mode.GALLERY_MD = 3;
 
 	// define min and max render dimensions
 	public static int MIN_SIZE = 16;
@@ -53,8 +57,11 @@ public class GalleryData {
 	// flag to check if is 2d classification
 	public boolean is2dClassification = false;
 	// Store the selection state for each item
-	protected boolean[] selection;
-	public int[] classes;
+	public boolean[] selection;
+	// Array with all ClassInfo
+	public ArrayList<ClassInfo> classesArray;
+	// ClassInfo reference for each element
+	public ClassInfo[] classes;
 
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
@@ -67,7 +74,7 @@ public class GalleryData {
 			zoom = param.zoom;
 			globalRender = param.renderImages;
 			mode = Mode.GALLERY_MD;
-			
+
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
@@ -117,21 +124,19 @@ public class GalleryData {
 		useGeo = containsGeometryInfo();
 		selection = new boolean[ids.length];
 		is2dClassification = checkifIs2DClassificationMd();
-		
-		if (is2DClassificationMd()){
-			classes = new int[ids.length];
-			for (int i = 0; i < ids.length; ++i)
-				classes[i] = -1;
+
+		if (is2DClassificationMd()) {
+			classes = new ClassInfo[ids.length];
+			classesArray = new ArrayList<ClassInfo>();
 		}
 
-		if (isRotSpectraMd())
-		{
+		if (isRotSpectraMd()) {
 			mode = Mode.GALLERY_ROTSPECTRA;
 			if (zoom == 0)
 				zoom = 100;
 			return;
 		}
-		
+
 		if (isGalleryMode())
 			mode = Mode.GALLERY_MD;
 
@@ -146,7 +151,7 @@ public class GalleryData {
 			}
 			if (image != null) { // Image file was found to render
 				if (zoom == 0) { // if default value, calculate zoom
-					//If in micrograph mode, reduce the MAX_SIZE constant
+					// If in micrograph mode, reduce the MAX_SIZE constant
 					if (md.containsMicrographsInfo())
 						MAX_SIZE /= 2;
 					int xdim = image.getXDim();
@@ -172,7 +177,7 @@ public class GalleryData {
 			}
 		} else {
 			// force this mode when there aren't render label
-				mode = Mode.TABLE_MD;
+			mode = Mode.TABLE_MD;
 		}
 
 	}// function loadMd
@@ -256,7 +261,7 @@ public class GalleryData {
 				// previous case
 				if (!md.isColumnFormat())
 					return new MetadataRow(this);
-				if (md.containsMicrographsInfo()) 
+				if (md.containsMicrographsInfo())
 					return new MicrographsTable(this);
 				return new MetadataTable(this);
 			case GALLERY_ROTSPECTRA:
@@ -290,17 +295,16 @@ public class GalleryData {
 	public int getRenderLabel() {
 		return ciFirstRender.getLabel();
 	}
-	
+
 	/** Return true if the gallery mode is allowed */
-	public boolean allowGallery(){
+	public boolean allowGallery() {
 		return hasRenderLabel() || isRotSpectraMd();
 	}
 
 	// some mode shortcuts
 	public boolean isGalleryMode() {
-		return mode == Mode.GALLERY_MD || 
-				mode == Mode.GALLERY_VOL ||
-				mode == Mode.GALLERY_ROTSPECTRA;
+		return mode == Mode.GALLERY_MD || mode == Mode.GALLERY_VOL
+				|| mode == Mode.GALLERY_ROTSPECTRA;
 	}
 
 	public boolean isVolumeMode() {
@@ -310,12 +314,12 @@ public class GalleryData {
 	public boolean isTableMode() {
 		return mode == Mode.TABLE_MD;
 	}
-	
-	public boolean isRotSpectraMode(){
+
+	public boolean isRotSpectraMode() {
 		return mode == Mode.GALLERY_ROTSPECTRA;
 	}
-	
-	public boolean isMicrographsMode(){
+
+	public boolean isMicrographsMode() {
 		return md.containsMicrographsInfo();
 	}
 
@@ -354,7 +358,9 @@ public class GalleryData {
 	public boolean isEnabled(int index) {
 		try {
 			if (!isVolumeMode()) // slices in a volume are always enabled
-				return md.getEnabled(ids[index]);
+				if (!md.containsLabel(MDLabel.MDL_ENABLED))
+					return true;
+			return md.getEnabled(ids[index]);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -380,11 +386,11 @@ public class GalleryData {
 		}
 		return false;
 	}
-	
+
 	public boolean isImageFile(int col) {
-		return isImageFile(labels.get(col));		
+		return isImageFile(labels.get(col));
 	}
-	
+
 	public boolean isImageFile(ColumnInfo ci) {
 		try {
 			return MetaData.isImage(ci.getLabel());
@@ -393,21 +399,27 @@ public class GalleryData {
 		}
 		return false;
 	}
-	
-	public boolean is2DClassificationMd(){
+
+	public boolean is2DClassificationMd() {
 		return is2dClassification;
 	}
+
 	/** Return true if current metadata comes from 2d classification */
-	public boolean checkifIs2DClassificationMd(){
+	public boolean checkifIs2DClassificationMd() {
 		try {
-			if (!selectedBlock.equalsIgnoreCase("classes"))
+			if (!selectedBlock.equalsIgnoreCase("classes")) {
+				DEBUG.printMessage("2Dclass: no block 'classes'");
 				return false;
-			int n = md.size();
-			for (long id: ids) {
+			}
+			for (long id : ids) {
 				int ref = md.getValueInt(MDLabel.MDL_REF, id);
+				int count = md.getValueInt(MDLabel.MDL_CLASS_COUNT, id);
 				String s = String.format("class%06d_images", ref);
-				if (!containsBlock(s))
+				if (count > 0 && !containsBlock(s)) {
+					DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'",
+							ref, s);
 					return false;
+				}
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -415,57 +427,84 @@ public class GalleryData {
 		}
 		return true;
 	}
-	
+
 	/** Get the assigned class of some element */
-	public int getItemClass(int index){
+	public ClassInfo getItemClassInfo(int index) {
 		if (is2dClassification)
 			return classes[index];
-		return -1;
+		return null;
 	}
-	
+
 	/** Set the class of an element */
-	public void setItemClass(int index, int classNumber){
-		classes[index] = classNumber;
+	public void setItemClass(int index, ClassInfo cli) {
+		classes[index] = cli;
 	}
-	
-	public void setSelectionClass(int classNumber){
-		
+
+	public ClassInfo getClassInfo(int classNumber) {
+		return classesArray.get(classNumber);
 	}
-	
+
+	/**
+	 * Compute and update the number of classes and images assigned to this
+	 * superclass
+	 */
+	public void updateClassesInfo() {
+		try {
+			//DEBUG.printMessage("updateClassesInfo");
+			for (ClassInfo cli : classesArray) {
+				cli.numberOfClasses = 0;
+				cli.numberOfImages = 0;
+			}
+			int i = 0;
+			for (long id : ids) { //iterate over all references
+				int count = md.getValueInt(MDLabel.MDL_CLASS_COUNT, id);
+				//DEBUG.printFormat("id: %d, count: %d", id, count);
+				ClassInfo cli = getItemClassInfo(i);
+				if (cli != null) {
+					cli.numberOfClasses += 1;
+					cli.numberOfImages += count;
+				}
+				++i;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	/** Return true if current metadata is a rotspectra classes */
-	public boolean isRotSpectraMd(){
+	public boolean isRotSpectraMd() {
 		String fnVectors = filename.replace("classes", "vectors");
 		String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-		//TODO: CHECK if is a classification md
-		if (is2DClassificationMd() &&
-			Filename.exists(fnVectors) && 
-			Filename.exists(fnVectorsData))
+		// TODO: CHECK if is a classification md
+		if (is2DClassificationMd() && Filename.exists(fnVectors)
+				&& Filename.exists(fnVectorsData))
 			return true;
 		return false;
 	}
-	
+
 	/** Check if a block is present, ignore case */
-	public boolean containsBlock(String block){
-		for (String b: mdBlocks)
+	public boolean containsBlock(String block) {
+		for (String b : mdBlocks)
 			if (b.equalsIgnoreCase(block))
 				return true;
 		return false;
 	}
-	
-	public String getValueFromCol(int index, int col){
+
+	public String getValueFromCol(int index, int col) {
 		return getValueFromCol(index, labels.get(col));
 	}
-	
-	public String getValueFromCol(int index, ColumnInfo ci){
+
+	public String getValueFromCol(int index, ColumnInfo ci) {
 		try {
 			return md.getValueString(ci.getLabel(), ids[index]);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
-	}	
-	
-	public String getValueFromLabel(int index, int label){
+	}
+
+	public String getValueFromLabel(int index, int label) {
 		try {
 			return md.getValueString(label, ids[index]);
 		} catch (Exception e) {

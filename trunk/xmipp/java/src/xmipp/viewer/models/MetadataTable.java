@@ -35,7 +35,6 @@ import javax.swing.table.TableColumn;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippPopupMenuCreator;
-import xmipp.viewer.ImageItem;
 import xmipp.viewer.TestRenderer;
 
 public class MetadataTable extends MetadataGallery {
@@ -210,6 +209,17 @@ public class MetadataTable extends MetadataGallery {
 			calculateCellSize();
 			fireTableDataChanged();
 		}
+	}
+	
+	@Override
+	public String getLabel(int row, int col) {
+		try {
+			long objId = data.ids[row];
+			return data.md.getValueString(visibleLabels.get(col).getLabel(), objId);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	@Override

@@ -55,8 +55,8 @@ public class XmippDialog extends JDialog  implements ActionListener {
 	protected boolean result;
 	protected JButton btnCancel;
 	protected JButton btnOk;
-	protected String okText = "Ok";
-	protected String cancelText = "Cancel";
+	protected String btnOkText = "Ok";
+	protected String btnCancelText = "Cancel";
 	protected JPanel panelBtn;
 	protected boolean disposeOnClose;
 	
@@ -87,9 +87,9 @@ public class XmippDialog extends JDialog  implements ActionListener {
 	protected void createButtons(){
 		//Create panel for Ok and Cancel buttons
 		panelBtn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-		btnOk = XmippWindowUtil.getTextButton(okText, this);
+		btnOk = XmippWindowUtil.getTextButton(btnOkText, this);
 		panelBtn.add(btnOk);
-		btnCancel = XmippWindowUtil.getTextButton(cancelText, this);
+		btnCancel = XmippWindowUtil.getTextButton(btnCancelText, this);
 		panelBtn.add(btnCancel);
 	}
 	

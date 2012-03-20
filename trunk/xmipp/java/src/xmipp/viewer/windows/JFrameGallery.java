@@ -87,7 +87,6 @@ import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippResource;
-import xmipp.viewer.ImageItem;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
@@ -97,13 +96,14 @@ import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGallery;
 import xmipp.viewer.models.MetadataGallery;
 import xmipp.viewer.models.MicrographsTable;
+import xmipp.viewer.windows.ClassesJDialog;
 
 public class JFrameGallery extends JFrame implements iCTFGUI {
 	private static final long serialVersionUID = -8957336972082018823L;
 
 	private final static int DELAY_TO_UPDATE = 500;
 	private static int update_counter = 0;
-	private ImageGallery gallery;
+	public ImageGallery gallery;
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
 	private JList rowHeader;
@@ -115,6 +115,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	private GalleryMenu menu;
 	private JFileChooser fc;
 	private SaveJDialog dlgSave = null;
+	private ClassesJDialog dlgClasses = null; 
 
 	private JLabel jlZoom;
 	private JLabel jlGoto;
@@ -606,6 +607,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			}
 		}
 	}
+	
+	private boolean openClassesDialog(){
+		if (dlgClasses == null){
+			dlgClasses = new ClassesJDialog(JFrameGallery.this, data.classesArray);
+		}
+		return dlgClasses.showDialog();
+	}
 
 	static String forceExtension(String filename, String ext) {
 		int dot = filename.lastIndexOf(".");
@@ -1039,6 +1047,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
+			addItem(FILE_REFRESH, "Refresh", "refresh.gif");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
 			// Display
@@ -1159,6 +1168,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
+			}else if (cmd.equals(FILE_REFRESH)) {
+				reloadTableData();
 			} else if (cmd.equals(DISPLAY_RESLICE_TOP)) {
 
 			} else if (cmd.equals(DISPLAY_RESLICE_BOTTOM)) {
@@ -1168,8 +1179,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)) {
 
 			} else if (cmd.equals(MD_CLASSES)){
-				ClassesJDialog dialog = new ClassesJDialog(JFrameGallery.this);
-				boolean result = dialog.showDialog();
+				openClassesDialog();				
 			}
 		}// function handleActionPerformed
 	}// class GalleryMenu
@@ -1267,11 +1277,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			} else if (cmd.equals(CTF_RECALCULATE)) {
 				showCTF(false);
 			} else if (cmd.equals(SET_CLASS)) {
-				ClassesJDialog dialog = new ClassesJDialog(JFrameGallery.this);
-				boolean result = dialog.showDialog();
-				if (result){
-					int classNumber = dialog.getSelectedClass();
-					DEBUG.printMessage(String.format("class: %d", classNumber));
+				if (openClassesDialog()){
+					int classNumber = dlgClasses.getSelectedClass();
+					//DEBUG.printMessage(String.format("class: %d", classNumber));
 					gallery.setSelectionClass(classNumber);
 				}
 			}

@@ -33,7 +33,6 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
-import xmipp.viewer.ImageItem;
 
 public class VolumeGallery extends ImageGallery {
 	protected String volFn;
@@ -83,7 +82,7 @@ public class VolumeGallery extends ImageGallery {
 	}
 
 	@Override
-	protected String getItemKey(int index) throws Exception {
+	public String getItemKey(int index) throws Exception {
 		return String.format("%d_(%d,%d)", index, thumb_width, thumb_height);
 	}
 	
@@ -94,9 +93,17 @@ public class VolumeGallery extends ImageGallery {
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImagePlus imp = XmippImageConverter.convertToImagePlus(volume, ImageGeneric.FIRST_IMAGE, index + 1);
-		String label = String.format("%d", index + 1);
-		return new ImageItem(key, label, imp);
+		ImagePlus imp = XmippImageConverter.convertToImagePlus(volume, 
+				        ImageGeneric.FIRST_IMAGE, index + 1);
+		ImageItem item = new ImageItem(index);
+		item.setImagePlus(imp);
+		return item;
+	}
+	
+	@Override
+	public String getLabel(int row, int col){
+		int index = getIndex(row, col);
+		return String.format("slice %d", index + 1);
 	}
 
 	@Override

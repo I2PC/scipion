@@ -1,8 +1,6 @@
 package xmipp.viewer;
 
-import ij.ImagePlus;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -20,6 +18,8 @@ import xmipp.utils.ColorIcon;
 import xmipp.utils.CompoundIcon;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippResource;
+import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
 
 /**
  * 
@@ -48,19 +48,19 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object object,
 			boolean isSelected, boolean hasFocus, int row, int column) {
-		ImageItem item = (ImageItem) object;
+		ImageGallery.ImageItem item = (ImageGallery.ImageItem) object;
 		// DEBUG.printMessage("*** 1. Rendering: " + item.getLabel());
 		// Calls super class so foreground, background, borders and rest of
 		// stuff is set.
 		super.getTableCellRendererComponent(table, null, item != null
-				&& item.isSelected, item != null && hasFocus, row, column);
+				&& item.isSelected(), item != null && hasFocus, row, column);
 
 		if (item != null) {
 			// DEBUG.printMessage("*** 2. Rendering: " + item.getLabel());
 			// AbstractXmippTableModel tableModel = (AbstractXmippTableModel)
 			// table.getModel();
 
-			setPreferredSize(item.cellDim);
+			setPreferredSize(item.getCellDim());
 
 			// Loads image...
 			Image image = item.getImage();
@@ -71,22 +71,23 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			else
 				icon = XmippResource.MISSING_ICON;
 			
-			if (!item.isEnabled){
+			if (!item.isEnabled()){
 				icon = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, 
 						CompoundIcon.RIGHT, CompoundIcon.BOTTOM, icon,
 						XmippResource.DELETE_ICON);
 						//new ColoredRectangleIcon(Color.red, 16, 16));
 			}
 
-			if (item.isBusy) {
+			if (item.isBusy()) {
 				icon = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, 
 						CompoundIcon.RIGHT, CompoundIcon.BOTTOM, icon,
 						 XmippResource.LOCK_ICON);	
 			}
-			if (item.classNumber >= 0){
+			ClassInfo cli = item.getClassInfo();
+			if (cli != null){
 				icon = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, 
 						CompoundIcon.RIGHT, CompoundIcon.BOTTOM, icon,
-						new ColorIcon(Color.red, 16, 16, 3, true));
+						cli.getIcon());
 						
 			}
 			setIcon(icon);
@@ -94,7 +95,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			setToolTipText(item.getLabel());
 
 			// (Shows label only when required).
-			if (item.showLabel) {
+			if (item.getShowLabel()) {
 				String label = cutString(item.getLabel(), table
 						.getColumnModel().getColumn(column).getWidth());
 				setText(label);
@@ -104,7 +105,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 
 			if (hackBorders) {
 				// Hacking borders to enhance the default one.
-				if (item.isSelected) {
+				if (item.isSelected()) {
 					setBorder(BORDER_SELECTED);
 				}
 

@@ -28,6 +28,7 @@ package xmipp.viewer.models;
 import ij.ImagePlus;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Insets;
 
 import javax.swing.JPopupMenu;
@@ -36,8 +37,8 @@ import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.viewer.ImageDimension;
-import xmipp.viewer.ImageItem;
 import xmipp.viewer.ImageItemRenderer;
+import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -79,7 +80,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	protected double normalize_min = Double.POSITIVE_INFINITY,
 			normalize_max = Double.NEGATIVE_INFINITY;
 
-	protected GalleryData data; // information about the gallery
+	public GalleryData data; // information about the gallery
 
 	// Initiazation function
 	public ImageGallery(GalleryData data) throws Exception {
@@ -165,12 +166,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 	}
 
 	protected void setupItem(ImageItem item, int index) {
-		item.showLabel = data.showLabel;
-		item.cellDim = cellDim;
-		item.isSelected = data.selection[index];
-		item.isEnabled = data.isEnabled(index);
-		item.classNumber = data.getItemClass(index);
-		DEBUG.printMessage(String.format("item.classNumber: %d", item.classNumber));
 		ImagePlus imp = item.getImagePlus();
 		if (imp != null) { // When image is missing this will be null
 			if (data.normalize)
@@ -316,6 +311,9 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public int getIndex(int row, int col) {
 		return row * cols + col;
 	}
+	
+	/** Return the label of the item at this position */
+	public abstract String getLabel(int row, int col);
 
 	/**
 	 * Return the row and col given an index
@@ -370,28 +368,26 @@ public abstract class ImageGallery extends AbstractTableModel {
 		fireTableDataChanged();
 	}
 
-	/** Select a range of elements given the coordinates */
+	/** Set the class of a given selection of elements. */
 	public void setSelectionClass(int classNumber) {
+		ClassInfo cli = data.getClassInfo(classNumber);
 		for (int i = 0; i < n; ++i)
 			if (data.selection[i]){
-				DEBUG.printMessage(String.format("   setting class for item: %d", i));
-				data.setItemClass(i, classNumber);
+				data.setItemClass(i, cli);
 			}
+		clearSelection();
 		fireTableDataChanged();
-	}	
+	}
 	
-
-	/** Invert selection on a range of elements */
-	// public void touchRange(int first_row, int first_col, int last_row,
-	// int last_col) {
-	// int i1 = getIndex(first_row, first_col);
-	// int i2 = getIndex(last_row, last_col);
-	// int i = Math.min(i1, i2);
-	// i2 = Math.max(i1, i2);
-	// for (; i <= i2; ++i)
-	// selection[i] = !selection[i];
-	// fireTableDataChanged();
-	// }
+	/** Remove a class */
+	public void removeClass(int classNumber){
+		ClassInfo cli = data.getClassInfo(classNumber);
+		for (int i = 0; i < n; ++i)
+			if (data.getItemClassInfo(i) == cli)
+				data.setItemClass(i, null);
+		data.classesArray.remove(classNumber);
+		fireTableDataChanged();
+	}
 
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
@@ -477,7 +473,12 @@ public abstract class ImageGallery extends AbstractTableModel {
 	/**
 	 * Function to create the key of the item knowing the item index
 	 */
-	protected abstract String getItemKey(int index) throws Exception;
+	public abstract String getItemKey(int index) throws Exception;
+	
+	/** Check if the item is busy */
+	public boolean isBusy(int row, int col){
+		return false;
+	}
 
 	/**
 	 * Return the main title to be used on windows
@@ -499,4 +500,90 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 */
 	protected abstract ImageItem createItem(int index, String key)
 			throws Exception;
+	
+	/** This class will contains basic info to be used for image rendering.
+	 * It will contains an ImagePlus, label and some other useful info.
+	 */
+	public class ImageItem {
+		
+		protected ImagePlus image = null;
+		protected int index;
+		
+		/** First argument is the gallery to wich this item belongs
+		 * Constructor of ImageItem
+		 * @param g gallery to wich this item belongs
+		 * @param r row position of the item
+		 * @param c 
+		 */
+		public ImageItem(int row, int col){
+			index = ImageGallery.this.getIndex(row, col);
+		}
+		
+		public ImageItem(int index){
+			this.index = index;			
+		}
+		
+		public int getIndex(){
+			return index;
+		}
+		
+		public ImagePlus getImagePlus() {
+			return image;
+		}
+		
+		public void setImagePlus(ImagePlus value){
+			image = value;
+		}
+		
+		public Image getImage(){
+			return image.getImage();
+		}
+		
+		public boolean getShowLabel(){
+			return data.showLabel;
+		}
+		
+		public Dimension getCellDim(){
+			return cellDim;
+		}
+		
+		public String getLabel() {
+			int [] coords = getCoords(index);
+			return ImageGallery.this.getLabel(coords[0], coords[1]);
+		}
+		
+		public String getKey() {
+			try {
+				return getItemKey(index);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}
+		
+		public boolean isSelected() {
+			return data.selection[index];
+		}
+		
+		public boolean isEnabled(){
+			return data.isEnabled(index);
+		}
+		
+		public boolean isBusy(){
+			int [] coords = getCoords(index);
+			return ImageGallery.this.isBusy(coords[0], coords[1]);
+		}
+		
+		public ClassInfo getClassInfo(){
+			return data.getItemClassInfo(index);
+		}
+		
+		@Override
+		public String toString(){
+			return image != null ? 
+					image.getFileInfo().fileName: null;
+		}
+	}//class ImageItem
+
 }

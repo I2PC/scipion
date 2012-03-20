@@ -132,7 +132,7 @@ public class SaveJDialog extends XmippDialog {
 		gbc.anchor = GridBagConstraints.PAGE_START;
 		panel.add(group, XmippWindowUtil.getConstraints(gbc, 0, 0, 2));
 		//Change default Ok text button
-		okText = "Save";
+		btnOkText = "Save";
 
 		
 	}// function initComponents
