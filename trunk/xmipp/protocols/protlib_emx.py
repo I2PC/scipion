@@ -189,6 +189,7 @@ class EmxBase:
 #from emx_ctf_Micrograph import CtfMicrographConverter
 #from emx_ctf_Particle   import CtfParticleConverter
 #from emx_particleAlignment import ParticleAlignmentConverter
+#from emx_particleClass import ParticleClassConverter
 #if __name__ == '__main__':
 #    
 #    def command_line_options():
