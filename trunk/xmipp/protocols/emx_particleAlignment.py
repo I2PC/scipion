@@ -298,10 +298,10 @@ class ParticleAlignmentConverter(EmxBase):
                 or (math.fabs(_scale[1] - _scale[2]) > 0.001) 
                 or (math.fabs(_scale[0] - _scale[2]) > 0.001)
                 ):
-                print >> sys.stderr "Scale is not equal in all directions"
-                print >> sys.stderr "XMIPP cannot handle different scales in each direction"
-                print >> sys.stderr "scale in x direction will be used"
-                print >> sys.stderr _scale[0],_scale[1],_scale[2]
+                print >> sys.stderr, "Scale is not equal in all directions"
+                print >> sys.stderr, "XMIPP cannot handle different scales in each direction"
+                print >> sys.stderr, "scale in x direction will be used"
+                print >> sys.stderr, _scale[0],_scale[1],_scale[2]
             self.itemNameListXMD.append(ParticleAlignmentStructXmd
                                            (image     = item.url,
                                             angleRot  = _angles[0]*180./_pi,
