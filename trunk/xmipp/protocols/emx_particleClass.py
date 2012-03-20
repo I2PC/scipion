@@ -57,7 +57,6 @@ class ParticleClassConverter(EmxBase):
         self.myStructEMX = ParticleClassStructEmx()
         label = prefix_particle + self.myStructEMX._fields_[1][0]
         #label = self.myStructEMX.prefix + self.myStructEMX._fields_[0][0]
-        print label
         for blockName in self.inMetadata.keys():
             _auxList=self.inMetadata[blockName].GetLoopItem(label)
             self.blockNameListEMX.append(BlockNamesEMX(BlockName=blockName,
@@ -152,7 +151,6 @@ class ParticleClassConverter(EmxBase):
             block.append(str(item.ref))
         #here you may change the block name if needed
         blockDifferent=list(set(block))
-        print blockDifferent
         for item in blockDifferent:
             self.blockNameListEMX.append(BlockNamesEMX(
                                                        BlockName=item,
