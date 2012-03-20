@@ -3,6 +3,7 @@ from ctypes import c_int, c_float, c_char_p
 from ctypes import Structure
 prefix_micrograph = "_emx_micrograph."
 prefix_particle   = "_emx_particle."
+prefix_class      = "_emx_class."
 
 class ParticlePickingStructEmx(Structure):
     _fields_ = [("coordinate_x", c_float),
@@ -22,6 +23,24 @@ class ParticlePickingStructXmd(Structure):
     
     def __init__(self, Xcoor=-1, Ycoor=-1,MicName="dummyMic"):
         super(ParticlePickingStructXmd, self).__init__( Xcoor, Ycoor,MicName)
+            
+
+class ParticleClassStructEmx(Structure):
+    _fields_ = [("id", c_char_p),
+                ("url",c_char_p)
+               ]
+    prefix = prefix_class
+    def __init__(self, id="dummy", url="dummyMic"):
+        super(ParticleClassStructEmx, self).__init__( id, url)
+
+class ParticleClassStructXmd(Structure):
+    _fields_ = [("image", c_char_p),
+                ("ref", c_int)
+               ]
+    prefix = "_"
+    
+    def __init__(self, image="dummy.mrc", ref=-1):
+        super(ParticleClassStructXmd, self).__init__( image, ref)
             
 
 class CtfMicrographStructEmx(Structure):
