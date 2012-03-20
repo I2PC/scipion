@@ -10,7 +10,7 @@
 #  http://conventions.cnb.csic.es
 ##########################################################################
 
-data_kk11
+data_mic_kk11
 _emx_micrograph.url                     kk1
 loop_
   _emx_particle.coordinate_x
@@ -27,7 +27,7 @@ loop_
    701  336
  
 
-data_kk22
+data_mic_kk22
 _emx_micrograph.url                     kk2
 loop_
   _emx_particle.coordinate_x
