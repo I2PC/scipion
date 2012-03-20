@@ -1068,7 +1068,7 @@ void ProgClassifyFTTRI::writeResults(bool FTTRI)
         // Write this class in summary
         size_t id=MDsummary.addObject();
         MDsummary.setValue(MDL_REF, i+1, id);
-        MDsummary.setValue(MDL_IMAGE_CLASS_COUNT,nmax,id);
+        MDsummary.setValue(MDL_CLASS_COUNT,nmax,id);
 
         // Measure the distance of each class and sort
         if (FTTRI)

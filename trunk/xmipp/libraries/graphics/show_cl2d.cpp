@@ -84,7 +84,8 @@ void ShowCL2D::readFile(const FileName &_fn_root,
         {
             FileName fnOriginal, fnSel;
             mD.getValue(MDL_IMAGE_ORIGINAL,fnOriginal, __iter.objId);
-            mD.getValue(MDL_IMAGE_CLASS_GROUP,fnSel, __iter.objId);
+            //FIXME: just commented to compile
+            //mD.getValue(MDL_IMAGE_CLASS_GROUP,fnSel, __iter.objId);
        	    SFcv[i].read(fnSel);
             hisAssigned[i]=integerToString(SFcv[i].size());
             originalImages[i]=fnOriginal;

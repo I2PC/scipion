@@ -763,7 +763,7 @@ void CL2D::write(const FileName &fnRoot) const
         size_t id = SFout.addObject();
         SFout.setValue(MDL_REF, q + 1, id);
         SFout.setValue(MDL_IMAGE, fnClass, id);
-        SFout.setValue(MDL_IMAGE_CLASS_COUNT,
+        SFout.setValue(MDL_CLASS_COUNT,
                        (int) P[q]->currentListImg.size(), id);
     }
     FileName fnSFout = fnRoot + "_classes.xmd";

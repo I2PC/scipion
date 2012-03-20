@@ -4043,9 +4043,7 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_DM3_VALUE", (long) MDL_DM3_VALUE);
     addIntConstant(dict, "MDL_ENABLED", (long) MDL_ENABLED);
     addIntConstant(dict, "MDL_FLIP", (long) MDL_FLIP);
-    addIntConstant(dict, "MDL_IMAGE_CLASS_COUNT", (long) MDL_IMAGE_CLASS_COUNT);
-    addIntConstant(dict, "MDL_IMAGE_CLASS_GROUP", (long) MDL_IMAGE_CLASS_GROUP);
-    addIntConstant(dict, "MDL_IMAGE_CLASS", (long) MDL_IMAGE_CLASS);
+    addIntConstant(dict, "MDL_IMAGE_CLASS_COUNT", (long) MDL_CLASS_COUNT);
     addIntConstant(dict, "MDL_IMAGE", (long) MDL_IMAGE);
     addIntConstant(dict, "MDL_IMAGE_ORIGINAL", (long) MDL_IMAGE_ORIGINAL);
     addIntConstant(dict, "MDL_IMAGE_TILTED", (long) MDL_IMAGE_TILTED);

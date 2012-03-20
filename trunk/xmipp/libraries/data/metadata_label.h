@@ -72,6 +72,7 @@ enum MDLabel
     MDL_CELLY, ///< Cell location for crystals
     MDL_CL2D_CHANGES, ///< Number of changes between iterations
     MDL_CL2D_SIMILARITY, ///< Average cross-correlation for the image (double)
+    MDL_CLASS_COUNT, ///< Number of images assigned to the same class as this image
     MDL_CLASSIFICATION_DATA, ///< Data vector for classification (vector double)
     MDL_CLASSIFICATION_DATA_SIZE, ///< Size of data vectors for classification (int)
     MDL_CLASSIFICATION_DPR_05, ///< Differential Phase Residual evaluated at FRC=0.5
@@ -153,9 +154,6 @@ enum MDLabel
     MDL_FLIP, ///< Flip the image? (bool)
     MDL_FOM, ///< Figure of Merit in 0-1 range (double)
     MDL_IDX, ///< Index within a list (size_t)
-    MDL_IMAGE_CLASS_COUNT, ///< Number of images assigned to the same class as this image
-    MDL_IMAGE_CLASS_GROUP, ///< Name of the class group for this image (metadata with all the images assigned to that class)
-    MDL_IMAGE_CLASS, ///< Name of the class representative for this image
     MDL_IMAGE, ///< Name of an image (std::string)
     MDL_IMAGE_ORIGINAL, ///< Name of an image from which MDL_IMAGE is coming from
     MDL_IMAGE_TILTED, ///< Name of the tilted images associated to MDL_IMAGE
@@ -579,6 +577,7 @@ private:
         MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
         MDL::addLabel(MDL_CL2D_CHANGES, LABEL_INT, "cl2d_changes");
         MDL::addLabel(MDL_CL2D_SIMILARITY, LABEL_DOUBLE, "cl2dsimilarity");
+        MDL::addLabel(MDL_CLASS_COUNT, LABEL_INT, "class_count");
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR, "ClassificationData");
         MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
         MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "ClassificationDPR05");
@@ -661,9 +660,6 @@ private:
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", TAGLABEL_NOTAG, "Flip");
         MDL::addLabel(MDL_FOM, LABEL_DOUBLE, "fom");
         MDL::addLabel(MDL_IDX, LABEL_LONG, "index");
-        MDL::addLabel(MDL_IMAGE_CLASS_COUNT, LABEL_INT, "class_count");
-        MDL::addLabel(MDL_IMAGE_CLASS_GROUP, LABEL_STRING, "class_group");
-        MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "original_image", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "tilted_image", TAGLABEL_IMAGE);

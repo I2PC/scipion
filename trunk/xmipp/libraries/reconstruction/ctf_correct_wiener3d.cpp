@@ -149,7 +149,7 @@ void ProgCtfCorrectAmplitude3D::generateWienerFilters()
 
         // Get the number of images contributing to this group
         int NumberOfImages;
-        ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages,__iter.objId);
+        ctfdat.getValue(MDL_CLASS_COUNT,NumberOfImages,__iter.objId);
         tot_nr_imgs += NumberOfImages;
 
         // Calculate denominator of the Wiener filter
@@ -171,7 +171,7 @@ void ProgCtfCorrectAmplitude3D::generateWienerFilters()
     FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
         int NumberOfImages;
-        ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages,__iter.objId);
+        ctfdat.getValue(MDL_CLASS_COUNT,NumberOfImages,__iter.objId);
         CTF1D=Vctfs1D[ii];
         CTF1D*=NumberOfImages;
         CTF1D/=sumterm;
