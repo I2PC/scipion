@@ -59,6 +59,10 @@ public class ColorEditor extends AbstractCellEditor
     protected static final String EDIT = "edit";
     private float position;
 
+    public ColorEditor(){
+    	this(0.0f);
+    }
+    
     public ColorEditor(float position) {
     	this.position = position;
     	

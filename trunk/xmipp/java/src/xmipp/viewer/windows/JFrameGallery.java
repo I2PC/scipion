@@ -1061,7 +1061,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(DISPLAY_RESLICE_RIGHT, "Right (X positive)");
 			//Metadata operations
 			addItem(METADATA, "Metadata");
-			addItem(CLASSES, "Classes");
+			addItem(MD_CLASSES, "Classes");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
@@ -1167,6 +1167,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 			} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)) {
 
+			} else if (cmd.equals(MD_CLASSES)){
+				ClassesJDialog dialog = new ClassesJDialog(JFrameGallery.this);
+				boolean result = dialog.showDialog();
 			}
 		}// function handleActionPerformed
 	}// class GalleryMenu
@@ -1185,6 +1188,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(CTF_PROFILE, "Show CTF profile");
 			addItem(CTF_RECALCULATE, "Recalculate CTF");
 			addSeparator();
+			addItem(SET_CLASS, "Set class");
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
@@ -1234,6 +1238,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			setItemVisible(OPEN_ASTEXT, false);
 			setItemVisible(CTF_PROFILE, false);
 			setItemVisible(CTF_RECALCULATE, false);
+			setItemVisible(SET_CLASS, data.is2DClassificationMd());
 		}
 
 		@Override
@@ -1261,6 +1266,14 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				showCTF(true);
 			} else if (cmd.equals(CTF_RECALCULATE)) {
 				showCTF(false);
+			} else if (cmd.equals(SET_CLASS)) {
+				ClassesJDialog dialog = new ClassesJDialog(JFrameGallery.this);
+				boolean result = dialog.showDialog();
+				if (result){
+					int classNumber = dialog.getSelectedClass();
+					DEBUG.printMessage(String.format("class: %d", classNumber));
+					gallery.setSelectionClass(classNumber);
+				}
 			}
 			initItems();
 		}

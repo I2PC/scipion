@@ -45,6 +45,7 @@ public class ColorRenderer  extends JLabel implements TableCellRenderer
 
 		 public ColorRenderer() {
 		        setOpaque(true); //MUST do this for background to show up.
+		        setHorizontalAlignment(JLabel.CENTER);
 		 }
 
 		@Override

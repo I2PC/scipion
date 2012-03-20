@@ -49,7 +49,8 @@ public class ImageItem {
 	// Cell dimension on table
 	public Dimension cellDim;
 	//Reference to the gallery
-	
+	//TODO: add reference to library to avoid some data usage
+	public int classNumber = -1;
 	
 	//Constructor
 	public ImageItem(String k, String l){

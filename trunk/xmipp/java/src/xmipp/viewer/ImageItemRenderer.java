@@ -16,7 +16,7 @@ import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import xmipp.utils.ColoredRectangleIcon;
+import xmipp.utils.ColorIcon;
 import xmipp.utils.CompoundIcon;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippResource;
@@ -79,11 +79,14 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			}
 
 			if (item.isBusy) {
-				DEBUG.printMessage("drawing busy item...");
 				icon = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, 
 						CompoundIcon.RIGHT, CompoundIcon.BOTTOM, icon,
 						 XmippResource.LOCK_ICON);	
-						//new ColoredRectangleIcon(Color.red, 16, 16));
+			}
+			if (item.classNumber >= 0){
+				icon = new CompoundIcon(CompoundIcon.Axis.Z_AXIS, 0, 
+						CompoundIcon.RIGHT, CompoundIcon.BOTTOM, icon,
+						new ColorIcon(Color.red, 16, 16, 3, true));
 						
 			}
 			setIcon(icon);

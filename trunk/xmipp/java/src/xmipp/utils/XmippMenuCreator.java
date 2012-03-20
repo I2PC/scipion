@@ -189,7 +189,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String DISPLAY_RESLICE_RIGHT = "Display.Reslice.Right_mi";
 
 	public final String METADATA = "Metadata";
-	public final String CLASSES = "Metadata.Classes";
+	public final String MD_CLASSES = "Metadata.Classes_mi";
 	public final String STATS = "Metadata.Stats";
 	public final String STATS_AVGSTD = "Metadata.Stats.AvgStd_mi";
 	public final String STATS_PCA = "Metadata.Stats.Pca_mi";
@@ -206,5 +206,6 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final static String SELECT_ALL = "Select.All_mi";
 	public final static String SELECT_TOHERE = "Select.ToHere_mi";
 	public final static String SELECT_FROMHERE = "Select.FromHere_mi";
+	public final static String SET_CLASS = "SetClass_mi";
 
 }

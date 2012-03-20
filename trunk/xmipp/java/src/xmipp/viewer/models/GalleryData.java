@@ -50,8 +50,11 @@ public class GalleryData {
 	public boolean useGeo = true;
 	// flag to wrapping
 	public boolean wrap = true;
+	// flag to check if is 2d classification
+	public boolean is2dClassification = false;
 	// Store the selection state for each item
 	protected boolean[] selection;
+	public int[] classes;
 
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
@@ -113,6 +116,13 @@ public class GalleryData {
 		volumes = null;
 		useGeo = containsGeometryInfo();
 		selection = new boolean[ids.length];
+		is2dClassification = checkifIs2DClassificationMd();
+		
+		if (is2DClassificationMd()){
+			classes = new int[ids.length];
+			for (int i = 0; i < ids.length; ++i)
+				classes[i] = -1;
+		}
 
 		if (isRotSpectraMd())
 		{
@@ -384,21 +394,42 @@ public class GalleryData {
 		return false;
 	}
 	
-	/** Return true if current metadata comes from 2d classification */
 	public boolean is2DClassificationMd(){
+		return is2dClassification;
+	}
+	/** Return true if current metadata comes from 2d classification */
+	public boolean checkifIs2DClassificationMd(){
 		try {
 			if (!selectedBlock.equalsIgnoreCase("classes"))
 				return false;
 			int n = md.size();
-
-			for (int i = 1; i <= n; ++i)
-				if (!containsBlock(String.format("class_%06d", i)))
+			for (long id: ids) {
+				int ref = md.getValueInt(MDLabel.MDL_REF, id);
+				String s = String.format("class%06d_images", ref);
+				if (!containsBlock(s))
 					return false;
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return true;
+	}
+	
+	/** Get the assigned class of some element */
+	public int getItemClass(int index){
+		if (is2dClassification)
+			return classes[index];
+		return -1;
+	}
+	
+	/** Set the class of an element */
+	public void setItemClass(int index, int classNumber){
+		classes[index] = classNumber;
+	}
+	
+	public void setSelectionClass(int classNumber){
+		
 	}
 	
 	/** Return true if current metadata is a rotspectra classes */

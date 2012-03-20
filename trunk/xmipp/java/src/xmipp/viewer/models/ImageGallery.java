@@ -169,6 +169,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 		item.cellDim = cellDim;
 		item.isSelected = data.selection[index];
 		item.isEnabled = data.isEnabled(index);
+		item.classNumber = data.getItemClass(index);
+		DEBUG.printMessage(String.format("item.classNumber: %d", item.classNumber));
 		ImagePlus imp = item.getImagePlus();
 		if (imp != null) { // When image is missing this will be null
 			if (data.normalize)
@@ -367,6 +369,17 @@ public abstract class ImageGallery extends AbstractTableModel {
 			data.selection[i] = value;
 		fireTableDataChanged();
 	}
+
+	/** Select a range of elements given the coordinates */
+	public void setSelectionClass(int classNumber) {
+		for (int i = 0; i < n; ++i)
+			if (data.selection[i]){
+				DEBUG.printMessage(String.format("   setting class for item: %d", i));
+				data.setItemClass(i, classNumber);
+			}
+		fireTableDataChanged();
+	}	
+	
 
 	/** Invert selection on a range of elements */
 	// public void touchRange(int first_row, int first_col, int last_row,
