@@ -48,8 +48,7 @@ class ProtKerdensom(XmippProtocol):
     def visualize(self):
         if self.getRunState() == SqliteDb.RUN_FINISHED:
             from protlib_utils import runShowJ
-            files = " ".join([self.workingDirPath(f) for f in ["results_classes.stk", "results_classes.xmd"]])
-            runShowJ(files, extraParams=" --columns %d" % self.SomXdim)
+            runShowJ("classes@"+self.workingDirPath("results_classes.xmd"), extraParams=" --columns %d" % self.SomXdim)
         else:
             from protlib_gui_ext import showWarning
             showWarning("Warning", "The algorithm has not finished yet", parent=self.master)
