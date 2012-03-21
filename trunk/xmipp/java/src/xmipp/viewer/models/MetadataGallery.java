@@ -138,7 +138,7 @@ public class MetadataGallery extends ImageGallery {
 			long objId = data.ids[index];
 			if (data.is2dClassification){
 				int ref = data.md.getValueInt(MDLabel.MDL_REF, objId);
-				int count = data.md.getValueInt(MDLabel.MDL_CLASS_COUNT, objId);
+				long count = data.md.getValueLong(MDLabel.MDL_CLASS_COUNT, objId);
 				return String.format("class %d (%d images)", ref, count);
 			}
 			else
