@@ -748,12 +748,12 @@ void CL2D::initialize(MetaData &_SF,
 #undef DEBUG
 
 /* CL2D write --------------------------------------------------------- */
-void CL2D::write(const FileName &fnRoot) const
+void CL2D::write(const FileName &fnRoot, int level) const
 {
     int Q = P.size();
     MetaData SFout;
     Image<double> I;
-    FileName fnOut = fnRoot + "_classes.stk", fnClass;
+    FileName fnOut = formatString("%s_classes_level_%02d.stk",fnRoot.c_str(),level), fnClass;
     fnOut.deleteFile();
     for (int q = 0; q < Q; q++)
     {
@@ -763,10 +763,9 @@ void CL2D::write(const FileName &fnRoot) const
         size_t id = SFout.addObject();
         SFout.setValue(MDL_REF, q + 1, id);
         SFout.setValue(MDL_IMAGE, fnClass, id);
-        SFout.setValue(MDL_CLASS_COUNT,
-                       (int) P[q]->currentListImg.size(), id);
+        SFout.setValue(MDL_CLASS_COUNT,P[q]->currentListImg.size(), id);
     }
-    FileName fnSFout = fnRoot + "_classes.xmd";
+    FileName fnSFout = formatString("%s_classes_level_%02d.xmd",fnRoot.c_str(),level);
     SFout._write(fnSFout, "classes", MD_APPEND);
 
     // Make the selfiles of each class
@@ -789,8 +788,7 @@ void CL2D::write(const FileName &fnRoot) const
         }
         MetaData SFq_sorted;
         SFq_sorted.sort(SFq, MDL_IMAGE);
-        SFq_sorted._write(fnSFout, "class_" + integerToString(q + 1, 6),
-                          MD_APPEND);
+        SFq_sorted._write(fnSFout,formatString("class%06d_images",q+1),MD_APPEND);
     }
 }
 
@@ -962,8 +960,7 @@ void CL2D::run(const FileName &fnOut, int level)
             << std::endl;
             MDChanges.setValue(MDL_CL2D_CHANGES, Nchanges, idMdChanges);
             MDChanges.write(
-                formatString("info@%s_level_%02d_classes.xmd",
-                             fnOut.c_str(), level));
+                formatString("info@%s_classes_level_%02d.xmd",fnOut.c_str(), level));
         }
 
         // Check if there are empty nodes
@@ -1039,7 +1036,7 @@ void CL2D::run(const FileName &fnOut, int level)
         }
 
         if (prm->node->rank == 0)
-            write(fnOut + "_level_" + integerToString(level, 2));
+            write(fnOut,level);
 
         if (iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1 || iter >= prm->Niter)
             goOn = false;
@@ -1497,7 +1494,7 @@ void ProgClassifyCL2D::run()
         for (int q = 0; q < Q; q++)
         {
             SFq.read(
-                formatString("class_%06d@%s_level_%02d_classes.xmd", q + 1,
+                formatString("class_%06d@%s_classes_level_%02d.xmd", q + 1,
                              fnOut.c_str(), level));
             SFq.fillConstant(MDL_REF, integerToString(q + 1));
             SFq.fillConstant(MDL_ENABLED, "1");

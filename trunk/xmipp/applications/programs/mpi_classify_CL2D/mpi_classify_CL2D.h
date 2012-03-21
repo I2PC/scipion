@@ -174,7 +174,7 @@ public:
     void shareSplitAssignments(Matrix1D<int> &assignment, CL2DClass *node1, CL2DClass *node2) const;
 
     /// Write the nodes
-    void write(const FileName &fnRoot) const;
+    void write(const FileName &fnRoot, int level) const;
 
     /** Look for a node suitable for this image.
         The image is rotationally and translationally aligned with
