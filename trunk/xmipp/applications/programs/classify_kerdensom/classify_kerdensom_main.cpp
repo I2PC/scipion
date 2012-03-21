@@ -207,7 +207,7 @@ public:
         	id=MDsummary.addObject();
         	MDsummary.setValue(MDL_REF,(int)i+1,id);
         	MDsummary.setValue(MDL_CLASSIFICATION_INTRACLASS_DISTANCE,myMap->aveDistances[i],id);
-        	MDsummary.setValue(MDL_COUNT,(size_t)myMap->classifSizeAt(i),id);
+        	MDsummary.setValue(MDL_CLASS_COUNT,(size_t)myMap->classifSizeAt(i),id);
         }
         MDsummary.write(formatString("classes@%s",fnClasses.c_str()),MD_APPEND);
 
@@ -225,15 +225,16 @@ public:
             {
             	size_t order=myMap->classifAt(i)[j];
             	vectorContentIn.getValue(MDL_IMAGE,fn,objIds[order]);
-            	MD.setValue(MDL_IMAGE,fn,MD.addObject());
-            	size_t id=MDimages.addObject();
+            	size_t id=MD.addObject();
+            	MD.setValue(MDL_IMAGE,fn,id);
+             	id=MDimages.addObject();
             	MDimages.setValue(MDL_IMAGE,fn,id);
             	MDimages.setValue(MDL_REF,(int) i+1,id);
             }
             if (MD.size()>0)
-            	MD.write(formatString("class_%06d@%s",i+1,fnClasses.c_str()),MD_APPEND);
+            	MD.write(formatString("class%06d_images@%s",i+1,fnClasses.c_str()),MD_APPEND);
         }
-        MDimages.write(fn_root+"_images.xmd");
+        MDimages.write((String)"images@"+fn_root+"_images.xmd");
 
         // Save code vectors
         if (norm)
