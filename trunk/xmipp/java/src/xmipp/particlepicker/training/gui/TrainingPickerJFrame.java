@@ -403,6 +403,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private void setThresholdChanges()
 	{
+		setChanged(true);
 		updateMicrographsModel();
 		canvas.repaint();
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));

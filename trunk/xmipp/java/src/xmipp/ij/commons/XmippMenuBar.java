@@ -20,7 +20,6 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-
 /**
  * 
  * @author Juanjo Vega
@@ -54,8 +53,8 @@ public class XmippMenuBar extends MenuBar
 
 	enum IJRequirement
 	{
-		BINARY, EIGHTBIT, IMAGEJ, STACK, THIRTYTWOBIT
-		
+		BINARY, EIGHTBIT, IMAGEJ, STACK, THIRTYTWOBIT, RGB
+
 	};
 
 	public XmippMenuBar(XmippIJWindow xw)
@@ -114,7 +113,7 @@ public class XmippMenuBar extends MenuBar
 
 			}
 		});
-		
+
 		openwith3dmi = new MenuItem("Open with 3D Viewer");
 		openwithvv3ds = new MenuItem("Open with Volume Viewer/3D Slicer");
 		openwithvolumej = new MenuItem("Open with VolumeJ");
@@ -159,28 +158,28 @@ public class XmippMenuBar extends MenuBar
 		adjustmn = new Menu("Adjust");
 		transformmn = new Menu("Transform");
 		filtersmn = new Menu("Filters");
-		
 
 		imagemn.add(infomn);
 		imagemn.add(adjustmn);
 		imagemn.add(transformmn);
 		imagemn.add(filtersmn);
-		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);//missing plugin
-		
+		addIJMenuItem(imagemn, "Masks Tool Bar", "Masks Tool Bar", IJRequirement.IMAGEJ);// missing
+																							// plugin
+
 		// image info menu
 		addIJMenuItem(infomn, "Show Info", "Show Info...");
 		addIJMenuItem(infomn, "Properties", "Properties...");
 		addIJMenuItem(infomn, "Histogram", "Histogram", IJRequirement.IMAGEJ);
-		addIJMenuItem(infomn, "Plot Profile", "Plot Profile",  IJRequirement.IMAGEJ);
+		addIJMenuItem(infomn, "Plot Profile", "Plot Profile", IJRequirement.IMAGEJ);
 
 		// image adjust menu
 		addIJMenuItem(adjustmn, "Brightness/Contrast", "Brightness/Contrast...");
 		addIJMenuItem(adjustmn, "Enhance Contrast", "Enhance Contrast");
-		
+
 		addIJMenuItem(adjustmn, "Crop", "Crop", IJRequirement.IMAGEJ);
 		addIJMenuItem(adjustmn, "Scale", "Scale...");
 		addIJMenuItem(adjustmn, "Untilt Stack", "Untilt Stack", IJRequirement.STACK);
-		
+
 		addIJMenuItem(adjustmn, "Reslice", "Reslice [/]...");
 
 		// image transform menu
@@ -210,22 +209,23 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(profilemn);
 
 		// advanced threshold menu
-		addIJMenuItem(thresholdingmn, "Threshold", "Threshold");
+		addIJMenuItem(thresholdingmn, "Threshold", "Threshold...");
 		addIJMenuItem(thresholdingmn, "Otsu Threshold", "Otsu Thresholding", IJRequirement.EIGHTBIT);
 		addIJMenuItem(thresholdingmn, "Multi Otsu Threshold", "Multi OtsuThreshold");
 		addIJMenuItem(thresholdingmn, "Maximum Entropy Threshold", "Entropy Threshold", IJRequirement.EIGHTBIT);
 		addIJMenuItem(thresholdingmn, "Mixture Modeling Threshold", "Mixture Modeling", IJRequirement.EIGHTBIT);
 		addIJMenuItem(thresholdingmn, "Robust Automatic Threshold Selection", "RATS ");
-		addIJMenuItem(thresholdingmn, "Simple Iterative Object Extraction", "SIOX Segmentation");
-		
+		//addIJMenuItem(thresholdingmn, "Simple Iterative Object Extraction", "SIOX Segmentation", IJRequirement.RGB);
 
 		// advanced binary menu
-		addIJMenuItem(binarymn, "Voxel Counter", "Voxel Counter", IJRequirement.STACK);//stack required
+		addIJMenuItem(binarymn, "Voxel Counter", "Voxel Counter", IJRequirement.STACK);// stack
+																						// required
 		addIJMenuItem(binarymn, "Erode", "Erode", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Dilate", "Dilate", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Open", "Open", IJRequirement.BINARY);
 		addIJMenuItem(binarymn, "Close", "Close", IJRequirement.BINARY);
-		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology", IJRequirement.THIRTYTWOBIT);// missing plugin
+		addIJMenuItem(binarymn, "Float Morphology", "Float Morphology", IJRequirement.THIRTYTWOBIT);// missing
+																									// plugin
 		addIJMenuItem(binarymn, "Outline", "Outline", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Fill Holes", "Fill Holes", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 		addIJMenuItem(binarymn, "Skeletonize", "Skeletonize", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
@@ -235,12 +235,12 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(binarymn, "Voronoi", "Voronoi", IJRequirement.BINARY, IJRequirement.EIGHTBIT);
 
 		// advanced process menu
-		
+
 		addIJMenuItem(processmn, "Subtract Background", "Subtract Background...");
 		addIJMenuItem(processmn, "Gaussian Blur", "Gaussian Blur...");
 		addIJMenuItem(processmn, "Convolve", "Convolve...");
 		addIJMenuItem(processmn, "Median", "Median...");
-		addIJMenuItem(processmn, "FFT", "FFT");//memory error
+		addIJMenuItem(processmn, "FFT", "FFT");// memory error
 		addIJMenuItem(processmn, "Straighten Curved Objects", "Straighten...", IJRequirement.IMAGEJ);
 
 		// advanced drawn menu
@@ -253,8 +253,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(profilemn, "Oval Profile Plot", "Oval Profile", IJRequirement.IMAGEJ);
 		addIJMenuItem(profilemn, "Radial Profile Plot Angle", "Radial Profile Angle", IJRequirement.IMAGEJ);
 		addIJMenuItem(profilemn, "Radial Profile Plot Height", "Radial Profile Height", IJRequirement.IMAGEJ);
-		addIJMenuItem(profilemn, "Contour Plotter", "ContourPlotter", IJRequirement.IMAGEJ);
-		
+		addIJMenuItem(profilemn, "Contour Plotter", "ContourPlotter ");
 
 		imagejmi.addActionListener(new ActionListener()
 		{
@@ -268,7 +267,7 @@ public class XmippMenuBar extends MenuBar
 
 	}
 
-	private void addIJMenuItem(Menu mn, String name, String command, IJRequirement ... requirements)
+	private void addIJMenuItem(Menu mn, String name, String command, IJRequirement... requirements)
 	{
 		MenuItem mi = new MenuItem(name);
 		addCommand(mi, command, requirements);
@@ -285,9 +284,7 @@ public class XmippMenuBar extends MenuBar
 		}
 	}
 
-	
-
-	protected void addCommand(MenuItem mi, String command, final IJRequirement ... requirements )
+	protected void addCommand(MenuItem mi, String command, final IJRequirement... requirements)
 	{
 		mi.setActionCommand(command);
 		mi.addActionListener(new ActionListener()
@@ -297,29 +294,43 @@ public class XmippMenuBar extends MenuBar
 			public void actionPerformed(ActionEvent e)
 			{
 
-				String command = ((MenuItem) e.getSource()).getActionCommand();
-				if (requirements != null)
-					for (IJRequirement requirement : requirements)
-						switch (requirement)
-						{
-						case IMAGEJ:
-							XmippIJUtil.showImageJ(Tool.VIEWER);
-							break;
-						case BINARY:
-							IJ.run("Make Binary");
-							break;
-						case EIGHTBIT:
-							IJ.run("8-bit");
-							break;
-						case THIRTYTWOBIT:
-							IJ.run("32-bit");
-							break;
-						case STACK:
-							if(WindowManager.getCurrentImage().getImageStackSize() == 1)
-								JOptionPane.showMessageDialog(null, "Only for Stack");
+				try
+				{
+					String command = ((MenuItem) e.getSource()).getActionCommand();
+					if (requirements != null)
+						for (IJRequirement requirement : requirements)
+							switch (requirement)
+							{
+							case IMAGEJ:
+								XmippIJUtil.showImageJ(Tool.VIEWER);
+								break;
+							case BINARY:
+								IJ.run("Make Binary");
+								JOptionPane.showMessageDialog(null, "make binary applied");
+								break;
+							case EIGHTBIT:
+								IJ.run("8-bit");
+								JOptionPane.showMessageDialog(null, "8-bit applied");
+								break;
+							case THIRTYTWOBIT:
+								IJ.run("32-bit");
+								JOptionPane.showMessageDialog(null, "32-bit applied");
+								break;
+							case RGB:
+								IJ.run("RGB Color");
+								JOptionPane.showMessageDialog(null, "RGB color applied");
+								break;
+							case STACK:
+								if (WindowManager.getCurrentImage().getImageStackSize() == 1)
+									JOptionPane.showMessageDialog(null, "Only for Stack");
 								return;
-						}
-				IJ.run(command);
+							}
+					IJ.run(command);
+				}
+				catch (Exception ex)
+				{
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+				}
 			}
 		});
 	}

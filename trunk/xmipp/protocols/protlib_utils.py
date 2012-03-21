@@ -533,13 +533,13 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     '''Launch an Java application based on ImageJ '''
     from protlib_filesystem import getXmippPath
     if len(memory) == 0:
-        memory = "512m"
+        memory = "1g"
         print "No memory size provided. Using default: " + memory
     imagej_home = getXmippPath("external", "imagej")
     javaLib = getXmippPath('java', 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
 
-    cmd = "java -Dplugins.dir=%(plugins_dir)s -cp %(imagej_home)s/*:%(javaLib)s/* %(appName)s %(args)s" % locals()
+    cmd = "java -Xmx%(memory)s -Dplugins.dir=%(plugins_dir)s -cp %(imagej_home)s/*:%(javaLib)s/* %(appName)s %(args)s" % locals()
     if batchMode:
         cmd += " &"
     return cmd

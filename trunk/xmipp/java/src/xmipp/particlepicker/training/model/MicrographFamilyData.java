@@ -170,7 +170,8 @@ public class MicrographFamilyData
 			if (state == MicrographFamilyState.ReadOnly)
 				return false;
 			if (state == MicrographFamilyState.Correct)
-				return !manualparticles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
+				//return !manualparticles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
+				return true;
 			return true;
 		}
 		return false;
