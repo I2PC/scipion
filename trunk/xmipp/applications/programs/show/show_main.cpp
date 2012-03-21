@@ -37,7 +37,7 @@
 
 
 enum ShowMode { MODE_INPUT, MODE_SPECT, MODE_SOM, MODE_SPECTSOM,
-                MODE_PSD, MODE_CL2D };
+                MODE_PSD };
 
 class ProgShow: public XmippProgram
 {
@@ -54,17 +54,14 @@ protected:
         addUsageLine("Provides a Graphical User Interface for visualization and manipulation of");
         addUsageLine("Electron Microscopy Single Particle Images. The program can show images,");
         addUsageLine("volumes, stacks or selfiles. Also are provided some specific visualizations");
-        addUsageLine("(like som, cl2d, spectra...etc)");
+        addUsageLine("(like som, spectra...etc)");
         addParamsLine("    -i <...>                   : Input files: accept images, volumes, stacks or metadatas");
         addParamsLine("or  --psd <...>                : Input PSDs (in image format)");
         addParamsLine("or  --spect <datafile>         : Spectra .dat file");
         addParamsLine("or  --som <SOM_rootname>       : SOM images");
-        addParamsLine("or  --cl2d <CL2D_rootname>     : CL2D images");
         addParamsLine("or  --spectsom <SOM_rootname>  : SOM spectra");
         addParamsLine("[--spectsom_din <filename>]    : Original data");
         addParamsLine("      requires --spectsom;");
-        addParamsLine("[--cl2d_filter_suffix <s>]     : Filter suffix for the CL2D");
-        addParamsLine("      requires --cl2d;");
         addParamsLine("   [--dim <w=10> <h=10>]       : Dimensions of the table");
         addParamsLine("   [--common_norm]             : Normalize all the volumes or images with the same factors");
         addParamsLine("   [--showall]                 : Only for sel mode, show all images even if sel = -1");
@@ -88,12 +85,6 @@ protected:
         {
             mode = MODE_SOM;
             getListParam("--som", files);
-        }
-        else if (checkParam("--cl2d"))
-        {
-            mode = MODE_CL2D;
-            getListParam("--cl2d", files);
-            filterSuffix = getParam("--cl2d_filter_suffix");
         }
         else if (checkParam("--psd"))
         {
@@ -155,10 +146,6 @@ protected:
             //                    {
             //                        // Not implemented
             //                    }
-            //                    else if (mode == MODE_CL2D)
-            //                    {
-            //                        // Not implemented
-            //                    }
             //                    else if (mode == MODE_PSD)
             //                    {
             //                        // Not implemented
@@ -188,8 +175,6 @@ protected:
                 case MODE_SPECT:
                     continue;
                 case MODE_SOM:
-                    break;
-                case MODE_CL2D:
                     break;
                 case MODE_SPECTSOM:
                     break;
@@ -258,15 +243,6 @@ protected:
                 showsom->apply_geo = apply_geo;
                 showsom->initWithFile(fn);
                 showsom->show();
-                shown++;
-            }
-            else if (mode == MODE_CL2D)
-            {
-                ShowCL2D *showcl2d = new ShowCL2D;
-                showcl2d->apply_geo = apply_geo;
-                showcl2d->filterSuffix = filterSuffix;
-                showcl2d->initWithFile(fn);
-                showcl2d->show();
                 shown++;
             }
             else if (mode == MODE_SPECTSOM)
