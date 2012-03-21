@@ -32,7 +32,6 @@
 #include <graphics/show_spectra.h>
 #include <graphics/show_som.h>
 #include <graphics/show_spectra_som.h>
-#include <graphics/show_cl2d.h>
 
 #include <qapplication.h>
 
