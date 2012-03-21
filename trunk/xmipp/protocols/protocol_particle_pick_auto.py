@@ -51,12 +51,11 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.insertStep('createLink', source=self.pickingMicrographs, dest=self.micrographs)
         self.insertStep('createLink', source=self.pickingFamilies, dest=self.families)
         for family in self.familiesForAuto:
-            modelRoot = self.workingDirPath(family)
             getFilename = lambda k, d: self.getFilename(k, dir=d, family=family)
             self.insertStep('createLink',source=getFilename('training', self.pickingDir),
-                            dest=getFilename('training', modelRoot))
+                            dest=getFilename('training', self.WorkingDir))
             self.insertStep('createLink', source=getFilename('mask', self.pickingDir),
-                            dest=getFilename('mask', modelRoot))
+                            dest=getFilename('mask', self.WorkingDir))
 
         md = MetaData(self.pickingMicrographs)
         for i, family in enumerate(self.familiesForAuto):
