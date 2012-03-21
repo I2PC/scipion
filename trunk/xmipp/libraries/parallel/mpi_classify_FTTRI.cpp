@@ -1063,7 +1063,7 @@ void ProgClassifyFTTRI::writeResults(bool FTTRI)
     {
         MDclass.clear();
         const std::vector<size_t> &class_i=bestEpsilonClasses[i].memberIdx;
-        int nmax=class_i.size();
+        size_t nmax=class_i.size();
 
         // Write this class in summary
         size_t id=MDsummary.addObject();

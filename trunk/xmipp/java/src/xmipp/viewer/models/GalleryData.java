@@ -413,7 +413,7 @@ public class GalleryData {
 			}
 			for (long id : ids) {
 				int ref = md.getValueInt(MDLabel.MDL_REF, id);
-				int count = md.getValueInt(MDLabel.MDL_CLASS_COUNT, id);
+				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
 				String s = String.format("class%06d_images", ref);
 				if (count > 0 && !containsBlock(s)) {
 					DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'",

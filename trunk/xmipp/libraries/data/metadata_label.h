@@ -577,7 +577,7 @@ private:
         MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
         MDL::addLabel(MDL_CL2D_CHANGES, LABEL_INT, "cl2d_changes");
         MDL::addLabel(MDL_CL2D_SIMILARITY, LABEL_DOUBLE, "cl2dsimilarity");
-        MDL::addLabel(MDL_CLASS_COUNT, LABEL_INT, "class_count");
+        MDL::addLabel(MDL_CLASS_COUNT, LABEL_LONG, "class_count");
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR, "ClassificationData");
         MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
         MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "ClassificationDPR05");
