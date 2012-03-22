@@ -53,7 +53,7 @@ int ImageBase::readSPE(size_t select_img,bool isStack)
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
     offset = 4100;
-    DataType datatype = UShort;
+    DataType datatype = DT_UShort;
 
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);

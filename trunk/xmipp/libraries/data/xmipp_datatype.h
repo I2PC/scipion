@@ -36,23 +36,23 @@
  */
 typedef enum
 {
-    Default = -1,           // For writing purposes
-    Unknown_Type = 0,       // Undefined data type
-    UChar = 1,              // Unsigned character or byte type
-    SChar = 2,              // Signed character (for CCP4)
-    UShort = 3,             // Unsigned integer (2-byte)
-    Short = 4,              // Signed integer (2-byte)
-    UInt = 5,               // Unsigned integer (4-byte)
-    Int = 6,                // Signed integer (4-byte)
-    Long = 7,               // Signed integer (4 or 8 byte, depending on system)
-    Float = 8,              // Floating point (4-byte)
-    Double = 9,             // Double precision floating point (8-byte)
-    ComplexShort = 10,      // Complex two-byte integer (4-byte)
-    ComplexInt = 11,        // Complex integer (8-byte)
-    ComplexFloat = 12,      // Complex floating point (8-byte)
-    ComplexDouble = 13,     // Complex floating point (16-byte)
-    Bool = 14,              // Boolean (1-byte?)
-    LastEntry = 15          // This must be the last entry
+    DT_Default = -1,           // For writing purposes
+    DT_Unknown = 0,       // Undefined data type
+    DT_UChar = 1,              // Unsigned character or byte type
+    DT_SChar = 2,              // Signed character (for CCP4)
+    DT_UShort = 3,             // Unsigned integer (2-byte)
+    DT_Short = 4,              // Signed integer (2-byte)
+    DT_UInt = 5,               // Unsigned integer (4-byte)
+    DT_Int = 6,                // Signed integer (4-byte)
+    DT_Long = 7,               // Signed integer (4 or 8 byte, depending on system)
+    DT_Float = 8,              // Floating point (4-byte)
+    DT_Double = 9,             // DT_Double precision floating point (8-byte)
+    DT_CShort = 10,      // Complex two-byte integer (4-byte)
+    DT_CInt = 11,        // Complex integer (8-byte)
+    DT_CFloat = 12,      // Complex floating point (8-byte)
+    DT_CDouble = 13,     // Complex floating point (16-byte)
+    DT_Bool = 14,              // Boolean (1-byte?)
+    DT_LastEntry = 15          // This must be the last entry
 } DataType;
 
 

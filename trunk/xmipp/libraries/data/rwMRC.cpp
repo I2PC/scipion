@@ -138,7 +138,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         fprintf(stderr, "Warning: Swapping header byte order for 4-byte types\n");
 #endif
 
-        swapPage((char *) header, MRCSIZE - 800, Float); // MRCSIZE - 800 is to exclude labels from swapping
+        swapPage((char *) header, MRCSIZE - 800, DT_Float); // MRCSIZE - 800 is to exclude labels from swapping
     }
 
     // Convert VAX floating point types if necessary
@@ -171,22 +171,22 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     switch ( header->mode % 5 )
     {
     case 0:
-        datatype = UChar;
+        datatype = DT_UChar;
         break;
     case 1:
-        datatype = Short;
+        datatype = DT_Short;
         break;
     case 2:
-        datatype = Float;
+        datatype = DT_Float;
         break;
     case 3:
-        datatype = ComplexShort;
+        datatype = DT_CShort;
         break;
     case 4:
-        datatype = ComplexFloat;
+        datatype = DT_CFloat;
         break;
     default:
-        datatype = UChar;
+        datatype = DT_UChar;
         break;
     }
     offset = MRCSIZE + header->nsymbt;
@@ -289,51 +289,51 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         castMode = CW_CAST;
         switch(myTypeID)
         {
-        case Double:
-        case Float:
-        case Int:
-        case UInt:
-            wDType = Float;
+        case DT_Double:
+        case DT_Float:
+        case DT_Int:
+        case DT_UInt:
+            wDType = DT_Float;
             header->mode = 2;
             break;
-        case Short:
-        case UShort:
-            wDType = Short;
+        case DT_Short:
+        case DT_UShort:
+            wDType = DT_Short;
             header->mode = 1;
             break;
-        case SChar:
-        case UChar:
+        case DT_SChar:
+        case DT_UChar:
             castMode = CW_CONVERT;
-            wDType = UChar;
+            wDType = DT_UChar;
             header->mode = 0;
             break;
-        case ComplexFloat:
-        case ComplexDouble:
-            wDType = ComplexFloat;
+        case DT_CFloat:
+        case DT_CDouble:
+            wDType = DT_CFloat;
             header->mode = 4;
             break;
         default:
-            wDType = Unknown_Type;
+            wDType = DT_Unknown;
             REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: Unsupported data type by MRC format.");
         }
     }
     else //Convert to other data type
     {
         // Default Value
-        wDType = (bitDepth == "default") ? Float : datatypeRAW(bitDepth);
+        wDType = (bitDepth == "default") ? DT_Float : datatypeRAW(bitDepth);
 
         switch (wDType)
         {
-        case Float:
+        case DT_Float:
             header->mode = 2;
             break;
-        case UChar:
+        case DT_UChar:
             header->mode = 0;
             break;
-        case Short:
+        case DT_Short:
             header->mode = 1;
             break;
-        case ComplexFloat:
+        case DT_CFloat:
             header->mode = 4;
             break;
         default:
@@ -498,7 +498,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     if(!isStack || replaceNsize < header->nz)
     {
         if ( swapWrite )
-            swapPage((char *) header, MRCSIZE - 800, Float);
+            swapPage((char *) header, MRCSIZE - 800, DT_Float);
         fwrite( header, MRCSIZE, 1, fimg );
     }
     freeMemory(header, sizeof(MRChead) );

@@ -101,36 +101,36 @@ DataType ImageBase::datatypeTIFF(TIFFDirHead dHead)
     {
     case 8:
         if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
-            datatype = SChar;
+            datatype = DT_SChar;
         else
-            datatype = UChar;
+            datatype = DT_UChar;
         break;
     case 16:
         if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
-            datatype = Short;
+            datatype = DT_Short;
         else
-            datatype = UShort;
+            datatype = DT_UShort;
 
         //        else if (dHead.imageSampleFormat == SAMPLEFORMAT_UINT ||
         //                 dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP ) //Don't know why
-        //            datatype = UShort;
+        //            datatype = DT_UShort;
         //        //        else if (dHead.imageSampleFormat == 0     ||
         //        //                 dHead.imageSampleFormat == 32767 ) // Format 0 and 32767 are not declared in TIFF 6.0 specifications ¿?
         //        else
-        //        datatype = UShort;
+        //        datatype = DT_UShort;
         break;
     case 32:
         if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
-            datatype = Int;
+            datatype = DT_Int;
         else if (dHead.imageSampleFormat == SAMPLEFORMAT_UINT )
-            datatype = UInt;
+            datatype = DT_UInt;
         else if (dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP )
-            datatype = Float;
+            datatype = DT_Float;
         else
-            datatype = Unknown_Type;
+            datatype = DT_Unknown;
         break;
     default:
-        datatype = Unknown_Type;
+        datatype = DT_Unknown;
         //        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Unsupported TIFF sample format.");
         break;
     }
@@ -373,31 +373,31 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
         castMode = CW_CAST;
         switch(myTypeID)
         {
-        case Double:
-        case Float:
-            wDType = Float;
+        case DT_Double:
+        case DT_Float:
+            wDType = DT_Float;
             dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
             break;
-        case Int:
+        case DT_Int:
             castMode = CW_CONVERT;
-        case UInt:
-            wDType = UInt;
+        case DT_UInt:
+            wDType = DT_UInt;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
             break;
-        case Short:
+        case DT_Short:
             castMode = CW_CONVERT;
-        case UShort:
-            wDType = UShort;
+        case DT_UShort:
+            wDType = DT_UShort;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
             break;
-        case SChar:
+        case DT_SChar:
             castMode = CW_CONVERT;
-        case UChar:
-            wDType = UChar;
+        case DT_UChar:
+            wDType = DT_UChar;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
             break;
         default:
-            wDType = Unknown_Type;
+            wDType = DT_Unknown;
             REPORT_ERROR(ERR_TYPE_INCORRECT,formatString("rwTIFF: cannot write TIFF format from %s\
                          datatype.",datatype2Str(myTypeID).c_str()));
         }
@@ -405,20 +405,20 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
     else
     {
         // Default Value
-        wDType = (bitDepth == "default") ? UChar : datatypeRAW(bitDepth);
+        wDType = (bitDepth == "default") ? DT_UChar : datatypeRAW(bitDepth);
 
         switch(wDType)
         {
-        case Float:
+        case DT_Float:
             dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
             break;
-        case UInt:
-        case UShort:
-        case UChar:
+        case DT_UInt:
+        case DT_UShort:
+        case DT_UChar:
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
             break;
         default:
-            wDType = Unknown_Type;
+            wDType = DT_Unknown;
             REPORT_ERROR(ERR_TYPE_INCORRECT,formatString("rwTIFF: TIFF format does not support %s " \
                                      "datatype.",datatype2Str(myTypeID).c_str()));
         }

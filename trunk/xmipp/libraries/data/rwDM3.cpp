@@ -72,34 +72,34 @@ DataType datatypeDM3(int nType)
     switch(nType)
     {
     case 2:      // (02h =  2  i2* signed    (short)
-        datatype = Short;
+        datatype = DT_Short;
         break;
     case 3:          // 03h =  3  i4* signed    (long)
-        datatype = Int;
+        datatype = DT_Int;
         break;
     case 4:       //  04h =  4  i2* unsigned  (ushort) or unicode string
-        datatype = UShort;
+        datatype = DT_UShort;
         break;
     case 5:        //  05h =  5  i4* unsigned  (ulong)
-        datatype = UInt;
+        datatype = DT_UInt;
         break;
     case 6:        //  06h =  6  f4*           (float)
-        datatype = Float;
+        datatype = DT_Float;
         break;
     case 7:        //  07h =  7  f8*           (double)
-        datatype = Double;
+        datatype = DT_Double;
         break;
     case 8:        //  08h =  8  i1            (boolean)
-        datatype = Bool;
+        datatype = DT_Bool;
         break;
     case 9:        //  0ah = 10  i1
-        datatype = SChar;
+        datatype = DT_SChar;
         break;
     case 10:        //  0ah = 10  i1
-        datatype = SChar;
+        datatype = DT_SChar;
         break;
     default:
-        datatype = Unknown_Type;
+        datatype = DT_Unknown;
         break;
     }
     return datatype;

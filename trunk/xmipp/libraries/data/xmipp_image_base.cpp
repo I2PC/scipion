@@ -249,7 +249,7 @@ void ImageBase::swapPage(char * page, size_t pageNrElements, DataType datatype, 
     // Swap bytes if required
     if ( swap == 1 )
     {
-        if ( datatype >= ComplexShort )
+        if ( datatype >= DT_CShort )
             datatypesize /= 2;
         for ( size_t i = 0; i < pageNrElements; i += datatypesize )
             swapbytes(page+i, datatypesize);
@@ -890,49 +890,49 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     o << "Data type      : ";
     switch (I.datatype())
     {
-    case Unknown_Type:
+    case DT_Unknown:
         o << "Undefined data type";
         break;
-    case UChar:
+    case DT_UChar:
         o << "Unsigned character or byte type (UInt8)";
         break;
-    case SChar:
+    case DT_SChar:
         o << "Signed character (Int8)";
         break;
-    case UShort:
+    case DT_UShort:
         o << "Unsigned short integer (UInt16)";
         break;
-    case Short:
+    case DT_Short:
         o << "Signed short integer (Int16)";
         break;
-    case UInt:
+    case DT_UInt:
         o << "Unsigned integer (UInt32)";
         break;
-    case Int:
+    case DT_Int:
         o << "Signed integer (Int32)";
         break;
-    case Long:
+    case DT_Long:
         o << "Signed integer (4 or 8 byte, depending on system)";
         break;
-    case Float:
+    case DT_Float:
         o << "Floating point (4-byte)";
         break;
-    case Double:
+    case DT_Double:
         o << "Double precision floating point (8-byte)";
         break;
-    case ComplexShort:
+    case DT_CShort:
         o << "Complex two-byte integer (4-byte)";
         break;
-    case ComplexInt:
+    case DT_CInt:
         o << "Complex integer (8-byte)";
         break;
-    case ComplexFloat:
+    case DT_CFloat:
         o << "Complex floating point (8-byte)";
         break;
-    case ComplexDouble:
+    case DT_CDouble:
         o << "Complex floating point (16-byte)";
         break;
-    case Bool:
+    case DT_Bool:
         o << "Boolean (1-byte?)";
         break;
     }

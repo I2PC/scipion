@@ -152,13 +152,13 @@ int  ImageBase::readSPIDER(size_t select_img)
     // Determine byte order and swap bytes if from different-endian machine
     if ( swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > 1000 ) ||
                  ( fabs(header->nslice) < 1 )) )
-        swapPage((char *) header, SPIDERSIZE - 180, Float);
+        swapPage((char *) header, SPIDERSIZE - 180, DT_Float);
 
     if(header->labbyt != header->labrec*header->lenbyt)
         REPORT_ERROR(ERR_IO_NOTFILE,formatString("Invalid Spider file:  %s", filename.c_str()));
 
     offset = (size_t) header->labbyt;
-    DataType datatype  = Float;
+    DataType datatype  = DT_Float;
 
     MDMainHeader.setValue(MDL_MIN,(double)header->fmin);
     MDMainHeader.setValue(MDL_MAX,(double)header->fmax);
@@ -235,7 +235,7 @@ int  ImageBase::readSPIDER(size_t select_img)
             if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
                 REPORT_ERROR(ERR_IO_NOREAD, formatString("rwSPIDER: cannot read Spider image %lu header", i));
             if ( swap )
-                swapPage((char *) header, SPIDERSIZE - 180, Float);
+                swapPage((char *) header, SPIDERSIZE - 180, DT_Float);
         }
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
@@ -300,7 +300,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 #undef DEBUG
 
     // Check datatype compatibility
-    DataType wDType = (isComplexT()) ? ComplexFloat : Float;
+    DataType wDType = (isComplexT()) ? DT_CFloat : DT_Float;
 
     if (mmapOnWrite)
     {
@@ -501,7 +501,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         newNsize > replaceNsize) //header must change
     {
         if ( swapWrite )
-            swapPage((char *) header, SPIDERSIZE - 180, Float);
+            swapPage((char *) header, SPIDERSIZE - 180, DT_Float);
         fwrite( header, offset, 1, fimg );
     }
 
@@ -557,7 +557,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             }
             //do not need to unlock because we are in the overwrite case
             if ( swapWrite )
-                swapPage((char *) header, SPIDERSIZE - 180, Float);
+                swapPage((char *) header, SPIDERSIZE - 180, DT_Float);
             fwrite( header, offset, 1, fimg );
             if (dataMode >= DATA)
             {

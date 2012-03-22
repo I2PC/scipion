@@ -131,24 +131,24 @@ int  ImageBase::readIMAGIC(size_t select_img)
 
     // Determine byte order and swap bytes if from little-endian machine
     if ( swap = (( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG )) )
-        swapPage((char *) header, IMAGICSIZE - 916, Float); // IMAGICSIZE - 916 is to exclude labels from swapping
+        swapPage((char *) header, IMAGICSIZE - 916, DT_Float); // IMAGICSIZE - 916 is to exclude labels from swapping
 
     DataType datatype;
 
     if ( strstr(header->type,"PACK") )
-        datatype = UChar;
+        datatype = DT_UChar;
     else if ( strstr(header->type,"INTG") )
-        datatype = Short;
+        datatype = DT_Short;
     else if ( strstr(header->type,"REAL") )
-        datatype = Float;
+        datatype = DT_Float;
     else if ( strstr(header->type,"RECO") )
     {
-        datatype = ComplexFloat; // Complex data
+        datatype = DT_CFloat; // Complex data
         transform = NoTransform;
     }
     else if ( strstr(header->type,"COMP") )
     {
-        datatype = ComplexFloat; // Complex transform data
+        datatype = DT_CFloat; // Complex transform data
         transform = Centered;
     }
 
@@ -209,7 +209,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
             return(-2);
         {
             if ( swap )
-                swapPage((char *) header, IMAGICSIZE - 916, Float);
+                swapPage((char *) header, IMAGICSIZE - 916, DT_Float);
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
@@ -268,54 +268,54 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     {
         switch(myTypeID)
         {
-        case Double:
-        case Float:
-        case Int:
-        case UInt:
-            wDType = Float;
+        case DT_Double:
+        case DT_Float:
+        case DT_Int:
+        case DT_UInt:
+            wDType = DT_Float;
             strcpy(header.type,"REAL");
             break;
-        case UShort:
+        case DT_UShort:
             castMode = CW_CONVERT;
-        case Short:
-            wDType = Short;
+        case DT_Short:
+            wDType = DT_Short;
             strcpy(header.type,"INTG");
             break;
-        case SChar:
+        case DT_SChar:
             castMode = CW_CONVERT;
-        case UChar:
-            wDType = UChar;
+        case DT_UChar:
+            wDType = DT_UChar;
             strcpy(header.type,"PACK");
             break;
-        case ComplexFloat:
-        case ComplexDouble:
-            wDType = ComplexFloat;
+        case DT_CFloat:
+        case DT_CDouble:
+            wDType = DT_CFloat;
             strcpy(header.type,"COMP");
             break;
         default:
-            wDType = Unknown_Type;
+            wDType = DT_Unknown;
             REPORT_ERROR(ERR_TYPE_INCORRECT, "ERROR: Unsupported data type by IMAGIC format.");
         }
     }
     else //Convert to other data type
     {
         // Default Value
-        wDType = (bitDepth == "default") ? Float : datatypeRAW(bitDepth);
+        wDType = (bitDepth == "default") ? DT_Float : datatypeRAW(bitDepth);
 
         switch (wDType)
         {
-        case UChar:
+        case DT_UChar:
             strcpy(header.type,"PACK");
             castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
-        case Short:
+        case DT_Short:
             strcpy(header.type,"INTG");
             castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
-        case Float:
+        case DT_Float:
             strcpy(header.type,"REAL");
             break;
-        case ComplexFloat:
+        case DT_CFloat:
             strcpy(header.type,"COMP");
             break;
         default:
@@ -423,7 +423,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         if ( swapWrite )
         {
             IMAGIChead headTemp = header;
-            swapPage((char *) &headTemp, IMAGICSIZE - 916, Float);
+            swapPage((char *) &headTemp, IMAGICSIZE - 916, DT_Float);
             fwrite( &headTemp, IMAGICSIZE, 1, fhed );
         }
         fwrite( &header, IMAGICSIZE, 1, fhed );
@@ -434,7 +434,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         if ( swapWrite )
         {
             int ifnswp = header.ifn;
-            swapPage((char *) ifnswp, SIZEOF_INT, Int);
+            swapPage((char *) ifnswp, SIZEOF_INT, DT_Int);
             fwrite(&(ifnswp),SIZEOF_INT,1,fhed);
         }
         else
@@ -471,7 +471,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         header.imn = imgStart + i + 1;
 
         if ( swapWrite )
-            swapPage((char *) &header, IMAGICSIZE - 916, Float);
+            swapPage((char *) &header, IMAGICSIZE - 916, DT_Float);
         fwrite( &header, IMAGICSIZE, 1, fhed );
 
         if (dataMode >= DATA)

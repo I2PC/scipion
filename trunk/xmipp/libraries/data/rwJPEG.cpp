@@ -48,7 +48,7 @@ int ImageBase::readJPEG(size_t select_img)
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,oneD);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,oneD);
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,oneD);
-    MDMainHeader.setValue(MDL_DATATYPE,(int) UChar);
+    MDMainHeader.setValue(MDL_DATATYPE,(int) DT_UChar);
 
     ArrayDim aDim;
     aDim.xdim = cinfo.image_width;
@@ -74,7 +74,7 @@ int ImageBase::readJPEG(size_t select_img)
     if (mmapOnRead)
     {
         mmapOnRead = false;
-        if (aDim.nzyxdim*gettypesize(UChar) > tiff_map_min_size)
+        if (aDim.nzyxdim*gettypesize(DT_UChar) > tiff_map_min_size)
             mdaBase->setMmap(true);
     }
 
@@ -99,7 +99,7 @@ int ImageBase::readJPEG(size_t select_img)
         jpeg_read_scanlines( &cinfo, row_pointer, 1 );
         for( int i=0; i<cinfo.image_width;i++)
             buffer[i] = row_pointer[0][i*cinfo.num_components];
-        setPage2T((cinfo.output_scanline - 1)*cinfo.image_width, buffer, UChar, aDim.xdim);
+        setPage2T((cinfo.output_scanline - 1)*cinfo.image_width, buffer, DT_UChar, aDim.xdim);
     }
     /* wrap up decompression, destroy objects, free pointers and close open files */
     jpeg_finish_decompress( &cinfo );
@@ -144,7 +144,7 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
     DataType wDType;
 
     castMode = CW_CONVERT;
-    wDType = UChar;
+    wDType = DT_UChar;
 
     if (mmapOnWrite)
     {
@@ -214,7 +214,7 @@ int ImageBase::writeJPEG(size_t select_img, bool isStack, int mode, String bitDe
     while (cinfo.next_scanline < cinfo.image_height)
     {
         getCastConvertPageFromT((cinfo.next_scanline)*cinfo.image_width, buffer,
-                                UChar, cinfo.image_width, min0, max0, castMode);
+                                DT_UChar, cinfo.image_width, min0, max0, castMode);
 
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }

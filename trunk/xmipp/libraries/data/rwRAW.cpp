@@ -31,35 +31,35 @@ DataType ImageBase::datatypeRAW(String strDT)
     DataType datatype;
 
     if(strDT=="uint8")
-        datatype = UChar;
+        datatype = DT_UChar;
     else if (strDT=="int8")
-        datatype = SChar;
+        datatype = DT_SChar;
     else if (strDT=="uint16")
-        datatype = UShort;
+        datatype = DT_UShort;
     else if (strDT=="int16")
-        datatype = Short;
+        datatype = DT_Short;
     else if (strDT=="uint32")
-        datatype = UInt;
+        datatype = DT_UInt;
     else if (strDT=="int32")
-        datatype = Int;
+        datatype = DT_Int;
     else if (strDT=="long")
-        datatype = Long;
+        datatype = DT_Long;
     else if (strDT=="float")
-        datatype = Float;
+        datatype = DT_Float;
     else if (strDT=="double")
-        datatype = Double;
+        datatype = DT_Double;
     else if (strDT=="cint16")
-        datatype = ComplexShort;
+        datatype = DT_CShort;
     else if (strDT=="cint32")
-        datatype = ComplexInt;
+        datatype = DT_CInt;
     else if (strDT=="cfloat")
-        datatype = ComplexFloat;
+        datatype = DT_CFloat;
     else if (strDT=="cdouble")
-        datatype = ComplexDouble;
+        datatype = DT_CDouble;
     else if (strDT=="bool")
-        datatype = Bool;
+        datatype = DT_Bool;
     else
-        datatype = Unknown_Type;
+        datatype = DT_Unknown;
 
     return datatype;
 }

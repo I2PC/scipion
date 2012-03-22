@@ -35,37 +35,37 @@ size_t gettypesize(DataType type)
 
     switch ( type )
     {
-    case UChar:
-    case SChar:
+    case DT_UChar:
+    case DT_SChar:
         size = sizeof(char);
         break;
-    case UShort:
-    case Short:
+    case DT_UShort:
+    case DT_Short:
         size = sizeof(short);
         break;
-    case UInt:
-    case Int:
+    case DT_UInt:
+    case DT_Int:
         size = sizeof(int);
         break;
-    case Float:
+    case DT_Float:
         size = sizeof(float);
         break;
-    case Double:
+    case DT_Double:
         size = sizeof(double);
         break;
-    case ComplexShort:
+    case DT_CShort:
         size = sizeof(std::complex<short>);
         break;
-    case ComplexInt:
+    case DT_CInt:
         size = sizeof(std::complex<int>);
         break;
-    case ComplexFloat:
+    case DT_CFloat:
         size = sizeof(std::complex<float>);
         break;
-    case ComplexDouble:
+    case DT_CDouble:
         size = sizeof(std::complex<double>);
         break;
-    case Bool:
+    case DT_Bool:
         size = sizeof(bool);
         break;
     default:
@@ -81,33 +81,33 @@ DataType str2Datatype(const std::string & str)
     DataType datatype;
 
     if(str=="uint8")
-        datatype = UChar;
+        datatype = DT_UChar;
     else if (str=="int8")
-        datatype = SChar;
+        datatype = DT_SChar;
     else if (str=="uint16")
-        datatype = UShort;
+        datatype = DT_UShort;
     else if (str=="int16")
-        datatype = Short;
+        datatype = DT_Short;
     else if (str=="uint32")
-        datatype = UInt;
+        datatype = DT_UInt;
     else if (str=="int32")
-        datatype = Int;
+        datatype = DT_Int;
     else if (str=="long")
-        datatype = Long;
+        datatype = DT_Long;
     else if (str=="float")
-        datatype = Float;
+        datatype = DT_Float;
     else if (str=="double")
-        datatype = Double;
+        datatype = DT_Double;
     else if (str=="cint16")
-        datatype = ComplexShort;
+        datatype = DT_CShort;
     else if (str=="cint32")
-        datatype = ComplexInt;
+        datatype = DT_CInt;
     else if (str=="cfloat")
-        datatype = ComplexFloat;
+        datatype = DT_CFloat;
     else if (str=="cdouble")
-        datatype = ComplexDouble;
+        datatype = DT_CDouble;
     else if (str=="bool")
-        datatype = Bool;
+        datatype = DT_Bool;
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT, "datatypeString2int; unknown datatype");
 
@@ -119,31 +119,31 @@ std::string datatype2Str(DataType datatype)
 {
     switch ( datatype )
     {
-    case UChar:
+    case DT_UChar:
         return "uint8";
-    case SChar:
+    case DT_SChar:
         return "int8";
-    case UShort:
+    case DT_UShort:
         return "uint16";
-    case Short:
+    case DT_Short:
         return "int16";
-    case UInt:
+    case DT_UInt:
         return "uint32";
-    case Int:
+    case DT_Int:
         return "int32";
-    case Float:
+    case DT_Float:
         return "float";
-    case Double:
+    case DT_Double:
         return "double";
-    case ComplexShort:
+    case DT_CShort:
         return "cint16";
-    case ComplexInt:
+    case DT_CInt:
         return "cint32";
-    case ComplexFloat:
+    case DT_CFloat:
         return "cfloat";
-    case ComplexDouble:
+    case DT_CDouble:
         return "cdouble";
-    case Bool:
+    case DT_Bool:
         return "bool";
     default:
         return "unknown type";

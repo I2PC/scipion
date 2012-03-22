@@ -180,18 +180,18 @@ public:
     {
         switch (datatype)
         {
-        case Float:
-        case UInt:
+        case DT_Float:
+        case DT_UInt:
             return 32;
-        case Int:
+        case DT_Int:
             return 31;
-        case Short:
+        case DT_Short:
             return 15;
-        case UShort:
+        case DT_UShort:
             return 16;
-        case SChar:
+        case DT_SChar:
             return 7;
-        case UChar:
+        case DT_UChar:
             return 8;
         }
     }

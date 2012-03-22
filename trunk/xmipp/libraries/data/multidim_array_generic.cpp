@@ -51,7 +51,7 @@ MultidimArrayGeneric::~MultidimArrayGeneric()
 void MultidimArrayGeneric::init()
 {
     im = NULL;
-    datatype = Unknown_Type;
+    datatype = DT_Unknown;
     destroyData = true;
 }
 
@@ -80,49 +80,49 @@ void MultidimArrayGeneric::setDatatype(DataType imgType)
 
     switch (datatype)
     {
-    case Float:
+    case DT_Float:
         {
             MultidimArray<float> *imT = new MultidimArray<float>;
             im = imT;
         }
         break;
-    case UInt:
+    case DT_UInt:
         {
             MultidimArray<unsigned int> *imT = new MultidimArray<unsigned int>;
             im = imT;
         }
         break;
-    case Int:
+    case DT_Int:
         {
             MultidimArray<int> *imT = new MultidimArray<int>;
             im = imT;
         }
         break;
-    case UShort:
+    case DT_UShort:
         {
             MultidimArray<unsigned short> *imT = new MultidimArray<unsigned short>;
             im = imT;
         }
         break;
-    case Short:
+    case DT_Short:
         {
             MultidimArray<short> *imT = new MultidimArray<short>;
             im = imT;
         }
         break;
-    case UChar:
+    case DT_UChar:
         {
             MultidimArray<unsigned char> *imT = new MultidimArray<unsigned char>;
             im = imT;
         }
         break;
-    case SChar:
+    case DT_SChar:
         {
             MultidimArray<char> *imT = new MultidimArray<char>;
             im = imT;
         }
         break;
-    case Unknown_Type:
+    case DT_Unknown:
         REPORT_ERROR(ERR_IMG_UNKNOWN,"");
         break;
     default:

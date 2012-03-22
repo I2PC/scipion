@@ -40,28 +40,28 @@ void Image< std::complex< double > >::castPage2T(char * page,
 
     switch (datatype)
     {
-    case ComplexShort:
+    case DT_CShort:
         {
             std::complex<short> * ptr = (std::complex<short> *) page;
             for(int i=0; i<pageSize;i++)
                 ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
             break;
         }
-    case ComplexInt:
+    case DT_CInt:
             {
                 std::complex<int> * ptr = (std::complex<int> *) page;
                 for(int i=0; i<pageSize;i++)
                 ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
                 break;
             }
-        case ComplexFloat:
+        case DT_CFloat:
                 {
                     std::complex<float> * ptr = (std::complex<float> *) page;
                     for(int i=0; i<pageSize;i++)
                         ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
                         break;
                     }
-                case ComplexDouble:
+                case DT_CDouble:
                         {
                             memcpy(ptrDest, page, pageSize*sizeof(std::complex<double>));
                             break;
@@ -83,28 +83,28 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
 {
     switch (datatype)
     {
-    case ComplexShort:
+    case DT_CShort:
         {
             std::complex<short> * ptr = (std::complex<short> *) page;
             for(int i=0; i<pageSize;i++)
                 ptr[i] = (std::complex<short>)srcPtr[i];
             break;
         }
-    case ComplexInt:
+    case DT_CInt:
             {
                 std::complex<int> * ptr = (std::complex<int> *) page;
                 for(int i=0; i<pageSize;i++)
                 ptr[i] = (std::complex<int>)srcPtr[i];
                 break;
             }
-        case ComplexFloat:
+        case DT_CFloat:
                 {
                     std::complex<float> * ptr = (std::complex<float> *) page;
                     for(int i=0; i<pageSize;i++)
                         ptr[i] = (std::complex<float>)srcPtr[i];
                         break;
                     }
-                case ComplexDouble:
+                case DT_CDouble:
                         {
                             memcpy(page, srcPtr, pageSize*sizeof(std::complex<double>));
                             break;
@@ -125,7 +125,7 @@ void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< dou
 
     switch (datatype)
     {
-    case ComplexFloat:
+    case DT_CFloat:
         {
             std::complex<float> * ptr = (std::complex<float> *) page;
             for(int i=0; i<pageSize;i++)

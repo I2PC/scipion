@@ -44,28 +44,28 @@
 #define SWITCHDATATYPE(datatype,OP) \
     switch (datatype)\
         {\
-     case Double:\
+     case DT_Double:\
          {OP(double)};\
             break;\
-        case Float:\
+        case DT_Float:\
             {OP(float)};\
             break;\
-        case UInt:\
+        case DT_UInt:\
             {OP(unsigned int)};\
             break;\
-        case Int:\
+        case DT_Int:\
             {OP(int)};\
             break;\
-        case Short:\
+        case DT_Short:\
             {OP(short)};\
             break;\
-        case UShort:\
+        case DT_UShort:\
             {OP(unsigned short)};\
             break;\
-        case SChar:\
+        case DT_SChar:\
             {OP(char)};\
             break;\
-        case UChar:\
+        case DT_UChar:\
             {OP(unsigned char)};\
             break;\
         }
@@ -372,7 +372,7 @@ public:
     /** Assignment **/
     MultidimArrayGeneric& operator=(const MultidimArrayGeneric& input)
     {
-        if (&input != this && input.datatype != Unknown_Type)
+        if (&input != this && input.datatype != DT_Unknown)
         {
             setDatatype(input.datatype);
             *im = *input.im;

@@ -178,9 +178,9 @@ public:
     {
         switch (datatype)
         {
-        case Unknown_Type:
+        case DT_Unknown:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: datatype is Unknown_Type");
-        case UChar:
+        case DT_UChar:
             {
                 if (typeid(T) == typeid(unsigned char))
                     memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -192,7 +192,7 @@ public:
                 }
                 break;
             }
-        case SChar:
+        case DT_SChar:
                 {
                     if (typeid(T) == typeid(signed char))
                 {
@@ -206,7 +206,7 @@ public:
                     }
                 break;
             }
-        case UShort:
+        case DT_UShort:
                 {
                     if (typeid(T) == typeid(unsigned short))
                 {
@@ -220,7 +220,7 @@ public:
                     }
                 break;
             }
-        case Short:
+        case DT_Short:
                 {
                     if (typeid(T) == typeid(short))
                 {
@@ -234,7 +234,7 @@ public:
                     }
                 break;
             }
-        case UInt:
+        case DT_UInt:
                 {
                     if (typeid(T) == typeid(unsigned int))
                 {
@@ -248,7 +248,7 @@ public:
                     }
                 break;
             }
-        case Int:
+        case DT_Int:
                 {
                     if (typeid(T) == typeid(int))
                 {
@@ -262,7 +262,7 @@ public:
                     }
                 break;
             }
-        case Long:
+        case DT_Long:
                 {
                     if (typeid(T) == typeid(long))
                 {
@@ -276,7 +276,7 @@ public:
                     }
                 break;
             }
-        case Float:
+        case DT_Float:
                 {
                     if (typeid(T) == typeid(float))
                 {
@@ -290,7 +290,7 @@ public:
                     }
                 break;
             }
-        case Double:
+        case DT_Double:
                 {
                     if (typeid(T) == typeid(double))
                 {
@@ -321,7 +321,7 @@ public:
     {
         switch (datatype)
         {
-        case Float:
+        case DT_Float:
             {
                 if (typeid(T) == typeid(float))
                 {
@@ -335,7 +335,7 @@ public:
                 }
                 break;
             }
-        case Double:
+        case DT_Double:
                 {
                     if (typeid(T) == typeid(double))
                 {
@@ -349,7 +349,7 @@ public:
                     }
                 break;
             }
-        case UShort:
+        case DT_UShort:
                 {
                     if (typeid(T) == typeid(unsigned short))
                 {
@@ -363,7 +363,7 @@ public:
                     }
                 break;
             }
-        case Short:
+        case DT_Short:
                 {
                     if (typeid(T) == typeid(short))
                 {
@@ -377,7 +377,7 @@ public:
                     }
                 break;
             }
-        case UChar:
+        case DT_UChar:
                 {
                     if (typeid(T) == typeid(unsigned char))
                 {
@@ -391,7 +391,7 @@ public:
                     }
                 break;
             }
-        case SChar:
+        case DT_SChar:
                 {
                     if (typeid(T) == typeid(char))
                 {
@@ -429,9 +429,9 @@ public:
 
         switch(datatype)
         {
-        case UChar:
+        case DT_UChar:
             {
-                if (castMode==CW_CONVERT && myTypeId == SChar)
+                if (castMode==CW_CONVERT && myTypeId == DT_SChar)
                 {
                     slope = 1;
                     min0 -= CHAR_MIN;
@@ -454,9 +454,9 @@ public:
 
                 break;
             }
-        case SChar:
+        case DT_SChar:
                 {
-                    if (castMode==CW_CONVERT &&  myTypeId == UChar)
+                    if (castMode==CW_CONVERT &&  myTypeId == DT_UChar)
                 {
                     slope = 1;
                     min0 += CHAR_MIN;
@@ -479,14 +479,14 @@ public:
 
                 break;
             }
-        case UShort:
+        case DT_UShort:
                 {
-                    if (castMode==CW_CONVERT && (myTypeId == SChar|| myTypeId == Short))
+                    if (castMode==CW_CONVERT && (myTypeId == DT_SChar|| myTypeId == DT_Short))
                     {
                         slope = 1;
                         min0 -= SHRT_MIN;
                     }
-                    else if (castMode==CW_CONVERT && (myTypeId == UChar))
+                    else if (castMode==CW_CONVERT && (myTypeId == DT_UChar))
                     {
                         slope = 1;
                     }
@@ -508,14 +508,14 @@ public:
 
                 break;
             }
-        case Short:
+        case DT_Short:
                 {
-                    if (castMode==CW_CONVERT && (myTypeId == UChar || myTypeId == UShort))
+                    if (castMode==CW_CONVERT && (myTypeId == DT_UChar || myTypeId == DT_UShort))
                     {
                         slope = 1;
                         min0 += SHRT_MIN;
                     }
-                    else if (castMode==CW_CONVERT && (myTypeId == SChar))
+                    else if (castMode==CW_CONVERT && (myTypeId == DT_SChar))
                     {
                         slope = 1;
                     }
@@ -537,16 +537,16 @@ public:
 
                 break;
             }
-        case UInt:
+        case DT_UInt:
                 {
-                    if (castMode==CW_CONVERT &&  (myTypeId == SChar
-                                                      || myTypeId == Short
-                                                      || myTypeId == Int))
+                    if (castMode==CW_CONVERT &&  (myTypeId == DT_SChar
+                                                      || myTypeId == DT_Short
+                                                      || myTypeId == DT_Int))
                     {
                         slope = 1;
                         min0 -= INT_MIN;
                     }
-                    else if (castMode==CW_CONVERT &&  (myTypeId == UShort || myTypeId == UChar))
+                    else if (castMode==CW_CONVERT &&  (myTypeId == DT_UShort || myTypeId == DT_UChar))
                     {
                         slope = 1;
                     }
@@ -567,16 +567,16 @@ public:
                                                      static_cast< double >(srcPtr[n] - min0)));
                 break;
             }
-        case Int:
+        case DT_Int:
                 {
-                    if (castMode==CW_CONVERT &&  (myTypeId == UChar
-                                                      || myTypeId == UShort
-                                                      || myTypeId == UInt))
+                    if (castMode==CW_CONVERT &&  (myTypeId == DT_UChar
+                                                      || myTypeId == DT_UShort
+                                                      || myTypeId == DT_UInt))
                     {
                         slope = 1;
                         min0 += INT_MIN;
                     }
-                    else if (castMode==CW_CONVERT &&  (myTypeId == Short || myTypeId == SChar))
+                    else if (castMode==CW_CONVERT &&  (myTypeId == DT_Short || myTypeId == DT_SChar))
                     {
                         slope = 1;
                     }
@@ -628,9 +628,9 @@ public:
 
         switch (datatype)
         {
-        case Unknown_Type:
+        case DT_Unknown:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: datatype is Unknown_Type");
-        case UChar:
+        case DT_UChar:
             {
                 if (typeid(T) == typeid(unsigned char))
                     return 1;
@@ -638,7 +638,7 @@ public:
                     return 0;
                 break;
             }
-        case SChar:
+        case DT_SChar:
             {
                 if (typeid(T) == typeid(char))
                     return 1;
@@ -646,7 +646,7 @@ public:
                     return 0;
                 break;
             }
-        case UShort:
+        case DT_UShort:
             {
                 if (typeid(T) == typeid(unsigned short))
                     return 1;
@@ -654,7 +654,7 @@ public:
                     return 0;
                 break;
             }
-        case Short:
+        case DT_Short:
             {
                 if (typeid(T) == typeid(short))
                     return 1;
@@ -662,7 +662,7 @@ public:
                     return 0;
                 break;
             }
-        case UInt:
+        case DT_UInt:
             {
                 if (typeid(T) == typeid(unsigned int))
                     return 1;
@@ -670,7 +670,7 @@ public:
                     return 0;
                 break;
             }
-        case Int:
+        case DT_Int:
             {
                 if (typeid(T) == typeid(int))
                     return 1;
@@ -678,7 +678,7 @@ public:
                     return 0;
                 break;
             }
-        case Long:
+        case DT_Long:
             {
                 if (typeid(T) == typeid(long))
                     return 1;
@@ -686,7 +686,7 @@ public:
                     return 0;
                 break;
             }
-        case Float:
+        case DT_Float:
             {
                 if (typeid(T) == typeid(float))
                     return 1;
@@ -694,7 +694,7 @@ public:
                     return 0;
                 break;
             }
-        case Double:
+        case DT_Double:
             {
                 if (typeid(T) == typeid(double))
                     return 1;
@@ -1303,39 +1303,39 @@ private:
     DataType myT() const
     {
         if (typeid(T) == typeid(unsigned char))
-            return UChar;
+            return DT_UChar;
         else if (typeid(T) == typeid(char))
-            return SChar;
+            return DT_SChar;
         else if (typeid(T) == typeid(unsigned short))
-            return UShort;
+            return DT_UShort;
         else if (typeid(T) == typeid(short))
-            return Short;
+            return DT_Short;
         else if (typeid(T) == typeid(unsigned int))
-            return UInt;
+            return DT_UInt;
         else if (typeid(T) == typeid(int))
-            return Int;
+            return DT_Int;
         else if (typeid(T) == typeid(unsigned int))
-            return UInt;
+            return DT_UInt;
         else if (typeid(T) == typeid(int))
-            return Int;
+            return DT_Int;
         else if (typeid(T) == typeid(long))
-            return Long;
+            return DT_Long;
         else if (typeid(T) == typeid(float))
-            return Float;
+            return DT_Float;
         else if (typeid(T) == typeid(double))
-            return Double;
+            return DT_Double;
         else if (typeid(T) == typeid(std::complex<short>))
-            return ComplexShort;
+            return DT_CShort;
         else if (typeid(T) == typeid(std::complex<int>))
-            return ComplexInt;
+            return DT_CInt;
         else if (typeid(T) == typeid(std::complex<float>))
-            return ComplexFloat;
+            return DT_CFloat;
         else if (typeid(T) == typeid(std::complex<double>))
-            return ComplexDouble;
+            return DT_CDouble;
         else if (typeid(T) == typeid(bool))
-            return Bool;
+            return DT_Bool;
         else
-            return Unknown_Type;
+            return DT_Unknown;
     }
 
     /* friend declaration for stacks handling purposes

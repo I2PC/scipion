@@ -386,27 +386,27 @@ public:
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
             // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
 	    return 0;
-        if (datatype == UChar)
+        if (datatype == DT_UChar)
         {
             return IMGPIXEL(*IUChar,y,x);
         }
-        else if (datatype == UShort)
+        else if (datatype == DT_UShort)
         {
             return IMGPIXEL(*IUShort,y,x);
         }
-        else if (datatype == Short)
+        else if (datatype == DT_Short)
         {
             return IMGPIXEL(*IShort,y,x);
         }
-        else if (datatype == UInt)
+        else if (datatype == DT_UInt)
         {
             return IMGPIXEL(*IUInt,y,x);
         }
-        else if (datatype == Int)
+        else if (datatype == DT_Int)
         {
             return IMGPIXEL(*IInt,y,x);
         }
-        else if (datatype == Float)
+        else if (datatype == DT_Float)
         {
             return IMGPIXEL(*IFloat,y,x);
         }
@@ -417,27 +417,27 @@ public:
     /** Micrograph max min*/
     void computeDoubleMinMax(double &Dmin, double &Dmax) const
     {
-        if (datatype == UChar)
+        if (datatype == DT_UChar)
         {
             return (*IUChar)().computeDoubleMinMax(Dmin,Dmax);
         }
-        else if (datatype == UShort)
+        else if (datatype == DT_UShort)
         {
             return (*IUShort)().computeDoubleMinMax(Dmin,Dmax);
         }
-        else if (datatype == Short)
+        else if (datatype == DT_Short)
         {
             return (*IShort)().computeDoubleMinMax(Dmin,Dmax);
         }
-        else if (datatype == UInt)
+        else if (datatype == DT_UInt)
         {
             return (*IUInt)().computeDoubleMinMax(Dmin,Dmax);
         }
-        else if (datatype == Int)
+        else if (datatype == DT_Int)
         {
             return (*IInt)().computeDoubleMinMax(Dmin,Dmax);
         }
-        else if (datatype == Float)
+        else if (datatype == DT_Float)
         {
             return (*IFloat)().computeDoubleMinMax(Dmin,Dmax);
         }
@@ -450,27 +450,27 @@ public:
     //write in default endiam
     void set_val(int y, int x, double new_val)
     {
-        if (datatype == UChar)
+        if (datatype == DT_UChar)
         {
         	IMGPIXEL(*IUChar,y,x) = (unsigned char) new_val;
         }
-        else if (datatype == UShort)
+        else if (datatype == DT_UShort)
         {
         	IMGPIXEL(*IUShort,y,x) = (unsigned short) new_val;
         }
-        else if (datatype == Short)
+        else if (datatype == DT_Short)
         {
         	IMGPIXEL(*IShort,y,x) = (short) new_val;
         }
-        else if (datatype == UInt)
+        else if (datatype == DT_UInt)
         {
         	IMGPIXEL(*IUInt,y,x) = (unsigned int) new_val;
         }
-        else if (datatype == Int)
+        else if (datatype == DT_Int)
         {
         	IMGPIXEL(*IInt,y,x) = (int) new_val;
         }
-        else if (datatype == Float)
+        else if (datatype == DT_Float)
         {
         	IMGPIXEL(*IFloat,y,x) = (float) new_val;
         }

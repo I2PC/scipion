@@ -160,39 +160,39 @@ int ImageBase::readTIA(int select_img,bool isStack)
     switch ( tiaDT )
     {
     case 1:
-        datatype = UChar;
+        datatype = DT_UChar;
         break;
     case 2:
-        datatype = UShort;
-        //        datatype = Short;
+        datatype = DT_UShort;
+        //        datatype = DT_Short;
         break;
     case 3:
-        datatype = UInt;
+        datatype = DT_UInt;
         break;
     case 4:
-        datatype = SChar;
+        datatype = DT_SChar;
         break;
     case 5:
-        datatype = Short;
+        datatype = DT_Short;
         //        dataHeaders[0].isSigned = true;
         break;
     case 6:
-        datatype = Int;
+        datatype = DT_Int;
         break;
     case 7:
-        datatype = Float;
+        datatype = DT_Float;
         break;
     case 8:
-        datatype = Double;
+        datatype = DT_Double;
         break;
     case 9:
-        datatype = ComplexFloat;
+        datatype = DT_CFloat;
         break;
     case 10:
-        datatype = ComplexDouble;
+        datatype = DT_CDouble;
         break;
     default:
-        datatype = Unknown_Type;
+        datatype = DT_Unknown;
         break;
     }
 

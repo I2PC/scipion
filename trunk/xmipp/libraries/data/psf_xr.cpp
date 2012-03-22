@@ -441,7 +441,7 @@ void XRayPSF::generatePSF()
     //    PSF = new Image<double>(Nox, Noy, Noz);
     //    VOLMATRIX(*PSF).setXmippOrigin();
 
-    PSFGen.setDatatype(Float);
+    PSFGen.setDatatype(DT_Float);
     MULTIDIM_ARRAY_GENERIC(PSFGen).resize(1,Noz, Niy, Nix, false);
     MULTIDIM_ARRAY_GENERIC(PSFGen).setXmippOrigin();
 

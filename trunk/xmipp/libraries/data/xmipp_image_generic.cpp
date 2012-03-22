@@ -57,7 +57,7 @@ void ImageGeneric::init()
 {
     image = NULL;
     data = NULL;
-    datatype = Unknown_Type;
+    datatype = DT_Unknown;
 }
 
 void ImageGeneric::clear()
@@ -73,7 +73,7 @@ void ImageGeneric::clear()
 
 void  ImageGeneric::copy(const ImageGeneric &img)
 {
-    if (img.datatype != Unknown_Type)
+    if (img.datatype != DT_Unknown)
     {
         setDatatype(img.datatype);
 #define COPY(type) (*(Image<type>*)image) = (*(Image<type>*)img.image);
@@ -114,63 +114,63 @@ void ImageGeneric::setDatatype(DataType imgType)
     datatype = imgType;
     switch (datatype)
     {
-    case Float:
+    case DT_Float:
         {
             Image<float> *imT = new Image<float>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case Double:
+    case DT_Double:
         {
             Image<double> *imT = new Image<double>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case UInt:
+    case DT_UInt:
         {
             Image<unsigned int> *imT = new Image<unsigned int>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case Int:
+    case DT_Int:
         {
             Image<int> *imT = new Image<int>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case UShort:
+    case DT_UShort:
         {
             Image<unsigned short> *imT = new Image<unsigned short>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case Short:
+    case DT_Short:
         {
             Image<short> *imT = new Image<short>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case UChar:
+    case DT_UChar:
         {
             Image<unsigned char> *imT = new Image<unsigned char>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case SChar:
+    case DT_SChar:
         {
             Image<char> *imT = new Image<char>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
-    case Unknown_Type:
+    case DT_Unknown:
         REPORT_ERROR(ERR_IMG_UNKNOWN,"Datatype of the image file is unknown.");
         break;
     default:
@@ -291,7 +291,7 @@ void ImageGeneric::applyGeo(const MetaData &md, size_t objId,
 
 void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
 {
-    if (_datatype == datatype || _datatype == Unknown_Type)
+    if (_datatype == datatype || _datatype == DT_Unknown)
         return;
 
     ArrayDim aDim;
@@ -453,7 +453,7 @@ void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
     String strType = "";
 
     if (found == String::npos)
-        image.setDatatype(Float);
+        image.setDatatype(DT_Float);
     else
     {
         strType = filename.substr(found+1).c_str();

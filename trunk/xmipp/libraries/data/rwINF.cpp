@@ -74,18 +74,18 @@ int ImageBase::readINF(size_t select_img,bool isStack)
     {
     case 8:
         if (__is_signed)
-            datatype = SChar;
+            datatype = DT_SChar;
         else
-            datatype = UChar;
+            datatype = DT_UChar;
         break;
     case 16:
         if (__is_signed)
-            datatype = Short;
+            datatype = DT_Short;
         else
-            datatype = UShort;
+            datatype = DT_UShort;
         break;
     case 32:
-        datatype = Float;
+        datatype = DT_Float;
         break;
     default:
         REPORT_ERROR(ERR_TYPE_INCORRECT, "rwINF::read: depth is not 8, 16 nor 32");
@@ -154,38 +154,38 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
 
     if (bitDepth != "")
     {
-        myTypeID = (bitDepth == "default") ? Float : datatypeRAW(bitDepth);
+        myTypeID = (bitDepth == "default") ? DT_Float : datatypeRAW(bitDepth);
         castMode = (adjust)? CW_ADJUST : CW_CONVERT;
     }
 
     switch(myTypeID)
     {
-    case Double:
-    case UInt:
-    case Int:
+    case DT_Double:
+    case DT_UInt:
+    case DT_Int:
         if (bitDepth != "")
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect RAW bits depth value.");
-    case Float:
-        wDType = Float;
+    case DT_Float:
+        wDType = DT_Float;
         break;
-    case UShort:
-        wDType = UShort;
+    case DT_UShort:
+        wDType = DT_UShort;
         _is_signed = false;
         break;
-    case Short:
-        wDType = Short;
+    case DT_Short:
+        wDType = DT_Short;
         _is_signed = true;
         break;
-    case UChar:
-        wDType = UChar;
+    case DT_UChar:
+        wDType = DT_UChar;
         _is_signed = false;
         break;
-    case SChar:
-        wDType = SChar;
+    case DT_SChar:
+        wDType = DT_SChar;
         _is_signed = true;
         break;
     default:
-        wDType = Unknown_Type;
+        wDType = DT_Unknown;
         REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: Unsupported data type by RAW format.");
     }
 

@@ -564,7 +564,7 @@ bool MDObject::fromStream(std::istream &is)
     }
     else
     {
-        // int,bool and long are read as double for compatibility with old doc files
+        //NOTE: int, bool and long(size_t) are read as double for compatibility with old doc files
         double d;
         size_t value;
         switch (type)
