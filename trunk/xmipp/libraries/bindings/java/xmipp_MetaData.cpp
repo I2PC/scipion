@@ -458,6 +458,20 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueInt(JNIEnv *env,
     return false;
 }
 
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueLong(JNIEnv *env,
+        jobject jobj, jint label, jlong value, jlong objId)
+{
+    MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+    XMIPP_TRY
+    {
+        return md->setValue((MDLabel) label, (size_t)value, objId);
+    }
+    XMIPP_CATCH;
+
+    return false;
+}
+
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueDouble(JNIEnv *env,
         jobject jobj, jint label, jdouble value, jlong objId)
 {
@@ -683,8 +697,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
         MetaData * md = GET_INTERNAL_METADATA(jmetadata);
         ImageGeneric *avg = GET_INTERNAL_IMAGE_GENERIC(jimageAvg);
         ImageGeneric *std = GET_INTERNAL_IMAGE_GENERIC(jimageStd);
-        avg->setDatatype(Double);
-        std->setDatatype(Double);
+        avg->setDatatype(DT_Double);
+        std->setDatatype(DT_Double);
         Image<double> * imgAvg = (Image<double>*)avg->image;
         Image<double> * imgStd = (Image<double>*)std->image;
         double dum;
@@ -701,7 +715,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
     {
         MetaData * mdIn = GET_INTERNAL_METADATA(jmetadata);
         ImageGeneric *basis= GET_INTERNAL_IMAGE_GENERIC(jbasis);
-        basis->setDatatype(Double);
+        basis->setDatatype(DT_Double);
         MultidimArray<double> *mdArray;
         MULTIDIM_ARRAY_GENERIC(*basis).getMultidimArrayPointer(mdArray);
 
@@ -733,6 +747,24 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
         getFourierStatistics(*mdIn, 1, *mdOut, true, 2, (MDLabel)label);
     }
     XMIPP_CATCH;
+}
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    unionAll
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_unionAll
+  (JNIEnv * env, jobject jobj, jobject jmdIn)
+{
+  MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+  XMIPP_TRY
+  {
+      MetaData * mdIn = GET_INTERNAL_METADATA(jmdIn);
+      md->unionAll(*mdIn);
+  }
+  XMIPP_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_enableDebug

@@ -539,7 +539,7 @@ Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
     try
     {
         ImageGeneric *image = self->image;
-        image->convert2Datatype(Double);
+        image->convert2Datatype(DT_Double);
         MultidimArray<double> *in;
         MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
         xmipp2PSD(*in, *in, true);
@@ -565,27 +565,27 @@ Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 static NPY_TYPES datatype2NpyType(DataType dt){
   switch (dt){
-    case Float:
+    case DT_Float:
       return NPY_FLOAT;
-    case Double:
+    case DT_Double:
       return NPY_DOUBLE;
-    case Int:
+    case DT_Int:
       return NPY_INT;
-    case UInt:
+    case DT_UInt:
       return NPY_UINT;
-    case Short:
+    case DT_Short:
       return NPY_SHORT;
-    case UShort:
+    case DT_UShort:
       return NPY_USHORT;
-    case SChar:
+    case DT_SChar:
       return NPY_BYTE;
-    case UChar:
+    case DT_UChar:
       return NPY_UBYTE;
-    case Bool:
+    case DT_Bool:
       return NPY_BOOL;
-    case ComplexFloat:
+    case DT_CFloat:
       return NPY_CFLOAT;
-    case ComplexDouble:
+    case DT_CDouble:
       return NPY_CDOUBLE;
     default:
       return NPY_NOTYPE;
@@ -3701,7 +3701,7 @@ xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
                 MultidimArray<double> data;
                 fastEstimateEnhancedPSD(fn, downsampling, data, Nthreads);
                 selfScaleToSize(LINEAR, data, dim, dim);
-                Image_Value(pyImage).setDatatype(Double);
+                Image_Value(pyImage).setDatatype(DT_Double);
                 Image_Value(pyImage).data->setImage(data);
                 Py_RETURN_NONE;
             }
@@ -3730,7 +3730,7 @@ if (x > y) h = y * (dim/x);\
 else if (y > x)\
   w = x * (dim/y);\
 selfScaleToSize(LINEAR, data, w, h);\
-Image_Value(pyImage).setDatatype(Double);\
+Image_Value(pyImage).setDatatype(DT_Double);\
 data.resetOrigin();\
 MULTIDIM_ARRAY_GENERIC(Image_Value(pyImage)).setImage(data);\
 Py_RETURN_NONE;\

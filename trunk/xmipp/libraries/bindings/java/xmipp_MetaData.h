@@ -269,6 +269,14 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueInt
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    setValueLong
+ * Signature: (IIJ)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueLong
+  (JNIEnv *, jobject, jint, jlong, jlong);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    setValueDouble
  * Signature: (IDJ)Z
  */
@@ -363,6 +371,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
   (JNIEnv *, jobject, jobject, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    unionAll
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_unionAll
+  (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     xmipp_MetaData

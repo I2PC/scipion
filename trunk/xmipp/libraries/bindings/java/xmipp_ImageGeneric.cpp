@@ -170,7 +170,7 @@ Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select
 
         switch (dataType)
     {
-    case UChar:
+    case DT_UChar:
         {
             unsigned char *mdarray;
 
@@ -180,7 +180,7 @@ Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select
                 env->SetByteArrayRegion(array, 0, size, (jbyte *) mdarray);
             }
             break;
-        case SChar:
+        case DT_SChar:
             {
                 char *mdarray;
 
@@ -237,7 +237,7 @@ Java_xmipp_jni_ImageGeneric_getArrayShort(JNIEnv *env, jobject jobj,
 
         switch (dataType)
     {
-    case UShort:
+    case DT_UShort:
         {
             unsigned short *mdarray;
 
@@ -247,7 +247,7 @@ Java_xmipp_jni_ImageGeneric_getArrayShort(JNIEnv *env, jobject jobj,
                 env->SetShortArrayRegion(array, 0, size, (jshort *) mdarray);
             }
             break;
-        case Short:
+        case DT_Short:
             {
                 short *mdarray;
 
@@ -305,7 +305,7 @@ Java_xmipp_jni_ImageGeneric_getArrayFloat(JNIEnv *env, jobject jobj,
 
         switch (dataType)
     {
-    case Float:
+    case DT_Float:
         {
             float *mdarray;
 
@@ -320,11 +320,11 @@ Java_xmipp_jni_ImageGeneric_getArrayFloat(JNIEnv *env, jobject jobj,
 #define CAST_PAGE(type) Image<type> *imageAux = (Image<type> *)image->image; \
                 type *data = MULTIDIM_ARRAY(imageAux->data); \
                 size_t page_size = rw_max_page_size; \
-                char * buffer = new char[rw_max_page_size * gettypesize(Float)]; \
+                char * buffer = new char[rw_max_page_size * gettypesize(DT_Float)]; \
                 for (size_t written = 0; written < size; written += page_size) \
                 { \
                     page_size = std::min(page_size, size - written); \
-                    imageAux->castPage2Datatype(data + written, buffer, Float, page_size); \
+                    imageAux->castPage2Datatype(data + written, buffer, DT_Float, page_size); \
                     env->SetFloatArrayRegion(array, written, page_size, (jfloat*) buffer); \
                 } \
                 delete[] buffer;
@@ -363,7 +363,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
 
         switch (dataType)
     {
-    case UChar:
+    case DT_UChar:
         {
             unsigned char *mdarray;
 
@@ -373,7 +373,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
                 env->GetByteArrayRegion(data, 0, size, (jbyte *) mdarray);
             }
             break;
-        case SChar:
+        case DT_SChar:
             {
                 char *mdarray;
 
@@ -409,7 +409,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
                     page_size = std::min(page_size, size - written); \
                     env->GetByteArrayRegion(data, written, page_size, (jbyte *) buffer); \
                     type * iter = mdarray + written; \
-                    imageAux->castPage2T(buffer, iter, UChar, page_size); \
+                    imageAux->castPage2T(buffer, iter, DT_UChar, page_size); \
                 } \
                 SWITCHDATATYPE(image->getDatatype(), CAST_PAGE);\
                   delete [] buffer;
@@ -438,7 +438,7 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
 
         switch (image->getDatatype())
     {
-    case UShort:
+    case DT_UShort:
         {
             unsigned short *mdarray;
 
@@ -448,7 +448,7 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
                 env->GetShortArrayRegion(data, 0, size, (jshort *) mdarray);
             }
             break;
-        case Short:
+        case DT_Short:
             {
                 short *mdarray;
 
@@ -471,7 +471,7 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
                 delete [] buffer;
             }
             break;
-        case Float:
+        case DT_Float:
                 {
                     float *mdarray;
 
@@ -489,7 +489,7 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
                         env->GetShortArrayRegion(data, written, page_size, (jshort *) buffer);
 
                         float * iter = mdarray + written;
-                        imageAux->castPage2T(buffer, iter, UShort, page_size);
+                        imageAux->castPage2T(buffer, iter, DT_UShort, page_size);
                     }
                     delete [] buffer;
             }
@@ -525,7 +525,7 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
 
         switch (image->getDatatype())
     {
-    case Float:
+    case DT_Float:
         {
             float *mdarray;
 
@@ -540,11 +540,11 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
 #define CAST_PAGE(type) Image<type> *imageAux = (Image<type> *)image->image; \
              type *data = MULTIDIM_ARRAY(imageAux->data); \
              size_t page_size = rw_max_page_size; \
-             char * buffer = new char[rw_max_page_size * gettypesize(Float)]; \
+             char * buffer = new char[rw_max_page_size * gettypesize(DT_Float)]; \
              for (size_t written = 0; written < size; written += page_size) \
              { \
               page_size = std::min(page_size, size - written); \
-              imageAux->castPage2Datatype(data + written, buffer, Float, page_size); \
+              imageAux->castPage2Datatype(data + written, buffer, DT_Float, page_size); \
               env->SetFloatArrayRegion(array, written, page_size, (jfloat*) buffer); \
              } \
              SWITCHDATATYPE(dataType, CAST_PAGE);\
@@ -692,7 +692,7 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
     XMIPP_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        image->convert2Datatype(Double);
+        image->convert2Datatype(DT_Double);
         MultidimArray<double> *in;
         MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
         xmipp2PSD(*in, *in, useLogarithm);

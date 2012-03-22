@@ -25,8 +25,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_Projection_projectVolume
                 int w = XSIZE(* projection->data->im);
                 int h = YSIZE(* projection->data->im);
 
-                projection->convert2Datatype(Double);
-                volume->convert2Datatype(Double);
+                projection->convert2Datatype(DT_Double);
+                volume->convert2Datatype(DT_Double);
 
                 MultidimArray<double> *mdVolume;
                 MULTIDIM_ARRAY_GENERIC(*volume).getMultidimArrayPointer(mdVolume);
@@ -85,8 +85,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_Projection_projectVolume
                 int w = XSIZE(* projection->data->im);
                 int h = YSIZE(* projection->data->im);
 
-                projection->convert2Datatype(Double);
-                volume->convert2Datatype(Double);
+                projection->convert2Datatype(DT_Double);
+                volume->convert2Datatype(DT_Double);
 
                 MultidimArray<double> *mdVolume;
                 MULTIDIM_ARRAY_GENERIC(*volume).getMultidimArrayPointer(mdVolume);
@@ -153,7 +153,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_Projection_entropyOtsuSegmentation
     try
     {
         MultidimArray<double> *mdarray;
-        volume->convert2Datatype(Double);
+        volume->convert2Datatype(DT_Double);
 
         MULTIDIM_ARRAY_GENERIC(*volume).getMultidimArrayPointer(mdarray);
 
