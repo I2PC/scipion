@@ -126,7 +126,7 @@ TEST_F( ImageGenericTest, createEmptyFile)
 TEST_F( ImageGenericTest, initConstant)
 {
     ImageGeneric img;
-    img.setDatatype(Double);
+    img.setDatatype(DT_Double);
     img.data->im->setDimensions(3,3,1,1);
     img.data->im->coreAllocateReuse();
     img.initConstant(1.);
@@ -144,7 +144,7 @@ TEST_F( ImageGenericTest, initConstant)
 TEST_F( ImageGenericTest, initRandom)
 {
     ImageGeneric img;
-    img.setDatatype(Double);
+    img.setDatatype(DT_Double);
     img.data->im->setDimensions(1024,1024,1,1);
     img.data->im->coreAllocateReuse();
     img.initRandom(0,1, RND_Gaussian);
@@ -163,7 +163,7 @@ TEST_F( ImageGenericTest, getArrayPointer)
 
     ImageInfo info;
     img.getInfo(info);
-    img2.setDatatype(Float);
+    img2.setDatatype(DT_Float);
     MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
     mag2.resize(info.adim, false);
     float * data, *data2;
@@ -184,7 +184,7 @@ TEST_F( ImageGenericTest, getMultidimArrayPointer)
 
     ImageInfo info;
     img.getInfo(info);
-    img2.setDatatype(Float);
+    img2.setDatatype(DT_Float);
     MultidimArrayGeneric & mag2 = MULTIDIM_ARRAY_GENERIC(img2);
     mag2.resize(info.adim, false);
     MultidimArray<float> * data, *data2;
@@ -219,7 +219,7 @@ TEST_F( ImageGenericTest, convert2Datatype)
     EXPECT_NE(auxMa, *ma);
 
     // Change of datatype and conversion of values
-    img.convert2Datatype(UChar, CW_CONVERT);
+    img.convert2Datatype(DT_UChar, CW_CONVERT);
     typeCast(auxMa, uintMa);
     img().getMultidimArrayPointer(uintMaP);
 
@@ -236,7 +236,7 @@ TEST_F( ImageGenericTest, convert2Datatype)
     // Slices number when working with Images class start in FIRST_SLICE (1)
     myImageGeneric.movePointerTo(3);
     // Now It should keep the information of the slice only
-    myImageGeneric.convert2Datatype(UChar);
+    myImageGeneric.convert2Datatype(DT_UChar);
     myImageGeneric.movePointerTo(ALL_SLICES);
     myImageGeneric.getDimensions(aftAdim);
 

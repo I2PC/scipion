@@ -1,4 +1,5 @@
 #include <data/metadata_extension.h>
+#include <data/xmipp_image_convert.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 #include <stdlib.h>
@@ -880,6 +881,47 @@ TEST_F( MetadataTest, setGetValue)
 //Copy images on metadata using ImageConvert logic
 TEST_F( MetadataTest, copyImages)
 {
+  FileName fn = TEST_FILENAME("smallStack.stk");
+  FileName oroot = TEST_FILENAME("smallImg:mrc");
+  FileName out = TEST_FILENAME("smallStack.mrcs");
+  FileName fn1, fn2;
+  MetaData md(fn);
+  ProgConvImg conv;
+  conv.setup(&md, "", oroot);
+  conv.tryRun();
+  MetaData *mdOut = conv.getOutputMd();
+
+  FOR_ALL_OBJECTS_IN_METADATA2(md, *mdOut)
+  {
+      md.getValue(MDL_IMAGE, fn1, __iter.objId);
+      mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
+      EXPECT_TRUE(compareImage(fn1, fn2));
+  }
+
+  conv.setup(&md, out);
+  conv.tryRun();
+
+  FOR_ALL_OBJECTS_IN_METADATA2(md, *mdOut)
+  {
+      md.getValue(MDL_IMAGE, fn1, __iter.objId);
+      mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
+      EXPECT_TRUE(compareImage(fn1, fn2));
+  }
+
+  out = TEST_FILENAME("smallStackVol.mrc");
+  conv.setup(&md, out);
+  conv.tryRun();
+  Image<float> imgStk, imgVol;
+  imgStk.read(fn);
+  imgVol.read(out);
+
+  int n = imgStk.getDimensions().ndim;
+  for (int i = FIRST_IMAGE; i <= n; ++i)
+  {
+    imgStk.movePointerTo(1, i);
+    imgVol.movePointerTo(i);
+    EXPECT_TRUE(imgStk == imgVol);
+  }
 
 }
 
