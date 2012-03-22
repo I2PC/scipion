@@ -42,6 +42,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -55,7 +57,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
+import xmipp.utils.XmippFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -98,7 +100,7 @@ import xmipp.viewer.models.MetadataGallery;
 import xmipp.viewer.models.MicrographsTable;
 import xmipp.viewer.windows.ClassesJDialog;
 
-public class JFrameGallery extends JFrame implements iCTFGUI {
+public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	private static final long serialVersionUID = -8957336972082018823L;
 
 	private final static int DELAY_TO_UPDATE = 500;
@@ -113,7 +115,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	private boolean autoAdjustColumns = false;
 	private GalleryPopupMenu jpopUpMenuTable;
 	private GalleryMenu menu;
-	private JFileChooser fc;
+	private XmippFileChooser fc;
 	private SaveJDialog dlgSave = null;
 	private ClassesJDialog dlgClasses = null; 
 
@@ -199,6 +201,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		super();
 		// createGUI(new MDTableModel(filenames, enabled), parameters);
 	}
+	
+	/** Open another metadata separataly *
+	 */
+	public void openMetadata(MetaData md){
+		new JFrameGallery(null, md, new Param());
+	}
 
 	/**
 	 * Function to create the gallery type depending on the filename
@@ -219,8 +227,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	 */
 	private void createGUI() {
 		// Create file chooser and set current dir
-		fc = new JFileChooser();
-		fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		fc = new XmippFileChooser();
 		ctfTasks = new TasksEngine(JFrameGallery.this);
 
 		isUpdating = true; // avoid handling some changes events
@@ -1070,7 +1077,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(DISPLAY_RESLICE_RIGHT, "Right (X positive)");
 			//Metadata operations
 			addItem(METADATA, "Metadata");
-			addItem(MD_CLASSES, "Classes");
+			addItem(MD_CLASSES, "Superclasses");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
@@ -1136,14 +1143,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			else if (cmd.equals(STATS_FSC))
 				runInBackground(Worker.FSC);
 			else if (cmd.equals(FILE_OPEN)) {
-				if (fc.showOpenDialog(JFrameGallery.this) != JFileChooser.CANCEL_OPTION) {
+				if (fc.showOpenDialog(JFrameGallery.this) != XmippFileChooser.CANCEL_OPTION) {
 					if (fc.getSelectedFile().exists())
-						ImagesWindowFactory.openFileAsDefault(fc
-								.getSelectedFile().getPath());
+						ImagesWindowFactory.openFileAsDefault(fc.getSelectedPath());
 					else
 						XmippDialog.showError(JFrameGallery.this, String
-								.format("File: '%s' doesn't exist.", fc
-										.getSelectedFile().getPath()));
+								.format("File: '%s' doesn't exist.", fc.getSelectedPath()));
 				}
 			} else if (cmd.equals(FILE_SAVE)) {
 				save();
@@ -1192,13 +1197,14 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		protected void createItems() throws Exception {
 			addItem(ENABLED, "Enable");
 			addItem(DISABLED, "Disable");
-			addSeparator();
+			//addSeparator();
 			addItem(OPEN, "Open");
 			addItem(OPEN_ASTEXT, "Open as text");
 			addItem(CTF_PROFILE, "Show CTF profile");
 			addItem(CTF_RECALCULATE, "Recalculate CTF");
 			addSeparator();
-			addItem(SET_CLASS, "Set class");
+			addItem(SET_CLASS, "Set superclass");
+			addItem(OPEN_IMAGES, "Open images");
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
@@ -1207,6 +1213,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		}// function createItems
 
 		public void show(Component cmpnt, Point location) {
+			//This item visibility depends on current selection
+			setItemVisible(OPEN_IMAGES, data.is2DClassificationMd() 
+					&& gallery.getSelectedCount() == 1);
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
@@ -1282,7 +1291,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					//DEBUG.printMessage(String.format("class: %d", classNumber));
 					gallery.setSelectionClass(classNumber);
 				}
-			}
+			} else if (cmd.equals(OPEN_IMAGES)) {
+				int index = gallery.getIndex(row, col);
+				openMetadata(data.getClassImages(index));
+			} 
 			initItems();
 		}
 
@@ -1315,5 +1327,48 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	public void done() {
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 
+	}
+
+	@Override
+	public void windowActivated(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosed(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosing(WindowEvent arg0) {
+		if (dlgClasses != null){
+			dlgClasses.dispose();
+		}
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowOpened(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 }// class JFrameGallery

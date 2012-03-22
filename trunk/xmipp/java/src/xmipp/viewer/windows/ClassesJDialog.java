@@ -29,15 +29,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JButton;
-import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -46,13 +45,16 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.ColorEditor;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.ColorRenderer;
-import xmipp.utils.XmippWindowUtil;
+import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
-import xmipp.viewer.models.ColumnInfo;
+import xmipp.utils.XmippFileChooser;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ImageGallery;
 
 public class ClassesJDialog extends XmippDialog {
@@ -75,7 +77,6 @@ public class ClassesJDialog extends XmippDialog {
 		disposeOnClose = false;
 		initComponents();
 		enableDelete(false);
-		
 	}// constructor ColumnsJDialog
 
 	private JButton createButton(String icon){
@@ -152,6 +153,27 @@ public class ClassesJDialog extends XmippDialog {
 			gallery.removeClass(row);
 			model.fireTableRowsDeleted(row, row);
 		}
+		else if (btn == btnSave){
+			try {
+			MetaData[] mds = gallery.data.getClassesMd();
+			XmippFileChooser fc = new XmippFileChooser();
+			if (fc.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION){
+				String filename = fc.getSelectedPath();
+				MetaData md = mds[0];
+				md.write("classes" + Filename.SEPARATOR + filename);
+				long[] ids = md.findObjects();
+				DEBUG.printFormat("mds: %s, ids:%s", mds.length, ids.length);
+				int i = 1;
+				for (long id: ids) {
+					int ref = md.getValueInt(MDLabel.MDL_REF, id);
+					mds[i].writeBlock(Filename.getClassBlockName(ref) + Filename.SEPARATOR + filename);
+					++i;
+				}
+			}
+			} catch (Exception e){
+				XmippDialog.showException(parent, e);
+			}
+		}
 	}// function actionPerformed
 
 	public int getSelectedClass() {
@@ -166,8 +188,9 @@ public class ClassesJDialog extends XmippDialog {
 	public class ClassInfo {
 		private String comment;
 		private ColorIcon icon;
+		public int index; //index of the class
 		public int numberOfClasses; //Classes assigned to superclass
-		public int numberOfImages; //total images assigned to superclass
+		public long numberOfImages; //total images assigned to superclass
 
 		/** Constructor */
 		ClassInfo(String name, Color c) {

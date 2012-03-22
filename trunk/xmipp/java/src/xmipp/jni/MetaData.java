@@ -262,6 +262,9 @@ public class MetaData {
 
 	public native boolean setValueInt(int label, int value, long objId)
 			throws Exception;
+	
+	public native boolean setValueLong(int label, long value, long objId)
+			throws Exception;
 
 	public native boolean setValueDouble(int label, double value, long objId)
 			throws Exception;
@@ -302,8 +305,14 @@ public class MetaData {
 
 	public native void computeFourierStatistics(MetaData mdIn, int label)
 			throws Exception;
+	
+	/** Union of all elements in two Metadata, duplicating common elements.
+	 * Result in calling metadata object, repetion are allowed
+	 */
+	public native void unionAll(MetaData mdIn);
 
 	public native void enableDebug() throws Exception;
+	
 
 	// non-native functions
 	// constructor

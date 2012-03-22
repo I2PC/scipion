@@ -1,5 +1,31 @@
+/***************************************************************************
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+ *
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
 package xmipp.viewer.models;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import xmipp.jni.Filename;
@@ -81,17 +107,20 @@ public class GalleryData {
 				mode = Mode.GALLERY_ROTSPECTRA;
 
 			filename = fn;
-			if (Filename.hasPrefix(fn)) {
-				if (Filename.isMetadata(fn)) {
-					selectedBlock = Filename.getPrefix(fn); // FIXME: validate
-															// block exists
-					filename = Filename.getFilename(fn);
+			if (fn != null) {
+				if (Filename.hasPrefix(fn)) {
+					if (Filename.isMetadata(fn)) {
+						selectedBlock = Filename.getPrefix(fn); // FIXME:
+																// validate
+																// block exists
+						filename = Filename.getFilename(fn);
+					}
 				}
-			}
-			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
+				mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
 
-			if (mdBlocks.length > 1 && selectedBlock.isEmpty())
-				selectedBlock = mdBlocks[0];
+				if (mdBlocks.length > 1 && selectedBlock.isEmpty())
+					selectedBlock = mdBlocks[0];
+			}
 
 			if (md == null) {
 				this.md = new MetaData();
@@ -414,7 +443,7 @@ public class GalleryData {
 			for (long id : ids) {
 				int ref = md.getValueInt(MDLabel.MDL_REF, id);
 				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
-				String s = String.format("class%06d_images", ref);
+				String s = Filename.getClassBlockName(ref);
 				if (count > 0 && !containsBlock(s)) {
 					DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'",
 							ref, s);
@@ -450,15 +479,16 @@ public class GalleryData {
 	 */
 	public void updateClassesInfo() {
 		try {
-			//DEBUG.printMessage("updateClassesInfo");
+			int i = 0;
 			for (ClassInfo cli : classesArray) {
 				cli.numberOfClasses = 0;
 				cli.numberOfImages = 0;
+				cli.index = i++;
 			}
-			int i = 0;
-			for (long id : ids) { //iterate over all references
-				int count = md.getValueInt(MDLabel.MDL_CLASS_COUNT, id);
-				//DEBUG.printFormat("id: %d, count: %d", id, count);
+			i = 0;
+			for (long id : ids) { // iterate over all references
+				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
+				// DEBUG.printFormat("id: %d, count: %d", id, count);
 				ClassInfo cli = getItemClassInfo(i);
 				if (cli != null) {
 					cli.numberOfClasses += 1;
@@ -470,6 +500,62 @@ public class GalleryData {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Compute the metadatas
+	 */
+	public MetaData[] getClassesMd() {
+		try {
+			if (!classesArray.isEmpty()) {
+				updateClassesInfo();
+				MetaData[] mds = new MetaData[classesArray.size() + 1];
+				mds[0] = new MetaData();
+				MetaData md = mds[0];
+				int i = 0;
+				// Md for classes block
+				for (ClassInfo cli : classesArray) {
+					long id = md.addObject();
+					md.setValueInt(MDLabel.MDL_REF, ++i, id);
+					md.setValueLong(MDLabel.MDL_CLASS_COUNT,
+							cli.numberOfImages, id);
+					md.setValueString(MDLabel.MDL_KEYWORDS, cli.getComment(),
+							id);
+					mds[i] = new MetaData();
+				}
+				i = 0;
+				// Fill the classX_images blocks
+				for (i = 0; i < ids.length; ++i) {
+					ClassInfo cli = getItemClassInfo(i);
+					if (cli != null) {
+						md = getClassImages(i);
+						if (md != null)
+							mds[cli.index + 1].unionAll(md);
+					}
+					++i;
+				}
+				return mds;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/** Get the metadata with assigned images to this classes */
+	public MetaData getClassImages(int index) {
+		try {
+			long id = ids[index];
+			int ref = md.getValueInt(MDLabel.MDL_REF, id);
+			String blockName = Filename.getClassBlockName(ref);
+			if (containsBlock(blockName)) {
+				return new MetaData(blockName + Filename.SEPARATOR + filename);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	/** Return true if current metadata is a rotspectra classes */

@@ -42,7 +42,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
+import xmipp.utils.XmippFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -67,7 +67,7 @@ public class SaveJDialog extends XmippDialog {
 	protected JPanel group;
 	protected GridBagConstraints gbc;
 
-	protected JFileChooser fc;
+	protected XmippFileChooser fc;
 	protected JCheckBox chbMd;
 	protected JCheckBox chbImg;
 	//protected JButton btnBrowseMd;
@@ -106,7 +106,7 @@ public class SaveJDialog extends XmippDialog {
 //		gbc.weightx = 1.0;
 //		gbc.weighty = 1.0;
 		gbc.anchor = GridBagConstraints.NORTHWEST;
-		fc = new JFileChooser();
+		fc = new XmippFileChooser();
 		fc.setCurrentDirectory(new File(System.getProperty("user.dir")));
 		
 		group = new JPanel(new GridBagLayout());
@@ -227,7 +227,7 @@ public class SaveJDialog extends XmippDialog {
 	private void browseFile(JTextField tb){
 		int returnVal = fc.showOpenDialog(this);
 
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
+        if (returnVal == XmippFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
             tb.setText(file.getPath());
         }

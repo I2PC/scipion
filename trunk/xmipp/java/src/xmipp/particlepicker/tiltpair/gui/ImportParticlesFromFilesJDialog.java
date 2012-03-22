@@ -13,7 +13,7 @@ import java.io.File;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
+import xmipp.utils.XmippFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -38,7 +38,7 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 	private JTextField tiltedtf;
 	private JButton browsetbt;
 	private JButton browseubt;
-	private JFileChooser fc;
+	private XmippFileChooser fc;
 
 	public ImportParticlesFromFilesJDialog(TiltPairPickerJFrame parent, boolean modal)
 	{
@@ -69,7 +69,7 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		add(browsetbt, XmippWindowUtil.getConstraints(constraints, 2, 2, 1));
 		browsetbt.addActionListener(bl);
 
-		fc = new JFileChooser(new File(parent.getParticlePicker().getOutputDir()));
+		fc = new XmippFileChooser(new File(parent.getParticlePicker().getOutputDir()));
 		setFile(untiltedtf, parent.getMicrograph().getPosFileFromXmipp24());
 		setFile(tiltedtf, parent.getMicrograph().getTiltedMicrograph().getPosFileFromXmipp24());
 
@@ -146,7 +146,7 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 
 		try
 		{
-			if (returnVal == JFileChooser.APPROVE_OPTION)
+			if (returnVal == XmippFileChooser.APPROVE_OPTION)
 			{
 				String path = fc.getSelectedFile().getAbsolutePath();
 				tf.setText(path);

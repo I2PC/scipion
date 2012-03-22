@@ -26,7 +26,7 @@ import java.util.List;
 
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
+import xmipp.utils.XmippFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -185,12 +185,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				JFileChooser fc = new JFileChooser();
+				XmippFileChooser fc = new XmippFileChooser();
 				int returnVal = fc.showOpenDialog(ParticlePickerJFrame.this);
 
 				try
 				{
-					if (returnVal == JFileChooser.APPROVE_OPTION)
+					if (returnVal == XmippFileChooser.APPROVE_OPTION)
 					{
 						File file = fc.getSelectedFile();
 						getParticlePicker().exportParticles(getFamily(), file.getAbsolutePath());

@@ -17,7 +17,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 
-import javax.swing.JFileChooser;
+import xmipp.utils.XmippFileChooser;
 import javax.swing.JOptionPane;
 
 /**
@@ -95,12 +95,12 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				JFileChooser fc = new JFileChooser();
+				XmippFileChooser fc = new XmippFileChooser();
 				int returnVal = fc.showOpenDialog(null);
 
 				try
 				{
-					if (returnVal == JFileChooser.APPROVE_OPTION)
+					if (returnVal == XmippFileChooser.APPROVE_OPTION)
 					{
 						File file = fc.getSelectedFile();
 						XmippMenuBar.this.xw.saveDataAs(file.getAbsolutePath());

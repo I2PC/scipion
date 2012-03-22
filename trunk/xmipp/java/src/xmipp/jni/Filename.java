@@ -8,29 +8,35 @@ public class Filename {
 
     public final static String PROJECT_FILE = ".project.sqlite";
     public final static String SEPARATOR = "@";
-    private final static String EXTENSION_XMP = ".xmp";
-    private final static String EXTENSION_IMG = ".img";
-    private final static String EXTENSION_HED = ".hed";
-    private final static String EXTENSION_PSD = ".psd";
-    private final static String EXTENSION_SER = ".ser";
-    private final static String EXTENSION_DM3 = ".dm3";
-    private final static String EXTENSION_RAW = ".raw";
-    private final static String EXTENSION_INF = ".inf";
-    private final static String EXTENSION_SPE = ".spe";
-    private final static String EXTENSION_MRC = ".mrc";
-    private final static String EXTENSION_MRCS = ".mrcs";
-    private final static String EXTENSION_MRCS2 = ".st";
-    private final static String EXTENSION_STK = ".stk";
+    public final static String EXT_XMP = ".xmp";
+    public final static String EXT_IMG = ".img";
+    public final static String EXT_HED = ".hed";
+    public final static String EXT_PSD = ".psd";
+    public final static String EXT_SER = ".ser";
+    public final static String EXT_DM3 = ".dm3";
+    public final static String EXT_RAW = ".raw";
+    public final static String EXT_INF = ".inf";
+    public final static String EXT_SPE = ".spe";
+    public final static String EXT_MRC = ".mrc";
+    public final static String EXT_MRCS = ".mrcs";
+    public final static String EXT_MRCS2 = ".st";
+    public final static String EXT_STK = ".stk";
     //metadata extensions
-    private final static String EXTENSION_XMD = ".xmd";
-    private final static String EXTENSION_SEL = ".sel";
-    private final static String EXTENSION_DOC = ".doc";
-    private final static String EXTENSION_CTFPARAM = ".ctfparam";
-    private final static String EXTENSION_CTFDAT = ".ctfdat";
-    private final static String EXTENSION_POS = ".pos";
-    private final static String EXTENSION_VOL = ".vol";
-    private final static String EXTENSION_SPI = ".spi";
-    private final static String EXTENSION_TIF = ".tif";
+    public final static String EXT_XMD = ".xmd";
+    public final static String EXT_SEL = ".sel";
+    public final static String EXT_DOC = ".doc";
+    public final static String EXT_CTFPARAM = ".ctfparam";
+    public final static String EXT_CTFDAT = ".ctfdat";
+    public final static String EXT_POS = ".pos";
+    public final static String EXT_VOL = ".vol";
+    public final static String EXT_SPI = ".spi";
+    public final static String EXT_TIF = ".tif";
+    public final static String EXT_LOG = ".log";
+    public final static String EXT_OUT = ".out";
+    public final static String EXT_ERR = ".err";
+    public final static String EXT_PY = ".py";
+    public final static String EXT_TXT = ".txt";
+    
     
     // Initialize library.
     static {
@@ -39,48 +45,48 @@ public class Filename {
     }
 
     public final static String[] SINGLE_IMAGES = new String[]{
-        EXTENSION_XMP,
-        EXTENSION_IMG,
-        EXTENSION_HED,
-        EXTENSION_PSD,
-        EXTENSION_SER,
-        EXTENSION_DM3,
-        EXTENSION_RAW,
-        EXTENSION_INF,
-        EXTENSION_SPE,
-        EXTENSION_SPI,
-        EXTENSION_TIF
+        EXT_XMP,
+        EXT_IMG,
+        EXT_HED,
+        EXT_PSD,
+        EXT_SER,
+        EXT_DM3,
+        EXT_RAW,
+        EXT_INF,
+        EXT_SPE,
+        EXT_SPI,
+        EXT_TIF
     };
     public final static String[] VOLUMES = new String[]{
-        EXTENSION_MRC,
-        EXTENSION_VOL
+        EXT_MRC,
+        EXT_VOL
     };
     public final static String[] STACKS = new String[]{
-        EXTENSION_MRCS,
-        EXTENSION_MRCS2,
-        EXTENSION_STK
+        EXT_MRCS,
+        EXT_MRCS2,
+        EXT_STK
     };
     
     public final static String[] METADATAS = new String[]{
-    	EXTENSION_XMD,
-        EXTENSION_SEL,
-        EXTENSION_DOC,
-        EXTENSION_CTFPARAM,
-        EXTENSION_CTFDAT,
-        EXTENSION_POS
+    	EXT_XMD,
+        EXT_SEL,
+        EXT_DOC,
+        EXT_CTFPARAM,
+        EXT_CTFDAT,
+        EXT_POS
     };
     
     public final static String[] SPIDER = new String[] {
-    	EXTENSION_SPI,
-    	EXTENSION_VOL
+    	EXT_SPI,
+    	EXT_VOL
     };
     
     public final static String[] TEXT = new String[]{
-    	".txt", ".log", ".out"
+    	EXT_TXT, EXT_LOG, EXT_ERR, EXT_OUT
     };
 
     public static boolean isPSD(String filename) {
-        return filename != null && filename.endsWith(EXTENSION_PSD);
+        return filename != null && filename.endsWith(EXT_PSD);
     }
     
     public static boolean isSpiderVolume(String filename){
@@ -284,5 +290,12 @@ public class Filename {
         }
 
         return null;
+    }
+    
+    /** Return the name of the block associated with
+     * class 'ref' in a results_classes.xmd metadata
+     */
+    public static String getClassBlockName(int ref){
+    	return String.format("class%06d_images", ref);
     }
 }

@@ -30,7 +30,7 @@ import java.util.List;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
+import xmipp.utils.XmippFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
@@ -85,7 +85,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private JPanel panelPlot, panelPlotAVG;
     private XYSeriesCollection datasetProfile, datasetAVG;
     private ChartPanel chartPanelProfile, chartPanelAVG;
-    private JFileChooser fc = new JFileChooser();
+    private XmippFileChooser fc = new XmippFileChooser();
     private JButton bExportProfile, bExportAVG;
     private double xValues[];
     private double Tm;
@@ -226,7 +226,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     }
 
     public void actionPerformed(ActionEvent ae) {
-        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (fc.showSaveDialog(this) == XmippFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
             if (file != null) {
                 JFreeChart chart = null;

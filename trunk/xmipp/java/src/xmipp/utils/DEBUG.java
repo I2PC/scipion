@@ -24,7 +24,7 @@ public class DEBUG {
     
     public static void printFormat(String format, Object...objects){
     	if (DEBUG){
-    		System.out.format(format, objects);
+    		System.out.format(format+"\n", objects);
     	}
     }
 

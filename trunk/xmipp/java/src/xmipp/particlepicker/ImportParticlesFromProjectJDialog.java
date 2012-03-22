@@ -13,7 +13,7 @@ import java.io.File;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
+import xmipp.utils.XmippFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -106,13 +106,13 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 
 	private void browseDirectory()
 	{
-		JFileChooser fc = new JFileChooser(new File(parent.getParticlePicker().getOutputDir()));
-		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		XmippFileChooser fc = new XmippFileChooser(new File(parent.getParticlePicker().getOutputDir()));
+		fc.setFileSelectionMode(XmippFileChooser.DIRECTORIES_ONLY);
 		int returnVal = fc.showOpenDialog(ImportParticlesFromProjectJDialog.this);
 
 		try
 		{
-			if (returnVal == JFileChooser.APPROVE_OPTION)
+			if (returnVal == XmippFileChooser.APPROVE_OPTION)
 			{
 				String path = fc.getSelectedFile().getAbsolutePath();
 				sourcetf.setText(path);
