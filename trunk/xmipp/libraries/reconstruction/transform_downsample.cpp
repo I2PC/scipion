@@ -95,9 +95,9 @@ void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName
     int Ypdim = floor(Ydim/step);
     ImageGeneric M_out;
     if (method==SMOOTH)
-        M_out.setDatatype(UChar);
+        M_out.setDatatype(DT_UChar);
     else
-        M_out.setDatatype(Float);
+        M_out.setDatatype(DT_Float);
     M_out.mapFile2Write(Xpdim, Ypdim, 1, fnImgOut,fnImg==fnImgOut);
 
     // Downsample
@@ -128,17 +128,17 @@ void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
     double b = 0;
     double scale = 1;
     int ii, jj, i2, j2, i, j, y, x;
-    if (Mp.getDatatype() != Float)
+    if (Mp.getDatatype() != DT_Float)
     {
         double imin, imax;
         double omin, omax;
         imin=imax=M.getPixel(0,0);
         bool ofirst = true;
 
-        if (M.getDatatype() != Float)
+        if (M.getDatatype() != DT_Float)
             scale = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) /
                     (pow(2.0, M.getDatatypeDepth()) - 1.0);
-        else if (M.getDatatype() == Float)
+        else if (M.getDatatype() == DT_Float)
             scale = 1;
         for (ii = 0, y = 0; y < Ydim && ii < Ypdim; y += istep, ++ii)
             for (jj = 0, x = 0; x < Xdim && jj < Xpdim; x += istep, ++jj)
@@ -169,12 +169,12 @@ void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
         double irange = imax - imin;
         double orange = omax - omin;
 
-        if (M.getDatatype() != Float)
+        if (M.getDatatype() != DT_Float)
         {
             a = scale * irange / orange;
             b = -omin;
         }
-        else if (Mp.getDatatype() != Float)
+        else if (Mp.getDatatype() != DT_Float)
         {
             a = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) / orange;
             scale = 1;
@@ -191,7 +191,7 @@ void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
                 for (j=0, j2=x; j<XSIZE(kernel)&& j2<Xdim; ++j, ++j2)
                     pixval += A2D_ELEM(kernel,i, j) * M.getPixel(i2, j2);
             if (ii < Ypdim && jj < Xpdim)
-                if (Mp.datatype != Float)
+                if (Mp.datatype != DT_Float)
                     Mp.setPixel(ii, jj, floor(a*(pixval*scale + b)));
                 else
                     Mp.setPixel(ii, jj, pixval);
@@ -245,14 +245,14 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
     double a = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) / orange;
     double b = -omin;
     double scale=1;
-    if (M.getDatatype() != Float)
+    if (M.getDatatype() != DT_Float)
         scale = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) /
                 (pow(2.0, M.getDatatypeDepth()) - 1.0);
-    else if (M.getDatatype() == Float)
+    else if (M.getDatatype() == DT_Float)
         scale = 1;
 
     // Copy back data
-    if (Mp.datatype!=Float)
+    if (Mp.datatype!=DT_Float)
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mpmem)
         Mp.setPixel(i, j, a*(A2D_ELEM(Mpmem,i,j)*scale + b));
     else
@@ -262,7 +262,7 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
 
 void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
 {
-    if (Mp.datatype!=UChar)
+    if (Mp.datatype!=DT_UChar)
         REPORT_ERROR(ERR_ARG_INCORRECT,formatString("Smooth downsampling is only valid for 8 bit images. \n"
         		"Choose a supporting 8bit file format different from %s",Mp.image->name().c_str()));
 
@@ -275,7 +275,7 @@ void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
         rgb[i] = i;
     byte *inputImage=NULL;
     MultidimArray<unsigned char> Maux;
-    if (M.datatype==UChar)
+    if (M.datatype==DT_UChar)
         inputImage=MULTIDIM_ARRAY(*(((MultidimArray<unsigned char>*)M().im)));
     else
     {
