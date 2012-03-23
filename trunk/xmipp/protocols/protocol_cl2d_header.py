@@ -66,7 +66,7 @@ thZscore=3
     This Z-score is measured after projecting onto the PCA space."""
 thPCAZscore=3
 
-# Tolerance
+# {validate}(IsInt) Tolerance
 """ An image belongs to the stable core if it has been with other images in the same class
 in all the previous levels except possibly a few of them. Tolerance defines how few is few.
 Tolerance=0 means that an image must be in all previous levels with the rest of images in
