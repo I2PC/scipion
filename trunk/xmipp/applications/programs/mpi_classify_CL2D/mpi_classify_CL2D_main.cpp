@@ -1494,7 +1494,7 @@ void ProgClassifyCL2D::run()
         for (int q = 0; q < Q; q++)
         {
             SFq.read(
-                formatString("class_%06d@%s_classes_level_%02d.xmd", q + 1,
+                formatString("class%06d_images@%s_classes_level_%02d.xmd", q + 1,
                              fnOut.c_str(), level));
             SFq.fillConstant(MDL_REF, integerToString(q + 1));
             SFq.fillConstant(MDL_ENABLED, "1");

@@ -57,7 +57,7 @@ class ProtRotSpectra(XmippProtocol):
         return message
     
     def visualize(self):
-        runShowJ("classes@%s" % self.workingDirPath("results_classes.xmd"), extraParams="--mode rotspectra")
+        runShowJ("classes@%s" % self.workingDirPath("results_classes.xmd"), extraParams="--mode rotspectra --columns %d" % self.SomXdim)
   
 def findCenter(log, HowCenter, Selfile, WorkingDir, SpectraInnerRadius, SpectraOuterRadius):
     if HowCenter == 'Minimize first harmonic':

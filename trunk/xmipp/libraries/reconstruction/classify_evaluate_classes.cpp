@@ -112,7 +112,7 @@ void ProgEvaluateClass::run()
 	{
 		int classNo;
 		MD.getValue(MDL_REF,classNo,__iter.objId);
-		MDclass.read(formatString("class_%06d@%s",classNo,fnClass.c_str()));
+		MDclass.read(formatString("class%06d_images@%s",classNo,fnClass.c_str()));
 		evaluateClass(MDclass,eval);
 		MD.setValue(MDL_CLASSIFICATION_FRC_05,eval.FRC_05,__iter.objId);
 		MD.setValue(MDL_CLASSIFICATION_DPR_05,eval.DPR_05,__iter.objId);

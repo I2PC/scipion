@@ -107,7 +107,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
     maxLevel=0;
     FileName fnLevel;
     do
-        fnLevel=formatString("%s_level_%02d_classes.xmd",fnRoot.c_str(),maxLevel++);
+        fnLevel=formatString("%s_classes_level_%02d.xmd",fnRoot.c_str(),maxLevel++);
     while (fnLevel.exists());
     maxLevel-=2;
     if (maxLevel==-1)
@@ -118,14 +118,14 @@ void ProgClassifyCL2DCore::produceSideInfo()
     CL2DBlock block;
     for (int level=0; level<=maxLevel; level++)
     {
-        fnLevel=formatString("%s_level_%02d_classes.xmd",fnRoot.c_str(),level);
+        fnLevel=formatString("%s_classes_level_%02d.xmd",fnRoot.c_str(),level);
         getBlocksInMetaDataFile(fnLevel,blocksAux);
         block.level=level;
         block.fnLevel=fnLevel;
         block.fnLevelCore=fnLevel.insertBeforeExtension("_core");
         for (int i=0; i<blocksAux.size(); i++)
         {
-            if (blocksAux[i].find("class_")!=std::string::npos)
+            if (blocksAux[i].find("class")!=std::string::npos && blocksAux[i].find("images")!=std::string::npos)
             {
                 block.block=blocksAux[i];
                 blocks.push_back(block);
@@ -219,6 +219,7 @@ void ProgClassifyCL2DCore::computeStableCores()
             CL2DBlock &thisBlock=blocks[idx];
             if (thisBlock.level<=tolerance)
                 continue;
+            std::cout << "Reading: " << thisBlock.block+"@"+thisBlock.fnLevelCore << std::endl;
             thisClass.read(thisBlock.block+"@"+thisBlock.fnLevelCore);
 
             // Add MDL_ORDER
@@ -299,7 +300,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
         for (int level=firstLevel; level<=maxLevel; level++)
         {
             classes.clear();
-            fnSummary=formatString("%s_level_%02d_classes_%s",fnRoot.c_str(),level,suffix.c_str());
+            fnSummary=formatString("%s_classes_level_%02d_%s",fnRoot.c_str(),level,suffix.c_str());
             for (int idx=0; idx<Nblocks; idx++)
             {
                 if (blocks[idx].level!=level)
@@ -308,7 +309,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
                 if (fileExists(fnBlock))
                 {
                     MD.read(fnBlock);
-                    MDoriginal.read(formatString("%s@%s_level_%02d_classes.xmd",blocks[idx].block.c_str(),fnRoot.c_str(),level));
+                    MDoriginal.read(formatString("%s@%s_classes_level_%02d.xmd",blocks[idx].block.c_str(),fnRoot.c_str(),level));
                     int classNo=textToInteger(blocks[idx].block.substr(6,6));
                     size_t classSize=MD.size();
                     fnClass.compose(classNo,fnSummary,"stk");
@@ -333,7 +334,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
         // Write the rest of blocks
         for (int idx=0; idx<Nblocks; idx++)
         {
-            fnSummary=formatString("%s_level_%02d_classes_%s",fnRoot.c_str(),blocks[idx].level,suffix.c_str());
+            fnSummary=formatString("%s_classes_level_%02d_%s",fnRoot.c_str(),blocks[idx].level,suffix.c_str());
             fnBlock=fnSummary+"_"+blocks[idx].block+".xmd";
             if (fileExists(fnBlock))
             {
