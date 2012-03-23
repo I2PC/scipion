@@ -53,6 +53,7 @@ import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.InfiniteProgressPanel;
+import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 import xmipp.jni.Program;
@@ -161,7 +162,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
-		editfamiliesmn = new JMenuItem("Edit Families");
+		editfamiliesmn = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmn);
 
 		helpmn.add(hcontentsmi);
@@ -443,12 +444,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		infopn.add(autolb);
 		micrographpn.add(infopn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		resetbt = new JButton("Reset");
-		buttonspn.add(resetbt);
-		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
-		resetbt.addActionListener(new ActionListener()
+		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
 		{
-
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
@@ -459,6 +456,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				setChanged(true);
 			}
 		});
+		buttonspn.add(resetbt);
+		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
 

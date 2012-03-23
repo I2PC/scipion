@@ -43,11 +43,13 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
+import xmipp.ij.commons.XmippIJUtil;
 import xmipp.jni.Filename;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
@@ -137,7 +139,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn = new JMenu("File");
-		savemi = new JMenuItem("Save");
+		savemi = new JMenuItem("Save", XmippResource.getIcon("save.gif"));
 		savemi.setMnemonic('S');
 		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 		savemi.addActionListener(new ActionListener()
@@ -152,7 +154,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importfpmi = new JMenuItem("Import from Project...");
+		importfpmi = new JMenuItem("Import from Project...", XmippResource.getIcon("import_wiz.gif"));
 		filemn.add(importfpmi);
 		importfpmi.addActionListener(new ActionListener()
 		{
@@ -164,7 +166,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		
-		importffmi = new JMenuItem("Import from Files...");
+		importffmi = new JMenuItem("Import from Files...", XmippResource.getIcon("import.gif") );
 		filemn.add(importffmi);
 		importffmi.addActionListener(new ActionListener()
 		{
@@ -177,7 +179,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		
-		exportmi = new JMenuItem("Export Particles...");
+		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif") );
 		filemn.add(exportmi);
 		exportmi.addActionListener(new ActionListener()
 		{
@@ -204,20 +206,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 
-		ijmi = new JMenuItem("ImageJ");
+		ijmi = new JMenuItem("ImageJ", XmippResource.getIcon("ij.gif"));
 		ijmi.addActionListener(new ActionListener()
 		{
 
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if (IJ.getInstance() == null)
-				{
-
-					new ImageJ();
-					IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
-					IJ.setTool(Tool.getTool(Tool.PICKER));
-				}
+				XmippIJUtil.showImageJ(Tool.PICKER);
 			}
 		});
 		
@@ -238,7 +234,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 			}
 		});
-		pmi = new JMenuItem("Particles");
+		pmi = new JMenuItem("Particles", XmippResource.getIcon("table_view.gif"));
 		pmi.addActionListener(new ActionListener()
 		{
 

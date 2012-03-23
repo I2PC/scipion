@@ -229,12 +229,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		infopn.add(upslb);
 		micrographpn.add(infopn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		resetbt = new JButton("Reset");
-		buttonspn.add(resetbt);
-		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
-		resetbt.addActionListener(new ActionListener()
+		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
 		{
-
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
@@ -244,6 +240,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 				setChanged(true);
 			}
 		});
+		buttonspn.add(resetbt);
+		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
 
