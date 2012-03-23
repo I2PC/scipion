@@ -126,4 +126,4 @@ public class VolumeGallery extends ImageGallery {
 		return null;
 	}
 
-}
+}//class VolumeGallery

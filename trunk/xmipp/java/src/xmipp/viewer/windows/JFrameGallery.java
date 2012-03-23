@@ -1308,13 +1308,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 	@Override
 	public void setRowBusy(int row) {
-		DEBUG.printFormat("setting busy row: %d\n", row);
 		((MicrographsTable) gallery).setRowBusy(row);
 	}
 
 	@Override
 	public void setRowIdle(int row) {
-		DEBUG.printFormat("setting idle row: %d\n", row);
 		((MicrographsTable) gallery).setRowIdle(row);
 	}
 

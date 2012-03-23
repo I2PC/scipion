@@ -386,8 +386,7 @@ public class GalleryData {
 	/** Check if an item is enabled or not */
 	public boolean isEnabled(int index) {
 		try {
-			if (!isVolumeMode()) // slices in a volume are always enabled
-				if (!md.containsLabel(MDLabel.MDL_ENABLED))
+			if (isVolumeMode() || !md.containsLabel(MDLabel.MDL_ENABLED))
 					return true;
 			return md.getEnabled(ids[index]);
 		} catch (Exception e) {
