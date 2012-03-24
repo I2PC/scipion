@@ -37,7 +37,10 @@ class ProtExtractParticles(XmippProtocol):
         self.Import = 'from protocol_extract_particles import *'
         # Take some parameter from previous picking protocol run
         pickingProt = self.getProtocolFromRunName(self.PickingRun)
-        self.TiltPairs = pickingProt.TiltPairs
+        if hasattr(pickingProt,'TiltPairs'):
+            self.TiltPairs = pickingProt.TiltPairs
+        else:
+            self.TiltPairs = False
         self.pickingDir = pickingProt.WorkingDir
         if self.TiltPairs:
             self.pickingMicrographs = pickingProt.getFilename('tiltedPairs')

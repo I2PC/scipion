@@ -1310,8 +1310,9 @@ class ProtocolGUI(BasicGUI):
                 if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
                     particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
                     self.setVarValue("ParticleSize", str(particleSize))
-            if pickingProt.TiltPairs:
-                self.setVarValue("DoFlip", str(False))
+            if hasattr(pickingProt,'TiltPairs'):
+                if pickingProt.TiltPairs:
+                    self.setVarValue("DoFlip", str(False))
             else:
                 md=MetaData(pickingProt.getFilename("micrographs"))
                 self.setVarValue("DoFlip", md.containsLabel(MDL_CTFMODEL))
