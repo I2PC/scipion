@@ -126,7 +126,7 @@ def gatherResults(log,Family,WorkingDir,PickingDir):
     fnExtractList = join(WorkingDir, Family + "_extract_list.xmd")
     for objId in md:
         fullname = md.getValue(MDL_MICROGRAPH, objId)
-        name = replaceFilenameExt(fullname, '')        
+        name = os.path.split(replaceFilenameExt(fullname, ''))[1]        
         
         fn = join(PickingDir, name + ".pos")
         mdpos.clear()
