@@ -491,9 +491,8 @@ bool FileName::isStar1(bool failIfNotExists) const
     char cline[128];
     infile.getline(cline, 128);
     line = cline;
-    int pos = line.find("XMIPP_STAR_1 *");
-
-    return (pos != npos); // xmipp_star_1 token found
+    size_t pos = line.find("XMIPP_STAR_1 *");
+    return (pos != String::npos); // xmipp_star_1 token found
 }
 
 // Substitute one extension by other .......................................
@@ -756,25 +755,7 @@ char * getXmippPath()
     if (path == NULL)
         REPORT_ERROR(ERR_VALUE_EMPTY, "getXmippPath::Variable XMIPP_HOME is not defined");
     return path;
-    //    String path = getenv("PATH");
-    //    StringVector directories;
-    //    int number_directories = splitString(path, ":", directories);
-    //    if (number_directories == 0)
-    //        REPORT_ERROR(ERR_IO_NOPATH, "getXmippPath::Cannot find Xmipp Base directory");
-    //    bool found = false;
-    //    int i;
-    //    for (i = 0; i < number_directories; i++)
-    //    {
-    //        if (fileExists(directories[i] + "/xmipp_reconstruct_art"))
-    //        {
-    //            found = true;
-    //            break;
-    //        }
-    //    }
-    //    if (found)
-    //        return directories[i].substr(0, directories[i].length() - 4); //Remove '/bin'
-    //    else
-    //        REPORT_ERROR(ERR_IO_NOPATH, "getXmippPath::Cannot find Xmipp Base directory");
+
 }
 
 void copyImage(const FileName & source, const FileName & target)
