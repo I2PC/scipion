@@ -4,6 +4,7 @@ import unittest, os, sys
 @summary: This pyUnit test module defines the unit tests for the Xmipp Python Interface
 """
 from unittest import TestResult, _TextTestResult
+from protlib_filesystem import getXmippPath
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
 except ImportError:
@@ -17,6 +18,7 @@ from xmipp import *
 #from json.tests.test_fail import TestFail
 
 import sys
+import os
 
 def binaryFileComparison(nameo, namet):
     ## open files
@@ -39,26 +41,27 @@ def binaryFileComparison(nameo, namet):
 
 
 class TestXmippPythonInterface(unittest.TestCase):
-    testsPath = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/applications/tests'
+    testsPath = os.path.join(getXmippPath(),"resources","test")
     def setUp(self):
         """This function performs all the setup stuff.      
         """
         pass
         
+    
     def test_Image_compare(self):
-        imgPath = os.path.join(self.testsPath, "test_image", "singleImage.spi")
+        imgPath = os.path.join(self.testsPath, "singleImage.spi")
         img1 = Image()
         img1.read(imgPath)
         img2 = Image(imgPath)
         # Test that image is equal to itself
         self.assertEqual(img1, img2)
         # Test different images
-        imgPath = "1@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
+        imgPath = "1@" + os.path.join(self.testsPath, "smallStack.stk")
         img2.read(imgPath)
         self.assertNotEqual(img1, img2)
  
     def test_Image_initConstant(self):
-        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        imgPath = os.path.join(self.testsPath, "tinyImage.spi")
         img = Image(imgPath)
         img.initConstant(1.) 
         img.write("/tmp/kk.spi") 
@@ -68,7 +71,7 @@ class TestXmippPythonInterface(unittest.TestCase):
                 self.assertAlmostEquals(p, 1.0)
     
     def test_Image_initRandom(self):
-        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        imgPath = os.path.join(self.testsPath, "tinyImage.spi")
         img = Image(imgPath)
         img.resize(1024, 1024) 
         img.initRandom(0., 1., XMIPP_RND_GAUSSIAN)
@@ -77,11 +80,11 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertAlmostEqual(dev, 1., 2)
                       
     def test_Image_add(self):
-        stackPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
+        stackPath = os.path.join(self.testsPath, "smallStack.stk")
         img1 = Image("1@" + stackPath)
         img2 = Image("2@" + stackPath)
         sum = img1 + img2
-        sumRef = Image(os.path.join(self.testsPath, "test_image_generic", "sum.spi"))
+        sumRef = Image(os.path.join(self.testsPath, "sum.spi"))
         self.assertEqual(sum, sumRef)
         img1 += img2        
         self.assertEqual(sum, img1)
@@ -89,27 +92,39 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertNotEqual(sum, img1)   
              
     def test_Image_computeStatistics(self):
-        stackPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
+        stackPath = os.path.join(self.testsPath, "smallStack.stk")
         img1 = Image("1@" + stackPath)
         mean, dev, min, max = img1.computeStats()
         self.assertAlmostEqual(mean, -0.000360, 5)
         self.assertAlmostEqual(dev, 0.105687, 5)
         self.assertAlmostEqual(min, -0.415921, 5)
         self.assertAlmostEqual(max, 0.637052, 5)
-             
+        
+    def test_Image_setDataType(self):
+        img = Image();
+        img.setDataType(XMIPP_DT_FLOAT)
+        img.resize(3,3,)
+        img.setPixel(1,1,1.)
+        img.computeStats()
+        mean, dev, min, max = img.computeStats()
+        self.assertAlmostEqual(mean, 0.111111, 5)
+        self.assertAlmostEqual(dev,  0.314270, 5)
+        self.assertAlmostEqual(min, 0., 5)
+        self.assertAlmostEqual(max, 1., 5)   
+              
     def test_Image_minus(self):
-        pathSum = os.path.join(self.testsPath, "test_image_generic", "sum.spi")
+        pathSum = os.path.join(self.testsPath, "sum.spi")
         imgAdd = Image(pathSum)
-        path1 = "1@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
+        path1 = "1@" + os.path.join(self.testsPath, "smallStack.stk")
         img1 = Image(path1)
-        path2 = "2@" + os.path.join(self.testsPath, "test_image", "smallStack.stk")
+        path2 = "2@" + os.path.join(self.testsPath, "smallStack.stk")
         img2 = Image(path2)
         
         imgAdd -= img2
         self.assertEqual(img1, imgAdd)   
         
     def test_Image_read(self):
-        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        imgPath = os.path.join(self.testsPath, "tinyImage.spi")
         img = Image(imgPath)        
         count = 0.
         for i in range(0, 3):
@@ -120,7 +135,7 @@ class TestXmippPythonInterface(unittest.TestCase):
                 
     def test_Image_read_header(self):
         
-        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        imgPath = os.path.join(self.testsPath, "tinyImage.spi")
         img = Image()
         img.read(imgPath, HEADER)        
         
@@ -134,9 +149,9 @@ class TestXmippPythonInterface(unittest.TestCase):
         
                 
     def test_Image_readApplyGeo(self):
-        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyRotated.spi")
+        imgPath = os.path.join(self.testsPath, "tinyRotated.spi")
         img = Image(imgPath)  
-        imgPath = os.path.join(self.testsPath, "test_pythoninterface", "tinyImage.spi")
+        imgPath = os.path.join(self.testsPath, "tinyImage.spi")
         md = MetaData()
         id = md.addObject()
         md.setValue(MDL_IMAGE, imgPath, id)
@@ -160,10 +175,15 @@ class TestXmippPythonInterface(unittest.TestCase):
          self.assertFalse(fn2.isInStack())
          
     def test_FileName_isMetaData(self):
-         imgPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
+         imgPath = os.path.join(self.testsPath, "smallStack.stk")
          fn1 = FileName(imgPath)
-         self.assertFalse(fn1.isMetaData())
-         imgPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+         try: 
+             result = fn1.isMetaData()
+         except: 
+             print "cannot open file:", fn1 ; exit()
+         self.assertFalse(result)
+         
+         imgPath = os.path.join(self.testsPath, "test.xmd")
          fn2 = FileName(imgPath)
          self.assertTrue (fn2.isMetaData())
 
