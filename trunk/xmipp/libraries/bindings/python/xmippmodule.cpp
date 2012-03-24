@@ -190,11 +190,16 @@ static PyObject *
 FileName_isMetaData(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     FileNameObject *self = (FileNameObject*) obj;
-
-    if (self->filename->isMetaData(false))
-        Py_RETURN_TRUE;
-    else
-        Py_RETURN_FALSE;
+    try
+    {
+    	self->filename->isMetaData(false);
+    }
+    catch (XmippError &xe)
+    {
+    	std::cerr <<  xe <<std::endl;
+    	Py_RETURN_FALSE;
+    }
+    Py_RETURN_TRUE;
 }
 
 /* isImage */
@@ -773,6 +778,30 @@ Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 }
 
+/* Set Data Type */
+static PyObject *
+Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    int datatype;
+
+    if (self != NULL && PyArg_ParseTuple(args, "d", &datatype))
+    {
+        try
+        {
+            self->image->setDatatype((DataType)datatype);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+    return NULL;
+
+}
+
 /* Return image dimensions as a tuple */
 static PyObject *
 Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -927,6 +956,8 @@ static PyMethodDef Image_methods[] =
           "Initialize to random value" },
         { "resize", (PyCFunction) Image_resize, METH_VARARGS,
           "resize the image dimensions" },
+        { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
+          "set DataType for Image" },
         { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
           "Set the value of some pixel" },
         { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
@@ -4155,5 +4186,22 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "XMIPP_RND_UNIFORM", (long) RND_Uniform);
     addIntConstant(dict, "XMIPP_RND_GAUSSIAN", (long) RND_Gaussian);
 
+	addIntConstant(dict, "XMIPP_DT_DEFAULT",        (long) DT_Default);
+	addIntConstant(dict, "XMIPP_DT_UNKNOWN",        (long) DT_Unknown);
+	addIntConstant(dict, "XMIPP_DT_UCHAR",          (long) DT_UChar);
+	addIntConstant(dict, "XMIPP_DT_SCHAR",          (long) DT_SChar);
+	addIntConstant(dict, "XMIPP_DT_USHORT",         (long) DT_UShort);
+	addIntConstant(dict, "XMIPP_DT_SHORT",          (long) DT_Short);
+	addIntConstant(dict, "XMIPP_DT_UINT",           (long) DT_UInt);
+	addIntConstant(dict, "XMIPP_DT_INT",            (long) DT_Int);
+	addIntConstant(dict, "XMIPP_DT_LONG",           (long) DT_Long);
+	addIntConstant(dict, "XMIPP_DT_FLOAT",          (long) DT_Float);
+	addIntConstant(dict, "XMIPP_DT_DOUBLE",         (long) DT_Double);
+	addIntConstant(dict, "XMIPP_DT_COMPLEXSHORT",   (long) DT_CShort);
+	addIntConstant(dict, "XMIPP_DT_COMPLEXINT",     (long) DT_CInt);
+	addIntConstant(dict, "XMIPP_DT_COMPLEXFLOAT",   (long) DT_CFloat);
+	addIntConstant(dict, "XMIPP_DT_COMPLEXDOUBLE",  (long) DT_CDouble);
+	addIntConstant(dict, "XMIPP_DT_BOOL",           (long) DT_Bool);
+	addIntConstant(dict, "XMIPP_DT_LASTENTRY",      (long) DT_LastEntry);
 
 }
