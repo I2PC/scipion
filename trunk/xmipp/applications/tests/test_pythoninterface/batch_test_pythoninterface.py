@@ -188,22 +188,25 @@ class TestXmippPythonInterface(unittest.TestCase):
          self.assertTrue (fn2.isMetaData())
 
     def test_Metadata_iter(self):
-         mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+         mdPath = os.path.join(self.testsPath, "test.xmd")
          mD = MetaData(mdPath)
          i = 1
          for id in mD:
              img = mD.getValue(MDL_IMAGE, id)
-             expImg = '00000%d@Images/proj_ctf_1.stk' % i
+             expImg = os.path.join(self.testsPath, "test.xmd")
+             expImg = ("00000%d@"% i )+ os.path.join(self.testsPath, "proj_ctf_1.stk")
+             #expImg = '00000%d@Images/proj_ctf_1.stk' % i
              self.assertEqual(img, expImg)
              i += 1
                  
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
-        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+        mdPath = os.path.join(self.testsPath, "test.xmd")
+        mdPath2 = os.path.join(self.testsPath, "proj_ctf_1.stk")
+        """ change to resources directory """
         mD = MetaData(mdPath)
-        
         img = mD.getValue(MDL_IMAGE, 1L)
-        self.assertEqual(img, '000001@Images/proj_ctf_1.stk')
+        self.assertEqual(img, '000001@'+mdPath2)
         defocus = mD.getValue(MDL_CTF_DEFOCUSU, 2L)
         self.assertAlmostEqual(defocus, 200.0)
         count = mD.getValue(MDL_COUNT, 3L)
@@ -215,11 +218,11 @@ class TestXmippPythonInterface(unittest.TestCase):
         
     def test_Metadata_importObjects(self):
         '''import metadata subset'''
-        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+        mdPath = os.path.join(self.testsPath, "test.xmd")
         mD = MetaData(mdPath)
         mDout = MetaData()
         mDout.importObjects(mD, MDValueEQ(MDL_REF3D, -1))
-        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "importObject.xmd")
+        mdPath = os.path.join(self.testsPath, "importObject.xmd")
         mD = MetaData(mdPath)
         self.assertEqual(mD, mDout)
         
@@ -235,18 +238,18 @@ class TestXmippPythonInterface(unittest.TestCase):
          _count
          _angleComparison
          _ref3d
-         000001@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 [     1.000000     2.000000     3.000000 ]         -1
-         000002@Images/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 [     1.000000     4.000000     9.000000 ]          2
-         000003@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 [     1.000000     8.000000    27.000000 ]         -3
+         000001@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 ' 1.000000     2.000000     3.000000 '         -1
+         000002@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 ' 1.000000     4.000000     9.000000 '          2
+         000003@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 ' 1.000000     8.000000    27.000000 '         -3
         ''' 
-        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+        mdPath = os.path.join(self.testsPath, "test.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
         listOrig = [1.0, 2.0, 3.0]
         for i in range(1, 4):
             id = md.addObject() 
-            img = '00000%i@Images/proj_ctf_1.stk' % i
+            img = '00000%i@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
             md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
@@ -276,18 +279,18 @@ class TestXmippPythonInterface(unittest.TestCase):
          _count
          _angleComparison
          _ref3d
-         000001@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 [     1.000000     2.000000     3.000000 ]         -1
-         000002@Images/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 [     1.000000     4.000000     9.000000 ]          2
-         000003@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 [     1.000000     8.000000    27.000000 ]         -3
+         000001@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 ' 1.000000     2.000000     3.000000 '         -1
+         000002@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 ' 1.000000     4.000000     9.000000 '          2
+         000003@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 ' 1.000000     8.000000    27.000000 '         -3
         ''' 
-        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+        mdPath = os.path.join(self.testsPath, "test.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
         listOrig = [1.0, 2.0, 3.0]
         for i in range(1, 4):
             id = md.addObject() 
-            img = '00000%i@Images/proj_ctf_1.stk' % i
+            img = '00000%i@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
             md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
@@ -307,7 +310,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         md2 = MetaData()
         for i in range(1, 4):
             id = md2.addObject() 
-            img = '00000%i@Images/proj_ctf_1.stk' % i
+            img = '00000%i@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk' % i
             md2.setValue(MDL_IMAGE, img, id)
             md2.setValue(MDL_COUNT, (i * 10L), id)
         self.assertEqual(md, md2)
@@ -321,7 +324,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          _image 000001@Images/proj_ctf_1.stk
          _CTFModel CTFs/10.ctfparam
         ''' 
-        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test_row.xmd")
+        mdPath = os.path.join(self.testsPath, "test_row.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
@@ -350,18 +353,18 @@ class TestXmippPythonInterface(unittest.TestCase):
          _count
          _angleComparison
          _ref3d
-         000001@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 [     1.000000     2.000000     3.000000 ]         -1
-         000002@Images/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 [     1.000000     4.000000     9.000000 ]          2
-         000003@Images/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 [     1.000000     8.000000    27.000000 ]         -3
+         000001@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 [     1.000000     2.000000     3.000000 ]         -1
+         000002@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 [     1.000000     4.000000     9.000000 ]          2
+         000003@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 [     1.000000     8.000000    27.000000 ]         -3
         ''' 
-        mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+        mdPath = os.path.join(self.testsPath, "test.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
         listOrig = [1.0, 2.0, 3.0]
         for i in range(1, 4):
             id = md.addObject() 
-            img = '00000%i@Images/proj_ctf_1.stk' % i
+            img = '00000%i@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
             md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
@@ -372,7 +375,6 @@ class TestXmippPythonInterface(unittest.TestCase):
             ii *= -1
             
             
-        #print mdRef, md
         self.assertEqual(mdRef, md)
         self.assertRaises(XmippError, md.setValue, MDL_COUNT, 5.5, 1L)
        
