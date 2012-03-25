@@ -8,6 +8,6 @@ loop_
  _count
  _ref3d
  _angleComparison
- 000001@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000	      10 1 [	 1.000000     2.000000     3.000000 ]	     
- 000002@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000	      20 2 [	 1.000000     4.000000     9.000000 ]	      
- 000003@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000	      30 3 [	 1.000000     8.000000    27.000000 ]	     
+ 000001@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000	      10  '	 1.000000     2.000000     3.000000 '	  1    
+ 000002@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000	      20  '	 1.000000     4.000000     9.000000 '	  2    
+ 000003@/home/roberto/xmipp_svn/resources/test/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000	      30  '	 1.000000     8.000000    27.000000 '	  3   
