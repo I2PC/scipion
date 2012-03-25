@@ -7,9 +7,9 @@ data_neighbors
 loop_
  _order_
  _neighbors
-         1 [ 0 1 2 ] 
-         2 [ 24 23 10 11 17 16 15 ] 
-         3 [ 29 28 27 20 19 ] 
+         1 ' 0 1 2 ' 
+         2 ' 24 23 10 11 17 16 15 ' 
+         3 ' 29 28 27 20 19 ' 
 data_projectionDirections
 loop_
  _order_
