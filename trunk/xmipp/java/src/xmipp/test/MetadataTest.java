@@ -26,11 +26,15 @@
 package xmipp.test;
 
 
+import java.io.File;
+
 import org.junit.After;
  import org.junit.AfterClass;
  import org.junit.Before;
  import org.junit.BeforeClass;
  import org.junit.Test;
+
+import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import static org.junit.Assert.*;
@@ -114,11 +118,45 @@ public class MetadataTest {
     
     @Test
     public void testMakeAbsPath() throws Exception{
-    	MetaData md = new MetaData(mdFn);
+    	MetaData md = new MetaData(mdFn), md2 = new MetaData(mdFn);
+    	md2.makeAbsPath(MDLabel.MDL_IMAGE);
+    	long [] ids = md.findObjects();
+    	long [] ids2 = md2.findObjects();
+    	
+    	for (int i=0; i < ids.length; ++i) {
+    		String path = md.getValueString(MDLabel.MDL_IMAGE, ids[i]);
+    		File f = new File(Filename.getFilename(path));
+    		path = md2.getValueString(MDLabel.MDL_IMAGE, ids2[i]);
+    		assertEquals(Filename.getFilename(path), f.getAbsolutePath());
+    	}    	
     	md.print();
-    	md.makeAbsPath(MDLabel.MDL_IMAGE);
-    	md.print();
+    	md2.print();
     	
     }//function testSort
+    
+    @Test
+    public void testFill() throws Exception{
+    	//Test fillConstant
+    	String imagePath = "resources/test/singleImage.img";
+    	MetaData md = new MetaData(mdFn);
+    	md.fillConstant(MDLabel.MDL_ASSOCIATED_IMAGE1, imagePath);
+    	long [] ids = md.findObjects();
+    	for (int i=0; i < ids.length; ++i)
+    		assertEquals(imagePath, md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, ids[i]));
+    	
+    	//Test fillLinear
+    	md.fillLinear(MDLabel.MDL_SHIFTY, 0.0, 0.5);
+    	double value = 0.0;
+    	for (int i=0; i < ids.length; ++i) {
+    		assertEquals(value, md.getValueDouble(MDLabel.MDL_SHIFTY, ids[i]), XmippTest.EQUAL_ACCURACY);
+    		value += 0.5;
+    	}
+    	md.print();
+    	
+    	//Test fillRandom
+    	md.fillRandom(MDLabel.MDL_SHIFTY, "uniform", 2.0, 3.0);
+    	md.print();
+    }//function testFill
+    
 
 }//class MetadataTest

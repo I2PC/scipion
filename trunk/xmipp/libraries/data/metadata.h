@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -938,7 +938,7 @@ public:
     void fillRandom(MDLabel label, const String &mode, double op1, double op2, double op3=0.);
 
     /** Fill lineal, starting at some value and with some step */
-    void fillLineal(MDLabel label, double initial, double step);
+    void fillLinear(MDLabel label, double initial, double step);
 
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;

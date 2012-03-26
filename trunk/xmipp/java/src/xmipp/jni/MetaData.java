@@ -1,3 +1,28 @@
+/***************************************************************************
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+ *
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
 package xmipp.jni;
 
 import java.io.File;
@@ -310,30 +335,69 @@ public class MetaData {
 	 * Result in calling metadata object, repetion are allowed
 	 */
 	public native void unionAll(MetaData mdIn);
+	
+	/** Fill all values in a column(label).
+	 * Different types of fill are:
+	 * Constant
+	 * Linear
+	 * Random uniform
+	 * Random gaussian
+	 * @throws Exception
+	 */
+	public native void fillConstant(int label, String value);
+	
+	/**
+	 * Fill column in a random way
+	 * @param label column to be filled
+	 * @param mode can be "uniform" or "gaussian"
+	 * @param op1 min for uniform and mean for gaussian
+	 * @param op2 max for uniform and std for gaussian
+	 */
+	public native void fillRandom(int label, String mode, double op1, double op2);
+	
+	/** Fill label starting at some value and with some step */
+	public native void fillLinear(int label,double start, double step);
+	
 
+	/** Just for debugging purposes */
 	public native void enableDebug() throws Exception;
 	
 
-	// non-native functions
-	// constructor
+	/*********** Non-native functions ********************/
+	/** Create empty metadata */
 	public MetaData() {
 		create();
 	}
 
+	/** Create a metadata and read data from filename */
 	public MetaData(String filename) throws Exception {
 		create();
 		read(filename);
 	}
-
-	// Should be called by GarbageCollector before destroying
+	
+	/** Will be called by GarbageCollector before destroying.
+	 * Needed to free C++ object memory. 
+	 */
 	@Override
 	protected void finalize() throws Throwable {
 		super.finalize();
 		destroy();
 	}
 
+	/** Read a metadata from plain textfile.
+	 * @param file filename from where to read
+	 * @param columns expected columns(labels) in file
+	 * @throws Exception
+	 */
 	public native void readPlain(String file, String columns) throws Exception;
 
+	/** Write the images on metadata to some location
+	 * 
+	 * @param output Stack name or prefix, depending on indepent param
+	 * @param independent if False write images to stack, if True using a prefix
+	 * @param image_label Which label have the images to write
+	 * @throws Exception
+	 */
 	public native void writeImages(String output, boolean independent,
 			int image_label) throws Exception;
 }

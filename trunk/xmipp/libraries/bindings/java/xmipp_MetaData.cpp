@@ -767,6 +767,45 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_unionAll
   XMIPP_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillConstant
+  (JNIEnv * env, jobject jobj, jint label, jstring value)
+{
+  MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+  XMIPP_TRY
+  {
+      const char * strValue = env->GetStringUTFChars(value, false);
+      md->fillConstant((MDLabel)label, strValue);
+  }
+  XMIPP_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillLinear
+  (JNIEnv * env, jobject jobj, jint label, jdouble start, jdouble step)
+{
+  MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+  XMIPP_TRY
+  {
+      md->fillLinear((MDLabel)label, start, step);
+  }
+  XMIPP_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillRandom
+  (JNIEnv * env, jobject jobj, jint label, jstring mode, jdouble op1, jdouble op2)
+{
+  MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+  XMIPP_TRY
+  {
+      const char * strMode = env->GetStringUTFChars(mode, false);
+      md->fillRandom((MDLabel)label, strMode, op1, op2);
+  }
+  XMIPP_CATCH;
+}
+
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_enableDebug
 (JNIEnv *, jobject)
 {

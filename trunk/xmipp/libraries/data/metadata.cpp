@@ -1239,7 +1239,7 @@ void MetaData::fillRandom(MDLabel label, const String &mode, double op1, double 
     SET_AND_FILL();
 }
 
-void MetaData::fillLineal(MDLabel label, double initial, double step)
+void MetaData::fillLinear(MDLabel label, double initial, double step)
 {
    MDLinealGenerator generator(initial, step);
    SET_AND_FILL();

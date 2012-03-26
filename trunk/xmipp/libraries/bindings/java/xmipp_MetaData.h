@@ -382,6 +382,27 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_unionAll
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    fillConstant
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillConstant
+  (JNIEnv *, jobject, jint label, jstring value);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    fillLinear
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillLinear
+  (JNIEnv *, jobject, jint label, jdouble start, jdouble step);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    fillConstant
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillRandom
+  (JNIEnv *, jobject, jint label, jstring mode, jdouble op1, jdouble op2);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    enableDebug
  * Signature: ()V
  */
