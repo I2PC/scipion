@@ -9,13 +9,13 @@
 JNIEXPORT jint JNICALL Java_xmipp_jni_Program_runByName
 (JNIEnv *env, jclass jc, jstring progName, jstring args)
 {
-     XMIPP_TRY
+     XMIPP_JAVA_TRY
      {
         String progNameStr = env->GetStringUTFChars(progName, false);
         String argsStr = env->GetStringUTFChars(args, false);
 
         return runProgram(progNameStr,argsStr);
      }
-     XMIPP_CATCH;
+     XMIPP_JAVA_CATCH;
 }
 

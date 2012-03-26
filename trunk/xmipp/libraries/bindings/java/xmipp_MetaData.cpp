@@ -38,24 +38,24 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_read_1
 (JNIEnv *env, jobject jobj, jstring filename)
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         const char * fn = env->GetStringUTFChars(filename, false);
         md->read(fn);
         env->ReleaseStringUTFChars(filename, fn);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_size(JNIEnv *env, jobject jobj)
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->size();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return 0;
 }
@@ -63,37 +63,37 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_size(JNIEnv *env, jobject jobj)
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_setColumnFormat(JNIEnv *env, jobject jobj, jboolean format)
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         md->setColumnFormat(format);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_write
 (JNIEnv *env, jobject jobj, jstring filename)
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         const char * fn = env->GetStringUTFChars(filename, false);
         md->write(fn);
         env->ReleaseStringUTFChars(filename, fn);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeBlock
 (JNIEnv *env, jobject jobj, jstring filename)
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         const char * fn = env->GetStringUTFChars(filename, false);
         md->write(fn, MD_APPEND);
         env->ReleaseStringUTFChars(filename, fn);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_print
@@ -101,11 +101,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_print
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         md->write(std::cout);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isColumnFormat
@@ -113,11 +113,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isColumnFormat
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->isColumnFormat();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
@@ -127,11 +127,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_containsLabel
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->containsLabel((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
@@ -153,12 +153,12 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_removeLabel
 JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_label2Str(JNIEnv *env,
         jclass class_, jint label)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         String str = MDL::label2Str((MDLabel) label);
         return env->NewStringUTF(str.data());
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -166,14 +166,14 @@ JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_label2Str(JNIEnv *env,
 JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_str2Label
   (JNIEnv * env, jclass class_, jstring jlabelName)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         const char * labelName = env->GetStringUTFChars(jlabelName, false);
         MDLabel label = MDL::str2Label(labelName);
         env->ReleaseStringUTFChars(jlabelName, labelName);
         return (jint) label;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -181,7 +181,7 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_str2Label
 JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_MetaData_getBlocksInMetaDataFile(
     JNIEnv *env, jclass class_, jstring filename)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         StringVector blocks;
 
@@ -205,7 +205,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_MetaData_getBlocksInMetaDataFile(
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -214,7 +214,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels(JNIEnv *env,
         jobject jobj)
 {
     MetaData *md = GET_INTERNAL_METADATA(jobj);
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         std::vector < MDLabel > labels = md->getActiveLabels();
 
@@ -232,7 +232,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels(JNIEnv *env,
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -240,11 +240,11 @@ JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels(JNIEnv *env,
 JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getLabelType(JNIEnv *env,
         jclass jclass_, jint label)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return (MDL::labelType((MDLabel) label));
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return LABEL_NOTYPE;
 }
@@ -254,11 +254,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isTextFile(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         result = MDL::isTextFile((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -268,11 +268,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMetadata(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         result = MDL::isMetadata((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -282,11 +282,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isCtfParam(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         result = MDL::isCtfParam((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -296,11 +296,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isImage(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         result = MDL::isImage((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -310,11 +310,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isStack(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         result = MDL::isStack((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -324,11 +324,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMicrograph(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         result = MDL::isMicrograph((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -338,11 +338,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isPSD(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         result = MDL::isPSD((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -352,12 +352,12 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isMetadataFile(JNIEnv *env,
 {
     bool result = false;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
     	 MetaData * md = GET_INTERNAL_METADATA(jobj);
         result =  md->isMetadataFile;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return result;
 }
@@ -367,11 +367,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_makeAbsPath
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         md->makeAbsPath((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getValueInt(JNIEnv *env,
@@ -379,14 +379,14 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getValueInt(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         int value;
 
         if (md->getValue((MDLabel) label, value, objId))
             return value;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return 0;
 }
@@ -396,13 +396,13 @@ JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_getValueLong
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         size_t value;
         if (md->getValue((MDLabel) label, value, objId))
             return value;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return 0;
 }
@@ -412,13 +412,13 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getValueDouble(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         double value;
         if (md->getValue((MDLabel) label, value, objId))
             return value;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return 0;
 }
@@ -428,7 +428,7 @@ JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_getValueString(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         MDObject obj((MDLabel) label);
         if (md->getValue(obj, objId))
@@ -437,7 +437,7 @@ JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_getValueString(JNIEnv *env,
             return env->NewStringUTF(str.data());
         }
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -447,13 +447,13 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_getValueBoolean(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         bool value;
         if (md->getValue((MDLabel) label, value, objId))
             return value;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return 0;
 }
@@ -463,11 +463,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueInt(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->setValue((MDLabel) label, (int)value, objId);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
@@ -477,11 +477,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueLong(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->setValue((MDLabel) label, (size_t)value, objId);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
@@ -491,18 +491,18 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueDouble(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->setValue((MDLabel) label, value, objId);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueString(JNIEnv *env,
         jobject jobj, jint label, jstring value, jlong objId)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         MetaData * md = GET_INTERNAL_METADATA(jobj);
 
@@ -515,7 +515,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueString(JNIEnv *env,
 
         return result;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
@@ -525,11 +525,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueBoolean(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->setValue((MDLabel) label, (bool) value, objId);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
@@ -539,7 +539,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getStatistics(JNIEnv *env
 {
     MetaData *md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         double avg, stddev, min, max;
         getStatistics((*md), avg, stddev, min, max, applyGeo);
@@ -557,7 +557,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getStatistics(JNIEnv *env
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -567,7 +567,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getColumnValues(JNIEnv *e
 {
     MetaData *md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         std::vector<double> values;
         md->getColumnValues((MDLabel) label, values);
@@ -585,7 +585,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getColumnValues(JNIEnv *e
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -612,13 +612,13 @@ JNIEXPORT jlongArray JNICALL Java_xmipp_jni_MetaData_findObjects(JNIEnv *env,
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         std::vector < size_t > ids;
         md->findObjects(ids);
         return createLongArray(env, ids);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -628,13 +628,13 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_sort
 
   MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         MetaData mdSorted;
         mdSorted.sort(*md, (MDLabel)label, ascending);
         *md = mdSorted;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 
@@ -644,7 +644,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_importObjects
     MetaData * md = GET_INTERNAL_METADATA(jobj);
     MetaData * mdfrom = GET_INTERNAL_METADATA(from);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         jlong *ids = env->GetLongArrayElements(jids, 0);
         int size = env->GetArrayLength(jids);
@@ -659,7 +659,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_importObjects
 
         md->importObjects(*mdfrom, out_ids);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_firstObject(JNIEnv *env,
@@ -668,11 +668,11 @@ JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_firstObject(JNIEnv *env,
     MetaData * md = GET_INTERNAL_METADATA(jobj);
     jlong id = 0;
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         id = md->firstObject();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return id;
 }
@@ -682,11 +682,11 @@ JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_addObject(JNIEnv *env, jobject j
     jlong id = 0;
     MetaData *md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         id = md->addObject();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return id;
 }
@@ -695,18 +695,18 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_addLabel(JNIEnv *env, jobject job
 {
     MetaData *md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         md->addLabel((MDLabel)label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
 (JNIEnv *env, jobject jmetadata,
 		jobject jimageAvg, jobject jimageStd, jboolean applyGeo, jint label)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         MetaData * md = GET_INTERNAL_METADATA(jmetadata);
         ImageGeneric *avg = GET_INTERNAL_IMAGE_GENERIC(jimageAvg);
@@ -718,14 +718,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
         double dum;
         getStatistics(*md, *imgAvg, *imgStd, dum, dum, applyGeo, (MDLabel)label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
 (JNIEnv *env, jobject jmetadata, jobject jbasis, jint label)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         MetaData * mdIn = GET_INTERNAL_METADATA(jmetadata);
         ImageGeneric *basis= GET_INTERNAL_IMAGE_GENERIC(jbasis);
@@ -747,7 +747,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
         mdArray->getDimensions(adim);
         basis->image->setADimFile(adim);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
@@ -755,12 +755,12 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_computeFourierStatistics
 {
     MetaData * mdOut = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         MetaData * mdIn = GET_INTERNAL_METADATA(jmetadata);
         getFourierStatistics(*mdIn, 1, *mdOut, true, 2, (MDLabel)label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 /*
@@ -773,12 +773,12 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_unionAll
 {
   MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-  XMIPP_TRY
+  XMIPP_JAVA_TRY
   {
       MetaData * mdIn = GET_INTERNAL_METADATA(jmdIn);
       md->unionAll(*mdIn);
   }
-  XMIPP_CATCH;
+  XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillConstant
@@ -830,7 +830,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_enableDebug
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
 (JNIEnv * env, jobject jobj, jstring jfile, jstring jcolumns)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         const char * nfile = env->GetStringUTFChars(jfile, false);
         const char * ncolumns = env->GetStringUTFChars(jcolumns, false);
@@ -839,18 +839,18 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
         env->ReleaseStringUTFChars(jfile, nfile);
         env->ReleaseStringUTFChars(jcolumns, ncolumns);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
 (JNIEnv * env, jobject jobj, jstring joutput, jboolean independent, jint image_label)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         MetaData * md = GET_INTERNAL_METADATA(jobj);
         const char * output = env->GetStringUTFChars(joutput, false);
         copyImages(*md, output, independent, (MDLabel) image_label);
         env->ReleaseStringUTFChars(joutput, output);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }

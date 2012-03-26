@@ -27,23 +27,23 @@ JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_resize(JNIEnv *env, jobject jobj, jint w, jint h,
                                    jint d, jlong n)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         image->resize(w, h, d, (size_t) n, false);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jint JNICALL
 Java_xmipp_jni_ImageGeneric_getXDim(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         return XSIZE(* image->data->im);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return -1;
 }
@@ -51,13 +51,13 @@ Java_xmipp_jni_ImageGeneric_getXDim(JNIEnv *env, jobject jobj)
 JNIEXPORT jint JNICALL
 Java_xmipp_jni_ImageGeneric_getYDim(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
         return YSIZE(* image->data->im);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return -1;
 }
@@ -65,13 +65,13 @@ Java_xmipp_jni_ImageGeneric_getYDim(JNIEnv *env, jobject jobj)
 JNIEXPORT jint JNICALL
 Java_xmipp_jni_ImageGeneric_getZDim(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
         return ZSIZE(* image->data->im);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return -1;
 }
@@ -79,13 +79,13 @@ Java_xmipp_jni_ImageGeneric_getZDim(JNIEnv *env, jobject jobj)
 JNIEXPORT jlong JNICALL
 Java_xmipp_jni_ImageGeneric_getNDim(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
         return NSIZE(* image->data->im);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return -1;
 }
@@ -93,13 +93,13 @@ Java_xmipp_jni_ImageGeneric_getNDim(JNIEnv *env, jobject jobj)
 JNIEXPORT jint JNICALL
 Java_xmipp_jni_ImageGeneric_getDataType(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
         return image->getDatatype();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return -1;
 }
@@ -108,33 +108,33 @@ JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_readHeader(JNIEnv * env, jobject jobj,
                                        jstring filename)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         const char *fnStr = env->GetStringUTFChars(filename, false);
         image->read(fnStr, HEADER);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
                                  jint jx, jint jy, jint jz, jlong jn)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         const char *fn = env->GetStringUTFChars(filename, false);
         image->readOrReadPreview(fn, jx, jy, jz, jn, true);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_readApplyGeo_1(JNIEnv *env, jobject jimage,
         jstring filename, jobject jmetadata, jlong id, jint w, jint h, jboolean wrap)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jimage);
         MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
@@ -150,13 +150,13 @@ Java_xmipp_jni_ImageGeneric_readApplyGeo_1(JNIEnv *env, jobject jimage,
 
         SWITCHDATATYPE(image->getDatatype(), SELF_SCALE_TO_SIZE);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jbyteArray JNICALL
 Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select_image, jint nslice)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
@@ -214,7 +214,7 @@ Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -223,7 +223,7 @@ JNIEXPORT jshortArray JNICALL
 Java_xmipp_jni_ImageGeneric_getArrayShort(JNIEnv *env, jobject jobj,
         jlong select_image, jint nslice)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
@@ -282,7 +282,7 @@ Java_xmipp_jni_ImageGeneric_getArrayShort(JNIEnv *env, jobject jobj,
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -291,7 +291,7 @@ JNIEXPORT jfloatArray JNICALL
 Java_xmipp_jni_ImageGeneric_getArrayFloat(JNIEnv *env, jobject jobj,
         jlong select_image, jint nslice)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
@@ -340,7 +340,7 @@ Java_xmipp_jni_ImageGeneric_getArrayFloat(JNIEnv *env, jobject jobj,
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -349,7 +349,7 @@ JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
         jbyteArray data, jlong select_image, jint nslice)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
@@ -420,14 +420,14 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
         // Resets slice pointer.
         image->movePointerTo();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
         jshortArray data, jlong select_image, jint nslice)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
@@ -506,14 +506,14 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
         // Resets slice pointer.
         image->movePointerTo();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
         jfloatArray data, jlong select_image, jint nslice)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
@@ -556,86 +556,86 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
         // Resets slice pointer.
         image->movePointerTo();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setDataType(JNIEnv *env, jobject jobj,
                                         jint dataType)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         image->setDatatype((DataType) dataType);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_convert2Datatype(JNIEnv *env, jobject jobj,
         jint dataType)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         image->convert2Datatype((DataType) dataType);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_mapFile2Write(JNIEnv *env, jobject jobj, jint w,
         jint h, jint z, jstring filename, jlong n)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         const char *fnStr = env->GetStringUTFChars(filename, false);
 
         image->mapFile2Write(w, h, z, fnStr, false, (size_t) n);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_write(JNIEnv *env, jobject jobj, jstring filename)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         const char *fnStr = env->GetStringUTFChars(filename, false);
         image->write(fnStr);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_printShape(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         image->print();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jboolean JNICALL
 Java_xmipp_jni_ImageGeneric_equal(JNIEnv *env, jobject jobj1, jobject jobj2, jdouble accuracy)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image1 = GET_INTERNAL_IMAGE_GENERIC(jobj1);
         ImageGeneric *image2 = GET_INTERNAL_IMAGE_GENERIC(jobj2);
         return image1->equal(*image2,accuracy);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_subtract(JNIEnv *env, jobject jobj1, jobject jobj2, jobject jobj3)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image1 = GET_INTERNAL_IMAGE_GENERIC(jobj1);
         ImageGeneric *image2 = GET_INTERNAL_IMAGE_GENERIC(jobj2);
@@ -643,13 +643,13 @@ Java_xmipp_jni_ImageGeneric_subtract(JNIEnv *env, jobject jobj1, jobject jobj2, 
         *image3 = *image1;
         image3->subtract(*image2);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT jdoubleArray JNICALL
 Java_xmipp_jni_ImageGeneric_getStatistics(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
 
@@ -669,7 +669,7 @@ Java_xmipp_jni_ImageGeneric_getStatistics(JNIEnv *env, jobject jobj)
 
         return array;
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return NULL;
 }
@@ -677,19 +677,19 @@ Java_xmipp_jni_ImageGeneric_getStatistics(JNIEnv *env, jobject jobj)
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_setXmippOrigin(JNIEnv *env, jobject jobj)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         (*image)().setXmippOrigin();
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
                                        jboolean useLogarithm)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         image->convert2Datatype(DT_Double);
@@ -697,20 +697,20 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
         MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
         xmipp2PSD(*in, *in, useLogarithm);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_reslice(JNIEnv *env, jobject jobj, jobject jimgOut,
                                     jint view)
 {
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         ImageGeneric *imageOut = GET_INTERNAL_IMAGE_GENERIC(jimgOut);
         image->reslice((ImageGeneric::AxisView)view, *imageOut);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 }
 
 
