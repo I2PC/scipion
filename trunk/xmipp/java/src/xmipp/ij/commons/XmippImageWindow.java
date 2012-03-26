@@ -17,7 +17,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 			// openImageJ(Tool.VIEWER);
-			w = new XmippImageWindow("/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
+			w = new XmippImageWindow("/home/airen/xmipp-work/image-formats/ali_35c.hed");
+			
 			// IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 
 		}
@@ -89,5 +90,11 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		super.windowClosing(e);
 		if(XmippIJUtil.getXmippImageJ() != null)
 			XmippIJUtil.getXmippImageJ().close();
+	}
+
+	@Override
+	public String getImageFilePath()
+	{
+		return imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
 	}
 }// class XmippImageWindow

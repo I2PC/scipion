@@ -5,6 +5,7 @@
 package xmipp.ij.commons;
 
 import ij.IJ;
+import ij.ImagePlus;
 import ij.WindowManager;
 
 import java.awt.CheckboxMenuItem;
@@ -17,8 +18,11 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 
+import xmipp.jni.Filename;
 import xmipp.utils.XmippFileChooser;
 import javax.swing.JOptionPane;
+
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 /**
  * 
@@ -115,8 +119,25 @@ public class XmippMenuBar extends MenuBar
 		});
 
 		openwith3dmi = new MenuItem("Open with 3D Viewer");
-		openwithvv3ds = new MenuItem("Open with Volume Viewer/3D Slicer");
-		openwithvolumej = new MenuItem("Open with VolumeJ");
+		
+		openwith3dmi.setEnabled(Filename.isVolume(xw.getImageFilePath()));
+		openwith3dmi.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				ImagePlus imp = WindowManager.getCurrentImage();
+				if (imp.getImageStackSize() == 1)
+					JOptionPane.showMessageDialog(null, "Only for Stack");
+				else
+					ImagesWindowFactory.openImagePlusAs3D(imp);
+				
+			}
+		});
+		filemn.add(openwith3dmi);
+		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer");
+		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ");
 		refreshmi = new MenuItem("Refresh");
 		refreshmi.addActionListener(new ActionListener()
 		{
@@ -147,9 +168,6 @@ public class XmippMenuBar extends MenuBar
 		filemn.add(savemi);
 		filemn.add(saveasmi);
 		addIJMenuItem(filemn, "Duplicate", "Duplicate...", IJRequirement.IMAGEJ);
-		filemn.add(openwith3dmi);
-		filemn.add(openwithvv3ds);
-		filemn.add(openwithvolumej);
 		filemn.add(refreshmi);
 		filemn.add(pollmi);
 

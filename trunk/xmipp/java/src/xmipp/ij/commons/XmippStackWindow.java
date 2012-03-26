@@ -52,4 +52,10 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		saveDataAs(imp.getTitle());
 		
 	}
+
+	@Override
+	public String getImageFilePath()
+	{
+		return imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+	}
 }

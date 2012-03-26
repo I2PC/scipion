@@ -1,5 +1,7 @@
 package xmipp.ij.commons;
 
+import ij.ImagePlus;
+
 public interface XmippIJWindow
 {
 	
@@ -9,5 +11,9 @@ public interface XmippIJWindow
 	public void saveData() throws Exception;
 	
 	public void saveDataAs(String file) throws Exception;
+	
+	public ImagePlus getImagePlus();
+	
+	public String getImageFilePath();
 	
 }
