@@ -681,9 +681,6 @@ inline bool fileExists( const FileName &filename )
     return fileExists(filename.c_str());
 }
 
-/** Macro to be used on tests */
-#define TEST_FILENAME(fnStr) (formatString("%s/resources/test/%s", getXmippPath(), fnStr))
-
 /** Copy one image
  */
 void copyImage(const FileName & source,const FileName & target);

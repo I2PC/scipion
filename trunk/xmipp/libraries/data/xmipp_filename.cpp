@@ -295,9 +295,10 @@ void FileName::initRandom(int length)
 void FileName::initUniqueName(const char *templateStr)
 {
     int fd;
-    char filename[L_tmpnam];
+    int len = 256;
+    char filename[len];
     strcpy(filename, templateStr);
-    filename[L_tmpnam - 1] = 0;
+    filename[len - 1] = 0;
 
     if ((fd = mkstemp(filename)) == -1)
     {
@@ -361,7 +362,7 @@ FileName FileName::removeExtension(const String &ext) const
 // Remove the last extension ................................................
 FileName FileName::removeLastExtension() const
 {
-	FileName retval = *this;
+    FileName retval = *this;
     size_t first = find_last_of('.');
     return (first == npos) ? retval : retval.substr(0, first);
 }
@@ -369,7 +370,7 @@ FileName FileName::removeLastExtension() const
 // Remove all extensions....................................................
 FileName FileName::removeAllExtensions() const
 {
-	FileName retval = *this;
+    FileName retval = *this;
     size_t first = find_last_of('/');
     first = find_first_of('.', first + 1);
     return (first == npos) ? retval: retval.substr(0, first);
@@ -575,8 +576,9 @@ bool FileName::exists() const
 /* Delete  file exists -------------------------------------------------- */
 void FileName::deleteFile() const
 {
-    if (exists())
-        unlink(c_str());
+    FileName temp = this->removeFileFormat().removeBlockNameOrSliceNumber();
+    if (temp.exists())
+        unlink(temp.c_str());
 }
 /* Check if a file exists remove leading @ and tailing : */
 bool FileName::existsTrim() const
