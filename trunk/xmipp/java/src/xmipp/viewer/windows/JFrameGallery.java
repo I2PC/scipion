@@ -228,6 +228,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	 */
 	private void createGUI() {
 		// Create file chooser and set current dir
+		setIconImage(XmippResource.getIcon("xmipp2.gif").getImage());
 		fc = new XmippFileChooser();
 		ctfTasks = new TasksEngine(JFrameGallery.this);
 
@@ -276,7 +277,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		jpopUpMenuTable = new GalleryPopupMenu();
 		menu.update();
 
-		pack();
+		//pack();
 		isUpdating = false;
 
 		// Zoom in with Ctrl + P
