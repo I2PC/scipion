@@ -1,9 +1,0 @@
-# XMIPP_STAR_1 * 
-# 
-data_
-loop_
- _image
- _anglePsi
- _angleTilt
- _angleRot
- test_pythoninterface/tinyImage.spi    90.000000     0.000000     0.000000 
