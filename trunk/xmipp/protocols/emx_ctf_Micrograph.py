@@ -156,6 +156,7 @@ class CtfMicrographConverter(EmxBase):
                                         )
 #        for item in self.itemNameListXMD:
 #            print item.image, item.CTF_Spherical_aberration, item.BlockName
+#        exit(1)
     def EMX2XMD(self):
         
         for item in self.itemNameListEMX:
@@ -209,7 +210,8 @@ class CtfMicrographConverter(EmxBase):
                                          )
 
 #        for item in self.itemNameListEMX:
-#             print item.magnification, item.defocusU, item.BlockName
+#             print item.magnification, item.defocusU, item.astigmatism_angle
+#        exit(1)
 
     def XMD2startObject(self):
         #create blocks in empty star file
@@ -279,9 +281,9 @@ class CtfMicrographConverter(EmxBase):
         _defocusU_ = xmdStruct.prefix + xmdStruct._fields_[3][0]
         _defocusV_ = xmdStruct.prefix + xmdStruct._fields_[4][0]
         _astigmatism__angle = xmdStruct.prefix + xmdStruct._fields_[5][0]
-        _voltage_ = xmdStruct.prefix + xmdStruct._fields_[5][0]
-        _Cs_ = xmdStruct.prefix + xmdStruct._fields_[6][0]
-        _amplitude_contrast_= xmdStruct.prefix + xmdStruct._fields_[7][0]
+        _voltage_ = xmdStruct.prefix + xmdStruct._fields_[6][0]
+        _Cs_ = xmdStruct.prefix + xmdStruct._fields_[7][0]
+        _amplitude_contrast_= xmdStruct.prefix + xmdStruct._fields_[8][0]
 
         #fill block
         for block in self.blockNameListEMX:
