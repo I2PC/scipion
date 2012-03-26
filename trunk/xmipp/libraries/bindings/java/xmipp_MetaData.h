@@ -93,6 +93,14 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_containsLabel
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    containsLabel
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_removeLabel
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    label2Str
  * Signature: (I)Ljava/lang/String;
  */

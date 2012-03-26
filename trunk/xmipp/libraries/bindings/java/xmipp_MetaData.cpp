@@ -108,8 +108,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_print
     XMIPP_CATCH;
 }
 
-JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isColumnFormat(JNIEnv *env,
-        jobject jobj)
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isColumnFormat
+(JNIEnv *env, jobject jobj)
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
@@ -122,14 +122,28 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isColumnFormat(JNIEnv *env,
     return false;
 }
 
-JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_containsLabel(JNIEnv *env,
-        jobject jobj, jint label)
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_containsLabel
+(JNIEnv *env, jobject jobj, jint label)
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
     XMIPP_TRY
     {
         return md->containsLabel((MDLabel) label);
+    }
+    XMIPP_CATCH;
+
+    return false;
+}
+
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_removeLabel
+(JNIEnv *env, jobject jobj, jint label)
+{
+    MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+    XMIPP_TRY
+    {
+        return md->removeLabel((MDLabel) label);
     }
     XMIPP_CATCH;
 

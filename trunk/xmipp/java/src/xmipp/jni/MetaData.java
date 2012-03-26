@@ -41,6 +41,11 @@ public class MetaData {
 	public static final int LABEL_VECTOR = 5;
 	public static final int LABEL_LONG = 6;
 	public static final int LABEL_VECTOR_LONG = 7;
+	
+	public static final String FILL_CONSTANT = "constant";
+	public static final String FILL_LINEAR = "linear";
+	public static final String FILL_RAND_UNIFORM = "random uniform";
+	public static final String FILL_RAND_GAUSSIAN = "random gaussian";
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
 	// private final static int PATHS_FIELDS[] = {
@@ -115,6 +120,8 @@ public class MetaData {
 	public native boolean isColumnFormat() throws Exception;
 
 	public native boolean containsLabel(int label) throws Exception;
+	
+	public native boolean removeLabel(int label) throws Exception;
 
 	public boolean containsGeometryInfo() {
 		try {
@@ -356,7 +363,7 @@ public class MetaData {
 	public native void fillRandom(int label, String mode, double op1, double op2);
 	
 	/** Fill label starting at some value and with some step */
-	public native void fillLinear(int label,double start, double step);
+	public native void fillLinear(int label, double start, double step);
 	
 
 	/** Just for debugging purposes */
