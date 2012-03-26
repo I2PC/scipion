@@ -434,6 +434,9 @@ XmippMetadataProgram::XmippMetadataProgram()
     delete_mdIn = false;
 }
 
+void XmippMetadataProgram::init()
+{}
+
 void XmippMetadataProgram::initComments()
 {
     XmippProgram::initComments();
@@ -484,64 +487,6 @@ void XmippMetadataProgram::defineParams()
     }
 }//function defineParams
 
-
-void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileName &oroot,
-    bool applyGeo, MDLabel image_label)
-{
-    this->mdIn = md;
-    this->fn_out = out;
-    this->oroot = oroot;
-    this->image_label = image_label;
-    this->doRun = true;
-
-    if (remove_disabled)
-            mdIn->removeDisabled();
-
-        if (mdIn->isEmpty())
-            REPORT_ERROR(ERR_MD_NOOBJ, "Empty input Metadata.");
-
-        mdInSize = mdIn->size();
-
-        if (!mdIn->isMetadataFile)
-        {
-            if (mdInSize == 1)
-                single_image = true;
-            else
-                input_is_stack = true;
-        }
-
-        String labelStr = MDL::label2Str(image_label);
-
-        if (image_label == MDL_UNDEFINED)
-          REPORT_ERROR(ERR_MD_BADLABEL, formatString("Unknown image label '%s'.", labelStr.c_str()));
-
-        if (!mdIn->containsLabel(image_label))
-          REPORT_ERROR(ERR_MD_MISSINGLABEL,
-              formatString("Image label '%s' is missing. See option --label.", labelStr.c_str()));
-
-        /* Output is stack if, given a filename in fn_out, mdIn has multiple images.
-         * In case no output name is given, then input is overwritten and we have to
-         * check if it is stack. */
-        output_is_stack = mdInSize > 1 && oroot.empty() && (!fn_out.empty() || input_is_stack);
-
-        save_metadata_stack = save_metadata_stack && mdIn->isMetadataFile && output_is_stack;
-
-
-        // Only delete output stack in case we are not overwritting input
-        delete_output_stack = (output_is_stack && delete_output_stack) ?
-                              !(fn_out.empty() && oroot.empty()) : false;
-
-        // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
-        create_empty_stackfile = (each_image_produces_an_output && output_is_stack && !fn_out.empty());
-
-        // if create, then we need to read the dimensions of the input stack
-        getImageInfo(*mdIn, xdimOut, ydimOut, zdimOut, ndimOut, datatypeOut, image_label);
-
-        // if input is volume do not apply geo
-        if (allow_apply_geo && zdimOut == 1)
-            apply_geo = !checkParam("--dont_apply_geo");
-}//function setup
-
 void XmippMetadataProgram::readParams()
 {
     fn_in = getParam("-i");
@@ -560,10 +505,69 @@ void XmippMetadataProgram::readParams()
 
     MetaData * md = new MetaData;
     md->read(fn_in, NULL, decompose_stacks);
-    delete_mdIn = true;
+    delete_mdIn = true; // Only delete mdIn when called directly from command line
 
     setup(md, fn_out, oroot, apply_geo, MDL::str2Label(getParam("--label")));
 }//function readParams
+
+void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileName &oroot,
+                                 bool applyGeo, MDLabel image_label)
+{
+    this->mdIn = md;
+    this->fn_out = out;
+    this->oroot = oroot;
+    this->image_label = image_label;
+    this->doRun = true;
+
+    if (remove_disabled)
+        mdIn->removeDisabled();
+
+    if (mdIn->isEmpty())
+        REPORT_ERROR(ERR_MD_NOOBJ, "Empty input Metadata.");
+
+    mdInSize = mdIn->size();
+
+    if (!mdIn->isMetadataFile)
+    {
+        if (mdInSize == 1)
+            single_image = true;
+        else
+            input_is_stack = true;
+    }
+
+    String labelStr = MDL::label2Str(image_label);
+
+    if (image_label == MDL_UNDEFINED)
+        REPORT_ERROR(ERR_MD_BADLABEL, formatString("Unknown image label '%s'.", labelStr.c_str()));
+
+    if (!mdIn->containsLabel(image_label))
+        REPORT_ERROR(ERR_MD_MISSINGLABEL,
+                     formatString("Image label '%s' is missing. See option --label.", labelStr.c_str()));
+
+    /* Output is stack if, given a filename in fn_out, mdIn has multiple images.
+     * In case no output name is given, then input is overwritten and we have to
+     * check if it is stack. */
+    output_is_stack = mdInSize > 1 && oroot.empty() && (!fn_out.empty() || input_is_stack);
+
+    /* Save metadata related to output stack only if required,
+     * if input is also a metadata (i.e., there is info to keep in the output),
+     * and output is a stack.*/
+    save_metadata_stack = save_metadata_stack && mdIn->isMetadataFile && output_is_stack;
+
+    // Only delete output stack in case we are not overwritting input
+    delete_output_stack = (output_is_stack && delete_output_stack) ?
+                          !(fn_out.empty() && oroot.empty()) : false;
+
+    // If the output is a stack, create empty stack file in advance to avoid concurrent access to the header
+    create_empty_stackfile = (each_image_produces_an_output && output_is_stack && !fn_out.empty());
+
+    // if create, then we need to read the dimensions of the input stack
+    getImageInfo(*mdIn, xdimOut, ydimOut, zdimOut, ndimOut, datatypeOut, image_label);
+
+    // if input is volume do not apply geo
+    if (zdimOut > 1)
+        apply_geo = false;
+}//function setup
 
 void XmippMetadataProgram::show()
 {
@@ -572,13 +576,10 @@ void XmippMetadataProgram::show()
     std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo)
         std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
-    if (each_image_produces_an_output || produces_an_output)
-    {
-        if (!fn_out.empty())
-            std::cout << "Output File: " << fn_out << std::endl;
-        if (!oroot.empty())
-            std::cout << "Output Root: " << oroot << std::endl;
-    }
+    if (!fn_out.empty())
+        std::cout << "Output File: " << fn_out << std::endl;
+    if (!oroot.empty())
+        std::cout << "Output Root: " << oroot << std::endl;
 }
 
 void XmippMetadataProgram::preProcess()
@@ -590,10 +591,7 @@ void XmippMetadataProgram::postProcess()
 void XmippMetadataProgram::startProcessing()
 {
     if (delete_output_stack)
-    {
-        FileName fn_stack_plain = fn_out.removeFileFormat();
-        fn_stack_plain.deleteFile();
-    }
+        fn_out.deleteFile();
 
     if (create_empty_stackfile)
         createEmptyFile(fn_out, xdimOut, ydimOut, zdimOut, mdInSize, true, WRITE_OVERWRITE);
@@ -688,10 +686,10 @@ void XmippMetadataProgram::run()
             {
                 if (oext.empty()) // If oext is still empty, then use ext of indep input images
                 {
-                  if (input_is_stack)
-                    oextBaseName = "spi";
-                  else
-                    oextBaseName = fnImg.getFileFormat();
+                    if (input_is_stack)
+                        oextBaseName = "spi";
+                    else
+                        oextBaseName = fnImg.getFileFormat();
                 }
 
                 if (!baseName.empty() )
@@ -751,6 +749,10 @@ void XmippMetadataProgram::run()
     finishProcessing();
 
     postProcess();
+
+    /* Reset the default values of the program in case
+     * to be reused.*/
+    init();
 }
 
 XmippProgramGeneric::XmippProgramGeneric()

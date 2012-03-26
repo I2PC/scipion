@@ -28,10 +28,10 @@
 #include "xmipp_image_generic.h"
 #include "xmipp_image_convert.h"
 
-//ProgConvImg::ProgConvImg()
-//{
-//    init();
-//}
+ProgConvImg::ProgConvImg()
+{
+    init();
+}
 
 void ProgConvImg::init()
 {
@@ -287,7 +287,7 @@ void ProgConvImg::processImage(const FileName &fnImg, const FileName &fnImgOut, 
             imIn.write(_fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode, swap);
 
             if ((fnImg == fnImgOut) && (rename(tempName.c_str(),fnImgOut.c_str())!=0))
-                REPORT_ERROR(ERR_IO, "ProgConvImg:: Error renaming the file.");
+                REPORT_ERROR(ERR_IO, formatString("ProgConvImg:: Error renaming the file from %s to %s.",tempName.c_str(), fnImgOut.c_str()));
 
             break;
         }
@@ -320,11 +320,6 @@ void ProgConvImg::finishProcessing()
     }
 
     XmippMetadataProgram::finishProcessing();
-}
-
-void ProgConvImg::postProcess()
-{
-	init();
 }
 
 void ProgConvImg::show()

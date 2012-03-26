@@ -248,7 +248,7 @@ public:
     }
     MetaData * getOutputMd()
     {
-      return &mdOut;
+        return &mdOut;
     }
 
 public:
@@ -341,6 +341,13 @@ protected:
 public:
     XmippMetadataProgram();
 
+    /** Initialization of variables should be done here
+     */
+    virtual void init();
+
+    /** Setup of common XmippMetadataProgram arguments
+     *  to be called from another program.
+     */
     virtual void setup(MetaData *md, const FileName &o="", const FileName &oroot="",
                        bool applyGeo=false, MDLabel label=MDL_IMAGE);
 
