@@ -551,6 +551,10 @@ class MDLabelStaticInit
 private:
     MDLabelStaticInit()
     {
+    	//Just to be safe, initialize all data to null
+    	for (int i = (int)MDL_FIRST_LABEL; i <= (int)MDL_LAST_LABEL; ++i)
+    		MDL::data[i] = NULL;
+
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         //The label MDL_OBJID is special and should not be used
         MDL::addLabel(MDL_OBJID, LABEL_LONG, "objId");
@@ -732,6 +736,9 @@ private:
         MDL::addLabel(MDL_SHIFTX, LABEL_DOUBLE, "shiftX", TAGLABEL_NOTAG, "Xoff");
         MDL::addLabel(MDL_SHIFTY, LABEL_DOUBLE, "shiftY", TAGLABEL_NOTAG, "Yoff");
         MDL::addLabel(MDL_SHIFTZ, LABEL_DOUBLE, "shiftZ", TAGLABEL_NOTAG, "Zoff");
+        MDL::addLabel(MDL_SHIFT_CRYSTALX, LABEL_DOUBLE, "crystalShiftX", TAGLABEL_NOTAG, "Xoff");
+        MDL::addLabel(MDL_SHIFT_CRYSTALY, LABEL_DOUBLE, "crystalShiftY", TAGLABEL_NOTAG, "Yoff");
+        MDL::addLabel(MDL_SHIFT_CRYSTALZ, LABEL_DOUBLE, "crystalShiftZ", TAGLABEL_NOTAG, "Zoff");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");

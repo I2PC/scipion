@@ -124,7 +124,9 @@ bool MDL::isVectorLong(const MDLabel label)
 }
 bool MDL::isValidLabel(const MDLabel label)
 {
-    return (label > MDL_UNDEFINED && label < MDL_LAST_LABEL);
+    return label > MDL_UNDEFINED &&
+    		label < MDL_LAST_LABEL &&
+    		data[(int)label] != NULL;
 }
 
 bool MDL::isValidLabel(const String &labelName)
