@@ -7,8 +7,8 @@
 # The ../Src is so beacuse this file will be executed in another directory
 NULL
 #Internally generated
-0 360 10 random
-0 15 10 random
+0 360 10 
+0 15 10 
 0
 # Noise description ----------------------------------------------------------
 #     noise (and bias) applied to rotational angle 
