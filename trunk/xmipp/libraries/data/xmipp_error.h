@@ -196,6 +196,19 @@ enum ErrorType
     ERR_VALUE_NOTSET        ///< Value has not been set.
 };
 
+
+/** MACROs that proccess XMIPP exceptions
+ */
+#define XMIPP_TRY try{
+
+#define XMIPP_CATCH \
+	}\
+    catch (XmippError &xe)\
+    {\
+        std::cerr << xe;\
+        exit(-1);\
+    }
+
 /** Show message and exit
  *
  * This is an internal function (not to be used by programmers)
