@@ -221,7 +221,7 @@ String FileName::getExtension() const
 // Has image extension .....................................................
 bool FileName::hasImageExtension() const
 {
-    String ext=getExtension();
+    String ext = getFileFormat();
     if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
         ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
         ext=="ser" || ext=="stk" || ext=="mrcs")
@@ -233,7 +233,7 @@ bool FileName::hasImageExtension() const
 // Has image extension .....................................................
 bool FileName::hasStackExtension() const
 {
-    String ext=getExtension();
+    String ext = getFileFormat();
     if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
         ext=="img" || ext=="hed" || ext=="tif" || ext=="dm3" ||
         ext=="ser")
@@ -245,7 +245,7 @@ bool FileName::hasStackExtension() const
 // Has image extension .....................................................
 bool FileName::hasVolumeExtension() const
 {
-    String ext=getExtension();
+    String ext = getFileFormat();
     if (ext=="vol" || ext=="spi" || ext=="xmp" ||
         ext=="mrc" || ext=="inf" || ext=="raw")
         return true;
@@ -382,7 +382,7 @@ FileName FileName::removeFilename() const
     return (first == npos) ? "" : substr(0, first);
 }
 
-FileName FileName::getFileFormat() const
+String FileName::getFileFormat() const
 {
     size_t first;
     FileName result;

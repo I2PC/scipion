@@ -265,6 +265,19 @@ public:
      */
     String getExtension() const;
 
+    /** Get image format identifier
+     *
+     * @code
+     * fn_proj = "g1ta00001.xmp";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "xmp"
+     * fn_proj = "g1ta00001.nor:spi";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "spi"
+     * fn_proj = "input.file#120,120,55,1024,float";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
+     * @endcode
+     */
+    String getFileFormat() const;
+
     /** True if the extension of this filename is of an image type
      */
     bool hasImageExtension() const;
@@ -277,18 +290,6 @@ public:
      */
     bool hasVolumeExtension() const;
 
-    /** Get image format identifier (as in Bsoft)
-     *
-     * @code
-     * fn_proj = "g1ta00001.xmp";
-     * fn_proj = fn_proj.get_file_format(); // fn_proj == "xmp"
-     * fn_proj = "g1ta00001.nor:spi";
-     * fn_proj = fn_proj.get_file_format(); // fn_proj == "spi"
-     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
-     * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
-     * @endcode
-     */
-    FileName getFileFormat() const;
 
     /** Get the size of the file.
      */
