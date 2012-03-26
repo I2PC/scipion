@@ -145,7 +145,7 @@ public class GalleryData {
 	}// function getMdFilename
 
 	/** Load contents from a metadata already read */
-	private void loadMd() throws Exception {
+	public void loadMd() throws Exception {
 		ids = md.findObjects();
 		loadLabels();
 		numberOfVols = 0;

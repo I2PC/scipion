@@ -156,19 +156,16 @@ public class MetadataGallery extends ImageGallery {
 			int displayLabel, String key) throws Exception {
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
-		String labelStr = data.md.getValueString(displayLabel, objId);
+		ImageItem item = new ImageItem(index);
 		ImagePlus imp = null;
-		if (imageFn != null) {
+		if (imageFn != null && Filename.exists(imageFn)) {
 			if (data.useGeo)
 				image.readApplyGeo(imageFn, data.md, objId, thumb_width,
 						thumb_height, data.wrap);
 			else
 				image.read(imageFn, thumb_width, thumb_height);
 			imp = XmippImageConverter.convertToImagePlus(image);
-			// image.destroy();
-
 		}
-		ImageItem item = new ImageItem(index);
 		item.setImagePlus(imp);
 		return item;
 	}

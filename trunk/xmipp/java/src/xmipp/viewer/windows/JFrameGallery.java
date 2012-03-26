@@ -117,7 +117,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	private GalleryMenu menu;
 	private XmippFileChooser fc;
 	private SaveJDialog dlgSave = null;
-	private ClassesJDialog dlgClasses = null; 
+	private ClassesJDialog dlgClasses = null;
 
 	private JLabel jlZoom;
 	private JLabel jlGoto;
@@ -201,10 +201,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		super();
 		// createGUI(new MDTableModel(filenames, enabled), parameters);
 	}
-	
-	/** Open another metadata separataly *
+
+	/**
+	 * Open another metadata separataly *
 	 */
-	public void openMetadata(MetaData md){
+	public void openMetadata(MetaData md) {
 		new JFrameGallery(null, md, new Param());
 	}
 
@@ -614,10 +615,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			}
 		}
 	}
-	
-	private boolean openClassesDialog(){
-		if (dlgClasses == null){
-			dlgClasses = new ClassesJDialog(JFrameGallery.this, data.classesArray);
+
+	private boolean openClassesDialog() {
+		if (dlgClasses == null) {
+			dlgClasses = new ClassesJDialog(JFrameGallery.this,
+					data.classesArray);
 		}
 		return dlgClasses.showDialog();
 	}
@@ -717,7 +719,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	}
 
 	/** Reload table data */
-	protected void reloadTableData() {
+	public void reloadTableData() {
 		try {
 			table.removeAll();
 			createModel();
@@ -732,6 +734,36 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Fill some label mode can be: "constant", "linear", "uniform", "gaussian"
+	 * values is a list of string
+	 * */
+	public void fillLabel(int label, String mode, String... values)
+			throws Exception {
+		DEBUG.printFormat("fillLabels, mode:%s\n", mode);
+		if (mode.equalsIgnoreCase(MetaData.FILL_CONSTANT))
+			data.md.fillConstant(label, values[0]);
+		else {
+			Double v1 = Double.parseDouble(values[0]);
+			Double v2 = Double.parseDouble(values[1]);
+			if (mode.equalsIgnoreCase(MetaData.FILL_LINEAR))
+				data.md.fillLinear(label, v1, v2);
+			else if (mode.equalsIgnoreCase(MetaData.FILL_RAND_UNIFORM))
+				data.md.fillRandom(label, "uniform", v1, v2);
+			else if (mode.equalsIgnoreCase(MetaData.FILL_RAND_GAUSSIAN))
+				data.md.fillRandom(label, "gaussian", v1, v2);
+		}
+		data.loadMd();
+		reloadTableData();
+	}
+	
+	/** Drop some label from the metadata */
+	public void removeLabel(int label)throws Exception {
+		data.md.removeLabel(label);
+		data.loadMd();
+		reloadTableData();
 	}
 
 	/***
@@ -1041,7 +1073,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	}
 
 	class GalleryMenu extends XmippMenuBarCreator {
-		
+
 		@Override
 		protected void createItems() throws Exception {
 			// File
@@ -1075,10 +1107,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			addItem(DISPLAY_RESLICE_BOTTOM, "Bottom (Y positive)");
 			addItem(DISPLAY_RESLICE_LEFT, "Left (X negative)");
 			addItem(DISPLAY_RESLICE_RIGHT, "Right (X positive)");
-			//Metadata operations
+			// Metadata operations
 			addItem(METADATA, "Metadata");
 			addItem(MD_CLASSES, "Superclasses");
-			addItem(MD_EDIT_COLS, "Edit columns");
+			addItem(MD_EDIT_COLS, "Edit labels");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
@@ -1146,10 +1178,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			else if (cmd.equals(FILE_OPEN)) {
 				if (fc.showOpenDialog(JFrameGallery.this) != XmippFileChooser.CANCEL_OPTION) {
 					if (fc.getSelectedFile().exists())
-						ImagesWindowFactory.openFileAsDefault(fc.getSelectedPath());
+						ImagesWindowFactory.openFileAsDefault(fc
+								.getSelectedPath());
 					else
-						XmippDialog.showError(JFrameGallery.this, String
-								.format("File: '%s' doesn't exist.", fc.getSelectedPath()));
+						XmippDialog.showError(
+								JFrameGallery.this,
+								String.format("File: '%s' doesn't exist.",
+										fc.getSelectedPath()));
 				}
 			} else if (cmd.equals(FILE_SAVE)) {
 				save();
@@ -1174,7 +1209,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-			}else if (cmd.equals(FILE_REFRESH)) {
+			} else if (cmd.equals(FILE_REFRESH)) {
 				reloadTableData();
 			} else if (cmd.equals(DISPLAY_RESLICE_TOP)) {
 
@@ -1184,10 +1219,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 			} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)) {
 
-			} else if (cmd.equals(MD_CLASSES)){
-				openClassesDialog();				
-			} else if (cmd.equals(MD_EDIT_COLS)){
-				EditLabelsJDialog dlg = new EditLabelsJDialog(JFrameGallery.this);
+			} else if (cmd.equals(MD_CLASSES)) {
+				openClassesDialog();
+			} else if (cmd.equals(MD_EDIT_COLS)) {
+				EditLabelsJDialog dlg = new EditLabelsJDialog(
+						JFrameGallery.this);
 				dlg.showDialog();
 			}
 		}// function handleActionPerformed
@@ -1201,7 +1237,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		protected void createItems() throws Exception {
 			addItem(ENABLED, "Enable");
 			addItem(DISABLED, "Disable");
-			//addSeparator();
+			// addSeparator();
 			addItem(OPEN, "Open");
 			addItem(OPEN_ASTEXT, "Open as text");
 			addItem(CTF_PROFILE, "Show CTF profile");
@@ -1217,9 +1253,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		}// function createItems
 
 		public void show(Component cmpnt, Point location) {
-			//This item visibility depends on current selection
-			setItemVisible(OPEN_IMAGES, data.is2DClassificationMd() 
-					&& gallery.getSelectedCount() == 1);
+			// This item visibility depends on current selection
+			setItemVisible(OPEN_IMAGES,
+					data.is2DClassificationMd()
+							&& gallery.getSelectedCount() == 1);
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
@@ -1290,15 +1327,16 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			} else if (cmd.equals(CTF_RECALCULATE)) {
 				showCTF(false);
 			} else if (cmd.equals(SET_CLASS)) {
-				if (openClassesDialog()){
+				if (openClassesDialog()) {
 					int classNumber = dlgClasses.getSelectedClass();
-					//DEBUG.printMessage(String.format("class: %d", classNumber));
+					// DEBUG.printMessage(String.format("class: %d",
+					// classNumber));
 					gallery.setSelectionClass(classNumber);
 				}
 			} else if (cmd.equals(OPEN_IMAGES)) {
 				int index = gallery.getIndex(row, col);
 				openMetadata(data.getClassImages(index));
-			} 
+			}
 			initItems();
 		}
 
@@ -1334,18 +1372,18 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	@Override
 	public void windowActivated(WindowEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void windowClosed(WindowEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void windowClosing(WindowEvent arg0) {
-		if (dlgClasses != null){
+		if (dlgClasses != null) {
 			dlgClasses.dispose();
 		}
 	}
@@ -1353,24 +1391,24 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	@Override
 	public void windowDeactivated(WindowEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void windowDeiconified(WindowEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void windowIconified(WindowEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void windowOpened(WindowEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }// class JFrameGallery

@@ -114,6 +114,16 @@ public class XmippDialog extends JDialog implements ActionListener {
 	public void handleActionPerformed(ActionEvent evt) {
 
 	}
+	
+	/**
+	 * Function called before close after ok pressed
+	 */
+	public void handleOk(){}
+	
+	/**
+	 * Function called before close after cancel pressed
+	 */
+	public void handleCancel(){}
 
 	@Override
 	public void actionPerformed(ActionEvent evt) {
@@ -128,6 +138,10 @@ public class XmippDialog extends JDialog implements ActionListener {
 
 	/** Close function to hide the Dialog and dispose resources */
 	protected void close(boolean result) {
+		if (result)
+			handleOk();
+		else
+			handleCancel();
 		this.result = result;
 		setVisible(false);
 		if (disposeOnClose)

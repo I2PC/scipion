@@ -536,7 +536,9 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 		
 		public Image getImage(){
-			return image.getImage();
+			if (image != null)
+				return image.getImage();
+			return null;
 		}
 		
 		public boolean getShowLabel(){

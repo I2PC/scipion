@@ -58,7 +58,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	GridBagConstraints gbc = new GridBagConstraints();
 	ImageGallery gallery;
 	JPanel panelButtons;
-	
+
 	public EditLabelsJDialog(JFrameGallery parent) {
 		super(parent, "Edit labels", true);
 		this.rows = parent.getData().labels;
@@ -69,26 +69,21 @@ public class EditLabelsJDialog extends XmippDialog {
 		enableDelete(false);
 	}// constructor ColumnsJDialog
 
-	private JButton createButton(String icon, String tip){
+	private JButton createButton(String icon, String tip) {
 		JButton btn = XmippWindowUtil.getIconButton(icon, this);
 		btn.setToolTipText(tip);
 		btn.setFocusable(false);
 		panelButtons.add(btn);
 		return btn;
 	}
-	
-	protected void createToolbarButtons(){
+
+	protected void createToolbarButtons() {
 		panelButtons = new JPanel();
 		btnAdd = createButton("add.gif", "Add new label");
 		btnDelete = createButton("delete.gif", "Delete label");
 		btnFill = createButton("fill.png", "Fill label");
 	}
-	
-	public int getSelectedLabel() {
-		int row = tableColumns.getSelectedRow();
-		return rows.get(row).getLabel();
-	}
-	
+
 	@Override
 	protected void createContent(JPanel panel) {
 		setResizable(false);
@@ -108,52 +103,73 @@ public class EditLabelsJDialog extends XmippDialog {
 		panel.add(groupstbpn, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 		createToolbarButtons();
 		panel.add(panelButtons, XmippWindowUtil.getConstraints(gbc, 1, 0));
-		
+
 		// listen to selection changes (only one row selected)
 		tableColumns.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tableColumns.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						enableDelete(getSelectedColumn() >= 0);
+						enableDelete(getSelectedRow() >= 0);
 					}
 				});
 	}// function initComponents
 
 	private void enableDelete(boolean value) {
-		//btnAdd.setEnabled(value);
+		// btnAdd.setEnabled(value);
 		btnDelete.setEnabled(value);
 		btnFill.setEnabled(value);
 	}// function enableUpDown
 
+	private void rowsChanged() {
+		this.rows = ((JFrameGallery) parent).getData().labels;
+		model.fireTableDataChanged();
+	}
+
+	private void showAddFillDialog(AddFillLabelsJDialog dlg) throws Exception {
+
+		if (dlg.showDialog()) {
+			((JFrameGallery) parent).fillLabel(dlg.getLabel(),
+					dlg.getFillMode(), dlg.getValues());
+			rowsChanged();
+		}
+
+	}
+
 	@Override
 	public void handleActionPerformed(ActionEvent evt) {
-		JButton btn = (JButton) evt.getSource();
-		if (btn == btnAdd){
-			XmippDialog dlg = new AddFillLabelsJDialog((JFrameGallery)parent, 
-					rows);
-			dlg.showDialog();
-		}
-		else if (btn == btnDelete){
-			int row = getSelectedColumn();
-			gallery.removeClass(row);
-			model.fireTableRowsDeleted(row, row);
-		}
-		else if (btn == btnFill){
-			XmippDialog dlg = new AddFillLabelsJDialog((JFrameGallery)parent, 
-					getSelectedLabel());
-			dlg.showDialog();
+		try {
+			JButton btn = (JButton) evt.getSource();
+			if (btn == btnAdd) {
+				showAddFillDialog(new AddFillLabelsJDialog(
+						(JFrameGallery) parent, rows));
+			} else if (btn == btnDelete) {
+				if (XmippDialog.showWarning(parent,
+						"Are you sure to remove this label?")) {
+					((JFrameGallery) parent).removeLabel(getSelectedLabel());
+					rowsChanged();
+				}
+			} else if (btn == btnFill) {
+				showAddFillDialog(new AddFillLabelsJDialog(
+						(JFrameGallery) parent, getSelectedLabel()));
+			}
+		} catch (Exception e) {
+			XmippDialog.showException(parent, e);
 		}
 	}// function actionPerformed
 
-	public int getSelectedColumn() {
+	public int getSelectedRow() {
 		return tableColumns.getSelectedRow();
+	}
+
+	public int getSelectedLabel() {
+		return rows.get(getSelectedRow()).getLabel();
 	}
 
 	class ColumnsTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = 1L;
 
-		private String[] columns = { "Column", "Type" };
+		private String[] columns = { "Label", "Type" };
 
 		@Override
 		public Class getColumnClass(int column) {

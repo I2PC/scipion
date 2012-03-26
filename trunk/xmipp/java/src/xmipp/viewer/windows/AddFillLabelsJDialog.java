@@ -56,11 +56,13 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.models.MetadataGallery;
+import xmipp.viewer.models.MetadataTable;
 import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
 
 public class AddFillLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
-	protected ImageGallery gallery;
+	protected MetadataGallery gallery;
 
 	protected boolean fillMode = false;
 	protected GridBagConstraints gbc = new GridBagConstraints();
@@ -70,7 +72,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	protected Hashtable<String, JTextField> dictTexts = new Hashtable<String, JTextField>();
 	protected Hashtable<String, JPanel> dictPanels = new Hashtable<String, JPanel>();
 	protected JPanel mainPanel;
-	protected JComboBox jcbFillMode;
+	protected JComboBox jcbLabel, jcbFillMode;
 
 	/**
 	 * Constructor to add a new label the labels present in the metadata are
@@ -79,6 +81,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	public AddFillLabelsJDialog(JFrameGallery parent,
 			ArrayList<ColumnInfo> labels) {
 		super(parent, "Add new label", true);
+		this.gallery = (MetadataGallery) parent.gallery;
 		this.labels = labels;
 		initComponents();
 	}// constructor AddFillLabelsJDialog
@@ -114,7 +117,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 
 	/** Create a combobox with possible new labels */
 	private JComboBox createLabelsCombo() {
-		JComboBox jcb = new JComboBox();
+		jcbLabel = new JComboBox();
 		boolean found = false;
 		for (int label = MDLabel.MDL_FIRST_LABEL; label < MDLabel.MDL_LAST_LABEL; ++label) {
 			found = false;
@@ -125,11 +128,11 @@ public class AddFillLabelsJDialog extends XmippDialog {
 				}
 			if (!found) {
 				String name = MetaData.getLabelName(label);
-				jcb.addItem(name);
+				jcbLabel.addItem(name);
 			}
 		}
-		jcb.addActionListener(this);
-		return jcb;
+		jcbLabel.addActionListener(this);
+		return jcbLabel;
 	}
 
 	/** Create panel with values pairs needed */
@@ -148,7 +151,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	}
 
 	@Override
-	protected void createContent(JPanel panel) {		
+	protected void createContent(JPanel panel) {
 		setResizable(false);
 		mainPanel = new JPanel(new GridBagLayout());
 		gbc.insets = new Insets(5, 5, 0, 0);
@@ -164,13 +167,13 @@ public class AddFillLabelsJDialog extends XmippDialog {
 			setPreferredSize(new Dimension(350, 200));
 		}
 		addPair(mainPanel, "Label", 0, c);
-		String[] opts = { "Constant", "Linear", "Random Uniform",
-				"Random Gaussian" };
+		String[] opts = { MetaData.FILL_CONSTANT, MetaData.FILL_LINEAR, MetaData.FILL_RAND_UNIFORM,
+				MetaData.FILL_RAND_GAUSSIAN };
 		jcbFillMode = new JComboBox(opts);
 		jcbFillMode.addActionListener(this);
 		addPair(mainPanel, "Fill mode", 1, jcbFillMode);
 		addPairsPanel(opts[0], 2, "value").setVisible(true);
-		addPairsPanel(opts[1], 3, "start", "end", "step");
+		addPairsPanel(opts[1], 3, "start", "step");
 		addPairsPanel(opts[2], 4, "min", "max");
 		addPairsPanel(opts[3], 5, "mean", "std");
 
@@ -179,15 +182,44 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	}// function initComponents
 
 	/** some helper functions */
-	public String getFillMode(){
+	public String getFillMode() {
 		return (String) jcbFillMode.getSelectedItem();
 	}
-	
-	public String getValue(String key){
+
+	/** Return the current working label */
+	public int getLabel() {
+		if (isFillMode())
+			return label;
+		else {
+			try {
+				return MetaData.str2Label((String) jcbLabel.getSelectedItem());
+			} catch (Exception e) {
+				XmippDialog.showException(parent, e);
+			}
+			return MDLabel.MDL_UNDEFINED;
+		}
+	}
+
+	public String getValue(String key) {
 		JTextField jtf = dictTexts.get(key);
 		return jtf.getText();
 	}
 	
+	public String[] getValues(){
+		String[] values = null;
+		String mode = getFillMode();
+		if (mode.equalsIgnoreCase(MetaData.FILL_CONSTANT))
+			values = new String[] { getValue("value") };
+		else if (mode.equalsIgnoreCase(MetaData.FILL_LINEAR))
+			values = new String[] { getValue("start"), getValue("step") };
+		else if (mode.equalsIgnoreCase(MetaData.FILL_RAND_UNIFORM))
+			values = new String[] { getValue("min"), getValue("max") };
+		else if (mode.equalsIgnoreCase(MetaData.FILL_RAND_GAUSSIAN))
+			values = new String[] { getValue("mean"), getValue("std") };
+		
+		return values;
+	}
+
 	@Override
 	public void handleActionPerformed(ActionEvent evt) {
 		JComboBox jcb = (JComboBox) evt.getSource();
@@ -200,5 +232,15 @@ public class AddFillLabelsJDialog extends XmippDialog {
 			}
 		}
 	}// function actionPerformed
+
+	/** Perform the selected action */
+//	@Override
+//	public void handleOk() {
+//		try {
+//			gallery.fillLabel(getLabel(), getFillMode(), dictTexts.get("value").getText());
+//		} catch (Exception e) {
+//			XmippDialog.showException(parent, e);
+//		}
+//	}
 
 }// class AddFillLabelsJDialog

@@ -323,5 +323,5 @@ public class MetadataTable extends MetadataGallery {
 		}//function adjustColumnsWidth
 
 	}//class MetadataColumnModel
-
+	
 }//class MetadataTable
