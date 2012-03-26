@@ -35,7 +35,7 @@ import javax.swing.table.TableColumn;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippPopupMenuCreator;
-import xmipp.viewer.TestRenderer;
+import xmipp.viewer.FloatRenderer;
 
 public class MetadataTable extends MetadataGallery {
 	private static final long serialVersionUID = 1L;
@@ -245,7 +245,7 @@ public class MetadataTable extends MetadataGallery {
 		//table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		table.setDefaultRenderer(ImageItem.class, renderer);
-		table.setDefaultRenderer(Double.class, new TestRenderer());
+		table.setDefaultRenderer(Double.class, new FloatRenderer());
 		table.setAutoCreateRowSorter(true);
 		updateTableSelection(table);
 	}

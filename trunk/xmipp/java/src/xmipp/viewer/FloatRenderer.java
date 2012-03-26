@@ -7,10 +7,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import xmipp.utils.DEBUG;
 
-public class TestRenderer extends DefaultTableCellRenderer {
+public class FloatRenderer extends DefaultTableCellRenderer {
 	private static final long serialVersionUID = 1L;
 
-   public TestRenderer() {
+   public FloatRenderer() {
        super();
        setOpaque(true);
        setHorizontalAlignment(JLabel.RIGHT);

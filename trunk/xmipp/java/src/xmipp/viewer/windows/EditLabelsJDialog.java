@@ -28,7 +28,6 @@ package xmipp.viewer.windows;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 
@@ -42,114 +41,119 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
-import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
+import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
 
-public class ColumnsJDialog extends XmippDialog {
+public class EditLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
 	private JTable tableColumns;
-	private JButton btnUp;
-	private JButton btnDown;
+	private JButton btnAdd, btnDelete, btnFill, btnOpen;
+	private ArrayList<ColumnInfo> rows;
 	private ColumnsTableModel model;
 	// This will be used for check for results from the dialog
-	private ArrayList<ColumnInfo> rows;
 	boolean fireEvent = true;
-
-	public ColumnsJDialog(JFrameGallery parent) {
-		super(parent, "Columns", true);
+	GridBagConstraints gbc = new GridBagConstraints();
+	ImageGallery gallery;
+	JPanel panelButtons;
+	
+	public EditLabelsJDialog(JFrameGallery parent) {
+		super(parent, "Edit labels", true);
+		this.rows = parent.getData().labels;
+		this.gallery = parent.gallery;
+		btnOkText = "Close";
+		btnCancelDisplay = false;
 		initComponents();
+		enableDelete(false);
 	}// constructor ColumnsJDialog
 
-	public ArrayList<ColumnInfo> getColumnsResult() {
-		return rows;
+	private JButton createButton(String icon, String tip){
+		JButton btn = XmippWindowUtil.getIconButton(icon, this);
+		btn.setToolTipText(tip);
+		btn.setFocusable(false);
+		panelButtons.add(btn);
+		return btn;
 	}
-
+	
+	protected void createToolbarButtons(){
+		panelButtons = new JPanel();
+		btnAdd = createButton("add.gif", "Add new label");
+		btnDelete = createButton("delete.gif", "Delete label");
+		btnFill = createButton("fill.png", "Fill label");
+	}
+	
+	public int getSelectedLabel() {
+		int row = tableColumns.getSelectedRow();
+		return rows.get(row).getLabel();
+	}
+	
 	@Override
-	protected void createContent(JPanel panel){
+	protected void createContent(JPanel panel) {
 		setResizable(false);
 		panel.setLayout(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.insets = new Insets(10, 10, 10, 10);
-		gbc.anchor = GridBagConstraints.WEST;
+		gbc.anchor = GridBagConstraints.EAST;
 
 		JPanel groupstbpn = new JPanel();
 		JScrollPane sp = new JScrollPane();
-		groupstbpn.setBorder(BorderFactory
-				.createTitledBorder("Column properties"));
+		groupstbpn.setBorder(BorderFactory.createTitledBorder("Labels"));
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
-		model = new ColumnsTableModel(((JFrameGallery)parent).getData().labels);
+		model = new ColumnsTableModel();
 		tableColumns = new JTable(model);
 		tableColumns
 				.setPreferredScrollableViewportSize(new Dimension(350, 200));
 		sp.setViewportView(tableColumns);
-		panel.add(groupstbpn, XmippWindowUtil.getConstraints(gbc, 0, 0));
-
-		JPanel panelUpDown = new JPanel();
-		panelUpDown.setLayout(new GridBagLayout());
-		gbc.insets = new Insets(0, 0, 5, 5);
-		btnUp = XmippWindowUtil.getIconButton("up.gif", this);
-		panelUpDown.add(btnUp, XmippWindowUtil.getConstraints(gbc, 0, 0));
-		btnDown = XmippWindowUtil.getIconButton("down.gif", this);
-		panelUpDown.add(btnDown, XmippWindowUtil.getConstraints(gbc, 0, 1));
-		panel.add(panelUpDown, XmippWindowUtil.getConstraints(gbc, 1, 0));
-		// this buttons will be enabled after selection
-		enableUpDown(false);
+		panel.add(groupstbpn, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
+		createToolbarButtons();
+		panel.add(panelButtons, XmippWindowUtil.getConstraints(gbc, 1, 0));
+		
 		// listen to selection changes (only one row selected)
 		tableColumns.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tableColumns.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						enableUpDown(true);
+						enableDelete(getSelectedColumn() >= 0);
 					}
 				});
 	}// function initComponents
 
-	private void enableUpDown(boolean value) {
-		btnUp.setEnabled(value);
-		btnDown.setEnabled(value);
+	private void enableDelete(boolean value) {
+		//btnAdd.setEnabled(value);
+		btnDelete.setEnabled(value);
+		btnFill.setEnabled(value);
 	}// function enableUpDown
 
-	// move the selection on the table, -1 up, 0 down
-	private void moveSelection(int deltha) {
-		int pos = tableColumns.getSelectedRow();
-		ColumnInfo ci = rows.remove(pos);
-		pos += deltha;
-		rows.add(pos, ci);
-		model.fireTableDataChanged();
-		tableColumns.setRowSelectionInterval(pos, pos);
-	}
-
 	@Override
-	public void handleActionPerformed(ActionEvent evt){		
+	public void handleActionPerformed(ActionEvent evt) {
 		JButton btn = (JButton) evt.getSource();
-		
-		if (btn == btnUp && tableColumns.getSelectedRow() > 0)
-			moveSelection(-1);
-		else if (btn == btnDown && tableColumns.getSelectedRow() < rows.size() - 1)
-			moveSelection(1);
+		if (btn == btnAdd){
+			XmippDialog dlg = new AddFillLabelsJDialog((JFrameGallery)parent, 
+					rows);
+			dlg.showDialog();
+		}
+		else if (btn == btnDelete){
+			int row = getSelectedColumn();
+			gallery.removeClass(row);
+			model.fireTableRowsDeleted(row, row);
+		}
+		else if (btn == btnFill){
+			XmippDialog dlg = new AddFillLabelsJDialog((JFrameGallery)parent, 
+					getSelectedLabel());
+			dlg.showDialog();
+		}
 	}// function actionPerformed
+
+	public int getSelectedColumn() {
+		return tableColumns.getSelectedRow();
+	}
 
 	class ColumnsTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = 1L;
 
-		private String[] columns = { "Label", "Visible", "Render", "Edit" };
-
-		public ColumnsTableModel(int[] labels) {
-			rows = new ArrayList<ColumnInfo>(labels.length);
-			for (int i = 0; i < labels.length; ++i)
-				rows.add(new ColumnInfo(labels[i]));
-		}
-
-		public ColumnsTableModel(ArrayList<ColumnInfo> labelsInfo) {
-			int n = labelsInfo.size();
-			rows = new ArrayList<ColumnInfo>(n);
-			for (int i = 0; i < n; ++i)
-				rows.add(labelsInfo.get(i).clone());
-		}
+		private String[] columns = { "Column", "Type" };
 
 		@Override
 		public Class getColumnClass(int column) {
@@ -174,33 +178,11 @@ public class ColumnsJDialog extends XmippDialog {
 
 		@Override
 		public boolean isCellEditable(int row, int column) {
-			try {
-				if (column == 2 && !MetaData.isImage(rows.get(row).getLabel()))
-					return false;
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return true;
+			return false;
 		}
 
 		@Override
 		public void setValueAt(Object value, int row, int column) {
-			ColumnInfo col = rows.get(row);
-			switch (column) {
-			case 0:
-				col.changeLabelName((String)value);
-				break;
-			case 1:
-				col.visible = (Boolean) value;
-				break;
-			case 2:
-				col.render = (Boolean) value;
-				break;
-			case 3:
-				col.allowEdit = (Boolean) value;
-				break;
-			}
-
 		}
 
 		@Override
@@ -210,11 +192,7 @@ public class ColumnsJDialog extends XmippDialog {
 			case 0:
 				return col.getLabelName();
 			case 1:
-				return col.visible;
-			case 2:
-				return col.render;
-			case 3:
-				return col.allowEdit;
+				return col.getLabelName();
 			}
 			return null;
 		}

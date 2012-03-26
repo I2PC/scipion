@@ -70,7 +70,7 @@ public class ClassesJDialog extends XmippDialog {
 	JPanel panelButtons;
 	
 	public ClassesJDialog(JFrameGallery parent, ArrayList<ClassInfo> classes) {
-		super(parent, "Columns", true);
+		super(parent, "Classes", true);
 		this.classes = classes;
 		this.gallery = parent.gallery;
 		this.btnOkText = "Select";
@@ -162,7 +162,7 @@ public class ClassesJDialog extends XmippDialog {
 				MetaData md = mds[0];
 				md.write("classes" + Filename.SEPARATOR + filename);
 				long[] ids = md.findObjects();
-				DEBUG.printFormat("mds: %s, ids:%s", mds.length, ids.length);
+				//DEBUG.printFormat("mds: %s, ids:%s", mds.length, ids.length);
 				int i = 1;
 				for (long id: ids) {
 					int ref = md.getValueInt(MDLabel.MDL_REF, id);

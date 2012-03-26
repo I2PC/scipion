@@ -1078,6 +1078,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			//Metadata operations
 			addItem(METADATA, "Metadata");
 			addItem(MD_CLASSES, "Superclasses");
+			addItem(MD_EDIT_COLS, "Edit columns");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
@@ -1102,7 +1103,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
-			setItemEnabled(METADATA, data.is2DClassificationMd());
+			setItemEnabled(MD_CLASSES, data.is2DClassificationMd());
 			setItemEnabled(STATS, !volMode);
 		}// function update
 
@@ -1185,6 +1186,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 			} else if (cmd.equals(MD_CLASSES)){
 				openClassesDialog();				
+			} else if (cmd.equals(MD_EDIT_COLS)){
+				EditLabelsJDialog dlg = new EditLabelsJDialog(JFrameGallery.this);
+				dlg.showDialog();
 			}
 		}// function handleActionPerformed
 	}// class GalleryMenu
@@ -1203,7 +1207,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			addItem(CTF_PROFILE, "Show CTF profile");
 			addItem(CTF_RECALCULATE, "Recalculate CTF");
 			addSeparator();
-			addItem(SET_CLASS, "Set superclass");
+			addItem(SET_CLASS, "Set class");
 			addItem(OPEN_IMAGES, "Open images");
 			addItem(SELECT, "Select");
 			addItem(SELECT_ALL, "All", null, "control released A");

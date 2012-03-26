@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-
-
 package xmipp.utils;
 
 import java.awt.BorderLayout;
@@ -43,13 +41,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-/** This class serve as a simple JDialog extension.
- * The Ok and Cancel buttons are added and the dispose
- * of the dialog is set. After constructing a dialog
- * the show function should be called. It will return
- * true if OK is pressed and false if Cancel.
+/**
+ * This class serve as a simple JDialog extension. The Ok and Cancel buttons are
+ * added and the dispose of the dialog is set. After constructing a dialog the
+ * show function should be called. It will return true if OK is pressed and
+ * false if Cancel.
  */
-public class XmippDialog extends JDialog  implements ActionListener {
+public class XmippDialog extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	protected JFrame parent;
 	protected boolean result;
@@ -57,19 +55,20 @@ public class XmippDialog extends JDialog  implements ActionListener {
 	protected JButton btnOk;
 	protected String btnOkText = "Ok";
 	protected String btnCancelText = "Cancel";
+	protected boolean btnCancelDisplay = true;
 	protected JPanel panelBtn;
 	protected boolean disposeOnClose;
-	
-	public XmippDialog(JFrame parent, String title, boolean modal){
+
+	public XmippDialog(JFrame parent, String title, boolean modal) {
 		super(parent, title, modal);
 		this.parent = parent;
 		disposeOnClose = true;
 		setTitle(title);
 	}
-	
-	/** this is the general method to init the components.
-	 * It should be called from every subclass constructor
-	 * after some settings of values
+
+	/**
+	 * this is the general method to init the components. It should be called
+	 * from every subclass constructor after some settings of values
 	 */
 	protected void initComponents() {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -83,33 +82,37 @@ public class XmippDialog extends JDialog  implements ActionListener {
 		if (parent != null)
 			XmippWindowUtil.centerWindows(this, parent);
 	}
-	
-	protected void createButtons(){
-		//Create panel for Ok and Cancel buttons
+
+	protected void createButtons() {
+		// Create panel for Ok and Cancel buttons
 		panelBtn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		btnOk = XmippWindowUtil.getTextButton(btnOkText, this);
 		panelBtn.add(btnOk);
-		btnCancel = XmippWindowUtil.getTextButton(btnCancelText, this);
-		panelBtn.add(btnCancel);
+		if (btnCancelDisplay) {
+			btnCancel = XmippWindowUtil.getTextButton(btnCancelText, this);
+			panelBtn.add(btnCancel);
+		}
 	}
-	
+
 	/** Function to display the Dialog and return the result state */
 	public boolean showDialog() {
 		setVisible(true);
 		return result;
 	}
-	
-	/** This function should be redefined to add the content
-	 * to the dialog, the container panel is passed */
-	protected void createContent(JPanel panel){
-		
-	}
-	
-	/** This function should be overrided to handle action
-	 * events.
+
+	/**
+	 * This function should be redefined to add the content to the dialog, the
+	 * container panel is passed
 	 */
-	public void handleActionPerformed(ActionEvent evt){
-		
+	protected void createContent(JPanel panel) {
+
+	}
+
+	/**
+	 * This function should be overrided to handle action events.
+	 */
+	public void handleActionPerformed(ActionEvent evt) {
+
 	}
 
 	@Override
@@ -119,62 +122,68 @@ public class XmippDialog extends JDialog  implements ActionListener {
 			close(true);
 		else if (obj == btnCancel) {
 			close(false);
-		}
-		else 
-			handleActionPerformed(evt);		
+		} else
+			handleActionPerformed(evt);
 	}
-	
+
 	/** Close function to hide the Dialog and dispose resources */
 	protected void close(boolean result) {
 		this.result = result;
 		setVisible(false);
 		if (disposeOnClose)
-			dispose();	
+			dispose();
 	}// function close
-	
+
 	/** Change the default dispose on close behavior */
-	public void setDisposeOnClose(boolean value){
+	public void setDisposeOnClose(boolean value) {
 		disposeOnClose = value;
 	}
-	
+
 	/** Some static methods to display some message dialogs */
-	public static boolean showInfo(JFrame parent, String message){
-		XmippMessageDialog dlg = new XmippMessageDialog(parent, "INFO", message, "info.gif");
+	public static boolean showInfo(JFrame parent, String message) {
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "INFO",
+				message, "info.gif");
 		return dlg.showDialog();
 	}
-	public static boolean showWarning(JFrame parent, String message){
-		XmippMessageDialog dlg = new XmippMessageDialog(parent, "WARNING", message, "warning.gif");
+
+	public static boolean showWarning(JFrame parent, String message) {
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "WARNING",
+				message, "warning.gif");
 		return dlg.showDialog();
 	}
-	public static boolean showError(JFrame parent, String message){
-		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR", message, "error.gif");
+
+	public static boolean showError(JFrame parent, String message) {
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR",
+				message, "error.gif");
 		return dlg.showDialog();
-	}	
-	
-	public static boolean showException(JFrame parent, Exception e){
-		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR", e.getMessage(), "error.gif");
-		//TODO: Integrate the stack trace into the dialog
+	}
+
+	public static boolean showException(JFrame parent, Exception e) {
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR",
+				e.getMessage(), "error.gif");
+		// TODO: Integrate the stack trace into the dialog
 		e.printStackTrace();
 		return dlg.showDialog();
 	}
-	
-}//class XmippDialog
+
+}// class XmippDialog
 
 /** Special case of XmippDialog to display message (info, error, warning) */
 class XmippMessageDialog extends XmippDialog {
 
 	String message;
 	String iconPath;
-	
-	public XmippMessageDialog(JFrame parent, String title, String message, String iconPath) {
+
+	public XmippMessageDialog(JFrame parent, String title, String message,
+			String iconPath) {
 		super(parent, title, true);
 		this.message = message;
 		this.iconPath = iconPath;
 		initComponents();
 	}
-	
+
 	@Override
-	protected void createContent(JPanel panel){
+	protected void createContent(JPanel panel) {
 		panel.setLayout(new BorderLayout());
 		JPanel iconPanel = new JPanel();
 		iconPanel.add(XmippWindowUtil.getIconLabel(iconPath));
@@ -186,16 +195,16 @@ class XmippMessageDialog extends XmippDialog {
 		text.setBorder(BorderFactory.createEmptyBorder());
 		text.setLineWrap(true);
 		text.setWrapStyleWord(true);
-		//text
-		JScrollPane scrollPane = new JScrollPane(text); 
+		// text
+		JScrollPane scrollPane = new JScrollPane(text);
 		scrollPane.setBorder(BorderFactory.createEmptyBorder());
 		scrollPane.setBackground(Color.white);
 		panel.add(scrollPane, BorderLayout.CENTER);
 	}
-	
+
 	@Override
-	protected void createButtons(){
+	protected void createButtons() {
 		super.createButtons();
 		panelBtn.setLayout(new FlowLayout());
 	}
-}//class XmippMessageDialog
+}// class XmippMessageDialog
