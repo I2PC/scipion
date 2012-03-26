@@ -1,4 +1,0 @@
-javac xmipp/ImageGeneric_Test.java -classpath ~/xmipp/java/lib/XmippJNI.jar:/usr/share/java/junit4.jar
-mv xmipp/ImageGeneric_Test.class xmipp/jni/.
-#right thing for glassfishdev
-#java  -classpath :/usr/share/java/hamcrest-core.jar:/usr/share/java:/usr/share/java/junit4.jar:xmipp:/home/aquintana/xmipp/java/lib/XmippJNI.jar   org.junit.runner.JUnitCore xmipp.jni.ImageGeneric_Test  
