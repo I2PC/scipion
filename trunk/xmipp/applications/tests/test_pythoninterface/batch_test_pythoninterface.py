@@ -102,7 +102,7 @@ class TestXmippPythonInterface(unittest.TestCase):
     def test_Image_setDataType(self):
         img = Image();
         img.setDataType(XMIPP_DT_FLOAT)
-        img.resize(3,3,)
+        img.resize(3,3)
         img.setPixel(1,1,1.)
         img.computeStats()
         mean, dev, min, max = img.computeStats()

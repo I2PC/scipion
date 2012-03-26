@@ -750,7 +750,7 @@ TEST_F( MetadataTest, ExistsBlock)
 
 TEST_F( MetadataTest, ReadWriteAppendBlock)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     //temp file name
     char sfn[32] = "";
     strncpy(sfn, "/tmp/testWrite_XXXXXX", sizeof sfn);
@@ -903,12 +903,18 @@ TEST_F( MetadataTest, copyImages)
 {
     XMIPP_TRY
     FileName fn = "metadata/smallStack.stk";
-    FileName oroot = "metadata/smallImg:mrc";
-    FileName out = "metadata/smallStack.mrcs";
+    FileName out;
+    FileName oroot;
+    oroot.initUniqueName("/tmp/smallImg_XXXXXX");
+    oroot.deleteFile();
+    out = oroot.addExtension("xmd");
+    oroot = oroot + ":mrc";
+
     FileName fn1, fn2;
     MetaData md(fn);
     ProgConvImg conv;
-    conv.setup(&md, "", oroot);
+    conv.verbose = 0;
+    conv.setup(&md, out, oroot);
     conv.tryRun();
     MetaData *mdOut = conv.getOutputMd();
 
@@ -917,8 +923,12 @@ TEST_F( MetadataTest, copyImages)
         md.getValue(MDL_IMAGE, fn1, __iter.objId);
         mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
         EXPECT_TRUE(compareImage(fn1, fn2));
+        fn2.deleteFile();
     }
 
+    out.deleteFile();
+    out.initUniqueName("/tmp/smallStack_XXXXXX");
+    out = out + ":mrcs";
     conv.setup(&md, out);
     conv.tryRun();
 
@@ -928,8 +938,10 @@ TEST_F( MetadataTest, copyImages)
         mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
         EXPECT_TRUE(compareImage(fn1, fn2));
     }
+    out.deleteFile();
 
-    out = "metadata/smallStackVol.mrc";
+    out.initUniqueName("/tmp/smallStackVol_XXXXXX");
+    out = out + ":mrc";
     conv.setup(&md, out);
     conv.tryRun();
     Image<float> imgStk, imgVol;
@@ -943,6 +955,7 @@ TEST_F( MetadataTest, copyImages)
         imgVol.movePointerTo(i);
         EXPECT_TRUE(imgStk == imgVol);
     }
+    out.deleteFile();
     XMIPP_CATCH
 }
 
