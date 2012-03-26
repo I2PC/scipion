@@ -39,15 +39,13 @@ protected:
 #define len 128
 
         //get example down1_42_Periodogramavg.psd
-        baseName = getenv("XMIPP_HOME");
-        imageName = baseName + "/applications/tests/test_fringe_processing/test.txt";
+        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
     }
 
     //Image to be fitted:
     MultidimArray<double> im;
     //File name of the image to process
-    FileName imageName;
-    FileName baseName;
+    FileName tempImageName;
 
 };
 
@@ -93,39 +91,42 @@ TEST_F( FringeProcessingTests, simulPattern)
     //im.write(imageName);
 }
 
-TEST_F( FringeProcessingTests, SPTH)
-{
-	FringeProcessing fp;
-	FileName imageName2, imageName3;
-	imageName2 = baseName + "/applications/tests/test_fringe_processing/test2.txt";
-	imageName3 = baseName + "/applications/tests/test_fringe_processing/originalImag.txt";
-
-	MultidimArray< std::complex <double> > imProc;
-
-	MultidimArray< double > imProcReal;
-	MultidimArray< double > imProcImag;
-
-	MultidimArray<double> im;
-
-	int nx = 311;
-    int ny = 312;
-    double noiseLevel = 0.0;
-    double freq = 20;
-    Matrix1D<int> coefs(10);
-
-    fp.simulPattern(im,fp.SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
-    imProc.resizeNoCopy(im);
-
-    fp.SPTH(im, imProc);
-
-    imProc.getReal(imProcReal);
-    imProc.getImag(imProcImag);
-
-    imProcReal.write(imageName);
-    imProcImag.write(imageName2);
-    im.write(imageName3);
-
-}
+//TEST_F( FringeProcessingTests, SPTH)
+//{
+//    tempImageName.initUniqueName("/tmp/temp_XXXXXX");
+//
+//	FringeProcessing fp;
+//	FileName imageName2, imageName3;
+//	imageName2 = "fringe/test2.txt";
+//	imageName3 = "fringe/originalImag.txt";
+//
+//	MultidimArray< std::complex <double> > imProc;
+//
+//	MultidimArray< double > imProcReal;
+//	MultidimArray< double > imProcImag;
+//
+//	MultidimArray<double> im;
+//
+//	int nx = 311;
+//    int ny = 312;
+//    double noiseLevel = 0.0;
+//    double freq = 20;
+//    Matrix1D<int> coefs(10);
+//
+//    fp.simulPattern(im,fp.SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
+//    imProc.resizeNoCopy(im);
+//
+//    fp.SPTH(im, imProc);
+//
+//    imProc.getReal(imProcReal);
+//    imProc.getImag(imProcImag);
+//
+//    imProcReal.write(tempImageName);
+//    imProcImag.write(imageName2);
+//    im.write(imageName3);
+//
+//    tempImageName.deleteFile();
+//}
 
 TEST_F( FringeProcessingTests, orMinDer)
 {
@@ -166,8 +167,8 @@ TEST_F( FringeProcessingTests, orMinDer)
 TEST_F( FringeProcessingTests, normalize)
 {
 	FileName fpName, Iname;
-	fpName = baseName + "/applications/tests/test_fringe_processing/fp.txt";
-	Iname = baseName + "/applications/tests/test_fringe_processing/IN.txt";
+	fpName = "fringe/fp.txt";
+	Iname = "fringe/IN.txt";
 
 	FringeProcessing fp;
 	MultidimArray<double> im, imN, imNMod;
