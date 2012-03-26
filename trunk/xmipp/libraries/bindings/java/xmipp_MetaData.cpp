@@ -141,11 +141,11 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_removeLabel
 {
     MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-    XMIPP_TRY
+    XMIPP_JAVA_TRY
     {
         return md->removeLabel((MDLabel) label);
     }
-    XMIPP_CATCH;
+    XMIPP_JAVA_CATCH;
 
     return false;
 }
@@ -786,12 +786,12 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillConstant
 {
   MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-  XMIPP_TRY
+  XMIPP_JAVA_TRY
   {
       const char * strValue = env->GetStringUTFChars(value, false);
       md->fillConstant((MDLabel)label, strValue);
   }
-  XMIPP_CATCH;
+  XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillLinear
@@ -799,11 +799,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillLinear
 {
   MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-  XMIPP_TRY
+  XMIPP_JAVA_TRY
   {
       md->fillLinear((MDLabel)label, start, step);
   }
-  XMIPP_CATCH;
+  XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillRandom
@@ -811,12 +811,12 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillRandom
 {
   MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-  XMIPP_TRY
+  XMIPP_JAVA_TRY
   {
       const char * strMode = env->GetStringUTFChars(mode, false);
       md->fillRandom((MDLabel)label, strMode, op1, op2);
   }
-  XMIPP_CATCH;
+  XMIPP_JAVA_CATCH;
 }
 
 
