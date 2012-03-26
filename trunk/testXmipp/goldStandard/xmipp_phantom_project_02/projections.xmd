@@ -1,0 +1,114 @@
+# XMIPP_STAR_1 * 
+# Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _shiftX
+ _shiftY
+ _angleRot2
+ _angleTilt2
+ _anglePsi2
+000001@tmpLink/xmipp_phantom_project_02/projections.stk          1   165.023196    12.726404     0.000000     0.000000     0.000000   165.023196    12.726404     0.000000 
+000002@tmpLink/xmipp_phantom_project_02/projections.stk          1   266.099901    13.649340     0.000000     0.000000     0.000000   266.099901    13.649340     0.000000 
+000003@tmpLink/xmipp_phantom_project_02/projections.stk          1   163.951121    10.995538     0.000000     0.000000     0.000000   163.951121    10.995538     0.000000 
+000004@tmpLink/xmipp_phantom_project_02/projections.stk          1   238.174814    11.131311     0.000000     0.000000     0.000000   238.174814    11.131311     0.000000 
+000005@tmpLink/xmipp_phantom_project_02/projections.stk          1    49.463288    14.720434     0.000000     0.000000     0.000000    49.463288    14.720434     0.000000 
+000006@tmpLink/xmipp_phantom_project_02/projections.stk          1   104.838504    11.834476     0.000000     0.000000     0.000000   104.838504    11.834476     0.000000 
+000007@tmpLink/xmipp_phantom_project_02/projections.stk          1   106.482532    12.410778     0.000000     0.000000     0.000000   106.482532    12.410778     0.000000 
+000008@tmpLink/xmipp_phantom_project_02/projections.stk          1   194.978178    12.162522     0.000000     0.000000     0.000000   194.978178    12.162522     0.000000 
+000009@tmpLink/xmipp_phantom_project_02/projections.stk          1   298.610923    14.372729     0.000000     0.000000     0.000000   298.610923    14.372729     0.000000 
+000010@tmpLink/xmipp_phantom_project_02/projections.stk          1   103.170494    12.934142     0.000000     0.000000     0.000000   103.170494    12.934142     0.000000 
+000011@tmpLink/xmipp_phantom_project_02/projections.stk          1   123.024720    11.510309     0.000000     0.000000     0.000000   123.024720    11.510309     0.000000 
+000012@tmpLink/xmipp_phantom_project_02/projections.stk          1   221.184706     4.584668     0.000000     0.000000     0.000000   221.184706     4.584668     0.000000 
+000013@tmpLink/xmipp_phantom_project_02/projections.stk          1   287.376690     9.819680     0.000000     0.000000     0.000000   287.376690     9.819680     0.000000 
+000014@tmpLink/xmipp_phantom_project_02/projections.stk          1   223.490004     5.798767     0.000000     0.000000     0.000000   223.490004     5.798767     0.000000 
+000015@tmpLink/xmipp_phantom_project_02/projections.stk          1    84.301714    12.886069     0.000000     0.000000     0.000000    84.301714    12.886069     0.000000 
+000016@tmpLink/xmipp_phantom_project_02/projections.stk          1   347.534942     4.483841     0.000000     0.000000     0.000000   347.534942     4.483841     0.000000 
+000017@tmpLink/xmipp_phantom_project_02/projections.stk          1   355.790668    13.615663     0.000000     0.000000     0.000000   355.790668    13.615663     0.000000 
+000018@tmpLink/xmipp_phantom_project_02/projections.stk          1   130.230232    13.251454     0.000000     0.000000     0.000000   130.230232    13.251454     0.000000 
+000019@tmpLink/xmipp_phantom_project_02/projections.stk          1   359.064344     9.722610     0.000000     0.000000     0.000000   359.064344     9.722610     0.000000 
+000020@tmpLink/xmipp_phantom_project_02/projections.stk          1   204.557026     9.345698     0.000000     0.000000     0.000000   204.557026     9.345698     0.000000 
+000021@tmpLink/xmipp_phantom_project_02/projections.stk          1   225.460412     7.499114     0.000000     0.000000     0.000000   225.460412     7.499114     0.000000 
+000022@tmpLink/xmipp_phantom_project_02/projections.stk          1    81.334690     7.843146     0.000000     0.000000     0.000000    81.334690     7.843146     0.000000 
+000023@tmpLink/xmipp_phantom_project_02/projections.stk          1   163.688353     7.987187     0.000000     0.000000     0.000000   163.688353     7.987187     0.000000 
+000024@tmpLink/xmipp_phantom_project_02/projections.stk          1   296.612977     6.858281     0.000000     0.000000     0.000000   296.612977     6.858281     0.000000 
+000025@tmpLink/xmipp_phantom_project_02/projections.stk          1   216.722463     3.741256     0.000000     0.000000     0.000000   216.722463     3.741256     0.000000 
+000026@tmpLink/xmipp_phantom_project_02/projections.stk          1   206.256347    13.172617     0.000000     0.000000     0.000000   206.256347    13.172617     0.000000 
+000027@tmpLink/xmipp_phantom_project_02/projections.stk          1   308.015416    13.644587     0.000000     0.000000     0.000000   308.015416    13.644587     0.000000 
+000028@tmpLink/xmipp_phantom_project_02/projections.stk          1   205.835224     7.426891     0.000000     0.000000     0.000000   205.835224     7.426891     0.000000 
+000029@tmpLink/xmipp_phantom_project_02/projections.stk          1   330.567095    10.844617     0.000000     0.000000     0.000000   330.567095    10.844617     0.000000 
+000030@tmpLink/xmipp_phantom_project_02/projections.stk          1   258.537557    10.702418     0.000000     0.000000     0.000000   258.537557    10.702418     0.000000 
+000031@tmpLink/xmipp_phantom_project_02/projections.stk          1   285.844350     6.779502     0.000000     0.000000     0.000000   285.844350     6.779502     0.000000 
+000032@tmpLink/xmipp_phantom_project_02/projections.stk          1   132.641521    11.163659     0.000000     0.000000     0.000000   132.641521    11.163659     0.000000 
+000033@tmpLink/xmipp_phantom_project_02/projections.stk          1   228.529996    11.882118     0.000000     0.000000     0.000000   228.529996    11.882118     0.000000 
+000034@tmpLink/xmipp_phantom_project_02/projections.stk          1   208.399248     6.485639     0.000000     0.000000     0.000000   208.399248     6.485639     0.000000 
+000035@tmpLink/xmipp_phantom_project_02/projections.stk          1   249.208484     8.573686     0.000000     0.000000     0.000000   249.208484     8.573686     0.000000 
+000036@tmpLink/xmipp_phantom_project_02/projections.stk          1   173.319901     9.589710     0.000000     0.000000     0.000000   173.319901     9.589710     0.000000 
+000037@tmpLink/xmipp_phantom_project_02/projections.stk          1   231.304529    10.665731     0.000000     0.000000     0.000000   231.304529    10.665731     0.000000 
+000038@tmpLink/xmipp_phantom_project_02/projections.stk          1   143.639791    11.278245     0.000000     0.000000     0.000000   143.639791    11.278245     0.000000 
+000039@tmpLink/xmipp_phantom_project_02/projections.stk          1    99.790103    13.450104     0.000000     0.000000     0.000000    99.790103    13.450104     0.000000 
+000040@tmpLink/xmipp_phantom_project_02/projections.stk          1   218.155251     5.058178     0.000000     0.000000     0.000000   218.155251     5.058178     0.000000 
+000041@tmpLink/xmipp_phantom_project_02/projections.stk          1   252.143527    12.813074     0.000000     0.000000     0.000000   252.143527    12.813074     0.000000 
+000042@tmpLink/xmipp_phantom_project_02/projections.stk          1    55.017356    10.765153     0.000000     0.000000     0.000000    55.017356    10.765153     0.000000 
+000043@tmpLink/xmipp_phantom_project_02/projections.stk          1   254.940766     3.388777     0.000000     0.000000     0.000000   254.940766     3.388777     0.000000 
+000044@tmpLink/xmipp_phantom_project_02/projections.stk          1   161.380264     9.606379     0.000000     0.000000     0.000000   161.380264     9.606379     0.000000 
+000045@tmpLink/xmipp_phantom_project_02/projections.stk          1    10.556051     6.249454     0.000000     0.000000     0.000000    10.556051     6.249454     0.000000 
+000046@tmpLink/xmipp_phantom_project_02/projections.stk          1   160.592415    13.315388     0.000000     0.000000     0.000000   160.592415    13.315388     0.000000 
+000047@tmpLink/xmipp_phantom_project_02/projections.stk          1    22.141681    14.213994     0.000000     0.000000     0.000000    22.141681    14.213994     0.000000 
+000048@tmpLink/xmipp_phantom_project_02/projections.stk          1   270.406538    11.247884     0.000000     0.000000     0.000000   270.406538    11.247884     0.000000 
+000049@tmpLink/xmipp_phantom_project_02/projections.stk          1   192.910955    10.968175     0.000000     0.000000     0.000000   192.910955    10.968175     0.000000 
+000050@tmpLink/xmipp_phantom_project_02/projections.stk          1   315.981353    10.623429     0.000000     0.000000     0.000000   315.981353    10.623429     0.000000 
+000051@tmpLink/xmipp_phantom_project_02/projections.stk          1   124.703013     3.632454     0.000000     0.000000     0.000000   124.703013     3.632454     0.000000 
+000052@tmpLink/xmipp_phantom_project_02/projections.stk          1   180.071964     8.557716     0.000000     0.000000     0.000000   180.071964     8.557716     0.000000 
+000053@tmpLink/xmipp_phantom_project_02/projections.stk          1   226.768191     8.887221     0.000000     0.000000     0.000000   226.768191     8.887221     0.000000 
+000054@tmpLink/xmipp_phantom_project_02/projections.stk          1   180.527473     3.146724     0.000000     0.000000     0.000000   180.527473     3.146724     0.000000 
+000055@tmpLink/xmipp_phantom_project_02/projections.stk          1   352.872802    13.918024     0.000000     0.000000     0.000000   352.872802    13.918024     0.000000 
+000056@tmpLink/xmipp_phantom_project_02/projections.stk          1   254.447962    10.207387     0.000000     0.000000     0.000000   254.447962    10.207387     0.000000 
+000057@tmpLink/xmipp_phantom_project_02/projections.stk          1   127.786148     4.073927     0.000000     0.000000     0.000000   127.786148     4.073927     0.000000 
+000058@tmpLink/xmipp_phantom_project_02/projections.stk          1     5.604210    14.813411     0.000000     0.000000     0.000000     5.604210    14.813411     0.000000 
+000059@tmpLink/xmipp_phantom_project_02/projections.stk          1   318.442993     8.967293     0.000000     0.000000     0.000000   318.442993     8.967293     0.000000 
+000060@tmpLink/xmipp_phantom_project_02/projections.stk          1   119.278972    12.856408     0.000000     0.000000     0.000000   119.278972    12.856408     0.000000 
+000061@tmpLink/xmipp_phantom_project_02/projections.stk          1   280.661738     3.812810     0.000000     0.000000     0.000000   280.661738     3.812810     0.000000 
+000062@tmpLink/xmipp_phantom_project_02/projections.stk          1   319.452577     9.454908     0.000000     0.000000     0.000000   319.452577     9.454908     0.000000 
+000063@tmpLink/xmipp_phantom_project_02/projections.stk          1   186.996027     8.263170     0.000000     0.000000     0.000000   186.996027     8.263170     0.000000 
+000064@tmpLink/xmipp_phantom_project_02/projections.stk          1   226.256966    11.140823     0.000000     0.000000     0.000000   226.256966    11.140823     0.000000 
+000065@tmpLink/xmipp_phantom_project_02/projections.stk          1   139.128961    11.996441     0.000000     0.000000     0.000000   139.128961    11.996441     0.000000 
+000066@tmpLink/xmipp_phantom_project_02/projections.stk          1   168.100193     8.919670     0.000000     0.000000     0.000000   168.100193     8.919670     0.000000 
+000067@tmpLink/xmipp_phantom_project_02/projections.stk          1   310.747654     3.274836     0.000000     0.000000     0.000000   310.747654     3.274836     0.000000 
+000068@tmpLink/xmipp_phantom_project_02/projections.stk          1   187.578565    14.948717     0.000000     0.000000     0.000000   187.578565    14.948717     0.000000 
+000069@tmpLink/xmipp_phantom_project_02/projections.stk          1   279.470300    14.140309     0.000000     0.000000     0.000000   279.470300    14.140309     0.000000 
+000070@tmpLink/xmipp_phantom_project_02/projections.stk          1   235.358362    10.912633     0.000000     0.000000     0.000000   235.358362    10.912633     0.000000 
+000071@tmpLink/xmipp_phantom_project_02/projections.stk          1   197.406993    11.532463     0.000000     0.000000     0.000000   197.406993    11.532463     0.000000 
+000072@tmpLink/xmipp_phantom_project_02/projections.stk          1   190.090448    11.100218     0.000000     0.000000     0.000000   190.090448    11.100218     0.000000 
+000073@tmpLink/xmipp_phantom_project_02/projections.stk          1   280.455024    12.989043     0.000000     0.000000     0.000000   280.455024    12.989043     0.000000 
+000074@tmpLink/xmipp_phantom_project_02/projections.stk          1   146.758894     4.196077     0.000000     0.000000     0.000000   146.758894     4.196077     0.000000 
+000075@tmpLink/xmipp_phantom_project_02/projections.stk          1   299.059045    14.339006     0.000000     0.000000     0.000000   299.059045    14.339006     0.000000 
+000076@tmpLink/xmipp_phantom_project_02/projections.stk          1     8.985850    13.552449     0.000000     0.000000     0.000000     8.985850    13.552449     0.000000 
+000077@tmpLink/xmipp_phantom_project_02/projections.stk          1   231.369007     2.928288     0.000000     0.000000     0.000000   231.369007     2.928288     0.000000 
+000078@tmpLink/xmipp_phantom_project_02/projections.stk          1   356.694300    11.934426     0.000000     0.000000     0.000000   356.694300    11.934426     0.000000 
+000079@tmpLink/xmipp_phantom_project_02/projections.stk          1    41.895418    11.414069     0.000000     0.000000     0.000000    41.895418    11.414069     0.000000 
+000080@tmpLink/xmipp_phantom_project_02/projections.stk          1   212.898539    13.908504     0.000000     0.000000     0.000000   212.898539    13.908504     0.000000 
+000081@tmpLink/xmipp_phantom_project_02/projections.stk          1    79.624622     9.016860     0.000000     0.000000     0.000000    79.624622     9.016860     0.000000 
+000082@tmpLink/xmipp_phantom_project_02/projections.stk          1    39.249854     6.962739     0.000000     0.000000     0.000000    39.249854     6.962739     0.000000 
+000083@tmpLink/xmipp_phantom_project_02/projections.stk          1   109.677733    12.310865     0.000000     0.000000     0.000000   109.677733    12.310865     0.000000 
+000084@tmpLink/xmipp_phantom_project_02/projections.stk          1   132.961249    13.964290     0.000000     0.000000     0.000000   132.961249    13.964290     0.000000 
+000085@tmpLink/xmipp_phantom_project_02/projections.stk          1   230.602281    11.597852     0.000000     0.000000     0.000000   230.602281    11.597852     0.000000 
+000086@tmpLink/xmipp_phantom_project_02/projections.stk          1     3.675669    14.259330     0.000000     0.000000     0.000000     3.675669    14.259330     0.000000 
+000087@tmpLink/xmipp_phantom_project_02/projections.stk          1   177.751416     8.652034     0.000000     0.000000     0.000000   177.751416     8.652034     0.000000 
+000088@tmpLink/xmipp_phantom_project_02/projections.stk          1    24.908491    10.465580     0.000000     0.000000     0.000000    24.908491    10.465580     0.000000 
+000089@tmpLink/xmipp_phantom_project_02/projections.stk          1   149.716505     6.426856     0.000000     0.000000     0.000000   149.716505     6.426856     0.000000 
+000090@tmpLink/xmipp_phantom_project_02/projections.stk          1   289.293155    10.451828     0.000000     0.000000     0.000000   289.293155    10.451828     0.000000 
+000091@tmpLink/xmipp_phantom_project_02/projections.stk          1   213.296987    13.342425     0.000000     0.000000     0.000000   213.296987    13.342425     0.000000 
+000092@tmpLink/xmipp_phantom_project_02/projections.stk          1   281.514822     8.394980     0.000000     0.000000     0.000000   281.514822     8.394980     0.000000 
+000093@tmpLink/xmipp_phantom_project_02/projections.stk          1   157.003689    14.511954     0.000000     0.000000     0.000000   157.003689    14.511954     0.000000 
+000094@tmpLink/xmipp_phantom_project_02/projections.stk          1    48.511553     3.706885     0.000000     0.000000     0.000000    48.511553     3.706885     0.000000 
+000095@tmpLink/xmipp_phantom_project_02/projections.stk          1   283.904305     8.309810     0.000000     0.000000     0.000000   283.904305     8.309810     0.000000 
+000096@tmpLink/xmipp_phantom_project_02/projections.stk          1   257.322432    14.671418     0.000000     0.000000     0.000000   257.322432    14.671418     0.000000 
+000097@tmpLink/xmipp_phantom_project_02/projections.stk          1   250.993423     4.258151     0.000000     0.000000     0.000000   250.993423     4.258151     0.000000 
+000098@tmpLink/xmipp_phantom_project_02/projections.stk          1    23.597045    14.702500     0.000000     0.000000     0.000000    23.597045    14.702500     0.000000 
+000099@tmpLink/xmipp_phantom_project_02/projections.stk          1   245.152331     5.972838     0.000000     0.000000     0.000000   245.152331     5.972838     0.000000 
+000100@tmpLink/xmipp_phantom_project_02/projections.stk          1   173.918919     6.850115     0.000000     0.000000     0.000000   173.918919     6.850115     0.000000 
