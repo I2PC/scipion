@@ -28,6 +28,8 @@ package xmipp.utils;
 import java.io.File;
 import javax.swing.JFileChooser;
 
+import xmipp.jni.Filename;
+
 
 /** Xmipp customization of the default XmippFileChooser */
 @SuppressWarnings("serial")
@@ -35,7 +37,7 @@ public class XmippFileChooser extends JFileChooser {
 	
 	/** Constructor */	
 	public XmippFileChooser(){
-		this(new File(System.getProperty("user.dir")));
+		this(new File(Filename.getCurrentDir()));
 	}
 	
 	public XmippFileChooser(File f){

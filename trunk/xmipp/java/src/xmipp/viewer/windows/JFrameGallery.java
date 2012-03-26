@@ -1004,10 +1004,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		if (evt.getButton() == MouseEvent.BUTTON1) { // Left click.
 			if (evt.getClickCount() > 1) {
 				try {
-					String imageFn = gallery.getImageFilenameAt(view_row,
-							view_col);
-					if (imageFn != null)
-						new XmippImageWindow(imageFn);
+//					String imageFn = gallery.getImageFilenameAt(view_row,
+//							view_col);
+//					if (imageFn != null)
+//						new XmippImageWindow(imageFn);
+					gallery.handleDoubleClick(view_row, view_col);
 				} catch (Exception e) {
 					XmippDialog.showError(this, e.getMessage());
 				}

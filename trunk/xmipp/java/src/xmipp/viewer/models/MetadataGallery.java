@@ -27,9 +27,11 @@ package xmipp.viewer.models;
 
 import ij.ImagePlus;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -192,8 +194,14 @@ public class MetadataGallery extends ImageGallery {
 
 	@Override
 	public String getTitle() {
-		return String.format("Metadata: %s (%d)", filename, n);
-	}
+		String title = "Metadata: " + filename != null ? 
+				Filename.getBaseName(filename) : "";
+		if (n > 1)
+			title += String.format(" %d items", n);
+		if (data.hasRenderLabel())
+			title += String.format(" (%d x %d)", image_width, image_height);
+		return title;
+	}//function getTitle
 
 	public String getImageFilename(int index, int label) {
 		try {
@@ -202,13 +210,26 @@ public class MetadataGallery extends ImageGallery {
 			e.printStackTrace();
 		}
 		return null;
-	}
+	}//function getImageFilename
 
+//	@Override
+//	public String getImageFilenameAt(int row, int col) {
+//		return data.isImageFile(renderLabel) ? data.getValueFromCol(row,
+//				renderLabel) : null;
+//	}
+	
 	@Override
-	public String getImageFilenameAt(int row, int col) {
-		return data.isImageFile(renderLabel) ? data.getValueFromCol(row,
-				renderLabel) : null;
-	}
+	public boolean handleDoubleClick(int row, int col){
+		try {
+			if (data.isImageFile(renderLabel)) {
+				new XmippImageWindow(data.getValueFromCol(getIndex(row, col), renderLabel));
+				return true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}//function handleDoubleClick
 
 	@Override
 	protected double[] getMinAndMax() {
@@ -218,7 +239,7 @@ public class MetadataGallery extends ImageGallery {
 			DEBUG.printException(ex);
 		}
 		return null;
-	}
+	}//function getMinAndMax
 
 	/** Change the use of geometry info */
 	public void setUseGeometry(boolean geo, boolean wrap) {
@@ -229,7 +250,7 @@ public class MetadataGallery extends ImageGallery {
 		data.wrap = wrap;
 		if (changed)
 			fireTableDataChanged();
-	}
+	}//function setUseGeometry
 
 	@Override
 	public ImagePlus getImagePlus() {
@@ -239,11 +260,11 @@ public class MetadataGallery extends ImageGallery {
 			e.printStackTrace();
 		}
 		return null;
-	}
+	}//function getImagePlus
 
 	@Override
 	public boolean handleRightClick(int row, int col,
 			XmippPopupMenuCreator xpopup) {
 		return true;
-	}
+	}//function handleRightClick
 }

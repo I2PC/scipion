@@ -450,6 +450,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 */
 	public abstract boolean handleRightClick(int row, int col,
 			XmippPopupMenuCreator xpopup);
+	
+	/** This function will be called when a double click is performed
+	 * under the element at specified row and column
+	 */
+	public boolean handleDoubleClick(int row, int col){
+		return false; //by default, do nothing
+	}
 
 	/** Whether to display the labels */
 	public void setShowLabels(boolean value) {
@@ -467,8 +474,8 @@ public abstract class ImageGallery extends AbstractTableModel {
 	/** Retrieve the mininum and maximum of data */
 	protected abstract double[] getMinAndMax();
 
-	/** Retrieve the image filename, return null if error */
-	public abstract String getImageFilenameAt(int row, int col);
+//	/** Retrieve the image filename, return null if error */
+//	protected abstract String getImageFilenameAt(int row, int col);
 
 	/**
 	 * Function to create the key of the item knowing the item index

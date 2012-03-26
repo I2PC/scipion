@@ -40,7 +40,7 @@ import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
 public class GalleryData {
 	public MetaData md;
 	public long[] ids;
-	public String[] mdBlocks;
+	public String[] mdBlocks = null;
 	public String selectedBlock;
 	// The following is only used in VolumeGallery mode
 	public String selectedVol = "";
@@ -303,7 +303,7 @@ public class GalleryData {
 	}
 
 	public int getNumberOfBlocks() {
-		return mdBlocks.length;
+		return mdBlocks != null ? mdBlocks.length : 1;
 	}
 
 	public int getNumberOfVols() {
@@ -387,7 +387,7 @@ public class GalleryData {
 	public boolean isEnabled(int index) {
 		try {
 			if (isVolumeMode() || !md.containsLabel(MDLabel.MDL_ENABLED))
-					return true;
+				return true;
 			return md.getEnabled(ids[index]);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -559,20 +559,22 @@ public class GalleryData {
 
 	/** Return true if current metadata is a rotspectra classes */
 	public boolean isRotSpectraMd() {
-		String fnVectors = filename.replace("classes", "vectors");
-		String fnVectorsData = fnVectors.replace(".xmd", ".vec");
-		// TODO: CHECK if is a classification md
-		if (is2DClassificationMd() && Filename.exists(fnVectors)
-				&& Filename.exists(fnVectorsData))
-			return true;
+		if (filename != null) {
+			String fnVectors = filename.replace("classes", "vectors");
+			String fnVectorsData = fnVectors.replace(".xmd", ".vec");
+			if (is2DClassificationMd() && Filename.exists(fnVectors)
+					&& Filename.exists(fnVectorsData))
+				return true;
+		}
 		return false;
 	}
 
 	/** Check if a block is present, ignore case */
 	public boolean containsBlock(String block) {
-		for (String b : mdBlocks)
-			if (b.equalsIgnoreCase(block))
-				return true;
+		if (mdBlocks != null)
+			for (String b : mdBlocks)
+				if (b.equalsIgnoreCase(block))
+					return true;
 		return false;
 	}
 

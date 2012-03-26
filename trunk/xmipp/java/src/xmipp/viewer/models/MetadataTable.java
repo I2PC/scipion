@@ -32,6 +32,7 @@ import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -178,12 +179,24 @@ public class MetadataTable extends MetadataGallery {
 		return ci.allowEdit && !ci.render;
 	}
 
+//	@Override
+//	public String getImageFilenameAt(int row, int col){
+//		ColumnInfo ci = visibleLabels.get(col);
+//		return (ci.render && data.isImageFile(ci))
+//				? data.getValueFromCol(row, ci) : null;
+//	}
 	@Override
-	public String getImageFilenameAt(int row, int col){
-		ColumnInfo ci = visibleLabels.get(col);
-		return (ci.render && data.isImageFile(ci))
-				? data.getValueFromCol(row, ci) : null;
-	}
+	public boolean handleDoubleClick(int row, int col){
+		try {
+			if (data.isImageFile(col)) {
+				new XmippImageWindow(data.getValueFromCol(row, col));
+				return true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}//function handleDoubleClick
 	
 	@Override
 	public void setColumns(int cols) {
