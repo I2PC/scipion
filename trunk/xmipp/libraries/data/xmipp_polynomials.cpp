@@ -211,7 +211,7 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, c
 
 void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> & im)
 {
-	bool DEBUG = true;
+	bool DEBUG = false;
 
 	this->create(coef);
 
