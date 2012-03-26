@@ -9,8 +9,8 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-        FileName xmippPath = getenv("XMIPP_HOME");
-        fn_root = xmippPath + "/applications/tests/test_sampling/";
+        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+        fn_root = "sampling/";
 
         //Create the sampling
         double sampling_rate = 3.0;
@@ -42,17 +42,19 @@ protected:
 
 TEST_F(SamplingTest, computeSamplingPoints)
 {
+    XMIPP_TRY
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref");
-    s1.saveSamplingFile(fn_root + "refkk");
     Sampling s2;
     s2.setSampling(3.);
     s2.computeSamplingPoints(false, 91., -91.);
     EXPECT_EQ(s1, s2);
+    XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, removeRedundantPointsI3H)
 {
+	XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_i3h");
@@ -64,10 +66,12 @@ TEST_F(SamplingTest, removeRedundantPointsI3H)
     s2.fillLRRepository();
     s2.removeRedundantPoints(symmetry, sym_order);
     EXPECT_EQ(s1, s2);
+    XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, removeRedundantPointsC1)
 {
+	XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_c1");
@@ -80,10 +84,12 @@ TEST_F(SamplingTest, removeRedundantPointsC1)
     s2.removeRedundantPoints(symmetry, sym_order);
     //s2.saveSamplingFile("/tmp/removeRedundantPointsC1");
     EXPECT_EQ(s1, s2);
+    XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataI3H)
 {
+	XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_i3h_exp");
@@ -98,10 +104,12 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataI3H)
     s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
     s2.removePointsFarAwayFromExperimentalData();
     EXPECT_EQ(s1, s2);
+    XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataC1)
 {
+	XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_c1_exp");
@@ -117,19 +125,25 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataC1)
     s2.removePointsFarAwayFromExperimentalData();
     //s2.saveSamplingFile("/tmp/removePointsFarAwayFromExperimentalDataC1");
     EXPECT_EQ(s1, s2);
+    XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, saveReadSamplingFile)
 {
-  FileName fn = fn_root + "test";
+	XMIPP_TRY
+    FileName fn;
+    fn.initUniqueName("/tmp/temp_XXXXXX");
     mysampling.saveSamplingFile(fn, true, true);
     Sampling s;
     s.readSamplingFile(fn, true, true);
     EXPECT_EQ(mysampling, s);
+    fn.deleteFile();
+    XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, computeNeighborsI3H)
 {
+	XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "neigh_ref_i3h_exp");
@@ -146,10 +160,12 @@ TEST_F(SamplingTest, computeNeighborsI3H)
     s2.computeNeighbors();
     //s2.saveSamplingFile("/tmp/computeNeighborsI3H");
     EXPECT_EQ(s1, s2);
+    XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, computeNeighborsC1)
 {
+	XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "neigh_ref_c1_exp");
@@ -164,8 +180,9 @@ TEST_F(SamplingTest, computeNeighborsC1)
     s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
     s2.removePointsFarAwayFromExperimentalData();
     s2.computeNeighbors();
-    s2.saveSamplingFile(fn_root + "/tmp/ref_c1_computeNeighborsC1");
+//    s2.saveSamplingFile(fn_root + "/tmp/ref_c1_computeNeighborsC1");
     EXPECT_EQ(s1, s2);
+    XMIPP_CATCH
 }
 
 GTEST_API_ int main(int argc, char **argv)

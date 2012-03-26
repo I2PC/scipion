@@ -10,16 +10,8 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-#define len 128
-        //find binaries directory
-        //        char szTmp[len];
-        //        char pBuf[len];
-        //        sprintf(szTmp, "/proc/%d/exe", getpid());
-        //        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        //        if(bytes >= 0)
-        //            pBuf[bytes] = '\0';
-        //imageName2 = filename + "/../applications/tests/test_fftw/singleImage2.spi";
-        //myImage2.read(imageName2);123321445.xmp
+        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+
         mulDouble1.resize(3,3);
         DIRECT_A2D_ELEM(mulDouble1,0,0) = 1;
         DIRECT_A2D_ELEM(mulDouble1,0,1) = 2;
@@ -64,14 +56,14 @@ protected:
 
 TEST_F( FiltersTest, bestShift)
 {
- double x,y;
- MultidimArray<  double  > auxMul,auxMul2;
- CorrelationAux aux;
- auxMul = mulDouble1;
- auxMul.setXmippOrigin();
- bestShift(auxMul,auxMul,x,y,aux);
- EXPECT_DOUBLE_EQ(x,0.);
- EXPECT_DOUBLE_EQ(y,0.);
+    double x,y;
+    MultidimArray<  double  > auxMul,auxMul2;
+    CorrelationAux aux;
+    auxMul = mulDouble1;
+    auxMul.setXmippOrigin();
+    bestShift(auxMul,auxMul,x,y,aux);
+    EXPECT_DOUBLE_EQ(x,0.);
+    EXPECT_DOUBLE_EQ(y,0.);
 
 }
 
@@ -100,80 +92,83 @@ TEST_F( FiltersTest, correlation_matrix)
 
 TEST_F( FiltersTest, correlation)
 {
- MultidimArray<  double  > auxMul,auxMul2;
- auxMul = mulDouble1;
- double result;
- auxMul.setXmippOrigin();
- result = correlationIndex(auxMul,auxMul);
- EXPECT_DOUBLE_EQ(result,1.);
+    MultidimArray<  double  > auxMul,auxMul2;
+    auxMul = mulDouble1;
+    double result;
+    auxMul.setXmippOrigin();
+    result = correlationIndex(auxMul,auxMul);
+    EXPECT_DOUBLE_EQ(result,1.);
 
 }
-//TODO THIS TEST NEED TO BE FIXED, IMAGE IS MISSING
-//TEST_F( FiltersTest, alignImages)
-//{
-//    FileName baseName = (String)getenv("XMIPP_HOME")+"/resources/test";
-//    Image<double> I;
-//    I.read(baseName+"/test2.spi");
-//    I().setXmippOrigin();
-//
-//    // Transform the image: Mirror, shift and rotation
-//    Image<double> Itransformed, ItransformedMirror;
-//    Itransformed()=I();
-//    Matrix2D<double> A;
-//    rotation2DMatrix(15,A,true);
-//    MAT_ELEM(A,0,2)=-4;
-//    MAT_ELEM(A,1,2)= 6;
-//    selfApplyGeometry(BSPLINE3,Itransformed(),A,IS_NOT_INV,DONT_WRAP);
-//    Itransformed.write(baseName+"/test2_transformed.spi");
-//
-//    ItransformedMirror()=Itransformed();
-//    ItransformedMirror().selfReverseX();
-//    ItransformedMirror().setXmippOrigin();
-//
-//    // Align the images in 4 different ways
-//    Matrix2D<double> M1;
-//    AlignmentAux aux;
-//    CorrelationAux aux2;
-//    RotationalCorrelationAux aux3;
-//    MultidimArray<double> Ialigned1=ItransformedMirror();
-//    alignImages(I(),Ialigned1,M1,DONT_WRAP,aux,aux2,aux3);
-//
-//    MultidimArray<double> Ialigned2;
-//    applyGeometry(BSPLINE3, Ialigned2, ItransformedMirror(), M1, IS_NOT_INV, DONT_WRAP);
-//
-//    Matrix2D<double> M2=M1;
-//    MAT_ELEM(M2,0,0)*=-1;
-//    MAT_ELEM(M2,1,0)*=-1;
-//    MultidimArray<double> Ialigned3;
-//    applyGeometry(BSPLINE3, Ialigned3, Itransformed(), M2, IS_NOT_INV, DONT_WRAP);
-//
-//    bool flip;
-//    double scale, shiftX, shiftY, psi;
-//    transformationMatrix2Parameters2D(M2, flip, scale, shiftX, shiftY, psi);
-//    MDRow row;
-//    row.setValue(MDL_FLIP,flip);
-//    row.setValue(MDL_SCALE,scale);
-//    row.setValue(MDL_SHIFTX,shiftX);
-//    row.setValue(MDL_SHIFTY,shiftY);
-//    row.setValue(MDL_ANGLEPSI,psi);
-//    Image<double> Ialigned4;
-//    Ialigned4.readApplyGeo(baseName+"/test2_transformed.spi", row);
-//
-//    MultidimArray<double> diff;
-//
-//    diff=Ialigned1-Ialigned2;
-//    double mean=diff.computeAvg();
-//    EXPECT_NEAR(mean,0.0,1e-2);
-//
-//    diff=Ialigned1-Ialigned3;
-//    mean=diff.computeAvg();
-//    EXPECT_NEAR(mean,0.0,1e-2);
-//
-//    Ialigned4().setXmippOrigin();
-//    diff=Ialigned1-Ialigned4();
-//    mean=diff.computeAvg();
-//    EXPECT_NEAR(mean,0.0,1e-2);
-//}
+TEST_F( FiltersTest, alignImages)
+{
+    FileName fileTemp;
+    fileTemp.initUniqueName("/tmp/temp_XXXXXX");
+    fileTemp = fileTemp + ":spi";
+    Image<double> I;
+    I.read("filters/test2.spi");
+    I().setXmippOrigin();
+
+    // Transform the image: Mirror, shift and rotation
+    Image<double> Itransformed, ItransformedMirror;
+    Itransformed()=I();
+    Matrix2D<double> A;
+    rotation2DMatrix(15,A,true);
+    MAT_ELEM(A,0,2)=-4;
+    MAT_ELEM(A,1,2)= 6;
+    selfApplyGeometry(BSPLINE3,Itransformed(),A,IS_NOT_INV,DONT_WRAP);
+    Itransformed.write(fileTemp);
+
+    ItransformedMirror()=Itransformed();
+    ItransformedMirror().selfReverseX();
+    ItransformedMirror().setXmippOrigin();
+
+    // Align the images in 4 different ways
+    Matrix2D<double> M1;
+    AlignmentAux aux;
+    CorrelationAux aux2;
+    RotationalCorrelationAux aux3;
+    MultidimArray<double> Ialigned1=ItransformedMirror();
+    alignImages(I(),Ialigned1,M1,DONT_WRAP,aux,aux2,aux3);
+
+    MultidimArray<double> Ialigned2;
+    applyGeometry(BSPLINE3, Ialigned2, ItransformedMirror(), M1, IS_NOT_INV, DONT_WRAP);
+
+    Matrix2D<double> M2=M1;
+    MAT_ELEM(M2,0,0)*=-1;
+    MAT_ELEM(M2,1,0)*=-1;
+    MultidimArray<double> Ialigned3;
+    applyGeometry(BSPLINE3, Ialigned3, Itransformed(), M2, IS_NOT_INV, DONT_WRAP);
+
+    bool flip;
+    double scale, shiftX, shiftY, psi;
+    transformationMatrix2Parameters2D(M2, flip, scale, shiftX, shiftY, psi);
+    MDRow row;
+    row.setValue(MDL_FLIP,flip);
+    row.setValue(MDL_SCALE,scale);
+    row.setValue(MDL_SHIFTX,shiftX);
+    row.setValue(MDL_SHIFTY,shiftY);
+    row.setValue(MDL_ANGLEPSI,psi);
+    Image<double> Ialigned4;
+    Ialigned4.readApplyGeo(fileTemp, row);
+
+    MultidimArray<double> diff;
+
+    diff=Ialigned1-Ialigned2;
+    double mean=diff.computeAvg();
+    EXPECT_NEAR(mean,0.0,1e-2);
+
+    diff=Ialigned1-Ialigned3;
+    mean=diff.computeAvg();
+    EXPECT_NEAR(mean,0.0,1e-2);
+
+    Ialigned4().setXmippOrigin();
+    diff=Ialigned1-Ialigned4();
+    mean=diff.computeAvg();
+    EXPECT_NEAR(mean,0.0,1e-2);
+
+    fileTemp.deleteFile();
+}
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

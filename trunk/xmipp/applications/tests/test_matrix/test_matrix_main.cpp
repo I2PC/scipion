@@ -8,17 +8,8 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-#define len 128
-        //find binaries directory
-        //        char szTmp[len];
-        //        char pBuf[len];
-        //        sprintf(szTmp, "/proc/%d/exe", getpid());
-        //        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        //        if(bytes >= 0)
-        //            pBuf[bytes] = '\0';
-        //imageName2 = filename + "/../applications/tests/test_fftw/singleImage2.spi";
-        //myImage2.read(imageName2);123321445.xmp
-        A.resize(3,3);
+        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+    	A.resize(3,3);
         A(0,0) =-0.9234482 ;
         A(0,1) =  -0.38372311   ;
         A(0,2) =0 ;

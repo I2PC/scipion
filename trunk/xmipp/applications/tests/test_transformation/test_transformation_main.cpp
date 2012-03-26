@@ -10,16 +10,6 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-#define len 128
-        //find binaries directory
-        //        char szTmp[len];
-        //        char pBuf[len];
-        //        sprintf(szTmp, "/proc/%d/exe", getpid());
-        //        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
-        //        if(bytes >= 0)
-        //            pBuf[bytes] = '\0';
-        //imageName2 = filename + "/../applications/tests/test_fftw/singleImage2.spi";
-        //myImage2.read(imageName2);123321445.xmp
         mulDouble.resize(3,3);
         DIRECT_A2D_ELEM(mulDouble,0,0) = 1;
         DIRECT_A2D_ELEM(mulDouble,0,1) = 2;

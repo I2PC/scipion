@@ -10,12 +10,22 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-        //filename = getenv("XMIPP_HOME");
-        //get example images/staks
-        imageName = TEST_FILENAME("singleImage.spi");
-        stackName = TEST_FILENAME("smallStack.stk");
-        myImageGeneric.readMapped(imageName);
-        myImageGeneric2.readMapped(stackName, 1);
+
+        try
+        {
+            //get example images/staks
+            chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+            // testBaseName = xmippPath + "/resources/test";
+            imageName = "image/singleImage.spi";
+            stackName = "image/smallStack.stk";
+            myImageGeneric.readMapped(imageName);
+            myImageGeneric2.readMapped(stackName, 1);
+        }
+        catch (XmippError &xe)
+        {
+            std::cerr << xe;
+            exit(-1);
+        }
     }
 
     // virtual void TearDown() {}//Destructor
@@ -25,6 +35,7 @@ protected:
     FileName imageName;
     FileName stackName;
     // FileName filename;
+
 
 };
 
@@ -80,7 +91,7 @@ TEST_F( ImageGenericTest, add)
     ImageGeneric auxImageGeneric1(auxFilename1);
     ImageGeneric auxImageGeneric2(auxFilename2);
     auxImageGeneric1.add(auxImageGeneric2);
-    auxFilename2  = TEST_FILENAME("sum.spi");
+    auxFilename2  = "image/sum.spi";
     auxImageGeneric2.read(auxFilename2);
     EXPECT_TRUE(auxImageGeneric1==auxImageGeneric2);
     auxImageGeneric1.add(auxImageGeneric2);
@@ -89,7 +100,7 @@ TEST_F( ImageGenericTest, add)
 
 TEST_F( ImageGenericTest, subtract)
 {
-    FileName sumFn = TEST_FILENAME("sum.spi");
+    FileName sumFn = "image/sum.spi";
     ImageGeneric sumImg(sumFn);
     FileName fn1((String)"1@"+stackName);
     ImageGeneric img1(fn1);
@@ -103,7 +114,7 @@ TEST_F( ImageGenericTest, subtract)
 // check if an empty file is correctly created
 TEST_F( ImageGenericTest, createEmptyFile)
 {
-    FileName Fn = TEST_FILENAME("emptyFile.stk");
+    FileName Fn = "image/emptyFile.stk";
     const int size = 16;
     createEmptyFile(Fn,size,size,size,size);
     FileName Fn2;
@@ -228,7 +239,7 @@ TEST_F( ImageGenericTest, convert2Datatype)
 
     // Checking that convert2Datatype works after movePointer2
     ArrayDim befAdim, aftAdim;
-    FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    FileName auxFn = "image/smallVolume.vol";
     myImageGeneric.readMapped(auxFn);
     myImageGeneric.getDimensions(befAdim);
     // Slices number when working with multidimarrays start in zero
@@ -254,7 +265,7 @@ TEST_F( ImageGenericTest, convert2Datatype)
 // check the reslicing is right
 TEST_F( ImageGenericTest, reslice)
 {
-    FileName fnVol = TEST_FILENAME("progVol.vol");
+    FileName fnVol = "image/progVol.vol";
     ImageGeneric imgSliced, imgRef;
     imgSliced.read(fnVol);
     imgRef.read(fnVol);
@@ -290,7 +301,7 @@ TEST_F( ImageGenericTest, reslice)
 
 TEST_F( ImageGenericTest, getPreview)
 {
-    FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    FileName auxFn = "image/smallVolume.vol";
     ImageGeneric img1, img2, imgTemp;
     imgTemp.read(auxFn);
 

@@ -10,9 +10,10 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
+        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
        //get example images/staks
-        source1 = TEST_FILENAME("singleImage.spi");
-        source2 = TEST_FILENAME("singleImage.mrc");
+        source1 = "funcs/singleImage.spi";
+        source2 = "funcs/singleImage.mrc";
     }
 
     // virtual void TearDown() {}//Destructor

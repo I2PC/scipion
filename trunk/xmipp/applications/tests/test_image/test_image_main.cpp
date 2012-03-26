@@ -13,13 +13,22 @@ protected:
     //init metadatas
     virtual void SetUp()
     {
-        //get example images/staks
-        xmippPath = getXmippPath();
-       // testBaseName = xmippPath + "/resources/test";
-        imageName = TEST_FILENAME("singleImage.spi");
-        stackName = TEST_FILENAME("smallStack.stk");
-        myImage.read(imageName);
-        myStack.read(stackName);
+        try
+        {
+            //get example images/staks
+            xmippPath = getXmippPath();
+            chdir(((String)(xmippPath + "/resources/test")).c_str());
+            // testBaseName = xmippPath + "/resources/test";
+            imageName = "image/singleImage.spi";
+            stackName = "image/smallStack.stk";
+            myImage.read(imageName);
+            myStack.read(stackName);
+        }
+        catch (XmippError &xe)
+        {
+            std::cerr << xe;
+            exit(-1);
+        }
     }
 
     // virtual void TearDown() {}//Destructor
@@ -70,7 +79,7 @@ TEST_F( ImageTest, getEulerAngles)
 
 TEST_F( ImageTest, readApplyGeo)
 {
-    FileName auxFn = TEST_FILENAME("test2.spi");
+    FileName auxFn = "image/test2.spi";
     MetaData MD;
     size_t id = MD.addObject();
     MD.setValue(MDL_IMAGE, auxFn, id);
@@ -204,7 +213,7 @@ TEST_F( ImageTest, writeRAWimage)
 
 TEST_F( ImageTest, readPreview)
 {
-    FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    FileName auxFn = "image/smallVolume.vol";
     Image<double> img1, img2;
     img1.read(auxFn);
 
@@ -220,7 +229,7 @@ TEST_F( ImageTest, readPreview)
 
 TEST_F( ImageTest, getPreview)
 {
-    FileName auxFn = TEST_FILENAME("smallVolume.vol");
+    FileName auxFn = "image/smallVolume.vol";
     Image<double> img1, img2;
     img1.read(auxFn);
 
@@ -236,8 +245,8 @@ TEST_F( ImageTest, getPreview)
 
 TEST_F( ImageTest, mapFile2Write)
 {
-     FileName auxFn = TEST_FILENAME("smallVolume.vol");
-    FileName auxMappedFilename = TEST_FILENAME("mappedFile.vol");
+    FileName auxFn = "image/smallVolume.vol";
+    FileName auxMappedFilename = "image/mappedFile.vol";
     Image<float> img1, img2;
     img1.read(auxFn);
     ArrayDim aDim;
@@ -254,7 +263,7 @@ TEST_F( ImageTest, mapFile2Write)
 }
 TEST_F( ImageTest, movePointerTo)
 {
-    FileName auxFn= TEST_FILENAME("smallVolumeStack.stk");
+    FileName auxFn= "image/smallVolumeStack.stk";
     Image<double> img1, img2;
     img1.read(auxFn);
 

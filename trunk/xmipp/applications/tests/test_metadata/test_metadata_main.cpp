@@ -14,8 +14,7 @@ protected:
 
     virtual void SetUp()
     {
-        localDir = getenv("XMIPP_HOME");
-
+        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
         //Md1
         id = mDsource.addObject();
         mDsource.setValue(MDL_X,1.,id);
@@ -53,7 +52,6 @@ protected:
     MetaData mDsource,mDanotherSource;
     MetaData mDunion, mDjoin;
     size_t id, id1,id2;
-    FileName localDir;
 };
 
 TEST_F( MetadataTest, SimilarToOperator)
@@ -752,6 +750,7 @@ TEST_F( MetadataTest, ExistsBlock)
 
 TEST_F( MetadataTest, ReadWriteAppendBlock)
 {
+	XMIPP_TRY
     //temp file name
     char sfn[32] = "";
     strncpy(sfn, "/tmp/testWrite_XXXXXX", sizeof sfn);
@@ -760,10 +759,11 @@ TEST_F( MetadataTest, ReadWriteAppendBlock)
     mDsource.write((String)"two@"+sfn,MD_APPEND);
     mDsource.write((String)"three@"+sfn,MD_APPEND);
     MetaData auxMetadata;
-    FileName sfn2 = TEST_FILENAME("ReadWriteAppendBlock.xmd");
+    FileName sfn2 = "metadata/ReadWriteAppendBlock.xmd";
     auxMetadata.read(sfn);
     EXPECT_TRUE(compareTwoFiles(sfn,sfn2,0));
     unlink(sfn);
+    XMIPP_CATCH
 }
 
 TEST_F( MetadataTest, RemoveDuplicates)
@@ -881,84 +881,70 @@ TEST_F( MetadataTest, setGetValue)
 //read file with vector
 TEST_F( MetadataTest, getValue)
 {
+    XMIPP_TRY
     std::vector<double> v1(3);
     std::vector<double> v2(3);
-    try
-    {
-        v1[0]=1.;
-        v1[1]=2.;
-        v1[2]=3.;
-        FileName inFile;
-        inFile = TEST_FILENAME("importObject.xmd");
-        MetaData auxMD1(inFile);
-        id = auxMD1.firstObject();
-        auxMD1.getValue(MDL_ANGLE_COMPARISON,v2, id);
-    }
-    catch (XmippError &xe)
-    {
-        std::cerr << xe.msg.c_str() <<std::endl;
-    }
+    MetaData auxMD1;
+    id = auxMD1.addObject();
+    v1[0]=1.;
+    v1[1]=2.;
+    v1[2]=3.;
+    auxMD1.setValue(MDL_ANGLE_COMPARISON,v1,id);
+    id = auxMD1.firstObject();
+    auxMD1.getValue(MDL_ANGLE_COMPARISON,v2, id);
 
     EXPECT_EQ(v1[0],v2[0]);
     EXPECT_EQ(v1[1],v2[1]);
     EXPECT_EQ(v1[2],v2[2]);
+    XMIPP_CATCH
 }
-//TODO does not work
-////Copy images on metadata using ImageConvert logic
-//TEST_F( MetadataTest, copyImages)
-//{
-//    try
-//    {
-//        FileName fn = TEST_FILENAME("smallStack.stk");
-//        FileName oroot = TEST_FILENAME("smallImg:mrc");
-//        FileName out = TEST_FILENAME("smallStack.mrcs");
-//        FileName fn1, fn2;
-//        MetaData md(fn);
-//        ProgConvImg conv;
-//        conv.setup(&md, "", oroot);
-//        conv.tryRun();
-//        MetaData *mdOut = conv.getOutputMd();
-//
-//        FOR_ALL_OBJECTS_IN_METADATA2(md, *mdOut)
-//        {
-//            md.getValue(MDL_IMAGE, fn1, __iter.objId);
-//            mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
-//            std::cerr << "fn1:" << fn1 << std::endl;
-//            std::cerr << "fn2:" << fn2 << std::endl;
-//            EXPECT_TRUE(compareImage(fn1, fn2));
-//        }
-//
-//        conv.setup(&md, out);
-//        conv.tryRun();
-//
-//        FOR_ALL_OBJECTS_IN_METADATA2(md, *mdOut)
-//        {
-//            md.getValue(MDL_IMAGE, fn1, __iter.objId);
-//            mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
-//            EXPECT_TRUE(compareImage(fn1, fn2));
-//        }
-//
-//        out = TEST_FILENAME("smallStackVol.mrc");
-//        conv.setup(&md, out);
-//        conv.tryRun();
-//        Image<float> imgStk, imgVol;
-//        imgStk.read(fn);
-//        imgVol.read(out);
-//
-//        int n = imgStk.getDimensions().ndim;
-//        for (int i = FIRST_IMAGE; i <= n; ++i)
-//        {
-//            imgStk.movePointerTo(1, i);
-//            imgVol.movePointerTo(i);
-//            EXPECT_TRUE(imgStk == imgVol);
-//        }
-//    }
-//    catch (XmippError &xe)
-//    {
-//        std::cerr << xe.msg.c_str() <<std::endl;
-//    }
-//
-//}
+//Copy images on metadata using ImageConvert logic
+TEST_F( MetadataTest, copyImages)
+{
+    XMIPP_TRY
+    FileName fn = "metadata/smallStack.stk";
+    FileName oroot = "metadata/smallImg:mrc";
+    FileName out = "metadata/smallStack.mrcs";
+    FileName fn1, fn2;
+    MetaData md(fn);
+    ProgConvImg conv;
+    conv.setup(&md, "", oroot);
+    conv.tryRun();
+    MetaData *mdOut = conv.getOutputMd();
+
+    FOR_ALL_OBJECTS_IN_METADATA2(md, *mdOut)
+    {
+        md.getValue(MDL_IMAGE, fn1, __iter.objId);
+        mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
+        EXPECT_TRUE(compareImage(fn1, fn2));
+    }
+
+    conv.setup(&md, out);
+    conv.tryRun();
+
+    FOR_ALL_OBJECTS_IN_METADATA2(md, *mdOut)
+    {
+        md.getValue(MDL_IMAGE, fn1, __iter.objId);
+        mdOut->getValue(MDL_IMAGE, fn2, __iter2.objId);
+        EXPECT_TRUE(compareImage(fn1, fn2));
+    }
+
+    out = "metadata/smallStackVol.mrc";
+    conv.setup(&md, out);
+    conv.tryRun();
+    Image<float> imgStk, imgVol;
+    imgStk.read(fn);
+    imgVol.read(out);
+
+    int n = imgStk.getDimensions().ndim;
+    for (int i = FIRST_IMAGE; i <= n; ++i)
+    {
+        imgStk.movePointerTo(1, i);
+        imgVol.movePointerTo(i);
+        EXPECT_TRUE(imgStk == imgVol);
+    }
+    XMIPP_CATCH
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {
