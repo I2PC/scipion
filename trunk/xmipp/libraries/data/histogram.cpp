@@ -456,15 +456,7 @@ void compute_hist(const MultidimArrayGeneric& array, Histogram1D& hist,
 void compute_hist(const MultidimArrayGeneric& v, Histogram1D& hist, double min,
 		double max, int no_steps) {
 	hist.init(min, max, no_steps);
-	int Xdim, Ydim, Zdim;
-	size_t Ndim;
-	v.getDimensions(Xdim, Ydim, Zdim, Ndim);
-	for (size_t n = 0; n < Ndim; ++n)
-		for (int k = 0; k < Zdim; ++k)
-			for (int i = 0; i < Ydim; ++i)
-				for (int j = 0; j < Xdim; ++j)
-				{
-					double pixval=v(n, k, i, j);
-					INSERT_VALUE(hist,pixval);
-				}
+#define COMPUTEHIST(type) compute_hist(MULTIDIM_ARRAY_TYPE(v,type),hist,min,max,no_steps);
+    SWITCHDATATYPE(v.datatype,COMPUTEHIST)
+#undef COMPUTEHIST
 }
