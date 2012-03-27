@@ -117,6 +117,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	private GalleryMenu menu;
 	private XmippFileChooser fc;
 	private SaveJDialog dlgSave = null;
+	private boolean saved = false;
 	private ClassesJDialog dlgClasses = null;
 
 	private JLabel jlZoom;
@@ -579,10 +580,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	}
 
 	private void save() {
-		if (dlgSave == null) {
+		if (dlgSave == null) 
 			dlgSave = new SaveJDialog(this);
+		if (!saved)
 			saveAs();
-		} else {
+		else {
 			try {
 				String path = dlgSave.getMdFilename();
 				if (dlgSave.isAppendMode())
@@ -606,6 +608,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 					data.md.writeBlock(path);
 				else
 					data.md.write(path);
+				saved = true;
 				if (dlgSave.doSaveImages()) {
 					data.md.writeImages(dlgSave.getOutput(),
 							dlgSave.isOutputIndependent(),
@@ -731,6 +734,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			updateCombos();
 			if (dlgSave != null)
 				dlgSave.setInitialValues();
+			saved = false;
 			setTitle(gallery.getTitle());
 		} catch (Exception e) {
 			e.printStackTrace();
