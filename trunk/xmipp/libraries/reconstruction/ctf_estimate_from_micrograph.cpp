@@ -359,10 +359,7 @@ void ProgCTFEstimateFromMicrograph::run()
             j = Xdim - pieceDim;
 
         // Extract micrograph piece ..........................................
-        const MultidimArrayGeneric& mM_in=M_in();
-        for (int k = 0; k < YSIZE(piece); k++)
-            for (int l = 0; l < XSIZE(piece); l++)
-                DIRECT_A2D_ELEM(piece, k, l) = mM_in(i+k, j+l);
+        M_in().window(piece,0,0,i,j,0,0,i+YSIZE(piece)-1,j+XSIZE(piece)-1);
         piece.statisticsAdjust(0, 1);
         normalize_ramp(piece,pieceMask);
         piece*=pieceSmoother;
