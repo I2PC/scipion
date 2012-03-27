@@ -41,7 +41,7 @@ def binaryFileComparison(nameo, namet):
 
 
 class TestXmippPythonInterface(unittest.TestCase):
-    testsPath = os.path.join(getXmippPath(),"resources","test")
+    testsPath = os.path.join(getXmippPath(), "resources", "test")
     def setUp(self):
         """This function performs all the setup stuff.      
         """
@@ -102,12 +102,12 @@ class TestXmippPythonInterface(unittest.TestCase):
     def test_Image_setDataType(self):
         img = Image();
         img.setDataType(XMIPP_DT_FLOAT)
-        img.resize(3,3)
-        img.setPixel(1,1,1.)
+        img.resize(3, 3)
+        img.setPixel(1, 1, 1.)
         img.computeStats()
         mean, dev, min, max = img.computeStats()
         self.assertAlmostEqual(mean, 0.111111, 5)
-        self.assertAlmostEqual(dev,  0.314270, 5)
+        self.assertAlmostEqual(dev, 0.314270, 5)
         self.assertAlmostEqual(min, 0., 5)
         self.assertAlmostEqual(max, 1., 5)   
               
@@ -145,7 +145,18 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertEqual(z, 1)   
         self.assertEqual(n, 1)   
 
-        
+    def test_Image_equal(self):
+        img = Image()
+        img2 = Image()
+        img.setDataType(XMIPP_DT_FLOAT)
+        img2.setDataType(XMIPP_DT_FLOAT)
+        img.resize(3, 3)
+        img2.resize(3, 3)
+        img.setPixel(1, 1, 1.)
+        img2.setPixel(1, 1, 1.01)
+
+        self.assertFalse(img.equal(img2, 0.005))
+        self.assertTrue(img.equal(img2, 0.1))
                 
     def test_Image_readApplyGeo(self):
         imgPath = os.path.join("pythoninterface", "tinyRotated.spi")
@@ -193,7 +204,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          for id in mD:
              img = mD.getValue(MDL_IMAGE, id)
              expImg = os.path.join("pythoninterface", "test.xmd")
-             expImg = ("00000%d@"% i )+ os.path.join("pythoninterface", "proj_ctf_1.stk")
+             expImg = ("00000%d@" % i) + os.path.join("pythoninterface", "proj_ctf_1.stk")
              #expImg = '00000%d@Images/proj_ctf_1.stk' % i
              self.assertEqual(img, expImg)
              i += 1
@@ -205,7 +216,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         """ change to resources directory """
         mD = MetaData(mdPath)
         img = mD.getValue(MDL_IMAGE, 1L)
-        self.assertEqual(img, '000001@'+mdPath2)
+        self.assertEqual(img, '000001@' + mdPath2)
         defocus = mD.getValue(MDL_CTF_DEFOCUSU, 2L)
         self.assertAlmostEqual(defocus, 200)
         count = mD.getValue(MDL_COUNT, 3L)

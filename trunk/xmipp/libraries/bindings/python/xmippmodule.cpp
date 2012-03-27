@@ -391,11 +391,15 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
             {
                 try
                 {
-                    if (PyString_Check(input))
-                        self->image = new ImageGeneric(PyString_AsString(input));
-                    else if (FileName_Check(input))
-                        self->image = new ImageGeneric(FileName_Value(input));
+                	PyObject *pyStr;
+                	 if ((pyStr = PyObject_Str(input)) != NULL)
+                	{
+//                    if (PyString_Check(input))
+                        self->image = new ImageGeneric(PyString_AsString(pyStr));
+//                    else if (FileName_Check(input))
+//                        self->image = new ImageGeneric(FileName_Value(input));
                     //todo: add copy constructor
+                	}
                     else
                     {
                         PyErr_SetString(PyExc_TypeError,
@@ -446,7 +450,34 @@ Image_compare(PyObject * obj, PyObject * obj2)
     }
     return result;
 }
-
+/* Compare two images up to a precision */
+static PyObject *
+Image_equal(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+	XMIPP_TRY
+    ImageObject *self = (ImageObject*) obj;
+    if (self != NULL)
+    {
+        double precision = 1.e-3;
+        PyObject *image2 = NULL, *pyStr = NULL;
+        if (PyArg_ParseTuple(args, "O|d", &image2, &precision))
+        {
+            try
+            {
+                if (Image_Value(obj).equal(Image_Value(image2), precision))
+                    Py_RETURN_TRUE;
+                else
+                    Py_RETURN_FALSE;
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    XMIPP_CATCH
+    return NULL;
+}
 /* write */
 static PyObject *
 Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -951,6 +982,8 @@ static PyMethodDef Image_methods[] =
           "Read image from disk" },
         { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
           "Read image preview" },
+        { "equal", (PyCFunction) Image_equal, METH_VARARGS,
+          "return true if both images are equal up to precision" },
         { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
           "Convert to PSD: center FFT and use logarithm" },
         { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,

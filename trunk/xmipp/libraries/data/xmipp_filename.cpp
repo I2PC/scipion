@@ -224,7 +224,7 @@ bool FileName::hasImageExtension() const
     String ext = getFileFormat();
     if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
         ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
-        ext=="ser" || ext=="stk" || ext=="mrcs")
+        ext=="ser" || ext=="stk" || ext=="mrcs"|| ext=="jpg")
         return true;
     else
         return false;
