@@ -42,15 +42,18 @@ protected:
 
 TEST_F( ImageGenericTest, equalsOperator)
 {
+	XMIPP_TRY
     ImageGeneric auxImageG;
     auxImageG.readMapped(imageName);
     ASSERT_TRUE(myImageGeneric==myImageGeneric);
     ASSERT_TRUE(myImageGeneric==auxImageG);
     ASSERT_FALSE(myImageGeneric==myImageGeneric2);
+    XMIPP_CATCH
 }
 
 TEST_F( ImageGenericTest, equalsFunction)
 {
+	XMIPP_TRY
     ImageGeneric auxImageG;
     auxImageG.read(imageName);
     ASSERT_TRUE (myImageGeneric.equal(auxImageG) );
@@ -62,6 +65,7 @@ TEST_F( ImageGenericTest, equalsFunction)
     //std::cerr << *((MultidimArray<float>*)auxImageG.data->im) <<std::endl;
     ASSERT_FALSE(myImageGeneric.equal(auxImageG));
     ASSERT_TRUE(myImageGeneric.equal(auxImageG,XMIPP_EQUAL_ACCURACY*4.));
+    XMIPP_CATCH
 }
 
 TEST_F( ImageGenericTest, copy)
@@ -76,16 +80,19 @@ TEST_F( ImageGenericTest, copy)
 // Check if swapped images are read correctly, mapped and unmapped.
 TEST_F( ImageGenericTest, readMapSwapFile)
 {
+	XMIPP_TRY
     FileName auxFn = imageName.insertBeforeExtension("_swap");
     ImageGeneric auxImageGeneric;
     auxImageGeneric.read(auxFn);
     EXPECT_EQ(myImageGeneric,auxImageGeneric);
     auxImageGeneric.readMapped(auxFn);
     EXPECT_EQ(myImageGeneric,auxImageGeneric);
+    XMIPP_CATCH
 }
 
 TEST_F( ImageGenericTest, add)
 {
+	XMIPP_TRY
     FileName auxFilename1((String)"1@"+stackName);
     FileName auxFilename2((String)"2@"+stackName);
     ImageGeneric auxImageGeneric1(auxFilename1);
@@ -96,6 +103,7 @@ TEST_F( ImageGenericTest, add)
     EXPECT_TRUE(auxImageGeneric1==auxImageGeneric2);
     auxImageGeneric1.add(auxImageGeneric2);
     EXPECT_FALSE(auxImageGeneric1==auxImageGeneric2);
+    XMIPP_CATCH
 }
 
 TEST_F( ImageGenericTest, subtract)
@@ -114,13 +122,14 @@ TEST_F( ImageGenericTest, subtract)
 // check if an empty file is correctly created
 TEST_F( ImageGenericTest, createEmptyFile)
 {
-    FileName Fn = "image/emptyFile.stk";
+	XMIPP_TRY
+    FileName tempFn;
+    tempFn.initUniqueName("/tmp/emptyFile_XXXXXX");
+    tempFn = tempFn + ":stk";
     const int size = 16;
-    createEmptyFile(Fn,size,size,size,size);
-    FileName Fn2;
-    size_t dump;
-    Fn.decompose(dump, Fn2);
-    ImageGeneric Img(Fn2);
+    createEmptyFile(tempFn,size,size,size,size);
+
+    ImageGeneric Img(tempFn);
 
     int Xdim, Ydim, Zdim;
     size_t Ndim;
@@ -132,6 +141,8 @@ TEST_F( ImageGenericTest, createEmptyFile)
     EXPECT_DOUBLE_EQ(std, 0);
     EXPECT_DOUBLE_EQ(min, 0);
     EXPECT_DOUBLE_EQ(max, 0);
+    tempFn.deleteFile();
+    XMIPP_CATCH
 }
 
 TEST_F( ImageGenericTest, initConstant)
@@ -168,6 +179,7 @@ TEST_F( ImageGenericTest, initRandom)
 // check if a pointer to data array is correctly passed
 TEST_F( ImageGenericTest, getArrayPointer)
 {
+	XMIPP_TRY
     ImageGeneric img, img2;
     img.read(imageName);
     MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
@@ -184,11 +196,13 @@ TEST_F( ImageGenericTest, getArrayPointer)
     memcpy(data2, data, info.adim.nzyxdim*sizeof(float));
 
     EXPECT_TRUE(img == img2);
+    XMIPP_CATCH
 }
 
 // check if a pointer to MultidimArray is correctly passed
 TEST_F( ImageGenericTest, getMultidimArrayPointer)
 {
+	XMIPP_TRY
     ImageGeneric img, img2;
     img.read(imageName);
     MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
@@ -205,6 +219,7 @@ TEST_F( ImageGenericTest, getMultidimArrayPointer)
     typeCast(*data, *data2);
 
     EXPECT_TRUE(img == img2);
+    XMIPP_CATCH
 }
 
 /* check if an image declared as one kind of datatype is correctly
@@ -212,6 +227,7 @@ TEST_F( ImageGenericTest, getMultidimArrayPointer)
  */
 TEST_F( ImageGenericTest, convert2Datatype)
 {
+	XMIPP_TRY
     ImageGeneric img;
     img.read(imageName);
     MultidimArray<float> * ma;
@@ -260,11 +276,13 @@ TEST_F( ImageGenericTest, convert2Datatype)
     MULTIDIM_ARRAY_GENERIC(myImageGeneric).getMultidimArrayPointer(uintMaP);
 
     EXPECT_EQ(*uintMaP, uintMa);
+    XMIPP_CATCH
 }
 
 // check the reslicing is right
 TEST_F( ImageGenericTest, reslice)
 {
+	XMIPP_TRY
     FileName fnVol = "image/progVol.vol";
     ImageGeneric imgSliced, imgRef;
     imgSliced.read(fnVol);
@@ -297,10 +315,12 @@ TEST_F( ImageGenericTest, reslice)
     imgSliced().getMultidimArrayPointer(dataS);
 
     EXPECT_EQ(*dataR, *dataS);
+    XMIPP_CATCH
 }
 
 TEST_F( ImageGenericTest, getPreview)
 {
+	XMIPP_TRY
     FileName auxFn = "image/smallVolume.vol";
     ImageGeneric img1, img2, imgTemp;
     imgTemp.read(auxFn);
@@ -319,6 +339,7 @@ TEST_F( ImageGenericTest, getPreview)
         img2().setXmippOrigin();
         EXPECT_EQ(img1, img2) << "getPreview a specific slice";
     }
+    XMIPP_CATCH
 }
 
 GTEST_API_ int main(int argc, char **argv)
