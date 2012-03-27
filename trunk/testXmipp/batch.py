@@ -166,7 +166,7 @@ if __name__ == '__main__':
     tmpLink = 'tmpLink'
     if not os.path.exists(fnDir):
         os.makedirs(fnDir)
-    if os.path.exists(tmpLink):
+    if os.path.lexists(tmpLink):
         os.remove(tmpLink)
     os.symlink(fnDir, tmpLink)
     # Create tester

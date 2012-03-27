@@ -1,0 +1,54 @@
+#EMX1.0 
+##########################################################################
+#               EMX Exchange file 
+#               Produced by PyCifRW module
+# 
+#  This is a EMX file.  EMX has been adopted after the developer's Madrid
+#  Meeting (6-7, February - 2012) as the standard for data archiving 
+#  and transmission in 3DEM.
+#
+#  Information on this file format is available at 
+#  http://conventions.cnb.csic.es
+##########################################################################
+#  Converted from XMIPP_STAR_1 to EMX1.0
+#  Inputfile: input/metadata_convert_emx/particlePicking.xmd
+##########################################################################
+#  Thanks for using EMX interchange format
+#  One of the best ways you can help us to improve this software
+#  is to let us know about any problems you find with it.
+#  Please report bugs to: xmipp@cnb.csic.es
+##########################################################################
+
+data_kk1
+_emx_micrograph.MicName                 kk1
+loop_
+  _emx_particle.coordinate_x
+  _emx_particle.coordinate_y
+   549.0  136.0
+   549.0  204.0
+   371.0  235.0
+   266.0  325.0
+   277.0  255.0
+   232.0  267.0
+   263.0  217.0
+   589.0  269.0
+   657.0  278.0
+   701.0  336.0
+ 
+
+data_kk2
+_emx_micrograph.MicName                 kk2
+loop_
+  _emx_particle.coordinate_x
+  _emx_particle.coordinate_y
+   549.0  136.0
+   410.0  204.0
+   371.0  235.0
+   266.0  325.0
+   277.0  255.0
+   232.0  267.0
+   263.0  217.0
+   589.0  269.0
+   657.0  278.0
+   701.0  336.0
+ 

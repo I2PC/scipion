@@ -1,0 +1,34 @@
+#EMX1.0 
+##########################################################################
+#               EMX Exchange file 
+#               Produced by PyCifRW module
+# 
+#  This is a EMX file.  EMX has been adopted after the developer's Madrid
+#  Meeting (6-7, February - 2012) as the standard for data archiving 
+#  and transmission in 3DEM.
+#
+#  Information on this file format is available at 
+#  http://conventions.cnb.csic.es
+##########################################################################
+#  Converted from XMIPP_STAR_1 to EMX1.0
+#  Inputfile: input/metadata_convert_emx/part_class.xmd
+##########################################################################
+#  Thanks for using EMX interchange format
+#  One of the best ways you can help us to improve this software
+#  is to let us know about any problems you find with it.
+#  Please report bugs to: xmipp@cnb.csic.es
+##########################################################################
+
+data_1
+loop_
+  _emx_particle.ref
+   1@particle001.mrc
+   2@particle001.mrc
+ 
+
+data_2
+loop_
+  _emx_particle.ref
+   11@particle001.mrc
+   22@particle001.mrc
+ 

@@ -1,0 +1,42 @@
+# XMIPP_STAR_1 *
+##########################################################################
+#  Converted from EMX1.0 to XMIPP_STAR_1
+#  Inputfile: input/metadata_convert_emx/particlePicking.emx
+##########################################################################
+#  Thanks for using EMX interchange format
+#  One of the best ways you can help us to improve this software
+#  is to let us know about any problems you find with it.
+#  Please report bugs to: xmipp@cnb.csic.es
+##########################################################################
+
+data_kk1
+loop_
+  _Xcoor
+  _Ycoor
+   549  137
+   549  204
+   371  235
+   266  325
+   277  255
+   232  267
+   263  217
+   589  269
+   657  278
+   701  336
+ 
+
+data_kk2
+loop_
+  _Xcoor
+  _Ycoor
+   549  136
+   410  204
+   371  235
+   266  325
+   277  255
+   232  267
+   263  217
+   589  269
+   657  278
+   701  336
+ 

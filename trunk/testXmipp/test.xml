@@ -404,28 +404,70 @@
 			<FILE filename="images.stk" />
 		</CASE>
 	</PROGRAM>
-	<PROGRAM name="xmipp_metadata_convert_to_spider" mpi="FALSE">
+	<PROGRAM name="xmipp_metadata_convert_emx" mpi="FALSE">
 		<CASE
-			arguments="-i input/smallStack.stk -o %o/listNew.doc --action extract_selfile"
+			arguments="-i input/metadata_convert_emx/particlePicking.xmd -o %o/particlePicking.emx --conversion_type coordinates"
 			changeDir="FALSE">
-			<FILE filename="listNew.doc" />
+			<FILE filename="particlePicking.emx" />
 		</CASE>
 		<CASE
-			arguments="-i input/smallStack.stk -o %o/listOld.doc --action extract_selfile old"
-			changeDir="FALSE">
-			<FILE filename="listOld.doc" />
-		</CASE>
-		<CASE
-			arguments="-i input/smallStack.stk -o %o/angles.doc --action extract_angles rot psi tilt --disregard_disabled"
-			changeDir="FALSE">
-			<FILE filename="angles.doc" />
-		</CASE>
-		<CASE
-			arguments="-i input/smallStack.stk -o %o/count.doc --action generate_count"
-			changeDir="FALSE">
-			<FILE filename="count.doc" />
-		</CASE>
+            arguments="-i input/metadata_convert_emx/particlePicking.emx -o %o/particlePicking.xmd --conversion_type coordinates"
+            changeDir="FALSE">
+            <FILE filename="particlePicking.xmd" />
+        </CASE>
+            <CASE
+            arguments="-i input/metadata_convert_emx/ctf_micrograph.xmd -o %o/ctf_micrograph.emx --conversion_type ctfMicrograph"
+            changeDir="FALSE">
+            <FILE filename="ctf_micrograph.emx" />
+        </CASE>
+        <CASE
+            arguments="-i input/metadata_convert_emx/ctf_micrograph.emx -o %o/ctf_micrograph.xmd --conversion_type ctfMicrograph"
+            changeDir="FALSE">
+            <FILE filename="ctf_micrograph.xmd" />
+        </CASE>
+                <CASE
+            arguments="-i input/metadata_convert_emx/part_align.xmd -o %o/part_align.emx --conversion_type alignment"
+            changeDir="FALSE">
+            <FILE filename="part_align.emx" />
+        </CASE>
+        <CASE
+            arguments="-i input/metadata_convert_emx/part_align.emx -o %o/part_align.xmd --conversion_type alignment"
+            changeDir="FALSE">
+            <FILE filename="part_align.xmd" />
+        </CASE>
+            <CASE
+            arguments="-i input/metadata_convert_emx/part_class.xmd -o %o/part_class.emx --conversion_type class"
+            changeDir="FALSE">
+            <FILE filename="part_class.emx" />
+        </CASE>
+        <CASE
+            arguments="-i input/metadata_convert_emx/part_class.emx -o %o/part_class.xmd --conversion_type class"
+            changeDir="FALSE">
+            <FILE filename="part_class.xmd" />
+        </CASE>
 	</PROGRAM>
+	<PROGRAM name="xmipp_metadata_convert_to_spider" mpi="FALSE">
+        <CASE
+            arguments="-i input/smallStack.stk -o %o/listNew.doc --action extract_selfile"
+            changeDir="FALSE">
+            <FILE filename="listNew.doc" />
+        </CASE>
+        <CASE
+            arguments="-i input/smallStack.stk -o %o/listOld.doc --action extract_selfile old"
+            changeDir="FALSE">
+            <FILE filename="listOld.doc" />
+        </CASE>
+        <CASE
+            arguments="-i input/smallStack.stk -o %o/angles.doc --action extract_angles rot psi tilt --disregard_disabled"
+            changeDir="FALSE">
+            <FILE filename="angles.doc" />
+        </CASE>
+        <CASE
+            arguments="-i input/smallStack.stk -o %o/count.doc --action generate_count"
+            changeDir="FALSE">
+            <FILE filename="count.doc" />
+        </CASE>
+    </PROGRAM>
 	<PROGRAM name="xmipp_metadata_selfile_create" mpi="FALSE">
 		<CASE arguments="-p input/smallStack.stk -o %o/metadata.xmd -s"
 			changeDir="FALSE">

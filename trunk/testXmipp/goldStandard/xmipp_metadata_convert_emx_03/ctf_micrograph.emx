@@ -1,0 +1,34 @@
+#EMX1.0 
+##########################################################################
+#               EMX Exchange file 
+#               Produced by PyCifRW module
+# 
+#  This is a EMX file.  EMX has been adopted after the developer's Madrid
+#  Meeting (6-7, February - 2012) as the standard for data archiving 
+#  and transmission in 3DEM.
+#
+#  Information on this file format is available at 
+#  http://conventions.cnb.csic.es
+##########################################################################
+#  Converted from XMIPP_STAR_1 to EMX1.0
+#  Inputfile: input/metadata_convert_emx/ctf_micrograph.xmd
+##########################################################################
+#  Thanks for using EMX interchange format
+#  One of the best ways you can help us to improve this software
+#  is to let us know about any problems you find with it.
+#  Please report bugs to: xmipp@cnb.csic.es
+##########################################################################
+
+data_ctf
+loop_
+  _emx_micrograph.url
+  _emx_micrograph.magnification
+  _emx_micrograph.scanner_pixel_size
+  _emx_micrograph.defocusU
+  _emx_micrograph.defocusV
+  _emx_micrograph.astigmatism_angle
+  _emx_micrograph.voltage
+  _emx_micrograph.Cs
+   mic001.mrc  10000.0  1.44444441795  20.0  25.0  300.0  2.20000004768  0.070000000298
+   mic002.mrc  10000.0  1.7948718071  18.0  12.0  200.0  2.0  0.10000000149
+ 
