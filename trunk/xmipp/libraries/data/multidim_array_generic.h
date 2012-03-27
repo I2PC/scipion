@@ -445,6 +445,17 @@ public:
 
     }
 
+    /** Get window.
+     */
+    template <typename T1>
+    void window(MultidimArray<T1> &result, int n0,int z0, int y0, int x0,
+                int nF,int zF, int yF, int xF,
+                T1 init_value = 0) const
+    {
+#define WINDOW(type) ((MultidimArray<type>*)(im))->window(result, n0, z0, y0, x0, nF, zF, yF, xF, init_value);
+        SWITCHDATATYPE(datatype, WINDOW)
+#undef WINDOW
+    }
 }
 ;
 //@}
