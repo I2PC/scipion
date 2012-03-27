@@ -520,3 +520,15 @@ double MultidimArray<double>::interpolatedElement2D(double x, double y, double o
     return LIN_INTERP(fy, d0, d1);
 }
 
+void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimArray<double> &c)
+{
+    s.resizeNoCopy(x);
+    c.resizeNoCopy(x);
+    double *ptr=NULL;
+    double *ptrS=MULTIDIM_ARRAY(s);
+    double *ptrC=MULTIDIM_ARRAY(c);
+    size_t n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(x,n,ptr)
+    sincos(*ptr, ptrS++,ptrC++);
+}
+

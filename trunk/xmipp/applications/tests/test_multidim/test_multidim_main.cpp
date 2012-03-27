@@ -104,6 +104,30 @@ TEST( MultidimTest, getImagFromComplex)
     EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 3).imag(),DIRECT_MULTIDIM_ELEM(mdTarget,3));
 }
 
+TEST( MultidimTest, SINCOS)
+{
+    MultidimArray<double> mSource(2,2);
+    MultidimArray<double> mdSIN;
+    MultidimArray<double> mdCOS;
+
+    A2D_ELEM(mSource,0,0) = 0;
+    A2D_ELEM(mSource,1,0) = 3.14159265/2;
+    A2D_ELEM(mSource,0,1) = 3.14159265;
+    A2D_ELEM(mSource,1,1) = (3*3.14159265)/2;
+
+    sincos(mSource,mdSIN,mdCOS);
+
+    ASSERT_TRUE( (A2D_ELEM(mdSIN,0,0) -  0)<0.0001);
+    ASSERT_TRUE( (A2D_ELEM(mdSIN,1,0) -  1)<0.0001);
+    ASSERT_TRUE( (A2D_ELEM(mdSIN,0,1) -  0)<0.0001);
+    ASSERT_TRUE( (A2D_ELEM(mdSIN,1,1) +  1)<0.0001);
+
+    ASSERT_TRUE( (A2D_ELEM(mdCOS,0,0) -  1)<0.0001);
+    ASSERT_TRUE( (A2D_ELEM(mdCOS,1,0) -  0)<0.0001);
+    ASSERT_TRUE( (A2D_ELEM(mdCOS,0,1) +  1)<0.0001);
+    ASSERT_TRUE( (A2D_ELEM(mdCOS,1,1) -  0)<0.0001);
+
+}
 
 GTEST_API_ int main(int argc, char **argv) {
 

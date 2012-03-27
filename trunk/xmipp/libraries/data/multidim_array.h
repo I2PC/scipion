@@ -4966,6 +4966,11 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
     V2.window(z0, y0, x0, zF, yF, xF);
 }
 
+
+/** Get Sin and Cos of vector x.
+ */
+void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimArray<double> &c);
+
 /** Output to output stream.
  * This function is not ported to Python.
  */
