@@ -1,5 +1,5 @@
 from unittest import TestResult, _TextTestResult
-from protlib_xmipp import greenStr, failStr
+from protlib_xmipp import greenLowStr, failStr
 
 try:
    from unittest.runner import _WritelnDecorator # Python 2.7+
@@ -19,11 +19,11 @@ class XmippPythonTestResult(TestResult):
     def closeXmlReport(self):
          self.xml.write('</testsuite>\n')
          self.xml.close()
-         print >> sys.stderr, greenStr("[==========]") + " run %d tests\n" % self.numberTests
+         print >> sys.stderr, greenLowStr("[==========]") + " run %d tests\n" % self.numberTests
          if (self.testFailed):
              print >> sys.stderr, failStr("[  FAILED  ]") + " %d tests\n" % self.testFailed
          else:
-             print >> sys.stderr, greenStr("[  PASSED  ]") + " %d tests\n" % (self.numberTests - self.testFailed)
+             print >> sys.stderr, greenLowStr("[  PASSED  ]") + " %d tests\n" % (self.numberTests - self.testFailed)
              
     
     def getTestNames(self, test):
@@ -37,8 +37,8 @@ class XmippPythonTestResult(TestResult):
     def addSuccess(self, test):
         name, classname = self.getTestNames(test)
         self.xml.write('   <testcase name="%s" classname="%s"/>\n' % (name, classname))
-        sys.stderr.write("%s %s.%s\n" % (greenStr('[ RUN      ]'), classname, name))
-        sys.stderr.write("%s %s.%s\n" % (greenStr('[      OK  ]'), classname, name))
+        sys.stderr.write("%s %s.%s\n" % (greenLowStr('[ RUN      ]'), classname, name))
+        sys.stderr.write("%s %s.%s\n" % (greenLowStr('[       OK ]'), classname, name))
     
     def reportError(self, test, err):
         name, classname = self.getTestNames(test)

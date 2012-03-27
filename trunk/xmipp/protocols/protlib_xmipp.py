@@ -434,6 +434,7 @@ colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE,
 
 blueStr = lambda s: colorStr(XMIPP_BLUE, s)
 greenStr = lambda s: colorStr(XMIPP_GREEN, s)
+greenLowStr = lambda s: colorStr(XMIPP_GREEN, s, 0)
 failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
 headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
 yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)

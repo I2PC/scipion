@@ -3336,9 +3336,10 @@ xmipp_colorStr(PyObject *obj, PyObject *args)
 {
     char *str;
     int color;
-    if (PyArg_ParseTuple(args, "is", &color, &str))
+    int attrib = BRIGHT;
+    if (PyArg_ParseTuple(args, "is|i", &color, &str, &attrib))
     {
-        String labelStr = colorString(str, color);
+        String labelStr = colorString(str, color, attrib);
         return PyString_FromString(labelStr.c_str());
     }
     return NULL;
