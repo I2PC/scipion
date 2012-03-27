@@ -84,10 +84,10 @@ class Tester(ContentHandler):
             self.runProgramTests(program)
         
     def checkResult(self,testfiles,outDir,random):
-        import xmipp	
+        from xmipp import FileName, Image, compareTwoFiles
         for file in testfiles:
             file = os.path.join(outDir, file)
-	    fileGoldStd = file.replace(self.fnDir, 'goldStandard')
+            fileGoldStd = file.replace(self.fnDir, 'goldStandard')
             result = True
             if not os.path.exists(file):
                 self.error += file +  " was NOT produced\n"
@@ -98,7 +98,12 @@ class Tester(ContentHandler):
                     self.warningFlag = True
                 else:
                     print "comparing '%s' and '%s'" % (file, fileGoldStd)
-                    result = xmipp.compareTwoFiles(file, fileGoldStd, 0)
+                    if FileName(fileGoldStd).isImage():
+                        im1 = Image(fileGoldStd)
+                        im2 = Image(file)
+                        result = im1.equal(im2, 0.001)
+                    else:
+                        result = compareTwoFiles(file, fileGoldStd, 0)
             if not result:
                 self.error += " file '%s' and '%s' are NOT identical\n" % (file, fileGoldStd)
                 self.errorFlag = True
