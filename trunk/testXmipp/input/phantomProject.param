@@ -17,7 +17,7 @@ _projTiltNoise   [0.6 0.7]
 # Type of range for Tilt
 _projTiltRandomness   random_group 
 # Psi range and number of samples
-_projPsiRange    [0]
+_projPsiRange    [0 360 20]
 # Psi added noise
 _projPsiNoise   [0 0]
 # Type of range for Psi
