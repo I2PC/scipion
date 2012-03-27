@@ -1,8 +1,10 @@
 package xmipp.ij.commons;
 
+import java.awt.event.WindowEvent;
 import java.io.File;
 
 import xmipp.jni.Filename;
+import xmipp.utils.DEBUG;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -18,15 +20,6 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		super(imp, new XmippImageCanvas(imp));
 		setTitle(title);
 		setMenuBar(new XmippMenuBar(this));
-	}
-	
-	public static void openImageJ(Tool tool){
-		if (IJ.getInstance() == null)
-		{
-			new ImageJ();
-			IJ.run("Install...", "install=" + Filename.getXmippPath("java/src/xmipp/ij/XmippMacros.txt"));
-			IJ.setTool(Tool.getTool(tool));
-		}		
 	}
 
 	@Override
@@ -51,6 +44,14 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	{
 		saveDataAs(imp.getTitle());
 		
+	}
+	
+	@Override
+	public void windowClosing(WindowEvent e) {
+		super.windowClosing(e);
+		if(XmippIJUtil.getXmippImageJ() != null)
+			XmippIJUtil.getXmippImageJ().close();
+		DEBUG.printMessage("kkk");
 	}
 
 	@Override

@@ -263,7 +263,14 @@ enum MDLabel
 /** Possible types of the values of labels */
 enum MDLabelType
 {
-    LABEL_NOTYPE = -1, LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG, LABEL_VECTOR_LONG
+    LABEL_NOTYPE = -1,
+    LABEL_INT,
+    LABEL_BOOL,
+    LABEL_DOUBLE,
+    LABEL_STRING,
+    LABEL_VECTOR_DOUBLE,
+    LABEL_SIZET,
+    LABEL_VECTOR_SIZET
 };
 
 /** Possible types of the values of labels */
@@ -500,6 +507,8 @@ public:
     static String label2Str(const MDLabel label);
     /** Converts MDLabel to string representing SQL column*/
     static String label2SqlColumn(const MDLabel label);
+    /** Return the type of the label as String */
+    static String labelType2Str(MDLabelType type);
     /** @} */
 
     /** @name Type checks
@@ -557,9 +566,9 @@ private:
 
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         //The label MDL_OBJID is special and should not be used
-        MDL::addLabel(MDL_OBJID, LABEL_LONG, "objId");
+        MDL::addLabel(MDL_OBJID, LABEL_SIZET, "objId");
 
-        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR, "angleComparison", TAGLABEL_NOTAG, "psi2");
+        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR_DOUBLE, "angleComparison", TAGLABEL_NOTAG, "psi2");
         MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", TAGLABEL_NOTAG, "psi");
         MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", TAGLABEL_NOTAG, "psi2");
         MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", TAGLABEL_NOTAG, "rot");
@@ -581,16 +590,16 @@ private:
         MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
         MDL::addLabel(MDL_CL2D_CHANGES, LABEL_INT, "cl2d_changes");
         MDL::addLabel(MDL_CL2D_SIMILARITY, LABEL_DOUBLE, "cl2dsimilarity");
-        MDL::addLabel(MDL_CLASS_COUNT, LABEL_LONG, "class_count");
-        MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR, "ClassificationData");
+        MDL::addLabel(MDL_CLASS_COUNT, LABEL_SIZET, "class_count");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR_DOUBLE, "ClassificationData");
         MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
         MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "ClassificationDPR05");
         MDL::addLabel(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, LABEL_DOUBLE, "ClassificationIntraclassDistance");
         MDL::addLabel(MDL_CLASSIFICATION_FRC_05, LABEL_DOUBLE, "ClassificationFRC05");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
-        MDL::addLabel(MDL_COUNT, LABEL_LONG, "count");
-        MDL::addLabel(MDL_COUNT2, LABEL_LONG, "count2");
+        MDL::addLabel(MDL_COUNT, LABEL_SIZET, "count");
+        MDL::addLabel(MDL_COUNT2, LABEL_SIZET, "count2");
         MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams", TAGLABEL_TEXTFILE);
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel", TAGLABEL_CTFPARAM);
         MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2", TAGLABEL_CTFPARAM);
@@ -641,7 +650,7 @@ private:
         MDL::addLabel(MDL_CTF_CRITERION_PSDPCARUNSTEST, LABEL_DOUBLE, "CTFCrit_PSDPCARuns");
         MDL::addLabel(MDL_CTF_CRITERION_NORMALITY, LABEL_DOUBLE, "CTFCrit_Normality");
 
-        MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR, "CTF_Xray_dimensions");
+        MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR_DOUBLE, "CTF_Xray_dimensions");
         MDL::addLabel(MDL_CTF_XRAY_LAMBDA, LABEL_DOUBLE, "CTF_Xray_lambda");
         MDL::addLabel(MDL_CTF_XRAY_LENS_TYPE, LABEL_STRING, "CTF_Xray_lens_type");
         MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "CTF_Xray_OuterZoneWidth");
@@ -649,7 +658,7 @@ private:
 
         MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
-        MDL::addLabel(MDL_DIRECTION, LABEL_VECTOR, "direction");
+        MDL::addLabel(MDL_DIRECTION, LABEL_VECTOR_DOUBLE, "direction");
 
         MDL::addLabel(MDL_DM3_IDTAG, LABEL_INT, "IdTag");
         MDL::addLabel(MDL_DM3_NODEID, LABEL_INT, "NodeID");
@@ -658,12 +667,12 @@ private:
         MDL::addLabel(MDL_DM3_TAGCLASS, LABEL_STRING, "Tag_Class");
         MDL::addLabel(MDL_DM3_TAGNAME, LABEL_STRING, "TagName");
         MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "Size");
-        MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR, "Value");
+        MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR_DOUBLE, "Value");
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", TAGLABEL_NOTAG, "Flip");
         MDL::addLabel(MDL_FOM, LABEL_DOUBLE, "fom");
-        MDL::addLabel(MDL_IDX, LABEL_LONG, "index");
+        MDL::addLabel(MDL_IDX, LABEL_SIZET, "index");
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "original_image", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "tilted_image", TAGLABEL_IMAGE);
@@ -693,14 +702,14 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THY0, LABEL_DOUBLE, "missingRegionThetaY0");
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
-        MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_LONG, "neighbors");
+        MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_SIZET, "neighbors");
         MDL::addLabel(MDL_NEIGHBORHOOD_RADIUS, LABEL_DOUBLE, "neighborhoodRadius");
-        MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
+        MDL::addLabel(MDL_NMA, LABEL_VECTOR_DOUBLE, "NMADisplacements");
         MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile", TAGLABEL_TEXTFILE);
-        MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR, "noiseAngles");
-        MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR, "noiseParticleCoord");
-        MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR, "noisePixelLevel");
-        MDL::addLabel(MDL_ORDER, LABEL_LONG, "order_");
+        MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
+        MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
+        MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR_DOUBLE, "noisePixelLevel");
+        MDL::addLabel(MDL_ORDER, LABEL_SIZET, "order_");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
@@ -710,9 +719,9 @@ private:
         MDL::addLabel(MDL_PICKING_FAMILY_STATE, LABEL_STRING, "family_state");
         MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "micrograph_family_state");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", TAGLABEL_NOTAG, "Pmax", "sumP");
-        MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_LONG, "pointsasymmetricunit");
-        MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR, "projDimensions");
-        MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR, "projTiltRange");
+        MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_SIZET, "pointsasymmetricunit");
+        MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR_DOUBLE, "projDimensions");
+        MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR_DOUBLE, "projTiltRange");
         MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume", TAGLABEL_VOLUME);
         MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum", TAGLABEL_PSD);
         MDL::addLabel(MDL_PSD_ENHANCED, LABEL_STRING, "enhancedPowerSpectrum", TAGLABEL_IMAGE);
@@ -747,7 +756,7 @@ private:
         MDL::addLabel(MDL_SUM, LABEL_DOUBLE, "sum");
         MDL::addLabel(MDL_SUMWEIGHT, LABEL_DOUBLE, "sumWeight");
         MDL::addLabel(MDL_SYMNO, LABEL_INT, "symNo");
-        MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR, "transMat");
+        MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR_DOUBLE, "transMat");
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", TAGLABEL_NOTAG, "Weight");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");

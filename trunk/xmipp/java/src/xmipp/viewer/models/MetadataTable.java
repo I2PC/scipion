@@ -105,14 +105,13 @@ public class MetadataTable extends MetadataGallery {
 				return value;
 			case MetaData.LABEL_BOOL:
 				return md.getValueBoolean(label, id);
-			case MetaData.LABEL_FLOAT:
 			case MetaData.LABEL_DOUBLE:
 				return md.getValueDouble(label, id);
-			case MetaData.LABEL_LONG:
+			case MetaData.LABEL_SIZET:
 				return md.getValueLong(label, id);
 			case MetaData.LABEL_STRING:
-			case MetaData.LABEL_VECTOR:
-			case MetaData.LABEL_VECTOR_LONG:
+			case MetaData.LABEL_VECTOR_DOUBLE:
+			case MetaData.LABEL_VECTOR_SIZET:
 				return md.getValueString(ci.getLabel(), data.ids[row]);
 
 			}
@@ -155,16 +154,15 @@ public class MetadataTable extends MetadataGallery {
 				} else
 					md.setValueInt(label, ((Integer) value).intValue(), id);
 				break;
-			case MetaData.LABEL_FLOAT:
 			case MetaData.LABEL_DOUBLE:
 				md.setValueDouble(label, ((Double) value).doubleValue(), id);
 				break;
-			case MetaData.LABEL_LONG:
+			case MetaData.LABEL_SIZET:
 				md.setValueInt(label, ((Integer) value).intValue(), id);
 				break;
 			case MetaData.LABEL_STRING:
-			case MetaData.LABEL_VECTOR:
-			case MetaData.LABEL_VECTOR_LONG:
+			case MetaData.LABEL_VECTOR_DOUBLE:
+			case MetaData.LABEL_VECTOR_SIZET:
 				// TODO: Implement a better editor for vectors
 				md.setValueString(label, value.toString(), id);
 				break;

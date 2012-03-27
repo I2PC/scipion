@@ -100,6 +100,11 @@ public class MetadataTest {
     	}
     }//function testRead
     
+    @Test
+    public void testLabelType() throws Exception{    	
+    	int type = MetaData.getLabelType(MDLabel.MDL_IMAGE);
+    	assertEquals(MetaData.LABEL_STRING, type);
+    }//function testLabelType
 
     @Test
     public void testSort() throws Exception{

@@ -876,14 +876,14 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
         return sqlite3_bind_int(stmt, position, valueIn.data.boolValue ? 1 : 0);
     case LABEL_INT:
         return sqlite3_bind_int(stmt, position, valueIn.data.intValue);
-    case LABEL_LONG:
+    case LABEL_SIZET:
         return sqlite3_bind_int(stmt, position, valueIn.data.longintValue);
     case LABEL_DOUBLE:
         return sqlite3_bind_double(stmt, position, valueIn.data.doubleValue);
     case LABEL_STRING:
         return sqlite3_bind_text(stmt, position, valueIn.data.stringValue->c_str(), -1, SQLITE_TRANSIENT);
-    case LABEL_VECTOR:
-    case LABEL_VECTOR_LONG:
+    case LABEL_VECTOR_DOUBLE:
+    case LABEL_VECTOR_SIZET:
         return sqlite3_bind_text(stmt, position, valueIn.toString().c_str(), -1, SQLITE_TRANSIENT);
     }
 }
@@ -899,7 +899,7 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueO
     case LABEL_INT:
         valueOut.data.intValue = sqlite3_column_int(stmt, position);
         break;
-    case LABEL_LONG:
+    case LABEL_SIZET:
         valueOut.data.longintValue = sqlite3_column_int(stmt, position);
         break;
     case LABEL_DOUBLE:
@@ -909,8 +909,8 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueO
         ss << sqlite3_column_text(stmt, position);
         valueOut.data.stringValue->assign(ss.str());
         break;
-    case LABEL_VECTOR:
-    case LABEL_VECTOR_LONG:
+    case LABEL_VECTOR_DOUBLE:
+    case LABEL_VECTOR_SIZET:
         ss << sqlite3_column_text(stmt, position);
         valueOut.fromStream(ss);
         break;

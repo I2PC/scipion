@@ -3238,13 +3238,13 @@ getMDObjectValue(MDObject * obj)
             Py_RETURN_FALSE;
     case LABEL_INT:
         return PyInt_FromLong(obj->data.intValue);
-    case LABEL_LONG:
+    case LABEL_SIZET:
         return PyLong_FromLong(obj->data.longintValue);
     case LABEL_DOUBLE:
         return PyFloat_FromDouble(obj->data.doubleValue);
     case LABEL_STRING:
         return PyString_FromString(obj->data.stringValue->c_str());
-    case LABEL_VECTOR:
+    case LABEL_VECTOR_DOUBLE:
         std::vector<double> & vector = *(obj->data.vectorValue);
         int size = vector.size();
         PyObject * list = PyList_New(size);
@@ -4144,7 +4144,7 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_MISSINGREGION_THX0",(long) MDL_MISSINGREGION_THX0);
     addIntConstant(dict, "MDL_MISSINGREGION_THXF",(long) MDL_MISSINGREGION_THXF);
     addIntConstant(dict, "MDL_MODELFRAC", (long) MDL_MODELFRAC);
-    addIntConstant(dict, "MDL_NEIGHBORS", (long)LABEL_VECTOR_LONG);
+    addIntConstant(dict, "MDL_NEIGHBORS", (long)LABEL_VECTOR_SIZET);
     addIntConstant(dict, "MDL_NEIGHBORHOOD_RADIUS", (long)LABEL_DOUBLE);
     addIntConstant(dict, "MDL_NMA", (long) MDL_NMA);
     addIntConstant(dict, "MDL_ORDER", (long) MDL_ORDER);
@@ -4208,10 +4208,9 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "LABEL_INT", (long) LABEL_INT);
     addIntConstant(dict, "LABEL_BOOL", (long) LABEL_BOOL);
     addIntConstant(dict, "LABEL_DOUBLE", (long) LABEL_DOUBLE);
-    addIntConstant(dict, "LABEL_FLOAT", (long) LABEL_FLOAT);
     addIntConstant(dict, "LABEL_STRING", (long) LABEL_STRING);
-    addIntConstant(dict, "LABEL_VECTOR", (long) LABEL_VECTOR);
-    addIntConstant(dict, "LABEL_LONG", (long) LABEL_LONG);
+    addIntConstant(dict, "LABEL_VECTOR", (long) LABEL_VECTOR_DOUBLE);
+    addIntConstant(dict, "LABEL_SIZET", (long) LABEL_SIZET);
     addIntConstant(dict, "_NONE", (long) _NONE);
     addIntConstant(dict, "HEADER", (long) HEADER);
     addIntConstant(dict, "_HEADER_ALL", (long) _HEADER_ALL);
@@ -4231,22 +4230,22 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "XMIPP_RND_UNIFORM", (long) RND_Uniform);
     addIntConstant(dict, "XMIPP_RND_GAUSSIAN", (long) RND_Gaussian);
 
-    addIntConstant(dict, "XMIPP_DT_DEFAULT",        (long) DT_Default);
-    addIntConstant(dict, "XMIPP_DT_UNKNOWN",        (long) DT_Unknown);
-    addIntConstant(dict, "XMIPP_DT_UCHAR",          (long) DT_UChar);
-    addIntConstant(dict, "XMIPP_DT_SCHAR",          (long) DT_SChar);
-    addIntConstant(dict, "XMIPP_DT_USHORT",         (long) DT_UShort);
-    addIntConstant(dict, "XMIPP_DT_SHORT",          (long) DT_Short);
-    addIntConstant(dict, "XMIPP_DT_UINT",           (long) DT_UInt);
-    addIntConstant(dict, "XMIPP_DT_INT",            (long) DT_Int);
-    addIntConstant(dict, "XMIPP_DT_LONG",           (long) DT_Long);
-    addIntConstant(dict, "XMIPP_DT_FLOAT",          (long) DT_Float);
-    addIntConstant(dict, "XMIPP_DT_DOUBLE",         (long) DT_Double);
-    addIntConstant(dict, "XMIPP_DT_COMPLEXSHORT",   (long) DT_CShort);
-    addIntConstant(dict, "XMIPP_DT_COMPLEXINT",     (long) DT_CInt);
-    addIntConstant(dict, "XMIPP_DT_COMPLEXFLOAT",   (long) DT_CFloat);
-    addIntConstant(dict, "XMIPP_DT_COMPLEXDOUBLE",  (long) DT_CDouble);
-    addIntConstant(dict, "XMIPP_DT_BOOL",           (long) DT_Bool);
-    addIntConstant(dict, "XMIPP_DT_LASTENTRY",      (long) DT_LastEntry);
+    addIntConstant(dict, "DT_DEFAULT",        (long) DT_Default);
+    addIntConstant(dict, "DT_UNKNOWN",        (long) DT_Unknown);
+    addIntConstant(dict, "DT_UCHAR",          (long) DT_UChar);
+    addIntConstant(dict, "DT_SCHAR",          (long) DT_SChar);
+    addIntConstant(dict, "DT_USHORT",         (long) DT_UShort);
+    addIntConstant(dict, "DT_SHORT",          (long) DT_Short);
+    addIntConstant(dict, "DT_UINT",           (long) DT_UInt);
+    addIntConstant(dict, "DT_INT",            (long) DT_Int);
+    addIntConstant(dict, "DT_LONG",           (long) DT_Long);
+    addIntConstant(dict, "DT_FLOAT",          (long) DT_Float);
+    addIntConstant(dict, "DT_DOUBLE",         (long) DT_Double);
+    addIntConstant(dict, "DT_COMPLEXSHORT",   (long) DT_CShort);
+    addIntConstant(dict, "DT_COMPLEXINT",     (long) DT_CInt);
+    addIntConstant(dict, "DT_COMPLEXFLOAT",   (long) DT_CFloat);
+    addIntConstant(dict, "DT_COMPLEXDOUBLE",  (long) DT_CDouble);
+    addIntConstant(dict, "DT_BOOL",           (long) DT_Bool);
+    addIntConstant(dict, "DT_LASTENTRY",      (long) DT_LastEntry);
 
 }

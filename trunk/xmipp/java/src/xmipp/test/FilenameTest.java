@@ -25,14 +25,10 @@
  ***************************************************************************/
 package xmipp.test;
 
- import org.junit.After;
- import org.junit.AfterClass;
- import org.junit.Before;
- import org.junit.BeforeClass;
- import org.junit.Test;
-
- import xmipp.jni.Filename;
- import static org.junit.Assert.*;
+ import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import org.junit.*;
+import xmipp.jni.Filename;
 
 /**
  *

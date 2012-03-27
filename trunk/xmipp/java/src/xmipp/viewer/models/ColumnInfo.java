@@ -79,9 +79,26 @@ public class ColumnInfo {
 		return label;
 	}
 	
+	public String getLabelTypeString(){
+		try {
+			int type = MetaData.getLabelType(label);
+			return MetaData.getLabelTypeString(type);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	/** Return the name of the label */
 	public String getLabelName(){
 		return labelName;
+	}
+	
+	/** Return the real name of the label
+	 * This is read from metadata 
+	 * */
+	public String getLabelRealName(){
+		return MetaData.getLabelName(label);
 	}
 	
 	/** Change display name of the label */

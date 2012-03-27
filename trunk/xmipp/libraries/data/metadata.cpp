@@ -1480,7 +1480,7 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit,
     // Check if the label has semicolon
     int ipos=sortLabel.find(':');
     MDLabelType type = MDL::labelType(sortLabel);
-    if (ipos!=String::npos || type == LABEL_VECTOR || type == LABEL_VECTOR_LONG)
+    if (ipos!=String::npos || type == LABEL_VECTOR_DOUBLE || type == LABEL_VECTOR_SIZET)
     {
         if(limit != -1 || offset != 0)
             REPORT_ERROR(ERR_ARG_INCORRECT,"Limit and Offset are not implemented for vector sorting.");
@@ -1494,7 +1494,7 @@ void MetaData::sort(MetaData &MDin, const String &sortLabel,bool asc, int limit,
             splitString(sortLabel,":",results);
             column=textToInteger(results[1]);
             MDLabelType type = MDL::labelType(results[0]);
-            if (type != LABEL_VECTOR || type != LABEL_VECTOR_LONG)
+            if (type != LABEL_VECTOR_DOUBLE || type != LABEL_VECTOR_SIZET)
                 REPORT_ERROR(ERR_ARG_INCORRECT,"Column specifications cannot be used with non-vector labels");
             label = MDL::str2Label(results[0]);
         }

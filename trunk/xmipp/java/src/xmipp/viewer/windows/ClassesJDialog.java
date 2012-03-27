@@ -64,17 +64,17 @@ public class ClassesJDialog extends XmippDialog {
 	private ClassesTableModel model;
 	// This will be used for check for results from the dialog
 	private ArrayList<ClassInfo> classes;
-	boolean fireEvent = true;
 	GridBagConstraints gbc = new GridBagConstraints();
 	ImageGallery gallery;
 	JPanel panelButtons;
 	
-	public ClassesJDialog(JFrameGallery parent, ArrayList<ClassInfo> classes) {
+	public ClassesJDialog(JFrameGallery parent) {
 		super(parent, "Classes", true);
-		this.classes = classes;
+		//this.classes = classes;
 		this.gallery = parent.gallery;
+		this.classes = gallery.data.classesArray;
 		this.btnOkText = "Select";
-		disposeOnClose = false;
+		//disposeOnClose = false;
 		initComponents();
 		enableDelete(false);
 	}// constructor ColumnsJDialog
@@ -130,7 +130,12 @@ public class ClassesJDialog extends XmippDialog {
 	@Override 
 	public boolean showDialog(){
 		gallery.data.updateClassesInfo();
+		this.classes = gallery.data.classesArray;
 		return super.showDialog();
+	}
+	
+	public void resetClasses(){
+		this.classes = null;
 	}
 
 	private void enableDelete(boolean value) {
@@ -241,11 +246,15 @@ public class ClassesJDialog extends XmippDialog {
 
 		@Override
 		public int getColumnCount() {
+			if (classes == null)
+				return 0;
 			return columns.length;
 		}
 
 		@Override
 		public int getRowCount() {
+			if (classes == null)
+				return 0;
 			return classes.size();
 			// return frame.getParticlePicker().getFamilies().size();
 		}
@@ -303,6 +312,7 @@ public class ClassesJDialog extends XmippDialog {
 		int colorCounter = 0;
 		
 		Color getNextColor() {
+			DEBUG.printFormat("getNextColor, counter:%d\n", colorCounter);
 		    return new Color(upperLimit-colorStep*colorCounter++);
 		}
 

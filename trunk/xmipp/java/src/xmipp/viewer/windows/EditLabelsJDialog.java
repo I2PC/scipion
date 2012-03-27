@@ -206,9 +206,9 @@ public class EditLabelsJDialog extends XmippDialog {
 			ColumnInfo col = rows.get(row);
 			switch (column) {
 			case 0:
-				return col.getLabelName();
+				return col.getLabelRealName();
 			case 1:
-				return col.getLabelName();
+				return col.getLabelTypeString();
 			}
 			return null;
 		}

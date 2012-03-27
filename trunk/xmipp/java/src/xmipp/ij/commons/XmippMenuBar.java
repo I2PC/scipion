@@ -120,7 +120,7 @@ public class XmippMenuBar extends MenuBar
 
 		openwith3dmi = new MenuItem("Open with 3D Viewer");
 		
-		openwith3dmi.setEnabled(Filename.isVolume(xw.getImageFilePath()));
+//		openwith3dmi.setEnabled(Filename.isVolume(xw.getImageFilePath()));
 		openwith3dmi.addActionListener(new ActionListener()
 		{
 			

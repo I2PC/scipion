@@ -86,6 +86,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		saveDataAs(imp.getTitle());
 	}
 	
+	@Override
 	public void windowClosing(WindowEvent e) {
 		super.windowClosing(e);
 		if(XmippIJUtil.getXmippImageJ() != null)

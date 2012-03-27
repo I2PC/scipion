@@ -866,7 +866,7 @@ TEST_F( MetadataTest, setGetValue)
 {
     size_t t;
     int i;
-    EXPECT_EQ(MDL::labelType(MDL_ORDER),LABEL_LONG);
+    EXPECT_EQ(MDL::labelType(MDL_ORDER),LABEL_SIZET);
     MetaData auxMetadata;
     id = auxMetadata.addObject();
     auxMetadata.setValue(MDL_ORDER,(size_t)1, id);

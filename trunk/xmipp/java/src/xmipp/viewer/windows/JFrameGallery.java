@@ -238,6 +238,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		setTitle(gallery.getTitle());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
+		//addWindowListener(this);
 
 		// Get main pane and set layout
 		Container pane = getContentPane();
@@ -622,10 +623,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 	private boolean openClassesDialog() {
 		if (dlgClasses == null) {
-			dlgClasses = new ClassesJDialog(JFrameGallery.this,
-					data.classesArray);
+			dlgClasses = new ClassesJDialog(JFrameGallery.this);
 		}
-		return dlgClasses.showDialog();
+		boolean result = dlgClasses.showDialog();
+		dlgClasses.resetClasses();
+		return result;
 	}
 
 	static String forceExtension(String filename, String ext) {
@@ -1389,9 +1391,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 	@Override
 	public void windowClosing(WindowEvent arg0) {
-		if (dlgClasses != null) {
-			dlgClasses.dispose();
-		}
+//		DEBUG.printMessage("on window closing...");
+//		if (dlgClasses != null) {
+//			DEBUG.printMessage("disposing dialog");
+//			dlgClasses.dispose();
+//		}
+		
 	}
 
 	@Override

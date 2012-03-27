@@ -36,11 +36,10 @@ public class MetaData {
 	public static final int LABEL_INT = 0;
 	public static final int LABEL_BOOL = 1;
 	public static final int LABEL_DOUBLE = 2;
-	public static final int LABEL_FLOAT = 3;
-	public static final int LABEL_STRING = 4;
-	public static final int LABEL_VECTOR = 5;
-	public static final int LABEL_LONG = 6;
-	public static final int LABEL_VECTOR_LONG = 7;
+	public static final int LABEL_STRING = 3;
+	public static final int LABEL_VECTOR_DOUBLE = 4;
+	public static final int LABEL_SIZET = 5;
+	public static final int LABEL_VECTOR_SIZET = 6;
 	
 	public static final String FILL_CONSTANT = "constant";
 	public static final String FILL_LINEAR = "linear";
@@ -173,20 +172,39 @@ public class MetaData {
 			return Integer.class;
 		case LABEL_BOOL:
 			return Boolean.class;
-		case LABEL_FLOAT:
-			return Float.class;
 		case LABEL_DOUBLE:
 			return Double.class;
-		case LABEL_LONG:
+		case LABEL_SIZET:
 			return Long.class;
 		case LABEL_STRING:
-		case LABEL_VECTOR:
-		case LABEL_VECTOR_LONG:
+		case LABEL_VECTOR_DOUBLE:
+		case LABEL_VECTOR_SIZET:
 			return String.class;
 
 		}
 		return null;
 	}
+	
+	/** Return an String representing the label type */
+	public static String getLabelTypeString(int labelType) throws Exception {
+		switch (labelType) {
+	    case LABEL_STRING:
+	        return "STRING";
+	    case LABEL_DOUBLE:
+	      return "DOUBLE";
+	    case LABEL_INT:
+	        return "INT";
+	    case LABEL_BOOL:
+	      return "BOOL";
+	    case LABEL_VECTOR_DOUBLE:
+	      return "VECTOR(DOUBLE)";
+	    case LABEL_SIZET:
+	      return "SIZE_T";
+	    case LABEL_VECTOR_SIZET:
+	      return "VECTOR(SIZE_T)";
+	    }
+	    return "UNKNOWN";
+	}//function getLabelTypeString
 
 	public static native boolean isTextFile(int label) throws Exception;
 
