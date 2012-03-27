@@ -1168,6 +1168,8 @@ double CTF_fitness(double *p, void *)
         retval = distsum / N;
     else
         retval = global_heavy_penalization;
+    if (global_show == 3)
+    	std::cout << "Fitness1=" << retval << std::endl;
     if ((global_action >= 3 && global_action <= 4 || global_action==6) &&
         Ncorr > 0 && global_prm->enhanced_weight != 0)
     {
@@ -1176,7 +1178,8 @@ double CTF_fitness(double *p, void *)
         double correlation_coeff = enhanced_model / Ncorr - model_avg * enhanced_avg;
         double sigma1 = sqrt(fabs(enhanced2 / Ncorr - enhanced_avg * enhanced_avg));
         double sigma2 = sqrt(fabs(model2 / Ncorr - model_avg * model_avg));
-        if (fabs(sigma1) < XMIPP_EQUAL_ACCURACY || fabs(sigma2) < XMIPP_EQUAL_ACCURACY)
+        double maxSigma = std::max(sigma1,sigma2);
+        if (sigma1 < XMIPP_EQUAL_ACCURACY || sigma2 < XMIPP_EQUAL_ACCURACY || fabs(sigma1-sigma2)/maxSigma>0.9)
             retval = global_heavy_penalization;
         else
         {
@@ -1185,6 +1188,15 @@ double CTF_fitness(double *p, void *)
                 global_corr13=correlation_coeff;
             else
                 retval -= global_prm->enhanced_weight*correlation_coeff;
+            if (global_show == 3)
+            {
+            	std::cout << "model_avg=" << model_avg << std::endl;
+            	std::cout << "enhanced_avg=" << enhanced_avg << std::endl;
+            	std::cout << "enhanced_model=" << enhanced_model / Ncorr << std::endl;
+            	std::cout << "sigma1=" << sigma1 << std::endl;
+            	std::cout << "sigma2=" << sigma2 << std::endl;
+            	std::cout << "Fitness2=" << -(global_prm->enhanced_weight*correlation_coeff) << " (" << correlation_coeff << ")" << std::endl;
+            }
         }
     }
 
@@ -1195,9 +1207,9 @@ double CTF_fitness(double *p, void *)
         if (global_show == 3)
         {
             save_intermediate_results("PPP");
-         //   std::cout << "Press any key\n";
-         //   char c;
-         //   std::cin >> c;
+            std::cout << "Press any key\n";
+            char c;
+            std::cin >> c;
         }
     }
 
