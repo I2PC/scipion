@@ -54,7 +54,7 @@ TEST_F(SamplingTest, computeSamplingPoints)
 
 TEST_F(SamplingTest, removeRedundantPointsI3H)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_i3h");
@@ -71,7 +71,7 @@ TEST_F(SamplingTest, removeRedundantPointsI3H)
 
 TEST_F(SamplingTest, removeRedundantPointsC1)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_c1");
@@ -89,7 +89,7 @@ TEST_F(SamplingTest, removeRedundantPointsC1)
 
 TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataI3H)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_i3h_exp");
@@ -109,7 +109,7 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataI3H)
 
 TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataC1)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "ref_c1_exp");
@@ -130,7 +130,7 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataC1)
 
 TEST_F(SamplingTest, saveReadSamplingFile)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     FileName fn;
     fn.initUniqueName("/tmp/temp_XXXXXX");
     mysampling.saveSamplingFile(fn, true, true);
@@ -138,12 +138,14 @@ TEST_F(SamplingTest, saveReadSamplingFile)
     s.readSamplingFile(fn, true, true);
     EXPECT_EQ(mysampling, s);
     fn.deleteFile();
+    fn = fn + "_sampling.xmd";
+    fn.deleteFile();
     XMIPP_CATCH
 }
 
 TEST_F(SamplingTest, computeNeighborsI3H)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "neigh_ref_i3h_exp");
@@ -165,7 +167,7 @@ TEST_F(SamplingTest, computeNeighborsI3H)
 
 TEST_F(SamplingTest, computeNeighborsC1)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     int  symmetry, sym_order;
     Sampling s1;
     s1.readSamplingFile(fn_root + "neigh_ref_c1_exp");
@@ -180,7 +182,7 @@ TEST_F(SamplingTest, computeNeighborsC1)
     s2.fillExpDataProjectionDirectionByLR(fn_root + "experimental_images.xmd");
     s2.removePointsFarAwayFromExperimentalData();
     s2.computeNeighbors();
-//    s2.saveSamplingFile(fn_root + "/tmp/ref_c1_computeNeighborsC1");
+    //    s2.saveSamplingFile(fn_root + "/tmp/ref_c1_computeNeighborsC1");
     EXPECT_EQ(s1, s2);
     XMIPP_CATCH
 }
