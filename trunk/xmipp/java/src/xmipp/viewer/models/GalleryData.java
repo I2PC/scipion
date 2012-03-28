@@ -175,8 +175,13 @@ public class GalleryData {
 			String imageFn;
 			for (int i = 0; i < ids.length && image == null; ++i) {
 				imageFn = md.getValueString(renderLabel, ids[i]);
-				if (Filename.exists(imageFn))
+				if (Filename.exists(imageFn)){
+					try {
 					image = new ImageGeneric(imageFn);
+					}catch (Exception e){
+						image = null;
+					}
+				}
 			}
 			if (image != null) { // Image file was found to render
 				if (zoom == 0) { // if default value, calculate zoom
@@ -269,11 +274,16 @@ public class GalleryData {
 			ids = null;
 		}
 	}
+	
+	/** Reload current metadata */
+	public void reloadMd(){
+		readMetadata(getMdFilename());
+	}
 
 	/** Select one of the blocks */
 	public void selectBlock(String block) {
-		selectedBlock = block; // FIXME: validate block exists
-		readMetadata(getMdFilename());
+		selectedBlock = block;
+		reloadMd();
 	}
 
 	public ImageGallery createModel() {
@@ -598,5 +608,13 @@ public class GalleryData {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	/** Delete from metadata selected items */
+	public void removeSelection() throws Exception{
+		for (int i = 0; i < ids.length; ++i){
+			if (selection[i])
+				md.removeObject(ids[i]);
+		}
 	}
 }// class GalleryData

@@ -30,7 +30,8 @@ PluginLibs = {}
 PluginResources = {}
 javaEnumDict = {'ImageWriteMode': ['libraries/data/xmipp_image_base.h', 'WRITE_'],
             'CastWriteMode': ['libraries/data/xmipp_image_base.h', 'CW_'],
-            'MDLabel': ['libraries/data/metadata_label.h', 'MDL_']}
+            'MDLabel': ['libraries/data/metadata_label.h', 'MDL_'],
+            'XmippError': ['libraries/data/xmipp_error.h', 'ERR_']}
 
 copyJar = None
 

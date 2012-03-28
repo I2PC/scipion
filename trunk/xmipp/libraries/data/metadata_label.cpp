@@ -102,17 +102,17 @@ String MDL::labelType2Str(MDLabelType type)
     case LABEL_STRING:
         return "STRING";
     case LABEL_DOUBLE:
-      return "DOUBLE";
+        return "DOUBLE";
     case LABEL_INT:
         return "INT";
     case LABEL_BOOL:
-      return "BOOL";
+        return "BOOL";
     case LABEL_VECTOR_DOUBLE:
-      return "VECTOR(DOUBLE)";
+        return "VECTOR(DOUBLE)";
     case LABEL_SIZET:
-      return "SIZE_T";
+        return "SIZE_T";
     case LABEL_VECTOR_SIZET:
-      return "VECTOR(SIZE_T)";
+        return "VECTOR(SIZE_T)";
     }
     return "UNKNOWN";
 }
@@ -263,7 +263,7 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
     {
         std::stringstream ss;
         ss << "Mismatch Label (" << MDL::label2Str(label)
-           << ") and value type(" << MDL::labelType2Str(checkingType) << ")";
+        << ") and value type(" << MDL::labelType2Str(checkingType) << ")";
         REPORT_ERROR(ERR_MD_BADLABEL, ss.str());
     }
 }
@@ -470,7 +470,7 @@ void MDObject::setValue(const char*  &charvalue)
     if (withFormat) os << std::setw(10); \
     os << i;
 
-void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
+void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql, bool escape) const
 {
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << data.stringValue;
@@ -492,13 +492,15 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
         case LABEL_STRING:
             {
                 char c = _SPACE;
-                if (isSql || data.stringValue->find_first_of(_DQUOT) != String::npos)
-                    c = _QUOT;
-                else if (data.stringValue->find_first_of(_QUOT) != String::npos)
-                    c = _DQUOT;
-                else if (data.stringValue->find_first_of(_SPACE) != String::npos)
-                    c = _QUOT;
-
+                if (escape)
+                {
+                    if (isSql || data.stringValue->find_first_of(_DQUOT) != String::npos)
+                        c = _QUOT;
+                    else if (data.stringValue->find_first_of(_QUOT) != String::npos)
+                        c = _DQUOT;
+                    else if (data.stringValue->find_first_of(_SPACE) != String::npos)
+                        c = _QUOT;
+                }
                 if (c == _SPACE)
                     os << *(data.stringValue);
                 else
@@ -508,7 +510,8 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
         case LABEL_VECTOR_DOUBLE:
             {
                 std::vector<double> &vectorDouble = *(data.vectorValue);
-                os << _QUOT << " ";
+                if (escape)
+                    os << _QUOT << " ";
                 size_t size = vectorDouble.size();
                 for (size_t i = 0; i < size; i++)
                 {
@@ -516,17 +519,20 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
                     DOUBLE2STREAM(v);
                     os << " ";
                 }
-                os << _QUOT;
+                if (escape)
+                    os << _QUOT;
             }
             break;
         case LABEL_VECTOR_SIZET:
             {
                 std::vector<size_t> &vector = *(data.vectorValueLong);
-                os << _QUOT << " ";
+                if (escape)
+                    os << _QUOT << " ";
                 size_t size = vector.size();
                 for (size_t i = 0; i < size; i++)
                     os << vector[i] << " ";
-                os << _QUOT;
+                if (escape)
+                    os << _QUOT;
             }
             break;
 
@@ -535,8 +541,11 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
 
 String MDObject::toString(bool withFormat, bool isSql) const
 {
+    if (type == LABEL_STRING)
+        return *data.stringValue;
     std::stringstream ss;
-    toStream(ss, withFormat, isSql);
+    toStream(ss, withFormat, isSql, isSql);
+
     return ss.str();
 }
 
@@ -554,7 +563,7 @@ std::istream& operator>> (std::istream& is, MDObject &value)
     return is;
 }
 
-bool MDObject::fromStream(std::istream &is)
+bool MDObject::fromStream(std::istream &is, bool fromString)
 {
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
     {
@@ -599,40 +608,48 @@ bool MDObject::fromStream(std::istream &is)
                     }
                     s = s.substr(0, s.size() - 1); //remove last char '
                 }
-                else
-                    chr = _SPACE;
                 data.stringValue->append(s);
             }
             break;
         case LABEL_VECTOR_DOUBLE:
-            is.ignore(256, _QUOT);
+            if (!fromString)
+                is.ignore(256, _QUOT);
             //if (data.vectorValue == NULL)
             //  data.vectorValue = new std::vector<double>;
             data.vectorValue->clear();
             while (is >> d) //This will stop at ending "]"
                 data.vectorValue->push_back(d);
-            is.clear(); //this is for clear the fail state after found ']'
-            is.ignore(256, _QUOT); //ignore the ending ']'
+            if (!fromString)
+            {
+                is.clear(); //this is for clear the fail state after found ']'
+                is.ignore(256, _QUOT); //ignore the ending ']'
+            }
             break;
         case LABEL_VECTOR_SIZET:
-            is.ignore(256, _QUOT);
+            if (!fromString)
+                is.ignore(256, _QUOT);
             //if (data.vectorValue == NULL)
             //  data.vectorValue = new std::vector<double>;
             data.vectorValueLong->clear();
             while (is >> value) //This will stop at ending "]"
                 data.vectorValueLong->push_back(value);
-            is.clear(); //this is for clear the fail state after found ']'
-            is.ignore(256, _QUOT); //ignore the ending ']'
+            if (!fromString)
+            {
+                is.clear(); //this is for clear the fail state after found ']'
+                is.ignore(256, _QUOT); //ignore the ending ']'
+            }
             break;
         }
     }
     return is.good();
 }
 
-bool MDObject::fromString(const String&str)
+bool MDObject::fromString(const String& str)
 {
+    if (type == LABEL_STRING)
+        *data.stringValue = str;
     std::stringstream ss(str);
-    fromStream(ss);
+    return fromStream(ss, true);
 }
 
 bool MDObject::fromChar(const char * szChar)

@@ -349,6 +349,22 @@ JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_addObject
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    removeObject
+ * Signature: (I)V
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_removeObject
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    removeDisabled
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_removeDisabled
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    addLabel
  * Signature: (I)V
  */

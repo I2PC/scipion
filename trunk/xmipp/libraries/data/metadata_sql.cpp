@@ -884,7 +884,7 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
         return sqlite3_bind_text(stmt, position, valueIn.data.stringValue->c_str(), -1, SQLITE_TRANSIENT);
     case LABEL_VECTOR_DOUBLE:
     case LABEL_VECTOR_SIZET:
-        return sqlite3_bind_text(stmt, position, valueIn.toString().c_str(), -1, SQLITE_TRANSIENT);
+        return sqlite3_bind_text(stmt, position, valueIn.toString(false, true).c_str(), -1, SQLITE_TRANSIENT);
     }
 }
 

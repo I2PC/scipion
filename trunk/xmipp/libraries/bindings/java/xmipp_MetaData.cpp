@@ -691,6 +691,32 @@ JNIEXPORT jlong JNICALL Java_xmipp_jni_MetaData_addObject(JNIEnv *env, jobject j
     return id;
 }
 
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_removeObject
+  (JNIEnv * env, jobject jobj, jlong objId)
+{
+  MetaData *md = GET_INTERNAL_METADATA(jobj);
+
+  XMIPP_JAVA_TRY
+  {
+    return md->removeObject((size_t)objId);
+  }
+  XMIPP_JAVA_CATCH;
+
+  return false;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_removeDisabled
+  (JNIEnv * env, jobject jobj)
+{
+  MetaData *md = GET_INTERNAL_METADATA(jobj);
+
+  XMIPP_JAVA_TRY
+  {
+    return md->removeDisabled();
+  }
+  XMIPP_JAVA_CATCH;
+}
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_addLabel(JNIEnv *env, jobject jobj, jint label)
 {
     MetaData *md = GET_INTERNAL_METADATA(jobj);

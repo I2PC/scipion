@@ -401,9 +401,9 @@ public:
         if (withFormat) os << std::setw(10); \
         os << i;
 
-    void toStream(std::ostream &os, bool withFormat = false, bool isSql=false) const;
+    void toStream(std::ostream &os, bool withFormat = false, bool isSql=false, bool escape=true) const;
     String toString(bool withFormat = false, bool isSql=false) const;
-    bool fromStream(std::istream &is);
+    bool fromStream(std::istream &is, bool fromString=false);
     friend std::istream& operator>> (std::istream& is, MDObject &value);
     friend std::ostream& operator<< (std::ostream& is, MDObject &value);
     bool fromString(const String &str);

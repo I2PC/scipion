@@ -37,6 +37,7 @@ import org.junit.After;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.DEBUG;
 import static org.junit.Assert.*;
 
 /**
@@ -162,6 +163,33 @@ public class MetadataTest {
     	md.fillRandom(MDLabel.MDL_SHIFTY, "uniform", 2.0, 3.0);
     	md.print();
     }//function testFill
+    
+    @Test
+    public void testRemoveObject() throws Exception {
+    	double[] localShiftXValues = {  shiftXValues[1], shiftXValues[3]};
+    	MetaData md = new MetaData(mdFn);
+    	long[] ids = md.findObjects();
+    	md.removeObject(ids[0]);
+    	md.removeObject(ids[2]);
+    	assertEquals(2, md.size());
+    	ids = md.findObjects();
+    	for (int i=0; i < ids.length; ++i)
+    		assertEquals(localShiftXValues[i], md.getValueDouble(MDLabel.MDL_SHIFTX, ids[i]), XmippTest.EQUAL_ACCURACY);
+    	md.print();
+    }
+    
+    @Test
+    public void testReadQuotedString() throws Exception {
+    	MetaData md = new MetaData("kk.xmd");
+    	long[] ids = md.findObjects(); 
+    	md.print();
+    	System.out.println("------------------------------------");   	
+    	for (int i=0; i < ids.length; ++i){
+    		System.out.println(md.getValueString(MDLabel.MDL_IMAGE, ids[i]));
+    		System.out.println(md.getValueString(MDLabel.MDL_ANGLE_COMPARISON, ids[i]));
+    	}
+    	//md.print();
+    }  
     
 
 }//class MetadataTest

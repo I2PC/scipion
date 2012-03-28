@@ -113,10 +113,13 @@ public class MetadataGallery extends ImageGallery {
 			for (int i = 0; i < data.ids.length; ++i) {
 				String imageFn = getImageFilename(i, renderLabel.getLabel());
 				if (imageFn != null && Filename.exists(imageFn)) {
+					try {
 					image = new ImageGeneric(imageFn);
 					dim = new ImageDimension(image);
-					// image.destroy();
 					break;
+					} catch (Exception e){
+						dim = null;
+					}
 				}
 			}
 		}

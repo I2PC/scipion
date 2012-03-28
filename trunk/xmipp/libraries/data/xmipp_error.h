@@ -113,7 +113,8 @@
  */
 enum ErrorType
 {
-    ERR_ARG_BADCMDLINE = 1,     ///< Errors on command line parameters.
+    ERR_FIRST_LABEL,
+    ERR_ARG_BADCMDLINE,     ///< Errors on command line parameters.
     ERR_ARG_INCORRECT,      ///< Incorrect argument received.
     ERR_ARG_MISSING,        ///< Argument missing.
     ERR_ARG_DEPENDENCE,     ///< Error with some arguments dependecies
@@ -193,7 +194,9 @@ enum ErrorType
 
     ERR_VALUE_EMPTY,        ///< Empty value.
     ERR_VALUE_INCORRECT,    ///< Incorrect value received.
-    ERR_VALUE_NOTSET        ///< Value has not been set.
+    ERR_VALUE_NOTSET,        ///< Value has not been set.
+
+    ERR_LAST_LABEL
 };
 
 

@@ -342,6 +342,12 @@ public class MetaData {
 
 	/** Add a new object entry and return new id */
 	public native long addObject() throws Exception;
+	
+	/** Remove an existing object from metadata */
+	public native boolean removeObject(long objId) throws Exception;
+	
+	/** Remove disabled objects */
+	public native void removeDisabled() throws Exception;
 
 	/** Add new column to MetaData */
 	public native void addLabel(int label) throws Exception;

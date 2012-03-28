@@ -534,7 +534,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 					break;
 				}
 			} catch (Exception e) {
-				XmippDialog.showException(JFrameGallery.this, e);
+				showException(e);
 			}
 			ImagesWindowFactory.releaseGUI(JFrameGallery.this.getRootPane());
 		}
@@ -743,6 +743,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		}
 	}
 
+	/** Reload metadata info, rebuild the table */
+	private void reloadMd() throws Exception {
+		data.loadMd();
+		reloadTableData();
+	}// function reloadMd
+
 	/**
 	 * Fill some label mode can be: "constant", "linear", "uniform", "gaussian"
 	 * values is a list of string
@@ -762,15 +768,29 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			else if (mode.equalsIgnoreCase(MetaData.FILL_RAND_GAUSSIAN))
 				data.md.fillRandom(label, "gaussian", v1, v2);
 		}
-		data.loadMd();
-		reloadTableData();
+		reloadMd();
+	}
+
+	/**
+	 * Delete selected or disabled items if 'selected' is true, selection is
+	 * removed if false, the disabled items
+	 * */
+	public void removeObjects(boolean selected) throws Exception {
+		String type = selected ? "selected" : "disabled";
+		if (XmippDialog.showWarning(this,
+				String.format("Are you sure to delete %s items?", type))) {
+			if (selected)
+				data.removeSelection();
+			else
+				data.md.removeDisabled();
+			reloadMd();
+		}
 	}
 
 	/** Drop some label from the metadata */
 	public void removeLabel(int label) throws Exception {
 		data.md.removeLabel(label);
-		data.loadMd();
-		reloadTableData();
+		reloadMd();
 	}
 
 	/***
@@ -1024,7 +1044,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 				// removed.
 				boolean move = true;
 				if (!evt.isControlDown() && !evt.isShiftDown()) {
-					if (gallery.getSelectedCount() <= 1
+					if (gallery.getSelectionCount() <= 1
 							|| XmippDialog
 									.showWarning(this,
 											"You will lose previous selection.\nDo you want to proceed?")) {
@@ -1060,7 +1080,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 			final MouseEvent me = evt;
 			if (gallery.handleRightClick(view_row, view_col, jpopUpMenuTable)) {
-				if (gallery.getSelectedCount() < 2) {
+				if (gallery.getSelectionCount() < 2) {
 					gallery.clearSelection();
 					gallery.touchItem(view_row, view_col);
 				}
@@ -1117,12 +1137,14 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			addItem(DISPLAY_RESLICE_RIGHT, "Right (X positive)");
 			// Metadata operations
 			addItem(METADATA, "Metadata");
-			addItem(MD_CLASSES, "Superclasses");
-			addItem(MD_EDIT_COLS, "Edit labels");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
 			addItem(STATS_FSC, "FSC");
+			addItem(MD_CLASSES, "Superclasses");
+			addItem(MD_EDIT_COLS, "Edit labels");
+			addItem(MD_REMOVE_DISABLED, "Remove disabled");
+			addItem(MD_REMOVE_SELECTION, "Remove selection");
 		}// function createItems
 
 		public void update() {
@@ -1144,95 +1166,106 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
 			setItemEnabled(MD_CLASSES, data.is2DClassificationMd());
+			setItemEnabled(MD_REMOVE_SELECTION, gallery.getSelectionCount() > 0);
 			setItemEnabled(STATS, !volMode);
 		}// function update
 
 		@Override
-		protected void handleActionPerformed(ActionEvent e) {
-			String cmd = e.getActionCommand();
+		protected void handleActionPerformed(ActionEvent evt) {
+			String cmd = evt.getActionCommand();
+			try {
+				if (cmd.equals(DISPLAY_NORMALIZE)) {
+					gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
+				} else if (cmd.equals(DISPLAY_APPLYGEO)
+						|| cmd.equals(DISPLAY_WRAP)) {
+					if (data.containsGeometryInfo()) {
+						((MetadataGallery) gallery).setUseGeometry(
+								getItemSelected(DISPLAY_APPLYGEO),
+								getItemSelected(DISPLAY_WRAP));
+						setItemEnabled(DISPLAY_WRAP,
+								data.containsGeometryInfo() && data.useGeo);
+					}
+				} else if (cmd.equals(DISPLAY_SHOWLABELS)) {
+					gallery.setShowLabels(getItemSelected(DISPLAY_SHOWLABELS));
+				} else if (cmd.equals(DISPLAY_RENDERIMAGES)) {
+					gallery.setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
+				} else if (cmd.equals(DISPLAY_COLUMNS)) {
+					ColumnsJDialog dialog = new ColumnsJDialog(
+							JFrameGallery.this);
+					boolean result = dialog.showDialog();
+					if (result) {
+						ArrayList<ColumnInfo> columns = dialog
+								.getColumnsResult();
+						isUpdating = true;
+						((MetadataGallery) gallery).updateColumnInfo(columns);
+						gallery.fireTableDataChanged();
+						setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
+						// menu.enableRenderImages(data.globalRender);
+						isUpdating = false;
+					}
+				} else if (cmd.equals(STATS_AVGSTD))
+					runInBackground(Worker.STATS);
+				else if (cmd.equals(STATS_PCA))
+					runInBackground(Worker.PCA);
+				else if (cmd.equals(STATS_FSC))
+					runInBackground(Worker.FSC);
+				else if (cmd.equals(FILE_OPEN)) {
+					if (fc.showOpenDialog(JFrameGallery.this) != XmippFileChooser.CANCEL_OPTION) {
+						if (fc.getSelectedFile().exists())
+							ImagesWindowFactory.openFileAsDefault(fc
+									.getSelectedPath());
+						else
+							XmippDialog.showError(JFrameGallery.this, String
+									.format("File: '%s' doesn't exist.",
+											fc.getSelectedPath()));
+					}
+				} else if (cmd.equals(FILE_SAVE)) {
+					save();
+				} else if (cmd.equals(FILE_SAVEAS)) {
+					saveAs();
+				} else if (cmd.equals(FILE_EXIT)) {
+					System.exit(0);
+				} else if (cmd.equals(FILE_OPENWITH_CHIMERA)) {
+					try {
+						String args = data.selectedVol;
+						if (Filename.isSpiderVolume(args))
+							args = "spider:" + args;
+						// FIXME: Check chimera is installed
+						Process p = new ProcessBuilder("chimera", args).start();
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+				} else if (cmd.equals(FILE_OPENWITH_IJ)) {
+					try {
+						ImagePlus imp = gallery.getImagePlus();
+						ImagesWindowFactory.captureFrame(imp);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+				} else if (cmd.equals(FILE_REFRESH)) {
+					data.reloadMd();
+					reloadTableData();
+				} else if (cmd.equals(DISPLAY_RESLICE_TOP)) {
 
-			if (cmd.equals(DISPLAY_NORMALIZE)) {
-				gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
-			} else if (cmd.equals(DISPLAY_APPLYGEO) || cmd.equals(DISPLAY_WRAP)) {
-				if (data.containsGeometryInfo()) {
-					((MetadataGallery) gallery).setUseGeometry(
-							getItemSelected(DISPLAY_APPLYGEO),
-							getItemSelected(DISPLAY_WRAP));
-					setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo()
-							&& data.useGeo);
-				}
-			} else if (cmd.equals(DISPLAY_SHOWLABELS)) {
-				gallery.setShowLabels(getItemSelected(DISPLAY_SHOWLABELS));
-			} else if (cmd.equals(DISPLAY_RENDERIMAGES)) {
-				gallery.setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
-			} else if (cmd.equals(DISPLAY_COLUMNS)) {
-				ColumnsJDialog dialog = new ColumnsJDialog(JFrameGallery.this);
-				boolean result = dialog.showDialog();
-				if (result) {
-					ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
-					isUpdating = true;
-					((MetadataGallery) gallery).updateColumnInfo(columns);
-					gallery.fireTableDataChanged();
-					setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
-					// menu.enableRenderImages(data.globalRender);
-					isUpdating = false;
-				}
-			} else if (cmd.equals(STATS_AVGSTD))
-				runInBackground(Worker.STATS);
-			else if (cmd.equals(STATS_PCA))
-				runInBackground(Worker.PCA);
-			else if (cmd.equals(STATS_FSC))
-				runInBackground(Worker.FSC);
-			else if (cmd.equals(FILE_OPEN)) {
-				if (fc.showOpenDialog(JFrameGallery.this) != XmippFileChooser.CANCEL_OPTION) {
-					if (fc.getSelectedFile().exists())
-						ImagesWindowFactory.openFileAsDefault(fc
-								.getSelectedPath());
-					else
-						XmippDialog.showError(
-								JFrameGallery.this,
-								String.format("File: '%s' doesn't exist.",
-										fc.getSelectedPath()));
-				}
-			} else if (cmd.equals(FILE_SAVE)) {
-				save();
-			} else if (cmd.equals(FILE_SAVEAS)) {
-				saveAs();
-			} else if (cmd.equals(FILE_EXIT)) {
-				System.exit(0);
-			} else if (cmd.equals(FILE_OPENWITH_CHIMERA)) {
-				try {
-					String args = data.selectedVol;
-					if (Filename.isSpiderVolume(args))
-						args = "spider:" + args;
-					// FIXME: Check chimera is installed
-					Process p = new ProcessBuilder("chimera", args).start();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			} else if (cmd.equals(FILE_OPENWITH_IJ)) {
-				try {
-					ImagePlus imp = gallery.getImagePlus();
-					ImagesWindowFactory.captureFrame(imp);
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-			} else if (cmd.equals(FILE_REFRESH)) {
-				reloadTableData();
-			} else if (cmd.equals(DISPLAY_RESLICE_TOP)) {
+				} else if (cmd.equals(DISPLAY_RESLICE_BOTTOM)) {
 
-			} else if (cmd.equals(DISPLAY_RESLICE_BOTTOM)) {
+				} else if (cmd.equals(DISPLAY_RESLICE_LEFT)) {
 
-			} else if (cmd.equals(DISPLAY_RESLICE_LEFT)) {
+				} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)) {
 
-			} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)) {
-
-			} else if (cmd.equals(MD_CLASSES)) {
-				openClassesDialog();
-			} else if (cmd.equals(MD_EDIT_COLS)) {
-				EditLabelsJDialog dlg = new EditLabelsJDialog(
-						JFrameGallery.this);
-				dlg.showDialog();
+				} else if (cmd.equals(MD_CLASSES)) {
+					openClassesDialog();
+				} else if (cmd.equals(MD_EDIT_COLS)) {
+					EditLabelsJDialog dlg = new EditLabelsJDialog(
+							JFrameGallery.this);
+					dlg.showDialog();
+				} else if (cmd.equals(MD_REMOVE_SELECTION)) {
+					removeObjects(true);
+				} else if (cmd.equals(MD_REMOVE_DISABLED)) {
+					removeObjects(false);
+				}
+			} catch (Exception e) {
+				showException(e);
 			}
 		}// function handleActionPerformed
 	}// class GalleryMenu
@@ -1265,7 +1298,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			// This item visibility depends on current selection
 			setItemVisible(OPEN_IMAGES,
 					data.is2DClassificationMd()
-							&& gallery.getSelectedCount() == 1);
+							&& gallery.getSelectionCount() == 1);
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
@@ -1352,6 +1385,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		}
 
 	}// class JPopUpMenuGallery
+
+	public void showException(Exception e) {
+		XmippDialog.showException(this, e);
+	}
 
 	@Override
 	public void setRunning(boolean running) {
