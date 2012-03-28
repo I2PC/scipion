@@ -1912,7 +1912,7 @@ void estimate_defoci()
     steps.initConstant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
-    for (double defocusStep = initial_defocusStep; defocusStep >= XMIPP_MIN(8000, global_prm->defocus_range); defocusStep /= 2)
+    for (double defocusStep = initial_defocusStep; defocusStep >= std::min(8000., global_prm->defocus_range/2); defocusStep /= 2)
     {
         error.resize(CEIL((defocusVF - defocusV0) / defocusStep + 1),
                      CEIL((defocusUF - defocusU0) / defocusStep + 1));
