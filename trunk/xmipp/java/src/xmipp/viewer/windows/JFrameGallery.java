@@ -1243,8 +1243,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 		@Override
 		protected void createItems() throws Exception {
-			addItem(ENABLED, "Enable");
-			addItem(DISABLED, "Disable");
+			addItem(ENABLED, "Enable", "enable.gif");
+			addItem(DISABLED, "Disable", "disable.gif");
 			addItem(REFRESH, "Refresh", "refresh.gif");
 			// addSeparator();
 			addItem(OPEN, "Open");
