@@ -208,39 +208,72 @@ class ParticleAlignmentConverter(EmxBase):
 #        exit(1)
 
     def startObject2XMD(self):
+        labelNames = self.inMetadata.first_block().keys() 
         for blockName in self.inMetadata.keys():
             image= self.myStructXMD.prefix + self.myStructXMD._fields_[0][0]
             imageList=self.inMetadata[blockName].GetLoopItem(image)
             
+            length = len(imageList)
+
             angleRot= self.myStructXMD.prefix + self.myStructXMD._fields_[1][0]
-            angleRotList=self.inMetadata[blockName].GetLoopItem(angleRot)
+            if (angleRot in labelNames):
+                angleRotList=self.inMetadata[blockName].GetLoopItem(angleRot)
+            else:
+                angleRotList=[0.]*length
             
             angleTilt= self.myStructXMD.prefix + self.myStructXMD._fields_[2][0]
-            angleTiltList=self.inMetadata[blockName].GetLoopItem(angleTilt)
+            if (angleTilt in labelNames):
+                angleTiltList=self.inMetadata[blockName].GetLoopItem(angleTilt)
+            else:
+                angleTiltList=[0.]*length
 
             anglePsi= self.myStructXMD.prefix + self.myStructXMD._fields_[3][0]
-            anglePsiList=self.inMetadata[blockName].GetLoopItem(anglePsi)
+            if (anglePsi in labelNames):
+                anglePsiList=self.inMetadata[blockName].GetLoopItem(anglePsi)
+            else:
+                anglePsiList=[0.]*length
 
             shiftX= self.myStructXMD.prefix + self.myStructXMD._fields_[4][0]
-            shiftXList=self.inMetadata[blockName].GetLoopItem(shiftX)
+            if (shiftX in labelNames):
+                shiftXList=self.inMetadata[blockName].GetLoopItem(shiftX)
+            else:
+                shiftXList=[0.]*length
             
             shiftY= self.myStructXMD.prefix + self.myStructXMD._fields_[5][0]
-            shiftYList=self.inMetadata[blockName].GetLoopItem(shiftY)
+            if (shiftX in labelNames):
+                shiftYList=self.inMetadata[blockName].GetLoopItem(shiftY)
+            else:
+                shiftYList=[0.]*length
             
             shiftZ= self.myStructXMD.prefix + self.myStructXMD._fields_[6][0]
-            shiftZList=self.inMetadata[blockName].GetLoopItem(shiftZ)
+            if (shiftZ in labelNames):
+                shiftZList=self.inMetadata[blockName].GetLoopItem(shiftZ)
+            else:
+                shiftZList=[0.]*length
             
             flip= self.myStructXMD.prefix + self.myStructXMD._fields_[7][0]
-            flipList=self.inMetadata[blockName].GetLoopItem(flip)
+            if (flip in labelNames):
+                flipList=self.inMetadata[blockName].GetLoopItem(flip)
+            else:
+                flipList=[0]*length
             
             scale= self.myStructXMD.prefix + self.myStructXMD._fields_[8][0]
-            scaleList=self.inMetadata[blockName].GetLoopItem(scale)
+            if (scale in labelNames):
+                scaleList=self.inMetadata[blockName].GetLoopItem(scale)
+            else:
+                scaleList=[1.]*length
             
             enabled= self.myStructXMD.prefix + self.myStructXMD._fields_[9][0]
-            enabledList=self.inMetadata[blockName].GetLoopItem(enabled)
+            if (enabled in labelNames):
+                enabledList=self.inMetadata[blockName].GetLoopItem(enabled)
+            else:
+                enabledList=[1]*length
             
             fom= self.myStructXMD.prefix + self.myStructXMD._fields_[10][0]
-            fomList=self.inMetadata[blockName].GetLoopItem(fom)
+            if (enabled in labelNames):
+                fomList=self.inMetadata[blockName].GetLoopItem(fom)
+            else:
+                fomList=[1.]*length
             
             for i in range(len(fomList)):
                 self.itemNameListXMD.append(ParticleAlignmentStructXmd
