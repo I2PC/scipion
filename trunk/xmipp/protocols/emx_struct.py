@@ -186,7 +186,7 @@ class ParticleAlignmentStructXmd(Structure):
                 ("shiftZ",c_float),
                 ("flip",c_int),
                 ("scale",c_float),
-                ("enable",c_int),
+                ("enabled",c_int),
                 ("fom",c_float)
                ]
     prefix = "_"
