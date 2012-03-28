@@ -28,6 +28,7 @@
 
 #include "multidim_array.h"
 #include "matrix2d.h"
+#include "histogram.h"
 
 //This class groups all the fringe processing methods that will be used to process the CTF
 //in the non parametric CTF estimation approach
@@ -64,9 +65,10 @@ public:
     //pattern normalization", Optics Communications, 224, Pages 221-227 (2003)
     void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, int fmin, int fmax, int num);
 
+    void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap);
+
 protected:
 
-    void direction(const MultidimArray<double> & im, double lambda, int size);
 };
 
 
