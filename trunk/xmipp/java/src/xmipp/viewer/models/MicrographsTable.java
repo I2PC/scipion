@@ -51,6 +51,8 @@ public class MicrographsTable extends MetadataTable {
 
     @Override
     public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
+    	if (isBusy(row, col))
+    		return false;
         super.handleRightClick(row, col, xpopup);
         xpopup.setItemVisible(XmippPopupMenuCreator.CTF_PROFILE, true);
         xpopup.setItemVisible(XmippPopupMenuCreator.CTF_RECALCULATE, true);
@@ -63,13 +65,15 @@ public class MicrographsTable extends MetadataTable {
 	}
     
 	public void setRowBusy(int row) {
-		busyRows.add(row);
+		DEBUG.printFormat("setting busy row: %d", row);
+		busyRows.add(new Integer(row));
 		fireTableRowsUpdated(row, row);
 	}
 
 	public void setRowIdle(int row) {
-		busyRows.remove(new Integer(row));		
-		fireTableRowsUpdated(row, row);
+		DEBUG.printFormat("setting idle row: %d", row);
+		busyRows.remove(new Integer(row));	
+		refreshRow(row);
 	}
    
     

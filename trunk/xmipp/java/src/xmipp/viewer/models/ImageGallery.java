@@ -161,8 +161,41 @@ public abstract class ImageGallery extends AbstractTableModel {
 				e.printStackTrace();
 			}
 		}
-
 		return null;
+	}
+
+	/** Function to force the refresh of some item */
+	public void refreshAt(int row, int col) {
+		int index = getIndex(row, col);
+
+		if (index < n) {
+			try {
+				String key = getItemKey(index);
+				// Clear cache entry
+				cache.remove(key);
+				fireTableRowsUpdated(row, row);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/** Function to force the refresh of some item */
+	public void refreshRow(int row) {
+		try {
+			int n = getColumnCount();
+			int index;
+			String key;
+			for (int col = 0; col < n; ++col) {
+				index = getIndex(row, col);
+				key = getItemKey(index);
+				cache.remove(key);
+			}
+			// Clear cache entry
+			fireTableRowsUpdated(row, row);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	protected void setupItem(ImageItem item, int index) {
@@ -311,7 +344,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public int getIndex(int row, int col) {
 		return row * cols + col;
 	}
-	
+
 	/** Return the label of the item at this position */
 	public abstract String getLabel(int row, int col);
 
@@ -372,15 +405,15 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public void setSelectionClass(int classNumber) {
 		ClassInfo cli = data.getClassInfo(classNumber);
 		for (int i = 0; i < n; ++i)
-			if (data.selection[i]){
+			if (data.selection[i]) {
 				data.setItemClass(i, cli);
 			}
 		clearSelection();
 		fireTableDataChanged();
 	}
-	
+
 	/** Remove a class */
-	public void removeClass(int classNumber){
+	public void removeClass(int classNumber) {
 		ClassInfo cli = data.getClassInfo(classNumber);
 		for (int i = 0; i < n; ++i)
 			if (data.getItemClassInfo(i) == cli)
@@ -450,12 +483,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 */
 	public abstract boolean handleRightClick(int row, int col,
 			XmippPopupMenuCreator xpopup);
-	
-	/** This function will be called when a double click is performed
-	 * under the element at specified row and column
+
+	/**
+	 * This function will be called when a double click is performed under the
+	 * element at specified row and column
 	 */
-	public boolean handleDoubleClick(int row, int col){
-		return false; //by default, do nothing
+	public boolean handleDoubleClick(int row, int col) {
+		return false; // by default, do nothing
 	}
 
 	/** Whether to display the labels */
@@ -474,16 +508,16 @@ public abstract class ImageGallery extends AbstractTableModel {
 	/** Retrieve the mininum and maximum of data */
 	protected abstract double[] getMinAndMax();
 
-//	/** Retrieve the image filename, return null if error */
-//	protected abstract String getImageFilenameAt(int row, int col);
+	// /** Retrieve the image filename, return null if error */
+	// protected abstract String getImageFilenameAt(int row, int col);
 
 	/**
 	 * Function to create the key of the item knowing the item index
 	 */
 	public abstract String getItemKey(int index) throws Exception;
-	
+
 	/** Check if the item is busy */
-	public boolean isBusy(int row, int col){
+	public boolean isBusy(int row, int col) {
 		return false;
 	}
 
@@ -507,60 +541,65 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 */
 	protected abstract ImageItem createItem(int index, String key)
 			throws Exception;
-	
-	/** This class will contains basic info to be used for image rendering.
-	 * It will contains an ImagePlus, label and some other useful info.
+
+	/**
+	 * This class will contains basic info to be used for image rendering. It
+	 * will contains an ImagePlus, label and some other useful info.
 	 */
 	public class ImageItem {
-		
+
 		protected ImagePlus image = null;
 		protected int index;
-		
-		/** First argument is the gallery to wich this item belongs
-		 * Constructor of ImageItem
-		 * @param g gallery to wich this item belongs
-		 * @param r row position of the item
-		 * @param c 
+
+		/**
+		 * First argument is the gallery to wich this item belongs Constructor
+		 * of ImageItem
+		 * 
+		 * @param g
+		 *            gallery to wich this item belongs
+		 * @param r
+		 *            row position of the item
+		 * @param c
 		 */
-		public ImageItem(int row, int col){
+		public ImageItem(int row, int col) {
 			index = ImageGallery.this.getIndex(row, col);
 		}
-		
-		public ImageItem(int index){
-			this.index = index;			
+
+		public ImageItem(int index) {
+			this.index = index;
 		}
-		
-		public int getIndex(){
+
+		public int getIndex() {
 			return index;
 		}
-		
+
 		public ImagePlus getImagePlus() {
 			return image;
 		}
-		
-		public void setImagePlus(ImagePlus value){
+
+		public void setImagePlus(ImagePlus value) {
 			image = value;
 		}
-		
-		public Image getImage(){
+
+		public Image getImage() {
 			if (image != null)
 				return image.getImage();
 			return null;
 		}
-		
-		public boolean getShowLabel(){
+
+		public boolean getShowLabel() {
 			return data.showLabel;
 		}
-		
-		public Dimension getCellDim(){
+
+		public Dimension getCellDim() {
 			return cellDim;
 		}
-		
+
 		public String getLabel() {
-			int [] coords = getCoords(index);
+			int[] coords = getCoords(index);
 			return ImageGallery.this.getLabel(coords[0], coords[1]);
 		}
-		
+
 		public String getKey() {
 			try {
 				return getItemKey(index);
@@ -570,29 +609,28 @@ public abstract class ImageGallery extends AbstractTableModel {
 			}
 			return null;
 		}
-		
+
 		public boolean isSelected() {
 			return data.selection[index];
 		}
-		
-		public boolean isEnabled(){
+
+		public boolean isEnabled() {
 			return data.isEnabled(index);
 		}
-		
-		public boolean isBusy(){
-			int [] coords = getCoords(index);
-			return ImageGallery.this.isBusy(coords[0], coords[1]);
+
+		public boolean isBusy() {
+			//int[] coords = getCoords(index);
+			return ImageGallery.this.isBusy(index, 0);
 		}
-		
-		public ClassInfo getClassInfo(){
+
+		public ClassInfo getClassInfo() {
 			return data.getItemClassInfo(index);
 		}
-		
+
 		@Override
-		public String toString(){
-			return image != null ? 
-					image.getFileInfo().fileName: null;
+		public String toString() {
+			return image != null ? image.getFileInfo().fileName : null;
 		}
-	}//class ImageItem
+	}// class ImageItem
 
 }

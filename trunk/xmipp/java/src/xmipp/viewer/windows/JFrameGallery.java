@@ -238,7 +238,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		setTitle(gallery.getTitle());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
-		//addWindowListener(this);
+		// addWindowListener(this);
 
 		// Get main pane and set layout
 		Container pane = getContentPane();
@@ -279,7 +279,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		jpopUpMenuTable = new GalleryPopupMenu();
 		menu.update();
 
-		//pack();
+		// pack();
 		isUpdating = false;
 
 		// Zoom in with Ctrl + P
@@ -581,7 +581,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	}
 
 	private void save() {
-		if (dlgSave == null) 
+		if (dlgSave == null)
 			dlgSave = new SaveJDialog(this);
 		if (!saved)
 			saveAs();
@@ -765,9 +765,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		data.loadMd();
 		reloadTableData();
 	}
-	
+
 	/** Drop some label from the metadata */
-	public void removeLabel(int label)throws Exception {
+	public void removeLabel(int label) throws Exception {
 		data.md.removeLabel(label);
 		data.loadMd();
 		reloadTableData();
@@ -1011,10 +1011,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		if (evt.getButton() == MouseEvent.BUTTON1) { // Left click.
 			if (evt.getClickCount() > 1) {
 				try {
-//					String imageFn = gallery.getImageFilenameAt(view_row,
-//							view_col);
-//					if (imageFn != null)
-//						new XmippImageWindow(imageFn);
+					// String imageFn = gallery.getImageFilenameAt(view_row,
+					// view_col);
+					// if (imageFn != null)
+					// new XmippImageWindow(imageFn);
 					gallery.handleDoubleClick(view_row, view_col);
 				} catch (Exception e) {
 					XmippDialog.showError(this, e.getMessage());
@@ -1245,6 +1245,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		protected void createItems() throws Exception {
 			addItem(ENABLED, "Enable");
 			addItem(DISABLED, "Disable");
+			addItem(REFRESH, "Refresh", "refresh.gif");
 			// addSeparator();
 			addItem(OPEN, "Open");
 			addItem(OPEN_ASTEXT, "Open as text");
@@ -1324,8 +1325,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			} else if (cmd.equals(DISABLED)) {
 				gallery.setSelectionEnabled(false);
 				gallery.clearSelection();
+			} else if (cmd.equals(REFRESH)) {
+				gallery.refreshAt(row, col);
 			} else if (cmd.equals(OPEN)) {
-				String file = gallery.getValueAt(row, col).toString();
+				String file = data.getValueFromCol(row, col);
 				ImagesWindowFactory.openFileAsDefault(file);
 			} else if (cmd.equals(OPEN_ASTEXT)) {
 				String file = gallery.getValueAt(row, col).toString();
@@ -1374,7 +1377,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	@Override
 	public void done() {
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
-
 	}
 
 	@Override
@@ -1391,12 +1393,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 	@Override
 	public void windowClosing(WindowEvent arg0) {
-//		DEBUG.printMessage("on window closing...");
-//		if (dlgClasses != null) {
-//			DEBUG.printMessage("disposing dialog");
-//			dlgClasses.dispose();
-//		}
-		
+		// DEBUG.printMessage("on window closing...");
+		// if (dlgClasses != null) {
+		// DEBUG.printMessage("disposing dialog");
+		// dlgClasses.dispose();
+		// }
+
 	}
 
 	@Override

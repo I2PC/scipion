@@ -200,6 +200,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 
 	public final static String ENABLED = "Enabled_mi";
 	public final static String DISABLED = "Disabled_mi";
+	public final static String REFRESH = "Refresh_mi";
 	public final static String OPEN = "Open_mi";
 	public final static String OPEN_ASTEXT = "OpenAsText_mi";
 	public final static String CTF_PROFILE = "CTFProfile_mi";
