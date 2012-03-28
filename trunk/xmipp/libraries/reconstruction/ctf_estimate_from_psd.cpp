@@ -2326,6 +2326,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmo
         size_t id = MD.firstObject();
         MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE,fitness,id);
         MD.setValue(MDL_CTF_CRITERION_FITTINGCORR13,global_corr13,id);
+        MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED,prm.downsampleFactor,id);
         MD.write(fn_root + ".ctfparam");
     }
     output_ctfmodel=global_ctfmodel;
