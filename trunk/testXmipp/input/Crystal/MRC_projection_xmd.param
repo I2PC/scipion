@@ -1,0 +1,17 @@
+# XMIPP_STAR_1 *
+# Projection Parameters
+data_
+_angleFile     Crystal/angles.doc
+# X and Y projection dimensions [Xdim Ydim]
+_dimensions2D   '64 64'
+# Rotation angle added noise  [noise (bias)]
+_projRotNoise   '0'
+# Tilt angle added noise
+_projTiltNoise   '0'
+# Psi added noise
+_projPsiNoise   '0'
+# Type of range for Psi
+# Noise applied to pixels [noise (bias)]
+_noisePixelLevel   '1'
+# Noise applied to particle center coordenates [noise (bias)]
+_noiseCoord   '0'
