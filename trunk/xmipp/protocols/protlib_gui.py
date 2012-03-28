@@ -1315,7 +1315,7 @@ class ProtocolGUI(BasicGUI):
                     self.setVarValue("DoFlip", str(False))
             else:
                 md=MetaData(pickingProt.getFilename("micrographs"))
-                self.setVarValue("DoFlip", md.containsLabel(MDL_CTFMODEL))
+                self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTFMODEL)))
 
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
