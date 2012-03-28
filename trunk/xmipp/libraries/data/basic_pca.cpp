@@ -108,13 +108,27 @@ void PCAMahalanobisAnalyzer::projectOnPCABasis(Matrix2D<double> &CtY)
     for (int ii=0; ii<N; ii++)
     {
         const MultidimArray<float> &Iii=v[ii];
+        const size_t unroll=4;
+        size_t nmax=unroll*(MULTIDIM_SIZE(Iii)/unroll);
         for (int jj=0; jj<NPCA; jj++)
         {
             const MultidimArray<double> &Ijj=PCAbasis[jj];
-            CtY(jj,ii)=0;
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(Iii)
-            MAT_ELEM(CtY,jj,ii)+=
-                DIRECT_A1D_ELEM(Iii,i)*DIRECT_A1D_ELEM(Ijj,i);
+
+            double dotProduct=0;
+            size_t n=0;
+            const float *ptrii=MULTIDIM_ARRAY(Iii);
+            const double *ptrjj=MULTIDIM_ARRAY(Ijj);
+            for (size_t n=0; n<nmax; n+=unroll, ptrii+=unroll, ptrjj+=unroll)
+            {
+            	dotProduct += *ptrii * *ptrjj;
+            	dotProduct += *(ptrii+1) * *(ptrjj+1);
+            	dotProduct += *(ptrii+2) * *(ptrjj+2);
+            	dotProduct += *(ptrii+3) * *(ptrjj+3);
+            }
+            for (n=nmax, ptrii=MULTIDIM_ARRAY(Iii)+nmax, ptrjj=MULTIDIM_ARRAY(Ijj)+nmax;
+            	n<MULTIDIM_SIZE(Iii); ++n, ++ptrii, ++ptrjj)
+            	dotProduct += *ptrii * *ptrjj;
+            MAT_ELEM(CtY,jj,ii)=dotProduct;
         }
     }
 }
@@ -161,13 +175,26 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
         for (int ii=0; ii<NPCA; ii++)
         {
             MultidimArray<double> &Ipca=PCAbasis[ii];
+            const size_t unroll=4;
+            size_t nmax=unroll*(MULTIDIM_SIZE(Ipca)/unroll);
             Ipca.initZeros();
             for (int jj=0; jj<N; jj++)
             {
                 const MultidimArray<float> &I=v[jj];
-                double val=XtXXtinv(jj,ii);
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(I)
-                DIRECT_A1D_ELEM(Ipca,i)+=DIRECT_A1D_ELEM(I,i)*val;
+                const float *ptrI=MULTIDIM_ARRAY(I);
+                double *ptrPCA=MULTIDIM_ARRAY(Ipca);
+                double val=MAT_ELEM(XtXXtinv,jj,ii);
+                size_t n;
+                for (n=0; n<nmax; n+=unroll, ptrPCA+=unroll, ptrI+=unroll)
+                {
+                	*ptrPCA += *ptrI * val;
+                	*(ptrPCA+1) += *(ptrI+1) * val;
+                	*(ptrPCA+2) += *(ptrI+2) * val;
+                	*(ptrPCA+3) += *(ptrI+3) * val;
+                }
+                for (n=nmax, ptrI=MULTIDIM_ARRAY(I)+nmax, ptrPCA=MULTIDIM_ARRAY(Ipca)+nmax;
+                	n<MULTIDIM_SIZE(I); ++n, ++ptrI, ++ptrPCA)
+                	*ptrPCA += *ptrI * val;
             }
         }
     }
