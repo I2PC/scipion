@@ -1,0 +1,19 @@
+# XMIPP_STAR_1 *
+# Crystal Projection Parameters
+data_
+# X and Y projection dimensions [Xdim Ydim]
+_dimensions2D   '64 64'
+# Lattice vector a
+_latticeVec1    '60.23 21.95'
+# Lattice vector b
+_latticeVec2    '-49.026 41.1384'
+# Noise applied to pixels [noise (bias)]
+_noisePixelLevel   '0'
+# Disappearing threshold
+_crystalDisThresh  1.0
+# Orthogonal projections
+_orthogonalProj  0
+#Shift File 
+#_crystalShiftFile  NULL
+
+
