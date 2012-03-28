@@ -14,7 +14,7 @@ import xmipp.jni.MetaData;
  */
 public class EllipseCTF {
 
-    private double Q0, Cs, D, Ts, kV, lambda;
+    private double Q0, Cs, D, Ts, kV, lambda, downsampleFactor;
     double defU, defV;
     private double defocusU, defocusV;
 
@@ -32,7 +32,8 @@ public class EllipseCTF {
 
             Q0 = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_Q0, firstID);
             Cs = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_CS, firstID);
-            Ts = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, firstID);
+            downsampleFactor = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, firstID);
+            Ts = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, firstID)*downsampleFactor;
             kV = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, firstID);
 
             defU = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, firstID);
@@ -70,7 +71,7 @@ public class EllipseCTF {
         double a = lambda * R * R;
         double defocus = Math.atan(-Q0) / (Math.PI * a) - 1 / a - 0.5 * (Cs * a * lambda);
 
-        return defocus;
+        return -defocus;
     }
 
     public double getSamplingRate() {
