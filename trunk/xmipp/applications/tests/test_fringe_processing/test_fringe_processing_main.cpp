@@ -39,7 +39,7 @@ protected:
 #define len 128
 
         //get example down1_42_Periodogramavg.psd
-        chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
+        chdir(((String)(getXmippPath() + (String)"/resources/test/fringe")).c_str());
     }
 
     //Image to be fitted:
@@ -193,6 +193,48 @@ TEST_F( FringeProcessingTests, orMinDer)
 //	ASSERT_TRUE(true);
 //
 //}
+
+TEST_F( FringeProcessingTests, direction)
+{
+	//FileName ModName = "Mod.txt";
+	//FileName DirName = "Dir.txt";
+	//FileName OrName = "Or.txt";
+	FringeProcessing fp;
+	MultidimArray<double> im, orMap, orModMap, dirMap;
+
+	int nx = 311;
+    int ny = 311;
+    double noiseLevel = 0.0;
+    double freq = 20;
+    Matrix1D<int> coefs(10);
+
+    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    orMap.resizeNoCopy(im);
+    dirMap.resizeNoCopy(im);
+
+    int wSize = 2;
+    //We get the orientation map
+    fp.orMinDer(im,orMap,orModMap, wSize);
+
+    //we obtain the phase direction map from the orientation map
+    double lambda = 2;
+    int size = 1;
+    fp.direction(orMap, orModMap, lambda, size, dirMap);
+
+    //Comparing with Matlab results
+    ASSERT_TRUE( A2D_ELEM(dirMap,10,10)  - 2.35619);
+    ASSERT_TRUE( A2D_ELEM(dirMap,10,20)  - 2.33116);
+    ASSERT_TRUE( A2D_ELEM(dirMap,20,10)  - 2.38123);
+    ASSERT_TRUE( A2D_ELEM(dirMap,20,20)  - 2.35619);
+    ASSERT_TRUE( A2D_ELEM(dirMap,100,50) - 2.35365);
+    ASSERT_TRUE( A2D_ELEM(dirMap,50,100) - -2.43884);
+    ASSERT_TRUE( A2D_ELEM(dirMap,100,100) - 0.868044);
+    ASSERT_TRUE( A2D_ELEM(dirMap,200,100) - -0.779435);
+
+    //orModMap.write(ModName);
+    //orMap.write(OrName);
+    //dirMap.write(DirName);
+}
 
 
 GTEST_API_ int main(int argc, char **argv)
