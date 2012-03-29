@@ -14,6 +14,7 @@ DO_ARPACK=false
 
 DO_CLEAN=true
 DO_STATIC=false
+DO_SETUP=true
 DO_GUI=true
 
 export NUMBER_OF_CPU=1
@@ -60,7 +61,8 @@ for param in $@; do
 			DO_FFTW=false
 			DO_TIFF=false
 			DO_JPEG=false
-			DO_ARPACK=false;;			
+			DO_ARPACK=false
+			DO_SETUP=false;;			
         "-j")             TAKE_CPU=true;;
         "untar=true")   DO_UNTAR=true;;
         "untar=false")   DO_UNTAR=false;;
@@ -167,7 +169,7 @@ BUILD_PATH=$XMIPP_HOME/build
 VSQLITE=sqlite-3.6.23
 VTCLTK=8.5.10
 VPYTHON=Python-2.7.2
-VFFTW=fftw-3.2.2
+VFFTW=fftw-3.3.1
 VTIFF=tiff-3.9.4
 VJPEG=jpeg-8c
 VARPACK=arpack++-2.3
@@ -441,7 +443,9 @@ cd $XMIPP_HOME
 #echoGreen "COMPILE: $COMPILE_ARGS"
 #echoGreen "GUI: $GUI_ARGS"
 
-echoExec "./setup.py -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install"
+if $DO_SETUP; then
+	echoExec "./setup.py -j $NUMBER_OF_CPU configure $CONFIGURE_ARGS compile $COMPILE_ARGS $GUI_ARGS install"
+fi
 
 exit 0
 

@@ -109,7 +109,7 @@ void FourierTransformer::setReal(MultidimArray<double> &input)
             if (YSIZE(input)==1)
                 ndim=1;
         }
-        int *N = new int[ndim];
+        int N[3];
         switch (ndim)
         {
         case 1:
@@ -140,7 +140,6 @@ void FourierTransformer::setReal(MultidimArray<double> &input)
                                           FFTW_ESTIMATE);
         if (fPlanForward == NULL || fPlanBackward == NULL)
             REPORT_ERROR(ERR_PLANS_NOCREATE, "FFTW plans cannot be created");
-        delete [] N;
         dataPtr=MULTIDIM_ARRAY(*fReal);
         pthread_mutex_unlock(&fftw_plan_mutex);
     }

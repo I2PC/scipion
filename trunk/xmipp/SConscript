@@ -6,7 +6,7 @@ Import('env')
 import os
 from os.path import join
 
-FFTWDir = "external/fftw-3.2.2"
+FFTWDir = "external/fftw-3.3.1"
 FFTWLibs = ['fftw3', 'fftw3_threads']
 TIFFDir = "external/tiff-3.9.4"
 TIFFLibs = ['tiff']

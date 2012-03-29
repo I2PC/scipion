@@ -221,17 +221,31 @@ def addTabs(nb):
         
         
 def run(notebook):
+    
     options = notebook.options
     out = OUTPUT
     procs = options.getNumberOfCpu()
     scons = os.path.join("external", "scons", "scons.py")
     os.environ['JAVA_HOME'] = notebook.getValue('Java & QT', 'JAVA_HOME')
-    cmd = ''    
+    cmd = ''   
     if out != STDOUT and os.path.exists(out):
         os.remove(out)
-    
+    # Check new external packages
     if options.hasOption('update'):
+        # Check new external packages
+        if not os.path.exists("external/fftw-3.3.1/.libs/libfftw3.so"):
+            cmd += '\n'
+            cmd += 'echo "\033[1;31mXmipp Update Service:  fftw-3.3.1 library being updated, please wait ...\033[0m"\n'
+            cmd += 'echo "Calling the installer ..."\n'
+            cmd1 = "./install.sh -j %(procs)s disable_all fftw=true" % locals()
+            cmd += 'echo "%(cmd1)s" >> %(out)s \n'
+            cmd += cmd1 + '\n'
         cmd += 'echo "*** RUNNING SVN UPDATE..." >> %(out)s 2>&1\n svn up >> %(out)s 2>&1\n'
+    elif not os.path.exists("external/fftw-3.3.1/.libs/libfftw3.so"):
+        print '\033[1;31mXMIPP Update service: External fftw-3.3.1 library update available\033[0m'
+        print 'To install, execute xupdate'
+        
+        
     
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
