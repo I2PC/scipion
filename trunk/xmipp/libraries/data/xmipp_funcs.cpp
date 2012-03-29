@@ -884,7 +884,7 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 }
 
 /* Map file */
-void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescriptor)
+void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescriptor, bool readOnly)
 {
     struct stat file_status;
     if(stat(filename.data(), &file_status) != 0)
@@ -893,11 +893,17 @@ void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescrip
     if(size==0)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"File size=0, cannot read it ("+filename+")");
 
-    fileDescriptor = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
+    if (readOnly)
+        fileDescriptor = open(filename.data(),  O_RDONLY, S_IREAD);
+    else
+    	fileDescriptor = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
     if (fileDescriptor == -1)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot read file named "+filename);
 
-    map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0);
+    if (readOnly)
+    	map = (char *) mmap(0, size, PROT_READ, MAP_SHARED, fileDescriptor, 0);
+    else
+    	map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0);
     if (map == MAP_FAILED)
         REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
 }

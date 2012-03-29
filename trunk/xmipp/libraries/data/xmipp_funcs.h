@@ -1159,7 +1159,7 @@ size_t xmippFWRITE(const void* src,
                    bool reverse = false);
 
 /** Map file to memory */
-void mapFile(const FileName &filename, char*&map,size_t &size, int &fileDescriptor);
+void mapFile(const FileName &filename, char*&map,size_t &size, int &fileDescriptor, bool readOnly=false);
 
 /** Unmap file*/
 void unmapFile(char *&map, size_t &size, int& fileDescriptor);
