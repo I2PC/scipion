@@ -43,7 +43,7 @@ class ProtExtractParticles(XmippProtocol):
             self.TiltPairs = False
         self.pickingDir = pickingProt.WorkingDir
         if self.TiltPairs:
-            self.pickingMicrographs = pickingProt.getFilename('tiltedPairs')
+            self.pickingMicrographs = ickingProt.getFilename('tiltedPairs')
         else:
             self.pickingMicrographs = pickingProt.getFilename("micrographs")
         self.micrographs = self.getEquivalentFilename(pickingProt, self.pickingMicrographs)
@@ -59,14 +59,14 @@ class ProtExtractParticles(XmippProtocol):
         md = MetaData(self.pickingMicrographs)
         self.containsCTF = md.containsLabel(MDL_CTFMODEL)
 
-        destFnExtractList = self.getFilename("extractList")
+        destFnExtractList = self.getFilename("extractList",Family=self.Family)
         if self.TiltPairs:
             self.insertStep("createExtractListTiltPairs", family=self.Family,
                                fnMicrographs=self.pickingMicrographs, pickingDir=self.pickingDir,
                                fnExtractList=destFnExtractList)
             micrographs = self.createBlocksInExtractFile(self.pickingMicrographs)
         else:
-            srcFnExtractList = join(self.pickingDir, self.getFilename("extractList"))
+            srcFnExtractList = os.path.join(self.pickingDir,self.Family+"_extract_list.xmd")
             if exists(srcFnExtractList):
                 self.insertStep("createLink",source=srcFnExtractList,dest=destFnExtractList)
                 micrographs = getBlocksInMetaDataFile(srcFnExtractList)
@@ -124,7 +124,7 @@ class ProtExtractParticles(XmippProtocol):
 
     def summary(self):
         message=[]
-        familyFn = self.getFilename("family")
+        familyFn = self.getFilename("family",Family=self.Family)
         if self.TiltPairs:
             part1 = "tilt pairs"
             part2 = "particle pairs"
@@ -219,7 +219,6 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
         
         fnUntilted = join(pickingDir,umicName + ".pos")
         fnTilted = join(pickingDir,tmicName + ".pos")
-        print "Looking for "+fnUntilted+" "+fnTilted
 
         mdUntiltedPos.clear()
         mdTiltedPos.clear()
@@ -231,14 +230,12 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
                 pass
         # Append alphanumeric prefix to help identifying the block 
         fn = _getFilename('mic_block_fn', micName=umicName, fn=fnExtractList)
-        print "Writing untilted to "+fn
         mdUntiltedPos.write(fn, MD_APPEND)
         fn =_getFilename('mic_block_fn', micName=tmicName, fn=fnExtractList)
-        print "Writing tilted to "+fn
         mdTiltedPos.write(fn, MD_APPEND)
 
 def phaseFlip(log, micrograph, ctf, fnOut):
-    runJob(log,"xmipp_ctf_phase_flip"," -i %(micrograph)s --ctf %(ctf)s -o %(fnOut)" % locals())
+    runJob(log,"xmipp_ctf_phase_flip"," -i %(micrograph)s --ctf %(ctf)s -o %(fnOut)s" % locals())
 
 def extractParticles(log,WorkingDir,micrographName, ctf,originalMicrograph, micrographToExtract, fnExtractList,
                      particleSize, doFlip, doNorm, doLog, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
