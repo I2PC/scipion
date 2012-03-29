@@ -1,6 +1,6 @@
 # XMIPP_STAR_1 *
 # Projection Parameters
-data_
+data_block1
 #_angleFile     test.o
 # X and Y projection dimensions [Xdim Ydim]
 _dimensions2D   '64 64'
