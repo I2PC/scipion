@@ -1276,13 +1276,17 @@ private:
                 REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::mmapFile: Error opening the image file to be mapped.");
         }
         char * map;
+        const size_t pagesize = sysconf(_SC_PAGESIZE);
+        size_t offsetPages = (offset/pagesize)*pagesize;
+        mappedOffset -= offsetPages;
+        mappedSize -= offsetPages;
 
         if (this->hFile->mode == WRITE_READONLY)
-            map = (char*) mmap(0,mappedSize, PROT_READ, MAP_SHARED, mFd, 0);
+            map = (char*) mmap(0,mappedSize, PROT_READ, MAP_SHARED, mFd, offsetPages);
         else
-            map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0);
+            map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, offsetPages);
 
-        if ( map == (void*) -1 )
+        if ( map == MAP_FAILED )
             REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
         data.data = reinterpret_cast<T*> (map+mappedOffset);
         data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);
