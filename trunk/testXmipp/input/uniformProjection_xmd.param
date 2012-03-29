@@ -1,6 +1,6 @@
 # XMIPP_STAR_1 *
 # Projection Parameters
-data_
+data_block1
 # X and Y projection dimensions [Xdim Ydim]
 _dimensions2D   '64 64'
 # Rotation range and number of samples [Start Finish NSamples]
