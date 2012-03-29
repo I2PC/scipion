@@ -256,7 +256,6 @@ public class ClassesJDialog extends XmippDialog {
 			if (classes == null)
 				return 0;
 			return classes.size();
-			// return frame.getParticlePicker().getFamilies().size();
 		}
 
 		@Override
@@ -301,7 +300,7 @@ public class ClassesJDialog extends XmippDialog {
 		
 		public void addNewRow(){
 			int newPos = classes.size();
-			classes.add(new ClassInfo("NewClass", getNextColor()));			
+			classes.add(new ClassInfo("NewClass", getNextColor()));
 			fireTableRowsInserted(newPos, newPos);
 		}
 		
