@@ -70,6 +70,7 @@ public:
     double psiSingle;
     /// Use real-shears algorithm
     bool shears;
+
 public:
     /** Read parameters. */
     void readParams();
@@ -138,7 +139,7 @@ struct Angle_range
     the same file format, for doing so you must first introduce the
     right values in the class fields, and the call to the procedure
     write */
-class Projection_Parameters
+class ParametersProjection
 {
 public:
     /// Projection Xdim
@@ -210,7 +211,7 @@ public:
         program parameters. Basically it loads the phantom, sets
         the phantom mode to voxel or mathematical description and
         generates or read the projection angles.*/
-    void produce_Side_Info(Projection_Parameters &prm,
+    void produce_Side_Info(ParametersProjection &prm,
                            ProgProject &prog_prm);
 };
 
@@ -230,7 +231,7 @@ public:
     projection set. The current line of the document file is set to
     the beginning of the file.
 */
-int PROJECT_Assign_angles(MetaData &DF, const Projection_Parameters &prm);
+int PROJECT_Assign_angles(MetaData &DF, const ParametersProjection &prm);
 
 /* Effectively project ----------------------------------------------------- */
 /** Effectively project.
@@ -244,7 +245,7 @@ int PROJECT_Assign_angles(MetaData &DF, const Projection_Parameters &prm);
 int PROJECT_Effectively_project(const std::string &fnOut,
 								bool singleProjection,
 								bool shears,
-								const Projection_Parameters &prm,
+								const ParametersProjection &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, MetaData &SF);

@@ -263,7 +263,7 @@ void Oriented_Feature::rotate(const Matrix2D<double> &E)
 /* I/O functions                                                             */
 /* ------------------------------------------------------------------------- */
 /* Read common part of features -------------------------------------------- */
-void Feature::read_common(char *line)
+void Feature::readCommon(char *line)
 {
     int        stat;
     char       straux[6];
@@ -281,6 +281,32 @@ void Feature::read_common(char *line)
     Type = straux;
 }
 
+// Read the common parameters for a feature
+void Feature::readCommon(MDRow & row)
+{
+    Center.resize(3);
+	std::vector <double> VecFeatureCenter;  // Keep the center of the feature
+	std::string s_op;  // As no label for char in MD_TYPE  (for add/assign)
+	if (!row.getValue(MDL_PHANTOM_FEATURE_TYPE,Type) ||
+		      !row.getValue(MDL_PHANTOM_FEATURE_OPERATION,s_op) ||
+		      !row.getValue(MDL_PHANTOM_FEATURE_DENSITY,Density) ||
+		      !row.getValue(MDL_PHANTOM_FEATURE_CENTER,VecFeatureCenter))
+		 REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Error when reading common part of feature");
+	XX(Center) = VecFeatureCenter[0];
+	YY(Center) = VecFeatureCenter[1];
+	ZZ(Center) = VecFeatureCenter[2];
+	Add_Assign = s_op[0];
+}
+
+// Read all the related parameters of the feature
+void Feature::read(MDRow & row)
+{
+	readCommon(row);
+	std::vector<double> VectSpecific;  // Vector for specific parameters of feature
+	row.getValue(MDL_PHANTOM_FEATURE_SPECIFIC, VectSpecific);
+	read_specific(VectSpecific);
+}
+
 /* Read a sphere ----------------------------------------------------------- */
 void Sphere::read_specific(char *line)
 {
@@ -290,7 +316,14 @@ void Sphere::read_specific(char *line)
         REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a sphere:" + line);
     prepare();
 }
-
+/* Read a sphere from MetaData -------------------------------------------- */
+void Sphere::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 1)
+	        REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a sphere: empty Feature vector");
+    radius = vect[0];
+    prepare();
+}
 /* Read a blob ----------------------------------------------------------- */
 void Blob::read_specific(char *line)
 {
@@ -298,6 +331,16 @@ void Blob::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %d", &radius, &alpha, &m);
     if (stat != 3)
         REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a blob:" + line);
+    prepare();
+}
+/* Read a Blob from MetaData --------------------------------------------- */
+void Blob::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 3)
+		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a blob");
+    radius = vect[0];
+    alpha = vect[1];
+    m = vect[2];
     prepare();
 }
 
@@ -308,6 +351,15 @@ void Gaussian::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf", &sigma);
     if (stat != 1)
         REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a Gaussian:" + line);
+    prepare();
+}
+
+/* Read a Gaussian from MetaData --------------------------------------------- */
+void Gaussian::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 1)
+		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a Gaussian");
+	sigma = vect[0];
     prepare();
 }
 
@@ -322,6 +374,20 @@ void Cylinder::read_specific(char *line)
     prepare();
 }
 
+/* Read a Cylinder from MetaData --------------------------------------------- */
+void Cylinder::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 6)
+		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a cylinder");
+	xradius = vect[0];
+	yradius = vect[1];
+	height = vect[2];
+	rot = vect[3];
+	tilt = vect[4];
+	psi =  vect[5];
+    prepare();
+}
+
 /* Read a Double Cylinder -------------------------------------------------- */
 void DCylinder::read_specific(char *line)
 {
@@ -333,6 +399,19 @@ void DCylinder::read_specific(char *line)
     prepare();
 }
 
+/* Read a DCylinder from MetaData ------------------------------------------- */
+void DCylinder::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 6)
+		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a double cylinder");
+	radius = vect[0];
+	height = vect[1];
+	separation = vect[2];
+	rot = vect[3];
+	tilt = vect[4];
+	psi =  vect[5];
+    prepare();
+}
 /* Read a Cube ------------------------------------------------------------- */
 void Cube::read_specific(char *line)
 {
@@ -341,6 +420,20 @@ void Cube::read_specific(char *line)
                   &xdim, &ydim, &zdim, &rot, &tilt, &psi);
     if (stat != 6)
         REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cube" + line);
+    prepare();
+}
+
+/* Read a Cube from MetaData ---------------------------------------------- */
+void Cube::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 6)
+		REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cube");
+	xdim = vect[0];
+	ydim = vect[1];
+	zdim = vect[2];
+	rot = vect[3];
+	tilt = vect[4];
+	psi =  vect[5];
     prepare();
 }
 
@@ -355,6 +448,20 @@ void Ellipsoid::read_specific(char *line)
     prepare();
 }
 
+/* Read a Ellipsoid from MetaData ---------------------------------------------- */
+void Ellipsoid::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 6)
+		REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a ellipsoid");
+	xradius = vect[0];
+	yradius = vect[1];
+	zradius = vect[2];
+	rot = vect[3];
+	tilt = vect[4];
+	psi =  vect[5];
+    prepare();
+}
+
 /* Read a Cone ------------------------------------------------------------- */
 void Cone::read_specific(char *line)
 {
@@ -366,12 +473,32 @@ void Cone::read_specific(char *line)
     prepare();
 }
 
+/* Read a Cone from MetaData ---------------------------------------------- */
+void Cone::read_specific(const std::vector<double> &vect)
+{
+	if (vect.size() != 5)
+		REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cone");
+	radius = vect[0];
+	height = vect[1];
+	rot = vect[2];
+	tilt = vect[3];
+	psi = vect[4];
+	prepare();
+}
 /* Show an sphere ---------------------------------------------------------- */
 void  Sphere::feat_printf(FILE *fh) const
 {
     fprintf(fh, "sph    %c     %1.4f    % 7.2f   % 7.2f    % 7.2f    % 7.2f\n",
             Add_Assign, Density, XX(Center), YY(Center), ZZ(Center),
             radius);
+}
+
+/* Write specific parameters of a Sphere in MetaData ---------------------- */
+void  Sphere::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(radius);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect, id);
 }
 
 /* Show a Blob    ---------------------------------------------------------- */
@@ -383,12 +510,30 @@ void  Blob::feat_printf(FILE *fh) const
             radius, alpha, m);
 }
 
+/* Write specific parameters of a Blob in MetaData ---------------------- */
+void  Blob::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(radius);
+	FSVect.push_back(alpha);
+	FSVect.push_back(m);
+	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+}
+
 /* Show a Gaussian --------------------------------------------------------- */
 void  Gaussian::feat_printf(FILE *fh) const
 {
     fprintf(fh, "blo    %c     %1.4f    % 7.2f   % 7.2f    % 7.2f    % 7.2f\n",
             Add_Assign, Density, XX(Center), YY(Center), ZZ(Center),
             sigma);
+}
+
+/* Write specific parameters of a Gaussian in MetaData ---------------------- */
+void  Gaussian::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(sigma);
+	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 
 /* Show a cylinder --------------------------------------------------------- */
@@ -401,6 +546,18 @@ void  Cylinder::feat_printf(FILE *fh) const
             rot, tilt, psi);
 }
 
+/* Write specific parameters of a Cylinder in MetaData ---------------------- */
+void  Cylinder::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(xradius);
+	FSVect.push_back(yradius);
+	FSVect.push_back(height);
+	FSVect.push_back(rot);
+	FSVect.push_back(tilt);
+	FSVect.push_back(psi);
+	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+}
 /* Show a double cylinder -------------------------------------------------- */
 void  DCylinder::feat_printf(FILE *fh) const
 {
@@ -411,6 +568,18 @@ void  DCylinder::feat_printf(FILE *fh) const
             rot, tilt, psi);
 }
 
+/* Write specific parameters of a DCylinder in MetaData ---------------------- */
+void  DCylinder::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(radius);
+	FSVect.push_back(height);
+	FSVect.push_back(separation);
+	FSVect.push_back(rot);
+	FSVect.push_back(tilt);
+	FSVect.push_back(psi);
+	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+}
 /* Show a cube ------------------------------------------------------------- */
 void  Cube::feat_printf(FILE *fh) const
 {
@@ -419,6 +588,19 @@ void  Cube::feat_printf(FILE *fh) const
             Add_Assign, Density, XX(Center), YY(Center), ZZ(Center),
             xdim, ydim, zdim,
             rot, tilt, psi);
+}
+
+/* Write specific parameters of a Cube in MetaData ---------------------- */
+void  Cube::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(xdim);
+	FSVect.push_back(ydim);
+	FSVect.push_back(zdim);
+	FSVect.push_back(rot);
+	FSVect.push_back(tilt);
+	FSVect.push_back(psi);
+	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 
 /* Show an ellipsoid ------------------------------------------------------- */
@@ -431,6 +613,19 @@ void  Ellipsoid::feat_printf(FILE *fh) const
             rot, tilt, psi);
 }
 
+/* Write specific parameters of a Ellipsoid in MetaData ---------------------- */
+void  Ellipsoid::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(xradius);
+	FSVect.push_back(yradius);
+	FSVect.push_back(zradius);
+	FSVect.push_back(rot);
+	FSVect.push_back(tilt);
+	FSVect.push_back(psi);
+	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+}
+
 /* Show a cone ------------------------------------------------------------- */
 void  Cone::feat_printf(FILE *fh) const
 {
@@ -440,6 +635,19 @@ void  Cone::feat_printf(FILE *fh) const
             radius, height,
             rot, tilt, psi);
 }
+
+/* Write specific parameters of a Cone in MetaData ---------------------- */
+void  Cone::feat_printm(MetaData &MD, size_t id)
+{
+	std::vector<double> FSVect;
+	FSVect.push_back(radius);
+	FSVect.push_back(height);
+	FSVect.push_back(rot);
+	FSVect.push_back(tilt);
+	FSVect.push_back(psi);
+	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+}
+
 
 /* Show feat --------------------------------------------------------------- */
 std::ostream& operator << (std::ostream &o, const Feature *F)
@@ -1911,122 +2119,225 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
 // Clear actual phantom
     clear();
 
-// Open Volume Description File
-    if ((fh_phantom = fopen(fn_phantom.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::read: Cannot open the phantom file: "
-                     + fn_phantom);
-    fn = fn_phantom;
-
-// Read the file
-    while (fgets(line, 200, fh_phantom) != NULL)
+    if (fn_phantom.isMetaData())
     {
-        if (line[0] == 0) continue;
-        if (line[0] == '#') continue;
-        if (line[0] == '\n') continue;
+    	 MetaData MD1;  //MetaData for the first block (phantom parameters)
+    	 MetaData MD2;	//MetaData for the second block (phantom parameters)
+    	 std::vector <double> TempVec; // A temporary vector for reading vector data
+    	 size_t objId;
 
-        // Read volume dimensions and global density .........................
-        if (Global_Feature_Read == 0)
-        {
-            Global_Feature_Read = 1;
-            stat = sscanf(line, "%d %d %d %lf %lf", &xdim, &ydim, &zdim,
-                          &Background_Density, &scale);
-            if (stat < 3)
-                REPORT_ERROR(ERR_IO_NOREAD, "Phantom::read: check the volume"
-                             " dimensions and global density in volume description file");
-            if (stat <= 3) Background_Density = 0;
-            if (stat <= 4) scale = 1;
-            if (apply_scale)
-            {
-                xdim = (int) CEIL(scale * xdim);
-                ydim = (int) CEIL(scale * ydim);
-                zdim = (int) CEIL(scale * zdim);
-                current_scale = 1;
-            }
-            else current_scale = scale;
-            continue;
-        }
+    // Assign different blocks to different MetaDatas
+    	 MD1.read((std::string)"block1@"+fn_phantom.c_str());
+    	 MD2.read((std::string)"block2@"+fn_phantom.c_str());
 
-        // Read feature description ..........................................
-        stat = sscanf(line, "%s", straux);
-        feat_type = straux;
-        if (stat != 1)
-            REPORT_ERROR(ERR_IO_NOREAD,
-                         (std::string)"Phantom::read: Not correct feature type" + line);
+   // Read the first block containing parameters of phantom
+    	 objId = MD1.firstObject();
+    	 MD1.getValue(MDL_DIMENSIONS_3D, TempVec, objId);
+    	 if (TempVec.size()<3)
+    		 REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_DIMENSIONS_3D) + " problems with project dimensions");
+    	 xdim = TempVec[0]; ydim = TempVec[1]; zdim = TempVec[2];
+    	 if (!MD1.getValue(MDL_PHANTOM_BGDENSITY, Background_Density, objId))
+    		 Background_Density = 0;
+    	 if (!MD1.getValue(MDL_SCALE, scale, objId))
+    		 scale = 1;
+    	 if (apply_scale)
+    	 {
+    		 xdim = (int) CEIL(scale * xdim);
+    		 ydim = (int) CEIL(scale * ydim);
+    		 zdim = (int) CEIL(scale * zdim);
+    		 current_scale = 1;
+    	 }
+		 else current_scale = scale;
 
-        if (feat_type == "sph")
-        {
-            sph = new Sphere;
-            feat = sph;
-            sph->read_common(line);
-            sph->read_specific(line);
-        }
-        else if (feat_type == "blo")
-        {
-            blo = new Blob;
-            feat = blo;
-            blo->read_common(line);
-            blo->read_specific(line);
-        }
-        else if (feat_type == "gau")
-        {
-            gau = new Gaussian;
-            feat = gau;
-            gau->read_common(line);
-            gau->read_specific(line);
-        }
-        else if (feat_type == "cyl")
-        {
-            cyl = new Cylinder;
-            feat = cyl;
-            cyl->read_common(line);
-            cyl->read_specific(line);
-        }
-        else if (feat_type == "dcy")
-        {
-            dcy = new DCylinder;
-            feat = dcy;
-            dcy->read_common(line);
-            dcy->read_specific(line);
-        }
-        else if (feat_type == "cub")
-        {
-            cub = new Cube;
-            feat = cub;
-            cub->read_common(line);
-            cub->read_specific(line);
-        }
-        else if (feat_type == "ell")
-        {
-            ell = new Ellipsoid;
-            feat = ell;
-            ell->read_common(line);
-            ell->read_specific(line);
-        }
-        else if (feat_type == "con")
-        {
-            con = new Cone;
-            feat = con;
-            con->read_common(line);
-            con->read_specific(line);
-        }
-        else
-            REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Phantom::read: Unknown feature type: " + line);
+    // Read the second block
+    	 MDRow FeatureRow;
+    	 FOR_ALL_OBJECTS_IN_METADATA(MD2)
+		 {
+    		MD2.getRow(FeatureRow, __iter.objId);
+    		if(!FeatureRow.getValue(MDL_PHANTOM_FEATURE_TYPE, feat_type))
+    			REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_TYPE) + " feature type not present");
+    		if (feat_type == "sph")
+			{
+				sph = new Sphere;
+				feat = sph;
+				sph->read(FeatureRow);
+			}
+			else if (feat_type == "blo")
+			{
+				blo = new Blob;
+				feat = blo;
+				blo->read(FeatureRow);
+			}
+			else if (feat_type == "gau")
+			{
+				gau = new Gaussian;
+				feat = gau;
+				gau->read(FeatureRow);
+			}
+			else if (feat_type == "cyl")
+			{
+				cyl = new Cylinder;
+				feat = cyl;
+				cyl->read(FeatureRow);
+			}
+			else if (feat_type == "dcy")
+			{
+				dcy = new DCylinder;
+				feat = dcy;
+				dcy->read(FeatureRow);
+			}
+			else if (feat_type == "cub")
+			{
+				cub = new Cube;
+				feat = cub;
+				cub->read(FeatureRow);
+			}
+			else if (feat_type == "ell")
+			{
+				ell = new Ellipsoid;
+				feat = ell;
+				ell->read(FeatureRow);
+			}
+			else if (feat_type == "con")
+			{
+				con = new Cone;
+				feat = con;
+				con->read(FeatureRow);
+			}
+			else
+				REPORT_ERROR(ERR_ARG_INCORRECT, MDL::label2Str(MDL_PHANTOM_FEATURE_TYPE) + "Unknown feature type");
+    		if (apply_scale)
+			{
+				scaled_feat = feat->scale(scale);
+				scaled_feat->Center = scaled_feat->Center * scale;
+				delete feat;
 
-        // Scale and Store feature
-        if (apply_scale)
-        {
-            scaled_feat = feat->scale(scale);
-            scaled_feat->Center = scaled_feat->Center * scale;
-            delete feat;
-
-            // Store feature
-            VF.push_back(scaled_feat);
-        }
-        else
-            VF.push_back(feat);
+				// Store feature
+				VF.push_back(scaled_feat);
+			}
+			else
+				VF.push_back(feat);
+		 }
     }
-    fclose(fh_phantom);
-    phantom_scale = scale;
+    else
+    {
+	// Open Volume Description File
+		if ((fh_phantom = fopen(fn_phantom.c_str(), "r")) == NULL)
+			REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::read: Cannot open the phantom file: "
+						 + fn_phantom);
+		fn = fn_phantom;
+
+	// Read the file
+		while (fgets(line, 200, fh_phantom) != NULL)
+		{
+			if (line[0] == 0) continue;
+			if (line[0] == '#') continue;
+			if (line[0] == '\n') continue;
+
+			// Read volume dimensions and global density .........................
+			if (Global_Feature_Read == 0)
+			{
+				Global_Feature_Read = 1;
+				stat = sscanf(line, "%d %d %d %lf %lf", &xdim, &ydim, &zdim,
+							  &Background_Density, &scale);
+				if (stat < 3)
+					REPORT_ERROR(ERR_IO_NOREAD, "Phantom::read: check the volume"
+								 " dimensions and global density in volume description file");
+				if (stat <= 3) Background_Density = 0;
+				if (stat <= 4) scale = 1;
+				if (apply_scale)
+				{
+					xdim = (int) CEIL(scale * xdim);
+					ydim = (int) CEIL(scale * ydim);
+					zdim = (int) CEIL(scale * zdim);
+					current_scale = 1;
+				}
+				else current_scale = scale;
+				continue;
+			}
+
+			// Read feature description ..........................................
+			stat = sscanf(line, "%s", straux);
+			feat_type = straux;
+			if (stat != 1)
+				REPORT_ERROR(ERR_IO_NOREAD,
+							 (std::string)"Phantom::read: Not correct feature type" + line);
+
+			if (feat_type == "sph")
+			{
+				sph = new Sphere;
+				feat = sph;
+				sph->readCommon(line);
+				sph->read_specific(line);
+			}
+			else if (feat_type == "blo")
+			{
+				blo = new Blob;
+				feat = blo;
+				blo->readCommon(line);
+				blo->read_specific(line);
+			}
+			else if (feat_type == "gau")
+			{
+				gau = new Gaussian;
+				feat = gau;
+				gau->readCommon(line);
+				gau->read_specific(line);
+			}
+			else if (feat_type == "cyl")
+			{
+				cyl = new Cylinder;
+				feat = cyl;
+				cyl->readCommon(line);
+				cyl->read_specific(line);
+			}
+			else if (feat_type == "dcy")
+			{
+				dcy = new DCylinder;
+				feat = dcy;
+				dcy->readCommon(line);
+				dcy->read_specific(line);
+			}
+			else if (feat_type == "cub")
+			{
+				cub = new Cube;
+				feat = cub;
+				cub->readCommon(line);
+				cub->read_specific(line);
+			}
+			else if (feat_type == "ell")
+			{
+				ell = new Ellipsoid;
+				feat = ell;
+				ell->readCommon(line);
+				ell->read_specific(line);
+			}
+			else if (feat_type == "con")
+			{
+				con = new Cone;
+				feat = con;
+				con->readCommon(line);
+				con->read_specific(line);
+			}
+			else
+				REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Phantom::read: Unknown feature type: " + line);
+
+			// Scale and Store feature
+			if (apply_scale)
+			{
+				scaled_feat = feat->scale(scale);
+				scaled_feat->Center = scaled_feat->Center * scale;
+				delete feat;
+
+				// Store feature
+				VF.push_back(scaled_feat);
+			}
+			else
+				VF.push_back(feat);
+		}
+		fclose(fh_phantom);
+		phantom_scale = scale;
+    }
 }
 
 /* Show whole phantom ------------------------------------------------------ */
@@ -2044,24 +2355,65 @@ std::ostream& operator << (std::ostream &o, const Phantom &P)
 void Phantom::write(const FileName &fn_phantom)
 {
 
-    FILE *fh_phantom;
-    char line[201];
+	if (fn_phantom.isMetaData())
+	{
+		MetaData MD1;  //MetaData for phanto global parameters
+		MetaData MD2;  //MetaData for Feature parameters
+		std::vector<double> FCVect(3);  //For the center of feature
+		size_t id;
+	// Write global parameters to the first block
+		std::vector<double> PCVector;  //For the center of Phantom
+		MD1.setColumnFormat(false);
+		id = MD1.addObject();
+		PCVector.push_back(xdim);
+		PCVector.push_back(ydim);
+		PCVector.push_back(zdim);
+		MD1.setValue(MDL_DIMENSIONS_3D, PCVector, id);
+		MD1.setValue(MDL_PHANTOM_BGDENSITY, Background_Density, id);
+		if (current_scale != 1)
+			MD1.setValue(MDL_SCALE, current_scale, id);
+		else
+			MD1.setValue(MDL_SCALE, 1.0, id);
+		MD1.write((std::string)"block1@"+fn_phantom.c_str(), MD_OVERWRITE);
 
-// Open Volume Description File
-    if ((fh_phantom = fopen(fn_phantom.c_str(), "w")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::write: Cannot open the phantom file "
-                     + fn_phantom + " for output");
+	// Write specific parameters
+		std::string SAddAssign;  // string variab for feature operation (+/=)
+		for (int i = 0; i < VF.size(); i++)
+		{
+			id = MD2.addObject();
+			SAddAssign = VF[i]->Add_Assign;
+			MD2.setValue(MDL_PHANTOM_FEATURE_TYPE,VF[i]->Type, id);
+			MD2.setValue(MDL_PHANTOM_FEATURE_OPERATION, SAddAssign, id);
+			MD2.setValue(MDL_PHANTOM_FEATURE_DENSITY, VF[i]->Density, id);
+			FCVect[0] = XX(VF[i]->Center);
+			FCVect[1] = YY(VF[i]->Center);
+			FCVect[2] = ZZ(VF[i]->Center);
+			MD2.setValue(MDL_PHANTOM_FEATURE_CENTER, FCVect, id);
+			VF[i]->feat_printm(MD2, id);
+		}
+		MD2.write((std::string)"block2@"+fn_phantom.c_str(), MD_APPEND);
+	}
+	else
+	{
+		FILE *fh_phantom;
+		char line[201];
 
-// Write global comment and size
-    fprintf(fh_phantom, "#Phantom Xdim Ydim Zdim Background density\n");
-    fprintf(fh_phantom, "       %d    %d   %d   %f", xdim, ydim, zdim, Background_Density);
-    if (current_scale != 1) fprintf(fh_phantom, "   %f", current_scale);
-    fprintf(fh_phantom, "\n");
+	// Open Volume Description File
+		if ((fh_phantom = fopen(fn_phantom.c_str(), "w")) == NULL)
+			REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::write: Cannot open the phantom file "
+						 + fn_phantom + " for output");
 
-// Write description comment and features
-    fprintf(fh_phantom, "#Type +/= Density X_Center Y_Center Z_Center\n");
-    for (int i = 0; i < VF.size(); i++) VF[i]->feat_printf(fh_phantom);
-    fclose(fh_phantom);
+	// Write global comment and size
+		fprintf(fh_phantom, "#Phantom Xdim Ydim Zdim Background density\n");
+		fprintf(fh_phantom, "       %d    %d   %d   %f", xdim, ydim, zdim, Background_Density);
+		if (current_scale != 1) fprintf(fh_phantom, "   %f", current_scale);
+		fprintf(fh_phantom, "\n");
+
+	// Write description comment and features
+		fprintf(fh_phantom, "#Type +/= Density X_Center Y_Center Z_Center\n");
+		for (int i = 0; i < VF.size(); i++) VF[i]->feat_printf(fh_phantom);
+		fclose(fh_phantom);
+	}
 }
 
 /* Voxel Inside any feature ------------------------------------------------ */

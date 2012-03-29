@@ -25,7 +25,7 @@
 #ifndef _PROG_PROJECT_CRYSTAL_HH
 #define _PROG_PROJECT_CRYSTAL_HH
 
-class Projection_Parameters;
+class ParametersProjection;
 class PROJECT_Side_Info;
 class Crystal_Projection_Parameters;
 
@@ -99,7 +99,7 @@ public:
 /** Project a Mathematical volume as a crystal.
 */
 void project_crystal(Phantom &phantom, Projection &P,
-                     const Projection_Parameters &prm,
+                     const ParametersProjection &prm,
                      PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
                      float rot, float tilt, float psi);
 

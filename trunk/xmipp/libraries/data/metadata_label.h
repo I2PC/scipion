@@ -189,6 +189,7 @@ enum MDLabel
     MDL_NMA_MODEFILE, ///< File with an NMA mode
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
     MDL_NOISE_PARTICLE_COORD, ///< Noise description for particle's center coordenates (when projecting)
+    MDL_NOISE_COORD,  //Use instead of MDL_NOISE_PARTICLE_COORD in future
     MDL_NOISE_PIXEL_LEVEL, ///< Noise description for pixels' gray level (when projecting)
     MDL_ORDER, /// auxiliary label to be used as an index (long)
     MDL_ORIGINX, ///< Origin for the image in the X axis (double)
@@ -204,6 +205,8 @@ enum MDLabel
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
     MDL_PRJ_TILT_RANGE, // Vector with the initial and final tilt angle values, and step size
     MDL_PRJ_VOL,        // Volume file name to generate projections from
+    MDL_DIMENSIONS_3D,  // X,Y,Z dimensions
+    MDL_DIMENSIONS_2D,  // X,Y dimensions
     MDL_PSD, ///< A Power Spectrum Density file name (std::string)
     MDL_PSD_ENHANCED, ///< A enhanced Power Spectrum Density file name (std::string)
     MDL_RANDOMSEED, ///< Seed for random number generator
@@ -253,7 +256,30 @@ enum MDLabel
     MDL_ZINT, ///< Z component (int)
     MDL_ZSCORE, ///< Z Score (double)
     MDL_ZSIZE, ///< Z size (int)
+    MDL_PHANTOM_BGDENSITY, ///< Phantom background density (double)
+    MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
+    MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
+    MDL_PHANTOM_FEATURE_OPERATION, ///< Operation in case of overlapping features (+,-)
+    MDL_PHANTOM_FEATURE_DENSITY, ///< The density of the feature (double)
+    MDL_PHANTOM_FEATURE_CENTER, ///< Center of the feature (vector double)
+    MDL_PHANTOM_FEATURE_SPECIFIC, ///< Specific parameters for a feature (vector double)
 
+    MDL_PRJ_ANGFILE,  ///< File for generated angles
+    MDL_PRJ_ROT_RANGE,
+    MDL_PRJ_ROT_Noise ,  /// < Rotational angle dev and mean noise (vector double)
+    MDL_PRJ_ROT_RANDSTR,  /// < Type of randomness for Rotational (std::string)
+    MDL_PRJ_TILT_Noise,  /// < Tilt angle dev and mean noise (vector double)
+    MDL_PRJ_TILT_RANDSTR,  /// < Type of randomness for Tilt (std::string)
+    MDL_PRJ_PSI_RANGE,  /// < Psi angle range (vector double)
+    MDL_PRJ_PSI_Noise,  /// < Psi angle dev and mean noise (vector double)
+    MDL_PRJ_PSI_RANDSTR, /// < Type of randomness for Psi (std::string)
+
+    MDL_2D_LATTICE_VECA,   /// < Lattice vector for projection (vector double)
+    MDL_2D_LATTICE_VECB,   /// < Lattice vector for projection (vector double)
+    MDL_CRYSTAL_DISAPPEAR_THRE,   /// < Disappearing threshold (double)
+    MDL_CRYSTAL_SHFILE,   /// < Shift file for crystal projection
+    MDL_ORTHOGONAL_PROJECTION,   /// <Orthogonal projection or not (bool)
+    MDL_CRYSTAL_PROJ,   /// < Have a crystal projection (boo)
 
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
@@ -708,10 +734,11 @@ private:
         MDL::addLabel(MDL_NEIGHBORHOOD_RADIUS, LABEL_DOUBLE, "neighborhoodRadius");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR_DOUBLE, "NMADisplacements");
         MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile", TAGLABEL_TEXTFILE);
-        MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
-        MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
-        MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR_DOUBLE, "noisePixelLevel");
-        MDL::addLabel(MDL_ORDER, LABEL_SIZET, "order_");
+		MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
+		MDL::addLabel(MDL_NOISE_COORD, LABEL_VECTOR_DOUBLE, "noiseCoord");
+		MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
+		MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR_DOUBLE, "noisePixelLevel");
+		MDL::addLabel(MDL_ORDER, LABEL_SIZET, "order_");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
@@ -725,6 +752,8 @@ private:
         MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR_DOUBLE, "projDimensions");
         MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR_DOUBLE, "projTiltRange");
         MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume", TAGLABEL_VOLUME);
+        MDL::addLabel(MDL_DIMENSIONS_3D, LABEL_VECTOR_DOUBLE, "dimensions3D");
+        MDL::addLabel(MDL_DIMENSIONS_2D, LABEL_VECTOR_DOUBLE, "dimensions2D");
         MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum", TAGLABEL_PSD);
         MDL::addLabel(MDL_PSD_ENHANCED, LABEL_STRING, "enhancedPowerSpectrum", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
@@ -774,6 +803,27 @@ private:
         MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "Zscore");
         MDL::addLabel(MDL_ZSIZE, LABEL_INT, "Zsize");
+        MDL::addLabel(MDL_PHANTOM_BGDENSITY, LABEL_DOUBLE, "phantomBGDensity");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_OPERATION, LABEL_STRING, "featureOperation");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_DENSITY, LABEL_DOUBLE, "featureDensity");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_CENTER, LABEL_VECTOR_DOUBLE, "featureCenter");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
+        MDL::addLabel(MDL_PRJ_ANGFILE, LABEL_STRING, "angleFile");
+        MDL::addLabel(MDL_PRJ_ROT_RANGE, LABEL_VECTOR_DOUBLE, "projRotRange");
+        MDL::addLabel(MDL_PRJ_ROT_RANDSTR, LABEL_STRING, "projRotRandomness");
+        MDL::addLabel(MDL_PRJ_ROT_Noise, LABEL_VECTOR_DOUBLE, "projRotNoise");
+        MDL::addLabel(MDL_PRJ_TILT_RANDSTR, LABEL_STRING, "projTiltRandomness");
+        MDL::addLabel(MDL_PRJ_TILT_Noise, LABEL_VECTOR_DOUBLE, "projTiltNoise");
+        MDL::addLabel(MDL_PRJ_PSI_RANGE, LABEL_VECTOR_DOUBLE, "projPsiRange");
+        MDL::addLabel(MDL_PRJ_PSI_RANDSTR, LABEL_STRING, "projPsiRandomness");
+        MDL::addLabel(MDL_PRJ_PSI_Noise, LABEL_VECTOR_DOUBLE, "projPsiNoise");
+        MDL::addLabel(MDL_2D_LATTICE_VECA, LABEL_VECTOR_DOUBLE, "latticeVec1");
+        MDL::addLabel(MDL_2D_LATTICE_VECB, LABEL_VECTOR_DOUBLE, "latticeVec2");
+        MDL::addLabel(MDL_CRYSTAL_DISAPPEAR_THRE, LABEL_DOUBLE, "crystalDisThresh");
+        MDL::addLabel(MDL_ORTHOGONAL_PROJECTION, LABEL_BOOL, "orthogonalProj");
+        MDL::addLabel( MDL_CRYSTAL_SHFILE, LABEL_STRING, "crystalShiftFile");
+        MDL::addLabel( MDL_CRYSTAL_PROJ, LABEL_BOOL, "crystalProj");
 
         //Create an static empty header for image initialization
         MDL::emptyHeader.setValue(MDL_ORIGINX,  0.);

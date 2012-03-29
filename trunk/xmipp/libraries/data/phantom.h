@@ -34,6 +34,7 @@
 #include "multidim_array.h"
 #include "blobs.h"
 #include "projection.h"
+#include "metadata_label.h"
 
 /**@defgroup Phantoms Phantoms
  * @ingroup DataLibrary
@@ -381,19 +382,24 @@ public:
         specific feature. See \ref Phantoms for more information about the
         supported file format. */
     virtual void feat_printf(FILE *fh) const = 0;
-
+    virtual void feat_printm(MetaData &MD, size_t id) = 0;
     /** Read common part of the feature description.
         The common part is the feature type, the behaviour, density and center.
         The description is passed as a line. Exceptions are thrown if the
         description doesn't conform the standard specification.*/
-    void read_common(char *line);
+    void readCommon(char *line);
+    void readCommon(MDRow &row);
+
+ //   void read(char *line);
+      void read(MDRow &row);
 
     /** Read a feature from a file, VIRTUAL!!!.
         The format must be the one given in \ref Phantoms, and each subclass
         must implement its own I/O routines. These routines must fill only the
         non common part of the feature description, but they receive the whole
         line with the description. */
-    virtual void read_specific(char *line) = 0;
+//    virtual void read_specific(char *line) = 0;
+    virtual void read_specific(const std::vector<double> &vector) = 0;
 
     /** Show feature not in the standard format but more informatively.
         This function is based on the std::cout << ... of each subclass. First
@@ -521,11 +527,12 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
+    void read_specific(const std::vector<double> &vect);
 
     /** Print sphere in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
@@ -623,11 +630,12 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
+    void read_specific(const std::vector<double> &vect);
 
     /** Print blob in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
@@ -720,11 +728,11 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
-
+    void read_specific(const std::vector<double> &vect);
     /** Print Gaussian in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
@@ -834,11 +842,11 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
-
+    void read_specific(const std::vector<double> &vect);
     /** Print cylinder in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void  feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
@@ -968,11 +976,11 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
-
+    void read_specific(const std::vector<double> &vect);
     /** Print double cylinder in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
@@ -1088,11 +1096,11 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
-
+    void read_specific(const std::vector<double> &vect);
     /** Print cube in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
@@ -1208,11 +1216,11 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
-
+    void read_specific(const std::vector<double> &vect);
     /** Print ellipsoid in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */
@@ -1326,11 +1334,11 @@ public:
         An exception is thrown if the line doesn't conform the standard
         specification. See \ref Feature::read_specific */
     void read_specific(char *line);
-
+    void read_specific(const std::vector<double> &vect);
     /** Print cone in the standard feature format.
         \ See {Feature::feat_printf}, \ref Phantoms */
     void feat_printf(FILE *fh) const;
-
+    void feat_printm(MetaData &MD, size_t id);
     /** Show feature not in the standard format but more informatively.
         This function only shows the non common part of the feature. Use
         the << operator of Feature to show the whole feature. */

@@ -46,79 +46,120 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters()
 /* Read Crystal Projection Parameters ====================================== */
 void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scale)
 {
-    FILE    *fh_param;
-    char    line[201];
-    int     lineNo = 0;
-    char    *auxstr;
 
-    if ((fh_param = fopen(fn_crystal.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,
-                     (std::string)"Prog_Project_Parameters::read: There is a problem "
-                     "opening the file " + fn_crystal);
+	if (fn_crystal.isMetaData())
+	{
+		MetaData MD;
+		MD.read((std::string)"block2@"+fn_crystal.c_str());
+		if (MD.isEmpty())
+			REPORT_ERROR(ERR_IO_NOTOPEN,
+						 (String)"Prog_Project_Parameters::read: There is a problem "
+						 "opening the file " + fn_crystal);
 
-    while (fgets(line, 200, fh_param) != NULL)
-    {
-        if (line[0] == 0)
-            continue;
-        if (line[0] == '#')
-            continue;
-        if (line[0] == '\n')
-            continue;
-        switch (lineNo)
-        {
-        case 0:
-            crystal_Xdim = textToInteger(firstToken(line));
-            crystal_Ydim = textToInteger(nextToken());
-            lineNo++;
-            crystal_Xdim = ROUND(scale * crystal_Xdim);
-            crystal_Ydim = ROUND(scale * crystal_Ydim);
-            break;
-        case 1:
-            a.resize(3);
-            XX(a) = scale * textToFloat(firstToken(line));
-            YY(a) = scale * textToFloat(nextToken());
-            ZZ(a) = 0;
-            lineNo++;
-            break;
-        case 2:
-            b.resize(3);
-            XX(b) = scale * textToFloat(firstToken(line));
-            YY(b) = scale * textToFloat(nextToken());
-            ZZ(b) = 0;
-            lineNo++;
-            break;
-        case 3:
-            Nshift_dev = scale * textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Nshift_avg = scale * textToFloat(auxstr);
-            else
-                Nshift_avg = 0;
-            lineNo++;
-            break;
-        case 4:
-            disappearing_th = textToFloat(firstToken(line));
-            lineNo++;
-            break;
-        case 5:
-            orthogonal = (strcmp(firstToken(line), "Yes") == 0);
-            lineNo++;
-            break;
-        case 6:
-            // shift file
-            // DF_shift_bool is true when there is a shift file
-            fn_shift = firstWord(line);
-            if (strcmp(fn_shift.c_str(), "NULL"))
-                DF_shift_bool = true;
-            lineNo++;
-            break;
-        } /* switch end */
-    } /* while end */
-    if (lineNo != 7 && lineNo != 6)
-        REPORT_ERROR(ERR_PARAM_MISSING, (std::string)"Prog_Project_Crystal::read: I "
-                     "couldn't read all parameters from file " + fn_crystal);
+		std::vector <double> ParamVec;
+		size_t objId;
+		objId = MD.firstObject();
+		MD.getValue(MDL_DIMENSIONS_2D, ParamVec, objId);
+		crystal_Xdim = (int)ParamVec[0];crystal_Ydim = (int)ParamVec[1];
+		crystal_Xdim = ROUND(scale * crystal_Xdim);
+		crystal_Ydim = ROUND(scale * crystal_Ydim);
+		MD.getValue(MDL_2D_LATTICE_VECA, ParamVec, objId);
+		a.resize(3);
+		XX(a) = scale * ParamVec[0];
+		YY(a) = scale * ParamVec[1];
+		ZZ(a) = 0;
+		MD.getValue(MDL_2D_LATTICE_VECB, ParamVec, objId);
+		b.resize(3);
+		XX(b) = scale * ParamVec[0];
+		YY(b) = scale * ParamVec[1];
+		ZZ(b) = 0;
+		MD.getValue(MDL_NOISE_PIXEL_LEVEL,ParamVec, objId);
+		Nshift_dev = scale *  ParamVec[0];
+		if (ParamVec.size() < 2)
+			Nshift_avg = 0;
+		else
+			Nshift_avg = scale * ParamVec[1];
+		MD.getValue(MDL_CRYSTAL_DISAPPEAR_THRE,disappearing_th, objId);
+		MD.getValue(MDL_ORTHOGONAL_PROJECTION,orthogonal, objId);
+		if (MD.getValue(MDL_CRYSTAL_SHFILE, fn_shift, objId))
+			DF_shift_bool = true;
+	}
+	else
+	{
+		FILE    *fh_param;
+		char    line[201];
+		int     lineNo = 0;
+		char    *auxstr;
 
-    fclose(fh_param);
+		if ((fh_param = fopen(fn_crystal.c_str(), "r")) == NULL)
+			REPORT_ERROR(ERR_IO_NOTOPEN,
+						 (std::string)"Prog_Project_Parameters::read: There is a problem "
+						 "opening the file " + fn_crystal);
+
+		while (fgets(line, 200, fh_param) != NULL)
+		{
+			if (line[0] == 0)
+				continue;
+			if (line[0] == '#')
+				continue;
+			if (line[0] == '\n')
+				continue;
+			switch (lineNo)
+			{
+			case 0:
+				crystal_Xdim = textToInteger(firstToken(line));
+				crystal_Ydim = textToInteger(nextToken());
+				lineNo++;
+				crystal_Xdim = ROUND(scale * crystal_Xdim);
+				crystal_Ydim = ROUND(scale * crystal_Ydim);
+				break;
+			case 1:
+				a.resize(3);
+				XX(a) = scale * textToFloat(firstToken(line));
+				YY(a) = scale * textToFloat(nextToken());
+				ZZ(a) = 0;
+				lineNo++;
+				break;
+			case 2:
+				b.resize(3);
+				XX(b) = scale * textToFloat(firstToken(line));
+				YY(b) = scale * textToFloat(nextToken());
+				ZZ(b) = 0;
+				lineNo++;
+				break;
+			case 3:
+				Nshift_dev = scale * textToFloat(firstWord(line));
+				auxstr = nextToken();
+				if (auxstr != NULL)
+					Nshift_avg = scale * textToFloat(auxstr);
+				else
+					Nshift_avg = 0;
+				lineNo++;
+				break;
+			case 4:
+				disappearing_th = textToFloat(firstToken(line));
+				lineNo++;
+				break;
+			case 5:
+				orthogonal = (strcmp(firstToken(line), "Yes") == 0);
+				lineNo++;
+				break;
+			case 6:
+				// shift file
+				// DF_shift_bool is true when there is a shift file
+				fn_shift = firstWord(line);
+				if (strcmp(fn_shift.c_str(), "NULL"))
+					DF_shift_bool = true;
+				lineNo++;
+				break;
+			} /* switch end */
+		} /* while end */
+		if (lineNo != 7 && lineNo != 6)
+			REPORT_ERROR(ERR_PARAM_MISSING, (std::string)"Prog_Project_Crystal::read: I "
+						 "couldn't read all parameters from file " + fn_crystal);
+
+		fclose(fh_param);
+	}
 //#define DEBUG
 #ifdef DEBUG
     std::cerr << "crystal_Xdim"   << crystal_Xdim<<std::endl;
@@ -132,49 +173,77 @@ void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scal
 /* Write =================================================================== */
 void Crystal_Projection_Parameters::write(const FileName &fn_crystal)
 {
-    FILE *fh_param;
+	if (fn_crystal.isMetaData())
+	{
+		MetaData MD1;  //MetaData for crystal projection parameters
+		std::vector<double> FCVect(2);  //For the center of feature
+		size_t id;
+		std::vector<double> TVector;  //For general use
+		MD1.setColumnFormat(false);
+		id = MD1.addObject();
+		TVector[0] = crystal_Xdim;
+		TVector[1] = crystal_Ydim;
+		MD1.setValue(MDL_DIMENSIONS_2D, TVector, id);
+		TVector[0] = XX(a);
+		TVector[1] = YY(a);
+		MD1.setValue(MDL_2D_LATTICE_VECA, TVector, id);
+		TVector[0] = XX(b);
+		TVector[1] = YY(b);
+		MD1.setValue(MDL_2D_LATTICE_VECB, TVector, id);
+		TVector[0] = Nshift_dev;
+		TVector[1] = Nshift_avg;
+		MD1.setValue(MDL_NOISE_PIXEL_LEVEL, TVector, id);
+		MD1.setValue(MDL_CRYSTAL_DISAPPEAR_THRE, disappearing_th, id);
+		MD1.setValue(MDL_ORTHOGONAL_PROJECTION, orthogonal, id);
+		MD1.setValue(MDL_CRYSTAL_SHFILE, fn_shift.c_str(), id);
+		//MD1.write(fn_crystal, MD_OVERWRITE);
+	}
+	else
+	{
+		FILE *fh_param;
 
-    if ((fh_param = fopen(fn_crystal.c_str(), "w")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,
+		if ((fh_param = fopen(fn_crystal.c_str(), "w")) == NULL)
+			REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"Prog_Project_Parameters::write: There is a problem "
                      "opening the file " + fn_crystal + " for output");
 
-    fprintf(fh_param, "# Crystal dimensions (X, Y)\n");
-    fprintf(fh_param, "%d %d\n", crystal_Xdim, crystal_Ydim);
-    fprintf(fh_param, "# Crystal a lattice vector (X, Y)\n");
-    fprintf(fh_param, "%f %f\n", XX(a), YY(a));
-    fprintf(fh_param, "# Crystal b lattice vector (X, Y)\n");
-    fprintf(fh_param, "%f %f\n", XX(b), YY(b));
+		fprintf(fh_param, "# Crystal dimensions (X, Y)\n");
+		fprintf(fh_param, "%d %d\n", crystal_Xdim, crystal_Ydim);
+		fprintf(fh_param, "# Crystal a lattice vector (X, Y)\n");
+		fprintf(fh_param, "%f %f\n", XX(a), YY(a));
+		fprintf(fh_param, "# Crystal b lattice vector (X, Y)\n");
+		fprintf(fh_param, "%f %f\n", XX(b), YY(b));
 
-    fprintf(fh_param, "#     Noise (and bias) applied to the magnitude shift\n");
-    fprintf(fh_param, "%f ", Nshift_dev);
-    if (Nshift_avg != 0)
-        fprintf(fh_param, "%f \n", Nshift_avg);
-    else
-        fprintf(fh_param, "\n");
+		fprintf(fh_param, "#     Noise (and bias) applied to the magnitude shift\n");
+		fprintf(fh_param, "%f ", Nshift_dev);
+		if (Nshift_avg != 0)
+			fprintf(fh_param, "%f \n", Nshift_avg);
+		else
+			fprintf(fh_param, "\n");
 
-    fprintf(fh_param, "# Disappearing threshold\n");
-    fprintf(fh_param, "%f\n", disappearing_th);
+		fprintf(fh_param, "# Disappearing threshold\n");
+		fprintf(fh_param, "%f\n", disappearing_th);
 
-    fprintf(fh_param, "# Orthogonal Projections\n");
-    if (orthogonal)
-        fprintf(fh_param, "Yes\n");
-    else
-        fprintf(fh_param, "No\n");
+		fprintf(fh_param, "# Orthogonal Projections\n");
+		if (orthogonal)
+			fprintf(fh_param, "Yes\n");
+		else
+			fprintf(fh_param, "No\n");
 
-    //   fprintf(fh_param,"# Grid relative size\n");
+		//   fprintf(fh_param,"# Grid relative size\n");
 
-    fprintf(fh_param, "# File with shifts for each unit cell\n");
-    fprintf(fh_param, "%s", fn_shift.c_str());
+		fprintf(fh_param, "# File with shifts for each unit cell\n");
+		fprintf(fh_param, "%s", fn_shift.c_str());
 
-    fclose(fh_param);
+		fclose(fh_param);
+	}
 }
 
 /* Project crystal --------------------------------------------------------- */
 //#define DEBUG
 //#define DEBUG_MORE
 void project_crystal(Phantom &phantom, Projection &P,
-                     const Projection_Parameters &prm,
+                     const ParametersProjection &prm,
                      PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
                      float rot, float tilt, float psi)
 {

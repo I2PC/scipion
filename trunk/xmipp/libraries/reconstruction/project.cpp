@@ -32,7 +32,7 @@
 /* Read from command line ================================================== */
 void ProgProject::readParams()
 {
-    fnPhantom     = getParam("-i");
+	fnPhantom = getParam("-i");
     fnOut = getParam("-o");
     samplingRate  = getDoubleParam("--sampling_rate");
     singleProjection = false;
@@ -121,7 +121,7 @@ void ProgProject::run()
 }
 
 /* Projection parameters from program parameters =========================== */
-void Projection_Parameters::from_prog_params(const ProgProject &prog_prm)
+void ParametersProjection::from_prog_params(const ProgProject &prog_prm)
 {
     read(prog_prm.fn_proj_param);
 }
@@ -142,164 +142,293 @@ int translate_randomness(char * str)
                  + str);
 }
 
-void Projection_Parameters::read(const FileName &fn_proj_param)
+void ParametersProjection::read(const FileName &fn_proj_param)
 {
-    FILE    *fh_param;
-    char    line[201];
-    int     lineNo = 0;
-    char    *auxstr;
+	if (fn_proj_param.isMetaData())
+	{
+		MetaData MD;
+		MD.read((std::string)"block1@"+fn_proj_param.c_str());
+		if (MD.isEmpty())
+			REPORT_ERROR(ERR_IO_NOTOPEN,
+						 (String)"Prog_Project_Parameters::read: There is a problem "
+						 "opening the file " + fn_proj_param);
 
-    if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,
-                     (String)"Prog_Project_Parameters::read: There is a problem "
-                     "opening the file " + fn_proj_param);
-    while (fgets(line, 200, fh_param) != NULL)
-    {
-        if (line[0] == 0)
-            continue;
-        if (line[0] == '#')
-            continue;
-        if (line[0] == '\n')
-            continue;
-        switch (lineNo)
-        {
-        case 0:
-            proj_Xdim = textToInteger(firstToken(line));
-            proj_Ydim = textToInteger(nextToken());
-            lineNo = 1;
-            break;
-        case 1:
-            // Angle file
-            fn_angle = firstWord(line);
-            if (fn_angle == "NULL")
-                ;
-            else if (!fn_angle.exists())
-                REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
-                             "file " + fn_angle + " doesn't exist");
-            lineNo = 2;
-            break;
-        case 2:
-            // theta init
-            auxstr = firstWord(line);
-            if (strcmp(auxstr, "NULL") != 0)
-            {
-                enable_angle_range = true;
-                rot_range.ang0 = textToFloat(auxstr);
-                auxstr = nextToken();
-                if (auxstr == NULL)
-                {
-                    // Fixed mode
-                    rot_range.randomness = ANGLE_RANGE_DETERMINISTIC;
-                    rot_range.angF = rot_range.ang0;
-                    rot_range.samples = 1;
-                }
-                else
-                {
-                    rot_range.angF = textToFloat(auxstr);
-                    rot_range.samples = textToInteger(nextToken());
-                    if (rot_range.ang0 == rot_range.angF)
-                        rot_range.samples = 1;
-                    rot_range.randomness = translate_randomness(nextToken());
-                }
-                lineNo = 3;
-            }
-            else
-            {
-                enable_angle_range = false;
-                lineNo = 5;
-            }
-            break;
-        case 3:
-            tilt_range.ang0 = textToFloat(firstToken(line));
-            auxstr = nextToken();
-            if (auxstr == NULL)
-            {
-                // Fixed mode
-                tilt_range.randomness = ANGLE_RANGE_DETERMINISTIC;
-                tilt_range.angF = tilt_range.ang0;
-                tilt_range.samples = 1;
-            }
-            else
-            {
-                tilt_range.angF = textToFloat(auxstr);
-                tilt_range.samples = textToInteger(nextToken());
-                if (tilt_range.ang0 == tilt_range.angF)
-                    tilt_range.samples = 1;
-                tilt_range.randomness = translate_randomness(nextToken());
-            }
-            lineNo = 4;
-            break;
-        case 4:
-            psi_range.ang0 = textToFloat(firstToken(line));
-            auxstr = nextToken();
-            if (auxstr == NULL)
-            {
-                // Fixed mode
-                psi_range.randomness = ANGLE_RANGE_DETERMINISTIC;
-                psi_range.angF = psi_range.ang0;
-                psi_range.samples = 1;
-            }
-            else
-            {
-                psi_range.angF = textToFloat(auxstr);
-                psi_range.samples = textToInteger(nextToken());
-                if (psi_range.ang0 == psi_range.angF)
-                    psi_range.samples = 1;
-                psi_range.randomness = translate_randomness(nextToken());
-            }
-            lineNo = 5;
-            break;
-        case 5:
-            rot_range.Ndev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                rot_range.Navg = textToFloat(auxstr);
-            else
-                rot_range.Navg = 0;
-            lineNo = 6;
-            break;
-        case 6:
-            tilt_range.Ndev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                tilt_range.Navg = textToFloat(auxstr);
-            else
-                tilt_range.Navg = 0;
-            lineNo = 7;
-            break;
-        case 7:
-            psi_range.Ndev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                psi_range.Navg = textToFloat(auxstr);
-            else
-                psi_range.Navg = 0;
-            lineNo = 8;
-            break;
-        case 8:
-            Npixel_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Npixel_avg = textToFloat(auxstr);
-            else
-                Npixel_avg = 0;
-            lineNo = 9;
-            break;
-        case 9:
-            Ncenter_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Ncenter_avg = textToFloat(auxstr);
-            else
-                Ncenter_avg = 0;
-            lineNo = 10;
-            break;
-        } /* switch end */
-    } /* while end */
-    if (lineNo != 10)
-        REPORT_ERROR(ERR_PARAM_MISSING, formatString("Prog_Project_Parameters::read: I "
-                     "couldn't read all parameters from file %s, only read %d lines", fn_proj_param.c_str(), lineNo));
-    fclose(fh_param);
+		std::vector <double> ParamVec;
+		std::string RandStr;
+		char * RandChar;
+		size_t objId;
+
+		// Read data from the MetaData
+		objId = MD.firstObject();
+		MD.getValue(MDL_DIMENSIONS_2D, ParamVec, objId);
+		proj_Xdim = (int)ParamVec[0];proj_Ydim = (int)ParamVec[1];
+		if (!MD.getValue(MDL_PRJ_ANGFILE, fn_angle, objId))
+			fn_angle = "NULL";
+		else
+		if (!fn_angle.exists())
+			REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
+			"file " + fn_angle + " doesn't exist");
+		if (MD.getValue(MDL_PRJ_ROT_RANGE,ParamVec, objId))
+		{
+			enable_angle_range = true;
+			rot_range.ang0 = ParamVec[0];
+			if (ParamVec.size() == 1)
+			{
+				rot_range.angF = rot_range.ang0;
+				rot_range.samples = 1;
+			}
+			else
+			{
+				rot_range.angF = ParamVec[1];
+				rot_range.samples = ParamVec[2];
+				if (rot_range.ang0 == rot_range.angF)
+					rot_range.samples = 1;
+			}
+			if (!MD.getValue(MDL_PRJ_ROT_RANDSTR,RandStr,objId))
+				rot_range.randomness = ANGLE_RANGE_DETERMINISTIC;
+			else
+			{
+				RandChar = new char[RandStr.length() + 1];
+				strcpy(RandChar, RandStr.c_str());
+				rot_range.randomness = translate_randomness(RandChar);
+			}
+			MD.getValue(MDL_PRJ_TILT_RANGE,ParamVec, objId);
+			tilt_range.ang0 = ParamVec[0];
+			if (ParamVec.size() == 1)
+			{
+				tilt_range.angF = tilt_range.ang0;
+				tilt_range.samples = 1;
+			}
+			else
+			{
+				tilt_range.angF = ParamVec[1];
+				tilt_range.samples = ParamVec[2];
+				if (tilt_range.ang0 == tilt_range.angF)
+					tilt_range.samples = 1;
+			}
+			if (!MD.getValue(MDL_PRJ_TILT_RANDSTR,RandStr,objId))
+				tilt_range.randomness = ANGLE_RANGE_DETERMINISTIC;
+			else
+			{
+				RandChar = new char[RandStr.length() + 1];
+				strcpy(RandChar, RandStr.c_str());
+				tilt_range.randomness = translate_randomness(RandChar);
+			}
+			MD.getValue(MDL_PRJ_PSI_RANGE,ParamVec, objId);
+			psi_range.ang0 = ParamVec[0];
+			if (ParamVec.size() == 1)
+			{
+				psi_range.angF = tilt_range.ang0;
+				psi_range.samples = 1;
+			}
+			else
+			{
+				psi_range.angF = ParamVec[1];
+				psi_range.samples = ParamVec[2];
+				if (psi_range.ang0 == psi_range.angF)
+					psi_range.samples = 1;
+			}
+			if (!MD.getValue(MDL_PRJ_PSI_RANDSTR,RandStr,objId))
+				psi_range.randomness = ANGLE_RANGE_DETERMINISTIC;
+			else
+			{
+				RandChar = new char[RandStr.length() + 1];
+				strcpy(RandChar, RandStr.c_str());
+			    psi_range.randomness = translate_randomness(RandChar);
+			}
+		}
+		else
+			enable_angle_range = false;
+		MD.getValue(MDL_PRJ_ROT_Noise,ParamVec, objId);
+		rot_range.Ndev = ParamVec[0];
+		if (ParamVec.size()<2)
+			rot_range.Navg = 0;
+		else
+			rot_range.Navg = ParamVec[1];
+		MD.getValue(MDL_PRJ_TILT_Noise,ParamVec, objId);
+		tilt_range.Ndev = ParamVec[0];
+		if (ParamVec.size()<2)
+			tilt_range.Navg = 0;
+		else
+			tilt_range.Navg = ParamVec[1];
+		MD.getValue(MDL_PRJ_PSI_Noise,ParamVec, objId);
+		psi_range.Ndev = ParamVec[0];
+		if (ParamVec.size()<2)
+			psi_range.Navg = 0;
+		else
+			psi_range.Navg = ParamVec[1];
+		MD.getValue(MDL_NOISE_PIXEL_LEVEL,ParamVec, objId);
+		Npixel_dev = ParamVec[0];
+		if (ParamVec.size() < 2)
+			Npixel_avg = 0;
+		else
+			Npixel_avg = ParamVec[1];
+		MD.getValue(MDL_NOISE_COORD,ParamVec, objId);
+		Ncenter_dev = ParamVec[0];
+		if (ParamVec.size() < 2)
+			Ncenter_avg = 0;
+		else
+			Ncenter_avg = ParamVec[1];
+	}
+	else
+	{
+		FILE    *fh_param;
+		char    line[201];
+		int     lineNo = 0;
+		char    *auxstr;
+
+		if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
+			REPORT_ERROR(ERR_IO_NOTOPEN,
+						 (String)"Prog_Project_Parameters::read: There is a problem "
+						 "opening the file " + fn_proj_param);
+		while (fgets(line, 200, fh_param) != NULL)
+		{
+			if (line[0] == 0)
+				continue;
+			if (line[0] == '#')
+				continue;
+			if (line[0] == '\n')
+				continue;
+			switch (lineNo)
+			{
+			case 0:
+				proj_Xdim = textToInteger(firstToken(line));
+				proj_Ydim = textToInteger(nextToken());
+				lineNo = 1;
+				break;
+			case 1:
+				// Angle file
+				fn_angle = firstWord(line);
+				if (fn_angle == "NULL")
+					;
+				else if (!fn_angle.exists())
+					REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
+								 "file " + fn_angle + " doesn't exist");
+				lineNo = 2;
+				break;
+			case 2:
+				// theta init
+				auxstr = firstWord(line);
+				if (strcmp(auxstr, "NULL") != 0)
+				{
+					enable_angle_range = true;
+					rot_range.ang0 = textToFloat(auxstr);
+					auxstr = nextToken();
+					if (auxstr == NULL)
+					{
+						// Fixed mode
+						rot_range.randomness = ANGLE_RANGE_DETERMINISTIC;
+						rot_range.angF = rot_range.ang0;
+						rot_range.samples = 1;
+					}
+					else
+					{
+						rot_range.angF = textToFloat(auxstr);
+						rot_range.samples = textToInteger(nextToken());
+						if (rot_range.ang0 == rot_range.angF)
+							rot_range.samples = 1;
+						rot_range.randomness = translate_randomness(nextToken());
+					}
+					lineNo = 3;
+				}
+				else
+				{
+					enable_angle_range = false;
+					lineNo = 5;
+				}
+				break;
+			case 3:
+				tilt_range.ang0 = textToFloat(firstToken(line));
+				auxstr = nextToken();
+				if (auxstr == NULL)
+				{
+					// Fixed mode
+					tilt_range.randomness = ANGLE_RANGE_DETERMINISTIC;
+					tilt_range.angF = tilt_range.ang0;
+					tilt_range.samples = 1;
+				}
+				else
+				{
+					tilt_range.angF = textToFloat(auxstr);
+					tilt_range.samples = textToInteger(nextToken());
+					if (tilt_range.ang0 == tilt_range.angF)
+						tilt_range.samples = 1;
+					tilt_range.randomness = translate_randomness(nextToken());
+				}
+				lineNo = 4;
+				break;
+			case 4:
+				psi_range.ang0 = textToFloat(firstToken(line));
+				auxstr = nextToken();
+				if (auxstr == NULL)
+				{
+					// Fixed mode
+					psi_range.randomness = ANGLE_RANGE_DETERMINISTIC;
+					psi_range.angF = psi_range.ang0;
+					psi_range.samples = 1;
+				}
+				else
+				{
+					psi_range.angF = textToFloat(auxstr);
+					psi_range.samples = textToInteger(nextToken());
+					if (psi_range.ang0 == psi_range.angF)
+						psi_range.samples = 1;
+					psi_range.randomness = translate_randomness(nextToken());
+				}
+				lineNo = 5;
+				break;
+			case 5:
+				rot_range.Ndev = textToFloat(firstWord(line));
+				auxstr = nextToken();
+				if (auxstr != NULL)
+					rot_range.Navg = textToFloat(auxstr);
+				else
+					rot_range.Navg = 0;
+				lineNo = 6;
+				break;
+			case 6:
+				tilt_range.Ndev = textToFloat(firstWord(line));
+				auxstr = nextToken();
+				if (auxstr != NULL)
+					tilt_range.Navg = textToFloat(auxstr);
+				else
+					tilt_range.Navg = 0;
+				lineNo = 7;
+				break;
+			case 7:
+				psi_range.Ndev = textToFloat(firstWord(line));
+				auxstr = nextToken();
+				if (auxstr != NULL)
+					psi_range.Navg = textToFloat(auxstr);
+				else
+					psi_range.Navg = 0;
+				lineNo = 8;
+				break;
+			case 8:
+				Npixel_dev = textToFloat(firstWord(line));
+				auxstr = nextToken();
+				if (auxstr != NULL)
+					Npixel_avg = textToFloat(auxstr);
+				else
+					Npixel_avg = 0;
+				lineNo = 9;
+				break;
+			case 9:
+				Ncenter_dev = textToFloat(firstWord(line));
+				auxstr = nextToken();
+				if (auxstr != NULL)
+					Ncenter_avg = textToFloat(auxstr);
+				else
+					Ncenter_avg = 0;
+				lineNo = 10;
+				break;
+			} /* switch end */
+		} /* while end */
+		if (lineNo != 10)
+			REPORT_ERROR(ERR_PARAM_MISSING, formatString("Prog_Project_Parameters::read: I "
+						 "couldn't read all parameters from file %s, only read %d lines", fn_proj_param.c_str(), lineNo));
+		fclose(fh_param);
+	}
 }
 
 /* Generate angles ========================================================= */
@@ -312,7 +441,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
 #define Npsi  prm.psi_range.samples
 #define proj_number(base,irot,itilt,ipsi) base+irot*Ntilt*Npsi+itilt*Npsi+ipsi
 void generate_angles(int ExtProjs, const Angle_range &range,
-                     MetaData &DF, char ang_name, const Projection_Parameters &prm)
+                     MetaData &DF, char ang_name, const ParametersProjection &prm)
 {
     double ang;
     int   N1, N2;
@@ -458,7 +587,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
 
 /* Generate evenly distributed angles ====================================== */
 void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
-                          const Projection_Parameters &prm)
+                          const ParametersProjection &prm)
 {
     // We will run over the tilt angle in a deterministic way
     // then for every tilt angle, a rot_step is computed so that
@@ -520,7 +649,7 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
 }
 
 // See generate_even_angles for comments
-int count_even_angles(const Projection_Parameters &prm)
+int count_even_angles(const ParametersProjection &prm)
 {
     int N = 0;
     int limit = prm.tilt_range.samples;
@@ -546,7 +675,7 @@ int count_even_angles(const Projection_Parameters &prm)
 }
 
 /* Assign angles =========================================================== */
-int Assign_angles(MetaData &DF, const Projection_Parameters &prm,
+int Assign_angles(MetaData &DF, const ParametersProjection &prm,
                   const FileName &fn_sym)
 {
     int ExtProjs = 0, IntProjs = 0;    // External and internal projections
@@ -612,7 +741,7 @@ int Assign_angles(MetaData &DF, const Projection_Parameters &prm,
 }
 
 /* Produce Side Information ================================================ */
-void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
+void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         ProgProject &prog_prm)
 {
     // Generate Projection angles
@@ -667,7 +796,7 @@ void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
 int PROJECT_Effectively_project(const String &fnOut,
                                 bool singleProjection,
                                 bool shears,
-                                const Projection_Parameters &prm,
+                                const ParametersProjection &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, MetaData &SF)
@@ -832,18 +961,21 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
 {
     randomize_random_generator();
     // Read projection parameters and produce side information
-    Projection_Parameters proj_prm;
+    ParametersProjection proj_prm;
     PROJECT_Side_Info side;
     if (!prm.singleProjection)
         proj_prm.from_prog_params(prm);
     side.produce_Side_Info(proj_prm, prm);
     Crystal_Projection_Parameters crystal_proj_prm;
-
-    if (prm.fn_crystal != "")
+	MetaData MD;
+	if (prm.fn_crystal != "" || MD.containsLabel(MDL_CRYSTAL_PROJ))
     {
-        crystal_proj_prm.read(prm.fn_crystal,
+    	if (prm.fn_crystal != "")
+    		crystal_proj_prm.read(prm.fn_crystal,
                               (side.phantomDescr).phantom_scale);
-
+    	else
+    		crystal_proj_prm.read(prm.fn_proj_param,
+    		                  (side.phantomDescr).phantom_scale);
         // if not null read doc file with unitcell shift
         // format h, k, shift_X shift_Y shift_Z
         if (crystal_proj_prm.DF_shift_bool == true)
