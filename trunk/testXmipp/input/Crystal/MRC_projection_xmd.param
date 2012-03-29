@@ -1,17 +1,35 @@
 # XMIPP_STAR_1 *
 # Projection Parameters
-data_
-_angleFile     Crystal/angles.doc
 # X and Y projection dimensions [Xdim Ydim]
-_dimensions2D   '64 64'
 # Rotation angle added noise  [noise (bias)]
-_projRotNoise   '0'
 # Tilt angle added noise
-_projTiltNoise   '0'
 # Psi added noise
-_projPsiNoise   '0'
 # Type of range for Psi
 # Noise applied to pixels [noise (bias)]
-_noisePixelLevel   '1'
 # Noise applied to particle center coordenates [noise (bias)]
+# Crystal Projection Parameters
+# X and Y projection dimensions [Xdim Ydim]
+# Lattice vector a
+# Lattice vector b
+# Noise applied to pixels [noise (bias)]
+# Disappearing threshold
+# Orthogonal projections
+#Shift File 
+data_block1
+_angleFile     Crystal/angles.doc
+_dimensions2D   '64 64'
+_projRotNoise   '0'
+_projTiltNoise   '0'
+_projPsiNoise   '0'
+_noisePixelLevel   '1'
 _noiseCoord   '0'
+_crystalProj  1
+data_block2
+_dimensions2D   '64 64'
+_latticeVec1    '60.23 21.95'
+_latticeVec2    '-49.026 41.1384'
+_noisePixelLevel   '0'
+_crystalDisThresh  1.0
+_orthogonalProj  0
+
+
