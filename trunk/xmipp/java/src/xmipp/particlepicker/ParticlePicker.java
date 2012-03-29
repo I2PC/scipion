@@ -125,16 +125,6 @@ public abstract class ParticlePicker
 	{
 		return outputdir + File.separator + file;
 	}
-//
-//	public static String getXmippPath()
-//	{
-//		return Filename.getXmippPath();
-//	}
-//
-//	public static String getXmippPath(String relpath)
-//	{
-//		return getXmippPath() + File.separator + relpath;
-//	}
 
 	public String getOutputDir()
 	{

@@ -48,7 +48,7 @@ public class ReviewParticlePicker extends TrainingPicker
 	@Override
 	public void persistMicrographs()
 	{
-		exportParticles(reviewfamily, getOutputPath(reviewfamily.getName() + "_export_list.xmd"));
+		exportParticles(reviewfamily, reviewfile);
 	}
 
 	@Override

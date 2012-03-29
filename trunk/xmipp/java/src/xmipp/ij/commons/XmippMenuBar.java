@@ -127,7 +127,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				ImagePlus imp = WindowManager.getCurrentImage();
+				ImagePlus imp = XmippMenuBar.this.xw.getImagePlus();
 				if (imp.getImageStackSize() == 1)
 					JOptionPane.showMessageDialog(null, "Only for Stack");
 				else
@@ -343,7 +343,7 @@ public class XmippMenuBar extends MenuBar
 									JOptionPane.showMessageDialog(null, "Only for Stack");
 								return;
 							}
-					IJ.run(command);
+					IJ.run(xw.getImagePlus(), command, "");
 				}
 				catch (Exception ex)
 				{

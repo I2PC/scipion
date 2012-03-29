@@ -58,6 +58,8 @@ class Main
 						ppicker = new ReviewParticlePicker(selfile, outputdir, reviewfile);
 
 					}
+					else if (mode == FamilyState.ReadOnly)
+						ppicker = new ReadOnlyParticlePicker(selfile, outputdir);
 					new TrainingPickerJFrame(ppicker);
 				}
 				catch (Exception e)

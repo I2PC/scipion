@@ -65,7 +65,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JMenuBar mb;
 	private JComboBox familiescb;
 	private TrainingPicker ppicker;
-	private Color color;
 	private JPanel familypn;
 	private JPanel micrographpn;
 	private JTable micrographstb;
@@ -73,13 +72,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private MicrographsTableModel micrographsmd;
 	private TrainingMicrograph micrograph;
 	private JButton nextbt;
-	private JButton colorbt;
 	private float positionx;
 	private JLabel iconlb;
 	private JLabel steplb;
 	private JButton actionsbt;
 	private Family family;
-	private JMenuItem editfamiliesmn;
+	private JMenuItem editfamiliesmi;
 	private int index;
 	private JButton resetbt;
 	private JLabel manuallb;
@@ -104,6 +102,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		super(picker);
 		this.ppicker = picker;
 		initComponents();
+		if(ppicker.getMode() == FamilyState.ReadOnly)
+			enableEdition(false);
 	}
 
 	public TrainingMicrograph getMicrograph()
@@ -145,6 +145,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	protected void enableEdition(boolean enable)
+	{
+		super.enableEdition(enable);
+		resetbt.setEnabled(enable);
+		editfamiliesmi.setEnabled(enable);
+	}
 
 	public void initMenuBar()
 	{
@@ -162,14 +169,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
-		editfamiliesmn = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
-		windowmn.add(editfamiliesmn);
+		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
+		windowmn.add(editfamiliesmi);
 
 		helpmn.add(hcontentsmi);
 
 		// Setting menu item listeners
 
-		editfamiliesmn.addActionListener(new ActionListener()
+		editfamiliesmi.addActionListener(new ActionListener()
 		{
 
 			@Override
@@ -204,12 +211,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(familiescb);
 
 		// Setting color
-		color = family.getColor();
-		fieldspn.add(new JLabel("Color:"));
-		colorbt = new JButton();
-		colorbt.setIcon(new ColorIcon(color));
-		colorbt.setBorderPainted(false);
-		fieldspn.add(colorbt);
+		initColorPane();
+		fieldspn.add(colorpn);
 
 		// Setting slider
 		initSizePane();
@@ -523,11 +526,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		steplb.setText(step.toString());
 		sizesl.setEnabled(step == FamilyState.Manual);
 		sizetf.setEnabled(step == FamilyState.Manual);
-		editfamiliesmn.setEnabled(step == FamilyState.Manual);
+		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(getFamilyData().getAction());
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
+		
 	}
 
 	protected void initializeCanvas()

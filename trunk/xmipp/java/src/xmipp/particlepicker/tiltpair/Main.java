@@ -32,6 +32,7 @@ class Main {
 				
 				String selfile = myargs[0];
 				String outputdir = myargs[1];
+					
 				
 				TiltPairPicker pppicker = new TiltPairPicker(selfile, outputdir);
 				TiltPairPickerJFrame frame = new TiltPairPickerJFrame(pppicker);

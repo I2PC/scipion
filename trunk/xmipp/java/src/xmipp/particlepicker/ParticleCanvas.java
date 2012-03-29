@@ -39,21 +39,19 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		super(particle.getMicrograph().getImagePlus());
 		this.particle = particle;
 		this.frame = frame;
-		this.canvas = (particle instanceof TiltedParticle)? ((TiltPairPickerJFrame)frame).getTiltedCanvas(): frame.getCanvas();
-		
-		this.size = (int)(frame.getFamily().getSize());
+		this.canvas = (particle instanceof TiltedParticle) ? ((TiltPairPickerJFrame) frame).getTiltedCanvas() : frame.getCanvas();
+
+		this.size = (int) (frame.getFamily().getSize());
 		side = frame.getSide(size);
-		setMagnification((float)side/size);
+		setMagnification((float) side / size);
 		setDrawingSize(side, side);
 		addMouseMotionListener(this);
 		addMouseListener(this);
 	}
-	
-	
 
 	public void paint(Graphics g)
 	{
-		Rectangle source = new Rectangle(particle.getX0(), particle.getY0(), size, size); 
+		Rectangle source = new Rectangle(particle.getX0(), particle.getY0(), size, size);
 		setSourceRect(source);
 		super.paint(g);
 		g.setColor(Color.white);
@@ -84,36 +82,38 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		lastx = e.getX();
 		lasty = e.getY();
 	}
-	
 
 	@Override
 	public void mousePressed(MouseEvent e)
 	{
-		dragged = true;
-		lastx = e.getX();
-		lasty = e.getY();
-		
-		if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown()) 
+		if (frame.isPickingAvailable(e))
 		{
-			if(frame instanceof TrainingPickerJFrame)
-				((TrainingMicrograph)frame.getMicrograph()).removeParticle(particle, ((TrainingPickerJFrame)frame).getParticlePicker());
-			else if (frame instanceof TiltPairPickerJFrame)
+			dragged = true;
+			lastx = e.getX();
+			lasty = e.getY();
+
+			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
 			{
-				if(frame.getMicrograph() instanceof UntiltedMicrograph)
-					((UntiltedMicrograph)frame.getMicrograph()).removeParticle((UntiltedParticle)particle);
-				else if(frame.getMicrograph() instanceof TiltedMicrograph)
-					((TiltedMicrograph)frame.getMicrograph()).removeParticle((TiltedParticle)particle);
+				if (frame instanceof TrainingPickerJFrame)
+					((TrainingMicrograph) frame.getMicrograph()).removeParticle(particle, ((TrainingPickerJFrame) frame).getParticlePicker());
+				else if (frame instanceof TiltPairPickerJFrame)
+				{
+					if (frame.getMicrograph() instanceof UntiltedMicrograph)
+						((UntiltedMicrograph) frame.getMicrograph()).removeParticle((UntiltedParticle) particle);
+					else if (frame.getMicrograph() instanceof TiltedMicrograph)
+						((TiltedMicrograph) frame.getMicrograph()).removeParticle((TiltedParticle) particle);
+				}
+				canvas.repaint();
+				frame.updateMicrographsModel();
+				frame.loadParticles();
 			}
-			canvas.repaint();
-			frame.updateMicrographsModel();
-			frame.loadParticles();
+			else
+			{
+				canvas.moveTo(particle);
+				canvas.setActive(particle);
+			}
 		}
-		else
-		{
-			canvas.moveTo(particle);
-			canvas.setActive(particle);
-		}
-			
+
 	}
 
 	@Override

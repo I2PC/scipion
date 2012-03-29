@@ -51,14 +51,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	private TiltPairPicker pppicker;
 	private JMenuBar mb;
-	private Color color;
 	private JPanel particlespn;
 	private JPanel micrographpn;
 	private JTable micrographstb;
 	private UntiltedMicrographCanvas canvas;
 	private MicrographPairsTableModel micrographsmd;
 	private UntiltedMicrograph untiltedmic;
-	private JButton colorbt;
+	
 	private float position;
 	private int index;
 	private JButton resetbt;
@@ -152,11 +151,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		// Setting color
-		color = pppicker.getColor();
-		fieldspn.add(new JLabel("Color:"));
-		colorbt = new JButton();
-		colorbt.setIcon(new ColorIcon(color));
-		colorbt.setBorderPainted(false);
+		initColorPane();
 		fieldspn.add(colorbt);
 
 		// Setting slider

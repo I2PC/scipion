@@ -8,6 +8,7 @@ import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -27,6 +28,8 @@ import java.util.List;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import xmipp.utils.XmippFileChooser;
+
+import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -47,8 +50,10 @@ import xmipp.ij.commons.XmippIJUtil;
 import xmipp.jni.Filename;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
+import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
@@ -77,6 +82,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	private List<JCheckBoxMenuItem> mifilters;
 	protected JMenu filemn;
 	protected JMenuItem importffmi;
+	protected JButton colorbt;
+	protected Color color;
+	protected JPanel colorpn;
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
@@ -272,6 +280,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 			}
 		});
+						
 
 		addFilterMenuItem("Bandpass Filter...", true, picker);
 		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
@@ -291,6 +300,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Subtract Background...", true, picker);
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
+		
+		
+	}
+	
+	protected void enableEdition(boolean enable)
+	{
+		importffmi.setEnabled(enable);
+		importfpmi.setEnabled(enable);
+		savemi.setEnabled(enable);
+		sizesl.setEnabled(enable);
+		colorbt.setEnabled(enable);
 	}
 
 	protected abstract void displayImportDialog();
@@ -388,6 +408,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return false;
 		if (SwingUtilities.isRightMouseButton(e))
 			return false;
+		if(getParticlePicker().getMode() == FamilyState.ReadOnly)
+			return false;
 		return true;
 	}
 
@@ -446,6 +468,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public abstract ParticlePicker getParticlePicker();
 
 	public abstract void setChanged(boolean changed);
+	
+	protected void initColorPane()
+	{
+		colorpn = new JPanel();
+		color = getFamily().getColor();
+		colorpn.add(new JLabel("Color:"));
+		colorbt = new JButton();
+		colorbt.setIcon(new ColorIcon(color));
+		colorbt.setBorderPainted(false);
+		colorpn.add(colorbt);
+	}
 
 	protected void initSizePane()
 	{
