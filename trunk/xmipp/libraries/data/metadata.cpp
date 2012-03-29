@@ -1126,7 +1126,7 @@ void MetaData::_read(const FileName &filename,
         //map file
         int fd;
         BUFFER_CREATE(bufferMap);
-        mapFile(filename, bufferMap.begin, bufferMap.size, fd, true);
+        mapFile(filename, bufferMap.begin, bufferMap.size, fd);
 
         BLOCK_CREATE(block);
         regex_t re;
