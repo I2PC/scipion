@@ -148,8 +148,8 @@ class TestXmippPythonInterface(unittest.TestCase):
     def test_Image_equal(self):
         img = Image()
         img2 = Image()
-        img.setDataType(XMIPP_DT_FLOAT)
-        img2.setDataType(XMIPP_DT_FLOAT)
+        img.setDataType(DT_FLOAT)
+        img2.setDataType(DT_FLOAT)
         img.resize(3, 3)
         img2.resize(3, 3)
         img.setPixel(1, 1, 1.)
