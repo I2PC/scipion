@@ -34,6 +34,9 @@ ArgsTemplate = "%(file)s"
 # Command to stop a job
 StopCommand = "canceljob"
 StopArgsTemplate = "%(jobid)d"
+# Command to query about job status
+QueryCommand = "qstat"
+QueryArgsTemplate = "%(jobid)d"
 
 FileTemplate = """
 #!/bin/bash

@@ -41,6 +41,7 @@ ContinueAtStep = 1
     return linesStr % locals()
 
 def expandParallel(threads=1, mpi=8, condition="", hours=72, jobsize=0):
+    conditionValue = 'True'
     if len(condition) > 0:
         conditionValue = condition
         condition = "{condition}(%s)" % condition

@@ -272,11 +272,16 @@ class Process():
         p = Popen('kill %s > "/dev/null" 2>&1' % self.pid, shell=True, stdout=PIPE)
         os.waitpid(p.pid, 0)
         
+    def __str__(self):
+        return str(self.info)
+        
 class ProcessManager():
     def __init__(self, run):
         self.run = run
+        self.isBatch = run['jobid'] > -1;
                
     def getProcessFromCmd(self, cmd):
+        print "getProcessFromCmd: ", cmd
         procs = []
         self.hostfile = self.run['script'].replace('.py', '.nodes')
         
@@ -294,9 +299,7 @@ class ProcessManager():
         else:
             procs = self.__getProcessFromCmd(cmd)
         
-        if len(procs):
-            return procs
-        return None
+        return procs
     
     def __getProcessFromCmd(self, cmd):
         ''' Return process data from previous built command'''
@@ -310,7 +313,8 @@ class ProcessManager():
     def getUniqueProcessFromCmd(self, cmd):
         ''' Return process data from previous built command'''
         procList = self.getProcessFromCmd(cmd)
-        if not procList:
+        n = len(procList)
+        if n == 0:
             return None
         if len(procList) > 1:
             msg = [str(p) for p in procList]
@@ -324,10 +328,11 @@ class ProcessManager():
     
     def getProcessGroup(self):
         '''Return a list of process using the same working dir'''
-        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%s" ' % self.run['script'])
+        script = self.run['script']
+        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%(script)s" | grep -v "grep %(script)s"' % locals())
 
     def stopProcessGroup(self):
-        if os.path.exists(self.hostfile):
+        if self.isBatch:
             launch = loadLaunchModule()
             cmd = launch.StopCommand + " " + launch.StopArgsTemplate
             p = Popen(cmd % self.run, shell=True, stdout=PIPE)
@@ -335,7 +340,18 @@ class ProcessManager():
         else:
             childs = self.getProcessGroup()
             for c in childs:
-                c.terminate()        
+                c.terminate()
+                
+    def isAlive(self):
+        if self.isBatch:
+            launch = loadLaunchModule()
+            cmd = launch.QueryCommand + " " + launch.QueryArgsTemplate
+            p = Popen(cmd % self.run, shell=True, stdout=PIPE)
+            os.waitpid(p.pid, 0)
+            return (p.returncode == 0)
+        else:
+            childs = self.getProcessGroup()
+            return len(childs) > 0
     
 # The job should be launched from the working directory!
 def runJob(log, 
@@ -361,7 +377,7 @@ def runJob(log,
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
         if log:
             printLog("Process returned with code %d" % retcode,log)
-            if retcode!=0:
+            if retcode != 0:
                 raise Exception("Process returned with code %d" % retcode)
     except OSError, e:
         raise Exception("Execution failed %s, command: %s" % (e, command))

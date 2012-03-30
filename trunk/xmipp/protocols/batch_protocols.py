@@ -358,7 +358,7 @@ class XmippProjectGUI():
             self.historyRefreshRate = 1
             self.updateRunHistory(self.lastDisplayGroup)
 
-    def updateRunHistory(self, protGroup, selectFirst=True):
+    def updateRunHistory(self, protGroup, selectFirst=True, checkDead=False):
         #Cancel if there are pending refresh
         tree = self.lbHist
         
@@ -382,13 +382,9 @@ class XmippProjectGUI():
                 stateStr = SqliteDb.StateNames[state]
                 if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
                     stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
-                    #TODO: Check deadly jobs
-                    #childs = ProcessManager(run).getProcessGroup()
-                    #if len(childs):
-                    #    stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
-                    #else:
-                    #    self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
-                    #    stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
+                    if checkDead and not ProcessManager(run).isAlive():
+                            self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
+                            stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
                 #if state == SqliteDb.RUN_STARTED:
                 tree.insert('', 'end', text = '  ' +  getExtendedRunName(run), 
                             image=self.getImage(state),
@@ -530,7 +526,7 @@ class XmippProjectGUI():
                 pass
             elif event == ACTION_REFRESH:
                 self.historyRefreshRate = 1
-                self.updateRunHistory(self.lastDisplayGroup)
+                self.updateRunHistory(self.lastDisplayGroup, False, True)
         
     def createToolbarFrame(self, parent):
         #Configure toolbar frame
@@ -594,7 +590,7 @@ class XmippProjectGUI():
         history = ProjectSection(parent, 'History')
         self.Frames['history'] = history
         
-        history.addWidget(tk.Label, text="Display group")
+        history.addWidget(tk.Label, text="Filter")
         import ttk
         values = [GROUP_ALL]
         for k, v in sections:
