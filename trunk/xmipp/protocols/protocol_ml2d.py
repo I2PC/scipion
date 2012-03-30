@@ -31,7 +31,7 @@ class ProtML2D(XmippProtocol):
         
     def validate(self):
         errors = []
-        if self.DoCorrectAmplitudes and not exists(self.InCtfDatFile):
+        if self.DoMlf and self.DoCorrectAmplitudes and not exists(self.InCtfDatFile):
             errors.append("Missing '%s' file for correcting amplitudes" % self.InCtfDatFile)
         return errors
     
