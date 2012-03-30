@@ -21,10 +21,10 @@ class ProtImportParticles(XmippProtocol):
         self.Import = 'from protocol_import_particles import *'
 
     def defineSteps(self):
-        fnOut=self.workingDirPath("micrographs.sel")
+        fnOut=self.workingDirPath("micrographs.xmd")
         self.Db.insertStep('createEmptyMicrographSel',verifyfiles=[fnOut],fnOut=fnOut)
         selfileRoot=self.workingDirPath(self.Family)
-        fnOut=selfileRoot+".sel"
+        fnOut=selfileRoot+".xmd"
         self.Db.insertStep('linkOrCopy', verifyfiles=[fnOut],
                            Family=self.Family,InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
                            ImportAll=self.ImportAll, SubsetMode=self.SubsetMode, Nsubset=self.Nsubset, TmpDir=self.TmpDir)
@@ -34,7 +34,7 @@ class ProtImportParticles(XmippProtocol):
             self.Db.insertStep('removeDust', FamilySel=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
         if self.DoNorm and self.ImportAll:
             self.Db.insertStep('normalize', FamilySel=fnOut,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
-        self.Db.insertStep('sortImageInFamily', verifyfiles=[selfileRoot+".sel"],selfileRoot=selfileRoot)
+        self.Db.insertStep('sortImageInFamily', verifyfiles=[selfileRoot+".xmd"],selfileRoot=selfileRoot)
             
     def validate(self):
         errors = []
@@ -67,7 +67,7 @@ class ProtImportParticles(XmippProtocol):
 
     def visualize(self):
         from protlib_utils import runShowJ
-        runShowJ(self.workingDirPath(self.Family+".sel"), memory='1024m')        
+        runShowJ(self.workingDirPath(self.Family+".xmd"), memory='1024m')        
 
 def createEmptyMicrographSel(log,fnOut):
     mD = xmipp.MetaData()
@@ -76,7 +76,7 @@ def createEmptyMicrographSel(log,fnOut):
     mD.write(fnOut)
 
 def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,ImportAll,SubsetMode,Nsubset,TmpDir):
-    familySel = os.path.join(WorkingDir,Family+".sel")
+    familySel = os.path.join(WorkingDir,Family+".xmd")
     if DoCopy:
         familyDir=os.path.join(WorkingDir,Family)
         createDir(log,familyDir)
@@ -145,4 +145,4 @@ def normalize(log,FamilySel,bgRadius,Nproc):
     runJob(log,"xmipp_transform_normalize","-i "+FamilySel+' --method Ramp --background circle '+str(bgRadius),Nproc)
 
 def sortImageInFamily(log,selfileRoot):
-    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".sel --multivariate --addToInput -o "+selfileRoot+"_sorted")
+    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".xmd --multivariate --addToInput -o "+selfileRoot+"_sorted")
