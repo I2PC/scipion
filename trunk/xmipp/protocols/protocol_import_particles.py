@@ -28,11 +28,11 @@ class ProtImportParticles(XmippProtocol):
         self.Db.insertStep('linkOrCopy', verifyfiles=[fnOut],
                            Family=self.Family,InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
                            ImportAll=self.ImportAll, SubsetMode=self.SubsetMode, Nsubset=self.Nsubset, TmpDir=self.TmpDir)
-        if self.DoInvert:
+        if self.DoInvert and self.ImportAll:
             self.Db.insertStep('invert', FamilySel=fnOut,Nproc=self.NumberOfMpi)
-        if self.DoRemoveDust:
+        if self.DoRemoveDust and self.ImportAll:
             self.Db.insertStep('removeDust', FamilySel=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
-        if self.DoNorm:
+        if self.DoNorm and self.ImportAll:
             self.Db.insertStep('normalize', FamilySel=fnOut,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
         self.Db.insertStep('sortImageInFamily', verifyfiles=[selfileRoot+".sel"],selfileRoot=selfileRoot)
             
