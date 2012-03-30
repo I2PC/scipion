@@ -8,6 +8,8 @@
 
 #{include} inc_comment_run.py
 
+# {eval} expandCommentRun()
+
 #-----------------------------------------------------------------------------
 # {section} Extracting parameters
 #-----------------------------------------------------------------------------
@@ -15,30 +17,9 @@
 """ Stack file or metadata file with a selection file"""
 InputFile=''
 
-#------------------------------------------------------------------------------------------
-# {section} Parallelization
-#------------------------------------------------------------------------------------------
-# Submit to queue
-"""Submit to queue
-"""
-SubmitToQueue = False
+# {eval} expandParallel(mpi=0, threads=0, hours=4)
+# {eval} expandExpert()
 
-# {condition}(SubmitToQueue) Queue name
-"""Name of the queue to submit the job
-"""
-QueueName = "default"
-
-# {condition}(SubmitToQueue) Queue hours
-"""This establish a maximum number of hours the job will
-be running, after that time it will be killed by the
-queue system
-"""
-QueueHours = 12
-
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
 
 #
 #------------------------------------------------------------------------------------------------
