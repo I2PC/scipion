@@ -1,0 +1,15 @@
+# XMIPP_STAR_1 * 
+# Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _shiftX
+ _shiftY
+ _angleRot2
+ _angleTilt2
+ _anglePsi2
+000001@tmpLink/xmipp_phantom_project_05/MRCproj.stk          1     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000 

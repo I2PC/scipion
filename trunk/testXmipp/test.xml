@@ -713,6 +713,30 @@
 			<FILE filename="MRCproj.stk" />
 			<FILE filename="MRCproj.xmd" />
 		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/clusterProjection_xmd.param"
+			changeDir="FALSE">
+			<FILE filename="projections.stk" />
+			<FILE filename="projections.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection_xmd.param"
+			changeDir="FALSE">
+			<FILE filename="projections.stk" />
+			<FILE filename="projections.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection_xmd.param --shears"
+			changeDir="FALSE">
+			<FILE filename="projections.stk" />
+			<FILE filename="projections.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/Crystal/cylinder_with_axis.descr -o %o/MRCproj     --params input/Crystal/MRC_projection_xmd.param --crystal input/Crystal/MRC_crystal_projection_xmd.param"
+			changeDir="FALSE" random="TRUE">
+			<FILE filename="MRCproj.stk" />
+			<FILE filename="MRCproj.xmd" />
+		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_phantom_simulate_microscope" mpi="FALSE">
 		<CASE
