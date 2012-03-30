@@ -104,7 +104,7 @@ TEST( MultidimTest, getImagFromComplex)
     EXPECT_EQ(DIRECT_MULTIDIM_ELEM(mSource, 3).imag(),DIRECT_MULTIDIM_ELEM(mdTarget,3));
 }
 
-TEST( MultidimTest, SINCOS)
+TEST( MultidimTest, sincos)
 {
     MultidimArray<double> mSource(2,2);
     MultidimArray<double> mdSIN;
@@ -127,6 +127,23 @@ TEST( MultidimTest, SINCOS)
     ASSERT_TRUE( (A2D_ELEM(mdCOS,0,1) +  1)<0.0001);
     ASSERT_TRUE( (A2D_ELEM(mdCOS,1,1) -  0)<0.0001);
 
+}
+
+TEST( MultidimTest, mapFile)
+{
+	XMIPP_TRY
+    MultidimArray<double> mda, mdaMap;
+
+    mda.resize(32,32,32);
+    mda.initRandom(0,1);
+
+    mdaMap.setMmap(true);
+    mdaMap.resize(32,32,32);
+
+    mdaMap = mda;
+
+    ASSERT_EQ(mda, mdaMap);
+XMIPP_CATCH
 }
 
 GTEST_API_ int main(int argc, char **argv) {
