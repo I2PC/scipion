@@ -345,7 +345,7 @@ class ParticleAlignmentConverter(EmxBase):
                                             shiftZ    = _trans[2],
                                             flip      = 0,
                                             scale     = _scale[0],
-                                            enable   = item.enable,
+                                            enabled    = item.enable,
                                             fom       = item.FOM
                                            )
                                           )
@@ -452,7 +452,7 @@ class ParticleAlignmentConverter(EmxBase):
             shiftZList.append(str(item.shiftZ))
             flipList.append(str(item.flip))
             scaleList.append(str(item.scale))
-            enabledList.append(str(item.enable))
+            enabledList.append(str(item.enabled))
             fomList.append(str(item.fom))
         self.outMetadata[self.blockNameListXMD[0].BlockName].AddCifItem(([[
                                                         _image_,    
