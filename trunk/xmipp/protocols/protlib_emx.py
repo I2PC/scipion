@@ -26,6 +26,7 @@
 import CifFile
 import StarFile
 import sys
+from emx_struct import errorWrongFileType
 from transformations import *
 import numpy
 #from emx_struct import ParticlePickingStructEmx,\
@@ -73,11 +74,12 @@ class EmxBase:
             fin.close()
             return (False) # isEMX
         #if not emx or xmipp abort
-        print >> sys.stderr,  "Error: Metadata Files should contain the string ",\
+	errorLine = "Error: Metadata Files should contain the string ",\
                self.emxVersion, "or", self.xmippStartVersion, \
             " in the first line.  Exiting program.\n", \
             "First line: ", firstLine
-        exit(1)
+        print >> sys.stderr, errorLine 
+        exit(errorWrongFileType)
     
     def saveFileXMD(self):
         """Auxiliary funtion for saving metadata as xmipp file"""
