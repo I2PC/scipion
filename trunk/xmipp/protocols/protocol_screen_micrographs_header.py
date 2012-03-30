@@ -81,10 +81,7 @@ StepFocus = 0.1
 
 # {eval} expandParallel(threads=0,hours=12)
 
-# {hidden} Show expert options
-"""If True, expert options will be displayed
-"""
-ShowExpertOptions = False
+# {eval} expandExpert()
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------

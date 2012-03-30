@@ -42,11 +42,14 @@ ContinueAtStep = 1
 
 def expandParallel(threads=1, mpi=8, condition="", hours=72, jobsize=0):
     if len(condition) > 0:
+        conditionValue = condition
         condition = "{condition}(%s)" % condition
     linesStr = ''' 
 #------------------------------------------------------------------------------------------
 # {section} %(condition)s Parallelization
 #------------------------------------------------------------------------------------------
+# {hidden} Parallel Condition
+ParallelCondition = "%(conditionValue)s"
 '''
     if threads > 0:
         linesStr += '''

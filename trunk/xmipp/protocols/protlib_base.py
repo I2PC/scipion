@@ -598,19 +598,21 @@ def protocolMain(ProtocolClass, script=None):
                 _run = {'run_id': run_id}
                 
             if getattr(mod, 'SubmitToQueue', False):
-                from protlib_utils import submitProtocol
-                NumberOfThreads = getattr(mod, 'NumberOfThreads', 1)
-                _run['jobid'] = submitProtocol(script,
-                               jobName = p.uniquePrefix,
-                               queueName = mod.QueueName,
-                               nodes = mod.NumberOfMpi,
-                               threads = NumberOfThreads,
-                               hours = mod.QueueHours,
-                               command = 'xmipp_python %s --no_check' % script
-                               )
-                project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
-                project.projectDb.updateRunJobid(_run)
-                doRun = False
+                ParallelCondition = getattr(mod, 'ParallelCondition', '')
+                if getattr(mod, ParallelCondition, True): # This is valid only for Single variable condition
+                    from protlib_utils import submitProtocol
+                    NumberOfThreads = getattr(mod, 'NumberOfThreads', 1)
+                    _run['jobid'] = submitProtocol(script,
+                                   jobName = p.uniquePrefix,
+                                   queueName = mod.QueueName,
+                                   nodes = mod.NumberOfMpi,
+                                   threads = NumberOfThreads,
+                                   hours = mod.QueueHours,
+                                   command = 'xmipp_python %s --no_check' % script
+                                   )
+                    project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
+                    project.projectDb.updateRunJobid(_run)
+                    doRun = False
                 #_run['pid'] = SqliteDb.NO_JOBID
         
         if doRun:
