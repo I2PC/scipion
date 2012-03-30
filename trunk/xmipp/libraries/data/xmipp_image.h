@@ -1287,7 +1287,7 @@ private:
             map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, offsetPages);
 
         if ( map == MAP_FAILED )
-            REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
+            REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"Image Class::ReadData: mmap of image file failed: "+strerror(errno));
         data.data = reinterpret_cast<T*> (map+mappedOffset);
         data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);
     }
