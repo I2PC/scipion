@@ -278,10 +278,10 @@ class Process():
 class ProcessManager():
     def __init__(self, run):
         self.run = run
-        self.isBatch = run['jobid'] > -1;
+        from protlib_sql import SqliteDb
+        self.isBatch = run['jobid'] > SqliteDb.NO_JOBID;
                
     def getProcessFromCmd(self, cmd):
-        print "getProcessFromCmd: ", cmd
         procs = []
         self.hostfile = self.run['script'].replace('.py', '.nodes')
         

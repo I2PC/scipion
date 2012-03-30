@@ -145,7 +145,8 @@ class XmippProject():
             deleteFiles(None, [script, script+'c'], False)
             self.cleanRun(run)
         except Exception, e:
-            return "Error on <deleteRun>: " % e
+            return "Error on <deleteRun>: %s" % e
+            raise
         return None
     
     def deleteTmpFiles(self):

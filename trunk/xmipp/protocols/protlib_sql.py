@@ -156,8 +156,8 @@ class XmippProjectDb(SqliteDb):
                           init DATE,      -- run started at
                           last_modified DATE, --last modification (edition usually)
                           protocol_name TEXT REFERENCES %(TableProtocols)s(protocol_name), -- protocol name
-                          comment TEXT,       -- user defined comment
-                          pid TEXT,           -- process id
+                          comment TEXT,             -- user defined comment
+                          pid  INTEGER DEFAULT -1,  -- process id
                           jobid INTEGER DEFAULT -1, -- this will be different of -1 of queue launched jobs
                           CONSTRAINT unique_workingdir UNIQUE(run_name, protocol_name));""" % self.sqlDict
             self.execSqlCommand(_sqlCommand, "Error creating '%(TableRuns)s' table: " % self.sqlDict)
@@ -225,9 +225,7 @@ class XmippProjectDb(SqliteDb):
                             datetime('now'), 
                             datetime('now'), 
                             '%(protocol_name)s',
-                            '%(comment)s',
-                            -1, 0 --pid and type                            
-                            ); """ % self.sqlDict
+                            '%(comment)s', -1, -1); """ % self.sqlDict
         self.cur.execute(_sqlCommand)
         run['run_id'] = self.cur.lastrowid
         run['run_state'] = SqliteDb.RUN_SAVED
