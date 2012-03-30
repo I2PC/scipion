@@ -153,7 +153,7 @@ public:
      * fn_proj.compose("g1ta", 1, "xmp");  // fn_proj = "g1ta000001.xmp"
      * @endcode
      */
-    void compose(const String& str, const size_t no, const String& ext);
+    void compose(const String& str, const size_t no, const String& ext = "");
 
     /** Prefix with number @. Mainly for selfiles
      *

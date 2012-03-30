@@ -437,8 +437,10 @@ public:
       */
     virtual void movePointerTo(int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES) = 0;
 
-    /** Check file Datatype is same as T type to use mmap.
-     */
+    /* Return the datatype of the current image object */
+    virtual DataType myT() const = 0;
+
+    /** Check file Datatype is same as T type to use mmap. */
     virtual bool checkMmapT(DataType datatype)=0;
 
     /** Write an entire page as datatype
@@ -814,10 +816,6 @@ protected:
     /** Set datatype info in MDMainHeader
      */
     void setDatatype(DataType datatype);
-
-    /** Return the datatype of the current image object
-     */
-    virtual DataType myT() const = 0;
 
     /** Show ImageBase */
     friend std::ostream& operator<<(std::ostream& o, const ImageBase& I);

@@ -49,7 +49,7 @@ class Image: public ImageBase
 {
 
 public:
-    MultidimArray<T>    data;        // The image data array
+    MultidimArray<T> data; // The image data array
 
 public:
     /** Empty constructor
@@ -67,14 +67,14 @@ public:
     }
 
     /** Constructor with size and filename
-      *
-      * An image file, which name and format are given by filename,
-      * is created with the given size. Then the image is mapped to this file.
-      *
-      * @code
-      * Image I(64,64,1,1,"image.spi");
-      * @endcode
-      */
+     *
+     * An image file, which name and format are given by filename,
+     * is created with the given size. Then the image is mapped to this file.
+     *
+     * @code
+     * Image I(64,64,1,1,"image.spi");
+     * @endcode
+     */
     Image(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename)
     {
         mdaBase = (MultidimArrayBase*) &data;
@@ -98,7 +98,8 @@ public:
      * Image I(64,64);
      * @endcode
      */
-    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1, bool _mmapOn=false)
+    Image(int Xdim, int Ydim, int Zdim = 1, int Ndim = 1,
+          bool _mmapOn = false)
     {
         mdaBase = (MultidimArrayBase*) &data;
         init();
@@ -153,7 +154,7 @@ public:
         // This check must be done prior to mappedSize check, since mappedSlice is a trick over data pointer
         if (virtualOffset != 0)
             movePointerTo(ALL_SLICES);
-        if(mmapOnRead || mmapOnWrite)
+        if (mmapOnRead || mmapOnWrite)
             munmapFile();
 
         else
@@ -161,34 +162,33 @@ public:
 
     }
 
-
     /** Check whether image is complex based on T
      */
     bool isComplexT() const
     {
-        return ( typeid(T) == typeid(std::complex<double>) ||
-                 typeid(T) == typeid(std::complex<float>) );
+        return (typeid(T) == typeid(std::complex<double>)
+                || typeid(T) == typeid(std::complex<float>));
     }
-
 
     /** Cast a page of data from type dataType to type Tdest
      *    input pointer  char *
      */
-    void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize )
+    void castPage2T(char * page, T * ptrDest, DataType datatype,
+                    size_t pageSize)
     {
         switch (datatype)
         {
         case DT_Unknown:
-            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: datatype is Unknown_Type");
+            REPORT_ERROR(ERR_TYPE_INCORRECT, "ERROR: datatype is Unknown_Type");
         case DT_UChar:
             {
                 if (typeid(T) == typeid(unsigned char))
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                 else
                 {
                     unsigned char * ptr = (unsigned char *) page;
-                    for(int i=0; i<pageSize; ++i, ++ptr)
-                        ptrDest[i]=(T) *ptr;
+                    for (int i = 0; i < pageSize; ++i, ++ptr)
+                        ptrDest[i] = (T) *ptr;
                 }
                 break;
             }
@@ -196,13 +196,13 @@ public:
                 {
                     if (typeid(T) == typeid(signed char))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         signed char * ptr = (signed char *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
@@ -210,13 +210,13 @@ public:
                 {
                     if (typeid(T) == typeid(unsigned short))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         unsigned short * ptr = (unsigned short *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
@@ -224,13 +224,13 @@ public:
                 {
                     if (typeid(T) == typeid(short))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         short * ptr = (short *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
@@ -238,13 +238,13 @@ public:
                 {
                     if (typeid(T) == typeid(unsigned int))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         unsigned int * ptr = (unsigned int *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
@@ -252,13 +252,13 @@ public:
                 {
                     if (typeid(T) == typeid(int))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         int * ptr = (int *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
@@ -266,13 +266,13 @@ public:
                 {
                     if (typeid(T) == typeid(long))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         long * ptr = (long *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
@@ -280,13 +280,13 @@ public:
                 {
                     if (typeid(T) == typeid(float))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         float * ptr = (float *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
@@ -294,20 +294,21 @@ public:
                 {
                     if (typeid(T) == typeid(double))
                 {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    memcpy(ptrDest, page, pageSize * sizeof(T));
                     }
                     else
                     {
                         double * ptr = (double *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            ptrDest[i]=(T) *ptr;
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            ptrDest[i] = (T) *ptr;
                     }
                 break;
             }
         default:
                 {
-                    std::cerr<<"Datatype= "<<datatype<<std::endl;
-                    REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to T");
+                    std::cerr << "Datatype= " << datatype << std::endl;
+                    REPORT_ERROR(ERR_TYPE_INCORRECT,
+                                 " ERROR: cannot cast datatype to T");
                     break;
                 }
             }
@@ -317,7 +318,8 @@ public:
     /** Cast page from T to datatype
      *  input pointer char *
      */
-    void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize ) const
+    void castPage2Datatype(T * srcPtr, char * page, DataType datatype,
+                           size_t pageSize) const
     {
         switch (datatype)
         {
@@ -325,13 +327,13 @@ public:
             {
                 if (typeid(T) == typeid(float))
                 {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    memcpy(page, srcPtr, pageSize * sizeof(T));
                 }
                 else
                 {
                     float * ptr = (float *) page;
-                    for(int i=0; i<pageSize; ++i, ++ptr)
-                        *ptr = (float)srcPtr[i];
+                    for (int i = 0; i < pageSize; ++i, ++ptr)
+                        *ptr = (float) srcPtr[i];
                 }
                 break;
             }
@@ -339,13 +341,13 @@ public:
                 {
                     if (typeid(T) == typeid(double))
                 {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    memcpy(page, srcPtr, pageSize * sizeof(T));
                     }
                     else
                     {
                         double * ptr = (double *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            *ptr = (double)srcPtr[i];
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            *ptr = (double) srcPtr[i];
                     }
                 break;
             }
@@ -353,13 +355,13 @@ public:
                 {
                     if (typeid(T) == typeid(unsigned short))
                 {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    memcpy(page, srcPtr, pageSize * sizeof(T));
                     }
                     else
                     {
                         unsigned short * ptr = (unsigned short *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            *ptr = (unsigned short)srcPtr[i];
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            *ptr = (unsigned short) srcPtr[i];
                     }
                 break;
             }
@@ -367,13 +369,13 @@ public:
                 {
                     if (typeid(T) == typeid(short))
                 {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    memcpy(page, srcPtr, pageSize * sizeof(T));
                     }
                     else
                     {
                         short * ptr = (short *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            *ptr = (short)srcPtr[i];
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            *ptr = (short) srcPtr[i];
                     }
                 break;
             }
@@ -381,13 +383,13 @@ public:
                 {
                     if (typeid(T) == typeid(unsigned char))
                 {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    memcpy(page, srcPtr, pageSize * sizeof(T));
                     }
                     else
                     {
                         unsigned char * ptr = (unsigned char *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            *ptr = (unsigned char)srcPtr[i];
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            *ptr = (unsigned char) srcPtr[i];
                     }
                 break;
             }
@@ -395,20 +397,21 @@ public:
                 {
                     if (typeid(T) == typeid(char))
                 {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    memcpy(page, srcPtr, pageSize * sizeof(T));
                     }
                     else
                     {
                         char * ptr = (char *) page;
-                        for(int i=0; i<pageSize; ++i, ++ptr)
-                            *ptr = (char)srcPtr[i];
+                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                            *ptr = (char) srcPtr[i];
                     }
                 break;
             }
         default:
                 {
-                    std::cerr<<"outputDatatype = " << datatype << std::endl;
-                    REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast T to outputDatatype");
+                    std::cerr << "outputDatatype = " << datatype << std::endl;
+                    REPORT_ERROR(ERR_TYPE_INCORRECT,
+                                 " ERROR: cannot cast T to outputDatatype");
                     break;
                 }
             }
@@ -418,20 +421,21 @@ public:
      * of same bitdepth the shift of the minimum values. In other cases, the conversion is done
      * adjusting the input values in the range of output datatype.
      */
-    void castConvertPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize,
-                                  double min0, double max0, CastWriteMode castMode=CW_CONVERT) const
+    void castConvertPage2Datatype(T * srcPtr, char * page, DataType datatype,
+                                  size_t pageSize, double min0, double max0, CastWriteMode castMode =
+                                      CW_CONVERT) const
     {
 
         double minF, maxF;
         double slope;
         size_t n;
-        DataType  myTypeId = myT();
+        DataType myTypeId = myT();
 
-        switch(datatype)
+        switch (datatype)
         {
         case DT_UChar:
             {
-                if (castMode==CW_CONVERT && myTypeId == DT_SChar)
+                if (castMode == CW_CONVERT && myTypeId == DT_SChar)
                 {
                     slope = 1;
                     min0 -= CHAR_MIN;
@@ -441,22 +445,22 @@ public:
                     minF = 0;
                     maxF = UCHAR_MAX;
                     if (max0 != min0)
-                        slope = static_cast< double >(maxF - minF) /
-                                static_cast< double >(max0 - min0);
+                        slope = static_cast<double>(maxF - minF)
+                                / static_cast<double>(max0 - min0);
                     else
                         slope = 0;
                 }
                 unsigned char * ptr = (unsigned char *) page;
 
-                for( n=0; n<pageSize; n++)
-                    ptr[n] = static_cast< unsigned char >(minF + (slope *
-                                                          static_cast< double >(srcPtr[n] - min0)));
+                for (n = 0; n < pageSize; n++)
+                    ptr[n] = static_cast<unsigned char>(minF
+                                                        + (slope * static_cast<double>(srcPtr[n] - min0)));
 
                 break;
             }
         case DT_SChar:
                 {
-                    if (castMode==CW_CONVERT &&  myTypeId == DT_UChar)
+                    if (castMode==CW_CONVERT && myTypeId == DT_UChar)
                 {
                     slope = 1;
                     min0 += CHAR_MIN;
@@ -539,14 +543,14 @@ public:
             }
         case DT_UInt:
                 {
-                    if (castMode==CW_CONVERT &&  (myTypeId == DT_SChar
-                                                      || myTypeId == DT_Short
-                                                      || myTypeId == DT_Int))
+                    if (castMode==CW_CONVERT && (myTypeId == DT_SChar
+                                                     || myTypeId == DT_Short
+                                                     || myTypeId == DT_Int))
                     {
                         slope = 1;
                         min0 -= INT_MIN;
                     }
-                    else if (castMode==CW_CONVERT &&  (myTypeId == DT_UShort || myTypeId == DT_UChar))
+                    else if (castMode==CW_CONVERT && (myTypeId == DT_UShort || myTypeId == DT_UChar))
                     {
                         slope = 1;
                     }
@@ -569,14 +573,14 @@ public:
             }
         case DT_Int:
                 {
-                    if (castMode==CW_CONVERT &&  (myTypeId == DT_UChar
-                                                      || myTypeId == DT_UShort
-                                                      || myTypeId == DT_UInt))
+                    if (castMode==CW_CONVERT && (myTypeId == DT_UChar
+                                                     || myTypeId == DT_UShort
+                                                     || myTypeId == DT_UInt))
                     {
                         slope = 1;
                         min0 += INT_MIN;
                     }
-                    else if (castMode==CW_CONVERT &&  (myTypeId == DT_Short || myTypeId == DT_SChar))
+                    else if (castMode==CW_CONVERT && (myTypeId == DT_Short || myTypeId == DT_SChar))
                     {
                         slope = 1;
                     }
@@ -619,7 +623,6 @@ public:
         castConvertPage2Datatype(MULTIDIM_ARRAY(data)+offset, page, datatype, pageSize,
                                  min0, max0, castMode);
     }
-
 
     /** Check if file Datatype is the same as the declared image object (T type) to use mmap.
      */
@@ -754,7 +757,7 @@ public:
 
         int mode = (scale <= 1)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
 
-        if (select_slice > ALL_SLICES) // In this case a specific slice number has been chosen (Not central slice)
+        if (select_slice > ALL_SLICES)// In this case a specific slice number has been chosen (Not central slice)
         {
             MultidimArrayGeneric array(im(), select_slice - 1);
             array.setXmippOrigin();
@@ -772,9 +775,9 @@ public:
     }
 
     /** Returns an image with a lower resolution as a preview image.
-      * If Zdim parameter is not passed, then all slices are rescaled.
-      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
-      */
+     * If Zdim parameter is not passed, then all slices are rescaled.
+     * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
+     */
     void getPreview(ImageBase *imgBOut, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
     {
         // Zdim is used to choose the slices: -1 = CENTRAL_SLICE, 0 = ALL_SLICES, else This Slice
@@ -804,7 +807,7 @@ public:
 
         int mode = (scale <= 1)? NEAREST : LINEAR; // If scale factor is higher than 1, LINEAR mode is used to avoid artifacts
 
-        if (select_slice > ALL_SLICES) // In this case a specific slice number has been chosen (Not central slice)
+        if (select_slice > ALL_SLICES)// In this case a specific slice number has been chosen (Not central slice)
         {
             movePointerTo(select_slice, select_img);
             scaleToSize(mode, IMGMATRIX(imgOut), IMGMATRIX(*this), Xdim, Ydim);
@@ -822,7 +825,6 @@ public:
         // We set the actual dimesions of th MDA to the imageOut as if it were read from file.
         imgOut.setADimFile(IMGMATRIX(imgOut).getDimensions());
     }
-
 
     /** It changes the behavior of the internal multidimarray so it points to a specific slice/image
      *  from a stack, volume or stack of volumes. No information is deallocated from memory, so it is
@@ -947,18 +949,18 @@ public:
     }
 
     /** Pixel access
-    *
-    * This operator is used to access a pixel within a 2D image. This is a
-    * logical access, so you could access to negative positions if the image
-    * has been defined so (see the general explanation for the class).
-    *
-    * @code
-    * std::cout << "Grey level of pixel (-3,-3) of the image = " << I(-3, -3)
-    * << std::endl;
-    *
-    * I(-3, -3) = I(-3, -2);
-    * @endcode
-    */
+     *
+     * This operator is used to access a pixel within a 2D image. This is a
+     * logical access, so you could access to negative positions if the image
+     * has been defined so (see the general explanation for the class).
+     *
+     * @code
+     * std::cout << "Grey level of pixel (-3,-3) of the image = " << I(-3, -3)
+     * << std::endl;
+     *
+     * I(-3, -3) = I(-3, -2);
+     * @endcode
+     */
     T& operator()(int i, int j) const
     {
         return A2D_ELEM(data, i, j);
@@ -998,14 +1000,13 @@ public:
     //        Zdim = ZSIZE(data);
     //        Ndim = NSIZE(data);
     //    }
-
     size_t getSize() const
     {
         return NZYXSIZE(data);
     }
 
     /** Get geometric transformation matrix from 2D-image header
-      */
+     */
     void getTransformationMatrix(Matrix2D<double> &A,
                                  bool only_apply_shifts = false,
                                  const size_t n = 0)
@@ -1017,7 +1018,7 @@ public:
     }
 
     /** Sum this object with other file and keep in this object
-      */
+     */
     void sumWithFile(const FileName &fn)
     {
         Image<T> aux;
@@ -1029,7 +1030,6 @@ public:
      *  Specific read functions for different file formats
      */
     //#include "rwTIFF.h"
-
 protected:
 
     /** Apply geometry in refering metadata to the image */
@@ -1101,7 +1101,7 @@ protected:
 private:
 
     /** Read the raw data
-      */
+     */
     void readData(FILE* fimg, size_t select_img, DataType datatype, size_t pad)
     {
         //#define DEBUG
@@ -1118,9 +1118,9 @@ private:
         if (transform == Hermitian || transform == CentHerm )
             data.setXdim(XSIZE(data)/2 + 1);
 
-        size_t selectImgOffset, readsize, readsize_n, pagemax = 4194304; //4Mb
+        size_t selectImgOffset, readsize, readsize_n, pagemax = 4194304;//4Mb
         size_t datatypesize=gettypesize(datatype);
-        size_t pagesize  =ZYXSIZE(data)*datatypesize;
+        size_t pagesize =ZYXSIZE(data)*datatypesize;
         size_t haveread_n = 0;
 
         selectImgOffset = offset + IMG_INDEX(select_img) * (pagesize + pad);
@@ -1146,7 +1146,7 @@ private:
                              "images file not compatible. Try selecting a unique image.");
             }
             mappedOffset = selectImgOffset;
-            mappedSize   = mappedOffset + pagesize;
+            mappedSize = mappedOffset + pagesize;
             mmapFile();
         }
         else
@@ -1176,7 +1176,7 @@ private:
                 REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
             for ( size_t myn = 0; myn < NSIZE(data); myn++ )
             {
-                for (size_t myj = 0; myj < pagesize; myj += pagemax )//pagesize size of object
+                for (size_t myj = 0; myj < pagesize; myj += pagemax ) //pagesize size of object
                 {
                     // Read next page. Divide pages larger than pagemax
                     readsize = pagesize - myj;
@@ -1219,10 +1219,10 @@ private:
                    CastWriteMode castMode=CW_CAST)
     {
         size_t dTypeSize = gettypesize(wDType);
-        size_t datasize  = datasize_n * dTypeSize;
-        size_t ds2Write  = rw_max_page_size;
+        size_t datasize = datasize_n * dTypeSize;
+        size_t ds2Write = rw_max_page_size;
         size_t dsN2Write = rw_max_page_size/dTypeSize;
-        size_t rw_max_n  = dsN2Write;
+        size_t rw_max_n = dsN2Write;
 
         char* fdata;
         double min0 = 0, max0 = 0;
@@ -1234,7 +1234,6 @@ private:
             fdata = (char *) askMemory(rw_max_page_size*sizeof(char));
         else
             fdata = (char *) askMemory(datasize*sizeof(char));
-
 
         for (size_t writtenDataN = 0; writtenDataN < datasize_n; writtenDataN += rw_max_n )
         {
@@ -1277,7 +1276,7 @@ private:
         }
         char * map;
         const size_t pagesize = sysconf(_SC_PAGESIZE);
-        size_t offsetPages = (offset/pagesize)*pagesize;
+        size_t offsetPages = (mappedOffset/pagesize)*pagesize;
         mappedOffset -= offsetPages;
         mappedSize -= offsetPages;
 
@@ -1287,7 +1286,7 @@ private:
             map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, offsetPages);
 
         if ( map == MAP_FAILED )
-            REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"Image Class::ReadData: mmap of image file failed: "+strerror(errno));
+            REPORT_ERROR(ERR_MMAP_NOTADDR,formatString("Image Class::mmapFile: mmap of image file failed. Error: %s", strerror(errno)));
         data.data = reinterpret_cast<T*> (map+mappedOffset);
         data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);
     }
@@ -1343,7 +1342,7 @@ private:
     }
 
     /* friend declaration for stacks handling purposes
-    */
+     */
     friend class ImageCollection;
     template <typename TT>
     friend class Image;
@@ -1353,18 +1352,17 @@ private:
 
 // Special cases for complex numbers
 template<>
-void Image< std::complex< double > >::castPage2T(char * page,
-        std::complex<double> * ptrDest,
-        DataType datatype,
-        size_t pageSize);
+void Image<std::complex<double> >::castPage2T(char * page,
+        std::complex<double> * ptrDest, DataType datatype, size_t pageSize);
 template<>
-void Image< std::complex< double > >::castPage2Datatype(std::complex< double > * srcPtr,
-        char * page,
-        DataType datatype,
-        size_t pageSize) const;
+void Image<std::complex<double> >::castPage2Datatype(
+    std::complex<double> * srcPtr, char * page, DataType datatype,
+    size_t pageSize) const;
 template<>
-void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< double > * srcPtr,
-        char * page, DataType datatype, size_t pageSize,double min0,double max0,CastWriteMode castMode) const;
+void Image<std::complex<double> >::castConvertPage2Datatype(
+    std::complex<double> * srcPtr, char * page, DataType datatype,
+    size_t pageSize, double min0, double max0,
+    CastWriteMode castMode) const;
 
 //@}
 #endif

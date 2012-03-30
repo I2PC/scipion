@@ -1204,7 +1204,7 @@ public:
     void coreInit()
     {
         xdim = yxdim = zyxdim = nzyxdim = 0;
-        ydim = zdim = ndim = 1;
+        ydim = zdim = ndim = 0;
         zinit = yinit = xinit = 0;
         data = NULL;
         nzyxdimAlloc = 0;
@@ -1215,7 +1215,7 @@ public:
 
     /** Core allocate with dimensions.
      */
-    void coreAllocate(int _ndim, int _zdim, int _ydim, int _xdim)
+    void coreAllocate(size_t _ndim, int _zdim, int _ydim, int _xdim)
     {
         if (_ndim <= 0 || _zdim <= 0 || _ydim<=0 || _xdim<=0)
         {
@@ -1301,8 +1301,8 @@ public:
             fclose(fMap);
             REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::resize: Error 'stretching' the map file.");
         }
-        if ( (_data = (T*) mmap(0,nzyxDim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0)) == (void*) -1 )
-            REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::resize: mmap failed.");
+        if ( (_data = (T*) mmap(0,nzyxDim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0)) == (void*) MAP_FAILED )
+            REPORT_ERROR(ERR_MMAP_NOTADDR,formatString("MultidimArray::resize: mmap failed. Error %s", strerror(errno)));
 
         return fMap;
     }

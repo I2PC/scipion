@@ -97,7 +97,7 @@ int ImageBase::readOrReadMapped(const FileName &name, size_t select_img, int mod
 }
 
 int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img,
-    bool mapData)
+                                 bool mapData)
 {
     read(name, HEADER);
     int imXdim, imYdim, imZdim;
@@ -162,13 +162,13 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_fil
                            applyGeo(row, params.only_apply_shifts, params.wrap) \
 
 void ImageBase::applyGeo(const MetaData &md, size_t objId,
-    const ApplyGeoParams &params)
+const ApplyGeoParams &params)
 {
     APPLY_GEO();
 }
 
 int ImageBase::readApplyGeo(const FileName &name, const MDRow &row,
-    const ApplyGeoParams &params)
+                            const ApplyGeoParams &params)
 {
     READ_AND_RETURN();
 }
@@ -176,7 +176,7 @@ int ImageBase::readApplyGeo(const FileName &name, const MDRow &row,
 /** Read an image from metadata, filename is provided
 */
 int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
-    const ApplyGeoParams &params)
+                            const ApplyGeoParams &params)
 {
     GET_ROW();
     READ_AND_RETURN();
@@ -185,7 +185,7 @@ int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t obj
 /** Read an image from metadata, filename is taken from MDL_IMAGE
  */
 int ImageBase::readApplyGeo(const MetaData &md, size_t objId,
-    const ApplyGeoParams &params)
+                            const ApplyGeoParams &params)
 {
     GET_ROW();
     FileName name;
@@ -696,7 +696,7 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
     else if (ext_name.contains("spe"))//SPE
         err = readSPE(select_img,false);
     else if (ext_name.contains("jpg"))//SPE
-            err = readJPEG(select_img);
+        err = readJPEG(select_img);
     else
         err = readSPIDER(select_img);
 
@@ -845,7 +845,7 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     else if (ext_name.contains("spe"))
         writeSPE(select_img,isStack,mode);
     else if (ext_name.contains("jpg"))
-            writeJPEG(select_img);
+        writeJPEG(select_img);
     else
         err = writeSPIDER(select_img,isStack,mode);
 
@@ -868,82 +868,44 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
 std::ostream& operator<<(std::ostream& o, const ImageBase& I)
 {
     o << std::endl;
-    o << "Filename       : " << I.filename << std::endl;
+    DataType * fileDT = NULL;
+    if (!I.filename.empty())
+    {
+        o << "--- File information ---" << std::endl;
+        o << "Filename       : " << I.filename << std::endl;
+        o << "Endianess      : ";
+        if (I.swap^IsLittleEndian())
+            o << "Little"  << std::endl;
+        else
+            o << "Big" << std::endl;
+
+        o << "Reversed       : ";
+        if (I.swap)
+            o << "True"  << std::endl;
+        else
+            o << "False" << std::endl;
+        fileDT = new DataType;
+        *fileDT = I.datatype();
+        o << "Data type      : " << datatype2StrLong(*fileDT) << std::endl;
+        o << "Data offset    : " << I.offset << std::endl;
+    }
+
+    o << "--- Image information ---" << std::endl;
+
+    DataType myDT = I.myT();
+    if (fileDT == NULL || myDT != *fileDT)
+        o << "Memory datatype: " << datatype2StrLong(I.myT()) << std::endl;
     o << "Image type     : ";
     if (I.isComplex())
         o << "Fourier-space image" << std::endl;
     else
         o << "Real-space image" << std::endl;
 
-    o << "Endianess      : ";
-    if (I.swap^IsLittleEndian())
-        o << "Little"  << std::endl;
-    else
-        o << "Big" << std::endl;
-
-    o << "Reversed       : ";
-    if (I.swap)
-        o << "True"  << std::endl;
-    else
-        o << "False" << std::endl;
-
-    o << "Data type      : ";
-    switch (I.datatype())
-    {
-    case DT_Unknown:
-        o << "Undefined data type";
-        break;
-    case DT_UChar:
-        o << "Unsigned character or byte type (UInt8)";
-        break;
-    case DT_SChar:
-        o << "Signed character (Int8)";
-        break;
-    case DT_UShort:
-        o << "Unsigned short integer (UInt16)";
-        break;
-    case DT_Short:
-        o << "Signed short integer (Int16)";
-        break;
-    case DT_UInt:
-        o << "Unsigned integer (UInt32)";
-        break;
-    case DT_Int:
-        o << "Signed integer (Int32)";
-        break;
-    case DT_Long:
-        o << "Signed integer (4 or 8 byte, depending on system)";
-        break;
-    case DT_Float:
-        o << "Floating point (4-byte)";
-        break;
-    case DT_Double:
-        o << "Double precision floating point (8-byte)";
-        break;
-    case DT_CShort:
-        o << "Complex two-byte integer (4-byte)";
-        break;
-    case DT_CInt:
-        o << "Complex integer (8-byte)";
-        break;
-    case DT_CFloat:
-        o << "Complex floating point (8-byte)";
-        break;
-    case DT_CDouble:
-        o << "Complex floating point (16-byte)";
-        break;
-    case DT_Bool:
-        o << "Boolean (1-byte?)";
-        break;
-    }
-    o << std::endl;
-
     int xdim, ydim, zdim;
     size_t ndim;
     I.getDimensions(xdim, ydim, zdim, ndim);
     o << "Dimensions     : " << ndim << " x " << zdim << " x " << ydim << " x " << xdim;
     o << "  ((N)Objects x (Z)Slices x (Y)Rows x (X)Columns)" << std::endl;
-    o << "Data offset    : " << I.offset << std::endl;
 
     std::stringstream oGeo;
 

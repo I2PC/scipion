@@ -65,5 +65,8 @@ DataType str2Datatype(const std::string & str);
 /** Convert datatype to string */
 std::string datatype2Str(DataType datatype);
 
+/** Convert datatype to string in long format */
+std::string datatype2StrLong(DataType datatype);
+
 //@}
 #endif /* DATATYPE_H_ */
