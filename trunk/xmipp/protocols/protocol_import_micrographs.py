@@ -6,7 +6,8 @@
 from glob import glob
 from protlib_base import *
 import xmipp
-from protlib_filesystem import replaceFilenameExt
+from protlib_filesystem import replaceFilenameExt, renameFile
+from protlib_utils import runJob
 
 class ProtImportMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -129,11 +130,14 @@ class ProtImportMicrographs(XmippProtocol):
         
         # Downsample
         if self.DoDownsample:
-            tmpFile = outputMic + "_tmp.mrc"
-            previousId = self.insertParallelRunJobStep("xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,self.DownsampleFactor),
-                                       verifyfiles = [tmpFile], parent_step_id=previousId)
-            self.insertParallelStep("renameFile", verifyfiles=[outputMic], parent_step_id=previousId, 
-                            source=tmpFile, dest=outputMic)
+            self.insertParallelStep("doDownsample", verifyfiles=[outputMic], parent_step_id=previousId, 
+                            iname=iname, outputMic=outputMic, downsampleFactor=self.DownsampleFactor)
+
+def doDownsample(log,iname,outputMic,downsampleFactor):
+    from protlib_filesystem import renameFile
+    tmpFile = outputMic + "_tmp.mrc"
+    runJob(log,"xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,downsampleFactor))
+    renameFile(log,source=tmpFile, dest=outputMic)
 
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
     md = xmipp.MetaData()
