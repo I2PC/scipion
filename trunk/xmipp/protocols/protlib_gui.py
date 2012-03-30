@@ -317,13 +317,16 @@ class ProtocolWidget():
             return True
      
     def checkVisibility(self):
+        self.display(self.getVisibility())    
+        
+    def getVisibility(self):
         show = self.variable.isVisualize() == self.master.visualize_mode
         if show and self.variable.isExpert():
             show = self.master.expert_mode
         if show:
             show = self.satisfiesCondition() #has condition, check it
-        self.display(show)    
-
+        return show
+        
             
     def display(self, value):
         for w in self.widgetslist:
@@ -334,11 +337,24 @@ class ProtocolWidget():
                 
     def validate(self):
         errors = []
-        for v in self.variable.validators:
-            e = globals()[v](self.variable)
-            if e:
-                errors.append(e)
+        if self.getVisibility():
+            for v in self.variable.validators:
+                e = globals()[v](self.variable)
+                if e:
+                    errors.append(e)
         return errors
+    
+    def isSectionExpanded(self):
+        print "Section Name: ", self.name
+        print "    has_question: ", self.has_question
+        print "    visibility:  ", self.getVisibility()
+        if self.has_question:
+            print "    tkvar.get(): ", self.tkvar.get()
+        
+        ''' Return true if the section is visible and expanded'''
+        if not self.has_question:
+            return True
+        return self.tkvar.get() == 'True' and self.getVisibility()
 
 """ Guidelines for python script header formatting:
 
@@ -474,20 +490,20 @@ class ProtocolGUI(BasicGUI):
             section.content.grid(row=1, column=0, columnspan=5, sticky='nsew')
         self.updateScrollRegion()
             
-    def autocompleteEntry(self, var):
-        keys = var.tags.keys()
-        if 'file' in keys:
-            args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
-        elif 'dir' in keys:
-            args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
-        elif 'run' in keys:
-            protocols = var.tags['run'].split(',')
-            runs = []
-            for p in protocols:
-                runs += self.project.projectDb.selectRunsByProtocol(p)
-            list = [getExtendedRunName(r) for r in runs]
-            if len(list)==1:
-                var.tkvar.set(list[0])
+#    def autocompleteEntry(self, var):
+#        keys = var.tags.keys()
+#        if 'file' in keys:
+#            args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
+#        elif 'dir' in keys:
+#            args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
+#        elif 'run' in keys:
+#            protocols = var.tags['run'].split(',')
+#            runs = []
+#            for p in protocols:
+#                runs += self.project.projectDb.selectRunsByProtocol(p)
+#            list = [getExtendedRunName(r) for r in runs]
+#            if len(list)==1:
+#                var.tkvar.set(list[0])
 
     def getRunsList(self,protocols):
         #protocols = var.tags['run'].split(',')
@@ -886,8 +902,12 @@ class ProtocolGUI(BasicGUI):
     def validateInput(self):
         errors = []
         for s in self.sectionslist:
-            for w in s.childwidgets:
-                errors += w.validate()
+            expanded = s.isSectionExpanded()
+            print "-----> EXPANDED: ", expanded
+            if expanded:   
+                print "-----> Validating child widgets"      
+                for w in s.childwidgets:
+                    errors += w.validate()
         if len(errors) > 0:
             showError("Validation ERRORS", '\n'.join(errors), parent=self.master)
             return False

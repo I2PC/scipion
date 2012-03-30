@@ -28,13 +28,6 @@ class ProtML2D(XmippProtocol):
                 }
         #self.fnIterLogs = self.workingDirPath('ml2d_iter_logs.xmd')
         #self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
-        
-    def validate(self):
-        errors = []
-        if self.DoMlf and self.DoCorrectAmplitudes and not exists(self.InCtfDatFile):
-            errors.append("Missing '%s' file for correcting amplitudes" % self.InCtfDatFile)
-        return errors
-    
     def summary(self):
         md = MetaData(self.ImgMd)
         lines = [('Input images            ', "%s (%u)" % (self.ImgMd, md.size())),

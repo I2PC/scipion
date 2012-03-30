@@ -56,7 +56,7 @@ If set to <No>, provide the images pixel size in Angstrom
 """
 DoCorrectAmplitudes = True
 
-# {file}{condition}(DoCorrectAmplitudes and DoMlf) CTFdat file with the input images:
+# {file}{condition}(DoCorrectAmplitudes and DoMlf){validate}(PathExists) CTFdat file with the input images:
 InCtfDatFile = "all_images.ctfdat"
 
 # {condition}(not DoCorrectAmplitudes)Image pixel size (in Angstroms)
