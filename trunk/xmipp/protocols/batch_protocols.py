@@ -151,10 +151,6 @@ class XmippProjectGUI():
         
     def createMainMenu(self):
         self.menubar = tk.Menu(self.root)
-        self.fileMenu = tk.Menu(self.root, tearoff=0)
-        self.fileMenu.add_command(label="Exit", command=self.close)
-        #File menu
-        self.menubar.add_cascade(label="File", menu=self.fileMenu)
         #Project menu
         self.menuProject = tk.Menu(self.root, tearoff=0)
         self.menubar.add_cascade(label="Project", menu=self.menuProject)
@@ -167,6 +163,8 @@ class XmippProjectGUI():
         self.cleanImg = tk.PhotoImage(file=getXmippPath('resources', 'clean.gif'))       
         self.menuProject.add_command(label="Clean project", command=self.cleanProject,
                                      image=self.cleanImg, compound=tk.LEFT)
+        self.menuProject.add_separator()
+        self.menuProject.add_command(label="Exit", command=self.close)
         
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow

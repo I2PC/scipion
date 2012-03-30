@@ -722,7 +722,7 @@ class TextfileViewer(tk.Frame):
         left.grid(column=0, row=0, sticky='nw')
         XmippButton(left, "Open", 'folderopen.gif').grid(row=0, column=0, padx=(0, 5))
         XmippButton(left, "Save", 'save.gif').grid(row=0, column=1, padx=(0, 5))
-        XmippButton(left, "Refresh", 'refresh.gif', command=self.refreshOutput).grid(row=0, column=2, padx=(0, 5))
+        XmippButton(left, "Refresh", 'refresh.gif', command=self.refreshAll).grid(row=0, column=2, padx=(0, 5))
         right = tk.Frame(toolbarFrame)
         right.grid(column=1, row=0, sticky='ne')        
         self.searchVar = tk.StringVar()
@@ -763,6 +763,12 @@ class TextfileViewer(tk.Frame):
         for font in self.fontDict.values():
             changeFontSize(font, event)
               
+    def refreshAll(self, e=None):
+        ''' Refresh all output textareas '''
+        for ta in self.taList:
+            ta.readFile()
+            ta.goEnd()
+        
     def refreshOutput(self, e=None):
         if self.refreshAlarm:
             self.after_cancel(self.refreshAlarm)
@@ -1097,8 +1103,6 @@ def defaultOnDoubleClick(filename, browser):
 def textFillMenu(filename, browser):
     menu = browser.menu
     menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
-    menu.add_separator()
-    menu.add_command(label="Delete file", command=None)
     return True
 
 def textOnDoubleClick(filename, browser):
@@ -1151,8 +1155,6 @@ def mdFillMenu( filename, browser):
     menu.add_command(label="Open as Images table", command=lambda:showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda: showj(filename, 'image'))
     menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
-    menu.add_separator()
-    menu.add_command(label="Delete file", command=None) 
     return True
 
 def mdOnDoubleClick(filename, browser):
