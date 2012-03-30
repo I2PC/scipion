@@ -4,6 +4,7 @@ from ctypes import Structure
 prefix_micrograph = "_emx_micrograph."
 prefix_particle   = "_emx_particle."
 prefix_class      = "_emx_class."
+errorWrongFileType = 10
 
 class ParticlePickingStructEmx(Structure):
     _fields_ = [("coordinate_x", c_float),
@@ -201,7 +202,7 @@ class ParticleAlignmentStructXmd(Structure):
             shiftZ=0.,
             flip=0,
             scale=1.,
-            enable=1,
+            enabled=1,
             fom=1.
             ):
         
@@ -215,7 +216,7 @@ class ParticleAlignmentStructXmd(Structure):
             shiftZ,
             flip,
             scale,
-            enable,
+            enabled,
             fom
             )
 ##################aligment_end
