@@ -159,6 +159,12 @@ class XmippTree(ttk.Treeview):
             index = self.index(item)
             if self.next(item) != '':
                 self.move(item, '', index+1)
+                
+    def clear(self):
+        ''' remove all items '''
+        childs = self.get_children('')
+        for c in childs:
+            self.delete(c)
             
         
 class AutoScrollbar(tk.Scrollbar):

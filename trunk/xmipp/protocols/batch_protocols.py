@@ -296,8 +296,7 @@ class XmippProjectGUI():
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         
-        def updateHistory(state):
-            self.project.projectDb.updateRunState(state, run['run_id'])
+        def updateAndClose():
             root.destroy()
             self.historyRefreshRate = 1
             self.updateRunHistory(self.lastDisplayGroup)
@@ -306,37 +305,60 @@ class XmippProjectGUI():
             if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
                 #p = pm.getProcessFromPid(run['pid'])
                 pm.stopProcessGroup()
-                updateHistory(SqliteDb.RUN_ABORTED)
+                self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
+                updateAndClose()
+                
         
         detailsSection = ProjectSection(root, 'Process monitor')
         detailsSection.addButton("Stop run", command=stopRun)
-        txt = tk.Text(detailsSection.frameContent, width=80, height=15,
-                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
-        txt.tag_config('normal', justify=tk.LEFT)
-        txt.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
-        txt.pack(fill=tk.BOTH)
+#        txt = tk.Text(detailsSection.frameContent, width=80, height=15,
+#                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
+#        txt.tag_config('normal', justify=tk.LEFT)
+#        txt.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
+#        txt.pack(fill=tk.BOTH)
+        cols = ('pid', '%cpu', '%mem', 'command')
+        frame = detailsSection.frameContent
+        tree = XmippTree(frame, columns=cols)
+        for c in cols:
+            tree.heading(c, text=c)
+            if c != 'command':
+                tree.column(c, width=60)
+        tree.heading('#0', text='Node')
+        tk.Label(frame, text='Process id:', font=Fonts['button']).grid(row=0, column=0, sticky='e')
+        tk.Label(frame, text='Elapsed time:', font=Fonts['button']).grid(row=1, column=0, sticky='e')
+        labPid = tk.StringVar()
+        tk.Label(frame, textvariable=labPid).grid(row=0, column=1, sticky='w')
+        labElap = tk.StringVar()
+        tk.Label(frame, textvariable=labElap).grid(row=1, column=1, sticky='w')
+        tree.grid(row=2, column=0, sticky='nsew', columnspan=2)
         detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
         
         def refreshInfo():
             p = pm.getProcessFromPid()
+            #txt.delete(1.0, tk.END)
+            tree.clear()
             if p:
-                line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
-                txt.delete(1.0, tk.END)
-                txt.insert(tk.END, line)
-                txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
+                labPid.set(p.pid)
+                labElap.set(p.etime)
+                #line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
+                #txt.insert(tk.END, line)
+                #txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
                 childs = pm.getProcessGroup()
-                lastHost = 'localhost'
+                lastHost = ''
                 for c in childs:
                     c.info['pname'] = pname = os.path.basename(c.args.split()[0])
                     if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
                         line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
                         if c.host != lastHost:
-                            txt.insert(tk.END, "%s\n" % c.host, 'bold')
+                            #txt.insert(tk.END, "%s\n" % c.host, 'bold')
+                            tree.insert('', 'end', c.host, text=c.host)
+                            tree.item(c.host, open=True)
                             lastHost = c.host
-                        txt.insert(tk.END, line % c.info, 'normal')
-                txt.after(5000, refreshInfo)
+                        #txt.insert(tk.END, line % c.info, 'normal')
+                        tree.insert(lastHost, 'end', values=(c.pid, c.pcpu, c.pmem, pname))
+                tree.after(5000, refreshInfo)
             else:
-                updateHistory(SqliteDb.RUN_FAILED)
+                updateAndClose()
             
         refreshInfo()
         centerWindows(root, refWindows=self.root)
@@ -366,16 +388,17 @@ class XmippProjectGUI():
             tree.after_cancel(self.historyRefresh)
             self.historyRefresh = None
         runName = None
+        
         if not selectFirst:
             item = tree.selection_first()
             runName = tree.item(item, 'text')
-        childs = tree.get_children('')
-        for c in childs:
-            tree.delete(c)
+        tree.clear()
+
         if protGroup == GROUP_ALL:
             self.runs = self.project.projectDb.selectRuns()
         else:
             self.runs = self.project.projectDb.selectRuns(protGroup)
+        
         if len(self.runs) > 0:
             for run in self.runs:
                 state = run['run_state']

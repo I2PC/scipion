@@ -993,7 +993,6 @@ class ProtocolGUI(BasicGUI):
             # Check the section visibility and check childs if needed                
             if s.checkVisibility() and expanded:
                 visible_child = False #Check there is at least one visible child 
-                print "SECTION: ", s.name        
                 for w in s.childwidgets:
                     if w.checkVisibility():
                         visible_child = True
