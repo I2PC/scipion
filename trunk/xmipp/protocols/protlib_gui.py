@@ -286,8 +286,8 @@ class ProtocolVariable():
             template = '%s = %s\n\n'  
         if self.tkvar:   
             lines.append(template % (self.name, self.getValue()))
-        if self.name and  'label' in self.name:
-            print lines
+#        if self.name and  'label' in self.name:
+#            print lines
         return lines
     
     def satisfiesCondition(self):
@@ -317,9 +317,14 @@ class ProtocolWidget():
             return True
      
     def checkVisibility(self):
-        self.display(self.getVisibility())    
+        '''Show or hide the widget, also return the visibility'''
+        show = self.getVisibility()
+        self.display(show)
+        return show    
         
     def getVisibility(self):
+        if self.variable.isHidden():
+            return False
         show = self.variable.isVisualize() == self.master.visualize_mode
         if show and self.variable.isExpert():
             show = self.master.expert_mode
@@ -345,12 +350,6 @@ class ProtocolWidget():
         return errors
     
     def isSectionExpanded(self):
-        print "Section Name: ", self.name
-        print "    has_question: ", self.has_question
-        print "    visibility:  ", self.getVisibility()
-        if self.has_question:
-            print "    tkvar.get(): ", self.tkvar.get()
-        
         ''' Return true if the section is visible and expanded'''
         if not self.has_question:
             return True
@@ -484,11 +483,15 @@ class ProtocolGUI(BasicGUI):
         w.widgetslist.append(w.frame)
         
     def expandCollapseSection(self, section):
+        '''Expand/collapse the section area, return True if expanded'''
         if section.tkvar.get() == 'False':
             section.content.grid_remove()
+            expanded = False
         else:
             section.content.grid(row=1, column=0, columnspan=5, sticky='nsew')
+            expanded = True
         self.updateScrollRegion()
+        return expanded
             
 #    def autocompleteEntry(self, var):
 #        keys = var.tags.keys()
@@ -903,9 +906,7 @@ class ProtocolGUI(BasicGUI):
         errors = []
         for s in self.sectionslist:
             expanded = s.isSectionExpanded()
-            print "-----> EXPANDED: ", expanded
             if expanded:   
-                print "-----> Validating child widgets"      
                 for w in s.childwidgets:
                     errors += w.validate()
         if len(errors) > 0:
@@ -988,11 +989,16 @@ class ProtocolGUI(BasicGUI):
         
     def checkVisibility(self, *args):
         for s in self.sectionslist:
-            if s.has_question:
-                self.expandCollapseSection(s)
-            s.checkVisibility()
-            for w in s.childwidgets:
-                w.checkVisibility()
+            expanded = not s.has_question or self.expandCollapseSection(s)
+            # Check the section visibility and check childs if needed                
+            if s.checkVisibility() and expanded:
+                visible_child = False #Check there is at least one visible child 
+                print "SECTION: ", s.name        
+                for w in s.childwidgets:
+                    if w.checkVisibility():
+                        visible_child = True
+                if not visible_child:
+                    s.display(False)
         #self.resize()
         self.updateScrollRegion() 
 

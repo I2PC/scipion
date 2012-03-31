@@ -27,26 +27,26 @@ InSelFile=''
 # {list_combo}(Use the middle of the image,Minimize first harmonic)How to find the center of rotation?
 HowCenter='Use the middle of the image'
 
-# {expert} Inner radius for rotational harmonics calculation (%):
+# {expert} Inner radius for rotational harmonics (%):
 """ A percentage of the image radius """
-SpectraInnerRadius=15
+SpectraInnerRadius = 15
 
-# {expert} Outer radius for rotational harmonics calculation (%):
+# {expert} Outer radius for rotational harmonics (%):
 """ A percentage of the image radius """
-SpectraOuterRadius=80
+SpectraOuterRadius = 80
 
 # {expert} Lowest harmonic to calculate
-SpectraLowHarmonic=1
+SpectraLowHarmonic = 1
 # {expert} Highest harmonic to calculate
-SpectraHighHarmonic=15
+SpectraHighHarmonic = 15
 
 #-----------------------------------------------------------------------------
 # {section} Classification: classify_kerdensom 
 #-----------------------------------------------------------------------------
 # X-dimension of the self-organizing map:
-SomXdim=7
+SomXdim = 7
 # Y-dimension of the self-organizing map:
-SomYdim=7
+SomYdim = 7
 # {expert} Initial regularization factor:
 """ The kerdenSOM algorithm anneals from an initial high regularization factor
     to a final lower one, in a user-defined number of steps.
@@ -54,16 +54,16 @@ SomYdim=7
     If the output map is not organized, higher the regularization factors
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
-SomReg0=1000
+SomReg0 = 1000
 # {expert} Final regularization factor:
-SomReg1=200
+SomReg1 = 200
 # {expert} Number of steps to lower the regularization factor:
-SomSteps=5
+SomSteps = 5
 # {expert} Additional kerdenSOM parameters:
 """ For a complete description 
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
 """
-KerdensomExtraCommand=''
+KerdensomExtraCommand = ''
 
 # {eval} expandParallel(threads=0, mpi=0, hours=96)
 
