@@ -9,7 +9,6 @@ import java.io.File;
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
 
-	public static XmippImageWindow w;
 	
 
 	public static void main(String[] args)
@@ -17,7 +16,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 			// openImageJ(Tool.VIEWER);
-			w = new XmippImageWindow("/home/airen/xmipp-work/image-formats/ali_35c.hed");
+			XmippStackWindow w = new XmippStackWindow(new ImagePlus("/home/airen/xmipp-work/image-formats/ali_35c.hed"));
 			
 			// IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 

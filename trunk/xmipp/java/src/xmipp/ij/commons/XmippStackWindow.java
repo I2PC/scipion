@@ -36,6 +36,7 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	@Override
 	public void saveDataAs(String file) throws Exception
 	{
+		
 		XmippImageConverter.writeImagePlus(imp, file);
 	}
 
@@ -49,9 +50,10 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	@Override
 	public void windowClosing(WindowEvent e) {
 		super.windowClosing(e);
+		close();//it works for stack
 		if(XmippIJUtil.getXmippImageJ() != null)
 			XmippIJUtil.getXmippImageJ().close();
-		DEBUG.printMessage("kkk");
+		//System.exit(0);
 	}
 
 	@Override

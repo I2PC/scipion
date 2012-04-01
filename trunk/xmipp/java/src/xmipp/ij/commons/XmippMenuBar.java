@@ -46,8 +46,6 @@ public class XmippMenuBar extends MenuBar
 	private Menu processmn;
 	private Menu drawmn;
 	private MenuItem imagejmi;
-	private MenuItem openwithvv3ds;
-	private MenuItem openwithvolumej;
 	private Menu profilemn;
 	private CheckboxMenuItem pollmi;
 	protected Object timer;
