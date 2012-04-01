@@ -1142,8 +1142,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			addItem(STATS_PCA, "PCA");
 			addItem(STATS_FSC, "FSC");
 			addItem(MD_CLASSES, "Superclasses");
-			addItem(MD_EDIT_COLS, "Edit labels");
-			addItem(MD_REMOVE_DISABLED, "Remove disabled");
+			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
+			addItem(MD_ADD_OBJECT, "Add new object");
+			addItem(MD_REMOVE_DISABLED, "Remove disabled", "delete.gif");
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
 		}// function createItems
 
@@ -1263,6 +1264,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 					removeObjects(true);
 				} else if (cmd.equals(MD_REMOVE_DISABLED)) {
 					removeObjects(false);
+				} else if (cmd.equals(MD_ADD_OBJECT)) {
+					AddObjectJDialog dlg = new AddObjectJDialog(JFrameGallery.this);
+					if (dlg.showDialog()){
+						data.md.unionAll(dlg.md);
+						reloadMd();
+					}
 				}
 			} catch (Exception e) {
 				showException(e);

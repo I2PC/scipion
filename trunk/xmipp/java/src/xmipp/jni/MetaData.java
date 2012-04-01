@@ -40,7 +40,7 @@ public class MetaData {
 	public static final int LABEL_VECTOR_DOUBLE = 4;
 	public static final int LABEL_SIZET = 5;
 	public static final int LABEL_VECTOR_SIZET = 6;
-	
+
 	public static final String FILL_CONSTANT = "constant";
 	public static final String FILL_LINEAR = "linear";
 	public static final String FILL_RAND_UNIFORM = "random uniform";
@@ -62,18 +62,11 @@ public class MetaData {
 	// Arrays.sort(PATHS_FIELDS);
 	// }
 
-	public final static int GEOMETRY_LABELS[] = {
-		    MDLabel.MDL_FLIP, 
-			MDLabel.MDL_ANGLEPSI,
-			MDLabel.MDL_SHIFTX, 
-			MDLabel.MDL_SHIFTY
-	};
-	
-    public final static int MICROGRAPH_BASIC_LABELS[] = {
-        MDLabel.MDL_MICROGRAPH,
-        MDLabel.MDL_PSD,
-        MDLabel.MDL_CTFMODEL
-    };
+	public final static int GEOMETRY_LABELS[] = { MDLabel.MDL_FLIP,
+			MDLabel.MDL_ANGLEPSI, MDLabel.MDL_SHIFTX, MDLabel.MDL_SHIFTY };
+
+	public final static int MICROGRAPH_BASIC_LABELS[] = {
+			MDLabel.MDL_MICROGRAPH, MDLabel.MDL_PSD, MDLabel.MDL_CTFMODEL };
 
 	public static final int MD_OVERWRITE = 0;
 	public static final int MD_APPEND = 1;
@@ -115,11 +108,11 @@ public class MetaData {
 	public native void writeBlock(String filename) throws Exception;
 
 	public native void print() throws Exception;
-	
+
 	public native boolean isColumnFormat() throws Exception;
 
 	public native boolean containsLabel(int label) throws Exception;
-	
+
 	public native boolean removeLabel(int label) throws Exception;
 
 	public boolean containsGeometryInfo() {
@@ -132,10 +125,10 @@ public class MetaData {
 		}
 		return false;
 	}
-	
+
 	public boolean containsMicrographsInfo() {
 		try {
-			//Should contain some micrographs labels
+			// Should contain some micrographs labels
 			for (int i = 0; i < MICROGRAPH_BASIC_LABELS.length; i++)
 				if (!containsLabel(MICROGRAPH_BASIC_LABELS[i]))
 					return false;
@@ -144,7 +137,7 @@ public class MetaData {
 		}
 		return true;
 	}
-	
+
 	public static native String label2Str(int label) throws Exception;
 
 	public static native int str2Label(String labelName) throws Exception;
@@ -184,27 +177,27 @@ public class MetaData {
 		}
 		return null;
 	}
-	
+
 	/** Return an String representing the label type */
 	public static String getLabelTypeString(int labelType) throws Exception {
 		switch (labelType) {
-	    case LABEL_STRING:
-	        return "STRING";
-	    case LABEL_DOUBLE:
-	      return "DOUBLE";
-	    case LABEL_INT:
-	        return "INT";
-	    case LABEL_BOOL:
-	      return "BOOL";
-	    case LABEL_VECTOR_DOUBLE:
-	      return "VECTOR(DOUBLE)";
-	    case LABEL_SIZET:
-	      return "SIZE_T";
-	    case LABEL_VECTOR_SIZET:
-	      return "VECTOR(SIZE_T)";
-	    }
-	    return "UNKNOWN";
-	}//function getLabelTypeString
+		case LABEL_STRING:
+			return "STRING";
+		case LABEL_DOUBLE:
+			return "DOUBLE";
+		case LABEL_INT:
+			return "INT";
+		case LABEL_BOOL:
+			return "BOOL";
+		case LABEL_VECTOR_DOUBLE:
+			return "VECTOR(DOUBLE)";
+		case LABEL_SIZET:
+			return "SIZE_T";
+		case LABEL_VECTOR_SIZET:
+			return "VECTOR(SIZE_T)";
+		}
+		return "UNKNOWN";
+	}// function getLabelTypeString
 
 	public static native boolean isTextFile(int label) throws Exception;
 
@@ -256,6 +249,25 @@ public class MetaData {
 		for (int i = 0; i < activeLabels.length; ++i)
 			values[i] = getValueString(activeLabels[i], objId);
 		return values;
+	}
+
+	/**
+	 * Create a metadata row from another metadata Adding the activeLabels and
+	 * adding an object
+	 */
+	public MetaData getMetaDataRow() {
+		MetaData md = null;
+		try {
+			md = new MetaData();
+			md.setColumnFormat(false);
+			int[] labels = getActiveLabels();
+			for (int l: labels)
+				md.addLabel(l);
+			md.addObject();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return md;
 	}
 
 	public static boolean isPathField(int label) throws Exception {
@@ -312,7 +324,7 @@ public class MetaData {
 
 	public native boolean setValueInt(int label, int value, long objId)
 			throws Exception;
-	
+
 	public native boolean setValueLong(int label, long value, long objId)
 			throws Exception;
 
@@ -342,10 +354,10 @@ public class MetaData {
 
 	/** Add a new object entry and return new id */
 	public native long addObject() throws Exception;
-	
+
 	/** Remove an existing object from metadata */
 	public native boolean removeObject(long objId) throws Exception;
-	
+
 	/** Remove disabled objects */
 	public native void removeDisabled() throws Exception;
 
@@ -357,42 +369,45 @@ public class MetaData {
 			ImageGeneric imageStd, boolean applyGeo, int label)
 			throws Exception;
 
-	public native void getPCAbasis(ImageGeneric basis, int label) throws Exception;
+	public native void getPCAbasis(ImageGeneric basis, int label)
+			throws Exception;
 
 	public native void computeFourierStatistics(MetaData mdIn, int label)
 			throws Exception;
-	
-	/** Union of all elements in two Metadata, duplicating common elements.
+
+	/**
+	 * Union of all elements in two Metadata, duplicating common elements.
 	 * Result in calling metadata object, repetion are allowed
 	 */
 	public native void unionAll(MetaData mdIn);
-	
-	/** Fill all values in a column(label).
-	 * Different types of fill are:
-	 * Constant
-	 * Linear
-	 * Random uniform
-	 * Random gaussian
+
+	/**
+	 * Fill all values in a column(label). Different types of fill are: Constant
+	 * Linear Random uniform Random gaussian
+	 * 
 	 * @throws Exception
 	 */
 	public native void fillConstant(int label, String value);
-	
+
 	/**
 	 * Fill column in a random way
-	 * @param label column to be filled
-	 * @param mode can be "uniform" or "gaussian"
-	 * @param op1 min for uniform and mean for gaussian
-	 * @param op2 max for uniform and std for gaussian
+	 * 
+	 * @param label
+	 *            column to be filled
+	 * @param mode
+	 *            can be "uniform" or "gaussian"
+	 * @param op1
+	 *            min for uniform and mean for gaussian
+	 * @param op2
+	 *            max for uniform and std for gaussian
 	 */
 	public native void fillRandom(int label, String mode, double op1, double op2);
-	
+
 	/** Fill label starting at some value and with some step */
 	public native void fillLinear(int label, double start, double step);
-	
 
 	/** Just for debugging purposes */
 	public native void enableDebug() throws Exception;
-	
 
 	/*********** Non-native functions ********************/
 	/** Create empty metadata */
@@ -405,9 +420,10 @@ public class MetaData {
 		create();
 		read(filename);
 	}
-	
-	/** Will be called by GarbageCollector before destroying.
-	 * Needed to free C++ object memory. 
+
+	/**
+	 * Will be called by GarbageCollector before destroying. Needed to free C++
+	 * object memory.
 	 */
 	@Override
 	protected void finalize() throws Throwable {
@@ -415,18 +431,26 @@ public class MetaData {
 		destroy();
 	}
 
-	/** Read a metadata from plain textfile.
-	 * @param file filename from where to read
-	 * @param columns expected columns(labels) in file
+	/**
+	 * Read a metadata from plain textfile.
+	 * 
+	 * @param file
+	 *            filename from where to read
+	 * @param columns
+	 *            expected columns(labels) in file
 	 * @throws Exception
 	 */
 	public native void readPlain(String file, String columns) throws Exception;
 
-	/** Write the images on metadata to some location
+	/**
+	 * Write the images on metadata to some location
 	 * 
-	 * @param output Stack name or prefix, depending on indepent param
-	 * @param independent if False write images to stack, if True using a prefix
-	 * @param image_label Which label have the images to write
+	 * @param output
+	 *            Stack name or prefix, depending on indepent param
+	 * @param independent
+	 *            if False write images to stack, if True using a prefix
+	 * @param image_label
+	 *            Which label have the images to write
 	 * @throws Exception
 	 */
 	public native void writeImages(String output, boolean independent,

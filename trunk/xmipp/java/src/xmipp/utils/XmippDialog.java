@@ -212,6 +212,8 @@ public class XmippDialog extends JDialog implements ActionListener {
 	}
 	
 	public static String removeColors(String message) {
+		if (message == null)
+			return null;
 		String redPrefix=String.format("%c[%d;%dm",0x1B,1,31);
 		String redSuffix=String.format("%c[0m",0x1B);
 		return message.replace(redPrefix,"").replace(redSuffix,"");

@@ -27,10 +27,18 @@ package xmipp.viewer.models;
 
 import javax.swing.JTable;
 
+import xmipp.jni.MetaData;
+import xmipp.utils.Param;
+
 /** This is a data model designed for Row metadatas */
 @SuppressWarnings("serial")
 public class MetadataRow extends MetadataTable {
 	protected long id;
+	
+	/** Constructor using a metadata row */
+	public MetadataRow(MetaData md) throws Exception {
+		this(new GalleryData(null, new Param(), md));
+	}
 	
 	public MetadataRow(GalleryData data) throws Exception {
 		super(data);
