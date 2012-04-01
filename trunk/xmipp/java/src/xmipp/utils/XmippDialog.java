@@ -28,7 +28,9 @@ package xmipp.utils;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Dialog;
 import java.awt.FlowLayout;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -49,7 +51,7 @@ import javax.swing.JTextArea;
  */
 public class XmippDialog extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 1L;
-	protected JFrame parent;
+	protected Window parent;
 	protected boolean result;
 	protected JButton btnCancel;
 	protected JButton btnOk;
@@ -57,15 +59,17 @@ public class XmippDialog extends JDialog implements ActionListener {
 	protected String btnCancelText = "Cancel";
 	protected boolean btnCancelDisplay = true;
 	protected JPanel panelBtn;
-	protected boolean disposeOnClose;
+	protected boolean disposeOnClose = true;
 
 	public XmippDialog(JFrame parent, String title, boolean modal) {
 		super(parent, title, modal);
 		this.parent = parent;
-		disposeOnClose = true;
-		setTitle(title);
 	}
-
+	public XmippDialog(Dialog parent, String title, boolean modal) {
+		super(parent, title, modal);
+		this.parent = parent;
+	}
+	
 	/**
 	 * this is the general method to init the components. It should be called
 	 * from every subclass constructor after some settings of values
@@ -153,6 +157,33 @@ public class XmippDialog extends JDialog implements ActionListener {
 		disposeOnClose = value;
 	}
 
+	/** Some methods to show dialog using the current as parent */
+	public boolean showInfo(String message) {
+		XmippMessageDialog dlg = new XmippMessageDialog(this, "INFO",
+				message, "info.gif");
+		return dlg.showDialog();
+	}
+	
+	public boolean showWarning(String message) {
+		XmippMessageDialog dlg = new XmippMessageDialog(this, "WARNING",
+				message, "warning.gif");
+		return dlg.showDialog();
+	}
+
+	public boolean showError(String message) {
+		XmippMessageDialog dlg = new XmippMessageDialog(this, "ERROR",
+				removeColors(message), "error.gif");
+		return dlg.showDialog();
+	}
+
+	public boolean showException(Exception e) {
+		XmippMessageDialog dlg = new XmippMessageDialog(this, "ERROR",
+				removeColors(e.getMessage()), "error.gif");
+		// TODO: Integrate the stack trace into the dialog
+		e.printStackTrace();
+		return dlg.showDialog();
+	}
+		
 	/** Some static methods to display some message dialogs */
 	public static boolean showInfo(JFrame parent, String message) {
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "INFO",
@@ -197,6 +228,17 @@ class XmippMessageDialog extends XmippDialog {
 	public XmippMessageDialog(JFrame parent, String title, String message,
 			String iconPath) {
 		super(parent, title, true);
+		init(message, iconPath);
+	}
+	
+	public XmippMessageDialog(Dialog parent, String title, String message,
+			String iconPath) {
+		super(parent, title, true);
+		init(message, iconPath);
+	}
+	
+	/** Perform some initializations */
+	private void init(String message, String iconPath){
 		this.message = message;
 		this.iconPath = iconPath;
 		initComponents();

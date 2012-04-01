@@ -22,6 +22,7 @@ import javax.swing.event.ChangeListener;
 
 import xmipp.particlepicker.Family;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 
 public class AddFamilyJDialog extends JDialog implements ActionListener
@@ -65,9 +66,9 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 		initSizePane();
 
 		add(sizepn, XmippWindowUtil.getConstraints(constraints, 1, 2, 1));
-		addbt = new JButton("Add");
+		addbt = XmippWindowUtil.getTextButton("Add", null);
 		getRootPane().setDefaultButton(addbt);
-		cancelbt = new JButton("Cancel");
+		cancelbt = XmippWindowUtil.getTextButton("Cancel", null);
 
 		add(addbt, XmippWindowUtil.getConstraints(constraints, 0, 3, 1));
 		add(cancelbt, XmippWindowUtil.getConstraints(constraints, 1, 3, 1));
@@ -102,6 +103,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 				}
 				catch (IllegalArgumentException ex)
 				{
+					//XmippDialog.showException(AddFamilyJDialog.this, e);
 					JOptionPane.showMessageDialog(AddFamilyJDialog.this, ex.getMessage());
 				}
 

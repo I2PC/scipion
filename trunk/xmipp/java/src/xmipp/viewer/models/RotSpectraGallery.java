@@ -40,6 +40,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -128,6 +129,19 @@ public class RotSpectraGallery extends MetadataGallery {
 		return false;
 	}
 	
+	@Override
+	public boolean handleDoubleClick(int row, int col){
+		int index = getIndex(row, col);
+		if (index < n) {
+			RotSpectraItem item = vectorItems.get(index);
+			//item.cellDim.setSize(thumb_width, thumb_height);
+			JFrame chart = item.getChart();
+			chart.setVisible(true);
+			return true;
+		}
+		return false;
+	}//function handleDoubleClick
+	
 	public class RotSpectraItem extends ImageItem{
 
 	    JFreeChart chart;
@@ -165,8 +179,7 @@ public class RotSpectraGallery extends MetadataGallery {
 
 	    public JFrame getChart() {
 	        ChartPanel panel = new ChartPanel(chart);
-	        JFrame frame = new JFrame();
-	        frame.setTitle(getLabel());
+	        JFrame frame = new JFrame(getLabel());
 	        frame.getContentPane().add(panel);
 	        frame.pack();
 	        return frame;

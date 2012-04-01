@@ -144,8 +144,7 @@ public class EditLabelsJDialog extends XmippDialog {
 				showAddFillDialog(new AddFillLabelsJDialog(
 						(JFrameGallery) parent, rows));
 			} else if (btn == btnDelete) {
-				if (XmippDialog.showWarning(parent,
-						"Are you sure to remove this label?")) {
+				if (showWarning("Are you sure to remove this label?")) {
 					((JFrameGallery) parent).removeLabel(getSelectedLabel());
 					rowsChanged();
 				}
@@ -154,7 +153,7 @@ public class EditLabelsJDialog extends XmippDialog {
 						(JFrameGallery) parent, getSelectedLabel()));
 			}
 		} catch (Exception e) {
-			XmippDialog.showException(parent, e);
+			showException(e);
 		}
 	}// function actionPerformed
 

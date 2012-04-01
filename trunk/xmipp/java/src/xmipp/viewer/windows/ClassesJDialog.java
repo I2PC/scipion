@@ -176,7 +176,7 @@ public class ClassesJDialog extends XmippDialog {
 				}
 			}
 			} catch (Exception e){
-				XmippDialog.showException(parent, e);
+				showException(e);
 			}
 		}
 	}// function actionPerformed
@@ -275,8 +275,7 @@ public class ClassesJDialog extends XmippDialog {
 				gallery.fireTableDataChanged();
 				break;
 			default:
-				XmippDialog.showError(parent,
-						String.format("Column %d is not editable", column));
+				showError(String.format("Column %d is not editable", column));
 			}
 
 		}

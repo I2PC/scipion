@@ -194,7 +194,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 			try {
 				return MetaData.str2Label((String) jcbLabel.getSelectedItem());
 			} catch (Exception e) {
-				XmippDialog.showException(parent, e);
+				showException(e);
 			}
 			return MDLabel.MDL_UNDEFINED;
 		}
