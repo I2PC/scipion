@@ -49,8 +49,6 @@ void ProgProject::readParams()
     if (doParams)
     {
         fn_proj_param = getParam("--params");
-        if (checkParam("--crystal"))
-            fn_crystal    = getParam("--crystal");
         if (checkParam("--sym"))
             fn_sym        = getParam("--sym");
         only_create_angles = checkParam("--only_create_angles");
@@ -81,18 +79,21 @@ void ProgProject::defineParams()
     addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
     addExampleLine("+In the following links you can find some examples of projection parameter files",false);
     addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection.param",false);
+    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/phantomProject.param",false);
     addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection.param",false);
+    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection_xmd.param",false);
+    addExampleLine("+ ",false);
+    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection_xmd.param",false);
     addExampleLine("Creating a 2D crystal",false);
-    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr -o imgs.stk --params MRC_projection.param --crystal MRC_crystal_projection.param");
+    addExampleLine("In order to create a 2D crystal, you can pass --params as a projection file with a second block for crystal projection.: ",false);
+    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRCCrystalProj_xmd.param");
     addExampleLine("+In the following links you can find some examples of projection parameter files",false);
     addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_projection.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_crystal_projection.param",false);
+    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRCCrystalProj_xmd.param",false);
     addExampleLine("+ ",false);
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
+    addExampleLine("+ ",false);
+    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_crystal_projection_xmd.param",false);
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
     addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
@@ -102,7 +103,6 @@ void ProgProject::defineParams()
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
-    addParamsLine("  [--crystal <crystal_parameters_file>]  : It is used for computing the assymetric unit");
     addParamsLine("  [--sym <sym_file>]                     : It is used for computing the assymetric unit");
     addParamsLine("  [--only_create_angles]                 : Do not create projections");
     addParamsLine("== Generating a single projection == ");
