@@ -50,14 +50,22 @@ void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scal
 	if (fn_crystal.isMetaData())
 	{
 		MetaData MD;
-		MD.read((std::string)"block2@"+fn_crystal.c_str());
+		bool doCrystal = false;
+		size_t objId;
+		MD.read((std::string)"block1@"+fn_crystal.c_str());
+		if (MD.containsLabel(MDL_CRYSTAL_PROJ))
+		{
+			objId = MD.firstObject();
+			doCrystal = MD.getValue(MDL_CRYSTAL_PROJ,doCrystal,objId);
+			if (doCrystal)
+				MD.read((std::string)"block2@"+fn_crystal.c_str());
+		}
 		if (MD.isEmpty())
 			REPORT_ERROR(ERR_IO_NOTOPEN,
 						 (String)"Prog_Project_Parameters::read: There is a problem "
 						 "opening the file " + fn_crystal);
 
 		std::vector <double> ParamVec;
-		size_t objId;
 		objId = MD.firstObject();
 		MD.getValue(MDL_DIMENSIONS_2D, ParamVec, objId);
 		crystal_Xdim = (int)ParamVec[0];crystal_Ydim = (int)ParamVec[1];

@@ -963,18 +963,20 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     // Read projection parameters and produce side information
     ParametersProjection proj_prm;
     PROJECT_Side_Info side;
+    bool doCrystal = false;
     if (!prm.singleProjection)
         proj_prm.from_prog_params(prm);
     side.produce_Side_Info(proj_prm, prm);
     Crystal_Projection_Parameters crystal_proj_prm;
 	MetaData MD;
-	if (prm.fn_crystal != "" || MD.containsLabel(MDL_CRYSTAL_PROJ))
+	size_t objId;
+
+	MD.read((std::string)"block1@"+prm.fn_proj_param);
+	objId = MD.firstObject();
+	doCrystal = MD.getValue(MDL_CRYSTAL_PROJ,doCrystal,objId);
+	if (doCrystal)
     {
-    	if (prm.fn_crystal != "")
-    		crystal_proj_prm.read(prm.fn_crystal,
-                              (side.phantomDescr).phantom_scale);
-    	else
-    		crystal_proj_prm.read(prm.fn_proj_param,
+		crystal_proj_prm.read(prm.fn_proj_param,
     		                  (side.phantomDescr).phantom_scale);
         // if not null read doc file with unitcell shift
         // format h, k, shift_X shift_Y shift_Z
