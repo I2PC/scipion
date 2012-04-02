@@ -129,6 +129,42 @@ TEST( MultidimTest, sincos)
 
 }
 
+TEST( MultidimTest, modulo)
+{
+    MultidimArray<double> mSource(3,3);
+    MultidimArray<double> mTarget(3,3);
+
+    A2D_ELEM(mSource,0,0) = 0;
+    A2D_ELEM(mSource,0,1) = 10;
+    A2D_ELEM(mSource,0,2) = 3.14159265;
+
+    A2D_ELEM(mSource,1,0) = (20*3.14159265);
+    A2D_ELEM(mSource,1,1) = (3.14159265/2);
+    A2D_ELEM(mSource,1,2) = (3*3.14159265/2);
+
+    A2D_ELEM(mSource,2,0) = (10*3.14159265/2);
+    A2D_ELEM(mSource,2,1) = (50*3.14159265);
+    A2D_ELEM(mSource,2,2) = (2*3.14159265);
+
+    double value = 2*3.14159265;
+    mod(mSource,mTarget,value);
+
+    //We test the obtained values with the results obtained from method "mod" of Matlab
+    ASSERT_TRUE( (A2D_ELEM(mTarget,0,0) - 0)       < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(mTarget,0,1) - 3.7168)  < 1e-3 );
+    ASSERT_TRUE( (A2D_ELEM(mTarget,0,2) - 3.1416)  < 1e-3);
+
+    ASSERT_TRUE( (A2D_ELEM(mTarget,1,0) - 0)       < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(mTarget,1,1) - 1.5708)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(mTarget,1,2) - 4.7124)  < 1e-3);
+
+    ASSERT_TRUE( (A2D_ELEM(mTarget,2,0) - 3.1416)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(mTarget,2,1) - 0)       < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(mTarget,2,2) - 0)       < 1e-3);
+
+}
+
+
 TEST( MultidimTest, mapFile)
 {
 	XMIPP_TRY
