@@ -71,11 +71,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 	
 
-	protected void enableEdition(boolean enable)
-	{
-		super.enableEdition(enable);
-		
-	}
+	
 
 	public TiltPairPickerJFrame(TiltPairPicker picker)
 	{

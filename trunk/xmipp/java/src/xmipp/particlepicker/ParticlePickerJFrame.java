@@ -65,7 +65,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 {
 
 	protected ParticlesJDialog particlesdialog;
-	
+
 	protected JMenuItem ijmi;
 	protected JCheckBox circlechb;
 	protected JCheckBox rectanglechb;
@@ -97,9 +97,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				if (getParticlePicker().isChanged() &&
-					showMessage("Save changes before closing?"))
-						saveChanges();
+				if (getParticlePicker().isChanged() && showMessage("Save changes before closing?"))
+					saveChanges();
 				System.exit(0);
 			}
 		});
@@ -174,8 +173,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				new ImportParticlesFromProjectJDialog(ParticlePickerJFrame.this, true);
 			}
 		});
-		
-		importffmi = new JMenuItem("Import from Files...", XmippResource.getIcon("import.gif") );
+
+		importffmi = new JMenuItem("Import from Files...", XmippResource.getIcon("import.gif"));
 		filemn.add(importffmi);
 		importffmi.addActionListener(new ActionListener()
 		{
@@ -184,11 +183,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void actionPerformed(ActionEvent e)
 			{
 				displayImportDialog();
-				
+
 			}
 		});
-		
-		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif") );
+
+		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
 		filemn.add(exportmi);
 		exportmi.addActionListener(new ActionListener()
 		{
@@ -225,7 +224,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				XmippIJUtil.showImageJ(Tool.PICKER);
 			}
 		});
-		
+
 		hcontentsmi = new JMenuItem("Online help", XmippResource.getIcon("online_help.gif"));
 		hcontentsmi.addActionListener(new ActionListener()
 		{
@@ -240,7 +239,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				catch (Exception ex)
 				{
 					showException(ex);
-					//JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+					// JOptionPane.showMessageDialog(ParticlePickerJFrame.this,
+					// ex.getMessage());
 				}
 			}
 		});
@@ -282,7 +282,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 			}
 		});
-						
 
 		addFilterMenuItem("Bandpass Filter...", true, picker);
 		JCheckBoxMenuItem smoothmi = new JCheckBoxMenuItem("Smooth");
@@ -292,17 +291,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				
-				try {
-					ImageGeneric Iaux=XmippImageConverter.convertToImageGeneric(IJ.getImage());
-					ImageGeneric Ismooth=new ImageGeneric();
-					Iaux.smooth(Ismooth);
-					new ImageWindow(XmippImageConverter.convertToImagePlus(Ismooth));
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
+
+				smooth();
+
 			}
 		});
 		filtersmn.add(smoothmi);
@@ -323,7 +314,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Subtract Background...", true, picker);
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
-		
+
 		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
 		{
 			@Override
@@ -332,9 +323,27 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				resetMicrograph();
 			}
 		});
-		
+
 	}
-	
+
+	protected void smooth()
+	{
+		try
+		{
+			ImageGeneric Iaux = XmippImageConverter.convertToImageGeneric(IJ.getImage());
+			Iaux.convert2Datatype(ImageGeneric.UChar);
+			ImageGeneric Ismooth = new ImageGeneric(ImageGeneric.UChar);
+			Ismooth.resize(Iaux.getXDim(), Iaux.getYDim());
+			Iaux.smooth(Ismooth);
+			ImagePlus imp = XmippImageConverter.convertToImagePlus(Ismooth);
+		}
+		catch (Exception e1)
+		{
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
+
 	protected abstract void resetMicrograph();
 
 	protected void enableEdition(boolean enable)
@@ -434,15 +443,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract List<? extends TrainingParticle> getParticles();
 
-
-
 	public boolean isPickingAvailable(MouseEvent e)
 	{
 		if (getCanvas().getTool() != Tool.PICKER)
 			return false;
 		if (SwingUtilities.isRightMouseButton(e))
 			return false;
-		if(getParticlePicker().getMode() == FamilyState.ReadOnly)
+		if (getParticlePicker().getMode() == FamilyState.ReadOnly)
 			return false;
 		return true;
 	}
@@ -502,7 +509,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public abstract ParticlePicker getParticlePicker();
 
 	public abstract void setChanged(boolean changed);
-	
+
 	protected void initColorPane()
 	{
 		colorpn = new JPanel();
@@ -570,7 +577,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		setChanged(true);
 	}
-	
+
 	protected void importParticlesXmipp30(String path)
 	{
 		getParticlePicker().importParticlesXmipp30(getFamily(), path);
@@ -578,31 +585,31 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().repaint();
 		updateMicrographsModel();
 	}
-	
-	
-	public  void importParticlesXmipp24(String projectdir)
+
+	public void importParticlesXmipp24(String projectdir)
 	{
 		getParticlePicker().importParticlesFromXmipp24Project(getFamily(), projectdir);
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();
-		
+
 	}
 
-	public  void importParticlesEman(String path)
+	public void importParticlesEman(String path)
 	{
 		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
-		
+
 	}
 
 	/** Shortcut function to show messages */
-	private boolean showMessage(String message){
+	private boolean showMessage(String message)
+	{
 		return XmippDialog.showInfo(this, message);
 	}
 
-	private boolean showException(Exception e){
+	private boolean showException(Exception e)
+	{
 		return XmippDialog.showException(this, e);
 	}
-
 
 }

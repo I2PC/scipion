@@ -654,6 +654,7 @@ Java_xmipp_jni_ImageGeneric_smooth(JNIEnv *env, jobject jobj1, jobject jobj2)
     {
         ImageGeneric *image1 = GET_INTERNAL_IMAGE_GENERIC(jobj1);
         ImageGeneric *image2 = GET_INTERNAL_IMAGE_GENERIC(jobj2);
+
         downsampleSmooth(*image1, *image2);
     }
     XMIPP_JAVA_CATCH;
