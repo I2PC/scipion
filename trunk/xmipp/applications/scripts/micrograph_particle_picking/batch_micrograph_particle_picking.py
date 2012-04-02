@@ -21,6 +21,7 @@ class ScriptTrainingPicking(ScriptAppIJ):
         self.addParamsLine("                                                      : Autopicker will use number of threads, fast and incore modes provided");
         self.addParamsLine("       review <file>                                  : Enables review mode. User reviews/corrects particles set provided on specified file");
         self.addParamsLine("                                                      : without updating model. ");
+        self.addParamsLine("       readonly                                       : Enables readonly mode. User can see the picked particles, but cannot modify them.");
         
     def readOtherParams(self):
         input = self.getParam('-i')
@@ -43,7 +44,6 @@ class ScriptTrainingPicking(ScriptAppIJ):
             self.args += " %(numberOfThreads)d %(fastMode)s %(incore)s" %locals()
         if review:
             self.args += " %(file)s" %locals()
-        print(self.args)
         
 if __name__ == '__main__':
     ScriptTrainingPicking().tryRun()
