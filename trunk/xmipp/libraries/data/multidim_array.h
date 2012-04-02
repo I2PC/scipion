@@ -3595,6 +3595,7 @@ public:
         return tmp;
     }
 
+
     /** v3 = (v1 == k).
      */
     void equal(T op1, MultidimArray<char> &result) const
@@ -4970,6 +4971,29 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
 /** Get Sin and Cos of vector x.
  */
 void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimArray<double> &c);
+
+/*
+   mod    Modulus after division.
+    mod(x,y) is x - n.*y where n = floor(x./y) if y ~= 0.  If y is not an
+    integer and the quotient x./y is within roundoff error of an integer,
+    then n is that integer.  The inputs x and y must be real arrays of the
+    same size, or real scalars.
+
+    By convention:
+       MOD(x, m, 0) is m = x.
+       MOD(x,m,x) is m = 0.
+       MOD(x,m,y), for x~=y and y~=0, m has the same sign as y.
+ */
+template <typename T>
+void mod(const MultidimArray<T> &x, MultidimArray<T> &m, double y)
+{
+    m.resizeNoCopy(x);
+    double *ptr=NULL;
+    double *ptrm=MULTIDIM_ARRAY(m);
+    size_t n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(x,n,ptr)
+    *(ptrm++) = (*ptr) - std::floor((*ptr)/(y))*(y);
+}
 
 /** Output to output stream.
  * This function is not ported to Python.
