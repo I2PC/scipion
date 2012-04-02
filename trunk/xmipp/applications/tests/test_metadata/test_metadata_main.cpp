@@ -518,6 +518,31 @@ TEST_F( MetadataTest, MultiQuery)
     EXPECT_EQ(outMetadata,auxMetadata);
 }
 
+TEST_F( MetadataTest, MDValueEQ)
+{
+  try {
+    MetaData md;
+    md.setValue(MDL_IMAGE, (String)"a", md.addObject());
+    md.setValue(MDL_IMAGE, (String)"b", md.addObject());
+    md.setValue(MDL_IMAGE, (String)"c", md.addObject());
+    md.setValue(MDL_IMAGE, (String)"a", md.addObject());
+
+    MetaData md2;
+    md2.setValue(MDL_IMAGE, (String)"a", md2.addObject());
+    md2.setValue(MDL_IMAGE, (String)"a", md2.addObject());
+
+    MDValueEQ eq(MDL_IMAGE,(String)"a");
+    //Test empty query
+    MetaData md3;
+    md3.importObjects(md, eq);
+    EXPECT_EQ(md2, md3);
+  }
+  catch (XmippError &xe)
+  {
+    std::cerr << "DEBUG_JM: xe: " << xe << std::endl;
+  }
+}
+
 TEST_F( MetadataTest, NaturalJoin)
 {
     MetaData auxMetadata;

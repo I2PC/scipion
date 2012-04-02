@@ -542,7 +542,9 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql, bool esca
 String MDObject::toString(bool withFormat, bool isSql) const
 {
     if (type == LABEL_STRING)
-        return *data.stringValue;
+    {
+        return isSql ? formatString("'%s'", data.stringValue->c_str()) : *data.stringValue;
+    }
     std::stringstream ss;
     toStream(ss, withFormat, isSql, isSql);
 
