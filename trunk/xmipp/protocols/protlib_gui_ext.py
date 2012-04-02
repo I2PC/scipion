@@ -32,7 +32,7 @@ import Tkinter as tk
 from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
-from protlib_filesystem import getXmippPath, xmippExists
+from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix
 from Tkinter import TclError
 
 RESOURCES = getXmippPath('resources')

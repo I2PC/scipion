@@ -121,6 +121,11 @@ def uniqueFilename(file_name):
 def removeFilenameExt(filename):
     return replaceFilenameExt(filename, '')
 
+def removeFilenamePrefix(filename):
+    if '@' in filename:
+        return filename.split('@')[1]
+    return filename
+
 def replaceFilenameExt(filename, new_ext):
     ''' Replace the current filename extension by a new one'''
     return os.path.splitext(filename)[0] + new_ext

@@ -155,16 +155,27 @@ class XmippProjectGUI():
         self.menuProject = tk.Menu(self.root, tearoff=0)
         self.menubar.add_cascade(label="Project", menu=self.menuProject)
         self.browseFolderImg = tk.PhotoImage(file=getXmippPath('resources', 'folderopen.gif'))
-        self.menuProject.add_command(label="Browse files", command=self.browseFiles, 
+        self.menuProject.add_command(label=" Browse files", command=self.browseFiles, 
                                      image=self.browseFolderImg, compound=tk.LEFT)
         self.delImg = tk.PhotoImage(file=getXmippPath('resources', 'delete.gif'))
-        self.menuProject.add_command(label="Remove temporary files", command=self.deleteTmpFiles,
+        self.menuProject.add_command(label=" Remove temporary files", command=self.deleteTmpFiles,
                                      image=self.delImg, compound=tk.LEFT) 
         self.cleanImg = tk.PhotoImage(file=getXmippPath('resources', 'clean.gif'))       
-        self.menuProject.add_command(label="Clean project", command=self.cleanProject,
+        self.menuProject.add_command(label=" Clean project", command=self.cleanProject,
                                      image=self.cleanImg, compound=tk.LEFT)
         self.menuProject.add_separator()
-        self.menuProject.add_command(label="Exit", command=self.close)
+        self.menuProject.add_command(label=" Exit", command=self.close)
+        # Help menu
+        self.menuHelp = tk.Menu(self.root, tearoff=0)
+        self.menubar.add_cascade(label="Help", menu=self.menuHelp)
+        self.helpImg = tk.PhotoImage(file=getXmippPath('resources', 'online_help.gif'))
+        self.menuHelp.add_command(label=" Online help", command=self.openHelp,
+                                     image=self.helpImg, compound=tk.LEFT)
+        self.menuHelp.add_command(label=" About Xmipp", command=self.openHelp,
+                                     compound=tk.LEFT)
+    def openHelp(self, e=None):
+        from protlib_gui_ext import openLink
+        openLink('http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/WebHome')
         
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow
@@ -557,7 +568,7 @@ class XmippProjectGUI():
         toolbar = tk.Frame(parent, bd=2, relief=tk.RIDGE)
         
         self.Frames['toolbar'] = toolbar
-        self.logo = getXmippImage('xmipp2.gif')
+        self.logo = getXmippImage('xmipp_logo.gif')
         label = tk.Label(toolbar, image=self.logo)
         label.pack()
         
