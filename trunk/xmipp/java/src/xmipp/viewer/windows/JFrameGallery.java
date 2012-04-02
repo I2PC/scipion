@@ -168,11 +168,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	/** Store data about visualization */
 	GalleryData data;
 
-	public enum RESLICE_MODE {
-
-		TOP_Y, RIGHT_X
-	}
-
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data) {
 		try {
@@ -652,42 +647,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		frame.setVisible(true);
 	}
 
-	private void reslice(RESLICE_MODE mode) throws Exception {
-		String command = null;
-
-		switch (mode) {
-		case TOP_Y:
-			command = "Top";
-			break;
-		case RIGHT_X:
-			command = "Right";
-			break;
-		}
-
-		// Get volume ImagePlus.
-		// String filename = gallery.getFilename();
-		// ImagePlus volume = XmippImageConverter.loadImage(filename);
-		//
-		// // Reslice.
-		// IJ.run(volume, "Reslice [/]...", "slice=1.000 start=" + command);
-		// volume = WindowManager.getCurrentImage();
-		// volume.getWindow().setVisible(false);
-		//
-		// // Save temp file.
-		// int index = filename.lastIndexOf(".");
-		// String name = filename.substring(
-		// filename.lastIndexOf(File.separator) + 1, index);
-		// String ext = filename.substring(index);
-		// File f = File.createTempFile(name + "_" + command, ext);
-		// f.deleteOnExit();
-		//
-		// XmippImageConverter.saveImage(volume, f.getAbsolutePath());
-		// volume.close();
-		//
-		// // Open as gallery.
-		// ImagesWindowFactory.openFileAsGallery(f.getCanonicalPath());
-	}
-
 	/***
 	 * Helper function to create toolbar toggle buttons
 	 */
@@ -1137,11 +1096,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			addItem(DISPLAY_RESLICE, "Reslice");
-			addItem(DISPLAY_RESLICE_ZNEG, "Z (Front)");
-			addItem(DISPLAY_RESLICE_YNEG, "Y (Top)");
-			addItem(DISPLAY_RESLICE_XNEG, "X (Left)");
-			addItem(DISPLAY_RESLICE_YPOS, "Y Positive (Bottom)");
-			addItem(DISPLAY_RESLICE_XPOS, "X Positive (Right)");
+			String text[] = {"Z Negative (Front)", "Y Negative (Top)", "X Negative (Left)", "Y Positive (Bottom)", "X Positive (Right)" };
+			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
+				addItem(DISPLAY_RESLICE_VIEWS[i], text[i]);
 			// Metadata operations
 			addItem(METADATA, "Metadata");
 			addItem(STATS, "Statistics");
@@ -1156,7 +1113,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
-			addItem(HELP_ABOUT, "About Xmipp");
 		}// function createItems
 
 		public void update() {
@@ -1175,6 +1131,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			setItemEnabled(DISPLAY_RENDERIMAGES,
 					!galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
+			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
+				setItemSelected(DISPLAY_RESLICE_VIEWS[i], 
+						(data.resliceView == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
 			setItemEnabled(MD_CLASSES, data.is2DClassificationMd());
@@ -1257,16 +1216,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 				} else if (cmd.equals(FILE_REFRESH)) {
 					data.reloadMd();
 					reloadTableData();
-				} else if (cmd.equals(DISPLAY_RESLICE_ZNEG)) {
-					setResliceView(ImageGeneric.Z_NEG);
-				} else if (cmd.equals(DISPLAY_RESLICE_YNEG)) {
-					setResliceView(ImageGeneric.Y_NEG);
-				} else if (cmd.equals(DISPLAY_RESLICE_XNEG)) {
-					setResliceView(ImageGeneric.X_NEG);
-				} else if (cmd.equals(DISPLAY_RESLICE_YPOS)) {
-					setResliceView(ImageGeneric.Y_POS);
-				} else if (cmd.equals(DISPLAY_RESLICE_XPOS)) {
-					setResliceView(ImageGeneric.X_POS);
+				} else if (cmd.contains(DISPLAY_RESLICE)) {
+					for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
+						if (cmd.equals(DISPLAY_RESLICE_VIEWS[i])){
+							setResliceView(ImageGeneric.VIEWS[i]);
+							break;
+						}
 				} else if (cmd.equals(MD_CLASSES)) {
 					openClassesDialog();
 				} else if (cmd.equals(MD_EDIT_COLS)) {
@@ -1285,8 +1240,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 					}
 				} else if (cmd.equals(HELP_ONLINE)) {
 					XmippWindowUtil.openURI("http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/WebHome");
-				} else if (cmd.equals(HELP_ABOUT)) {
-					//TODO: Show about Dialog
 				} 
 				
 			} catch (Exception e) {

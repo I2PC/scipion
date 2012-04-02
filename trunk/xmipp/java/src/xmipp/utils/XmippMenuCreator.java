@@ -184,11 +184,12 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String DISPLAY_WRAP = "Display.Wrap_cb";
 	public final String DISPLAY_COLUMNS = "Display.Columns_mi";
 	public final String DISPLAY_RESLICE = "Display.Reslice";
-	public final String DISPLAY_RESLICE_ZNEG = "Display.Reslice.ZNeg_rb";
-	public final String DISPLAY_RESLICE_YNEG = "Display.Reslice.YNeg_rb";
-	public final String DISPLAY_RESLICE_XNEG = "Display.Reslice.XNeg_rb";
-	public final String DISPLAY_RESLICE_YPOS = "Display.Reslice.YPos_rb";
-	public final String DISPLAY_RESLICE_XPOS = "Display.Reslice.XPos_rb";
+	public final String DISPLAY_RESLICE_VIEWS[] = { 
+			"Display.Reslice.ZNeg_rb",
+			"Display.Reslice.YNeg_rb",
+			"Display.Reslice.XNeg_rb",
+			"Display.Reslice.YPos_rb",
+			"Display.Reslice.XPos_rb"};
 
 	public final String METADATA = "Metadata";
 	public final String MD_CLASSES = "Metadata.Classes_mi";
@@ -203,7 +204,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	
 	public final String HELP = "Help";
 	public final String HELP_ONLINE = "Help.Online_mi";
-	public final String HELP_ABOUT = "Help.About_mi";
+	//public final String HELP_ABOUT = "Help.About_mi";
 	
 
 	public final static String ENABLED = "Enabled_mi";
