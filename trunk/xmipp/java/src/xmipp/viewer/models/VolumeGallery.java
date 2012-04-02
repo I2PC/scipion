@@ -132,7 +132,7 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	public ImagePlus getImagePlus() {
 		try {
-			return XmippImageConverter.readToImagePlus(volume);
+			return XmippImageConverter.convertToImagePlus(volume);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
