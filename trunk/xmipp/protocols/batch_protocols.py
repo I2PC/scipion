@@ -171,11 +171,15 @@ class XmippProjectGUI():
         self.helpImg = tk.PhotoImage(file=getXmippPath('resources', 'online_help.gif'))
         self.menuHelp.add_command(label=" Online help", command=self.openHelp,
                                      image=self.helpImg, compound=tk.LEFT)
-        self.menuHelp.add_command(label=" About Xmipp", command=self.openHelp,
+        self.menuHelp.add_command(label=" About Xmipp", command=self.openAbout,
                                      compound=tk.LEFT)
     def openHelp(self, e=None):
         from protlib_gui_ext import openLink
         openLink('http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/WebHome')
+        
+    def openAbout(self, e=None):
+        from about_gui import createAboutDialog
+        createAboutDialog()
         
     def selectRunUpDown(self, event):
         if event.keycode == 111: # Up arrow

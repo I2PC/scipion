@@ -32,7 +32,8 @@ import tkFont as font
 import ttk  
 
 from protlib_gui_ext import centerWindows, XmippButton, registerCommonFonts, showInfo, showError, OutputText,\
-    getGeometry
+    Fonts
+from config_protocols import FontName, FontSize
 from protlib_filesystem import getXmippPath
     
 ############### Helper functions ######################
@@ -60,8 +61,8 @@ class OptionsTab(tk.Frame):
         self.optionsDict = {}
         style = ttk.Style()
         style.configure("Name.TLabel", foreground="red")
-        self.normal = font.Font(family='Helvetica', size=10)
-        self.bold = font.Font(family='Helvetica', size=10, weight='bold')
+        self.normal = font.Font(family=FontName, size=FontSize)
+        self.bold = font.Font(family=FontName, size=FontSize, weight='bold')
         
     def addOption(self, name, comment, default='', cond=None, wiz=None, browse=False):
         r = self.lastRow
@@ -200,13 +201,19 @@ class ConfigNotebook(ttk.Notebook):
                 
     def createPanels(self, runFunc):
         root = self.master
+        root.columnconfigure(0, minsize=130, weight=1)
+        registerCommonFonts()
         #left panel
-        leftFrame = ttk.Frame(root)
+        bgColor = 'white'
+        leftFrame = tk.Frame(root, bg=bgColor)
+        leftFrame.columnconfigure(0, weight=1)
+        leftFrame.rowconfigure(0, minsize=100)
         imgPath = getXmippPath('resources', 'xmipp_logo.gif')
         self.img = tk.PhotoImage(file=imgPath)
-        label = ttk.Label(leftFrame, image=self.img)
-        label.grid(column=0, row=0)
-        leftFrame.grid(column=0, row=0, sticky='ns', padx=5, pady=5, rowspan=2)
+        tk.Label(leftFrame, image=self.img, bg=bgColor).grid(column=0, row=0, sticky='we')
+        tk.Label(leftFrame, text='Xmipp 3.0',  font=Fonts['button'], bg=bgColor).grid(column=0, row=1, sticky='we')
+        tk.Label(leftFrame, text='r12.4.3.11834', bg=bgColor).grid(column=0, row=2, sticky='we')
+        leftFrame.grid(column=0, row=0, sticky='nsew', padx=5, pady=5, rowspan=2)
         self.grid(column=1, row=0, sticky='nsew', padx=5, pady=5)
         #bottom panel
         panel = ttk.Frame(root)
@@ -216,7 +223,6 @@ class ConfigNotebook(ttk.Notebook):
         progress = ttk.Progressbar(panel, orient=tk.HORIZONTAL, length=300, mode='determinate', variable=self.progressVar, maximum="700")
         progress.pack(side=tk.LEFT, padx=(0, 30))
         
-        registerCommonFonts()
         self.btn = XmippButton(panel, text='Compile')
         self.btn.pack(side=tk.RIGHT, padx=(15, 0))
         procVar = tk.StringVar()

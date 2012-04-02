@@ -98,7 +98,8 @@ projectDefaults = {
 #--------------------------------------------------------------------------------
 
 #Font
-FontName = "Helvetica"
+#FontName = "Helvetica"
+FontName = "Verdana"
 FontSize = 10
 
 #TextColor

@@ -567,6 +567,12 @@ class XmippText(tk.Text):
         if not xmippExists(self.selection):
             state = 'disabled'#self.menu.entryconfig(1, background="green")
         self.menu.entryconfig(1, state=state)
+        
+    def setReadOnly(self, value):
+        state = tk.NORMAL
+        if value:
+           state = tk.DISABLED
+        self.config(state=state) 
 
 class TaggedText(XmippText):  
     '''
