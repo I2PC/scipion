@@ -1,8 +1,8 @@
 # XMIPP_STAR_1 *
 # Crystal Projection Parameters
-data_
+data_block1
 # X and Y projection dimensions [Xdim Ydim]
-_dimensions2D   '64 64'
+_dimensions2D   '1024 1024'
 # Lattice vector a
 _latticeVec1    '60.23 21.95'
 # Lattice vector b

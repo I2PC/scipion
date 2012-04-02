@@ -9,7 +9,7 @@
 #
 # Angle Set Source -----------------------------------------------------------
 #Externally generated
-input/Crystal/angles.doc rot tilt psi
+Crystal/angles.doc rot tilt psi
 #
 #Internally generated
 NULL

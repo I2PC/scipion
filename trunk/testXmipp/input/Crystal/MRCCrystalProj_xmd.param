@@ -25,7 +25,7 @@ _noisePixelLevel   '1'
 _noiseCoord   '0'
 _crystalProj  1
 data_block2
-_dimensions2D   '64 64'
+_dimensions2D   '1024 1024'
 _latticeVec1    '60.23 21.95'
 _latticeVec2    '-49.026 41.1384'
 _noisePixelLevel   '0'
