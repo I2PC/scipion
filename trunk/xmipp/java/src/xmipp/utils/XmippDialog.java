@@ -103,6 +103,15 @@ public class XmippDialog extends JDialog implements ActionListener {
 		setVisible(true);
 		return result;
 	}
+	
+	/** Change Ok and Cancel button text */
+	public void setButtonOkText(String text){
+		btnOkText = text;
+	}
+	
+	public void setButtonCancelText(String text){
+		btnCancelText = text;
+	}
 
 	/**
 	 * This function should be redefined to add the content to the dialog, the
@@ -172,13 +181,13 @@ public class XmippDialog extends JDialog implements ActionListener {
 
 	public boolean showError(String message) {
 		XmippMessageDialog dlg = new XmippMessageDialog(this, "ERROR",
-				removeColors(message), "error.gif");
+				message, "error.gif");
 		return dlg.showDialog();
 	}
 
 	public boolean showException(Exception e) {
 		XmippMessageDialog dlg = new XmippMessageDialog(this, "ERROR",
-				removeColors(e.getMessage()), "error.gif");
+				e.getMessage(), "error.gif");
 		// TODO: Integrate the stack trace into the dialog
 		e.printStackTrace();
 		return dlg.showDialog();
@@ -199,17 +208,25 @@ public class XmippDialog extends JDialog implements ActionListener {
 
 	public static boolean showError(JFrame parent, String message) {
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR",
-				removeColors(message), "error.gif");
+				message, "error.gif");
 		return dlg.showDialog();
 	}
 
 	public static boolean showException(JFrame parent, Exception e) {
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR",
-				removeColors(e.getMessage()), "error.gif");
+				e.getMessage(), "error.gif");
 		// TODO: Integrate the stack trace into the dialog
 		e.printStackTrace();
 		return dlg.showDialog();
 	}
+	
+	public static boolean showQuestion(JFrame parent, String message) {
+		XmippMessageDialog dlg = new XmippMessageDialog(parent, "QUESTION",
+				message, "info.gif");
+		dlg.setButtonOkText("Yes");
+		dlg.setButtonCancelText("No");
+		return dlg.showDialog();
+	}	
 	
 	public static String removeColors(String message) {
 		if (message == null)
@@ -230,7 +247,7 @@ class XmippMessageDialog extends XmippDialog {
 	public XmippMessageDialog(JFrame parent, String title, String message,
 			String iconPath) {
 		super(parent, title, true);
-		init(message, iconPath);
+		init(removeColors(message), iconPath);
 	}
 	
 	public XmippMessageDialog(Dialog parent, String title, String message,
