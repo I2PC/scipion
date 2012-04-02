@@ -101,6 +101,17 @@ TEST_F( MatrixTest, solveLinearSystem)
 
 }
 
+TEST_F( MatrixTest, initGaussian)
+{
+    Matrix2D<double> A;
+    A.initGaussian(10,1);
+
+    ASSERT_TRUE( (dMij(A,5,5) - 1) < 1e-3);
+    ASSERT_TRUE( (dMij(A,6,7) - 0.6065) < 1e-3);
+    ASSERT_TRUE( (dMij(A,7,6) - 0.6065) < 1e-3);
+    ASSERT_TRUE( (dMij(A,5,6) - 0.6065) < 1e-3);
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

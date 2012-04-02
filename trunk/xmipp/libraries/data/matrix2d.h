@@ -679,6 +679,22 @@ public:
         for (int i = 0; i < dim; i++)
             MAT_ELEM(*this,i,i) = 1;
     }
+    /** 2D gaussian matrix of a given size and with a given variance. The amplitude of the Gaussian is set to 1.
+     *
+     * A (dim x dim) gaussian matrix is generated.
+     *
+     * @code
+     * m.initGaussian(3,1);
+     * @endcode
+     */
+    void initGaussian(int dim, double var)
+    {
+    	double center = ((double)dim)/2;
+        initZeros(dim, dim);
+        for (int i = 0; i < dim; i++)
+        	for (int j = 0; j < dim; j++)
+        		MAT_ELEM(*this,i,j) = std::exp(-( (i-center)*(i-center)+(j-center)*(j-center) )/(2*var*var));
+    }
     //@}
 
     /// @name Operators for Matrix2D
