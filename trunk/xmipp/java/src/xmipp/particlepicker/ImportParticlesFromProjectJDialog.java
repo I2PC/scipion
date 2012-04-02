@@ -22,8 +22,7 @@ import javax.swing.JTextField;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
-public class ImportParticlesFromProjectJDialog extends JDialog
-{
+public class ImportParticlesFromProjectJDialog extends JDialog {
 
 	ParticlePickerJFrame parent;
 	private JRadioButton xmipp24rb;
@@ -34,8 +33,8 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 	private ButtonGroup formatgroup;
 	public Format format;
 
-	public ImportParticlesFromProjectJDialog(ParticlePickerJFrame parent, boolean modal)
-	{
+	public ImportParticlesFromProjectJDialog(ParticlePickerJFrame parent,
+			boolean modal) {
 		super(parent, modal);
 		setResizable(false);
 		this.parent = parent;
@@ -46,53 +45,42 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 		constraints.insets = new Insets(5, 5, 5, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 		initSourcePane();
-		add(new JLabel("Format:"), XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+		add(new JLabel("Format:"),
+				XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 		add(sourcepn, XmippWindowUtil.getConstraints(constraints, 1, 0, 2));
-		add(new JLabel("Source:"), XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
+		add(new JLabel("Source:"),
+				XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		sourcetf = new JTextField(20);
 		add(sourcetf, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));
-		JButton browsebt = new JButton("Browse");
+		JButton browsebt = XmippWindowUtil.getIconButton("folderopen.gif",
+				new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						browseDirectory();
+					}
+				});
 		add(browsebt, XmippWindowUtil.getConstraints(constraints, 2, 1, 1));
-		browsebt.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				browseDirectory();
-			}
-
-		});
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		JButton okbt = new JButton("OK");
-		okbt.addActionListener(new ActionListener()
-		{
-
+		JButton okbt = XmippWindowUtil.getTextButton("OK",
+				new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						try {
+							importParticles();
+							setVisible(false);
+							dispose();
+						} catch (Exception ex) {
+							JOptionPane.showMessageDialog(
+									ImportParticlesFromProjectJDialog.this,
+									ex.getMessage());
+						}
+					}
+				});
+		JButton cancelbt = XmippWindowUtil.getTextButton("Cancel", new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
-				try
-				{
-					importParticles();
-					setVisible(false);
-					dispose();
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(ImportParticlesFromProjectJDialog.this, ex.getMessage());
-				}
-			}
-		});
-		JButton cancelbt = new JButton("Cancel");
-		cancelbt.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
+			public void actionPerformed(ActionEvent arg0) {
 				setVisible(false);
 				dispose();
-
 			}
 		});
 		actionspn.add(okbt);
@@ -104,29 +92,26 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 
 	}
 
-	private void browseDirectory()
-	{
-		XmippFileChooser fc = new XmippFileChooser(new File(parent.getParticlePicker().getOutputDir()));
+	private void browseDirectory() {
+		XmippFileChooser fc = new XmippFileChooser(new File(parent
+				.getParticlePicker().getOutputDir()));
 		fc.setFileSelectionMode(XmippFileChooser.DIRECTORIES_ONLY);
-		int returnVal = fc.showOpenDialog(ImportParticlesFromProjectJDialog.this);
+		int returnVal = fc
+				.showOpenDialog(ImportParticlesFromProjectJDialog.this);
 
-		try
-		{
-			if (returnVal == XmippFileChooser.APPROVE_OPTION)
-			{
+		try {
+			if (returnVal == XmippFileChooser.APPROVE_OPTION) {
 				String path = fc.getSelectedFile().getAbsolutePath();
 				sourcetf.setText(path);
 			}
-		}
-		catch (Exception ex)
-		{
-			JOptionPane.showMessageDialog(ImportParticlesFromProjectJDialog.this, ex.getMessage());
+		} catch (Exception ex) {
+			JOptionPane.showMessageDialog(
+					ImportParticlesFromProjectJDialog.this, ex.getMessage());
 		}
 
 	}
 
-	protected void initSourcePane()
-	{
+	protected void initSourcePane() {
 
 		sourcepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -154,25 +139,22 @@ public class ImportParticlesFromProjectJDialog extends JDialog
 
 	}
 
-	class FormatItemListener implements ItemListener
-	{
+	class FormatItemListener implements ItemListener {
 
 		@Override
-		public void itemStateChanged(ItemEvent e)
-		{
+		public void itemStateChanged(ItemEvent e) {
 			JRadioButton formatrb = (JRadioButton) e.getSource();
 			format = Format.valueOf(formatrb.getText());
 		}
 	}
 
-	private void importParticles()
-	{
+	private void importParticles() {
 
 		String projectdir = sourcetf.getText();
 		if (projectdir == null || projectdir.equals(""))
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("directory"));
-		switch (format)
-		{
+			throw new IllegalArgumentException(
+					XmippMessage.getEmptyFieldMsg("directory"));
+		switch (format) {
 		case Xmipp24:
 			parent.importParticlesXmipp24(projectdir);
 			break;

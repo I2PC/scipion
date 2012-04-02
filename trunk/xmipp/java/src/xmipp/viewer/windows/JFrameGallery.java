@@ -229,7 +229,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	 */
 	private void createGUI() {
 		// Create file chooser and set current dir
-		setIconImage(XmippResource.getIcon("xmipp2.gif").getImage());
+		setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
 		fc = new XmippFileChooser();
 		ctfTasks = new TasksEngine(JFrameGallery.this);
 
@@ -1143,9 +1143,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			addItem(STATS_FSC, "FSC");
 			addItem(MD_CLASSES, "Superclasses");
 			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
-			addItem(MD_ADD_OBJECT, "Add new object");
+			addItem(MD_ADD_OBJECT, "Add new object", "new_object.gif");
 			addItem(MD_REMOVE_DISABLED, "Remove disabled", "delete.gif");
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
+			// Help
+			addItem(HELP, "Help");
+			addItem(HELP_ONLINE, "Online help", "online_help.gif");
+			addItem(HELP_ABOUT, "About Xmipp");
 		}// function createItems
 
 		public void update() {
@@ -1270,7 +1274,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 						data.md.unionAll(dlg.md);
 						reloadMd();
 					}
-				}
+				} else if (cmd.equals(HELP_ONLINE)) {
+					XmippWindowUtil.openURI("http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/WebHome");
+				} else if (cmd.equals(HELP_ABOUT)) {
+					//TODO: Show about Dialog
+				} 
+				
 			} catch (Exception e) {
 				showException(e);
 			}
@@ -1386,7 +1395,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 				}
 			} else if (cmd.equals(OPEN_IMAGES)) {
 				int index = gallery.getIndex(row, col);
-				openMetadata(data.getClassImages(index));
+				MetaData md = data.getClassImages(index);
+				if (md != null)
+					openMetadata(md);
+				else
+					XmippDialog.showWarning(JFrameGallery.this, "This class has no images");
 			}
 			initItems();
 		}

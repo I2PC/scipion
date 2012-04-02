@@ -158,7 +158,7 @@ public class MetadataTable extends MetadataGallery {
 				md.setValueDouble(label, ((Double) value).doubleValue(), id);
 				break;
 			case MetaData.LABEL_SIZET:
-				md.setValueInt(label, ((Integer) value).intValue(), id);
+				md.setValueInt(label, ((Long) value).intValue(), id);
 				break;
 			case MetaData.LABEL_STRING:
 			case MetaData.LABEL_VECTOR_DOUBLE:

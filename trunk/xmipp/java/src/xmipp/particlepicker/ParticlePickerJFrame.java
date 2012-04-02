@@ -35,7 +35,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.KeyStroke;
@@ -54,6 +53,7 @@ import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
@@ -93,12 +93,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				if (getParticlePicker().isChanged())
-				{
-					int result = JOptionPane.showConfirmDialog(ParticlePickerJFrame.this, "Save changes before closing?", "Message", JOptionPane.YES_NO_OPTION);
-					if (result == JOptionPane.OK_OPTION)
+				if (getParticlePicker().isChanged() &&
+					showMessage("Save changes before closing?"))
 						saveChanges();
-				}
 				System.exit(0);
 			}
 		});
@@ -157,7 +154,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			public void actionPerformed(ActionEvent e)
 			{
 				saveChanges();
-				JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Data saved successfully");
+				showMessage("Data saved successfully");
 				((JMenuItem) e.getSource()).setEnabled(false);
 			}
 		});
@@ -204,12 +201,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					{
 						File file = fc.getSelectedFile();
 						getParticlePicker().exportParticles(getFamily(), file.getAbsolutePath());
-						JOptionPane.showMessageDialog(ParticlePickerJFrame.this, "Export successful");
+						showMessage("Export successful");
 					}
 				}
 				catch (Exception ex)
 				{
-					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+					showException(ex);
 				}
 			}
 		});
@@ -225,7 +222,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		
-		hcontentsmi = new JMenuItem("Help Contents...");
+		hcontentsmi = new JMenuItem("Online help", XmippResource.getIcon("online_help.gif"));
 		hcontentsmi.addActionListener(new ActionListener()
 		{
 
@@ -238,7 +235,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 				catch (Exception ex)
 				{
-					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+					showException(ex);
+					//JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
 				}
 			}
 		});
@@ -344,7 +342,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
-			JOptionPane.showMessageDialog(this, ex.getMessage());
+			showException(ex);
 		}
 
 	}
@@ -378,7 +376,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		catch (Exception ex)
 		{
-			JOptionPane.showMessageDialog(ParticlePickerJFrame.this, ex.getMessage());
+			showException(ex);
 			if (particlesdialog != null)
 				particlesdialog.close();
 			particlesdialog = null;
@@ -561,9 +559,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		
 	}
 
+	/** Shortcut function to show messages */
+	private boolean showMessage(String message){
+		return XmippDialog.showInfo(this, message);
+	}
 
-
-	
+	private boolean showException(Exception e){
+		return XmippDialog.showException(this, e);
+	}
 
 
 }

@@ -200,6 +200,10 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String STATS_PCA = "Metadata.Stats.Pca_mi";
 	public final String STATS_FSC = "Metadata.Stats.Fsc_mi";
 	
+	public final String HELP = "Help";
+	public final String HELP_ONLINE = "Help.Online_mi";
+	public final String HELP_ABOUT = "Help.About_mi";
+	
 
 	public final static String ENABLED = "Enabled_mi";
 	public final static String DISABLED = "Disabled_mi";

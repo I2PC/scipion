@@ -25,8 +25,7 @@ import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
-public class ImportParticlesFromFileJDialog extends JDialog
-{
+public class ImportParticlesFromFileJDialog extends JDialog {
 
 	private TrainingPickerJFrame parent;
 	private JRadioButton xmipp24rb;
@@ -40,8 +39,8 @@ public class ImportParticlesFromFileJDialog extends JDialog
 	private JButton browseubt;
 	private XmippFileChooser fc;
 
-	public ImportParticlesFromFileJDialog(TrainingPickerJFrame parent, boolean modal)
-	{
+	public ImportParticlesFromFileJDialog(TrainingPickerJFrame parent,
+			boolean modal) {
 		super(parent, modal);
 		setResizable(false);
 		this.parent = parent;
@@ -52,52 +51,47 @@ public class ImportParticlesFromFileJDialog extends JDialog
 		constraints.insets = new Insets(5, 5, 5, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 		initSourcePane();
-		add(new JLabel("Format:"), XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+		add(new JLabel("Format:"),
+				XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
 		add(sourcepn, XmippWindowUtil.getConstraints(constraints, 1, 0, 2));
-		add(new JLabel("File:"), XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
+		add(new JLabel("File:"),
+				XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		filetf = new JTextField(20);
 
 		add(filetf, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));
 		BrowseListener bl = new BrowseListener();
-		browseubt = new JButton("Browse");
+		browseubt = XmippWindowUtil.getIconButton("folderopen.gif", null);
 		add(browseubt, XmippWindowUtil.getConstraints(constraints, 2, 1, 1));
 		browseubt.addActionListener(bl);
 
-		fc = new XmippFileChooser(new File(parent.getParticlePicker().getOutputDir()));
+		fc = new XmippFileChooser(new File(parent.getParticlePicker()
+				.getOutputDir()));
 		setFile(filetf, parent.getMicrograph().getPosFileFromXmipp24());
 
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		JButton okbt = new JButton("OK");
-		okbt.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
-				try
-				{
-					importParticles();
-					setVisible(false);
-					dispose();
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(ImportParticlesFromFileJDialog.this, ex.getMessage());
-				}
-			}
-		});
-		JButton cancelbt = new JButton("Cancel");
-		cancelbt.addActionListener(new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
-				setVisible(false);
-				dispose();
-
-			}
-		});
+		JButton okbt = XmippWindowUtil.getTextButton("OK",
+				new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						try {
+							importParticles();
+							setVisible(false);
+							dispose();
+						} catch (Exception ex) {
+							JOptionPane.showMessageDialog(
+									ImportParticlesFromFileJDialog.this,
+									ex.getMessage());
+						}
+					}
+				});
+		JButton cancelbt = XmippWindowUtil.getTextButton("Cancel",
+				new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						setVisible(false);
+						dispose();
+					}
+				});
 		actionspn.add(okbt);
 		actionspn.add(cancelbt);
 		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
@@ -108,52 +102,44 @@ public class ImportParticlesFromFileJDialog extends JDialog
 
 	}
 
-	private void setFile(JTextField tf, String filepath)
-	{
+	private void setFile(JTextField tf, String filepath) {
 		if (filepath == null)
 			return;
 		File file = new File(filepath);
-		if (file.exists())
-		{
+		if (file.exists()) {
 			tf.setText(filepath);
 			fc.setSelectedFile(file);
 		}
 	}
 
-	class BrowseListener implements ActionListener
-	{
+	class BrowseListener implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			JTextField tf = (e.getSource().equals(browseubt)) ? filetf : tiltedtf;
+		public void actionPerformed(ActionEvent e) {
+			JTextField tf = (e.getSource().equals(browseubt)) ? filetf
+					: tiltedtf;
 			browseDirectory(tf);
 		}
 
 	}
 
-	private void browseDirectory(JTextField tf)
-	{
+	private void browseDirectory(JTextField tf) {
 
 		int returnVal = fc.showOpenDialog(ImportParticlesFromFileJDialog.this);
 
-		try
-		{
-			if (returnVal == XmippFileChooser.APPROVE_OPTION)
-			{
+		try {
+			if (returnVal == XmippFileChooser.APPROVE_OPTION) {
 				String path = fc.getSelectedFile().getAbsolutePath();
 				tf.setText(path);
 			}
-		}
-		catch (Exception ex)
-		{
-			JOptionPane.showMessageDialog(ImportParticlesFromFileJDialog.this, ex.getMessage());
+		} catch (Exception ex) {
+			JOptionPane.showMessageDialog(ImportParticlesFromFileJDialog.this,
+					ex.getMessage());
 		}
 
 	}
 
-	protected void initSourcePane()
-	{
+	protected void initSourcePane() {
 
 		sourcepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -176,25 +162,22 @@ public class ImportParticlesFromFileJDialog extends JDialog
 
 	}
 
-	class FormatItemListener implements ItemListener
-	{
+	class FormatItemListener implements ItemListener {
 
 		@Override
-		public void itemStateChanged(ItemEvent e)
-		{
+		public void itemStateChanged(ItemEvent e) {
 			JRadioButton formatrb = (JRadioButton) e.getSource();
 			format = Format.valueOf(formatrb.getText());
 		}
 	}
 
-	private void importParticles()
-	{
+	private void importParticles() {
 
 		String file = filetf.getText();
 		if (file == null || file.equals(""))
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("file"));
-		switch (format)
-		{
+			throw new IllegalArgumentException(
+					XmippMessage.getEmptyFieldMsg("file"));
+		switch (format) {
 		case Xmipp24:
 			parent.importParticlesFromXmipp24File(file);
 			break;
