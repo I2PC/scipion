@@ -211,6 +211,8 @@ public class ImageGeneric {
     //substract two imageGeneric. calling image minuend
     public native void subtract(ImageGeneric imgSubtrahend, ImageGeneric imgResult) throws Exception;
 
+    //Smooth image generic by color dithering
+    public native void smooth(ImageGeneric imgResult) throws Exception;
     
     public boolean isPSD() {
         return Filename.isPSD(filename);

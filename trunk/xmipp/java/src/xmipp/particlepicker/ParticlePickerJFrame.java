@@ -6,6 +6,7 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImageListener;
 import ij.ImagePlus;
+import ij.gui.ImageWindow;
 import ij.plugin.frame.Recorder;
 
 import java.awt.Color;
@@ -46,7 +47,9 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
@@ -282,6 +285,27 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 						
 
 		addFilterMenuItem("Bandpass Filter...", true, picker);
+		JCheckBoxMenuItem smoothmi = new JCheckBoxMenuItem("Smooth");
+		smoothmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				
+				try {
+					ImageGeneric Iaux=XmippImageConverter.convertToImageGeneric(IJ.getImage());
+					ImageGeneric Ismooth=new ImageGeneric();
+					Iaux.smooth(Ismooth);
+					new ImageWindow(XmippImageConverter.convertToImagePlus(Ismooth));
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+			}
+		});
+		filtersmn.add(smoothmi);
 		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
 		admi.addActionListener(new ActionListener()
 		{

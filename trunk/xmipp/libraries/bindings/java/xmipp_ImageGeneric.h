@@ -242,6 +242,15 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_printShape
 
    JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_subtract
      (JNIEnv *, jobject, jobject, jobject);
+
+   /*
+      * Class:     xmipp_ImageGeneric
+      * Method:    smooth
+      * Signature: void
+      */
+
+      JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_smooth
+        (JNIEnv *, jobject, jobject);
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    getStatistics

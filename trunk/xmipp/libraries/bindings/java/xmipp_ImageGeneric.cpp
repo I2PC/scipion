@@ -6,6 +6,7 @@
 #include "xmipp_ExceptionsHandler.h"
 #include <data/xmipp_image_generic.h>
 #include <data/xmipp_fft.h>
+#include <reconstruction/transform_downsample.h>
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
@@ -642,6 +643,18 @@ Java_xmipp_jni_ImageGeneric_subtract(JNIEnv *env, jobject jobj1, jobject jobj2, 
         ImageGeneric *image3 = GET_INTERNAL_IMAGE_GENERIC(jobj3);
         *image3 = *image1;
         image3->subtract(*image2);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT void JNICALL
+Java_xmipp_jni_ImageGeneric_smooth(JNIEnv *env, jobject jobj1, jobject jobj2)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image1 = GET_INTERNAL_IMAGE_GENERIC(jobj1);
+        ImageGeneric *image2 = GET_INTERNAL_IMAGE_GENERIC(jobj2);
+        downsampleSmooth(*image1, *image2);
     }
     XMIPP_JAVA_CATCH;
 }
