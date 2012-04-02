@@ -274,13 +274,30 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_setXmippOrigin
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_convertPSD
   (JNIEnv *, jobject, jboolean);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    reslice
+ * Signature: (Z,Z,I)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getReslice
+  (JNIEnv *, jobject, jobject, jint);
+
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    reslice
  * Signature: (Z,Z,I)V
  */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_reslice
-  (JNIEnv *, jobject, jobject, jint);
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    reslice
+ * Signature: (Z,Z,I)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
+  (JNIEnv *, jobject, jobject, jint, jint, jint, jlong);
 
 #ifdef __cplusplus
 }

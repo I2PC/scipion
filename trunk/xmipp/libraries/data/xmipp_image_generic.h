@@ -327,6 +327,8 @@ public:
 
     typedef enum
     {
+        Z_NEG,    // Front view (Z negative)
+        Z_POS,    //  Z positve
         Y_NEG,    // Align -Y axis to Z axis, rotating 90 degrees around X axis");
         Y_POS, // Align Y axis to Z axis, rotating -90 degrees around X axis");
         X_NEG,   // Align -X axis to Z axis, rotating -90 degrees around Y axis");

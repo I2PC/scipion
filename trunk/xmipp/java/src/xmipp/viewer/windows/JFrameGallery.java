@@ -970,7 +970,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 
 			@Override
 			public Object getSelectedItem() {
-				return data.selectedVol;
+				return data.selectedVolFn;
 			}
 
 			@Override
@@ -1100,6 +1100,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 		setAutoAdjustColumns(value);
 		adjustColumns();
 	}
+	
+	private void setResliceView(int view){
+		data.resliceView = view;
+		reloadTableData();
+	}
 
 	class GalleryMenu extends XmippMenuBarCreator {
 
@@ -1132,10 +1137,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			addItem(DISPLAY_RESLICE, "Reslice");
-			addItem(DISPLAY_RESLICE_TOP, "Top (Y negative)");
-			addItem(DISPLAY_RESLICE_BOTTOM, "Bottom (Y positive)");
-			addItem(DISPLAY_RESLICE_LEFT, "Left (X negative)");
-			addItem(DISPLAY_RESLICE_RIGHT, "Right (X positive)");
+			addItem(DISPLAY_RESLICE_ZNEG, "Z (Front)");
+			addItem(DISPLAY_RESLICE_YNEG, "Y (Top)");
+			addItem(DISPLAY_RESLICE_XNEG, "X (Left)");
+			addItem(DISPLAY_RESLICE_YPOS, "Y Positive (Bottom)");
+			addItem(DISPLAY_RESLICE_XPOS, "X Positive (Right)");
 			// Metadata operations
 			addItem(METADATA, "Metadata");
 			addItem(STATS, "Statistics");
@@ -1233,7 +1239,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 					System.exit(0);
 				} else if (cmd.equals(FILE_OPENWITH_CHIMERA)) {
 					try {
-						String args = data.selectedVol;
+						String args = data.selectedVolFn;
 						if (Filename.isSpiderVolume(args))
 							args = "spider:" + args;
 						// FIXME: Check chimera is installed
@@ -1251,14 +1257,16 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 				} else if (cmd.equals(FILE_REFRESH)) {
 					data.reloadMd();
 					reloadTableData();
-				} else if (cmd.equals(DISPLAY_RESLICE_TOP)) {
-
-				} else if (cmd.equals(DISPLAY_RESLICE_BOTTOM)) {
-
-				} else if (cmd.equals(DISPLAY_RESLICE_LEFT)) {
-
-				} else if (cmd.equals(DISPLAY_RESLICE_RIGHT)) {
-
+				} else if (cmd.equals(DISPLAY_RESLICE_ZNEG)) {
+					setResliceView(ImageGeneric.Z_NEG);
+				} else if (cmd.equals(DISPLAY_RESLICE_YNEG)) {
+					setResliceView(ImageGeneric.Y_NEG);
+				} else if (cmd.equals(DISPLAY_RESLICE_XNEG)) {
+					setResliceView(ImageGeneric.X_NEG);
+				} else if (cmd.equals(DISPLAY_RESLICE_YPOS)) {
+					setResliceView(ImageGeneric.Y_POS);
+				} else if (cmd.equals(DISPLAY_RESLICE_XPOS)) {
+					setResliceView(ImageGeneric.X_POS);
 				} else if (cmd.equals(MD_CLASSES)) {
 					openClassesDialog();
 				} else if (cmd.equals(MD_EDIT_COLS)) {

@@ -714,7 +714,7 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
 }
 
 JNIEXPORT void JNICALL
-Java_xmipp_jni_ImageGeneric_reslice(JNIEnv *env, jobject jobj, jobject jimgOut,
+Java_xmipp_jni_ImageGeneric_getReslice(JNIEnv *env, jobject jobj, jobject jimgOut,
                                     jint view)
 {
     XMIPP_JAVA_TRY
@@ -724,6 +724,30 @@ Java_xmipp_jni_ImageGeneric_reslice(JNIEnv *env, jobject jobj, jobject jimgOut,
         image->reslice((ImageGeneric::AxisView)view, *imageOut);
     }
     XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT void JNICALL
+Java_xmipp_jni_ImageGeneric_reslice(JNIEnv *env, jobject jobj, jint view)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        image->reslice((ImageGeneric::AxisView)view);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
+  (JNIEnv * env, jobject jobj, jobject jimgOut, jint xdim, jint ydim,
+      jint select_slice, jlong select_image)
+{
+  XMIPP_JAVA_TRY
+  {
+      ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+      ImageGeneric *imageOut = GET_INTERNAL_IMAGE_GENERIC(jimgOut);
+      image->getPreview(*imageOut, xdim, ydim, select_slice, select_image);
+  }
+  XMIPP_JAVA_CATCH;
 }
 
 

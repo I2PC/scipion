@@ -45,8 +45,6 @@ public class VolumeGallery extends ImageGallery {
 		super(data);
 		data.normalize = true; // volumes are displayed with global
 								// normalization by default
-		volFn = Filename.getFilename(data.selectedVol);
-		volNumber = Filename.getNimage(data.selectedVol);
 		data.selection = new boolean[n];
 		calculateMinAndMax();
 	}
@@ -55,20 +53,25 @@ public class VolumeGallery extends ImageGallery {
 
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
-		volume = new ImageGeneric(data.selectedVol); // read image header
+		volFn = Filename.getFilename(data.selectedVolFn);
+		volNumber = Filename.getNimage(data.selectedVolFn);
+		volume = new ImageGeneric(data.selectedVolFn); // read image header
+		volume.read(volNumber);
+		if (data.resliceView != ImageGeneric.Z_NEG)
+			volume.reslice(data.resliceView );
 		ImageDimension dim = new ImageDimension(volume);
 		return dim;
 	}
 
-	@Override
-	protected void setZoomValue(int z) {
-		super.setZoomValue(z);
-		try {
-			volume.read(thumb_width, thumb_height, volNumber);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	@Override
+//	protected void setZoomValue(int z) {
+//		super.setZoomValue(z);
+//		try {
+//			volume.read(thumb_width, thumb_height, volNumber);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	@Override
 	protected double[] getMinAndMax() {
@@ -91,14 +94,16 @@ public class VolumeGallery extends ImageGallery {
 
 	@Override
 	public String getTitle() {
-		return String.format("Volume: %s (%d x %d x %d)", data.selectedVol,
+		return String.format("Volume: %s (%d x %d x %d)", data.selectedVolFn,
 				image_width, image_height, n);
 	}
 
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
-		ImagePlus imp = XmippImageConverter.convertToImagePlus(volume,
-				ImageGeneric.FIRST_IMAGE, index + 1);
+		ImageGeneric preview = new ImageGeneric();
+		volume.getPreview(preview, thumb_width, thumb_height, 
+				index + 1, ImageGeneric.FIRST_IMAGE);
+		ImagePlus imp = XmippImageConverter.convertToImagePlus(preview);
 		ImageItem item = new ImageItem(index);
 		item.setImagePlus(imp);
 		return item;

@@ -43,7 +43,7 @@ public class GalleryData {
 	public String[] mdBlocks = null;
 	public String selectedBlock;
 	// The following is only used in VolumeGallery mode
-	public String selectedVol = "";
+	public String selectedVolFn = "";
 	public String[] volumes = null;
 
 	public ArrayList<ColumnInfo> labels = null;
@@ -51,6 +51,7 @@ public class GalleryData {
 	ColumnInfo ciFirstRender = null;
 	public int zoom;
 	public String filename;
+	public int resliceView;
 
 	// public boolean galleryMode = true; // if false, is table model
 	// public boolean volumeMode = false;
@@ -100,6 +101,7 @@ public class GalleryData {
 			zoom = param.zoom;
 			globalRender = param.renderImages;
 			mode = Mode.GALLERY_MD;
+			resliceView = param.resliceView;
 
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
@@ -204,7 +206,7 @@ public class GalleryData {
 					for (int i = 0; i < numberOfVols; ++i)
 						volumes[i] = md.getValueString(
 								ciFirstRender.getLabel(), ids[i]);
-					if (selectedVol.isEmpty())
+					if (selectedVolFn.isEmpty())
 						selectVolume(volumes[0]);
 				}
 				image.destroy();
@@ -380,7 +382,7 @@ public class GalleryData {
 	}
 
 	public void selectVolume(String vol) {
-		selectedVol = vol; // FIXME: Check it is valid
+		selectedVolFn = vol; // FIXME: Check it is valid
 	}
 
 	// Check if the underlying data has geometrical information

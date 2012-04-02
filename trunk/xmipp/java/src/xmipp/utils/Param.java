@@ -4,6 +4,8 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import xmipp.jni.ImageGeneric;
+
 
 /**
  *
@@ -44,7 +46,6 @@ public class Param {
     public final static String MASKFILENAME = "mask";
     public final static String DEBUG = "debug";
     
-    
     public String directory;
     public String files[];
     public int port;
@@ -66,6 +67,7 @@ public class Param {
     public String vectorsFilename;
     public String classesFilename;
     public String dataFilename;
+    public int resliceView = ImageGeneric.Z_NEG; 
 
     public Param() {
     }
@@ -109,6 +111,7 @@ public class Param {
         options.addOption(INPUT_VECTORSFILE, true, "");
         options.addOption(INPUT_CLASSESFILE, true, "");
         options.addOption(INPUT_DATAFILE, true, "");
+        options.addOption("view", true, "z");
 
 
         try {
@@ -203,6 +206,22 @@ public class Param {
 
             if (cmdLine.hasOption(INPUT_DATAFILE)) {
                 dataFilename = cmdLine.getOptionValue(INPUT_DATAFILE);
+            }
+            
+            if (cmdLine.hasOption("view")){
+            	String view = cmdLine.getOptionValue("view");
+            	if (view.equals("z"))
+            		resliceView = ImageGeneric.Z_NEG;
+            	else if (view.equals("y"))
+            		resliceView = ImageGeneric.Y_NEG;
+            	else if (view.equals("x"))
+            		resliceView = ImageGeneric.X_NEG;
+            	else if (view.equals("z_pos"))
+            		resliceView = ImageGeneric.Z_POS;
+            	else if (view.equals("y_pos"))
+            		resliceView = ImageGeneric.Y_POS;
+            	else if (view.equals("x_pos"))
+            		resliceView = ImageGeneric.X_POS;
             }
         } catch (Exception ex) {
         	ex.printStackTrace();
