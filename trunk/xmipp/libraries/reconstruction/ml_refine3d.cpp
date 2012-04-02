@@ -636,24 +636,48 @@ void ProgMLRefine3D::makeNoiseImages()
     mdNoise.write(fn_noise);
 }
 
-ProgReconsBase * ProgMLRefine3D::createReconsProgram()
+ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &output)
 {
     //get reconstruction extra params
-    String arguments = getParam("--recons", 1);
+    String arguments = getParam("--recons", 1) +
+        formatString(" -v 0 --thr %d -i %s -o %s", ml2d->threads, input.c_str(), output.c_str());
+    ProgReconsBase * program;
 
     if (recons_type == RECONS_FOURIER)
     {
-        ProgRecFourier * program = new ProgRecFourier();
+        program = new ProgRecFourier();
         //force use of weights and the verbosity will be the same of this program
         //-i and -o options are passed for avoiding errors, this should be changed
         //when reconstructing
-        arguments += formatString(" --weight -v 0 --thr %d -i iii -o ooo", ml2d->threads);
+        arguments += " --weight";
         program->read(arguments);
         return program;
     }
     else if (recons_type == RECONS_ART)//use of wlsArt
     {
-        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction throught wlsArt");
+        //REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction throught wlsArt");
+        program = new ProgReconsART();
+        FileName fn_tmp(arguments);
+        arguments += " --WLS";
+        if (fn_symmask.empty() && checkParam("--sym"))
+          arguments += " --sym " + fn_sym;
+        if (!fn_tmp.contains("-n "))
+          arguments += " -n 10";
+        if (!fn_tmp.contains("-l "))
+          arguments += " -l 0.2";
+        bool noise_vols = input.contains("_cref_") || input.contains("_noise_");
+        if (!noise_vols && !wlsart_no_start)
+        {
+             arguments += " --save_basis";
+             if (iter > 1)
+             {
+              // arguments += " --start " +
+             }
+        }
+        //        if (fn_symmask != "")
+        //            art_prm.fn_sym = "";
+
+
         //        BasicARTParameters   art_prm;
         //        Plain_ART_Parameters   dummy;
         //        GridVolume             new_blobs;
@@ -721,7 +745,7 @@ void ProgMLRefine3D::reconstructVolumes()
             {
 				mdProj.read(reconsMdFn[i]);
 				String &fn_base = reconsOutFnBase[i];
-				reconsProgram = createReconsProgram();
+				reconsProgram = createReconsProgram(fn_one, fn_vol);
                 //fn_vol.compose(volno, fn_base);
 				COMPOSE_VOL_FN(fn_vol, volno, fn_base);
                 fn_one.compose(fn_base, volno, "projections.xmd");
@@ -730,7 +754,7 @@ void ProgMLRefine3D::reconstructVolumes()
                 mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
                 mdOne.write(fn_one);
                 // Set input/output for the reconstruction algorithm
-                reconsProgram->setIO(fn_one, fn_vol);
+                //reconsProgram->setIO();
                 reconsProgram->run();
 				delete reconsProgram;
 				LOG(formatString("           END Reconstructing volume: %s", fn_vol.c_str()).c_str());
@@ -923,12 +947,12 @@ void ProgMLRefine3D::copyVolumes()
 
 void ProgMLRefine3D::updateVolumesMetadata()
 {
+
     FileName fn_vol, fn_base;
     mdVol.clear();
 
     for (size_t i = 0; i < reconsOutFnBase.size(); ++i)
     {
-        fn_base = reconsOutFnBase[i];
         for (size_t volno = 1; volno <= Nvols; ++volno)
         {
         	COMPOSE_VOL_FN(fn_vol, volno, fn_base);

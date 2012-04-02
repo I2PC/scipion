@@ -140,7 +140,7 @@ public:
     virtual void makeNoiseImages() ;
 
     /// Create the program to be used for reconstruction of the volumes
-    virtual ProgReconsBase * createReconsProgram();
+    virtual ProgReconsBase * createReconsProgram(FileName &input, FileName &output);
 
     /// reconstruction by (weighted ART) or Fourier interpolation
     virtual void reconstructVolumes();
