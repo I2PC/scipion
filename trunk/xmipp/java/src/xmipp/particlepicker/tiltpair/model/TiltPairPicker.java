@@ -24,14 +24,14 @@ public class TiltPairPicker extends ParticlePicker
 	
 	
 
-	public TiltPairPicker(String selfile, String outputdir)
+	public TiltPairPicker(String selfile, String outputdir, FamilyState state)
 	{
-		super(selfile, outputdir, FamilyState.Manual);
+		super(selfile, outputdir, state);
 		this.micrographs = new ArrayList<UntiltedMicrograph>();
 		family = families.get(0);
 		loadData();
-
 	}
+	
 
 	private void loadData()
 	{

@@ -85,6 +85,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JButton colorbt;
 	protected Color color;
 	protected JPanel colorpn;
+	protected JButton resetbt;
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
@@ -299,9 +300,19 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
 		
+		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				resetMicrograph();
+			}
+		});
 		
 	}
 	
+	protected abstract void resetMicrograph();
+
 	protected void enableEdition(boolean enable)
 	{
 		importffmi.setEnabled(enable);
@@ -309,6 +320,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		savemi.setEnabled(enable);
 		sizesl.setEnabled(enable);
 		colorbt.setEnabled(enable);
+		resetbt.setEnabled(enable);
 	}
 
 	protected abstract void displayImportDialog();

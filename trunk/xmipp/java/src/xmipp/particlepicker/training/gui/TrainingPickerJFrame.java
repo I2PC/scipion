@@ -79,7 +79,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private Family family;
 	private JMenuItem editfamiliesmi;
 	private int index;
-	private JButton resetbt;
 	private JLabel manuallb;
 	private JLabel autolb;
 	private JSlider thresholdsl;
@@ -149,7 +148,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	protected void enableEdition(boolean enable)
 	{
 		super.enableEdition(enable);
-		resetbt.setEnabled(enable);
+		
 		editfamiliesmi.setEnabled(enable);
 	}
 
@@ -447,18 +446,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		infopn.add(autolb);
 		micrographpn.add(infopn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				ppicker.resetFamilyData(getFamilyData());
-				setState(MicrographFamilyState.Available);
-				canvas.setActive(null);
-				updateMicrographsModel();
-				setChanged(true);
-			}
-		});
+		
 		buttonspn.add(resetbt);
 		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
@@ -490,6 +478,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		});
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
 
+	}
+
+	protected void resetMicrograph()
+	{
+		ppicker.resetFamilyData(getFamilyData());
+		setState(MicrographFamilyState.Available);
+		canvas.setActive(null);
+		updateMicrographsModel();
+		setChanged(true);
+		
 	}
 
 	private void setState(MicrographFamilyState state)

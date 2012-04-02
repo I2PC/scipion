@@ -6,6 +6,7 @@ import javax.swing.SwingUtilities;
 
 import xmipp.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
+import xmipp.particlepicker.training.model.FamilyState;
 
 
 class Main {
@@ -32,9 +33,9 @@ class Main {
 				
 				String selfile = myargs[0];
 				String outputdir = myargs[1];
-					
+				FamilyState state = (myargs.length == 2)? FamilyState.Manual: FamilyState.getFamilyState(myargs[2]);	
 				
-				TiltPairPicker pppicker = new TiltPairPicker(selfile, outputdir);
+				TiltPairPicker pppicker = new TiltPairPicker(selfile, outputdir, state);
 				TiltPairPickerJFrame frame = new TiltPairPickerJFrame(pppicker);
 
 			}

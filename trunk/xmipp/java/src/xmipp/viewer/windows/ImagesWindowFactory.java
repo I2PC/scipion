@@ -23,6 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JRootPane;
 import javax.vecmath.Color3f;
 
+import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
@@ -167,9 +168,9 @@ public class ImagesWindowFactory {
 		// }
 		ImageWindow iw;
 		if (imp.getStackSize() > 1)
-			iw = new XmippStackWindow(imp);
+			iw = new XmippStackWindow(new ImagePlusLoader(imp));
 		else
-			iw = new XmippImageWindow(imp);
+			iw = new XmippImageWindow(new ImagePlusLoader(imp));
 		iw.setVisible(true);
 		return iw;
 	}

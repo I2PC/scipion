@@ -12,8 +12,8 @@ public interface XmippIJWindow
 	
 	public void saveDataAs(String file) throws Exception;
 	
-	public ImagePlus getImagePlus();
 	
-	public String getImageFilePath();
+	public ImagePlusLoader getImagePlusLoader();
+	
 	
 }

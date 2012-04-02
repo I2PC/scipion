@@ -28,6 +28,7 @@ package xmipp.viewer.models;
 import javax.swing.JPopupMenu;
 
 import ij.ImagePlus;
+import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
@@ -109,7 +110,7 @@ public class VolumeGallery extends ImageGallery {
 			int index = getIndex(row, col);
 			ImagePlus imp = XmippImageConverter.convertToImagePlus(volume,
 					ImageGeneric.FIRST_IMAGE, index + 1);
-			new XmippImageWindow(imp, getLabel(row, col));
+			new XmippImageWindow(new ImagePlusLoader(imp), getLabel(row, col));
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

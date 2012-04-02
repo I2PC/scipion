@@ -30,6 +30,7 @@ import ij.ImagePlus;
 import java.io.File;
 import java.util.ArrayList;
 
+import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
@@ -225,7 +226,7 @@ public class MetadataGallery extends ImageGallery {
 	public boolean handleDoubleClick(int row, int col){
 		try {
 			if (data.isImageFile(renderLabel)) {
-				new XmippImageWindow(data.getValueFromCol(getIndex(row, col), renderLabel));
+				new XmippImageWindow(new ImagePlusLoader(data.getValueFromCol(getIndex(row, col), renderLabel)));
 				return true;
 			}
 		} catch (Exception e) {

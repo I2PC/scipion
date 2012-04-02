@@ -125,7 +125,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				ImagePlus imp = XmippMenuBar.this.xw.getImagePlus();
+				ImagePlus imp = XmippMenuBar.this.xw.getImagePlusLoader().getImagePlus();
 				if (imp.getImageStackSize() == 1)
 					JOptionPane.showMessageDialog(null, "Only for Stack");
 				else
@@ -149,6 +149,7 @@ public class XmippMenuBar extends MenuBar
 		});
 
 		pollmi = new CheckboxMenuItem("Poll");
+		pollmi.setEnabled(xw.getImagePlusLoader().allowsPoll());
 		pollmi.addItemListener(new ItemListener()
 		{
 
@@ -341,7 +342,7 @@ public class XmippMenuBar extends MenuBar
 									JOptionPane.showMessageDialog(null, "Only for Stack");
 								return;
 							}
-					IJ.run(xw.getImagePlus(), command, "");
+					IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
 				}
 				catch (Exception ex)
 				{

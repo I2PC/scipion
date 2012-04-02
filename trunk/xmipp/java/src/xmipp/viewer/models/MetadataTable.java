@@ -32,6 +32,7 @@ import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -187,7 +188,7 @@ public class MetadataTable extends MetadataGallery {
 	public boolean handleDoubleClick(int row, int col){
 		try {
 			if (data.isImageFile(col)) {
-				new XmippImageWindow(data.getValueFromCol(row, col));
+				new XmippImageWindow(new ImagePlusLoader(data.getValueFromCol(row, col)));
 				return true;
 			}
 		} catch (Exception e) {

@@ -39,6 +39,7 @@ import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
+import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippWindowUtil;
@@ -60,7 +61,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	
 	private float position;
 	private int index;
-	private JButton resetbt;
 	private JLabel upslb;
 	private TiltedMicrographCanvas tiltedcanvas;
 	private JCheckBoxMenuItem anglesmi;
@@ -71,12 +71,18 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 	
 
+	protected void enableEdition(boolean enable)
+	{
+		super.enableEdition(enable);
+		
+	}
 
 	public TiltPairPickerJFrame(TiltPairPicker picker)
 	{
 		super(picker);
 		pppicker = picker;
 		initComponents();
+		enableEdition(picker.getMode() != FamilyState.ReadOnly);
 	}
 
 	private void initComponents()
@@ -224,17 +230,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		infopn.add(upslb);
 		micrographpn.add(infopn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				pppicker.resetMicrograph(untiltedmic);
-				canvas.setActive(null);
-				updateMicrographsModel();
-				setChanged(true);
-			}
-		});
+		
 		buttonspn.add(resetbt);
 		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
@@ -395,6 +391,17 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	protected void displayImportDialog()
 	{
 		new ImportParticlesFromFilesJDialog(this, true);
+		
+	}
+
+
+	@Override
+	protected void resetMicrograph()
+	{
+		pppicker.resetMicrograph(untiltedmic);
+		canvas.setActive(null);
+		updateMicrographsModel();
+		setChanged(true);
 		
 	}
 	

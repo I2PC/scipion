@@ -1,32 +1,33 @@
 package xmipp.ij.commons;
 
-import java.awt.event.WindowEvent;
-import java.io.File;
-
-import xmipp.jni.Filename;
-import xmipp.utils.DEBUG;
-import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.gui.StackWindow;
 
+import java.awt.event.WindowEvent;
+
 public class XmippStackWindow extends StackWindow implements XmippIJWindow{
-	public XmippStackWindow(ImagePlus imp) {
-		this(imp, "");
-	}
 	
-	public XmippStackWindow(ImagePlus imp, String title)
+	private ImagePlusLoader ipl;
+
+
+	public XmippStackWindow(ImagePlusLoader ipl, String title)
 	{
-		super(imp, new XmippImageCanvas(imp));
+		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
+		this.ipl = ipl;
 		setTitle(title);
 		setMenuBar(new XmippMenuBar(this));
+		
+	}
+	
+	public XmippStackWindow(ImagePlusLoader ipl)
+	{
+		this(ipl, ipl.getFileName());
 	}
 
 	@Override
 	public void loadData()
 	{
-		String file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
-		ImagePlus imp = new ImagePlus(file);
+		ImagePlus imp = ipl.loadImagePlus();
 		setImage(imp);//second alone does not work
 		updateImage(imp);//first one alone does not work
 	}
@@ -53,12 +54,13 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		close();//it works for stack
 		if(XmippIJUtil.getXmippImageJ() != null)
 			XmippIJUtil.getXmippImageJ().close();
-		//System.exit(0);
 	}
 
 	@Override
-	public String getImageFilePath()
+	public ImagePlusLoader getImagePlusLoader()
 	{
-		return imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+		return ipl;
 	}
+
+
 }

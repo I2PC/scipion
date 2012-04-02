@@ -2,9 +2,7 @@ package xmipp.ij.commons;
 
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-
 import java.awt.event.WindowEvent;
-import java.io.File;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
@@ -16,7 +14,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 			// openImageJ(Tool.VIEWER);
-			XmippStackWindow w = new XmippStackWindow(new ImagePlus("/home/airen/xmipp-work/image-formats/ali_35c.hed"));
+			XmippStackWindow w = new XmippStackWindow(new ImagePlusLoader("/home/airen/xmipp-work/image-formats/ali_35c.hed"));
 			
 			// IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 
@@ -28,29 +26,23 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		}
 
 	}
+	private ImagePlusLoader ipl;
 
-	private String file;
-	private long modified;
 
-	public XmippImageWindow(String file) throws Exception
+	public XmippImageWindow(ImagePlusLoader ipl)
 	{
-		this(XmippImageConverter.loadImage(file), file);
-		this.file = file;
-		this.modified = new File(file).lastModified();
+		this(ipl, ipl.getFileName());
+		
 	}
 
-	public XmippImageWindow(ImagePlus imp)
-	{
-		this(imp, "");
-	}
 
-	public XmippImageWindow(ImagePlus imp, String title)
+	public XmippImageWindow(ImagePlusLoader ipl, String title)
 	{
-		super(imp, new XmippImageCanvas(imp));
-		// file = imp.getOriginalFileInfo().directory + File.separator +
-		// imp.getOriginalFileInfo().fileName;
+		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
+		this.ipl = ipl;
 		setTitle(title);
 		setMenuBar(new XmippMenuBar(this));
+		
 	}
 
 	
@@ -59,12 +51,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		try
 		{
-			if (file != null && new File(file).lastModified() > modified)
-			{
-				ImagePlus imp = XmippImageConverter.loadImage(file);
+				ImagePlus imp = ipl.loadImagePlus();
 				setImage(imp);// second alone does not work
 				updateImage(imp);// first one alone does not work
-			}
 		}
 		catch (Exception e)
 		{
@@ -75,7 +64,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	@Override
 	public void saveDataAs(String file) throws Exception
 	{
-		this.file = file;
 		XmippImageConverter.writeImagePlus(imp, file);
 	}
 
@@ -92,9 +80,10 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 			XmippIJUtil.getXmippImageJ().close();
 	}
 
-	@Override
-	public String getImageFilePath()
+
+	
+	public ImagePlusLoader getImagePlusLoader()
 	{
-		return imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+		return ipl;
 	}
 }// class XmippImageWindow
