@@ -1,0 +1,6 @@
+Xmipp is also posible thanks to following open source projects:
+eclipse [http://www.eclipse.org]
+scons [http://www.scons.org]
+sqlite [http://www.sqlite.org]
+valgrind
+openmpi
