@@ -488,6 +488,8 @@ class ProtocolGUI(BasicGUI):
             section.content.grid_remove()
             expanded = False
         else:
+            for w in section.childwidgets:
+                w.checkVisibility()
             section.content.grid(row=1, column=0, columnspan=5, sticky='nsew')
             expanded = True
         self.updateScrollRegion()
@@ -763,7 +765,9 @@ class ProtocolGUI(BasicGUI):
         if not end_of_header:
             raise Exception('{end_of_header} tag not found in protocol script: %s' % script)
                 
-    def parseHeader(self):
+    def parseHeader(self, gui=True):
+        ''' gui flag will be used to create protocols 
+        runs outside Protocols Gui environment '''
         #REGURLAR EXPRESSION TO PARSE VARIABLES DEFINITION
         import re
         #Comment regex, match lines starting by # and followed by tags with values
@@ -823,7 +827,7 @@ class ProtocolGUI(BasicGUI):
                                 self.variablesDict[v.name] = v
                                 index += 1
                                 self.checkSpecialCases(v)
-                if is_section or v.name or 'text' in v.tags.keys():
+                if gui and (is_section or v.name or 'text' in v.tags.keys()):
                     self.createWidget(v)
         #Update if citations found
         if len(self.citeslist) > 0:
