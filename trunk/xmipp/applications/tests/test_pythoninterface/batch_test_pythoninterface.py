@@ -196,18 +196,6 @@ class TestXmippPythonInterface(unittest.TestCase):
          fn2 = FileName(imgPath)
          self.assertTrue (fn2.isMetaData())
 
-    def test_Metadata_iter(self):
-         mdPath = os.path.join("pythoninterface", "test.xmd")
-         mD = MetaData(mdPath)
-         i = 1
-         for id in mD:
-             img = mD.getValue(MDL_IMAGE, id)
-             expImg = os.path.join("pythoninterface", "test.xmd")
-             expImg = ("00000%d@" % i) + os.path.join("pythoninterface", "proj_ctf_1.stk")
-             #expImg = '00000%d@Images/proj_ctf_1.stk' % i
-             self.assertEqual(img, expImg)
-             i += 1
-                 
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
         mdPath = os.path.join("pythoninterface", "test.xmd")
@@ -235,7 +223,49 @@ class TestXmippPythonInterface(unittest.TestCase):
         mD = MetaData(mdPath)
         self.assertEqual(mD, mDout)
         
-        
+    def test_Metadata_iter(self):
+         mdPath = os.path.join("pythoninterface", "test.xmd")
+         mD = MetaData(mdPath)
+         i = 1
+         for id in mD:
+             img = mD.getValue(MDL_IMAGE, id)
+             expImg = os.path.join("pythoninterface", "test.xmd")
+             expImg = ("00000%d@" % i) + os.path.join("pythoninterface", "proj_ctf_1.stk")
+             #expImg = '00000%d@Images/proj_ctf_1.stk' % i
+             self.assertEqual(img, expImg)
+             i += 1
+
+    def test_Metadata_join(self):
+         #create metadta
+        md = MetaData()
+        md2 = MetaData()
+        mdout = MetaData()
+        listOrig = [1.0, 2.0, 3.0]
+        for i in range(1, 4):
+            id = md.addObject() 
+            img = '%06d@pythoninterface/proj_ctf_1.stk' % i
+            md.setValue(MDL_IMAGE, img, id)
+            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_COUNT, (i * 10L), id)
+        for i in range(1, 3):
+            id = md2.addObject() 
+            img = '%06d@pythoninterface/proj_ctf_1.stk' % i
+            md2.setValue(MDL_IMAGE, img, id)
+            md2.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md2.setValue(MDL_ANGLEPSI, 1., id)
+        mdout.join (md, md2,  MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+
+        md.clear()
+        for i in range(1, 3):
+            id = md.addObject() 
+            img = '%06d@pythoninterface/proj_ctf_1.stk' % i
+            md.setValue(MDL_IMAGE, img, id)
+            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_COUNT, (i * 10L), id)
+            md.setValue(MDL_ANGLEPSI, 1., id)
+
+        self.assertEqual(mdout, md)
+                 
     def test_Metadata_read(self):
         '''MetaData_setValues'''
         '''This test should produce the following metadata, which is the same of 'test.xmd'
