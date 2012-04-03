@@ -425,6 +425,11 @@ Optional:
 """       
 
 class ProtocolGUI(BasicGUI):
+    def __init__(self, gui=True):
+        '''gui flag is a bit contradictory, but if False
+        will be used to run protocols from non-gui environment '''
+        self.gui = gui        
+        
     def init(self):
         self.variablesDict = {}       
         self.pre_header_lines = []
@@ -766,7 +771,7 @@ class ProtocolGUI(BasicGUI):
         if not end_of_header:
             raise Exception('{end_of_header} tag not found in protocol script: %s' % script)
                 
-    def parseHeader(self, gui=True):
+    def parseHeader(self):
         ''' gui flag will be used to create protocols 
         runs outside Protocols Gui environment '''
         #REGURLAR EXPRESSION TO PARSE VARIABLES DEFINITION
@@ -828,7 +833,7 @@ class ProtocolGUI(BasicGUI):
                                 self.variablesDict[v.name] = v
                                 index += 1
                                 self.checkSpecialCases(v)
-                if gui and (is_section or v.name or 'text' in v.tags.keys()):
+                if self.gui and (is_section or v.name or 'text' in v.tags.keys()):
                     self.createWidget(v)
         #Update if citations found
         if len(self.citeslist) > 0:
@@ -861,7 +866,7 @@ class ProtocolGUI(BasicGUI):
         self.checkVisibility()
         
     def save(self, event=""):
-        if not self.validateInput():
+        if self.gui and not self.validateInput():
             return False
         try:
             runName = self.getVarValue('RunName')
@@ -907,7 +912,7 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def showError(self, title, e):
-        if self.master:
+        if self.gui:
             showError(title, str(e), parent=self.master)
         else:
             print title, str(e)
