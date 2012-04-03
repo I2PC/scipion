@@ -79,12 +79,12 @@ public class ImageGeneric {
     	readHeader(filename);//Filename.getFilename(filename));
     }
 
-    public void resize(int h, int w) throws Exception {
-        resize(h, w, 1);
+    public void resize(int w, int h) throws Exception {
+        resize(w, h, 1);
     }
 
-    public void resize(int h, int w, int d) throws Exception {
-        resize(h, w, d, 1);
+    public void resize(int w, int h, int d) throws Exception {
+        resize(w, h, d, 1);
     }
 
     public native void resize(int h, int w, int d, long n) throws Exception;

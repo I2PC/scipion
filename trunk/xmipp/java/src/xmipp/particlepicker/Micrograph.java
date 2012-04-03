@@ -97,20 +97,23 @@ public abstract class Micrograph
 			
 			if (imp == null)
 			{
-				ImageGeneric image = new ImageGeneric(file);
-				image.read(ImageGeneric.FIRST_IMAGE);
+				ImageGeneric ig = new ImageGeneric(file);
+				ig.read(ImageGeneric.FIRST_IMAGE);
 				for (Filter f: filters)
 					if (f.getCommand().equals("Smooth Filter")){ //this filter should be the first applied
-						image.convert2Datatype(ImageGeneric.UChar);
-						ImageGeneric imgSmooth = new ImageGeneric(ImageGeneric.UChar);
-						imgSmooth.resize(image.getXDim(), image.getYDim());
-						image.smooth(imgSmooth);
-						imp = XmippImageConverter.convertToImagePlus(imgSmooth);
-						image.destroy();
-					} else {
+						ig.convert2Datatype(ImageGeneric.UChar);
+						ImageGeneric igsmooth = new ImageGeneric(ImageGeneric.UChar);
+						System.out.printf("width: %s height: %s\n", ig.getXDim(), ig.getYDim());
+						igsmooth.resize(ig.getXDim(), ig.getYDim());
+						ig.smooth(igsmooth);
+						imp = XmippImageConverter.convertToImagePlus(igsmooth);
+						ig.destroy();
+					} 
+					else 
+					{
 						if (imp == null) {
-							imp = XmippImageConverter.convertToImagePlus(image);
-							image.destroy();
+							imp = XmippImageConverter.convertToImagePlus(ig);
+							ig.destroy();
 						}
 						//String macro = String.format("run(\"%s\", \"%s\");", f.getCommand(), f.getOptions());
 						IJ.run(imp, f.getCommand(), f.getOptions());

@@ -262,23 +262,20 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
 
 void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
 {
-
     if (Mp.datatype!=DT_UChar)
         REPORT_ERROR(ERR_ARG_INCORRECT,formatString("Smooth downsampling is only valid for 8 bit images. \n"
         		"Choose a supporting 8bit file format different from %s",Mp.image->name().c_str()));
 
-    printf("no format error\n");
     int Ydim, Xdim, Ypdim, Xpdim;
     M().getDimensions(Xdim, Ydim);
     Mp().getDimensions(Xpdim, Ypdim);
-
     byte rgb[256];
     for (int i = 0; i < 256; i++)
         rgb[i] = i;
     byte *inputImage=NULL;
     MultidimArray<unsigned char> Maux;
     if (M.datatype==DT_UChar)
-        inputImage=MULTIDIM_ARRAY(*(((MultidimArray<unsigned char>*)M().im)));
+        M().getArrayPointer(inputImage);
     else
     {
         Maux.setMmap(true);
@@ -288,9 +285,9 @@ void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
     byte *result = SmoothResize(inputImage,
                                 Xdim, Ydim, Xpdim, Ypdim,
                                 rgb, rgb, rgb, rgb, rgb, rgb, 256);
-    for (int i = 0; i < Ypdim; i++)
-        for (int j = 0; j < Xpdim; j++)
-            Mp.setPixel(i, j, result[i*Xpdim+j]);
-    free(result);
 
+    unsigned char *outputImage;
+    Mp().getArrayPointer(outputImage);
+    memcpy(outputImage,result,((size_t)Xpdim)*Ypdim);
+    free(result);
 }

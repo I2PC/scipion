@@ -794,4 +794,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		
 	}
 
+	@Override
+	protected void reloadImage()
+	{
+		getCanvas().getMicrograph().releaseImage();
+		getCanvas().updateMicrographData();
+		
+	}
+
 }

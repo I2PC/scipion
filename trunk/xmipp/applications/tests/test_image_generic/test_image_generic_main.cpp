@@ -1,4 +1,5 @@
 #include <data/xmipp_image.h>
+#include <reconstruction/transform_downsample.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -339,6 +340,21 @@ TEST_F( ImageGenericTest, getPreview)
         img2().setXmippOrigin();
         EXPECT_EQ(img1, img2) << "getPreview a specific slice";
     }
+    XMIPP_CATCH
+}
+
+TEST_F ( ImageGenericTest, smoother)
+{
+	XMIPP_TRY
+    FileName auxFn = "image/BPV_1387.mrc";
+    ImageGeneric img1, img2;
+    img1.read(auxFn);
+    img1.convert2Datatype(DT_UChar);
+    img2.setDatatype(DT_UChar);
+    img2().resize(img1(),false);
+    downsampleSmooth(img1,img2);
+    img1.write("/home/airen/test0.xmp");
+    img2.write("/home/airen/testF.xmp");
     XMIPP_CATCH
 }
 

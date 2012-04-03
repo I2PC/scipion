@@ -79,6 +79,8 @@ typedef unsigned char byte;
 #include <stdio.h>
 #include <string.h>
 
+#include "xmipp_image_generic.h"
+
 byte *Smooth24(byte *pic824, int is24, int swide, int shigh,
                int dwide, int dhigh, byte *rmap, byte *gmap, byte *bmap);
 byte *DoColorDither(byte *pic24, byte *pic8, int w, int h,
@@ -115,6 +117,13 @@ byte *SmoothResize(byte *srcpic8, int swide, int shigh,
     byte *pic24, *pic8;
 
     pic24 = Smooth24(srcpic8, 0, swide, shigh, dwide, dhigh, rmap, gmap, bmap);
+    ImageGeneric img2;
+    img2.setDatatype(DT_UChar);
+    img2().resize(dwide,dhigh,1,1,false);
+    unsigned char *outputImage;
+    img2().getArrayPointer(outputImage);
+    memcpy(outputImage,pic24,((size_t)dwide)*dhigh*3);
+    img2.write("/home/airen/testXV0.xmp");
 
     if (pic24)
     {

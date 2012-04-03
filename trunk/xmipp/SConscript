@@ -220,7 +220,7 @@ def AddXmippTest(name, testprog, command):
 
 
 def AddXmippCTest(name):
-    testprog = AddXmippProgram(name, ['gtest'], 'tests')
+    testprog = AddXmippProgram(name, ['gtest','XmippRecons'], 'tests')
     AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
 
 def AddXmippPythonTest(name):

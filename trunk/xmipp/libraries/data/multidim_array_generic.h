@@ -189,7 +189,7 @@ public:
      *  Return a pointer to internal multidimarray casted to template T.
      */
     template <typename T>
-    void getArrayPointer(T* &M)
+    void getArrayPointer(T* &M) const
     {
 #define GETMULTIDIMARRAY(type) M = (T*) (((MultidimArray<type>*) im)->data);
         SWITCHDATATYPE(datatype,GETMULTIDIMARRAY)
@@ -197,7 +197,7 @@ public:
 
     }
 
-    void * getArrayPointer()
+    void * getArrayPointer() const
     {
 #define GETMULTIDIMARRAY(type) return (void *) (((MultidimArray<type>*) im)->data);
         SWITCHDATATYPE(datatype,GETMULTIDIMARRAY)
@@ -209,7 +209,7 @@ public:
      *  Return a pointer to internal multidimarray casted to template T.
      */
     template <typename T>
-    void getMultidimArrayPointer(MultidimArray<T>* &M)
+    void getMultidimArrayPointer(MultidimArray<T>* &M) const
     {
 #define GETMULTIDIMARRAY(type) M = (MultidimArray<T>*) ((MultidimArray<type>*) im);
         SWITCHDATATYPE(datatype,GETMULTIDIMARRAY)

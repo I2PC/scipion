@@ -5,6 +5,7 @@ import ij.Executer;
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
+import ij.WindowManager;
 import ij.plugin.frame.Recorder;
 
 import java.awt.Color;
@@ -377,16 +378,18 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				if (activefilter.equals("Smooth Filter"))
 				{
 					getParticlePicker().addFilter("Smooth Filter", "xmipp");
+					reloadImage();
 				}
 				else
 				{
-					IJ.run(activefilter);
+					for(int i = 0; i < WindowManager.getImageCount(); i ++)
+						IJ.run(WindowManager.getImage(i), activefilter, "");
 				}
 			else
 			{
 				// filter removed
 				getParticlePicker().removeFilter(activefilter);
-				getCanvas().updateMicrographData();
+				reloadImage();
 			}
 
 			setChanged(true);
@@ -398,6 +401,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 
 	}
+	
+	protected abstract void reloadImage();
+
 
 	protected abstract void saveChanges();
 

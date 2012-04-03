@@ -399,7 +399,15 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		
 	}
 	
-	
+	@Override
+	protected void reloadImage()
+	{
+		getCanvas().getMicrograph().releaseImage();
+		getCanvas().updateMicrographData();
+		getTiltedCanvas().getMicrograph().releaseImage();
+		getTiltedCanvas().updateMicrographData();
+		
+	}
 
 
 }
