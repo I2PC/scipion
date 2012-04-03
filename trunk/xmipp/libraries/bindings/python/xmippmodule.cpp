@@ -1965,8 +1965,8 @@ MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs)
     catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
-        return NULL;
     }
+    return NULL;
 }
 /* isEmpty */
 static PyObject *
@@ -1983,8 +1983,8 @@ MetaData_isEmpty(PyObject *obj, PyObject *args, PyObject *kwargs)
     catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
-        return NULL;
     }
+    return NULL;
 }
 /* getColumnFormat */
 static PyObject *
@@ -2001,8 +2001,8 @@ MetaData_getColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
     catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
-        return NULL;
     }
+    return NULL;
 }
 /* setColumnFormat */
 static PyObject *
