@@ -689,6 +689,11 @@ void MDSql::setOperate(const MetaData *mdInLeft,
             }
     }
     ss << ";";
+//    std::cerr << "ss:" << ss.str() << std::endl;
+//    for (int j = 0; j < sizeLeft; j++)
+//    	std::cerr << "mdInRight->activeLabels:" << mdInRight->activeLabels[0] << std::endl;
+//    for (int j = 0; j < sizeLeft; j++)
+//    	std::cerr << "mdInLeft->activeLabels:"  << mdInLeft->activeLabels[1] << std::endl;
     execSingleStmt(ss);
 }
 
