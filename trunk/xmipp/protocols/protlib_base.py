@@ -603,10 +603,11 @@ def protocolMain(ProtocolClass, script=None):
                 if getattr(mod, ParallelCondition, True): # This is valid only for Single variable condition
                     from protlib_utils import submitProtocol
                     NumberOfThreads = getattr(mod, 'NumberOfThreads', 1)
+                    NumberOfMPI = getattr(mod, 'NumberOfMPI', 1)
                     _run['jobid'] = submitProtocol(script,
                                    jobName = p.uniquePrefix,
                                    queueName = mod.QueueName,
-                                   nodes = mod.NumberOfMpi,
+                                   nodes = NumberOfMPI,
                                    threads = NumberOfThreads,
                                    hours = mod.QueueHours,
                                    command = 'xmipp_python %s --no_check' % script
