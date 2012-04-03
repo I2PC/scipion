@@ -542,13 +542,9 @@ int main(int argc, char *argv[])
     try
     {
         program.preRun();
-        std::cerr << "["<<program.rank<<"]: BP01" <<std::endl;
         program.run();
-        std::cerr << "["<<program.rank<<"]: BP02" <<std::endl;
         program.createGroupSamplingFiles();
-        std::cerr << "["<<program.rank<<"]: BP03" <<std::endl;
         MPI_Finalize();
-        std::cerr << "["<<program.rank<<"]: BP04" <<std::endl;
     }
     catch (XmippError XE)
     {
