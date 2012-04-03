@@ -63,7 +63,6 @@ class TestXmippPythonInterface(unittest.TestCase):
         imgPath = os.path.join("pythoninterface", "tinyImage.spi")
         img = Image(imgPath)
         img.initConstant(1.) 
-        img.write("/tmp/kk.spi") 
         for i in range(0, 3):
             for j in range (0, 3):
                 p = img.getPixel(i, j)
