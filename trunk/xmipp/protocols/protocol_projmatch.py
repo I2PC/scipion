@@ -505,14 +505,14 @@ class ProtProjMatch(XmippProtocol):
          
     
     def preRun(self):
-        print "in PRERUN"
+        #print "in PRERUN"
         # Convert vectors to list
         self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)
 
         # Construct special filename list with zero special case
         self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
-        print 'self.DocFileInputAngles: ', self.DocFileInputAngles
+        #print 'self.DocFileInputAngles: ', self.DocFileInputAngles
         self.reconstructedFileNamesIters = [[None] + self.ReferenceFileNames]
         for iterN in range(1, self.NumberOfIterations + 1):
             self.reconstructedFileNamesIters.append([None] + [self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
