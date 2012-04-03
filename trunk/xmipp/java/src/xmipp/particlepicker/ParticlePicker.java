@@ -76,14 +76,14 @@ public abstract class ParticlePicker
 		return filters;
 	}
 
-	public String getFiltersMacro()
-	{
-		
-		String macros = "";
-		for(Filter f: filters)
-			macros += String.format("run(\"%s\", \"%s\");\n", f.getCommand(), f.getOptions());
-		return macros;
-	}
+//	public String getFiltersMacro()
+//	{
+//		
+//		String macros = "";
+//		for(Filter f: filters)
+//			macros += String.format("run(\"%s\", \"%s\");\n", f.getCommand(), f.getOptions());
+//		return macros;
+//	}
 
 	public void setChanged(boolean changed)
 	{
@@ -312,6 +312,7 @@ public abstract class ParticlePicker
 				filters.add(new Filter(command, options));
 				
 			}
+			System.out.println(filters.size());
 		}
 		catch (Exception e)
 		{
@@ -330,6 +331,7 @@ public abstract class ParticlePicker
 				break;
 				
 			}
+		
 	}
 	
 	public boolean isFilterSelected(String filter)

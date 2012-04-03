@@ -288,8 +288,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			tiltedcanvas = new TiltedMicrographCanvas(this);
 			if(!untiltedmic.getParticles().isEmpty())
 				canvas.setActive(untiltedmic.getParticles().get(untiltedmic.getParticles().size() - 1));//needs both canvas to be initialized
-			if(!pppicker.getFilters().isEmpty())
-				IJ.runMacro(pppicker.getFiltersMacro());
 		}
 		else
 		{

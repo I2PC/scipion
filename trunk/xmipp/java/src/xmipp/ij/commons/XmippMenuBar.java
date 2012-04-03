@@ -7,6 +7,9 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.process.StackConverter;
+import ij3d.Content;
+import ij3d.Image3DUniverse;
 
 import java.awt.CheckboxMenuItem;
 import java.awt.Menu;
@@ -18,11 +21,10 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 
-import xmipp.jni.Filename;
-import xmipp.utils.XmippFileChooser;
 import javax.swing.JOptionPane;
+import javax.vecmath.Color3f;
 
-import xmipp.viewer.windows.ImagesWindowFactory;
+import xmipp.utils.XmippFileChooser;
 
 /**
  * 
@@ -129,7 +131,7 @@ public class XmippMenuBar extends MenuBar
 				if (imp.getImageStackSize() == 1)
 					JOptionPane.showMessageDialog(null, "Only for Stack");
 				else
-					ImagesWindowFactory.openImagePlusAs3D(imp);
+					openImagePlusAs3D(imp);
 				
 			}
 		});
@@ -282,6 +284,29 @@ public class XmippMenuBar extends MenuBar
 			}
 		});
 
+	}
+	
+	public static void openImagePlusAs3D(ImagePlus ip) {
+		try {
+			int UNIVERSE_W = 400, UNIVERSE_H = 400;
+			// Checks if java3D is available or not.
+			Class.forName("javax.media.j3d.J3DBuffer");
+
+			new StackConverter(ip).convertToRGB();
+
+			Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W,
+					UNIVERSE_H);
+
+			// Adds the sphere image plus to universe.
+			Content c = universe.addSurfacePlot(ip, new Color3f(1f, 165f / 255,
+					82f / 255), "1", 50, new boolean[] { true, true, true }, 1);
+			c.displayAs(Content.SURFACE);
+			c.setColor(new Color3f(1f, 165f / 255, 82f / 255));
+
+			universe.show(); // Shows...
+		} catch (final ClassNotFoundException e) {
+			IJ.error("Java 3D not found. Please, check your installation.");
+		}
 	}
 
 	private void addIJMenuItem(Menu mn, String name, String command, IJRequirement... requirements)

@@ -191,14 +191,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public void updateMicrographData()
 	{
 		Micrograph m = getMicrograph();
-		imp = m.getImagePlus();
+		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
 		ImageWindow iw = (ImageWindow) getParent();
 		iw.setImage(imp);
 		iw.updateImage(imp);
 		iw.setTitle(m.getName());
-
-		if (!getFrame().getParticlePicker().getFilters().isEmpty())
-			IJ.runMacro(getFrame().getParticlePicker().getFiltersMacro());
 	}
 
 	public abstract Micrograph getMicrograph();

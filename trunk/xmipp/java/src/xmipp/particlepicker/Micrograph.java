@@ -1,10 +1,13 @@
 package xmipp.particlepicker;
 
+import ij.IJ;
 import ij.ImagePlus;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 
 public abstract class Micrograph
@@ -12,7 +15,7 @@ public abstract class Micrograph
 
 	private String file;
 	private String name;
-	private ImagePlus image;
+	private ImagePlus imp;	
 	private String ofilename;
 	private String posfile;
 	public static final String ext = ".pos";
@@ -70,14 +73,50 @@ public abstract class Micrograph
 		try
 		{
 
-			if (image == null)
+			if (imp == null)
 			{
-
-				image = XmippImageConverter.loadImage(file);
-				if(image == null)
-					image = new ImagePlus(file);
+				System.out.println("Empty Filters");
+				imp = XmippImageConverter.loadImage(file);
+				if(imp == null)
+					imp = new ImagePlus(file);
 			}
-			return image;
+			return imp;
+		}
+		catch (Exception e)
+		{
+			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
+	
+	public ImagePlus getImagePlus(List<Filter> filters){
+		try
+		{
+			if (filters.isEmpty())
+				return getImagePlus();
+			
+			if (imp == null)
+			{
+				ImageGeneric image = new ImageGeneric(file);
+				image.read(ImageGeneric.FIRST_IMAGE);
+				for (Filter f: filters)
+					if (f.getCommand().equals("Smooth Filter")){ //this filter should be the first applied
+						image.convert2Datatype(ImageGeneric.UChar);
+						ImageGeneric imgSmooth = new ImageGeneric(ImageGeneric.UChar);
+						imgSmooth.resize(image.getXDim(), image.getYDim());
+						image.smooth(imgSmooth);
+						imp = XmippImageConverter.convertToImagePlus(imgSmooth);
+						image.destroy();
+					} else {
+						if (imp == null) {
+							imp = XmippImageConverter.convertToImagePlus(image);
+							image.destroy();
+						}
+						//String macro = String.format("run(\"%s\", \"%s\");", f.getCommand(), f.getOptions());
+						IJ.run(imp, f.getCommand(), f.getOptions());
+					}
+			}
+			return imp;
 		}
 		catch (Exception e)
 		{
@@ -88,7 +127,7 @@ public abstract class Micrograph
 
 	public void releaseImage()
 	{
-		image = null;
+		imp = null;
 	}
 
 	public String getFile()

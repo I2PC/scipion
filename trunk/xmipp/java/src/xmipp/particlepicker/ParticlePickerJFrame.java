@@ -3,10 +3,8 @@ package xmipp.particlepicker;
 import ij.CommandListener;
 import ij.Executer;
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImageListener;
 import ij.ImagePlus;
-import ij.gui.ImageWindow;
 import ij.plugin.frame.Recorder;
 
 import java.awt.Color;
@@ -26,11 +24,9 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import xmipp.utils.XmippFileChooser;
-
-import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -44,22 +40,18 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.jni.Filename;
-import xmipp.jni.ImageGeneric;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippFileChooser;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.utils.XmippMessage;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -90,6 +82,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JPanel colorpn;
 	protected JButton resetbt;
 
+	private JMenuItem exitmi;
+
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
 
@@ -97,7 +91,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				if (getParticlePicker().isChanged() && showMessage("Save changes before closing?"))
+				if (getParticlePicker().isChanged() && XmippDialog.showQuestion(ParticlePickerJFrame.this, "Save changes before closing?"))
 					saveChanges();
 				System.exit(0);
 			}
@@ -213,6 +207,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 			}
 		});
+		exitmi = new JMenuItem("Exit");
+		exitmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+
+			}
+		});
+		filemn.add(exitmi);
 
 		ijmi = new JMenuItem("ImageJ", XmippResource.getIcon("ij.gif"));
 		ijmi.addActionListener(new ActionListener()
@@ -283,20 +288,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 
+		addFilterMenuItem("Smooth Filter", true, picker);
 		addFilterMenuItem("Bandpass Filter...", true, picker);
-		JCheckBoxMenuItem smoothmi = new JCheckBoxMenuItem("Smooth");
-		smoothmi.addActionListener(new ActionListener()
-		{
 
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-
-				smooth();
-
-			}
-		});
-		filtersmn.add(smoothmi);
 		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
 		admi.addActionListener(new ActionListener()
 		{
@@ -326,23 +320,25 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	protected void smooth()
-	{
-		try
-		{
-			ImageGeneric Iaux = XmippImageConverter.convertToImageGeneric(IJ.getImage());
-			Iaux.convert2Datatype(ImageGeneric.UChar);
-			ImageGeneric Ismooth = new ImageGeneric(ImageGeneric.UChar);
-			Ismooth.resize(Iaux.getXDim(), Iaux.getYDim());
-			Iaux.smooth(Ismooth);
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(Ismooth);
-		}
-		catch (Exception e1)
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	}
+	//
+	// protected void smooth()
+	// {
+	// try
+	// {
+	// ImageGeneric Iaux =
+	// XmippImageConverter.convertToImageGeneric(IJ.getImage());
+	// Iaux.convert2Datatype(ImageGeneric.UChar);
+	// ImageGeneric Ismooth = new ImageGeneric(ImageGeneric.UChar);
+	// Ismooth.resize(Iaux.getXDim(), Iaux.getYDim());
+	// Iaux.smooth(Ismooth);
+	// ImagePlus imp = XmippImageConverter.convertToImagePlus(Ismooth);
+	// }
+	// catch (Exception e1)
+	// {
+	// // TODO Auto-generated catch block
+	// e1.printStackTrace();
+	// }
+	// }
 
 	protected abstract void resetMicrograph();
 
@@ -378,10 +374,21 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			activefilter = item.getText();
 			if (item.isSelected())// filter added, will be registered by picker
 									// with options if needed
-				IJ.run(activefilter);
+				if (activefilter.equals("Smooth Filter"))
+				{
+					getParticlePicker().addFilter("Smooth Filter", "xmipp");
+				}
+				else
+				{
+					IJ.run(activefilter);
+				}
 			else
+			{
 				// filter removed
 				getParticlePicker().removeFilter(activefilter);
+				getCanvas().updateMicrographData();
+			}
+
 			setChanged(true);
 		}
 		catch (Exception ex)

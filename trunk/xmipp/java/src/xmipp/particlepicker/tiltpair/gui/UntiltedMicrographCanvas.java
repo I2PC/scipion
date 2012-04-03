@@ -69,7 +69,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 	public UntiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
-		super(frame.getMicrograph().getImagePlus());
+		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
 		this.um = frame.getMicrograph();
 
 		this.frame = frame;

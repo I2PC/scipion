@@ -537,10 +537,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		if (canvas == null)
 		{
 			canvas = new TrainingCanvas(this);
-			ImageWindow iw = new ImageWindow(micrograph.getImagePlus(), canvas);
+			ImageWindow iw = new ImageWindow(micrograph.getImagePlus(ppicker.getFilters()), canvas);
 			iw.setTitle(micrograph.getName());
-			if (!ppicker.getFilters().isEmpty())
-				IJ.runMacro(ppicker.getFiltersMacro());
 		}
 		else
 			canvas.updateMicrograph();

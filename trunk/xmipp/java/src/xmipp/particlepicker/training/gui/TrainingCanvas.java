@@ -38,7 +38,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
-		super(frame.getMicrograph().getImagePlus());
+		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
 		this.micrograph = frame.getMicrograph();
 		this.frame = frame;
 		this.ppicker = frame.getParticlePicker();
