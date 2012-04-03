@@ -354,7 +354,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
                 G.inv(invG);
                 R = invG*b;
 
-//                A2D_ELEM(dirMap,indi[k],indj[k]) = std::atan2(-VEC_ELEM(R,0),VEC_ELEM(R,1));
+                //                A2D_ELEM(dirMap,indi[k],indj[k]) = std::atan2(-VEC_ELEM(R,0),VEC_ELEM(R,1));
                 A2D_ELEM(dirMap,indi[k],indj[k]) = std::atan2(-VEC_ELEM(R,1),VEC_ELEM(R,0));
                 A2D_ELEM(processed,indi[k],indj[k]) = true;
                 A2D_ELEM(px,indi[k],indj[k]) = VEC_ELEM(R,0);
@@ -362,7 +362,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 
                 H = A2D_ELEM(qualityMapInt,indi[k],indj[k]);
                 if ( H == 0)
-                	H = 1;
+                    H = 1;
 
                 if ( VEC_ELEM(final,H) ==  maxElem )
                     VEC_ELEM(final,H) = 1;
@@ -407,14 +407,174 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
                     if ( temp == maxElem)
                         VEC_ELEM(front,k) = 1;
                     else
-                    	VEC_ELEM(front,k) += 1;
-
+                        VEC_ELEM(front,k) += 1;
             }
 
             k -= 1;
-
         }
     }
+}
+
+
+void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & unwrappedPhase)
+{
+    //First we perform some setup stuff
+    int nx = XSIZE(wrappedPhase);
+    int ny = YSIZE(wrappedPhase);
+
+    Histogram1D hist;
+    int no_steps = 10, maxElem = 0, k;
+    int imax, jmax, i, j;
+
+    //We look for the maximun value of qualityMap
+    qualityMap.selfABS();
+    qualityMap.maxIndex(imax,jmax);
+
+    double maxQualityMapValue = A2D_ELEM(qualityMap,imax,jmax);
+
+    //Here we transform the quality map to the no_steps possible values
+    MultidimArray<double> qualityMapInt = (((qualityMap/maxQualityMapValue)*(no_steps-1)));
+    qualityMapInt.selfROUND();
+
+    compute_hist(qualityMapInt, hist, no_steps);
+    int tempValue = 0;
+
+    //We look for the max element in hist
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hist)
+    {
+        tempValue = A1D_ELEM(hist,i);
+        if (tempValue > maxElem)
+            maxElem =  tempValue;
+    }
+
+    //In hx and hy we store the pixels to process attending to their quality value
+    Matrix2D<int> hi(no_steps,maxElem), hj(no_steps,maxElem);
+    Matrix1D<int> front(maxElem), final(maxElem);
+    Matrix2D<double> gaussian;
+    gaussian.initGaussian(2*size+1,0.6);
+    hi.initZeros();
+    hj.initZeros();
+    front.initZeros();
+    final.initZeros();
+
+    MultidimArray<bool> processed;
+    processed.resizeNoCopy(wrappedPhase);
+    processed.initZeros();
+
+    //Here appears the real processing
+    A2D_ELEM(unwrappedPhase,imax,jmax) = A2D_ELEM(wrappedPhase,imax,jmax);
+    A2D_ELEM(processed,imax,jmax) = true;
+
+    int ind = 1;
+    int H = 0;
+    i = imax;
+    j = jmax;
+
+    //predictor and corrector
+    double pred = 0;
+    double cor = 0;
+    double uw = 0;
+    double wp = 0;
+    double q = 0;
+    double g = 0;
+    int n = 0;
+    double t = 0;
+    double norm = 0;
+    double up = 0;
+
+
+    while( ind > 0)
+    {
+
+        int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
+        int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
+
+        for(int k = 0; k< 8 ; k++)
+            if ( (A2D_ELEM(processed,indi[k],indj[k]) == 0) && (indi[k] > size-1 ) && (indi[k] < nx-size )
+                 && (indj[k] > size-1 ) && (indj[k] < ny-size ) )
+            {
+                wp =  A2D_ELEM(wrappedPhase,indi[k],indj[k]);
+
+                for (int li=-size; li <= size; li++)
+                    for (int lj=-size; lj <= size; lj++)
+                    {
+                        if (A2D_ELEM(processed,indi[k]+li,indj[k]+lj)>0)
+                        {
+                            uw =  A2D_ELEM(unwrappedPhase,indi[k]+li,indj[k]+lj);
+                            q  =  A2D_ELEM(qualityMap,indi[k]+li,indj[k]+lj);
+                            g  =  dMij(gaussian,li+size,lj+size);
+
+                            t = (wp - uw);
+
+                            if ( t > 0 )
+                                n = std::floor(t+3.14159265)/(2*3.14159265);
+                            else
+                                n = std::ceil(t-3.14159265)/(2*3.14159265);
+
+                            up = t - (2*3.14159265)*n;
+
+                            pred += (uw*q*g);
+                            cor  += (up*q*g);
+                            norm += (q*g);
+                        }
+
+                    }
+
+                A2D_ELEM(unwrappedPhase,indi[k],indj[k]) = pred/norm + (lambda*cor)/norm;
+                A2D_ELEM(processed,indi[k],indj[k]) = true;
+
+                norm = 0;
+                pred = 0;
+                cor = 0;
+
+                H = A2D_ELEM(qualityMapInt,indi[k],indj[k]);
+                if ( H == 0)
+                    H = 1;
+
+                if ( VEC_ELEM(final,H) ==  maxElem )
+                    VEC_ELEM(final,H) = 1;
+                else
+                    VEC_ELEM(final,H) += 1;
+
+                dMij(hi,H,VEC_ELEM(final,H)) = indi[k];
+                dMij(hj,H,VEC_ELEM(final,H)) = indj[k];
+
+                if ( VEC_ELEM(front,H) ==  0 )
+                    VEC_ELEM(front,H) =  1;
+
+            }
+
+        k = maxElem-1;
+        ind = 0;
+
+        //We obtain the next coordinates to process from the histogram looking for the values in hi, hj
+        //with highest quality value
+        while( (ind == 0) && (k > 0) )
+        {
+            int temp = VEC_ELEM(front,k);
+            ind = temp;
+            if (ind > 0)
+            {
+                i = dMij(hi,k,temp);
+                j = dMij(hj,k,temp);
+
+                if ( temp == VEC_ELEM(final,k))
+                {
+                    VEC_ELEM(front,k) = 0;
+                    VEC_ELEM(final,k) = 0;
+                }
+                else
+                    if ( temp == maxElem)
+                        VEC_ELEM(front,k) = 1;
+                    else
+                        VEC_ELEM(front,k) += 1;
+            }
+
+            k -= 1;
+        }
+
+    }
+
 }
 
 

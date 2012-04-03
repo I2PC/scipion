@@ -65,7 +65,14 @@ public:
     //pattern normalization", Optics Communications, 224, Pages 221-227 (2003)
     void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, int fmin, int fmax, int num);
 
+    //This method obtains the phase direction map from the fringe orientation map solving the sign ambiguity problem that exists in the fringe orientation map.
+    //Once computed the phase direction map the modulating phase can be obtained from the SPTH transform.
+    //REF: Jesús Villa, Ismael De la Rosa, and Gerardo Miramontes, Juan Antonio Quiroga, Phase recovery from a single fringe pattern using an orientational
+    //vector-field-regularized estimator J. Opt. Soc. Am. A Vol. 22, No. 12, (2005)
     void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap);
+
+    //https://ccrma.stanford.edu/~jos/filters/Impulse_Response_Representation.html
+    void unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & unwrappedPhase);
 
 protected:
 

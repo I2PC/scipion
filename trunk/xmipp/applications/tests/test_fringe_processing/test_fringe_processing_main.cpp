@@ -94,19 +94,19 @@ TEST_F( FringeProcessingTests, simulPattern)
 //{
 //    tempImageName.initUniqueName("/tmp/temp_XXXXXX");
 //
-//	FringeProcessing fp;
-//	FileName imageName2, imageName3;
-//	imageName2 = "fringe/test2.txt";
-//	imageName3 = "fringe/originalImag.txt";
+// FringeProcessing fp;
+// FileName imageName2, imageName3;
+// imageName2 = "fringe/test2.txt";
+// imageName3 = "fringe/originalImag.txt";
 //
-//	MultidimArray< std::complex <double> > imProc;
+// MultidimArray< std::complex <double> > imProc;
 //
-//	MultidimArray< double > imProcReal;
-//	MultidimArray< double > imProcImag;
+// MultidimArray< double > imProcReal;
+// MultidimArray< double > imProcImag;
 //
-//	MultidimArray<double> im;
+// MultidimArray<double> im;
 //
-//	int nx = 311;
+// int nx = 311;
 //    int ny = 312;
 //    double noiseLevel = 0.0;
 //    double freq = 20;
@@ -130,13 +130,13 @@ TEST_F( FringeProcessingTests, simulPattern)
 TEST_F( FringeProcessingTests, orMinDer)
 {
 
-	//FileName fpName;
-	//fpName = baseName + "/applications/tests/test_fringe_processing/fp.txt";
+    //FileName fpName;
+    //fpName = baseName + "/applications/tests/test_fringe_processing/fp.txt";
 
-	FringeProcessing fp;
-	MultidimArray<double> im, orMap, orModMap;
+    FringeProcessing fp;
+    MultidimArray<double> im, orMap, orModMap;
 
-	int nx = 311;
+    int nx = 311;
     int ny = 311;
     double noiseLevel = 0.0;
     double freq = 20;
@@ -165,14 +165,14 @@ TEST_F( FringeProcessingTests, orMinDer)
 
 //TEST_F( FringeProcessingTests, normalize)
 //{
-//	FileName fpName, Iname;
-//	fpName = "fringe/fp.txt";
-//	Iname = "fringe/IN.txt";
+// FileName fpName, Iname;
+// fpName = "fringe/fp.txt";
+// Iname = "fringe/IN.txt";
 //
-//	FringeProcessing fp;
-//	MultidimArray<double> im, imN, imNMod;
+// FringeProcessing fp;
+// MultidimArray<double> im, imN, imNMod;
 //
-//	int nx = 311;
+// int nx = 311;
 //    int ny = 311;
 //    double noiseLevel = 0.0;
 //    double freq = 20;
@@ -190,19 +190,19 @@ TEST_F( FringeProcessingTests, orMinDer)
 //
 //    //imN.write(Iname);
 //
-//	ASSERT_TRUE(true);
+// ASSERT_TRUE(true);
 //
 //}
 
 TEST_F( FringeProcessingTests, direction)
 {
-	//FileName ModName = "Mod.txt";
-	//FileName DirName = "Dir.txt";
-	//FileName OrName = "Or.txt";
-	FringeProcessing fp;
-	MultidimArray<double> im, orMap, orModMap, dirMap;
+    //FileName ModName = "Mod.txt";
+    //FileName DirName = "Dir.txt";
+    //FileName OrName = "Or.txt";
+    FringeProcessing fp;
+    MultidimArray<double> im, orMap, orModMap, dirMap;
 
-	int nx = 311;
+    int nx = 311;
     int ny = 311;
     double noiseLevel = 0.0;
     double freq = 20;
@@ -222,18 +222,74 @@ TEST_F( FringeProcessingTests, direction)
     fp.direction(orMap, orModMap, lambda, size, dirMap);
 
     //Comparing with Matlab results
-    ASSERT_TRUE( A2D_ELEM(dirMap,10,10)  - 2.35619);
-    ASSERT_TRUE( A2D_ELEM(dirMap,10,20)  - 2.33116);
-    ASSERT_TRUE( A2D_ELEM(dirMap,20,10)  - 2.38123);
-    ASSERT_TRUE( A2D_ELEM(dirMap,20,20)  - 2.35619);
-    ASSERT_TRUE( A2D_ELEM(dirMap,100,50) - 2.35365);
-    ASSERT_TRUE( A2D_ELEM(dirMap,50,100) - -2.43884);
-    ASSERT_TRUE( A2D_ELEM(dirMap,100,100) - 0.868044);
-    ASSERT_TRUE( A2D_ELEM(dirMap,200,100) - -0.779435);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,10,10)  - 2.35619)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,10,20)  - 2.33116)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,20,10)  - 2.38123)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,20,20)  - 2.35619)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,100,50) - 2.35365)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,50,100) - -2.43884) < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,100,100) - 0.868044) < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,200,100) - -0.779435)< 1e-3);
 
     //orModMap.write(ModName);
     //orMap.write(OrName);
     //dirMap.write(DirName);
+}
+
+TEST_F( FringeProcessingTests, unwrapping)
+{
+    //FileName PName = "P.txt";
+    //FileName uPName = "uP.txt";
+
+    int nx = 311;
+    int ny = 311;
+    double noiseLevel = 0.0;
+
+    FringeProcessing fp;
+    MultidimArray<double> refPhase(nx,ny), wphase, comPhase, Q;
+    wphase.resizeNoCopy(refPhase);
+    Q.resizeNoCopy(refPhase);
+    comPhase.resizeNoCopy(refPhase);
+
+    double iMaxDim2 = 2./std::max(nx,ny);
+    double value = 2*3.14159265;
+
+    //we generate a gaussian phase map
+    refPhase.setXmippOrigin();
+    Q.setXmippOrigin();
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(refPhase)
+    {
+        A2D_ELEM(refPhase,i,j) = (50*std::exp(-0.5*(std::pow(i*iMaxDim2,2)+std::pow(j*iMaxDim2,2))))+rnd_gaus(0,noiseLevel);
+    }
+    //We wrap the phase inside [0 2pi]
+    mod(refPhase,wphase,value);
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(refPhase)
+    {
+        A2D_ELEM(Q,i,j) = (255*std::exp(-0.05*(std::pow(A2D_ELEM(wphase,i,j)-value/2,2)+std::pow(A2D_ELEM(wphase,i,j)-value/2,2))));
+    }
+
+    STARTINGX(Q)=STARTINGY(Q)=0;
+    STARTINGX(wphase)=STARTINGY(wphase)=0;
+
+    double lambda = 0.5;
+    int size = 3;
+
+    fp.unwrapping(wphase, Q, lambda, size, comPhase);
+
+    //Comparing with Matlab results
+    ASSERT_TRUE( (A2D_ELEM(comPhase,10,10)  - -10.5288)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,10,20)  - -9.2939)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,20,10)  - -9.2880)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,20,20)  - -8.2370)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,100,50) -  5.6160)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,50,100) -  5.6176) < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,100,100) - 12.4282) < 1e-3);
+
+    //comPhase.write(uPName);
+    //wphase.write(PName);
+
 }
 
 
