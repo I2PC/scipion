@@ -36,22 +36,16 @@ package xmipp.utils;
  * TableDialogEditDemo.java.
  */
 
-import javax.swing.AbstractCellEditor;
-import javax.swing.table.TableCellEditor;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JColorChooser;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JTable;
-
-import xmipp.viewer.windows.JFrameGallery;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import javax.swing.AbstractCellEditor;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JTable;
+import javax.swing.table.TableCellEditor;
 
 public class ColorEditor extends AbstractCellEditor implements TableCellEditor,
 		ActionListener {
