@@ -1342,6 +1342,15 @@ class ProtocolGUI(BasicGUI):
                 md=MetaData(pickingProt.getFilename("micrographs"))
                 self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTFMODEL)))
 
+    #Select micrograph extension
+    def wizardProjMatchRadius(self,var):
+        from xmipp import SingleImgSize, FileName
+        volumeList = self.getVarValue('ReferenceFileNames')
+        fnVol = FileName(volumeList.split(' ')[0])
+        if fnVol.exists() and fnVol.isImage():
+            (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(fnVol)
+            self.setVarValue("MaskRadius", str(Xdim/2))
+
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
 # The return value of each validator should be an error message string 

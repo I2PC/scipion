@@ -142,7 +142,7 @@ DoMask =True
 """
 DoSphericalMask =True
 
-# {condition}(DoSphericalMask) Radius of spherical mask
+# {condition}(DoSphericalMask){wizard}(wizardProjMatchRadius) Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
 MaskRadius = 64
@@ -384,7 +384,7 @@ ScaleNumberOfSteps ='3'
 """
 ProjMatchingExtra =''
 
-# Save images assigned to each class?f
+# Save images assigned to each class?
 """ If true, save images assigned to each class to a metadata file
     Be aware that for a very fine angular sampling it can be time consuming.
 """
