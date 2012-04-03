@@ -440,6 +440,7 @@ class ProtocolGUI(BasicGUI):
         self.programname = os.path.basename(self.run['source'].replace('.py', ''))
         self.maxLabelWidth = 0
         self.hasVisualizeOptions = False
+        self.master = None
 
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
@@ -889,9 +890,8 @@ class ProtocolGUI(BasicGUI):
                 self.inRunName = runName
             else:
                 if self.run['run_state'] in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED] and not self.visualize_mode:
-                    showError('Save not allowed', 
-                              "This run appears to be <RUNNING> or <LAUNCHED>, so you can't save it",
-                              parent=self.master)
+                    self.showError('Save not allowed', 
+                              "This run appears to be <RUNNING> or <LAUNCHED>, so you can't save it")
                     return False 
                 if not self.visualize_mode:
                     self.run['run_state'] = SqliteDb.RUN_SAVED
@@ -902,9 +902,15 @@ class ProtocolGUI(BasicGUI):
                 
             FlashMessage(self.master, 'Saved successfully.', delay=1)
         except Exception, e:
-            showError("Error saving run parameters", str(e), parent=self.master)
+            self.showError("Error saving run parameters", str(e))
             raise e
         return True
+    
+    def showError(self, title, e):
+        if self.master:
+            showError(title, str(e), parent=self.master)
+        else:
+            print title, str(e)
     
     def validateInput(self):
         errors = []
