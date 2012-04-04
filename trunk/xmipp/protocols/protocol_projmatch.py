@@ -38,8 +38,9 @@ class ProtProjMatch(XmippProtocol):
                        from protocol_projmatch_in_loop import *;' 
                 #Convert directories/files  to absolute path from projdir
     def validate(self):
+        from xmipp import ImgSize, SingleImgSize, XmippError
         errors = []
-        #1 call base class, checks if project exists
+        #1 call base class, checks if project exists # COSS
         super(ProtProjMatch, self).validate()
         
         #2 Check reference and projection size match
@@ -48,18 +49,30 @@ class ProtProjMatch(XmippProtocol):
               'ReferenceFileNames':_ReferenceFileNames
             , 'SelFileName':self.SelFileName
             }
-        from protocol_projmatch_before_loop import checkVolumeProjSize
-        # a!!!
-        #_retval, _error_message = checkVolumeProjSize(None,**_Parameters)
-        #if(not _retval):
-        #    errors.append(_error_message)
+
+        # Check that all volumes have the same size
+        listOfReferences=self.ReferenceFileNames.split(' ')
+        (xdim, ydim, zdim, ndim) = SingleImgSize(listOfReferences[0])
+        for reference in listOfReferences:
+            (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
+            if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
+                errors.append("Reference %s and %s have not the same size" % \
+                               (listOfReferences[0], reference)) 
+
+        # Check that volume and projections have the same size        
+        (xdim2, ydim2, zdim2, ndim2) = ImgSize(self.SelFileName)
+        if (xdim2, ydim2) != (xdim, ydim):
+            errors.append("Volume and reference images have not the same size")
     
-    
+        # Check options compatibility
+        if self.DoAlign2D and self.DoCtfCorrection:
+            errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
+
         # 3 Never allow DoAlign2D and DoCtfCorrection together
         if (int(getComponentFromVector(self.DoAlign2D, 1)) == 1 and self.DoCtfCorrection):
             errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
     
-        #4N outter radius is compulsory
+        #4N outer radius is compulsory
         _OuterRadius = getComponentFromVector(self.OuterRadius, 1)
         _InnerRadius = getComponentFromVector(self.InnerRadius, 1)
         if _OuterRadius <= _InnerRadius:
@@ -550,11 +563,6 @@ class ProtProjMatch(XmippProtocol):
         self.Search5DStep = [-1] + getListFromVector(self.Search5DStep, self.NumberOfIterations)
         self.SymmetryGroup = [-1] + getListFromVector(self.SymmetryGroup, self.NumberOfIterations)
          
-        # Configure dabase
-        ###############self.Db.setVerify(self.Verify,self.ViewVerifyedFiles)
-        ###############self.Db.setParentDefault(XmippProjectDb.lastStep)
-        
-
     def otherActionsToBePerformedBeforeLoop(self):
         print "in otherActionsToBePerformedBeforeLoop"
         _VerifyFiles = []
@@ -570,17 +578,6 @@ class ProtProjMatch(XmippProtocol):
 
         #create dir for iteration 1 (This need to be 0 or 1? ROB FIXME
         #!a _dataBase.insertStep('createDir', path = self.getIterDirName(0))
-    
-        #Check references and projections size match
-        #Is already done in preconditions but I like to
-        #run protocols from command line bypassing the gui
-        _dataBase.insertStep('checkVolumeProjSize',
-                                                         ReferenceFileNames=self.ReferenceFileNames
-                                                       , SelFileName=self.SelFileName)
-    
-        #Check Option compatibility
-        _dataBase.insertStep('checkOptionsCompatibility', DoAlign2D=self.DoAlign2D[1]
-                                                          , DoCtfCorrection=self.DoCtfCorrection)
     
         #7 make CTF groups
         verifyFiles = [self.getFilename('ImageCTFpairs')]

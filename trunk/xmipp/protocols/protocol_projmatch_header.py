@@ -204,7 +204,7 @@ AvailableMemory = 2
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='1 3 2 1'
+AngSamplingRateDeg='7 5 3 2'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -629,17 +629,6 @@ DoCenterVolume = False
 """ This script serves only for GUI-assisted visualization of the results
 """
 AnalysisScript ='visualize_projmatch.py'
-
-#-----------------------------------------------------------------------------
-# {section}{has_question} Debug
-#-----------------------------------------------------------------------------
-# Do debug
-"""Check that some output files are created. 
-"""
-Verify=True
-
-# {expert} show file verification
-ViewVerifyedFiles=True 
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization
