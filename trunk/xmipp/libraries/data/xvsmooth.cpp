@@ -126,7 +126,7 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 	int retval;
 
 	cA = cB = cC = cD = 0;
-	size_t picSmoothSize = ((size_t) dwide) * dhigh * 3;
+	size_t picSmoothSize = ((size_t) dwide) * dhigh;
 	ptrPicSmooth = picSmooth = (byte *) malloc(picSmoothSize);
 	if (!picSmooth)
 		REPORT_ERROR(ERR_MEM_NOTENOUGH,
@@ -200,13 +200,9 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 				cD = picSrc8[cyOff + cx]; /* center pixel */
 
 				/* quick check */
-				if (cA == cB && cB == cC && cC == cD) {
+				if (cA == cB && cB == cC && cC == cD)
 					/* set this pixel to the same color as in pic8 */
 					*ptrPicSmooth++ = cD;
-					*ptrPicSmooth++ = cD;
-					*ptrPicSmooth++ = cD;
-				}
-
 				else {
 					/* compute weighting factors */
 					apx = abs(px);
@@ -218,8 +214,6 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 
 					byte val = (byte) ((pA * cA) / 100 + (pB * cB) / 100
 							+ (pC * cC) / 100 + (pD * cD) / 100);
-					*ptrPicSmooth++ = val;
-					*ptrPicSmooth++ = val;
 					*ptrPicSmooth++ = val;
 				}
 			}
@@ -274,10 +268,7 @@ int SmoothXY(byte *picSmooth, byte *picSrc8, int swide, int shigh, int dwide,
 
 			for (j = 0, paptr = pixarr; j <= swide; j++, paptr++) {
 				if (*paptr != lastpix) { /* write a pixel to pic24 */
-					int val = (pix / linecnt) / pixcnt;
-					*picSmooth++ = val;
-					*picSmooth++ = val;
-					*picSmooth++ = val;
+					*picSmooth++ = (pix / linecnt) / pixcnt;
 					lastpix = *paptr;
 					pix = pixcnt = 0;
 				}
@@ -325,13 +316,12 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 	short *cache;
 	int r2;
 	int *thisline, *nextline, *thisptr, *nextptr, *tmpptr;
-	int i, j, rerr, pwide3;
+	int i, j, rerr;
 	int imax, jmax;
 	int key;
 	long cnt1, cnt2;
 
 	cnt1 = cnt2 = 0;
-	pwide3 = w * 3;
 	imax = h - 1;
 	jmax = w - 1;
 	ep = picSmooth;
@@ -339,8 +329,8 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 	/* attempt to malloc things */
 	picDithered = (byte *) malloc((size_t) w * h);
 	cache = (short *) calloc(2 << 14, sizeof(short));
-	thisline = (int *) malloc(pwide3 * sizeof(int));
-	nextline = (int *) malloc(pwide3 * sizeof(int));
+	thisline = (int *) malloc(w * sizeof(int));
+	nextline = (int *) malloc(w * sizeof(int));
 	if (!cache || !picDithered || !thisline || !nextline)
 		REPORT_ERROR(ERR_MEM_NOTENOUGH, "Cannot allocate memory for smoothing");
 
@@ -348,7 +338,7 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 
 	/* get first line of picture */
 
-	for (j = pwide3, tmpptr = nextline; j; j--, ep++)
+	for (j = w, tmpptr = nextline; j; j--, ep++)
 		*tmpptr++ = (int) *ep;
 
 	for (i = 0; i < h; i++) {
@@ -358,12 +348,12 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 		nextline = tmpptr; /* swap */
 
 		if (i != imax)
-			for (j = pwide3, tmpptr = nextline; j; j--, ep++)
+			for (j = w, tmpptr = nextline; j; j--, ep++)
 				*tmpptr++ = (int) *ep;
 
 		/* dither a line, doing odd-lines right-to-left (serpentine) */
-		thisptr = (i & 1) ? thisline + w * 3 - 3 : thisline;
-		nextptr = (i & 1) ? nextline + w * 3 - 3 : nextline;
+		thisptr = (i & 1) ? thisline + w - 1 : thisline;
+		nextptr = (i & 1) ? nextline + w - 1 : nextline;
 		if (i & 1)
 			np += w - 1;
 
@@ -372,9 +362,9 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 
 			r2 = *thisptr;
 			if (i & 1)
-				thisptr -= 3; /* move left */
+				thisptr -= 1; /* move left */
 			else
-				thisptr += 3; /* move right */
+				thisptr += 1; /* move right */
 
 			if (r2 < 0)
 				r2 = 0;
@@ -419,10 +409,10 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 			}
 
 			if (i & 1) {
-				nextptr -= 3;
+				nextptr -= 1;
 				np--;
 			} else {
-				nextptr += 3;
+				nextptr += 1;
 				np++;
 			}
 		}
