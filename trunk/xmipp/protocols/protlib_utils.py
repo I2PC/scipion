@@ -345,10 +345,16 @@ class ProcessManager():
     def isAlive(self):
         if self.isBatch:
             launch = loadLaunchModule()
-            cmd = launch.QueryCommand + " " + launch.QueryArgsTemplate
-            p = Popen(cmd % self.run, shell=True, stdout=PIPE)
-            os.waitpid(p.pid, 0)
-            return (p.returncode == 0)
+            cmd = launch.QueryCommand + " " + launch.QueryArgsTemplate            
+            from subprocess import call
+            retcode = 1000
+            try:
+                fnull = open(os.devnull, 'w')
+                retcode = call(cmd % self.run, shell=True, stdout=fnull, stderr=fnull)                
+                fnull.close()
+            except OSError, e:
+                raise Exception("Failed %s, command: %s" % (e, cmd))
+            return (retcode == 0)
         else:
             childs = self.getProcessGroup()
             return len(childs) > 0

@@ -420,10 +420,12 @@ class XmippProjectGUI():
                 stateStr = SqliteDb.StateNames[state]
                 if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
                     stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
-                    if not state in [SqliteDb.RUN_FAILED, SqliteDb.RUN_ABORTED]:
+                    if not state in [SqliteDb.RUN_ABORTED]:
                         if checkDead and not ProcessManager(run).isAlive():
                                 self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
                                 stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
+                        else: 
+                            self.project.projectDb.updateRunState(SqliteDb.RUN_STARTED, run['run_id'])
                 #if state == SqliteDb.RUN_STARTED:
                 tree.insert('', 'end', text = '  ' +  getExtendedRunName(run), 
                             image=self.getImage(state),
