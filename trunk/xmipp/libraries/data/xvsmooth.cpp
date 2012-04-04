@@ -116,7 +116,7 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 	byte *picSmooth, *ptrPicSmooth;
 	int *cxtab, *pxtab;
 	size_t y1Off, cyOff;
-	size_t ex, ey, cx, cy, px, py, apx, apy, x1, y1;
+	size_t ex, ey, cx, cy, px, py, apx, apy, apx_100, apy_100, x1, y1;
 	size_t cA, cB, cC, cD;
 	size_t pA, pB, pC, pD;
 	int retval;
@@ -168,6 +168,8 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 				if (y1 > shigh - 1)
 					y1 = shigh - 1;
 			}
+			apy = abs(py);
+			apy_100 = 100 - apy;
 
 			cyOff = (size_t) cy * swide; /* current line */
 			y1Off = (size_t) y1 * swide; /* up or down one line, depending */
@@ -202,14 +204,13 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 				else {
 					/* compute weighting factors */
 					apx = abs(px);
-					apy = abs(py);
-					pA = (apx * apy) / 100;
-					pB = (apy * (100 - apx)) / 100;
-					pC = (apx * (100 - apy)) / 100;
-					pD = 100 - (pA + pB + pC);
+					apx_100 = 100 - apx;
+					pA = apx * apy;
+					pB = apy * apx_100;
+					pC = apx * apy_100;
+					pD = apx_100*apy_100;
 
-					byte val = (byte) ((pA * cA) / 100 + (pB * cB) / 100
-							+ (pC * cC) / 100 + (pD * cD) / 100);
+					byte val = (byte) (((pA * cA) + (pB * cB) + (pC * cC) + (pD * cD)) / 10000);
 					*ptrPicSmooth++ = val;
 				}
 			}
@@ -367,9 +368,12 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 			if (r2 > 255)
 				r2 = 255;
 			key = ((r2 & 0xf8) << 6) | ((r2 & 0xf8) << 1) | (r2 >> 4);
-			if (key >= (2 << 14))
+			/*
+			const int maxKey=2 << 14;
+			if (key >= maxKey)
 				REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
 						"overflow in DoColorDither");
+			*/
 
 			if (cache[key]) {
 				*np = (byte) (cache[key] - 1);
