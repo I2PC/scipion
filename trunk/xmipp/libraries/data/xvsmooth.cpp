@@ -79,7 +79,7 @@ typedef unsigned char byte;
 #include <stdio.h>
 #include <string.h>
 
-byte *Smooth24(byte *pic824, int is24, int swide, int shigh,
+byte *Smooth24(byte *pic824, int swide, int shigh,
                int dwide, int dhigh, byte *rmap, byte *gmap, byte *bmap);
 byte *DoColorDither(byte *pic24, byte *pic8, int w, int h,
                     byte *rmap, byte *gmap, byte *bmap,
@@ -113,7 +113,7 @@ byte *SmoothResize(byte *srcpic8, int swide, int shigh,
 
     byte *pic24, *pic8;
 
-    pic24 = Smooth24(srcpic8, 0, swide, shigh, dwide, dhigh, rmap, gmap, bmap);
+    pic24 = Smooth24(srcpic8, swide, shigh, dwide, dhigh, rmap, gmap, bmap);
     if (pic24)
     {
         pic8 = DoColorDither(pic24, NULL, dwide, dhigh, rmap, gmap, bmap,
@@ -128,7 +128,7 @@ byte *SmoothResize(byte *srcpic8, int swide, int shigh,
 
 
 /***************************************************/
-byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
+byte *Smooth24(byte *pic824, int swide, int shigh, int dwide,
                int dhigh, byte *rmap, byte *gmap, byte *bmap)
 {
     /* does a SMOOTH resize from pic824 (which is either a swide*shigh, 8-bit
@@ -144,7 +144,7 @@ byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
     size_t   ex, ey, cx, cy, px, py, apx, apy, x1, y1;
     size_t   cA, cB, cC, cD;
     size_t   pA, pB, pC, pD;
-    int   retval, bperpix;
+    int   retval;
 
     cA = cB = cC = cD = 0;
     pp = pic24 = (byte *) malloc(((size_t)dwide) * dhigh * 3);
@@ -154,19 +154,17 @@ byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
         return pic24;
     }
 
-    bperpix = (is24) ? 3 : 1;
-
     /* decide which smoothing routine to use based on type of expansion */
     if (dwide <  swide && dhigh <  shigh)
-        retval = SmoothXY(pic24, pic824, is24, swide, shigh, dwide, dhigh,
+        retval = SmoothXY(pic24, pic824, 0, swide, shigh, dwide, dhigh,
                           rmap, gmap, bmap);
 
     else if (dwide <  swide && dhigh >= shigh)
-        retval = SmoothX(pic24, pic824, is24, swide, shigh, dwide, dhigh,
+        retval = SmoothX(pic24, pic824, 0, swide, shigh, dwide, dhigh,
                          rmap, gmap, bmap);
 
     else if (dwide >= swide && dhigh <  shigh)
-        retval = SmoothY(pic24, pic824, is24, swide, shigh, dwide, dhigh,
+        retval = SmoothY(pic24, pic824, 0, swide, shigh, dwide, dhigh,
                          rmap, gmap, bmap);
 
     else
@@ -219,8 +217,8 @@ byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
                 if (y1 > shigh - 1) y1 = shigh - 1;
             }
 
-            cyOff = (size_t) cy * swide * bperpix;    /* current line */
-            y1Off = (size_t) y1 * swide * bperpix;    /* up or down one line, depending */
+            cyOff = (size_t) cy * swide ;    /* current line */
+            y1Off = (size_t) y1 * swide ;    /* up or down one line, depending */
 
             /*      if ((ey&15) == 0) WaitCursor(); */
 
@@ -242,38 +240,13 @@ byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
                     if (x1 > swide - 1) x1 = swide - 1;
                 }
 
-                if (is24)
-                {
-                    pptr = pic824 + y1Off + x1 * bperpix;   /* corner pixel */
-                    rA = *pptr++;
-                    gA = *pptr++;
-                    bA = *pptr++;
-
-                    pptr = pic824 + y1Off + cx * bperpix;   /* up/down center pixel */
-                    rB = *pptr++;
-                    gB = *pptr++;
-                    bB = *pptr++;
-
-                    pptr = pic824 + cyOff + x1 * bperpix;   /* left/right center pixel */
-                    rC = *pptr++;
-                    gC = *pptr++;
-                    bC = *pptr++;
-
-                    pptr = pic824 + cyOff + cx * bperpix;   /* center pixel */
-                    rD = *pptr++;
-                    gD = *pptr++;
-                    bD = *pptr++;
-                }
-                else
-                {  /* 8-bit picture */
-                    cA = pic824[y1Off + x1];   /* corner pixel */
-                    cB = pic824[y1Off + cx];   /* up/down center pixel */
-                    cC = pic824[cyOff + x1];   /* left/right center pixel */
-                    cD = pic824[cyOff + cx];   /* center pixel */
-                }
+				cA = pic824[y1Off + x1];   /* corner pixel */
+				cB = pic824[y1Off + cx];   /* up/down center pixel */
+				cC = pic824[cyOff + x1];   /* left/right center pixel */
+				cD = pic824[cyOff + cx];   /* center pixel */
 
                 /* quick check */
-                if (!is24 && cA == cB && cB == cC && cC == cD)
+                if (cA == cB && cB == cC && cC == cD)
                 {
                     /* set this pixel to the same color as in pic8 */
                     *pp++ = rmap[cD];
@@ -291,28 +264,21 @@ byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
                     pC = (apx * (100 - apy)) / 100;
                     pD = 100 - (pA + pB + pC);
 
-                    if (is24)
-                    {
-                        *pp++ = (pA * rA) / 100 + (pB * rB) / 100 +
-                                (pC * rC) / 100 + (pD * rD) / 100;
+                    int val=(pA * cA) / 100 + (pB * cB) / 100 +
+							(pC * cC) / 100 + (pD * cD) / 100;
+                    /*
+					*pp++ = (pA * rmap[cA]) / 100 + (pB * rmap[cB]) / 100 +
+							(pC * rmap[cC]) / 100 + (pD * rmap[cD]) / 100;
 
-                        *pp++ = (pA * gA) / 100 + (pB * gB) / 100 +
-                                (pC * gC) / 100 + (pD * gD) / 100;
+					*pp++ = (pA * gmap[cA]) / 100 + (pB * gmap[cB]) / 100 +
+							(pC * gmap[cC]) / 100 + (pD * gmap[cD]) / 100;
 
-                        *pp++ = (pA * bA) / 100 + (pB * bB) / 100 +
-                                (pC * bC) / 100 + (pD * bD) / 100;
-                    }
-                    else
-                    {  /* 8-bit pic */
-                        *pp++ = (pA * rmap[cA]) / 100 + (pB * rmap[cB]) / 100 +
-                                (pC * rmap[cC]) / 100 + (pD * rmap[cD]) / 100;
-
-                        *pp++ = (pA * gmap[cA]) / 100 + (pB * gmap[cB]) / 100 +
-                                (pC * gmap[cC]) / 100 + (pD * gmap[cD]) / 100;
-
-                        *pp++ = (pA * bmap[cA]) / 100 + (pB * bmap[cB]) / 100 +
-                                (pC * bmap[cC]) / 100 + (pD * bmap[cD]) / 100;
-                    }
+					*pp++ = (pA * bmap[cA]) / 100 + (pB * bmap[cB]) / 100 +
+							(pC * bmap[cC]) / 100 + (pD * bmap[cD]) / 100;                    }
+					*/
+                    *pp++=val;
+                    *pp++=val;
+                    *pp++=val;
                 }
             }
         }
