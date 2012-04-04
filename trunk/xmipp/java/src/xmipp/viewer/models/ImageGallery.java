@@ -418,7 +418,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		for (int i = 0; i < n; ++i)
 			if (data.getItemClassInfo(i) == cli)
 				data.setItemClass(i, null);
-		data.classesArray.remove(classNumber);
+		data.removeClass(classNumber);		
 		fireTableDataChanged();
 	}
 

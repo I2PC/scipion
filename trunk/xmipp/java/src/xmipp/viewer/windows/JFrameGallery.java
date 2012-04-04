@@ -596,6 +596,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI, WindowListener {
 	}
 
 	private void saveAs() {
+		if (dlgSave == null)
+			dlgSave = new SaveJDialog(this);
 		dlgSave.setMdFilename(data.getMdFilename());
 		if (dlgSave.showDialog()) {
 			try {

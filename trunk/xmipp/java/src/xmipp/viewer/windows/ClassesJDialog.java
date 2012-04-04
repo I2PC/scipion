@@ -63,7 +63,7 @@ public class ClassesJDialog extends XmippDialog {
 	private JButton btnAdd, btnDelete, btnSave, btnOpen;
 	private ClassesTableModel model;
 	// This will be used for check for results from the dialog
-	private ArrayList<ClassInfo> classes;
+	private ArrayList<ClassInfo> classes;	
 	GridBagConstraints gbc = new GridBagConstraints();
 	ImageGallery gallery;
 	JPanel panelButtons;
@@ -299,7 +299,7 @@ public class ClassesJDialog extends XmippDialog {
 		
 		public void addNewRow(){
 			int newPos = classes.size();
-			classes.add(new ClassInfo("NewClass", getNextColor()));
+			gallery.data.addClass(new ClassInfo("NewClass", getNextColor())));
 			fireTableRowsInserted(newPos, newPos);
 		}
 		

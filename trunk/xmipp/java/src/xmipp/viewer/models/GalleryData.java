@@ -53,15 +53,9 @@ public class GalleryData {
 	public String filename;
 	public int resliceView;
 
-	// public boolean galleryMode = true; // if false, is table model
-	// public boolean volumeMode = false;
 	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
 	};
-
-	// public static final int Mode.GALLERYGALLERY_MD = 1;
-	// public static final int MODE_GALLERY_VOL = 2;
-	// public static final int Mode.GALLERY_MD = 3;
 
 	// define min and max render dimensions
 	public static int MIN_SIZE = 16;
@@ -89,6 +83,9 @@ public class GalleryData {
 	public ArrayList<ClassInfo> classesArray;
 	// ClassInfo reference for each element
 	public ClassInfo[] classes;
+	//Flags to check if md or classes has changed 
+	public boolean mdHasChanged, classesHasChanged;
+	
 
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
@@ -148,6 +145,8 @@ public class GalleryData {
 
 	/** Load contents from a metadata already read */
 	public void loadMd() throws Exception {
+		mdHasChanged = false;
+		classesHasChanged = false;
 		ids = md.findObjects();
 		loadLabels();
 		numberOfVols = 0;
@@ -477,6 +476,7 @@ public class GalleryData {
 
 	/** Set the class of an element */
 	public void setItemClass(int index, ClassInfo cli) {
+		classesHasChanged = true;
 		classes[index] = cli;
 	}
 
@@ -618,5 +618,15 @@ public class GalleryData {
 			if (selection[i])
 				md.removeObject(ids[i]);
 		}
+	}
+
+	public void addClass(ClassInfo ci) {
+		classesArray.add(ci);
+		classesHasChanged = true;		
+	}
+
+	public void removeClass(int classNumber) {
+		classesArray.remove(classNumber);
+		classesHasChanged = true;	
 	}
 }// class GalleryData
