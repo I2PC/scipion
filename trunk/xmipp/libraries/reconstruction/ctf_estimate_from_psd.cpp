@@ -1050,9 +1050,9 @@ double CTF_fitness(double *p, void *)
         // If there is an initial model, the true solution
         // cannot be too far
         if (fabs(global_prm->initial_ctfmodel.DeltafU -
-                 global_ctfmodel.DeltafU) > 10000 ||
+                 global_ctfmodel.DeltafU) > global_prm->defocus_range ||
             fabs(global_prm->initial_ctfmodel.DeltafV -
-                 global_ctfmodel.DeltafV) > 10000)
+                 global_ctfmodel.DeltafV) > global_prm->defocus_range)
         {
             if (global_show >= 2)
                 std::cout << "Too far from hint\n";
