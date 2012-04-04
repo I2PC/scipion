@@ -351,10 +351,20 @@ TEST_F ( ImageGenericTest, smoother)
     img1.read(auxFn);
     img1.convert2Datatype(DT_UChar);
     img2.setDatatype(DT_UChar);
-    img2().resize(img1(),false);
+    int Xdim,Ydim;
+    img1().getDimensions(Xdim,Ydim);
+
+    img2().resize(1,1,Ydim,Xdim,false);
     downsampleSmooth(img1,img2);
-    img1.write("/home/airen/test0.xmp");
-    img2.write("/home/airen/testF.xmp");
+    ImageGeneric imgCorrect;
+    imgCorrect.read("image/BPV_1387_dithered.mrc");
+    EXPECT_EQ(imgCorrect, img2) << "Smoothing";
+
+    img2().resize(1,1,Ydim/6,Xdim/6,false);
+    downsampleSmooth(img1,img2);
+    imgCorrect.read("image/BPV_1387_dithered_downsampled.mrc");
+    EXPECT_EQ(imgCorrect, img2) << "Smoothing downsampled";
+
     XMIPP_CATCH
 }
 
