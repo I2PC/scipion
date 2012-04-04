@@ -267,13 +267,13 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh)
 }
 
 /***************************************************/
-int SmoothXY(byte *pic24, byte *pic824,
+int SmoothXY(byte *picSmooth, byte *picSrc8,
              int swide, int shigh, int dwide, int dhigh)
 {
     byte *cptr;
     int  i, j;
-    int  *lbufR, *lbufG, *lbufB;
-    int  pixR, pixG, pixB;
+    int  *lbuf;
+    int  pix;
     int  lastline, thisline, lastpix, linecnt, pixcnt;
     int  *pixarr, *paptr;
 
@@ -284,18 +284,16 @@ int SmoothXY(byte *pic24, byte *pic824,
        axes) */
 
     /* malloc some arrays */
-    lbufR = (int *) calloc(swide, sizeof(int));
-    lbufG = (int *) calloc(swide, sizeof(int));
-    lbufB = (int *) calloc(swide, sizeof(int));
+    lbuf = (int *) calloc(swide, sizeof(int));
     pixarr = (int *) calloc(swide + 1, sizeof(int));
-    if (!lbufR || !lbufG || !lbufB || !pixarr)
+    if (!lbuf || !pixarr)
     	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Cannot allocate memory for smoothing");
 
     for (j = 0; j <= swide; j++)
         pixarr[j] = (j * dwide + (15 * swide) / 16) / swide;
 
-    lastline = linecnt = pixR = pixG = pixB = 0;
-    cptr = pic824;
+    lastline = linecnt = pix = 0;
+    cptr = picSrc8;
 
     for (i = 0; i <= shigh; i++)
     {
@@ -305,51 +303,42 @@ int SmoothXY(byte *pic24, byte *pic824,
 
         if ((thisline != lastline))
         {      /* copy a line to pic24 */
-            pixR = pixG = pixB = pixcnt = lastpix = 0;
+            pix = pixcnt = lastpix = 0;
 
             for (j = 0, paptr = pixarr; j <= swide; j++, paptr++)
             {
                 if (*paptr != lastpix)
                 {                 /* write a pixel to pic24 */
-                    *pic24++ = (pixR / linecnt) / pixcnt;
-                    *pic24++ = (pixG / linecnt) / pixcnt;
-                    *pic24++ = (pixB / linecnt) / pixcnt;
+                	int val=(pix / linecnt) / pixcnt;
+                    *picSmooth++ = val;
+                    *picSmooth++ = val;
+                    *picSmooth++ = val;
                     lastpix = *paptr;
-                    pixR = pixG = pixB = pixcnt = 0;
+                    pix = pixcnt = 0;
                 }
 
                 if (j < swide)
                 {
-                    pixR += lbufR[j];
-                    pixG += lbufG[j];
-                    pixB += lbufB[j];
+                    pix += lbuf[j];
                     pixcnt++;
                 }
             }
 
             lastline = thisline;
-            xvbzero((char *) lbufR, swide * sizeof(int));  /* clear out line bufs */
-            xvbzero((char *) lbufG, swide * sizeof(int));
-            xvbzero((char *) lbufB, swide * sizeof(int));
+            xvbzero((char *) lbuf, swide * sizeof(int));  /* clear out line bufs */
             linecnt = 0;
         }
 
         if (i < shigh)
         {
             for (j = 0; j < swide; j++, cptr++)
-            {
-                lbufR[j] += *cptr;
-                lbufG[j] += *cptr;
-                lbufB[j] += *cptr;
-            }
+                lbuf[j] += *cptr;
 
             linecnt++;
         }
     }
 
-    free(lbufR);
-    free(lbufG);
-    free(lbufB);
+    free(lbuf);
     free(pixarr);
     return 0;
 }
