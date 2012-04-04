@@ -370,11 +370,11 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 		for (j = 0; j < w; j++) {
 			int k, d, mind, closest;
 
-			r2 = *thisptr++;
-			thisptr++;
-			thisptr++;
+			r2 = *thisptr;
 			if (i & 1)
-				thisptr -= 6; /* move left */
+				thisptr -= 3; /* move left */
+			else
+				thisptr += 3; /* move right */
 
 			if (r2 < 0)
 				r2 = 0;
@@ -395,7 +395,7 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 
 				mind = 10000;
 				for (k = closest = 0; k < 256 && mind > 7; k++) {
-					d = 3 * abs(r2 - k);
+					d = 3*abs(r2 - k);
 					if (d < mind) {
 						mind = d;
 						closest = k;
