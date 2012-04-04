@@ -79,8 +79,6 @@ typedef unsigned char byte;
 #include <stdio.h>
 #include <string.h>
 
-#include "xmipp_image_generic.h"
-
 byte *Smooth24(byte *pic824, int is24, int swide, int shigh,
                int dwide, int dhigh, byte *rmap, byte *gmap, byte *bmap);
 byte *DoColorDither(byte *pic24, byte *pic8, int w, int h,
@@ -99,7 +97,6 @@ int SmoothXY(byte *, byte *, int, int, int, int, int,
 int  SmoothX(), SmoothY(), SmoothXY();
 #endif
 
-
 #define xvbzero(s,l) memset(s, 0, l)
 /***************************************************/
 byte *SmoothResize(byte *srcpic8, int swide, int shigh,
@@ -117,14 +114,6 @@ byte *SmoothResize(byte *srcpic8, int swide, int shigh,
     byte *pic24, *pic8;
 
     pic24 = Smooth24(srcpic8, 0, swide, shigh, dwide, dhigh, rmap, gmap, bmap);
-    ImageGeneric img2;
-    img2.setDatatype(DT_UChar);
-    img2().resize(dwide,dhigh,1,1,false);
-    unsigned char *outputImage;
-    img2().getArrayPointer(outputImage);
-    memcpy(outputImage,pic24,((size_t)dwide)*dhigh*3);
-    img2.write("/home/airen/testXV0.xmp");
-
     if (pic24)
     {
         pic8 = DoColorDither(pic24, NULL, dwide, dhigh, rmap, gmap, bmap,
@@ -151,14 +140,14 @@ byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
 
     byte *pic24, *pp;
     int  *cxtab, *pxtab;
-    int   y1Off, cyOff;
-    int   ex, ey, cx, cy, px, py, apx, apy, x1, y1;
-    int   cA, cB, cC, cD;
-    int   pA, pB, pC, pD;
+    size_t   y1Off, cyOff;
+    size_t   ex, ey, cx, cy, px, py, apx, apy, x1, y1;
+    size_t   cA, cB, cC, cD;
+    size_t   pA, pB, pC, pD;
     int   retval, bperpix;
 
     cA = cB = cC = cD = 0;
-    pp = pic24 = (byte *) malloc(dwide * dhigh * 3);
+    pp = pic24 = (byte *) malloc(((size_t)dwide) * dhigh * 3);
     if (!pic24)
     {
         fprintf(stderr, "unable to malloc pic24 in 'Smooth24()'\n");
@@ -230,8 +219,8 @@ byte *Smooth24(byte *pic824, int is24, int swide, int shigh, int dwide,
                 if (y1 > shigh - 1) y1 = shigh - 1;
             }
 
-            cyOff = cy * swide * bperpix;    /* current line */
-            y1Off = y1 * swide * bperpix;    /* up or down one line, depending */
+            cyOff = (size_t) cy * swide * bperpix;    /* current line */
+            y1Off = (size_t) y1 * swide * bperpix;    /* up or down one line, depending */
 
             /*      if ((ey&15) == 0) WaitCursor(); */
 
@@ -924,165 +913,6 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
     free(thisline);
     free(nextline);
     free(cache);
-
-    return newpic;
-}
-
-/********************************************/
-byte *Do332ColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
-                       byte *gmap, byte *bmap, byte *rdisp, byte *gdisp, byte *bdisp, int maplen)
-{
-    /* some sort of color dither optimized for the 332 std cmap */
-
-    /* takes a 24 bit picture, of size w*h, dithers with the colors in
-       rdisp, gdisp, bdisp (which have already been allocated),
-       and generates an 8-bit w*h image, which it returns.  
-       ignores input value 'pic8'
-       returns NULL on error 
-
-       note: the rdisp,gdisp,bdisp arrays should be the 'displayed' colors,
-       not the 'desired' colors
-
-       if pic24 is NULL, uses the passed-in pic8 (an 8-bit image) as
-       the source, and the rmap,gmap,bmap arrays as the desired colors */
-
-    byte *np, *ep, *newpic;
-    int r2, g2, b2;
-    int *thisline, *nextline, *thisptr, *nextptr, *tmpptr;
-    int  i, j, rerr, gerr, berr, pwide3;
-    int  imax, jmax;
-    long cnt1, cnt2;
-
-    cnt1 = cnt2 = 0;
-    pwide3 = w * 3;
-    imax = h - 1;
-    jmax = w - 1;
-
-    /* attempt to malloc things */
-    newpic = (byte *) malloc(w * h);
-    thisline = (int *) malloc(pwide3 * sizeof(int));
-    nextline = (int *) malloc(pwide3 * sizeof(int));
-    if (!newpic || !thisline || !nextline)
-    {
-        if (newpic)   free(newpic);
-        if (thisline) free(thisline);
-        if (nextline) free(nextline);
-
-        return (byte *) NULL;
-    }
-
-    np = newpic;
-    ep = (pic24) ? pic24 : pic8;
-
-
-    /* get first line of picture */
-
-    if (pic24)
-    {
-        for (j = pwide3, tmpptr = nextline; j; j--, ep++) *tmpptr++ = (int) * ep;
-    }
-    else
-    {
-        for (j = w, tmpptr = nextline; j; j--, ep++)
-        {
-            *tmpptr++ = (int) rmap[*ep];
-            *tmpptr++ = (int) gmap[*ep];
-            *tmpptr++ = (int) bmap[*ep];
-        }
-    }
-
-
-    for (i = 0; i < h; i++)
-    {
-        np = newpic + i * w;
-        /*    if ((i&15) == 0) WaitCursor();*/
-
-        tmpptr = thisline;
-        thisline = nextline;
-        nextline = tmpptr;   /* swap */
-
-        if (i != imax)
-        {  /* get next line */
-            if (!pic24)
-                for (j = w, tmpptr = nextline; j; j--, ep++)
-                {
-                    *tmpptr++ = (int) rmap[*ep];
-                    *tmpptr++ = (int) gmap[*ep];
-                    *tmpptr++ = (int) bmap[*ep];
-                }
-            else
-                for (j = pwide3, tmpptr = nextline; j; j--, ep++) *tmpptr++ = (int) * ep;
-        }
-
-
-        /* dither a line, doing odd-lines right-to-left (serpentine) */
-        thisptr = (i & 1) ? thisline + w * 3 - 3 : thisline;
-        nextptr = (i & 1) ? nextline + w * 3 - 3 : nextline;
-        if (i&1) np += w - 1;
-
-
-        for (j = 0; j < w; j++)
-        {
-            int k, d, mind, closest, rb, gb, bb;
-
-            r2 = *thisptr++;
-            g2 = *thisptr++;
-            b2 = *thisptr++;
-            if (i&1) thisptr -= 6;  /* move left */
-
-            rb = (r2 + 0x10);    /* round top 3 bits */
-            RANGE(rb, 0, 255);
-            rb = rb & 0xe0;
-
-            gb = (g2 + 0x10);    /* round 3 bits */
-            RANGE(gb, 0, 255);
-            gb = gb & 0xe0;
-
-            bb = (b2 + 0x20);    /* round 2 bits */
-            RANGE(bb, 0, 255);
-            bb = bb & 0xc0;
-
-
-            *np = rb | (gb >> 3) | (bb >> 6);
-
-            /* propogate the error */
-            rerr = r2 - rdisp[*np];
-            gerr = g2 - gdisp[*np];
-            berr = b2 - bdisp[*np];
-
-            if (j != jmax)
-            {  /* adjust LEFT/RIGHT pixel */
-                thisptr[0] += (rerr / 2);
-                rerr -= (rerr / 2);
-                thisptr[1] += (gerr / 2);
-                gerr -= (gerr / 2);
-                thisptr[2] += (berr / 2);
-                berr -= (berr / 2);
-            }
-
-            if (i != imax)
-            { /* adjust BOTTOM pixel */
-                nextptr[0] += rerr;    /* possibly all err if we're at l/r edge */
-                nextptr[1] += gerr;
-                nextptr[2] += berr;
-            }
-
-            if (i&1)
-            {
-                nextptr -= 3;
-                np--;
-            }
-            else
-            {
-                nextptr += 3;
-                np++;
-            }
-        }
-    }
-
-
-    free(thisline);
-    free(nextline);
 
     return newpic;
 }
