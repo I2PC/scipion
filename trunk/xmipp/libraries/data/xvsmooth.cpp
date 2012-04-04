@@ -628,105 +628,19 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h)
             int k, d, mind, closest;
 
             r2 = *thisptr++;
-            g2 = *thisptr++;
-            b2 = *thisptr++;
+            thisptr++;
+            thisptr++;
             if (i&1)
                 thisptr -= 6;  /* move left */
 
-            /* map r2,g2,b2 components (could be outside 0..255 range)
-            into 0..255 range */
+            if (r2 < 0)
+            	r2=0;
 
-            if (r2 < 0 || g2 < 0 || b2 < 0)
-            {   /* are there any negatives in RGB? */
-                if (r2 < g2)
-                {
-                    if (r2 < b2)
-                        k = 0;
-                    else
-                        k = 2;
-                }
-                else
-                {
-                    if (g2 < b2)
-                        k = 1;
-                    else
-                        k = 2;
-                }
-
-                switch (k)
-                {
-                case 0:
-                    g2 -= r2;
-                    b2 -= r2;
-                    d = (abs(r2) * 3) / 2;    /* RED */
-                    r2 = 0;
-                    g2 = (g2 > d) ? g2 - d : 0;
-                    b2 = (b2 > d) ? b2 - d : 0;
-                    break;
-
-                case 1:
-                    r2 -= g2;
-                    b2 -= g2;
-                    d = (abs(g2) * 3) / 2;    /* GREEN */
-                    r2 = (r2 > d) ? r2 - d : 0;
-                    g2 = 0;
-                    b2 = (b2 > d) ? b2 - d : 0;
-                    break;
-
-                case 2:
-                    r2 -= b2;
-                    g2 -= b2;
-                    d = (abs(b2) * 3) / 2;    /* BLUE */
-                    r2 = (r2 > d) ? r2 - d : 0;
-                    g2 = (g2 > d) ? g2 - d : 0;
-                    b2 = 0;
-                    break;
-                }
-            }
-
-            if (r2 > 255 || g2 > 255 || b2 > 255)
-            {   /* any overflows in RGB? */
-                if (r2 > g2)
-                {
-                    if (r2 > b2)
-                        k = 0;
-                    else
-                        k = 2;
-                }
-                else
-                {
-                    if (g2 > b2)
-                        k = 1;
-                    else
-                        k = 2;
-                }
-
-                switch (k)
-                {
-                case 0:
-                    g2 = (g2 * 255) / r2;
-                    b2 = (b2 * 255) / r2;
-                    r2 = 255;
-                    break;
-                case 1:
-                    r2 = (r2 * 255) / g2;
-                    b2 = (b2 * 255) / g2;
-                    g2 = 255;
-                    break;
-                case 2:
-                    r2 = (r2 * 255) / b2;
-                    g2 = (g2 * 255) / b2;
-                    b2 = 255;
-                    break;
-                }
-            }
-
-            key = ((r2 & 0xf8) << 6) | ((g2 & 0xf8) << 1) | (b2 >> 4);
+            if (r2 > 255)
+            	r2=255;
+            key = ((r2 & 0xf8) << 6) | ((r2 & 0xf8) << 1) | (r2 >> 4);
             if (key >= (2 << 14))
-            {
-                fprintf(stderr, "'key' overflow in DoColorDither()");
-                exit(-1);
-            }
+            	REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"overflow in DoColorDither");
 
             if (cache[key])
             {
@@ -741,9 +655,7 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h)
                 mind = 10000;
                 for (k = closest = 0; k < 256 && mind > 7; k++)
                 {
-                    d = abs(r2 - k)
-                        + abs(g2 - k)
-                        + abs(b2 - k);
+                    d = 3*abs(r2 - k);
                     if (d < mind)
                     {
                         mind = d;
@@ -755,26 +667,23 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h)
             }
 
 
-            /* propogate the error */
+            /* propagate the error */
             rerr = r2 - *np;
-            gerr = g2 - *np;
-            berr = b2 - *np;
 
             if (j != jmax)
             {  /* adjust LEFT/RIGHT pixel */
-                thisptr[0] += (rerr / 2);
-                rerr -= (rerr / 2);
-                thisptr[1] += (gerr / 2);
-                gerr -= (gerr / 2);
-                thisptr[2] += (berr / 2);
-                berr -= (berr / 2);
+            	int rerr_2=rerr/2;
+                thisptr[0] += rerr_2;
+                thisptr[1] += rerr_2;
+                thisptr[2] += rerr_2;
+                rerr -= rerr_2;
             }
 
             if (i != imax)
             { /* adjust BOTTOM pixel */
                 nextptr[0] += rerr;    /* possibly all err if we're at l/r edge */
-                nextptr[1] += gerr;
-                nextptr[2] += berr;
+                nextptr[1] += rerr;
+                nextptr[2] += rerr;
             }
 
             if (i&1)
@@ -789,7 +698,6 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h)
             }
         }
     }
-
 
     free(thisline);
     free(nextline);
