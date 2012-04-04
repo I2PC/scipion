@@ -67,7 +67,6 @@
  *    EMail:    bradley@cis.upenn.edu
  */
 
-
 /* CO: --------------------------------------------------------------------- */
 /* RANGE forces a to be in the range b..c (inclusive) */
 #define RANGE(a,b,c) { if (a < b) a = b;  if (a > c) a = c; }
@@ -91,423 +90,351 @@ int SmoothXY();
 
 #define xvbzero(s,l) memset(s, 0, l)
 /***************************************************/
-byte *SmoothResize(byte *picSrc8, int swide, int shigh,
-                   int dwide, int dhigh)
-{
-    /* generic interface to Smooth and ColorDither code.
-       given an 8-bit-per, swide * shigh image with colormap rmap,gmap,bmap,
-       will generate a new 8-bit-per, dwide * dhigh image, which is dithered
-       using colors found in rdmap, gdmap, bdmap arrays */
+byte *SmoothResize(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
+	/* generic interface to Smooth and ColorDither code.
+	 given an 8-bit-per, swide * shigh image with colormap rmap,gmap,bmap,
+	 will generate a new 8-bit-per, dwide * dhigh image, which is dithered
+	 using colors found in rdmap, gdmap, bdmap arrays */
 
-    /* returns ptr to a dwide*dhigh array of bytes, or NULL on failure */
-    byte * picSmooth = Smooth(picSrc8, swide, shigh, dwide, dhigh);
-    if (picSmooth)
-    {
-    	byte * picDithered = NULL;
-    	DoColorDither(picSmooth, picDithered, dwide, dhigh);
-        free(picSmooth);
-        return picDithered;
-    }
+	/* returns ptr to a dwide*dhigh array of bytes, or NULL on failure */
+	byte * picSmooth = Smooth(picSrc8, swide, shigh, dwide, dhigh);
+	if (picSmooth) {
+		byte * picDithered = NULL;
+		DoColorDither(picSmooth, picDithered, dwide, dhigh);
+		free(picSmooth);
+		return picDithered;
+	}
 
-    return (byte *) NULL;
+	return (byte *) NULL;
 }
 
 /***************************************************/
-byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh)
-{
-    /* does a SMOOTH resize from pic824 (which is either a swide*shigh, 8-bit
-       pic, with colormap rmap,gmap,bmap OR a swide*shigh, 24-bit image, based
-       on whether 'is24' is set) into a dwide * dhigh 24-bit image
+byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
+	/* does a SMOOTH resize from pic824 (which is either a swide*shigh, 8-bit
+	 pic, with colormap rmap,gmap,bmap OR a swide*shigh, 24-bit image, based
+	 on whether 'is24' is set) into a dwide * dhigh 24-bit image
 
-       returns a dwide*dhigh 24bit image, or NULL on failure (malloc) */
-    /* rmap,gmap,bmap should be 'desired' colors */
+	 returns a dwide*dhigh 24bit image, or NULL on failure (malloc) */
+	/* rmap,gmap,bmap should be 'desired' colors */
 
-    byte *picSmooth, *ptrPicSmooth;
-    int  *cxtab, *pxtab;
-    size_t   y1Off, cyOff;
-    size_t   ex, ey, cx, cy, px, py, apx, apy, x1, y1;
-    size_t   cA, cB, cC, cD;
-    size_t   pA, pB, pC, pD;
-    int   retval;
+	byte *picSmooth, *ptrPicSmooth;
+	int *cxtab, *pxtab;
+	size_t y1Off, cyOff;
+	size_t ex, ey, cx, cy, px, py, apx, apy, x1, y1;
+	size_t cA, cB, cC, cD;
+	size_t pA, pB, pC, pD;
+	int retval;
 
-    cA = cB = cC = cD = 0;
-    size_t picSmoothSize=((size_t)dwide) * dhigh * 3;
-    ptrPicSmooth = picSmooth = (byte *) malloc(picSmoothSize);
-    if (!picSmooth)
-    	REPORT_ERROR(ERR_MEM_NOTENOUGH,formatString("Unable to alloc: %lu",picSmoothSize));
+	cA = cB = cC = cD = 0;
+	size_t picSmoothSize = ((size_t) dwide) * dhigh * 3;
+	ptrPicSmooth = picSmooth = (byte *) malloc(picSmoothSize);
+	if (!picSmooth)
+		REPORT_ERROR(ERR_MEM_NOTENOUGH,
+				formatString("Unable to alloc: %lu",picSmoothSize));
 
-    /* decide which smoothing routine to use based on type of expansion */
-    if (dwide <  swide && dhigh <  shigh)
-        retval = SmoothXY(picSmooth, picSrc8, swide, shigh, dwide, dhigh);
-    else
-    {
-        /* dwide >= swide && dhigh >= shigh */
+	/* decide which smoothing routine to use based on type of expansion */
+	if (dwide < swide && dhigh < shigh)
+		retval = SmoothXY(picSmooth, picSrc8, swide, shigh, dwide, dhigh);
+	else {
+		/* dwide >= swide && dhigh >= shigh */
 
-        /* cx,cy = original pixel in pic824.  px,py = relative position
-           of pixel ex,ey inside of cx,cy as percentages +-50%, +-50%.
-           0,0 = middle of pixel */
+		/* cx,cy = original pixel in pic824.  px,py = relative position
+		 of pixel ex,ey inside of cx,cy as percentages +-50%, +-50%.
+		 0,0 = middle of pixel */
 
-        /* we can save a lot of time by precomputing cxtab[] and pxtab[], both
-           dwide arrays of ints that contain values for the equations:
-             cx = (ex * swide) / dwide;
-             px = ((ex * swide * 100) / dwide) - (cx * 100) - 50; */
+		/* we can save a lot of time by precomputing cxtab[] and pxtab[], both
+		 dwide arrays of ints that contain values for the equations:
+		 cx = (ex * swide) / dwide;
+		 px = ((ex * swide * 100) / dwide) - (cx * 100) - 50; */
 
-        cxtab = (int *) malloc(dwide * sizeof(int));
-        if (!cxtab)
-        	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Unable to alloc for smoothing");
+		cxtab = (int *) malloc(dwide * sizeof(int));
+		if (!cxtab)
+			REPORT_ERROR(ERR_MEM_NOTENOUGH, "Unable to alloc for smoothing");
 
-        pxtab = (int *) malloc(dwide * sizeof(int));
-        if (!pxtab)
-        	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Unable to alloc for smoothing");
+		pxtab = (int *) malloc(dwide * sizeof(int));
+		if (!pxtab)
+			REPORT_ERROR(ERR_MEM_NOTENOUGH, "Unable to alloc for smoothing");
 
-        for (ex = 0; ex < dwide; ex++)
-        {
-            cxtab[ex] = (ex * swide) / dwide;
-            pxtab[ex] = (((ex * swide) * 100) / dwide)
-                        - (cxtab[ex] * 100) - 50;
-        }
+		for (ex = 0; ex < dwide; ex++) {
+			cxtab[ex] = (ex * swide) / dwide;
+			pxtab[ex] = (((ex * swide) * 100) / dwide) - (cxtab[ex] * 100) - 50;
+		}
 
-        for (ey = 0; ey < dhigh; ey++)
-        {
-            cy = (ey * shigh) / dhigh;
-            py = (((ey * shigh) * 100) / dhigh) - (cy * 100) - 50;
-            if (py < 0)
-            {
-                y1 = cy - 1;
-                if (y1 < 0)
-                    y1 = 0;
-            }
-            else
-            {
-                y1 = cy + 1;
-                if (y1 > shigh - 1)
-                    y1 = shigh - 1;
-            }
+		for (ey = 0; ey < dhigh; ey++) {
+			cy = (ey * shigh) / dhigh;
+			py = (((ey * shigh) * 100) / dhigh) - (cy * 100) - 50;
+			if (py < 0) {
+				y1 = cy - 1;
+				if (y1 < 0)
+					y1 = 0;
+			} else {
+				y1 = cy + 1;
+				if (y1 > shigh - 1)
+					y1 = shigh - 1;
+			}
 
-            cyOff = (size_t) cy * swide ;    /* current line */
-            y1Off = (size_t) y1 * swide ;    /* up or down one line, depending */
+			cyOff = (size_t) cy * swide; /* current line */
+			y1Off = (size_t) y1 * swide; /* up or down one line, depending */
 
-            /*      if ((ey&15) == 0) WaitCursor(); */
+			/*      if ((ey&15) == 0) WaitCursor(); */
 
-            for (ex = 0; ex < dwide; ex++)
-            {
-                byte *pptr, rA, gA, bA, rB, gB, bB, rC, gC, bC, rD, gD, bD;
+			for (ex = 0; ex < dwide; ex++) {
+				byte *pptr, rA, gA, bA, rB, gB, bB, rC, gC, bC, rD, gD, bD;
 
-                cx = cxtab[ex];
-                px = pxtab[ex];
+				cx = cxtab[ex];
+				px = pxtab[ex];
 
-                if (px < 0)
-                {
-                    x1 = cx - 1;
-                    if (x1 < 0)
-                        x1 = 0;
-                }
-                else
-                {
-                    x1 = cx + 1;
-                    if (x1 > swide - 1)
-                        x1 = swide - 1;
-                }
+				if (px < 0) {
+					x1 = cx - 1;
+					if (x1 < 0)
+						x1 = 0;
+				} else {
+					x1 = cx + 1;
+					if (x1 > swide - 1)
+						x1 = swide - 1;
+				}
 
-                cA = picSrc8[y1Off + x1];   /* corner pixel */
-                cB = picSrc8[y1Off + cx];   /* up/down center pixel */
-                cC = picSrc8[cyOff + x1];   /* left/right center pixel */
-                cD = picSrc8[cyOff + cx];   /* center pixel */
+				cA = picSrc8[y1Off + x1]; /* corner pixel */
+				cB = picSrc8[y1Off + cx]; /* up/down center pixel */
+				cC = picSrc8[cyOff + x1]; /* left/right center pixel */
+				cD = picSrc8[cyOff + cx]; /* center pixel */
 
-                /* quick check */
-                if (cA == cB && cB == cC && cC == cD)
-                {
-                    /* set this pixel to the same color as in pic8 */
-                    *ptrPicSmooth++ = cD;
-                    *ptrPicSmooth++ = cD;
-                    *ptrPicSmooth++ = cD;
-                }
+				/* quick check */
+				if (cA == cB && cB == cC && cC == cD) {
+					/* set this pixel to the same color as in pic8 */
+					*ptrPicSmooth++ = cD;
+					*ptrPicSmooth++ = cD;
+					*ptrPicSmooth++ = cD;
+				}
 
-                else
-                {
-                    /* compute weighting factors */
-                    apx = abs(px);
-                    apy = abs(py);
-                    pA = (apx * apy) / 100;
-                    pB = (apy * (100 - apx)) / 100;
-                    pC = (apx * (100 - apy)) / 100;
-                    pD = 100 - (pA + pB + pC);
+				else {
+					/* compute weighting factors */
+					apx = abs(px);
+					apy = abs(py);
+					pA = (apx * apy) / 100;
+					pB = (apy * (100 - apx)) / 100;
+					pC = (apx * (100 - apy)) / 100;
+					pD = 100 - (pA + pB + pC);
 
-                    byte val=(byte)((pA * cA) / 100 + (pB * cB) / 100 +
-                                    (pC * cC) / 100 + (pD * cD) / 100);
-                    /*
-                    *ptrPicSmooth++ = (pA * rmap[cA]) / 100 + (pB * rmap[cB]) / 100 +
-                    (pC * rmap[cC]) / 100 + (pD * rmap[cD]) / 100;
+					byte val = (byte) ((pA * cA) / 100 + (pB * cB) / 100
+							+ (pC * cC) / 100 + (pD * cD) / 100);
+					*ptrPicSmooth++ = val;
+					*ptrPicSmooth++ = val;
+					*ptrPicSmooth++ = val;
+				}
+			}
+		}
 
-                    *pp++ = (pA * gmap[cA]) / 100 + (pB * gmap[cB]) / 100 +
-                    (pC * gmap[cC]) / 100 + (pD * gmap[cD]) / 100;
+		free(cxtab);
+		free(pxtab);
+		retval = 0; /* okay */
+	}
 
-                    *pp++ = (pA * bmap[cA]) / 100 + (pB * bmap[cB]) / 100 +
-                    (pC * bmap[cC]) / 100 + (pD * bmap[cD]) / 100;                    }
-                    */
-                    *ptrPicSmooth++=val;
-                    *ptrPicSmooth++=val;
-                    *ptrPicSmooth++=val;
-                }
-            }
-        }
+	if (retval) { /* one of the Smooth**() methods failed */
+		free(picSmooth);
+		picSmooth = (byte *) NULL;
+	}
 
-        free(cxtab);
-        free(pxtab);
-        retval = 0;    /* okay */
-    }
-
-    if (retval)
-    {    /* one of the Smooth**() methods failed */
-        free(picSmooth);
-        picSmooth = (byte *) NULL;
-    }
-
-    return picSmooth;
+	return picSmooth;
 }
 
 /***************************************************/
-int SmoothXY(byte *picSmooth, byte *picSrc8,
-             int swide, int shigh, int dwide, int dhigh)
-{
-    byte *cptr;
-    int  i, j;
-    int  *lbuf;
-    int  pix;
-    int  lastline, thisline, lastpix, linecnt, pixcnt;
-    int  *pixarr, *paptr;
+int SmoothXY(byte *picSmooth, byte *picSrc8, int swide, int shigh, int dwide,
+		int dhigh) {
+	byte *cptr;
+	int i, j;
+	int *lbuf;
+	int pix;
+	int lastline, thisline, lastpix, linecnt, pixcnt;
+	int *pixarr, *paptr;
 
-    /* returns '0' if okay, '1' if failed (malloc) */
+	/* returns '0' if okay, '1' if failed (malloc) */
 
-    /* shrinks pic8 into a dwide * dhigh 24-bit picture.  Only works correctly
-       when swide>=dwide and shigh>=dhigh (ie, the picture is shrunk on both
-       axes) */
+	/* shrinks pic8 into a dwide * dhigh 24-bit picture.  Only works correctly
+	 when swide>=dwide and shigh>=dhigh (ie, the picture is shrunk on both
+	 axes) */
 
-    /* malloc some arrays */
-    lbuf = (int *) calloc(swide, sizeof(int));
-    pixarr = (int *) calloc(swide + 1, sizeof(int));
-    if (!lbuf || !pixarr)
-    	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Cannot allocate memory for smoothing");
+	/* malloc some arrays */
+	lbuf = (int *) calloc(swide, sizeof(int));
+	pixarr = (int *) calloc(swide + 1, sizeof(int));
+	if (!lbuf || !pixarr)
+		REPORT_ERROR(ERR_MEM_NOTENOUGH, "Cannot allocate memory for smoothing");
 
-    for (j = 0; j <= swide; j++)
-        pixarr[j] = (j * dwide + (15 * swide) / 16) / swide;
+	for (j = 0; j <= swide; j++)
+		pixarr[j] = (j * dwide + (15 * swide) / 16) / swide;
 
-    lastline = linecnt = pix = 0;
-    cptr = picSrc8;
+	lastline = linecnt = pix = 0;
+	cptr = picSrc8;
 
-    for (i = 0; i <= shigh; i++)
-    {
-        /*    if ((i&15) == 0) WaitCursor();*/
+	for (i = 0; i <= shigh; i++) {
+		thisline = (i * dhigh + (15 * shigh) / 16) / shigh;
 
-        thisline = (i * dhigh + (15 * shigh) / 16) / shigh;
+		if ((thisline != lastline)) {
+			pix = pixcnt = lastpix = 0;
 
-        if ((thisline != lastline))
-        {      /* copy a line to pic24 */
-            pix = pixcnt = lastpix = 0;
+			for (j = 0, paptr = pixarr; j <= swide; j++, paptr++) {
+				if (*paptr != lastpix) { /* write a pixel to pic24 */
+					int val = (pix / linecnt) / pixcnt;
+					*picSmooth++ = val;
+					*picSmooth++ = val;
+					*picSmooth++ = val;
+					lastpix = *paptr;
+					pix = pixcnt = 0;
+				}
 
-            for (j = 0, paptr = pixarr; j <= swide; j++, paptr++)
-            {
-                if (*paptr != lastpix)
-                {                 /* write a pixel to pic24 */
-                	int val=(pix / linecnt) / pixcnt;
-                    *picSmooth++ = val;
-                    *picSmooth++ = val;
-                    *picSmooth++ = val;
-                    lastpix = *paptr;
-                    pix = pixcnt = 0;
-                }
+				if (j < swide) {
+					pix += lbuf[j];
+					pixcnt++;
+				}
+			}
 
-                if (j < swide)
-                {
-                    pix += lbuf[j];
-                    pixcnt++;
-                }
-            }
+			lastline = thisline;
+			xvbzero((char *) lbuf, swide * sizeof(int));
+			/* clear out line bufs */
+			linecnt = 0;
+		}
 
-            lastline = thisline;
-            xvbzero((char *) lbuf, swide * sizeof(int));  /* clear out line bufs */
-            linecnt = 0;
-        }
+		if (i < shigh) {
+			for (j = 0; j < swide; j++, cptr++)
+				lbuf[j] += *cptr;
 
-        if (i < shigh)
-        {
-            for (j = 0; j < swide; j++, cptr++)
-                lbuf[j] += *cptr;
+			linecnt++;
+		}
+	}
 
-            linecnt++;
-        }
-    }
-
-    free(lbuf);
-    free(pixarr);
-    return 0;
+	free(lbuf);
+	free(pixarr);
+	return 0;
 }
 
 /********************************************/
-void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h)
-{
-    /* takes a 24 bit picture, of size w*h, dithers with the colors in
-       rdisp, gdisp, bdisp (which have already been allocated),
-       and generates an 8-bit w*h image, which it returns.
-       ignores input value 'pic8'
-       returns NULL on error
+void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
+	/* takes a 24 bit picture, of size w*h, dithers with the colors in
+	 rdisp, gdisp, bdisp (which have already been allocated),
+	 and generates an 8-bit w*h image, which it returns.
+	 ignores input value 'pic8'
+	 returns NULL on error
 
-       note: the rdisp,gdisp,bdisp arrays should be the 'displayed' colors,
-       not the 'desired' colors
+	 note: the rdisp,gdisp,bdisp arrays should be the 'displayed' colors,
+	 not the 'desired' colors
 
-       if picSrc is NULL, uses the passed-in pic8 (an 8-bit image) as
-       the source, and the rmap,gmap,bmap arrays as the desired colors */
+	 if picSrc is NULL, uses the passed-in pic8 (an 8-bit image) as
+	 the source, and the rmap,gmap,bmap arrays as the desired colors */
 
-    byte *np, *ep;
-    short *cache;
-    int r2, g2, b2;
-    int *thisline, *nextline, *thisptr, *nextptr, *tmpptr;
-    int  i, j, rerr, gerr, berr, pwide3;
-    int  imax, jmax;
-    int key;
-    long cnt1, cnt2;
+	byte *np, *ep;
+	short *cache;
+	int r2, g2, b2;
+	int *thisline, *nextline, *thisptr, *nextptr, *tmpptr;
+	int i, j, rerr, gerr, berr, pwide3;
+	int imax, jmax;
+	int key;
+	long cnt1, cnt2;
 
-    cnt1 = cnt2 = 0;
-    pwide3 = w * 3;
-    imax = h - 1;
-    jmax = w - 1;
-    ep = picSmooth;
+	cnt1 = cnt2 = 0;
+	pwide3 = w * 3;
+	imax = h - 1;
+	jmax = w - 1;
+	ep = picSmooth;
 
-    /* attempt to malloc things */
-    picDithered = (byte *) malloc((size_t) w * h);
-    cache = (short *) calloc(2 << 14, sizeof(short));
-    thisline = (int *) malloc(pwide3 * sizeof(int));
-    nextline = (int *) malloc(pwide3 * sizeof(int));
-    if (!cache || !picDithered || !thisline || !nextline)
-    	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Cannot allocate memory for smoothing");
+	/* attempt to malloc things */
+	picDithered = (byte *) malloc((size_t) w * h);
+	cache = (short *) calloc(2 << 14, sizeof(short));
+	thisline = (int *) malloc(pwide3 * sizeof(int));
+	nextline = (int *) malloc(pwide3 * sizeof(int));
+	if (!cache || !picDithered || !thisline || !nextline)
+		REPORT_ERROR(ERR_MEM_NOTENOUGH, "Cannot allocate memory for smoothing");
 
-    np = picDithered;
+	np = picDithered;
 
-    /* get first line of picture */
+	/* get first line of picture */
 
-    if (picSmooth)
-    {
-        for (j = pwide3, tmpptr = nextline; j; j--, ep++)
-            *tmpptr++ = (int) * ep;
-    }
-    else
-    {
-        for (j = w, tmpptr = nextline; j; j--, ep++)
-        {
-            *tmpptr++ = (int) *ep;
-            *tmpptr++ = (int) *ep;
-            *tmpptr++ = (int) *ep;
-        }
-    }
+	for (j = pwide3, tmpptr = nextline; j; j--, ep++)
+		*tmpptr++ = (int) *ep;
 
+	for (i = 0; i < h; i++) {
+		np = picDithered + i * w;
+		/*    if ((i&15) == 0) WaitCursor();*/
 
-    for (i = 0; i < h; i++)
-    {
-        np = picDithered + i * w;
-        /*    if ((i&15) == 0) WaitCursor();*/
+		tmpptr = thisline;
+		thisline = nextline;
+		nextline = tmpptr; /* swap */
 
-        tmpptr = thisline;
-        thisline = nextline;
-        nextline = tmpptr;   /* swap */
+		if (i != imax)
+			for (j = pwide3, tmpptr = nextline; j; j--, ep++)
+				*tmpptr++ = (int) *ep;
 
-        if (i != imax)
-        {  /* get next line */
-            if (!picSmooth)
-                for (j = w, tmpptr = nextline; j; j--, ep++)
-                {
-                    *tmpptr++ = (int) *ep;
-                    *tmpptr++ = (int) *ep;
-                    *tmpptr++ = (int) *ep;
-                }
-            else
-                for (j = pwide3, tmpptr = nextline; j; j--, ep++)
-                    *tmpptr++ = (int) * ep;
-        }
+		/* dither a line, doing odd-lines right-to-left (serpentine) */
+		thisptr = (i & 1) ? thisline + w * 3 - 3 : thisline;
+		nextptr = (i & 1) ? nextline + w * 3 - 3 : nextline;
+		if (i & 1)
+			np += w - 1;
 
-        /* dither a line, doing odd-lines right-to-left (serpentine) */
-        thisptr = (i & 1) ? thisline + w * 3 - 3 : thisline;
-        nextptr = (i & 1) ? nextline + w * 3 - 3 : nextline;
-        if (i&1)
-            np += w - 1;
+		for (j = 0; j < w; j++) {
+			int k, d, mind, closest;
 
+			r2 = *thisptr++;
+			thisptr++;
+			thisptr++;
+			if (i & 1)
+				thisptr -= 6; /* move left */
 
-        for (j = 0; j < w; j++)
-        {
-            int k, d, mind, closest;
+			if (r2 < 0)
+				r2 = 0;
 
-            r2 = *thisptr++;
-            thisptr++;
-            thisptr++;
-            if (i&1)
-                thisptr -= 6;  /* move left */
+			if (r2 > 255)
+				r2 = 255;
+			key = ((r2 & 0xf8) << 6) | ((r2 & 0xf8) << 1) | (r2 >> 4);
+			if (key >= (2 << 14))
+				REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
+						"overflow in DoColorDither");
 
-            if (r2 < 0)
-            	r2=0;
+			if (cache[key]) {
+				*np = (byte) (cache[key] - 1);
+				cnt1++;
+			} else {
+				/* not in cache, have to search the colortable */
+				cnt2++;
 
-            if (r2 > 255)
-            	r2=255;
-            key = ((r2 & 0xf8) << 6) | ((r2 & 0xf8) << 1) | (r2 >> 4);
-            if (key >= (2 << 14))
-            	REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"overflow in DoColorDither");
+				mind = 10000;
+				for (k = closest = 0; k < 256 && mind > 7; k++) {
+					d = 3 * abs(r2 - k);
+					if (d < mind) {
+						mind = d;
+						closest = k;
+					}
+				}
+				cache[key] = closest + 1;
+				*np = closest;
+			}
 
-            if (cache[key])
-            {
-                *np = (byte)(cache[key] - 1);
-                cnt1++;
-            }
-            else
-            {
-                /* not in cache, have to search the colortable */
-                cnt2++;
+			/* propagate the error */
+			rerr = r2 - *np;
 
-                mind = 10000;
-                for (k = closest = 0; k < 256 && mind > 7; k++)
-                {
-                    d = 3*abs(r2 - k);
-                    if (d < mind)
-                    {
-                        mind = d;
-                        closest = k;
-                    }
-                }
-                cache[key] = closest + 1;
-                *np = closest;
-            }
+			if (j != jmax) { /* adjust LEFT/RIGHT pixel */
+				int rerr_2 = rerr / 2;
+				thisptr[0] += rerr_2;
+				thisptr[1] += rerr_2;
+				thisptr[2] += rerr_2;
+				rerr -= rerr_2;
+			}
 
+			if (i != imax) { /* adjust BOTTOM pixel */
+				nextptr[0] += rerr; /* possibly all err if we're at l/r edge */
+				nextptr[1] += rerr;
+				nextptr[2] += rerr;
+			}
 
-            /* propagate the error */
-            rerr = r2 - *np;
+			if (i & 1) {
+				nextptr -= 3;
+				np--;
+			} else {
+				nextptr += 3;
+				np++;
+			}
+		}
+	}
 
-            if (j != jmax)
-            {  /* adjust LEFT/RIGHT pixel */
-            	int rerr_2=rerr/2;
-                thisptr[0] += rerr_2;
-                thisptr[1] += rerr_2;
-                thisptr[2] += rerr_2;
-                rerr -= rerr_2;
-            }
-
-            if (i != imax)
-            { /* adjust BOTTOM pixel */
-                nextptr[0] += rerr;    /* possibly all err if we're at l/r edge */
-                nextptr[1] += rerr;
-                nextptr[2] += rerr;
-            }
-
-            if (i&1)
-            {
-                nextptr -= 3;
-                np--;
-            }
-            else
-            {
-                nextptr += 3;
-                np++;
-            }
-        }
-    }
-
-    free(thisline);
-    free(nextline);
-    free(cache);
+	free(thisline);
+	free(nextline);
+	free(cache);
 }
