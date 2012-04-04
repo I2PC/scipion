@@ -95,8 +95,8 @@ void QtImageMicrograph::loadImage()
                 *ptr++ = (*getMicrograph())(mY, mX);
 
         // Apply xvsmooth and copy to the canvas
-        byte *result = SmoothResize(piece,
-                                    mXF - mX0, mYF - mY0, image()->width(), image()->height());
+        byte *result = (byte *) malloc(image()->width()*image()->height());
+        SmoothResize(piece,result,mXF - mX0, mYF - mY0, image()->width(), image()->height());
         ptr = result;
         for (int y = 0; y < image()->height(); y++)
             for (int x = 0; x < image()->width(); x++)
