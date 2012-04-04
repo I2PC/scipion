@@ -22,7 +22,12 @@
 ImportRun = ''
 
 # {wizard}(wizardBrowseCTF2) Downsampling factor 
-""" Set to 1 for no downsampling. Non-integer downsample factors are possible."""
+""" Set to 1 for no downsampling. Non-integer downsample factors are possible.
+    This downsampling is only used for estimating the CTF and it does not affect any
+    further calculation. Ideally the estimation of the CTF is optimal when the Thon rings
+    are not too concentrated at the origin (too small to be seen) and not occupying
+    the whole power spectrum (since this downsampling might entail aliasing).
+"""
 DownsampleFactor = 1
 
 # Amplitude Contrast
