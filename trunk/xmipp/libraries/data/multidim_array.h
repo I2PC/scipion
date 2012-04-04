@@ -4818,7 +4818,7 @@ public:
             return false;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
         {
-            if (ABS(DIRECT_MULTIDIM_ELEM(*this,n) -
+            if (fabs(DIRECT_MULTIDIM_ELEM(*this,n) -
                     DIRECT_MULTIDIM_ELEM(op,n)) > accuracy)
                 return false;
         }
