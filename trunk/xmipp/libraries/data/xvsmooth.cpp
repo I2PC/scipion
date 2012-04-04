@@ -353,8 +353,6 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 
 	for (i = 0; i < h; i++) {
 		np = picDithered + i * w;
-		/*    if ((i&15) == 0) WaitCursor();*/
-
 		tmpptr = thisline;
 		thisline = nextline;
 		nextline = tmpptr; /* swap */
@@ -413,15 +411,11 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 			if (j != jmax) { /* adjust LEFT/RIGHT pixel */
 				int rerr_2 = rerr / 2;
 				thisptr[0] += rerr_2;
-				thisptr[1] += rerr_2;
-				thisptr[2] += rerr_2;
 				rerr -= rerr_2;
 			}
 
 			if (i != imax) { /* adjust BOTTOM pixel */
 				nextptr[0] += rerr; /* possibly all err if we're at l/r edge */
-				nextptr[1] += rerr;
-				nextptr[2] += rerr;
 			}
 
 			if (i & 1) {
