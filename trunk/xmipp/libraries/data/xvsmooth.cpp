@@ -84,11 +84,9 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh);
 void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h);
 
 #ifdef __STDC__
-int SmoothX(byte *, byte *, int, int, int, int);
-int SmoothY(byte *, byte *, int, int, int, int);
 int SmoothXY(byte *, byte *, int, int, int, int);
 #else
-int  SmoothX(), SmoothY(), SmoothXY();
+int SmoothXY();
 #endif
 
 #define xvbzero(s,l) memset(s, 0, l)
@@ -113,8 +111,6 @@ byte *SmoothResize(byte *picSrc8, int swide, int shigh,
 
     return (byte *) NULL;
 }
-
-
 
 /***************************************************/
 byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh)
@@ -143,13 +139,6 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh)
     /* decide which smoothing routine to use based on type of expansion */
     if (dwide <  swide && dhigh <  shigh)
         retval = SmoothXY(picSmooth, picSrc8, swide, shigh, dwide, dhigh);
-
-    else if (dwide <  swide && dhigh >= shigh)
-        retval = SmoothX(picSmooth, picSrc8, swide, shigh, dwide, dhigh);
-
-    else if (dwide >= swide && dhigh <  shigh)
-        retval = SmoothY(picSmooth, picSrc8, swide, shigh, dwide, dhigh);
-
     else
     {
         /* dwide >= swide && dhigh >= shigh */
@@ -275,176 +264,6 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh)
     }
 
     return picSmooth;
-}
-
-/***************************************************/
-int SmoothX(byte *picSmooth, byte *picSrc8,
-            int swide, int shigh, int dwide, int dhigh)
-{
-    byte *cptr, *cptr1;
-    int  i, j;
-    int  *lbufR, *lbufG, *lbufB;
-    int  pixR, pixG, pixB;
-    int  pcnt0, pcnt1, lastpix, pixcnt, thisline, ypcnt;
-    int  *pixarr, *paptr;
-
-    /* returns '0' if okay, '1' if failed (malloc) */
-
-    /* for case where pic8 is shrunk horizontally and stretched vertically
-       maps pic8 into an dwide * dhigh 24-bit picture.  Only works correctly
-       when swide>=dwide and shigh<=dhigh */
-
-
-    /* malloc some arrays */
-    lbufR = (int *) calloc(swide, sizeof(int));
-    lbufG = (int *) calloc(swide, sizeof(int));
-    lbufB = (int *) calloc(swide, sizeof(int));
-    pixarr = (int *) calloc(swide + 1, sizeof(int));
-    if (!lbufR || !lbufG || !lbufB || !pixarr)
-    	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Cannot allocate memory for smoothing");
-
-    for (j = 0; j <= swide; j++)
-        pixarr[j] = (j * dwide + (15 * swide) / 16) / swide;
-
-    cptr = picSrc8;
-    cptr1 = cptr + swide;
-
-    for (i = 0; i < dhigh; i++)
-    {
-        ypcnt = (((i * shigh) << 6) / dhigh) - 32;
-        if (ypcnt < 0)
-            ypcnt = 0;
-
-        pcnt1 = ypcnt & 0x3f;                     /* 64ths of NEXT line to use */
-        pcnt0 = 64 - pcnt1;                       /* 64ths of THIS line to use */
-
-        thisline = ypcnt >> 6;
-
-        cptr  = picSrc8 + thisline * swide;
-        if (thisline + 1 < shigh)
-            cptr1 = cptr + swide;
-        else
-            cptr1 = cptr;
-
-        for (j = 0; j < swide; j++, cptr++, cptr1++)
-        {
-            lbufR[j] = ((*cptr * pcnt0) + (*cptr1 * pcnt1)) >> 6;
-            lbufG[j] = ((*cptr * pcnt0) + (*cptr1 * pcnt1)) >> 6;
-            lbufB[j] = ((*cptr * pcnt0) + (*cptr1 * pcnt1)) >> 6;
-        }
-
-        pixR = pixG = pixB = pixcnt = lastpix = 0;
-
-        for (j = 0, paptr = pixarr; j <= swide; j++, paptr++)
-        {
-            if (*paptr != lastpix)
-            {   /* write a pixel to pic24 */
-                *picSmooth++ = pixR / pixcnt;
-                *picSmooth++ = pixG / pixcnt;
-                *picSmooth++ = pixB / pixcnt;
-                lastpix = *paptr;
-                pixR = pixG = pixB = pixcnt = 0;
-            }
-
-            if (j < swide)
-            {
-                pixR += lbufR[j];
-                pixG += lbufG[j];
-                pixB += lbufB[j];
-                pixcnt++;
-            }
-        }
-    }
-
-    free(lbufR);
-    free(lbufG);
-    free(lbufB);
-    free(pixarr);
-    return 0;
-}
-
-/***************************************************/
-int SmoothY(byte *picSmooth, byte *picSrc8, int swide,
-            int shigh, int dwide, int dhigh)
-{
-    byte *clptr, *cptr, *cptr1;
-    int  i, j;
-    int  *lbufR, *lbufG, *lbufB, *pct0, *pct1, *cxarr, *cxptr;
-    int  lastline, thisline, linecnt;
-    int  retval;
-
-
-    /* returns '0' if okay, '1' if failed (malloc) */
-
-    /* for case where pic8 is shrunk vertically and stretched horizontally
-       maps pic8 into a dwide * dhigh 24-bit picture.  Only works correctly
-       when swide<=dwide and shigh>=dhigh */
-
-    retval = 0;   /* no probs, yet... */
-
-    lbufR = lbufG = lbufB = pct0 = pct1 = cxarr = NULL;
-    lbufR = (int *) calloc(dwide, sizeof(int));
-    lbufG = (int *) calloc(dwide, sizeof(int));
-    lbufB = (int *) calloc(dwide, sizeof(int));
-    pct0  = (int *) calloc(dwide, sizeof(int));
-    pct1  = (int *) calloc(dwide, sizeof(int));
-    cxarr = (int *) calloc(dwide, sizeof(int));
-
-    if (!lbufR || !lbufG || !lbufB || !pct0 || ! pct1 || !cxarr)
-    	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Cannot allocate memory for smoothing");
-
-    for (i = 0; i < dwide; i++)
-    {                /* precompute some handy tables */
-        int cx64;
-        cx64 = (((i * swide) << 6) / dwide) - 32;
-        if (cx64 < 0)
-            cx64 = 0;
-        pct1[i] = cx64 & 0x3f;
-        pct0[i] = 64 - pct1[i];
-        cxarr[i] = cx64 >> 6;
-    }
-
-    lastline = linecnt = 0;
-    for (i = 0, clptr = picSrc8; i <= shigh; i++, clptr += swide)
-    {
-        /*    if ((i&15) == 0) WaitCursor();*/
-
-        thisline = (i * dhigh + (15 * shigh) / 16) / shigh;
-
-        if (thisline != lastline)
-        {  /* copy a line to pic24 */
-            for (j = 0; j < dwide; j++)
-            {
-                *picSmooth++ = lbufR[j] / linecnt;
-                *picSmooth++ = lbufG[j] / linecnt;
-                *picSmooth++ = lbufB[j] / linecnt;
-            }
-
-            xvbzero((char *) lbufR, dwide * sizeof(int));  /* clear out line bufs */
-            xvbzero((char *) lbufG, dwide * sizeof(int));
-            xvbzero((char *) lbufB, dwide * sizeof(int));
-            linecnt = 0;
-            lastline = thisline;
-        }
-
-
-        for (j = 0, cxptr = cxarr; j < dwide; j++, cxptr++)
-        {
-            cptr  = clptr + *cxptr;
-            if (*cxptr < swide - 1)
-                cptr1 = cptr + 1;
-            else
-                cptr1 = cptr;
-
-            lbufR[j] += (((*cptr * pct0[j]) + (*cptr1 * pct1[j])) >> 6);
-            lbufG[j] += (((*cptr * pct0[j]) + (*cptr1 * pct1[j])) >> 6);
-            lbufB[j] += (((*cptr * pct0[j]) + (*cptr1 * pct1[j])) >> 6);
-        }
-
-        linecnt++;
-    }
-
-    return retval;
 }
 
 /***************************************************/
