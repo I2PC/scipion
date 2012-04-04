@@ -323,9 +323,9 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 
 	byte *np, *ep;
 	short *cache;
-	int r2, g2, b2;
+	int r2;
 	int *thisline, *nextline, *thisptr, *nextptr, *tmpptr;
-	int i, j, rerr, gerr, berr, pwide3;
+	int i, j, rerr, pwide3;
 	int imax, jmax;
 	int key;
 	long cnt1, cnt2;
