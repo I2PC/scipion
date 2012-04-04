@@ -175,7 +175,7 @@ FixFractions = False
 # {view} Visualize last iter references
 DoShowReferences = True
 
-# Show Log-Likelihood over iterations?
+# {view} Show Log-Likelihood over iterations?
 """ The Log-Likelihood value should increase"""
 DoShowLL = True
 
