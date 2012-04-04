@@ -81,7 +81,7 @@ typedef unsigned char byte;
 #include "xmipp_error.h"
 
 byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh);
-byte *DoColorDither(byte *picSrc, int w, int h);
+void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h);
 
 #ifdef __STDC__
 int SmoothX(byte *, byte *, int, int, int, int);
@@ -105,7 +105,8 @@ byte *SmoothResize(byte *picSrc8, int swide, int shigh,
     byte * picSmooth = Smooth(picSrc8, swide, shigh, dwide, dhigh);
     if (picSmooth)
     {
-    	byte * picDithered = DoColorDither(picSmooth, dwide, dhigh);
+    	byte * picDithered = NULL;
+    	DoColorDither(picSmooth, picDithered, dwide, dhigh);
         free(picSmooth);
         return picDithered;
     }
@@ -535,7 +536,7 @@ int SmoothXY(byte *pic24, byte *pic824,
 }
 
 /********************************************/
-byte *DoColorDither(byte *picSrc, int w, int h)
+void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h)
 {
     /* takes a 24 bit picture, of size w*h, dithers with the colors in
        rdisp, gdisp, bdisp (which have already been allocated),
@@ -549,7 +550,7 @@ byte *DoColorDither(byte *picSrc, int w, int h)
        if picSrc is NULL, uses the passed-in pic8 (an 8-bit image) as
        the source, and the rmap,gmap,bmap arrays as the desired colors */
 
-    byte *np, *ep, *newpic;
+    byte *np, *ep;
     short *cache;
     int r2, g2, b2;
     int *thisline, *nextline, *thisptr, *nextptr, *tmpptr;
@@ -562,32 +563,21 @@ byte *DoColorDither(byte *picSrc, int w, int h)
     pwide3 = w * 3;
     imax = h - 1;
     jmax = w - 1;
-    ep = picSrc;
+    ep = picSmooth;
 
     /* attempt to malloc things */
-    newpic = (byte *) malloc(w * h);
+    picDithered = (byte *) malloc((size_t) w * h);
     cache = (short *) calloc(2 << 14, sizeof(short));
     thisline = (int *) malloc(pwide3 * sizeof(int));
     nextline = (int *) malloc(pwide3 * sizeof(int));
-    if (!cache || !newpic || !thisline || !nextline)
-    {
-        if (newpic)
-            free(newpic);
-        if (cache)
-            free(cache);
-        if (thisline)
-            free(thisline);
-        if (nextline)
-            free(nextline);
+    if (!cache || !picDithered || !thisline || !nextline)
+    	REPORT_ERROR(ERR_MEM_NOTENOUGH,"Cannot allocate memory for smoothing");
 
-        return (byte *) NULL;
-    }
-
-    np = newpic;
+    np = picDithered;
 
     /* get first line of picture */
 
-    if (picSrc)
+    if (picSmooth)
     {
         for (j = pwide3, tmpptr = nextline; j; j--, ep++)
             *tmpptr++ = (int) * ep;
@@ -605,7 +595,7 @@ byte *DoColorDither(byte *picSrc, int w, int h)
 
     for (i = 0; i < h; i++)
     {
-        np = newpic + i * w;
+        np = picDithered + i * w;
         /*    if ((i&15) == 0) WaitCursor();*/
 
         tmpptr = thisline;
@@ -614,7 +604,7 @@ byte *DoColorDither(byte *picSrc, int w, int h)
 
         if (i != imax)
         {  /* get next line */
-            if (!picSrc)
+            if (!picSmooth)
                 for (j = w, tmpptr = nextline; j; j--, ep++)
                 {
                     *tmpptr++ = (int) *ep;
@@ -804,6 +794,4 @@ byte *DoColorDither(byte *picSrc, int w, int h)
     free(thisline);
     free(nextline);
     free(cache);
-
-    return newpic;
 }
