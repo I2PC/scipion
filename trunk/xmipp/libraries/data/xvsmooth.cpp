@@ -7,7 +7,7 @@
  *  Contains:
  *            byte *SmoothResize(src8, swide, shigh, dwide, dhigh,
  *                               rmap, gmap, bmap, rdmap, gdmap, bdmap, maplen)
- *            byte *Smooth24(pic824, is24, swide, shigh, dwide, dhigh,
+ *            byte *Smooth24(pic824, swide, shigh, dwide, dhigh,
  *                               rmap, gmap, bmap)
  *            byte *DoColorDither(pic24, pic8, w, h, rmap,gmap,bmap,
  *                                rdisp, gdisp, bdisp, maplen)
@@ -80,19 +80,14 @@ typedef unsigned char byte;
 #include <string.h>
 
 byte *Smooth24(byte *pic824, int swide, int shigh,
-               int dwide, int dhigh, byte *rmap, byte *gmap, byte *bmap);
-byte *DoColorDither(byte *pic24, byte *pic8, int w, int h,
-                    byte *rmap, byte *gmap, byte *bmap,
-                    byte *rdisp, byte *gdisp, byte *bdisp, int maplen);
+               int dwide, int dhigh);
+byte *DoColorDither(byte *pic24, byte *pic8, int w, int h);
 
 
 #ifdef __STDC__
-int SmoothX(byte *, byte *, int, int, int, int, int,
-            byte *, byte *, byte *);
-int SmoothY(byte *, byte *, int, int, int, int, int,
-            byte *, byte *, byte *);
-int SmoothXY(byte *, byte *, int, int, int, int, int,
-             byte *, byte *, byte *);
+int SmoothX(byte *, byte *, int, int, int, int);
+int SmoothY(byte *, byte *, int, int, int, int);
+int SmoothXY(byte *, byte *, int, int, int, int);
 #else
 int  SmoothX(), SmoothY(), SmoothXY();
 #endif
@@ -100,9 +95,7 @@ int  SmoothX(), SmoothY(), SmoothXY();
 #define xvbzero(s,l) memset(s, 0, l)
 /***************************************************/
 byte *SmoothResize(byte *srcpic8, int swide, int shigh,
-                   int dwide, int dhigh,
-                   byte *rmap, byte *gmap, byte *bmap,
-                   byte *rdmap, byte *gdmap, byte *bdmap, int maplen)
+                   int dwide, int dhigh)
 {
     /* generic interface to Smooth and ColorDither code.
        given an 8-bit-per, swide * shigh image with colormap rmap,gmap,bmap, 
@@ -113,11 +106,10 @@ byte *SmoothResize(byte *srcpic8, int swide, int shigh,
 
     byte *pic24, *pic8;
 
-    pic24 = Smooth24(srcpic8, swide, shigh, dwide, dhigh, rmap, gmap, bmap);
+    pic24 = Smooth24(srcpic8, swide, shigh, dwide, dhigh);
     if (pic24)
     {
-        pic8 = DoColorDither(pic24, NULL, dwide, dhigh, rmap, gmap, bmap,
-                             rdmap, gdmap, bdmap, maplen);
+        pic8 = DoColorDither(pic24, NULL, dwide, dhigh);
         free(pic24);
         return pic8;
     }
@@ -128,8 +120,7 @@ byte *SmoothResize(byte *srcpic8, int swide, int shigh,
 
 
 /***************************************************/
-byte *Smooth24(byte *pic824, int swide, int shigh, int dwide,
-               int dhigh, byte *rmap, byte *gmap, byte *bmap)
+byte *Smooth24(byte *pic824, int swide, int shigh, int dwide, int dhigh)
 {
     /* does a SMOOTH resize from pic824 (which is either a swide*shigh, 8-bit
        pic, with colormap rmap,gmap,bmap OR a swide*shigh, 24-bit image, based
@@ -156,16 +147,13 @@ byte *Smooth24(byte *pic824, int swide, int shigh, int dwide,
 
     /* decide which smoothing routine to use based on type of expansion */
     if (dwide <  swide && dhigh <  shigh)
-        retval = SmoothXY(pic24, pic824, 0, swide, shigh, dwide, dhigh,
-                          rmap, gmap, bmap);
+        retval = SmoothXY(pic24, pic824, swide, shigh, dwide, dhigh);
 
     else if (dwide <  swide && dhigh >= shigh)
-        retval = SmoothX(pic24, pic824, 0, swide, shigh, dwide, dhigh,
-                         rmap, gmap, bmap);
+        retval = SmoothX(pic24, pic824, swide, shigh, dwide, dhigh);
 
     else if (dwide >= swide && dhigh <  shigh)
-        retval = SmoothY(pic24, pic824, 0, swide, shigh, dwide, dhigh,
-                         rmap, gmap, bmap);
+        retval = SmoothY(pic24, pic824, swide, shigh, dwide, dhigh);
 
     else
     {
@@ -209,12 +197,14 @@ byte *Smooth24(byte *pic824, int swide, int shigh, int dwide,
             if (py < 0)
             {
                 y1 = cy - 1;
-                if (y1 < 0) y1 = 0;
+                if (y1 < 0)
+                    y1 = 0;
             }
             else
             {
                 y1 = cy + 1;
-                if (y1 > shigh - 1) y1 = shigh - 1;
+                if (y1 > shigh - 1)
+                    y1 = shigh - 1;
             }
 
             cyOff = (size_t) cy * swide ;    /* current line */
@@ -232,26 +222,28 @@ byte *Smooth24(byte *pic824, int swide, int shigh, int dwide,
                 if (px < 0)
                 {
                     x1 = cx - 1;
-                    if (x1 < 0) x1 = 0;
+                    if (x1 < 0)
+                        x1 = 0;
                 }
                 else
                 {
                     x1 = cx + 1;
-                    if (x1 > swide - 1) x1 = swide - 1;
+                    if (x1 > swide - 1)
+                        x1 = swide - 1;
                 }
 
-				cA = pic824[y1Off + x1];   /* corner pixel */
-				cB = pic824[y1Off + cx];   /* up/down center pixel */
-				cC = pic824[cyOff + x1];   /* left/right center pixel */
-				cD = pic824[cyOff + cx];   /* center pixel */
+                cA = pic824[y1Off + x1];   /* corner pixel */
+                cB = pic824[y1Off + cx];   /* up/down center pixel */
+                cC = pic824[cyOff + x1];   /* left/right center pixel */
+                cD = pic824[cyOff + cx];   /* center pixel */
 
                 /* quick check */
                 if (cA == cB && cB == cC && cC == cD)
                 {
                     /* set this pixel to the same color as in pic8 */
-                    *pp++ = rmap[cD];
-                    *pp++ = gmap[cD];
-                    *pp++ = bmap[cD];
+                    *pp++ = cD;
+                    *pp++ = cD;
+                    *pp++ = cD;
                 }
 
                 else
@@ -265,17 +257,17 @@ byte *Smooth24(byte *pic824, int swide, int shigh, int dwide,
                     pD = 100 - (pA + pB + pC);
 
                     int val=(pA * cA) / 100 + (pB * cB) / 100 +
-							(pC * cC) / 100 + (pD * cD) / 100;
+                            (pC * cC) / 100 + (pD * cD) / 100;
                     /*
-					*pp++ = (pA * rmap[cA]) / 100 + (pB * rmap[cB]) / 100 +
-							(pC * rmap[cC]) / 100 + (pD * rmap[cD]) / 100;
+                    *pp++ = (pA * rmap[cA]) / 100 + (pB * rmap[cB]) / 100 +
+                    (pC * rmap[cC]) / 100 + (pD * rmap[cD]) / 100;
 
-					*pp++ = (pA * gmap[cA]) / 100 + (pB * gmap[cB]) / 100 +
-							(pC * gmap[cC]) / 100 + (pD * gmap[cD]) / 100;
+                    *pp++ = (pA * gmap[cA]) / 100 + (pB * gmap[cB]) / 100 +
+                    (pC * gmap[cC]) / 100 + (pD * gmap[cD]) / 100;
 
-					*pp++ = (pA * bmap[cA]) / 100 + (pB * bmap[cB]) / 100 +
-							(pC * bmap[cC]) / 100 + (pD * bmap[cD]) / 100;                    }
-					*/
+                    *pp++ = (pA * bmap[cA]) / 100 + (pB * bmap[cB]) / 100 +
+                    (pC * bmap[cC]) / 100 + (pD * bmap[cD]) / 100;                    }
+                    */
                     *pp++=val;
                     *pp++=val;
                     *pp++=val;
@@ -298,14 +290,13 @@ byte *Smooth24(byte *pic824, int swide, int shigh, int dwide,
 }
 
 /***************************************************/
-int SmoothX(byte *pic24, byte *pic824, int is24,
-            int swide, int shigh, int dwide, int dhigh,
-            byte *rmap, byte *gmap, byte *bmap)
+int SmoothX(byte *pic24, byte *pic824,
+            int swide, int shigh, int dwide, int dhigh)
 {
     byte *cptr, *cptr1;
     int  i, j;
     int  *lbufR, *lbufG, *lbufB;
-    int  pixR, pixG, pixB, bperpix;
+    int  pixR, pixG, pixB;
     int  pcnt0, pcnt1, lastpix, pixcnt, thisline, ypcnt;
     int  *pixarr, *paptr;
 
@@ -323,54 +314,47 @@ int SmoothX(byte *pic24, byte *pic824, int is24,
     pixarr = (int *) calloc(swide + 1, sizeof(int));
     if (!lbufR || !lbufG || !lbufB || !pixarr)
     {
-        if (lbufR)  free(lbufR);
-        if (lbufG)  free(lbufG);
-        if (lbufB)  free(lbufB);
-        if (pixarr) free(pixarr);
+        if (lbufR)
+            free(lbufR);
+        if (lbufG)
+            free(lbufG);
+        if (lbufB)
+            free(lbufB);
+        if (pixarr)
+            free(pixarr);
         return 1;
     }
-
-    bperpix = (is24) ? 3 : 1;
 
     for (j = 0; j <= swide; j++)
         pixarr[j] = (j * dwide + (15 * swide) / 16) / swide;
 
     cptr = pic824;
-    cptr1 = cptr + swide * bperpix;
+    cptr1 = cptr + swide;
 
     for (i = 0; i < dhigh; i++)
     {
         /*    if ((i&15) == 0) WaitCursor();*/
 
         ypcnt = (((i * shigh) << 6) / dhigh) - 32;
-        if (ypcnt < 0) ypcnt = 0;
+        if (ypcnt < 0)
+            ypcnt = 0;
 
         pcnt1 = ypcnt & 0x3f;                     /* 64ths of NEXT line to use */
         pcnt0 = 64 - pcnt1;                       /* 64ths of THIS line to use */
 
         thisline = ypcnt >> 6;
 
-        cptr  = pic824 + thisline * swide * bperpix;
-        if (thisline + 1 < shigh) cptr1 = cptr + swide * bperpix;
-        else cptr1 = cptr;
-
-        if (is24)
-        {
-            for (j = 0; j < swide; j++)
-            {
-                lbufR[j] = ((*cptr++ * pcnt0) + (*cptr1++ * pcnt1)) >> 6;
-                lbufG[j] = ((*cptr++ * pcnt0) + (*cptr1++ * pcnt1)) >> 6;
-                lbufB[j] = ((*cptr++ * pcnt0) + (*cptr1++ * pcnt1)) >> 6;
-            }
-        }
+        cptr  = pic824 + thisline * swide;
+        if (thisline + 1 < shigh)
+            cptr1 = cptr + swide;
         else
-        {  /* 8-bit input pic */
-            for (j = 0; j < swide; j++, cptr++, cptr1++)
-            {
-                lbufR[j] = ((rmap[*cptr] * pcnt0) + (rmap[*cptr1] * pcnt1)) >> 6;
-                lbufG[j] = ((gmap[*cptr] * pcnt0) + (gmap[*cptr1] * pcnt1)) >> 6;
-                lbufB[j] = ((bmap[*cptr] * pcnt0) + (bmap[*cptr1] * pcnt1)) >> 6;
-            }
+            cptr1 = cptr;
+
+        for (j = 0; j < swide; j++, cptr++, cptr1++)
+        {
+            lbufR[j] = ((*cptr * pcnt0) + (*cptr1 * pcnt1)) >> 6;
+            lbufG[j] = ((*cptr * pcnt0) + (*cptr1 * pcnt1)) >> 6;
+            lbufB[j] = ((*cptr * pcnt0) + (*cptr1 * pcnt1)) >> 6;
         }
 
         pixR = pixG = pixB = pixcnt = lastpix = 0;
@@ -404,12 +388,11 @@ int SmoothX(byte *pic24, byte *pic824, int is24,
 }
 
 /***************************************************/
-int SmoothY(byte *pic24, byte *pic824, int is24, int swide,
-            int shigh, int dwide, int dhigh,
-            byte *rmap, byte *gmap, byte *bmap)
+int SmoothY(byte *pic24, byte *pic824, int swide,
+            int shigh, int dwide, int dhigh)
 {
     byte *clptr, *cptr, *cptr1;
-    int  i, j, bperpix;
+    int  i, j;
     int  *lbufR, *lbufG, *lbufB, *pct0, *pct1, *cxarr, *cxptr;
     int  lastline, thisline, linecnt;
     int  retval;
@@ -422,8 +405,6 @@ int SmoothY(byte *pic24, byte *pic824, int is24, int swide,
        when swide<=dwide and shigh>=dhigh */
 
     retval = 0;   /* no probs, yet... */
-
-    bperpix = (is24) ? 3 : 1;
 
     lbufR = lbufG = lbufB = pct0 = pct1 = cxarr = NULL;
     lbufR = (int *) calloc(dwide, sizeof(int));
@@ -445,7 +426,8 @@ int SmoothY(byte *pic24, byte *pic824, int is24, int swide,
     {                /* precompute some handy tables */
         int cx64;
         cx64 = (((i * swide) << 6) / dwide) - 32;
-        if (cx64 < 0) cx64 = 0;
+        if (cx64 < 0)
+            cx64 = 0;
         pct1[i] = cx64 & 0x3f;
         pct0[i] = 64 - pct1[i];
         cxarr[i] = cx64 >> 6;
@@ -454,7 +436,7 @@ int SmoothY(byte *pic24, byte *pic824, int is24, int swide,
 
     lastline = linecnt = 0;
 
-    for (i = 0, clptr = pic824; i <= shigh; i++, clptr += swide * bperpix)
+    for (i = 0, clptr = pic824; i <= shigh; i++, clptr += swide)
     {
         /*    if ((i&15) == 0) WaitCursor();*/
 
@@ -479,22 +461,15 @@ int SmoothY(byte *pic24, byte *pic824, int is24, int swide,
 
         for (j = 0, cxptr = cxarr; j < dwide; j++, cxptr++)
         {
-            cptr  = clptr + *cxptr * bperpix;
-            if (*cxptr < swide - 1) cptr1 = cptr + 1 * bperpix;
-            else cptr1 = cptr;
-
-            if (is24)
-            {
-                lbufR[j] += (((*cptr++ * pct0[j]) + (*cptr1++ * pct1[j])) >> 6);
-                lbufG[j] += (((*cptr++ * pct0[j]) + (*cptr1++ * pct1[j])) >> 6);
-                lbufB[j] += (((*cptr++ * pct0[j]) + (*cptr1++ * pct1[j])) >> 6);
-            }
+            cptr  = clptr + *cxptr;
+            if (*cxptr < swide - 1)
+                cptr1 = cptr + 1;
             else
-            {  /* 8-bit input pic */
-                lbufR[j] += (((rmap[*cptr] * pct0[j]) + (rmap[*cptr1] * pct1[j])) >> 6);
-                lbufG[j] += (((gmap[*cptr] * pct0[j]) + (gmap[*cptr1] * pct1[j])) >> 6);
-                lbufB[j] += (((bmap[*cptr] * pct0[j]) + (bmap[*cptr1] * pct1[j])) >> 6);
-            }
+                cptr1 = cptr;
+
+            lbufR[j] += (((*cptr * pct0[j]) + (*cptr1 * pct1[j])) >> 6);
+            lbufG[j] += (((*cptr * pct0[j]) + (*cptr1 * pct1[j])) >> 6);
+            lbufB[j] += (((*cptr * pct0[j]) + (*cptr1 * pct1[j])) >> 6);
         }
 
         linecnt++;
@@ -502,25 +477,30 @@ int SmoothY(byte *pic24, byte *pic824, int is24, int swide,
 
 
 smyexit:
-    if (lbufR) free(lbufR);
-    if (lbufG) free(lbufG);
-    if (lbufB) free(lbufB);
-    if (pct0)  free(pct0);
-    if (pct1)  free(pct1);
-    if (cxarr) free(cxarr);
+    if (lbufR)
+        free(lbufR);
+    if (lbufG)
+        free(lbufG);
+    if (lbufB)
+        free(lbufB);
+    if (pct0)
+        free(pct0);
+    if (pct1)
+        free(pct1);
+    if (cxarr)
+        free(cxarr);
 
     return retval;
 }
 
 /***************************************************/
-int SmoothXY(byte *pic24, byte *pic824, int is24,
-             int swide, int shigh, int dwide, int dhigh,
-             byte *rmap, byte *gmap, byte *bmap)
+int SmoothXY(byte *pic24, byte *pic824,
+             int swide, int shigh, int dwide, int dhigh)
 {
     byte *cptr;
     int  i, j;
     int  *lbufR, *lbufG, *lbufB;
-    int  pixR, pixG, pixB, bperpix;
+    int  pixR, pixG, pixB;
     int  lastline, thisline, lastpix, linecnt, pixcnt;
     int  *pixarr, *paptr;
 
@@ -539,14 +519,16 @@ int SmoothXY(byte *pic24, byte *pic824, int is24,
     pixarr = (int *) calloc(swide + 1, sizeof(int));
     if (!lbufR || !lbufG || !lbufB || !pixarr)
     {
-        if (lbufR)  free(lbufR);
-        if (lbufG)  free(lbufG);
-        if (lbufB)  free(lbufB);
-        if (pixarr) free(pixarr);
+        if (lbufR)
+            free(lbufR);
+        if (lbufG)
+            free(lbufG);
+        if (lbufB)
+            free(lbufB);
+        if (pixarr)
+            free(pixarr);
         return 1;
     }
-
-    bperpix = (is24) ? 3 : 1;
 
     for (j = 0; j <= swide; j++)
         pixarr[j] = (j * dwide + (15 * swide) / 16) / swide;
@@ -593,23 +575,11 @@ int SmoothXY(byte *pic24, byte *pic824, int is24,
 
         if (i < shigh)
         {
-            if (is24)
+            for (j = 0; j < swide; j++, cptr++)
             {
-                for (j = 0; j < swide; j++)
-                {
-                    lbufR[j] += *cptr++;
-                    lbufG[j] += *cptr++;
-                    lbufB[j] += *cptr++;
-                }
-            }
-            else
-            {
-                for (j = 0; j < swide; j++, cptr++)
-                {
-                    lbufR[j] += rmap[*cptr];
-                    lbufG[j] += gmap[*cptr];
-                    lbufB[j] += bmap[*cptr];
-                }
+                lbufR[j] += *cptr;
+                lbufG[j] += *cptr;
+                lbufB[j] += *cptr;
             }
 
             linecnt++;
@@ -624,8 +594,7 @@ int SmoothXY(byte *pic24, byte *pic824, int is24,
 }
 
 /********************************************/
-byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
-                    byte *gmap, byte *bmap, byte *rdisp, byte *gdisp, byte *bdisp, int maplen)
+byte *DoColorDither(byte *pic24, byte *pic8, int w, int h)
 {
     /* takes a 24 bit picture, of size w*h, dithers with the colors in
        rdisp, gdisp, bdisp (which have already been allocated),
@@ -661,10 +630,14 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
     nextline = (int *) malloc(pwide3 * sizeof(int));
     if (!cache || !newpic || !thisline || !nextline)
     {
-        if (newpic)   free(newpic);
-        if (cache)    free(cache);
-        if (thisline) free(thisline);
-        if (nextline) free(nextline);
+        if (newpic)
+            free(newpic);
+        if (cache)
+            free(cache);
+        if (thisline)
+            free(thisline);
+        if (nextline)
+            free(nextline);
 
         return (byte *) NULL;
     }
@@ -682,9 +655,9 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
     {
         for (j = w, tmpptr = nextline; j; j--, ep++)
         {
-            *tmpptr++ = (int) rmap[*ep];
-            *tmpptr++ = (int) gmap[*ep];
-            *tmpptr++ = (int) bmap[*ep];
+            *tmpptr++ = (int) *ep;
+            *tmpptr++ = (int) *ep;
+            *tmpptr++ = (int) *ep;
         }
     }
 
@@ -703,18 +676,20 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
             if (!pic24)
                 for (j = w, tmpptr = nextline; j; j--, ep++)
                 {
-                    *tmpptr++ = (int) rmap[*ep];
-                    *tmpptr++ = (int) gmap[*ep];
-                    *tmpptr++ = (int) bmap[*ep];
+                    *tmpptr++ = (int) *ep;
+                    *tmpptr++ = (int) *ep;
+                    *tmpptr++ = (int) *ep;
                 }
             else
-                for (j = pwide3, tmpptr = nextline; j; j--, ep++) *tmpptr++ = (int) * ep;
+                for (j = pwide3, tmpptr = nextline; j; j--, ep++)
+                    *tmpptr++ = (int) * ep;
         }
 
         /* dither a line, doing odd-lines right-to-left (serpentine) */
         thisptr = (i & 1) ? thisline + w * 3 - 3 : thisline;
         nextptr = (i & 1) ? nextline + w * 3 - 3 : nextline;
-        if (i&1) np += w - 1;
+        if (i&1)
+            np += w - 1;
 
 
         for (j = 0; j < w; j++)
@@ -724,7 +699,8 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
             r2 = *thisptr++;
             g2 = *thisptr++;
             b2 = *thisptr++;
-            if (i&1) thisptr -= 6;  /* move left */
+            if (i&1)
+                thisptr -= 6;  /* move left */
 
             /* map r2,g2,b2 components (could be outside 0..255 range)
             into 0..255 range */
@@ -733,13 +709,17 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
             {   /* are there any negatives in RGB? */
                 if (r2 < g2)
                 {
-                    if (r2 < b2) k = 0;
-                    else k = 2;
+                    if (r2 < b2)
+                        k = 0;
+                    else
+                        k = 2;
                 }
                 else
                 {
-                    if (g2 < b2) k = 1;
-                    else k = 2;
+                    if (g2 < b2)
+                        k = 1;
+                    else
+                        k = 2;
                 }
 
                 switch (k)
@@ -777,13 +757,17 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
             {   /* any overflows in RGB? */
                 if (r2 > g2)
                 {
-                    if (r2 > b2) k = 0;
-                    else k = 2;
+                    if (r2 > b2)
+                        k = 0;
+                    else
+                        k = 2;
                 }
                 else
                 {
-                    if (g2 > b2) k = 1;
-                    else k = 2;
+                    if (g2 > b2)
+                        k = 1;
+                    else
+                        k = 2;
                 }
 
                 switch (k)
@@ -824,11 +808,11 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
                 cnt2++;
 
                 mind = 10000;
-                for (k = closest = 0; k < maplen && mind > 7; k++)
+                for (k = closest = 0; k < 256 && mind > 7; k++)
                 {
-                    d = abs(r2 - rdisp[k])
-                        + abs(g2 - gdisp[k])
-                        + abs(b2 - bdisp[k]);
+                    d = abs(r2 - k)
+                        + abs(g2 - k)
+                        + abs(b2 - k);
                     if (d < mind)
                     {
                         mind = d;
@@ -841,9 +825,9 @@ byte *DoColorDither(byte *pic24, byte *pic8, int w, int h, byte *rmap,
 
 
             /* propogate the error */
-            rerr = r2 - rdisp[*np];
-            gerr = g2 - gdisp[*np];
-            berr = b2 - bdisp[*np];
+            rerr = r2 - *np;
+            gerr = g2 - *np;
+            berr = b2 - *np;
 
             if (j != jmax)
             {  /* adjust LEFT/RIGHT pixel */
