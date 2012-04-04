@@ -90,7 +90,7 @@ int SmoothXY();
 
 #define xvbzero(s,l) memset(s, 0, l)
 /***************************************************/
-byte *SmoothResize(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
+void SmoothResize(byte *picSrc8, byte *destpic8, int swide, int shigh, int dwide, int dhigh) {
 	/* generic interface to Smooth and ColorDither code.
 	 given an 8-bit-per, swide * shigh image with colormap rmap,gmap,bmap,
 	 will generate a new 8-bit-per, dwide * dhigh image, which is dithered
@@ -99,13 +99,9 @@ byte *SmoothResize(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 	/* returns ptr to a dwide*dhigh array of bytes, or NULL on failure */
 	byte * picSmooth = Smooth(picSrc8, swide, shigh, dwide, dhigh);
 	if (picSmooth) {
-		byte * picDithered = NULL;
-		DoColorDither(picSmooth, picDithered, dwide, dhigh);
+		DoColorDither(picSmooth, destpic8, dwide, dhigh);
 		free(picSmooth);
-		return picDithered;
 	}
-
-	return (byte *) NULL;
 }
 
 /***************************************************/
@@ -327,7 +323,6 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 	ep = picSmooth;
 
 	/* attempt to malloc things */
-	picDithered = (byte *) malloc((size_t) w * h);
 	cache = (short *) calloc(2 << 14, sizeof(short));
 	thisline = (int *) malloc(w * sizeof(int));
 	nextline = (int *) malloc(w * sizeof(int));

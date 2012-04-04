@@ -279,11 +279,7 @@ void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
         M().getImage(Maux);
         inputImage=MULTIDIM_ARRAY(Maux);
     }
-    byte *result = SmoothResize(inputImage,
-                                Xdim, Ydim, Xpdim, Ypdim);
-
     unsigned char *outputImage;
     Mp().getArrayPointer(outputImage);
-    memcpy(outputImage,result,((size_t)Xpdim)*Ypdim);
-    free(result);
+    SmoothResize(inputImage,outputImage, Xdim, Ydim, Xpdim, Ypdim);
 }
