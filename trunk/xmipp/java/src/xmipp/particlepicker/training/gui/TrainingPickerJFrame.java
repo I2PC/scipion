@@ -755,9 +755,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	}
 
 	@Override
-	public List<? extends TrainingParticle> getParticles()
+	public List<? extends TrainingParticle> getAvailableParticles()
 	{
-		return getFamilyData().getParticles();
+		return getFamilyData().getAvailableParticles(getThreshold());
 	}
 
 	@Override

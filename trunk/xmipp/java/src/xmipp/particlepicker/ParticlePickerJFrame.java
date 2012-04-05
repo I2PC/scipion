@@ -454,7 +454,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract Micrograph getMicrograph();
 
-	public abstract List<? extends TrainingParticle> getParticles();
+	public abstract List<? extends TrainingParticle> getAvailableParticles();
 
 	public boolean isPickingAvailable(MouseEvent e)
 	{
@@ -584,7 +584,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getFamily().setSize(size);
 		if (particlesdialog != null)
 		{
-			for (TrainingParticle p : getParticles())
+			for (TrainingParticle p : getAvailableParticles())
 				p.resetParticleCanvas();
 			loadParticles();
 		}

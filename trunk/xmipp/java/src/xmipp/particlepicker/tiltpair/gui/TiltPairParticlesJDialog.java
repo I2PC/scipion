@@ -24,7 +24,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 	public void loadParticles(boolean resize)
 	{
 		int side, rows, columns, width = 0, height = 0;
-		List<? extends TrainingParticle> particles = frame.getParticles();
+		List<? extends TrainingParticle> particles = frame.getAvailableParticles();
 		side = frame.getSide(frame.getFamily().getSize());
 
 		if (particles.isEmpty())
@@ -50,7 +50,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 			rows = (int) Math.ceil((particles.size() / (float) columns));
 		}
 		particlespn.removeAll();
-		particles = frame.getParticles();
+		particles = frame.getAvailableParticles();
 		int index = 0;
 		ParticleCanvas c;
 		TrainingParticle p;

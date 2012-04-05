@@ -240,6 +240,16 @@ public class MicrographFamilyData
 		return result;
 	}
 	
+	public List<TrainingParticle> getAvailableParticles(double threshold)
+	{
+		ArrayList<TrainingParticle> result = new ArrayList<TrainingParticle>();
+		result.addAll(manualparticles);
+		for(AutomaticParticle ap: autoparticles)
+			if(!ap.isDeleted() && ap.getCost() >= threshold)
+				result.add(ap);
+		return result;
+	}
+	
 	public TrainingParticle getLastAvailableParticle()
 	{
 		AutomaticParticle ap;

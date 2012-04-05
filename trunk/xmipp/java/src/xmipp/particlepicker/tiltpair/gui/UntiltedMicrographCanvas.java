@@ -113,7 +113,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 			if (p != null)
 			{
-				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
+				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 					removeParticle(p);
 				else if (SwingUtilities.isLeftMouseButton(e))
 					setActive(p);

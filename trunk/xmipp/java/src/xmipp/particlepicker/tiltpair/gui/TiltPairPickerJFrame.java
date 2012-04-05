@@ -326,7 +326,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 
 	@Override
-	public List<? extends TrainingParticle> getParticles()
+	public List<? extends TrainingParticle> getAvailableParticles()
 	{
 		return untiltedmic.getParticles();
 	}

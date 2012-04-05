@@ -74,7 +74,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null)
 			{
-				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
+				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 				{
 					micrograph.removeParticle(p, ppicker);
 					frame.updateMicrographsModel();

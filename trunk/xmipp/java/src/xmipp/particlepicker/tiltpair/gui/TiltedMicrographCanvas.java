@@ -126,7 +126,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 			TiltedParticle p = um.getTiltedMicrograph().getParticle(x, y, (int) (frame.getParticleSize()));
 			if (p != null)
 			{
-				if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
+				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 				{
 					um.removeParticle(p.getUntiltedParticle());
 					frame.updateMicrographsModel();
