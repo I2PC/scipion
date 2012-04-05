@@ -156,10 +156,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	protected static int MIN_HEIGHT;
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
+	protected static Dimension screenSize;
 
 	/** Some static initialization for fancy default dimensions */
 	static {
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		float aux = (float) screenSize.height * MAX_HEIGHT_RATE;
 		MAX_HEIGHT = Math.round(aux);
 		aux = (float) MIN_WIDTH / DIM_RATE;
@@ -367,15 +368,25 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			gallery.setRows(data.parameters.rows);
 		else if (!data.isRotSpectraMode())
 			adjust = true;
+		
 		if (data.isMicrographsMode()) {
-			setExtendedState(JFrame.MAXIMIZED_BOTH);
-			width = getSize().width;
+			//setExtendedState(JFrame.MAXIMIZED_BOTH);
+			width = screenSize.width - 50;
+			int h = screenSize.height - 100;
+			setPreferredSize(new Dimension(width, h));
 		} else {
 			int desiredCols = adjust ? (int) Math.ceil(Math.sqrt(gallery
 					.getSize())) : gallery.getColumnCount();
-			int desiredWidth = desiredCols * gallery.cellDim.width + 50;
-			width = Math.min(Math.max(desiredWidth, MIN_WIDTH), MAX_WIDTH);
+			width = desiredCols * gallery.cellDim.width + 50;
+			width = Math.min(Math.max(width, MIN_WIDTH), MAX_WIDTH);
+			if (adjust) {
+				gallery.adjustColumn(width - 50);
+			}
+			int h = gallery.getRowCount() * gallery.cellDim.height;
+			h = Math.min(Math.max(h, MIN_HEIGHT), MAX_HEIGHT);
+			setPreferredSize(new Dimension(width, h));
 		}
+		DEBUG.printFormat("width: %d", width);
 		setAutoAdjustColumns(adjust);
 	}
 
@@ -1014,8 +1025,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	private void formComponentResized(java.awt.event.ComponentEvent evt) {
 		width = getSize().width;
-		if (!isUpdating && autoAdjustColumns)
+		if (!isUpdating && autoAdjustColumns){
+			DEBUG.printMessage("formComponentResized");
 			adjustColumns();
+		}
 	}
 
 	private void tableMouseClicked(MouseEvent evt) {

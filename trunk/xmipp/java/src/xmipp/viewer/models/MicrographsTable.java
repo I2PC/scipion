@@ -21,9 +21,13 @@ public class MicrographsTable extends MetadataTable {
 		data.globalRender = true;
 		ColumnInfo ctfModel = null;
 		ColumnInfo ctfModel2 = null;
+		ColumnInfo firstRender = null;
 		for (ColumnInfo ci: data.labels){
-			if (ci.allowRender && ci.getLabel() != MDLabel.MDL_MICROGRAPH)
+			if (ci.allowRender && ci.getLabel() != MDLabel.MDL_MICROGRAPH){
 				ci.render = true;
+				if (firstRender == null)
+					firstRender = ci;
+			}
 			if (ci.getLabel() == MDLabel.MDL_CTFMODEL)
 				ctfModel = ci;
 			if (ci.getLabel() == MDLabel.MDL_CTFMODEL2)
@@ -39,6 +43,12 @@ public class MicrographsTable extends MetadataTable {
 		if (ctfModel2 != null){
 			data.labels.remove(ctfModel2);
 			data.labels.add(ctfModel2);
+		}
+		
+		//Replace MDL_MICROGRAPH as first render
+		if (firstRender != null){
+			data.ciFirstRender = firstRender;
+			data.zoom = 50;
 		}
 	}
 	
