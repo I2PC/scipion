@@ -254,5 +254,10 @@ public class MicrographFamilyData
 		return null;
 		
 	}
+	
+	public String toString()
+	{
+		return String.format("Micrograph: %s Family: %s State: %s", micrograph.getName(), family.getName(), state);
+	}
 
 }

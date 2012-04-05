@@ -111,7 +111,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		{
 			int x, y;
 			TrainingParticle particle;
-			String file = getOutputPath(micrograph.getOFilename());
+			String file = getOutputPath(micrograph.getPosFile());
 			String fname;
 			Family family;
 			MicrographFamilyState state;
@@ -168,7 +168,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			String file;
 			for (TrainingMicrograph m : micrographs)
 			{
-				file = getOutputPath(m.getOFilename());
+				file = getOutputPath(m.getPosFile());
 				if (!m.hasData())
 					new File(file).delete();
 				else
@@ -286,7 +286,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		long id;
 		try
 		{
-			String file = getOutputPath(m.getOFilename());
+			String file = getOutputPath(m.getPosFile());
 			MetaData md = new MetaData();
 			for (MicrographFamilyData mfd : m.getFamiliesData())
 			{
@@ -336,7 +336,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			if (!mfd.getManualParticles().isEmpty())
 			{
 				// removing manual particles
-				block = String.format("%s@%s", mfd.getFamily().getName(), mfd.getMicrograph().getOFilename());
+				block = String.format("%s@%s", mfd.getFamily().getName(), mfd.getMicrograph().getPosFile());
 				emptymd.writeBlock(block);
 			}
 			mfd.reset();// Resetting family data

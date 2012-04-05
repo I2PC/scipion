@@ -39,7 +39,7 @@ public class ReviewParticlePicker extends TrainingPicker
 		this.reviewfamily = getFamily(familyname);
 		if (reviewfamily == null)
 			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("family", familyname));
-
+		reviewfamily.setState(FamilyState.Review);
 		loadMicrographs();
 		families.clear();
 		families.add(reviewfamily);

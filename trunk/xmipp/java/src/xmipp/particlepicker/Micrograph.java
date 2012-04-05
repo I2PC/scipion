@@ -16,20 +16,20 @@ public abstract class Micrograph
 	private String file;
 	private String name;
 	private ImagePlus imp;	
-	private String ofilename;
 	private String posfile;
+	private String pos24file;
 	public static final String ext = ".pos";
 	
 
 	
 	public void setPosFileFromXmipp24(String posfile)
 	{
-		this.posfile = posfile;
+		this.pos24file = posfile;
 	}
 	
 	public String getPosFileFromXmipp24()
 	{
-		return posfile;
+		return pos24file;
 	}
 
 	public Micrograph(String file)
@@ -43,7 +43,7 @@ public abstract class Micrograph
 		if (!new File(file).exists())
 			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
 		this.name = name;
-		this.ofilename = name + ext;
+		this.posfile = name + ext;
 
 	}
 
@@ -62,9 +62,9 @@ public abstract class Micrograph
 		return name;
 	}
 
-	public String getOFilename()
+	public String getPosFile()
 	{
-		return ofilename;
+		return posfile;
 	}
 	
 

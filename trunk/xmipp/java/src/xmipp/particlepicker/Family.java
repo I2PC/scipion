@@ -168,8 +168,8 @@ public class Family {
 	}
 
 
-	public void setReviewState() {
-		state = FamilyState.Review;
+	public void setState(FamilyState state) {
+		this.state = state;
 		
 	}
 

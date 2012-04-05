@@ -55,8 +55,6 @@ public abstract class ParticlePicker
 		this.macrosfile = getOutputPath("macros.xmd");
 		loadFilters();
 		loadFamilies();
-		
-
 	}
 	
 	public String getMicrographsSelFile()

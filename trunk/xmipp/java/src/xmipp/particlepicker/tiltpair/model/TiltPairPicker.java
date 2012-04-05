@@ -74,7 +74,7 @@ public class TiltPairPicker extends ParticlePicker
 			int x, y;
 			UntiltedParticle up;
 			TiltedParticle tp;
-			String filename = getOutputPath(micrograph.getOFilename());
+			String filename = getOutputPath(micrograph.getPosFile());
 			if (!new File(filename).exists())
 				return;
 
@@ -86,7 +86,7 @@ public class TiltPairPicker extends ParticlePicker
 				up = new UntiltedParticle(x, y, micrograph, family);
 				micrograph.addParticle(up);
 			}
-			filename = getOutputPath(micrograph.getTiltedMicrograph().getOFilename());
+			filename = getOutputPath(micrograph.getTiltedMicrograph().getPosFile());
 			md = new MetaData(filename);
 			int i = 0;
 			long[] ids = md.findObjects();
@@ -184,7 +184,7 @@ public class TiltPairPicker extends ParticlePicker
 			for (UntiltedMicrograph m : micrographs)
 			{
 				if (!m.hasData())
-					new File(m.getOFilename()).delete();
+					new File(m.getPosFile()).delete();
 				else
 				{
 
@@ -210,8 +210,8 @@ public class TiltPairPicker extends ParticlePicker
 						}
 					}
 					String template = family.getName() + "@%s";
-					md.write(String.format(template, getOutputPath(m.getOFilename())));
-					md2.write(String.format(template, getOutputPath(m.getTiltedMicrograph().getOFilename())));
+					md.write(String.format(template, getOutputPath(m.getPosFile())));
+					md2.write(String.format(template, getOutputPath(m.getTiltedMicrograph().getPosFile())));
 					anglesmd.write(selfile);
 				}
 			}

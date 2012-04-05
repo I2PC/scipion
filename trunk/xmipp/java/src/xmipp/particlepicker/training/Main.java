@@ -44,7 +44,7 @@ class Main
 					if (mode == FamilyState.Manual)
 						ppicker = new ManualParticlePicker(selfile, outputdir, mode);
 
-					if (mode == FamilyState.Supervised)
+					else if (mode == FamilyState.Supervised)
 					{
 						int threads = Integer.parseInt(myargs[3]);
 						boolean fastmode = Boolean.parseBoolean(myargs[4]);

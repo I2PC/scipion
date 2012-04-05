@@ -410,6 +410,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		updateMicrographsModel();
 		canvas.repaint();
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
+		if(particlesdialog != null)
+			loadParticles();
+		
 	}
 
 	private void initMicrographsPane()
@@ -610,12 +613,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
 		saveChanges();// persist changes
+		MicrographFamilyData mfd;
 		for (TrainingMicrograph micrograph : ppicker.getMicrographs())
 		{
-			if (!micrograph.getFamilyData(family).isEmpty())
+			mfd = micrograph.getFamilyData(family);
+			System.out.println(mfd);	
+			if (!mfd.isEmpty())
 			{
-
-				final String fargs = ((SupervisedParticlePicker) ppicker).getTrainCommandLineArgs(getFamilyData());
+				System.out.println(mfd.isEmpty());
+				final String fargs = ((SupervisedParticlePicker) ppicker).getTrainCommandLineArgs(mfd);
 				try
 				{
 					final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("training picker...");

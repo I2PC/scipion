@@ -104,7 +104,7 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		);
 
 		if (mfd.getManualParticles().size() > 0)
-			args += family.getName() + "@" + getOutputPath(micrograph.getOFilename());
+			args += family.getName() + "@" + getOutputPath(micrograph.getPosFile());
 		if (isFastMode())
 			args += " --fast";
 		if (isIncore())
@@ -138,7 +138,7 @@ public class SupervisedParticlePicker extends TrainingPicker {
 				family.getSize(), // --particleSize
 				getOutputPath(family.getName()),// --model
 				getOutputPath(micrograph.getName()), // --outputRoot
-				family.getName() + "@" + getOutputPath(micrograph.getOFilename()));// train
+				family.getName() + "@" + getOutputPath(micrograph.getPosFile()));// train
 		// parameter
 		if (isFastMode())
 			args += " --fast";
