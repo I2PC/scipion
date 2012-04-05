@@ -49,6 +49,8 @@ double CTF_fitness(double *, void *);
 #define FIRST_ENVELOPE_PARAMETER    4
 #define FIRST_DEFOCUS_PARAMETER     0
 
+#define DEBUG_PROFILE
+
 /* Global variables -------------------------------------------------------- */
 namespace AdjustCTF {
 // Some aliases
@@ -70,10 +72,12 @@ MultidimArray<double> global_mask;
 MultidimArray<double> global_mask_between_zeroes;
 MultidimArray<double> global_w_count;
 
+#ifdef DEBUG_PROFILE
 MultidimArray<double> global_psd_exp_radial_derivative;
 MultidimArray<double> global_psd_theo_radial_derivative;
 MultidimArray<double> global_psd_exp_radial;
 MultidimArray<double> global_psd_theo_radial;
+#endif
 
 // Penalization for forbidden values of the parameters
 double global_heavy_penalization;
@@ -642,6 +646,7 @@ void ProgCTFEstimateFromPSD::produce_side_info() {
 	STARTINGX(enhanced_ctftomodel()) = STARTINGY(enhanced_ctftomodel()) = 0;
 
 	// Compute now radial average of the enhanced_ctftomodel
+#ifdef DEBUG_PROFILE
 	global_psd_exp_radial_derivative.initZeros(XSIZE(enhanced_ctftomodel()));
 	global_psd_theo_radial_derivative.initZeros(global_psd_exp_radial_derivative);
 	global_psd_exp_radial.initZeros(global_psd_exp_radial_derivative);
@@ -690,6 +695,7 @@ void ProgCTFEstimateFromPSD::produce_side_info() {
 		}
 	}
 	global_psd_exp_radial_derivative/=maxDiff;
+#endif
 }
 
 /* Generate model so far ---------------------------------------------------- */
@@ -1192,8 +1198,9 @@ double CTF_fitness(double *p, void *) {
 			}
 		}
 
+#ifdef DEBUG_PROFILE
 		// Correlation of the derivative of the radial profile
-		if (global_action==3)
+		if (global_action==3 || global_evaluation_reduction==1)
 		{
 			int state=0;
 			double maxDiff=0;
@@ -1260,6 +1267,7 @@ double CTF_fitness(double *p, void *) {
 				}
 			}
 		}
+#endif
 	}
 
 	// Show some debugging information
@@ -1912,7 +1920,7 @@ void estimate_defoci() {
 	double min_allowed_defocusU = 1e3, max_allowed_defocusU = 100e3;
 	double min_allowed_defocusV = 1e3, max_allowed_defocusV = 100e3;
 	if (global_prm->initial_ctfmodel.DeltafU != 0) {
-		initial_defocusStep = global_prm->defocus_range;
+		initial_defocusStep = std::min(global_prm->defocus_range,20000.0);
 		defocusU0 = std::max(
 				1e3,
 				global_prm->initial_ctfmodel.DeltafU
@@ -1954,7 +1962,7 @@ void estimate_defoci() {
 	steps(3) = 0; // Do not optimize kV
 	steps(4) = 0; // Do not optimize K
 	for (double defocusStep = initial_defocusStep;
-			defocusStep >= std::min(8000., global_prm->defocus_range / 2);
+			defocusStep >= std::min(5000., global_prm->defocus_range / 2);
 			defocusStep /= 2) {
 		error.resize(CEIL((defocusVF - defocusV0) / defocusStep + 1),
 				CEIL((defocusUF - defocusU0) / defocusStep + 1));
@@ -2249,6 +2257,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 	/************************************************************************
 	 STEP 8:  all parameters
 	 /************************************************************************/
+	/*
 	global_action = 4;
 	global_evaluation_reduction = 4;
 
@@ -2285,6 +2294,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 		std::cout << "Best fast Fit:\n" << global_ctfmodel << std::endl;
 		save_intermediate_results("step03b_best_fast_fit");
 	}
+	*/
 
 	/************************************************************************
 	 STEPs 9, 10 and 11: all parameters included second Gaussian
