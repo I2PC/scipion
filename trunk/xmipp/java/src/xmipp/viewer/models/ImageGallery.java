@@ -142,7 +142,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public Object getValueAt(int row, int col) {
 		int index = getIndex(row, col);
 
-		if (index < n) {
+		if (isValidIndex(index)) {
 			try {
 				String key = getItemKey(index);
 				ImageItem item;
@@ -168,7 +168,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public void refreshAt(int row, int col) {
 		int index = getIndex(row, col);
 
-		if (index < n) {
+		if (isValidIndex(index)) {
 			try {
 				String key = getItemKey(index);
 				// Clear cache entry
@@ -344,6 +344,11 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public int getIndex(int row, int col) {
 		return row * cols + col;
 	}
+	
+	/** Check if the index is inside bounds */
+	public boolean isValidIndex(int index){
+		return index >= 0 && index < n;
+	}
 
 	/** Return the label of the item at this position */
 	public abstract String getLabel(int row, int col);
@@ -418,15 +423,17 @@ public abstract class ImageGallery extends AbstractTableModel {
 		for (int i = 0; i < n; ++i)
 			if (data.getItemClassInfo(i) == cli)
 				data.setItemClass(i, null);
-		data.removeClass(classNumber);		
+		data.removeClass(classNumber);
 		fireTableDataChanged();
 	}
 
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
 		int i = getIndex(row, col);
-		data.selection[i] = !data.selection[i];
-		fireTableCellUpdated(row, col);
+		if (isValidIndex(i)) {
+			data.selection[i] = !data.selection[i];
+			fireTableCellUpdated(row, col);
+		}
 	}
 
 	/**
@@ -619,7 +626,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 
 		public boolean isBusy() {
-			//int[] coords = getCoords(index);
+			// int[] coords = getCoords(index);
 			return ImageGallery.this.isBusy(index, 0);
 		}
 

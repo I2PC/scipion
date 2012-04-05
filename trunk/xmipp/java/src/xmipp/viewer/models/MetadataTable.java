@@ -131,6 +131,7 @@ public class MetadataTable extends MetadataGallery {
 			ColumnInfo ci = visibleLabels.get(column);
 			long id = data.ids[row];
 			setMdValueAt(value, row, column, ci, id);
+			data.setMdChanges(true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

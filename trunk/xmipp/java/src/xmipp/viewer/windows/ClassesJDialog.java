@@ -299,7 +299,7 @@ public class ClassesJDialog extends XmippDialog {
 		
 		public void addNewRow(){
 			int newPos = classes.size();
-			gallery.data.addClass(new ClassInfo("NewClass", getNextColor())));
+			gallery.data.addClass(new ClassInfo("NewClass", getNextColor()));
 			fireTableRowsInserted(newPos, newPos);
 		}
 		

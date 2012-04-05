@@ -119,7 +119,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	private JComboBox createLabelsCombo() {
 		jcbLabel = new JComboBox();
 		boolean found = false;
-		for (int label = MDLabel.MDL_FIRST_LABEL; label < MDLabel.MDL_LAST_LABEL; ++label) {
+		for (int label = MDLabel.MDL_OBJID + 1; label < MDLabel.MDL_LAST_LABEL; ++label) {
 			found = false;
 			for (ColumnInfo ci : this.labels)
 				if (ci.getLabel() == label) {

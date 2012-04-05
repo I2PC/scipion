@@ -51,6 +51,7 @@ public class XmippFilePreview extends JComponent implements
 	}
 
 	private void loadImage(String filename) throws Exception{
+		try{
 		ImageGeneric image;
 		image = new ImageGeneric(filename);
 		image.read(128, 128, ImageGeneric.MID_SLICE, ImageGeneric.FIRST_IMAGE);
@@ -60,6 +61,9 @@ public class XmippFilePreview extends JComponent implements
 		bimg.getRaster().setDataElements(0, 0, image.getXDim(), image.getYDim(), 
 				image.getArrayByte(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE));
 		thumbnail = new ImageIcon(bimg);
+		} catch (Exception e){
+			thumbnail = null;
+		}
 	}
 	
 	public void loadImage() {

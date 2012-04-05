@@ -26,7 +26,6 @@
 package xmipp.utils;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.FlowLayout;
@@ -34,14 +33,10 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
 /**
  * This class serve as a simple JDialog extension. The Ok and Cancel buttons are
@@ -102,15 +97,6 @@ public class XmippDialog extends JDialog implements ActionListener {
 	public boolean showDialog() {
 		setVisible(true);
 		return result;
-	}
-	
-	/** Change Ok and Cancel button text */
-	public void setButtonOkText(String text){
-		btnOkText = text;
-	}
-	
-	public void setButtonCancelText(String text){
-		btnCancelText = text;
 	}
 
 	/**
@@ -221,10 +207,12 @@ public class XmippDialog extends JDialog implements ActionListener {
 	}
 	
 	public static boolean showQuestion(JFrame parent, String message) {
-		XmippMessageDialog dlg = new XmippMessageDialog(parent, "QUESTION",
-				message, "info.gif");
-		dlg.setButtonOkText("Yes");
-		dlg.setButtonCancelText("No");
+		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message);
+		return dlg.showDialog();
+	}	
+	
+	public static boolean showQuestion(JDialog parent, String message) {
+		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message);
 		return dlg.showDialog();
 	}	
 	
@@ -238,54 +226,3 @@ public class XmippDialog extends JDialog implements ActionListener {
 
 }// class XmippDialog
 
-/** Special case of XmippDialog to display message (info, error, warning) */
-class XmippMessageDialog extends XmippDialog {
-
-	String message;
-	String iconPath;
-
-	public XmippMessageDialog(JFrame parent, String title, String message,
-			String iconPath) {
-		super(parent, title, true);
-		init(removeColors(message), iconPath);
-	}
-	
-	public XmippMessageDialog(Dialog parent, String title, String message,
-			String iconPath) {
-		super(parent, title, true);
-		init(message, iconPath);
-	}
-	
-	/** Perform some initializations */
-	private void init(String message, String iconPath){
-		this.message = message;
-		this.iconPath = iconPath;
-		initComponents();
-	}
-
-	@Override
-	protected void createContent(JPanel panel) {
-		panel.setLayout(new BorderLayout());
-		JPanel iconPanel = new JPanel();
-		iconPanel.add(XmippWindowUtil.getIconLabel(iconPath));
-		iconPanel.setBackground(Color.white);
-		panel.add(iconPanel, BorderLayout.LINE_START);
-		JTextArea text = new JTextArea(message, 5, 40);
-		text.setEditable(false);
-		text.setBackground(Color.white);
-		text.setBorder(BorderFactory.createEmptyBorder());
-		text.setLineWrap(true);
-		text.setWrapStyleWord(true);
-		// text
-		JScrollPane scrollPane = new JScrollPane(text);
-		scrollPane.setBorder(BorderFactory.createEmptyBorder());
-		scrollPane.setBackground(Color.white);
-		panel.add(scrollPane, BorderLayout.CENTER);
-	}
-
-	@Override
-	protected void createButtons() {
-		super.createButtons();
-		panelBtn.setLayout(new FlowLayout());
-	}
-}// class XmippMessageDialog

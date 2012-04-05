@@ -84,7 +84,7 @@ public class GalleryData {
 	// ClassInfo reference for each element
 	public ClassInfo[] classes;
 	//Flags to check if md or classes has changed 
-	public boolean mdHasChanged, classesHasChanged;
+	private boolean hasMdChanges, hasClassesChanges;
 	
 
 	/**
@@ -145,8 +145,6 @@ public class GalleryData {
 
 	/** Load contents from a metadata already read */
 	public void loadMd() throws Exception {
-		mdHasChanged = false;
-		classesHasChanged = false;
 		ids = md.findObjects();
 		loadLabels();
 		numberOfVols = 0;
@@ -265,6 +263,8 @@ public class GalleryData {
 	/** Read metadata and store ids */
 	private void readMetadata(String fn) {
 		try {
+			hasMdChanges = false;
+			hasClassesChanges = false;
 			md.read(fn);
 			loadMd();
 
@@ -276,15 +276,16 @@ public class GalleryData {
 		}
 	}
 	
-	/** Reload current metadata */
-	public void reloadMd(){
-		readMetadata(getMdFilename());
+	/** Reload current metadata from file*/
+	public void readMd(){
+		if (filename != null)
+			readMetadata(getMdFilename());
 	}
 
 	/** Select one of the blocks */
 	public void selectBlock(String block) {
 		selectedBlock = block;
-		reloadMd();
+		readMd();
 	}
 
 	public ImageGallery createModel() {
@@ -409,8 +410,10 @@ public class GalleryData {
 	/** Set enabled state */
 	public void setEnabled(int index, boolean value) {
 		try {
-			if (!isVolumeMode()) // slices in a volume are always enabled
+			if (!isVolumeMode()){ // slices in a volume are always enabled
 				md.setEnabled(value, ids[index]);
+				hasMdChanges = true;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -476,7 +479,7 @@ public class GalleryData {
 
 	/** Set the class of an element */
 	public void setItemClass(int index, ClassInfo cli) {
-		classesHasChanged = true;
+		hasClassesChanges = true;
 		classes[index] = cli;
 	}
 
@@ -615,18 +618,32 @@ public class GalleryData {
 	/** Delete from metadata selected items */
 	public void removeSelection() throws Exception{
 		for (int i = 0; i < ids.length; ++i){
-			if (selection[i])
+			if (selection[i]) {
 				md.removeObject(ids[i]);
+				hasMdChanges = true;
+			}
 		}
 	}
 
 	public void addClass(ClassInfo ci) {
 		classesArray.add(ci);
-		classesHasChanged = true;		
+		hasClassesChanges = true;		
 	}
 
 	public void removeClass(int classNumber) {
 		classesArray.remove(classNumber);
-		classesHasChanged = true;	
+		hasClassesChanges = true;	
+	}
+	
+	public boolean hasMdChanges(){
+		return hasMdChanges;
+	}
+	
+	public void setMdChanges(boolean value){
+		hasMdChanges = value;
+	}
+	
+	public boolean hasClassesChanges(){
+		return hasClassesChanges;
 	}
 }// class GalleryData

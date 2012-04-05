@@ -185,8 +185,7 @@ public class MetadataGallery extends ImageGallery {
 	 * Return a key string using label
 	 */
 	protected String getItemKey(int index, int label) throws Exception {
-		String format = data.md.getValueString(label, data.ids[index])
-				+ "(%d,%d)";
+		String format = data.getValueFromLabel(index, label) + "(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
 		if (data.wrap)
