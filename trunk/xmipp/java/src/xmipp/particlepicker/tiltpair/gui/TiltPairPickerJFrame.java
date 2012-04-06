@@ -247,6 +247,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 				initializeCanvas();
 				saveChanges();
 				pack();
+				if (particlesdialog != null)
+					loadParticles();
 			}
 		});
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);

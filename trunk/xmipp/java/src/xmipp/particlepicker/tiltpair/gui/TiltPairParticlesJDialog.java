@@ -27,10 +27,16 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 		List<? extends TrainingParticle> particles = frame.getAvailableParticles();
 		side = frame.getSide(frame.getFamily().getSize());
 
-		if (particles.isEmpty())
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particles"));
 		if (side == 0)
 			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));
+		
+		if (particles.isEmpty())
+		{
+			particlespn.removeAll();
+			sp.setPreferredSize(new Dimension(200, 200));
+			pack();
+			return;
+		}
 
 		if (resize)
 		{
