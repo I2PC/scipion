@@ -49,8 +49,6 @@ double CTF_fitness(double *, void *);
 #define FIRST_ENVELOPE_PARAMETER    4
 #define FIRST_DEFOCUS_PARAMETER     0
 
-#define DEBUG_PROFILE
-
 /* Global variables -------------------------------------------------------- */
 namespace AdjustCTF {
 // Some aliases
@@ -72,12 +70,10 @@ MultidimArray<double> global_mask;
 MultidimArray<double> global_mask_between_zeroes;
 MultidimArray<double> global_w_count;
 
-#ifdef DEBUG_PROFILE
 MultidimArray<double> global_psd_exp_radial_derivative;
 MultidimArray<double> global_psd_theo_radial_derivative;
 MultidimArray<double> global_psd_exp_radial;
 MultidimArray<double> global_psd_theo_radial;
-#endif
 
 // Penalization for forbidden values of the parameters
 double global_heavy_penalization;
@@ -646,7 +642,6 @@ void ProgCTFEstimateFromPSD::produce_side_info() {
 	STARTINGX(enhanced_ctftomodel()) = STARTINGY(enhanced_ctftomodel()) = 0;
 
 	// Compute now radial average of the enhanced_ctftomodel
-#ifdef DEBUG_PROFILE
 	global_psd_exp_radial_derivative.initZeros(XSIZE(enhanced_ctftomodel()));
 	global_psd_theo_radial_derivative.initZeros(global_psd_exp_radial_derivative);
 	global_psd_exp_radial.initZeros(global_psd_exp_radial_derivative);
@@ -695,7 +690,6 @@ void ProgCTFEstimateFromPSD::produce_side_info() {
 		}
 	}
 	global_psd_exp_radial_derivative/=maxDiff;
-#endif
 }
 
 /* Generate model so far ---------------------------------------------------- */
@@ -1198,7 +1192,6 @@ double CTF_fitness(double *p, void *) {
 			}
 		}
 
-#ifdef DEBUG_PROFILE
 		// Correlation of the derivative of the radial profile
 		if (global_action==3 || global_evaluation_reduction==1)
 		{
@@ -1267,7 +1260,6 @@ double CTF_fitness(double *p, void *) {
 				}
 			}
 		}
-#endif
 	}
 
 	// Show some debugging information
