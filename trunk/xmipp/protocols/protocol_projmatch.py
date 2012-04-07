@@ -65,12 +65,12 @@ class ProtProjMatch(XmippProtocol):
             errors.append("Volume and reference images have not the same size")
     
         # Check options compatibility
-        if self.DoAlign2D and self.DoCtfCorrection:
-            errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
+        #if self.DoAlign2D and self.DoCtfCorrection:
+        #    errors.append("Yyyou cannot realign classes AND perform CTF-correction. Switch either of them off!")
 
         # 3 Never allow DoAlign2D and DoCtfCorrection together
         if (int(getComponentFromVector(self.DoAlign2D, 1)) == 1 and self.DoCtfCorrection):
-            errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
+            errors.append("Yooou cannot realign classes AND perform CTF-correction. Switch either of them off!")
     
         #4N outer radius is compulsory
         _OuterRadius = getComponentFromVector(self.OuterRadius, 1)
