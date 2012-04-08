@@ -9,7 +9,7 @@ def expandCommentRun(allowContinue=False):
 DisplayComment = False
 
 # {text} Write a comment:
-""" 
+Comment = """ 
 Describe your run here...
 """
 #-----------------------------------------------------------------------------

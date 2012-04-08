@@ -29,15 +29,19 @@ This module contains the classes to perform the protocol header
 parsing, getting protocol variables and meta-information. 
  '''
 
-import sys
+import os, sys
 from protlib_include import *
-from protlib_xmipp import greenStr
+from protlib_xmipp import greenStr, redStr
 
-sepLine = "#------------------------------------------------------------------------------------------\n" 
+# Variable types
+VAR_STRING = 0
+VAR_TEXT = 1 # Multiline string
+VAR_BOOL = 2
+VAR_NUMBER = 3 # Int or float
         
 class ProtocolVariable():
     '''Store meta-information about variables.'''
-    def __init__(self, protocol):
+    def __init__(self, parser):
         self.name = None
         self.value = None
         self.comment = None
@@ -46,13 +50,12 @@ class ProtocolVariable():
         self.tags = {}
         self.conditions = {} #map with conditions to be visible
         self.validators = [] #list with validators for this variable
-        self.isString = False
-        self.isBoolean = False
-        self.isNumber = False    
-        self.protocol = protocol
+        self.type = None
+         
+        self.parser = parser
         self.childs = [] # Only section will use childs    
                   
-        self.tkvar = None
+        self.tkvar = None #used from gui
         self.tktext = None #special text widget     
     
     def setTags(self, tags):
@@ -64,6 +67,65 @@ class ProtocolVariable():
     
     def setTag(self, tagKey, tagValue=None):
         self.tags[tagKey] = tagValue
+        
+    def getTag(self, tagKey):
+        return self.tags[tagKey]
+    
+    def getTagValues(self, tagKey):
+        return [v.strip() for v in self.tags[tagKey].split(',')]
+    
+    def getValue(self):
+        return self.value
+    
+    def updateValue(self):
+        '''this function will be used with gui,
+        it will update variable value with the
+        gui tkvar value '''
+        if self.tkvar:
+            self.value = self.tkvar.get()
+        elif self.tktext:
+            self.value = self.tktext.get(1.0, 'end')
+            
+    def setTkValue(self, value):
+        '''Update the this function will be used with gui,
+        it will update variable value with the
+        gui tkvar value '''
+        if self.tkvar:
+            self.tkvar.set(value)
+        elif self.tktext:
+            self.tktext.clear()
+            self.tktext.addText(value)
+    
+    def setValue(self, value):
+        self.value = value
+    
+    def getLiteralValue(self):
+        if self.isText():
+            return '"""%s"""' % self.getValue()
+        elif self.isString():
+            return '"%s"' % self.getValue()
+        return self.getValue()
+
+    def checkType(self):
+        '''Check the type of the variable depending on
+        the literal value read from header '''
+        v = startswithQuotes(self.value, 3)
+        if not v is None:
+            self.type = VAR_TEXT
+            self.value = v
+            return
+        v = startswithQuotes(self.value, 1)
+        if not v is None:
+            self.type = VAR_STRING
+            self.value = v
+            return
+        if self.value in ['True', 'False']:
+            self.type = VAR_BOOL
+            return 
+        if isNumber(self.value):
+            self.type = VAR_NUMBER
+            return
+        raise Exception('Invalid value: "%s" for variable: "%s"' % (self.value, self.name))
     
     def isExpert(self):
         return self.hasTag('expert')
@@ -75,18 +137,34 @@ class ProtocolVariable():
         return self.hasTag('section')
     
     def isHidden(self):
-        return self.hasTag('hidden')
+        return self.hasTag('hidden') or self.isCite()
     
-    def isCitation(self):
-        return self.hasTag('citation')
+    def isCite(self):
+        return self.hasTag('cite')
+    
+    def isString(self):
+        return self.type == VAR_STRING
     
     def isText(self):
-        return self.hasTag('text')
+        return self.type == VAR_TEXT
+    
+    def isBoolean(self):
+        return self.type == VAR_BOOL
+    
+    def isNumber(self):
+        return self.type == VAR_NUMBER
+    
+    def hasQuestion(self):
+        return self.hasTag('has_question')
+    
+    def hasValidate(self):
+        return self.hasTag('validate')
     
     def isSeparator(self):
         return self.commentline.startswith("#---")
 
     def getLines(self):   
+        self.updateValue()
         lines = ['']
         if self.isSection():
             sepLine = '#%s' % ('-' * 100) 
@@ -96,14 +174,14 @@ class ProtocolVariable():
         else:    
             lines.append(self.commentline)
             if self.help:
-                lines.append('"""%s"""\n' % self.help)
+                lines.append(self.help)
             if self.isText(): #Store the value in the comment field
-                template = '%s = \n"""%s"""'            
-            elif self.isString:
+                template = '%s = """\n%s\n"""'            
+            elif self.isString():
                 template = '%s = "%s"\n'
             else:
                 template = '%s = %s\n'
-            lines.append(template % (self.name, self.value))
+            lines.append(template % (self.name, self.getValue()))
         return lines
     
     def addChild(self, variable):
@@ -114,21 +192,19 @@ class ProtocolVariable():
             raise Exception("Adding child variable to non-section variable")
     
     def satisfiesCondition(self):
+        self.updateValue()
         if not self.hasTag('condition'):
             return True
         import re
         condition = self.tags['condition']
-        #print "Checking condition-> var: %s, cond: %s" %(self, condition)
         tokens = re.split('\W+', condition)
         for t in tokens:
-            if self.protocol.hasVar(t):
-                condition = condition.replace(t, self.protocol.getVarLiteralValue(t))
-        #print "condition after: ", condition,  eval(condition)
-        return eval(condition) 
+            if self.parser.hasVariable(t):
+                condition = condition.replace(t, self.parser.getVariable(t).getLiteralValue())
+        if len(condition):#,  eval(condition)
+            return eval(condition)
+        return True 
        
-def emptyString(value):
-    return len(value.strip()) == 0
-                   
 class ProtocolParser():
     ''' Class to parse the protocol header files and extract the
     variables information arranged in sections '''
@@ -200,20 +276,25 @@ class ProtocolParser():
         '''Move the index to next line '''
         self.index += deltha
         
-    def parseMultilineString(self):
+    def parseMultilineString(self, isComment=True):
         '''Parse a multiline python string literal'''
         strValue = ''
-        countQuotes = 0 # count starting and endi
-        if self.moreLines() and self.currentLine().startswith('"""'):
-            while self.moreLines() and countQuotes < 2:
-                line = self.getLine()
-                if line.startswith('"""'):
-                    countQuotes += 1
-                if len(line) > 4 and line.endswith('"""'):
-                    countQuotes += 1
-                line = line.replace('"""', '')
-                if len(line) > 0:
-                    strValue += line + '\n'
+        if self.moreLines():
+            if isComment:
+                parse = self.currentLine().startswith('"""')
+            else:
+                parse = '"""' in self.currentLine()
+            if parse:
+                pos = self.currentLine().find('"""')
+                line = self.getLine()[pos:]
+                condition = len(line) > 4
+                while self.moreLines():
+                    if len(line) > 0:
+                        strValue += line + '\n'
+                    if condition and line.endswith('"""'):
+                        break
+                    line = self.getLine()
+                    condition = True
         return strValue
            
     def addSection(self, v):
@@ -227,11 +308,17 @@ class ProtocolParser():
     def hasVariable(self, varName):
         return varName in self.variables
     
+    def getVariable(self, varName):
+        return self.variables[varName]
+    
     def getValue(self, varName):
-        return self.variables[varName].value
+        return self.variables[varName].getValue()
+    
+    def getLiteralValue(self, varName):
+        return self.variables[varName].getLiteralValue()
     
     def setValue(self, varName, value):
-        self.variables[varName].value = value
+        self.variables[varName].setValue(value)
         
     def parseHeaderLines(self):
         '''Parse header lines storing the information
@@ -248,7 +335,7 @@ class ProtocolParser():
         reTags = re.compile('(?:{\s*(\w+)\s*}\s*(?:\(([^)]*)\))?\s*)')
         #This is the regular expression of a Variable
         #possible values are: True, False, String with single and double quotes and a number(int or float) 
-        reVariable = re.compile('(\w+)\s*=\s*(True|False|".*"|\'.*\'|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|)?')
+        reVariable = re.compile('(\w+)\s*=\s*("""|True|False|".*"|\'.*\'|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|)?')
         
         self.widgetslist = []
         self.index = 0
@@ -277,12 +364,13 @@ class ProtocolParser():
                             if match2:
                                 v.name, v.value = (match2.group(1).strip(), match2.group(2).strip())
                                 self.addVariable(v)
-                                self.nextLine()
-                                if emptyString(v.value): # Parse multiline variable
-                                    v.value = self.parseMultilineString()
+                                #self.nextLine()
+                                if v.value.startswith('"""'): # Parse multiline variable
+                                    v.value = self.parseMultilineString(False)
                                     if emptyString(v.value):
                                         raise Exception("Parse variable failed", 
                                                         "Expecting multiline value for variable '%s'" % v.name)
+                                v.checkType()
                     else: self.addSection(v)
                         
     def writeLines(self, f, linesList):
@@ -291,21 +379,53 @@ class ProtocolParser():
             
     def write(self, f=sys.stdout):  
         self.writeLines(f, self.pre_header_lines + ['','# {begin_of_header}', ''])      
-        for s in parser.sections:
+        for s in self.sections:
             self.writeLines(f, s.getLines())
-        self.writeLines(f, ['', '# {end_of_header}', ''] + self.post_header_lines)
+        self.writeLines(f, ['', '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE', ''] + self.post_header_lines)
         
     def save(self, filename):
         f = open(filename, 'w+')
         self.write(f)
-        f.close()   
+        f.close()
+        os.chmod(filename, 0755)
+
+
+#---------------- Some utilities functions --------------------------
+
+def emptyString(value):
+    return len(value.strip()) == 0
+
+def startswithQuotes(s, n):
+    '''Check if a string starting with quotes or doublequotes'''
+    p = '"' * n
+    if s.startswith(p):
+        return s.replace(p, '')
+    p = "'" * n
+    if s.startswith(p):
+        return s.replace(p, '')
+    
+    return None
+
+def isNumber(s):
+    try:
+        float(s)
+        return True
+    except Exception, e:
+        return False
+
 
 if __name__ == '__main__':
     script = sys.argv[1]
     parser = ProtocolParser(script)
-    parser.setValue("Comment", """This is a t
+    #parser.write()
+    parser.setValue("Comment", """5sdfsdfff...44444jjjj 
+    This is a t
     very very long....
     test")'""")
+    print "Behavior1", parser.getValue("Behavior")
+    parser.setValue('Behavior', 'Restart')
+    print "Behavior2", parser.getValue("Behavior")
+    parser.setValue('DirMicrographs', 'InputKK')
     parser.save("kk.py")
 
     print "Finished"

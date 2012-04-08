@@ -28,16 +28,17 @@
 
 import os
 from glob import glob
+from subprocess import Popen
 from os.path import join, relpath, exists
 import Tkinter as tk
 import tkFont
 
-from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
-    getScriptFromRunName
-from protlib_utils import loadModule, runImageJPlugin, which, runJavaIJappWithResponse,\
-    runShowJ
+
+from protlib_base import getWorkingDirFromRunName, getExtendedRunName
+from protlib_utils import loadModule, which, runShowJ
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
-    showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage
+    showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
+    TaggedText
 from protlib_filesystem import getXmippPath, xmippExists
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -45,7 +46,9 @@ from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
 from config_protocols import BgColor, EntryBgColor, SectionBgColor, LabelBgColor, ButtonActiveBgColor, ButtonBgColor                         
 from protlib_sql import SqliteDb
 from protlib_include import *
-from subprocess import Popen
+from protlib_parser import ProtocolParser
+from protlib_xmipp import redStr, greenStr
+
 
 class ProtocolStyle():
     ''' Class to define some style settings like font, colors, etc '''
@@ -101,8 +104,19 @@ def createSection(parent, text):
     return (frame, label, content)     
 
 class BasicGUI(): 
-    def __init__(self):
-        pass
+    
+    def createBasicGUI(self, master=None):
+        """Perform some basic GUI initializations.
+        - create the main window
+        - create style and fonts
+        - create scrollable canvas
+        """
+        if not master:
+            master = tk.Tk()
+        self.master = master
+        self.master.withdraw()
+        self.style = ProtocolStyle('config_protocols')
+        self.style.createFonts()
         
     def createScrollableCanvas(self):
         """Create an scrollable canvas
@@ -123,26 +137,12 @@ class BasicGUI():
         self.frame = tk.Frame(self.canvas, background=self.style.BgColor)
         self.frame.rowconfigure(0, weight=1)
         self.frame.columnconfigure(0, weight=1)
-    
-    def createBasicGUI(self, master=None):
-        """Perform some basic GUI initializations.
-        - create the main window
-        - create style and fonts
-        - create scrollable canvas
-        """
-        if not master:
-            master = tk.Tk()
-        self.master = master
-        self.master.withdraw()
-        self.style = ProtocolStyle('config_protocols')
-        self.style.createFonts()
         
     def resize(self):
         height = min(self.frame.winfo_reqheight() + 25, MaxHeight)
         width = min(self.frame.winfo_reqwidth() + 25, MaxWidth)
         x = self.master.winfo_x()
         y = self.master.winfo_y()
-        #print "geometry: %dx%d%+d%+d" % (width, height, x, y)
         self.master.geometry("%dx%d%+d%+d" % (width, height, x, y))
         return (width, height)
 
@@ -228,91 +228,17 @@ class BasicGUI():
         line.grid(row=self.nextRow(), column=column, columnspan=columnspan, sticky='ew')
         return line
         
-sepLine = "#------------------------------------------------------------------------------------------\n" 
-        
-class ProtocolVariable():
-    '''Store information about Protocols variables.'''
-    def __init__(self, protocol):
-        self.name = None
-        self.value = None
-        self.tkvar = None
-        self.comment = None
-        self.help = None
-        self.tags = {}
-        self.conditions = {} #map with conditions to be visible
-        self.validators = [] #list with validators for this variable
-        self.isString = False
-        self.isBoolean = False
-        self.isNumber = False    
-        self.tktext = None #special text widget     
-        self.protocol = protocol                  
-    
-    def setTags(self, tags):
-        for k, v in tags:
-            self.tags[k] = v
-            
-    def isExpert(self):
-        return 'expert' in self.tags.keys()
-    
-    def isVisualize(self):
-        return 'visualize' in self.tags.keys()
-    
-    def isSection(self):
-        return 'section' in self.tags.keys()
-    
-    def isHidden(self):
-        return 'hidden' in self.tags.keys()
-    
-    def getValue(self):
-        if self.tktext:
-            return self.tktext.get(1.0, tk.END)
-        return self.tkvar.get().replace('"', '\\"')
 
-    def setValue(self, value):
-        self.tkvar.set(value)
-    
-    def getLines(self):   
-        if self.isSection():
-            lines = [sepLine + self.commentline + '\n' + sepLine]
-        else:    
-            lines = [self.commentline + '\n']
-        if 'text' in self.tags.keys(): #Store the value in the comment field
-            self.help = self.getValue()
-        if self.help:
-            lines.append('"""%s"""\n' %  self.help)
-        if self.isString:
-            template = '%s = "%s"\n\n'
-        else:
-            template = '%s = %s\n\n'  
-        if self.tkvar:   
-            lines.append(template % (self.name, self.getValue()))
-#        if self.name and  'label' in self.name:
-#            print lines
-        return lines
-    
-    def satisfiesCondition(self):
-        if not 'condition' in self.tags.keys():
-            return True
-        import re
-        condition = self.tags['condition']
-        #print "Checking condition-> var: %s, cond: %s" %(self, condition)
-        tokens = re.split('\W+', condition)
-        for t in tokens:
-            if self.protocol.hasVar(t):
-                condition = condition.replace(t, self.protocol.getVarLiteralValue(t))
-        #print "condition after: ", condition,  eval(condition)
-        return eval(condition) 
-       
 class ProtocolWidget():
     def __init__(self, master, var):
         self.master = master
         self.widgetslist = [] # Store real tk widgets
         self.childwidgets = [] # This will only be used for sections
-        self.variable = var
+        self.var = var
        
     def satisfiesCondition(self):
-        if self.variable:
-            return self.variable.satisfiesCondition()
+        if self.var:
+            return self.var.satisfiesCondition()
         else:
             return True
      
@@ -323,10 +249,10 @@ class ProtocolWidget():
         return show    
         
     def getVisibility(self):
-        if self.variable.isHidden():
+        if self.var.isHidden():
             return False
-        show = self.variable.isVisualize() == self.master.visualize_mode
-        if show and self.variable.isExpert():
+        show = self.var.isVisualize() == self.master.visualize_mode
+        if show and self.var.isExpert():
             show = self.master.expert_mode
         if show:
             show = self.satisfiesCondition() #has condition, check it
@@ -342,110 +268,43 @@ class ProtocolWidget():
                 
     def validate(self):
         errors = []
+        wiz = loadModule("protlib_wizard")
         if self.getVisibility():
-            for v in self.variable.validators:
-                e = globals()[v](self.variable)
+            for v in self.var.validators:
+                if hasattr(wiz, v):
+                    e = getattr(wiz, v)(self.var)
+                else:
+                    e = "Validator <%s> for <%s> not found" % (v, self.var.comment)
                 if e:
                     errors.append(e)
         return errors
     
     def isSectionExpanded(self):
         ''' Return true if the section is visible and expanded'''
-        if not self.has_question:
+        if not self.var.hasQuestion():
             return True
         return self.tkvar.get() == 'True' and self.getVisibility()
 
-""" Guidelines for python script header formatting:
-
-The idea of the GUI class is that it provides a graphical editor of
-only the variables contained in the header of a python script, and
-that it can also be used to launch the script.
-
-Usage from main:
-    gui = ProtocolGUI()
-    gui.createGUI(script)
-    gui.fillGUI()
-    gui.launchGUI()
-    
-where script contains the filename of the python script that will be
-parsed. Or if you already has a GUI environmet, you can launch the
-protocol GUI in another  window by simply creating a TopLevel windows
-and passing as root to createGUI function. Following an example
-    top = TopLevel()
-    gui = ProtocolGUI()
-    gui.createGUI(script, top)
-    gui.fillGUI()
-    gui.launchGUI()
-    
-Where the header of script.py should be organized as follows:
-
-Obligatory:
-    * Include a {begin_of_header} label at the begining of the header
-      and {end_of_header} label at the end of the header
-    * Variable declaration (visible in GUI): Variablename = XXX
-          o If XXX is True or False, the variable is considered as a
-            Boolean (yes/no button in GUI)
-          o If XXX starts with " or ', the variable is considered as
-            a string (text field in GUI) or a list option (see {list} tag}
-          o If XXX is a number, the variable is considered as a number
-            (text field in GUI) 
-    * The first single comment line above each variable (starting with a #)
-      will be displayed in the GUI, as a label left from the variable entry field
-    * More detailed help for each variable can be placed between the comment
-      line and the variable declaration line using \""" ...\""".
-      This text will become visible in the GUI by pressing a HELP
-      button, at the right side of the variable entry field.
-Optional:
-    * There are extra tags in the comment that have some semantic for the GUI:
-        - {section} defines a section with the comment, not a variable      
-        - {has_question} this tag can be used with a section and take the next 
-              boolean variables as a checkbutton for show/hide the entire section box
-        - {expert} mark this variable or section as "expert", not shown in the GUI
-              by default, showed when pressed the "Show expert options" button
-        - {file} or {dir} marks the option as a Filename or Directory, and will add 
-              a corresponding "Browse" button to that option
-        - {view} this will add an extra button to view/explore some files or folders
-        - {run}(prot1, prot2) Select as input previous runs from other(or same) protocol
-        - {text} Will display a text box with more space for writing
-        - {list}(option A, option B, option C) marks the option as a radio-list button. 
-              The selected variable should be one of the options indicated.
-        - {condition}(option=True)
-          {condition}(selection=optionA) marks an option or section dependent of some
-              condition, it can be used with boolean options or for list-selections
-        - {please_cite} will display
-              a message at the top of the protocol stating -If you publish results obtained with
-              this protocol, please cite-, followed by the text on rest of the comment line.
-              If more than one citation lines are present, they will all be displayed.
-              DONT use very long citations, as this will results in an ugly gui.
-        - {hidden} label on the comment line (#) marks the option as -hidden-
-        - {wizard} (WizardFunction) this will serve to plugin a graphical wizard
-             to select some parameter
-        - {validate}(NonEmpty, PathExists, IsInt, IsFloat) Impose some validating
-             on values entered by the user     
-"""       
-
 class ProtocolGUI(BasicGUI):
-    def __init__(self, gui=True):
-        '''gui flag is a bit contradictory, but if False
-        will be used to run protocols from non-gui environment '''
-        self.gui = gui        
         
-    def init(self):
-        self.variablesDict = {}       
-        self.pre_header_lines = []
-        self.header_lines = []
-        self.post_header_lines = []
+    def initialize(self, project, run, saveCallback):
+        ''' Internal function to initialize some properties.
+        It is not the constructor '''
         self.expert_mode = True
         self.visualize_mode = False
         self.lastrow = 0
-        self.widgetslist = []
         self.sectionslist = [] # List of all sections
-        self.citeslist = []
+        self.parser = None
+        self.run = run
+        self.project = project
         # Script title
         self.programname = os.path.basename(self.run['source'].replace('.py', ''))
         self.maxLabelWidth = 0
         self.hasVisualizeOptions = False
-        self.master = None
+        #self.master = None
+        self.Error = None
+        self.saveCallback = saveCallback
+        registerCommonFonts()
 
     #-------------------------------------------------------------------
     # Widgets creation and GUI building
@@ -483,11 +342,6 @@ class ProtocolGUI(BasicGUI):
         w.widgetslist.append(rb)
         return rb
         
-    def createSectionWidget(self, w, var):
-        w.frame, w.label, w.content = createSection(self.frame, var.comment)
-        w.name = var.comment
-        w.widgetslist.append(w.frame)
-        
     def expandCollapseSection(self, section):
         '''Expand/collapse the section area, return True if expanded'''
         if section.tkvar.get() == 'False':
@@ -500,23 +354,8 @@ class ProtocolGUI(BasicGUI):
             expanded = True
         self.updateScrollRegion()
         return expanded
-            
-#    def autocompleteEntry(self, var):
-#        keys = var.tags.keys()
-#        if 'file' in keys:
-#            args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
-#        elif 'dir' in keys:
-#            args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
-#        elif 'run' in keys:
-#            protocols = var.tags['run'].split(',')
-#            runs = []
-#            for p in protocols:
-#                runs += self.project.projectDb.selectRunsByProtocol(p)
-#            list = [getExtendedRunName(r) for r in runs]
-#            if len(list)==1:
-#                var.tkvar.set(list[0])
 
-    def getRunsList(self,protocols):
+    def getRunsList(self, protocols):
         #protocols = var.tags['run'].split(',')
         runs = []
         for p in protocols:
@@ -524,182 +363,161 @@ class ProtocolGUI(BasicGUI):
         list = [getExtendedRunName(r) for r in runs]
         return list
            
-    def createWidget(self, var):
+    def updateValidators(self, var):
+        if var.hasValidate():
+            var.validators = ['validator' + v for v in var.getTagValues('validate')]
+        if var.isNumber():
+            if 'validatorIsInt' not in var.validators:
+                var.validators.append('validatorIsFloat')
+            
+            
+    def createSectionWidget(self, var):
+        w = ProtocolWidget(self, var)
+        w.frame, w.label, w.content = createSection(self.frame, var.comment)
+        w.name = var.comment
+        w.widgetslist.append(w.frame)
+        w.frame.grid(row=self.getRow(), column=0, columnspan=5, 
+                         sticky='ew', pady=5, padx=(10,5))
+        self.sectionslist.append(w)
+        return w
+    
+    def createWidget(self, section, var):
         w = ProtocolWidget(self, var)  
-        self.widgetslist.append(w)  
+        
+        if var.isHidden():
+            return w
+        
         label_row = row = self.getRow() # Get row where to place the widget        
         label_text = var.comment
         label_color = self.style.LabelTextColor
         label_bgcolor = self.style.LabelBgColor        
         
-        if 'section' in var.tags.keys():
-            self.createSectionWidget(w, var)
-            w.frame.grid(row=label_row, column=0, columnspan=5, 
-                         sticky='ew', pady=5, padx=(10,5))
-            w.has_question = 'has_question' in var.tags.keys()
-            self.lastSection = w
-            section = w
-            self.sectionslist.append(w)
-        else:
-            section = self.lastSection
-            section.childwidgets.append(w)
-            frame = section.content
-            #widgets inherit expert from section and its conditions 
-            if section.variable.isExpert():
-                var.tags['expert'] = section.variable.tags['expert']
-            if section.variable.isVisualize():
-                self.hasVisualizeOptions = True
-                var.tags['visualize'] = section.variable.tags['visualize']
-#            for k, v in section.variable.conditions.iteritems():
-#                var.conditions[k] = v
-                
+        section.childwidgets.append(w)
+        frame = section.content
+        #widgets inherit expert from section and its conditions 
+        if section.var.isExpert():
+            var.setTag('expert')
+        if section.var.isVisualize():
+            self.hasVisualizeOptions = True
+            var.setTag('visualize')
         
-        keys = var.tags.keys()
-                
-        if 'expert' in keys:
+        self.updateValidators(var)
+        
+        if var.isExpert():
             label_bgcolor = self.style.ExpertLabelBgColor
-        if 'validate' in keys:
-            var.validators = ['validator' + v.strip() for v in var.tags['validate'].split(',')]
-        if 'text' in keys:
+            
+        if var.isText():
             var.tktext = tk.Text(frame, width=66, height=10, wrap=tk.WORD, bg=EntryBgColor)#, yscrollcommand=scrollbar.set, bg=EntryBgColor)
             var.tktext.grid(row=label_row, column=0, columnspan=5, sticky='ew', padx=(10, 0), pady=(10, 0))
-            var.tktext.insert(tk.END, var.help)
+            var.tktext.insert(tk.END, var.value)
             w.widgetslist.append(var.tktext)
             return w
-        # Treat variables
-        if var.value:
-        #Escape string literals
-            var_column = 1
-            var.tkvar = tk.StringVar()   
-            
-            if var.value.startswith('"') or var.value.startswith("'"):
-                var.value = var.value.replace('"', '')
-                var.value = var.value.replace("'", '')
-                var.isString = True
-            elif var.value in ['True', 'False']:
-                var.isBoolean = True
-            else: #Should be a number
-                var.isNumber = True
-                if 'validatorIsInt' not in var.validators:
-                    var.validators.append('validatorIsFloat')
-                
-            var.tkvar.set(var.value)
-            
-            if 'hidden' in keys:
-                return w
-            
-            if var.value == 'True' or var.value == 'False':
-                #Check if that boolean variable is the question of the section
-                if section.has_question and len(section.childwidgets) == 1:
-                    section.tkvar = var.tkvar
-                    #Label(section.frame, text=label_text, bg=SectionBgColor).grid(row=0, column=1, padx=(5, 0))
-                    chb = tk.Checkbutton(section.frame, text=label_text, variable=var.tkvar, 
-                                onvalue='True', offvalue='False',
-                                command=lambda:self.expandCollapseSection(section),
-                                bg=SectionBgColor, activebackground=ButtonActiveBgColor)
-                    chb.grid(row=0, column=1, padx=(5, 0))
-                    self.expandCollapseSection(section)
-                    return w
-                else:
-                    self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
-                    self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame) 
-                    if 'view' in keys:
-                        btn = self.addButton("View", lambda:self.visualizeVar(var.name), -1, row, var_column+2, 'nw', 'visualize.gif', frame, 'View')
-                        w.widgetslist.append(btn)
-                    var.tkvar.trace('w', self.checkVisibility)
-            elif 'list_combo' in keys:
-                opts = [o.strip() for o in var.tags['list_combo'].split(',')]
-                optMenu = tk.OptionMenu(frame, var.tkvar, *opts)
-                optMenu.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
-                optMenu.grid(row=row, column=var_column, sticky='ew', columnspan=2)
-                w.widgetslist.append(optMenu)
-                var.tkvar.trace('w', self.checkVisibility)
-                
-            elif 'list' in keys:
-                opts = var.tags['list'].split(',')
-                for o in opts:
-                    o = o.strip()
-                    self.addRadioButton(w, var, o, o, row, var_column, frame)
-                    row = self.getRow()
-                var.tkvar.trace('w', self.checkVisibility)
-          
-            elif 'text' in keys:
-                scrollbar = tk.Scrollbar(frame)
-                scrollbar.grid(row=label_row+1, column=1, sticky='ns')
-                var.tktext = tk.Text(frame, width=66, height=10, wrap=tk.WORD, yscrollcommand=scrollbar.set, bg=EntryBgColor)
-                scrollbar.config(command=var.tktext.yview)
-                var.tktext.grid(row=label_row+1, column=0, columnspan=5, sticky='ew', padx=(10, 0))
-                w.widgetslist.append(var.tktext)
-                var.tktext.insert(tk.END, var.value)            
-            else: #Add a text Entry
-                from protlib_gui_ext import AutoCompleteEntry
-                entry = AutoCompleteEntry(frame, textvariable=var.tkvar, bg=EntryBgColor)
-                entry.grid(row=row, column=var_column, columnspan=2, sticky='ew')
-                w.widgetslist.append(entry)
-                args = None
-                
-                def getEntries(var, onlyDir=False):
-                    cwd = os.getcwd()
-                    pattern = join(cwd, var.tkvar.get()) + '*'
-                    entries = []
-                    for p in glob(pattern):
-                        p = relpath(p, cwd)
-                        if os.path.isdir(p):
-                            p+="/"
-                            entries.append(p)
-                        else:
-                            if not onlyDir:
-                                entries.append(p)
-                    return entries
-                
-                def getRuns(var):
-                    return self.getRunsList(var.tags['run'].split(','))
 
-                if 'file' in keys:
-                    entry.setBuildListFunction(lambda: getEntries(var), refreshOnTab=True)
-                    args = ['Browse', lambda: self.wizardBrowse(var), 'fileopen.gif', 'Browse file']
-                elif 'dir' in keys:
-                    entry.setBuildListFunction(lambda: getEntries(var,onlyDir=True), refreshOnTab=True)
-                    args = ['Browse', lambda: self.wizardBrowse(var), 'folderopen.gif', 'Browse folder']
-                elif 'run' in keys:
-                    entry.setBuildListFunction(lambda: getRuns(var))
-                    list = getRuns(var)
-                    if len(list)==1:
-                        var.tkvar.set(list[0])
-                    args = ['Select Run', lambda: self.selectFromList(var, list), 'wizard.gif', 'Select run']
-                    # Run are always input variables and should not be empty
-                    var.validators.append('validatorNonEmpty')
-                elif 'blocks' in keys:
-                    #md = self.variablesDict[var.tags['blocks']].getValue()
-                    args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizard.gif', 'Select blocks']
-                elif 'wizard' in keys:
-                    func = self.wizardNotFound
-                    funcName = var.tags['wizard']
-                    if funcName in dir(self) and callable(getattr(self, funcName)):
-                        func = getattr(self, funcName)
-                    #TODO: Maybe do more validations if fu
-                    args = [funcName, lambda:func(var), 'wizard.gif', funcName]
-                if args:
-                    btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, 'nw', args[2], frame, args[3])
-                    w.widgetslist.append(btn)
+        var_column = 1
+        var.tkvar = tk.StringVar()   
+        var.setTkValue(var.getValue())
+        keys = var.tags.keys()
+            
+        if var.isBoolean():
+            #Check if that boolean variable is the question of the section
+            if section.var.hasQuestion() and len(section.childwidgets) == 1:
+                section.tkvar = var.tkvar
+                #Label(section.frame, text=label_text, bg=SectionBgColor).grid(row=0, column=1, padx=(5, 0))
+                chb = tk.Checkbutton(section.frame, text=label_text, variable=var.tkvar, 
+                            onvalue='True', offvalue='False',
+                            command=lambda:self.expandCollapseSection(section),
+                            bg=SectionBgColor, activebackground=ButtonActiveBgColor)
+                chb.grid(row=0, column=1, padx=(5, 0))
+                self.expandCollapseSection(section)
+                return w
+            else:
+                self.addRadioButton(w, var, 'Yes', 'True', row, var_column, frame)  
+                self.addRadioButton(w, var, 'No', 'False', row, var_column + 1, frame) 
                 if 'view' in keys:
-                    func = self.wizardShowJ
-                    funcName = var.tags['view']
-                    if hasattr(self, funcName) and callable(getattr(self, funcName)):
-                        func = getattr(self, funcName)
-                    #TODO: Maybe do more validations if fu
-                    btn = self.addButton("View", lambda:func(var), -1, label_row, var_column+3, 'nw', 'visualize.gif', frame, 'View')
-            if var.help:
-                btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, 'nw', 'help.gif', frame, 'Show info')
+                    btn = self.addButton("View", lambda:self.visualizeVar(var.name), -1, row, var_column+2, 'nw', 'visualize.gif', frame, 'View')
+                    w.widgetslist.append(btn)
+                var.tkvar.trace('w', self.checkVisibility)
+        elif 'list_combo' in keys:
+            opts = var.getTagValues('list_combo')
+            optMenu = tk.OptionMenu(frame, var.tkvar, *opts)
+            optMenu.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
+            optMenu.grid(row=row, column=var_column, sticky='ew', columnspan=2)
+            w.widgetslist.append(optMenu)
+            var.tkvar.trace('w', self.checkVisibility)            
+        elif 'list' in keys:
+            opts = var.tags['list'].split(',')
+            for o in opts:
+                o = o.strip()
+                self.addRadioButton(w, var, o, o, row, var_column, frame)
+                row = self.getRow()
+            var.tkvar.trace('w', self.checkVisibility)
+         
+        else: #Add a text Entry
+            from protlib_gui_ext import AutoCompleteEntry
+            entry = AutoCompleteEntry(frame, textvariable=var.tkvar, bg=EntryBgColor)
+            entry.grid(row=row, column=var_column, columnspan=2, sticky='ew')
+            w.widgetslist.append(entry)
+            args = None
+            
+            def getEntries(var, onlyDir=False):
+                cwd = os.getcwd()
+                pattern = join(cwd, var.tkvar.get()) + '*'
+                entries = []
+                for p in glob(pattern):
+                    p = relpath(p, cwd)
+                    if os.path.isdir(p):
+                        p+="/"
+                        entries.append(p)
+                    else:
+                        if not onlyDir:
+                            entries.append(p)
+                return entries
+            
+            def getRuns(var):
+                return self.getRunsList(var.getTagValues('run'))
+
+            wiz = loadModule('protlib_wizard')
+            if 'file' in keys:
+                entry.setBuildListFunction(lambda: getEntries(var), refreshOnTab=True)
+                args = ['Browse', lambda: wiz.wizardBrowse(self, var), 'fileopen.gif', 'Browse file']
+            elif 'dir' in keys:
+                entry.setBuildListFunction(lambda: getEntries(var,onlyDir=True), refreshOnTab=True)
+                args = ['Browse', lambda: wiz.wizardBrowse(self, var), 'folderopen.gif', 'Browse folder']
+            elif 'run' in keys:
+                entry.setBuildListFunction(lambda: getRuns(var))
+                runList = getRuns(var)
+                if len(runList) == 1:
+                    var.setTkValue(runList[0])
+                args = ['Select Run', lambda: self.selectFromList(var, runList), 'wizard.gif', 'Select run']
+                # Run are always input variables and should not be empty
+                var.validators.append('validatorNonEmpty')
+            elif 'blocks' in keys:
+                #md = self.varsDict[var.tags['blocks']].getValue()
+                args = ['Select Blocks', lambda: self.selectFromList(var, ['block1', 'block2', 'block3']), 'wizard.gif', 'Select blocks']
+            elif 'wizard' in keys:
+                func = wiz.wizardNotFound
+                funcName = var.tags['wizard']                
+                func = getattr(wiz, funcName, func)
+                args = [funcName, lambda:func(self, var), 'wizard.gif', funcName]
+            if args:
+                btn = self.addButton(args[0], args[1], -1, label_row, var_column+2, 'nw', args[2], frame, args[3])
                 w.widgetslist.append(btn)
-            if var.name == 'RunName':
-                label_text += ' %s_' % self.run['protocol_name']
-                
-            label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
-            label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
-            self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
-            w.widgetslist.append(label)
-        
+            if 'view' in keys:
+                viewFunc = wiz.wizardShowJ
+                funcName = var.tags['view']
+                viewFunc = getattr(wiz, funcName, viewFunc)
+                btn = self.addButton("View", lambda:viewFunc(self, var), -1, label_row, var_column+3, 'nw', 'visualize.gif', frame, 'View')
+        if var.help:
+            btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, 'nw', 'help.gif', frame, 'Show info')
+            w.widgetslist.append(btn)
+        if var.name == 'RunName':
+            label_text += ' %s_' % self.run['protocol_name']
+            
+        label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
+        label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
+        self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
+        w.widgetslist.append(label)
+    
         return w
         
     def visualizeVar(self, varName):
@@ -724,121 +542,22 @@ class ProtocolGUI(BasicGUI):
         if event.num == 4 or event.delta == 120:
             count = -1
         self.canvas.yview("scroll", count, "units")
-    #-------------------------------------------------------------------
-    # Reading and parsing script
-    #-------------------------------------------------------------------
-    def readProtocolScript(self):
-        begin_of_header = False
-        end_of_header = False   
-        has_expert = False 
-        script = self.run['source'] 
-        try:   
-            f = open(script, 'r')
-        except Exception, e:
-            raise Exception("Script read failed", "Couldn't read from script file <%s>" % script)
         
-        for line in f:
-            #print "LINE: ", line
-            if not begin_of_header:
-                self.pre_header_lines.append(line)
-            elif not end_of_header:
-                #check for eval
-                if 'ShowExpertOptions' in line:
-                    has_expert = True
-                    
-                if '{eval}' in line:
-                    evalStr = line.split('{eval}')[1].strip()
-                    #print "Evaluating: ", redStr(evalStr)
-                    linesStr = eval(evalStr)
-                    if linesStr:
-                        self.header_lines += linesStr.splitlines()
-                    else:
-                        print "Empty lines received"
-                else:
-                    self.header_lines.append(line)
-            else:
-                self.post_header_lines.append(line)                
-            if '{begin_of_header}' in line:
-                begin_of_header = True
-            if '{end_of_header}' in line:
-                if not has_expert:
-                    self.header_lines += expandExpert().splitlines()
-                end_of_header = True
-        f.close()
-        
-        if not begin_of_header:
-            raise Exception('{begin_of_header} tag not found in protocol script: %s' % script)
-        if not end_of_header:
-            raise Exception('{end_of_header} tag not found in protocol script: %s' % script)
-                
-    def parseHeader(self):
-        ''' gui flag will be used to create protocols 
-        runs outside Protocols Gui environment '''
-        #REGURLAR EXPRESSION TO PARSE VARIABLES DEFINITION
-        import re
-        #Comment regex, match lines starting by # and followed by tags with values
-        #of the form {tag}(value) and ending with the comment for the GUI    
-        reComment = re.compile('#\s*((?:{\s*\w+\s*}\s*(?:\([^)]*\)\s*)?)*)?\s*(.*)')
-        #This take all tags and values from previous one
-        reTags = re.compile('(?:{\s*(\w+)\s*}\s*(?:\(([^)]*)\))?\s*)')
-        #This is the regular expression of a Variable
-        #possible values are: True, False, String with single and double quotes and a number(int or float) 
-        #reVariable = re.compile('(\w+)\s*=\s*(True|False|".*"|\'.*\'|\d+|)')
-        reVariable = re.compile('(\w+)\s*=\s*(True|False|".*"|\'.*\'|[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?|)')
-        
-        self.variablesDict = {}
-        self.widgetslist = []
-        index = 0;
-        count = len(self.header_lines)
-        while index < count:
-            line = self.header_lines[index].strip()
-            index += 1
-            match = reComment.search(line) #Parse the comment line
-            if match:
-                v = ProtocolVariable(self)
-                v.comment = match.group(2)
-                v.commentline = line
-                
-                if match.group(1) != '':
-                    tags = reTags.findall(match.group(1))
-                    v.setTags(tags)
-                    
-                is_section = v.isSection()
-                if not is_section:
-                    #This is a variable, try to get help string
-                    helpStr = ''
-                    countQuotes = 0 # count starting and endi
-                    if index < count and self.header_lines[index].strip().startswith('"""'):
-                        while index < count and countQuotes < 2:
-                            line = self.header_lines[index].strip()
-                            if line.startswith('"""'):
-                                countQuotes += 1
-                            if len(line) > 4 and line.endswith('"""'):
-                                countQuotes += 1
-                            line = line.replace('"""', '')
-                            if len(line) > 0:
-                                helpStr += line + '\n'
-                            index += 1
-                        v.help = helpStr
-                        
-                    if 'please_cite' in v.tags.keys():
-                        self.citeslist.append(v.help)
-                    else:
-                        if index < count:
-                            line = self.header_lines[index].strip()
-                            match2 = reVariable.match(line)
-                            if match2:
-                                v.name, v.value = (match2.group(1).strip(), match2.group(2).strip())
-                                #print "DEBUG_JM: v.name: '%s', v.value: '%s'" % (v.name, v.value)
-                                self.variablesDict[v.name] = v
-                                index += 1
-                                self.checkSpecialCases(v)
-                if self.gui and (is_section or v.name or 'text' in v.tags.keys()):
-                    self.createWidget(v)
+    def createWidgets(self):
+        ''' Create the widgets after the protocol header script have been 
+        parsed and the variables were created '''
+        self.checkSpecialCases()
+        citeslist = []
+        for s in self.parser.sections:
+            section = self.createSectionWidget(s)
+            for var in s.childs:
+                if var.hasTag('cite'):
+                    citeslist.append(var.getValue())
+                self.createWidget(section, var)
         #Update if citations found
-        if len(self.citeslist) > 0:
+        if len(citeslist) > 0:
             citetext = "If you publish results obtained with this protocol, please cite:\n"
-            citetext += '\n'.join(self.citeslist)
+            citetext += ' '.join(citeslist).strip()
             self.fonts['cites'] = tkFont.Font(family=FontName, size=FontSize-2, weight=tkFont.BOLD)
             label = tk.Label(self.frame, text=citetext, fg=CitationTextColor, bg=BgColor,
                           font=self.fonts['cites'], wraplength=WrapLenght)
@@ -848,7 +567,7 @@ class ProtocolGUI(BasicGUI):
     # GUI Events handling
     #-------------------------------------------------------------------           
         
-    def close(self, event=""):
+    def close(self, e=None):
         self.master.destroy()
     
     def toggleExpertMode(self, event=""):
@@ -866,28 +585,16 @@ class ProtocolGUI(BasicGUI):
         self.checkVisibility()
         
     def save(self, event=""):
-        if self.gui and not self.validateInput():
+        if not self.validateInput():
             return False
         try:
             runName = self.getVarValue('RunName')
             if runName != self.inRunName:
                 self.run['run_name'] = runName
                 self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
-            #print "* Saving script: %s" % self.run['script']
-            f = open(self.run['script'], 'w')
-            #f = sys.stdout
-            f.writelines(self.pre_header_lines)
-            if len(self.citeslist) > 0:
-                f.writelines('#{please_cite}\n"""\n')
-                f.writelines(self.citeslist)
-                f.writelines('"""\n')
-            for w in self.widgetslist:
-                wlines = w.variable.getLines()
-                f.writelines(wlines)
-            f.writelines(sepLine + '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n') 
-            f.writelines(self.post_header_lines)
-            f.close()
-            os.chmod(self.run['script'], 0755)
+            
+            self.parser.save(self.run['script'])
+            
             #update database
             if self.run['script'] != self.run['source']:
                 self.project.projectDb.insertRun(self.run)
@@ -912,10 +619,7 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def showError(self, title, e):
-        if self.gui:
-            showError(title, str(e), parent=self.master)
-        else:
-            print title, str(e)
+        showError(title, str(e), parent=self.master)
     
     def validateInput(self):
         errors = []
@@ -970,7 +674,7 @@ class ProtocolGUI(BasicGUI):
         d = ListboxDialog(self.frame, list, selectmode=tk.SINGLE)
         if len(d.result) > 0:
             index = d.result[0]
-            var.setValue(list[index])
+            var.setTkValue(list[index])
         
     def showHelp(self, helpmsg):
         showInfo("Help", helpmsg, parent=self.master)
@@ -983,28 +687,32 @@ class ProtocolGUI(BasicGUI):
     def changeFont(self, event=""):
         changeFontSize(self.style.Font, event, self.style.MinFontSize, self.style.MaxFontSize)
         centerWindows(self.master, self.resize() )
-        
-    def checkSpecialCases(self, var):
-        from protlib_utils import loadLaunchModule
-        if var.name == "SubmitToQueue":
-            launch = loadLaunchModule()
-            if which(launch.Program) == '':
-                var.value = "False"
-                var.tags['hidden'] = True
-        elif var.name == 'Behavior':
-            var.value = '"Resume"'
-            if not exists(self.run['script']) or not exists(self.getProtocol().WorkingDir):
-                var.tags['hidden'] = True
-        elif var.name == "NumberOfMpi":
-            launch = loadLaunchModule()         
-            if which(launch.MpiProgram) == '':
-                var.value = "False"
-                var.tags['hidden'] = True
+     
+    def checkProgramAvailable(self, varName, program):
+        if self.hasVar(varName):    
+            var = self.parser.getVariable(varName) 
+            if which(program) == '':
+                var.setValue('False')
+                var.setTag('hidden')
                 
+    def checkSpecialCases(self):
+        ''' check special variables which values and visibility can 
+        change depending on the conditions '''
+        if self.hasVar('Behavior'):
+            var = self.parser.getVariable('Behavior')
+            var.setTkValue('Resume')
+            if not exists(self.run['script']) or not exists(self.getProtocol().WorkingDir):
+                var.setTag('hidden')
+        
+        from protlib_utils import loadLaunchModule
+        launch = loadLaunchModule()
+        # Check if mpi and queue are availables
+        self.checkProgramAvailable('NumberOfMpi', launch.MpiProgram)
+        self.checkProgramAvailable('SubmitToQueue', launch.Program)
         
     def checkVisibility(self, *args):
         for s in self.sectionslist:
-            expanded = not s.has_question or self.expandCollapseSection(s)
+            expanded = not s.var.hasQuestion() or self.expandCollapseSection(s)
             # Check the section visibility and check childs if needed                
             if s.checkVisibility() and expanded:
                 visible_child = False #Check there is at least one visible child 
@@ -1039,12 +747,12 @@ class ProtocolGUI(BasicGUI):
         self.master.bind("<Button-5>", self.scroll)
         
     def hasVar(self, varName):
-        return varName in self.variablesDict.keys()
+        return self.parser.hasVariable(varName)
     
     def getVarValue(self, varName):
         ''' Return the value of a variable give the name'''
         if self.hasVar(varName):
-            return self.variablesDict[varName].getValue()
+            return self.parser.getValue(varName)
         return None
     
     def getVarlistValue(self, varList):
@@ -1053,17 +761,14 @@ class ProtocolGUI(BasicGUI):
     
     def getVarLiteralValue(self, varName):
         if self.hasVar(varName):
-            var = self.variablesDict[varName]
-            value = var.getValue()
-            if var.isString:
-                value = '"%s"' % value
-            return value
-        return None       
+            var = self.parser.getVariable(varName)
+            return var.getLiteralValue()
+        return None
     
     def setVarValue(self, varName, value):
         ''' Set the value of some var'''
         if self.hasVar(varName):
-            self.variablesDict[varName].setValue(value)   
+            self.parser.getVariable(varName).setTkValue(value)
             
     def setVarlistValue(self, varList, valueList):
         ''' Return a list of values of given variables names'''
@@ -1072,17 +777,12 @@ class ProtocolGUI(BasicGUI):
         
     def createGUI(self, project, run, master=None, saveCallback=None, visualize_mode=False):
         try:
-            self.Error = None
-            self.run = run
-            self.saveCallback = saveCallback
-            self.project = project
-            self.init()        
-            registerCommonFonts()
             self.createBasicGUI(master)
-            self.readProtocolScript()
+            self.initialize(project, run, saveCallback)
             self.createScrollableCanvas()
             self.fillHeader()
-            self.parseHeader()
+            self.parser = ProtocolParser(self.run['source'])
+            self.createWidgets()
             self.master.update_idletasks()
             maxWidth = max([s.frame.winfo_width() for s in self.sectionslist])
             #self.maxLabelWidth = 300
@@ -1117,296 +817,7 @@ class ProtocolGUI(BasicGUI):
         if self.Error:
             return
         if self.visualize_mode and not self.hasVisualizeOptions:
-            #print "Calling visualize from protlib_gui"
             self.getProtocol().visualize()
         else:
             BasicGUI.launchGUI(self)
     
-# This group of function are called Wizzards and should help
-# to set some parameters  in the GUI, they will receive as parameters
-# ProtocolGUI instance and the variable to setup 
-# wizard functions should usually set the variable value
-# if not, can be used as viewers
-
-    def wizardNotFound(self, var):
-        showError("Wizard not found", "The wizard <%s> for this parameter has not been found" % var.tags['wizard']
-                               , parent=self.master)
-        
-    def wizardDummy(self, var):
-        showInfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
-        
-    def wizardShowJ(self, var):
-        runShowJ(var.tkvar.get())
-        
-    def wizardBrowse(self, var):
-        if 'file' in var.tags.keys():
-            seltype="file"
-            filterExt = var.tags['file']
-        else:
-            seltype="folder"
-            filterExt = ''
-        files = showBrowseDialog(parent=self.master, seltype=seltype, filter=filterExt)
-        if files:
-            var.tkvar.set(', '.join([relpath(f) for f in files]))
-    
-    #Helper function to select Downsampling wizards
-    def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None, md=None):  
-        from protlib_gui_ext import XmippBrowserCTF
-        results = showBrowseDialog(path=path, parent=self.master, browser=XmippBrowserCTF,title="Select Downsampling", 
-                                        seltype="file", selmode="browse", filter=filterExt, previewDim=256, 
-                                        extra={'freqs':freqs, 'downsampling':value, 'previewLabel': 'Micrograph', \
-                                               'computingMessage': 'Estimating PSD...', 'md':md}) # a list is returned
-        if results:
-            self.setVarValue('DownsampleFactor', results[0])
-        return results
-          
-    #This wizard is specific for import_micrographs protocol
-    def wizardBrowseCTF(self, var):
-        args = self.getVarlistValue(['DirMicrographs', 'ExtMicrographs', 'DownsampleFactor'])
-        self.wizardHelperSetDownsampling(var, *args)
-        
-    #This wizard is specific for screen_micrographs protocol
-    #it will help to select downsampling, and frequencies cutoffs
-    def wizardBrowseCTF2(self, var):
-        error = None
-        vList = ['LowResolCutoff', 'HighResolCutoff']
-        freqs = self.getVarlistValue(vList)
-        importRunName = self.getVarValue('ImportRun')
-        prot = self.project.getProtocolFromRunName(importRunName)
-        path = prot.WorkingDir
-        if path and exists(path):
-            mdPath = prot.getFilename('micrographs')
-            if exists(mdPath):
-                from xmipp import MetaData, MDL_MICROGRAPH
-                md = MetaData(mdPath)
-                if md.size():
-                    image = md.getValue(MDL_MICROGRAPH, md.firstObject())     
-                    if image:         
-                        filterExt = "*" + os.path.splitext(image)[1]
-                        value = self.getVarValue('DownsampleFactor')
-                        results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs, md)
-                        if results:
-                            self.setVarlistValue(vList, results[1:])
-                    else:
-                        error = "Not micrograph found in metadata <%s>" % mdPath
-                        #self.setVarValue('LowResolCutoff', results[1])
-                        #self.setVarValue('HighResolCutoff', results[2])
-                else:
-                    error = "Micrograph metadata <%s> is empty" % mdPath
-            else:
-                error = "Micrograph metadata <%s> doesn't exists" % mdPath
-        else:
-            error = "Import run <%s> doesn't exists" % str(path)
-        if error:
-            showWarning("Select Downsampling Wizard", error, self.master)
-            return None
-        else:
-            return results
-                
-    #Select family from extraction run
-    def wizardChooseFamily(self, var):
-        extractionDir = getWorkingDirFromRunName(self.getVarValue('PreviousRun'))
-        if not extractionDir:
-            showWarning("Warning", "No previous Run has been found", parent=self.master)
-            return
-        familyList = []
-        for file in glob(join(extractionDir, "*_sorted.sel")):
-            familyList.append(os.path.split(file)[1].replace("_sorted.sel",""))
-        if len(familyList)==1:
-            var.tkvar.set(familyList[0])
-        else:
-            self.selectFromList(var, familyList)        
-
-    def wizardHelperFilter(self, browser, title, **args):
-        extra = {'previewLabel': 'Image', 'computingMessage': 'Applying filter...'}
-        extra.update(args)
-        selfile = self.getVarValue('InSelFile')
-        path, filename = os.path.split(selfile)
-        if not exists(selfile):
-            showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
-            return
-        return showBrowseDialog(path=path, parent=self.master, browser=browser,title=title, 
-                                seltype="file", selmode="browse", filter=filename, previewDim=256, extra=extra)        
-        
-    def wizardChooseBandPassFilter(self, var):
-        '''Wizard dialog to help choosing Bandpass filter parameters (used in protocol_preprocess_particles) '''
-        vList = ['Freq_low','Freq_high','Freq_decay']
-        from protlib_gui_ext import XmippBrowserBandpassFilter
-        results = self.wizardHelperFilter(XmippBrowserBandpassFilter, "Bandpass Filter", freqs=self.getVarlistValue(vList))
-        if results:
-            self.setVarlistValue(vList, results)
-            
-    #Choose Gaussian Filter
-    def wizardChooseGaussianFilter(self, var):
-        '''Wizard dialog to help choosing Gaussian filter(in Fourier space) parameters (used in protocol_preprocess_particles) '''
-        from protlib_gui_ext import XmippBrowserGaussianFilter
-        results = self.wizardHelperFilter(XmippBrowserGaussianFilter, "Gaussian Filter", freqSigma=self.getVarValue('Freq_sigma'))
-        if results:
-            var.tkvar.set(results) #expecting single result            
-
-    #Choose Bad pixels wizard
-    def wizardChooseBadPixelsFilter(self, var):
-        from protlib_gui_ext import XmippBrowserBadpixelFilter
-        results = self.wizardHelperFilter(XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=self.getVarValue('DustRemovalThreshold'))
-        if results:
-            var.tkvar.set(results) #expecting single result            
-
-    #Design mask wizard
-    def wizardDesignMask(self, var):
-        selfile = self.getVarValue('InSelFile')
-        workingDir = getWorkingDirFromRunName(self.getVarValue('RunName'))
-        #fnMask=os.path.join(workingDir,"mask.xmp")
-        fnMask = self.project.projectTmpPath("mask.xmp")
-        from protlib_utils import runJavaIJapp
-        msg = runJavaIJapp("512m", "XmippMaskDesignWizard", "-i %(selfile)s -mask %(fnMask)s" % locals())
-        msg = msg.strip().splitlines()
-        if len(msg)>0:
-            var.tkvar.set(fnMask)            
-
-    #Select micrograph extension
-    def wizardMicrographExtension(self,var):
-        dirMicrographs = self.getVarValue('DirMicrographs')
-        files=glob(join(dirMicrographs,"*"))
-        extensions={}
-        bestCount=0
-        bestExt=""
-        imgExt=['.raw','.tif','.mrc','.dm3','.ser','.spi','.xmp']
-        for fn in files:
-            ext=os.path.splitext(fn)[1]
-            if ext in imgExt:                
-                if ext in extensions.keys():
-                    extensions[ext]+=1
-                else:
-                    extensions[ext]=1
-                if extensions[ext]>bestCount:
-                    bestCount=extensions[ext]
-                    bestExt=ext
-        self.setVarValue("ExtMicrographs", "*"+bestExt)
-
-    #Select Tilt pairs
-    def wizardTiltPairs(self, var):
-        dirMicrographs = self.getVarValue('DirMicrographs')
-        extMicrographs = self.getVarValue('ExtMicrographs')
-        resultFilename = var.tkvar.get()
-        uList = []
-        tList = []
-        from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
-        
-        if exists(resultFilename):
-            md = MetaData(resultFilename)
-            for id in md:
-                tList.append(md.getValue(MDL_MICROGRAPH_TILTED, id))
-                uList.append(md.getValue(MDL_MICROGRAPH, id))                
-        else:
-            if len(resultFilename) == 0:
-                resultFilename = "tilted_pairs.xmd"
-            micrographs = glob(join(dirMicrographs, extMicrographs))
-            micrographs.sort()
-            for i, m in enumerate(micrographs):
-                m = os.path.basename(m)
-                if i % 2 == 0:
-                    tList.append(m)
-                else:
-                    uList.append(m)
-        
-        from protlib_gui_ext import showTiltPairsDialog
-        results = showTiltPairsDialog((uList, tList), self.master)
-        #self.wizardHelperFilter(XmippBrowserTiltPairs, "Choose tilt pairs", pattern=os.path.join(dirMicrographs,extMicrographs))
-        if results:
-            var.tkvar.set(resultFilename)
-            uList, tList = results
-            md = MetaData()
-            for u, t in zip(uList, tList):
-                id = md.addObject()
-                md.setValue(MDL_MICROGRAPH, join(dirMicrographs,u), id)
-                md.setValue(MDL_MICROGRAPH_TILTED, join(dirMicrographs,t), id)
-            md.write(resultFilename)
-
-    #Select family from extraction run
-    def wizardChooseFamilyToExtract(self, var):
-        from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTFMODEL
-        from protlib_gui_ext import ListboxDialog
-        pickingRun = self.getVarValue('PickingRun')
-        pickingProt = self.project.getProtocolFromRunName(pickingRun)
-        fnFamilies = pickingProt.getFilename('families')
-        
-        if not exists(fnFamilies):
-            showWarning("Warning", "No elements to select", parent=self.master)
-            return
-        md = MetaData(fnFamilies)
-        families = [md.getValue(MDL_PICKING_FAMILY, objId) for objId in md]
-        if len(families) == 1:
-            d = 0
-        else:  
-            d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
-            if len(d.result) > 0:
-                d = d.result[0]
-            else:
-                d = None
-        if d is not None:
-            selectedFamily = families[d]
-            var.setValue(selectedFamily)
-            for objId in md:
-                if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
-                    particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-                    self.setVarValue("ParticleSize", str(particleSize))
-            if hasattr(pickingProt,'TiltPairs'):
-                if pickingProt.TiltPairs:
-                    self.setVarValue("DoFlip", str(False))
-            else:
-                md=MetaData(pickingProt.getFilename("micrographs"))
-                self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTFMODEL)))
-
-    #Select micrograph extension
-    def wizardProjMatchRadius(self,var):
-        from xmipp import SingleImgSize, FileName
-        volumeList = self.getVarValue('ReferenceFileNames')
-        fnVol = FileName(volumeList.split(' ')[0])
-        if fnVol.exists() and fnVol.isImage():
-            (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(fnVol)
-            self.setVarValue("MaskRadius", str(Xdim/2))
-
-# This group of functions are called Validator, and should serve
-# for validation of user input for each variable
-# The return value of each validator should be an error message string 
-# or None if not error
-def validatorNonEmpty(var):
-    if len(var.tkvar.get().strip()) == 0:
-        return "Input for <%s> is empty" % var.comment
-    return None
-    
-def validatorPathExists(var):
-    if not var.satisfiesCondition():
-        return None
-    err = validatorNonEmpty(var)
-    if not err:
-        pathList = var.tkvar.get().split()
-        err = ''
-        for p in pathList:
-            if not xmippExists(p):
-                err += "\n<%s>" % p
-        if len(err):
-            err = "Following path: %s\ndoesn't exist\nFor input <%s>" % (err, var.comment)
-        else: 
-            err = None
-    return err  
-
-def validatorIsFloat(var):
-    err = validatorNonEmpty(var)
-    if not err:
-        try:
-            value = var.tkvar.get()
-            float(value)
-        except ValueError:
-            err = "Input value: <%s> for <%s> isn't a valid number" % (value, var.comment)
-    return err    
-
-def validatorIsInt(var):
-    err = validatorNonEmpty(var)
-    if not err:
-        value = var.tkvar.get()
-        try:
-            int(value)
-        except ValueError:
-            err = "Input value: <%s> for <%s> isn't a valid integer" % (value, var.comment)
-    return err 

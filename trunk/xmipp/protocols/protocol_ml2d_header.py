@@ -9,24 +9,28 @@
 #  Author:  Sjors Scheres, January 2008
 # Updated:  J. M. de la Rosa Trevin July 2011
 #
+
+#------------------------------------------------------------------------------------------
 # {begin_of_header}
-#   {please_cite}
-"""
-for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
-for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
-"""
+
 #{eval} expandCommentRun()
 
 #------------------------------------------------------------------------------------------
 # {section} Input
 #------------------------------------------------------------------------------------------
+#  {cite} ML References
+CiteML = """
+for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
+for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
+"""
+
 # {file}(*.xmd *.stk *.sel){validate}(PathExists) Input images:
 """ 
 Provide a list of images from a stack or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
 If you have images outside the <Project> you should import them first.
 """
-ImgMd = "all_images.xmd"
+ImgMd = ""
 
 # Generate references (or classes) ?
 """ 
@@ -39,7 +43,7 @@ DoGenerateReferences = True
 """ Number of references to be generated. """
 NumberOfReferences = 3
 
-# {file}{validate}(PathExists){condition}(not DoGenerateReferences) References metadata:
+# {file}(result_classes*xmd){validate}(PathExists){condition}(not DoGenerateReferences) References metadata:
 """ Metadata with the input reference images """
 RefMd = "result_classes.xmd"
 
@@ -56,8 +60,8 @@ If set to <No>, provide the images pixel size in Angstrom
 """
 DoCorrectAmplitudes = True
 
-# {file}{condition}(DoCorrectAmplitudes and DoMlf){validate}(PathExists) CTFdat file with the input images:
-InCtfDatFile = "all_images.ctfdat"
+# {file}(*.ctfdat){condition}(DoCorrectAmplitudes and DoMlf){validate}(PathExists) CTFdat file with the input images:
+InCtfDatFile = ""
 
 # {condition}(not DoCorrectAmplitudes)Image pixel size (in Angstroms)
 PixelSize = 5.6

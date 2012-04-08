@@ -498,6 +498,7 @@ class XmippText(tk.Text):
         scrollbar = AutoScrollbar(frame)
         scrollbar.grid(row=0, column=1, sticky='ns')
         options['yscrollcommand'] = scrollbar.set
+        options['wrap'] = tk.WORD
         tk.Text.__init__(self, frame, options)
         scrollbar.config(command=self.yview)
         self.grid(row=0, column=0, sticky='nsew')
