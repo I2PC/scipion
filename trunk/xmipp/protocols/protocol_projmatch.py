@@ -82,7 +82,6 @@ class ProtProjMatch(XmippProtocol):
     
     def summary(self):
         from protlib_sql import XmippProtocolDb
-
         super(ProtProjMatch, self).summary()
         
         
@@ -98,16 +97,18 @@ class ProtProjMatch(XmippProtocol):
         self.numberOfReferences = len(self.ReferenceFileNames)
         
         _dataBase  = XmippProtocolDb(self, self.scriptName, False)
-        
         iteration = _dataBase.getRunIter()
         summary = ['Performed <%d/%d> iterations with angular sampling rate <%s>' 
                    % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
         if (iteration > 1):
             ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
-            md = MetaData(ResolutionXmdCurrIterMaxSummary)
-            id = md.firstObject()
-            FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
-            summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
+            if not exists(ResolutionXmdCurrIterMaxSummary):
+                summary += ['<ERROR:> Resolution is not available but iteration number is not 1. Something went wrong']            
+            else:
+                md = MetaData(ResolutionXmdCurrIterMaxSummary)
+                id = md.firstObject()
+                FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+                summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
         else:
             summary += ['Resolution is <%s>' % 'not available']            
         
