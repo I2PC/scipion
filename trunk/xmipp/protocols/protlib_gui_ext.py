@@ -870,7 +870,7 @@ class ShowDialog(Dialog):
             m = max(m, len(l))
             self.text.addLine(l)
         m = min(m + 5, 80)
-        self.text.config(height=len(mylines)+3, width=m-7)
+        self.text.config(height=len(mylines)+3, width=m)
         self.text.addNewline()
         self.text.config(state=tk.DISABLED)
         self.text.frame.pack()

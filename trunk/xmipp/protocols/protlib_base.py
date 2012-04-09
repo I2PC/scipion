@@ -224,6 +224,14 @@ class XmippProject():
         This is usually the input when one protocol uses another one.'''
         return self.getProtocolFromModule(getScriptFromRunName(extendedRunName))
     
+    def getRunList(self, protocols):
+        ''' Return the list of extended run_names of runs that are FINISHED 
+        for each protocol in the given list '''
+        runs = []
+        for p in protocols:
+            runs += self.projectDb.selectRunsByProtocol(p, SqliteDb.RUN_FINISHED)
+        return [getExtendedRunName(r) for r in runs]
+    
                   
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''

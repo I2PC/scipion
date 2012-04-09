@@ -10,8 +10,8 @@
 # Updated:  J. M. de la Rosa Trevin July 2011
 #
 # {begin_of_header}
-#{please_cite}
-"""
+#{cite}
+DummyCite = """
 for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
 for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 """

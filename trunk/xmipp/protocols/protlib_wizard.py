@@ -34,7 +34,8 @@ import Tkinter as tk
 import tkFont
 
 
-from protlib_base import getWorkingDirFromRunName, getExtendedRunName
+from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
+    XmippProject
 from protlib_utils import loadModule, which, runShowJ
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
@@ -64,7 +65,11 @@ def wizardDummy(self, var):
     showInfo("Wizard test", "This is only a test on wizards setup", parent=self.master)
     
 def wizardShowJ(self, var):
-    runShowJ(var.tkvar.get())
+    value = var.getTkValue().strip()
+    if len(value):
+        runShowJ(var.getTkValue())
+    else:
+        showWarning("Empty file", "Please select a file to visualize", parent=self.master)
     
 def wizardBrowse(self, var):
     if 'file' in var.tags.keys():
@@ -91,7 +96,7 @@ def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None, m
 #This wizard is specific for import_micrographs protocol
 def wizardBrowseCTF(self, var):
     args = self.getVarlistValue(['DirMicrographs', 'ExtMicrographs', 'DownsampleFactor'])
-    self.wizardHelperSetDownsampling(var, *args)
+    wizardHelperSetDownsampling(self, var, *args)
     
 #This wizard is specific for screen_micrographs protocol
 #it will help to select downsampling, and frequencies cutoffs
@@ -112,7 +117,7 @@ def wizardBrowseCTF2(self, var):
                 if image:         
                     filterExt = "*" + os.path.splitext(image)[1]
                     value = self.getVarValue('DownsampleFactor')
-                    results = self.wizardHelperSetDownsampling(var, path, filterExt, value, freqs, md)
+                    results = wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs, md)
                     if results:
                         self.setVarlistValue(vList, results[1:])
                 else:
@@ -160,7 +165,7 @@ def wizardChooseBandPassFilter(self, var):
     '''Wizard dialog to help choosing Bandpass filter parameters (used in protocol_preprocess_particles) '''
     vList = ['Freq_low','Freq_high','Freq_decay']
     from protlib_gui_ext import XmippBrowserBandpassFilter
-    results = self.wizardHelperFilter(XmippBrowserBandpassFilter, "Bandpass Filter", freqs=self.getVarlistValue(vList))
+    results = wizardHelperFilter(self, XmippBrowserBandpassFilter, "Bandpass Filter", freqs=self.getVarlistValue(vList))
     if results:
         self.setVarlistValue(vList, results)
         
@@ -168,14 +173,14 @@ def wizardChooseBandPassFilter(self, var):
 def wizardChooseGaussianFilter(self, var):
     '''Wizard dialog to help choosing Gaussian filter(in Fourier space) parameters (used in protocol_preprocess_particles) '''
     from protlib_gui_ext import XmippBrowserGaussianFilter
-    results = self.wizardHelperFilter(XmippBrowserGaussianFilter, "Gaussian Filter", freqSigma=self.getVarValue('Freq_sigma'))
+    results = wizardHelperFilter(self, XmippBrowserGaussianFilter, "Gaussian Filter", freqSigma=self.getVarValue('Freq_sigma'))
     if results:
         var.setTkValue(results) #expecting single result            
 
 #Choose Bad pixels wizard
 def wizardChooseBadPixelsFilter(self, var):
     from protlib_gui_ext import XmippBrowserBadpixelFilter
-    results = self.wizardHelperFilter(XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=self.getVarValue('DustRemovalThreshold'))
+    results = wizardHelperFilter(self, XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=self.getVarValue('DustRemovalThreshold'))
     if results:
         var.setTkValue(results) #expecting single result            
 
@@ -186,7 +191,7 @@ def wizardDesignMask(self, var):
     #fnMask=os.path.join(workingDir,"mask.xmp")
     fnMask = self.project.projectTmpPath("mask.xmp")
     from protlib_utils import runJavaIJapp
-    msg = runJavaIJapp("512m", "XmippMaskDesignWizard", "-i %(selfile)s -mask %(fnMask)s" % locals())
+    msg = runJavaIJapp("1g", "XmippMaskDesignWizard", "-i %(selfile)s -mask %(fnMask)s" % locals())
     msg = msg.strip().splitlines()
     if len(msg)>0:
         var.setTkValue(fnMask)            
@@ -215,7 +220,7 @@ def wizardMicrographExtension(self,var):
 def wizardTiltPairs(self, var):
     dirMicrographs = self.getVarValue('DirMicrographs')
     extMicrographs = self.getVarValue('ExtMicrographs')
-    resultFilename = var.tkvar.get()
+    resultFilename = var.getTkValue()
     uList = []
     tList = []
     from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
@@ -239,7 +244,6 @@ def wizardTiltPairs(self, var):
     
     from protlib_gui_ext import showTiltPairsDialog
     results = showTiltPairsDialog((uList, tList), self.master)
-    #self.wizardHelperFilter(XmippBrowserTiltPairs, "Choose tilt pairs", pattern=os.path.join(dirMicrographs,extMicrographs))
     if results:
         var.setTkValue(resultFilename)
         uList, tList = results
@@ -299,7 +303,7 @@ def wizardProjMatchRadius(self,var):
 # The return value of each validator should be an error message string 
 # or None if not error
 def validatorNonEmpty(var):
-    if len(var.tkvar.get().strip()) == 0:
+    if len(var.getTkValue().strip()) == 0:
         return "Input for <%s> is empty" % var.comment
     return None
     
@@ -308,7 +312,7 @@ def validatorPathExists(var):
         return None
     err = validatorNonEmpty(var)
     if not err:
-        pathList = var.tkvar.get().split()
+        pathList = var.getTkValue().split()
         err = ''
         for p in pathList:
             if not xmippExists(p):
@@ -323,7 +327,7 @@ def validatorIsFloat(var):
     err = validatorNonEmpty(var)
     if not err:
         try:
-            value = var.tkvar.get()
+            value = var.getTkValue()
             float(value)
         except ValueError:
             err = "Input value: <%s> for <%s> isn't a valid number" % (value, var.comment)
@@ -332,10 +336,21 @@ def validatorIsFloat(var):
 def validatorIsInt(var):
     err = validatorNonEmpty(var)
     if not err:
-        value = var.tkvar.get()
+        value = var.getTkValue()
         try:
             int(value)
         except ValueError:
             err = "Input value: <%s> for <%s> isn't a valid integer" % (value, var.comment)
     return err
 
+def validatorValidRun(var):
+    ''' Check if the variable value is a valid posible run '''
+    project = XmippProject()
+    project.load()
+    runList = project.getRunList(var.getTagValues('run'))
+    run = var.getTkValue()
+    if not run in runList:
+        err = "Run <%s> is not valid" % run
+    else:
+        err = None
+    return err

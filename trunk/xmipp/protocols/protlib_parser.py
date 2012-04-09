@@ -77,14 +77,19 @@ class ProtocolVariable():
     def getValue(self):
         return self.value
     
-    def updateValue(self):
+    def getTkValue(self):
         '''this function will be used with gui,
         it will update variable value with the
         gui tkvar value '''
+        if self.isHidden():
+            return self.value
         if self.tkvar:
-            self.value = self.tkvar.get()
+            return self.tkvar.get()
         elif self.tktext:
-            self.value = self.tktext.get(1.0, 'end')
+            return self.tktext.get(1.0, 'end')
+        
+    def updateValue(self):
+        self.value = self.getTkValue()
             
     def setTkValue(self, value):
         '''Update the this function will be used with gui,
@@ -141,6 +146,9 @@ class ProtocolVariable():
     
     def isCite(self):
         return self.hasTag('cite')
+    
+    def isRun(self):
+        return self.hasTag('run')
     
     def isString(self):
         return self.type == VAR_STRING
@@ -204,6 +212,31 @@ class ProtocolVariable():
         if len(condition):#,  eval(condition)
             return eval(condition)
         return True 
+    
+    def hasValidator(self, validator):
+        '''check if a validator is already present'''
+        return 'validator' + validator in self.validators
+    
+    def addValidator(self, validator):
+        ''' Add a validator to the list if not present.
+        The name should be without the 'validator' prefix, that will 
+        be added automatically '''
+        if not self.hasValidator(validator):
+            self.validators.append('validator' + validator) 
+        
+    def updateValidators(self):
+        ''' Take validators names comming in 'validate' tag and 
+        add the 'validator' prefix, storing all validators names
+        in a list'''
+        if self.hasValidate():
+            for v in self.getTagValues('validate'):
+                self.addValidator(v)
+        if self.isNumber() and not self.hasValidator('IsInt'):
+            self.addValidator('IsFloat')
+        if self.isRun():
+            self.addValidator('ValidRun')
+            
+            
        
 class ProtocolParser():
     ''' Class to parse the protocol header files and extract the

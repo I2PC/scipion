@@ -12,7 +12,7 @@
 from protlib_base import *
 import glob
 import os
-from protlib_utils import runJob
+from protlib_utils import runJob, runShowJ
 from protlib_filesystem import deleteFile, deleteDir, createLink, copyFile
 
 class ProtScreenParticles(XmippProtocol):
@@ -29,21 +29,21 @@ class ProtScreenParticles(XmippProtocol):
 
     def summary(self):
         message=[]
-        message.append("Screening of  "+self.InputFile)
+        message.append("Screening of [%s]" % self.InputFile)
         return message
 
     def visualize(self):
-        summaryFile=self.workingDirPath("sorted.xmd")
+        summaryFile = self.workingDirPath("sorted.xmd")
         if not os.path.exists(summaryFile):
-            import tkMessageBox
-            tkMessageBox.showerror("Error", "There is no result yet")
-        else:                                        
-            os.system("xmipp_metadata_showj -i "+summaryFile+" --memory 512m &")
+            from protlib_gui_ext import showWarning
+            showWarning("Error", "There is no result yet")
+        else:   
+            runShowJ(summaryFile)                                     
     
-def sortImages(log,inputFile,outputFile):
+def sortImages(log, inputFile, outputFile):
     from xmipp import MetaData
-    mD=MetaData(inputFile)
-    if mD.size()>0:
+    mD = MetaData(inputFile)
+    if mD.size() > 0:
         runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" --multivariate -o "+outputFile.replace(".xmd",""))
     else:
         createLink(log,inputFile,outputFile)

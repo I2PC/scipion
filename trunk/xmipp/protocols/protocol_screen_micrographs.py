@@ -7,7 +7,7 @@ from protlib_base import *
 from protlib_utils import which, runJob, runShowJ
 from protlib_filesystem import deleteFile, exists, replaceFilenameExt
 import xmipp
-from protlib_gui_ext import showError
+from protlib_gui_ext import showWarning
 
 # The dictionary with specific filename templates 
 # is defined here to allow use of it outside the protocol
@@ -114,7 +114,6 @@ class ProtScreenMicrographs(XmippProtocol):
     
     def validate(self):
         errors = []
-
         # Check that there are any micrograph to process
         if not exists(self.importMicrographs):
             errors.append("Cannot find imported micrographs file:\n   <%s>" % self.importMicrographs)
@@ -143,22 +142,23 @@ class ProtScreenMicrographs(XmippProtocol):
     def summary(self):
         message = []
         md = xmipp.MetaData(self.importMicrographs)
-        message.append("CTF screening of <%d> micrographs from <%s>" % (md.size(), self.importDir))
+        message.append("CTF screening of <%d> micrographs." % md.size())
+        message.append("Input directory: [%s]" % self.importDir)
         if self.DoCtffind:
             message.append("CTF validated with <CTFFIND3>")
         return message
     
     def visualize(self):
         summaryFile = self.getFilename('micrographs')
-        if exists(summaryFile):
-            runShowJ(summaryFile,extraParams="--mode metadata")
-        else:
+        
+        if not exists(summaryFile): # Try to create partial summary file
             summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
             buildSummaryMetadata(self.WorkingDir, self.DoCtffind, self.importMicrographs, summaryFile)
-            if exists(summaryFile):
-                runShowJ(summaryFile,extraParams="--mode metadata")
-            else:
-                showError('Error', 'There are not results yet')
+            
+        if exists(summaryFile):
+            runShowJ(summaryFile, extraParams = "--mode metadata")
+        else:
+            showWarning('Warning', 'There are not results yet')
     
 def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
                        AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):

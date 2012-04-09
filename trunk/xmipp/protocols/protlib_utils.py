@@ -491,7 +491,7 @@ def submitProtocol(protocolPath, **params):
 def getImageJPluginCmd(memory, macro, args, batchMode=False):
     from protlib_filesystem import getXmippPath
     if len(memory) == 0:
-        memory = "512m"
+        memory = "1g"
         print "No memory size provided. Using default: " + memory
     imagej_home = getXmippPath("external/imagej")
     plugins_dir = os.path.join(imagej_home, "plugins")
@@ -579,7 +579,7 @@ def runJavaJar(memory, jarName, args, batchMode=True):
 def runJavaIJappWithResponse(memory, appName, args):
     return runExternalAppWithResponse(getJavaIJappCmd(memory, appName, args, True))
 
-def runShowJ(inputFiles, memory="512m", extraParams=""):
+def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
 def runChimera(inputFile):

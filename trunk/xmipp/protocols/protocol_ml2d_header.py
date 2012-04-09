@@ -24,18 +24,21 @@ for ML2D:  Scheres et al. (2005) J.Mol.Biol 348, 139-149
 for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 """
 
-# {file}(*.xmd *.stk *.sel){validate}(PathExists) Input images:
+# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images:
 """ 
-Provide a list of images from a stack or metadata file that make up your data set.
-The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
+Provide a list of images from a stack or metadata file that make up 
+your data set. The filenames should be relative to the <ProjectDir> 
+where you are running the <Protocols>
 If you have images outside the <Project> you should import them first.
 """
 ImgMd = ""
 
 # Generate references (or classes) ?
 """ 
-If you set to <No>, you should provide references images (In stack or metadata file). 
-The default generation is done by averaging subsets of input images.
+If you set to <No>, you should provide references images 
+(In stack or metadata file). 
+The default generation is done by averaging subsets 
+of input images.
 """
 DoGenerateReferences = True
 
@@ -55,13 +58,11 @@ DoMlf = False
 
 # Use CTF-amplitude correction inside MLF?
 """ 
-If set to <Yes>, provide the <ctfdat> file in the field below. 
+If set to <Yes>, the input images metadata should be of type 
+.ctfdat containing the ctf info for each image
 If set to <No>, provide the images pixel size in Angstrom
 """
 DoCorrectAmplitudes = True
-
-# {file}(*.ctfdat){condition}(DoCorrectAmplitudes and DoMlf){validate}(PathExists) CTFdat file with the input images:
-InCtfDatFile = ""
 
 # {condition}(not DoCorrectAmplitudes)Image pixel size (in Angstroms)
 PixelSize = 5.6
@@ -85,10 +86,11 @@ HighResLimit = 20
 AdvancedParameters = False
 
 # Also include mirror in the alignment?
-"""  Including the mirror transformation is useful if your particles have a handedness 
-and may fall either face-up or face-down on the grid. Note that when you want to use 
-this <ML2D> run for later <RCT> reconstruction, you can <NOT include the mirror> 
-transformation here.
+"""
+Including the mirror transformation is useful if your particles 
+have a handedness and may fall either face-up or face-down on the grid. 
+Note that when you want to use this <ML2D> run for later <RCT> 
+reconstruction, you can <NOT include the mirror> transformation here.
 """
 DoMirror = False
 
@@ -99,11 +101,6 @@ For detaisl see:
 [http://dx.doi.org/10.1093/bioinformatics/bti1140]
 """
 DoFast = True
-# {expert}{condition}(DoFast) -C   double
-"""
-Significance criterion for fast approach  
-"""
-CFast = 1e-12
 
 # Refine the normalization for each image?
 """ 
@@ -114,62 +111,46 @@ For more info see (and please cite):
 DoNorm = False
 
 # Restart after iteration:
-""" For previous runs that stopped before convergence, resume the calculations
-after the completely finished iteration. (Use zero to start from the beginning)
+""" 
+For previous runs that stopped before convergence, resume the 
+calculations after the completely finished iteration. 
+(Use <zero> to start from the beginning)
 """
 RestartIter = 0
 
-# {expert} --eps   float
+# {expert} Stoping threshold
 """
- Stopping criterium 
+When the differences beetween the model on the previous iteration
+and the current one is less than this threshold, it will be said
+that convergence has been reached
 """
 Eps = 5e-5
 
-# {expert} --iter   int
+# {expert} Maximum number of iterations
 """
-Maximum number of iterations to perform  
+If the convergence has not been reached after this number 
+of iterations, the process will be stopped.
 """
 MaxIters = 100
 
-#{expert}  --psi_step   float
+#{expert}(PsiStep >= 1.0)  In-plane rotation sampling (degrees)
 """
 In-plane rotation sampling interval (degrees) 
 """
 PsiStep = 5.0
 
-#{expert}  --noise   float
+#{expert}  Std for pixel noise
 """
 Expected standard deviation for pixel noise  
 """
-StdNoise = 1
+StdNoise = 1.0
 
-# {expert} --offset   float
+# {expert} Std for origin offset
 """
 Expected standard deviation for origin offset (pixels) 
 """
 StdOffset = 3.0
 
-# {expert} --zero_offsets
-"""
-Kick-start the fast algorithm from all-zero offsets  
-"""
-ZeroOffsets = False
-
-# {expert} --fix_sigma_noise
-"""
- Do not re-estimate the standard deviation in the pixel noise  
-"""
-FixSigmaNoise = False
-# {expert}--fix_sigma_offset
-"""
-Do not re-estimate the standard deviation in the origin offsets  
-"""
-FixSigmaOffset = False
-# {expert} --fix_fractions
-"""
-Do not re-estimate the model fractions  
-"""
-FixFractions = False
 
 #{eval} expandParallel()
 

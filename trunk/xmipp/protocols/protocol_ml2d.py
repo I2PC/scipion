@@ -55,8 +55,6 @@ class ProtML2D(XmippProtocol):
         restart = False
         if (restart):
             pass 
-            #Not yet implemented
-            #params= ' --restart ' + utils_xmipp.composeFileName('ml2d_it', RestartIter,'log')
         else: 
             # Dictionary with boolean options and the cmd options
             booleanDict = {'DoMirror': '--mirror', 'DoNorm': '--norm', 'ZeroOffsets': '--zero_offsets',
@@ -77,9 +75,7 @@ class ProtML2D(XmippProtocol):
             if (self.NumberOfThreads > 1  and not self.DoMlf):
                 params += ' --thr %i' % self.NumberOfThreads
             if (self.DoMlf):
-                if (self.DoCorrectAmplitudes):
-                    params += ' --ctfdat %s' % self.InCtfDatFile
-                else:
+                if not self.DoCorrectAmplitudes:
                     params += ' --no_ctf --pixel_size %f' % self.PixelSize
                 if (not self.ImagesArePhaseFlipped):
                     params += ' --not_phase_flipped'
@@ -89,7 +85,7 @@ class ProtML2D(XmippProtocol):
                 params += " --iter %d" % self.MaxIters
             #Add all boolean options if true
             for k, v in booleanDict.iteritems():
-                if self.__dict__[k]:
+                if self.getattr(k):
                     params += " " + v
             
             #Add extra options
@@ -112,7 +108,7 @@ class ProtML2D(XmippProtocol):
             blocks = getBlocksInMetaDataFile(refs)
             lastBlock = blocks[-1]
             try:
-                runShowJ("%(lastBlock)s@%(refs)s" % locals(), "512m", "--mode metadata --render")
+                runShowJ("%(lastBlock)s@%(refs)s" % locals(), extraParams="--mode metadata --render")
             except Exception, e:
                 from protlib_gui_ext import showError
                 showError("Error launching java app", str(e))

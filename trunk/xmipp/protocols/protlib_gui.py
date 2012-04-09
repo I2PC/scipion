@@ -355,22 +355,6 @@ class ProtocolGUI(BasicGUI):
         self.updateScrollRegion()
         return expanded
 
-    def getRunsList(self, protocols):
-        #protocols = var.tags['run'].split(',')
-        runs = []
-        for p in protocols:
-            runs += self.project.projectDb.selectRunsByProtocol(p, SqliteDb.RUN_FINISHED)
-        list = [getExtendedRunName(r) for r in runs]
-        return list
-           
-    def updateValidators(self, var):
-        if var.hasValidate():
-            var.validators = ['validator' + v for v in var.getTagValues('validate')]
-        if var.isNumber():
-            if 'validatorIsInt' not in var.validators:
-                var.validators.append('validatorIsFloat')
-            
-            
     def createSectionWidget(self, var):
         w = ProtocolWidget(self, var)
         w.frame, w.label, w.content = createSection(self.frame, var.comment)
@@ -401,7 +385,7 @@ class ProtocolGUI(BasicGUI):
             self.hasVisualizeOptions = True
             var.setTag('visualize')
         
-        self.updateValidators(var)
+        var.updateValidators()
         
         if var.isExpert():
             label_bgcolor = self.style.ExpertLabelBgColor
@@ -474,10 +458,12 @@ class ProtocolGUI(BasicGUI):
                 return entries
             
             def getRuns(var):
-                return self.getRunsList(var.getTagValues('run'))
+                return self.project.getRunList(var.getTagValues('run'))
 
             wiz = loadModule('protlib_wizard')
+            viewFunc = None
             if 'file' in keys:
+                viewFunc = wiz.wizardShowJ
                 entry.setBuildListFunction(lambda: getEntries(var), refreshOnTab=True)
                 args = ['Browse', lambda: wiz.wizardBrowse(self, var), 'fileopen.gif', 'Browse file']
             elif 'dir' in keys:
@@ -506,7 +492,9 @@ class ProtocolGUI(BasicGUI):
                 viewFunc = wiz.wizardShowJ
                 funcName = var.tags['view']
                 viewFunc = getattr(wiz, funcName, viewFunc)
+            if viewFunc:
                 btn = self.addButton("View", lambda:viewFunc(self, var), -1, label_row, var_column+3, 'nw', 'visualize.gif', frame, 'View')
+                w.widgetslist.append(btn)
         if var.help:
             btn = self.addButton("Help", lambda: self.showHelp(var.help.replace('"', '')), -1, label_row, var_column+4, 'nw', 'help.gif', frame, 'Show info')
             w.widgetslist.append(btn)
@@ -752,7 +740,10 @@ class ProtocolGUI(BasicGUI):
     def getVarValue(self, varName):
         ''' Return the value of a variable give the name'''
         if self.hasVar(varName):
-            return self.parser.getValue(varName)
+            var = self.parser.getVariable(varName)
+            var.updateValue()
+            return var.getValue()
+            #return self.parser.getValue(varName)
         return None
     
     def getVarlistValue(self, varList):
