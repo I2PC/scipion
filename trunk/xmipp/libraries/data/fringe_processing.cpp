@@ -195,7 +195,7 @@ void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<
     orModMap = ornMod;
 }
 
-void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, int fmin, int fmax, int num)
+void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S)
 {
     // H is an Annular filter with radius=R and sigma=S and a Gaussian DC filter with sigma=1
     MultidimArray< std::complex<double> > H;
@@ -210,9 +210,6 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
     //Fourier Transformer
     FourierTransformer ftrans(FFTW_BACKWARD);
     ftrans.FourierTransform(imComplex, fftIm, false);
-
-    double S = 25;
-    double R = 10;
 
     double temp = 0;
     std::complex<double> tempCpx;

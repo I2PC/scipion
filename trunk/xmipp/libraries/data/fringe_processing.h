@@ -58,12 +58,12 @@ public:
     void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap,  MultidimArray<double > & orModMap, int wSize);
 
     //This function computes the normalized version of the fringe pattern im = a+m*cos(phi) that it is
-    //imN = cos(phi) and computes also the modulation map m that it is called imModMap; fmin and fmax are
-    //rough estimations of the maximun and minimun frequency of the fringes and num is the number of
-    //Gabor filters used.
+    //imN = cos(phi) and computes also the modulation map m that it is called imModMap; R and S are
+    //rough estimations of the number of fringes in the image that give us the fringe frequency and S is the variance of the exponential
+    //that filter the frequency of the fringes
     //Ref: Juan Antonio Quiroga, Manuel Servin, "Isotropic n-dimensional fringe
     //pattern normalization", Optics Communications, 224, Pages 221-227 (2003)
-    void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, int fmin, int fmax, int num);
+    void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S);
 
     //This method obtains the phase direction map from the fringe orientation map solving the sign ambiguity problem that exists in the fringe orientation map.
     //Once computed the phase direction map the modulating phase can be obtained from the SPTH transform.

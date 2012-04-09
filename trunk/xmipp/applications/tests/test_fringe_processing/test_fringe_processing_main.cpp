@@ -90,42 +90,46 @@ TEST_F( FringeProcessingTests, simulPattern)
     //im.write(imageName);
 }
 
-//TEST_F( FringeProcessingTests, SPTH)
-//{
-//    tempImageName.initUniqueName("/tmp/temp_XXXXXX");
-//
-// FringeProcessing fp;
-// FileName imageName2, imageName3;
-// imageName2 = "fringe/test2.txt";
-// imageName3 = "fringe/originalImag.txt";
-//
-// MultidimArray< std::complex <double> > imProc;
-//
-// MultidimArray< double > imProcReal;
-// MultidimArray< double > imProcImag;
-//
-// MultidimArray<double> im;
-//
-// int nx = 311;
-//    int ny = 312;
-//    double noiseLevel = 0.0;
-//    double freq = 20;
-//    Matrix1D<int> coefs(10);
-//
-//    fp.simulPattern(im,fp.SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
-//    imProc.resizeNoCopy(im);
-//
-//    fp.SPTH(im, imProc);
-//
-//    imProc.getReal(imProcReal);
-//    imProc.getImag(imProcImag);
-//
-//    imProcReal.write(tempImageName);
-//    imProcImag.write(imageName2);
-//    im.write(imageName3);
-//
-//    tempImageName.deleteFile();
-//}
+TEST_F( FringeProcessingTests, SPTH)
+{
+    //FileName fpName, imProcRealName, imProcImagName;
+    //fpName = "fp.txt";
+    //imProcRealName  = "IpReal.txt";
+    //imProcImagName  = "IpImag.txt";
+
+    FringeProcessing fp;
+    MultidimArray< std::complex <double> > imProc;
+    MultidimArray< double > imProcReal;
+    MultidimArray< double > imProcImag;
+    MultidimArray<double> im;
+
+    int nx = 311;
+    int ny = 312;
+    double noiseLevel = 0.0;
+    double freq = 20;
+    Matrix1D<int> coefs(10);
+
+    fp.simulPattern(im,fp.SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    imProc.resizeNoCopy(im);
+    fp.SPTH(im, imProc);
+
+    imProc.getReal(imProcReal);
+    imProc.getImag(imProcImag);
+
+    ASSERT_TRUE( (A2D_ELEM(imProcReal,10,10)  -  0)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(imProcReal,10,20)  -  0)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(imProcReal,20,10)  -  0)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(imProcReal,20,20)  -  0)  < 1e-3);
+
+    ASSERT_TRUE( (A2D_ELEM(imProcImag,10,10)  -  0.954154)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(imProcImag,10,20)  -  0.536937)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(imProcImag,20,10)  -  0.954154)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(imProcImag,20,20)  -  0.536937)  < 1e-3);
+
+    //im.write(fpName);
+    //imProcReal.write(imProcRealName);
+    //imProcImag.write(imProcImagName);
+}
 
 TEST_F( FringeProcessingTests, orMinDer)
 {
@@ -163,36 +167,43 @@ TEST_F( FringeProcessingTests, orMinDer)
 
 }
 
-//TEST_F( FringeProcessingTests, normalize)
-//{
-// FileName fpName, Iname;
-// fpName = "fringe/fp.txt";
-// Iname = "fringe/IN.txt";
-//
-// FringeProcessing fp;
-// MultidimArray<double> im, imN, imNMod;
-//
-// int nx = 311;
-//    int ny = 311;
-//    double noiseLevel = 0.0;
-//    double freq = 20;
-//    Matrix1D<int> coefs(10);
-//
-//    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
-//
-//    im.write(fpName);
-//
-//    imN.resizeNoCopy(im);
-//    imNMod.resizeNoCopy(im);
-//
-//    int fmin,fmax,num;
-//    fp.normalize(im,imN,imNMod, fmin, fmax, num);
-//
-//    //imN.write(Iname);
-//
-// ASSERT_TRUE(true);
-//
-//}
+TEST_F( FringeProcessingTests, normalize)
+{
+    //FileName fpName, Iname, ModName;
+    //fpName = "fp.txt";
+    //Iname  = "IN.txt";
+    //ModName= "Mod.txt";
+    FringeProcessing fp;
+    MultidimArray<double> im, In, Mod;
+
+    int nx = 311;
+    int ny = 311;
+    double noiseLevel = 0.1;
+    double freq = 20;
+    Matrix1D<int> coefs(10);
+
+    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+
+    //im.write(fpName);
+
+    In.resizeNoCopy(im);
+    Mod.resizeNoCopy(im);
+
+    //aprox there are 5 fringe in the image
+    double R = 5;
+    double S = 10;
+
+    fp.normalize(im,In,Mod, R, S);
+
+    //We test some values comparing with the values recovered with Matlab
+    ASSERT_TRUE( (A2D_ELEM(In,10,10)  -  0.924569)  < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,10,20)  -  0.924981)  < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,20,10)  -  0.924981)  < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,20,20)  -  0.924981)  < 1e-1);
+
+    //In.write(Iname);
+    //Mod.write(ModName);
+}
 
 TEST_F( FringeProcessingTests, direction)
 {
