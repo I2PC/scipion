@@ -1,0 +1,23 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _originX
+ _originY
+ _originZ
+000001@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk     0.000000     0.000000 1.387280e-309     0.000000     0.000000     0.000000 
+000002@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk  -180.000000    63.434948 4.124318e-15     0.000000     0.000000     0.000000 
+000003@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk   108.000001    63.434947 -5.024109e-07     0.000000     0.000000     0.000000 
+000004@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk  -108.000001    63.434947    72.000000     0.000000     0.000000     0.000000 
+000005@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk    36.000001    63.434947 -5.024109e-07     0.000000     0.000000     0.000000 
+000006@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk   -35.999999    63.434947 -5.024109e-07     0.000000     0.000000     0.000000 
+000007@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk   144.000001   116.565047    35.999999     0.000000     0.000000     0.000000 
+000008@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk  -144.000000   116.565047    36.000000     0.000000     0.000000     0.000000 
+000009@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk    72.000001   116.565047    35.999999     0.000000     0.000000     0.000000 
+000010@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk 5.050094e-07   116.565047    35.999999     0.000000     0.000000     0.000000 
+000011@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk   -71.999996   116.565048   -35.999998     0.000000     0.000000     0.000000 
+000012@tmpLink/xmipp_tomo_extract_subvolume/vertices.stk     0.000000   180.000000  -144.000001     0.000000     0.000000     0.000000 

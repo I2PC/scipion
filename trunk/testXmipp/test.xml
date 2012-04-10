@@ -148,20 +148,26 @@
 			<FILE filename="pca.xmd" />
 		</CASE>
 	</PROGRAM>
-    <PROGRAM name="xmipp_classify_compare_classes" mpi="FALSE">
-        <CASE arguments="--i1 input/CL2D/results_level_00_classes.xmd --i2 input/CL2D/results_level_01_classes.xmd -o %o/classes_hierarchy.txt" changeDir="FALSE">
-             <FILE filename="classes_hierarchy.txt"/>
-        </CASE>
-        <CASE arguments="--i1 input/CL2D/results_level_01_classes.xmd --i2 input/CL2D/results_level_02_classes.xmd -o %o/classes_hierarchy.txt --append" changeDir="FALSE">
-	         <PRERUN command="cp input/CL2D/classes_hierarchy.txt %o"/>
-             <FILE filename="classes_hierarchy.txt"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_classify_evaluate_classes" mpi="FALSE">
-        <CASE arguments="-i input/CL2DBacteriorhodopsin/results_level_00_classes.xmd -o %o/evaluated_classes.xmd" changeDir="FALSE">
-             <FILE filename="evaluated_classes.xmd"/>
-        </CASE>
-    </PROGRAM>
+	<PROGRAM name="xmipp_classify_compare_classes" mpi="FALSE">
+		<CASE
+			arguments="--i1 input/CL2D/results_level_00_classes.xmd --i2 input/CL2D/results_level_01_classes.xmd -o %o/classes_hierarchy.txt"
+			changeDir="FALSE">
+			<FILE filename="classes_hierarchy.txt" />
+		</CASE>
+		<CASE
+			arguments="--i1 input/CL2D/results_level_01_classes.xmd --i2 input/CL2D/results_level_02_classes.xmd -o %o/classes_hierarchy.txt --append"
+			changeDir="FALSE">
+			<PRERUN command="cp input/CL2D/classes_hierarchy.txt %o" />
+			<FILE filename="classes_hierarchy.txt" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_classify_evaluate_classes" mpi="FALSE">
+		<CASE
+			arguments="-i input/CL2DBacteriorhodopsin/results_level_00_classes.xmd -o %o/evaluated_classes.xmd"
+			changeDir="FALSE">
+			<FILE filename="evaluated_classes.xmd" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_classify_kerdensom" mpi="FALSE">
 		<CASE
 			arguments="-i input/clusterVectors.xmd --oroot %o/kerdensom --deterministic_annealing 1"
@@ -411,63 +417,63 @@
 			<FILE filename="particlePicking.emx" />
 		</CASE>
 		<CASE
-            arguments="-i input/metadata_convert_emx/particlePicking.emx -o %o/particlePicking.xmd --conversion_type coordinates"
-            changeDir="FALSE">
-            <FILE filename="particlePicking.xmd" />
-        </CASE>
-            <CASE
-            arguments="-i input/metadata_convert_emx/ctf_micrograph.xmd -o %o/ctf_micrograph.emx --conversion_type ctfMicrograph"
-            changeDir="FALSE">
-            <FILE filename="ctf_micrograph.emx" />
-        </CASE>
-        <CASE
-            arguments="-i input/metadata_convert_emx/ctf_micrograph.emx -o %o/ctf_micrograph.xmd --conversion_type ctfMicrograph"
-            changeDir="FALSE">
-            <FILE filename="ctf_micrograph.xmd" />
-        </CASE>
-                <CASE
-            arguments="-i input/metadata_convert_emx/part_align.xmd -o %o/part_align.emx --conversion_type alignment"
-            changeDir="FALSE">
-            <FILE filename="part_align.emx" />
-        </CASE>
-        <CASE
-            arguments="-i input/metadata_convert_emx/part_align.emx -o %o/part_align.xmd --conversion_type alignment"
-            changeDir="FALSE">
-            <FILE filename="part_align.xmd" />
-        </CASE>
-            <CASE
-            arguments="-i input/metadata_convert_emx/part_class.xmd -o %o/part_class.emx --conversion_type class"
-            changeDir="FALSE">
-            <FILE filename="part_class.emx" />
-        </CASE>
-        <CASE
-            arguments="-i input/metadata_convert_emx/part_class.emx -o %o/part_class.xmd --conversion_type class"
-            changeDir="FALSE">
-            <FILE filename="part_class.xmd" />
-        </CASE>
+			arguments="-i input/metadata_convert_emx/particlePicking.emx -o %o/particlePicking.xmd --conversion_type coordinates"
+			changeDir="FALSE">
+			<FILE filename="particlePicking.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/metadata_convert_emx/ctf_micrograph.xmd -o %o/ctf_micrograph.emx --conversion_type ctfMicrograph"
+			changeDir="FALSE">
+			<FILE filename="ctf_micrograph.emx" />
+		</CASE>
+		<CASE
+			arguments="-i input/metadata_convert_emx/ctf_micrograph.emx -o %o/ctf_micrograph.xmd --conversion_type ctfMicrograph"
+			changeDir="FALSE">
+			<FILE filename="ctf_micrograph.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/metadata_convert_emx/part_align.xmd -o %o/part_align.emx --conversion_type alignment"
+			changeDir="FALSE">
+			<FILE filename="part_align.emx" />
+		</CASE>
+		<CASE
+			arguments="-i input/metadata_convert_emx/part_align.emx -o %o/part_align.xmd --conversion_type alignment"
+			changeDir="FALSE">
+			<FILE filename="part_align.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/metadata_convert_emx/part_class.xmd -o %o/part_class.emx --conversion_type class"
+			changeDir="FALSE">
+			<FILE filename="part_class.emx" />
+		</CASE>
+		<CASE
+			arguments="-i input/metadata_convert_emx/part_class.emx -o %o/part_class.xmd --conversion_type class"
+			changeDir="FALSE">
+			<FILE filename="part_class.xmd" />
+		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_metadata_convert_to_spider" mpi="FALSE">
-        <CASE
-            arguments="-i input/smallStack.stk -o %o/listNew.doc --action extract_selfile"
-            changeDir="FALSE">
-            <FILE filename="listNew.doc" />
-        </CASE>
-        <CASE
-            arguments="-i input/smallStack.stk -o %o/listOld.doc --action extract_selfile old"
-            changeDir="FALSE">
-            <FILE filename="listOld.doc" />
-        </CASE>
-        <CASE
-            arguments="-i input/smallStack.stk -o %o/angles.doc --action extract_angles rot psi tilt --disregard_disabled"
-            changeDir="FALSE">
-            <FILE filename="angles.doc" />
-        </CASE>
-        <CASE
-            arguments="-i input/smallStack.stk -o %o/count.doc --action generate_count"
-            changeDir="FALSE">
-            <FILE filename="count.doc" />
-        </CASE>
-    </PROGRAM>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/listNew.doc --action extract_selfile"
+			changeDir="FALSE">
+			<FILE filename="listNew.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/listOld.doc --action extract_selfile old"
+			changeDir="FALSE">
+			<FILE filename="listOld.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/angles.doc --action extract_angles rot psi tilt --disregard_disabled"
+			changeDir="FALSE">
+			<FILE filename="angles.doc" />
+		</CASE>
+		<CASE
+			arguments="-i input/smallStack.stk -o %o/count.doc --action generate_count"
+			changeDir="FALSE">
+			<FILE filename="count.doc" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_metadata_selfile_create" mpi="FALSE">
 		<CASE arguments="-p input/smallStack.stk -o %o/metadata.xmd -s"
 			changeDir="FALSE">
@@ -601,7 +607,8 @@
 		<CASE
 			arguments=" -i input/CL2DBacteriorhodopsin/results --computeCore 3.000000 3.000000"
 			changeDir="TRUE">
-			<PRERUN command="mkdir %o/input ; cp -r input/CL2DBacteriorhodopsin %o/input ; rm -rf %o/input/CL2DBacteriorhodopsin/.svn ; cp input/projectionsBacteriorhodopsin.stk %o/input" />
+			<PRERUN
+				command="mkdir %o/input ; cp -r input/CL2DBacteriorhodopsin %o/input ; rm -rf %o/input/CL2DBacteriorhodopsin/.svn ; cp input/projectionsBacteriorhodopsin.stk %o/input" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_ctf_correct_idr" mpi="TRUE">
@@ -623,7 +630,8 @@
 		<CASE
 			arguments="-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o output.txt --resume"
 			changeDir="TRUE">
-			<PRERUN command="cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" />
+			<PRERUN
+				command="cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" />
 			<FILE filename="output.txt" />
 		</CASE>
 	</PROGRAM>
@@ -631,7 +639,8 @@
 		<CASE
 			arguments="-i 2tbv_prj00001.xmp  --pdb 2tbv.pdb --modes modelist.xmd  --deformation_scale 1000 --sampling_rate 6.4 -o output.txt --resume"
 			changeDir="TRUE">
-			<PRERUN command="cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" />
+			<PRERUN
+				command="cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" />
 			<FILE filename="output.txt" />
 		</CASE>
 	</PROGRAM>
@@ -642,12 +651,12 @@
 			<FILE filename="rec_art.vol" />
 		</CASE>
 	</PROGRAM>
-	   <PROGRAM name="xmipp_mpi_reconstruct_fourier" mpi="TRUE">
-        <CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol "
-            changeDir="FALSE">
-            <FILE filename="recon.vol" />
-        </CASE>
-    </PROGRAM>
+	<PROGRAM name="xmipp_mpi_reconstruct_fourier" mpi="TRUE">
+		<CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol "
+			changeDir="FALSE">
+			<FILE filename="recon.vol" />
+		</CASE>
+	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_reconstruct_wbp" mpi="TRUE">
 		<CASE
 			arguments="-i input/projectionsBacteriorhodopsin.xmd --use_each_image -o  %o/recon.vol "
@@ -805,6 +814,14 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_tomo_detect_missing_wedge" mpi="FALSE">
 		<CASE arguments="-i input/smallTomogram.vol" changeDir="FALSE">
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_tomo_extract_subvolume" mpi="FALSE">
+		<CASE
+			arguments="-i input/ico.vol --oroot %o/vertices --center 0 0 50 --size 30 --sym i3"
+			changeDir="FALSE">
+			<FILE filename="vertices.stk" />
+			<FILE filename="vertices.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_tomo_project" mpi="FALSE">
@@ -1045,13 +1062,14 @@
 			<FILE filename="pseudo.pdb" />
 		</CASE>
 	</PROGRAM>
-	   <PROGRAM name="xmipp_volume_to_web" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --central_slices %o/imgOut.jpg"
-            changeDir="FALSE">
-            <FILE filename="imgOut.jpg" />
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_xray_import" mpi="FALSE">
+	<PROGRAM name="xmipp_volume_to_web" mpi="FALSE">
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol --central_slices %o/imgOut.jpg"
+			changeDir="FALSE">
+			<FILE filename="imgOut.jpg" />
+		</CASE>
+	</PROGRAM>
+	<PROGRAM name="xmipp_xray_import" mpi="FALSE">
 		<CASE
 			arguments="--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30"
 			changeDir="FALSE">

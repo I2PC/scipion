@@ -1,0 +1,14 @@
+ -----------------------------------------------------------------
+ | Read more about this program in the following publication:    |
+ |  Scheres ea.  (2009) Structure, 17, 1563-1572                 |
+ |                                                               |
+ |   *** Please cite it if this program is of use to you! ***    |
+ -----------------------------------------------------------------
+Input  Metadata File input/ico.vol
+Output volume root   tmpLink/xmipp_tomo_extract_subvolume/vertices
+Output metadata file 
+Coordenate center    
+         0          0         50 
+Size subvolume       30
+Symmetry group       i3
+Minimum distance between subvolumes 7.5
