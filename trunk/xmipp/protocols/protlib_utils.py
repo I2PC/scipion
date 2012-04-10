@@ -475,7 +475,7 @@ def submitProtocol(protocolPath, **params):
     launchFilename = protocolPath.replace('.py', '.job')
     # This is for make a copy of nodes files
     nodesFile = protocolPath.replace('.py', '.nodes')
-    params['pbsNodeBackup']= nodesFile
+    params['pbsNodeBackup'] = nodesFile
     params['file'] = launchFilename
     #create launch file
     launchfile = open(launchFilename, 'w')
