@@ -28,17 +28,6 @@
 
 // Read arguments ==========================================================
 
-void ProgTomoExtractSubvolume::preProcess()
-{
-    produceSideInfo();
-
-    center.resizeNoCopy(3);
-    doccenter.resizeNoCopy(3);
-    A.resizeNoCopy(3,3);
-    R.resizeNoCopy(3,3);
-    I.resizeNoCopy(3,3);
-    I.initIdentity();
-}
 void ProgTomoExtractSubvolume::defineParams()
 {
     defaultComments["-i"].addComment("Metadata file with input volumes (and rotations/shifts)");
@@ -49,11 +38,11 @@ void ProgTomoExtractSubvolume::defineParams()
     addUsageLine("+++This program works closely together with the ml_tomo program, which is used to align");
     addUsageLine("+++ (and classify) a series of subtomograms. Now, if each subtomogram contains some sort");
     addUsageLine("+++ of (pseudo-) symmetry, tomo_extract_subvolume can be used to extract subvolumes of the");
-    addUsageLine("+++ asymmetric parts of each subtomogram. The metadata file  that is output by this program orients");
+    addUsageLine("+++ asymmetric parts of each subtomogram. The metadata file that is output by this program orients");
     addUsageLine("+++ each subvolume and its missing wedge in the correct orientation, so that it can be fed");
     addUsageLine("+++ directly back into ml_tomo. There, the sub-subtomograms can be further aligned and/or classified");
-    addParamsLine("--oroot <root=\"out\">  : Root FileName output subvolume");
-    addParamsLine("[-o <filename=\"\">]         : Name of output metadata (\"oroot\".xmd by default)");
+    addParamsLine("[--oroot <rootname=\"\">]: Rootname for output stacks of subvolumes");
+    addParamsLine("[-o <filename=\"\">]    : Name of output metadata (\"oroot\".xmd by default)");
     addParamsLine("--sym  <sym=\"c1\">     : Symmetry group");
     addParamsLine("--size     <dim>        : size output subvolumes");
     addParamsLine("[--mindist  <distance=-1>] : Minimum distance between subvolume centers, usefull to avoid repetition of subvolumes place at simmetry axis");
@@ -117,11 +106,9 @@ void ProgTomoExtractSubvolume::defineParams()
 
 void ProgTomoExtractSubvolume::readParams()
 {
-	XmippMetadataProgram::readParams();
-	oroot = getParam("--oroot");
-	fn_out = getParam("-o");
-	if (fn_out.empty())
-		fn_out = oroot.addExtension("xmd");
+    XmippMetadataProgram::readParams();
+    oroot = getParam("--oroot");
+    fn_out = getParam("-o");
     // Read command line
     fn_sym  = getParam( "--sym");
     center_ref.resize(3);
@@ -131,7 +118,7 @@ void ProgTomoExtractSubvolume::readParams()
     ZZ(center_ref) = getIntParam( "--center",2);
     mindist = getDoubleParam("--mindist");
     if (mindist == -1)
-      mindist = size/4.;
+        mindist = size/4.;
 }
 
 // Usage ===================================================================
@@ -163,13 +150,9 @@ void ProgTomoExtractSubvolume::show()
 #endif
 }
 
-// Set up a lot of general stuff
-// This side info is general, i.e. in parallel mode it is the same for
-// all processors! (in contrast to produce_Side_info2)
-void ProgTomoExtractSubvolume::produceSideInfo()
+void ProgTomoExtractSubvolume::preProcess()
 {
-	//do not write metadata
-
+    //    produceSideInfo();
 #ifdef  DEBUG
     std::cerr<<"Start produceSideInfo"<<std::endl;
 #endif
@@ -187,14 +170,14 @@ void ProgTomoExtractSubvolume::produceSideInfo()
     centers_subvolumes.clear();
     rotations_subvolumes.clear();
     Matrix2D<double>  L(4, 4), R(4, 4);
-    Matrix2D<double>  I(3,3);
+    Matrix2D<double>  Iref(3,3);
     Matrix1D<double>  newcenter(3), distcenter(3);
     double dist;
     bool is_uniq;
-    I.initIdentity();
+    Iref.initIdentity();
 
     centers_subvolumes.push_back(center_ref);
-    rotations_subvolumes.push_back(I);
+    rotations_subvolumes.push_back(Iref);
 
     for (int isym = 0; isym < SL.symsNo(); isym++)
     {
@@ -223,7 +206,14 @@ void ProgTomoExtractSubvolume::produceSideInfo()
     std::cerr<<"End produceSideInfo"<<std::endl;
 #endif
 
+    center.resizeNoCopy(3);
+    doccenter.resizeNoCopy(3);
+    A.resizeNoCopy(3,3);
+    R.resizeNoCopy(3,3);
+    I.resizeNoCopy(3,3);
+    I.initIdentity();
 }
+
 void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
@@ -251,7 +241,50 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
     x0 = FIRST_XMIPP_INDEX(size);
     xF = LAST_XMIPP_INDEX(size);
 
-    // Tomo_Extract each of the unique subvolumes
+    FileName fnOutStack, fnOutMd;
+
+    size_t image_num;
+    FileName dump;
+    if (mdInSize > 1)// Other case, is a unique volume name so there is no need of add the number
+    {
+        if (oroot.empty())
+        {
+            fn_aux = fnImg.removeSliceNumber().removeLastExtension()+ "_sub";
+
+            if  (fnImg.isInStack())
+            {
+                fnImg.decompose(image_num, dump);
+                fn_aux.compose(fn_aux,image_num);
+            }
+        }
+        else if (fnImg.isInStack())
+        {
+            fnImg.decompose(image_num, dump);
+            fn_aux.compose(oroot,image_num);
+        }
+        else
+            fn_aux = oroot + "_" + fnImg.getBaseName();
+    }
+    else if (!oroot.empty())
+        fn_aux = oroot;
+    else
+        fn_aux = fnImg.insertBeforeExtension("_sub");
+
+    if (mdInSize > 1)
+    {
+        if (fn_out.empty())
+            fnOutMd = fn_aux.addExtension("xmd");
+        else if (fnImg.isInStack())
+            fnOutMd.compose(fn_out.removeLastExtension(), image_num, fn_out.getExtension());
+        else
+            fnOutMd = fn_out.insertBeforeExtension("_" + fnImg.getBaseName());
+    }
+    else if (!fn_out.empty())
+        fnOutMd = fn_out;
+    else
+        fnOutMd = fn_aux.addExtension("xmd");
+
+     // Tomo_Extract each of the unique subvolumes
     size_t oId;
     for (int i = 0; i < centers_subvolumes.size(); i++)
     {
@@ -269,17 +302,16 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
         //vol().translate(-center, volout(), DONT_WRAP);
         //4. Window operation and write subvolume to disc
         volout().selfWindow(x0,x0,x0,xF,xF,xF);
-        fn_aux=fnImgOut.removeLastExtension();
-        fn_aux+="_sub";
-        fn_aux.compose(fn_aux,i+1,"vol");
-        volout.write(fn_aux);
+
+        fnOutStack.compose(i+1,fn_aux,"stk");
+        volout.write(fnOutStack);
 
 
         // 5. Calculate output angles: apply symmetry rotation to rot,tilt and psi
         Euler_apply_transf(rotations_subvolumes[i], I, rot, tilt, psi, rotp, tiltp, psip);
         oId=DFout.addObject();
 
-        DFout.setValue(MDL_IMAGE,fn_aux,oId);
+        DFout.setValue(MDL_IMAGE,fnOutStack,oId);
         DFout.setValue(MDL_ANGLEROT,rotp,oId);
         DFout.setValue(MDL_ANGLETILT,tiltp,oId);
         DFout.setValue(MDL_ANGLEPSI,psip,oId);
@@ -289,6 +321,10 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
     DFout.setValueCol(MDL_ORIGINY,0.);
     DFout.setValueCol(MDL_ORIGINZ,0.);
 
+    DFout.write(fnOutMd);
+    DFout.clear();
+
+
 
 #ifdef  DEBUG
 
@@ -296,6 +332,4 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
 #endif
 }
 void ProgTomoExtractSubvolume::postProcess()
-{
-    DFout.write(fn_out);
-}
+{}

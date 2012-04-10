@@ -42,8 +42,6 @@
 #include <pthread.h>
 #include <vector>
 
-class ProgTomoExtractSubvolume;
-
 /** tomo_extract_subvolume parameters. */
 class ProgTomoExtractSubvolume: public XmippMetadataProgram
 {
@@ -104,9 +102,6 @@ public:
 
     /// Show
     void show();
-
-    /// Setup lots of stuff
-    void produceSideInfo();
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
