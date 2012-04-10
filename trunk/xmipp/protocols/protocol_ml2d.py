@@ -57,9 +57,7 @@ class ProtML2D(XmippProtocol):
             pass 
         else: 
             # Dictionary with boolean options and the cmd options
-            booleanDict = {'DoMirror': '--mirror', 'DoNorm': '--norm', 'ZeroOffsets': '--zero_offsets',
-                           'FixSigmaNoise': '--fix_sigma_noise', 'FixSigmaOffset': '--fix_sigma_offset',
-                           'FixFractions': '--fix_fractions'}
+            booleanDict = {'DoMirror': '--mirror', 'DoNorm': '--norm'}
             
             prefix = '%s2d' % progId
             oroot = self.workingDirPath(prefix)
@@ -80,7 +78,7 @@ class ProtML2D(XmippProtocol):
                 if (not self.ImagesArePhaseFlipped):
                     params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
-                    params += ' --high %f' % self.HighResLimit
+                    params += ' --limit_resolution 0 %f' % self.HighResLimit
             if self.MaxIters != 100:
                 params += " --iter %d" % self.MaxIters
             #Add all boolean options if true
