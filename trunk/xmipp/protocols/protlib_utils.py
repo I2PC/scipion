@@ -406,35 +406,12 @@ def buildRunCommand(
     if not DoParallel:
         command = programname + ' ' + params
     else:
+        paramsDict['nodes'] = NumberOfMpi
+        prog = programname.replace('xmipp', 'xmipp_mpi')
+        paramsDict['command'] = "`which %(prog)s` %(params)s" % locals()
         launch = loadLaunchModule()
-        SystemFlavour = launch.SystemFlavour
-        paramsDict['prog'] = programname.replace('xmipp', 'xmipp_mpi')
-        paramsDict['jobs'] = NumberOfMpi
-        paramsDict['params'] = params
-        
-        if (SystemFlavour == 'SLURM-MPICH'): # like BSCs MareNostrum, LaPalma etc
-            mpicommand = 'srun '
-        elif (SystemFlavour == 'TORQUE-OPENMPI'): # like our crunchy
-            mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np %(jobs)d'
-            if (int(NumberOfThreads) > 1):
-                mpicommand += ' --bynode'
-        elif (SystemFlavour == 'SGE-OPENMPI'): # like cluster at imp.ac.at (no variable nr_cpus yet...)
-            mpicommand = 'mpiexec -n  %(jobs)d' 
-        elif (SystemFlavour == 'PBS'): # like in Vermeer and FinisTerrae
-            paramsDict['file']  = os.environ.get('PBS_NODEFILE')
-            mpicommand = 'mpirun -np  %(jobs)d -hostfile %(file)s'
-        elif (SystemFlavour == 'XMIPP_MACHINEFILE'): # environment variable $XMIPP_MACHINEFILE points to machinefile
-            paramsDict['file']  = os.environ.get('XMIPP_MACHINEFILE')
-            mpicommand = 'mpirun -np  %(jobs)d -machinefile %(file)s'
-        elif (SystemFlavour == 'HOME_MACHINEFILE'): # machinefile is called $HOME/machines.dat
-            paramsDict['file'] = os.environ.get('HOME') + '/machinefile.dat'
-            mpicommand = 'mpirun -np   %(jobs)d -machinefile %(file)s'
-        elif (SystemFlavour == ''):
-            mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np %(jobs)d'
-        else:
-            from protlib_xmipp import failStr
-            printLog(failStr('Unrecognized SystemFlavour %s' % SystemFlavour),log,err=True,isError=True)
-        command = (mpicommand + ' `which %(prog)s` %(params)s') % paramsDict
+        command = launch.MpiProgram + " " + launch.MpiArgsTemplate % paramsDict
+
     if RunInBackground:
         command+=" &"
 

@@ -15,20 +15,18 @@
 #
 # 2.- ArgsTemplate: string with the template arguments passed to launch Program
 #      Following vars are availables to template:
-#      - %(file)s     : file to be launched 
-# 3.- SystemFlavour could be one of the followings:
-#      TORQUE-OPENMPI
-#      SLURM-MPICH
-#      SGE-OPENMPI
-#      XMIPP_MACHINEFILE
-#      HOME_MACHINEFILE
+#      - %(file)s     : file to be launched
+#
+# 3.- MpiArgsTemplate: string with the template arguments to run MPI program
+#      Following vars are availables to template:
+#      - %(nodes)d       : number of mpi nodes
+#      - %(command)s     : command to be executed in parallel
+#
+#
 #--------------------------------------------------------------------------------
 
-#System flavour to use
-SystemFlavour = "TORQUE-OPENMPI"
 #Program to launch jobs
 Program = "qsub"
-MpiProgram = "mpirun"
 #Arguments template to launch
 ArgsTemplate = "%(file)s"
 # Command to stop a job
@@ -38,6 +36,22 @@ StopArgsTemplate = "%(jobid)d"
 QueryCommand = "qstat"
 QueryArgsTemplate = "%(jobid)d"
 
+# Mpi executable
+MpiProgram = "mpirun"
+# Mpi run arguments template
+MpiArgsTemplate = "-np %(nodes)d --bynode %(command)s"
+
+# Other templates for other environments: 
+# Using nodefile setted as environment variable or at home
+# hostfile = os.environ.get('HOSFILE')
+# hostfile = os.environ.get('HOME') + "/machinefile.txt" 
+# MpiArgsTemplate = "-n %(nodes)d -hostfile " + hostfile
+#
+# For SGE-OPENMPI
+#MpiProgram = "mpiexec"
+#MpiArgsTemplate = "-n %(nodes)d --bynode %(command)s"
+
+# Queue submition file template
 FileTemplate = """
 #!/bin/bash
 ### Inherit all current environment variables
