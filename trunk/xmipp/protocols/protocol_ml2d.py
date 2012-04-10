@@ -85,7 +85,7 @@ class ProtML2D(XmippProtocol):
                 params += " --iter %d" % self.MaxIters
             #Add all boolean options if true
             for k, v in booleanDict.iteritems():
-                if self.getattr(k):
+                if getattr(self, k):
                     params += " " + v
             
             #Add extra options
