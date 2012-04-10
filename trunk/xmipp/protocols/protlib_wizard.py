@@ -260,8 +260,7 @@ def wizardChooseFamilyToExtract(self, var):
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.getFilename('families')
-    
+    fnFamilies = pickingProt.workingDirPath("families.xmd")    
     if not exists(fnFamilies):
         showWarning("Warning", "No elements to select", parent=self.master)
         return
@@ -282,6 +281,7 @@ def wizardChooseFamilyToExtract(self, var):
             if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
                 particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
                 self.setVarValue("ParticleSize", str(particleSize))
+                self.setVarValue("Family",selectedFamily)
         if hasattr(pickingProt,'TiltPairs'):
             if pickingProt.TiltPairs:
                 self.setVarValue("DoFlip", str(False))
