@@ -575,13 +575,38 @@ class XmippText(tk.Text):
            state = tk.DISABLED
         self.config(state=state) 
 
+def configureColorTags(text):
+    ''' Function to configure tag_colorX for all supported colors.
+    It is applicable to an XmippText text '''
+    from protlib_xmipp import colorMap
+    for color in colorMap.keys():
+        text.tag_config("tag_" + color, foreground=color)
+        
+def insertColoredLine(text, line, tag=""):
+    ''' Check if the color codes are present in a line
+    and use the corresponding tags. The colors tags should 
+    be already configured on text object'''
+    from protlib_xmipp import findColor
+    ctuple = findColor(line)
+    if ctuple is None:
+        line = line[line.rfind("\r")+1:]
+        text.insert(tk.END, line, tag)  
+    else:
+        color,idxInitColor,idxFinishColor,cleanText=ctuple
+        if idxInitColor>0:
+            text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
+        text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
+        text.insert(tk.END, cleanText[idxFinishColor:])
+        
 class TaggedText(XmippText):  
     '''
     Implement a Text that will recognized some basic tags
     <some_text> will display some_text in bold
     [some_link] will display some_link as hiperlinnk
+    also colors are recognized if set option colors=True
     '''           
-    def __init__(self, master, **options):  
+    def __init__(self, master, colors=True, **options):  
+        self.colors = colors
         XmippText.__init__(self, master, **options)
         # Create regex for tags parsing
         import re
@@ -594,7 +619,9 @@ class TaggedText(XmippText):
     def configureTags(self):
         self.tag_config('normal', justify=tk.LEFT)
         self.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
-        
+        if self.colors:
+            
+            configureColorTags(self)        
         
     def getTaggedParts(self, parts):
         ''' Detect [] as links text and <> as bold text'''
@@ -616,14 +643,15 @@ class TaggedText(XmippText):
                     self.insert(tk.INSERT, link, self.hm.add(lambda: openLink(link)))
                 insertLink(p)
             else:
-                self.insert(tk.END, p, t)
+                insertColoredLine(self, p, t)
+                #self.insert(tk.END, p, t)
         self.addNewline()       
 
-'''
-Implement a Text that will show file content
-and handle console metacharacter for colored output
-'''
 class OutputText(XmippText):
+    '''
+    Implement a Text that will show file content
+    and handle console metacharacter for colored output
+    '''
     def __init__(self, master, filename, colors=True, refresh=0, goEnd=True, **opts):
         ''' colors flag indicate if try to parse color meta-characters
             refresh is the refresh timedeltha in seconds, 0 means no refresh
@@ -642,24 +670,13 @@ class OutputText(XmippText):
         
     def configureTags(self):
         if self.colors:
-            from protlib_xmipp import colorMap
-            for color in colorMap.keys():
-                self.tag_config("tag_" + color, foreground=color)
+            configureColorTags(self)
 
     def addLine(self, line): 
         self.lineNo += 1
         if self.colors:
-            from protlib_xmipp import findColor
-            ctuple = findColor(line)
-            self.insert(tk.END, "%05d:   " % self.lineNo,"tag_cyan")  
-            if ctuple is None:
-                self.insert(tk.END, line[line.rfind("\r")+1:])  
-            else:
-                color,idxInitColor,idxFinishColor,cleanText=ctuple
-                if idxInitColor>0:
-                    self.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
-                self.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
-                self.insert(tk.END, cleanText[idxFinishColor:])
+            self.insert(tk.END, "%05d:   " % self.lineNo, "tag_cyan")  
+            insertColoredLine(self, line)
         else:
             self.insert(tk.END, "%05d:   " % self.lineNo)
             self.insert(tk.END, line)   
