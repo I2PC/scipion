@@ -15,6 +15,7 @@ DO_ARPACK=false
 DO_CLEAN=true
 DO_STATIC=false
 DO_UPDATE=false
+
 DO_SETUP=true
 DO_GUI=true
 
