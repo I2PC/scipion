@@ -343,31 +343,6 @@ TEST_F( ImageGenericTest, getPreview)
     XMIPP_CATCH
 }
 
-TEST_F ( ImageGenericTest, smoother)
-{
-	XMIPP_TRY
-    FileName auxFn = "image/BPV_1387.mrc";
-    ImageGeneric img1, img2;
-    img1.read(auxFn);
-    img1.convert2Datatype(DT_UChar);
-    img2.setDatatype(DT_UChar);
-    int Xdim,Ydim;
-    img1().getDimensions(Xdim,Ydim);
-
-    img2().resize(1,1,Ydim,Xdim,false);
-    downsampleSmooth(img1,img2);
-    ImageGeneric imgCorrect;
-    imgCorrect.read("image/BPV_1387_dithered.mrc");
-    EXPECT_EQ(imgCorrect, img2) << "Smoothing";
-
-    img2().resize(1,1,Ydim/6,Xdim/6,false);
-    downsampleSmooth(img1,img2);
-    imgCorrect.read("image/BPV_1387_dithered_downsampled.mrc");
-    EXPECT_EQ(imgCorrect, img2) << "Smoothing downsampled";
-
-    XMIPP_CATCH
-}
-
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
