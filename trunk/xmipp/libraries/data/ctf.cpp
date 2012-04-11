@@ -394,7 +394,9 @@ void CTFDescription::Produce_Side_Info()
     //    m: electron mass
     //    e: electron charge
     lambda=12.2643247/sqrt(local_kV*(1.+0.978466e-6*local_kV)); // See http://en.wikipedia.org/wiki/Electron_diffraction
-
+    //
+    defocus_average   = -(DeltafU + DeltafV) * 0.5;
+    defocus_deviation = -(DeltafU - DeltafV) * 0.5;
     // Phase shift for spherical aberration
     // X(u)=-PI*deltaf(u)*lambda*u^2+PI/2*Cs*lambda^3*u^4
     // ICE: X(u)=-PI/2*deltaf(u)*lambda*u^2+PI/2*Cs*lambda^3*u^4

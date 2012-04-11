@@ -177,6 +177,10 @@ public:
     double Kcos;
     // Azimuthal angle in radians
     double rad_azimuth;
+    // defocus_average = -(defocus_u + defocus_v)/2
+    double defocus_average;
+    // defocus_deviation = -(defocus_u - defocus_v)/2
+    double defocus_deviation;
     // Gaussian angle in radians
     double rad_gaussian;
     // Second Gaussian angle in radians
@@ -327,20 +331,6 @@ public:
         {
             double ellipsoid_ang = precomputed.ang - rad_azimuth;
             /*
-            double cos_ellipsoid_ang = cos(ellipsoid_ang);
-            double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
-            double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
-
-            defocus = defocus_average + defocus_deviation * cos(2 * (angle - astigmatism_angle))
-            defocus_average = (defocus_max + defocus_min)/2
-            defocus_deviation = (defocus_max - defocus_min)/2
-            precomputed.deltaf=-SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
-                                                  DeltafV*DeltafV*sin_ellipsoid_ang_2);
-            */
-            //defocus = defocus_average + defocus_deviation * cos(2 * (angle - astigmatism_angle))
-            //defocus_average = (defocus_max + defocus_min)/2
-            //defocus_deviation = (defocus_max - defocus_min)/2
-            /*
              * For a derivation of this formulae confer
              * Principles of Electron Optics page 1380
              * in particular term defocus and twofold axial astigmatism
@@ -349,9 +339,7 @@ public:
              * and at 45 degrees. In this case a2=0
              */
             double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
-            double defocus_average   = (DeltafU + DeltafV)/2.;
-            double defocus_deviation = (DeltafU - DeltafV)/2.;
-            precomputed.deltaf= -1.*(defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
+            precomputed.deltaf= (defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
         }
     }
 
@@ -366,11 +354,9 @@ public:
         if (precomputed.deltaf==-1)
         {
             double ellipsoid_ang = precomputed.ang - rad_azimuth;
-            double cos_ellipsoid_ang = cos(ellipsoid_ang);
-            double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
-            double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
-            precomputed.deltaf=-SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
-                                                  DeltafV*DeltafV*sin_ellipsoid_ang_2);
+            double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
+            precomputed.deltaf= (defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
+
         }
     }
 
@@ -514,11 +500,8 @@ public:
             fabs(Y) < XMIPP_EQUAL_ACCURACY)
             return 0;
         double ellipsoid_ang = atan2(Y, X) - rad_azimuth;
-        double cos_ellipsoid_ang=cos(ellipsoid_ang);
-        double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
-        double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
-        return -SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
-                                  DeltafV*DeltafV*sin_ellipsoid_ang_2);
+        double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
+        return(defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
     }
 
     /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
