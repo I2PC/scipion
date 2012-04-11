@@ -39,10 +39,10 @@ class ProtImportParticles(XmippProtocol):
     def validate(self):
         errors = []
         inputExt=os.path.splitext(self.InputFile)[1]
-        if not inputExt in ['.mrc','.stk','.sel','.xmd','.hed','.img']:
+        if not inputExt in ['.mrc','.stk','.sel','.xmd','.hed','.img', '.ctfdat']:
             errors.append("Input file must be stack or metadata")
         else:
-            if inputExt in ['.sel','.xmd']:
+            if inputExt in ['.sel', '.xmd', '.ctfdat']:
                 mD=xmipp.MetaData(self.InputFile)
                 if not mD.containsLabel(xmipp.MDL_IMAGE):
                     errors.append("Cannot find label for images in the input file")
