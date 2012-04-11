@@ -688,7 +688,7 @@ class ProtocolGUI(BasicGUI):
         change depending on the conditions '''
         if self.hasVar('Behavior'):
             var = self.parser.getVariable('Behavior')
-            var.setTkValue('Resume')
+            var.setValue('Resume')
             if not exists(self.run['script']) or not exists(self.getProtocol().WorkingDir):
                 var.setTag('hidden')
         
