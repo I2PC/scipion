@@ -172,7 +172,7 @@ SeedsAreAmplitudeCorrected = False
 
 # {list}(wlsART, fourier) Reconstruction method
 """ Choose between wslART or fourier """
-ReconstructionMethod ='wslART'
+ReconstructionMethod ='wlsART'
 
 # {expert}{condition}(ReconstructionMethod=="wslART") Extra parameters
 """ Additional reconstruction parameters for ART
