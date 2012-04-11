@@ -128,8 +128,8 @@ class XmippProjectGUI():
         for i, path in enumerate(paths):
             self.images[i] = getXmippImage(path + '.gif')
             
-    def getImage(self, path):
-        return self.images[path]
+    def getStateImage(self, state):
+        return self.images[state]
               
     def addBindings(self):
         #self.root.bind('<Configure>', self.unpostMenu)
@@ -409,27 +409,13 @@ class XmippProjectGUI():
             runName = tree.item(item, 'text')
         tree.clear()
 
-        if protGroup == GROUP_ALL:
-            self.runs = self.project.projectDb.selectRuns()
-        else:
-            self.runs = self.project.projectDb.selectRuns(protGroup)
+        self.runs, stateList = self.project.getStateRunList(protGroup, checkDead)
         
-        if len(self.runs) > 0:
-            for run in self.runs:
-                state = run['run_state']
-                stateStr = SqliteDb.StateNames[state]
-                if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
-                    stateStr += " - %d/%d" % self.project.projectDb.getRunProgress(run)
-                    if not state in [SqliteDb.RUN_ABORTED, SqliteDb.RUN_FAILED]:
-                        if checkDead and not ProcessManager(run).isAlive():
-                                self.project.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
-                                stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
-                        else: 
-                            self.project.projectDb.updateRunState(SqliteDb.RUN_STARTED, run['run_id'])
-                #if state == SqliteDb.RUN_STARTED:
-                tree.insert('', 'end', text = '  ' +  getExtendedRunName(run), 
-                            image=self.getImage(state),
-                            values=(stateStr, run['last_modified']))  
+        if len(stateList) > 0:
+            for name, state, stateStr, modified in stateList:
+                tree.insert('', 'end', text = name, 
+                            image=self.getStateImage(state),
+                            values=(stateStr, modified)) 
             
             for c in tree.get_children(''):
                 if selectFirst or tree.item(c, 'text') == runName:
@@ -747,7 +733,7 @@ class XmippProjectGUI():
         run = self.getLastRunDict()
         self.launchProtocolGUI(run, True)
 
-from protlib_xmipp import XmippScript
+from protlib_xmipp import XmippScript, greenStr, cyanStr, redStr
 
 class ScriptProtocols(XmippScript):
     def __init__(self):
@@ -755,9 +741,14 @@ class ScriptProtocols(XmippScript):
         
     def defineParams(self):
         self.addUsageLine("Create Xmipp project on this folder.");
+        self.addUsageLine("Or manage an existing project");
         ## params
-        self.addParamsLine("[ -c  ]            : Clean project");
-        self.addParamsLine("   alias --clean;"); 
+        self.addParamsLine("[ --list  ]                         : List project runs");
+        self.addParamsLine("   alias -l;"); 
+        self.addParamsLine("[ --details <runName>  ]            : Print details about some run");
+        self.addParamsLine("   alias -d;"); 
+        self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
+        self.addParamsLine("   alias -c;"); 
         
     def confirm(self, msg, default=True):
         centerWindows(self.root)
@@ -778,6 +769,33 @@ class ScriptProtocols(XmippScript):
                 project.clean()
             else:
                 print "CLEAN aborted."
+        elif self.checkParam('--list'):
+            launch = False
+            project.load()
+            runs, stateList = project.getStateRunList(checkDead=True)
+            if len(stateList) > 0:
+                print cyanStr("List of runs:")
+                stateList.insert(0, ('RUN', 0, 'STATE', 'MODIFIED'))
+                for name, state, stateStr, modified in stateList:
+                    print "%s | %s | %s " % (name.rjust(35), stateStr.rjust(15), modified)
+            else:
+                print greenStr("No runs found")
+        elif self.checkParam('--details'):
+            launch = False
+            project.load()
+            runName = self.getParam('--details')
+            try:
+                protocol = project.getProtocolFromRunName(runName)
+                print cyanStr("Details or run "), greenStr(runName)
+                summaryLines = protocol.summary()
+                for line in summaryLines:
+                    for c in '<>[]':
+                        line = line.replace(c, '')
+                    print "   ", line
+            except Exception, e:
+                print redStr("Run %s not found" % runName)
+                #print redStr("ERROR:"), e
+                
                 
         else: #lauch project     
             if not project.exists():    

@@ -202,10 +202,10 @@ class XmippProject():
             run = self.newProtocol(protocol_name)
         return run
     
-    '''This will return a string with an unique identifier for each run
-    It will be also unique from diferent projects
-    '''
     def getUniqueRunPrefix(self, run_id):
+        '''This will return a string with an unique identifier for each run
+        It will be also unique from diferent projects
+        '''
         return self.projectDir.replace(os.path.sep, '_') + "_%s" % run_id
         
     def getProtocolFromModule(self, script):
@@ -224,7 +224,30 @@ class XmippProject():
         This is usually the input when one protocol uses another one.'''
         return self.getProtocolFromModule(getScriptFromRunName(extendedRunName))
     
-    def getRunList(self, protocols):
+    def getStateRunList(self, protGroup='All', checkDead=False):
+        '''Return the list of runs and also 
+        a list of 3-tuple with (run_extended_name, state, modified)
+        '''
+        runs = self.projectDb.selectRuns(protGroup)
+        stateList = []
+        
+        if len(runs) > 0:            
+            for run in runs:
+                state = run['run_state']
+                stateStr = SqliteDb.StateNames[state]
+                if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
+                    stateStr += " - %d/%d" % self.projectDb.getRunProgress(run)
+                    if not state in [SqliteDb.RUN_ABORTED, SqliteDb.RUN_FAILED]:
+                        from protlib_utils import ProcessManager
+                        if checkDead and not ProcessManager(run).isAlive():
+                                self.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
+                                stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
+                        else: 
+                            self.projectDb.updateRunState(SqliteDb.RUN_STARTED, run['run_id']) 
+                stateList.append(('  ' + getExtendedRunName(run), state, stateStr, run['last_modified']))       
+        return runs, stateList
+        
+    def getFinishedRunList(self, protocols):
         ''' Return the list of extended run_names of runs that are FINISHED 
         for each protocol in the given list '''
         runs = []

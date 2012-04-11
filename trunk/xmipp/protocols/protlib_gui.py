@@ -458,7 +458,7 @@ class ProtocolGUI(BasicGUI):
                 return entries
             
             def getRuns(var):
-                return self.project.getRunList(var.getTagValues('run'))
+                return self.project.getFinishedRunList(var.getTagValues('run'))
 
             wiz = loadModule('protlib_wizard')
             viewFunc = None
