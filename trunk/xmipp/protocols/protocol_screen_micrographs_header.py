@@ -21,7 +21,7 @@
 # {run}(import_micrographs) Import Micrographs Run
 ImportRun = ''
 
-# {wizard}(wizardBrowseCTF2) Downsampling factor 
+# {wizard}(wizardBrowseCTF2) CTF Downsampling factor 
 """ 
 Set to 1 for no downsampling. Non-integer downsample factors are possible.
 This downsampling is only used for estimating the CTF and it does not affect 
