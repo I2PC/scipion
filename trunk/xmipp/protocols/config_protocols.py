@@ -4,6 +4,7 @@
 #--------------------------------------------------------------------------------
 protocols = {
         'import_micrographs': ('Import Micrographs', 'Micrographs/Imported'),
+        'downsample_micrographs': ('Downsample Micrographs', 'Micrographs/Downsampled'),
         'screen_micrographs': ('Screen Micrographs', 'Micrographs/Screen'),
         'particle_pick': ('Manual picking', 'ParticlePicking/Manual'),
         'particle_pick_auto': ('Automatic picking', 'ParticlePicking/Auto'),
@@ -30,9 +31,9 @@ protocols = {
 #--------------------------------------------------------------------------------
 sections = [
 ('Preprocessing', 
-   [['Micrographs', 'import_micrographs','screen_micrographs'], 
+   [['Micrographs', 'import_micrographs','screen_micrographs','downsample_micrographs'], 
     ['Particle picking', 'particle_pick', 'particle_pick_auto', 'extract_particles'], 
-    ['Tools', 'import_particles', 'preprocess_particles', 'screen_particles']]),
+    ['Particles', 'import_particles', 'preprocess_particles', 'screen_particles']]),
 ('2D', 
    [['Align+Classify', 'ml2d', 'cl2d', 'cl2d_align'], 
     ['Tools', 'kerdensom', 'rotspectra']]),
