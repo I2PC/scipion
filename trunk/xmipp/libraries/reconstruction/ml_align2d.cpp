@@ -2163,6 +2163,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 
 //Some macros
 #define ITER_PREFIX "iter"//formatString("iter%06d", iter)
+#define FINAL_PREFIX "final"
 #define IS_FINAL outputType == OUT_FINAL
 
 void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
@@ -2204,7 +2205,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         break;
     case OUT_FINAL:
         //fn_base = fn_root;
-        fn_prefix = "final";
+        fn_prefix = FINAL_PREFIX;
         break;
     case OUT_IMGS:
         //std::cerr << "OUT_IMGS" <<std::endl;

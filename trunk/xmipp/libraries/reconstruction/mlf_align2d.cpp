@@ -104,11 +104,11 @@ void ProgMLF2D::readParams()
         MDrestart.read(getParameter(argc, argv, "--restart"));
         cline = MDrestart.getComment();
         size_t id = MDrestart.firstObject();
-        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset,id);
-        MDrestart.getValue(MDL_IMGMD, restart_imgmd,id);
-        MDrestart.getValue(MDL_REFMD, restart_refmd,id);
-        MDrestart.getValue(MDL_ITER, restart_iter,id);
-        MDrestart.getValue(MDL_RANDOMSEED, restart_seed,id);
+        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset, id);
+        MDrestart.getValue(MDL_IMGMD, restart_imgmd, id);
+        MDrestart.getValue(MDL_REFMD, restart_refmd, id);
+        MDrestart.getValue(MDL_ITER, restart_iter, id);
+        MDrestart.getValue(MDL_RANDOMSEED, restart_seed, id);
         //MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
         generateCommandLine(cline, argc2, argv2, copy);
     }
@@ -2708,41 +2708,32 @@ void writeImage(Image<double> &img, const FileName &fn, MDRow &row)
 void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
 
-    FileName          fn_tmp, fn_base;
+    FileName          fn_tmp, fn_base, fn_prefix;
     Image<double>        Itmp;
     MetaData          MDo;
     String       comment;
     std::ofstream     fh;
     size_t id;
     bool write_conv = !do_ML3D;
+    //Only override first time
+    static WriteModeMetaData mode = MD_OVERWRITE;
 
     if (iter == 0)
         write_conv = false;
 
     fn_base = fn_root;
+    fn_prefix = FN_FINAL_PREFIX();
 
     if (outputType == OUT_ITER || outputType == OUT_REFS)
     {
         fn_base = FN_ITER_BASE(iter);
+        fn_prefix = FN_ITER_PREFIX(iter);
 
     }
 
     // Write out optimal image orientations
-    fn_tmp = FN_IMGMD(fn_base);
-    MDimg.write(fn_tmp);
-    // Also write out metaData files of all experimental images,
-    // classified according to optimal reference image
-    //fixme: check if needed
-    //    for (int refno = 0; refno < model.n_ref; refno++)
-    //    {
-    //        MDo.clear();
-    //        MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
-    //        fn_tmp = FN_REFMD(fn_base);
-    //        fn_tmp = fn_root + "_ref";
-    //        fn_tmp.compose(fn_tmp, refno + 1, "");
-    //        fn_tmp += "_img.xmd";
-    //        MDo.write(fn_tmp);
-    //    }
+    fn_tmp = FN_IMGMD(fn_prefix);
+    MDimg.write(fn_tmp, mode);
 
     // Write out current reference images and fill sel & log-file
     // First time for _ref, second time for _cref
@@ -2755,6 +2746,9 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
     for (int refno = 0; refno < model.n_ref; ++refno, mdIter.moveNext())
     {
+        row.setValue(MDL_ITER, iter);
+        row.setValue(MDL_REF, refno + 1);
+
         if (do_mirror)
             row.setValue(MDL_MIRRORFRAC, mirror_fraction[refno]);
 
@@ -2778,27 +2772,33 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
     // Write out reference md file
     MDo.write(FN_CREF_IMG_MD);
-    outRefsMd = FN_REFMD(fn_base);
+    outRefsMd = FN_REFMD(fn_prefix);
 //    std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
-    MDref.write(outRefsMd);
+    MDref.write(outRefsMd, mode);
 
     // Write out log-file
-    MDo.clear();
-    MDo.setColumnFormat(false);
-    MDo.setComment(cline);
-    id = MDo.addObject();
-    MDo.setValue(MDL_LL, LL,id);
-    MDo.setValue(MDL_PMAX, sumw_allrefs,id);
-    MDo.setValue(MDL_SIGMAOFFSET, sigma_offset,id);
-    MDo.setValue(MDL_RANDOMSEED, seed,id);
+    MetaData mdLog;
+    //mdLog.setComment(cline);
+    id = mdLog.addObject();
+    mdLog.setValue(MDL_ITER, iter, id);
+    mdLog.setValue(MDL_LL, LL, id);
+    mdLog.setValue(MDL_PMAX, sumw_allrefs, id);
+    mdLog.setValue(MDL_SIGMAOFFSET, sigma_offset, id);
+    mdLog.setValue(MDL_RANDOMSEED, seed, id);
     if (do_norm)
-        MDo.setValue(MDL_INTSCALE, average_scale,id);
-    MDo.setValue(MDL_ITER, iter, id);
-    fn_tmp = FN_IMGMD(fn_base);
-    MDo.setValue(MDL_IMGMD, fn_tmp, id);
-    MDo.setValue(MDL_REFMD, outRefsMd, id);
-    fn_tmp = FN_LOGMD(fn_base);
-    MDo.write(fn_tmp);
+        mdLog.setValue(MDL_INTSCALE, average_scale, id);
+    fn_tmp = FN_IMGMD(fn_prefix);
+    mdLog.setValue(MDL_IMGMD, fn_tmp, id);
+    mdLog.setValue(MDL_REFMD, outRefsMd, id);
+    if (outputType == OUT_ITER)
+      fn_prefix = fn_root + "_iter";
+    fn_tmp = FN_LOGMD(fn_prefix);
+    if (mode == MD_OVERWRITE)
+      mdLog.write(fn_tmp);
+    else
+      mdLog.append(fn_tmp);
+
+    mode = MD_APPEND;
 
 
     // Write out average and resolution-dependent histograms

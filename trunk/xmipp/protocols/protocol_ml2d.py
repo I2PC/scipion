@@ -15,6 +15,7 @@ import os
 from os.path import exists
 from protlib_utils import runShowJ
 from protlib_gui_ext import showWarning
+from protlib_xmipp import greenStr, redStr
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -22,33 +23,49 @@ class ProtML2D(XmippProtocol):
         self.Import = 'from protocol_ml2d import *'
         
     def createFilenameTemplates(self):
+        tmpl = self.workingDirPath(self.getId() + '2d_iter_%s.xmd')
         return {
-                'iter_logs': self.workingDirPath('ml2d_iter_logs.xmd'),
-                'iter_refs': self.workingDirPath('ml2d_iter_refs.xmd')
+                'iter_logs': tmpl % 'logs',
+                'iter_refs': tmpl % 'refs'
                 }
         #self.fnIterLogs = self.workingDirPath('ml2d_iter_logs.xmd')
         #self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
     def summary(self):
         md = MetaData(self.ImgMd)
-        lines = [('Input images            ', "%s (%u)" % (self.ImgMd, md.size())),
-                 ('Reference image', self.RefMd)]
+        lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, md.size())]
+        
+        if self.DoGenerateReferences:
+            lines.append("Number of references: <%d>" % self.NumberOfReferences)
+        else:
+            lines.append("Reference image(s): [%s]" % self.RefMd)
+        
+        if self.DoMlf:
+            if self.DoCorrectAmplitudes:
+                suffix = "with CTF correction "
+            else:
+                suffix = "ignoring CTF effects "
+            lines.append("Using a ML in <Fourier>-space " + suffix)
         
         logs = self.getFilename('iter_logs')    
+        
         if exists(logs):
             md = MetaData(logs)
             id = md.lastObject()
             iteration = md.getValue(MDL_ITER, id)
-            lines.append(('Iteration                   ', str(iteration)))
+            lines.append("Iteration:  <%d>" % iteration)
             LL = md.getValue(MDL_LL, id)
-            lines.append(('LogLikelihood          ', str(LL)))
+            lines.append("LogLikelihood:  %f" % LL)
         
-        output = ["%s : %s" % (k.ljust(20),  v) for k, v in lines]
-        return output
+        return lines
     
-    def defineSteps(self):
+    def getId(self):
         progId = "ml"
         if (self.DoMlf):
-            progId += "f"  
+            progId += "f" 
+        return progId
+        
+    def defineSteps(self):
+        progId = self.getId()
         
         program = "xmipp_%s_align2d" % progId
 
@@ -231,12 +248,15 @@ def collectResults(log, WorkingDir, Prefix):
     mdImgs = MetaData(oroot + '_final_images.xmd')
     outImages = os.path.join(WorkingDir, 'result_images.xmd')
     mdImgs.write('images@' + outImages)
+    print greenStr("after writing images...")
     mdRefs = MetaData(oroot + '_final_refs.xmd')
     outRefs = os.path.join(WorkingDir, 'result_classes.xmd')
     mdRefs.write('classes@' + outRefs)
+    print greenStr("after writing refs...")
     mdGroup = MetaData()
     for idx in mdRefs:
         ref = mdRefs.getValue(MDL_REF, idx)
+        print greenStr("REF:"), redStr(str(ref))
         mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
         mdGroup.writeBlock(outRefs, 'class%06d_images' % ref)
 

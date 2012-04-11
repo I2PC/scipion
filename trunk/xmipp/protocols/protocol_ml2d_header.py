@@ -46,9 +46,9 @@ DoGenerateReferences = True
 """ Number of references to be generated. """
 NumberOfReferences = 3
 
-# {file}(result_classes*xmd){validate}(PathExists){condition}(not DoGenerateReferences) References metadata:
+# {file}(result_classes*xmd){validate}(PathExists){condition}(not DoGenerateReferences) References image(s):
 """ Metadata with the input reference images """
-RefMd = "result_classes.xmd"
+RefMd = ""
 
 #------------------------------------------------------------------------------------------
 # {section}{has_question} MLF-specific parameters
