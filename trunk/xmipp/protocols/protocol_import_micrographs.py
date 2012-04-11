@@ -19,7 +19,7 @@ class ProtImportMicrographs(XmippProtocol):
         # Create microscope
         self.insertCreateMicroscope()
         # Decide name after preprocessing
-        doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixels or self.DoDownsample)
+        doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixels)
         micrographs = self.getMicrographs()
         if doPreprocess:
             func = self.insertPreprocessStep
@@ -82,16 +82,13 @@ class ProtImportMicrographs(XmippProtocol):
 
     def insertCreateMicroscope(self):    
         if self.SamplingRateMode == "From image":
-            AngPix = float(self.SamplingRate)
+            self.AngPix = float(self.SamplingRate)
         else:
             scannedPixelSize=float(self.ScannedPixelSize)
-            if self.DoDownsample:
-                AngPix = (10000. * scannedPixelSize * self.DownsampleFactor) / self.Magnification
-            else:
-                AngPix = (10000. * scannedPixelSize) / self.Magnification
+            self.AngPix = (10000. * scannedPixelSize) / self.Magnification
         fnOut = self.getFilename('microscope')
         self.insertStep("createMicroscope", verifyfiles=[fnOut], fnOut=fnOut, Voltage=self.Voltage,
-                        SphericalAberration=self.SphericalAberration,SamplingRate=AngPix,
+                        SphericalAberration=self.SphericalAberration,SamplingRate=self.AngPix,
                         Magnification=self.Magnification)
             
     def insertCreateResults(self, filenameDict):
@@ -104,7 +101,8 @@ class ProtImportMicrographs(XmippProtocol):
             vf.append(tilted)
             pairMd = self.PairDescr
         self.insertStep('createResults', verifyfiles=vf, WorkingDir=self.WorkingDir, PairsMd=pairMd, 
-                        FilenameDict=filenameDict, MicrographFn=vf[0], TiltedFn=tilted)
+                        FilenameDict=filenameDict, MicrographFn=vf[0], TiltedFn=tilted,
+                        PixelSize=self.AngPix)
         
     def insertCopyMicrograph(self, inputMic, outputMic):
         self.insertStep('copyFile', source=inputMic, dest=outputMic)
@@ -128,17 +126,6 @@ class ProtImportMicrographs(XmippProtocol):
                 iname = outputMic
             previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[outputMic], parent_step_id=previousId)
         
-        # Downsample
-        if self.DoDownsample:
-            self.insertParallelStep("doDownsample", verifyfiles=[outputMic], parent_step_id=previousId, 
-                            iname=iname, outputMic=outputMic, downsampleFactor=self.DownsampleFactor)
-
-def doDownsample(log,iname,outputMic,downsampleFactor):
-    from protlib_filesystem import renameFile
-    tmpFile = outputMic + "_tmp.mrc"
-    runJob(log,"xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (iname,tmpFile,downsampleFactor))
-    renameFile(log,source=tmpFile, dest=outputMic)
-
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
     md = xmipp.MetaData()
     md.setColumnFormat(False)
@@ -149,7 +136,7 @@ def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnific
     md.setValue(xmipp.MDL_MAGNIFICATION,float(Magnification),objId)
     md.write(fnOut)    
 
-def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn):
+def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):
     ''' Create a metadata micrographs.xmd with all micrographs
     and if tilted pairs another one tilted_pairs.xmd'''
     from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
@@ -159,9 +146,12 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
     for m in micrographs:
         md.setValue(MDL_MICROGRAPH, m, md.addObject())
     md.write(MicrographFn)
+    mdAcquisition = MetaData()
+    mdAcquisition.setValue(xmipp.MDL_SAMPLINGRATE,float(PixelSize),mdAcquisition.addObject())
+    mdAcquisition.write("acquisition_info@"+MicrographFn,xmipp.MD_APPEND)
     
     if len(PairsMd):
-        md = MetaData() 
+        md.clear()
         mdTilted = MetaData(PairsMd)
         for objId in mdTilted:
             u = mdTilted.getValue(MDL_MICROGRAPH, objId)
@@ -170,3 +160,4 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
             md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
             md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)
         md.write(TiltedFn)
+        mdAcquisition.write("acquisition_info@"+TiltedFn,xmipp.MD_APPEND)

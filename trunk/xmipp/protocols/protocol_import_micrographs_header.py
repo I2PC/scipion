@@ -65,12 +65,6 @@ DoRemoveBadPixels = False
 # {condition} (DoRemoveBadPixels) Multiple of Stddev
 Stddev = 5
 
-# Downsample micrographs?
-DoDownsample = False
-# {condition}(DoDownsample){wizard}(wizardBrowseCTF) Downsampling factor 
-""" Set to 1 for no downsampling. Non-integer downsample factors are possible."""
-DownsampleFactor = 1
-
 #------------------------------------------------------------------------------------------------
 # {section} Microscope description
 #------------------------------------------------------------------------------------------------
