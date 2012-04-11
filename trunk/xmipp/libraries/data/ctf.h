@@ -326,11 +326,32 @@ public:
         else
         {
             double ellipsoid_ang = precomputed.ang - rad_azimuth;
+            /*
             double cos_ellipsoid_ang = cos(ellipsoid_ang);
             double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
             double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
+
+            defocus = defocus_average + defocus_deviation * cos(2 * (angle - astigmatism_angle))
+            defocus_average = (defocus_max + defocus_min)/2
+            defocus_deviation = (defocus_max - defocus_min)/2
             precomputed.deltaf=-SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
                                                   DeltafV*DeltafV*sin_ellipsoid_ang_2);
+            */
+            //defocus = defocus_average + defocus_deviation * cos(2 * (angle - astigmatism_angle))
+            //defocus_average = (defocus_max + defocus_min)/2
+            //defocus_deviation = (defocus_max - defocus_min)/2
+            /*
+             * For a derivation of this formulae confer
+             * Principles of Electron Optics page 1380
+             * in particular term defocus and twofold axial astigmatism
+             * take into account that a1 and a2 are the coefficient
+             * of the zernike polynomials difference of defocus at 0
+             * and at 45 degrees. In this case a2=0
+             */
+            double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
+            double defocus_average   = (DeltafU + DeltafV)/2.;
+            double defocus_deviation = (DeltafU - DeltafV)/2.;
+            precomputed.deltaf= -1.*(defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
         }
     }
 
