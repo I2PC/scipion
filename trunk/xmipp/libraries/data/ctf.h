@@ -389,9 +389,9 @@ public:
             << sine_part << std::endl;
             std::cout << "   Q0=" << Q0 << std::endl;
             std::cout << "   CTF without damping="
-            << -(Ksin*sine_part + Kcos*cosine_part) << std::endl;
+            << -(Ksin*sine_part - Kcos*cosine_part) << std::endl;
         }
-        return -(Ksin*sine_part + Kcos*cosine_part);
+        return -(Ksin*sine_part - Kcos*cosine_part);
     }
 
     /// Compute CTF damping at (U,V). Continuous frequencies
@@ -450,9 +450,9 @@ public:
             std::cout << "   Total atenuation(E)= " << E << std::endl;
             std::cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
             std::cout << "   CTF="
-            << -K*(Ksin*sine_part + Kcos*cosine_part)*E << std::endl;
+            << -K*(Ksin*sine_part - Kcos*cosine_part)*E << std::endl;
         }
-        return -K*(Ksin*sine_part + Kcos*cosine_part)*E;
+        return -K*(Ksin*sine_part - Kcos*cosine_part)*E;
     }
 
     /// Compute CTF pure at (U,V). Continuous frequencies
@@ -488,9 +488,9 @@ public:
             std::cout << " Total atenuation(E)= " << E << std::endl;
             std::cout << " K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
             std::cout << " (X,Y)=(" << X << "," << Y << ") CTF="
-            << -K*(Ksin*sine_part + Kcos*cosine_part)*E + base_line << std::endl;
+            << -K*(Ksin*sine_part - Kcos*cosine_part)*E + base_line << std::endl;
         }
-        return -K*(Ksin*sine_part + Kcos*cosine_part)*E;
+        return -K*(Ksin*sine_part - Kcos*cosine_part)*E;
     }
 
     /// Deltaf at a given direction
