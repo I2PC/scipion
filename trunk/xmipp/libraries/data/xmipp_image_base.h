@@ -114,6 +114,7 @@ struct ImageFHandler
 
 struct ImageInfo
 {
+	size_t    offset;
     DataType  datatype;
     bool   swap;
     ArrayDim  adim;

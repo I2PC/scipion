@@ -68,3 +68,17 @@ bool isImage(const FileName &name)
     return I.isImage(name);
 }
 
+
+bool checkFileSize(const FileName &name)
+{
+    ImageInfo imgInfo;
+    getImageInfo(name, imgInfo);
+    size_t expectedSize = imgInfo.adim.nzyxdim*gettypesize(imgInfo.datatype) + imgInfo.offset;
+
+    struct stat file_status;
+    if(stat(name.data(), &file_status) != 0)
+        REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot get filesize for file "+name);
+    size_t actualSize = file_status.st_size;
+
+    return actualSize >= expectedSize;
+}

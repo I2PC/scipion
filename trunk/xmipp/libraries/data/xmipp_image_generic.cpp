@@ -184,6 +184,7 @@ int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_im
 {
     ImageInfo imInf;
     getImageInfo(name, imInf);
+
     setDatatype(imInf.datatype);
     return image->read(name, datamode, select_img, mapData && !imInf.swap);
 }

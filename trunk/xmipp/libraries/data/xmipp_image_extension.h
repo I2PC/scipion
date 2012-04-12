@@ -51,6 +51,10 @@ DataType getImageDatatype(const FileName &name);
 /** A filename is an image? */
 bool isImage(const FileName &name);
 
+/** Check if the file is at least as large as needed */
+bool checkFileSize(const FileName &name);
+
+
 //@}
 
 #endif /* XMIPP_IMAGE_EXTENSION_H_ */

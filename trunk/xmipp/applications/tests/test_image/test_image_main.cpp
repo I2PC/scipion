@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <data/xmipp_image.h>
+#include <data/xmipp_image_extension.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 #include <data/metadata.h>
@@ -326,6 +327,17 @@ TEST_F( ImageTest, movePointerTo)
             EXPECT_TRUE(img1 == img2);
         }
     }
+    XMIPP_CATCH
+}
+
+TEST_F( ImageTest, checkFileSize)
+{
+    XMIPP_TRY
+
+    EXPECT_TRUE(checkFileSize("image/smallVolumeStack.stk"));
+    EXPECT_FALSE(checkFileSize("image/smallVolumeStackCorrupted.stk"));
+
+
     XMIPP_CATCH
 }
 
