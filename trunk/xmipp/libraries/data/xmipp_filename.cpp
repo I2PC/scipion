@@ -75,7 +75,10 @@ void FileName::compose(size_t no, const String &str, const String &ext)
 // Constructor: string  and filename, mainly for metadata blocks..
 void FileName::compose(const String &blockName, const String &str)
 {
-    *this = (FileName) (blockName + (String) "@" + str);
+    if (blockName.empty())
+        *this = str;
+    else
+        *this = (FileName) (blockName + (String) "@" + str);
 }
 
 // Constructor: string, number and filename, mainly for numered metadata blocks..
@@ -399,8 +402,11 @@ size_t FileName::getFileSize() const
 {
     Stat info;
     if (stat(c_str(), &info))
-        REPORT_ERROR(ERR_UNCLASSIFIED,
-                     (String)"FileName::getFileSize: Cannot get size of file " + *this);
+    {
+        char cCurrentPath[FILENAME_MAX];
+        getcwd(cCurrentPath, sizeof(cCurrentPath));
+        REPORT_ERROR(ERR_UNCLASSIFIED,formatString("FileName::getFileSize: Cannot get size of file %s/%s",cCurrentPath,this->c_str()));
+    }
     return info.st_size;
 }
 

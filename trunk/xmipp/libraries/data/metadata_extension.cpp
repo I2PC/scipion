@@ -34,7 +34,7 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-    	MD.getValue(image_label,fnImg,__iter.objId);
+        MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
             image.readApplyGeo(fnImg, MD,__iter.objId);
         else
@@ -63,7 +63,7 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     // Calculate SD
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-		MD.getValue(image_label,fnImg,__iter.objId);
+        MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
             image.readApplyGeo(fnImg, MD,__iter.objId);
         else
@@ -91,7 +91,7 @@ void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image
 
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-    	MD.getValue(image_label,fnImg,__iter.objId);
+        MD.getValue(image_label,fnImg,__iter.objId);
         image.readApplyGeo(fnImg, MD,__iter.objId);
 
         if (first)
@@ -117,7 +117,7 @@ void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
     _ave = _sd = 0;
     int n = 0;
     //Remove disabled images if present
-   MD.removeDisabled();
+    MD.removeDisabled();
     // Calculate Mean
     if (MD.isEmpty())
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
@@ -127,7 +127,7 @@ void getStatistics(MetaData MD, double& _ave, double& _sd, double& _min,
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-		MD.getValue(image_label,fnImg,__iter.objId);
+        MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
             image.readApplyGeo(fnImg, MD,__iter.objId);
         else
@@ -245,17 +245,38 @@ bool compareImageSize(const FileName &filename1, const FileName &filename2)
     return (x==X && y == Y && z == Z && n == N);
 }
 
+bool compareTwoMetadataFiles(const FileName &fn1, const FileName &fn2)
+{
+    StringVector blockList;
+    getBlocksInMetaDataFile(fn1,blockList);
+    FileName fn_1aux, fn_2aux;
+    MetaData md1, md2;
+
+    for (StringVector::iterator it= blockList.begin();
+         it!=blockList.end(); it++)
+    {
+        fn_1aux.compose(*it, fn1);
+        fn_2aux.compose(*it, fn2);
+        md1.read(fn_1aux);
+        md2.read(fn_2aux);
+        if (!(md1 == md2))
+            return false;
+    }
+
+    return true;
+}
+
 void copyImages(const MetaData &md, const char * output, bool independent, MDLabel image_label)
 {
-	ProgConvImg conv;
-	FileName out, oroot;
-	if (independent)
-		oroot = output;
-	else
-		out = output;
-	//Image convert dont use applyGeo
-	conv.setup(new MetaData(md), out, oroot, false, image_label);
-	conv.tryRun();
+    ProgConvImg conv;
+    FileName out, oroot;
+    if (independent)
+        oroot = output;
+    else
+        out = output;
+    //Image convert dont use applyGeo
+    conv.setup(new MetaData(md), out, oroot, false, image_label);
+    conv.tryRun();
 }
 
 int maxFileNameLength(const MetaData &MD, MDLabel image_label)

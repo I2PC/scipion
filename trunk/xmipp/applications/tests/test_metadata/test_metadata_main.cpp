@@ -398,6 +398,59 @@ TEST_F( MetadataTest, CheckRegularExpression2)
     unlink(sfn);
 }
 
+TEST_F( MetadataTest, compareTwoMetadataFiles)
+{
+    XMIPP_TRY
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testGetBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    char sfn2[64] = "";
+    strncpy(sfn2, "/tmp/testGetBlocks_XXXXXX", sizeof sfn2);
+    mkstemp(sfn2);
+    char sfn3[64] = "";
+    strncpy(sfn3, "/tmp/testGetBlocks_XXXXXX", sizeof sfn3);
+    mkstemp(sfn3);
+
+    MetaData auxMd, auxMd2;
+    auxMd.setValue(MDL_IMAGE,(String)"image_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_2.xmp",auxMd.addObject());
+    auxMd.write(sfn,MD_OVERWRITE);
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMd.addObject());
+    auxMd.write((String)"block_000001@"+sfn,MD_APPEND);
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_2_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_2_2.xmp",auxMd.addObject());
+    auxMd.write(sfn2, MD_OVERWRITE);
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_A_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_A_2.xmp",auxMd.addObject());
+    auxMd.write((String)"block_000001@"+sfn2,MD_APPEND);
+    auxMd.clear();
+
+    EXPECT_FALSE(compareTwoMetadataFiles(sfn, sfn2));
+    EXPECT_TRUE(compareTwoMetadataFiles(sfn, sfn));
+
+    auxMd.setValue(MDL_IMAGE,(String)"image_1.xmpSPACE",auxMd.addObject());//extra space
+    auxMd.setValue(MDL_IMAGE,(String)"image_2.xmp",auxMd.addObject());
+    auxMd.write(sfn2,MD_OVERWRITE);
+    auxMd.clear();
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_1.xmp",auxMd.addObject());
+    auxMd.setValue(MDL_IMAGE,(String)"image_data_1_2.xmp",auxMd.addObject());
+    auxMd.write((String)"block_000001@"+sfn2,MD_APPEND);
+
+    String command=(String)"sed 's/SPACE/ /g' " + sfn2 + (String) ">" + sfn3;
+    system (command.c_str());
+
+    EXPECT_TRUE(compareTwoMetadataFiles(sfn, sfn3));
+
+    unlink(sfn);
+    unlink(sfn2);
+    unlink(sfn3);
+    XMIPP_CATCH
+}
+
 TEST_F( MetadataTest, ImportObject)
 {
     //FIXME importObjects test is in the test named select
@@ -520,27 +573,28 @@ TEST_F( MetadataTest, MultiQuery)
 
 TEST_F( MetadataTest, MDValueEQ)
 {
-  try {
-    MetaData md;
-    md.setValue(MDL_IMAGE, (String)"a", md.addObject());
-    md.setValue(MDL_IMAGE, (String)"b", md.addObject());
-    md.setValue(MDL_IMAGE, (String)"c", md.addObject());
-    md.setValue(MDL_IMAGE, (String)"a", md.addObject());
+    try
+    {
+        MetaData md;
+        md.setValue(MDL_IMAGE, (String)"a", md.addObject());
+        md.setValue(MDL_IMAGE, (String)"b", md.addObject());
+        md.setValue(MDL_IMAGE, (String)"c", md.addObject());
+        md.setValue(MDL_IMAGE, (String)"a", md.addObject());
 
-    MetaData md2;
-    md2.setValue(MDL_IMAGE, (String)"a", md2.addObject());
-    md2.setValue(MDL_IMAGE, (String)"a", md2.addObject());
+        MetaData md2;
+        md2.setValue(MDL_IMAGE, (String)"a", md2.addObject());
+        md2.setValue(MDL_IMAGE, (String)"a", md2.addObject());
 
-    MDValueEQ eq(MDL_IMAGE,(String)"a");
-    //Test empty query
-    MetaData md3;
-    md3.importObjects(md, eq);
-    EXPECT_EQ(md2, md3);
-  }
-  catch (XmippError &xe)
-  {
-    std::cerr << "DEBUG_JM: xe: " << xe << std::endl;
-  }
+        MDValueEQ eq(MDL_IMAGE,(String)"a");
+        //Test empty query
+        MetaData md3;
+        md3.importObjects(md, eq);
+        EXPECT_EQ(md2, md3);
+    }
+    catch (XmippError &xe)
+    {
+        std::cerr << "DEBUG_JM: xe: " << xe << std::endl;
+    }
 }
 
 TEST_F( MetadataTest, NaturalJoin)

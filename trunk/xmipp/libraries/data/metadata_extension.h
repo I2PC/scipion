@@ -51,6 +51,9 @@ bool compareImage(const FileName &filename1, const FileName &filename2);
 /// compare if same dimensions
 bool compareImageSize(const FileName &filename1, const FileName &filename2);
 
+/** Compare two metadata files */
+bool compareTwoMetadataFiles(const FileName &fn1, const FileName &fn2);
+
 /**Copy images listed in metadata to some location using the
  * same logic as in xmipp_image_convert program
  * if independent is false, output will be treated as the output stack name

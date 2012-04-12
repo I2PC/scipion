@@ -72,7 +72,7 @@ bool isImage(const FileName &name)
 bool checkImageFileSize(const FileName &name, const ImageInfo &imgInfo, bool error)
 {
     size_t expectedSize = imgInfo.adim.nzyxdim*gettypesize(imgInfo.datatype) + imgInfo.offset;
-    size_t actualSize = name.getFileSize();
+    size_t actualSize = name.removeBlockNameOrSliceNumber().removeFileFormat().getFileSize();
     bool result = (actualSize >= expectedSize);
 
     if (error && !result)
