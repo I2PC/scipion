@@ -462,7 +462,7 @@ class ProtProjMatch(XmippProtocol):
         'CtfGroupRootName': "ctf",
         'CtfGroupSubsetFileName': "ctf_images.sel"
         }
-        self.ParamsDict.update(extraParams);
+        self.ParamsDict.update(extraParams)
         # Set as protocol variables
         for k, v in extraParams.iteritems():
             setattr(self, k, v)
