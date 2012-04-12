@@ -47,6 +47,7 @@ ACTION_EDIT = 'Edit'
 ACTION_COPY = 'Copy'
 ACTION_REFRESH = 'Refresh'
 ACTION_DEFAULT = 'Default'
+ACTION_STEPS = 'Show Steps'
 GROUP_ALL = 'All'
 GROUP_XMIPP = protDict.xmipp.title
         
@@ -130,6 +131,12 @@ class XmippProjectGUI():
             
     def getStateImage(self, state):
         return self.images[state]
+    
+    def getImage(self, imgName):
+        ''' Create the image and store in dictionary'''
+        if not imgName in self.images.keys():
+            self.images[imgName] = getXmippImage(imgName + '.gif')
+        return self.images[imgName]
               
     def addBindings(self):
         #self.root.bind('<Configure>', self.unpostMenu)
@@ -207,10 +214,6 @@ class XmippProjectGUI():
     #GUI for launching Xmipp Programs as Protocols        
     def launchProgramsGUI(self, event=None):
         text = protDict.xmipp.title
-#        last = self.lastDisplayGroup
-#        self.clickToolbarButton(text, False)
-#        if text != last and len(self.runs)>0:
-#            return
         db = ProgramDb()        
         root = tk.Toplevel()
         root.withdraw()
@@ -326,11 +329,6 @@ class XmippProjectGUI():
         
         detailsSection = ProjectSection(root, 'Process monitor')
         detailsSection.addButton("Stop run", command=stopRun)
-#        txt = tk.Text(detailsSection.frameContent, width=80, height=15,
-#                        bg=BgColor, bd=1, relief=tk.RIDGE, font=Fonts['normal'])
-#        txt.tag_config('normal', justify=tk.LEFT)
-#        txt.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
-#        txt.pack(fill=tk.BOTH)
         cols = ('pid', '%cpu', '%mem', 'command')
         frame = detailsSection.frameContent
         tree = XmippTree(frame, columns=cols)
@@ -379,6 +377,51 @@ class XmippProjectGUI():
         centerWindows(root, refWindows=self.root)
         root.deiconify()
         root.mainloop()
+        
+    def launchRunStepsTree(self, run):
+        ''' Launch another windows with the steps 
+        inserted for that run '''
+        import pickle
+        runName = getExtendedRunName(run)
+        root = tk.Toplevel()
+        root.withdraw()
+        #root.title()
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
+
+        frame = tk.Frame(root)
+        frame.grid(row=0, column=0, sticky='nsew')
+        frame.columnconfigure(0, weight=1, minsize=400)
+        frame.rowconfigure(0, weight=1)       
+        tree = XmippTree(frame)
+        tree.grid(row=0, column=0, sticky='nsew')
+        
+        r = tree.insert('', 'end', text=runName, image=self.getStateImage(run['run_state']))
+        tree.item(r, open=True)
+        steps = self.project.projectDb.getRunSteps(run)
+        for s in steps:    
+            t = "%s (id = %d)" % (s['command'], s['step_id'])
+            stepIcon = 'step_finished'
+            if s['finish'] is None:
+                stepIcon = 'step'
+            item = tree.insert(r, 'end', text=t, image=self.getImage(stepIcon))
+            p = tree.insert(item, 'end', text=' parameters', image=self.getImage('md_view'))
+            vf = tree.insert(item, 'end', text=' verify_files', image=self.getImage('copy'))
+            tree.insert(item, 'end', text='parent = %d' % s['parent_step_id'])
+            tree.insert(item, 'end', text='   init = %s' % str(s['init']))
+            tree.insert(item, 'end', text=' finish = %s' % str(s['finish']))
+            
+            params = pickle.loads(str(s['parameters']))
+            for k, v in params.iteritems():
+                tree.insert(p, 'end', text=" %s = %s" % (k, v))
+            
+            files = pickle.loads(str(s['verifyFiles']))        
+            for f in files:
+                tree.insert(vf, 'end', text=f)
+
+        centerWindows(root, refWindows=self.root)
+        root.deiconify()
+        root.mainloop()       
         
         
     def launchProtocolGUI(self, run, visualizeMode=False):
@@ -549,8 +592,8 @@ class XmippProjectGUI():
                             self.updateRunHistory(self.lastDisplayGroup)
                         else: 
                             showError("Error deleting RUN", error, parent=self.root)
-            elif event == "Visualize":
-                pass
+            elif event == ACTION_STEPS:
+                self.launchRunStepsTree(run)
             elif event == ACTION_REFRESH:
                 self.historyRefreshRate = 1
                 self.updateRunHistory(self.lastDisplayGroup, False, True)
@@ -630,7 +673,8 @@ class XmippProjectGUI():
         aList = [(ACTION_EDIT, 'edit.gif', 'Edit    Alt-E/(Enter)'), 
                 (ACTION_COPY, 'copy.gif', 'Duplicate   Alt-D/Ctrl-Enter'),
                 (ACTION_REFRESH, 'refresh.gif', 'Refresh   F5'), 
-                (ACTION_DELETE, 'delete.gif', 'Delete    Del')]
+                (ACTION_DELETE, 'delete.gif', 'Delete    Del'),
+                (ACTION_STEPS, 'run_steps.gif', 'Show run steps')]
         def setupButton(k, v, t):
             btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor)
             ToolTip(btn, t, 500)

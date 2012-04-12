@@ -325,6 +325,16 @@ class XmippProjectDb(SqliteDb):
         sqlCommand = "SELECT run_state FROM %(TableRuns)s WHERE run_id = %(run_id)d" % self.sqlDict
         self.cur.execute(sqlCommand)
         return self.cur.fetchone()[0]
+    
+    def getRunSteps(self, run):
+        self.sqlDict['run_id'] = run['run_id']
+        sqlCommand = """ SELECT step_id, iter, init, finish, command, 
+                            parameters, verifyFiles, parent_step_id 
+                         FROM %(TableSteps)s 
+                         WHERE (run_id = %(run_id)d)
+                         ORDER BY step_id """ % self.sqlDict 
+        self.cur.execute(sqlCommand % self.sqlDict) 
+        return self.cur.fetchall()       
      
 class XmippProtocolDb(SqliteDb):
     def __init__(self, protocol, script, isMainLoop=True):
