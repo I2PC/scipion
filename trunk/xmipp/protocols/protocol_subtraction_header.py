@@ -17,7 +17,7 @@
 #-----------------------------------------------------------------------------
 
 # {file} Protocol Name
-ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
+ProtocolName='Runs/projmatch_run_001.py'
 
 #Show results for iteration
 """ Use data coming from iteration
@@ -106,7 +106,7 @@ dimX = 64
 """
 dimY = -1
 
-# {eval} expandParallel(jobsize=1)
+# {eval} expandParallel(mpi=3, jobsize=1)
 
 #------------------------------------------------------------------------------------------------
 # {hidden} Analysis of results
