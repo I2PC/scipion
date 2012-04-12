@@ -179,12 +179,20 @@ void ImageGeneric::setDatatype(DataType imgType)
     }
 }
 
+void ImageGeneric::setDatatype(const FileName &name)
+{
+    ImageInfo imgInf;
+    getImageInfo(name, imgInf);
+    checkImageFileSize(name, imgInf, true);
+    setDatatype(imgInf.datatype);
+}
+
 int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_img,
                        bool mapData)
 {
     ImageInfo imInf;
     getImageInfo(name, imInf);
-
+    checkImageFileSize(name, imInf, true);
     setDatatype(imInf.datatype);
     return image->read(name, datamode, select_img, mapData && !imInf.swap);
 }
@@ -193,6 +201,7 @@ int ImageGeneric::readMapped(const FileName &name, size_t select_img, int mode)
 {
     ImageInfo imInf;
     getImageInfo(name, imInf);
+    checkImageFileSize(name, imInf, true);
     setDatatype(imInf.datatype);
     return image->read(name, DATA, select_img, !imInf.swap, mode);
 }
@@ -218,8 +227,7 @@ int ImageGeneric::readOrReadMapped(const FileName &name, size_t select_img, int 
 
 int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)
 {
-    setDatatype(getImageDatatype(name));
-
+    setDatatype(name);
     return image->readPreview(name, Xdim, Ydim, select_slice, select_img);
 }
 
@@ -228,6 +236,7 @@ int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, in
 {
     ImageInfo imInf;
     getImageInfo(name, imInf);
+    checkImageFileSize(name, imInf, true);
     setDatatype(imInf.datatype);
 
     return image->readOrReadPreview(name, Xdim, Ydim, select_slice, select_img, !imInf.swap && mapData);
@@ -235,8 +244,8 @@ int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, in
 
 void ImageGeneric::getPreview(ImageGeneric &imgOut, int Xdim, int Ydim, int select_slice, size_t select_img)
 {
-	imgOut.setDatatype(getDatatype());
-	image->getPreview(imgOut.image, Xdim, Ydim, select_slice, select_img);
+    imgOut.setDatatype(getDatatype());
+    image->getPreview(imgOut.image, Xdim, Ydim, select_slice, select_img);
 }
 
 
@@ -261,14 +270,14 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &
 int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row,
                                const ApplyGeoParams &params)
 {
-    setDatatype(getImageDatatype(name));
+    setDatatype(name);
     return image->readApplyGeo(name, row, params);
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
                                const ApplyGeoParams &params)
 {
-    setDatatype(getImageDatatype(name));
+    setDatatype(name);
     return image->readApplyGeo(name, md, objId, params);
 }
 
@@ -278,7 +287,7 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
 {
     FileName name;
     md.getValue(MDL_IMAGE, name, objId/*md.firstObject()*/);
-    setDatatype(getImageDatatype(name));
+    setDatatype(name);
     return image->readApplyGeo(name, md, objId, params);
 }
 

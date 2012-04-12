@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "xmipp_image_extension.h"
+#include "xmipp_error.h"
 
 
 void getImageSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
@@ -68,17 +69,23 @@ bool isImage(const FileName &name)
     return I.isImage(name);
 }
 
+bool checkImageFileSize(const FileName &name, const ImageInfo &imgInfo, bool error)
+{
+    size_t expectedSize = imgInfo.adim.nzyxdim*gettypesize(imgInfo.datatype) + imgInfo.offset;
+    size_t actualSize = name.getFileSize();
+    bool result = (actualSize >= expectedSize);
 
-bool checkFileSize(const FileName &name)
+    if (error && !result)
+        REPORT_ERROR(ERR_IO_SIZE, formatString("Image Extension: File %s has wrong size.\n"
+                                               "Expected size (at least) %u bytes. Actual size %u bytes.", name.c_str(), expectedSize, actualSize));
+
+    return result;
+}
+
+bool checkImageFileSize(const FileName &name, bool error)
 {
     ImageInfo imgInfo;
     getImageInfo(name, imgInfo);
-    size_t expectedSize = imgInfo.adim.nzyxdim*gettypesize(imgInfo.datatype) + imgInfo.offset;
 
-    struct stat file_status;
-    if(stat(name.data(), &file_status) != 0)
-        REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot get filesize for file "+name);
-    size_t actualSize = file_status.st_size;
-
-    return actualSize >= expectedSize;
+    return checkImageFileSize(name, imgInfo, error);
 }

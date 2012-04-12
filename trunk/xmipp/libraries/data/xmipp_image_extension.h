@@ -36,24 +36,22 @@
 /** What is the size of an image */
 void getImageSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
                   size_t &Ndim);
-/** Get basic information from image file
- */
+/** Get basic information from image file */
 void getImageInfo(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
                   size_t &Ndim, DataType &datatype);
 void getImageInfo(const FileName &name, ImageInfo &imgInfo);
 
-/** Get datatype information from image file
- */
+/** Get datatype information from image file*/
 void getImageDatatype(const FileName &name, DataType &datatype);
-
 DataType getImageDatatype(const FileName &name);
 
 /** A filename is an image? */
 bool isImage(const FileName &name);
 
-/** Check if the file is at least as large as needed */
-bool checkFileSize(const FileName &name);
-
+/** Check if the file is at least as large as needed.
+ *  If error = true, then report an error in case of check fail. */
+bool checkImageFileSize(const FileName &name, const ImageInfo &imgInfo, bool error = false);
+bool checkImageFileSize(const FileName &name, bool error = false);
 
 //@}
 

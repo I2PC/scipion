@@ -157,6 +157,11 @@ public:
      */
     void setDatatype(DataType _datatype);
 
+    /** Set the data type according to the image file, checking if
+     *  file size is correct.
+     */
+    void setDatatype(const FileName &name);
+
     /** Set image dataMode */
     void setDataMode(DataMode mode)
     {
