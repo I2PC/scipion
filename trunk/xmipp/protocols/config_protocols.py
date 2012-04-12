@@ -21,7 +21,7 @@ protocols = {
         'projmatch': ('Projection Matching', '3D/ProjMatch'), 
         'ml3d': ('ML3D', '3D/ML3D'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
-        'subtraction': ('Partial Projection Subtraction', '3D/ProjSubs'),
+        'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
         'dummy': ('Dummy', 'Dummy'),
         'xmipp': ('Xmipp Programs', 'XmippPrograms')            
         }
