@@ -115,7 +115,37 @@ echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
-echo 'test -s $XMIPP_HOME/.xmipp.alias && . $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
+echo " "    >> $INC_FILE
+echo " "    >> $INC_FILE
+echo " "    >> $INC_FILE
+
+echo "# Xmipp Aliases 						 "    >> $INC_FILE
+echo "## Setup ##                        "    >> $INC_FILE
+echo "alias xconfigure='./setup.py -j $NUMBER_OF_CPU configure compile ' " >> $INC_FILE
+echo "alias xcompile='./setup.py -j $NUMBER_OF_CPU compile ' "             >> $INC_FILE
+echo "alias xupdate='./setup.py -j $NUMBER_OF_CPU update compile ' "       >> $INC_FILE
+echo "## Interface ##                        "    >> $INC_FILE
+echo "alias xa='xmipp_apropos'               "    >> $INC_FILE
+echo "alias xb='xmipp_browser'               "    >> $INC_FILE
+echo "alias xp='xmipp_protocols'             "    >> $INC_FILE
+echo "alias xmipp='xmipp_protocols'          "    >> $INC_FILE
+echo "alias xs='xmipp_show'                  "    >> $INC_FILE
+echo "alias xsj='xmipp_showj'                "    >> $INC_FILE
+echo "## Image ##                            "    >> $INC_FILE
+echo "alias xic='xmipp_image_convert'        "    >> $INC_FILE
+echo "alias xih='xmipp_image_header'         "    >> $INC_FILE
+echo "alias xio='xmipp_image_operate'        "    >> $INC_FILE
+echo "alias xis='xmipp_image_statistics'     "    >> $INC_FILE
+echo "## Metadata ##                         "    >> $INC_FILE
+echo "alias xmu='xmipp_metadata_utilities'   "    >> $INC_FILE
+echo "alias xmp='xmipp_metadata_plot'        "    >> $INC_FILE
+echo "## Transformation ##                   "    >> $INC_FILE
+echo "alias xtg='xmipp_transform_geometry'   "    >> $INC_FILE
+echo "alias xtf='xmipp_transform_filter'     "    >> $INC_FILE
+echo "alias xtn='xmipp_transform_normalize'  "    >> $INC_FILE
+echo "## Other ##                            "    >> $INC_FILE
+echo "alias xrf='xmipp_resolution_fsc'       "    >> $INC_FILE
+echo "alias xrs='xmipp_resolution_ssnr'      "    >> $INC_FILE
 chmod u+x $INC_FILE
 
 # for CSH or TCSH
@@ -127,39 +157,38 @@ if $IS_MAC; then
 	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
 echo 'test -s $XMIPP_HOME/.xmipp.alias && . $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
+
+echo " "    >> $INC_FILE
+echo " "    >> $INC_FILE
+echo " "    >> $INC_FILE
+echo "# Xmipp Aliases 						 "    >> $INC_FILE
+echo "## Setup ##                        "    >> $INC_FILE
+echo "alias xconfigure './setup.py -j $NUMBER_OF_CPU configure compile ' " >> $INC_FILE
+echo "alias xcompile './setup.py -j $NUMBER_OF_CPU compile ' "             >> $INC_FILE
+echo "alias xupdate './setup.py -j $NUMBER_OF_CPU update compile ' "       >> $INC_FILE
+echo "## Interface ##                        "    >> $INC_FILE
+echo "alias xa 'xmipp_apropos'               "    >> $INC_FILE
+echo "alias xb 'xmipp_browser'               "    >> $INC_FILE
+echo "alias xp 'xmipp_protocols'             "    >> $INC_FILE
+echo "alias xmipp 'xmipp_protocols'          "    >> $INC_FILE
+echo "alias xs 'xmipp_show'                  "    >> $INC_FILE
+echo "alias xsj 'xmipp_showj'                "    >> $INC_FILE
+echo "## Image ##                            "    >> $INC_FILE
+echo "alias xic 'xmipp_image_convert'        "    >> $INC_FILE
+echo "alias xih 'xmipp_image_header'         "    >> $INC_FILE
+echo "alias xio 'xmipp_image_operate'        "    >> $INC_FILE
+echo "alias xis 'xmipp_image_statistics'     "    >> $INC_FILE
+echo "## Metadata ##                         "    >> $INC_FILE
+echo "alias xmu 'xmipp_metadata_utilities'   "    >> $INC_FILE
+echo "alias xmp 'xmipp_metadata_plot'        "    >> $INC_FILE
+echo "## Transformation ##                   "    >> $INC_FILE
+echo "alias xtg 'xmipp_transform_geometry'   "    >> $INC_FILE
+echo "alias xtf 'xmipp_transform_filter'     "    >> $INC_FILE
+echo "alias xtn 'xmipp_transform_normalize'  "    >> $INC_FILE
+echo "## Other ##                            "    >> $INC_FILE
+echo "alias xrf 'xmipp_resolution_fsc'       "    >> $INC_FILE
+echo "alias xrs 'xmipp_resolution_ssnr'      "    >> $INC_FILE
 chmod u+x $INC_FILE
-
-
-#Create aliases file
-ALIAS_FILE=.xmipp.alias
-
-echo "# Xmipp Aliases 						 "    >> $ALIAS_FILE
-echo "## Setup ##                        "    >> $ALIAS_FILE
-echo "alias xconfigure='./setup.py -j $NUMBER_OF_CPU configure compile ' " >> $ALIAS_FILE
-echo "alias xcompile='./setup.py -j $NUMBER_OF_CPU compile ' "             >> $ALIAS_FILE
-echo "alias xupdate='./setup.py -j $NUMBER_OF_CPU update compile ' "       >> $ALIAS_FILE
-echo "## Interface ##                        "    >> $ALIAS_FILE
-echo "alias xa='xmipp_apropos'               "    >> $ALIAS_FILE
-echo "alias xb='xmipp_browser'               "    >> $ALIAS_FILE
-echo "alias xp='xmipp_protocols'             "    >> $ALIAS_FILE
-echo "alias xmipp='xmipp_protocols'          "    >> $ALIAS_FILE
-echo "alias xs='xmipp_show'                  "    >> $ALIAS_FILE
-echo "alias xsj='xmipp_showj'                "    >> $ALIAS_FILE
-echo "## Image ##                            "    >> $ALIAS_FILE
-echo "alias xic='xmipp_image_convert'        "    >> $ALIAS_FILE
-echo "alias xih='xmipp_image_header'         "    >> $ALIAS_FILE
-echo "alias xio='xmipp_image_operate'        "    >> $ALIAS_FILE
-echo "alias xis='xmipp_image_statistics'     "    >> $ALIAS_FILE
-echo "## Metadata ##                         "    >> $ALIAS_FILE
-echo "alias xmu='xmipp_metadata_utilities'   "    >> $ALIAS_FILE
-echo "alias xmp='xmipp_metadata_plot'        "    >> $ALIAS_FILE
-echo "## Transformation ##                   "    >> $ALIAS_FILE
-echo "alias xtg='xmipp_transform_geometry'   "    >> $ALIAS_FILE
-echo "alias xtf='xmipp_transform_filter'     "    >> $ALIAS_FILE
-echo "alias xtn='xmipp_transform_normalize'  "    >> $ALIAS_FILE
-echo "## Other ##                            "    >> $ALIAS_FILE
-echo "alias xrf='xmipp_resolution_fsc'       "    >> $ALIAS_FILE
-echo "alias xrs='xmipp_resolution_ssnr'      "    >> $ALIAS_FILE
 
 
 
