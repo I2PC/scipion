@@ -67,7 +67,7 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
             }
         case SIMPLY_CLOSED_FRINGES :
             {
-                A2D_ELEM(im,i,j) = std::cos(50*std::exp(-0.5*(std::pow(i*iMaxDim2,2)+std::pow(j*iMaxDim2,2))))+rnd_gaus(0,noiseLevel);
+                A2D_ELEM(im,i,j) = std::cos(50*std::exp(-0.5*(std::pow(i*iMaxDim2*freq,2)+std::pow(j*iMaxDim2*freq,2))))+rnd_gaus(0,noiseLevel);
                 break;
             }
 
@@ -80,6 +80,12 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
             {
                 A2D_ELEM(im,i,j) = std::cos(50*std::exp(-0.5*(std::pow(i*iMaxDim2,2)+std::pow(j*iMaxDim2,2)))+A2D_ELEM(im,i,j))+rnd_gaus(0,noiseLevel);
                 break;
+            }
+
+        case SIMPLY_CLOSED_FRINGES_MOD :
+            {
+            	A2D_ELEM(im,i,j) =  (std::exp(-((i*i)+(j*j))/(2e3*freq*freq)))*(std::cos(50*std::exp(-0.5*(std::pow(i*iMaxDim2*freq,2)+std::pow(j*iMaxDim2*freq,2))))+rnd_gaus(0,noiseLevel));
+            	break;
             }
         }
     }
@@ -122,6 +128,7 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
     ftrans.inverseFourierTransform();
     //Here in the Matlab code there is a complex conjugate s
     imProc = imComplex;
+
 }
 
 void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, MultidimArray<double > & orModMap, int wSize)
@@ -236,6 +243,7 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
     }
 
     SPTH(imN,H);
+    sph = H;
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
@@ -243,6 +251,8 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
         A2D_ELEM(imModMap,i,j) = std::sqrt(std::pow(temp,2)+std::pow(A2D_ELEM(imN,i,j),2));
         A2D_ELEM(imN,i,j)      = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
     }
+
+    STARTINGX(imN)=STARTINGY(imN)=0;
 }
 
 void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap)
@@ -250,6 +260,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
     //First we perform some setup stuff
     int nx = XSIZE(orMap);
     int ny = YSIZE(orMap);
+    double minQuality = 0.0;
 
     Histogram1D hist;
     int no_steps = 10, maxElem = 0, k;
@@ -264,6 +275,9 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
     //Here we transform the quality map to the no_steps possible values
     MultidimArray<double> qualityMapInt = (((qualityMap/maxQualityMapValue)*(no_steps-1)));
     qualityMapInt.selfROUND();
+
+    //imax = 100;
+    //jmax = 100;
 
     compute_hist(qualityMapInt, hist, no_steps);
     int tempValue = 0;
@@ -316,6 +330,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
     i = imax;
     j = jmax;
 
+
     while( ind > 0)
     {
         int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
@@ -323,7 +338,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 
         for(int k = 0; k< 8 ; k++)
             if ( (A2D_ELEM(processed,indi[k],indj[k]) == 0) && (indi[k] > size-1 ) && (indi[k] < nx-size )
-                 && (indj[k] > size-1 ) && (indj[k] < ny-size ) )
+                 && (indj[k] > size-1 ) && (indj[k] < ny-size ) &&  (A2D_ELEM(qualityMap,indi[k],indj[k]) > minQuality) )
             {
                 for (int li=-size; li <= size; li++)
                     for (int lj=-size; lj <= size; lj++)
@@ -338,6 +353,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 
                         b1 += lambda*(A2D_ELEM(px,indi[k]+li,indj[k]+lj))*tempb;
                         b2 += lambda*(A2D_ELEM(py,indi[k]+li,indj[k]+lj))*tempb;
+
                     }
 
                 dMij(G,0,0) = G11;
@@ -351,15 +367,16 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
                 G.inv(invG);
                 R = invG*b;
 
-                //                A2D_ELEM(dirMap,indi[k],indj[k]) = std::atan2(-VEC_ELEM(R,0),VEC_ELEM(R,1));
                 A2D_ELEM(dirMap,indi[k],indj[k]) = std::atan2(-VEC_ELEM(R,1),VEC_ELEM(R,0));
                 A2D_ELEM(processed,indi[k],indj[k]) = true;
                 A2D_ELEM(px,indi[k],indj[k]) = VEC_ELEM(R,0);
                 A2D_ELEM(py,indi[k],indj[k]) = VEC_ELEM(R,1);
 
+
                 H = A2D_ELEM(qualityMapInt,indi[k],indj[k]);
                 if ( H == 0)
                     H = 1;
+
 
                 if ( VEC_ELEM(final,H) ==  maxElem )
                     VEC_ELEM(final,H) = 1;
@@ -371,6 +388,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 
                 if ( VEC_ELEM(front,H) ==  0 )
                     VEC_ELEM(front,H) =  1;
+
 
                 G11 = 0;
                 G12 = 0;
@@ -407,7 +425,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
                         VEC_ELEM(front,k) += 1;
             }
 
-            k -= 1;
+            --k;
         }
     }
 }
@@ -418,6 +436,7 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     //First we perform some setup stuff
     int nx = XSIZE(wrappedPhase);
     int ny = YSIZE(wrappedPhase);
+    double minQuality = 0.01;
 
     Histogram1D hist;
     int no_steps = 10, maxElem = 0, k;
@@ -488,7 +507,7 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
 
         for(int k = 0; k< 8 ; k++)
             if ( (A2D_ELEM(processed,indi[k],indj[k]) == 0) && (indi[k] > size-1 ) && (indi[k] < nx-size )
-                 && (indj[k] > size-1 ) && (indj[k] < ny-size ) )
+                 && (indj[k] > size-1 ) && (indj[k] < ny-size ) &&  (A2D_ELEM(qualityMap,indi[k],indj[k]) > minQuality) )
             {
                 wp =  A2D_ELEM(wrappedPhase,indi[k],indj[k]);
 
@@ -569,6 +588,94 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
 
             k -= 1;
         }
+
+    }
+
+}
+
+void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose)
+{
+    //Initial Setup
+    MultidimArray< double > In, orMap, orModMap, dir, wphase;
+    MultidimArray< std::complex<double> > sph;
+
+    In.resizeNoCopy(im);
+    orMap.resizeNoCopy(im);
+    orModMap.resizeNoCopy(im);
+    dir.resizeNoCopy(im);
+    wphase.resizeNoCopy(im);
+    sph.resizeNoCopy(im);
+
+    //We obtain previous necessary maps
+    //Normalized version of im and modulation map
+    normalize(im,In,mod,R,S);
+
+    Image<double> save;
+    if (verbose == 1)
+    {
+	   save()=In;
+	   save.write("PPP1.xmp");
+    }
+
+    STARTINGX(mod)=STARTINGY(mod)=0;
+    //Orientation map of the fringes
+    orMinDer(In, orMap, orModMap, size);
+    if (verbose == 2)
+    {
+	   save()=orMap;
+	   save.write("PPP2.xmp");
+    }
+
+    //We obtain the direction from the orientation map
+    direction(orMap, orModMap, lambda, size, dir);
+    if (verbose == 3)
+    {
+	   save()=dir;
+	   save.write("PPP3.xmp");
+    }
+    //Spiral transform of the normalized image
+    SPTH(In,sph);
+    STARTINGX(sph)=STARTINGY(sph)=0;
+    STARTINGX(In)=STARTINGY(In)=0;
+
+    // We obtain the wrapped phase
+    std::complex<double> ci = std::complex<double>(0,1.0);
+    std::complex<double> temp;
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(im)
+    {
+        temp = -ci*std::exp(ci*A2D_ELEM(dir,i,j))*A2D_ELEM(sph,i,j);
+        A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
+    }
+
+    if (verbose == 4)
+    {
+	   save()=wphase;
+	   save.write("PPP3.xmp");
+    }
+    //Finally we obtain the unwrapped phase
+    unwrapping(wphase, mod, lambda, size, phase);
+
+    if (verbose == 5)
+    {
+	   save()=phase;
+	   save.write("PPP4.xmp");
+    }
+
+    if (verbose > 5)
+    {
+	   save()=In;
+	   save.write("PPP1.xmp");
+	   save()=orMap;
+	   save.write("PPP2.xmp");
+	   save()=dir;
+	   save.write("PPP3.xmp");
+	   save()=wphase;
+	   save.write("PPP4.xmp");
+	   save()=phase;
+	   save.write("PPP5.xmp");
+	   save()=mod;
+	   save.write("PPP6.xmp");
 
     }
 

@@ -35,9 +35,13 @@
 class FringeProcessing
 {
 
+protected:
+
+	MultidimArray<std::complex<double> > sph;
+
 public:
 
-	enum FP_TYPE { SIMPLY_OPEN_FRINGES, SIMPLY_CLOSED_FRINGES, COMPLEX_OPEN_FRINGES, COMPLEX_CLOSED_FRINGES };
+	enum FP_TYPE { SIMPLY_OPEN_FRINGES, SIMPLY_CLOSED_FRINGES, COMPLEX_OPEN_FRINGES, COMPLEX_CLOSED_FRINGES, SIMPLY_CLOSED_FRINGES_MOD };
 
 	//Function to simulate some test fringe patterns
     void simulPattern(MultidimArray<double> & im, enum FP_TYPE type, int xdim, int ydim, double noiseLevel, const double freq, Matrix1D<int> coefs);
@@ -71,10 +75,23 @@ public:
     //vector-field-regularized estimator J. Opt. Soc. Am. A Vol. 22, No. 12, (2005)
     void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap);
 
-    //https://ccrma.stanford.edu/~jos/filters/Impulse_Response_Representation.html
+    //This method performs the phase unwrapping process obtaining the absolute phase from a wrapped phase that has 2pi jumps. The method is an improved version
+    //of the work presented in:
+    //Miguel A. Navarro, Julio C. Estrada, M. Servin, Juan A. Quiroga, and Javier Vargas,
+    //"Fast two-dimensional simultaneous phase unwrapping and low-pass filtering," Opt. Express 20, 2556-2561 (2012)
     void unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & unwrappedPhase);
 
-protected:
+    //This method performs all the process to demodulate a CTF (im) in order to obtain the phase and the envelope that it is called mod. The method calls the rest of
+    //the methods for this purpose.  R and S are rough estimations of the number of fringes in the image (R) and S is the variance of the exponential that filter the frequency of the fringes.
+    //lambda and size is the regularization parameter and the window size where the regularization it is performed. In order to see typical values of these
+    //parameters see the test: test_fringe_processing_main.cpp
+    //COMMENTS: verbose is an argument to save intermediate maps
+    //verbose == 1 saves the normalize map of the fringe pattern
+    //verbose == 2 saves the orientation map of the fringe pattern
+    //verbose == 3 saves the direction map
+    //verbose == 4 saves the wrapped phase map
+    //verbose == 5 saves all
+    void demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose=0);
 
 };
 
