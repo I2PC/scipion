@@ -562,11 +562,15 @@ class XmippProjectGUI():
             
     def getLastRunDict(self):
         if self.lastRunSelected:
-            from protlib_sql import runColumns
-            run = dict(zip(runColumns, self.lastRunSelected))
-            run['source'] = run['script']        
-            return run
+            return self.getZippedRun(self.lastRunSelected)
         return None
+    
+    def getZippedRun(self, run):
+        from protlib_sql import runColumns
+        zrun = dict(zip(runColumns, run))
+        zrun['source'] = zrun['script']        
+        return zrun
+        
     
     def runButtonClick(self, event=None):
         #FlashMessage(self.root, 'Opening...', delay=1)
@@ -791,6 +795,12 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("   alias -l;"); 
         self.addParamsLine("[ --details <runName>  ]            : Print details about some run");
         self.addParamsLine("   alias -d;"); 
+        self.addParamsLine("[ --create_run <protName>  ]        : Create a new run of a protocol");
+        #self.addParamsLine("   alias -e;");
+        self.addParamsLine("[ --copy_run <runName>  ]           : Create a copy of an existing run");
+        self.addParamsLine("   alias -p;");
+        self.addParamsLine("[ --delete_run <protName>  ]        : Delete an existing run");
+        self.addParamsLine("   alias -e;");
         self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
         self.addParamsLine("   alias -c;"); 
         
@@ -802,9 +812,8 @@ class ScriptProtocols(XmippScript):
     def run(self):
         proj_dir = os.getcwd()
         project = XmippProject(proj_dir)
-        self.root = tk.Tk()
-        self.root.withdraw()
         launch = True
+
         if self.checkParam('--clean'):
             msg = 'You are in project: %s\n' % proj_dir
             msg += '<ALL RESULTS> will be <DELETED>, are you sure to <CLEAN>?'
@@ -814,6 +823,7 @@ class ScriptProtocols(XmippScript):
             else:
                 print "CLEAN aborted."
         elif self.checkParam('--list'):
+            print cyanStr("PROJECT: "), greenStr(os.path.basename(proj_dir))
             launch = False
             project.load()
             runs, stateList = project.getStateRunList(checkDead=True)
@@ -839,7 +849,12 @@ class ScriptProtocols(XmippScript):
             except Exception, e:
                 print redStr("Run %s not found" % runName)
                 #print redStr("ERROR:"), e
-                
+        elif self.checkParam('--create_run'):
+            pass
+        elif self.checkParam('--copy_run'):
+            pass
+        elif self.checkParam('--delete_run'):
+            pass      
                 
         else: #lauch project     
             if not project.exists():    
@@ -853,6 +868,8 @@ class ScriptProtocols(XmippScript):
             else:
                 project.load()
         if launch:
+            self.root = tk.Tk()
+            self.root.withdraw()
             gui = XmippProjectGUI(project)
             gui.createGUI(self.root)
             gui.launchGUI()

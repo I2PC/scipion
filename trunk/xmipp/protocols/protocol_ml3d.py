@@ -35,9 +35,7 @@ class ProtML3D(XmippProtocol):
                  ('Reference image', self.RefMd)]
         
         logs = self.getFilename('iter_logs')   
-        print "logs: ", logs 
         if exists(logs):
-            print "exits"
             md = MetaData(logs)
             objId = md.lastObject()
             iteration = md.getValue(MDL_ITER, objId)
@@ -84,14 +82,10 @@ class ProtML3D(XmippProtocol):
     # Crude correction of grey-scale, by performing a single iteration of 
     # projection matching and fourier reconstruction
     def insertCorrectGreyScaleSteps(self):
-    #    print '*********************************************************************'
-    #    print '*  Correcting absolute grey scale of initial reference:'
+        ''' Correct the initial reference greyscale '''
         cgsDir = self.workingDirPath('CorrectGreyscale')
         self.insertStep('createDir', path=cgsDir)
         volStack = self.ParamsDict['InitialVols'] = join(cgsDir, 'corrected_volumes.stk')
-        #FIXME: better to create an empty file
-        #self.insertStep('copyVolumes', [volStack], 
-        #                       inputMd=self.RefMd, outputStack=volStack)
         md  = MetaData(self.RefMd)
         index = 1
         for idx in md:
@@ -117,11 +111,12 @@ class ProtML3D(XmippProtocol):
             self.insertRunJob('xmipp_angular_projection_matching', ['projMatch'])
  
 #FIXME: COMMENTED THIS STEP UNTIL COMPLETION BY ROBERTO    
-#            params = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
-#            insertRunJob('xmipp_angular_class_average', [corrRefs])
+#            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
+#            self.insertRunJob('xmipp_angular_class_average', ['corrRefs'])
 
             self.ParamsStr = '-i %(projMatch)s -o %(outputVol)s --sym %(Symmetry)s --weight --thr %(NumberOfThreads)d'
-            self.insertRunJob('xmipp_reconstruct_fourier')
+            self.insertRunJob('xmipp_reconstruct_fourier', ['outputVol'])
+            index += 1
         
     def insertFilterStep(self):
         self.ParamsDict['FilteredVols'] = 'filtered_volumes.stk'
@@ -129,20 +124,56 @@ class ProtML3D(XmippProtocol):
         self.insertRunJob('xmipp_transform_filter', ['FilteredVols'])
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
         
+    def insertGenerateRefSteps(self):
+        ''' Generete more reference volumes than provided in input reference '''
+        grDir = self.workingDirPath('GenerateReferences')
+        self.insertStep('createDir', path=grDir)
+        volStack = self.ParamsDict['InitialVols'] = join(grDir, 'corrected_volumes.stk')
+        md  = MetaData(self.RefMd)
+        index = 1
+        for idx in md:
+            volDir = join(grDir, 'vol%03d' % index)
+            projs = join(volDir, 'projections')
+            self.insertStep('createDir', path=volDir)
+            self.ParamsDict.update({
+                'inputVol': md.getValue(MDL_IMAGE, idx),
+                'outputVol': "%(index)d@%(volStack)s" % locals(),
+                'projRefs': projs + ".stk",
+                'docRefs': projs + ".doc",
+                'corrRefs': join(volDir, 'corrected_refs.stk'),
+                'projMatch': join(volDir, "proj_match.doc")
+                })
+            
+            self.ParamsStr = ' -i %(inputVol)s --experimental_images %(ImgMd)s -o %(projRefs)s' + \
+                    ' --sampling_rate %(ProjMatchSampling)d --sym %(Symmetry)s' + \
+                    'h --compute_neighbors --angular_distance -1' 
+                       
+            self.insertRunJob('xmipp_angular_project_library', ['projRefs', 'docRefs'])
+
+            self.ParamsStr = '-i %(ImgMd)s -o %(projMatch)s --ref %(projRefs)s' 
+            self.insertRunJob('xmipp_angular_projection_matching', ['projMatch'])
+ 
+#FIXME: COMMENTED THIS STEP UNTIL COMPLETION BY ROBERTO    
+#            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
+#            self.insertRunJob('xmipp_angular_class_average', ['corrRefs'])
+
+            self.ParamsStr = '-i %(projMatch)s -o %(outputVol)s --sym %(Symmetry)s --weight --thr %(NumberOfThreads)d'
+            self.insertRunJob('xmipp_reconstruct_fourier')
+            index += 1
+        
+        
     def insertML3DStep(self):
         self.ParamsStr = "-i %(ImgMd)s --oroot %(ORoot)s --ref %(InitialVols)s --iter %(NumberOfIterations)d " + \
                          "--sym %(Symmetry)s --ang %(AngularSampling)s %(ExtraParams)s"
-        if self.NumberOfReferences > 1:
-            self.ParamsStr += " --nref %(NumberOfReferences)s"
+#        if self.NumberOfReferences > 1:
+#            self.ParamsStr += " --nref %(NumberOfReferences)s"
         if self.NumberOfThreads > 1:
             self.ParamsStr += " --thr %(NumberOfThreads)d"
         if self.DoNorm:
             self.ParamsStr += " --norm"
         
         if self.DoMlf:
-            if self.DoCorrectAmplitudes:
-                self.ParamsStr += ' --ctfdat %(ctfFile)d'
-            else:
+            if not self.DoCorrectAmplitudes:
                 self.ParamsStr += ' --no_ctf --pixel_size %(PixelSize)f'
             if not self.ImagesArePhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
@@ -160,8 +191,7 @@ def copyVolumes(log, inputMd, outputStack):
     deleteFile(log, outputStack)
     md = MetaData(inputMd)
     img = Image()
-    i = 1
-    for idx in md:
+
+    for i, idx in enumerate(md):
         img.read(md.getValue(MDL_IMAGE, idx))
-        img.write('%d@%s' % (i, outputStack))
-        i += 1
+        img.write('%d@%s' % (i + 1, outputStack))

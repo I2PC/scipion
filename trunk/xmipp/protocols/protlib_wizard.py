@@ -347,7 +347,7 @@ def validatorValidRun(var):
     ''' Check if the variable value is a valid posible run '''
     project = XmippProject()
     project.load()
-    runList = project.getRunList(var.getTagValues('run'))
+    runList = project.getFinishedRunList(var.getTagValues('run'))
     run = var.getTkValue()
     if not run in runList:
         err = "Run <%s> is not valid" % run

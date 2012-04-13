@@ -1179,12 +1179,16 @@ def mdOnClick(filename, browser):
         msg = "<Metadata Block>\n" + getMdString(filename, browser)
     return msg
         
-def mdFillMenu( filename, browser):
+def mdFillMenu(filename, browser):
     menu = browser.menu
     menu.add_command(label="Open", command=lambda: showj(filename, 'metadata'))
     menu.add_command(label="Open as Images table", command=lambda:showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda: showj(filename, 'image'))
     menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
+    from xmipp import MetaData, MDL_MICROGRAPH
+    md = MetaData(filename)
+    if md.containsLabel(MDL_MICROGRAPH):
+        menu.add_command(label="PSD preview", command=lambda: showCTFPreview(filename, parent=browser.parent, md=md))
     return True
 
 def mdOnDoubleClick(filename, browser):
@@ -1227,6 +1231,7 @@ def volFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda:showj(filename, 'image'))
     menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
+    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, volFn=filename))
     return True
 
 def volOnDoubleClick(filename, browser):
@@ -1458,7 +1463,6 @@ class XmippBrowser():
         
     #Functions for handling events
     def onDoubleClick(self, e=None):
-        print "double Click"
         item, fm = self.getSelection()
         if fm:
             fm.onDoubleClick(item, self)
@@ -1812,6 +1816,29 @@ class XmippBrowserBadpixelFilter(XmippBrowserGaussianFilter):
         dustRemovalThreshold = float(self.getResults())
         return lambda: badPixelFilter(self.image, self.lastitem, dustRemovalThreshold, self.dim)
 
+class XmippBrowserMask(XmippBrowser):
+    ''' Preview the middle slice and select a circular mask '''
+    def __init__(self, volFn=None, **args):
+        XmippBrowser.__init__(self, **args)
+        self.volFn = volFn
+        
+    def createDetailsTop(self, parent):
+        from xmipp import Image
+        from protlib_xmipp import getImageData
+        from protlib_gui_figure import ImagePreview
+        XmippBrowser.createDetailsTop(self, parent)
+        self.root.minsize(800, 400)        
+        self.preview = ImagePreview(self.detailstop, self.dim, label="Central slice")
+        self.detailstop.columnconfigure(1, weight=1)
+        ## Read volume preview and update
+        image = Image(self.volFn)
+        image.readPreview(self.volFn, self.dim)
+        Z = getImageData(self.image)
+        self.preview.updateData(Z)               
+        return self.detailstop
+    
+    def insertFiles(self, path):
+        self.insertElement('', self.volFn)
 
 '''Show Xmipp Browser and return selected files'''
 def showBrowseDialog(path='.', title='', parent=None, main=False, browser=XmippBrowser, **args):
@@ -1849,5 +1876,15 @@ def showTiltPairsDialog(pairsList, parent=None):
     root.wait_window(root)
     return tiltPairs.result
     
-   
+#Helper function to select Downsampling wizards
+def showCTFPreview(mdPath, parent=None, md=None):  
+    path = os.path.dirname(mdPath)
+    from xmipp import MetaData
+    if md is None:
+        md = MetaData(mdPath)
+    results = showBrowseDialog(path=path, browser=XmippBrowserCTF, title="PSD Preview", parent=parent,
+                                    seltype="file", selmode="browse", filter=None, previewDim=256, 
+                                    extra={'freqs':None, 'downsampling':1, 'previewLabel': 'Micrograph', \
+                                           'computingMessage': 'Estimating PSD...', 'md':md}) # a list is returned
+
     

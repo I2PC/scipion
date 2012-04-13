@@ -105,14 +105,6 @@ class PsdPreview(Preview):
         ax.grid(True)
         self.ring = None
         self.img = ax.imshow(self.bg, cmap=cm.gray, extent=[-h, h, -h, h])
-#        for direction in ["xzero", "yzero"]:
-#            ax.axis[direction].set_visible(True)
-        
-#        print "minor", ax.axis['xzero'].minor_ticklabels
-#        print 'major', ax.axis['xzero'].major_ticklabels
-        
-#        for direction in ["left", "right", "bottom", "top"]:
-#            ax.axis[direction].set_visible(False)
         self.ax = ax
         
     def createRing(self):
