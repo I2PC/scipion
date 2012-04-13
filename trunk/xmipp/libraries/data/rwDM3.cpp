@@ -547,6 +547,9 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
 
     }
 
+    if (dataHeaders.size() == 0)
+        REPORT_ERROR(ERR_IMG_NOREAD,formatString("readDM3: Image information not found in file %s",filename.c_str()));
+
     int _xDim,_yDim;
     size_t _nDim;
     _xDim = dataHeaders[0].imageWidth;
