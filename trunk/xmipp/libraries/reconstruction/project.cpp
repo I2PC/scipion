@@ -968,12 +968,15 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
         proj_prm.from_prog_params(prm);
     side.produce_Side_Info(proj_prm, prm);
     Crystal_Projection_Parameters crystal_proj_prm;
-	MetaData MD;
-	size_t objId;
+    if (prm.fn_proj_param != "")
+    {
+           MetaData MD;
+           size_t objId;
 
-	MD.read((std::string)"block1@"+prm.fn_proj_param);
-	objId = MD.firstObject();
-	doCrystal = MD.getValue(MDL_CRYSTAL_PROJ,doCrystal,objId);
+           MD.read((std::string)"block1@"+prm.fn_proj_param);
+           objId = MD.firstObject();
+           doCrystal = MD.getValue(MDL_CRYSTAL_PROJ,doCrystal,objId);
+    }
 	if (doCrystal)
     {
 		crystal_proj_prm.read(prm.fn_proj_param,
