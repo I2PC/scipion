@@ -46,18 +46,25 @@ class ProtImportMicrographs(XmippProtocol):
     def validate(self):
         errors = []
         # Check that there are any micrograph to process
-        if len(self.getMicrographs()) == 0:
+        micrographList=self.getMicrographs()
+        if len(micrographList) == 0:
             errors.append("There are no micrographs to process in " + self.PatternMicrographs)
-        if self.SamplingRateMode == "From image":
-            try:
-                AngPix = float(self.SamplingRate)
-            except:
-                errors.append("Sampling rate is not correctly set")
         else:
-            try:
+            for micrograph in micrographList:
+                try:
+                    if not xmipp.checkImageFileSize(micrograph):
+                        errors.append(micrograph+" seems to be corrupted")
+                    # COSS: if not xmipp.checkImageCorners(micrograph):
+                    # COSS:    errors.append("Check corners of "+micrograph)
+                except Exception:
+                    errors.append(micrograph+" seems to be corrupted")
+        try:
+            if self.SamplingRateMode == "From image":
+                AngPix = float(self.SamplingRate)
+            else:
                 scannedPixelSize=float(self.ScannedPixelSize)
-            except:
-                errors.append("Sampling rate is not correctly set")
+        except:
+            errors.append("Sampling rate is not correctly set")
         return errors
 
     def summary(self):
@@ -145,7 +152,7 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
     micrographs.sort()
     for m in micrographs:
         md.setValue(MDL_MICROGRAPH, m, md.addObject())
-    md.write(MicrographFn)
+    md.write("micrographs@"+MicrographFn)
     mdAcquisition = MetaData()
     mdAcquisition.setValue(xmipp.MDL_SAMPLINGRATE,float(PixelSize),mdAcquisition.addObject())
     mdAcquisition.write("acquisition_info@"+MicrographFn,xmipp.MD_APPEND)
@@ -159,5 +166,5 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
             id2 = md.addObject()
             md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
             md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)
-        md.write(TiltedFn)
+        md.write("micrographPairs@"+TiltedFn)
         mdAcquisition.write("acquisition_info@"+TiltedFn,xmipp.MD_APPEND)
