@@ -352,7 +352,7 @@ void MpiProgAngularClassAverage::mpi_process_loop(double * Def_3Dref_2Dref_JobNo
 
 void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
-    //#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     std::cerr<<"["<<node->rank<<"]"
     << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
@@ -445,7 +445,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         img.read(fn_img);
         img().setXmippOrigin();
         img.setEulerAngles(0., 0., psi);
-        img.setShifts(xshift, yshift);
+        img.setShifts(-xshift, -yshift);
 
         if (do_mirrors)
             img.setFlip(mirror);
@@ -496,8 +496,29 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass2.setValue(MDL_ORDER, order_number, id);
         }
 
-    }
+//#define DEBUG
+#ifdef DEBUG
+        //WRITE IMAGES TO AVERAGE
+        FileName fn_tmp1;
+        int static static_i=0;
+        static_i++;
+        formatStringFast(fn_tmp1, "test_img_%06d.spi", static_i);
+        img.write(fn_tmp1);
+        formatStringFast(fn_tmp1, "test_avg_%06d.spi", static_i);
+        avg1.write(fn_tmp1);
+        std::cout << fn_img
+        		  << psi
+        		  << A <<std::endl;
+        if (static_i> 25)
+        {
+            std::cerr << "static_i:" << static_i << std::endl;
+            _DF.write("DF.xmd");
+            exit(1);
+        }
+#endif
+#undef DEBUG
 
+    }
     // Re-alignment of the class
     if (nr_iter > 0)
     {
@@ -1126,6 +1147,8 @@ void MpiProgAngularClassAverage::createJobList()
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
+//    mdJobList.write("mdJobList");
+//    exit(1);
     numberOfJobs = mdJobList.size();
 }
 
