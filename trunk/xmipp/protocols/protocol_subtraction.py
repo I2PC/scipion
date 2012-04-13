@@ -48,8 +48,11 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         # Check these params
         self.DoDeleteWorkingDir = False
         
-        self.CtfGroupDirectory = "CtfGroups"
+        self.CtfGroupDirectoryName = "CtfGroups"
         self.CtfGroupRootName =  "ctf"
+        self.localStackCTFs = "ctf_ctf.stk"
+        self.localDocCTFs = "ctf_images.sel"
+
         
 
     def ImportProtocol(self):
@@ -74,7 +77,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             
 
 #        self.defocusGroupNo = importProt.NumberOfCtfGroups
-        file_name_tmp = join(self.CtfGroupDirectory, self.CtfGroupRootName) +'Info.xmd'
+        file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
         file_name = join(self.pmprotWorkingDir, file_name_tmp)
         print "file_name: ", file_name
                          
@@ -166,7 +169,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         extraParams = {'ReferenceVolumeName': 'reference_volume.vol',
 #        'LibraryDir': LibraryDir,
 #        'ProjectLibraryRootName': join(LibraryDir, "gallery"),
-        'ProjSubDir': "xxx",
+        'ProjSubDir': "ProjSub",
 #        'ProjMatchName': self.Name,
 #        'ClassAverageName': 'class_average',
 #        #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
@@ -188,8 +191,9 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         'CtfGroupRecRootName':'rec_ctfg',
         'VolsDir': 'Vols',
         'ReferencesDir': 'Refs',
-        'SubtractionsDir': 'Subs',
-        #
+        'SubtractionsDir': 'SubImgs',
+        'ScaledXmd': 'scaled.xmd',
+        'ScaledStk': 'scaled.stk',
         'CtfGroupSubsetFileName': "ctf_images.sel"
         }
         
@@ -198,14 +202,16 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         for k, v in extraParams.iteritems():
             setattr(self, k, v)
 #                              
-        Iter = 'Iter_%(iter)03d'
-        Ref3D = 'Ref3D_%(ref)03d'
-        Ctf = 'CtfGroup_%(ctf)06d'
-        Vol = 'Rec' + Ctf
-        IterDir = self.workingDirPath(Iter)
+        #Iter = 'Iter_%(iter)03d'
+        Ref3D = 'refGroup%(ref)03d'
+        Ctf = 'ctfGroup%(ctf)06d'
+        Vol = 'Rec_' + Ctf
+#        IterDir = self.workingDirPath(Iter)
 #        
 #        #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
-        ProjSubDirs = join(IterDir, '%(ProjSubDir)s')
+        #ProjSubDirs = join(IterDir, '%(ProjSubDir)s')
+        StackCTFs = join('%(CtfGroupDirectory)s', 'ctf_ctf.stk')
+        DocCTFs = join('%(CtfGroupDirectory)s', 'ctf_images.sel')
 #        _OutClassesXmd = join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.xmd')
 #        _OutClassesXmdS1 = join(ProjMatchDirs, '%(ProjMatchName)s_split_1_' + Ref3D + '.xmd')
 #        _OutClassesXmdS2 = join(ProjMatchDirs, '%(ProjMatchName)s_split_2_' + Ref3D + '.xmd')
@@ -213,8 +219,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 #        ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref3D)
         return {
                 # Global filenames templates
-                'IterDir': IterDir,
-                'ProjSubDirs': ProjSubDirs,
+#                'IterDir': IterDir,
+#                'ProjSubDirs': ProjSubDirs,
 #                'DocfileInputAnglesIters': join(IterDir, '%(Docfile_with_current_angles)s.doc'),
 #                'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
 #                'ProjectLibraryRootNames': ProjLibRootNames,
@@ -231,8 +237,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 #                'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.vol'),
 #            tmpReconstruct = os.path.join(self.volsDir, 'rec_ctfg' + str(iterN).zfill(6) + '.vol')
 
-                'ReconstructedFileNamesIters': join('%(VolsDir)s', Vol + '.vol'),
-                'ReconstructedMaskedFileNamesIters': join('%(VolsDir)s', Vol + '_masked.vol'),
+                'ReconstructedFileNamesIters': self.workingDirPath(join('%(VolsDir)s', Vol + '.vol')),
+                'ReconstructedMaskedFileNamesIters': self.workingDirPath(join('%(VolsDir)s', Vol + '_masked.vol')),
 
 #                'ReconstructedFileNamesItersSplit1': join(IterDir, '%(ReconstructedVolume)s_split_1_' + Ref3D + '.vol'),
 #                'ReconstructedFileNamesItersSplit2': join(IterDir, '%(ReconstructedVolume)s_split_2_' + Ref3D + '.vol'),
@@ -244,13 +250,18 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 #                # Particular templates for executeCtfGroups  
 #                'ImageCTFpairs': CtfGroupBase + '_images.sel',
 #                'CTFGroupSummary': CtfGroupBase + 'Info.xmd',
-                'StackCTFs': Ctf + '@ctf_ctf.stk',
-                'SubCurrentAngles': Ctf + '@' + '%(LocalCurrentAngles)s',
-                'SubCurrentAnglesCftGroups': Ctf + '@' + '%(LocalCurrentAnglesCtfGroups)s',
-                'ReferenceStack'   : join('%(ReferencesDir)s','ref_'+ Ctf + '.stk'),
-                'ReferenceStackDoc': join('%(ReferencesDir)s','ref_'+ Ctf + '.doc'),
-                'SubtractedStack'  : join('%(SubtractionsDir)s','sub_'+ Ctf + '.stk'),
-                'SubtractedDoc'    : join('%(SubtractionsDir)s','sub_'+ Ctf + '.doc')
+                'DocCTFsBlocks' : Ctf + '@' + self.workingDirPath(DocCTFs),
+                'StackCTFsBlocks' : Ctf + '@' + self.workingDirPath(StackCTFs),
+                'ScaledXmdBlocks': self.workingDirPath('%(ScaledXmd)s'),
+                'ScaledXmdBlocks': self.workingDirPath('%(ScaledXmd)s'),
+                'SubCurrentAngles': Ctf + '@' + self.workingDirPath('%(LocalCurrentAngles)s'),
+                'SubCurrentAnglesAllExpImgs': 'all_exp_images@' + self.workingDirPath('%(LocalCurrentAngles)s'),
+                'SubCurrentAnglesCftGroups': Ctf + '@' + self.workingDirPath('%(LocalCurrentAnglesCtfGroups)s'),
+                'SubCurrentAnglesCftGroupsAllExpImgs': 'all_exp_images@' + self.workingDirPath('%(LocalCurrentAnglesCtfGroups)s'),
+                'ReferenceStack'   : self.workingDirPath(join('%(ReferencesDir)s','ref_'+ Ctf + '.stk')),
+                'ReferenceStackDoc': self.workingDirPath(join('%(ReferencesDir)s','ref_'+ Ctf + '.doc')),
+                'SubtractedStack'  : self.workingDirPath(join('%(SubtractionsDir)s','sub_'+ Ctf + '.stk')),
+                'SubtractedDoc'    : self.workingDirPath(join('%(SubtractionsDir)s','sub_'+ Ctf + '.doc'))
 #                'StackWienerFilters': CtfGroupBase + '_wien.stk',
 #                'SplitAtDefocus': CtfGroupBase + '_split.doc',
 #                # Particular templates for angular_project_library 
@@ -334,6 +345,15 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         
         self.localFilenameCurrentAngles = self.workingDirPath(self.localCurrentAngles)
         
+        self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectoryName)
+        tmpCTFname = join(self.CtfGroupDirectoryName,self.localStackCTFs)
+        self.projmatchStackCTFs = join(self.pmprotWorkingDir,tmpCTFname)
+        self.localStackCTFs = self.workingDirPath(tmpCTFname)
+        
+        tmpCTFname = join(self.CtfGroupDirectoryName,self.localDocCTFs)
+        self.projmatchDocCTFs = join(self.pmprotWorkingDir,tmpCTFname)
+        self.localDocCTFs = self.workingDirPath(tmpCTFname)
+                
         if(self.MaxChangeInAngles > 100):
             self.MaxChangeInAngles=-1
             
@@ -442,11 +462,11 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         _dataBase.insertStep('createDir', path = self.volsDir)
         _dataBase.insertStep('createDir', path = self.referenceDir)
         _dataBase.insertStep('createDir', path = self.subImgsDir)
-        
+        _dataBase.insertStep('createDir', path = self.CtfGroupDirectory)
 #        copyFile(_log, self.filename_currentAngles, self.localFilenameCurrentAngles)
         _dataBase.insertStep('copyFile',source=self.filename_currentAngles, dest=self.localFilenameCurrentAngles)
-#        print "[Alex] stop"
-#        exit(0)
+        _dataBase.insertStep('copyFile',source=self.projmatchStackCTFs, dest=self.localStackCTFs)
+        _dataBase.insertStep('copyFile',source=self.projmatchDocCTFs, dest=self.localDocCTFs)
 
         if(self.doScaleImages):
             _VerifyFiles = [self.scaledImages+".stk"]
@@ -454,7 +474,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             id = _dataBase.insertStep('scaleImages', verifyfiles = _VerifyFiles
                                        , dimX = self.dimX
                                        , dimY = self.dimY
-                                       , filename_currentAngles = self.localFilenameCurrentAngles
+                                       , filename_currentAngles = self.getFilename('SubCurrentAnglesAllExpImgs')
                                        , MpiJobSize = self.MpiJobSize
                                        , NumberOfMpi = self.NumberOfMpi
                                        , NumberOfThreads = self.NumberOfThreads
@@ -475,21 +495,21 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             else:
                 inputSelfile = self.filename_currentAngles
                             
-            if(self.defocusGroupNo > 2 and self.doScaleImages):
+            if(self.defocusGroupNo > 1 and self.doScaleImages):
                 _VerifyFiles = []
                 auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN))
                 _VerifyFiles.append(auxFilename.removeBlockName())
                 id = self.Db.insertStep('joinImageCTFscale', verifyfiles = _VerifyFiles
-                                        , CTFgroupName = self.getFilename('StackCTFs', ctf=iterN)
+                                        , CTFgroupName = self.getFilename('DocCTFsBlocks', ctf=iterN)
                                         , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN)
                                         , inputSelfile = inputSelfile
                                         )
-            elif (self.defocusGroupNo > 2 and not self.doScaleImages):
+            elif (self.defocusGroupNo > 1 and not self.doScaleImages):
                 _VerifyFiles = []
                 auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN))
                 _VerifyFiles.append(auxFilename.removeBlockName())
                 id = self.Db.insertStep('joinImageCTF', verifyfiles = _VerifyFiles
-                                        , CTFgroupName =  self.getFilename('StackCTFs', ctf=iterN)
+                                        , CTFgroupName =  self.getFilename('DocCTFsBlocks', ctf=iterN)
                                         , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN)
                                         , inputSelfile = inputSelfile
                                         )                
@@ -521,10 +541,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
     
             #project reconstructe4d volumes
             _VerifyFiles = []
-            _VerifyFiles.append(self.getFilename('ReferenceStack', ctf=iterN))
-            tmp = self.referenceStack[iterN]
-            _VerifyFiles.append(tmp.replace('.stk','.doc'))
-            _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
+#            _VerifyFiles.append(self.getFilename('ReferenceStack', ctf=iterN))
+#            tmp = self.referenceStack[iterN]
+#            _VerifyFiles.append(tmp.replace('.stk','.doc'))
+#            _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
             id = self.Db.insertStep('createProjections', verifyfiles = _VerifyFiles
                                         , AngSamplingRateDeg = self.AngSamplingRateDeg
