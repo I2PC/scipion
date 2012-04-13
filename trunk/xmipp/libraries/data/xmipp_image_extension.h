@@ -53,6 +53,10 @@ bool isImage(const FileName &name);
 bool checkImageFileSize(const FileName &name, const ImageInfo &imgInfo, bool error = false);
 bool checkImageFileSize(const FileName &name, bool error = false);
 
+/** Check if image corners have the same variance as the central part of the image.
+ * The test of equality of variances F-Snedecor is applied with 99.99% of confidence
+ */
+bool checkImageCorners(const FileName &name);
 //@}
 
 #endif /* XMIPP_IMAGE_EXTENSION_H_ */

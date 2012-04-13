@@ -89,3 +89,66 @@ bool checkImageFileSize(const FileName &name, bool error)
 
     return checkImageFileSize(name, imgInfo, error);
 }
+
+bool checkImageCorners(const FileName &name)
+{
+	const int windowSize=11;
+	const int windowSize_2=windowSize/2;
+	const double Flower=0.4871; // MATLAB: N=11*11-1; finv(0.00005,N,N)
+	const double Fupper=2.0530; // MATLAB: N=11*11-1; finv(0.99995,N,N)
+
+	ImageGeneric I;
+	I.readMapped(name);
+	int Xdim, Ydim, Zdim;
+	I.getDimensions(Xdim,Ydim,Zdim);
+	if (Zdim>1)
+		return true;
+	if (Xdim<=2*windowSize || Ydim<=2*windowSize)
+		return true;
+
+	MultidimArray<double> window;
+	int i=Ydim/2;
+	int j=Xdim/2;
+	I().window(window,0,0,i-windowSize_2,j-windowSize_2,0,0,i+windowSize_2,j+windowSize_2);
+	double stddev0=window.computeStddev();
+	double var0=stddev0*stddev0;
+	std::cout << "Var0=" << var0 << std::endl;
+
+	i=windowSize_2;
+	j=windowSize_2;
+	I().window(window,0,0,i-windowSize_2,j-windowSize_2,0,0,i+windowSize_2,j+windowSize_2);
+	double stddev1=window.computeStddev();
+	double var1=stddev1*stddev1;
+	double F=var1/var0;
+	if (F<Flower || F>Fupper)
+		return false;
+
+	i=Ydim-1-windowSize_2;
+	j=windowSize_2;
+	I().window(window,0,0,i-windowSize_2,j-windowSize_2,0,0,i+windowSize_2,j+windowSize_2);
+	stddev1=window.computeStddev();
+	var1=stddev1*stddev1;
+	F=var1/var0;
+	if (F<Flower || F>Fupper)
+		return false;
+
+	i=windowSize_2;
+	j=Xdim-1-windowSize_2;
+	I().window(window,0,0,i-windowSize_2,j-windowSize_2,0,0,i+windowSize_2,j+windowSize_2);
+	stddev1=window.computeStddev();
+	var1=stddev1*stddev1;
+	F=var1/var0;
+	if (F<Flower || F>Fupper)
+		return false;
+
+	i=Ydim-1-windowSize_2;
+	j=Xdim-1-windowSize_2;
+	I().window(window,0,0,i-windowSize_2,j-windowSize_2,0,0,i+windowSize_2,j+windowSize_2);
+	stddev1=window.computeStddev();
+	var1=stddev1*stddev1;
+	F=var1/var0;
+	if (F<Flower || F>Fupper)
+		return false;
+
+	return true;
+}
