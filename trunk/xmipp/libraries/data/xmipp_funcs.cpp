@@ -848,6 +848,9 @@ size_t xmippFREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool rever
             ptr += size;
         }
     }
+    if (retval != nitems)
+        REPORT_ERROR(ERR_IO_NOREAD,"XmippFREAD: An error occurred or End of File was reached.");
+
     return retval;
 }
 
@@ -896,14 +899,14 @@ void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescrip
     if (readOnly)
         fileDescriptor = open(filename.data(),  O_RDONLY, S_IREAD);
     else
-    	fileDescriptor = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
+        fileDescriptor = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
     if (fileDescriptor == -1)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot read file named "+filename);
 
     if (readOnly)
-    	map = (char *) mmap(0, size, PROT_READ, MAP_SHARED, fileDescriptor, 0);
+        map = (char *) mmap(0, size, PROT_READ, MAP_SHARED, fileDescriptor, 0);
     else
-    	map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0);
+        map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0);
     if (map == MAP_FAILED)
         REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
 }

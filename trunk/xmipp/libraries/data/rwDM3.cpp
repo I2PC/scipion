@@ -188,7 +188,7 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
     std::string stagName;
 
     char * tagName =  new char[ltName+1];
-    xmippFREAD(tagName,ltName,1,fimg,false); // Tag name
+    xmippFREAD(tagName,1,ltName,fimg,false); // Tag name
     tagName[ltName] = '\0';
     stagName = tagName;
     delete [] tagName;
@@ -603,7 +603,7 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
     if( dataMode < DATA )
         return 0;
 
-    //#define DEBUG
+#undef DEBUG
 #ifdef DEBUG
 
     MDMainHeader.write(std::cerr);
