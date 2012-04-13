@@ -3592,6 +3592,58 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
 }/* ImgSize (from metadata filename)*/
 
 static PyObject *
+xmipp_CheckImageFileSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *filename;
+
+    if (PyArg_ParseTuple(args, "O", &filename))
+    {
+        try
+        {
+            PyObject * pyStr = PyObject_Str(filename);
+            char * str = PyString_AsString(pyStr);
+            bool result = checkImageFileSize(str);
+            Py_DECREF(pyStr);
+            if (result)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+static PyObject *
+xmipp_CheckImageCorners(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *filename;
+
+    if (PyArg_ParseTuple(args, "O", &filename))
+    {
+        try
+        {
+            PyObject * pyStr = PyObject_Str(filename);
+            char * str = PyString_AsString(pyStr);
+            bool result = checkImageCorners(str);
+            Py_DECREF(pyStr);
+            if (result)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+static PyObject *
 xmipp_ImgCompare(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *filename1, *filename2;
@@ -3917,6 +3969,10 @@ xmipp_methods[] =
           "Get image dimensions of first metadata entry" },
         { "ImgCompare", (PyCFunction) xmipp_ImgCompare,  METH_VARARGS,
           "return true if both files are identical" },
+        { "checkImageFileSize", (PyCFunction) xmipp_CheckImageFileSize,  METH_VARARGS,
+          "return true if the file has at least as many bytes as needed to read the image" },
+        { "checkImageCorners", (PyCFunction) xmipp_CheckImageCorners,  METH_VARARGS,
+            "return false if the image has repeated pixels at some corner" },
         { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
           "return true if both files are identical" },
         { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
