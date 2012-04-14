@@ -34,10 +34,12 @@ from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTre
     showBrowseDialog, showTextfileViewer, showError, TaggedText, XmippButton, ProjectLabel,\
     FlashMessage, showWarning, YesNoDialog, getXmippImage
 from config_protocols import *
-from protlib_base import XmippProject, getExtendedRunName
+from protlib_base import XmippProject, getExtendedRunName, splitExtendedRunName,\
+    getScriptFromRunName
 from protlib_utils import ProcessManager,  getHostname
 from protlib_sql import SqliteDb, ProgramDb
 from protlib_filesystem import getXmippPath
+from protlib_parser import ProtocolParser
 
 # Redefine BgColor
 BgColor = "white"
@@ -799,48 +801,55 @@ class ScriptProtocols(XmippScript):
         #self.addParamsLine("   alias -e;");
         self.addParamsLine("[ --copy_run <runName>  ]           : Create a copy of an existing run");
         self.addParamsLine("   alias -p;");
+        self.addParamsLine("[ --start_run <runName>  ]           : Create a copy of an existing run");
+        
         self.addParamsLine("[ --delete_run <protName>  ]        : Delete an existing run");
         self.addParamsLine("   alias -e;");
         self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
         self.addParamsLine("   alias -c;"); 
         
-    def confirm(self, msg, default=True):
-        centerWindows(self.root)
-        result = askYesNo("NEW PROJECT", msg, self.root)
-        return result
+    def confirm(self, msg, defaultYes=True):
+        if defaultYes:
+            suffix = ' [Y/n] '
+        else:
+            suffix = ' [y/N] '
+        answer = raw_input(msg + cyanStr(suffix))
+        if not answer:
+            return defaultYes
+        return answer.lower() == 'y'
     
-    def run(self):
-        proj_dir = os.getcwd()
-        project = XmippProject(proj_dir)
-        launch = True
+    def printProjectName(self):
+        '''Print project name '''
+        print cyanStr("PROJECT: "), greenStr(os.path.basename(self.proj_dir))
+        
+    def loadProjectFromCli(self):
+        '''Load project to work from command line'''
+        self.printProjectName()
+        self.launch = False
+        self.project.load()
 
-        if self.checkParam('--clean'):
-            msg = 'You are in project: %s\n' % proj_dir
-            msg += '<ALL RESULTS> will be <DELETED>, are you sure to <CLEAN>?'
-            launch = self.confirm(msg, False)
-            if launch:
-                project.clean()
-            else:
-                print "CLEAN aborted."
-        elif self.checkParam('--list'):
-            print cyanStr("PROJECT: "), greenStr(os.path.basename(proj_dir))
-            launch = False
-            project.load()
-            runs, stateList = project.getStateRunList(checkDead=True)
+    def run(self):
+        self.proj_dir = os.getcwd()
+        self.project = XmippProject(self.proj_dir)
+        self.launch = True
+
+
+        if self.checkParam('--list'):
+            self.loadProjectFromCli()
+            runs, stateList = self.project.getStateRunList(checkDead=True)
             if len(stateList) > 0:
                 print cyanStr("List of runs:")
                 stateList.insert(0, ('RUN', 0, 'STATE', 'MODIFIED'))
                 for name, state, stateStr, modified in stateList:
                     print "%s | %s | %s " % (name.rjust(35), stateStr.rjust(15), modified)
             else:
-                print greenStr("No runs found")
+                print cyanStr("No runs found")
         elif self.checkParam('--details'):
-            launch = False
-            project.load()
+            self.loadProjectFromCli()
             runName = self.getParam('--details')
             try:
-                protocol = project.getProtocolFromRunName(runName)
-                print cyanStr("Details or run "), greenStr(runName)
+                protocol = self.project.getProtocolFromRunName(runName)
+                print cyanStr("Details of run "), greenStr(runName)
                 summaryLines = protocol.summary()
                 for line in summaryLines:
                     for c in '<>[]':
@@ -848,31 +857,56 @@ class ScriptProtocols(XmippScript):
                     print "   ", line
             except Exception, e:
                 print redStr("Run %s not found" % runName)
-                #print redStr("ERROR:"), e
         elif self.checkParam('--create_run'):
-            pass
+            protName = self.getParam('--create_run')
+            self.loadProjectFromCli()
+            run = self.project.newProtocol(protName) #Create new run for this protocol
+            self.project.projectDb.insertRun(run) # Register the run in Db
+            ProtocolParser(run['source']).save(run['script']) # Save the .py file
+            print "Run %s was created" % greenStr(getExtendedRunName(run))
+            print "Edit file %s and launch it" % greenStr(run['script'])
         elif self.checkParam('--copy_run'):
+            extRunName = self.getParam('--copy_run')
+            self.loadProjectFromCli()
+            protName, runName = splitExtendedRunName(extRunName)
+            source = getScriptFromRunName(extRunName)
+            run = self.project.newProtocol(protName) #Create new run for this protocol
+            self.project.projectDb.insertRun(run) # Register the run in Db
+            ProtocolParser(source).save(run['script']) # Save the .py file
+            print "Run %s was created from %s" % (greenStr(getExtendedRunName(run)), greenStr(extRunName))
+            print "Edit file %s and launch it" % greenStr(run['script'])
             pass
         elif self.checkParam('--delete_run'):
             pass      
-                
-        else: #lauch project     
-            if not project.exists():    
-                msg = 'You are in directory: <%s>\n' % proj_dir
-                msg += 'Do you want to <CREATE> a <NEW PROJECT> in this folder?'
-                launch = self.confirm(msg)
-                if (launch):
-                    project.create()
-                else:
-                    print "PROJECT CREATION aborted."
+        elif self.checkParam('--start_run'):
+            pass
+        elif self.checkParam('--clean'):
+            self.printProjectName()
+            self.launch = self.confirm('%s, are you sure to clean?' % cyanStr('ALL RESULTS will be DELETED'), False)
+            if self.launch:
+                self.project.clean()
             else:
-                project.load()
-        if launch:
-            self.root = tk.Tk()
-            self.root.withdraw()
-            gui = XmippProjectGUI(project)
-            gui.createGUI(self.root)
-            gui.launchGUI()
+                print cyanStr("CLEAN aborted.")        
+        else: #lauch project     
+            if not self.project.exists():    
+                print 'You are in directory: %s' % greenStr(self.proj_dir)
+                self.launch = self.confirm('Do you want to %s in this folder?' % cyanStr('CREATE a NEW PROJECT'))
+                if (self.launch):
+                    self.project.create()
+                    print "Created new project on directory: %s" % greenStr(self.proj_dir)
+                else:
+                    print cyanStr("PROJECT CREATION aborted")
+            else:
+                self.project.load()
+        if self.launch:
+            try:
+                self.root = tk.Tk()
+                self.root.withdraw()
+                gui = XmippProjectGUI(self.project)
+                gui.createGUI(self.root)
+                gui.launchGUI()
+            except Exception, e:
+                print cyanStr("Could not create Tk GUI, disabled")
 
 if __name__ == '__main__':
     ScriptProtocols().tryRun()

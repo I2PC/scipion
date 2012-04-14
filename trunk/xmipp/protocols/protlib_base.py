@@ -59,7 +59,7 @@ class XmippProject():
     
     def create(self):
         os.chdir(self.projectDir)
-        print "Creating new project on directory: '%s'" % self.projectDir
+        
         #==== CREATE CONFIG file
         self.config = ConfigParser.RawConfigParser()            
         self.config.add_section('project')
@@ -528,7 +528,7 @@ def splitExtendedRunName(extendedRunName):
     if bestLength==0:
         return None
     else:
-        return (protocolName,runName)
+        return (protocolName, runName)
 
 def getWorkingDirFromRunName(extendedRunName):
     # The extended run name has the name of the protocol in front

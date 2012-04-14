@@ -75,6 +75,8 @@ class ProtocolVariable():
         return [v.strip() for v in self.tags[tagKey].split(',')]
     
     def getValue(self):
+        #print "%s " % redStr(self.name)
+        #print " = %s" % greenStr(self.value)
         return self.value
     
     def getTkValue(self):
@@ -87,6 +89,8 @@ class ProtocolVariable():
             return self.tkvar.get()
         elif self.tktext:
             return self.tktext.get(1.0, 'end')
+        else:
+            return self.value
         
     def updateValue(self):
         self.value = self.getTkValue()
@@ -242,6 +246,7 @@ class ProtocolParser():
     ''' Class to parse the protocol header files and extract the
     variables information arranged in sections '''
     def __init__(self, header_script):
+        self.script = header_script
         self.readProtocolScript(header_script)
         self.parseHeaderLines()
 
@@ -396,6 +401,8 @@ class ProtocolParser():
                             match2 = reVariable.match(line)
                             if match2:
                                 v.name, v.value = (match2.group(1).strip(), match2.group(2).strip())
+                                #print greenStr("v.name = %s" % v.name)
+                                #print redStr("v.value = %s" % v.value)
                                 self.addVariable(v)
                                 #self.nextLine()
                                 if v.value.startswith('"""'): # Parse multiline variable
@@ -416,11 +423,14 @@ class ProtocolParser():
             self.writeLines(f, s.getLines())
         self.writeLines(f, ['', '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE', ''] + self.post_header_lines)
         
-    def save(self, filename):
-        f = open(filename, 'w+')
+    def save(self, filename=None):
+        if filename is not None:
+            self.script = filename
+        f = open(self.script, 'w+')
         self.write(f)
         f.close()
-        os.chmod(filename, 0755)
+        os.chmod(self.script, 0755)
+        
 
 
 #---------------- Some utilities functions --------------------------
@@ -451,14 +461,14 @@ if __name__ == '__main__':
     script = sys.argv[1]
     parser = ProtocolParser(script)
     #parser.write()
-    parser.setValue("Comment", """5sdfsdfff...44444jjjj 
-    This is a t
-    very very long....
-    test")'""")
-    print "Behavior1", parser.getValue("Behavior")
-    parser.setValue('Behavior', 'Restart')
-    print "Behavior2", parser.getValue("Behavior")
-    parser.setValue('DirMicrographs', 'InputKK')
+#    parser.setValue("Comment", """5sdfsdfff...44444jjjj 
+#    This is a t
+#    very very long....
+#    test")'""")
+#    print "Behavior1", parser.getValue("Behavior")
+#    parser.setValue('Behavior', 'Restart')
+#    print "Behavior2", parser.getValue("Behavior")
+#    parser.setValue('DirMicrographs', 'InputKK')
     parser.save("kk.py")
 
     print "Finished"
