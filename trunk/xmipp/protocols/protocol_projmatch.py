@@ -357,9 +357,9 @@ class ProtProjMatch(XmippProtocol):
                         gridsize1 = [(len(ref3Ds)+1)/2, 2]
                     
                     xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_' + it, windowTitle="AngularDistribution")
-                    print 'gridsize1: ', gridsize1
-                    print 'iterations: ', iterations
-                    print 'ref3Ds: ', ref3Ds
+                    #print 'gridsize1: ', gridsize1
+                    #print 'iterations: ', iterations
+                    #print 'ref3Ds: ', ref3Ds
                     
                     #Fixed plot markersize limits
                     max_p = 40
@@ -368,7 +368,8 @@ class ProtProjMatch(XmippProtocol):
                     for ref3d in ref3Ds:
                         file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
                         md = MetaData(file_name)
-                        rot = [md.getValue(MDL_ANGLEROT, id) for id in md]
+                        #rot must be polar
+                        rot = [md.getValue(MDL_ANGLEROT, id)*2.*3.141592/360. for id in md]
                         tilt = [md.getValue(MDL_ANGLETILT, id) for id in md]
                         weight = [md.getValue(MDL_WEIGHT, id) for id in md]
                         max_w = 2
@@ -394,7 +395,7 @@ class ProtProjMatch(XmippProtocol):
                             #print 'min_w: ', min_w, ' | max_w: ', max_w, ' | min_p: ', min_p, ' | max_p: ', max_p
                             a.plot(rot[i], tilt[i], markerfacecolor='blue', marker='.', markersize=pointsize)
                             i = i + 1
-                        
+
                     xplotter.draw()
                     
                     
