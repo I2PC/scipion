@@ -153,12 +153,22 @@ protected:
             rowOut = rowIn;
             if (round_shifts)
                 roundShifts(rowOut);
+            //FIXME ROB cannot write if a read only the header
+            //AKS QuINO
+            /***/
+            params.datamode = DATA;
+            /***/
             img.readApplyGeo(fnImg, rowOut, params);
             img.setDataMode(_HEADER_ALL);
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
         case HEADER_RESET:
-            img.read(fnImg, _HEADER_ALL);
+            //FIXME ROB cannot write if a read only the header
+            //AKS QuINO
+            /***/
+            img.read(fnImg, DATA);
+            /***/
+//            img.read(fnImg, _HEADER_ALL);
             img.initGeometry();
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
