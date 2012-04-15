@@ -287,7 +287,7 @@ def assign_images_to_references(_log
     #with the pairs ctf_group reference    
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile  = CtfBlockName + str(iCTFGroup).zfill(FILENAMENUMBERLENGTH)+'@'
-        print 'read file: ', auxInputdocfile+outputdocfile
+        #print 'read file: ', auxInputdocfile+outputdocfile
         MDaux.read(auxInputdocfile+outputdocfile)
         for iRef3D in range(1,NumberOfReferences+1):
             auxOutputdocfile  = CtfBlockName + \
