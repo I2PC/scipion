@@ -356,7 +356,7 @@ class ProtProjMatch(XmippProtocol):
                     else:
                         gridsize1 = [(len(ref3Ds)+1)/2, 2]
                     
-                    xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_' + it)
+                    xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_' + it, windowTitle="AngularDistribution")
                     print 'gridsize1: ', gridsize1
                     print 'iterations: ', iterations
                     print 'ref3Ds: ', ref3Ds
@@ -390,8 +390,8 @@ class ProtProjMatch(XmippProtocol):
                                 pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
                             else:
                                 pointsize = 1
-                            print 'weight[i]: ', weight[i], ' | pointsize: ', pointsize
-                            print 'min_w: ', min_w, ' | max_w: ', max_w, ' | min_p: ', min_p, ' | max_p: ', max_p
+                            #print 'weight[i]: ', weight[i], ' | pointsize: ', pointsize
+                            #print 'min_w: ', min_w, ' | max_w: ', max_w, ' | min_p: ', min_p, ' | max_p: ', max_p
                             a.plot(rot[i], tilt[i], markerfacecolor='blue', marker='.', markersize=pointsize)
                             i = i + 1
                         
@@ -409,7 +409,7 @@ class ProtProjMatch(XmippProtocol):
                 gridsize1 = [2, 1]
             else:
                 gridsize1 = [(len(ref3Ds)+1)/2, 2]
-            xplotter = XmippPlotter(*gridsize1)
+            xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionFSC")
             print 'gridsize1: ', gridsize1
             print 'iterations: ', iterations
             print 'ref3Ds: ', ref3Ds
