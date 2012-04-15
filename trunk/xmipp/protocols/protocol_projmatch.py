@@ -20,7 +20,7 @@ from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning
 from protlib_gui_figure import XmippPlotter
-
+from math import radians
 
 class ProtProjMatch(XmippProtocol):
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
@@ -357,9 +357,6 @@ class ProtProjMatch(XmippProtocol):
                         gridsize1 = [(len(ref3Ds)+1)/2, 2]
                     
                     xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_' + it, windowTitle="AngularDistribution")
-                    #print 'gridsize1: ', gridsize1
-                    #print 'iterations: ', iterations
-                    #print 'ref3Ds: ', ref3Ds
                     
                     #Fixed plot markersize limits
                     max_p = 40
@@ -369,7 +366,7 @@ class ProtProjMatch(XmippProtocol):
                         file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
                         md = MetaData(file_name)
                         #rot must be polar
-                        rot = [md.getValue(MDL_ANGLEROT, id)*2.*3.141592/360. for id in md]
+                        rot = [radians(md.getValue(MDL_ANGLEROT, id)) for id in md]
                         tilt = [md.getValue(MDL_ANGLETILT, id) for id in md]
                         weight = [md.getValue(MDL_WEIGHT, id) for id in md]
                         max_w = 2
