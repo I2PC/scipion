@@ -54,6 +54,10 @@ class Preview():
         self.frame.grid(column=col, row=row)
         self._create_axes()
         
+    def setWindowTitle(self,title):
+        """ Set window title"""
+        self.canvas.set_window_title(title)
+
     def _create_axes(self):
         pass
     
@@ -196,7 +200,7 @@ import matplotlib.pyplot as plt
 
 ''' Class to create several plots'''
 class XmippPlotter():
-    def __init__(self, x=1, y=1, mainTitle="", figsize=None, dpi=100):
+    def __init__(self, x=1, y=1, mainTitle="", figsize=None, dpi=100, windowTitle=""):
         
         if figsize is None: # Set some defaults values
             if x == 1 and y == 1:
@@ -214,9 +218,12 @@ class XmippPlotter():
         self.gridx = x
         self.gridy = y  
         self.figure = plt.figure(figsize=figsize, dpi=dpi)
-        self.mainTitle = mainTitle
+        #self.mainTitle = mainTitle
+        #self.windowTitle = windowTitle
         if (mainTitle):
             self.figure.suptitle(mainTitle)
+        if (windowTitle):
+            self.figure.canvas.set_window_title(windowTitle) 
         self.plot_count = 0
         self.plot_axis_fontsize = 10
         self.plot_text_fontsize = 8
