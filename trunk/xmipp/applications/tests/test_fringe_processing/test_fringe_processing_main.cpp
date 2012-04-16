@@ -70,7 +70,7 @@ TEST_F( FringeProcessingTests, simulPattern)
     ASSERT_TRUE( std::abs(A2D_ELEM(im,1,0) - 0.521457)<0.01);
 
     //im.write(imageName);
-
+    freq = 1;
     fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
 
     ASSERT_TRUE(XSIZE(im) == nx);
@@ -79,6 +79,7 @@ TEST_F( FringeProcessingTests, simulPattern)
     ASSERT_TRUE( std::abs(A2D_ELEM(im,0,1) - 0.975946)<0.01);
     ASSERT_TRUE( std::abs(A2D_ELEM(im,1,0) - 0.976113)<0.01);
 
+    freq = 20;
     fp.simulPattern(im,fp.COMPLEX_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
 
     ASSERT_TRUE(XSIZE(im) == nx);
@@ -143,7 +144,7 @@ TEST_F( FringeProcessingTests, orMinDer)
     int nx = 311;
     int ny = 311;
     double noiseLevel = 0.0;
-    double freq = 20;
+    double freq = 1;
     Matrix1D<int> coefs(10);
 
     fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
@@ -179,7 +180,7 @@ TEST_F( FringeProcessingTests, normalize)
     int nx = 311;
     int ny = 311;
     double noiseLevel = 0.1;
-    double freq = 20;
+    double freq = 1;
     Matrix1D<int> coefs(10);
 
     fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
@@ -205,18 +206,21 @@ TEST_F( FringeProcessingTests, normalize)
     //Mod.write(ModName);
 }
 
+#define DEBUG
 TEST_F( FringeProcessingTests, direction)
 {
-    //FileName ModName = "Mod.txt";
-    //FileName DirName = "Dir.txt";
-    //FileName OrName = "Or.txt";
+#ifdef DEBUG
+    FileName ModName = "Mod.txt";
+    FileName DirName = "Dir.txt";
+    FileName OrName = "Or.txt";
+#endif
     FringeProcessing fp;
     MultidimArray<double> im, orMap, orModMap, dirMap;
 
     int nx = 311;
     int ny = 311;
     double noiseLevel = 0.0;
-    double freq = 20;
+    double freq = 1;
     Matrix1D<int> coefs(10);
 
     fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
@@ -228,8 +232,8 @@ TEST_F( FringeProcessingTests, direction)
     fp.orMinDer(im,orMap,orModMap, wSize);
 
     //we obtain the phase direction map from the orientation map
-    double lambda = 2;
-    int size = 1;
+    double lambda = 1;
+    int size = 3;
     fp.direction(orMap, orModMap, lambda, size, dirMap);
 
     //Comparing with Matlab results
@@ -241,11 +245,13 @@ TEST_F( FringeProcessingTests, direction)
     ASSERT_TRUE( (A2D_ELEM(dirMap,100,50) - 2.6420)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,100,100) -  2.3536) < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,200,100) -  -2.4388)< 1e-2);
-
-    //orModMap.write(ModName);
-    //orMap.write(OrName);
-    //dirMap.write(DirName);
+#ifdef DEBUG
+    orModMap.write(ModName);
+    orMap.write(OrName);
+    dirMap.write(DirName);
+#endif
 }
+#undef DEBUG
 
 TEST_F( FringeProcessingTests, unwrapping)
 {
@@ -300,6 +306,49 @@ TEST_F( FringeProcessingTests, unwrapping)
 
     //comPhase.write(uPName);
     //wphase.write(PName);
+
+}
+TEST_F( FringeProcessingTests, demodulate)
+{
+
+	    FileName ModName = "Mod.txt";
+	    FileName fpName = "fp.txt";
+	    FileName phaseName = "Phase.txt";
+
+	    FringeProcessing fp;
+	    MultidimArray<double> im, mod, phase;
+
+	    int nx = 311;
+	    int ny = 311;
+	    double noiseLevel = 1;
+	    double freq = 2;
+	    Matrix1D<int> coefs(10);
+
+	    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
+	    im.write(fpName);
+	    mod.resizeNoCopy(im);
+	    phase.resizeNoCopy(im);
+
+	    double lambda = 2;
+	    int size = 5;
+	    double R = 10;
+	    double S = 15;
+
+	    fp.demodulate(im,R,S,lambda,size,phase,mod);
+
+	    //Comparing with Matlab results
+
+	    /*ASSERT_TRUE( (A2D_ELEM(dirMap,10,10)  - 2.35619)  < 1e-2);
+	    ASSERT_TRUE( (A2D_ELEM(dirMap,10,20)  - 2.33116)  < 1e-2);
+	    ASSERT_TRUE( (A2D_ELEM(dirMap,20,10)  - 2.38123)  < 1e-2);
+	    ASSERT_TRUE( (A2D_ELEM(dirMap,20,20)  - 2.35619)  < 1e-2);
+	    ASSERT_TRUE( (A2D_ELEM(dirMap,100,50) - 2.6420)  < 1e-2);
+	    ASSERT_TRUE( (A2D_ELEM(dirMap,100,100) -  2.3536) < 1e-2);
+	    ASSERT_TRUE( (A2D_ELEM(dirMap,200,100) -  -2.4388)< 1e-2);
+		*/
+
+	    mod.write(ModName);
+	    phase.write(phaseName);
 
 }
 

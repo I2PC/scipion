@@ -25,24 +25,36 @@
 
 #include <data/xmipp_polynomials.h>
 #include <data/xmipp_program.h>
-
 #include <data/multidim_array.h>
 #include <data/fringe_processing.h>
 #include <data/xmipp_image.h>
+#include <data/xmipp_fftw.h>
 
 class ProgCTFEstimateFromPSDZernike: public XmippProgram
 {
 public:
     /// CTF filename
-    FileName             fn_psd;
+    FileName fn_psd;
+    double lambda;
+    int size;
+    double R;
+    double S;
+    double thrs;
+
 public:
     /// CTF amplitude to model
-    Image<double>        ctftomodel;
+    Image<double> ctftomodel;
 public:
     /// Read parameters
     void readParams()
     {
     	fn_psd=getParam("--psd");
+    	lambda = getDoubleParam("--lambda");
+    	R = getDoubleParam("--freq");
+    	S = getDoubleParam("--var");
+    	size = getIntParam("--size");
+    	thrs = getDoubleParam("--thrs");
+
     }
 
     /// Show parameters
@@ -58,8 +70,12 @@ public:
         addUsageLine("The PSD is enhanced ([[http://www.ncbi.nlm.nih.gov/pubmed/16987671][See article]]). ");
         addUsageLine("And finally, the CTF is fitted to the PSD, being guided by the enhanced PSD ");
         addUsageLine("([[http://www.ncbi.nlm.nih.gov/pubmed/17911028][See article]]).");
-        addParamsLine("   --psd <PSDfile> : PSD file");
-        addSeeAlsoLine("ctf_estimate_from_micrograph, ctf_estimate_from_psd");
+        addParamsLine("--psd <PSDfile> : PSD file");
+        addParamsLine("[--lambda <v=2>] : regularization parameter");
+        addParamsLine("--freq <R>: Rough estimation of the fringe frequencies");
+        addParamsLine("--var <S>: variance of the fringe frequency along the pattern");
+        addParamsLine("[--size <size=5>] : regularization window");
+        addParamsLine("[--thrs <thrs=5>] : intensity thresholding parameter to cutoff the psd intensity above a athis value");
     }
 
     /// Produce side information
@@ -72,31 +88,20 @@ public:
     void run()
     {
 
-    	//produce_side_info();
-    	//PolyZernikes polynom;
-    	//Matrix1D<int> coefs(4);
-    	//coefs.initConstant(0);
-    	//VEC_ELEM(coefs,2)=1;
-    	//polynom.fit(coefs,ctftomodel());
-    	//polynom.zernikePols(coefs,ctftomodel());
+    	produce_side_info();
 
     	FringeProcessing fp;
+    	MultidimArray<double> mod, in, phase;
+    	MultidimArray<double> & im =  ctftomodel();
 
-    	MultidimArray< std::complex <double> > imProc;
-    	MultidimArray<double> im;
+    	mod.resizeNoCopy(im);
+    	in.resizeNoCopy(im);
+    	phase.resizeNoCopy(im);
 
-    	int nx = 311;
-        int ny = 312;
-        double noiseLevel = 0.0;
-        double freq = 20;
-        Matrix1D<int> coefs(10);
+    	CenterFFT(im,true);
+    	im.threshold("abs_above", thrs, 0);
 
-        fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
-        imProc.resizeNoCopy(im);
-
-        fp.SPTH(im, imProc);
-
-
+        fp.demodulate(im,R,S,lambda,size,phase,mod,verbose);
     }
 };
 
