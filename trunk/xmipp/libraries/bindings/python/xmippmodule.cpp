@@ -3810,6 +3810,44 @@ bool validateInputImageString(PyObject * pyImage, PyObject *pyStrFn, FileName &f
     return true;
 }
 
+static PyObject *
+xmipp_compareTwoMetadataFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyStrFn1, *pyStrFn2;
+
+    if (PyArg_ParseTuple(args, "OO", &pyStrFn1, &pyStrFn2))
+    {
+        try
+        {
+            FileName fn1, fn2;
+            if (PyString_Check(pyStrFn1))
+                fn1 = PyString_AsString(pyStrFn1);
+            else if (FileName_Check(pyStrFn1))
+                fn1 = FileName_Value(pyStrFn1);
+            else
+                PyErr_SetString(PyExc_TypeError,
+                                "Expected string or FileName as first argument");
+            if (PyString_Check(pyStrFn2))
+                fn2 = PyString_AsString(pyStrFn2);
+            else if (FileName_Check(pyStrFn2))
+                fn2 = FileName_Value(pyStrFn2);
+            else
+                PyErr_SetString(PyExc_TypeError,
+                                 "Expected string or FileName as first argument");
+
+            if (compareTwoMetadataFiles(fn1, fn2))
+               Py_RETURN_TRUE;
+            else
+               Py_RETURN_FALSE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* calculate enhanced psd and return preview*/
 static PyObject *
 xmipp_fastEstimateEnhancedPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -3981,6 +4019,8 @@ xmipp_methods[] =
           "Substitute the original images into a given column of a metadata" },
         { "fastEstimateEnhancedPSD", (PyCFunction) xmipp_fastEstimateEnhancedPSD, METH_VARARGS,
           "Utility function to calculate PSD preview" },
+        { "compareTwoMetadataFiles", (PyCFunction) xmipp_compareTwoMetadataFiles, METH_VARARGS,
+          "Compare two metadata files" },
         { "bandPassFilter", (PyCFunction) xmipp_bandPassFilter, METH_VARARGS,
           "Utility function to apply bandpass filter" },
         { "gaussianFilter", (PyCFunction) xmipp_gaussianFilter, METH_VARARGS,

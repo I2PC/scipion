@@ -99,7 +99,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertAlmostEqual(max, 0.637052, 5)
         
     def test_Image_setDataType(self):
-        img = Image();
+        img = Image()
         img.setDataType(DT_FLOAT)
         img.resize(3, 3)
         img.setPixel(1, 1, 1.)
@@ -253,7 +253,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md2.setValue(MDL_IMAGE, img, id)
             md2.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
             md2.setValue(MDL_ANGLEPSI, 1., id)
-        mdout.join (md, md2,  MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+        mdout.join (md, md2, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
 
         md.clear()
         for i in range(1, 3):
@@ -416,6 +416,60 @@ class TestXmippPythonInterface(unittest.TestCase):
             
         self.assertEqual(mdRef, md)
         self.assertRaises(XmippError, md.setValue, MDL_COUNT, 5.5, 1L)
+   
+        
+    def test_Metadata_compareTwoMetadataFiles(self):
+        
+        try:
+            from tempfile import NamedTemporaryFile
+            
+            sfn = NamedTemporaryFile(dir="/tmp/", suffix=".xmd")
+            sfn2 = NamedTemporaryFile(dir="/tmp/", suffix=".xmd")
+            sfn3 = NamedTemporaryFile(dir="/tmp/", suffix=".xmd")
+        
+            auxMd = MetaData()
+            auxMd2 = MetaData()
+            
+            auxMd.setValue(MDL_IMAGE, "image_1.xmp", auxMd.addObject())
+            auxMd.setValue(MDL_IMAGE, "image_2.xmp", auxMd.addObject())
+            auxMd.write("block_000000@" + sfn.name, MD_OVERWRITE)
+            auxMd.clear()
+            auxMd.setValue(MDL_IMAGE, "image_data_1_1.xmp", auxMd.addObject())
+            auxMd.setValue(MDL_IMAGE, "image_data_1_2.xmp", auxMd.addObject())
+            auxMd.write("block_000001@" + sfn.name, MD_APPEND)
+            auxMd.clear()
+            auxMd.setValue(MDL_IMAGE, "image_data_2_1.xmp", auxMd.addObject())
+            auxMd.setValue(MDL_IMAGE, "image_data_2_2.xmp", auxMd.addObject())
+            auxMd.write("block_000000@" + sfn2.name, MD_OVERWRITE)
+            auxMd.clear()
+            auxMd.setValue(MDL_IMAGE, "image_data_A_1.xmp", auxMd.addObject())
+            auxMd.setValue(MDL_IMAGE, "image_data_A_2.xmp", auxMd.addObject())
+            auxMd.write("block_000001@" + sfn2.name, MD_APPEND)
+            auxMd.clear()
+        
+            self.assertFalse(compareTwoMetadataFiles(sfn.name, sfn2.name))
+            self.assertTrue(compareTwoMetadataFiles(sfn.name, sfn.name))
+        
+            auxMd.setValue(MDL_IMAGE, "image_1.xmpSPACE", auxMd.addObject())
+            auxMd.setValue(MDL_IMAGE, "image_2.xmp", auxMd.addObject())
+            auxMd.write("block_000000@" + sfn2.name, MD_OVERWRITE)
+            auxMd.clear()
+            auxMd.setValue(MDL_IMAGE, "image_data_1_1.xmp", auxMd.addObject())
+            auxMd.setValue(MDL_IMAGE, "image_data_1_2.xmp", auxMd.addObject())
+            auxMd.write("block_000001@" + sfn2.name, MD_APPEND)
+        
+            command = "sed 's/SPACE/ /g' " + sfn2.name + ">" + sfn3.name
+            os.system(command)
+        
+            self.assertTrue(compareTwoMetadataFiles(sfn.name, sfn3.name))
+        
+            sfn.close()
+            sfn2.close()
+            sfn3.close()
+            
+        except Exception, e:
+            print str(e)
+
        
 from  XmippPythonTestResult import XmippPythonTestResult
 
