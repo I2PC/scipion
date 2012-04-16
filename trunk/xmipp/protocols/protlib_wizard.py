@@ -95,8 +95,19 @@ def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None, m
       
 #This wizard is specific for import_micrographs protocol
 def wizardBrowseCTF(self, var):
-    args = self.getVarlistValue(['DirMicrographs', 'ExtMicrographs', 'DownsampleFactor'])
-    wizardHelperSetDownsampling(self, var, *args)
+    from xmipp import MetaData
+    importRunName = self.getVarValue('ImportRun')
+    downsample = self.getVarValue('DownsampleFactor')
+    prot = self.project.getProtocolFromRunName(importRunName)
+    path = prot.WorkingDir
+    MD=MetaData()
+    fnMicrographs=os.path.join(path,"micrographs.xmd")
+    if os.path.exists(fnMicrographs):
+        MD.read(fnMicrographs)
+    fnMicrographs=os.path.join(path,"tilted_pairs.xmd")
+    if os.path.exists(fnMicrographs):
+        MD.read(fnMicrographs)
+    wizardHelperSetDownsampling(self, var, None, None, downsample, md=MD)
     
 #This wizard is specific for screen_micrographs protocol
 #it will help to select downsampling, and frequencies cutoffs
