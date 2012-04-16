@@ -27,15 +27,7 @@ class ScriptShowJ(ScriptAppIJ):
 		self.addParamsLine('     where <axis> z y x z_pos y_pos x_pos')
 		self.addParamsLine('  [--debug] : debug')
 		
-#	def readInputFiles(self):
-#		if self.checkParam('--mode'):
-#			mode = self.getParam('--mode') 
-#			if mode == 'rotspectra':
-#				prefix = self.getParam('-i')
-#				self.inputFiles = [prefix + s for s in ['_classes.xmd', '_vectors.xmd', '_vectors.xmd.raw']]
-#		else:
-#			ScriptAppIJ.readInputFiles(self)
-		
+	
 	def readOtherParams(self):	
 		if self.checkParam('--mode'):
 			self.args += " --mode %s" % self.getParam('--mode') 	

@@ -128,7 +128,6 @@ class ScriptIJBase(XmippScript):
             print "Missing files: \n %s" % '  \n'.join(missingFiles) 
         self.args = "-i %s" % ' '.join(self.inputFiles)
         self.readOtherParams()
-        print "self.args:", self.args
  
 class ScriptPluginIJ(ScriptIJBase):
     def __init__(self, macro):

@@ -1019,7 +1019,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	private void jsGoToImageStateChanged(javax.swing.event.ChangeEvent evt) {
 		DEBUG.printMessage("jsGotoImage...");
 		if (!isUpdating) {
-			goToImage((Integer) jsGoToImage.getValue() - 1);
+			Integer intValue = (Integer) jsGoToImage.getValue();
+			if (intValue < 0)
+				intValue = 1;
+			else if (intValue >= gallery.getSize())
+				intValue = gallery.getSize();
+			goToImage(intValue - 1);
 		}
 	}
 
@@ -1074,9 +1079,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				}
 				if (move) {
 					isUpdating = true;
-					int index = gallery.getIndex(view_row, view_col) + 1;
+					int index = gallery.getIndex(view_row, view_col);
 					if (gallery.isValidIndex(index))
-						jsGoToImage.setValue(index);
+						jsGoToImage.setValue(index + 1);
 					isUpdating = false;
 				}
 				if (!evt.isShiftDown()) {
