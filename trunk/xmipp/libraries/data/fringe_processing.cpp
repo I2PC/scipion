@@ -29,7 +29,7 @@
 #include "multidim_array.h"
 #include "xmipp_funcs.h"
 #include "xmipp_fftw.h"
-
+#include <queue>
 
 //This member function simulates different types of fringe patterns.
 // im is the resultant multidimarray
@@ -84,8 +84,8 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
 
         case SIMPLY_CLOSED_FRINGES_MOD :
             {
-            	A2D_ELEM(im,i,j) =  (std::exp(-((i*i)+(j*j))/(2e3*freq*freq)))*(std::cos(50*std::exp(-0.5*(std::pow(i*iMaxDim2*freq,2)+std::pow(j*iMaxDim2*freq,2))))+rnd_gaus(0,noiseLevel));
-            	break;
+                A2D_ELEM(im,i,j) =  (std::exp(-((i*i)+(j*j))/(2e3*freq*freq)))*(std::cos(50*std::exp(-0.5*(std::pow(i*iMaxDim2*freq,2)+std::pow(j*iMaxDim2*freq,2))))+rnd_gaus(0,noiseLevel));
+                break;
             }
         }
     }
@@ -255,16 +255,25 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
     STARTINGX(imN)=STARTINGY(imN)=0;
 }
 
+class PointQuality
+{
+public:
+    int i;
+    int j;
+    double quality;
+    const bool operator <(const PointQuality& p) const
+    {
+        return (quality < p.quality);
+    }
+};
+
 void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap)
 {
     //First we perform some setup stuff
     int nx = XSIZE(orMap);
     int ny = YSIZE(orMap);
     double minQuality = 0.0;
-
-    Histogram1D hist;
-    int no_steps = 10, maxElem = 0, k;
-    int imax, jmax, i, j;
+    int imax, jmax;
 
     //We look for the maximun value of qualityMap
     qualityMap.selfABS();
@@ -272,89 +281,71 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 
     double maxQualityMapValue = A2D_ELEM(qualityMap,imax,jmax);
 
-    //Here we transform the quality map to the no_steps possible values
-    MultidimArray<double> qualityMapInt = (((qualityMap/maxQualityMapValue)*(no_steps-1)));
-    qualityMapInt.selfROUND();
-
-    //imax = 100;
-    //jmax = 100;
-
-    compute_hist(qualityMapInt, hist, no_steps);
-    int tempValue = 0;
-
-    //We look for the max element in hist
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(hist)
-    {
-        tempValue = A1D_ELEM(hist,i);
-        if (tempValue > maxElem)
-            maxElem =  tempValue;
-    }
-
     MultidimArray<double> ds, dc, px, py;
     sincos(orMap,ds,dc);
     px.resizeNoCopy(orMap);
     py.resizeNoCopy(orMap);
 
     //In hx and hy we store the pixels to process attending to their quality value
-    Matrix2D<int> hi(no_steps,maxElem), hj(no_steps,maxElem);
-    Matrix1D<int> front(maxElem), final(maxElem);
     Matrix2D<double> G(2,2), invG(2,2);
     Matrix1D<double> b(2),R(2);
 
-    hi.initZeros();
-    hj.initZeros();
-    front.initZeros();
-    final.initZeros();
-
     MultidimArray<bool> processed;
-    processed.resizeNoCopy(orMap);
-    processed.initZeros();
+    processed.initZeros(orMap);
 
-    //Here appears the real processing
-    A2D_ELEM(dirMap,imax,jmax) = std::atan2(A2D_ELEM(ds,imax,jmax),A2D_ELEM(dc,imax,jmax));
-    A2D_ELEM(processed,imax,jmax) = true;
-    A2D_ELEM(px,imax,jmax) = -A2D_ELEM(ds,imax,jmax);
-    A2D_ELEM(py,imax,jmax) =  A2D_ELEM(dc,imax,jmax);
+    // Process the first point
+    int i=imax;
+    int j=jmax;
+    A2D_ELEM(dirMap,i,j) = std::atan2(A2D_ELEM(ds,i,j),A2D_ELEM(dc,i,j));
+    A2D_ELEM(processed,i,j) = true;
+    A2D_ELEM(px,i,j) = -A2D_ELEM(ds,i,j);
+    A2D_ELEM(py,i,j) =  A2D_ELEM(dc,i,j);
 
-    int ind = 1;
-    double G11 = 0;
-    double G12 = 0;
-    double G21 = 0;
-    double G22 = 0;
-    double b1 = 0;
-    double b2 = 0;
-    int H = 0;
-    double tempx,tempy;
-    bool tempb;
+    PointQuality p;
+    p.i=i;
+    p.j=j;
+    p.quality=maxQualityMapValue;
+    std::priority_queue<PointQuality> queueToProcess;
+    queueToProcess.push(p);
 
-    i = imax;
-    j = jmax;
-
-
-    while( ind > 0)
+    while (!queueToProcess.empty())
     {
+        p=queueToProcess.top();
+        i=p.i;
+        j=p.j;
+        queueToProcess.pop();
+
         int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
         int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
 
+        double G11=0, G12=0, G22=0, b1=0, b2=0;
         for(int k = 0; k< 8 ; k++)
-            if ( (A2D_ELEM(processed,indi[k],indj[k]) == 0) && (indi[k] > size-1 ) && (indi[k] < nx-size )
-                 && (indj[k] > size-1 ) && (indj[k] < ny-size ) &&  (A2D_ELEM(qualityMap,indi[k],indj[k]) > minQuality) )
+        {
+            int ni=indi[k];
+            int nj=indj[k];
+            if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
+            		&& ((nj+size)<XSIZE(processed)-1))
             {
                 for (int li=-size; li <= size; li++)
+                {
+                    int nli=ni+li;
                     for (int lj=-size; lj <= size; lj++)
                     {
-                        tempx = A2D_ELEM(ds,indi[k]+li,indj[k]+lj);
-                        tempy = A2D_ELEM(dc,indi[k]+li,indj[k]+lj);
-                        tempb = A2D_ELEM(processed,indi[k]+li,indj[k]+lj);
+                        int nlj=nj+lj;
+                        if (A2D_ELEM(processed,nli,nlj))
+                        {
+                            double tempx = A2D_ELEM(ds,nli,nlj);
+                            double tempy = A2D_ELEM(dc,nli,nlj);
 
-                        G11 += tempx*tempx+lambda*tempb;
-                        G12 += tempx*tempy;
-                        G22 += tempy*tempy+lambda*tempb;
+                            G11 += tempx*tempx+lambda;
+                            G12 += tempx*tempy;
+                            G22 += tempy*tempy+lambda;
 
-                        b1 += lambda*(A2D_ELEM(px,indi[k]+li,indj[k]+lj))*tempb;
-                        b2 += lambda*(A2D_ELEM(py,indi[k]+li,indj[k]+lj))*tempb;
-
+                            b1 += lambda*(A2D_ELEM(px,nli,nlj));
+                            b2 += lambda*(A2D_ELEM(py,nli,nlj));
+                        }
                     }
+                }
 
                 dMij(G,0,0) = G11;
                 dMij(G,0,1) = G12;
@@ -367,65 +358,16 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
                 G.inv(invG);
                 R = invG*b;
 
-                A2D_ELEM(dirMap,indi[k],indj[k]) = std::atan2(-VEC_ELEM(R,1),VEC_ELEM(R,0));
-                A2D_ELEM(processed,indi[k],indj[k]) = true;
-                A2D_ELEM(px,indi[k],indj[k]) = VEC_ELEM(R,0);
-                A2D_ELEM(py,indi[k],indj[k]) = VEC_ELEM(R,1);
-
-
-                H = A2D_ELEM(qualityMapInt,indi[k],indj[k]);
-                if ( H == 0)
-                    H = 1;
-
-
-                if ( VEC_ELEM(final,H) ==  maxElem )
-                    VEC_ELEM(final,H) = 1;
-                else
-                    VEC_ELEM(final,H) += 1;
-
-                dMij(hi,H,VEC_ELEM(final,H)) = indi[k];
-                dMij(hj,H,VEC_ELEM(final,H)) = indj[k];
-
-                if ( VEC_ELEM(front,H) ==  0 )
-                    VEC_ELEM(front,H) =  1;
-
-
-                G11 = 0;
-                G12 = 0;
-                G21 = 0;
-                G22 = 0;
-                b1 = 0;
-                b2 = 0;
-
+                // Process this point
+                A2D_ELEM(dirMap,ni,nj) = std::atan2(-VEC_ELEM(R,1),VEC_ELEM(R,0));
+                A2D_ELEM(processed,ni,nj) = true;
+                A2D_ELEM(px,ni,nj) = VEC_ELEM(R,0);
+                A2D_ELEM(py,ni,nj) = VEC_ELEM(R,1);
+                p.i=ni;
+                p.j=nj;
+                p.quality=A2D_ELEM(qualityMap,ni,nj);
+                queueToProcess.push(p);
             }
-
-        k = maxElem-1;
-        ind = 0;
-
-        //We obtain the next coordinates to process from the histogram looking for the values in hi, hj
-        //with highest quality value
-        while( (ind == 0) && (k > 0) )
-        {
-            int temp = VEC_ELEM(front,k);
-            ind = temp;
-            if (ind > 0)
-            {
-                i = dMij(hi,k,temp);
-                j = dMij(hj,k,temp);
-
-                if ( temp == VEC_ELEM(final,k))
-                {
-                    VEC_ELEM(front,k) = 0;
-                    VEC_ELEM(final,k) = 0;
-                }
-                else
-                    if ( temp == maxElem)
-                        VEC_ELEM(front,k) = 1;
-                    else
-                        VEC_ELEM(front,k) += 1;
-            }
-
-            --k;
         }
     }
 }
@@ -613,8 +555,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     Image<double> save;
     if (verbose == 1)
     {
-	   save()=In;
-	   save.write("PPP1.xmp");
+        save()=In;
+        save.write("PPP1.xmp");
     }
 
     STARTINGX(mod)=STARTINGY(mod)=0;
@@ -622,16 +564,16 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     orMinDer(In, orMap, orModMap, size);
     if (verbose == 2)
     {
-	   save()=orMap;
-	   save.write("PPP2.xmp");
+        save()=orMap;
+        save.write("PPP2.xmp");
     }
 
     //We obtain the direction from the orientation map
     direction(orMap, orModMap, lambda, size, dir);
     if (verbose == 3)
     {
-	   save()=dir;
-	   save.write("PPP3.xmp");
+        save()=dir;
+        save.write("PPP3.xmp");
     }
     //Spiral transform of the normalized image
     SPTH(In,sph);
@@ -650,32 +592,32 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
 
     if (verbose == 4)
     {
-	   save()=wphase;
-	   save.write("PPP3.xmp");
+        save()=wphase;
+        save.write("PPP3.xmp");
     }
     //Finally we obtain the unwrapped phase
     unwrapping(wphase, mod, lambda, size, phase);
 
     if (verbose == 5)
     {
-	   save()=phase;
-	   save.write("PPP4.xmp");
+        save()=phase;
+        save.write("PPP4.xmp");
     }
 
     if (verbose > 5)
     {
-	   save()=In;
-	   save.write("PPP1.xmp");
-	   save()=orMap;
-	   save.write("PPP2.xmp");
-	   save()=dir;
-	   save.write("PPP3.xmp");
-	   save()=wphase;
-	   save.write("PPP4.xmp");
-	   save()=phase;
-	   save.write("PPP5.xmp");
-	   save()=mod;
-	   save.write("PPP6.xmp");
+        save()=In;
+        save.write("PPP1.xmp");
+        save()=orMap;
+        save.write("PPP2.xmp");
+        save()=dir;
+        save.write("PPP3.xmp");
+        save()=wphase;
+        save.write("PPP4.xmp");
+        save()=phase;
+        save.write("PPP5.xmp");
+        save()=mod;
+        save.write("PPP6.xmp");
 
     }
 
