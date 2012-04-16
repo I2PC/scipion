@@ -333,11 +333,8 @@ TEST_F( ImageTest, movePointerTo)
 TEST_F( ImageTest, checkImageFileSize)
 {
     XMIPP_TRY
-
     EXPECT_TRUE(checkImageFileSize("image/smallVolumeStack.stk"));
     EXPECT_FALSE(checkImageFileSize("image/smallVolumeStackCorrupted.stk"));
-
-
     XMIPP_CATCH
 }
 
