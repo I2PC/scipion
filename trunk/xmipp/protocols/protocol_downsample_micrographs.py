@@ -59,6 +59,7 @@ def doDownsample(log,fnMicrograph,fnOut,downsampleFactor):
     runJob(log,"xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (fnMicrograph,fnOut,downsampleFactor))
 
 def changeSamplingRate(log,fnIn,fnOut,downsampleFactor):
+    MD=xmipp.MetaData()
     MD.read(fnIn)
     i=MD.firstObject()
     Ts=MD.getValue(xmipp.MDL_SAMPLINGRATE,i)
