@@ -84,7 +84,7 @@ class Tester(ContentHandler):
             self.runProgramTests(program)
         
     def checkResult(self,testfiles,outDir,random):
-        from xmipp import FileName, Image, compareTwoFiles
+        from xmipp import FileName, Image, compareTwoFiles, compareTwoMetadataFiles
         for file in testfiles:
             file = os.path.join(outDir, file)
             fileGoldStd = file.replace(self.fnDir, 'goldStandard')
@@ -98,10 +98,13 @@ class Tester(ContentHandler):
                     self.warningFlag = True
                 else:
                     print "comparing '%s' and '%s'" % (file, fileGoldStd)
-                    if FileName(fileGoldStd).isImage():
+                    fnGoldStd = FileName(fileGoldStd)
+                    if fnGoldStd.isImage():
                         im1 = Image(fileGoldStd)
                         im2 = Image(file)
                         result = im1.equal(im2, 0.001)
+                    elif fnGoldStd.isMetaData(): 
+                        result = compareTwoMetadataFiles(file, fileGoldStd)
                     else:
                         result = compareTwoFiles(file, fileGoldStd, 0)
             if not result:
