@@ -55,12 +55,15 @@ class ProtDownsampleMicrographs(XmippProtocol):
 def doDownsample(log,fnMicrograph,fnOut,downsampleFactor):
     runJob(log,"xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (fnMicrograph,fnOut,downsampleFactor))
 
-def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor):
+def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor,tiltPairs):
     MD=xmipp.MetaData()
     MD.read(fnIn)
     for i in MD:
         fnMicrograph=MD.getValue(xmipp.MDL_MICROGRAPH,i);
         MD.setValue(xmipp.MDL_MICROGRAPH,IOTable[fnMicrograph],i)
+        if tiltPairs:
+            fnMicrographTilted=MD.getValue(xmipp.MDL_MICROGRAPH_TILTED,i);
+            MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],i)
     MD.write(blockname+"@"+fnOut)
 
     MD.read("acquisition_info@"+fnIn)
@@ -71,11 +74,11 @@ def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor):
 
 def gatherResults(log, WorkingDir, ImportDir,IOTable,downsampleFactor):
     convertMetaData(os.path.join(ImportDir,"micrographs.xmd"),os.path.join(WorkingDir,"micrographs.xmd"),
-                    "micrographs",IOTable,downsampleFactor)
+                    "micrographs",IOTable,downsampleFactor,False)
     
     fnTilted=os.path.join(ImportDir,"tilted_pairs.xmd")
     if os.path.exists(fnTilted):
         convertMetaData(fnTilted,os.path.join(WorkingDir,"tilted_pairs.xmd"),
-                        "micrographPairs",IOTable,downsampleFactor)
+                        "micrographPairs",IOTable,downsampleFactor,True)
     
     createLink(log,os.path.join(ImportDir,"microscope.xmd"),os.path.join(WorkingDir,"microscope.xmd"))
