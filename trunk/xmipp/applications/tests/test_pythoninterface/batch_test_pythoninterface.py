@@ -449,7 +449,12 @@ class TestXmippPythonInterface(unittest.TestCase):
         
             self.assertFalse(compareTwoMetadataFiles(sfn.name, sfn2.name))
             self.assertTrue(compareTwoMetadataFiles(sfn.name, sfn.name))
-        
+
+            sfnFN = FileName(sfn.name)
+            sfn2FN = FileName(sfn2.name)
+            self.assertFalse(compareTwoMetadataFiles(sfnFN, sfn2FN))
+            self.assertTrue(compareTwoMetadataFiles(sfnFN, sfnFN))
+                    
             auxMd.setValue(MDL_IMAGE, "image_1.xmpSPACE", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_2.xmp", auxMd.addObject())
             auxMd.write("block_000000@" + sfn2.name, MD_OVERWRITE)

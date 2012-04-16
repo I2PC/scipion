@@ -3813,24 +3813,24 @@ bool validateInputImageString(PyObject * pyImage, PyObject *pyStrFn, FileName &f
 static PyObject *
 xmipp_compareTwoMetadataFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    PyObject *pyStrFn1, *pyStrFn2;
+    PyObject *pyStrFn1, *pyStrFn2, *pyStrAux;
 
     if (PyArg_ParseTuple(args, "OO", &pyStrFn1, &pyStrFn2))
     {
         try
         {
-            FileName fn1, fn2;
-            if (PyString_Check(pyStrFn1))
-                fn1 = PyString_AsString(pyStrFn1);
-            else if (FileName_Check(pyStrFn1))
-                fn1 = FileName_Value(pyStrFn1);
+        	FileName fn1, fn2;
+
+        	pyStrAux = PyObject_Str(pyStrFn1);
+
+            if (pyStrAux != NULL)
+                fn1 = PyString_AsString(pyStrAux);
             else
                 PyErr_SetString(PyExc_TypeError,
                                 "Expected string or FileName as first argument");
-            if (PyString_Check(pyStrFn2))
-                fn2 = PyString_AsString(pyStrFn2);
-            else if (FileName_Check(pyStrFn2))
-                fn2 = FileName_Value(pyStrFn2);
+            pyStrAux = PyObject_Str(pyStrFn2);
+            if (pyStrAux != NULL)
+                fn2 = PyString_AsString(pyStrAux);
             else
                 PyErr_SetString(PyExc_TypeError,
                                  "Expected string or FileName as first argument");
