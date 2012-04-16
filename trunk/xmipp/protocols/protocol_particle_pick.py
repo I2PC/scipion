@@ -20,7 +20,7 @@ class ProtParticlePicking(XmippProtocol):
         XmippProtocol.__init__(self, protDict.particle_pick.name, scriptname, project)
         self.Import = "from protocol_particle_pick import *"
         importProt = self.getProtocolFromRunName(self.ImportRun)
-        self.TiltPairs = importProt.TiltPairs
+        self.TiltPairs = os.path.exists(os.path.join(importProt.WorkingDir,"tilted_pairs.xmd"))
         if self.TiltPairs:
             self.inputMicrographs = importProt.getFilename('tiltedPairs')
         else:
@@ -29,6 +29,9 @@ class ProtParticlePicking(XmippProtocol):
 
     def defineSteps(self):
         self.insertStep('copyFile', source=self.inputMicrographs, dest=self.micrographs)
+        fnAcquisition=self.workingDirPath("acquisition_info.xmd")
+        self.insertStep('copyAcquisitionInfo',verifyfiles=[fnAcquisition],
+                        source=self.inputMicrographs,dest=fnAcquisition)
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.micrographs, WorkingDir=self.WorkingDir,
                            TiltPairs=self.TiltPairs,
@@ -122,14 +125,21 @@ class ProtParticlePicking(XmippProtocol):
     def visualize(self):
         launchParticlePickingGUI(None, self.micrographs, self.WorkingDir, self.TiltPairs, ReadOnly=True)
 
+def copyAcquisitionInfo(log,source,dest):
+    MD=xmipp.MetaData()
+    MD.read("acquisition_info@"+source)
+    MD.write("acquisition_info@"+dest)
+
 # Execute protocol in the working directory
 def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,
                              TiltPairs=False,
                              AutomaticPicking=False, NumberOfThreads=1, Fast=True, InCore=False, ReadOnly=False):
     if TiltPairs:
-        args="-i %(MicrographSelfile)s -o %(WorkingDir)s" % locals()
         if ReadOnly:
-            args+=" --mode readonly"
+            mode = "readonly"
+        else:
+            mode = "manual"
+        args="-i %(MicrographSelfile)s -o %(WorkingDir)s --mode %(mode)s" % locals()
         runJob(log,"xmipp_micrograph_tiltpair_picking", args, RunInBackground=True)
     else:
         if ReadOnly:
