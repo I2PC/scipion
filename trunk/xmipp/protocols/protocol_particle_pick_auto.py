@@ -42,6 +42,7 @@ class ProtParticlePickingAuto(XmippProtocol):
 
     def createFilenameTemplates(self):
         return {
+             'acquisition': join('%(dir)s', 'acquisition_info.xmd'),
                 'training': join('%(dir)s', '%(family)s_training.txt'),
                     'mask': join('%(dir)s', '%(family)s_mask.xmp'),
                      'pos': join('%(dir)s', '%(micrograph)s.pos')
@@ -50,6 +51,8 @@ class ProtParticlePickingAuto(XmippProtocol):
     def defineSteps(self):
         self.insertStep('createLink', source=self.pickingMicrographs, dest=self.micrographs)
         self.insertStep('createLink', source=self.pickingFamilies, dest=self.families)
+        self.insertStep('createLink', source=self.getFilename('acquisition',dir=self.pickingDir),
+                                      dest=self.getFilename('acquisition',dir=self.WorkingDir))
         for family in self.familiesForAuto:
             getFilename = lambda k, d: self.getFilename(k, dir=d, family=family)
             self.insertStep('createLink',source=getFilename('training', self.pickingDir),
