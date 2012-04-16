@@ -484,9 +484,10 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
         if (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3)
             A.resizeNoCopy(3, 3);
 
-    sincos(DEG2RAD(alpha),&ca,&sa);
-    sincos(DEG2RAD(beta),&cb,&sb);
-    sincos(DEG2RAD(gamma),&cg,&sg);
+    sincos(DEG2RAD(alpha),&sa,&ca);
+    sincos(DEG2RAD(beta),&sb,&cb);
+    sincos(DEG2RAD(gamma),&sg,&cg);
+
     cc = cb * ca;
     cs = cb * sa;
     sc = sb * ca;
