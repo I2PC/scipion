@@ -155,7 +155,7 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
     md.write("micrographs@"+MicrographFn)
     mdAcquisition = MetaData()
     mdAcquisition.setValue(xmipp.MDL_SAMPLINGRATE,float(PixelSize),mdAcquisition.addObject())
-    mdAcquisition.write("acquisition_info@"+MicrographFn,xmipp.MD_APPEND)
+    mdAcquisition.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
     
     if len(PairsMd):
         md.clear()
@@ -167,4 +167,3 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
             md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
             md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)
         md.write("micrographPairs@"+TiltedFn)
-        mdAcquisition.write("acquisition_info@"+TiltedFn,xmipp.MD_APPEND)
