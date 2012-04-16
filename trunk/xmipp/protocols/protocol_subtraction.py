@@ -156,15 +156,21 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         def doPlot(plotName):
             return plotName in selectedPlots
         
+        importProtPlots = self.getProtocolFromRunName("../"+self.ProtocolName) 
+        self.pmprotWorkingDir = importProtPlots.WorkingDir
+        
+        print "self.pmprotWorkingDir: ", self.pmprotWorkingDir
+        
         file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
-        file_name = join(self.pmprotWorkingDir, file_name_tmp)
+        file_name = ""+join(self.pmprotWorkingDir, file_name_tmp)
         print "file_name: ", file_name
                          
         if exists(file_name):
+            print "exists"
             auxMD = MetaData("numberGroups@"+file_name)
-            self.defocusGroupNo = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
+            self.NumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
         else:
-            self.defocusGroupNo = 1
+            self.NumberOfCtfGroups = 1
             
         
         if doPlot('DisplayReference'):
