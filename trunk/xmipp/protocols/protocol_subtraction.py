@@ -127,6 +127,20 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         #summary = ['Performed %d iterations with angular sampling rate %s' 
         #           % (self.NumberOfIterations, self.AngSamplingRateDeg)]
         #summary += ['Final Resolution is %s'%'not yet implemented']
+        importProtSummary = self.getProtocolFromRunName("../"+self.ProtocolName) 
+        self.pmprotWorkingDir = importProtSummary.WorkingDir
+        
+        file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
+        file_name = ""+join(self.pmprotWorkingDir, file_name_tmp)
+                         
+        if exists(file_name):
+            auxMD = MetaData("numberGroups@"+file_name)
+            self.NumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
+        else:
+            self.NumberOfCtfGroups = 1
+
+        summary += ['Number of CTFgroups is %d ' %(self.NumberOfCtfGroups)]
+
         return summary
     
     
