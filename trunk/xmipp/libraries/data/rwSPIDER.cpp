@@ -491,8 +491,8 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
      */
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked if a shared or exclusive lock is
-                                                                   blocked by other locks, the thread shall
-                                                                   wait until the request can be satisfied*/
+                                                                       blocked by other locks, the thread shall
+                                                                       wait until the request can be satisfied*/
 
     // Write main header
     if( mode == WRITE_OVERWRITE ||
@@ -508,15 +508,18 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     // write single image if not stack
     if ( Ndim == 1 && !isStack)
     {
-        if (mmapOnWrite)
+        if (dataMode >= DATA) // Image is not written if only is modifying the header
         {
-            mappedOffset = ftell(fimg);
-            mappedSize = mappedOffset + datasize;
-            fseek(fimg, datasize-1, SEEK_CUR);
-            fputc(0, fimg);
+            if (mmapOnWrite)
+            {
+                mappedOffset = ftell(fimg);
+                mappedSize = mappedOffset + datasize;
+                fseek(fimg, datasize-1, SEEK_CUR);
+                fputc(0, fimg);
+            }
+            else
+                writeData(fimg, 0, wDType, datasize_n, CW_CAST);
         }
-        else
-            writeData(fimg, 0, wDType, datasize_n, CW_CAST);
     }
     else // Jump to the selected imgStart position
     {
