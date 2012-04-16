@@ -40,6 +40,10 @@ class ProtScreenMicrographs(XmippProtocol):
 
     def defineSteps(self):
         self.micrographs = self.getFilename('micrographs')
+        fnAcquisition=self.workingDirPath("acquisition_info.xmd")
+        self.insertStep('createLink',verifyfiles=[fnAcquisition],source=os.path.join(self.importDir,"acquisition_info.xmd"),
+                        dest=fnAcquisition);
+
         # Read Microscope parameters
         MD = xmipp.MetaData(self.importMicroscope)
         objId = MD.firstObject()

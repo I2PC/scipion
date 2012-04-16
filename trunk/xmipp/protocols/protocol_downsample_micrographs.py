@@ -17,6 +17,9 @@ class ProtDownsampleMicrographs(XmippProtocol):
         self.importDir = self.importProt.WorkingDir
         
     def defineSteps(self):
+        self.insertStep("changeSamplingRate",fnIn=os.path.join(self.importDir,"acquisition_info.xmd"),
+                        fnOut=self.workingDirPath("acquisition_info.xmd"),downsampleFactor=self.DownsampleFactor)
+
         MD = xmipp.MetaData(os.path.join(self.importDir,"micrographs.xmd"))
         previousId = XmippProjectDb.FIRST_STEP
         IOTable={}
@@ -55,6 +58,13 @@ class ProtDownsampleMicrographs(XmippProtocol):
 def doDownsample(log,fnMicrograph,fnOut,downsampleFactor):
     runJob(log,"xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % (fnMicrograph,fnOut,downsampleFactor))
 
+def changeSamplingRate(log,fnIn,fnOut,downsampleFactor):
+    MD.read(fnIn)
+    i=MD.firstObject()
+    Ts=MD.getValue(xmipp.MDL_SAMPLINGRATE,i)
+    MD.setValue(xmipp.MDL_SAMPLINGRATE,Ts*downsampleFactor,i)
+    MD.write(fnOut)
+
 def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor,tiltPairs):
     MD=xmipp.MetaData()
     MD.read(fnIn)
@@ -66,11 +76,6 @@ def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor,tiltPairs):
             MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],i)
     MD.write(blockname+"@"+fnOut)
 
-    MD.read("acquisition_info@"+fnIn)
-    i=MD.firstObject()
-    Ts=MD.getValue(xmipp.MDL_SAMPLINGRATE,i)
-    MD.setValue(xmipp.MDL_SAMPLINGRATE,Ts*downsampleFactor,i)
-    MD.write("acquisition_info@"+fnOut,xmipp.MD_APPEND)
 
 def gatherResults(log, WorkingDir, ImportDir,IOTable,downsampleFactor):
     convertMetaData(os.path.join(ImportDir,"micrographs.xmd"),os.path.join(WorkingDir,"micrographs.xmd"),
