@@ -330,7 +330,6 @@ void ProgAngularProjectLibrary::run()
             mySFout.setValue(MDL_Y,y,id);
             mySFout.setValue(MDL_Z,z,id);
             mySFout.setValue(MDL_SCALE,1.0,id);
-
         }
     }
     mySFout.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");
