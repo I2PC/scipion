@@ -17,7 +17,7 @@ from xmipp import MDL_COUNT
 
 from protlib_base import XmippProtocol, protocolMain
 #from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector
-from protlib_utils import getComponentFromVector
+from protlib_utils import getComponentFromVector, runShowJ
 from protlib_sql import XmippProjectDb
 from config_protocols import protDict
 from protlib_filesystem import copyFile
@@ -123,7 +123,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def summary(self):
         super(ProtPartialProjectionSubtraction, self).summary()
-        summary = ['Summary'] 
+        summary = [] 
         #summary = ['Performed %d iterations with angular sampling rate %s' 
         #           % (self.NumberOfIterations, self.AngSamplingRateDeg)]
         #summary += ['Final Resolution is %s'%'not yet implemented']
@@ -173,14 +173,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         importProtPlots = self.getProtocolFromRunName("../"+self.ProtocolName) 
         self.pmprotWorkingDir = importProtPlots.WorkingDir
         
-        print "self.pmprotWorkingDir: ", self.pmprotWorkingDir
-        
         file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
-        file_name = ""+join(self.pmprotWorkingDir, file_name_tmp)
-        print "file_name: ", file_name
+        file_name = join(self.pmprotWorkingDir, file_name_tmp)
                          
         if exists(file_name):
-            print "exists"
             auxMD = MetaData("numberGroups@"+file_name)
             self.NumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
         else:
@@ -188,7 +184,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             
         
         if doPlot('DisplayReference'):
-            for indexCtf in range(1, self.defocusGroupNo+1): 
+            for indexCtf in range(1, self.NumberOfCtfGroups+1): 
                 file_name = self.getFilename('SubtractedStack', ctf=indexCtf)+'ref'
                     
                 if exists(file_name):
@@ -196,10 +192,11 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                         runShowJ(file_name)
                     except Exception, e:
                         from protlib_gui_ext import showError
-                        showError("Error launching java app", str(e))
+                        print "Error: ", str(e)
+#                        showError("Error launching java app", str(e))
 
         if doPlot('DisplayExperimental'):
-            for indexCtf in range(1, self.defocusGroupNo+1): 
+            for indexCtf in range(1, self.NumberOfCtfGroups+1): 
                 file_name = self.getFilename('SubtractedStack', ctf=indexCtf)+'exp'
                     
                 if exists(file_name):
@@ -207,18 +204,20 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                         runShowJ(file_name)
                     except Exception, e:
                         from protlib_gui_ext import showError
-                        showError("Error launching java app", str(e))
+                        print "Error: ", str(e)
+#                        showError("Error launching java app", str(e))
 
         if doPlot('DisplaySubtracted'):
-            for indexCtf in range(1, self.defocusGroupNo+1): 
+            for indexCtf in range(1, self.NumberOfCtfGroups+1): 
                 file_name = self.getFilename('SubtractedStack', ctf=indexCtf)
-                    
+                print "DisplaySubtracted file_name: ", file_name
                 if exists(file_name):
                     try:
                         runShowJ(file_name)
                     except Exception, e:
                         from protlib_gui_ext import showError
-                        showError("Error launching java app", str(e))
+                        print "Error: ", str(e)
+#                        showError("Error launching java app", str(e))
 
         if xplotter:
             xplotter.show()
