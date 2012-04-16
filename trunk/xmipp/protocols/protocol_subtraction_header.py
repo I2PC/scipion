@@ -109,11 +109,29 @@ dimY = -1
 # {eval} expandParallel(mpi=3, jobsize=1)
 
 #------------------------------------------------------------------------------------------------
-# {hidden} Analysis of results
-
+# {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript='visualize_partial_projection_subtraction.py'
+AnalysisScript ='visualize_subtraction.py'
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Visualization
+#------------------------------------------------------------------------------------------------
+
+# {view} Display stack with reference images
+""" Stack with reference images
+"""
+DisplayReference=False
+
+# {view} Display stack with experimental images
+""" Stack with experimental images
+"""
+DisplayExperimental=False
+
+# {view} Display stack with subtracted images
+""" Stack with subtracted images
+"""
+DisplaySubtracted=True
 
 #-----------------------------------------------------------------------------
 # {section} Debug

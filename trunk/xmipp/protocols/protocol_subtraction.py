@@ -127,25 +127,23 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         #summary = ['Performed %d iterations with angular sampling rate %s' 
         #           % (self.NumberOfIterations, self.AngSamplingRateDeg)]
         #summary += ['Final Resolution is %s'%'not yet implemented']
-        #summary += ['Number of CTFgroups and References is %d %d respectively'
-        #                %(self.NumberOfCtfGroups,self.numberOfReferences)]
         return summary
     
     
     def visualize(self):
     
-        plots = [k for k in ['DisplayReference', 'DisplayReconstruction', 'DisplayFilteredReconstruction', 
-                             'DisplayBFactorCorrectedVolume', 'DisplayProjectionMatchingAlign2d', 'DisplayDiscardedImages',
-                             'DisplayDiscardedImages', 'DisplayAngularDistribution', 'DisplayResolutionPlots'] if self.ParamsDict[k]]
-#        if len(plots):
-#            self.launchProjmatchPlots(plots)
-
-
+        plots = [k for k in ['DisplayReference', 'DisplayExperimental', 'DisplaySubtracted'] if self.ParamsDict[k]]
+        
+        if len(plots):
+            self.launchProjSubPlots(plots)
+            
+            
     def visualizeVar(self, varName):
 #        if varName == 'DoShowReferences':
 #            self.visualizeReferences()
 #        else:
         self.launchProjSubPlots([varName])
+        
         
     def launchProjSubPlots(self, selectedPlots):
         ''' Launch some plots for a Projection Matching protocol run '''
@@ -158,8 +156,52 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         def doPlot(plotName):
             return plotName in selectedPlots
         
-        print "XXX"
-#            if doPlot('DisplayReference'):
+        file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
+        file_name = join(self.pmprotWorkingDir, file_name_tmp)
+        print "file_name: ", file_name
+                         
+        if exists(file_name):
+            auxMD = MetaData("numberGroups@"+file_name)
+            self.defocusGroupNo = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
+        else:
+            self.defocusGroupNo = 1
+            
+        
+        if doPlot('DisplayReference'):
+            for indexCtf in range(1, self.defocusGroupNo+1): 
+                file_name = self.getFilename('SubtractedStack', ctf=indexCtf)+'ref'
+                    
+                if exists(file_name):
+                    try:
+                        runShowJ(file_name)
+                    except Exception, e:
+                        from protlib_gui_ext import showError
+                        showError("Error launching java app", str(e))
+
+        if doPlot('DisplayExperimental'):
+            for indexCtf in range(1, self.defocusGroupNo+1): 
+                file_name = self.getFilename('SubtractedStack', ctf=indexCtf)+'exp'
+                    
+                if exists(file_name):
+                    try:
+                        runShowJ(file_name)
+                    except Exception, e:
+                        from protlib_gui_ext import showError
+                        showError("Error launching java app", str(e))
+
+        if doPlot('DisplaySubtracted'):
+            for indexCtf in range(1, self.defocusGroupNo+1): 
+                file_name = self.getFilename('SubtractedStack', ctf=indexCtf)
+                    
+                if exists(file_name):
+                    try:
+                        runShowJ(file_name)
+                    except Exception, e:
+                        from protlib_gui_ext import showError
+                        showError("Error launching java app", str(e))
+
+        if xplotter:
+            xplotter.show()
 
 
     def createFilenameTemplates(self):  
