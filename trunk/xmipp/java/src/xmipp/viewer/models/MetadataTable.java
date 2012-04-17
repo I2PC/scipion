@@ -36,6 +36,7 @@ import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
 
@@ -305,12 +306,17 @@ public class MetadataTable extends MetadataGallery {
 				int width = 0;
 				TableCellRenderer rend;
 				Component comp;
+				boolean non_empty = data.md.size() > 0;
+				
 				for (int i = 0; i < visibleLabels.size(); ++i) {
 					ColumnInfo col = visibleLabels.get(i);
+					width = 0;
 					//Calculate width of the cell 
 					if (col.render) {
 						width = cellDim.width;
-					} else {
+					} 
+					else if (non_empty) {
+					//else {
 						rend = table.getCellRenderer(0, i);
 						comp = rend.getTableCellRendererComponent(
 								table, getValueAt(0, i), false, false, 0, 0);
@@ -326,8 +332,7 @@ public class MetadataTable extends MetadataGallery {
 					//Take max width
 					width = Math.max(width, comp.getPreferredSize().width);
 					getColumn(i).setPreferredWidth(width + 10);
-//					DEBUG.printMessage(String.format("col: %d, width: %d", i,
-//							width));
+//					DEBUG.printMessage(String.format("col: %d, width: %d", i, width));
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

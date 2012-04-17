@@ -479,6 +479,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			table.setRowHeight(dimension.height);
 			rowHeader.setFixedCellHeight(dimension.height);
 			rowHeaderModel.setSize(gallery.getRowCount());
+		}
 			// Adjusts columns width
 			gallery.getColumnModel().adjustColumnsWidth(table);
 			// columnModel.setWidth(dimension.width);
@@ -491,7 +492,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			rowHeader.repaint();
 			// table.revalidate();
 			// repaint();
-		}
+		//}
 
 		jsZoom.setValue(data.zoom);
 		isUpdating = updatingState;

@@ -294,10 +294,11 @@ public class GalleryData {
 			case GALLERY_VOL:
 				return new VolumeGallery(this);
 			case GALLERY_MD:
-				if (hasRenderLabel())
+				if (md.size() > 0 && hasRenderLabel())
 					return new MetadataGallery(this);
 				// else fall in the next case
 			case TABLE_MD:
+				DEBUG.printFormat("Mode.TABLE_MD");
 				mode = Mode.TABLE_MD; // this is necessary when coming from
 				// previous case
 				if (!md.isColumnFormat())
