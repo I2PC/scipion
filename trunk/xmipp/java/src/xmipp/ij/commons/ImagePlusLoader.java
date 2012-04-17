@@ -43,10 +43,10 @@ public class ImagePlusLoader
 
 	public ImagePlus loadImagePlus()
 	{
-		ImagePlus imp = null;
+		//ImagePlus imp = null;
 		try
 		{
-			if (fileName != null && (new File(fileName).lastModified() > modified || imp == null))
+			if (fileName != null && ( hasChanged() || imp == null))
 				imp = XmippImageConverter.loadImage(fileName);
 			else if (ig != null)
 				imp = XmippImageConverter.readToImagePlus(ig);
@@ -57,6 +57,10 @@ public class ImagePlusLoader
 			e.printStackTrace();
 		}
 		return imp;
+	}
+	
+	public boolean hasChanged(){
+		return new File(fileName).lastModified() > modified;
 	}
 
 	public String getFileName()

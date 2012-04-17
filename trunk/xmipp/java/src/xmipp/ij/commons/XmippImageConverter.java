@@ -47,7 +47,8 @@ public class XmippImageConverter {
 		 * image = new ImageGeneric(name); imp = convertToImageJ(image, nimage);
 		 * } else {
 		 */
-		imp = readToImagePlus(image, w, h);
+		long select_image = Filename.getNimage(filename);
+		imp = readToImagePlus(image, w, h, select_image);
 		// }
 
 		return imp;
