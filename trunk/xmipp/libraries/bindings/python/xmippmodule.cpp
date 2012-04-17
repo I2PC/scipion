@@ -212,9 +212,7 @@ FileName_isMetaData(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 FileName_isImage(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    FileNameObject *self = (FileNameObject*) obj;
-
-    if (isImage(*(self->filename)))
+    if (isImage(FileName_Value(obj)))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;

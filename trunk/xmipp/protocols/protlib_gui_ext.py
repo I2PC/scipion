@@ -1860,7 +1860,9 @@ def showTextfileViewer(title, filelist, parent=None, main=False):
         root = tk.Toplevel()
     root.withdraw()
     root.title(title)
-    l = TextfileViewer(root, filelist)
+    from xmipp import FileName
+    files = [FileName(f).removeBlockName() for f in filelist]
+    l = TextfileViewer(root, files)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
     l.grid(column=0, row=0, sticky='nsew')
