@@ -258,9 +258,9 @@ TEST_F( FringeProcessingTests, direction)
     */
 
 #ifdef DEBUG
-    orModMap.write(ModName);
-    orMap.write(OrName);
-    dirMap.write(DirName);
+    //orModMap.write(ModName);
+    //orMap.write(OrName);
+    //dirMap.write(DirName);
 #endif
 }
 #undef DEBUG
