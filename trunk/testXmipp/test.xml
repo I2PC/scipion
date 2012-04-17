@@ -303,18 +303,53 @@
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_image_header" mpi="FALSE">
-		<CASE arguments="-i input/smallStack.stk --extract -o %o/header.doc"
+		<CASE arguments="-i input/smallStack.stk --extract -o %o/header.xmd"
 			changeDir="FALSE">
-			<FILE filename="header.doc" />
+			<FILE filename="header.xmd" />
 		</CASE>
-		<CASE arguments="-i %o/smallStack.doc --assign" changeDir="FALSE">
+		<CASE arguments="-i %o/newHeaderStack.xmd --assign" changeDir="FALSE">
 			<PRERUN command="cp input/smallStack.stk %o" />
 			<PRERUN
-				command=" xmipp_metadata_selfile_create -p %o/smallStack.stk -o %o/smallStack.doc -s" />
+				command=" xmipp_metadata_selfile_create -p %o/smallStack.stk -o %o/smallStack.xmd -s" />
 			<PRERUN
-				command=" xmipp_metadata_utilities -i %o/smallStack.doc -o %o/smallStack.doc --fill Y constant 2" />
-			<FILE filename="smallStack.doc" />
-			<FILE filename="smallStack.stk" />
+				command=" xmipp_metadata_utilities -i %o/smallStack.xmd -o %o/newHeaderStack.xmd --fill shiftY constant 2" />
+			<POSTRUN
+				command="xmipp_image_header -i %o/smallStack.xmd --extract -o %o/outputHeader.xmd" />
+			<FILE filename="outputHeader.xmd" />
+		</CASE>
+		<CASE arguments="-i %o/newHeader.xmd --assign" changeDir="FALSE">
+			<PRERUN
+				command=" xmipp_image_convert input/smallStack.stk --oroot %o/smallImages:spi -o %o/images.xmd" />
+			<PRERUN
+				command=" xmipp_metadata_utilities -i %o/images.xmd -o %o/newHeader.xmd --fill shiftY constant 2" />
+			<POSTRUN
+				command="xmipp_image_header %o/images.xmd --extract -o %o/outputHeader.xmd" />
+			<FILE filename="outputHeader.xmd" />
+		</CASE>
+		<CASE arguments="-i %o/smallStack.xmd --reset" changeDir="FALSE">
+			<PRERUN command="cp input/smallStack.stk %o" />
+			<PRERUN
+				command=" xmipp_metadata_selfile_create -p %o/smallStack.stk -o %o/smallStack.xmd -s" />
+			<PRERUN
+				command=" xmipp_metadata_utilities -i %o/smallStack.xmd -o %o/newHeaderStack.xmd --fill shiftY constant 2" />
+			<PRERUN command=" xmipp_image_header -i %o/newHeaderStack.xmd --assign" />
+			<PRERUN
+				command="xmipp_image_header -i %o/smallStack.xmd --extract -o %o/preOutputHeader.xmd" />
+			<POSTRUN
+				command="xmipp_image_header -i %o/smallStack.xmd --extract -o %o/outputHeader.xmd" />
+			<FILE filename="outputHeader.xmd" />
+		</CASE>
+		<CASE arguments="-i %o/images.xmd --reset" changeDir="FALSE">
+			<PRERUN
+				command=" xmipp_image_convert input/smallStack.stk --oroot %o/smallImages:spi -o %o/images.xmd" />
+			<PRERUN
+				command="xmipp_metadata_utilities -i %o/images.xmd -o %o/newHeader.xmd --fill shiftY constant 2" />
+			<PRERUN command="xmipp_image_header -i %o/newHeader.xmd --assign" />
+			<PRERUN
+				command="xmipp_image_header %o/images.xmd --extract -o %o/preOutputHeader.xmd" />
+			<POSTRUN
+				command="xmipp_image_header %o/images.xmd --extract -o %o/outputHeader.xmd" />
+			<FILE filename="outputHeader.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_image_histogram" mpi="FALSE">

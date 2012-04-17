@@ -1,0 +1,8 @@
+Input File: input/smallStack.stk
+Output File: tmpLink/xmipp_image_header_05/images.xmd
+Output Root: tmpLink/xmipp_image_header_05/smallImages:spi
+Assigning image(s) geometrical transformations from metadata to header...
+Input: tmpLink/xmipp_image_header_05/newHeader.xmd
+Extracting image(s) geometrical transformations from header to metadata...
+Input: tmpLink/xmipp_image_header_05/images.xmd
+Output: tmpLink/xmipp_image_header_05/preOutputHeader.xmd

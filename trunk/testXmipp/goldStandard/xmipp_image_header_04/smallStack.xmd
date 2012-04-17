@@ -1,0 +1,10 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+000001@tmpLink/xmipp_image_header_04/smallStack.stk          1 
+000002@tmpLink/xmipp_image_header_04/smallStack.stk          1 
+000003@tmpLink/xmipp_image_header_04/smallStack.stk          1 
+000004@tmpLink/xmipp_image_header_04/smallStack.stk          1 

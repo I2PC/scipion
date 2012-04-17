@@ -1,0 +1,3 @@
+Extracting image(s) geometrical transformations from header to metadata...
+Input: tmpLink/xmipp_image_header_04/smallStack.xmd
+Output: tmpLink/xmipp_image_header_04/outputHeader.xmd

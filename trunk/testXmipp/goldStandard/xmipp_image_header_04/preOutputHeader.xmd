@@ -1,0 +1,21 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _originX
+ _originY
+ _originZ
+ _shiftX
+ _shiftY
+ _shiftZ
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _weight
+ _flip
+ _scale
+ _image
+    0.000000     0.000000     0.000000     0.000000     2.000000     0.000000     0.000000     0.000000     0.000000     0.000000 0     1.000000 000001@tmpLink/xmipp_image_header_04/smallStack.stk 
+    0.000000     0.000000     0.000000     0.000000     2.000000     0.000000     0.000000     0.000000     0.000000     0.000000 0     1.000000 000002@tmpLink/xmipp_image_header_04/smallStack.stk 
+    0.000000     0.000000     0.000000     0.000000     2.000000     0.000000     0.000000     0.000000     0.000000     0.000000 0     1.000000 000003@tmpLink/xmipp_image_header_04/smallStack.stk 
+    0.000000     0.000000     0.000000     0.000000     2.000000     0.000000     0.000000     0.000000     0.000000     0.000000 0     1.000000 000004@tmpLink/xmipp_image_header_04/smallStack.stk 

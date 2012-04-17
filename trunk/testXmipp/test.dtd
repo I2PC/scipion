@@ -32,7 +32,7 @@
   >
 
 <!--- Put your DTDDoc comment here. -->
-<!ELEMENT CASE (PRERUN|FILE)*>
+<!ELEMENT CASE (PRERUN|POSTRUN|FILE)*>
 <!ATTLIST CASE
     arguments CDATA #IMPLIED
     changeDir CDATA #IMPLIED
@@ -44,6 +44,12 @@
 <!ATTLIST PRERUN
     command CDATA #IMPLIED
   >
+  
+<!ELEMENT POSTRUN EMPTY>
+<!ATTLIST POSTRUN
+    command CDATA #IMPLIED
+  >
+  
 <!ELEMENT FILE EMPTY>
 <!ATTLIST FILE
     filename CDATA #IMPLIED
