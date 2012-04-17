@@ -205,7 +205,7 @@ void ProgSortByStatistics::run()
     MetaData SFout;
     std::ofstream fh_zind;
     if (verbose==2 && fn_out!="")
-        fh_zind.open((fn_out + "_vectors.xmd").c_str(), std::ios::out);
+        fh_zind.open((fn_out.withoutExtension() + "_vectors.xmd").c_str(), std::ios::out);
     MultidimArray<double> finalZscore=Zscore;
     double L=1;
     if (multivariate)
