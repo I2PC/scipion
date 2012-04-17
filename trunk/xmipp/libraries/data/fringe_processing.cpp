@@ -267,19 +267,23 @@ public:
     }
 };
 
-void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap)
+void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap, int x, int y)
 {
     //First we perform some setup stuff
     int nx = XSIZE(orMap);
     int ny = YSIZE(orMap);
-    double minQuality = 0.0;
-    int imax, jmax;
+    double minQuality = 0;
+    int imax, jmax, max_levels=10;
+
 
     //We look for the maximun value of qualityMap
     qualityMap.selfABS();
     qualityMap.maxIndex(imax,jmax);
 
-    double maxQualityMapValue = A2D_ELEM(qualityMap,imax,jmax);
+    double maxQualityMapValue = (A2D_ELEM(qualityMap,imax,jmax));
+
+    MultidimArray<double> qualityMapInt = (((qualityMap/maxQualityMapValue)*(max_levels-1)));
+    qualityMapInt.selfROUND();
 
     MultidimArray<double> ds, dc, px, py;
     sincos(orMap,ds,dc);
@@ -294,8 +298,9 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
     processed.initZeros(orMap);
 
     // Process the first point
-    int i=imax;
-    int j=jmax;
+    int i=x;
+    int j=y;
+
     A2D_ELEM(dirMap,i,j) = std::atan2(A2D_ELEM(ds,i,j),A2D_ELEM(dc,i,j));
     A2D_ELEM(processed,i,j) = true;
     A2D_ELEM(px,i,j) = -A2D_ELEM(ds,i,j);
@@ -304,7 +309,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
     PointQuality p;
     p.i=i;
     p.j=j;
-    p.quality=maxQualityMapValue;
+    p.quality=A2D_ELEM(qualityMapInt,i,j);
     std::priority_queue<PointQuality> queueToProcess;
     queueToProcess.push(p);
 
@@ -318,14 +323,16 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
         int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
         int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
 
-        double G11=0, G12=0, G22=0, b1=0, b2=0;
         for(int k = 0; k< 8 ; k++)
         {
+
             int ni=indi[k];
             int nj=indj[k];
             if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
-            		&& ((nj+size)<XSIZE(processed)-1))
+                 && ((nj+size)<XSIZE(processed)-1))
             {
+                double G11=0, G12=0, G22=0, b1=0, b2=0;
+
                 for (int li=-size; li <= size; li++)
                 {
                     int nli=ni+li;
@@ -365,7 +372,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
                 A2D_ELEM(py,ni,nj) = VEC_ELEM(R,1);
                 p.i=ni;
                 p.j=nj;
-                p.quality=A2D_ELEM(qualityMap,ni,nj);
+                p.quality=A2D_ELEM(qualityMapInt,ni,nj);
                 queueToProcess.push(p);
             }
         }
@@ -380,40 +387,18 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     int ny = YSIZE(wrappedPhase);
     double minQuality = 0.01;
 
-    Histogram1D hist;
-    int no_steps = 10, maxElem = 0, k;
-    int imax, jmax, i, j;
+    int imax, jmax, i, j, max_levels=10;
 
     //We look for the maximun value of qualityMap
     qualityMap.selfABS();
     qualityMap.maxIndex(imax,jmax);
 
     double maxQualityMapValue = A2D_ELEM(qualityMap,imax,jmax);
-
-    //Here we transform the quality map to the no_steps possible values
-    MultidimArray<double> qualityMapInt = (((qualityMap/maxQualityMapValue)*(no_steps-1)));
+    MultidimArray<double> qualityMapInt = (((qualityMap/maxQualityMapValue)*(max_levels-1)));
     qualityMapInt.selfROUND();
 
-    compute_hist(qualityMapInt, hist, no_steps);
-    int tempValue = 0;
-
-    //We look for the max element in hist
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(hist)
-    {
-        tempValue = A1D_ELEM(hist,i);
-        if (tempValue > maxElem)
-            maxElem =  tempValue;
-    }
-
-    //In hx and hy we store the pixels to process attending to their quality value
-    Matrix2D<int> hi(no_steps,maxElem), hj(no_steps,maxElem);
-    Matrix1D<int> front(maxElem), final(maxElem);
     Matrix2D<double> gaussian;
     gaussian.initGaussian(2*size+1,0.6);
-    hi.initZeros();
-    hj.initZeros();
-    front.initZeros();
-    final.initZeros();
 
     MultidimArray<bool> processed;
     processed.resizeNoCopy(wrappedPhase);
@@ -423,10 +408,12 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     A2D_ELEM(unwrappedPhase,imax,jmax) = A2D_ELEM(wrappedPhase,imax,jmax);
     A2D_ELEM(processed,imax,jmax) = true;
 
-    int ind = 1;
-    int H = 0;
-    i = imax;
-    j = jmax;
+    PointQuality p;
+    p.i=imax;
+    p.j=jmax;
+    p.quality=A2D_ELEM(qualityMapInt,imax,jmax);
+    std::priority_queue<PointQuality> queueToProcess;
+    queueToProcess.push(p);
 
     //predictor and corrector
     double pred = 0;
@@ -440,26 +427,35 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     double norm = 0;
     double up = 0;
 
-
-    while( ind > 0)
+    while(!queueToProcess.empty())
     {
+        p=queueToProcess.top();
+        i=p.i;
+        j=p.j;
+        queueToProcess.pop();
 
         int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
         int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
 
         for(int k = 0; k< 8 ; k++)
-            if ( (A2D_ELEM(processed,indi[k],indj[k]) == 0) && (indi[k] > size-1 ) && (indi[k] < nx-size )
-                 && (indj[k] > size-1 ) && (indj[k] < ny-size ) &&  (A2D_ELEM(qualityMap,indi[k],indj[k]) > minQuality) )
+        {
+            int ni=indi[k];
+            int nj=indj[k];
+            if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
+                 && ((nj+size)<XSIZE(processed)-1))
             {
-                wp =  A2D_ELEM(wrappedPhase,indi[k],indj[k]);
+                wp =  A2D_ELEM(wrappedPhase,ni,nj);
 
                 for (int li=-size; li <= size; li++)
+                {
+                    int nli=ni+li;
                     for (int lj=-size; lj <= size; lj++)
                     {
-                        if (A2D_ELEM(processed,indi[k]+li,indj[k]+lj)>0)
+                        int nlj=nj+lj;
+                        if (A2D_ELEM(processed,nli,nlj))
                         {
-                            uw =  A2D_ELEM(unwrappedPhase,indi[k]+li,indj[k]+lj);
-                            q  =  A2D_ELEM(qualityMap,indi[k]+li,indj[k]+lj);
+                            uw =  A2D_ELEM(unwrappedPhase,nli,nlj);
+                            q  =  A2D_ELEM(qualityMap,nli,nlj);
                             g  =  dMij(gaussian,li+size,lj+size);
 
                             t = (wp - uw);
@@ -474,68 +470,30 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
                             pred += (uw*q*g);
                             cor  += (up*q*g);
                             norm += (q*g);
-                        }
 
+                        }
                     }
 
-                A2D_ELEM(unwrappedPhase,indi[k],indj[k]) = pred/norm + (lambda*cor)/norm;
-                A2D_ELEM(processed,indi[k],indj[k]) = true;
+                }
+
+                A2D_ELEM(unwrappedPhase,ni,nj) = pred/norm + (lambda*cor)/norm;
+                A2D_ELEM(processed,ni,nj) = true;
 
                 norm = 0;
                 pred = 0;
                 cor = 0;
 
-                H = A2D_ELEM(qualityMapInt,indi[k],indj[k]);
-                if ( H == 0)
-                    H = 1;
-
-                if ( VEC_ELEM(final,H) ==  maxElem )
-                    VEC_ELEM(final,H) = 1;
-                else
-                    VEC_ELEM(final,H) += 1;
-
-                dMij(hi,H,VEC_ELEM(final,H)) = indi[k];
-                dMij(hj,H,VEC_ELEM(final,H)) = indj[k];
-
-                if ( VEC_ELEM(front,H) ==  0 )
-                    VEC_ELEM(front,H) =  1;
+                p.i=ni;
+                p.j=nj;
+                p.quality=A2D_ELEM(qualityMapInt,ni,nj);
+                queueToProcess.push(p);
 
             }
-
-        k = maxElem-1;
-        ind = 0;
-
-        //We obtain the next coordinates to process from the histogram looking for the values in hi, hj
-        //with highest quality value
-        while( (ind == 0) && (k > 0) )
-        {
-            int temp = VEC_ELEM(front,k);
-            ind = temp;
-            if (ind > 0)
-            {
-                i = dMij(hi,k,temp);
-                j = dMij(hj,k,temp);
-
-                if ( temp == VEC_ELEM(final,k))
-                {
-                    VEC_ELEM(front,k) = 0;
-                    VEC_ELEM(final,k) = 0;
-                }
-                else
-                    if ( temp == maxElem)
-                        VEC_ELEM(front,k) = 1;
-                    else
-                        VEC_ELEM(front,k) += 1;
-            }
-
-            k -= 1;
         }
-
     }
-
 }
 
-void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose)
+void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose)
 {
     //Initial Setup
     MultidimArray< double > In, orMap, orModMap, dir, wphase;
@@ -565,11 +523,13 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     if (verbose == 2)
     {
         save()=orMap;
-        save.write("PPP2.xmp");
+        save.write("PPP21.xmp");
+        save()=orModMap;
+        save.write("PPP22.xmp");
     }
 
     //We obtain the direction from the orientation map
-    direction(orMap, orModMap, lambda, size, dir);
+    direction(orMap, orModMap, lambda, size, dir, x, y);
     if (verbose == 3)
     {
         save()=dir;
@@ -596,7 +556,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
         save.write("PPP3.xmp");
     }
     //Finally we obtain the unwrapped phase
-    unwrapping(wphase, mod, lambda, size, phase);
+    unwrapping(wphase, orModMap, lambda, size, phase);
 
     if (verbose == 5)
     {
@@ -609,7 +569,9 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
         save()=In;
         save.write("PPP1.xmp");
         save()=orMap;
-        save.write("PPP2.xmp");
+        save.write("PPP21.xmp");
+        save()=orModMap;
+        save.write("PPP22.xmp");
         save()=dir;
         save.write("PPP3.xmp");
         save()=wphase;
@@ -620,7 +582,6 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
         save.write("PPP6.xmp");
 
     }
-
 }
 
 

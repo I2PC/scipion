@@ -73,7 +73,7 @@ public:
     //Once computed the phase direction map the modulating phase can be obtained from the SPTH transform.
     //REF: Jesús Villa, Ismael De la Rosa, and Gerardo Miramontes, Juan Antonio Quiroga, Phase recovery from a single fringe pattern using an orientational
     //vector-field-regularized estimator J. Opt. Soc. Am. A Vol. 22, No. 12, (2005)
-    void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap);
+    void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap, int x, int y);
 
     //This method performs the phase unwrapping process obtaining the absolute phase from a wrapped phase that has 2pi jumps. The method is an improved version
     //of the work presented in:
@@ -91,7 +91,7 @@ public:
     //verbose == 3 saves the direction map
     //verbose == 4 saves the wrapped phase map
     //verbose == 5 saves all
-    void demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose=0);
+    void demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose=0);
 
 };
 

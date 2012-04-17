@@ -37,6 +37,8 @@ public:
     FileName fn_psd;
     double lambda;
     int size;
+    int x;
+    int y;
     double R;
     double S;
     double thrs;
@@ -53,6 +55,8 @@ public:
     	R = getDoubleParam("--freq");
     	S = getDoubleParam("--var");
     	size = getIntParam("--size");
+    	x = getIntParam("--x");
+    	y = getIntParam("--y");
     	thrs = getDoubleParam("--thrs");
 
     }
@@ -75,6 +79,8 @@ public:
         addParamsLine("--freq <R>: Rough estimation of the fringe frequencies");
         addParamsLine("--var <S>: variance of the fringe frequency along the pattern");
         addParamsLine("[--size <size=5>] : regularization window");
+        addParamsLine("--x <x> : x coordinate of the direction starting point");
+        addParamsLine("--y <y> : x coordinate of the direction starting point");
         addParamsLine("[--thrs <thrs=5>] : intensity thresholding parameter to cutoff the psd intensity above a athis value");
     }
 
@@ -101,7 +107,7 @@ public:
     	CenterFFT(im,true);
     	im.threshold("abs_above", thrs, 0);
 
-        fp.demodulate(im,R,S,lambda,size,phase,mod,verbose);
+        fp.demodulate(im,R,S,lambda,size,x,y,phase,mod,verbose);
     }
 };
 

@@ -50,7 +50,7 @@ protected:
 
 TEST_F( FringeProcessingTests, simulPattern)
 {
-    /*int nx = 311;
+    int nx = 311;
     int ny = 312;
     double noiseLevel = 0.0;
     double freq = 20;
@@ -89,8 +89,7 @@ TEST_F( FringeProcessingTests, simulPattern)
     ASSERT_TRUE( std::abs(A2D_ELEM(im,1,0) + 0.986396)<0.01);
 
     //im.write(imageName);
-     *
-     */
+
 }
 
 TEST_F( FringeProcessingTests, SPTH)
@@ -157,7 +156,7 @@ TEST_F( FringeProcessingTests, orMinDer)
     int wSize = 2;
     fp.orMinDer(im,orMap,orModMap, wSize);
 
-    /*ASSERT_TRUE(XSIZE(im) == XSIZE(orMap));
+    ASSERT_TRUE(XSIZE(im) == XSIZE(orMap));
     ASSERT_TRUE(YSIZE(im) == YSIZE(orMap));
     ASSERT_TRUE(XSIZE(im) == XSIZE(orModMap));
     ASSERT_TRUE(YSIZE(im) == YSIZE(orModMap));
@@ -167,7 +166,7 @@ TEST_F( FringeProcessingTests, orMinDer)
 
     ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,1) -  0.0690)<0.01);
     ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,5) -  0.3364)<0.01);
-*/
+
 }
 
 TEST_F( FringeProcessingTests, normalize)
@@ -221,6 +220,8 @@ TEST_F( FringeProcessingTests, direction)
 
     int nx = 311;
     int ny = 311;
+    int x = 150;
+    int y = 150;
     double noiseLevel = 0.0;
     double freq = 1;
     Matrix1D<int> coefs(10);
@@ -236,18 +237,18 @@ TEST_F( FringeProcessingTests, direction)
     //we obtain the phase direction map from the orientation map
     double lambda = 1;
     int size = 3;
-    fp.direction(orMap, orModMap, lambda, size, dirMap);
+    fp.direction(orMap, orModMap, lambda, size, dirMap, x, y);
 
     //Comparing with Matlab results
 
-    /*ASSERT_TRUE( (A2D_ELEM(dirMap,10,10)  - 2.35619)  < 1e-2);
+    ASSERT_TRUE( (A2D_ELEM(dirMap,10,10)  - 2.35619)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,10,20)  - 2.33116)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,20,10)  - 2.38123)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,20,20)  - 2.35619)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,100,50) - 2.6420)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,100,100) -  2.3536) < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(dirMap,200,100) -  -2.4388)< 1e-2);
-    */
+
 #ifdef DEBUG
     orModMap.write(ModName);
     orMap.write(OrName);
@@ -256,6 +257,7 @@ TEST_F( FringeProcessingTests, direction)
 }
 #undef DEBUG
 
+#define DEBUG
 TEST_F( FringeProcessingTests, unwrapping)
 {
 #ifdef DEBUG
@@ -312,8 +314,9 @@ TEST_F( FringeProcessingTests, unwrapping)
     comPhase.write(uPName);
     wphase.write(PName);
 #endif
-
 }
+#undef DEBUG
+
 TEST_F( FringeProcessingTests, demodulate)
 {
 
@@ -329,6 +332,8 @@ TEST_F( FringeProcessingTests, demodulate)
 
 	    int nx = 311;
 	    int ny = 311;
+	    int x = 150;
+	    int y = 150;
 	    double noiseLevel = 0;
 	    double freq = 2;
 	    Matrix1D<int> coefs(10);
@@ -337,20 +342,20 @@ TEST_F( FringeProcessingTests, demodulate)
 	    mod.resizeNoCopy(im);
 	    phase.resizeNoCopy(im);
 
-	    double lambda = 3;
+	    double lambda = 1;
 	    int size = 3;
 	    double R = 10;
-	    double S = 15;
+	    double S = 5;
 	    int verbose=6;
 
-	    fp.demodulate(im,R,S,lambda,size,phase,mod,verbose);
+	    fp.demodulate(im,R,S,lambda,size, x, y, phase,mod,verbose);
 
 	    //Comparing with Matlab results
 	    /*ASSERT_TRUE( (A2D_ELEM(phase,30,30)  - 10.5929)  < 1e-2);
 	    ASSERT_TRUE( (A2D_ELEM(phase,30,50)  - 7.22597)  < 1e-2);
 	    ASSERT_TRUE( (A2D_ELEM(phase,50,30)  - 7.22597)  < 1e-2);
 	    ASSERT_TRUE( (A2D_ELEM(phase,100,100)- 4.38535)  < 1e-2);
-	    */
+		*/
 
 #ifdef DEBUG
 	    im.write(fpName);
