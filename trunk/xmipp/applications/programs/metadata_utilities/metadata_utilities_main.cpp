@@ -172,6 +172,10 @@ protected:
             mdIn.read(fn_in);
         doWrite = true;
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
+        mode = MD_OVERWRITE;
+        if (checkParam("--mode")
+            && STR_EQUAL(getParam("--mode"), "append"))
+          mode = MD_APPEND;
     }
 
     void doSet()
@@ -411,18 +415,14 @@ public:
         else if (checkParam("--fill"))
             doFill();
 
+        std::cerr << "DEBUG_JM: mode: " << mode << std::endl;
         if (checkParam("--print"))
             mdIn.write(std::cout);
         else if (doWrite)
-            mdIn.write(fn_out);
+            mdIn.write(fn_out, mode);
     }
 
 }
 ;//end of class ProgMetaDataUtilities
 
-int main(int argc, char **argv)
-{
-    ProgMetadataUtilities program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMetadataUtilities);
