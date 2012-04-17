@@ -25,8 +25,9 @@ PickingRun=''
 # {wizard}(wizardChooseFamilyToExtract) Family 
 Family=''
 
-# Particle size
-""" In pixels """
+# Particle box size
+""" In pixels. The box size is the size of the boxed particles,
+actual particles may be smaller than this. """
 ParticleSize=0
 
 # Take Logarithm
