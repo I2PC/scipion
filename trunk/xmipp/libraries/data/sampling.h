@@ -107,6 +107,8 @@ public:
     std::vector <Matrix2D<double> > L_repository;
     /** vector with product of experimental images and L and R */
     std::vector <Matrix1D<double> > exp_data_projection_direction_by_L_R;
+    /** vector with product of experimental images and L and R */
+    std::vector <FileName > exp_data_fileNames;
 #ifdef MYPSI
     /** vector with psi resulting from product of experimental images and L and R */
     std::vector <double > exp_data_projection_direction_by_L_R_psi;

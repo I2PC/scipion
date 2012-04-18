@@ -87,12 +87,13 @@ Sampling::Sampling()
     cos_neighborhood_radius=-1.01;
 
     numberSamplesAsymmetricUnit=-1;
+    exp_data_fileNames.clear();
     //#define DEBUG1
 #ifdef  DEBUG1
 
     for (int i = 0;
-            i < vertices_vectors.size();
-            i++)
+         i < vertices_vectors.size();
+         i++)
         std::cout  <<  vertices_vectors[].transpose()  << std::endl;
 #endif
 #undef DEBUG1
@@ -106,7 +107,10 @@ bool Sampling::operator==(const Sampling& op) const
             no_redundant_sampling_points_angles == op.no_redundant_sampling_points_angles &&
             no_redundant_sampling_points_vector == op.no_redundant_sampling_points_vector &&
             no_redundant_sampling_points_index == op.no_redundant_sampling_points_index &&
-            my_neighbors == op.my_neighbors);
+            my_neighbors == op.my_neighbors //&&
+            //exp_data_fileNames == op.exp_data_fileNames
+           );
+
 }
 
 void Sampling::setSampling(double sampling)
@@ -321,8 +325,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
 #ifdef  DEBUG2
 
     for (int i = 0;
-            i < edge_vector_start.size();
-            i++)
+         i < edge_vector_start.size();
+         i++)
     {
         std::cout  <<  ".sphere " << edge_vector_start[i]  << " 1 1 " << std::endl;
         std::cout  <<  ".sphere " << edge_vector_end[i]  << " 1 2 " << std::endl;
@@ -334,8 +338,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     {
         int i=11;
         if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
-                || ZZ(vertices_vectors[i]) < min_z
-                || ZZ(vertices_vectors[i]) > max_z
+               || ZZ(vertices_vectors[i]) < min_z
+               || ZZ(vertices_vectors[i]) > max_z
            )
             //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
             ;
@@ -345,8 +349,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     {
         int i=0;
         if (   (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
-                || ZZ(vertices_vectors[i]) < min_z
-                || ZZ(vertices_vectors[i]) > max_z
+               || ZZ(vertices_vectors[i]) < min_z
+               || ZZ(vertices_vectors[i]) > max_z
            )
             //if (only_half_sphere && ZZ(vertices_vectors[i]) < 0.0)
             ;
@@ -356,14 +360,14 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
 
     // add edges
     for (int i = 0;
-            i < edge_vector_start.size();
-            i++)
+         i < edge_vector_start.size();
+         i++)
     {
         if (i < number_of_samples * 10 - 15)
         {
             if (   (only_half_sphere && ZZ(edge_vector_start[i]) < 0.0)
-                    || ZZ(edge_vector_start[i]) < min_z
-                    || ZZ(edge_vector_start[i]) > max_z
+                   || ZZ(edge_vector_start[i]) < min_z
+                   || ZZ(edge_vector_start[i]) > max_z
                )
                 //if (only_half_sphere && ZZ(edge_vector_start[i]) < 0.0)
                 continue;
@@ -373,8 +377,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
         else
         {
             if (   (only_half_sphere && ZZ(edge_vector_end[i]) < 0.0)
-                    || ZZ(edge_vector_end[i]) < min_z
-                    || ZZ(edge_vector_end[i]) > max_z
+                   || ZZ(edge_vector_end[i]) < min_z
+                   || ZZ(edge_vector_end[i]) > max_z
                )
                 //if (only_half_sphere && ZZ(edge_vector_end[i]) < 0.0)
                 continue;
@@ -387,8 +391,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     std::ofstream filestr;
     filestr.open ("debug3_1.bild");
     for (int i = 0;
-            i < sampling_points_vector.size();
-            i++)
+         i < sampling_points_vector.size();
+         i++)
     {
         filestr  <<  ".color 1 0 0" << std::endl
         <<  ".sphere " << sampling_points_vector[i] <<
@@ -408,8 +412,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     int j = 0;
     bool j_flag = false;
     for (int i = 0;
-            i < edge_vector_start.size();
-            i++)
+         i < edge_vector_start.size();
+         i++)
     {
         if ((j % (number_of_samples - 1)) == 0 && j != 0)
         {
@@ -431,8 +435,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     //#define DEBUG3
 #ifdef  DEBUG3
     for (int i = 0;
-            i < sampling_points_vector.size();
-            i++)
+         i < sampling_points_vector.size();
+         i++)
     {
         std::cout  <<  ".color 1 0 0" << std::endl
         <<  ".sphere " << sampling_points_vector[i].transpose()  <<
@@ -444,8 +448,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     if(sampling_noise!=0.0)
     {
         for (int i = 0;
-                i < sampling_points_vector.size();
-                i++)
+             i < sampling_points_vector.size();
+             i++)
         {
             FOR_ALL_ELEMENTS_IN_MATRIX1D(sampling_points_vector[i])
             (sampling_points_vector[i])(i) += rnd_gaus(0., sampling_noise);
@@ -456,8 +460,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     //#define DEBUG3
 #ifdef  DEBUG3
     for (int i = 0;
-            i < sampling_points_vector.size();
-            i++)
+         i < sampling_points_vector.size();
+         i++)
     {
         std::cout  <<  ".color 0 1 0" << std::endl
         <<  ".sphere " << sampling_points_vector[i].transpose()  <<
@@ -471,8 +475,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     ZZ(aux) = 0.;
     double rot, tilt, psi;
     for (int i = 0;
-            i < sampling_points_vector.size();
-            i++)
+         i < sampling_points_vector.size();
+         i++)
     {
         XX(aux) = atan2(YY(sampling_points_vector[i]),
                         XX(sampling_points_vector[i]));
@@ -522,8 +526,8 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
     << std::endl
     ;
     for (int i = 0;
-            i < sampling_points_vector.size();
-            i++)
+         i < sampling_points_vector.size();
+         i++)
     {
         filestr  <<  ".sphere " << sampling_points_vector[i]  << " 0.018 " << std::endl;
     }
@@ -606,8 +610,8 @@ void Sampling::fillDistance(Matrix1D<double> starting_point,
         v_aux = alpha * starting_point + beta * ending_point;
         v_aux.selfNormalize();
         if (   (only_half_sphere && ZZ(v_aux) < 0.0)
-                || ZZ(v_aux) < min_z
-                || ZZ(v_aux) > max_z
+               || ZZ(v_aux) < min_z
+               || ZZ(v_aux) > max_z
            )
             //if (only_half_sphere && ZZ(v_aux) < 0.0)
             continue;
@@ -662,7 +666,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= (-180. / sym_order) &&
-                    XX(sampling_points_angles[i]) <= (180. / sym_order))
+                XX(sampling_points_angles[i]) <= (180. / sym_order))
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
                 no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
@@ -686,7 +690,7 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=    0. / sym_order &&
-                    XX(sampling_points_angles[i]) <=  180. / sym_order)
+                XX(sampling_points_angles[i]) <=  180. / sym_order)
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
                 no_redundant_sampling_points_vector.push_back(sampling_points_vector[i]);
@@ -698,8 +702,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180. / sym_order &&
-                    XX(sampling_points_angles[i]) <=  180. / sym_order &&
-                    YY(sampling_points_angles[i]) <=    90.
+                XX(sampling_points_angles[i]) <=  180. / sym_order &&
+                YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -712,8 +716,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180.*2. / sym_order &&
-                    XX(sampling_points_angles[i]) <=  180.*2. / sym_order &&
-                    YY(sampling_points_angles[i]) <=    90.
+                XX(sampling_points_angles[i]) <=  180.*2. / sym_order &&
+                YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -726,8 +730,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= -180. / (sym_order)  + 90. &&
-                    XX(sampling_points_angles[i]) <=  180. / (sym_order)  + 90. &&
-                    YY(sampling_points_angles[i]) <=    90.
+                XX(sampling_points_angles[i]) <=  180. / (sym_order)  + 90. &&
+                YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -740,8 +744,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=    0. + 90. &&
-                    XX(sampling_points_angles[i]) <=  180. / (sym_order) +90. &&
-                    YY(sampling_points_angles[i]) <=    90.
+                XX(sampling_points_angles[i]) <=  180. / (sym_order) +90. &&
+                YY(sampling_points_angles[i]) <=    90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -754,8 +758,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >= 0. &&
-                    XX(sampling_points_angles[i]) <=  180. / (sym_order) &&
-                    YY(sampling_points_angles[i]) <=   90.
+                XX(sampling_points_angles[i]) <=  180. / (sym_order) &&
+                YY(sampling_points_angles[i]) <=   90.
                )
             {
                 no_redundant_sampling_points_angles.push_back(sampling_points_angles[i]);
@@ -777,8 +781,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=     90. &&
-                    XX(sampling_points_angles[i]) <=   150. ||
-                    XX(sampling_points_angles[i]) ==     0
+                XX(sampling_points_angles[i]) <=   150. ||
+                XX(sampling_points_angles[i]) ==     0
                )
                 if (
                     dotProduct(sampling_points_vector[i], _3_fold_axis_1_by_3_fold_axis_2) >= 0 &&
@@ -861,9 +865,9 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if ((XX(sampling_points_angles[i]) >=   45. &&
-                    XX(sampling_points_angles[i]) <=  135. &&
-                    YY(sampling_points_angles[i]) <=  90.) ||
-                    XX(sampling_points_angles[i]) ==  0.
+                 XX(sampling_points_angles[i]) <=  135. &&
+                 YY(sampling_points_angles[i]) <=  90.) ||
+                XX(sampling_points_angles[i]) ==  0.
                )
                 if (
                     dotProduct(sampling_points_vector[i], _3_fold_axis_1_by_3_fold_axis_2) >= 0 &&
@@ -890,8 +894,8 @@ void Sampling::removeRedundantPoints(const int symmetry, int sym_order)
         for (int i = 0; i < sampling_points_angles.size(); i++)
         {
             if (XX(sampling_points_angles[i]) >=   90. &&
-                    XX(sampling_points_angles[i]) <=  135. &&
-                    YY(sampling_points_angles[i]) <=  90.)
+                XX(sampling_points_angles[i]) <=  135. &&
+                YY(sampling_points_angles[i]) <=  90.)
                 if (
                     dotProduct(sampling_points_vector[i], _3_fold_axis_1_by_3_fold_axis_2) >= 0 &&
                     dotProduct(sampling_points_vector[i], _3_fold_axis_2_by_4_fold_axis) >= 0 &&
@@ -1437,7 +1441,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
     md.setComment("data_extra -> sampling description;"\
                   " data_neighbors --> List with order of each"\
                   "experimental images and its neighbors"\
-                   );
+                 );
     md.setColumnFormat(false);
     md.addRow(row);
     md.write(FN_SAMPLING_EXTRA(fn_base), MD_OVERWRITE);
@@ -1447,9 +1451,12 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
     row.clear();
     size_t size = my_neighbors.size();
     //Write first block with experimental images order and its neighbors
+    bool writeFileName = !exp_data_fileNames.empty();
     for(size_t i = 0; i < size; ++i)
     {
-        row.setValue(MDL_ORDER, i + 1);
+        row.setValue(MDL_ORDER,i);
+        if (writeFileName)
+            row.setValue(MDL_IMAGE,exp_data_fileNames[i]);
         row.setValue(MDL_NEIGHBORS, my_neighbors[i]);
         md.addRow(row);
     }
@@ -1522,9 +1529,14 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
     //Read neighbors
     md.read(FN_SAMPLING_NEI(fn_base));
     my_neighbors.resize(md.size());
-
+    bool readFileName = md.containsLabel(MDL_IMAGE);
+    if (readFileName)
+        exp_data_fileNames.clear();
+    int ii=0;
     FOR_ALL_OBJECTS_IN_METADATA(md)
     {
+        if (readFileName)
+            md.getValue(MDL_IMAGE,exp_data_fileNames[ii++], __iter.objId);
         md.getValue(MDL_NEIGHBORS, my_neighbors[__iter.objIndex], __iter.objId);
     }
 
@@ -1728,13 +1740,14 @@ void Sampling::computeNeighbors(bool only_winner)
     }//for j
     progress_bar(exp_data_projection_direction_by_L_R_size);
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
+
     for (int i=0;i< my_neighbors.size();i++)
         for (int j=0;j< my_neighbors[i].size();j++)
-    	std::cerr << "image:" << i << " "<< my_neighbors[i][j]<<std::endl;
-exit(1);
-    #endif
+            std::cerr << "image:" << i << " "<< my_neighbors[i][j]<<std::endl;
+    exit(1);
+#endif
 #undef DEBUG
 
     //#define CHIMERA
@@ -1752,8 +1765,8 @@ exit(1);
     <<  ".sphere "   << exp_data_projection_direction_by_L_R[exp_image*R_repository.size()]
     <<  " .021"      << std::endl;
     for(int i=(exp_image*R_repository.size());
-            i< (exp_image+1)*R_repository.size();
-            i++)
+        i< (exp_image+1)*R_repository.size();
+        i++)
     {
         filestr    <<  ".color red" << std::endl
         <<  ".sphere "   << exp_data_projection_direction_by_L_R[i]
@@ -1761,8 +1774,8 @@ exit(1);
     }
     double blue;
     for(int i=0;
-            i< my_neighbors[exp_image].size();
-            i++)
+        i< my_neighbors[exp_image].size();
+        i++)
     {
 #ifdef MYPSI
         blue = (my_neighbors_psi[exp_image][i]+180.)/360.;
@@ -1830,8 +1843,8 @@ void Sampling::removePointsFarAwayFromExperimentalData()
     ;
     //green neighbours
     for (int i = 0;
-            i < no_redundant_sampling_points_vector.size();
-            i++)
+         i < no_redundant_sampling_points_vector.size();
+         i++)
     {
         filestr    <<  ".color green" << std::endl
         <<  ".sphere " << no_redundant_sampling_points_vector[i].transpose()  <<
@@ -2022,8 +2035,8 @@ void Sampling::findClosestExperimentalPoint()
     << std::endl
     ;
     for (int i = 0;
-            i < no_redundant_sampling_points_vector.size();
-            i++)
+         i < no_redundant_sampling_points_vector.size();
+         i++)
     {
         filestr    <<  ".sphere " << no_redundant_sampling_points_vector[i].transpose()  <<
         " .018" << std::endl;
@@ -2034,8 +2047,8 @@ void Sampling::findClosestExperimentalPoint()
     ;
     int ii;
     for (int i = 0;
-            i < my_exp_img_per_sampling_point[my_sample_point].size();
-            i++)
+         i < my_exp_img_per_sampling_point[my_sample_point].size();
+         i++)
     {
         ii=aux_vec[my_sample_point][i];
         filestr    << ".sphere "
@@ -2053,13 +2066,13 @@ void Sampling::findClosestExperimentalPoint()
     filestr.open ("find_closest_experimental_point.txt");
 
     for (int i = 0;
-            i < my_exp_img_per_sampling_point.size();
-            i++)
+         i < my_exp_img_per_sampling_point.size();
+         i++)
     {   //for each sampling point write its experimental images
         filestr << i << std::endl;
         for (int j = 0;
-                j < my_exp_img_per_sampling_point[i].size();
-                j++)
+             j < my_exp_img_per_sampling_point[i].size();
+             j++)
         {
             filestr    << my_exp_img_per_sampling_point[i][j]
             << " " ;
@@ -2132,6 +2145,8 @@ void Sampling::fillExpDataProjectionDirectionByLR(MetaData &DFi)
 #endif
 
     double img_tilt,img_rot,img_psi;
+    FileName imgName;
+    exp_data_fileNames.clear();
     FOR_ALL_OBJECTS_IN_METADATA(DFi)
     {
         DFi.getValue(MDL_ANGLEROT,img_rot,__iter.objId);
@@ -2139,8 +2154,10 @@ void Sampling::fillExpDataProjectionDirectionByLR(MetaData &DFi)
         DFi.getValue(MDL_ANGLEPSI,img_psi,__iter.objId);
         Euler_direction(img_rot, img_tilt, img_psi, direction);
         exp_data_projection_direction.push_back(direction);
+        DFi.getValue(MDL_IMAGE,imgName,__iter.objId);
+        exp_data_fileNames.push_back(imgName);
     }
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     std::cerr << "DEBUG_ROB, img_rot:" << img_rot << std::endl;
     std::cerr << "DEBUG_ROB, img_tilt:" << img_tilt << std::endl;
