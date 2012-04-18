@@ -828,6 +828,18 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
                     selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
 
                 // Add to average
+//#define DEBUG
+#ifdef DEBUG
+                //WRITE IMAGES TO AVERAGE
+                FileName fn_tmp1;
+                int static static_i=0;
+                static_i++;
+                formatStringFast(fn_tmp1, "test_%06d", static_i);
+                img.write(fn_tmp1);
+                if (static_i> 25)
+                	exit(1);
+#endif
+#undef DEBUG
                 if (isplit == 0)
                 {
                     avg1() += img();
