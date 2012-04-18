@@ -719,14 +719,14 @@ void atomRadialProfile(int M, double T, const std::string &atom,
 
     // Remove zero values
     int ileft=STARTINGX(profile);
-    if (ABS(profile(ileft))<1e-3)
+    if (fabs(profile(ileft))<1e-3)
         for (ileft=STARTINGX(profile)+1; ileft<=0; ileft++)
-            if (ABS(profile(ileft))>1e-3)
+            if (fabs(profile(ileft))>1e-3)
                 break;
     int iright=FINISHINGX(profile);
-    if (ABS(profile(iright))<1e-3)
+    if (fabs(profile(iright))<1e-3)
         for (iright=FINISHINGX(profile)-1; iright>=0; iright--)
-            if (ABS(profile(iright))>1e-3)
+            if (fabs(profile(iright))>1e-3)
                 break;
     profile.selfWindow(ileft,iright);
 }
