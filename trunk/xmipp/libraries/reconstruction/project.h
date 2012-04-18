@@ -37,6 +37,8 @@
 /**@defgroup ProjectionProgram project (Generate projections from a volume)
    @ingroup ReconsLibrary */
 //@{
+/// Type of projection
+enum projctionType {REALSPACE, SHEARS, FOURIER};
 /* Projection Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
 class ProgProject: public XmippProgram
@@ -68,8 +70,10 @@ public:
     double tiltSingle;
     /// Psi angle of a single projection
     double psiSingle;
-    /// Use real-shears algorithm
-    bool shears;
+    /// Type of projection algorithm
+    projctionType projType;
+    /// The padding factor for Fourier projection
+    double paddFactor;
 
 public:
     /** Read parameters. */
@@ -205,6 +209,8 @@ public:
     PDBPhantom     phantomPDB;
     /// Atom interpolator
     AtomInterpolator interpolator;
+    double padFactor;
+
 public:
     /** Produce Project Side information.
         This function produce the side information from the project
@@ -244,7 +250,7 @@ int PROJECT_Assign_angles(MetaData &DF, const ParametersProjection &prm);
     A selection file with all images is also returned.*/
 int PROJECT_Effectively_project(const std::string &fnOut,
 								bool singleProjection,
-								bool shears,
+								int projType,
 								const ParametersProjection &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,

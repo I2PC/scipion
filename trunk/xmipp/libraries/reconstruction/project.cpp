@@ -26,6 +26,7 @@
 #include "project.h"
 #include "directions.h"
 #include "project_real_shears.h"
+#include "fourier_projection.h"
 
 #include <data/args.h>
 
@@ -36,8 +37,15 @@ void ProgProject::readParams()
     fnOut = getParam("-o");
     samplingRate  = getDoubleParam("--sampling_rate");
     singleProjection = false;
-    shears  = checkParam("--shears");
-
+    if (STR_EQUAL(getParam("--method"), "real_space"))
+        projType = REALSPACE;
+    if (STR_EQUAL(getParam("--method"), "shears"))
+        projType = SHEARS;
+    if (STR_EQUAL(getParam("--method"), "fourier"))
+    {
+        projType = FOURIER;
+        paddFactor = getDoubleParam("--method", 1);
+    }
     bool doParams = checkParam("--params");
     bool doAngles = checkParam("--angles");
 
@@ -86,7 +94,7 @@ void ProgProject::defineParams()
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection_xmd.param",false);
     addExampleLine("Creating a 2D crystal",false);
     addExampleLine("In order to create a 2D crystal, you can pass --params as a projection file with a second block for crystal projection.: ",false);
-    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr -o MRCproj --params MRCCrystalProj_xmd.param");
+    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRCCrystalProj_xmd.param");
     addExampleLine("+In the following links you can find some examples of projection parameter files",false);
     addExampleLine("+ ",false);
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRCCrystalProj_xmd.param",false);
@@ -97,9 +105,15 @@ void ProgProject::defineParams()
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
     addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
-    addParamsLine("  [--shears]                                  : Use real-shears algorithm");
+    addParamsLine("  [--method <method=real_space>]              : Projection method");
+    addParamsLine("        where <method>");
+    addParamsLine("                real_space                    : Makes projections by ray tracing in real space");
+    addParamsLine("                shears                        : Use real-shears algorithm");
     addParamsLine("                                              :+This algorithm is slower but more accurate. For a full description see");
-    addParamsLine("                                              :+this Ph.D. [[http://biblion.epfl.ch/EPFL/theses/2003/2901/EPFL_TH2901.pdf][thesis]] (Chapter 3).");
+    addParamsLine("                fourier <pad=3>               : Takes a central slice in Fourier space");
+    addParamsLine("                                              : pad controls the padding factor, by default, the padded volume is");
+    addParamsLine("                                              : three times bigger than the original volume");
+
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
@@ -250,7 +264,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
                 rot_range.Navg = ParamVec[1];
         }
         else
-        	rot_range.Ndev = rot_range.Navg =0.;
+            rot_range.Ndev = rot_range.Navg =0.;
 
         if(MD.getValue(MDL_PRJ_TILT_Noise,ParamVec, objId))
         {
@@ -261,7 +275,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
                 tilt_range.Navg = ParamVec[1];
         }
         else
-        	tilt_range.Ndev = tilt_range.Navg =0.;
+            tilt_range.Ndev = tilt_range.Navg =0.;
 
         if(MD.getValue(MDL_PRJ_PSI_Noise,ParamVec, objId))
         {
@@ -272,7 +286,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
                 psi_range.Navg = ParamVec[1];
         }
         else
-        	psi_range.Ndev = psi_range.Navg =0.;
+            psi_range.Ndev = psi_range.Navg =0.;
 
         if(MD.getValue(MDL_NOISE_PIXEL_LEVEL,ParamVec, objId))
         {
@@ -283,7 +297,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
                 Npixel_avg = ParamVec[1];
         }
         else
-        	Npixel_dev = Npixel_avg =0.;
+            Npixel_dev = Npixel_avg =0.;
 
         if(MD.getValue(MDL_NOISE_COORD,ParamVec, objId))
         {
@@ -294,7 +308,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
                 Ncenter_avg = ParamVec[1];
         }
         else
-        	Ncenter_dev = Ncenter_avg =0.;
+            Ncenter_dev = Ncenter_avg =0.;
 
     }
     else
@@ -616,7 +630,6 @@ void generate_angles(int ExtProjs, const Angle_range &range,
 void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
                           const ParametersProjection &prm)
 {
-    std::cerr << "1generate_even_angles" <<std::endl;
     // We will run over the tilt angle in a deterministic way
     // then for every tilt angle, a rot_step is computed so that
     // it keeps the same distance in the circle generated by tilt
@@ -738,7 +751,6 @@ int Assign_angles(MetaData &DF, const ParametersProjection &prm,
         }
         if (prm.rot_range.randomness != ANGLE_EVENLY)
         {
-
             generate_angles(ExtProjs, prm.rot_range,  DF, 'r', prm);
             generate_angles(ExtProjs, prm.tilt_range, DF, 't', prm);
             generate_angles(ExtProjs, prm.psi_range,  DF, 'p', prm);
@@ -746,7 +758,6 @@ int Assign_angles(MetaData &DF, const ParametersProjection &prm,
         }
         else
         {
-
             if (fn_sym == "")
                 generate_even_angles(ExtProjs, Nrottilt, DF, prm);
             else
@@ -824,12 +835,13 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
+    padFactor = prog_prm.paddFactor;
 }
 
 /* Effectively project ===================================================== */
 int PROJECT_Effectively_project(const String &fnOut,
                                 bool singleProjection,
-                                bool shears,
+                                int projType,
                                 const ParametersProjection &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
@@ -871,8 +883,11 @@ int PROJECT_Effectively_project(const String &fnOut,
     int projIdx=FIRST_IMAGE;
     FileName fn_proj;              // Projection name
     RealShearsInfo *Vshears=NULL;
-    if (shears && side.phantomMode==PROJECT_Side_Info::VOXEL)
+    FourierProjector *Vfourier=NULL;
+    if (projType == SHEARS && side.phantomMode==PROJECT_Side_Info::VOXEL)
         Vshears=new RealShearsInfo(side.phantomVol());
+    if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)
+        Vfourier=new FourierProjector(side.phantomVol(),side.padFactor);
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();
@@ -920,10 +935,13 @@ int PROJECT_Effectively_project(const String &fnOut,
         // Really project ....................................................
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
         {
-            if (shears)
+            if (projType == SHEARS)
                 projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            else
+            if (projType == FOURIER)
+                projectVolume(*Vfourier, proj, prm.proj_Ydim, prm.proj_Xdim,
+                              rot, tilt, psi);
+            if (projType == REALSPACE)
                 projectVolume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
             Matrix1D<double> shifts(2);
@@ -1060,7 +1078,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     {
         // Really project
         if (prm.singleProjection)
-            ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection, prm.shears,
+            ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection, prm.projType,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
         else
         {
@@ -1070,7 +1088,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
             else
                 stackName = prm.fnOut.removeAllExtensions() + ".stk";
             FileName mdName = prm.fnOut.removeAllExtensions() + ".xmd";
-            ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection, prm.shears,
+            ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection, prm.projType,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
             SF.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
             SF.write(mdName);
