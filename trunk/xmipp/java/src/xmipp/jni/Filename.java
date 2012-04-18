@@ -91,6 +91,9 @@ public class Filename {
 	public static native boolean hasVolumeExtension(String filename)
 			throws Exception;
 
+	private static native boolean isMetaDataFile(String filename)
+			throws Exception;
+
 	public static native String compose(int slice, String path)
 			throws Exception;
 
@@ -131,8 +134,15 @@ public class Filename {
 	}
 
 	public static boolean isMetadata(String filename) {
-		return filename != null && isFileType(filename, METADATAS);
-	}
+		try {
+		if (filename != null)
+			return isMetaDataFile(filename);
+		}
+		 catch (Exception e){
+			e.printStackTrace();
+		}
+		return false;
+	}//function isMetadata
 
 	public static boolean isTextfile(String filename) {
 		return isMetadata(filename) || isFileType(filename, TEXT);
@@ -287,15 +297,14 @@ public class Filename {
 	public static String getClassBlockName(int ref) {
 		return String.format("class%06d_images", ref);
 	}
-	
+
 	/** Return the current working directory */
-	public static String getCurrentDir(){
+	public static String getCurrentDir() {
 		return System.getProperty("user.dir");
 	}
 
 	/***********
-	 * Create the relative path from one path to another
-	 * Taken from: /*
+	 * Create the relative path from one path to another Taken from: /*
 	 * http://mrpmorris.blogspot.com/2007/05/convert-absolute-path
 	 * -to-relative-path.html
 	 * 
@@ -350,15 +359,15 @@ public class Filename {
 			}
 		}
 		return relativePath == null ? null : relativePath.toString();
-	}//function getRelativePath
-	
+	}// function getRelativePath
+
 	/** Overload using current working dir */
-	public static String getRelativePath(String path){
+	public static String getRelativePath(String path) {
 		return getRelativePath(path, getCurrentDir());
 	}
-	
+
 	/** Get the last part of the filename */
-	public static String getBaseName(String path){
+	public static String getBaseName(String path) {
 		return new File(path).getName();
 	}
 }

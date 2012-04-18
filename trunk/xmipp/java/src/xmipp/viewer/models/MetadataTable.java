@@ -300,6 +300,8 @@ public class MetadataTable extends MetadataGallery {
 		@Override
 		public void adjustColumnsWidth(JTable table) {
 			try {
+				if (visibleLabels.size() != getColumnCount())
+					return;
 				calculateCellSize();
 				// String[] row = md.getRowValues(data.ids[0]);
 				// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);

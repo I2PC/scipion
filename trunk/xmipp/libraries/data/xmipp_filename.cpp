@@ -473,7 +473,8 @@ bool FileName::isMetaData(bool failIfNotExists) const
     //ROB
     //FIXME
     FileName ext = getFileFormat();
-    if (ext == "sel" || ext == "xmd" || ext == "doc")
+    if (ext == "sel" || ext == "xmd" || ext == "doc" ||
+        ext == "ctfdat" || ext == "ctfparam" || ext == "pos")
     {
         return true;
     }

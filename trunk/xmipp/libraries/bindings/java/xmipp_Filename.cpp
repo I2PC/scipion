@@ -32,13 +32,26 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_hasVolumeExtension
     return false;
 }
 
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_isMetaDataFile
+(JNIEnv *env, jclass class_, jstring filename)
+{
+  XMIPP_JAVA_TRY
+  {
+      const char *fnStr = env->GetStringUTFChars(filename, false);
+      return FileName(fnStr).isMetaData();
+  }
+  XMIPP_JAVA_CATCH;
+
+  return false;
+}
+
 JNIEXPORT jstring JNICALL Java_xmipp_jni_Filename_compose
   (JNIEnv *env, jclass class_, jint slice, jstring path){
     XMIPP_JAVA_TRY
     {
         const char *fnStr = env->GetStringUTFChars(path, false);
         FileName fnTemp;
-        std::string filestring= std::string(fnStr);
+        String filestring= String(fnStr);
         fnTemp.compose(slice,filestring);
         return env->NewStringUTF(fnTemp.data());;
     }

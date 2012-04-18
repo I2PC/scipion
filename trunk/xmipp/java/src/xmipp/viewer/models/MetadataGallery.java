@@ -61,7 +61,8 @@ public class MetadataGallery extends ImageGallery {
 		int n = newInfo.size();
 		boolean changed = false;
 		data.globalRender = false;
-
+		data.ciFirstRender = null;
+		
 		for (int i = 0; i < n; ++i)
 			for (int j = 0; j < n; ++j) {
 				ColumnInfo ci1 = data.labels.get(i);
@@ -70,8 +71,11 @@ public class MetadataGallery extends ImageGallery {
 					if (ci1.updateInfo(ci2))
 						changed = true;
 
-					if (ci1.visible)
+					if (ci1.visible){
 						visibleLabels.add(ci1);
+						if (data.ciFirstRender == null && ci1.allowRender)
+							data.ciFirstRender = ci1;
+					}
 					if (ci1.render)
 						data.globalRender = true;
 					if (i != j)

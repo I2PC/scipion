@@ -25,6 +25,14 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_hasVolumeExtension
 
 /*
  * Class:     xmipp_Filename
+ * Method:    hasVolumeExtension
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_isMetaDataFile
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     xmipp_Filename
  * Method:    compose
  * Signature: (ILjava/lang/String;)Ljava/lang/String;
  */
