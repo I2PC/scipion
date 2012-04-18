@@ -18,9 +18,9 @@
 # {section} Input
 #-----------------------------------------------------------------------------
 # {file}{validate}(PathExists) Selfile with the input images:
-""" This selfile points to the spider single-file format images that make up 
-your data set. The filenames can have relative or absolute paths, but it is 
-strictly necessary that you put this selfile IN THE PROJECTDIR. 
+""" This metadata file points to the experimental images to be processed.
+ The filenames can have relative or absolute paths, but it is 
+strictly necessary that you put this metadata file IN THE PROJECTDIR. 
 """
 SelFileName ='new20.sel'
 
