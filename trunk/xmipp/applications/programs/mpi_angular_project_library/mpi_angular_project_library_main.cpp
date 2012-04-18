@@ -412,6 +412,7 @@ public:
                     mySF.setValue(MDL_SCALE,1.0,id);
                 }
                 fn_temp=output_file_root+".doc";
+                mySF.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");
                 mySF.write(fn_temp);
 
                 unlink((output_file_root+"_angles.doc").c_str());
