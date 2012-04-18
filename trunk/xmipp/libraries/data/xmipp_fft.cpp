@@ -351,20 +351,29 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
 {
     v.checkDimension(3);
     double dotp, a, b, c, d, ac, bd, ab_cd;
-    double xxshift = xshift / (double)XSIZE(v);
-    double yyshift = yshift / (double)YSIZE(v);
-    double zzshift = zshift / (double)ZSIZE(v);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(v)
+    double xxshift = -2 * PI * xshift / (double)XSIZE(v);
+    double yyshift = -2 * PI * yshift / (double)YSIZE(v);
+    double zzshift = -2 * PI * zshift / (double)ZSIZE(v);
+    for (int k=0; k<ZSIZE(v); ++k)
     {
-        dotp = -2 * PI * ((double)(j) * xxshift + (double)(i) * yyshift + (double)(k) * zzshift);
-        a = cos(dotp);
-        b = sin(dotp);
-        c = DIRECT_A3D_ELEM(v,k,i,j).real();
-        d = DIRECT_A3D_ELEM(v,k,i,j).imag();
-        ac = a * c;
-        bd = b * d;
-        ab_cd = (a + b) * (c + d);
-        DIRECT_A3D_ELEM(v,k,i,j) = std::complex<double>(ac - bd, ab_cd - ac - bd);
+    	double zdot=(double)(k) * zzshift;
+        for (int i=0; i<YSIZE(v); ++i)
+        {
+        	double zydot=zdot+(double)(i) * yyshift;
+            for (int j=0; j<XSIZE(v); ++j)
+            {
+            	double *ptrv_kij=(double *)&DIRECT_A3D_ELEM(v,k,i,j);
+                dotp = (double)(j) * xxshift + zydot;
+                sincos(dotp,&b,&a);
+                c = *ptrv_kij;
+                d = *(ptrv_kij+1);
+                ac = a * c;
+                bd = b * d;
+                ab_cd = (a + b) * (c + d);
+                *ptrv_kij = ac - bd;
+                *(ptrv_kij+1) = ab_cd - ac - bd;
+            }
+        }
     }
 }
 

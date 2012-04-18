@@ -44,18 +44,18 @@
  * digital frequency (-1/2 to 1/2)
  */
 #define FFT_IDX2DIGFREQ(idx, size, freq) \
-    freq = (size<=1)? 0:(((double) ((idx) < ((size) >> 1)) ? (idx) : -(size) + (idx)) / \
+    freq = (size<=1)? 0:(((double) ((idx) <= ((size) >> 1)) ? (idx) : -(size) + (idx)) / \
            (double)(size));
 
 #define FFT_IDX2DIGFREQ_FAST(idx, size, size_2, isize, freq) \
-    freq = ( ((idx) < (size_2)) ? (idx) : -(size) + (idx) ) * (isize);
+    freq = ( ((idx) <= (size_2)) ? (idx) : -(size) + (idx) ) * (isize);
 /** Frequency to index (int)
  *
  * Given a frequency and a size of the FFT, this macro returns the corresponding
  * integer index
  */
 #define DIGFREQ2FFT_IDX(freq, size, idx) { \
-        (idx) = (int) (ROUND((size) * (freq))); if ((idx) < 0) (idx) += (int) \
+        (idx) = (int) (round((size) * (freq))); if ((idx) < 0) (idx) += (int) \
                     (size); }
 
 /** Frequency to index (double)
@@ -273,6 +273,9 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > &
 
 #define SWAP_ARRAY(a, b, n)  memcpy(buffer, a, n); memcpy(a, b, n); memcpy(b, buffer, n);
 
+/** Center FFT for 2D arrays.
+ * The function is optimized for the particular case of 2D.
+ */
 void centerFFT2(MultidimArray<double> &v);
 
 /** CenterFFT
