@@ -1403,7 +1403,7 @@ void Sampling::createAsymUnitFile(const FileName &docfilename)
         ;
 #endif
 
-        row.setValue(MDL_ORDER, no_redundant_sampling_points_index[i]);
+        row.setValue(MDL_NEIGHBOR, no_redundant_sampling_points_index[i]);
         row.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]));
         row.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]));
         row.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]));
@@ -1437,7 +1437,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
     md.setComment("data_extra -> sampling description;"\
                   " data_neighbors --> List with order of each"\
                   "experimental images and its neighbors"\
-                 );
+                   );
     md.setColumnFormat(false);
     md.addRow(row);
     md.write(FN_SAMPLING_EXTRA(fn_base), MD_OVERWRITE);
@@ -1464,7 +1464,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
     for (size_t i = 0; i < size; ++i)
     {
         Matrix1D<double> &angles = no_redundant_sampling_points_angles[i];
-        row.setValue(MDL_ORDER, no_redundant_sampling_points_index[i]);
+        row.setValue(MDL_NEIGHBOR, no_redundant_sampling_points_index[i]);
         row.setValue(MDL_ANGLEROT, XX(angles));
         row.setValue(MDL_ANGLETILT, YY(angles));
         row.setValue(MDL_ANGLEPSI, ZZ(angles));
@@ -1488,7 +1488,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
 
         for (size_t i = 0; i < size; ++i)
         {
-            row.setValue(MDL_ORDER, no_redundant_sampling_points_index[i]);
+            row.setValue(MDL_NEIGHBOR, no_redundant_sampling_points_index[i]);
             Matrix1D<double> &angles = sampling_points_angles[i];
             row.setValue(MDL_ANGLEROT, XX(angles));
             row.setValue(MDL_ANGLETILT, YY(angles));
@@ -1543,7 +1543,7 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
 
         Matrix1D<double> &angles = no_redundant_sampling_points_angles[i];
         angles.resizeNoCopy(3);
-        md.getValue(MDL_ORDER, no_redundant_sampling_points_index[i], id);
+        md.getValue(MDL_NEIGHBOR, no_redundant_sampling_points_index[i], id);
         md.getValue(MDL_ANGLEROT, XX(angles), id);
         md.getValue(MDL_ANGLETILT, YY(angles), id);
         md.getValue(MDL_ANGLEPSI, ZZ(angles), id);
@@ -1728,6 +1728,14 @@ void Sampling::computeNeighbors(bool only_winner)
     }//for j
     progress_bar(exp_data_projection_direction_by_L_R_size);
 
+//#define DEBUG
+#ifdef DEBUG
+    for (int i=0;i< my_neighbors.size();i++)
+        for (int j=0;j< my_neighbors[i].size();j++)
+    	std::cerr << "image:" << i << " "<< my_neighbors[i][j]<<std::endl;
+exit(1);
+    #endif
+#undef DEBUG
 
     //#define CHIMERA
 #ifdef CHIMERA
@@ -1930,7 +1938,7 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
         DFo.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
 #endif
 
-        DFo.setValue(MDL_ORDER, no_redundant_sampling_points_index[winner_sampling], id);
+        DFo.setValue(MDL_NEIGHBOR, no_redundant_sampling_points_index[winner_sampling], id);
         DFo.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[winner_sampling]), id);
         DFo.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[winner_sampling]), id);
         DFo.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[winner_sampling]), id);
@@ -2129,10 +2137,18 @@ void Sampling::fillExpDataProjectionDirectionByLR(MetaData &DFi)
         DFi.getValue(MDL_ANGLEROT,img_rot,__iter.objId);
         DFi.getValue(MDL_ANGLETILT,img_tilt,__iter.objId);
         DFi.getValue(MDL_ANGLEPSI,img_psi,__iter.objId);
-
         Euler_direction(img_rot, img_tilt, img_psi, direction);
         exp_data_projection_direction.push_back(direction);
     }
+//#define DEBUG
+#ifdef DEBUG
+    std::cerr << "DEBUG_ROB, img_rot:" << img_rot << std::endl;
+    std::cerr << "DEBUG_ROB, img_tilt:" << img_tilt << std::endl;
+    std::cerr << "DEBUG_ROB, img_psi:" << img_psi << std::endl;
+    exit(1);
+
+#endif DEBUG
+#undef DEBUG
 
     exp_data_projection_direction_by_L_R.clear();
 #ifdef MYPSI
