@@ -74,8 +74,11 @@ class ScriptParallelStepRunner(XmippScript):
             #comm.Disconnect()
         
         except Exception, e:
-            printLog("Stopping MPI process because of error %s" % e, self.db.Log, out=True, err=True, isError=True)
-            self.db.updateRunState(SqliteDb.RUN_FAILED)
+            if self.db:
+                printLog("Stopping MPI process because of error %s" % e, self.db.Log, out=True, err=True, isError=True)
+                self.db.updateRunState(SqliteDb.RUN_FAILED)
+            else:
+                print "Stopping MPI process because of error %s" % e
             exit(1)
             
     def createStepsDict(self):
