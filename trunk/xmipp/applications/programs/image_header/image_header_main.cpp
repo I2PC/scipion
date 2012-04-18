@@ -134,13 +134,13 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
 
-        ImageGeneric img;
+        Image<char> img;
 
         switch (operation)
         {
         case HEADER_PRINT:
             img.read(fnImg, _HEADER_ALL);
-            img.print();
+            std::cout << img <<std::endl;
             break;
         case HEADER_EXTRACT:
             img.read(fnImg, _HEADER_ALL);
@@ -153,22 +153,12 @@ protected:
             rowOut = rowIn;
             if (round_shifts)
                 roundShifts(rowOut);
-            //FIXME ROB cannot write if a read only the header
-            //AKS QuINO
-            /***/
-            params.datamode = DATA;
-            /***/
             img.readApplyGeo(fnImg, rowOut, params);
             img.setDataMode(_HEADER_ALL);
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
         case HEADER_RESET:
-            //FIXME ROB cannot write if a read only the header
-            //AKS QuINO
-            /***/
-            img.read(fnImg, DATA);
-            /***/
-//            img.read(fnImg, _HEADER_ALL);
+            img.read(fnImg, _HEADER_ALL);
             img.initGeometry();
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;

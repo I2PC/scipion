@@ -114,7 +114,7 @@ struct ImageFHandler
 
 struct ImageInfo
 {
-	size_t    offset;
+    size_t    offset;
     DataType  datatype;
     bool   swap;
     ArrayDim  adim;
@@ -237,7 +237,7 @@ protected:
     FILE*               fhed;        // Image File header handler
     TIFF*               tif;         // TIFF Image file hander
     ImageFHandler*      hFile;       // Image File handler information structure
-    ArrayDim      		aDimFile;   // Image header file information structure (original info from file)
+    ArrayDim        aDimFile;   // Image header file information structure (original info from file)
     DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
     size_t              offset;      // Data offset
@@ -251,7 +251,7 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
     size_t              mappedOffset;// Offset for the mapped file
-    size_t      		virtualOffset;// MDA Offset when movePointerTo is used
+    size_t        virtualOffset;// MDA Offset when movePointerTo is used
 
 public:
 
@@ -517,6 +517,20 @@ public:
     int getSwap() const
     {
         return swap;
+    }
+
+    /** Return geometry row
+     */
+    MDRow& getGeometry(const size_t n = 0)
+    {
+        return MD[n];
+    }
+
+    /** Init geometry transformation with defaults values
+     */
+    void initGeometry(const size_t n = 0)
+    {
+        MD[n]=MDL::emptyHeader;
     }
 
     /* Check if the label is in the individual header

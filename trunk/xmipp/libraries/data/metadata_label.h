@@ -198,7 +198,7 @@ enum MDLabel
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
     MDL_PICKING_COLOR, ///< Color for particle picking
     MDL_PICKING_FAMILY, ///< Family for particle picking
-    MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking	
+    MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
@@ -304,15 +304,15 @@ enum MDLabelType
 /** Possible types of the values of labels */
 enum MDLabelTag
 {
-	TAGLABEL_NOTAG = 0,
-	TAGLABEL_TEXTFILE=0x1,
-	TAGLABEL_METADATA=0x3,
-	TAGLABEL_CTFPARAM=0x5,
-	TAGLABEL_IMAGE=0x8,
-	TAGLABEL_VOLUME=0x10,
-	TAGLABEL_STACK=0x20,
-	TAGLABEL_MICROGRAPH=0x48,
-	TAGLABEL_PSD=0x88
+    TAGLABEL_NOTAG = 0,
+    TAGLABEL_TEXTFILE=0x1,
+    TAGLABEL_METADATA=0x3,
+    TAGLABEL_CTFPARAM=0x5,
+    TAGLABEL_IMAGE=0x8,
+    TAGLABEL_VOLUME=0x10,
+    TAGLABEL_STACK=0x20,
+    TAGLABEL_MICROGRAPH=0x48,
+    TAGLABEL_PSD=0x88
 };
 
 /**Just an utility function */
@@ -492,6 +492,13 @@ public:
         objects[label]->getValue(d);
         return true;
     }
+    /** Get value */
+    template <typename T, typename T1>
+    void getValueOrDefault(MDLabel label, T &d, T1 def) const
+    {
+        if (!getValue(label, d))
+            d = (T) def;
+    }
 
     bool getValue(MDObject &object) const;
 
@@ -499,14 +506,14 @@ public:
     template <typename T>
     void setValue(MDLabel label, const T &d)
     {
-      if (objects[label] == NULL)
-      {
-        objects[label] = new MDObject(label, d);
-        order[_size] = label;
-        ++_size;
-      }
-      else
-        objects[label]->setValue(d);
+        if (objects[label] == NULL)
+        {
+            objects[label] = new MDObject(label, d);
+            order[_size] = label;
+            ++_size;
+        }
+        else
+            objects[label]->setValue(d);
     }
 
     void setValue(const MDObject &object);
@@ -588,9 +595,9 @@ class MDLabelStaticInit
 private:
     MDLabelStaticInit()
     {
-    	//Just to be safe, initialize all data to null
-    	for (int i = (int)MDL_FIRST_LABEL; i <= (int)MDL_LAST_LABEL; ++i)
-    		MDL::data[i] = NULL;
+        //Just to be safe, initialize all data to null
+        for (int i = (int)MDL_FIRST_LABEL; i <= (int)MDL_LAST_LABEL; ++i)
+            MDL::data[i] = NULL;
 
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         //The label MDL_OBJID is special and should not be used
@@ -736,11 +743,11 @@ private:
         MDL::addLabel(MDL_NEIGHBORHOOD_RADIUS, LABEL_DOUBLE, "neighborhoodRadius");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR_DOUBLE, "NMADisplacements");
         MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile", TAGLABEL_TEXTFILE);
-		MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
-		MDL::addLabel(MDL_NOISE_COORD, LABEL_VECTOR_DOUBLE, "noiseCoord");
-		MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
-		MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR_DOUBLE, "noisePixelLevel");
-		MDL::addLabel(MDL_ORDER, LABEL_SIZET, "order_");
+        MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
+        MDL::addLabel(MDL_NOISE_COORD, LABEL_VECTOR_DOUBLE, "noiseCoord");
+        MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
+        MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR_DOUBLE, "noisePixelLevel");
+        MDL::addLabel(MDL_ORDER, LABEL_SIZET, "order_");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");

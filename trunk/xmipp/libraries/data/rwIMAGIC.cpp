@@ -213,8 +213,8 @@ int  ImageBase::readIMAGIC(size_t select_img)
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
-                MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->iyold);
-                MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->ixold);
+                MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->ixold);
+                MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->iyold);
                 MD[i].setValue(MDL_SHIFTZ,  zeroD);
                 MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
                 MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
@@ -370,23 +370,16 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
 
     if (!MDMainHeader.empty())
     {
-
-        if(MDMainHeader.getValue(MDL_MIN,   aux))
-            header.densmin = (float)aux;
-        if(MDMainHeader.getValue(MDL_MAX,   aux))
-            header.densmax = (float)aux;
-        if(MDMainHeader.getValue(MDL_AVG,   aux))
-            header.avdens   = (float)aux;
-        if(MDMainHeader.getValue(MDL_STDDEV,aux))
-        {
-            header.sigma  = (float)aux;
-            header.varian = (float)(aux*aux);
-        }
+#define SET_MAIN_HEADER_VALUE(field, label)  MDMainHeader.getValueOrDefault(label, aux, 0.); header.field = (float)aux
+        SET_MAIN_HEADER_VALUE(densmin, MDL_MIN);
+        SET_MAIN_HEADER_VALUE(densmax, MDL_MAX);
+        SET_MAIN_HEADER_VALUE(avdens, MDL_AVG);
+        SET_MAIN_HEADER_VALUE(sigma, MDL_STDDEV);
+        header.varian = header.sigma*header.sigma;
     }
 
     memcpy(header.lastpr, "Xmipp", 5);
     memcpy(header.name, filename.c_str(), 80);
-
 
     size_t  imgStart = IMG_INDEX(select_img);
 
@@ -454,18 +447,13 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         // Write the individual image header
         if (it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
-            if(it->getValue(MDL_SHIFTX,  aux))
-                header.iyold  = (float)-aux;
-            if(it->getValue(MDL_SHIFTY,  aux))
-                header.ixold  =(float)-aux;
-            //if(it->getValue(MDL_SHIFTZ,  aux))
-            //    header.zoff  =(float)aux;
-            if(it->getValue(MDL_ANGLEROT, aux))
-                header.euler_alpha   =(float)-aux;
-            if(it->getValue(MDL_ANGLETILT,aux))
-                header.euler_beta    =(float)-aux;
-            if(it->getValue(MDL_ANGLEPSI, aux))
-                header.euler_gamma =(float)-aux;
+#define SET_HEADER_VALUE(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
+
+        	SET_HEADER_VALUE(ixold, MDL_SHIFTX);
+        	SET_HEADER_VALUE(iyold, MDL_SHIFTY);
+        	SET_HEADER_VALUE(euler_alpha, MDL_ANGLEROT);
+        	SET_HEADER_VALUE(euler_beta, MDL_ANGLETILT);
+        	SET_HEADER_VALUE(euler_gamma, MDL_ANGLEPSI);
         }
         // Update index number of image
         header.imn = imgStart + i + 1;

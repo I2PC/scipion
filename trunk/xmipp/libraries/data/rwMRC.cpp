@@ -160,7 +160,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     }
     else // If the reading is not like a stack, then the select_img is not taken into account and must be selected the only image
     {
-    	select_img = ALL_IMAGES;
+        select_img = ALL_IMAGES;
         _nDim = 1;
     }
 
@@ -412,32 +412,24 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
 
     if (!MDMainHeader.empty())
     {
-        if(MDMainHeader.getValue(MDL_MIN, aux))
-            header->amin  = (float)aux;
-        if(MDMainHeader.getValue(MDL_MAX, aux))
-            header->amax  = (float)aux;
-        if(MDMainHeader.getValue(MDL_AVG, aux))
-            header->amean = (float)aux;
-        if(MDMainHeader.getValue(MDL_STDDEV, aux))
-            header->arms  = (float)aux;
+#define SET_MAIN_HEADER_VALUE(field, label)  MDMainHeader.getValueOrDefault(label, aux, 0.); header->field = (float)aux
+        SET_MAIN_HEADER_VALUE(amin, MDL_MIN);
+        SET_MAIN_HEADER_VALUE(amax, MDL_MAX);
+        SET_MAIN_HEADER_VALUE(amean, MDL_AVG);
+        SET_MAIN_HEADER_VALUE(arms, MDL_STDDEV);
 
         if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
-            if(MD[0].getValue(MDL_SHIFTX, aux))
-                header->nxStart = (int)-(aux-0.5);
-            if(MD[0].getValue(MDL_ORIGINX, aux) &&
-               MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux2))//header is init to zero
-                header->xOrigin = (float)(aux*aux2);
-            if (MD[0].getValue(MDL_SHIFTY, aux))
-                header->nyStart = (int)-(aux-0.5);
-            if (MD[0].getValue(MDL_ORIGINY, aux) &&
-                MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux2))//header is init to zero
-                header->yOrigin = (float)(aux*aux2);
-            if (MD[0].getValue(MDL_SHIFTZ, aux))
-                header->nzStart = (int)-(aux-0.5);
-            if (MD[0].getValue(MDL_ORIGINZ, aux) &&
-                MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux2))//header is init to zero
-                header->zOrigin = (float)(aux*aux2);
+#define SET_HEADER_SHIFT(field, label)  MD[0].getValueOrDefault(label, aux, 0.); header->field = -(int) round(aux)
+            SET_HEADER_SHIFT(nxStart, MDL_SHIFTX);
+            SET_HEADER_SHIFT(nyStart, MDL_SHIFTY);
+            SET_HEADER_SHIFT(nzStart, MDL_SHIFTZ);
+#define SET_HEADER_ORIGIN(field, label1, label2)  MD[0].getValueOrDefault(label1, aux, 0.);MDMainHeader.getValueOrDefault(label2, aux2, 0.);\
+              header->field = (float) (aux * aux2)
+
+            SET_HEADER_ORIGIN(xOrigin, MDL_ORIGINX, MDL_SAMPLINGRATEX);
+            SET_HEADER_ORIGIN(yOrigin, MDL_ORIGINY, MDL_SAMPLINGRATEY);
+            SET_HEADER_ORIGIN(zOrigin, MDL_ORIGINZ, MDL_SAMPLINGRATEZ);
         }
         else
             header->nxStart = header->xOrigin = header->nyStart = \

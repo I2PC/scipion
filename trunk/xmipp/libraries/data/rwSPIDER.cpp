@@ -380,40 +380,28 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 
     if (!MDMainHeader.empty())
     {
-        if(MDMainHeader.getValue(MDL_MIN, aux))
-            header->fmin = (float)aux;
-        if(MDMainHeader.getValue(MDL_MAX, aux))
-            header->fmax = (float)aux;
-        if(MDMainHeader.getValue(MDL_AVG, aux))
-            header->av   = (float)aux;
-        if(MDMainHeader.getValue(MDL_STDDEV, aux))
-            header->sig  = (float)aux;
-
+#define SET_MAIN_HEADER_VALUE(field, label, aux)  MDMainHeader.getValueOrDefault(label, aux, 0.); header->field = (float)aux
+        SET_MAIN_HEADER_VALUE(fmin, MDL_MIN, aux);
+        SET_MAIN_HEADER_VALUE(fmax, MDL_MAX, aux);
+        SET_MAIN_HEADER_VALUE(av, MDL_AVG, aux);
+        SET_MAIN_HEADER_VALUE(sig, MDL_STDDEV, aux);
     }
+
 
     if (Ndim == 1 && mode != WRITE_APPEND && !isStack && !MD.empty())
     {
         if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
-
-            if(MD[0].getValue(MDL_SHIFTX,  aux))
-                header->xoff  =(float)aux;
-            if(MD[0].getValue(MDL_SHIFTY,  aux))
-                header->yoff  =(float)aux;
-            if(MD[0].getValue(MDL_SHIFTZ,  aux))
-                header->zoff  =(float)aux;
-            if(MD[0].getValue(MDL_ANGLEROT, aux))
-                header->phi   =(float)aux;
-            if(MD[0].getValue(MDL_ANGLETILT,aux))
-                header->theta =(float)aux;
-            if(MD[0].getValue(MDL_ANGLEPSI, aux))
-                header->gamma =(float)aux;
-            if(MD[0].getValue(MDL_WEIGHT,   aux))
-                header->weight=(float)aux;
-            if(MD[0].getValue(MDL_FLIP,    baux))
-                header->flip  =(float)baux;
-            if(MD[0].getValue(MDL_SCALE,    aux))
-                header->scale  =(float)aux;
+#define SET_HEADER_VALUE(field, label, aux)  MD[0].getValueOrDefault((label), (aux), 0.); header->field = (float)(aux)
+            SET_HEADER_VALUE(xoff, MDL_SHIFTX, aux);
+            SET_HEADER_VALUE(yoff, MDL_SHIFTY, aux);
+            SET_HEADER_VALUE(zoff, MDL_SHIFTZ, aux);
+            SET_HEADER_VALUE(phi, MDL_ANGLEROT, aux);
+            SET_HEADER_VALUE(theta, MDL_ANGLETILT, aux);
+            SET_HEADER_VALUE(gamma, MDL_ANGLEPSI, aux);
+            SET_HEADER_VALUE(weight, MDL_WEIGHT, aux);
+            SET_HEADER_VALUE(flip, MDL_FLIP, baux);
+            SET_HEADER_VALUE(scale, MDL_SCALE, aux);
         }
         else
         {
@@ -491,8 +479,8 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
      */
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked if a shared or exclusive lock is
-                                                                       blocked by other locks, the thread shall
-                                                                       wait until the request can be satisfied*/
+                                                                                           blocked by other locks, the thread shall
+                                                                                           wait until the request can be satisfied*/
 
     // Write main header
     if( mode == WRITE_OVERWRITE ||
@@ -533,24 +521,15 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             // Write the individual image header
             if ( it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
             {
-                if(it->getValue(MDL_SHIFTX,  aux))
-                    header->xoff  =(float)aux;
-                if(it->getValue(MDL_SHIFTY,  aux))
-                    header->yoff  =(float)aux;
-                if(it->getValue(MDL_SHIFTZ,  aux))
-                    header->zoff  =(float)aux;
-                if(it->getValue(MDL_ANGLEROT, aux))
-                    header->phi   =(float)aux;
-                if(it->getValue(MDL_ANGLETILT,aux))
-                    header->theta =(float)aux;
-                if(it->getValue(MDL_ANGLEPSI, aux))
-                    header->gamma =(float)aux;
-                if(it->getValue(MDL_WEIGHT,   aux))
-                    header->weight=(float)aux;
-                if(it->getValue(MDL_FLIP,    baux))
-                    header->flip  =(float)baux;
-                if(it->getValue(MDL_SCALE,    aux))
-                    header->scale  =(float)aux;
+                SET_HEADER_VALUE(xoff, MDL_SHIFTX, aux);
+                SET_HEADER_VALUE(yoff, MDL_SHIFTY, aux);
+                SET_HEADER_VALUE(zoff, MDL_SHIFTZ, aux);
+                SET_HEADER_VALUE(phi, MDL_ANGLEROT, aux);
+                SET_HEADER_VALUE(theta, MDL_ANGLETILT, aux);
+                SET_HEADER_VALUE(gamma, MDL_ANGLEPSI, aux);
+                SET_HEADER_VALUE(weight, MDL_WEIGHT, aux);
+                SET_HEADER_VALUE(flip, MDL_FLIP, baux);
+                SET_HEADER_VALUE(scale, MDL_SCALE, aux);
             }
             else
             {
