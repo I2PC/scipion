@@ -2320,13 +2320,13 @@ public:
         y -= STARTINGY(*this);
         x -= STARTINGX(*this);
 
-        int l1 = CEIL(x - SplineDegree_1);
+        int l1 = ceil(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
 
-        int m1 = CEIL(y - SplineDegree_1);
+        int m1 = ceil(y - SplineDegree_1);
         int m2 = m1 + SplineDegree;
 
-        int n1 = CEIL(z - SplineDegree_1);
+        int n1 = ceil(z - SplineDegree_1);
         int n2 = n1 + SplineDegree;
 
         double zyxsum = 0.0;
@@ -2599,7 +2599,7 @@ public:
         // Logical to physical
         x -= STARTINGX(*this);
 
-        int l1 = CEIL(x - SplineDegree_1);
+        int l1 = ceil(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
 
         double sum = 0.0;
