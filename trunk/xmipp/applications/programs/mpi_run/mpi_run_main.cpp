@@ -128,13 +128,13 @@ public:
         {
             while (1)
             {
-                //any message from the master, is tag is TAG_STOP then stop
+                //I am free
                 MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
-                //get yor next task
+                //get your next task
                 MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (status.MPI_TAG == TAG_STOP)//I am free
                     break;
-                else if (status.MPI_TAG == TAG_WAIT)//I am free
+                else if (status.MPI_TAG == TAG_WAIT)//wait
                 {
                     MPI_Recv(&szline, 1, MPI_CHAR, 0, TAG_WAIT, MPI_COMM_WORLD, &status);
                     continue;
