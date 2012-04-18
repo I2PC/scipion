@@ -115,7 +115,7 @@ void KaiserMask(MultidimArray<double> &mask, double delta, double Deltaw)
     {
         double r = sqrt((double)(i * i + j * j + k * k));
         if (r <= M)
-            mask(k, i, j) = bessi0(beta * sqrt(1 - (r / M) * (r / M))) * iI0Beta;
+            A3D_ELEM(mask, k, i, j) = bessi0(beta * sqrt(1 - (r / M) * (r / M))) * iI0Beta;
     }
 
 }
@@ -136,6 +136,7 @@ void SincKaiserMask(MultidimArray<double> &mask,
                     double omega, double delta, double Deltaw)
 {
     MultidimArray<double> kaiser;
+    kaiser.resizeNoCopy(mask);
     KaiserMask(kaiser, delta, Deltaw);
     mask.resize(kaiser);
     mask.setXmippOrigin();
