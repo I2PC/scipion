@@ -22,6 +22,7 @@ class ProtScreenParticles(XmippProtocol):
 
     def defineSteps(self):
         outputFile=self.workingDirPath("sorted.xmd")
+        self.Db.insertStep("copyAcquisition",inputFile=self.InputFile,WorkingDir=self.WorkingDir)
         self.Db.insertStep('sortImages',verifyfiles=[outputFile],inputFile=self.InputFile, outputFile=outputFile)
                 
     def validate(self):
@@ -39,12 +40,19 @@ class ProtScreenParticles(XmippProtocol):
             showWarning("Error", "There is no result yet")
         else:   
             runShowJ(summaryFile)                                     
-    
+
+def copyAcquisition(log,inputFile,WorkingDir):
+    inputFileDir=os.path.dirname(inputFile)
+    fnAcquistionIn=os.path.join(inputFileDir,"acquisition_info.xmd")
+    if os.path.exists(fnAcquistionIn):
+        fnAcquistionOut=os.path.join(WorkingDir,"acquisition_info.xmd")
+        createLink(log, fnAcquistionIn, fnAcquistionOut)
+
 def sortImages(log, inputFile, outputFile):
     from xmipp import MetaData
     mD = MetaData(inputFile)
     if mD.size() > 0:
-        runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" --multivariate -o "+outputFile.replace(".xmd",""))
+        runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" --multivariate -o "+outputFile)
     else:
         createLink(log,inputFile,outputFile)
 
