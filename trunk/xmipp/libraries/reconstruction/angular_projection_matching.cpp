@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Sjors Scheres            scheres@cnb.csic.es (2004)
+ * Authors:    Roberto Marabini            roberto@cnb.csic.es (2012)
  *
  * Unidad de Bioinformatica del Centro Nacional de Biotecnologia , CSIC
  *
@@ -245,6 +246,18 @@ void ProgAngularProjectionMatching::produceSideInfo()
     mysampling.readSamplingFile(fn_ref.removeAllExtensions(),false);
     total_nr_refs = mysampling.no_redundant_sampling_points_angles.size();
 
+//#define DEBUG
+#ifdef DEBUG
+    std::cerr << "XXXXmysampling.no_redundant_sampling_points_indexXXXXXX" <<std::endl;
+    for (std::vector<size_t>::iterator i =
+                mysampling.no_redundant_sampling_points_index.begin();
+            i != mysampling.no_redundant_sampling_points_index.end();
+            ++i)
+        std::cerr << *i << " ";
+    std::cerr << std::endl;
+    std::cerr << "exit" <<std::endl;
+#endif
+#undef DEBUG
     convert_refno_to_stack_position.resize(mysampling.numberSamplesAsymmetricUnit, -1);
     for (int i = 0; i < mysampling.no_redundant_sampling_points_index.size(); i++)
     	convert_refno_to_stack_position[mysampling.no_redundant_sampling_points_index[i]] = i;
@@ -372,26 +385,28 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     fnt.compose(convert_refno_to_stack_position[refno] + FIRST_IMAGE, fn_ref);
     //!a delete _DATA_ALL
     img.read(fnt, _DATA_ALL);
-    double rot_tmp,tilt_tmp,psi_tmp;
-    img.getEulerAngles(rot_tmp,tilt_tmp,psi_tmp);
     img().setXmippOrigin();
+
 //#define DEBUG
 #ifdef DEBUG
+    double rot_tmp,tilt_tmp,psi_tmp;
+    img.getEulerAngles(rot_tmp,tilt_tmp,psi_tmp);
 
     {
-        std::cerr << "refno: " << refno<<std::endl;
     	std::cerr << "index_found: " << convert_refno_to_stack_position[refno] << std::endl;
+        std::cerr << "refno: " << refno<<std::endl;
     	std::cerr << "reading image " << fnt << std::endl;
         std::cerr << "rot_tmp,tilt_tmp,psi_tmp: " << rot_tmp<< " "<< tilt_tmp<< " "<<psi_tmp<< std::endl;
-        std::cerr << "XXXXno_redundant_sampling_points_indexXXXXXX" <<std::endl;
-        for (std::vector<size_t>::iterator i =
-                    mysampling.no_redundant_sampling_points_index.begin();
-                i != mysampling.no_redundant_sampling_points_index.end();
-                ++i)
-            std::cerr << *i << " ";
+//        std::cerr << "XXXXno_redundant_sampling_points_indexXXXXXX" <<std::endl;
+//        for (std::vector<size_t>::iterator i =
+//                    mysampling.my_neighbors.begin();
+//                i != mysampling.my_neighbors.end();
+//                ++i)
+//            std::cerr << *i << " ";
         std::cerr << std::endl;
     }
 #endif
+#undef DEBUG
     // Apply CTF
     if (fn_ctf!="")
     {
@@ -480,6 +495,7 @@ void * threadRotationallyAlignOneImage( void * data )
     double *opt_psi = thread_data->opt_psi;
     bool *opt_flip = thread_data->opt_flip;
     double *maxcorr = thread_data->maxcorr;
+
 
     // Local variables
     MultidimArray<double>       Maux;
@@ -639,13 +655,11 @@ void * threadRotationallyAlignOneImage( void * data )
                     {
                         *maxcorr = DIRECT_A1D_ELEM(corr,k);
                         *opt_psi = DIRECT_A1D_ELEM(ang,k);
-                        *opt_refno = prm->mysampling.my_neighbors[imgno][i];
+                        //FIXME not sure about FIRST_IMAGE
+                        *opt_refno = prm->mysampling.my_neighbors[imgno][i]+FIRST_IMAGE;
                         *opt_flip = false;
                     }
                 }
-#ifdef DEBUG
-                std::cerr<<"straight: corr "<<*maxcorr<<std::endl;
-#endif
                 // B. Check mirrored image
                 rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
@@ -669,6 +683,15 @@ void * threadRotationallyAlignOneImage( void * data )
 #undef DEBUG
 
             }
+//#define DEBUG
+#ifdef DEBUG
+                std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
+                std::cerr << "DEBUG_ROB, i:" << i << std::endl;
+                std::cerr << "DEBUG_ROB, prm->mysampling.my_neighbors[imgno][i]:" << prm->mysampling.my_neighbors[imgno][i] << std::endl;
+                std::cerr<<"straight: corr "<<*maxcorr<<std::endl;
+#endif
+#undef DEBUG
+
         }
     }
 
@@ -700,7 +723,6 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
     Mtrans.setXmippOrigin();
     Mimg.setXmippOrigin();
     Mref.setXmippOrigin();
-
 #ifdef TIMING
 
     TimeStamp t0,t1,t2;
@@ -724,6 +746,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 
     // Rotate stored reference projection by phi degrees
     rotate(BSPLINE3,Mref,proj_ref[refno],opt_psi,DONT_WRAP);
+    //rotate(BSPLINE3,Mref,proj_ref[refno],-opt_psi,DONT_WRAP);
 
 #ifdef DEBUG
 
@@ -735,7 +758,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         // Flip experimental image
         Matrix2D<double> A(3,3);
         A.initIdentity();
-        MAT_ELEM(A,0, 0) = -1;
+        MAT_ELEM(A,0, 0) = -1.;
         applyGeometry(LINEAR, Mimg, img, A, IS_INV, DONT_WRAP);
     }
     else
@@ -906,10 +929,23 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     size_t nr_images = imagesToProcess.size();
     size_t idNew, imgid;
     FileName fn;
-
     for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
         imgid = imagesToProcess[imgno];
+        /**/
+        double kk;
+        FileName pp;
+        DFexp.getValue(MDL_IMAGE,pp, imgid);
+        std::cerr << "1 DEBUG_ROB, fn_img:" << pp << std::endl;
+        DFexp.getValue(MDL_ANGLEROT,kk, imgid);
+        std::cerr << "1 DEBUG_ROB, rot:" << kk << std::endl;
+        DFexp.getValue(MDL_ANGLETILT,kk, imgid);
+        std::cerr << "1 DEBUG_ROB, tilt:" << kk << std::endl;
+        DFexp.getValue(MDL_ANGLEPSI,kk, imgid);
+        std::cerr << "1 DEBUG_ROB, psi:" << kk << std::endl<< std::endl;
+
+        /**/
+std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
         getCurrentImage(imgid, img);
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
@@ -941,17 +977,23 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             }
             pthread_join(*(th_ids+c),NULL);
         }
-
         // Flip order to loop through references
         loop_forward_refs = !loop_forward_refs;
 
         opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
         opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
+//        std::cerr << "3 DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
+//        std::cerr << "3 DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
+//        std::cerr << "3 DEBUG_ROB, opt_psi:" << opt_psi << std::endl;
 
         translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
         // Add previously applied translation to the newly found one
         opt_xoff += img.Xoff();
         opt_yoff += img.Yoff();
+
+        /* FIXME ROB     */
+        //opt_psi += img.psi();
+        /*         */
 
         opt_scale=1.0;
 
@@ -997,8 +1039,13 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
     double shiftX, shiftY;
     DFexp.getValue(MDL_SHIFTX,shiftX, imgid);
     DFexp.getValue(MDL_SHIFTY,shiftY, imgid);
+
     img.setShifts(shiftX,shiftY);
-    img.setEulerAngles(0.,0.,0.);
+
+    //FIXME ROB
+    //img.setEulerAngles(0.,0.,psi);
+    img.setEulerAngles(0.,0.,0);
+    //
     img.setFlip(0.);
 
     double scale;
