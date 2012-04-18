@@ -8,7 +8,7 @@ data_neighbors
 loop_
 data_projectionDirections
 loop_
- _order_
+ _neighbor
  _angleRot
  _angleTilt
  _anglePsi
@@ -32,7 +32,7 @@ loop_
         15     5.965838    51.818048     0.000000     0.781794     0.081699     0.618161 
 data_projectionDirectionsSphere
 loop_
- _order_
+ _neighbor
  _angleRot
  _angleTilt
  _anglePsi

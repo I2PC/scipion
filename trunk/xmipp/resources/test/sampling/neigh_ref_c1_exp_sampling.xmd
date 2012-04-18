@@ -5,14 +5,14 @@ data_extra
  _neighborhoodRadius 0.996195
 data_neighbors
 loop_
- _order_
+ _neighbor
  _neighbors
          1 ' 525 524 511 510 509 497 496 ' 
          2 ' 595 594 577 576 575 559 558 '
          3 ' 619 618 600 599 598 581 580 579 '
 data_projectionDirections
 loop_
- _order_
+ _neighbor
  _angleRot
  _angleTilt
  _anglePsi

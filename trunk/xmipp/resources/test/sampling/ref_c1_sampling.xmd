@@ -7,7 +7,7 @@ data_neighbors
 loop_
 data_projectionDirections
 loop_
- _order_
+ _neighbor
  _angleRot
  _angleTilt
  _anglePsi

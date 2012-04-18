@@ -10,7 +10,7 @@ data_projectionDirections
 loop_
 data_projectionDirectionsSphere
 loop_
- _order_
+ _neighbor
  _angleRot
  _angleTilt
  _anglePsi
