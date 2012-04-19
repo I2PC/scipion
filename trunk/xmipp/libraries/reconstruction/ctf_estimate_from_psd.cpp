@@ -1062,8 +1062,6 @@ double CTF_fitness(double *p, void *) {
 				continue;
 
 			// Compute each component
-			double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
-			double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
 			global_ctfmodel.precomputeValues(i, j);
 			double bg = global_ctfmodel.CTFnoise_at();
 			double envelope, ctf_without_damping, ctf_with_damping;
