@@ -29,7 +29,7 @@ class ProtParticlePicking(XmippProtocol):
         self.micrographs = self.getEquivalentFilename(importProt, self.inputMicrographs)
 
     def defineSteps(self):
-        self.insertStep('copyFile', source=self.inputMicrographs, dest=self.micrographs)
+        self.insertStep('copyFile', verifyfiles=[self.micrographs], source=self.inputMicrographs, dest=self.micrographs)
         fnAcquisition=self.workingDirPath("acquisition_info.xmd")
         self.insertStep('createLink', verifyfiles=[fnAcquisition],source=os.path.join(self.importDir,"acquisition_info.xmd"),dest=fnAcquisition)
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
