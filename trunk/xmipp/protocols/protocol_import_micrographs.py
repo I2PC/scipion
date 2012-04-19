@@ -69,7 +69,7 @@ class ProtImportMicrographs(XmippProtocol):
 
     def summary(self):
         message = []
-        message.append("Import of <%d> micrographs from <%s>" % (len(self.getMicrographs()), self.DirMicrographs))
+        message.append("Import of <%d> micrographs from [%s]" % (len(self.getMicrographs()), self.DirMicrographs))
         if self.TiltPairs:
             message.append("Micrographs are in tilt pairs")
         return message

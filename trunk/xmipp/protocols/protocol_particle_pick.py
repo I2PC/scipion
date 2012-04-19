@@ -30,8 +30,7 @@ class ProtParticlePicking(XmippProtocol):
 
     def defineSteps(self):
         self.insertStep('copyFile', verifyfiles=[self.micrographs], source=self.inputMicrographs, dest=self.micrographs)
-        fnAcquisition=self.workingDirPath("acquisition_info.xmd")
-        self.insertStep('createLink', verifyfiles=[fnAcquisition],source=os.path.join(self.importDir,"acquisition_info.xmd"),dest=fnAcquisition)
+        self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            MicrographSelfile=self.micrographs, WorkingDir=self.WorkingDir,
                            TiltPairs=self.TiltPairs,
@@ -50,7 +49,7 @@ class ProtParticlePicking(XmippProtocol):
         else: 
             suffix = "micrographs"        
         
-        summary=["Input: <%s> with <%u> %s" % (self.inputMicrographs, md.size(), suffix)]        
+        summary=["Input: [%s] with <%u> %s" % (self.importDir, md.size(), suffix)]        
         total_manual = 0
         N_manual = 0
         total_auto = 0
