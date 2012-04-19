@@ -412,7 +412,6 @@ def reconstruction(_log
     print '*********************************************************************'
     print '* Reconstruct volume using '
     if ReconstructionMethod=='wbp':
-        OutputVolume = OutputVolume+".vol"
         program = 'xmipp_reconstruct_wbp'
         parameters= ' -i '    + ReconstructionXmd + \
                     ' --doc '  + ReconstructionXmd + \
