@@ -35,6 +35,7 @@
 ProgReconsART::ProgReconsART()
 {
     isMpi = false;
+    artRecons = NULL;
 }
 ProgReconsART::~ProgReconsART()
 {
