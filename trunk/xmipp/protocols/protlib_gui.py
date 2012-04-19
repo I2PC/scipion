@@ -655,14 +655,10 @@ class ProtocolGUI(BasicGUI):
         showInfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
         
     def selectFromList(self, var, list):
-        if len(list) == 0:
-            showWarning("Warning", "No elements to select", parent=self.master)
-            return
-        from protlib_gui_ext import ListboxDialog
-        d = ListboxDialog(self.frame, list, selectmode=tk.SINGLE)
-        if len(d.result) > 0:
-            index = d.result[0]
-            var.setTkValue(list[index])
+        from protlib_wizard import wizardSelectFromList
+        selected=wizardSelectFromList(self.master,self.frame, list)
+        if selected is not None:
+            var.setTkValue(selected)
         
     def showHelp(self, helpmsg):
         showInfo("Help", helpmsg, parent=self.master)

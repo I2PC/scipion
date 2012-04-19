@@ -33,7 +33,6 @@ from os.path import join, relpath, exists
 import Tkinter as tk
 import tkFont
 
-
 from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
     XmippProject
 from protlib_utils import loadModule, which, runShowJ
@@ -51,11 +50,27 @@ from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, greenStr
 
    
-# This group of function are called Wizzards and should help
+# This group of function are called Wizards and should help
 # to set some parameters  in the GUI, they will receive as parameters
 # ProtocolGUI instance and the variable to setup 
 # wizard functions should usually set the variable value
 # if not, can be used as viewers
+
+def wizardSelectFromList(master, frame, list):
+    '''Helper function to select elements from a list '''
+    L=len(list)
+    if L == 0:
+        showWarning("Warning", "No elements to select", parent=master)
+        return
+    if L == 1:
+        return list[0]
+    from protlib_gui_ext import ListboxDialog
+    d = ListboxDialog(frame, list, selectmode=tk.SINGLE)
+    if len(d.result) > 0:
+        index = d.result[0]
+        return(list[index])
+    else:
+        return None
 
 def wizardNotFound(self, var):
     showError("Wizard not found", "The wizard <%s> for this parameter has not been found" % var.tags['wizard']
@@ -209,24 +224,24 @@ def wizardDesignMask(self, var):
 
 #Select micrograph extension
 def wizardMicrographExtension(self,var):
-    dirMicrographs = self.getVarValue('DirMicrographs')
-    files=glob(join(dirMicrographs,"*"))
-    extensions={}
-    bestCount=0
-    bestExt=""
-    imgExt=['.raw','.tif','.mrc','.dm3','.ser','.spi','.xmp']
-    for fn in files:
-        ext=os.path.splitext(fn)[1]
-        if ext in imgExt:                
-            if ext in extensions.keys():
-                extensions[ext]+=1
-            else:
-                extensions[ext]=1
-            if extensions[ext]>bestCount:
-                bestCount=extensions[ext]
-                bestExt=ext
-    self.setVarValue("ExtMicrographs", "*"+bestExt)
+    import fnmatch
+    imgExt=['.raw','.tif','.mrc','.dm3','.ser','.spi']
+    files = []
+    currentDir=self.getVarValue('DirMicrographs')
+    if currentDir=="":
+        currentDir="."
 
+    possibleLocations=[]
+    for ext in imgExt:
+        for root, dirnames, filenames in os.walk(currentDir):
+            if len(fnmatch.filter(filenames, '*'+ext))>0:
+                possibleLocations.append(os.path.join(root, '*'+ext))
+    selected=wizardSelectFromList(self.master, self.frame, possibleLocations)
+    if selected is not None:
+        dir,ext=os.path.split(selected)
+        self.setVarValue('DirMicrographs',dir)
+        self.setVarValue('ExtMicrographs',ext)
+                
 #Select Tilt pairs
 def wizardTiltPairs(self, var):
     dirMicrographs = self.getVarValue('DirMicrographs')
