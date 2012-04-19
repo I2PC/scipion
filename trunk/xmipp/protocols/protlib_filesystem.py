@@ -108,6 +108,9 @@ def createLink(log, source, dest):
     except Exception, e:
         printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
+def createLink2(log, filename, dir1, dir2):
+    createLink(log,os.path.join(dir1,filename),os.path.join(dir2,filename))
+
 def uniqueFilename(file_name):
     ''' Create a unique filename (not file handler)
        this approach is unsecure but good enought for most purposes'''
