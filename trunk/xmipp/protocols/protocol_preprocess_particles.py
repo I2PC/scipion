@@ -9,7 +9,7 @@ from protlib_base import *
 import xmipp
 import os
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import deleteFile
+from protlib_filesystem import deleteFile,linkAcquisitionInfoIfPresent
 import glob
 from protlib_gui_ext import showError
 
@@ -22,6 +22,7 @@ class ProtPreprocessParticles(XmippProtocol):
 
     def defineSteps(self):
         self.Db.insertStep('copyFiles',verifyfiles=[self.OutSelFile],InputFile=self.InSelFile,OutputFile=self.OutSelFile)
+        self.Db.insertStep('createAcquisition',InputFile=self.InSelFile,WorkingDir=self.WorkingDir,DoScale=self.DoScale,NewSize=self.NewSize)
         if self.DoScale:
             self.Db.insertStep('doScale',stack=self.OutSelFile,new_size=self.NewSize,Nproc=self.NumberOfMpi)
         if self.DoFourier:
@@ -73,6 +74,21 @@ class ProtPreprocessParticles(XmippProtocol):
             showError("Error", "There is no result yet")
         else:
             runShowJ(self.OutSelFile)
+
+def createAcquisition(log,InputFile,WorkingDir,DoScale,NewSize):
+    if not DoScale:
+        linkAcquisitionInfoIfPresent("acquisition_info.xmd", InputFile, WorkingDir)
+    else:
+        dirSrc=os.path.dirname(InputFile)
+        fnAcquisitionIn=os.path.join(dirSrc,"acquisition_info.xmd")
+        if os.path.exists(fnAcquisitionIn):
+            MD=xmipp.MetaData(fnAcquisitionIn)
+            id=MD.firstObject()
+            Ts=MD.getValue(xmipp.MDL_SAMPLINGRATE,id)
+            (Xdim, Ydim, Zdim, Ndim) = xmipp.ImgSize(InputFile)
+            downsampling=float(Xdim)/NewSize;
+            MD.setValue(xmipp.MDL_SAMPLINGRATE,Ts*downsampling,id)
+            MD.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
 
 def copyFiles(log,InputFile,OutputFile):
     runJob(log,"xmipp_image_convert","-i "+InputFile+" -o "+OutputFile)

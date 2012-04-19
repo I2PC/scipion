@@ -16,14 +16,14 @@
 """
 InSelFile=''
 
-# Scale
+# 1) Scale
 """ Change the scale of the input images """
 DoScale=False
 
 #{condition}(DoScale) New image size
 NewSize=0
 
-# Fourier bandpass filter
+# 2) Fourier bandpass filter
 """ You may do a lowpass filter by setting Freq_low to 0. You may do a high pass filter
     by setting Freq_high to 0.5."""
 DoFourier=False 
@@ -40,7 +40,7 @@ Freq_high=0.35
 """ It describes the length of the amplitude decay in a raised cosine """
 Freq_decay=0.02
 
-# Fourier Gaussian
+# 3) Fourier Gaussian
 """ Gaussian filter defined in Fourier space"""
 DoGaussian=False
 
@@ -48,7 +48,7 @@ DoGaussian=False
 """ Remind that the Fourier frequency is normalized between 0 and 0.5"""
 Freq_sigma=0.04
 
-# Remove dust
+# 4) Remove dust
 """
 Sets pixels with unusually large values to random values from a Gaussian 
 with zero-mean and unity-standard deviation. It requires a previous normalization, 
@@ -64,7 +64,7 @@ the signal itself may be affected so that a higher value may be preferable.
 """
 DustRemovalThreshold=3.5
 
-# Normalize
+# 5) Normalize
 """ 
 It subtract a ramp in the gray values and normalizes so that in the background
 there is 0 mean and standard deviation 1 """
@@ -84,7 +84,7 @@ Radius for background circle definition (in pix.).
 If this value is 0, then the same as the particle radius is used. """
 BackGroundRadius=0
 
-# Apply mask
+# 6) Apply mask
 """ Apply mask from file """
 DoMask=False
 
