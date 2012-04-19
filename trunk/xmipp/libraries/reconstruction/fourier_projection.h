@@ -41,6 +41,11 @@ class FourierProjector
 public:
     /// Padding factor
     double paddingFactor;
+    /// Maximum Frequency for pixels
+    double maxFrequency;
+    /// The order of B-Spline for interpolation
+    double BSplineDeg;
+
 public:
     // Auxiliary FFT transformer
     FourierTransformer transformer3D, transformer2D;
@@ -66,11 +71,11 @@ public:
     /*
      * The constructor of the class
      */
-    FourierProjector(const MultidimArray<double> &V, double paddFactor);
+    FourierProjector(const MultidimArray<double> &V, double paddFactor, double maxFreq, int BSplinedegree);
     /**
      * This method gets the volume's Fourier and the Euler's angles as the inputs and interpolates the related projection
      */
-    void project(double rot, double tilt, double psi,  double maxFreq = 0.25);
+    void project(double rot, double tilt, double psi);
 private:
     /*
      * This is a private method which provides the values for the class variable

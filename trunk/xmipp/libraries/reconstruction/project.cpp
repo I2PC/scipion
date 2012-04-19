@@ -45,6 +45,17 @@ void ProgProject::readParams()
     {
         projType = FOURIER;
         paddFactor = getDoubleParam("--method", 1);
+        maxFrequency = getDoubleParam("--method", 2);
+        String degree = getParam("--method", 3);
+        if (degree == "nearest")
+        	BSplineDeg = NEAREST;
+        else if (degree == "linear")
+        	BSplineDeg = LINEAR;
+        else if (degree == "spline")
+        	BSplineDeg = BSPLINE3;
+        else
+        	REPORT_ERROR(ERR_ARG_BADCMDLINE, "The values for interpolation can be : nearest, linear, spline");
+
     }
     bool doParams = checkParam("--params");
     bool doAngles = checkParam("--angles");
@@ -110,9 +121,13 @@ void ProgProject::defineParams()
     addParamsLine("                real_space                    : Makes projections by ray tracing in real space");
     addParamsLine("                shears                        : Use real-shears algorithm");
     addParamsLine("                                              :+This algorithm is slower but more accurate. For a full description see");
-    addParamsLine("                fourier <pad=3>               : Takes a central slice in Fourier space");
+    addParamsLine("               fourier <pad=3><maxfreq=0.25><interp=LINEAR> : Takes a central slice in Fourier space");
     addParamsLine("                                              : pad controls the padding factor, by default, the padded volume is");
     addParamsLine("                                              : three times bigger than the original volume");
+    addParamsLine("                                              : maxfreq is the maximum frequency for the pixels and by default ");
+    addParamsLine("                                              : pixels with frequency more than 0.25 are not considered");
+    addParamsLine("                                              : bsplinedeg is the order of B-Spline which is used for interpolation");
+    addParamsLine("                                              : and by default the order is zero");
 
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
@@ -835,7 +850,9 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
-    padFactor = prog_prm.paddFactor;
+    paddFactor = prog_prm.paddFactor;
+    maxFrequency = prog_prm.maxFrequency;
+    BSplineDeg = prog_prm.BSplineDeg;
 }
 
 /* Effectively project ===================================================== */
@@ -887,7 +904,7 @@ int PROJECT_Effectively_project(const String &fnOut,
     if (projType == SHEARS && side.phantomMode==PROJECT_Side_Info::VOXEL)
         Vshears=new RealShearsInfo(side.phantomVol());
     if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)
-        Vfourier=new FourierProjector(side.phantomVol(),side.padFactor);
+        Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();

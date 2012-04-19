@@ -74,6 +74,10 @@ public:
     projctionType projType;
     /// The padding factor for Fourier projection
     double paddFactor;
+    /// The maximum frequency for pixels
+    double maxFrequency;
+    /// The type of interpolation (NEAR
+    int BSplineDeg;
 
 public:
     /** Read parameters. */
@@ -209,8 +213,12 @@ public:
     PDBPhantom     phantomPDB;
     /// Atom interpolator
     AtomInterpolator interpolator;
-    double padFactor;
-
+    /// The padding factor for Fourier projection
+       double paddFactor;
+       /// The maximum frequency for pixels
+       double maxFrequency;
+       /// The type of interpolation (NEAR
+       int BSplineDeg;
 public:
     /** Produce Project Side information.
         This function produce the side information from the project

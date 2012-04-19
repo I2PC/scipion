@@ -26,27 +26,27 @@
 #include "fourier_projection.h"
 #include <data/xmipp_fft.h>
 
-FourierProjector::FourierProjector(const MultidimArray<double> &V, double paddFactor)
+FourierProjector::FourierProjector(const MultidimArray<double> &V, double paddFactor, double maxFreq, int degree)
 {
     volume = &V;
     volumeSize=XSIZE(*volume);
     paddingFactor = paddFactor;
+    maxFrequency = maxFreq;
+    BSplineDeg = degree;
     produceSideInfo();
 }
 
-void FourierProjector::project(double rot, double tilt, double psi,double maxFreq)
+void FourierProjector::project(double rot, double tilt, double psi)
 {
     double freqz, freqy, freqx;
     double kx,ky,arg;
     std::complex< double > f;
     Euler_angles2matrix(rot,tilt,psi,E);
 
-    int degree=1;
-
     projectionFourier.initZeros();
     double shift=-FIRST_XMIPP_INDEX(volumeSize);
     double xxshift = -2 * PI * shift / volumeSize;
-    double maxFreq2=maxFreq*maxFreq;
+    double maxFreq2=maxFrequency*maxFrequency;
     double volumePaddedSize=XSIZE(VfourierRealCoefs);
     for (int i=0; i<YSIZE(projectionFourier); ++i)
     {
@@ -72,7 +72,7 @@ void FourierProjector::project(double rot, double tilt, double psi,double maxFre
             double freqvol_Z=freqYvol_Z+MAT_ELEM(E,0,2)*freqx;
 
             double c,d;
-            if (degree==0)
+            if (BSplineDeg==0)
             {
                 // 0 order interpolation
                 // Compute corresponding index in the volume
@@ -82,7 +82,7 @@ void FourierProjector::project(double rot, double tilt, double psi,double maxFre
                 c = A3D_ELEM(VfourierRealCoefs,kVolume,iVolume,jVolume);
                 d = A3D_ELEM(VfourierImagCoefs,kVolume,iVolume,jVolume);
             }
-            else if (degree==1)
+            else if (BSplineDeg==1)
             {
                 // B-spline linear interpolation
                 double kVolume=freqvol_Z*volumePaddedSize;
@@ -142,8 +142,7 @@ void FourierProjector::produceSideInfo()
     DIRECT_MULTIDIM_ELEM(Vfourier,n)*=K;
 
     // Compute Bspline coefficients
-    int degree=1;
-    if (degree==3)
+    if (BSplineDeg==3)
     {
         MultidimArray< double > VfourierRealAux, VfourierImagAux;
         Complex2RealImag(Vfourier, VfourierRealAux, VfourierImagAux);
