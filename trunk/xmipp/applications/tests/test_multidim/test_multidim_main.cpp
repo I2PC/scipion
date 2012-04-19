@@ -17,6 +17,21 @@ TEST( MultidimTest, Size)
     EXPECT_EQ(3, x) << "MultidimArray: wrong x size";
 }
 
+TEST( MultidimTest, Assign)
+{
+	MultidimArray<double> * array = new MultidimArray<double>[5];
+    MultidimArray<double> source(10);
+    MultidimArray<double> source5(5);
+    source5.initConstant(5.);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(source)
+    	source(i)=(double)i;
+    array[0] = source;
+    EXPECT_EQ(array[0], source);
+    array[0] = source5;
+    EXPECT_EQ(array[0], source5);
+    delete[] array;
+}
+
 TEST( MultidimTest, Copy)
 {
     MultidimArray<int> mdtarget,mdsource;
@@ -167,7 +182,7 @@ TEST( MultidimTest, modulo)
 
 TEST( MultidimTest, mapFile)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     MultidimArray<double> mda, mdaMap;
 
     mda.resize(32,32,32);
@@ -179,11 +194,12 @@ TEST( MultidimTest, mapFile)
     mdaMap = mda;
 
     ASSERT_EQ(mda, mdaMap);
-XMIPP_CATCH
+    XMIPP_CATCH
 }
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char **argv)
+{
 
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
