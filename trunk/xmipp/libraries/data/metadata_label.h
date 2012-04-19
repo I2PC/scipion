@@ -173,7 +173,9 @@ enum MDLabel
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
     MDL_MAX, ///<maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
+    MDL_MICROGRAPH_ORIGINAL, ///< Name of the original micrograph, MDL_MICROGRAPH is probably a downsampled version of this one (std::string)
     MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
+    MDL_MICROGRAPH_TILTED_ORIGINAL, ///< Name of the corresponding original, tilted micrograph (std::string)
     MDL_MIN, ///<minimum value (double)
     MDL_MIRRORFRAC, ///< Mirror fraction for a Maximum Likelihood model
     MDL_MISSINGREGION_NR, ///< Number of missing region in subtomogram
@@ -728,7 +730,9 @@ private:
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
+        MDL::addLabel(MDL_MICROGRAPH_ORIGINAL, LABEL_STRING, "micrographOriginal", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_TILTED, LABEL_STRING, "micrographTilted", TAGLABEL_MICROGRAPH);
+        MDL::addLabel(MDL_MICROGRAPH_TILTED_ORIGINAL, LABEL_STRING, "micrographTiltedOriginal", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MIN, LABEL_DOUBLE, "min");
         MDL::addLabel(MDL_MIRRORFRAC, LABEL_DOUBLE, "mirrorFraction");
         MDL::addLabel(MDL_MISSINGREGION_NR, LABEL_INT, "missingRegionNumber", TAGLABEL_NOTAG, "Wedge");
