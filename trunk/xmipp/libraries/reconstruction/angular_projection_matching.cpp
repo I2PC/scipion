@@ -172,10 +172,21 @@ void ProgAngularProjectionMatching::run()
 
     writeOutputFiles();
 
+    destroyAndClean();
     if (verbose)
         std::cout << "done!"<<std::endl;
 }
 
+void ProgAngularProjectionMatching::destroyAndClean()
+{
+    delete [] fP_ref;
+    delete [] proj_ref;
+    delete [] fP_img;
+    delete [] fPm_img;
+    delete [] stddev_ref;
+    delete [] stddev_img;
+
+}
 
 // Side info stuff ===================================================================
 void ProgAngularProjectionMatching::produceSideInfo()
@@ -195,8 +206,15 @@ void ProgAngularProjectionMatching::produceSideInfo()
     Polar<std::complex <double> > fP;
 
     // Read Selfile and get dimensions
-    DFexp.read(fn_exp);
-
+    MetaData MetaDataLeft;
+    MetaData MetaDataRight;
+    FileName rightFn;
+    rightFn.compose((String)"exp_images",fn_exp.removeBlockName());
+    MetaDataRight.read(rightFn);
+    MetaDataLeft.read(fn_exp);
+    //Join with angles and shifhts
+    DFexp.join(MetaDataLeft,MetaDataRight,MDL_IMAGE,LEFT);
+    DFexp.write("kk.xmd");
     // Thread barrier
     barrier_init(&thread_barrier, threads);
 
@@ -656,7 +674,8 @@ void * threadRotationallyAlignOneImage( void * data )
                         *maxcorr = DIRECT_A1D_ELEM(corr,k);
                         *opt_psi = DIRECT_A1D_ELEM(ang,k);
                         //FIXME not sure about FIRST_IMAGE
-                        *opt_refno = prm->mysampling.my_neighbors[imgno][i]+FIRST_IMAGE;
+                        *opt_refno = prm->mysampling.my_neighbors[imgno][i]/*+FIRST_IMAGE*/;
+                        //*opt_refno = prm->mysampling.my_neighbors[imgno][i];
                         *opt_flip = false;
                     }
                 }
@@ -774,7 +793,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         opt_xoff = opt_yoff = 0.;
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
         opt_xoff = opt_yoff = 0.;
-
+#define DEBUG
 #ifdef DEBUG
 
     std::cerr<<"optimal shift "<<opt_xoff<<" "<<opt_yoff<<std::endl;
@@ -788,7 +807,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 
     std::cerr<<"optimal shift corr "<<maxcorr<<std::endl;
 #endif
-
+#undef DEBUG
     // Correct X-shift for mirrored images
     if (opt_flip)
         opt_xoff *= -1.;
@@ -922,13 +941,22 @@ void ProgAngularProjectionMatching::processAllImages()
 void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> &imagesToProcess)
 {
     Image<double> img;
-    double opt_rot, opt_tilt, opt_psi, opt_xoff, opt_yoff, opt_scale, maxcorr=-99.e99;
-    bool opt_flip;
-    int opt_refno;
+    double opt_rot=0.,
+    	   opt_tilt=0.,
+    	   opt_psi=0.,
+    	   opt_xoff=0.,
+    	   opt_yoff=0.,
+    	   opt_scale=0.,
+    	   maxcorr=-99.e99;
+    bool opt_flip=false;
+    int opt_refno=-1;
 
     size_t nr_images = imagesToProcess.size();
     size_t idNew, imgid;
     FileName fn;
+//    std::cerr << "DEBUG_ROB, DFexp.size():" << DFexp.size() << std::endl;
+//    std::cerr << "DEBUG_ROB, nr_images:" << nr_images << std::endl;
+    //DFexp.write("/dev/stderr");
     for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
         imgid = imagesToProcess[imgno];
@@ -936,16 +964,18 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         double kk;
         FileName pp;
         DFexp.getValue(MDL_IMAGE,pp, imgid);
-        std::cerr << "1 DEBUG_ROB, fn_img:" << pp << std::endl;
-        DFexp.getValue(MDL_ANGLEROT,kk, imgid);
-        std::cerr << "1 DEBUG_ROB, rot:" << kk << std::endl;
-        DFexp.getValue(MDL_ANGLETILT,kk, imgid);
-        std::cerr << "1 DEBUG_ROB, tilt:" << kk << std::endl;
-        DFexp.getValue(MDL_ANGLEPSI,kk, imgid);
-        std::cerr << "1 DEBUG_ROB, psi:" << kk << std::endl<< std::endl;
+//    	std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
+//        std::cerr << "1 DEBUG_ROB, fn_img:" << pp << std::endl;
+        //DFexp does not have angles
+//        DFexp.getValue(MDL_ANGLEROT,kk, imgid);
+//        std::cerr << "1 DEBUG_ROB, rot:" << kk << std::endl;
+//        DFexp.getValue(MDL_ANGLETILT,kk, imgid);
+//        std::cerr << "1 DEBUG_ROB, tilt:" << kk << std::endl;
+//        DFexp.getValue(MDL_ANGLEPSI,kk, imgid);
+//        std::cerr << "1 DEBUG_ROB, psi:" << kk << std::endl<< std::endl;
 
         /**/
-std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
+//std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
         getCurrentImage(imgid, img);
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
@@ -982,7 +1012,9 @@ std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
 
         opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
         opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
-//        std::cerr << "3 DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
+//std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
+//std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
+        //        std::cerr << "3 DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
 //        std::cerr << "3 DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
 //        std::cerr << "3 DEBUG_ROB, opt_psi:" << opt_psi << std::endl;
 
@@ -991,6 +1023,10 @@ std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
         opt_xoff += img.Xoff();
         opt_yoff += img.Yoff();
 
+//        std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
+//        std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
+//        std::cerr << "DEBUG_ROB, opt_xoff:" << opt_xoff << std::endl;
+//        std::cerr << "DEBUG_ROB, opt_yoff:" << opt_yoff << std::endl;
         /* FIXME ROB     */
         //opt_psi += img.psi();
         /*         */
@@ -1005,6 +1041,7 @@ std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
             opt_scale *= img.scale();
         }
 
+//#ifdef GGGGGG
         // Output
         DFexp.getValue(MDL_IMAGE, fn, imgid);
         idNew = DFo.addObject();
@@ -1012,14 +1049,20 @@ std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
         DFo.setValue(MDL_ANGLEROT, opt_rot,idNew);
         DFo.setValue(MDL_ANGLETILT,opt_tilt,idNew);
         DFo.setValue(MDL_ANGLEPSI, opt_psi,idNew);
+/**/
+        //opt_xoff=0;
         DFo.setValue(MDL_SHIFTX,   opt_xoff,idNew);
         DFo.setValue(MDL_SHIFTY,   opt_yoff,idNew);
-        DFo.setValue(MDL_REF,      opt_refno + FIRST_IMAGE,idNew);
+        DFo.setValue(MDL_REF,      opt_refno /*+ FIRST_IMAGE*/,idNew);
         DFo.setValue(MDL_FLIP,     opt_flip,idNew);
         DFo.setValue(MDL_SCALE,    opt_scale,idNew);
         DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
         if (verbose && imgno % progress_bar_step == 0)
             progress_bar(imgno);
+//#endif
+        //DFo.write("/dev/stderr");
+    free(th_ids);
+    free(threads_d);
     }
 }
 
@@ -1027,6 +1070,8 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
 {
     FileName fn_img;
     Matrix2D<double> A;
+    //init A just in case
+    A.initIdentity(3);
 
     // jump to line imgno+1 in DFexp, get data and filename
     DFexp.getValue(MDL_IMAGE,fn_img, imgid);
@@ -1036,7 +1081,8 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
     img().setXmippOrigin();
 
     // Store translation in header and apply it to the actual image
-    double shiftX, shiftY;
+    //No need to get initial angles since those came with the reference projection
+    double shiftX=0., shiftY=0.;
     DFexp.getValue(MDL_SHIFTX,shiftX, imgid);
     DFexp.getValue(MDL_SHIFTY,shiftY, imgid);
 
@@ -1055,8 +1101,13 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
     img.setScale(scale);
 
     img.getTransformationMatrix(A,true);
+    A=A.inv();
+    //std::cerr << "DEBUG_ROB, A:" << A << std::endl;
+    //img.write("before.spi");
     if (!A.isIdentity())
         selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
+    //img.write("after.spi");
+    //exit(0);
 }
 
 void ProgAngularProjectionMatching::writeOutputFiles()
