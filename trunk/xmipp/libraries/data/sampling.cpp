@@ -1454,7 +1454,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
     bool writeFileName = !exp_data_fileNames.empty();
     for(size_t i = 0; i < size; ++i)
     {
-        row.setValue(MDL_ORDER,i);
+        row.setValue(MDL_ORDER,i+FIRST_IMAGE);
         if (writeFileName)
             row.setValue(MDL_IMAGE,exp_data_fileNames[i]);
         row.setValue(MDL_NEIGHBORS, my_neighbors[i]);
@@ -1531,7 +1531,10 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
     my_neighbors.resize(md.size());
     bool readFileName = md.containsLabel(MDL_IMAGE);
     if (readFileName)
+    {
         exp_data_fileNames.clear();
+        exp_data_fileNames.resize(md.size());
+    }
     int ii=0;
     FOR_ALL_OBJECTS_IN_METADATA(md)
     {
