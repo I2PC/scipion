@@ -40,9 +40,8 @@ class ProtScreenMicrographs(XmippProtocol):
 
     def defineSteps(self):
         self.micrographs = self.getFilename('micrographs')
-        fnAcquisition=self.workingDirPath("acquisition_info.xmd")
-        self.insertStep('createLink',verifyfiles=[fnAcquisition],source=os.path.join(self.importDir,"acquisition_info.xmd"),
-                        dest=fnAcquisition);
+        self.insertStep('createLink2', "acquisition_info.xmd",self.importDir,self.WorkingDir)
+        self.insertStep('createLink2', "microscope.xmd",self.importDir,self.WorkingDir)
 
         # Read Microscope parameters
         MD = xmipp.MetaData(self.importMicroscope)
@@ -118,6 +117,9 @@ class ProtScreenMicrographs(XmippProtocol):
     
     def validate(self):
         errors = []
+        if self.DownsampleFactor<1:
+            errors.append("Downsampling must be >=1");
+
         # Check that there are any micrograph to process
         if not exists(self.importMicrographs):
             errors.append("Cannot find imported micrographs file:\n   <%s>" % self.importMicrographs)
