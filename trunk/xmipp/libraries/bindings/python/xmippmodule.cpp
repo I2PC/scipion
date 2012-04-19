@@ -4266,6 +4266,7 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_RESOLUTION_FREQ", (long) MDL_RESOLUTION_FREQ);
     addIntConstant(dict, "MDL_RESOLUTION_FREQREAL",(long) MDL_RESOLUTION_FREQREAL);
     addIntConstant(dict, "MDL_SAMPLINGRATE", (long) MDL_SAMPLINGRATE);
+    addIntConstant(dict, "MDL_SAMPLINGRATE_ORIGINAL", (long) MDL_SAMPLINGRATE_ORIGINAL);
     addIntConstant(dict, "MDL_SAMPLINGRATEX", (long) MDL_SAMPLINGRATEX);
     addIntConstant(dict, "MDL_SAMPLINGRATEY", (long) MDL_SAMPLINGRATEY);
     addIntConstant(dict, "MDL_SAMPLINGRATEZ", (long) MDL_SAMPLINGRATEZ);

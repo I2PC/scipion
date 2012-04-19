@@ -223,6 +223,7 @@ enum MDLabel
     MDL_RESOLUTION_FREQ, ///<Frequency in 1/A (double)
     MDL_RESOLUTION_FREQREAL, ///< Frequency in A (double)
     MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
+    MDL_SAMPLINGRATE_ORIGINAL, ///< original sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEX, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEY, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEZ, ///< sampling rate in A/pixel (double)
@@ -780,6 +781,7 @@ private:
         MDL::addLabel(MDL_RESOLUTION_FREQ, LABEL_DOUBLE, "Resol_Inverse_Ang");
         MDL::addLabel(MDL_RESOLUTION_FREQREAL, LABEL_DOUBLE, "Resol_Ang");
         MDL::addLabel(MDL_SAMPLINGRATE, LABEL_DOUBLE, "sampling_rate");
+        MDL::addLabel(MDL_SAMPLINGRATE_ORIGINAL, LABEL_DOUBLE, "sampling_rate_original");
         MDL::addLabel(MDL_SAMPLINGRATEX, LABEL_DOUBLE, "sampling_rateX");
         MDL::addLabel(MDL_SAMPLINGRATEY, LABEL_DOUBLE, "sampling_rateY");
         MDL::addLabel(MDL_SAMPLINGRATEZ, LABEL_DOUBLE, "sampling_rateZ");
