@@ -17,6 +17,7 @@ class ProtDownsampleMicrographs(XmippProtocol):
         self.importDir = self.importProt.WorkingDir
         
     def defineSteps(self):
+        self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
         self.insertStep("changeSamplingRate",fnIn=os.path.join(self.importDir,"acquisition_info.xmd"),
                         fnOut=self.workingDirPath("acquisition_info.xmd"),downsampleFactor=self.DownsampleFactor)
 
@@ -31,10 +32,10 @@ class ProtDownsampleMicrographs(XmippProtocol):
                             fnMicrograph=fnMicrograph, fnOut=fnOut, downsampleFactor=self.DownsampleFactor)
         self.insertStep("gatherResults",WorkingDir=self.WorkingDir,ImportDir=self.importDir,IOTable=IOTable,
                         downsampleFactor=self.DownsampleFactor)
+        self.insertStep("createLink2","microscope.xmd",self.importDir,self.WorkingDir)
 
     def validate(self):
         errors = []
-        # Check that there are any micrograph to process
         if self.DownsampleFactor<=1:
             errors.append("Downsampling must be larger than 1");
         return errors
@@ -87,4 +88,3 @@ def gatherResults(log, WorkingDir, ImportDir,IOTable,downsampleFactor):
         convertMetaData(fnTilted,os.path.join(WorkingDir,"tilted_pairs.xmd"),
                         "micrographPairs",IOTable,downsampleFactor,True)
     
-    createLink(log,os.path.join(ImportDir,"microscope.xmd"),os.path.join(WorkingDir,"microscope.xmd"))

@@ -7,7 +7,7 @@
 #-----------------------------------------------------------------------------
 # {section} Input micrographs
 #-----------------------------------------------------------------------------
-# {run}(import_micrographs) Import Micrographs Run
+# {run}(import_micrographs,screen_micrographs) Micrographs to downsample
 ImportRun = ''
 
 # {wizard}(wizardBrowseCTF) Downsampling factor 
