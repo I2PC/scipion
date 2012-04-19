@@ -5,7 +5,7 @@
 #from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import which, runJob, runShowJ
-from protlib_filesystem import deleteFile, exists, replaceFilenameExt
+from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt
 import xmipp
 from protlib_gui_ext import showWarning
 
@@ -40,8 +40,8 @@ class ProtScreenMicrographs(XmippProtocol):
 
     def defineSteps(self):
         self.micrographs = self.getFilename('micrographs')
-        self.insertStep('createLink2', "acquisition_info.xmd",self.importDir,self.WorkingDir)
-        self.insertStep('createLink2', "microscope.xmd",self.importDir,self.WorkingDir)
+        self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
+        self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
 
         # Read Microscope parameters
         MD = xmipp.MetaData(self.importMicroscope)
