@@ -198,3 +198,9 @@ def findRealFile(path, recursive=True):
 def xmippExists(path):
     from xmipp import FileName
     return FileName(path).exists()
+
+def linkAcquisitionInfoIfPresent(log,InputFile,dirDest):
+    dirSrc=os.path.dirname(InputFile)
+    fnAcquisitionIn=os.path.join(dirSrc,"acquisition_info.xmd")
+    if os.path.exists(fnAcquisitionIn):
+        createLink2(log, "acquisition_info.xmd", dirSrc, dirDest)
