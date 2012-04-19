@@ -45,7 +45,7 @@ class ProtPreprocessParticles(XmippProtocol):
     def summary(self):
         message=[]
         step=1
-        message.append("Steps applied to "+self.InSelFile)
+        message.append("Steps applied to [%s]"%self.InSelFile)
         if self.DoScale:
             message.append("Step %d -> scale applied: new_size=%d"%(step,self.NewSize))
             step+=1
