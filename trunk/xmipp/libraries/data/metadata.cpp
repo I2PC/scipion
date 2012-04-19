@@ -960,7 +960,7 @@ void MetaData::read(const FileName &_filename,
     _read(filename,desiredLabels,BlockName,decomposeStack);
     //_read calls clean so I cannot use eFilename as filename ROB
     // since eFilename is reset in clean
-    eFilename = filename;
+    eFilename = _filename;
 }
 
 #define LINE_LENGTH 1024
