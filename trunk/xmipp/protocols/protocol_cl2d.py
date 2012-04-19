@@ -9,7 +9,7 @@ import glob,os,re,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob, getListFromRangeString
-from protlib_filesystem import createLink, deleteFile
+from protlib_filesystem import createLink, deleteFile, linkAcquisitionInfoIfPresent
 from xmipp import MetaData, MD_APPEND
 
 class ProtCL2D(XmippProtocol):
@@ -18,6 +18,7 @@ class ProtCL2D(XmippProtocol):
         self.Import = 'from protocol_cl2d import *'    
 
     def defineSteps(self):
+        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.insertCl2dStep()
         self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="")
         if self.NumberOfReferences > self.NumberOfInitialReferences:

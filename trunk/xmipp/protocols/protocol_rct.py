@@ -18,6 +18,7 @@ class ProtRCT(XmippProtocol):
     def defineSteps(self):
         extractionProt = self.getProtocolFromRunName(self.ExtractionRun)
         pickingDir = getWorkingDirFromRunName(extractionProt.PickingRun)
+        self.insertStep("createLink2",filename="acquisition_info.xmd",dirSrc=pickingDir,destDir=self.WorkingDir)
 
         classNumbers = getListFromRangeString(self.SelectedClasses)
         extractRootName = os.path.join(getWorkingDirFromRunName(self.ExtractionRun),"Default")

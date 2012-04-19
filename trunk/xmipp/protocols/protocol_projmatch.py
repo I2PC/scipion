@@ -20,6 +20,7 @@ from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning
 from protlib_gui_figure import XmippPlotter
+from protlib_filesystem import linkAcquisitionInfoIfPresent
 from math import radians
 
 class ProtProjMatch(XmippProtocol):
@@ -517,7 +518,8 @@ class ProtProjMatch(XmippProtocol):
          
     
     def preRun(self):
-        #print "in PRERUN"
+        self.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.SelFileName,dirDest=self.WorkingDir)
+        
         # Convert vectors to list
         self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         self.numberOfReferences = len(self.ReferenceFileNames)

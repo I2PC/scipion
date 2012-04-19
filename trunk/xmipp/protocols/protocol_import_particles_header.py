@@ -12,7 +12,7 @@
 #-----------------------------------------------------------------------------
 # {section} Importing parameters
 #-----------------------------------------------------------------------------
-# {file}{validate}(PathExists) Stack or Selfile
+# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Stack or Selfile
 InputFile=''
 
 # {validate}(NonEmpty) Family name

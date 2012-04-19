@@ -13,7 +13,7 @@
 #-----------------------------------------------------------------------------
 # {section} Extracting parameters
 #-----------------------------------------------------------------------------
-# {file}{validate}(PathExists) Input images
+# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images
 """ Stack file or metadata file with a selection file"""
 InputFile=''
 

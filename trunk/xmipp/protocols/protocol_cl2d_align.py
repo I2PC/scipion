@@ -18,6 +18,7 @@ class ProtCL2DAlignment(XmippProtocol):
         self.Import = 'from protocol_cl2d_align import *'    
 
     def defineSteps(self):
+        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.insertCl2dStep()
         self.Db.insertStep('gatherResults',
                            verifyfiles=[self.workingDirPath("average.xmp"),self.workingDirPath("alignment.xmd")],

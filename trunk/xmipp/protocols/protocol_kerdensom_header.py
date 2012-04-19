@@ -15,7 +15,7 @@
 #------------------------------------------------------------------------------------------------
 # {section} KerdenSOM parameters
 #------------------------------------------------------------------------------------------------
-# {file}{validate}(PathExists) Selfile with the input images:
+# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Selfile with the input images:
 """ This selfile points to the stack or metadata containing your images 
 """
 InSelFile=''

@@ -14,6 +14,7 @@ class ProtKerdensom(XmippProtocol):
         self.Import = 'from protocol_kerdensom import *'    
 
     def defineSteps(self):
+        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.Db.insertStep('img2vector',[self.workingDirPath("vectors.xmd")],
                            Selfile=self.InSelFile,Mask=self.Mask,WorkingDir=self.WorkingDir)
         self.Db.insertStep('kerdensom',[self.workingDirPath("results_vectors.xmd"),
