@@ -13,46 +13,34 @@ from protlib_base import *
 import glob
 import os
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import deleteFile, deleteDir, createLink, copyFile
+from protlib_filesystem import createLink, linkAcquisitionInfoIfPresent
 
 class ProtScreenParticles(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.screen_particles.name, scriptname, project)
         self.Import = 'from protocol_screen_particles import *'
+        self.outputFile=self.workingDirPath(os.path.basename(self.InputFile))
 
     def defineSteps(self):
-        outputFile=self.workingDirPath("sorted.xmd")
-        self.Db.insertStep("copyAcquisition",inputFile=self.InputFile,WorkingDir=self.WorkingDir)
-        self.Db.insertStep('sortImages',verifyfiles=[outputFile],inputFile=self.InputFile, outputFile=outputFile)
+        self.Db.insertStep("copyFile",verifyfiles=[self.outputFile],source=self.InputFile,dest=self.outputFile)
+        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.InputFile,dirDest=self.WorkingDir)
+        self.Db.insertStep('sortImages',inputFile=self.outputFile)
                 
-    def validate(self):
-        return []
-
     def summary(self):
         message=[]
         message.append("Screening of [%s]" % self.InputFile)
         return message
 
     def visualize(self):
-        summaryFile = self.workingDirPath("sorted.xmd")
-        if not os.path.exists(summaryFile):
+        if not os.path.exists(self.outputFile):
             from protlib_gui_ext import showWarning
             showWarning("Error", "There is no result yet")
         else:   
-            runShowJ(summaryFile)                                     
+            runShowJ(self.outputFile)                                     
 
-def copyAcquisition(log,inputFile,WorkingDir):
-    inputFileDir=os.path.dirname(inputFile)
-    fnAcquistionIn=os.path.join(inputFileDir,"acquisition_info.xmd")
-    if os.path.exists(fnAcquistionIn):
-        fnAcquistionOut=os.path.join(WorkingDir,"acquisition_info.xmd")
-        createLink(log, fnAcquistionIn, fnAcquistionOut)
-
-def sortImages(log, inputFile, outputFile):
-    from xmipp import MetaData
-    mD = MetaData(inputFile)
-    if mD.size() > 0:
-        runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" --multivariate -o "+outputFile)
-    else:
-        createLink(log,inputFile,outputFile)
+def sortImages(log, inputFile):
+    from xmipp import ImgSize
+    (Xdim, Ydim, Zdim, Ndim) = ImgSize(inputFile)
+    if Ndim > 0:
+        runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" --multivariate --addToInput")
 
