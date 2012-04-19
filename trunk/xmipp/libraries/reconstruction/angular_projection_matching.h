@@ -206,6 +206,9 @@ public:
      * This function should be override in MPI class, only master should write.
      */
     virtual void writeOutputFiles();
+
+    /** destroy and clean **/
+    void destroyAndClean();
 };				
 //@}
 #endif
