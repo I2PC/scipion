@@ -51,8 +51,7 @@ class ProtParticlePickingAuto(XmippProtocol):
     def defineSteps(self):
         self.insertStep('createLink', verifyfiles=[self.micrographs], source=self.pickingMicrographs, dest=self.micrographs)
         self.insertStep('createLink', verifyfiles=[self.families],source=self.pickingFamilies, dest=self.families)
-        fnAcquisition=self.getFilename('acquisition',dir=self.WorkingDir)
-        self.insertStep('createLink', verifyfiles=[fnAcquisition],source=self.getFilename('acquisition',dir=self.pickingDir),dest=fnAcquisition)
+        self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.pickingDir,dirDest=self.WorkingDir)
         for family in self.familiesForAuto:
             getFilename = lambda k, d: self.getFilename(k, dir=d, family=family)
             self.insertStep('createLink',source=getFilename('training', self.pickingDir),
@@ -91,6 +90,7 @@ class ProtParticlePickingAuto(XmippProtocol):
     def summary(self):
         summary = []
         summary.append("Manual picking run: <%s> " % self.PickingRun)
+        summary.append("Input directory: [%s] " % self.pickingDir)
         summary.append("Automatic picking of the following models: "+",".join(self.familiesForAuto))
         autoFiles = glob.glob(self.workingDirPath("*auto.pos"))
         if len(autoFiles)>0:
