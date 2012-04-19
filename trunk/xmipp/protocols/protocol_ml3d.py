@@ -21,7 +21,7 @@ class ProtML3D(XmippProtocol):
             self.progId = 'mlf'
         else:
             self.progId = 'ml'
-        self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
+        self.ORoot = self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
                         
     def createFilenameTemplates(self):
         return {
@@ -62,23 +62,38 @@ class ProtML3D(XmippProtocol):
                 self.insertStep('copyFile', [ctfFile], 
                                    source=self.InCtfDatFile, dest=ctfFile )
             
-            self.ParamsDict['InitialVols'] = initVols = self.workingDirPath('initial_volumes.stk')
+            initVols = self.ParamsDict['InitialVols'] = self.workingDirPath('initial_volumes.stk')
+            self.mdVols = MetaData(self.RefMd)
+            
             self.insertStep('copyVolumes', [initVols], 
                                inputMd=self.RefMd, outputStack=initVols)
-        
+            
             if self.DoCorrectGreyScale:
                 self.insertCorrectGreyScaleSteps()
                 
             if self.DoLowPassFilterReference:
                 self.insertFilterStep()
                 
+            if self.NumberOfReferences > 1:
+                self.insertGenerateRefSteps()
+                
             if self.DoML3DClassification:
-                self.insertML3DStep()
+                self.insertML3DStep(self.ImgMd, self.ORoot, self.ParamsDict['InitialVols'], self.NumberOfIterations)
             
     # Insert the step of launch some program
-    def insertRunJob(self, prog, vf=[]):
-        self.insertRunJobStep(prog, self.ParamsStr % self.ParamsDict, 
-                              [self.ParamsDict[k] for k in vf]) 
+    def insertRunJob(self, prog, vf=[], files=None, useProcs=True):
+        if files is None:
+            files = [self.ParamsDict[k] for k in vf]
+        NumberOfMpi = NumberOfThreads = 1
+        if useProcs:
+            NumberOfMpi = self.NumberOfMpi
+            NumberOfThreads = self.NumberOfThreads
+        self.insertStep('runJob', programname=prog, 
+                        params = self.ParamsStr % self.ParamsDict, 
+                        verifyfiles = files, 
+                        NumberOfMpi = NumberOfMpi, 
+                        NumberOfThreads = NumberOfThreads)
+    
     # Crude correction of grey-scale, by performing a single iteration of 
     # projection matching and fourier reconstruction
     def insertCorrectGreyScaleSteps(self):
@@ -86,21 +101,22 @@ class ProtML3D(XmippProtocol):
         cgsDir = self.workingDirPath('CorrectGreyscale')
         self.insertStep('createDir', path=cgsDir)
         volStack = self.ParamsDict['InitialVols'] = join(cgsDir, 'corrected_volumes.stk')
-        md  = MetaData(self.RefMd)
         index = 1
-        for idx in md:
+        outputVol = ''
+        for idx in self.mdVols:
             volDir = join(cgsDir, 'vol%03d' % index)
             projs = join(volDir, 'projections')
             self.insertStep('createDir', path=volDir)
+            outputVol = "%(index)d@%(volStack)s" % locals()
             self.ParamsDict.update({
-                'inputVol': md.getValue(MDL_IMAGE, idx),
-                'outputVol': "%(index)d@%(volStack)s" % locals(),
+                'inputVol': self.mdVols.getValue(MDL_IMAGE, idx),
+                'outputVol': outputVol,
                 'projRefs': projs + ".stk",
                 'docRefs': projs + ".doc",
                 'corrRefs': join(volDir, 'corrected_refs.stk'),
                 'projMatch': join(volDir, "proj_match.doc")
                 })
-            
+            self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
             self.ParamsStr = ' -i %(inputVol)s --experimental_images %(ImgMd)s -o %(projRefs)s' + \
                     ' --sampling_rate %(ProjMatchSampling)d --sym %(Symmetry)s' + \
                     'h --compute_neighbors --angular_distance -1' 
@@ -119,51 +135,56 @@ class ProtML3D(XmippProtocol):
             index += 1
         
     def insertFilterStep(self):
-        self.ParamsDict['FilteredVols'] = 'filtered_volumes.stk'
+        volStack = self.ParamsDict['FilteredVols'] = self.workingDirPath('filtered_volumes.stk')
+        index = 1
+        outputVol = ''
+        for idx in self.mdVols:
+            outputVol = "%(index)d@%(volStack)s" % locals()
+            self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
+            index += 1
         self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter) --sampling %(PixelSize)s'
-        self.insertRunJob('xmipp_transform_filter', ['FilteredVols'])
+        self.insertRunJob('xmipp_transform_filter', ['FilteredVols'], useProcs=False)
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
-        
+            
     def insertGenerateRefSteps(self):
         ''' Generete more reference volumes than provided in input reference '''
-        grDir = self.workingDirPath('GenerateReferences')
+        grDir = self.workingDirPath('GeneratedReferences')
+        # Create dir for seeds generation
         self.insertStep('createDir', path=grDir)
-        volStack = self.ParamsDict['InitialVols'] = join(grDir, 'corrected_volumes.stk')
-        md  = MetaData(self.RefMd)
+        # Split images metadata
+        nvols = self.ParamsDict['NumberOfVols'] = self.mdVols.size() * self.NumberOfReferences
+        sroot = self.ParamsDict['SplitRoot'] = join(grDir, 'images')
+        self.ParamsStr = '-i %(ImgMd)s -n %(NumberOfVols)d --oroot %(SplitRoot)s'
+        files = ['%s%06d.xmd' % (sroot, i) for i in range(1, nvols+1)]        
+        self.insertRunJob('xmipp_metadata_split', files=files, useProcs=False)
+        
+        
+        volStack = self.ParamsDict['InitialVols'] = self.workingDirPath('generated_volumes.stk')
         index = 1
-        for idx in md:
-            volDir = join(grDir, 'vol%03d' % index)
-            projs = join(volDir, 'projections')
-            self.insertStep('createDir', path=volDir)
-            self.ParamsDict.update({
-                'inputVol': md.getValue(MDL_IMAGE, idx),
-                'outputVol': "%(index)d@%(volStack)s" % locals(),
-                'projRefs': projs + ".stk",
-                'docRefs': projs + ".doc",
-                'corrRefs': join(volDir, 'corrected_refs.stk'),
-                'projMatch': join(volDir, "proj_match.doc")
-                })
-            
-            self.ParamsStr = ' -i %(inputVol)s --experimental_images %(ImgMd)s -o %(projRefs)s' + \
-                    ' --sampling_rate %(ProjMatchSampling)d --sym %(Symmetry)s' + \
-                    'h --compute_neighbors --angular_distance -1' 
-                       
-            self.insertRunJob('xmipp_angular_project_library', ['projRefs', 'docRefs'])
-
-            self.ParamsStr = '-i %(ImgMd)s -o %(projMatch)s --ref %(projRefs)s' 
-            self.insertRunJob('xmipp_angular_projection_matching', ['projMatch'])
- 
-#FIXME: COMMENTED THIS STEP UNTIL COMPLETION BY ROBERTO    
-#            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
-#            self.insertRunJob('xmipp_angular_class_average', ['corrRefs'])
-
-            self.ParamsStr = '-i %(projMatch)s -o %(outputVol)s --sym %(Symmetry)s --weight --thr %(NumberOfThreads)d'
-            self.insertRunJob('xmipp_reconstruct_fourier')
-            index += 1
+        copyVols = []
+        for idx in self.mdVols:
+            for i in range(self.NumberOfReferences):
+                outputVol = "%d@%s" % (index, volStack)
+                generatedVol = join(grDir, "vol%03d_iter%06d_vol%06d.vol" % (index, 1, 1))
+                copyVols.append((outputVol, generatedVol))
+                self.insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(MDL_IMAGE, idx), 1)
+                #self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
+                index += 1
+                
+        for outVol, genVol in copyVols:
+            self.ParamsDict.update({'outVol': outVol, 'genVol':genVol})
+            self.ParamsStr = '-i %(genVol)s -o %(outVol)s'
+            self.insertRunJob('xmipp_image_convert', files=[volStack], useProcs=False)
         
         
-    def insertML3DStep(self):
-        self.ParamsStr = "-i %(ImgMd)s --oroot %(ORoot)s --ref %(InitialVols)s --iter %(NumberOfIterations)d " + \
+    def insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters):
+        self.ParamsDict.update({
+                         '_ImgMd': inputImg,
+                         '_ORoot': oRoot,
+                         '_InitialVols': initialVols,
+                         '_NumberOfIterations': numberOfIters       
+                                })
+        self.ParamsStr = "-i %(_ImgMd)s --oroot %(_ORoot)s --ref %(_InitialVols)s --iter %(_NumberOfIterations)d " + \
                          "--sym %(Symmetry)s --ang %(AngularSampling)s %(ExtraParams)s"
 #        if self.NumberOfReferences > 1:
 #            self.ParamsStr += " --nref %(NumberOfReferences)s"
@@ -191,7 +212,6 @@ def copyVolumes(log, inputMd, outputStack):
     deleteFile(log, outputStack)
     md = MetaData(inputMd)
     img = Image()
-
     for i, idx in enumerate(md):
         img.read(md.getValue(MDL_IMAGE, idx))
         img.write('%d@%s' % (i + 1, outputStack))
