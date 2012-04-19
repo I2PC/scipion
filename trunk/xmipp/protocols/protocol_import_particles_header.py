@@ -19,6 +19,9 @@ InputFile=''
 """ Name of the family with which they will be imported """
 Family="Imported"
 
+# {validate}(IsFloat) Sampling rate (A/pixel)
+SamplingRate = 1
+
 # Copy images
 """ Copy images from their original location """
 DoCopy=False
@@ -29,11 +32,11 @@ ImportAll=True
 #-----------------------------------------------------------------------------
 # {section}{condition}(ImportAll) Preprocessing parameters
 #-----------------------------------------------------------------------------
-# Invert contrast
+# 1) Invert contrast
 """ Invert the contrast if your particles are black over a white background. """
 DoInvert=False
 
-# Dust particles removal
+# 2) Dust particles removal
 """ Sets pixels with unusually large values to random values from a Gaussian with zero-mean and unity-standard deviation.
     It requires a previous normalization, i.e., Normalization must be set to Yes.
 """
@@ -45,7 +48,7 @@ DoRemoveDust=False
 """
 DustRemovalThreshold=3.5
 
-# Normalize (Recommended)
+# 3) Normalize (Recommended)
 """ It subtract a ramp in the gray values and normalizes so that in the background
     there is 0 mean and standard deviation 1 """
 DoNorm=True

@@ -21,6 +21,8 @@ class ProtImportParticles(XmippProtocol):
         self.Import = 'from protocol_import_particles import *'
 
     def defineSteps(self):
+        fnOut=self.workingDirPath("acquisition_info.xmd")
+        self.insertStep('createAcquisitionData',verifyfiles=[fnOut],samplingRate=self.SamplingRate, fnOut=fnOut)
         fnOut=self.workingDirPath("micrographs.xmd")
         self.Db.insertStep('createEmptyMicrographSel',verifyfiles=[fnOut],fnOut=fnOut)
         selfileRoot=self.workingDirPath(self.Family)
@@ -68,6 +70,11 @@ class ProtImportParticles(XmippProtocol):
     def visualize(self):
         from protlib_utils import runShowJ
         runShowJ(self.workingDirPath(self.Family+".xmd"), memory='1024m')        
+
+def createAcquisitionData(log,samplingRate,fnOut):
+    mdAcquisition = xmipp.MetaData()
+    mdAcquisition.setValue(xmipp.MDL_SAMPLINGRATE,float(samplingRate),mdAcquisition.addObject())
+    mdAcquisition.write(fnOut)
 
 def createEmptyMicrographSel(log,fnOut):
     mD = xmipp.MetaData()
