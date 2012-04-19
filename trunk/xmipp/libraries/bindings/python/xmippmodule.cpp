@@ -4228,7 +4228,9 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_MAXCC", (long) MDL_MAXCC);
     addIntConstant(dict, "MDL_MAX", (long) MDL_MAX);
     addIntConstant(dict, "MDL_MICROGRAPH", (long) MDL_MICROGRAPH);
+    addIntConstant(dict, "MDL_MICROGRAPH_ORIGINAL", (long) MDL_MICROGRAPH_ORIGINAL);
     addIntConstant(dict, "MDL_MICROGRAPH_TILTED", (long) MDL_MICROGRAPH_TILTED);
+    addIntConstant(dict, "MDL_MICROGRAPH_TILTED_ORIGINAL", (long) MDL_MICROGRAPH_TILTED_ORIGINAL);
     addIntConstant(dict, "MDL_MIN", (long) MDL_MIN);
     addIntConstant(dict, "MDL_MIRRORFRAC", (long) MDL_MIRRORFRAC);
     addIntConstant(dict, "MDL_MISSINGREGION_NR", (long) MDL_MISSINGREGION_NR);
