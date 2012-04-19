@@ -23,7 +23,12 @@ public class MicrographsTable extends MetadataTable {
 		ColumnInfo ctfModel2 = null;
 		ColumnInfo firstRender = null;
 		for (ColumnInfo ci: data.labels){
-			if (ci.allowRender && ci.getLabel() != MDLabel.MDL_MICROGRAPH){
+			if (ci.allowRender &&
+				ci.getLabel() != MDLabel.MDL_MICROGRAPH &&
+				ci.getLabel() != MDLabel.MDL_MICROGRAPH_ORIGINAL &&
+				ci.getLabel() != MDLabel.MDL_MICROGRAPH_TILTED &&
+				ci.getLabel() != MDLabel.MDL_MICROGRAPH_TILTED_ORIGINAL)
+			{
 				ci.render = true;
 				if (firstRender == null)
 					firstRender = ci;
