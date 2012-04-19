@@ -67,6 +67,19 @@ class ProtImportMicrographs(XmippProtocol):
             errors.append("Sampling rate is not correctly set")
         return errors
 
+    def warnings(self):
+        warningList = []
+        # Check that there are any micrograph to process
+        micrographList=self.getMicrographs()
+        if len(micrographList) > 0 and not self.DoCrop:
+            for micrograph in micrographList:
+                try:
+                    if not xmipp.checkImageCorners(micrograph):
+                           warningList.append("Check corners of "+micrograph)
+                except Exception:
+                    pass
+        return warningList
+
     def summary(self):
         message = []
         message.append("Import of <%d> micrographs from [%s]" % (len(self.getMicrographs()), self.DirMicrographs))
