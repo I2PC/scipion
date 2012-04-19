@@ -40,13 +40,15 @@ class ProgCTFPhaseFlipping: public XmippProgram
 {
 public:
     /** Input micrograph */
-    Micrograph     M_in;
+    Micrograph M_in;
     /** Input micrograph file name */
     FileName fn_in;
     /** Out flipped micrograph */
     FileName fn_out;
-    /** CTf param file name*/
+    /** CTF param file name*/
     FileName fnt_ctf;
+    /** Downsampling factor */
+    double downsampling;
 
     /** Define parameters */
     void defineParams();

@@ -34,13 +34,18 @@ void ProgCTFPhaseFlipping::defineParams()
     addParamsLine(" -i <file>               : Input micrograph");
     addParamsLine(" -o <file>               : Output micrograph");
     addParamsLine(" --ctf <ctfparam_file>   : CTF description");
+    addParamsLine(" [--downsampling <D=1>]  : Downsampling factor of the input micrograph with respect to the CTF");
+    addParamsLine("                         :+The CTF downsampling rate is the one of the original images.");
+    addParamsLine("                         :+However, the micrograph that is the input of this program may have undergone a");
+    addParamsLine("                         :+downsamplig. This parameter informs of the downsampling applied.");
 }
 
 void ProgCTFPhaseFlipping::readParams()
 {
-    fn_in   = getParam("-i");
-    fn_out  = getParam("-o");
-    fnt_ctf = getParam("--ctf");
+    fn_in        = getParam("-i");
+    fn_out       = getParam("-o");
+    fnt_ctf      = getParam("--ctf");
+    downsampling = getDoubleParam("--downsampling");
 }
 
 void ProgCTFPhaseFlipping::show()
@@ -48,9 +53,10 @@ void ProgCTFPhaseFlipping::show()
     if (verbose==0)
         return;
     std::cout
-    << "input_micrograph:      " << fn_in    << std::endl
-    << "output_micrograph:     " << fn_out << std::endl
-    << "ctf_param_file:        " << fnt_ctf << std::endl
+    << "input_micrograph:      " << fn_in        << std::endl
+    << "output_micrograph:     " << fn_out       << std::endl
+    << "ctf_param_file:        " << fnt_ctf      << std::endl
+    << "downsampling:          " << downsampling << std::endl
     ;
 }
 
@@ -71,6 +77,7 @@ void ProgCTFPhaseFlipping::run()
     CTFDescription ctf;
     ctf.clear();
     ctf.read(fnt_ctf);
+    ctf.changeSamplingRate(ctf.Tm*downsampling);
     ctf.Produce_Side_Info();
 
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
