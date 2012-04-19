@@ -42,7 +42,7 @@ class ProtDownsampleMicrographs(XmippProtocol):
 
     def summary(self):
         message = []
-        message.append("Downsampling of micrographs from <%s> by a factor <%3.2f>" % (self.importDir,self.DownsampleFactor))
+        message.append("Downsampling of micrographs from [%s] by a factor <%3.2f>" % (self.importDir,self.DownsampleFactor))
         return message
     
     def createFilenameTemplates(self):
@@ -65,6 +65,7 @@ def changeSamplingRate(log,fnIn,fnOut,downsampleFactor):
     i=MD.firstObject()
     Ts=MD.getValue(xmipp.MDL_SAMPLINGRATE,i)
     MD.setValue(xmipp.MDL_SAMPLINGRATE,Ts*downsampleFactor,i)
+    MD.setValue(xmipp.MDL_SAMPLINGRATE_ORIGINAL,Ts,i)
     MD.write(fnOut)
 
 def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor,tiltPairs):
@@ -73,9 +74,11 @@ def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor,tiltPairs):
     for i in MD:
         fnMicrograph=MD.getValue(xmipp.MDL_MICROGRAPH,i);
         MD.setValue(xmipp.MDL_MICROGRAPH,IOTable[fnMicrograph],i)
+        MD.setValue(xmipp.MDL_MICROGRAPH_ORIGINAL,fnMicrograph,i)
         if tiltPairs:
             fnMicrographTilted=MD.getValue(xmipp.MDL_MICROGRAPH_TILTED,i);
             MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],i)
+            MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,i)
     MD.write(blockname+"@"+fnOut)
 
 
