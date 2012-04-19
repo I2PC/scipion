@@ -52,7 +52,7 @@
 #define FN_NOISE_VOLBASE (fn_root + "_noise_vol")
 #define FN_CREF_VOLBASE (fn_root + "_cref_vol")
 // Filename generation for a volume from a base
-#define COMPOSE_VOL_FN(fn, volno, base) fn.compose(base, volno, ".vol")
+#define COMPOSE_VOL_FN(fn, volno, base) fn.compose(base, volno, "vol")
 
 ProgMLRefine3D::ProgMLRefine3D(bool fourier)
 {
@@ -362,7 +362,7 @@ void ProgMLRefine3D::produceSideInfo()
     // Project volumes and store projections in a metadata
     LOG("   ProgMLRefine3D::produceSideInfo: projectVolumes");
     projectVolumes(ml2d->MDref);
-    //FIXME: this is for concurrency problem...remove after that
+//    //FIXME: this is for concurrency problem...remove after that
     FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
     MetaData(fn_sel).write(myImg);
     ml2d->fn_img = myImg;
@@ -552,9 +552,12 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
     // Loop over all reference volumes
     volno = nr_dir = 0;
 
+    //std::cerr << "DEBUG_JM: ProgMLRefine3D::projectVolumes" <<std::endl;
+
     FOR_ALL_OBJECTS_IN_METADATA(mdVol)
     {
         mdVol.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
+        //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
         vol.read(fn_tmp);
         vol().setXmippOrigin();
         ++volno;
@@ -642,6 +645,9 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &
     String arguments = getParam("--recons", 1) +
         formatString(" -v 0 --thr %d -i %s -o %s", ml2d->threads, input.c_str(), output.c_str());
     ProgReconsBase * program;
+//    std::cerr << "DEBUG_JM: ProgMLRefine3D::createReconsProgram" <<std::endl;
+//    std::cerr << "DEBUG_JM: arguments: " << arguments << std::endl;
+//    std::cerr << "DEBUG_JM: input: " << input << std::endl;
 
     if (recons_type == RECONS_FOURIER)
     {
@@ -743,18 +749,20 @@ void ProgMLRefine3D::reconstructVolumes()
             //for now each node reconstruct one volume
             if (volno_index % size == rank)
             {
-				mdProj.read(reconsMdFn[i]);
+				LOG(formatString("              Projections: : %s", reconsMdFn[i].c_str()).c_str());
 				String &fn_base = reconsOutFnBase[i];
-				reconsProgram = createReconsProgram(fn_one, fn_vol);
                 //fn_vol.compose(volno, fn_base);
+				LOG(formatString("              Base: : %s", fn_base.c_str()).c_str());
+				mdProj.read(reconsMdFn[i]);
 				COMPOSE_VOL_FN(fn_vol, volno, fn_base);
                 fn_one.compose(fn_base, volno, "projections.xmd");
-            	LOG(formatString("           Reconstructing volume: %s", fn_vol.c_str()).c_str());
+            	LOG(formatString("              Reconstructing volume: %s", fn_vol.c_str()).c_str());
                 // Select only relevant projections to reconstruct
                 mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
                 mdOne.write(fn_one);
                 // Set input/output for the reconstruction algorithm
                 //reconsProgram->setIO();
+				reconsProgram = createReconsProgram(fn_one, fn_vol);
                 reconsProgram->run();
 				delete reconsProgram;
 				LOG(formatString("           END Reconstructing volume: %s", fn_vol.c_str()).c_str());
@@ -953,6 +961,7 @@ void ProgMLRefine3D::updateVolumesMetadata()
 
     for (size_t i = 0; i < reconsOutFnBase.size(); ++i)
     {
+        fn_base = reconsOutFnBase[i];
         for (size_t volno = 1; volno <= Nvols; ++volno)
         {
         	COMPOSE_VOL_FN(fn_vol, volno, fn_base);

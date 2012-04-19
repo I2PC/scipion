@@ -184,6 +184,8 @@ void MpiProgML2D::endIteration()
     writeOutputFiles(model, OUT_ITER);
 }
 
+#define FN_ITER_REFS() formatString("iter%06d@%s_iter_refs.xmd", iter, fn_root.c_str())
+
 void MpiProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
     //All nodes should arrive to writeOutput files at same time
@@ -192,7 +194,7 @@ void MpiProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType
     if (node->isMaster())
         ProgML2D::writeOutputFiles(model, outputType);
     else if (outputType == OUT_REFS)
-        outRefsMd = formatString("iter%06d@%s_iter_refs.xmd", iter, fn_root.c_str());
+        outRefsMd = FN_ITER_REFS();
     //All nodes wait until files are written
     node->barrierWait();
 }
@@ -239,6 +241,7 @@ void MpiProgMLRefine3D::copyVolumes()
 void MpiProgMLRefine3D::reconstructVolumes()
 {
     //code is already parallelized through the rank variable
+    LOG("           MpiProgMLRefine3D::reconstructVolumes");
     ProgMLRefine3D::reconstructVolumes();
     //all nodes needs to wait until reconstruction is done
     node->barrierWait();
@@ -407,7 +410,7 @@ void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputTyp
     if (node->isMaster())
         ProgMLF2D::writeOutputFiles(model, outputType);
     else if (outputType == OUT_REFS)
-        outRefsMd = formatString("%s_iter%06d_refs.xmd", fn_root.c_str(), iter);
+      outRefsMd = FN_ITER_REFS();
     //All nodes wait until files are written
     node->barrierWait();
 }

@@ -2286,6 +2286,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
         if (outputType == OUT_REFS)
             outRefsMd = fn_ref;
+        std::cerr << "DEBUG_JM: outRefsMd: " << outRefsMd << std::endl;
 
         // Write out log-file
         MetaData mdLog;
