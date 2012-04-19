@@ -112,7 +112,6 @@ bool checkImageCorners(const FileName &name)
 	I().window(window,0,0,i-windowSize_2,j-windowSize_2,0,0,i+windowSize_2,j+windowSize_2);
 	double stddev0=window.computeStddev();
 	double var0=stddev0*stddev0;
-	std::cout << "Var0=" << var0 << std::endl;
 
 	i=windowSize_2;
 	j=windowSize_2;
