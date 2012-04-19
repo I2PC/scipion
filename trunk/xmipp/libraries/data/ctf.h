@@ -313,6 +313,16 @@ public:
     /// Clear pure CTF
     void clear_pure_ctf();
 
+    /** Change sampling rate.
+     * It is advisable to change the sampling rate just after reading the CTF parameters.
+     * However, unless you use precomputed values, there should not be any problem of changing
+     * it at a later stage.
+     */
+    inline void changeSamplingRate(double newTm)
+    {
+    	Tm=newTm;
+    }
+
     /// Produce Side information
     void Produce_Side_Info();
 
