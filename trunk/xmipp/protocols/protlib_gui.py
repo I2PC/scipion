@@ -641,19 +641,10 @@ class ProtocolGUI(BasicGUI):
             if self.validateProtocol(prot):
                 warnings = prot.warningsBase()
                 if len(warnings)==0 or askYesNo("Confirm execution",'\n'.join(warnings), self.master):
-                    #os.system('python %s --no_confirm &' % self.run['script'] )
                     args = 'xmipp_python %s --no_confirm &' % self.run['script']
                     Popen(args, shell=True)
-#                    from protlib_utils import ProcessManager
-#                    p = ProcessManager().getProcessFromScript(self.run['script'])
-#                    self.run['pid'] = p.pid
-#                    self.run['jobid'] = SqliteDb.PID_POSIX
-#                    self.project.projectDb.updateRunPid(self.run)
                     self.master.destroy() 
     
-    def viewFiles(self):
-        showInfo("Visualize", "This should open ImageJ plugin to display files", parent=self.master)
-        
     def selectFromList(self, var, list):
         from protlib_wizard import wizardSelectFromList
         selected=wizardSelectFromList(self.master,self.frame, list)
