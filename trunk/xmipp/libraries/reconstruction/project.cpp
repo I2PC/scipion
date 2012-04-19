@@ -48,13 +48,13 @@ void ProgProject::readParams()
         maxFrequency = getDoubleParam("--method", 2);
         String degree = getParam("--method", 3);
         if (degree == "nearest")
-        	BSplineDeg = NEAREST;
+            BSplineDeg = NEAREST;
         else if (degree == "linear")
-        	BSplineDeg = LINEAR;
-        else if (degree == "spline")
-        	BSplineDeg = BSPLINE3;
+            BSplineDeg = LINEAR;
+        else if (degree == "bspline")
+            BSplineDeg = BSPLINE3;
         else
-        	REPORT_ERROR(ERR_ARG_BADCMDLINE, "The values for interpolation can be : nearest, linear, spline");
+            REPORT_ERROR(ERR_ARG_BADCMDLINE, "The values for interpolation can be : nearest, linear, bspline");
 
     }
     bool doParams = checkParam("--params");
@@ -86,10 +86,12 @@ void ProgProject::readParams()
 /* Usage =================================================================== */
 void ProgProject::defineParams()
 {
-    addUsageLine("Generates projections from a volume");
+    addUsageLine("Generates projections from a volume xxx");
     addSeeAlsoLine("tomo_project, xray_project, phantom_create");
-    addExampleLine("Generating a set of projections",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --params projectionParams.xmd");
+    addExampleLine("Generating a set of projections using fourier method",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method fourier 3 0.25 bspline --params uniformProjection_xmd.param");
+    addExampleLine("Generating a set of projections using shears method",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method shears --params uniformProjection_xmd.param");
     addExampleLine("Generating a top view from Z",false);
     addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 0 0");
     addExampleLine("Generating a side view from Y",false);
@@ -103,6 +105,7 @@ void ProgProject::defineParams()
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection_xmd.param",false);
     addExampleLine("+ ",false);
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection_xmd.param",false);
+    addExampleLine("+ ",false);
     addExampleLine("Creating a 2D crystal",false);
     addExampleLine("In order to create a 2D crystal, you can pass --params as a projection file with a second block for crystal projection.: ",false);
     addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRCCrystalProj_xmd.param");
@@ -113,22 +116,25 @@ void ProgProject::defineParams()
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
     addExampleLine("+ ",false);
     addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_crystal_projection_xmd.param",false);
+
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
     addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
+    addParamsLine("                                              :+++ KKKKKK %BR%");
     addParamsLine("  [--method <method=real_space>]              : Projection method");
     addParamsLine("        where <method>");
     addParamsLine("                real_space                    : Makes projections by ray tracing in real space");
     addParamsLine("                shears                        : Use real-shears algorithm");
     addParamsLine("                                              :+This algorithm is slower but more accurate. For a full description see");
-    addParamsLine("               fourier <pad=3><maxfreq=0.25><interp=LINEAR> : Takes a central slice in Fourier space");
+    addParamsLine("               fourier <pad=3> <maxfreq=0.25> <interp=LINEAR> : Takes a central slice in Fourier space");
     addParamsLine("                                              : pad controls the padding factor, by default, the padded volume is");
-    addParamsLine("                                              : three times bigger than the original volume");
+    addParamsLine("                                              : three times bigger than the original volume. ");
     addParamsLine("                                              : maxfreq is the maximum frequency for the pixels and by default ");
-    addParamsLine("                                              : pixels with frequency more than 0.25 are not considered");
-    addParamsLine("                                              : bsplinedeg is the order of B-Spline which is used for interpolation");
-    addParamsLine("                                              : and by default the order is zero");
-
+    addParamsLine("                                              : pixels with frequency more than 0.25 are not considered.");
+    addParamsLine("                                              : interp is the method for interpolation and the values can be: ");
+    addParamsLine("                                              : nearest:          Nearest Neighborhood  ");
+    addParamsLine("                                              : linear:           Linear  ");
+    addParamsLine("                                              : bspline:          Cubic BSpline  ");
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
