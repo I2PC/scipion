@@ -35,11 +35,13 @@ If you have images outside the <Project> you should import them first.
 """
 SelFileName = ''
 
-# {expert} {file}(*.xmd *.doc)Docfile with the input angles:
+# {expert} Use initial angles/shifts ? 
 """ 
-Do not provide anything if there are no angles yet.
+Set to <Yes> if you want to use the initial set of angles/shifts.
+This information should be in the images input file. 
+(In stack or metadata file).
 """
-DocFileName = ''
+UseInitialAngles = False
 
 # {file}(*.vol){validate}(PathExists) Initial 3D reference map:
 """
