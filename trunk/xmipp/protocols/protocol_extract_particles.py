@@ -336,8 +336,9 @@ def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, ori
         else:
             md.setValueCol(MDL_MICROGRAPH, fullMicrographName)
         if downsamplingMode==DownsamplingMode.NewDownsample:
-            pass
-            # TODO: the coordinates in fnBlock should be set in md (COSS)
+            downsamplingFactor=TsFinal/TsInput
+            md.operate("Xcoor=Xcoor*%f"%downsamplingFactor)
+            md.operate("Ycoor=Ycoor*%f"%downsamplingFactor)
         if ctf != None:
             md.setValueCol(MDL_CTFMODEL,ctf)
         md.write(selfile)
