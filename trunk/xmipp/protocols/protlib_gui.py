@@ -639,11 +639,15 @@ class ProtocolGUI(BasicGUI):
             prot.visualize()
         else:
             if self.validateProtocol(prot):
+                doRun = True
                 warnings = prot.warningsBase()
-                if len(warnings)==0 or askYesNo("Confirm execution",'\n'.join(warnings), self.master):
+                if len(warnings) > 0:
+                    msg = "There are some warnings:\n%s\n\nDo you want to proceed?" % '\n'.join(warnings)
+                    doRun = askYesNo("Confirm execution", msg, self.master)
+                if doRun:
                     args = 'xmipp_python %s --no_confirm &' % self.run['script']
                     Popen(args, shell=True)
-                    self.master.destroy() 
+                    self.master.destroy()
     
     def selectFromList(self, var, list):
         from protlib_wizard import wizardSelectFromList
