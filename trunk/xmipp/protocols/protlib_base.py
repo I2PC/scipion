@@ -59,15 +59,8 @@ class XmippProject():
     
     def create(self):
         os.chdir(self.projectDir)
+        self.createConfig()
         
-        #==== CREATE CONFIG file
-        self.config = ConfigParser.RawConfigParser()            
-        self.config.add_section('project')
-        self.config.set('project', 'projectdir', self.projectDir)
-        self.config.set('project', 'systemflavour', '')
-        self.SystemFlavour = self.config.get('project', 'systemflavour')
-
-        self.writeConfig()
         #===== CREATE LOG AND RUN directories
         if not os.path.exists(self.logsDir):
             os.mkdir(self.logsDir)
@@ -93,13 +86,21 @@ class XmippProject():
         self.projectDb.connection.commit()
         
     def load(self):
+        #Check if project exists
+        if not self.exists():
+            raise Exception('Trying to load project from %s, but not project found' % self.projectDir)
+        # Load config file
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.cfgName)
         # Load database
         self.projectDb = XmippProjectDb(self.dbName)
-        self.SystemFlavour = self.config.get('project', 'systemflavour')
         
-
+    def createConfig(self):
+         #==== CREATE CONFIG file
+        self.config = ConfigParser.RawConfigParser()            
+        self.config.add_section('project')
+        self.writeConfig()
+        
     def writeConfig(self):
         with open(self.cfgName, 'wb') as configfile:
             self.config.write(configfile) 
@@ -292,7 +293,6 @@ class XmippProtocol(object):
         self.Out = self.LogPrefix+".out"
         self.LogFile = self.LogPrefix + ".log"
         self.Log = None # This will be created on run setup
-        self.SystemFlavour = project.SystemFlavour
         # Create filenames dictionary
         self.FilenamesDict = self.createFilenameDict()
         
