@@ -69,6 +69,7 @@ void FourierTransformer::clear()
         fftw_destroy_plan(fPlanBackward);
     pthread_mutex_unlock(&fftw_plan_mutex);
     init();
+    fftw_cleanup();
 }
 
 FourierTransformer::~FourierTransformer()
