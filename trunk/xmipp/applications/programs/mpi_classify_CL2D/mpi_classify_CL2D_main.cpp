@@ -770,6 +770,7 @@ void CL2D::write(const FileName &fnRoot, int level) const
 
     // Make the selfiles of each class
     FileName fnImg;
+    MDRow row;
     for (int q = 0; q < Q; q++)
     {
         MetaData SFq;
@@ -778,13 +779,12 @@ void CL2D::write(const FileName &fnRoot, int level) const
         for (int i = 0; i < imax; i++)
         {
             const CL2DAssignment &assignment = currentListImg[i];
-            SF->getValue(MDL_IMAGE, fnImg, assignment.objId);
-            size_t id = SFq.addObject();
-            SFq.setValue(MDL_IMAGE, fnImg, id);
-            SFq.setValue(MDL_FLIP, assignment.flip, id);
-            SFq.setValue(MDL_SHIFTX, assignment.shiftx, id);
-            SFq.setValue(MDL_SHIFTY, assignment.shifty, id);
-            SFq.setValue(MDL_ANGLEPSI, assignment.psi, id);
+            SF->getRow(row,assignment.objId);
+            row.setValue(MDL_FLIP, assignment.flip);
+            row.setValue(MDL_SHIFTX, assignment.shiftx);
+            row.setValue(MDL_SHIFTY, assignment.shifty);
+            row.setValue(MDL_ANGLEPSI, assignment.psi);
+            SFq.addRow(row);
         }
         MetaData SFq_sorted;
         SFq_sorted.sort(SFq, MDL_IMAGE);

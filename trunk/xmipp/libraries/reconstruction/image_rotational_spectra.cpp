@@ -102,6 +102,7 @@ void ProgMakeSpectra::run()
     rot_spt.rl=(int)((rot_spt.rl/100.0)*Xdim/2);
     rot_spt.rh=(int)((rot_spt.rh/100.0)*Xdim/2);
 
+    MDRow row;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
@@ -130,9 +131,9 @@ void ProgMakeSpectra::run()
         }
 
         // Save this image in the output metadata
-        size_t outId=vectorContent.addObject();
-        vectorContent.setValue(MDL_IMAGE,fnImg,outId);
-        vectorContent.setValue(MDL_ORDER,order++,outId);
+        MD.getRow(row,__iter.objId);
+        row.setValue(MDL_ORDER,order++);
+        vectorContent.addRow(row);
     }
     vectorContent.write(formatString("vectorContent@%s",fn_out.c_str()),MD_APPEND);
 }

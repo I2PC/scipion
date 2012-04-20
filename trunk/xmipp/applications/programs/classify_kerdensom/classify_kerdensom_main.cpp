@@ -215,25 +215,27 @@ public:
         std::cout << "Saving neurons assigments ....." << std::endl;
         MetaData vectorContentIn, MDimages;
         vectorContentIn.read(formatString("vectorContent@%s",fn_in.c_str()));
-        FileName fn;
         std::vector<size_t> objIds;
         vectorContentIn.findObjects(objIds);
+        MDRow row;
         for (unsigned i = 0; i < myMap->size(); i++)
         {
         	MetaData MD;
             for (int j = 0; j < myMap->classifAt(i).size(); j++)
             {
             	size_t order=myMap->classifAt(i)[j];
-            	vectorContentIn.getValue(MDL_IMAGE,fn,objIds[order]);
-            	size_t id=MD.addObject();
-            	MD.setValue(MDL_IMAGE,fn,id);
-             	id=MDimages.addObject();
-            	MDimages.setValue(MDL_IMAGE,fn,id);
-            	MDimages.setValue(MDL_REF,(int) i+1,id);
+            	vectorContentIn.getRow(row,objIds[order]);
+            	row.setValue(MDL_REF,(int) i+1);
+            	MDimages.addRow(row);
+            	MD.addRow(row);
             }
             if (MD.size()>0)
+            {
+            	MD.removeLabel(MDL_ORDER);
             	MD.write(formatString("class%06d_images@%s",i+1,fnClasses.c_str()),MD_APPEND);
+            }
         }
+        MDimages.removeLabel(MDL_ORDER);
         MDimages.write((String)"images@"+fn_root+"_images.xmd");
 
         // Save code vectors
