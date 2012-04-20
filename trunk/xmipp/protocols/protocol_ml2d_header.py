@@ -58,8 +58,8 @@ DoMlf = False
 
 # Use CTF-amplitude correction inside MLF?
 """ 
-If set to <Yes>, the input images metadata should be of type 
-.ctfdat containing the ctf info for each image
+If set to <Yes>, the input images file should contains
+the CTF information for each image.
 If set to <No>, provide the images pixel size in Angstrom
 """
 DoCorrectAmplitudes = True

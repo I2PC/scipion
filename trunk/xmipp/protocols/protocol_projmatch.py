@@ -38,6 +38,10 @@ class ProtProjMatch(XmippProtocol):
         self.Import = 'from protocol_projmatch_before_loop import *;\
                        from protocol_projmatch_in_loop import *;' 
                 #Convert directories/files  to absolute path from projdir
+                
+        # Now the CTF information should come in images input file
+        self.CTFDatName = self.SelFileName
+        
     def validate(self):
         from xmipp import ImgSize, SingleImgSize, XmippError
         errors = []

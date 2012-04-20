@@ -17,24 +17,34 @@
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# {file}{validate}(PathExists) Selfile with the input images:
-""" This metadata file points to the experimental images to be processed.
- The filenames can have relative or absolute paths, but it is 
-strictly necessary that you put this metadata file IN THE PROJECTDIR. 
+# Import images from previous RUN ? 
+""" 
+If you set to <No>, you should provide a set of images 
+(In stack or metadata file).
 """
-SelFileName ='new20.sel'
+ImportImagesFromRun = False
 
-# {file}{expert} Docfile with the input angles:
-""" Do not provide anything if there are no angles yet. 
-    In that case, the starting angles will be read from the image headers
-    This docfile should be in newXmipp-style format (with filenames as comments)
-    Note that all filenames in this docfile should be with absolute paths!
+# {condition}(not ImportImagesFromRun){file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images:
+""" 
+Provide a stack or metadata file with the input images.
+If you want perform <CTF> correction this file should contains a 
+column with <CTFModel> filename. 
+The filenames should be relative to the <ProjectDir> 
+where you are running the <Protocols>
+If you have images outside the <Project> you should import them first.
 """
-DocFileName =' '
+SelFileName = ''
 
-# {file}{validate}(PathExists) Initial 3D reference map:
-""" Write down the reference/es name. For example "Reference1.vol Reference2.vol"
-    specifies two references
+# {expert} {file}(*.xmd *.doc)Docfile with the input angles:
+""" 
+Do not provide anything if there are no angles yet.
+"""
+DocFileName = ''
+
+# {file}(*.vol){validate}(PathExists) Initial 3D reference map:
+"""
+Write down the reference/es name. For example "Reference1.vol Reference2.vol"
+specifies two references
 """
 ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
 
@@ -42,8 +52,9 @@ ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
 NumberOfIterations = 4
 
 # {expert} Save disc space by cleaning up intermediate files?
-""" Be careful, many options of the visualization protocol will not work anymore, 
-    since all class averages, selfiles etc will be deleted.
+""" 
+Be careful, many options of the visualization protocol will not work anymore, 
+since all class averages, selfiles etc will be deleted.
 """
 CleanUpFiles =False
 
@@ -51,25 +62,19 @@ CleanUpFiles =False
 # {section}{has_question} CTF correction
 #-----------------------------------------------------------------------------
 # Perform CTF correction
-""" If set to true, a CTF (amplitude and phase) corrected map will be refined,
-    and the data will be processed in CTF groups.
-    Note that you cannot combine CTF-correction with re-alignment of the classes.
+""" 
+If set to true, a CTF (amplitude and phase) corrected map will be refined,
+and the data will be processed in CTF groups.
+Note that you cannot combine CTF-correction with re-alignment of the classes.
+Remember that CTF information should be provided in the images input file.
 """
 DoCtfCorrection = True
 
-# {file} CTFDat file with CTF data:
-""" The input selfile may be a subset of the images in the CTFDat file, but all 
-    images in the input selfile must be present in the CTFDat file. This field is 
-    obligatory if CTF correction is to be performed. 
-    Note that this file should be positioned in the project directory, and that the
-    image names and ctf parameter filenames should be in absolute paths.
-"""
-CTFDatName ='new_ctf.ctfdat'
-
 # Make CTF groups automatically?
-""" Make CTF groups based on a maximum differences at a given resolution limit.
-    If this option is set to false, a docfile with the defocus values where to 
-    split the images in distinct defocus group has to be provided (see expert option below)
+"""
+Make CTF groups based on a maximum differences at a given resolution limit.
+If this option is set to false, a docfile with the defocus values where to 
+split the images in distinct defocus group has to be provided (see expert option below)
 """
 DoAutoCtfGroup =True
 
