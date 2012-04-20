@@ -122,6 +122,8 @@ class ProtExtractParticles(XmippProtocol):
                     args+=" --downsampling "+str(self.TsFinal/self.TsOriginal)
                 parent_id=self.insertParallelRunJobStep("xmipp_ctf_phase_flip", args, parent_step_id=parent_id)
                 micrographToExtract=micrographFlipped
+            
+            # Actually extract
             fnOut = self.workingDirPath(micrographName + ".stk")
             parent_id = self.insertParallelStep('extractParticles', parent_step_id=parent_id,
                                   WorkingDir=self.WorkingDir,
