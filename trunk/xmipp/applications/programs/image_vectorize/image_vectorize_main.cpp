@@ -100,6 +100,7 @@ public:
             if (!fhOutRaw)
                 REPORT_ERROR(ERR_IO_NOWRITE,fnOutRaw);
             int vectorSize;
+            MDRow row;
             FOR_ALL_OBJECTS_IN_METADATA(SF)
             {
                 img.readApplyGeo(SF, __iter.objId);
@@ -126,10 +127,9 @@ public:
                 }
 
                 // Save this image in the output metadata
-                size_t outId=vectorContent.addObject();
-                SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                vectorContent.setValue(MDL_IMAGE,fnImg,outId);
-                vectorContent.setValue(MDL_ORDER,order++,outId);
+                SF.getRow(row,__iter.objId);
+                row.setValue(MDL_ORDER,order++);
+                vectorContent.addRow(row);
 
                 // Save raw values
                 const MultidimArray<double> &mimg=img();
