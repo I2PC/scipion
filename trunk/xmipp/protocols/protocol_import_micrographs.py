@@ -54,8 +54,6 @@ class ProtImportMicrographs(XmippProtocol):
                 try:
                     if not xmipp.checkImageFileSize(micrograph):
                         errors.append(micrograph+" seems to be corrupted")
-                    # COSS: if not xmipp.checkImageCorners(micrograph):
-                    # COSS:    errors.append("Check corners of "+micrograph)
                 except Exception:
                     errors.append(micrograph+" seems to be corrupted")
         try:
@@ -75,7 +73,7 @@ class ProtImportMicrographs(XmippProtocol):
             for micrograph in micrographList:
                 try:
                     if not xmipp.checkImageCorners(micrograph):
-                           warningList.append("Check corners of "+micrograph)
+                           warningList.append("Check corners of [%s]" % micrograph)
                 except Exception:
                     pass
         return warningList
