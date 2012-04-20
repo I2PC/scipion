@@ -52,9 +52,9 @@ class ProtImportParticles(XmippProtocol):
 
     def summary(self):
         message=[]
-        message.append("Stack imported from: "+self.InputFile)
+        message.append("Stack imported from: [%s]"%self.InputFile)
         if self.DoCopy:
-            message.append("Copied into "+self.WorkingDir)
+            message.append("Copied into [%s]"%self.WorkingDir)
         steps=[]
         if self.DoInvert:
             steps.append("Constrast inversion")
