@@ -42,7 +42,7 @@ class ProtImportParticles(XmippProtocol):
         errors = []
         inputExt=os.path.splitext(self.InputFile)[1]
         if not inputExt in ['.mrc','.stk','.sel','.xmd','.hed','.img', '.ctfdat']:
-            errors.append("Input file must be stack or metadata")
+            errors.append("Input file must be stack or metadata (valid extensions are .mrc, .stk, .sel, .xmd, .hed, .img, .ctfdat")
         else:
             if inputExt in ['.sel', '.xmd', '.ctfdat']:
                 mD=xmipp.MetaData(self.InputFile)
