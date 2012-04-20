@@ -19,7 +19,7 @@ public class Family {
 	private FamilyState state;
 
 	private static int sizemax = 1000;
-	private static Family dfamily = new Family("Default", Color.green);
+	private static Family dfamily = new Family("DefaultFamily", Color.green);
 	private static Color[] colors = new Color[]{
 										Color.BLUE, 
 										Color.CYAN, 
