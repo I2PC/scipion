@@ -33,18 +33,19 @@ class ProtML2D(XmippProtocol):
     def summary(self):
         md = MetaData(self.ImgMd)
         lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, md.size())]
+
+        if self.DoMlf:
+            if self.DoCorrectAmplitudes:
+                suffix = "with CTF correction "
+            else:
+                suffix = "ignoring CTF effects "
+            lines.append("Using a ML in <Fourier-space> " + suffix)
         
         if self.DoGenerateReferences:
             lines.append("Number of references: <%d>" % self.NumberOfReferences)
         else:
             lines.append("Reference image(s): [%s]" % self.RefMd)
         
-        if self.DoMlf:
-            if self.DoCorrectAmplitudes:
-                suffix = "with CTF correction "
-            else:
-                suffix = "ignoring CTF effects "
-            lines.append("Using a ML in <Fourier>-space " + suffix)
         
         logs = self.getFilename('iter_logs')    
         
@@ -52,10 +53,12 @@ class ProtML2D(XmippProtocol):
             md = MetaData(logs)
             id = md.lastObject()
             iteration = md.getValue(MDL_ITER, id)
-            lines.append("Iteration:  <%d>" % iteration)
+            lines.append("Last iteration:  <%d>" % iteration)
             LL = md.getValue(MDL_LL, id)
             lines.append("LogLikelihood:  %f" % LL)
-        
+            mdRefs = self.getFilename('iter_refs')
+            lines.append("Last classes: [iter%06d@%s]" % (iteration, mdRefs))
+
         return lines
     
     def getId(self):
@@ -92,7 +95,7 @@ class ProtML2D(XmippProtocol):
                 params += ' --thr %i' % self.NumberOfThreads
             if (self.DoMlf):
                 if not self.DoCorrectAmplitudes:
-                    params += ' --no_ctf --pixel_size %f' % self.PixelSize
+                    params += ' --no_ctf %f' % self.PixelSize
                 if (not self.ImagesArePhaseFlipped):
                     params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
@@ -168,35 +171,6 @@ class ProtML2D(XmippProtocol):
             
         xplotter = XmippPlotter(*gridsize)
             
-#       
-#    
-#        #f = plt.figure()
-#        def createSubPlot(title, xlabel, ylabel, yformat=None):
-#            self._plot_count += 1
-#            a = fig.add_subplot(xg, yg, self._plot_count)
-#            #a.get_label().set_fontsize(12)
-#            a.set_title(title)
-#            a.set_xlabel(xlabel)
-#            a.set_ylabel(ylabel)
-#            
-#            if yformat:
-#                formatter = ticker.FormatStrFormatter('%1.2e')
-#                a.yaxis.set_major_formatter(formatter)
-#            a.xaxis.get_label().set_fontsize(10)
-#            a.yaxis.get_label().set_fontsize(10)
-#            labels = a.xaxis.get_ticklabels() + a.yaxis.get_ticklabels()
-#            for label in labels:
-#                label.set_fontsize(8) # Set fontsize
-#                label.set_text('aa')
-#                #print label.
-#                #label.set_visible(False)
-#            return a
-#        
-#        # Create figure and prepare grid    
-#        gs = gridspec.GridSpec(xg, yg)#, height_ratios=[7,4])
-#        gs.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)    
-#        fig = plt.figure(figsize=(xs, ys), dpi=100)
-        
         # Create data to plot
         logs = self.getFilename('iter_logs')
         md = MetaData(logs)

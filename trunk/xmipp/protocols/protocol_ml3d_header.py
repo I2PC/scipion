@@ -11,30 +11,30 @@
 #------------------------------------------------------------------------------------------------
 # {begin_of_header}
 
-
 # {eval} expandCommentRun()
-
 # {cite}
 CiteML3D = """
 for ML3D:  Scheres et al. (2007) Nature Methods, 4, 27-29
 for MLF3D: Scheres et al. (2007) Structure, 15, 1167-1177
 """
 
+
 #------------------------------------------------------------------------------------------
 # {section} Input
 #------------------------------------------------------------------------------------------
-# {file}{validate}(PathExists) Input images:
+# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images:
 """ 
 Provide a list of images from a stack or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
 If you have images outside the <ProjectDir> you should import them first.
 """
-ImgMd = "all_images.xmd"
+ImgMd = ""
 
-# {file}{validate}(PathExists) Initial 3D reference volumes:
-"""Initial 3D density maps with the same dimensions as your particles.
+# {file}(*.xmd *.stk *.vol){validate}(PathExists) Initial 3D reference volumes:
 """
-RefMd = "result_classes.xmd"
+Initial 3D density maps with the same dimensions as your particles.
+"""
+RefMd = ""
 
 # Number of seeds per reference
 """
@@ -54,17 +54,20 @@ DoCorrectGreyScale = False
 """ 
 Angular sampling for a quick projection matching to obtain right grey scale.
 As the resolution of the intial reference should be low, this sampling can
- be relatively crude, e.g. 15
+be relatively crude, e.g. 15
 """
 ProjMatchSampling = 15
 
 # Low-pass filter initial references?
-""" It is highly recommended to low-pass filter your initial reference 
+""" 
+It is highly recommended to low-pass filter your initial reference 
 volume as much as you can.
 """
 DoLowPassFilterReference = True
+
 # {condition}(DoLowPassFilterReference) Resolution of the low-pass filter (Ang):
 LowPassFilter = 50
+
 # {condition}(DoLowPassFilterReference) Pixel size (Ang):
 PixelSize = 5.6
 
@@ -92,13 +95,14 @@ Give <c1> if no symmetry is present
 """
 Symmetry = 'c1'
 # Refine the normalization for each image?
-""" This variant of the algorithm deals with normalization errors.
-    For more info see (and please cite):
-    <Scheres et. al. (2009) J. Struc. Biol., in press>
+""" 
+This variant of the algorithm deals with normalization errors.
+For more info see (and please cite):
+<Scheres et. al. (2009) J. Struc. Biol., in press>
 """
 DoNorm = False
 
-# {expert} Restart after iteration:
+# {expert}{hiden} Restart after iteration:
 """ 
 For previous runs that stopped before convergence,
 resume the calculations after the completely finished iteration,
@@ -108,6 +112,7 @@ seed generation will be ignored if a value larger than 0 is given,
 since this option only concerns the ML3D classification part
 """
 RestartIter=0
+
 # {expert} Additional parameters:
 """ 
 Additional <xmipp_ml(f)_refine3d parameters>
@@ -126,17 +131,10 @@ DoMlf = False
 
 # Use CTF-amplitude correction inside MLF?
 """ 
-If set to true, provide the ctfdat file in the field below. 
-If set to false, the ctfdat field will be ignored.
+If set to <Yes>, the input images file should contains
+the CTF information for each image.
 """
 DoCorrectAmplitudes = True
-
-# {file}{validate}(PathExists){condition}(DoCorrectAmplitudes) CTFdat file with the input images:
-"""
-The names of both the images and the ctf-parameter files should be 
-relative path from <ProjectDir>. You can import data from other projects.
-"""
-InCtfDatFile='all_images.ctfdat'
 
 # High-resolution limit (in Angstroms)
 """
@@ -170,27 +168,29 @@ SeedsAreAmplitudeCorrected = False
 # {section}{expert} 3D Reconstruction
 #-----------------------------------------------------------------------------
 
-# {list}(wlsART, fourier) Reconstruction method
+# {list}(fourier, wlsART) Reconstruction method
 """ Choose between wslART or fourier """
-ReconstructionMethod ='wlsART'
+ReconstructionMethod = 'fourier'
 
 # {expert}{condition}(ReconstructionMethod=="wslART") Extra parameters
-""" Additional reconstruction parameters for ART
-    For details see:
-    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art]
 """
-ARTExtraParams =''
+Additional reconstruction parameters for ART
+For details see:
+[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art]
+"""
+ARTExtraParams = ''
 
 # {condition}(ReconstructionMethod=="fourier") Extra parameters
-""" The Fourier-interpolation reconstruction method is much faster than wlsART 
-    and may give similar results. It however is not guaranteed to optimize the 
-    likelihood function. This is an experimental feature. One may limit the 
-    maximum resolution of the fourier-interpolation using "-max_resolution 0.3"
-    (to 0.3 digital frequency). Use the extra parameter entry below for that. 
-    For details see:
-    [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier]
 """
-FourierExtraParams =''
+The Fourier-interpolation reconstruction method is much faster than wlsART 
+and may give similar results. It however is not guaranteed to optimize the 
+likelihood function. This is an experimental feature. One may limit the 
+maximum resolution of the fourier-interpolation using "-max_resolution 0.3"
+(to 0.3 digital frequency). Use the extra parameter entry below for that. 
+For details see:
+[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier]
+"""
+FourierExtraParams = ''
 
 # {eval} expandParallel()
 
@@ -198,7 +198,8 @@ FourierExtraParams =''
 # {section}{visualize} Visualization
 #------------------------------------------------------------------------------------------------
 # Visualize volumes in UCSF Chimera?
-""" For this to work, you need to have chimera installed!
+"""
+For this to work, you need to have chimera installed!
 """
 UseChimera = False
 

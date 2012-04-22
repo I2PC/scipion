@@ -21,30 +21,46 @@ class ProtML3D(XmippProtocol):
             self.progId = 'mlf'
         else:
             self.progId = 'ml'
+        self.ParamsDict['ProgId'] = self.progId
         self.ORoot = self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
                         
     def createFilenameTemplates(self):
         return {
-                'iter_logs': '%(ORoot)s_ml2d_iter_logs.xmd',
-                'iter_refs': '%(ORoot)s_ml2d_iter_refs.xmd'
+                'iter_logs': '%(ORoot)s_%(ProgId)s2d_iter_logs.xmd',
+                'iter_refs': '%(ORoot)s_%(ProgId)s2d_iter_refs.xmd',
+                'vols': 'iter%(iter)06d@%(ORoot)s_vols.xmd'
                 }
         
     def summary(self):
         md = MetaData(self.ImgMd)
-        lines = [('Input images            ', "%s (%u)" % (self.ImgMd, md.size())),
-                 ('Reference image', self.RefMd)]
+        lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, md.size())]
+        if self.DoMlf:
+            if self.DoCorrectAmplitudes:
+                suffix = "with CTF correction "
+            else:
+                suffix = "ignoring CTF effects "
+            lines.append("Using a ML in <Fourier-space> " + suffix)
+
+        lines.append("Reference volumes(s): [%s]" % self.RefMd)
         
-        logs = self.getFilename('iter_logs')   
+        if self.NumberOfReferences > 1:
+            lines.append("Number of references per volume: <%d>" % self.NumberOfReferences)
+        
+        logs = self.getFilename('iter_logs')    
+        
         if exists(logs):
             md = MetaData(logs)
-            objId = md.lastObject()
-            iteration = md.getValue(MDL_ITER, objId)
-            lines.append(('Iteration                   ', str(iteration)))
-            LL = md.getValue(MDL_LL, objId)
-            lines.append(('LogLikelihood          ', str(LL)))
+            id = md.lastObject()
+            iteration = md.getValue(MDL_ITER, id)
+            lines.append("Last iteration:  <%d>" % iteration)
+            LL = md.getValue(MDL_LL, id)
+            lines.append("LogLikelihood:  %f" % LL)
+            mdRefs = self.getFilename('iter_refs')
+            lines.append("Last 2D classes: [iter%06d@%s]" % (iteration, mdRefs))
+            fnVols = self.getFilename('vols', iter=iteration)
+            lines.append("Last 3D classes: [%s]" % fnVols)
         
-        output = ["%s : %s" % (k.ljust(20),  v) for k, v in lines]
-        return output
+        return lines
     
     def defineSteps(self):        
         restart = False
@@ -56,12 +72,6 @@ class ProtML3D(XmippProtocol):
 #            os.chdir(self.WorkingDir)
 #            self.restart_MLrefine3D(RestartIter)
         else:
-            if self.DoMlf and self.DoCorrectAmplitudes:
-                ctfFile = self.ParamsDict['ctfFile'] = self.workingDirPath('my.ctfdat')
-                # Copy CTFdat to the workingdir as well
-                self.insertStep('copyFile', [ctfFile], 
-                                   source=self.InCtfDatFile, dest=ctfFile )
-            
             initVols = self.ParamsDict['InitialVols'] = self.workingDirPath('initial_volumes.stk')
             self.mdVols = MetaData(self.RefMd)
             
@@ -195,7 +205,7 @@ class ProtML3D(XmippProtocol):
         
         if self.DoMlf:
             if not self.DoCorrectAmplitudes:
-                self.ParamsStr += ' --no_ctf --pixel_size %(PixelSize)f'
+                self.ParamsStr += ' --no_ctf %(PixelSize)f'
             if not self.ImagesArePhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
 
