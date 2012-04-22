@@ -153,22 +153,12 @@ public:
     /** Update the metadata with reference volumes */
     void updateVolumesMetadata();
 
-
-
     /// Masking, filtering etc. of the volume
     virtual void postProcessVolumes();
 
     /// Convergency check
     virtual bool checkConvergence() ;
 
-
-
-    /**** DEPRECATED *****/
-//    /// After reconstruction update reference volume selfile
-//    void remakeSFvol(int iter, bool rewrite = false, bool include_noise = false);
-//
-//    /// Merge MLalign2D classification selfiles into volume classes
-//    void concatenateSelfiles(int iter);
-};
+}; // class ProgMLRefine3D
 //@}
 #endif

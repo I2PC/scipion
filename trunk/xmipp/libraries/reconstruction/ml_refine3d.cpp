@@ -553,10 +553,11 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
     volno = nr_dir = 0;
 
     //std::cerr << "DEBUG_JM: ProgMLRefine3D::projectVolumes" <<std::endl;
-
-    FOR_ALL_OBJECTS_IN_METADATA(mdVol)
+    MDIterator iter(mdVol);
+    for (int i = 0; i < Nvols; ++i)
+    //FOR_ALL_OBJECTS_IN_METADATA(mdVol)
     {
-        mdVol.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
+        mdVol.getValue(MDL_IMAGE, fn_tmp, iter.objId);
         //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
         vol.read(fn_tmp);
         vol().setXmippOrigin();
@@ -589,6 +590,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
             if (verbose && (nr_dir % bar_step == 0))
                 progress_bar(nr_dir);
         }
+        iter.moveNext();
     }
 
     if (verbose)
@@ -729,9 +731,10 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &
 // Reconstruction using the ML-weights ==========================================
 void ProgMLRefine3D::reconstructVolumes()
 {
-    FileName               fn_vol, fn_one;
-    MetaData               mdOne;
-    MetaData               mdProj;
+    FileName fn_vol, fn_one;
+    MetaData mdOne, mdProj, mdOutVols;
+    size_t id;
+
 
     ProgReconsBase * reconsProgram;
     int volno_index  = 0;
@@ -746,15 +749,15 @@ void ProgMLRefine3D::reconstructVolumes()
         for (int volno = 1; volno <= Nvols; ++volno)
         {
             volno_index = Nvols * i + volno - 1;
+            String &fn_base = reconsOutFnBase[i];
+            COMPOSE_VOL_FN(fn_vol, volno, fn_base);
             //for now each node reconstruct one volume
             if (volno_index % size == rank)
             {
 				LOG(formatString("              Projections: : %s", reconsMdFn[i].c_str()).c_str());
-				String &fn_base = reconsOutFnBase[i];
                 //fn_vol.compose(volno, fn_base);
 				LOG(formatString("              Base: : %s", fn_base.c_str()).c_str());
 				mdProj.read(reconsMdFn[i]);
-				COMPOSE_VOL_FN(fn_vol, volno, fn_base);
                 fn_one.compose(fn_base, volno, "projections.xmd");
             	LOG(formatString("              Reconstructing volume: %s", fn_vol.c_str()).c_str());
                 // Select only relevant projections to reconstruct
@@ -767,8 +770,23 @@ void ProgMLRefine3D::reconstructVolumes()
 				delete reconsProgram;
 				LOG(formatString("           END Reconstructing volume: %s", fn_vol.c_str()).c_str());
             }
-        }
+            //Store output volumes, avoid noise and cref volumes
+            //Only need to be done by master node
+            if (i == 0 && rank == 0)
+            {
+               id = mdOutVols.addObject();
+               mdOutVols.setValue(MDL_IMAGE, fn_vol, id);
+               mdOutVols.setValue(MDL_ENABLED, 1, id);
+            }
+        }//for volno
+    }//for reconsOutFnBase
+
+    if (rank == 0)
+    {
+      FileName fn = formatString("iter%06d@%s_vols.xmd", iter, fn_root.c_str());
+      mdOutVols.write(fn, MD_APPEND);
     }
+
     LOG("           END ProgMLRefine3D::reconstructVolumes");
 }
 
