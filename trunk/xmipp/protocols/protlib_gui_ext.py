@@ -533,6 +533,9 @@ class XmippText(tk.Text):
     def goEnd(self):
         self.see(tk.END)
         
+    def isAtEnd(self):
+        return self.scrollbar.get() == 1.0
+        
     def clear(self):
         self.config(state=tk.NORMAL)
         self.delete(0.0, tk.END)
@@ -699,6 +702,8 @@ class OutputText(XmippText):
         else:
             self.addLine("File '%s' doesn't exist" % self.filename)
         self.config(state=tk.DISABLED)
+        #if self.isAtEnd():
+        self.goEnd();
         #if goEnd:
         #    self.goEnd()        
       
