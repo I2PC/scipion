@@ -55,6 +55,38 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
     unmapFile(bufferMap.begin, bufferMap.size, fd);
 }
 
+// Get the blocks available
+bool existsBlockInMetaDataFile(const FileName &inFile, const String& inBlock)
+{
+    if (!inFile.isMetaData())
+        return false;
+    if (!inFile.getBlockName().empty())
+        return inBlock == inFile.getBlockName();
+
+    MetaData MDaux(inFile);
+    //map file
+    int fd;
+    BUFFER_CREATE(bufferMap);
+    mapFile(inFile, bufferMap.begin, bufferMap.size, fd);
+    BUFFER_COPY(bufferMap, buffer);
+    BLOCK_CREATE(block);
+    String blockName;
+    bool result = false;
+    while (MDaux.nextBlock(buffer, block))
+    {
+        BLOCK_NAME(block, blockName);
+        if (inBlock == blockName)
+        {
+          result = true;
+          break;
+        }
+    }
+
+    unmapFile(bufferMap.begin, bufferMap.size, fd);
+    return result;
+
+}
+
 //-----Constructors and related functions ------------
 void MetaData::_clear(bool onlyData)
 {

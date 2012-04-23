@@ -112,6 +112,7 @@ typedef enum
 
 /** Which are the blocks available in a metadata */
 void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList);
+bool existsBlockInMetaDataFile(const FileName &inFile, const String& inBlock);
 
 class MDQuery;
 class MDSql;

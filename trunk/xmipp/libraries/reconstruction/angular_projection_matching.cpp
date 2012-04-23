@@ -208,13 +208,23 @@ void ProgAngularProjectionMatching::produceSideInfo()
     // Read Selfile and get dimensions
     MetaData MetaDataLeft;
     MetaData MetaDataRight;
-    FileName rightFn;
-    rightFn.compose((String)"exp_images",fn_exp.removeBlockName());
-    MetaDataRight.read(rightFn);
-    MetaDataLeft.read(fn_exp);
-    //Join with angles and shifhts
-    DFexp.join(MetaDataLeft,MetaDataRight,MDL_IMAGE,LEFT);
-    DFexp.write("kk.xmd");
+    String blockName = "all_exp_images";
+
+    FileName inputFn = fn_exp.removeBlockName();
+    if (existsBlockInMetaDataFile(inputFn, blockName))
+    {
+        FileName rightFn;
+        rightFn.compose(blockName, inputFn);
+        MetaDataRight.read(rightFn);
+        MetaDataLeft.read(fn_exp);
+        //Join with angles and shifhts
+        DFexp.join(MetaDataLeft,MetaDataRight,MDL_IMAGE,LEFT);
+    }
+    else
+       DFexp.read(fn_exp);
+
+
+    ////////DFexp.write("kk.xmd");
     // Thread barrier
     barrier_init(&thread_barrier, threads);
 
