@@ -54,6 +54,12 @@ public:
     int                  ctfmodelSize;
     /// Bootstrap estimation
     bool                 bootstrap;
+    /// Fast defocus estimate
+    bool                 fastDefocusEstimate;
+    /// Regularization factor for the phase direction and unwrapping estimates (used in Zernike estimate)
+    double               lambdaPhase;
+    /// Size of the average window used during phase direction and unwrapping estimates (used in Zernike estimate)
+    int                  sizeWindowPhase;
 
     /// Minimum frequency to adjust
     double               min_freq;
