@@ -47,6 +47,7 @@ class ProtProjMatch(XmippProtocol):
         
         if self.UseInitialAngles:
             self.DocFileName = self.SelFileName
+        self.ResolSam=float(self.ResolSam)
         
     def validate(self):
         from xmipp import ImgSize, SingleImgSize, XmippError
