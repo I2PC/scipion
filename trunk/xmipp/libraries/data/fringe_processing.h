@@ -59,7 +59,7 @@ public:
     //A reference to the current method can be found in:
     //Yang, Xia; Yu, Qifeng, and Fu, Sihua. An algorithm for estimating both fringe orientation and fringe density. Optics Communications.
     //2007 Jun 15; 274(2):286-292
-    void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap,  MultidimArray<double > & orModMap, int wSize);
+    void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap,  MultidimArray<double > & orModMap, int wSize, MultidimArray<bool > & ROI);
 
     //This function computes the normalized version of the fringe pattern im = a+m*cos(phi) that it is
     //imN = cos(phi) and computes also the modulation map m that it is called imModMap; R and S are
@@ -67,7 +67,7 @@ public:
     //that filter the frequency of the fringes
     //Ref: Juan Antonio Quiroga, Manuel Servin, "Isotropic n-dimensional fringe
     //pattern normalization", Optics Communications, 224, Pages 221-227 (2003)
-    void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S);
+    void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S, MultidimArray<bool> & ROI);
 
     //This method obtains the phase direction map from the fringe orientation map solving the sign ambiguity problem that exists in the fringe orientation map.
     //Once computed the phase direction map the modulating phase can be obtained from the SPTH transform.
@@ -91,7 +91,7 @@ public:
     //verbose == 3 saves the direction map
     //verbose == 4 saves the wrapped phase map
     //verbose == 5 saves all
-    void demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose=0);
+    void demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, int rmin, int rmax, MultidimArray<double> & phase, MultidimArray<double> & mod, Matrix1D<double> & coeffs, int verbose=0);
 
 };
 

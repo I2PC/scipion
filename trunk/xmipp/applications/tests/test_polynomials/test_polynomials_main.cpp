@@ -3,6 +3,7 @@
 #include <data/matrix1d.h>
 #include <data/xmipp_fft.h>
 #include <data/matrix2d.h>
+#include <data/multidim_array.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -31,6 +32,7 @@ protected:
     Image<double> im;
     //File name of the image to process
     FileName imageName;
+
 };
 
 TEST_F( PolynomialsTest, ZernikeFit)
@@ -40,6 +42,7 @@ TEST_F( PolynomialsTest, ZernikeFit)
     // coefficients obtained using Matlab
     Matrix1D<double> xmippCoeffs;
 
+    //xmippCoeffs.resizeNoCopy(10);
     xmippCoeffs.resizeNoCopy(10);
     xmippCoeffs.initConstant(1);
     matlabCoeffs.resizeNoCopy(10);
@@ -52,14 +55,29 @@ TEST_F( PolynomialsTest, ZernikeFit)
     VEC_ELEM(matlabCoeffs,6) =  -0.00005;
     VEC_ELEM(matlabCoeffs,7) =  -0.00005;
     VEC_ELEM(matlabCoeffs,8) =  -0.00005;
-    VEC_ELEM(matlabCoeffs,9) =  0.00005;
+    VEC_ELEM(matlabCoeffs,9) =   0.00005;
+
+    int rmin = -1;
+    int rmax = XSIZE(MULTIDIM_ARRAY(im))/2;
+
+    MultidimArray< bool > ROI;
+    ROI.resizeNoCopy(MULTIDIM_ARRAY(im));
+    ROI.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+    {
+        double temp = std::sqrt(i*i+j*j);
+        if ( (temp > rmin) &&  (temp < rmax) )
+            A2D_ELEM(ROI,i,j)= true;
+        else
+            A2D_ELEM(ROI,i,j)= false;
+    }
 
     CenterFFT(MULTIDIM_ARRAY(im), true);
     PolyZernikes polynom;
     Matrix1D<int> coefs(10);
     coefs.initConstant(1);
 
-    polynom.fit(coefs,MULTIDIM_ARRAY(im));
+    polynom.fit(coefs,MULTIDIM_ARRAY(im),ROI,1);
     xmippCoeffs = COEFFICIENTS(polynom);
 
     Matrix1D<double> error = xmippCoeffs - matlabCoeffs;
@@ -68,13 +86,12 @@ TEST_F( PolynomialsTest, ZernikeFit)
     {
         ASSERT_TRUE(std::abs(VEC_ELEM(error,i))<0.01) << "Zernike fit: no correspondence between matlab and xmipp zernike coefficients";
     }
-
 }
 
 TEST_F( PolynomialsTest, ZernikePols)
 {
     CenterFFT(MULTIDIM_ARRAY(im), true);
-    Matrix1D<int> coefs(4);
+    Matrix1D<int> coefs(8);
     coefs.initConstant(0);
 
     VEC_ELEM(coefs,1)=1;
@@ -82,7 +99,23 @@ TEST_F( PolynomialsTest, ZernikePols)
 
     PolyZernikes polynom;
 
-    polynom.zernikePols(coefs,MULTIDIM_ARRAY(im));
+    int rmin = 100;
+    int rmax = 1000;
+
+    MultidimArray< bool > ROI;
+    ROI.resizeNoCopy(MULTIDIM_ARRAY(im));
+    ROI.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+    {
+        double temp = std::sqrt(i*i+j*j);
+        if ( (temp > rmin) &&  (temp < rmax) )
+            A2D_ELEM(ROI,i,j)= true;
+        else
+            A2D_ELEM(ROI,i,j)= false;
+    }
+
+    im().initZeros();
+    polynom.zernikePols(coefs,MULTIDIM_ARRAY(im),ROI);
 
     ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,0)+       1)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
     ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,1)+0.996094)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";

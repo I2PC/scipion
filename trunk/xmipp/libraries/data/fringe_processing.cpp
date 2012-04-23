@@ -51,7 +51,14 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
 
     if ( (type == COMPLEX_OPEN_FRINGES) || (type == COMPLEX_CLOSED_FRINGES) )
     {
-        polynom.zernikePols(coefs,im);
+        MultidimArray< bool > ROI;
+        ROI.resizeNoCopy(im);
+
+        ROI.setXmippOrigin();
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+        	A2D_ELEM(ROI,i,j) = true;
+
+        polynom.zernikePols(coefs,im,ROI);
         im.setXmippOrigin();
     }
 
@@ -131,7 +138,7 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
 
 }
 
-void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, MultidimArray<double > & orModMap, int wSize)
+void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, MultidimArray<double > & orModMap, int wSize, MultidimArray<bool > & ROI)
 {
     int NR, NC,NZ;
     size_t NDim;
@@ -145,6 +152,8 @@ void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<
     d45.resizeNoCopy(im);
     d90.resizeNoCopy(im);
     d135.resizeNoCopy(im);
+    //mask is the region to perform average in d0, d90, d90, d135 maps
+    //ROI is the region of interested. If ROI is 1 then process in this px if ROI is 0 not process
     mask.resizeNoCopy(im);
     orn.resizeNoCopy(im);
     ornMod.resizeNoCopy(im);
@@ -188,21 +197,33 @@ void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<
      *     orn = mod(Or+pi/2,pi);
      *    ornMod=mat2gray(abs(c+1i*b));
      */
+
+    STARTINGX(ROI)=STARTINGY(ROI)=0;
     double tempx = 0;
     double tempy = 0;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-        tempx =  0.5*(A2D_ELEM(d0,i,j)-A2D_ELEM(d90,i,j));
-        tempy = -0.5*(A2D_ELEM(d45,i,j)-A2D_ELEM(d135,i,j));
-        A2D_ELEM(orn,i,j)   =  std::fmod((0.5*std::atan2(tempy,tempx))+double(PI)/2,double(PI));
-        A2D_ELEM(ornMod,i,j) = std::sqrt(std::pow(tempx,2)+std::pow(tempy,2));
+        if (A2D_ELEM(ROI,i,j))
+        {
+            tempx =  0.5*(A2D_ELEM(d0,i,j)-A2D_ELEM(d90,i,j));
+            tempy = -0.5*(A2D_ELEM(d45,i,j)-A2D_ELEM(d135,i,j));
+            A2D_ELEM(orn,i,j)   =  std::fmod((0.5*std::atan2(tempy,tempx))+double(PI)/2,double(PI));
+            A2D_ELEM(ornMod,i,j) = std::sqrt(std::pow(tempx,2)+std::pow(tempy,2));
+        }
+        else
+        {
+            A2D_ELEM(orn,i,j) = 0;
+            A2D_ELEM(ornMod,i,j) = 0;
+        }
     }
 
+    //we set again the ROI in the xmipp origin
+    ROI.setXmippOrigin();
     orMap = orn;
     orModMap = ornMod;
 }
 
-void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S)
+void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S, MultidimArray<bool> & ROI)
 {
     // H is an Annular filter with radius=R and sigma=S and a Gaussian DC filter with sigma=1
     MultidimArray< std::complex<double> > H;
@@ -247,9 +268,17 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-        temp = std::abs(A2D_ELEM(H,i,j));
-        A2D_ELEM(imModMap,i,j) = std::sqrt(std::pow(temp,2)+std::pow(A2D_ELEM(imN,i,j),2));
-        A2D_ELEM(imN,i,j)      = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
+        if (A2D_ELEM(ROI,i,j))
+        {
+            temp = std::abs(A2D_ELEM(H,i,j));
+            A2D_ELEM(imModMap,i,j) = std::sqrt(std::pow(temp,2)+std::pow(A2D_ELEM(imN,i,j),2));
+            A2D_ELEM(imN,i,j)      = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
+        }
+        else
+        {
+            A2D_ELEM(imModMap,i,j) = 0;
+            A2D_ELEM(imN,i,j)      = 0;
+        }
     }
 
     STARTINGX(imN)=STARTINGY(imN)=0;
@@ -328,8 +357,9 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 
             int ni=indi[k];
             int nj=indj[k];
+
             if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
-                 && ((nj+size)<XSIZE(processed)-1))
+                 && ((nj+size)<XSIZE(processed)-1) )
             {
                 double G11=0, G12=0, G22=0, b1=0, b2=0;
 
@@ -375,6 +405,7 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
                 p.quality=A2D_ELEM(qualityMapInt,ni,nj);
                 queueToProcess.push(p);
             }
+
         }
     }
 }
@@ -493,10 +524,11 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     }
 }
 
-void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, MultidimArray<double> & phase, MultidimArray<double> & mod, int verbose)
+void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, int rmin, int rmax, MultidimArray<double> & phase, MultidimArray<double> & mod, Matrix1D<double> & coeffs, int verbose)
 {
     //Initial Setup
     MultidimArray< double > In, orMap, orModMap, dir, wphase;
+    MultidimArray< bool > ROI;
     MultidimArray< std::complex<double> > sph;
 
     In.resizeNoCopy(im);
@@ -505,10 +537,23 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     dir.resizeNoCopy(im);
     wphase.resizeNoCopy(im);
     sph.resizeNoCopy(im);
+    ROI.resizeNoCopy(im);
+
+    //First we define the Region of Interesting to perform all the operations inside this regions
+    ROI.setXmippOrigin();
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+    {
+        double temp = std::sqrt(i*i+j*j);
+        if ( (temp > rmin) &&  (temp < rmax) )
+            A2D_ELEM(ROI,i,j)= true;
+        else
+            A2D_ELEM(ROI,i,j)= false;
+    }
 
     //We obtain previous necessary maps
     //Normalized version of im and modulation map
-    normalize(im,In,mod,R,S);
+    normalize(im,In,mod, R, S, ROI);
 
     Image<double> save;
     if (verbose == 1)
@@ -519,7 +564,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
 
     STARTINGX(mod)=STARTINGY(mod)=0;
     //Orientation map of the fringes
-    orMinDer(In, orMap, orModMap, size);
+    orMinDer(In, orMap, orModMap, size, ROI);
     if (verbose == 2)
     {
         save()=orMap;
@@ -539,6 +584,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     SPTH(In,sph);
     STARTINGX(sph)=STARTINGY(sph)=0;
     STARTINGX(In)=STARTINGY(In)=0;
+    STARTINGX(ROI)=STARTINGY(ROI)=0;
 
     // We obtain the wrapped phase
     std::complex<double> ci = std::complex<double>(0,1.0);
@@ -546,8 +592,11 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(im)
     {
-        temp = -ci*std::exp(ci*A2D_ELEM(dir,i,j))*A2D_ELEM(sph,i,j);
-        A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
+        if (A2D_ELEM(ROI,i,j))
+        {
+            temp = -ci*std::exp(ci*A2D_ELEM(dir,i,j))*A2D_ELEM(sph,i,j);
+            A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
+        }
     }
 
     if (verbose == 4)
@@ -563,6 +612,14 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
         save()=phase;
         save.write("PPP4.xmp");
     }
+
+    ROI.setXmippOrigin();
+    Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
+    coefsInit.initConstant(1);
+
+    PolyZernikes polynom;
+    polynom.fit(coefsInit,phase,ROI,1);
+    coeffs = polynom.fittedCoeffs;
 
     if (verbose > 5)
     {
@@ -580,7 +637,6 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
         save.write("PPP5.xmp");
         save()=mod;
         save.write("PPP6.xmp");
-
     }
 }
 

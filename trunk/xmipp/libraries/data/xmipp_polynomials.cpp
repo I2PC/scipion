@@ -29,6 +29,7 @@
 #include "mask.h"
 #include "xmipp_fft.h"
 
+
 #define PR(x) std::cout << #x " = " << x << std::endl;
 #define ZERNIKE_ORDER(n) ceil((-3+sqrt(9+8*(double)(n)))/2.);
 
@@ -41,10 +42,11 @@ void PolyZernikes::create(const Matrix1D<int> & coef)
 
     for (int nZ = 0; nZ < VEC_XSIZE(coef); ++nZ)
     {
-        if (VEC_ELEM(coef,nZ) == 0){
-        	fMatT = new Matrix2D<int>(1,1);
-        	dMij(*fMatT,0,0)=0;
-        	//*fMatT = 0;
+        if (VEC_ELEM(coef,nZ) == 0)
+        {
+            fMatT = new Matrix2D<int>(1,1);
+            dMij(*fMatT,0,0)=0;
+            //*fMatT = 0;
         }
         else
         {
@@ -82,10 +84,8 @@ void PolyZernikes::create(const Matrix1D<int> & coef)
     }
 };
 
-void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, const double thrs)
+void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, MultidimArray<bool> & ROI, int verbose)
 {
-	bool DEBUG = false;
-
     this->create(coef);
 
     int xdim = XSIZE(im);
@@ -100,30 +100,20 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, c
 
     Matrix2D<double> polValue(polOrder,polOrder);
 
-    // Get the central part of the image
-    Mask mask;
-    mask.type = BINARY_CIRCULAR_MASK;
-    mask.mode = INNER_MASK;
-    mask.R1 = XSIZE(im)/2;
-    mask.resize(im);
-    mask.generate_mask();
-    MultidimArray<int>& mMask=mask.get_binary_mask();
-    mMask.setXmippOrigin();
-
     //First argument means number of images
     //Second argument means number of pixels
     PseudoInverseHelper pseudoInverter;
     Matrix2D<double>& zerMat=pseudoInverter.A;
-    zerMat.resizeNoCopy(mMask.sum(), numZer);
+    zerMat.resizeNoCopy(ROI.sum(), numZer);
     double iMaxDim2 = 2./std::max(xdim,ydim);
 
     size_t pixel_idx=0;
 
-    pseudoInverter.b.resizeNoCopy(mMask.sum());
+    pseudoInverter.b.resizeNoCopy(ROI.sum());
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-        if ( (A2D_ELEM( mMask,i,j)>0) && std::abs(A2D_ELEM(im,i,j)) > thrs)
+        if ( (A2D_ELEM(ROI,i,j)))
         {
             //For one i we swap the different j
             double y=i*iMaxDim2;
@@ -148,7 +138,6 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, c
             {
                 fMat = &fMatV[k];
 
-
                 if (fMat == NULL)
                     continue;
 
@@ -168,52 +157,45 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, c
     Matrix1D<double> zernikeCoefficients;
     solveLinearSystem(pseudoInverter, zernikeCoefficients);
     fittedCoeffs = zernikeCoefficients;
-    reconstructed.resizeNoCopy(im);
 
-    pixel_idx=0;
-    double Temp=0;
-    Image<double> B;
-    B().resizeNoCopy(im);
-    B().initZeros();
-
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
-    if (A2D_ELEM(mMask,i,j)>0)
+    if (verbose == 1)
     {
-        for (int k=0; k < numZer; ++k)
-            Temp+=dMij(zerMat,pixel_idx,k)*VEC_ELEM(fittedCoeffs,k);
+    	// Pointer to the image to be fitted
+    	MultidimArray<double> reconstructed;
 
-        A2D_ELEM(reconstructed,i,j)=Temp;
-        A2D_ELEM(MULTIDIM_ARRAY(B),i,j) = VEC_ELEM(pseudoInverter.b, pixel_idx);
-        Temp=0;
-        ++pixel_idx;
-    }
+    	reconstructed.resizeNoCopy(im);
+        pixel_idx=0;
+        double Temp=0;
+        Image<double> B;
+        B().resizeNoCopy(im);
+        B().initZeros();
 
-    pixel_idx=0;
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+        if (A2D_ELEM(ROI,i,j))
+        {
+            for (int k=0; k < numZer; ++k)
+                Temp+=dMij(zerMat,pixel_idx,k)*VEC_ELEM(fittedCoeffs,k);
 
-    if (DEBUG)
-    {
+            A2D_ELEM(reconstructed,i,j)=Temp;
+            A2D_ELEM(MULTIDIM_ARRAY(B),i,j) = VEC_ELEM(pseudoInverter.b, pixel_idx);
+            Temp=0;
+            ++pixel_idx;
+        }
+
+        pixel_idx=0;
+
         Image<double> save;
-        save().resizeNoCopy(im);
-        FileName name;
-        save() = reconstructed;
-        name.compose("Reconstructed",1,"xmp");
-        save.write(name);
-
-        Image<int> save2(mMask);
-        FileName name2;
-        name2.compose("Mask",1,"xmp");
-        save2.write(name2);
-
-        zerMat.write("zerMat.txt");
-        pseudoInverter.b.write("b.txt");
+        save()=reconstructed;
+        save.write("rectonstructedZernikes.xmp");
+        //zerMat.write("PPP2.txt");
+        //pseudoInverter.b.write("PPP3.txt");
     }
 }
 
-void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> & im)
+void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> & im, MultidimArray<bool> & ROI, int verbose)
 {
-	bool DEBUG = false;
 
-	this->create(coef);
+    this->create(coef);
 
     int polOrder=ZERNIKE_ORDER(coef.size());
     int numZer = coef.size();
@@ -229,49 +211,49 @@ void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> &
     double temp = 0;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-        //For one i we swap the different j
-        double y=i*iMaxDim2;
-        double x=j*iMaxDim2;
-
-        //polValue = [ 0    y   y2    y3   ...
-        //             x   xy  xy2    xy3  ...
-        //             x2  x2y x2y2   x2y3 ]
-        //dMij(polValue,py,px) py es fila, px es columna
-        for (int py = 0; py < polOrder; ++py)
+        if (A2D_ELEM(ROI,i,j))
         {
-            double ypy=std::pow(y,py);
-            for (int px = 0; px < polOrder; ++px)
-                dMij(polValue,px,py) = ypy*std::pow(x,px);
+            //For one i we swap the different j
+            double y=i*iMaxDim2;
+            double x=j*iMaxDim2;
+
+            //polValue = [ 0    y   y2    y3   ...
+            //             x   xy  xy2    xy3  ...
+            //             x2  x2y x2y2   x2y3 ]
+            //dMij(polValue,py,px) py es fila, px es columna
+            for (int py = 0; py < polOrder; ++py)
+            {
+                double ypy=std::pow(y,py);
+                for (int px = 0; px < polOrder; ++px)
+                    dMij(polValue,px,py) = ypy*std::pow(x,px);
+            }
+
+            Matrix2D<int> *fMat;
+            //We generate the representation of the Zernike polynomials
+
+            for (int k=0; k < numZer; ++k)
+            {
+                fMat = &fMatV[k];
+
+                if ( (dMij(*fMat,0,0) == 0) && MAT_SIZE(*fMat) == 1 )
+                    continue;
+
+                for (int px = 0; px < (*fMat).Xdim(); ++px)
+                    for (int py = 0; py < (*fMat).Ydim(); ++py)
+                        temp += dMij(*fMat,py,px)*dMij(polValue,py,px)*VEC_ELEM(coef,k);
+            }
+
+            A2D_ELEM(im,i,j) = temp;
+            temp = 0;
         }
-
-        Matrix2D<int> *fMat;
-        //We generate the representation of the Zernike polynomials
-
-        for (int k=0; k < numZer; ++k)
-        {
-            fMat = &fMatV[k];
-
-            if ( (dMij(*fMat,0,0) == 0) && MAT_SIZE(*fMat) == 1 )
-                continue;
-
-            for (int px = 0; px < (*fMat).Xdim(); ++px)
-                for (int py = 0; py < (*fMat).Ydim(); ++py)
-                    temp += dMij(*fMat,py,px)*dMij(polValue,py,px)*VEC_ELEM(coef,k);
-        }
-
-        A2D_ELEM(im,i,j) = temp;
-        temp = 0;
     }
 
     STARTINGX(im)=STARTINGY(im)=0;
 
-    if (DEBUG)
+    if (verbose == 1)
     {
         Image<double> save;
-        save().resizeNoCopy(im);
-        FileName name;
-        save() = im;
-        name.compose("ZernikePol",1,"xmp");
-        save.write(name);
+        save()=im;
+        save.write("PPP1.xmp");
     }
 }
