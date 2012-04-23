@@ -48,7 +48,20 @@ DoGaussian=False
 """ Remind that the Fourier frequency is normalized between 0 and 0.5"""
 Freq_sigma=0.04
 
-# 4) Remove dust
+# 4) Crop
+"""
+Crop a certain amount of pixels. If crop=10 and the image size is 100x100 originally, the
+new images will be of size 90x90
+"""
+DoCrop=False
+
+# {condition}(DoCrop){wizard}(wizardChooseCropSizeFilter)  Crop size:
+""" 
+In pixels
+"""
+CropSize=10
+
+# 5) Remove dust
 """
 Sets pixels with unusually large values to random values from a Gaussian 
 with zero-mean and unity-standard deviation. It requires a previous normalization, 
@@ -64,7 +77,7 @@ the signal itself may be affected so that a higher value may be preferable.
 """
 DustRemovalThreshold=3.5
 
-# 5) Normalize
+# 6) Normalize
 """ 
 It subtract a ramp in the gray values and normalizes so that in the background
 there is 0 mean and standard deviation 1 """
@@ -84,7 +97,7 @@ Radius for background circle definition (in pix.).
 If this value is 0, then the same as the particle radius is used. """
 BackGroundRadius=0
 
-# 6) Apply mask
+# 7) Apply mask
 """ Apply mask from file """
 DoMask=False
 

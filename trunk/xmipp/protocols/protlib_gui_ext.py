@@ -1805,7 +1805,24 @@ class XmippBrowserGaussianFilter(XmippBrowserBandpassFilter):
         self.createPreviewButton(frame)
         self.fillResultPreview()
         return frame
+
+"""
+class XmippBrowserCropSizeFilter(XmippBrowserCropSizeFilter):
+    ''' This subclass is specific preview some operations
+        the extra dict will be used for personalized parameters
+        that will not be passed to XmippBrowser constructor
+    '''
+    def __init__(self, **args):
+        XmippBrowserPreview.__init__(self, **args)
+        self.label = 'CropSize'
+        self.key = 'cropSize'
     
+    def getComputeFunction(self):
+        from xmipp import cropsize
+        cropSize = float(self.getResults())
+        return lambda: cropsize(self.image, self.lastitem, cropSize, self.dim)
+"""
+
 class XmippBrowserBadpixelFilter(XmippBrowserGaussianFilter):
     ''' This subclass is specific preview some operations
         the extra dict will be used for personalized parameters
