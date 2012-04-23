@@ -193,7 +193,7 @@ class ProtML2D(XmippProtocol):
             md = MetaData('%(lastBlock)s@%(refs)s' % locals())
             mirrors = [md.getValue(MDL_MIRRORFRAC, id) for id in md]
             nrefs = len(mirrors)
-            ind = np.arange(nrefs)
+            ind = range(1, nrefs + 1)
             width = 0.85#min(0.15, 5/float(nrefs))       # the width of the bars: can also be len(x) sequence
             a = xplotter.createSubPlot('Mirror fractions on last iteration', 'references', 'mirror fraction')
             a.bar(ind, mirrors, width, color='b')

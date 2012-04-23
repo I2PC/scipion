@@ -11,6 +11,8 @@ from os.path import join, exists
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL
+from protlib_utils import runShowJ
+from protlib_parser import ProtocolParser
 
 class ProtML3D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -25,10 +27,15 @@ class ProtML3D(XmippProtocol):
         self.ORoot = self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
                         
     def createFilenameTemplates(self):
+        mdRefs = '%(ORoot)s_%(ProgId)s2d_iter_refs.xmd'
         return {
                 'iter_logs': '%(ORoot)s_%(ProgId)s2d_iter_logs.xmd',
-                'iter_refs': '%(ORoot)s_%(ProgId)s2d_iter_refs.xmd',
-                'vols': 'iter%(iter)06d@%(ORoot)s_vols.xmd'
+                'iter_refs': mdRefs,
+                'vols': 'iter%(iter)06d@%(ORoot)s_vols.xmd',
+                'refs': 'iter%(iter)06d@' + mdRefs,
+                'corrected_vols': '%(ORoot)s_corrected_volumes.stk',
+                'filtered_vols': '%(ORoot)s_filtered_volumes.stk',
+                'generated_vols': '%(ORoot)s_generated_volumes.stk'
                 }
         
     def summary(self):
@@ -55,8 +62,8 @@ class ProtML3D(XmippProtocol):
             lines.append("Last iteration:  <%d>" % iteration)
             LL = md.getValue(MDL_LL, id)
             lines.append("LogLikelihood:  %f" % LL)
-            mdRefs = self.getFilename('iter_refs')
-            lines.append("Last 2D classes: [iter%06d@%s]" % (iteration, mdRefs))
+            fnRefs = self.getFilename('refs', iter=iteration)
+            lines.append("Last 2D classes: [%s]" % fnRefs)
             fnVols = self.getFilename('vols', iter=iteration)
             lines.append("Last 3D classes: [%s]" % fnVols)
         
@@ -110,7 +117,7 @@ class ProtML3D(XmippProtocol):
         ''' Correct the initial reference greyscale '''
         cgsDir = self.workingDirPath('CorrectGreyscale')
         self.insertStep('createDir', path=cgsDir)
-        volStack = self.ParamsDict['InitialVols'] = join(cgsDir, 'corrected_volumes.stk')
+        volStack = self.ParamsDict['InitialVols'] = self.getFilename('corrected_vols')
         index = 1
         outputVol = ''
         for idx in self.mdVols:
@@ -137,15 +144,15 @@ class ProtML3D(XmippProtocol):
             self.insertRunJob('xmipp_angular_projection_matching', ['projMatch'])
  
 #FIXME: COMMENTED THIS STEP UNTIL COMPLETION BY ROBERTO    
-#            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
-#            self.insertRunJob('xmipp_angular_class_average', ['corrRefs'])
+            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
+            self.insertRunJob('xmipp_angular_class_average', ['corrRefs'])
 
             self.ParamsStr = '-i %(projMatch)s -o %(outputVol)s --sym %(Symmetry)s --weight --thr %(NumberOfThreads)d'
             self.insertRunJob('xmipp_reconstruct_fourier', ['outputVol'])
             index += 1
         
     def insertFilterStep(self):
-        volStack = self.ParamsDict['FilteredVols'] = self.workingDirPath('filtered_volumes.stk')
+        volStack = self.ParamsDict['FilteredVols'] = self.getFilename('filtered_vols')
         index = 1
         outputVol = ''
         for idx in self.mdVols:
@@ -169,7 +176,7 @@ class ProtML3D(XmippProtocol):
         self.insertRunJob('xmipp_metadata_split', files=files, useProcs=False)
         
         
-        volStack = self.ParamsDict['InitialVols'] = self.workingDirPath('generated_volumes.stk')
+        volStack = self.ParamsDict['InitialVols'] = self.getFilename('generated_vols') 
         index = 1
         copyVols = []
         for idx in self.mdVols:
@@ -215,6 +222,29 @@ class ProtML3D(XmippProtocol):
         else:
             self.ParamsStr += " %(FourierExtraParams)s" 
         self.insertRunJob('xmipp_%s_refine3d' % self.progId, [])
+        
+    def visualize(self):
+        parser = ProtocolParser(self.scriptName)
+        for k, v in self.ParamsDict.iteritems():
+            if k.startswith('Visualize') and v and parser.getVariable(k).satisfiesCondition():
+                self.visualizeVar(k)
+               
+    def visualizeVar(self, varName):
+        logs = self.getFilename('iter_logs')    
+        
+        if exists(logs):
+            md = MetaData(logs)
+            objId = md.lastObject()
+            iteration = md.getValue(MDL_ITER, objId)
+            visualizeVolVar = {'VisualizeCRVolume': self.getFilename('corrected_vols'), 
+                               'VisualizeFRVolume': self.getFilename('filtered_vols'),
+                               'VisualizeGSVolume':self.getFilename( 'generated_vols'),
+                               'VisualizeML3DAvgs': self.getFilename('refs', iter=iteration),
+                               'VisualizeML3DReferences': self.getFilename('vols', iter=iteration)                             
+                               }
+            if varName in visualizeVolVar:
+                runShowJ(visualizeVolVar[varName])
+    
                 
 ''' This function will copy input references into a stack in working directory'''
 def copyVolumes(log, inputMd, outputStack):

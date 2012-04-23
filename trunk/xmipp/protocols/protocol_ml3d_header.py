@@ -195,19 +195,39 @@ FourierExtraParams = ''
 # {eval} expandParallel()
 
 #------------------------------------------------------------------------------------------------
-# {section}{visualize} Visualization
+# {section}{visualize} Preparation
 #------------------------------------------------------------------------------------------------
-# Visualize volumes in UCSF Chimera?
-"""
-For this to work, you need to have chimera installed!
-"""
-UseChimera = False
 
-# {view} Visualize the grey-scale corrected reference volume?
+# {view}{condition}(DoCorrectGreyScale) Visualize the grey-scale corrected reference volume?
 VisualizeCRVolume = True
 
-# {view} Visualize the projections of the grey-scale correction?
+# {view}{condition}(DoCorrectGreyScale) Visualize the projections of the grey-scale correction?
 VisualizeCRProjections = True
+
+# {view}{condition}(DoLowPassFilterReference) Visualize the low-pass filtered reference volume?
+VisualizeFRVolume = True
+
+# {view}{condition}(NumberOfReferences>1) Visualize the generated seeds volumes?
+VisualizeGSVolume = True
+
+# {view}{condition}(NumberOfReferences>1) Visualize the projections of generated volumes?
+VisualizeGSProjections = True
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Results
+#------------------------------------------------------------------------------------------------
+# {view} Visualize weighted 2D-averages of last iteration?
+VisualizeML3DAvgs = True
+
+# {view} Visualize the reference volumes of last iteration?
+VisualizeML3DReferences = True
+
+# {view} Plot the angular distribution of the reference(s)?
+VisualizeAngDistribution = True
+
+# {view} Plot data distribution over the distinct references?
+VisualizeClassDistribution = True
+
 
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
