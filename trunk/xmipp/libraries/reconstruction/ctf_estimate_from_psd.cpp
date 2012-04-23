@@ -410,6 +410,8 @@ void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program) {
 	{
 		lambdaPhase=program->getDoubleParam("--fastDefocus",0);
 		sizeWindowPhase=program->getIntParam("--fastDefocus",1);
+		R = program->getIntParam("--fastDefocus",2);
+		S = program->getIntParam("--fastDefocus",3);
 	}
 	ctfmodelSize = program->getIntParam("--ctfmodelSize");
 	enhanced_weight = program->getDoubleParam("--enhance_weight");
@@ -484,7 +486,7 @@ void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program) {
 	program->addParamsLine(
 			"                                : It should be higher than the last zero of the CTF.");
 	program->addParamsLine(
-			"   [--fastDefocus <lambda=1> <size=5>] : Estimate first defocus with Zernike polynomials");
+			"   [--fastDefocus <lambda=1> <size=5> <R=10> <S=3>] : Estimate first defocus with Zernike polynomials");
 	program->addParamsLine(
 			"                                :+Lambda is a regularization factor used during the estimation of the CTF phase");
 	program->addParamsLine(
@@ -2179,23 +2181,40 @@ void estimate_defoci_Zernike() {
 	// Estimate phase, modulation and Zernikes
     FringeProcessing fp;
     MultidimArray<double> mod, phase;
-    Matrix1D<double> coefs(21);
+    Matrix1D<double> coefs(15);
     coefs.initConstant(1);
 
-    double R=11;
-    double S=5;
+    //double R = 11;
+    //double S = 3.5;
     Image<double> save;
     save()=centeredEnhancedPSD;
     save.write("PPPcenteredEnhancedPSD.xmp");
 
-    int x=(int)((0.25*global_prm->max_freq+0.75*global_prm->min_freq)*cos(PI/2)*XSIZE(centeredEnhancedPSD));
-    fp.demodulate(centeredEnhancedPSD,R,S,
+    int x=(int)((0.3*global_prm->max_freq+0.7*global_prm->min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
+
+    //prm.initial_ctfmodel.kV
+    //global_prm->
+    //global_prm->Tm
+
+    double kv = global_prm->initial_ctfmodel.kV*1000;
+    double lambda=12.2643247/std::sqrt(kv*(1.+0.978466e-6*kv));
+
+    std::cout << global_prm->max_freq << std::endl;
+    std::cout << global_prm->min_freq << std::endl;
+    std::cout << x << std::endl;
+    std:: cout << XSIZE(centeredEnhancedPSD) << std::endl;
+
+    fp.demodulate(centeredEnhancedPSD,global_prm->R,global_prm->S,
     		global_prm->lambdaPhase,global_prm->sizeWindowPhase,
     		x,x,
     		global_prm->min_freq*XSIZE(centeredEnhancedPSD),
     		global_prm->max_freq*XSIZE(centeredEnhancedPSD),
     		phase, mod, coefs, 6); // global_prm->verbose);
+
+    double defocusAvg = 2*global_prm->Tm*global_prm->Tm*(2*VEC_ELEM(coefs,4)-6*VEC_ELEM(coefs,12)+std::sqrt(VEC_ELEM(coefs,3)*VEC_ELEM(coefs,3)+VEC_ELEM(coefs,5)*VEC_ELEM(coefs,5))/2)/(3.14159265*lambda);
+
     std::cout<< coefs << std::endl;
+    std::cout<< defocusAvg << std::endl;
     REPORT_ERROR(ERR_IO_NOCLOSED,"Adioooooss");
 }
 
