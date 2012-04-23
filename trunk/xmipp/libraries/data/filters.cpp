@@ -2127,6 +2127,7 @@ void centerImage(MultidimArray<double> &I, CorrelationAux &aux, RotationalCorrel
     Polar_fftw_plans *plans=NULL;
     Polar< std::complex<double> > polarFourierI, polarFourierIx;
     MultidimArray<double> rotationalCorr;
+    Matrix2D<double> R;
     for (int i=0; i<Niter; i++)
     {
         // Mask Iaux
@@ -2206,8 +2207,8 @@ void centerImage(MultidimArray<double> &I, CorrelationAux &aux, RotationalCorrel
         if (Ny>0)
             meanShiftY/=Ny;
 
-        A(0,2)+=-meanShiftX/2;
-        A(1,2)+=-meanShiftY/2;
+        MAT_ELEM(A,0,2)+=-meanShiftX/2;
+        MAT_ELEM(A,1,2)+=-meanShiftY/2;
         Iaux.initZeros();
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
@@ -2241,7 +2242,6 @@ void centerImage(MultidimArray<double> &I, CorrelationAux &aux, RotationalCorrel
         if (bestRot>90)
             bestRot=bestRot-180;
 
-        Matrix2D<double> R;
         rotation2DMatrix(bestRot/2,R);
         A=R*A;
         Iaux.initZeros();
