@@ -524,7 +524,8 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     }
 }
 
-void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, int rmin, int rmax, MultidimArray<double> & phase, MultidimArray<double> & mod, Matrix1D<double> & coeffs, int verbose)
+void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, int rmin, int rmax,
+		MultidimArray<double> & phase, MultidimArray<double> & mod, Matrix1D<double> & coeffs, int verbose)
 {
     //Initial Setup
     MultidimArray< double > In, orMap, orModMap, dir, wphase;
@@ -538,6 +539,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     wphase.resizeNoCopy(im);
     sph.resizeNoCopy(im);
     ROI.resizeNoCopy(im);
+    mod.resizeNoCopy(im);
+    phase.resizeNoCopy(im);
 
     //First we define the Region of Interesting to perform all the operations inside this regions
     ROI.setXmippOrigin();
