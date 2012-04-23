@@ -321,6 +321,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                 'SubCurrentAnglesCftGroupsAllExpImgs': 'all_exp_images@' + self.workingDirPath('%(LocalCurrentAnglesCtfGroups)s'),
                 'ReferenceStack'   : self.workingDirPath(join('%(ReferencesDir)s','ref_'+ Ctf + '.stk')),
                 'ReferenceStackDoc': self.workingDirPath(join('%(ReferencesDir)s','ref_'+ Ctf + '.doc')),
+                'ReferenceStackSampling': self.workingDirPath(join('%(ReferencesDir)s','ref_'+ Ctf + '_sampling.xmd')),
                 'SubtractedStack'  : self.workingDirPath(join('%(SubtractionsDir)s','sub_'+ Ctf + '.stk')),
                 'SubtractedDoc'    : self.workingDirPath(join('%(SubtractionsDir)s','sub_'+ Ctf + '.doc'))
 #                'StackWienerFilters': CtfGroupBase + '_wien.stk',
@@ -548,8 +549,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         _log = self.Log
         _dataBase = self.Db
         print "self.defocusGroupNo: ", self.defocusGroupNo
-        for iterN in range(1, self.defocusGroupNo+1):
-            print "iterN: ", iterN
+        for indexCTFInsideLoop in range(1, self.defocusGroupNo+1):
+            print "indexCTFInsideLoop: ", indexCTFInsideLoop
             #Create auxiliary metadata with image names , angles and CTF
             if(self.doScaleImages):
                 inputSelfile = self.scaledImages +'.xmd'
@@ -558,84 +559,89 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
                             
             if(self.defocusGroupNo > 1 and self.doScaleImages):
                 _VerifyFiles = []
-                auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN))
+                auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
                 _VerifyFiles.append(auxFilename.removeBlockName())
                 id = self.Db.insertStep('joinImageCTFscale', verifyfiles = _VerifyFiles
-                                        , CTFgroupName = self.getFilename('DocCTFsBlocks', ctf=iterN)
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN)
+                                        , CTFgroupName = self.getFilename('DocCTFsBlocks', ctf=indexCTFInsideLoop)
+                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
                                         , inputSelfile = inputSelfile
                                         )
             elif (self.defocusGroupNo > 1 and not self.doScaleImages):
                 _VerifyFiles = []
-                auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN))
+                auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
                 _VerifyFiles.append(auxFilename.removeBlockName())
                 id = self.Db.insertStep('joinImageCTF', verifyfiles = _VerifyFiles
-                                        , CTFgroupName =  self.getFilename('DocCTFsBlocks', ctf=iterN)
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN)
+                                        , CTFgroupName =  self.getFilename('DocCTFsBlocks', ctf=indexCTFInsideLoop)
+                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
                                         , inputSelfile = inputSelfile
                                         )                
-#            else: # No Ctf correction in ProjMatch
-#                self.DocFileExp[iterN] =  self.getFilename('StackCTFs', ctf=iterN)
+            else: # No Ctf correction in ProjMatch 
+                _dataBase.insertStep('copyFile',source=self.getFilename('StackCTFs', ctf=indexCTFInsideLoop), dest=self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
+
 
             #reconstruct each CTF group
             _VerifyFiles = []
-            _VerifyFiles.append(self.getFilename('ReconstructedFileNamesIters', ctf=iterN))
+            _VerifyFiles.append(self.getFilename('ReconstructedFileNamesIters', ctf=indexCTFInsideLoop))
             id = self.Db.insertStep('reconstructVolume', verifyfiles = _VerifyFiles
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN)
+                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
                                         , MpiJobSize = self.MpiJobSize
                                         , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads
-                                        , reconstructedVolume = self.getFilename('ReconstructedFileNamesIters', ctf=iterN)
+                                        , reconstructedVolume = self.getFilename('ReconstructedFileNamesIters', ctf=indexCTFInsideLoop)
                                         , SymmetryGroup = self.SymmetryGroup)
             
             #mask volume before projection
             _VerifyFiles = []
-            auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN))
-#            _VerifyFiles.append(self.maskReconstructedVolume[iterN])
+            auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
+            _VerifyFiles.append(self.getFilename('ReconstructedMaskedFileNamesIters', ctf=indexCTFInsideLoop))
+
             id = self.Db.insertStep('maskVolume', verifyfiles = _VerifyFiles
                                         , dRradiusMax = self.dRradiusMax
                                         , dRradiusMin = self.dRradiusMin
-                                        , maskReconstructedVolume = self.getFilename('ReconstructedMaskedFileNamesIters', ctf=iterN)
-                                        , reconstructedVolume = self.getFilename('ReconstructedFileNamesIters', ctf=iterN)
+                                        , maskReconstructedVolume = self.getFilename('ReconstructedMaskedFileNamesIters', ctf=indexCTFInsideLoop)
+                                        , reconstructedVolume = self.getFilename('ReconstructedFileNamesIters', ctf=indexCTFInsideLoop)
                                         , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads)
     
             #project reconstructe4d volumes
             _VerifyFiles = []
-#            _VerifyFiles.append(self.getFilename('ReferenceStack', ctf=iterN))
+            _VerifyFiles.append(self.getFilename('ReferenceStack', ctf=iterN))
+            _VerifyFiles.append(self.getFilename('ReferenceStackDoc', ctf=iterN))
+            _VerifyFiles.append(self.getFilename('ReferenceStackSampling', ctf=iterN))
+            
 #            tmp = self.referenceStack[iterN]
 #            _VerifyFiles.append(tmp.replace('.stk','.doc'))
 #            _VerifyFiles.append(tmp.replace('.stk','_sampling.xmd'))
             
             id = self.Db.insertStep('createProjections', verifyfiles = _VerifyFiles
                                         , AngSamplingRateDeg = self.AngSamplingRateDeg
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN)
-                                        , maskReconstructedVolume = self.getFilename('ReconstructedMaskedFileNamesIters', ctf=iterN)
+                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
+                                        , maskReconstructedVolume = self.getFilename('ReconstructedMaskedFileNamesIters', ctf=indexCTFInsideLoop)
                                         , MaxChangeInAngles = self.MaxChangeInAngles
                                         , MpiJobSize = self.MpiJobSize
                                         , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads
-                                        , referenceStack = self.getFilename('ReferenceStack', ctf=iterN)
+                                        , referenceStack = self.getFilename('ReferenceStack', ctf=indexCTFInsideLoop)
                                         , SymmetryGroup = self.SymmetryGroup)
                           
                      
                      
     #project reconstructe4d volumes
             _Parameters = {
-                          'DocFileExp'        : self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN)
-                          ,'referenceStackDoc': self.getFilename('ReferenceStackDoc', ctf=iterN)
-                          ,'subtractedStack'  : self.getFilename('SubtractedStack', ctf=iterN)
+                          'DocFileExp'        : self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
+                          ,'referenceStackDoc': self.getFilename('ReferenceStackDoc', ctf=indexCTFInsideLoop)
+                          ,'subtractedStack'  : self.getFilename('SubtractedStack', ctf=indexCTFInsideLoop)
                           }
             command = "subtractionScript"
             _VerifyFiles = []
-            _VerifyFiles.append(self.getFilename('SubtractedStack', ctf=iterN))
-            _VerifyFiles.append(self.getFilename('SubtractedStack', ctf=iterN)+'ref')
-            _VerifyFiles.append(self.getFilename('SubtractedStack', ctf=iterN)+'exp')
+            _VerifyFiles.append(self.getFilename('SubtractedStack', ctf=indexCTFInsideLoop))
+            _VerifyFiles.append(self.getFilename('SubtractedStack', ctf=indexCTFInsideLoop)+'ref')
+            _VerifyFiles.append(self.getFilename('SubtractedStack', ctf=indexCTFInsideLoop)+'exp')
             
             id = self.Db.insertStep('subtractionScript', verifyfiles = _VerifyFiles
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=iterN) 
-                                        , referenceStackDoc = self.getFilename('ReferenceStackDoc', ctf=iterN)
-                                        , subtractedStack = self.getFilename('SubtractedStack', ctf=iterN)
+                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop) 
+                                        , referenceStackDoc = self.getFilename('ReferenceStackDoc', ctf=indexCTFInsideLoop)
+                                        , subtractedStack = self.getFilename('SubtractedStack', ctf=indexCTFInsideLoop)
                                         , resultsImagesName = self.resultsImagesName)
                           
             self.Db.connection.commit()
