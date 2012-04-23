@@ -33,6 +33,7 @@
 #include <data/histogram.h>
 #include <data/filters.h>
 #include <data/xmipp_fft.h>
+#include <data/fringe_processing.h>
 
 /* prototypes */
 double CTF_fitness(double *, void *);
@@ -404,6 +405,12 @@ void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program) {
 	defocus_range = program->getDoubleParam("--defocus_range");
 	modelSimplification = program->getIntParam("--model_simplification");
 	bootstrap = program->checkParam("--bootstrapFit");
+	fastDefocusEstimate = program->checkParam("--fastDefocus");
+	if (fastDefocusEstimate)
+	{
+		lambdaPhase=program->getDoubleParam("--fastDefocus",0);
+		sizeWindowPhase=program->getIntParam("--fastDefocus",1);
+	}
 	ctfmodelSize = program->getIntParam("--ctfmodelSize");
 	enhanced_weight = program->getDoubleParam("--enhance_weight");
 	if (!program->checkParam("--enhance_min_freq")) {
@@ -433,6 +440,8 @@ void ProgCTFEstimateFromPSD::readParams() {
 
 /* Show -------------------------------------------------------------------- */
 void ProgCTFEstimateFromPSD::show() {
+	if (verbose==0)
+		return;
 	std::cout << "PSD file:            " << fn_psd << std::endl
 			<< "Downsampling:        " << downsampleFactor << std::endl
 			<< "Min Freq.:           " << min_freq << std::endl
@@ -445,7 +454,13 @@ void ProgCTFEstimateFromPSD::show() {
 			<< "Enhance weight:      " << enhanced_weight << std::endl
 			<< "Model simplification:" << modelSimplification << std::endl
 			<< "Bootstrap:           " << bootstrap << std::endl
-			<< "Starting CTF:\n" << initial_ctfmodel << std::endl;
+			<< "Fast defocus:        " << fastDefocusEstimate << std::endl
+			;
+	if (fastDefocusEstimate)
+		std::cout
+		<< "Regularization factor:      " << lambdaPhase << std::endl
+		<< "Window size:                " << sizeWindowPhase << std::endl;
+	std::cout << "Starting CTF:\n" << initial_ctfmodel << std::endl;
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -468,6 +483,12 @@ void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program) {
 			"   [--max_freq <fmax=0.35>]     : Maximum digital frequency (<0.5) to use in adjust.");
 	program->addParamsLine(
 			"                                : It should be higher than the last zero of the CTF.");
+	program->addParamsLine(
+			"   [--fastDefocus <lambda=1> <size=5>] : Estimate first defocus with Zernike polynomials");
+	program->addParamsLine(
+			"                                :+Lambda is a regularization factor used during the estimation of the CTF phase");
+	program->addParamsLine(
+			"                                :+During the estimation, the phase values are averaged within a window of this size");
 	program->addParamsLine(
 			"   [--defocus_range <D=8000>]   : Defocus range in Angstroms");
 	program->addParamsLine(
@@ -2145,6 +2166,39 @@ void estimate_defoci() {
 }
 #undef DEBUG
 
+// Estimate defoci with Zernike ---------------------------------------------
+//#define DEBUG
+void estimate_defoci_Zernike() {
+	if (global_prm->show_optimization)
+		std::cout << "Looking for first defoci ...\n";
+
+	// Center enhanced PSD
+	MultidimArray<double> centeredEnhancedPSD=global_prm->enhanced_ctftomodel_fullsize();
+	CenterFFT(centeredEnhancedPSD,true);
+
+	// Estimate phase, modulation and Zernikes
+    FringeProcessing fp;
+    MultidimArray<double> mod, phase;
+    Matrix1D<double> coefs(21);
+    coefs.initConstant(1);
+
+    double R=11;
+    double S=5;
+    Image<double> save;
+    save()=centeredEnhancedPSD;
+    save.write("PPPcenteredEnhancedPSD.xmp");
+
+    int x=(int)((0.25*global_prm->max_freq+0.75*global_prm->min_freq)*cos(PI/2)*XSIZE(centeredEnhancedPSD));
+    fp.demodulate(centeredEnhancedPSD,R,S,
+    		global_prm->lambdaPhase,global_prm->sizeWindowPhase,
+    		x,x,
+    		global_prm->min_freq*XSIZE(centeredEnhancedPSD),
+    		global_prm->max_freq*XSIZE(centeredEnhancedPSD),
+    		phase, mod, coefs, 6); // global_prm->verbose);
+    std::cout<< coefs << std::endl;
+    REPORT_ERROR(ERR_IO_NOCLOSED,"Adioooooss");
+}
+
 /* Main routine ------------------------------------------------------------ */
 //#define DEBUG
 double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
@@ -2242,7 +2296,10 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 	 /************************************************************************/
 	global_action = 3;
 	global_evaluation_reduction = 1;
-	estimate_defoci();
+	if (prm.fastDefocusEstimate)
+		estimate_defoci_Zernike();
+	else
+		estimate_defoci();
 
 	/************************************************************************
 	 STEP 8:  all parameters
