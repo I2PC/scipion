@@ -11,7 +11,7 @@
 #
 
 import os
-from os.path import join, exists
+from os.path import join
 from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
 MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE, MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_WEIGHT
 from protlib_base import XmippProtocol, protocolMain
@@ -20,7 +20,7 @@ from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning
 from protlib_gui_figure import XmippPlotter
-from protlib_filesystem import linkAcquisitionInfoIfPresent
+from protlib_filesystem import linkAcquisitionInfoIfPresent, xmippExists
 from math import radians
 
 class ProtProjMatch(XmippProtocol):
@@ -52,10 +52,8 @@ class ProtProjMatch(XmippProtocol):
     def validate(self):
         from xmipp import ImgSize, SingleImgSize, XmippError
         errors = []
-        #1 call base class, checks if project exists # COSS
-        super(ProtProjMatch, self).validate()
         
-        #2 Check reference and projection size match
+        # Check reference and projection size match
         _ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
         _Parameters = {
               'ReferenceFileNames':_ReferenceFileNames
@@ -82,11 +80,11 @@ class ProtProjMatch(XmippProtocol):
 
         # 3 Never allow DoAlign2D and DoCtfCorrection together
         if (int(getComponentFromVector(self.DoAlign2D, 1)) == 1 and self.DoCtfCorrection):
-            errors.append("Yooou cannot realign classes AND perform CTF-correction. Switch either of them off!")
+            errors.append("You cannot realign classes AND perform CTF-correction. Switch either of them off!")
     
         #4N outer radius is compulsory
-        _OuterRadius = getComponentFromVector(self.OuterRadius, 1)
-        _InnerRadius = getComponentFromVector(self.InnerRadius, 1)
+        _OuterRadius = int(getComponentFromVector(self.OuterRadius, 1))
+        _InnerRadius = int(getComponentFromVector(self.InnerRadius, 1))
         if _OuterRadius <= _InnerRadius:
             errors.append("OuterRadius must be larger than InnerRadius")
 
@@ -98,7 +96,7 @@ class ProtProjMatch(XmippProtocol):
         
         
         file_name = join(self.CtfGroupDirectory, self.CtfGroupRootName) +'Info.xmd'
-        if exists(file_name):
+        if xmippExists(file_name):
             auxMD = MetaData("numberGroups@"+file_name)
             summaryNumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
         else:
@@ -114,7 +112,7 @@ class ProtProjMatch(XmippProtocol):
                    % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
         if (iteration > 1):
             ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
-            if not exists(ResolutionXmdCurrIterMaxSummary):
+            if not xmippExists(ResolutionXmdCurrIterMaxSummary):
                 summary += ['<ERROR:> Resolution is not available but iteration number is not 1. Something went wrong']            
             else:
                 md = MetaData(ResolutionXmdCurrIterMaxSummary)
@@ -165,19 +163,20 @@ class ProtProjMatch(XmippProtocol):
         def doPlot(plotName):
             return plotName in selectedPlots
         
+        ref3Ds = map(int, getListFromVector(self.DisplayRef3DNo))
+        iterations = map(int, getListFromVector(self.DisplayIterationsNo))
+        
         if doPlot('DisplayReference'):
-            
-            ref3Ds = getListFromVector(self.DisplayRef3DNo)
             VisualizationReferenceFileNames = [None] + getListFromVector(self.ReferenceFileNames)
-            print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
+            #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
             for ref3d in ref3Ds:
-                file_name = VisualizationReferenceFileNames[int(ref3d)]
-                print 'ref3d: ',ref3d, ' | file_name:',file_name
-                if exists(file_name):
+                file_name = VisualizationReferenceFileNames[ref3d]
+                #print 'ref3d: ',ref3d, ' | file_name:',file_name
+                if xmippExists(file_name):
                     #Chimera
                     if(self.DisplayVolumeSlicesAlong == 'surface'):
                         parameters =  ' spider:' + file_name 
-                        print 'parameters: ',parameters
+                        #print 'parameters: ',parameters
                         runJob(_log,
                                'chimera',
                                parameters
@@ -192,19 +191,15 @@ class ProtProjMatch(XmippProtocol):
                         
             
         if doPlot('DisplayReconstruction'):
-            
-            iterations = getListFromVector(self.DisplayIterationsNo)
-            ref3Ds = getListFromVector(self.DisplayRef3DNo)
-            
             for ref3d in ref3Ds:
                 for it in iterations:
-                    file_name = self.getFilename('ReconstructedFileNamesIters', iter=int(it), ref=int(ref3d))
-                    print 'it: ',it, ' | file_name:',file_name
-                    if exists(file_name):
+                    file_name = self.getFilename('ReconstructedFileNamesIters', iter=it, ref=ref3d)
+                    #print 'it: ',it, ' | file_name:',file_name
+                    if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
                             parameters =  ' spider:' + file_name 
-                            print 'parameters: ',parameters
+                            #print 'parameters: ',parameters
                             runJob(_log,
                                    'chimera',
                                    parameters
@@ -218,18 +213,15 @@ class ProtProjMatch(XmippProtocol):
                                 showError("Error launching java app", str(e))
                             
         if doPlot('DisplayFilteredReconstruction'):
-            iterations = getListFromVector(self.DisplayIterationsNo)
-            ref3Ds = getListFromVector(self.DisplayRef3DNo)
-            
             for ref3d in ref3Ds:
                 for it in iterations:
-                    file_name = self.getFilename('ReconstructedFilteredFileNamesIters', iter=int(it), ref=int(ref3d))
-                    print 'it: ',it, ' | file_name:',file_name
-                    if exists(file_name):
+                    file_name = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
+                    #print 'it: ',it, ' | file_name:',file_name
+                    if xmippExists(file_name):
                                                 #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
                             parameters =  ' spider:' + file_name 
-                            print 'parameters: ',parameters
+                            #print 'parameters: ',parameters
                             runJob(_log,
                                    'chimera',
                                    parameters
@@ -244,17 +236,14 @@ class ProtProjMatch(XmippProtocol):
                                 showError("Error launching java app", str(e))
                 
         if doPlot('DisplayBFactorCorrectedVolume'):
-            
-            iterations = getListFromVector(self.DisplayIterationsNo)
-            ref3Ds = getListFromVector(self.DisplayRef3DNo)
             #if(self.DisplayVolumeSlicesAlong == 'surface'):
             
             for ref3d in ref3Ds:
                 for it in iterations:
-                    file_name = self.getFilename('ReconstructedFileNamesIters', iter=int(it), ref=int(ref3d))
+                    file_name = self.getFilename('ReconstructedFileNamesIters', iter=it, ref=ref3d)
                     file_name_bfactor = file_name + '.bfactor'
-                    print 'it: ',it, ' | file_name:',file_name
-                    print 'it: ',it, ' | file_name_bfactor:',file_name_bfactor
+#                    print 'it: ',it, ' | file_name:',file_name
+#                    print 'it: ',it, ' | file_name_bfactor:',file_name_bfactor
                     
                     parameters = ' -i ' + file_name + \
                         ' --sampling ' + str(self.SamplingRate) + \
@@ -268,12 +257,12 @@ class ProtProjMatch(XmippProtocol):
                            parameters
                            )
 
-                    if exists(file_name_bfactor):
+                    if xmippExists(file_name_bfactor):
                         
                                                                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
                             parameters =  ' spider:' + file_name_bfactor 
-                            print 'parameters: ',parameters
+                            #print 'parameters: ',parameters
                             runJob(_log,
                                    'chimera',
                                    parameters
@@ -289,15 +278,12 @@ class ProtProjMatch(XmippProtocol):
 
             
         if doPlot('DisplayProjectionMatchingAlign2d'):
-            iterations = getListFromVector(self.DisplayIterationsNo)
-            ref3Ds = getListFromVector(self.DisplayRef3DNo)
-            
             MD = MetaData()
             for ref3d in ref3Ds:
                 for it in iterations:
-                    file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
-                    print 'ref3d: ',ref3d , ' | it: ',it, ' | file_name:',file_name
-                    if exists(file_name):
+                    file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
+                    #print 'ref3d: ',ref3d , ' | it: ',it, ' | file_name:',file_name
+                    if xmippExists(file_name):
                         MD.read(file_name)
                         if MD.size()==0:
                             print "Empty metadata: ", file_name
@@ -310,13 +296,11 @@ class ProtProjMatch(XmippProtocol):
 
             
         if doPlot('DisplayDiscardedImages'):
-            iterations = getListFromVector(self.DisplayIterationsNo)
-            
             MD = MetaData()
             for it in iterations:
-                file_name = self.getFilename('OutClassesDiscarded', iter=int(it))
-                print 'it: ',it, ' | file_name:',file_name
-                if exists(file_name):
+                file_name = self.getFilename('OutClassesDiscarded', iter=it)
+                #print 'it: ',it, ' | file_name:',file_name
+                if xmippExists(file_name):
                     MD.read(file_name)
                     if MD.size()==0:
                         print "Empty metadata: ", file_name
@@ -328,17 +312,13 @@ class ProtProjMatch(XmippProtocol):
                             showError("Error launching java app", str(e))
             
         if doPlot('DisplayAngularDistribution'):
-
-            iterations = getListFromVector(self.DisplayIterationsNo)
-            ref3Ds = getListFromVector(self.DisplayRef3DNo)
-            
             if(self.DisplayAngularDistributionWith == '3D'):
                 for ref3d in ref3Ds:
                     for it in iterations:
-                        _OuterRadius = getComponentFromVector(self.OuterRadius, int(it))
-                        _InnerRadius = getComponentFromVector(self.InnerRadius, int(it))
+                        _OuterRadius = getComponentFromVector(self.OuterRadius, it)
+                        _InnerRadius = getComponentFromVector(self.InnerRadius, it)
 
-                        file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
+                        file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
                         file_name_bild = file_name + '.bild'
     
                         parameters =  ' -i ' + file_name + \
@@ -350,7 +330,7 @@ class ProtProjMatch(XmippProtocol):
                                parameters
                                )
                         
-                        file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=int(it), ref=int(ref3d))
+                        file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
                         
                         parameters =  ' ' + file_name_bild + ' spider:' + file_name_rec_filt 
                             
@@ -368,14 +348,14 @@ class ProtProjMatch(XmippProtocol):
                     else:
                         gridsize1 = [(len(ref3Ds)+1)/2, 2]
                     
-                    xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_' + it, windowTitle="AngularDistribution")
+                    xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
                     
                     #Fixed plot markersize limits
                     max_p = 40
                     min_p = 5
                     
                     for ref3d in ref3Ds:
-                        file_name = self.getFilename('OutClassesXmd', iter=int(it), ref=int(ref3d))
+                        file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
                         md = MetaData(file_name)
                         #rot must be polar
                         rot = [radians(md.getValue(MDL_ANGLEROT, id)) for id in md]
@@ -387,7 +367,7 @@ class ProtProjMatch(XmippProtocol):
                             max_w = max(weight)
                             min_w = min(weight)
                             
-                        plot_title = 'Ref3D_'+ ref3d
+                        plot_title = 'Ref3D_%d' % ref3d
                         if (len(weight) > 0):
                             a = xplotter.createSubPlot(plot_title, 'Min weight='+str(min_w)+', Max weight='+str(max_w), '', yformat=False, projection='polar')
                         else:
@@ -409,10 +389,6 @@ class ProtProjMatch(XmippProtocol):
                     
                     
         if doPlot('DisplayResolutionPlots'):
-
-            iterations = getListFromVector(self.DisplayIterationsNo)
-            ref3Ds = getListFromVector(self.DisplayRef3DNo)
-
             if(len(ref3Ds) == 1):
                 gridsize1 = [1, 1]
             elif (len(ref3Ds) == 2):
@@ -420,17 +396,17 @@ class ProtProjMatch(XmippProtocol):
             else:
                 gridsize1 = [(len(ref3Ds)+1)/2, 2]
             xplotter = XmippPlotter(*gridsize1,windowTitle="ResolutionFSC")
-            print 'gridsize1: ', gridsize1
-            print 'iterations: ', iterations
-            print 'ref3Ds: ', ref3Ds
+            #print 'gridsize1: ', gridsize1
+            #print 'iterations: ', iterations
+            #print 'ref3Ds: ', ref3Ds
             
             for ref3d in ref3Ds:
-                plot_title = 'Ref3D_'+ ref3d
+                plot_title = 'Ref3D_%s' % ref3d
                 a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'Fourier Shell Correlation', yformat=False)
                 legendName=[]
                 for it in iterations:
-                    file_name = self.getFilename('ResolutionXmdFile', iter=int(it), ref=int(ref3d))
-                    print 'it: ',it, ' | file_name:',file_name
+                    file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
+                    #print 'it: ',it, ' | file_name:',file_name
                     md = MetaData(file_name)
                     resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
                     frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
@@ -576,13 +552,13 @@ class ProtProjMatch(XmippProtocol):
         self.SymmetryGroup = [-1] + getListFromVector(self.SymmetryGroup, self.NumberOfIterations)
          
     def otherActionsToBePerformedBeforeLoop(self):
-        print "in otherActionsToBePerformedBeforeLoop"
+        #print "in otherActionsToBePerformedBeforeLoop"
         _VerifyFiles = []
 
         _dataBase = self.Db
         
         file_name = join(self.CtfGroupDirectory, self.CtfGroupRootName) +'Info.xmd'
-        if exists(file_name):
+        if xmippExists(file_name):
             auxMD = MetaData("numberGroups@"+file_name)
             self.NumberOfCtfGroups = auxMD.getValue(MDL_COUNT,auxMD.firstObject())
         else:
