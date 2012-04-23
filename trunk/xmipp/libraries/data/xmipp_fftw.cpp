@@ -74,14 +74,6 @@ void FourierTransformer::clear()
 FourierTransformer::~FourierTransformer()
 {
     clear();
-    /*
-     * FFTW's planner saves some other persistent data, such as the
-     * accumulated wisdom and a list of algorithms available in the
-     * current configuration. If you want to deallocate all of that
-     * and reset FFTW to the pristine state it was in when you started
-     * your program, you can call to:
-     */
-    fftw_cleanup();
 }
 
 // Initialization ----------------------------------------------------------
