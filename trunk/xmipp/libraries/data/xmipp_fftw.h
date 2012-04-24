@@ -280,9 +280,9 @@ public:
                 else
                 {
                     ptrSource=(double*)&DIRECT_A3D_ELEM(fFourier,
-                            (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
-                            (YSIZE(*fReal)-i)%YSIZE(*fReal),
-                            XSIZE(*fReal)-j);
+                                                        (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
+                                                        (YSIZE(*fReal)-i)%YSIZE(*fReal),
+                                                        XSIZE(*fReal)-j);
                     *ptrDest=*ptrSource;
                     *(ptrDest+1)=-(*(ptrSource+1));
                 }
@@ -345,7 +345,16 @@ public:
     void init();
     /** Clear object */
     void clear();
-
+    /**     FFTW's planner saves some other persistent data,
+     * such as the accumulated wisdom and a list of algorithms available
+     * in the current configuration. If you want to deallocate all of that
+     * and reset FFTW to the pristine state it was in when
+     * you started your program, you can call:
+     */
+    void cleanup(void)
+    {
+        fftw_cleanup();
+    }
     /** Computes the transform, specified in Init() function
         If normalization=true the forward transform is normalized
         (no normalization is made in the inverse transform)
@@ -528,8 +537,8 @@ void correlation_matrix(const MultidimArray< T > & m1,
     double *ptrFFT1=(double*)MULTIDIM_ARRAY(aux.FFT1);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux.FFT1)
     {
-    	a=*ptrFFT1;
-    	b=*(ptrFFT1+1);
+        a=*ptrFFT1;
+        b=*(ptrFFT1+1);
         c=(*ptrFFT2++)*dSize;
         d=(*ptrFFT2++)*mdSize;
         *ptrFFT1++ = a*c-b*d;
