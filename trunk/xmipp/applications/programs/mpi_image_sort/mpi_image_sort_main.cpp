@@ -49,7 +49,7 @@ public:
     MetaData SFout;
 
     // SelFile images
-    std::vector< FileName > toClassify;
+    std::vector< MDRow > toClassify;
 
     // Control vector to specify which ones have already been done
     Matrix1D<int> stillToDo;
@@ -130,12 +130,14 @@ public:
         FileName fnImageStack;
         CorrelationAux aux;
         RotationalCorrelationAux aux2;
+        MDRow row;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
+        	SF.getRow(row,__iter.objId);
+            toClassify.push_back(row);
             if (idx==0)
             {
-                SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                toClassify.push_back(fnImg);
+                row.getValue(MDL_IMAGE,fnImg);
                 lastImage.read(fnImg);
                 centerImage(lastImage(),aux,aux2);
                 if (rank==0)
@@ -143,16 +145,10 @@ public:
                 fnImageStack.compose(idx+1,fnStack);
                 if (rank==0)
                 {
-                    objId = SFout.addObject();
-                    SFout.setValue(MDL_IMAGE,fnImageStack,objId);
-                    SFout.setValue(MDL_IMAGE_ORIGINAL,fnImg,objId);
-                    SFout.setValue(MDL_MAXCC,1.0,objId);
+                    row.setValue(MDL_IMAGE_ORIGINAL,fnImg);
+                    row.setValue(MDL_MAXCC,1.0);
+                    SFout.addRow(row);
                 }
-            }
-            else
-            {
-                SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                toClassify.push_back(fnImg);
             }
             idx++;
         }
@@ -174,7 +170,7 @@ public:
         double bestCorr=-1;
         int bestIdx=-1;
         int count=0;
-        FileName fnImageStack;
+        FileName fnImageStack, fnImg;
         AlignmentAux aux;
         CorrelationAux aux2;
         RotationalCorrelationAux aux3;
@@ -187,7 +183,8 @@ public:
                 ++count;
                 continue;
             }
-            I.read(toClassify[i]);
+            toClassify[i].getValue(MDL_IMAGE,fnImg);
+            I.read(fnImg);
             I().setXmippOrigin();
             double corr=alignImagesConsideringMirrors(lastImage(),I(),M,aux,aux2,aux3,&mask);
             centerImage(I(),aux2,aux3);
@@ -236,7 +233,8 @@ public:
         }
 
         // All compute the best image
-        I.read(toClassify[bestIdx]);
+        toClassify[bestIdx].getValue(MDL_IMAGE,fnImg);
+        I.read(fnImg);
         I().setXmippOrigin();
         bestCorr=alignImagesConsideringMirrors(lastImage(),I(),M,aux,aux2,aux3,&mask);
         centerImage(I(),aux2,aux3);
@@ -249,10 +247,13 @@ public:
             int idxStack=SFout.size();
             fnImageStack.compose(idxStack+1,fnStack);
             bestImage.write(fnStack,idxStack,true,WRITE_APPEND);
-            objId = SFout.addObject();
-            SFout.setValue(MDL_IMAGE,fnImageStack,objId);
-            SFout.setValue(MDL_IMAGE_ORIGINAL,toClassify[bestIdx],objId);
-            SFout.setValue(MDL_MAXCC,bestCorr,objId);
+            MDRow &row=toClassify[bestIdx];
+            FileName fnImgOrig;
+            row.getValue(MDL_IMAGE,fnImgOrig);
+            row.setValue(MDL_IMAGE_ORIGINAL,fnImgOrig);
+            row.setValue(MDL_IMAGE,fnImageStack);
+            row.setValue(MDL_MAXCC,bestCorr);
+            SFout.addRow(row);
         }
         VEC_ELEM(stillToDo,bestIdx)=0;
     }
