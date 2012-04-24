@@ -632,10 +632,10 @@
 			arguments="-i input/projectionsBacteriorhodopsin.stk --nref 4 --oroot %o/class --iter 5"
 			changeDir="FALSE" random="TRUE">
 			<FILE filename="class_images.xmd" />
-			<FILE filename="class_level_00_classes.stk" />
-			<FILE filename="class_level_00_classes.xmd" />
-			<FILE filename="class_level_01_classes.stk" />
-			<FILE filename="class_level_01_classes.xmd" />
+			<FILE filename="class_classes_level_00.stk" />
+			<FILE filename="class_classes_level_00.xmd" />
+			<FILE filename="class_classes_level_01.stk" />
+			<FILE filename="class_classes_level_01.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_classify_CL2D_core_analysis" mpi="TRUE">
