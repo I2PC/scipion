@@ -335,7 +335,7 @@ def angular_class_average(_log
         print "Empty metadata, remember to copy the reference ", NumberOfCtfGroups, Ref3dNum
         return
 
-    parameters =  ' -i ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@'       + DocFileInputAngles +\
+    parameters =  ' -i ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]\$@'       + DocFileInputAngles +\
                   ' --lib '    + refname.replace(".stk",".doc") + \
                   ' -o '       + OutClasses
     if(DoSaveImagesAssignedToClasses):
