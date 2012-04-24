@@ -322,6 +322,14 @@ def wizardChooseFamilyToExtract(self, var):
             md=MetaData(pickingProt.getFilename("micrographs"))
             self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTFMODEL)))
 
+#This wizard is specific for cl2d protocol
+def wizardCL2DNumberOfClasses(self, var):
+    from xmipp import MetaData
+    fnSel = self.getVarValue('InSelFile')
+    if os.path.exists(fnSel):
+        MD=MetaData(fnSel)
+        self.setVarValue("NumberOfReferences", int(round(MD.size()/200.0)))
+
 #Select micrograph extension
 def wizardProjMatchRadius(self,var):
     from xmipp import SingleImgSize, FileName

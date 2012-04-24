@@ -21,7 +21,7 @@
 """
 InSelFile=''
 
-# Number of references (or classes) to be used:
+# {wizard}(wizardCL2DNumberOfClasses) Number of references (or classes) to be used:
 NumberOfReferences=64
 
 # {expert} Number of initial references
