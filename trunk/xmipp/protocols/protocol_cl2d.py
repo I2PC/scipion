@@ -33,11 +33,13 @@ class ProtCL2D(XmippProtocol):
             self.insertRunJobStep("xmipp_classify_CL2D_core_analysis", params)
             # evaluate classes again
             self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="_stable_core")
-        self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi)
+        self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="")
+        self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="_core")
+        self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="_stable_core")
     
     def summary(self):
         message=[]
-        message.append("Classification of "+self.InSelFile+" into "+str(self.NumberOfReferences)+" classes")
+        message.append(("Classification of [%s]"%self.InSelFile)+" into "+str(self.NumberOfReferences)+" classes")
         levelFiles=glob.glob(self.WorkingDir+"/results_classes_level_??.xmd")
         if not levelFiles:
             message.append("No class file has been generated")
@@ -115,10 +117,12 @@ def postCl2d(log, WorkingDir, NumberOfReferences):
         if mD.size()==NumberOfReferences:
             createLink(log, lastLevelFile, os.path.join(WorkingDir,"results_classes.xmd"))
 
-def sortClasses(log,WorkingDir,Nproc):
-    for filename in glob.glob(os.path.join(WorkingDir,"results_classes_level_??.xmd")):
+def sortClasses(log,WorkingDir,Nproc,suffix):
+    if Nproc==1:
+        Nproc=2
+    for filename in glob.glob(os.path.join(WorkingDir,"results_classes_level_??%s.xmd"%suffix)):
         level=int(re.search('level_(\d\d)',filename).group(1))
-        fnRoot=os.path.join(WorkingDir,"results_classes_level_%02d_sorted"%level)
+        fnRoot=os.path.join(WorkingDir,"results_classes_level_%02d%s_sorted"%(level,suffix))
         params= "-i classes@"+filename+" --oroot "+fnRoot
         runJob(log,"xmipp_image_sort",params,Nproc)
         mD=MetaData(fnRoot+".xmd")
