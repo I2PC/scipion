@@ -506,7 +506,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
 
     counter_refs_in_memory++;
     pthread_mutex_unlock(  &update_refs_in_memory_mutex );
-
+//    local_transformer.cleanup();
 }
 
 void * threadRotationallyAlignOneImage( void * data )
@@ -803,7 +803,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         opt_xoff = opt_yoff = 0.;
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
         opt_xoff = opt_yoff = 0.;
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     std::cerr<<"optimal shift "<<opt_xoff<<" "<<opt_yoff<<std::endl;
