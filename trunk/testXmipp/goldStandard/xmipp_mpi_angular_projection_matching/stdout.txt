@@ -1,0 +1,11 @@
+New chunk_angular_distance 30.7175
+number of subsets: 7
+biggest subset (EXPERIMENTAL images per chunk): 2
+maximun number of references in memory: 362
+  Input images            : input/aFewProjections.sel
+  Output file             : tmpLink/xmipp_mpi_angular_projection_matching/assigned_angles.txt
+  Inner radius rot-search : 1
+  Outer radius rot-search : 31
+  Number of references    : 362 (all stored in memory)
+  Max. allowed shift      : +/- 32 pixels
+ =================================================================
