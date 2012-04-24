@@ -1914,6 +1914,34 @@ void estimate_envelope_parameters() {
 #undef DEBUG
 
 // Estimate defoci ---------------------------------------------------------
+void showFirstDefoci()
+{
+	if (global_prm->show_optimization) {
+		std::cout << "First defocus Fit:\n" << global_ctfmodel << std::endl;
+		save_intermediate_results("step03a_first_defocus_fit");
+		global_prm->enhanced_ctftomodel.write("step03a_enhanced_PSD.xmp");
+		Image<double> save, save2, save3;
+		save().resize(YSIZE(global_w_digfreq), XSIZE(global_w_digfreq));
+		save2().resize(save());
+		save3().resize(save());
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(save())
+		{
+			save()(i, j) = global_prm->enhanced_ctftomodel()(i, j);
+			double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
+			double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
+			global_ctfmodel.precomputeValues(f_x, f_y);
+			double ctf_without_damping =
+					global_ctfmodel.CTFpure_without_damping_at();
+			save2()(i, j) = ctf_without_damping * ctf_without_damping;
+			save3()(i, j) = -global_prm->enhanced_ctftomodel()(i, j)
+					* ctf_without_damping * ctf_without_damping;
+		}
+		save.write("step03a_enhanced_PSD.xmp");
+		save2.write("step03a_fitted_CTF.xmp");
+		save3.write("step03a_superposition.xmp");
+	}
+}
+
 //#define DEBUG
 void estimate_defoci() {
 	if (global_prm->show_optimization)
@@ -2141,41 +2169,19 @@ void estimate_defoci() {
 	COPY_ctfmodel_TO_CURRENT_GUESS;
 	global_ctfmodel_defoci = global_ctfmodel;
 
-	if (global_prm->show_optimization) {
-		std::cout << "First defocus Fit:\n" << global_ctfmodel << std::endl;
-		save_intermediate_results("step03a_first_defocus_fit");
-		global_prm->enhanced_ctftomodel.write("step03a_enhanced_PSD.xmp");
-		Image<double> save, save2, save3;
-		save().resize(YSIZE(global_w_digfreq), XSIZE(global_w_digfreq));
-		save2().resize(save());
-		save3().resize(save());
-		FOR_ALL_ELEMENTS_IN_ARRAY2D(save())
-		{
-			save()(i, j) = global_prm->enhanced_ctftomodel()(i, j);
-			double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
-			double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-			global_ctfmodel.precomputeValues(f_x, f_y);
-			double ctf_without_damping =
-					global_ctfmodel.CTFpure_without_damping_at();
-			save2()(i, j) = ctf_without_damping * ctf_without_damping;
-			save3()(i, j) = -global_prm->enhanced_ctftomodel()(i, j)
-					* ctf_without_damping * ctf_without_damping;
-		}
-		save.write("step03a_enhanced_PSD.xmp");
-		save2.write("step03a_fitted_CTF.xmp");
-		save3.write("step03a_superposition.xmp");
-	}
+	showFirstDefoci();
 }
 #undef DEBUG
 
 // Estimate defoci with Zernike ---------------------------------------------
-//#define DEBUG
-void estimate_defoci_Zernike() {
+double estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double min_freq, double max_freq, double Tm,
+		double kV, double R, double S, double lambdaPhase, double sizeWindowPhase, int verbose)
+{
 	if (global_prm->show_optimization)
 		std::cout << "Looking for first defoci ...\n";
 
 	// Center enhanced PSD
-	MultidimArray<double> centeredEnhancedPSD=global_prm->enhanced_ctftomodel_fullsize();
+	MultidimArray<double> centeredEnhancedPSD=psdToModelFullSize;
 	CenterFFT(centeredEnhancedPSD,true);
 
 	// Estimate phase, modulation and Zernikes
@@ -2190,32 +2196,62 @@ void estimate_defoci_Zernike() {
     save()=centeredEnhancedPSD;
     save.write("PPPcenteredEnhancedPSD.xmp");
 
-    int x=(int)((0.3*global_prm->max_freq+0.7*global_prm->min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
+    int x=(int)((0.3*max_freq+0.7*min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
 
     //prm.initial_ctfmodel.kV
     //global_prm->
     //global_prm->Tm
 
-    double kv = global_prm->initial_ctfmodel.kV*1000;
-    double lambda=12.2643247/std::sqrt(kv*(1.+0.978466e-6*kv));
-
-    std::cout << global_prm->max_freq << std::endl;
-    std::cout << global_prm->min_freq << std::endl;
-    std::cout << x << std::endl;
-    std:: cout << XSIZE(centeredEnhancedPSD) << std::endl;
-
-    fp.demodulate(centeredEnhancedPSD,global_prm->R,global_prm->S,
-    		global_prm->lambdaPhase,global_prm->sizeWindowPhase,
+    fp.demodulate(centeredEnhancedPSD,R,S,lambdaPhase,sizeWindowPhase,
     		x,x,
-    		global_prm->min_freq*XSIZE(centeredEnhancedPSD),
-    		global_prm->max_freq*XSIZE(centeredEnhancedPSD),
-    		phase, mod, coefs, 6); // global_prm->verbose);
+    		min_freq*XSIZE(centeredEnhancedPSD),
+    		max_freq*XSIZE(centeredEnhancedPSD),
+    		phase, mod, coefs, verbose);
 
-    double defocusAvg = 2*global_prm->Tm*global_prm->Tm*(2*VEC_ELEM(coefs,4)-6*VEC_ELEM(coefs,12)+std::sqrt(VEC_ELEM(coefs,3)*VEC_ELEM(coefs,3)+VEC_ELEM(coefs,5)*VEC_ELEM(coefs,5))/2)/(3.14159265*lambda);
+    kV = kV*1000;
+    double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
+    double Z3=VEC_ELEM(coefs,4);
+    double Z8=VEC_ELEM(coefs,12);
+    double Z4=VEC_ELEM(coefs,3);
+    double Z5=VEC_ELEM(coefs,5);
+    double defocusAvg = fabs(2*Tm*Tm*(2*Z3-6*Z8+std::sqrt(Z4*Z4+Z5*Z5)/2)/(PI*lambda));
 
     std::cout<< coefs << std::endl;
     std::cout<< defocusAvg << std::endl;
-    REPORT_ERROR(ERR_IO_NOCLOSED,"Adioooooss");
+    return defocusAvg;
+}
+
+void estimate_defoci_Zernike() {
+	if (global_prm->show_optimization)
+		std::cout << "Looking for first defoci ...\n";
+
+	double defocus_avg=estimate_defoci_Zernike(global_prm->enhanced_ctftomodel_fullsize(),
+			global_prm->min_freq,global_prm->max_freq,global_prm->Tm,
+			global_prm->initial_ctfmodel.kV,
+			global_prm->R,global_prm->S,
+			global_prm->lambdaPhase,global_prm->sizeWindowPhase,
+			0);
+
+	(*global_adjust)(0) = defocus_avg;
+	(*global_adjust)(1) = defocus_avg;
+	(*global_adjust)(2) = 0;
+	(*global_adjust)(4) = global_ctfmodel.K;
+
+	int iter;
+	double fitness;
+	Matrix1D<double> steps(DEFOCUS_PARAMETERS);
+	steps.initConstant(1);
+	steps(3) = 0; // Do not optimize kV
+	steps(4) = 0; // Do not optimize K
+	powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+			DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+			fitness, iter, steps, false);
+
+	global_ctfmodel.force_physical_meaning();
+	COPY_ctfmodel_TO_CURRENT_GUESS;
+	global_ctfmodel_defoci = global_ctfmodel;
+
+	showFirstDefoci();
 }
 
 /* Main routine ------------------------------------------------------------ */
