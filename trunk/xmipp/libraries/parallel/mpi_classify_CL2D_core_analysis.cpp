@@ -219,7 +219,6 @@ void ProgClassifyCL2DCore::computeStableCores()
             CL2DBlock &thisBlock=blocks[idx];
             if (thisBlock.level<=tolerance)
                 continue;
-            std::cout << "Reading: " << thisBlock.block+"@"+thisBlock.fnLevelCore << std::endl;
             thisClass.read(thisBlock.block+"@"+thisBlock.fnLevelCore);
 
             // Add MDL_ORDER
