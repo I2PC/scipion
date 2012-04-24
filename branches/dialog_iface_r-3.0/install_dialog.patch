@@ -1,0 +1,250 @@
+*** install.sh	2012-04-24 12:57:03.898707028 +0200
+--- ../install.sh	2012-04-24 17:13:17.778941985 +0200
+***************
+*** 1,4 ****
+! #!/bin/sh
+  
+  #Some flags variables
+  
+--- 1,4 ----
+! #!/bin/bash
+  
+  #Some flags variables
+  
+***************
+*** 53,59 ****
+       COMPILE_ARGS="$COMPILE_ARGS $param"
+   else
+      case $param in
+!         "disable_all")
+  			DO_UNTAR=false
+  			DO_SQLITE=false
+  			DO_TCLTK=false
+--- 52,58 ----
+       COMPILE_ARGS="$COMPILE_ARGS $param"
+   else
+      case $param in
+!         "--disable_all")
+  			DO_UNTAR=false
+  			DO_SQLITE=false
+  			DO_TCLTK=false
+***************
+*** 64,99 ****
+  			DO_JPEG=false
+  			DO_ARPACK=false
+  			DO_SETUP=false;;			
+!         "-j")             TAKE_CPU=true;;
+!         "untar=true")   DO_UNTAR=true;;
+!         "untar=false")   DO_UNTAR=false;;
+!         "sqlite=true")   DO_SQLITE=true;;
+!         "sqlite=false")   DO_SQLITE=false;;
+!         "tcltk=true")   DO_TCLTK=true;;
+!         "tcltk=false")   DO_TCLTK=false;;
+!         "python=true")   DO_PYTHON=true;DO_PYMOD=true;;
+!         "python=false")   DO_PYTHON=false;DO_PYMOD=false;;
+!         "pymodules=true")   DO_PYMOD=true;;
+!         "pymodules=false")   DO_PYMOD=false;;
+!         "fftw=true")   DO_FFTW=true;;
+!         "fftw=false")   DO_FFTW=false;;
+!         "tiff=true")   DO_TIFF=true;;
+!         "tiff=false")   DO_TIFF=false;;
+!         "jpeg=true")   DO_JPEG=true;;
+!         "jpeg=false")   DO_JPEG=false;;
+!         "arpack=true")   DO_ARPACK=true;;
+!         "arpack=false")   DO_ARPACK=false;;
+!         "clean=true")   DO_CLEAN=true;;
+!         "clean=false")   DO_CLEAN=false;;
+!         "static=true")   DO_STATIC=true;;
+!         "static=false")   DO_STATIC=false;;
+!         "gui=false")   GUI_ARGS="";;
+          # This two if passed should be at the end and 
+          # will setup arguments for configure and compilation steps
+!         "configure") TAKE_CONFIGURE=true;
+!                      TAKE_COMPILE=false;;
+!         "compile")   TAKE_CONFIGURE=false;
+!                      TAKE_COMPILE=true;;
+           *)          echo "Unrecognized option $param, exiting..."; exit 1
+      esac
+   fi 
+--- 63,243 ----
+  			DO_JPEG=false
+  			DO_ARPACK=false
+  			DO_SETUP=false;;			
+!         "-j")                TAKE_CPU=true;;
+!         "--untar=true")      DO_UNTAR=true;;
+!         "--untar=false")     DO_UNTAR=false;;
+!         "--sqlite=true")     DO_SQLITE=true;;
+!         "--sqlite=false")    DO_SQLITE=false;;
+!         "--tcltk=true")      DO_TCLTK=true;;
+!         "--tcltk=false")     DO_TCLTK=false;;
+!         "--python=true")     DO_PYTHON=true;DO_PYMOD=true;;
+!         "--python=false")    DO_PYTHON=false;DO_PYMOD=false;;
+!         "--pymodules=true")  DO_PYMOD=true;;
+!         "--pymodules=false") DO_PYMOD=false;;
+!         "--fftw=true")       DO_FFTW=true;;
+!         "--fftw=false")      DO_FFTW=false;;
+!         "--tiff=true")       DO_TIFF=true;;
+!         "--tiff=false")      DO_TIFF=false;;
+!         "--jpeg=true")       DO_JPEG=true;;
+!         "--jpeg=false")      DO_JPEG=false;;
+!         "--arpack=true")     DO_ARPACK=true;;
+!         "--arpack=false")    DO_ARPACK=false;;
+!         "--clean=true")      DO_CLEAN=true;;
+!         "--clean=false")     DO_CLEAN=false;;
+!         "--static=true")     DO_STATIC=true;;
+!         "--static=false")    DO_STATIC=false;;
+!         "--gui=false")       GUI_ARGS="";;
+          # This two if passed should be at the end and 
+          # will setup arguments for configure and compilation steps
+!         "--configure"|"-g")  TAKE_CONFIGURE=true;
+!                              TAKE_COMPILE=false;;
+!         "--compile"|"-c")    TAKE_CONFIGURE=false;
+!                              TAKE_COMPILE=true;;
+!         "--iface=dialog"|"-d")
+!           #Starting dialog install interface
+!                              DO_UNTAR=false
+!                              DO_SQLITE=false
+!                              DO_TCLTK=false
+!                              DO_PYTHON=false
+!                              DO_PYMOD=false
+!                              DO_FFTW=false
+!                              DO_TIFF=false
+!                              DO_JPEG=false
+!                              DO_ARPACK=false
+!                              DO_CLEAN=false
+!                              DO_STATIC=false
+!                              GUI_ARGS=""
+!                              TAKE_CONFIGURE=false
+!                              TAKE_COMPILE=false
+!           
+!           OPTIONS=( $(dialog --separate-output --output-fd 1 --colors --cr-wrap --shadow --title "\Zu\Z4XMIPP:" --backtitle "XMIPP installation script" --cancel-label "Abort" --ok-label "Go" --checklist "Select one/multiple options:" 0 80 16 \
+!              untar "Untar external libraries" "off"\
+!              sqlite "Configure/Compile sqlite" "off"\
+!              tcltk "Configure/Compile tcltk libraries" "off"\
+!              python "Configure/Compile python support" "off"\
+!              pymodules "Configure/Compile python modules" "off"\
+!              fftw "Configure/Compile Fast Fourier Transform library" "off"\
+!              tiff "Configure/Compile TIFF images management library" "off"\
+!              jpeg "Configure/Compile JPEG images management library" "off"\
+!              arpack "Configure/Compile ARPACK library" "off"\
+!              clean "Clean the installation" "off"\
+!              static "Configure/Compile as static libraries" "off"\
+!              gui "Configure/Compile XMIPP front-end" "off"\
+!              configure "Just Configure selected libraries" "off"\
+!              compile "Just Compile selected libraries" "off"\
+!              CPU "Set number of CPU" "on"\
+!              All 'Do it all!' "on") )
+!           
+!           if [ $? == 1 ]; then
+!             echo "Aborting. Bye"
+!             exit 1
+!           fi
+!           
+!           for opt in ${OPTIONS[@]}
+!             do
+!               case $opt in 
+!                 \"All\")DO_UNTAR=true;DO_SQLITE=true;DO_TCLTK=true;DO_PYTHON=true;DO_PY_MOD=true;DO_FFTW=true;DO_TIFF=true;DO_JPEG=true;DO_ARPACK=false;DO_CLEAN=false;DO_STATIC=false;GUI_ARGS="gui";break;;
+!                 \"untar\")DO_UNTAR=true;;
+!                 \"sqlite\")DO_SQLITE=true;;
+!                 \"tcltk\")DO_TCLTK=true;;
+!                 \"python\")DO_PYTHON=true;;
+!                 \"pymodules\")DO_PYTHON=true;DO_PYMOD=true;;
+!                 \"fftw\")DO_FFTW=true;;
+!                 \"tiff\")DO_TIFF=true;;
+!                 \"jpeg\")DO_JPEG=true;;
+!                 \"arpack\")DO_ARPACK=true;;
+!                 \"clean\")DO_CLEAN=true;;
+!                 \"static\")DO_STATIC=true;;
+!                 \"gui\")GUI_ARGS="gui";;
+!                 \"configure\")TAKE_CONFIGURE=true;TAKE_COMPILE=false;;
+!                 \"compile\")TAKE_CONFIGURE=false;TAKE_COMPILE=true;;
+!                 \"CPU\")NUMBER_OF_CPU=$(dialog --output-fd 1 --colors --cr-wrap --shadow --title "\Zu\Z4XMIPP:" --backtitle "XMIPP installation script" --cancel-label "Abort" --ok-label "Go" --inputbox "Type the number of CPU you want to use: " 0 80)
+!                   if [ $? == 1 ]; then
+!                     echo "Aborting. Bye"
+!                     exit 1
+!                   fi
+!                   if [ "$NUMBER_OF_CPU" == "" ]; then
+!                     echo "ERROR: No number of CPU provided. Bye"
+!                     exit 1
+!                   fi
+!               esac
+!             done;;
+! 
+!          "--help"|"-h")
+! echo "0000000000000000000000000000000000000000000000000001"              
+! echo "0000000000000000P!!00000!!!!!00000!!0000000000000001"
+! echo "000000000000P'  .:==.           ,=;:.  \"400000000001"
+! echo "0000000000!  .;=::.::,         .=:.-:=,.  !000000001"
+! echo "0000000P' .=:-......::=      ::;.......-:=. \"0000001"
+! echo "0000000,.==-.........::;.   .;::.-.......-=:.a#00001"
+! echo "0000000'.=;......--:.:.:=:.==::.:--:.:...,=- !000001"
+! echo "000000    -=...:.:.:-:::::=;::.::.:.:..-:=-    00001"
+! echo "0000P       ==:.:-::. .aa. :::::::::.::=:      \"4001"
+! echo "00001        :;:::::..:#0: =::::::::::::        j#01"
+! echo "0001   aa _aas  _aa_  .aa, _a__aa_.  .a__aas,    j#1"
+! echo '0001   4WU*!4#gW9!##i .##; 3##P!9#Ai .##U!!Q#_   j#1'
+! echo '001    3O.  :xO.  ]Oi .XX: ]O( .  X2 .XC;  :xX.   01'
+! echo '001    dU.  :jU.  %Ui .WW: ]UL,..aXf .Ums  jd*    01'
+! echo '0001   4W.  :dW. .%W1 :WW: %WVXNWO~  .#U*#WV!    _01'
+! echo '0001        .............. %#1  .... .#A)        j01'
+! echo '00001      :=::-:::::;;;;: 301 ::::: .0A)       j#01'
+! echo "0000L    .;::.--::::::::;: ,,..:::::... .::.   _d001"
+! echo "000000  :;:...-.-.:.:::=;   =;:::---.:....::,  00001"
+! echo "000000!:::.....-.:.::::-     :=:-.:.-......:= !00001"
+! echo "000000a  =;.........:;        .:;........,;;  a00001"
+! echo '0000000La --:_....:=-           :=:...:_:--_a#000001'
+! echo '0000000000a  -=;,:=              -;::=:-  a000000001'
+! echo '00000000000Laaa -\aa              ar- aaa00000000001'
+! echo "00000000000000#00000000aaaaaad000000#00#0#0000000001"
+! echo ""
+! echo "##############################"
+! echo '#         XMIPP USAGE        #'
+! echo "##############################"
+! echo "NAME"
+! echo "  install.sh - XMIPP installation script"
+! echo ""
+! echo "SYNOPSIS"
+! echo "  ./install.sh [OPTIONS]"
+! echo ""
+! echo "DESCRIPTION"
+! echo "  Scripts that automates te XMIPP installation process. Options can be selected with a dialog interface giving the --iface=dialog option"
+! echo ""
+! echo "No option is mandatory. The default behaviour (without any given option) is qt interface. Following options are accepted:"
+! echo ""
+! echo "--untar=[true|false]"
+! echo "    Enable|Disable the initial untar of all external libraries (if it has been previously done)"
+! echo "--sqlite=[true|false]"
+! echo "    Enable|Disable the sqlite compilation|configuration"
+! echo "--tcltk=[true|false]"
+! echo "    Enable|Disable the tcl & tk compilation|configuration"
+! echo "--python=[true|false]"
+! echo "    Enable|Disable the python compilation|configuration"
+! echo "--pymodules=[true|false]"
+! echo "    Enable|Disable the python modules compilation|configuration"
+! echo "--fftw=[true|false]"
+! echo "    Enable|Disable the fftw compilation|configuration"
+! echo "--tiff=[true|false]"
+! echo "    Enable|Disable the tiff compilation|configuration"
+! echo "--arpack=[true|false]"
+! echo "    Enable|Disable the arpack compilation|configuration"
+! echo "--clean=[true|false]"
+! echo "    Enable|Disable the previous compilation cleaning"
+! echo "--static=[true|false]"
+! echo "    Compile libraries as static ones, or not"
+! echo "--gui=[true|false]"
+! echo "    Enable|Disable the GUI"
+! echo "--configure,-g"
+! echo "    Just do the configuration for the external libraries"
+! echo "--compile,-c"
+! echo "    Just do the compilation for the external libraries"
+! echo "--iface=dialog"
+! echo "    Use a dialog interface to enter the configure|copile options instead of doing it by hand"
+! echo "-j <number of CPU>"
+! echo "    Provides a number of CPUs for the compilation process"
+! echo ""
+! 
+! exit 0
+!          ;;
+           *)          echo "Unrecognized option $param, exiting..."; exit 1
+      esac
+   fi 
