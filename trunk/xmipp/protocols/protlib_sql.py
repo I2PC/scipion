@@ -552,7 +552,7 @@ class XmippProtocolDb(SqliteDb):
     def verifyStepFiles(self, fileList):
         missingFilesStr = ''
         for f in fileList:
-            if not exists(f):
+            if not xmippExists(f):
                 missingFilesStr += ' ' + f
 
         if len(missingFilesStr) > 0:

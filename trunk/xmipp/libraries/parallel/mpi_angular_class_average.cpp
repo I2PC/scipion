@@ -404,16 +404,17 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         defGroup_last = defGroup;
     }
 
+    std::cerr << "DEBUG_JM: BEFORE MDValueEQ" <<std::endl;
     MDValueEQ eq1(MDL_REF3D, ref3d);
     MDValueEQ eq2(MDL_DEFGROUP, defGroup);
     MDValueEQ eq3(MDL_ORDER, order_number);
     MDMultiQuery multi;
-
     multi.addAndQuery(eq1);
     multi.addAndQuery(eq2);
     multi.addAndQuery(eq3);
 
     _DF.importObjects(DF, multi);
+    std::cerr << "DEBUG_JM: AFTER MDValueEQ" <<std::endl;
 
     if (_DF.size() == 0)
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
@@ -689,12 +690,13 @@ void MpiProgAngularClassAverage::mpi_writeFile(
     {
         if (w != 1.)
             avg() /= w;
-        //How are we going to handle weights, are they in the header, I do not think so....
-        //in spider should be OK in general...!!
-        //A more independent approach would be nice
         if (fileNameStk.exists())
         {
+
+          std::cerr << "DEBUG_JM: Composing" <<std::endl;
+          std::cerr << "DEBUG_JM: dirno: " << dirno << std::endl;
             fn_tmp.compose(dirno, fileNameStk);
+            std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
             old.read(fn_tmp);
 
             //w_old = old.weight();
@@ -765,10 +767,15 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
+      std::cerr << "DEBUG_JM: saveDiscardedImages" <<std::endl;
         saveDiscardedImages();
+        std::cerr << "DEBUG_JM: createJobList" <<std::endl;
         createJobList();
+        std::cerr << "DEBUG_JM: initDimentions" <<std::endl;
         initDimentions();
+        std::cerr << "DEBUG_JM: initWeights" <<std::endl;
         initWeights();
+        std::cerr << "DEBUG_JM: initOutputFiles" <<std::endl;
         initOutputFiles();
     }
 
@@ -782,6 +789,12 @@ void MpiProgAngularClassAverage::mpi_preprocess()
     MPI_Bcast(&paddim,1,MPI_INT,0,MPI_COMM_WORLD);
 
     mpi_produceSideInfo();
+
+    if (node->rank == 0)
+    {
+      std::cerr << "DEBUG_JM: end of mpi_preprocess" <<std::endl;
+    }
+
     node->barrierWait();
 }
 
@@ -802,7 +815,23 @@ void MpiProgAngularClassAverage::filterInputMetadata()
 {
     MetaData auxDF,auxF1;
 
-    auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
+
+    //auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
+    //std::cerr << "DEBUG_JM: inFile: " << inFile << std::endl;
+    auxDF.read(inFile);
+    if (!auxDF.containsLabel(MDL_REF3D))
+      auxDF.fillConstant(MDL_REF3D, "1");
+    if (!auxDF.containsLabel(MDL_DEFGROUP))
+      auxDF.fillConstant(MDL_DEFGROUP, "1");
+    if (!auxDF.containsLabel(MDL_ORDER))
+    {
+
+      String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
+          MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
+      auxDF.addLabel(MDL_ORDER);
+      auxDF.operate(cmd);
+    }
+    //std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
 
     MDMultiQuery multi;
     MDValueGE eq1(MDL::str2Label(col_select), limit0);
@@ -811,16 +840,10 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     // remove percent of images
     if (do_limitR0per || do_limitRFper)
     {
-        bool asc;
+        bool asc= !do_limitR0per;
         MDLabel codifyLabel = MDL::str2Label(col_select);
         int size = auxDF.size();
         int limit = size - ROUND((limitRper/100.) * size);
-
-        if (do_limitR0per)
-            asc=false;
-        else
-            asc=true;
-
         auxF1.sort(auxDF,codifyLabel,asc,limit,0);
     }
     //remove inages bellow (above) these limits
@@ -910,8 +933,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         auxF1 = auxDF;
     }
 
-    DF.sort(auxF1,MDL_IMAGE);
-
+    DF.sort(auxF1, MDL_IMAGE);
 }
 
 void MpiProgAngularClassAverage::saveDiscardedImages()
@@ -921,7 +943,8 @@ void MpiProgAngularClassAverage::saveDiscardedImages()
     FileName fileNameXmd;
     std::stringstream comment;
 
-    auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
+    //auxDF.read((String)"ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]$@" + inFile);
+    auxDF.read(inFile);
 
     comment << "Discarded images";
     if (do_limit0)
@@ -1025,6 +1048,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
 {
     // Write class selfile to disc (even if its empty)
 
+    std::cerr << "DEBUG_JM: mpi_postprocess: " << std::endl;
     FileName imageName, fileNameXmd, blockNameXmd;
     FileName imageNames1, fileNameXmds1, imageNames2, fileNameXmds2;
     MetaData auxMd,auxMd2,auxMd3;
@@ -1147,8 +1171,6 @@ void MpiProgAngularClassAverage::createJobList()
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
-//    mdJobList.write("mdJobList");
-//    exit(1);
     numberOfJobs = mdJobList.size();
 }
 

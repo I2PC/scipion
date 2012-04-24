@@ -941,6 +941,11 @@ public:
     /** Fill lineal, starting at some value and with some step */
     void fillLinear(MDLabel label, double initial, double step);
 
+    /** Copy all values from one column to another.
+     * Source column should exist
+     */
+    void copyColumn(MDLabel labelDest, MDLabel labelSrc);
+
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
 }

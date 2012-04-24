@@ -18,7 +18,7 @@ from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector, runShowJ, runJob
 from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
-from protlib_gui_ext import showWarning
+from protlib_gui_ext import showWarning, showError
 from protlib_gui_figure import XmippPlotter
 from protlib_filesystem import linkAcquisitionInfoIfPresent, xmippExists
 from math import radians
@@ -186,7 +186,6 @@ class ProtProjMatch(XmippProtocol):
                         try:
                             runShowJ(file_name)
                         except Exception, e:
-                            from protlib_gui_ext import showError
                             showError("Error launching java app", str(e))
                         
             
@@ -209,7 +208,6 @@ class ProtProjMatch(XmippProtocol):
                             try:
                                 runShowJ(file_name)
                             except Exception, e:
-                                from protlib_gui_ext import showError
                                 showError("Error launching java app", str(e))
                             
         if doPlot('DisplayFilteredReconstruction'):
@@ -232,7 +230,6 @@ class ProtProjMatch(XmippProtocol):
                             try:
                                 runShowJ(file_name)
                             except Exception, e:
-                                from protlib_gui_ext import showError
                                 showError("Error launching java app", str(e))
                 
         if doPlot('DisplayBFactorCorrectedVolume'):
@@ -273,7 +270,6 @@ class ProtProjMatch(XmippProtocol):
                             try:
                                 runShowJ(file_name_bfactor)
                             except Exception, e:
-                                from protlib_gui_ext import showError
                                 showError("Error launching java app", str(e))
 
             
@@ -291,7 +287,6 @@ class ProtProjMatch(XmippProtocol):
                             try:
                                 runShowJ(file_name)
                             except Exception, e:
-                                from protlib_gui_ext import showError
                                 showError("Error launching java app", str(e))
 
             
@@ -308,7 +303,6 @@ class ProtProjMatch(XmippProtocol):
                         try:
                             runShowJ(file_name)
                         except Exception, e:
-                            from protlib_gui_ext import showError
                             showError("Error launching java app", str(e))
             
         if doPlot('DisplayAngularDistribution'):

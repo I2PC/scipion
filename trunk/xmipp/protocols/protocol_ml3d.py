@@ -33,6 +33,7 @@ class ProtML3D(XmippProtocol):
                 'iter_refs': mdRefs,
                 'vols': 'iter%(iter)06d@%(ORoot)s_vols.xmd',
                 'refs': 'iter%(iter)06d@' + mdRefs,
+                'initial_vols':  '%(ORoot)s_initial_volumes.stk',
                 'corrected_vols': '%(ORoot)s_corrected_volumes.stk',
                 'filtered_vols': '%(ORoot)s_filtered_volumes.stk',
                 'generated_vols': '%(ORoot)s_generated_volumes.stk'
@@ -79,7 +80,7 @@ class ProtML3D(XmippProtocol):
 #            os.chdir(self.WorkingDir)
 #            self.restart_MLrefine3D(RestartIter)
         else:
-            initVols = self.ParamsDict['InitialVols'] = self.workingDirPath('initial_volumes.stk')
+            initVols = self.ParamsDict['InitialVols'] = self.getFilename('initial_vols')
             self.mdVols = MetaData(self.RefMd)
             
             self.insertStep('copyVolumes', [initVols], 
@@ -125,12 +126,14 @@ class ProtML3D(XmippProtocol):
             projs = join(volDir, 'projections')
             self.insertStep('createDir', path=volDir)
             outputVol = "%(index)d@%(volStack)s" % locals()
+            corrRefsRoot = join(volDir, 'corrected_refs')
             self.ParamsDict.update({
                 'inputVol': self.mdVols.getValue(MDL_IMAGE, idx),
                 'outputVol': outputVol,
                 'projRefs': projs + ".stk",
                 'docRefs': projs + ".doc",
-                'corrRefs': join(volDir, 'corrected_refs.stk'),
+                'corrRefsRoot':corrRefsRoot ,
+                'corrRefs': corrRefsRoot + '_Ref3D_001.stk',
                 'projMatch': join(volDir, "proj_match.doc")
                 })
             self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
@@ -144,7 +147,7 @@ class ProtML3D(XmippProtocol):
             self.insertRunJob('xmipp_angular_projection_matching', ['projMatch'])
  
 #FIXME: COMMENTED THIS STEP UNTIL COMPLETION BY ROBERTO    
-            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefs)s'
+            self.ParamsStr = '-i %(projMatch)s --lib %(docRefs)s -o %(corrRefsRoot)s'
             self.insertRunJob('xmipp_angular_class_average', ['corrRefs'])
 
             self.ParamsStr = '-i %(projMatch)s -o %(outputVol)s --sym %(Symmetry)s --weight --thr %(NumberOfThreads)d'

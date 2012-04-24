@@ -1277,6 +1277,16 @@ void MetaData::fillLinear(MDLabel label, double initial, double step)
    SET_AND_FILL();
 }
 
+void MetaData::copyColumn(MDLabel labelDest, MDLabel labelSrc)
+{
+  const char * srcName = MDL::label2Str(labelSrc).c_str();
+  if (!containsLabel(labelSrc))
+    REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName));
+  addLabel(labelDest);
+  String cmd = formatString("%s=%s", MDL::label2Str(labelDest).c_str(), srcName);
+  operate(cmd);
+}
+
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                                MDLabel aggregateLabel)
 

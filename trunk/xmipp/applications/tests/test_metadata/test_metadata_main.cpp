@@ -977,6 +977,25 @@ TEST_F( MetadataTest, getValue)
     EXPECT_EQ(v1[2],v2[2]);
     XMIPP_CATCH
 }
+
+TEST_F( MetadataTest, CopyColumn)
+{
+  XMIPP_TRY
+    MetaData md1(mDsource), md2(mDsource);
+    double value;
+
+    FOR_ALL_OBJECTS_IN_METADATA(md1)
+    {
+      md1.getValue(MDL_Y, value, __iter.objId);
+      md1.setValue(MDL_Z, value, __iter.objId);
+    }
+
+    md2.copyColumn(MDL_Z, MDL_Y);
+
+    EXPECT_EQ(md1, md2);
+    XMIPP_CATCH
+}
+
 //Copy images on metadata using ImageConvert logic
 TEST_F( MetadataTest, copyImages)
 {
