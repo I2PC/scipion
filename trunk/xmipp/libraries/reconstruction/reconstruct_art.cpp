@@ -214,7 +214,7 @@ void ProgReconsART::run()
     artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size,artPrm.threads);
 
-    vol_voxels.write(artPrm.fn_root+".vol");
+    vol_voxels.write(artPrm.fn_out);
 
     if (artPrm.tell&TELL_SAVE_BASIS)
         vol_basis.write(artPrm.fn_root+".basis");

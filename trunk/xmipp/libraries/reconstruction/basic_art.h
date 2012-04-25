@@ -210,8 +210,8 @@ public:
     /// Shifted tomograms
     bool shiftedTomograms;
 
-    /// Root of output filenames
-    FileName fn_root;
+    /// Name of the output volume, also used to set the root of rest output files
+    FileName fn_out, fn_root;
 
     /// Grid volume as initial guess
     FileName fn_start;

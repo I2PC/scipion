@@ -603,9 +603,9 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         Image<double> vol_voxels_noisy;
         artPrm.basis.changeToVoxels(vol_basis_noisy, &(vol_voxels_noisy()),
                                     Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-        vol_voxels_noisy.write(artPrm.fn_root+"_noise.vol");
-        SF_noise.write(artPrm.fn_root+"_noise_proj.sel");
-        SF_signal.write(artPrm.fn_root+"_signal_proj.sel");
+        vol_voxels_noisy.write(artPrm.fn_out.insertBeforeExtension("_noise"));
+        SF_noise.write(artPrm.fn_root+"_noise_proj.xmd");
+        SF_signal.write(artPrm.fn_root+"_signal_proj.xmd");
     }
 
 }

@@ -115,12 +115,12 @@ void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
 
     program->addParamsLine(" == I/O Parameters == ");
     program->addParamsLine("   -i <md_file>                : Metadata file with input projections");
-    program->addParamsLine("   [--oroot <rootname>]        : Output rootname. If not supplied, input name is taken without extension.");
+    program->addParamsLine("   [-o <volume_file=\"rec_art.vol\">]  : Filename for output volume.");
+    program->addParamsLine("             : Rootname for rest of output files is taken from volume filename");
     program->addParamsLine("                               :+++The created files are as follows: %BR%");
     program->addParamsLine("                               :+++  =outputname.vol= 3D reconstruction in voxels %BR%");
     program->addParamsLine("                               :+++  =outputname.basis= 3D reconstruction in basis if the =--save_basis= option is enabled). The grid parameters are also stored in the same file %BR%");
     program->addParamsLine("                               :+++  =outputname.hist= History and information about the 3D reconstruction process %BR%");
-    program->addParamsLine("   alias -o;");
     program->addParamsLine("   [--ctf <ctf_file=\"\">]     : Metadata file with CTFs");
     program->addParamsLine("   [--unmatched]               : Apply unmatched forward/backward projectors");
     program->addParamsLine("   [--start <basisvolume_file=\"\">]  : Start from this basis volume. The reconstruction is performed in the same grid as the one ");
@@ -269,11 +269,8 @@ void BasicARTParameters::readParams(XmippProgram * program)
     defaultValues();
 
     fn_sel = program->getParam("-i");
-
-    if (program->checkParam("-o"))
-        fn_root = program->getParam("-o");
-    else
-        fn_root = fn_sel.withoutExtension();
+    fn_out = program->getParam("-o");
+    fn_root = fn_out.withoutExtension();
 
     fn_ctf = program->getParam("--ctf");
     unmatched = program->checkParam("--unmatched");
