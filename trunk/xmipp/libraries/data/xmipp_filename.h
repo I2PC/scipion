@@ -515,43 +515,39 @@ public:
     /** True if it is a Star 1 file. */
     bool isStar1(bool failIfNotExists) const;
 
-    /** Clean image FileName (as in Bsoft)
-     *
-     * @code
-     * fn_proj = "g1ta00001.xmp";
-     * fn_proj = fn_proj.get_file_format(); // fn_proj == "g1ta00001.xmp"
-     * fn_proj = "g1ta00001.nor:spi";
-     * fn_proj = fn_proj.clean_image_name(); // fn_proj == "g1ta00001.nor"
-     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
-     * fn_proj = fn_proj.clean_image_name(); // fn_proj == "input.file"
-     * @endcode
-     */
-    //FileName clean_image_name() const;
-
-    /** Substitute ext1 by ext2
-     *
-     * It doesn't matter if ext1 is in the middle of several extensions. If ext1
-     * is not present in the filename nothing is done.
+    /** Replace a the first ocurrence of substring 'subOld' by 'subNew'
+     * If 'subOld' not present, not changes are done.
+     * The search is done from left to right
      *
      * @code
      * fn_proj = "g1ta00001.xmp.bak";
-     * fn_proj = fn_proj.substitute_extension("xmp", "bor");
+     * fn_proj = fn_proj.replace(".xmp", ".bor");
      * // fn_proj == "g1ta00001.bor.bak"
      *
      * fn_proj = "g1ta00001.xmp.bak";
-     * fn_proj = fn_proj.substitute_extension("tob", "bor");
-     * // fn_proj=="g1ta00001.xmp.bak"
+     * fn_proj = fn_proj.replace(".bor", "");
+     * // fn_proj == "g1ta00001.bak"
+     * @endcode
+     * */
+    FileName replaceSubstring(const String& subOld, const String& subNew) const;
+
+    /** Substitute last extension by a new one
+     *
+     * @code
+     * fn_proj = "g1ta00001.xmp.bak";
+     * fn_proj = fn_proj.replaceExtension("bor");
+     * // fn_proj == "g1ta00001.xmp.bor"
      * @endcode
      */
-    FileName substituteExtension(const String& ext1,
-                                 const String& ext2) const;
+    FileName replaceExtension(const String& newExt) const;
 
-    /** Without a substring
+    /** Remove a substring from the filename
      *
      * If the substring is not present the same FileName is returned, if it is
      * there the substring is removed.
+     * It is equivalent to replaceSubstring(sub, "");
      */
-    FileName without(const String& str) const;
+    FileName removeSubstring(const String& sub) const;
 
     /** Remove until prefix
      *
@@ -559,7 +555,7 @@ public:
      * instance /usr/local/data/ctf-image00001.fft with ctf- yields
      * image00001.fft. If the prefix is not found nothing is done.
      */
-    FileName removeUntilPrefix(const String& str) const;
+    FileName removeUntilPrefix(const String& prefix) const;
 
     /** Remove all directories
      *

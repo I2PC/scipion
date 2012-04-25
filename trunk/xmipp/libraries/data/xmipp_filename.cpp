@@ -343,7 +343,7 @@ FileName FileName::withoutExtension() const
 // Remove root .............................................................
 FileName FileName::withoutRoot() const
 {
-    return without(getRoot());
+    return removeSubstring(getRoot());
 }
 
 // Insert before extension .................................................
@@ -503,60 +503,51 @@ bool FileName::isStar1(bool failIfNotExists) const
     return (pos != String::npos); // xmipp_star_1 token found
 }
 
-// Substitute one extension by other .......................................
-FileName FileName::substituteExtension(const String &ext1, const String &ext2) const
+// Replace one substring by other .......................................
+FileName FileName::replaceSubstring(const String &subOld, const String &subNew) const
 {
-    int first = find((String) "." + ext1);
-    if (first == -1)
+    size_t pos = find(subOld);
+    if (pos == npos)
         return *this;
-    else
-    {
-        FileName retval = *this;
-        return retval.replace(first, 1 + ext1.length(), (String) "." + ext2);
-    }
+
+    FileName result = *this;
+    result.replace(pos, 1 + subOld.length(), subNew);
+    return result;
+}
+
+// Substitute one extension by other .......................................
+FileName FileName::replaceExtension(const String &newExt) const
+{
+  return removeLastExtension() + "." + newExt;
 }
 
 // Remove a substring ......................................................
-FileName FileName::without(const String &str) const
+FileName FileName::removeSubstring(const String &sub) const
 {
-    if (str.length() == 0)
-        return *this;
-    int pos = find(str);
-    if (pos == -1)
-        return *this;
-    else
-    {
-        FileName retval = *this;
-        return retval.erase(pos, str.length());
-    }
+    return replaceSubstring(sub, "");
 }
 
 // Remove until prefix .....................................................
-FileName FileName::removeUntilPrefix(const String &str) const
+FileName FileName::removeUntilPrefix(const String &prefix) const
 {
-    if (str.length() == 0)
+    size_t pos = find(prefix);
+    if (pos == npos)
         return *this;
-    int pos = find(str);
-    if (pos == -1)
-        return *this;
-    else
-    {
-        FileName retval = *this;
-        return retval.erase(0, pos + str.length());
-    }
+    FileName result = *this;
+    return result.erase(0, pos + prefix.length());
 }
 
 // Remove directories ......................................................
 FileName FileName::removeDirectories(int keep) const
 {
-    int last_slash = rfind("/");
+    size_t last_slash = rfind("/");
     int tokeep = keep;
     while (tokeep > 0)
     {
         last_slash = rfind("/", last_slash - 1);
         tokeep--;
     }
-    if (last_slash == -1)
+    if (last_slash == npos)
         return *this;
     else
         return substr(last_slash + 1, length() - last_slash);
