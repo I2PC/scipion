@@ -334,7 +334,6 @@ class ProtProjMatch(XmippProtocol):
                                )
             else: #DisplayAngularDistributionWith == '2D'
                 for it in iterations:
-                    
                     if(len(ref3Ds) == 1):
                         gridsize1 = [1, 1]
                     elif (len(ref3Ds) == 2):
@@ -344,43 +343,12 @@ class ProtProjMatch(XmippProtocol):
                     
                     xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
                     
-                    #Fixed plot markersize limits
-                    max_p = 40
-                    min_p = 5
-                    
                     for ref3d in ref3Ds:
                         file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
                         md = MetaData(file_name)
-                        #rot must be polar
-                        rot = [radians(md.getValue(MDL_ANGLEROT, id)) for id in md]
-                        tilt = [md.getValue(MDL_ANGLETILT, id) for id in md]
-                        weight = [md.getValue(MDL_WEIGHT, id) for id in md]
-                        max_w = 2
-                        min_w = 1
-                        if (len(weight) > 0):
-                            max_w = max(weight)
-                            min_w = min(weight)
-                            
                         plot_title = 'Ref3D_%d' % ref3d
-                        if (len(weight) > 0):
-                            a = xplotter.createSubPlot(plot_title, 'Min weight='+str(min_w)+', Max weight='+str(max_w), '', yformat=False, projection='polar')
-                        else:
-                            a = xplotter.createSubPlot(plot_title, 'Empty plot', '', yformat=False, projection='polar')
-                      
-                        i = 0
-                        
-                        for id in md:
-                            if (len(weight) > 0):
-                                pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
-                            else:
-                                pointsize = 1
-                            #print 'weight[i]: ', weight[i], ' | pointsize: ', pointsize
-                            #print 'min_w: ', min_w, ' | max_w: ', max_w, ' | min_p: ', min_p, ' | max_p: ', max_p
-                            a.plot(rot[i], tilt[i], markerfacecolor='blue', marker='.', markersize=pointsize)
-                            i = i + 1
-
+                        xplotter.plotAngularDistribution(plot_title, md)
                     xplotter.draw()
-                    
                     
         if doPlot('DisplayResolutionPlots'):
             if(len(ref3Ds) == 1):

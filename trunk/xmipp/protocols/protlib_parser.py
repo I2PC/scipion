@@ -51,6 +51,7 @@ class ProtocolVariable():
         self.conditions = {} #map with conditions to be visible
         self.validators = [] #list with validators for this variable
         self.type = None
+        self.section = None # Section to which belongs the variable
          
         self.parser = parser
         self.childs = [] # Only section will use childs    
@@ -140,7 +141,10 @@ class ProtocolVariable():
         return self.hasTag('expert')
     
     def isVisualize(self):
-        return self.hasTag('visualize')
+        if self.section is None:
+            return self.hasTag('visualize')
+        else:
+            return self.section.hasTag('visualize')
     
     def isSection(self):
         return self.hasTag('section')
@@ -200,8 +204,12 @@ class ProtocolVariable():
         '''Add child variable to section '''
         if self.isSection():
             self.childs.append(variable)
+            variable.section = self
         else:
             raise Exception("Adding child variable to non-section variable")
+    
+    def getSection(self):
+        return self.section
     
     def satisfiesCondition(self):
         self.updateValue()
@@ -418,10 +426,10 @@ class ProtocolParser():
             print >> f, line.rstrip()
             
     def write(self, f=sys.stdout):  
-        self.writeLines(f, self.pre_header_lines + ['','# {begin_of_header}', ''])      
+        self.writeLines(f, self.pre_header_lines + ['# {begin_of_header}', ''])      
         for s in self.sections:
             self.writeLines(f, s.getLines())
-        self.writeLines(f, ['', '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE', ''] + self.post_header_lines)
+        self.writeLines(f, ['', '# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE'] + self.post_header_lines)
         
     def save(self, filename=None):
         if filename is not None:

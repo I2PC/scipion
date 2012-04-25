@@ -271,6 +271,35 @@ class XmippPlotter():
         self.hist = a.hist
         return a
     
+    def plotAngularDistribution(self, title, md, color='blue'):
+        '''Create an special type of subplot, representing the angular
+        distribution of weight projections. A metadata should be provided containing
+        labels: MDL_ANGLEROT, MDL_ANGLETILT, MDL_WEIGHT '''
+        from math import radians
+        from xmipp import MDL_ANGLEROT, MDL_ANGLETILT, MDL_WEIGHT
+        
+        max_p = 40
+        min_p = 5
+        max_w = 2
+        min_w = 1
+        rot = [radians(md.getValue(MDL_ANGLEROT, objId)) for objId in md]
+        tilt = [md.getValue(MDL_ANGLETILT, objId) for objId in md]
+        weight = [md.getValue(MDL_WEIGHT, objId) for objId in md]
+        
+        if (len(weight) > 0):
+            max_w = max(weight)
+            min_w = min(weight)
+            a = self.createSubPlot(title, 'Min weight=%(min_w)f, Max weight=%(max_w)f' % locals(), '', projection='polar')
+        else:
+            a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
+      
+        for i, objId in enumerate(md):
+            if (len(weight) > 0):
+                pointsize = int((weight[i] - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
+            else:
+                pointsize = 1
+            a.plot(rot[i], tilt[i], markerfacecolor=color, marker='.', markersize=pointsize)
+    
     def plotMd(self, md, mdLabelX, mdLabelY, color='g',**args):
         """ plot metadata columns mdLabelX and mdLabelY
             if nbins is in args then and histogram over y data is made

@@ -228,6 +228,9 @@ VisualizeAngDistribution = True
 # {view} Plot data distribution over the distinct references?
 VisualizeClassDistribution = True
 
+# {view} Plot overall convergence statistics?
+""" As also described in Scheres et al. (2007) Nature Methods, 4, 27-29 """
+DoShowStats = True
 
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE

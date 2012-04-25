@@ -10,9 +10,11 @@
 from os.path import join, exists
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
-from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL
+from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
+getBlocksInMetaDataFile, MDL_ANGLEROT, MDL_ANGLETILT, MDValueEQ
 from protlib_utils import runShowJ
 from protlib_parser import ProtocolParser
+from protlib_xmipp import redStr
 
 class ProtML3D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -228,13 +230,21 @@ class ProtML3D(XmippProtocol):
         
     def visualize(self):
         parser = ProtocolParser(self.scriptName)
+        self.xplotter = None
         for k, v in self.ParamsDict.iteritems():
-            if k.startswith('Visualize') and v and parser.getVariable(k).satisfiesCondition():
-                self.visualizeVar(k)
-               
+            if parser.hasVariable(k):
+                var = parser.getVariable(k)
+                if var.isVisualize() and v and var.satisfiesCondition():
+                    self._visualizeVar(k)
+        self.showPlot()
+            
     def visualizeVar(self, varName):
-        logs = self.getFilename('iter_logs')    
+        self.xplotter = None
+        self._visualizeVar(varName)
+        self.showPlot()
         
+    def _visualizeVar(self, varName):
+        logs = self.getFilename('iter_logs')    
         if exists(logs):
             md = MetaData(logs)
             objId = md.lastObject()
@@ -247,7 +257,66 @@ class ProtML3D(XmippProtocol):
                                }
             if varName in visualizeVolVar:
                 runShowJ(visualizeVolVar[varName])
-    
+            elif varName == 'DoShowStats':
+                from protocol_ml2d import launchML2DPlots
+                xplotter = launchML2DPlots(self, ['DoShowLL', 'DoShowPmax'])
+                self.drawPlot(xplotter)
+            elif varName == 'VisualizeClassDistribution':
+                self.plotClassDistribution()
+            elif varName == 'VisualizeAngDistribution':
+                self.plotAngularDistribution()
+                    
+    def getRefsMd(self, mlIter=None):
+        ''' Read the references metadata for a give iteration.
+        If not iteration provided, the last one is used.'''
+        refs = self.getFilename('iter_refs')
+        if mlIter is None:
+            blocks = getBlocksInMetaDataFile(refs)
+            lastBlock = blocks[-1]
+            md = MetaData('%(lastBlock)s@%(refs)s' % locals())
+            return md
+        return None
+        
+    def drawPlot(self, xplotter):
+        self.xplotter = xplotter
+        
+    def showPlot(self):
+        if self.xplotter is not None:
+            self.xplotter.show()
+        
+    def plotClassDistribution(self):
+        from protlib_gui_figure import XmippPlotter
+        xplotter = XmippPlotter(1, 1)
+        md = self.getRefsMd()
+        md2 = MetaData()    
+        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
+        weights = [md2.getValue(MDL_WEIGHT, id) for id in md2]
+        nrefs = len(weights)
+        refs3d = range(1, nrefs + 1)
+        width = 0.85
+        a = xplotter.createSubPlot('3D references weights on last iteration', 'references', 'weight')
+        a.bar(refs3d, weights, width, color='b')
+        self.drawPlot(xplotter)
+
+    def plotAngularDistribution(self): 
+        from protlib_gui_figure import XmippPlotter
+        md = self.getRefsMd()
+        md2 = MetaData()
+        md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
+        nrefs = md2.size()
+        if(nrefs in [1, 2]):
+            gridsize = [nrefs, 1]
+        else:
+            gridsize = [(nrefs+1)/2, 2]
+
+        xplotter = XmippPlotter(*gridsize)
+        
+        for r in range(1, nrefs+1):
+            md2.importObjects(md, MDValueEQ(MDL_REF3D, r))  
+            plot_title = 'ref %d' % r
+            xplotter.plotAngularDistribution(plot_title, md2)
+        self.drawPlot(xplotter)
+        
                 
 ''' This function will copy input references into a stack in working directory'''
 def copyVolumes(log, inputMd, outputStack):
