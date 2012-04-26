@@ -148,7 +148,7 @@ TEST_F( ImageTest, writeIMAGICimage)
     auxImage.read(auxFn);
     EXPECT_EQ(myImage,auxImage);
     auxFn.deleteFile();
-    auxFn = auxFn.substituteExtension("img", "hed");
+    auxFn = auxFn.replaceSubstring(".img", ".hed");
     auxFn.deleteFile();
     XMIPP_CATCH
 }
@@ -165,7 +165,7 @@ TEST_F( ImageTest, writeIMAGICstack)
     auxStack.read(auxFn);
     EXPECT_EQ(myStack,auxStack);
     auxFn.deleteFile();
-    auxFn = auxFn.substituteExtension("img", "hed");
+    auxFn = auxFn.replaceSubstring(".img", ".hed");
     auxFn.deleteFile();
     XMIPP_CATCH
 }

@@ -38,7 +38,7 @@ void ImageBase::init()
     else
         transform = NoTransform;
 
-    filename = "";
+    filename.clear();// = "";
     offset = 0;
     swap = swapWrite = 0;
     replaceNsize = 0;
