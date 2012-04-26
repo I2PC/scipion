@@ -927,9 +927,10 @@ int PROJECT_Effectively_project(const String &fnOut,
         side.DF.getValue(MDL_ANGLEROT,rot,__iter.objId);
         side.DF.getValue(MDL_ANGLETILT,tilt,__iter.objId);
         side.DF.getValue(MDL_ANGLEPSI,psi,__iter.objId);
-        SF.setValue(MDL_ANGLEROT,realWRAP(rot, 0, 360),realWRAP(DFmov_objId, 0, 360));
-        SF.setValue(MDL_ANGLETILT,realWRAP(tilt, 0, 360),realWRAP(DFmov_objId, 0, 360));
-        SF.setValue(MDL_ANGLEPSI,realWRAP(psi, 0, 360),realWRAP(DFmov_objId, 0, 360));
+        SF.setValue(MDL_ANGLEROT,realWRAP(rot, 0, 360),DFmov_objId);
+        SF.setValue(MDL_ANGLETILT,realWRAP(tilt, 0, 360),DFmov_objId);
+        SF.setValue(MDL_ANGLEPSI,realWRAP(psi, 0, 360),DFmov_objId);
+
         if ((NumProjs % XMIPP_MAX(1, side.DF.size() / 60)) == 0)
             progress_bar(NumProjs);
 
@@ -938,7 +939,6 @@ int PROJECT_Effectively_project(const String &fnOut,
         double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
         SF.setValue(MDL_SHIFTX,-shiftX,DFmov_objId);
         SF.setValue(MDL_SHIFTY,-shiftY,DFmov_objId);
-
 #ifdef DEBUG
 
         mdShifts.addObject();
@@ -1019,7 +1019,9 @@ int PROJECT_Effectively_project(const String &fnOut,
         if (singleProjection)
             proj.write(fn_proj);
         else
+        {
             proj.write(fn_proj,projIdx,true,WRITE_APPEND);
+        }
         projIdx++;
         NumProjs++;
     }
