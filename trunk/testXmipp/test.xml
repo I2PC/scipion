@@ -802,7 +802,7 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_reconstruct_art" mpi="FALSE">
 		<CASE
-			arguments="-i input/projectionsBacteriorhodopsin.xmd -n 2 -o  %o/rec_art --noisy_reconstruction"
+			arguments="-i input/projectionsBacteriorhodopsin.xmd -n 2 --thr 2 -o  %o/rec_art.vol --noisy_reconstruction"
 			changeDir="FALSE">
 			<FILE filename="rec_art.vol" />
 		</CASE>
