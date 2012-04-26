@@ -179,10 +179,11 @@ int translate_randomness(char * str)
 
 void ParametersProjection::read(const FileName &fn_proj_param)
 {
+
     if (fn_proj_param.isMetaData())
     {
         MetaData MD;
-        MD.read((std::string)"block1@"+fn_proj_param.c_str());
+        MD.read(fn_proj_param);
         if (MD.isEmpty())
             REPORT_ERROR(ERR_IO_NOTOPEN,
                          (String)"Prog_Project_Parameters::read: There is a problem "
@@ -1050,8 +1051,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     {
         MetaData MD;
         size_t objId;
-
-        MD.read((std::string)"block1@"+prm.fn_proj_param);
+        MD.read(prm.fn_proj_param);
         objId = MD.firstObject();
         doCrystal = MD.getValue(MDL_CRYSTAL_PROJ,doCrystal,objId);
     }
