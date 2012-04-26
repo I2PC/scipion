@@ -673,15 +673,23 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &
           arguments += " -n 10";
         if (!fn_tmp.contains("-l "))
           arguments += " -l 0.2";
+        if (!fn_tmp.contains("-k "))
+          arguments += " -k 0.5";
+
         bool noise_vols = input.contains("_cref_") || input.contains("_noise_");
         if (!noise_vols && !wlsart_no_start)
         {
              arguments += " --save_basis";
              if (iter > 1)
              {
-              // arguments += " --start " +
+               String currIter = FN_ITER_BASE(iter);
+               String prevIter = FN_ITER_BASE(iter - 1);
+               arguments += " --start ";
+               arguments += output.replaceSubstring(currIter, prevIter).replaceExtension("basis");
              }
         }
+        program->read(arguments);
+        return program;
         //        if (fn_symmask != "")
         //            art_prm.fn_sym = "";
 
@@ -731,7 +739,7 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &
 // Reconstruction using the ML-weights ==========================================
 void ProgMLRefine3D::reconstructVolumes()
 {
-    FileName fn_vol, fn_one;
+    FileName fn_vol, fn_vol_prev, fn_one;
     MetaData mdOne, mdProj, mdOutVols;
     size_t id;
 
@@ -760,6 +768,7 @@ void ProgMLRefine3D::reconstructVolumes()
 				mdProj.read(reconsMdFn[i]);
                 fn_one.compose(fn_base, volno, "projections.xmd");
             	LOG(formatString("              Reconstructing volume: %s", fn_vol.c_str()).c_str());
+            	std::cerr << "DEBUG_JM: " << formatString(">>>>>>>>>>>>  Reconstructing volume: %s", fn_vol.c_str()) << std::endl;
                 // Select only relevant projections to reconstruct
                 mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
                 mdOne.write(fn_one);

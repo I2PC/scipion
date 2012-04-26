@@ -570,16 +570,17 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             }
         }
 
-        if ( (artPrm.tell&TELL_SAVE_INTERMIDIATE) && it!=artPrm.no_it-1)
+        if ( (artPrm.tell & TELL_SAVE_INTERMIDIATE) && it != artPrm.no_it-1)
         {
             if (rank==-1)
                 std::cout << "Converting basis volume to voxels ...\n";
             artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                                         Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-            vol_voxels.write(artPrm.fn_root+"it"+integerToString(it)+".vol");
+            FileName fn_tmp = artPrm.fn_out.insertBeforeExtension(formatString("_it%06d", it));
+            vol_voxels.write(fn_tmp);
 
-            if (artPrm.tell&TELL_SAVE_BASIS)
-                vol_basis.write(artPrm.fn_root+"it"+integerToString(it)+".basis");
+            if (artPrm.tell & TELL_SAVE_BASIS)
+                vol_basis.write(fn_tmp.removeLastExtension().addExtension("basis"));
         }
 
         // Check if algorithm must stop via stop_at
