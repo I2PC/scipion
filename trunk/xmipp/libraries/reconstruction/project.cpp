@@ -912,12 +912,14 @@ int PROJECT_Effectively_project(const String &fnOut,
         Vshears=new RealShearsInfo(side.phantomVol());
     if (projType == FOURIER && side.phantomMode==PROJECT_Side_Info::VOXEL)
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
+
+    fn_proj=fnOut;
+    createEmptyFile(fn_proj, prm.proj_Xdim, prm.proj_Ydim,
+                    1, side.DF.size(), true,WRITE_OVERWRITE);
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();
-        if (singleProjection)
-            fn_proj=fnOut;
-        else
+        if (!singleProjection)
             fn_proj.compose(projIdx,fnOut);
         SF.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
         SF.setValue(MDL_ENABLED,1,DFmov_objId);
@@ -1020,7 +1022,7 @@ int PROJECT_Effectively_project(const String &fnOut,
             proj.write(fn_proj);
         else
         {
-            proj.write(fn_proj,projIdx,true,WRITE_APPEND);
+            proj.write(fn_proj,projIdx,true,WRITE_OVERWRITE);
         }
         projIdx++;
         NumProjs++;
