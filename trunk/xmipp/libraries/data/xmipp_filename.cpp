@@ -511,7 +511,7 @@ FileName FileName::replaceSubstring(const String &subOld, const String &subNew) 
         return *this;
 
     FileName result = *this;
-    result.replace(pos, 1 + subOld.length(), subNew);
+    result.replace(pos, subOld.length(), subNew);
     return result;
 }
 
