@@ -528,7 +528,7 @@ void DocFile::get_selfile(MetaData& sel)
         if (strstr(((*current_line).get_text()).c_str(), " ; ") != NULL)
         {
             img = (*current_line).get_text();
-            sel.setValue(MDL_IMAGE,img.without(" ; "), sel.addObject());
+            sel.setValue(MDL_IMAGE,img.removeSubstring(" ; "), sel.addObject());
         }
 
         next();
@@ -1491,7 +1491,7 @@ void get_subset_docfile(DocFile& DFin, MetaData& SF, DocFile& DFout)
         REPORT_ERROR(ERR_DOCFILE,"Input docfile is not of NewXmipp-style");
     else
         // append the same header to DFout
-        DFout.append_comment(fn_tmp.without(" ; "));
+        DFout.append_comment(fn_tmp.removeSubstring(" ; "));
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
