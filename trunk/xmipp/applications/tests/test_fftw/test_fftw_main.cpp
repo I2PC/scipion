@@ -46,6 +46,7 @@ TEST_F( FftwTest, directFourierTransform)
     DIRECT_A2D_ELEM(auxFFT,2,0) = std::complex<double>(-0.388889,-0.673575) ;
     DIRECT_A2D_ELEM(auxFFT,2,1) = std::complex<double>(-0.0555556,0.288675) ;
     EXPECT_EQ(FFT1,auxFFT);
+    transformer1.cleanup();
 }
 
 GTEST_API_ int main(int argc, char **argv)
