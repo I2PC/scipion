@@ -249,7 +249,6 @@ class ProtocolVariable():
             self.addValidator('ValidRun')
             
             
-       
 class ProtocolParser():
     ''' Class to parse the protocol header files and extract the
     variables information arranged in sections '''
@@ -359,6 +358,9 @@ class ProtocolParser():
     
     def getValue(self, varName):
         return self.variables[varName].getValue()
+    
+    def getTkValue(self, varName):
+        return self.variables[varName].getTkValue()
     
     def getLiteralValue(self, varName):
         return self.variables[varName].getLiteralValue()

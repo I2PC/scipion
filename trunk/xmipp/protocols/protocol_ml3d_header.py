@@ -172,7 +172,7 @@ SeedsAreAmplitudeCorrected = False
 """ Choose between wslART or fourier """
 ReconstructionMethod = 'fourier'
 
-# {expert}{condition}(ReconstructionMethod=="wslART") Extra parameters
+# {expert}{condition}(ReconstructionMethod=="wlsART") Extra parameters
 """
 Additional reconstruction parameters for ART
 For details see:
@@ -201,32 +201,37 @@ FourierExtraParams = ''
 # {view}{condition}(DoCorrectGreyScale) Visualize the grey-scale corrected reference volume?
 VisualizeCRVolume = True
 
-# {view}{condition}(DoCorrectGreyScale) Visualize the projections of the grey-scale correction?
-VisualizeCRProjections = True
-
 # {view}{condition}(DoLowPassFilterReference) Visualize the low-pass filtered reference volume?
 VisualizeFRVolume = True
 
 # {view}{condition}(NumberOfReferences>1) Visualize the generated seeds volumes?
 VisualizeGSVolume = True
 
-# {view}{condition}(NumberOfReferences>1) Visualize the projections of generated volumes?
-VisualizeGSProjections = True
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Results per Iteration
+#------------------------------------------------------------------------------------------------
+# {list} (last, all, selection) Which iteration you want to visualize?
+VisualizeIter = 'last'
 
-#------------------------------------------------------------------------------------------------
-# {section}{visualize} Results
-#------------------------------------------------------------------------------------------------
+# {condition}(VisualizeIter=='selection') Selected iterations
+''' Which iteration do you want to visualize'''
+SelectedIters = ''
+
 # {view} Visualize weighted 2D-averages of last iteration?
 VisualizeML3DAvgs = True
 
 # {view} Visualize the reference volumes of last iteration?
 VisualizeML3DReferences = True
 
-# {view} Plot the angular distribution of the reference(s)?
+# {view} Plot the angular distribution of the references?
 VisualizeAngDistribution = True
 
 # {view} Plot data distribution over the distinct references?
 VisualizeClassDistribution = True
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Overall Results
+#------------------------------------------------------------------------------------------------
 
 # {view} Plot overall convergence statistics?
 """ As also described in Scheres et al. (2007) Nature Methods, 4, 27-29 """

@@ -509,7 +509,7 @@ class ProtocolGUI(BasicGUI):
         return w
         
     def visualizeVar(self, varName):
-        prot = self.getProtocol()
+        prot = self.getProtocol()        
         prot.visualizeVar(varName)
         
     def fillHeader(self):
@@ -629,7 +629,9 @@ class ProtocolGUI(BasicGUI):
         return True
     
     def getProtocol(self):
-        return self.project.getProtocolFromModule(self.run['script'])
+        prot = self.project.getProtocolFromModule(self.run['script'])
+        prot.parser = self.parser
+        return prot
     
     def saveExecute(self, event=""):
         if not self.save(): #Validate user input

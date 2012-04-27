@@ -295,6 +295,7 @@ class XmippProtocol(object):
         self.Log = None # This will be created on run setup
         # Create filenames dictionary
         self.FilenamesDict = self.createFilenameDict()
+        self.parser = None # This is only used in GUI
         
     def getFilename(self, key, **params):
         # Is desirable the names comming in params doesn't overlap

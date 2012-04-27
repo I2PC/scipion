@@ -12,9 +12,10 @@ from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
 getBlocksInMetaDataFile, MDL_ANGLEROT, MDL_ANGLETILT, MDValueEQ
-from protlib_utils import runShowJ
+from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
-from protlib_xmipp import redStr
+from protlib_xmipp import redStr, cyanStr
+from protlib_gui_ext import showWarning
 
 class ProtML3D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -228,27 +229,45 @@ class ProtML3D(XmippProtocol):
             self.ParamsStr += " %(FourierExtraParams)s" 
         self.insertRunJob('xmipp_%s_refine3d' % self.progId, [])
         
+    def setVisualizeIterations(self):
+        '''Validate and set the set of iterations to visualize.
+        If not set is selected, only use the last iteration'''
+        logs = self.getFilename('iter_logs')    
+        md = MetaData(logs)
+        lastIter = md.getValue(MDL_ITER, md.lastObject())
+        self.VisualizeIter = self.parser.getTkValue('VisualizeIter')
+        self.lastIter = lastIter
+        if self.VisualizeIter == 'last':
+            self.visualizeIters = [lastIter]
+        elif self.VisualizeIter == 'all':
+            self.visualizeIters = range(1, lastIter+1)
+        elif self.VisualizeIter == 'selection':
+            selection = getListFromRangeString(self.parser.getTkValue('SelectedIters'))
+            self.visualizeIters = [it for it in selection if (it > 0 and it <= lastIter)]
+            invalidIters = [it for it in selection if (it <= 0 or it > lastIter)]
+            if len(invalidIters):
+                print cyanStr("Following iterations are invalid: %s" % str(invalidIters))
+        
     def visualize(self):
-        parser = ProtocolParser(self.scriptName)
+        self.setVisualizeIterations()
         self.xplotter = None
         for k, v in self.ParamsDict.iteritems():
-            if parser.hasVariable(k):
-                var = parser.getVariable(k)
+            if self.parser.hasVariable(k):
+                var = self.parser.getVariable(k)
                 if var.isVisualize() and v and var.satisfiesCondition():
                     self._visualizeVar(k)
         self.showPlot()
             
     def visualizeVar(self, varName):
         self.xplotter = None
+        self.setVisualizeIterations()
         self._visualizeVar(varName)
         self.showPlot()
         
     def _visualizeVar(self, varName):
         logs = self.getFilename('iter_logs')    
         if exists(logs):
-            md = MetaData(logs)
-            objId = md.lastObject()
-            iteration = md.getValue(MDL_ITER, objId)
+            iteration = self.visualizeIters[0]
             visualizeVolVar = {'VisualizeCRVolume': self.getFilename('corrected_vols'), 
                                'VisualizeFRVolume': self.getFilename('filtered_vols'),
                                'VisualizeGSVolume':self.getFilename( 'generated_vols'),
@@ -262,20 +281,16 @@ class ProtML3D(XmippProtocol):
                 xplotter = launchML2DPlots(self, ['DoShowLL', 'DoShowPmax'])
                 self.drawPlot(xplotter)
             elif varName == 'VisualizeClassDistribution':
-                self.plotClassDistribution()
+                for it in self.visualizeIters:
+                    self.plotClassDistribution(it)
             elif varName == 'VisualizeAngDistribution':
-                self.plotAngularDistribution()
+                for it in self.visualizeIters:
+                    self.plotAngularDistribution(it)
                     
-    def getRefsMd(self, mlIter=None):
-        ''' Read the references metadata for a give iteration.
-        If not iteration provided, the last one is used.'''
-        refs = self.getFilename('iter_refs')
-        if mlIter is None:
-            blocks = getBlocksInMetaDataFile(refs)
-            lastBlock = blocks[-1]
-            md = MetaData('%(lastBlock)s@%(refs)s' % locals())
-            return md
-        return None
+    def getRefsMd(self, iteration):
+        ''' Read the references metadata for a give iteration. '''
+        fn = 'iter%06d@%s' % (iteration, self.getFilename('iter_refs'))
+        return MetaData(fn)
         
     def drawPlot(self, xplotter):
         self.xplotter = xplotter
@@ -283,14 +298,15 @@ class ProtML3D(XmippProtocol):
     def showPlot(self):
         if self.xplotter is not None:
             self.xplotter.show()
-        
-    def plotClassDistribution(self):
+            
+    def plotClassDistribution(self, iteration):
         from protlib_gui_figure import XmippPlotter
-        xplotter = XmippPlotter(1, 1)
-        md = self.getRefsMd()
+        xplotter = XmippPlotter(1, 1, figsize=(4,4),
+                                windowTitle="Images distribution - iteration %d" % iteration)
+        md = self.getRefsMd(iteration)
         md2 = MetaData()    
         md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
-        weights = [md2.getValue(MDL_WEIGHT, id) for id in md2]
+        weights = [md2.getValue(MDL_WEIGHT, objId) for objId in md2]
         nrefs = len(weights)
         refs3d = range(1, nrefs + 1)
         width = 0.85
@@ -298,18 +314,25 @@ class ProtML3D(XmippProtocol):
         a.bar(refs3d, weights, width, color='b')
         self.drawPlot(xplotter)
 
-    def plotAngularDistribution(self): 
+    def plotAngularDistribution(self, iteration): 
         from protlib_gui_figure import XmippPlotter
-        md = self.getRefsMd()
+        md = self.getRefsMd(iteration)
         md2 = MetaData()
         md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
         nrefs = md2.size()
-        if(nrefs in [1, 2]):
-            gridsize = [nrefs, 1]
+        figsize = None
+        if nrefs == 1:
+            gridsize = [1, 1]
+            figsize = (4, 4)
+        elif nrefs == 2:
+            gridsize = [1, 2]
+            figsize = (8, 4)
         else:
             gridsize = [(nrefs+1)/2, 2]
+            figsize = (8, 12)
 
-        xplotter = XmippPlotter(*gridsize)
+        xplotter = XmippPlotter(*gridsize, figsize=figsize, 
+                                windowTitle="Angular distribution - iteration %d" % iteration)
         
         for r in range(1, nrefs+1):
             md2.importObjects(md, MDValueEQ(MDL_REF3D, r))  
