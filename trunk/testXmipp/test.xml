@@ -593,7 +593,7 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_ml_align2d" mpi="FALSE">
 		<CASE
-			arguments="-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror"
+			arguments="-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d --fast --mirror"
 			changeDir="FALSE" random="TRUE">
 			<FILE filename="ml2d_final_images.xmd" />
 			<FILE filename="ml2d_final_logs.xmd" />
@@ -601,7 +601,7 @@
 			<FILE filename="ml2d_final_refs.xmd" />
 		</CASE>
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --oroot %o/ml2d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml2d_final_images.xmd" />
             <FILE filename="ml2d_final_logs.xmd" />
@@ -609,7 +609,7 @@
             <FILE filename="ml2d_final_refs.xmd" />
         </CASE>		
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --nref 4 --oroot %o/ml2d"
+            arguments="-i input/mlData/phantom_images.xmd --nref 4 --iter 2 --oroot %o/ml2d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml2d_final_images.xmd" />
             <FILE filename="ml2d_final_logs.xmd" />
@@ -617,7 +617,7 @@
             <FILE filename="ml2d_final_refs.xmd" />
         </CASE>     
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --oroot %o/ml2d --thr 2"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/ml2d --thr 2"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml2d_final_images.xmd" />
             <FILE filename="ml2d_final_logs.xmd" />
@@ -627,7 +627,7 @@
 	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_ml_align2d" mpi="TRUE">
 		<CASE
-			arguments="-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror"
+			arguments="-i input/images_some.stk --ref input/seeds2.stk --iter 2 --oroot %o/ml2d --fast --mirror"
 			changeDir="FALSE" random="TRUE">
 			<FILE filename="ml2d_final_images.xmd" />
 			<FILE filename="ml2d_final_logs.xmd" />
@@ -637,7 +637,7 @@
 	</PROGRAM>
     <PROGRAM name="xmipp_mlf_align2d" mpi="FALSE">
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --oroot %o/mlf2d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/mlf2d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="mlf2d_final_images.xmd" />
             <FILE filename="mlf2d_final_logs.xmd" />
@@ -645,9 +645,19 @@
             <FILE filename="mlf2d_final_refs.xmd" />
         </CASE>
     </PROGRAM>	
+    <PROGRAM name="xmipp_mpi_mlf_align2d" mpi="TRUE">
+        <CASE
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/refs.xmd --iter 2 --oroot %o/mlf2d"
+            changeDir="FALSE" random="TRUE">
+            <FILE filename="mlf2d_final_images.xmd" />
+            <FILE filename="mlf2d_final_logs.xmd" />
+            <FILE filename="mlf2d_final_refs.stk" />
+            <FILE filename="mlf2d_final_refs.xmd" />
+        </CASE>
+    </PROGRAM>  
     <PROGRAM name="xmipp_ml_refine3d" mpi="FALSE">
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --oroot %o/ml3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --iter 2 --oroot %o/ml3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />
@@ -655,7 +665,7 @@
             <FILE filename="ml3d_ml2d_final_refs.xmd" />
         </CASE>     
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --oroot %o/ml3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --iter 2 --oroot %o/ml3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />
@@ -665,7 +675,7 @@
     </PROGRAM>    
     <PROGRAM name="xmipp_mlf_refine3d" mpi="FALSE">
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --oroot %o/mlf3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --iter 2 --oroot %o/mlf3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />
@@ -673,7 +683,7 @@
             <FILE filename="ml3d_ml2d_final_refs.xmd" />
         </CASE>     
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --oroot %o/mlf3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --iter 2 --oroot %o/mlf3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />
@@ -683,7 +693,7 @@
     </PROGRAM>  	
         <PROGRAM name="xmipp_mpi_ml_refine3d" mpi="TRUE">
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --oroot %o/ml3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --iter 2 --oroot %o/ml3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />
@@ -691,7 +701,7 @@
             <FILE filename="ml3d_ml2d_final_refs.xmd" />
         </CASE>     
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --oroot %o/ml3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --iter 2 --oroot %o/ml3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />
@@ -701,7 +711,7 @@
     </PROGRAM>    
     <PROGRAM name="xmipp_mpi_mlf_refine3d" mpi="TRUE">
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --oroot %o/mlf3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons fourier --ang 15 --iter 2 --oroot %o/mlf3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />
@@ -709,7 +719,7 @@
             <FILE filename="ml3d_ml2d_final_refs.xmd" />
         </CASE>     
         <CASE
-            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --oroot %o/mlf3d"
+            arguments="-i input/mlData/phantom_images.xmd --ref input/mlData/icoFiltered.vol  --recons wlsART --ang 15 --iter 2 --oroot %o/mlf3d"
             changeDir="FALSE" random="TRUE">
             <FILE filename="ml3d_ml2d_final_images.xmd" />
             <FILE filename="ml3d_ml2d_final_logs.xmd" />

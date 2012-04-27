@@ -175,8 +175,8 @@ if __name__ == '__main__':
 
     argc = len(sys.argv)
 
-    if argc < 2 or argc > 3:
-        print "Usage: ./batch.py <directory> [program]"
+    if argc < 2:
+        print "Usage: ./batch.py <directory> [programs]"
         sys.exit()
 
     fnDir = sys.argv[1]
@@ -198,9 +198,10 @@ if __name__ == '__main__':
 
     programs = ""
     if argc > 2:
-        program = sys.argv[2]
-        tester.runProgramTests(program)
-        programs = program
+        programs = sys.argv[2:]
+        for program in programs:
+            tester.runProgramTests(program)
+            #programs = program
         #if not os.path.exists(fnDir):
         #    os.makedirs(fnDir)
     else:
@@ -235,7 +236,7 @@ if __name__ == '__main__':
        globalMessage += "ERROR:\n" + tester.error
     if  tester.warningFlag:
        globalMessage += "WARNINGS:\n" + tester.warning
-    globalMessage += "\nProgram tested:\n" + programs
+    globalMessage += "\nPrograms tested:\n" + str(programs)
     #mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
 
  
