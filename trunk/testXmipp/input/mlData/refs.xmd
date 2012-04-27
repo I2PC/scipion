@@ -1,0 +1,14 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+000001@input/mlData/refs.stk          1 
+000002@input/mlData/refs.stk          1 
+000003@input/mlData/refs.stk          1 
+000004@input/mlData/refs.stk          1 
+000005@input/mlData/refs.stk          1 
+000006@input/mlData/refs.stk          1 
+000007@input/mlData/refs.stk          1 
+000008@input/mlData/refs.stk          1 
