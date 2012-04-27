@@ -415,7 +415,6 @@ public:
         else if (checkParam("--fill"))
             doFill();
 
-        std::cerr << "DEBUG_JM: mode: " << mode << std::endl;
         if (checkParam("--print"))
             mdIn.write(std::cout);
         else if (doWrite)

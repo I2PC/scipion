@@ -752,8 +752,6 @@ void ProgMLRefine3D::reconstructVolumes()
 
     for (int i = 0; i < reconsOutFnBase.size(); ++i)
     {
-        //std::cerr << "DEBUG_JM: rank: " << rank << std::endl;
-        //std::cerr << "DEBUG_JM: reconsMdFn[i]: " << reconsMdFn[i] << std::endl;
         for (int volno = 1; volno <= Nvols; ++volno)
         {
             volno_index = Nvols * i + volno - 1;
@@ -768,12 +766,10 @@ void ProgMLRefine3D::reconstructVolumes()
 				mdProj.read(reconsMdFn[i]);
                 fn_one.compose(fn_base, volno, "projections.xmd");
             	LOG(formatString("              Reconstructing volume: %s", fn_vol.c_str()).c_str());
-            	std::cerr << "DEBUG_JM: " << formatString(">>>>>>>>>>>>  Reconstructing volume: %s", fn_vol.c_str()) << std::endl;
                 // Select only relevant projections to reconstruct
                 mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
                 mdOne.write(fn_one);
                 // Set input/output for the reconstruction algorithm
-                //reconsProgram->setIO();
 				reconsProgram = createReconsProgram(fn_one, fn_vol);
                 reconsProgram->run();
 				delete reconsProgram;
