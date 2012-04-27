@@ -47,7 +47,7 @@ class ProtExtractParticles(XmippProtocol):
             self.TiltPairs = False
         self.pickingDir = pickingProt.WorkingDir
         if self.TiltPairs:
-            self.pickingMicrographs = ickingProt.getFilename('tiltedPairs')
+            self.pickingMicrographs = pickingProt.getFilename('tiltedPairs')
         else:
             self.pickingMicrographs = pickingProt.getFilename("micrographs")
         self.micrographs = self.getEquivalentFilename(pickingProt, self.pickingMicrographs)
