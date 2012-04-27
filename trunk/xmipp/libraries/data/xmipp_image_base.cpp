@@ -32,19 +32,21 @@
 void ImageBase::init()
 {
     clearHeader();
-    dataMode = DATA;
-    if (isComplexT())
-        transform = Standard;
-    else
-        transform = NoTransform;
 
-    filename.clear();// = "";
+    filename = tempFilename = dataFName = "";
+    fimg = fhed = NULL;
+    hFile = NULL;
+    tif = NULL;
+    dataMode = DATA;
+    stayOpen = false;
+    transform = isComplexT() ? Standard : NoTransform;
+    filename.clear();
     offset = 0;
     swap = swapWrite = 0;
     replaceNsize = 0;
-    mmapOnRead = mmapOnWrite = false;
-    mappedSize = mappedOffset = virtualOffset = 0;
+    _exists = mmapOnRead = mmapOnWrite = false;
     mFd        = NULL;
+    mappedSize = mappedOffset = virtualOffset = 0;
 }
 
 void ImageBase::clearHeader()
@@ -458,7 +460,7 @@ void ImageBase::getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) con
  */
 void ImageBase::getInfo(ImageInfo &imgInfo) const
 {
-	imgInfo.offset = offset;
+    imgInfo.offset = offset;
     imgInfo.datatype = datatype();
     imgInfo.swap = getSwap() > 0;
     imgInfo.adim = aDimFile ;
@@ -894,7 +896,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     o << "--- Image information ---" << std::endl;
 
     DataType myDT = I.myT();
-    if (fileDT == NULL || myDT != *fileDT)
+    if ((fileDT == NULL || myDT != *fileDT) && I.dataMode >= DATA )
         o << "Memory datatype: " << datatype2StrLong(I.myT()) << std::endl;
     o << "Image type     : ";
     if (I.isComplex())
