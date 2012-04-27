@@ -1,0 +1,27 @@
+ -----------------------------------------------------------------
+ | Read more about this program in the following publication:    |
+ |  Scheres ea. (2007) Structure, 15, 1167-1177                  |
+ |                                                               |
+ |   *** Please cite it if this program is of use to you! ***    |
+ -----------------------------------------------------------------
+--> Multi-reference refinement 
+--> using a maximum-likelihood in Fourier-space (MLF) target 
+--> with CTF correction 
+  Input images            : input/mlData/phantom_images.xmd (104)
+  Reference image(s)      : input/mlData/refs.xmd
+  Output rootname         : tmpLink/xmipp_mpi_mlf_align2d/mlf2d
+  Stopping criterium      : 5e-05
+  initial sigma offset    : 3
+  Psi sampling interval   : 5 degrees
+  Translational searches  : 3 pixels
+  Low resolution limit    : 999 Ang
+  High resolution limit   : 0 Ang
+  Check mirrors           : false
+    + Assuming images have been phase flipped 
+    + CTF group 1 contains 52 images
+    + CTF group 2 contains 52 images
+ -----------------------------------------------------------------
+--> Estimating initial noise models from average power spectra ...
+  Multi-reference refinement:  iteration 1 of 2
+  Multi-reference refinement:  iteration 2 of 2
+--> Optimization was stopped before convergence was reached!

@@ -1,0 +1,12 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _iterationNumber
+ _logLikelihood
+ _pMax
+ _sigmaNoise
+ _sigmaOffset
+ _randomSeed
+        15 -152625.112316     1.000000     1.012408     0.000000 1335527083 
+         3 -172642.382143     0.986729     1.142702     0.000000 1335531354 

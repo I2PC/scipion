@@ -1,0 +1,46 @@
+ -----------------------------------------------------------------
+ | Read more about this program in the following publication:    |
+ |  Scheres ea. (2007)  Structure, 15, 1167-1177                 |
+ |                                                               |
+ |    *** Please cite it if this program is of use to you! ***   |
+ -----------------------------------------------------------------
+--> Maximum-likelihood multi-reference 3D-refinement
+  Initial reference volume : input/mlData/icoFiltered.vol
+  Experimental images:     : input/mlData/phantom_images.xmd
+  Angular sampling rate    : 15
+  Symmetry group:          : c1
+  Output rootname          : tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d
+  Convergence criterion    : 5e-05
+  -> Use fourier-interpolation instead of wlsART for reconstruction
+ -----------------------------------------------------------------
+--> projecting 1 volumes x 81 projections...
+ -----------------------------------------------------------------
+--> Multi-reference refinement 
+--> using a maximum-likelihood in Fourier-space (MLF) target 
+--> with CTF correction 
+  Input images            : tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3dimages_node00.xmd (104)
+  Reference image(s)      : tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.xmd
+  Output rootname         : tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_mlf2d
+  Stopping criterium      : 5e-05
+  initial sigma offset    : 3
+  Psi sampling interval   : 15 degrees
+  Translational searches  : 3 pixels
+  Low resolution limit    : 999 Ang
+  High resolution limit   : 0 Ang
+  Check mirrors           : true
+    + Assuming images have been phase flipped 
+    + CTF group 1 contains 52 images
+    + CTF group 2 contains 52 images
+ -----------------------------------------------------------------
+--> Estimating initial noise models from average power spectra ...
+--> 3D-EM volume refinement:  iteration 1 of 2
+--> calculating 3D-SSNR ...
+--> Checking convergence 
+--> Relative signal change volume 1 = 6.979170
+--> 3D-EM volume refinement:  iteration 2 of 2
+--> projecting 1 volumes x 81 projections...
+ -----------------------------------------------------------------
+--> calculating 3D-SSNR ...
+--> Checking convergence 
+--> Relative signal change volume 1 = 0.096826
+--> Optimization was stopped before convergence was reached!

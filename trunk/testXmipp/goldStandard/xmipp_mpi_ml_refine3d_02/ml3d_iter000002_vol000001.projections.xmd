@@ -1,0 +1,95 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _ref3d
+ _iterationNumber
+ _ref
+ _weight
+ _mirrorFraction
+000001@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1     0.000000     0.000000     0.000000          1          2          1    19.980861     0.632102 
+000002@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -36.000000    15.858741     0.000000          1          2          2     0.000000     0.000000 
+000003@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -36.000000    31.717482     0.000000          1          2          3     0.000000     0.000000 
+000004@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -36.000000    47.576224     0.000000          1          2          4     0.000000     0.000000 
+000005@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -36.000000    63.434965     0.000000          1          2          5     0.000000     0.000000 
+000006@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -18.000000    90.000000     0.000000          1          2          6     0.000000     0.000000 
+000007@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -26.494295    76.558393     0.000000          1          2          7     0.000000     0.000000 
+000008@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    36.000000    15.858741     0.000000          1          2          8     0.000000     0.000000 
+000009@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    36.000000    31.717482     0.000000          1          2          9     0.000000     0.000000 
+000010@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    36.000000    47.576224     0.000000          1          2         10     0.000000     0.000000 
+000011@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    36.000000    63.434965     0.000000          1          2         11     0.000000     0.000000 
+000012@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    54.000000    90.000000     0.000000          1          2         12     0.000000     0.000000 
+000013@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    45.505705    76.558393     0.000000          1          2         13     0.000000     0.000000 
+000014@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   108.000000    15.858741     0.000000          1          2         14     0.000000     0.000000 
+000015@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   108.000000    31.717482     0.000000          1          2         15     0.000000     0.000000 
+000016@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   108.000000    47.576224     0.000000          1          2         16     0.000000     0.000000 
+000017@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   108.000000    63.434965     0.000000          1          2         17     0.000000     0.000000 
+000018@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   126.000000    90.000000     0.000000          1          2         18     0.000000     0.000000 
+000019@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   117.505705    76.558393     0.000000          1          2         19     0.000000     0.000000 
+000020@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   180.000000    15.858741     0.000000          1          2         20    13.948487     0.238392 
+000021@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   180.000000    31.717482     0.000000          1          2         21 1.922637e-15 422365793831643.562500 
+000022@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   180.000000    47.576224     0.000000          1          2         22     0.041279     3.002777 
+000023@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   180.000000    63.434965     0.000000          1          2         23     0.000000     0.000000 
+000024@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -162.000000    90.000000     0.000000          1          2         24     0.000000     0.000000 
+000025@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -170.494295    76.558393     0.000000          1          2         25     0.000000     0.000000 
+000026@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -108.000000    15.858741     0.000000          1          2         26     0.000000     0.000000 
+000027@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -108.000000    31.717482     0.000000          1          2         27     0.000000     0.000000 
+000028@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -108.000000    47.576224     0.000000          1          2         28     0.000000     0.000000 
+000029@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -108.000000    63.434965     0.000000          1          2         29     0.000000     0.000000 
+000030@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -90.000000    90.000000     0.000000          1          2         30    23.897165     0.495252 
+000031@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -98.494295    76.558393     0.000000          1          2         31     0.000000     0.000000 
+000032@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -117.505705    76.558393     0.000000          1          2         32     0.000000     0.000000 
+000033@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   170.494295    76.558393     0.000000          1          2         33     0.000000     0.000000 
+000034@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    98.494295    76.558393     0.000000          1          2         34     0.000000     0.000000 
+000035@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    26.494295    76.558393     0.000000          1          2         35     0.000000     0.000000 
+000036@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -45.505705    76.558393     0.000000          1          2         36     0.000000     0.000000 
+000037@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1     0.000000    26.565058     0.000000          1          2         37     0.000000     0.000000 
+000038@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -12.811021    42.234673     0.000000          1          2         38     0.000000     0.000000 
+000039@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    12.811021    42.234673     0.000000          1          2         39     0.000000     0.000000 
+000040@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -18.466996    59.620797     0.000000          1          2         40     0.000000     0.000000 
+000041@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1     0.000000    58.282544     0.000000          1          2         41 1.952855e-34 5128424761296976343741087124291584.000000 
+000042@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    18.466996    59.620797     0.000000          1          2         42     0.000000     0.000000 
+000043@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1     0.000000    90.000000     0.000000          1          2         43    39.005793     0.548744 
+000044@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    -8.867209    75.219088     0.000000          1          2         44     0.000000     0.000000 
+000045@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1     8.867209    75.219088     0.000000          1          2         45     0.000000     0.000000 
+000046@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    72.000000    26.565058     0.000000          1          2         46     0.000000     0.000000 
+000047@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    59.188979    42.234673     0.000000          1          2         47     0.000000     0.000000 
+000048@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    84.811021    42.234673     0.000000          1          2         48     2.097098     0.991524 
+000049@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    53.533003    59.620797     0.000000          1          2         49     0.000000     0.000000 
+000050@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    72.000000    58.282544     0.000000          1          2         50     0.000000     0.000000 
+000051@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    90.466996    59.620797     0.000000          1          2         51     5.029315     0.962131 
+000052@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    72.000000    90.000000     0.000000          1          2         52     0.000000     0.000000 
+000053@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    63.132791    75.219088     0.000000          1          2         53     0.000000     0.000000 
+000054@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1    80.867209    75.219088     0.000000          1          2         54     0.000000     0.000000 
+000055@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   144.000000    26.565058     0.000000          1          2         55     0.000000     0.000000 
+000056@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   131.188979    42.234673     0.000000          1          2         56     0.000000     0.000000 
+000057@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   156.811021    42.234673     0.000000          1          2         57     0.000000     0.000000 
+000058@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   125.533003    59.620797     0.000000          1          2         58     0.000000     0.000000 
+000059@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   144.000000    58.282544     0.000000          1          2         59     0.000000     0.000000 
+000060@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   162.466996    59.620797     0.000000          1          2         60     0.000000     0.000000 
+000061@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   144.000000    90.000000     0.000000          1          2         61     0.000000     0.000000 
+000062@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   135.132791    75.219088     0.000000          1          2         62 4.516220e-23 17313596117453574766592.000000 
+000063@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   152.867209    75.219088     0.000000          1          2         63     0.000000     0.000000 
+000064@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -144.000000    26.565058     0.000000          1          2         64     0.000000     0.000000 
+000065@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -156.811021    42.234673     0.000000          1          2         65     0.000000     0.000000 
+000066@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -131.188979    42.234673     0.000000          1          2         66     0.000000     0.000000 
+000067@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -162.466996    59.620797     0.000000          1          2         67     0.000000     0.000000 
+000068@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -144.000000    58.282544     0.000000          1          2         68     0.000000     0.000000 
+000069@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -125.533003    59.620797     0.000000          1          2         69     0.000000     0.000000 
+000070@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -144.000000    90.000000     0.000000          1          2         70     0.000000     0.000000 
+000071@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -152.867209    75.219088     0.000000          1          2         71     0.000000     0.000000 
+000072@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1  -135.132791    75.219088     0.000000          1          2         72     0.000000     0.000000 
+000073@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -72.000000    26.565058     0.000000          1          2         73     0.000000     0.000000 
+000074@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -84.811021    42.234673     0.000000          1          2         74     0.000000     0.000000 
+000075@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -59.188979    42.234673     0.000000          1          2         75     0.000000     0.000000 
+000076@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -90.466996    59.620797     0.000000          1          2         76 8.870033e-24 43623902632546893824.000000 
+000077@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -72.000000    58.282544     0.000000          1          2         77     0.000000     0.000000 
+000078@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -53.533003    59.620797     0.000000          1          2         78     0.000000     0.000000 
+000079@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -72.000000    90.000000     0.000000          1          2         79     0.000000     0.000000 
+000080@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -80.867209    75.219088     0.000000          1          2         80 1.286518e-35 44420115908435467298925119977553920.000000 
+000081@tmpLink/xmipp_mpi_ml_refine3d_02/ml3d_ml2d_iter000002_refs.stk          1   -63.132791    75.219088     0.000000          1          2         81     0.000000     0.000000 

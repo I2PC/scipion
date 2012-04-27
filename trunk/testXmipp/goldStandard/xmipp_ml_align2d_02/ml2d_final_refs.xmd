@@ -1,0 +1,34 @@
+# XMIPP_STAR_1 * 
+# 
+data_iter000015
+loop_
+ _image
+ _enabled
+ _iterationNumber
+ _ref
+ _weight
+ _signalChange
+000001@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          1     9.000000 2.157412e-29 
+000002@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          2     9.000000 1.537796e-29 
+000003@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          3     9.000000 2.045161e-29 
+000004@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          4    12.000000 1.734603e-29 
+000005@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          5    14.000000 1.933822e-29 
+000006@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          6    16.000000 1.887303e-29 
+000007@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          7    31.000000 1.473252e-16 
+000008@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1         15          8     4.000000 2.473909e-29 
+data_iter000003
+loop_
+ _image
+ _enabled
+ _iterationNumber
+ _ref
+ _weight
+ _signalChange
+000001@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          1     4.000000    21.784421 
+000002@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          2    10.998788    32.134312 
+000003@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          3    19.201661     5.839511 
+000004@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          4     4.000000    27.384355 
+000005@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          5    17.005698    13.307391 
+000006@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          6    24.793854     8.619038 
+000007@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          7    21.999998    24.627542 
+000008@tmpLink/xmipp_ml_align2d_02/ml2d_final_refs.stk          1          3          8     2.000000    16.150202 

@@ -1,0 +1,95 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _ref3d
+ _iterationNumber
+ _ref
+ _mirrorFraction
+ _weight
+000001@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1     0.000000     0.000000     0.000000          1          1          1     0.496719   103.110773 
+000002@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -36.000000    15.858741     0.000000          1          1          2     0.000000     0.000000 
+000003@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -36.000000    31.717482     0.000000          1          1          3     0.000000     0.000000 
+000004@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -36.000000    47.576224     0.000000          1          1          4     0.000000     0.000000 
+000005@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -36.000000    63.434965     0.000000          1          1          5     0.495231 2.350146e-33 
+000006@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -18.000000    90.000000     0.000000          1          1          6     0.005390 1.998432e-21 
+000007@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -26.494295    76.558393     0.000000          1          1          7     0.878697 3.039582e-33 
+000008@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    36.000000    15.858741     0.000000          1          1          8     0.000000     0.000000 
+000009@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    36.000000    31.717482     0.000000          1          1          9     0.000000     0.000000 
+000010@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    36.000000    47.576224     0.000000          1          1         10     0.000000     0.000000 
+000011@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    36.000000    63.434965     0.000000          1          1         11     0.498931 1.307097e-32 
+000012@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    54.000000    90.000000     0.000000          1          1         12     0.005032 1.749519e-24 
+000013@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    45.505705    76.558393     0.000000          1          1         13     0.876764 5.887221e-37 
+000014@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   108.000000    15.858741     0.000000          1          1         14     0.000000     0.000000 
+000015@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   108.000000    31.717482     0.000000          1          1         15     0.000000     0.000000 
+000016@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   108.000000    47.576224     0.000000          1          1         16     0.000000     0.000000 
+000017@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   108.000000    63.434965     0.000000          1          1         17     0.498984 4.716483e-39 
+000018@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   126.000000    90.000000     0.000000          1          1         18     0.005014 1.864874e-24 
+000019@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   117.505705    76.558393     0.000000          1          1         19     0.777306 2.700546e-37 
+000020@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   180.000000    15.858741     0.000000          1          1         20     0.001149 6.125500e-20 
+000021@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   180.000000    31.717482     0.000000          1          1         21     0.001500 6.245729e-32 
+000022@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   180.000000    47.576224     0.000000          1          1         22 9.527708e-04 1.312183e-24 
+000023@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   180.000000    63.434965     0.000000          1          1         23     0.487942 9.676925e-14 
+000024@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -162.000000    90.000000     0.000000          1          1         24     0.005325 5.754262e-20 
+000025@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -170.494295    76.558393     0.000000          1          1         25     1.000000 1.292937e-43 
+000026@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -108.000000    15.858741     0.000000          1          1         26     0.000000     0.000000 
+000027@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -108.000000    31.717482     0.000000          1          1         27     0.000000     0.000000 
+000028@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -108.000000    47.576224     0.000000          1          1         28     0.000000     0.000000 
+000029@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -108.000000    63.434965     0.000000          1          1         29     0.500960 1.016718e-38 
+000030@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -90.000000    90.000000     0.000000          1          1         30     0.998897     0.889227 
+000031@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -98.494295    76.558393     0.000000          1          1         31     0.925960 1.613156e-28 
+000032@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -117.505705    76.558393     0.000000          1          1         32     0.321643 9.346492e-36 
+000033@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   170.494295    76.558393     0.000000          1          1         33     0.476613 7.830042e-41 
+000034@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    98.494295    76.558393     0.000000          1          1         34     0.345587 3.876549e-25 
+000035@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    26.494295    76.558393     0.000000          1          1         35     0.380559 7.202422e-32 
+000036@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -45.505705    76.558393     0.000000          1          1         36     0.296370 3.340652e-35 
+000037@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1     0.000000    26.565058     0.000000          1          1         37     0.664627 2.409047e-34 
+000038@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -12.811021    42.234673     0.000000          1          1         38     0.000000     0.000000 
+000039@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    12.811021    42.234673     0.000000          1          1         39     0.000000     0.000000 
+000040@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -18.466996    59.620797     0.000000          1          1         40     0.997759 7.208220e-38 
+000041@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1     0.000000    58.282544     0.000000          1          1         41 2.195828e-04 3.071431e-31 
+000042@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    18.466996    59.620797     0.000000          1          1         42     0.029879 1.278957e-41 
+000043@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1     0.000000    90.000000     0.000000          1          1         43     0.566867 1.665214e-08 
+000044@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    -8.867209    75.219088     0.000000          1          1         44     0.000000     0.000000 
+000045@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1     8.867209    75.219088     0.000000          1          1         45     0.000000     0.000000 
+000046@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    72.000000    26.565058     0.000000          1          1         46     0.000000     0.000000 
+000047@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    59.188979    42.234673     0.000000          1          1         47     0.000000     0.000000 
+000048@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    84.811021    42.234673     0.000000          1          1         48     0.000000     0.000000 
+000049@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    53.533003    59.620797     0.000000          1          1         49     1.000000 6.669524e-43 
+000050@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    72.000000    58.282544     0.000000          1          1         50     0.000000     0.000000 
+000051@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    90.466996    59.620797     0.000000          1          1         51     0.030496 7.492465e-25 
+000052@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    72.000000    90.000000     0.000000          1          1         52     0.610150 1.345961e-30 
+000053@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    63.132791    75.219088     0.000000          1          1         53     0.000000     0.000000 
+000054@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1    80.867209    75.219088     0.000000          1          1         54     0.000000     0.000000 
+000055@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   144.000000    26.565058     0.000000          1          1         55     0.000000     0.000000 
+000056@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   131.188979    42.234673     0.000000          1          1         56     0.000000     0.000000 
+000057@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   156.811021    42.234673     0.000000          1          1         57     0.000000     0.000000 
+000058@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   125.533003    59.620797     0.000000          1          1         58     1.000000 8.083463e-43 
+000059@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   144.000000    58.282544     0.000000          1          1         59     0.000000     0.000000 
+000060@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   162.466996    59.620797     0.000000          1          1         60     0.000000     0.000000 
+000061@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   144.000000    90.000000     0.000000          1          1         61     0.590666 9.271932e-30 
+000062@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   135.132791    75.219088     0.000000          1          1         62     0.000000     0.000000 
+000063@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   152.867209    75.219088     0.000000          1          1         63     0.000000     0.000000 
+000064@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -144.000000    26.565058     0.000000          1          1         64     0.000000     0.000000 
+000065@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -156.811021    42.234673     0.000000          1          1         65     0.000000     0.000000 
+000066@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -131.188979    42.234673     0.000000          1          1         66     0.000000     0.000000 
+000067@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -162.466996    59.620797     0.000000          1          1         67     1.000000 2.027737e-42 
+000068@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -144.000000    58.282544     0.000000          1          1         68     0.000000     0.000000 
+000069@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -125.533003    59.620797     0.000000          1          1         69     0.000000     0.000000 
+000070@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -144.000000    90.000000     0.000000          1          1         70     0.645263 9.051433e-30 
+000071@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -152.867209    75.219088     0.000000          1          1         71     0.000000     0.000000 
+000072@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1  -135.132791    75.219088     0.000000          1          1         72     0.000000     0.000000 
+000073@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -72.000000    26.565058     0.000000          1          1         73     0.000000     0.000000 
+000074@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -84.811021    42.234673     0.000000          1          1         74     0.000000     0.000000 
+000075@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -59.188979    42.234673     0.000000          1          1         75     0.000000     0.000000 
+000076@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -90.466996    59.620797     0.000000          1          1         76     0.996046 2.272988e-23 
+000077@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -72.000000    58.282544     0.000000          1          1         77     0.000000     0.000000 
+000078@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -53.533003    59.620797     0.000000          1          1         78     0.000000     0.000000 
+000079@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -72.000000    90.000000     0.000000          1          1         79     0.617573 1.634959e-31 
+000080@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -80.867209    75.219088     0.000000          1          1         80     0.000000     0.000000 
+000081@tmpLink/xmipp_mlf_refine3d_02/mlf3d_mlf2d_iter000001_refs.stk          1   -63.132791    75.219088     0.000000          1          1         81     0.000000     0.000000 

@@ -1,0 +1,24 @@
+# XMIPP_STAR_1 * 
+# 
+data_iter000011
+loop_
+ _image
+ _enabled
+ _iterationNumber
+ _ref
+ _weight
+ _mirrorFraction
+ _signalChange
+000001@tmpLink/xmipp_ml_align2d_01/ml2d_final_refs.stk          1         11          1    90.066841     0.544125     0.001451 
+000002@tmpLink/xmipp_ml_align2d_01/ml2d_final_refs.stk          1         11          2   124.933159     0.320037 8.838748e-04 
+data_iter000003
+loop_
+ _image
+ _enabled
+ _iterationNumber
+ _ref
+ _weight
+ _mirrorFraction
+ _signalChange
+000001@tmpLink/xmipp_ml_align2d_01/ml2d_final_refs.stk          1          3          1    75.146888     0.514373   660.309216 
+000002@tmpLink/xmipp_ml_align2d_01/ml2d_final_refs.stk          1          3          2   139.853112     0.392320   565.625319 

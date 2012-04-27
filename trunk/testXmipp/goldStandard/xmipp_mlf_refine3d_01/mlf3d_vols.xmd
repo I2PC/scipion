@@ -1,0 +1,72 @@
+# XMIPP_STAR_1 * 
+# 
+data_iter000003
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000003_vol000001.vol          1 
+data_iter000004
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000004_vol000001.vol          1 
+data_iter000005
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000005_vol000001.vol          1 
+data_iter000006
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000006_vol000001.vol          1 
+data_iter000007
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000007_vol000001.vol          1 
+data_iter000008
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000008_vol000001.vol          1 
+data_iter000009
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000009_vol000001.vol          1 
+data_iter000010
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000010_vol000001.vol          1 
+data_iter000011
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000011_vol000001.vol          1 
+data_iter000012
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000012_vol000001.vol          1 
+data_iter000013
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000013_vol000001.vol          1 
+data_iter000014
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000014_vol000001.vol          1 
+data_iter000001
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000001_vol000001.vol          1 
+data_iter000002
+loop_
+ _image
+ _enabled
+tmpLink/xmipp_mlf_refine3d_01/mlf3d_iter000002_vol000001.vol          1 

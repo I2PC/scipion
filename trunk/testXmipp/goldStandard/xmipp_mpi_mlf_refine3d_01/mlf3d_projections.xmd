@@ -1,0 +1,91 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _ref3d
+000001@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1     0.000000     0.000000     0.000000          1 
+000002@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -36.000000    15.858741     0.000000          1 
+000003@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -36.000000    31.717482     0.000000          1 
+000004@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -36.000000    47.576224     0.000000          1 
+000005@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -36.000000    63.434965     0.000000          1 
+000006@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -18.000000    90.000000     0.000000          1 
+000007@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -26.494295    76.558393     0.000000          1 
+000008@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    36.000000    15.858741     0.000000          1 
+000009@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    36.000000    31.717482     0.000000          1 
+000010@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    36.000000    47.576224     0.000000          1 
+000011@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    36.000000    63.434965     0.000000          1 
+000012@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    54.000000    90.000000     0.000000          1 
+000013@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    45.505705    76.558393     0.000000          1 
+000014@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   108.000000    15.858741     0.000000          1 
+000015@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   108.000000    31.717482     0.000000          1 
+000016@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   108.000000    47.576224     0.000000          1 
+000017@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   108.000000    63.434965     0.000000          1 
+000018@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   126.000000    90.000000     0.000000          1 
+000019@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   117.505705    76.558393     0.000000          1 
+000020@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   180.000000    15.858741     0.000000          1 
+000021@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   180.000000    31.717482     0.000000          1 
+000022@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   180.000000    47.576224     0.000000          1 
+000023@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   180.000000    63.434965     0.000000          1 
+000024@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -162.000000    90.000000     0.000000          1 
+000025@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -170.494295    76.558393     0.000000          1 
+000026@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -108.000000    15.858741     0.000000          1 
+000027@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -108.000000    31.717482     0.000000          1 
+000028@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -108.000000    47.576224     0.000000          1 
+000029@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -108.000000    63.434965     0.000000          1 
+000030@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -90.000000    90.000000     0.000000          1 
+000031@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -98.494295    76.558393     0.000000          1 
+000032@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -117.505705    76.558393     0.000000          1 
+000033@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   170.494295    76.558393     0.000000          1 
+000034@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    98.494295    76.558393     0.000000          1 
+000035@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    26.494295    76.558393     0.000000          1 
+000036@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -45.505705    76.558393     0.000000          1 
+000037@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1     0.000000    26.565058     0.000000          1 
+000038@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -12.811021    42.234673     0.000000          1 
+000039@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    12.811021    42.234673     0.000000          1 
+000040@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -18.466996    59.620797     0.000000          1 
+000041@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1     0.000000    58.282544     0.000000          1 
+000042@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    18.466996    59.620797     0.000000          1 
+000043@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1     0.000000    90.000000     0.000000          1 
+000044@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    -8.867209    75.219088     0.000000          1 
+000045@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1     8.867209    75.219088     0.000000          1 
+000046@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    72.000000    26.565058     0.000000          1 
+000047@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    59.188979    42.234673     0.000000          1 
+000048@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    84.811021    42.234673     0.000000          1 
+000049@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    53.533003    59.620797     0.000000          1 
+000050@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    72.000000    58.282544     0.000000          1 
+000051@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    90.466996    59.620797     0.000000          1 
+000052@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    72.000000    90.000000     0.000000          1 
+000053@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    63.132791    75.219088     0.000000          1 
+000054@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1    80.867209    75.219088     0.000000          1 
+000055@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   144.000000    26.565058     0.000000          1 
+000056@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   131.188979    42.234673     0.000000          1 
+000057@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   156.811021    42.234673     0.000000          1 
+000058@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   125.533003    59.620797     0.000000          1 
+000059@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   144.000000    58.282544     0.000000          1 
+000060@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   162.466996    59.620797     0.000000          1 
+000061@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   144.000000    90.000000     0.000000          1 
+000062@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   135.132791    75.219088     0.000000          1 
+000063@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   152.867209    75.219088     0.000000          1 
+000064@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -144.000000    26.565058     0.000000          1 
+000065@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -156.811021    42.234673     0.000000          1 
+000066@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -131.188979    42.234673     0.000000          1 
+000067@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -162.466996    59.620797     0.000000          1 
+000068@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -144.000000    58.282544     0.000000          1 
+000069@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -125.533003    59.620797     0.000000          1 
+000070@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -144.000000    90.000000     0.000000          1 
+000071@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -152.867209    75.219088     0.000000          1 
+000072@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1  -135.132791    75.219088     0.000000          1 
+000073@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -72.000000    26.565058     0.000000          1 
+000074@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -84.811021    42.234673     0.000000          1 
+000075@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -59.188979    42.234673     0.000000          1 
+000076@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -90.466996    59.620797     0.000000          1 
+000077@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -72.000000    58.282544     0.000000          1 
+000078@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -53.533003    59.620797     0.000000          1 
+000079@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -72.000000    90.000000     0.000000          1 
+000080@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -80.867209    75.219088     0.000000          1 
+000081@tmpLink/xmipp_mpi_mlf_refine3d_01/mlf3d_projections.stk          1   -63.132791    75.219088     0.000000          1 

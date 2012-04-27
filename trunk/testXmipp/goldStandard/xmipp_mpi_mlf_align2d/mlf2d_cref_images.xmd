@@ -1,0 +1,18 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _iterationNumber
+ _ref
+ _signalChange
+ _weight
+000001@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          1     8.470710    27.124716 
+000002@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          2 -1000.000000     0.000000 
+000003@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          3 -1000.000000     0.000000 
+000004@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          4 -1000.000000     0.000000 
+000005@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          5     7.766789    76.875284 
+000006@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          6 -1000.000000     0.000000 
+000007@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          7 -1000.000000     0.000000 
+000008@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_cref_images.stk          1          3          8 -1000.000000     0.000000 

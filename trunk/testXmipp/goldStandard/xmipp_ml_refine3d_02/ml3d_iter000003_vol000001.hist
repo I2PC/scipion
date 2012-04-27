@@ -1,0 +1,207 @@
+WLS-ART% Sum over all weights = 6
+ ============================================================
+ ART RECONSTRUCTION HISTORY: 
+ ============================================================
+
+ Parameters -------------------------------------------------
+ Projections file     : tmpLink/xmipp_ml_refine3d_02/ml3d_iter000003_vol000001.projections.xmd
+ CTF file             : 
+ Goldmask             : 1e+06
+ Unmatched projectors : 0
+ Sampling             : 1
+ Blobs:         radius=2 pixels alpha=10.4 order=2
+
+ Grid Type: BCC  Shifted tomograms:0
+ Ray length: -1
+
+ Radius of the interest sphere= -1 pixels
+ Grid unit=1.41 pixels
+ No Projection extension
+ Output volume size as input images
+ Iterations:    lambda=
+       0.2 
+                No. Iter=10
+ Perform weighted least-squares ART 
+ Iterations:    kappa=
+       0.5 
+                No. Iter=10
+ Parallel mode: ART
+ Equation mode: ARTK
+ Projections: Ydim x Xdim = 32 x 32
+ Surface mask: 
+ POCS freq: 1
+ Known volume: -1
+ Positivity: 0
+ Apply shifts in images headers: 1
+ Symmetry file: 
+ Force Symmetry each: 0 projections
+ Maximun absolute tilt angle: 1e+07 degrees
+ Generating symmetry group: 1
+ Do not use symmetrized projections: 1
+ Number of total projections (including symmetrized): 6
+ Number of different projections: 6
+ Forcing symmetry: 0
+ Stop at: 0
+ Sort with last 2 images
+ Variability analysis: 0
+ Refine projections: 0
+ Sparsity epsilon: -1
+ Diffusion weight: -1
+ Saving intermidiate at every 0 projections
+ Projection angles -----------------------------------------
+rot= 0 tilt= 0 psi= 0
+rot= 180 tilt= 15.8587 psi= 0
+rot= 270 tilt= 90 psi= 0
+rot= 0 tilt= 90 psi= 0
+rot= 84.811 tilt= 42.2347 psi= 0
+rot= 90.467 tilt= 59.6208 psi= 0
+ -----------------------------------------------------------
+ Starting from file: tmpLink/xmipp_ml_refine3d_02/ml3d_iter000002_vol000001.basis
+ Grid structure ------
+Complex Grid -------------------------------------
+   Simple Grid -----
+   Vector 1: 
+         1
+         0
+         0
+
+   Vector 2: 
+         0
+         1
+         0
+
+   Vector 3: 
+         0
+         0
+         1
+
+   Relative size:         1.41
+   Interest radius:       -1
+   Origin (univ.coords)   
+         0
+         0
+         0
+
+   Highest (grid. coord)  
+        12
+        12
+        12
+
+   Lowest (grid. coord)   
+       -12
+       -12
+       -12
+
+   Simple Grid -----
+   Vector 1: 
+         1
+         0
+         0
+
+   Vector 2: 
+         0
+         1
+         0
+
+   Vector 3: 
+         0
+         0
+         1
+
+   Relative size:         1.41
+   Interest radius:       -1
+   Origin (univ.coords)   
+     0.705
+     0.705
+     0.705
+
+   Highest (grid. coord)  
+        11
+        11
+        11
+
+   Lowest (grid. coord)   
+       -12
+       -12
+       -12
+
+ Extra: 000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.28208
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.351711
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.456456
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.20102
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.247394
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.097703
+Finished - Iteration 0
+   Weighted error: 1.63636 1st block: 1.63636 2nd block: 3.44166e-06 residual: 0.000141617
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.24206
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.312445
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.421065
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.167626
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.16457
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0873175
+Finished - Iteration 1
+   Weighted error: 1.39508 1st block: 1.37758 2nd block: 7.52749e-06 residual: 0.000489047
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.21905
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.29159
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.394456
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.144892
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.129261
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0790242
+Finished - Iteration 2
+   Weighted error: 1.25827 1st block: 1.22748 2nd block: 1.12657e-05 residual: 0.000974103
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.203662
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.276858
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.372559
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.127635
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.110393
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0722375
+Finished - Iteration 3
+   Weighted error: 1.16335 1st block: 1.12169 2nd block: 1.44637e-05 residual: 0.00155126
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.192428
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.265356
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.354375
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.113922
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0984357
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0665948
+Finished - Iteration 4
+   Weighted error: 1.09111 1st block: 1.04026 2nd block: 1.72715e-05 residual: 0.0021891
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.183766
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.255903
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.339063
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.102734
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0899053
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0618428
+Finished - Iteration 5
+   Weighted error: 1.03321 1st block: 0.974412 2nd block: 1.97762e-05 residual: 0.00286535
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.176853
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.247879
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.325984
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0934352
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0833258
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0577971
+Finished - Iteration 6
+   Weighted error: 0.985275 1st block: 0.919495 2nd block: 2.20449e-05 residual: 0.00356417
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.171203
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.240916
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.314667
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0855977
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0779844
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.05432
+Finished - Iteration 7
+   Weighted error: 0.944689 1st block: 0.872703 2nd block: 2.4115e-05 residual: 0.00427426
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.1665
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.234774
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.304763
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0789154
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0734958
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0513061
+Finished - Iteration 8
+   Weighted error: 0.909754 1st block: 0.832188 2nd block: 2.60131e-05 residual: 0.00498766
+000001@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.162527
+000030@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.229286
+000043@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.29601
+000020@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0731623
+000051@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0696311
+000048@tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d_iter000003_refs.stk, sym=-1		0.0486737
+Finished - Iteration 9
+   Weighted error: 0.87929 1st block: 0.796654 2nd block: 2.77572e-05 residual: 0.00569884

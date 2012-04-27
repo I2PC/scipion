@@ -1,0 +1,23 @@
+ -----------------------------------------------------------------
+ | Read more about this program in the following publications:   |
+ |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |
+ |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |
+ |                                                               |
+ |  *** Please cite them if this program is of use to you! ***   |
+ -----------------------------------------------------------------
+--> Maximum-likelihood multi-reference refinement 
+  Input images            : input/mlData/phantom_images.xmd (104)
+  Reference image(s)      : tmpLink/xmipp_ml_align2d_03/ml2d_images_average.xmp (1)
+  Reference expanding factor   : 4
+  Number of references:   : 4
+  Output rootname         : tmpLink/xmipp_ml_align2d_03/ml2d
+  Stopping criterium      : 5e-05
+  Initial sigma noise     : 1
+  Initial sigma offset    : 3
+  Psi sampling interval   : 5
+  Check mirrors           : false
+ -----------------------------------------------------------------
+  Multi-reference refinement:  iteration 0 of 2
+  Multi-reference refinement:  iteration 1 of 2
+  Multi-reference refinement:  iteration 2 of 2
+--> Optimization was stopped before convergence was reached!

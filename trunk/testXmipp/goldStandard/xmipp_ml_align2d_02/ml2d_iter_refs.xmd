@@ -1,0 +1,34 @@
+# XMIPP_STAR_1 * 
+# 
+data_iter000001
+loop_
+ _image
+ _enabled
+ _iterationNumber
+ _ref
+ _weight
+ _signalChange
+000001@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          1     5.322725   123.177964 
+000002@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          2     9.438400    49.329211 
+000003@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          3    17.864309    83.533544 
+000004@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          4 1.096753e-11   219.319946 
+000005@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          5    19.941929    97.622512 
+000006@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          6    29.440104   142.133370 
+000007@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          7    20.991687    52.530287 
+000008@tmpLink/xmipp_ml_align2d_02/ml2d_iter000001_refs.stk          1          1          8     1.000846   319.559123 
+data_iter000002
+loop_
+ _image
+ _enabled
+ _iterationNumber
+ _ref
+ _weight
+ _signalChange
+000001@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          1     4.000000    21.784421 
+000002@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          2    10.998788    32.134312 
+000003@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          3    19.201661     5.839511 
+000004@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          4     4.000000    27.384355 
+000005@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          5    17.005698    13.307391 
+000006@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          6    24.793854     8.619038 
+000007@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          7    21.999998    24.627542 
+000008@tmpLink/xmipp_ml_align2d_02/ml2d_iter000002_refs.stk          1          2          8     2.000000    16.150202 

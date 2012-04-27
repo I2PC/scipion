@@ -1,0 +1,156 @@
+ -----------------------------------------------------------------
+ | Read more about this program in the following publication:    |
+ |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |
+ |                                                               |
+ |    *** Please cite it if this program is of use to you! ***   |
+ -----------------------------------------------------------------
+--> Maximum-likelihood multi-reference 3D-refinement
+  Initial reference volume : input/mlData/icoFiltered.vol
+  Experimental images:     : input/mlData/phantom_images.xmd
+  Angular sampling rate    : 15
+  Symmetry group:          : c1
+  Output rootname          : tmpLink/xmipp_ml_refine3d_02/ml3d
+  Convergence criterion    : 5e-05
+ -----------------------------------------------------------------
+--> projecting 1 volumes x 81 projections...
+ -----------------------------------------------------------------
+--> Maximum-likelihood multi-reference refinement 
+  Input images            : tmpLink/xmipp_ml_refine3d_02/ml3dimages_node00.xmd (104)
+  Reference image(s)      : tmpLink/xmipp_ml_refine3d_02/ml3d_projections.xmd (-1)
+  Number of references:   : -1
+  Output rootname         : tmpLink/xmipp_ml_refine3d_02/ml3d_ml2d
+  Stopping criterium      : 5e-05
+  Initial sigma noise     : 1
+  Initial sigma offset    : 3
+  Psi sampling interval   : 15
+  Check mirrors           : true
+  -> Use fast, reduced search-space approach with C = 1e-12
+  -> Save_memory B: limit translations to 3 sigma_offset 
+ -----------------------------------------------------------------
+--> 3D-EM volume refinement:  iteration 1 of 2
+Reading angle information ...
+Sorting projections ...
+
+Running iteration 0 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 8.43118 1st block: 8.43118 2nd block: 0.0026891 residual: 0.0316506
+Running iteration 1 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 2.48416 1st block: 2.08283 2nd block: 0.00222891 residual: 0.0710676
+Running iteration 2 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.47979 1st block: 1.01763 2nd block: 0.00213642 residual: 0.108068
+Running iteration 3 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.06388 1st block: 0.591725 2nd block: 0.00206636 residual: 0.140607
+Running iteration 4 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 0.846167 1st block: 0.379997 2nd block: 0.00201623 residual: 0.16835
+Running iteration 5 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 0.71599 1st block: 0.260826 2nd block: 0.00196136 residual: 0.191598
+Running iteration 6 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 0.631102 1st block: 0.188049 2nd block: 0.00190609 residual: 0.210876
+Running iteration 7 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 0.572237 1st block: 0.140904 2nd block: 0.00185089 residual: 0.226747
+Running iteration 8 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 0.529508 1st block: 0.108971 2nd block: 0.00179738 residual: 0.239745
+Running iteration 9 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 0.49736 1st block: 0.0865533 2nd block: 0.00174614 residual: 0.250345
+
+Time of 10 iterations: 
+Elapsed time: User(25.72) System(0.08)
+INIT_TIME: 0.022479
+PROCESS_TIME: 25.8897
+FINISH_TIME: 0.073096
+--> Checking convergence 
+--> Relative signal change volume 1 = 0.347835
+--> 3D-EM volume refinement:  iteration 2 of 2
+--> projecting 1 volumes x 81 projections...
+ -----------------------------------------------------------------
+Reading angle information ...
+Sorting projections ...
+
+Running iteration 0 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 3.44414 1st block: 3.44414 2nd block: 2.82672e-05 residual: 0.000585546
+Running iteration 1 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 2.49894 1st block: 2.45347 2nd block: 6.05658e-05 residual: 0.0018333
+Running iteration 2 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 2.01221 1st block: 1.94098 2nd block: 8.51223e-05 residual: 0.00335976
+Running iteration 3 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.70595 1st block: 1.61785 2nd block: 0.000102021 residual: 0.00498442
+Running iteration 4 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.49439 1st block: 1.39434 2nd block: 0.00011341 residual: 0.00661554
+Running iteration 5 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.3394 1st block: 1.23046 2nd block: 0.000120996 residual: 0.00820499
+Running iteration 6 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.22109 1st block: 1.1053 2nd block: 0.000126024 residual: 0.00972808
+Running iteration 7 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.12796 1st block: 1.00675 2nd block: 0.000129314 residual: 0.0111734
+Running iteration 8 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 1.05285 1st block: 0.927232 2nd block: 0.000131411 residual: 0.0125374
+Running iteration 9 with lambda= 0.2
+
+Backprojection of residual images 
+Projection of residual volume; kappa = 0.5
+   Weighted error: 0.991067 1st block: 0.86179 2nd block: 0.000132671 residual: 0.0138206
+
+Time of 10 iterations: 
+Elapsed time: User(3.45) System(0.01)
+INIT_TIME: 0.012352
+PROCESS_TIME: 3.46526
+FINISH_TIME: 0.073476
+--> Checking convergence 
+--> Relative signal change volume 1 = 0.031990
+--> Optimization was stopped before convergence was reached!

@@ -1,0 +1,39 @@
+ -----------------------------------------------------------------
+ | Read more about this program in the following publication:    |
+ |  Scheres ea. (2007)  Nature Methods, 4, 27-29                 |
+ |                                                               |
+ |    *** Please cite it if this program is of use to you! ***   |
+ -----------------------------------------------------------------
+--> Maximum-likelihood multi-reference 3D-refinement
+  Initial reference volume : input/mlData/icoFiltered.vol
+  Experimental images:     : input/mlData/phantom_images.xmd
+  Angular sampling rate    : 15
+  Symmetry group:          : c1
+  Output rootname          : tmpLink/xmipp_mpi_ml_refine3d_01/ml3d
+  Convergence criterion    : 5e-05
+  -> Use fourier-interpolation instead of wlsART for reconstruction
+ -----------------------------------------------------------------
+--> projecting 1 volumes x 81 projections...
+ -----------------------------------------------------------------
+--> Maximum-likelihood multi-reference refinement 
+  Input images            : tmpLink/xmipp_mpi_ml_refine3d_01/ml3dimages_node00.xmd (104)
+  Reference image(s)      : tmpLink/xmipp_mpi_ml_refine3d_01/ml3d_projections.xmd (-1)
+  Number of references:   : -1
+  Output rootname         : tmpLink/xmipp_mpi_ml_refine3d_01/ml3d_ml2d
+  Stopping criterium      : 5e-05
+  Initial sigma noise     : 1
+  Initial sigma offset    : 3
+  Psi sampling interval   : 15
+  Check mirrors           : true
+  -> Use fast, reduced search-space approach with C = 1e-12
+  -> Save_memory B: limit translations to 3 sigma_offset 
+ -----------------------------------------------------------------
+--> 3D-EM volume refinement:  iteration 1 of 2
+--> Checking convergence 
+--> Relative signal change volume 1 = 1.809006
+--> 3D-EM volume refinement:  iteration 2 of 2
+--> projecting 1 volumes x 81 projections...
+ -----------------------------------------------------------------
+--> Checking convergence 
+--> Relative signal change volume 1 = 0.083729
+--> Optimization was stopped before convergence was reached!

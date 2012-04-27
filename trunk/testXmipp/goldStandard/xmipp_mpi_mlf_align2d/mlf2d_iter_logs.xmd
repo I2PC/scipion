@@ -1,0 +1,13 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _iterationNumber
+ _logLikelihood
+ _pMax
+ _sigmaOffset
+ _randomSeed
+ _imageMetaData
+ _referenceMetaData
+         1 -2711529.839439   104.000000     0.000000 1335531376 iter000001@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_iter_images.xmd iter000001@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_iter_refs.xmd 
+         2 222981.036096   104.000000     0.000000 1335531376 iter000002@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_iter_images.xmd iter000002@tmpLink/xmipp_mpi_mlf_align2d/mlf2d_iter_refs.xmd 

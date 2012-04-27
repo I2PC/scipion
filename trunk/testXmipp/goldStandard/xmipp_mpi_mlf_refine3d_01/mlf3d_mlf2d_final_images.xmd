@@ -1,0 +1,121 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _CTFModel
+ _enabled
+ _count
+ _defocusGroup
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _shiftX
+ _shiftY
+ _ref
+ _flip
+ _pMax
+000001@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   178.250000     0.000000     0.000000          2 1     0.715266 
+000002@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 0     0.476104 
+000003@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   268.250000     0.000000     0.000000          2 0     0.792143 
+000004@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.721972 
+000005@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   358.250000     0.000000     0.000000          2 0     0.768572 
+000006@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    88.250000     0.000000     0.000000          2 0     0.657843 
+000007@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   253.250000     0.000000     0.000000          2 1     0.410769 
+000008@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   268.250000     0.000000     0.000000          2 1     0.873038 
+000009@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 1     0.747318 
+000010@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 0     0.401909 
+000011@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   253.250000     0.000000     0.000000          2 0     0.495697 
+000012@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.809755 
+000013@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 1     0.527738 
+000014@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.483758 
+000015@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 0     0.650465 
+000016@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.348032 
+000017@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.886243 
+000018@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   358.250000     0.000000     0.000000          2 1     0.467692 
+000019@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   358.250000     0.000000     0.000000          2 1     0.364043 
+000020@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 1     0.975649 
+000021@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    88.250000     0.000000     0.000000          2 1     0.645058 
+000022@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    88.250000     0.000000     0.000000          2 1     0.418558 
+000023@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.644355 
+000024@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    88.250000     0.000000     0.000000          2 0     0.626581 
+000025@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 1     0.866486 
+000026@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.612243 
+000027@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   358.250000     0.000000     0.000000          2 1     0.758973 
+000028@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    73.250000     0.000000     0.000000          2 0     0.608665 
+000029@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.279061 
+000030@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   268.250000     0.000000     0.000000          2 0     0.696728 
+000031@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.573417 
+000032@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   358.250000     0.000000     0.000000          2 1     0.550415 
+000033@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.674031 
+000034@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 0     0.791636 
+000035@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.863279 
+000036@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 1     0.304076 
+000037@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    88.250000     0.000000     0.000000          2 1     0.723247 
+000038@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.883605 
+000039@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.991845 
+000040@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.666999 
+000041@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   253.250000     0.000000     0.000000          2 0     0.509405 
+000042@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   268.250000     0.000000     0.000000          2 0     0.931004 
+000043@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.985554 
+000044@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.492416 
+000045@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    88.250000     0.000000     0.000000          2 0     0.793212 
+000046@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.748363 
+000047@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 1     0.908855 
+000048@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    88.250000     0.000000     0.000000          2 0     0.560698 
+000049@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.685278 
+000050@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   358.250000     0.000000     0.000000          2 0     0.496913 
+000051@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 1     0.930968 
+000052@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 1     0.981206 
+000053@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   268.250000     0.000000     0.000000          2 1     0.612312 
+000054@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.494228 
+000055@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.958522 
+000056@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    73.250000     0.000000     0.000000          2 0     0.745756 
+000057@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.979123 
+000058@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 0     0.948077 
+000059@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 1     0.751787 
+000060@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 0     0.738537 
+000061@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   268.250000     0.000000     0.000000          2 1     0.840872 
+000062@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.567353 
+000063@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    88.250000     0.000000     0.000000          2 0     0.858863 
+000064@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   268.250000     0.000000     0.000000          2 0     0.906127 
+000065@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   253.250000     0.000000     0.000000          2 0     0.414442 
+000066@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    88.250000     0.000000     0.000000          2 1     0.675620 
+000067@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   268.250000     0.000000     0.000000          2 0     0.730891 
+000068@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 1     0.513928 
+000069@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 0     0.962278 
+000070@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   358.250000     0.000000     0.000000          2 0     0.826292 
+000071@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 1     0.933051 
+000072@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    88.250000     0.000000     0.000000          2 0     0.376791 
+000073@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.811201 
+000074@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.904537 
+000075@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    73.250000     0.000000     0.000000          2 0     0.491050 
+000076@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.750545 
+000077@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    88.250000     0.000000     0.000000          2 0     0.840055 
+000078@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   253.250000     0.000000     0.000000          2 1     0.967214 
+000079@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 1     0.621288 
+000080@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.799941 
+000081@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   358.250000     0.000000     0.000000          2 0     0.521772 
+000082@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 1     0.950156 
+000083@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   268.250000     0.000000     0.000000          2 0     0.636934 
+000084@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 0     0.706135 
+000085@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 0     0.981148 
+000086@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.405076 
+000087@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 0     0.795956 
+000088@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.915874 
+000089@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.687890 
+000090@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   343.250000     0.000000     0.000000          2 1     0.904633 
+000091@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   343.250000     0.000000     0.000000          2 1     0.637433 
+000092@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   343.250000     0.000000     0.000000          2 1     0.944144 
+000093@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 1     0.398156 
+000094@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   178.250000     0.000000     0.000000          2 1     0.540757 
+000095@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000    73.250000     0.000000     0.000000          2 1     0.762285 
+000096@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   163.250000     0.000000     0.000000          2 0     0.999470 
+000097@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   178.250000     0.000000     0.000000          2 0     0.927366 
+000098@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000    73.250000     0.000000     0.000000          2 1     0.999552 
+000099@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   118.250000     0.000000     0.000000          2 1     0.496288 
+000100@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   178.250000     0.000000     0.000000          2 0     0.731352 
+000101@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   253.250000     0.000000     0.000000          2 1     0.495723 
+000102@input/mlData/phantom_images.stk input/mlData/CTFs/10.ctfparam          1         52          0     0.000000     0.000000   358.250000     0.000000     0.000000          2 0     0.914813 
+000103@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   343.250000     0.000000     0.000000          2 0     0.420999 
+000104@input/mlData/phantom_images.stk input/mlData/CTFs/20.ctfparam          1         52          1     0.000000     0.000000   178.250000     0.000000     0.000000          2 0     0.461328 

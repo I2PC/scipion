@@ -1,0 +1,152 @@
+WLS-ART% Sum over all weights = 1
+ ============================================================
+ ART RECONSTRUCTION HISTORY: 
+ ============================================================
+
+ Parameters -------------------------------------------------
+ Projections file     : tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_iter000004_vol000001.projections.xmd
+ CTF file             : 
+ Goldmask             : 1e+06
+ Unmatched projectors : 0
+ Sampling             : 1
+ Blobs:         radius=2 pixels alpha=10.4 order=2
+
+ Grid Type: BCC  Shifted tomograms:0
+ Ray length: -1
+
+ Radius of the interest sphere= -1 pixels
+ Grid unit=1.41 pixels
+ No Projection extension
+ Output volume size as input images
+ Iterations:    lambda=
+       0.2 
+                No. Iter=10
+ Perform weighted least-squares ART 
+ Iterations:    kappa=
+       0.5 
+                No. Iter=10
+ Parallel mode: ART
+ Equation mode: ARTK
+ Projections: Ydim x Xdim = 32 x 32
+ Surface mask: 
+ POCS freq: 1
+ Known volume: -1
+ Positivity: 0
+ Apply shifts in images headers: 1
+ Symmetry file: 
+ Force Symmetry each: 0 projections
+ Maximun absolute tilt angle: 1e+07 degrees
+ Generating symmetry group: 1
+ Do not use symmetrized projections: 1
+ Number of total projections (including symmetrized): 1
+ Number of different projections: 1
+ Forcing symmetry: 0
+ Stop at: 0
+ Sort with last 2 images
+ Variability analysis: 0
+ Refine projections: 0
+ Sparsity epsilon: -1
+ Diffusion weight: -1
+ Saving intermidiate at every 0 projections
+ Projection angles -----------------------------------------
+rot= 0 tilt= 0 psi= 0
+ -----------------------------------------------------------
+ Starting from file: tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_iter000003_vol000001.basis
+ Grid structure ------
+Complex Grid -------------------------------------
+   Simple Grid -----
+   Vector 1: 
+         1
+         0
+         0
+
+   Vector 2: 
+         0
+         1
+         0
+
+   Vector 3: 
+         0
+         0
+         1
+
+   Relative size:         1.41
+   Interest radius:       -1
+   Origin (univ.coords)   
+         0
+         0
+         0
+
+   Highest (grid. coord)  
+        12
+        12
+        12
+
+   Lowest (grid. coord)   
+       -12
+       -12
+       -12
+
+   Simple Grid -----
+   Vector 1: 
+         1
+         0
+         0
+
+   Vector 2: 
+         0
+         1
+         0
+
+   Vector 3: 
+         0
+         0
+         1
+
+   Relative size:         1.41
+   Interest radius:       -1
+   Origin (univ.coords)   
+     0.705
+     0.705
+     0.705
+
+   Highest (grid. coord)  
+        11
+        11
+        11
+
+   Lowest (grid. coord)   
+       -12
+       -12
+       -12
+
+ Extra: 000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		18.5577
+Finished - Iteration 0
+   Weighted error: 18.5577 1st block: 18.5577 2nd block: 7.39221e-08 residual: 3.13423e-07
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		15.9691
+Finished - Iteration 1
+   Weighted error: 15.9691 1st block: 15.965 2nd block: 1.69756e-08 residual: 1.16469e-06
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		15.1889
+Finished - Iteration 2
+   Weighted error: 15.1889 1st block: 15.1807 2nd block: 1.53704e-08 residual: 2.57689e-06
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		14.796
+Finished - Iteration 3
+   Weighted error: 14.796 1st block: 14.7838 2nd block: 1.18058e-08 residual: 4.52649e-06
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		14.5398
+Finished - Iteration 4
+   Weighted error: 14.5398 1st block: 14.5238 2nd block: 1.11481e-08 residual: 7.01807e-06
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		14.3539
+Finished - Iteration 5
+   Weighted error: 14.3539 1st block: 14.3341 2nd block: 1.04287e-08 residual: 1.00461e-05
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		14.2122
+Finished - Iteration 6
+   Weighted error: 14.2122 1st block: 14.1887 2nd block: 1.0047e-08 residual: 1.36159e-05
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		14.1012
+Finished - Iteration 7
+   Weighted error: 14.1012 1st block: 14.0739 2nd block: 9.58992e-09 residual: 1.77244e-05
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		14.0129
+Finished - Iteration 8
+   Weighted error: 14.0129 1st block: 13.9818 2nd block: 9.22769e-09 residual: 2.23758e-05
+000001@tmpLink/xmipp_mpi_mlf_refine3d_02/mlf3d_mlf2d_iter000004_refs.stk, sym=-1		13.9416
+Finished - Iteration 9
+   Weighted error: 13.9416 1st block: 13.9068 2nd block: 8.83656e-09 residual: 2.75681e-05
