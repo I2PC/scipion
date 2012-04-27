@@ -323,7 +323,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
                     size_t id=classes.addObject();
                     classes.setValue(MDL_REF,classNo,id);
                     classes.setValue(MDL_IMAGE,fnClass,id);
-                    classes.setValue(MDL_COUNT,classSize,id);
+                    classes.setValue(MDL_CLASS_COUNT,classSize,id);
                     classes.setValue(MDL_MODELFRAC,((double)classSize)/MDoriginal.size(),id);
                 }
             }
