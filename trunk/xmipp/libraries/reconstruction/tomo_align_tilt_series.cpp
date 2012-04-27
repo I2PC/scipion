@@ -174,7 +174,7 @@ public:
             // Produce masks for the comparison
             MultidimArray<int> maskInTheSpaceOf1, maskInTheSpaceOf2;
             MultidimArray<double> maskAux;
-            applyGeometry(LINEAR,maskAux,Mask2_level,A12level,IS_NOT_INV,DONT_WRAP);
+            applyGeometry(LINEAR,maskAux,Mask1_level,A12level,IS_NOT_INV,DONT_WRAP);
             maskInTheSpaceOf2.initZeros(YSIZE(maskAux),XSIZE(maskAux));
             maskInTheSpaceOf2.setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
