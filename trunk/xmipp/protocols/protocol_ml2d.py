@@ -194,16 +194,19 @@ def launchML2DPlots(protML, selectedPlots):
 
     #Create plot of mirror for last iteration
     if doPlot('DoShowMirror'):
+        from numpy import arange
+        from matplotlib.ticker import FormatStrFormatter
         md = MetaData('%(lastBlock)s@%(refs)s' % locals())
         mirrors = [md.getValue(MDL_MIRRORFRAC, id) for id in md]
         nrefs = len(mirrors)
-        ind = range(1, nrefs + 1)
-        width = 0.85#min(0.15, 5/float(nrefs))       # the width of the bars: can also be len(x) sequence
+        ind = arange(1, nrefs + 1)
+        width = 0.85
         a = xplotter.createSubPlot('Mirror fractions on last iteration', 'references', 'mirror fraction')
+        a.set_xticks(ind + 0.45)
+        a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
         a.bar(ind, mirrors, width, color='b')
         a.set_ylim([0, 1.])
-        #a.set_xticks(ind + width / 2., [str(r+1) for r in ind])
-        #a.set_yticks(np.arange(0, 1, 10))
+        a.set_xlim([0.8, nrefs + 1])
         
     if doPlot('DoShowPmax'):
         a = xplotter.createSubPlot('Probabilities distribution', 'iterations', 'Pmax/Psum') 

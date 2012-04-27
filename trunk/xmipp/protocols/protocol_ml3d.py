@@ -300,7 +300,10 @@ class ProtML3D(XmippProtocol):
             self.xplotter.show()
             
     def plotClassDistribution(self, iteration):
+        from numpy import arange
         from protlib_gui_figure import XmippPlotter
+        from matplotlib.ticker import FormatStrFormatter
+        
         xplotter = XmippPlotter(1, 1, figsize=(4,4),
                                 windowTitle="Images distribution - iteration %d" % iteration)
         md = self.getRefsMd(iteration)
@@ -308,9 +311,12 @@ class ProtML3D(XmippProtocol):
         md2.aggregate(md, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, MDL_WEIGHT)
         weights = [md2.getValue(MDL_WEIGHT, objId) for objId in md2]
         nrefs = len(weights)
-        refs3d = range(1, nrefs + 1)
+        refs3d = arange(1, nrefs + 1)
         width = 0.85
         a = xplotter.createSubPlot('3D references weights on last iteration', 'references', 'weight')
+        a.set_xticks(refs3d + 0.45)
+        a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
+        a.set_xlim([0.8, nrefs + 1])
         a.bar(refs3d, weights, width, color='b')
         self.drawPlot(xplotter)
 
