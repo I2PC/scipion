@@ -26,7 +26,7 @@
  '''
 
 import os
-from os.path import join, exists
+from os.path import join, exists, basename, dirname
 import Tkinter as tk
 
 from tkSimpleDialog import Dialog
@@ -34,6 +34,7 @@ import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
 from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix
 from Tkinter import TclError
+from protlib_xmipp import redStr, greenStr
 
 RESOURCES = getXmippPath('resources')
 
@@ -740,7 +741,7 @@ class TextfileViewer(tk.Frame):
         t = OutputText(tab, filename, width=100, height=30)
         t.frame.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
         self.taList.append(t)
-        tabText = "   %s   " % os.path.basename(filename)
+        tabText = "   %s   " % basename(filename)
         self.notebook.add(tab, text=tabText)        
     
     def createWidgets(self):
@@ -1174,7 +1175,6 @@ def mdOnClick(filename, browser):
             # Insert blocks in metadata as independent items
             if len(browser.tree.get_children(filename)) == 0:
                 fm = browser.managers['md']
-                from os.path import basename
                 
                 for b in blocks:
                     bname = "%s@%s" % (b, filename)                    
@@ -1236,7 +1236,7 @@ def volFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda:showj(filename, 'image'))
     menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
-    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, volFn=filename))
+    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, volFn=filename, allowFilter=False))
     return True
 
 def volOnDoubleClick(filename, browser):
@@ -1258,13 +1258,15 @@ class XmippBrowser():
         - browse -> only single file selection
         - extended -> multiple file selection
     '''
-    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", filter=None, previewDim=144):
+    def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
         self.seltype = seltype
         self.selmode = selmode
         self.dir = initialDir
         self.pattern = filter
+        self.allowFilter = allowFilter
         self.selectedFiles = None
         self.dim = previewDim
+        self.commonRoot = "" # this will be used to avoid display of long path names
         from protlib_filesystem import findProjectInPathTree
         self.projectDir = findProjectInPathTree('.')
         # Check if matplotlib is available
@@ -1320,6 +1322,20 @@ class XmippBrowser():
         self.text.frame.grid(column=0, row=1, sticky="nwes")
         return self.text.frame
             
+    def createFilterFrame(self, bottomFrame):
+        #Create filter frame
+        filterFrame = ttk.Frame(bottomFrame)
+        filterFrame.grid(column=0, row=0, sticky='ew')
+        ttk.Label(filterFrame, text="Filter").pack(side=tk.LEFT,padx=2)
+        self.filterVar = tk.StringVar()
+        if self.pattern:
+            self.filterVar.set(self.pattern)
+        filterEntry = ttk.Entry(filterFrame, width=25, textvariable=self.filterVar)
+        filterEntry.pack(side=tk.LEFT,padx=2)
+        self.btnFilter = XmippButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
+        filterEntry.bind('<Return>', self.filterResults)
+        self.btnFilter.pack(side=tk.LEFT, padx=2)
+        
     def createGUI(self, root=None, title='', parent=None):
         if root:
             self.root = root
@@ -1377,18 +1393,10 @@ class XmippBrowser():
         bottomFrame.grid(column=0, row=1, columnspan=2, sticky='ew')
         bottomFrame.columnconfigure(0, weight=1)
         bottomFrame.columnconfigure(1, weight=1)
-        #Create filter frame
-        filterFrame = ttk.Frame(bottomFrame)
-        filterFrame.grid(column=0, row=0, sticky='ew')
-        ttk.Label(filterFrame, text="Filter").pack(side=tk.LEFT,padx=2)
-        self.filterVar = tk.StringVar()
-        if self.pattern:
-            self.filterVar.set(self.pattern)
-        filterEntry = ttk.Entry(filterFrame, width=25, textvariable=self.filterVar)
-        filterEntry.pack(side=tk.LEFT,padx=2)
-        self.btnFilter = XmippButton(filterFrame, "Search", 'search.gif', command=self.filterResults)
-        filterEntry.bind('<Return>', self.filterResults)
-        self.btnFilter.pack(side=tk.LEFT, padx=2)
+
+        if self.allowFilter:
+            self.createFilterFrame(bottomFrame)
+        
         #Create buttons frame
         buttonsFrame = ttk.Frame(bottomFrame)
         buttonsFrame.grid(column=1, row=0, sticky='e')
@@ -1417,7 +1425,8 @@ class XmippBrowser():
         #Create a dictionary with extensions and icon type
         self.insertFiles(self.dir)
         #Filter result, if pattern no provided, all files will be listed
-        self.filterResults()
+        if self.allowFilter:
+            self.filterResults()
         
     def showGUI(self, loop=True):        
         centerWindows(self.root, refWindows=self.parent)
@@ -1458,7 +1467,7 @@ class XmippBrowser():
         selection = self.tree.selection()
         item = fm = None
         if len(selection) == 1:
-            item = selection[0]
+            item = join(self.commonRoot, selection[0])
             ext = os.path.splitext(item)[1]
             if self.extSet.has_key(ext):
                 fm = self.extSet[ext]
@@ -1482,6 +1491,7 @@ class XmippBrowser():
     def onClick(self, e):
         self.unpostMenu()
         item, fm = self.getSelection()
+        print redStr(item)
         if fm:
             msg = ""
             if exists(item):
@@ -1550,7 +1560,7 @@ class XmippBrowser():
             item = self.tree.parent(item)
          
     def matchPattern(self, item):
-        i = os.path.basename(item)
+        i = basename(item)
         from fnmatch import fnmatch
         for p in self.pattern:
             if fnmatch(i, p):
@@ -1580,16 +1590,19 @@ class XmippSlider(ttk.Frame):
     ''' Create a personalized frame that contains label, slider and label value
         it also keeps a variable with the value
     '''
-    def __init__(self, master, label, from_=0, to=100, value=50, callback=None):
+    def __init__(self, master, label, from_=0, to=100, value=50, callback=None, step=0.01):
         self.var = tk.DoubleVar()
         self.var.set(float(value))
         ttk.Frame.__init__(self, master)
         ttk.Label(self, text=label).pack(side=tk.LEFT, padx=2, pady=2, anchor='s')
         self.slider = tk.Scale(self, from_=from_, to=to, variable=self.var, 
-                                bigincrement=0.01, resolution=0.01, orient=tk.HORIZONTAL)
+                                bigincrement=step, resolution=step, orient=tk.HORIZONTAL)
         if callback:
             self.var.trace('w', callback)
-        self.slider.pack(side=tk.LEFT, padx=2)        
+        self.slider.pack(side=tk.LEFT, padx=2)
+        
+    def getValue(self):
+        return self.var.get()       
         
 class XmippBrowserPreview(XmippBrowser):
     ''' This subclass is specific preview some operations
@@ -1640,7 +1653,7 @@ class XmippBrowserPreview(XmippBrowser):
             showWarning("Operation failed","Select an image to preview", self.root)
     
     def onClick(self, e):
-        self.lastitem = self.tree.selection_first()
+        self.lastitem = join(self.commonRoot, self.tree.selection_first())
         self.updatePreview(self.lastitem)
         self.clearResultPreview()
     
@@ -1669,15 +1682,21 @@ class XmippBrowserCTF(XmippBrowserPreview):
     def __init__(self, **args):
         XmippBrowserPreview.__init__(self, **args)
         # If metadata was provided, populate file list from there
+        self.allowFilter = False
         if hasattr(self, 'md') and self.md: 
             self.insertFiles =  self.insertFilesFromMd
     
     def insertFilesFromMd(self, path):
         from xmipp import MDL_MICROGRAPH
-        for objId in self.md:
-            fn = self.md.getValue(MDL_MICROGRAPH, objId)
-            self.insertElement('', fn)
-                    
+        files = [self.md.getValue(MDL_MICROGRAPH, objId) for objId in self.md]
+        prefix = os.path.commonprefix(files)
+        if not exists(prefix):
+            prefix = dirname(prefix)
+        self.commonRoot = prefix
+        prefix += '/'
+        for fn in files:
+            self.insertElement('', fn.replace(prefix, ''))
+            
     def createResultPreview(self):
         self.lf, self.hf = 0, 0
         if self.freqs:
@@ -1695,7 +1714,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
     def getResults(self):
         results = [self.downsamplingVar.get()]
         if self.freqs:
-            results += [self.lfSlider.var.get(), self.hfSlider.var.get()]
+            results += [self.lfSlider.getValue(), self.hfSlider.getValue()]
         return results        
         
     def createPreviewButton(self, frame):
@@ -1735,7 +1754,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
         return slider
         
     def updateFreqRing(self):
-        self.resultPreview.updateFreq(self.lfSlider.var.get(), self.hfSlider.var.get())
+        self.resultPreview.updateFreq(self.lfSlider.getValue(), self.hfSlider.getValue())
         
     def updateSliderState(self, state=tk.NORMAL):
         self.lfSlider.slider.config(state=state)
@@ -1765,7 +1784,7 @@ class XmippBrowserBandpassFilter(XmippBrowserCTF):
         return lambda: bandPassFilter(self.image, self.lastitem, lf, hf, decay, self.dim)
 
     def getResults(self):
-        return [self.lfSlider.var.get(), self.hfSlider.var.get(), self.decaySlider.var.get()]
+        return [self.lfSlider.getValue(), self.hfSlider.getValue(), self.decaySlider.getValue()]
         
     def createDetailsBottom(self, parent):
         frame = ttk.Frame(parent)
@@ -1845,22 +1864,47 @@ class XmippBrowserMask(XmippBrowser):
         self.volFn = volFn
         
     def createDetailsTop(self, parent):
-        from xmipp import Image
+        from xmipp import Image, HEADER
         from protlib_xmipp import getImageData
-        from protlib_gui_figure import ImagePreview
+        from protlib_gui_figure import MaskPreview
+        
         XmippBrowser.createDetailsTop(self, parent)
-        self.root.minsize(800, 400)        
-        self.preview = ImagePreview(self.detailstop, self.dim, label="Central slice")
+        # Read real dimension
+        self.dim = 196
+        img = Image()
+        img.read(self.volFn, HEADER)
+        self.real_dim = float(img.getDimensions()[0])
+        self.rate = self.dim / self.real_dim
+        self.image = Image()
+        self.image.readPreview(self.volFn, self.dim)
+        #self.root.minsize(600, 400)        
+        self.preview = MaskPreview(self.detailstop, self.dim, label="Central slice")
         self.detailstop.columnconfigure(1, weight=1)
         ## Read volume preview and update
-        image = Image(self.volFn)
-        image.readPreview(self.volFn, self.dim)
         Z = getImageData(self.image)
-        self.preview.updateData(Z)               
+        self.preview.updateData(Z)
         return self.detailstop
     
+    def createDetailsBottom(self, parent):
+        self.text = None
+        frame = ttk.Frame(parent)
+        xdim = self.real_dim
+        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", from_=0, to=xdim/2, value=0, step=1,
+                                  callback=lambda a, b, c:self.updateMaskRadius())
+        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", from_=1, to=xdim/2, value=xdim/2, step=1,
+                                  callback=lambda a, b, c:self.updateMaskRadius())
+        self.innerRadiusSlider.grid(row=0, column=0)#, padx=3, pady=3)
+        self.outerRadiusSlider.grid(row=1, column=0)#, padx=3, pady=3)
+        return frame
+    
     def insertFiles(self, path):
-        self.insertElement('', self.volFn)
+        self.commonRoot = dirname(self.volFn)
+        self.insertElement('', basename(self.volFn))
+        
+    def updateMaskRadius(self):
+        innerRadius = self.innerRadiusSlider.getValue() * self.rate
+        outerRadius = self.outerRadiusSlider.getValue() * self.rate
+        self.preview.updateMask(outerRadius, innerRadius)
 
 '''Show Xmipp Browser and return selected files'''
 def showBrowseDialog(path='.', title='', parent=None, main=False, browser=XmippBrowser, **args):

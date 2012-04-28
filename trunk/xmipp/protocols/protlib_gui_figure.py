@@ -80,6 +80,7 @@ class ImagePreview(Preview):
         ax = self.figure.add_axes([0,0,1,1], frameon=False)       
         self.figureimg = ax.imshow(self.bg, cmap=cm.gray)#, extent=[-h, h, -h, h])
         ax.set_axis_off()
+        self.ax = ax
         
     def _update(self, Z, *args):
         self.figureimg.set_data(Z)
@@ -135,7 +136,26 @@ class PsdPreview(Preview):
             self.createRing()
         self.img.set_data(Z)
         self.img.autoscale()
-        self.canvas.draw()        
+        self.canvas.draw()
+        
+class MaskPreview(ImagePreview):
+    def __init__(self, parent, dim, dpi=36, label=None, col=0, outerRadius=None, innerRadius=0):
+        ImagePreview.__init__(self, parent, dim, dpi, label, col)
+        if outerRadius is None:
+            outerRadius = dim / 2
+        self.ring = None
+        self.updateMask(outerRadius, innerRadius)
+            
+    def updateMask(self, outerRadius, innerRadius=0):
+        if self.ring is not None:
+            self.ring.remove()
+        center = self.dim / 2
+        width = outerRadius - innerRadius
+        self.ring = Wedge((center, center), outerRadius, 0, 360, width=width, alpha=0.15) # Full ring
+        self.ax.add_patch(self.ring)
+        self.canvas.draw()
+           
+               
     
 w = None
 def showImage(filename, dim=512, dpi=96):
