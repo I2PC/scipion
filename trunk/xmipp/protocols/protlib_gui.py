@@ -567,8 +567,7 @@ class ProtocolGUI(BasicGUI):
         else:
             text = "Show Expert Options"
             strValue = 'False'
-        if self.hasVar('ShowExpertOptions'):
-            self.setVarValue('ShowExpertOptions', strValue)
+        self.setVarValue('ShowExpertOptions', strValue)
         self.btnToggleExpert.config(text=text)
         self.checkVisibility()
         

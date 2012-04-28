@@ -105,6 +105,8 @@ class ProtocolVariable():
         elif self.tktext:
             self.tktext.clear()
             self.tktext.addText(value)
+        else:
+            self.value = value
     
     def setValue(self, value):
         self.value = value
