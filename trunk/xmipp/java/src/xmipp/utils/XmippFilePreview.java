@@ -74,6 +74,10 @@ public class XmippFilePreview extends JComponent implements
 
 		try {
 			String filename = file.getPath();
+			if (!file.exists()){
+				thumbnail = null;
+				return;
+			}
 			if (Filename.isSingleImage(filename) ||
 					Filename.isStack(filename) ||
 					Filename.isVolume(filename))
