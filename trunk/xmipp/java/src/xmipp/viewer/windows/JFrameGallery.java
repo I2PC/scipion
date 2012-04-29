@@ -1332,6 +1332,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		}// function createItems
 
 		public void show(Component cmpnt, Point location) {
+			setItemVisible(SET_CLASS, data.is2DClassificationMd());
 			// This item visibility depends on current selection
 			setItemVisible(OPEN_IMAGES,
 					data.is2DClassificationMd()
@@ -1377,7 +1378,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			setItemVisible(OPEN_ASTEXT, false);
 			setItemVisible(CTF_PROFILE, false);
 			setItemVisible(CTF_RECALCULATE, false);
-			setItemVisible(SET_CLASS, data.is2DClassificationMd());
 		}
 
 		@Override

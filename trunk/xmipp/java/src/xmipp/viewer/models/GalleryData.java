@@ -109,9 +109,7 @@ public class GalleryData {
 			if (fn != null) {
 				if (Filename.hasPrefix(fn)) {
 					if (Filename.isMetadata(fn)) {
-						selectedBlock = Filename.getPrefix(fn); // FIXME:
-																// validate
-																// block exists
+						selectedBlock = Filename.getPrefix(fn); // FIXME: validate block exists
 						filename = Filename.getFilename(fn);
 					}
 				}
@@ -153,7 +151,7 @@ public class GalleryData {
 		selection = new boolean[ids.length];
 		is2dClassification = checkifIs2DClassificationMd();
 
-		if (is2DClassificationMd()) {
+		if (is2dClassification) {
 			classes = new ClassInfo[ids.length];
 			classesArray = new ArrayList<ClassInfo>();
 		}
@@ -448,12 +446,11 @@ public class GalleryData {
 	}
 
 	/** Return true if current metadata comes from 2d classification */
-	public boolean checkifIs2DClassificationMd() {
+	public boolean checkifIs2DClassificationMd() {		
 		try {
-			if (!selectedBlock.equalsIgnoreCase("classes")) {
-				DEBUG.printMessage("2Dclass: no block 'classes'");
+			if (!selectedBlock.startsWith("classes") || 
+				!(md.containsLabel(MDLabel.MDL_REF) && md.containsLabel(MDLabel.MDL_CLASS_COUNT)))
 				return false;
-			}
 			for (long id : ids) {
 				int ref = md.getValueInt(MDLabel.MDL_REF, id);
 				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
