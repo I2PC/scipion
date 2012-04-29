@@ -8,7 +8,7 @@
 #
 
 from xmipp import MetaData, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ, getBlocksInMetaDataFile, \
-MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC
+MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC, MDL_WEIGHT, MDL_CLASS_COUNT
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
@@ -16,6 +16,7 @@ from os.path import exists
 from protlib_utils import runShowJ
 from protlib_gui_ext import showWarning
 from protlib_xmipp import greenStr, redStr
+from protlib_filesystem import deleteFile
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -231,16 +232,14 @@ def collectResults(log, WorkingDir, Prefix):
     mdImgs = MetaData(oroot + '_final_images.xmd')
     outImages = os.path.join(WorkingDir, 'result_images.xmd')
     mdImgs.write('images@' + outImages)
-    print greenStr("after writing images...")
     mdRefs = MetaData(oroot + '_final_refs.xmd')
     outRefs = os.path.join(WorkingDir, 'result_classes.xmd')
-    mdRefs.write('classes@' + outRefs)
     mdGroup = MetaData()
+    deleteFile(log, outRefs)
     for idx in mdRefs:
         ref = mdRefs.getValue(MDL_REF, idx)
-        print greenStr("REF:"), redStr(str(ref))
+        mdRefs.setValue(MDL_CLASS_COUNT, long(round(mdRefs.getValue(MDL_WEIGHT, idx))), idx)
         mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
         mdGroup.writeBlock(outRefs, 'class%06d_images' % ref)
-
-
+    mdRefs.writeBlock(outRefs, 'classes')
     
