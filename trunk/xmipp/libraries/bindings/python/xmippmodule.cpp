@@ -2347,7 +2347,7 @@ MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
-/* addLabel */
+/* fillConstant */
 static PyObject *
 MetaData_fillConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -2368,6 +2368,27 @@ MetaData_fillConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
                 }
             }
             PyErr_SetString(PyXmippError, "MetaData.fillConstant: couldn't convert second argument to string");
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* fillConstant */
+static PyObject *
+MetaData_copyColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int labelDst, labelSrc;
+    if (PyArg_ParseTuple(args, "ii", &labelDst, &labelSrc))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->copyColumn((MDLabel)labelDst, (MDLabel)labelSrc);
+            Py_RETURN_TRUE;
         }
         catch (XmippError &xe)
         {
@@ -2607,6 +2628,8 @@ MetaData_methods[] =
           METH_VARARGS, "Add a new label to MetaData" },
         { "fillConstant", (PyCFunction) MetaData_fillConstant,
           METH_VARARGS, "Fill a column with constant value" },
+        { "copyColumn", (PyCFunction) MetaData_copyColumn,
+          METH_VARARGS, "Copy the values of one column to another" },
         { "makeAbsPath", (PyCFunction) MetaData_makeAbsPath,
           METH_VARARGS,
           "Make filenames with absolute paths" },
@@ -4213,7 +4236,7 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_DM3_VALUE", (long) MDL_DM3_VALUE);
     addIntConstant(dict, "MDL_ENABLED", (long) MDL_ENABLED);
     addIntConstant(dict, "MDL_FLIP", (long) MDL_FLIP);
-    addIntConstant(dict, "MDL_IMAGE_CLASS_COUNT", (long) MDL_CLASS_COUNT);
+    addIntConstant(dict, "MDL_CLASS_COUNT", (long) MDL_CLASS_COUNT);
     addIntConstant(dict, "MDL_IMAGE", (long) MDL_IMAGE);
     addIntConstant(dict, "MDL_IMAGE_ORIGINAL", (long) MDL_IMAGE_ORIGINAL);
     addIntConstant(dict, "MDL_IMAGE_TILTED", (long) MDL_IMAGE_TILTED);
