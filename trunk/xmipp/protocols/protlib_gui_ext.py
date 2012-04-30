@@ -34,7 +34,6 @@ import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
 from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix
 from Tkinter import TclError
-from protlib_xmipp import redStr, greenStr
 
 RESOURCES = getXmippPath('resources')
 
@@ -1490,8 +1489,7 @@ class XmippBrowser():
 
     def onClick(self, e):
         self.unpostMenu()
-        item, fm = self.getSelection()
-        print redStr(item)
+        item, fm = self.getSelection()        
         if fm:
             msg = ""
             if exists(item):
