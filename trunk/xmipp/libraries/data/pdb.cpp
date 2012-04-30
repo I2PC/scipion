@@ -569,15 +569,17 @@ void fhlpf(const MultidimArray<double> &f, const MultidimArray<double> &filter,
     // amplitude factor
     const double K1=2*PI*(STARTINGX(auxFilter)-1);
     const double K2=XSIZE(auxFilter);
+    std::complex<double> aux;
+    double * ptrAux=(double*)&aux;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(F)
     {
         double w;
         FFT_IDX2DIGFREQ(i,XSIZE(F),w);
         double arg=w*K1;
-        double s,c;
-        sincos(arg,&s,&c);
-        A1D_ELEM(F,i)*=std::complex<double>(c,s);
-        A1D_ELEM(F,i)*=K2;
+        sincos(arg,ptrAux+1,ptrAux);
+        *ptrAux*=K2;
+        *(ptrAux+1)*=K2;
+        A1D_ELEM(F,i)*=aux;
     }
     InverseFourierTransform(F,convolution);
     convolution.setXmippOrigin();
