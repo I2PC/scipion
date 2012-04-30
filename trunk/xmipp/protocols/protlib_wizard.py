@@ -331,13 +331,42 @@ def wizardCL2DNumberOfClasses(self, var):
         self.setVarValue("NumberOfReferences", int(round(MD.size()/200.0)))
 
 #Select micrograph extension
-def wizardProjMatchRadius(self,var):
-    from xmipp import SingleImgSize, FileName
-    volumeList = self.getVarValue('ReferenceFileNames')
-    fnVol = FileName(volumeList.split(' ')[0])
-    if fnVol.exists() and fnVol.isImage():
-        (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(fnVol)
-        self.setVarValue("MaskRadius", str(Xdim/2))
+def wizardHelperSetRadii(self, outerVarName, innerVarName=None):
+    volumeList = self.getVarValue('ReferenceFileNames').split()
+    showInner = innerVarName is not None
+    innerRadius = 0
+    try:
+        if showInner:
+            innerRadius = int(self.getVarValue(innerVarName))
+        outerRadius = int(self.getVarValue(outerVarName))
+    except Exception, e:
+        showError("Conversion error", "Error trying to parse integer value from \ninnerRadius: <%(innerVarName)s> or\n outerRadius: <%(outerVarName)s>" % locals(), 
+                  parent=self.master)
+        return
+    
+    if outerRadius < 0:
+        from xmipp import Image, FileName, HEADER
+        fnVol = FileName(volumeList[0])
+        if fnVol.exists() and fnVol.isImage():
+            vol = Image()
+            vol.read(fnVol, HEADER)
+            xdim = vol.getDimensions()[0]
+            outerRadius = xdim / 2 
+            self.setVarValue("MaskRadius", outerRadius)
+    from protlib_gui_ext import XmippBrowserMask
+    results = showBrowseDialog(parent=self.master, browser=XmippBrowserMask, title="Select mask radius", allowFilter=False, 
+                                    extra={'fileList': volumeList, 'outerRadius': outerRadius, 
+                                           'innerRadius': innerRadius, 'showInner': showInner})
+    if results:
+        self.setVarValue(outerVarName, int(results[1]))
+        if showInner:
+            self.setVarValue(innerVarName, int(results[0]))
+        
+def wizardSetMaskRadius(self, var):
+    wizardHelperSetRadii(self, 'MaskRadius')
+    
+def wizardSetAlignRadii(self, var):
+    wizardHelperSetRadii(self, 'OuterRadius', 'InnerRadius')
 
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable

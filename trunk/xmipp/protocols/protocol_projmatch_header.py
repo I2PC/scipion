@@ -142,10 +142,10 @@ DoMask =True
 """
 DoSphericalMask =True
 
-# {condition}(DoSphericalMask){wizard}(wizardProjMatchRadius) Radius of spherical mask
+# {condition}(DoSphericalMask){wizard}(wizardSetMaskRadius) Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius = 64
+MaskRadius = -1
 
 # {file} {condition}(not DoSphericalMask)  Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
@@ -157,7 +157,7 @@ MaskFileName ='mask.vol'
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
-# Inner radius for rotational correlation:
+# {wizard}(wizardSetAlignRadii) Inner radius for rotational correlation:
 """ In pixels from the image center
     You may specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
@@ -170,7 +170,7 @@ MaskFileName ='mask.vol'
 """
 InnerRadius = '0'
 
-# Outer radius for rotational correlation
+# {wizard}(wizardSetAlignRadii) Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
     <WARNING>: this radius will be use for masking before computing resolution
     You may specify this option for each iteration. 

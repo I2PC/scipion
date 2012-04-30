@@ -1601,18 +1601,21 @@ class XmippSlider(ttk.Frame):
         
     def getValue(self):
         return self.var.get()       
-        
+  
+def initXmippBrowser(self, **args):
+        if args.has_key('extra'):
+            for k, v in  args['extra'].iteritems():
+                setattr(self, k, v)
+            del args['extra']
+        XmippBrowser.__init__(self, **args)
+          
 class XmippBrowserPreview(XmippBrowser):
     ''' This subclass is specific preview some operations
         the extra dict will be used for personalized parameters
         that will not be passed to XmippBrowser constructor
     '''
     def __init__(self, **args):
-        if args.has_key('extra'):
-            for k, v in  args['extra'].iteritems():
-                setattr(self, k, v)
-            del args['extra']
-        XmippBrowser.__init__(self, **args)
+        initXmippBrowser(self, **args)
         self.clearCallbacks = []
         self.fillCallbacks = []
         
@@ -1857,9 +1860,8 @@ class XmippBrowserBadpixelFilter(XmippBrowserGaussianFilter):
 
 class XmippBrowserMask(XmippBrowser):
     ''' Preview the middle slice and select a circular mask '''
-    def __init__(self, volFn=None, **args):
-        XmippBrowser.__init__(self, **args)
-        self.volFn = volFn
+    def __init__(self, **args):
+        initXmippBrowser(self, **args)
         
     def createDetailsTop(self, parent):
         from xmipp import Image, HEADER
@@ -1870,13 +1872,15 @@ class XmippBrowserMask(XmippBrowser):
         # Read real dimension
         self.dim = 196
         img = Image()
+        self.volFn = self.fileList[0]
         img.read(self.volFn, HEADER)
         self.real_dim = float(img.getDimensions()[0])
         self.rate = self.dim / self.real_dim
         self.image = Image()
         self.image.readPreview(self.volFn, self.dim)
         #self.root.minsize(600, 400)        
-        self.preview = MaskPreview(self.detailstop, self.dim, label="Central slice")
+        self.preview = MaskPreview(self.detailstop, self.dim, label="Central slice", 
+                                   outerRadius=self.outerRadius * self.rate, innerRadius=self.innerRadius * self.rate)
         self.detailstop.columnconfigure(1, weight=1)
         ## Read volume preview and update
         Z = getImageData(self.image)
@@ -1887,22 +1891,28 @@ class XmippBrowserMask(XmippBrowser):
         self.text = None
         frame = ttk.Frame(parent)
         xdim = self.real_dim
-        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", from_=0, to=xdim/2, value=0, step=1,
+        self.innerRadiusSlider = XmippSlider(frame, "Inner radius", from_=0, to=xdim/2, value=self.innerRadius, step=1,
+                              callback=lambda a, b, c:self.updateMaskRadius())
+        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", from_=1, to=xdim/2, value=self.outerRadius, step=1,
                                   callback=lambda a, b, c:self.updateMaskRadius())
-        self.outerRadiusSlider = XmippSlider(frame, "Outer radius", from_=1, to=xdim/2, value=xdim/2, step=1,
-                                  callback=lambda a, b, c:self.updateMaskRadius())
-        self.innerRadiusSlider.grid(row=0, column=0)#, padx=3, pady=3)
+        if self.showInner:
+            self.innerRadiusSlider.grid(row=0, column=0)#, padx=3, pady=3)
         self.outerRadiusSlider.grid(row=1, column=0)#, padx=3, pady=3)
         return frame
     
     def insertFiles(self, path):
-        self.commonRoot = dirname(self.volFn)
-        self.insertElement('', basename(self.volFn))
+        self.commonRoot = dirname(self.fileList[0])
+        for f in self.fileList:
+            self.insertElement('', basename(f))
         
     def updateMaskRadius(self):
         innerRadius = self.innerRadiusSlider.getValue() * self.rate
         outerRadius = self.outerRadiusSlider.getValue() * self.rate
         self.preview.updateMask(outerRadius, innerRadius)
+
+    def selectFiles(self, e=None):
+        self.selectedFiles = (int(self.innerRadiusSlider.getValue()), int(self.outerRadiusSlider.getValue()))
+        self.root.destroy()  
 
 '''Show Xmipp Browser and return selected files'''
 def showBrowseDialog(path='.', title='', parent=None, main=False, browser=XmippBrowser, **args):
