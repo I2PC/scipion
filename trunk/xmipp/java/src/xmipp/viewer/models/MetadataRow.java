@@ -69,8 +69,6 @@ public class MetadataRow extends MetadataTable {
 		return null;
 	}
 	
-	
-	
 	@Override
 	public void setValueAt(Object value, int row, int column) {
 		try {

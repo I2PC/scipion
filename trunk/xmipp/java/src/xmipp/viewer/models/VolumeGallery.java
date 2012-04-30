@@ -58,20 +58,20 @@ public class VolumeGallery extends ImageGallery {
 		volume = new ImageGeneric(data.selectedVolFn); // read image header
 		volume.read(volNumber);
 		if (data.resliceView != ImageGeneric.Z_NEG)
-			volume.reslice(data.resliceView );
+			volume.reslice(data.resliceView);
 		ImageDimension dim = new ImageDimension(volume);
 		return dim;
 	}
 
-//	@Override
-//	protected void setZoomValue(int z) {
-//		super.setZoomValue(z);
-//		try {
-//			volume.read(thumb_width, thumb_height, volNumber);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
+	// @Override
+	// protected void setZoomValue(int z) {
+	// super.setZoomValue(z);
+	// try {
+	// volume.read(thumb_width, thumb_height, volNumber);
+	// } catch (Exception e) {
+	// e.printStackTrace();
+	// }
+	// }
 
 	@Override
 	protected double[] getMinAndMax() {
@@ -101,8 +101,8 @@ public class VolumeGallery extends ImageGallery {
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception {
 		ImageGeneric preview = new ImageGeneric();
-		volume.getPreview(preview, thumb_width, thumb_height, 
-				index + 1, ImageGeneric.FIRST_IMAGE);
+		volume.getPreview(preview, thumb_width, thumb_height, index + 1,
+				ImageGeneric.FIRST_IMAGE);
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(preview);
 		ImageItem item = new ImageItem(index);
 		item.setImagePlus(imp);
@@ -130,9 +130,9 @@ public class VolumeGallery extends ImageGallery {
 	}
 
 	@Override
-	public ImagePlus getImagePlus() {
+	public ImagePlusLoader getImageLoader() {
 		try {
-			return XmippImageConverter.convertToImagePlus(volume);
+			return new VolumeLoader();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -145,9 +145,24 @@ public class VolumeGallery extends ImageGallery {
 		return false;
 	}
 
-	// @Override
-	// public String getImageFilenameAt(int row, int col) {
-	// return null;
-	// }
+	// Extension of the ImagePlusLoader, read an entire volume as an ImagePlus
+	public class VolumeLoader extends ImagePlusLoader {
+		boolean normalize;
+
+		public VolumeLoader() {
+			super(data.selectedVolFn);
+			normalize = data.normalize;
+		}
+
+		@Override
+		protected ImagePlus loadImage() throws Exception {
+			ImagePlus imp = XmippImageConverter.convertToImagePlus(volume);
+			if (normalize) {
+				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
+				imp.updateImage();
+			}
+			return imp;
+		}
+	}//class VolumeLoader
 
 }// class VolumeGallery

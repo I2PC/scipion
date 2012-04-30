@@ -72,9 +72,9 @@ public class GalleryData {
 	// flag to perform global normalization
 	public boolean normalize = false;
 	// flag to use geometry info
-	public boolean useGeo = true;
+	public boolean useGeo;
 	// flag to wrapping
-	public boolean wrap = true;
+	public boolean wrap;
 	// flag to check if is 2d classification
 	public boolean is2dClassification = false;
 	// Store the selection state for each item
@@ -99,6 +99,8 @@ public class GalleryData {
 			globalRender = param.renderImages;
 			mode = Mode.GALLERY_MD;
 			resliceView = param.resliceView;
+			useGeo = param.useGeo;
+			wrap = param.wrap;
 
 			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
@@ -147,7 +149,8 @@ public class GalleryData {
 		loadLabels();
 		numberOfVols = 0;
 		volumes = null;
-		useGeo = containsGeometryInfo();
+		if (!containsGeometryInfo())
+			useGeo = false;		
 		selection = new boolean[ids.length];
 		is2dClassification = checkifIs2DClassificationMd();
 

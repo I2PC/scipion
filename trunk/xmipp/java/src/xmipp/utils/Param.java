@@ -45,6 +45,9 @@ public class Param {
     public final static String RAISED_W = "raised_w";
     public final static String MASKFILENAME = "mask";
     public final static String DEBUG = "debug";
+    public final static String VIEW = "view";
+    public final static String NO_GEO = "dont_apply_geo";
+    public final static String NO_WRAP = "dont_wrap";
     
     public String directory;
     public String files[];
@@ -68,6 +71,8 @@ public class Param {
     public String classesFilename;
     public String dataFilename;
     public int resliceView = ImageGeneric.Z_NEG; 
+    public boolean useGeo = true;
+    public boolean wrap = true;
 
     public Param() {
     }
@@ -111,7 +116,9 @@ public class Param {
         options.addOption(INPUT_VECTORSFILE, true, "");
         options.addOption(INPUT_CLASSESFILE, true, "");
         options.addOption(INPUT_DATAFILE, true, "");
-        options.addOption("view", true, "z");
+        options.addOption(VIEW, true, "z");
+        options.addOption(NO_GEO, false, "");
+        options.addOption(NO_WRAP, false, "");
 
 
         try {
@@ -208,8 +215,11 @@ public class Param {
                 dataFilename = cmdLine.getOptionValue(INPUT_DATAFILE);
             }
             
-            if (cmdLine.hasOption("view")){
-            	String view = cmdLine.getOptionValue("view");
+            useGeo = !cmdLine.hasOption(NO_GEO);
+            wrap = !cmdLine.hasOption(NO_WRAP);
+            
+            if (cmdLine.hasOption(VIEW)){
+            	String view = cmdLine.getOptionValue(VIEW);
             	if (view.equals("z"))
             		resliceView = ImageGeneric.Z_NEG;
             	else if (view.equals("y"))

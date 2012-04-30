@@ -39,6 +39,7 @@ import javax.swing.table.AbstractTableModel;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.ImageItemRenderer;
 import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
+import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -534,9 +535,10 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public abstract String getTitle();
 
 	/**
-	 * Return the ImagePlus representation of this gallery
+	 * Return the ImagePlusLoader subclass that handle the reading
+	 * of the gallery representation as an ImagePlus
 	 */
-	public abstract ImagePlus getImagePlus();
+	public abstract ImagePlusLoader getImageLoader();
 
 	/**
 	 * Function to create the image item. this should be implemented in

@@ -674,9 +674,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		ImageGeneric image = new ImageGeneric();
 		data.md.getPCAbasis(image, data.getRenderLabel());
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-		// new XmippImageWindow(imp, "PCA: " + data.filename);
 		imp.setTitle("PCA: " + data.filename);
-		ImagesWindowFactory.captureFrame(imp);
+		ImagesWindowFactory.openXmippImageWindow(imp, false);
 
 	}
 
@@ -1184,7 +1183,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					&& data.useGeo);
 			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
-			setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
+			//setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
 			setItemEnabled(DISPLAY_RENDERIMAGES,
 					!galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
@@ -1240,8 +1239,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				else if (cmd.equals(FILE_OPEN)) {
 					if (fc.showOpenDialog(JFrameGallery.this) != XmippFileChooser.CANCEL_OPTION) {
 						if (fc.getSelectedFile().exists())
-							ImagesWindowFactory.openFileAsDefault(fc
-									.getSelectedPath());
+							ImagesWindowFactory.openFileAsDefault(fc.getSelectedPath());
 						else
 							XmippDialog.showError(JFrameGallery.this, String
 									.format("File: '%s' doesn't exist.",
@@ -1265,8 +1263,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					}
 				} else if (cmd.equals(FILE_OPENWITH_IJ)) {
 					try {
-						ImagePlus imp = gallery.getImagePlus();
-						ImagesWindowFactory.captureFrame(imp);
+						ImagePlusLoader loader = gallery.getImageLoader();
+						ImagesWindowFactory.openXmippImageWindow(loader, true);
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
@@ -1398,8 +1396,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			} else if (cmd.equals(REFRESH)) {
 				gallery.refreshAt(row, col);
 			} else if (cmd.equals(OPEN)) {
-				String file = data.getValueFromCol(row, col);
-				ImagesWindowFactory.openFileAsDefault(file);
+				if (data.labels.get(col).allowRender)
+					gallery.handleDoubleClick(row, col);
+				else {
+					String file = data.getValueFromCol(row, col);
+					ImagesWindowFactory.openFileAsDefault(file);
+				}
 			} else if (cmd.equals(OPEN_ASTEXT)) {
 				String file = gallery.getValueAt(row, col).toString();
 				ImagesWindowFactory.openFileAsText(file, null);

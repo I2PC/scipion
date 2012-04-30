@@ -190,7 +190,7 @@ public class MetadataTable extends MetadataGallery {
 	public boolean handleDoubleClick(int row, int col){
 		try {
 			if (data.isImageFile(col)) {
-				new XmippImageWindow(new ImagePlusLoader(data.getValueFromCol(row, col)));
+				new XmippImageWindow(new MdRowImageLoader(row, data.labels.get(col).getLabel()));
 				return true;
 			}
 		} catch (Exception e) {

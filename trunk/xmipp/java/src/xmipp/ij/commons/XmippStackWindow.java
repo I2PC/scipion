@@ -16,7 +16,6 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		this.ipl = ipl;
 		setTitle(title);
 		setMenuBar(new XmippMenuBar(this));
-		
 	}
 	
 	public XmippStackWindow(ImagePlusLoader ipl)
