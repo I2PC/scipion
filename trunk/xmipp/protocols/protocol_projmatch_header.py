@@ -17,14 +17,7 @@
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# Import images from previous RUN ? 
-""" 
-If you set to <No>, you should provide a set of images 
-(In stack or metadata file).
-"""
-ImportImagesFromRun = False
-
-# {condition}(not ImportImagesFromRun){file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images:
+# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images:
 """ 
 Provide a stack or metadata file with the input images.
 If you want perform <CTF> correction this file should contains a 
