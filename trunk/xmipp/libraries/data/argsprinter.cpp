@@ -158,7 +158,7 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
                     }
                     printRequiresList(arg.subParams[j]->requires);
                     *pOut << std::endl;
-                    printCommentList(arg.subParams[j]->comments);
+                    printCommentList(arg.subParams[j]->comments, v);
 
                 }
             }
