@@ -71,21 +71,21 @@ void Sammon::operator()(const In& in, Out& out)
     }
 
     // calculate distances in original space
-    std::vector<Feature> distances(in.size() *(in.size() - 1) / 2);
-    std::vector<Feature>::iterator distance = distances.begin();
+    std::vector<floatFeature> distances(in.size() *(in.size() - 1) / 2);
+    std::vector<floatFeature>::iterator distance = distances.begin();
     for (i = 1; i < in.size(); i++)
         for (unsigned j = 0; j < i; j++)
             *distance++ = max(0.001, euclideanDistance(in.theItems[i], in.theItems[j]));
 
     // centroids of mapped samples
-    std::vector<Feature> centroid(mapped);
+    std::vector<floatFeature> centroid(mapped);
 
     // first derivative and second derivative of mapping error
-    std::vector<Feature> dE(in.size());
-    std::vector<Feature> d2E2(in.size());
+    std::vector<floatFeature> dE(in.size());
+    std::vector<floatFeature> d2E2(in.size());
 
     // copy of the samples for each pattern loop p
-    std::vector<std::vector<Feature> > out2(in.size(), std::vector<Feature>(mapped));
+    std::vector<std::vector<floatFeature> > out2(in.size(), std::vector<floatFeature>(mapped));
     int p;
     unsigned q;
 

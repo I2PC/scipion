@@ -130,7 +130,7 @@ void KerDenSOM::updateV(FuzzyMap* _som, const TS* _examples, const double& _reg)
         {
             double tmpU = (double) _som->memb[vv][cc];
             tmpDens_cc += tmpU;
-            const Feature * ptrExample=&(_examples->theItems[vv][0]);
+            const floatFeature * ptrExample=&(_examples->theItems[vv][0]);
             for (int j = 0; j < dim; j++)
             	ptrTmpMap_cc[j] +=  tmpU * ptrExample[j];
         }
@@ -151,13 +151,13 @@ void KerDenSOM::updateV(FuzzyMap* _som, const TS* _examples, const double& _reg)
                 _som->localAve(_som->indexToPos(cc), tmpV);
         	double *ptrTmpMap_cc=&(tmpMap[cc][0]);
         	double iTmpDens_cc=1.0/tmpDens[cc];
-        	Feature *ptrCodeVector_cc=&(_som->theItems[cc][0]);
+        	floatFeature *ptrCodeVector_cc=&(_som->theItems[cc][0]);
             for (int j = 0; j < dim; j++)
             {
                 double tmpU = (ptrTmpMap_cc[j] + ptrTmpV[j] * _reg) * iTmpDens_cc;
                 stopError1 += fabs(ptrCodeVector_cc[j] - tmpU);
                 stopError2 += fabs(tmpU);
-                ptrCodeVector_cc[j] = (Feature) tmpU;
+                ptrCodeVector_cc[j] = (floatFeature) tmpU;
             }
         } // for
         convergence = stopError1 / stopError2;
@@ -211,12 +211,12 @@ double KerDenSOM::updateSigmaI(FuzzyMap* _som, const TS* _examples)
     for (size_t vv = 0; vv < numVectors; vv++)
     {
     	const FeatureVector &example=_examples->theItems[vv];
-    	const Feature *ptrExample0=&example[0];
+    	const floatFeature *ptrExample0=&example[0];
         for (size_t cc = 0; cc < numNeurons; cc++)
         {
             double r = 0.0;
-        	const Feature *ptrExample=ptrExample0;
-        	const Feature *ptrCodeVector=&(_som->theItems[cc][0]);
+        	const floatFeature *ptrExample=ptrExample0;
+        	const floatFeature *ptrCodeVector=&(_som->theItems[cc][0]);
             for (int j = 0; j < dim; j++)
             {
             	double diff=(double)(*ptrExample++) - (double)(*ptrCodeVector++);
@@ -251,7 +251,7 @@ void KerDenSOM::updateV1(FuzzyMap* _som, const TS* _examples)
         {
             double tmpU = _som->memb[vv][cc];
             tmpDens_cc += tmpU;
-            const Feature *ptrExample=&(_examples->theItems[vv][0]);
+            const floatFeature *ptrExample=&(_examples->theItems[vv][0]);
             double *ptrTmpMap_cc=ptrTmpMap_cc0;
             for (int j = 0; j < dim; j++)
             {
@@ -270,7 +270,7 @@ void KerDenSOM::updateV1(FuzzyMap* _som, const TS* _examples)
         for (int j = 0; j < dim; j++)
         {
             double tmpU =tmpMap_cc[j] * itmpDens_cc;
-            codevector[j] = (Feature) tmpU;
+            codevector[j] = (floatFeature) tmpU;
         }
     } // for
 }
@@ -311,7 +311,7 @@ void KerDenSOM::updateU1(FuzzyMap* _som, const TS* _examples)
                     		euclideanDistance(_som->theItems[j], _examples->theItems[k]);
                     auxDist += pow(tmp, 2);
                 } // for j
-                _som->memb[k][i] = (Feature) 1.0 / auxDist;
+                _som->memb[k][i] = (floatFeature) 1.0 / auxDist;
             } // for i
         } // if auxProd
     } // for k
@@ -333,11 +333,11 @@ void KerDenSOM::initU(FuzzyMap* _som)
         double t = 0.;
         for (cc = 0; cc < numNeurons; cc++)
         {
-            _som->memb[vv][cc] = (Feature) rnd_unif();
+            _som->memb[vv][cc] = (floatFeature) rnd_unif();
             t += _som->memb[vv][cc];
         }
         for (cc = 0; cc < numNeurons; cc++)
-            _som->memb[vv][cc] /= (Feature) t;
+            _som->memb[vv][cc] /= (floatFeature) t;
     }
 }
 

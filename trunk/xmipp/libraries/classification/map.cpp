@@ -550,28 +550,28 @@ void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
     if ((tmpi - 1) >= 0)
     {
         kk++;
-        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj)))[0]);
+        const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj)))[0]);
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }
     if ((tmpi + 1) < _som->width())
     {
         kk++;
-        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi + 1, tmpj)))[0]);
+        const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi + 1, tmpj)))[0]);
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }
     if ((tmpj - 1) >= 0)
     {
         kk++;
-        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj-1)))[0]);
+        const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj-1)))[0]);
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }
     if ((tmpj + 1) < _som->height())
     {
         kk++;
-        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj+1)))[0]);
+        const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj+1)))[0]);
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }

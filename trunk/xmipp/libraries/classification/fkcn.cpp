@@ -115,7 +115,7 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
             }
             for (j = 0; j < numClusters; j ++)
             {
-                _xmippDS.memb[k][j] = (Feature)(1. / (auxProd * tmpD[j]));
+                _xmippDS.memb[k][j] = (floatFeature)(1. / (auxProd * tmpD[j]));
             }
         } // for k
 
@@ -124,7 +124,7 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
         // Calculate Alpha
         for (cc = 0; cc < numClusters; cc++)
             for (vv = 0; vv < numVectors; vv++)
-                alpha[vv][cc] = (Feature) pow((double)_xmippDS.memb[vv][cc], (double)mt);
+                alpha[vv][cc] = (floatFeature) pow((double)_xmippDS.memb[vv][cc], (double)mt);
 
 
         /* Step III: Update Code Vectors */
@@ -143,7 +143,7 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
             } // for vv
             if (auxSum != 0.)
                 for (j = 0; j < _examples.theItems[0].size(); j++)
-                    _xmippDS.theItems[cc][j] += (Feature)(tmpV[j] / auxSum);
+                    _xmippDS.theItems[cc][j] += (floatFeature)(tmpV[j] / auxSum);
         } // for cc
 
 

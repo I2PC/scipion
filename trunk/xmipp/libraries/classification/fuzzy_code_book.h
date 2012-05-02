@@ -48,12 +48,12 @@ class FuzzyCodeBook : public CodeBook
 {
 public:
 
-    typedef std::vector< std::vector< Feature > > MM;
+    typedef std::vector< std::vector< floatFeature > > MM;
     /// Alias for Membership Matrix
     //typedef ClassificationTrainingSet<std::vector<Feature>,Label> TS;  // Alias for a Training set
     typedef ClassicTrainingVectors TS;
     /// Alias for a Training set
-    typedef ClassificationTrainingSet<std::vector<Feature>, Feature > FV;
+    typedef ClassificationTrainingSet<std::vector<floatFeature>, floatFeature > FV;
     /// Alias for Fuzzy vectors
 
     // Fuzzy membership matrix
@@ -133,7 +133,7 @@ public:
      * Parameter: _di  data index
      * @exception out_of_range If _i is out of range
      */
-    Feature membAt(unsigned _di, unsigned _ci) const;
+    floatFeature membAt(unsigned _di, unsigned _ci) const;
 
     /**
      * Returns a  reference to the specified item
@@ -141,7 +141,7 @@ public:
      * Parameter: _di  data index
      * @exception out_of_range If _i is out of range
      */
-    Feature& membAt(unsigned _di, unsigned _ci);
+    floatFeature& membAt(unsigned _di, unsigned _ci);
 
 
     /**

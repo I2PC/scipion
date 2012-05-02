@@ -67,7 +67,7 @@ void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> 
         for (int k = 0;k < n;k++)
         {
             a[k].resize(n);
-            Feature sum = 0.0;
+            floatFeature sum = 0.0;
             int l = 0;
             for (std::vector<unsigned>::const_iterator i = idx.begin();i != idx.end();i++)
             {
@@ -90,12 +90,12 @@ void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> 
         {
             for (int j = 0;j <= i;j++)
             {
-                Feature sum = 0.0;
+                floatFeature sum = 0.0;
                 int l = 0;
                 for (std::vector<unsigned>::const_iterator it = idx.begin();it != idx.end();it++)
                 {
-                    Feature d1 = ts.itemAt(*it)[i] - mean[i];
-                    Feature d2 = ts.itemAt(*it)[j] - mean[j];
+                    floatFeature d1 = ts.itemAt(*it)[i] - mean[i];
+                    floatFeature d2 = ts.itemAt(*it)[j] - mean[j];
                     if (finite(d1) && finite(d2))
                     {
                         sum += d1 * d2;
@@ -148,8 +148,8 @@ void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> 
         if ((verbosity == 1) && (it == 1))
             listener->OnProgress(0);
 
-        Feature tresh;
-        Feature sm = 0.0;
+        floatFeature tresh;
+        floatFeature sm = 0.0;
         for (int ip = 0; ip < n - 1; ip++)
         {
             for (int iq = ip + 1; iq < n; iq++)
@@ -160,7 +160,7 @@ void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> 
             for (int i = 0; i < n - 1; i++)
             {
                 int k = i;
-                Feature p = d[i];
+                floatFeature p = d[i];
 
                 for (int j = i + 1; j < n; j++)
                     if (d[j] >= p)
@@ -189,7 +189,7 @@ void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> 
         {
             for (int iq = ip + 1; iq < n; iq++)
             {
-                Feature g = 100.0 * fabs(a[iq][ip]);
+                floatFeature g = 100.0 * fabs(a[iq][ip]);
 
                 if (it > 4
                     && fabs(d[ip]) + g == fabs(d[ip])
@@ -197,13 +197,13 @@ void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> 
                     a[iq][ip] = 0.0;
                 else if (fabs(a[iq][ip]) > tresh)
                 {
-                    Feature tau, t, s, c;
-                    Feature h = d[iq] - d[ip];
+                    floatFeature tau, t, s, c;
+                    floatFeature h = d[iq] - d[ip];
                     if (fabs(h) + g == fabs(h))
                         t = a[iq][ip] / h;
                     else
                     {
-                        Feature theta = 0.5 * h / a[iq][ip];
+                        floatFeature theta = 0.5 * h / a[iq][ip];
                         t = 1.0 / (fabs(theta) + sqrt(1.0 + theta * theta));
                         if (theta < 0.0)
                             t = -t;

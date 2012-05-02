@@ -263,7 +263,7 @@ double FuzzySOM::updateU(FuzzyMap& _som, const TS& _examples, const double& _m)
         {
             double tmp =  1. / (auxProd * tmpD[j]);
             var += fabs((double)(_som.memb[k][j]) - tmp);
-            _som.memb[k][j] = (Feature) tmp;
+            _som.memb[k][j] = (floatFeature) tmp;
         }
 
 
@@ -321,7 +321,7 @@ void FuzzySOM::updateV(FuzzyMap& _som, const TS& _examples, const double& _m)
                 tmpV[j] *= reg;
                 double tmpU = (tmpMap[cc][j] + tmpV[j]) / tmpDens[cc];
                 stopError2 += fabs((double)(_som.theItems[cc][j]) - tmpU);
-                _som.theItems[cc][j] = (Feature) tmpU;
+                _som.theItems[cc][j] = (floatFeature) tmpU;
             }
         } // for
         stopError2 /= (double)(numNeurons * dim);

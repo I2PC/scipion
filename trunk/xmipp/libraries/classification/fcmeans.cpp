@@ -121,7 +121,7 @@ void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
                               euclideanDistance(_xmippDS.theItems[j], _examples.theItems[k]);
                         auxDist += pow(tmp, auxExp);
                     } // for j
-                    _xmippDS.memb[k][i] = (Feature) 1.0 / auxDist;
+                    _xmippDS.memb[k][i] = (floatFeature) 1.0 / auxDist;
                 } // for i
             } // if auxProd
         } // for k
@@ -135,10 +135,10 @@ void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
             auxSum = 0;
             for (k = 0; k < numVectors; k++)
             {
-                _xmippDS.theItems[i] += (Feature) pow((double)(_xmippDS.memb[k][i]), m) * _examples.theItems[k];
+                _xmippDS.theItems[i] += (floatFeature) pow((double)(_xmippDS.memb[k][i]), m) * _examples.theItems[k];
                 auxSum += pow((double)(_xmippDS.memb[k][i]), m);
             } // for i
-            _xmippDS.theItems[i] /= (Feature) auxSum;
+            _xmippDS.theItems[i] /= (floatFeature) auxSum;
         } // for k
 
         // Compute stopping criterion
@@ -335,36 +335,36 @@ double FuzzyCMeans::S(const FuzzyCodeBook& _xmippDS,
                       const TS& _examples) const
 {
 
-    std::vector< std::vector< Feature > > ICD;       // Intercluster distance
-    std::vector< std::vector< Feature > > D;         // Distance from each data to cluster centers
+    std::vector< std::vector< floatFeature > > ICD;       // Intercluster distance
+    std::vector< std::vector< floatFeature > > D;         // Distance from each data to cluster centers
 
     unsigned i;
     D.resize(_xmippDS.membClusters());
     for (i = 0; i < _xmippDS.membClusters(); i++)
     {
-        std::vector <Feature> d;
+        std::vector <floatFeature> d;
         d.resize(_xmippDS.membVectors());
         for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
-            d[k] = (Feature)euclideanDistance(_xmippDS.theItems[i], _examples.theItems[k]);
+            d[k] = (floatFeature)euclideanDistance(_xmippDS.theItems[i], _examples.theItems[k]);
         D[i] = d;
     } // for i
 
     ICD.resize(_xmippDS.membClusters());
     for (i = 0; i < _xmippDS.membClusters(); i++)
     {
-        std::vector <Feature> v;
+        std::vector <floatFeature> v;
         v.resize(_xmippDS.membVectors());
         for (unsigned j = 0; j < _xmippDS.membClusters(); j++)
-            v[j] = (Feature)euclideanDistance(_xmippDS.theItems[i], _xmippDS.theItems[j]);
+            v[j] = (floatFeature)euclideanDistance(_xmippDS.theItems[i], _xmippDS.theItems[j]);
         ICD[i] = v;
     } // for i
 
-    Feature auxSum = 0;
+    floatFeature auxSum = 0;
     for (i = 0; i < _xmippDS.membClusters(); i++)
         for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
-            auxSum += (Feature) pow((double)(D[i][k] * _xmippDS.memb[k][i]), (double)m);
+            auxSum += (floatFeature) pow((double)(D[i][k] * _xmippDS.memb[k][i]), (double)m);
 
-    Feature auxMin = MAXFLOAT;
+    floatFeature auxMin = MAXFLOAT;
     for (i = 0; i < _xmippDS.membClusters(); i++)
         for (unsigned j = i + 1; j < _xmippDS.membClusters(); j++)
             if (auxMin > ICD[i][j])

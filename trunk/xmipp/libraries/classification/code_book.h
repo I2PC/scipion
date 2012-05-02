@@ -91,7 +91,7 @@ public:
      * Parameter: _upper   Upper value for random elements
      * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
      */
-    CodeBook(unsigned _n, unsigned _size, Feature _lower = 0, Feature _upper = 1,
+    CodeBook(unsigned _n, unsigned _size, floatFeature _lower = 0, floatFeature _upper = 1,
             bool _cal = false);
 
     /**

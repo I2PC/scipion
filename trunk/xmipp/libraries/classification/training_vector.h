@@ -49,8 +49,8 @@ public:
 
     typedef struct stats
     {
-        Feature mean;
-        Feature sd;
+        floatFeature mean;
+        floatFeature sd;
     }
     statsStruct;
 
@@ -206,7 +206,7 @@ public:
      * Calcualtes the average and SD of a feature in the training set
      * Parameter: _i  The index to the feature
      */
-    void getFeatureStats(unsigned _i, Feature& _mean, Feature& _sd);
+    void getFeatureStats(unsigned _i, floatFeature& _mean, floatFeature& _sd);
 
     /**
     * Returns a vector containing the average (item 0) and SD (item 1)

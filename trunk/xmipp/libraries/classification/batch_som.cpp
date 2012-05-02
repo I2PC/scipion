@@ -87,7 +87,7 @@ void BatchSOM::train(ClassificationMap& _som, const ClassicTrainingVectors& _ts)
             if (total != 0)
             {
                 for (unsigned a = 0; a < aveVector.size(); a++)
-                    aveVector[a] /= (Feature) total;
+                    aveVector[a] /= (floatFeature) total;
                 _som.theItems[it] = aveVector;
             }
         }

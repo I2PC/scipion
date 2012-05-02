@@ -67,7 +67,9 @@
 * Feature as float
 */
 //typedef double Feature;
-typedef float Feature;
+//ROB in some compiles Feature classes with feature class
+//SO I rename it as floatFeature
+typedef float floatFeature;
 
 //-----------------------------------------------------------------------------
 
@@ -81,14 +83,14 @@ typedef std::string Label;
 /**
 * FeatureVector as vector of doubles
 */
-typedef std::vector<Feature> FeatureVector;
+typedef std::vector<floatFeature> FeatureVector;
 
 //-----------------------------------------------------------------------------
 
 /**
 * FeatureSet as a set of xmippfeatures
 */
-typedef std::set<Feature, std::less<Feature> > FeatureSet;
+typedef std::set<floatFeature, std::less<floatFeature> > FeatureSet;
 //@}
 
 //-----------------------------------------------------------------------------

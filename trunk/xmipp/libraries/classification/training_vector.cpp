@@ -151,11 +151,11 @@ void ClassicTrainingVectors::readSelf(std::istream& _is)
 
         for (int i = 0; i < size; i++)
         {
-            std::vector<Feature> v;
+            std::vector<floatFeature> v;
             v.resize(dim);
             for (int j = 0; j < dim; j++)
             {
-                Feature var;
+                floatFeature var;
                 _is >> var;
                 v[j] = var;
             }
@@ -195,7 +195,7 @@ void ClassicTrainingVectors::read(const FileName& fnIn)
     std::ifstream fhInRaw(fnInRaw.c_str(),std::ios::binary);
     if (!fhInRaw)
         REPORT_ERROR(ERR_IO_NOTEXIST,fnInRaw);
-    std::vector<Feature> v;
+    std::vector<floatFeature> v;
     v.resize(vectorSize);
     float *buffer=new float[vectorSize];
     String fnImg;
@@ -368,7 +368,7 @@ void ClassicTrainingVectors::normalizeFeature(unsigned _i)
     }
 
     // first calculates the mean
-    Feature mean = 0;
+    floatFeature mean = 0;
     int nn = 0;
     for (int it = 0; it < size(); it++)
     {
@@ -379,16 +379,16 @@ void ClassicTrainingVectors::normalizeFeature(unsigned _i)
         }
 
     }
-    mean /= (Feature) nn;
+    mean /= (floatFeature) nn;
 
     // Then calculates SD
-    Feature sd = 0;
+    floatFeature sd = 0;
     for (int it = 0; it < size(); it++)
     {
         if (!isnan(itemAt(it)[_i]))
             sd += (itemAt(it)[_i] - mean) * (itemAt(it)[_i] - mean);
     }
-    sd = sqrt(sd / (Feature)(nn - 1));
+    sd = sqrt(sd / (floatFeature)(nn - 1));
 
     // Now normalize the variable
     if (sd != 0)
@@ -496,7 +496,7 @@ bool ClassicTrainingVectors::isNormalized() const
  * Calcualtes the average and SD of a feature in the training set
  * Parameter: _i  The index to the feature
  */
-void ClassicTrainingVectors::getFeatureStats(unsigned _i, Feature& _mean, Feature& _sd)
+void ClassicTrainingVectors::getFeatureStats(unsigned _i, floatFeature& _mean, floatFeature& _sd)
 {
     using namespace std;
 
@@ -520,7 +520,7 @@ void ClassicTrainingVectors::getFeatureStats(unsigned _i, Feature& _mean, Featur
         }
 
     }
-    _mean /= (Feature) nn;
+    _mean /= (floatFeature) nn;
 
     // Then calculates SD
     _sd = 0;
@@ -529,7 +529,7 @@ void ClassicTrainingVectors::getFeatureStats(unsigned _i, Feature& _mean, Featur
         if (!isnan(itemAt(it)[_i]))
             _sd += (itemAt(it)[_i] - _mean) * (itemAt(it)[_i] - _mean);
     }
-    _sd = sqrt(_sd / (Feature)(nn - 1));
+    _sd = sqrt(_sd / (floatFeature)(nn - 1));
 }
 
 /**

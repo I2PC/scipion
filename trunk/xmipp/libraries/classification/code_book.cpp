@@ -84,8 +84,8 @@ CodeBook::CodeBook(unsigned _n, unsigned _size, bool _cal)
  * Parameter: _upper   Upper value for random elements
  * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
  */
-CodeBook::CodeBook(unsigned _n, unsigned _size, Feature _lower,
-                   Feature _upper, bool _cal)
+CodeBook::CodeBook(unsigned _n, unsigned _size, floatFeature _lower,
+                   floatFeature _upper, bool _cal)
         : ClassificationDataSet<FeatureVector, Label>(),
         ClassificationTrainingSet<FeatureVector, Label>(_cal)
 {
@@ -95,7 +95,7 @@ CodeBook::CodeBook(unsigned _n, unsigned _size, Feature _lower,
     // Assign random vectors
     for (unsigned i = 0 ; i < _n ; i++)
     {
-        std::vector<Feature> v;
+        std::vector<floatFeature> v;
         v = randomVector(_size, _lower, _upper);
         theItems[i] = v;
     }
@@ -128,7 +128,7 @@ CodeBook::CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _u
     //if (_ts.calibrated())
     theTargets.resize(_n, "");
     // Assign random vectors
-    std::vector<Feature> v;
+    std::vector<floatFeature> v;
     for (unsigned i = 0 ; i < _n ; i++)
     {
         int index = (int) rnd_unif(0, _ts.size() - 1);
@@ -136,8 +136,8 @@ CodeBook::CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _u
         if (_use_rand_cvs)
         {
             // NT: Scan this vector for the range of pixel values
-            Feature minval, maxval;
-            std::vector<Feature>::const_iterator viter = v.begin();
+            floatFeature minval, maxval;
+            std::vector<floatFeature>::const_iterator viter = v.begin();
             minval = maxval = *viter;
             for (viter++; viter != v.end(); viter++)
             {
@@ -403,11 +403,11 @@ void CodeBook::readSelf(std::istream& _is, long _dim, long _size)
 
         for (int i = 0; i < size; i++)
         {
-            std::vector<Feature> v;
+            std::vector<floatFeature> v;
             v.resize(dim);
             for (int j = 0; j < dim; j++)
             {
-                Feature var;
+                floatFeature var;
                 _is >> var;
                 v[j] = var;
             }

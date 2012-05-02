@@ -260,11 +260,11 @@ double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples,
     {
         auxProd = 0;
         max1 = -MAXFLOAT;
-        const Feature *ptrExample=&(_examples->theItems[k][0]);
+        const floatFeature *ptrExample=&(_examples->theItems[k][0]);
         for (size_t i = 0; i < numNeurons; i ++)
         {
             auxDist = 0;
-            const Feature *ptrCodeVector=&(_som->theItems[i][0]);
+            const floatFeature *ptrCodeVector=&(_som->theItems[i][0]);
             for (int j = 0; j < dim; j++)
             {
                 double tmp=((double)ptrExample[j] - (double)ptrCodeVector[j]);
@@ -290,11 +290,11 @@ double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples,
         }
         double ir1=1.0/r1;
 
-        Feature *ptrSomMembK=&(_som->memb[k][0]);
+        floatFeature *ptrSomMembK=&(_som->memb[k][0]);
         for (size_t j = 0; j < numNeurons; j ++)
         {
             tmp = ptrTmpD1[j] * ir1;
-            ptrSomMembK[j] = (Feature) tmp;
+            ptrSomMembK[j] = (floatFeature) tmp;
             _alpha += tmp * ptrTmpD[j];
         }
     } // for k
@@ -333,11 +333,11 @@ double GaussianKerDenSOM::codeDens(const FuzzyMap* _som, const FeatureVector* _e
 {
     double s = 0;
     double K=-1.0/(2*_sigma);
-    const Feature *ptrExample=&((*_example)[0]);
+    const floatFeature *ptrExample=&((*_example)[0]);
     for (size_t cc = 0; cc < numNeurons; cc++)
     {
         double t = 0;
-        const Feature *ptrCodeVector=&(_som->theItems[cc][0]);
+        const floatFeature *ptrCodeVector=&(_som->theItems[cc][0]);
         for (int j = 0; j < dim; j++)
         {
             double diff=(double)(ptrExample[j]) - (double)(ptrCodeVector[j]);

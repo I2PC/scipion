@@ -49,7 +49,7 @@ FuzzyCodeBook::FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data,
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <Feature> v;
+        std::vector <floatFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -80,7 +80,7 @@ FuzzyCodeBook::FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data, double
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <Feature> v;
+        std::vector <floatFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -110,7 +110,7 @@ FuzzyCodeBook::FuzzyCodeBook(unsigned _n, const ClassicTrainingVectors& _ts,
     numClusters = _n;
     numVectors = _ts.size();
     memb.resize(numVectors);
-    std::vector <Feature> v;
+    std::vector <floatFeature> v;
     v.resize(numClusters, 0);
     for (unsigned k = 0; k < numVectors; k++)
     {
@@ -135,7 +135,7 @@ FuzzyCodeBook::FuzzyCodeBook(std::istream& _is, const unsigned _size)
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <Feature> v;
+        std::vector <floatFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -151,7 +151,7 @@ FuzzyCodeBook::FuzzyCodeBook(std::istream& _is, const unsigned _size)
  * Parameter: _di  data index
  * @exception out_of_range If _i is out of range
  */
-Feature FuzzyCodeBook::membAt(unsigned _di, unsigned _ci) const
+floatFeature FuzzyCodeBook::membAt(unsigned _di, unsigned _ci) const
 {
     std::ostringstream msg;
     if ((_di >= membVectors()) || (_ci >= membClusters()))
@@ -169,7 +169,7 @@ Feature FuzzyCodeBook::membAt(unsigned _di, unsigned _ci) const
  * Parameter: _di  data index
  * @exception out_of_range If _i is out of range
  */
-Feature& FuzzyCodeBook::membAt(unsigned _di, unsigned _ci)
+floatFeature& FuzzyCodeBook::membAt(unsigned _di, unsigned _ci)
 {
     std::ostringstream msg;
     if ((_di >= membVectors()) || (_ci >= membClusters()))
@@ -463,7 +463,7 @@ void FuzzyCodeBook::readSelf(std::istream& _is, const unsigned _size)
     memb.resize(numVectors);
     for (int k = 0; k < numVectors; k++)
     {
-        std::vector <Feature> v;
+        std::vector <floatFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
