@@ -131,7 +131,9 @@
 			changeDir="FALSE">
 			<PRERUN
 				command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1" />
-			<FILE filename="assigned_angles.txt" />
+			<FILE filename="reference.doc" />
+			<FILE filename="reference_sampling.xmd" />
+			<FILE filename="reference.stk" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_angular_rotate" mpi="FALSE">
