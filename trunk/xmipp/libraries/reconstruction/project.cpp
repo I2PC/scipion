@@ -126,9 +126,8 @@ void ProgProject::defineParams()
     addParamsLine("                real_space                    : Makes projections by ray tracing in real space");
     addParamsLine("                shears                        : Use real-shears algorithm");
     addParamsLine("                                              :+This algorithm is slower but more accurate. For a full description see");
-    addParamsLine("               fourier <pad=3> <maxfreq=0.25> <interp=LINEAR> : Takes a central slice in Fourier space");
-    addParamsLine("                                              : pad controls the padding factor, by default, the padded volume is");
-    addParamsLine("                                              : three times bigger than the original volume. ");
+    addParamsLine("               fourier <pad=2> <maxfreq=0.25> <interp=bspline> : Takes a central slice in Fourier space");
+    addParamsLine("                                              : pad controls the padding factor. ");
     addParamsLine("                                              : maxfreq is the maximum frequency for the pixels and by default ");
     addParamsLine("                                              : pixels with frequency more than 0.25 are not considered.");
     addParamsLine("                                              : interp is the method for interpolation and the values can be: ");
@@ -865,7 +864,7 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
 /* Effectively project ===================================================== */
 int PROJECT_Effectively_project(const String &fnOut,
                                 bool singleProjection,
-                                int projType,
+                                projectionType projType,
                                 const ParametersProjection &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
@@ -964,10 +963,10 @@ int PROJECT_Effectively_project(const String &fnOut,
             if (projType == SHEARS)
                 projectVolume(*Vshears, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            if (projType == FOURIER)
+            else if (projType == FOURIER)
                 projectVolume(*Vfourier, proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
-            if (projType == REALSPACE)
+            else if (projType == REALSPACE)
                 projectVolume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                               rot, tilt, psi);
             Matrix1D<double> shifts(2);
