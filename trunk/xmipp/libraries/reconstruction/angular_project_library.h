@@ -35,8 +35,10 @@
 #include <data/xmipp_image.h>
 #include <data/xmipp_funcs.h>
 #include <data/xmipp_program.h>
-#include "project_real_shears.h"
 #include <data/metadata_extension.h>
+#include <reconstruction/project_real_shears.h>
+#include <reconstruction/fourier_projection.h>"
+#include <reconstruction/project.h>
 
 /**@name Projection library program */
 //@{
@@ -72,9 +74,15 @@ public:
     /** Name of selfile for groups */
     FileName fn_groups;
 
-    /** Shears.
-        Use projection shears as projection method. */
-    bool shears;
+    /// Type of projection algorithm:
+    projectionType projType;
+    /// The padding factor for Fourier projection
+    double paddFactor;
+    /// The maximum frequency for Fourier projection
+    double maxFrequency;
+    /// The type of interpolation (NEAR
+    int BSplineDeg;
+
 #ifdef NEVERDEFINED
     /** vector with valid proyection directions after looking for 
         directions close to experimental data. 
@@ -131,7 +139,10 @@ public:
     bool only_winner;
 
     /* Volume for shear projection */
-    RealShearsInfo* VShears;
+    RealShearsInfo *Vshears;
+
+    /* Volume for fourier projection */
+    FourierProjector *Vfourier;
 
     /** fil vector with symmetry axis */
     // std::vector <Matrix1D<double> > symmetry_vectors;
