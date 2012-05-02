@@ -31,12 +31,15 @@ ProgAngularProjectLibrary::ProgAngularProjectLibrary()
 {
     /** sampling object 1 by default*/
     mysampling.setSampling(1);
-    VShears=NULL;
+    Vshears=NULL;
+    Vfourier=NULL;
+
 }
 
 ProgAngularProjectLibrary::~ProgAngularProjectLibrary()
 {
-    delete VShears;
+    delete Vshears;
+    delete Vfourier;
 }
 
 /* Read parameters --------------------------------------------------------- */
@@ -61,7 +64,26 @@ void ProgAngularProjectLibrary::readParams()
     compute_closer_sampling_point_bool= checkParam("--closer_sampling_points");
     if(compute_closer_sampling_point_bool)
         FnexperimentalImages = getParam("--experimental_images");
-    shears = checkParam("--shears");
+    if (STR_EQUAL(getParam("--method"), "real_space"))
+        projType = REALSPACE;
+    if (STR_EQUAL(getParam("--method"), "shears"))
+        projType = SHEARS;
+    if (STR_EQUAL(getParam("--method"), "fourier"))
+    {
+        projType = FOURIER;
+        paddFactor = getDoubleParam("--method", 1);
+        maxFrequency = getDoubleParam("--method", 2);
+        String degree = getParam("--method", 3);
+        if (degree == "nearest")
+            BSplineDeg = NEAREST;
+        else if (degree == "linear")
+            BSplineDeg = LINEAR;
+        else if (degree == "bspline")
+            BSplineDeg = BSPLINE3;
+        else
+            REPORT_ERROR(ERR_ARG_BADCMDLINE, "The interpolation kernel can be : nearest, linear, bspline");
+    }
+
     //NOTE perturb in computed after the even sampling is computes
     //     and max tilt min tilt applied
     perturb_projection_vector=getDoubleParam("--perturb");
@@ -99,8 +121,18 @@ void ProgAngularProjectLibrary::defineParams()
     addParamsLine("  requires --experimental_images;");
     addParamsLine("  [--compute_neighbors]         : create doc file with sampling point neighbors");
     addParamsLine("  requires --angular_distance;");
-    addParamsLine("  [--shears]                    : use projection shears to generate projections");
-    addParamsLine("                                :+this method is more accurate but slower");
+    addParamsLine("  [--method <method=fourier>]              : Projection method");
+    addParamsLine("        where <method>");
+    addParamsLine("                real_space                    : Makes projections by ray tracing in real space");
+    addParamsLine("                fourier <pad=1> <maxfreq=0.25> <interp=bspline> : Takes a central slice in Fourier space");
+    addParamsLine("                                              : pad controls the padding factor, by default, the padded volume is");
+    addParamsLine("                                              : the same than the original volume. ");
+    addParamsLine("                                              : maxfreq is the maximum frequency for the pixels and by default ");
+    addParamsLine("                                              : pixels with frequency more than 0.25 are not considered.");
+    addParamsLine("                                              : interp is the method for interpolation and the values can be: ");
+    addParamsLine("                                              : nearest:          Nearest Neighborhood  ");
+    addParamsLine("                                              : linear:           Linear  ");
+    addParamsLine("                                              : bspline:          Cubic BSpline  ");
     addParamsLine("  [--perturb <sigma=0.0>]       : gaussian noise projection unit vectors ");
     addParamsLine("                                : a value=sin(sampling_rate)/4  ");
     addParamsLine("                                : may be a good starting point ");
@@ -129,8 +161,24 @@ void ProgAngularProjectLibrary::show()
     << "compute_neighbors:         " << compute_neighbors_bool << std::endl
     << "only_winner:               " << only_winner << std::endl
     << "verbose:                   " << verbose << std::endl
-    << "shears:                    " << shears << std::endl
-    ;
+    << "projection method:         ";
+
+    if (projType == FOURIER)
+    {
+        std::cout << " fourier " <<std::endl;
+        std::cout << "     pad factor: "   << paddFactor <<std::endl;
+        std::cout << "     maxFrequency: " << maxFrequency <<std::endl;
+        std::cout << "     interpolator: ";
+        if (BSplineDeg == NEAREST)
+            std::cout << " nearest" <<std::endl;
+        else if (BSplineDeg == LINEAR)
+            std::cout << " linear" <<std::endl;
+        else if (BSplineDeg == BSPLINE3)
+            std::cout << " bspline" <<std::endl;
+    }
+    else if (projType == REALSPACE)
+        std::cout << " realspace " <<std::endl;
+
     if (angular_distance_bool)
         std::cout << "angular_distance:          " << angular_distance << std::endl;
     if (FnexperimentalImages.size() > 0)
@@ -165,8 +213,15 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
         for (int i=0;i<my_init;i++)
             myCounter++;
 
-    if (shears && XSIZE(inputVol())!=0 && VShears==NULL)
-        VShears=new RealShearsInfo(inputVol());
+//    if (shears && XSIZE(inputVol())!=0 && VShears==NULL)
+//        VShears=new RealShearsInfo(inputVol());
+    if (projType == SHEARS && XSIZE(inputVol())!=0 && Vshears==NULL)
+        Vshears=new RealShearsInfo(inputVol());
+    if (projType == FOURIER && XSIZE(inputVol())!=0 && Vfourier==NULL)
+        Vfourier=new FourierProjector(inputVol(),
+        		                      paddFactor,
+        		                      maxFrequency,
+        		                      BSplineDeg);
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
@@ -178,10 +233,17 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             tilt=      YY(mysampling.no_redundant_sampling_points_angles[i]);
             rot=       XX(mysampling.no_redundant_sampling_points_angles[i]);
 
-            if (shears)
-                projectVolume(*VShears, P, Ydim, Xdim, rot,tilt,psi);
-            else
-                projectVolume(inputVol(), P, Ydim, Xdim, rot,tilt,psi);
+//            if (shears)
+//                projectVolume(*VShears, P, Ydim, Xdim, rot,tilt,psi);
+//            else
+//                projectVolume(inputVol(), P, Ydim, Xdim, rot,tilt,psi);
+            if (projType == SHEARS)
+                projectVolume(*Vshears, P, Ydim, Xdim,   rot, tilt, psi);
+            else if (projType == FOURIER)
+                projectVolume(*Vfourier, P, Ydim, Xdim,  rot, tilt, psi);
+            else if (projType == REALSPACE)
+                projectVolume(inputVol(), P, Ydim, Xdim, rot, tilt, psi);
+
 
             P.setEulerAngles(rot,tilt,psi);
             P.setDataMode(_DATA_ALL);
