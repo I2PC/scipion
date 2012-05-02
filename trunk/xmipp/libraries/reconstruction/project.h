@@ -38,7 +38,7 @@
    @ingroup ReconsLibrary */
 //@{
 /// Type of projection
-enum projctionType {REALSPACE, SHEARS, FOURIER};
+enum projectionType {REALSPACE, SHEARS, FOURIER};
 /* Projection Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
 class ProgProject: public XmippProgram
@@ -71,10 +71,10 @@ public:
     /// Psi angle of a single projection
     double psiSingle;
     /// Type of projection algorithm
-    projctionType projType;
+    projectionType projType;
     /// The padding factor for Fourier projection
     double paddFactor;
-    /// The maximum frequency for pixels
+    /// The maximum frequency for Fourier projection
     double maxFrequency;
     /// The type of interpolation (NEAR
     int BSplineDeg;
