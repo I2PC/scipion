@@ -442,12 +442,12 @@ void WikiPrinter::printParam(const ParamDef &param, int v)
                     for (size_t k = 0; k < arg.subParams[j]->arguments.size(); ++k)
                     {
                         *pOut << " ";
-                        printArgument(*(arg.subParams[j]->arguments[k]));
+                        printArgument(*(arg.subParams[j]->arguments[k]), v);
                     }
                     *pOut << " %ENDCOLOR%" << std::endl;
                     printRequiresList(arg.subParams[j]->requires);
                     //                    *pOut << std::endl;
-                    printCommentList(arg.subParams[j]->comments);
+                    printCommentList(arg.subParams[j]->comments, v);
 
                 }
             }
