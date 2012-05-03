@@ -112,16 +112,27 @@ public class ImagePlusLoader
 	{
 		return allowsGeometry;
 	}
+	
+	public void setAllowsGeometry(boolean useGeometry)
+	{
+		this.useGeometry = useGeometry;
+	}
 
 	public boolean getUseGeometry()
 	{
 		return useGeometry;
 	}
 
-	public void setUseGeometry(boolean useGeometry)
+	public void useGeometry()
 	{
-		this.useGeometry = useGeometry;
+		setAllowsGeometry(true);
 		loadImagePlus();
+	}
+
+	public void wrap()
+	{
+		// TODO Auto-generated method stub
+		
 	}
 
 }

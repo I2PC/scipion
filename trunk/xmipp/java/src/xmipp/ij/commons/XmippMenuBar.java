@@ -54,6 +54,8 @@ public class XmippMenuBar extends MenuBar
 	private final XmippIJWindow xw;
 	private PollTimer polltimer;
 	private MenuItem refreshmi;
+	private CheckboxMenuItem wrapmi;
+	private CheckboxMenuItem ugmi;
 
 	enum IJRequirement
 	{
@@ -165,12 +167,46 @@ public class XmippMenuBar extends MenuBar
 					polltimer.stop();
 			}
 		});
+		
+		ugmi = new CheckboxMenuItem("Use Geometry");
+		ugmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		ugmi.addItemListener(new ItemListener()
+		{
+
+			@Override
+			public void itemStateChanged(ItemEvent e)
+			{
+				boolean ug = ugmi.getState();
+				if (ug)
+					useGeometry();
+				
+			}
+		});
+
+		
+		wrapmi = new CheckboxMenuItem("Wrap");
+		wrapmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		wrapmi.addItemListener(new ItemListener()
+		{
+
+			@Override
+			public void itemStateChanged(ItemEvent e)
+			{
+				boolean wrap = wrapmi.getState();
+				if (wrap)
+					wrap();
+				
+			}
+		});
+
 
 		filemn.add(savemi);
 		filemn.add(saveasmi);
 		addIJMenuItem(filemn, "Duplicate", "Duplicate...", IJRequirement.IMAGEJ);
 		filemn.add(refreshmi);
 		filemn.add(pollmi);
+		filemn.add(ugmi);
+		filemn.add(wrapmi);
 
 		// menubar image menu
 		infomn = new Menu("Info");
@@ -286,6 +322,18 @@ public class XmippMenuBar extends MenuBar
 
 	}
 	
+	protected void useGeometry()
+	{
+		xw.getImagePlusLoader().useGeometry();
+		
+	}
+
+	protected void wrap()
+	{
+		xw.getImagePlusLoader().wrap();
+		
+	}
+
 	public static void openImagePlusAs3D(ImagePlus ip) {
 		try {
 			int UNIVERSE_W = 400, UNIVERSE_H = 400;

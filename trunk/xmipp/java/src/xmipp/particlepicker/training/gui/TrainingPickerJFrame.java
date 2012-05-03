@@ -460,27 +460,33 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			{
 				if (e.getValueIsAdjusting())
 					return;
-				if (TrainingPickerJFrame.this.micrographstb.getSelectedRow() == -1)
-					return;// Probably from fireTableDataChanged raised
-				index = TrainingPickerJFrame.this.micrographstb.getSelectedRow();
-				// by me.
-				micrograph.releaseImage();
-				micrograph = (TrainingMicrograph) ppicker.getMicrographs().get(index);
-
-				initializeCanvas();
-				TrainingPickerJFrame.this.iconlb.setIcon(micrograph.getCTFIcon());
-				actionsbt.setText(getFamilyData().getAction());
-				actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
-				thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
-				pack();
-				saveChanges();// Saving changes when switching micrographs, by
-								// Coss suggestion
-				if (particlesdialog != null)
-					loadParticles();
+				loadMicrograph();
 			}
 		});
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
 
+	}
+
+	protected void loadMicrograph()
+	{
+		if (TrainingPickerJFrame.this.micrographstb.getSelectedRow() == -1)
+			return;// Probably from fireTableDataChanged raised
+		index = TrainingPickerJFrame.this.micrographstb.getSelectedRow();
+		// by me.
+		micrograph.releaseImage();
+		micrograph = (TrainingMicrograph) ppicker.getMicrographs().get(index);
+
+		initializeCanvas();
+		TrainingPickerJFrame.this.iconlb.setIcon(micrograph.getCTFIcon());
+		actionsbt.setText(getFamilyData().getAction());
+		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
+		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
+		pack();
+		saveChanges();// Saving changes when switching micrographs, by
+						// Coss suggestion
+		if (particlesdialog != null)
+			loadParticles();
+		
 	}
 
 	protected void resetMicrograph()
@@ -537,7 +543,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	protected void initializeCanvas()
 	{
-		if (canvas == null)
+		if (canvas == null )
 		{
 			canvas = new TrainingCanvas(this);
 			ImageWindow iw = new ImageWindow(micrograph.getImagePlus(ppicker.getFilters()), canvas);
