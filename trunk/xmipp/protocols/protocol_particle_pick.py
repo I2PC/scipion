@@ -14,6 +14,9 @@ import xmipp
 from glob import glob
 from os.path import exists, join
 
+# Picking modes
+PM_MANUAL, PM_SUPERVISED, PM_READONLY = ('manual', 'supervised', 'readonly')
+
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -21,130 +24,116 @@ class ProtParticlePicking(XmippProtocol):
         self.Import = "from protocol_particle_pick import *"
         importProt = self.getProtocolFromRunName(self.ImportRun)
         self.importDir = importProt.WorkingDir
-        self.TiltPairs = os.path.exists(os.path.join(importProt.WorkingDir,"tilted_pairs.xmd"))
-        if self.TiltPairs:
-            self.inputMicrographs = importProt.getFilename('tiltedPairs')
-        else:
+        self.TiltPairs = True
+        self.inputMicrographs = importProt.getFilename('tilted_pairs')
+        if not exists(self.inputMicrographs):
             self.inputMicrographs = importProt.getFilename('micrographs')
+            self.TiltPairs = False
         self.micrographs = self.getEquivalentFilename(importProt, self.inputMicrographs)
 
     def defineSteps(self):
         self.insertStep('copyFile', verifyfiles=[self.micrographs], source=self.inputMicrographs, dest=self.micrographs)
         self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
-                           MicrographSelfile=self.micrographs, WorkingDir=self.WorkingDir,
-                           TiltPairs=self.TiltPairs,
-                           AutomaticPicking=self.AutomaticPicking, NumberOfThreads=self.NumberOfThreads,
-                           Fast=self.Fast, InCore=self.InCore)       
-
-    def createFilenameTemplates(self):
-        return {
-                'families': join('%(WorkingDir)s', 'families.xmd')
-                }
+                           InputMicrographs=self.micrographs, WorkingDir=self.WorkingDir,
+                           TiltPairs=self.TiltPairs, Memory=self.Memory)       
         
     def summary(self):
         md = xmipp.MetaData(self.micrographs)
+        micrographs, particles, familiesDict = countParticles(self)
         if self.TiltPairs: 
             suffix = "tilt pairs"
+            items = "pairs"
+            micrographs /= 2
+            particles /= 2
         else: 
-            suffix = "micrographs"        
+            suffix = "micrographs"
+            items = "particles"        
         
-        summary=["Input: [%s] with <%u> %s" % (self.importDir, md.size(), suffix)]        
-        total_manual = 0
-        N_manual = 0
-        total_auto = 0
-        N_auto = 0
-        Nblock = {}
-        for posfile in glob(self.workingDirPath('*.pos')):
-            blockList = xmipp.getBlocksInMetaDataFile(posfile)
-            if 'families' in blockList:
-                blockList.remove('families')
-            particles = 0
-            for block in blockList:
-                md = xmipp.MetaData("%(block)s@%(posfile)s" % locals());
-                md.removeDisabled();
-                Nparticles = md.size()
-                particles += Nparticles
-                if block in Nblock.keys():
-                    Nblock[block] += Nparticles
-                else:
-                    Nblock[block] = Nparticles
-            if particles > 0:
-                if 'auto' in posfile:
-                    total_auto += particles
-                    N_auto += 1
-                else:
-                    total_manual += particles
-                    N_manual += 1
-        if self.TiltPairs:
-            summary.append("Number of pairs manually picked: <%d> (from <%d> micrographs)" % (total_manual/2, N_manual/2))
-        else:
-            summary.append("Number of particles manually picked: <%d> (from <%d> micrographs)" % (total_manual, N_manual))
-        if N_auto > 0:
-            summary.append("Number of particles automatically picked: <%d> (from <%d> micrographs)" % (total_auto, N_auto))
-        fnFamilies = self.getFilename('families')
-        if exists(fnFamilies):
-            md = xmipp.MetaData(fnFamilies)
-            Nfamilies = md.size()
-            if Nfamilies > 1:
-                summary.append("Number of families: <%u>" % Nfamilies)
-        for block in Nblock.keys():
+        summary = ["Input: [%s] with <%u> %s" % (self.importDir, md.size(), suffix),         
+                   "Number of %(items)s manually picked: <%(particles)d> (from <%(micrographs)d> micrographs)" % locals()]
+        
+        families = len(familiesDict)
+        if families > 1:
+            summary.append("Number of families: <%u>" % families)
+        
+        for family, particles in familiesDict.iteritems():
             if self.TiltPairs:
-                summary.append("Family <%s>: <%u> pairs" % (block, Nblock[block]/2))
-            else:
-                summary.append("Family <%s>: <%u> particles" % (block, Nblock[block]))
+                particles /= 2
+            summary.append("Family <%(family)s>: <%(particles)u> %(items)s" % locals())
+        
         return summary
     
     def validate(self):
-        # Check that there is a valid list of micrographs
-        if not exists(self.inputMicrographs):
-            return ["Cannot find input micrographs: \n   <%s>" % self.inputMicrographs]
-        # Check that all micrographs exist
-        errors = []
-        md = xmipp.MetaData(self.inputMicrographs)
-        missingMicrographs = []        
-        def checkMicrograph(label, objId): # Check if micrograph exists
-            micrograph = md.getValue(label, objId)
-            if not exists(micrograph):
-                missingMicrographs.append(micrograph)
-        for objId in md:
-            checkMicrograph(xmipp.MDL_MICROGRAPH, objId)
-            if self.TiltPairs:
-                checkMicrograph(xmipp.MDL_MICROGRAPH_TILTED, objId)
-        
-        if len(missingMicrographs):
-            errors.append("Cannot find the following micrographs: " + "\n".join(missingMicrographs))
-                
-        # Check that automatic particle picking is not for tilted
-        if self.TiltPairs and self.AutomaticPicking:
-            errors.append("Automatic particle picking cannot be done on tilt pairs")
-        
-        return errors
+        return validateMicrographs(self.inputMicrographs, self.TiltPairs)
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.micrographs, self.WorkingDir, self.TiltPairs, ReadOnly=True)
+        launchParticlePickingGUI(None, self.micrographs, self.WorkingDir, PM_READONLY, self.TiltPairs)
 
-# Execute protocol in the working directory
-def launchParticlePickingGUI(log,MicrographSelfile,WorkingDir,
-                             TiltPairs=False,
-                             AutomaticPicking=False, NumberOfThreads=1, Fast=True, InCore=False, ReadOnly=False):
+
+def getPosFiles(prot, pattern=''):
+    '''Return the .pos files of this picking protocol'''
+    return glob(prot.workingDirPath('*%s.pos' % pattern))
+
+def validateMicrographs(inputMicrographs, tiltPairs=False):
+    ''' Validate the existence of input micrographs metadata file 
+    and also each of the micrographs, return an error list if some 
+    file is missing '''
+    # Check that there is a valid list of micrographs
+    if not exists(inputMicrographs):
+        return ["Cannot find input micrographs: \n   <%s>" % inputMicrographs]
+    # Check that all micrographs exist
+    errors = []
+    md = xmipp.MetaData(inputMicrographs)
+    missingMicrographs = []        
+    
+    def checkMicrograph(label, objId): # Check if micrograph exists
+        micrograph = md.getValue(label, objId)
+        if not exists(micrograph):
+            missingMicrographs.append(micrograph)
+    for objId in md:
+        checkMicrograph(xmipp.MDL_MICROGRAPH, objId)
+        if tiltPairs:
+            checkMicrograph(xmipp.MDL_MICROGRAPH_TILTED, objId)
+    
+    if len(missingMicrographs):
+        errors.append("Cannot find the following micrographs: " + "\n".join(missingMicrographs))
+    return errors    
+
+def countParticles(prot, pattern=''):
+    '''Return the number of picked micrographs, particles and 
+    a dictionary with particles per family'''
+    particles = 0
+    micrographs = 0
+    familiesDict = {}
+    
+    for posfile in getPosFiles(prot, pattern):
+        blockList = xmipp.getBlocksInMetaDataFile(posfile)
+        pos_particles = 0
+        for block in blockList:
+            if block != 'families':
+                md = xmipp.MetaData("%(block)s@%(posfile)s" % locals());
+                md.removeDisabled();
+                block_particles = md.size()
+                pos_particles += block_particles
+                if block in familiesDict:
+                    familiesDict[block] += block_particles
+                else:
+                    familiesDict[block] = block_particles
+        if pos_particles > 0:
+            particles += pos_particles
+            micrographs += 1
+    return micrographs, particles, familiesDict
+
+def launchParticlePickingGUI(log, InputMicrographs, WorkingDir, PickingMode=PM_MANUAL,
+                             TiltPairs=False, Memory=2):
+    ''' Utility function to launch the Particle Picking application '''
+    args = "-i %(InputMicrographs)s -o %(WorkingDir)s --mode %(PickingMode)s --memory %(Memory)dg"
     if TiltPairs:
-        if ReadOnly:
-            mode = "readonly"
-        else:
-            mode = "manual"
-        args="-i %(MicrographSelfile)s -o %(WorkingDir)s --mode %(mode)s" % locals()
-        runJob(log,"xmipp_micrograph_tiltpair_picking", args, RunInBackground=True)
+        program = "xmipp_micrograph_tiltpair_picking"
     else:
-        if ReadOnly:
-            mode = "readonly"
-        elif AutomaticPicking:
-            mode = "supervised %(NumberOfThreads)d %(Fast)s %(InCore)s"
-        else:
-            mode = "manual"
-        params = "-i %(MicrographSelfile)s -o %(WorkingDir)s --mode " + mode 
-        runJob(log,"xmipp_micrograph_particle_picking", params % locals(), RunInBackground=True)
-
+        program = "xmipp_micrograph_particle_picking"
+    runJob(log, program, args % locals(), RunInBackground=True)
 #		
 # Main
 #     

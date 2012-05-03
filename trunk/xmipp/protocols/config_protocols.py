@@ -7,6 +7,7 @@ protocols = {
         'downsample_micrographs': ('Downsample Micrographs', 'Micrographs/Downsampled'),
         'screen_micrographs': ('Screen Micrographs', 'Micrographs/Screen'),
         'particle_pick': ('Manual picking', 'ParticlePicking/Manual'),
+        'particle_pick_supervised': ('Supervised picking', 'ParticlePicking/Supervised'),
         'particle_pick_auto': ('Automatic picking', 'ParticlePicking/Auto'),
         'extract_particles': ('Extract Particles', 'Images/Extracted'),
         'import_particles': ('Import Particles', 'Images/Imported'),
@@ -32,7 +33,7 @@ protocols = {
 sections = [
 ('Preprocessing', 
    [['Micrographs', 'import_micrographs','screen_micrographs','downsample_micrographs'], 
-    ['Particle picking', 'particle_pick', 'particle_pick_auto', 'extract_particles'], 
+    ['Particle picking', 'particle_pick', 'particle_pick_supervised', 'particle_pick_auto', 'extract_particles'], 
     ['Particles', 'import_particles', 'preprocess_particles', 'screen_particles']]),
 ('2D', 
    [['Align+Classify', 'ml2d', 'cl2d', 'cl2d_align'], 

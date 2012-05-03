@@ -27,6 +27,7 @@
  '''
 
 import os
+from os.path import exists
 import Tkinter as tk
 #import protlib_gui_figure
 from protlib_gui import ProtocolGUI, Fonts, registerCommonFonts
@@ -313,7 +314,7 @@ class XmippProjectGUI():
         root.withdraw()
         root.title(script)
         root.columnconfigure(1, weight=1)
-        root.rowconfigure(0, weight=1)
+        #root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         
         def updateAndClose():
@@ -333,6 +334,8 @@ class XmippProjectGUI():
         detailsSection.addButton("Stop run", command=stopRun)
         cols = ('pid', '%cpu', '%mem', 'command')
         frame = detailsSection.frameContent
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(2, weight=1)
         tree = XmippTree(frame, columns=cols)
         for c in cols:
             tree.heading(c, text=c)
@@ -474,11 +477,6 @@ class XmippProjectGUI():
             self.updateRunSelection(-1)
 
     #---------------- Functions related with Popup menu ----------------------   
-#    def lastPair(self):
-#        if self.lastDisplayGroup:
-#            return  self.ToolbarButtonsDict[self.lastDisplayGroup]
-#        return None
-        
     def unpostMenu(self, event=None):
         if self.lastMenu:
             self.lastMenu.unpost()
@@ -492,13 +490,6 @@ class XmippProjectGUI():
             xroot, yroot = self.root.winfo_x() + btn.master.winfo_x(), self.root.winfo_y()+ btn.master.winfo_y()
             menu.post(xroot + x + w + 10, yroot + y)
             self.lastMenu = menu
-#        if self.lastDisplayGroup and self.lastDisplayGroup != key:
-#            lastBtn, lastMenu = self.lastPair()
-#            lastBtn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
-#            if lastMenu:
-#                lastMenu.unpost()            
-#            
-#        if self.lastDisplayGroup and showMenu:
             
     def cbDisplayGroupChanged(self, e=None):
         index = self.cbDisplayGroup.current()
@@ -507,17 +498,10 @@ class XmippProjectGUI():
         
     def selectDisplayGroup(self, group=GROUP_ALL):
         '''Change the display group for runs list'''
-        #self.selectToolbarButton(group, showMenu=False)
         if not self.lastDisplayGroup or group != self.lastDisplayGroup:
             self.project.config.set('project', 'lastselected', group)
             self.project.writeConfig()
             self.updateRunHistory(group)
-#            if self.lastDisplayGroup:
-#                btn, menu = self.ToolbarButtonsDict[self.lastDisplayGroup]
-#                btn.config(bg=ButtonBgColor, activebackground=ButtonActiveBgColor)
-#            if group != GROUP_ALL: # Update buttons backgroud if different from ALL
-#                btn, menu = self.ToolbarButtonsDict[group]
-#                btn.config(bg=ButtonBgColor, activebackground=ButtonSelectColor)
             self.lastDisplayGroup = group
             
     def updateRunSelection(self, index):
@@ -532,8 +516,10 @@ class XmippProjectGUI():
             run = self.lastRunSelected
             showButtons = False
             try:
+                if not exists(run['script']):
+                    return
                 prot = self.project.getProtocolFromModule(run['script'])
-                if os.path.exists(prot.WorkingDir):
+                if exists(prot.WorkingDir):
                     summary = '\n'.join(prot.summary())
                     showButtons = True
                     wd = "[%s]" % prot.WorkingDir # If exists, create a link to open folder
@@ -635,9 +621,7 @@ class XmippProjectGUI():
                 index = index + 1
         section.addButton(GROUP_XMIPP, command=self.launchProgramsGUI)
         self.ToolbarButtonsDict[index] = (GROUP_XMIPP, None, None)
-#        text = GROUP_ALL
-#        btn = section.addButton(text, command=lambda: self.selectToolbarButton(text, False))
-#        self.ToolbarButtonsDict[text] = (btn, None)        
+
         return toolbar
                 
     def addRunButton(self, frame, text, col, imageFilename=None):
@@ -730,7 +714,7 @@ class XmippProjectGUI():
 
         #Create main frame that will contain all other sections
         #Configure min size and expanding behaviour
-        root.minsize(750, 500)
+        root.minsize(750, 550)
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         main = tk.Frame(self.root)
@@ -740,9 +724,8 @@ class XmippProjectGUI():
         main.rowconfigure(1, minsize=200, weight=1)
         main.rowconfigure(2, minsize=200, weight=1)
         self.Frames['main'] = main
-        
+
         registerCommonFonts()
-        
         #Create section frames and locate them
         self.createToolbarFrame(main).grid(row=1, column=0, sticky='nse', padx=5, pady=5, rowspan=2)
         self.createHistoryFrame(main).grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
@@ -753,14 +736,11 @@ class XmippProjectGUI():
         lastGroup = GROUP_ALL
         if self.project.config.has_option('project', 'lastselected'):
             lastGroup = self.project.config.get('project', 'lastselected')
-            #self.selectToolbarButton(self.project.config.get('project', 'lastselected'), False)
         self.selectDisplayGroup(lastGroup)
         for k, v in self.ToolbarButtonsDict.iteritems():
             if lastGroup == v[0]:
                 self.cbDisplayGroup.current(k)
                 break
-#        else:
-#            self.Frames['details'].grid_remove()
     
         self.addBindings()
                 

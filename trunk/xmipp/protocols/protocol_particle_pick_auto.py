@@ -21,12 +21,12 @@ class ProtParticlePickingAuto(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.particle_pick_auto.name, scriptname, project)
         self.Import="from protocol_particle_pick_auto import *"
-        pickingProt = self.getProtocolFromRunName(self.PickingRun)
-        self.pickingDir = pickingProt.WorkingDir
-        self.pickingMicrographs = pickingProt.getFilename('micrographs')
-        self.pickingFamilies = pickingProt.getFilename('families')
+        supervisedProt = self.getProtocolFromRunName(self.SupervisedRun)
+        self.pickingDir = supervisedProt.WorkingDir
+        self.pickingMicrographs = supervisedProt.getFilename('micrographs')
+        self.pickingFamilies = supervisedProt.getFilename('families')
         self.micrographs = self.getFilename('micrographs')
-        self.families = self.getEquivalentFilename(pickingProt, self.pickingFamilies)
+        self.families = self.getEquivalentFilename(supervisedProt, self.pickingFamilies)
 
         # Families to process
         self.familiesForAuto = []
@@ -88,10 +88,9 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.insertStep('deleteTempFiles',WorkingDir=self.WorkingDir)
 
     def summary(self):
-        summary = []
-        summary.append("Manual picking run: <%s> " % self.PickingRun)
-        summary.append("Input directory: [%s] " % self.pickingDir)
-        summary.append("Automatic picking of the following models: "+",".join(self.familiesForAuto))
+        summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun, 
+                   "Input directory: [%s] " % self.pickingDir, 
+                   "Automatic picking of the following models: " + ",".join(self.familiesForAuto)]
         autoFiles = glob.glob(self.workingDirPath("*auto.pos"))
         if len(autoFiles)>0:
             Nparticles = 0
@@ -174,4 +173,4 @@ def deleteTempFiles(log,WorkingDir):
 # Main
 #     
 if __name__ == '__main__':
-    protocolMain(ProtParticlePicking)
+    protocolMain(ProtParticlePickingAuto)

@@ -109,3 +109,14 @@ def expandExpert():
 """If True, expert options will be displayed """
 ShowExpertOptions = False
 '''
+    
+def expandJavaMemory():
+    return '''
+# {expert} Memory to use (In Gb)
+"""
+Amount of memory passed to the JVM for the application.
+If you have very large micrographs (more than 10k pixels width)
+is recommended to use 2Gb or more
+"""
+Memory = 2
+'''

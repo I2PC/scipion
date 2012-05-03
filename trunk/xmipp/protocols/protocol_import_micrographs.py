@@ -91,7 +91,7 @@ class ProtImportMicrographs(XmippProtocol):
     
     def visualize(self):
         if self.TiltPairs:
-            summaryFile = self.getFilename('tiltedPairs')
+            summaryFile = self.getFilename('tilted_pairs')
         else:
             summaryFile = self.getFilename('micrographs')
         if os.path.exists(summaryFile):
@@ -115,7 +115,7 @@ class ProtImportMicrographs(XmippProtocol):
         pairMd = ''
         tilted = ''
         if self.TiltPairs:
-            tilted = self.getFilename('tiltedPairs')
+            tilted = self.getFilename('tilted_pairs')
             vf.append(tilted)
             pairMd = self.PairDescr
         self.insertStep('createResults', verifyfiles=vf, WorkingDir=self.WorkingDir, PairsMd=pairMd, 

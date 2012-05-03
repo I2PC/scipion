@@ -5,18 +5,17 @@
 # Author: Carlos Oscar Sorzano, September, 2011
 #
 #------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------
 # {begin_of_header} 
 
 # {eval} expandCommentRun()
 
-#------------------------------------------------------------------------------------------
-# {section} Picking parameters
-#------------------------------------------------------------------------------------------
-# {run}(particle_pick) Manual particle picking run
-""" Execution run of the manual particle picking
+# {run}(particle_pick_supervised) Supervised particle picking RUN
 """
-PickingRun = ""
+Select previous RUN of the <Supervised> particle picking.
+"""
+SupervisedRun = ""
+
+# {eval} expandJavaMemory()
 
 # {eval} expandParallel(threads=0, hours=36)
 

@@ -217,7 +217,7 @@ class XmippProject():
         for v in mod.__dict__.values():
             if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
                 return v(script, self)
-        reportError("Can load protocol from " + script)
+        reportError("Can't load protocol from " + script)
 
     def getProtocolFromRunName(self, extendedRunName):
         ''' This function will be helpful to create an instance
@@ -316,8 +316,9 @@ class XmippProtocol(object):
         with each protocol particular dictionary'''
         d = {
                 'micrographs': join('%(WorkingDir)s','micrographs.xmd'),
-                "tiltedPairs": join('%(WorkingDir)s','tilted_pairs.xmd'),
-                'families':    join('%(WorkingDir)s', 'families.xmd')             
+                "tilted_pairs": join('%(WorkingDir)s','tilted_pairs.xmd'),
+                'families':    join('%(WorkingDir)s', 'families.xmd'),
+                'macros': join('%(WorkingDir)s', 'macros.xmd')             
              
              }
         d.update(self.createFilenameTemplates())

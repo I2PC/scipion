@@ -15,26 +15,43 @@
 
 # {eval} expandCommentRun()
 
-# {run}(downsample_micrographs,screen_micrographs,import_micrographs) Micrographs RUN
+# {run}(particle_pick) Manual particle picking RUN
+""" 
+Select previous RUN of the <Manual> particle picking.
 """
-Select desired RUN from which you obtained the micrographs.
-
-Possible input protocols are:
-<Import Micrographs>
-<Screen Micrographs> or
-<Downsample Micrographs>
-"""
-ImportRun = ""
+PickingRun = ""
 
 # {eval} expandJavaMemory()
+
+# Number of threads
+""" 
+This option provides shared-memory parallelization on multi-core machines.
+It does not require any additional software, other than xmipp.
+"""
+NumberOfThreads = 2
+
+# Fast picking
+""" 
+The fast version includes a Fourier filter while the non-fast version 
+uses the Fourier filter and a Wavelet denoising. The fast version takes 
+half the time of the non-fast version.
+"""
+Fast = True
+
+# {expert} In-core picking
+"""
+If you can afford to load the micrographs in memory while picking, 
+this option makes the program faster.
+"""
+InCore = False
 
 #------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
 #------------------------------------------------------------------------------------------------
 
-from protocol_particle_pick import *
+from protocol_particle_pick_supervised import *
 #		
 # Main
 #     
 if __name__ == '__main__':
-    protocolMain(ProtParticlePicking)
+    protocolMain(ProtParticlePickingSupervised)

@@ -41,13 +41,10 @@ class ProtExtractParticles(XmippProtocol):
         self.Import = 'from protocol_extract_particles import *'
         # Take some parameter from previous picking protocol run
         pickingProt = self.getProtocolFromRunName(self.PickingRun)
-        if hasattr(pickingProt,'TiltPairs'):
-            self.TiltPairs = pickingProt.TiltPairs
-        else:
-            self.TiltPairs = False
+        self.TiltPairs = getattr(pickingProt, 'TiltPairs', False)
         self.pickingDir = pickingProt.WorkingDir
         if self.TiltPairs:
-            self.pickingMicrographs = pickingProt.getFilename('tiltedPairs')
+            self.pickingMicrographs = pickingProt.getFilename('tilted_pairs')
         else:
             self.pickingMicrographs = pickingProt.getFilename("micrographs")
         self.micrographs = self.getEquivalentFilename(pickingProt, self.pickingMicrographs)
@@ -197,8 +194,8 @@ class ProtExtractParticles(XmippProtocol):
             micFullName = md.getValue(MDL_MICROGRAPH,objId)
             micName = baseWithoutExt(micFullName)
             if micrograph==micName:
-                if md.containsLabel(MDL_MICROGRAPH_ORIGINAL):
-                    micOriginalName=md.getValue(MDL_MICROGRAPH_ORIGINAL,objId)
+                if md.containsLabel(MDL_MICROGRAPH):
+                    micOriginalName=md.getValue(MDL_MICROGRAPH,objId)
                 else:
                     micOriginalName=None
                 if self.containsCTF:
@@ -226,6 +223,17 @@ class ProtExtractParticles(XmippProtocol):
                 runShowJ(selfile,extraParams="--mode metadata --render")
             else:
                 runShowJ(selfile)
+                
+            selfileRoot = self.workingDirPath(self.Family)
+            fnSorted = _getFilename('sorted', root=selfileRoot)
+            if exists(fnSorted):
+                from protlib_gui_figure import XmippPlotter
+                from xmipp import MDL_ZSCORE
+                xplotter = XmippPlotter()
+                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                xplotter.plotMdFile(fnSorted, False, mdLabelY=MDL_ZSCORE)
+                xplotter.show()
+                #runShowJ(fnSorted, extraParams=" --mode metadata --render")
     
     def createBlocksInExtractFile(self,fnMicrographsSel):
         md = MetaData(fnMicrographsSel)
