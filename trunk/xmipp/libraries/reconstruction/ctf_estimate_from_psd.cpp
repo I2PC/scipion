@@ -2173,7 +2173,7 @@ void estimate_defoci() {
 }
 #undef DEBUG
 
-// Estimate defoci with Zernike ---------------------------------------------
+// Estimate defoci with Zernike and SPTH transform---------------------------------------------
 double estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double min_freq, double max_freq, double Tm,
 		double kV, double R, double S, double lambdaPhase, double sizeWindowPhase, int verbose)
 {
@@ -2187,11 +2187,19 @@ double estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double
 	// Estimate phase, modulation and Zernikes
     FringeProcessing fp;
     MultidimArray<double> mod, phase;
-    Matrix1D<double> coefs(15);
-    coefs.initConstant(1);
 
-    //double R = 11;
-    //double S = 3.5;
+    Matrix1D<double> coefs(13);
+    coefs.initConstant(0);
+    VEC_ELEM(coefs,0) = 1;
+    VEC_ELEM(coefs,1) = 1;
+    VEC_ELEM(coefs,2) = 1;
+    VEC_ELEM(coefs,3) = 1;
+    VEC_ELEM(coefs,4) = 1;
+    VEC_ELEM(coefs,5) = 1;
+    VEC_ELEM(coefs,7) = 1;
+    VEC_ELEM(coefs,8) = 1;
+    VEC_ELEM(coefs,12) = 1;
+
     Image<double> save;
     save()=centeredEnhancedPSD;
     save.write("PPPcenteredEnhancedPSD.xmp");
@@ -2202,11 +2210,11 @@ double estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double
     //global_prm->
     //global_prm->Tm
 
-    fp.demodulate(centeredEnhancedPSD,R,S,lambdaPhase,sizeWindowPhase,
+    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
     		x,x,
     		min_freq*XSIZE(centeredEnhancedPSD),
     		max_freq*XSIZE(centeredEnhancedPSD),
-    		phase, mod, coefs, verbose);
+    		phase, mod, coefs, 6);
 
     kV = kV*1000;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
@@ -2215,9 +2223,14 @@ double estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double
     double Z4=VEC_ELEM(coefs,3);
     double Z5=VEC_ELEM(coefs,5);
     double defocusAvg = fabs(2*Tm*Tm*(2*Z3-6*Z8+std::sqrt(Z4*Z4+Z5*Z5)/2)/(PI*lambda));
+    double defocusDiff = fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5)/2)/(PI*lambda));
+    double angleEllipse = std::atan2(Z5,Z4)*180/PI;
 
     std::cout<< coefs << std::endl;
     std::cout<< defocusAvg << std::endl;
+    std::cout<< defocusDiff << std::endl;
+    std::cout<< angleEllipse << std::endl;
+
     return defocusAvg;
 }
 

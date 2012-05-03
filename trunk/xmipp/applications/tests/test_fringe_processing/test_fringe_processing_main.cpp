@@ -133,7 +133,6 @@ TEST_F( FringeProcessingTests, SPTH)
 }
 
 
-#define DEBUG
 TEST_F( FringeProcessingTests, orMinDer)
 {
 
@@ -195,7 +194,6 @@ TEST_F( FringeProcessingTests, orMinDer)
 
 }
 
-#define DEBUG
 TEST_F( FringeProcessingTests, normalize)
 {
 
@@ -258,7 +256,62 @@ TEST_F( FringeProcessingTests, normalize)
 #undef DEBUG
 
 
-#define DEBUG
+TEST_F( FringeProcessingTests, normalizeWB)
+{
+
+#ifdef DEBUG
+    FileName fpName, Iname, ModName;
+    fpName = "fp.txt";
+    Iname  = "IN.txt";
+    ModName= "Mod.txt";
+#endif
+
+    FringeProcessing fp;
+    MultidimArray<double> im, In, Mod;
+    MultidimArray<bool> ROI;
+
+    int nx = 311;
+    int ny = 311;
+    double noiseLevel = 0.1;
+    double freq = 1;
+    Matrix1D<int> coefs(10);
+
+    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+
+    In.resizeNoCopy(im);
+    Mod.resizeNoCopy(im);
+    ROI.resizeNoCopy(im);
+
+    int rmin = 20;
+    int rmax = 150;
+    ROI.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+    {
+        double temp = std::sqrt(i*i+j*j);
+        if ( (temp > rmin) &&  (temp < rmax) )
+            A2D_ELEM(ROI,i,j)= true;
+        else
+            A2D_ELEM(ROI,i,j)= false;
+    }
+
+    fp.normalizeWB(im,In,Mod, rmin, rmax, ROI);
+
+    //We test some values comparing with the values recovered with Matlab
+    ASSERT_TRUE( (A2D_ELEM(In,100,100)  -  0.98989)  < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,100,200)  - -0.00647944)  < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,200,100)  -  0.43138)  < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,200,200)  -  0.43138)  < 1e-1);
+
+#ifdef DEBUG
+    im.write(fpName);
+    In.write(Iname);
+    Mod.write(ModName);
+#endif
+
+}
+#undef DEBUG
+
+
 TEST_F( FringeProcessingTests, direction)
 {
 #ifdef DEBUG
@@ -325,7 +378,6 @@ TEST_F( FringeProcessingTests, direction)
 }
 #undef DEBUG
 
-#define DEBUG
 TEST_F( FringeProcessingTests, unwrapping)
 {
 #ifdef DEBUG
@@ -404,9 +456,9 @@ TEST_F( FringeProcessingTests, unwrapping)
 }
 #undef DEBUG
 
+#define DEBUG
 TEST_F( FringeProcessingTests, demodulate)
 {
-
 
 #ifdef DEBUG
     FileName ModName = "Mod.txt";
@@ -423,7 +475,7 @@ TEST_F( FringeProcessingTests, demodulate)
     int y = 65;
     double noiseLevel = 0;
     double freq = 2;
-    Matrix1D<double> coefs(10);
+    Matrix1D<double> coefs(13);
 
     fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
     mod.resizeNoCopy(im);
@@ -431,19 +483,27 @@ TEST_F( FringeProcessingTests, demodulate)
 
     double lambda = 1;
     int size = 3,rmin=40, rmax=150;
-    double R = 10;
-    double S = 5;
-    int verbose=5;
+    int verbose=6;
 
-    coefs.initConstant(1);
-    fp.demodulate(im,R,S,lambda,size, x, y, rmin, rmax,phase,mod, coefs, verbose);
+    coefs.initConstant(0);
+    VEC_ELEM(coefs,0) = 1;
+    VEC_ELEM(coefs,1) = 1;
+    VEC_ELEM(coefs,2) = 1;
+    VEC_ELEM(coefs,3) = 1;
+    VEC_ELEM(coefs,4) = 1;
+    VEC_ELEM(coefs,5) = 1;
+    VEC_ELEM(coefs,7) = 1;
+    VEC_ELEM(coefs,8) = 1;
+    VEC_ELEM(coefs,12) = 1;
+
+    fp.demodulate(im, lambda,size, x, y, rmin, rmax,phase,mod, coefs, verbose);
 
     //Comparing with Matlab results
-    /*ASSERT_TRUE( (A2D_ELEM(phase,30,30)  - 10.5929)  < 1e-2);
+    ASSERT_TRUE( (A2D_ELEM(phase,30,30)  - 10.5929)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(phase,30,50)  - 7.22597)  < 1e-2);
     ASSERT_TRUE( (A2D_ELEM(phase,50,30)  - 7.22597)  < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(phase,100,100)- 4.38535)  < 1e-2);
-    */
+    ASSERT_TRUE( (A2D_ELEM(phase,100,100)- 34.3254)  < 1e-2);
+
 
 #ifdef DEBUG
     im.write(fpName);

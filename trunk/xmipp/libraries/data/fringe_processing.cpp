@@ -56,7 +56,7 @@ void FringeProcessing::simulPattern(MultidimArray<double> & im, enum FP_TYPE typ
 
         ROI.setXmippOrigin();
         FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
-        	A2D_ELEM(ROI,i,j) = true;
+        A2D_ELEM(ROI,i,j) = true;
 
         polynom.zernikePols(coefs,im,ROI);
         im.setXmippOrigin();
@@ -283,6 +283,73 @@ void FringeProcessing::normalize(MultidimArray<double> & im, MultidimArray<doubl
 
     STARTINGX(imN)=STARTINGY(imN)=0;
 }
+
+void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double rmax, double rmin, MultidimArray<bool> & ROI)
+{
+
+    // H is an Annular bandpass filter.
+    MultidimArray< std::complex<double> > H;
+    H.resizeNoCopy(im);
+
+    im.setXmippOrigin();
+    H.setXmippOrigin();
+
+    MultidimArray<std::complex<double> > fftIm, imComplex;
+    typeCast(im, imComplex);
+
+    //Fourier Transformer
+    FourierTransformer ftrans(FFTW_BACKWARD);
+    ftrans.FourierTransform(imComplex, fftIm, false);
+
+    double temp = 0;
+    std::complex<double> tempCpx;
+
+    double rang = (rmax-rmin)/2;
+    //Inside rang we assume that there will a range of fringes per field from 2 to 10.
+    double freq1 = XSIZE(im)/(rang/2);
+    double freq2 = XSIZE(im)/(rang/10);
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    {
+        temp= (1/(1+std::exp(((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-freq1),2)/(2))))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(freq1*freq1/2))));
+        tempCpx = std::complex<double>(temp,temp);
+        A2D_ELEM(H,i,j) = tempCpx;
+    }
+
+    CenterFFT(H,false);
+    fftIm *= H;
+    ftrans.inverseFourierTransform();
+
+    //output of the program
+    imN.setXmippOrigin();
+    imModMap.setXmippOrigin();
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    {
+        A2D_ELEM(imN,i,j) = A2D_ELEM(imComplex,i,j).real();
+    }
+
+    SPTH(imN,H);
+    sph = H;
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    {
+        if (A2D_ELEM(ROI,i,j))
+        {
+            temp = std::abs(A2D_ELEM(H,i,j));
+            A2D_ELEM(imModMap,i,j) = std::sqrt(std::pow(temp,2)+std::pow(A2D_ELEM(imN,i,j),2));
+            A2D_ELEM(imN,i,j)      = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
+        }
+        else
+        {
+            A2D_ELEM(imModMap,i,j) = 0;
+            A2D_ELEM(imN,i,j)      = 0;
+        }
+    }
+
+    STARTINGX(imN)=STARTINGY(imN)=0;
+}
+
 
 class PointQuality
 {
@@ -524,8 +591,8 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     }
 }
 
-void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S, double lambda, int size, int x, int y, int rmin, int rmax,
-		MultidimArray<double> & phase, MultidimArray<double> & mod, Matrix1D<double> & coeffs, int verbose)
+void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
+                                  MultidimArray<double> & phase, MultidimArray<double> & mod, Matrix1D<double> & coeffs, int verbose)
 {
     //Initial Setup
     MultidimArray< double > In, orMap, orModMap, dir, wphase;
@@ -542,21 +609,27 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     mod.resizeNoCopy(im);
     phase.resizeNoCopy(im);
 
-    //First we define the Region of Interesting to perform all the operations inside this regions
+    //First we define the Region of Interesting to perform all the operations inside these regions
     ROI.setXmippOrigin();
+    dir.setXmippOrigin();
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
     {
         double temp = std::sqrt(i*i+j*j);
         if ( (temp > rmin) &&  (temp < rmax) )
+        {
             A2D_ELEM(ROI,i,j)= true;
+            A2D_ELEM(dir,i,j)= -std::atan2(i,j);
+        }
         else
             A2D_ELEM(ROI,i,j)= false;
     }
 
+    STARTINGX(dir)=STARTINGY(dir)=0;
+
     //We obtain previous necessary maps
     //Normalized version of im and modulation map
-    normalize(im,In,mod, R, S, ROI);
+    normalizeWB(im,In,mod, rmax, rmin, ROI);
 
     Image<double> save;
     if (verbose == 1)
@@ -567,7 +640,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
 
     STARTINGX(mod)=STARTINGY(mod)=0;
     //Orientation map of the fringes
-    orMinDer(In, orMap, orModMap, size, ROI);
+
+    /*orMinDer(In, orMap, orModMap, size, ROI);
     if (verbose == 2)
     {
         save()=orMap;
@@ -575,13 +649,14 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
         save()=orModMap;
         save.write("PPP22.xmp");
     }
+    */
 
     //We obtain the direction from the orientation map
-    direction(orMap, orModMap, lambda, size, dir, x, y);
-    if (verbose == 3)
+    //direction(orMap, orModMap, lambda, size, dir, x, y);
+    if (verbose == 2)
     {
         save()=dir;
-        save.write("PPP3.xmp");
+        save.write("PPP2.xmp");
     }
     //Spiral transform of the normalized image
     SPTH(In,sph);
@@ -599,10 +674,12 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
         {
             temp = -ci*std::exp(ci*A2D_ELEM(dir,i,j))*A2D_ELEM(sph,i,j);
             A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
+            A2D_ELEM(orModMap,i,j) = std::sqrt( temp.real()*temp.real() + A2D_ELEM(In,i,j)*A2D_ELEM(In,i,j));
+
         }
     }
 
-    if (verbose == 4)
+    if (verbose == 3)
     {
         save()=wphase;
         save.write("PPP3.xmp");
@@ -610,7 +687,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
     //Finally we obtain the unwrapped phase
     unwrapping(wphase, orModMap, lambda, size, phase);
 
-    if (verbose == 5)
+    if (verbose == 4)
     {
         save()=phase;
         save.write("PPP4.xmp");
@@ -618,11 +695,20 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double R, double S
 
     ROI.setXmippOrigin();
     Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
-    coefsInit.initConstant(1);
+
+    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+        VEC_ELEM(coefsInit,i) = (int)VEC_ELEM(coeffs,i);
 
     PolyZernikes polynom;
     polynom.fit(coefsInit,phase,ROI,1);
-    coeffs = polynom.fittedCoeffs;
+
+    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    {
+    	if ( VEC_ELEM(coeffs,i) != 0)
+    		VEC_ELEM(coeffs,i) = VEC_ELEM(polynom.fittedCoeffs,i);
+    	else
+    		VEC_ELEM(coeffs,i) = 0;
+    }
 
     if (verbose > 5)
     {

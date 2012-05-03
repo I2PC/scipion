@@ -117,7 +117,7 @@ public:
         Matrix1D<double> coefs(21);
         coefs.initConstant(1);
 
-        fp.demodulate(im,R,S,lambda,size,x,y,rmin,rmax, phase,mod, coefs, verbose);
+        fp.demodulate(im,lambda,size,x,y,rmin,rmax, phase,mod, coefs, verbose);
 
         /*
         //TODO poner local_kV como parametro de entrada
