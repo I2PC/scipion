@@ -14,6 +14,10 @@ class ProtImportMicrographs(XmippProtocol):
         XmippProtocol.__init__(self, protDict.import_micrographs.name, scriptname, project)
         self.Import = "from protocol_import_micrographs import *"
         self.PatternMicrographs = join(self.DirMicrographs, self.ExtMicrographs)
+        if self.TiltPairs:
+            self.outputMicrographs = self.getFilename('tilt_pairs')
+        else:
+            self.outputMicrographs = self.getFilename('micrographs')
         
     def defineSteps(self):
         # Create microscope
@@ -39,14 +43,12 @@ class ProtImportMicrographs(XmippProtocol):
         self.insertCreateResults(filenameDict)
 
     def createFilenameTemplates(self):
-        return {
-                'microscope': '%(WorkingDir)s/microscope.xmd'
-                }
+        return { 'microscope': '%(WorkingDir)s/microscope.xmd' }
         
     def validate(self):
         errors = []
         # Check that there are any micrograph to process
-        micrographList=self.getMicrographs()
+        micrographList = self.getMicrographs()
         if len(micrographList) == 0:
             errors.append("There are no micrographs to process in " + self.PatternMicrographs)
         else:
@@ -56,13 +58,7 @@ class ProtImportMicrographs(XmippProtocol):
                         errors.append(micrograph+" seems to be corrupted")
                 except Exception:
                     errors.append(micrograph+" seems to be corrupted")
-        try:
-            if self.SamplingRateMode == "From image":
-                AngPix = float(self.SamplingRate)
-            else:
-                scannedPixelSize=float(self.ScannedPixelSize)
-        except:
-            errors.append("Sampling rate is not correctly set")
+
         return errors
 
     def warnings(self):
@@ -73,7 +69,7 @@ class ProtImportMicrographs(XmippProtocol):
             for micrograph in micrographList:
                 try:
                     if not xmipp.checkImageCorners(micrograph):
-                           warningList.append("Check corners of [%s]" % micrograph)
+                        warningList.append("Check corners of [%s]" % micrograph)
                 except Exception:
                     pass
         return warningList

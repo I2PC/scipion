@@ -74,16 +74,15 @@ Voltage = 200
 # Spherical aberration (in mm)
 SphericalAberration = 2.26
 
-# Magnification rate
-Magnification = 60000
-
 # {list}(From image, From scanner) Sampling rate mode
 SamplingRateMode="From image"
 
-# {condition}(SamplingRateMode=="From image") Sampling rate (A/pixel)
+# {condition}(SamplingRateMode=="From image"){validate}(IsFloat) Sampling rate (A/pixel)
 SamplingRate = ""
 
-# {condition}(SamplingRateMode=="From scanner") Scanned pixel size (in um/pixel)
+# {condition}(SamplingRateMode=="From scanner") Magnification rate
+Magnification = 60000
+# {condition}(SamplingRateMode=="From scanner"){validate}(IsFloat) Scanned pixel size (in um/pixel)
 ScannedPixelSize = ""
 
 # {eval} expandParallel(threads=0,hours=6)
