@@ -621,9 +621,14 @@ class ProtocolGUI(BasicGUI):
         return True
         
     def validateProtocol(self, prot):
-        errors = prot.validateBase()        
-        if len(errors) > 0:
-            showError("Validation ERRORS", '\n'.join(errors), parent=self.master)
+        self.validate_errors = []
+        def validateBase():
+            self.validate_errors = prot.validateBase()
+        
+        FlashMessage(self.master, 'Validating data...', func=validateBase)
+                
+        if len(self.validate_errors) > 0:
+            showError("Validation ERRORS", '\n'.join(self.validate_errors), parent=self.master)
             return False
         return True
     
