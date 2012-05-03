@@ -23,12 +23,13 @@ runColumns = ['run_id',
 NO_MORE_GAPS = 0 #no more gaps to work on
 NO_AVAIL_GAP = 1 #no available gaps now, retry later
 STEP_GAP = 2 #step gap to work on
+DB_TIMEOUT = 300 # 300 ms for timeout waiting
 
 def existsDB(dbName):
     """check if database has been created by checking if the table tableruns exist"""
     result = False
     try:
-        connection = sqlite.Connection(dbName)
+        connection = sqlite.Connection(dbName, timeout=DB_TIMEOUT)
         connection.row_factory = sqlite.Row
         cur = connection.cursor()
         _sqlCommand = "SELECT count(*) from sqlite_master where tbl_name = '%(TableRuns)s';" % projectDefaults
@@ -118,7 +119,7 @@ class XmippProjectDb(SqliteDb):
     def __init__(self, dbName):
         try:
             self.dbName = dbName
-            self.connection = sqlite.Connection(dbName)
+            self.connection = sqlite.Connection(dbName, timeout=DB_TIMEOUT)
             self.connection.row_factory = sqlite.Row
             self.cur = self.connection.cursor()
             self.sqlDict = projectDefaults
@@ -345,7 +346,7 @@ class XmippProtocolDb(SqliteDb):
         self.Log = protocol.Log  
         self.NumberOfMpi = getattr(protocol, 'NumberOfMpi', 1) 
         self.sqlDict = projectDefaults
-        self.connection = sqlite.Connection(self.dbName)
+        self.connection = sqlite.Connection(self.dbName, timeout=DB_TIMEOUT)
         self.connection.row_factory = sqlite.Row
         self.cur = self.connection.cursor()
         self.cur_aux = self.connection.cursor()
@@ -642,7 +643,7 @@ class ProgramDb():
             from protlib_xmipp import getProgramsDbName
             dbName = getProgramsDbName()
         self.dbName = dbName
-        self.connection = sqlite.Connection(dbName)
+        self.connection = sqlite.Connection(dbName, timeout=DB_TIMEOUT)
         self.connection.row_factory = sqlite.Row
         self.cursor = self.connection.cursor()
         self.cursor.execute('pragma foreign_keys=ON')
