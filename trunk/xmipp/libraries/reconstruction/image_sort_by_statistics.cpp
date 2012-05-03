@@ -64,7 +64,7 @@ void ProgSortByStatistics::defineParams()
     addParamsLine(" [--addToInput]          : Add columns also to input MetaData");
 }
 
-void ProgSortByStatistics::process_selfile(MetaData &SF, bool do_prepare, bool multivariate)
+void ProgSortByStatistics::processInput(MetaData &SF, bool do_prepare, bool multivariate)
 {
     Image<double> img;
     MultidimArray<double> img2;
@@ -76,9 +76,9 @@ void ProgSortByStatistics::process_selfile(MetaData &SF, bool do_prepare, bool m
     if (verbose>0)
     {
         if (do_prepare)
-            std::cerr << " Processing training set ..." << std::endl;
+            std::cout << " Processing training set ..." << std::endl;
         else
-            std::cerr << " Sorting particle set ..." << std::endl;
+            std::cout << " Sorting particle set ..." << std::endl;
     }
 
     int nr_imgs = SF.size();
@@ -195,16 +195,16 @@ void ProgSortByStatistics::run()
     if (fn_train != "")
     {
         SFtrain.read(fn_train);
-        process_selfile(SFtrain, true, multivariate);
+        processInput(SFtrain, true, multivariate);
     }
     else
-        process_selfile(SF, true, multivariate);
-    process_selfile(SF, false, multivariate);
+        processInput(SF, true, multivariate);
+    processInput(SF, false, multivariate);
 
     // Produce output .....................................................
     MetaData SFout;
     std::ofstream fh_zind;
-    if (verbose==2 && fn_out!="")
+    if (verbose==2 && !fn_out.empty())
         fh_zind.open((fn_out.withoutExtension() + "_vectors.xmd").c_str(), std::ios::out);
     MultidimArray<double> finalZscore=Zscore;
     double L=1;
@@ -222,35 +222,39 @@ void ProgSortByStatistics::run()
     int nr_imgs = SF.size();
     bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
     FileName fnImg;
+    MDRow row;
+
     for (int imgno = 0; imgno < nr_imgs; imgno++)
     {
         int isort_1 = DIRECT_A1D_ELEM(sorted,imgno);
         int isort = isort_1 - 1;
-        SF.getValue(MDL_IMAGE,fnImg,isort+1);
+        //SF.getValue(MDL_IMAGE,fnImg,isort+1);
+        SF.getRow(row, isort_1);
+        row.getValue(MDL_IMAGE, fnImg);
 
         if (thereIsEnable)
         {
             int enabled;
-            SF.getValue(MDL_ENABLED,enabled,isort_1);
+            row.getValue(MDL_ENABLED, enabled);
             if (enabled==-1)
                 continue;
         }
-        size_t objId=SFout.addObject();
-        SFout.setValue(MDL_IMAGE,fnImg,objId);
+        //size_t objId = SFout.addObject();
+        row.setValue(MDL_IMAGE,fnImg);
         double zscore=DIRECT_A1D_ELEM(finalZscore,isort);
         if (zscore>cutoff && cutoff>0)
         {
-            SFout.setValue(MDL_ENABLED,-1,objId);
+            row.setValue(MDL_ENABLED,-1);
             if (addToInput)
                 SF.setValue(MDL_ENABLED,-1,isort_1);
         }
         else
         {
-            SFout.setValue(MDL_ENABLED,1,objId);
+            row.setValue(MDL_ENABLED,1);
             if (addToInput)
                 SF.setValue(MDL_ENABLED,1,isort_1);
         }
-        SFout.setValue(MDL_ZSCORE,zscore,objId);
+        row.setValue(MDL_ZSCORE,zscore);
         if (addToInput)
             SF.setValue(MDL_ZSCORE,zscore,isort_1);
         if (verbose==2)
@@ -259,11 +263,12 @@ void ProgSortByStatistics::run()
             FOR_ALL_ELEMENTS_IN_ARRAY1D(pcaAnalyzer.v[isort])
             fh_zind << pcaAnalyzer.v[isort](i) << "\n";
         }
+        SFout.addRow(row);
     }
     if (verbose==2)
         fh_zind.close();
-    if (fn_out!="")
-        SFout.write(fn_out,MD_APPEND);
+    if (!fn_out.empty())
+        SFout.write(fn_out,MD_OVERWRITE);
     if (addToInput)
         SF.write(fn,MD_APPEND);
 }

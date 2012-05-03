@@ -49,7 +49,7 @@ public:
 
     void defineParams();
 
-    void process_selfile(MetaData &SF, bool do_prepare, bool multivariate);
+    void processInput(MetaData &SF, bool do_prepare, bool multivariate);
 
     void run();
 };
