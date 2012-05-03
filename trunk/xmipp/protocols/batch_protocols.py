@@ -27,6 +27,8 @@
  '''
 
 import os
+import time
+import threading
 from os.path import exists
 import Tkinter as tk
 #import protlib_gui_figure
@@ -320,6 +322,7 @@ class XmippProjectGUI():
         def updateAndClose():
             root.destroy()
             self.historyRefreshRate = 1
+            self.process_check = False
             self.updateRunHistory(self.lastDisplayGroup)
             
         def stopRun():
@@ -329,7 +332,42 @@ class XmippProjectGUI():
                 self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
                 updateAndClose()
                 
-        
+        def processWorker():
+            '''This function will be invoke from a worker thread 
+            to update process info and avoid freeze the GUI '''
+            self.process = pm.getProcessFromPid()
+            while self.process_check and self.process:
+                self.process_childs = pm.getProcessGroup()
+                time.sleep(4)
+                self.process = pm.getProcessFromPid()
+                
+        def refreshInfo():
+            #p = pm.getProcessFromPid()
+            #txt.delete(1.0, tk.END)
+            tree.clear()
+            if self.process:
+                labPid.set(self.process.pid)
+                labElap.set(self.process.etime)
+                #line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
+                #txt.insert(tk.END, line)
+                #txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
+                #childs = pm.getProcessGroup()
+                lastHost = ''
+                for c in self.process_childs:
+                    c.info['pname'] = pname = os.path.basename(c.args.split()[0])
+                    if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
+                        line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        if c.host != lastHost:
+                            #txt.insert(tk.END, "%s\n" % c.host, 'bold')
+                            tree.insert('', 'end', c.host, text=c.host)
+                            tree.item(c.host, open=True)
+                            lastHost = c.host
+                        #txt.insert(tk.END, line % c.info, 'normal')
+                        tree.insert(lastHost, 'end', values=(c.pid, c.pcpu, c.pmem, pname))
+                tree.after(4500, refreshInfo)
+            else:
+                updateAndClose()
+                
         detailsSection = ProjectSection(root, 'Process monitor')
         detailsSection.addButton("Stop run", command=stopRun)
         cols = ('pid', '%cpu', '%mem', 'command')
@@ -350,33 +388,14 @@ class XmippProjectGUI():
         tk.Label(frame, textvariable=labElap).grid(row=1, column=1, sticky='w')
         tree.grid(row=2, column=0, sticky='nsew', columnspan=2)
         detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
-        
-        def refreshInfo():
-            p = pm.getProcessFromPid()
-            #txt.delete(1.0, tk.END)
-            tree.clear()
-            if p:
-                labPid.set(p.pid)
-                labElap.set(p.etime)
-                #line = "Process id    : %(pid)s\nElapsed time  : %(etime)s\n\nSubprocess:\n" % p.info
-                #txt.insert(tk.END, line)
-                #txt.insert(tk.END, "PID\t ARGS\t CPU(%)\t MEM(%)\n")
-                childs = pm.getProcessGroup()
-                lastHost = ''
-                for c in childs:
-                    c.info['pname'] = pname = os.path.basename(c.args.split()[0])
-                    if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
-                        line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
-                        if c.host != lastHost:
-                            #txt.insert(tk.END, "%s\n" % c.host, 'bold')
-                            tree.insert('', 'end', c.host, text=c.host)
-                            tree.item(c.host, open=True)
-                            lastHost = c.host
-                        #txt.insert(tk.END, line % c.info, 'normal')
-                        tree.insert(lastHost, 'end', values=(c.pid, c.pcpu, c.pmem, pname))
-                tree.after(5000, refreshInfo)
-            else:
-                updateAndClose()
+
+        # First time load in GUI thread        
+        self.process = pm.getProcessFromPid()
+        self.process_childs = pm.getProcessGroup()
+        # Launch Working thread for next updates
+        self.process_check = True
+        self.process_thread = threading.Thread(target=processWorker)
+        self.process_thread.start()
             
         refreshInfo()
         centerWindows(root, refWindows=self.root)
