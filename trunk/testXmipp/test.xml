@@ -63,12 +63,6 @@
 			<FILE filename="output_projections.stk" />
 		</CASE>
 		<CASE
-			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --shears"
-			changeDir="FALSE">
-			<FILE filename="output_projections.doc" />
-			<FILE filename="output_projections.stk" />
-		</CASE>
-		<CASE
 			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --compute_neighbors --experimental_images input/aFewProjections.sel  --angular_distance -1"
 			changeDir="FALSE">
 			<FILE filename="output_projections.doc" />
@@ -89,6 +83,13 @@
 			<FILE filename="output_projections.stk" />
 			<FILE filename="output_projections_sampling.xmd" />
 		</CASE>
+		<CASE
+			arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5 --method real_space"
+			changeDir="FALSE">
+			<FILE filename="output_projections.doc" />
+			<FILE filename="output_projections.stk" />
+		</CASE>
+
 	</PROGRAM>
 	<PROGRAM name="xmipp_mpi_angular_project_library" mpi="TRUE">
 		<CASE
