@@ -577,7 +577,7 @@ void ProgCtfGroup::writeOutputToDisc()
     size_t idctf = MD.addObject();
     MD.setValue(MDL_COUNT,numberDefGroups,idctf);
     MD.setColumnFormat(false);
-    MD.write("numberGroups@"+fn_root+"Info.xmd");
+    MD.write("numberGroups@"+fn_root+"Info.xmd",MD_APPEND);
 
     //(2)save auxiliary file for defocus split
 
