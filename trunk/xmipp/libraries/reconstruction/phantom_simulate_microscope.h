@@ -67,6 +67,9 @@ public:
     int      Ydim;
     /// Particular reference to mdIn to manipulated
     MetaData * pmdIn;
+    /** Downsampling factor */
+    double downsampling;
+
 public:
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,
