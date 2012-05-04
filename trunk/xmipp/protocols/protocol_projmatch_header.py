@@ -115,16 +115,16 @@ DataArePhaseFlipped =True
 """
     You may specify this option for each iteration. 
     This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
-    specifies 4 iterations, the first two applied alig2d while the last 2
+    specifies 4 iterations, the first two applied align2d while the last 2
     dont. an alternative compact notation is 
     is ("2x1 2x0", i.e.,
     2 iterations with value 1, and 2 with value 0).
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
     <IMPORTANT:> if you set this variable to 0 the output  of the projection
-    muching step will be copied as output of align2d
+    matching step will be copied as output of align2d
 """
-ReferenceIsCtfCorrected ='1'
+ReferenceIsCtfCorrected = '1'
 
 #-----------------------------------------------------------------------------
 # {section} {has_question} Mask
