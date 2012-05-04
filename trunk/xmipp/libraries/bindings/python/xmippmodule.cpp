@@ -372,7 +372,7 @@ static void Image_dealloc(ImageObject* self)
 {
     delete self->image;
     self->ob_type->tp_free((PyObject*) self);
-}
+}//function Image_dealloc
 
 /* Constructor */
 static PyObject *
@@ -418,7 +418,7 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
             return NULL;
     }
     return (PyObject *) self;
-}
+}//function Image_new
 
 /* Image string representation */
 static PyObject *
@@ -428,7 +428,8 @@ Image_repr(PyObject * obj)
     String s;
     self->image->toString(s);
     return PyString_FromString(s.c_str());
-}
+}//function Image_repr
+
 /* Image compare function */
 static int
 Image_compare(PyObject * obj, PyObject * obj2)
@@ -447,7 +448,8 @@ Image_compare(PyObject * obj, PyObject * obj2)
         }
     }
     return result;
-}
+}//function Image_compare
+
 /* Compare two images up to a precision */
 static PyObject *
 Image_equal(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -475,7 +477,8 @@ Image_equal(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     XMIPP_CATCH
     return NULL;
-}
+}//function Image_equal
+
 /* write */
 static PyObject *
 Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -503,7 +506,7 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}
+}//function Image_write
 
 /* read */
 static PyObject *
@@ -535,7 +538,7 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}
+}//function Image_read
 
 /* read preview*/
 static PyObject *
@@ -592,7 +595,7 @@ Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}//function convertPSD
+}//function Image_convertPSD
 
 /* readApplyGeo */
 //int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId,
@@ -650,47 +653,18 @@ Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs)
         dims[0] = adim.xdim;
         dims[1] = adim.ydim;
         dims[2] = adim.zdim;
-        //
-        //      size_t size;
         //Get the pointer to data
         void *mymem = image().getArrayPointer();
-        //float * data = (float *)mymem;
-        //      for (int i = 0; i < adim.zyxdim; ++i)
-        //        std::cerr << "DEBUG_JM: data[" << i << "]: " << data[i] << std::endl;
-        //      std::cerr << "DEBUG_JM: adim.xdim: " << adim.xdim << std::endl;
-        //      std::cerr << "DEBUG_JM: adim.ydim: " << adim.ydim << std::endl;
-        //      std::cerr << "DEBUG_JM: adim.zdim: " << adim.zdim << std::endl;
-        //      std::cerr << "DEBUG_JM: adim.zyxdim: " << adim.zyxdim << std::endl;
-        //Convert our datatype to NumPy type
         NPY_TYPES type = datatype2NpyType(image.getDatatype());
+        //PyObject * arr = PyArray_SimpleNewFromData(2, dims2, NPY_FLOAT, data);
+        PyArrayObject * arr = (PyArrayObject*) PyArray_SimpleNew(nd, dims, type);
+        void * data = PyArray_DATA(arr);
+        memcpy(data, mymem, adim.nzyxdim * gettypesize(image.getDatatype()));
 
-        float * data = (float*) malloc(256 * sizeof(float));
-        for (int i = 0; i < 256; ++i)
-            data[i] = i;
-
-        for (int i = 0; i < 16; ++i)
-        {
-            for (int j = 0; i < 16; ++j)
-            {
-                int index = j * 16 + i;
-                std::cerr << "DEBUG_JM: data[index]: " << data[index] << std::endl;
-            }
-        }
-        npy_intp dims2[2]={16, 16};
-        PyObject * arr = PyArray_SimpleNewFromData(2, dims2, NPY_FLOAT, data);
-        PyArray_BASE(arr) = obj;
-        Py_INCREF(obj);
-        std::cerr << "DEBUG_JM: after PyArray_SimpleNewFromData" <<std::endl;
-        return arr;
-        //Create the NumPy array
-        //      std::cerr << "DEBUG_JM: nd: " << nd << std::endl;
-        //      std::cerr << "DEBUG_JM: dims[0]: " << dims[0] << std::endl;
-        //      std::cerr << "DEBUG_JM: dims[1]: " << dims[1] << std::endl;
-        //      std::cerr << "DEBUG_JM: type: " << type << std::endl;
-        //return PyArray_SimpleNewFromData(nd, dims, type, mymem);
-        //      Py_RETURN_NONE;
+        return (PyObject*)arr;
     }
-}
+    return NULL;
+}//function Image_getData
 
 /* getPixel */
 static PyObject *
@@ -712,9 +686,8 @@ Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-
     return NULL;
-}
+}//function Image_getPixel
 
 /* setPixel */
 static PyObject *
@@ -736,9 +709,8 @@ Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-
     return NULL;
-}
+}//function Image_setPixel
 
 /* initConstant */
 static PyObject *
@@ -759,9 +731,8 @@ Image_initConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-
     return NULL;
-}
+}//function Image_initConstant
 
 /* initRandom */
 static PyObject *
@@ -788,10 +759,8 @@ Image_initRandom(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-
     return NULL;
-
-}
+}//function Image_initRandom
 
 /* Resize Image */
 static PyObject *
@@ -813,10 +782,8 @@ Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-
     return NULL;
-
-}
+}//function Image_resize
 
 /* Set Data Type */
 static PyObject *
@@ -837,10 +804,8 @@ Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
-
     return NULL;
-
-}
+}//function Image_setDataType
 
 /* Return image dimensions as a tuple */
 static PyObject *
@@ -862,7 +827,7 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}
+}//function Image_getDimensions
 
 /* Return image dimensions as a tuple */
 static PyObject *
@@ -884,7 +849,7 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}//Image_getDimensions
+}//function Image_getEulerAngles
 
 
 /* Return image dimensions as a tuple */
@@ -909,7 +874,7 @@ Image_computeStats(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
-}//Image_getDimensions
+}//function Image_computeStats
 
 static PyObject *
 Image_add(PyObject *obj1, PyObject *obj2);
@@ -4065,7 +4030,7 @@ PyMODINIT_FUNC initxmipp(void)
     PyObject* module;
     module = Py_InitModule3("xmipp", xmipp_methods,
                             "Xmipp module as a Python extension.");
-
+    import_array();
     // Add FileName type
     if (PyType_Ready(&FileNameType) < 0)
         return;
