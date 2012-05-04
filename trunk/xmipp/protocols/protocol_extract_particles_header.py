@@ -26,10 +26,12 @@ PickingRun=''
 Family=''
 
 # Extraction downsampling factor
-""" This factor is always referred to the original sampling rate.
-You may use independent downsampling factors for extracting the particles, picking them
-and estimating the CTF. All downsampling factors are always referred to the original
-sampling rate, and the differences are correctly handled by Xmipp.
+""" 
+This factor is always referred to the original sampling rate.
+You may use independent downsampling factors for extracting the 
+particles, picking them and estimating the CTF. All downsampling 
+factors are always referred to the original sampling rate, and 
+the differences are correctly handled by Xmipp.
 """
 DownsampleFactor=1
 
@@ -38,42 +40,52 @@ DownsampleFactor=1
 actual particles may be smaller than this. """
 ParticleSize=0
 
-# 1) Phase flipping (Recommended)
+# Phase flipping (Recommended)
 """ Use the information from the CTF to compensate for phase reversals."""
 DoFlip=True
 
-# 2) Take Logarithm
-""" Depending on your acquisition system you may have to take the logarithm
-    or not in order to have a linear relationship between the gray values
-    in the image and those in the volume """
+# Take Logarithm
+""" 
+Depending on your acquisition system you may have to take the logarithm
+or not in order to have a linear relationship between the gray values
+in the image and those in the volume """
 DoLog=False 
 
-# 3) Invert contrast
+# Invert contrast
 """ Invert the contrast if your particles are black over a white background. """
 DoInvert=False
 
-# 4) Dust particles removal
-""" Sets pixels with unusually large values to random values from a Gaussian with zero-mean and unity-standard deviation.
-    It requires a previous normalization, i.e., Normalization must be set to Yes.
-"""
-DoRemoveDust=False
 
-# {expert} Threshold for dust removal:
-""" Pixels with a signal higher or lower than this value times the standard deviation of the image will be affected. For cryo, 3.5 is a good value.
-    For high-contrast negative stain, the signal itself may be affected so that a higher value may be preferable.
-"""
-DustRemovalThreshold=3.5
-
-# 5) Normalize (Recommended)
-""" It subtract a ramp in the gray values and normalizes so that in the background
-    there is 0 mean and standard deviation 1 """
+# Normalize (Recommended)
+""" 
+It subtract a ramp in the gray values and normalizes so that in the 
+background there is 0 mean and standard deviation 1 """
 DoNorm=True
 
-# {expert} Background radius
-"""Pixels outside this circle are assumed to be noise and their stddev is set to 1.
-   Radius for background circle definition (in pix.).
-   If this value is 0, then half the box size is used. """
-BackGroundRadius=0
+# {expert}{condition}(DoNorm) Background radius
+"""
+Pixels outside this circle are assumed to be noise and their stddev 
+is set to 1. Radius for background circle definition (in pix.).
+If this value is 0, then half the box size is used. """
+BackGroundRadius = 0
+
+# {condition}(DoNorm) Dust particles removal
+""" 
+Sets pixels with unusually large values to random values from a Gaussian
+with zero-mean and unity-standard deviation. 
+"""
+DoRemoveDust = False
+
+# {expert}{condition}(DoRemoveDust) Threshold for dust removal:
+""" 
+Pixels with a signal higher or lower than this value times the standard 
+deviation of the image will be affected. For cryo, 3.5 is a good value.
+For high-contrast negative stain, the signal itself may be affected so 
+that a higher value may be preferable.
+"""
+DustRemovalThreshold = 3.5
+
+
 
 # {eval} expandParallel(threads=0, hours=12, mpi=8)
 #
