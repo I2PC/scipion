@@ -9,8 +9,11 @@ psi_sampling:              360
 compute_neighbors:         1
 only_winner:               0
 verbose:                   1
-shears:                    0
-angular_distance:          -1
+projection method:          fourier 
+     pad factor: 1
+     maxFrequency: 0.25
+     interpolator:  bspline
+angular_distance:          10
 experimental_images:       input/aFewProjections.sel
 compute_closer_sampling_point_bool:0
 Find valid sampling points based on the neighborhood

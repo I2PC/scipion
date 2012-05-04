@@ -6,11 +6,8 @@ symmetry neighbohound group: c6
 max_tilt_angle:            91
 min_tilt_angle:            -91
 psi_sampling:              360
-compute_neighbors:         1
+compute_neighbors:         0
 only_winner:               0
 verbose:                   1
-shears:                    0
-angular_distance:          10
-experimental_images:       input/aFewProjections.sel
+projection method:          realspace 
 compute_closer_sampling_point_bool:0
-Find valid sampling points based on the neighborhood

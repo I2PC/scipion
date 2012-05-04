@@ -9,5 +9,8 @@ psi_sampling:              360
 compute_neighbors:         0
 only_winner:               0
 verbose:                   1
-shears:                    0
+projection method:          fourier 
+     pad factor: 1
+     maxFrequency: 0.25
+     interpolator:  bspline
 compute_closer_sampling_point_bool:0
