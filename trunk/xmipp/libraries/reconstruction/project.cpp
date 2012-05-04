@@ -120,19 +120,24 @@ void ProgProject::defineParams()
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
     addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
-    addParamsLine("                                              :+++ KKKKKK %BR%");
     addParamsLine("  [--method <method=real_space>]              : Projection method");
     addParamsLine("        where <method>");
     addParamsLine("                real_space                    : Makes projections by ray tracing in real space");
     addParamsLine("                shears                        : Use real-shears algorithm");
     addParamsLine("                                              :+This algorithm is slower but more accurate. For a full description see");
     addParamsLine("               fourier <pad=2> <maxfreq=0.25> <interp=bspline> : Takes a central slice in Fourier space");
-    addParamsLine("                                              : pad controls the padding factor. ");
-    addParamsLine("                                              : maxfreq is the maximum frequency for the pixels and by default ");
+    addParamsLine("                                              :+++                        %BR% ");
+    addParamsLine("                                              : pad: controls the padding factor.");
+    addParamsLine("                                              :+++                        %BR% ");
+    addParamsLine("                                              : maxfreq: is the maximum frequency for the pixels and by default ");
     addParamsLine("                                              : pixels with frequency more than 0.25 are not considered.");
-    addParamsLine("                                              : interp is the method for interpolation and the values can be: ");
+    addParamsLine("                                              :+++                        %BR% ");
+    addParamsLine("                                              : interp: is the method for interpolation and the values can be: ");
+    addParamsLine("                                              :+++                        %BR% ");
     addParamsLine("                                              : nearest:          Nearest Neighborhood  ");
-    addParamsLine("                                              : linear:           Linear  ");
+    addParamsLine("                                              :+++                        %BR% ");
+    addParamsLine("                                              : linear:           Linear BSpline  ");
+    addParamsLine("                                              :+++                        %BR% ");
     addParamsLine("                                              : bspline:          Cubic BSpline  ");
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
@@ -913,8 +918,12 @@ int PROJECT_Effectively_project(const String &fnOut,
         Vfourier=new FourierProjector(side.phantomVol(),side.paddFactor,side.maxFrequency,side.BSplineDeg);
 
     fn_proj=fnOut;
-    createEmptyFile(fn_proj, prm.proj_Xdim, prm.proj_Ydim,
-                    1, side.DF.size(), true,WRITE_OVERWRITE);
+    if (side.doCrystal)
+        createEmptyFile(fn_proj, prm_crystal.crystal_Xdim, prm_crystal.crystal_Ydim,
+                        1, side.DF.size(), true,WRITE_OVERWRITE);
+    else
+        createEmptyFile(fn_proj, prm.proj_Xdim, prm.proj_Ydim,
+                        1, side.DF.size(), true,WRITE_OVERWRITE);
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();
@@ -1045,7 +1054,6 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     // Read projection parameters and produce side information
     ParametersProjection proj_prm;
     PROJECT_Side_Info side;
-    bool doCrystal = false;
     if (!prm.singleProjection)
         proj_prm.from_prog_params(prm);
     side.produce_Side_Info(proj_prm, prm);
@@ -1056,9 +1064,9 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
         size_t objId;
         MD.read(prm.fn_proj_param);
         objId = MD.firstObject();
-        doCrystal = MD.getValue(MDL_CRYSTAL_PROJ,doCrystal,objId);
+        MD.getValue(MDL_CRYSTAL_PROJ,side.doCrystal,objId);
     }
-    if (doCrystal)
+    if (side.doCrystal)
     {
         crystal_proj_prm.read(prm.fn_proj_param,
                               (side.phantomDescr).phantom_scale);

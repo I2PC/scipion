@@ -214,11 +214,14 @@ public:
     /// Atom interpolator
     AtomInterpolator interpolator;
     /// The padding factor for Fourier projection
-       double paddFactor;
-       /// The maximum frequency for pixels
-       double maxFrequency;
-       /// The type of interpolation (NEAR
-       int BSplineDeg;
+    double paddFactor;
+    /// The maximum frequency for pixels
+    double maxFrequency;
+    /// The type of interpolation (NEAR
+    int BSplineDeg;
+    /// Is this a crystal projection
+    bool doCrystal;
+
 public:
     /** Produce Project Side information.
         This function produce the side information from the project
@@ -257,9 +260,9 @@ int PROJECT_Assign_angles(MetaData &DF, const ParametersProjection &prm);
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
 int PROJECT_Effectively_project(const std::string &fnOut,
-								bool singleProjection,
-								int projType,
-								const ParametersProjection &prm,
+                                bool singleProjection,
+                                int projType,
+                                const ParametersProjection &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, MetaData &SF);
