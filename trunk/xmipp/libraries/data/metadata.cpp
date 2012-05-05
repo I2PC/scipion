@@ -35,7 +35,7 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
     if (!inFile.isMetaData())
         return;
     if (inFile.getBlockName()!="")
-    	return;
+        return;
 
     MetaData MDaux(inFile);
     blockList.clear();
@@ -77,8 +77,8 @@ bool existsBlockInMetaDataFile(const FileName &inFile, const String& inBlock)
         BLOCK_NAME(block, blockName);
         if (inBlock == blockName)
         {
-          result = true;
-          break;
+            result = true;
+            break;
         }
     }
 
@@ -697,8 +697,9 @@ void MetaData::_writeRows(std::ostream &os) const
     }
 }
 
-void MetaData::print() const{
-  write(std::cout);
+void MetaData::print() const
+{
+    write(std::cout);
 }
 
 
@@ -706,8 +707,8 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
 {
     if(mode==MD_OVERWRITE)
         os << "# XMIPP_STAR_1 * "// << (isColumnFormat ? "column" : "row")
-        << std::endl //write wich type of format (column or row) and the path
-        << "# " << comment << std::endl;     //write md comment in the 2nd comment line of header
+        << std::endl //write wich type of format (column or row) and the path;
+        << WordWrap(comment, line_max);     //write md comment in the 2nd comment line of header
     //write data block
     String _szBlockName = (String)("data_") + blockName;
 
@@ -849,7 +850,7 @@ char * MetaData::_readColumnsStar(mdBlock &block,
             newline = END_OF_LINE();
             //Last label and no data needs this check
             if (newline == NULL)
-            	newline = end;
+                newline = end;
             String s(iter, newline - iter);//get current line
             ss.str(s);//set the string of the stream
             //Take the first token wich is the label
@@ -1017,7 +1018,7 @@ void MetaData::readPlain(const FileName &inFile, const String &labelsString, con
         line.assign(lineBuffer);
         trim(line);
         if (line[0]=='#') // This is an old Xmipp comment
-        	continue;
+            continue;
         if (!line.empty())
         {
             std::stringstream ss(line);
@@ -1128,7 +1129,7 @@ void MetaData::_read(const FileName &filename,
 
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;
-    String line, token;
+    String line, token,_comment;
     std::vector<MDObject*> columnValues;
 
     getline(is, line); //get first line to identify the type of file
@@ -1149,11 +1150,28 @@ void MetaData::_read(const FileName &filename,
         oldFormat=false;
 
         // Read comment
-        is.ignore(256,'#');
-        is.ignore(256,'#');
-        getline(is, line);
-        trim(line);
-        setComment(line);
+        //        is.ignore(256,'#');//format line
+        is.ignore(256,'\n');//skip first line
+        _comment.clear();
+        bool addspace=false;
+        while(1)
+        {
+            getline(is, line);
+            trim(line);
+            if (line[0]=='#')
+            {
+                line[0]=' ';
+                trim(line);
+                if (addspace)
+                    _comment += " " + line;
+                else
+                    _comment += line;
+                addspace = true;
+            }
+            else
+                break;
+        }
+        setComment(_comment);
 
         //map file
         int fd;
@@ -1273,18 +1291,18 @@ void MetaData::fillRandom(MDLabel label, const String &mode, double op1, double 
 
 void MetaData::fillLinear(MDLabel label, double initial, double step)
 {
-   MDLinealGenerator generator(initial, step);
-   SET_AND_FILL();
+    MDLinealGenerator generator(initial, step);
+    SET_AND_FILL();
 }
 
 void MetaData::copyColumn(MDLabel labelDest, MDLabel labelSrc)
 {
-  const char * srcName = MDL::label2Str(labelSrc).c_str();
-  if (!containsLabel(labelSrc))
-    REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName));
-  addLabel(labelDest);
-  String cmd = formatString("%s=%s", MDL::label2Str(labelDest).c_str(), srcName);
-  operate(cmd);
+    const char * srcName = MDL::label2Str(labelSrc).c_str();
+    if (!containsLabel(labelSrc))
+        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName));
+    addLabel(labelDest);
+    String cmd = formatString("%s=%s", MDL::label2Str(labelDest).c_str(), srcName);
+    operate(cmd);
 }
 
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
