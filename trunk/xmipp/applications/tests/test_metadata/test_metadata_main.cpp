@@ -956,7 +956,27 @@ TEST_F( MetadataTest, setGetValue)
     // doesn't match the label type
     EXPECT_THROW(auxMetadata.getValue(MDL_ORDER, i, id), XmippError);
 }
+TEST_F( MetadataTest, Comment)
+{
+    XMIPP_TRY
+    char sfn[64] = "";
+    MetaData md1(mDsource);
+    strncpy(sfn, "/tmp/testComment_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    String s1((String)"This is a very long comment that has more than 80 characters"+
+            " Therefore should be split in several lines"+
+            " Let us see what happend");
+    md1.setComment(s1);
+    md1.write(sfn, MD_OVERWRITE);
+    MetaData md2;
+    md2.read(sfn);
+    String s2;
+    s2=md2.getComment();
+    EXPECT_EQ(s1, s2);
+    unlink(sfn);
 
+    XMIPP_CATCH
+}
 //read file with vector
 TEST_F( MetadataTest, getValue)
 {
@@ -980,14 +1000,14 @@ TEST_F( MetadataTest, getValue)
 
 TEST_F( MetadataTest, CopyColumn)
 {
-  XMIPP_TRY
+    XMIPP_TRY
     MetaData md1(mDsource), md2(mDsource);
     double value;
 
     FOR_ALL_OBJECTS_IN_METADATA(md1)
     {
-      md1.getValue(MDL_Y, value, __iter.objId);
-      md1.setValue(MDL_Z, value, __iter.objId);
+        md1.getValue(MDL_Y, value, __iter.objId);
+        md1.setValue(MDL_Z, value, __iter.objId);
     }
 
     md2.copyColumn(MDL_Z, MDL_Y);
