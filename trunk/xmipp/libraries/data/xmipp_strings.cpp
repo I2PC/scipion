@@ -616,16 +616,49 @@ void formatStringFast(String &str, const char * format, ...)
 /* Matches regular expression */
 bool matchRegExp(const String &inputString, const String &pattern)
 {
-	// Construct regular expression
+    // Construct regular expression
     regex_t re;
     if (regcomp(&re, pattern.c_str(), REG_EXTENDED|REG_NOSUB) != 0)
-    	REPORT_ERROR(ERR_ARG_INCORRECT,(String)"Pattern cannot be parsed:"+pattern);
+        REPORT_ERROR(ERR_ARG_INCORRECT,(String)"Pattern cannot be parsed:"+pattern);
 
     // Check if the string matches the pattern
     int status = regexec(&re, inputString.c_str(), (size_t) 0, NULL, 0);
     regfree(&re);
     if (status != 0)
-    	return false;
+        return false;
     return true;
+}
+#include <sstream>
+
+String WordWrap(const String &inputString, size_t lineLength)
+{
+
+    if(inputString.size() <= lineLength)
+        return ((String)"# " + inputString + "\n");
+    std::istringstream iss(inputString);
+    std::ostringstream ss;
+    std::string line;
+
+    line.clear();
+    do
+    {
+        std::string word;
+        iss >> word;
+
+        if (line.length() + word.length() > lineLength)
+        {
+            ss << "# "  << line << std::endl;
+            line.clear();
+        }
+        line += word + " ";
+
+    }
+    while (iss);
+
+    if (!line.empty())
+    {
+        ss << "# "  << line << std::endl;
+    }
+    return ss.str();
 }
 
