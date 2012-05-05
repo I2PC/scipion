@@ -403,5 +403,8 @@ void formatStringFast(String &str, const char * format, ...);
 
 /** True if the inputString matches the regular expression in pattern */
 bool matchRegExp(const String &inputString, const String &pattern);
+/** split long comments in several lines starting with # */
+String WordWrap(const String &inputString, size_t lineLength);
+
 //@}
 #endif
