@@ -77,7 +77,6 @@ protected:
         addParamsLine("                            : use label:col, e.g., NMADisplacements:0");
         addParamsLine("                            : The first column is column number 0");
         addParamsLine("   randomize                            : Randomize elements of metadata");
-        addParamsLine("    add_column <labels>                 : Add some columns(label list) to metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
@@ -130,8 +129,6 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set merge mD2.doc -o out.doc");
         addExampleLine(" Sort the elements in metadata (using default label 'image').", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -s sort -o out.doc");
-        addExampleLine(" Add columns 'shiftX' and 'shiftY' to metadata.", false);
-        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate add_column \"shiftX shiftY\" -o out.doc");
         addExampleLine(" You can also add columns and 'filling' its values with different options", false);
         addExampleLine("By example, to add the column 'shiftX' with uniform random value between 0 and 10", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --fill shiftX rand_uniform 0 10 -o out.doc");
@@ -175,7 +172,7 @@ protected:
         mode = MD_OVERWRITE;
         if (checkParam("--mode")
             && STR_EQUAL(getParam("--mode"), "append"))
-          mode = MD_APPEND;
+            mode = MD_APPEND;
     }
 
     void doSet()
@@ -212,16 +209,11 @@ protected:
     {
         operation = getParam("--operate", 0);
 
-        if (operation == "add_column" || operation == "drop_column")
+        if ( operation == "drop_column")
         {
             MDL::str2LabelVector(getParam("--operate", 1), labels);
             for (int i = 0; i < labels.size(); ++i)
-            {
-                if (operation == "add_column")
-                    mdIn.addLabel(labels[i]);
-                else if (operation == "drop_column")
-                    mdIn.removeLabel(labels[i]);
-            }
+                mdIn.removeLabel(labels[i]);
         }
         else if (operation == "modify_values")// modify_values
             mdIn.operate(getParam("--operate", 1));
@@ -306,12 +298,12 @@ protected:
         }
         else if (operation == "blocks")
         {
-          doWrite = false;
-          StringVector blocks;
-          std::cout << "Blocks in " << fn_in << ": " << std::endl;
-          getBlocksInMetaDataFile(fn_in, blocks);
-          for (int i = 0; i < blocks.size(); ++i)
-            std::cout << blocks[i] << std::endl;
+            doWrite = false;
+            StringVector blocks;
+            std::cout << "Blocks in " << fn_in << ": " << std::endl;
+            getBlocksInMetaDataFile(fn_in, blocks);
+            for (int i = 0; i < blocks.size(); ++i)
+                std::cout << blocks[i] << std::endl;
         }
     }//end of function doQuery
 
