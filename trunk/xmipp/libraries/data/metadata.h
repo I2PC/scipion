@@ -198,6 +198,8 @@ protected:
 
     String path; ///< A parameter stored on MetaData Files
     String comment; ///< A general comment for the MetaData file
+    ///comment is wraped in char_max lenght lines
+	#define line_max 70
 
     bool _isColumnFormat; ///< Format for the file, column or row formatted
     int precision;
