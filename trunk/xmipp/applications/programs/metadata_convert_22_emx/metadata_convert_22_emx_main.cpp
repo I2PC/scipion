@@ -26,6 +26,11 @@
 #include <data/metadata_extension.h>
 #include <data/xmipp_program.h>
 #include <map>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <string.h>
+#include <stdlib.h>
 
 typedef enum
 {
@@ -49,8 +54,59 @@ private:
     EMXConversion conversionType;
     bool toemx;
     bool toxmipp;
+    //tmpname is required just in case /dev/stdout is selected
+    char *tmpname;
 
 public:
+
+    /* EMX standrad has label with dots, xmipp does not support it
+     * so first a temporary file is created changing "." by "____"
+     */
+    void restoreDots(void)
+    {
+        std::ifstream ifile(tmpname,std::ios::binary);
+        ifile.seekg(0,std::ios_base::end);
+        long s=ifile.tellg();
+        char *buffer=new char[s];
+        ifile.seekg(0);
+        ifile.read(buffer,s);
+        ifile.close();
+        std::string txt(buffer,s);
+        delete[] buffer;
+        size_t off=0;
+        while ((off=txt.find("____",off))!=std::string::npos)
+            txt.replace(off,sizeof("____")-1,".");
+        std::ofstream ofile(fn_out.c_str());
+        ofile.write(txt.c_str(),txt.size());
+        ofile.close();
+    }
+
+    void removeDots(void)
+    {
+
+        std::ifstream ifile(fn_in.c_str(),std::ios::binary);
+        ifile.seekg(0,std::ios_base::end);
+        long s=ifile.tellg();
+        char *buffer=new char[s];
+        ifile.seekg(0);
+        ifile.read(buffer,s);
+        ifile.close();
+        std::string txt(buffer,s);
+        delete[] buffer;
+        size_t off=0;
+        while ((off=txt.find("_emx_particle.",off))!=std::string::npos)
+            txt.replace(off,sizeof("_emx_particle.")-1,"_emx_particle____");
+        off=0;
+        while ((off=txt.find("_emx_micrograph.",off))!=std::string::npos)
+            txt.replace(off,sizeof("_emx_micrograph.")-1,"_emx_micrograph____");
+        off=0;
+        while ((off=txt.find("_emx_class.",off))!=std::string::npos)
+            txt.replace(off,sizeof("_emx_class.")-1,"_emx_class____");
+        std::ofstream ofile(tmpname);
+        ofile.write(txt.c_str(),txt.size());
+        ofile.close();
+    }
+
     ProgMetadataConvert22Emx()
     {
         toemx=false;
@@ -67,6 +123,16 @@ public:
         EMXconversion2string[EMX_CLASS]         = (String)"class";
         EMXconversion2string[EMX_CTFMICROGRAPH] = (String)"ctfMicrograph";
         EMXconversion2string[EMX_CTFPARTICLE]   = (String)"ctfParticle";
+        //temporary file name, since emx standard uses dots
+        //and xmipp metadata does not support them I change them to ____
+        tmpname = strdup("/tmp/EMXtmpfileXXXXXX");
+        mkstemp(tmpname);
+    }
+
+    ~ProgMetadataConvert22Emx()
+    {
+        unlink(tmpname);
+        free(tmpname);
     }
 protected:
     void defineParams()
@@ -120,22 +186,7 @@ protected:
             std::cerr << "Converting from xmipp to emx:" << std::endl;
     }
 public:
-    /*xmipp coordenate file example
-    # XMIPP_STAR_1 *
-    #
-    data_kk1
-    loop_
-    _Xcoor
-    _Ycoor
-    549        136
-    549        204
-    data_kk2
-    loop_
-    _Xcoor
-    _Ycoor
-    266        325
-    277        255
-    */
+
     void convertXmipp2EmxCoordinates(void)
     {
         // Loop through all blocks
@@ -172,7 +223,58 @@ public:
                 mdCoordinateEMX.addRow(rowOut);
             }
         }
-        mdCoordinateEMX.write(fn_out);
+        FileName tmpFn;
+        tmpFn.compose("particle",tmpname);
+        setMetadataVersion("EMX1.0");
+        mdCoordinateEMX.write(tmpFn);
+    }
+    void convertEmx2XmippCoordinates(void)
+    {
+        MetaData mdCoordinateEMX;
+        MetaData mdMicAggregate;
+        MetaData mdSingleMicrograph;
+        MetaData mdCoordinateXmipp;
+        FileName micrographName;
+        FileName particleName;
+        FileName blockOut;
+        MDRow rowIn, rowOut;
+        double x,y;
+
+        mdCoordinateEMX.read(tmpname);
+        if (!mdCoordinateEMX.containsLabel(MDL_EMX_PARTICLE_COORDINATE_X)  )
+            REPORT_ERROR(ERR_MD_BADLABEL,
+                         (String)"Label: " + MDL::label2Str(MDL_EMX_PARTICLE_COORDINATE_X) + " missing.");
+        if (!mdCoordinateEMX.containsLabel(MDL_EMX_PARTICLE_COORDINATE_Y)  )
+            REPORT_ERROR(ERR_MD_BADLABEL,
+                         (String)"Label: " + MDL::label2Str(MDL_EMX_PARTICLE_COORDINATE_Y) + " missing.");
+        mdMicAggregate.aggregate(mdCoordinateEMX,AGGR_COUNT,MDL_EMX_MICROGRAPH_URL,
+                                 MDL_UNDEFINED,MDL_COUNT);
+        //must delete, append multiple blocks
+        unlink(fn_out.c_str());
+        FOR_ALL_OBJECTS_IN_METADATA(mdMicAggregate)
+        {
+            mdMicAggregate.getValue(MDL_EMX_MICROGRAPH_URL,
+                                    micrographName,__iter.objId);
+            mdSingleMicrograph.clear();
+            MDValueEQ eq(MDL_EMX_MICROGRAPH_URL,micrographName);
+            mdSingleMicrograph.importObjects(mdCoordinateEMX, eq);
+            mdCoordinateXmipp.clear();
+            FOR_ALL_OBJECTS_IN_METADATA(mdSingleMicrograph)
+            {
+                mdSingleMicrograph.getRow(rowIn, __iter.objId);
+                rowIn.getValue(MDL_EMX_PARTICLE_COORDINATE_X,x);
+                rowIn.getValue(MDL_EMX_PARTICLE_COORDINATE_Y,y);
+                rowIn.getValue(MDL_EMX_PARTICLE_URL,particleName);
+                rowOut.setValue(MDL_XINT,ROUND(x));
+                rowOut.setValue(MDL_YINT,ROUND(y));
+                rowOut.setValue(MDL_IMAGE,particleName);
+                mdCoordinateXmipp.addRow(rowOut);
+            }
+            blockOut.compose(micrographName,fn_out);
+            setMetadataVersion("XMIPP_STAR_1");
+            mdCoordinateXmipp.write(blockOut,MD_APPEND);
+        }
+    	std::cerr << "convertEmx2XmippCoordinates_end" <<std::endl;
     }
 
     void run()
@@ -180,17 +282,29 @@ public:
         show();
 
         if(toxmipp)
-            int a=0;
+            switch (conversionType)
+            {
+            case EMX_COORDINATES:
+                removeDots();
+                convertEmx2XmippCoordinates();
+                break;
+            default:
+                REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp2EmxCoordinates");
+                break;
+            }
         else if (toemx)
             switch (conversionType)
             {
             case EMX_COORDINATES:
-                convertXmipp2EmxCoordinates()
-                ;
+                convertXmipp2EmxCoordinates();
+                restoreDots();
                 break;
             default:
+                REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp2EmxCoordinates");
                 break;
             }
+        else
+            REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp2EmxCoordinates");
 
     }
 }
