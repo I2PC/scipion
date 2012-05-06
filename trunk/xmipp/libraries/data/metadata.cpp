@@ -617,7 +617,8 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
 
             // Is this a START formatted FILE
 
-            if(strncmp(map,"# XMIPP_STAR",12)!=0)
+//            if(strncmp(map,"# XMIPP_STAR",12)!=0)
+            if(strncmp(map+2,MetadataVersion.c_str(),MetadataVersion.length())!=0)
             {
                 mode=MD_OVERWRITE;
             }
@@ -706,7 +707,7 @@ void MetaData::print() const
 void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData mode ) const
 {
     if(mode==MD_OVERWRITE)
-        os << "# XMIPP_STAR_1 * "// << (isColumnFormat ? "column" : "row")
+        os << "# " << MetadataVersion << " * "// << (isColumnFormat ? "column" : "row")
         << std::endl //write wich type of format (column or row) and the path;
         << WordWrap(comment, line_max);     //write md comment in the 2nd comment line of header
     //write data block
@@ -1145,7 +1146,7 @@ void MetaData::_read(const FileName &filename,
 
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
 
-    if (line.find("XMIPP_STAR_1") != String::npos)
+    if (line.find(MetadataVersion) != String::npos)
     {
         oldFormat=false;
 
@@ -1728,6 +1729,7 @@ void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
     objId = BAD_OBJID;
     objIndex = BAD_INDEX;
     size = objectsVector.size();
+
 
     if (size > 0)
     {
