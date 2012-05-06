@@ -88,7 +88,7 @@ enum MDLabel
     MDL_CTF_SAMPLING_RATE, ///< Sampling rate
     MDL_CTF_SAMPLING_RATE_Z, ///< Sampling rate in Z direction
     MDL_CTF_VOLTAGE, ///< Microscope voltage (kV)
-    MDL_CTF_DEFOCUSA, ///< aver (Angage defocusstroms)
+    MDL_CTF_DEFOCUSA, ///< average defocus (Angtroms)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
     MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
     MDL_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
@@ -153,6 +153,14 @@ enum MDLabel
 
     //label related with EM exchange
     MDL_EMX_MICROGRAPH_URL,   /// <micrograph name (string)
+    MDL_EMX_MICROGRAPH_SAMPLING,/// < Angstroms / pixel (float)
+    MDL_EMX_MICROGRAPH_DEFOCUSU,/// <defocusu in Angstroms (float)
+    MDL_EMX_MICROGRAPH_DEFOCUSV,/// <defocusv in Angstroms (float)
+    MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,/// <angle to main defoucs axis from axis x in degrees (float)
+    MDL_EMX_MICROGRAPH_VOLTAGE,/// <voltage in KV (float)
+    MDL_EMX_MICROGRAPH_CS,/// <spherical aberration mm (float)
+    MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,/// <amplitud contrast range 0-1 (float)
+    MDL_EMX_PARTICLE_CLASS_ID,///class string
     MDL_EMX_PARTICLE_COORDINATE_X,  /// <particle coordinate X in micrograph (float)
     MDL_EMX_PARTICLE_COORDINATE_Y,  /// <particle coordinate Y in micrograph (float)
     MDL_EMX_PARTICLE_URL,     /// <particle name (string)
@@ -715,9 +723,17 @@ private:
         MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "Size");
         MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR_DOUBLE, "Value");
 
-        MDL::addLabel(MDL_EMX_MICROGRAPH_URL,  LABEL_STRING, "emx_micrograph____url", TAGLABEL_NOTAG,"emx_micrograph.url");
-        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x", TAGLABEL_NOTAG,"emx_particle.coordinate_x");
-        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y", TAGLABEL_NOTAG,"emx_particle.coordinate_y");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_URL, LABEL_STRING, "emx_micrograph____url");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_SAMPLING, LABEL_DOUBLE, "emx_micrograph____samplingRate");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_DEFOCUSU, LABEL_DOUBLE, "emx_micrograph____defocus_U");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_DEFOCUSV, LABEL_DOUBLE, "emx_micrograph____defocus_V");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_micrograph____astigmatism_angle");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_VOLTAGE, LABEL_DOUBLE, "emx_micrograph____voltage");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_CS, LABEL_DOUBLE,"emx_micrograph____Cs");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,LABEL_DOUBLE,"emx_micrograph____amplitude_contrast");
+        MDL::addLabel(MDL_EMX_PARTICLE_CLASS_ID, LABEL_STRING, "emx_particle____class_id");
+        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x");
+        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y");
         MDL::addLabel(MDL_EMX_PARTICLE_URL,    LABEL_STRING, "emx_particle____url", TAGLABEL_NOTAG,"emx_particle.url");
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
