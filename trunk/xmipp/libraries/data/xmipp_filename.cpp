@@ -30,6 +30,17 @@
 #include "xmipp_funcs.h"
 #include "xmipp_image_macros.h"
 #include "xmipp_image_generic.h"
+//extern variable with magic Word  used to define metadata version
+
+String MetadataVersion="XMIPP_STAR_1";
+void setMetadataVersion(String version)
+{
+	MetadataVersion=version;
+}
+String getMetadataVersion(void)
+{
+	return MetadataVersion;
+}
 
 // Constructor with root, number and extension .............................
 void FileName::compose(const String &str, size_t no, const String &ext)
@@ -499,7 +510,7 @@ bool FileName::isStar1(bool failIfNotExists) const
     char cline[128];
     infile.getline(cline, 128);
     line = cline;
-    size_t pos = line.find("XMIPP_STAR_1 *");
+    size_t pos = line.find(MetadataVersion);
     return (pos != String::npos); // xmipp_star_1 token found
 }
 
