@@ -667,6 +667,13 @@ inline bool fileExists( const FileName &filename )
 /** Copy one image
  */
 void copyImage(const FileName & source,const FileName & target);
+
+//Functions to make easy to change the magicWord used to identify the
+//file format of metadata
+extern String MetadataVersion;
+void setMetadataVersion(String version);
+String getMetadataVersion(void);
+
 /** This class is used for comparing filenames.
  *
  * Example: "g0ta00001.xmp" is less than "g0ta00002.xmp"
