@@ -151,6 +151,13 @@ enum MDLabel
     MDL_DM3_SIZE,
     MDL_DM3_VALUE,
 
+    //label related with EM exchange
+    MDL_EMX_MICROGRAPH_URL,   /// <micrograph name (string)
+    MDL_EMX_PARTICLE_COORDINATE_X,  /// <particle coordinate X in micrograph (float)
+    MDL_EMX_PARTICLE_COORDINATE_Y,  /// <particle coordinate Y in micrograph (float)
+    MDL_EMX_PARTICLE_URL,     /// <particle name (string)
+    //End of labels
+
     MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
     MDL_FLIP, ///< Flip the image? (bool)
     MDL_FOM, ///< Figure of Merit in 0-1 range (double)
@@ -707,6 +714,11 @@ private:
         MDL::addLabel(MDL_DM3_TAGNAME, LABEL_STRING, "TagName");
         MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "Size");
         MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR_DOUBLE, "Value");
+
+        MDL::addLabel(MDL_EMX_MICROGRAPH_URL,  LABEL_STRING, "emx_micrograph____url", TAGLABEL_NOTAG,"emx_micrograph.url");
+        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x", TAGLABEL_NOTAG,"emx_particle.coordinate_x");
+        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y", TAGLABEL_NOTAG,"emx_particle.coordinate_y");
+        MDL::addLabel(MDL_EMX_PARTICLE_URL,    LABEL_STRING, "emx_particle____url", TAGLABEL_NOTAG,"emx_particle.url");
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", TAGLABEL_NOTAG, "Flip");
