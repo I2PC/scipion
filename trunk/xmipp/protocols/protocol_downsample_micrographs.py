@@ -13,26 +13,28 @@ class ProtDownsampleMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.downsample_micrographs.name, scriptname, project)
         self.Import = "from protocol_downsample_micrographs import *"
-        self.importProt = self.getProtocolFromRunName(self.ImportRun) 
-        self.importDir = self.importProt.WorkingDir
+        self.setPreviousRun(self.ImportRun) 
+        self.importDir = self.PrevRun.WorkingDir
+        self.inputFilename('microscope', 'micrographs', 'acquisition')
+        self.inputProperty('TiltPairs', 'OutputMd')
         
     def defineSteps(self):
-        self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
-        self.insertStep("changeSamplingRate",fnIn=os.path.join(self.importDir,"acquisition_info.xmd"),
-                        fnOut=self.workingDirPath("acquisition_info.xmd"),downsampleFactor=self.DownsampleFactor)
+        self.insertImportOfFiles([self.Input['microscope']])
+        #self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
+        self.insertStep("changeSamplingRate",fnIn=self.Input['acquisition'], fnOut=self.getFilename('acquisition'),
+                        downsampleFactor=self.DownsampleFactor)
 
-        MD = xmipp.MetaData(os.path.join(self.importDir,"micrographs.xmd"))
+        MD = xmipp.MetaData(self.Input['micrographs'])
         previousId = XmippProjectDb.FIRST_STEP
-        IOTable={}
+        IOTable = {}
         for i in MD:
-            fnMicrograph=MD.getValue(xmipp.MDL_MICROGRAPH,i)
-            fnOut =self.workingDirPath(replaceFilenameExt(os.path.basename(fnMicrograph), '.mrc'))
-            IOTable[fnMicrograph]=fnOut
+            fnMicrograph = MD.getValue(xmipp.MDL_MICROGRAPH,i)
+            fnOut = self.workingDirPath(replaceFilenameExt(os.path.basename(fnMicrograph), '.mrc'))
+            IOTable[fnMicrograph] = fnOut
             self.insertParallelStep("doDownsample", verifyfiles=[fnOut], parent_step_id=XmippProjectDb.FIRST_STEP, 
                             fnMicrograph=fnMicrograph, fnOut=fnOut, downsampleFactor=self.DownsampleFactor)
         self.insertStep("gatherResults",WorkingDir=self.WorkingDir,ImportDir=self.importDir,IOTable=IOTable,
                         downsampleFactor=self.DownsampleFactor)
-        self.insertStep("createLink2","microscope.xmd",self.importDir,self.WorkingDir)
 
     def validate(self):
         errors = []
@@ -44,11 +46,6 @@ class ProtDownsampleMicrographs(XmippProtocol):
         message = []
         message.append("Downsampling of micrographs from [%s] by a factor <%3.2f>" % (self.importDir,self.DownsampleFactor))
         return message
-    
-    def createFilenameTemplates(self):
-        return {
-                'micrographs': '%(WorkingDir)s/micrographs.xmd'
-                }
 
     def visualize(self):
         summaryFile = self.getFilename('micrographs')

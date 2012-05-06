@@ -40,14 +40,14 @@ class ProtExtractParticles(XmippProtocol):
         XmippProtocol.__init__(self, protDict.extract_particles.name, scriptname, project)
         self.Import = 'from protocol_extract_particles import *'
         # Take some parameter from previous picking protocol run
-        pickingProt = self.getProtocolFromRunName(self.PickingRun)
-        self.TiltPairs = getattr(pickingProt, 'TiltPairs', False)
-        self.pickingDir = pickingProt.WorkingDir
+        self.setPreviousRun(self.PickingRun)
+        self.TiltPairs = getattr(self.PrevRun, 'TiltPairs', False)
+        self.pickingDir = self.PrevRun.WorkingDir
         if self.TiltPairs:
-            self.pickingMicrographs = pickingProt.getFilename('tilted_pairs')
+            self.pickingMicrographs = self.PrevRun.getFilename('tilted_pairs')
         else:
-            self.pickingMicrographs = pickingProt.getFilename("micrographs")
-        self.micrographs = self.getEquivalentFilename(pickingProt, self.pickingMicrographs)
+            self.pickingMicrographs = self.PrevRun.getFilename("micrographs")
+        self.micrographs = self.getEquivalentFilename(self.PrevRun, self.pickingMicrographs)
         
         MD=MetaData(os.path.join(self.pickingDir,"acquisition_info.xmd"));
         id=MD.firstObject()

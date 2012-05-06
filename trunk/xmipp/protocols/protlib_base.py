@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join
+from os.path import join, exists
 import sys
 import shutil
 import ConfigParser
@@ -35,7 +35,7 @@ from config_protocols import projectDefaults, sections, protDict
 from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix
 from protlib_xmipp import failStr
-from protlib_filesystem import deleteFiles
+from protlib_filesystem import deleteFiles, xmippExists, removeFilenamePrefix
 
 class XmippProject():
     def __init__(self, projectDir=None):
@@ -53,7 +53,7 @@ class XmippProject():
         ''' a project exists if the data base can be opened and directories Logs and Runs
         exists'''
         for filename in [self.logsDir, self.runsDir, self.tmpDir, self.cfgName, self.dbName]:
-            if not os.path.exists(filename):
+            if not exists(filename):
                 return False
         return True        
     
@@ -62,11 +62,11 @@ class XmippProject():
         self.createConfig()
         
         #===== CREATE LOG AND RUN directories
-        if not os.path.exists(self.logsDir):
+        if not exists(self.logsDir):
             os.mkdir(self.logsDir)
-        if not os.path.exists(self.runsDir):
+        if not exists(self.runsDir):
             os.mkdir(self.runsDir)
-        if not os.path.exists(self.tmpDir):
+        if not exists(self.tmpDir):
             os.mkdir(self.tmpDir)
         #===== CREATE DATABASE
         self.projectDb  = XmippProjectDb(self.dbName)
@@ -96,7 +96,7 @@ class XmippProject():
         self.projectDb = XmippProjectDb(self.dbName)
         
     def createConfig(self):
-         #==== CREATE CONFIG file
+        #==== CREATE CONFIG file
         self.config = ConfigParser.RawConfigParser()            
         self.config.add_section('project')
         self.writeConfig()
@@ -105,22 +105,29 @@ class XmippProject():
         with open(self.cfgName, 'wb') as configfile:
             self.config.write(configfile) 
             
+    def cleanDirs(self, *dirList):
+        ''' Remove all directories passed on list'''
+        for d in dirList:
+            if exists(d):
+                shutil.rmtree(d)
+            
     def clean(self):
         ''' delete files related with a project'''
-        if os.path.exists(self.logsDir):
-            shutil.rmtree(self.logsDir)
-        if os.path.exists(self.runsDir):
-            shutil.rmtree(self.runsDir)
-        if os.path.exists(self.tmpDir):
-            shutil.rmtree(self.tmpDir)
-        if os.path.exists(self.cfgName):
+        self.cleanDirs([self.logsDir, self.runsDir, self.tmpDir] + [p.dir for p in protDict.values()])
+#        if exists(self.logsDir):
+#            shutil.rmtree(self.logsDir)
+#        if exists(self.runsDir):
+#            shutil.rmtree(self.runsDir)
+#        if exists(self.tmpDir):
+#            shutil.rmtree(self.tmpDir)
+        if exists(self.cfgName):
             os.remove(self.cfgName)
-        if os.path.exists(self.dbName):
+        if exists(self.dbName):
             os.remove(self.dbName)
-            
-        for p in protDict.values():
-            if os.path.exists(p.dir):
-                shutil.rmtree(p.dir)
+#            
+#        for p in protDict.values():
+#            if exists(p.dir):
+#                shutil.rmtree(p.dir)
         self.create()
 
     def projectTmpPath(self, *paths):
@@ -134,7 +141,7 @@ class XmippProject():
         deleteFiles(None, toDelete, False)
         workingDir = self.getWorkingDir(run['protocol_name'], run['run_name'])
         from distutils.dir_util import remove_tree
-        if os.path.exists(workingDir):
+        if exists(workingDir):
             remove_tree(workingDir, True)
 
     def deleteRun(self, run):
@@ -157,7 +164,7 @@ class XmippProject():
                 runs = self.projectDb.selectRuns(groupName)
                 for run in runs:
                     tmpDir = join(self.getWorkingDir(run['protocol_name'], run['run_name']), 'tmp')
-                    if os.path.exists(tmpDir):
+                    if exists(tmpDir):
                         shutil.rmtree(tmpDir)
 
     def getWorkingDir(self,protocol_name,run_name):
@@ -256,6 +263,40 @@ class XmippProject():
             runs += self.projectDb.selectRunsByProtocol(p, SqliteDb.RUN_FINISHED)
         return [getExtendedRunName(r) for r in runs]
     
+    def _registerRunProtocol(self, extRunName, prot, runsDict):
+        if extRunName not in runsDict:
+            deps = []
+            runsDict[extRunName] = (prot, deps)
+            if prot.PrevRun:
+                self._registerRunProtocol(prot.PrevRunName, prot.PrevRun, runsDict)
+                deps.append(prot.PrevRunName)
+                
+    def getRunsDependencies(self):
+        ''' Return a dictionary with run_name as key and value
+        a list of all runs that depends on it'''
+        runs = self.projectDb.selectRuns()
+        runsDict = {}
+        for r in runs:
+            extRunName = getExtendedRunName(r)
+            prot = self.getProtocolFromRunName(extRunName)
+            self._registerRunProtocol(extRunName, prot, runsDict)
+        
+        for r in runs:
+            extRunName = getExtendedRunName(r)
+            prot, deps = runsDict[extRunName]
+            for r2 in runs:
+                extRunName2 = getExtendedRunName(r2)
+                if extRunName != extRunName2 and extRunName2 not in deps:
+                    wd = getWorkingDirFromRunName(extRunName2)
+                    for v in prot.ParamsDict.values():
+                        if type(v) == str and wd in v:
+                            deps.append(extRunName2)
+        
+        from protlib_xmipp import greenStr, redStr
+        for k, v in runsDict.iteritems():
+            deps = [str(e) for e in v[1]]
+            print '%s DEPENDS ON: %s' % (greenStr(k), redStr(','.join(deps)))
+    
                   
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
@@ -295,6 +336,9 @@ class XmippProtocol(object):
         self.Log = None # This will be created on run setup
         # Create filenames dictionary
         self.FilenamesDict = self.createFilenameDict()
+        self.PrevRun = None # Previous required run
+        self.PrevRunName = None
+        self.Input = {}
         self.parser = None # This is only used in GUI
         
     def getFilename(self, key, **params):
@@ -304,6 +348,10 @@ class XmippProtocol(object):
         if self.FilenamesDict.has_key(key):
             return self.FilenamesDict[key] % params
         return None
+    
+    def getFileList(self, *keyList):
+        ''' Return a list of filename using the getFilename function '''
+        return [self.getFilename(k) for k in keyList]
 
     def createFilenameTemplates(self):
         ''' Each protocol should implement this function to
@@ -315,19 +363,45 @@ class XmippProtocol(object):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
         d = {
-                'micrographs': join('%(WorkingDir)s','micrographs.xmd'),
-                "tilted_pairs": join('%(WorkingDir)s','tilted_pairs.xmd'),
-                'families':    join('%(WorkingDir)s', 'families.xmd'),
-                'macros': join('%(WorkingDir)s', 'macros.xmd')             
-             
+                'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),             
+                'families':     join('%(WorkingDir)s', 'families.xmd'),
+                'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
+                'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
+                'microscope':   join('%(WorkingDir)s','microscope.xmd'),
+                'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
              }
         d.update(self.createFilenameTemplates())
         return d
         
-    def getProjectId(self):
-        pass
-        #self.project = project.getId(launchDict['Projection Matching'],runName,)
+    def inputProperty(self, *keys):
+        ''' Take property Key from self.PrevRun and set to self.
+        Equivalent to: self.Variable = self.PrevRun.Variable '''
+        for key in keys:
+            setattr(self, key, getattr(self.PrevRun, key))
+            
+    def inputFilename(self, *keys):
+        ''' Take the filename with this key from self.PrevRun and 
+        store in the Input dictionary '''
+        for key in keys:
+            self.Input[key] = self.PrevRun.getFilename(key)
         
+    def insertImportOfFiles(self, fileList, copy=False):
+        ''' Create a link or copy files from a previous run 
+        to current run working dir '''
+        if copy:
+            func = self.insertCopyFile
+        else:
+            func = self.insertCreateLink
+            
+        for f in fileList:
+            func(f, self.getEquivalentFilename(self.PrevRun, f))
+        
+    def setPreviousRun(self, extRunName):
+        ''' Store the extended runName of the previous run
+        and instanciate the previous protocol run '''
+        self.PrevRunName = extRunName
+        self.PrevRun = self.getProtocolFromRunName(extRunName)
+            
     def workingDirPath(self, *paths):
         '''Return file path prefixing the working dir'''
         return join(self.WorkingDir, *paths)
@@ -338,6 +412,15 @@ class XmippProtocol(object):
 
     def getRunState(self):
         return self.project.projectDb.getRunStateByName(self.Name, self.RunName)
+    
+    def validateInputFiles(self):
+        ''' Validate that each file stored in self.Input 
+        dictionary exists '''
+        errors = []
+        for key, inputFile in self.Input.iteritems():
+            if not xmippExists(inputFile):
+                errors.append("Cannot find input <%s> file:\n   <%s>" % (key, inputFile))
+        return errors
     
     def validateBase(self):
         '''Validate if the protocols is ready to be run
@@ -359,6 +442,8 @@ class XmippProtocol(object):
         if getattr(self, 'NumberOfMpi', 2) < 1:
             errors.append("Number of MPI processes has to be >=1")
         
+        # Check that input files exists
+        errors += self.validateInputFiles()
         #specific protocols validations
         errors += self.validate()
         
@@ -434,7 +519,7 @@ class XmippProtocol(object):
                }
             self.project.cleanRun(run)
             #Remove temporaly files
-            if os.path.exists(self.TmpDir):
+            if exists(self.TmpDir):
                 shutil.rmtree(self.TmpDir)
         #Initialization of log and db
         retcode = 0
@@ -485,17 +570,29 @@ class XmippProtocol(object):
                      NumberOfThreads = 1,
                      parent_step_id=parent_step_id)
         
+    def insertCopyFile(self, src, dst):
+        ''' Shortcut to inserting a copyFile step '''
+        self.insertStep('copyFile', source=src, dest=dst, verifyfiles=[dst])
+        
+    def insertCreateLink(self, src, dst):
+        ''' Shortcut to inserting a createLink step '''
+        self.insertStep('createLink', source=src, dest=dst, verifyfiles=[dst])
+        
     def getProtocolFromRunName(self, extendedRunName):
         ''' This function will be helpful to create an instance
         of another protocol providing the extendedRunName.
         This is usually the input when one protocol uses another one.'''
-        return self.project.getProtocolFromModule(getScriptFromRunName(extendedRunName))
+        return self.project.getProtocolFromRunName(extendedRunName)
     
     def getEquivalentFilename(self, prot, filename):
         ''' This function will take a filename relative to some protocol
         and will create the same filename but in the current protocol 
         working dir'''
         return filename.replace(prot.WorkingDir, self.WorkingDir)
+    
+    def getExtendedRunName(self):
+        ''' Return the extended run name of this run '''
+        return '%s_%s' % (self.Name, self.RunName)
         
 #    def insertRunMpiGapsStep(self,verifyfiles=[]):
 #        return self.insertStep('runStepGapsMpi',passDb=True, verifyfiles=verifyfiles, 

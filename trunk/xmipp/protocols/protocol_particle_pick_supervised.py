@@ -22,22 +22,23 @@ class ProtParticlePickingSupervised(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.particle_pick_supervised.name, scriptname, project)
         self.Import = "from protocol_particle_pick_supervised import *"
-        pickingProt = self.getProtocolFromRunName(self.PickingRun)
-        self.pickingDir = pickingProt.WorkingDir
-        self.inputMicrographs = pickingProt.inputMicrographs
-        self.micrographs = self.getEquivalentFilename(pickingProt, self.inputMicrographs)
-        self.pickingProt = pickingProt
+        self.setPreviousRun(self.PickingRun)
+        self.pickingDir = self.PrevRun.WorkingDir
+        self.inputFilename('micrographs', 'families', 'macros', 'acquisition')
+        self.micrographs = self.getFilename('micrographs')
+        
+    def createFilenameTemplates(self):
+        return {
+                'training': join('%(WorkingDir)s', '%(family)s_training.txt'),
+                     'pos': join('%(WorkingDir)s', '%(micrograph)s.pos'),
+                    'mask': join('%(WorkingDir)s', '%(family)s_mask.xmp')
+                }
 
     def defineSteps(self):
-        self.insertStep('copyFile', verifyfiles=[self.micrographs], source=self.inputMicrographs, dest=self.micrographs)
-        filesToCopy = getPosFiles(self.pickingProt)
-        filesToCopy += [self.pickingProt.getFilename('families'), 
-                        self.pickingProt.getFilename('macros'),
-                        self.inputMicrographs]
-        for pos in filesToCopy:
-            posDest = self.getEquivalentFilename(self.pickingProt, pos)
-            self.insertStep('copyFile', verifyfiles=[posDest], source=pos, dest=posDest)
-        self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.pickingDir, dirDest=self.WorkingDir)
+        #self.insertStep('copyFile', source=self.inputMicrographs, dest=self.micrographs, verifyfiles=[self.micrographs])
+        filesToImport = [self.Input[k] for k in ['micrographs', 'families', 'macros', 'acquisition']]
+        filesToImport += getPosFiles(self.PrevRun)
+        self.insertImportOfFiles(filesToImport, copy=True)
         modeWithArgs = PM_SUPERVISED + " %(NumberOfThreads)d %(Fast)s %(InCore)s" % self.ParamsDict
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            InputMicrographs=self.micrographs, WorkingDir=self.WorkingDir,
@@ -53,7 +54,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
         return summary
     
     def validate(self):
-        return validateMicrographs(self.inputMicrographs)
+        return validateMicrographs(self.Input['micrographs'])
     
     def visualize(self):
         launchParticlePickingGUI(None, self.micrographs, self.WorkingDir, PM_READONLY)

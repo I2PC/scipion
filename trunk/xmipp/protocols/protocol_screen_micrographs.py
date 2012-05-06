@@ -31,20 +31,20 @@ class ProtScreenMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.screen_micrographs.name, scriptname, project)
         self.Import = "from protocol_screen_micrographs import *"
-        importProt = self.getProtocolFromRunName(self.ImportRun) 
-        self.importDir = importProt.WorkingDir
-        self.TiltPairs = importProt.TiltPairs
-        self.importMicroscope = importProt.getFilename('microscope')
-        self.importMicrographs = importProt.getFilename('micrographs')
+        self.setPreviousRun(self.ImportRun) 
+        self.inputFilename('microscope', 'micrographs', 'acquisition')
+        self.inputProperty('TiltPairs', 'OutputMd')
         self.CtffindExec =  which('ctffind3.exe')
+        self.micrographs = self.getFilename('micrographs')
 
     def defineSteps(self):
-        self.micrographs = self.getFilename('micrographs')
-        self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
-        self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
+        filesToImport = [self.Input[k] for k in ['microscope', 'acquisition']]
+        self.insertImportOfFiles(filesToImport)
+        #self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
+        #self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
 
         # Read Microscope parameters
-        MD = xmipp.MetaData(self.importMicroscope)
+        MD = xmipp.MetaData(self.Input['microscope'])
         objId = MD.firstObject()
         Voltage = MD.getValue(xmipp.MDL_CTF_VOLTAGE,objId)
         SphericalAberration = MD.getValue(xmipp.MDL_CTF_CS,objId)
@@ -52,7 +52,7 @@ class ProtScreenMicrographs(XmippProtocol):
         Magnification = MD.getValue(xmipp.MDL_MAGNIFICATION,objId)
 
         # Create verifyFiles for the MPI and output directories
-        MD = xmipp.MetaData(self.importMicrographs)
+        MD = xmipp.MetaData(self.Input['micrographs'])
         
         # Now the estimation actions
         CtfFindActions = []
@@ -108,7 +108,7 @@ class ProtScreenMicrographs(XmippProtocol):
                            TmpDir=self.TmpDir,
                            WorkingDir=self.WorkingDir,
                            summaryFile=self.micrographs,
-                           importMicrographs=self.importMicrographs,
+                           importMicrographs=self.Input['micrographs'],
                            DoCtffind=self.DoCtffind,
                            Downsampling=self.DownsampleFactor)
     
@@ -121,14 +121,10 @@ class ProtScreenMicrographs(XmippProtocol):
             errors.append("Downsampling must be >=1");
 
         # Check that there are any micrograph to process
-        if not exists(self.importMicrographs):
-            errors.append("Cannot find imported micrographs file:\n   <%s>" % self.importMicrographs)
-        else:
-            md = xmipp.MetaData(self.importMicrographs)
+        if xmippExists(self.Input['micrographs']):
+            md = xmipp.MetaData(self.Input['micrographs'])
             if md.isEmpty():
-                errors.append("Imported micrographs file <%s> is empty" % self.importMicrographs)
-        if not exists(self.importMicroscope):
-            errors.append("Cannot find imported microscopy file:\n   <%s>" % self.importMicroscope)
+                errors.append("Imported micrographs file <%(micrographs)s> is empty" % self.Input)
         
         if self.AmplitudeContrast < 0:
             errors.append("Q0 should be positive")
@@ -147,9 +143,9 @@ class ProtScreenMicrographs(XmippProtocol):
 
     def summary(self):
         message = []
-        md = xmipp.MetaData(self.importMicrographs)
+        md = xmipp.MetaData(self.Input['micrographs'])
         message.append("CTF screening of <%d> micrographs." % md.size())
-        message.append("Input directory: [%s]" % self.importDir)
+        message.append("Input directory: [%s]" % self.PrevRun.WorkingDir)
         if self.DoCtffind:
             message.append("CTF validated with <CTFFIND3>")
         return message
@@ -159,7 +155,7 @@ class ProtScreenMicrographs(XmippProtocol):
         
         if not exists(summaryFile): # Try to create partial summary file
             summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
-            buildSummaryMetadata(self.WorkingDir, self.DoCtffind, self.importMicrographs, summaryFile)
+            buildSummaryMetadata(self.WorkingDir, self.DoCtffind, self.Input['micrographs'], summaryFile)
             
         if exists(summaryFile):
             runShowJ(summaryFile, extraParams = "--mode metadata")
@@ -279,3 +275,5 @@ def buildSummaryMetadata(WorkingDir,DoCtffind,importMicrographs,summaryFile):
     if not md.isEmpty():
         md.sort(xmipp.MDL_MICROGRAPH)
         md.write(summaryFile)
+        
+        

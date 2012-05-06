@@ -20,46 +20,36 @@ from os.path import exists
 class ProtParticlePickingAuto(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.particle_pick_auto.name, scriptname, project)
-        self.Import="from protocol_particle_pick_auto import *"
-        supervisedProt = self.getProtocolFromRunName(self.SupervisedRun)
-        self.pickingDir = supervisedProt.WorkingDir
-        self.pickingMicrographs = supervisedProt.getFilename('micrographs')
-        self.pickingFamilies = supervisedProt.getFilename('families')
+        self.Import = "from protocol_particle_pick_auto import *"
+        self.setPreviousRun(self.SupervisedRun)
+        self.pickingDir = self.PrevRun.WorkingDir
+        self.inputFilename('acquisition', 'micrographs', 'families')
         self.micrographs = self.getFilename('micrographs')
-        self.families = self.getEquivalentFilename(supervisedProt, self.pickingFamilies)
-
-        # Families to process
+        self.families = self.getFilename('families')
         self.familiesForAuto = []
         self.particleSizeForAuto = []
-        md = MetaData(self.pickingFamilies)
+        
+    def computeFamilies(self):
+        md = MetaData(self.Input['families'])
         for objId in md:
             family = md.getValue(MDL_PICKING_FAMILY, objId)
-            if exists(join(self.pickingDir,family+"_training.txt")):
+            if exists(self.PrevRun.getFilename('training', family=family)):
                 self.familiesForAuto.append(family)
                 particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
                 self.particleSizeForAuto.append(particleSize)
-
-
-    def createFilenameTemplates(self):
-        return {
-             'acquisition': join('%(dir)s', 'acquisition_info.xmd'),
-                'training': join('%(dir)s', '%(family)s_training.txt'),
-                    'mask': join('%(dir)s', '%(family)s_mask.xmp'),
-                     'pos': join('%(dir)s', '%(micrograph)s.pos')
-                }
-        
+       
     def defineSteps(self):
-        self.insertStep('createLink', verifyfiles=[self.micrographs], source=self.pickingMicrographs, dest=self.micrographs)
-        self.insertStep('createLink', verifyfiles=[self.families],source=self.pickingFamilies, dest=self.families)
-        self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.pickingDir,dirDest=self.WorkingDir)
+        self.computeFamilies()
+        filesToImport = [self.Input[k] for k in ['micrographs', 'families', 'acquisition']]
         for family in self.familiesForAuto:
-            getFilename = lambda k, d: self.getFilename(k, dir=d, family=family)
-            self.insertStep('createLink',source=getFilename('training', self.pickingDir),
-                            dest=getFilename('training', self.WorkingDir))
-            self.insertStep('createLink', source=getFilename('mask', self.pickingDir),
-                            dest=getFilename('mask', self.WorkingDir))
+            filesToImport.append(self.PrevRun.getFilename('training', family=family))
+            filesToImport.append(self.PrevRun.getFilename('mask', family=family))
+        self.insertImportOfFiles(filesToImport)
+        #self.insertStep('createLink', verifyfiles=[self.micrographs], source=self.pickingMicrographs, dest=self.micrographs)
+        #self.insertStep('createLink', verifyfiles=[self.families],source=self.Input['families'], dest=self.families)
+        #self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.pickingDir,dirDest=self.WorkingDir)
 
-        md = MetaData(self.pickingMicrographs)
+        md = MetaData(self.Input['micrographs'])
         for i, family in enumerate(self.familiesForAuto):
             particleSize = self.particleSizeForAuto[i]
             modelRoot = self.workingDirPath(family)
@@ -68,26 +58,28 @@ class ProtParticlePickingAuto(XmippProtocol):
                 path = md.getValue(MDL_MICROGRAPH, objId)
                 micrographName = replaceFilenameExt(os.path.basename(path), '')
                 proceed = True
-                fnPos = self.getFilename('pos', dir=self.pickingDir, micrograph=micrographName)
-                if exists(fnPos):
+                fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
+                if xmippExists(fnPos):
                     mdaux = MetaData("families@" + fnPos)
                     for idaux in mdaux:
-                        familyAux = mdaux.getValue(MDL_PICKING_FAMILY,idaux)
+                        familyAux = mdaux.getValue(MDL_PICKING_FAMILY, idaux)
                         if family == familyAux:
                             state = mdaux.getValue(MDL_PICKING_MICROGRAPH_FAMILY_STATE,idaux)
                             if state != "Available":
                                 proceed = False
                                 break
                 if proceed:
-                    oroot = join(self.WorkingDir, micrographName)
+                    oroot = self.workingDirPath(micrographName)
                     cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
                     self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
                                              
         for family in self.familiesForAuto:
             self.insertStep('gatherResults', Family=family, WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
-        self.insertStep('deleteTempFiles',WorkingDir=self.WorkingDir)
+        self.insertStep('deleteTempFiles', WorkingDir=self.WorkingDir)
 
     def summary(self):
+        if len(self.familiesForAuto):
+            self.computeFamilies()
         summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun, 
                    "Input directory: [%s] " % self.pickingDir, 
                    "Automatic picking of the following models: " + ",".join(self.familiesForAuto)]
@@ -132,7 +124,7 @@ class ProtParticlePickingAuto(XmippProtocol):
     
     def visualize(self):
         for f in glob.glob(self.workingDirPath("*extract_list.xmd")):
-            params="-i %s -o %s --mode review %s &" % (self.pickingMicrographs, self.WorkingDir, f)
+            params="-i %s -o %s --mode review %s &" % (self.Input['micrographs'], self.WorkingDir, f)
             os.system("xmipp_micrograph_particle_picking " + params)
 
 def gatherResults(log,Family,WorkingDir,PickingDir):

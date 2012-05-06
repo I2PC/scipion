@@ -15,9 +15,9 @@ class ProtImportMicrographs(XmippProtocol):
         self.Import = "from protocol_import_micrographs import *"
         self.PatternMicrographs = join(self.DirMicrographs, self.ExtMicrographs)
         if self.TiltPairs:
-            self.outputMicrographs = self.getFilename('tilt_pairs')
+            self.OutputMd = self.getFilename('tilt_pairs')
         else:
-            self.outputMicrographs = self.getFilename('micrographs')
+            self.OutputMd = self.getFilename('micrographs')
         
     def defineSteps(self):
         # Create microscope
@@ -41,9 +41,6 @@ class ProtImportMicrographs(XmippProtocol):
             func(m, output)
         # Insert step for result metadatas creation     
         self.insertCreateResults(filenameDict)
-
-    def createFilenameTemplates(self):
-        return { 'microscope': '%(WorkingDir)s/microscope.xmd' }
         
     def validate(self):
         errors = []
