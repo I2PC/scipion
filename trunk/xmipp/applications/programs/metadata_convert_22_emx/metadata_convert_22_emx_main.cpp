@@ -56,10 +56,10 @@ private:
     bool toxmipp;
     //tmpname is required just in case /dev/stdout is selected
     char *tmpname;
-
+    String comment;
 public:
 
-    /* EMX standrad has label with dots, xmipp does not support it
+    /* EMX standard has label with dots, xmipp does not support it
      * so first a temporary file is created changing "." by "____"
      */
     void restoreDots(void)
@@ -163,12 +163,29 @@ protected:
 
         setMetadataVersion("XMIPP_STAR_1");
         if (fn_in.isStar1(false))
+        {
             toemx=true;
+            comment = "##########################################################################\n"
+                      "#               EMX Exchange file \n"
+                      "# \n"
+                      "#  Information on this file format is available at \n"
+                      "#  http://i2pc.cnb.csic.es/emx\n"
+                      "##########################################################################\n";
+        }
         else
         {
             setMetadataVersion("EMX1.0");
             if (fn_in.isStar1(false))
+            {
                 toxmipp=true;
+                comment = "##########################################################################\n"
+                          "#               EMX Exchange file \n"
+                          "# \n"
+                          "# this metadata file has been imported from a EMX metadata file"
+                          "#  Information on emx file format is available at \n"
+                          "#  http://i2pc.cnb.csic.es/emx\n"
+                          "##########################################################################\n";
+            }
         }
         if(toemx==toxmipp)//both false
             REPORT_ERROR(ERR_IO_NOTFILE,(std::string)"File ");
@@ -226,8 +243,81 @@ public:
         FileName tmpFn;
         tmpFn.compose("particle",tmpname);
         setMetadataVersion("EMX1.0");
+        mdCoordinateEMX.setComment(comment);
         mdCoordinateEMX.write(tmpFn);
     }
+    void convertXmipp2EmxCTFMicrograph(void)
+    {
+        std::cerr << "convertXmipp2EmxCTFMicrograph" <<std::endl;
+        MetaData mdMicrographXmipp;
+        MetaData mdMicrographEMX;
+        String micrographXmipp;
+        MDRow  rowIn, rowOut;
+        double samplingRate;
+        double defocusU;
+        double defocusV;
+        double defocusAngle;
+        double voltage;
+        double sphericalAberration;
+        double Q0;
+        mdMicrographXmipp.read(fn_in);
+        FOR_ALL_OBJECTS_IN_METADATA(mdMicrographXmipp)
+        {
+            mdMicrographXmipp.getRow(rowIn, __iter.objId);
+            rowIn.getValue(MDL_CTF_SAMPLING_RATE,samplingRate);
+            rowIn.getValue(MDL_CTF_DEFOCUSU,defocusU);
+            rowIn.getValue(MDL_CTF_DEFOCUSV,defocusV);
+            rowIn.getValue(MDL_CTF_DEFOCUS_ANGLE,defocusAngle);
+            rowIn.getValue(MDL_CTF_VOLTAGE,voltage);
+            rowIn.getValue(MDL_CTF_CS,sphericalAberration);
+            rowIn.getValue(MDL_CTF_Q0,Q0);
+            rowIn.getValue(MDL_IMAGE,micrographXmipp);
+
+            rowOut.setValue(MDL_EMX_MICROGRAPH_SAMPLING,samplingRate);
+            rowOut.setValue(MDL_EMX_MICROGRAPH_DEFOCUSU, defocusU);
+            rowOut.setValue(MDL_EMX_MICROGRAPH_DEFOCUSV, defocusV);
+            rowOut.setValue(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,defocusAngle);
+            rowOut.setValue(MDL_EMX_MICROGRAPH_VOLTAGE, voltage);
+            rowOut.setValue(MDL_EMX_MICROGRAPH_CS, sphericalAberration);
+            rowOut.setValue(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,Q0);
+            rowOut.setValue(MDL_EMX_MICROGRAPH_URL,micrographXmipp);
+
+            mdMicrographEMX.addRow(rowOut);
+        }
+        FileName tmpFn;
+        tmpFn.compose("micrograph",tmpname);
+        setMetadataVersion("EMX1.0");
+        mdMicrographEMX.setComment(comment);
+        mdMicrographEMX.write(tmpFn);
+    }
+    void convertXmipp2EmxClass(void)
+    {
+        MetaData mdClassXmipp;
+        MetaData mdClassEMX;
+        //        FileName fnCoordinateXmipp;
+        //        FileName micrographName;
+        MDRow rowIn, rowOut;
+        int ref;
+        String particleName;
+        //
+        mdClassXmipp.read(fn_in);
+        std::stringstream out;
+        FOR_ALL_OBJECTS_IN_METADATA(mdClassXmipp)
+        {
+            mdClassXmipp.getRow(rowIn, __iter.objId);
+            rowIn.getValue(MDL_IMAGE,particleName);
+            rowIn.getValue(MDL_REF,ref);
+            rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
+            rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
+            mdClassEMX.addRow(rowOut);
+        }
+        FileName tmpFn;
+        tmpFn.compose("processedParticle",tmpname);
+        setMetadataVersion("EMX1.0");
+        mdClassEMX.setComment(comment);
+        mdClassEMX.write(tmpFn);
+    }
+
     void convertEmx2XmippCoordinates(void)
     {
         MetaData mdCoordinateEMX;
@@ -241,12 +331,19 @@ public:
         double x,y;
 
         mdCoordinateEMX.read(tmpname);
-        if (!mdCoordinateEMX.containsLabel(MDL_EMX_PARTICLE_COORDINATE_X)  )
-            REPORT_ERROR(ERR_MD_BADLABEL,
-                         (String)"Label: " + MDL::label2Str(MDL_EMX_PARTICLE_COORDINATE_X) + " missing.");
-        if (!mdCoordinateEMX.containsLabel(MDL_EMX_PARTICLE_COORDINATE_Y)  )
-            REPORT_ERROR(ERR_MD_BADLABEL,
-                         (String)"Label: " + MDL::label2Str(MDL_EMX_PARTICLE_COORDINATE_Y) + " missing.");
+        const MDLabel MyLabels[]       =
+            {
+                MDL_EMX_PARTICLE_COORDINATE_X,
+                MDL_EMX_PARTICLE_COORDINATE_Y
+            };
+        std::vector<MDLabel> myVector(MyLabels,MyLabels+8);
+        for (std::vector<MDLabel>::iterator it = myVector.begin(); it != myVector.end(); ++it)
+        {
+            if (!mdCoordinateEMX.containsLabel(*it) )
+                REPORT_ERROR(ERR_MD_BADLABEL,
+                             (String)"Label: " + MDL::label2Str(*it) + " missing.");
+        }
+
         mdMicAggregate.aggregate(mdCoordinateEMX,AGGR_COUNT,MDL_EMX_MICROGRAPH_URL,
                                  MDL_UNDEFINED,MDL_COUNT);
         //must delete, append multiple blocks
@@ -272,9 +369,115 @@ public:
             }
             blockOut.compose(micrographName,fn_out);
             setMetadataVersion("XMIPP_STAR_1");
+            mdCoordinateXmipp.setComment(comment);
             mdCoordinateXmipp.write(blockOut,MD_APPEND);
         }
-    	std::cerr << "convertEmx2XmippCoordinates_end" <<std::endl;
+    }
+
+    void convertEmx2XmippCTFMicrograph(void)
+    {
+        MetaData mdCTFMicrograph;
+        MetaData mdCTFMicrographXmipp;
+        String micrographXmipp;
+        MDRow  rowIn, rowOut;
+        double samplingRate;
+        double defocusU;
+        double defocusV;
+        double defocusAngle;
+        double voltage;
+        double sphericalAberration;
+        double Q0;
+
+        const MDLabel MyLabels[]       =
+            {
+                MDL_EMX_MICROGRAPH_SAMPLING,
+                MDL_EMX_MICROGRAPH_DEFOCUSU,
+                MDL_EMX_MICROGRAPH_DEFOCUSV,
+                MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,
+                MDL_EMX_MICROGRAPH_VOLTAGE,
+                MDL_EMX_MICROGRAPH_CS,
+                MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,
+                MDL_EMX_MICROGRAPH_URL
+            };
+        std::vector<MDLabel> myVector(MyLabels,MyLabels+8);
+        mdCTFMicrograph.read(tmpname);
+        for (std::vector<MDLabel>::iterator it = myVector.begin(); it != myVector.end(); ++it)
+        {
+            if (!mdCTFMicrograph.containsLabel(*it) )
+                REPORT_ERROR(ERR_MD_BADLABEL,
+                             (String)"Label: " + MDL::label2Str(*it) + " missing.");
+        }
+        FOR_ALL_OBJECTS_IN_METADATA(mdCTFMicrograph)
+        {
+            mdCTFMicrograph.getRow(rowIn, __iter.objId);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_URL,micrographXmipp);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_SAMPLING,samplingRate);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_DEFOCUSU,defocusU);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_DEFOCUSV,defocusV);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,defocusAngle);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_VOLTAGE,voltage);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_CS,sphericalAberration);
+            rowIn.getValue(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,Q0);
+
+            rowOut.setValue(MDL_IMAGE,micrographXmipp);
+            rowOut.setValue(MDL_CTF_SAMPLING_RATE,samplingRate);
+            rowOut.setValue(MDL_CTF_DEFOCUSU,defocusU);
+            rowOut.setValue(MDL_CTF_DEFOCUSV,defocusV);
+            rowOut.setValue(MDL_CTF_DEFOCUS_ANGLE,defocusAngle);
+            rowOut.setValue(MDL_CTF_VOLTAGE,voltage);
+            rowOut.setValue(MDL_CTF_CS,sphericalAberration);
+            rowOut.setValue(MDL_CTF_Q0,Q0);
+
+            mdCTFMicrographXmipp.addRow(rowOut);
+        }
+        setMetadataVersion("XMIPP_STAR_1");
+        mdCTFMicrographXmipp.setComment(comment);
+        mdCTFMicrographXmipp.write(fn_out);
+    }
+    void convertEmx2XmippClass(void)
+    {
+        MetaData mdClassEMX;
+        MetaData mdClassXmipp;
+        MetaData mdMicAggregate;
+        String particleName;
+        String _class;
+        MDRow  rowIn, rowOut;
+
+        const MDLabel MyLabels[]       =
+            {
+                MDL_EMX_PARTICLE_URL,
+                MDL_EMX_PARTICLE_CLASS_ID,
+            };
+        std::vector<MDLabel> myVector(MyLabels,MyLabels+2);
+        mdClassEMX.read(tmpname);
+        for (std::vector<MDLabel>::iterator it = myVector.begin(); it != myVector.end(); ++it)
+        {
+            if (!mdClassEMX.containsLabel(*it) )
+                REPORT_ERROR(ERR_MD_BADLABEL,
+                             (String)"Label: " + MDL::label2Str(*it) + " missing.");
+        }
+        mdMicAggregate.aggregate(mdClassEMX,AGGR_COUNT,MDL_EMX_PARTICLE_CLASS_ID,
+                                 MDL_UNDEFINED,MDL_COUNT);
+
+        std::map< String, int> mapReferences;
+        FOR_ALL_OBJECTS_IN_METADATA(mdMicAggregate)
+        {
+        	mdMicAggregate.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class,__iter.objId);
+            mapReferences[_class] = (int)__iter.objId;
+        }
+        FOR_ALL_OBJECTS_IN_METADATA(mdClassEMX)
+        {
+        	mdClassEMX.getRow(rowIn, __iter.objId);
+            rowIn.getValue(MDL_EMX_PARTICLE_URL,particleName);
+            rowIn.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class);
+
+            rowOut.setValue(MDL_IMAGE,particleName);
+            rowOut.setValue(MDL_REF,mapReferences[_class]);
+            mdClassXmipp.addRow(rowOut);
+        }
+        setMetadataVersion("XMIPP_STAR_1");
+        mdClassXmipp.setComment(comment);
+        mdClassXmipp.write(fn_out);
     }
 
     void run()
@@ -284,9 +487,17 @@ public:
         if(toxmipp)
             switch (conversionType)
             {
+            case EMX_CLASS:
+                removeDots();
+                convertEmx2XmippClass();
+                break;
             case EMX_COORDINATES:
                 removeDots();
                 convertEmx2XmippCoordinates();
+                break;
+            case EMX_CTFMICROGRAPH:
+                removeDots();
+                convertEmx2XmippCTFMicrograph();
                 break;
             default:
                 REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp2EmxCoordinates");
@@ -295,8 +506,16 @@ public:
         else if (toemx)
             switch (conversionType)
             {
+            case EMX_CLASS:
+                convertXmipp2EmxClass();
+                restoreDots();
+                break;
             case EMX_COORDINATES:
                 convertXmipp2EmxCoordinates();
+                restoreDots();
+                break;
+            case EMX_CTFMICROGRAPH:
+                convertXmipp2EmxCTFMicrograph();
                 restoreDots();
                 break;
             default:
