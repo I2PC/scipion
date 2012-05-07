@@ -523,7 +523,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     int           Vsampling, Usampling;      // Sampling rate in Y and X
     // directions respectively
     // inside the blobprint
-    double        vol_corr;                  // Correction for a volum element
+    double        vol_corr;                  // Correction for a volume element
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes

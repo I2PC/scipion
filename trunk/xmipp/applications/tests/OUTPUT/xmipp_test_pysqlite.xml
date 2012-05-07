@@ -1,0 +1,7 @@
+<testsuite name="TestPySql">
+   <testcase name="test_001CreateTable" classname="TestPySqlite"/>
+   <testcase name="test_010Insert" classname="TestPySqlite"/>
+   <testcase name="test_020Delete" classname="TestPySqlite"/>
+   <testcase name="test_021Delete" classname="TestPySqlite"/>
+   <testcase name="test_022Delete" classname="TestPySqlite"/>
+</testsuite>
