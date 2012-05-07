@@ -448,46 +448,36 @@
 			<FILE filename="images.stk" />
 		</CASE>
 	</PROGRAM>
-	<PROGRAM name="xmipp_metadata_convert_emx" mpi="FALSE">
+	<PROGRAM name="xmipp_metadata_convert_22_emx" mpi="FALSE">
 		<CASE
-			arguments="-i input/metadata_convert_emx/particlePicking.xmd -o %o/particlePicking.emx --conversion_type coordinates"
+			arguments="-i input/Emx/part_coor.xmd -o %o/part_coor.emx --conversion_type coordinates"
 			changeDir="FALSE">
-			<FILE filename="particlePicking.emx" />
+			<FILE filename="part_coor.emx" />
 		</CASE>
 		<CASE
-			arguments="-i input/metadata_convert_emx/particlePicking.emx -o %o/particlePicking.xmd --conversion_type coordinates"
+			arguments="-i input/Emx/part_coor.emx -o %o/part_coor.xmd --conversion_type coordinates"
 			changeDir="FALSE">
-			<FILE filename="particlePicking.xmd" />
+			<FILE filename="part_coor.xmd" />
 		</CASE>
 		<CASE
-			arguments="-i input/metadata_convert_emx/ctf_micrograph.xmd -o %o/ctf_micrograph.emx --conversion_type ctfMicrograph"
-			changeDir="FALSE">
-			<FILE filename="ctf_micrograph.emx" />
-		</CASE>
-		<CASE
-			arguments="-i input/metadata_convert_emx/ctf_micrograph.emx -o %o/ctf_micrograph.xmd --conversion_type ctfMicrograph"
-			changeDir="FALSE">
-			<FILE filename="ctf_micrograph.xmd" />
-		</CASE>
-		<CASE
-			arguments="-i input/metadata_convert_emx/part_align.xmd -o %o/part_align.emx --conversion_type alignment"
-			changeDir="FALSE">
-			<FILE filename="part_align.emx" />
-		</CASE>
-		<CASE
-			arguments="-i input/metadata_convert_emx/part_align.emx -o %o/part_align.xmd --conversion_type alignment"
-			changeDir="FALSE">
-			<FILE filename="part_align.xmd" />
-		</CASE>
-		<CASE
-			arguments="-i input/metadata_convert_emx/part_class.xmd -o %o/part_class.emx --conversion_type class"
+			arguments="-i input/Emx/part_class.xmd -o %o/part_class.emx --conversion_type class"
 			changeDir="FALSE">
 			<FILE filename="part_class.emx" />
 		</CASE>
 		<CASE
-			arguments="-i input/metadata_convert_emx/part_class.emx -o %o/part_class.xmd --conversion_type class"
+			arguments="-i input/Emx/part_class.emx -o %o/part_class.xmd --conversion_type class"
 			changeDir="FALSE">
 			<FILE filename="part_class.xmd" />
+		</CASE>
+		<CASE
+			arguments="-i input/Emx/micrograph_ctf.xmd -o %o/micrograph_ctf.emx --conversion_type ctfMicrograph"
+			changeDir="FALSE">
+			<FILE filename="micrograph_ctf.emx" />
+		</CASE>
+		<CASE
+			arguments="-i input/Emx/micrograph_ctf.emx -o %o/micrograph_ctf.xmd --conversion_type ctfMicrograph"
+			changeDir="FALSE">
+			<FILE filename="micrograph_ctf.xmd" />
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_metadata_convert_to_spider" mpi="FALSE">

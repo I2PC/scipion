@@ -1,0 +1,20 @@
+# XMIPP_STAR_1 * 
+# 
+# ########################################################################## 
+# # EMX Exchange file # # this metadata file has been imported from a 
+# EMX metadata file# Information on emx file format is available at # 
+# http://i2pc.cnb.csic.es/emx 
+# ########################################################################## 
+#  
+data_
+loop_
+ _CTF_Voltage
+ _CTF_Spherical_aberration
+ _image
+ _CTF_Sampling_rate
+ _CTF_Defocus_U
+ _CTF_Defocus_V
+ _CTF_Defocus_angle
+ _CTF_Q0
+  300.000000     2.200000 mic001.mrc     1.444444 20000.000000 25000.000000    23.800000     0.070000 
+  200.000000     2.000000 mic002.mrc     1.794872 18000.000000 12000.000000    56.200000     0.100000 

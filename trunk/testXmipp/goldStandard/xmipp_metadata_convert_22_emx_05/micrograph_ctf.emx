@@ -1,0 +1,19 @@
+# EMX1.0 * 
+# 
+# ########################################################################## 
+# # EMX Exchange file # # Information on this file format is available 
+# at # http://i2pc.cnb.csic.es/emx 
+# ########################################################################## 
+#  
+data_micrograph
+loop_
+ _emx_micrograph.samplingRate
+ _emx_micrograph.defocus_U
+ _emx_micrograph.defocus_V
+ _emx_micrograph.astigmatism_angle
+ _emx_micrograph.voltage
+ _emx_micrograph.Cs
+ _emx_micrograph.amplitude_contrast
+ _emx_micrograph.url
+    1.444444 20000.000000 25000.000000    23.800000   300.000000     2.200000     0.070000 mic001.mrc 
+    1.794872 18000.000000 12000.000000    56.200000   200.000000     2.000000     0.100000 mic002.mrc 
