@@ -265,37 +265,62 @@ class XmippProject():
     
     def _registerRunProtocol(self, extRunName, prot, runsDict):
         if extRunName not in runsDict:
-            deps = []
-            runsDict[extRunName] = (prot, deps)
+            runsDict[extRunName] = DepData(runsDict, extRunName, prot)
             if prot.PrevRun:
                 self._registerRunProtocol(prot.PrevRunName, prot.PrevRun, runsDict)
-                deps.append(prot.PrevRunName)
-                
-    def getRunsDependencies(self):
+                runsDict[prot.PrevRunName].addDep(extRunName)
+           
+    def _printGraph(self, runsDict):
+        from protlib_xmipp import greenStr, redStr
+        for k, dd in runsDict.iteritems():
+            deps = [str(e) for e in dd.deps]
+            if dd.isRoot:
+                k = '>>> ' + greenStr(k)
+            else:
+                k = greenStr(k)
+            print '%s REFERENCED FROM: %s' % (k, redStr(', '.join(deps)))            
+    
+    def getRunsDependencies(self, printGraph=False):
         ''' Return a dictionary with run_name as key and value
         a list of all runs that depends on it'''
         runs = self.projectDb.selectRuns()
         runsDict = {}
+        
         for r in runs:
             extRunName = getExtendedRunName(r)
             prot = self.getProtocolFromRunName(extRunName)
             self._registerRunProtocol(extRunName, prot, runsDict)
         
         for r in runs:
-            extRunName = getExtendedRunName(r)
-            prot, deps = runsDict[extRunName]
+            dd = runsDict[getExtendedRunName(r)]
             for r2 in runs:
-                extRunName2 = getExtendedRunName(r2)
-                if extRunName != extRunName2 and extRunName2 not in deps:
-                    wd = getWorkingDirFromRunName(extRunName2)
-                    for v in prot.ParamsDict.values():
-                        if type(v) == str and wd in v:
-                            deps.append(extRunName2)
+                dd2 = runsDict[getExtendedRunName(r2)]
+                if dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
+                    for v in dd.prot.ParamsDict.values():
+                        if type(v) == str and dd2.prot.WorkingDir in v:
+                            dd2.addDep(dd.extRunName)
         
-        from protlib_xmipp import greenStr, redStr
-        for k, v in runsDict.iteritems():
-            deps = [str(e) for e in v[1]]
-            print '%s DEPENDS ON: %s' % (greenStr(k), redStr(','.join(deps)))
+        if printGraph:
+            self._printGraph(runsDict)
+                
+        return runsDict
+
+class DepData():
+    '''Simple structure to hold runs dependencies data '''
+    def __init__(self, runsDict, extRunName, protocol):
+        self.runsDict = runsDict
+        self.extRunName = extRunName
+        self.prot = protocol
+        self.deps = []
+        self.isRoot = True
+        
+    def addDep(self, extRunName):
+        self.deps.append(extRunName)
+        self.runsDict[extRunName].isRoot = False
+        
+    def hasDep(self, extRunName):
+        return extRunName in self.deps
+        
     
                   
 class XmippProtocol(object):
@@ -363,8 +388,10 @@ class XmippProtocol(object):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
         d = {
-                'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),             
+                'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
+                'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
                 'families':     join('%(WorkingDir)s', 'families.xmd'),
+                'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
                 'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
                 'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
                 'microscope':   join('%(WorkingDir)s','microscope.xmd'),
@@ -385,7 +412,7 @@ class XmippProtocol(object):
         for key in keys:
             self.Input[key] = self.PrevRun.getFilename(key)
         
-    def insertImportOfFiles(self, fileList, copy=False):
+    def insertImportOfFiles(self, fileList, copy=True):
         ''' Create a link or copy files from a previous run 
         to current run working dir '''
         if copy:

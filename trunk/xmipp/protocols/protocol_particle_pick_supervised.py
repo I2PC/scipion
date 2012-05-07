@@ -24,8 +24,11 @@ class ProtParticlePickingSupervised(XmippProtocol):
         self.Import = "from protocol_particle_pick_supervised import *"
         self.setPreviousRun(self.PickingRun)
         self.pickingDir = self.PrevRun.WorkingDir
-        self.inputFilename('micrographs', 'families', 'macros', 'acquisition')
-        self.micrographs = self.getFilename('micrographs')
+        self.inputProperty('TiltPairs', 'MicrographsMd')
+        self.inputFilename('families', 'macros', 'acquisition')
+        self.Input['micrographs'] = self.MicrographsMd
+        #self.micrographs = self.getFilename('micrographs')
+        self.micrographs = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
         
     def createFilenameTemplates(self):
         return {
@@ -54,6 +57,8 @@ class ProtParticlePickingSupervised(XmippProtocol):
         return summary
     
     def validate(self):
+        if self.TiltPairs:
+            return "Supervised picking can't be done on tilted pairs run"
         return validateMicrographs(self.Input['micrographs'])
     
     def visualize(self):

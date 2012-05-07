@@ -41,22 +41,19 @@ class ProtExtractParticles(XmippProtocol):
         self.Import = 'from protocol_extract_particles import *'
         # Take some parameter from previous picking protocol run
         self.setPreviousRun(self.PickingRun)
-        self.TiltPairs = getattr(self.PrevRun, 'TiltPairs', False)
         self.pickingDir = self.PrevRun.WorkingDir
-        if self.TiltPairs:
-            self.pickingMicrographs = self.PrevRun.getFilename('tilted_pairs')
-        else:
-            self.pickingMicrographs = self.PrevRun.getFilename("micrographs")
-        self.micrographs = self.getEquivalentFilename(self.PrevRun, self.pickingMicrographs)
+        self.inputFilename('acquisition')
+        self.inputProperty('TiltPairs', 'MicrographsMd')
+        self.micrographs = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
         
-        MD=MetaData(os.path.join(self.pickingDir,"acquisition_info.xmd"));
-        id=MD.firstObject()
-        self.TsInput=MD.getValue(MDL_SAMPLINGRATE,id)
-        if MD.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
-            self.TsOriginal=MD.getValue(MDL_SAMPLINGRATE_ORIGINAL,id)
-        else:
-            self.TsOriginal=self.TsInput
-        self.TsFinal=self.TsOriginal*self.DownsampleFactor
+    def setSamplingMode(self):
+        md = MetaData(self.PrevRun.getFilename('acquisition'))
+        objId = md.firstObject()
+        
+        self.TsOriginal= self.TsInput = md.getValue(MDL_SAMPLINGRATE, objId)        
+        if md.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
+            self.TsOriginal = md.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
+        self.TsFinal = self.TsOriginal*self.DownsampleFactor
         
         if abs(self.TsFinal-self.TsInput)<0.001:
             self.downsamplingMode=DownsamplingMode.SameAsPicking
@@ -65,33 +62,34 @@ class ProtExtractParticles(XmippProtocol):
         else:
             self.downsamplingMode=DownsamplingMode.NewDownsample
 
-    def createFilenameTemplates(self):
-        return {
-                'extractList': self.workingDirPath("%(Family)s_extract_list.xmd"),
-                'family': self.workingDirPath("%(Family)s.xmd")
-                }
-
     def defineSteps(self):
-        self.insertStep('copyFile', source=self.pickingMicrographs, dest=self.micrographs)
-        md = MetaData(self.pickingMicrographs)
-        self.containsCTF = md.containsLabel(MDL_CTFMODEL)
+        self.setSamplingMode()
+        filesToCopy = [self.MicrographsMd, self.Input['acquisition']]
+        self.insertImportOfFiles(filesToCopy, copy=True)
 
+        # Update sampling rate in 'acquisition_info.xmd' if necessary
+        if self.downsamplingMode != DownsamplingMode.SameAsPicking:
+            self.insertStep('updateSampling', SamplingMd=self.getFilename('acquisition'), 
+                            TsOriginal=self.TsOriginal, Ts=self.TsFinal, TsMode=self.downsamplingMode)
+        
+        md = MetaData(self.MicrographsMd)
+        self.containsCTF = md.containsLabel(MDL_CTFMODEL)
         # Create or look for the extract list
-        destFnExtractList = self.getFilename("extractList",Family=self.Family)
+        destFnExtractList = self.getFilename('extract_list', family=self.Family)
         if self.TiltPairs:
             self.insertStep("createExtractListTiltPairs", family=self.Family,
-                               fnMicrographs=self.pickingMicrographs, pickingDir=self.pickingDir,
+                               fnMicrographs=self.MicrographsMd, pickingDir=self.pickingDir,
                                fnExtractList=destFnExtractList)
-            micrographs = self.createBlocksInExtractFile(self.pickingMicrographs)
+            micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
         else:
-            srcFnExtractList = os.path.join(self.pickingDir,self.Family+"_extract_list.xmd")
+            srcFnExtractList = self.PrevRun.getFilename('extract_list', family=self.Family)
             if exists(srcFnExtractList):
-                self.insertStep("createLink",source=srcFnExtractList,dest=destFnExtractList)
+                self.insertImportOfFiles([srcFnExtractList])
                 micrographs = getBlocksInMetaDataFile(srcFnExtractList)
             else:
-                self.insertStep("createExtractList",Family=self.Family,fnMicrographsSel=self.pickingMicrographs,pickingDir=self.pickingDir,
+                self.insertStep("createExtractList",Family=self.Family,fnMicrographsSel=self.MicrographsMd,pickingDir=self.pickingDir,
                                    fnExtractList=destFnExtractList)
-                micrographs = self.createBlocksInExtractFile(self.pickingMicrographs)
+                micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
 
         # Process each micrograph                        
         for micrograph in micrographs:
@@ -152,12 +150,12 @@ class ProtExtractParticles(XmippProtocol):
     def validate(self):
         errors = []
         if self.pickingDir:
-            if not exists(self.pickingMicrographs):
-                errors.append("Cannot find "+self.pickingMicrographs)
+            if not exists(self.MicrographsMd):
+                errors.append("Cannot find: \n<%s>" % self.MicrographsMd)
             else:
-                md=MetaData(self.pickingMicrographs)
+                md = MetaData(self.MicrographsMd)
                 if self.DoFlip and not md.containsLabel(MDL_CTFMODEL):
-                    errors.append(self.pickingMicrographs+" does not contain CTF information for phase flipping")
+                    errors.append("Micrographs metadata: <%s>\n does not contain CTF information for phase flipping" % self.MicrographsMd)
         else:
             errors.append("Picking run is not valid")
         if self.DownsampleFactor<1:
@@ -165,8 +163,9 @@ class ProtExtractParticles(XmippProtocol):
         return errors
 
     def summary(self):
+        self.setSamplingMode()
         message=[]
-        familyFn = self.getFilename("family",Family=self.Family)
+        familyFn = self.getFilename("family", family=self.Family)
         if self.TiltPairs:
             part1 = "tilt pairs"
             part2 = "particle pairs"
@@ -194,12 +193,14 @@ class ProtExtractParticles(XmippProtocol):
             micFullName = md.getValue(MDL_MICROGRAPH,objId)
             micName = baseWithoutExt(micFullName)
             if micrograph==micName:
-                if md.containsLabel(MDL_MICROGRAPH):
-                    micOriginalName=md.getValue(MDL_MICROGRAPH,objId)
+                if md.containsLabel(MDL_MICROGRAPH_ORIGINAL):
+                    micOriginalName = md.getValue(MDL_MICROGRAPH_ORIGINAL,objId)
+                elif md.containsLabel(MDL_MICROGRAPH):
+                    micOriginalName = md.getValue(MDL_MICROGRAPH,objId)
                 else:
-                    micOriginalName=None
+                    micOriginalName = None
                 if self.containsCTF:
-                    ctfFile = md.getValue(MDL_CTFMODEL,objId)
+                    ctfFile = md.getValue(MDL_CTFMODEL, objId)
                 else:
                     ctfFile = None
                 return (micFullName, micOriginalName, ctfFile)
@@ -209,12 +210,15 @@ class ProtExtractParticles(XmippProtocol):
                 if micrograph == micName:
                     if md.containsLabel(MDL_MICROGRAPH_TILTED_ORIGINAL):
                         micOriginalName=md.getValue(MDL_MICROGRAPH_TILTED_ORIGINAL,objId)
+                    elif md.containsLabel(MDL_MICROGRAPH_TILTED):
+                        micOriginalName=md.getValue(MDL_MICROGRAPH_TILTED, objId)
                     else:
                         micOriginalName=None
                     return (micFullName, micOriginalName, None)
 
     def visualize(self):
-        selfile = self.getFilename("family")
+        selfile = self.getFilename("family", family=self.Family)
+        print selfile
         if not exists(selfile):
             showError("Error", "There is no result yet")
         else:
@@ -250,6 +254,18 @@ class ProtExtractParticles(XmippProtocol):
 
 def baseWithoutExt(filename):
     return removeFilenameExt(os.path.basename(filename))
+
+def updateSampling(log, SamplingMd, TsOriginal, Ts, TsMode):
+    md = MetaData(SamplingMd)
+    objId = md.firstObject()
+    
+    if TsMode == DownsamplingMode.SameAsOriginal:
+        md.removeLabel(MDL_SAMPLINGRATE_ORIGINAL)
+    elif TsMode == DownsamplingMode.NewDownsample:
+        md.setValue(MDL_SAMPLINGRATE_ORIGINAL, TsOriginal, objId)
+        
+    md.setValue(MDL_SAMPLINGRATE, Ts, objId)
+    md.write(SamplingMd)
 
 def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
     md=MetaData(fnMicrographsSel)
@@ -307,7 +323,6 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
 def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,
                      fnExtractList, particleSize, doFlip, doNorm, doLog, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
-    print "---->Extracting",micrographName
     fnBlock = _getFilename('mic_block_fn', micName=micrographName, fn=fnExtractList)
     md = MetaData(fnBlock)
     printLog( 'Metadata block: %s' % fnBlock, log)

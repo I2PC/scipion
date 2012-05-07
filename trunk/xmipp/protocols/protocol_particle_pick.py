@@ -15,7 +15,7 @@ from glob import glob
 from os.path import exists, join
 
 # Picking modes
-PM_MANUAL, PM_SUPERVISED, PM_READONLY = ('manual', 'supervised', 'readonly')
+PM_MANUAL, PM_SUPERVISED, PM_READONLY, PM_REVIEW = ('manual', 'supervised', 'readonly', 'review')
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePicking(XmippProtocol):
@@ -24,26 +24,18 @@ class ProtParticlePicking(XmippProtocol):
         self.Import = "from protocol_particle_pick import *"
         self.setPreviousRun(self.ImportRun)
         self.importDir = self.PrevRun.WorkingDir
-        self.TiltPairs = self.PrevRun.TiltPairs
-        #self.Input['micrographs'] = self.PrevRun.OutputMd
-        self.inputFilename('microscope', 'micrographs', 'acquisition')
-
-        if self.TiltPairs:
-            self.micrographs = self.getFilename('tilted_pairs')
-        else:
-            self.micrographs = self.PrevRun.getFilename('micrographs')
+        self.inputProperty('TiltPairs', 'MicrographsMd')
+        self.Input['micrographs'] = self.MicrographsMd
+        self.inputFilename('microscope', 'acquisition')
 
     def defineSteps(self):
-        #self.insertCreateLink(self.Input['micrographs'], self.micrographs)
-        self.insertImportOfFiles([self.Input[k] for k in ['micrographs', 'acquisition']])
-        #self.insertStep('copyFile', verifyfiles=[self.micrographs], source=self.inputMicrographs, dest=self.micrographs)
-        #self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
+        self.insertImportOfFiles(self.MicrographsMd, self.Input['acquisition'])
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
-                           InputMicrographs=self.micrographs, WorkingDir=self.WorkingDir,
+                           InputMicrographs=self.MicrographsMd, WorkingDir=self.WorkingDir,
                            TiltPairs=self.TiltPairs, Memory=self.Memory)       
         
     def summary(self):
-        md = xmipp.MetaData(self.micrographs)
+        md = xmipp.MetaData(self.MicrographsMd)
         micrographs, particles, familiesDict = countParticles(self)
         if self.TiltPairs: 
             suffix = "tilt pairs"
@@ -72,7 +64,7 @@ class ProtParticlePicking(XmippProtocol):
         return validateMicrographs(self.Input['micrographs'], self.TiltPairs)
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.micrographs, self.WorkingDir, PM_READONLY, self.TiltPairs)
+        launchParticlePickingGUI(None, self.MicrographsMd, self.WorkingDir, PM_READONLY, self.TiltPairs)
 
 
 def getPosFiles(prot, pattern=''):

@@ -19,13 +19,10 @@
 #-----------------------------------------------------------------------------
 # {section} Extracting parameters
 #-----------------------------------------------------------------------------
-# {run}(particle_pick,particle_pick_auto) Particle picking run
-PickingRun=''
+# {list} (original, same as picking, other) Select downsampling factor:
+DownsampleType = 'same as picking'
 
-# {wizard}(wizardChooseFamilyToExtract) Family 
-Family=''
-
-# Extraction downsampling factor
+# {condition}(DownsampleType == 'other') Extraction downsampling factor
 """ 
 This factor is always referred to the original sampling rate.
 You may use independent downsampling factors for extracting the 
@@ -33,34 +30,40 @@ particles, picking them and estimating the CTF. All downsampling
 factors are always referred to the original sampling rate, and 
 the differences are correctly handled by Xmipp.
 """
-DownsampleFactor=1
+DownsampleFactor = 2
+
+# {run}(particle_pick,particle_pick_auto) Particle picking run
+PickingRun = ''
+
+# {wizard}(wizardChooseFamilyToExtract) Family 
+Family = ''
 
 # Particle box size
 """ In pixels. The box size is the size of the boxed particles,
 actual particles may be smaller than this. """
-ParticleSize=0
+ParticleSize = 0
 
 # Phase flipping (Recommended)
 """ Use the information from the CTF to compensate for phase reversals."""
-DoFlip=True
+DoFlip = True
 
 # Take Logarithm
 """ 
 Depending on your acquisition system you may have to take the logarithm
 or not in order to have a linear relationship between the gray values
 in the image and those in the volume """
-DoLog=False 
+DoLog = False 
 
 # Invert contrast
 """ Invert the contrast if your particles are black over a white background. """
-DoInvert=False
+DoInvert = False
 
 
 # Normalize (Recommended)
 """ 
 It subtract a ramp in the gray values and normalizes so that in the 
 background there is 0 mean and standard deviation 1 """
-DoNorm=True
+DoNorm = True
 
 # {expert}{condition}(DoNorm) Background radius
 """

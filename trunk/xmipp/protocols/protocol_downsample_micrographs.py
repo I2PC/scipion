@@ -16,7 +16,7 @@ class ProtDownsampleMicrographs(XmippProtocol):
         self.setPreviousRun(self.ImportRun) 
         self.importDir = self.PrevRun.WorkingDir
         self.inputFilename('microscope', 'micrographs', 'acquisition')
-        self.inputProperty('TiltPairs', 'OutputMd')
+        self.inputProperty('TiltPairs', 'MicrographsMd')
         
     def defineSteps(self):
         self.insertImportOfFiles([self.Input['microscope']])

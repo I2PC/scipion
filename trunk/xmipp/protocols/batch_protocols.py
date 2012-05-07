@@ -597,12 +597,17 @@ class XmippProjectGUI():
                 if state in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
                     showWarning("Delete warning", "This RUN is LAUNCHED or RUNNING, you need to stopped it before delete", parent=self.root) 
                 else:
-                    if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
-                        error = self.project.deleteRun(run)
-                        if error is None:
-                            self.updateRunHistory(self.lastDisplayGroup)
-                        else: 
-                            showError("Error deleting RUN", error, parent=self.root)
+                    runsDict = self.project.getRunsDependencies()
+                    deps = ['<%s>' % d for d in runsDict[getExtendedRunName(run)].deps]
+                    if len(deps):
+                        showWarning("Delete warning", "This RUN is referenced from: \n" + '  \n'.join(deps), parent=self.root) 
+                    else:
+                        if askYesNo("Confirm DELETE", "<ALL DATA> related to this <protocol run> will be <DELETED>. \nDo you really want to continue?", self.root):
+                            error = self.project.deleteRun(run)
+                            if error is None:
+                                self.updateRunHistory(self.lastDisplayGroup)
+                            else: 
+                                showError("Error deleting RUN", error, parent=self.root)
             elif event == ACTION_STEPS:
                 self.launchRunStepsTree(run)
             elif event == ACTION_REFRESH:

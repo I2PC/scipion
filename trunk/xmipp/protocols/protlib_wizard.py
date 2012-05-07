@@ -289,11 +289,11 @@ def wizardTiltPairs(self, var):
 
 #Select family from extraction run
 def wizardChooseFamilyToExtract(self, var):
-    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTFMODEL
+    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTFMODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.workingDirPath("families.xmd")    
+    fnFamilies = pickingProt.getFilename("families")    
     if not exists(fnFamilies):
         showWarning("Warning", "No elements to select", parent=self.master)
         return
@@ -313,11 +313,29 @@ def wizardChooseFamilyToExtract(self, var):
         for objId in md:
             if md.getValue(MDL_PICKING_FAMILY, objId) == selectedFamily:
                 particleSize = md.getValue(MDL_PICKING_PARTICLE_SIZE, objId)
-                self.setVarValue("ParticleSize", str(particleSize))
-                self.setVarValue("Family",selectedFamily)
-        if hasattr(pickingProt,'TiltPairs'):
-            if pickingProt.TiltPairs:
-                self.setVarValue("DoFlip", str(False))
+                type = self.getVarValue("DownsampleType")
+                mdAcquisition = MetaData(pickingProt.getFilename('acquisition'))
+                objId = mdAcquisition.firstObject()
+                tsOriginal = tsPicking = mdAcquisition.getValue(MDL_SAMPLINGRATE, objId)
+                
+                if mdAcquisition.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
+                    tsOriginal = mdAcquisition.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
+                
+                if type == "same as picking":
+                    factor = 1
+                else:
+                    factor = tsPicking / tsOriginal;
+                    if type == "other":
+                        try:
+                            factor /= float(self.getVarValue("DownsampleFactor"))
+                        except Exception, e:
+                            showWarning("Warning", "Please select valid downsample factor", parent=self.master)
+                            return
+                particleSize *= factor 
+                self.setVarValue("ParticleSize", str(int(particleSize)))
+                self.setVarValue("Family", selectedFamily)
+        if getattr(pickingProt,'TiltPairs', False):
+            self.setVarValue("DoFlip", str(False))
         else:
             md=MetaData(pickingProt.getFilename("micrographs"))
             self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTFMODEL)))

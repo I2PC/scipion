@@ -33,7 +33,7 @@ class ProtScreenMicrographs(XmippProtocol):
         self.Import = "from protocol_screen_micrographs import *"
         self.setPreviousRun(self.ImportRun) 
         self.inputFilename('microscope', 'micrographs', 'acquisition')
-        self.inputProperty('TiltPairs', 'OutputMd')
+        self.inputProperty('TiltPairs', 'MicrographsMd')
         self.CtffindExec =  which('ctffind3.exe')
         self.micrographs = self.getFilename('micrographs')
 

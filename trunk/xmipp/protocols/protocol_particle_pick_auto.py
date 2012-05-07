@@ -15,6 +15,8 @@ from xmipp import MetaData, MD_APPEND,MDL_IMAGE, MDL_PICKING_FAMILY, \
                   MDL_ENABLED, MDL_COST, MDL_MICROGRAPH, MDValueRange, getBlocksInMetaDataFile
 import glob
 from os.path import exists
+from protocol_particle_pick import launchParticlePickingGUI, PM_READONLY,\
+    PM_REVIEW
 
 # Create a GUI automatically from a selfile of micrographs
 class ProtParticlePickingAuto(XmippProtocol):
@@ -23,7 +25,8 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.Import = "from protocol_particle_pick_auto import *"
         self.setPreviousRun(self.SupervisedRun)
         self.pickingDir = self.PrevRun.WorkingDir
-        self.inputFilename('acquisition', 'micrographs', 'families')
+        self.inputFilename('acquisition', 'micrographs', 'families', 'macros')
+        self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
         self.families = self.getFilename('families')
         self.familiesForAuto = []
@@ -40,14 +43,11 @@ class ProtParticlePickingAuto(XmippProtocol):
        
     def defineSteps(self):
         self.computeFamilies()
-        filesToImport = [self.Input[k] for k in ['micrographs', 'families', 'acquisition']]
+        filesToImport = [self.Input[k] for k in ['micrographs', 'families', 'acquisition', 'macros']]
         for family in self.familiesForAuto:
             filesToImport.append(self.PrevRun.getFilename('training', family=family))
             filesToImport.append(self.PrevRun.getFilename('mask', family=family))
         self.insertImportOfFiles(filesToImport)
-        #self.insertStep('createLink', verifyfiles=[self.micrographs], source=self.pickingMicrographs, dest=self.micrographs)
-        #self.insertStep('createLink', verifyfiles=[self.families],source=self.Input['families'], dest=self.families)
-        #self.insertStep('createLink2', filename="acquisition_info.xmd",dirSrc=self.pickingDir,dirDest=self.WorkingDir)
 
         md = MetaData(self.Input['micrographs'])
         for i, family in enumerate(self.familiesForAuto):
@@ -104,17 +104,17 @@ class ProtParticlePickingAuto(XmippProtocol):
             summary.append("<%d> particles automatically picked from <%d> micrographs in <%d> minutes"%(Nparticles,Nmicrographs,int((maxTime-minTime)/60.0)))
         else:
             for family in self.familiesForAuto:
-                fnExtractList=self.workingDirPath(family+"_extract_list.xmd")
-                msg=family+": "
+                fnExtractList = self.getFilename('extract_list', family=family)
+                msg  =  family + ": "
                 if os.path.exists(fnExtractList):
-                    MD=MetaData("mic.*@"+fnExtractList)
-                    MDauto=MetaData()
+                    MD = MetaData("mic.*@"+fnExtractList)
+                    MDauto = MetaData()
                     MDauto.importObjects(MD, MDValueRange(MDL_COST, 0., 1.))
-                    Nparticles=MDauto.size()
-                    minTime=os.stat(self.workingDirPath(family+"_mask.xmp")).st_mtime
-                    maxTime=os.stat(fnExtractList).st_mtime
-                    Nmicrographs=len(getBlocksInMetaDataFile(fnExtractList))
-                    msg+="<%d> particles automatically picked from <%d> micrographs in <%d> minutes"%(Nparticles,Nmicrographs,int((maxTime-minTime)/60.0))
+                    Nparticles = MDauto.size()
+                    minTime = os.stat(self.workingDirPath(family+"_mask.xmp")).st_mtime
+                    maxTime = os.stat(fnExtractList).st_mtime
+                    Nmicrographs = len(getBlocksInMetaDataFile(fnExtractList))
+                    msg += "<%d> particles automatically picked from <%d> micrographs in <%d> minutes"%(Nparticles,Nmicrographs,int((maxTime-minTime)/60.0))
                 summary.append(msg)
         return summary
     
@@ -123,9 +123,12 @@ class ProtParticlePickingAuto(XmippProtocol):
         return errors
     
     def visualize(self):
+        mode = PM_REVIEW + " %s"
         for f in glob.glob(self.workingDirPath("*extract_list.xmd")):
-            params="-i %s -o %s --mode review %s &" % (self.Input['micrographs'], self.WorkingDir, f)
-            os.system("xmipp_micrograph_particle_picking " + params)
+            launchParticlePickingGUI(None, self.Input['micrographs'], self.WorkingDir, mode % f, self.TiltPairs, self.Memory)
+            
+            #params="-i %s -o %s --mode review %s &" % (self.Input['micrographs'], self.WorkingDir, f)
+            #os.system("xmipp_micrograph_particle_picking " + params)
 
 def gatherResults(log,Family,WorkingDir,PickingDir):
     familyFn = lambda fn: "%s@%s" % (Family, fn)
