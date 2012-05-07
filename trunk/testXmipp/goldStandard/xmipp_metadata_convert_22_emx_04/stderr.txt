@@ -1,0 +1,4 @@
+In file         : input/Emx/part_class.emx
+Out file        : tmpLink/xmipp_metadata_convert_22_emx_04/part_class.xmd
+Conversion Type : class
+Converting from emx to xmipp:

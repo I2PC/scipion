@@ -1,0 +1,4 @@
+In file         : input/Emx/part_coor.emx
+Out file        : tmpLink/xmipp_metadata_convert_22_emx_02/part_coor.xmd
+Conversion Type : coordinates
+Converting from emx to xmipp:

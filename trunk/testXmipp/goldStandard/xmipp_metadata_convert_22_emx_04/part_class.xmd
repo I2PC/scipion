@@ -1,0 +1,16 @@
+# XMIPP_STAR_1 * 
+# 
+# ########################################################################## 
+# # EMX Exchange file # # this metadata file has been imported from a 
+# EMX metadata file# Information on emx file format is available at # 
+# http://i2pc.cnb.csic.es/emx 
+# ########################################################################## 
+#  
+data_
+loop_
+ _image
+ _ref
+1@particle001.mrc          1 
+2@particle001.mrc          1 
+11@particle001.mrc          2 
+22@particle001.mrc          2 
