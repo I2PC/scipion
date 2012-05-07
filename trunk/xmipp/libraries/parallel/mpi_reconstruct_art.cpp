@@ -81,7 +81,7 @@ void ProgMPIReconsArt::run()
         comms_t = 0.0; // Initializes time
 
         show();
-        artRecons->preIterations(vol_basis, FULL, node->rank);
+        artRecons->preProcess(vol_basis, FULL, node->rank);
         if (verbose > 0)
         {
             std::cout << " ---------------------------------------------------------------------" << std::endl;
@@ -102,7 +102,7 @@ void ProgMPIReconsArt::run()
         FileName aux = artPrm.fn_root;
 
         artPrm.fn_root = artPrm.fn_root + integerToString(node->rank);
-        artRecons->preIterations(vol_basis, FULL, node->rank);
+        artRecons->preProcess(vol_basis, FULL, node->rank);
 
         // Restore original filename.
         artPrm.fn_root = aux;

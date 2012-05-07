@@ -34,7 +34,7 @@ void ARTReconsBase::readParams(XmippProgram * program)
     artPrm.readParams(program);
 }
 
-void ARTReconsBase::preIterations(GridVolume &vol_basis0, int level, int rank)
+void ARTReconsBase::preProcess(GridVolume &vol_basis0, int level, int rank)
 {
     artPrm.produceSideInfo(vol_basis0, level, rank);
 }
@@ -614,7 +614,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
 void ARTReconsBase::singleStep(GridVolume & vol_in, GridVolume *vol_out, Projection & theo_proj, Projection & read_proj, int sym_no, Projection & diff_proj, Projection & corr_proj, Projection & alig_proj, double & mean_error, int numIMG, double lambda, int act_proj, const FileName & fn_ctf, const MultidimArray<int> *maskPtr, bool refine)
 {}
 
-void ARTReconsBase::postIterations(GridVolume &vol_basis)
+void ARTReconsBase::postProcess(GridVolume &vol_basis)
 {}
 
 void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
@@ -806,9 +806,9 @@ void ARTReconsBase::applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int gr
 }
 
 
-void SinPartARTRecons::preIterations(GridVolume & vol_basis0, int level, int rank)
+void SinPartARTRecons::preProcess(GridVolume & vol_basis0, int level, int rank)
 {
-    ARTReconsBase::preIterations(vol_basis0, level, rank);
+    ARTReconsBase::preProcess(vol_basis0, level, rank);
 
     // As this is a threaded implementation, create structures for threads, and
     // create threads
@@ -1035,7 +1035,7 @@ void SinPartARTRecons::singleStep(GridVolume &vol_in, GridVolume *vol_out,
 }
 
 
-void SinPartARTRecons::postIterations(GridVolume & vol_basis)
+void SinPartARTRecons::postProcess(GridVolume & vol_basis)
 {
     // Destroy created threads. This is done in a tricky way. At this point, threads
     // are "slept" waiting for a barrier to be reached by the master thread to continue

@@ -101,7 +101,7 @@ public:
         The reconstructed volume size can be modified such that the unit cell
         mask fits.
     */
-    void produceSideInfo(GridVolume &vol_basis0);
+    void preProcess(GridVolume &vol_basis0);
 
     /** Run a single step of ART.
         An ART iteration is compound of as many steps as projections,
@@ -125,7 +125,7 @@ public:
 
     /* Finish ART iterations.
        Expand output volume to fill space if necessary. */
-    void postIterations(GridVolume &vol_basis);
+    void postProcess(GridVolume &vol_basis);
 
     /** Force the trial volume to be symmetric. */
     void applySymmetry(GridVolume &vol_in, GridVolume *vol_out,int grid_type);

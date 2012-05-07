@@ -72,7 +72,7 @@ public:
     virtual void print(std::ostream &o)const;
 
     /// Produce Plain side information from the Class parameters
-    virtual void preIterations(GridVolume &vol_basis0, int level = FULL, int rank = -1);
+    virtual void preProcess(GridVolume &vol_basis0, int level = FULL, int rank = -1);
 
     /** Run a single step of ART.
         An ART iteration is compound of as many steps as projections,
@@ -98,7 +98,7 @@ public:
     /** Finish iterations.
         For WLS: delete residual images
         Else: do nothing. */
-    virtual void postIterations(GridVolume &vol_basis);
+    virtual void postProcess(GridVolume &vol_basis);
 
     /** Force the trial volume to be symmetric. So far only implemented
         for crystals.*/
@@ -155,7 +155,7 @@ public:
     virtual ~SinPartARTRecons()
     {}
 
-    void preIterations(GridVolume &vol_basis0, int level = FULL, int rank = -1);
+    void preProcess(GridVolume &vol_basis0, int level = FULL, int rank = -1);
 
     virtual void singleStep(GridVolume &vol_in, GridVolume *vol_out,
                             Projection &theo_proj, Projection &read_proj,
@@ -165,7 +165,7 @@ public:
                             const FileName &fn_ctf, const MultidimArray<int> *maskPtr,
                             bool refine);
 
-    void postIterations(GridVolume &vol_basis);
+    void postProcess(GridVolume &vol_basis);
 }
 ;
 

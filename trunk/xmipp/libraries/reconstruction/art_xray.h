@@ -53,7 +53,7 @@ public:
     /** Read special parameters from command line. */
     void readParams(XmippProgram * proram);
 
-    void preIterations(GridVolume &vol_basis0, int level = FULL, int rank = -1);
+    void preProcess(GridVolume &vol_basis0, int level = FULL, int rank = -1);
 
     void print(std::ostream &o)const;
 

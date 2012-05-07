@@ -51,7 +51,7 @@ void XrayARTRecons::readParams(XmippProgram * program)
     //    psf.readParams(program);
 }
 
-void XrayARTRecons::preIterations(GridVolume &vol_basis0, int level, int rank)
+void XrayARTRecons::preProcess(GridVolume &vol_basis0, int level, int rank)
 {
     psf.calculateParams(artPrm.sampling*1.e-10); // sampling is read in angstrom
 
@@ -59,7 +59,7 @@ void XrayARTRecons::preIterations(GridVolume &vol_basis0, int level, int rank)
         artPrm.basis.VolPSF = new MultidimArray<double>;
     psf.PSFGen().getImage(*artPrm.basis.VolPSF);
 
-    SinPartARTRecons::preIterations(vol_basis0);
+    SinPartARTRecons::preProcess(vol_basis0);
 
     //TODO: If Start volume is not loaded, then vol_basis (our mu in x-ray) must be estimated
 }

@@ -173,7 +173,7 @@ void ProgReconsART::run()
 
     show();
     // Produce side information and initial volume
-    artRecons->preIterations(vol_basis);
+    artRecons->preProcess(vol_basis);
     if (verbose > 0)
     {
         std::cout << " ---------------------------------------------------------------------" << std::endl;
@@ -199,7 +199,7 @@ void ProgReconsART::run()
     gettimeofday(&start_time,NULL);
 
     // Finish iterations
-    artRecons->postIterations(vol_basis);
+    artRecons->postProcess(vol_basis);
 
     // Write final volume
     int Xoutput_volume_size=(artPrm.Xoutput_volume_size==0) ?
