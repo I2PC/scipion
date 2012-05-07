@@ -857,7 +857,7 @@ if int(env['arpack']):
 AddBatch('apropos', 'applications/scripts/apropos', '.py')
 AddBatch('import_ctfparam', 'applications/scripts/import_ctfparam', '.py')
 AddBatch('import_ctfdat', 'applications/scripts/import_ctfdat', '.py')
-AddBatch('metadata_convert_emx', 'applications/scripts/metadata_convert_emx', '.py')
+#AddBatch('metadata_convert_emx', 'applications/scripts/metadata_convert_emx', '.py')
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
 AddBatch('metadata_plot', 'applications/scripts/metadata_plot', '.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
