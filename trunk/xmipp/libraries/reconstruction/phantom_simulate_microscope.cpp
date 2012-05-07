@@ -92,10 +92,8 @@ void ProgSimulateMicroscope::defineParams()
     addParamsLine(" --noise <stddev> <w=0.5> : noise to be added, this noise is filtered at the frequency specified (<0.5).");
     addParamsLine("or --targetSNR <snr>      : the necessary noise power for a specified SNR is estimated");
     addParamsLine("or --noNoise              : do not add any noise, only simulate the CTF");
-    addParamsLine(" [--downsampling <D=1>]  : Downsampling factor of the input micrograph with respect to the CTF");
-    addParamsLine("                         :+The CTF downsampling rate is the one of the original images.");
-    addParamsLine("                         :+However, the micrograph that is the input of this program may have undergone a");
-    addParamsLine("                         :+downsamplig. This parameter informs of the downsampling applied.");
+    addParamsLine(" [--downsampling <D=1>]  : Downsampling factor of the input micrograph with respect to the original");
+    addParamsLine("                         : micrograph.");
     addExampleLine("Generate a set of images with the CTF applied without any noise", false);
     addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g1ta --ctf untilt_ARMAavg.ctfparam");
     addExampleLine("Generate a set of images with a target SNR", false);

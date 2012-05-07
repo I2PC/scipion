@@ -34,10 +34,8 @@ void ProgCTFPhaseFlipping::defineParams()
     addParamsLine(" -i <file>               : Input micrograph");
     addParamsLine(" -o <file>               : Output micrograph");
     addParamsLine(" --ctf <ctfparam_file>   : CTF description");
-    addParamsLine(" [--downsampling <D=1>]  : Downsampling factor of the input micrograph with respect to the CTF");
-    addParamsLine("                         :+The CTF downsampling rate is the one of the original images.");
-    addParamsLine("                         :+However, the micrograph that is the input of this program may have undergone a");
-    addParamsLine("                         :+downsamplig. This parameter informs of the downsampling applied.");
+    addParamsLine(" [--downsampling <D=1>]  : Downsampling factor of the input micrograph with respect to the original");
+    addParamsLine("                         : micrograph.");
 }
 
 void ProgCTFPhaseFlipping::readParams()
