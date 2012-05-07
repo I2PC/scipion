@@ -123,9 +123,10 @@ class MDValueGenerator;
  */
 typedef struct
 {
-  char * begin;
-  size_t size;
-} mdBuffer;
+    char * begin;
+    size_t size;
+}
+mdBuffer;
 
 /// Some macros to use the buffer
 #define BUFFER_CREATE(b) mdBuffer b; b.begin = NULL; b.size = 0
@@ -135,11 +136,12 @@ typedef struct
 
 typedef struct
 {
-  char * begin; //Position of _dataXXX on buffer
-  size_t nameSize; //Number of charater of block name, counting after _data
-  char * end; //Position just before next _dataXXX or end of buffer
-  char * loop; //Position of _loop if exists, NULL otherwise
-}mdBlock;
+    char * begin; //Position of _dataXXX on buffer
+    size_t nameSize; //Number of charater of block name, counting after _data
+    char * end; //Position just before next _dataXXX or end of buffer
+    char * loop; //Position of _loop if exists, NULL otherwise
+}
+mdBlock;
 /// Some macros to use the block pointers
 #define BLOCK_CREATE(b) mdBlock b; b.begin = b.end = b.loop = NULL; b.nameSize = 0
 #define BLOCK_INIT(b) b.begin = b.end = b.loop = NULL; b.nameSize = 0
@@ -199,7 +201,7 @@ protected:
     String path; ///< A parameter stored on MetaData Files
     String comment; ///< A general comment for the MetaData file
     ///comment is wraped in char_max lenght lines
-	#define line_max 70
+#define line_max 70
 
     bool _isColumnFormat; ///< Format for the file, column or row formatted
     int precision;
@@ -493,6 +495,16 @@ public:
         mdValueOut.getValue(valueOut);
         return true;
     }
+    template<class T>
+    bool getValueDefault(const MDLabel label, T &valueOut, size_t id, T &_default) const
+    {
+        MDObject mdValueOut(label);
+        if (!getValue(mdValueOut, id))
+            valueOut = _default;
+        else
+            mdValueOut.getValue(valueOut);
+        return true;
+    }
 
     /** Get all values of a column as a vector.
      */
@@ -523,20 +535,20 @@ public:
     template<class T>
     void setColumnValues(const MDLabel label, const std::vector<T> &valuesIn)
     {
-    	bool addObjects=false;
-    	if (size()==0)
-    		addObjects=true;
+        bool addObjects=false;
+        if (size()==0)
+            addObjects=true;
         if (valuesIn.size()!=size() && !addObjects)
             REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Input vector must be of the same size as the metadata");
         size_t n=0;
         if (!addObjects)
-        	FOR_ALL_OBJECTS_IN_METADATA(*this)
-        	setValue(label,valuesIn[n++],__iter.objId);
+            FOR_ALL_OBJECTS_IN_METADATA(*this)
+            setValue(label,valuesIn[n++],__iter.objId);
         else
         {
-        	size_t nmax=valuesIn.size();
-        	for (size_t n=0; n<nmax; ++n)
-        		setValue(label,valuesIn[n],addObject());
+            size_t nmax=valuesIn.size();
+            for (size_t n=0; n<nmax; ++n)
+                setValue(label,valuesIn[n],addObject());
         }
     }
 
@@ -717,9 +729,9 @@ public:
     /** Read data from file.
      */
     void _read(const FileName &inFile,
-    		const std::vector<MDLabel> *desiredLabels = NULL,
-    		const String & blockName="",
-    		bool decomposeStack=true);
+               const std::vector<MDLabel> *desiredLabels = NULL,
+               const String & blockName="",
+               bool decomposeStack=true);
     /** Read data from file. Guess the blockname from the filename
      * @code
      * inFilename="first@md1.doc" -> filename = md1.doc, blockname = first
@@ -769,10 +781,10 @@ public:
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
                    const std::vector<MDLabel> &operateLabels, const std::vector<MDLabel> &resultLabels);
     void aggregateGroupBy(const MetaData &mdIn,
-                             AggregateOperation op,
-                             const std::vector<MDLabel> &groupByLabels,
-                             MDLabel operateLabel,
-                             MDLabel resultLabel);
+                          AggregateOperation op,
+                          const std::vector<MDLabel> &groupByLabels,
+                          MDLabel operateLabel,
+                          MDLabel resultLabel);
     /** This function performs aggregation operations.
         without grouping. (i.e. absolute maximum of a metadata column)
         for double
@@ -784,13 +796,13 @@ public:
         for int
      */
     void aggregateSingleInt(MDObject &mdValueOut, AggregateOperation op,
-                                   MDLabel aggregateLabel);
+                            MDLabel aggregateLabel);
     /** This function performs aggregation operations.
         without grouping. (i.e. absolute maximum of a metadata column)
         for size_t
      */
     void aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
-                                   MDLabel aggregateLabel);
+                              MDLabel aggregateLabel);
 
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object
