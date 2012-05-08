@@ -1,5 +1,0 @@
-Input File: input/singleImage.spi
-Applying transformation stored in header of 2D-image
-Output File: tmpLink/xmipp_transform_window_03/image.xmp
-New window: from (z0,y0,x0)=(0,0,0) to (zF,yF,xF)=(0,31,31)
-Physical: 1

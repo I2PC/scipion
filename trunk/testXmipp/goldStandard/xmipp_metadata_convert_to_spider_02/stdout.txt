@@ -1,4 +1,0 @@
-Input Selfile  = input/smallStack.stk
-Output Selfile = tmpLink/xmipp_metadata_convert_to_spider_02/listOld.doc
-Action         = extract_selfile
-New style      = 0

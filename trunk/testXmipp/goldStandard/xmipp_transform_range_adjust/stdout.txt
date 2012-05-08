@@ -1,5 +1,0 @@
-Input File: input/singleImage.spi
-Output File: tmpLink/xmipp_transform_range_adjust/image.xmp
-Min:   -100
-Max:   100
-Noise: 0

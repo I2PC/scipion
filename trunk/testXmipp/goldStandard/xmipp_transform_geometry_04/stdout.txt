@@ -1,2 +1,0 @@
-Input File: input/header.doc
-Output Root: tmpLink/xmipp_transform_geometry_04/halvedFourierDim

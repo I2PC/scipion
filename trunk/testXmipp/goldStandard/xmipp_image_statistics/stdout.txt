@@ -1,8 +1,0 @@
- Statistics of input/smallStack.stk
-000001@input/smallStack.stk min= -0.415921 max=  0.637052 avg= -0.000360 stddev=  0.105687
-000002@input/smallStack.stk min= -0.406276 max=  0.590629 avg= -0.000294 stddev=  0.103291
-000003@input/smallStack.stk min= -0.470336 max=  0.545304 avg= -0.001044 stddev=  0.104381
-000004@input/smallStack.stk min= -0.486693 max=  0.729848 avg= -0.000253 stddev=  0.107409
-==================================================
-Total number of images/volumes: 4
-                                        min= -0.444807 max=  0.625708 avg= -0.000488 stddev=  0.105192

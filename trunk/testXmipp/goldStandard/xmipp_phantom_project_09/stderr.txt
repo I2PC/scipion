@@ -1,3 +1,0 @@
-[1;31mXMIPP_ERROR 17:  File or directory does not exists[0m
-[1;31m[1;31mProg_Project_Parameters::read: file Crystal/angles.doc doesn't exist[0m[0m
-[1;31mFile: libraries/reconstruction/project.cpp line: 170[0m

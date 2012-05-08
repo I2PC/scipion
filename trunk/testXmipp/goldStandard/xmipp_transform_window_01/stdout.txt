@@ -1,4 +1,0 @@
-Input File: input/singleImage.spi
-Applying transformation stored in header of 2D-image
-Output File: tmpLink/xmipp_transform_window_01/image.xmp
-New size: (XxYxZ)=32x32x32

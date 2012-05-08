@@ -1,4 +1,0 @@
- Saved CTF parameter file tmpLink/xmipp_ctf_create_ctfdat_02/output000001.ctfparam for micrograph number 1
- Saved CTF parameter file tmpLink/xmipp_ctf_create_ctfdat_02/output000002.ctfparam for micrograph number 2
- Saved CTFdat file as tmpLink/xmipp_ctf_create_ctfdat_02/output.ctfdat
- Done! 

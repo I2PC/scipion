@@ -1,8 +1,0 @@
-PDB file:           input/1o7d.pdb
-Sampling rate:      1
-High sampling rate: 0.0833333
-Size:               -1
-Center PDB:         0
-Use blobs:          0
-Use poor Gaussian:  0
-Use fixed Gaussian: 0

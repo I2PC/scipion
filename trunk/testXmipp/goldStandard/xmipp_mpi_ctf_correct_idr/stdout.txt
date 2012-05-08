@@ -1,4 +1,0 @@
-Input File: input/projectionsBacteriorhodopsinWithCTF.sel
-Output File: tmpLink/xmipp_mpi_ctf_correct_idr/idr.stk
-Input volume: input/phantomBacteriorhodopsin.vol
-Relaxation factor: 1.8

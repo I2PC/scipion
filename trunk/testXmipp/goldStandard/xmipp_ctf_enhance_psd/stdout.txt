@@ -1,7 +1,0 @@
-Input File: input/down1_01nov26b.001.001.001.002_Periodogramavg.psd
-Output File: tmpLink/xmipp_ctf_enhance_psd/enhanced_psd.xmp
-Filter w1:    0.05
-Filter w2:    0.2
-Filter decay: 0.02
-Mask w1:      0.025
-Mask w2:      0.3

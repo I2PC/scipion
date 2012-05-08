@@ -1,8 +1,0 @@
-Input File: input/aFewProjections.sel
-Reference volume:    input/phantomBacteriorhodopsin.vol
-Gaussian Fourier:    0.5
-Gaussian Real:       0.5
-Zero-frequency weight:0
-Max. Iter:           60
-Max. Shift:          -1
-Max. Angular Change: -1

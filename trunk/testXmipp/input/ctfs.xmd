@@ -1,7 +1,0 @@
-# XMIPP_STAR_1 * 
-# 
-data_
-loop_
- _CTFModel
- input.ctfparam 
- input2.ctfparam 

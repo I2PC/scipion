@@ -1,4 +1,0 @@
-In file         : input/Emx/micrograph_ctf.emx
-Out file        : tmpLink/xmipp_metadata_convert_22_emx_06/micrograph_ctf.xmd
-Conversion Type : ctfMicrograph
-Converting from emx to xmipp:

@@ -1,2 +1,0 @@
-Global angular distance = 6.72453
-Global shift   distance = 0

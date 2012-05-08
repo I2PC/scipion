@@ -1,8 +1,0 @@
-# XMIPP_STAR_1 * 
-# 
-data_
-loop_
- _angleRot
- _angleTilt
- _anglePsi
- 0.00000    0.00000    0.00000

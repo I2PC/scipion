@@ -1,3 +1,0 @@
-Fit within resolutions: 15 - 10 Angstrom
- Fitted slope= -218.291 intercept= -6.63791
-Applying B-factor of -873.165 squared Angstroms

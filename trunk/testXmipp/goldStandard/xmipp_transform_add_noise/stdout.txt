@@ -1,4 +1,0 @@
-Input File: input/cleanImage.spi
-Output File: tmpLink/xmipp_transform_add_noise/noisyGaussian.spi
-Noise avg=5
-Noise stddev=10

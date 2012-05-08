@@ -1,9 +1,0 @@
-Images to go=8 current correlation= 0.995024
-Images to go=7 current correlation= 0.961661
-Images to go=6 current correlation= 0.978452
-Images to go=5 current correlation= 0.95871
-Images to go=4 current correlation= 0.975113
-Images to go=3 current correlation= 0.965473
-Images to go=2 current correlation= 0.97268
-Images to go=1 current correlation= 0.942947
-Images to go=0 current correlation= 0.96816

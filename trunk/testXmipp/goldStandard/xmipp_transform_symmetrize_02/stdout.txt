@@ -1,5 +1,0 @@
-Input File: input/phantomBacteriorhodopsin.vol
-Output File: tmpLink/xmipp_transform_symmetrize_02/symmetrizedVolume.vol
-Symmetry: C5
-No group: 0
-Wrap:     1

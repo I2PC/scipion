@@ -1,7 +1,0 @@
-Input File: input/projectionsBacteriorhodopsin.stk
-Output File: tmpLink/xmipp_phantom_simulate_microscope_01/smallStackPlusCtf.stk
-CTF file: 
-Noise: 0
-Low pass freq: 0.5
-After CTF noise: 0
-Defocus change: 0

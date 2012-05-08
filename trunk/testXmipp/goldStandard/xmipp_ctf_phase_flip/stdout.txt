@@ -1,3 +1,0 @@
-input_micrograph:      input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc
-output_micrograph:     tmpLink/xmipp_ctf_phase_flip/micrographFlipped.mrc
-ctf_param_file:        input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc.ctfparam

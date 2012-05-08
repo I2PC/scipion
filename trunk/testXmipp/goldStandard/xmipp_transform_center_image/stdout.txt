@@ -1,4 +1,0 @@
-Input File: input/smallStack.stk
-Output File: tmpLink/xmipp_transform_center_image/smallStackCentered.stk
-iterations = 10
-limit shift = 0

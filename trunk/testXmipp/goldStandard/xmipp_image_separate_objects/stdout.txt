@@ -1,2 +1,0 @@
-Volume number 1 contains 224449 voxels set to 1
-Volume number 2 contains 37695 voxels set to 1

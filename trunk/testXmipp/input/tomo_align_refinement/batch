@@ -1,1 +1,0 @@
-xmipp_angular_assign_for_tomogram --ref BBa.st.tifART_ite5_rel0.10.vol --sel BBa_ali_sorted.sel --oroot refined --max_tilt_change 1 --max_rot_change 2 --tilt_step 0.25 --rot_step 0.5 --adjustGray

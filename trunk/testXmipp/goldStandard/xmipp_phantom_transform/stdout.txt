@@ -1,3 +1,0 @@
-Input file : input/1o7d.pdb
-Output file: tmpLink/xmipp_phantom_transform/shifted.pdb
-Input file is PDB

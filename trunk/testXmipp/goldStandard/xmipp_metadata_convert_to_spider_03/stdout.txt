@@ -1,4 +1,0 @@
-Input Selfile  = input/smallStack.stk
-Output Selfile = tmpLink/xmipp_metadata_convert_to_spider_03/angles.doc
-Action         = extract_angles
-Angle order    = rot psi tilt

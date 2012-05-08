@@ -1,2 +1,0 @@
-Input File: input/singleImage.spi
-Output File: tmpLink/xmipp_image_convert_03/singleImage.raw

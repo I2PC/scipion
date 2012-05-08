@@ -1,3 +1,0 @@
-[1;31mXMIPP_ERROR 2:  Incorrect argument received[0m
-[1;31m[1;31mFileName::isMetaData: Empty string is not a MetaData[0m[0m
-[1;31mFile: libraries/data/xmipp_filename.cpp line: 456[0m

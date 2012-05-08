@@ -1,8 +1,0 @@
-# XMIPP_STAR_1 * 
-# 
-data_
-loop_
- _angleRot
- _angleTilt
- _direction
-    0.000000     0.000000 [     0.000000     0.000000     1.000000 ] 

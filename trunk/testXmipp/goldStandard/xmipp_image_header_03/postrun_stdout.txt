@@ -1,3 +1,0 @@
-Extracting image(s) geometrical transformations from header to metadata...
-Input: tmpLink/xmipp_image_header_03/images.xmd
-Output: tmpLink/xmipp_image_header_03/outputHeader.xmd

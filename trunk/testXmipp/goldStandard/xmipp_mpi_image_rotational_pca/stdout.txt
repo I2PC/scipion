@@ -1,8 +1,0 @@
-Input:               input/smallStack.stk
-Output root:         tmpLink/xmipp_mpi_image_rotational_pca/invariant
-Number eigenvectors: 200
-Number iterations:   2
-Psi step:            1
-Max shift change:    0 step: 1
-Max images:          -1
-Number of threads:   1

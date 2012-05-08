@@ -1,6 +1,0 @@
-# XMIPP_STAR_1 * 
-# Defocus values to split into 2 ctf groups
-data_
-loop_
- _CTF_Defocus_A
--15000.000000 

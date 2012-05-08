@@ -1,5 +1,0 @@
-Input File: input/phantomBacteriorhodopsin.vol
-Output File: tmpLink/xmipp_transform_threshold/mask.vol
-Selection method:    below
-Threshold:           0.01
-Substitution method: binarize

@@ -1,5 +1,0 @@
-Error at iteration 0 = 0.183497
-Error at iteration 1 = 0.058349
-Error at iteration 2 = 0.0568499
-Error at iteration 3 = 0.0565767
-Error at iteration 4 = 0.0564313

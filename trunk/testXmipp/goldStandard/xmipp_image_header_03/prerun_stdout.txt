@@ -1,3 +1,0 @@
-Input File: input/smallStack.stk
-Output File: tmpLink/xmipp_image_header_03/images.xmd
-Output Root: tmpLink/xmipp_image_header_03/smallImages:spi

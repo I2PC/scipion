@@ -1,6 +1,0 @@
-Selfile                      : input/randomAngularDistribution.sel
-Neighbourhoods docfile       : input/aFewProjections.sel
-Output root                  : tmpLink/xmipp_angular_neighbourhood/neighborhood.sel
-Max. neighbour distance      : 10
-Symmetry file                : 
-Calculating ...

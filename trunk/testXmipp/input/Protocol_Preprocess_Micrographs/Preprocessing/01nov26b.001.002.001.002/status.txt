@@ -1,6 +1,0 @@
-Process started at Wed Mar 30 10:03:00 2011
-Step 0: Directory created at Wed Mar 30 10:03:00 2011
-Step 1: Preprocessed image created  Wed Mar 30 10:03:01 CEST 2011
-Step 2: CTF estimated with Xmipp  Wed Mar 30 10:13:50 CEST 2011
-Step 3: CTF estimated with CTFFind Wed Mar 30 10:47:08 2011
-Step F: Finished on Wed Mar 30 10:47:08 2011

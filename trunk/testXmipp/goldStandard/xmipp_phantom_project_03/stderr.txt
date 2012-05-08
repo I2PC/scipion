@@ -1,3 +1,0 @@
-[1;31mXMIPP_ERROR 20:  Couldn't read from file[0m
-[1;31m[1;31mrwSPIDER: cannot read Spider main header from file input/uniformProjection.param. Error message: Success[0m[0m
-[1;31mFile: libraries/data/rwSPIDER.cpp line: 150[0m

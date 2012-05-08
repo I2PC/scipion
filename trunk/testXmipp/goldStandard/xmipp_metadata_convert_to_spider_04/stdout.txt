@@ -1,3 +1,0 @@
-Input Selfile  = input/smallStack.stk
-Output Selfile = tmpLink/xmipp_metadata_convert_to_spider_04/count.doc
-Action         = generate_count

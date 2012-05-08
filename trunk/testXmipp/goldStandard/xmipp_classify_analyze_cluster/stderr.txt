@@ -1,10 +1,0 @@
-Input metadata file:    input/smallStack.stk
-Reference:              1@input/smallStack.stk
-Output metadata:        tmpLink/xmipp_classify_analyze_cluster/pca.xmd
-Output basis stack:     
-PCA dimension:          2
-Iterations:             10
-Maximum distance:       3
-Don't mask:             0
-Processing cluster ...
-0000/???? sec. ------------------------------------------------------------   1/   1 sec. ............................................................

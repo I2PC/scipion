@@ -1,2 +1,0 @@
-Input File: input/micrograph8bits.tif
-Output File: tmpLink/xmipp_transform_downsample_02/downsampledSmooth.mrc

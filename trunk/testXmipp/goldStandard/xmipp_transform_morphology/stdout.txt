@@ -1,7 +1,0 @@
-Performing a Dilation
-Size=1
-Neighbourhood2D=8
-Neighbourhood3D=18
-Count=0
-Initially the image has 37695 pixels set to 1
-Finally the image has 48796 pixels set to 1

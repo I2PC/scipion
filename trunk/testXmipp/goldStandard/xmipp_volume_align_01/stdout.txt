@@ -1,7 +1,0 @@
-The best correlation is for
-Scale                  : 1
-Translation (X,Y,Z)    : 0 0 0
-Rotation (rot,tilt,psi): 90 0 0
-Best grey scale       : 1
-Best grey shift       : 0
-Fitness value         : -0.997081

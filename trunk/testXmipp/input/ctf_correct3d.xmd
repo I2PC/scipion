@@ -1,8 +1,0 @@
-# XMIPP_STAR_1 * 
-# 
-data_
-loop_
- _image
- _CTFModel
- _class_count
- input/phantomBacteriorhodopsinWithCTF.vol input/input.ctfparam 181

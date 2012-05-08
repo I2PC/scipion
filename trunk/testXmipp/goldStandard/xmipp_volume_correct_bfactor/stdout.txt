@@ -1,4 +1,0 @@
-Input File: input/1FFKfull_reconstructed.vol
-Pixel size : 1 Angstrom
-Maximum resolution: 10 Angstrom
-Use automated B-factor fit (Rosenthal and Henderson, 2003) 

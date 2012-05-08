@@ -1,2 +1,0 @@
-Input File: input/smallStack.stk
-Output File: tmpLink/xmipp_image_convert_01/smallStack.mrcs
