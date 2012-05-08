@@ -57,7 +57,7 @@ sampling them at a finer rate.
 HighResolCutoff = 0.35
 
 # {expert} Fast defocus estimate
-FastDefocus = True
+FastDefocus = False
 
 # {expert} Minimum defocus to search (in microns)
 """ Minimum defocus value (in microns) to include in defocus search. 

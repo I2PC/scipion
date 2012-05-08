@@ -2347,6 +2347,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
+
     if (global_prm->show_optimization)
         std::cout << "Looking for first defoci ...\n";
 
