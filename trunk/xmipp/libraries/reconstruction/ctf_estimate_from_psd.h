@@ -60,10 +60,6 @@ public:
     double               lambdaPhase;
     /// Size of the average window used during phase direction and unwrapping estimates (used in Zernike estimate)
     int                  sizeWindowPhase;
-    //fringe frequency average used in fringe_processing
-    double R;
-    //variance of a fringe frequency filter used in fringe_processing
-    double S;
     /// Minimum frequency to adjust
     double               min_freq;
     /// Maximum frequency to adjust

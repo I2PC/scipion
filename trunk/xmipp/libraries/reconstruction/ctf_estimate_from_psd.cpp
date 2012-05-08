@@ -483,8 +483,6 @@ void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program)
     {
         lambdaPhase=program->getDoubleParam("--fastDefocus",0);
         sizeWindowPhase=program->getIntParam("--fastDefocus",1);
-        R = program->getIntParam("--fastDefocus",2);
-        S = program->getIntParam("--fastDefocus",3);
     }
     ctfmodelSize = program->getIntParam("--ctfmodelSize");
     enhanced_weight = program->getDoubleParam("--enhance_weight");
@@ -566,7 +564,7 @@ void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
     program->addParamsLine(
         "                                : It should be higher than the last zero of the CTF.");
     program->addParamsLine(
-        "   [--fastDefocus <lambda=1> <size=5> <R=10> <S=3>] : Estimate first defocus with Zernike polynomials");
+        "   [--fastDefocus <lambda=2> <size=10>] : Estimate first defocus with Zernike polynomials");
     program->addParamsLine(
         "                                :+Lambda is a regularization factor used during the estimation of the CTF phase");
     program->addParamsLine(
@@ -2346,7 +2344,7 @@ void estimate_defoci()
 
 // Estimate defoci with Zernike and SPTH transform---------------------------------------------
 void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double min_freq, double max_freq, double Tm,
-                             double kV, double R, double S, double lambdaPhase, double sizeWindowPhase,
+                             double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
     if (global_prm->show_optimization)
@@ -2404,7 +2402,6 @@ void estimate_defoci_Zernike()
     estimate_defoci_Zernike(global_prm->enhanced_ctftomodel_fullsize(),
                        global_prm->min_freq,global_prm->max_freq,global_prm->Tm,
                        global_prm->initial_ctfmodel.kV,
-                       global_prm->R,global_prm->S,
                        global_prm->lambdaPhase,global_prm->sizeWindowPhase,
                        defocusU, defocusV, angle, 0);
 
