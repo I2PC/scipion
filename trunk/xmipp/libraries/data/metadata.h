@@ -496,14 +496,17 @@ public:
         return true;
     }
     template<class T>
-    bool getValueDefault(const MDLabel label, T &valueOut, size_t id, T &_default) const
+    void getValueOrAbort(const MDLabel label, T &valueOut, size_t id) const
     {
-        MDObject mdValueOut(label);
-        if (!getValue(mdValueOut, id))
-            valueOut = _default;
-        else
-            mdValueOut.getValue(valueOut);
-        return true;
+        if (!getValue(label, valueOut,id))
+        	REPORT_ERROR(ERR_ARG_MISSING,(String)"Cannot find label: " + MDL::label2Str(label));
+    }
+
+    template <typename T, typename T1>
+    void getValueOrDefault(const MDLabel label, T &valueOut, size_t id, const T1 &_default) const
+    {
+        if (!getValue(label, valueOut,id))
+        	valueOut = (T) _default;
     }
 
     /** Get all values of a column as a vector.
