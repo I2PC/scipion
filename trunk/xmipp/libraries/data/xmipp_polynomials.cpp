@@ -122,8 +122,8 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
             //polValue = [ 0    y   y2    y3   ...
             //             x   xy  xy2    xy3  ...
             //             x2  x2y x2y2   x2y3 ]
-
             //dMij(polValue,py,px) py es fila, px es columna
+
             for (int py = 0; py < polOrder; ++py)
             {
                 double ypy=std::pow(y,py);
@@ -187,8 +187,6 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
         Image<double> save;
         save()=reconstructed;
         save.write("rectonstructedZernikes.xmp");
-        //zerMat.write("PPP2.txt");
-        //pseudoInverter.b.write("PPP3.txt");
     }
 }
 
