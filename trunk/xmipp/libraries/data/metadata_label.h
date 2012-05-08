@@ -163,7 +163,30 @@ enum MDLabel
     MDL_EMX_PARTICLE_CLASS_ID,///class string
     MDL_EMX_PARTICLE_COORDINATE_X,  /// <particle coordinate X in micrograph (float)
     MDL_EMX_PARTICLE_COORDINATE_Y,  /// <particle coordinate Y in micrograph (float)
+    MDL_EMX_PARTICLE_ENABLED, // <particle enable bool
+    MDL_EMX_PARTICLE_FOM, // <particle fom (float)
     MDL_EMX_PARTICLE_URL,     /// <particle name (string)
+
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,     ///element 1_1 (x,y) of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,     ///element 2_1 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,     ///element 3_1 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1,     ///element 4_1 of transformation matrix (float)
+
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2,     ///element 1_2 (x,y) of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2,     ///element 2_2 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2,     ///element 3_2 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2,     ///element 4_2 of transformation matrix (float)
+
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3,     ///element 1_3 (x,y) of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3,     ///element 2_3 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,     ///element 3_3 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,     ///element 4_3 of transformation matrix (float)
+
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,     ///element 1_4 (x,y) of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,     ///element 2_4 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,     ///element 3_4 of transformation matrix (float)
+    MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4,     ///element 4_4 of transformation matrix (float)
+
     //End of labels
 
     MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
@@ -511,6 +534,19 @@ public:
         return true;
     }
     /** Get value */
+    //    template <typename T >
+    //    void getValueOrAbort(MDLabel label, T &d) const
+    //    {
+    //        if (!getValue(label, d))
+    //         REPORT_ERROR(ERR_ARG_MISSING,(String)"Cannot find label: " + MDL::label2Str(label) );
+    //        //formatString("%d",label) );
+    //    }
+    //weite function as macro since MDL::label2Str is not availale at class compilation time
+#define rowGetValueOrAbort(__row,__label, __d)\
+        if (!__row.getValue(__label, __d))\
+         REPORT_ERROR(ERR_ARG_MISSING,(String)"Cannot find label: " + MDL::label2Str(__label) );
+
+    /** Get value */
     template <typename T, typename T1>
     void getValueOrDefault(MDLabel label, T &d, T1 def) const
     {
@@ -734,7 +770,30 @@ private:
         MDL::addLabel(MDL_EMX_PARTICLE_CLASS_ID, LABEL_STRING, "emx_particle____class_id");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y");
+        MDL::addLabel(MDL_EMX_PARTICLE_ENABLED, LABEL_BOOL, "emx_particle____enable");
+        MDL::addLabel(MDL_EMX_PARTICLE_FOM, LABEL_DOUBLE, "emx_particle____fom");
+
         MDL::addLabel(MDL_EMX_PARTICLE_URL,    LABEL_STRING, "emx_particle____url", TAGLABEL_NOTAG,"emx_particle.url");
+
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1, LABEL_DOUBLE, "emx_particle_transformation_matrix_1_1");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1, LABEL_DOUBLE, "emx_particle_transformation_matrix_2_1");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1, LABEL_DOUBLE, "emx_particle_transformation_matrix_3_1");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1, LABEL_DOUBLE, "transformation_matrix_offset_x");
+
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2, LABEL_DOUBLE, "emx_particle_transformation_matrix_1_2");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2, LABEL_DOUBLE, "emx_particle_transformation_matrix_2_2");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2, LABEL_DOUBLE, "emx_particle_transformation_matrix_3_2");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2, LABEL_DOUBLE, "transformation_matrix_offset_y");
+
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3, LABEL_DOUBLE, "emx_particle_transformation_matrix_1_3");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3, LABEL_DOUBLE, "emx_particle_transformation_matrix_2_3");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3, LABEL_DOUBLE, "emx_particle_transformation_matrix_3_3");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3, LABEL_DOUBLE, "transformation_matrix_offset_z");
+
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4, LABEL_DOUBLE, "emx_particle_transformation_matrix_1_4");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4, LABEL_DOUBLE, "emx_particle_transformation_matrix_2_4");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4, LABEL_DOUBLE, "emx_particle_transformation_matrix_3_4");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4, LABEL_DOUBLE, "emx_particle_transformation_matrix_4_4");
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", TAGLABEL_NOTAG, "Flip");
