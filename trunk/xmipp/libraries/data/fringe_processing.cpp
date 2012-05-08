@@ -306,12 +306,12 @@ void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<dou
 
     double rang = (rmax-rmin)/2;
     //Inside rang we assume that there will a range of fringes per field from 2 to 10.
-    double freq1 = XSIZE(im)/(rang/2);
-    double freq2 = XSIZE(im)/(rang/10);
+    double freq2 = XSIZE(im)/(rang/2);
+    double freq1 = XSIZE(im)/(rang/10);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-        temp= (1/(1+std::exp(((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-freq1),2)/(2))))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(freq1*freq1/2))));
+        temp= (1/(1+std::exp(((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-freq1),2)/(5))))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(freq2*freq2/2))));
         tempCpx = std::complex<double>(temp,temp);
         A2D_ELEM(H,i,j) = tempCpx;
     }
@@ -643,12 +643,12 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
 
     /*orMinDer(In, orMap, orModMap, size, ROI);
     if (verbose == 2)
-    {
+{
         save()=orMap;
         save.write("PPP21.xmp");
         save()=orModMap;
         save.write("PPP22.xmp");
-    }
+}
     */
 
     //We obtain the direction from the orientation map
@@ -668,6 +668,10 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     std::complex<double> ci = std::complex<double>(0,1.0);
     std::complex<double> temp;
 
+    //tempTheta is the Theta coordinate in polar. This is because we want to subtract in ROI the crux of the CTF
+    double tempTheta=0;
+    //val is a number that establish the quantity we want to subtract in the phase to avoid the crux
+    double val = 0.1;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(im)
     {
         if (A2D_ELEM(ROI,i,j))
@@ -676,6 +680,17 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
             A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
             A2D_ELEM(orModMap,i,j) = std::sqrt( temp.real()*temp.real() + A2D_ELEM(In,i,j)*A2D_ELEM(In,i,j));
 
+            tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
+
+            if (  !(((tempTheta > val) | (tempTheta < -val)) && !((tempTheta > PI-val) || (tempTheta < -PI+val)) &&
+            		!( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))   ))
+            {
+            	A2D_ELEM(ROI,i,j) = false;
+            }
+        }
+        else
+        {
+            A2D_ELEM(orModMap,i,j) = 0;
         }
     }
 
@@ -704,14 +719,17 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
 
     for (int i=0; i<VEC_XSIZE(coeffs); i++)
     {
-    	if ( VEC_ELEM(coeffs,i) != 0)
-    		VEC_ELEM(coeffs,i) = VEC_ELEM(polynom.fittedCoeffs,i);
-    	else
-    		VEC_ELEM(coeffs,i) = 0;
+        if ( VEC_ELEM(coeffs,i) != 0)
+            VEC_ELEM(coeffs,i) = VEC_ELEM(polynom.fittedCoeffs,i);
+        else
+            VEC_ELEM(coeffs,i) = 0;
     }
 
+    Image<bool> save2;
     if (verbose > 5)
     {
+        save()=im;
+        save.write("PPP0.xmp");
         save()=In;
         save.write("PPP1.xmp");
         save()=orMap;
@@ -726,6 +744,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
         save.write("PPP5.xmp");
         save()=mod;
         save.write("PPP6.xmp");
+        save2()= ROI;
+        save2.write("PPP7.xmp");
     }
 }
 
