@@ -73,20 +73,22 @@ class ProtScreenMicrographs(XmippProtocol):
                 finalname = inputFile
             
             # CTF estimation with Xmipp
-            self.insertParallelRunJobStep('xmipp_ctf_estimate_from_micrograph',
-                                     "--micrograph "+finalname+\
-                                     " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
-                                     " --kV "+str(Voltage)+\
-                                     " --Cs "+str(SphericalAberration)+\
-                                     " --sampling_rate "+str(AngPix*self.DownsampleFactor)+\
-                                     " --downSamplingPerformed "+str(self.DownsampleFactor)+\
-                                     " --ctfmodelSize 256"+\
-                                     " --Q0 "+str(self.AmplitudeContrast)+\
-                                     " --min_freq "+str(self.LowResolCutoff)+\
-                                     " --max_freq "+str(self.HighResolCutoff)+\
-                                     " --pieceDim "+str(self.WinSize)+\
-                                     " --defocus_range "+str((self.MaxFocus-self.MinFocus)*10000/2)+\
-                                     " --defocusU "+str((self.MaxFocus+self.MinFocus)*10000/2),
+            args="--micrograph "+finalname+\
+                 " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
+                 " --kV "+str(Voltage)+\
+                 " --Cs "+str(SphericalAberration)+\
+                 " --sampling_rate "+str(AngPix*self.DownsampleFactor)+\
+                 " --downSamplingPerformed "+str(self.DownsampleFactor)+\
+                 " --ctfmodelSize 256"+\
+                 " --Q0 "+str(self.AmplitudeContrast)+\
+                 " --min_freq "+str(self.LowResolCutoff)+\
+                 " --max_freq "+str(self.HighResolCutoff)+\
+                 " --pieceDim "+str(self.WinSize)+\
+                 " --defocus_range "+str((self.MaxFocus-self.MinFocus)*10000/2)+\
+                 " --defocusU "+str((self.MaxFocus+self.MinFocus)*10000/2)
+            if (self.FastDefocus):
+                args+=" --fastDefocus"
+            self.insertParallelRunJobStep('xmipp_ctf_estimate_from_micrograph', args,
                                      verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],parent_step_id=parent_id)
 
             # CTF estimation with Ctffind
