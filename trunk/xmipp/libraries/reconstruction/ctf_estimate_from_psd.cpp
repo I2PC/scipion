@@ -2391,6 +2391,9 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
     defocusU=deFocusAvg+deFocusDiff;
     defocusV=deFocusAvg-deFocusDiff;
+
+    std::cout << "defocusU="<< defocusU << std::endl;
+    std::cout << "defocusV="<< defocusV << std::endl;
 }
 
 void estimate_defoci_Zernike()
@@ -2403,7 +2406,7 @@ void estimate_defoci_Zernike()
                        global_prm->min_freq,global_prm->max_freq,global_prm->Tm,
                        global_prm->initial_ctfmodel.kV,
                        global_prm->lambdaPhase,global_prm->sizeWindowPhase,
-                       defocusU, defocusV, angle, 0);
+                       defocusU, defocusV, angle, 6);
 
     (*global_adjust)(0) = defocusU;
     (*global_adjust)(1) = defocusV;
