@@ -105,7 +105,7 @@ class XmippProject():
         with open(self.cfgName, 'wb') as configfile:
             self.config.write(configfile) 
             
-    def cleanDirs(self, *dirList):
+    def cleanDirs(self, dirList):
         ''' Remove all directories passed on list'''
         for d in dirList:
             if exists(d):
