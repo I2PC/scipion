@@ -998,7 +998,6 @@ TEST_F( MetadataTest, getValue)
     XMIPP_CATCH
 }
 
-//read file with vector
 TEST_F( MetadataTest, getValueDefault)
 {
     XMIPP_TRY
@@ -1006,21 +1005,43 @@ TEST_F( MetadataTest, getValueDefault)
     MetaData auxMD2;
     double rot=1., tilt=2., psi=3.;
     double rot2=0., tilt2=0., psi2=0.;
-    double zero=0;
     id = auxMD1.addObject();
     auxMD1.setValue(MDL_ANGLEROT,rot,id);
     auxMD1.setValue(MDL_ANGLETILT,tilt,id);
     //psi assigned by defaults
     id = auxMD1.firstObject();
-    auxMD1.getValueDefault(MDL_ANGLEROT,rot2, id, zero);
-    auxMD1.getValueDefault(MDL_ANGLETILT,tilt2, id, zero);
-    auxMD1.getValueDefault(MDL_ANGLEPSI,psi2, id, psi);
+    auxMD1.getValueOrDefault(MDL_ANGLEROT,rot2, id, 0.);
+    auxMD1.getValueOrDefault(MDL_ANGLETILT,tilt2, id, 0.);
+    auxMD1.getValueOrDefault(MDL_ANGLEPSI,psi2, id, 3.);
 
     EXPECT_EQ(rot,rot2);
     EXPECT_EQ(tilt,tilt2);
     EXPECT_EQ(psi,psi2);
+
+    MDRow  rowIn;
+    psi2=0;
+    auxMD1.getRow(rowIn, id);
+    rowIn.getValueOrDefault(MDL_ANGLEPSI,psi2,3.);
+    EXPECT_EQ(psi,psi2);
+
     XMIPP_CATCH
 }
+TEST_F( MetadataTest, getValueAbort)
+{
+    XMIPP_TRY
+    MetaData auxMD1;
+    double rot=1.;
+    id = auxMD1.addObject();
+    auxMD1.setValue(MDL_ANGLEROT,rot,id);
+    //psi assigned by defaults
+    id = auxMD1.firstObject();
+	EXPECT_THROW(auxMD1.getValueOrAbort(MDL_ORDER, rot, id), XmippError);
+    MDRow  rowIn;
+    auxMD1.getRow(rowIn, id);
+    EXPECT_THROW(rowGetValueOrAbort(rowIn,MDL_ANGLEPSI,rot), XmippError);
+    XMIPP_CATCH
+}
+
 TEST_F( MetadataTest, CopyColumn)
 {
     XMIPP_TRY

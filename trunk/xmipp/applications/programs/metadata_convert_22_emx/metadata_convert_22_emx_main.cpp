@@ -223,15 +223,11 @@ public:
             micrographName=*it;
             fnCoordinateXmipp.compose(*it, fn_in);
             mdCoordinateXmipp.read(fnCoordinateXmipp);
-            if (!mdCoordinateXmipp.containsLabel(MDL_XINT)  )
-                REPORT_ERROR(ERR_MD_BADLABEL,(String)"Label: " + MDL::label2Str(MDL_XINT) + "missing.");
-            if (!mdCoordinateXmipp.containsLabel(MDL_YINT)  )
-                REPORT_ERROR(ERR_MD_BADLABEL,(String)"Label: " + MDL::label2Str(MDL_YINT) + "missing.");
             FOR_ALL_OBJECTS_IN_METADATA(mdCoordinateXmipp)
             {
                 mdCoordinateXmipp.getRow(rowIn, __iter.objId);
-                rowIn.getValue(MDL_XINT,x);
-                rowIn.getValue(MDL_YINT,y);
+                rowGetValueOrAbort(rowIn,MDL_XINT,x);
+                rowGetValueOrAbort(rowIn,MDL_YINT,y);
                 particleName=formatString("%s_%04d",micrographName.c_str(),__iter.objId);
                 rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
                 rowOut.setValue(MDL_EMX_MICROGRAPH_URL,micrographName);
@@ -264,14 +260,14 @@ public:
         FOR_ALL_OBJECTS_IN_METADATA(mdMicrographXmipp)
         {
             mdMicrographXmipp.getRow(rowIn, __iter.objId);
-            rowIn.getValue(MDL_CTF_SAMPLING_RATE,samplingRate);
-            rowIn.getValue(MDL_CTF_DEFOCUSU,defocusU);
-            rowIn.getValue(MDL_CTF_DEFOCUSV,defocusV);
-            rowIn.getValue(MDL_CTF_DEFOCUS_ANGLE,defocusAngle);
-            rowIn.getValue(MDL_CTF_VOLTAGE,voltage);
-            rowIn.getValue(MDL_CTF_CS,sphericalAberration);
-            rowIn.getValue(MDL_CTF_Q0,Q0);
-            rowIn.getValue(MDL_IMAGE,micrographXmipp);
+            rowIn.getValueOrDefault(MDL_CTF_SAMPLING_RATE,samplingRate,1.);
+            rowGetValueOrAbort(rowIn,MDL_CTF_DEFOCUSU,defocusU);
+            rowIn.getValueOrDefault(MDL_CTF_DEFOCUSV,defocusV,defocusU);
+            rowIn.getValueOrDefault(MDL_CTF_DEFOCUS_ANGLE,defocusAngle,0.);
+            rowGetValueOrAbort(rowIn,MDL_CTF_VOLTAGE,voltage);
+            rowIn.getValue         (MDL_CTF_CS,sphericalAberration);
+            rowIn.getValueOrDefault(MDL_CTF_Q0,Q0,0.);
+            rowGetValueOrAbort(rowIn,MDL_IMAGE,micrographXmipp);
 
             rowOut.setValue(MDL_EMX_MICROGRAPH_SAMPLING,samplingRate);
             rowOut.setValue(MDL_EMX_MICROGRAPH_DEFOCUSU, defocusU);
@@ -305,8 +301,8 @@ public:
         FOR_ALL_OBJECTS_IN_METADATA(mdClassXmipp)
         {
             mdClassXmipp.getRow(rowIn, __iter.objId);
-            rowIn.getValue(MDL_IMAGE,particleName);
-            rowIn.getValue(MDL_REF,ref);
+            rowGetValueOrAbort(rowIn,MDL_IMAGE,particleName);
+            rowGetValueOrAbort(rowIn,MDL_REF,ref);
             rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
             rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
             mdClassEMX.addRow(rowOut);
@@ -316,6 +312,85 @@ public:
         setMetadataVersion("EMX1.0");
         mdClassEMX.setComment(comment);
         mdClassEMX.write(tmpFn);
+    }
+
+    void convertXmipp2EmxAlignment(void)
+    {
+        MetaData mdAlignmentXmipp;
+        MetaData mdAlignmentEMX;
+        String particleName;
+        double angleRot;
+        double angleTilt;
+        double anglePsi;
+        double shiftX;
+        double shiftY;
+        double shiftZ;
+        int flip;
+        double scale;
+        int enable;
+        double fom;
+        int ref;
+
+        //        //        FileName fnCoordinateXmipp;
+        //        //        FileName micrographName;
+        MDRow rowIn, rowOut;
+
+        mdAlignmentXmipp.read(fn_in);
+        //        std::stringstream out;
+        FOR_ALL_OBJECTS_IN_METADATA(mdAlignmentXmipp)
+        {
+            mdAlignmentXmipp.getRow(rowIn, __iter.objId);
+            rowGetValueOrAbort(rowIn,MDL_IMAGE,particleName);
+            //            rowIn.getValueOrDefault(MDL_ANGLEROT,angleRot,0.);
+            //            rowIn.getValueOrDefault(MDL_ANGLETILT,angleTilt,0.);
+            //            rowIn.getValueOrDefault(MDL_ANGLEPSI,anglePsi,0.);
+            //            rowIn.getValueOrDefault(MDL_SHIFTX,shiftX,0.);
+            //            rowIn.getValueOrDefault(MDL_SHIFTY,shiftY,0.);
+            //            rowIn.getValueOrDefault(MDL_SHIFTZ,shiftZ,0.);
+            //            rowIn.getValueOrDefault(MDL_FLIP,flip,false);
+            //            rowIn.getValueOrDefault(MDL_SCALE,scale,1.0);
+            rowIn.getValueOrDefault(MDL_ENABLED,enable,1);
+            rowIn.getValueOrDefault(MDL_FOM,fom,1.);
+            rowIn.getValueOrDefault(MDL_REF,ref,1);
+
+            //compute matrix
+            Matrix2D<double> A(4, 4);
+            //transformationMatrix2Geo
+            geo2TransformationMatrix(rowIn,A,false);
+
+            rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
+
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A,0,2));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A,0,3));//xy=yx
+
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A,1,0));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A,1,1));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A,1,2));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A,1,3));//xy=yx
+
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A,2,0));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A,2,1));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A,2,2));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A,2,3));//xy=yx
+
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A,3,0));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A,3,1));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A,3,2));//xy=yx
+            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4,MAT_ELEM(A,3,3));//xy=yx
+
+            rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
+            rowOut.setValue(MDL_EMX_PARTICLE_ENABLED, enable==1);
+            rowOut.setValue(MDL_EMX_PARTICLE_FOM, fom);
+
+            mdAlignmentEMX.addRow(rowOut);
+        }
+        FileName tmpFn;
+        tmpFn.compose("processedParticle",tmpname);
+        setMetadataVersion("EMX1.0");
+        mdAlignmentEMX.setComment(comment);
+        mdAlignmentEMX.write(tmpFn);
     }
 
     void convertEmx2XmippCoordinates(void)
@@ -331,18 +406,6 @@ public:
         double x,y;
 
         mdCoordinateEMX.read(tmpname);
-        const MDLabel MyLabels[]       =
-            {
-                MDL_EMX_PARTICLE_COORDINATE_X,
-                MDL_EMX_PARTICLE_COORDINATE_Y
-            };
-        std::vector<MDLabel> myVector(MyLabels,MyLabels+8);
-        for (std::vector<MDLabel>::iterator it = myVector.begin(); it != myVector.end(); ++it)
-        {
-            if (!mdCoordinateEMX.containsLabel(*it) )
-                REPORT_ERROR(ERR_MD_BADLABEL,
-                             (String)"Label: " + MDL::label2Str(*it) + " missing.");
-        }
 
         mdMicAggregate.aggregate(mdCoordinateEMX,AGGR_COUNT,MDL_EMX_MICROGRAPH_URL,
                                  MDL_UNDEFINED,MDL_COUNT);
@@ -359,12 +422,12 @@ public:
             FOR_ALL_OBJECTS_IN_METADATA(mdSingleMicrograph)
             {
                 mdSingleMicrograph.getRow(rowIn, __iter.objId);
-                rowIn.getValue(MDL_EMX_PARTICLE_COORDINATE_X,x);
-                rowIn.getValue(MDL_EMX_PARTICLE_COORDINATE_Y,y);
-                rowIn.getValue(MDL_EMX_PARTICLE_URL,particleName);
+                rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_COORDINATE_X,x);
+                rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_COORDINATE_Y,y);
+                if(rowIn.getValue(MDL_EMX_PARTICLE_URL,particleName))
+                    rowOut.setValue(MDL_IMAGE,particleName);
                 rowOut.setValue(MDL_XINT,ROUND(x));
                 rowOut.setValue(MDL_YINT,ROUND(y));
-                rowOut.setValue(MDL_IMAGE,particleName);
                 mdCoordinateXmipp.addRow(rowOut);
             }
             blockOut.compose(micrographName,fn_out);
@@ -388,44 +451,27 @@ public:
         double sphericalAberration;
         double Q0;
 
-        const MDLabel MyLabels[]       =
-            {
-                MDL_EMX_MICROGRAPH_SAMPLING,
-                MDL_EMX_MICROGRAPH_DEFOCUSU,
-                MDL_EMX_MICROGRAPH_DEFOCUSV,
-                MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,
-                MDL_EMX_MICROGRAPH_VOLTAGE,
-                MDL_EMX_MICROGRAPH_CS,
-                MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,
-                MDL_EMX_MICROGRAPH_URL
-            };
-        std::vector<MDLabel> myVector(MyLabels,MyLabels+8);
         mdCTFMicrograph.read(tmpname);
-        for (std::vector<MDLabel>::iterator it = myVector.begin(); it != myVector.end(); ++it)
-        {
-            if (!mdCTFMicrograph.containsLabel(*it) )
-                REPORT_ERROR(ERR_MD_BADLABEL,
-                             (String)"Label: " + MDL::label2Str(*it) + " missing.");
-        }
+
         FOR_ALL_OBJECTS_IN_METADATA(mdCTFMicrograph)
         {
             mdCTFMicrograph.getRow(rowIn, __iter.objId);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_URL,micrographXmipp);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_SAMPLING,samplingRate);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_DEFOCUSU,defocusU);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_DEFOCUSV,defocusV);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,defocusAngle);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_VOLTAGE,voltage);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_CS,sphericalAberration);
-            rowIn.getValue(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,Q0);
+            rowGetValueOrAbort(rowIn,MDL_EMX_MICROGRAPH_URL,micrographXmipp);
+            rowIn.getValueOrDefault(MDL_EMX_MICROGRAPH_SAMPLING,samplingRate,1.);
+            rowGetValueOrAbort(rowIn,MDL_EMX_MICROGRAPH_DEFOCUSU,defocusU);
+            rowIn.getValueOrDefault(MDL_EMX_MICROGRAPH_DEFOCUSV,defocusV,defocusU);
+            rowIn.getValueOrDefault(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,defocusAngle,0.);
+            if(rowIn.getValue(MDL_EMX_MICROGRAPH_VOLTAGE,voltage))
+                rowOut.setValue(MDL_CTF_VOLTAGE,voltage);
+            if(rowIn.getValue(MDL_EMX_MICROGRAPH_CS,sphericalAberration))
+                rowOut.setValue(MDL_CTF_CS,sphericalAberration);
+            rowIn.getValueOrDefault(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,Q0,0.);
 
             rowOut.setValue(MDL_IMAGE,micrographXmipp);
             rowOut.setValue(MDL_CTF_SAMPLING_RATE,samplingRate);
             rowOut.setValue(MDL_CTF_DEFOCUSU,defocusU);
             rowOut.setValue(MDL_CTF_DEFOCUSV,defocusV);
             rowOut.setValue(MDL_CTF_DEFOCUS_ANGLE,defocusAngle);
-            rowOut.setValue(MDL_CTF_VOLTAGE,voltage);
-            rowOut.setValue(MDL_CTF_CS,sphericalAberration);
             rowOut.setValue(MDL_CTF_Q0,Q0);
 
             mdCTFMicrographXmipp.addRow(rowOut);
@@ -443,33 +489,21 @@ public:
         String _class;
         MDRow  rowIn, rowOut;
 
-        const MDLabel MyLabels[]       =
-            {
-                MDL_EMX_PARTICLE_URL,
-                MDL_EMX_PARTICLE_CLASS_ID,
-            };
-        std::vector<MDLabel> myVector(MyLabels,MyLabels+2);
         mdClassEMX.read(tmpname);
-        for (std::vector<MDLabel>::iterator it = myVector.begin(); it != myVector.end(); ++it)
-        {
-            if (!mdClassEMX.containsLabel(*it) )
-                REPORT_ERROR(ERR_MD_BADLABEL,
-                             (String)"Label: " + MDL::label2Str(*it) + " missing.");
-        }
         mdMicAggregate.aggregate(mdClassEMX,AGGR_COUNT,MDL_EMX_PARTICLE_CLASS_ID,
                                  MDL_UNDEFINED,MDL_COUNT);
 
         std::map< String, int> mapReferences;
         FOR_ALL_OBJECTS_IN_METADATA(mdMicAggregate)
         {
-        	mdMicAggregate.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class,__iter.objId);
+            mdMicAggregate.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class,__iter.objId);
             mapReferences[_class] = (int)__iter.objId;
         }
         FOR_ALL_OBJECTS_IN_METADATA(mdClassEMX)
         {
-        	mdClassEMX.getRow(rowIn, __iter.objId);
-            rowIn.getValue(MDL_EMX_PARTICLE_URL,particleName);
-            rowIn.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class);
+            mdClassEMX.getRow(rowIn, __iter.objId);
+            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_URL,particleName);
+            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_CLASS_ID,_class);
 
             rowOut.setValue(MDL_IMAGE,particleName);
             rowOut.setValue(MDL_REF,mapReferences[_class]);
@@ -479,6 +513,76 @@ public:
         mdClassXmipp.setComment(comment);
         mdClassXmipp.write(fn_out);
     }
+    void convertEmx2XmippAlignment(void)
+    {
+        MetaData mdAlignmentEMX;
+        Matrix2D<double> A(4, 4);
+        String particleName;
+
+
+        //        MetaData mdClassXmipp;
+        //        MetaData mdMicAggregate;
+        //        String _class;
+        MDRow  rowIn, rowOut;
+        //
+        mdAlignmentEMX.read(tmpname);
+        FOR_ALL_OBJECTS_IN_METADATA(mdAlignmentEMX)
+        {
+            mdAlignmentEMX.getRow(rowIn, __iter.objId);
+            rowIn.getValueOrDefault(),MDL_EMX_PARTICLE_URL,particleName);
+            MDL_EMX_PARTICLE_URL,particleName);
+
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A.1,1),1.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A.1,2),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A.1,3),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A.1,4),0.);
+
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A.2,1),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A.2,2),1.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A.2,3),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A.2,4),0.);
+
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A.3,1),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A.3,2),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A.3,3),1.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A.3,4),0.);
+
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A.4,1),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A.4,2),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A.4,3),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4,MAT_ELEM(A.4,4),1.);
+
+            rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
+            rowOut.setValue(MDL_EMX_PARTICLE_ENABLED, enable==1);
+            rowOut.setValue(MDL_EMX_PARTICLE_FOM, fom);
+
+            //            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_CLASS_ID,_class);
+            //
+            //            rowOut.setValue(MDL_IMAGE,particleName);
+            //            rowOut.setValue(MDL_REF,mapReferences[_class]);
+            //            mdClassXmipp.addRow(rowOut);
+        }
+        //        setMetadataVersion("XMIPP_STAR_1");
+        //        mdClassXmipp.setComment(comment);
+        //        mdClassXmipp.write(fn_out);
+    }
+    //    transformationMatrix2Parameters3D
+    //    transformationMatrix2Geo
+    //    vt = (M14, M24, M34)T
+    //
+    //    Next, the three scaling factors:
+    //
+    //    sx = sqrt(M112 + M122 + M132);
+    //    sy = sqrt(M212 + M222 + M232);
+    //    sz = sqrt(M312 + M322 + M332);
+    //
+    //    Edit: If you know that scaling was uniform, you could save some cycles by calculating the determinant of the 3x3 minor instead.
+    //
+    //    Now you can work backwards for the rotation matrix:
+    //    Mrot = M11/sx   M12/sx   M13/sx   0
+    //           M21/sy   M22/sy   M23/sy   0
+    //           M31/sz   M32/sz   M33/sz   0
+    //           0        0        0        1
 
     void run()
     {
@@ -487,6 +591,10 @@ public:
         if(toxmipp)
             switch (conversionType)
             {
+            case EMX_ALIGNMENT:
+                removeDots();
+                convertEmx2XmippAlignment();
+                break;
             case EMX_CLASS:
                 removeDots();
                 convertEmx2XmippClass();
@@ -500,12 +608,16 @@ public:
                 convertEmx2XmippCTFMicrograph();
                 break;
             default:
-                REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp2EmxCoordinates");
+                REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp22Emx");
                 break;
             }
         else if (toemx)
             switch (conversionType)
             {
+            case EMX_ALIGNMENT:
+                convertXmipp2EmxAlignment();
+                restoreDots();
+                break;
             case EMX_CLASS:
                 convertXmipp2EmxClass();
                 restoreDots();
