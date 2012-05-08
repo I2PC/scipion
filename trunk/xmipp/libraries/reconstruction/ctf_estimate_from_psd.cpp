@@ -2406,22 +2406,7 @@ void estimate_defoci_Zernike()
                        global_prm->min_freq,global_prm->max_freq,global_prm->Tm,
                        global_prm->initial_ctfmodel.kV,
                        global_prm->lambdaPhase,global_prm->sizeWindowPhase,
-                       defocusU, defocusV, angle, 6);
-
-    (*global_adjust)(0) = defocusU;
-    (*global_adjust)(1) = defocusV;
-    (*global_adjust)(2) = angle;
-    (*global_adjust)(4) = global_ctfmodel.K;
-
-    int iter;
-    double fitness;
-    Matrix1D<double> steps(DEFOCUS_PARAMETERS);
-    steps.initConstant(1);
-    steps(3) = 0; // Do not optimize kV
-    steps(4) = 0; // Do not optimize K
-    powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
-                    DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
-                    fitness, iter, steps, false);
+                       global_ctfmodel.DeltafU, global_ctfmodel.DeltafV, global_ctfmodel.azimuthal_angle, 0);
 
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
