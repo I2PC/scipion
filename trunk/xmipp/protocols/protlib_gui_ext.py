@@ -622,8 +622,7 @@ class TaggedText(XmippText):
     def configureTags(self):
         self.tag_config('normal', justify=tk.LEFT)
         self.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
-        if self.colors:
-            
+        if self.colors:            
             configureColorTags(self)        
         
     def getTaggedParts(self, parts):
@@ -892,7 +891,8 @@ class ShowDialog(Dialog):
             m = max(m, len(l))
             self.text.addLine(l)
         m = min(m + 5, 80)
-        self.text.config(height=len(mylines)+3, width=m)
+        h = min(len(mylines)+3, 30)
+        self.text.config(height=h, width=m)
         self.text.addNewline()
         self.text.config(state=tk.DISABLED)
         self.text.frame.pack()
