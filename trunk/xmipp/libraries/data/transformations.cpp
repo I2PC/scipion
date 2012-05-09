@@ -67,7 +67,14 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
 
     if (scale != 1.)
     {
-        M3x3_BY_CT(A, A, scale);
+        if (dim == 2)
+        {
+            M3x3_BY_CT(A, A, scale);
+        }
+        else if (dim == 3)
+        {
+            M4x4_BY_CT(A, A, scale);
+        }
         MAT_ELEM(A, dim, dim) = 1.;
     }
 
@@ -100,6 +107,7 @@ void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, do
                                        double &rot, double &tilt, double &psi)
 {
     Matrix2D<double> eulerMatrix(3,3);
+
     FOR_ALL_ELEMENTS_IN_MATRIX2D(eulerMatrix)
     dMij(eulerMatrix,i,j) = dMij(A, i, j);
 
@@ -115,15 +123,6 @@ void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, do
     else
         flip = false;
 
-    double scale2 = dMij(A,2,0)*dMij(A,2,0) \
-                    + dMij(A,2,1)*dMij(A,2,1)\
-                    + dMij(A,2,2)*dMij(A,2,2) ;
-
-    scale = sqrt(scale2);
-    double invScale = 1 / scale;
-    shiftX = dMij(A, 0, 3) * invScale;
-    shiftY = dMij(A, 1, 3) * invScale;
-    shiftZ = dMij(A, 2, 3) * invScale;
 }
 
 #define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
@@ -134,18 +133,30 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
     double scale, shiftX, shiftY, psi, shiftZ = 0, rot = 0, tilt = 0;
 
     int dim = A.Xdim() -1;
+    //deal with scale
+    scale =  sqrt(dMij(A,2,0)*dMij(A,2,0) \
+                              + dMij(A,2,1)*dMij(A,2,1)\
+                              + dMij(A,2,2)*dMij(A,2,2) );
+    double invScale = 1./ scale;
+    M4x4_BY_CT(A, A, invScale)
 
     if (dim == 2)
+    {
+        M4x4_BY_CT(A, A, invScale)
         transformationMatrix2Parameters2D(A,flip, scale, shiftX, shiftY, psi);
+    }
     else if (dim == 3)
+    {
+        M3x3_BY_CT(A, A, invScale)
         transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
+    }
 
     ADD_IF_EXIST_NONZERO(MDL_ANGLEROT, rot);
     ADD_IF_EXIST_NONZERO(MDL_ANGLETILT, tilt);
     ADD_IF_EXIST_NONZERO(MDL_ANGLEPSI, psi);
-    ADD_IF_EXIST_NONZERO(MDL_SHIFTX, shiftX);
-    ADD_IF_EXIST_NONZERO(MDL_SHIFTY, shiftY);
-    ADD_IF_EXIST_NONZERO(MDL_SHIFTZ, shiftZ);
+    ADD_IF_EXIST_NONZERO(MDL_SHIFTX, dMij(A,0,3));
+    ADD_IF_EXIST_NONZERO(MDL_SHIFTY, dMij(A,1,3));
+    ADD_IF_EXIST_NONZERO(MDL_SHIFTZ, dMij(A,2,3));
 
     if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
         imageGeo.setValue(MDL_SCALE, scale);
