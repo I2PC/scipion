@@ -683,7 +683,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
             tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
 
             if (  !(((tempTheta > val) | (tempTheta < -val)) && !((tempTheta > PI-val) || (tempTheta < -PI+val)) &&
-            		!( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))   ))
+            		!( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))) )
             {
             	A2D_ELEM(ROI,i,j) = false;
             }
