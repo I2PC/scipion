@@ -181,6 +181,14 @@ int translate_randomness(char * str)
                  + str);
 }
 
+ParametersProjection::ParametersProjection()
+{
+    Npixel_avg=0.;
+    Npixel_dev=0.;
+    Ncenter_avg=0.;
+    Ncenter_dev=0.;
+}
+
 void ParametersProjection::read(const FileName &fn_proj_param)
 {
 
@@ -188,6 +196,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
     {
         MetaData MD;
         MD.read(fn_proj_param);
+        std::cerr << "DEBUG_ROB, MD:" << MD << std::endl;
         if (MD.isEmpty())
             REPORT_ERROR(ERR_IO_NOTOPEN,
                          (String)"Prog_Project_Parameters::read: There is a problem "

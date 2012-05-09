@@ -180,6 +180,8 @@ public:
     /// Standard deviation of the image center
     double    Ncenter_dev;
 public:
+
+    ParametersProjection();
     /** From Program Parameters.
         This function loads the Projection Parameters from the parameters
         given to the program (PROJECT). */
