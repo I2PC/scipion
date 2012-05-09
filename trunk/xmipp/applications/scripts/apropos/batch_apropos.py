@@ -32,6 +32,8 @@ class ScriptApropos(XmippScript):
 		self.addExampleLine("   xmipp_apropos noise gaussian")
 		self.addExampleLine("List all xmipp programs", False)
 		self.addExampleLine("   xmipp_apropos --list")
+		self.addExampleLine("List all xmipp metadata labels", False)
+		self.addExampleLine("   xmipp_apropos --list -t labels")
 			
 	def readParams(self):
 		self.keywords = []
