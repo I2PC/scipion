@@ -233,7 +233,7 @@ class ProtExtractParticles(XmippProtocol):
             if exists(fnSorted):
                 from protlib_gui_figure import XmippPlotter
                 from xmipp import MDL_ZSCORE
-                xplotter = XmippPlotter()
+                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMdFile(fnSorted, False, mdLabelY=MDL_ZSCORE)
                 xplotter.show()
