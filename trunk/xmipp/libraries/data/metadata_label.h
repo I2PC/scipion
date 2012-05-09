@@ -166,7 +166,7 @@ enum MDLabel
     MDL_EMX_PARTICLE_ENABLED, // <particle enable bool
     MDL_EMX_PARTICLE_FOM, // <particle fom (float)
     MDL_EMX_PARTICLE_URL,     /// <particle name (string)
-
+    MDL_EMX_PARTICLE_MICROGRAPH_URL,/// <particle has been extracted from micrograph
     MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,     ///element 1_1 (x,y) of transformation matrix (float)
     MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,     ///element 2_1 of transformation matrix (float)
     MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,     ///element 3_1 of transformation matrix (float)
@@ -774,6 +774,7 @@ private:
         MDL::addLabel(MDL_EMX_PARTICLE_FOM, LABEL_DOUBLE, "emx_particle____fom");
 
         MDL::addLabel(MDL_EMX_PARTICLE_URL,    LABEL_STRING, "emx_particle____url", TAGLABEL_NOTAG,"emx_particle.url");
+        MDL::addLabel(MDL_EMX_PARTICLE_MICROGRAPH_URL, LABEL_STRING, "emx_particle____micrograph_url", TAGLABEL_NOTAG,"emx_particle.url");
 
         MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1, LABEL_DOUBLE, "emx_particle_transformation_matrix_1_1");
         MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1, LABEL_DOUBLE, "emx_particle_transformation_matrix_2_1");
