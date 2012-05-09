@@ -259,9 +259,7 @@ void svbksb(Matrix2D< double >& u,
 		dMn(M2,12) = dMn(M1,12) * k; \
 		dMn(M2,13) = dMn(M1,13) * k; \
 		dMn(M2,14) = dMn(M1,14) * k; \
-		dMn(M2,15) = dMn(M1,15) * k; \
-		dMn(M2,16) = dMn(M1,16) * k; \
-		dMn(M2,17) = dMn(M1,17) * k; }
+		dMn(M2,15) = dMn(M1,15) * k;}
 
 /** Inverse of a matrix (2x2)
  *
