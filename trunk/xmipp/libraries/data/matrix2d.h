@@ -238,6 +238,30 @@ void svbksb(Matrix2D< double >& u,
         dMn(M2, 6) = dMn(M1, 6) * k; \
         dMn(M2, 7) = dMn(M1, 7) * k; \
         dMn(M2, 8) = dMn(M1, 8) * k; }
+/** Matrix (4x4) by constant (M2=M1*k)
+ *
+ * You must create the result matrix with the appropiate size. You can reuse the
+ * matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is allowed).
+ */
+#define M4x4_BY_CT(M2, M1, k) { \
+        dMn(M2, 0) = dMn(M1, 0) * k; \
+        dMn(M2, 1) = dMn(M1, 1) * k; \
+        dMn(M2, 2) = dMn(M1, 2) * k; \
+        dMn(M2, 3) = dMn(M1, 3) * k; \
+        dMn(M2, 4) = dMn(M1, 4) * k; \
+        dMn(M2, 5) = dMn(M1, 5) * k; \
+        dMn(M2, 6) = dMn(M1, 6) * k; \
+        dMn(M2, 7) = dMn(M1, 7) * k; \
+        dMn(M2, 8) = dMn(M1, 8) * k; \
+		dMn(M2, 9) = dMn(M1, 9) * k; \
+		dMn(M2,10) = dMn(M1,10) * k; \
+		dMn(M2,11) = dMn(M1,11) * k; \
+		dMn(M2,12) = dMn(M1,12) * k; \
+		dMn(M2,13) = dMn(M1,13) * k; \
+		dMn(M2,14) = dMn(M1,14) * k; \
+		dMn(M2,15) = dMn(M1,15) * k; \
+		dMn(M2,16) = dMn(M1,16) * k; \
+		dMn(M2,17) = dMn(M1,17) * k; }
 
 /** Inverse of a matrix (2x2)
  *
