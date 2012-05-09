@@ -1058,6 +1058,8 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
         proj_prm.from_prog_params(prm);
     side.produce_Side_Info(proj_prm, prm);
     Crystal_Projection_Parameters crystal_proj_prm;
+
+    side.doCrystal=false;
     if (prm.fn_proj_param != "")
     {
         MetaData MD;
@@ -1106,6 +1108,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
         crystal_proj_prm.DF_shift.write("DEBUG1_shifts");
 #endif
 #undef DEBUG1
+
 
     int ProjNo = 0;
     if (!prm.only_create_angles)
