@@ -124,6 +124,57 @@ TEST_F(TransformationTest, scaleToSizeNearest)
     EXPECT_EQ(auxMul, imOut);
 }
 
+TEST_F(TransformationTest, geo2TransformationMatrix)
+{
+	//It would be nice to have a operator == for mdrow
+    double scale = 1.;
+    double rot = 40.9090909091;
+    double tilt=81.8181818182;
+    double psi=54.5454545455;
+    double x =1.;
+    double y=2.;
+    double z=3;
+    bool flip = false;
+    double scale2 = 1.;
+    double rot2 = 0.;
+    double tilt2=0.;
+    double psi2=0.;
+    double x2 =0.;
+    double y2=0.;
+    double z2=0.;
+    bool flip2 = false;
+
+    MDRow rowIn,rowOut;
+    rowIn.setValue(MDL_SCALE,scale);
+    rowIn.setValue(MDL_ANGLEROT,rot);
+    rowIn.setValue(MDL_ANGLETILT,tilt);
+    rowIn.setValue(MDL_ANGLEPSI,psi);
+    rowIn.setValue(MDL_SHIFTX,x);
+    rowIn.setValue(MDL_SHIFTY,y);
+    rowIn.setValue(MDL_SHIFTZ,z);
+    rowIn.setValue(MDL_FLIP, flip);
+    Matrix2D<double> A(4, 4);
+
+    geo2TransformationMatrix(rowIn,A,false);
+    transformationMatrix2Geo(A,rowOut);
+    rowOut.getValue(MDL_SCALE,scale2);
+    rowOut.getValue(MDL_ANGLEROT,rot2);
+    rowOut.getValue(MDL_ANGLETILT,tilt2);
+    rowOut.getValue(MDL_ANGLEPSI,psi2);
+    rowOut.getValue(MDL_SHIFTX,x2);
+    rowOut.getValue(MDL_SHIFTY,y2);
+    rowOut.getValue(MDL_SHIFTZ,z2);
+    rowOut.getValue(MDL_FLIP, flip2);
+
+    EXPECT_DOUBLE_EQ(scale, scale2);
+    EXPECT_DOUBLE_EQ(rot, rot2);
+    EXPECT_DOUBLE_EQ(tilt, tilt2);
+    EXPECT_DOUBLE_EQ(psi, psi2);
+    EXPECT_DOUBLE_EQ(x, x2);
+    EXPECT_DOUBLE_EQ(y, y2);
+    EXPECT_DOUBLE_EQ(z, z2);
+    EXPECT_EQ(flip, flip2);
+}
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
