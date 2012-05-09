@@ -789,7 +789,7 @@ private:
         MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3, LABEL_DOUBLE, "emx_particle____transformation_matrix_1_3");
         MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3, LABEL_DOUBLE, "emx_particle____transformation_matrix_2_3");
         MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3, LABEL_DOUBLE, "emx_particle____transformation_matrix_3_3");
-        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3, LABEL_DOUBLE, "transformation____matrix_offset_z");
+        MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3, LABEL_DOUBLE, "emx_particle____transformation_matrix_offset_z");
 
         MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4, LABEL_DOUBLE, "emx_particle____transformation_matrix_1_4");
         MDL::addLabel(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4, LABEL_DOUBLE, "emx_particle____transformation_matrix_2_4");
