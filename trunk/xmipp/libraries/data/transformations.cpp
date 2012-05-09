@@ -138,16 +138,15 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
                               + dMij(A,2,1)*dMij(A,2,1)\
                               + dMij(A,2,2)*dMij(A,2,2) );
     double invScale = 1./ scale;
-    M4x4_BY_CT(A, A, invScale)
 
     if (dim == 2)
     {
-        M4x4_BY_CT(A, A, invScale)
+        M3x3_BY_CT(A, A, invScale)
         transformationMatrix2Parameters2D(A,flip, scale, shiftX, shiftY, psi);
     }
     else if (dim == 3)
     {
-        M3x3_BY_CT(A, A, invScale)
+        M4x4_BY_CT(A, A, invScale)
         transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
     }
 
