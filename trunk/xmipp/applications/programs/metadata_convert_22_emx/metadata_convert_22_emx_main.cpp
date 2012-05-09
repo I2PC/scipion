@@ -336,19 +336,12 @@ public:
         MDRow rowIn, rowOut;
 
         mdAlignmentXmipp.read(fn_in);
+
         //        std::stringstream out;
         FOR_ALL_OBJECTS_IN_METADATA(mdAlignmentXmipp)
         {
             mdAlignmentXmipp.getRow(rowIn, __iter.objId);
             rowGetValueOrAbort(rowIn,MDL_IMAGE,particleName);
-            //            rowIn.getValueOrDefault(MDL_ANGLEROT,angleRot,0.);
-            //            rowIn.getValueOrDefault(MDL_ANGLETILT,angleTilt,0.);
-            //            rowIn.getValueOrDefault(MDL_ANGLEPSI,anglePsi,0.);
-            //            rowIn.getValueOrDefault(MDL_SHIFTX,shiftX,0.);
-            //            rowIn.getValueOrDefault(MDL_SHIFTY,shiftY,0.);
-            //            rowIn.getValueOrDefault(MDL_SHIFTZ,shiftZ,0.);
-            //            rowIn.getValueOrDefault(MDL_FLIP,flip,false);
-            //            rowIn.getValueOrDefault(MDL_SCALE,scale,1.0);
             rowIn.getValueOrDefault(MDL_ENABLED,enable,1);
             rowIn.getValueOrDefault(MDL_FOM,fom,1.);
             rowIn.getValueOrDefault(MDL_REF,ref,1);
@@ -375,10 +368,10 @@ public:
             rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A,2,2));//xy=yx
             rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A,2,3));//xy=yx
 
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A,3,0));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A,3,1));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A,3,2));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4,MAT_ELEM(A,3,3));//xy=yx
+            //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A,3,0));//xy=yx
+            //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A,3,1));//xy=yx
+            //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A,3,2));//xy=yx
+            //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4,MAT_ELEM(A,3,3));//xy=yx
 
             rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
             rowOut.setValue(MDL_EMX_PARTICLE_ENABLED, enable==1);
@@ -516,73 +509,90 @@ public:
     void convertEmx2XmippAlignment(void)
     {
         MetaData mdAlignmentEMX;
+        MetaData mdAux;
         Matrix2D<double> A(4, 4);
         String particleName;
-
-
-        //        MetaData mdClassXmipp;
-        //        MetaData mdMicAggregate;
-        //        String _class;
+        int ref=1;
+        std::map< String, int> mapReferences;
+        String _class;
+        bool enabled;
+        double fom=1.;
+        double sx=1.,sy=1.,sz=1.;
+        MetaData mdAlignmentXmipp;
         MDRow  rowIn, rowOut;
-        //
+
         mdAlignmentEMX.read(tmpname);
+
+        //check if there are class
+        //agregate them and make a map
+        if(mdAlignmentEMX.containsLabel(MDL_EMX_PARTICLE_CLASS_ID))
+        {
+            mdAux.aggregate(mdAlignmentEMX,AGGR_COUNT,MDL_EMX_PARTICLE_CLASS_ID,
+                            MDL_UNDEFINED,MDL_COUNT);
+            FOR_ALL_OBJECTS_IN_METADATA(mdAux)
+            {
+                mdAux.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class, __iter.objId);
+                mapReferences[_class]=ref++;
+            }
+        }
+
         FOR_ALL_OBJECTS_IN_METADATA(mdAlignmentEMX)
         {
             mdAlignmentEMX.getRow(rowIn, __iter.objId);
-            rowIn.getValueOrDefault(),MDL_EMX_PARTICLE_URL,particleName);
-            MDL_EMX_PARTICLE_URL,particleName);
+            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_URL,particleName);
 
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A.1,1),1.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A.1,2),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A.1,3),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A.1,4),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0),1.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A,0,2),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A,0,3),0.);
 
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A.2,1),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A.2,2),1.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A.2,3),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A.2,4),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A,1,0),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A,1,1),1.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A,1,2),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A,1,3),0.);
 
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A.3,1),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A.3,2),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A.3,3),1.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A.3,4),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A,2,0),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A,2,1),0.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A,2,2),1.);
+            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A,2,3),0.);
 
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A.4,1),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A.4,2),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A.4,3),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4,MAT_ELEM(A.4,4),1.);
+            //            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A,3,0),0.);
+            //            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A,3,1),0.);
+            //            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A,3,2),0.);
+            MAT_ELEM(A,3,3)=1.;
 
-            rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
-            rowOut.setValue(MDL_EMX_PARTICLE_ENABLED, enable==1);
-            rowOut.setValue(MDL_EMX_PARTICLE_FOM, fom);
+            if(rowIn.getValue(MDL_EMX_PARTICLE_CLASS_ID, _class))
+                rowOut.setValue(MDL_REF,mapReferences[_class]);
+            if(rowIn.getValue(MDL_EMX_PARTICLE_ENABLED, enabled))
+                rowOut.getValue(MDL_ENABLED, enabled);
+            if(rowIn.getValue(MDL_EMX_PARTICLE_FOM, fom))
+                rowOut.getValue(MDL_FOM, fom);
 
-            //            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_CLASS_ID,_class);
-            //
-            //            rowOut.setValue(MDL_IMAGE,particleName);
-            //            rowOut.setValue(MDL_REF,mapReferences[_class]);
-            //            mdClassXmipp.addRow(rowOut);
+            rowOut.setValue(MDL_IMAGE,particleName);
+            //getScale
+            sx = sqrt(MAT_ELEM(A,0,0)*MAT_ELEM(A,0,0) +
+                      MAT_ELEM(A,0,1)*MAT_ELEM(A,0,1) +
+                      MAT_ELEM(A,0,2)*MAT_ELEM(A,0,2));
+            sy = sqrt(MAT_ELEM(A,1,0)*MAT_ELEM(A,1,0) +
+                      MAT_ELEM(A,1,1)*MAT_ELEM(A,1,1) +
+                      MAT_ELEM(A,1,2)*MAT_ELEM(A,1,2));
+            sz = sqrt(MAT_ELEM(A,2,0)*MAT_ELEM(A,2,0) +
+                      MAT_ELEM(A,2,1)*MAT_ELEM(A,2,1) +
+                      MAT_ELEM(A,2,2)*MAT_ELEM(A,2,2));
+            if(ABS(sx-sy)< 0.001 || ABS(sx-sz)< 0.001 || ABS(sy-sz)< 0.001)
+            {
+                REPORT_ERROR(ERR_MATRIX,formatString("Scale along the fifferent axes "
+                                                     " is different. Xmipp does not support it"
+                                                     "sx=%f,sy=%f,sz=%f", sx,sy,sz) );
+            }
+            transformationMatrix2Geo(A,rowOut);
+            mdAlignmentXmipp.addRow(rowOut);
         }
-        //        setMetadataVersion("XMIPP_STAR_1");
-        //        mdClassXmipp.setComment(comment);
-        //        mdClassXmipp.write(fn_out);
+        setMetadataVersion("XMIPP_STAR_1");
+        mdAlignmentXmipp.setComment(comment);
+        mdAlignmentXmipp.write(fn_out);
     }
-    //    transformationMatrix2Parameters3D
-    //    transformationMatrix2Geo
-    //    vt = (M14, M24, M34)T
-    //
-    //    Next, the three scaling factors:
-    //
-    //    sx = sqrt(M112 + M122 + M132);
-    //    sy = sqrt(M212 + M222 + M232);
-    //    sz = sqrt(M312 + M322 + M332);
-    //
-    //    Edit: If you know that scaling was uniform, you could save some cycles by calculating the determinant of the 3x3 minor instead.
-    //
-    //    Now you can work backwards for the rotation matrix:
-    //    Mrot = M11/sx   M12/sx   M13/sx   0
-    //           M21/sy   M22/sy   M23/sy   0
-    //           M31/sz   M32/sz   M33/sz   0
-    //           0        0        0        1
+
 
     void run()
     {
