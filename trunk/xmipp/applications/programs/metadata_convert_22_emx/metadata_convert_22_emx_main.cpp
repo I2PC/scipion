@@ -151,7 +151,7 @@ protected:
         addParamsLine("     alias -t;");
         addKeywords("convert emx");
         addExampleLine("Convert coordinates file from EMX to Xmipp", false);
-        addExampleLine("xmipp_emx_convert -i particlePicking.emx -o particlePicking.xmd -t coordinates");
+        addExampleLine("xmipp_convert_metadata_22_emx -i particlePicking.emx -o particlePicking.xmd -t coordinates");
 
     }
 
@@ -166,9 +166,8 @@ protected:
         {
             toemx=true;
             comment = "##########################################################################\n"
-                      "#               EMX Exchange file \n"
-                      "# \n"
-                      "#  Information on this file format is available at \n"
+                      "#               EMX Exchange file\n"
+                      "#  This emx file has been produced from a XMIPP metadata file\n"
                       "#  http://i2pc.cnb.csic.es/emx\n"
                       "##########################################################################\n";
         }
@@ -187,6 +186,14 @@ protected:
                           "##########################################################################\n";
             }
         }
+        comment += "##########################################################################\n"
+                   "#  This file has been created using XMIPP-EMX conversion utility\n"
+                   "#  One of the best ways you can help us to improve this software\n"
+                   "#  is to let us know about any problems you find with it.\n"
+                   "#  Please report bugs to: xmipp@cnb.csic.es\n"
+                   "#  MAn page at: http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Metadata_convert_22_emx_v3"
+                   "##########################################################################";
+
         if(toemx==toxmipp)//both false
             REPORT_ERROR(ERR_IO_NOTFILE,(std::string)"File ");
     }
@@ -350,7 +357,6 @@ public:
             Matrix2D<double> A(4, 4);
             //transformationMatrix2Geo
             geo2TransformationMatrix(rowIn,A,false);
-
             rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
 
             rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0));//xy=yx
@@ -376,7 +382,6 @@ public:
             rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
             rowOut.setValue(MDL_EMX_PARTICLE_ENABLED, enable==1);
             rowOut.setValue(MDL_EMX_PARTICLE_FOM, fom);
-
             mdAlignmentEMX.addRow(rowOut);
         }
         FileName tmpFn;
@@ -579,7 +584,9 @@ public:
             sz = sqrt(MAT_ELEM(A,2,0)*MAT_ELEM(A,2,0) +
                       MAT_ELEM(A,2,1)*MAT_ELEM(A,2,1) +
                       MAT_ELEM(A,2,2)*MAT_ELEM(A,2,2));
-            if(ABS(sx-sy)< 0.001 || ABS(sx-sz)< 0.001 || ABS(sy-sz)< 0.001)
+            if(ABS(sx-sy)> 0.001 ||
+               ABS(sx-sz)> 0.001 ||
+               ABS(sy-sz)> 0.001)
             {
                 REPORT_ERROR(ERR_MATRIX,formatString("Scale along the fifferent axes "
                                                      " is different. Xmipp does not support it"
