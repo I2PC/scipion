@@ -76,8 +76,11 @@ TEST_F( PolynomialsTest, ZernikeFit)
     PolyZernikes polynom;
     Matrix1D<int> coefs(10);
     coefs.initConstant(1);
+    MultidimArray<double> weight;
+    weight.resizeNoCopy(im());
+    weight.initConstant(1.0);
 
-    polynom.fit(coefs,MULTIDIM_ARRAY(im),ROI,1);
+    polynom.fit(coefs,MULTIDIM_ARRAY(im),weight,ROI,1);
     xmippCoeffs = COEFFICIENTS(polynom);
 
     Matrix1D<double> error = xmippCoeffs - matlabCoeffs;
