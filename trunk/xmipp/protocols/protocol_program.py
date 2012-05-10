@@ -33,6 +33,7 @@
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from protlib_xmipp import greenStr, redStr, blueStr
+from os.path import basename
 
 class ProtXmippProgram(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -59,11 +60,8 @@ class ProtXmippProgram(XmippProtocol):
                 # Check special cases of -o or --oroot 
                 # and append the working dir to the value
                 
-                if ('_P_oroot_A_' in k or '_P_o_A_' in k) and value != "":
-                    print redStr(k)
-                    print 'value1: __%s__' % value
+                if ('_P_oroot_A_' in k or '_P_o_A_' in k) and value != "" and value == basename(value):
                     value = self.workingDirPath(value)
-                    print 'value2:', value
                 if '_P_' in k: # Param variable (contains _P_)
                     if '_L_' in k:  # Param List variable (contains _P_L_)
                         sep = '_P_L_'
