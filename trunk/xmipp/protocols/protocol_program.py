@@ -54,13 +54,24 @@ class ProtXmippProgram(XmippProtocol):
         lastSubParamValue = None
         for k in dir(self):
             if k.startswith('_K_'):
+                from protlib_xmipp import redStr
                 value = self.__dict__[k]
-                if '_P_' in k:
-                    if '_L_' in k: sep = '_P_L_'
-                    else: sep = '_P_'
+                # Check special cases of -o or --oroot 
+                # and append the working dir to the value
+                
+                if ('_P_oroot_A_' in k or '_P_o_A_' in k) and value != "":
+                    print redStr(k)
+                    print 'value1: __%s__' % value
+                    value = self.workingDirPath(value)
+                    print 'value2:', value
+                if '_P_' in k: # Param variable (contains _P_)
+                    if '_L_' in k:  # Param List variable (contains _P_L_)
+                        sep = '_P_L_'
+                    else: 
+                        sep = '_P_'
                     myLine = ""
                     key, suffix = k.split(sep)
-                    if '_A_' in suffix:
+                    if '_A_' in suffix: # Arguments present (contains _A_)
                         args = suffix.split('_A_')
                         paramName = getParamName(args[0])
                         if len(args) > 2:
@@ -74,7 +85,7 @@ class ProtXmippProgram(XmippProtocol):
                                 myLine = paramName
                             myLine += ' ' + value
                             
-                    else: #Param without args, True or False value
+                    else: #Param without Arguments, True or False value
                         paramName = getParamName(suffix)
                         if value:
                             myLine = paramName
@@ -98,7 +109,8 @@ class ProtXmippProgram(XmippProtocol):
                              NumberOfThreads = self.NumberOfThreads)
 
 def getParamName(paramId):
-    if len(paramId) > 1: return '--' + paramId
+    if len(paramId) > 1: 
+        return '--' + paramId
     return '-' + paramId
 
 def printCommandLine(log, programname, params):

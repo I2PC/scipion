@@ -328,8 +328,8 @@ class ProcessManager():
     
     def getProcessGroup(self):
         '''Return a list of process using the same working dir'''
-        script = self.run['script']
-        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%(script)s" | grep -v "grep %(script)s"' % locals())
+        script = 'xmipp_protocol_script %s' % os.path.abspath(self.run['script'])
+        return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%(script)s" | grep -v grep ' % locals())
 
     def stopProcessGroup(self):
         if self.isBatch:
@@ -477,7 +477,6 @@ def getImageJPluginCmd(memory, macro, args, batchMode=False):
     cmd = """ java -Xmx%s -Dplugins.dir=%s -jar %s -macro %s "%s" """ % (memory, plugins_dir, imagej_jar, macro, args)
     if batchMode:
         cmd += " &"
-    print "getImageJPluginCmd:", cmd
     return cmd
 
 def runImageJPlugin(memory, macro, args, batchMode=False):

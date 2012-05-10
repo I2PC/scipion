@@ -48,6 +48,7 @@ class XmippProject():
         self.logsDir = projectDefaults['LogsDir']
         self.runsDir = projectDefaults['RunsDir']
         self.tmpDir = projectDefaults['TmpDir']
+        self.possibleDead = {} # used to check dead process
     
     def exists(self):
         ''' a project exists if the data base can be opened and directories Logs and Runs
@@ -114,20 +115,12 @@ class XmippProject():
     def clean(self):
         ''' delete files related with a project'''
         self.cleanDirs([self.logsDir, self.runsDir, self.tmpDir] + [p.dir for p in protDict.values()])
-#        if exists(self.logsDir):
-#            shutil.rmtree(self.logsDir)
-#        if exists(self.runsDir):
-#            shutil.rmtree(self.runsDir)
-#        if exists(self.tmpDir):
-#            shutil.rmtree(self.tmpDir)
+
         if exists(self.cfgName):
             os.remove(self.cfgName)
+        
         if exists(self.dbName):
             os.remove(self.dbName)
-#            
-#        for p in protDict.values():
-#            if exists(p.dir):
-#                shutil.rmtree(p.dir)
         self.create()
 
     def projectTmpPath(self, *paths):
@@ -239,19 +232,31 @@ class XmippProject():
         runs = self.projectDb.selectRuns(protGroup)
         stateList = []
         
+        def cleanPossibleDead(runName):
+            if runName in self.possibleDead:
+                del self.possibleDead[runName]
+                
         if len(runs) > 0:            
             for run in runs:
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
+                runName = getExtendedRunName(run)
+                if state == SqliteDb.RUN_FINISHED:
+                    cleanPossibleDead(runName)
                 if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
                     stateStr += " - %d/%d" % self.projectDb.getRunProgress(run)
                     if not state in [SqliteDb.RUN_ABORTED, SqliteDb.RUN_FAILED]:
                         from protlib_utils import ProcessManager
                         if checkDead and not ProcessManager(run).isAlive():
+                            if runName in self.possibleDead:
                                 self.projectDb.updateRunState(SqliteDb.RUN_FAILED, run['run_id'])
                                 stateStr = SqliteDb.StateNames[SqliteDb.RUN_FAILED]
+                                del self.possibleDead[runName]
+                            else:
+                                stateStr = SqliteDb.StateNames[state]
+                                self.possibleDead[runName] = True
                         else: 
-                            self.projectDb.updateRunState(SqliteDb.RUN_STARTED, run['run_id']) 
+                            self.projectDb.updateRunState(SqliteDb.RUN_STARTED, run['run_id'])
                 stateList.append(('  ' + getExtendedRunName(run), state, stateStr, run['last_modified']))       
         return runs, stateList
         
@@ -483,6 +488,7 @@ class XmippProtocol(object):
         super(ProtProjMatch, self).validate()
         '''
         return []
+        
     
     def summary(self):
         '''Produces a summary with the most relevant information of the protocol run'''
@@ -494,10 +500,11 @@ class XmippProtocol(object):
     
     def warningsBase(self):
         '''Output some warnings that can be errors and require user confirmation to proceed'''
-        warningList=[]
+        warningList = []
         if self.Behavior == "Restart":
             warningList.append("Restarting a protocol will <DELETE> previous results")
         warningList += self.warnings()
+        
         return warningList
 
     def warnings(self):

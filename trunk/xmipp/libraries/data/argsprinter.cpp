@@ -507,12 +507,9 @@ void printEnd(FILE * output, const String &progName)
     fprintf(output, "#{eval} expandParallel()\n\n");
 
     fprintf(output,
-            "# {hidden} Program name"
+            "# {hidden} Program name\n"
             "\"\"\"This is the name of the program to be executed, dont change this!!!\"\"\"\n"
             "ProgramName = \"%s\"\n"
-            "# {hidden} Run behavior"
-            "\"\"\"For programs this have not much sense\"\"\"\n"
-            "Behavior = \"Resume\"\n"
             "#------------------------------------------------------------------------------------------\n"
             "# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n"
             "#------------------------------------------------------------------------------------------------\n\n"
