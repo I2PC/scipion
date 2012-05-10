@@ -168,9 +168,9 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
 
         reconstructed.resizeNoCopy(im);
         pixel_idx=0;
-        Image<double> B;
-        B().resizeNoCopy(im);
-        B().initZeros();
+        //Image<double> B;
+        //B().resizeNoCopy(im);
+        //B().initZeros();
 
         FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
         if (A2D_ELEM(ROI,i,j))
@@ -180,7 +180,7 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
                 temp+=dMij(zerMat,pixel_idx,k)*VEC_ELEM(fittedCoeffs,k);
 
             A2D_ELEM(reconstructed,i,j)=temp;
-            A2D_ELEM(MULTIDIM_ARRAY(B),i,j) = VEC_ELEM(weightedLeastSquaresHelper.b, pixel_idx);
+            //A2D_ELEM(MULTIDIM_ARRAY(B),i,j) = VEC_ELEM(weightedLeastSquaresHelper.b, pixel_idx);
             ++pixel_idx;
         }
 

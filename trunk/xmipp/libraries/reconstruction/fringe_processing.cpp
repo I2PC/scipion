@@ -699,21 +699,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
         save()=wphase;
         save.write("PPP3.xmp");
     }
-    //Finally we obtain the unwrapped phase
-    FourierFilter lpf;
-    lpf.FilterBand=LOWPASS;
-    lpf.w1=0.15;
-    lpf.raised_w=0.02;
-    lpf.applyMaskSpace(orModMap);
-    if (verbose == 3)
-    {
-        save()=orModMap;
-        save.write("PPP31.xmp");
-    }
-    unwrapping(wphase, orModMap, lambda, size, phase);
 
-    unwrapping(phase, orModMap, lambda, size, wphase);
-    phase=wphase;
+    unwrapping(wphase, orModMap, lambda, size, phase);
 
     if (verbose == 4)
     {
@@ -733,11 +720,6 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     mod2.resizeNoCopy(im);
     mod2.initConstant(1.0);
     polynom.fit(coefsInit,phase,mod,ROI,1);
-    std::cout << polynom.fittedCoeffs << std::endl;
-
-    polynom.fit(coefsInit,phase,mod2,ROI,1);
-    std::cout << polynom.fittedCoeffs << std::endl;
-
 
     for (int i=0; i<VEC_XSIZE(coeffs); i++)
     {
