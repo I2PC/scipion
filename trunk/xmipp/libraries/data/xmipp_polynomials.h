@@ -42,7 +42,8 @@ public :
 
 public:
 	// fitting a surface given by member im using the polynomials
-	virtual void fit(const Matrix1D<int> & coef, MultidimArray<double> & im, MultidimArray<bool> & ROI, int verbose=0)=0;
+	virtual void fit(const Matrix1D<int> & coef, MultidimArray<double> & im, MultidimArray<double> &weight,
+			         MultidimArray<bool> & ROI, int verbose=0)=0;
 
 protected:
 	// Create the polynomials
@@ -70,7 +71,8 @@ public:
 	void create(const Matrix1D<int> & coef);
 	//This function obtains the Zernike coefficients from the matrix 1D coeff. This array is formed by zeros and ones.
 	// If the value of one element of coef is
-	void fit(const Matrix1D<int> & coef, MultidimArray<double> & im, MultidimArray<bool> & ROI, int verbose=0);
+	void fit(const Matrix1D<int> & coef, MultidimArray<double> & im, MultidimArray<double> &weight,
+			 MultidimArray<bool> & ROI, int verbose=0);
 	//Gives the zernike polynomio of index zerIndex that it is stored in im
 	void zernikePols(const Matrix1D<int> coef, MultidimArray<double> & im, MultidimArray<bool> & ROI, int verbose=0);
 };
