@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/multidim_array.h>
-#include <data/fringe_processing.h>
+#include <reconstruction/fringe_processing.h>
 #include <data/xmipp_image.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"

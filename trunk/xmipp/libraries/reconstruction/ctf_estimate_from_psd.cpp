@@ -28,12 +28,12 @@
 #include "ctf_estimate_from_psd.h"
 #include "ctf_enhance_psd.h"
 #include "fourier_filter.h"
+#include "fringe_processing.h"
 
 #include <data/args.h>
 #include <data/histogram.h>
 #include <data/filters.h>
 #include <data/xmipp_fft.h>
-#include <data/fringe_processing.h>
 
 /* prototypes */
 double CTF_fitness(double *, void *);

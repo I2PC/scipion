@@ -757,8 +757,6 @@ AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 AddXmippProgram('ctf_enhance_psd', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
-if not int(env['release']):
-	AddXmippProgram('ctf_estimate_from_psd_zernike', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('ctf_phase_flip', ['XmippRecons'])
 AddXmippProgram('ctf_show', ['XmippRecons'])
