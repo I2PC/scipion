@@ -24,11 +24,13 @@
  ***************************************************************************/
 
 #include "fringe_processing.h"
-#include "xmipp_polynomials.h"
-#include "xmipp_image.h"
-#include "multidim_array.h"
-#include "xmipp_funcs.h"
-#include "xmipp_fftw.h"
+#include <data/xmipp_polynomials.h>
+#include <data/xmipp_image.h>
+#include <data/multidim_array.h>
+#include <data/xmipp_funcs.h>
+#include <data/xmipp_fftw.h>
+#include "fourier_filter.h"
+
 #include <queue>
 
 //This member function simulates different types of fringe patterns.
@@ -698,7 +700,20 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
         save.write("PPP3.xmp");
     }
     //Finally we obtain the unwrapped phase
+    FourierFilter lpf;
+    lpf.FilterBand=LOWPASS;
+    lpf.w1=0.15;
+    lpf.raised_w=0.02;
+    lpf.applyMaskSpace(orModMap);
+    if (verbose == 3)
+    {
+        save()=orModMap;
+        save.write("PPP31.xmp");
+    }
     unwrapping(wphase, orModMap, lambda, size, phase);
+
+    unwrapping(phase, orModMap, lambda, size, wphase);
+    phase=wphase;
 
     if (verbose == 4)
     {
@@ -707,13 +722,22 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     }
 
     ROI.setXmippOrigin();
+    mod.setXmippOrigin();
     Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
 
     for (int i=0; i<VEC_XSIZE(coeffs); i++)
         VEC_ELEM(coefsInit,i) = (int)VEC_ELEM(coeffs,i);
 
     PolyZernikes polynom;
-    polynom.fit(coefsInit,phase,ROI,1);
+    MultidimArray< double > mod2;
+    mod2.resizeNoCopy(im);
+    mod2.initConstant(1.0);
+    polynom.fit(coefsInit,phase,mod,ROI,1);
+    std::cout << polynom.fittedCoeffs << std::endl;
+
+    polynom.fit(coefsInit,phase,mod2,ROI,1);
+    std::cout << polynom.fittedCoeffs << std::endl;
+
 
     for (int i=0; i<VEC_XSIZE(coeffs); i++)
     {

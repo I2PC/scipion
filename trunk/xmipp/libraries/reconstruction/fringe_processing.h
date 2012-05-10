@@ -26,9 +26,9 @@
 #ifndef FRINGEPROCESSING_H_
 #define FRINGEPROCESSING_H_
 
-#include "multidim_array.h"
-#include "matrix2d.h"
-#include "histogram.h"
+#include <data/multidim_array.h>
+#include <data/matrix2d.h>
+#include <data/histogram.h>
 
 //This class groups all the fringe processing methods that will be used to process the CTF
 //in the non parametric CTF estimation approach
