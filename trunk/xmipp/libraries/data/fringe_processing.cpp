@@ -301,19 +301,17 @@ void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<dou
     FourierTransformer ftrans(FFTW_BACKWARD);
     ftrans.FourierTransform(imComplex, fftIm, false);
 
-    double temp = 0;
-    std::complex<double> tempCpx;
-
     double rang = (rmax-rmin)/2;
     //Inside rang we assume that there will a range of fringes per field from 2 to 10.
-    double freq2 = XSIZE(im)/(rang/2);
+    double freq2 = XSIZE(im)/(rang/1.5);
     double freq1 = XSIZE(im)/(rang/10);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-        temp= (1/(1+std::exp(((std::sqrt(std::pow((double)i,2)+std::pow((double)j,2))-freq1),2)/(5))))*(1-(std::exp((-1)*(std::pow(double(i),2) + std::pow(double(j),2)) /(freq2*freq2/2))));
-        tempCpx = std::complex<double>(temp,temp);
-        A2D_ELEM(H,i,j) = tempCpx;
+    	double r2=i*i+j*j;
+        double temp= (1/(1+std::exp(((std::sqrt(r2)-freq1))/(10))))*
+        		(1-(std::exp(-r2 /(freq2*freq2/2))));
+        A2D_ELEM(H,i,j) = std::complex<double>(temp,temp);
     }
 
     CenterFFT(H,false);
@@ -496,7 +494,7 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     qualityMapInt.selfROUND();
 
     Matrix2D<double> gaussian;
-    gaussian.initGaussian(2*size+1,0.6);
+    gaussian.initGaussian(2*size+1,1.5);
 
     MultidimArray<bool> processed;
     processed.resizeNoCopy(wrappedPhase);

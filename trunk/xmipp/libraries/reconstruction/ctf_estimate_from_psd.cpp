@@ -2373,12 +2373,14 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
 
     int x=(int)((0.3*max_freq+0.7*min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
 
-
+    // We test three cases: First one: max_freq = 0.2, second max_freq = 0.3, third max_freq = 0.4. We select the one in which the difference between
+    // defocusU and defocusV normalized between the max(defocusU,defocusV) is smaller
+    //double max_freq2 = 0.2;
     fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
                   x,x,
                   min_freq*XSIZE(centeredEnhancedPSD),
                   max_freq*XSIZE(centeredEnhancedPSD),
-                  phase, mod, coefs, 6);
+                  phase, mod, coefs, 0);
 
     kV = kV*1000;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
@@ -2390,11 +2392,85 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     double deFocusAvg =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
     double deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
     ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    defocusU=deFocusAvg+deFocusDiff;
-    defocusV=deFocusAvg-deFocusDiff;
+    double defocusU1=deFocusAvg+deFocusDiff;
+    double defocusV1=deFocusAvg-deFocusDiff;
+
+    std::cout << "defocusU1="<< defocusU1 << std::endl;
+    std::cout << "defocusV1="<< defocusV1 << std::endl;
+
+    //SECOND CASE max_freq2 = 0.3;
+    /*max_freq2 = 0.3;
+    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
+                  x,x,
+                  min_freq*XSIZE(centeredEnhancedPSD),
+                  max_freq2*XSIZE(centeredEnhancedPSD),
+                  phase, mod, coefs, 0);
+
+    std::cout << "aquiii" << std::endl;
+
+    Z3=VEC_ELEM(coefs,4);
+    Z8=VEC_ELEM(coefs,12);
+    Z4=VEC_ELEM(coefs,3);
+    Z5=VEC_ELEM(coefs,5);
+
+    deFocusAvg =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
+    deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
+    ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+    double defocusU2=deFocusAvg+deFocusDiff;
+    double defocusV2=deFocusAvg-deFocusDiff;
+
+    std::cout << "defocusU2="<< defocusU << std::endl;
+    std::cout << "defocusV2="<< defocusV << std::endl;
+
+    //THIRD CASE max_freq2 = 0.4;
+    max_freq2 = 0.4;
+    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
+                  x,x,
+                  min_freq*XSIZE(centeredEnhancedPSD),
+                  max_freq2*XSIZE(centeredEnhancedPSD),
+                  phase, mod, coefs, 6);
+
+    Z3=VEC_ELEM(coefs,4);
+    Z8=VEC_ELEM(coefs,12);
+    Z4=VEC_ELEM(coefs,3);
+    Z5=VEC_ELEM(coefs,5);
+
+    deFocusAvg =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
+    deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
+    ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+    double defocusU3=deFocusAvg+deFocusDiff;
+    double defocusV3=deFocusAvg-deFocusDiff;
+
+    std::cout << "defocusU3="<< defocusU << std::endl;
+    std::cout << "defocusV3="<< defocusV << std::endl;
+
+    //We calculate the difference relative between defocusU and defocusV for the three cases:
+    double diffmax_freq1 = std::fabs((defocusU1-defocusV1)/defocusV1);
+    double diffmax_freq2 = std::fabs((defocusU2-defocusV2)/defocusV2);
+    double diffmax_freq3 = std::fabs((defocusU3-defocusV3)/defocusV3);
+
+    if ( (diffmax_freq1 < diffmax_freq2) && (diffmax_freq1 < diffmax_freq3) )
+    {
+        defocusU = defocusU1;
+        defocusV = defocusV1;
+    }
+    else if ( (diffmax_freq2 < diffmax_freq1) && (diffmax_freq2 < diffmax_freq3))
+    {
+        defocusU = defocusU2;
+        defocusV = defocusV2;
+    }else
+    {
+        defocusU = defocusU3;
+        defocusV = defocusV3;
+    }
 
     std::cout << "defocusU="<< defocusU << std::endl;
     std::cout << "defocusV="<< defocusV << std::endl;
+    */
+
+    defocusU = defocusU1;
+    defocusV = defocusV1;
+    ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
 }
 
 void estimate_defoci_Zernike()
@@ -2404,10 +2480,10 @@ void estimate_defoci_Zernike()
 
     double defocusU, defocusV, angle;
     estimate_defoci_Zernike(global_prm->enhanced_ctftomodel_fullsize(),
-                       global_prm->min_freq,global_prm->max_freq,global_prm->Tm,
-                       global_prm->initial_ctfmodel.kV,
-                       global_prm->lambdaPhase,global_prm->sizeWindowPhase,
-                       global_ctfmodel.DeltafU, global_ctfmodel.DeltafV, global_ctfmodel.azimuthal_angle, 0);
+                            global_prm->min_freq,global_prm->max_freq,global_prm->Tm,
+                            global_prm->initial_ctfmodel.kV,
+                            global_prm->lambdaPhase,global_prm->sizeWindowPhase,
+                            global_ctfmodel.DeltafU, global_ctfmodel.DeltafV, global_ctfmodel.azimuthal_angle, 0);
 
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
