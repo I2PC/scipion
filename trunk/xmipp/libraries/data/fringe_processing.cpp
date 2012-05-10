@@ -334,7 +334,7 @@ void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<dou
     {
         if (A2D_ELEM(ROI,i,j))
         {
-            temp = std::abs(A2D_ELEM(H,i,j));
+            double temp = std::abs(A2D_ELEM(H,i,j));
             A2D_ELEM(imModMap,i,j) = std::sqrt(std::pow(temp,2)+std::pow(A2D_ELEM(imN,i,j),2));
             A2D_ELEM(imN,i,j)      = std::cos(std::atan2(temp, A2D_ELEM(imN,i,j)));
         }
