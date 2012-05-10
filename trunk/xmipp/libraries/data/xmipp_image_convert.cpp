@@ -169,7 +169,13 @@ void ProgConvImg::readParams()
 
     // Check output type
     type = getParam("--type");
-    depth = (checkParam("--depth"))? "%" + (String)getParam("--depth") : "";
+
+    if (checkParam("--depth"))
+    {
+        String depthTemp = (String)getParam("--depth");
+        if (depthTemp != "default")
+            depth = "%" + depthTemp;
+    }
     swap = checkParam("--swap");
 
 }
