@@ -2380,7 +2380,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                   x,x,
                   min_freq*XSIZE(centeredEnhancedPSD),
                   max_freq*XSIZE(centeredEnhancedPSD),
-                  phase, mod, coefs, 0);
+                  phase, mod, coefs, 6);
 
     kV = kV*1000;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
@@ -2392,84 +2392,8 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     double deFocusAvg =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
     double deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
     ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    double defocusU1=deFocusAvg+deFocusDiff;
-    double defocusV1=deFocusAvg-deFocusDiff;
-
-    std::cout << "defocusU1="<< defocusU1 << std::endl;
-    std::cout << "defocusV1="<< defocusV1 << std::endl;
-
-    //SECOND CASE max_freq2 = 0.3;
-    /*max_freq2 = 0.3;
-    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
-                  x,x,
-                  min_freq*XSIZE(centeredEnhancedPSD),
-                  max_freq2*XSIZE(centeredEnhancedPSD),
-                  phase, mod, coefs, 0);
-
-    std::cout << "aquiii" << std::endl;
-
-    Z3=VEC_ELEM(coefs,4);
-    Z8=VEC_ELEM(coefs,12);
-    Z4=VEC_ELEM(coefs,3);
-    Z5=VEC_ELEM(coefs,5);
-
-    deFocusAvg =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
-    deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
-    ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    double defocusU2=deFocusAvg+deFocusDiff;
-    double defocusV2=deFocusAvg-deFocusDiff;
-
-    std::cout << "defocusU2="<< defocusU << std::endl;
-    std::cout << "defocusV2="<< defocusV << std::endl;
-
-    //THIRD CASE max_freq2 = 0.4;
-    max_freq2 = 0.4;
-    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
-                  x,x,
-                  min_freq*XSIZE(centeredEnhancedPSD),
-                  max_freq2*XSIZE(centeredEnhancedPSD),
-                  phase, mod, coefs, 6);
-
-    Z3=VEC_ELEM(coefs,4);
-    Z8=VEC_ELEM(coefs,12);
-    Z4=VEC_ELEM(coefs,3);
-    Z5=VEC_ELEM(coefs,5);
-
-    deFocusAvg =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
-    deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
-    ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    double defocusU3=deFocusAvg+deFocusDiff;
-    double defocusV3=deFocusAvg-deFocusDiff;
-
-    std::cout << "defocusU3="<< defocusU << std::endl;
-    std::cout << "defocusV3="<< defocusV << std::endl;
-
-    //We calculate the difference relative between defocusU and defocusV for the three cases:
-    double diffmax_freq1 = std::fabs((defocusU1-defocusV1)/defocusV1);
-    double diffmax_freq2 = std::fabs((defocusU2-defocusV2)/defocusV2);
-    double diffmax_freq3 = std::fabs((defocusU3-defocusV3)/defocusV3);
-
-    if ( (diffmax_freq1 < diffmax_freq2) && (diffmax_freq1 < diffmax_freq3) )
-    {
-        defocusU = defocusU1;
-        defocusV = defocusV1;
-    }
-    else if ( (diffmax_freq2 < diffmax_freq1) && (diffmax_freq2 < diffmax_freq3))
-    {
-        defocusU = defocusU2;
-        defocusV = defocusV2;
-    }else
-    {
-        defocusU = defocusU3;
-        defocusV = defocusV3;
-    }
-
-    std::cout << "defocusU="<< defocusU << std::endl;
-    std::cout << "defocusV="<< defocusV << std::endl;
-    */
-
-    defocusU = defocusU1;
-    defocusV = defocusV1;
+    defocusU=deFocusAvg+deFocusDiff;
+    defocusV=deFocusAvg-deFocusDiff;
     ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
 }
 
