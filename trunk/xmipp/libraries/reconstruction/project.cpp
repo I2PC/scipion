@@ -203,7 +203,6 @@ void ParametersProjection::read(const FileName &fn_proj_param)
     {
         MetaData MD;
         MD.read(fn_proj_param);
-        std::cerr << "DEBUG_ROB, MD:" << MD << std::endl;
         if (MD.isEmpty())
             REPORT_ERROR(ERR_IO_NOTOPEN,
                          (String)"Prog_Project_Parameters::read: There is a problem "
