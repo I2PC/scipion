@@ -1549,11 +1549,27 @@ public:
     Matrix1D<double> Atb, b, bpredicted;
 };
 
+/** Helper class for solving Weighted Least Squares */
+class WeightedLeastSquaresHelper: public PseudoInverseHelper
+{
+public:
+	Matrix1D<double> w; //Weights
+};
+
 /** Solve Linear system Ax=b with pseudoinverse.
  * A and b must be set inside the PseudoInverseHelper, the rest of the
  * fields in PseudoInverseHelper are used by this routine to avoid
  * several allocation/deallocations */
 void solveLinearSystem(PseudoInverseHelper &h, Matrix1D<double> &result);
+
+/** Solve Weighted least square problem Ax=b with pseudoinverse and weights w.
+ * A, w and b must be set inside the WeightedLeastSquaresHelper, the rest of the
+ * fields in WeightedLeastSquaresHelper are used by this routine to avoid
+ * several allocation/deallocations.
+ *
+ * The normal equations of this problem are A^t W A x = A^t W b,
+ * where W is a diagonal matrix whose entries are in the vector w. */
+void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result);
 
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */

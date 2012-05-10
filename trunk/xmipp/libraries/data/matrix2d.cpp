@@ -91,3 +91,22 @@ void solveLinearSystem(PseudoInverseHelper &h, Matrix1D<double> &result)
 		VEC_ELEM(result,i)+=MAT_ELEM(AtAinv,i,j)*VEC_ELEM(Atb,j);
 }
 
+// Solve linear systems ---------------------------------------------------
+void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result)
+{
+	Matrix2D<double> &A=h.A;
+	Matrix1D<double> &b=h.b;
+	Matrix1D<double> &w=h.w;
+
+	// See http://en.wikipedia.org/wiki/Least_squares#Weighted_least_squares
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(w)
+	{
+		double wii=sqrt(VEC_ELEM(w,i));
+		VEC_ELEM(b,i)*=wii;
+		for (int j=0; j<MAT_XSIZE(A); ++j)
+			MAT_ELEM(A,i,j)*=wii;
+	}
+	solveLinearSystem(h,result);
+}
+
+
