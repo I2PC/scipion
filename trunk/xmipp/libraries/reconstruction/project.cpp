@@ -1059,6 +1059,9 @@ int PROJECT_Effectively_project(const String &fnOut,
     mdRotations.write("rotations.xmd");
 #endif
 #undef DEBUG
+    // release memory
+    delete Vshears;
+    delete Vfourier;
 
     return NumProjs;
 }
