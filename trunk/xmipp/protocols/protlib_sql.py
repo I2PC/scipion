@@ -1,4 +1,5 @@
 from sqlite3 import dbapi2 as sqlite
+from sqlite3 import IntegrityError
 import pickle
 import os, sys
 from os.path import exists

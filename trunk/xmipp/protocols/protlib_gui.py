@@ -572,6 +572,8 @@ class ProtocolGUI(BasicGUI):
         self.checkVisibility()
         
     def save(self, event=""):
+        from protlib_sql import IntegrityError
+         
         if not self.validateInput():
             return False
         try:
@@ -580,9 +582,8 @@ class ProtocolGUI(BasicGUI):
                 self.run['run_name'] = runName
                 self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
             
-            self.parser.save(self.run['script'])
             
-            #update database
+            # update database
             if self.run['script'] != self.run['source']:
                 self.project.projectDb.insertRun(self.run)
                 self.run['source'] = self.run['script']
@@ -595,11 +596,17 @@ class ProtocolGUI(BasicGUI):
                 if not self.visualize_mode:
                     self.run['run_state'] = SqliteDb.RUN_SAVED
                 self.project.projectDb.updateRun(self.run)
+            # write header file if not error
+            self.parser.save(self.run['script'])
     
             if self.saveCallback:
                 self.saveCallback()
                 
             FlashMessage(self.master, 'Saved successfully.', delay=1)
+        except IntegrityError, ie: 
+            if 'columns run_name, protocol_name are not unique' in str(ie):
+                self.showError("Error saving run parameters", 
+                               "The RUN name <%s> \nalready exists in the PROJECT." % getExtendedRunName(self.run))
         except Exception, e:
             self.showError("Error saving run parameters", str(e))
             raise e
