@@ -187,6 +187,13 @@ ParametersProjection::ParametersProjection()
     Npixel_dev=0.;
     Ncenter_avg=0.;
     Ncenter_dev=0.;
+    rot_range.Navg = 0.;
+    rot_range.Ndev=0.;
+    tilt_range.Navg=0.;
+    tilt_range.Ndev=0.;
+    psi_range.Navg=0.;
+    psi_range.Ndev=0.;
+
 }
 
 void ParametersProjection::read(const FileName &fn_proj_param)
