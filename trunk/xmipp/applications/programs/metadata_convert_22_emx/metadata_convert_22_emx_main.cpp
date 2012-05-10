@@ -165,11 +165,12 @@ protected:
         if (fn_in.isStar1(false))
         {
             toemx=true;
-            comment = "##########################################################################\n"
-                      "#               EMX Exchange file\n"
-                      "#  This emx file has been produced from a XMIPP metadata file\n"
-                      "#  http://i2pc.cnb.csic.es/emx\n"
-                      "##########################################################################\n";
+            //1234567890123456789012345678901234567890123456789012345678901234567890
+            comment = " ====================================================================== "
+                      ".................EMX Exchange file...................................."
+                      " This emx file has been produced from a XMIPP metadata file."
+                      " Information on emx file format is available at"
+                      " http://i2pc.cnb.csic.es/emx";
         }
         else
         {
@@ -177,22 +178,20 @@ protected:
             if (fn_in.isStar1(false))
             {
                 toxmipp=true;
-                comment = "##########################################################################\n"
-                          "#               EMX Exchange file \n"
-                          "# \n"
-                          "# this metadata file has been imported from a EMX metadata file"
-                          "#  Information on emx file format is available at \n"
-                          "#  http://i2pc.cnb.csic.es/emx\n"
-                          "##########################################################################\n";
+                //1234567890123456789012345678901234567890123456789012345678901234567890
+                comment = " ====================================================================== "
+                          ".................XMIPP Metadata file.................................= "
+                          " This metadata file has been imported from a EMX metadata file.";
             }
         }
-        comment += "##########################################################################\n"
-                   "#  This file has been created using XMIPP-EMX conversion utility\n"
-                   "#  One of the best ways you can help us to improve this software\n"
-                   "#  is to let us know about any problems you find with it.\n"
-                   "#  Please report bugs to: xmipp@cnb.csic.es\n"
-                   "#  MAn page at: http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Metadata_convert_22_emx_v3"
-                   "##########################################################################";
+        //1234567890123456789012345678901234567890123456789012345678901234567890
+        comment += " ====================================================================== "
+                   " This file has been created using xmipp_metadata_convert_22_emx program."
+                   " One of the best ways you can help us to improve this software"
+                   " is to let us know about any problems you find with it."
+                   " Please report bugs to: xmipp@cnb.csic.es"
+                   " Help Page at: http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Metadata_convert_22_emx_v3"
+                   " ====================================================================== ";
 
         if(toemx==toxmipp)//both false
             REPORT_ERROR(ERR_IO_NOTFILE,(std::string)"File ");
@@ -624,6 +623,10 @@ public:
                 removeDots();
                 convertEmx2XmippCTFMicrograph();
                 break;
+            case EMX_CTFPARTICLE:
+                std::cerr << colorString("ctfParticle: Option not yet implemented", RED)  <<std::endl;
+                exit(1);
+                break;
             default:
                 REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp22Emx");
                 break;
@@ -647,6 +650,10 @@ public:
                 convertXmipp2EmxCTFMicrograph();
                 restoreDots();
                 break;
+            case EMX_CTFPARTICLE:
+                std::cerr << colorString("ctfParticle: Option not yet implemented", RED)  <<std::endl;
+                exit(1);
+                break;
             default:
                 REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp2EmxCoordinates");
                 break;
@@ -654,6 +661,7 @@ public:
         else
             REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"Congratulations you have found a bug in convertXmipp2EmxCoordinates");
 
+        errorCode=0;
     }
 }
 ;//end of class ProgMetadataConvert22Emx
