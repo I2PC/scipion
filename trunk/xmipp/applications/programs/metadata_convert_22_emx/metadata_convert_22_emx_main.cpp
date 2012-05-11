@@ -175,10 +175,8 @@ protected:
         else
         {
             setMetadataVersion("EMX1.0");
-            std::cerr << "1) EMX1" <<std::endl;
             if (fn_in.isStar1(false))
             {
-                std::cerr << "2) isStar1" <<std::endl;
                 toxmipp=true;
                 //1234567890123456789012345678901234567890123456789012345678901234567890
                 comment = " ====================================================================== "
