@@ -25,7 +25,10 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.Import = "from protocol_particle_pick_auto import *"
         self.setPreviousRun(self.SupervisedRun)
         self.pickingDir = self.PrevRun.WorkingDir
-        self.inputFilename('acquisition', 'micrographs', 'families', 'macros')
+        self.keysToImport = ['micrographs', 'families', 'acquisition']
+        if xmippExists(self.PrevRun.getFilename('macros')):
+            self.keysToImport.append('macros')
+        self.inputFilename(*self.keysToImport)
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
         self.families = self.getFilename('families')
@@ -43,7 +46,7 @@ class ProtParticlePickingAuto(XmippProtocol):
        
     def defineSteps(self):
         self.computeFamilies()
-        filesToImport = [self.Input[k] for k in ['micrographs', 'families', 'acquisition', 'macros']]
+        filesToImport = [self.Input[k] for k in self.keysToImport]
         for family in self.familiesForAuto:
             filesToImport.append(self.PrevRun.getFilename('training', family=family))
             filesToImport.append(self.PrevRun.getFilename('mask', family=family))

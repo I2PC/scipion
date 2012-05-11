@@ -25,10 +25,12 @@ class ProtParticlePickingSupervised(XmippProtocol):
         self.setPreviousRun(self.PickingRun)
         self.pickingDir = self.PrevRun.WorkingDir
         self.inputProperty('TiltPairs', 'MicrographsMd')
-        self.inputFilename('families', 'macros', 'acquisition')
+        self.keysToImport = ['micrographs', 'families', 'acquisition']
+        if xmippExists(self.PrevRun.getFilename('macros')):
+            self.keysToImport.append('macros')
+        self.inputFilename(*self.keysToImport)
         self.Input['micrographs'] = self.MicrographsMd
-        #self.micrographs = self.getFilename('micrographs')
-        self.micrographs = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
+        self.micrographsMd = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
         
     def createFilenameTemplates(self):
         return {
@@ -38,17 +40,16 @@ class ProtParticlePickingSupervised(XmippProtocol):
                 }
 
     def defineSteps(self):
-        #self.insertStep('copyFile', source=self.inputMicrographs, dest=self.micrographs, verifyfiles=[self.micrographs])
-        filesToImport = [self.Input[k] for k in ['micrographs', 'families', 'macros', 'acquisition']]
+        filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getPosFiles(self.PrevRun)
-        self.insertImportOfFiles(filesToImport, copy=True)
+        self.insertImportOfFiles(filesToImport)
         modeWithArgs = PM_SUPERVISED + " %(NumberOfThreads)d %(Fast)s %(InCore)s" % self.ParamsDict
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
-                           InputMicrographs=self.micrographs, WorkingDir=self.WorkingDir,
+                           InputMicrographs=self.micrographsMd, WorkingDir=self.WorkingDir,
                            PickingMode=modeWithArgs, Memory=self.Memory)       
         
     def summary(self):
-        md = xmipp.MetaData(self.micrographs)
+        md = xmipp.MetaData(self.micrographsMd)
         micrographs, particles, familiesDict = countParticles(self, 'auto')
         suffix = "micrographs"        
         summary = ["Manual picking RUN: <%s> " % self.PickingRun,
@@ -62,7 +63,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
         return validateMicrographs(self.Input['micrographs'])
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.micrographs, self.WorkingDir, PM_READONLY)
+        launchParticlePickingGUI(None, self.micrographsMd, self.WorkingDir, PM_READONLY)
 
 # Main
 #     
