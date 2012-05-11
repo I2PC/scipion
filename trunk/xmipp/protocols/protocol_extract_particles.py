@@ -49,11 +49,16 @@ class ProtExtractParticles(XmippProtocol):
     def setSamplingMode(self):
         md = MetaData(self.PrevRun.getFilename('acquisition'))
         objId = md.firstObject()
-        
         self.TsOriginal= self.TsInput = md.getValue(MDL_SAMPLINGRATE, objId)        
         if md.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
             self.TsOriginal = md.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
-        self.TsFinal = self.TsOriginal*self.DownsampleFactor
+
+        if self.DownsampleType == "same as picking":
+            self.TsFinal = md.getValue(MDL_SAMPLINGRATE, objId)
+        elif self.DownsampleType == "original":
+            self.TsFinal = self.TsOriginal
+        else:
+            self.TsFinal = self.TsOriginal*self.DownsampleFactor
         
         if abs(self.TsFinal-self.TsInput)<0.001:
             self.downsamplingMode=DownsamplingMode.SameAsPicking
@@ -61,6 +66,7 @@ class ProtExtractParticles(XmippProtocol):
             self.downsamplingMode=DownsamplingMode.SameAsOriginal
         else:
             self.downsamplingMode=DownsamplingMode.NewDownsample
+        print (str(self.TsFinal)+","+str(self.TsInput))
 
     def defineSteps(self):
         self.setSamplingMode()
