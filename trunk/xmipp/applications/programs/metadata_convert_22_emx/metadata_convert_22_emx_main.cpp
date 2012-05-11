@@ -250,7 +250,6 @@ public:
     }
     void convertXmipp2EmxCTFMicrograph(void)
     {
-        std::cerr << "convertXmipp2EmxCTFMicrograph" <<std::endl;
         MetaData mdMicrographXmipp;
         MetaData mdMicrographEMX;
         String micrographXmipp;
