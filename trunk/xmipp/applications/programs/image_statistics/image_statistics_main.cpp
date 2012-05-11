@@ -242,9 +242,9 @@ protected:
         {
             Image<double> dummyImage;
             dummyImage()=averageArray;
-            dummyImage.write((String)"avg_"+statFileNameRoot);
+            dummyImage.write((String)"avg_"+statFileNameRoot+".xmp");
             dummyImage()=stdArray;
-            dummyImage.write((String)"stdDev_"+statFileNameRoot);
+            dummyImage.write((String)"stdDev_"+statFileNameRoot+".xmp");
         }
     }
 }
