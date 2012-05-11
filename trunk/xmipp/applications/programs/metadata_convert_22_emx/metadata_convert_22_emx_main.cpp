@@ -164,6 +164,7 @@ protected:
         setMetadataVersion("XMIPP_STAR_1");
         if (fn_in.isStar1(false))
         {
+            std::cerr << "XMIPP_STAR_1" <<std::endl;
             toemx=true;
             //1234567890123456789012345678901234567890123456789012345678901234567890
             comment = " ====================================================================== "
@@ -175,8 +176,10 @@ protected:
         else
         {
             setMetadataVersion("EMX1.0");
+            std::cerr << "1) EMX1" <<std::endl;
             if (fn_in.isStar1(false))
             {
+                std::cerr << "2) isStar1" <<std::endl;
                 toxmipp=true;
                 //1234567890123456789012345678901234567890123456789012345678901234567890
                 comment = " ====================================================================== "
@@ -295,29 +298,11 @@ public:
     void convertXmipp2EmxClass(void)
     {
         MetaData mdClassXmipp;
-        MetaData mdClassEMX;
-        //        FileName fnCoordinateXmipp;
-        //        FileName micrographName;
-        MDRow rowIn, rowOut;
-        int ref;
-        String particleName;
-        //
         mdClassXmipp.read(fn_in);
-        std::stringstream out;
-        FOR_ALL_OBJECTS_IN_METADATA(mdClassXmipp)
-        {
-            mdClassXmipp.getRow(rowIn, __iter.objId);
-            rowGetValueOrAbort(rowIn,MDL_IMAGE,particleName);
-            rowGetValueOrAbort(rowIn,MDL_REF,ref);
-            rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
-            rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
-            mdClassEMX.addRow(rowOut);
-        }
-        FileName tmpFn;
-        tmpFn.compose("processedParticle",tmpname);
-        setMetadataVersion("EMX1.0");
-        mdClassEMX.setComment(comment);
-        mdClassEMX.write(tmpFn);
+        if(!mdClassXmipp.containsLabel(MDL_REF))
+            REPORT_ERROR(ERR_MD_MISSINGLABEL,"No classification info available");
+        else
+            convertXmipp2EmxAlignment();
     }
 
     void convertXmipp2EmxAlignment(void)
@@ -337,8 +322,6 @@ public:
         double fom;
         int ref;
 
-        //        //        FileName fnCoordinateXmipp;
-        //        //        FileName micrographName;
         MDRow rowIn, rowOut;
 
         mdAlignmentXmipp.read(fn_in);
@@ -480,35 +463,11 @@ public:
     void convertEmx2XmippClass(void)
     {
         MetaData mdClassEMX;
-        MetaData mdClassXmipp;
-        MetaData mdMicAggregate;
-        String particleName;
-        String _class;
-        MDRow  rowIn, rowOut;
-
         mdClassEMX.read(tmpname);
-        mdMicAggregate.aggregate(mdClassEMX,AGGR_COUNT,MDL_EMX_PARTICLE_CLASS_ID,
-                                 MDL_UNDEFINED,MDL_COUNT);
-
-        std::map< String, int> mapReferences;
-        FOR_ALL_OBJECTS_IN_METADATA(mdMicAggregate)
-        {
-            mdMicAggregate.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class,__iter.objId);
-            mapReferences[_class] = (int)__iter.objId;
-        }
-        FOR_ALL_OBJECTS_IN_METADATA(mdClassEMX)
-        {
-            mdClassEMX.getRow(rowIn, __iter.objId);
-            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_URL,particleName);
-            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_CLASS_ID,_class);
-
-            rowOut.setValue(MDL_IMAGE,particleName);
-            rowOut.setValue(MDL_REF,mapReferences[_class]);
-            mdClassXmipp.addRow(rowOut);
-        }
-        setMetadataVersion("XMIPP_STAR_1");
-        mdClassXmipp.setComment(comment);
-        mdClassXmipp.write(fn_out);
+        if(!mdClassEMX.containsLabel(MDL_EMX_PARTICLE_CLASS_ID))
+            REPORT_ERROR(ERR_MD_MISSINGLABEL,"No classification info available");
+        else
+            convertEmx2XmippAlignment();
     }
     void convertEmx2XmippAlignment(void)
     {
@@ -540,6 +499,7 @@ public:
             }
         }
 
+        A.initZeros();
         FOR_ALL_OBJECTS_IN_METADATA(mdAlignmentEMX)
         {
             mdAlignmentEMX.getRow(rowIn, __iter.objId);
@@ -573,25 +533,28 @@ public:
                 rowOut.getValue(MDL_FOM, fom);
 
             rowOut.setValue(MDL_IMAGE,particleName);
-            //getScale
-            sx = sqrt(MAT_ELEM(A,0,0)*MAT_ELEM(A,0,0) +
-                      MAT_ELEM(A,0,1)*MAT_ELEM(A,0,1) +
-                      MAT_ELEM(A,0,2)*MAT_ELEM(A,0,2));
-            sy = sqrt(MAT_ELEM(A,1,0)*MAT_ELEM(A,1,0) +
-                      MAT_ELEM(A,1,1)*MAT_ELEM(A,1,1) +
-                      MAT_ELEM(A,1,2)*MAT_ELEM(A,1,2));
-            sz = sqrt(MAT_ELEM(A,2,0)*MAT_ELEM(A,2,0) +
-                      MAT_ELEM(A,2,1)*MAT_ELEM(A,2,1) +
-                      MAT_ELEM(A,2,2)*MAT_ELEM(A,2,2));
-            if(ABS(sx-sy)> 0.001 ||
-               ABS(sx-sz)> 0.001 ||
-               ABS(sy-sz)> 0.001)
+            if (!A.isIdentity())
             {
-                REPORT_ERROR(ERR_MATRIX,formatString("Scale along the fifferent axes "
-                                                     " is different. Xmipp does not support it"
-                                                     "sx=%f,sy=%f,sz=%f", sx,sy,sz) );
+                //getScale
+                sx = sqrt(MAT_ELEM(A,0,0)*MAT_ELEM(A,0,0) +
+                          MAT_ELEM(A,0,1)*MAT_ELEM(A,0,1) +
+                          MAT_ELEM(A,0,2)*MAT_ELEM(A,0,2));
+                sy = sqrt(MAT_ELEM(A,1,0)*MAT_ELEM(A,1,0) +
+                          MAT_ELEM(A,1,1)*MAT_ELEM(A,1,1) +
+                          MAT_ELEM(A,1,2)*MAT_ELEM(A,1,2));
+                sz = sqrt(MAT_ELEM(A,2,0)*MAT_ELEM(A,2,0) +
+                          MAT_ELEM(A,2,1)*MAT_ELEM(A,2,1) +
+                          MAT_ELEM(A,2,2)*MAT_ELEM(A,2,2));
+                if(ABS(sx-sy)> 0.001 ||
+                   ABS(sx-sz)> 0.001 ||
+                   ABS(sy-sz)> 0.001)
+                {
+                    REPORT_ERROR(ERR_MATRIX,formatString("Scale along the fifferent axes "
+                                                         " is different. Xmipp does not support it"
+                                                         "sx=%f,sy=%f,sz=%f", sx,sy,sz) );
+                }
+                transformationMatrix2Geo(A,rowOut);
             }
-            transformationMatrix2Geo(A,rowOut);
             mdAlignmentXmipp.addRow(rowOut);
         }
         setMetadataVersion("XMIPP_STAR_1");
@@ -602,7 +565,8 @@ public:
 
     void run()
     {
-        show();
+        if(verbose)
+            show();
 
         if(toxmipp)
             switch (conversionType)
