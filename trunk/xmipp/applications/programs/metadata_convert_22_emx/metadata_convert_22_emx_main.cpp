@@ -383,7 +383,8 @@ public:
         double x,y;
 
         mdCoordinateEMX.read(tmpname);
-
+        if(!mdCoordinateEMX.containsLabel(MDL_EMX_MICROGRAPH_URL))
+            REPORT_ERROR(ERR_MD_MISSINGLABEL,"No micrograph.url available");
         mdMicAggregate.aggregate(mdCoordinateEMX,AGGR_COUNT,MDL_EMX_MICROGRAPH_URL,
                                  MDL_UNDEFINED,MDL_COUNT);
         //must delete, append multiple blocks
