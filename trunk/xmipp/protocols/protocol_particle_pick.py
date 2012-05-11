@@ -29,7 +29,7 @@ class ProtParticlePicking(XmippProtocol):
         self.inputFilename('microscope', 'acquisition')
 
     def defineSteps(self):
-        self.insertImportOfFiles(self.MicrographsMd, self.Input['acquisition'])
+        self.insertImportOfFiles([self.MicrographsMd, self.Input['acquisition']])
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            InputMicrographs=self.MicrographsMd, WorkingDir=self.WorkingDir,
                            TiltPairs=self.TiltPairs, Memory=self.Memory)       
