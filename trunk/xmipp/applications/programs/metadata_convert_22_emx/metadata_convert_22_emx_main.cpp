@@ -164,7 +164,6 @@ protected:
         setMetadataVersion("XMIPP_STAR_1");
         if (fn_in.isStar1(false))
         {
-            std::cerr << "XMIPP_STAR_1" <<std::endl;
             toemx=true;
             //1234567890123456789012345678901234567890123456789012345678901234567890
             comment = " ====================================================================== "
