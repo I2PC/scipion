@@ -338,8 +338,8 @@ def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, ori
         return
     
     # Extract 
-    rootname = join(WorkingDir, micrographName)
-    arguments="-i "+micrographToExtract+" --pos "+fnBlock+" --oroot "+rootname+" --Xdim "+str(particleSize)
+    rootname = join(WorkingDir, micrographName+".stk")
+    arguments="-i "+micrographToExtract+" --pos "+fnBlock+" -o "+rootname+" --Xdim "+str(particleSize)
     if abs(TsFinal-TsInput)>0.001:
         arguments+=" --downsampling "+str(TsFinal/TsInput)
     if doInvert:

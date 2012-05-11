@@ -42,8 +42,8 @@ protected:
         addParamsLine("  -i <input_untilted_micrograph>     : From which the untilted images will be cutted");
         addParamsLine("     alias --untilted;");
         addParamsLine("  [--orig <original_micrograph>]      : unless this parameter is specified");
-        addParamsLine("  --oroot <oroot>                    : Name for the particle images");
-        addParamsLine("                                      :+ Two files will be created: oroot.stk with the particles in a Spider stack an oroot.xmd with the list of image names, the micrograph they were taken from, and their coordinates");
+        addParamsLine("  -o <output_stack>                   : Name for the particle images");
+        addParamsLine("                                      :+ Two files will be created: output_stack with the particles in a Spider stack an output_stack.xmd with the list of image names, the micrograph they were taken from, and their coordinates");
         addParamsLine("     alias --untiltfn;");
         addParamsLine("  [--pos <position_file>]             : file with particle coordinates");
         addParamsLine("     alias --untiltPos;");
@@ -71,8 +71,8 @@ protected:
         addExampleLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos --oroot images --Xdim 64");
         addExampleLine ("   xmipp_micrograph_scissor --untilted Preprocessing/untilt/down1_untilt.raw --tilted Preprocessing/tilt/down1_tilt.raw --untiltfn untilt --tiltfn tilt --Xdim 60 --tiltAngles ParticlePicking/down1_untilt.raw.angles.txt --pos ParticlePicking/down1_untilt.raw.Common.pos --tiltPos ParticlePicking/down1_untilt.raw.tilted.Common.pos");
     }
-    FileName fn_micrograph,fn_root;
-    FileName fn_tilted, fn_root_tilted, fn_angles, fn_tilt_pos;
+    FileName fn_micrograph,fn_out;
+    FileName fn_tilted, fn_out_tilted, fn_angles, fn_tilt_pos;
     FileName fn_orig, fn_pos;
     bool     pair_mode;
     int      Ydim, Xdim;
@@ -86,7 +86,7 @@ protected:
     {
         fn_micrograph = getParam  ("-i");
         pair_mode     = checkParam("--tilted");
-        fn_root       = getParam  ("--untiltfn");
+        fn_out        = getParam  ("-o");
         fn_pos        = getParam  ("--pos");
         Xdim          = getIntParam("--Xdim");
         if (checkParam("--Ydim"))
@@ -105,7 +105,7 @@ protected:
         }
         else
         {
-            fn_root_tilted = getParam("--tiltfn");
+            fn_out_tilted = getParam("--tiltfn");
             fn_tilted      = getParam("--tilted");
             fn_angles      = getParam("--tiltAngles");
             fn_tilt_pos    = getParam("--tiltPos");
@@ -126,7 +126,7 @@ public:
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, -1, fn_root, fn_orig, 0.,0.,0., rmStack);
+            m.produce_all_images(0, -1, fn_out, fn_orig, 0.,0.,0., rmStack);
         }
         else
         {
@@ -147,7 +147,7 @@ public:
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, -1, fn_root, "", alpha_u,0.,0.,rmStack);
+            m.produce_all_images(0, -1, fn_out, "", alpha_u,0.,0.,rmStack);
             m.close_micrograph();
 
             // Generate the images for the tilted image
@@ -158,7 +158,7 @@ public:
             mt.add_label("");
             mt.set_transmitance_flag(compute_transmitance);
             mt.set_inverse_flag(compute_inverse);
-            mt.produce_all_images(0, -1, fn_root_tilted, "", 0., tilt_angle, alpha_t, rmStack);
+            mt.produce_all_images(0, -1, fn_out_tilted, "", 0., tilt_angle, alpha_t, rmStack);
             mt.close_micrograph();
         }
     }
