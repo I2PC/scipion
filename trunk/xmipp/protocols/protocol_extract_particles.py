@@ -66,7 +66,6 @@ class ProtExtractParticles(XmippProtocol):
             self.downsamplingMode=DownsamplingMode.SameAsOriginal
         else:
             self.downsamplingMode=DownsamplingMode.NewDownsample
-        print (str(self.TsFinal)+","+str(self.TsInput))
 
     def defineSteps(self):
         self.setSamplingMode()
@@ -224,7 +223,6 @@ class ProtExtractParticles(XmippProtocol):
 
     def visualize(self):
         selfile = self.getFilename("family", family=self.Family)
-        print selfile
         if not exists(selfile):
             showError("Error", "There is no result yet")
         else:
