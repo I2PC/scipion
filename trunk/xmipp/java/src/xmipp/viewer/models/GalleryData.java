@@ -547,7 +547,6 @@ public class GalleryData {
 						if (md != null)
 							mds[cli.index + 1].unionAll(md);
 					}
-					++i;
 				}
 				return mds;
 			}
