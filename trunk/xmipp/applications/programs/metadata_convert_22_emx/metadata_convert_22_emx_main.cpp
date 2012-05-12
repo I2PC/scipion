@@ -94,6 +94,9 @@ public:
         std::string txt(buffer,s);
         delete[] buffer;
         size_t off=0;
+        while ((off=txt.find("_emx_p_particle.",off))!=std::string::npos)
+            txt.replace(off,sizeof("_emx_p_particle.")-1,"_emx_p_particle____");
+        off=0;
         while ((off=txt.find("_emx_particle.",off))!=std::string::npos)
             txt.replace(off,sizeof("_emx_particle.")-1,"_emx_particle____");
         off=0;
@@ -337,20 +340,20 @@ public:
             geo2TransformationMatrix(rowIn,A,false);
             rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
 
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A,0,2));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A,0,3));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A,0,2));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A,0,3));//xy=yx
 
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A,1,0));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A,1,1));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A,1,2));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A,1,3));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A,1,0));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A,1,1));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A,1,2));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A,1,3));//xy=yx
 
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A,2,0));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A,2,1));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A,2,2));//xy=yx
-            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A,2,3));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A,2,0));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A,2,1));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A,2,2));//xy=yx
+            rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A,2,3));//xy=yx
 
             //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A,3,0));//xy=yx
             //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A,3,1));//xy=yx
@@ -502,20 +505,20 @@ public:
             mdAlignmentEMX.getRow(rowIn, __iter.objId);
             rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_URL,particleName);
 
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0),1.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A,0,2),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A,0,3),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0),1.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1,MAT_ELEM(A,0,2),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1,MAT_ELEM(A,0,3),0.);
 
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A,1,0),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A,1,1),1.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A,1,2),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A,1,3),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2,MAT_ELEM(A,1,0),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2,MAT_ELEM(A,1,1),1.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2,MAT_ELEM(A,1,2),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2,MAT_ELEM(A,1,3),0.);
 
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A,2,0),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A,2,1),0.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A,2,2),1.);
-            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A,2,3),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3,MAT_ELEM(A,2,0),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3,MAT_ELEM(A,2,1),0.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3,MAT_ELEM(A,2,2),1.);
+            rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3,MAT_ELEM(A,2,3),0.);
 
             //            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_1_4,MAT_ELEM(A,3,0),0.);
             //            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_2_4,MAT_ELEM(A,3,1),0.);
