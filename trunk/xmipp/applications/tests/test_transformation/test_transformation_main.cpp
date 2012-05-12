@@ -134,7 +134,7 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
     double x =1.;
     double y=2.;
     double z=3;
-    bool flip = false;
+    bool flip = true;
     double scale2 = 1.;
     double rot2 = 0.;
     double tilt2=0.;
@@ -142,7 +142,7 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
     double x2 =0.;
     double y2=0.;
     double z2=0.;
-    bool flip2 = false;
+    bool flip2 = true;
 
     MDRow rowIn,rowOut;
     rowIn.setValue(MDL_SCALE,scale);
