@@ -253,13 +253,13 @@ void svbksb(Matrix2D< double >& u,
         dMn(M2, 6) = dMn(M1, 6) * k; \
         dMn(M2, 7) = dMn(M1, 7) * k; \
         dMn(M2, 8) = dMn(M1, 8) * k; \
-		dMn(M2, 9) = dMn(M1, 9) * k; \
-		dMn(M2,10) = dMn(M1,10) * k; \
-		dMn(M2,11) = dMn(M1,11) * k; \
-		dMn(M2,12) = dMn(M1,12) * k; \
-		dMn(M2,13) = dMn(M1,13) * k; \
-		dMn(M2,14) = dMn(M1,14) * k; \
-		dMn(M2,15) = dMn(M1,15) * k;}
+  dMn(M2, 9) = dMn(M1, 9) * k; \
+  dMn(M2,10) = dMn(M1,10) * k; \
+  dMn(M2,11) = dMn(M1,11) * k; \
+  dMn(M2,12) = dMn(M1,12) * k; \
+  dMn(M2,13) = dMn(M1,13) * k; \
+  dMn(M2,14) = dMn(M1,14) * k; \
+  dMn(M2,15) = dMn(M1,15) * k;}
 
 /** Inverse of a matrix (2x2)
  *
@@ -711,11 +711,11 @@ public:
      */
     void initGaussian(int dim, double var)
     {
-    	double center = ((double)dim)/2;
+        double center = ((double)dim)/2;
         initZeros(dim, dim);
         for (int i = 0; i < dim; i++)
-        	for (int j = 0; j < dim; j++)
-        		MAT_ELEM(*this,i,j) = std::exp(-( (i-center)*(i-center)+(j-center)*(j-center) )/(2*var*var));
+            for (int j = 0; j < dim; j++)
+                MAT_ELEM(*this,i,j) = std::exp(-( (i-center)*(i-center)+(j-center)*(j-center) )/(2*var*var));
     }
     //@}
 
@@ -1320,7 +1320,18 @@ public:
 
         return d;
     }
-
+    ///determinat of 3x3 matrix
+    T det3x3() const
+    {
+        return (
+                   dMij(*this,0,0)*( dMij(*this,2,2)*dMij(*this,1,1)-
+                                     dMij(*this,2,1)*dMij(*this,1,2) )-
+                   dMij(*this,1,0)*( dMij(*this,2,2)*dMij(*this,0,1)-
+                                     dMij(*this,2,1)*dMij(*this,0,2) )+
+                   dMij(*this,2,0)*( dMij(*this,1,2)*dMij(*this,0,1)-
+                                     dMij(*this,1,1)*dMij(*this,0,2) )
+               );
+    }
     /** Algebraic transpose of a Matrix
      *
      * You can use the transpose in as complex expressions as you like. The
@@ -1553,7 +1564,7 @@ public:
 class WeightedLeastSquaresHelper: public PseudoInverseHelper
 {
 public:
-	Matrix1D<double> w; //Weights
+    Matrix1D<double> w; //Weights
 };
 
 /** Solve Linear system Ax=b with pseudoinverse.
