@@ -63,6 +63,28 @@ TEST_F( MatrixTest, inverse)
 
 }
 
+
+TEST_F( MatrixTest, det3x3)
+{
+    Matrix2D<double> auxA(A);
+
+    auxA(0,0) =1 ;
+    auxA(0,1) =2;
+    auxA(0,2) =3;
+
+    auxA(1,0) =4;
+    auxA(1,1) =5;
+    auxA(1,2) =6;
+
+    auxA(2,0) =7;
+    auxA(2,1) =8;
+    auxA(2,2) =11;
+    double result = -6;
+    EXPECT_DOUBLE_EQ(auxA.det3x3(),result) << "wrong det3x3";
+    EXPECT_DOUBLE_EQ(auxA.det(),result) << "wrong det";
+
+}
+
 TEST_F( MatrixTest, solveLinearSystem)
 {
 	 PseudoInverseHelper pseudoInverter;
