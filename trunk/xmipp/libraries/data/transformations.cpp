@@ -110,18 +110,18 @@ void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, do
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(eulerMatrix)
     dMij(eulerMatrix,i,j) = dMij(A, i, j);
-
+    //check determinat if -1 then flip = true
+    double result = A.det3x3();
+    flip = result  < 0;
+    if (flip)
+    {
+        int dim = A.Xdim() - 1;//A.xdim and not eulerMatrix.xdim
+        MAT_ELEM(eulerMatrix, 0, 0) *= -1.;
+        MAT_ELEM(eulerMatrix, 0, 1) *= -1.;
+        if (dim == 3)
+            MAT_ELEM(eulerMatrix, 0, 2) *= -1.;
+    }
     Euler_matrix2angles(eulerMatrix, rot, tilt, psi);
-
-    // Flip
-    if (!XMIPP_EQUAL_ZERO(dMij(A,0,0)))
-        flip = !XMIPP_EQUAL_ZERO(dMij(A,0,0)-( COSD(rot)*COSD(psi)*COSD(tilt) - SIND(rot)*SIND(psi) ));
-    else if (!XMIPP_EQUAL_ZERO(dMij(A,0,1)))
-        flip = !XMIPP_EQUAL_ZERO(dMij(A,0,1)-( COSD(psi)*COSD(tilt)*SIND(rot) + SIND(psi)*COSD(rot) ));
-    else if (!XMIPP_EQUAL_ZERO(dMij(A,0,2)))
-        flip = !XMIPP_EQUAL_ZERO(dMij(A,0,2)+(COSD(psi)*SIND(tilt)));
-    else
-        flip = false;
 
 }
 
@@ -135,8 +135,8 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
     int dim = A.Xdim() -1;
     //deal with scale
     scale =  sqrt(dMij(A,2,0)*dMij(A,2,0) \
-                              + dMij(A,2,1)*dMij(A,2,1)\
-                              + dMij(A,2,2)*dMij(A,2,2) );
+                  + dMij(A,2,1)*dMij(A,2,1)\
+                  + dMij(A,2,2)*dMij(A,2,2) );
     double invScale = 1./ scale;
 
     if (dim == 2)
@@ -157,10 +157,13 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
     ADD_IF_EXIST_NONZERO(MDL_SHIFTY, dMij(A,1,3));
     ADD_IF_EXIST_NONZERO(MDL_SHIFTZ, dMij(A,2,3));
 
-    if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
+    //if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
+    if(!XMIPP_EQUAL_REAL(scale, 1.))
         imageGeo.setValue(MDL_SCALE, scale);
-    if (imageGeo.containsLabel(MDL_FLIP) || flip)
-        imageGeo.setValue(MDL_FLIP, flip);
+    else
+        imageGeo.setValue(MDL_SCALE, 1.);
+    //if (imageGeo.containsLabel(MDL_FLIP) || flip)
+    imageGeo.setValue(MDL_FLIP, flip);
 }
 
 /* Rotation 2D ------------------------------------------------------------- */
