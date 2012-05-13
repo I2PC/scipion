@@ -211,4 +211,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			active.getParticleCanvas(getFrame()).repaint();
 	}
 
+	
+
 }

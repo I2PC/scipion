@@ -34,6 +34,7 @@ class Main
 			@Override
 			public void run()
 			{
+				TrainingPickerJFrame tp = null;
 				try
 				{
 					TrainingPicker ppicker = null;
@@ -50,6 +51,7 @@ class Main
 						boolean fastmode = Boolean.parseBoolean(myargs[4]);
 						boolean incore = Boolean.parseBoolean(myargs[5]);
 						ppicker = new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore);
+						
 					}
 
 					else if (mode == FamilyState.Review)
@@ -60,11 +62,13 @@ class Main
 					}
 					else if (mode == FamilyState.ReadOnly)
 						ppicker = new ReadOnlyParticlePicker(selfile, outputdir);
-					new TrainingPickerJFrame(ppicker);
+					tp = new TrainingPickerJFrame(ppicker);
 				}
 				catch (Exception e)
 				{
 					JOptionPane.showMessageDialog(null, e.getMessage());
+					
+					
 				}
 			}
 		});

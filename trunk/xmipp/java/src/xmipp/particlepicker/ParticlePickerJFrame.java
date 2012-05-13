@@ -11,6 +11,7 @@ import ij.plugin.frame.Recorder;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -94,7 +95,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (getParticlePicker().isChanged() && XmippDialog.showQuestion(ParticlePickerJFrame.this, "Save changes before closing?"))
 					saveChanges();
-				System.exit(0);
+				close();
 			}
 		});
 
@@ -215,7 +216,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-
+				close();
 			}
 		});
 		filemn.add(exitmi);
@@ -623,6 +624,18 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	private boolean showException(Exception e)
 	{
 		return XmippDialog.showException(this, e);
+	}
+	
+	public void close()
+	{
+		setVisible(false);
+		dispose();
+		for(Window w: getWindows())
+		{
+			w.setVisible(false);
+			w.dispose();
+			
+		}
 	}
 
 }
