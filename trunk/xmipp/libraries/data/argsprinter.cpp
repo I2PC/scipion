@@ -499,37 +499,41 @@ void printBegin(FILE * output, const ProgramDef &program, int v, bool programGui
     fprintf(output, "# -------------------------------------------------------------------------------\n");
     fprintf(output, "# Protocol header automatically generated for program: %s\n", program.name.c_str());
     fprintf(output, "#{begin_of_header}\n\n");
-    size_t numberOfComments = program.usageComments.size();
-    if (numberOfComments > 0)
-    {
-        fprintf(output, "{hidden} Usage of the program\nUsage = \"\"\"");
-
-        for (size_t i = 0; i < numberOfComments; ++i)
-            if (program.usageComments.visibility[i] <= v)
-                fprintf(output, "%s\n", program.usageComments.comments[i].c_str());
-        fprintf(output, "\"\"\"\n");
-    }
 
     if (!programGui)
       fprintf(output, "#{eval} expandCommentRun()\n\n");
 }
 
-void printEnd(FILE * output, const String &progName, bool programGui)
+void printEnd(FILE * output,  const ProgramDef &program, int v, bool programGui)
 {
-  if (progName.find("mpi") != String::npos)
-    fprintf(output, "#{eval} expandParallel()\n\n");
+    if (program.name.find("mpi") != String::npos)
+      fprintf(output, "#{eval} expandParallel()\n\n");
 
     fprintf(output,
-            "# {hidden} Program name\n"
+            "\n# {hidden} Program name\n"
             "\"\"\"This is the name of the program to be executed, dont change this!!!\"\"\"\n"
-            "ProgramName = \"%s\"\n"
+            "ProgramName = \"%s\"\n", program.name.c_str());
+    size_t numberOfComments = program.usageComments.size();
+    if (numberOfComments > 0)
+    {
+        fprintf(output, "\n#{hidden} Usage of the program\nUsage = \"\"\"");
+        String sep("");
+        for (size_t i = 0; i < numberOfComments; ++i)
+        {
+            if (program.usageComments.visibility[i] <= v)
+                fprintf(output, "%s%s", sep.c_str(), program.usageComments.comments[i].c_str());
+            sep = "\n";
+        }
+        fprintf(output, "\"\"\"\n");
+    }
+    fprintf(output,
             "#------------------------------------------------------------------------------------------\n"
             "# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n"
             "#------------------------------------------------------------------------------------------------\n\n"
             "import sys\n"
             "from protocol_program import *\n"
             "from protlib_gui import launchProgramGUI\n\n"
-            "if __name__ == '__main__':\n", progName.c_str());
+            "if __name__ == '__main__':\n");
     if (!programGui)
        fprintf(output, "    protocolMain(ProtXmippProgram)\n");
     else
@@ -539,10 +543,10 @@ void printEnd(FILE * output, const String &progName, bool programGui)
 
 void ProtPrinter::printProgram(const ProgramDef &program, int v)
 {
-    printBegin(output, program, programGui, v);
+    printBegin(output, program, v, programGui);
     for (size_t i = 0; i < program.sections.size(); ++i)
         printSection(*program.sections[i], v);
-    printEnd(output, program.name.c_str(), programGui);
+    printEnd(output, program, v, programGui);
 }
 
 void ProtPrinter::printSection(const SectionDef &section, int v)
@@ -651,9 +655,16 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 
     if (argSubParamsSize > 0)
     {
-        //String firstComboItem = argument
-        tags += "{list_combo}(" + argument.subParams[0]->name;
-        for (size_t j = 1; j < argSubParamsSize; ++j)
+       ParamDef * param = (ParamDef*)argument.parent;
+       String firstItem("");
+       size_t j = 0;
+       if (param->notOptional)
+       {
+          firstItem = argument.subParams[0]->name;
+          j = 1;
+       }
+        tags += "{list_combo}(" + firstItem;
+        for (; j < argSubParamsSize; ++j)
             tags += "," + argument.subParams[j]->name;
         tags += ")";
     }
@@ -662,10 +673,14 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
         tags += formatString("{condition}(%s)", condition.c_str());
     }
 
-    label += "   " + argument.name;
+    String argName(argument.name);
+    if (argName == "...")
+      argName = "arglist";
+
+    label += "   " + argName;
     fprintf(output, "# %s %s\n", tags.c_str(), label.c_str());
     BACKUP(parentName);
-    parentName = formatString("%s_A_%s", parentName.c_str(), argument.name.c_str());
+    parentName = formatString("%s_A_%s", parentName.c_str(), argName.c_str());
     String varName = KEY_PREFIX(parentName.c_str());
 
 

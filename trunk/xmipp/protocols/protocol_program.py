@@ -104,7 +104,9 @@ def buildCommandLine(prot):
                     if  allowArg and value != "":
                         if paramName not in paramsLine:
                             myLine = paramName
-                        myLine += ' ' + escapeStr(value)
+                        if 'arglist' not in args[1]:
+                            value = escapeStr(value)
+                        myLine += ' ' + value
                         
                 else: #Param without Arguments, True or False value
                     paramName = getParamName(suffix)
@@ -113,7 +115,8 @@ def buildCommandLine(prot):
                         
                 if sep == '_P_': # normal param, not inside OR group
                     if lastListValue != 'none':
-                        paramsLine += " " + lastListValue # this is necessary for params inside OR group with no extra arguments
+                        if lastListValue not in paramsLine:
+                            paramsLine += " " + lastListValue # this is necessary for params inside OR group with no extra arguments
                         lastListValue = 'none'
                     paramsLine += " " + myLine
                 elif paramName == lastListValue:
