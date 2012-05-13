@@ -578,7 +578,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			} catch (Exception e) {
 				showException(e);
 			}
-			ImagesWindowFactory.releaseGUI(JFrameGallery.this.getRootPane());
+			XmippWindowUtil.releaseGUI(JFrameGallery.this.getRootPane());
 		}
 
 		public String getMessage() {
@@ -598,7 +598,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	/** Function to create and launch the worker, blocking the gui */
 	public void runInBackground(int operation) {
 		Worker w = new Worker(operation);
-		ImagesWindowFactory.blockGUI(getRootPane(), w.getMessage());
+		XmippWindowUtil.blockGUI(getRootPane(), w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
 	}
@@ -1437,7 +1437,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	@Override
 	public void setRunning(boolean running) {
 		// XmippDialog.showInfo(this, String.format("Calculating ctf"));
-		// ImagesWindowFactory.blockGUI(getRootPane(), "Calculating CTF");
+		// XmippWindowUtil.blockGUI(getRootPane(), "Calculating CTF");
 	}
 
 	@Override

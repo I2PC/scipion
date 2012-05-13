@@ -48,20 +48,6 @@ public class ImagesWindowFactory {
 
 	private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
 
-	public static void blockGUI(JRootPane panel, String status) {
-		final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel(
-				status);
-		panel.setGlassPane(progressPanel);
-		progressPanel.start();
-	}
-
-	public static void releaseGUI(JRootPane panel) {
-		InfiniteProgressPanel progressPanel = (InfiniteProgressPanel) panel
-				.getGlassPane();
-		progressPanel.stop();
-		progressPanel.setVisible(false);
-	}
-
 	public static void openFilesAsDefault(String filenames[], Param parameters) {
 		for (int i = 0; i < filenames.length; i++) {
 			openFileAsDefault(filenames[i], parameters);

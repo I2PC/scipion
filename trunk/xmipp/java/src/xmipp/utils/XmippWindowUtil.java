@@ -34,6 +34,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JRootPane;
 
 
 public class XmippWindowUtil {
@@ -143,6 +144,22 @@ public class XmippWindowUtil {
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e);
 		}
+	}
+	
+	/** Block the gui and show the InfiniteProgressPanel */
+	public static void blockGUI(JRootPane panel, String status) {
+		final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel(
+				status);
+		panel.setGlassPane(progressPanel);
+		progressPanel.start();
+	}
+
+	/** Release the gui from a previous block */
+	public static void releaseGUI(JRootPane panel) {
+		InfiniteProgressPanel progressPanel = (InfiniteProgressPanel) panel
+				.getGlassPane();
+		progressPanel.stop();
+		progressPanel.setVisible(false);
 	}
 
 }
