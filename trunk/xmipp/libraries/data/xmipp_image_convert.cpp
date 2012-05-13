@@ -117,7 +117,7 @@ void  ProgConvImg::defineParams()
     addParamsLine("                 bool");
     addParamsLine("  alias -d;");
     addParamsLine("  [--swap]        : Swap the endianess of the image file");
-    addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range");
+    addParamsLine("  [--range_adjust] : Adjust the histogram to fill the gray level range");
     addParamsLine("  alias -r;");
     addParamsLine("or --dont_convert : Do not apply any conversion to gray levels when writing");
     addParamsLine("                  : in a lower bit depth or changing the sign");
@@ -156,7 +156,7 @@ void ProgConvImg::readParams()
     XmippMetadataProgram::readParams();
 
     //fn_out = (checkParam("-o"))? getParam("-o") : "";
-    castMode = (checkParam("--rangeAdjust"))? CW_ADJUST: \
+    castMode = (checkParam("--range_adjust"))? CW_ADJUST: \
                (checkParam("--dont_convert"))? CW_CAST: CW_CONVERT;
 
     save_metadata_stack = checkParam("--selfile_stack");
