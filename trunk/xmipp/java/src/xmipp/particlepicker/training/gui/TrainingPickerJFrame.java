@@ -525,8 +525,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		else
 		{
 			canvas.updateMicrograph();
-			iw = new ImageWindow(canvas.getImage(), canvas);//seems to keep previous window instead of creating a new one
-			
+			iw = new ImageWindow(canvas.getImage(), canvas);// seems to keep
+															// previous window
+															// instead of
+															// creating a new
+															// one
+
 		}
 	}
 
@@ -607,25 +611,20 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				final String fargs = ((SupervisedParticlePicker) ppicker).getTrainCommandLineArgs(mfd);
 				try
 				{
-					final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("training picker...");
-					final Component previousGlassPane = TrainingPickerJFrame.this.getRootPane().getGlassPane();
 					canvas.setEnabled(false);
-					TrainingPickerJFrame.this.getRootPane().setGlassPane(glassPane);
-					glassPane.start();
-
+					XmippWindowUtil.blockGUI(getRootPane(), "Training...");
 					Thread t = new Thread(new Runnable()
 					{
 
 						public void run()
 						{
 							runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
-							glassPane.stop();
-							TrainingPickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
+
 							canvas.setEnabled(true);
 							int next = ppicker.getNextFreeMicrograph(family);
 							if (next != -1)
 								micrographstb.setRowSelectionInterval(next, next);
-
+							XmippWindowUtil.releaseGUI(getRootPane());
 						}
 					});
 					t.start();
@@ -647,13 +646,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
 		try
 		{
-			// final InfiniteProgressPanel glassPane = new
-			// InfiniteProgressPanel("autopicking...");
-			// final Component previousGlassPane =
-			// TrainingPickerJFrame.this.getRootPane().getGlassPane();
 			canvas.setEnabled(false);
-			// TrainingPickerJFrame.this.getRootPane().setGlassPane(glassPane);
-			// glassPane.start();
 			XmippWindowUtil.blockGUI(getRootPane(), "Autopicking...");
 			Thread t = new Thread(new Runnable()
 			{
@@ -661,8 +654,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				public void run()
 				{
 					runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
-					// glassPane.stop();
-					// TrainingPickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
 					ppicker.loadAutomaticParticles(micrograph);
 					setState(MicrographFamilyState.Correct);
 					canvas.repaint();
@@ -689,26 +680,20 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		final String fargs = ((SupervisedParticlePicker) ppicker).getCorrectCommandLineArgs(getFamilyData());
 		try
 		{
-			final InfiniteProgressPanel glassPane = new InfiniteProgressPanel("correcting...");
-			final Component previousGlassPane = TrainingPickerJFrame.this.getRootPane().getGlassPane();
 			canvas.setEnabled(false);
-			TrainingPickerJFrame.this.getRootPane().setGlassPane(glassPane);
-			glassPane.start();
+			XmippWindowUtil.blockGUI(getRootPane(), "Correcting...");
 			Thread t = new Thread(new Runnable()
 			{
 				public void run()
 				{
 					runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
-
-					glassPane.stop();
-					TrainingPickerJFrame.this.getRootPane().setGlassPane(previousGlassPane);
 					int next = ppicker.getNextFreeMicrograph(family);
 					if (next != -1)
 						micrographstb.setRowSelectionInterval(next, next);
 					else
 						actionsbt.setVisible(false);
 					canvas.setEnabled(true);
-
+					XmippWindowUtil.releaseGUI(getRootPane());
 				}
 			});
 			t.start();
