@@ -47,11 +47,11 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine("Perform several operation over the metadata files. If the -o option is not used");
-        addUsageLine("the original metadata will be modified after applying some operations.");
-        addUsageLine("Also you can use the --print option just to print out the result metadata to screen.");
-        addUsageLine("The combination of -i and -o without other operations can serve to extract data blocks");
-        addUsageLine("inside a medata and write to an independent one.");
+        addUsageLine("Perform several operations on metadata files. ");
+        addUsageLine("If the -o option is not used the original metadata will be modified.");
+        addUsageLine("+ Also you can use the --print option just to print out the result metadata to screen.");
+        addUsageLine("+ The combination of -i and -o without other operations can serve to extract data blocks");
+        addUsageLine("+ inside a medata and write to an independent one.");
         addSeeAlsoLine("metadata_import");
 
         addParamsLine(" -i <metadata>         : Input metadata file");
