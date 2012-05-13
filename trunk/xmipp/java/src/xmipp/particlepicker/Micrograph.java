@@ -75,7 +75,6 @@ public abstract class Micrograph
 
 			if (imp == null)
 			{
-				System.out.println("Empty Filters");
 				imp = XmippImageConverter.loadImage(file);
 				if(imp == null)
 					imp = new ImagePlus(file);

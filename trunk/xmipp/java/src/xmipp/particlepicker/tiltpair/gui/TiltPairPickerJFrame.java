@@ -295,6 +295,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		{
 			canvas.updateMicrograph();
 			tiltedcanvas.updateMicrograph();
+			new ImageWindow(canvas.getImage(), canvas);//seems to keep previous window instead of creating a new one
+			new ImageWindow(tiltedcanvas.getImage(), tiltedcanvas);//seems to keep previous window instead of creating a new one
+			
 		}
 	}
 

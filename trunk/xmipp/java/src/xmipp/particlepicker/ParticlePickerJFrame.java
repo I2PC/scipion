@@ -322,25 +322,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	//
-	// protected void smooth()
-	// {
-	// try
-	// {
-	// ImageGeneric Iaux =
-	// XmippImageConverter.convertToImageGeneric(IJ.getImage());
-	// Iaux.convert2Datatype(ImageGeneric.UChar);
-	// ImageGeneric Ismooth = new ImageGeneric(ImageGeneric.UChar);
-	// Ismooth.resize(Iaux.getXDim(), Iaux.getYDim());
-	// Iaux.smooth(Ismooth);
-	// ImagePlus imp = XmippImageConverter.convertToImagePlus(Ismooth);
-	// }
-	// catch (Exception e1)
-	// {
-	// // TODO Auto-generated catch block
-	// e1.printStackTrace();
-	// }
-	// }
+	
+
 
 	protected abstract void resetMicrograph();
 
