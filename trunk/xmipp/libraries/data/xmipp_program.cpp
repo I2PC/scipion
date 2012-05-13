@@ -62,6 +62,7 @@ void XmippProgram::defineCommons()
     addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
     addParamsLine("[--xmipp_write_protocol* <scriptfile>] : Generate protocol header file");
     addParamsLine("[--xmipp_protocol_script <script>] : This is only meanful when execute throught protocols");
+    addParamsLine("[--xmipp_validate_params] : Validate input params");
 }
 
 void XmippProgram::init()
@@ -132,8 +133,12 @@ void XmippProgram::writeToProtocol( )
 
 void XmippProgram::createGUI()
 {
-    TkPrinter tk;
-    tk.printProgram(*progDef);
+    String script = formatString("./%s.py", progDef->name.c_str());
+    const char * scriptStr = script.c_str();
+    ProtPrinter pp(scriptStr, true);
+    pp.printProgram(*progDef);
+    chmod(scriptStr, S_IRWXU);
+    system(scriptStr);
 }
 
 void XmippProgram::createWiki()
@@ -220,7 +225,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
                 if (verbose) //if 0, ignore the parameter, useful for mpi programs
                     verbose = getIntParam("--verbose");
                 this->readParams();
-                doRun = true;
+              doRun = !checkParam("--xmipp_validate_params"); //just validation, not run
             }
         }
         catch (XmippError &xe)

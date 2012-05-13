@@ -480,28 +480,41 @@ void WikiPrinter::printCommentList(const CommentList &comments, int v)
 #define BACKUP(str) stringBackup.push_back(str)
 #define RESTORE(str) str = stringBackup.back(); stringBackup.pop_back()
 
-ProtPrinter::ProtPrinter(const char * scriptfile)
+ProtPrinter::ProtPrinter(const char * scriptfile, bool programGui)
 {
-    output = fopen(scriptfile, "w+");
+    output = fopen(scriptfile, "w");
+    if (output == NULL)
+      REPORT_ERROR(ERR_IO, "Couldn't open file to write program header script");
     keyCounter = 1;
+    this->programGui = programGui;
 }
 
 ProtPrinter::~ProtPrinter()
 {
-    fclose(output);
 }
 
-void printBegin(FILE * output, const ProgramDef &program)
+void printBegin(FILE * output, const ProgramDef &program, int v, bool programGui)
 {
+    fprintf(output, "#!/usr/bin/env xmipp_python\n");
     fprintf(output, "# -------------------------------------------------------------------------------\n");
     fprintf(output, "# Protocol header automatically generated for program: %s\n", program.name.c_str());
+    fprintf(output, "#{begin_of_header}\n\n");
     size_t numberOfComments = program.usageComments.size();
-    for (size_t i = 0; i < numberOfComments; ++i)
-        fprintf(output, "#   %s\n", program.usageComments.comments[i].c_str());
-    fprintf(output, "#{begin_of_header}\n\n#{eval} expandCommentRun()\n\n");
+    if (numberOfComments > 0)
+    {
+        fprintf(output, "{hidden} Usage of the program\nUsage = \"\"\"");
+
+        for (size_t i = 0; i < numberOfComments; ++i)
+            if (program.usageComments.visibility[i] <= v)
+                fprintf(output, "%s\n", program.usageComments.comments[i].c_str());
+        fprintf(output, "\"\"\"\n");
+    }
+
+    if (!programGui)
+      fprintf(output, "#{eval} expandCommentRun()\n\n");
 }
 
-void printEnd(FILE * output, const String &progName)
+void printEnd(FILE * output, const String &progName, bool programGui)
 {
   if (progName.find("mpi") != String::npos)
     fprintf(output, "#{eval} expandParallel()\n\n");
@@ -513,17 +526,23 @@ void printEnd(FILE * output, const String &progName)
             "#------------------------------------------------------------------------------------------\n"
             "# {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE\n"
             "#------------------------------------------------------------------------------------------------\n\n"
-            "from protocol_program import *\n\n"
-            "if __name__ == '__main__':\n"
-            "    protocolMain(ProtXmippProgram)\n", progName.c_str());
+            "import sys\n"
+            "from protocol_program import *\n"
+            "from protlib_gui import launchProgramGUI\n\n"
+            "if __name__ == '__main__':\n", progName.c_str());
+    if (!programGui)
+       fprintf(output, "    protocolMain(ProtXmippProgram)\n");
+    else
+       fprintf(output, "    launchProgramGUI(sys.argv[0])\n");
+    fclose(output);
 }
 
 void ProtPrinter::printProgram(const ProgramDef &program, int v)
 {
-    printBegin(output, program);
+    printBegin(output, program, programGui, v);
     for (size_t i = 0; i < program.sections.size(); ++i)
         printSection(*program.sections[i], v);
-    printEnd(output, program.name.c_str());
+    printEnd(output, program.name.c_str(), programGui);
 }
 
 void ProtPrinter::printSection(const SectionDef &section, int v)
@@ -561,11 +580,18 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
         if (param.name == exclusive[0]->name)
         {
             exclusiveGroupName = KEY_PREFIX("L_");
-            fprintf(output, "#  %s{list} (%s", (param_expert ? "{expert}" : ""), param.name.c_str());
-            for (size_t i = 1; i < exclusive.size(); ++i)
+            size_t i = 0;
+            String firstItem("none");
+            if (param.notOptional)
+            {
+              i = 1;
+              firstItem = param.name;
+            }
+            fprintf(output, "#  %s{list} (%s", (param_expert ? "{expert}" : ""), firstItem.c_str());
+            for (; i < exclusive.size(); ++i)
                 fprintf(output, ",%s", exclusive[i]->name.c_str());
-            fprintf(output, ")Select option\n%s = \"%s\"\n",
-                   exclusiveGroupName.c_str(), param.name.c_str());
+            fprintf(output, ") Select option\n%s = \"%s\"\n",
+                   exclusiveGroupName.c_str(), firstItem.c_str());
         }
         condition = formatString("%s==\"%s\"", exclusiveGroupName.c_str(), param.name.c_str());
     }
@@ -625,6 +651,7 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 
     if (argSubParamsSize > 0)
     {
+        //String firstComboItem = argument
         tags += "{list_combo}(" + argument.subParams[0]->name;
         for (size_t j = 1; j < argSubParamsSize; ++j)
             tags += "," + argument.subParams[j]->name;

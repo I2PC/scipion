@@ -33,6 +33,7 @@
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from protlib_xmipp import greenStr, redStr, blueStr
+from protlib_sql import SqliteDb
 from os.path import basename
 
 class ProtXmippProgram(XmippProtocol):
@@ -49,63 +50,19 @@ class ProtXmippProgram(XmippProtocol):
                 "Need a real summary here..."
                 ]
         
-    def buildCommandLine(self):
-        paramsLine = ""
-        lastListValue = None
-        lastSubParamValue = None
-        for k in dir(self):
-            if k.startswith('_K_'):
-                from protlib_xmipp import redStr
-                value = self.__dict__[k]
-                # Check special cases of -o or --oroot 
-                # and append the working dir to the value
-                
-                if ('_P_oroot_A_' in k or '_P_o_A_' in k) and value != "" and value == basename(value):
-                    value = self.workingDirPath(value)
-                if '_P_' in k: # Param variable (contains _P_)
-                    if '_L_' in k:  # Param List variable (contains _P_L_)
-                        sep = '_P_L_'
-                    else: 
-                        sep = '_P_'
-                    myLine = ""
-                    key, suffix = k.split(sep)
-                    if '_A_' in suffix: # Arguments present (contains _A_)
-                        args = suffix.split('_A_')
-                        paramName = getParamName(args[0])
-                        if len(args) > 2:
-                            allowArg = lastSubParamValue == args[2]
-                        else:
-                            allowArg = True
-                            lastSubParamValue = value
-                            
-                        if  allowArg and value != "":
-                            if paramName not in paramsLine:
-                                myLine = paramName
-                            myLine += ' ' + value
-                            
-                    else: #Param without Arguments, True or False value
-                        paramName = getParamName(suffix)
-                        if value:
-                            myLine = paramName
-                    if sep != '_P_L_' or paramName == lastListValue:
-                        paramsLine += " " + myLine
-                elif '_L_' in k: #exclusive list of some params
-                    lastListValue = value
-                    
-        return paramsLine
-    
     def defineSteps(self):
         program = self.ProgramName
-        params = self.buildCommandLine()
+        params = buildCommandLine(self)
         self.NumberOfMpi = 1
         self.NumberOfThreads = 1
         #self.Db.insertStep('printCommandLine', programname=program, params=params)
-        self.Db.insertStep('runJob', 
+        self.Db.insertStep('runJob', execution_mode=SqliteDb.EXEC_ALWAYS,
                              programname=program, 
                              params=params,
                              NumberOfMpi = self.NumberOfMpi,
                              NumberOfThreads = self.NumberOfThreads)
 
+# Some helper functions
 def getParamName(paramId):
     if len(paramId) > 1: 
         return '--' + paramId
@@ -114,3 +71,60 @@ def getParamName(paramId):
 def printCommandLine(log, programname, params):
     print "Running program: ", programname
     print "         params: ", params
+    
+def buildCommandLine(prot):
+    paramsLine = ""
+    lastListValue = 'none'
+    lastSubParamValue = None
+    for k in dir(prot):
+        if k.startswith('_K_'):
+            from protlib_xmipp import redStr
+            value = getattr(prot, k)
+            # Check special cases of -o or --oroot 
+            # and append the working dir to the value
+            
+            if ('_P_oroot_A_' in k or '_P_o_A_' in k) and value != "" and value == basename(value):
+                value = prot.workingDirPath(value)
+            if '_P_' in k: # Param variable (contains _P_)
+                if '_L_' in k:  # This param is an option inside a list (OR group, contains _P_L_)
+                    sep = '_P_L_'
+                else:  # This is a common param, just '_P_'
+                    sep = '_P_'
+                myLine = ""
+                key, suffix = k.split(sep)
+                if '_A_' in suffix: # Arguments present (contains _A_)
+                    args = suffix.split('_A_')
+                    paramName = getParamName(args[0])
+                    if len(args) > 2:
+                        allowArg = lastSubParamValue == args[2]
+                    else:
+                        allowArg = True
+                        lastSubParamValue = value
+                        
+                    if  allowArg and value != "":
+                        if paramName not in paramsLine:
+                            myLine = paramName
+                        myLine += ' ' + escapeStr(value)
+                        
+                else: #Param without Arguments, True or False value
+                    paramName = getParamName(suffix)
+                    if value:
+                        myLine = paramName
+                        
+                if sep == '_P_': # normal param, not inside OR group
+                    if lastListValue != 'none':
+                        paramsLine += " " + lastListValue # this is necessary for params inside OR group with no extra arguments
+                        lastListValue = 'none'
+                    paramsLine += " " + myLine
+                elif paramName == lastListValue:
+                    paramsLine += " " + myLine
+            elif '_L_' in k: #exclusive list of some params
+                lastListValue = value
+    #Remove several white spaces            
+    return ' '.join(paramsLine.split())
+
+def escapeStr(value):
+    '''If the value contains spaces and not start with ", add it'''
+    if ' ' in value and not value.startswith('"'):
+        value = '"%s"' % value
+    return value

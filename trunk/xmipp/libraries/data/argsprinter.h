@@ -107,13 +107,15 @@ protected:
   StringVector stringBackup;
   size_t keyCounter;
   bool param_expert; //this will be used for arguments or expert parameters
+  bool programGui; //this is for special case of use protocol gui for single programs outside project
+
 
 public:
   /** buffer to read the command line output */
   char readbuffer[1024];
   /** Constructor */
-  ProtPrinter(const char * scriptfile);
-  ~ProtPrinter();
+  ProtPrinter(const char * scriptfile, bool programGui = false);
+  virtual ~ProtPrinter();
   virtual void printProgram(const ProgramDef &program, int v = 0);
   virtual void printSection(const SectionDef &section, int v = 0);
   virtual void printParam(const ParamDef &param, int v = 0);

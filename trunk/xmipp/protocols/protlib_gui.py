@@ -38,7 +38,7 @@ from protlib_base import getWorkingDirFromRunName, getExtendedRunName
 from protlib_utils import loadModule, which, runShowJ
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
-    TaggedText
+    TaggedText, XmippText, XmippButton, OutputText
 from protlib_filesystem import getXmippPath, xmippExists
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
@@ -512,13 +512,17 @@ class ProtocolGUI(BasicGUI):
         prot = self.getProtocol()        
         prot.visualizeVar(varName)
         
+    def setTitleAndHeader(self):
+        self.titleText = "Run script: %(script)s" % self.run
+        self.headerText  = "Xmipp Protocol: %s\n" % protDict[self.run['protocol_name']].title
+        self.headerText += "Project: %s" % os.path.basename(self.project.projectDir) 
+        
     def fillHeader(self):
-        self.master.title("Run script: %(script)s" % self.run)
-        headertext  = "Xmipp Protocol: %s\n" % protDict[self.run['protocol_name']].title
-        headertext += "Project: %s" % os.path.basename(self.project.projectDir) 
+        self.setTitleAndHeader()
+        self.master.title(self.titleText)
         self.fonts = {}
         self.fonts['header'] = tkFont.Font(family=FontName, size=FontSize+2, weight=tkFont.BOLD)
-        self.l1 = tk.Label(self.frame, text=headertext, fg=SectionTextColor, bg=BgColor, 
+        self.l1 = tk.Label(self.frame, text=self.headerText, fg=SectionTextColor, bg=BgColor, 
                         font=self.fonts['header'], pady=5)
         self.l1.configure(wraplength=WrapLenght)
         self.l1.grid(row=self.getRow(), column=0, columnspan=6, sticky='ew')
@@ -536,19 +540,27 @@ class ProtocolGUI(BasicGUI):
         parsed and the variables were created '''
         self.checkSpecialCases()
         citeslist = []
+        maintext = ''
+        
         for s in self.parser.sections:
             section = self.createSectionWidget(s)
             for var in s.childs:
                 if var.hasTag('cite'):
                     citeslist.append(var.getValue())
                 self.createWidget(section, var)
-        #Update if citations found
+        
+        #Show usage if found
+        if self.parser.hasVariable('Usage'):
+            maintext += self.getVarValue('Usage')
+        #Show citations if found
         if len(citeslist) > 0:
-            citetext = "If you publish results obtained with this protocol, please cite:\n"
-            citetext += ' '.join(citeslist).strip()
+            maintext += "If you publish results obtained with this protocol, please cite:\n"
+            maintext += ' '.join(citeslist).strip()
+            
+        if len(maintext):
             self.fonts['cites'] = tkFont.Font(family=FontName, size=FontSize-2, weight=tkFont.BOLD)
-            label = tk.Label(self.frame, text=citetext, fg=CitationTextColor, bg=BgColor,
-                          font=self.fonts['cites'], wraplength=WrapLenght)
+            label = tk.Label(self.frame, text=maintext, fg=CitationTextColor, bg=BgColor,
+                          font=self.fonts['cites'], wraplength=500)
             label.grid(row=self.citerow, column=0, columnspan=5, sticky='ew')
             
     #-------------------------------------------------------------------
@@ -562,10 +574,10 @@ class ProtocolGUI(BasicGUI):
         self.expert_mode = not self.expert_mode
         
         if self.expert_mode:
-            text = "Hide Expert Options"
+            text = "Less options"
             strValue = 'True'
         else:
-            text = "Show Expert Options"
+            text = "More options"
             strValue = 'False'
         self.setVarValue('ShowExpertOptions', strValue)
         self.btnToggleExpert.config(text=text)
@@ -719,7 +731,7 @@ class ProtocolGUI(BasicGUI):
     def fillButtons(self):
         row = self.getRow()
         row += 3
-        self.btnToggleExpert = self.addButton("Show Expert Options", self.toggleExpertMode, 12, row, 1, 'ew')
+        self.btnToggleExpert = self.addButton("More options", self.toggleExpertMode, 5, row, 1, 'ew')
         self.addButton("Save", self.save, 0, row, 3, 'w')
         self.btnExecute = self.addButton("Save & Execute", self.saveExecute, 7, row, 4, 'w')
         
@@ -787,7 +799,7 @@ class ProtocolGUI(BasicGUI):
                 #section.content.grid_columnconfigure(1)
                 #section.content.grid_columnconfigure(2, weight=1)
             #Set the run_name
-            if self.run:
+            if self.hasVar('RunName'):
                 self.inRunName = run['run_name']
                 self.setVarValue('RunName', self.inRunName)
                 
@@ -816,3 +828,90 @@ class ProtocolGUI(BasicGUI):
         else:
             BasicGUI.launchGUI(self)
     
+# Class based on ProtocolGUI but special for single 
+# programs execution
+class ProgramGUI(ProtocolGUI):
+    def __init__(self, script):
+        self.script = script
+        self.loadModule()
+        self.msgWin = None
+    
+    def loadModule(self):
+        scriptMod = loadModule(self.script)
+        for k in dir(scriptMod):
+            if not (k.startswith('_') and not k.startswith('_K_')):
+                obj = getattr(scriptMod, k)
+                if not callable(obj):
+                    setattr(self, k, obj)
+                
+    def workingDirPath(self, value):
+        return value
+    
+    def save(self):
+        self.parser.save(self.script)
+        self.loadModule()
+
+    def getCmd(self):
+        from protocol_program import buildCommandLine
+        self.cmdStr = "%s %s" % (self.ProgramName, buildCommandLine(self))
+        
+    def closeMsgWin(self, e=None):
+        self.msgWin.destroy()
+        self.msgWin = None
+        
+    def showMsg(self, title, msg):
+        '''Open message window if not exist to show a message '''
+        if not self.msgWin: # Create the msg windows if not exists
+            self.msgWin = tk.Toplevel(self.master)
+            self.msgText = TaggedText(self.msgWin, width=70, height=7, background="white")
+            self.msgText.frame.grid(row=0, column=0, columnspan=3, padx=5)
+            XmippButton(self.msgWin, text="Close", width=6, command=self.closeMsgWin).grid(row=1, column=2, pady=5, padx=5, sticky='e')
+            centerWindows(self.msgWin, refWindows=self.master)
+        
+        self.msgWin.title(title)
+        self.msgText.clear()
+        self.msgText.addText(msg)
+        self.msgWin.lift() # raise to the top
+        
+    def showCmd(self, e=None):
+        self.save()
+        self.getCmd()
+        self.showMsg('Command line', self.cmdStr)
+        
+    def validate(self):
+        from subprocess import PIPE
+        cmd = self.cmdStr + ' --xmipp_validate_params'
+        ps = Popen(cmd, shell=True, stderr=PIPE)
+        return ps.communicate()[1] # return output of stderr
+
+    def saveExecute(self, e=None):
+        self.save()       
+        self.getCmd()
+        errors = self.validate()
+        if len(errors):
+            self.showMsg("Errors", errors)
+        else:
+            self.master.destroy()
+            os.system(self.cmdStr)        
+        
+    def setTitleAndHeader(self):
+        self.titleText = 'Program: %s' % self.ProgramName
+        self.headerText = self.titleText
+        
+    def fillButtons(self):
+        row = self.getRow()
+        row += 3
+        self.btnToggleExpert = self.addButton("More options", self.toggleExpertMode, 5, row, 1, 'ew')
+        self.addButton("Show command", self.showCmd, 0, row, 3, 'w')
+        self.btnExecute = self.addButton("Execute", self.saveExecute, 0, row, 4, 'w')
+        
+    def addBindings(self):
+        ProtocolGUI.addBindings(self)
+        self.master.bind('<Alt_L><s>', self.showCmd)
+        
+def launchProgramGUI(script):
+    run = {'source': script}
+    root = tk.Tk()
+    gui = ProgramGUI(script)
+    gui.createGUI(None, run, root)
+    gui.launchGUI()
