@@ -45,10 +45,14 @@ class ScriptPlotMetadata(XmippScript):
         self.addParamsLine(' [--title <title="">]   : Plot title')
         self.addParamsLine(' [--xtitle <title>]     : Plot x axis label')
         self.addParamsLine(' [--ytitle <title>]     : Plot y axis label')
-        self.addParamsLine(' [-c <colors>]          : Colors for each plot')
-        self.addParamsLine('   alias --colors;')
-        self.addParamsLine(' [-n <nbin>]          : Create histogram with Y data and nbin bins')
-        self.addParamsLine('   alias --nbins;')
+        self.addParamsLine(' [--colors <colors>]          : Colors for each plot')
+        self.addParamsLine('   alias -c;')
+        self.addParamsLine(' [--nbins <nbin>]          : Create histogram with Y data and nbin bins')
+        self.addParamsLine('   alias -n;')
+        self.addParamsLine(' [--legend <location=best>] : Select where to place legend')
+        self.addParamsLine('    where <location> ')
+        self.addParamsLine('     best none  upper_right upper_left lower_right lower_left')
+        self.addParamsLine('   alias -l;')
         ## examples
         self.addExampleLine('Simple plot of label "sigmaNoise" from metadata', False)
         self.addExampleLine('xmipp_metadata_plot -i results.xmd -y sigmaNoise')
@@ -88,7 +92,7 @@ class ScriptPlotMetadata(XmippScript):
         if self.checkParam('--colors'):
             colors = self.getParam('--colors').split()
         else:
-            colors = ['g', 'b', 'r', 'y']
+            colors = ['g', 'b', 'r', 'y', 'c', 'm', 'k']
         if self.checkParam('--nbins'):
             nBins = self.getIntParam('--nbins')
         else:
@@ -104,7 +108,10 @@ class ScriptPlotMetadata(XmippScript):
                 xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i], nbins=nBins)#if nbins is present do an histogram
             else:
                 xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i])#if nbins presnts do an histogram
-        xplotter.showLegend(ylabels)
+        
+        legendLocation = self.getParam('--legend')
+        if legendLocation != 'none':
+            xplotter.showLegend(ylabels, loc=legendLocation.replace('_', ' '))
         xplotter.show()
 
 if __name__ == '__main__':
