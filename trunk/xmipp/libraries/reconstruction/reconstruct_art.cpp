@@ -192,6 +192,7 @@ void ProgReconsART::run()
     // Iterations
     artRecons->iterations(vol_basis);
 
+
     gettimeofday(&end_time,NULL);
 
     process_usecs = (end_time.tv_sec-start_time.tv_sec)*1000000+(end_time.tv_usec-start_time.tv_usec);

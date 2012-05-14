@@ -26,7 +26,7 @@
 #ifndef ART_XRAY_H_
 #define ART_XRAY_H_
 
-#include "project_XR.h"
+#include "project_xray.h"
 #include "base_art_recons.h"
 
 /**@defgroup ARTXray art_xray (ART for xrays)

@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 
-#include <reconstruction/project_XR.h>
+#include <reconstruction/project_xray.h>
 
 int main(int argc, char *argv[])
 {

@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include "project_XR.h"
+#include "project_xray.h"
 
 void ProgXrayProject::defineParams()
 {
