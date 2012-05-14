@@ -32,7 +32,7 @@
 #include <reconstruction/fourier_filter.h>
 #include <classification/naive_bayes.h>
 
-/// @defgroup AutomaticPicking Image denoising
+/// @defgroup AutomaticPicking Automatic Particle Picking
 /// @ingroup ReconsLibrary
 //@{
 /* Particle ---------------------------------------------------------------- */

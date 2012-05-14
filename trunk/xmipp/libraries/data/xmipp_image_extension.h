@@ -29,7 +29,7 @@
 #include "xmipp_image.h"
 
 /** @defgroup ImageExtension Extension to Image class
- *  @ingroup Image
+ *  @ingroup Images
  *  @{
  */
 

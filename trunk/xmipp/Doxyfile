@@ -4,7 +4,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME           = "Xmipp Programmers' Guide"
-PROJECT_NUMBER         = 1.1+CVS
+PROJECT_NUMBER         = 3.0
 OUTPUT_DIRECTORY       = documentation
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
@@ -80,15 +80,21 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  =./documentation.dox \
+INPUT                  = ./documentation.dox \
                          ./libraries \
-                         ./external/bilib
-FILE_PATTERNS          = *.h \
-                         *.dox
+                         ./external/bilib \
+                         ./java \
+                         ./protocols \
+                         ./applications/scripts \
+                         ./applications/programs
+FILE_PATTERNS          = *.h *.cpp \
+                         *.dox \
+                         *.java \
+                         *.py
 RECURSIVE              = YES
 EXCLUDE                =./applications/tests
 EXCLUDE_SYMLINKS       = NO
-EXCLUDE_PATTERNS       = moc* */swig/* */graphicsj/* */scripts/* */.svn/* */cppsqlite3*
+EXCLUDE_PATTERNS       = moc* */.svn/* */cppsqlite3*
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO

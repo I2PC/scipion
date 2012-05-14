@@ -31,7 +31,7 @@
 #include <data/xmipp_program.h>
 #include <classification/naive_bayes.h>
 
-/// @defgroup AutomaticPickingQt Image denoising
+/// @defgroup AutomaticPickingQt Automatic Particle Picking for Qt
 /// @ingroup ReconsLibrary
 //@{
 /* Particle ---------------------------------------------------------------- */
