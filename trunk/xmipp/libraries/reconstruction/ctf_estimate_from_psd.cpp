@@ -2362,25 +2362,18 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     Matrix1D<double> coefs(13);
     coefs.initConstant(0);
     VEC_ELEM(coefs,0) = 1;
-    VEC_ELEM(coefs,1) = 1;
-    VEC_ELEM(coefs,2) = 1;
     VEC_ELEM(coefs,3) = 1;
     VEC_ELEM(coefs,4) = 1;
     VEC_ELEM(coefs,5) = 1;
-    VEC_ELEM(coefs,7) = 1;
-    VEC_ELEM(coefs,8) = 1;
-    VEC_ELEM(coefs,12) = 1;
+    VEC_ELEM(coefs,12) =1;
 
     int x=(int)((0.3*max_freq+0.7*min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
 
-    // We test three cases: First one: max_freq = 0.2, second max_freq = 0.3, third max_freq = 0.4. We select the one in which the difference between
-    // defocusU and defocusV normalized between the max(defocusU,defocusV) is smaller
-    //double max_freq2 = 0.2;
     fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
                   x,x,
                   min_freq*XSIZE(centeredEnhancedPSD),
                   max_freq*XSIZE(centeredEnhancedPSD),
-                  phase, mod, coefs, 6);
+                  phase, mod, coefs, 0);
 
     kV = kV*1000;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
@@ -2389,7 +2382,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     double Z4=VEC_ELEM(coefs,3);
     double Z5=VEC_ELEM(coefs,5);
 
-    double deFocusAvg =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
+    double deFocusAvg  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
     double deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
     ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
     defocusU=deFocusAvg+deFocusDiff;
