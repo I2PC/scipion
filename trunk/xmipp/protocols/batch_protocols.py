@@ -53,6 +53,7 @@ ACTION_COPY = 'Copy'
 ACTION_REFRESH = 'Refresh'
 ACTION_DEFAULT = 'Default'
 ACTION_STEPS = 'Show Steps'
+ACTION_TREE = 'Show run dependency tree'
 GROUP_ALL = 'All'
 GROUP_XMIPP = protDict.xmipp.title
         
@@ -155,6 +156,7 @@ class XmippProjectGUI():
         self.root.bind('<Alt_L><e>', lambda e: self.runButtonClick(ACTION_EDIT))
         self.root.bind('<Alt_L><d>', lambda e: self.runButtonClick(ACTION_COPY))
         self.root.bind('<Delete>', lambda e: self.runButtonClick(ACTION_DELETE))
+        self.root.bind('<Alt_L><t>', lambda e: self.runButtonClick(ACTION_TREE))
         self.root.bind('<Up>', self.lbHist.selection_up)
         self.root.bind('<Down>', self.lbHist.selection_down)
         self.root.bind('<Alt_L><c>', self.close )
@@ -402,6 +404,11 @@ class XmippProjectGUI():
         root.deiconify()
         root.mainloop()
         
+    def launchDepsTree(self):
+        runsDict = self.project.getRunsDependencies()
+        from protlib_gui_figure import showDependencyTree
+        showDependencyTree(runsDict)
+        
     def launchRunStepsTree(self, run):
         ''' Launch another windows with the steps 
         inserted for that run '''
@@ -610,6 +617,8 @@ class XmippProjectGUI():
                                 showError("Error deleting RUN", error, parent=self.root)
             elif event == ACTION_STEPS:
                 self.launchRunStepsTree(run)
+            elif event == ACTION_TREE:
+                self.launchDepsTree()
             elif event == ACTION_REFRESH:
                 self.historyRefreshRate = 1
                 self.updateRunHistory(self.lastDisplayGroup, False, True)
@@ -688,7 +697,8 @@ class XmippProjectGUI():
                 (ACTION_COPY, 'copy.gif', 'Duplicate   Alt-D/Ctrl-Enter'),
                 (ACTION_REFRESH, 'refresh.gif', 'Refresh   F5'), 
                 (ACTION_DELETE, 'delete.gif', 'Delete    Del'),
-                (ACTION_STEPS, 'run_steps.gif', 'Show run steps')]
+                (ACTION_STEPS, 'run_steps.gif', 'Show run steps'),
+                (ACTION_TREE, 'tree.gif', 'Show runs dependency tree')]
         def setupButton(k, v, t):
             btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor)
             ToolTip(btn, t, 500)

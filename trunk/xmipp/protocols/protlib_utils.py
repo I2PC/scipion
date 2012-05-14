@@ -441,7 +441,7 @@ def loadLaunchModule():
     ''' Load the launch module containing queue and mpi related parameters'''
     return loadModule('config_launch.py')
         
-def submitProtocol(protocolPath, **params):
+def submitProtocol(script, **params):
     '''Launch a protocol, to a queue or executing directly.
     If the queue options are found, it will be launched with 
     configuration (command and file template) found in project settings
@@ -449,9 +449,9 @@ def submitProtocol(protocolPath, **params):
     '''
     #Load the config module
     launch = loadLaunchModule()
-    launchFilename = protocolPath.replace('.py', '.job')
+    launchFilename = script.replace('.py', '.job')
     # This is for make a copy of nodes files
-    nodesFile = protocolPath.replace('.py', '.nodes')
+    nodesFile = script.replace('.py', '.nodes')
     params['pbsNodeBackup'] = nodesFile
     params['file'] = launchFilename
     #create launch file
@@ -464,6 +464,24 @@ def submitProtocol(protocolPath, **params):
     ps = Popen(command, shell=True, stdout=PIPE)
     out = ps.communicate()[0]
     return int(out.split('.')[0])
+
+def submitProgram(script, **params):
+    ''' Same function as submitProtocol but just for single
+    programs, not need to be inside a Project '''
+        #Load the config module
+    launch = loadLaunchModule()
+    launchFilename = script.replace('.py', '.job')
+    nodesFile = script.replace('.py', '.nodes')
+    params['pbsNodeBackup'] = nodesFile
+    params['file'] = launchFilename
+    #create launch file
+    launchfile = open(launchFilename, 'w')
+    launchfile.write(launch.FileTemplate % params)
+    launchfile.close()
+    command = launch.Program + " " + launch.ArgsTemplate % params
+    from protlib_xmipp import greenStr
+    print "** Submiting to queue: '%s'" % greenStr(command)
+    os.system(command)
     
 def getImageJPluginCmd(memory, macro, args, batchMode=False):
     from protlib_filesystem import getXmippPath

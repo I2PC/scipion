@@ -270,7 +270,7 @@ class XmippProject():
     
     def _registerRunProtocol(self, extRunName, prot, runsDict):
         if extRunName not in runsDict:
-            runsDict[extRunName] = DepData(runsDict, extRunName, prot)
+            DepData(runsDict, extRunName, prot)
             if prot.PrevRun:
                 self._registerRunProtocol(prot.PrevRunName, prot.PrevRun, runsDict)
                 runsDict[prot.PrevRunName].addDep(extRunName)
@@ -288,13 +288,14 @@ class XmippProject():
     def getRunsDependencies(self, printGraph=False):
         ''' Return a dictionary with run_name as key and value
         a list of all runs that depends on it'''
-        runs = self.projectDb.selectRuns()
+        runs = self.projectDb.selectRuns(order='ASC')
         runsDict = {}
         
         for r in runs:
             extRunName = getExtendedRunName(r)
             prot = self.getProtocolFromRunName(extRunName)
             self._registerRunProtocol(extRunName, prot, runsDict)
+            runsDict[extRunName].state = r['run_state']
         
         for r in runs:
             dd = runsDict[getExtendedRunName(r)]
@@ -304,6 +305,12 @@ class XmippProject():
                     for v in dd.prot.ParamsDict.values():
                         if type(v) == str and dd2.prot.WorkingDir in v:
                             dd2.addDep(dd.extRunName)
+        
+        #Create special node ROOT
+        roots = [k for k, v in runsDict.iteritems() if v.isRoot]
+        ddRoot = DepData(runsDict, 'PROJECT', None)
+        ddRoot.state = 6
+        ddRoot.deps = roots
         
         if printGraph:
             self._printGraph(runsDict)
@@ -318,6 +325,7 @@ class DepData():
         self.prot = protocol
         self.deps = []
         self.isRoot = True
+        runsDict[extRunName] = self
         
     def addDep(self, extRunName):
         self.deps.append(extRunName)

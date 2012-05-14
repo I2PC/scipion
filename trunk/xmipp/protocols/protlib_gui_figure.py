@@ -213,6 +213,72 @@ def getPngData(filename):
     import matplotlib.image as mpimg
     return mpimg.imread(filename)
 
+def showDependencyTree(runsDict):
+    ''' This function will create a figure with a dependency 
+    tree between the runs of the project '''
+    from protlib_gui_figure import XmippPlotter
+    import matplotlib.lines as mlines
+    XSIZE, YSIZE = 8, 6
+    DPI = 100
+    XDIM, YDIM = XSIZE*DPI, YSIZE*DPI
+    DY = 50
+    DX = 50
+    FONT = "sans-serif"
+    FONTSIZE = 9
+    colors = ['#D9F1FA', '#D9F1FA', '#FCCE62', '#D2F5CB', '#F5CCCB', '#F3F5CB', '#416FF0']
+    xplotter = XmippPlotter(figsize=(XSIZE, YSIZE), dpi=100, windowTitle='Runs dependencies TREE')
+    # Store the right horizontal x position for better packaging of
+    # the graph, assuming max of 100 y-levels
+    from numpy import zeros
+    hLimits = zeros(100)
+    #a = xplotter.createSubPlot("Test", "Particle number", "Zscore")
+    a = xplotter.createCanvas()
+    a.set_xlim(0, XDIM)
+    a.set_ylim(top=0, bottom=YDIM)
+    
+    def showNode(dd, x, y):
+        t = a.text(x, y, dd.extRunName, family=FONT, size=FONTSIZE, 
+                       bbox = dict(boxstyle="round", fc=colors[dd.state]))
+        xplotter.draw()
+        box = t.get_bbox_patch()
+        dd.width = box.get_width()
+        dd.height = box.get_height()
+        dd.start = x
+        
+        return t
+        
+    def showLevel(dd, level):
+        y = level * DY
+        
+        if len(dd.deps):
+            #width = (xmax - xmin) / n
+            childs = [runsDict[rn] for rn in dd.deps]
+            for c in childs:
+                showLevel(c, level + 1)
+                
+            firstChild = childs[0]
+            lastChild = childs[-1]
+            
+            t = showNode(dd, 0, y)
+            dd.start = (lastChild.start + lastChild.width + firstChild.start - dd.width) / 2
+            dd.start = max(dd.start, hLimits[level] + DX)
+            t.set_position((dd.start, y))            
+            hLimits[level] = dd.start + dd.width     
+            xx = [dd.start + dd.width/2, 0]
+            yy = [y + dd.height - 5, 0]
+            for c in childs:
+                xx[1] = c.start + c.width/2
+                yy[1] = y + DY - c.height
+                a.add_line(mlines.Line2D(xx, yy, lw=2., alpha=0.4))
+        else:
+            t = showNode(dd, hLimits[level] + DX, y)
+            hLimits[level] = dd.start + dd.width
+    root = runsDict['PROJECT']
+    showLevel(root, 0)    
+    xplotter.show()
+
+
+
 import numpy as np
 import matplotlib.ticker as ticker
 import matplotlib.gridspec as gridspec
@@ -249,8 +315,8 @@ class XmippPlotter():
         self.plot_text_fontsize = 8
         self.plot_yformat = '%1.2e'
 
-    def showLegend(self, labels):
-        leg = self.last_subplot.legend(tuple(labels))
+    def showLegend(self, labels, loc='best'):
+        leg = self.last_subplot.legend(tuple(labels), loc=loc)
         for t in leg.get_texts():
             t.set_fontsize(self.plot_axis_fontsize)    # the legend text fontsize
         
@@ -289,6 +355,12 @@ class XmippPlotter():
         self.last_subplot = a
         self.plot = a.plot
         self.hist = a.hist
+        return a
+    
+    def createCanvas(self):
+        a = self.figure.add_subplot(111, axisbg='g')
+        a.set_axis_off()
+        self.figure.set_facecolor('white')
         return a
     
     def plotAngularDistribution(self, title, md, color='blue'):

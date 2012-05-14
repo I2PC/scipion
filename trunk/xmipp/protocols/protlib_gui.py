@@ -893,7 +893,9 @@ class ProgramGUI(ProtocolGUI):
         else:
             self.master.destroy()
             print "Running: ", greenStr(self.cmdStr)
-            os.system(self.cmdStr)        
+            os.system(self.cmdStr)    
+            os.remove(self.script + 'c')#.pyc
+            os.remove(self.script) #remove script    
         
     def setTitleAndHeader(self):
         self.titleText = 'Program: %s' % self.ProgramName
