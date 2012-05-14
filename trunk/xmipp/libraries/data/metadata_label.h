@@ -161,16 +161,17 @@ enum MDLabel
     MDL_EMX_MICROGRAPH_CS,/// <spherical aberration mm (float)
     MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,/// <amplitud contrast range 0-1 (float)
     MDL_EMX_MICROGRAPH_FOM,///Quality index. 0 worst case, 1 best case
-    MDL_EMX_PARTICLE_CLASS_ID,///class string
     MDL_EMX_PARTICLE_COORDINATE_X,  /// <particle coordinate X in micrograph (float)
     MDL_EMX_PARTICLE_COORDINATE_Y,  /// <particle coordinate Y in micrograph (float)
-    MDL_EMX_PARTICLE_ENABLED, // <particle enable bool
-    MDL_EMX_PARTICLE_FOM, // <particle fom (float)
     MDL_EMX_PARTICLE_URL,     /// <particle name (string)
     MDL_EMX_PARTICLE_MICROGRAPH_URL,/// <particle has been extracted from micrograph
     MDL_EMX_PARTICLE_DEFOCUSU,/// <defocusu in Angstroms (float)
     MDL_EMX_PARTICLE_DEFOCUSV,/// <defocusv in Angstroms (float)
     MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE,/// <angle to main defoucs axis from axis x in degrees (float)
+    MDL_EMX_P_PARTICLE_CLASS_ID,///class string
+    MDL_EMX_P_PARTICLE_ACTIVE_FLAG, // <particle enable bool
+    MDL_EMX_P_PARTICLE_FOM, // <particle fom (float)
+    MDL_EMX_P_PARTICLE_PARTICLE_URL, // <particle url
     MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,     ///element 1_1 (x,y) of transformation matrix (float)
     MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,     ///element 2_1 of transformation matrix (float)
     MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1,     ///element 3_1 of transformation matrix (float)
@@ -772,11 +773,8 @@ private:
         MDL::addLabel(MDL_EMX_MICROGRAPH_CS, LABEL_DOUBLE,"emx_micrograph____Cs");
         MDL::addLabel(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,LABEL_DOUBLE,"emx_micrograph____amplitude_contrast");
         MDL::addLabel(MDL_EMX_MICROGRAPH_FOM, LABEL_DOUBLE,"emx_micrograph.FOM");
-        MDL::addLabel(MDL_EMX_PARTICLE_CLASS_ID, LABEL_STRING, "emx_particle____class_id");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y");
-        MDL::addLabel(MDL_EMX_PARTICLE_ENABLED, LABEL_BOOL, "emx_particle____active_flag");
-        MDL::addLabel(MDL_EMX_PARTICLE_FOM, LABEL_DOUBLE, "emx_particle____fom");
 
         MDL::addLabel(MDL_EMX_PARTICLE_URL,    LABEL_STRING, "emx_particle____url", TAGLABEL_NOTAG,"emx_particle.url");
         MDL::addLabel(MDL_EMX_PARTICLE_MICROGRAPH_URL, LABEL_STRING, "emx_particle____micrograph_url", TAGLABEL_NOTAG,"emx_particle.url");
@@ -784,6 +782,10 @@ private:
         MDL::addLabel(MDL_EMX_PARTICLE_DEFOCUSV, LABEL_DOUBLE, "emx_particle____defocus_V");
         MDL::addLabel(MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_particle____astigmatism_angle");
 
+        MDL::addLabel(MDL_EMX_P_PARTICLE_CLASS_ID, LABEL_STRING, "emx_p_particle____class_id");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_ACTIVE_FLAG, LABEL_BOOL, "emx_p_particle____active_flag");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_FOM, LABEL_DOUBLE, "emx_p_particle____fom");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_PARTICLE_URL, LABEL_STRING, "emx_p_particle____particle_url");
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_1");
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_1");
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_1");

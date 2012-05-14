@@ -239,7 +239,7 @@ public:
                 rowGetValueOrAbort(rowIn,MDL_YINT,y);
                 particleName=formatString("%s_%04d",micrographName.c_str(),__iter.objId);
                 rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
-                rowOut.setValue(MDL_EMX_MICROGRAPH_URL,micrographName);
+                rowOut.setValue(MDL_EMX_PARTICLE_MICROGRAPH_URL,micrographName);
                 rowOut.setValue(MDL_EMX_PARTICLE_COORDINATE_X,(double)x);
                 rowOut.setValue(MDL_EMX_PARTICLE_COORDINATE_Y,(double)y);
                 mdCoordinateEMX.addRow(rowOut);
@@ -338,7 +338,7 @@ public:
             Matrix2D<double> A(4, 4);
             //transformationMatrix2Geo
             geo2TransformationMatrix(rowIn,A,false);
-            rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
+            rowOut.setValue(MDL_EMX_P_PARTICLE_PARTICLE_URL,particleName);
 
             rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0));//xy=yx
             rowOut.setValue(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1));//xy=yx
@@ -360,13 +360,13 @@ public:
             //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A,3,2));//xy=yx
             //            rowOut.setValue(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_4_4,MAT_ELEM(A,3,3));//xy=yx
 
-            rowOut.setValue(MDL_EMX_PARTICLE_CLASS_ID, formatString("%04d",ref));
-            rowOut.setValue(MDL_EMX_PARTICLE_ENABLED, enable==1);
-            rowOut.setValue(MDL_EMX_PARTICLE_FOM, fom);
+            rowOut.setValue(MDL_EMX_P_PARTICLE_CLASS_ID, formatString("%04d",ref));
+            rowOut.setValue(MDL_EMX_P_PARTICLE_ACTIVE_FLAG, enable==1);
+            rowOut.setValue(MDL_EMX_P_PARTICLE_FOM, fom);
             mdAlignmentEMX.addRow(rowOut);
         }
         FileName tmpFn;
-        tmpFn.compose("processedParticle",tmpname);
+        tmpFn.compose("p_particle",tmpname);
         setMetadataVersion("EMX1.0");
         mdAlignmentEMX.setComment(comment);
         mdAlignmentEMX.write(tmpFn);
@@ -385,18 +385,18 @@ public:
         double x,y;
 
         mdCoordinateEMX.read(tmpname);
-        if(!mdCoordinateEMX.containsLabel(MDL_EMX_MICROGRAPH_URL))
+        if(!mdCoordinateEMX.containsLabel(MDL_EMX_PARTICLE_MICROGRAPH_URL))
             REPORT_ERROR(ERR_MD_MISSINGLABEL,"No micrograph.url available");
-        mdMicAggregate.aggregate(mdCoordinateEMX,AGGR_COUNT,MDL_EMX_MICROGRAPH_URL,
+        mdMicAggregate.aggregate(mdCoordinateEMX,AGGR_COUNT,MDL_EMX_PARTICLE_MICROGRAPH_URL,
                                  MDL_UNDEFINED,MDL_COUNT);
         //must delete, append multiple blocks
         unlink(fn_out.c_str());
         FOR_ALL_OBJECTS_IN_METADATA(mdMicAggregate)
         {
-            mdMicAggregate.getValue(MDL_EMX_MICROGRAPH_URL,
+            mdMicAggregate.getValue(MDL_EMX_PARTICLE_MICROGRAPH_URL,
                                     micrographName,__iter.objId);
             mdSingleMicrograph.clear();
-            MDValueEQ eq(MDL_EMX_MICROGRAPH_URL,micrographName);
+            MDValueEQ eq(MDL_EMX_PARTICLE_MICROGRAPH_URL,micrographName);
             mdSingleMicrograph.importObjects(mdCoordinateEMX, eq);
             mdCoordinateXmipp.clear();
             FOR_ALL_OBJECTS_IN_METADATA(mdSingleMicrograph)
@@ -464,7 +464,7 @@ public:
     {
         MetaData mdClassEMX;
         mdClassEMX.read(tmpname);
-        if(!mdClassEMX.containsLabel(MDL_EMX_PARTICLE_CLASS_ID))
+        if(!mdClassEMX.containsLabel(MDL_EMX_P_PARTICLE_CLASS_ID))
             REPORT_ERROR(ERR_MD_MISSINGLABEL,"No classification info available");
         else
             convertEmx2XmippAlignment();
@@ -488,13 +488,13 @@ public:
 
         //check if there are class
         //agregate them and make a map
-        if(mdAlignmentEMX.containsLabel(MDL_EMX_PARTICLE_CLASS_ID))
+        if(mdAlignmentEMX.containsLabel(MDL_EMX_P_PARTICLE_CLASS_ID))
         {
-            mdAux.aggregate(mdAlignmentEMX,AGGR_COUNT,MDL_EMX_PARTICLE_CLASS_ID,
+            mdAux.aggregate(mdAlignmentEMX,AGGR_COUNT,MDL_EMX_P_PARTICLE_CLASS_ID,
                             MDL_UNDEFINED,MDL_COUNT);
             FOR_ALL_OBJECTS_IN_METADATA(mdAux)
             {
-                mdAux.getValue(MDL_EMX_PARTICLE_CLASS_ID,_class, __iter.objId);
+                mdAux.getValue(MDL_EMX_P_PARTICLE_CLASS_ID,_class, __iter.objId);
                 mapReferences[_class]=ref++;
             }
         }
@@ -503,7 +503,7 @@ public:
         FOR_ALL_OBJECTS_IN_METADATA(mdAlignmentEMX)
         {
             mdAlignmentEMX.getRow(rowIn, __iter.objId);
-            rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_URL,particleName);
+            rowGetValueOrAbort(rowIn,MDL_EMX_P_PARTICLE_PARTICLE_URL,particleName);
 
             rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,MAT_ELEM(A,0,0),1.);
             rowIn.getValueOrDefault(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,MAT_ELEM(A,0,1),0.);
@@ -525,11 +525,11 @@ public:
             //            rowIn.getValueOrDefault(MDL_EMX_PARTICLE_TRANSFORMATION_MATRIX_3_4,MAT_ELEM(A,3,2),0.);
             MAT_ELEM(A,3,3)=1.;
 
-            if(rowIn.getValue(MDL_EMX_PARTICLE_CLASS_ID, _class))
+            if(rowIn.getValue(MDL_EMX_P_PARTICLE_CLASS_ID, _class))
                 rowOut.setValue(MDL_REF,mapReferences[_class]);
-            if(rowIn.getValue(MDL_EMX_PARTICLE_ENABLED, enabled))
+            if(rowIn.getValue(MDL_EMX_P_PARTICLE_ACTIVE_FLAG, enabled))
                 rowOut.getValue(MDL_ENABLED, enabled);
-            if(rowIn.getValue(MDL_EMX_PARTICLE_FOM, fom))
+            if(rowIn.getValue(MDL_EMX_P_PARTICLE_FOM, fom))
                 rowOut.getValue(MDL_FOM, fom);
 
             rowOut.setValue(MDL_IMAGE,particleName);
