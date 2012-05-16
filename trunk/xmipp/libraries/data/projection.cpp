@@ -51,7 +51,7 @@ void Projection::reset(int Ydim, int Xdim)
 }
 
 /* Set angles ============================================================== */
-void Projection::set_angles(double _rot, double _tilt, double _psi)
+void Projection::setAngles(double _rot, double _tilt, double _psi)
 {
     setEulerAngles(_rot, _tilt, _psi);
     Euler_angles2matrix(_rot, _tilt, _psi, euler);
@@ -329,7 +329,7 @@ void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, do
     rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
     double rot, tilt, psi;
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
-    P.set_angles(rot, tilt, psi);
+    P.setAngles(rot, tilt, psi);
 
     // Find displacement because of axis offset and inplane shift
     Matrix1D<double> roffset = Rinplane*(raxis-Raxis*raxis) + sinplane;
@@ -363,7 +363,7 @@ void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
 
     // Initialise projection
     P.reset(Ydim, Xdim);
-    P.set_angles(rot, tilt, psi);
+    P.setAngles(rot, tilt, psi);
 
     // Compute the distance for this line crossing one voxel
     int x_0 = STARTINGX(V), x_F = FINISHINGX(V);
@@ -1184,7 +1184,7 @@ void project_Crystal_Volume(
     if (FORW)
     {
         proj.reset(Ydim, Xdim);
-        proj.set_angles(rot, tilt, psi);
+        proj.setAngles(rot, tilt, psi);
         norm_proj().resize(proj());
     }
 

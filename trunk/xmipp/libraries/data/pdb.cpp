@@ -994,7 +994,7 @@ void projectPDB(const PDBPhantom &phantomPDB,
     // Initialise projection
     proj().initZeros(Ydim, Xdim);
     proj().setXmippOrigin();
-    proj.set_angles(rot, tilt, psi);
+    proj.setAngles(rot, tilt, psi);
 
     // Compute volume to Projection matrix
     Matrix2D<double> VP = proj.euler;

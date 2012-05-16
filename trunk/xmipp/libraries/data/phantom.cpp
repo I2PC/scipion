@@ -2531,7 +2531,7 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
     // Initialise projection
     P().initZeros(Ydim, Xdim);
     P().setXmippOrigin();
-    P.set_angles(rot, tilt, psi);
+    P.setAngles(rot, tilt, psi);
 
     // Compute volume to Projection matrix
     Matrix2D<double> VP = P.euler;
@@ -2545,7 +2545,7 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
 void Phantom::project_to(Projection &P,
                          double rot, double tilt, double psi, const Matrix2D<double> *A) const
 {
-    P.set_angles(rot, tilt, psi);
+    P.setAngles(rot, tilt, psi);
 
     // Compute volume to Projection matrix
     Matrix2D<double> VP = P.euler;

@@ -99,7 +99,7 @@ public:
      * (Universe <---> Projection coordinate system) are computed, and the
      * vector perpendicular to this projection plane is also calculated.
      */
-    void set_angles(double _rot, double _tilt, double _psi);
+    void setAngles(double _rot, double _tilt, double _psi);
 
     /** Read a Projection from file.
       *
@@ -424,7 +424,7 @@ void *project_SimpleGridThread( void * params )
             norm_proj = forw_norm_proj;
 
             proj->reset(YSIZE( (*global_proj)() ), XSIZE( (*global_proj)() ));
-            proj->set_angles(rot, tilt, psi);
+            proj->setAngles(rot, tilt, psi);
             (*norm_proj)().initZeros((*proj)());
         }
         else
@@ -1060,7 +1060,7 @@ void project_GridVolume(
     if (FORW)
     {
         proj.reset(Ydim, Xdim);
-        proj.set_angles(rot, tilt, psi);
+        proj.setAngles(rot, tilt, psi);
         norm_proj().initZeros(proj());
     }
 

@@ -356,7 +356,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
         }
 
     // Set Euler angles and Save Image
-    prj.set_angles(RAD2DEG(prm.rot), RAD2DEG(prm.tilt), RAD2DEG(prm.psi));
+    prj.setAngles(RAD2DEG(prm.rot), RAD2DEG(prm.tilt), RAD2DEG(prm.psi));
     prj.write(prm.fn_out);
 }
 

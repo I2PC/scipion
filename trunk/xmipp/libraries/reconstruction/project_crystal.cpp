@@ -185,7 +185,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     P().setXmippOrigin();
 
     // Compute lattice vectors in the projection plane
-    P.set_angles(rot, tilt, psi);
+    P.setAngles(rot, tilt, psi);
     Matrix1D<double> proja = P.euler * prm_crystal.a;
     Matrix1D<double> projb = P.euler * prm_crystal.b;
 

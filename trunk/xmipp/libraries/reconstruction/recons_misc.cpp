@@ -299,7 +299,7 @@ void updateResidualVector(BasicARTParameters &prm, GridVolume &vol_basis,
         read_proj() *= sqrtweight;
         dummy_proj().resize(read_proj());
 
-        dummy_proj.set_angles(prm.IMG_Inf[iact_proj].rot,
+        dummy_proj.setAngles(prm.IMG_Inf[iact_proj].rot,
                               prm.IMG_Inf[iact_proj].tilt,
                               prm.IMG_Inf[iact_proj].psi);
 
