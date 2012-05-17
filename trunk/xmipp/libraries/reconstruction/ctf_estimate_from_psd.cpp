@@ -50,6 +50,20 @@ double CTF_fitness(double *, void *);
 #define FIRST_ENVELOPE_PARAMETER    4
 #define FIRST_DEFOCUS_PARAMETER     0
 
+//#define DEBUG_WITH_TEXTFILES
+#ifdef DEBUG_WITH_TEXTFILES
+std::ofstream fhDebug;
+#define DEBUG_OPEN_TEXTFILE(fnRoot) fhDebug.open((fnRoot+"_debug.txt").c_str());
+#define DEBUG_CLOSE_TEXTFILE fhDebug.close();
+#define DEBUG_TEXTFILE(str) fhDebug << time (NULL) << " " << str << std::endl;
+#define DEBUG_MODEL_TEXTFILE fhDebug << global_ctfmodel << std::endl;
+#else
+#define DEBUG_OPEN_TEXTFILE(fnRoot);
+#define DEBUG_CLOSE_TEXTFILE ;
+#define DEBUG_TEXTFILE(str);
+#define DEBUG_MODEL_TEXTFILE
+#endif
+
 /* Global variables -------------------------------------------------------- */
 namespace AdjustCTF
 {
@@ -2368,6 +2382,10 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     VEC_ELEM(coefs,12) =1;
 
     int x=(int)((0.3*max_freq+0.7*min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
+    DEBUG_TEXTFILE(formatString("Zernike1 %d",x));
+    DEBUG_TEXTFILE(formatString("centeredEnhancedPSD80x80 %f",centeredEnhancedPSD(80,80)));
+    DEBUG_TEXTFILE(formatString("centeredEnhancedPSD120x120 %f",centeredEnhancedPSD(120,120)));
+    DEBUG_TEXTFILE(formatString("centeredEnhancedPSD160x160 %f",centeredEnhancedPSD(160,160)));
 
     fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
                   x,x,
@@ -2375,10 +2393,14 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                   max_freq*XSIZE(centeredEnhancedPSD),
                   phase, mod, coefs, 0);
 
+    DEBUG_TEXTFILE(formatString("phase160x160 %f",phase(160,160)));
+    DEBUG_TEXTFILE(formatString("mod160x160 %f",mod(160,160)));
+
     kV = kV*1000;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
     double Z3=VEC_ELEM(coefs,4);
-    double Z8=VEC_ELEM(coefs,12);
+    //double Z8=VEC_ELEM(coefs,12);
+    double Z8 = 0;
     double Z4=VEC_ELEM(coefs,3);
     double Z5=VEC_ELEM(coefs,5);
 
@@ -2388,6 +2410,17 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     defocusU=deFocusAvg+deFocusDiff;
     defocusV=deFocusAvg-deFocusDiff;
     ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+
+    DEBUG_TEXTFILE(formatString("lambda %f",lambda));
+    DEBUG_TEXTFILE(formatString("Z3 %f",Z3));
+    DEBUG_TEXTFILE(formatString("Z8 %f",Z8));
+    DEBUG_TEXTFILE(formatString("Z4 %f",Z4));
+    DEBUG_TEXTFILE(formatString("Z5 %f",Z5));
+    DEBUG_TEXTFILE(formatString("deFocusAvg %f",deFocusAvg));
+    DEBUG_TEXTFILE(formatString("deFocusDiff %f",deFocusDiff));
+    DEBUG_TEXTFILE(formatString("ellipseAngle %f",ellipseAngle));
+    DEBUG_TEXTFILE(formatString("defocusU %f",defocusU));
+    DEBUG_TEXTFILE(formatString("defocusV %f",defocusV));
 }
 
 void estimate_defoci_Zernike()
@@ -2396,11 +2429,15 @@ void estimate_defoci_Zernike()
         std::cout << "Looking for first defoci ...\n";
 
     double defocusU, defocusV, angle;
+    DEBUG_TEXTFILE("Step 6.1");
+    DEBUG_MODEL_TEXTFILE;
     estimate_defoci_Zernike(global_prm->enhanced_ctftomodel_fullsize(),
                             global_prm->min_freq,global_prm->max_freq,global_prm->Tm,
                             global_prm->initial_ctfmodel.kV,
                             global_prm->lambdaPhase,global_prm->sizeWindowPhase,
                             global_ctfmodel.DeltafU, global_ctfmodel.DeltafV, global_ctfmodel.azimuthal_angle, 0);
+    DEBUG_TEXTFILE("Step 6.2");
+    DEBUG_MODEL_TEXTFILE;
 
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
@@ -2414,10 +2451,25 @@ void estimate_defoci_Zernike()
 double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
                        CTFDescription &output_ctfmodel, bool standalone)
 {
+	// Sleep randomly to avoid some problems while reading the images by many processors
+	// at the same time
+	//randomize_random_generator();
+	//struct timespec tim, tim2;
+	//tim.tv_sec = 1;
+	//tim.tv_nsec = 1e9*rnd_unif(0,10);
+	//nanosleep(&tim , &tim2);
+
+	//char hostname[1024];
+	//gethostname(hostname,1023);
+	//std::cout << prm.fn_psd << " " << hostname << std::endl;
+
+	DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
     global_prm = &prm;
     if (standalone || prm.show_optimization)
         prm.show();
     prm.produce_side_info();
+    DEBUG_TEXTFILE(formatString("After producing side info: Avg=%f",prm.ctftomodel().computeAvg()));
+    DEBUG_MODEL_TEXTFILE;
 
     // Build initial frequency mask
     global_value_th = -1;
@@ -2475,6 +2527,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         std::cout << "Best background Fit:\n" << global_ctfmodel << std::endl;
         save_intermediate_results("step01d_best_background_fit");
     }
+    DEBUG_TEXTFILE(formatString("Step 4: CTF_fitness=%f",CTF_fitness));
+    DEBUG_MODEL_TEXTFILE;
+
 
     /************************************************************************
      STEPs 5 and 6:  Find envelope which best fits the CTF
@@ -2506,6 +2561,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         global_ctfmodel.Q0 = prm.initial_ctfmodel.Q0;
         COPY_ctfmodel_TO_CURRENT_GUESS;
     }
+    DEBUG_TEXTFILE(formatString("Step 6: espr=%f",global_ctfmodel.espr));
+    DEBUG_MODEL_TEXTFILE;
 
     /************************************************************************
      STEP 7:  the defocus and angular parameters
@@ -2516,6 +2573,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         estimate_defoci_Zernike();
     else
         estimate_defoci();
+    DEBUG_TEXTFILE(formatString("Step 7: DeltafU=%f",global_ctfmodel.DeltafU));
+    DEBUG_MODEL_TEXTFILE;
 
     /************************************************************************
      STEP 8:  all parameters
@@ -2608,6 +2667,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         std::cout << "Best fit:\n" << global_ctfmodel << std::endl;
         save_intermediate_results("step04c_best_fit");
     }
+    DEBUG_TEXTFILE(formatString("Step 11: DeltafU=%f fitness=%f",global_ctfmodel.DeltafU,fitness));
+    DEBUG_MODEL_TEXTFILE;
 
     /************************************************************************
      STEP 12:  Produce output
@@ -2648,6 +2709,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     }
     output_ctfmodel = global_ctfmodel;
 
+    DEBUG_CLOSE_TEXTFILE;
     return fitness;
 }
 
