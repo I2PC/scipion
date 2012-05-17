@@ -732,8 +732,9 @@ class ProtocolGUI(BasicGUI):
         row = self.getRow()
         row += 3
         self.btnToggleExpert = self.addButton("More options", self.toggleExpertMode, 5, row, 1, 'ew')
-        self.addButton("Save", self.save, 0, row, 3, 'w')
-        self.btnExecute = self.addButton("Save & Execute", self.saveExecute, 7, row, 4, 'w')
+        self.addButton("Save", self.save, 0, row, 2, 'w')
+        self.btnExecute = self.addButton("Save & Execute", self.saveExecute, 7, row, 3, 'w')
+        self.addButton("Close", self.close, 0, row, 4, 'w')
         
     def addBindings(self):
         self.master.bind('<Alt_L><c>', self.close)
@@ -905,8 +906,9 @@ class ProgramGUI(ProtocolGUI):
         row = self.getRow()
         row += 3
         self.btnToggleExpert = self.addButton("More options", self.toggleExpertMode, 5, row, 1, 'ew')
-        self.addButton("Show command", self.showCmd, 0, row, 3, 'w')
-        self.btnExecute = self.addButton("Execute", self.saveExecute, 0, row, 4, 'w')
+        self.addButton("Show command", self.showCmd, 0, row, 2, 'w')
+        self.btnExecute = self.addButton("Execute", self.saveExecute, 0, row, 3, 'w')
+        self.addButton("Close", self.close, 0, row, 4, 'w')
         
     def addBindings(self):
         ProtocolGUI.addBindings(self)
