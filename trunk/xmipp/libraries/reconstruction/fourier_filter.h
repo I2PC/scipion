@@ -128,8 +128,13 @@ public:
     /** Generate nD mask. */
     void generateMask(MultidimArray<double> &v);
 
-    /** Apply mask in 3D. */
+    /** Apply mask in real space. */
     void applyMaskSpace(MultidimArray<double> &v);
+
+    /** Apply mask in Fourier space.
+     * The image remains in Fourier space.
+     */
+    void applyMaskFourierSpace(const MultidimArray<double> &v, MultidimArray<std::complex<double> > &V);
 
     /** Get the power of the nD mask. */
     double maskPower();

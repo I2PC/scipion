@@ -442,35 +442,39 @@ void FourierFilter::applyMaskSpace(MultidimArray<double> &v)
 {
     MultidimArray< std::complex<double> > aux3D;
     transformer.FourierTransform(v, aux3D, false);
+    applyMaskFourierSpace(v, aux3D);
+    transformer.inverseFourierTransform();
+}
+
+void FourierFilter::applyMaskFourierSpace(const MultidimArray<double> &v, MultidimArray<std::complex<double> > &V)
+{
     if (XSIZE(maskFourier)!=0)
     {
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
-        DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier,n);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
+        DIRECT_MULTIDIM_ELEM(V,n)*=DIRECT_MULTIDIM_ELEM(maskFourier,n);
     }
     else if (XSIZE(maskFourierd)!=0)
     {
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
-        DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourierd,n);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
+        DIRECT_MULTIDIM_ELEM(V,n)*=DIRECT_MULTIDIM_ELEM(maskFourierd,n);
     }
     else
     {
-
         w.resizeNoCopy(3);
-        for (int k=0; k<ZSIZE(aux3D); k++)
+        for (int k=0; k<ZSIZE(V); k++)
         {
             FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
-            for (int i=0; i<YSIZE(aux3D); i++)
+            for (int i=0; i<YSIZE(V); i++)
             {
                 FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
-                for (int j=0; j<XSIZE(aux3D); j++)
+                for (int j=0; j<XSIZE(V); j++)
                 {
                     FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
-                    DIRECT_A3D_ELEM(aux3D,k,i,j)*=maskValue(w);
+                    DIRECT_A3D_ELEM(V,k,i,j)*=maskValue(w);
                 }
             }
         }
     }
-    transformer.inverseFourierTransform();
 }
 
 /* Mask power -------------------------------------------------------------- */
