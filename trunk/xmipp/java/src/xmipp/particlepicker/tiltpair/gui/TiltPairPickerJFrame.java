@@ -84,7 +84,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private void initComponents()
 	{
 		setResizable(false);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Xmipp Particle Pair Picker");
 		initMenuBar();
 		setJMenuBar(mb);

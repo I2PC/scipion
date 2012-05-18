@@ -125,7 +125,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		try
 		{
 			setResizable(false);
-			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setTitle("Xmipp Particle Picker - " + ppicker.getMode());
 			initMenuBar();
 			setJMenuBar(mb);

@@ -17,7 +17,7 @@ class ScriptTrainingPicking(ScriptAppIJ):
         self.addParamsLine("    where <pick_mode>");
         self.addParamsLine("       manual                                         : Enables manual mode. User will pick particles manually.");
         self.addParamsLine("       supervised <thr=1> <fast=True> <incore=False>  : Enables supervised mode. User will use autopicking. Then review/correct particles selected."); 
-        self.addParamsLine("                                                      : Particles from manual mode can be used to train software and switch to supervised mode");
+        self.addParamsLine("                                                      : Particles from manual mode will be used to train software and switch to supervised mode");
         self.addParamsLine("                                                      : Autopicker will use number of threads, fast and incore modes provided");
         self.addParamsLine("       review <file>                                  : Enables review mode. User reviews/corrects particles set provided on specified file");
         self.addParamsLine("                                                      : without updating model. ");

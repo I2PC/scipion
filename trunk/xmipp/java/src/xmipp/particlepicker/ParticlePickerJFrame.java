@@ -1,12 +1,7 @@
 package xmipp.particlepicker;
 
-import ij.CommandListener;
-import ij.Executer;
 import ij.IJ;
-import ij.ImageListener;
-import ij.ImagePlus;
 import ij.WindowManager;
-import ij.plugin.frame.Recorder;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -42,6 +37,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
@@ -52,6 +48,7 @@ import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 
@@ -75,7 +72,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected String activefilter;
 	protected JSlider sizesl;
 	protected JPanel sizepn;
-	private String command;
+
 	private List<JCheckBoxMenuItem> mifilters;
 	protected JMenu filemn;
 	protected JMenuItem importffmi;
@@ -88,60 +85,27 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
-
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter()
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				if (getParticlePicker().isChanged() && XmippDialog.showQuestion(ParticlePickerJFrame.this, "Save changes before closing?"))
-					saveChanges();
+				
+				if (getParticlePicker().isChanged())
+				{
+					XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Save changes before closing?");
+					boolean save = qd.showDialog();
+					if(save)
+						saveChanges();
+					else if (qd.isCanceled())
+						return;
+				}
 				close();
 			}
 		});
 
-		Recorder.record = true;
-
-		// detecting if a command is thrown by ImageJ
-		Executer.addCommandListener(new CommandListener()
-		{
-			public String commandExecuting(String command)
-			{
-				ParticlePickerJFrame.this.command = command;
-				return command;
-
-			}
-		});
-		ImagePlus.addImageListener(new ImageListener()
-		{
-
-			@Override
-			public void imageUpdated(ImagePlus arg0)
-			{
-				if (command != null)
-				{
-					String options = "";
-					if (Recorder.getCommandOptions() != null)
-						options = Recorder.getCommandOptions();
-					if (!getParticlePicker().isFilterSelected(command))
-						getParticlePicker().addFilter(command, options);
-					command = null;
-				}
-			}
-
-			@Override
-			public void imageOpened(ImagePlus arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void imageClosed(ImagePlus arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-		});
+		
+		
 		filemn = new JMenu("File");
 		savemi = new JMenuItem("Save", XmippResource.getIcon("save.gif"));
 		savemi.setMnemonic('S');

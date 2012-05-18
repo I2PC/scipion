@@ -35,6 +35,7 @@ public abstract class ParticlePicker
 	private FamilyState mode;
 	private List<Filter> filters;
 	protected String selfile;
+	private String command;
 	
 	public String getPosFileFromXmipp24Project(String projectdir, String mname)
 	{
@@ -55,6 +56,50 @@ public abstract class ParticlePicker
 		this.macrosfile = getOutputPath("macros.xmd");
 		loadFilters();
 		loadFamilies();
+		Recorder.record = true;
+
+		
+		// detecting if a command is thrown by ImageJ
+		Executer.addCommandListener(new CommandListener()
+		{
+			public String commandExecuting(String command)
+			{
+				ParticlePicker.this.command = command;
+				return command;
+
+			}
+		});
+		ImagePlus.addImageListener(new ImageListener()
+		{
+
+			@Override
+			public void imageUpdated(ImagePlus arg0)
+			{
+				if (command != null)
+				{
+					String options = "";
+					if (Recorder.getCommandOptions() != null)
+						options = Recorder.getCommandOptions();
+					if (!isFilterSelected(command))
+						addFilter(command, options);
+					command = null;
+				}
+			}
+
+			@Override
+			public void imageOpened(ImagePlus arg0)
+			{
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void imageClosed(ImagePlus arg0)
+			{
+				// TODO Auto-generated method stub
+
+			}
+		});
 	}
 	
 	public String getMicrographsSelFile()
