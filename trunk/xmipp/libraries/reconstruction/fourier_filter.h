@@ -71,8 +71,9 @@ public:
 #define CTFPOS       10
 #define BFACTOR      11
 #define REALGAUSSIAN 12
+#define SPARSIFY     13
     /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, CTFPOS,
-       WEDGE, CONE, GAUSSIAN, FROM_FILE, REALGAUSSIAN, BFACTOR */
+       WEDGE, CONE, GAUSSIAN, FROM_FILE, REALGAUSSIAN, BFACTOR, SPARSIFY */
     int FilterBand;
 
     /** Cut frequency for Low and High pass filters, first freq for bandpass.
@@ -84,6 +85,9 @@ public:
 
     /** Wedge and cone filter parameters */
     double t1, t2,rot,tilt,psi;
+
+    /** Percentage of coefficients to throw */
+    double percentage;
 
     /** Filename in which store the mask (valid only for fourier masks) */
     FileName maskFn;
@@ -153,6 +157,9 @@ public:
 
     // Transformer
     FourierTransformer transformer;
+
+    // Auxiliary variables for sparsify
+    MultidimArray<double> vMag, vMagSorted;
 };
 
 /** Fast access to bandpass filter.

@@ -64,6 +64,7 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
     program->addParamsLine("                                             : do not use mask type for wedge or cone filters");
     program->addParamsLine("            gaussian <w1>                    : Gaussian with sigma = w1");
+    program->addParamsLine("            sparsify <p=0.975>               : Delete p percent of the smallest Fourier coefficients");
     program->addParamsLine("            ctf <ctfile>                     : Provide a .ctfparam file");
     program->addParamsLine("            ctfpos <ctfile>                  : Provide a .ctfparam file");
     program->addParamsLine("                                             : The CTF phase will be corrected before applying");
@@ -137,6 +138,12 @@ void FourierFilter::readParams(XmippProgram *program)
         w1 = program->getDoubleParam("--fourier", "gaussian");
         FilterShape = GAUSSIAN;
         FilterBand = LOWPASS;
+    }
+    else if (filter_type == "sparsify")
+    {
+        percentage = program->getDoubleParam("--fourier", "sparsify");
+        FilterShape = SPARSIFY;
+        FilterBand = SPARSIFY;
     }
     else if (filter_type == "real_gaussian")
     {
@@ -224,6 +231,9 @@ void FourierFilter::show()
         case GAUSSIAN:
             std::cout << "Gaussian\n";
             break;
+        case SPARSIFY:
+            std::cout << "Sparsify\n";
+            break;
         case REALGAUSSIAN:
             std::cout << "Real Gaussian\n";
             break;
@@ -251,13 +261,7 @@ void FourierFilter::apply(MultidimArray<double> &img)
     }
     if (maskFn != "")
         if (do_generate_3dmask==0 && MULTIDIM_SIZE(img)>1024*1024)
-        {
-            std::cerr << "do_generate_3dmask MULTIDIM_SIZE(img) "
-            << do_generate_3dmask
-            << " " <<  MULTIDIM_SIZE(img)
-            << std::endl;
             REPORT_ERROR(ERR_IO_SIZE,"Cannot save 2D mask with xdim*ydim  > 1M");
-        }
         else
         {
             Image<int> I;
@@ -368,6 +372,8 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
 /* Generate mask ----------------------------------------------------------- */
 void FourierFilter::generateMask(MultidimArray<double> &v)
 {
+	if (FilterShape==SPARSIFY)
+		return;
     if (do_generate_3dmask)
     {
         transformer.setReal(v);
@@ -458,8 +464,23 @@ void FourierFilter::applyMaskFourierSpace(const MultidimArray<double> &v, Multid
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
         DIRECT_MULTIDIM_ELEM(V,n)*=DIRECT_MULTIDIM_ELEM(maskFourierd,n);
     }
+    else if (FilterShape==SPARSIFY)
+    {
+        FFT_magnitude(V,vMag);
+        vMag.resize(1,1,1,MULTIDIM_SIZE(vMag));
+        vMag.sort(vMagSorted);
+        double minMagnitude=A1D_ELEM(vMagSorted,(int)(percentage*XSIZE(vMag)));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
+        if (DIRECT_MULTIDIM_ELEM(vMag,n)<minMagnitude)
+        {
+            double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(V,n);
+            *ptr=0;
+            *(ptr+1)=0;
+        }
+    }
     else
     {
+        std::cout << "Aqui3" << std::endl;
         w.resizeNoCopy(3);
         for (int k=0; k<ZSIZE(V); k++)
         {
