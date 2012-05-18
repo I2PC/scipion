@@ -265,28 +265,5 @@ protected:
 /// Generate the quadratic phase distribution of a ideal lens
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //@}
 #endif
