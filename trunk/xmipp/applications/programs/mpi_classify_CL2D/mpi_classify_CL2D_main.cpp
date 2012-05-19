@@ -119,9 +119,9 @@ void CL2DClass::transferUpdate()
         Pupdate *= iNq;
         Pupdate.statisticsAdjust(0, 1);
         P = Pupdate;
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
-        if (!DIRECT_A2D_ELEM(prm->mask,i,j))
-            DIRECT_A2D_ELEM(P,i,j) = 0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
+        if (!DIRECT_MULTIDIM_ELEM(prm->mask,n))
+        	DIRECT_MULTIDIM_ELEM(P,n) = 0;
         Pupdate.initZeros(P);
 
         // Make sure the image is centered
