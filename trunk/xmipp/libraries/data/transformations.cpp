@@ -311,12 +311,35 @@ void alignWithZ(const Matrix1D<double> &axis, Matrix2D<double>& result,
 void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
                       Matrix2D<double> &result, bool homogeneous)
 {
-    // Compute a matrix which makes the turning axis coincident with Z
+#ifdef NEVERDEFINED
+	// Compute a matrix which makes the turning axis coincident with Z
     // And turn around this axis
     Matrix2D<double> A, R;
     alignWithZ(axis, A, homogeneous);
     rotation3DMatrix(ang, 'Z', R, homogeneous);
     result = A.transpose() * R * A;
+#else
+    // http://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+    if (homogeneous)
+    	result.initIdentity(4);
+    else
+    	result.initIdentity(3);
+    double s,c;
+    sincos(DEG2RAD(ang),&s,&c);
+    double c1=1-c;
+    double x=XX(axis);
+    double y=YY(axis);
+    double z=ZZ(axis);
+    double xy=x*y;
+    double xz=x*z;
+    double yz=y*z;
+    double x2=x*x;
+    double y2=y*y;
+    double z2=z*z;
+    MAT_ELEM(result,0,0)=c+x2*c1;   MAT_ELEM(result,0,1)=xy*c1-z*s; MAT_ELEM(result,0,2)=xz*c1+y*s;
+    MAT_ELEM(result,1,0)=xy*c1+z*s; MAT_ELEM(result,1,1)=c+y2*c1;   MAT_ELEM(result,1,2)=yz*c1-x*s;
+    MAT_ELEM(result,2,0)=xz*c1-y*s; MAT_ELEM(result,2,1)=yz*c1+x*s; MAT_ELEM(result,2,2)=c+z2*c1;
+#endif
 }
 
 /* Translation 3D ---------------------------------------------------------- */
