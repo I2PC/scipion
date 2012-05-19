@@ -884,6 +884,9 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
     AddProgramLink('classify_CL2D','mpi_classify_CL2D')
+    if not int(env['release']):
+        AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
+        AddProgramLink('classify_CL3D','mpi_classify_CL3D')
     AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
     if not int(env['release']):
         AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])
