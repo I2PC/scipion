@@ -818,7 +818,7 @@ void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
 
 /** Produce a polar image from a cartesian image.
  * You can give the minimum and maximum radius for the interpolation, the
- * delta radius and the delta angle. If no delta Ang is given, then
+ * delta radius and the delta angle.
  * It is assumed that the input image has the Xmipp origin.
  * Delta Ang must be in radians. */
 void image_convertCartesianToPolar(MultidimArray<double> &in, MultidimArray<double> &out,
@@ -839,5 +839,16 @@ void image_convertCartesianToPolar_ZoomAtCenter(const MultidimArray<double> &in,
 												double zoomFactor,
 												double Rmin, double Rmax, int NRSteps,
 												double angMin, double angMax, int NAngSteps);
+
+/** Produce a cylindrical volume from a cartesian volume.
+ * You can give the minimum and maximum radius for the interpolation, the
+ * delta radius and the delta angle.
+ * It is assumed that the input image has the Xmipp origin.
+ * Delta Ang must be in radians. */
+void volume_convertCartesianToCylindrical(MultidimArray<double> &in, MultidimArray<double> &out,
+                                   double Rmin, double Rmax, double deltaR,
+                                   double angMin, double angMax, double deltaAng,
+                                   Matrix1D<double> &axis);
+
 //@}
 #endif
