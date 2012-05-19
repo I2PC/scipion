@@ -888,7 +888,6 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
     int              imax, jmax, i_actual, j_actual;
     double           max, xmax, ymax, sumcorr, avecorr, stdcorr, dummy;
     float            xshift, yshift, shift;
-    int              n_max = -1;
     bool             neighbourhood = true;
     MultidimArray<double> Mcorr;
 
@@ -910,11 +909,12 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
         else
         {
             computeStats_within_binary_mask(*mask, Mcorr, dummy, dummy, avecorr, stdcorr);
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(Mcorr)
-            if (A2D_ELEM(*mask, i, j))
-                A2D_ELEM(Mcorr, i, j) = (A2D_ELEM(Mcorr, i, j) - avecorr) / stdcorr;
+            double istdcorr=1.0/stdcorr;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mcorr)
+            if (DIRECT_MULTIDIM_ELEM(*mask, n))
+            	DIRECT_MULTIDIM_ELEM(Mcorr, n) = (DIRECT_MULTIDIM_ELEM(Mcorr, n) - avecorr) * istdcorr;
             else
-                A2D_ELEM(Mcorr, i, j) = 0.;
+            	DIRECT_MULTIDIM_ELEM(Mcorr, n) = 0.;
         }
     }
     else
@@ -922,41 +922,165 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
     Mcorr.maxIndex(imax, jmax);
     max = A2D_ELEM(Mcorr, imax, jmax);
 
+    // Estimate n_max around the maximum
+    int              n_max = -1;
     while (neighbourhood)
     {
         n_max ++;
-        for (int i = -n_max; i <= n_max; i++)
-            for (int j = -n_max; j <= n_max; j++)
-            {
-                i_actual = i + imax;
-                j_actual = j + jmax;
-                if (i_actual < STARTINGY(Mcorr)  || j_actual < STARTINGX(Mcorr) ||
-                    i_actual > FINISHINGY(Mcorr) || j_actual > FINISHINGX(Mcorr))
-                    neighbourhood = false;
-                else if (max / 1.414 > A2D_ELEM(Mcorr, i_actual, j_actual))
-                    neighbourhood = false;
-            }
+		for (int i = -n_max; i <= n_max && neighbourhood; i++)
+		{
+			i_actual = i + imax;
+			if (i_actual < STARTINGY(Mcorr) || i_actual > FINISHINGY(Mcorr))
+			{
+				neighbourhood = false;
+				break;
+			}
+			for (int j = -n_max; j <= n_max && neighbourhood; j++)
+			{
+				j_actual = j + jmax;
+				if (j_actual < STARTINGX(Mcorr) || j_actual > FINISHINGX(Mcorr))
+				{
+					neighbourhood = false;
+					break;
+				}
+				else if (max / 1.414 > A2D_ELEM(Mcorr, i_actual, j_actual))
+				{
+					neighbourhood = false;
+					break;
+				}
+			}
+		}
     }
 
     // We have the neighbourhood => looking for the gravity centre
     xmax = ymax = sumcorr = 0.;
     for (int i = -n_max; i <= n_max; i++)
+    {
+        i_actual = i + imax;
         for (int j = -n_max; j <= n_max; j++)
         {
-            i_actual = i + imax;
             j_actual = j + jmax;
-            if (i_actual >= STARTINGY(Mcorr)  && j_actual >= STARTINGX(Mcorr) &&
-                i_actual <= FINISHINGY(Mcorr) && j_actual <= FINISHINGX(Mcorr))
-            {
-                ymax += i_actual * A2D_ELEM(Mcorr, i_actual, j_actual);
-                xmax += j_actual * A2D_ELEM(Mcorr, i_actual, j_actual);
-                sumcorr += A2D_ELEM(Mcorr, i_actual, j_actual);
-            }
+            double val=A2D_ELEM(Mcorr, i_actual, j_actual);
+			ymax += i_actual * val;
+			xmax += j_actual * val;
+			sumcorr += val;
         }
+    }
     if (sumcorr!=0)
     {
         shiftX = xmax / sumcorr;
         shiftY = ymax / sumcorr;
+    }
+}
+
+/* Best shift -------------------------------------------------------------- */
+void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+               double &shiftX, double &shiftY, double &shiftZ, CorrelationAux &aux,
+               const MultidimArray<int> *mask)
+{
+    I1.checkDimension(3);
+    I2.checkDimension(3);
+
+    int              imax, jmax, kmax, i_actual, j_actual, k_actual;
+    double           max, xmax, ymax, zmax, sumcorr, avecorr, stdcorr, dummy;
+    float            xshift, yshift, zshift, shift;
+    bool             neighbourhood = true;
+    MultidimArray<double> Mcorr;
+
+    correlation_matrix(I1, I2, Mcorr, aux);
+
+    /*
+      Warning: for masks with a small number of non-zero pixels, this routine is NOT reliable...
+      Anyway, maybe using a mask is not a good idea at al...
+     */
+
+    // Adjust statistics within shiftmask to average 0 and stddev 1
+    if (mask != NULL)
+    {
+        if ((*mask).sum() < 2)
+        {
+            shiftX = shiftY = shiftZ=0.;
+            return;
+        }
+        else
+        {
+            computeStats_within_binary_mask(*mask, Mcorr, dummy, dummy, avecorr, stdcorr);
+            double istdcorr=1.0/stdcorr;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mcorr)
+            if (DIRECT_MULTIDIM_ELEM(*mask, n))
+            	DIRECT_MULTIDIM_ELEM(Mcorr, n) = (DIRECT_MULTIDIM_ELEM(Mcorr, n) - avecorr) * istdcorr;
+            else
+            	DIRECT_MULTIDIM_ELEM(Mcorr, n) = 0.;
+        }
+    }
+    else
+        Mcorr.statisticsAdjust(0, 1);
+    Mcorr.maxIndex(imax, jmax, kmax);
+    max = A3D_ELEM(Mcorr, kmax, imax, jmax);
+
+    // Estimate n_max around the maximum
+    int              n_max = -1;
+    while (neighbourhood)
+    {
+        n_max ++;
+        for (int k = -n_max; k <= n_max && neighbourhood; k++)
+        {
+			k_actual = k + kmax;
+			if (k_actual < STARTINGZ(Mcorr) || k_actual > FINISHINGZ(Mcorr))
+			{
+				neighbourhood = false;
+				break;
+			}
+			for (int i = -n_max; i <= n_max && neighbourhood; i++)
+			{
+				i_actual = i + imax;
+				if (i_actual < STARTINGY(Mcorr) || i_actual > FINISHINGY(Mcorr))
+				{
+					neighbourhood = false;
+					break;
+				}
+				for (int j = -n_max; j <= n_max && neighbourhood; j++)
+				{
+					j_actual = j + jmax;
+					if (j_actual < STARTINGX(Mcorr) || j_actual > FINISHINGX(Mcorr))
+					{
+						neighbourhood = false;
+						break;
+					}
+					else if (max / 1.414 > A3D_ELEM(Mcorr, k_actual, i_actual, j_actual))
+					{
+						neighbourhood = false;
+						break;
+					}
+				}
+			}
+        }
+    }
+
+    // We have the neighbourhood => looking for the gravity centre
+    xmax = ymax = sumcorr = 0.;
+    for (int k = -n_max; k <= n_max; k++)
+    {
+		k_actual = k + kmax;
+		for (int i = -n_max; i <= n_max; i++)
+		{
+			i_actual = i + imax;
+			for (int j = -n_max; j <= n_max; j++)
+			{
+				j_actual = j + jmax;
+				double val=A3D_ELEM(Mcorr, k_actual, i_actual, j_actual);
+				zmax += i_actual * val;
+				ymax += i_actual * val;
+				xmax += j_actual * val;
+				sumcorr += val;
+			}
+		}
+    }
+    if (sumcorr!=0)
+    {
+        shiftX = xmax / sumcorr;
+        shiftY = ymax / sumcorr;
+        shiftZ = zmax / sumcorr;
     }
 }
 

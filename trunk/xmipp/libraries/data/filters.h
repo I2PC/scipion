@@ -445,6 +445,20 @@ void bestShift(const MultidimArray< double >& I1,
                CorrelationAux &aux,
                const MultidimArray< int >* mask = NULL);
 
+/** Translational search (3D)
+ * @ingroup Filters
+ *
+ * This function returns the best interpolated shift for the alignment of two
+ * volumes. You can restrict the shift to a region defined by a mask (the maximum
+ * will be sought where the mask is 1).
+ *
+ * To apply these results you must shift I1 by (-shiftX,-shiftY,-shiftZ) or
+ * I2 by (shiftX, shiftY,shiftZ)
+ */
+void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+               double &shiftX, double &shiftY, double &shiftZ, CorrelationAux &aux,
+               const MultidimArray<int> *mask=NULL);
+
 /** Translational search (non-wrapping)
  * @ingroup Filters
  *
