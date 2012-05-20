@@ -73,7 +73,6 @@ void CL3DAssignment::copyAlignment(const CL3DAssignment &alignment)
 /* CL3DClass basics ---------------------------------------------------- */
 CL3DClass::CL3DClass()
 {
-    plans = NULL;
     P.initZeros(prm->Zdim, prm->Ydim, prm->Xdim);
     P.setXmippOrigin();
     Pupdate = P;
@@ -81,8 +80,6 @@ CL3DClass::CL3DClass()
 
 CL3DClass::CL3DClass(const CL3DClass &other)
 {
-    plans = NULL;
-
     CL3DAssignment assignment;
     assignment.corr = 1;
     Pupdate = other.P;
@@ -93,11 +90,6 @@ CL3DClass::CL3DClass(const CL3DClass &other)
     histClass = other.histClass;
     histNonClass = other.histNonClass;
     neighboursIdx = other.neighboursIdx;
-}
-
-CL3DClass::~CL3DClass()
-{
-    delete plans;
 }
 
 void CL3DClass::updateProjection(const MultidimArray<double> &I,
@@ -131,15 +123,12 @@ void CL3DClass::transferUpdate()
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
         if (!DIRECT_A2D_ELEM(prm->mask,i,j))
             DIRECT_A2D_ELEM(P,i,j) = 0;
-
-        // Compute the polar Fourier transform of the full image
-        normalizedPolarFourierTransform(P, polarFourierP, false, XSIZE(P) / 5,
-                                        XSIZE(P) / 2, plans, 1);
-        int finalSize = 2 * polarFourierP.getSampleNoOuterRing() - 1;
-        if (XSIZE(rotationalCorr) != finalSize)
-            rotationalCorr.resize(finalSize);
-        rotAux.local_transformer.setReal(rotationalCorr);
          */
+
+        double deltaAng=atan(2.0/XSIZE(P));
+        Matrix1D<double> v(3);
+        XX(v)=0; YY(v)=0; ZZ(v)=1;
+        volume_convertCartesianToCylindrical(P,PcylZ,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
 
         // Take the list of images
         currentListImg = nextListImg;
@@ -209,7 +198,8 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
         MAT_ELEM(ASR,2,3) += shiftZ;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
-        bestRot = bestRotationAroundZ(P,IauxSR,corrAux2,volAlignmentAux);
+        bestRot = fastBestRotationAroundZ(PcylZ,IauxSR,corrAux2,volAlignmentAux);
+        //bestRot = bestRotationAroundZ(P,IauxSR,corrAux2,volAlignmentAux);
         rotation3DMatrix(bestRot, 'Z', R);
         ASR=R*ASR;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);

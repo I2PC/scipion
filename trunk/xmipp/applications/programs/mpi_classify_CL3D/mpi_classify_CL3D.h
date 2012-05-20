@@ -75,24 +75,14 @@ public:
     // Update for next iteration
     MultidimArray<double> Pupdate;
 
-    // Polar Fourier transform of the projection at full size
-    Polar<std::complex <double> > polarFourierP;
-
-    // Rotational correlation for best_rotation
-    MultidimArray<double> rotationalCorr;
-
-    // Plans for the best_rotation
-    Polar_fftw_plans *plans;
+    // P in cylindrical coordinates around Z
+    MultidimArray<double> PcylZ;
 
     // Correlation aux
     CorrelationAux corrAux, corrAux2;
 
     // Volume Alignment aux
     VolumeAlignmentAux volAlignmentAux;
-
-
-    // Rotational correlation aux
-    RotationalCorrelationAux rotAux;
 
     // List of images assigned
     std::vector<CL3DAssignment> currentListImg;
@@ -117,9 +107,6 @@ public:
 
     /** Copy constructor */
     CL3DClass(const CL3DClass &other);
-
-    /** Destructor */
-    ~CL3DClass();
 
     /** Update projection. */
     void updateProjection(const MultidimArray<double> &I, const CL3DAssignment &assigned);
