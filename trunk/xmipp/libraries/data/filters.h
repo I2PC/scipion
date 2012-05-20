@@ -509,6 +509,22 @@ double alignImages(const MultidimArray< double >& Iref,
                    CorrelationAux &aux2,
                    RotationalCorrelationAux &aux3);
 
+/** Auxiliary class for fast volume alignment */
+class VolumeAlignmentAux
+{
+public:
+	MultidimArray<double> IrefCyl, Icyl, corr;
+};
+
+/** Align two volumes by applying a rotation around Z.
+ * The rotation must be applied on I to get Iref.
+ * @ingroup Filters
+ */
+double bestRotationAroundZ(const MultidimArray< double >& Iref,
+                   MultidimArray< double >& I,
+                   CorrelationAux &aux,
+                   VolumeAlignmentAux &aux2);
+
 /** Align two images considering also the mirrors
  * @ingroup Filters
  *

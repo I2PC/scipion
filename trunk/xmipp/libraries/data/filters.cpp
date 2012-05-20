@@ -1358,6 +1358,36 @@ void alignSetOfImages(MetaData &MD, MultidimArray< double >& Iavg, int Niter,
     }
 }
 
+double bestRotationAroundZ(const MultidimArray< double >& Iref,
+                   MultidimArray< double >& I,
+                   CorrelationAux &aux,
+                   VolumeAlignmentAux &aux2)
+{
+    Iref.checkDimension(3);
+    I.checkDimension(3);
+
+    double deltaAng=atan(2.0/XSIZE(Iref));
+    Matrix1D<double> v(3);
+    XX(v)=0; YY(v)=0; ZZ(v)=1;
+    volume_convertCartesianToCylindrical(Iref,aux2.IrefCyl,3,XSIZE(Iref)/2,1,0,2*PI,deltaAng,v);
+    volume_convertCartesianToCylindrical(I,aux2.Icyl,3,XSIZE(Iref)/2,1,0,2*PI,deltaAng,v);
+    correlation_matrix(aux2.IrefCyl,aux2.Icyl,aux2.corr,aux);
+    aux2.corr.setXmippOrigin();
+    double bestCorr=A3D_ELEM(aux2.corr,0,STARTINGY(aux2.corr),0);
+    double bestAngle=0;
+    for (int i=STARTINGY(aux2.corr)+1; i<=FINISHINGY(aux2.corr); i++)
+    {
+    	double corr=A3D_ELEM(aux2.corr,0,i,0);
+        if (corr>bestCorr)
+        {
+        	bestCorr=corr;
+        	bestAngle=i;
+        }
+    }
+    bestAngle*=deltaAng*180.0/PI;
+    return -bestAngle;
+}
+
 /* Estimate 2D Gaussian ---------------------------------------------------- */
 /* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric
    spot fitting for spot array images. 2000 */
