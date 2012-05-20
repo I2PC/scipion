@@ -845,7 +845,7 @@ void image_convertCartesianToPolar_ZoomAtCenter(const MultidimArray<double> &in,
  * delta radius and the delta angle.
  * It is assumed that the input image has the Xmipp origin.
  * Delta Ang must be in radians. */
-void volume_convertCartesianToCylindrical(MultidimArray<double> &in, MultidimArray<double> &out,
+void volume_convertCartesianToCylindrical(const MultidimArray<double> &in, MultidimArray<double> &out,
                                    double Rmin, double Rmax, double deltaR,
                                    double angMin, double angMax, double deltaAng,
                                    Matrix1D<double> &axis);

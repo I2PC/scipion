@@ -225,7 +225,7 @@ void image_convertCartesianToPolar_ZoomAtCenter(const MultidimArray<double> &in,
 }
 
 // Cartesian to cylindrical -----------------------------------------------
-void volume_convertCartesianToCylindrical(MultidimArray<double> &in,
+void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 		MultidimArray<double> &out, double Rmin, double Rmax, double deltaR,
 		double angMin, double angMax, double deltaAng, Matrix1D<double> &axis) {
 	int NAngSteps = floor((angMax - angMin) / deltaAng);
