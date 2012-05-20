@@ -525,6 +525,14 @@ double bestRotationAroundZ(const MultidimArray< double >& Iref,
                    CorrelationAux &aux,
                    VolumeAlignmentAux &aux2);
 
+/** Fast version of bestRotationAroundZ.
+ * The reference volume has already been converted to cylindrical coordinates.
+ */
+double fastBestRotationAroundZ(const MultidimArray< double >& IrefCyl,
+                   const MultidimArray< double >& I,
+                   CorrelationAux &aux,
+                   VolumeAlignmentAux &aux2);
+
 /** Align two images considering also the mirrors
  * @ingroup Filters
  *

@@ -1365,13 +1365,26 @@ double bestRotationAroundZ(const MultidimArray< double >& Iref,
 {
     Iref.checkDimension(3);
     I.checkDimension(3);
+    if (!I.sameShape(Iref))
+    	REPORT_ERROR(ERR_MULTIDIM_SIZE,"Both volumes should be of the same shape");
 
-    double deltaAng=atan(2.0/XSIZE(Iref));
+    double deltaAng=atan(2.0/XSIZE(I));
     Matrix1D<double> v(3);
     XX(v)=0; YY(v)=0; ZZ(v)=1;
-    volume_convertCartesianToCylindrical(Iref,aux2.IrefCyl,3,XSIZE(Iref)/2,1,0,2*PI,deltaAng,v);
-    volume_convertCartesianToCylindrical(I,aux2.Icyl,3,XSIZE(Iref)/2,1,0,2*PI,deltaAng,v);
-    correlation_matrix(aux2.IrefCyl,aux2.Icyl,aux2.corr,aux,false);
+    volume_convertCartesianToCylindrical(Iref,aux2.IrefCyl,3,XSIZE(I)/2,1,0,2*PI,deltaAng,v);
+    return fastBestRotationAroundZ(aux2.IrefCyl,I,aux,aux2);
+}
+
+double fastBestRotationAroundZ(const MultidimArray< double >& IrefCyl,
+                   const MultidimArray< double >& I,
+                   CorrelationAux &aux,
+                   VolumeAlignmentAux &aux2)
+{
+    double deltaAng=atan(2.0/XSIZE(I));
+    Matrix1D<double> v(3);
+    XX(v)=0; YY(v)=0; ZZ(v)=1;
+    volume_convertCartesianToCylindrical(I,aux2.Icyl,3,XSIZE(I)/2,1,0,2*PI,deltaAng,v);
+    correlation_matrix(IrefCyl,aux2.Icyl,aux2.corr,aux,false);
     STARTINGZ(aux2.corr)=STARTINGY(aux2.corr)=STARTINGX(aux2.corr)=0;
     double bestCorr=A3D_ELEM(aux2.corr,0,STARTINGY(aux2.corr),0);
     double bestAngle=0;
@@ -1387,6 +1400,7 @@ double bestRotationAroundZ(const MultidimArray< double >& Iref,
     bestAngle*=deltaAng*180.0/PI;
     return -bestAngle;
 }
+
 
 /* Estimate 2D Gaussian ---------------------------------------------------- */
 /* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric
