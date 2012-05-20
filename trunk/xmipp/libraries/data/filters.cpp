@@ -1371,8 +1371,8 @@ double bestRotationAroundZ(const MultidimArray< double >& Iref,
     XX(v)=0; YY(v)=0; ZZ(v)=1;
     volume_convertCartesianToCylindrical(Iref,aux2.IrefCyl,3,XSIZE(Iref)/2,1,0,2*PI,deltaAng,v);
     volume_convertCartesianToCylindrical(I,aux2.Icyl,3,XSIZE(Iref)/2,1,0,2*PI,deltaAng,v);
-    correlation_matrix(aux2.IrefCyl,aux2.Icyl,aux2.corr,aux);
-    aux2.corr.setXmippOrigin();
+    correlation_matrix(aux2.IrefCyl,aux2.Icyl,aux2.corr,aux,false);
+    STARTINGZ(aux2.corr)=STARTINGY(aux2.corr)=STARTINGX(aux2.corr)=0;
     double bestCorr=A3D_ELEM(aux2.corr,0,STARTINGY(aux2.corr),0);
     double bestAngle=0;
     for (int i=STARTINGY(aux2.corr)+1; i<=FINISHINGY(aux2.corr); i++)
