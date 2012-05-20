@@ -28,6 +28,7 @@
 #include <parallel/xmipp_mpi.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
+#include <data/filters.h>
 #include <data/polar.h>
 #include <data/xmipp_fftw.h>
 #include <data/histogram.h>
@@ -84,7 +85,11 @@ public:
     Polar_fftw_plans *plans;
 
     // Correlation aux
-    CorrelationAux corrAux;
+    CorrelationAux corrAux, corrAux2;
+
+    // Volume Alignment aux
+    VolumeAlignmentAux volAlignmentAux;
+
 
     // Rotational correlation aux
     RotationalCorrelationAux rotAux;

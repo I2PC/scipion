@@ -24,7 +24,6 @@
  ***************************************************************************/
 
 #include "mpi_classify_CL3D.h"
-#include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
 #include <data/xmipp_image_generic.h>
@@ -198,7 +197,6 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     ARS.initIdentity(4);
     ASR = ARS;
     MultidimArray<double> IauxSR = I, IauxRS = I;
-    Polar<std::complex<double> > polarFourierI;
 
 	// Align the image with the node
 	for (int i = 0; i < 1; i++) {
@@ -209,6 +207,11 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
         MAT_ELEM(ASR,0,3) += shiftX;
         MAT_ELEM(ASR,1,3) += shiftY;
         MAT_ELEM(ASR,2,3) += shiftZ;
+        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+
+        bestRot = bestRotationAroundZ(P,IauxSR,corrAux2,volAlignmentAux);
+        rotation3DMatrix(bestRot, 'Z', R);
+        ASR=R*ASR;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
         /*
