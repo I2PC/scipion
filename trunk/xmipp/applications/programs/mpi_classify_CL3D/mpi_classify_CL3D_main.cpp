@@ -120,10 +120,10 @@ void CL3DClass::transferUpdate()
         /* COSS: STILL TO PUT IN 3D
         // Make sure the image is centered
         centerImage(P,corrAux,rotAux);
+        */
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
         if (!DIRECT_A2D_ELEM(prm->mask,i,j))
             DIRECT_A2D_ELEM(P,i,j) = 0;
-         */
 
         double deltaAng=atan(2.0/XSIZE(P));
         Matrix1D<double> v(3);
@@ -188,7 +188,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     MultidimArray<double> IauxSR = I, IauxRS = I;
 
 	// Align the image with the node
-	for (int i = 0; i < 1; i++) {
+	for (int i = 0; i < 3; i++) {
 		double shiftX, shiftY, shiftZ, bestRot;
 
         // Shift then rotate
@@ -199,34 +199,21 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
         bestRot = fastBestRotationAroundZ(PcylZ,IauxSR,corrAux2,volAlignmentAux);
-        //bestRot = bestRotationAroundZ(P,IauxSR,corrAux2,volAlignmentAux);
         rotation3DMatrix(bestRot, 'Z', R);
         ASR=R*ASR;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
-        /*
-        normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
-                                        XSIZE(P) / 5, XSIZE(P) / 2, plans, 1);
-
-        bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
-        rotation2DMatrix(bestRot, R);
-        SPEED_UP_temps;
-        M3x3_BY_M3x3(ASR,R,ASR);
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
-
         // Rotate then shift
-        normalizedPolarFourierTransform(IauxRS, polarFourierI, true,
-                                        XSIZE(P) / 5, XSIZE(P) / 2, plans, 1);
-        bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
-        rotation2DMatrix(bestRot, R);
-        M3x3_BY_M3x3(ARS,R,ARS);
+        bestRot = fastBestRotationAroundZ(PcylZ,IauxSR,corrAux2,volAlignmentAux);
+        rotation3DMatrix(bestRot, 'Z', R);
+        ARS=R*ARS;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 
-        bestShift(P, IauxRS, shiftX, shiftY, corrAux);
-        MAT_ELEM(ARS,0,2) += shiftX;
-        MAT_ELEM(ARS,1,2) += shiftY;
+        bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
+        MAT_ELEM(ARS,0,3) += shiftX;
+        MAT_ELEM(ARS,1,3) += shiftY;
+        MAT_ELEM(ARS,2,3) += shiftZ;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
-        */
     }
 
     // Compute the correntropy
