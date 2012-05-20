@@ -236,7 +236,6 @@ void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 
 	// Calculate rotation matrix
 	Matrix2D<double> M;
-	M.initIdentity(3);
 	if (XX(axis)!=0.0 || YY(axis)!=0.0)
 	{
 		// 1) Calculate rotation axis v=(0,0,1) x axis
@@ -263,8 +262,13 @@ void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 				double R = Rmin + j * deltaR;
 				YY(p)=R*s;
 				XX(p)=R*c;
-				M3x3_BY_V3x1(pc,M,p);
-				A3D_ELEM(out,k,i,j) = in.interpolatedElement3D(XX(pc),YY(pc),ZZ(pc));
+				if (MAT_XSIZE(M)>0)
+				{
+					M3x3_BY_V3x1(pc,M,p);
+					A3D_ELEM(out,k,i,j) = in.interpolatedElement3D(XX(pc),YY(pc),ZZ(pc));
+				}
+				else
+					A3D_ELEM(out,k,i,j) = in.interpolatedElement3D(XX(p),YY(p),ZZ(p));
 			}
 		}
 	}
