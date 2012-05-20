@@ -2237,17 +2237,17 @@ public:
      *
      * (x,y,z) are in logical coordinates.
      */
-    T interpolatedElement3D(double x, double y, double z, T outside_value = (T) 0)
+    T interpolatedElement3D(double x, double y, double z, T outside_value = (T) 0) const
     {
-        int x0 = FLOOR(x);
+        int x0 = floor(x);
         double fx = x - x0;
         int x1 = x0 + 1;
 
-        int y0 = FLOOR(y);
+        int y0 = floor(y);
         double fy = y - y0;
         int y1 = y0 + 1;
 
-        int z0 = FLOOR(z);
+        int z0 = floor(z);
         double fz = z - z0;
         int z1 = z0 + 1;
 
