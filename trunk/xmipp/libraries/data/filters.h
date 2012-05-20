@@ -521,7 +521,7 @@ public:
  * @ingroup Filters
  */
 double bestRotationAroundZ(const MultidimArray< double >& Iref,
-                   MultidimArray< double >& I,
+                   const MultidimArray< double >& I,
                    CorrelationAux &aux,
                    VolumeAlignmentAux &aux2);
 

@@ -1359,7 +1359,7 @@ void alignSetOfImages(MetaData &MD, MultidimArray< double >& Iavg, int Niter,
 }
 
 double bestRotationAroundZ(const MultidimArray< double >& Iref,
-                   MultidimArray< double >& I,
+                   const MultidimArray< double >& I,
                    CorrelationAux &aux,
                    VolumeAlignmentAux &aux2)
 {
