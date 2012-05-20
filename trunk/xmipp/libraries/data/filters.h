@@ -513,7 +513,7 @@ double alignImages(const MultidimArray< double >& Iref,
 class VolumeAlignmentAux
 {
 public:
-	MultidimArray<double> IrefCyl, Icyl, corr;
+	MultidimArray<double> IrefCyl, Icyl, corr, Irotated;
 };
 
 /** Align two volumes by applying a rotation around Z.
@@ -525,13 +525,12 @@ double bestRotationAroundZ(const MultidimArray< double >& Iref,
                    CorrelationAux &aux,
                    VolumeAlignmentAux &aux2);
 
-/** Fast version of bestRotationAroundZ.
- * The reference volume has already been converted to cylindrical coordinates.
+/** Find a ZYZ rotation that transforms I into Iref.
+ * The rotation matrix is returned in R. I is modified to be aligned.
  */
-double fastBestRotationAroundZ(const MultidimArray< double >& IrefCyl,
-                   const MultidimArray< double >& I,
-                   CorrelationAux &aux,
-                   VolumeAlignmentAux &aux2);
+void fastBestRotation(const MultidimArray<double>& IrefCylZ,
+		const MultidimArray<double>& IrefCylY, MultidimArray<double>& I,
+		Matrix2D<double> &R, CorrelationAux &aux, VolumeAlignmentAux &aux2);
 
 /** Align two images considering also the mirrors
  * @ingroup Filters
