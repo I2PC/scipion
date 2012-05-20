@@ -603,6 +603,12 @@ extern String floatToString(float F, int _width, int _prec);
 #define OUTSIDE(i,j) \
             ((j) < STARTINGX(*this) || (j) > FINISHINGX(*this) || \
              (i) < STARTINGY(*this) || (i) > FINISHINGY(*this))
+
+/** Macro to check whether a point is inside or outside a given matrix. */
+#define OUTSIDE(k, i,j) \
+            ((j) < STARTINGX(*this) || (j) > FINISHINGX(*this) || \
+             (i) < STARTINGY(*this) || (i) > FINISHINGY(*this) || \
+             (k) < STARTINGZ(*this) || (k) > FINISHINGZ(*this))
 //@}
 
 // Forward declarations ====================================================
@@ -2251,21 +2257,22 @@ public:
         double fz = z - z0;
         int z1 = z0 + 1;
 
-        T d000 = (outside(z0, y0, x0)) ? outside_value : A3D_ELEM(*this, z0, y0, x0);
-        T d001 = (outside(z0, y0, x1)) ? outside_value : A3D_ELEM(*this, z0, y0, x1);
-        T d010 = (outside(z0, y1, x0)) ? outside_value : A3D_ELEM(*this, z0, y1, x0);
-        T d011 = (outside(z0, y1, x1)) ? outside_value : A3D_ELEM(*this, z0, y1, x1);
-        T d100 = (outside(z1, y0, x0)) ? outside_value : A3D_ELEM(*this, z1, y0, x0);
-        T d101 = (outside(z1, y0, x1)) ? outside_value : A3D_ELEM(*this, z1, y0, x1);
-        T d110 = (outside(z1, y1, x0)) ? outside_value : A3D_ELEM(*this, z1, y1, x0);
-        T d111 = (outside(z1, y1, x1)) ? outside_value : A3D_ELEM(*this, z1, y1, x1);
+        double doutside_value=outside_value;
+        double d000 = (OUTSIDE(z0, y0, x0)) ? doutside_value : A3D_ELEM(*this, z0, y0, x0);
+        double d001 = (OUTSIDE(z0, y0, x1)) ? doutside_value : A3D_ELEM(*this, z0, y0, x1);
+        double d010 = (OUTSIDE(z0, y1, x0)) ? doutside_value : A3D_ELEM(*this, z0, y1, x0);
+        double d011 = (OUTSIDE(z0, y1, x1)) ? doutside_value : A3D_ELEM(*this, z0, y1, x1);
+        double d100 = (OUTSIDE(z1, y0, x0)) ? doutside_value : A3D_ELEM(*this, z1, y0, x0);
+        double d101 = (OUTSIDE(z1, y0, x1)) ? doutside_value : A3D_ELEM(*this, z1, y0, x1);
+        double d110 = (OUTSIDE(z1, y1, x0)) ? doutside_value : A3D_ELEM(*this, z1, y1, x0);
+        double d111 = (OUTSIDE(z1, y1, x1)) ? doutside_value : A3D_ELEM(*this, z1, y1, x1);
 
-        double dx00 = LIN_INTERP(fx, (double) d000, (double) d001);
-        double dx01 = LIN_INTERP(fx, (double) d100, (double) d101);
-        double dx10 = LIN_INTERP(fx, (double) d010, (double) d011);
-        double dx11 = LIN_INTERP(fx, (double) d110, (double) d111);
-        double dxy0 = LIN_INTERP(fy, (double) dx00, (double) dx10);
-        double dxy1 = LIN_INTERP(fy, (double) dx01, (double) dx11);
+        double dx00 = LIN_INTERP(fx, d000, d001);
+        double dx01 = LIN_INTERP(fx, d100, d101);
+        double dx10 = LIN_INTERP(fx, d010, d011);
+        double dx11 = LIN_INTERP(fx, d110, d111);
+        double dxy0 = LIN_INTERP(fy, dx00, dx10);
+        double dxy1 = LIN_INTERP(fy, dx01, dx11);
 
         return (T) LIN_INTERP(fz, dxy0, dxy1);
     }
