@@ -110,7 +110,7 @@ void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, do
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(eulerMatrix)
     dMij(eulerMatrix,i,j) = dMij(A, i, j);
-    //check determinat if -1 then flip = true
+    //check determinant if -1 then flip = true
     double result = A.det3x3();
     flip = result  < 0;
     if (flip)
@@ -122,7 +122,12 @@ void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, do
             MAT_ELEM(eulerMatrix, 0, 2) *= -1.;
     }
     Euler_matrix2angles(eulerMatrix, rot, tilt, psi);
-
+    if (MAT_XSIZE(A)==4)
+    {
+    	shiftX=MAT_ELEM(A,0,3);
+    	shiftY=MAT_ELEM(A,1,3);
+    	shiftZ=MAT_ELEM(A,2,3);
+    }
 }
 
 #define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
