@@ -41,7 +41,8 @@ FILE * _logCL3D = NULL;
 /* CL3D Assigned basics ------------------------------------------------ */
 std::ostream & operator <<(std::ostream &out, const CL3DAssignment& assigned)
 {
-    out << "(" << assigned.objId << ", " << assigned.corr << ")";
+    out << "(" << assigned.objId << " Angles=" << assigned.rot << "," << assigned.tilt << "," << assigned.psi
+    	<< " Shifts=" << assigned.shiftx << "," << assigned.shifty << "," << assigned.shiftz << " -> " << assigned.corr << ")";
     return out;
 }
 
@@ -56,6 +57,9 @@ void CL3DAssignment::readAlignment(const Matrix2D<double> &M)
     double scale;
     bool flip;
     transformationMatrix2Parameters3D(M, flip, scale, shiftx, shifty, shiftz, rot, tilt, psi);
+    rot=realWRAP(rot,-180,180);
+    tilt=realWRAP(tilt,-180,180);
+    psi=realWRAP(psi,-180,180);
 }
 
 void CL3DAssignment::copyAlignment(const CL3DAssignment &alignment)
@@ -129,6 +133,8 @@ void CL3DClass::transferUpdate()
         Matrix1D<double> v(3);
         XX(v)=0; YY(v)=0; ZZ(v)=1;
         volume_convertCartesianToCylindrical(P,PcylZ,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
+        XX(v)=0; YY(v)=1; ZZ(v)=0;
+        volume_convertCartesianToCylindrical(P,PcylY,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
 
         // Take the list of images
         currentListImg = nextListImg;
@@ -198,16 +204,12 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
         MAT_ELEM(ASR,2,3) += shiftZ;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
-        bestRot = fastBestRotationAroundZ(PcylZ,IauxSR,corrAux2,volAlignmentAux);
-        rotation3DMatrix(bestRot, 'Z', R);
+        fastBestRotation(PcylZ,PcylY,IauxSR,R,corrAux2,volAlignmentAux);
         ASR=R*ASR;
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
         // Rotate then shift
-        bestRot = fastBestRotationAroundZ(PcylZ,IauxSR,corrAux2,volAlignmentAux);
-        rotation3DMatrix(bestRot, 'Z', R);
+        fastBestRotation(PcylZ,PcylY,IauxRS,R,corrAux2,volAlignmentAux);
         ARS=R*ARS;
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 
         bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
         MAT_ELEM(ARS,0,3) += shiftX;
@@ -250,23 +252,29 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     candidateSR.readAlignment(ASR);
     if (std::abs(candidateRS.shiftx)>prm->maxShiftX ||
         std::abs(candidateRS.shifty)>prm->maxShiftY ||
-        std::abs(candidateRS.shiftz)>prm->maxShiftZ)
+        std::abs(candidateRS.shiftz)>prm->maxShiftZ ||
+        std::abs(candidateRS.rot)>prm->maxRot ||
+        std::abs(candidateRS.tilt)>prm->maxTilt ||
+        std::abs(candidateRS.psi)>prm->maxPsi)
         candidateRS.corr = 0;
     else
         candidateRS.corr = corrRS;
     if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
         std::abs(candidateSR.shifty)>prm->maxShiftY ||
-        std::abs(candidateSR.shiftz)>prm->maxShiftZ)
+        std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
+        std::abs(candidateSR.rot)>prm->maxRot ||
+        std::abs(candidateSR.tilt)>prm->maxTilt ||
+        std::abs(candidateSR.psi)>prm->maxPsi)
         candidateSR.corr = 0;
     else
         candidateSR.corr = corrSR;
 
-    if (corrRS >= corrSR)
+    if (candidateRS.corr >= candidateSR.corr)
     {
         I = IauxRS;
         result.copyAlignment(candidateRS);
     }
-    else if (corrSR > corrRS)
+    else if (candidateSR.corr > candidateRS.corr)
     {
         I = IauxSR;
         result.copyAlignment(candidateSR);
@@ -1376,9 +1384,9 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxShiftX <d=10>]      : Maximum allowed shift in X");
     addParamsLine("   [--maxShiftY <d=10>]      : Maximum allowed shift in Y");
     addParamsLine("   [--maxShiftZ <d=10>]      : Maximum allowed shift in Z");
-    addParamsLine("   [--maxRot <d=360>]        : Maximum allowed rotational angle");
-    addParamsLine("   [--maxTilt <d=360>]       : Maximum allowed tilt angle");
-    addParamsLine("   [--maxPsi <d=360>]        : Maximum allowed in-plane angle");
+    addParamsLine("   [--maxRot <d=180>]        : Maximum allowed rotational angle in absolute value");
+    addParamsLine("   [--maxTilt <d=180>]       : Maximum allowed tilt angle in absolute value");
+    addParamsLine("   [--maxPsi <d=180>]        : Maximum allowed in-plane angle in absolute value");
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }

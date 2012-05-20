@@ -78,6 +78,9 @@ public:
     // P in cylindrical coordinates around Z
     MultidimArray<double> PcylZ;
 
+    // P in cylindrical coordinates around Y
+    MultidimArray<double> PcylY;
+
     // Correlation aux
     CorrelationAux corrAux, corrAux2;
 
