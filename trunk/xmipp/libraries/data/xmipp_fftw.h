@@ -522,7 +522,8 @@ template <typename T>
 void correlation_matrix(const MultidimArray< T > & m1,
                         const MultidimArray< T > & m2,
                         MultidimArray< double >& R,
-                        CorrelationAux &aux)
+                        CorrelationAux &aux,
+                        bool center=true)
 {
     // Compute the Fourier Transforms
     R=m1;
@@ -549,7 +550,8 @@ void correlation_matrix(const MultidimArray< T > & m1,
     aux.transformer1.inverseFourierTransform();
 
     // Center the resulting image to obtain a centered autocorrelation
-    CenterFFT(R, true);
+    if (center)
+    	CenterFFT(R, true);
 }
 
 /** Autocorrelation function of an image
