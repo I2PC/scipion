@@ -1359,7 +1359,7 @@ public:
      * m1.inv(m1_inv);
      * @endcode
      */
-    void inv(Matrix2D<T>& result) const
+    void inv(Matrix2D<double>& result) const
     {
 
         if (mdimx == 0 || mdimy == 0)
@@ -1377,7 +1377,7 @@ public:
         bool invertible = false;
         FOR_ALL_ELEMENTS_IN_MATRIX1D(w)
         {
-            if (ABS(VEC_ELEM(w,i)) > tol)
+            if (fabs(VEC_ELEM(w,i)) > tol)
             {
                 VEC_ELEM(w,i) = 1.0 / VEC_ELEM(w,i);
                 invertible = true;
@@ -1397,14 +1397,14 @@ public:
         for (int i = 0; i < mdimx; i++)
             for (int j = 0; j < mdimy; j++)
                 for (int k = 0; k < mdimx; k++)
-                    MAT_ELEM(result,i,j) += (T) MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
+                    MAT_ELEM(result,i,j) += MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
     }
 
     /** Inverse of a matrix
      */
-    Matrix2D<T> inv() const
+    Matrix2D<double> inv() const
     {
-        Matrix2D<T> result;
+        Matrix2D<double> result;
         inv(result);
 
         return result;
