@@ -41,8 +41,9 @@ public class ImagePlusLoader
 	protected ImagePlus imp;
 	protected ImageGeneric ig;
 	protected long modified;
-	
-	public ImagePlusLoader(){
+
+	public ImagePlusLoader()
+	{
 		this.imp = null;
 	}
 
@@ -73,11 +74,10 @@ public class ImagePlusLoader
 
 	public ImagePlus loadImagePlus()
 	{
-		//ImagePlus imp = null;
+		// ImagePlus imp = null;
 		try
 		{
-			if (fileName != null && Filename.exists(fileName) &&
-			   ( hasChanged() || imp == null))
+			if (fileName != null && Filename.exists(fileName) && (hasChanged() || imp == null))
 				imp = loadImage();
 			else if (ig != null)
 				imp = XmippImageConverter.readToImagePlus(ig);
@@ -89,12 +89,18 @@ public class ImagePlusLoader
 		}
 		return imp;
 	}
-	
-	protected ImagePlus loadImage() throws Exception {
-		return XmippImageConverter.loadImage(fileName);
+
+	protected ImagePlus loadImage() throws Exception
+	{
+		ig = new ImageGeneric(fileName);
+		long select_image = Filename.getNimage(fileName);
+		imp = XmippImageConverter.readToImagePlus(ig, ig.getXDim(), ig.getYDim(), select_image);
+		return imp;
+		
 	}
-	
-	public boolean hasChanged(){
+
+	public boolean hasChanged()
+	{
 		return new File(fileName).lastModified() > modified;
 	}
 
@@ -112,7 +118,7 @@ public class ImagePlusLoader
 	{
 		return allowsGeometry;
 	}
-	
+
 	public void setAllowsGeometry(boolean useGeometry)
 	{
 		this.useGeometry = useGeometry;
@@ -132,7 +138,21 @@ public class ImagePlusLoader
 	public void wrap()
 	{
 		// TODO Auto-generated method stub
-		
+
+	}
+
+	public boolean isVolume()
+	{
+		try
+		{
+			
+			return ig.isVolume();
+
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
 	}
 
 }

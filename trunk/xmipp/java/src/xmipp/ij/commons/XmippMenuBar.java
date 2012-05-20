@@ -15,13 +15,17 @@ import java.awt.CheckboxMenuItem;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
+import java.awt.MenuShortcut;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 
 import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 import javax.vecmath.Color3f;
 
 import xmipp.utils.XmippFileChooser;
@@ -59,7 +63,7 @@ public class XmippMenuBar extends MenuBar
 
 	enum IJRequirement
 	{
-		BINARY, EIGHTBIT, IMAGEJ, STACK, THIRTYTWOBIT, RGB
+		BINARY, EIGHTBIT, IMAGEJ, STACK, THIRTYTWOBIT, RGB, VOLUME
 
 	};
 
@@ -77,6 +81,7 @@ public class XmippMenuBar extends MenuBar
 
 		// menubar file menu
 		savemi = new MenuItem("Save");
+		savemi.setShortcut(new MenuShortcut(KeyEvent.VK_S));
 		savemi.addActionListener(new ActionListener()
 		{
 
@@ -121,7 +126,7 @@ public class XmippMenuBar extends MenuBar
 		});
 
 		openwith3dmi = new MenuItem("Open with 3D Viewer");
-		
+		openwith3dmi.setEnabled(xw.isVolume());
 //		openwith3dmi.setEnabled(Filename.isVolume(xw.getImageFilePath()));
 		openwith3dmi.addActionListener(new ActionListener()
 		{
@@ -138,9 +143,10 @@ public class XmippMenuBar extends MenuBar
 			}
 		});
 		filemn.add(openwith3dmi);
-		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer");
-		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ");
+		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer", IJRequirement.VOLUME);
+		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ", IJRequirement.VOLUME);
 		refreshmi = new MenuItem("Refresh");
+		refreshmi.setShortcut(new MenuShortcut(KeyEvent.VK_F5));
 		refreshmi.addActionListener(new ActionListener()
 		{
 
@@ -235,7 +241,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(adjustmn, "Scale", "Scale...");
 		addIJMenuItem(adjustmn, "Untilt Stack", "Untilt Stack", IJRequirement.STACK);
 
-		addIJMenuItem(adjustmn, "Reslice", "Reslice [/]...");
+		addIJMenuItem(adjustmn, "Reslice", "Reslice [/]...", IJRequirement.VOLUME);
 
 		// image transform menu
 		addIJMenuItem(transformmn, "Flip Horizontally", "Flip Horizontally");
@@ -250,6 +256,7 @@ public class XmippMenuBar extends MenuBar
 
 		// menubar advanced menu
 		imagejmi = new MenuItem("ImageJ");
+		imagejmi.setShortcut(new MenuShortcut(KeyEvent.VK_I));
 		thresholdingmn = new Menu("Thresholding");
 		binarymn = new Menu("Binary");
 		processmn = new Menu("Process");
@@ -377,6 +384,13 @@ public class XmippMenuBar extends MenuBar
 	protected void addCommand(MenuItem mi, String command, final IJRequirement... requirements)
 	{
 		mi.setActionCommand(command);
+		for (IJRequirement requirement : requirements)
+		{
+			if (requirement == IJRequirement.STACK && !xw.isStack())
+				mi.setEnabled(false);
+			if (requirement == IJRequirement.VOLUME && !xw.isVolume())
+				mi.setEnabled(false);
+		}
 		mi.addActionListener(new ActionListener()
 		{
 
@@ -410,10 +424,7 @@ public class XmippMenuBar extends MenuBar
 								IJ.run("RGB Color");
 								JOptionPane.showMessageDialog(null, "RGB color applied");
 								break;
-							case STACK:
-								if (WindowManager.getCurrentImage().getImageStackSize() == 1)
-									JOptionPane.showMessageDialog(null, "Only for Stack");
-								return;
+							
 							}
 					IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
 				}

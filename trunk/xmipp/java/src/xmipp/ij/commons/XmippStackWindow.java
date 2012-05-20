@@ -61,5 +61,17 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		return ipl;
 	}
 
+	@Override
+	public boolean isVolume()
+	{
+		return getImagePlusLoader().isVolume();
+	}
+
+	@Override
+	public boolean isStack()
+	{
+		return true;
+	}
+
 
 }

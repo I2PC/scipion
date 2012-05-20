@@ -11,4 +11,8 @@ public interface XmippIJWindow
 	public void saveDataAs(String file) throws Exception;
 	
 	public ImagePlusLoader getImagePlusLoader();
+	
+	public boolean isVolume();
+
+	public boolean isStack();
 }

@@ -14,8 +14,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 			// openImageJ(Tool.VIEWER);
-			XmippStackWindow w = new XmippStackWindow(new ImagePlusLoader("/home/airen/coss/xmipp/BPV/InputData/BPV_1386.mrc"));
-			
+			//XmippStackWindow w = new XmippStackWindow(new ImagePlusLoader("/home/airen/hand.vol"));
+			XmippImageWindow w = new XmippImageWindow(new ImagePlusLoader("/home/airen/coss/RCT/InputData/imageU.xmp"));
 			// IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 
 		}
@@ -85,5 +85,21 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public ImagePlusLoader getImagePlusLoader()
 	{
 		return ipl;
+	}
+
+
+	@Override
+	public boolean isVolume()
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public boolean isStack()
+	{
+		
+		return false;
 	}
 }// class XmippImageWindow
