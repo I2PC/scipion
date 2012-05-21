@@ -3109,6 +3109,11 @@ createMDObject(int label, PyObject *pyValue)
 {
     try
     {
+        if (PyBool_Check(pyValue))
+        {
+            bool bValue = (pyValue == Py_True);
+            RETURN_MDOBJECT(bValue);
+        }
         if (PyInt_Check(pyValue))
         {
             int iValue = PyInt_AS_LONG(pyValue);
@@ -3131,11 +3136,6 @@ createMDObject(int label, PyObject *pyValue)
         {
             double dValue = PyFloat_AS_DOUBLE(pyValue);
             RETURN_MDOBJECT(double(dValue));
-        }
-        if (PyBool_Check(pyValue))
-        {
-            bool bValue = (pyValue == Py_True);
-            RETURN_MDOBJECT(bValue);
         }
         if (PyList_Check(pyValue))
         {
@@ -4200,6 +4200,46 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_DM3_SIZE", (long) MDL_DM3_SIZE);
     addIntConstant(dict, "MDL_DM3_VALUE", (long) MDL_DM3_VALUE);
     addIntConstant(dict, "MDL_ENABLED", (long) MDL_ENABLED);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_URL", (long) MDL_EMX_MICROGRAPH_URL);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_SAMPLING", (long) MDL_EMX_MICROGRAPH_SAMPLING);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_DEFOCUSU", (long) MDL_EMX_MICROGRAPH_DEFOCUSU);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_DEFOCUSV", (long) MDL_EMX_MICROGRAPH_DEFOCUSV);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE", (long) MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_VOLTAGE", (long) MDL_EMX_MICROGRAPH_VOLTAGE);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_CS", (long) MDL_EMX_MICROGRAPH_CS);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST", (long) MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST);
+    addIntConstant(dict, "MDL_EMX_MICROGRAPH_FOM", (long) MDL_EMX_MICROGRAPH_FOM);
+    addIntConstant(dict, "MDL_EMX_PARTICLE_COORDINATE_X", (long) MDL_EMX_PARTICLE_COORDINATE_X);
+    addIntConstant(dict, "MDL_EMX_PARTICLE_COORDINATE_Y", (long) MDL_EMX_PARTICLE_COORDINATE_Y);
+    addIntConstant(dict, "MDL_EMX_PARTICLE_URL", (long) MDL_EMX_PARTICLE_URL);
+    addIntConstant(dict, "MDL_EMX_PARTICLE_MICROGRAPH_URL", (long) MDL_EMX_PARTICLE_MICROGRAPH_URL);
+    addIntConstant(dict, "MDL_EMX_PARTICLE_DEFOCUSU", (long) MDL_EMX_PARTICLE_DEFOCUSU);
+    addIntConstant(dict, "MDL_EMX_PARTICLE_DEFOCUSV", (long) MDL_EMX_PARTICLE_DEFOCUSV);
+    addIntConstant(dict, "MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE", (long) MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_CLASS_ID", (long) MDL_EMX_P_PARTICLE_CLASS_ID);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_ACTIVE_FLAG", (long) MDL_EMX_P_PARTICLE_ACTIVE_FLAG);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_FOM", (long) MDL_EMX_P_PARTICLE_FOM);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_PARTICLE_URL", (long) MDL_EMX_P_PARTICLE_PARTICLE_URL);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1);
+
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2);
+
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3);
+
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_4", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_4);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_4", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_4);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_4", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_4);
+    addIntConstant(dict, "MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_4", (long) MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_4);
+
     addIntConstant(dict, "MDL_FLIP", (long) MDL_FLIP);
     addIntConstant(dict, "MDL_CLASS_COUNT", (long) MDL_CLASS_COUNT);
     addIntConstant(dict, "MDL_IMAGE", (long) MDL_IMAGE);

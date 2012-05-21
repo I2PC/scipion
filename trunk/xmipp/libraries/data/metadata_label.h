@@ -772,7 +772,7 @@ private:
         MDL::addLabel(MDL_EMX_MICROGRAPH_VOLTAGE, LABEL_DOUBLE, "emx_micrograph____voltage");
         MDL::addLabel(MDL_EMX_MICROGRAPH_CS, LABEL_DOUBLE,"emx_micrograph____Cs");
         MDL::addLabel(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,LABEL_DOUBLE,"emx_micrograph____amplitude_contrast");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_FOM, LABEL_DOUBLE,"emx_micrograph.FOM");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_FOM, LABEL_DOUBLE,      "emx_micrograph____FOM");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y");
 
