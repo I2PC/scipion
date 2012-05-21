@@ -389,15 +389,15 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
             {
                 try
                 {
-                	PyObject *pyStr;
-                	 if ((pyStr = PyObject_Str(input)) != NULL)
-                	{
-//                    if (PyString_Check(input))
+                    PyObject *pyStr;
+                    if ((pyStr = PyObject_Str(input)) != NULL)
+                    {
+                        //                    if (PyString_Check(input))
                         self->image = new ImageGeneric(PyString_AsString(pyStr));
-//                    else if (FileName_Check(input))
-//                        self->image = new ImageGeneric(FileName_Value(input));
-                    //todo: add copy constructor
-                	}
+                        //                    else if (FileName_Check(input))
+                        //                        self->image = new ImageGeneric(FileName_Value(input));
+                        //todo: add copy constructor
+                    }
                     else
                     {
                         PyErr_SetString(PyExc_TypeError,
@@ -454,7 +454,7 @@ Image_compare(PyObject * obj, PyObject * obj2)
 static PyObject *
 Image_equal(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     ImageObject *self = (ImageObject*) obj;
     if (self != NULL)
     {
@@ -3805,9 +3805,9 @@ xmipp_compareTwoMetadataFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-        	FileName fn1, fn2;
+            FileName fn1, fn2;
 
-        	pyStrAux = PyObject_Str(pyStrFn1);
+            pyStrAux = PyObject_Str(pyStrFn1);
 
             if (pyStrAux != NULL)
                 fn1 = PyString_AsString(pyStrAux);
@@ -3819,12 +3819,12 @@ xmipp_compareTwoMetadataFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
                 fn2 = PyString_AsString(pyStrAux);
             else
                 PyErr_SetString(PyExc_TypeError,
-                                 "Expected string or FileName as first argument");
+                                "Expected string or FileName as first argument");
 
             if (compareTwoMetadataFiles(fn1, fn2))
-               Py_RETURN_TRUE;
+                Py_RETURN_TRUE;
             else
-               Py_RETURN_FALSE;
+                Py_RETURN_FALSE;
         }
         catch (XmippError &xe)
         {
@@ -3950,6 +3950,25 @@ xmipp_badPixelFilter(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* dump metadatas to database*/
+static PyObject *
+xmipp_dumpToFile(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyStrFn, *pyStrAux;
+    FileName fn;
+
+    if (PyArg_ParseTuple(args, "O", &pyStrFn))
+    {
+        pyStrAux = PyObject_Str(pyStrFn);
+        if (pyStrAux != NULL)
+        {
+            fn = PyString_AsString(pyStrAux);
+            MDSql::dumpToFile(fn);
+            Py_RETURN_NONE;
+        }
+    }
+    return NULL;
+}
 static PyMethodDef
 xmipp_methods[] =
     {
@@ -3996,7 +4015,7 @@ xmipp_methods[] =
         { "checkImageFileSize", (PyCFunction) xmipp_CheckImageFileSize,  METH_VARARGS,
           "return true if the file has at least as many bytes as needed to read the image" },
         { "checkImageCorners", (PyCFunction) xmipp_CheckImageCorners,  METH_VARARGS,
-            "return false if the image has repeated pixels at some corner" },
+          "return false if the image has repeated pixels at some corner" },
         { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
           "return true if both files are identical" },
         { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
@@ -4013,6 +4032,8 @@ xmipp_methods[] =
           "Utility function to apply gaussian filter in Fourier space" },
         { "badPixelFilter", (PyCFunction) xmipp_badPixelFilter, METH_VARARGS,
           "Bad pixel filter" },
+        { "dumpToFile", (PyCFunction) xmipp_dumpToFile, METH_VARARGS,
+          "dump metadata to sqlite database" },
 
         { NULL } /* Sentinel */
     };
