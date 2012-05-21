@@ -293,6 +293,75 @@ void svbksb(Matrix2D< double >& u,
         spduptmp0 = 1.0 / (dMn(A,0)*dMn(Ainv,0)+dMn(A,3)*dMn(Ainv,1)+dMn(A,6)*dMn(Ainv,2)); \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
+/** Inverse of a matrix (4x4)
+ *
+ * Input and output matrix cannot be the same one. The output is supposed to be
+ * already resized.
+ */
+#define M4x4_INV(Ainv, A) { \
+        dMn(Ainv, 0) =   dMn(A,5)*(dMn(A,10)*dMn(A,15)-dMn(A,11)*dMn(A,14))+\
+             dMn(A,6)*(dMn(A,11)*dMn(A,13)-dMn(A,9) *dMn(A,15))+\
+             dMn(A,7)*(dMn(A,9) *dMn(A,14)-dMn(A,10)*dMn(A,13));\
+  dMn(Ainv, 1) =   dMn(A,1)*(dMn(A,11)*dMn(A,14)-dMn(A,10)*dMn(A,15))+\
+       dMn(A,2)*(dMn(A,9) *dMn(A,15)-dMn(A,11)*dMn(A,13))+\
+       dMn(A,3)*(dMn(A,10)*dMn(A,13)-dMn(A,9) *dMn(A,14));\
+  dMn(Ainv, 2) =   dMn(A,1)*(dMn(A,6) *dMn(A,15)-dMn(A,7) *dMn(A,14))+\
+       dMn(A,2)*(dMn(A,7) *dMn(A,13)-dMn(A,5) *dMn(A,15))+\
+       dMn(A,3)*(dMn(A,5) *dMn(A,14)-dMn(A,6) *dMn(A,13));\
+  dMn(Ainv, 3) =   dMn(A,1)*(dMn(A,7) *dMn(A,10)-dMn(A,6) *dMn(A,11))+\
+       dMn(A,2)*(dMn(A,5) *dMn(A,11)-dMn(A,7) *dMn(A,9))+\
+       dMn(A,3)*(dMn(A,6) *dMn(A,9) -dMn(A,5) *dMn(A,10));\
+  dMn(Ainv, 4) =   dMn(A,4)*(dMn(A,11)*dMn(A,14)-dMn(A,10)*dMn(A,15))+\
+       dMn(A,6)*(dMn(A,8) *dMn(A,15)-dMn(A,11)*dMn(A,12))+\
+       dMn(A,7)*(dMn(A,10)*dMn(A,12)-dMn(A,8) *dMn(A,14));\
+  dMn(Ainv, 5) =   dMn(A,0)*(dMn(A,10)*dMn(A,15)-dMn(A,11)*dMn(A,14))+\
+       dMn(A,2)*(dMn(A,11)*dMn(A,12)-dMn(A,8) *dMn(A,15))+\
+       dMn(A,3)*(dMn(A,8) *dMn(A,14)-dMn(A,10)*dMn(A,12));\
+  dMn(Ainv, 6) =   dMn(A,0)*(dMn(A,7) *dMn(A,14)-dMn(A,6) *dMn(A,15))+\
+       dMn(A,2)*(dMn(A,4) *dMn(A,15)-dMn(A,7) *dMn(A,12))+\
+       dMn(A,3)*(dMn(A,6) *dMn(A,12)-dMn(A,4) *dMn(A,14));\
+  dMn(Ainv, 7) =   dMn(A,0)*(dMn(A,6) *dMn(A,11)-dMn(A,7) *dMn(A,10))+\
+       dMn(A,2)*(dMn(A,7) *dMn(A,8) -dMn(A,4) *dMn(A,11))+\
+       dMn(A,3)*(dMn(A,4) *dMn(A,10)-dMn(A,6) *dMn(A,8));\
+  dMn(Ainv, 8) =   dMn(A,4)*(dMn(A,9) *dMn(A,15)-dMn(A,11)*dMn(A,13))+\
+       dMn(A,5)*(dMn(A,11)*dMn(A,12)-dMn(A,8) *dMn(A,15))+\
+       dMn(A,7)*(dMn(A,8) *dMn(A,13)-dMn(A,9) *dMn(A,12));\
+  dMn(Ainv, 9) =   dMn(A,0)*(dMn(A,11)*dMn(A,13)-dMn(A,9) *dMn(A,15))+\
+       dMn(A,1)*(dMn(A,8) *dMn(A,15)-dMn(A,11)*dMn(A,12))+\
+       dMn(A,3)*(dMn(A,9) *dMn(A,12)-dMn(A,8) *dMn(A,13));\
+  dMn(Ainv,10) =   dMn(A,0)*(dMn(A,5) *dMn(A,15)-dMn(A,7) *dMn(A,13))+\
+       dMn(A,1)*(dMn(A,7) *dMn(A,12)-dMn(A,4) *dMn(A,15))+\
+       dMn(A,3)*(dMn(A,4) *dMn(A,13)-dMn(A,5) *dMn(A,12));\
+  dMn(Ainv,11) =   dMn(A,0)*(dMn(A,7) *dMn(A,9) -dMn(A,5) *dMn(A,11))+\
+       dMn(A,1)*(dMn(A,4) *dMn(A,11)-dMn(A,7) *dMn(A,8))+\
+       dMn(A,3)*(dMn(A,5) *dMn(A,8) -dMn(A,4) *dMn(A,9));\
+  dMn(Ainv,12) =   dMn(A,4)*(dMn(A,10)*dMn(A,13)-dMn(A,9) *dMn(A,14))+\
+       dMn(A,5)*(dMn(A,8) *dMn(A,14)-dMn(A,10)*dMn(A,12))+\
+       dMn(A,6)*(dMn(A,9) *dMn(A,12)-dMn(A,8) *dMn(A,13));\
+  dMn(Ainv,13) =   dMn(A,0)*(dMn(A,9) *dMn(A,14)-dMn(A,10)*dMn(A,13))+\
+       dMn(A,1)*(dMn(A,10)*dMn(A,12)-dMn(A,8) *dMn(A,14))+\
+       dMn(A,2)*(dMn(A,8) *dMn(A,13)-dMn(A,9) *dMn(A,12));\
+  dMn(Ainv,14) =   dMn(A,0)*(dMn(A,6) *dMn(A,13)-dMn(A,5) *dMn(A,14))+\
+       dMn(A,1)*(dMn(A,4) *dMn(A,14)-dMn(A,6) *dMn(A,12))+\
+       dMn(A,2)*(dMn(A,5) *dMn(A,12)-dMn(A,4) *dMn(A,13));\
+  dMn(Ainv,15) =   dMn(A,0)*(dMn(A,5) *dMn(A,10)-dMn(A,6) *dMn(A,9))+\
+       dMn(A,1)*(dMn(A,6) *dMn(A,8) -dMn(A,4) *dMn(A,10))+\
+       dMn(A,2)*(dMn(A,4) *dMn(A,9) -dMn(A,5) *dMn(A,8));\
+        spduptmp0 = 1.0 / (dMn(A,0)*(dMn(A,5)*(dMn(A,10)*dMn(A,15)-dMn(A,11)*dMn(A,14))\
+                              +dMn(A,6)*(dMn(A,11)*dMn(A,13)-dMn(A,9) *dMn(A,15))\
+                              +dMn(A,7)*(dMn(A,9) *dMn(A,14)-dMn(A,10)*dMn(A,13)))\
+                    +dMn(A,1)*(dMn(A,4)*(dMn(A,11)*dMn(A,14)-dMn(A,10)*dMn(A,15))\
+                              +dMn(A,6)*(dMn(A,8) *dMn(A,15)-dMn(A,11)*dMn(A,12))\
+                              +dMn(A,7)*(dMn(A,10)*dMn(A,12)-dMn(A,8) *dMn(A,14)))\
+        +dMn(A,2)*(dMn(A,4)*(dMn(A,9) *dMn(A,15)-dMn(A,11)*dMn(A,13))\
+         +dMn(A,5)*(dMn(A,11)*dMn(A,12)-dMn(A,8) *dMn(A,15))\
+         +dMn(A,7)*(dMn(A,8) *dMn(A,13)-dMn(A,9) *dMn(A,12)))\
+        +dMn(A,3)*(dMn(A,4)*(dMn(A,10)*dMn(A,13)-dMn(A,9) *dMn(A,14))\
+         +dMn(A,5)*(dMn(A,8) *dMn(A,14)-dMn(A,10)*dMn(A,12))\
+         +dMn(A,6)*(dMn(A,9) *dMn(A,12)-dMn(A,8) *dMn(A,13)))\
+                          ); \
+        M4x4_BY_CT(Ainv, Ainv, spduptmp0); }
+
 /** Matrix2D class */
 template<typename T>
 class Matrix2D
@@ -1361,43 +1430,57 @@ public:
      */
     void inv(Matrix2D<double>& result) const
     {
-
         if (mdimx == 0 || mdimy == 0)
             REPORT_ERROR(ERR_MATRIX_EMPTY, "Inverse: Matrix is empty");
-
-        // Perform SVD decomposition
-        Matrix2D< double > u, v;
-        Matrix1D< double > w;
-        svdcmp(*this, u, w, v); // *this = U * W * V^t
-
-        double tol = computeMax() * XMIPP_MAX(mdimx, mdimy) * 1e-14;
         result.initZeros(mdimx, mdimy);
-
-        // Compute W^-1
-        bool invertible = false;
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(w)
+        SPEED_UP_temps;
+        if (mdimx==2)
         {
-            if (fabs(VEC_ELEM(w,i)) > tol)
-            {
-                VEC_ELEM(w,i) = 1.0 / VEC_ELEM(w,i);
-                invertible = true;
-            }
-            else
-                VEC_ELEM(w,i) = 0.0;
+            M2x2_INV(result,*this);
         }
+        else if (mdimx==3)
+        {
+            M3x3_INV(result,*this);
+        }
+        else if (mdimx==4)
+        {
+            M4x4_INV(result,*this);
+        }
+        else
+        {
+            // Perform SVD decomposition
+            Matrix2D< double > u, v;
+            Matrix1D< double > w;
+            svdcmp(*this, u, w, v); // *this = U * W * V^t
 
-        if (!invertible)
-            return;
+            double tol = computeMax() * XMIPP_MAX(mdimx, mdimy) * 1e-14;
 
-        // Compute V*W^-1
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
-        MAT_ELEM(v,i,j) *= VEC_ELEM(w,j);
+            // Compute W^-1
+            bool invertible = false;
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(w)
+            {
+                if (fabs(VEC_ELEM(w,i)) > tol)
+                {
+                    VEC_ELEM(w,i) = 1.0 / VEC_ELEM(w,i);
+                    invertible = true;
+                }
+                else
+                    VEC_ELEM(w,i) = 0.0;
+            }
 
-        // Compute Inverse
-        for (int i = 0; i < mdimx; i++)
-            for (int j = 0; j < mdimy; j++)
-                for (int k = 0; k < mdimx; k++)
-                    MAT_ELEM(result,i,j) += MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
+            if (!invertible)
+                return;
+
+            // Compute V*W^-1
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
+            MAT_ELEM(v,i,j) *= VEC_ELEM(w,j);
+
+            // Compute Inverse
+            for (int i = 0; i < mdimx; i++)
+                for (int j = 0; j < mdimy; j++)
+                    for (int k = 0; k < mdimx; k++)
+                        MAT_ELEM(result,i,j) += MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
+        }
     }
 
     /** Inverse of a matrix
