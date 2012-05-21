@@ -189,7 +189,10 @@ def getListFromVector(_vector,numberIteration=None):
         if len(listaIntervalo) == 1:
             listValues += listaIntervalo
         elif len(listaIntervalo) == 2:
-            listValues += [ listaIntervalo[1] ] * string.atoi(listaIntervalo[0])
+            try:
+                listValues += [ listaIntervalo[1] ] * string.atoi(listaIntervalo[0])
+            except:
+                listValues += listaIntervalo
         else:
             raise RuntimeError, "Unknown syntax: " + intervalos
     #fill with last value the iterations
