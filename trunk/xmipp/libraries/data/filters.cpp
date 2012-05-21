@@ -1299,14 +1299,14 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 	VolumeAlignmentAux aux3;
 	double bestTilt = fastBestRotationAroundY(IrefCylY, aux2.Irotated, aux, aux3);
 	Matrix2D<double> Raux;
-	rotation3DMatrix(bestRot, 'Y', Raux);
+	rotation3DMatrix(bestTilt, 'Y', Raux);
 	R=Raux*R;
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
 
 	// Rotate in Z
 	VolumeAlignmentAux aux4;
 	double bestPsi = fastBestRotationAroundY(IrefCylZ, aux2.Irotated, aux, aux4);
-	rotation3DMatrix(bestRot, 'Z', Raux);
+	rotation3DMatrix(bestPsi, 'Z', Raux);
 	R=Raux*R;
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
 
