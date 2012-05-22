@@ -637,6 +637,37 @@ static NPY_TYPES datatype2NpyType(DataType dt)
     }
 }
 
+static DataType npyType2Datatype(int npy)
+{
+    switch (npy)
+    {
+    case NPY_FLOAT:
+        return DT_Float;
+    case NPY_DOUBLE:
+        return DT_Double;
+    case NPY_INT:
+        return DT_Int;
+    case NPY_UINT:
+        return DT_UInt;
+    case NPY_SHORT:
+        return DT_Short;
+    case NPY_USHORT:
+        return DT_UShort;
+    case NPY_BYTE:
+        return DT_SChar;
+    case NPY_UBYTE:
+        return DT_UChar;
+    case NPY_BOOL:
+        return DT_Bool;
+    case NPY_CFLOAT:
+        return DT_CFloat;
+    case NPY_CDOUBLE:
+        return DT_CDouble;
+    default:
+        return DT_Unknown;
+    }
+}
+
 /* getData */
 static PyObject *
 Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -645,26 +676,80 @@ Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
+      try
+      {
         ArrayDim adim;
         ImageGeneric & image = Image_Value(self);
+        DataType dt = image.getDatatype();
         int nd = image.image->mdaBase->getDim();
         MULTIDIM_ARRAY_GENERIC(image).getDimensions(adim);
-        npy_intp dims[3];
-        dims[0] = adim.xdim;
-        dims[1] = adim.ydim;
-        dims[2] = adim.zdim;
+        npy_intp dims[4];
+        dims[0] = adim.ndim;
+        dims[1] = adim.zdim;
+        dims[2] = adim.ydim;
+        dims[3] = adim.xdim;
         //Get the pointer to data
         void *mymem = image().getArrayPointer();
-        NPY_TYPES type = datatype2NpyType(image.getDatatype());
-        //PyObject * arr = PyArray_SimpleNewFromData(2, dims2, NPY_FLOAT, data);
-        PyArrayObject * arr = (PyArrayObject*) PyArray_SimpleNew(nd, dims, type);
+        NPY_TYPES type = datatype2NpyType(dt);
+        //dims pointer is shifted if ndim or zdim are 1
+        PyArrayObject * arr = (PyArrayObject*) PyArray_SimpleNew(nd, dims+4-nd, type);
         void * data = PyArray_DATA(arr);
-        memcpy(data, mymem, adim.nzyxdim * gettypesize(image.getDatatype()));
+        memcpy(data, mymem, adim.nzyxdim * gettypesize(dt));
 
         return (PyObject*)arr;
+      }
+      catch (XmippError &xe)
+      {
+          PyErr_SetString(PyXmippError, xe.msg.c_str());
+      }
     }
     return NULL;
 }//function Image_getData
+
+/* setData */
+static PyObject *
+Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    PyArrayObject * arr = NULL;
+
+    if (self != NULL && PyArg_ParseTuple(args, "O", &arr))
+    {
+        try
+        {
+          ImageGeneric & image = Image_Value(self);
+          DataType dt = npyType2Datatype(PyArray_TYPE(arr));
+          int nd = PyArray_NDIM(arr);
+          std::cerr << "DEBUG_JM: nd: " << nd << std::endl;
+          std::cerr << "DEBUG_JM: dt: " << datatype2Str(dt) << std::endl;
+          //Setup of image
+          image.setDatatype(dt);
+          ArrayDim adim;
+          adim.ndim = (nd == 4 ) ? PyArray_DIM(arr, 0) : 1;
+          adim.zdim = (nd > 2 ) ? PyArray_DIM(arr, nd - 3) : 1;
+          adim.ydim = PyArray_DIM(arr, nd - 2);
+          adim.xdim = PyArray_DIM(arr, nd - 1);
+
+          std::cerr << "DEBUG_JM: adim.ndim: " << adim.ndim << std::endl;
+          std::cerr << "DEBUG_JM: adim.zdim: " << adim.zdim << std::endl;
+          std::cerr << "DEBUG_JM: adim.ydim: " << adim.ydim << std::endl;
+          std::cerr << "DEBUG_JM: adim.xdim: " << adim.xdim << std::endl;
+
+
+          MULTIDIM_ARRAY_GENERIC(image).resize(adim, false);
+          std::cerr << "DEBUG_JM: adim.nzyxdim: " << adim.nzyxdim << std::endl;
+          void *mymem = image().getArrayPointer();
+          void * data = PyArray_DATA(arr);
+          memcpy(mymem, data, adim.nzyxdim * gettypesize(dt));
+          Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_setData
 
 /* getPixel */
 static PyObject *
@@ -954,7 +1039,9 @@ static PyMethodDef Image_methods[] =
         { "write", (PyCFunction) Image_write, METH_VARARGS,
           "Write image to disk" },
         { "getData", (PyCFunction) Image_getData, METH_VARARGS,
-          "Return a NumPy matrix with image data" },
+          "Return NumPy array from image data" },
+        { "setData", (PyCFunction) Image_setData, METH_VARARGS,
+          "Copy NumPy array to image data" },
         { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
           "Return a pixel value" },
         { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
