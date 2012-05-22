@@ -234,6 +234,21 @@ MaxChangeInAngles='1000 10 4 2'
 """
 PerturbProjectionDirections ='0'
 
+# {expert}{list}(fourier, realSpace) projection method
+"""select projection method, by default Fourier with padding 1 and interpolation bspline
+"""
+ProjectionMethod ='fourier'
+
+# {expert}{condition}(ProjectionMethod=="fourier") Padding factor for projection generation
+"""Increase the padding factor will improve projection quality but 
+projection generation will be slower. In general padding 1 and spline is OK
+"""
+PaddingAngularProjection = 1
+# {expert} {condition}(ProjectionMethod=="fourier"){list}(nearest,linear,bspline) Interpolation Schema for projection generation
+""" Interpolation function.
+"""
+KernelAngularProjection ='bspline'
+
 # Maximum change in origin offset
 """ Maximum allowed change in shift in the 3D+2D searches (in +/- pixels).
     Shifts larger than this value will be reset to (0,0)
