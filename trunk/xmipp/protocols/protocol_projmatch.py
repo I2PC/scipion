@@ -26,7 +26,9 @@ from math import radians
 class ProtProjMatch(XmippProtocol):
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
     def __init__(self, scriptname, project=None):
-        super(ProtProjMatch, self).__init__(protDict.projmatch.name, scriptname, project)
+                #XmippProtocol.__init__(self, protDict.ml2d.name, scriptname, project)
+
+        XmippProtocol.__init__(self, protDict.projmatch.name, scriptname, project)
         self.CtfGroupDirectory = self.workingDirPath(self.CtfGroupDirectory)
         self.CtfGroupSubsetFileName = join(self.CtfGroupDirectory, self.CtfGroupSubsetFileName)
         self.DocFileWithOriginalAngles = self.workingDirPath(self.DocFileWithOriginalAngles)
