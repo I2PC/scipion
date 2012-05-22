@@ -32,9 +32,12 @@ class ProtProjMatch(XmippProtocol):
         self.DocFileWithOriginalAngles = self.workingDirPath(self.DocFileWithOriginalAngles)
         
         #maskedFileNamesIter = []# names masked volumes used as reference
-        self.numberOfReferences = 1#number of references
 #        self.createAuxTable = False
         self.NumberOfCtfGroups = 1
+        
+        self.ReferenceFileNames = self.ReferenceFileNames.split()
+        self.numberOfReferences = len(self.ReferenceFileNames)
+
         self.Import = 'from protocol_projmatch_before_loop import *;\
                        from protocol_projmatch_in_loop import *;' 
                 #Convert directories/files  to absolute path from projdir
@@ -53,21 +56,22 @@ class ProtProjMatch(XmippProtocol):
         from xmipp import ImgSize, SingleImgSize, XmippError
         errors = []
         
-        # Check reference and projection size match
-        _ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
-        _Parameters = {
-              'ReferenceFileNames':_ReferenceFileNames
-            , 'SelFileName':self.SelFileName
-            }
+#        # Check reference and projection size match
+#        _ReferenceFileNames = getListFromVector(self.ReferenceFileNames,processX=False)
+#        _Parameters = {
+#              'ReferenceFileNames':_ReferenceFileNames
+#            , 'SelFileName':self.SelFileName
+#            }
 
         # Check that all volumes have the same size
-        listOfReferences=self.ReferenceFileNames.split(' ')
-        (xdim, ydim, zdim, ndim) = SingleImgSize(listOfReferences[0])
-        for reference in listOfReferences:
+        #getListFromVector(self.ReferenceFileNames,processX=False)
+        #listOfReferences=self.ReferenceFileNames.split()
+        (xdim, ydim, zdim, ndim) = SingleImgSize(self.ReferenceFileNames[0])
+        for reference in self.ReferenceFileNames:
             (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
             if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
                 errors.append("Reference %s and %s have not the same size" % \
-                               (listOfReferences[0], reference)) 
+                               (self.ReferenceFileNames[0], reference)) 
 
         # Check that volume and projections have the same size        
         (xdim2, ydim2, zdim2, ndim2) = ImgSize(self.SelFileName)
@@ -103,8 +107,10 @@ class ProtProjMatch(XmippProtocol):
             summaryNumberOfCtfGroups = 1
             
 
-        self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
-        self.numberOfReferences = len(self.ReferenceFileNames)
+        #self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
+        #self.ReferenceFileNames = self.ReferenceFileNames.split()
+
+        #self.numberOfReferences = len(self.ReferenceFileNames)
         
         _dataBase  = XmippProtocolDb(self, self.scriptName, False)
         iteration = _dataBase.getRunIter()
@@ -167,7 +173,7 @@ class ProtProjMatch(XmippProtocol):
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
         
         if doPlot('DisplayReference'):
-            VisualizationReferenceFileNames = [None] + getListFromVector(self.ReferenceFileNames)
+            VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
             for ref3d in ref3Ds:
                 file_name = VisualizationReferenceFileNames[ref3d]
@@ -469,10 +475,6 @@ class ProtProjMatch(XmippProtocol):
     def preRun(self):
         self.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.SelFileName,dirDest=self.WorkingDir)
         
-        # Convert vectors to list
-        self.ReferenceFileNames = getListFromVector(self.ReferenceFileNames)
-        self.numberOfReferences = len(self.ReferenceFileNames)
-
         # Construct special filename list with zero special case
         self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
         #print 'self.DocFileInputAngles: ', self.DocFileInputAngles
@@ -512,7 +514,12 @@ class ProtProjMatch(XmippProtocol):
         self.Search5DShift = [-1] + getListFromVector(self.Search5DShift, self.NumberOfIterations)
         self.Search5DStep = [-1] + getListFromVector(self.Search5DStep, self.NumberOfIterations)
         self.SymmetryGroup = [-1] + getListFromVector(self.SymmetryGroup, self.NumberOfIterations)
-         
+        
+#        self.ProjectionMethod=ProjectionMethod
+#        self.PaddingAngularProjection=PaddingAngularProjection
+#        self.KernelAngularProjection=KernelAngularProjection
+        
+        
     def otherActionsToBePerformedBeforeLoop(self):
         #print "in otherActionsToBePerformedBeforeLoop"
         _VerifyFiles = []
@@ -610,23 +617,32 @@ class ProtProjMatch(XmippProtocol):
                 _VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
                                      for g in range (1, self.NumberOfCtfGroups+1)]
                 projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
-                         
+                   
+
+      
                 _dataBase.insertStep('angular_project_library', verifyfiles=_VerifyFiles
                                     , AngSamplingRateDeg=self.AngSamplingRateDeg[iterN]
                                     , BlockWithAllExpImages = self.BlockWithAllExpImages
+                                    , ConstantToAddToFiltration = self.ConstantToAddToFiltration[iterN]
                                     , CtfGroupSubsetFileName=self.CtfGroupSubsetFileName
                                     , DoCtfCorrection=self.DoCtfCorrection
                                     , DocFileInputAngles=self.DocFileInputAngles[iterN - 1]
                                     , DoParallel=self.DoParallel
                                     , DoRestricSearchbyTiltAngle=self.DoRestricSearchbyTiltAngle
+                                    , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
+                                    , KernelAngularProjection=self.KernelAngularProjection
                                     , MaxChangeInAngles=self.MaxChangeInAngles[iterN]
                                     , maskedFileNamesIter=maskedFileName
+                                    , MpiJobSize=self.MpiJobSize
                                     , NumberOfMpi=self.NumberOfMpi
                                     , NumberOfThreads=self.NumberOfThreads
-                                    , MpiJobSize=self.MpiJobSize
                                     , OnlyWinner=self.OnlyWinner[iterN]
+                                    , PaddingAngularProjection=self.PaddingAngularProjection
                                     , PerturbProjectionDirections=self.PerturbProjectionDirections[iterN]
                                     , ProjectLibraryRootName=projLibFn
+                                    , ProjectionMethod=self.ProjectionMethod
+                                    , ResolSam = self.ResolSam
+                                    , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
                                     , SymmetryGroup=self.SymmetryGroup[iterN]
                                     , SymmetryGroupNeighbourhood=self.SymmetryGroupNeighbourhood
                                     , Tilt0=self.Tilt0
