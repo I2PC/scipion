@@ -267,8 +267,10 @@ void svbksb(Matrix2D< double >& u,
  * already resized.
  */
 #define M2x2_INV(Ainv, A) { \
-        spduptmp0 = 1.0 / (dMn(A,0) * dMn(A,3) - dMn(A,1) \
-                           * dMn(A,2)); \
+		spduptmp0 = dMn(A,0) * dMn(A,3) - dMn(A,1) * dMn(A,2);\
+		if (spduptmp0==0.0)	\
+			REPORT_ERROR(ERR_NUMERICAL,"2x2 matrix is not invertible"); \
+        spduptmp0 = 1.0 / spduptmp0; \
         dMn(Ainv, 0) =  dMn(A,3); \
         dMn(Ainv, 1) = -dMn(A,1); \
         dMn(Ainv, 2) = -dMn(A,2); \
@@ -290,7 +292,10 @@ void svbksb(Matrix2D< double >& u,
         dMn(Ainv, 6) =   dMn(A,7)*dMn(A,3)-dMn(A,6)*dMn(A,4); \
         dMn(Ainv, 7) = -(dMn(A,7)*dMn(A,0)-dMn(A,6)*dMn(A,1)); \
         dMn(Ainv, 8) =   dMn(A,4)*dMn(A,0)-dMn(A,3)*dMn(A,1); \
-        spduptmp0 = 1.0 / (dMn(A,0)*dMn(Ainv,0)+dMn(A,3)*dMn(Ainv,1)+dMn(A,6)*dMn(Ainv,2)); \
+        spduptmp0 = dMn(A,0)*dMn(Ainv,0)+dMn(A,3)*dMn(Ainv,1)+dMn(A,6)*dMn(Ainv,2); \
+		if (spduptmp0==0.0)	\
+			REPORT_ERROR(ERR_NUMERICAL,"3x3 matrix is not invertible"); \
+	    spduptmp0 = 1.0 / spduptmp0; \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
 /** Inverse of a matrix (4x4)
@@ -347,7 +352,7 @@ void svbksb(Matrix2D< double >& u,
   dMn(Ainv,15) =   dMn(A,0)*(dMn(A,5) *dMn(A,10)-dMn(A,6) *dMn(A,9))+\
        dMn(A,1)*(dMn(A,6) *dMn(A,8) -dMn(A,4) *dMn(A,10))+\
        dMn(A,2)*(dMn(A,4) *dMn(A,9) -dMn(A,5) *dMn(A,8));\
-        spduptmp0 = 1.0 / (dMn(A,0)*(dMn(A,5)*(dMn(A,10)*dMn(A,15)-dMn(A,11)*dMn(A,14))\
+        spduptmp0 = dMn(A,0)*(dMn(A,5)*(dMn(A,10)*dMn(A,15)-dMn(A,11)*dMn(A,14))\
                               +dMn(A,6)*(dMn(A,11)*dMn(A,13)-dMn(A,9) *dMn(A,15))\
                               +dMn(A,7)*(dMn(A,9) *dMn(A,14)-dMn(A,10)*dMn(A,13)))\
                     +dMn(A,1)*(dMn(A,4)*(dMn(A,11)*dMn(A,14)-dMn(A,10)*dMn(A,15))\
@@ -358,8 +363,10 @@ void svbksb(Matrix2D< double >& u,
          +dMn(A,7)*(dMn(A,8) *dMn(A,13)-dMn(A,9) *dMn(A,12)))\
         +dMn(A,3)*(dMn(A,4)*(dMn(A,10)*dMn(A,13)-dMn(A,9) *dMn(A,14))\
          +dMn(A,5)*(dMn(A,8) *dMn(A,14)-dMn(A,10)*dMn(A,12))\
-         +dMn(A,6)*(dMn(A,9) *dMn(A,12)-dMn(A,8) *dMn(A,13)))\
-                          ); \
+         +dMn(A,6)*(dMn(A,9) *dMn(A,12)-dMn(A,8) *dMn(A,13))); \
+		if (spduptmp0==0.0)	\
+			REPORT_ERROR(ERR_NUMERICAL,"4x4 matrix is not invertible"); \
+		spduptmp0 = 1.0 / spduptmp0; \
         M4x4_BY_CT(Ainv, Ainv, spduptmp0); }
 
 /** Matrix2D class */
