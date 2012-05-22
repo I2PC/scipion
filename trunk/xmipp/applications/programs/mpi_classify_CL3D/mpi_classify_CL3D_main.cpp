@@ -1075,7 +1075,6 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             {
                 readImage(I, node->currentListImg[i].objId, false);
                 node->fit(I(), assignment);
-                std::cout << "i=" << i << " " << assignment << std::endl;
                 A1D_ELEM(corrList,i) = assignment.corr;
             }
             if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
@@ -1085,7 +1084,6 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             progress_bar(imax);
         MPI_Allreduce(MPI_IN_PLACE, MULTIDIM_ARRAY(corrList), imax, MPI_DOUBLE,
                       MPI_MAX, MPI_COMM_WORLD);
-        std::cout << "COSS Corrlist: " << corrList << std::endl;
         newAssignment.initZeros(imax);
 
         // Compute threshold
@@ -1125,8 +1123,6 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                 break;
             }
         }
-
-        std::cout << "COSS threshold=" << corrThreshold << std::endl;
 
         // Split according to corr
         if (prm->node->rank == 0 && prm->verbose >= 2)
@@ -1190,7 +1186,6 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                     node1->fit(Iaux1, assignment1);
                     Iaux2 = I();
                     node2->fit(Iaux2, assignment2);
-                    std::cout << "Image " << i << " lik1=" << assignment1.likelihood << " Lik2=" << assignment2.likelihood << std::endl;
 
                     if (assignment1.likelihood > assignment2.likelihood)
                     {
@@ -1219,8 +1214,6 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             if (prm->node->rank == 0 && prm->verbose >= 2)
                 std::cout << "Number of assignment split changes=" << Nchanges
                 << std::endl;
-
-            std::cout << "COSS node.size=" << node1->currentListImg.size() << " node2 size=" << node2->currentListImg.size() << std::endl;
 
             // Check if one of the nodes is too small
             if (node1->currentListImg.size() < minAllowedSize
