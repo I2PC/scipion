@@ -1044,12 +1044,13 @@ public:
     {
         if (NZYXSIZE(*this) < 1)
             return 0;
+        if (NSIZE(*this) > 1)
+            return 4;
         if (ZSIZE(*this) > 1)
             return 3;
         if (YSIZE(*this) > 1)
             return 2;
-        else
-            return 1;
+        return 1;
     }
 
     /** Sets mmap.

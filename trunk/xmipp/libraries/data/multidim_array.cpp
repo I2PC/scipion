@@ -171,8 +171,9 @@ size_t MultidimArrayBase::getSize() const
 /** Resize the multidimarray from an ArrayDim struct
  *
  */
-void MultidimArrayBase::resize(ArrayDim &adim,bool copy)
+void MultidimArrayBase::resize(ArrayDim &adim, bool copy)
 {
+    setDimensions(adim);
     resize(adim.ndim, adim.zdim, adim.ydim, adim.xdim, copy);
 }
 
