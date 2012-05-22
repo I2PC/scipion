@@ -61,6 +61,18 @@ TEST_F( MatrixTest, inverse)
     auxA(2,2) = 1;
     EXPECT_EQ(auxA,auxA.inv()) << "MatrixTest_inverse: identitity with negative 0 matrix failed";
 
+    Matrix2D<double> M(4,4), Minv;
+    M(0,0)=1; M(0,1)=2; M(0,2)=3; M(0,3)=-4;
+    M(1,0)=3; M(1,1)=-4; M(1,2)=5; M(1,3)=6;
+    M(2,0)=5; M(2,1)=6; M(2,2)=7; M(2,3)=-8;
+    M(3,0)=7; M(3,1)=-8; M(3,2)=9; M(3,3)=10;
+    M.inv(Minv);
+
+    M(0,0)=-0.437500; M(0,1)=-0.562500; M(0,2)=0.187500; M(0,3)=0.312500;
+    M(1,0)=-0.500000; M(1,1)=0.625000; M(1,2)=0.250000; M(1,3)=-0.375000;
+    M(2,0)=0.312500; M(2,1)=0.437500; M(2,2)=-0.062500; M(2,3)=-0.187500;
+    M(3,0)=-0.375000; M(3,1)=0.500000; M(3,2)=0.125000; M(3,3)=-0.250000;
+    EXPECT_EQ(M,Minv) << "MatrixTest_inverse: 4x4 matrix inverse failed";
 }
 
 
@@ -98,12 +110,12 @@ TEST_F( MatrixTest, solveLinearSystem)
 	 A(0,2) = -3;
 	 A(1,0) = 4;
 	 A(1,1) = 5;
-	 A(1,2) = 6;
+	 A(1,2) = -6;
 	 A(2,0) = -7;
-	 A(2,1) = 8;
+	 A(2,1) = -8;
 	 A(2,2) = -9;
 	 A(3,0) = 10;
-	 A(3,1) = 11;
+	 A(3,1) = -11;
 	 A(3,2) = -12;
 
 	 b(0) = 14;
@@ -113,14 +125,13 @@ TEST_F( MatrixTest, solveLinearSystem)
 
     Matrix1D<double> auxX(3), X(3);
 
-    auxX(0) = 1;
-    auxX(1) = 2;
-    auxX(2) = 3;
+    auxX(0) =  0.064431;
+    auxX(1) = -0.183922;
+    auxX(2) = -5.412896;
 
     solveLinearSystem(pseudoInverter, X);
 
     EXPECT_EQ(auxX,X) << "MatrixTest_solveLinearSystem failed";
-
 }
 
 TEST_F( MatrixTest, initGaussian)
