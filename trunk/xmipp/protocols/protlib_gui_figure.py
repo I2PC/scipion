@@ -28,6 +28,7 @@
 import Tkinter as tk
 import ttk
 import matplotlib
+from protlib_utils import reportError
 matplotlib.use('TkAgg')
 import numpy as np
 from matplotlib.figure import Figure
@@ -158,20 +159,29 @@ class MaskPreview(ImagePreview):
                
     
 w = None
-def showImage(filename, dim=512, dpi=96):
+def showImage(filename=None, dim=512, dpi=96, image=None):
+    
+    if filename is None and image is None:
+        reportError("You should provide image or filename")
+    
     import xmipp
     #from pylab import axes, Slider
     from protlib_xmipp import getImageData
+    
     
     h = 0.5
     lf0 = 0.15
     hf0 = 0.35
     axcolor = 'lightgoldenrodyellow'
     
-    img = xmipp.Image()
-    img.readPreview(filename, dim)
-    xdim, ydim, zdim, n = img.getDimensions()
-    Z = getImageData(img)
+    if image is None:
+        image = xmipp.Image()
+        image.readPreview(filename, dim)
+    if filename is None:
+        filename = "No filename"
+        
+    xdim, ydim, zdim, n = image.getDimensions()
+    Z = getImageData(image)
     xdim += 10
     ydim += 10
     figure = Figure(figsize=(xdim/dpi, ydim/dpi), dpi=dpi, frameon=False)
@@ -180,24 +190,10 @@ def showImage(filename, dim=512, dpi=96):
     root.title(filename)
     canvas = FigureCanvasTkAgg(figure, master=root)
     canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
-    #figureimg = figure.figimage(Z, cmap=cm.gray)#, origin='lower')
-    #ax = SubplotZero(figure, 111)
-    #ax = figure.add_subplot(ax)
     ax = figure.add_axes([0.2,0.2,0.6,0.6], frameon=False)
     ax.set_xlim(-0.5, 0.5)
     ax.set_ylim(-0.5, 0.5)
-    #ax.xaxis.set_offset_position(0.5)
-    #ax.set_axis_off()
-    #axes([0.1, 0.1, 0.9, 0.9])
-    #ax.set_aspect(1.0)
     ax.imshow(Z, cmap=cm.gray, extent=[-h, h, -h, h])
-    #for direction in ["xzero", "yzero"]:
-    #    ax.axis[direction].set_visible(True)
-    #for direction in ["left", "right", "bottom", "top"]:
-    #    ax.axis[direction].set_visible(False)
-    global w
-    #w = Wedge((0,0), hf0, 0, 360, width=lf0, alpha=0.15) # Full ring
-    #ax.add_patch(w)
     
     def update(hf, lf):
         global w
