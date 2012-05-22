@@ -19,6 +19,7 @@ def executeMask(_log,
                   userSuppliedMask
                   ):
     _log.debug("executeMask")
+    print "executeMask", maskRadius
     if DoMask:
         command = ' -i ' + ReconstructedFilteredVolume + \
                   ' -o ' + maskedFileName
@@ -34,19 +35,26 @@ def executeMask(_log,
 def angular_project_library(_log
                                 ,AngSamplingRateDeg
                                 ,BlockWithAllExpImages
+                                ,ConstantToAddToFiltration
                                 ,CtfGroupSubsetFileName
                                 ,DoCtfCorrection
                                 ,DocFileInputAngles
                                 ,DoParallel
                                 ,DoRestricSearchbyTiltAngle
+                                ,FourierMaxFrequencyOfInterest
+                                ,KernelAngularProjection
                                 ,MaxChangeInAngles
                                 ,maskedFileNamesIter
                                 ,MpiJobSize
                                 ,NumberOfMpi
                                 ,NumberOfThreads
                                 ,OnlyWinner
+                                ,PaddingAngularProjection
                                 ,PerturbProjectionDirections
                                 ,ProjectLibraryRootName
+                                ,ProjectionMethod
+                                ,ResolSam
+                                ,ResolutionXmdPrevIterMax
                                 ,SymmetryGroup
                                 ,SymmetryGroupNeighbourhood
                                 ,Tilt0
@@ -60,7 +68,22 @@ def angular_project_library(_log
               ' -o '                    + ProjectLibraryRootName + \
               ' --sampling_rate '       + AngSamplingRateDeg  + \
               ' --sym '                 + SymmetryGroup + 'h' + \
-              ' --compute_neighbors'
+              ' --compute_neighbors'    + \
+              ' --method ' + ProjectionMethod 
+    if ProjectionMethod=='fourier':
+        if FourierMaxFrequencyOfInterest == -1:
+                md = MetaData(ResolutionXmdPrevIterMax)
+                id = md.firstObject()
+                FourierMaxFrequencyOfInterest = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+                FourierMaxFrequencyOfInterest = ResolSam/FourierMaxFrequencyOfInterest + float(ConstantToAddToFiltration)
+                if FourierMaxFrequencyOfInterest > 0.5:
+                    FourierMaxFrequencyOfInterest = 0.5
+                elif FourierMaxFrequencyOfInterest < 0.:
+                    FourierMaxFrequencyOfInterest = 0.001
+
+        parameters += " " + str(PaddingAngularProjection)
+        parameters += " " + str(FourierMaxFrequencyOfInterest)
+        parameters += " " + str(KernelAngularProjection)
 
     if ( string.atof(MaxChangeInAngles) < 181.):
         parameters+= \
