@@ -985,9 +985,11 @@ void CL2D::run(const FileName &fnOut, int level)
                         largestNode = q;
                     }
                 }
+                if (sizeLargestNode==0)
+                	REPORT_ERROR(ERR_UNCLASSIFIED,"All classes are of size 0: normally this happens when images are too noisy");
                 if (largestNode == -1 || smallNode == -1)
                     break;
-                if (sizeSmallestNode < prm->PminSize * Nimgs / Q * 0.01)
+                if (sizeSmallestNode < prm->PminSize * Nimgs / Q * 0.01 && sizeSmallestNode<0.25*sizeLargestNode)
                 {
                     if (prm->node->rank == 0 && prm->verbose)
                         std::cout << "Splitting node " << largestNode

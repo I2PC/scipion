@@ -950,13 +950,15 @@ void CL3D::run(const FileName &fnOut, int level)
                         largestNode = q;
                     }
                 }
+                if (sizeLargestNode==0)
+                	REPORT_ERROR(ERR_UNCLASSIFIED,"All classes are of size 0: normally this happens when images are too noisy");
                 if (largestNode == -1 || smallNode == -1)
                     break;
-                if (sizeSmallestNode < prm->PminSize * Nimgs / Q * 0.01)
+                if (sizeSmallestNode < prm->PminSize * Nimgs / Q * 0.01 && sizeSmallestNode<0.25*sizeLargestNode)
                 {
                     if (prm->node->rank == 0 && prm->verbose)
-                        std::cout << "Splitting node " << largestNode
-                        << " by overwriting " << smallNode << std::endl;
+                        std::cout << "Splitting node " << largestNode << " (" << sizeLargestNode
+                        << ") by overwriting " << smallNode << " (" << sizeSmallestNode << " )" << std::endl;
                     smallNodes = true;
 
                     // Clear the old assignment of the images in the small node
@@ -1050,7 +1052,8 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     {
         finish = true;
         node2->neighboursIdx = node1->neighboursIdx = node->neighboursIdx;
-        node2->P = node1->P = node->P;
+        node1->P = node->P; // *** AQUI ES DONDE FALLA
+        node2->P = node->P; // *** AQUI ES DONDE FALLA
 
         int imax = node->currentListImg.size();
         if (imax < minAllowedSize)
@@ -1072,6 +1075,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             {
                 readImage(I, node->currentListImg[i].objId, false);
                 node->fit(I(), assignment);
+                std::cout << "i=" << i << " " << assignment << std::endl;
                 A1D_ELEM(corrList,i) = assignment.corr;
             }
             if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
@@ -1081,6 +1085,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             progress_bar(imax);
         MPI_Allreduce(MPI_IN_PLACE, MULTIDIM_ARRAY(corrList), imax, MPI_DOUBLE,
                       MPI_MAX, MPI_COMM_WORLD);
+        std::cout << "COSS Corrlist: " << corrList << std::endl;
         newAssignment.initZeros(imax);
 
         // Compute threshold
@@ -1120,6 +1125,8 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                 break;
             }
         }
+
+        std::cout << "COSS threshold=" << corrThreshold << std::endl;
 
         // Split according to corr
         if (prm->node->rank == 0 && prm->verbose >= 2)
@@ -1183,6 +1190,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                     node1->fit(Iaux1, assignment1);
                     Iaux2 = I();
                     node2->fit(Iaux2, assignment2);
+                    std::cout << "Image " << i << " lik1=" << assignment1.likelihood << " Lik2=" << assignment2.likelihood << std::endl;
 
                     if (assignment1.likelihood > assignment2.likelihood)
                     {
@@ -1211,6 +1219,8 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             if (prm->node->rank == 0 && prm->verbose >= 2)
                 std::cout << "Number of assignment split changes=" << Nchanges
                 << std::endl;
+
+            std::cout << "COSS node.size=" << node1->currentListImg.size() << " node2 size=" << node2->currentListImg.size() << std::endl;
 
             // Check if one of the nodes is too small
             if (node1->currentListImg.size() < minAllowedSize
