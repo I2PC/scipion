@@ -28,6 +28,8 @@ class ScriptTrainingPicking(ScriptAppIJ):
         output = self.getParam('-o')
         mode = self.getParam('--mode')
 
+        if (not os.path.exists(output)):
+            os.makedirs(output)
         supervised = (mode == 'supervised')
         if supervised:
             numberOfThreads = self.getIntParam('--mode', 1)
