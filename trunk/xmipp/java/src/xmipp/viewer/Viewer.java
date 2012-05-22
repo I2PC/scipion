@@ -42,26 +42,6 @@ public class Viewer {
     static void openFiles(Param parameters) throws Exception {
     	DEBUG.printMessage(String.format("Viewer.openFiles"));
     	ImagesWindowFactory.openFilesAsDefault(parameters.files, parameters);
-//        if (parameters.mode.trim().toLowerCase().compareTo(Param.OPENING_MODE_DEFAULT) == 0) {
-//            ImagesWindowFactory.openFilesAsDefault(parameters.files, parameters);
-//        } else if (parameters.mode.trim().toLowerCase().compareTo(Param.OPENING_MODE_IMAGE) == 0) {
-//            ImagesWindowFactory.openFilesAsImages(parameters.files, parameters);
-//        } else if (parameters.mode.trim().toLowerCase().compareTo(Param.OPENING_MODE_GALLERY) == 0) {
-//            // Separates single images (index 0) from the rest of files (index 1).
-//            String filesList[][] = getSeparatedFiles(parameters.files);
-//
-//            // Single images are opened in the same table...
-//            if (filesList[0] != null) {
-//                ImagesWindowFactory.openFilesAsGallery(filesList[0], true, parameters);
-//            }
-//
-//            // ...while rest of files are opened in separated ones.
-//            if (filesList[1] != null) {
-//                ImagesWindowFactory.openFilesAsGallery(filesList[1], false, parameters);
-//            }
-//        } else if (parameters.mode.trim().toLowerCase().compareTo(Param.OPENING_MODE_METADATA) == 0) {
-//            ImagesWindowFactory.openFilesAsMetadata(parameters.files, parameters);
-//        }
     }
 
     static String[][] getSeparatedFiles(String items[]) {
