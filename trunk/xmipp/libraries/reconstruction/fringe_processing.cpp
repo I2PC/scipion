@@ -305,14 +305,14 @@ void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<dou
 
     double rang = (rmax-rmin)/2;
     //Inside rang we assume that there will a range of fringes per field from 2 to 10.
-    double freq2 = XSIZE(im)/(rang/1.5);
-    double freq1 = XSIZE(im)/(rang/10);
+    double freq2 = XSIZE(im)/(rang/1);
+    double freq1 = XSIZE(im)/(rang/15);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-    	double r2=i*i+j*j;
+        double r2=i*i+j*j;
         double temp= (1/(1+std::exp(((std::sqrt(r2)-freq1))/(10))))*
-        		(1-(std::exp(-r2 /(freq2*freq2/2))));
+                     (1-(std::exp(-r2 /(2*freq2*freq2))));
         A2D_ELEM(H,i,j) = std::complex<double>(temp,temp);
     }
 
@@ -631,6 +631,11 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     //Normalized version of im and modulation map
     normalizeWB(im,In,mod, rmax, rmin, ROI);
 
+    double modThr = 0.05;
+    int imax, jmax;
+    mod.maxIndex(imax,jmax);
+    mod = mod/A2D_ELEM(mod,imax,jmax);
+
     Image<double> save;
     if (verbose == 1)
     {
@@ -683,9 +688,9 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
             tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
 
             if (  !(((tempTheta > val) | (tempTheta < -val)) && !((tempTheta > PI-val) || (tempTheta < -PI+val)) &&
-            		!( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))) )
+                    !( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))) )
             {
-            	A2D_ELEM(ROI,i,j) = false;
+                A2D_ELEM(ROI,i,j) = false;
             }
         }
         else
@@ -720,12 +725,17 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     mod2.resizeNoCopy(im);
     mod2.initConstant(1.0);
     polynom.fit(coefsInit,phase,mod2,ROI,0);
-    polynom.fit(coefsInit,phase,mod2,ROI,0);
+    polynom.fit(coefsInit,phase,mod2,ROI,1);
 
+    int index = 0;
     for (int i=0; i<VEC_XSIZE(coeffs); i++)
     {
         if ( VEC_ELEM(coeffs,i) != 0)
-            VEC_ELEM(coeffs,i) = VEC_ELEM(polynom.fittedCoeffs,i);
+        {
+            VEC_ELEM(coeffs,i) = VEC_ELEM(polynom.fittedCoeffs,index);
+            index++;
+        }
+
         else
             VEC_ELEM(coeffs,i) = 0;
     }
