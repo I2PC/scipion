@@ -2371,7 +2371,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
 
     // Estimate phase, modulation and Zernikes
     FringeProcessing fp;
-    MultidimArray<double> mod, phase;
+    MultidimArray<double> mod, phase, mod2, phase2, mod3, phase3, mod4, phase4;
 
     Matrix1D<double> coefs(13);
     coefs.initConstant(0);
@@ -2381,6 +2381,30 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     VEC_ELEM(coefs,5) = 1;
     VEC_ELEM(coefs,12) =1;
 
+    Matrix1D<double> coefs2(13);
+    coefs2.initConstant(0);
+    VEC_ELEM(coefs2,0) = 1;
+    VEC_ELEM(coefs2,3) = 1;
+    VEC_ELEM(coefs2,4) = 1;
+    VEC_ELEM(coefs2,5) = 1;
+    VEC_ELEM(coefs2,12) =1;
+
+    Matrix1D<double> coefs3(13);
+    coefs3.initConstant(0);
+    VEC_ELEM(coefs3,0) = 1;
+    VEC_ELEM(coefs3,3) = 1;
+    VEC_ELEM(coefs3,4) = 1;
+    VEC_ELEM(coefs3,5) = 1;
+    VEC_ELEM(coefs3,12) =1;
+
+    Matrix1D<double> coefs4(13);
+    coefs4.initConstant(0);
+    VEC_ELEM(coefs4,0) = 1;
+    VEC_ELEM(coefs4,3) = 1;
+    VEC_ELEM(coefs4,4) = 1;
+    VEC_ELEM(coefs4,5) = 1;
+    VEC_ELEM(coefs4,12) =1;
+
     int x=(int)((0.3*max_freq+0.7*min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
     DEBUG_TEXTFILE(formatString("Zernike1 %d",x));
     DEBUG_TEXTFILE(formatString("centeredEnhancedPSD80x80 %f",centeredEnhancedPSD(80,80)));
@@ -2389,27 +2413,116 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
 
     fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
                   x,x,
-                  min_freq*XSIZE(centeredEnhancedPSD),
-                  max_freq*XSIZE(centeredEnhancedPSD),
+                  1*min_freq*XSIZE(centeredEnhancedPSD),
+                  1*max_freq*XSIZE(centeredEnhancedPSD),
                   phase, mod, coefs, 0);
-
-    DEBUG_TEXTFILE(formatString("phase160x160 %f",phase(160,160)));
-    DEBUG_TEXTFILE(formatString("mod160x160 %f",mod(160,160)));
 
     kV = kV*1000;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
-    double Z3=VEC_ELEM(coefs,4);
+    //double Z3=VEC_ELEM(coefs,4);
     //double Z8=VEC_ELEM(coefs,12);
-    double Z8 = 0;
+    double Z8=VEC_ELEM(coefs,4);
+    double Z3=VEC_ELEM(coefs,12);
     double Z4=VEC_ELEM(coefs,3);
     double Z5=VEC_ELEM(coefs,5);
 
-    double deFocusAvg  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
-    double deFocusDiff =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
-    ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    defocusU=deFocusAvg+deFocusDiff;
-    defocusV=deFocusAvg-deFocusDiff;
-    ellipseAngle = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+    double ellipseAngle1 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+    double deFocusAvg1  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
+    double deFocusDiff1 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
+    double deFocusAvgMean =  deFocusAvg1;
+
+    STARTINGX(centeredEnhancedPSD)=STARTINGY(centeredEnhancedPSD)=0;
+    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
+                  x,x,
+                  0.76*min_freq*XSIZE(centeredEnhancedPSD),
+                  0.76*max_freq*XSIZE(centeredEnhancedPSD),
+                  phase2, mod2, coefs2, 0);
+
+
+    //Z3=VEC_ELEM(coefs2,4);
+    //Z8=VEC_ELEM(coefs2,12);
+    Z8=VEC_ELEM(coefs2,4);
+    Z3=VEC_ELEM(coefs2,12);
+    Z4=VEC_ELEM(coefs2,3);
+    Z5=VEC_ELEM(coefs2,5);
+
+    double deFocusAvg2  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
+    double deFocusDiff2 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
+    double ellipseAngle2 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+    deFocusAvgMean +=  deFocusAvg2;
+
+    STARTINGX(centeredEnhancedPSD)=STARTINGY(centeredEnhancedPSD)=0;
+    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
+                  x,x,
+                  0.88*min_freq*XSIZE(centeredEnhancedPSD),
+                  0.88*max_freq*XSIZE(centeredEnhancedPSD),
+                  phase3, mod3, coefs3, 0);
+
+
+    Z8=VEC_ELEM(coefs3,4);
+    Z3=VEC_ELEM(coefs3,12);
+    Z4=VEC_ELEM(coefs3,3);
+    Z5=VEC_ELEM(coefs3,5);
+
+    double deFocusAvg3  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
+    double deFocusDiff3 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
+    double ellipseAngle3 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+    deFocusAvgMean +=  deFocusAvg3;
+
+    STARTINGX(centeredEnhancedPSD)=STARTINGY(centeredEnhancedPSD)=0;
+    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
+                  x,x,
+                  0.64*min_freq*XSIZE(centeredEnhancedPSD),
+                  0.64*max_freq*XSIZE(centeredEnhancedPSD),
+                  phase4, mod4, coefs4, 0);
+
+
+    Z8=VEC_ELEM(coefs4,4);
+    Z3=VEC_ELEM(coefs4,12);
+    Z4=VEC_ELEM(coefs4,3);
+    Z5=VEC_ELEM(coefs4,5);
+
+    double deFocusAvg4  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
+    double deFocusDiff4 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
+    double ellipseAngle4 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
+    deFocusAvgMean +=  deFocusAvg4;
+    deFocusAvgMean /= 4;
+
+    //if ( (deFocusDiff2 > deFocusDiff1) && (deFocusDiff3 > deFocusDiff1)
+    //		&& (deFocusDiff4 > deFocusDiff1))
+    if ( ( fabs(deFocusAvg2-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean))
+    		&& ( fabs(deFocusAvg3-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean))
+    		&& ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean)) )
+    {
+        defocusU=deFocusAvg1+deFocusDiff1;
+        defocusV=deFocusAvg1-deFocusDiff1;
+        ellipseAngle = ellipseAngle1;
+    }
+    else
+        if ( ( fabs(deFocusAvg2-deFocusAvgMean) > fabs(deFocusAvg3-deFocusAvgMean))
+        		&& ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg3-deFocusAvgMean)))
+        {
+            defocusU=deFocusAvg3+deFocusDiff3;
+            defocusV=deFocusAvg3-deFocusDiff3;
+            ellipseAngle = ellipseAngle3;
+        }
+        else
+            if ( ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg2-deFocusAvgMean)))
+            {
+                defocusU=deFocusAvg2+deFocusDiff2;
+                defocusV=deFocusAvg2-deFocusDiff2;
+                ellipseAngle = ellipseAngle2;
+            }
+            else
+            {
+                defocusU=deFocusAvg4+deFocusDiff4;
+                defocusV=deFocusAvg4-deFocusDiff4;
+                ellipseAngle = ellipseAngle4;
+            }
+
+
+    DEBUG_TEXTFILE(formatString("phase160x160 %f",phase(160,160)));
+    DEBUG_TEXTFILE(formatString("mod160x160 %f",mod(160,160)));
 
     DEBUG_TEXTFILE(formatString("lambda %f",lambda));
     DEBUG_TEXTFILE(formatString("Z3 %f",Z3));
@@ -2451,19 +2564,19 @@ void estimate_defoci_Zernike()
 double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
                        CTFDescription &output_ctfmodel, bool standalone)
 {
-	// Sleep randomly to avoid some problems while reading the images by many processors
-	// at the same time
-	//randomize_random_generator();
-	//struct timespec tim, tim2;
-	//tim.tv_sec = 1;
-	//tim.tv_nsec = 1e9*rnd_unif(0,10);
-	//nanosleep(&tim , &tim2);
+    // Sleep randomly to avoid some problems while reading the images by many processors
+    // at the same time
+    //randomize_random_generator();
+    //struct timespec tim, tim2;
+    //tim.tv_sec = 1;
+    //tim.tv_nsec = 1e9*rnd_unif(0,10);
+    //nanosleep(&tim , &tim2);
 
-	//char hostname[1024];
-	//gethostname(hostname,1023);
-	//std::cout << prm.fn_psd << " " << hostname << std::endl;
+    //char hostname[1024];
+    //gethostname(hostname,1023);
+    //std::cout << prm.fn_psd << " " << hostname << std::endl;
 
-	DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
+    DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
     global_prm = &prm;
     if (standalone || prm.show_optimization)
         prm.show();
