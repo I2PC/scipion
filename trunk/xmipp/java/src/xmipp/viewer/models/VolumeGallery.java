@@ -163,6 +163,16 @@ public class VolumeGallery extends ImageGallery {
 			}
 			return imp;
 		}
+		@Override
+		public boolean isVolume()
+		{
+			return true;
+		}
+		@Override
+		public boolean allowsGeometry()
+		{
+			return false;
+		}
 	}//class VolumeLoader
 
 }// class VolumeGallery

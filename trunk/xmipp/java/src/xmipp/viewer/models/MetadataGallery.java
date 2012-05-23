@@ -312,6 +312,17 @@ public class MetadataGallery extends ImageGallery {
 		protected ImagePlus loadImage() throws Exception {
 			return XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap);
 		}
+		@Override
+		public boolean isVolume()
+		{
+			return false;
+		}
+		@Override
+		public boolean allowsGeometry()
+		{
+			return data.containsGeometryInfo();
+		}
 	}//class MetadataImageLoader
+	
 	
 }

@@ -77,7 +77,10 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import xmipp.ij.commons.ImagePlusLoader;
+import xmipp.ij.commons.Tool;
+import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippImageJ;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -1265,6 +1268,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					try {
 						ImagePlusLoader loader = gallery.getImageLoader();
 						ImagesWindowFactory.openXmippImageWindow(loader, true);
+						XmippIJUtil.showImageJ(Tool.VIEWER);
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
