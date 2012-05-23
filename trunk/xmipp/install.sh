@@ -34,10 +34,10 @@ OS_TYPE=`uname`
 IS_MAC=false
 IS_CYGWIN=false
 echo "The OS is $OS_TYPE"
-if [ $OS_TYPE = Darwin ]; then
+if [[ $OS_TYPE == Darwin ]]; then
 	IS_MAC=true;
 	CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
-elif [ $OS_TYPE = CYGWIN* ]; then
+elif [[ $OS_TYPE == CYGWIN* ]]; then
 	IS_CYGWIN=true;
 fi
 
