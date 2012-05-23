@@ -2809,6 +2809,10 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 
         // Save results
         FileName fn_root = prm.fn_psd.withoutExtension();
+        int atPosition=fn_root.find('@');
+        if (atPosition!=std::string::npos)
+        	fn_root=formatString("region%03d@%s",textToInteger(fn_root.substr(0, atPosition)),
+        			    fn_root.substr(atPosition+1).c_str());
         save_intermediate_results(fn_root, false);
         global_ctfmodel.Tm /= prm.downsampleFactor;
         global_ctfmodel.write(fn_root + ".ctfparam");
@@ -2818,7 +2822,10 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRITERION_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);
-        MD.write(fn_root + ".ctfparam");
+        if (fn_root.getBlockName()!="")
+        	MD.write(fn_root + ".ctfparam",MD_APPEND);
+        else
+        	MD.write(fn_root + ".ctfparam");
     }
     output_ctfmodel = global_ctfmodel;
 
