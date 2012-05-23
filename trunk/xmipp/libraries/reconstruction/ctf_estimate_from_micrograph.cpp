@@ -102,7 +102,7 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addParamsLine("  [--mode <mode=micrograph>]  : How many PSDs are to be estimated");
     addParamsLine("         where <mode>");
     addParamsLine("                  micrograph  : Single PSD for the whole micrograph");
-    addParamsLine("                  regions <file> : The micrograph is divided into a region grid ");
+    addParamsLine("                  regions <file=\"\"> : The micrograph is divided into a region grid ");
     addParamsLine("                              : and a PSD is computed for each one.");
     addParamsLine("                              : The file is metadata with the position of each particle within the micrograph");
     addParamsLine("                  particles <file> : One PSD per particle.");
