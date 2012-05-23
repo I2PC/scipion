@@ -725,7 +725,10 @@ void ProgCTFEstimateFromPSD::produce_side_info()
     prm.mask_w2 = 0.5;
     enhanced_ctftomodel() = ctftomodel();
     prm.applyFilter(enhanced_ctftomodel());
-    enhanced_ctftomodel.write(fn_psd.withoutExtension() + "_enhanced_psd.xmp");
+    if (fn_psd.find('@')==std::string::npos)
+    	enhanced_ctftomodel.write(fn_psd.withoutExtension() + "_enhanced_psd.xmp");
+    else
+    	enhanced_ctftomodel.write(fn_psd.withoutExtension() + "_enhanced_psd.stk");
     CenterFFT(enhanced_ctftomodel(), false);
     enhanced_ctftomodel_fullsize() = enhanced_ctftomodel();
 
@@ -868,10 +871,16 @@ void save_intermediate_results(const FileName &fn_root, bool generate_profiles =
     Image<double> save_ctf;
     global_prm->generate_model_halfplane(global_prm->ctfmodelSize,
                                          global_prm->ctfmodelSize, save_ctf());
-    save_ctf.write(fn_root + "_ctfmodel_halfplane.xmp");
+    if (fn_root.find("@")==std::string::npos)
+    	save_ctf.write(fn_root + "_ctfmodel_halfplane.xmp");
+    else
+    	save_ctf.write(fn_root + "_ctfmodel_halfplane.stk");
     global_prm->generate_model_quadrant(global_prm->ctfmodelSize,
                                         global_prm->ctfmodelSize, save_ctf());
-    save_ctf.write(fn_root + "_ctfmodel_quadrant.xmp");
+    if (fn_root.find("@")==std::string::npos)
+    	save_ctf.write(fn_root + "_ctfmodel_quadrant.xmp");
+    else
+    	save_ctf.write(fn_root + "_ctfmodel_quadrant.stk");
 
     if (!generate_profiles)
         return;
@@ -2808,24 +2817,26 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         CTF_fitness(global_adjust->adaptForNumericalRecipes(), NULL);
 
         // Save results
-        FileName fn_root = prm.fn_psd.withoutExtension();
-        int atPosition=fn_root.find('@');
+        FileName fn_rootCTFPARAM = prm.fn_psd.withoutExtension();
+        FileName fn_rootMODEL = fn_rootCTFPARAM;
+        int atPosition=fn_rootCTFPARAM.find('@');
         if (atPosition!=std::string::npos)
-        	fn_root=formatString("region%03d@%s",textToInteger(fn_root.substr(0, atPosition)),
-        			    fn_root.substr(atPosition+1).c_str());
-        save_intermediate_results(fn_root, false);
+        {
+        	fn_rootMODEL=formatString("%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
+        			fn_rootCTFPARAM.substr(atPosition+1).c_str());
+        	fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
+        			fn_rootCTFPARAM.substr(atPosition+1).c_str());
+        }
+        save_intermediate_results(fn_rootMODEL, false);
         global_ctfmodel.Tm /= prm.downsampleFactor;
-        global_ctfmodel.write(fn_root + ".ctfparam");
+        global_ctfmodel.write(fn_rootCTFPARAM + ".ctfparam");
         MetaData MD;
-        MD.read(fn_root + ".ctfparam");
+        MD.read(fn_rootCTFPARAM + ".ctfparam");
         size_t id = MD.firstObject();
         MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRITERION_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);
-        if (fn_root.getBlockName()!="")
-        	MD.write(fn_root + ".ctfparam",MD_APPEND);
-        else
-        	MD.write(fn_root + ".ctfparam");
+        MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
     }
     output_ctfmodel = global_ctfmodel;
 
