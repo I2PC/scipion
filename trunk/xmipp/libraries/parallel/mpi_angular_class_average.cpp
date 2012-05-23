@@ -404,7 +404,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         defGroup_last = defGroup;
     }
 
-    std::cerr << "DEBUG_JM: BEFORE MDValueEQ" <<std::endl;
+    //std::cerr << "DEBUG_JM: BEFORE MDValueEQ" <<std::endl;
     MDValueEQ eq1(MDL_REF3D, ref3d);
     MDValueEQ eq2(MDL_DEFGROUP, defGroup);
     MDValueEQ eq3(MDL_ORDER, order_number);
@@ -414,7 +414,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     multi.addAndQuery(eq3);
 
     _DF.importObjects(DF, multi);
-    std::cerr << "DEBUG_JM: AFTER MDValueEQ" <<std::endl;
+    //std::cerr << "DEBUG_JM: AFTER MDValueEQ" <<std::endl;
 
     if (_DF.size() == 0)
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,
@@ -693,10 +693,10 @@ void MpiProgAngularClassAverage::mpi_writeFile(
         if (fileNameStk.exists())
         {
 
-          std::cerr << "DEBUG_JM: Composing" <<std::endl;
-          std::cerr << "DEBUG_JM: dirno: " << dirno << std::endl;
+          //std::cerr << "DEBUG_JM: Composing" <<std::endl;
+          //std::cerr << "DEBUG_JM: dirno: " << dirno << std::endl;
             fn_tmp.compose(dirno, fileNameStk);
-            std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
+            //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
             old.read(fn_tmp);
 
             //w_old = old.weight();
@@ -767,15 +767,15 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
-      std::cerr << "DEBUG_JM: saveDiscardedImages" <<std::endl;
+      //std::cerr << "DEBUG_JM: saveDiscardedImages" <<std::endl;
         saveDiscardedImages();
-        std::cerr << "DEBUG_JM: createJobList" <<std::endl;
+        //std::cerr << "DEBUG_JM: createJobList" <<std::endl;
         createJobList();
-        std::cerr << "DEBUG_JM: initDimentions" <<std::endl;
+        //std::cerr << "DEBUG_JM: initDimentions" <<std::endl;
         initDimentions();
-        std::cerr << "DEBUG_JM: initWeights" <<std::endl;
+        //std::cerr << "DEBUG_JM: initWeights" <<std::endl;
         initWeights();
-        std::cerr << "DEBUG_JM: initOutputFiles" <<std::endl;
+        //std::cerr << "DEBUG_JM: initOutputFiles" <<std::endl;
         initOutputFiles();
     }
 
@@ -790,10 +790,10 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     mpi_produceSideInfo();
 
-    if (node->rank == 0)
-    {
-      std::cerr << "DEBUG_JM: end of mpi_preprocess" <<std::endl;
-    }
+//    if (node->rank == 0)
+//    {
+//      std::cerr << "DEBUG_JM: end of mpi_preprocess" <<std::endl;
+//    }
 
     node->barrierWait();
 }
@@ -1048,7 +1048,7 @@ void MpiProgAngularClassAverage::mpi_postprocess()
 {
     // Write class selfile to disc (even if its empty)
 
-    std::cerr << "DEBUG_JM: mpi_postprocess: " << std::endl;
+    //std::cerr << "DEBUG_JM: mpi_postprocess: " << std::endl;
     FileName imageName, fileNameXmd, blockNameXmd;
     FileName imageNames1, fileNameXmds1, imageNames2, fileNameXmds2;
     MetaData auxMd,auxMd2,auxMd3;
