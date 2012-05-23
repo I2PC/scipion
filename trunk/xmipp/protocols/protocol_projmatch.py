@@ -120,13 +120,19 @@ class ProtProjMatch(XmippProtocol):
                    % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
         if (iteration > 1):
             ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
-            if not xmippExists(ResolutionXmdCurrIterMaxSummary):
-                summary += ['<ERROR:> Resolution is not available but iteration number is not 1. Something went wrong']            
-            else:
+            ResolutionXmdCurrIterMaxSummary1 = self.getFilename('ResolutionXmdMax', iter=iteration-1, ref=1)
+            if xmippExists(ResolutionXmdCurrIterMaxSummary):
                 md = MetaData(ResolutionXmdCurrIterMaxSummary)
                 id = md.firstObject()
                 FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
                 summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
+            elif xmippExists(ResolutionXmdCurrIterMaxSummary1):
+                md = MetaData(ResolutionXmdCurrIterMaxSummary1)
+                id = md.firstObject()
+                FourierMaxFrequencyOfInterestSummary = md.getValue(MDL_RESOLUTION_FREQREAL, id)
+                summary += ['Resolution for first reference is <%s> A' % FourierMaxFrequencyOfInterestSummary]
+            else:
+                summary += ['<ERROR:> Resolution is not available but iteration number is not 1.\n <Something went wrong>. File=[%s] ' % ResolutionXmdCurrIterMaxSummary]            
         else:
             summary += ['Resolution is <%s>' % 'not available']            
         
@@ -489,7 +495,7 @@ class ProtProjMatch(XmippProtocol):
             self.reconstructedFilteredFileNamesIters.append([None] + [self.getFilename('ReconstructedFilteredFileNamesIters', iter=iterN, ref=r) for r in range(1, self.numberOfReferences + 1)])
 
         _tmp = self.FourierMaxFrequencyOfInterest
-        self.FourierMaxFrequencyOfInterest = list(-1 for  k in range(0, self.NumberOfIterations + 1))
+        self.FourierMaxFrequencyOfInterest = list(-1 for  k in range(0, self.NumberOfIterations + 1 +1))
         self.FourierMaxFrequencyOfInterest[1] = _tmp
         #parameter for projection matching
         self.Align2DIterNr = [-1] + getListFromVector(self.Align2DIterNr, self.NumberOfIterations)
@@ -807,6 +813,7 @@ class ProtProjMatch(XmippProtocol):
                     
                     _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
                     id = _dataBase.insertStep('compute_resolution', verifyfiles=_VerifyFiles
+                                                 , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
                                                  , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
                                                  , ReconstructionMethod = self.ReconstructionMethod
                                                  , ResolutionXmdCurrIter = self.getFilename('ResolutionXmd', iter=iterN, ref=refN)
@@ -819,7 +826,7 @@ class ProtProjMatch(XmippProtocol):
                                                   )
 
                     id = _dataBase.insertStep('filter_volume', verifyfiles=_VerifyFiles
-                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
+                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN+1]
                                               , ReconstructedVolume = self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=refN)
                                               , ReconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN][refN]
                                               , DoComputeResolution = self.DoComputeResolution
@@ -827,7 +834,7 @@ class ProtProjMatch(XmippProtocol):
                                               , DoLowPassFilter = self.DoLowPassFilter
                                               , UseFscForFilter = self.UseFscForFilter
                                               , ConstantToAddToFiltration = self.ConstantToAddToFiltration[iterN]
-                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN, ref=refN)
                                               , ResolSam = self.ResolSam
                                               )
         _dataBase.connection.commit()
