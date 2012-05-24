@@ -310,7 +310,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             if(self.doScaleImages):
                 inputSelfile = self.scaledImages +'.xmd'
             else:
-                inputSelfile = self.filename_currentAngles
+                inputSelfile = self.getFilename('SubCurrentAnglesAllExpImgs')
                             
             if(self.defocusGroupNo > 1 and self.doScaleImages):
                 _VerifyFiles = []
