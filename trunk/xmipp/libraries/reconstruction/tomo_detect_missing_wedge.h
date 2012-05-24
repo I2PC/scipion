@@ -53,7 +53,7 @@ public:
     bool saveMask;
 public:
     // Input volume
-    Image<double> *V;
+    Image<double> V;
 
     // Magnitude of the input volume
     MultidimArray<double> *Vmag;

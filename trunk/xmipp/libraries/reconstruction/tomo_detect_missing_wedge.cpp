@@ -276,11 +276,10 @@ void ProgDetectMissingWedge::readParams()
 // Produce side info -------------------------------------------------------
 void ProgDetectMissingWedge::produceSideInfo()
 {
-    V = new Image<double>();
-    V->read(fn_vol);
+    V.read(fn_vol);
     FourierTransformer transformer;
     MultidimArray< std::complex<double> > Vfft;
-    transformer.FourierTransform((*V)(),Vfft,false);
+    transformer.FourierTransform(MULTIDIM_ARRAY(V),Vfft,false);
     Vmag = new MultidimArray<double>();
     Vmag->resize(Vfft);
     FOR_ALL_ELEMENTS_IN_ARRAY3D(*Vmag)
@@ -324,10 +323,12 @@ void ProgDetectMissingWedge::defineParams()
 void ProgDetectMissingWedge::run()
 {
     produceSideInfo();
-    FileName fn_root=V->name().withoutExtension();
+    FileName fn_root=V.name().withoutExtension();
+
+    MultidimArray<double> * mdaV = &MULTIDIM_ARRAY(V);
 
     // Detect one of the planes
-    lookForPlane(&(*V)(), Vmag, maxFreq, planeWidth, 1, rotPos, tiltPos);
+    lookForPlane(mdaV, Vmag, maxFreq, planeWidth, 1, rotPos, tiltPos);
 
     Image<double> * Vdraw = new Image<double>();
 
@@ -335,16 +336,16 @@ void ProgDetectMissingWedge::run()
     {
         (*Vdraw)()=(*Vmag);
 
-        evaluatePlane(rotPos, tiltPos, &(*V)(), Vmag, maxFreq, planeWidth,
+        evaluatePlane(rotPos, tiltPos, mdaV, Vmag, maxFreq, planeWidth,
                       1, &(*Vdraw)());
     }
 
     // Detect the other plane
-    lookForPlane(&(*V)(), Vmag, maxFreq, planeWidth, -1, rotNeg, tiltNeg, true, rotPos, tiltPos);
+    lookForPlane(mdaV, Vmag, maxFreq, planeWidth, -1, rotNeg, tiltNeg, true, rotPos, tiltPos);
 
     if (saveMarks)
     {
-        evaluatePlane(rotNeg, tiltNeg, &(*V)(), Vmag, maxFreq, planeWidth,
+        evaluatePlane(rotNeg, tiltNeg, mdaV, Vmag, maxFreq, planeWidth,
                       -1, &(*Vdraw)());
         Vdraw->write(fn_root+"_marks.vol");
     }
@@ -352,10 +353,13 @@ void ProgDetectMissingWedge::run()
     if (saveMask)
     {
         Vdraw->clear();
-        drawWedge(rotPos, tiltPos, rotNeg, tiltNeg, &(*V)(), Vmag, &(*Vdraw)());
+        drawWedge(rotPos, tiltPos, rotNeg, tiltNeg, mdaV, Vmag, &(*Vdraw)());
         Vdraw->write(fn_root+"_mask.vol");
     }
 
     std::cout << "Plane1: " << rotPos << " " << tiltPos << std::endl;
     std::cout << "Plane2: " << rotNeg << " " << tiltNeg << std::endl;
+
+    delete Vdraw;
+    delete Vmag;
 }
