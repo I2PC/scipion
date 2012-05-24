@@ -223,6 +223,7 @@ class ConfigNotebook(ttk.Notebook):
         progress = ttk.Progressbar(panel, orient=tk.HORIZONTAL, length=300, mode='determinate', variable=self.progressVar, maximum="700")
         progress.pack(side=tk.LEFT, padx=(0, 30))
         
+        XmippButton(panel, text='Close', command=lambda: self.master.destroy()).pack(side=tk.RIGHT, padx=(5, 0))
         self.btn = XmippButton(panel, text='Compile')
         self.btn.pack(side=tk.RIGHT, padx=(15, 0))
         procVar = tk.StringVar()
