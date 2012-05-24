@@ -651,8 +651,10 @@ class TaggedText(XmippText):
                     self.insert(tk.INSERT, link, self.hm.add(lambda: openLink(link)))
                 insertLink(p)
             else:
-                insertColoredLine(self, p, t)
-                #self.insert(tk.END, p, t)
+                if self.colors:
+                    insertColoredLine(self, p, t)
+                else:
+                    self.insert(tk.END, p, t)
         self.addNewline()       
 
 class OutputText(XmippText):
