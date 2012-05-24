@@ -27,7 +27,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
     def __init__(self, scriptname,project=None):
         
         super(ProtPartialProjectionSubtraction, self).__init__(protDict.subtraction.name, scriptname, project)
-        
+
         self.Import = 'from protocol_subtraction_before_loop import *;\
                        from protocol_subtraction_in_loop import *;'        
         
@@ -362,9 +362,9 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             
             #project reconstructe4d volumes
             _VerifyFiles = []
-            _VerifyFiles.append(self.getFilename('ReferenceStack', ctf=iterN))
-            _VerifyFiles.append(self.getFilename('ReferenceStackDoc', ctf=iterN))
-            _VerifyFiles.append(self.getFilename('ReferenceStackSampling', ctf=iterN))
+            _VerifyFiles.append(self.getFilename('ReferenceStack', ctf=indexCTFInsideLoop))
+            _VerifyFiles.append(self.getFilename('ReferenceStackDoc', ctf=indexCTFInsideLoop))
+            _VerifyFiles.append(self.getFilename('ReferenceStackSampling', ctf=indexCTFInsideLoop))
             
             id = self.Db.insertStep('createProjections', verifyfiles = _VerifyFiles
                                         , AngSamplingRateDeg = self.AngSamplingRateDeg
