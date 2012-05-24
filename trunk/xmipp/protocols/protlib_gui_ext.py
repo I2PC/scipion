@@ -575,15 +575,21 @@ class XmippText(tk.Text):
     def setReadOnly(self, value):
         state = tk.NORMAL
         if value:
-           state = tk.DISABLED
+            state = tk.DISABLED
         self.config(state=state) 
 
 def configureColorTags(text):
     ''' Function to configure tag_colorX for all supported colors.
     It is applicable to an XmippText text '''
-    from protlib_xmipp import colorMap
-    for color in colorMap.keys():
-        text.tag_config("tag_" + color, foreground=color)
+    try:
+        from protlib_xmipp import colorMap
+        for color in colorMap.keys():
+            text.tag_config("tag_" + color, foreground=color)
+        return True
+    except Exception, e:
+        print "Colors still not available"
+    return False
+        
         
 def insertColoredLine(text, line, tag=""):
     ''' Check if the color codes are present in a line
@@ -623,7 +629,7 @@ class TaggedText(XmippText):
         self.tag_config('normal', justify=tk.LEFT)
         self.tag_config('bold', justify=tk.LEFT, font=Fonts['button'])
         if self.colors:            
-            configureColorTags(self)        
+            self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
     def getTaggedParts(self, parts):
         ''' Detect [] as links text and <> as bold text'''
