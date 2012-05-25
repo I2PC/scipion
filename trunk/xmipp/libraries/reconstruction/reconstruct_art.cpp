@@ -25,7 +25,7 @@
 
 #include "reconstruct_art.h"
 #include "art_crystal.h"
-#include "art_xray.h"
+//#include "art_xray.h"
 #include "denoise.h"
 #include "fourier_filter.h"
 #include <data/wavelet.h>
@@ -57,8 +57,8 @@ void ProgReconsART::defineParams()
 
 #ifndef RELEASE_MODE
 
-    addParamsLine(" == Special Parameters for X-rays == ");
-    XrayARTRecons::defineParams(this);
+//    addParamsLine(" == Special Parameters for X-rays == ");
+//    XrayARTRecons::defineParams(this);
 #endif
 
     //    addParamsLine(" == Special Parameters for crystals == ");
@@ -124,9 +124,9 @@ void ProgReconsART::readParams()
     //    else
 
 #ifndef RELEASE_MODE
-    if (checkParam("--xray"))
-        artRecons = new XrayARTRecons;
-    else
+//    if (checkParam("--xray"))
+//        artRecons = new XrayARTRecons;
+//    else
 #endif
 
         artRecons = new SinPartARTRecons;
