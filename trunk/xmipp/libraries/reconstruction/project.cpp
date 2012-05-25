@@ -296,7 +296,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
         else
             enable_angle_range = false;
 
-        if(MD.getValue(MDL_PRJ_ROT_Noise,ParamVec, objId))
+        if(MD.getValue(MDL_PRJ_ROT_NOISE,ParamVec, objId))
         {
             rot_range.Ndev = ParamVec[0];
             if (ParamVec.size()<2)
@@ -307,7 +307,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
         else
             rot_range.Ndev = rot_range.Navg =0.;
 
-        if(MD.getValue(MDL_PRJ_TILT_Noise,ParamVec, objId))
+        if(MD.getValue(MDL_PRJ_TILT_NOISE,ParamVec, objId))
         {
             tilt_range.Ndev = ParamVec[0];
             if (ParamVec.size()<2)
@@ -318,7 +318,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
         else
             tilt_range.Ndev = tilt_range.Navg =0.;
 
-        if(MD.getValue(MDL_PRJ_PSI_Noise,ParamVec, objId))
+        if(MD.getValue(MDL_PRJ_PSI_NOISE,ParamVec, objId))
         {
             psi_range.Ndev = ParamVec[0];
             if (ParamVec.size()<2)
