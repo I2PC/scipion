@@ -164,8 +164,8 @@ public:
 
     void resize(MultidimArrayGeneric &mdim, bool copy=true)
     {
-    	ArrayDim adim;
-    	mdim.getDimensions(adim);
+        ArrayDim adim;
+        mdim.getDimensions(adim);
         im->resize(adim, copy);
     }
 
@@ -335,6 +335,11 @@ public:
         im->setXmippOrigin();
     }
 
+    void maxIndex(ArrayCoord &pos)
+    {
+        im->maxIndex(pos);
+    }
+
     /** Compute average */
     double computeAvg() const
     {
@@ -455,6 +460,7 @@ public:
 #define WINDOW(type) ((MultidimArray<type>*)(im))->window(result, n0, z0, y0, x0, nF, zF, yF, xF, init_value);
         SWITCHDATATYPE(datatype, WINDOW)
 #undef WINDOW
+
     }
 }
 ;

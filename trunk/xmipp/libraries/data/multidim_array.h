@@ -658,6 +658,22 @@ struct ArrayDim
 ;
 
 /**
+ *  Structure with a set of coordinates in an image
+ */
+struct ArrayCoord
+{
+    // Number of images
+    size_t n;
+    // Number of elements in Z
+    int z;
+    // Number of elements in Y
+    int y;
+    // Number of elements in X
+    int x;
+}
+;
+
+/**
  *  Structure to define random generation mode
  */
 enum RandomMode
@@ -714,7 +730,17 @@ public:
 public:
     virtual ~MultidimArrayBase()
     {}
+
+    // Virtual declarations to be used from MultidimArrayGeneric
     virtual void clear() = 0;
+    virtual void selfReverseX() = 0;
+    virtual void selfReverseY() = 0;
+    virtual void selfReverseZ() = 0;
+    virtual double computeAvg() const = 0;
+    virtual void computeDoubleMinMaxRange(double& minval, double& maxval,size_t offset, size_t size) const = 0;
+    virtual void maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const = 0;
+    virtual void coreAllocateReuse() = 0;
+
 
     /// @name Size
     //@{
@@ -1027,12 +1053,6 @@ public:
 
     //@}
 
-    virtual void selfReverseX() = 0;
-    virtual void selfReverseY() = 0;
-    virtual void selfReverseZ() = 0;
-    virtual double computeAvg() const = 0;
-    virtual void computeDoubleMinMaxRange(double& minval, double& maxval,size_t offset, size_t size) const = 0;
-
 
     /** Returns the multidimArray dimension.
      *
@@ -1063,7 +1083,40 @@ public:
         mmapOn = mmap;
     }
 
-    virtual void coreAllocateReuse() = 0;
+    void maxIndex(ArrayCoord &pos) const
+    {
+        maxIndex((int&)pos.n, pos.z, pos.y, pos.x);
+    }
+
+    /** 3D Indices for the maximum element.
+      *
+      * This function just calls to the 4D function
+      */
+    void maxIndex(int& kmax, int& imax, int& jmax) const
+    {
+        int dum;
+        maxIndex(dum, kmax, imax, jmax);
+    }
+
+    /** 2D Indices for the maximum element.
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& imax, int& jmax) const
+    {
+        int dum;
+        maxIndex(dum, dum, imax, jmax);
+    }
+
+    /** 1D Indices for the maximum element.
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& jmax) const
+    {
+        int dum;
+        maxIndex(dum, dum, dum, jmax);
+    }
 
     /** Print shape of multidimensional array.
      *
@@ -1401,6 +1454,7 @@ public:
      */
     using MultidimArrayBase::resizeNoCopy;
     using MultidimArrayBase::resize;
+    using MultidimArrayBase::maxIndex;
 
     /** Resize to a given size
      *
@@ -2841,35 +2895,6 @@ public:
         }
     }
 
-    /** 3D Indices for the maximum element.
-     *
-     * This function just calls to the 4D function
-     */
-    void maxIndex(int& kmax, int& imax, int& jmax) const
-    {
-        int dum;
-        maxIndex(dum, kmax, imax, jmax);
-    }
-
-    /** 2D Indices for the maximum element.
-     *
-     * This function just calls to the 4D function
-     */
-    void maxIndex(int& imax, int& jmax) const
-    {
-        int dum;
-        maxIndex(dum, dum, imax, jmax);
-    }
-
-    /** 1D Indices for the maximum element.
-     *
-     * This function just calls to the 4D function
-     */
-    void maxIndex(int& jmax) const
-    {
-        int dum;
-        maxIndex(dum, dum, dum, jmax);
-    }
 
     /** Minimum and maximum of the values in the array.
      *
@@ -4827,7 +4852,7 @@ public:
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
         {
             if (fabs(DIRECT_MULTIDIM_ELEM(*this,n) -
-                    DIRECT_MULTIDIM_ELEM(op,n)) > accuracy)
+                     DIRECT_MULTIDIM_ELEM(op,n)) > accuracy)
                 return false;
         }
         return true;
@@ -5066,6 +5091,8 @@ template<>
 void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double > minF, std::complex< double > maxF);
 template<>
 double MultidimArray< std::complex< double > >::computeAvg() const;
+template<>
+void MultidimArray< std::complex< double > >::maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const;
 template<>
 void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const;
 template<>

@@ -354,6 +354,12 @@ double MultidimArray< std::complex< double > >::computeAvg() const
 }
 
 template<>
+void MultidimArray< std::complex< double > >::maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const
+{
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::maxIndex not implemented for complex.");
+}
+
+template<>
 void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const
 {
     if (NZYXSIZE(*this) <= 0)
