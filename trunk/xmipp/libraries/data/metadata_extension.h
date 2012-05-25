@@ -42,6 +42,8 @@ void getImageSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &N
 /** Get image size and data type */
 void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype, MDLabel image_label=MDL_IMAGE);
 
+void getImageInfo(const MetaData &MD, ImageInfo &imgInfo, MDLabel image_label=MDL_IMAGE);
+
 /** Get image size and data type of a Metadata file */
 void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label=MDL_IMAGE);
 

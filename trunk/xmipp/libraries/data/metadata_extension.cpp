@@ -219,6 +219,18 @@ void getImageInfo(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &N
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
+void getImageInfo(const MetaData &MD, ImageInfo &imgInfo, MDLabel image_label)
+{
+    if (!MD.isEmpty())
+    {
+        FileName fn_img;
+        MD.getValue(image_label, fn_img, MD.firstObject());
+        getImageInfo(fn_img, imgInfo);
+    }
+    else
+        REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
+}
+
 void getImageSizeFromFilename(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, MDLabel image_label)
 {
     if (filename.hasImageExtension())
