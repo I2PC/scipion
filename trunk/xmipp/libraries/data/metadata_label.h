@@ -248,9 +248,20 @@ enum MDLabel
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
     MDL_POINTSASYMETRICUNIT, //number of points in asymmetric unit
+
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
+    MDL_PRJ_ANGFILE,  ///< File for generated angles
+    MDL_PRJ_PSI_NOISE,  /// < Psi angle dev and mean noise (vector double)
+    MDL_PRJ_PSI_RANDSTR, /// < Type of randomness for Psi (std::string)
+    MDL_PRJ_PSI_RANGE,  /// < Psi angle range (vector double)
+    MDL_PRJ_ROT_NOISE ,  /// < Rotational angle dev and mean noise (vector double)
+    MDL_PRJ_ROT_RANDSTR,  /// < Type of randomness for Rotational (std::string)
+    MDL_PRJ_ROT_RANGE,
+    MDL_PRJ_TILT_NOISE,  /// < Tilt angle dev and mean noise (vector double)
+    MDL_PRJ_TILT_RANDSTR,  /// < Type of randomness for Tilt (std::string)
     MDL_PRJ_TILT_RANGE, // Vector with the initial and final tilt angle values, and step size
     MDL_PRJ_VOL,        // Volume file name to generate projections from
+
     MDL_DIMENSIONS_3D,  // X,Y,Z dimensions
     MDL_DIMENSIONS_2D,  // X,Y dimensions
     MDL_PSD, ///< A Power Spectrum Density file name (std::string)
@@ -259,17 +270,20 @@ enum MDLabel
     MDL_REF3D, ///< 3D Class to which the image belongs (int)
     MDL_REF, ///< Class to which the image belongs (int)
     MDL_REFMD, ///< Name of Metadata file for all references(string)
+
     MDL_RESOLUTION_DPR, ///<differential phase residual (double)
     MDL_RESOLUTION_ERRORL2, ///<Error in l2 (double)
     MDL_RESOLUTION_FRC, ///<Fourier shell correlation (double)
     MDL_RESOLUTION_FRCRANDOMNOISE, ///<Fourier shell correlation noise (double)
     MDL_RESOLUTION_FREQ, ///<Frequency in 1/A (double)
     MDL_RESOLUTION_FREQREAL, ///< Frequency in A (double)
+
     MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATE_ORIGINAL, ///< original sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEX, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEY, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEZ, ///< sampling rate in A/pixel (double)
+
     MDL_SCALE, ///< scaling factor for an image or volume (double)
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
@@ -304,22 +318,13 @@ enum MDLabel
     MDL_ZSCORE, ///< Z Score (double)
     MDL_ZSIZE, ///< Z size (int)
     MDL_PHANTOM_BGDENSITY, ///< Phantom background density (double)
-    MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
-    MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
-    MDL_PHANTOM_FEATURE_OPERATION, ///< Operation in case of overlapping features (+,-)
-    MDL_PHANTOM_FEATURE_DENSITY, ///< The density of the feature (double)
     MDL_PHANTOM_FEATURE_CENTER, ///< Center of the feature (vector double)
+    MDL_PHANTOM_FEATURE_DENSITY, ///< The density of the feature (double)
+    MDL_PHANTOM_FEATURE_OPERATION, ///< Operation in case of overlapping features (+,-)
     MDL_PHANTOM_FEATURE_SPECIFIC, ///< Specific parameters for a feature (vector double)
+    MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
+    MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
 
-    MDL_PRJ_ANGFILE,  ///< File for generated angles
-    MDL_PRJ_ROT_RANGE,
-    MDL_PRJ_ROT_Noise ,  /// < Rotational angle dev and mean noise (vector double)
-    MDL_PRJ_ROT_RANDSTR,  /// < Type of randomness for Rotational (std::string)
-    MDL_PRJ_TILT_Noise,  /// < Tilt angle dev and mean noise (vector double)
-    MDL_PRJ_TILT_RANDSTR,  /// < Type of randomness for Tilt (std::string)
-    MDL_PRJ_PSI_RANGE,  /// < Psi angle range (vector double)
-    MDL_PRJ_PSI_Noise,  /// < Psi angle dev and mean noise (vector double)
-    MDL_PRJ_PSI_RANDSTR, /// < Type of randomness for Psi (std::string)
 
     MDL_2D_LATTICE_VECA,   /// < Lattice vector for projection (vector double)
     MDL_2D_LATTICE_VECB,   /// < Lattice vector for projection (vector double)
@@ -925,12 +930,12 @@ private:
         MDL::addLabel(MDL_PRJ_ANGFILE, LABEL_STRING, "angleFile");
         MDL::addLabel(MDL_PRJ_ROT_RANGE, LABEL_VECTOR_DOUBLE, "projRotRange");
         MDL::addLabel(MDL_PRJ_ROT_RANDSTR, LABEL_STRING, "projRotRandomness");
-        MDL::addLabel(MDL_PRJ_ROT_Noise, LABEL_VECTOR_DOUBLE, "projRotNoise");
+        MDL::addLabel(MDL_PRJ_ROT_NOISE, LABEL_VECTOR_DOUBLE, "projRotNoise");
         MDL::addLabel(MDL_PRJ_TILT_RANDSTR, LABEL_STRING, "projTiltRandomness");
-        MDL::addLabel(MDL_PRJ_TILT_Noise, LABEL_VECTOR_DOUBLE, "projTiltNoise");
+        MDL::addLabel(MDL_PRJ_TILT_NOISE, LABEL_VECTOR_DOUBLE, "projTiltNoise");
         MDL::addLabel(MDL_PRJ_PSI_RANGE, LABEL_VECTOR_DOUBLE, "projPsiRange");
         MDL::addLabel(MDL_PRJ_PSI_RANDSTR, LABEL_STRING, "projPsiRandomness");
-        MDL::addLabel(MDL_PRJ_PSI_Noise, LABEL_VECTOR_DOUBLE, "projPsiNoise");
+        MDL::addLabel(MDL_PRJ_PSI_NOISE, LABEL_VECTOR_DOUBLE, "projPsiNoise");
         MDL::addLabel(MDL_2D_LATTICE_VECA, LABEL_VECTOR_DOUBLE, "latticeVec1");
         MDL::addLabel(MDL_2D_LATTICE_VECB, LABEL_VECTOR_DOUBLE, "latticeVec2");
         MDL::addLabel(MDL_CRYSTAL_DISAPPEAR_THRE, LABEL_DOUBLE, "crystalDisThresh");
