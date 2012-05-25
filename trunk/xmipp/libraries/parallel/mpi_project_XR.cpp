@@ -145,7 +145,7 @@ void ProgMPIXrayProject::run()
                         XMIPP_MIN(XSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol)),projParam.proj_Xdim),
                         XMIPP_MIN(YSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol)),projParam.proj_Ydim));
 
-        std::cerr << "Projecting ...\n";
+        std::cout << "Projecting ...\n";
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
