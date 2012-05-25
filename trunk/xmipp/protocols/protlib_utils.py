@@ -27,7 +27,6 @@
 
 import os
 import sys
-from protlib_sql import SqliteDb
 
 #---------------------------------------------------------------------------
 # Logging utilities
@@ -464,6 +463,7 @@ def submitProtocol(script, **params):
     launchfile.close()
     command = launch.Program + " " + launch.ArgsTemplate % params
     from protlib_xmipp import greenStr
+    from protlib_sql import UNKNOWN_JOBID
     print "** Submiting to queue: '%s'" % greenStr(command)
     ps = Popen(command, shell=True, stdout=PIPE)
     out = ps.communicate()[0]
@@ -472,7 +472,7 @@ def submitProtocol(script, **params):
     if s:
         return int(s.group(0))
     else:
-        return SqliteDb.UNKNOWN_JOBID
+        return UNKNOWN_JOBID
 
 def submitProgram(script, **params):
     ''' Same function as submitProtocol but just for single
