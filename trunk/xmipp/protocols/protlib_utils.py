@@ -27,6 +27,7 @@
 
 import os
 import sys
+from protlib_sql import SqliteDb
 
 #---------------------------------------------------------------------------
 # Logging utilities
@@ -466,7 +467,12 @@ def submitProtocol(script, **params):
     print "** Submiting to queue: '%s'" % greenStr(command)
     ps = Popen(command, shell=True, stdout=PIPE)
     out = ps.communicate()[0]
-    return int(out.split('.')[0])
+    import re
+    s = re.search('(\d+)', out)
+    if s:
+        return int(s.group(0))
+    else:
+        return SqliteDb.UNKNOWN_JOBID
 
 def submitProgram(script, **params):
     ''' Same function as submitProtocol but just for single

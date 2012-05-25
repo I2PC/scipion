@@ -54,6 +54,7 @@ class SqliteDb:
     EXEC_ALWAYS = 0
     
     NO_JOBID = -1
+    UNKNOWN_JOBID = 0
     
     StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed', 'Aborted']
     
