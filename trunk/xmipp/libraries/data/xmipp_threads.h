@@ -1,10 +1,34 @@
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
+/***************************************************************************
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+ *
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
 
 #ifndef THREADS_T
 #define THREADS_T
 
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 class ThreadManager;
 class ThreadArgument;
@@ -124,7 +148,7 @@ private:
 public:
     int thread_id; ///< The thread id
     void * workClass; ///< The class in wich threads will be working
-    void * data;
+    void * data; // Pointer to void *
 
     ThreadArgument();
     ThreadArgument(int id, ThreadManager * manager = NULL, void * data = NULL);
@@ -157,9 +181,17 @@ private:
     bool started;
     void * workClass;
 
-    void startThreads();
-
 public:
+    /** Function to create threads structure and each thread
+     * will be waiting to start working
+     */
+    void createThreads(void * data = NULL);
+
+    /** Set data for working threads.
+     * If nThread = -1 then data is set for all threads.
+     */
+    void setData(void * data, int nThread = -1);
+
     /** Constructor, number of working threads should be supplied */
     ThreadManager(int numberOfThreads, void * workClass = NULL);
 
@@ -167,8 +199,9 @@ public:
     ~ThreadManager();
 
     /** Function to start working in a task.
-     * The function that want to be executed in parallel
+     * The function that you want to execute in parallel
      * by the working threads should be passed as argument.
+     * If data is passed, then it is set to all threads.
      * Functions that can be executed by thread should by of the
      * type ThreadFunction, i.e., return void * and only
      * one argument of type ThreadArgument.
@@ -210,10 +243,10 @@ public:
      *  }
      * @endcode
      */
-    void run(ThreadFunction function);
+    void run(ThreadFunction function, void * data = NULL);
 
     /** Same as run but without blocking. */
-    void runAsync(ThreadFunction function);
+    void runAsync(ThreadFunction function, void * data = NULL);
 
     /** Function that should be called to wait until all threads finished work */
     void wait();

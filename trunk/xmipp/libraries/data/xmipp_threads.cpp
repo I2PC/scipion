@@ -83,15 +83,17 @@ void * _threadMain(void * data)
         //After awaked check what to do
         if (thMgr->workFunction != NULL)
         {
-        	try {
-            thMgr->workFunction(*thArg);
-            thMgr->wait(); //wait for finish together
-        	} catch (XmippError XE)
-        	{
-        		std::cerr << XE << std::endl
-        		          << "In thread " << thArg->thread_id << std::endl;
-        		pthread_exit(NULL);
-        	}
+            try
+            {
+                thMgr->workFunction(*thArg);
+                thMgr->wait(); //wait for finish together
+            }
+            catch (XmippError XE)
+            {
+                std::cerr << XE << std::endl
+                << "In thread " << thArg->thread_id << std::endl;
+                pthread_exit(NULL);
+            }
         }
         else //exit thread
         {
@@ -112,7 +114,17 @@ ThreadManager::ThreadManager(int numberOfThreads, void * workClass)
 
 }
 
-void ThreadManager::startThreads()
+void ThreadManager::setData(void * data, int idxThread)
+{
+
+    if (idxThread == -1)
+        for (int i = 0; i < threads; ++i)
+            arguments[i].data = data;
+    else
+        arguments[idxThread].data = data;
+}
+
+void ThreadManager::createThreads(void * data)
 {
     //Create threads
     int result;
@@ -121,7 +133,7 @@ void ThreadManager::startThreads()
     {
         arguments[i].thread_id = i;
         arguments[i].manager = this;
-        arguments[i].data = NULL;
+        arguments[i].data = data;
         arguments[i].workClass = workClass;
 
         result = pthread_create(ids + i, NULL, _threadMain, (void*) (arguments + i));
@@ -151,18 +163,20 @@ ThreadManager::~ThreadManager()
     delete[] arguments;
 }
 
-void ThreadManager::run(ThreadFunction function)
+void ThreadManager::run(ThreadFunction function, void * data)
 {
-    runAsync(function);
+    runAsync(function, data);
     //Wait on barrier to wait for threads finish
     wait();
 }
 
-void ThreadManager::runAsync(ThreadFunction function)
+void ThreadManager::runAsync(ThreadFunction function, void * data)
 {
+    if (data != NULL)
+        setData(data);
     workFunction = function;
     if (!started)
-        startThreads();
+        createThreads();
     //Wait on barrier to threads starts working
     wait();
 }
@@ -176,8 +190,8 @@ void ThreadManager::wait()
 
 ParallelTaskDistributor::ParallelTaskDistributor(size_t nTasks, size_t bSize)
 {
-  if (!(nTasks && bSize && bSize <= nTasks))
-     REPORT_ERROR(ERR_ARG_INCORRECT, "nTasks and bSize should be > 0, also bSize <= nTasks");
+    if (!(nTasks && bSize && bSize <= nTasks))
+        REPORT_ERROR(ERR_ARG_INCORRECT, "nTasks and bSize should be > 0, also bSize <= nTasks");
 
     numberOfTasks = nTasks;
     blockSize = bSize;
