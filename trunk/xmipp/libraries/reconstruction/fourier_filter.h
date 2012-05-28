@@ -43,7 +43,7 @@
       Filter.w1=w_cutoff;
       Filter.raised_w=slope;
       I().setXmippOrigin();
-      Filter.generate_mask(I()); // Should not be used with filters
+      Filter.generateMask(I()); // Should not be used with filters
                                  // other than WEDGE or CONE
       Filter.applyMaskSpace(I());
       I.write("filtered_image.xmp");
