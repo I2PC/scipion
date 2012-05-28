@@ -944,7 +944,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
 		}
 	} else
 		Mcorr.statisticsAdjust(0, 1);
-	Mcorr.maxIndex(imax, jmax, kmax);
+	Mcorr.maxIndex(kmax, imax, jmax);
 	max = A3D_ELEM(Mcorr, kmax, imax, jmax);
 
 	// Estimate n_max around the maximum
@@ -980,7 +980,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
 	}
 
 	// We have the neighbourhood => looking for the gravity centre
-	xmax = ymax = sumcorr = 0.;
+	zmax = xmax = ymax = sumcorr = 0.;
 	for (int k = -n_max; k <= n_max; k++) {
 		k_actual = k + kmax;
 		for (int i = -n_max; i <= n_max; i++) {
@@ -988,7 +988,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
 			for (int j = -n_max; j <= n_max; j++) {
 				j_actual = j + jmax;
 				double val = A3D_ELEM(Mcorr, k_actual, i_actual, j_actual);
-				zmax += i_actual * val;
+				zmax += k_actual * val;
 				ymax += i_actual * val;
 				xmax += j_actual * val;
 				sumcorr += val;
@@ -1283,7 +1283,7 @@ double fastBestRotationAroundY(const MultidimArray<double>& IrefCyl,
 	ZZ(v) = 0;
 	volume_convertCartesianToCylindrical(I, aux2.Icyl, 3, XSIZE(I) / 2, 1, 0,
 			2 * PI, deltaAng, v);
-	return fastBestRotation(IrefCyl,aux2.Icyl,aux,aux2,deltaAng);
+	return -fastBestRotation(IrefCyl,aux2.Icyl,aux,aux2,deltaAng);
 }
 
 void fastBestRotation(const MultidimArray<double>& IrefCylZ,
@@ -1305,11 +1305,10 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 
 	// Rotate in Z
 	VolumeAlignmentAux aux4;
-	double bestPsi = fastBestRotationAroundY(IrefCylZ, aux2.Irotated, aux, aux4);
+	double bestPsi = fastBestRotationAroundZ(IrefCylZ, aux2.Irotated, aux, aux4);
 	rotation3DMatrix(bestPsi, 'Z', Raux);
 	R=Raux*R;
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
-
 	I=aux2.Irotated;
 }
 
