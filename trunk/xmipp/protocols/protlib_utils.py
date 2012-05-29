@@ -462,8 +462,8 @@ def submitProtocol(script, **params):
     launchfile.write(launch.FileTemplate % params)
     launchfile.close()
     command = launch.Program + " " + launch.ArgsTemplate % params
-    from protlib_xmipp import greenStr
-    from protlib_sql import UNKNOWN_JOBID
+    from protlib_xmipp import greenStr, redStr
+    from protlib_sql import SqliteDb
     print "** Submiting to queue: '%s'" % greenStr(command)
     ps = Popen(command, shell=True, stdout=PIPE)
     out = ps.communicate()[0]
@@ -472,7 +472,8 @@ def submitProtocol(script, **params):
     if s:
         return int(s.group(0))
     else:
-        return UNKNOWN_JOBID
+        print "** Couldn't parse %s ouput: %s" % (launch.Program, redStr(out)) 
+        return SqliteDb.UNKNOWN_JOBID
 
 def submitProgram(script, **params):
     ''' Same function as submitProtocol but just for single
