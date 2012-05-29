@@ -472,7 +472,7 @@ def submitProtocol(script, **params):
     if s:
         return int(s.group(0))
     else:
-        print "** Couldn't parse %s ouput: %s" % (launch.Program, redStr(out)) 
+        print "** Couldn't parse %s ouput: %s" % (greenStr(launch.Program), redStr(out)) 
         return SqliteDb.UNKNOWN_JOBID
 
 def submitProgram(script, **params):
