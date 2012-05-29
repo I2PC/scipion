@@ -313,6 +313,10 @@ class XmippProjectGUI():
     def launchRunJobMonitorGUI(self, run):
         runName = getExtendedRunName(run)
         script = run['script']
+        jobId = run['jobid']
+        if jobId == SqliteDb.UNKNOWN_JOBID:
+            showInfo('No jobId tracked', "The <jobId> of this process wasn't tracked", parent=root)
+            return
         pm = ProcessManager(run)
         root = tk.Toplevel()
         root.withdraw()
