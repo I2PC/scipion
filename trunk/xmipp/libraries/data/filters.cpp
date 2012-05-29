@@ -981,6 +981,12 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
 
 	// We have the neighbourhood => looking for the gravity centre
 	zmax = xmax = ymax = sumcorr = 0.;
+	if (kmax-n_max<STARTINGZ(Mcorr))  n_max=std::min(kmax-STARTINGZ(Mcorr),n_max);
+	if (kmax+n_max>FINISHINGZ(Mcorr)) n_max=std::min(FINISHINGZ(Mcorr)-kmax,n_max);
+	if (imax-n_max<STARTINGY(Mcorr))  n_max=std::min(imax-STARTINGY(Mcorr),n_max);
+	if (imax+n_max>FINISHINGY(Mcorr)) n_max=std::min(FINISHINGY(Mcorr)-imax,n_max);
+	if (jmax-n_max<STARTINGY(Mcorr))  n_max=std::min(jmax-STARTINGX(Mcorr),n_max);
+	if (jmax+n_max>FINISHINGY(Mcorr)) n_max=std::min(FINISHINGX(Mcorr)-jmax,n_max);
 	for (int k = -n_max; k <= n_max; k++) {
 		k_actual = k + kmax;
 		for (int i = -n_max; i <= n_max; i++) {
