@@ -127,7 +127,7 @@ void BasicARTParameters::defineParams(XmippProgram * program, bool mpiMode)
     program->addParamsLine("                               : in which the basis volume was stored (any -FCC or -CC or grid size value are useless)");
     program->addParamsLine("  [--max_tilt <alpha=10.e+6>]  : Skip projections with absolute tilt angle greater than alpha.");
     program->addParamsLine("                               : It means that if alpha=40, then only images with tilt angle ");
-    program->addParamsLine("                               : within the ranges 0±40 and 180±40 will be processed. (Projection");
+    program->addParamsLine("                               : within the ranges 0+/-40 and 180+/-40 will be processed. (Projection");
     program->addParamsLine("                               : tilt angles are forced to be in the range 0-360)");
     program->addParamsLine("  [--ref_trans_after <n=-1>]   : Refine the translation alignment after n projections. (Integer type)");
     program->addParamsLine("  [--ref_trans_step <v=-1>]    : Maximum displacement in translation alignment. (Double type)");

@@ -61,8 +61,8 @@ void ProgReconsART::defineParams()
 //    XrayARTRecons::defineParams(this);
 #endif
 
-    //    addParamsLine(" == Special Parameters for crystals == ");
-    //    CrystalARTRecons::defineParams(this);
+    addParamsLine(" == Special Parameters for crystals == ");
+    CrystalARTRecons::defineParams(this);
 
     addExampleLine("+++* Basis volume definition: The basis volume is defined internally such that it should cover ",false);
     addExampleLine("+++the space cube corresponding to =(-Xdim/2,-Xdim/2,-Xdim/2)= to =(X dim /2,Xdim/2,Xdim/2)= where Xdim  ",false);
@@ -119,9 +119,6 @@ void ProgReconsART::defineParams()
 
 void ProgReconsART::readParams()
 {
-    //    if (checkParam("--crystal"))
-    //        artRecons = new CrystalARTRecons;
-    //    else
 
 #ifndef RELEASE_MODE
 //    if (checkParam("--xray"))
@@ -129,7 +126,10 @@ void ProgReconsART::readParams()
 //    else
 #endif
 
-        artRecons = new SinPartARTRecons;
+      if (checkParam("--crystal"))
+          artRecons = new CrystalARTRecons;
+      else
+          artRecons = new SinPartARTRecons;
 
     artRecons->readParams(this);
 

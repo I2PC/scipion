@@ -112,7 +112,7 @@ void CrystalARTRecons::print(std::ostream &o) const
 /* Side information ======================================================== */
 //#define DEBUG
 //#define DEBUG_A_LOT
-void CrystalARTRecons::preProcess(GridVolume &vol_basis0)
+void CrystalARTRecons::preProcess(GridVolume &vol_basis0, int level, int rank)
 {
     // Lattice vectors in BCC units
     a = avox / artPrm.grid_relative_size;
@@ -487,7 +487,7 @@ void computeIntegerLattice(const Matrix1D<double> &a,
 void expandToFillSpace(const BasicARTParameters &prm,
                        const CrystalARTRecons &eprm, GridVolume &vol)
 {
-    std::cerr << "Replicating unit cell ...\n";
+    std::cout << "Replicating unit cell ...\n";
 #ifdef DEBUG
 
     ImageXmipp save;

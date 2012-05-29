@@ -44,14 +44,12 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters()
 }
 
 /* Read Crystal Projection Parameters ====================================== */
-void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scale)
+void Crystal_Projection_Parameters::read(const FileName &fn, double scale)
 {
-
-
     MetaData MD;
     size_t objId;
-
-    MD.read((std::string)"block2@"+fn_crystal.c_str());
+    FileName fn_crystal = fn.removeBlockName();
+    MD.read(formatString("crystal@%s", fn_crystal.c_str()));
     if (MD.isEmpty())
         REPORT_ERROR(ERR_IO_NOTOPEN,
                      (String)"Prog_Project_Parameters::read: There is a problem "

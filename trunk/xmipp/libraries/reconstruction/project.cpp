@@ -220,7 +220,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
         proj_Ydim = (int)ParamVec[1];
         if (!MD.getValue(MDL_PRJ_ANGFILE, fn_angle, objId))
             fn_angle = "NULL";
-        else
+        else if (fn_angle != "NULL")
             if (!fn_angle.exists())
                 REPORT_ERROR(ERR_IO_NOTEXIST, (String)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");

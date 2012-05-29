@@ -101,7 +101,7 @@ public:
         The reconstructed volume size can be modified such that the unit cell
         mask fits.
     */
-    void preProcess(GridVolume &vol_basis0);
+    void preProcess(GridVolume &vol_basis0, int level = FULL, int rank = -1);
 
     /** Run a single step of ART.
         An ART iteration is compound of as many steps as projections,
