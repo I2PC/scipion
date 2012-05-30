@@ -190,7 +190,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     // Check if orthogonal projections
     // (projXdim,0)'=A*aproj
     // (0,projYdim)'=A*bproj
-    Matrix2D<double> Ainv, A, D, Dinv, AuxMat;
+    Matrix2D<double> Ainv, A, D, Dinv, AuxMat, Daux;
     if (prm_crystal.orthogonal)
     {
         A.resize(2, 2);
@@ -206,18 +206,20 @@ void project_crystal(Phantom &phantom, Projection &P,
         M2x2_BY_CT(A, A, nor);
         A.resize(3, 3);
         A(2, 2) = 1;
-        Ainv = A.inv();
+        A.inv(Ainv);
         AuxMat.resize(3, 3);
-        //matrix with ceytal vectors
+        //Matrix with crystal vectors
+        // Delta = (a, b) with a and b crystal column vectors
         AuxMat(0, 0) = XX(prm_crystal.a);
         AuxMat(0, 1) = YY(prm_crystal.a);
         AuxMat(0, 2) = 0.;
         AuxMat(1, 0) = XX(prm_crystal.b);
         AuxMat(1, 1) = YY(prm_crystal.b);
         AuxMat(1, 2) = 0.;
-        AuxMat(2, 0) = 0.               ;
-        AuxMat(2, 1) = 0.               ;
+        AuxMat(2, 0) = 0.;
+        AuxMat(2, 1) = 0.;
         AuxMat(2, 2) = 1.;
+        // Product of Delta(trasposed) and Delta*
         D.resize(3, 3);
         D(0, 0) = XSIZE(P());
         D(0, 1) = 0.;
@@ -228,17 +230,19 @@ void project_crystal(Phantom &phantom, Projection &P,
         D(2, 0) = 0.;
         D(2, 1) = 0.;
         D(2, 2) = 1.;
-        D.inv(D);
+        Daux = D;
+        Daux.inv(D);
         M3x3_BY_M3x3(D, AuxMat, D);
         Dinv.resize(3, 3);
-        Dinv = D.inv();
+        D.inv(Dinv);
     }
     else
     {
         A.initIdentity(3);
         Ainv.initIdentity(3);
     }
-    //#define DEBUG
+
+//#define DEBUG
 #ifdef DEBUG
     std::cout << "P shape ";
     P().printShape();
