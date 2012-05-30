@@ -194,11 +194,11 @@ public:
      * @endcode
      */
 #define OVER2IMG(IO, v, u, iv, iu) \
-    iu = (int) ROUND((((u)-(IO).overumin) * (IO).uistep)); \
-    iv = (int) ROUND((((v)-(IO).overvmin) * (IO).vistep));
+    iu = (int) round((((u)-(IO).overumin) * (IO).uistep)); \
+    iv = (int) round((((v)-(IO).overvmin) * (IO).vistep));
 
 #define OVER2IMG_Z(IO, w, iw) \
-	    iw = (int) ROUND((((w)-(IO).overwmin) * (IO).wistep));
+	    iw = (int) round((((w)-(IO).overwmin) * (IO).wistep));
 
     /** Returns the logical position of a "physical" location
      *
