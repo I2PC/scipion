@@ -529,8 +529,11 @@ double bestRotationAroundZ(const MultidimArray< double >& Iref,
  * The rotation matrix is returned in R. I is modified to be aligned.
  */
 void fastBestRotation(const MultidimArray<double>& IrefCylZ,
-		const MultidimArray<double>& IrefCylY, MultidimArray<double>& I,
-		Matrix2D<double> &R, CorrelationAux &aux, VolumeAlignmentAux &aux2);
+		const MultidimArray<double>& IrefCylY,
+		const MultidimArray<double>& IrefCylX,
+		MultidimArray<double>& I,
+		const String &eulerAngles,
+		Matrix2D<double> &R, CorrelationAux &aux);
 
 /** Fast best rotation around Z */
 double fastBestRotationAroundZ(const MultidimArray<double>& IrefCylZ,
