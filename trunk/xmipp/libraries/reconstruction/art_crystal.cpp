@@ -490,8 +490,8 @@ void expandToFillSpace(const BasicARTParameters &prm,
     std::cout << "Replicating unit cell ...\n";
 #ifdef DEBUG
 
-    ImageXmipp save;
-    save = vol(0)().getSlice(0);
+    Image<double> save;
+    vol(0)().getSlice(0, save());
     save.write("inter_before_filling.xmp");
 #endif
 
@@ -511,7 +511,8 @@ void expandToFillSpace(const BasicARTParameters &prm,
     find_crystal_limits(corner1, corner2, zero, zero,
                         eprm.a, eprm.b, a0, aF, b0, bF);
 #ifdef DEBUG
-
+    std::cerr << "DEBUG_JM: eprm.a: " << eprm.a << std::endl;
+    std::cerr << "DEBUG_JM: eprm.b: " << eprm.b << std::endl;
     std::cout << "Output Volume size (ZxYxX)=" << prm.Zoutput_volume_size
     << " " << prm.Youtput_volume_size << " "
     << prm.Xoutput_volume_size << std::endl;
@@ -568,7 +569,7 @@ void expandToFillSpace(const BasicARTParameters &prm,
         }
     }
 #ifdef DEBUG
-    save = vol(0)().getSlice(0);
+    vol(0)().getSlice(0, save());
     save.write("inter_after_filling.xmp");
 #endif
 }
