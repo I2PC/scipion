@@ -274,3 +274,34 @@ void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 	}
 }
 
+// Cartesian to cylindrical -----------------------------------------------
+void volume_convertCartesianToSpherical(const MultidimArray<double> &in,
+		MultidimArray<double> &out, double Rmin, double Rmax, double deltaR,
+		double deltaRot, double deltaTilt) {
+	int NRotSteps = floor(2*PI / deltaRot);
+	int NTiltSteps = floor(PI / deltaRot);
+	int NRSteps = floor((Rmax - Rmin) / deltaR);
+	out.initZeros(NRSteps, NRotSteps, NTiltSteps);
+	STARTINGZ(out) = STARTINGY(out) = STARTINGX(out) = 0;
+
+	Matrix1D<double> p(3);
+	for (int i = 0; i < NRotSteps; ++i) {
+		double srot, crot;
+		double rot = i * deltaRot;
+		sincos(rot, &srot, &crot);
+		for (int j = 0; j < NRotSteps; ++j) {
+			double stilt, ctilt;
+			double tilt = j * deltaTilt;
+			sincos(tilt, &stilt, &ctilt);
+			double sc=stilt*crot;
+			double ss=stilt*srot;
+			for (int k = 0; k<NRSteps; ++k) {
+				double R = Rmin + k * deltaR;
+				ZZ(p)=R*ctilt;
+				YY(p)=R*ss;
+				XX(p)=R*sc;
+				A3D_ELEM(out,k,i,j) = in.interpolatedElement3D(XX(p),YY(p),ZZ(p));
+			}
+		}
+	}
+}

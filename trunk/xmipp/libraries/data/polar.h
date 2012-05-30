@@ -850,5 +850,13 @@ void volume_convertCartesianToCylindrical(const MultidimArray<double> &in, Multi
                                    double angMin, double angMax, double deltaAng,
                                    Matrix1D<double> &axis);
 
+/** Produce a spherical volume from a cartesian voume.
+ * You can give the minimum and maximum radii for the interpolation.
+ * It is assumed that the input image has the Xmipp origin.
+ * Delta Ang must be in radians.
+ */
+void volume_convertCartesianToSpherical(const MultidimArray<double> &in,
+		MultidimArray<double> &out, double Rmin, double Rmax, double deltaR=1.,
+		double deltaRot=2.*PI/360., double deltaTilt=PI/180.);
 //@}
 #endif
