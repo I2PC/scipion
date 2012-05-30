@@ -71,13 +71,15 @@ bool isImage(const FileName &name)
 
 bool checkImageFileSize(const FileName &name, const ImageInfo &imgInfo, bool error)
 {
-    String ext = name.getExtension();
+    FileName ext = name.getExtension();
     FileName dataFname;
 
-    if ( ext == "hed")
+    if ( ext.contains("hed"))
         dataFname = name.removeLastExtension().addExtension("img");
-    else if (ext == "inf")
+    else if (ext.contains("inf"))
         dataFname = name.removeLastExtension();
+    else if (ext.contains("tif") || ext.contains("jpg"))
+        return true;
     else
         dataFname = name;
 
