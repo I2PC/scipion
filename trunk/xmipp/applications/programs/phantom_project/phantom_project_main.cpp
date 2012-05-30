@@ -25,9 +25,4 @@
 
 #include <reconstruction/project.h>
 
-int main(int argc, char *argv[])
-{
-    ProgProject prm;
-    prm.read(argc, argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgProject);
