@@ -1262,6 +1262,9 @@ double fastBestRotation(const MultidimArray<double>& IrefCyl,
 			bestAngle = i;
 		}
 	}
+	Image<double> save;
+	save()=aux2.corr;
+	save.write("PPPcorr.vol");
 	bestAngle *= deltaAng * 180.0 / PI;
 	return -bestAngle;
 }
@@ -1292,6 +1295,19 @@ double fastBestRotationAroundY(const MultidimArray<double>& IrefCyl,
 	return -fastBestRotation(IrefCyl,aux2.Icyl,aux,aux2,deltaAng);
 }
 
+double fastBestRotationAroundX(const MultidimArray<double>& IrefCyl,
+		const MultidimArray<double>& I, CorrelationAux &aux,
+		VolumeAlignmentAux &aux2) {
+	double deltaAng = atan(2.0 / XSIZE(I));
+	Matrix1D<double> v(3);
+	XX(v) = 1;
+	YY(v) = 0;
+	ZZ(v) = 0;
+	volume_convertCartesianToCylindrical(I, aux2.Icyl, 3, XSIZE(I) / 2, 1, 0,
+			2 * PI, deltaAng, v);
+	return fastBestRotation(IrefCyl,aux2.Icyl,aux,aux2,deltaAng);
+}
+
 void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 		const MultidimArray<double>& IrefCylY, MultidimArray<double>& I,
 		Matrix2D<double> &R, CorrelationAux &aux, VolumeAlignmentAux &aux2)
@@ -1300,6 +1316,7 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 	double bestRot = fastBestRotationAroundZ(IrefCylZ, I, aux, aux2);
 	rotation3DMatrix(bestRot, 'Z', R);
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
+	std::cout << "bestRot=" << bestRot << std::endl;
 
 	// Rotate in Y
 	VolumeAlignmentAux aux3;
@@ -1308,6 +1325,7 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 	rotation3DMatrix(bestTilt, 'Y', Raux);
 	R=Raux*R;
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
+	std::cout << "bestTilt=" << bestTilt << std::endl;
 
 	// Rotate in Z
 	VolumeAlignmentAux aux4;
@@ -1316,6 +1334,7 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 	R=Raux*R;
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
 	I=aux2.Irotated;
+	std::cout << "bestPsi=" << bestPsi << std::endl;
 }
 
 double bestRotationAroundZ(const MultidimArray<double>& Iref,

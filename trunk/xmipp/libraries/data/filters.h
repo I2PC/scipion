@@ -532,6 +532,21 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 		const MultidimArray<double>& IrefCylY, MultidimArray<double>& I,
 		Matrix2D<double> &R, CorrelationAux &aux, VolumeAlignmentAux &aux2);
 
+/** Fast best rotation around Z */
+double fastBestRotationAroundZ(const MultidimArray<double>& IrefCylZ,
+		const MultidimArray<double>& I, CorrelationAux &aux,
+		VolumeAlignmentAux &aux2);
+
+/** Fast best rotation around Y */
+double fastBestRotationAroundY(const MultidimArray<double>& IrefCylY,
+		const MultidimArray<double>& I, CorrelationAux &aux,
+		VolumeAlignmentAux &aux2);
+
+/** Fast best rotation around X */
+double fastBestRotationAroundX(const MultidimArray<double>& IrefCylX,
+		const MultidimArray<double>& I, CorrelationAux &aux,
+		VolumeAlignmentAux &aux2);
+
 /** Align two images considering also the mirrors
  * @ingroup Filters
  *
