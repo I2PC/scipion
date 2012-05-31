@@ -32,10 +32,15 @@
 ProgClassifyCL3D *prm = NULL;
 FILE * _logCL3D = NULL;
 
+//#define DEBUG_WITH_LOG
 #ifdef DEBUG_WITH_LOG
 #define CREATE_LOG() _logCL3D = fopen(formatString("nodo%02d.log", node->rank).c_str(), "w+")
-#define LOG(msg) do{fprintf(_logCL3D, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logCL3D); }while(0)
+#define LOG(msg) do{fprintf(_logCL3D, "%s\t%s\n", getCurrentTimeString(), msg.c_str()); fflush(_logCL3D); }while(0)
 #define CLOSE_LOG() fclose(_logCL3D)
+#else
+#define CREATE_LOG() ;
+#define LOG(msg) ;
+#define CLOSE_LOG() ;
 #endif
 
 /* CL3D Assigned basics ------------------------------------------------ */
@@ -221,9 +226,11 @@ const String eulerSeqs[12]={"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ
 
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
-    Image<double> save2;
+#ifdef DEBUG
+	Image<double> save2;
     save2()=I;
     save2.write("PPP0.xmp");
+#endif
     Matrix2D<double> ARS, ASR, R(4, 4);
     MultidimArray<double> IauxSR, IauxRS, bestI;
 
@@ -684,7 +691,6 @@ void CL3D::initialize(MetaData &_SF,
                 if (q != -1)
                     P[q]->updateProjection(Ibest, bestAssignment);
             }
-            std::cout << prm->node->rank << " idx=" << idx << " corr=" << bestAssignment.corr << std::endl;
             SF->setValue(MDL_REF, q + 1, objId);
             if (idx % 100 == 0 && prm->node->rank == 0)
                 progress_bar(idx);
@@ -900,6 +906,7 @@ void CL3D::run(const FileName &fnOut, int level)
             std::cerr << "Iteration " << iter << " ...\n";
             init_progress_bar(Nimgs);
         }
+        LOG(formatString("Iteration %d",iter));
 
         int K = XMIPP_MIN(prm->Nneighbours+1,Q);
         if (K == 0)
@@ -925,11 +932,21 @@ void CL3D::run(const FileName &fnOut, int level)
 
                 assignment.objId = objId;
                 lookNode(I(), oldAssignment[idx], node, assignment);
+                LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[idx], node));
                 SF->setValue(MDL_REF, node + 1, objId);
                 corrSum += assignment.corr;
                 if (prm->node->rank == 0 && idx % progressStep == 0)
                     progress_bar(idx);
             }
+        }
+        FileName fnAux;
+        for (int q=0; q<Q; q++)
+        {
+        	for (int n=0; n<P[q]->currentListImg.size(); n++)
+        	{
+        		SF->getValue(MDL_IMAGE,fnAux,P[q]->currentListImg[n].objId);
+        		LOG(formatString("In node %d (%d): %s",q,n,fnAux.c_str()));
+        	}
         }
 
         // Gather all pieces computed by nodes
@@ -1481,6 +1498,7 @@ void ProgClassifyCL3D::produceSideInfo()
 
 void ProgClassifyCL3D::run()
 {
+    CREATE_LOG();
     show();
     produceSideInfo();
 
@@ -1536,6 +1554,7 @@ void ProgClassifyCL3D::run()
         SFaux.sort(SFaux2, MDL_IMAGE);
         SFaux.write(fnOut + "_images.xmd");
     }
+    CLOSE_LOG();
 }
 
 /* Main -------------------------------------------------------------------- */
