@@ -113,9 +113,27 @@ def createLink2(log, filename, dirSrc, dirDest):
 
 def uniqueFilename(file_name):
     ''' Create a unique filename (not file handler)
-       this approach is unsecure but good enought for most purposes'''
+       this approach is insecure but good enough for most purposes'''
     counter = 1
     file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    while os.path.isfile(file_name):
+        file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
+        counter += 1
+    return file_name 
+
+def random_alphanumeric(limit):
+    import random
+    #ascii alphabet of all alphanumerals
+    r = (range(48,58) + range(65,91) + range(97,123))
+    random.shuffle(r)
+    return reduce(lambda i,s: i + chr(s),r[:limit],"")
+
+def uniqueRandomFilename(file_name,randomLength=5):
+    ''' Create a unique filename (not file handler)
+       this approach is insecure but good enough for most purposes'''
+    counter = 1
+    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    file_name = file_name_parts[0] + '_' + random_alphanumeric(randomLength) + file_name_parts[1]
     while os.path.isfile(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
