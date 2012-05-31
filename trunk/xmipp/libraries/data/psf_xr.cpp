@@ -249,7 +249,7 @@ void XRayPSF::init()
     mode = GENERATE_PSF;
     type = IDEAL_FRESNEL_LENS;
 
-    ftGenOTF.setNormalizationSign(FFTW_BACKWARD);
+    //    ftGenOTF.setNormalizationSign(FFTW_BACKWARD);
 }
 /* Default values ---------------------------------------------------------- */
 void XRayPSF::clear()
@@ -259,7 +259,7 @@ void XRayPSF::clear()
 }
 
 /* Produce Side Information ------------------------------------------------ */
-void XRayPSF::calculateParams(double _dxo, double _dzo)
+void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
 {
 
     dxo = (_dxo > 0)? _dxo : dxoPSF;
@@ -289,6 +289,8 @@ void XRayPSF::calculateParams(double _dxo, double _dzo)
         dMij(T, 0, 0) = scaleFactor;
         dMij(T, 1, 1) = scaleFactor;
 
+        if (threshold != 0.)
+            reducePSF2Slabs(threshold);
     }
     else // Mask is used when creating PSF on demand
     {
@@ -296,20 +298,61 @@ void XRayPSF::calculateParams(double _dxo, double _dzo)
     }
 }
 
+void XRayPSF::reducePSF2Slabs(double threshold)
+{
+    // find max position
+    ArrayCoord maxPos;
+    MultidimArray<float> *psfComplete;
+    PSFGen.convert2Datatype(DT_Float);
+    PSFGen().getMultidimArrayPointer(psfComplete);
+
+    //MULTIDIM_ARRAY_GENERIC(PSFGen).maxIndex(maxPos);
+    psfComplete->maxIndex(maxPos);
+    double maxValue = A3D_ELEM(*psfComplete,maxPos.z,maxPos.y,maxPos.x);
+    threshold *= maxValue;
+    slabIndex.clear();
+
+    double maxTemp = maxValue;
+    for (int k = 0; k > STARTINGZ(*psfComplete); --k)
+    {
+        double tempV = A3D_ELEM(*psfComplete,k,maxPos.y,maxPos.x);
+        if ( maxTemp - tempV >  threshold)
+        {
+            slabIndex.insert(slabIndex.begin(), k);
+            maxTemp = tempV;
+        }
+    }
+    slabIndex.insert(slabIndex.begin(), STARTINGZ(*psfComplete));
+
+    maxTemp = maxValue;
+    for (int k = 0; k < FINISHINGZ(*psfComplete); ++k)
+    {
+        double tempV = A3D_ELEM(*psfComplete,k,maxPos.y,maxPos.x);
+        if ( maxTemp - tempV >  threshold)
+        {
+            slabIndex.push_back(k);
+            maxTemp = tempV;
+        }
+    }
+    slabIndex.push_back(FINISHINGZ(*psfComplete));
+
+} //reducePSF2Slabs
+
 /* Apply the OTF to an image ----------------------------------------------- */
-void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
+void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset) const
 {
     //    double Z;
     //    MultidimArray< std::complex<double> > OTF;
 
-    Z = Zo + DeltaZo + sliceOffset;
+    double Z = Zo + DeltaZo + sliceOffset;
 
-    generateOTF();
+    MultidimArray<std::complex<double> > OTF;
+    generateOTF(OTF, Z);
 
     MultidimArray<std::complex<double> > ImFT;
     FourierTransformer FTransAppOTF(FFTW_BACKWARD);
 
-    //    #define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
@@ -367,17 +410,17 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
 #undef DEBUG
 }
 
-void XRayPSF::generateOTF()
+void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos) const
 {
 
     MultidimArray<double> PSFi;
-
+    FourierTransformer ftGenOTF(FFTW_BACKWARD);
     switch (mode)
     {
     case GENERATE_PSF:
         {
             if (type == IDEAL_FRESNEL_LENS)
-                generatePSFIdealLens(PSFi);
+                generatePSFIdealLens(PSFi, Zpos);
             break;
         }
     case PSF_FROM_FILE:
@@ -385,7 +428,7 @@ void XRayPSF::generateOTF()
             PSFi.resizeNoCopy(Niy, Nix);
             PSFi.setXmippOrigin();
 
-            double zIndexPSF = (Zo - Z)/dzoPSF;
+            double zIndexPSF = (Zo - Zpos)/dzoPSF;
 
             if (zIndexPSF < STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)) ||
                 zIndexPSF > FINISHINGZ(MULTIDIM_ARRAY_BASE(PSFGen)))
@@ -404,7 +447,7 @@ void XRayPSF::generateOTF()
         }
     }
 
-    ftGenOTF.FourierTransform(PSFi, OTF, false);
+    ftGenOTF.FourierTransform(PSFi, OTF);
 
     //#define DEBUG
 #ifdef DEBUG
@@ -457,13 +500,13 @@ void XRayPSF::generatePSF()
          * the plane Z by subtracting k*dzoPSF which keeps positive in XMIPP system.
          */
 
-        Z = Zo + DeltaZo - k*dzoPSF;
+        double Z = Zo + DeltaZo - k*dzoPSF;
 
         switch (type)
         {
         case IDEAL_FRESNEL_LENS:
             {
-                generatePSFIdealLens(PSFi);
+                generatePSFIdealLens(PSFi, Z);
                 break;
             }
         case ANALYTIC_ZP:
@@ -486,9 +529,9 @@ void XRayPSF::generatePSF()
 }
 
 /* Generate the PSF for a ideal lens --------------------------------------- */
-void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
+void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi, double Zpos) const
 {
-    double focalEquiv = 1/(1/Z - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
+    double focalEquiv = 1/(1/Zpos - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
 
     MultidimArray< std::complex<double> > OTFTemp(Niy, Nix), PSFiTemp;
     //    Mask_Params mask_prm; TODO do we have to include masks using this class?
@@ -707,7 +750,7 @@ void XRayPSF::adjustParam()
     }
     else
     {
-        OTF.clear(); // Only for each projection
+        //        OTF.clear(); // Only for each projection
     }
 
     if (verbose > 1)

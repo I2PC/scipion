@@ -116,12 +116,18 @@ public:
     /// Define the selected PSF generation algorithm.
     PsfType type;
 
-    /// Current OTF
-    MultidimArray< std::complex<double> > OTF;
-    /// 3D PSF
+//    /// Current OTF
+//    MultidimArray< std::complex<double> > OTF;
+    /// 3D PSF read from file
     ImageGeneric  PSFGen;
-    /// Axial intensity
-    MultidimArray<float> axialInt;
+    /// Working PSF with nonlinear zdim whose slices are the mean PSF for slabs
+    MultidimArray<double> PSF;
+//    /// Axial intensity
+//    MultidimArray<float> axialInt;
+    /// Threshold to separate The volume into slabs to use the same PSF
+    double slabThr;
+    /// Z positions in the original PSF Volume to determine de slabs
+    std::vector<int> slabIndex;
     // Transformation Matrix when reading PSF from file
     Matrix2D<double>  T;
 
@@ -135,7 +141,7 @@ public:
     /// Object plane on Focus (Reference)
     double Zo;
     /// Object plane
-    double Z;
+//    double Z;
     /// Image plane (CCD position)
     double Zi;
     /// Depth of focus. Only for information purposes
@@ -163,8 +169,8 @@ public:
     /// Minimum diameter size of the microscope pupile in the lens plane, measured in pixels
     double pupileSizeMin;
 
-    // Fourier Transformer to generate OTF, declared in class to avoid copy output
-    FourierTransformer ftGenOTF;
+//    // Fourier Transformer to generate OTF, declared in class to avoid copy output
+//    FourierTransformer ftGenOTF;
 
 public:
     /// Lambda of illumination
@@ -242,13 +248,16 @@ public:
     friend std::ostream & operator <<(std::ostream &out, const XRayPSF &psf);
 
     /// Produce Side information
-    void calculateParams(double _dxo, double _dzo = -1);
+    void calculateParams(double _dxo, double _dzo = -1, double threshold = 0.);
+
+    /// Calculate the width of the slabs to reduce computing time and the mean PSF for each
+    void reducePSF2Slabs(double threshold);
 
     /// Apply the OTF to the image, by means of the convolution
-    void applyOTF(MultidimArray<double> &Im, const double sliceOffset);
+    void applyOTF(MultidimArray<double> &Im, const double sliceOffset) const;
 
     /// Generate the Optical Transfer Function (OTF) for a slice according to Microscope and Im parameters.
-    void generateOTF();
+    void generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos) const;
 
     /// Generate the 3D Point Spread Function (PSF) according to Microscope parameters.
     void generatePSF();
@@ -259,7 +268,7 @@ public:
 
 protected:
     /// Generate the PSF for a single plane according to a ideal lens.
-    void generatePSFIdealLens(MultidimArray<double> &PSFi) const;
+    void generatePSFIdealLens(MultidimArray<double> &PSFi, double Zpos) const;
 };
 
 /// Generate the quadratic phase distribution of a ideal lens

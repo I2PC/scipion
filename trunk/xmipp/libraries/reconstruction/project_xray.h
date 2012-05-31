@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (joton@cnb.csic.es)
+ * Authors:     Joaquin Oton (joton@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -23,23 +23,27 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _PROJECTXR_H_
-#define _PROJECTXR_H_
+#ifndef _PROJECTXRAY_H_
+#define _PROJECTXRAY_H_
 
-#include <data/psf_xr.h>
-#include <data/xmipp_program.h>
 #include <data/xmipp_threads.h>
+#include <data/xmipp_program.h>
+#include <data/psf_xr.h>
 
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
    @ingroup ReconsLibrary */
 //@{
 
 /// Data struct to be passed to threads
-struct XrayThread
+struct XrayThreadArgument
 {
-    XRayPSF                *psf;
-    MultidimArray<double> *vol;
-    Image<double>         *imOut;
+    XRayPSF               *psf;
+    MultidimArray<double> *muVol;
+    MultidimArray<double> *IgeoVol;
+    MultidimArray<double> *IgeoZb;
+    Image<double>         *projOut;
+    std::vector<int> 	  *phantomSlabIdx;
+    std::vector<int> 	  *psfSlicesIdx;
     ParallelTaskDistributor * td;
 };
 
@@ -55,7 +59,6 @@ public:
     ImageGeneric          iniVol;
     MultidimArray<double> rotVol;
 
-public:
     /** Produce Project Side information.
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
@@ -78,6 +81,8 @@ public:
     ParametersProjectionTomography projParam;
     // Microscope optics parameters
     XRayPSF psf;
+    /// threshold for psfSlabs
+    double psfThr;
     // Input volume sampling
     double dxo;
     /// Number of threads;
@@ -86,7 +91,6 @@ public:
     XrayProjPhantom phantom;
     Projection   proj;
     MetaData     projMD;
-    XrayThread * mainDataThread;
     ParallelTaskDistributor * td;
 
 protected:
@@ -125,6 +129,52 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projectio
 
 /// Thread Job to generate an X-ray microscope projection
 void threadXrayProject(ThreadArgument &thArg);
+
+struct CIGTArgument
+{
+    double samplingZ;
+    MultidimArray<double> *muVol;
+    MultidimArray<double> *IgeoVol;
+    MultidimArray<double> *IgeoZb;
+    ParallelTaskDistributor * td;
+};
+
+/// Calculate the volume of the information of Igeometric at each plane of the phantom
+void calculateIgeo(MultidimArray<double> &muVol, double sampling, MultidimArray<double> &IgeoVol,
+                   MultidimArray<double> &IgeoZb,int nThreads = 1 , ThreadManager * ThrMgr = NULL);
+
+void calculateIgeoThread(ThreadArgument &thArg);
+
+
+/// Project as in an X-ray microscope using a grids and blobs
+void projectXrayGridVolume(
+    GridVolume &vol,                  // Volume
+    const Basis &basis,                   // Basis (3DPSF info is contained as a blobprint)
+    MultidimArray<double> &IgeoVol,    /// Vol with the Igeometrical distribution along specimen volume
+    Projection       &proj,               // Projection
+    Projection       &norm_proj,          // Projection of a unitary volume
+    int              FORW,                // 1 if we are projecting a volume
+    //   norm_proj is calculated
+    // 0 if we are backprojecting
+    //   norm_proj must be valid
+    int               nThreads = 1);
+
+void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basis *basis,
+                           MultidimArray<double> *IgeoVol,
+                           Projection *proj, Projection *norm_proj, int FORW,
+                           int threadId = -1, int nThreads = 1);
+
+struct PXSGTArgument
+{
+    double sampling;
+    MultidimArray<double> *muVol;
+    MultidimArray<double> *IgeoVol;
+    MultidimArray<double> *IgeoZb;
+    ParallelTaskDistributor * td;
+};
+
+void projectXraySimpleGridThread(ThreadArgument &thArg);
+
 //@}
 
 #endif /* _PROJECTXR_H_ */
