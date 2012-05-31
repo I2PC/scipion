@@ -1323,9 +1323,8 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 		bestAngle1 = fastBestRotationAroundX(IrefCylX, I, aux, aux2);
 	rotation3DMatrix(bestAngle1, eulerAngles[0], R);
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
-	std::cout << "bestAngle1=" << bestAngle1 << std::endl;
 
-	// Rotate in Y
+	// Rotate in Angle2
 	VolumeAlignmentAux aux3;
 	double bestAngle2;
 	if (eulerAngles[1]=='Z')
@@ -1338,9 +1337,8 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 	rotation3DMatrix(bestAngle2, eulerAngles[1], Raux);
 	R=Raux*R;
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
-	std::cout << "bestAngle2=" << bestAngle2 << std::endl;
 
-	// Rotate in Z
+	// Rotate in Angle3
 	VolumeAlignmentAux aux4;
 	double bestAngle3;
 	if (eulerAngles[2]=='Z')
@@ -1353,7 +1351,6 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 	R=Raux*R;
 	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
 	I=aux2.Irotated;
-	std::cout << "bestAngle3=" << bestAngle3 << std::endl;
 }
 
 double bestRotationAroundZ(const MultidimArray<double>& Iref,
