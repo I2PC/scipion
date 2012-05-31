@@ -2382,13 +2382,13 @@ public:
         y -= STARTINGY(*this);
         x -= STARTINGX(*this);
 
-        int l1 = ceil(x - SplineDegree_1);
+        int l1 = (int)ceil(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
 
-        int m1 = ceil(y - SplineDegree_1);
+        int m1 = (int)ceil(y - SplineDegree_1);
         int m2 = m1 + SplineDegree;
 
-        int n1 = ceil(z - SplineDegree_1);
+        int n1 = (int)ceil(z - SplineDegree_1);
         int n2 = n1 + SplineDegree;
 
         double zyxsum = 0.0;
