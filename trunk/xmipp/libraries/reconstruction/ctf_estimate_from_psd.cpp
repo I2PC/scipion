@@ -726,9 +726,9 @@ void ProgCTFEstimateFromPSD::produce_side_info()
     enhanced_ctftomodel() = ctftomodel();
     prm.applyFilter(enhanced_ctftomodel());
     if (fn_psd.find('@')==std::string::npos)
-    	enhanced_ctftomodel.write(fn_psd.withoutExtension() + "_enhanced_psd.xmp");
+        enhanced_ctftomodel.write(fn_psd.withoutExtension() + "_enhanced_psd.xmp");
     else
-    	enhanced_ctftomodel.write(fn_psd.withoutExtension() + "_enhanced_psd.stk");
+        enhanced_ctftomodel.write(fn_psd.withoutExtension() + "_enhanced_psd.stk");
     CenterFFT(enhanced_ctftomodel(), false);
     enhanced_ctftomodel_fullsize() = enhanced_ctftomodel();
 
@@ -872,15 +872,15 @@ void save_intermediate_results(const FileName &fn_root, bool generate_profiles =
     global_prm->generate_model_halfplane(global_prm->ctfmodelSize,
                                          global_prm->ctfmodelSize, save_ctf());
     if (fn_root.find("@")==std::string::npos)
-    	save_ctf.write(fn_root + "_ctfmodel_halfplane.xmp");
+        save_ctf.write(fn_root + "_ctfmodel_halfplane.xmp");
     else
-    	save_ctf.write(fn_root + "_ctfmodel_halfplane.stk");
+        save_ctf.write(fn_root + "_ctfmodel_halfplane.stk");
     global_prm->generate_model_quadrant(global_prm->ctfmodelSize,
                                         global_prm->ctfmodelSize, save_ctf());
     if (fn_root.find("@")==std::string::npos)
-    	save_ctf.write(fn_root + "_ctfmodel_quadrant.xmp");
+        save_ctf.write(fn_root + "_ctfmodel_quadrant.xmp");
     else
-    	save_ctf.write(fn_root + "_ctfmodel_quadrant.stk");
+        save_ctf.write(fn_root + "_ctfmodel_quadrant.stk");
 
     if (!generate_profiles)
         return;
@@ -2498,10 +2498,10 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     deFocusAvgMean /= 4;
 
     //if ( (deFocusDiff2 > deFocusDiff1) && (deFocusDiff3 > deFocusDiff1)
-    //		&& (deFocusDiff4 > deFocusDiff1))
+    //  && (deFocusDiff4 > deFocusDiff1))
     if ( ( fabs(deFocusAvg2-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean))
-    		&& ( fabs(deFocusAvg3-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean))
-    		&& ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean)) )
+         && ( fabs(deFocusAvg3-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean))
+         && ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean)) )
     {
         defocusU=deFocusAvg1+deFocusDiff1;
         defocusV=deFocusAvg1-deFocusDiff1;
@@ -2509,7 +2509,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     }
     else
         if ( ( fabs(deFocusAvg2-deFocusAvgMean) > fabs(deFocusAvg3-deFocusAvgMean))
-        		&& ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg3-deFocusAvgMean)))
+             && ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg3-deFocusAvgMean)))
         {
             defocusU=deFocusAvg3+deFocusDiff3;
             defocusV=deFocusAvg3-deFocusDiff3;
@@ -2695,8 +2695,17 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         estimate_defoci_Zernike();
     else
         estimate_defoci();
+
+    std::cout << "estimate_defoci : DeltaU : " << global_ctfmodel.DeltafU << std::endl;
+    std::cout << "estimate_defoci : DeltaV : " << global_ctfmodel.DeltafV << std::endl;
+
     DEBUG_TEXTFILE(formatString("Step 7: DeltafU=%f",global_ctfmodel.DeltafU));
+    DEBUG_TEXTFILE(formatString("Step 7: DeltafV=%f",global_ctfmodel.DeltafV));
+    DEBUG_TEXTFILE(formatString("Step 7: azimutalAngle=%f",global_ctfmodel.azimuthal_angle));
     DEBUG_MODEL_TEXTFILE;
+
+    //This line is to test the results obtained
+    //exit(1);
 
     /************************************************************************
      STEP 8:  all parameters
@@ -2792,6 +2801,20 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     DEBUG_TEXTFILE(formatString("Step 11: DeltafU=%f fitness=%f",global_ctfmodel.DeltafU,fitness));
     DEBUG_MODEL_TEXTFILE;
 
+    std::cout << "DeltaU : " << global_ctfmodel.DeltafU << std::endl;
+    std::cout << "DeltaV : " << global_ctfmodel.DeltafV << std::endl;
+
+    //We adopt that always  DeltafU > DeltafV so if this is not the case we change the values and the angle
+    if ( global_ctfmodel.DeltafV > global_ctfmodel.DeltafU)
+    {
+    	double temp;
+    	temp = global_ctfmodel.DeltafU;
+    	global_ctfmodel.DeltafU = global_ctfmodel.DeltafV;
+    	global_ctfmodel.DeltafV = temp;
+    	global_ctfmodel.azimuthal_angle -= 90;
+    	COPY_ctfmodel_TO_CURRENT_GUESS;
+    }
+
     /************************************************************************
      STEP 12:  Produce output
      /************************************************************************/
@@ -2822,11 +2845,12 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         int atPosition=fn_rootCTFPARAM.find('@');
         if (atPosition!=std::string::npos)
         {
-        	fn_rootMODEL=formatString("%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
-        			fn_rootCTFPARAM.substr(atPosition+1).c_str());
-        	fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
-        			fn_rootCTFPARAM.substr(atPosition+1).c_str());
+            fn_rootMODEL=formatString("%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
+                                      fn_rootCTFPARAM.substr(atPosition+1).c_str());
+            fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
+                                         fn_rootCTFPARAM.substr(atPosition+1).c_str());
         }
+
         save_intermediate_results(fn_rootMODEL, false);
         global_ctfmodel.Tm /= prm.downsampleFactor;
         global_ctfmodel.write(fn_rootCTFPARAM + ".ctfparam");
