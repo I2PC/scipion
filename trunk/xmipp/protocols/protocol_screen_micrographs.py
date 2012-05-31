@@ -168,10 +168,10 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
                        AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
     # Convert image to MRC
     if not micrograph.endswith('.mrc'):
-        import uuid
+        from protlib_filesystem import uniqueRandomFilename
         deleteTempMicrograph = True
         fnMicrograph=os.path.split(micrograph)[1]
-        mrcMicrograph =  join(tmpDir,os.path.splitext(fnMicrograph)[0]+"_"+str(uuid.uuid4())+'.mrc')
+        mrcMicrograph =  join(tmpDir,uniqueRandomFilename(os.path.splitext(fnMicrograph)[0]+'.mrc'))
         runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
     else:
         deleteTempMicrograph = False
