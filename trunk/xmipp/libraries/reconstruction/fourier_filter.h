@@ -37,7 +37,8 @@
 
    Example of use for highpass filtering
    @code
-      ImageXmipp I("image.xmp");
+      Image<double> I;
+      I.read("image.xmp");
       FourierFilter Filter;
       Filter.FilterBand=HIGHPASS;
       Filter.w1=w_cutoff;
@@ -49,6 +50,22 @@
       I.write("filtered_image.xmp");
    @endcode
    
+   Example of use for wedge filtering
+   @code
+        Image<double> V;
+        V.read("1rux64.vol");
+        V().setXmippOrigin();
+        FourierFilter Filter;
+        Filter.FilterBand=WEDGE;
+        Filter.FilterShape=WEDGE;
+        Filter.t1=-60;
+        Filter.t2= 60;
+        Filter.rot=Filter.tilt=Filter.psi=0;
+        Filter.do_generate_3dmask=true;
+        Filter.generateMask(V());
+        Filter.applyMaskSpace(V());
+   @endcode
+
    For volumes you the mask is computed on the fly and
    in this way memory is saved (unless do_generate_3dmask == true).
 */
