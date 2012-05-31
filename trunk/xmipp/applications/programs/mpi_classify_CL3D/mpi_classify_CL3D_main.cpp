@@ -216,7 +216,7 @@ void CL3DClass::transferUpdate()
 }
 #undef DEBUG
 
-#define DEBUG
+//#define DEBUG
 const String eulerSeqs[12]={"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"};
 
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
@@ -244,7 +244,6 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 			MAT_ELEM(ASR,1,3) += shiftY;
 			MAT_ELEM(ASR,2,3) += shiftZ;
 			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
-			std::cout << "bestShift SR=" << shiftX << "," << shiftY << "," << shiftZ << std::endl;
 
 			fastBestRotation(PcylZ,PcylY,PcylX,IauxSR,eulerSeqs[neuler],R,corrAux2);
 			ASR=R*ASR;
@@ -257,7 +256,6 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 			MAT_ELEM(ARS,0,3) += shiftX;
 			MAT_ELEM(ARS,1,3) += shiftY;
 			MAT_ELEM(ARS,2,3) += shiftZ;
-			std::cout << "bestShift RS=" << shiftX << "," << shiftY << "," << shiftZ << std::endl;
 			applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 		}
 
@@ -312,18 +310,15 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 		else
 			candidateSR.corr = corrSR;
 
-		std::cout << eulerSeqs[neuler] << " RS: " << candidateRS.corr << " SR: " << candidateSR.corr << std::endl;
 		if (candidateRS.corr > result.corr)
 		{
 			bestI = IauxRS;
 			result.copyAlignment(candidateRS);
-			std::cout << "Best corr RS=" << result.corr << std::endl;
 		}
 		if (candidateSR.corr > result.corr)
 		{
 			bestI = IauxSR;
 			result.copyAlignment(candidateSR);
-			std::cout << "Best corr SR=" << result.corr << std::endl;
 		}
     }
 
@@ -689,6 +684,7 @@ void CL3D::initialize(MetaData &_SF,
                 if (q != -1)
                     P[q]->updateProjection(Ibest, bestAssignment);
             }
+            std::cout << prm->node->rank << " idx=" << idx << " corr=" << bestAssignment.corr << std::endl;
             SF->setValue(MDL_REF, q + 1, objId);
             if (idx % 100 == 0 && prm->node->rank == 0)
                 progress_bar(idx);
