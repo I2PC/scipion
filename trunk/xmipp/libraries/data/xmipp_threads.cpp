@@ -124,7 +124,7 @@ void ThreadManager::setData(void * data, int idxThread)
         arguments[idxThread].data = data;
 }
 
-void ThreadManager::createThreads(void * data)
+void ThreadManager::createThreads()
 {
     //Create threads
     int result;
@@ -133,7 +133,6 @@ void ThreadManager::createThreads(void * data)
     {
         arguments[i].thread_id = i;
         arguments[i].manager = this;
-        arguments[i].data = data;
         arguments[i].workClass = workClass;
 
         result = pthread_create(ids + i, NULL, _threadMain, (void*) (arguments + i));

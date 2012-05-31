@@ -181,12 +181,12 @@ private:
     bool started;
     void * workClass;
 
-public:
     /** Function to create threads structure and each thread
-     * will be waiting to start working
+     * will be waiting to start working. Will be called on the first use.
      */
-    void createThreads(void * data = NULL);
+    void createThreads();
 
+public:
     /** Set data for working threads.
      * If nThread = -1 then data is set for all threads.
      */
