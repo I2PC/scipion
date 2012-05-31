@@ -79,15 +79,16 @@ CL3DClass::CL3DClass()
 {
     P.initZeros(prm->Zdim, prm->Ydim, prm->Xdim);
     P.setXmippOrigin();
-    Pupdate = P;
+    transformer.setReal(P);
+    Pupdate.initZeros(transformer.fFourier);
+    PupdateMask.initZeros(Pupdate);
 }
 
 CL3DClass::CL3DClass(const CL3DClass &other)
 {
     CL3DAssignment assignment;
     assignment.corr = 1;
-    Pupdate = other.P;
-    nextListImg.push_back(assignment);
+    updateProjection((MultidimArray<double> &)other.P,assignment);
     transferUpdate();
 
     currentListImg = other.currentListImg;
@@ -96,12 +97,28 @@ CL3DClass::CL3DClass(const CL3DClass &other)
     neighboursIdx = other.neighboursIdx;
 }
 
-void CL3DClass::updateProjection(const MultidimArray<double> &I,
-                                 const CL3DAssignment &assigned)
+void CL3DClass::updateProjection(MultidimArray<double> &I,
+                                 const CL3DAssignment &assigned,
+                                 bool force)
 {
-    if (assigned.corr > 0 && assigned.objId != BAD_OBJID)
+    if (assigned.corr > 0 && assigned.objId != BAD_OBJID || force)
     {
-        Pupdate += I;
+    	transformer.FourierTransform(I,Ifourier,false);
+
+    	FFT_magnitude(Ifourier,IfourierMag);
+    	IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
+    	IfourierMag.sort(IfourierMagSorted);
+    	const double percentage=0.975;
+        double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(percentage*XSIZE(IfourierMag)));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Ifourier)
+        if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>0) //minMagnitude)
+        {
+            double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
+            double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,n);
+            *(ptrPupdate)+=*(ptrIfourier);
+            *(ptrPupdate+1)+=*(ptrIfourier+1);
+            DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=1;
+        }
         nextListImg.push_back(assigned);
     }
 }
@@ -112,14 +129,26 @@ void CL3DClass::transferUpdate()
     if (nextListImg.size() > 0)
     {
         // Take from Pupdate
-        double iNq = 1.0 / nextListImg.size();
-        Pupdate *= iNq;
-        Pupdate.statisticsAdjust(0, 1);
-        P = Pupdate;
+    	double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
+		{
+    		int maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
+    		if (maskVal>0)
+    		{
+    			double iMask=1./maskVal;
+    			*(ptrPupdate)*=iMask;
+    			*(ptrPupdate+1)*=iMask;
+    		}
+    		ptrPupdate+=2;
+		}
+    	transformer.inverseFourierTransform(Pupdate,P);
+
+        P.statisticsAdjust(0, 1);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
         if (!DIRECT_MULTIDIM_ELEM(prm->mask,n))
         	DIRECT_MULTIDIM_ELEM(P,n) = 0;
-        Pupdate.initZeros(P);
+        Pupdate.initZeros();
+        PupdateMask.initZeros();
 
         /* COSS: STILL TO PUT IN 3D
         // Make sure the image is centered
@@ -135,6 +164,8 @@ void CL3DClass::transferUpdate()
         volume_convertCartesianToCylindrical(P,PcylZ,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
         XX(v)=0; YY(v)=1; ZZ(v)=0;
         volume_convertCartesianToCylindrical(P,PcylY,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
+        XX(v)=1; YY(v)=0; ZZ(v)=0;
+        volume_convertCartesianToCylindrical(P,PcylX,3,XSIZE(P)/2,1,0,2*PI,deltaAng,v);
 
         // Take the list of images
         currentListImg = nextListImg;
@@ -185,102 +216,121 @@ void CL3DClass::transferUpdate()
 }
 #undef DEBUG
 
-//#define DEBUG
+#define DEBUG
+const String eulerSeqs[12]={"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"};
+
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
+    Image<double> save2;
+    save2()=I;
+    save2.write("PPP0.xmp");
     Matrix2D<double> ARS, ASR, R(4, 4);
-    ARS.initIdentity(4);
-    ASR = ARS;
-    MultidimArray<double> IauxSR = I, IauxRS = I;
+    MultidimArray<double> IauxSR, IauxRS, bestI;
 
-	// Align the image with the node
-	for (int i = 0; i < 3; i++) {
-		double shiftX, shiftY, shiftZ, bestRot;
-
-        // Shift then rotate
-        bestShift(P, IauxSR, shiftX, shiftY, shiftZ, corrAux);
-        MAT_ELEM(ASR,0,3) += shiftX;
-        MAT_ELEM(ASR,1,3) += shiftY;
-        MAT_ELEM(ASR,2,3) += shiftZ;
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
-
-        fastBestRotation(PcylZ,PcylY,IauxSR,R,corrAux2,volAlignmentAux);
-        ASR=R*ASR;
-
-        // Rotate then shift
-        fastBestRotation(PcylZ,PcylY,IauxRS,R,corrAux2,volAlignmentAux);
-        ARS=R*ARS;
-
-        bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
-        MAT_ELEM(ARS,0,3) += shiftX;
-        MAT_ELEM(ARS,1,3) += shiftY;
-        MAT_ELEM(ARS,2,3) += shiftZ;
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
-    }
-
-    // Compute the correntropy
-    double corrRS, corrSR;
-    const MultidimArray<int> &imask = prm->mask;
-    if (prm->useCorrelation)
+    result.corr=0;
+    for (int neuler=0; neuler<12; neuler++)
     {
-        corrRS = corrSR = 0;
-        long N = 0;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
-        {
-            if (DIRECT_MULTIDIM_ELEM(imask,n))
-            {
-                double Pval = DIRECT_MULTIDIM_ELEM(P, n);
-                corrRS += Pval * DIRECT_MULTIDIM_ELEM(IauxRS, n);
-                corrSR += Pval * DIRECT_MULTIDIM_ELEM(IauxSR, n);
-                ++N;
-            }
-        }
-        corrRS /= N;
-        corrSR /= N;
-    }
-    else
-    {
-        corrRS = fastCorrentropy(P, IauxRS, prm->sigma,
-                                 prm->gaussianInterpolator, imask);
-        corrSR = fastCorrentropy(P, IauxSR, prm->sigma,
-                                 prm->gaussianInterpolator, imask);
+		ARS.initIdentity(4);
+		ASR = ARS;
+		IauxSR = IauxRS = I;
+
+		// Align the image with the node
+		for (int i = 0; i < 3; i++) {
+			double shiftX, shiftY, shiftZ, bestRot;
+
+			// Shift then rotate
+			bestShift(P, IauxSR, shiftX, shiftY, shiftZ, corrAux);
+			MAT_ELEM(ASR,0,3) += shiftX;
+			MAT_ELEM(ASR,1,3) += shiftY;
+			MAT_ELEM(ASR,2,3) += shiftZ;
+			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+			std::cout << "bestShift SR=" << shiftX << "," << shiftY << "," << shiftZ << std::endl;
+
+			fastBestRotation(PcylZ,PcylY,PcylX,IauxSR,eulerSeqs[neuler],R,corrAux2);
+			ASR=R*ASR;
+
+			// Rotate then shift
+			fastBestRotation(PcylZ,PcylY,PcylX,IauxRS,eulerSeqs[neuler],R,corrAux2);
+			ARS=R*ARS;
+
+			bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
+			MAT_ELEM(ARS,0,3) += shiftX;
+			MAT_ELEM(ARS,1,3) += shiftY;
+			MAT_ELEM(ARS,2,3) += shiftZ;
+			std::cout << "bestShift RS=" << shiftX << "," << shiftY << "," << shiftZ << std::endl;
+			applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+		}
+
+		// Compute the correntropy
+		double corrRS, corrSR;
+		const MultidimArray<int> &imask = prm->mask;
+		if (prm->useCorrelation)
+		{
+			corrRS = corrSR = 0;
+			long N = 0;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
+			{
+				if (DIRECT_MULTIDIM_ELEM(imask,n))
+				{
+					double Pval = DIRECT_MULTIDIM_ELEM(P, n);
+					corrRS += Pval * DIRECT_MULTIDIM_ELEM(IauxRS, n);
+					corrSR += Pval * DIRECT_MULTIDIM_ELEM(IauxSR, n);
+					++N;
+				}
+			}
+			corrRS /= N;
+			corrSR /= N;
+		}
+		else
+		{
+			corrRS = fastCorrentropy(P, IauxRS, prm->sigma,
+									 prm->gaussianInterpolator, imask);
+			corrSR = fastCorrentropy(P, IauxSR, prm->sigma,
+									 prm->gaussianInterpolator, imask);
+		}
+
+		// Prepare result
+		CL3DAssignment candidateRS, candidateSR;
+		candidateRS.readAlignment(ARS);
+		candidateSR.readAlignment(ASR);
+		if (std::abs(candidateRS.shiftx)>prm->maxShiftX ||
+			std::abs(candidateRS.shifty)>prm->maxShiftY ||
+			std::abs(candidateRS.shiftz)>prm->maxShiftZ ||
+			std::abs(candidateRS.rot)>prm->maxRot ||
+			std::abs(candidateRS.tilt)>prm->maxTilt ||
+			std::abs(candidateRS.psi)>prm->maxPsi)
+			candidateRS.corr = 0;
+		else
+			candidateRS.corr = corrRS;
+		if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
+			std::abs(candidateSR.shifty)>prm->maxShiftY ||
+			std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
+			std::abs(candidateSR.rot)>prm->maxRot ||
+			std::abs(candidateSR.tilt)>prm->maxTilt ||
+			std::abs(candidateSR.psi)>prm->maxPsi)
+			candidateSR.corr = 0;
+		else
+			candidateSR.corr = corrSR;
+
+		std::cout << eulerSeqs[neuler] << " RS: " << candidateRS.corr << " SR: " << candidateSR.corr << std::endl;
+		if (candidateRS.corr > result.corr)
+		{
+			bestI = IauxRS;
+			result.copyAlignment(candidateRS);
+			std::cout << "Best corr RS=" << result.corr << std::endl;
+		}
+		if (candidateSR.corr > result.corr)
+		{
+			bestI = IauxSR;
+			result.copyAlignment(candidateSR);
+			std::cout << "Best corr SR=" << result.corr << std::endl;
+		}
     }
 
-    // Prepare result
-    CL3DAssignment candidateRS, candidateSR;
-    candidateRS.readAlignment(ARS);
-    candidateSR.readAlignment(ASR);
-    if (std::abs(candidateRS.shiftx)>prm->maxShiftX ||
-        std::abs(candidateRS.shifty)>prm->maxShiftY ||
-        std::abs(candidateRS.shiftz)>prm->maxShiftZ ||
-        std::abs(candidateRS.rot)>prm->maxRot ||
-        std::abs(candidateRS.tilt)>prm->maxTilt ||
-        std::abs(candidateRS.psi)>prm->maxPsi)
-        candidateRS.corr = 0;
+    if (result.corr>0)
+    	I=bestI;
     else
-        candidateRS.corr = corrRS;
-    if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
-        std::abs(candidateSR.shifty)>prm->maxShiftY ||
-        std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
-        std::abs(candidateSR.rot)>prm->maxRot ||
-        std::abs(candidateSR.tilt)>prm->maxTilt ||
-        std::abs(candidateSR.psi)>prm->maxPsi)
-        candidateSR.corr = 0;
-    else
-        candidateSR.corr = corrSR;
-
-    if (candidateRS.corr >= candidateSR.corr)
-    {
-        I = IauxRS;
-        result.copyAlignment(candidateRS);
-    }
-    else if (candidateSR.corr > candidateRS.corr)
-    {
-        I = IauxSR;
-        result.copyAlignment(candidateSR);
-    }
-    else
-        result.corr = 0;
+    	I.initZeros();
 
 #ifdef DEBUG
 
@@ -405,7 +455,7 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates,
         for (int q = 0; q < Q; q++)
         {
             MPI_Allreduce(MPI_IN_PLACE, MULTIDIM_ARRAY(P[q]->Pupdate),
-                          MULTIDIM_SIZE(P[q]->Pupdate), MPI_DOUBLE, MPI_SUM,
+                          2*MULTIDIM_SIZE(P[q]->Pupdate), MPI_DOUBLE, MPI_SUM,
                           MPI_COMM_WORLD);
 
             // Share nextClassCorr and nextNonClassCorr
@@ -488,7 +538,7 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
         else
             node = node2;
         MPI_Allreduce(MPI_IN_PLACE, MULTIDIM_ARRAY(node->Pupdate),
-                      MULTIDIM_SIZE(node->Pupdate), MPI_DOUBLE, MPI_SUM,
+                      2*MULTIDIM_SIZE(node->Pupdate), MPI_DOUBLE, MPI_SUM,
                       MPI_COMM_WORLD);
 
         // Share nextClassCorr and nextNonClassCorr
@@ -577,15 +627,13 @@ void CL3D::initialize(MetaData &_SF,
 
     // Start with _Ncodes0 codevectors
     CL3DAssignment assignment;
-    assignment.corr = 1;
     bool initialCodesGiven = _codes0.size() > 0;
     for (int q = 0; q < prm->Ncodes0; q++)
     {
         P.push_back(new CL3DClass());
         if (initialCodesGiven)
         {
-            P[q]->Pupdate = _codes0[q];
-            P[q]->nextListImg.push_back(assignment);
+        	P[q]->updateProjection(_codes0[q],assignment,true);
             P[q]->transferUpdate();
         }
     }
@@ -796,7 +844,8 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 			// Try this image
 			Iaux = I;
 			P[q]->fit(Iaux, assignment);
-			VEC_ELEM(corrList,q) = assignment.corr;
+
+		    VEC_ELEM(corrList,q) = assignment.corr;
 			if (!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood ||
 				 prm->classicalMultiref && assignment.corr > bestAssignment.corr ||
 				 prm->classifyAllImages) {
@@ -1341,10 +1390,12 @@ void ProgClassifyCL3D::show() const {
 		return;
 	std::cout << "Input images:            " << fnSel << std::endl
 			<< "Output images:           " << fnOut << std::endl
-			<< "Iterations:              " << Niter << std::endl
-			<< "CodesSel0:               " << fnCodes0 << std::endl
-			<< "Codes0:                  " << Ncodes0 << std::endl
-			<< "Codes:                   " << Ncodes << std::endl
+			<< "Iterations:              " << Niter << std::endl;
+	if (fnCodes0!="")
+		std::cout << "CodesSel0:               " << fnCodes0 << std::endl;
+	else
+		std::cout << "Codes0:                  " << Ncodes0 << std::endl;
+	std::cout << "Codes:                   " << Ncodes << std::endl
 			<< "Neighbours:              " << Nneighbours << std::endl
 			<< "Minimum node size:       " << PminSize << std::endl
 			<< "Use Correlation:         " << useCorrelation << std::endl

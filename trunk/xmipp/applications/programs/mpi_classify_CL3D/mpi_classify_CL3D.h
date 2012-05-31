@@ -72,14 +72,29 @@ public:
     // Projection
     MultidimArray<double> P;
     
+    // Fourier transformer
+    FourierTransformer transformer;
+
+    // Auxiliary Fourier image
+    MultidimArray< std::complex<double> > Ifourier;
+
+    // Auxiliary Fourier image magnitude
+    MultidimArray<double> IfourierMag,IfourierMagSorted;
+
     // Update for next iteration
-    MultidimArray<double> Pupdate;
+    MultidimArray< std::complex<double> > Pupdate;
+
+    // Update for next iteration
+    MultidimArray< int > PupdateMask;
 
     // P in cylindrical coordinates around Z
     MultidimArray<double> PcylZ;
 
     // P in cylindrical coordinates around Y
     MultidimArray<double> PcylY;
+
+    // P in cylindrical coordinates around X
+    MultidimArray<double> PcylX;
 
     // Correlation aux
     CorrelationAux corrAux, corrAux2;
@@ -112,7 +127,7 @@ public:
     CL3DClass(const CL3DClass &other);
 
     /** Update projection. */
-    void updateProjection(const MultidimArray<double> &I, const CL3DAssignment &assigned);
+    void updateProjection(MultidimArray<double> &I, const CL3DAssignment &assigned, bool force=false);
 
     /** Update non-projection */
     inline void updateNonProjection(double corr)
