@@ -32,6 +32,12 @@
 #include <reconstruction/fourier_filter.h>
 #include <reconstruction/transform_geometry.h>
 #include <classification/naive_bayes.h>
+#include <classification/svm.h><
+
+#include <data/xmipp_image.h>
+#include <data/polar.h>
+#include <data/normalize.h>
+#include <data/basic_pca.h>
 
 /// @defgroup AutomaticPicking Image denoising
 /// @ingroup ReconsLibrary
@@ -53,38 +59,53 @@ public:
     void read(std::istream &_in, int _vec_size);
 };
 
+/* Classification model ---------------------------------------------------- */
+class SVMClassifier
+{
+public:
+
+	svm_parameter param;
+    svm_problem prob;
+    svm_model *model;
+public:
+
+    SVMClassifier();
+    void SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> &lable);
+
+};
+
 /* Automatic particle picking ---------------------------------------------- */
 /** Class to perform the automatic particle picking */
 class AutoParticlePicking2
 {
 public:
-    static const double __penalization = 10;
-    static const double __gray_bins = 8;
-    static const double __radial_bins = 16;
-    static const double __highpass_cutoff = 0.02;
-    static const int    __reduction=2; // Of the piece with respect to the micrograph
+
+    static const int NangSteps=120;
 
     Micrograph                *__m;
     Image<double>              microImage;
+    PCAMahalanobisAnalyzer     pcaAnalyzer;
+    SVMClassifier              classifier;
     FileName                   fn_micrograph;
     int                        __numThreads;
     Mask                       __mask;
-    int                        piece_xsize;
-    int                        particle_radius;
-    int                        __piece_overlap;
-    int                        __scan_overlap;
-    int                        __learn_overlap;
+    int                          piece_xsize;
+    int                          particle_size;
+    int                          particle_radius;
+    int                          filter_num;
+    int                          NPCA;
+    int                          corr_num;
     double                       scaleRate;
+    int                          NRsteps;
     bool                       __fast;
     bool                       __incore;
     std::vector<Particle2>      __auto_candidates;
     std::vector<Particle2>      __rejected_particles;
-    std::vector < MultidimArray<double> > filterBank;
 
 public:
 
     /// Empty constructor
-    AutoParticlePicking2(const FileName &fn, Micrograph *_m, bool __fast);
+    AutoParticlePicking2(const FileName &fn, Micrograph *_m,int size, int filterNum,int pcaNum,int corrNum);
 
     /// Destructor
     ~AutoParticlePicking2();
@@ -92,25 +113,47 @@ public:
     /// Read the micrograph in memory
     void readMicrograph();
 
-    /// load models with a name
-    void loadModels(const FileName &fn_root);
+    //Extract the particles from the Micrograph
+    void extractParticle(const int x, const int y, ImageGeneric & filter,
+                         MultidimArray<double> &particleImage);
+    //Convert an image to its polar form
+    void convert2Polar(MultidimArray<double> &particleImage, MultidimArray<double> &polar);
 
-    /// Save models
-    void saveModels(const FileName &fn_root) const;
+    //Calculate the correlation of different polar channels
+    void polarCorrelation(MultidimArray<double> &Ipolar,MultidimArray<double> &IpolarCorr);
 
-    /** Save the feature vectors of the automatically selected particles.
-        * Nvectors is the number of vectors to save, given by saveAutoParticles.
-        */
-    void saveAutoFeatureVectors(const FileName &fn, int Nvectors) const;
+    /// Produce the training dataset for different samples
+    void buildVector(MultidimArray<double> &trainSet);
 
-    /// Load the feature vectors of the automatically selected particles
-    void loadAutoFeatureVectors(const FileName &fn);
+    /// Extract Invariant Features from a particle at x and y position
+    void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y,
+                        const FileName &fnInvariantFeat);
 
-    /// Training
-    void learnParticles();
+    /// Extract different channels from particles and Non-Particles within a Micrograph
+    void extractInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
 
-    /// Build vectors
-    void  buildPositiveVectors();
+    /// Extract different filter channels from particles within a Micrograph
+    void extractPositiveInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
+
+    /// Extract different filter channels from Non-Particles within a Micrograph
+    void extractNegativeInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
+
+    /// Project a vector in PCA space
+    void PCAProject(MultidimArray<double> &inputVec,int firstIndex);
+
+    /// Train a PCA with negative and positive vectors
+    void trainPCA(const FileName &fnPositiveFeat);
+
+    /// Train SVM
+    void trainSVM(const FileName &fnInvariantFeat);
+
+    /// Save PCA model
+    void savePCAModel(const FileName &fn_root) const;
+
+    /// Load PCA model
+    void loadPCAModel(const FileName &fn_root,int channelNum);
+
+
 };
 
 class ProgMicrographAutomaticPicking2: public XmippProgram
@@ -124,6 +167,12 @@ public:
     FileName fn_train;
     /// Particle size
     int size;
+    /// The number of filters
+    int filter_num;
+    /// The number of PCA components
+    int NPCA;
+    /// The number of correlation for a bank
+    int corr_num;
     /// Mode
     String mode;
     /// Number of threads
