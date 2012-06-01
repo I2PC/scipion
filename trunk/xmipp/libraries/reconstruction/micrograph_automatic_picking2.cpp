@@ -236,6 +236,7 @@ void AutoParticlePicking2::trainSVM(const FileName &fn_root)
     positiveInvariant.read(fnPositiveInvariant, HEADER);
     int num_correlation=filter_num+((filter_num-corr_num)*corr_num);
     int steps= aDim.ndim/num_correlation;
+    //trainSet.resize(1,1,steps,num_correlation*NPCA);
 
     for (int i=0;i<num_correlation;i++)
     {
@@ -245,9 +246,13 @@ void AutoParticlePicking2::trainSVM(const FileName &fn_root)
         pcaAnalyzer.avg.resize(1,1,1,XSIZE(pcaAnalyzer.avg)*YSIZE(pcaAnalyzer.avg));
         for (int j=0;j<NPCA;j++)
         {
+
             pcaBasis.readMapped(fnPCAModel,(i*(NPCA+1)+1)+(j+1));
-            pcaBasis().getImage(pcaAnalyzer.PCAbasis[j]);
-            pcaAnalyzer.PCAbasis[j].resize(1,1,1,XSIZE(pcaAnalyzer.PCAbasis[j])*YSIZE(pcaAnalyzer.PCAbasis[j]));
+            MultidimArray<double> Ijj;
+
+            pcaBasis().getImage(Ijj);
+            typeCast(Ijj,pcaAnalyzer.PCAbasis[j]);
+            pcaAnalyzer.PCAbasis[j].resize(1,1,1,XSIZE(pcaAnalyzer.PCAbasis[j]),YSIZE(pcaAnalyzer.PCAbasis[j]));
         }
         for (int k=0;k<steps;k++)
         {
@@ -432,12 +437,11 @@ void ProgMicrographAutomaticPicking2::run()
             }
         }
         autoPicking->extractInvariant(fnFilterBank,fnInvariant);
-        autoPicking->trainPCA(fn_root);
-        autoPicking->trainSVM(fn_root);
     }
     if (mode == "train")
     {
-        autoPicking->trainPCA(fnInvariant);
+        autoPicking->trainPCA(fn_root);
+        //autoPicking->trainSVM(fn_root);
     }
 }
 
