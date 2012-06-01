@@ -68,6 +68,9 @@ public:
     // Set of basis functions
     std::vector< MultidimArray<double> > PCAbasis;
 
+    // The average of the vectors
+    MultidimArray<double> avg;
+
     // Set of basis functions
     MultidimArray<double> Zscore;
 
@@ -81,6 +84,7 @@ public:
     	PCAbasis.clear();
     	Zscore.clear();
     	idx.clear();
+    	avg.clear();
     }
 
     /// Resize

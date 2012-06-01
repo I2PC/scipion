@@ -33,7 +33,7 @@ void PCAMahalanobisAnalyzer::subtractAvg()
     if (N==0)
         return;
     // Compute average
-    MultidimArray<double> avg;
+
     typeCast(v[0],avg);
     for (int n=1; n<N; n++)
     {
