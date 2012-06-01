@@ -43,7 +43,7 @@
 class CL3DAssignment
 {
 public:
-	double corr;   // Negative corrCodes indicate invalid particles
+	double stdK;   // Negative corrCodes indicate invalid particles
 	double likelihood; // Only valid if robust criterion
 	double shiftx;
 	double shifty;
@@ -69,9 +69,12 @@ std::ostream & operator << (std::ostream &out, const CL3DAssignment& assigned);
 /** CL3DClass class */
 class CL3DClass {
 public:
-    // Projection
+    // Centroid
     MultidimArray<double> P;
     
+    // Centroid in Fourier space
+    MultidimArray< std::complex<double> > Pfourier;
+
     // Fourier transformer
     FourierTransformer transformer;
 
@@ -138,6 +141,9 @@ public:
 
     /** Transfer update */
     void transferUpdate();
+
+    /** Sparse distance to centroid */
+    void sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK);
 
     /** Compute the fit of the input image with this node.
         The input image is rotationally and traslationally aligned
