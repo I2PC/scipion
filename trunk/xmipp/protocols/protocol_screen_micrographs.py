@@ -36,6 +36,8 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.CtffindExec =  which('ctffind3.exe')
         self.micrographs = self.getFilename('micrographs')
+        #FIXME FastDefocus has never be initialized ask JAVI (ROB)
+        self.FastDefocus=False
 
     def defineSteps(self):
         filesToImport = [self.Input[k] for k in ['microscope', 'acquisition']]
