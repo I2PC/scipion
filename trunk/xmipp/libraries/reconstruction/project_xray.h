@@ -26,8 +26,8 @@
 #ifndef _PROJECTXRAY_H_
 #define _PROJECTXRAY_H_
 
-#include <data/xmipp_threads.h>
 #include <data/xmipp_program.h>
+#include <data/xmipp_threads.h>
 #include <data/psf_xr.h>
 
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
@@ -41,10 +41,12 @@ struct XrayThreadArgument
     MultidimArray<double> *muVol;
     MultidimArray<double> *IgeoVol;
     MultidimArray<double> *IgeoZb;
-    Image<double>         *projOut;
-    std::vector<int> 	  *phantomSlabIdx;
-    std::vector<int> 	  *psfSlicesIdx;
+    Projection            *projOut;
+    MultidimArray<double> *projNorm;
+    std::vector<int>    *phantomSlabIdx;
+    std::vector<int>    *psfSlicesIdx;
     ParallelTaskDistributor * td;
+    Barrier     * barrier;
 };
 
 /** Project program Side information.
@@ -56,7 +58,7 @@ class XrayProjPhantom
 {
 public:
     /// Phantom Xmipp volume
-    ImageGeneric          iniVol;
+    Image<double>          iniVol;
     MultidimArray<double> rotVol;
 
     /** Produce Project Side information.
@@ -124,8 +126,12 @@ protected:
 
     Off-centered not implemented. Rotations are around volume center
 */
-void XrayProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
-                                  int Ydim, int Xdim, int  idxSlice = 1);
+void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
+        int Ydim, int Xdim, int  idxSlice = 1);
+
+void projectXrayVolume(MultidimArray<double> &muVol,
+                       MultidimArray<double> &IgeoVol,
+                       XRayPSF &psf, Projection &P, MultidimArray<double> * projNorm=NULL, ThreadManager * ThrMgr=NULL);
 
 /// Thread Job to generate an X-ray microscope projection
 void threadXrayProject(ThreadArgument &thArg);
@@ -147,21 +153,21 @@ void calculateIgeoThread(ThreadArgument &thArg);
 
 
 /// Project as in an X-ray microscope using a grids and blobs
-void projectXrayGridVolume(
-    GridVolume &vol,                  // Volume
-    const Basis &basis,                   // Basis (3DPSF info is contained as a blobprint)
+void projectXrayGridVolumeBackwards(
+    MultidimArray<double> &muVol,                  // Volume
+    XRayPSF &psf,                   // Basis
     MultidimArray<double> &IgeoVol,    /// Vol with the Igeometrical distribution along specimen volume
     Projection       &proj,               // Projection
-    Projection       &norm_proj,          // Projection of a unitary volume
+    MultidimArray<double> *projNorm,     // Projection of a unitary volume
     int              FORW,                // 1 if we are projecting a volume
     //   norm_proj is calculated
     // 0 if we are backprojecting
     //   norm_proj must be valid
-    int               nThreads = 1);
+    ThreadManager * thMgr);
 
-void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basis *basis,
+void projectXraySimpleGrid(MultidimArray<double> *vol,  const XRayPSF &psf,
                            MultidimArray<double> *IgeoVol,
-                           Projection *proj, Projection *norm_proj, int FORW,
+                           Projection *proj, MultidimArray<double> &projNorm, int FORW,
                            int threadId = -1, int nThreads = 1);
 
 struct PXSGTArgument
@@ -172,6 +178,7 @@ struct PXSGTArgument
     MultidimArray<double> *IgeoZb;
     ParallelTaskDistributor * td;
 };
+
 
 void projectXraySimpleGridThread(ThreadArgument &thArg);
 

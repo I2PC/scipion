@@ -142,8 +142,8 @@ void ProgMPIXrayProject::run()
 
         // Creation of output file to reserve space
         createEmptyFile(mpiData[mpiData.size()-1].fn_proj,
-                        XMIPP_MIN(XSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol)),projParam.proj_Xdim),
-                        XMIPP_MIN(YSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol)),projParam.proj_Ydim));
+                        XMIPP_MIN(XSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Xdim),
+                        XMIPP_MIN(YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Ydim));
 
         std::cout << "Projecting ...\n";
     }
@@ -165,7 +165,7 @@ void ProgMPIXrayProject::run()
             // Really project ....................................................
             if (!projParam.only_create_angles)
             {
-                XrayProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim);
+                XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim);
                 proj.write(mpiData[k].fn_proj);
             }
 

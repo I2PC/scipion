@@ -91,15 +91,16 @@ void ProgReconsXrayART::preProcess(GridVolume &volBasis)
     projXdim = imgInfo.adim.xdim;
     projYdim = imgInfo.adim.ydim;
 
-    psf.calculateParams(sampling*1.e-10, -1, psfThr); // sampling is read in angstrom
+    psf.calculateParams(sampling*1.e-9, -1, psfThr); // sampling is read in angstrom
+    psf.nThr = nThreads;
 
     // Lets force basis to voxels
     basis.type = Basis::voxels;
     basis.grid_relative_size = 1;
 
-    if (basis.VolPSF == NULL)
-        basis.VolPSF = new MultidimArray<double>;
-    psf.PSFGen().getImage(*basis.VolPSF);
+//    if (basis.VolPSF == NULL)
+//        basis.VolPSF = new MultidimArray<double>;
+//    psf.psfVol().getImage(*basis.VolPSF);
 
 
     /// Setting initial volume
@@ -130,11 +131,24 @@ void ProgReconsXrayART::preProcess(GridVolume &volBasis)
     /* Basis side info --------------------------------------------------------- */
     basis.produceSideInfo(volBasis.grid());
 
+    //Create threads to start working
+    thMgr = new ThreadManager(nThreads);
+
 }
 
 double ProgReconsXrayART::singleStep(GridVolume &volBasis, const Projection &projExp,
                                      double rot, double tilt, double psi)
 {
+    MultidimArray<double> &muVol = MULTIDIM_ARRAY(volBasis(0));
+    muVol.setXmippOrigin();
+
+    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
+    int zinit, zend, yinit, yend, xinit, xend;
+
+    iniXdim = XSIZE(muVol);
+    iniYdim = YSIZE(muVol);
+    iniZdim = ZSIZE(muVol);
+
     Projection projTheo, projNorm;
     MultidimArray<double> Idiff;
     const MultidimArray<double> &mdaProjExp = projExp();
@@ -144,9 +158,46 @@ double ProgReconsXrayART::singleStep(GridVolume &volBasis, const Projection &pro
     mdaProjTheo.initZeros(mdaProjExp);
     projTheo.setAngles(projExp.rot(), projExp.tilt(), projExp.psi());
 
-    projNorm().initZeros(mdaProjExp);
+    mdaProjNorm.initZeros(mdaProjExp);
 
-    projectXrayGridVolume(volBasis, basis, IgeoVol, projTheo, projNorm, FORWARD, nThreads);
+    newXdim = iniXdim;
+    newYdim = iniYdim;
+    newZdim = iniZdim;
+
+    MultidimArray<double> rotVol;
+
+    rotVol.resizeNoCopy(newZdim, newYdim, newXdim);
+    rotVol.setXmippOrigin();
+
+    // Rotate volume ....................................................
+
+    Matrix2D<double> R;
+
+    Euler_angles2matrix(projExp.rot(), projExp.tilt(), projExp.psi(), R, true);
+
+    double outside = 0; //phantom.iniVol.getPixel(0,0,0,0);
+
+    applyGeometry(1, rotVol, muVol, R, IS_NOT_INV, DONT_WRAP, outside);
+
+    psf.adjustParam(rotVol);
+
+    /// Calculation of IgeoVol to optimize process
+    MultidimArray<double> IgeoZb;
+    IgeoVol.resize(rotVol, false);
+    IgeoZb.resize(1, 1, YSIZE(rotVol), XSIZE(rotVol),false);
+    IgeoZb.initConstant(1.);
+
+    calculateIgeo(rotVol, psf.dzo, IgeoVol, IgeoZb, psf.nThr, thMgr);
+
+    /// Forward projection
+
+    projectXrayVolume(rotVol, IgeoVol, psf, projTheo, &mdaProjNorm, thMgr);
+
+    projTheo.write("theproj.spi");
+    projNorm.write("projNorm.spi");
+
+
+    //    projectXrayGridVolume(volBasis, basis, IgeoVol, projTheo, projNorm, FORWARD, nThreads);
 
     double mean_error = 0;
     Idiff.initZeros(mdaProjExp);
@@ -164,7 +215,7 @@ double ProgReconsXrayART::singleStep(GridVolume &volBasis, const Projection &pro
     }
     mean_error /= YXSIZE(mdaProjExp);
 
-    projectXrayGridVolume(volBasis, basis, IgeoVol, projTheo, projNorm, BACKWARD, nThreads);
+    projectXrayGridVolumeBackwards(muVol, psf, IgeoVol, projTheo, &mdaProjNorm, BACKWARD, thMgr);
 
     return mean_error;
 }
@@ -200,6 +251,7 @@ void ProgReconsXrayART::run()
 
             projExp.read(fnExp);
             projExp().setXmippOrigin();
+            projExp.setAngles(rot, tilt, psi);
 
             itError += singleStep(volBasis, projExp, rot, tilt, psi);
         }

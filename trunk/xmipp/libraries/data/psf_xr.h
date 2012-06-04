@@ -118,8 +118,9 @@ public:
 
 //    /// Current OTF
 //    MultidimArray< std::complex<double> > OTF;
+    ImageGeneric psfGen;
     /// 3D PSF read from file
-    ImageGeneric  PSFGen;
+    Image<double>  psfVol;
     /// Working PSF with nonlinear zdim whose slices are the mean PSF for slabs
     MultidimArray<double> PSF;
 //    /// Axial intensity

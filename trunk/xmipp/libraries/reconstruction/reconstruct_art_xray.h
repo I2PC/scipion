@@ -72,6 +72,7 @@ public:
     int             projYdim;
     // Number of threads to use
     int nThreads;
+    ThreadManager * thMgr;
 
     ProgReconsXrayART()
     {}

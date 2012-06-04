@@ -94,9 +94,17 @@ void XRayPSF::read(const FileName &fn)
         if (MD.getValue(MDL_IMAGE,fnPSF, id))
         {
             mode = PSF_FROM_FILE;
-            PSFGen.read(fn.getDir()+fnPSF);
-            PSFGen.getDimensions(Nox, Noy, Noz);
-            MULTIDIM_ARRAY_GENERIC(PSFGen).setXmippOrigin();
+            psfGen.readMapped(fn.getDir()+fnPSF);
+            ArrayDim aDim;
+            psfGen.getDimensions(aDim);
+            //            MULTIDIM_ARRAY(psfVol).getDimensions(aDim);
+            Nox = aDim.xdim;
+            Noy = aDim.ydim;
+            Noz = aDim.zdim;
+
+            psfGen().setXmippOrigin();
+
+            //            MULTIDIM_ARRAY(psfVol).setXmippOrigin();
         }
         else
         {
@@ -195,7 +203,7 @@ void XRayPSF::write(const FileName &fn)
 
     MD.write(fn.withoutExtension().addExtension("xmd"));
     //    PSF->write(fnPSF);
-    PSFGen.write(fnPSF);
+    psfVol.write(fnPSF);
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -254,7 +262,7 @@ void XRayPSF::init()
 /* Default values ---------------------------------------------------------- */
 void XRayPSF::clear()
 {
-    PSFGen.clear();
+    psfVol.clear();
     init();
 }
 
@@ -286,8 +294,22 @@ void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
     {
         T.initIdentity(4);
         double scaleFactor = dxo/dxoPSF;
+        double scaleFactorZ = dxo/dzoPSF;
         dMij(T, 0, 0) = scaleFactor;
         dMij(T, 1, 1) = scaleFactor;
+        dMij(T, 2, 2) = scaleFactorZ;
+
+        MultidimArray<double> &mdaPsfVol = psfVol();
+
+        mdaPsfVol.resize(1, Noz*dzoPSF/dxo,
+                         Noy/scaleFactor,
+                         Nox/scaleFactor, false);
+
+        applyGeometry(LINEAR, mdaPsfVol, psfGen(), T,
+                      IS_INV, DONT_WRAP);
+
+        dxoPSF = dxo;
+        dzoPSF = dzo;
 
         if (threshold != 0.)
             reducePSF2Slabs(threshold);
@@ -302,39 +324,37 @@ void XRayPSF::reducePSF2Slabs(double threshold)
 {
     // find max position
     ArrayCoord maxPos;
-    MultidimArray<float> *psfComplete;
-    PSFGen.convert2Datatype(DT_Float);
-    PSFGen().getMultidimArrayPointer(psfComplete);
+    MultidimArray<double> &mdaPsfVol = psfVol();
 
     //MULTIDIM_ARRAY_GENERIC(PSFGen).maxIndex(maxPos);
-    psfComplete->maxIndex(maxPos);
-    double maxValue = A3D_ELEM(*psfComplete,maxPos.z,maxPos.y,maxPos.x);
+    mdaPsfVol.maxIndex(maxPos);
+    double maxValue = A3D_ELEM(mdaPsfVol,maxPos.z,maxPos.y,maxPos.x);
     threshold *= maxValue;
     slabIndex.clear();
 
     double maxTemp = maxValue;
-    for (int k = 0; k > STARTINGZ(*psfComplete); --k)
+    for (int k = 0; k > STARTINGZ(mdaPsfVol); --k)
     {
-        double tempV = A3D_ELEM(*psfComplete,k,maxPos.y,maxPos.x);
+        double tempV = A3D_ELEM(mdaPsfVol,k,maxPos.y,maxPos.x);
         if ( maxTemp - tempV >  threshold)
         {
             slabIndex.insert(slabIndex.begin(), k);
             maxTemp = tempV;
         }
     }
-    slabIndex.insert(slabIndex.begin(), STARTINGZ(*psfComplete));
+    slabIndex.insert(slabIndex.begin(), STARTINGZ(mdaPsfVol));
 
     maxTemp = maxValue;
-    for (int k = 0; k < FINISHINGZ(*psfComplete); ++k)
+    for (int k = 0; k < FINISHINGZ(mdaPsfVol); ++k)
     {
-        double tempV = A3D_ELEM(*psfComplete,k,maxPos.y,maxPos.x);
+        double tempV = A3D_ELEM(mdaPsfVol,k,maxPos.y,maxPos.x);
         if ( maxTemp - tempV >  threshold)
         {
             slabIndex.push_back(k);
             maxTemp = tempV;
         }
     }
-    slabIndex.push_back(FINISHINGZ(*psfComplete));
+    slabIndex.push_back(FINISHINGZ(mdaPsfVol));
 
 } //reducePSF2Slabs
 
@@ -352,7 +372,7 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset) cons
     MultidimArray<std::complex<double> > ImFT;
     FourierTransformer FTransAppOTF(FFTW_BACKWARD);
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
@@ -428,19 +448,18 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
             PSFi.resizeNoCopy(Niy, Nix);
             PSFi.setXmippOrigin();
 
+            const MultidimArray<double> &mPsfVol = MULTIDIM_ARRAY(psfVol);
+
             double zIndexPSF = (Zo - Zpos)/dzoPSF;
 
-            if (zIndexPSF < STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)) ||
-                zIndexPSF > FINISHINGZ(MULTIDIM_ARRAY_BASE(PSFGen)))
+            if (zIndexPSF < STARTINGZ(mPsfVol) ||
+                zIndexPSF > FINISHINGZ(mPsfVol))
                 PSFi.initZeros();
             else
             {
                 dMij(T, 2, 3) = zIndexPSF; // Distance from the focal plane
-                applyGeometry(LINEAR, PSFi, MULTIDIM_ARRAY_GENERIC(PSFGen), T,
-                              IS_INV, DONT_WRAP, PSFGen.getPixel(1,
-                                                                 STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
-                                                                 STARTINGY(MULTIDIM_ARRAY_BASE(PSFGen)),
-                                                                 STARTINGX(MULTIDIM_ARRAY_BASE(PSFGen))));
+                applyGeometry(LINEAR, PSFi, mPsfVol, T,
+                              IS_INV, DONT_WRAP, dAkij(mPsfVol,0,0,0));
                 CenterFFT(PSFi, true);
             }
             break;
@@ -484,16 +503,16 @@ void XRayPSF::generatePSF()
     //    PSF = new Image<double>(Nox, Noy, Noz);
     //    VOLMATRIX(*PSF).setXmippOrigin();
 
-    PSFGen.setDatatype(DT_Float);
-    MULTIDIM_ARRAY_GENERIC(PSFGen).resize(1,Noz, Niy, Nix, false);
-    MULTIDIM_ARRAY_GENERIC(PSFGen).setXmippOrigin();
+    MultidimArray<double> &mPsfVol = MULTIDIM_ARRAY(psfVol);
+    mPsfVol.resize(1,Noz, Niy, Nix, false);
+    mPsfVol.setXmippOrigin();
 
     MultidimArray<double> PSFi;
 
-    init_progress_bar(ZSIZE(MULTIDIM_ARRAY_BASE(PSFGen)));
+    init_progress_bar(ZSIZE(mPsfVol));
 
     int k2;
-    for (int k = STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)), k2 = 0; k <= FINISHINGZ(MULTIDIM_ARRAY_BASE(PSFGen)); k++, k2++)
+    for (int k = STARTINGZ(mPsfVol), k2 = 0; k <= FINISHINGZ(mPsfVol); k++, k2++)
     {
         /* We keep sign of Z, Zo and DeltaZo positives in object space for the sake of simplicity in calculations,
          * it is, they increase opposite to Zdim in Xmipp reference system, so this is the reason to calculate
@@ -517,15 +536,15 @@ void XRayPSF::generatePSF()
         }
 
         CenterFFT(PSFi, false);
-        MULTIDIM_ARRAY_GENERIC(PSFGen).setSlice(k, PSFi);
+        mPsfVol.setSlice(k, PSFi);
 
         progress_bar(k2+1);
     }
     if (Nix != Nox || Niy != Noy)
-        MULTIDIM_ARRAY_GENERIC(PSFGen).selfWindow(STARTINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
-                FIRST_XMIPP_INDEX(Noy),FIRST_XMIPP_INDEX(Nox),
-                FINISHINGZ(MULTIDIM_ARRAY_BASE(PSFGen)),
-                FIRST_XMIPP_INDEX(Noy)+Noy-1,FIRST_XMIPP_INDEX(Nox)+Nox-1);
+        mPsfVol.selfWindow(STARTINGZ(mPsfVol),
+                           FIRST_XMIPP_INDEX(Noy),FIRST_XMIPP_INDEX(Nox),
+                           FINISHINGZ(mPsfVol),
+                           FIRST_XMIPP_INDEX(Noy)+Noy-1,FIRST_XMIPP_INDEX(Nox)+Nox-1);
 }
 
 /* Generate the PSF for a ideal lens --------------------------------------- */

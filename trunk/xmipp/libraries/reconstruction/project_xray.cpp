@@ -75,7 +75,7 @@ void ProgXrayProject::readParams()
 Mutex mutex;
 Barrier * barrier;
 ThreadManager * thMgr;
-XrayThreadArgument *projThreadData;
+
 
 void ProgXrayProject::preRun()
 {
@@ -87,16 +87,11 @@ void ProgXrayProject::preRun()
     projParam.raxis *= psf.dxo;
 
     // Threads stuff
-    projThreadData = new XrayThreadArgument;
 
-    projThreadData->psf= &psf;
-    projThreadData->muVol = &phantom.rotVol;
-    projThreadData->projOut = &proj;
-
-    barrier = new Barrier(nThr-1);
+    barrier = new Barrier(nThr);
 
     //Create threads to start working
-    thMgr = new ThreadManager(nThr,(void*) projThreadData);
+    thMgr = new ThreadManager(nThr);
 
 }
 
@@ -148,7 +143,7 @@ void ProgXrayProject::run()
 
         // Really project ....................................................
         if (!projParam.only_create_angles)
-            XrayProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
+            XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
 
         // Add noise in angles and voxels ....................................
         proj.getEulerAngles(tRot, tTilt,tPsi);
@@ -205,16 +200,16 @@ void ProgXrayProject::run()
     return;
 }
 
-void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
-                                  int Ydim, int Xdim, int idxSlice)
+void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
+        int Ydim, int Xdim, int idxSlice)
 {
 
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
     int zinit, zend, yinit, yend, xinit, xend;
 
-    iniXdim = XSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
-    iniYdim = YSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
-    iniZdim = ZSIZE(MULTIDIM_ARRAY_BASE(phantom.iniVol));
+    iniXdim = XSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    iniYdim = YSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    iniZdim = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
 
     // Projection offset in pixels
     Matrix1D<double> offsetNV(3);
@@ -319,22 +314,9 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     Euler_angles2matrix(P.rot(), P.tilt(), P.psi(), R, true);
 
     double outside = 0; //phantom.iniVol.getPixel(0,0,0,0);
-    phantom.iniVol.data->setXmippOrigin();
+    MULTIDIM_ARRAY(phantom.iniVol).setXmippOrigin();
 
-    applyGeometry(1, phantom.rotVol, MULTIDIM_ARRAY_GENERIC(phantom.iniVol), T*R, IS_NOT_INV, DONT_WRAP, outside);
-    //
-    //    Image<double> tempvol;
-    //
-    //    tempvol.data.alias(phantom.rotVol);
-    //
-    //    tempvol.write("rotvol_2.vol");
-    //
-    //    exit(0);
-
-    //    Euler_rotate(MULTIDIM_ARRAY_GENERIC(phantom.iniVol), P.rot(), P.tilt(), P.psi(),phantom.rotVol);
-
-    // Correct the shift position due to tilt axis is out of optical axis
-    //    phantom.rotVol.selfWindow(zinit, yinit, xinit, zend, yend, xend);
+    applyGeometry(1, phantom.rotVol, MULTIDIM_ARRAY(phantom.iniVol), T*R, IS_NOT_INV, DONT_WRAP, outside);
 
     psf.adjustParam(phantom.rotVol);
 
@@ -346,14 +328,24 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     IgeoZb.initConstant(1.);
 
     calculateIgeo(phantom.rotVol, psf.dzo, IgeoVol, IgeoZb, psf.nThr, thMgr);
-    projThreadData->IgeoVol = &IgeoVol;
 
 
+    projectXrayVolume(phantom.rotVol, IgeoVol, psf, P, NULL, thMgr);
 
-    //    Image<double> imDebug;
-    //    imDebug().alias(IgeoVol);
-    //    imDebug.write("IgeoVol.vol");
+    int outXDim = XMIPP_MIN(Xdim,iniXdim);
+    int outYDim = XMIPP_MIN(Ydim,iniYdim);
 
+    P().selfWindow(-ROUND(outYDim/2),
+                   -ROUND(outXDim/2),
+                   -ROUND(outYDim/2) + outYDim -1,
+                   -ROUND(outXDim/2) + outXDim -1);
+
+}//XrayRotateAndProjectVolumeOffCentered
+
+void projectXrayVolume(MultidimArray<double> &muVol,
+                       MultidimArray<double> &IgeoVol,
+                       XRayPSF &psf, Projection &P, MultidimArray<double> * projNorm, ThreadManager * thMgr)
+{
 
     /* Now we have to split the phantom rotated volume into slabs, taking into
      * account the possible different resolution and Z size.
@@ -367,7 +359,7 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     std::vector<int> phantomSlabIdx, psfSlicesIdx;
 
     // Search for the PSFslab of the begining of the volume
-    int firstSlab = STARTINGZ(phantom.rotVol)*psf.dzo/psf.dzoPSF;
+    int firstSlab = STARTINGZ(muVol)*psf.dzo/psf.dzoPSF;
 
     if (!XMIPP_EQUAL_ZERO(psf.slabThr))
     {
@@ -381,13 +373,13 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
         }
 
         // Searching the equivalent index in rotvol for the indexes for the Slabs of PSFVol
-        phantomSlabIdx.push_back(STARTINGZ(phantom.rotVol));
+        phantomSlabIdx.push_back(STARTINGZ(muVol));
 
         for (int kk = firstSlab+1; kk < psf.slabIndex.size(); ++kk)
         {
             int tempK = psf.slabIndex[kk] * psf.dzoPSF / psf.dzo;
 
-            if (tempK <= FINISHINGZ(phantom.rotVol))
+            if (tempK <= FINISHINGZ(muVol))
             {
                 phantomSlabIdx.push_back(tempK);
                 int tempKK = psf.slabIndex[kk-1];
@@ -396,7 +388,7 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
             }
             else
             {
-                phantomSlabIdx.push_back(FINISHINGZ(phantom.rotVol));
+                phantomSlabIdx.push_back(FINISHINGZ(muVol));
                 int psfMeanSlice = (tempK + phantomSlabIdx[kk-1])*0.5;
                 psfSlicesIdx.push_back(psfMeanSlice);
                 continue;
@@ -405,39 +397,38 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     }
     else
     {
-        for (int k = STARTINGZ(phantom.rotVol); k <= FINISHINGZ(phantom.rotVol); ++k)
+        for (int k = STARTINGZ(muVol); k <= FINISHINGZ(muVol); ++k)
         {
             phantomSlabIdx.push_back(k);
             psfSlicesIdx.push_back(k);
         }
         // To define the last range
-        phantomSlabIdx.push_back(FINISHINGZ(phantom.rotVol)+1);
+        phantomSlabIdx.push_back(FINISHINGZ(muVol)+1);
     }
 
-    projThreadData->phantomSlabIdx = & phantomSlabIdx;
-    projThreadData->psfSlicesIdx = & psfSlicesIdx;
+    XrayThreadArgument projThrData;
+    Barrier barrier(thMgr->threads);
+
+    projThrData.psf = &psf;
+    projThrData.muVol = &muVol;
+    projThrData.IgeoVol = &IgeoVol;
+    projThrData.projOut = &P;
+    projThrData.projNorm = projNorm;
+    projThrData.phantomSlabIdx = & phantomSlabIdx;
+    projThrData.psfSlicesIdx = & psfSlicesIdx;
 
     //Create the job handler to distribute thread jobs
     size_t blockSize, numberOfJobs = psfSlicesIdx.size() ;
     blockSize = 1;
     ThreadTaskDistributor td(numberOfJobs, blockSize);
-    projThreadData->td = &td;
+    projThrData.td = &td;
+    projThrData.barrier = &barrier;
 
     //the really really final project routine, I swear by Snoopy.
     //    project_xr(psf,side.rotPhantomVol,P, idxSlice);
 
-
-    thMgr->run(threadXrayProject,(void*) projThreadData);
-//    P.write("projection_after_threads.spi");
-
-    int outXDim = XMIPP_MIN(Xdim,iniXdim);
-    int outYDim = XMIPP_MIN(Ydim,iniYdim);
-
-    P().selfWindow(-ROUND(outYDim/2),
-                   -ROUND(outXDim/2),
-                   -ROUND(outYDim/2) + outYDim -1,
-                   -ROUND(outXDim/2) + outXDim -1);
-
+    thMgr->run(threadXrayProject,(void*) &projThrData);
+    //    P.write("projection_after_threads.spi");
 }
 
 /* Produce Side Information ================================================ */
@@ -446,7 +437,7 @@ void XrayProjPhantom::read(
 {
     //    iniVol.readMapped(prm.fnPhantom);
     iniVol.read(prm.fnPhantom);
-    MULTIDIM_ARRAY_GENERIC(iniVol).setXmippOrigin();
+    MULTIDIM_ARRAY(iniVol).setXmippOrigin();
     //    rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
 }
 
@@ -456,14 +447,16 @@ void threadXrayProject(ThreadArgument &thArg)
 
     int thread_id = thArg.thread_id;
 
-    XrayThreadArgument *dataThread = (XrayThreadArgument*) thArg.workClass;
-    XRayPSF psf = *(dataThread->psf);
+    XrayThreadArgument *dataThread = (XrayThreadArgument*) thArg.data;
+    const XRayPSF &psf = *(dataThread->psf);
     MultidimArray<double> &muVol =  *(dataThread->muVol);
     MultidimArray<double> &IgeoVol =  *(dataThread->IgeoVol);
     Image<double> &imOutGlobal = *(dataThread->projOut);
+    MultidimArray<double> * projNorm = dataThread->projNorm;
     std::vector<int> &phantomSlabIdx = *(dataThread->phantomSlabIdx);
     std::vector<int> &psfSlicesIdx = *(dataThread->psfSlicesIdx);
     ParallelTaskDistributor * td = dataThread->td;
+    Barrier * barrier = dataThread->barrier;
 
     size_t first = 0, last = 0;
 
@@ -477,8 +470,9 @@ void threadXrayProject(ThreadArgument &thArg)
 
     barrier->wait();
 
-    MultidimArray<double> imOut(psf.Niy, psf.Nix);
+    MultidimArray<double> imOut(psf.Niy, psf.Nix), projNormTemp(psf.Niy, psf.Nix);
     imOut.setXmippOrigin();
+    projNormTemp.setXmippOrigin();
 
     MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut),*imTempP;
     intExp.setXmippOrigin();
@@ -488,7 +482,7 @@ void threadXrayProject(ThreadArgument &thArg)
     // Parallel thread jobs
     while (td->getTasks(first, last))
     {
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
         Image<double> _Im;
 #endif
@@ -557,12 +551,34 @@ void threadXrayProject(ThreadArgument &thArg)
         _Im.write("projectXR-imout.spi");
 #endif
 
+        /// Calculate projNorm
+
+        if (projNorm != NULL)
+        {
+
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(imTemp)
+            A2D_ELEM(imTemp,i,j) = A3D_ELEM(IgeoVol,kini,i,j) * psf.dzo;
+
+            //            IgeoVol.getSlice(kini, imTemp);
+            psf.applyOTF(imTemp, imOutGlobal.Zoff()- psfSlicesIdx[first]*psf.dzo);
+
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+            dAij(projNormTemp,i,j) += dAij(imTemp,i,j)*dAij(imTemp,i,j);
+        }
+
+
     }
 
     //Lock to update the total addition
     mutex.lock();
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imOut)
     dAij(MULTIDIM_ARRAY(imOutGlobal),i,j) += dAij(imOut,i,j);
+
+    if (projNorm != NULL)
+    {
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(projNormTemp)
+        dAij(*projNorm,i,j) += dAij(projNormTemp,i,j);
+    }
     mutex.unlock();
 #ifdef DEBUG
 
@@ -654,57 +670,80 @@ void calculateIgeoThread(ThreadArgument &thArg)
 
 }
 
-void projectXrayGridVolume(
-    GridVolume &vol,                  // Volume
-    const Basis &basis,                   // Basis
+void projectXrayGridVolumeBackwards(
+    MultidimArray<double> &muVol,                  // Volume
+    XRayPSF &psf,                   // Basis
     MultidimArray<double> &IgeoVol,    /// Vol with the Igeometrical distribution along specimen volume
     Projection       &proj,               // Projection
-    Projection       &norm_proj,          // Projection of a unitary volume
+    MultidimArray<double> *projNorm,     // Projection of a unitary volume
     int              FORW,                // 1 if we are projecting a volume
     //   norm_proj is calculated
     // 0 if we are backprojecting
     //   norm_proj must be valid
-    int               threads)
+    ThreadManager * thMgr)
 {
-    if (basis.type != Basis::voxels)
-        REPORT_ERROR(ERR_ARG_INCORRECT, "ProjectXray only valid for voxels.");
+    XrayThreadArgument projThrData;
+    Barrier barrier(thMgr->threads);
 
-    // Project each subvolume
-    for (int i = 0; i < vol.VolumesNo(); i++)
-    {
+    projThrData.psf = &psf;
+    projThrData.muVol = &muVol;
+    projThrData.IgeoVol = &IgeoVol;
+    projThrData.projOut = &proj;
+    projThrData.projNorm = projNorm;
+    projThrData.phantomSlabIdx = NULL;
+    projThrData.psfSlicesIdx = NULL;
 
-        if( threads > 1 )
-        {
-            for( int c = 0 ; c < threads ; c++ )
-            {
-                project_threads[c].vol = &(vol(i));
-                project_threads[c].grid = &(vol.grid(i));
-            }
+    //    //Create the job handler to distribute thread jobs
+    //    size_t blockSize, numberOfJobs = psfSlicesIdx.size() ;
+    //    blockSize = 1;
+    //    ThreadTaskDistributor td(numberOfJobs, blockSize);
+    //    projThrData.td = &td;
+    //    projThrData.barrier = &barrier;
 
-            barrier_wait( &project_barrier );
+    //the really really final project routine, I swear by Snoopy.
+    //    project_xr(psf,side.rotPhantomVol,P, idxSlice);
 
-            // Here is being processed the volume by the threads
+    thMgr->run(projectXraySimpleGridThread,(void*) &projThrData);
 
-            barrier_wait( &project_barrier );
-        }
-        else
-        {
-            // create no thread to do the job
-            projectXraySimpleGrid(&(vol(i)), &(vol.grid(i)), &basis, &IgeoVol,
-                                  &proj, &norm_proj, FORW);
-        }
-
-    }
 }
 
 void projectXraySimpleGridThread(ThreadArgument &thArg)
-{}
+{
 
-void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basis *basis,
+    int threadId = thArg.thread_id;
+
+    XrayThreadArgument *dataThread = (XrayThreadArgument*) thArg.data;
+    const XRayPSF &psf = *(dataThread->psf);
+    MultidimArray<double> *muVol =  (dataThread->muVol);
+    MultidimArray<double> *IgeoVol =  (dataThread->IgeoVol);
+    Projection *proj = (dataThread->projOut);
+    MultidimArray<double> &projNorm = *(dataThread->projNorm);
+    std::vector<int> &phantomSlabIdx = *(dataThread->phantomSlabIdx);
+    std::vector<int> &psfSlicesIdx = *(dataThread->psfSlicesIdx);
+    ParallelTaskDistributor * td = dataThread->td;
+    Barrier * barrier = dataThread->barrier;
+
+    projectXraySimpleGrid(muVol, psf, IgeoVol, proj, projNorm , BACKWARD,
+                          threadId, thArg.threads);
+
+
+
+
+}
+
+void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
                            MultidimArray<double> *IgeoVol,
-                           Projection *proj, Projection *norm_proj, int FORW,
+                           Projection *proj, MultidimArray<double> &projNorm , int FORW,
                            int threadId, int numthreads)
 {
+
+    const SimpleGrid *grid;
+    const Basis *basis;
+
+
+
+
+
     Matrix1D<double> zero(3);                // Origin (0,0,0)
     Matrix1D<double> prjPix(3);       // Position of the pixel within the projection
     Matrix1D<double> prjX(3);         // Coordinate: Projection of the
@@ -767,14 +806,15 @@ void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basi
     // the universal grid.
     // actprj is reused with a different purpose
     VECTOR_R3(actprj, 1, 0, 0);
-    grid->Gdir_project_to_plane(actprj, proj->euler, prjX);
+    Uproject_to_plane(actprj, proj->euler, prjX);
     VECTOR_R3(actprj, 0, 1, 0);
-    grid->Gdir_project_to_plane(actprj, proj->euler, prjY);
+    Uproject_to_plane(actprj, proj->euler, prjY);
     VECTOR_R3(actprj, 0, 0, 1);
-    grid->Gdir_project_to_plane(actprj, proj->euler, prjZ);
+    Uproject_to_plane(actprj, proj->euler, prjZ);
 
     // This time the origin of the grid is in the universal coord system
-    Uproject_to_plane(grid->origin, proj->euler, prjOrigin);
+    //    Uproject_to_plane(grid->origin, proj->euler, prjOrigin);
+    prjOrigin.initZeros();
 
     // Get the projection direction .........................................
     proj->euler.getRow(2, prjDir);
@@ -782,25 +822,12 @@ void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basi
     // Footprint size .......................................................
     // The following vectors are integer valued vectors, but they are
     // stored as real ones to make easier operations with other vectors
-    if (basis->type == Basis::blobs)
-    {
-        XX_footprint_size = basis->blobprint.umax();
-        YY_footprint_size = basis->blobprint.vmax();
-        Usampling         = basis->blobprint.Ustep();
-        Vsampling         = basis->blobprint.Vstep();
+    //    XX_footprint_size ;
+    YY_footprint_size = basis->blobprint.vmax();
 
-        // Set the limit for grid points out of PSF
-        if (basis->VolPSF != NULL)
-        {
-            isVolPSF = true;
-            ZZ_footprint_size = basis->blobprint.wmax();
-        }
-    }
-    else if (basis->type == Basis::voxels || basis->type == Basis::splines)
-    {
-        YY_footprint_size = XX_footprint_size = CEIL(basis->maxLength());
-        Usampling = Vsampling = 0;
-    }
+
+    ZZ_footprint_size = basis->blobprint.wmax();
+
     XX_footprint_size += XMIPP_EQUAL_ACCURACY;
     YY_footprint_size += XMIPP_EQUAL_ACCURACY;
 
@@ -911,7 +938,7 @@ void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basi
                     if (condition)
                     {
                         printf("\nProjecting grid coord (%d,%d,%d) ", j, i, k);
-                        std::cout << "Vol there = " << VOLVOXEL(*vol, k, i, j) << std::endl;
+                        std::cout << "Vol there = " << A3D_ELEM(*vol, k, i, j) << std::endl;
                         printf(" 3D universal position (%f,%f,%f) \n",
                                XX(univ_position), YY(univ_position), ZZ(univ_position));
                         std::cout << " Center of the basis proj (2D) " << XX(actprj) << "," << YY(actprj) << std::endl;
@@ -1113,15 +1140,15 @@ void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basi
                                     if (FORW)
                                     {
                                         /// ARTK Equation mode
-                                        IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
-                                        IMGPIXEL(*norm_proj, y, x) += a2;
+                                        IMGPIXEL(*proj, y, x) += A3D_ELEM(*vol, k, i, j) * a;
+                                        A2D_ELEM(projNorm , y, x) += a2;
 
 #ifdef DEBUG
 
                                         if (condition)
                                         {
                                             std::cout << " proj= " << IMGPIXEL(*proj, y, x)
-                                            << " norm_proj=" << IMGPIXEL(*norm_proj, y, x) << std::endl;
+                                            << " norm_proj=" << A2D_ELEM(projNorm , y, x) << std::endl;
                                             std::cout.flush();
                                         }
 #endif
@@ -1129,14 +1156,14 @@ void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basi
                                     }
                                     else
                                     {
-                                        vol_corr += IMGPIXEL(*norm_proj, y, x) * a;
+                                        vol_corr += A2D_ELEM(projNorm , y, x) * a;
                                         if (a != 0)
                                             N_eq++;
 #ifdef DEBUG
 
                                         if (condition)
                                         {
-                                            std::cout << " corr_img= " << IMGPIXEL(*norm_proj, y, x)
+                                            std::cout << " corr_img= " << A2D_ELEM(projNorm , y, x)
                                             << " correction=" << vol_corr << std::endl;
                                             std::cout.flush();
                                         }
@@ -1152,14 +1179,14 @@ void projectXraySimpleGrid(Image<double> *vol, const SimpleGrid *grid,const Basi
 
                         if (!FORW)
                         {
-                            VOLVOXEL(*vol, k, i, j) += vol_corr;
+                            A3D_ELEM(*vol, k, i, j) += vol_corr;
 
 #ifdef DEBUG
 
                             if (condition)
                             {
                                 printf("\nFinal value at (%d,%d,%d) ", j, i, k);
-                                std::cout << " = " << VOLVOXEL(*vol, k, i, j) << std::endl;
+                                std::cout << " = " << A3D_ELEM(*vol, k, i, j) << std::endl;
                                 std::cout.flush();
                             }
 #endif
