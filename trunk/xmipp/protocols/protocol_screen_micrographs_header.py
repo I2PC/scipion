@@ -79,16 +79,6 @@ estimations are noisier.
 """
 WinSize = 256
 
-# Do CTFFIND
-""" This option can be applied if ctffind3.exe is on the system PATH.
-"""
-DoCtffind = False
-
-# {condition}(DoCtffind){expert} Defocus step for CTFFIND (in microns)
-""" Step size for defocus search (in microns)
-"""
-StepFocus = 0.1
-
 # {eval} expandParallel(threads=0,hours=12)
 
 # {eval} expandExpert()
