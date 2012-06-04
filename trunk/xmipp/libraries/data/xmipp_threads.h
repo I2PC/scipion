@@ -147,6 +147,7 @@ private:
     ThreadManager * manager;
 public:
     int thread_id; ///< The thread id
+    int threads;   ///< Number of threads
     void * workClass; ///< The class in wich threads will be working
     void * data; // Pointer to void *
 
@@ -170,8 +171,9 @@ void * _threadMain(void * data);
  */
 class ThreadManager
 {
-private:
+public:
     int threads; ///< number of working threads.
+private:
     pthread_t * ids; ///< pthreads identifiers
     ThreadArgument * arguments; ///< Arguments passed to threads
     Barrier * barrier; ///< barrier for synchronized between tasks.
@@ -360,19 +362,23 @@ class ThreadTaskDistributor: public ParallelTaskDistributor
 public:
     ThreadTaskDistributor(size_t nTasks, size_t bSize):ParallelTaskDistributor(nTasks, bSize)
     {}
-    virtual ~ThreadTaskDistributor(){};
+    virtual ~ThreadTaskDistributor()
+    {}
+    ;
 protected:
     Mutex mutex; ///< Mutex to synchronize access to critical region
     virtual void lock();
     virtual void unlock();
     virtual bool distribute(size_t &first, size_t &last);
-};//end of class ThreadTaskDistributor
+}
+;//end of class ThreadTaskDistributor
 
 /** @name Old parallel stuff. */
 /** Barrier structure */
 //@{
-typedef struct mybarrier_t {
-	/// How many threads should be awaited
+typedef struct mybarrier_t
+{
+    /// How many threads should be awaited
     int needed;
     /// How many threads already arrived
     int called;
@@ -380,7 +386,8 @@ typedef struct mybarrier_t {
     pthread_mutex_t mutex;
     /// Condition on which the threads are waiting
     pthread_cond_t cond;
-} barrier_t;
+}
+barrier_t;
 
 /** Barrier initialization */
 int barrier_init(barrier_t *barrier, int needed);

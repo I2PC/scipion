@@ -27,7 +27,7 @@ void Mutex::unlock()
 // ================= BARRIER ==========================
 Barrier::Barrier(int numberOfThreads)
 {
-    needed = numberOfThreads + 1;
+    needed = numberOfThreads;
     called = 0;
     pthread_mutex_init(&mutex, NULL);
     pthread_cond_init(&cond, NULL);
@@ -60,6 +60,7 @@ void Barrier::wait()
 ThreadArgument::ThreadArgument()
 {
     thread_id = -1;
+    threads = -1;
     manager = NULL;
     data = NULL;
 }
@@ -67,6 +68,7 @@ ThreadArgument::ThreadArgument()
 ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
 {
     this->thread_id = id;
+    this->threads = manager->threads;
     this->manager = manager;
     this->data = data;
 }
@@ -88,9 +90,9 @@ void * _threadMain(void * data)
                 thMgr->workFunction(*thArg);
                 thMgr->wait(); //wait for finish together
             }
-            catch (XmippError XE)
+            catch (XmippError &xe)
             {
-                std::cerr << XE << std::endl
+                std::cerr << xe << std::endl
                 << "In thread " << thArg->thread_id << std::endl;
                 pthread_exit(NULL);
             }
@@ -105,7 +107,7 @@ void * _threadMain(void * data)
 ThreadManager::ThreadManager(int numberOfThreads, void * workClass)
 {
     threads = numberOfThreads;
-    barrier = new Barrier(threads);
+    barrier = new Barrier(threads + 1);
     workFunction = NULL;
     ids = new pthread_t[threads];
     arguments = new ThreadArgument[threads];
@@ -132,6 +134,7 @@ void ThreadManager::createThreads()
     for (int i = 0; i < threads; ++i)
     {
         arguments[i].thread_id = i;
+        arguments[i].threads = threads;
         arguments[i].manager = this;
         arguments[i].workClass = workClass;
 
