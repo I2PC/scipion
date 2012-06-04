@@ -385,7 +385,8 @@ if $DO_TCLTK; then
 fi
 
 #################### PYTHON ###########################
-    EXT_PYTHON=$EXT_PATH/python
+EXT_PYTHON=$EXT_PATH/python
+
 if $DO_PYTHON; then
     echoGreen "PYTHON SETUP"
     export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
@@ -414,7 +415,7 @@ if $DO_PYTHON; then
 
     # Create the python launch script with necessary environment variable settings
     PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
-	echo "--> Creating python launch script $PYTHON_BIN ..."
+    echo "--> Creating python launch script $PYTHON_BIN ..."
     printf "#!/bin/sh\n\n" > $PYTHON_BIN
     printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
     printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
@@ -453,7 +454,11 @@ if $DO_PYMOD; then
 			echoExec "rm $XMIPP_HOME/bin/pythonXmipp"
 			echoExec "rm $XMIPP_HOME/bin/python2.7"
 	else
-			compile_pymodule $VMATLIBPLOT
+           echoExec "cp $EXT_PYTHON/matplotlib_setupext.py $EXT_PYTHON/$VMATLIBPLOT/setupext.py"
+	   #The following is needed from matplotlib to works
+	   echoExec "ln -sf $EXT_PYTHON/tk$VTCLTK/unix/libtk8.5.so  $EXT_PYTHON/tk$VTCLTK/unix/libtk.so"
+	   echoExec "ln -sf $EXT_PYTHON/tcl$VTCLTK/unix/libtcl8.5.so  $EXT_PYTHON/tcl$VTCLTK/unix/libtcl.so"
+	   compile_pymodule $VMATLIBPLOT
 	fi
     compile_pymodule $VPYMPI
     compile_pymodule $VPYCIFRW
