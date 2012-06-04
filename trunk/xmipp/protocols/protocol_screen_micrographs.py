@@ -96,7 +96,8 @@ class ProtScreenMicrographs(XmippProtocol):
                                      CtffindExec=self.CtffindExec,micrograph=finalname,micrographDir=micrographDir,
                                      tmpDir=self.TmpDir,
                                      Voltage=Voltage,SphericalAberration=SphericalAberration,
-                                     AngPix=AngPix,Magnification=Magnification,AmplitudeContrast=self.AmplitudeContrast,
+                                     AngPix=AngPix,Magnification=Magnification,DownsampleFactor=self.DownsampleFactor,
+                                     AmplitudeContrast=self.AmplitudeContrast,
                                      LowResolCutoff=self.LowResolCutoff,HighResolCutoff=self.HighResolCutoff,
                                      MinFocus=self.MinFocus,MaxFocus=self.MaxFocus,
                                      StepFocus=self.StepFocus,WinSize=self.WinSize))
@@ -163,7 +164,7 @@ class ProtScreenMicrographs(XmippProtocol):
             showWarning('Warning', 'There are not results yet')
     
 def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
-                       AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
+                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
     # Convert image to MRC
     if not micrograph.endswith('.mrc'):
         from protlib_filesystem import uniqueRandomFilename
@@ -182,11 +183,11 @@ def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,S
     params += str(SphericalAberration) + ',' + \
               str(Voltage) + ',' + \
               str(AmplitudeContrast) + ',' + \
-              str(Magnification) + ',' + \
-              str(Magnification*AngPix*1e-4) + "\n"
+              str(Magnification/DownsampleFactor) + ',' + \
+              str(Magnification/DownsampleFactor*AngPix*1e-4) + "\n"
     params += str(WinSize) + ',' + \
-              str(AngPix / LowResolCutoff) + ',' + \
-              str(AngPix / HighResolCutoff) + ',' + \
+              str(AngPix*DownsampleFactor / LowResolCutoff) + ',' + \
+              str(AngPix*DownsampleFactor / HighResolCutoff) + ',' + \
               str(MinFocus*10000) + ',' + \
               str(MaxFocus*10000) + ',' + \
               str(StepFocus*10000) + "\n"
