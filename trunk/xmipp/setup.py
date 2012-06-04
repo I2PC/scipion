@@ -230,15 +230,6 @@ def run(notebook):
     cmd = ''   
     if out != STDOUT and os.path.exists(out):
         os.remove(out)
-    # Check new external packages
-    if not os.path.exists("external/fftw-3.3.1/.libs/libfftw3.so"):
-        cmd += '\n'
-        print '\033[1;31mXMIPP Update service: External fftw-3.3.1 library update available\033[0m'
-        cmd += 'echo "\033[1;31mExecuting the installer, please wait ...\033[0m"\n'
-        cmd += 'echo " ..."\n'
-        cmd1 = "./install.sh -j %(procs)s disable_all untar=true fftw=true" % locals()
-        cmd += 'echo "%(cmd1)s" >> %(out)s \n'
-        cmd += cmd1 + '\n'
     
     if options.hasOption('update'):
         cmd += 'echo "*** RUNNING SVN UPDATE..." >> %(out)s 2>&1\n svn up >> %(out)s 2>&1\n'
