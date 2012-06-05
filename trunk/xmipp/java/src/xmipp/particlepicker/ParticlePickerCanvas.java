@@ -54,7 +54,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 					return;
 				int step = 1;
 				int code = e.getKeyCode();
-				System.out.println("Key Code " + code);
 				if (code == KeyEvent.VK_UP)
 					moveActiveParticle(active.getX(), active.getY() - step);
 				else if (code == KeyEvent.VK_DOWN)
@@ -206,7 +205,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		if (active == null)
 			return;
 		active.setPosition(x, y);
-		System.out.println(active);
 		if (getFrame().getParticlesJDialog() != null)
 			active.getParticleCanvas(getFrame()).repaint();
 	}

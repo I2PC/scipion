@@ -21,7 +21,6 @@ public class MicrographsTableModel extends AbstractTableModel {
 	{
 		this.micrographs = frame.getParticlePicker().getMicrographs();
 		this.frame = frame;
-		columns[getParticlesPosition()] = frame.getFamily().getName();
 	}
 	
 	@Override
@@ -31,6 +30,8 @@ public class MicrographsTableModel extends AbstractTableModel {
 	@Override
 	public String getColumnName(int c)
 	{
+		if(getParticlesPosition() == c)
+			return frame.getFamily().getName();
 		return columns[c];
 	}
 

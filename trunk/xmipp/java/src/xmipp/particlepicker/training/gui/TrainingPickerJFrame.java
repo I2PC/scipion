@@ -1,23 +1,20 @@
 package xmipp.particlepicker.training.gui;
 
-import ij.IJ;
 import ij.gui.ImageWindow;
-import java.awt.Color;
-import java.awt.Component;
+
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.Menu;
-import java.awt.MenuBar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
+
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -39,11 +36,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import xmipp.jni.Program;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.particlepicker.tiltpair.gui.ImportParticlesFromFilesJDialog;
-import xmipp.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.MicrographFamilyState;
@@ -52,11 +49,9 @@ import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.ColorIcon;
-import xmipp.utils.InfiniteProgressPanel;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.utils.XmippMessage;
-import xmipp.jni.Program;
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame
 {
@@ -274,13 +269,25 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				}
 				if (family.getStep() != family2.getStep())
 				{
-					int result = JOptionPane.showConfirmDialog(TrainingPickerJFrame.this, String.format("Selecting family %s will take you to %s mode." + "\nAre you sure you want to continue?", family2.getName(), family2.getStep().toString()), "Message", JOptionPane.YES_NO_OPTION);
+					int result = -1;
+					if (family2.getStep() == FamilyState.Manual)//You can only change of family if you change its mode, for now only from manual to supervised
+						result = JOptionPane.showConfirmDialog(TrainingPickerJFrame.this, String.format("Selecting family %s will take it to %s mode." + "\nAre you sure you want to continue?", family2.getName(), FamilyState.Supervised.toString()), "Message", JOptionPane.YES_NO_OPTION);
+					else
+					{
+						familiescb.setSelectedItem(family);
+						JOptionPane.showMessageDialog(TrainingPickerJFrame.this, String.format("%s is in %s mode", family2.getName(), family2.getStep()));
+						return;
+					}
 					if (result == JOptionPane.NO_OPTION)
 					{
 						familiescb.setSelectedItem(family);
 						return;
 					}
-					setStep(family2.getStep());
+					else
+					{
+						family = family2;
+						train();
+					}
 				}
 				family = family2;
 				color = (family.getColor());
@@ -407,13 +414,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		ctfpn.add(iconlb);
 		micrographsmd = new MicrographsTableModel(this);
 		micrographstb = new JTable(micrographsmd);
-		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(245);
-		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
-		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(420, 304));
-		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		formatMicrographsTable();
 
 		sp.setViewportView(micrographstb);
 		micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
@@ -473,12 +474,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setState(MicrographFamilyState.Available);
 		canvas.setActive(null);
 		updateMicrographsModel();
-		setChanged(true);
 
 	}
 
 	private void setState(MicrographFamilyState state)
 	{
+		setChanged(true);
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
 		saveChanges();// to keep consistence between files of automatic picker
@@ -490,7 +491,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	MicrographFamilyData getFamilyData()
 	{
-		return micrograph.getFamilyData(family);
+		MicrographFamilyData mfd = micrograph.getFamilyData(family);
+		return mfd;
 	}
 
 	private void setStep(FamilyState step)
@@ -532,9 +534,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		}
 	}
+	
+	private void formatMicrographsTable()
+	{
+		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(245);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
+		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(420, 304));
+		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	}
 
 	protected void saveChanges()
 	{
+
 		ppicker.saveData();
 		setChanged(false);
 	}
@@ -554,6 +568,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker.getFamilies().toArray());
 		familiescb.setModel(model);
 		familiescb.setSelectedItem(item);
+		micrographsmd.fireTableStructureChanged();
+		formatMicrographsTable();
 		pack();
 	}
 
@@ -602,11 +618,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		MicrographFamilyData mfd;
 		for (TrainingMicrograph micrograph : ppicker.getMicrographs())
 		{
-			mfd = micrograph.getFamilyData(family);
-			System.out.println(mfd);
+			mfd = getFamilyData();
 			if (!mfd.isEmpty())
 			{
-				System.out.println(mfd.isEmpty());
 				final String fargs = ((SupervisedParticlePicker) ppicker).getTrainCommandLineArgs(mfd);
 				try
 				{

@@ -179,8 +179,12 @@ public class EditFamiliesJDialog extends JDialog {
 					if (name.equals(f.getName()))
 						return;
 					else if (parent.getParticlePicker().existsFamilyName(name))
+					{
 						JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 								XmippMessage.getAlreadyExistsGroupNameMsg(name));
+						return;
+					}
+						
 					f.setName(name);
 					frame.updateFamilyComboBox();
 				} else if (column == 1)
