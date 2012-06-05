@@ -43,6 +43,7 @@ struct XrayThreadArgument
     MultidimArray<double> *IgeoZb;
     Projection            *projOut;
     MultidimArray<double> *projNorm;
+    int 				   forw;
     std::vector<int>    *phantomSlabIdx;
     std::vector<int>    *psfSlicesIdx;
     ParallelTaskDistributor * td;
@@ -153,7 +154,7 @@ void calculateIgeoThread(ThreadArgument &thArg);
 
 
 /// Project as in an X-ray microscope using a grids and blobs
-void projectXrayGridVolumeBackwards(
+void projectXrayGridVolume(
     MultidimArray<double> &muVol,                  // Volume
     XRayPSF &psf,                   // Basis
     MultidimArray<double> &IgeoVol,    /// Vol with the Igeometrical distribution along specimen volume

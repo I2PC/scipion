@@ -82,7 +82,7 @@ void ProgReconsXrayART::readParams()
 
 }
 
-void ProgReconsXrayART::preProcess(GridVolume &volBasis)
+void ProgReconsXrayART::preProcess(Image<double> &volVoxels)
 {
     MDin.read(fnDoc);
 
@@ -91,56 +91,29 @@ void ProgReconsXrayART::preProcess(GridVolume &volBasis)
     projXdim = imgInfo.adim.xdim;
     projYdim = imgInfo.adim.ydim;
 
-    psf.calculateParams(sampling*1.e-9, -1, psfThr); // sampling is read in angstrom
+    psf.calculateParams(sampling*1.e-9, -1, psfThr); // sampling is read in nm
     psf.nThr = nThreads;
 
-    // Lets force basis to voxels
-    basis.type = Basis::voxels;
-    basis.grid_relative_size = 1;
-
-//    if (basis.VolPSF == NULL)
-//        basis.VolPSF = new MultidimArray<double>;
-//    psf.psfVol().getImage(*basis.VolPSF);
-
-
     /// Setting initial volume
-    if ( !fnStart.empty() )
+    if ( fnStart.empty() )
     {
-        if (fnStart.contains("basis")) // A basis file
-            volBasis.read(fnStart, basis.basisName());
-        else // If it is a volume of voxels
-        {
-            Image<double> imTemp;
-            imTemp.read(fnStart);
-            basis.changeFromVoxels(imTemp(), volBasis, NULL, NULL,
-                                   NULL, NULL, -1, nThreads);
-        }
+        volVoxels().resize(1, projXdim, projYdim, projXdim, false);
+        volVoxels().initZeros();
     }
-    else /// Initial volume is empty
-    {
-        Grid grid_basis;
-        Matrix1D<double> corner;
-        corner = vectorR3(-(double)FIRST_XMIPP_INDEX(projXdim),
-                          -(double)FIRST_XMIPP_INDEX(projYdim),
-                          -(double)FIRST_XMIPP_INDEX(projXdim));
-        /// For voxels grid type is CC
-        grid_basis = Create_CC_grid(1, -corner, corner);
-        volBasis.adapt_to_grid(grid_basis);
-    }
+    else
+        volVoxels.read(fnStart);
 
-    /* Basis side info --------------------------------------------------------- */
-    basis.produceSideInfo(volBasis.grid());
+    volVoxels().setXmippOrigin();
 
     //Create threads to start working
     thMgr = new ThreadManager(nThreads);
 
 }
 
-double ProgReconsXrayART::singleStep(GridVolume &volBasis, const Projection &projExp,
+double ProgReconsXrayART::singleStep(MultidimArray<double> &muVol, const Projection &projExp,
                                      double rot, double tilt, double psi)
 {
-    MultidimArray<double> &muVol = MULTIDIM_ARRAY(volBasis(0));
-    muVol.setXmippOrigin();
+    //    muVol.setXmippOrigin();
 
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
     int zinit, zend, yinit, yend, xinit, xend;
@@ -189,9 +162,18 @@ double ProgReconsXrayART::singleStep(GridVolume &volBasis, const Projection &pro
 
     calculateIgeo(rotVol, psf.dzo, IgeoVol, IgeoZb, psf.nThr, thMgr);
 
+    Image<double> imTemp;
+    imTemp().alias(IgeoVol);
+    imTemp.write("IgeoVol.vol");
+
     /// Forward projection
 
-    projectXrayVolume(rotVol, IgeoVol, psf, projTheo, &mdaProjNorm, thMgr);
+    //    projectXrayVolume(rotVol, IgeoVol, psf, projTheo, &mdaProjNorm, thMgr);
+    //
+    //    projTheo.write("theproj.spi");
+    //    projNorm.write("projNorm.spi");
+
+    projectXrayGridVolume(muVol, psf, IgeoVol, projTheo, &mdaProjNorm, FORWARD, thMgr);
 
     projTheo.write("theproj.spi");
     projNorm.write("projNorm.spi");
@@ -215,7 +197,12 @@ double ProgReconsXrayART::singleStep(GridVolume &volBasis, const Projection &pro
     }
     mean_error /= YXSIZE(mdaProjExp);
 
-    projectXrayGridVolumeBackwards(muVol, psf, IgeoVol, projTheo, &mdaProjNorm, BACKWARD, thMgr);
+    projNorm.write("projNorm_2.spi");
+
+    imTemp().alias(Idiff);
+    imTemp.write("iDiff.spi");
+
+    projectXrayGridVolume(muVol, psf, IgeoVol, projTheo, &mdaProjNorm, BACKWARD, thMgr);
 
     return mean_error;
 }
@@ -225,10 +212,9 @@ void ProgReconsXrayART::run()
     //    show();
 
     Image<double> volVoxels;
-    GridVolume volBasis;
 
 
-    preProcess(volBasis);
+    preProcess(volVoxels);
     Projection projExp;
     for (int it=0; it<Nit; it++)
     {
@@ -253,7 +239,7 @@ void ProgReconsXrayART::run()
             projExp().setXmippOrigin();
             projExp.setAngles(rot, tilt, psi);
 
-            itError += singleStep(volBasis, projExp, rot, tilt, psi);
+            itError += singleStep(MULTIDIM_ARRAY(volVoxels), projExp, rot, tilt, psi);
         }
         //        postIteration();
 
@@ -261,5 +247,6 @@ void ProgReconsXrayART::run()
             itError/=MDin.size();
         std::cerr << "Error at iteration " << it << " = " << itError << std::endl;
     }
-    //    writePseudo();
+
+    volVoxels.write(fnOut);
 }

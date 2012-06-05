@@ -670,7 +670,7 @@ void calculateIgeoThread(ThreadArgument &thArg)
 
 }
 
-void projectXrayGridVolumeBackwards(
+void projectXrayGridVolume(
     MultidimArray<double> &muVol,                  // Volume
     XRayPSF &psf,                   // Basis
     MultidimArray<double> &IgeoVol,    /// Vol with the Igeometrical distribution along specimen volume
@@ -690,6 +690,7 @@ void projectXrayGridVolumeBackwards(
     projThrData.IgeoVol = &IgeoVol;
     projThrData.projOut = &proj;
     projThrData.projNorm = projNorm;
+    projThrData.forw = FORW;
     projThrData.phantomSlabIdx = NULL;
     projThrData.psfSlicesIdx = NULL;
 
@@ -718,12 +719,13 @@ void projectXraySimpleGridThread(ThreadArgument &thArg)
     MultidimArray<double> *IgeoVol =  (dataThread->IgeoVol);
     Projection *proj = (dataThread->projOut);
     MultidimArray<double> &projNorm = *(dataThread->projNorm);
+    int forw = dataThread->forw;
     std::vector<int> &phantomSlabIdx = *(dataThread->phantomSlabIdx);
     std::vector<int> &psfSlicesIdx = *(dataThread->psfSlicesIdx);
     ParallelTaskDistributor * td = dataThread->td;
     Barrier * barrier = dataThread->barrier;
 
-    projectXraySimpleGrid(muVol, psf, IgeoVol, proj, projNorm , BACKWARD,
+    projectXraySimpleGrid(muVol, psf, IgeoVol, proj, projNorm , forw,
                           threadId, thArg.threads);
 
 
@@ -737,11 +739,8 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
                            int threadId, int numthreads)
 {
 
-    const SimpleGrid *grid;
-    const Basis *basis;
-
-
-
+    MultidimArray<double> psfVol;
+    psfVol.alias(psf.psfVol());
 
 
     Matrix1D<double> zero(3);                // Origin (0,0,0)
@@ -805,12 +804,15 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     // The unit size within the image plane is 1, ie, the same as for
     // the universal grid.
     // actprj is reused with a different purpose
-    VECTOR_R3(actprj, 1, 0, 0);
-    Uproject_to_plane(actprj, proj->euler, prjX);
-    VECTOR_R3(actprj, 0, 1, 0);
-    Uproject_to_plane(actprj, proj->euler, prjY);
-    VECTOR_R3(actprj, 0, 0, 1);
-    Uproject_to_plane(actprj, proj->euler, prjZ);
+    //    VECTOR_R3(actprj, 1, 0, 0);
+    //    Uproject_to_plane(actprj, proj->euler, prjX);
+    //    VECTOR_R3(actprj, 0, 1, 0);
+    //    Uproject_to_plane(actprj, proj->euler, prjY);
+    //    VECTOR_R3(actprj, 0, 0, 1);
+    //    Uproject_to_plane(actprj, proj->euler, prjZ);
+    proj->euler.getCol(0, prjX);
+    proj->euler.getCol(1, prjY);
+    proj->euler.getCol(2, prjZ);
 
     // This time the origin of the grid is in the universal coord system
     //    Uproject_to_plane(grid->origin, proj->euler, prjOrigin);
@@ -822,14 +824,9 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     // Footprint size .......................................................
     // The following vectors are integer valued vectors, but they are
     // stored as real ones to make easier operations with other vectors
-    //    XX_footprint_size ;
-    YY_footprint_size = basis->blobprint.vmax();
-
-
-    ZZ_footprint_size = basis->blobprint.wmax();
-
-    XX_footprint_size += XMIPP_EQUAL_ACCURACY;
-    YY_footprint_size += XMIPP_EQUAL_ACCURACY;
+    XX_footprint_size = FINISHINGX(psfVol) + XMIPP_EQUAL_ACCURACY;
+    YY_footprint_size = FINISHINGY(psfVol) + XMIPP_EQUAL_ACCURACY;
+    ZZ_footprint_size = FINISHINGZ(psfVol) + XMIPP_EQUAL_ACCURACY;
 
     // Project the whole grid ...............................................
     // Corner of the plane defined by Z. These coordinates try to be within
@@ -843,16 +840,14 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
 
     // This type conversion gives more speed
 
-    int ZZ_lowest = (int) ZZ(grid->lowest);
-
+    int ZZ_lowest = STARTINGZ(*vol);
     if( threadId != -1 )
         ZZ_lowest += threadId;
-
-    int YY_lowest = (int) YY(grid->lowest);
-    int XX_lowest = (int) XX(grid->lowest);
-    int ZZ_highest = (int) ZZ(grid->highest);
-    int YY_highest = (int) YY(grid->highest);
-    int XX_highest = (int) XX(grid->highest);
+    int YY_lowest = STARTINGY(*vol);
+    int XX_lowest = STARTINGX(*vol);
+    int ZZ_highest = FINISHINGZ(*vol);
+    int YY_highest = FINISHINGY(*vol);
+    int XX_highest = FINISHINGX(*vol);
 
     beginZ = (double)XX_lowest * prjX + (double)YY_lowest * prjY + (double)ZZ_lowest * prjZ + prjOrigin;
 
@@ -889,47 +884,29 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     }
 #endif
 
-    // Compute the grid lattice vectors in space ............................
-    Matrix2D<double> grid_basis(3, 3);
-    grid_basis = grid->basis * grid->relative_size;
-    Matrix1D<double> gridX(3);  // Direction of the grid lattice vectors
-    Matrix1D<double> gridY(3);  // in universal coordinates
-    Matrix1D<double> gridZ(3);
-    Matrix1D<double> univ_position(3);
-
-    grid_basis.getCol(0, gridX);
-    grid_basis.getCol(1, gridY);
-    grid_basis.getCol(2, gridZ);
-
-    univ_beginZ = (double)XX_lowest * gridX + (double)YY_lowest * gridY + (double)ZZ_lowest * gridZ + grid->origin;
-
     int number_of_basis = 0;
 
     for (k = ZZ_lowest; k <= ZZ_highest; k += numthreads)
     {
         // Corner of the row defined by Y
         beginY = beginZ;
-        univ_beginY = univ_beginZ;
         for (i = YY_lowest; i <= YY_highest; i++)
         {
             // First point in the row
             actprj = beginY;
-            univ_position = univ_beginY;
             for (j = XX_lowest; j <= XX_highest; j++)
             {
                 // Ray length interesting
                 bool ray_length_interesting = true;
-                double zCenterDist, z = 0; // z = 0 standard value for non 3D blobprints
+                double zCenterDist;
 
-                zCenterDist = point_plane_distance_3D(univ_position, zero,
-                                                      proj->direction);
-                // Points out of 3DPSF
-                ray_length_interesting = (ABS(zCenterDist) <= ZZ_footprint_size);
-                // There is still missing the shift of the volume from focal plane
-                z = zCenterDist; // + shiftZ
+                double kPos = ZZ(actprj); // z = 0 standard value for non 3D blobprints
 
-                if (grid->is_interesting(univ_position) &&
-                    ray_length_interesting)
+                //                // Points out of 3DPSF
+                //                ray_length_interesting = (ABS(zCenterDist) <= ZZ_footprint_size);
+                //                // There is still missing the shift of the volume from focal plane
+
+                if (ray_length_interesting)
                 {
                     // Be careful that you cannot skip any basis, although its
                     // value be 0, because it is useful for norm_proj
@@ -965,29 +942,20 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
                     }
 #endif
 
-                    // Check if the basis falls outside the projection plane
+                    // Check if the voxel falls outside the projection plane
                     // COSS: I have changed here
-                    if (XX_corner1 <= XX_corner2 && YY_corner1 <= YY_corner2)
+                    if (XX_corner1 <= XX_corner2 && YY_corner1 <= YY_corner2
+                        && INSIDEZ(*IgeoVol,ZZ(actprj)))
                     {
-                        // Compute the index of the basis for corner1
-                        if (basis->type == Basis::blobs)
-                        {
-                            OVER2IMG(basis->blobprint, (double)YY_corner1 - YY(actprj),
-                                     (double)XX_corner1 - XX(actprj), foot_V1, foot_U1);
-                            if (isVolPSF != NULL)
-                                OVER2IMG_Z(basis->blobprint, z, foot_W);
-                        }
+
+                        double IgeoValue = A3D_ELEM(*IgeoVol, (int)ZZ(actprj), (int)YY(actprj), (int)XX(actprj));
 
                         if (!FORW)
                             vol_corr = 0;
 
-                        // Effectively project this basis
-                        // N_eq=(YY_corner2-YY_corner1+1)*(XX_corner2-XX_corner1+1);
                         N_eq = 0;
-                        foot_V = foot_V1;
                         for (int y = YY_corner1; y <= YY_corner2; y++)
                         {
-                            foot_U = foot_U1;
                             for (int x = XX_corner1; x <= XX_corner2; x++)
                             {
                                 //                                if (!((mask != NULL) && A2D_ELEM(*mask,y,x)<0.5))
@@ -1008,131 +976,14 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
                                         }
                                     }
 #endif
+
                                     double a, a2;
-                                    //                                    // Check if volumetric interpolation (i.e., SSNR)
-                                    //                                    if (VSSNR_mode)
-                                    //                                    {
-                                    //                                        // This is the VSSNR case
-                                    //                                        // Get the pixel position in the universal coordinate
-                                    //                                        // system
-                                    //                                        SPEED_UP_temps;
-                                    //                                        VECTOR_R3(prjPix, x, y, z);
-                                    //                                        M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
-                                    //                                        V3_MINUS_V3(prjPix, prjPix, univ_position);
-                                    //                                        a = basis->valueAt(prjPix);
-                                    //                                        a2 = a * a;
-                                    //                                    }
-                                    //                                    else
-                                    {
-                                        // This is normal reconstruction from projections
-                                        if (basis->type == Basis::blobs)
-                                        {
-                                            // Projection of a blob
-                                            a = VOLVOXEL(basis->blobprint, foot_W, foot_V, foot_U);
-                                            a2 = VOLVOXEL(basis->blobprint2, foot_W, foot_V, foot_U);
 
-                                        }
-                                        else
-                                        {
-                                            // Projection of other bases
-                                            // If the basis is big enough, then
-                                            // it is not necessary to integrate at several
-                                            // places. Big enough is being greater than
-                                            // 1.41 which is the maximum separation
-                                            // between two pixels
-                                            if (XX_footprint_size > 1.41)
-                                            {
-                                                // Get the pixel in universal coordinates
-                                                SPEED_UP_temps;
-                                                VECTOR_R3(prjPix, x, y, 0);
-                                                // Express the point in a local coordinate system
-                                                M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
+                                    a = A3D_ELEM(psfVol, (int)ZZ(actprj), y, x) * IgeoValue;
+                                    a2 = a * a;
+
 #ifdef DEBUG
 
-                                                if (condition)
-                                                    std::cout << " in volume coord ("
-                                                    << prjPix.transpose() << ")";
-#endif
-
-                                                V3_MINUS_V3(prjPix, prjPix, univ_position);
-#ifdef DEBUG
-
-                                                if (condition)
-                                                    std::cout << " in voxel coord ("
-                                                    << prjPix.transpose() << ")";
-#endif
-
-                                                a = basis->projectionAt(prjDir, prjPix);
-                                                a2 = a * a;
-                                            }
-                                            else
-                                            {
-                                                // If the basis is too small (of the
-                                                // range of the voxel), then it is
-                                                // necessary to sample in a few places
-                                                const double p0 = 1.0 / (2 * ART_PIXEL_SUBSAMPLING) - 0.5;
-                                                const double pStep = 1.0 / ART_PIXEL_SUBSAMPLING;
-                                                const double pAvg = 1.0 / (ART_PIXEL_SUBSAMPLING * ART_PIXEL_SUBSAMPLING);
-                                                int ii, jj;
-                                                double px, py;
-                                                a = 0;
-#ifdef DEBUG
-
-                                                if (condition)
-                                                    std::cout << std::endl;
-#endif
-
-                                                for (ii = 0, px = p0; ii < ART_PIXEL_SUBSAMPLING; ii++, px += pStep)
-                                                    for (jj = 0, py = p0; jj < ART_PIXEL_SUBSAMPLING; jj++, py += pStep)
-                                                    {
-#ifdef DEBUG
-                                                        if (condition)
-                                                            std::cout << "    subsampling (" << ii << ","
-                                                            << jj << ") ";
-#endif
-
-                                                        SPEED_UP_temps;
-                                                        // Get the pixel in universal coordinates
-                                                        VECTOR_R3(prjPix, x + px, y + py, 0);
-                                                        // Express the point in a local coordinate system
-                                                        M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
-#ifdef DEBUG
-
-                                                        if (condition)
-                                                            std::cout << " in volume coord ("
-                                                            << prjPix.transpose() << ")";
-#endif
-
-                                                        V3_MINUS_V3(prjPix, prjPix, univ_position);
-#ifdef DEBUG
-
-                                                        if (condition)
-                                                            std::cout << " in voxel coord ("
-                                                            << prjPix.transpose() << ")";
-#endif
-
-                                                        a += basis->projectionAt(prjDir, prjPix);
-#ifdef DEBUG
-
-                                                        if (condition)
-                                                            std::cout << " partial a="
-                                                            << basis->projectionAt(prjDir, prjPix)
-                                                            << std::endl;
-#endif
-
-                                                    }
-                                                a *= pAvg;
-                                                a2 = a * a;
-#ifdef DEBUG
-
-                                                if (condition)
-                                                    std::cout << "   Finally ";
-#endif
-
-                                            }
-                                        }
-                                    }
-#ifdef DEBUG
                                     if (condition)
                                         std::cout << "=" << a << " , " << a2;
 #endif
@@ -1170,11 +1021,8 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
 #endif
 
                                     }
-                                }
-                                // Prepare for next operation
-                                foot_U += Usampling;
+                                }// close possible mask constraint
                             }
-                            foot_V += Vsampling;
                         } // Project this basis
 
                         if (!FORW)
@@ -1193,18 +1041,15 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
 
                         }
                     } // If not collapsed
-                    number_of_basis++;
+                    //                    number_of_basis++;
                 } // If interesting
 
                 // Prepare for next iteration
-                V2_PLUS_V2(actprj, actprj, prjX);
-                V3_PLUS_V3(univ_position, univ_position, gridX);
+                V3_PLUS_V3(actprj, actprj, prjX);
             }
-            V2_PLUS_V2(beginY, beginY, prjY);
-            V3_PLUS_V3(univ_beginY, univ_beginY, gridY);
+            V3_PLUS_V3(beginY, beginY, prjY);
         }
-        V2_PLUS_V2(beginZ, beginZ, prjZ * numthreads );
-        V3_PLUS_V3(univ_beginZ, univ_beginZ, gridZ * numthreads);
+        V3_PLUS_V3(beginZ, beginZ, prjZ * numthreads );
     }
 }
 

@@ -81,18 +81,17 @@ public:
 
     ///Functions of common reconstruction interface
     void setIO(const FileName &fn_in, const FileName &fn_out)
-    {
-    }
+    {}
     void defineParams();
     void readParams();
     void show();
     void run();
-    void preProcess(GridVolume &volBasis);
+    void preProcess(Image<double> &volVoxels);
     void postProcess();
-//    void preIteration();
-//    void postIteration();
+    //    void preIteration();
+    //    void postIteration();
     /** ART single step */
-    double singleStep(GridVolume &volBasis, const Projection &projExp,
+    double singleStep(MultidimArray<double> &muVol, const Projection &projExp,
                       double rot, double tilt, double psi);
 
 

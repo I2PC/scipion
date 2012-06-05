@@ -305,6 +305,8 @@ void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
                          Noy/scaleFactor,
                          Nox/scaleFactor, false);
 
+        mdaPsfVol.setXmippOrigin();
+
         applyGeometry(LINEAR, mdaPsfVol, psfGen(), T,
                       IS_INV, DONT_WRAP);
 
@@ -363,6 +365,9 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset) cons
 {
     //    double Z;
     //    MultidimArray< std::complex<double> > OTF;
+
+    if (mode == GENERATE_PSF)
+        REPORT_ERROR(ERR_VALUE_NOTSET, "XrayPSF::applyOTF: a PSF from file must be read.");
 
     double Z = Zo + DeltaZo + sliceOffset;
 
