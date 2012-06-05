@@ -43,6 +43,13 @@ SVMClassifier::SVMClassifier()
     param.weight_label = NULL;
     param.weight = NULL;
 }
+SVMClassifier::~SVMClassifier()
+{
+	svm_free_and_destroy_model(&model);
+    svm_destroy_param(&param);
+    free(prob.y);
+    free(prob.x);
+}
 void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> &lable)
 {
     prob.l = YSIZE(trainSet);
@@ -50,7 +57,7 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> 
     prob.x = new svm_node *[prob.l];
     for (int i=0;i<YSIZE(trainSet);i++)
     {
-        prob.x[i]=new svm_node[YSIZE(trainSet)];
+        prob.x[i]=new svm_node[XSIZE(trainSet)];
         int cnt = 0;
         for (int j=0;j<XSIZE(trainSet);j++)
         {
@@ -67,4 +74,8 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> 
         prob.y[i] = DIRECT_A1D_ELEM(lable,i);
     }
     model=svm_train(&prob, &param);
+}
+void SVMClassifier::SaveModel(const FileName &fnModel)
+{
+	svm_save_model(fnModel.c_str(),model);
 }

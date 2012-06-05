@@ -42,14 +42,15 @@
 class SVMClassifier
 {
 public:
-
     svm_parameter param;
     svm_problem prob;
     svm_model *model;
 public:
 
     SVMClassifier();
+    ~SVMClassifier();
     void SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> &lable);
+    void SaveModel(const FileName &fnModel);
 };
 //@}
 #endif
