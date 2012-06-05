@@ -32,7 +32,7 @@
 #include <reconstruction/fourier_filter.h>
 #include <reconstruction/transform_geometry.h>
 #include <classification/naive_bayes.h>
-#include <classification/svm.h><
+#include <classification/svm_classifier.h>
 
 #include <data/xmipp_image.h>
 #include <data/polar.h>
@@ -59,21 +59,6 @@ public:
     void read(std::istream &_in, int _vec_size);
 };
 
-/* Classification model ---------------------------------------------------- */
-class SVMClassifier
-{
-public:
-
-	svm_parameter param;
-    svm_problem prob;
-    svm_model *model;
-public:
-
-    SVMClassifier();
-    void SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> &lable);
-
-};
-
 /* Automatic particle picking ---------------------------------------------- */
 /** Class to perform the automatic particle picking */
 class AutoParticlePicking2
@@ -82,13 +67,11 @@ public:
 
     static const int NangSteps=120;
 
-    Micrograph                *__m;
-    Image<double>              microImage;
-    PCAMahalanobisAnalyzer     pcaAnalyzer;
-    SVMClassifier              classifier;
-    FileName                   fn_micrograph;
-    int                        __numThreads;
-    Mask                       __mask;
+    Micrograph                  *__m;
+    Image<double>                microImage;
+    PCAMahalanobisAnalyzer       pcaAnalyzer;
+    SVMClassifier                classifier;
+    FileName                     fn_micrograph;
     int                          piece_xsize;
     int                          particle_size;
     int                          particle_radius;
@@ -97,10 +80,8 @@ public:
     int                          corr_num;
     double                       scaleRate;
     int                          NRsteps;
-    bool                       __fast;
-    bool                       __incore;
-    std::vector<Particle2>      __auto_candidates;
-    std::vector<Particle2>      __rejected_particles;
+    MultidimArray<double>        trainSet;
+    MultidimArray<int>           classLabel;
 
 public:
 
@@ -113,9 +94,16 @@ public:
     /// Read the micrograph in memory
     void readMicrograph();
 
+    //Check the distance between a point and positive samples
+    bool checkDist(Particle2 &p);
+
     //Extract the particles from the Micrograph
     void extractParticle(const int x, const int y, ImageGeneric & filter,
                          MultidimArray<double> &particleImage);
+
+    //Extract the particles from the Micrograph
+    void extractNonParticle(std::vector<Particle2> &negativePosition);
+
     //Convert an image to its polar form
     void convert2Polar(MultidimArray<double> &particleImage, MultidimArray<double> &polar);
 
@@ -139,13 +127,17 @@ public:
     void extractNegativeInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
 
     /// Project a vector in PCA space
-    void PCAProject(MultidimArray<double> &inputVec,int firstIndex);
+    double PCAProject(MultidimArray<double> &pcaBasis,MultidimArray<double> &vec,
+                      MultidimArray<double> &avg);
+
+    /// Train a PCA with negative and positive vectors
+    void trainSVM(const FileName &fn_root);
 
     /// Train a PCA with negative and positive vectors
     void trainPCA(const FileName &fnPositiveFeat);
 
-    /// Train SVM
-    void trainSVM(const FileName &fnInvariantFeat);
+    /// Make dataset from the data in file
+    void add2Dataset(const FileName &fnInvariantFeat,const FileName &fn_root,int lable);
 
     /// Save PCA model
     void savePCAModel(const FileName &fn_root) const;
