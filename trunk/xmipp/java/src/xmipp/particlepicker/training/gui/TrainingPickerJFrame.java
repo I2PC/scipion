@@ -618,7 +618,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		MicrographFamilyData mfd;
 		for (TrainingMicrograph micrograph : ppicker.getMicrographs())
 		{
-			mfd = getFamilyData();
+			mfd = micrograph.getFamilyData(family);
 			if (!mfd.isEmpty())
 			{
 				final String fargs = ((SupervisedParticlePicker) ppicker).getTrainCommandLineArgs(mfd);
