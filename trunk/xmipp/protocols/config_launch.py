@@ -66,14 +66,15 @@ FileTemplate = """
 #PBS -l nodes=%(nodes)d:ppn=%(threads)d
 ### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
 #PBS -l walltime=%(hours)d:00:00
+# Use as working dir the path where qsub was launched
+WORKDIR=$PBS_O_WORKDIR
 #################################
 ### Set environment varible to know running mode is non interactive
 export XMIPP_IN_QUEUE=1
 ### Switch to the working directory;
-cd $PBS_O_WORKDIR
-echo Working directory is $PBS_O_WORKDIR
+cd $WORKDIR
 # Make a copy of PBS_NODEFILE 
-cp $PBS_NODEFILE %(pbsNodeBackup)s
+cp $PBS_NODEFILE %(nodesfileBackup)s
 # Calculate the number of processors allocated to this run.
 NPROCS=`wc -l < $PBS_NODEFILE`
 # Calculate the number of nodes allocated.
@@ -81,7 +82,7 @@ NNODES=`uniq $PBS_NODEFILE | wc -l`
 ### Display the job context
 echo Running on host `hostname`
 echo Time is `date`
-echo Directory is `pwd`
+echo Working directory is `pwd`
 echo Using ${NPROCS} processors across ${NNODES} nodes
 echo PBS_NODEFILE:
 cat $PBS_NODEFILE

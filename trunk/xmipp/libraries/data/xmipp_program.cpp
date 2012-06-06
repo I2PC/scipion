@@ -207,7 +207,8 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
             doRun = true;
         else
         {
-            if (getenv("XMIPP_GUI_ON") != NULL)
+           const char * gui_default = getenv("XMIPP_GUI_DEFAULT");
+            if (gui_default != NULL && STR_EQUAL(gui_default, "1"))
                 createGUI();
             else
                 usage();
