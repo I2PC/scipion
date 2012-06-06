@@ -27,7 +27,8 @@
 '''
 
 from xmipp import MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
-MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_CA, MDL_CTF_Q0, MDL_CTF_K, label2Str, MetaData
+MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_CA, MDL_CTF_Q0, MDL_CTF_K, label2Str, MetaData,\
+MDL_XINT, MDL_YINT, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE
 
 
 def convertCtfparam(oldCtf):
@@ -67,5 +68,31 @@ def convertCtfparam(oldCtf):
     md.operate(expression)
     return md
     
+def convertBox(boxFile, posFile, ysize, family='DefaultFamily', particleSize=None):
+    ''' Convert the .box files with EMAN coordinates for one micrographs
+    to the .pos metadata file on Xmipp, change the coordinate from left-upper 
+    corner to center. As parameter the family could be provided and the 
+    particle size(if different from EMAN. If ysize is provide, the y-coordinate is inverted'''
+    f = open(boxFile)
     
+    md = MetaData()
+    md.readPlain(boxFile, 'Xcoor Ycoor')
+    
+    if particleSize is None: #Find the EMAN particle size
+        for line in f:
+            if len(line.strip()):
+                parts = line.strip().split()
+                particleSize = int(parts[2])                    
+                break
+                
+    half = particleSize / 2
+    # Move coordinates to the center and also invert the y-coordinate
+    md.operate('Xcoor=Xcoor+%(half)d,Ycoor=Ycoor+%(half)d' % locals())
+    
+    mdFamily = MetaData()
+    objId = mdFamily.addObject()
+    mdFamily.setValue(MDL_PICKING_FAMILY, family, objId)
+    mdFamily.setValue(MDL_PICKING_MICROGRAPH_FAMILY_STATE, 'Manual', objId)
+    mdFamily.write('families@%s' % posFile)
+    md.writeBlock(posFile, family)
     
