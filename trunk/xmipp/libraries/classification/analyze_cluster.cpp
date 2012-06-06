@@ -90,6 +90,9 @@ void ProgAnalyzeCluster::produceSideInfo(MDLabel image_label)
             return;
         if (SFin.containsLabel(MDL_ENABLED))
             SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+        MetaData SFaux;
+        SFaux.removeDuplicates(SFin,MDL_IMAGE);
+        SFin=SFaux;
     }
     bool subtractRef=false;
     Image<double> Iref;
@@ -192,7 +195,7 @@ void ProgAnalyzeCluster::produceBasis(MultidimArray<double> &basis)
 // Run  ====================================================================
 void ProgAnalyzeCluster::run()
 {
-    show();
+	show();
     produceSideInfo();
 
     pcaAnalyzer.evaluateZScore(NPCA, Niter);
