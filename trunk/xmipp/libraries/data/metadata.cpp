@@ -1462,11 +1462,11 @@ void MetaData::intersection(const MetaData &mdIn, const MDLabel label)
         _setOperates(mdIn, label, INTERSECTION);
 }
 
-void MetaData::removeDuplicates(MetaData &MDin)
+void MetaData::removeDuplicates(MetaData &MDin, MDLabel label)
 {
     if(MDin.isEmpty())
         return;
-    _setOperates(MDin, MDL_UNDEFINED, REMOVE_DUPLICATE);
+    _setOperates(MDin, label, REMOVE_DUPLICATE);
 }
 
 void MetaData::removeDisabled()

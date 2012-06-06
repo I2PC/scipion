@@ -865,7 +865,7 @@ public:
 
     /**Remove duplicate entries for attribute in label
      */
-    void removeDuplicates(MetaData &MDin);
+    void removeDuplicates(MetaData &MDin, MDLabel label=MDL_UNDEFINED);
 
     /**Remove rows with MDL_ENABLED = -1 if this labe is present
      */
