@@ -15,7 +15,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		{
 			// openImageJ(Tool.VIEWER);
 			//XmippStackWindow w = new XmippStackWindow(new ImagePlusLoader("/home/airen/hand.vol"));
-			XmippImageWindow w = new XmippImageWindow(new ImagePlusLoader("/home/airen/coss/RCT/InputData/imageU.xmp"));
+			XmippImageWindow w = new XmippImageWindow(new ImagePlusLoader("/home/airen/xprojects/1/Micrographs/KLH_Dataset_I_Training_0001.mrc"));
 			// IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 
 		}

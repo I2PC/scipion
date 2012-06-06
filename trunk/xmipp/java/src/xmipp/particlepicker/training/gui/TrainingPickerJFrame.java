@@ -290,11 +290,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 					}
 				}
 				family = family2;
+				index = ppicker.getNextFreeMicrograph(family);
+				micrographstb.getSelectionModel().setSelectionInterval(index, index);
 				color = (family.getColor());
 				colorbt.setIcon(new ColorIcon(color));
 				sizesl.setValue(family.getSize());
 				updateMicrographsModel();
 				micrographstb.getColumnModel().getColumn(micrographsmd.getParticlesPosition()).setHeaderValue(family.getName());
+				setThresholdValue(0);
 			}
 		});
 
@@ -367,11 +370,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				double threshold = Double.parseDouble(thresholdtf.getText()) * 100;
-				if (Math.abs(threshold) <= 100)
-				{
-					thresholdsl.setValue((int) threshold);
-					setThresholdChanges();
-				}
+				setThresholdValue(threshold);
 
 			}
 		});
@@ -387,6 +386,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				setThresholdChanges();
 			}
 		});
+	}
+	
+	private void setThresholdValue(double threshold)
+	{
+		if (Math.abs(threshold) <= 100)
+		{
+			thresholdsl.setValue((int) threshold);
+			setThresholdChanges();
+		}
 	}
 
 	private void setThresholdChanges()
@@ -657,6 +665,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setState(MicrographFamilyState.Autopick);
 
 		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
+		System.out.println(fargs);
 		try
 		{
 			canvas.setEnabled(false);
