@@ -47,9 +47,10 @@ class ScriptImportBox(XmippScript):
         self.addParamsLine(' -o <outputFolder>                   : Output folder where to generate output .pos files')
         self.addParamsLine('[--family <family=DefaultFamily>]   : Family name in Xmipp to which import particles')
         self.addParamsLine('[--particle_size <bs>] : box size of particles, by default use the one on EMAN')
- #       self.addExampleLine('[--invert <ysize>]    : invert the y-coordinates, provide the micrograph ysize', verbatim)
         ## examples
-        self.addExampleLine('   xmipp_import_ctfparam -i old.ctfparam -o new.ctfparam')
+        
+        self.addExampleLine('Import .box files from folder Input/BoxFiles/ to particle picking run_001', False)
+        self.addExampleLine('xmipp_import_box -i ParticlePicking/Manual/run_001/micrographs.xmd Input/BoxFiles/ -o ParticlePicking/Manual/run_001/')
       
     def run(self):
         micFn = self.getParam('-i', 0)
