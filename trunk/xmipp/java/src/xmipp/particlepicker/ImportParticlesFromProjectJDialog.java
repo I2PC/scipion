@@ -76,13 +76,14 @@ public class ImportParticlesFromProjectJDialog extends JDialog {
 						}
 					}
 				});
-		JButton cancelbt = XmippWindowUtil.getTextButton("Cancel", new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				setVisible(false);
-				dispose();
-			}
-		});
+		JButton cancelbt = XmippWindowUtil.getTextButton("Cancel",
+				new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						setVisible(false);
+						dispose();
+					}
+				});
 		actionspn.add(okbt);
 		actionspn.add(cancelbt);
 		add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
@@ -150,19 +151,19 @@ public class ImportParticlesFromProjectJDialog extends JDialog {
 
 	private void importParticles() {
 
+		
 		String projectdir = sourcetf.getText();
 		if (projectdir == null || projectdir.equals(""))
-			throw new IllegalArgumentException(
-					XmippMessage.getEmptyFieldMsg("directory"));
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("directory"));
 		switch (format) {
 		case Xmipp24:
-			parent.importParticlesXmipp24(projectdir);
+			parent.importParticlesXmipp24Project(projectdir);
 			break;
 		case Xmipp30:
-			parent.importParticlesXmipp30(projectdir);
+			parent.importParticlesXmipp30Project(projectdir);
 			break;
 		case Eman:
-			parent.importParticlesEman(projectdir);
+			parent.importParticlesEmanProject(projectdir);
 			break;
 
 		}

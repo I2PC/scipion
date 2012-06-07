@@ -479,7 +479,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	protected void resetMicrograph()
 	{
 		ppicker.resetFamilyData(getFamilyData());
-		setState(MicrographFamilyState.Available);
 		canvas.setActive(null);
 		updateMicrographsModel();
 
@@ -639,7 +638,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 						public void run()
 						{
-							runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
+							ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 
 							canvas.setEnabled(true);
 							int next = ppicker.getNextFreeMicrograph(family);
@@ -675,7 +674,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 				public void run()
 				{
-					runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
+					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 					ppicker.loadAutomaticParticles(micrograph);
 					setState(MicrographFamilyState.Correct);
 					canvas.repaint();
@@ -708,7 +707,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			{
 				public void run()
 				{
-					runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
+					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
 					int next = ppicker.getNextFreeMicrograph(family);
 					if (next != -1)
 						micrographstb.setRowSelectionInterval(next, next);
@@ -729,19 +728,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	private void runXmippProgram(String program, String args)
-	{
-		try
-		{
-			Program.runByName(program, args);
-		}
-		catch (Exception e)
-		{
-			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-	}
-
+	
 	public double getThreshold()
 	{
 		return thresholdsl.getValue() / 100.0;
@@ -770,14 +757,24 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void importParticlesFromXmipp30File(String file)
 	{
-		ppicker.importParticlesXmipp30(getFamily(), file);
+		ppicker.importParticlesXmipp30Project(getFamily(), file);
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();
 		canvas.setActive(null);
 
+		
 	}
-
+	
+	public void importParticlesFromEmanFile(String file) {
+		ppicker.importParticlesFromEmanFile(getFamilyData(), file);
+		setChanged(true);
+		getCanvas().repaint();
+		updateMicrographsModel();
+		canvas.setActive(null);
+		
+	}
+	
 	@Override
 	protected void displayImportDialog()
 	{
@@ -798,5 +795,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		getCanvas().updateMicrographData();
 
 	}
+
+	
+
+
 
 }

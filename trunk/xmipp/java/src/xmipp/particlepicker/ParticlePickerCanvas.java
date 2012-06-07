@@ -15,13 +15,16 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageCanvas;
+import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.AutomaticParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
+import xmipp.particlepicker.training.model.TrainingPicker;
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
@@ -207,6 +210,19 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		active.setPosition(x, y);
 		if (getFrame().getParticlesJDialog() != null)
 			active.getParticleCanvas(getFrame()).repaint();
+	}
+
+	private void runXmippProgram(String program, String args)
+	{
+		try
+		{
+			Program.runByName(program, args);
+		}
+		catch (Exception e)
+		{
+			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	

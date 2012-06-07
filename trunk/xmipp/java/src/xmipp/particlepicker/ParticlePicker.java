@@ -18,6 +18,7 @@ import java.util.logging.SimpleFormatter;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.XmippMessage;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -387,12 +388,26 @@ public abstract class ParticlePicker
 
 	public abstract void exportParticles(Family family, String absolutePath);
 
-	public abstract void importParticlesXmipp30(Family family, String absolutePath);
+	public abstract void importParticlesXmipp30Project(Family family, String absolutePath);
 
 	public abstract void importParticlesFromXmipp24Project(Family family, String path);
 	{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void runXmippProgram(String program, String args)
+	{
+		try
+		{
+			Program.runByName(program, args);
+		}
+		catch (Exception e)
+		{
+			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+	}
+
 
 }

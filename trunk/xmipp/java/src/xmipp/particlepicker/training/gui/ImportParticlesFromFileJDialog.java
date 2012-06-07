@@ -38,6 +38,7 @@ public class ImportParticlesFromFileJDialog extends JDialog {
 	private JButton browsetbt;
 	private JButton browseubt;
 	private XmippFileChooser fc;
+	private JRadioButton xmippemanrb;
 
 	public ImportParticlesFromFileJDialog(TrainingPickerJFrame parent,
 			boolean modal) {
@@ -64,8 +65,7 @@ public class ImportParticlesFromFileJDialog extends JDialog {
 		add(browseubt, XmippWindowUtil.getConstraints(constraints, 2, 1, 1));
 		browseubt.addActionListener(bl);
 
-		fc = new XmippFileChooser(new File(parent.getParticlePicker()
-				.getOutputDir()));
+		fc = new XmippFileChooser(new File(parent.getParticlePicker().getOutputDir()));
 		setFile(filetf, parent.getMicrograph().getPosFileFromXmipp24());
 
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -146,19 +146,24 @@ public class ImportParticlesFromFileJDialog extends JDialog {
 		FormatItemListener formatlistener = new FormatItemListener();
 
 		formatgroup = new ButtonGroup();
+		
 		xmipp24rb = new JRadioButton(Format.Xmipp24.toString());
 		xmipp24rb.setSelected(true);
 		format = Format.Xmipp24;
 		xmipp24rb.addItemListener(formatlistener);
-
+		formatgroup.add(xmipp24rb);
+		
 		xmipp30rb = new JRadioButton(Format.Xmipp30.toString());
 		xmipp30rb.addItemListener(formatlistener);
-
+		formatgroup.add(xmipp30rb);
+		
+		xmippemanrb = new JRadioButton(Format.Eman.toString());
+		xmippemanrb.addItemListener(formatlistener);
+		formatgroup.add(xmippemanrb);
+		
 		sourcepn.add(xmipp24rb);
 		sourcepn.add(xmipp30rb);
-
-		formatgroup.add(xmipp24rb);
-		formatgroup.add(xmipp30rb);
+		sourcepn.add(xmippemanrb);
 
 	}
 
@@ -183,6 +188,9 @@ public class ImportParticlesFromFileJDialog extends JDialog {
 			break;
 		case Xmipp30:
 			parent.importParticlesFromXmipp30File(file);
+			break;
+		case Eman:
+			parent.importParticlesFromEmanFile(file);
 			break;
 
 		}

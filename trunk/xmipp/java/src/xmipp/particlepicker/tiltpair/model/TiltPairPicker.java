@@ -311,7 +311,7 @@ public class TiltPairPicker extends ParticlePicker
 	}
 
 	@Override
-	public void importParticlesXmipp30(Family family, String absolutePath)
+	public void importParticlesXmipp30Project(Family family, String absolutePath)
 	{
 		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
 

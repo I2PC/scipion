@@ -308,7 +308,8 @@ public abstract class TrainingPicker extends ParticlePicker {
 			}
 			if (!mfd.getManualParticles().isEmpty()) {
 				// removing manual particles
-				block = String.format("%s@%s", mfd.getFamily().getName(), getOutputPath(mfd.getMicrograph().getPosFile()));
+				block = String.format("%s@%s", mfd.getFamily().getName(),
+						getOutputPath(mfd.getMicrograph().getPosFile()));
 				emptymd.writeBlock(block);
 			}
 			mfd.reset();// Resetting family data
@@ -346,17 +347,18 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	@Override
-	public void importParticlesXmipp30(Family family, String file) {
+	public void importParticlesXmipp30Project(Family family, String file) {//Expected a file for all micrographs
 		try {
 			MetaData md;
 			long[] ids;
 			int x, y;
 			Double cost;
 
-			List<String> blocks = Arrays.asList(MetaData
-					.getBlocksInMetaDataFile(file));
+			List<String> blocks = Arrays.asList(MetaData.getBlocksInMetaDataFile(file));
 			String block;
 			for (TrainingMicrograph m : micrographs) {
+				m.reset();
+				
 				block = "mic_" + m.getName();
 				if (blocks.contains(block)) {
 					md = new MetaData(block + "@" + file);
@@ -368,11 +370,9 @@ public abstract class TrainingPicker extends ParticlePicker {
 						y = md.getValueInt(MDLabel.MDL_YINT, id);
 						cost = md.getValueDouble(MDLabel.MDL_COST, id);
 						if (cost == null || cost == 0 || cost > 1)
-							m.addManualParticle(new TrainingParticle(x, y,
-									family, m, cost));
+							m.addManualParticle(new TrainingParticle(x, y, family, m, cost));
 						else
-							m.addAutomaticParticle(new AutomaticParticle(x, y,
-									family, m, cost, false));
+							m.addAutomaticParticle(new AutomaticParticle(x, y, family, m, cost, false), true);
 					}
 				}
 			}
@@ -383,6 +383,42 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	}
 
+
+
+	public void importParticlesFromEmanFile(MicrographFamilyData mfd, String file) {
+		try {
+			mfd.reset();
+			MetaData md = new MetaData();
+			md.readPlain(file, "Xcoor Ycoor");
+			long[] ids;
+			int x, y;
+			Double cost = 2.0;
+			int size = mfd.getFamily().getSize();
+			ids = md.findObjects();
+			for (long id : ids) {
+
+				x = md.getValueInt(MDLabel.MDL_XINT, id) + size/2;
+				y = md.getValueInt(MDLabel.MDL_YINT, id) + size/2;
+				mfd.addManualParticle(new TrainingParticle(x, y, mfd.getFamily(), mfd.getMicrograph(), cost));
+
+			}
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+	
+	
+
+	@Override
+	public void importParticlesFromXmipp24Project(Family family, String path) {
+		throw new UnsupportedOperationException(
+				XmippMessage.getNotImplementedYetMsg());
+
+	}
+	
 	public void exportParticles(Family f, String file) {
 
 		try {
@@ -412,13 +448,6 @@ public abstract class TrainingPicker extends ParticlePicker {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
-	}
-
-	@Override
-	public void importParticlesFromXmipp24Project(Family family, String path) {
-		throw new UnsupportedOperationException(
-				XmippMessage.getNotImplementedYetMsg());
-
 	}
 
 }

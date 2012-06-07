@@ -137,10 +137,13 @@ public class TrainingMicrograph extends Micrograph{
 	
 	public void addAutomaticParticle(AutomaticParticle p)
 	{
-		getFamilyData(p.getFamily()).addAutomaticParticle(p);
+		addAutomaticParticle(p, false);
 	}
 	
-	
+	public void addAutomaticParticle(AutomaticParticle p, boolean imported)
+	{
+		getFamilyData(p.getFamily()).addAutomaticParticle(p, imported);
+	}
 
 	public boolean hasManualParticles()
 	{

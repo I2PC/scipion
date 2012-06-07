@@ -125,7 +125,13 @@ public class MicrographFamilyData
 
 	public void addAutomaticParticle(AutomaticParticle p)
 	{
-		if (state == MicrographFamilyState.Available)
+		addAutomaticParticle(p, false);
+
+	}
+	
+	public void addAutomaticParticle(AutomaticParticle p, boolean imported)
+	{
+		if (state == MicrographFamilyState.Available && !imported)
 			throw new IllegalArgumentException(String.format("Invalid state %s on micrograph %s and family %s for adding automatic particles", state, micrograph.getName(), family.getName()));
 		autoparticles.add(p);
 

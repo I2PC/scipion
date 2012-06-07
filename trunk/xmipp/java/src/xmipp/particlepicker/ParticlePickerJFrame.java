@@ -538,16 +538,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		setChanged(true);
 	}
-
-	protected void importParticlesXmipp30(String path)
-	{
-		getParticlePicker().importParticlesXmipp30(getFamily(), path);
-		setChanged(true);
-		getCanvas().repaint();
-		updateMicrographsModel();
-	}
-
-	public void importParticlesXmipp24(String projectdir)
+	
+	public void importParticlesXmipp24Project(String projectdir)
 	{
 		getParticlePicker().importParticlesFromXmipp24Project(getFamily(), projectdir);
 		setChanged(true);
@@ -555,11 +547,20 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		updateMicrographsModel();
 
 	}
-
-	public void importParticlesEman(String path)
+	protected void importParticlesXmipp30Project(String path)
 	{
-		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		getParticlePicker().importParticlesXmipp30Project(getFamily(), path);
+		setChanged(true);
+		getCanvas().repaint();
+		updateMicrographsModel();
+	}
 
+	
+
+	public void importParticlesEmanProject(String path)
+	{
+		
+		
 	}
 
 	/** Shortcut function to show messages */
