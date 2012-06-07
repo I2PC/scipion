@@ -88,7 +88,7 @@ public:
     MultidimArray< std::complex<double> > Pupdate;
 
     // Update for next iteration
-    MultidimArray< int > PupdateMask;
+    MultidimArray< double > PupdateMask;
 
     // P in cylindrical coordinates around Z
     MultidimArray<double> PcylZ;

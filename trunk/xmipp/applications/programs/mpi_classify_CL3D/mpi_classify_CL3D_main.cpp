@@ -115,14 +115,17 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
     	IfourierMag.sort(IfourierMagSorted);
     	const double percentage=0.975;
         double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(percentage*XSIZE(IfourierMag)));
+        double weight=1.0;
+        if (assigned.stdK<1 && assigned.stdK>0)
+        	weight=1.0/assigned.stdK;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Ifourier)
         if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
         {
             double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
             double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,n);
-            *(ptrPupdate)+=*(ptrIfourier);
-            *(ptrPupdate+1)+=*(ptrIfourier+1);
-            DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=1;
+            *(ptrPupdate)+=weight * (*(ptrIfourier));
+            *(ptrPupdate+1)+=weight * (*(ptrIfourier+1));
+            DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=weight;
         }
         nextListImg.push_back(assigned);
     }
@@ -240,24 +243,23 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
         double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
 
         // Scale factor for the real part
-        double aux=(*ptrIfourier);
-        if (aux!=0.)
+        // This is the least squares solution of I(w)K=P(w)
+        double auxI=(*ptrIfourier);
+        double auxP=(*ptrPfourier);
+        double num=(auxI*auxP);
+        double den=(auxI*auxI);
+        auxI=(*(ptrIfourier+1));
+        auxP=(*(ptrPfourier+1));
+        num+=(auxI*auxP);
+        den+=(auxI*auxI);
+
+        if (den!=0.)
         {
-			double K=(*ptrPfourier)/aux;
+			double K=num/den;
 			avgK+=K;
 			stdK+=K*K;
         }
-
-        // Scale factor for the imaginary part
-        aux=(*(ptrIfourier+1));
-        if (aux!=0.)
-        {
-			double K=(*(ptrPfourier+1))/aux;
-			avgK+=K;
-			stdK+=K*K;
-        }
-
-        N+=2;
+        N+=1;
     }
     avgK/=N;
 	if (N > 1)
@@ -272,6 +274,8 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 //#define DEBUG
 const String eulerSeqs[12]={"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"};
 
+#define DEBUG
+#define DEBUG_MORE
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
 #ifdef DEBUG
@@ -323,6 +327,11 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 		sparseDistanceToCentroid(IauxRS,avgKRS, stdKRS);
 		sparseDistanceToCentroid(IauxSR,avgKSR, stdKSR);
 
+		double corrRS=correlationIndex(P,IauxRS);
+		double corrSR=correlationIndex(P,IauxSR);
+		double scoreRS=stdKRS*(1-corrRS);
+		double scoreSR=stdKSR*(1-corrSR);
+
 		// Prepare result
 		CL3DAssignment candidateRS, candidateSR;
 		candidateRS.readAlignment(ARS);
@@ -335,7 +344,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 			std::abs(candidateRS.psi)>prm->maxPsi)
 			candidateRS.stdK = 1e38;
 		else
-			candidateRS.stdK = stdKRS;
+			candidateRS.stdK = scoreRS;
 		if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
 			std::abs(candidateSR.shifty)>prm->maxShiftY ||
 			std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
@@ -344,7 +353,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 			std::abs(candidateSR.psi)>prm->maxPsi)
 			candidateSR.stdK = 1e38;
 		else
-			candidateSR.stdK = stdKSR;
+			candidateSR.stdK = scoreSR;
 
 		if (candidateRS.stdK < result.stdK)
 		{
@@ -359,6 +368,19 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 #ifdef DEBUG
 		std::cout << eulerSeqs[neuler] << " avgRS= " << avgKRS << " stdRS= " << stdKRS << " avgSR= " << avgKSR << " stdSR= " << stdKSR
 				  << " -> bestSoFar= " << result.stdK << std::endl;
+#ifdef DEBUG_MORE
+	    //Image<double> save;
+	    //save()=P;
+	    //save.write("PPPI1.xmp");
+	    //save()=IauxRS;
+	    //save.write("PPPI2RS.xmp");
+	    //save()=IauxSR;
+	    //save.write("PPPI2SR.xmp");
+	    std::cout << "    corr  RS=" << corrRS << " corr  SR=" << corrSR << std::endl;
+	    std::cout << "    score RS=" << scoreRS << " score SR=" << scoreSR << std::endl;
+	    char c;
+	    //std::cin >> c;
+#endif
 #endif
     }
 
@@ -379,7 +401,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     std::cout << "sigma=" << prm->sigma << " stdK=" << result.stdK
     << ". Press" << std::endl;
     char c;
-    std::cin >> c;
+    //std::cin >> c;
 #endif
 }
 #undef DEBUG
