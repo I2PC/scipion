@@ -25,7 +25,7 @@
  ***************************************************************************/
  '''
 
-from protlib_base import XmippProject, getProtocolFromModule
+from protlib_base import XmippProject
 from protlib_utils import printLog
 from protlib_xmipp import XmippScript
 from mpi4py import MPI
