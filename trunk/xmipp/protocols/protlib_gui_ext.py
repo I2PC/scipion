@@ -1702,7 +1702,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
         if not exists(prefix):
             prefix = dirname(prefix)
         self.commonRoot = prefix
-        prefix += '/'
+        prefix = join(prefix, '')
         for fn in files:
             self.insertElement('', fn.replace(prefix, ''))
             
