@@ -112,6 +112,9 @@ INC_FILE=.xmipp.bashrc
 echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo '# Load configuration file ' >> $INC_FILE
+echo "test -s $XMIPP_HOME/.xmipp.cfg && . $XMIPP_HOME/.xmipp.cfg || true" >> $INC_FILE
+
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
@@ -153,6 +156,9 @@ INC_FILE=.xmipp.csh
 echo "setenv XMIPP_HOME $PWD" > $INC_FILE
 echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
+echo '# Load configuration file ' >> $INC_FILE
+echo "test -s $XMIPP_HOME/.xmipp.cfg && . $XMIPP_HOME/.xmipp.cfg || true" >> $INC_FILE
+
 if $IS_MAC; then
 	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
@@ -344,10 +350,10 @@ if $DO_UNTAR; then
     cd $d 
     for file in $(ls *.tgz); do
       echo "--> tar -xvzf $file > /dev/null"
-      tar -xvzf $file > /dev/null
+      tar -xvzf $file > /dev/null 2>&1
     done
     echo "--> cd -"
-    cd - > /dev/null
+    cd - > /dev/null 2>&1
   done
   toc
 fi
