@@ -153,7 +153,7 @@ public:
 
             }
         }
-        MPI_Finalize();
+
     }
 };
 
@@ -161,5 +161,7 @@ int main(int argc, char *argv[])
 {
 	ProgMPIRun prm(argc, argv);
     prm.read(argc, argv);
-    return prm.tryRun();
+    int result = prm.tryRun();
+    MPI_Finalize();
+    return result;
 }

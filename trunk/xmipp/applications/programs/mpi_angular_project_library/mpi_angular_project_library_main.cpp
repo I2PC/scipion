@@ -71,8 +71,6 @@ public:
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
         MPI_Comm_rank(MPI_COMM_WORLD, &(rank));
-        if (nProcs < 2)
-            error_exit("This program cannot be executed in a single working node");
         //Blocks until all process have reached this routine.
         //very likelly this is
         MPI_Barrier(MPI_COMM_WORLD);
@@ -82,6 +80,8 @@ public:
     /* Read parameters --------------------------------------------------------- */
     void readParams()
     {
+        if (nProcs < 2)
+            error_exit("This program cannot be executed in a single working node");
         ProgAngularProjectLibrary::readParams();
         mpi_job_size = getIntParam("--mpi_job_size");
     }
@@ -243,7 +243,7 @@ public:
             {
                 inputVol.read(input_volume);
             }
-            catch (XmippError XE)
+            catch (XmippError &XE)
             {
                 std::cout << XE;
                 error_exit("Error reading reference volume\n\n");
@@ -308,7 +308,7 @@ public:
         MPI_Barrier(MPI_COMM_WORLD);
     }
     /* Run --------------------------------------------------------------------- */
-    void run()
+    void process()
     {
         if (rank == 0)
         {
@@ -496,6 +496,26 @@ public:
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
+    void run()
+    {
+      try
+      {
+          preRun();
+          process();
+          createGroupSamplingFiles();
+      }
+      catch (XmippError &XE)
+      {
+          std::cerr << "Error!" <<std::endl;
+          std::cerr << XE;
+          MPI_Finalize();
+          exit(1);
+      }
+
+      if (rank == 0)
+          std::cout << "Done!" <<std::endl;
+    }
+
 };
 
 int main(int argc, char *argv[])
@@ -515,7 +535,7 @@ int main(int argc, char *argv[])
         {
             program.read(argc, argv);
         }
-        catch (XmippError XE)
+        catch (XmippError &XE)
         {
             std::cerr << XE;
             MPI_Finalize();
@@ -531,7 +551,7 @@ int main(int argc, char *argv[])
         {
             program.read(argc, argv);
         }
-        catch (XmippError XE)
+        catch (XmippError &XE)
         {
             std::cerr << XE;
             MPI_Finalize();
@@ -539,25 +559,9 @@ int main(int argc, char *argv[])
         }
     }
 
-
-    try
-    {
-        program.preRun();
-        program.run();
-        program.createGroupSamplingFiles();
-        MPI_Finalize();
-    }
-    catch (XmippError XE)
-    {
-    	std::cerr << "Error!" <<std::endl;
-        std::cerr << XE;
-        exit(1);
-    }
-
-    if (program.rank == 0)
-    	std::cerr << "Done!" <<std::endl;
+    program.tryRun();
+    MPI_Finalize();
     exit(0);
-
 
 }
 
