@@ -619,6 +619,8 @@ class ProtocolGUI(BasicGUI):
             if 'columns run_name, protocol_name are not unique' in str(ie):
                 self.showError("Error saving run parameters", 
                                "The RUN name <%s> \nalready exists in the PROJECT." % getExtendedRunName(self.run))
+            else:
+                self.showError('Database error', str(ie))
         except Exception, e:
             self.showError("Error saving run parameters", str(e))
             raise e
