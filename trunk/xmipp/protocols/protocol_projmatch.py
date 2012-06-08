@@ -118,6 +118,8 @@ class ProtProjMatch(XmippProtocol):
         iteration = _dataBase.getRunIter()
         summary = ['Performed <%d/%d> iterations with angular sampling rate <%s>' 
                    % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
+        filenames=(' '.join(self.ReferenceFileNames)).replace("'","")
+        summary.append("Initial volume(s): [%s]"%filenames)
         if (iteration > 1):
             ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
             ResolutionXmdCurrIterMaxSummary1 = self.getFilename('ResolutionXmdMax', iter=iteration-1, ref=1)
