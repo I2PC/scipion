@@ -245,6 +245,8 @@ void ProgPSDSort::run()
     {
         SF.getValue(MDL_MICROGRAPH,fnMicrograph,__iter.objId);
         SF.getValue(MDL_PSD,fnPSD,__iter.objId);
+        if (fnPSD=="NA")
+        	continue;
         SF.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
         if (SF.containsLabel(MDL_CTFMODEL2))
         	SF.getValue(MDL_CTFMODEL2,fnCTF2,__iter.objId);
