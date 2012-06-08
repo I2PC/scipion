@@ -353,7 +353,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CXXFLAGS=['-DRELEASE_MODE'])
         
     if not int(env['cuda']):
-        AppendIfNotExists(CXXFLAGS=['-rdynamic'])
+	if env['PLATFORM'] != 'cygwin':
+            AppendIfNotExists(CXXFLAGS=['-rdynamic'])
         AppendIfNotExists(CXXFLAGS=['-O0'])
     else:
         # "safe" optimization
