@@ -33,6 +33,9 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
+        #TODO: check all the possible casses
+        if not self.TiltPairs:
+            self.MicrographsMd = self.micrographs
 
     def defineSteps(self):
         filesToImport = [self.Input[k] for k in ['microscope', 'acquisition']]
