@@ -1261,9 +1261,9 @@ class XmippBrowser():
         - folder -> only allow folder selection
         - both -> allow any selection
         - none -> doesn't select, only explore
-        selmode is the selection mode, it could be:
-        - browse -> only single file selection
-        - extended -> multiple file selection
+        - selmode is the selection mode, it could be:
+            browse -> only single file selection
+            extended -> multiple file selection
     '''
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
         self.seltype = seltype

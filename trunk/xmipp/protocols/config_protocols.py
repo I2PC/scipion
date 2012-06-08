@@ -23,7 +23,7 @@ protocols = {
         'ml3d': ('ML3D', '3D/ML3D'),
         'mltomo': ('MLTomo', '3D/MLTomo'),
         'subtraction': ('Partial Projection Subtraction', '3D/ProjSub'),
-        'dummy': ('Dummy', 'Dummy'),
+        'custom': ('Custom', 'Custom'),
         'xmipp': ('Xmipp Programs', 'XmippPrograms')            
         }
 
@@ -43,7 +43,7 @@ sections = [
     ['Model Refinement', 'projmatch', 'ml3d']])
 ,
 ('Other',
- [['Extra','subtraction', 'mltomo', 'dummy']])
+ [['Extra', 'custom','subtraction', 'mltomo']])
 ]
 
 #--------------------------------------------------------------------------------

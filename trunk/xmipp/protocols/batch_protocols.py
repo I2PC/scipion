@@ -41,7 +41,7 @@ from protlib_base import XmippProject, getExtendedRunName, splitExtendedRunName,
     getScriptFromRunName
 from protlib_utils import ProcessManager,  getHostname
 from protlib_sql import SqliteDb, ProgramDb
-from protlib_filesystem import getXmippPath
+from protlib_filesystem import getXmippPath, copyFile
 from protlib_parser import ProtocolParser
 
 # Redefine BgColor
@@ -212,12 +212,26 @@ class XmippProjectGUI():
                     def new_command(): 
                         self.launchProtocolGUI(self.project.newProtocol(prot.name))
                     return new_command 
-                menu.add_command(label=p.title, command=item_command(p))
+                # Treat special case of "custom" protocol
+                if p.title == 'Custom':
+                    menu.add_command(label=p.title, command=self.selectCustomProtocol)
+                else:
+                    menu.add_command(label=p.title, command=item_command(p))
             menu.bind("<Leave>", self.unpostMenu)
             return menu
         return None
 
-    
+    def selectCustomProtocol(self, e=None):
+        selection = showBrowseDialog(parent=self.root, seltype="file", filter="*py")
+        if selection is not None:
+            customProtFile = selection[0]
+            run = self.project.createRunFromScript(protDict.custom.name, customProtFile)
+            from os.path import basename
+            tmpFile = self.project.projectTmpPath(basename(run['script']))
+            copyFile(None, customProtFile, tmpFile)
+            run['source'] = tmpFile
+            self.launchProtocolGUI(run)
+        
     #GUI for launching Xmipp Programs as Protocols        
     def launchProgramsGUI(self, event=None):
         text = protDict.xmipp.title

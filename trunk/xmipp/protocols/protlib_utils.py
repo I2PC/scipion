@@ -288,7 +288,7 @@ class ProcessManager():
         procs = []
         self.hostfile = self.run['script'].replace('.py', '.nodes')
         
-        if os.path.exists(self.hostfile):
+        if os.path.exists(self.hostfile) and self.isBatch:
             hosts = {}
             f = open(self.hostfile)
             for line in f:                

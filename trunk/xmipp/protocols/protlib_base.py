@@ -215,7 +215,7 @@ class XmippProject():
         mod = loadModule(script)
         from inspect import isclass
         for v in mod.__dict__.values():
-            if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
+            if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol and v != CustomProtocol:
                 return v(script, self)
         reportError("Can't load protocol from " + script)
 
@@ -335,7 +335,6 @@ class DepData():
         return extRunName in self.deps
         
     
-                  
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):
@@ -637,17 +636,16 @@ class XmippProtocol(object):
         ''' Return the extended run name of this run '''
         return '%s_%s' % (self.Name, self.RunName)
         
-#    def insertRunMpiGapsStep(self,verifyfiles=[]):
-#        return self.insertStep('runStepGapsMpi',passDb=True, verifyfiles=verifyfiles, 
-#                               script=self.scriptName, NumberOfMpi=self.NumberOfMpi)
+        
+class CustomProtocol(XmippProtocol):
+    ''' Special type of protocol that doesn't have a header 
+    and will server for custom protocols development. It avoids the
+    registration of the protocol in config_protocols.py'''
+    def __init__(self, scriptname, project):
+        XmippProtocol.__init__(self, protDict.custom.name, scriptname, project)
 
-def getProtocolFromModule(script, project):
-    mod = loadModule(script)
-    from inspect import isclass
-    for v in mod.__dict__.values():
-        if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol:
-            return v(script, project)
-    reportError("Can load protocol from " + script)
+
+#----------Some helper functions ------------------
 
 def getExtendedRunName(run):
     ''' Return the extended run name, ie: protocol_runName '''
@@ -771,6 +769,8 @@ def protocolMain(ProtocolClass, script=None):
             else:
                 _run = {'run_id': run_id}
                 
+            _run['jobid'] = SqliteDb.NO_JOBID
+            
             if getattr(mod, 'SubmitToQueue', False):
                 ParallelCondition = getattr(mod, 'ParallelCondition', '')
                 if getattr(mod, ParallelCondition, True): # This is valid only for Single variable condition
@@ -786,8 +786,8 @@ def protocolMain(ProtocolClass, script=None):
                                    command = 'xmipp_python %s --no_check' % script
                                    )
                     project.projectDb.updateRunState(SqliteDb.RUN_LAUNCHED, run_id)
-                    project.projectDb.updateRunJobid(_run)
                     doRun = False
+            project.projectDb.updateRunJobid(_run)
                 #_run['pid'] = SqliteDb.NO_JOBID
         
         if doRun:
