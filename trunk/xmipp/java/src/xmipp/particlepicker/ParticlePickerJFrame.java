@@ -66,7 +66,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem savemi;
 	protected JMenuItem hcontentsmi;
 	protected JMenuItem pmi;
-	protected JMenuItem importfpmi;
+	protected JMenuItem importffilemi;
 	protected JMenuItem exportmi;
 	protected JMenu filtersmn;
 	protected String activefilter;
@@ -90,12 +90,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			public void windowClosing(WindowEvent winEvt)
 			{
-				
+
 				if (getParticlePicker().isChanged())
 				{
 					XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Save changes before closing?");
 					boolean save = qd.showDialog();
-					if(save)
+					if (save)
 						saveChanges();
 					else if (qd.isCanceled())
 						return;
@@ -104,8 +104,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 
-		
-		
 		filemn = new JMenu("File");
 		savemi = new JMenuItem("Save", XmippResource.getIcon("save.gif"));
 		savemi.setMnemonic('S');
@@ -122,21 +120,21 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importfpmi = new JMenuItem("Import from Project...", XmippResource.getIcon("import_wiz.gif"));
-		filemn.add(importfpmi);
-		importfpmi.addActionListener(new ActionListener()
+		importffmi = new JMenuItem("Import from Folder...", XmippResource.getIcon("import_wiz.gif"));
+		filemn.add(importffmi);
+		importffmi.addActionListener(new ActionListener()
 		{
 
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				new ImportParticlesFromProjectJDialog(ParticlePickerJFrame.this, true);
+				new ImportParticlesFromFolderJDialog(ParticlePickerJFrame.this, true);
 			}
 		});
 
-		importffmi = new JMenuItem("Import from Files...", XmippResource.getIcon("import.gif"));
-		filemn.add(importffmi);
-		importffmi.addActionListener(new ActionListener()
+		importffilemi = new JMenuItem("Import from Files...", XmippResource.getIcon("import.gif"));
+		filemn.add(importffilemi);
+		importffilemi.addActionListener(new ActionListener()
 		{
 
 			@Override
@@ -286,15 +284,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	
-
-
 	protected abstract void resetMicrograph();
 
 	protected void enableEdition(boolean enable)
 	{
 		importffmi.setEnabled(enable);
-		importfpmi.setEnabled(enable);
+		importffmi.setEnabled(enable);
 		savemi.setEnabled(enable);
 		sizesl.setEnabled(enable);
 		colorbt.setEnabled(enable);
@@ -330,7 +325,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 				else
 				{
-					for(int i = 0; i < WindowManager.getImageCount(); i ++)
+					for (int i = 0; i < WindowManager.getImageCount(); i++)
 						IJ.run(WindowManager.getImage(i), activefilter, "");
 				}
 			else
@@ -349,9 +344,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 
 	}
-	
-	protected abstract void reloadImage();
 
+	protected abstract void reloadImage();
 
 	protected abstract void saveChanges();
 
@@ -538,30 +532,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 		setChanged(true);
 	}
-	
-	public void importParticlesXmipp24Project(String projectdir)
-	{
-		getParticlePicker().importParticlesFromXmipp24Project(getFamily(), projectdir);
-		setChanged(true);
-		getCanvas().repaint();
-		updateMicrographsModel();
-
-	}
-	protected void importParticlesXmipp30Project(String path)
-	{
-		getParticlePicker().importParticlesXmipp30Project(getFamily(), path);
-		setChanged(true);
-		getCanvas().repaint();
-		updateMicrographsModel();
-	}
 
 	
-
-	public void importParticlesEmanProject(String path)
-	{
-		
-		
-	}
 
 	/** Shortcut function to show messages */
 	private boolean showMessage(String message)
@@ -573,17 +545,38 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		return XmippDialog.showException(this, e);
 	}
-	
+
 	public void close()
 	{
 		setVisible(false);
 		dispose();
-		for(Window w: getWindows())
+		for (Window w : getWindows())
 		{
 			w.setVisible(false);
 			w.dispose();
-			
+
 		}
 	}
+
+	public void importParticlesFromFolder(Format format, String dir)
+	{
+		switch (format)
+		{
+			case Xmipp24:
+				getParticlePicker().importParticlesFromXmipp24Folder(getFamily(), dir);
+				break;
+			case Xmipp30:
+				getParticlePicker().importParticlesFromXmipp30Folder(getFamily(), dir);
+				break;
+			case Eman:
+				getParticlePicker().importParticlesFromEmanFolder(getFamily(), dir);
+
+		}
+		setChanged(true);
+		getCanvas().repaint();
+		updateMicrographsModel();
+		getCanvas().setActive(null);
+	}
+
 
 }

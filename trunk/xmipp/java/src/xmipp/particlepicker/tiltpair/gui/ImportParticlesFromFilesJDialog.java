@@ -193,6 +193,8 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 			format = Format.valueOf(formatrb.getText());
 		}
 	}
+	
+	
 
 	private void importParticles()
 	{
@@ -201,13 +203,7 @@ public class ImportParticlesFromFilesJDialog extends JDialog
 		String tfile = tiltedtf.getText();
 		if (ufile == null || ufile.equals("") || ufile == null || ufile.equals(""))
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("files"));
-		switch (format)
-		{
-		case Xmipp24:
-			parent.importParticlesFromXmipp24Files(ufile, tfile);
-			break;
-
-		}
+		parent.importParticlesFromFiles(format, ufile, tfile);
 
 	}
 }

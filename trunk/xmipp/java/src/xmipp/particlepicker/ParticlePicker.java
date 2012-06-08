@@ -17,6 +17,7 @@ import java.util.logging.SimpleFormatter;
 
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.XmippMessage;
@@ -120,14 +121,7 @@ public abstract class ParticlePicker
 		return filters;
 	}
 
-//	public String getFiltersMacro()
-//	{
-//		
-//		String macros = "";
-//		for(Filter f: filters)
-//			macros += String.format("run(\"%s\", \"%s\");\n", f.getCommand(), f.getOptions());
-//		return macros;
-//	}
+
 
 	public void setChanged(boolean changed)
 	{
@@ -388,13 +382,13 @@ public abstract class ParticlePicker
 
 	public abstract void exportParticles(Family family, String absolutePath);
 
-	public abstract void importParticlesXmipp30Project(Family family, String absolutePath);
+	public abstract void importParticlesFromXmipp30Folder(Family family, String absolutePath);
 
-	public abstract void importParticlesFromXmipp24Project(Family family, String path);
-	{
-		// TODO Auto-generated method stub
-		
-	}
+	public abstract void importParticlesFromXmipp24Folder(Family family, String path);
+	 
+	public abstract void importParticlesFromEmanFolder(Family family, String path);
+	
+
 	
 	public void runXmippProgram(String program, String args)
 	{

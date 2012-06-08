@@ -22,7 +22,7 @@ import javax.swing.JTextField;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
-public class ImportParticlesFromProjectJDialog extends JDialog {
+public class ImportParticlesFromFolderJDialog extends JDialog {
 
 	ParticlePickerJFrame parent;
 	private JRadioButton xmipp24rb;
@@ -33,7 +33,7 @@ public class ImportParticlesFromProjectJDialog extends JDialog {
 	private ButtonGroup formatgroup;
 	public Format format;
 
-	public ImportParticlesFromProjectJDialog(ParticlePickerJFrame parent,
+	public ImportParticlesFromFolderJDialog(ParticlePickerJFrame parent,
 			boolean modal) {
 		super(parent, modal);
 		setResizable(false);
@@ -71,7 +71,7 @@ public class ImportParticlesFromProjectJDialog extends JDialog {
 							dispose();
 						} catch (Exception ex) {
 							JOptionPane.showMessageDialog(
-									ImportParticlesFromProjectJDialog.this,
+									ImportParticlesFromFolderJDialog.this,
 									ex.getMessage());
 						}
 					}
@@ -98,7 +98,7 @@ public class ImportParticlesFromProjectJDialog extends JDialog {
 				.getParticlePicker().getOutputDir()));
 		fc.setFileSelectionMode(XmippFileChooser.DIRECTORIES_ONLY);
 		int returnVal = fc
-				.showOpenDialog(ImportParticlesFromProjectJDialog.this);
+				.showOpenDialog(ImportParticlesFromFolderJDialog.this);
 
 		try {
 			if (returnVal == XmippFileChooser.APPROVE_OPTION) {
@@ -107,7 +107,7 @@ public class ImportParticlesFromProjectJDialog extends JDialog {
 			}
 		} catch (Exception ex) {
 			JOptionPane.showMessageDialog(
-					ImportParticlesFromProjectJDialog.this, ex.getMessage());
+					ImportParticlesFromFolderJDialog.this, ex.getMessage());
 		}
 
 	}
@@ -152,21 +152,12 @@ public class ImportParticlesFromProjectJDialog extends JDialog {
 	private void importParticles() {
 
 		
-		String projectdir = sourcetf.getText();
-		if (projectdir == null || projectdir.equals(""))
+		String dir = sourcetf.getText();
+		if (dir == null || dir.equals(""))
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("directory"));
-		switch (format) {
-		case Xmipp24:
-			parent.importParticlesXmipp24Project(projectdir);
-			break;
-		case Xmipp30:
-			parent.importParticlesXmipp30Project(projectdir);
-			break;
-		case Eman:
-			parent.importParticlesEmanProject(projectdir);
-			break;
-
-		}
+		parent.importParticlesFromFolder(format, dir);
+			
+		
 
 	}
 }

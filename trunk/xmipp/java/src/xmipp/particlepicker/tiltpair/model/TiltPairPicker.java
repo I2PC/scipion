@@ -10,6 +10,7 @@ import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.utils.XmippMessage;
 import xmipp.jni.MDLabel;
@@ -310,25 +311,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-	@Override
-	public void importParticlesXmipp30Project(Family family, String absolutePath)
-	{
-		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
-
-	}
-
-	@Override
-	public void importParticlesFromXmipp24Project(Family family, String projectdir)
-	{
-		String ufile, tfile;
-
-		for (UntiltedMicrograph um : micrographs)
-		{
-			ufile = getPosFileFromXmipp24Project(projectdir, um.getName());
-			tfile = getPosFileFromXmipp24Project(projectdir, um.getTiltedMicrograph().getName());
-			importParticlesFromXmipp24Files(um, ufile, tfile, false);
-		}
-	}
+	
 
 	public void importParticlesFromXmipp24Files(UntiltedMicrograph um, String ufile, String tfile, boolean checkfiles)
 	{
@@ -392,4 +375,49 @@ public class TiltPairPicker extends ParticlePicker
 		}
 
 	}
+	
+	@Override
+	public void importParticlesFromXmipp30Folder(Family family, String absolutePath)
+	{
+		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+
+	}
+
+	@Override
+	public void importParticlesFromXmipp24Folder(Family family, String dir)
+	{
+		String ufile, tfile;
+
+		for (UntiltedMicrograph um : micrographs)
+		{
+			ufile = getPosFileFromXmipp24Project(dir, um.getName());
+			tfile = getPosFileFromXmipp24Project(dir, um.getTiltedMicrograph().getName());
+			importParticlesFromXmipp24Files(um, ufile, tfile, false);
+		}
+	}
+
+
+	@Override
+	public void importParticlesFromEmanFolder(Family family, String path)
+	{
+		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		
+	}
+
+
+	public void importParticlesFromXmipp30Files(UntiltedMicrograph untiltedmic, String ufile, String tfile, boolean b)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	public void importParticlesFromEmanFiles(UntiltedMicrograph untiltedmic, String ufile, String tfile, boolean b)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	
 }

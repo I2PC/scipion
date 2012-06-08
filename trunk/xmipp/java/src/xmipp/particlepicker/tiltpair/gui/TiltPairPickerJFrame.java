@@ -35,11 +35,13 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import xmipp.particlepicker.Family;
+import xmipp.particlepicker.Format;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippWindowUtil;
@@ -355,30 +357,35 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		tiltedcanvas.repaint();
 		
 	}
-	
-	public  void importParticlesXmipp24Project(String projectdir)
+
+	public void importParticlesFromFolder(Format format, String dir)
 	{
-		super.importParticlesXmipp24Project(projectdir);
-		tiltedcanvas.repaint();
-		canvas.setActive(null);
-		
-	}
-	
-	protected void importParticlesXmipp30Project(String path)
-	{
-		super.importParticlesXmipp30Project(path);
+		super.importParticlesFromFolder(format, dir);
 		untiltedmic.initAligner();
 		tiltedcanvas.repaint();
 	}
+
 	
-	public void importParticlesFromXmipp24Files(String ufile, String tfile)
+	public void importParticlesFromFiles(Format format, String ufile, String tfile)
 	{
-		getParticlePicker().importParticlesFromXmipp24Files(untiltedmic, ufile, tfile, true);
+		untiltedmic.reset();
+		switch(format)
+		{
+		case Xmipp24:
+			pppicker.importParticlesFromXmipp24Files(untiltedmic, ufile, tfile, true);
+			break;
+		case Xmipp30:
+			pppicker.importParticlesFromXmipp30Files(untiltedmic, ufile, tfile, true);
+			break;
+		case Eman:
+			pppicker.importParticlesFromEmanFiles(untiltedmic, ufile, tfile, true);
+			break;
+		}
 		untiltedmic.initAligner();
 		setChanged(true);
 		getCanvas().repaint();
-		updateMicrographsModel();
 		tiltedcanvas.repaint();
+		updateMicrographsModel();
 		canvas.setActive(null);
 		
 	}
