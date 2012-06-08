@@ -51,15 +51,15 @@ MpiArgsTemplate = "-np %(nodes)d --bynode %(command)s"
 FileTemplate = """
 #!/bin/bash
 ### Inherit all current environment variables
-# -V
+#$ -V
 ### Job name
-# -N %(jobName)s
+#$ -N %(jobName)s
 ### Specify the number of nodes and threads for your job.
 #PBS -l nodes=%(nodes)d:ppn=%(threads)d
 ### Tell the expected run-time for your job (HH:MM:SS)
-# -l h_rt=%(hours)d:00:00
+#$ -l h_rt=%(hours)d:00:00
 ### Number of processors to use
-# -pe orte* %(nodes)d
+#$ -pe orte* %(nodes)d
 # Use as working dir the path where qsub was launched
 WORKDIR=$SGE_O_WORKDIR
 #################################
@@ -68,7 +68,7 @@ export XMIPP_IN_QUEUE=1
 ### Switch to the working directory;
 cd $WORKDIR
 # Make a copy of PBS_NODEFILE 
-cp $PBS_NODEFILE %(pbsNodeBackup)s
+#cp $PBS_NODEFILE %(nodesfileBackup)s
 # Calculate the number of processors allocated to this run.
 NPROCS=`wc -l < $PBS_NODEFILE`
 # Calculate the number of nodes allocated.
@@ -77,9 +77,9 @@ NNODES=`uniq $PBS_NODEFILE | wc -l`
 echo Running on host `hostname`
 echo Time is `date`
 echo Working directory is `pwd`
-echo Using ${NPROCS} processors across ${NNODES} nodes
-echo PBS_NODEFILE:
-cat $PBS_NODEFILE
+#echo Using ${NPROCS} processors across ${NNODES} nodes
+#echo PBS_NODEFILE:
+#cat $PBS_NODEFILE
 #################################
 
 %(command)s
