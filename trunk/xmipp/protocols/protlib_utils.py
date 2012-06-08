@@ -441,8 +441,12 @@ def loadModule(modulePath, report=True):
     return module
 
 def loadLaunchModule():
-    ''' Load the launch module containing queue and mpi related parameters'''
-    return loadModule('config_launch.py')
+    ''' Load the launch module containing queue and mpi related parameters
+    the actual configuration should be in [parallel] section of the XMIPP/.xmipp.cfg file
+    '''
+    launchModuleName = os.environ['XMIPP_PARALLEL_LAUNCH']
+    print launchModuleName
+    return loadModule(launchModuleName)
         
 def submitProtocol(script, **params):
     '''Launch a protocol, to a queue or executing directly.
@@ -455,7 +459,7 @@ def submitProtocol(script, **params):
     launchFilename = script.replace('.py', '.job')
     # This is for make a copy of nodes files
     nodesFile = script.replace('.py', '.nodes')
-    params['pbsNodeBackup'] = nodesFile
+    params['nodesfileBackup'] = nodesFile
     params['file'] = launchFilename
     #create launch file
     launchfile = open(launchFilename, 'w')
@@ -482,7 +486,7 @@ def submitProgram(script, **params):
     launch = loadLaunchModule()
     launchFilename = script.replace('.py', '.job')
     nodesFile = script.replace('.py', '.nodes')
-    params['pbsNodeBackup'] = nodesFile
+    params['nodesfileBackup'] = nodesFile
     params['file'] = launchFilename
     #create launch file
     launchfile = open(launchFilename, 'w')
