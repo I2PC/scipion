@@ -86,7 +86,7 @@ def validateMicrographs(inputMicrographs, tiltPairs=False):
     
     def checkMicrograph(label, objId): # Check if micrograph exists
         micrograph = md.getValue(label, objId)
-        if not exists(micrograph):
+        if not xmippExists(micrograph):
             missingMicrographs.append(micrograph)
     for objId in md:
         checkMicrograph(xmipp.MDL_MICROGRAPH, objId)
