@@ -61,6 +61,11 @@ class ProtXmippProgram(XmippProtocol):
                              params=params,
                              NumberOfMpi = self.NumberOfMpi,
                              NumberOfThreads = self.NumberOfThreads)
+        
+    def visualize(self):
+        '''The generic visualization of programs just open the working dir'''
+        from protlib_gui_ext import openLink
+        openLink(self.WorkingDir)
 
 # Some helper functions
 def getParamName(paramId):
