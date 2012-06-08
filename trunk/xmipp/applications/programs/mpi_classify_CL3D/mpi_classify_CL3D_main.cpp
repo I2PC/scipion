@@ -433,6 +433,7 @@ void CL3DClass::fit(MultidimArray<double> &I, CL3DAssignment &result)
             likelihoodNonClass += DIRECT_A1D_ELEM(histNonClass,i);
         result.likelihood = likelihoodClass * likelihoodNonClass;
     }
+    std::cout << "Fit: " << result.stdK << std::endl;
 }
 
 /* Look for K neighbours in a list ----------------------------------------- */
@@ -725,7 +726,7 @@ void CL3D::initialize(MetaData &_SF,
             bestAssignment.objId = assignment.objId = objId;
             if (!initialCodesGiven)
             {
-                bestAssignment.stdK = 1e38;
+                bestAssignment.stdK = 1;
                 P[q]->updateProjection(I(), bestAssignment);
             }
             else
