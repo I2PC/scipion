@@ -33,10 +33,15 @@
 ProgClassifyCL2D *prm = NULL;
 FILE * _logCL2D = NULL;
 
+//#define DEBUG_WITH_LOG
 #ifdef DEBUG_WITH_LOG
 #define CREATE_LOG() _logCL2D = fopen(formatString("nodo%02d.log", node->rank).c_str(), "w+")
 #define LOG(msg) do{fprintf(_logCL2D, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logCL2D); }while(0)
 #define CLOSE_LOG() fclose(_logCL2D)
+#else
+#define CREATE_LOG() ;
+#define LOG(msg) ;
+#define CLOSE_LOG() ;
 #endif
 
 /* CL2D Assigned basics ------------------------------------------------ */
@@ -431,6 +436,16 @@ void CL2D::shareAssignments(bool shareAssignment, bool shareUpdates,
         MPI_Allreduce(MPI_IN_PLACE, &(nodeRef[0]), nodeRef.size(), MPI_INT,
                       MPI_MAX, MPI_COMM_WORLD);
         SF->setColumnValues(MDL_REF, nodeRef);
+#ifdef DEBUG_WITH_LOG
+    	FileName fnImg;
+        FOR_ALL_OBJECTS_IN_METADATA(*SF)
+        {
+        	int classRef;
+        	SF->getValue(MDL_IMAGE,fnImg,__iter.objId);
+        	SF->getValue(MDL_REF,classRef,__iter.objId);
+        	LOG(formatString("Image %s: class: %d",fnImg.c_str(),classRef).c_str());
+        }
+#endif
     }
 
     // Share code updates
@@ -912,6 +927,7 @@ void CL2D::run(const FileName &fnOut, int level)
             {
                 size_t objId = prm->objId[idx];
                 readImage(I, objId, false);
+                LOG(((String)"Processing image: "+I.name()).c_str());
 
                 assignment.objId = objId;
                 lookNode(I(), oldAssignment[idx], node, assignment);
@@ -1456,6 +1472,7 @@ void ProgClassifyCL2D::produceSideInfo()
 
 void ProgClassifyCL2D::run()
 {
+	CREATE_LOG();
     show();
     produceSideInfo();
 
@@ -1512,6 +1529,7 @@ void ProgClassifyCL2D::run()
         SFaux.sort(SFaux2, MDL_IMAGE);
         SFaux.write(fnOut + "_images.xmd");
     }
+    CLOSE_LOG();
 }
 
 /* Main -------------------------------------------------------------------- */
