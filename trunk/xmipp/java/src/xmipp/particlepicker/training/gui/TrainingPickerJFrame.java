@@ -676,7 +676,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				public void run()
 				{
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", fargs);
-					ppicker.loadAutomaticParticles(micrograph);
+					ppicker.loadAutomaticParticles(getFamilyData());
 					setState(MicrographFamilyState.Correct);
 					canvas.repaint();
 					canvas.setEnabled(true);
