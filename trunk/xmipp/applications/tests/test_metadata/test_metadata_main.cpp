@@ -99,6 +99,31 @@ TEST_F( MetadataTest, AddLabel)
     EXPECT_EQ(v2,v1);
 }
 
+TEST_F( MetadataTest, testingDelete)
+{
+    //#include <data/metadata_extension.h>
+    MetaData md ;          // metadata object
+    FileName fn;           // metadata file Name
+    double Xoff;
+    fn.compose("two","metadata/ReadWriteAppendBlock.xmd"); //read metadata labeled two
+    md.read(fn);           // read metadata
+    String errorMessage;
+    FOR_ALL_OBJECTS_IN_METADATA(md) //loop through all lines
+    {
+        if (md.getValue(MDL_X, Xoff,__iter.objId))//get value for attribute ctf_sampling_rate
+            std::cerr << "The value is: " <<  Xoff;
+        else
+        {
+            errorMessage=formatString("Cannot find label %s ",(MDL::label2Str(MDL_X)).c_str());
+            REPORT_ERROR(ERR_MD_MISSINGLABEL,errorMessage);
+        }
+        md.setValue(MDL_X,Xoff*2.);//store the double of the sampling rate
+    }
+    fn.compose("three","/tmp/delete.xmd"); //write metadata labeled two
+    md.write(fn);                          //save metada in file
+    EXPECT_EQ(1,1);
+}
+
 TEST_F( MetadataTest, AddRow)
 {
     MetaData md;
@@ -964,8 +989,8 @@ TEST_F( MetadataTest, Comment)
     strncpy(sfn, "/tmp/testComment_XXXXXX", sizeof sfn);
     mkstemp(sfn);
     String s1((String)"This is a very long comment that has more than 80 characters"+
-            " Therefore should be split in several lines"+
-            " Let us see what happend");
+              " Therefore should be split in several lines"+
+              " Let us see what happend");
     md1.setComment(s1);
     md1.write(sfn, MD_OVERWRITE);
     MetaData md2;
@@ -1035,7 +1060,7 @@ TEST_F( MetadataTest, getValueAbort)
     auxMD1.setValue(MDL_ANGLEROT,rot,id);
     //psi assigned by defaults
     id = auxMD1.firstObject();
-	EXPECT_THROW(auxMD1.getValueOrAbort(MDL_ORDER, rot, id), XmippError);
+    EXPECT_THROW(auxMD1.getValueOrAbort(MDL_ORDER, rot, id), XmippError);
     MDRow  rowIn;
     auxMD1.getRow(rowIn, id);
     EXPECT_THROW(rowGetValueOrAbort(rowIn,MDL_ANGLEPSI,rot), XmippError);
