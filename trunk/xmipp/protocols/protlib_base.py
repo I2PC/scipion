@@ -35,7 +35,8 @@ from config_protocols import projectDefaults, sections, protDict
 from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
 from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix
 from protlib_xmipp import failStr
-from protlib_filesystem import deleteFiles, xmippExists, removeFilenamePrefix
+from protlib_filesystem import deleteFiles, xmippExists, removeFilenamePrefix,\
+    removeFilenameExt
 
 class XmippProject():
     def __init__(self, projectDir=None):
@@ -643,7 +644,9 @@ class CustomProtocol(XmippProtocol):
     registration of the protocol in config_protocols.py'''
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.custom.name, scriptname, project)
-
+        from os.path import basename
+        importName = removeFilenameExt(basename(scriptname))
+        self.Import = "from %s import *;" % importName
 
 #----------Some helper functions ------------------
 

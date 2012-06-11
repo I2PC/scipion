@@ -222,14 +222,14 @@ class XmippProjectGUI():
         return None
 
     def selectCustomProtocol(self, e=None):
-        selection = showBrowseDialog(parent=self.root, seltype="file", filter="*py")
+        selection = showBrowseDialog(parent=self.root, seltype="file", filter="custom*py")
         if selection is not None:
             customProtFile = selection[0]
             run = self.project.createRunFromScript(protDict.custom.name, customProtFile)
-            from os.path import basename
-            tmpFile = self.project.projectTmpPath(basename(run['script']))
-            copyFile(None, customProtFile, tmpFile)
-            run['source'] = tmpFile
+            #from os.path import basename
+            #tmpFile = self.project.projectTmpPath(basename(run['script']))
+            #copyFile(None, customProtFile, tmpFile)
+            #run['source'] = tmpFile
             self.launchProtocolGUI(run)
         
     #GUI for launching Xmipp Programs as Protocols        

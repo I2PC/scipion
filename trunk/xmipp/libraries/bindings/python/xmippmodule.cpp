@@ -4379,6 +4379,20 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_NEIGHBORS", (long)LABEL_VECTOR_SIZET);
     addIntConstant(dict, "MDL_NEIGHBORHOOD_RADIUS", (long)LABEL_DOUBLE);
     addIntConstant(dict, "MDL_NMA", (long) MDL_NMA);
+
+    addIntConstant(dict, "MDL_NMA_MODEFILE", (long)MDL_NMA_MODEFILE);
+    addIntConstant(dict, "MDL_NOISE_ANGLES", (long)MDL_NOISE_ANGLES);
+    addIntConstant(dict, "MDL_NOISE_PARTICLE_COORD", (long)MDL_NOISE_PARTICLE_COORD);
+    addIntConstant(dict, "MDL_NOISE_COORD", (long)MDL_NOISE_COORD);
+    addIntConstant(dict, "MDL_NOISE_PIXEL_LEVEL", (long)MDL_NOISE_PIXEL_LEVEL);
+
+    addIntConstant(dict, "MDL_2D_LATTICE_VECA", (long)MDL_2D_LATTICE_VECA);
+    addIntConstant(dict, "MDL_2D_LATTICE_VECB", (long)MDL_2D_LATTICE_VECB);
+    addIntConstant(dict, "MDL_CRYSTAL_DISAPPEAR_THRE", (long)MDL_CRYSTAL_DISAPPEAR_THRE);
+    addIntConstant(dict, "MDL_CRYSTAL_SHFILE", (long)MDL_CRYSTAL_SHFILE);
+    addIntConstant(dict, "MDL_ORTHOGONAL_PROJECTION", (long)MDL_ORTHOGONAL_PROJECTION);
+    addIntConstant(dict, "MDL_CRYSTAL_PROJ", (long)MDL_CRYSTAL_PROJ);
+
     addIntConstant(dict, "MDL_ORDER", (long) MDL_ORDER);
     addIntConstant(dict, "MDL_ORIGINX", (long) MDL_ORIGINX);
     addIntConstant(dict, "MDL_ORIGINY", (long) MDL_ORIGINY);
@@ -4389,6 +4403,24 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_PICKING_FAMILY_STATE", (long) MDL_PICKING_FAMILY_STATE);
     addIntConstant(dict, "MDL_PICKING_MICROGRAPH_FAMILY_STATE", (long) MDL_PICKING_MICROGRAPH_FAMILY_STATE);
     addIntConstant(dict, "MDL_PMAX", (long) MDL_PMAX);
+
+    addIntConstant(dict, "MDL_PRJ_DIMENSIONS", (long) MDL_PRJ_DIMENSIONS);
+    addIntConstant(dict, "MDL_PRJ_ANGFILE", (long)MDL_PRJ_ANGFILE);
+    addIntConstant(dict, "MDL_PRJ_PSI_NOISE",  (long) MDL_PRJ_PSI_NOISE);
+    addIntConstant(dict, "MDL_PRJ_PSI_RANDSTR",(long)MDL_PRJ_PSI_RANDSTR );
+    addIntConstant(dict, "MDL_PRJ_PSI_RANGE",  (long) MDL_PRJ_PSI_RANGE     );
+    addIntConstant(dict, "MDL_PRJ_ROT_NOISE" ,(long)  MDL_PRJ_ROT_NOISE     );
+    addIntConstant(dict, "MDL_PRJ_ROT_RANDSTR",(long) MDL_PRJ_ROT_RANDSTR     );
+    addIntConstant(dict, "MDL_PRJ_ROT_RANGE",(long) MDL_PRJ_ROT_RANGE       );
+    addIntConstant(dict, "MDL_PRJ_TILT_NOISE", (long)  MDL_PRJ_TILT_NOISE    );
+    addIntConstant(dict, "MDL_PRJ_TILT_RANDSTR", (long) MDL_PRJ_TILT_RANDSTR   );
+    addIntConstant(dict, "MDL_PRJ_TILT_RANGE", (long) MDL_PRJ_TILT_RANGE     );
+    addIntConstant(dict, "MDL_PRJ_VOL",   (long) MDL_PRJ_VOL  );
+
+    addIntConstant(dict, "MDL_DIMENSIONS_3D", (long)MDL_DIMENSIONS_3D);
+    addIntConstant(dict, "MDL_DIMENSIONS_2D", (long)MDL_DIMENSIONS_2D);
+
+
     addIntConstant(dict, "MDL_PSD", (long) MDL_PSD);
     addIntConstant(dict, "MDL_PSD_ENHANCED", (long) MDL_PSD_ENHANCED);
     addIntConstant(dict, "MDL_RANDOMSEED", (long) MDL_RANDOMSEED);
