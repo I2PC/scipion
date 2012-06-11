@@ -856,3 +856,24 @@ def pretty_date(time=False):
     if day_diff < 365:
         return str(day_diff/30) + " months ago"
     return str(day_diff/365) + " years ago"
+
+def createUniqueFileName(fn):
+    '''
+    This function creates a file name that is similar to the original 
+    by adding a unique numeric suffix. check   NamedTemporaryFile
+    from tempfile for alternatives
+    '''
+    if not os.path.exists(fn):
+        return fn
+
+    path, name = os.path.split(fn)
+    name, ext = os.path.splitext(name)
+
+    make_fn = lambda i: os.path.join(path, '%s__tmp_%d__%s' % (name, i, ext))
+
+    for i in xrange(2, sys.maxint):
+        uni_fn = make_fn(i)
+        if not os.path.exists(uni_fn):
+            return uni_fn
+
+    return None
