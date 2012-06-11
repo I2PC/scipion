@@ -56,7 +56,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JMenuBar mb;
 	private JPanel particlespn;
 	private JPanel micrographpn;
-	private JTable micrographstb;
 	private UntiltedMicrographCanvas canvas;
 	private MicrographPairsTableModel micrographsmd;
 	private UntiltedMicrograph untiltedmic;
@@ -209,7 +208,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrographs"));
 		JScrollPane sp = new JScrollPane();
 		micrographsmd = new MicrographPairsTableModel(this);
-		micrographstb = new JTable(micrographsmd);
+		micrographstb.setModel(micrographsmd);
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
 		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(120);
@@ -230,31 +229,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		
 		buttonspn.add(resetbt);
 		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
-		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
-		{
-
-			@Override
-			public void valueChanged(ListSelectionEvent e)
-			{
-				if (e.getValueIsAdjusting())
-					return;
-				if (micrographstb.getSelectedRow() == -1)
-					return;// Probably from fireTableDataChanged raised
-				index = micrographstb.getSelectedRow();
-				// by me.
-				untiltedmic.releaseImage();
-				untiltedmic = pppicker.getMicrographs().get(index);
-				anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);
-				initializeCanvas();
-				saveChanges();
-				pack();
-				if (particlesdialog != null)
-					loadParticles();
-			}
-		});
+		
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
 
 	}
+	
+	
 
 	protected void saveChanges()
 	{
@@ -417,6 +397,25 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		getCanvas().updateMicrographData();
 		getTiltedCanvas().getMicrograph().releaseImage();
 		getTiltedCanvas().updateMicrographData();
+		
+	}
+
+
+
+
+	@Override
+	protected void loadMicrograph()
+	{
+		index = micrographstb.getSelectedRow();
+		// by me.
+		untiltedmic.releaseImage();
+		untiltedmic = pppicker.getMicrographs().get(index);
+		anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);
+		initializeCanvas();
+		saveChanges();
+		pack();
+		if (particlesdialog != null)
+			loadParticles();
 		
 	}
 

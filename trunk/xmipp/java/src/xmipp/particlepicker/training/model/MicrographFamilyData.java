@@ -68,7 +68,7 @@ public class MicrographFamilyData
 	{
 
 		manualparticles.add(p);
-		if (state == MicrographFamilyState.Available)//to put micrograph family data on new state, done only for first particle
+		if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)//to put micrograph family data on new state, done only for first particle
 		{
 			if (family.getStep() == FamilyState.Manual)
 				state = MicrographFamilyState.Manual;

@@ -14,6 +14,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -31,10 +32,13 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -81,6 +85,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected Color color;
 	protected JPanel colorpn;
 	protected JButton resetbt;
+	protected JTable micrographstb;
 
 	private JMenuItem exitmi;
 
@@ -105,6 +110,73 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 
+		initMenuBar(picker);
+
+		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				resetMicrograph();
+			}
+		});
+		micrographstb = new JTable();
+		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
+		{
+
+			@Override
+			public void valueChanged(ListSelectionEvent e)
+			{
+				if (e.getValueIsAdjusting())
+					return;
+				if (micrographstb.getSelectedRow() == -1)
+					return;// Probably from fireTableDataChanged raised
+				loadMicrograph();
+			}
+		});
+		micrographstb.addMouseListener(new MouseListener()
+		{
+			
+			@Override
+			public void mouseReleased(MouseEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent arg0)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent arg0)
+			{
+				loadMicrograph();
+			}
+		});
+	}
+	
+	protected abstract void loadMicrograph();
+	
+	private void initMenuBar(ParticlePicker picker)
+	{
 		filemn = new JMenu("File");
 		savemi = new JMenuItem("Save", XmippResource.getIcon("save.gif"));
 		savemi.setMnemonic('S');
@@ -274,16 +346,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
 		addFilterMenuItem("Invert LUT", true, picker);
-
-		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				resetMicrograph();
-			}
-		});
-
 	}
 
 	protected abstract void resetMicrograph();

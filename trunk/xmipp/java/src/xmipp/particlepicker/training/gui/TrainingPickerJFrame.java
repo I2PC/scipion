@@ -11,6 +11,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
@@ -63,7 +64,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private TrainingPicker ppicker;
 	private JPanel familypn;
 	private JPanel micrographpn;
-	private JTable micrographstb;
+	
 
 	private MicrographsTableModel micrographsmd;
 	private TrainingMicrograph micrograph;
@@ -422,7 +423,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		iconlb = new JLabel();
 		ctfpn.add(iconlb);
 		micrographsmd = new MicrographsTableModel(this);
-		micrographstb = new JTable(micrographsmd);
+		micrographstb.setModel(micrographsmd);
 		formatMicrographsTable();
 
 		sp.setViewportView(micrographstb);
@@ -440,17 +441,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		buttonspn.add(resetbt);
 		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
-		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
-		{
-
-			@Override
-			public void valueChanged(ListSelectionEvent e)
-			{
-				if (e.getValueIsAdjusting())
-					return;
-				loadMicrograph();
-			}
-		});
+		
 		micrographstb.getSelectionModel().setSelectionInterval(index, index);
 
 	}
@@ -539,7 +530,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 															// instead of
 															// creating a new
 															// one
-
 		}
 	}
 	
