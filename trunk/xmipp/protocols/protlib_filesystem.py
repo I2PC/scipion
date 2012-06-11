@@ -217,8 +217,28 @@ def xmippExists(path):
     from xmipp import FileName
     return FileName(path).exists()
 
+acquisitionInfoFileName="acquisition_info.xmd"
 def linkAcquisitionInfoIfPresent(log,InputFile,dirDest):
     dirSrc=os.path.dirname(InputFile)
-    fnAcquisitionIn=os.path.join(dirSrc,"acquisition_info.xmd")
+    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
     if os.path.exists(fnAcquisitionIn):
-        createLink2(log, "acquisition_info.xmd", dirSrc, dirDest)
+        createLink2(log, acquisitionInfoFileName, dirSrc, dirDest)
+        
+def AcquisitionInfoExists(InputFile):
+    dirSrc=os.path.dirname(InputFile)
+    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
+    if os.path.exists(fnAcquisitionIn):
+        return True
+    else:
+        return False
+    
+def AcquisitionInfoGetSamplingRate(InputFile):
+    from xmipp import MetaData,MDL_SAMPLINGRATE
+    dirSrc=os.path.dirname(InputFile)
+    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
+    if os.path.exists(fnAcquisitionIn):
+        mD =MetaData(fnAcquisitionIn)
+        id = mD.firstObject()
+        return(mD.getValue(MDL_SAMPLINGRATE,id))
+    else:
+        return -1.
