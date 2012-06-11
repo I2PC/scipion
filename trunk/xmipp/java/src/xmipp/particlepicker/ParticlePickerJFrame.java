@@ -273,6 +273,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Subtract Background...", true, picker);
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
+		addFilterMenuItem("Invert LUT", true, picker);
 
 		resetbt = XmippWindowUtil.getTextButton("Reset", new ActionListener()
 		{
