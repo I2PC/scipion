@@ -1,6 +1,7 @@
 /***************************************************************************
  *
  * Authors:    Sjors Scheres            scheres@cnb.csic.es (2004)
+ * Authors:    Roberto Marabini            roberto@cnb.csic.es (2012)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
