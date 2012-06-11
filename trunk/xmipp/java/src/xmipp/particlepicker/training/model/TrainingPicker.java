@@ -132,7 +132,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					setChanged(true);
 				}
 				loadManualParticles(mfd, file);
-				loadAutomaticParticles(mfd, file);
+				loadAutomaticParticles(mfd, file, false);
 				mfdatas.add(mfd);
 			}
 			micrograph.setFamiliesState(mfdatas);
@@ -183,10 +183,10 @@ public abstract class TrainingPicker extends ParticlePicker
 	
 	public void loadAutomaticParticles(MicrographFamilyData mfd)
 	{
-		loadAutomaticParticles(mfd, getOutputPath(mfd.getMicrograph().getAutoPosFile()));
+		loadAutomaticParticles(mfd, getOutputPath(mfd.getMicrograph().getAutoPosFile()), false);
 	}
 	
-	public void loadAutomaticParticles(MicrographFamilyData mfd, String file)
+	public void loadAutomaticParticles(MicrographFamilyData mfd, String file, boolean imported)
 	{
 		if (!new File(file).exists())
 			return;
@@ -212,7 +212,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					throw new IllegalArgumentException("Invalid format for " + file);
 				deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? false : true;
 				particle = new AutomaticParticle(x, y, f, mfd.getMicrograph(), cost, deleted);
-				mfd.addAutomaticParticle(particle);
+				mfd.addAutomaticParticle(particle, imported);
 			}
 		}
 		catch (Exception e)
@@ -459,7 +459,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		{
 			mfd = m.getFamilyData(family);
 			loadManualParticles(mfd, dir + File.separator + m.getPosFile());
-			loadAutomaticParticles(mfd, dir + File.separator + m.getAutoPosFile());
+			loadAutomaticParticles(mfd, dir + File.separator + m.getAutoPosFile(), true);//boolean for imported, so that available micrographs can have automatic particles
 		}
 	}
 
@@ -485,7 +485,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		try
 		{
-			loadAutomaticParticles(mfd, file);//if manual raises exception
+			loadAutomaticParticles(mfd, file, true);//if manual raises exception
 		}
 		catch(Exception e)
 		{
