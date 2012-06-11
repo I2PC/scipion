@@ -221,7 +221,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
         DFexp.join(MetaDataLeft,MetaDataRight,MDL_IMAGE,LEFT);
     }
     else
-       DFexp.read(fn_exp);
+        DFexp.read(fn_exp);
 
 
     ////////DFexp.write("kk.xmd");
@@ -274,21 +274,23 @@ void ProgAngularProjectionMatching::produceSideInfo()
     mysampling.readSamplingFile(fn_ref.removeAllExtensions(),false);
     total_nr_refs = mysampling.no_redundant_sampling_points_angles.size();
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
+
     std::cerr << "XXXXmysampling.no_redundant_sampling_points_indexXXXXXX" <<std::endl;
     for (std::vector<size_t>::iterator i =
-                mysampling.no_redundant_sampling_points_index.begin();
-            i != mysampling.no_redundant_sampling_points_index.end();
-            ++i)
+             mysampling.no_redundant_sampling_points_index.begin();
+         i != mysampling.no_redundant_sampling_points_index.end();
+         ++i)
         std::cerr << *i << " ";
     std::cerr << std::endl;
     std::cerr << "exit" <<std::endl;
 #endif
 #undef DEBUG
+
     convert_refno_to_stack_position.resize(mysampling.numberSamplesAsymmetricUnit, -1);
     for (int i = 0; i < mysampling.no_redundant_sampling_points_index.size(); i++)
-    	convert_refno_to_stack_position[mysampling.no_redundant_sampling_points_index[i]] = i;
+        convert_refno_to_stack_position[mysampling.no_redundant_sampling_points_index[i]] = i;
 
     // Don't reserve more memory than necessary
     max_nr_refs_in_memory = XMIPP_MIN(max_nr_imgs_in_memory, total_nr_refs);
@@ -400,37 +402,38 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     size_t _pointer;
 
     // Image was not stored yet: read it from disc and store
-//    std::vector<size_t>::const_iterator found =
-//        std::find((mysampling.no_redundant_sampling_points_index).begin(),
-//                  (mysampling.no_redundant_sampling_points_index).end(),
-//                  (size_t)refno
-//                 );
-//    //found = found - (mysampling.no_redundant_sampling_points_index).begin();
-//    _pointer = found - (mysampling.no_redundant_sampling_points_index).begin();
-//    if (found == (mysampling.no_redundant_sampling_points_index).end())
-//        REPORT_ERROR(ERR_VALUE_INCORRECT, "Wrong reference number");
-//    fnt.compose(_pointer + FIRST_IMAGE, fn_ref);
+    //    std::vector<size_t>::const_iterator found =
+    //        std::find((mysampling.no_redundant_sampling_points_index).begin(),
+    //                  (mysampling.no_redundant_sampling_points_index).end(),
+    //                  (size_t)refno
+    //                 );
+    //    //found = found - (mysampling.no_redundant_sampling_points_index).begin();
+    //    _pointer = found - (mysampling.no_redundant_sampling_points_index).begin();
+    //    if (found == (mysampling.no_redundant_sampling_points_index).end())
+    //        REPORT_ERROR(ERR_VALUE_INCORRECT, "Wrong reference number");
+    //    fnt.compose(_pointer + FIRST_IMAGE, fn_ref);
     fnt.compose(convert_refno_to_stack_position[refno] + FIRST_IMAGE, fn_ref);
     //!a delete _DATA_ALL
     img.read(fnt, _DATA_ALL);
     img().setXmippOrigin();
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
+
     double rot_tmp,tilt_tmp,psi_tmp;
     img.getEulerAngles(rot_tmp,tilt_tmp,psi_tmp);
 
     {
-    	std::cerr << "index_found: " << convert_refno_to_stack_position[refno] << std::endl;
+        std::cerr << "index_found: " << convert_refno_to_stack_position[refno] << std::endl;
         std::cerr << "refno: " << refno<<std::endl;
-    	std::cerr << "reading image " << fnt << std::endl;
+        std::cerr << "reading image " << fnt << std::endl;
         std::cerr << "rot_tmp,tilt_tmp,psi_tmp: " << rot_tmp<< " "<< tilt_tmp<< " "<<psi_tmp<< std::endl;
-//        std::cerr << "XXXXno_redundant_sampling_points_indexXXXXXX" <<std::endl;
-//        for (std::vector<size_t>::iterator i =
-//                    mysampling.my_neighbors.begin();
-//                i != mysampling.my_neighbors.end();
-//                ++i)
-//            std::cerr << *i << " ";
+        //        std::cerr << "XXXXno_redundant_sampling_points_indexXXXXXX" <<std::endl;
+        //        for (std::vector<size_t>::iterator i =
+        //                    mysampling.my_neighbors.begin();
+        //                i != mysampling.my_neighbors.end();
+        //                ++i)
+        //            std::cerr << *i << " ";
         std::cerr << std::endl;
     }
 #endif
@@ -484,7 +487,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     fP_ref[counter] = fP;
     stddev_ref[counter] = stddev;
     proj_ref[counter] = img();
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     std::cerr<<"counter= "<<counter<<"refno= "<<refno<<" stddev = "<<stddev;
@@ -492,21 +495,21 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     std::cerr<<" allrefs2refsinmem= "<<pointer_allrefs2refsinmem[pointer_refsinmem2allrefs[counter]] <<std::endl;
     std::cerr << "pointer_allrefs2refsinmem" <<std::endl;
     for (std::vector<int>::iterator i = pointer_allrefs2refsinmem.begin();
-            i != pointer_allrefs2refsinmem.end();
-            ++i)
+         i != pointer_allrefs2refsinmem.end();
+         ++i)
         std::cerr << *i << " ";
     std::cerr <<std::endl;
     std::cerr << "pointer_refsinmem2allrefs" <<std::endl;
     for (std::vector<int>::iterator i = pointer_refsinmem2allrefs.begin();
-            i != pointer_refsinmem2allrefs.end();
-            ++i)
+         i != pointer_refsinmem2allrefs.end();
+         ++i)
         std::cerr << *i << " ";
     std::cerr <<std::endl;
 #endif
 
     counter_refs_in_memory++;
     pthread_mutex_unlock(  &update_refs_in_memory_mutex );
-//    local_transformer.cleanup();
+    //    local_transformer.cleanup();
 }
 
 void * threadRotationallyAlignOneImage( void * data )
@@ -629,14 +632,14 @@ void * threadRotationallyAlignOneImage( void * data )
                 std::cerr << "XXXXpointer_allrefs2refsinmemXXXXXX" <<std::endl;
                 for (std::vector<int>::iterator i = prm->
                                                     pointer_allrefs2refsinmem.begin();
-                        i != prm->pointer_allrefs2refsinmem.end();
-                        ++i)
+                     i != prm->pointer_allrefs2refsinmem.end();
+                     ++i)
                     std::cerr << *i << std::endl;
                 std::cerr << "XXXXpointer_refsinmem2allrefsXXXXXX" <<std::endl;
                 for (std::vector<int>
-                        ::iterator i = prm->pointer_refsinmem2allrefs.begin();
-                        i != prm->pointer_refsinmem2allrefs.end();
-                        ++i)
+                     ::iterator i = prm->pointer_refsinmem2allrefs.begin();
+                     i != prm->pointer_refsinmem2allrefs.end();
+                     ++i)
                     std::cerr << *i << std::endl;
                 std::cerr <<std::endl;
 
@@ -655,7 +658,7 @@ void * threadRotationallyAlignOneImage( void * data )
 #ifdef TIMING
             get_refs += elapsed_time(t1);
 #endif
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
 
             std::cerr << "imgno " << imgno <<std::endl;
@@ -673,9 +676,9 @@ void * threadRotationallyAlignOneImage( void * data )
                 prm->stddev_img[itrans];
 #endif
                 // A. Check straight image
-		rotationalCorrelation(prm->fP_img[itrans],
-				      prm->fP_ref[refno],
-				      ang,rotAux);
+                rotationalCorrelation(prm->fP_img[itrans],
+                                      prm->fP_ref[refno],
+                                      ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
                 {
@@ -712,12 +715,12 @@ void * threadRotationallyAlignOneImage( void * data )
 #undef DEBUG
 
             }
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
-                std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
-                std::cerr << "DEBUG_ROB, i:" << i << std::endl;
-                std::cerr << "DEBUG_ROB, prm->mysampling.my_neighbors[imgno][i]:" << prm->mysampling.my_neighbors[imgno][i] << std::endl;
-                std::cerr<<"straight: corr "<<*maxcorr<<std::endl;
+            std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
+            std::cerr << "DEBUG_ROB, i:" << i << std::endl;
+            std::cerr << "DEBUG_ROB, prm->mysampling.my_neighbors[imgno][i]:" << prm->mysampling.my_neighbors[imgno][i] << std::endl;
+            std::cerr<<"straight: corr "<<*maxcorr<<std::endl;
 #endif
 #undef DEBUG
 
@@ -796,14 +799,14 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
     // Perform the actual search for the optimal shift
     if (max_shift>0)
     {
-    	CorrelationAux aux;
+        CorrelationAux aux;
         bestShift(Mref,Mimg,opt_xoff,opt_yoff,aux);
     }
     else
         opt_xoff = opt_yoff = 0.;
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
         opt_xoff = opt_yoff = 0.;
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     std::cerr<<"optimal shift "<<opt_xoff<<" "<<opt_yoff<<std::endl;
@@ -905,8 +908,8 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
     // 1 (0.01 * scale_step * scale_nsteps)
     for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
-            scale <= 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
-            scale += 0.01 * scale_step)
+        scale <= 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
+        scale += 0.01 * scale_step)
     {
         // apply current scale
         A.initIdentity();
@@ -951,21 +954,22 @@ void ProgAngularProjectionMatching::processAllImages()
 void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> &imagesToProcess)
 {
     Image<double> img;
-    double opt_rot=0.,
-    	   opt_tilt=0.,
-    	   opt_psi=0.,
-    	   opt_xoff=0.,
-    	   opt_yoff=0.,
-    	   opt_scale=0.,
-    	   maxcorr=-99.e99;
+    double 
+	  opt_rot=0.,
+	  opt_tilt=0.,
+	  opt_psi=0.,
+	  opt_xoff=0.,
+	  opt_yoff=0.,
+	  opt_scale=0.,
+	  maxcorr=-99.e99;
     bool opt_flip=false;
     int opt_refno=-1;
 
     size_t nr_images = imagesToProcess.size();
     size_t idNew, imgid;
     FileName fn;
-//    std::cerr << "DEBUG_ROB, DFexp.size():" << DFexp.size() << std::endl;
-//    std::cerr << "DEBUG_ROB, nr_images:" << nr_images << std::endl;
+    //    std::cerr << "DEBUG_ROB, DFexp.size():" << DFexp.size() << std::endl;
+    //    std::cerr << "DEBUG_ROB, nr_images:" << nr_images << std::endl;
     //DFexp.write("/dev/stderr");
     for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
@@ -974,18 +978,18 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         double kk;
         FileName pp;
         DFexp.getValue(MDL_IMAGE,pp, imgid);
-//    	std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
-//        std::cerr << "1 DEBUG_ROB, fn_img:" << pp << std::endl;
+        //     std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
+        //        std::cerr << "1 DEBUG_ROB, fn_img:" << pp << std::endl;
         //DFexp does not have angles
-//        DFexp.getValue(MDL_ANGLEROT,kk, imgid);
-//        std::cerr << "1 DEBUG_ROB, rot:" << kk << std::endl;
-//        DFexp.getValue(MDL_ANGLETILT,kk, imgid);
-//        std::cerr << "1 DEBUG_ROB, tilt:" << kk << std::endl;
-//        DFexp.getValue(MDL_ANGLEPSI,kk, imgid);
-//        std::cerr << "1 DEBUG_ROB, psi:" << kk << std::endl<< std::endl;
+        //        DFexp.getValue(MDL_ANGLEROT,kk, imgid);
+        //        std::cerr << "1 DEBUG_ROB, rot:" << kk << std::endl;
+        //        DFexp.getValue(MDL_ANGLETILT,kk, imgid);
+        //        std::cerr << "1 DEBUG_ROB, tilt:" << kk << std::endl;
+        //        DFexp.getValue(MDL_ANGLEPSI,kk, imgid);
+        //        std::cerr << "1 DEBUG_ROB, psi:" << kk << std::endl<< std::endl;
 
         /**/
-//std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
+        //std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
         getCurrentImage(imgid, img);
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
@@ -1022,21 +1026,21 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
         opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
-//std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
-//std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
+        //std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
+        //std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
         //        std::cerr << "3 DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
-//        std::cerr << "3 DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
-//        std::cerr << "3 DEBUG_ROB, opt_psi:" << opt_psi << std::endl;
+        //        std::cerr << "3 DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
+        //        std::cerr << "3 DEBUG_ROB, opt_psi:" << opt_psi << std::endl;
 
         translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
         // Add previously applied translation to the newly found one
         opt_xoff += img.Xoff();
         opt_yoff += img.Yoff();
 
-//        std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
-//        std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
-//        std::cerr << "DEBUG_ROB, opt_xoff:" << opt_xoff << std::endl;
-//        std::cerr << "DEBUG_ROB, opt_yoff:" << opt_yoff << std::endl;
+        //        std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
+        //        std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
+        //        std::cerr << "DEBUG_ROB, opt_xoff:" << opt_xoff << std::endl;
+        //        std::cerr << "DEBUG_ROB, opt_yoff:" << opt_yoff << std::endl;
         /* FIXME ROB     */
         //opt_psi += img.psi();
         /*         */
@@ -1051,7 +1055,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             opt_scale *= img.scale();
         }
 
-//#ifdef GGGGGG
+        //#ifdef GGGGGG
         // Output
         DFexp.getValue(MDL_IMAGE, fn, imgid);
         idNew = DFo.addObject();
@@ -1059,7 +1063,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFo.setValue(MDL_ANGLEROT, opt_rot,idNew);
         DFo.setValue(MDL_ANGLETILT,opt_tilt,idNew);
         DFo.setValue(MDL_ANGLEPSI, opt_psi,idNew);
-/**/
+        /**/
         //opt_xoff=0;
         DFo.setValue(MDL_SHIFTX,   opt_xoff,idNew);
         DFo.setValue(MDL_SHIFTY,   opt_yoff,idNew);
@@ -1069,10 +1073,10 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
         if (verbose && imgno % progress_bar_step == 0)
             progress_bar(imgno);
-//#endif
+        //#endif
         //DFo.write("/dev/stderr");
-    free(th_ids);
-    free(threads_d);
+        free(th_ids);
+        free(threads_d);
     }
 }
 
