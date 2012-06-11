@@ -53,10 +53,13 @@ void ProgCtfGroup::readParams()
     {
         fn_split = getParam("--split");
     }
-    do_wiener = checkParam("--wiener");
-    memory = getDoubleParam("--memory");
-    do1Dctf   = checkParam("--do1Dctf");
-    wiener_constant = getDoubleParam("--wc");
+    do_wiener        = checkParam("--wiener");
+    replaceSampling  = checkParam("--samplingrate");
+    if(replaceSampling)
+        samplingRate       =  getDoubleParam("--samplingrate");
+    memory           = getDoubleParam("--memory");
+    do1Dctf          = checkParam("--do1Dctf");
+    wiener_constant  = getDoubleParam("--wc");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -130,6 +133,7 @@ void ProgCtfGroup::defineParams()
     addParamsLine("   [--phase_flipped]          : Output filters for phase-flipped data");
     addParamsLine("   [--discard_anisotropy]     : Exclude anisotropic CTFs from groups");
     addParamsLine("   [--wiener]                 : Also calculate Wiener filters");
+    addParamsLine("   [--samplingrate <s>]       : This sampling rate overwrites the one in the ctf.param files");
     addParamsLine("   [--memory <double=1.>]     : Available memory in Gb");
     addParamsLine("   [--do1Dctf]                : Compute Groups using 1D CTF, select this option is you have many \
                   non astismatic CTFs");
@@ -230,6 +234,11 @@ void ProgCtfGroup::produceSideInfo()
     int c = XMIPP_MAX(1, nCTFs / 60);
     init_progress_bar(nCTFs);
 
+    //use this sampling instead of the one in the CTFparam file
+    if(replaceSampling)
+    {
+    	ctfMD.setValueCol(MDL_CTF_SAMPLING_RATE, samplingRate);
+    }
     ctf.readFromMetadataRow(ctfMD,ctfMD.firstObject());
 
     //do not read directly Tm from metadata because it may be not there
@@ -503,7 +512,7 @@ void ProgCtfGroup::manualRun()
     int counter=0;
     DF.setValueCol(MDL_DEFGROUP,-2);
     sortedCtfMD.setValueCol(MDL_DEFGROUP,-1);
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     sortedCtfMD.write("sortedCtfMD1.xmd");
@@ -529,7 +538,7 @@ void ProgCtfGroup::manualRun()
             progress_bar(counter);
     }
     progress_bar(n);
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     unionMD.write("unionMD.xmd");
@@ -537,7 +546,7 @@ void ProgCtfGroup::manualRun()
 #undef DEBUG
 
     sortedCtfMD.importObjects(unionMD, MDValueNE(MDL_DEFGROUP, -2));
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     sortedCtfMD.write("sortedCtfMD3.xmd");
