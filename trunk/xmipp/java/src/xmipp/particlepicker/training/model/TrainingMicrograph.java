@@ -65,7 +65,7 @@ public class TrainingMicrograph extends Micrograph{
 	
 
 	
-	public String getAutoFilename()
+	public String getAutoPosFile()
 	{
 		return autofilename;
 	}

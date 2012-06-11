@@ -145,6 +145,11 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
+	public void loadManualParticles(MicrographFamilyData mfd)
+	{
+		loadManualParticles(mfd, getOutputPath(mfd.getMicrograph().getPosFile()));
+	}
+	
 	public void loadManualParticles(MicrographFamilyData mfd, String file)
 	{
 		Family family = mfd.getFamily();
@@ -176,7 +181,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	
 	public void loadAutomaticParticles(MicrographFamilyData mfd)
 	{
-		loadAutomaticParticles(mfd, getOutputPath(mfd.getMicrograph().getPosFile()));
+		loadAutomaticParticles(mfd, getOutputPath(mfd.getMicrograph().getAutoPosFile()));
 	}
 	
 	public void loadAutomaticParticles(MicrographFamilyData mfd, String file)
@@ -186,7 +191,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			return;
 		int x, y;
 		AutomaticParticle particle;
-		double cost;
+		Double cost;
 		MetaData md;
 		boolean deleted;
 		try
@@ -199,8 +204,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				x = md.getValueInt(MDLabel.MDL_XINT, id);
 				y = md.getValueInt(MDLabel.MDL_YINT, id);
 				cost = md.getValueDouble(MDLabel.MDL_COST, id);
-
-				
+				if(cost == null)
+					throw new IllegalArgumentException("Invalid format for " + file);
 				deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? false : true;
 				particle = new AutomaticParticle(x, y, f, mfd.getMicrograph(), cost, deleted);
 				mfd.addAutomaticParticle(particle);
@@ -261,7 +266,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 
 		if (!m.hasAutomaticParticles())
-			new File(getOutputPath(m.getAutoFilename())).delete();
+			new File(getOutputPath(m.getAutoPosFile())).delete();
 		else
 			for (MicrographFamilyData mfd : m.getFamiliesData())
 				persistAutomaticParticles(mfd);
@@ -276,7 +281,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			long id;
 			if (mfd.hasAutomaticParticles())
 			{
-				String file = getOutputPath(mfd.getMicrograph().getAutoFilename());
+				String file = getOutputPath(mfd.getMicrograph().getAutoPosFile());
 				String section = mfd.getFamily().getName() + "@" + file;
 				MetaData md = new MetaData();
 				for (AutomaticParticle p : mfd.getAutomaticParticles())
@@ -346,7 +351,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			if (!mfd.getAutomaticParticles().isEmpty())
 			{
 				// removing automatic particles
-				block = String.format("%s@%s", mfd.getFamily().getName(), getOutputPath(mfd.getMicrograph().getAutoFilename()));
+				block = String.format("%s@%s", mfd.getFamily().getName(), getOutputPath(mfd.getMicrograph().getAutoPosFile()));
 
 				emptymd.writeBlock(block);
 			}
@@ -441,9 +446,21 @@ public abstract class TrainingPicker extends ParticlePicker
 		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
 
 	}
-
+	
 	@Override
-	public void importParticlesFromXmipp30Folder(Family family, String file)
+	public void importParticlesFromXmipp30Folder(Family family, String dir)
+	{
+		MicrographFamilyData mfd;
+		for(TrainingMicrograph m: micrographs)
+		{
+			mfd = m.getFamilyData(family);
+			loadManualParticles(mfd);
+			loadAutomaticParticles(mfd);
+		}
+	}
+
+	
+	public void importAllParticles(Family family, String file)
 	{// Expected a file for all micrographs
 		try
 		{
@@ -504,10 +521,17 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void importParticlesFromXmipp30File(MicrographFamilyData mfd, String file)
 	{
-		loadManualParticles(mfd, file);
-		loadAutomaticParticles(mfd, file);
+		try
+		{
+			loadAutomaticParticles(mfd, file);//if manual raises exception
+		}
+		catch(Exception e)
+		{
+			loadManualParticles(mfd, file);
+		}
 	}
-
+	
+	
 	public void importParticlesFromEmanFile(MicrographFamilyData mfd, String file)
 	{
 		try
