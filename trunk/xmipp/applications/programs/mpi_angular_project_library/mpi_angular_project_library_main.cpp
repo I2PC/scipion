@@ -301,8 +301,6 @@ public:
             << numberProjections << "  projections."
             << std::endl;
             createEmptyFile(output_file,Xdim,Ydim,1,numberProjections,true,WRITE_REPLACE);
-//            Image<double> Iaux(Xdim,Ydim);
-//            Iaux.write(output_file,numberProjections,true,WRITE_REPLACE);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
@@ -378,7 +376,11 @@ public:
 
                 MetaData  mySFin;
                 mySFin.read(output_file_root + "_angles.doc");
-
+#define ANGLESDOC
+#ifdef ANGLESDOC
+       std::cerr << "DEBUG_ROB, output_file_root + angle.doc:"
+    		     << output_file_root + "_angles.doc" << std::endl;
+#endif
                 MetaData  mySF;
                 FileName fn_temp;
 
@@ -397,7 +399,7 @@ public:
                     mySFin.getValue(MDL_X,x,__iter.objId);
                     mySFin.getValue(MDL_Y,y,__iter.objId);
                     mySFin.getValue(MDL_Z,z,__iter.objId);
-
+                    //FIXME, do I have order?
                     fn_temp.compose( ++myCounter,output_file);
                     id = mySF.addObject();
                     mySF.setValue(MDL_IMAGE,fn_temp, id);
@@ -414,8 +416,10 @@ public:
                 fn_temp=output_file_root+".doc";
                 mySF.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");
                 mySF.write(fn_temp);
-
+#ifndef ANGLESDOC
                 unlink((output_file_root+"_angles.doc").c_str());
+#endif
+#undef ANGLESDOC
             }
         }
         else
