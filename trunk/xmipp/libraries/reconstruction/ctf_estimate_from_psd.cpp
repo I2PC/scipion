@@ -2371,6 +2371,23 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
 
+	//TODO: Esto está tomado de estimate_defoci
+
+    /*
+     *int iter;
+      double fitness;
+
+      (*global_adjust)(0) = defocusU;
+      (*global_adjust)(1) = defocusV;
+      (*global_adjust)(2) = angle;
+      (*global_adjust)(4) = K_so_far;
+
+      powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                      DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                      fitness, iter, steps, false);
+      */
+
+
     if (global_prm->show_optimization)
         std::cout << "Looking for first defoci ...\n";
 
@@ -2399,7 +2416,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     VEC_ELEM(coefs2,12) =1;
 
     Matrix1D<double> coefs3(13);
-    coefs3.initConstant(0);
+    coefs3.initConstant(1);
     VEC_ELEM(coefs3,0) = 1;
     VEC_ELEM(coefs3,3) = 1;
     VEC_ELEM(coefs3,4) = 1;
@@ -2425,6 +2442,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                   1*min_freq*XSIZE(centeredEnhancedPSD),
                   1*max_freq*XSIZE(centeredEnhancedPSD),
                   phase, mod, coefs, 0);
+
 
     kV = kV*1000;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
@@ -2465,13 +2483,20 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                   x,x,
                   0.88*min_freq*XSIZE(centeredEnhancedPSD),
                   0.88*max_freq*XSIZE(centeredEnhancedPSD),
-                  phase3, mod3, coefs3, 0);
+                  phase3, mod3, coefs3, 7);
 
+
+    std::cout << "coefs3 : " <<  coefs3 << std::endl;
 
     Z8=VEC_ELEM(coefs3,4);
     Z3=VEC_ELEM(coefs3,12);
     Z4=VEC_ELEM(coefs3,3);
     Z5=VEC_ELEM(coefs3,5);
+
+    std::cout << "Z3 : " <<  Z3 << std::endl;
+    std::cout << "Z4 : " <<  Z4 << std::endl;
+    std::cout << "Z5 : " <<  Z5 << std::endl;
+    std::cout << "Z8 : " <<  Z8 << std::endl;
 
     double deFocusAvg3  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
     double deFocusDiff3 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
@@ -2538,8 +2563,6 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     DEBUG_TEXTFILE(formatString("Z8 %f",Z8));
     DEBUG_TEXTFILE(formatString("Z4 %f",Z4));
     DEBUG_TEXTFILE(formatString("Z5 %f",Z5));
-    DEBUG_TEXTFILE(formatString("deFocusAvg %f",deFocusAvg));
-    DEBUG_TEXTFILE(formatString("deFocusDiff %f",deFocusDiff));
     DEBUG_TEXTFILE(formatString("ellipseAngle %f",ellipseAngle));
     DEBUG_TEXTFILE(formatString("defocusU %f",defocusU));
     DEBUG_TEXTFILE(formatString("defocusV %f",defocusV));
@@ -2585,6 +2608,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     //gethostname(hostname,1023);
     //std::cout << prm.fn_psd << " " << hostname << std::endl;
 
+	std::cout << prm.fn_psd.removeLastExtension() << std::endl;
     DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
     global_prm = &prm;
     if (standalone || prm.show_optimization)

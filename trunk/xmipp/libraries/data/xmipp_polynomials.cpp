@@ -181,13 +181,16 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
             A2D_ELEM(ROI,i,j) = false;
         }
 
-        A2D_ELEM(reconstructed,i,j) = std::cos(A2D_ELEM(reconstructed,i,j));
+
+        //A2D_ELEM(reconstructed,i,j) = std::cos(A2D_ELEM(reconstructed,i,j));
+        A2D_ELEM(reconstructed,i,j) = (A2D_ELEM(reconstructed,i,j));
         ++pixel_idx;
     }
 
     pixel_idx=0;
 
-    if (verbose == 1)
+
+    if (verbose > 0)
     {
 
         Image<double> save;

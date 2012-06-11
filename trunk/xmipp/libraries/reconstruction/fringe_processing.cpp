@@ -692,6 +692,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
             {
                 A2D_ELEM(ROI,i,j) = false;
             }
+
         }
         else
         {
@@ -725,7 +726,7 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     mod2.resizeNoCopy(im);
     mod2.initConstant(1.0);
     polynom.fit(coefsInit,phase,mod2,ROI,0);
-    polynom.fit(coefsInit,phase,mod2,ROI,1);
+    polynom.fit(coefsInit,phase,mod2,ROI,verbose);
 
     int index = 0;
     for (int i=0; i<VEC_XSIZE(coeffs); i++)
