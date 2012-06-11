@@ -77,6 +77,12 @@ public:
     /// Wiener filter constant
     double wiener_constant;
 
+    /// Replace ctf.param file sampling rate by this
+    bool replaceSampling;
+
+    /// New ctf sampling rate
+    double samplingRate;
+
     /// Compute 1D CTF using avg(defocusU + defocusV)/2 as defocus.
     /// This approach speed up the computation and is recommended for very larg data sets
     bool do1Dctf;
