@@ -97,7 +97,7 @@ typedef enum
  *     String imageFile;
  *     double angle;
  *     mdA.getValue(MDL_IMAGE, imageFile,__iter.objId);
- *     mdB.getValue(MDL_ANGLE_TILT, angle,__iter.objId);
+ *     mdB.getValue(MDL_ANGLE_TILT, angle,__iter2.objId);
  *     size_t objId=mdC.addObject();
  *     mdC.setValue(MDL_IMAGE, imageFile,objId);
  *     mdC.setValue(MDL_ANGLE_TILT, angle,objId);
