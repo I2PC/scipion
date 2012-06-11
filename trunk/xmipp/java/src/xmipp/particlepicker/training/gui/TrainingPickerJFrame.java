@@ -497,7 +497,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		pack();
 	}
 
-	MicrographFamilyData getFamilyData()
+	public MicrographFamilyData getFamilyData()
 	{
 		MicrographFamilyData mfd = micrograph.getFamilyData(family);
 		return mfd;

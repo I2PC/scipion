@@ -43,6 +43,7 @@ import xmipp.ij.commons.XmippIJUtil;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
@@ -563,7 +564,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public void importParticlesFromFolder(Format format, String dir)
 	{
 		
-		getMicrograph().reset();
+		if (this instanceof TrainingPickerJFrame)
+			((TrainingPickerJFrame)this).getFamilyData().reset();
+		else
+			getMicrograph().reset();
 		switch (format)
 		{
 			case Xmipp24:
