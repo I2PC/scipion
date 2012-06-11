@@ -445,7 +445,6 @@ def loadLaunchModule():
     the actual configuration should be in [parallel] section of the XMIPP/.xmipp.cfg file
     '''
     launchModuleName = os.environ['XMIPP_PARALLEL_LAUNCH']
-    print launchModuleName
     return loadModule(launchModuleName)
         
 def submitProtocol(script, **params):
