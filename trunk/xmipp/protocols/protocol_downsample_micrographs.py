@@ -66,8 +66,7 @@ def changeSamplingRate(log,fnIn,fnOut,downsampleFactor):
     MD.write(fnOut)
 
 def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor,tiltPairs):
-    MD=xmipp.MetaData()
-    MD.read(fnIn)
+    MD=xmipp.MetaData(fnIn)
     for i in MD:
         fnMicrograph=MD.getValue(xmipp.MDL_MICROGRAPH,i);
         MD.setValue(xmipp.MDL_MICROGRAPH,IOTable[fnMicrograph],i)
