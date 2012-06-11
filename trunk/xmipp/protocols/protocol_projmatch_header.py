@@ -568,10 +568,11 @@ DoComputeResolution ='1'
 DoSplitReferenceImages ="1"
 
 
-# Pixel size (in Ang.)
-""" This will make that the X-axis in the resolution plots has units 1/Angstrom
-"""
-ResolSam=5.6
+## sampling is now in acquisition info file
+## Pixel size (in Ang.)
+#""" This will make that the X-axis in the resolution plots has units 1/Angstrom
+#"""
+#ResolSam=5.6
 
 #-----------------------------------------------------------------------------
 # {section} Postprocessing
@@ -698,8 +699,9 @@ DisplayFilteredReconstruction=True
 """
 DisplayBFactorCorrectedVolume=False
 
-#{condition}(DisplayBFactorCorrectedVolume) Sampling rate
-SamplingRate=5.6
+#### this information is in acquisition info
+#### {condition}(DisplayBFactorCorrectedVolume) Sampling rate
+#### SamplingRate=5.6
 
 #{condition}(DisplayBFactorCorrectedVolume) Maximum resolution to apply B-factor (in Angstrom)
 MaxRes=12
@@ -710,8 +712,14 @@ MaxRes=12
 """
 CorrectBfactorExtraCommand='--auto'
 
-# {view} Show projection matching library and aligned classes
-DisplayProjectionMatchingAlign2d=False
+# {view} Show projection matching library
+DisplayProjectionMatchingLibrary=False
+
+# {view} Show projection matching classes
+DisplayProjectionMatchingClasses=False
+
+# {view} Show projection matching Library and Clases in a single image
+DisplayProjectionMatchingLibraryAndClasses=False
 
 # {view} Show discarded images
 DisplayDiscardedImages=False
