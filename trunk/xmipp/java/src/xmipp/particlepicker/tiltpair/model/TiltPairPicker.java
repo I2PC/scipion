@@ -67,19 +67,25 @@ public class TiltPairPicker extends ParticlePicker
 		}
 
 	}
-
+	
 	public void loadMicrographData(UntiltedMicrograph micrograph)
+	{
+		String ufile = getOutputPath(micrograph.getPosFile());
+		String tfile = getOutputPath(micrograph.getTiltedMicrograph().getPosFile());
+		loadMicrographData(micrograph, ufile, tfile);
+	}
+
+	public void loadMicrographData(UntiltedMicrograph micrograph, String ufile, String tfile)
 	{
 		try
 		{
 			int x, y;
 			UntiltedParticle up;
 			TiltedParticle tp;
-			String filename = getOutputPath(micrograph.getPosFile());
-			if (!new File(filename).exists())
+			if (!new File(ufile).exists())
 				return;
 
-			MetaData md = new MetaData(filename);
+			MetaData md = new MetaData(ufile);
 			for (long id : md.findObjects())
 			{
 				x = md.getValueInt(MDLabel.MDL_XINT, id);
@@ -87,8 +93,7 @@ public class TiltPairPicker extends ParticlePicker
 				up = new UntiltedParticle(x, y, micrograph, family);
 				micrograph.addParticle(up);
 			}
-			filename = getOutputPath(micrograph.getTiltedMicrograph().getPosFile());
-			md = new MetaData(filename);
+			md = new MetaData(tfile);
 			int i = 0;
 			long[] ids = md.findObjects();
 			for (long id : ids)
@@ -313,7 +318,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	
 
-	public void importParticlesFromXmipp24Files(UntiltedMicrograph um, String ufile, String tfile, boolean checkfiles)
+	public void importParticlesFromXmipp24Files(UntiltedMicrograph um, String ufile, String tfile)
 	{
 		try
 		{
@@ -326,12 +331,7 @@ public class TiltPairPicker extends ParticlePicker
 
 			um.getParticles().clear();
 			if (!new File(ufile).exists())
-			{
-				if(checkfiles)
-					throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", ufile));
-				else 
-					return;
-			}
+				return;
 			um.setPosFileFromXmipp24(ufile);
 			md.readPlain(ufile, "Xcoor Ycoor");
 			ids = md.findObjects();
@@ -346,12 +346,7 @@ public class TiltPairPicker extends ParticlePicker
 			tm = um.getTiltedMicrograph();
 			tm.getParticles().clear();
 			if (!new File(tfile).exists())
-			{
-				if(checkfiles)
-					throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", tfile));
-				else 
-					return;
-			}
+				return;
 			tm.setPosFileFromXmipp24(tfile);
 			md.readPlain(tfile, "Xcoor Ycoor");
 			int i = 0;
@@ -377,9 +372,10 @@ public class TiltPairPicker extends ParticlePicker
 	}
 	
 	@Override
-	public void importParticlesFromXmipp30Folder(Family family, String absolutePath)
+	public void importParticlesFromXmipp30Folder(Family family, String dir)
 	{
-		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
+		for(UntiltedMicrograph um: micrographs)
+			importParticlesFromXmipp30Files(um, dir + File.separator + um.getPosFile(), dir + File.separator + um.getTiltedMicrograph().getPosFile());
 
 	}
 
@@ -392,7 +388,7 @@ public class TiltPairPicker extends ParticlePicker
 		{
 			ufile = getPosFileFromXmipp24Project(dir, um.getName());
 			tfile = getPosFileFromXmipp24Project(dir, um.getTiltedMicrograph().getName());
-			importParticlesFromXmipp24Files(um, ufile, tfile, false);
+			importParticlesFromXmipp24Files(um, ufile, tfile);
 		}
 	}
 
@@ -405,14 +401,14 @@ public class TiltPairPicker extends ParticlePicker
 	}
 
 
-	public void importParticlesFromXmipp30Files(UntiltedMicrograph untiltedmic, String ufile, String tfile, boolean b)
+	public void importParticlesFromXmipp30Files(UntiltedMicrograph untiltedmic, String ufile, String tfile)
 	{
-		// TODO Auto-generated method stub
+		loadMicrographData(untiltedmic, ufile, tfile);
 		
 	}
 
 
-	public void importParticlesFromEmanFiles(UntiltedMicrograph untiltedmic, String ufile, String tfile, boolean b)
+	public void importParticlesFromEmanFiles(UntiltedMicrograph untiltedmic, String ufile, String tfile)
 	{
 		// TODO Auto-generated method stub
 		

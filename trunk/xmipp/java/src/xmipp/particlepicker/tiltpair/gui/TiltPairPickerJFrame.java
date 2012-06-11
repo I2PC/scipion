@@ -372,13 +372,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		switch(format)
 		{
 		case Xmipp24:
-			pppicker.importParticlesFromXmipp24Files(untiltedmic, ufile, tfile, true);
+			pppicker.importParticlesFromXmipp24Files(untiltedmic, ufile, tfile);
 			break;
 		case Xmipp30:
-			pppicker.importParticlesFromXmipp30Files(untiltedmic, ufile, tfile, true);
+			pppicker.importParticlesFromXmipp30Files(untiltedmic, ufile, tfile);
 			break;
 		case Eman:
-			pppicker.importParticlesFromEmanFiles(untiltedmic, ufile, tfile, true);
+			pppicker.importParticlesFromEmanFiles(untiltedmic, ufile, tfile);
 			break;
 		}
 		untiltedmic.initAligner();
