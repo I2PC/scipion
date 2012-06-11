@@ -530,7 +530,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 															// instead of
 															// creating a new
 															// one
+			
 		}
+		micrograph.runImageJFilters(ppicker.getFilters());
 	}
 	
 	private void formatMicrographsTable()

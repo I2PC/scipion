@@ -4,6 +4,7 @@ import ij.CommandListener;
 import ij.Executer;
 import ij.ImageListener;
 import ij.ImagePlus;
+import ij.gui.SaveChangesDialog;
 import ij.plugin.frame.Recorder;
 import java.awt.Color;
 import java.io.File;
@@ -67,7 +68,9 @@ public abstract class ParticlePicker
 			public String commandExecuting(String command)
 			{
 				ParticlePicker.this.command = command;
+				System.out.println(command);
 				return command;
+				
 
 			}
 		});
@@ -77,22 +80,13 @@ public abstract class ParticlePicker
 			@Override
 			public void imageUpdated(ImagePlus arg0)
 			{
-				if (command != null)
-				{
-					String options = "";
-					if (Recorder.getCommandOptions() != null)
-						options = Recorder.getCommandOptions();
-					if (!isFilterSelected(command))
-						addFilter(command, options);
-					command = null;
-				}
+				updateFilters();
 			}
 
 			@Override
 			public void imageOpened(ImagePlus arg0)
 			{
-				// TODO Auto-generated method stub
-
+				
 			}
 
 			@Override
@@ -104,6 +98,28 @@ public abstract class ParticlePicker
 		});
 	}
 	
+	private void updateFilters()
+	{
+		System.out.println("Image updated");
+		if (command != null)
+		{
+			String options = "";
+			if (Recorder.getCommandOptions() != null)
+				options = Recorder.getCommandOptions();
+			if (!isFilterSelected(command))
+				addFilter(command, options);
+			else if (!(options == null || options.equals("")))
+				for(Filter f: filters)
+					if(f.getCommand().equals(command))
+						f.setOptions(options);
+			setChanged(true);
+			command = null;
+			
+		}
+	}
+	
+	
+	
 	public String getMicrographsSelFile()
 	{
 		return selfile;
@@ -113,7 +129,6 @@ public abstract class ParticlePicker
 	{
 		Filter f = new Filter(command, options);
 		filters.add(f);
-		setChanged(true);
 	}
 	
 	public List<Filter> getFilters()

@@ -108,14 +108,13 @@ public abstract class Micrograph
 						imp = XmippImageConverter.convertToImagePlus(igsmooth);
 						ig.destroy();
 					} 
-					else 
+					else  
 					{
 						if (imp == null) {
 							imp = XmippImageConverter.convertToImagePlus(ig);
 							ig.destroy();
 						}
-						//String macro = String.format("run(\"%s\", \"%s\");", f.getCommand(), f.getOptions());
-						IJ.run(imp, f.getCommand(), f.getOptions());
+						
 					}
 			}
 			return imp;
@@ -125,6 +124,13 @@ public abstract class Micrograph
 			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+	
+	public void runImageJFilters(List<Filter> filters)
+	{
+		for (Filter f: filters)
+			if (!f.getCommand().equals("Smooth Filter")) //this filter should be the first applied
+				IJ.run(imp, f.getCommand(), f.getOptions());
 	}
 
 	public void releaseImage()
