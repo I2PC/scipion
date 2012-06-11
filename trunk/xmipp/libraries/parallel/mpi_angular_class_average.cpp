@@ -34,21 +34,6 @@ MpiProgAngularClassAverage::MpiProgAngularClassAverage(int argc, char **argv)
     this->read(argc, argv);
 }
 
-//void MpiProgAngularClassAverage::read(int argc, char** argv)
-//{
-//    node = new MpiNode(argc, argv);
-//    // Master should read first
-//    if (node->isMaster())
-//        XmippProgram::read(argc, argv);
-//    node->barrierWait();
-//    if (!node->isMaster())
-//    {
-//        verbose = 0;//disable verbose for slaves
-//        XmippProgram::read(argc, argv);
-//    }
-//}
-
-
 // Read arguments ==========================================================
 void MpiProgAngularClassAverage::readParams()
 {
@@ -590,7 +575,8 @@ void MpiProgAngularClassAverage::mpi_write(
     {
         if (w1 > 0)
         {
-            formatStringFast(fileNameStk, "%s_Ref3D_%03lu.stk", fn_out1.c_str(), ref3dIndex);
+            formatStringFast(fileNameStk, "%s_Ref3D_%03lu.stk",
+                             fn_out1.c_str(), ref3dIndex);
             mpi_writeFile(avg1, dirno, fileNameStk, old_w1);
         }
         if (w2 > 0)
