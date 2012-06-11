@@ -557,9 +557,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		}
 	}
+	
+	
 
 	public void importParticlesFromFolder(Format format, String dir)
 	{
+		
+		getMicrograph().reset();
 		switch (format)
 		{
 			case Xmipp24:

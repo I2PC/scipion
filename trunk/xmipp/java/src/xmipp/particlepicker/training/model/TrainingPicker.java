@@ -152,6 +152,8 @@ public abstract class TrainingPicker extends ParticlePicker
 	
 	public void loadManualParticles(MicrographFamilyData mfd, String file)
 	{
+		if (!new File(file).exists())
+			return;
 		Family family = mfd.getFamily();
 		if (!containsBlock(file, family.getName()))
 			return;
@@ -186,6 +188,8 @@ public abstract class TrainingPicker extends ParticlePicker
 	
 	public void loadAutomaticParticles(MicrographFamilyData mfd, String file)
 	{
+		if (!new File(file).exists())
+			return;
 		Family f = mfd.getFamily();
 		if (!containsBlock(file, f.getName()))
 			return;
@@ -454,55 +458,13 @@ public abstract class TrainingPicker extends ParticlePicker
 		for(TrainingMicrograph m: micrographs)
 		{
 			mfd = m.getFamilyData(family);
-			loadManualParticles(mfd);
-			loadAutomaticParticles(mfd);
+			loadManualParticles(mfd, dir + File.separator + m.getPosFile());
+			loadAutomaticParticles(mfd, dir + File.separator + m.getAutoPosFile());
 		}
 	}
 
 	
-	public void importAllParticles(Family family, String file)
-	{// Expected a file for all micrographs
-		try
-		{
-			MetaData md;
-			long[] ids;
-			int x, y;
-			Double cost;
-
-			List<String> blocks = Arrays.asList(MetaData.getBlocksInMetaDataFile(file));
-			String block;
-			for (TrainingMicrograph m : micrographs)
-			{
-				m.reset();
-
-				block = "mic_" + m.getName();
-				if (blocks.contains(block))
-				{
-					md = new MetaData(block + "@" + file);
-
-					ids = md.findObjects();
-					for (long id : ids)
-					{
-
-						x = md.getValueInt(MDLabel.MDL_XINT, id);
-						y = md.getValueInt(MDLabel.MDL_YINT, id);
-						cost = md.getValueDouble(MDLabel.MDL_COST, id);
-						if (cost == null || cost == 0 || cost > 1)
-							m.addManualParticle(new TrainingParticle(x, y, family, m, cost));
-						else
-							m.addAutomaticParticle(new AutomaticParticle(x, y, family, m, cost, false), true);
-					}
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
-
+	
 	public void importParticlesFromEmanFolder(Family family, String folder)
 	{
 		String file;
@@ -560,5 +522,49 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
+	
+	public void importAllParticles(Family family, String file)
+	{// Expected a file for all micrographs
+		try
+		{
+			MetaData md;
+			long[] ids;
+			int x, y;
+			Double cost;
+
+			List<String> blocks = Arrays.asList(MetaData.getBlocksInMetaDataFile(file));
+			String block;
+			for (TrainingMicrograph m : micrographs)
+			{
+				m.reset();
+
+				block = "mic_" + m.getName();
+				if (blocks.contains(block))
+				{
+					md = new MetaData(block + "@" + file);
+
+					ids = md.findObjects();
+					for (long id : ids)
+					{
+
+						x = md.getValueInt(MDLabel.MDL_XINT, id);
+						y = md.getValueInt(MDLabel.MDL_YINT, id);
+						cost = md.getValueDouble(MDLabel.MDL_COST, id);
+						if (cost == null || cost == 0 || cost > 1)
+							m.addManualParticle(new TrainingParticle(x, y, family, m, cost));
+						else
+							m.addAutomaticParticle(new AutomaticParticle(x, y, family, m, cost, false), true);
+					}
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+
 
 }
