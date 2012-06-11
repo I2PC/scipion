@@ -12,15 +12,22 @@
 
 import os
 from os.path import join
-from xmipp import MetaData, FILENAMENUMBERLENGTH, AGGR_COUNT, MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
-MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE, MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_WEIGHT
+from xmipp import MetaData, FileName, FILENAMENUMBERLENGTH, AGGR_COUNT,\
+         MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
+         MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE,\
+         MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_WEIGHT,\
+         MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR
 from protlib_base import XmippProtocol, protocolMain
-from protlib_utils import getListFromVector, getBoolListFromVector, getComponentFromVector, runShowJ, runJob
+from protlib_utils import getListFromVector, getBoolListFromVector,\
+     getComponentFromVector, runShowJ, runJob, createUniqueFileName
 from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning, showError
 from protlib_gui_figure import XmippPlotter
-from protlib_filesystem import linkAcquisitionInfoIfPresent, xmippExists
+from protlib_filesystem import linkAcquisitionInfoIfPresent\
+                               , xmippExists\
+                               , AcquisitionInfoExists\
+                               , AcquisitionInfoGetSamplingRate
 from math import radians
 
 class ProtProjMatch(XmippProtocol):
@@ -52,8 +59,9 @@ class ProtProjMatch(XmippProtocol):
         
         if self.UseInitialAngles:
             self.DocFileName = self.SelFileName
-        self.ResolSam=float(self.ResolSam)
-        
+        #sampling is now in acquisition info
+        #self.ResolSam=float(self.ResolSam)
+        self.ResolSam = AcquisitionInfoGetSamplingRate(self.SelFileName)
     def validate(self):
         from xmipp import ImgSize, SingleImgSize, XmippError
         errors = []
@@ -93,6 +101,21 @@ class ProtProjMatch(XmippProtocol):
         _InnerRadius = int(getComponentFromVector(self.InnerRadius, 1))
         if _OuterRadius <= _InnerRadius:
             errors.append("OuterRadius must be larger than InnerRadius")
+
+        #Check that acquisition info file is available
+        if not AcquisitionInfoExists(self.SelFileName):
+            errors.append("""Acquisition file for metadata %s is not available. 
+Either import images before using them
+or create a file named acquision_info.xmd 
+(see example below) and place it in the same directory than 
+the %s file
+
+EXAMPLE:
+# XMIPP_STAR_1 *
+# chage XXXXX by the sapling rate
+data_
+ _sampling_rate XXXXX
+""" %(self.SelFileName,self.SelFileName))
 
         return errors 
     
@@ -145,9 +168,16 @@ class ProtProjMatch(XmippProtocol):
     
     def visualize(self):
         
-        plots = [k for k in ['DisplayReference', 'DisplayReconstruction', 'DisplayFilteredReconstruction', 
-                             'DisplayBFactorCorrectedVolume', 'DisplayProjectionMatchingAlign2d', 'DisplayDiscardedImages',
-                             'DisplayDiscardedImages', 'DisplayAngularDistribution', 'DisplayResolutionPlots'] if self.ParamsDict[k]]
+        plots = [k for k in ['DisplayReference'
+                           , 'DisplayReconstruction'
+                           , 'DisplayFilteredReconstruction'
+                           , 'DisplayBFactorCorrectedVolume'
+                           , 'DisplayProjectionMatchingLibrary'
+                           , 'DisplayProjectionMatchingClasses'
+                           , 'DisplayProjectionMatchingLibraryAndClasses'
+                           , 'DisplayDiscardedImages'
+                           , 'DisplayAngularDistribution'
+                           , 'DisplayResolutionPlots'] if self.ParamsDict[k]]
         if len(plots):
             self.launchProjmatchPlots(plots)
 
@@ -255,11 +285,9 @@ class ProtProjMatch(XmippProtocol):
                 for it in iterations:
                     file_name = self.getFilename('ReconstructedFileNamesIters', iter=it, ref=ref3d)
                     file_name_bfactor = file_name + '.bfactor'
-#                    print 'it: ',it, ' | file_name:',file_name
-#                    print 'it: ',it, ' | file_name_bfactor:',file_name_bfactor
                     
                     parameters = ' -i ' + file_name + \
-                        ' --sampling ' + str(self.SamplingRate) + \
+                        ' --sampling ' + str(self.ResolSam) + \
                         ' --maxres ' + str(self.MaxRes) + \
                         ' -o ' + file_name_bfactor
                         
@@ -288,13 +316,50 @@ class ProtProjMatch(XmippProtocol):
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
-            
-        if doPlot('DisplayProjectionMatchingAlign2d'):
+
+        if doPlot('DisplayProjectionMatchingLibrary'):
+        #map stack position with ref number
+            MDin  = MetaData()
+            MDout = MetaData()
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    convert_refno_to_stack_position={}
+                    file_nameReferences = 'projectionDirections@'+self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
+                    #last reference name
+                    mdReferences     = MetaData(file_nameReferences)
+                    mdReferencesSize = mdReferences.size()
+                    for id in mdReferences:
+                        convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
+                    file_nameAverages   = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
+                    if xmippExists(file_nameAverages):
+                        #print "OutClassesXmd", OutClassesXmd
+                        MDin.read(file_nameAverages)
+                        for i in MDin:
+                            #id1=MDout.addObject()
+                            #MDout.setValue(MDL_IMAGE,MDin.getValue(MDL_IMAGE,i),id1)
+                            ref2D = MDin.getValue(MDL_REF,i)
+                            file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
+                            file_reference=FileName()
+                            file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
+                            id2=MDout.addObject()
+                            MDout.setValue(MDL_IMAGE,file_reference,id2)
+                        if MDout.size()==0:
+                            print "Empty metadata: ", file_name
+                        else:
+                            try:
+                                file_nameReferences = self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
+                                sfn   = createUniqueFileName(file_nameReferences)
+                                file_nameReferences = 'projectionDirections@'+sfn
+                                MDout.write( sfn )
+                                runShowJ(sfn)
+                            except Exception, e:
+                                showError("Error launching java app", str(e))
+
+        if doPlot('DisplayProjectionMatchingClasses'):
             MD = MetaData()
             for ref3d in ref3Ds:
                 for it in iterations:
                     file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
-                    #print 'ref3d: ',ref3d , ' | it: ',it, ' | file_name:',file_name
                     if xmippExists(file_name):
                         MD.read(file_name)
                         if MD.size()==0:
@@ -302,6 +367,45 @@ class ProtProjMatch(XmippProtocol):
                         else:
                             try:
                                 runShowJ(file_name)
+                            except Exception, e:
+                                showError("Error launching java app", str(e))
+        
+        if doPlot('DisplayProjectionMatchingLibraryAndClasses'):       
+        #map stack position with ref number
+            MDin  = MetaData()
+            MDout = MetaData()
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    convert_refno_to_stack_position={}
+                    file_nameReferences = 'projectionDirections@'+self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
+                    #last reference name
+                    mdReferences     = MetaData(file_nameReferences)
+                    print file_nameReferences
+                    mdReferencesSize = mdReferences.size()
+                    for id in mdReferences:
+                        convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
+                    file_nameAverages   = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
+                    if xmippExists(file_nameAverages):
+                        #print "OutClassesXmd", OutClassesXmd
+                        MDin.read(file_nameAverages)
+                        for i in MDin:
+                            id1=MDout.addObject()
+                            MDout.setValue(MDL_IMAGE,MDin.getValue(MDL_IMAGE,i),id1)
+                            ref2D = MDin.getValue(MDL_REF,i)
+                            file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
+                            file_reference=FileName()
+                            file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
+                            id2=MDout.addObject()
+                            MDout.setValue(MDL_IMAGE,file_reference,id2)
+                        if MDout.size()==0:
+                            print "Empty metadata: ", file_name
+                        else:
+                            try:
+                                file_nameReferences = self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
+                                sfn   = createUniqueFileName(file_nameReferences)
+                                file_nameReferences = 'projectionDirections@'+sfn
+                                MDout.write( sfn )
+                                runShowJ(sfn)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -483,7 +587,9 @@ class ProtProjMatch(XmippProtocol):
          
     
     def preRun(self):
-        self.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.SelFileName,dirDest=self.WorkingDir)
+        self.insertStep("linkAcquisitionInfoIfPresent",
+                        InputFile=self.SelFileName,
+                        dirDest=self.WorkingDir)
         
         # Construct special filename list with zero special case
         self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self.getFilename('DocfileInputAnglesIters', iter=i) for i in range(1, self.NumberOfIterations + 1)]
@@ -550,7 +656,10 @@ class ProtProjMatch(XmippProtocol):
         verifyFiles = [self.getFilename('ImageCTFpairs')]
         if self.DoCtfCorrection:
             verifyFiles += [self.getFilename(k) \
-                            for k in ['CTFGroupSummary','StackCTFs','StackWienerFilters','SplitAtDefocus']]
+                            for k in ['CTFGroupSummary',
+                                      'StackCTFs',
+                                      'StackWienerFilters',
+                                      'SplitAtDefocus']]
 
         _dataBase.insertStep('executeCtfGroups', verifyfiles=verifyFiles
                                                , CTFDatName=self.CTFDatName
@@ -562,6 +671,7 @@ class ProtProjMatch(XmippProtocol):
                                                , DoAutoCtfGroup=self.DoAutoCtfGroup
                                                , DoCtfCorrection=self.DoCtfCorrection
                                                , PaddingFactor=self.PaddingFactor
+                                               , SamplingRate=self.ResolSam
                                                , SelFileName=self.SelFileName
                                                , SplitDefocusDocFile=self.SplitDefocusDocFile
                                                , WienerConstant=self.WienerConstant)
@@ -835,7 +945,8 @@ class ProtProjMatch(XmippProtocol):
                                               , OuterRadius = self.OuterRadius
                                               , DoLowPassFilter = self.DoLowPassFilter
                                               , UseFscForFilter = self.UseFscForFilter
-                                              , ConstantToAddToFiltration = self.ConstantToAddToFiltration[iterN]
+                                              , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
+                                              #, ConstantToAddToFiltration = 0.
                                               , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN, ref=refN)
                                               , ResolSam = self.ResolSam
                                               )
