@@ -19,6 +19,7 @@ def executeCtfGroups (_log,
                                  DoAutoCtfGroup,
                                  DoCtfCorrection,
                                  PaddingFactor, 
+                                 SamplingRate ,
                                  SelFileName,
                                  SplitDefocusDocFile,
                                  WienerConstant, 
@@ -52,7 +53,8 @@ def executeCtfGroups (_log,
               ' --ctfdat ' + tmpCtfdat + \
               ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + ':stk'\
               ' --wiener --wc ' + str(WienerConstant) + \
-              ' --pad ' + str(PaddingFactor)
+              ' --pad ' + str(PaddingFactor) + \
+              ' --samplingrate ' + str (SamplingRate)
 
     if (DataArePhaseFlipped):
         command += ' --phase_flipped '
