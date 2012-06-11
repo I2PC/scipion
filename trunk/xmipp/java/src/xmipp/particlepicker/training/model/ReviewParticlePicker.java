@@ -73,7 +73,7 @@ public class ReviewParticlePicker extends TrainingPicker
 			}
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
-			importParticlesFromXmipp30Folder(reviewfamily, reviewfile);
+			importAllParticles(reviewfamily, reviewfile);
 		}
 		catch (Exception e)
 		{
