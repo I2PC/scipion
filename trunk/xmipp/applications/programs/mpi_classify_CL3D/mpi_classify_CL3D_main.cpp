@@ -153,8 +153,9 @@ void CL3DClass::transferUpdate()
     	transformer.inverseFourierTransform(Pupdate,P);
 
         P.statisticsAdjust(0, 1);
+        const MultidimArray<int> &mask=prm->mask.get_binary_mask();
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
-        if (!DIRECT_MULTIDIM_ELEM(prm->mask,n))
+        if (!DIRECT_MULTIDIM_ELEM(mask,n))
         	DIRECT_MULTIDIM_ELEM(P,n) = 0;
         Pupdate.initZeros();
         PupdateMask.initZeros();
@@ -162,10 +163,10 @@ void CL3DClass::transferUpdate()
         /* COSS: STILL TO PUT IN 3D
         // Make sure the image is centered
         centerImage(P,corrAux,rotAux);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
+        if (!DIRECT_MULTIDIM_ELEM(mask,n))
+            DIRECT_MULTIDIM_ELEM(P,n) = 0;
         */
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
-        if (!DIRECT_A2D_ELEM(prm->mask,i,j))
-            DIRECT_A2D_ELEM(P,i,j) = 0;
 
         double deltaAng=atan(2.0/XSIZE(P));
         Matrix1D<double> v(3);
@@ -319,7 +320,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 		}
 
 		// Compute the distance
-		const MultidimArray<int> &imask = prm->mask;
+		const MultidimArray<int> &imask = prm->mask.get_binary_mask();
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
 		if (!DIRECT_MULTIDIM_ELEM(imask,n))
 			DIRECT_MULTIDIM_ELEM(IauxRS,n)=DIRECT_MULTIDIM_ELEM(IauxSR,n)=0.;
@@ -719,7 +720,7 @@ void CL3D::initialize(MetaData &_SF,
 
             // Measure the variance of the signal outside a circular mask
             double avg, stddev;
-            computeAvgStdev_within_binary_mask(prm->mask, I(), avg, stddev);
+            computeAvgStdev_within_binary_mask(prm->mask.get_binary_mask(), I(), avg, stddev);
             prm->sigma += stddev;
 
             // Put it randomly in one of the classes
@@ -991,7 +992,8 @@ void CL3D::run(const FileName &fnOut, int level)
                 lookNode(I(), oldAssignment[idx], node, assignment);
                 LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[idx], node));
                 SF->setValue(MDL_REF, node + 1, objId);
-                corrSum += assignment.stdK;
+                if (assignment.stdK<1e10)
+                	corrSum += assignment.stdK;
                 if (prm->node->rank == 0 && idx % progressStep == 0)
                     progress_bar(idx);
             }
@@ -1422,6 +1424,7 @@ ProgClassifyCL3D::ProgClassifyCL3D(int argc, char** argv)
     if (!node->isMaster())
         verbose = 0;
     taskDistributor = NULL;
+    mask.type=INT_MASK;
 }
 
 /* Destructor -------------------------------------------------------------- */
@@ -1453,6 +1456,7 @@ void ProgClassifyCL3D::readParams()
     maxTilt = getDoubleParam("--maxTilt");
     maxPsi = getDoubleParam("--maxPsi");
 	classifyAllImages = checkParam("--classifyAllImages");
+    mask.readParams(this);
 }
 
 void ProgClassifyCL3D::show() const {
@@ -1478,6 +1482,7 @@ void ProgClassifyCL3D::show() const {
 			<< "Maximum psi:             " << maxPsi << std::endl
 			<< "Classify all images:     " << classifyAllImages << std::endl
 	;
+	mask.show();
 }
 
 void ProgClassifyCL3D::defineParams()
@@ -1512,6 +1517,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxTilt <d=180>]       : Maximum allowed tilt angle in absolute value");
     addParamsLine("   [--maxPsi <d=180>]        : Maximum allowed in-plane angle in absolute value");
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
+	Mask::defineParams(this);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
 
@@ -1531,9 +1537,17 @@ void ProgClassifyCL3D::produceSideInfo()
                       XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 
     // Prepare mask for evaluating the noise outside
-    mask.resize(prm->Zdim, prm->Ydim, prm->Xdim);
-    mask.setXmippOrigin();
-    BinaryCircularMask(mask, prm->Xdim / 2, INNER_MASK);
+    MultidimArray<int> sphericalMask;
+    sphericalMask.resize(prm->Zdim, prm->Ydim, prm->Xdim);
+    sphericalMask.setXmippOrigin();
+    BinaryCircularMask(sphericalMask, prm->Xdim / 2, INNER_MASK);
+
+    mask.generate_mask(prm->Zdim, prm->Ydim, prm->Xdim);
+    MultidimArray<int> &mMask=mask.get_binary_mask();
+    mMask.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(sphericalMask)
+    if (A3D_ELEM(sphericalMask,k,i,j)==0)
+    	A3D_ELEM(mMask,k,i,j)=0;
 
     // Read input code vectors if available
     std::vector<MultidimArray<double> > codes0;

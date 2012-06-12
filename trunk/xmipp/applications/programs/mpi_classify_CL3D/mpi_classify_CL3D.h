@@ -273,6 +273,9 @@ public:
     /// Maximum psi
     double maxPsi;
 
+    /// Mask
+    Mask mask;
+
     /// MPI constructor
     ProgClassifyCL3D(int argc, char** argv);
 
@@ -314,9 +317,6 @@ public:
 
     // Image dimensions
     int Zdim, Ydim, Xdim;
-
-    /// Mask for the background
-	MultidimArray<int> mask;
 
 	/// Noise in the images
     double sigma;
