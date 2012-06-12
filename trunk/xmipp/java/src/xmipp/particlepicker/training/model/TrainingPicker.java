@@ -132,6 +132,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					setChanged(true);
 				}
 				loadManualParticles(mfd, file);
+				file = getOutputPath(micrograph.getAutoPosFile());
 				loadAutomaticParticles(mfd, file, false);
 				mfdatas.add(mfd);
 			}
