@@ -334,6 +334,7 @@ data_
                     if xmippExists(file_nameAverages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDin.read(file_nameAverages)
+                        MDout.clear()
                         for i in MDin:
                             #id1=MDout.addObject()
                             #MDout.setValue(MDL_IMAGE,MDin.getValue(MDL_IMAGE,i),id1)
@@ -388,6 +389,7 @@ data_
                     if xmippExists(file_nameAverages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDin.read(file_nameAverages)
+                        MDout.clear()
                         for i in MDin:
                             id1=MDout.addObject()
                             MDout.setValue(MDL_IMAGE,MDin.getValue(MDL_IMAGE,i),id1)
