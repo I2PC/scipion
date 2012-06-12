@@ -1424,7 +1424,7 @@ ProgClassifyCL3D::ProgClassifyCL3D(int argc, char** argv)
     if (!node->isMaster())
         verbose = 0;
     taskDistributor = NULL;
-    mask.type=INT_MASK;
+    mask.allowed_data_types=INT_MASK;
 }
 
 /* Destructor -------------------------------------------------------------- */
@@ -1456,7 +1456,8 @@ void ProgClassifyCL3D::readParams()
     maxTilt = getDoubleParam("--maxTilt");
     maxPsi = getDoubleParam("--maxPsi");
 	classifyAllImages = checkParam("--classifyAllImages");
-    mask.readParams(this);
+	if (checkParam("--mask"))
+		mask.readParams(this);
 }
 
 void ProgClassifyCL3D::show() const {
