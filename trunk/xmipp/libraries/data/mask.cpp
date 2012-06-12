@@ -254,6 +254,23 @@ void BinaryCrownMask(MultidimArray<int> &mask,
     }
 }
 
+void BinaryTubeMask(MultidimArray<int> &mask,
+                     double R1, double R2, double H, int mode, double x0, double y0, double z0)
+{
+    mask.initZeros();
+    double R12 = R1 * R1;
+    double R22 = R2 * R2;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
+    {
+        double r2 = (i - y0) * (i - y0) + (j - x0) * (j - x0);
+        bool in_tube = (r2 >= R12 && r2 <= R22 && ABS(k)<H);
+        if (in_tube  && mode == INNER_MASK)
+            A3D_ELEM(mask, k, i, j) = 1;
+        else if (!in_tube && mode == OUTSIDE_MASK)
+            A3D_ELEM(mask, k, i, j) = 1;
+    }
+}
+
 void BlobCrownMask(MultidimArray<double> &mask,
                    double r1, double r2, blobtype blob, int mode,
                    double x0, double y0, double z0)
@@ -850,6 +867,29 @@ void Mask::read(int argc, char **argv)
         type = BINARY_CYLINDER_MASK;
         // Gaussian mask ........................................................
     }
+    else if (strcmp(argv[i+1], "tube") == 0)
+    {
+        if (i + 4 >= argc)
+            REPORT_ERROR(ERR_ARG_MISSING, "MaskProgram: tube mask needs two radii and a height");
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
+        R1 = textToFloat(argv[i+2]);
+        R2 = textToFloat(argv[i+3]);
+        H = textToFloat(argv[i+4]);
+        if (R1 < 0 && R2 < 0 && H<0)
+        {
+            mode = INNER_MASK;
+            R1 = ABS(R1);
+            R2 = ABS(R2);
+            H=ABS(H);
+        }
+        else if (R1 > 0 && R2 > 0 && H>0)
+            mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for crown");
+        type = BINARY_TUBE;
+        // Cylinder mask ........................................................
+    }
     else if (strcmp(argv[i+1], "gaussian") == 0)
     {
         if (i + 2 >= argc)
@@ -1019,7 +1059,16 @@ void Mask::show() const
         break;
     case BINARY_CYLINDER_MASK:
         std::cout << "Mask type: Cylinder\n"
-        << "   R1=" << R1 << std::endl;
+        << "   R1=" << R1 << std::endl
+        << "   H=" << H << std::endl;
+        SHOW_MODE;
+        SHOW_CENTER;
+        break;
+    case BINARY_TUBE:
+    	std::cout << "Mask type: Tube\n"
+        << "   R1=" << R1 << std::endl
+        << "   R2=" << R2 << std::endl
+        << "   H=" << H << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
@@ -1109,6 +1158,9 @@ void Mask::usage() const
         << "   |-mask cylinder <R> <H>   : 2D circle or 3D cylinder\n"
         << "                               if R,H > 0 => outside cylinder\n"
         << "                               if R,H < 0 => inside cylinder\n"
+        << "   |-mask tube <R1> <R2> <H> : 2D or 3D tube\n"
+        << "                               if R1,R2,H > 0 => outside tube\n"
+        << "                               if R1,R2,H < 0 => inside tube\n"
         << "   |-mask cone <theta>       : 3D cone (parallel to Z) \n"
         << "                               if theta > 0 => outside cone\n"
         << "                               if theta < 0 => inside cone\n"
@@ -1185,6 +1237,9 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
         program->addParamsLine("         cylinder <R> <H>   : 2D circle or 3D cylinder");
         program->addParamsLine("                                         :if R,H > 0 => outside cylinder");
         program->addParamsLine("                                          :if R,H < 0 => inside cylinder");
+        program->addParamsLine("         tube <R1> <R2> <H> : 3D tube");
+        program->addParamsLine("                                          :if R1,R2,H > 0 => outside tube");
+        program->addParamsLine("                                          :if R1,R2,H < 0 => inside tube");
         program->addParamsLine("         cone <theta>       : 3D cone (parallel to Z) ");
         program->addParamsLine("                                          :if theta > 0 => outside cone");
         program->addParamsLine("                                         :if theta < 0 => inside cone");
@@ -1346,6 +1401,30 @@ void Mask::readParams(XmippProgram * program)
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for cylinder");
 
         type = BINARY_CYLINDER_MASK;
+    }
+    /*// Crown mask ...........................................................*/
+    else if (mask_type == "tube")
+    {
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
+
+        R1 = program->getDoubleParam("--mask","tube",0);
+        R2 = program->getDoubleParam("--mask","tube",1);
+        H = program->getDoubleParam("--mask","tube",2);
+
+        if (R1 < 0 && R2 < 0 && H<0)
+        {
+            Mask::mode = INNER_MASK;
+            R1 = ABS(R1);
+            R2 = ABS(R2);
+            H=ABS(H);
+        }
+        else if (R1 > 0 && R2 > 0 && H>0)
+            Mask::mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for tube");
+
+        type = BINARY_TUBE;
     }
     /*// Gaussian mask ........................................................*/
     else if (mask_type == "gaussian")
@@ -1516,6 +1595,9 @@ void Mask::generate_mask(bool apply_geo)
         break;
     case BINARY_CYLINDER_MASK:
         BinaryCylinderMask(imask, R1, H, mode, x0, y0, z0);
+        break;
+    case BINARY_TUBE:
+        BinaryTubeMask(imask, R1, R2, H,  mode, x0, y0, z0);
         break;
     case BINARY_FRAME_MASK:
         BinaryFrameMask(imask, Xrect, Yrect, Zrect, mode, x0, y0, z0);

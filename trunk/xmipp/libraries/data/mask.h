@@ -385,6 +385,7 @@ public:
 #define BINARY_WEDGE_MASK        15
 #define BLOB_CIRCULAR_MASK       16
 #define BLOB_CROWN_MASK          17
+#define BINARY_TUBE              18
 
 #define INT_MASK    1
 #define DOUBLE_MASK 2
@@ -401,7 +402,7 @@ public:
      * BINARY_CYLINDER_MASK, BINARY_FRAME_MASK, GAUSSIAN_MASK,
      * RAISED_COSINE_MASK, BLACKMAN_MASK, SINC_MASK, SINC_BLACKMAN_MASK,
      * READ_MASK, RAISED_CROWN_MASK, BINARY_CONE_MASK, BINARY_WEDGE_MASK,
-     * BLOB_CIRCULAR_MASK, BLOB_CROWN_MASK
+     * BLOB_CIRCULAR_MASK, BLOB_CROWN_MASK, BINARY_TUBE
      */
     int type;
 
@@ -545,6 +546,7 @@ public:
     {
         if (type == BINARY_CIRCULAR_MASK || type == BINARY_CROWN_MASK ||
             type == BINARY_CYLINDER_MASK || type == BINARY_FRAME_MASK ||
+            type == BINARY_TUBE ||
             type == NO_MASK || type == READ_MASK ||
             type == BINARY_DWT_CIRCULAR_MASK || type == BINARY_CONE_MASK)
             return INT_MASK;
