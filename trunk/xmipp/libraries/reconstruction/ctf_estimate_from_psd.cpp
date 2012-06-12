@@ -2483,7 +2483,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                   x,x,
                   0.88*min_freq*XSIZE(centeredEnhancedPSD),
                   0.88*max_freq*XSIZE(centeredEnhancedPSD),
-                  phase3, mod3, coefs3, 7);
+                  phase3, mod3, coefs3, 0);
 
 
     std::cout << "coefs3 : " <<  coefs3 << std::endl;
