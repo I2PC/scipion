@@ -462,8 +462,10 @@ if $DO_PYMOD; then
 	else
            echoExec "cp $EXT_PYTHON/matplotlib_setupext.py $EXT_PYTHON/$VMATLIBPLOT/setupext.py"
 	   #The following is needed from matplotlib to works
-	   echoExec "ln -sf $EXT_PYTHON/tk$VTCLTK/unix/libtk8.5.so  $EXT_PYTHON/tk$VTCLTK/unix/libtk.so"
-	   echoExec "ln -sf $EXT_PYTHON/tcl$VTCLTK/unix/libtcl8.5.so  $EXT_PYTHON/tcl$VTCLTK/unix/libtcl.so"
+	   echoExec "cd $EXT_PYTHON/tk$VTCLTK/unix/"
+	   echoExec "ln -sf libtk8.5.so  libtk.so"
+	   echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
+	   echoExec "ln -sf libtcl8.5.so  libtcl.so"
 	   compile_pymodule $VMATLIBPLOT
 	fi
     compile_pymodule $VPYMPI
