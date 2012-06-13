@@ -1,8 +1,11 @@
 package xmipp.particlepicker.training;
 
+import java.util.logging.Level;
+
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import xmipp.particlepicker.ParticlePicker;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.ManualParticlePicker;
@@ -42,7 +45,7 @@ class Main
 					String outputdir = myargs[1];
 					FamilyState mode;
 					String fname = null;
-					if(myargs.length == 3)
+					if(myargs.length >= 3 && FamilyState.getFamilyState(myargs[2]) != null)
 						mode = FamilyState.getFamilyState(myargs[2]);
 					else
 					{
@@ -75,6 +78,7 @@ class Main
 				}
 				catch (Exception e)
 				{
+					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 					JOptionPane.showMessageDialog(null, e.getMessage());
 					
 					

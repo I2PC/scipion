@@ -88,10 +88,21 @@ public class MicrographFamilyData
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particle"));
 		if (p instanceof AutomaticParticle)
 		{
+			System.out.println("deleted automatic particle");
 			if (ppicker.getMode() != FamilyState.Review)
 				((AutomaticParticle) p).setDeleted(true);
 			else
 				autoparticles.remove(p);
+			//deleting could be the first thing to do after autopick, so I have to mark micrograph on this choice too
+			if (state == MicrographFamilyState.Auto)//to put micrograph family data on new state, done only for first particle
+			{
+				
+				if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)//THIS STATE IS NEVER PERSISTED
+					state = MicrographFamilyState.Correct;
+				else if (family.getStep() == FamilyState.Review)
+					state = MicrographFamilyState.Review;
+			
+			}
 		}
 		else
 		{
@@ -99,6 +110,8 @@ public class MicrographFamilyData
 			if (manualparticles.size() == 0 && autoparticles.size() - getAutomaticParticlesDeleted() == 0)
 				state = MicrographFamilyState.Available;
 		}
+		
+		
 	}
 
 	public boolean hasManualParticles()

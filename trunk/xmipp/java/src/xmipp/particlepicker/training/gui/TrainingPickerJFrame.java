@@ -487,6 +487,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(getFamilyData().getAction());
 		actionsbt.setVisible(getFamilyData().isActionAvailable(getThreshold()));
+		if(getFamilyData().getState() == MicrographFamilyState.Correct)
+			actionsbt.setEnabled(false);//enabled only after doing corrections
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
@@ -725,6 +727,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		canvas.repaint();
 
+	}
+	
+	public void importParticlesFromXmipp24File(String file)
+	{
+		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
 	}
 
 	
