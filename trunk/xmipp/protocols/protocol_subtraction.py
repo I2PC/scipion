@@ -284,8 +284,10 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         _dataBase.insertStep('createDir', path = self.CtfGroupDirectory)
 #        copyFile(_log, self.filename_currentAngles, self.localFilenameCurrentAngles)
         _dataBase.insertStep('copyFile',source=self.filename_currentAngles, dest=self.localFilenameCurrentAngles)
-        _dataBase.insertStep('copyFile',source=self.projmatchStackCTFs, dest=self.localStackCTFs)
-        _dataBase.insertStep('copyFile',source=self.projmatchDocCTFs, dest=self.localDocCTFs)
+        
+        if(self.defocusGroupNo > 1):
+            _dataBase.insertStep('copyFile',source=self.projmatchStackCTFs, dest=self.localStackCTFs)
+            _dataBase.insertStep('copyFile',source=self.projmatchDocCTFs, dest=self.localDocCTFs)
 
         if(self.doScaleImages):
             _VerifyFiles = [self.scaledImages+".stk"]
@@ -312,33 +314,55 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             else:
                 inputSelfile = self.getFilename('SubCurrentAnglesAllExpImgs')
                             
-            if(self.defocusGroupNo > 1 and self.doScaleImages):
-                _VerifyFiles = []
-                auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
-                _VerifyFiles.append(auxFilename.removeBlockName())
-                id = self.Db.insertStep('joinImageCTFscale', verifyfiles = _VerifyFiles
-                                        , CTFgroupName = self.getFilename('DocCTFsBlocks', ctf=indexCTFInsideLoop)
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
-                                        , inputSelfile = inputSelfile
-                                        )
-            elif (self.defocusGroupNo > 1 and not self.doScaleImages):
-                _VerifyFiles = []
-                auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
-                _VerifyFiles.append(auxFilename.removeBlockName())
-                id = self.Db.insertStep('joinImageCTF', verifyfiles = _VerifyFiles
-                                        , CTFgroupName =  self.getFilename('DocCTFsBlocks', ctf=indexCTFInsideLoop)
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
-                                        , inputSelfile = inputSelfile
-                                        )                
+            if(self.DocFileExp == ''):
+                DocFileExpAux = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
+            else:
+                DocFileExpAux = self.DocFileExp
+                    
+            if(self.defocusGroupNo > 1):
+                
+                
+                if(self.doScaleImages):
+                    _VerifyFiles = []
+                    auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
+                    _VerifyFiles.append(auxFilename.removeBlockName())
+                    id = self.Db.insertStep('joinImageCTFscale', verifyfiles = _VerifyFiles
+                                            , CTFgroupName = self.getFilename('DocCTFsBlocks', ctf=indexCTFInsideLoop)
+                                            , DocFileExp = DocFileExpAux
+                                            , inputSelfile = inputSelfile
+                                            )
+                else: #No scale
+                    _VerifyFiles = []
+                    auxFilename = FileName(self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
+                    _VerifyFiles.append(auxFilename.removeBlockName())
+                    id = self.Db.insertStep('joinImageCTF', verifyfiles = _VerifyFiles
+                                            , CTFgroupName =  self.getFilename('DocCTFsBlocks', ctf=indexCTFInsideLoop)
+                                            , DocFileExp = DocFileExpAux
+                                            , inputSelfile = inputSelfile
+                                            )                
             else: # No Ctf correction in ProjMatch 
-                _dataBase.insertStep('copyFile',source=self.getFilename('StackCTFs', ctf=indexCTFInsideLoop), dest=self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop))
+                if(self.doScaleImages):
+                    _VerifyFiles = []
+                    id = self.Db.insertStep('joinImageCTFscale', verifyfiles = _VerifyFiles
+                                            , CTFgroupName = self.localFilenameCurrentAngles
+                                            , DocFileExp = DocFileExpAux
+                                            , inputSelfile = inputSelfile
+                                            )
+                else:
+                    _VerifyFiles = []
+                    id = self.Db.insertStep('joinImageCTF', verifyfiles = _VerifyFiles
+                                            , CTFgroupName = self.localFilenameCurrentAngles
+                                            , DocFileExp = DocFileExpAux
+                                            , inputSelfile = inputSelfile
+                                            )
+
                 
                 
             #reconstruct each CTF group
             _VerifyFiles = []
             _VerifyFiles.append(self.getFilename('ReconstructedFileNamesIters', ctf=indexCTFInsideLoop))
             id = self.Db.insertStep('reconstructVolume', verifyfiles = _VerifyFiles
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
+                                        , DocFileExp = DocFileExpAux
                                         , MpiJobSize = self.MpiJobSize
                                         , NumberOfMpi = self.NumberOfMpi
                                         , NumberOfThreads = self.NumberOfThreads
@@ -368,7 +392,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             
             id = self.Db.insertStep('createProjections', verifyfiles = _VerifyFiles
                                         , AngSamplingRateDeg = self.AngSamplingRateDeg
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop)
+                                        , DocFileExp = DocFileExpAux
                                         , maskReconstructedVolume = self.getFilename('ReconstructedMaskedFileNamesIters', ctf=indexCTFInsideLoop)
                                         , MaxChangeInAngles = self.MaxChangeInAngles
                                         , MpiJobSize = self.MpiJobSize
@@ -385,7 +409,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             _VerifyFiles.append(self.getFilename('SubtractedStack', ctf=indexCTFInsideLoop)+'exp')
             
             id = self.Db.insertStep('subtractionScript', verifyfiles = _VerifyFiles
-                                        , DocFileExp = self.getFilename('SubCurrentAnglesCftGroups', ctf=indexCTFInsideLoop) 
+                                        , DocFileExp = DocFileExpAux
                                         , referenceStackDoc = self.getFilename('ReferenceStackDoc', ctf=indexCTFInsideLoop)
                                         , subtractedStack = self.getFilename('SubtractedStack', ctf=indexCTFInsideLoop)
                                         , resultsImagesName = self.resultsImagesName)
