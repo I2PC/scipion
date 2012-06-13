@@ -23,6 +23,8 @@ Possible input protocols are:
 <Import Micrographs>
 <Screen Micrographs> or
 <Downsample Micrographs>
+
+If you want to correct for the CTF in a subsequent step, you must use a screen or downsample run.
 """
 ImportRun = ""
 

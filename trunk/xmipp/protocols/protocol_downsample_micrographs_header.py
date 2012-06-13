@@ -9,9 +9,9 @@
 #-----------------------------------------------------------------------------
 # {run}(import_micrographs,screen_micrographs) Micrographs to downsample
 """ List with input micrographs. It is obtained from an execution of
-either <import_micrograph> or <screen_micrograph>. <BE AWARE<, if you
-use as input an execution of <input_micrographs> there will be not
-<CTF> information available"""
+either <import_micrograph> or <screen_micrograph>. <BE AWARE>, if you
+use as input an execution of <import_micrographs> there will be not
+<CTF> information available."""
 ImportRun = ''
 
 # {wizard}(wizardBrowseCTF) Downsampling factor 
