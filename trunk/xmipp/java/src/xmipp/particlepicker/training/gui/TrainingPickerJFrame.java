@@ -438,6 +438,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		TrainingPickerJFrame.this.iconlb.setIcon(micrograph.getCTFIcon());
 		actionsbt.setText(getFamilyData().getAction());
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		actionsbt.setEnabled(getFamilyData().isActionAvailable(getThreshold()));
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 		saveChanges();// Saving changes when switching micrographs, by
