@@ -131,7 +131,7 @@ bool checkImageCorners(const FileName &name)
     double stddev1=window.computeStddev();
     double var1=stddev1*stddev1;
     double F=var1/var0;
-    if (F<Flower || F>Fupper)
+    if (F<Flower)//|| F>Fupper)
         return false;
 
     i=Ydim-1-windowSize_2;
@@ -140,7 +140,7 @@ bool checkImageCorners(const FileName &name)
     stddev1=window.computeStddev();
     var1=stddev1*stddev1;
     F=var1/var0;
-    if (F<Flower || F>Fupper)
+    if (F<Flower)//|| F>Fupper)
         return false;
 
     i=windowSize_2;
@@ -149,7 +149,7 @@ bool checkImageCorners(const FileName &name)
     stddev1=window.computeStddev();
     var1=stddev1*stddev1;
     F=var1/var0;
-    if (F<Flower || F>Fupper)
+    if (F<Flower)//|| F>Fupper)
         return false;
 
     i=Ydim-1-windowSize_2;
@@ -158,7 +158,7 @@ bool checkImageCorners(const FileName &name)
     stddev1=window.computeStddev();
     var1=stddev1*stddev1;
     F=var1/var0;
-    if (F<Flower || F>Fupper)
+    if (F<Flower)//|| F>Fupper)
         return false;
 
     return true;
