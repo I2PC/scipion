@@ -21,7 +21,6 @@ public class TiltPairPicker extends ParticlePicker
 {
 
 	protected List<UntiltedMicrograph> micrographs;
-	private Family family;
 	
 	
 
@@ -29,7 +28,6 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		super(selfile, outputdir, state);
 		this.micrographs = new ArrayList<UntiltedMicrograph>();
-		family = families.get(0);
 		loadData();
 	}
 	
@@ -117,15 +115,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-	public int getSize()
-	{
-		return family.getSize();
-	}
-
-	public Color getColor()
-	{
-		return family.getColor();
-	}
+	
 
 	public int getNextFreeMicrograph()
 	{
@@ -144,11 +134,7 @@ public class TiltPairPicker extends ParticlePicker
 		return micrographs;
 	}
 
-	public void setColor(Color color)
-	{
-		family.setColor(color);
-		setChanged(true);
-	}
+	
 
 	public void resetMicrograph(UntiltedMicrograph m)
 	{
@@ -231,17 +217,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-	public void setSize(int size)
-	{
-		family.setSize(size);
-		setChanged(true);
-	}
-
-	public Family getFamily()
-	{
-		return family;
-	}
-
+	
 	@Override
 	public int getManualParticlesNumber(Family f)
 	{
@@ -310,7 +286,7 @@ public class TiltPairPicker extends ParticlePicker
 	}
 
 	@Override
-	public void exportParticles(Family family, String path)
+	public void exportParticles(String path)
 	{
 		throw new UnsupportedOperationException();
 
@@ -372,7 +348,7 @@ public class TiltPairPicker extends ParticlePicker
 	}
 	
 	@Override
-	public void importParticlesFromXmipp30Folder(Family family, String dir)
+	public void importParticlesFromXmipp30Folder(String dir)
 	{
 		for(UntiltedMicrograph um: micrographs)
 			importParticlesFromXmipp30Files(um, dir + File.separator + um.getPosFile(), dir + File.separator + um.getTiltedMicrograph().getPosFile());
@@ -380,7 +356,7 @@ public class TiltPairPicker extends ParticlePicker
 	}
 
 	@Override
-	public void importParticlesFromXmipp24Folder(Family family, String dir)
+	public void importParticlesFromXmipp24Folder(String dir)
 	{
 		String ufile, tfile;
 
@@ -394,7 +370,7 @@ public class TiltPairPicker extends ParticlePicker
 
 
 	@Override
-	public void importParticlesFromEmanFolder(Family family, String path)
+	public void importParticlesFromEmanFolder(String path)
 	{
 		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
 		

@@ -123,9 +123,11 @@ def countParticles(prot, pattern=''):
     return micrographs, particles, familiesDict
 
 def launchParticlePickingGUI(log, InputMicrographs, WorkingDir, PickingMode=PM_MANUAL,
-                             TiltPairs=False, Memory=2):
+                             TiltPairs=False, Memory=2, Family=""):
     ''' Utility function to launch the Particle Picking application '''
     args = "-i %(InputMicrographs)s -o %(WorkingDir)s --mode %(PickingMode)s --memory %(Memory)dg"
+    if Family!="":
+        args+=" --family %(Family)s"
     if TiltPairs:
         program = "xmipp_micrograph_tiltpair_picking"
     else:

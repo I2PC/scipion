@@ -234,7 +234,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 					if (returnVal == XmippFileChooser.APPROVE_OPTION)
 					{
 						File file = fc.getSelectedFile();
-						getParticlePicker().exportParticles(getFamily(), file.getAbsolutePath());
+						getParticlePicker().exportParticles(file.getAbsolutePath());
 						showMessage("Export successful");
 					}
 				}
@@ -418,7 +418,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return 100;
 	}
 
-	public abstract Family getFamily();
+	public Family getFamily()
+	{
+		return getParticlePicker().getFamily();
+	}
 
 	public abstract ParticlePickerCanvas getCanvas();
 
@@ -634,13 +637,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		switch (format)
 		{
 			case Xmipp24:
-				getParticlePicker().importParticlesFromXmipp24Folder(getFamily(), dir);
+				getParticlePicker().importParticlesFromXmipp24Folder( dir);
 				break;
 			case Xmipp30:
-				getParticlePicker().importParticlesFromXmipp30Folder(getFamily(), dir);
+				getParticlePicker().importParticlesFromXmipp30Folder(dir);
 				break;
 			case Eman:
-				getParticlePicker().importParticlesFromEmanFolder(getFamily(), dir);
+				getParticlePicker().importParticlesFromEmanFolder(dir);
 
 		}
 		setChanged(true);

@@ -40,24 +40,33 @@ class Main
 					TrainingPicker ppicker = null;
 					String selfile = myargs[0];
 					String outputdir = myargs[1];
-					FamilyState mode = FamilyState.getFamilyState(myargs[2]);
+					FamilyState mode;
+					String fname = null;
+					if(myargs.length == 3)
+						mode = FamilyState.getFamilyState(myargs[2]);
+					else
+					{
+						fname = myargs[2];
+						mode = FamilyState.getFamilyState(myargs[3]);
+					}
 
 					if (mode == FamilyState.Manual)
-						ppicker = new ManualParticlePicker(selfile, outputdir, mode);
+						ppicker = (fname == null)? new ManualParticlePicker(selfile, outputdir, mode): new ManualParticlePicker(selfile, outputdir, fname, mode);
 
 					else if (mode == FamilyState.Supervised)
 					{
-						int threads = Integer.parseInt(myargs[3]);
-						boolean fastmode = Boolean.parseBoolean(myargs[4]);
-						boolean incore = Boolean.parseBoolean(myargs[5]);
-						ppicker = new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore);
+						int index = (fname == null)? 3: 4;
+						int threads = Integer.parseInt(myargs[index]);
+						boolean fastmode = Boolean.parseBoolean(myargs[index + 1]);
+						boolean incore = Boolean.parseBoolean(myargs[index + 2]);
+						ppicker = (fname == null)? new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore): new SupervisedParticlePicker(selfile, outputdir, fname, threads, fastmode, incore);
 						
 					}
 
 					else if (mode == FamilyState.Review)
 					{
 						String reviewfile = myargs[3];
-						ppicker = new ReviewParticlePicker(selfile, outputdir, reviewfile);
+						ppicker = (fname == null)? new ReviewParticlePicker(selfile, outputdir, reviewfile): new ReviewParticlePicker(selfile, outputdir, fname, reviewfile);
 
 					}
 					else if (mode == FamilyState.ReadOnly)

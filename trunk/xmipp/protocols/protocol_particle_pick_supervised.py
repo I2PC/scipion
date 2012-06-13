@@ -46,7 +46,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
         modeWithArgs = PM_SUPERVISED + " %(NumberOfThreads)d %(Fast)s %(InCore)s" % self.ParamsDict
         self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
                            InputMicrographs=self.micrographsMd, WorkingDir=self.WorkingDir,
-                           PickingMode=modeWithArgs, Memory=self.Memory)       
+                           PickingMode=modeWithArgs, Memory=self.Memory, Family=self.Family)       
         
     def summary(self):
         md = xmipp.MetaData(self.micrographsMd)

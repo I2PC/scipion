@@ -21,6 +21,14 @@ Select previous RUN of the <Manual> particle picking.
 """
 PickingRun = ""
 
+# Family
+""" 
+Select family within run
+
+# {wizard}(wizardChooseFamilyToExtract) Family
+"""
+Family = ""
+
 # {eval} expandJavaMemory()
 
 # Number of threads

@@ -72,7 +72,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JLabel iconlb;
 	private JLabel steplb;
 	private JButton actionsbt;
-	private Family family;
 	private JMenuItem editfamiliesmi;
 	private int index;
 	private JLabel manuallb;
@@ -80,6 +79,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JSlider thresholdsl;
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
+	private Family family;
 
 	@Override
 	public TrainingPicker getParticlePicker()
@@ -87,10 +87,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return ppicker;
 	}
 
-	public Family getFamily()
-	{
-		return family;
-	}
+	
 
 	public TrainingPickerJFrame(TrainingPicker picker)
 	{
@@ -207,9 +204,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// Setting combo
 		fieldspn.add(new JLabel("Name:"));
 		familiescb = new JComboBox(ppicker.getFamilies().toArray());
-		familiescb.setEnabled(ppicker.getMode() != FamilyState.Review);
+		family = ppicker.getFamily();
+		familiescb.setSelectedItem(family);
+		familiescb.setEnabled(ppicker.getMode() == FamilyState.Manual || ppicker.getMode() == FamilyState.ReadOnly);//available families are marked by pickers at start
 
-		family = (Family) familiescb.getSelectedItem();
 		if (ppicker.getMode() == FamilyState.Manual && family.getStep() != FamilyState.Manual)
 			throw new IllegalArgumentException(String.format("Application not enabled for %s mode. Family %s could not be loaded", family.getStep(), family.getName()));
 
@@ -263,35 +261,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				Family family2 = (Family) familiescb.getSelectedItem();
-				if (ppicker.getMode() == FamilyState.Manual && family2.getStep() == FamilyState.Supervised)
+				//You can only switch between different states for readonly mode. Besides switching will be availabe on manual and readonly modes
+				if (family.getStep() != family2.getStep() && ppicker.getMode() != FamilyState.ReadOnly) 
 				{
 					familiescb.setSelectedItem(family);
 					JOptionPane.showMessageDialog(TrainingPickerJFrame.this, String.format("Application not enabled for %s mode. Family %s could not be loaded", FamilyState.Supervised, family2.getName()));
 					return;
-				}
-				if (family.getStep() != family2.getStep())
-				{
-					int result = -1;
-					if (family2.getStep() == FamilyState.Manual)//You can only change of family if you change its mode, for now only from manual to supervised
-						result = JOptionPane.showConfirmDialog(TrainingPickerJFrame.this, String.format("Selecting family %s will take it to %s mode." + "\nAre you sure you want to continue?", family2.getName(), FamilyState.Supervised.toString()), "Message", JOptionPane.YES_NO_OPTION);
-					else
-					{
-						familiescb.setSelectedItem(family);
-						JOptionPane.showMessageDialog(TrainingPickerJFrame.this, String.format("%s is in %s mode", family2.getName(), family2.getStep()));
-						return;
-					}
-					if (result == JOptionPane.NO_OPTION)
-					{
-						familiescb.setSelectedItem(family);
-						return;
-					}
-					else
-					{
-						family = family2;
-						train();
-					}
+				
 				}
 				family = family2;
+				ppicker.setFamily(family);
 				index = ppicker.getNextFreeMicrograph(family);
 				micrographstb.getSelectionModel().setSelectionInterval(index, index);
 				color = (family.getColor());

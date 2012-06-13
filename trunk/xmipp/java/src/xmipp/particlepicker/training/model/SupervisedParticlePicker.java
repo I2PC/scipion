@@ -32,6 +32,16 @@ public class SupervisedParticlePicker extends TrainingPicker {
 
 	}
 	
+	public SupervisedParticlePicker(String selfile, String outputdir, String fname, Integer threads,
+			boolean fastmode, boolean incore) {
+		super(selfile, outputdir, fname, FamilyState.Supervised);
+		this.threads = threads;
+		this.fastmode = fastmode;
+		this.incore = incore;
+		loadMicrographs();
+
+	}
+	
 	public boolean isFastMode() {
 		return fastmode;
 	}

@@ -16,39 +16,42 @@ public class ReviewParticlePicker extends TrainingPicker
 {
 
 	private String reviewfile;
-	private Family reviewfamily;
 
 	public String getReviewFile()
 	{
 		return reviewfile;
 	}
 
-	public Family getReviewFamily()
+
+	
+	public ReviewParticlePicker(String selfile, String outputdir, String fname, String reviewfile)
 	{
-		return reviewfamily;
+		super(selfile, outputdir, fname, FamilyState.Review);
+		if (!new File(reviewfile).exists())
+			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("review file", reviewfile));
+		this.reviewfile = reviewfile;
+		family.setState(FamilyState.Review);
+		loadMicrographs();
+		
 	}
 
 	public ReviewParticlePicker(String selfile, String outputdir, String reviewfile)
 	{
-		super(selfile, outputdir, FamilyState.Review);
-		if (!new File(reviewfile).exists())
-			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("review file", reviewfile));
-		this.reviewfile = reviewfile;
+		this(selfile, outputdir, getFamilyName(reviewfile), reviewfile);
+	
+	}
+	
+	public static String getFamilyName(String reviewfile)
+	{
 		String[] parts = reviewfile.split(File.separator);
 		String familyname = parts[parts.length - 1].split("_")[0];
-		this.reviewfamily = getFamily(familyname);
-		if (reviewfamily == null)
-			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("family", familyname));
-		reviewfamily.setState(FamilyState.Review);
-		loadMicrographs();
-		families.clear();
-		families.add(reviewfamily);
+		return familyname;
 	}
 
 	@Override
 	public void persistMicrographs()
 	{
-		exportParticles(reviewfamily, reviewfile);
+		exportParticles(reviewfile);
 	}
 
 	@Override
@@ -73,7 +76,7 @@ public class ReviewParticlePicker extends TrainingPicker
 			}
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
-			importAllParticles(reviewfamily, reviewfile);
+			importAllParticles(reviewfile);
 		}
 		catch (Exception e)
 		{

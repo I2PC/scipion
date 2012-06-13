@@ -28,13 +28,20 @@ public abstract class TrainingPicker extends ParticlePicker
 		return null;
 	}
 
-	public TrainingPicker(String selfile, String outputdir, FamilyState mode)
+	public TrainingPicker(String selfile, String outputdir, String fname, FamilyState mode)
 	{
-		super(selfile, outputdir, mode);
-
+		super(selfile, outputdir, fname, mode);
 		this.micrographs = new ArrayList<TrainingMicrograph>();
 
 	}
+	
+	public TrainingPicker(String selfile, String outputdir, FamilyState mode)
+	{
+		super(selfile, outputdir, mode);
+		this.micrographs = new ArrayList<TrainingMicrograph>();
+
+	}
+
 
 	public boolean hasEmptyMicrographs(Family f)
 	{
@@ -211,6 +218,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				cost = md.getValueDouble(MDLabel.MDL_COST, id);
 				if(cost == null)
 					throw new IllegalArgumentException("Invalid format for " + file);
+				System.out.println(cost);
 				deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? false : true;
 				particle = new AutomaticParticle(x, y, f, mfd.getMicrograph(), cost, deleted);
 				mfd.addAutomaticParticle(particle, imported);
@@ -407,7 +415,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		return count;
 	}
 
-	public void exportParticles(Family f, String file)
+	public void exportParticles(String file)
 	{
 
 		try
@@ -419,7 +427,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			for (TrainingMicrograph m : micrographs)
 			{
 
-				mfd = m.getFamilyData(f);
+				mfd = m.getFamilyData(family);
 				if (!mfd.isEmpty())
 				{
 					md = new MetaData();
@@ -446,14 +454,14 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 	@Override
-	public void importParticlesFromXmipp24Folder(Family family, String path)
+	public void importParticlesFromXmipp24Folder(String path)
 	{
 		throw new UnsupportedOperationException(XmippMessage.getNotImplementedYetMsg());
 
 	}
 	
 	@Override
-	public void importParticlesFromXmipp30Folder(Family family, String dir)
+	public void importParticlesFromXmipp30Folder(String dir)
 	{
 		MicrographFamilyData mfd;
 		for(TrainingMicrograph m: micrographs)
@@ -466,7 +474,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	
 	
-	public void importParticlesFromEmanFolder(Family family, String folder)
+	public void importParticlesFromEmanFolder(String folder)
 	{
 		String file;
 		for (TrainingMicrograph tm : micrographs)
@@ -524,7 +532,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 	
-	public void importAllParticles(Family family, String file)
+	public void importAllParticles(String file)
 	{// Expected a file for all micrographs
 		try
 		{
@@ -566,6 +574,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
+
+	
 
 
 }

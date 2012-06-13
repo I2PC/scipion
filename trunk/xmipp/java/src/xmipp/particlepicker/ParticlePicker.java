@@ -39,29 +39,86 @@ public abstract class ParticlePicker
 	private List<Filter> filters;
 	protected String selfile;
 	private String command;
+	protected Family family;
 	
+	public int getSize()
+	{
+		return family.getSize();
+	}
+
+	public Color getColor()
+	{
+		return family.getColor();
+	}
+	
+	public void setColor(Color color)
+	{
+		family.setColor(color);
+		setChanged(true);
+	}
+	
+	public void setSize(int size)
+	{
+		family.setSize(size);
+		setChanged(true);
+	}
+
+	public Family getFamily()
+	{
+		return family;
+	}
+	
+	public void setFamily(Family family)
+	{
+		this.family = family;
+		
+	}
+
+
 	public String getPosFileFromXmipp24Project(String projectdir, String mname)
 	{
 		String suffix = ".raw.Common.pos";
 		return String.format("%1$s%2$sPreprocessing%2$s%3$s%2$s%3$s%4$s", projectdir, File.separator, mname, suffix);
 	}
 
-
-
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
 	{
+		this.outputdir = outputdir;
+		this.familiesfile = getOutputPath("families.xmd");
+		
+		this.families = new ArrayList<Family>();
+		loadFamilies();
+		family = families.get(0);
+
 		this.selfile = selfile;
-		filters = new ArrayList<Filter>();
+		this.mode = mode;
+		initializeFilters();
+	}
+
+	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
+	{
+		this.outputdir = outputdir;
+		this.familiesfile = getOutputPath("families.xmd");
+		this.families = new ArrayList<Family>();
+		loadFamilies();
+		family = getFamily(fname);
+		if (family == null)
+			throw new IllegalArgumentException("Invalid family " + fname);
+		
+		this.selfile = selfile;
 		this.outputdir = outputdir;
 		this.mode = mode;
-		this.families = new ArrayList<Family>();
-		this.familiesfile = getOutputPath("families.xmd");
+		initializeFilters();
+
+	}
+
+	private void initializeFilters()
+	{
 		this.macrosfile = getOutputPath("macros.xmd");
+		filters = new ArrayList<Filter>();
 		loadFilters();
-		loadFamilies();
 		Recorder.record = true;
 
-		
 		// detecting if a command is thrown by ImageJ
 		Executer.addCommandListener(new CommandListener()
 		{
@@ -70,7 +127,6 @@ public abstract class ParticlePicker
 				ParticlePicker.this.command = command;
 				System.out.println(command);
 				return command;
-				
 
 			}
 		});
@@ -86,7 +142,7 @@ public abstract class ParticlePicker
 			@Override
 			public void imageOpened(ImagePlus arg0)
 			{
-				
+
 			}
 
 			@Override
@@ -97,7 +153,7 @@ public abstract class ParticlePicker
 			}
 		});
 	}
-	
+
 	private void updateFilters()
 	{
 		System.out.println("Image updated");
@@ -109,17 +165,15 @@ public abstract class ParticlePicker
 			if (!isFilterSelected(command))
 				addFilter(command, options);
 			else if (!(options == null || options.equals("")))
-				for(Filter f: filters)
-					if(f.getCommand().equals(command))
+				for (Filter f : filters)
+					if (f.getCommand().equals(command))
 						f.setOptions(options);
 			setChanged(true);
 			command = null;
-			
+
 		}
 	}
-	
-	
-	
+
 	public String getMicrographsSelFile()
 	{
 		return selfile;
@@ -130,13 +184,11 @@ public abstract class ParticlePicker
 		Filter f = new Filter(command, options);
 		filters.add(f);
 	}
-	
+
 	public List<Filter> getFilters()
 	{
 		return filters;
 	}
-
-
 
 	public void setChanged(boolean changed)
 	{
@@ -306,10 +358,11 @@ public abstract class ParticlePicker
 		families.remove(family);
 	}
 
-	public void saveData(){
+	public void saveData()
+	{
 		persistFilters();
 		persistFamilies();
-		
+
 	}
 
 	public abstract int getManualParticlesNumber(Family f);
@@ -327,11 +380,11 @@ public abstract class ParticlePicker
 		try
 		{
 			MetaData md = new MetaData();
-			for (Filter f: filters)
+			for (Filter f : filters)
 			{
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getCommand().replace(' ', '_'), id);
-				options = (f.getOptions() == null || f.getOptions().equals(""))? "NULL": f.getOptions().replace(' ', '_');
+				options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
 				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, options, id);
 			}
 			md.write(file);
@@ -343,7 +396,7 @@ public abstract class ParticlePicker
 		}
 
 	}
-	
+
 	public void loadFilters()
 	{
 		filters.clear();
@@ -360,10 +413,10 @@ public abstract class ParticlePicker
 			{
 				command = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id).replace('_', ' ');
 				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id).replace(' ', '_');
-				if(options.equals("NULL"))
+				if (options.equals("NULL"))
 					options = "";
 				filters.add(new Filter(command, options));
-				
+
 			}
 			System.out.println(filters.size());
 		}
@@ -376,36 +429,33 @@ public abstract class ParticlePicker
 
 	void removeFilter(String filter)
 	{
-		for(Filter f: filters)
-			if(f.getCommand().equals(filter))
+		for (Filter f : filters)
+			if (f.getCommand().equals(filter))
 			{
 				filters.remove(f);
 				setChanged(true);
 				break;
-				
+
 			}
-		
+
 	}
-	
+
 	public boolean isFilterSelected(String filter)
 	{
-		for(Filter f: filters)
-			if(f.getCommand().equals(filter))
+		for (Filter f : filters)
+			if (f.getCommand().equals(filter))
 				return true;
 		return false;
 	}
 
-	public abstract void exportParticles(Family family, String absolutePath);
+	public abstract void exportParticles(String absolutePath);
 
-	public abstract void importParticlesFromXmipp30Folder(Family family, String absolutePath);
+	public abstract void importParticlesFromXmipp30Folder(String absolutePath);
 
-	public abstract void importParticlesFromXmipp24Folder(Family family, String path);
-	 
-	public abstract void importParticlesFromEmanFolder(Family family, String path);
-	
+	public abstract void importParticlesFromXmipp24Folder(String path);
 
+	public abstract void importParticlesFromEmanFolder(String path);
 
-	
 	public void runXmippProgram(String program, String args)
 	{
 		try
@@ -418,6 +468,5 @@ public abstract class ParticlePicker
 			throw new IllegalArgumentException(e);
 		}
 	}
-
 
 }

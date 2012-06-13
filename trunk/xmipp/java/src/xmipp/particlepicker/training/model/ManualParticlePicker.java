@@ -12,6 +12,14 @@ public class ManualParticlePicker extends TrainingPicker {
 		loadMicrographs();
 
 	}
+	
+	public ManualParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
+
+		super(selfile, outputdir, fname, mode);
+		loadMicrographs();
+
+	}
+
 
 
 
