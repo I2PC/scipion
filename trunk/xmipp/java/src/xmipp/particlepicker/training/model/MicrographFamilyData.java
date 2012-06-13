@@ -72,8 +72,8 @@ public class MicrographFamilyData
 		{
 			if (family.getStep() == FamilyState.Manual)
 				state = MicrographFamilyState.Manual;
-			else if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)//THIS STATE IS NEVER PERSISTED
-				state = MicrographFamilyState.Correct;
+//			else if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)//THIS STATE IS NEVER PERSISTED
+//				state = MicrographFamilyState.Correct;
 			else if (family.getStep() == FamilyState.Review)
 				state = MicrographFamilyState.Review;
 			else
@@ -94,15 +94,8 @@ public class MicrographFamilyData
 			else
 				autoparticles.remove(p);
 			//deleting could be the first thing to do after autopick, so I have to mark micrograph on this choice too
-			if (state == MicrographFamilyState.Auto)//to put micrograph family data on new state, done only for first particle
-			{
-				
-				if (family.getStep() == FamilyState.Supervised && state == MicrographFamilyState.Autopick)//THIS STATE IS NEVER PERSISTED
-					state = MicrographFamilyState.Correct;
-				else if (family.getStep() == FamilyState.Review)
-					state = MicrographFamilyState.Review;
-			
-			}
+			if (state == MicrographFamilyState.Auto && family.getStep() == FamilyState.Review)//to put micrograph family data on new state, done only for first particle
+				state = MicrographFamilyState.Review;
 		}
 		else
 		{
@@ -177,7 +170,7 @@ public class MicrographFamilyData
 		return false;
 	}
 
-	public boolean isActionAvailable(double threshold)
+	public boolean isActionVisible(double threshold)
 	{
 
 		if (family.getStep() != FamilyState.Supervised)
@@ -190,12 +183,18 @@ public class MicrographFamilyData
 				return false;
 			if (state == MicrographFamilyState.ReadOnly)
 				return false;
-			if (state == MicrographFamilyState.Correct)
-				//return !manualparticles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
-				return true;
+			
 			return true;
 		}
 		return false;
+	}
+	
+	public boolean isActionAvailable(double threshold)
+	{
+
+		if (state == MicrographFamilyState.Correct)
+			return !manualparticles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
+		return true;
 	}
 
 	public String getAction()
