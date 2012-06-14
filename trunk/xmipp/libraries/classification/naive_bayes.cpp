@@ -153,11 +153,6 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
         {
             double minvalk, maxvalk;
             leafFeatures[k].computeDoubleMinMax(minvalk, maxvalk);
-            if (minvalk==maxvalk)
-            {
-                __discreteLevels=0;
-                return;
-            }
             if (k==0)
             {
                 minval=minvalk;
@@ -165,9 +160,14 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
             }
             else
             {
-                minval=XMIPP_MIN(minval,minvalk);
-                maxval=XMIPP_MAX(maxval,maxvalk);
+                minval=std::min(minval,minvalk);
+                maxval=std::max(maxval,maxvalk);
             }
+        }
+        if (minval==maxval)
+        {
+            __discreteLevels=0;
+            return;
         }
 
         // Compute the PDF of each class
@@ -310,6 +310,8 @@ NaiveBayes::NaiveBayes(
         {
             std::cout << "Node " << f << std::endl;
             std::cout << *(__leafs[f]) << std::endl;
+            //char c;
+            //std::cin >> c;
         }
 #endif
 
