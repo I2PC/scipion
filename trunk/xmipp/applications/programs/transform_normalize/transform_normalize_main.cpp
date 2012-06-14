@@ -29,6 +29,9 @@
 int main(int argc, char *argv[])
 {
     ProgNormalize program;
-    program.read(argc, argv);
+    int errorCode;
+    errorCode = program.tryRead(argc, argv);
+    if (errorCode)
+        return (errorCode);
     return program.tryRun();
 }
