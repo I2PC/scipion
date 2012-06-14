@@ -15,7 +15,7 @@ class ProtImportMicrographs(XmippProtocol):
         self.Import = "from protocol_import_micrographs import *"
         self.PatternMicrographs = join(self.DirMicrographs, self.ExtMicrographs)
         if self.TiltPairs:
-            self.MicrographsMd = self.getFilename('tilt_pairs')
+            self.MicrographsMd = self.getFilename('tilted_pairs')
         else:
             self.MicrographsMd = self.getFilename('micrographs')
         

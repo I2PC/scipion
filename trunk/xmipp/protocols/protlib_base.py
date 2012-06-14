@@ -385,7 +385,7 @@ class XmippProtocol(object):
         params.update(self.ParamsDict)
         if self.FilenamesDict.has_key(key):
             return self.FilenamesDict[key] % params
-        return None
+        raise Exception("Key: '%s' not found" % key)
     
     def getFileList(self, *keyList):
         ''' Return a list of filename using the getFilename function '''
