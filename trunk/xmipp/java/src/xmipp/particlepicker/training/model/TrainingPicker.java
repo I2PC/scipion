@@ -164,7 +164,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		loadManualParticles(mfd, getOutputPath(mfd.getMicrograph().getPosFile()));
 	}
 	
-	public void cd(MicrographFamilyData mfd, String file)
+	public void loadManualParticles(MicrographFamilyData mfd, String file)
 	{
 		if (!new File(file).exists())
 			return;

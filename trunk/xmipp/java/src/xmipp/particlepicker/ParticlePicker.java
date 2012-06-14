@@ -291,7 +291,7 @@ public abstract class ParticlePicker
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
 				if (state == FamilyState.Supervised && this instanceof SupervisedParticlePicker)
-					if (!new File(((SupervisedParticlePicker) this).getOTrainingFilename(name)).exists())
+					if (!new File(((SupervisedParticlePicker) this).getTrainingFile(name)).exists())
 						throw new IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode", state));
 				family = new Family(name, new Color(rgb), size, state, this);
 				families.add(family);

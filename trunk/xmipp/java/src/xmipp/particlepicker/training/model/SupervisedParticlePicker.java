@@ -60,12 +60,12 @@ public class SupervisedParticlePicker extends TrainingPicker {
 				.getName(), autofeaturesvectorfn, mfd.getFamily().getName()));
 	}
 
-	public String getOTrainingFilename(String familyname) {
+	public String getTrainingFile(String familyname) {
 		return getOutputPath(String.format("%s_%s", familyname,
 				getTrainingFilenameGeneric()));
 	}
 
-	public String getOTrainingMaskFilename(String familyname) {
+	public String getTrainingMaskFile(String familyname) {
 		return getOutputPath(String.format("%s_%s", familyname,
 				getTrainingMaskFilenameGeneric()));
 	}
@@ -86,10 +86,11 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		return mintraining;
 	}
 	
-	public void resetModel(Family family) {
+	//not used by anyone
+	public void resetModel() {
 		try {
-			new File(getOTrainingFilename(family.getName())).delete();
-			new File(getOTrainingMaskFilename(family.getName())).delete();
+			new File(getTrainingFile(family.getName())).delete();
+			new File(getTrainingMaskFile(family.getName())).delete();
 			MicrographFamilyData mfd;
 			for (TrainingMicrograph m : micrographs) {
 				mfd = m.getFamilyData(family);
