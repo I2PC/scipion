@@ -138,7 +138,7 @@ class ProtScreenMicrographs(XmippProtocol):
         if exists(summaryFile):
             runShowJ(summaryFile, extraParams = "--mode metadata")
         else:
-            showWarning('Warning', 'There are not results yet')
+            showWarning('Warning', 'There are not results yet',self.master)
     
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling):
     buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
