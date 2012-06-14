@@ -808,7 +808,7 @@ class TextfileViewer(tk.Frame):
     def refreshAll(self, e=None):
         ''' Refresh all output textareas '''
         for ta in self.taList:
-            ta.readFile()
+            ta.readFile(clear=True)
             ta.goEnd()
         
     def refreshOutput(self, e=None):
