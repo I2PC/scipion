@@ -513,7 +513,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		BufferedReader reader = null;
 		try
 		{
-			BufferedReader reader = new BufferedReader(new FileReader(file));
+			reader = new BufferedReader(new FileReader(file));
 			boolean inverty = false;
 			String line = reader.readLine();
 			reader.close();
