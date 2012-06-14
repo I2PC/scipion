@@ -18,23 +18,25 @@ class ProtPreprocessParticles(XmippProtocol):
         XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_preprocess_particles import *'
         file=os.path.split(self.InSelFile)[1]
-        self.OutSelFile=self.workingDirPath(os.path.splitext(file)[0]+".stk")
+        baseFile=os.path.splitext(file)[0]
+        self.OutStack=self.workingDirPath(baseFile+".stk")
+        self.OutMetadata=self.workingDirPath(baseFile+".xmd")
 
     def defineSteps(self):
-        self.Db.insertStep('copyFiles',verifyfiles=[self.OutSelFile],InputFile=self.InSelFile,OutputFile=self.OutSelFile)
+        self.Db.insertStep('copyFiles',verifyfiles=[self.OutStack],InputFile=self.InSelFile,OutputStack=self.OutStack,OutputMetadata=self.OutMetadata)
         self.Db.insertStep('createAcquisition',InputFile=self.InSelFile,WorkingDir=self.WorkingDir,DoScale=self.DoScale,NewSize=self.NewSize)
         if self.DoScale:
-            self.Db.insertStep('doScale',stack=self.OutSelFile,new_size=self.NewSize,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doScale',stack=self.OutStack,new_size=self.NewSize,Nproc=self.NumberOfMpi)
         if self.DoFourier:
-            self.Db.insertStep('doFourier',stack=self.OutSelFile,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doFourier',stack=self.OutStack,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
         if self.DoGaussian:
-            self.Db.insertStep('doGaussian',stack=self.OutSelFile,freq_sigma=self.Freq_sigma,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doGaussian',stack=self.OutStack,freq_sigma=self.Freq_sigma,Nproc=self.NumberOfMpi)
         if self.DoRemoveDust:
-            self.Db.insertStep('doRemoveDust',stack=self.OutSelFile,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doRemoveDust',stack=self.OutStack,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
         if self.DoNorm:
-            self.Db.insertStep('doNorm',stack=self.OutSelFile,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doNorm',stack=self.OutStack,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
         if self.DoMask:
-            self.Db.insertStep('doMask',stack=self.OutSelFile,maskFile=self.MaskFile,substitute=self.Substitute,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doMask',stack=self.OutStack,maskFile=self.MaskFile,substitute=self.Substitute,Nproc=self.NumberOfMpi)
         
     def validate(self):
         errors = []
@@ -67,14 +69,14 @@ class ProtPreprocessParticles(XmippProtocol):
         if self.DoMask:
             message.append("Step %d -> Mask applied: mask file=%f substituted value=%f"%(step,self.MaskFile,self.Substitute))
             step+=1
-        message.append("Output: [%s]"%self.OutSelFile)
+        message.append("Output: [%s]"%self.OutStack)
         return message
 
     def visualize(self):
-        if not os.path.exists(self.OutSelFile):
+        if not os.path.exists(self.OutStack):
             showError("Error", "There is no result yet")
         else:
-            runShowJ(self.OutSelFile)
+            runShowJ(self.OutMetadata)
 
 def createAcquisition(log,InputFile,WorkingDir,DoScale,NewSize):
     if not DoScale:
@@ -91,16 +93,16 @@ def createAcquisition(log,InputFile,WorkingDir,DoScale,NewSize):
             MD.setValue(xmipp.MDL_SAMPLINGRATE,Ts*downsampling,id)
             MD.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
 
-def copyFiles(log,InputFile,OutputFile):
-    runJob(log,"xmipp_image_convert","-i "+InputFile+" -o "+OutputFile)
+def copyFiles(log,InputFile,OutputStack,OutputMetadata):
+    runJob(log,"xmipp_image_convert","-i "+InputFile+" -o "+OutputStack)
+    mDstack=xmipp.MetaData(OutputStack)
     if xmipp.FileName.isMetaData(xmipp.FileName(InputFile)):
         mDin=xmipp.MetaData(InputFile)
         mDin.removeLabel(xmipp.MDL_IMAGE)
         mDin.removeLabel(xmipp.MDL_ZSCORE)
         mDaux=xmipp.MetaData(mDin)
-        mDstack=xmipp.MetaData(OutputFile)
-        mDaux.merge(mDstack)
-        mDaux.write(os.path.splitext(OutputFile)[0]+".xmd")
+        mDstack.merge(mDaux)
+    mDstack.write(OutputMetadata)
 
 def doScale(log,stack,new_size,Nproc):
     runJob(log,"xmipp_transform_geometry","-i %(stack)s --scale dim %(new_size)d"%locals(),Nproc)
