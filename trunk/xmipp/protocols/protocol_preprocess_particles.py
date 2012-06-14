@@ -67,6 +67,7 @@ class ProtPreprocessParticles(XmippProtocol):
         if self.DoMask:
             message.append("Step %d -> Mask applied: mask file=%f substituted value=%f"%(step,self.MaskFile,self.Substitute))
             step+=1
+        message.append("Output: [%s]"%self.OutSelFile)
         return message
 
     def visualize(self):
