@@ -385,9 +385,9 @@ void ProgMLF2D::produceSideInfo()
         bool is_unique;
 
         //CTF info now comes on input metadatas
-        MetaData mdCTF(MDimg);
+        MetaData mdCTF;
         //number of different CTFs
-        if (!mdCTF.containsLabel(MDL_CTFMODEL))
+        if (!MDimg.containsLabel(MDL_CTFMODEL))
             REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTFMODEL in input images metadata");
         mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT);
         nr_focus = mdCTF.size();
@@ -402,7 +402,6 @@ void ProgMLF2D::produceSideInfo()
         size_t id;
         MultidimArray<double> dum(hdim);
         FileName ctfname;
-
         FOR_ALL_OBJECTS_IN_METADATA(mdCTF)
         {
             id = __iter.objId;
@@ -419,10 +418,18 @@ void ProgMLF2D::produceSideInfo()
             mdCTF.getValue(MDL_CTFMODEL, ctfname, id);
             ctf.read(ctfname);
 
-            if (ABS(ctf.DeltafV - ctf.DeltafU) >1.)
+            double astigmCTFFactor = ABS( (ctf.DeltafV - ctf.DeltafU) / (std::max(ctf.DeltafV, ctf.DeltafU)) );
+            // we discard the CTF with a normalized diference between deltaU and deltaV of 10%
+            if (astigmCTFFactor >0.1)
             {
-                REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
+                //REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
+                std::cerr << "CTF file " << ctfname << " is too astigmatic. We ill ignore it." << std::endl;
+                std::cerr << "astigmCTFFactor " << astigmCTFFactor <<  std::endl;
+                continue;
             }
+            ctf.DeltafV =  (ctf.DeltafU+ctf.DeltafV)*0.5;
+            ctf.DeltafU =  ctf.DeltafV;
+
             ctf.K = 1.;
             ctf.enable_CTF = true;
             ctf.Produce_Side_Info();
