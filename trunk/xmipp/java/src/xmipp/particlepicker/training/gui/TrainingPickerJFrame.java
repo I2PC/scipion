@@ -11,11 +11,9 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -35,10 +33,6 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-
-import xmipp.jni.Program;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
 import xmipp.particlepicker.ParticlePickerCanvas;
@@ -64,8 +58,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private TrainingPicker ppicker;
 	private JPanel familypn;
 	private JPanel micrographpn;
-	
-
 	private MicrographsTableModel micrographsmd;
 	private TrainingMicrograph micrograph;
 	private float positionx;
@@ -695,6 +687,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				}
 			});
 			t.start();
+			
 
 		}
 		catch (Exception e)

@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -509,13 +510,16 @@ public abstract class TrainingPicker extends ParticlePicker
 	
 	public void importParticlesFromEmanFile(MicrographFamilyData mfd, String file)
 	{
+		BufferedReader reader = null;
 		try
 		{
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			boolean inverty = false;
 			String line = reader.readLine();
+			reader.close();
 			if(line.split("\t").length > 4)//eman 1.0
 				inverty = true;
+			int height;
 			MetaData md = new MetaData();
 			md.readPlain(file, "Xcoor Ycoor particleSize");
 			long[] ids;
@@ -529,7 +533,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				y = md.getValueInt(MDLabel.MDL_YINT, id) + width / 2;
 				if(inverty)
 				{
-					int height = mfd.getMicrograph().getImagePlus().getHeight();
+					height = mfd.getMicrograph().getImagePlus().getHeight();
 					y = height - y;
 				}
 				mfd.addManualParticle(new TrainingParticle(x, y, mfd.getFamily(), mfd.getMicrograph(), cost));
@@ -539,6 +543,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
+			if(reader != null)
+				reader.close();
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
