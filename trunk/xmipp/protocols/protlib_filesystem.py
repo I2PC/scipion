@@ -102,6 +102,8 @@ def deleteFiles(log, filelist, verbose):
 
 def createLink(log, source, dest):
     try:
+        if os.path.exists(dest):
+            os.remove(dest)
         destDir=os.path.split(dest)[0]
         os.symlink(os.path.relpath(source,destDir),dest)
         printLog("Linked '%s' to '%s'" % (source, dest))

@@ -327,6 +327,8 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
 def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,
                      fnExtractList, particleSize, doFlip, doNorm, doLog, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
+    
+    
     fnBlock = _getFilename('mic_block_fn', micName=micrographName, fn=fnExtractList)
     md = MetaData(fnBlock)
     printLog( 'Metadata block: %s' % fnBlock, log)
@@ -336,7 +338,7 @@ def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, ori
         return
     
     # Extract 
-    rootname = join(WorkingDir, micrographName+".stk")
+    rootname = join(WorkingDir, micrographName)
     arguments="-i "+micrographToExtract+" --pos "+fnBlock+" -o "+rootname+" --Xdim "+str(particleSize)
     if abs(TsFinal-TsInput)>0.001:
         arguments+=" --downsampling "+str(TsFinal/TsInput)
@@ -344,19 +346,23 @@ def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, ori
         arguments += " --invert"
     if doLog:
         arguments += " --log"
-    runJob(log,"xmipp_micrograph_scissor", arguments)
-    
+    try:
+        runJob(log,"xmipp_micrograph_scissor", arguments)
+    except OSError, e:
+       print ("Execution failed %s, command: %s" % (e, 'xmipp_micrograph_scissor'))
     # Normalize 
     if doNorm:
         if bgRadius == 0:
             bgRadius = int(particleSize/2)
         arguments = "-i "+rootname+'.stk --method Ramp --background circle '+str(bgRadius)
+
         if doRemoveDust:
             arguments+=' --thr_black_dust -' + str(dustRemovalThreshold)+' --thr_white_dust ' + str(dustRemovalThreshold)
         runJob(log,"xmipp_transform_normalize",arguments)
 
     # Substitute the micrograph name if it comes from the flipped version
     # Add information about the ctf if available
+
     if fullMicrographName != micrographToExtract or ctf != None:
         selfile = rootname + ".xmd"
         md = MetaData(selfile)
