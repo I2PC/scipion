@@ -212,6 +212,8 @@ public:
      * */
     virtual int tryRun();
 
+
+
     /** @name Constructors
      * @{
      */
@@ -340,6 +342,13 @@ protected:
 
 public:
     XmippMetadataProgram();
+
+    /** Call the read function inside a try/catch block
+     * The function will return the error code when
+     * 0 means success
+     * and a value greater than 0 represents the error type
+     * */
+    virtual int tryRead(int argc, char ** argv, bool reportErrors = true);
 
     /** Initialization of variables should be done here
      */
