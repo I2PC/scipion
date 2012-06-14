@@ -164,7 +164,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		loadManualParticles(mfd, getOutputPath(mfd.getMicrograph().getPosFile()));
 	}
 	
-	public void loadManualParticles(MicrographFamilyData mfd, String file)
+	public void cd(MicrographFamilyData mfd, String file)
 	{
 		if (!new File(file).exists())
 			return;
@@ -511,6 +511,8 @@ public abstract class TrainingPicker extends ParticlePicker
 	
 	public void importParticlesFromEmanFile(MicrographFamilyData mfd, String file)
 	{
+		if(!new File(file).exists())
+			return;
 		BufferedReader reader = null;
 		try
 		{
