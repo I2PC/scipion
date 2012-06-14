@@ -190,6 +190,21 @@ void XmippProgram::readParams()
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'readParams'");
 }
 
+int XmippMetadataProgram::tryRead(int argc, char ** argv, bool reportErrors )
+{
+    try
+    {
+		this->read( argc, argv,  reportErrors );
+    }
+    catch (XmippError &xe)
+    {
+        std::cerr << xe;
+        errorCode = xe.__errno;
+    }
+    return errorCode;
+}
+
+
 void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 {
     if (progDef == NULL)
