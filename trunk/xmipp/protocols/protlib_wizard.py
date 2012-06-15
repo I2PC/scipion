@@ -340,6 +340,31 @@ def wizardChooseFamilyToExtract(self, var):
             md=MetaData(pickingProt.getFilename("micrographs"))
             self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTFMODEL)))
 
+#Select family from extraction run
+def wizardChooseFamilyToExtractSupervised(self, var):
+    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTFMODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
+    from protlib_gui_ext import ListboxDialog
+    pickingRun = self.getVarValue('PickingRun')
+    pickingProt = self.project.getProtocolFromRunName(pickingRun)
+    fnFamilies = pickingProt.getFilename("families")    
+    if not exists(fnFamilies):
+        showWarning("Warning", "No elements to select", parent=self.master)
+        return
+    md = MetaData(fnFamilies)
+    families = [md.getValue(MDL_PICKING_FAMILY, objId) for objId in md]
+    if len(families) == 1:
+        d = 0
+    else:  
+        d = ListboxDialog(self.frame, families, selectmode=tk.SINGLE)
+        if len(d.result) > 0:
+            d = d.result[0]
+        else:
+            d = None
+    if d is not None:
+        selectedFamily = families[d]
+        var.setValue(selectedFamily)
+        self.setVarValue("Family", selectedFamily)
+
 #This wizard is specific for cl2d protocol
 def wizardCL2DNumberOfClasses(self, var):
     from xmipp import MetaData
