@@ -76,21 +76,24 @@ public:
 
     // Indexes to access in a sorted way
     MultidimArray<int> idx;
+
+    // Matrix for the Eigen values
+    Matrix1D<double> w;
 public:
     /// Clear
     inline void clear()
     {
-    	v.clear();
-    	PCAbasis.clear();
-    	Zscore.clear();
-    	idx.clear();
-    	avg.clear();
+        v.clear();
+        PCAbasis.clear();
+        Zscore.clear();
+        idx.clear();
+        avg.clear();
     }
 
     /// Resize
     inline void reserve(int newSize)
     {
-    	v.reserve(newSize);
+        v.reserve(newSize);
     }
 
     /// Add vector
@@ -105,6 +108,14 @@ public:
 
     /// Subtract average
     void subtractAvg();
+
+    /**
+     *This method computes the orthonormal basis for the vectors of an Eucldian
+     *which is formed by the vectors on each column of the matrix. The output
+     *of this method will be a matrix in which each column form an orthonormal
+     *basis.
+     */
+    void gramSchmidt();
 
     /// Standardarize variables
     void standardarizeVariables();
