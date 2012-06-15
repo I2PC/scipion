@@ -39,6 +39,7 @@ class ScriptCreateMetadata(XmippScript):
         self.addParamsLine(' -p <pattern>          : Pattern to match')
         self.addParamsLine('   alias --pattern;')
         self.addParamsLine(' -o <metadata>         : Output metadata')
+        self.addParamsLine(' -l <label=image>      : Label to store the matching files')
         self.addParamsLine('[ -s]                  : Check if the images are stacks')
         self.addParamsLine('   alias --isstack;')    
         ## examples
@@ -47,34 +48,9 @@ class ScriptCreateMetadata(XmippScript):
     def run(self):
         pattern = self.getParam('--pattern')
         isStack = self.checkParam('-s')
-        import glob
-        files = glob.glob(pattern)
-        files.sort()
-    
-        from xmipp import MetaData, FileName, SingleImgSize, MDL_IMAGE, MDL_ENABLED
-        mD = MetaData()
-        inFile = FileName()
-        
-        nSize = 1
-        for file in files:
-            fileAux=file
-            if isStack:
-                if file.endswith(".mrc"):
-                    fileAux=file+":mrcs"
-                x, x, x, nSize = SingleImgSize(fileAux)
-            if nSize != 1:
-                counter = 1
-                for jj in range(nSize):
-                    inFile.compose(counter, fileAux)
-                    objId = mD.addObject()
-                    mD.setValue(MDL_IMAGE, inFile, objId)
-                    mD.setValue(MDL_ENABLED, 1, objId)
-                    counter += 1
-            else:
-                objId = mD.addObject()
-                mD.setValue(MDL_IMAGE, fileAux, objId)
-                mD.setValue(MDL_ENABLED, 1, objId)
-                
+        label = self.getParam('-l')
+        from protlib_utils import createMetaDataFromPattern
+        mD = createMetaDataFromPattern(pattern, isStack, label)                
         outFile = self.getParam('-o')
         mD.write(outFile)
 

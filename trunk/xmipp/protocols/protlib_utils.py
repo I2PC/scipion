@@ -877,3 +877,36 @@ def createUniqueFileName(fn):
             return uni_fn
 
     return None
+
+def createMetaDataFromPattern(pattern, isStack=False, label="image"):
+    ''' Create a metadata from files matching pattern'''
+    import glob
+    files = glob.glob(pattern)
+    files.sort()
+
+    from xmipp import MetaData, FileName, SingleImgSize, MDL_ENABLED, str2Label
+    label = str2Label(label) #Check for label value
+    
+    mD = MetaData()
+    inFile = FileName()
+    
+    nSize = 1
+    for file in files:
+        fileAux=file
+        if isStack:
+            if file.endswith(".mrc"):
+                fileAux=file+":mrcs"
+            x, x, x, nSize = SingleImgSize(fileAux)
+        if nSize != 1:
+            counter = 1
+            for jj in range(nSize):
+                inFile.compose(counter, fileAux)
+                objId = mD.addObject()
+                mD.setValue(label, inFile, objId)
+                mD.setValue(MDL_ENABLED, 1, objId)
+                counter += 1
+        else:
+            objId = mD.addObject()
+            mD.setValue(label, fileAux, objId)
+            mD.setValue(MDL_ENABLED, 1, objId)
+    return mD
