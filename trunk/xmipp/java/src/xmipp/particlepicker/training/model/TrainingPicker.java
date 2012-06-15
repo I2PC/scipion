@@ -522,18 +522,17 @@ public abstract class TrainingPicker extends ParticlePicker
 			reader.close();
 			if(line.split("\t").length > 4)//eman 1.0
 				inverty = true;
-			int height;
 			MetaData md = new MetaData();
 			md.readPlain(file, "Xcoor Ycoor particleSize");
 			long[] ids;
-			int x, y, width;
+			int x, y, size = 0, height;
 			Double cost = 2.0;
 			ids = md.findObjects();
 			for (long id : ids)
 			{
-				width = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				x = md.getValueInt(MDLabel.MDL_XINT, id) + width / 2;
-				y = md.getValueInt(MDLabel.MDL_YINT, id) + width / 2;
+				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
+				x = md.getValueInt(MDLabel.MDL_XINT, id) + size / 2;
+				y = md.getValueInt(MDLabel.MDL_YINT, id) + size / 2;
 				if(inverty)
 				{
 					height = mfd.getMicrograph().getImagePlus().getHeight();
@@ -542,6 +541,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				mfd.addManualParticle(new TrainingParticle(x, y, mfd.getFamily(), mfd.getMicrograph(), cost));
 
 			}
+			if (size > 0)
+				mfd.getFamily().setSize(size);
 
 		}
 		catch (Exception e)

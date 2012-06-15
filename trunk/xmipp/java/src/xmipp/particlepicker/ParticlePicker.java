@@ -29,16 +29,16 @@ import xmipp.jni.Program;
 public abstract class ParticlePicker
 {
 
-	private String familiesfile;
-	private String macrosfile;
-	private static Logger logger;
-	private String outputdir = ".";
-	private boolean changed;
+	protected String familiesfile;
+	protected String macrosfile;
+	protected static Logger logger;
+	protected String outputdir = ".";
+	protected boolean changed;
 	protected List<Family> families;
-	private FamilyState mode;
-	private List<Filter> filters;
+	protected FamilyState mode;
+	protected List<Filter> filters;
 	protected String selfile;
-	private String command;
+	protected String command;
 	protected Family family;
 	
 	public int getSize()

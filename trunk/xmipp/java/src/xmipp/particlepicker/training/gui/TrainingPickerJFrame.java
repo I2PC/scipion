@@ -734,6 +734,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();
+		updateSize(family.getSize());
 		canvas.setActive(null);
 
 	}

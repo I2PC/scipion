@@ -195,7 +195,7 @@ public class EditFamiliesJDialog extends JDialog {
 				else if (column == 2) {
 					int size = (Integer) value;
 					f.setSize(size);
-					frame.switchSize(size);
+					frame.updateSize(size);
 				}
 
 			} catch (IllegalArgumentException e) {

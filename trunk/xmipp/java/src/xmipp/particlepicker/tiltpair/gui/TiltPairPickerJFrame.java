@@ -242,9 +242,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 	}
 
-	public void switchSize(int size)
+	public void updateSize(int size)
 	{
-		super.switchSize(size);
+		super.updateSize(size);
 		tiltedcanvas.repaint();
 	}
 
