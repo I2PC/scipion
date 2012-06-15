@@ -2295,9 +2295,9 @@ public:
     }
 
     /** Interpolates the value of the nth 3D matrix M at the point (x,y,z).
-     *
-     * (x,y,z) are in logical coordinates.
-     */
+    *
+    * (x,y,z) are in logical coordinates.
+    */
     T interpolatedElement3D(double x, double y, double z, T outside_value = (T) 0) const
     {
         int x0 = FLOOR(x);
@@ -3513,6 +3513,31 @@ public:
     void operator/=(const MultidimArray<T>& op1)
     {
         arrayByArray(*this, op1, *this, '/');
+    }
+
+    /** Dot product */
+    double dotProduct(const MultidimArray<T>& op1)
+    {
+        if (!sameShape(op1))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,"The two arrays for dot product are not of the same shape");
+        double dot=0;
+        size_t n;
+        T* ptrOp1=NULL;
+        T* ptrOp2=NULL;
+        const size_t unroll=4;
+        size_t nmax=unroll*(MULTIDIM_SIZE(*this)/unroll);
+        for (n=0, ptrOp1=data,ptrOp2=op1.data;
+             n<nmax; n+=unroll, ptrOp1+=unroll, ptrOp2+=unroll)
+        {
+            dot += *ptrOp1 * *ptrOp2;
+            dot += *(ptrOp1+1) * *(ptrOp2+1);
+            dot += *(ptrOp1+2) * *(ptrOp2+2);
+            dot += *(ptrOp1+3) * *(ptrOp2+3);
+        }
+        for (n=nmax, ptrOp1=data+nmax, ptrOp2=op1.data+nmax;
+             n<MULTIDIM_SIZE(*this); ++n, ++ptrOp1, ++ptrOp2)
+            dot += *ptrOp1 * *ptrOp2;
+        return dot;
     }
     //@}
 
