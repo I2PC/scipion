@@ -227,7 +227,7 @@ def linkAcquisitionInfoIfPresent(log,InputFile,dirDest):
         createLink2(log, acquisitionInfoFileName, dirSrc, dirDest)
         
 def AcquisitionInfoExists(InputFile):
-    dirSrc=os.path.dirname(InputFile)
+    dirSrc=os.path.dirname(removeFilenamePrefix(InputFile))
     fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
     if os.path.exists(fnAcquisitionIn):
         return True
@@ -236,7 +236,7 @@ def AcquisitionInfoExists(InputFile):
     
 def AcquisitionInfoGetSamplingRate(InputFile):
     from xmipp import MetaData,MDL_SAMPLINGRATE
-    dirSrc=os.path.dirname(InputFile)
+    dirSrc=os.path.dirname(removeFilenamePrefix(InputFile))
     fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
     if os.path.exists(fnAcquisitionIn):
         mD =MetaData(fnAcquisitionIn)
