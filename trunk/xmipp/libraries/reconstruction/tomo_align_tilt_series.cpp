@@ -2529,8 +2529,11 @@ double wrapperError(double *p, void *prm)
 void ProgTomographAlignment::run()
 {
     produceSideInfo();
+    std::cerr << "generateLandmarkSet"<< std::endl;
     generateLandmarkSet();
+    std::cerr << "produceInformationFromLandmarks" << std::endl;
     produceInformationFromLandmarks();
+    std::cerr << "alignment" << std::endl;
     Alignment *alignment=new Alignment(this);
 
     // Exhaustive search for rot

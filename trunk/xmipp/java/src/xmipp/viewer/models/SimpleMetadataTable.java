@@ -178,11 +178,12 @@ public class SimpleMetadataTable extends DefaultTableModel {
 
                 if (class_ == String.class) {
                     String value = md.getValueString(label, id);
+                    row[i] = value;
                     if (MetaData.isImage(label)) {
-//                        String path = md.getValueString(label, id, true);
-//                        row[i] = new GalleryImageItem(path, value, cache);
+                        String path = md.getValueString(label, id, true);
+                        //row[i] = new GalleryImageItem(path, value, cache);
                         //row[i] = new GalleryImageItem(id, md, label, cache);
-//                        containsImages = true;
+                        containsImages = true;
                     } else if (MetaData.isMetadata(label)) {
                         String path_ = md.getValueString(label, id, true);
                         //row[i] = new TableFileItem(path_, value);
@@ -191,8 +192,6 @@ public class SimpleMetadataTable extends DefaultTableModel {
                         String path_ = md.getValueString(label, id, true);
                         //row[i] = new TableFileItem(path_, value);
                         row[i] = path_;
-                    } else {
-                        row[i] = value;
                     }
                 } else if (class_ == Double.class) {
                     row[i] = md.getValueDouble(label, id);

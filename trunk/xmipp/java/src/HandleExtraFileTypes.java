@@ -316,9 +316,14 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
         // and then call appropriate plugin
         // using the above as models
         // eg:
-        System.err.println(path);
-        Param param=new Param();
+
+        
+        // Obviouslly, IJ.Opener needs a valid ImagePlus. If for some reason we don't return it,
+        // an alert will apear complaining something like "File is not supported format, a reader plugin
+        // is not available..."
         try{
+            System.err.println(path);
+            Param param=new Param();
         	imp=ImagesWindowFactory.openFileAsImagePlus(path, param);
             if (imp == null) {
                 width = PLUGIN_NOT_FOUND;

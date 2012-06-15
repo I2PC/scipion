@@ -730,7 +730,9 @@ if int(env['java']):
     # Compile the HandleExtraFileTypes for ImageJ I/O
     compileHEFT = CompileJava('HandleExtraFileTypes', ['XmippViewer'])
     copyHandleExtraFileTypes = env.Install('external/imagej/plugins/', javaBuildName('HandleExtraFileTypes.class'))
-    env.Alias('java', copyHandleExtraFileTypes) # Add copy of this class as a Java dependency
+    env.Default(copyHandleExtraFileTypes)
+    # with the alias sometimes does not perform the copy?
+    # env.Alias('java', copyHandleExtraFileTypes) # Add copy of this class as a Java dependency
 
 
 # --- Programs

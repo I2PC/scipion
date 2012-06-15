@@ -20,7 +20,10 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_create
   	ProgTomographAlignment *program = new ProgTomographAlignment();
 	env->SetLongField(jobj, ProgTomographAlignment_peerId, (long)program);
 	// default parameters for running produceInfo successfully
-	program->lastStep=1;
+	/*program->lastStep=1;
+	program->numThreads = 1;*/
+	// default parameters for running the whole program successfully
+	program->lastStep = -1;
 	program->numThreads = 1;
   }
 
@@ -103,4 +106,25 @@ delete program;
 	program = NULL;
 	env->SetLongField(jobj, ProgTomographAlignment_peerId, (long)program);
   }
+
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_run
+ (JNIEnv * env, jobject jobj){
+	std::string msg = "";
+  	try{
+  	  ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
+  	  program->run();
+  		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
 

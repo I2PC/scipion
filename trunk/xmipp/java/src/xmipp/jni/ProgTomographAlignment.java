@@ -18,10 +18,11 @@ public class ProgTomographAlignment
 	public native void setInputFilename(String name);
 	public native void setRoot(String name);
 	public native void produceSideInfo();
+	public native void run();
 	public native void writeTransformations(String name);
 	public native int getIteration();
 
-	// destructor
+	// destructor 
 	private synchronized native void destroy();
 
 	// non-native functions
