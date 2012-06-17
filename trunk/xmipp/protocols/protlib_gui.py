@@ -39,7 +39,7 @@ from protlib_utils import loadModule, which, runShowJ
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
     TaggedText, XmippText, XmippButton, OutputText
-from protlib_filesystem import getXmippPath, xmippExists
+from protlib_filesystem import getXmippPath, xmippExists, removeBasenameExt
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
@@ -298,7 +298,7 @@ class ProtocolGUI(BasicGUI):
         self.run = run
         self.project = project
         # Script title
-        self.programname = os.path.basename(self.run['source'].replace('.py', ''))
+        self.programname = removeBasenameExt(self.run['source']) 
         self.maxLabelWidth = 0
         self.hasVisualizeOptions = False
         #self.master = None

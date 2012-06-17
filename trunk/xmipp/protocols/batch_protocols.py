@@ -39,7 +39,7 @@ from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTre
 from config_protocols import *
 from protlib_base import XmippProject, getExtendedRunName, splitExtendedRunName,\
     getScriptFromRunName
-from protlib_utils import ProcessManager,  getHostname
+from protlib_utils import ProcessManager,  getHostname, loadModule
 from protlib_sql import SqliteDb, ProgramDb
 from protlib_filesystem import getXmippPath, copyFile
 from protlib_parser import ProtocolParser
@@ -225,7 +225,9 @@ class XmippProjectGUI():
         selection = showBrowseDialog(parent=self.root, seltype="file", filter="custom*py")
         if selection is not None:
             customProtFile = selection[0]
-            run = self.project.createRunFromScript(protDict.custom.name, customProtFile)
+            mod = loadModule(customProtFile)
+            prefix = getattr(mod, 'CustomPrefix', '')
+            run = self.project.createRunFromScript(protDict.custom.name, customProtFile, prefix=prefix)
             #from os.path import basename
             #tmpFile = self.project.projectTmpPath(basename(run['script']))
             #copyFile(None, customProtFile, tmpFile)
@@ -574,7 +576,7 @@ class XmippProjectGUI():
                 labels = '<Run>: ' + getExtendedRunName(run) + \
                           '\n<Created>: ' + run['init'] + '   <Modified>: ' + run['last_modified'] + \
                           '\n<Script>: ' + run['script'] + '\n<Directory>: ' + wd + \
-                          '\n<Summary>:\n' + summary   
+                          '\n\n<Summary>:\n' + summary   
             except Exception, e:
                 labels = 'Error creating protocol: <%s>' % str(e)
             self.detailsText.clear()
@@ -828,15 +830,15 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("[ --list  ]                         : List project runs");
         self.addParamsLine("   alias -l;"); 
         self.addParamsLine("[ --details <runName>  ]            : Print details about some run");
-        self.addParamsLine("   alias -d;"); 
-        self.addParamsLine("[ --create_run <protName>  ]        : Create a new run of a protocol");
-        #self.addParamsLine("   alias -e;");
+        self.addParamsLine("   alias -e;"); 
+        self.addParamsLine("[ --new_run <protName>  ]        : Create a new run of a protocol");
+        self.addParamsLine("   alias -n;");
         self.addParamsLine("[ --copy_run <runName>  ]           : Create a copy of an existing run");
         self.addParamsLine("   alias -p;");
-        self.addParamsLine("[ --start_run <runName>  ]           : Create a copy of an existing run");
+        self.addParamsLine("[ --start_run <runName>  ]           : Start an existing run");
         
         self.addParamsLine("[ --delete_run <protName>  ]        : Delete an existing run");
-        self.addParamsLine("   alias -e;");
+        self.addParamsLine("   alias -d;");
         self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
         self.addParamsLine("   alias -c;"); 
         
@@ -889,8 +891,8 @@ class ScriptProtocols(XmippScript):
                     print "   ", line
             except Exception, e:
                 print redStr("Run %s not found" % runName)
-        elif self.checkParam('--create_run'):
-            protName = self.getParam('--create_run')
+        elif self.checkParam('--new_run'):
+            protName = self.getParam('--new_run')
             self.loadProjectFromCli()
             run = self.project.newProtocol(protName) #Create new run for this protocol
             self.project.projectDb.insertRun(run) # Register the run in Db

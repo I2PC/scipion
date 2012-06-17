@@ -6,7 +6,7 @@
 from glob import glob
 from protlib_base import *
 import xmipp
-from protlib_filesystem import replaceFilenameExt, renameFile
+from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
 
 class ProtImportMicrographs(XmippProtocol):
@@ -27,7 +27,7 @@ class ProtImportMicrographs(XmippProtocol):
         micrographs = self.getMicrographs()
         if doPreprocess:
             func = self.insertPreprocessStep
-            funcOutput = lambda i: self.workingDirPath(replaceFilenameExt(os.path.basename(i), '.mrc'))
+            funcOutput = lambda i: self.workingDirPath(replaceBasenameExt(i, '.mrc'))
         elif self.CopyMicrographs:
             func = self.insertCopyMicrograph
             funcOutput = lambda i: self.workingDirPath(os.path.basename(i))

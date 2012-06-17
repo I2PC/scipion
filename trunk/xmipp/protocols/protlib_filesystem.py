@@ -29,7 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, basename
 from protlib_utils import printLog 
 from shutil import copyfile
 #from xmipp import *
@@ -140,6 +140,15 @@ def uniqueRandomFilename(file_name,randomLength=5):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
     return file_name 
+
+def replaceBasenameExt(filename, new_ext):
+    '''Take the basename of the filename 
+    and replace the extension by a new one'''
+    return replaceFilenameExt(basename(filename), new_ext)
+
+def removeBasenameExt(filename):
+    '''Take the basename of the filename and remove extension'''
+    return replaceBasenameExt(filename, '')
 
 def removeFilenameExt(filename):
     return replaceFilenameExt(filename, '')

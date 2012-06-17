@@ -196,7 +196,7 @@ class ProtExtractParticles(XmippProtocol):
     def getMicrographInfo(self, micrograph, md):
         for objId in md:
             micFullName = md.getValue(MDL_MICROGRAPH,objId)
-            micName = baseWithoutExt(micFullName)
+            micName = removeBasenameExt(micFullName)
             if micrograph==micName:
                 if md.containsLabel(MDL_MICROGRAPH_ORIGINAL):
                     micOriginalName = md.getValue(MDL_MICROGRAPH_ORIGINAL,objId)
@@ -211,7 +211,7 @@ class ProtExtractParticles(XmippProtocol):
                 return (micFullName, micOriginalName, ctfFile)
             if self.TiltPairs:
                 micFullName = md.getValue(MDL_MICROGRAPH_TILTED, objId)
-                micName = baseWithoutExt(micFullName)
+                micName = removeBasenameExt(micFullName)
                 if micrograph == micName:
                     if md.containsLabel(MDL_MICROGRAPH_TILTED_ORIGINAL):
                         micOriginalName=md.getValue(MDL_MICROGRAPH_TILTED_ORIGINAL,objId)
@@ -248,16 +248,13 @@ class ProtExtractParticles(XmippProtocol):
         blocks = []
         tiltPairs = md.containsLabel(MDL_MICROGRAPH_TILTED)
         def addBlock(label, objId): 
-            micName = baseWithoutExt(md.getValue(label, objId)) 
+            micName = removeBasenameExt(md.getValue(label, objId)) 
             blocks.append(_getFilename('mic_block', micName=micName))
         for objId in md:
             addBlock(MDL_MICROGRAPH, objId)            
             if tiltPairs:
                 addBlock(MDL_MICROGRAPH_TILTED, objId)
         return blocks
-
-def baseWithoutExt(filename):
-    return removeFilenameExt(os.path.basename(filename))
 
 def updateSampling(log, SamplingMd, TsOriginal, Ts, TsMode):
     md = MetaData(SamplingMd)
@@ -276,7 +273,7 @@ def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
     mdpos=MetaData()
     mdposAux=MetaData()
     for objId in md:
-        micName = baseWithoutExt(md.getValue(MDL_MICROGRAPH, objId))
+        micName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         
         fnManual = join(pickingDir, micName + ".pos")
         fnAuto1 = join(pickingDir, micName + "_auto.pos")
@@ -304,8 +301,8 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
     mdUntiltedPos = MetaData()
     mdTiltedPos = MetaData()
     for objId in md:
-        umicName = baseWithoutExt(md.getValue(MDL_MICROGRAPH, objId))
-        tmicName =baseWithoutExt(md.getValue(MDL_MICROGRAPH_TILTED, objId))
+        umicName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
+        tmicName =removeBasenameExt(md.getValue(MDL_MICROGRAPH_TILTED, objId))
         
         fnUntilted = join(pickingDir,umicName + ".pos")
         fnTilted = join(pickingDir,tmicName + ".pos")
@@ -393,12 +390,12 @@ def gatherTiltPairSelfiles(log, family, WorkingDir, fnMicrographs):
     mdUntilted = MetaData()
     mdTilted = MetaData()
     for objId in mdPairs:
-        umicName = baseWithoutExt(mdPairs.getValue(MDL_MICROGRAPH, objId))        
+        umicName = removeBasenameExt(mdPairs.getValue(MDL_MICROGRAPH, objId))        
         fnUntilted = join(WorkingDir, umicName + ".xmd")
         # Check if there are picked particles in this micrographs
         if exists(fnUntilted):
             mdUntilted.unionAll(MetaData(fnUntilted))            
-            tmicName = baseWithoutExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,objId))
+            tmicName = removeBasenameExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,objId))
             mdTilted.unionAll(MetaData(join(WorkingDir, tmicName + ".xmd")))
         
     mdUntilted.write(join(WorkingDir, "%s_untilted.xmd" % family))

@@ -6,7 +6,7 @@
 from glob import glob
 from protlib_base import *
 import xmipp
-from protlib_filesystem import replaceFilenameExt, createLink
+from protlib_filesystem import replaceBasenameExt, createLink
 from protlib_utils import runJob
 
 class ProtDownsampleMicrographs(XmippProtocol):
@@ -29,7 +29,7 @@ class ProtDownsampleMicrographs(XmippProtocol):
         IOTable = {}
         for i in MD:
             fnMicrograph = MD.getValue(xmipp.MDL_MICROGRAPH,i)
-            fnOut = self.workingDirPath(replaceFilenameExt(os.path.basename(fnMicrograph), '.mrc'))
+            fnOut = self.workingDirPath(replaceBasenameExt(fnMicrograph, '.mrc'))
             IOTable[fnMicrograph] = fnOut
             self.insertParallelStep("doDownsample", verifyfiles=[fnOut], parent_step_id=XmippProjectDb.FIRST_STEP, 
                             fnMicrograph=fnMicrograph, fnOut=fnOut, downsampleFactor=self.DownsampleFactor)

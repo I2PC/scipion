@@ -59,7 +59,7 @@ class ProtParticlePickingAuto(XmippProtocol):
             for objId in md:
                 # Get micrograph path and name
                 path = md.getValue(MDL_MICROGRAPH, objId)
-                micrographName = replaceFilenameExt(os.path.basename(path), '')
+                micrographName = removeBasenameExt(path)
                 proceed = True
                 fnPos = self.PrevRun.getFilename('pos', micrograph=micrographName)
                 if xmippExists(fnPos):
