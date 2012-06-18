@@ -16,7 +16,7 @@ from xmipp import MetaData, FileName, FILENAMENUMBERLENGTH, AGGR_COUNT,\
          MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
          MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE,\
          MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_WEIGHT,\
-         MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR
+         MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR, MDValueEQ, MDL_REF3D
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector,\
      getComponentFromVector, runShowJ, runJob, createUniqueFileName
@@ -175,6 +175,7 @@ data_
                            , 'DisplayProjectionMatchingLibrary'
                            , 'DisplayProjectionMatchingClasses'
                            , 'DisplayProjectionMatchingLibraryAndClasses'
+                           , 'DisplayProjectionMatchingLibraryAndImages'
                            , 'DisplayDiscardedImages'
                            , 'DisplayAngularDistribution'
                            , 'DisplayResolutionPlots'] if self.ParamsDict[k]]
@@ -389,6 +390,47 @@ data_
                     if xmippExists(file_nameAverages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDin.read(file_nameAverages)
+                        MDout.clear()
+                        for i in MDin:
+                            id1=MDout.addObject()
+                            MDout.setValue(MDL_IMAGE,MDin.getValue(MDL_IMAGE,i),id1)
+                            ref2D = MDin.getValue(MDL_REF,i)
+                            file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
+                            file_reference=FileName()
+                            file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
+                            id2=MDout.addObject()
+                            MDout.setValue(MDL_IMAGE,file_reference,id2)
+                        if MDout.size()==0:
+                            print "Empty metadata: ", file_name
+                        else:
+                            try:
+                                file_nameReferences = self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
+                                sfn   = createUniqueFileName(file_nameReferences)
+                                file_nameReferences = 'projectionDirections@'+sfn
+                                MDout.write( sfn )
+                                runShowJ(sfn)
+                            except Exception, e:
+                                showError("Error launching java app", str(e))
+
+        if doPlot('DisplayProjectionMatchingLibraryAndImages'):       
+        #map stack position with ref number
+            MDin  = MetaData()
+            MDout = MetaData()
+            MDtmp = MetaData()
+            for ref3d in ref3Ds:
+                for it in iterations:
+                    convert_refno_to_stack_position={}
+                    file_nameReferences = 'projectionDirections@'+self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
+                    #last reference name
+                    mdReferences     = MetaData(file_nameReferences)
+                    mdReferencesSize = mdReferences.size()
+                    for id in mdReferences:
+                        convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
+                    file_nameImages = self.getFilename('DocfileInputAnglesIters', iter=it)
+                    if xmippExists(file_nameImages):
+                        #print "OutClassesXmd", OutClassesXmd
+                        MDtmp.read(file_nameImages)#query with ref3D
+                        MDin.importObjects(MDtmp, MDValueEQ(MDL_REF3D, ref3d))
                         MDout.clear()
                         for i in MDin:
                             id1=MDout.addObject()
