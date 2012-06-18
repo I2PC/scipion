@@ -483,7 +483,7 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     //First we perform some setup stuff
     int nx = XSIZE(wrappedPhase);
     int ny = YSIZE(wrappedPhase);
-    double minQuality = 0.01;
+    double minQuality = 0.05;
 
     int imax, jmax, i, j, max_levels=10;
 
@@ -553,7 +553,7 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
                         if (A2D_ELEM(processed,nli,nlj))
                         {
                             uw =  A2D_ELEM(unwrappedPhase,nli,nlj);
-                            q  =  A2D_ELEM(qualityMap,nli,nlj);
+                            //q  =  A2D_ELEM(qualityMap,nli,nlj);
                             g  =  dMij(gaussian,li+size,lj+size);
 
                             t = (wp - uw);
@@ -565,9 +565,13 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
 
                             up = t - (2*3.14159265)*n;
 
-                            pred += (uw*q*g);
-                            cor  += (up*q*g);
-                            norm += (q*g);
+                            //pred += (uw*q*g);
+                            //cor  += (up*q*g);
+                            //norm += (q*g);
+
+                            pred += (uw*g);
+                            cor  += (up*g);
+                            norm += (g);
 
                         }
                     }
@@ -706,7 +710,8 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
         save.write("PPP3.xmp");
     }
 
-    unwrapping(wphase, orModMap, lambda, size, phase);
+    //unwrapping(wphase, orModMap, lambda, size, phase);
+    unwrapping(wphase, mod, lambda, size, phase);
 
     if (verbose == 4)
     {
@@ -760,6 +765,169 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
         save.write("PPP5.xmp");
         save()=mod;
         save.write("PPP6.xmp");
+        save2()= ROI;
+        save2.write("PPP7.xmp");
+    }
+}
+
+void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
+                                   Matrix1D<double> & coeffs, int verbose)
+{
+    //Initial Setup :
+	// In : Normalized image after using methods normalizeWB or normalize
+	// orModMap : modulation map of im using
+//TODO : subtract orModMap
+	// dir : direction map. It can be obtained using direction method but in our case, we impose the direction map shape
+	// wphase : wrapped phase
+	// phase : absolute phase computed from wphase and method unwrapping
+	// mod : modulation map
+
+    MultidimArray< double > In, mod, dir, wphase, phase;
+    MultidimArray< bool > ROI;
+    MultidimArray< std::complex<double> > sph;
+
+    In.resizeNoCopy(im);
+    mod.resizeNoCopy(im);
+    dir.resizeNoCopy(im);
+    wphase.resizeNoCopy(im);
+    sph.resizeNoCopy(im);
+    ROI.resizeNoCopy(im);
+    phase.resizeNoCopy(im);
+
+    //First we define the Region of Interesting to perform all the operations inside these regions
+    ROI.setXmippOrigin();
+    dir.setXmippOrigin();
+
+    //We obtain the ROI from rmax and rmin parameters and the direction map
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+    {
+        double temp = std::sqrt(i*i+j*j);
+        if ( (temp > rmin) &&  (temp < rmax) )
+        {
+            A2D_ELEM(ROI,i,j)= true;
+            A2D_ELEM(dir,i,j)= -std::atan2(i,j);
+        }
+        else
+            A2D_ELEM(ROI,i,j)= false;
+    }
+    STARTINGX(dir)=STARTINGY(dir)=0;
+
+    //We obtain the normalized version of im and the modulation map mod
+    normalizeWB(im,In,mod, rmax, rmin, ROI);
+    STARTINGX(mod)=STARTINGY(mod)=0;
+
+    //Here we make the max of mod to be 1
+    int imax, jmax;
+    mod.maxIndex(imax,jmax);
+    mod = mod/A2D_ELEM(mod,imax,jmax);
+
+    Image<double> save;
+    if (verbose == 1)
+    {
+        save()=In;
+        save.write("PPP1.xmp");
+    }
+
+    if (verbose == 2)
+    {
+        save()=dir;
+        save.write("PPP2.xmp");
+    }
+    //Spiral transform of the normalized image
+    SPTH(In,sph);
+    STARTINGX(sph)=STARTINGY(sph)=0;
+    STARTINGX(In)=STARTINGY(In)=0;
+    STARTINGX(ROI)=STARTINGY(ROI)=0;
+
+    // We obtain the wrapped phase
+    std::complex<double> ci = std::complex<double>(0,1.0);
+    std::complex<double> temp;
+
+    //tempTheta is the Theta magnitude in polar coordinates. This is because we want to subtract in ROI the crux of the CTF
+    double tempTheta=0;
+    //val is a number that establish the quantity we want to subtract in the phase to avoid the crux
+    double val = 0.05;
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(im)
+    {
+        if (A2D_ELEM(ROI,i,j))
+        {
+            temp = -ci*std::exp(ci*A2D_ELEM(dir,i,j))*A2D_ELEM(sph,i,j);
+            A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
+            //A2D_ELEM(mod,i,j) = std::sqrt( temp.real()*temp.real() + A2D_ELEM(In,i,j)*A2D_ELEM(In,i,j));
+
+            tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
+
+            if (  !(((tempTheta > val) | (tempTheta < -val)) && !((tempTheta > PI-val) || (tempTheta < -PI+val)) &&
+                    !( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))) )
+            {
+                A2D_ELEM(ROI,i,j) = false;
+            }
+        }
+        else
+        {
+            A2D_ELEM(mod,i,j) = 0;
+        }
+    }
+
+    if (verbose == 3)
+    {
+        save()=wphase;
+        save.write("PPP3.xmp");
+    }
+
+    unwrapping(wphase, mod, lambda, size, phase);
+
+    if (verbose == 4)
+    {
+        save()=phase;
+        save.write("PPP4.xmp");
+    }
+
+    ROI.setXmippOrigin();
+    mod.setXmippOrigin();
+    Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
+
+    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+        VEC_ELEM(coefsInit,i) = (int)VEC_ELEM(coeffs,i);
+
+    PolyZernikes polynom;
+    MultidimArray< double > onesMatrix;
+    onesMatrix.resizeNoCopy(im);
+    onesMatrix.initConstant(1.0);
+    polynom.fit(coefsInit,phase,onesMatrix,ROI,0);
+    polynom.fit(coefsInit,phase,onesMatrix,ROI,verbose);
+
+    int index = 0;
+    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    {
+        if ( VEC_ELEM(coeffs,i) != 0)
+        {
+            VEC_ELEM(coeffs,i) = VEC_ELEM(polynom.fittedCoeffs,index);
+            index++;
+        }
+
+        else
+            VEC_ELEM(coeffs,i) = 0;
+    }
+
+    if (verbose > 5)
+    {
+        save()=im;
+        save.write("PPP0.xmp");
+        save()=In;
+        save.write("PPP1.xmp");
+        //save()=orModMap;
+        //save.write("PPP2.xmp");
+        save()=dir;
+        save.write("PPP3.xmp");
+        save()=wphase;
+        save.write("PPP4.xmp");
+        save()=phase;
+        save.write("PPP5.xmp");
+        save()=mod;
+        save.write("PPP6.xmp");
+
+        Image<bool> save2;
         save2()= ROI;
         save2.write("PPP7.xmp");
     }
