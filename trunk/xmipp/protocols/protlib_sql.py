@@ -116,7 +116,7 @@ class SqliteDb:
         self.sqlDict['run_id'] = runId
         _sqlCommand = """ SELECT jobid 
                           FROM %(TableRuns)s 
-                          WHERE run_id = '%(run_id)d""" % self.sqlDict                            
+                          WHERE run_id = %(run_id)d""" % self.sqlDict                            
         self.cur.execute(_sqlCommand)
         result = self.cur.fetchone()
         if result:
