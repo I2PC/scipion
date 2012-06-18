@@ -1949,11 +1949,21 @@ void estimate_background_gauss_parameters2()
     if (N != 0)
     {
         A(1, 0) = A(0, 1);
-        b = A.inv() * b;
-        global_ctfmodel.sigmaU2 = XMIPP_MIN(fabs(b(1)), 95e3); // This value should be
-        global_ctfmodel.sigmaV2 = XMIPP_MIN(fabs(b(1)), 95e3); // conformant with the physical
-        // meaning routine in CTF.cc
-        global_ctfmodel.gaussian_K2 = exp(b(0));
+        std::cout << "A\n" << A << std::endl;
+        double det=A.det();
+        if (fabs(det)>1e-9)
+        {
+        	b = A.inv() * b;
+        	global_ctfmodel.sigmaU2 = XMIPP_MIN(fabs(b(1)), 95e3); // This value should be
+        	global_ctfmodel.sigmaV2 = XMIPP_MIN(fabs(b(1)), 95e3); // conformant with the physical
+        	// meaning routine in CTF.cc
+        	global_ctfmodel.gaussian_K2 = exp(b(0));
+        }
+        else
+        {
+            global_ctfmodel.sigmaU2 = global_ctfmodel.sigmaV2 = 0;
+            global_ctfmodel.gaussian_K2 = 0;
+        }
     }
     else
     {
@@ -2776,6 +2786,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     /************************************************************************
      STEPs 9, 10 and 11: all parameters included second Gaussian
      /************************************************************************/
+
     global_action = 5;
     if (prm.modelSimplification < 2)
         estimate_background_gauss_parameters2();
@@ -2793,8 +2804,10 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
                                                 0;
     if (prm.modelSimplification >= 1)
         steps(10) = steps(11) = 0;
+
     powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
                     NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
+
     global_ctfmodel.force_physical_meaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
