@@ -721,6 +721,9 @@ DisplayProjectionMatchingClasses=False
 # {view} Show projection matching Library and Clases in a single image
 DisplayProjectionMatchingLibraryAndClasses=False
 
+# {view} Show projection matching Library and Experimental images in a single image
+DisplayProjectionMatchingLibraryAndImages=False
+
 # {view} Show discarded images
 DisplayDiscardedImages=False
 
