@@ -348,15 +348,7 @@ public abstract class ParticlePicker
 		}
 	}
 
-	public void removeFamily(Family family)
-	{
-		if (getManualParticlesNumber(family) > 0)// perhaps I have to check
-													// automatic particles
-			throw new IllegalArgumentException(XmippMessage.getAssociatedDataMsg("family"));
-		if (families.size() == 1)
-			throw new IllegalArgumentException(XmippMessage.getIllegalDeleteMsg("family"));
-		families.remove(family);
-	}
+	
 
 	public void saveData()
 	{

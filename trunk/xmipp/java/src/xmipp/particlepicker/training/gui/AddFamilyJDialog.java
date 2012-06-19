@@ -97,7 +97,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 				{
 					Family g = new Family(name, color, size);
 
-					AddFamilyJDialog.this.parent.addGroup(g);
+					AddFamilyJDialog.this.parent.addFamily(g);
 					setVisible(false);
 					dispose();
 				}

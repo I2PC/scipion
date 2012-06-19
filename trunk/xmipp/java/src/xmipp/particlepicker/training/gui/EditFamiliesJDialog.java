@@ -27,12 +27,10 @@ import xmipp.utils.ColorRenderer;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
 
-
-
 public class EditFamiliesJDialog extends JDialog {
 
 	private TrainingPickerJFrame parent;
-	private JTable groupstb;
+	private JTable familiestb;
 	private JButton addbt;
 	private JButton deletebt;
 	private JButton okbt;
@@ -60,12 +58,13 @@ public class EditFamiliesJDialog extends JDialog {
 		sp.setOpaque(true);
 		float position = 0.9f;
 		model = new FamiliesTableModel(parent);
-		groupstb = new JTable(model);
-		groupstb.setPreferredScrollableViewportSize(new Dimension(200, 200));
-		groupstb.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-		groupstb.setDefaultRenderer(Color.class, new ColorRenderer());
-		groupstb.setDefaultEditor(Color.class, new ColorEditor(position));
-		sp.setViewportView(groupstb);
+		familiestb = new JTable(model);
+		familiestb.setPreferredScrollableViewportSize(new Dimension(200, 200));
+		familiestb
+				.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		familiestb.setDefaultRenderer(Color.class, new ColorRenderer());
+		familiestb.setDefaultEditor(Color.class, new ColorEditor(position));
+		sp.setViewportView(familiestb);
 		add(groupstbpn, XmippWindowUtil.getConstraints(constraints, 0, 0, 3));
 		addbt = XmippWindowUtil.getTextButton("Add", null);
 		deletebt = XmippWindowUtil.getTextButton("Delete", null);
@@ -92,7 +91,7 @@ public class EditFamiliesJDialog extends JDialog {
 			}
 		});
 
-		groupstb.getSelectionModel().addListSelectionListener(
+		familiestb.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 
 					@Override
@@ -116,18 +115,17 @@ public class EditFamiliesJDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				List<Family> families = EditFamiliesJDialog.this.parent
 						.getParticlePicker().getFamilies();
-				try
-				{
-				int index = groupstb.getSelectedRow();
-				parent.removeFamily(families.get(index));
-				model.fireTableStructureChanged();
-				EditFamiliesJDialog.this.deletebt.setEnabled(false);
-				}
-				catch(Exception ex)
-				{
+				try {
+					
+					int index = familiestb.getSelectedRow();
+					parent.removeFamily(families.get(index));
+					model.fireTableStructureChanged();
+					EditFamiliesJDialog.this.deletebt.setEnabled(false);
+				} 
+				catch (Exception ex) {
 					JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 							ex.getMessage());
-				
+
 				}
 			}
 		});
@@ -171,28 +169,29 @@ public class EditFamiliesJDialog extends JDialog {
 		@Override
 		public void setValueAt(Object value, int row, int column) {
 			try {
-				if(value == null)
-					throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg(columns[column]));
+				if (value == null)
+					throw new IllegalArgumentException(
+							XmippMessage.getEmptyFieldMsg(columns[column]));
 				Family f = frame.getParticlePicker().getFamilies().get(row);
 				if (column == 0) {
 					String name = (String) value;
 					if (name.equals(f.getName()))
 						return;
-					else if (parent.getParticlePicker().existsFamilyName(name))
-					{
-						JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
-								XmippMessage.getAlreadyExistsGroupNameMsg(name));
+					else if (parent.getParticlePicker().existsFamilyName(name)) {
+						JOptionPane
+								.showMessageDialog(
+										EditFamiliesJDialog.this,
+										XmippMessage
+												.getAlreadyExistsGroupNameMsg(name));
 						return;
 					}
-						
+
 					f.setName(name);
 					frame.updateFamilyComboBox();
-				} else if (column == 1)
-				{
+				} else if (column == 1) {
 					f.setColor((Color) value);
 					frame.updateFamilyColor();
-				}
-				else if (column == 2) {
+				} else if (column == 2) {
 					int size = (Integer) value;
 					f.setSize(size);
 					frame.updateSize(size);
@@ -218,7 +217,7 @@ public class EditFamiliesJDialog extends JDialog {
 
 	}
 
-	public void addGroup(Family g) {
+	public void addFamily(Family g) {
 		parent.addFamily(g);
 		model.fireTableStructureChanged();
 	}

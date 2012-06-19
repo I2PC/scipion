@@ -168,7 +168,8 @@ public class TrainingMicrograph extends Micrograph{
 	public boolean hasData()
 	{
 		for(MicrographFamilyData mfd: mfdatas)
-			if(mfd.getState() != MicrographFamilyState.Available)
+//			if(mfd.getState() != MicrographFamilyState.Available)
+			if(!mfd.isEmpty())
 				return true;
 		return false;
 	}
@@ -178,6 +179,12 @@ public class TrainingMicrograph extends Micrograph{
 		for(MicrographFamilyData mfd: mfdatas)
 			if(mfd != null)
 				mfd.reset();
+	}
+
+
+	public void removeFamilyData(Family family) {
+		mfdatas.remove(getFamilyData(family));
+		
 	}
 
 

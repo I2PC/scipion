@@ -256,8 +256,6 @@ public abstract class TrainingPicker extends ParticlePicker
 					persistMicrographFamilies(m);
 					for (MicrographFamilyData mfd : m.getFamiliesData())
 					{
-						if (!mfd.hasManualParticles())
-							continue;
 						md = new MetaData();
 						for (TrainingParticle p : mfd.getManualParticles())
 						{
@@ -603,6 +601,17 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
+	public void removeFamily(Family family)
+	{
+		if (getManualParticlesNumber(family) > 0)// perhaps I have to check
+													// automatic particles
+			throw new IllegalArgumentException(XmippMessage.getAssociatedDataMsg("family"));
+		if (families.size() == 1)
+			throw new IllegalArgumentException(XmippMessage.getIllegalDeleteMsg("family"));
+		families.remove(family);
+		for(TrainingMicrograph m: micrographs)
+			m.removeFamilyData(family);
+	}
 	
 
 
