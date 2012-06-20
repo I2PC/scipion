@@ -49,8 +49,10 @@ public:
 
     SVMClassifier();
     ~SVMClassifier();
-    void SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> &lable);
+    void SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &lable);
+    int  predict(MultidimArray<double> &featVec);
     void SaveModel(const FileName &fnModel);
+    void LoadModel(const FileName &fnModel);
 };
 //@}
 #endif

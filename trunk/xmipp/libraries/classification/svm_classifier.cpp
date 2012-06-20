@@ -28,14 +28,14 @@
 SVMClassifier::SVMClassifier()
 {
     param.svm_type = C_SVC;
-    param.kernel_type = RBF;
+    param.kernel_type = LINEAR1;
     param.degree = 3;
     param.gamma = 0;
     param.coef0 = 0;
     param.nu = 0.5;
     param.cache_size = 100;
     param.C = 1;
-    param.eps = 1e-3;
+    param.eps = 0.001;
     param.p = 0.1;
     param.shrinking = 1;
     param.probability = 0;
@@ -45,19 +45,20 @@ SVMClassifier::SVMClassifier()
 }
 SVMClassifier::~SVMClassifier()
 {
-	svm_free_and_destroy_model(&model);
+    svm_free_and_destroy_model(&model);
     svm_destroy_param(&param);
     free(prob.y);
     free(prob.x);
 }
-void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> &lable)
+void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &lable)
 {
     prob.l = YSIZE(trainSet);
     prob.y = new double[prob.l];
-    prob.x = new svm_node *[prob.l];
+    prob.x = new svm_node *[prob.l+1];
+    const char *error_msg;
     for (int i=0;i<YSIZE(trainSet);i++)
     {
-        prob.x[i]=new svm_node[XSIZE(trainSet)];
+        prob.x[i]=new svm_node[XSIZE(trainSet)+1];
         int cnt = 0;
         for (int j=0;j<XSIZE(trainSet);j++)
         {
@@ -71,11 +72,56 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<int> 
             }
         }
         prob.x[i][cnt].index=-1;
+        prob.x[i][cnt].value=2;
         prob.y[i] = DIRECT_A1D_ELEM(lable,i);
     }
-    model=svm_train(&prob, &param);
+    std::ofstream fh_auto;
+    fh_auto.open("trainvectors.txt");
+    for (int i=0;i<YSIZE(trainSet);i++)
+    {
+        for (int j=0;j<=XSIZE(trainSet);j++)
+        {
+            fh_auto <<"("<<prob.x[i][j].value<<","<<prob.x[i][j].index<<")"<<" ";
+        }
+
+        fh_auto<<" "<<prob.y[i]<<std::endl;
+    }
+    error_msg = svm_check_parameter(&prob,&param);
+    if(error_msg)
+    {
+        fprintf(stderr,"ERROR: %s\n",error_msg);
+        exit(1);
+    }
+    model=svm_train(&prob,&param);
+}
+int SVMClassifier::predict(MultidimArray<double> &featVec)
+{
+    svm_node *x_space;
+    int cnt=0;
+    int nr_class=svm_get_nr_class(model);
+    double *prob_estimates=(double *) malloc(nr_class*sizeof(double));
+    x_space=new svm_node[XSIZE(featVec)+1];
+
+    for (int i=0;i<XSIZE(featVec);i++)
+    {
+        if (DIRECT_A1D_ELEM(featVec,i)==0)
+            continue;
+        else
+        {
+            x_space[cnt].value=DIRECT_A1D_ELEM(featVec,i);
+            x_space[cnt].index=i+1;
+            cnt++;
+        }
+    }
+    x_space[cnt].index=-1;
+    return svm_predict_probability(model,x_space,prob_estimates);
 }
 void SVMClassifier::SaveModel(const FileName &fnModel)
 {
-	svm_save_model(fnModel.c_str(),model);
+    std::cerr<<svm_get_nr_class(model);
+    svm_save_model(fnModel.c_str(),model);
+}
+void SVMClassifier::LoadModel(const FileName &fnModel)
+{
+    model=svm_load_model(fnModel.c_str());
 }
