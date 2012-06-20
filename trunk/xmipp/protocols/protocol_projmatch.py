@@ -62,6 +62,7 @@ class ProtProjMatch(XmippProtocol):
         #sampling is now in acquisition info
         #self.ResolSam=float(self.ResolSam)
         self.ResolSam = AcquisitionInfoGetSamplingRate(self.SelFileName)
+        
     def validate(self):
         from xmipp import ImgSize, SingleImgSize, XmippError
         errors = []
@@ -548,7 +549,12 @@ data_
         if xplotter:
             xplotter.show()
     
-    
+#    def createAcquisitionData(_log,samplingRate,fnOut):
+#        mdAcquisition = xmipp.MetaData()
+#        mdAcquisition.setValue(xmipp.MDL_SAMPLINGRATE,samplingRate,mdAcquisition.addObject())
+#        mdAcquisition.write(fnOut)
+
+
     
     def createFilenameTemplates(self):  
         #Some class variables
@@ -631,7 +637,14 @@ data_
          
     
     def preRun(self):
-        self.insertStep("linkAcquisitionInfoIfPresent",
+        
+        _dataBase = self.Db
+        
+#        fnOut=self.workingDirPath("acquisition_info.xmd")
+#        _dataBase.insertStep('createAcquisitionData',verifyfiles=[fnOut],samplingRate=self.AngSamplingRateDeg, fnOut=fnOut)
+#        print "createAcquisitionData|| fnOut=",fnOut, " samplingRate=", self.AngSamplingRateDeg
+
+        _dataBase.insertStep("linkAcquisitionInfoIfPresent",
                         InputFile=self.SelFileName,
                         dirDest=self.WorkingDir)
         
