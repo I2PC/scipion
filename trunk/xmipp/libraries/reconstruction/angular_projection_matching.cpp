@@ -64,6 +64,9 @@ void ProgAngularProjectionMatching::readParams()
     if(do_scale)
     {
         scale_step = getDoubleParam("--scale",0);
+        //Scale Step can't be 0
+        if (scale_step == 0)
+        	scale_step = 1;
         scale_nsteps = getDoubleParam("--scale",1);
     }
 
@@ -840,6 +843,7 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         const bool &opt_flip,
         const double &opt_xoff,
         const double &opt_yoff,
+        const double &old_scale,
         double &opt_scale,
         double &maxcorr)
 {
@@ -899,7 +903,8 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     double ref_mean=Mref.computeAvg();
     Mref-=ref_mean;
     // Mtrans is already rotated and shifted
-    double trans_mean=Mtrans.computeAvg();
+    //double trans_mean=Mtrans.computeAvg();
+    double trans_mean = 0;
 
     // Scale search
     double corr;
@@ -908,7 +913,7 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
     // 1 (0.01 * scale_step * scale_nsteps)
     for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
-        scale <= 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
+        scale <= 1 + 0.01 * scale_step * scale_nsteps;
         scale += 0.01 * scale_step)
     {
         // apply current scale
@@ -916,11 +921,19 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         A *= scale;
         applyGeometry(LINEAR, Mscale, Mtrans, A, IS_INV, DONT_WRAP);
 
-        // SUM (Mscale - trans_mean) * (Mref - ref_mean)
-        corr=0;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mscale)
-        corr+=(DIRECT_MULTIDIM_ELEM(Mscale,n)-trans_mean)*DIRECT_MULTIDIM_ELEM(Mref,n);
+    	//Image spread correction (if scale != 1) for scale search
+        Mscale = Mscale / (scale * scale * old_scale * old_scale);
+        // !a
+        trans_mean = Mscale.computeAvg();
 
+        // SUM (Mscale - trans_meanf) * (Mref - ref_mean)
+//        corr=0;
+//        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mscale)
+//            corr+=(DIRECT_MULTIDIM_ELEM(Mscale,n)-trans_mean)*DIRECT_MULTIDIM_ELEM(Mref,n);
+
+        corr = correlationIndex(Mref,Mscale);
+
+        //std::cerr << "(v2) scale: "<< scale << " | corr: " << corr <<std::endl;
         // best scale update
         if(corr > maxcorr)
         {
@@ -1050,7 +1063,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         if(do_scale)
         {
             // Compute a better scale (scale_min -> scale_max)
-            scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
+            scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, img.scale(), opt_scale, maxcorr);
             //Add the previously applied scale to the newly found one
             opt_scale *= img.scale();
         }

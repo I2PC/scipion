@@ -181,7 +181,7 @@ public:
          */
     void scaleAlignOneImage(MultidimArray<double> &img,
         		const int &samplenr, const double &psi, const bool &opt_flip,
-        		const double &opt_xoff, const double &opt_yoff, double &opt_scale, double &maxcorr);
+        		const double &opt_xoff, const double &opt_yoff, const double &old_scale, double &opt_scale, double &maxcorr);
 
     /** Get pointer to the current reference image
       If this image wasn't stored in memory yet, read it from disc and
