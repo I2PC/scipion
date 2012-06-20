@@ -101,6 +101,8 @@ public:
     void demodulate2(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
     				Matrix1D<double> & coeffs, int verbose=0);
 
+    void firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints, int rmin, int rmax, int numAngles);
+
 
 
 

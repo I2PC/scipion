@@ -186,6 +186,7 @@ TEST_F( FringeProcessingTests, orMinDer)
 
 
 #ifdef DEBUG
+
     im.write(fpName);
     orMap.write(orName);
     orModMap.write(orMapName);
@@ -304,6 +305,7 @@ TEST_F( FringeProcessingTests, normalizeWB)
     */
 
 #ifdef DEBUG
+
     im.write(fpName);
     In.write(Iname);
     Mod.write(ModName);
@@ -372,6 +374,7 @@ TEST_F( FringeProcessingTests, direction)
     */
 
 #ifdef DEBUG
+
     orModMap.write(ModName);
     orMap.write(OrName);
     dirMap.write(DirName);
@@ -450,6 +453,7 @@ TEST_F( FringeProcessingTests, unwrapping)
     */
 
 #ifdef DEBUG
+
     comPhase.write(uPName);
     wphase.write(PName);
 #endif
@@ -457,7 +461,6 @@ TEST_F( FringeProcessingTests, unwrapping)
 }
 #undef DEBUG
 
-#define DEBUG
 TEST_F( FringeProcessingTests, demodulate)
 {
 
@@ -484,7 +487,7 @@ TEST_F( FringeProcessingTests, demodulate)
 
     double lambda = 1;
     int size = 3,rmin=40, rmax=150;
-    int verbose=6;
+    int verbose=0;
 
     coefs.initConstant(0);
     VEC_ELEM(coefs,0) = 1;
@@ -507,9 +510,45 @@ TEST_F( FringeProcessingTests, demodulate)
 
 
 #ifdef DEBUG
+
     im.write(fpName);
     mod.write(ModName);
     phase.write(phaseName);
+
+#endif
+}
+
+TEST_F( FringeProcessingTests, firsPSDZero)
+{
+#ifdef DEBUG
+    FileName PName = "Psd.txt";
+#endif
+
+   /* FringeProcessing fp;
+    int nx = 311;
+    int ny = 311;
+
+    MultidimArray<double> env(nx,ny);
+    Matrix2D<double> envM;
+    envM.initGaussian(nx,10);
+    envM.write(PName);
+
+    std::cout << "AQUIIII 0.1 " << dMij(envM,10,10)<< std::endl;
+    std::cout << "AQUIIII 0 " << std::endl;
+
+    MULTIDIM_ARRAY(env) = MATRIX2D_ARRAY(envM);
+
+    double noiseLevel = 0;
+    double freq = 2;
+    Matrix1D<double> coefs(13);
+
+    fp.simulPattern(env,fp.SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
+
+    */
+
+#ifdef DEBUG
+
+    im.write(PName);
 
 #endif
 }

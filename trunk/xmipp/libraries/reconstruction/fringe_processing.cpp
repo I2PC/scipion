@@ -746,6 +746,10 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
             VEC_ELEM(coeffs,i) = 0;
     }
 
+    STARTINGX(im)=STARTINGY(im)=0;
+    STARTINGX(phase)=STARTINGY(phase)=0;
+    STARTINGX(mod)=STARTINGY(mod)=0;
+
     Image<bool> save2;
     if (verbose > 5)
     {
@@ -910,6 +914,11 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
             VEC_ELEM(coeffs,i) = 0;
     }
 
+
+    STARTINGX(im)=STARTINGY(im)=0;
+    STARTINGX(phase)=STARTINGY(phase)=0;
+    STARTINGX(mod)=STARTINGY(mod)=0;
+
     if (verbose > 5)
     {
         save()=im;
@@ -931,6 +940,36 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
         save2()= ROI;
         save2.write("PPP7.xmp");
     }
+}
+
+void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints, int rmin, int rmax, int numAngles)
+{
+	enhancedPSD.setXmippOrigin();
+
+	Histogram1D hist;
+	compute_hist(enhancedPSD, hist, 200);
+	double eff0 = hist.percentil(0.1);
+	double effF = hist.percentil(90);
+
+	for (int nAngles = 0; nAngles < numAngles; nAngles++)
+	{
+		double minX = rmin*cos(nAngles);
+		double minY = rmin*sin(nAngles);
+
+		double maxX = rmax*cos(nAngles);
+		double maxY = rmax*sin(nAngles);
+
+
+	}
+
+
+	    //We obtain the ROI from rmax and rmin parameters and the direction map
+	    //FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
+	   // {
+
+
+	STARTINGX(enhancedPSD)=STARTINGY(enhancedPSD)=0;
+
 }
 
 
