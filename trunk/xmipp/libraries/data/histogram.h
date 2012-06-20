@@ -65,6 +65,24 @@
  * has been inserted. Be careful that this is not a probability density function
  * (pdf), to be so it should be divided by the total number of values inserted.
  *
+ * The simplest way of computing a histograms is the following:
+ * @code
+ * // Variable definition
+ * Histogram1D hist;
+ * MultidimArray<double> A(50, 50);
+ *
+ * // Matrix initialisation
+ * A.init_random(0, 100);
+ *
+ * // Histogram calculation with 200 bins
+ * compute_hist(A, hist, 200);
+ *
+ * // Effective range computation
+ * double eff0 = hist.percentil(2.5);
+ * double effF = hist.percentil(97.5);
+ *
+ * @endcode
+ *
  * The following example shows how to work with the histograms. In it we will
  * compute which is the central range within which the 95% of the values of a
  * matrix are comprised. This example could be even simplified by using the
