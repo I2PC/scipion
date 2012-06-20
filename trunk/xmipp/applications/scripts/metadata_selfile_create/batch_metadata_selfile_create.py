@@ -39,7 +39,7 @@ class ScriptCreateMetadata(XmippScript):
         self.addParamsLine(' -p <pattern>          : Pattern to match')
         self.addParamsLine('   alias --pattern;')
         self.addParamsLine(' -o <metadata>         : Output metadata')
-        self.addParamsLine(' -l <label=image>      : Label to store the matching files')
+        self.addParamsLine('[-l <label=image>]     : Label to store the matching files')
         self.addParamsLine('[ -s]                  : Check if the images are stacks')
         self.addParamsLine('   alias --isstack;')    
         ## examples
