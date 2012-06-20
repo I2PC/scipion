@@ -616,6 +616,7 @@ ProgMLTomo::produceSideInfo()
   // Check angles and shifts are not present on input metadata, fill it with 0 value
   MDLabel labels[6] = { MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_SHIFTX, MDL_SHIFTY, MDL_SHIFTZ };
   String labelStr = "WARNING: Labels ";
+  mdimg_contains_angles=true;
   for (int i = 0; i < 6; ++i)
   {
     if (!MDimg.containsLabel(labels[i]))
@@ -628,6 +629,7 @@ ProgMLTomo::produceSideInfo()
   if (!mdimg_contains_angles)
     std::cerr << labelStr + "are missing in input metadata and are filled with value 0.0" <<std::endl;
 
+  readMissingInfo();
   if (!MDimg.containsLabel(MDL_MISSINGREGION_NR))
   {
     if (MDmissing.size() > 1)
@@ -818,9 +820,6 @@ ProgMLTomo::produceSideInfo()
     if (do_generate_refs = fn_ref.empty()) //assign bool value and asking at same time
       generateInitialReferences();
   }
-
-  readMissingInfo();
-
 } //end of function produceSideInfo
 
 // Generate initial references =============================================
