@@ -78,10 +78,14 @@ public:
     int                          filter_num;
     int                          NPCA;
     int                          corr_num;
+    int                          num_correlation;
     double                       scaleRate;
     int                          NRsteps;
+
+    MultidimArray<double>        pcaModel;
     MultidimArray<double>        trainSet;
-    MultidimArray<int>           classLabel;
+    MultidimArray<double>           classLabel;
+    std::vector<Particle2>       auto_candidates;
 
 public:
 
@@ -94,30 +98,30 @@ public:
     /// Read the micrograph in memory
     void readMicrograph();
 
-    //Check the distance between a point and positive samples
+    //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
 
-    //Extract the particles from the Micrograph
+    /// Extract the particles from the Micrograph
     void extractParticle(const int x, const int y, ImageGeneric & filter,
                          MultidimArray<double> &particleImage);
 
     //Extract the particles from the Micrograph
     void extractNonParticle(std::vector<Particle2> &negativePosition);
 
-    //Convert an image to its polar form
+    /// Convert an image to its polar form
     void convert2Polar(MultidimArray<double> &particleImage, MultidimArray<double> &polar);
 
-    //Calculate the correlation of different polar channels
+    /// Calculate the correlation of different polar channels
     void polarCorrelation(MultidimArray<double> &Ipolar,MultidimArray<double> &IpolarCorr);
 
-    /// Produce the training dataset for different samples
-    void buildVector(MultidimArray<double> &trainSet);
+    //Build a feature vector from samples
+    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &featureVec);
 
     /// Extract Invariant Features from a particle at x and y position
     void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y,
                         const FileName &fnInvariantFeat);
 
-    /// Extract different channels from particles and Non-Particles within a Micrograph
+    /// Extract different filter channels from particles and Non-Particles within a Micrograph
     void extractInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
 
     /// Extract different filter channels from particles within a Micrograph
@@ -127,25 +131,22 @@ public:
     void extractNegativeInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
 
     /// Project a vector in PCA space
-    double PCAProject(MultidimArray<double> &pcaBasis,MultidimArray<double> &vec,
-                      MultidimArray<double> &avg);
+    double PCAProject(MultidimArray<double> &pcaBasis,MultidimArray<double> &vec);
 
     /// Train a PCA with negative and positive vectors
-    void trainSVM(const FileName &fn_root);
+    void trainSVM(const FileName &fnModel);
 
     /// Train a PCA with negative and positive vectors
     void trainPCA(const FileName &fnPositiveFeat);
 
     /// Make dataset from the data in file
-    void add2Dataset(const FileName &fnInvariantFeat,const FileName &fn_root,int lable);
+    void add2Dataset(const FileName &fnInvariantFeat,int lable);
 
     /// Save PCA model
-    void savePCAModel(const FileName &fn_root) const;
+    void savePCAModel(const FileName &fn_root);
 
-    /// Load PCA model
-    void loadPCAModel(const FileName &fn_root,int channelNum);
-
-
+    /// Select particles from the micrograph in an automatic way
+    int automaticallySelectParticles(const FileName &fnFilterBank);
 };
 
 class ProgMicrographAutomaticPicking2: public XmippProgram
