@@ -565,6 +565,13 @@ class XmippProjectGUI():
                 if not exists(run['script']):
                     return
                 prot = self.project.getProtocolFromModule(run['script'])
+                comment = ""
+                if not prot.Comment == None:
+                    if prot.Comment.find("Describe your run here...") < 0:
+                        comment = prot.Comment
+                        comment = comment.strip(' \t\n\r')
+                        if len(comment) > 128:
+                            comment = comment[0:128]+"..."
                 if exists(prot.WorkingDir):
                     summary = '\n'.join(prot.summary())
                     showButtons = True
@@ -576,7 +583,7 @@ class XmippProjectGUI():
                 labels = '<Run>: ' + getExtendedRunName(run) + \
                           '\n<Created>: ' + run['init'] + '   <Modified>: ' + run['last_modified'] + \
                           '\n<Script>: ' + run['script'] + '\n<Directory>: ' + wd + \
-                          '\n\n<Summary>:\n' + summary   
+                          '\n<Comment>: ' + comment + '\n\n<Summary>:\n' + summary   
             except Exception, e:
                 labels = 'Error creating protocol: <%s>' % str(e)
             self.detailsText.clear()
