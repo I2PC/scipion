@@ -376,7 +376,7 @@ DiscardPercentagePerClass ='10'
 DoScale = False
 
 # {condition}(DoScale) Step scale factors size
-""" Scale step factor size (1 means 0.01 in/de-crements arround 1)
+""" Scale step factor size (1 means 0.01 in/de-crements arround 1). MAybe different for the different iterations
 """
 ScaleStep ='1'
 
@@ -385,6 +385,9 @@ ScaleStep ='1'
     With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 +/-0.01 | +/-0.02 | +/-0.03.    
     With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
      1 +/-0.02 | +/-0.04 | +/-0.06 | +/-0.08.    
+    In general scale correction should only be applied to the last iteration. Do not use it unless
+    your data is fairly well aligned.
+
 """
 ScaleNumberOfSteps ='3'
 
