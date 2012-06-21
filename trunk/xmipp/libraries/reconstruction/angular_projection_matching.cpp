@@ -903,8 +903,6 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     double ref_mean=Mref.computeAvg();
     Mref-=ref_mean;
     // Mtrans is already rotated and shifted
-    //double trans_mean=Mtrans.computeAvg();
-    double trans_mean = 0;
 
     // Scale search
     double corr;
@@ -923,17 +921,9 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
     	//Image spread correction (if scale != 1) for scale search
         Mscale = Mscale / (scale * scale * old_scale * old_scale);
-        // !a
-        trans_mean = Mscale.computeAvg();
-
-        // SUM (Mscale - trans_meanf) * (Mref - ref_mean)
-//        corr=0;
-//        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mscale)
-//            corr+=(DIRECT_MULTIDIM_ELEM(Mscale,n)-trans_mean)*DIRECT_MULTIDIM_ELEM(Mref,n);
 
         corr = correlationIndex(Mref,Mscale);
 
-        //std::cerr << "(v2) scale: "<< scale << " | corr: " << corr <<std::endl;
         // best scale update
         if(corr > maxcorr)
         {
