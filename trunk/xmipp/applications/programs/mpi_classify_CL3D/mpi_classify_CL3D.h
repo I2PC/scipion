@@ -246,6 +246,9 @@ public:
     /// Minimum size of a node
     double PminSize;
     
+    /// Sparsity factor (0<f<1; 1=drop all coefficients, 0=do not drop any coefficient)
+    double sparsity;
+
     /// Use Correlation instead of Correntropy
     bool useCorrelation;
 

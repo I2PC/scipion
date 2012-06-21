@@ -233,10 +233,10 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 	FFT_magnitude(Ifourier,IfourierMag);
 	IfourierMag.resize(1,1,1,MULTIDIM_SIZE(IfourierMag));
 	IfourierMag.sort(IfourierMagSorted);
-	const double percentage=0.975;
-    double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(percentage*XSIZE(IfourierMag)));
+    double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(prm->sparsity*XSIZE(IfourierMag)));
     avgK=stdK=0;
     double N=0;
+    double stdAngle=0;
     for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
     if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
     {
@@ -249,16 +249,26 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
         double auxP=(*ptrPfourier);
         double num=(auxI*auxP);
         double den=(auxI*auxI);
+        double normP=auxP*auxP;
         auxI=(*(ptrIfourier+1));
         auxP=(*(ptrPfourier+1));
         num+=(auxI*auxP);
         den+=(auxI*auxI);
+        normP+=auxP*auxP;
+        double normI=den;
 
         if (den!=0.)
         {
 			double K=num/den;
 			avgK+=K;
 			stdK+=K*K;
+
+			double normPI=normP*normI;
+			if (normPI>0)
+			{
+				double angle=acos(num/sqrt(fabs(normPI))); // Angle between I(w) and P(w)
+				stdAngle+=angle*angle;
+			}
         }
         N+=1;
     }
@@ -267,6 +277,9 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 	{
 		stdK = stdK / N - avgK * avgK;
 		stdK = sqrt(fabs(stdK));
+
+		stdAngle=sqrt(fabs(stdAngle/N));
+		stdK*=stdAngle;
 	}
 	else
 		stdK = 0;
@@ -1445,6 +1458,7 @@ void ProgClassifyCL3D::readParams()
     Ncodes0 = getIntParam("--nref0");
     Ncodes = getIntParam("--nref");
     PminSize = getDoubleParam("--minsize");
+    sparsity = getDoubleParam("--sparsity");
     String aux;
     aux = getParam("--distance");
     useCorrelation = aux == "correlation";
@@ -1470,9 +1484,10 @@ void ProgClassifyCL3D::show() const {
 		std::cout << "CodesSel0:               " << fnCodes0 << std::endl;
 	else
 		std::cout << "Codes0:                  " << Ncodes0 << std::endl;
-	std::cout << "Codes:                   " << Ncodes << std::endl
+  	std::cout << "Codes:                   " << Ncodes << std::endl
 			<< "Neighbours:              " << Nneighbours << std::endl
 			<< "Minimum node size:       " << PminSize << std::endl
+			<< "Sparsity:                " << sparsity << std::endl
 			<< "Use Correlation:         " << useCorrelation << std::endl
 			<< "Classical Multiref:      " << classicalMultiref << std::endl
 			<< "Maximum shift Z:         " << maxShiftZ << std::endl
@@ -1507,6 +1522,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--neigh+ <N=4>]          : Number of neighbour code vectors");
     addParamsLine("                             : Set -1 for all");
     addParamsLine("   [--minsize+ <N=20>]       : Percentage minimum node size");
+    addParamsLine("   [--sparsity+ <f=0.975>]   : Percentage of Fourier coefficients to drop");
     addParamsLine("   [--distance <type=correntropy>]       : Distance type");
     addParamsLine("            where <type>");
     addParamsLine("                       correntropy correlation: See CL3D paper for the definition of correntropy");
