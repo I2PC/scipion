@@ -175,10 +175,10 @@ ProgMLTomo::defineParams()
   addExampleLine("+++  _ref          ", true);
   addExampleLine("+++  _logLikelihood        ", true);
   addExampleLine(
-      "+++   32_000001.scl  0.00 0.000000 0.000  0.000  0.000000     0.000000  0    0.000000 1",
+      "+++   32_000001.scl  0.00 1 0.000  0.000  0.000000     0.000000  0    0.000000 1",
       true);
   addExampleLine(
-      "+++   32_000002.scl  0.00 0.000000 0.000  0.000  0.000000     0.000000  0    0.000000 1",
+      "+++   32_000002.scl  0.00 1 0.000  0.000  0.000000     0.000000  0    0.000000 1",
       true);
 //  where:
 //  =ref= is the number of the corresponding reference (from 1 to NUMBER_OF_REFERENCES)
