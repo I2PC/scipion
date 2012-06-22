@@ -83,10 +83,12 @@ public:
     int                          NRsteps;
 
     MultidimArray<double>        pcaModel;
+    MultidimArray<double>        particleAvg;
     MultidimArray<double>        trainSet;
-    MultidimArray<double>           classLabel;
-    std::vector<Particle2>       auto_candidates;
+    MultidimArray<double>        classLabel;
 
+    std::vector<Particle2>       auto_candidates;
+    std::vector<ImageGeneric*>   micrographStack;
 public:
 
     /// Empty constructor
@@ -102,7 +104,10 @@ public:
     bool checkDist(Particle2 &p);
 
     /// Extract the particles from the Micrograph
-    void extractParticle(const int x, const int y, ImageGeneric & filter,
+    void extractParticle(const int x, const int y, MultidimArray<float> &filter,
+                         MultidimArray<double> &particleImage);
+    /// Extract the particles without normalization
+    void extractParticle(const int x, const int y, MultidimArray<double> &filter,
                          MultidimArray<double> &particleImage);
 
     //Extract the particles from the Micrograph
