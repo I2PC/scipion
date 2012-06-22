@@ -177,6 +177,9 @@ int  ImageBase::readSPIDER(size_t select_img)
     _zDim = (int) header->nslice;
     _nDim = (isStack)? header->maxim : 1;
 
+    if (_xDim < 1 || _yDim < 1 || _zDim < 1 || _nDim < 1)
+        REPORT_ERROR(ERR_IO_NOTFILE,formatString("Invalid Spider file:  %s", filename.c_str()));
+
     replaceNsize = _nDim;
 
     /************
@@ -479,8 +482,8 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
      */
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked if a shared or exclusive lock is
-                                                                                           blocked by other locks, the thread shall
-                                                                                           wait until the request can be satisfied*/
+                                                                                               blocked by other locks, the thread shall
+                                                                                               wait until the request can be satisfied*/
 
     // Write main header
     if( mode == WRITE_OVERWRITE ||
