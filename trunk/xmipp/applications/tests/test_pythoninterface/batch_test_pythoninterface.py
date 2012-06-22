@@ -266,6 +266,36 @@ class TestXmippPythonInterface(unittest.TestCase):
 
         self.assertEqual(mdout, md)
                  
+    def test_Metadata_intersect(self):
+         #create metadta
+        md = MetaData()
+        md2 = MetaData()
+        mdout = MetaData()
+        listOrig = [1.0, 2.0, 3.0]
+        for i in range(1, 4):
+            id = md.addObject() 
+            img = '%06d@pythoninterface/proj_ctf_1.stk' % i
+            md.setValue(MDL_IMAGE, img, id)
+            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_COUNT, (i * 10L), id)
+            md.setValue(MDL_ANGLEPSI, 1., id)
+        for i in range(1, 3):
+            id = md2.addObject() 
+            img = '%06d@pythoninterface/proj_ctf_1.stk' % i
+            md2.setValue(MDL_IMAGE, img, id)
+        md.intersection (md2,MDL_IMAGE)
+
+        for i in range(1, 3):
+            id = mdout.addObject() 
+            img = '%06d@pythoninterface/proj_ctf_1.stk' % i
+            mdout.setValue(MDL_IMAGE, img, id)
+            mdout.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            mdout.setValue(MDL_COUNT, (i * 10L), id)
+            mdout.setValue(MDL_ANGLEPSI, 1., id)
+
+
+        self.assertEqual(mdout, md)
+                 
     def test_Metadata_read(self):
         '''MetaData_setValues'''
         '''This test should produce the following metadata, which is the same of 'test.xmd'
