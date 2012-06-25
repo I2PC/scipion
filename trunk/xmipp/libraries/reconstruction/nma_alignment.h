@@ -64,6 +64,9 @@ public:
     /// Center PDB
     bool do_centerPDB;
 
+    /// ProjMatch
+    bool projMatch;
+
     /// Gaussian weight sigma in Fourier space
     double gaussian_DFT_sigma;
 
