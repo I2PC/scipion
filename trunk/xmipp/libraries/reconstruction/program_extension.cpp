@@ -28,6 +28,7 @@
 //Needed includes for instantiate programs
 #include "data/filters.h"
 #include "angular_project_library.h"
+#include "angular_projection_matching.h"
 #include "angular_discrete_assign.h"
 #include "volume_from_pdb.h"
 #include "pdb_nma_deform.h"
@@ -63,6 +64,9 @@ XmippProgram * getProgramByName(const String &programName)
 
     if (programName == "xmipp_angular_project_library")
         return new ProgAngularProjectLibrary();
+
+    if (programName == "xmipp_angular_projection_matching")
+        return new ProgAngularProjectionMatching();
 
     if (programName == "xmipp_mask")
         return new ProgMask();
