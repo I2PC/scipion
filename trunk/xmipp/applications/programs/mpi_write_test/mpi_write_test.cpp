@@ -51,8 +51,8 @@
 
 ParallelTaskDistributor * distributor;
 MpiNode * node;
-#define stackSize 1024
-//#define stackSize 65536
+//#define stackSize 1024
+#define stackSize 65536
 #define Xdim 51
 #define Ydim 77
 
