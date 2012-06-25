@@ -920,7 +920,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_transform_mask', ['XmippRecons'])
     AddXmippMPIProgram('mpi_transform_normalize', ['XmippRecons'])
     if not int(env['release']):
-        ('mpi_write_test', ['XmippRecons'])
+        AddXmippMPIProgram('mpi_write_test', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 
