@@ -123,6 +123,9 @@ public:
     /** vector with the indexes of each sampling point */
     std::vector <size_t> no_redundant_sampling_points_index;
 
+    /** Verbose */
+    int verbose;
+
     /** Default constructor. sampling in degrees*/
     Sampling();
 

@@ -262,7 +262,7 @@ void ProgAngularProjectLibrary::run()
     /////////////////////////////
     //all ranks
     //only rank 0
-
+	mysampling.verbose=verbose;
     show();
     //all ranks
     mysampling.setSampling(sampling);

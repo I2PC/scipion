@@ -88,6 +88,8 @@ Sampling::Sampling()
 
     numberSamplesAsymmetricUnit=-1;
     exp_data_fileNames.clear();
+
+    verbose=1;
     //#define DEBUG1
 #ifdef  DEBUG1
 
@@ -1629,14 +1631,17 @@ void Sampling::computeNeighbors(bool only_winner)
     size_t exp_data_projection_direction_by_L_R_size = exp_data_projection_direction_by_L_R.size();
     size_t no_redundant_sampling_points_vector_size = no_redundant_sampling_points_vector.size();
 
-    std::cout << "Find valid sampling points based on the neighborhood" <<std::endl;
-    init_progress_bar(exp_data_projection_direction_by_L_R_size);
+    if (verbose)
+    {
+    	std::cout << "Find valid sampling points based on the neighborhood" <<std::endl;
+    	init_progress_bar(exp_data_projection_direction_by_L_R_size);
+    }
     size_t ratio = exp_data_projection_direction_by_L_R_size / 60;
     ratio = XMIPP_MAX(ratio, 1);
 
     for(size_t j = 0; j < exp_data_projection_direction_by_L_R_size;)
     {
-        if ((j%ratio) == 0)
+        if ((j%ratio) == 0 && verbose)
             progress_bar(j);
 
 #ifdef MYPSI
@@ -1741,7 +1746,8 @@ void Sampling::computeNeighbors(bool only_winner)
 #endif
 
     }//for j
-    progress_bar(exp_data_projection_direction_by_L_R_size);
+    if (verbose)
+    	progress_bar(exp_data_projection_direction_by_L_R_size);
 
     //#define DEBUG
 #ifdef DEBUG
