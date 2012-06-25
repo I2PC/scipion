@@ -16,8 +16,17 @@
 # {section} Input
 #-----------------------------------------------------------------------------
 
-# {file} Protocol Name
-ProtocolName='Runs/projmatch_run_001.py'
+# {run}(projmatch) Projection Matching RUN
+"""
+Select desired RUN from which you obtained the micrographs.
+
+Possible input protocols are:
+<Projection Matching>
+
+"""
+ImportRun = ""
+
+# {eval} expandJavaMemory()
 
 #Show results for iteration
 """ Use data coming from iteration

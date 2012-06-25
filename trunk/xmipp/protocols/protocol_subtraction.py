@@ -31,6 +31,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         self.Import = 'from protocol_subtraction_before_loop import *;\
                        from protocol_subtraction_in_loop import *;'        
         
+        self.setPreviousRun(self.ImportRun)
+        
         self.myName='partial_projection_subtraction'
         self.subtractionDir ='Subtraction'
         self.referenceDir   ='Refs'
@@ -56,17 +58,17 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def ImportProtocol(self):
         
-        importProt = self.getProtocolFromRunName(self.ProtocolName) 
+        #importProt = self.getProtocolFromRunName(self.ProtocolName) 
         
-        self.pmprotWorkingDir = importProt.WorkingDir
+        self.pmprotWorkingDir = self.PrevRun.WorkingDir
         if (self.SymmetryGroup == ''):
-            self.SymmetryGroup = importProt.SymmetryGroup
+            self.SymmetryGroup = self.PrevRun.SymmetryGroup
             
         if (len(self.AngSamplingRateDeg) <1):
-            self.AngSamplingRateDeg    = getComponentFromVector(importProt.AngSamplingRateDeg,self.iterationNo - 1)
+            self.AngSamplingRateDeg    = getComponentFromVector(self.PrevRun.AngSamplingRateDeg,self.iterationNo - 1)
             
         if (len(self.MaxChangeInAngles) <1):
-            self.MaxChangeInAngles    = float(getComponentFromVector(importProt.MaxChangeInAngles,self.iterationNo - 1))
+            self.MaxChangeInAngles    = float(getComponentFromVector(self.PrevRun.MaxChangeInAngles,self.iterationNo - 1))
             
         file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
         file_name = join(self.pmprotWorkingDir, file_name_tmp)
