@@ -67,6 +67,7 @@ void ProgNmaAlignment::defineParams() {
 	addParamsLine("  [--mask <m=\"\">]                    : 2D Mask applied to the reference images of the deformed volume");
 	addParamsLine("  [--projMatch]                        : Use projection matching in real-space instead of wavelet+splines assignment");
 	addParamsLine("                                       :+Note that wavelet assignment needs the input images to be of a size power of 2");
+	addParamsLine("  [--minAngularSampling <ang=3>]       : Minimum angular sampling rate");
 	addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
 	addParamsLine("  [--gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
 	addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight");
@@ -93,6 +94,7 @@ void ProgNmaAlignment::readParams() {
 	//if (useFixedGaussian)
 	sigmaGaussian = getDoubleParam("--fixed_Gaussian");
 	projMatch = checkParam("--projMatch");
+	minAngularSampling = getDoubleParam("--minAngularSampling");
 }
 
 // Show ====================================================================
@@ -109,6 +111,7 @@ void ProgNmaAlignment::show() {
 			<< "Use fixed Gaussian:   " << useFixedGaussian << std::endl
 			<< "Sigma of Gaussian:    " << sigmaGaussian << std::endl
 			<< "Projection  Matching: " << projMatch << std::endl
+			<< "minAngularSampling:   " << minAngularSampling << std::endl
 	        << "Gaussian Fourier:     " << gaussian_DFT_sigma << std::endl
 			<< "Gaussian Real:        " << gaussian_Real_sigma << std::endl
 			<< "Zero-frequency weight:" << weight_zero_freq << std::endl;
@@ -248,11 +251,12 @@ void ProgNmaAlignment::performCompleteSearch(const FileName &fnRandom,
 
 	mkdir(((std::string) "ref" + fnRandom).c_str(), S_IRWXU);
 
+	double angSampling=2*RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
+	angSampling=std::max(angSampling,minAngularSampling);
 	program = "xmipp_angular_project_library";
 	arguments = formatString(
 			"-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate %f -v 0",
-			randStr, randStr, randStr,
-			RAD2DEG(2*atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1)))));
+			randStr, randStr, randStr, angSampling);
 	if (projMatch)
 		arguments +=formatString(
 						" --compute_neighbors --angular_distance -1 --experimental_images downimg_%s.xmp",
@@ -291,7 +295,8 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 	// Perform alignment
 	const char * randStr = fnRandom.c_str();
 	String fnResults=formatString("anglecont_%s.xmd", randStr);
-	if (!projMatch || currentStage==1) {
+	bool costSource=true;
+	if (!projMatch) {
 		String program = "xmipp_angular_continuous_assign";
 		String arguments =
 				formatString(
@@ -302,24 +307,33 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 	}
 	else
 	{
-		mkdir(((std::string) "ref" + fnRandom).c_str(), S_IRWXU);
+		costSource=false;
+		if (currentStage==1)
+		{
+			fnResults=formatString("angledisc_%s.xmd", randStr);
+		}
+		else
+		{
+			mkdir(((std::string) "ref" + fnRandom).c_str(), S_IRWXU);
 
-		String program = "xmipp_angular_project_library";
-		double angSampling=RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
-		String arguments = formatString(
-				"-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate %f -v 0",
-				randStr, randStr, randStr,angSampling);
-		arguments +=formatString(
-						" --compute_neighbors --angular_distance %f --experimental_images angledisc_%s.xmd",
-						5*angSampling,randStr);
-		runSystem(program, arguments, false);
+			String program = "xmipp_angular_project_library";
+			double angSampling=RAD2DEG(atan(1.0/((double) imgSize / pow(2.0, (double) pyramidLevel+1))));
+			angSampling=std::max(angSampling,minAngularSampling);
+			String arguments = formatString(
+					"-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate %f -v 0",
+					randStr, randStr, randStr,angSampling);
+			arguments +=formatString(
+							" --compute_neighbors --angular_distance %f --experimental_images angledisc_%s.xmd",
+							2.5*angSampling,randStr);
+			runSystem(program, arguments, false);
 
-		const char * refStkStr = formatString("ref%s/ref%s.stk", randStr, randStr).c_str();
-		program = "xmipp_angular_projection_matching";
-		arguments =	formatString(
-				        "-i downimg_%s.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
-						randStr, refStkStr, fnResults.c_str(), round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
-		runSystem(program, arguments, false);
+			const char * refStkStr = formatString("ref%s/ref%s.stk", randStr, randStr).c_str();
+			program = "xmipp_angular_projection_matching";
+			arguments =	formatString(
+							"-i downimg_%s.xmp --ref %s -o %s --search5d_step 1 --max_shift %d -v 0",
+							randStr, refStkStr, fnResults.c_str(), round((double) imgSize / (10.0 * pow(2.0, (double) pyramidLevel))));
+			runSystem(program, arguments, false);
+		}
 	}
 
 	// Pick up results
@@ -334,7 +348,7 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 	row.getValue(MDL_SHIFTY, trial(VEC_XSIZE(trial) - 1));
 	trial(VEC_XSIZE(trial) - 1) *= pow(2.0, (double) pyramidLevel);
 	double tempvar;
-	if (projMatch && currentStage==2) {
+	if (!costSource) {
 		row.getValue(MDL_MAXCC, tempvar);
 		tempvar = -tempvar;
 	} else

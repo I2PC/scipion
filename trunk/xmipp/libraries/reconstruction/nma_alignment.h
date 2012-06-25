@@ -67,6 +67,9 @@ public:
     /// ProjMatch
     bool projMatch;
 
+    /// Min angular sampling rate
+    double minAngularSampling;
+
     /// Gaussian weight sigma in Fourier space
     double gaussian_DFT_sigma;
 
