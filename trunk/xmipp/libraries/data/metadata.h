@@ -867,7 +867,7 @@ public:
      */
     void removeDuplicates(MetaData &MDin, MDLabel label=MDL_UNDEFINED);
 
-    /**Remove rows with MDL_ENABLED = -1 if this labe is present
+    /**Remove rows with MDL_ENABLED = -1 if this label is present
      */
     void removeDisabled();
 
