@@ -513,7 +513,8 @@ double alignImages(const MultidimArray< double >& Iref,
 class VolumeAlignmentAux
 {
 public:
-	MultidimArray<double> IrefCyl, Icyl, corr, Irotated;
+	MultidimArray<double> IrefCyl, Icyl, corr, I1, I12, I123;
+	Matrix2D<double> R1, R2, R3;
 };
 
 /** Align two volumes by applying a rotation around Z.
@@ -533,7 +534,7 @@ void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 		const MultidimArray<double>& IrefCylX,
 		MultidimArray<double>& I,
 		const String &eulerAngles,
-		Matrix2D<double> &R, CorrelationAux &aux);
+		Matrix2D<double> &R, CorrelationAux &aux, VolumeAlignmentAux &aux2);
 
 /** Fast best rotation around Z */
 double fastBestRotationAroundZ(const MultidimArray<double>& IrefCylZ,

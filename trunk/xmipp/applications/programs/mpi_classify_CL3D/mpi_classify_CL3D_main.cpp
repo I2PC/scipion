@@ -318,11 +318,11 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 			MAT_ELEM(ASR,2,3) += shiftZ;
 			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
-			fastBestRotation(PcylZ,PcylY,PcylX,IauxSR,eulerSeqs[neuler],R,corrAux2);
+			fastBestRotation(PcylZ,PcylY,PcylX,IauxSR,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
 			ASR=R*ASR;
 
 			// Rotate then shift
-			fastBestRotation(PcylZ,PcylY,PcylX,IauxRS,eulerSeqs[neuler],R,corrAux2);
+			fastBestRotation(PcylZ,PcylY,PcylX,IauxRS,eulerSeqs[neuler],R,corrAux2,volAlignmentAux);
 			ARS=R*ARS;
 
 			bestShift(P, IauxRS, shiftX, shiftY, shiftZ, corrAux);
