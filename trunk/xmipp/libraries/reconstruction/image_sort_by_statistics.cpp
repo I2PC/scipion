@@ -191,6 +191,7 @@ void ProgSortByStatistics::run()
 {
     // Process input selfile ..............................................
     SF.read(fn);
+    SF.removeDisabled();
     pcaAnalyzer.clear();
     if (fn_train != "")
     {
