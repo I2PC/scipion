@@ -4064,9 +4064,6 @@ xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs)
     double rot, tilt, psi;
     if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
     {
-        std::cerr << "DEBUG_ROB, rot:" << rot << std::endl;
-        std::cerr << "DEBUG_ROB, tilt:" << tilt << std::endl;
-        std::cerr << "DEBUG_ROB, psi:" << psi << std::endl;
         npy_intp dims[2];
         dims[0] = 3;
         dims[1] = 3;
