@@ -1312,49 +1312,39 @@ double fastBestRotationAroundX(const MultidimArray<double>& IrefCyl,
 void fastBestRotation(const MultidimArray<double>& IrefCylZ,
 		const MultidimArray<double>& IrefCylY,
 		const MultidimArray<double>& IrefCylX,
+		const MultidimArray<double>& I,
+		const MultidimArray<double>& Icurrent,
+		MultidimArray<double>& Ifinal,
+		char axis,
+		Matrix2D<double> &R,
+		CorrelationAux &aux, VolumeAlignmentAux &aux2)
+{
+	double bestAngle;
+	if (axis=='Z')
+		bestAngle = fastBestRotationAroundZ(IrefCylZ, Icurrent, aux, aux2);
+	else if (axis=='Y')
+		bestAngle = fastBestRotationAroundY(IrefCylY, Icurrent, aux, aux2);
+	else
+		bestAngle = fastBestRotationAroundX(IrefCylX, Icurrent, aux, aux2);
+	Matrix2D<double> Raux;
+	rotation3DMatrix(bestAngle, axis, Raux);
+	R=Raux*R;
+	applyGeometry(LINEAR, Ifinal, I, R, IS_NOT_INV, WRAP);
+}
+
+void fastBestRotation(const MultidimArray<double>& IrefCylZ,
+		const MultidimArray<double>& IrefCylY,
+		const MultidimArray<double>& IrefCylX,
 		MultidimArray<double>& I,
 		const String &eulerAngles,
-		Matrix2D<double> &R, CorrelationAux &aux)
+		Matrix2D<double> &R,
+		CorrelationAux &aux, VolumeAlignmentAux &aux2)
 {
-	// Rotate in Angle1
-	double bestAngle1;
-	VolumeAlignmentAux aux2;
-	if (eulerAngles[0]=='Z')
-		bestAngle1 = fastBestRotationAroundZ(IrefCylZ, I, aux, aux2);
-	else if (eulerAngles[0]=='Y')
-		bestAngle1 = fastBestRotationAroundY(IrefCylY, I, aux, aux2);
-	else
-		bestAngle1 = fastBestRotationAroundX(IrefCylX, I, aux, aux2);
-	rotation3DMatrix(bestAngle1, eulerAngles[0], R);
-	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
-
-	// Rotate in Angle2
-	VolumeAlignmentAux aux3;
-	double bestAngle2;
-	if (eulerAngles[1]=='Z')
-		bestAngle2 = fastBestRotationAroundZ(IrefCylZ, aux2.Irotated, aux, aux2);
-	else if (eulerAngles[1]=='Z')
-		bestAngle2 = fastBestRotationAroundY(IrefCylY, aux2.Irotated, aux, aux2);
-	else
-		bestAngle2 = fastBestRotationAroundX(IrefCylX, aux2.Irotated, aux, aux2);
-	Matrix2D<double> Raux;
-	rotation3DMatrix(bestAngle2, eulerAngles[1], Raux);
-	R=Raux*R;
-	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
-
-	// Rotate in Angle3
-	VolumeAlignmentAux aux4;
-	double bestAngle3;
-	if (eulerAngles[2]=='Z')
-		bestAngle3 = fastBestRotationAroundZ(IrefCylZ, aux2.Irotated, aux, aux2);
-	else if (eulerAngles[2]=='Y')
-		bestAngle3 = fastBestRotationAroundY(IrefCylY, aux2.Irotated, aux, aux2);
-	else
-		bestAngle3 = fastBestRotationAroundX(IrefCylX, aux2.Irotated, aux, aux2);
-	rotation3DMatrix(bestAngle3, eulerAngles[2], Raux);
-	R=Raux*R;
-	applyGeometry(LINEAR, aux2.Irotated, I, R, IS_NOT_INV, WRAP);
-	I=aux2.Irotated;
+	R.initIdentity(4);
+	fastBestRotation(IrefCylZ,IrefCylY,IrefCylX,I,I,aux2.I1,eulerAngles[0],R, aux,aux2);
+	fastBestRotation(IrefCylZ,IrefCylY,IrefCylX,I,aux2.I1,aux2.I12,eulerAngles[1],R,aux,aux2);
+	fastBestRotation(IrefCylZ,IrefCylY,IrefCylX,I,aux2.I12,aux2.I123,eulerAngles[2],R,aux,aux2);
+	I=aux2.I123;
 }
 
 double bestRotationAroundZ(const MultidimArray<double>& Iref,
