@@ -676,32 +676,32 @@ Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
-      try
-      {
-        ArrayDim adim;
-        ImageGeneric & image = Image_Value(self);
-        DataType dt = image.getDatatype();
-        int nd = image.image->mdaBase->getDim();
-        MULTIDIM_ARRAY_GENERIC(image).getDimensions(adim);
-        npy_intp dims[4];
-        dims[0] = adim.ndim;
-        dims[1] = adim.zdim;
-        dims[2] = adim.ydim;
-        dims[3] = adim.xdim;
-        //Get the pointer to data
-        void *mymem = image().getArrayPointer();
-        NPY_TYPES type = datatype2NpyType(dt);
-        //dims pointer is shifted if ndim or zdim are 1
-        PyArrayObject * arr = (PyArrayObject*) PyArray_SimpleNew(nd, dims+4-nd, type);
-        void * data = PyArray_DATA(arr);
-        memcpy(data, mymem, adim.nzyxdim * gettypesize(dt));
+        try
+        {
+            ArrayDim adim;
+            ImageGeneric & image = Image_Value(self);
+            DataType dt = image.getDatatype();
+            int nd = image.image->mdaBase->getDim();
+            MULTIDIM_ARRAY_GENERIC(image).getDimensions(adim);
+            npy_intp dims[4];
+            dims[0] = adim.ndim;
+            dims[1] = adim.zdim;
+            dims[2] = adim.ydim;
+            dims[3] = adim.xdim;
+            //Get the pointer to data
+            void *mymem = image().getArrayPointer();
+            NPY_TYPES type = datatype2NpyType(dt);
+            //dims pointer is shifted if ndim or zdim are 1
+            PyArrayObject * arr = (PyArrayObject*) PyArray_SimpleNew(nd, dims+4-nd, type);
+            void * data = PyArray_DATA(arr);
+            memcpy(data, mymem, adim.nzyxdim * gettypesize(dt));
 
-        return (PyObject*)arr;
-      }
-      catch (XmippError &xe)
-      {
-          PyErr_SetString(PyXmippError, xe.msg.c_str());
-      }
+            return (PyObject*)arr;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
     return NULL;
 }//function Image_getData
@@ -717,31 +717,31 @@ Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-          ImageGeneric & image = Image_Value(self);
-          DataType dt = npyType2Datatype(PyArray_TYPE(arr));
-          int nd = PyArray_NDIM(arr);
-          std::cerr << "DEBUG_JM: nd: " << nd << std::endl;
-          std::cerr << "DEBUG_JM: dt: " << datatype2Str(dt) << std::endl;
-          //Setup of image
-          image.setDatatype(dt);
-          ArrayDim adim;
-          adim.ndim = (nd == 4 ) ? PyArray_DIM(arr, 0) : 1;
-          adim.zdim = (nd > 2 ) ? PyArray_DIM(arr, nd - 3) : 1;
-          adim.ydim = PyArray_DIM(arr, nd - 2);
-          adim.xdim = PyArray_DIM(arr, nd - 1);
+            ImageGeneric & image = Image_Value(self);
+            DataType dt = npyType2Datatype(PyArray_TYPE(arr));
+            int nd = PyArray_NDIM(arr);
+            std::cerr << "DEBUG_JM: nd: " << nd << std::endl;
+            std::cerr << "DEBUG_JM: dt: " << datatype2Str(dt) << std::endl;
+            //Setup of image
+            image.setDatatype(dt);
+            ArrayDim adim;
+            adim.ndim = (nd == 4 ) ? PyArray_DIM(arr, 0) : 1;
+            adim.zdim = (nd > 2 ) ? PyArray_DIM(arr, nd - 3) : 1;
+            adim.ydim = PyArray_DIM(arr, nd - 2);
+            adim.xdim = PyArray_DIM(arr, nd - 1);
 
-          std::cerr << "DEBUG_JM: adim.ndim: " << adim.ndim << std::endl;
-          std::cerr << "DEBUG_JM: adim.zdim: " << adim.zdim << std::endl;
-          std::cerr << "DEBUG_JM: adim.ydim: " << adim.ydim << std::endl;
-          std::cerr << "DEBUG_JM: adim.xdim: " << adim.xdim << std::endl;
+            std::cerr << "DEBUG_JM: adim.ndim: " << adim.ndim << std::endl;
+            std::cerr << "DEBUG_JM: adim.zdim: " << adim.zdim << std::endl;
+            std::cerr << "DEBUG_JM: adim.ydim: " << adim.ydim << std::endl;
+            std::cerr << "DEBUG_JM: adim.xdim: " << adim.xdim << std::endl;
 
 
-          MULTIDIM_ARRAY_GENERIC(image).resize(adim, false);
-          std::cerr << "DEBUG_JM: adim.nzyxdim: " << adim.nzyxdim << std::endl;
-          void *mymem = image().getArrayPointer();
-          void * data = PyArray_DATA(arr);
-          memcpy(mymem, data, adim.nzyxdim * gettypesize(dt));
-          Py_RETURN_NONE;
+            MULTIDIM_ARRAY_GENERIC(image).resize(adim, false);
+            std::cerr << "DEBUG_JM: adim.nzyxdim: " << adim.nzyxdim << std::endl;
+            void *mymem = image().getArrayPointer();
+            void * data = PyArray_DATA(arr);
+            memcpy(mymem, data, adim.nzyxdim * gettypesize(dt));
+            Py_RETURN_NONE;
         }
         catch (XmippError &xe)
         {
@@ -4056,6 +4056,31 @@ xmipp_dumpToFile(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+static PyObject *
+xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    //PyObject *pyStrFn, *pyStrAux;
+    //FileName fn;
+    double rot, tilt, psi;
+    if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
+    {
+        std::cerr << "DEBUG_ROB, rot:" << rot << std::endl;
+        std::cerr << "DEBUG_ROB, tilt:" << tilt << std::endl;
+        std::cerr << "DEBUG_ROB, psi:" << psi << std::endl;
+        npy_intp dims[2];
+        dims[0] = 3;
+        dims[1] = 3;
+        PyArrayObject * arr = (PyArrayObject*) PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+        void * data = PyArray_DATA(arr);
+        Matrix2D<double> euler(3,3);
+        Euler_angles2matrix(rot, tilt, psi,euler,false);
+        memcpy(data, (euler.mdata), 9 * sizeof(double));
+        return (PyObject*)arr;
+    }
+    return NULL;
+
+}
+
 static PyMethodDef
 xmipp_methods[] =
     {
@@ -4121,6 +4146,8 @@ xmipp_methods[] =
           "Bad pixel filter" },
         { "dumpToFile", (PyCFunction) xmipp_dumpToFile, METH_VARARGS,
           "dump metadata to sqlite database" },
+        { "Euler_angles2matrix", (PyCFunction) xmipp_Euler_angles2matrix, METH_VARARGS,
+          "convert euler angles to transformation matrix" },
 
         { NULL } /* Sentinel */
     };

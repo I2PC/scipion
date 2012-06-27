@@ -46,6 +46,17 @@ class TestXmippPythonInterface(unittest.TestCase):
         """This function performs all the setup stuff.      
         """
         os.chdir(self.testsPath)
+    def test_Euler_angles2matrix(self):
+        from numpy  import array
+
+        a = array([[ 0.70710678,  0.70710678, -0.        ],
+           [-0.70710678,  0.70710678,  0.        ],
+           [ 0.,          0.,          1.        ]])
+        rot  = 45.
+        tilt =  0.
+        psi  =  0.
+        b = Euler_angles2matrix(rot,tilt,psi)
+        self.assertAlmostEqual(a.all(), b.all(),2)
     
     def test_Image_compare(self):
         imgPath = os.path.join("pythoninterface", "singleImage.spi")
