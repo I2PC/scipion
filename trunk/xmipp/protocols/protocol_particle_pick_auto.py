@@ -81,7 +81,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.insertStep('deleteTempFiles', WorkingDir=self.WorkingDir)
 
     def summary(self):
-        if len(self.familiesForAuto):
+        if len(self.familiesForAuto)==0:
             self.computeFamilies()
         summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun, 
                    "Input directory: [%s] " % self.pickingDir, 
