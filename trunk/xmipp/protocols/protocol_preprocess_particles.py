@@ -98,6 +98,7 @@ def copyFiles(log,InputFile,OutputStack,OutputMetadata):
     mDstack=xmipp.MetaData(OutputStack)
     if xmipp.FileName.isMetaData(xmipp.FileName(InputFile)):
         mDin=xmipp.MetaData(InputFile)
+        mDin.removeDisabled()
         mDin.removeLabel(xmipp.MDL_IMAGE)
         mDin.removeLabel(xmipp.MDL_ZSCORE)
         mDaux=xmipp.MetaData(mDin)
