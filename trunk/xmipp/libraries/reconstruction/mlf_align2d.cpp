@@ -418,14 +418,14 @@ void ProgMLF2D::produceSideInfo()
             mdCTF.getValue(MDL_CTFMODEL, ctfname, id);
             ctf.read(ctfname);
 
-            double astigmCTFFactor = ABS( (ctf.DeltafV - ctf.DeltafU) / (std::max(ctf.DeltafV, ctf.DeltafU)) );
+            double astigmCTFFactor = fabs( (ctf.DeltafV - ctf.DeltafU) / (std::max(ctf.DeltafV, ctf.DeltafU)) );
             // we discard the CTF with a normalized diference between deltaU and deltaV of 10%
             if (astigmCTFFactor >0.1)
             {
                 //REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
                 std::cerr << "CTF file " << ctfname << " is too astigmatic. We ill ignore it." << std::endl;
                 std::cerr << "astigmCTFFactor " << astigmCTFFactor <<  std::endl;
-                continue;
+                //continue;
             }
             ctf.DeltafV =  (ctf.DeltafU+ctf.DeltafV)*0.5;
             ctf.DeltafU =  ctf.DeltafV;
