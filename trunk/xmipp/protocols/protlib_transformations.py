@@ -1036,43 +1036,43 @@ def euler_matrix(ai, aj, ak, axes='sxyz'):
 
     M = numpy.identity(4)
     if repetition:
-#        M[i, i] = cj
-#        M[i, j] = sj*si
-#        M[i, k] = sj*ci
-#        M[j, i] = sj*sk
-#        M[j, j] = -cj*ss+cc
-#        M[j, k] = -cj*cs-sc
-#        M[k, i] = -sj*ck
-#        M[k, j] = cj*sc+cs
-#        M[k, k] = cj*cc-ss
         M[i, i] = cj
-        M[j, i] = sj*si
-        M[k, i] = sj*ci
-        M[i, j] = sj*sk
+        M[i, j] = sj*si
+        M[i, k] = sj*ci
+        M[j, i] = sj*sk
         M[j, j] = -cj*ss+cc
-        M[k, j] = -cj*cs-sc
-        M[i, k] = -sj*ck
-        M[j, k] = cj*sc+cs
+        M[j, k] = -cj*cs-sc
+        M[k, i] = -sj*ck
+        M[k, j] = cj*sc+cs
         M[k, k] = cj*cc-ss
+#        M[i, i] = cj
+#        M[j, i] = sj*si
+#        M[k, i] = sj*ci
+#        M[i, j] = sj*sk
+#        M[j, j] = -cj*ss+cc
+#        M[k, j] = -cj*cs-sc
+#        M[i, k] = -sj*ck
+#        M[j, k] = cj*sc+cs
+#        M[k, k] = cj*cc-ss
     else:
-#        M[i, i] = cj*ck
-#        M[i, j] = sj*sc-cs
-#        M[i, k] = sj*cc+ss
-#        M[j, i] = cj*sk
-#        M[j, j] = sj*ss+cc
-#        M[j, k] = sj*cs-sc
-#        M[k, i] = -sj
-#        M[k, j] = cj*si
-#        M[k, k] = cj*ci
         M[i, i] = cj*ck
-        M[j, i] = sj*sc-cs
-        M[k, i] = sj*cc+ss
-        M[i, j] = cj*sk
+        M[i, j] = sj*sc-cs
+        M[i, k] = sj*cc+ss
+        M[j, i] = cj*sk
         M[j, j] = sj*ss+cc
-        M[k, j] = sj*cs-sc
-        M[i, k] = -sj
-        M[j, k] = cj*si
+        M[j, k] = sj*cs-sc
+        M[k, i] = -sj
+        M[k, j] = cj*si
         M[k, k] = cj*ci
+#        M[i, i] = cj*ck
+#        M[j, i] = sj*sc-cs
+#        M[k, i] = sj*cc+ss
+#        M[i, j] = cj*sk
+#        M[j, j] = sj*ss+cc
+#        M[k, j] = sj*cs-sc
+#        M[i, k] = -sj
+#        M[j, k] = cj*si
+#        M[k, k] = cj*ci
     return M
 
 
@@ -1133,7 +1133,22 @@ def euler_from_matrix(matrix, axes='sxyz'):
         ax, az = az, ax
     return ax, ay, az
 
+def em_euler_matrix(rot, tilt, psi, axes='szyz'):
+    '''This function is a wrapper around euler_matrix to 
+    fulfill the EM conventions, where a positive rotation angle
+    is clockwise if rotating the object or counterclockwise if
+    rotating the axis.
+    rot, tilt, psi: Euler's angles taken in degrees'''
+    ai = numpy.deg2rad(-rot)
+    aj = numpy.deg2rad(-tilt)
+    ak = numpy.deg2rad(-psi)
+    return euler_matrix(ai, aj, ak, axes)
 
+def em_euler_from_matrix(matrix, axes='szyz'):
+    '''Same as previous but for euler_from_matrix'''
+    return -numpy.rad2deg(euler_from_matrix(matrix, axes))
+    
+    
 def euler_from_quaternion(quaternion, axes='sxyz'):
     """Return Euler angles from quaternion for specified axis sequence.
 
