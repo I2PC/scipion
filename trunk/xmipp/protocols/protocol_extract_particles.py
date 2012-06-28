@@ -108,7 +108,7 @@ class ProtExtractParticles(XmippProtocol):
             elif self.downsamplingMode==DownsamplingMode.SameAsOriginal:
                 micrographToExtract = originalMicrograph
             else:
-                micrographDownsampled=join(self.TmpDir,micrographName+"_downsampled.xmp")
+                micrographDownsampled = self.tmpPath(micrographName+"_downsampled.xmp")
                 parent_id=self.insertParallelRunJobStep("xmipp_transform_downsample", "-i %s -o %s --step %f --method fourier" % \
                                                         (originalMicrograph,micrographDownsampled,self.DownsampleFactor),
                                                         parent_step_id=parent_id)
@@ -116,7 +116,7 @@ class ProtExtractParticles(XmippProtocol):
 
             # Flipping?
             if self.DoFlip:
-                micrographFlipped=join(self.TmpDir,micrographName+"_flipped.xmp")
+                micrographFlipped = self.tmpPath(micrographName+"_flipped.xmp")
                 args=" -i %(micrographToExtract)s --ctf %(ctf)s -o %(micrographFlipped)s" % locals()
                 if self.downsamplingMode!=DownsamplingMode.SameAsOriginal:
                     args+=" --downsampling "+str(self.TsFinal/self.TsOriginal)
