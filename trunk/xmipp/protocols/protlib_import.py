@@ -30,19 +30,22 @@ from xmipp import MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_
 MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_CA, MDL_CTF_Q0, MDL_CTF_K, label2Str, MetaData,\
 MDL_XINT, MDL_YINT, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE
 
+CTF_BASIC_LABELS = [MDL_CTF_SAMPLING_RATE, 
+                    MDL_CTF_VOLTAGE, 
+                    MDL_CTF_DEFOCUSU, 
+                    MDL_CTF_DEFOCUSV, 
+                    MDL_CTF_DEFOCUS_ANGLE, 
+                    MDL_CTF_CS,
+                    MDL_CTF_CA,
+                    MDL_CTF_Q0, 
+                    MDL_CTF_K]
 
 def convertCtfparam(oldCtf):
     '''Convert the old format (Xmipp2.4) of the CTF 
     and return a new MetaData'''
-    conversionDict = {'sampling_rate': MDL_CTF_SAMPLING_RATE, 
-                      'voltage':       MDL_CTF_VOLTAGE, 
-                      'defocusU':      MDL_CTF_DEFOCUSU, 
-                      'defocusV':      MDL_CTF_DEFOCUSV, 
-                      'azimuthal_angle':      MDL_CTF_DEFOCUS_ANGLE, 
-                      'spherical_aberration': MDL_CTF_CS,
-                      'chromatic_aberration': MDL_CTF_CA,
-                      'Q0':                   MDL_CTF_Q0, 
-                      'K':                    MDL_CTF_K}
+    oldLabelsName = ['sampling_rate', 'voltage', 'defocusU', 'defocusV', 'azimuthal_angle', 
+                     'spherical_aberration', 'chromatic_aberration', 'Q0', 'K']                   
+    conversionDict = dict(zip(oldLabelsName, CTF_BASIC_LABELS))
     
     f = open(oldCtf)
     md = MetaData()
@@ -95,4 +98,28 @@ def convertBox(boxFile, posFile, ysize, family='DefaultFamily', particleSize=Non
     mdFamily.setValue(MDL_PICKING_MICROGRAPH_FAMILY_STATE, 'Manual', objId)
     mdFamily.write('families@%s' % posFile)
     md.writeBlock(posFile, family)
+    
+def renameMdLabels(inputMd, outputMd, labelsDict):
+    '''Change the labels' name on inputMd and write as outputMd
+    The change will be made using the labelsDict, changing
+    key by value '''
+    fIn = open(inputMd)
+    fOut = open(outputMd, 'w+')
+    for l in fIn:
+        if l.strip() in labelsDict:
+            l = l.strip()
+            l = labelsDict.get(l, l) + '\n'
+        fOut.write(l)
+    fIn.close()
+    fOut.close()
+    
+def removeMdHeader(inputMd, outputFile):
+    ''' Remove header from md and writing only data lines'''
+    fIn = open(inputMd)
+    fOut = open(outputFile, 'w+')
+    for l in fIn:
+        if not (l.startswith('data') or l.startswith('loop') or l.startswith('_')):
+            fOut.write(l)
+    fIn.close()
+    fOut.close()
     
