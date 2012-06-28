@@ -1005,9 +1005,7 @@ void ProgramDef::read(int argc, char ** argv, bool reportErrors)
     for (int i = 1; i < argc; ++i)
     {
 
-
-        double _d = atof (argv[i]);
-        if (argv[i][0] == '-' && _d == 0)
+        if (argv[i][0] == '-' && !isdigit(argv[i][1]))
         {
             param = findParam(argv[i]);
             if (param == NULL)
