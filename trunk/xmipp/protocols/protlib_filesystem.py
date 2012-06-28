@@ -75,7 +75,7 @@ def deleteFile(log, filename, verbose=True):
 def copyFile(log, source, dest):
     try:
         copyfile(source, dest)
-        printLog("Copied '%s' to '%s'" % (source, dest))
+        printLog("Copied '%s' to '%s'" % (source, dest), log)
     except Exception, e:
         printLog("Could not copy '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
     
