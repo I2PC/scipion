@@ -88,6 +88,7 @@ for param in $@; do
         "static=true")   DO_STATIC=true;;
         "static=false")   DO_STATIC=false;;
         "gui=false")   GUI_ARGS="";;
+	"setup=true")   DO_SETUP=true;;
         # This two if passed should be at the end and 
         # will setup arguments for configure and compilation steps
         "configure") TAKE_CONFIGURE=true;
@@ -149,7 +150,7 @@ echo "alias xtn='xmipp_transform_normalize'  "    >> $INC_FILE
 echo "## Other ##                            "    >> $INC_FILE
 echo "alias xrf='xmipp_resolution_fsc'       "    >> $INC_FILE
 echo "alias xrs='xmipp_resolution_ssnr'      "    >> $INC_FILE
-chmod u+x $INC_FILE
+chmod a+x $INC_FILE
 
 # for CSH or TCSH
 INC_FILE=.xmipp.csh
@@ -194,7 +195,7 @@ echo "alias xtn 'xmipp_transform_normalize'  "    >> $INC_FILE
 echo "## Other ##                            "    >> $INC_FILE
 echo "alias xrf 'xmipp_resolution_fsc'       "    >> $INC_FILE
 echo "alias xrs 'xmipp_resolution_ssnr'      "    >> $INC_FILE
-chmod u+x $INC_FILE
+chmod a+x $INC_FILE
 
 
 
@@ -442,7 +443,7 @@ if $DO_PYTHON; then
 		printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
 	fi
 	
-    echoExec "chmod u+x $PYTHON_BIN"    
+    echoExec "chmod a+x $PYTHON_BIN"    
 fi    
 
 #################### PYTHON MODULES ###########################
