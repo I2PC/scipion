@@ -916,7 +916,7 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     {
         // apply current scale
         A.initIdentity();
-        A *= scale;
+        A /= scale;
         applyGeometry(LINEAR, Mscale, Mtrans, A, IS_INV, DONT_WRAP);
 
     	//Image spread correction (if scale != 1) for scale search
