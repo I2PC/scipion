@@ -61,6 +61,7 @@ void ProgTransformGeometry::defineParams()
     addParamsLine("         where <rotation_type>");
     addParamsLine("             ang <angle>     : Rotate an image (positive angle values is a clockwise rotation)");
     addParamsLine("             euler <rot> <tilt> <psi>     : Rotate with these Euler angles");
+    addParamsLine("             matrix <r11> <r12> <r13> <r21> <r22> <r23> <r31> <r32> <r33>    : 3x3 rotation matrix, first index is row");
     addParamsLine("             alignZ <x> <y> <z>           : Align (x,y,z) with Z axis");
     addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
     addParamsLine("[--scale <scale_type>]                :Perform scaling");
@@ -147,11 +148,25 @@ void ProgTransformGeometry::preProcess()
             YY(xyz) = getDoubleParam("--rotate", 2); //tilt
             ZZ(xyz) = getDoubleParam("--rotate", 3);//psi
 
-            if (STR_EQUAL(getParam("--rotate"), "euler"))
+            const char * rotateType = getParam("--rotate");
+            if (STR_EQUAL(rotateType, "euler"))
             {
                 Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), R, true);
+                std::cerr << "DEBUG_JM: R: " << R << std::endl;
             }
-            else if (STR_EQUAL(getParam("--rotate"), "alignZ"))
+            else if (STR_EQUAL(rotateType, "matrix"))
+            {
+                R.initZeros(4,4);
+                MAT_ELEM(R, 3, 3) = 1;
+                for (int i = 0; i < 9; ++i)
+                {
+                  int r = i / 3;
+                  int c = i % 3;
+                  MAT_ELEM(R, r, c) =  getDoubleParam("--rotate", i+1);
+                }
+                std::cerr << "DEBUG_JM: R: " << R << std::endl;
+            }
+            else if (STR_EQUAL(rotateType, "alignZ"))
             {
                 alignWithZ(xyz, R);
             }
