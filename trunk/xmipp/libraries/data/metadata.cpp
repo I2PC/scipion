@@ -1306,6 +1306,19 @@ void MetaData::copyColumn(MDLabel labelDest, MDLabel labelSrc)
     operate(cmd);
 }
 
+void MetaData::copyColumnTo(MetaData &md, MDLabel labelDest, MDLabel labelSrc)
+{
+    if (!containsLabel(labelSrc))
+    {
+        const char * srcName = MDL::label2Str(labelSrc).c_str();
+        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName));
+    }
+    md.addLabel(labelDest);
+    std::vector<MDObject> values;
+    getColumnValues(labelSrc, values);
+    md.setColumnValues(values);
+}
+
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                                MDLabel aggregateLabel)
 

@@ -2429,7 +2429,7 @@ MetaData_fillConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
-/* fillConstant */
+/* copyColumn */
 static PyObject *
 MetaData_copyColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -2449,6 +2449,10 @@ MetaData_copyColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* copyColumnTo */
+static PyObject *
+MetaData_copyColumnTo(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* removeObjects */
 static PyObject *
@@ -2682,6 +2686,8 @@ MetaData_methods[] =
           METH_VARARGS, "Fill a column with constant value" },
         { "copyColumn", (PyCFunction) MetaData_copyColumn,
           METH_VARARGS, "Copy the values of one column to another" },
+          { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
+                    METH_VARARGS, "Copy the values of one column to another in other md" },
         { "makeAbsPath", (PyCFunction) MetaData_makeAbsPath,
           METH_VARARGS,
           "Make filenames with absolute paths" },
@@ -3249,6 +3255,30 @@ createMDObject(int label, PyObject *pyValue)
     catch (XmippError &xe)
     {
         PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
+
+/* copyColumnTo */
+static PyObject *
+MetaData_copyColumnTo(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int labelDst, labelSrc;
+    PyObject * pyMd;
+    if (PyArg_ParseTuple(args, "Oii", &pyMd, &labelDst, &labelSrc))
+    {
+        try
+        {
+          if (MetaData_Check(pyMd))
+          {
+              MetaData_Value(obj).copyColumnTo(MetaData_Value(pyMd), (MDLabel)labelDst, (MDLabel)labelSrc);
+              Py_RETURN_TRUE;
+          }
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
     return NULL;
 }
@@ -4486,10 +4516,12 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_WROBUST", (long) MDL_WROBUST);
     addIntConstant(dict, "MDL_XINT", (long) MDL_XINT);
     addIntConstant(dict, "MDL_XINTTILT", (long) MDL_XINTTILT);
+    addIntConstant(dict, "MDL_XSIZE", (long) MDL_XSIZE);
     addIntConstant(dict, "MDL_X", (long) MDL_X);
     addIntConstant(dict, "MDL_YINT", (long) MDL_YINT);
     addIntConstant(dict, "MDL_YINTTILT", (long) MDL_YINTTILT);
     addIntConstant(dict, "MDL_Y", (long) MDL_Y);
+    addIntConstant(dict, "MDL_YSIZE", (long) MDL_YSIZE);
     addIntConstant(dict, "MDL_ZINT", (long) MDL_ZINT);
     addIntConstant(dict, "MDL_Z", (long) MDL_Z);
     addIntConstant(dict, "MDL_ZSCORE", (long) MDL_ZSCORE);

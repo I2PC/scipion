@@ -325,7 +325,6 @@ enum MDLabel
     MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
     MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
 
-
     MDL_2D_LATTICE_VECA,   /// < Lattice vector for projection (vector double)
     MDL_2D_LATTICE_VECB,   /// < Lattice vector for projection (vector double)
     MDL_CRYSTAL_DISAPPEAR_THRE,   /// < Disappearing threshold (double)
