@@ -58,8 +58,6 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
 
     def ImportProtocol(self):
         
-        #importProt = self.getProtocolFromRunName(self.ProtocolName) 
-        
         self.pmprotWorkingDir = self.PrevRun.WorkingDir
         if (self.SymmetryGroup == ''):
             self.SymmetryGroup = self.PrevRun.SymmetryGroup
@@ -71,7 +69,7 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
             self.MaxChangeInAngles    = float(getComponentFromVector(self.PrevRun.MaxChangeInAngles,self.iterationNo - 1))
             
         file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
-        file_name = join(self.pmprotWorkingDir, file_name_tmp)
+        file_name = join(self.PrevRun.WorkingDir, file_name_tmp)
                          
         if exists(file_name):
             auxMD = MetaData("numberGroups@"+file_name)
@@ -90,12 +88,9 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
     def summary(self):
         super(ProtPartialProjectionSubtraction, self).summary()
         summary = [] 
-
-        importProtSummary = self.getProtocolFromRunName("../"+self.ProtocolName) 
-        self.pmprotWorkingDir = importProtSummary.WorkingDir
         
         file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
-        file_name = ""+join(self.pmprotWorkingDir, file_name_tmp)
+        file_name = ""+join(self.PrevRun.WorkingDir, file_name_tmp)
                          
         if exists(file_name):
             auxMD = MetaData("numberGroups@"+file_name)
@@ -132,11 +127,8 @@ class ProtPartialProjectionSubtraction(XmippProtocol):
         def doPlot(plotName):
             return plotName in selectedPlots
         
-        importProtPlots = self.getProtocolFromRunName("../"+self.ProtocolName) 
-        self.pmprotWorkingDir = importProtPlots.WorkingDir
-        
         file_name_tmp = join(self.CtfGroupDirectoryName, self.CtfGroupRootName) +'Info.xmd'
-        file_name = join(self.pmprotWorkingDir, file_name_tmp)
+        file_name = join(self.PrevRun.WorkingDir, file_name_tmp)
                          
         if exists(file_name):
             auxMD = MetaData("numberGroups@"+file_name)
