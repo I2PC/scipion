@@ -433,6 +433,7 @@ void CL2D::shareAssignments(bool shareAssignment, bool shareUpdates,
             SF->getColumnValues(MDL_REF, nodeRef);
         else
             nodeRef.resize(SF->size(), -1);
+
         MPI_Allreduce(MPI_IN_PLACE, &(nodeRef[0]), nodeRef.size(), MPI_INT,
                       MPI_MAX, MPI_COMM_WORLD);
         SF->setColumnValues(MDL_REF, nodeRef);
@@ -653,6 +654,7 @@ void CL2D::initialize(MetaData &_SF,
     prm->useCorrelation = true; // Since we cannot make the assignment before calculating sigma
     CL2DAssignment bestAssignment;
     size_t first, last;
+    SF->fillConstant(MDL_REF,"-1");
     while (prm->taskDistributor->getTasks(first, last))
     {
         for (size_t idx = first; idx <= last; ++idx)
@@ -826,11 +828,13 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
         {
             int imax = P[oldnode]->neighboursIdx.size();
             for (int i = 0; i < imax; i++)
+            {
                 if (P[oldnode]->neighboursIdx[i] == q)
                 {
                     proceed = true;
                     break;
                 }
+            }
             if (!proceed)
             {
                 double threshold = 3.0 * P[oldnode]->currentListImg.size();
