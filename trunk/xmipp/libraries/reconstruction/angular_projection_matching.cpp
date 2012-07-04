@@ -26,6 +26,8 @@
 
 #include "angular_projection_matching.h"
 
+#include <data/xmipp_image.h>
+
 //#define DEBUG
 //#define TIMING
 
@@ -899,15 +901,10 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     }
     Mref = proj_ref[refno];
 
-    // Means
-    double ref_mean=Mref.computeAvg();
-    Mref-=ref_mean;
-    // Mtrans is already rotated and shifted
-
     // Scale search
     double corr;
     opt_scale = 1;
-    maxcorr = 0;
+    maxcorr = -999;
 
     // 1 (0.01 * scale_step * scale_nsteps)
     for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
@@ -1050,13 +1047,14 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         opt_scale=1.0;
 
-        if(do_scale)
+        if(do_scale && scale_nsteps > 0)
         {
             // Compute a better scale (scale_min -> scale_max)
             scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, img.scale(), opt_scale, maxcorr);
-            //Add the previously applied scale to the newly found one
-            opt_scale *= img.scale();
         }
+
+        //Add the previously applied scale to the newly found one
+        opt_scale *= img.scale();
 
         //#ifdef GGGGGG
         // Output
