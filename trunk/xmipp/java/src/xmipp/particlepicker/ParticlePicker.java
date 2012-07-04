@@ -404,7 +404,7 @@ public abstract class ParticlePicker
 			for (long id : ids)
 			{
 				command = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id).replace('_', ' ');
-				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id).replace(' ', '_');
+				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id).replace('_', ' ');
 				if (options.equals("NULL"))
 					options = "";
 				filters.add(new Filter(command, options));
