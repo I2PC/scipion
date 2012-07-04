@@ -50,12 +50,11 @@ Freq_sigma=0.04
 
 # 4) Crop
 """
-Crop a certain amount of pixels. If crop=10 and the image size is 100x100 originally, the
-new images will be of size 90x90
+This is the desired output size(in pixels) after cropping.
 """
 DoCrop=False
 
-# {condition}(DoCrop){wizard}(wizardChooseCropSizeFilter)  Crop size:
+# {condition}(DoCrop){wizard}(wizardChooseCropSizeFilter)  Output size:
 """ 
 In pixels
 """

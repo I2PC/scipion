@@ -96,6 +96,10 @@ def copyDir(log, source, dest):
     except Exception, e:
         printLog("Could not copy '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
+def moveFile(log, source, dest):
+    copyFile(log, source, dest)
+    deleteFile(log, source)
+    
 def deleteFiles(log, filelist, verbose):
     for file in filelist:
         deleteFile(log, file, verbose)

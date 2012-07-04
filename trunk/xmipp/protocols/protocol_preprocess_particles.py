@@ -9,7 +9,7 @@ from protlib_base import *
 import xmipp
 import os
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import deleteFile,linkAcquisitionInfoIfPresent
+from protlib_filesystem import deleteFile,linkAcquisitionInfoIfPresent, moveFile
 import glob
 from protlib_gui_ext import showError
 
@@ -30,7 +30,9 @@ class ProtPreprocessParticles(XmippProtocol):
         if self.DoFourier:
             self.Db.insertStep('doFourier',stack=self.OutStack,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
         if self.DoGaussian:
-            self.Db.insertStep('doGaussian',stack=self.OutStack,freq_sigma=self.Freq_sigma,Nproc=self.NumberOfMpi)
+            self.Db.insertStep('doGaussian',stack=self.OutStack,freq_sigma=self.Freq_sigma, Nproc=self.NumberOfMpi)
+        if self.DoCrop:
+            self.Db.insertStep('doCrop',stack=self.OutStack, cropSize=self.CropSize, tmpStack=self.tmpPath('tmpCrop.stk'))
         if self.DoRemoveDust:
             self.Db.insertStep('doRemoveDust',stack=self.OutStack,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
         if self.DoNorm:
@@ -43,7 +45,7 @@ class ProtPreprocessParticles(XmippProtocol):
         if self.DoScale and self.NewSize<=0:
             errors.append("New size for scale have not correctly set")
         return errors
-
+        
     def summary(self):
         message=[]
         step=1
@@ -56,6 +58,9 @@ class ProtPreprocessParticles(XmippProtocol):
             step+=1
         if self.DoGaussian:
             message.append("Step %d -> Gaussian filter applied: freq_sigma=%f"%(step,self.Freq_sigma))
+            step+=1
+        if self.DoCrop:
+            message.append("Step %d -> Crop applied: cropSize=%d" % (step,self.CropSize))
             step+=1
         if self.DoRemoveDust:
             message.append("Step %d -> Dust removal filter applied: threshold=%f"%(step,self.DustRemovalThreshold))
@@ -116,9 +121,13 @@ def doFourier(log,stack,freq_low,freq_high,freq_decay,Nproc):
     else:
         runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier band_pass %(freq_low)f %(freq_high)f %(freq_decay)f"%locals(),Nproc)
 
-def doGaussian(log,stack,freq_sigma,Nproc):
+def doGaussian(log, stack, freq_sigma, Nproc):
     runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier gaussian %(freq_sigma)f"%locals(),Nproc)
 
+def doCrop(log, stack, cropSize, tmpStack):
+    runJob(log,"xmipp_transform_window","-i %(stack)s --size %(cropSize)d -o %(tmpStack)s" % locals())
+    moveFile(log, tmpStack, stack)
+    
 def doRemoveDust(log,stack,threshold,Nproc):
     runJob(log,"xmipp_transform_filter","-i %(stack)s --bad_pixels outliers %(threshold)f"%locals(),Nproc)
 
