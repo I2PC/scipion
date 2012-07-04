@@ -88,6 +88,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		try
 		{
 			MetaData md = new MetaData(selfile);
+			md.removeDisabled();
 			boolean existsctf = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
 			long[] ids = md.findObjects();
 			for (long id : ids)

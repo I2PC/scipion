@@ -218,7 +218,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		if (index == -1)
 			index = 0;
 		micrograph = ppicker.getMicrographs().get(index);
-
+		
 		initThresholdPane();
 		steppn.add(thresholdpn);
 		actionsbt = XmippWindowUtil.getTextButton("", new ActionListener() {
@@ -245,6 +245,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Family family2 = (Family) familiescb.getSelectedItem();
+				if(family == family2)
+					return;
 				// You can only switch between different states for readonly
 				// mode. Besides switching will be availabe on manual and
 				// readonly modes
@@ -512,6 +514,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		micrographstb
 				.setPreferredScrollableViewportSize(new Dimension(420, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		if(index != -1)
+			micrographstb.setRowSelectionInterval(index, index);
 	}
 
 	protected void saveChanges() {
@@ -535,6 +539,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		familiescb.setModel(model);
 		familiescb.setSelectedItem(item);
 		micrographsmd.fireTableStructureChanged();
+		
 		formatMicrographsTable();
 		pack();
 	}

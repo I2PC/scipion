@@ -103,7 +103,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 				}
 				catch (IllegalArgumentException ex)
 				{
-					//XmippDialog.showException(AddFamilyJDialog.this, e);
+					ex.printStackTrace();
 					JOptionPane.showMessageDialog(AddFamilyJDialog.this, ex.getMessage());
 				}
 
