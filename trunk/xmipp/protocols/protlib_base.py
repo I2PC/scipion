@@ -268,6 +268,13 @@ class XmippProject():
             runs += self.projectDb.selectRunsByProtocol(p, SqliteDb.RUN_FINISHED)
         return [getExtendedRunName(r) for r in runs]
     
+    def runBasicProtocol(self, ProtocolClass, run):
+        ''' Insert the run in the database and just execute the basic steps
+        without doing the steps of the protocol'''
+        self.projectDb.insertRun(run)
+        p = ProtocolClass(run['script'], self)
+        p.run(callDefineSteps=False)
+        
     def _registerRunProtocol(self, extRunName, prot, runsDict):
         if extRunName not in runsDict:
             DepData(runsDict, extRunName, prot)
@@ -540,10 +547,13 @@ class XmippProtocol(object):
         self.Db  = XmippProtocolDb(self, self.scriptName, isMainLoop)
         self.insertStep = self.Db.insertStep        
 
-    def run(self):
+    def run(self, callDefineSteps=True):
         '''Run of the protocols
         if the other functions have been correctly implemented, this not need to be
-        touched in derived class, since the run of protocols should be the same'''
+        touched in derived class, since the run of protocols should be the same
+        callDefineSteps should usually be True, False only should be used if you want
+        to register the protocol and create proper directories and nothing else 
+        '''
         #Change to project dir
         os.chdir(self.projectDir)
         errors = self.validateBase()
@@ -568,7 +578,8 @@ class XmippProtocol(object):
             self.runSetup()
             self.insertStep('createDir',verifyfiles=[self.WorkingDir], path=self.WorkingDir)
             self.insertStep('createDir', verifyfiles=[self.TmpDir], path=self.TmpDir)
-            self.defineSteps()
+            if callDefineSteps:
+                self.defineSteps()
             self.Db.runSteps()
             self.postRun()
         except Exception, e:
