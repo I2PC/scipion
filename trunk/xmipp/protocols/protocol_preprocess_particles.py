@@ -45,37 +45,36 @@ class ProtPreprocessParticles(XmippProtocol):
         if self.DoScale and self.NewSize<=0:
             errors.append("New size for scale have not correctly set")
         return errors
+
+    def setStepMessage(self, stepMsg):
+        step = len(self.messages) # assumed just one message before calling this function
+        msg = "Step %d -> " % step
+        msg += stepMsg % self.ParamsDict
+        self.messages.append(msg)            
         
     def summary(self):
-        message=[]
-        step=1
-        message.append("Steps applied to [%s]"%self.InSelFile)
+        self.messages = []
+        self.messages.append("Steps applied to [%s]" % self.InSelFile)
+        
         if self.DoScale:
-            message.append("Step %d -> scale applied: new_size=%d"%(step,self.NewSize))
-            step+=1
+            self.setStepMessage("Scale applied: new_size = %(NewSize)d")            
         if self.DoFourier:
-            message.append("Step %d -> Fourier filter applied: freq_low=%f freq_high=%f freq_decay=%f"%(step,self.Freq_low,self.Freq_high,self.Freq_decay))
-            step+=1
+            self.setStepMessage("Fourier filter applied: freq_low = %(Freq_low)f freq_high = %(Freq_high)f freq_decay = %(Freq_decay)f")            
         if self.DoGaussian:
-            message.append("Step %d -> Gaussian filter applied: freq_sigma=%f"%(step,self.Freq_sigma))
-            step+=1
+            self.setStepMessage("Gaussian filter applied: freq_sigma = %(Freq_sigma)f")
         if self.DoCrop:
-            message.append("Step %d -> Crop applied: cropSize=%d" % (step,self.CropSize))
-            step+=1
+            self.setStepMessage("Crop applied: cropSize = %(CropSize)d")
         if self.DoRemoveDust:
-            message.append("Step %d -> Dust removal filter applied: threshold=%f"%(step,self.DustRemovalThreshold))
-            step+=1
+            self.setStepMessage("Dust removal filter applied: threshold = %(DustRemovalThreshold)f")
         if self.DoNorm:
-            if self.NormType=="OldXmipp":
-                message.append("Step %d -> Normalization applied: type=%s"%(step,self.NormType))
+            if self.NormType == "OldXmipp":
+                self.setStepMessage("Normalization applied: type = %(NormType)s")
             else:
-                message.append("Step %d -> Normalization applied: type=%s backgroundRadius=%d"%(step,self.NormType,self.BackGroundRadius))
-            step+=1
+                self.setStepMessage("Normalization applied: type = %(NormType)s backgroundRadius = %(BackGroundRadius)d")
         if self.DoMask:
-            message.append("Step %d -> Mask applied: mask file=%f substituted value=%f"%(step,self.MaskFile,self.Substitute))
-            step+=1
-        message.append("Output: [%s]"%self.OutStack)
-        return message
+            self.setStepMessage("Mask applied: mask file = %(MaskFile)f substituted value = %(Substitute)f")
+        self.messages.append("Output: [%s]" % self.OutStack)
+        return self.messages
 
     def visualize(self):
         if not os.path.exists(self.OutStack):
