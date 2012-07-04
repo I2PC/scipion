@@ -63,15 +63,15 @@ public:
     /// MPI constructor
     ProgSortImages(int argc, char **argv)
     {
-    	node=new MpiNode(argc,argv);
+        node=new MpiNode(argc,argv);
         if (!node->isMaster())
-        	verbose=0;
+            verbose=0;
     }
 
     /// MPI destructor
     ~ProgSortImages()
     {
-    	delete node;
+        delete node;
     }
 
     /// Read argument from command line
@@ -84,8 +84,8 @@ public:
     /// Show
     void show()
     {
-    	if (!verbose)
-    		return;
+        if (!verbose)
+            return;
         std::cerr << "Input selfile:    " << fnSel           << std::endl
         << "Output rootname:  " << fnRoot          << std::endl
         ;
@@ -118,12 +118,11 @@ public:
         fnStack = fnRoot + ".stk";
 
         if (rank == 0)
-          fnStack.deleteFile();
+            fnStack.deleteFile();
 
         // Read input selfile and reference
         MetaData SF;
         SF.read(fnSel);
-        int idx=0;
         FileName fnImg;
         toClassify.reserve(SF.size());
         size_t objId;
@@ -131,28 +130,42 @@ public:
         CorrelationAux aux;
         RotationalCorrelationAux aux2;
         MDRow row;
+        bool thereIsClassCount=SF.containsLabel(MDL_CLASS_COUNT);
+        bool firstSelected=false;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-        	SF.getRow(row,__iter.objId);
-            toClassify.push_back(row);
-            if (idx==0)
+            SF.getRow(row,__iter.objId);
+            bool proceed=true;
+            if (thereIsClassCount)
             {
+                size_t classCount;
+                row.getValue(MDL_CLASS_COUNT,classCount);
+                if (classCount==0)
+                    proceed=false;
+            }
+            if (proceed)
+            {
+                toClassify.push_back(row);
                 row.getValue(MDL_IMAGE,fnImg);
-                lastImage.read(fnImg);
-                centerImage(lastImage(),aux,aux2);
-                if (rank==0)
-                    lastImage.write(fnStack,idx,true,WRITE_APPEND);
-                fnImageStack.compose(idx+1,fnStack);
-                if (rank==0)
+                if (!firstSelected)
                 {
-                    row.setValue(MDL_IMAGE_ORIGINAL,fnImg);
-                    row.setValue(MDL_MAXCC,1.0);
-                    SFout.addRow(row);
+                    row.getValue(MDL_IMAGE,fnImg);
+                    lastImage.read(fnImg);
+                    centerImage(lastImage(),aux,aux2);
+                    if (rank==0)
+                        lastImage.write(fnStack,0,true,WRITE_APPEND);
+                    fnImageStack.compose(1,fnStack);
+                    if (rank==0)
+                    {
+                        row.setValue(MDL_IMAGE_ORIGINAL,fnImg);
+                        row.setValue(MDL_MAXCC,1.0);
+                        SFout.addRow(row);
+                    }
+                    firstSelected=true;
                 }
             }
-            idx++;
         }
-        stillToDo.resizeNoCopy(SF.size());
+        stillToDo.resizeNoCopy(toClassify.size());
         stillToDo.initConstant(1);
         VEC_ELEM(stillToDo,0)=0;
 
