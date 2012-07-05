@@ -629,7 +629,7 @@ public:
      * each directory in path exists, rather than optimistically creating
      * the last element and working backwards. Return null if fails
      */
-    int makePath(mode_t mode = 0755);
+    int makePath(mode_t mode = 0755) const;
 
     /** This function raised an ERROR if the filename if not empty and if
      * the corresponding file does not exist.

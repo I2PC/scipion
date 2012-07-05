@@ -718,7 +718,7 @@ int do_mkdir(const char *path, mode_t mode)
     return (status);
 }
 
-int FileName::makePath(mode_t mode)
+int FileName::makePath(mode_t mode) const
 {
     char *pp;
     char *sp;
