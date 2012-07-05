@@ -87,8 +87,6 @@ TEST_F( FringeProcessingTests, simulPattern)
     ASSERT_TRUE( std::abs(A2D_ELEM(im,0,1) + 0.938343)<0.01);
     ASSERT_TRUE( std::abs(A2D_ELEM(im,1,0) + 0.986396)<0.01);
 
-    //im.write(imageName);
-
 }
 
 TEST_F( FringeProcessingTests, SPTH)
@@ -117,7 +115,7 @@ TEST_F( FringeProcessingTests, SPTH)
     imProc.getReal(imProcReal);
     imProc.getImag(imProcImag);
 
-    /*ASSERT_TRUE( (A2D_ELEM(imProcReal,10,10)  -  0)  < 1e-3);
+    ASSERT_TRUE( (A2D_ELEM(imProcReal,10,10)  -  0)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(imProcReal,10,20)  -  0)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(imProcReal,20,10)  -  0)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(imProcReal,20,20)  -  0)  < 1e-3);
@@ -126,7 +124,7 @@ TEST_F( FringeProcessingTests, SPTH)
     ASSERT_TRUE( (A2D_ELEM(imProcImag,10,20)  -  0.536937)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(imProcImag,20,10)  -  0.954154)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(imProcImag,20,20)  -  0.536937)  < 1e-3);
-    */
+
     //im.write(fpName);
     //imProcReal.write(imProcRealName);
     //imProcImag.write(imProcImagName);
@@ -177,10 +175,8 @@ TEST_F( FringeProcessingTests, orMinDer)
     ASSERT_TRUE(YSIZE(im) == YSIZE(orMap));
     ASSERT_TRUE(XSIZE(im) == XSIZE(orModMap));
     ASSERT_TRUE(YSIZE(im) == YSIZE(orModMap));
-
     ASSERT_TRUE( std::abs(A2D_ELEM(orMap,1,1) -  2.3562)<0.01);
     ASSERT_TRUE( std::abs(A2D_ELEM(orMap,1,5) -  2.3483)<0.01);
-
     ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,1) -  0.0690)<0.01);
     ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,5) -  0.3364)<0.01);
 
@@ -298,11 +294,10 @@ TEST_F( FringeProcessingTests, normalizeWB)
     fp.normalizeWB(im,In,Mod, rmin, rmax, ROI);
 
     //We test some values comparing with the values recovered with Matlab
-    /*ASSERT_TRUE( (A2D_ELEM(In,100,100)  -  0.98989)  < 1e-1);
-    ASSERT_TRUE( (A2D_ELEM(In,100,200)  - -0.00647944)  < 1e-1);
-    ASSERT_TRUE( (A2D_ELEM(In,200,100)  -  0.43138)  < 1e-1);
-    ASSERT_TRUE( (A2D_ELEM(In,200,200)  -  0.43138)  < 1e-1);
-    */
+    ASSERT_TRUE( (A2D_ELEM(In,100,100)  -  0.99979)    < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,100,200)  -  0.553923)   < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,200,100)  -  0.55329)    < 1e-1);
+    ASSERT_TRUE( (A2D_ELEM(In,200,200)  - -0.368664)   < 1e-1);
 
 #ifdef DEBUG
 
@@ -315,75 +310,9 @@ TEST_F( FringeProcessingTests, normalizeWB)
 #undef DEBUG
 
 
-TEST_F( FringeProcessingTests, direction)
-{
-#ifdef DEBUG
-    FileName ModName = "Mod.txt";
-    FileName DirName = "Dir.txt";
-    FileName OrName = "Or.txt";
-#endif
-
-    FringeProcessing fp;
-    MultidimArray<double> im, orMap, orModMap, dirMap;
-    MultidimArray<bool> ROI;
-
-    int nx = 311;
-    int ny = 311;
-    int x = 125;
-    int y = 125;
-
-    double noiseLevel = 0.0;
-    double freq = 1;
-    Matrix1D<int> coefs(10);
-
-    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
-    orMap.resizeNoCopy(im);
-    dirMap.resizeNoCopy(im);
-    ROI.resizeNoCopy(im);
-
-    int rmin = 20;
-    int rmax = 60;
-
-    ROI.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
-    {
-        double temp = std::sqrt(i*i+j*j);
-        if ( (temp > rmin) &&  (temp < rmax) )
-            A2D_ELEM(ROI,i,j)= true;
-        else
-            A2D_ELEM(ROI,i,j)= false;
-    }
-
-    int wSize = 2;
-    fp.orMinDer(im,orMap,orModMap, wSize, ROI);
-
-    //we obtain the phase direction map from the orientation map
-    double lambda = 1;
-    int size = 3;
-    fp.direction(orMap, orModMap, lambda, size, dirMap, x, y);
-
-    //Comparing with Matlab results
-    /*
-    ASSERT_TRUE( (A2D_ELEM(dirMap,10,10)  - 2.35619)  < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(dirMap,10,20)  - 2.33116)  < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(dirMap,20,10)  - 2.38123)  < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(dirMap,20,20)  - 2.35619)  < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(dirMap,100,50) - 2.6420)  < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(dirMap,100,100) -  2.3536) < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(dirMap,200,100) -  -2.4388)< 1e-2);
-    */
-
-#ifdef DEBUG
-
-    orModMap.write(ModName);
-    orMap.write(OrName);
-    dirMap.write(DirName);
-#endif
-}
-#undef DEBUG
-
 TEST_F( FringeProcessingTests, unwrapping)
 {
+
 #ifdef DEBUG
     FileName PName = "P.txt";
     FileName uPName = "uP.txt";
@@ -391,7 +320,7 @@ TEST_F( FringeProcessingTests, unwrapping)
 
     int nx = 311;
     int ny = 311;
-    double noiseLevel = 0.0;
+    double noiseLevel = 0;
 
     FringeProcessing fp;
     MultidimArray<double> refPhase(nx,ny), wphase, comPhase, im, orMap, orModMap;
@@ -422,8 +351,8 @@ TEST_F( FringeProcessingTests, unwrapping)
     STARTINGX(wphase)=STARTINGY(wphase)=0;
     STARTINGX(im)=STARTINGY(im)=0;
 
-    int rmin = 20;
-    int rmax = 60;
+    int rmin = 2;
+    int rmax = 300;
 
     ROI.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
@@ -438,22 +367,19 @@ TEST_F( FringeProcessingTests, unwrapping)
     int wSize = 2;
     fp.orMinDer(im, orMap,orModMap, wSize, ROI);
 
-
-    double lambda = 0.5;
-    int size = 3;
-
+    double lambda = 0.4;
+    int size = 4;
     fp.unwrapping(wphase, orModMap, lambda, size, comPhase);
 
     //Comparing with Matlab results
-    /*ASSERT_TRUE( (A2D_ELEM(comPhase,9,19)  -  -9.4841)   < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(comPhase,19,9)  -  -9.4679)   < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(comPhase,19,19) -  -8.2268)   < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(comPhase,99,49) -   5.6156)   < 1e-2);
-    ASSERT_TRUE( (A2D_ELEM(comPhase,49,99) -   5.6156)   < 1e-2);
-    */
+    ASSERT_TRUE( (A2D_ELEM(comPhase,9,19)  -  -2.87779)   < 1e-2);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,19,9)  -  -2.90942)   < 1e-2);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,19,19) -  -1.66237)   < 1e-2);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,99,49) -   11.7772)   < 1e-2);
+    ASSERT_TRUE( (A2D_ELEM(comPhase,49,99) -   11.7503)   < 1e-2);
+
 
 #ifdef DEBUG
-
     comPhase.write(uPName);
     wphase.write(PName);
 #endif
@@ -522,37 +448,110 @@ TEST_F( FringeProcessingTests, firsPSDZero)
 {
 #ifdef DEBUG
     FileName PName = "Psd.txt";
+    FileName PName2 = "pX.txt";
+    FileName PName3 = "pY.txt";
 #endif
 
-   /* FringeProcessing fp;
+    FringeProcessing fp;
     int nx = 311;
     int ny = 311;
 
-    MultidimArray<double> env(nx,ny);
+    MultidimArray<double> im(nx,ny);
     Matrix2D<double> envM;
-    envM.initGaussian(nx,10);
-    envM.write(PName);
-
-    std::cout << "AQUIIII 0.1 " << dMij(envM,10,10)<< std::endl;
-    std::cout << "AQUIIII 0 " << std::endl;
-
-    MULTIDIM_ARRAY(env) = MATRIX2D_ARRAY(envM);
+    envM.initGaussian(nx,100);
 
     double noiseLevel = 0;
-    double freq = 2;
+    double freq = 1;
     Matrix1D<double> coefs(13);
 
-    fp.simulPattern(env,fp.SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
+    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
 
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    {
+    	A2D_ELEM(im,i,j) = A2D_ELEM(im,i,j)* A2D_ELEM(im,i,j)*dMij(envM,i,j);
+    }
+
+    int numPts = 100;
+    Matrix1D<double> ptsX(numPts), ptsY(numPts);
+    fp.firsPSDZero(im,ptsX,ptsY,0.05*XSIZE(im),0.8*XSIZE(im),numPts,1);
+
+    //////////////////////
+    //Comparing the results
+    //////////////////////
+    //In development not working yet!!!!!!!!!!
+    /*ASSERT_TRUE( (VEC_ELEM(ptsX,0)  - 29.93375)   < 1e-2);
+    ASSERT_TRUE( (VEC_ELEM(ptsX,1)  - 29.874683)  < 1e-2);
+    ASSERT_TRUE( (VEC_ELEM(ptsX,2)  - 28.540659)  < 1e-2);
+    ASSERT_TRUE( (VEC_ELEM(ptsX,3)  - 28.257948)  < 1e-2);
+
+    ASSERT_TRUE( (VEC_ELEM(ptsY,0)  - 0)          < 1e-2);
+    ASSERT_TRUE( (VEC_ELEM(ptsY,1)  - 1.8795557)  < 1e-2);
+    ASSERT_TRUE( (VEC_ELEM(ptsY,2)  - 3.6055238)  < 1e-2);
+    ASSERT_TRUE( (VEC_ELEM(ptsY,3)  - 5.390492)   < 1e-2);
     */
+
 
 #ifdef DEBUG
 
     im.write(PName);
+    ptsX.write(PName2);
+    ptsY.write(PName3);
 
 #endif
 }
 
+TEST_F( FringeProcessingTests, fitEllipse)
+{
+
+#ifdef DEBUG
+    FileName PName2 = "pX.txt";
+    FileName PName3 = "pY.txt";
+
+    FileName PName4 = "pXA.txt";
+    FileName PName5 = "pYA.txt";
+
+#endif
+
+	int numPoints = 100;
+	double angle = 0;
+	double angleStep = 2*PI/numPoints;
+	double radiusX = 20;
+	double radiusY = 50;
+
+	Matrix1D<double> ptsX(numPoints), ptsY(numPoints);
+	for (int var = 0; var < numPoints; var++)
+	{
+		VEC_ELEM(ptsX,var) = radiusX*cos(angle)+radiusY*sin(angle)+10;
+		VEC_ELEM(ptsY,var) = -radiusY*sin(angle)+radiusX*cos(angle)+25;
+		angle += angleStep;
+
+	}
+
+	double x0,y0,majorAxis, minorAxis, ellipseAngle;
+	FringeProcessing fp;
+	Matrix1D<double> ptsX2 = ptsX;
+	Matrix1D<double> ptsY2 = ptsY;
+	fp.fitEllipse(ptsX2, ptsY2, x0, y0, majorAxis, minorAxis, ellipseAngle);
+
+    ASSERT_TRUE( (x0  - 20)   < 1e-2);
+    ASSERT_TRUE( (y0  - 50)  < 1e-2);
+    ASSERT_TRUE( (majorAxis - 28.2843)  < 1e-2);
+    ASSERT_TRUE( (minorAxis  - 70.717)  < 1e-2);
+    ASSERT_TRUE( (ellipseAngle  - -0.785398)  < 1e-2);
+
+
+#ifdef DEBUG
+
+    ptsX.write(PName2);
+    ptsY.write(PName3);
+
+    ptsX2.write(PName4);
+    ptsY2.write(PName5);
+
+
+#endif
+
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {
