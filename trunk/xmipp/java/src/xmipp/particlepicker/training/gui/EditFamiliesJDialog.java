@@ -113,12 +113,14 @@ public class EditFamiliesJDialog extends JDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<Family> families = EditFamiliesJDialog.this.parent
-						.getParticlePicker().getFamilies();
+				List<Family> families = parent.getParticlePicker().getFamilies();
 				try {
 					
 					int index = familiestb.getSelectedRow();
-					parent.removeFamily(families.get(index));
+					Family f = families.get(index);
+					if(f.equals(parent.getFamily()))
+						throw new IllegalArgumentException("Can not remove active family");
+					parent.removeFamily(f);
 					model.fireTableStructureChanged();
 					EditFamiliesJDialog.this.deletebt.setEnabled(false);
 				} 
