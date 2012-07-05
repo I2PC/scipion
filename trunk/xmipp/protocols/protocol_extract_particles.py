@@ -26,7 +26,8 @@ _templateDict = {
         # This templates are relative to a micrographDir
         'mic_block': _mic_block,
         'mic_block_fn': _mic_block+'@%(fn)s',
-        'sorted': '%(root)s_sorted.xmd'
+        'sorted': '%(root)s_sorted.xmd',
+        'extract_list':  join('%(ExtraDir)s', "%(family)s_extract_list.xmd")      
         }
 
 def _getFilename(key, **args):
@@ -71,6 +72,7 @@ class ProtExtractParticles(XmippProtocol):
         self.setSamplingMode()
         filesToCopy = [self.MicrographsMd, self.Input['acquisition']]
         self.insertImportOfFiles(filesToCopy, copy=True)
+        self.insertStep('createDir',path=self.ExtraDir)
 
         # Update sampling rate in 'acquisition_info.xmd' if necessary
         if self.downsamplingMode != DownsamplingMode.SameAsPicking:
@@ -80,7 +82,7 @@ class ProtExtractParticles(XmippProtocol):
         md = MetaData(self.MicrographsMd)
         self.containsCTF = md.containsLabel(MDL_CTFMODEL)
         # Create or look for the extract list
-        destFnExtractList = self.getFilename('extract_list', family=self.Family)
+        destFnExtractList = _getFilename('extract_list', ExtraDir=self.ExtraDir, family=self.Family)
         if self.TiltPairs:
             self.insertStep("createExtractListTiltPairs", family=self.Family,
                                fnMicrographs=self.MicrographsMd, pickingDir=self.pickingDir,
@@ -89,7 +91,7 @@ class ProtExtractParticles(XmippProtocol):
         else:
             srcFnExtractList = self.PrevRun.getFilename('extract_list', family=self.Family)
             if exists(srcFnExtractList):
-                self.insertImportOfFiles([srcFnExtractList])
+                self.insertCopyFile(srcFnExtractList, destFnExtractList)
                 micrographs = getBlocksInMetaDataFile(srcFnExtractList)
             else:
                 self.insertStep("createExtractList",Family=self.Family,fnMicrographsSel=self.MicrographsMd,pickingDir=self.pickingDir,
@@ -126,7 +128,7 @@ class ProtExtractParticles(XmippProtocol):
             # Actually extract
             fnOut = self.workingDirPath(micrographName + ".stk")
             parent_id = self.insertParallelStep('extractParticles', parent_step_id=parent_id,
-                                  WorkingDir=self.WorkingDir,
+                                  ExtraDir=self.ExtraDir,
                                   micrographName=micrographName,ctf=ctf,
                                   fullMicrographName=fullMicrographName,originalMicrograph=originalMicrograph,
                                   micrographToExtract=micrographToExtract,
@@ -143,9 +145,9 @@ class ProtExtractParticles(XmippProtocol):
         # Gather results
         if self.TiltPairs:
             self.insertStep('gatherTiltPairSelfiles',family=self.Family,
-                               WorkingDir=self.WorkingDir, fnMicrographs=self.micrographs)
+                               WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, fnMicrographs=self.micrographs)
         else:
-            self.insertStep('gatherSelfiles',WorkingDir=self.WorkingDir,family=self.Family)
+            self.insertStep('gatherSelfiles',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,family=self.Family)
             selfileRoot=self.workingDirPath(self.Family)
             fnOut = _getFilename('sorted', root=selfileRoot)
             self.insertStep('sortImagesInFamily',verifyfiles=[fnOut],selfileRoot=selfileRoot)
@@ -321,7 +323,7 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
         fn =_getFilename('mic_block_fn', micName=tmicName, fn=fnExtractList)
         mdTiltedPos.write(fn, MD_APPEND)
 
-def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
+def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,
                      fnExtractList, particleSize, doFlip, doNorm, doLog, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
     
@@ -335,7 +337,7 @@ def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, ori
         return
     
     # Extract 
-    rootname = join(WorkingDir, micrographName)
+    rootname = join(ExtraDir, micrographName)
     arguments="-i "+micrographToExtract+" --pos "+fnBlock+" -o "+rootname+" --Xdim "+str(particleSize)
     if abs(TsFinal-TsInput)>0.001:
         arguments+=" --downsampling "+str(TsFinal/TsInput)
@@ -375,8 +377,8 @@ def extractParticles(log,WorkingDir,micrographName, ctf, fullMicrographName, ori
             md.setValueCol(MDL_CTFMODEL,ctf)
         md.write(selfile)
 
-def gatherSelfiles(log, WorkingDir, family):
-    stackFiles = glob.glob(join(WorkingDir,"*.stk"))
+def gatherSelfiles(log, WorkingDir, ExtraDir, family):
+    stackFiles = glob.glob(join(ExtraDir,"*.stk"))
     stackFiles.sort()
     familySelfile=MetaData()
     for stackFile in stackFiles:
@@ -385,18 +387,18 @@ def gatherSelfiles(log, WorkingDir, family):
         familySelfile.unionAll(md)
     familySelfile.write(join(WorkingDir,family + ".xmd"))
 
-def gatherTiltPairSelfiles(log, family, WorkingDir, fnMicrographs):
+def gatherTiltPairSelfiles(log, family, WorkingDir, ExtraDir, fnMicrographs):
     mdPairs = MetaData(fnMicrographs)
     mdUntilted = MetaData()
     mdTilted = MetaData()
     for objId in mdPairs:
         umicName = removeBasenameExt(mdPairs.getValue(MDL_MICROGRAPH, objId))        
-        fnUntilted = join(WorkingDir, umicName + ".xmd")
+        fnUntilted = join(ExtraDir, umicName + ".xmd")
         # Check if there are picked particles in this micrographs
         if exists(fnUntilted):
             mdUntilted.unionAll(MetaData(fnUntilted))            
             tmicName = removeBasenameExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,objId))
-            mdTilted.unionAll(MetaData(join(WorkingDir, tmicName + ".xmd")))
+            mdTilted.unionAll(MetaData(join(ExtraDir, tmicName + ".xmd")))
         
     mdUntilted.write(join(WorkingDir, "%s_untilted.xmd" % family))
     mdTilted.write(join(WorkingDir, "%s_tilted.xmd" % family))
