@@ -49,7 +49,7 @@ public:
     FileName micrograph;       // Micrograph
     int x, y;                  // position in micrograph
     char status;               // rejected=0, selected=1 or moved=2
-    Matrix1D<double> vec;      // vector of that particle
+    MultidimArray<double> vec;      // vector of that particle
     double cost;               // Associated cost
 
     // Print
@@ -86,9 +86,9 @@ public:
     MultidimArray<double>        particleAvg;
     MultidimArray<double>        trainSet;
     MultidimArray<double>        classLabel;
-
     std::vector<Particle2>       auto_candidates;
-    std::vector<ImageGeneric*>   micrographStack;
+    std::vector<Particle2>       rejected_particles;
+    Image<double>   micrographStack;
 public:
 
     /// Empty constructor
@@ -103,28 +103,21 @@ public:
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
 
-    /// Extract the particles from the Micrograph
-    void extractParticle(const int x, const int y, MultidimArray<float> &filter,
-                         MultidimArray<double> &particleImage);
-    /// Extract the particles without normalization
-    void extractParticle(const int x, const int y, MultidimArray<double> &filter,
-                         MultidimArray<double> &particleImage);
-
-    //Extract the particles from the Micrograph
-    void extractNonParticle(std::vector<Particle2> &negativePosition);
-
     /// Convert an image to its polar form
     void convert2Polar(MultidimArray<double> &particleImage, MultidimArray<double> &polar);
 
     /// Calculate the correlation of different polar channels
     void polarCorrelation(MultidimArray<double> &Ipolar,MultidimArray<double> &IpolarCorr);
 
-    //Build a feature vector from samples
-    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &featureVec);
+    /// Project a vector in PCA space
+    double PCAProject(MultidimArray<double> &pcaBasis,MultidimArray<double> &vec);
 
-    /// Extract Invariant Features from a particle at x and y position
-    void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y,
-                        const FileName &fnInvariantFeat);
+    /// Extract the particles from the Micrograph
+    void extractParticle(const int x, const int y, MultidimArray<double> &filter,
+                         MultidimArray<double> &particleImage);
+
+    //Extract the particles from the Micrograph
+    void extractNonParticle(std::vector<Particle2> &negativePosition);
 
     /// Extract different filter channels from particles and Non-Particles within a Micrograph
     void extractInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
@@ -135,8 +128,12 @@ public:
     /// Extract different filter channels from Non-Particles within a Micrograph
     void extractNegativeInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
 
-    /// Project a vector in PCA space
-    double PCAProject(MultidimArray<double> &pcaBasis,MultidimArray<double> &vec);
+    //Build a feature vector from samples
+    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &featureVec);
+
+    /// Extract Invariant Features from a particle at x and y position
+    void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y,
+                        const FileName &fnInvariantFeat);
 
     /// Train a PCA with negative and positive vectors
     void trainSVM(const FileName &fnModel);
@@ -147,8 +144,29 @@ public:
     /// Make dataset from the data in file
     void add2Dataset(const FileName &fnInvariantFeat,int lable);
 
+    /// Add the false positives to the dataset
+    void add2Dataset();
+
+    /// Save automatically selected particles
+    int saveAutoParticles(const FileName &fn) const;
+
+    /// Save the feature vectors of the particles
+    void saveAutoVectors(const FileName &fn);
+
+    /// Save the feature vectors of the particles
+    void saveRejectedVectors(const FileName &fn);
+
     /// Save PCA model
     void savePCAModel(const FileName &fn_root);
+
+    /// Save training set
+    void saveTrainingSet(const FileName &fn_root);
+
+    /// Load the feature vectors of the particles
+    void loadAutoVectors(const FileName &fn);
+
+    /// Load training set
+    void loadTrainingSet(const FileName &fn_root);
 
     /// Select particles from the micrograph in an automatic way
     int automaticallySelectParticles(const FileName &fnFilterBank);
