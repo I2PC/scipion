@@ -36,7 +36,7 @@ public abstract class ParticlePicker
 	protected boolean changed;
 	protected List<Family> families;
 	protected FamilyState mode;
-	protected List<Filter> filters;
+	protected List<IJCommand> filters;
 	protected String selfile;
 	protected String command;
 	protected Family family;
@@ -115,7 +115,7 @@ public abstract class ParticlePicker
 	private void initializeFilters()
 	{
 		this.macrosfile = getOutputPath("macros.xmd");
-		filters = new ArrayList<Filter>();
+		filters = new ArrayList<IJCommand>();
 		loadFilters();
 		Recorder.record = true;
 
@@ -165,7 +165,7 @@ public abstract class ParticlePicker
 			if (!isFilterSelected(command))
 				addFilter(command, options);
 			else if (!(options == null || options.equals("")))
-				for (Filter f : filters)
+				for (IJCommand f : filters)
 					if (f.getCommand().equals(command))
 						f.setOptions(options);
 			setChanged(true);
@@ -181,11 +181,11 @@ public abstract class ParticlePicker
 
 	void addFilter(String command, String options)
 	{
-		Filter f = new Filter(command, options);
+		IJCommand f = new IJCommand(command, options);
 		filters.add(f);
 	}
 
-	public List<Filter> getFilters()
+	public List<IJCommand> getFilters()
 	{
 		return filters;
 	}
@@ -372,7 +372,7 @@ public abstract class ParticlePicker
 		try
 		{
 			MetaData md = new MetaData();
-			for (Filter f : filters)
+			for (IJCommand f : filters)
 			{
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getCommand().replace(' ', '_'), id);
@@ -407,7 +407,7 @@ public abstract class ParticlePicker
 				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id).replace('_', ' ');
 				if (options.equals("NULL"))
 					options = "";
-				filters.add(new Filter(command, options));
+				filters.add(new IJCommand(command, options));
 
 			}
 			System.out.println(filters.size());
@@ -421,7 +421,7 @@ public abstract class ParticlePicker
 
 	void removeFilter(String filter)
 	{
-		for (Filter f : filters)
+		for (IJCommand f : filters)
 			if (f.getCommand().equals(filter))
 			{
 				filters.remove(f);
@@ -434,7 +434,7 @@ public abstract class ParticlePicker
 
 	public boolean isFilterSelected(String filter)
 	{
-		for (Filter f : filters)
+		for (IJCommand f : filters)
 			if (f.getCommand().equals(filter))
 				return true;
 		return false;

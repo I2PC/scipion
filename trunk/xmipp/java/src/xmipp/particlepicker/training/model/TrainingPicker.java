@@ -95,6 +95,9 @@ public abstract class TrainingPicker extends ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
+				System.out.println(id);
+				if(id == 57)
+					System.out.println(57);
 				if (md.containsLabel(MDLabel.MDL_MICROGRAPH))
 					file = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				else if (md.containsLabel(MDLabel.MDL_IMAGE))
