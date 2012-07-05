@@ -3,7 +3,9 @@ package xmipp.particlepicker.training.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
+import xmipp.particlepicker.ParticlePicker;
 import xmipp.utils.XmippMessage;
 
 public class MicrographFamilyData
@@ -66,7 +68,8 @@ public class MicrographFamilyData
 
 	public void addManualParticle(TrainingParticle p)
 	{
-
+		if(!p.getMicrograph().fits(p.getX(), p.getY(), p.getFamily().getSize()))
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
 		manualparticles.add(p);
 		if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)//to put micrograph family data on new state, done only for first particle
 		{

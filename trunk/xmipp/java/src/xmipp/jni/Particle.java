@@ -49,21 +49,7 @@ public class Particle implements Comparable<Particle> {
 	}
 
 
-	public static boolean fits(int x, int y, int size, int width, int height) {
-		if (x < 0 || y < 0)
-			return false;
-
-		int radius = size/2;
-		if(x - radius < 0)
-			return false;
-		if(x + radius > width)
-			return false;
-		if(y - radius < 0)
-			return false;
-		if(y + radius > height)
-			return false;
-		return true;
-	}
+	
 
 	public void setPosition(int x, int y) {
 		this.x = x;

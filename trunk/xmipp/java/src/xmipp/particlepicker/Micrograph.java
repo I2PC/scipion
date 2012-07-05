@@ -46,6 +46,23 @@ public abstract class Micrograph
 		this.posfile = name + ext;
 
 	}
+	
+	public boolean fits(int x, int y, int size) {
+		if (x < 0 || y < 0)
+			return false;
+		int width = getImagePlus().getWidth();
+		int height = getImagePlus().getHeight();
+		int radius = size/2;
+		if(x - radius < 0)
+			return false;
+		if(x + radius > width)
+			return false;
+		if(y - radius < 0)
+			return false;
+		if(y + radius > height)
+			return false;
+		return true;
+	}
 
 	public static String getName(String file, int level)
 	{

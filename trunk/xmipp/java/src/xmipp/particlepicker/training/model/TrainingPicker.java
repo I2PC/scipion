@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
+import sun.misc.MessageUtils;
+
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -537,6 +539,11 @@ public abstract class TrainingPicker extends ParticlePicker
 					height = mfd.getMicrograph().getImagePlus().getHeight();
 					y = height - y;
 				}
+				if(!mfd.getMicrograph().fits(x, y, size))//ignore out of bounds particle
+				{
+					System.out.println(XmippMessage.getOutOfBoundsMsg("Particle") + String.format(" on x:%s y:%s", x, y));
+					continue;
+				}
 				mfd.addManualParticle(new TrainingParticle(x, y, mfd.getFamily(), mfd.getMicrograph(), cost));
 
 			}
@@ -546,6 +553,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 		catch (Exception e)
 		{
+			
+				
 			if(reader != null)
 				try {
 					reader.close();

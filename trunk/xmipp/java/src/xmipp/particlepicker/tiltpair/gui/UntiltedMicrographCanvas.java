@@ -118,7 +118,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				else if (SwingUtilities.isLeftMouseButton(e))
 					setActive(p);
 			}
-			else if (SwingUtilities.isLeftMouseButton(e) && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
+			else if (SwingUtilities.isLeftMouseButton(e) && um.fits(x, y, frame.getParticleSize()))
 				addParticle(x, y);
 		}
 	}
@@ -151,7 +151,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
 			return;
 		}
-		if (active != null && Particle.fits(x, y, frame.getParticleSize(), imp.getWidth(), imp.getHeight()))
+		if (active != null && um.fits(x, y, frame.getParticleSize()))
 		{
 			moveActiveParticle(x, y);
 			if (active.isAdded())
@@ -204,8 +204,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		try
 		{
 			Particle tp = um.getAlignerTiltedParticle(x, y);
-			ImagePlus tmimage = um.getTiltedMicrograph().getImagePlus();
-			if (!Particle.fits(tp.getX(), tp.getY(), pppicker.getFamily().getSize(), tmimage.getWidth(), tmimage.getHeight()))
+			if (!um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getFamily().getSize()))
 				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted Pair Coordinates"));
 			UntiltedParticle p = new UntiltedParticle(x, y, um, pppicker.getFamily());
 
@@ -255,7 +254,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				int xrect = (int) ((tp.getX() - srcrect.getX()));
 				int yrect = (int) ((tp.getY() - srcrect.getY()));
 
-				if (tp != null && !Particle.fits(xrect, yrect, (int) (tp.getFamily().getSize()), srcrect.width, srcrect.height))
+				if (tp != null && !um.fits(xrect, yrect, tp.getFamily().getSize()))
 					frame.getTiltedCanvas().moveTo(tp);
 			}
 		}
