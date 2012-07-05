@@ -639,7 +639,7 @@ public:
 	ImageGeneric *I;
 	MultidimArray<double> *PSD, *pieceSmoother;
     MultidimArray<int> *pieceMask;
-	Mutex mutex;
+	Mutex *mutex;
 	int Nprocessed;
 };
 
@@ -695,10 +695,10 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
     	}
 
     // Gather results
-    args->mutex.lock();
+    args->mutex->lock();
     args->Nprocessed+=Nprocessed;
     *(args->PSD)+=localPSD;
-    args->mutex.unlock();
+    args->mutex->unlock();
 }
 
 void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
@@ -741,12 +741,14 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     constructPieceSmoother(PSD,pieceSmoother);
 
     // Prepare thread arguments
+    Mutex mutex;
     ThreadFastEstimateEnhancedPSDParams args;
     args.I=&I;
     args.PSD=&PSD;
     args.pieceMask=&pieceMask;
     args.pieceSmoother=&pieceSmoother;
     args.Nprocessed=0;
+    args.mutex=&mutex;
     ThreadManager *thMgr = new ThreadManager(numberOfThreads,&args);
     thMgr->run(threadFastEstimateEnhancedPSD);
     if (args.Nprocessed!=0)
