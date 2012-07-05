@@ -154,5 +154,17 @@ public class ImagePlusLoader
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	public boolean existsFile()
+	{
+		String file;
+		if(fileName != null)
+			file = fileName;
+		else 
+			file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+		if(!new File(file).exists())
+			return false;
+		return true;
+	}
 
 }

@@ -7,6 +7,7 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.io.SaveDialog;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
@@ -28,6 +29,7 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.vecmath.Color3f;
 
+import xmipp.jni.Filename;
 import xmipp.utils.XmippFileChooser;
 
 /**
@@ -90,7 +92,10 @@ public class XmippMenuBar extends MenuBar
 			{
 				try
 				{
-					XmippMenuBar.this.xw.saveData();
+					if(XmippMenuBar.this.xw.getImagePlusLoader().existsFile())
+						XmippMenuBar.this.xw.saveData();
+					else
+						XmippMenuBar.this.saveAs();
 				}
 				catch (Exception ex)
 				{
@@ -106,21 +111,7 @@ public class XmippMenuBar extends MenuBar
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				XmippFileChooser fc = new XmippFileChooser();
-				int returnVal = fc.showOpenDialog(null);
-
-				try
-				{
-					if (returnVal == XmippFileChooser.APPROVE_OPTION)
-					{
-						File file = fc.getSelectedFile();
-						XmippMenuBar.this.xw.saveDataAs(file.getAbsolutePath());
-					}
-				}
-				catch (Exception ex)
-				{
-					JOptionPane.showMessageDialog(null, ex.getMessage());
-				}
+				saveAs();
 
 			}
 		});
@@ -327,6 +318,25 @@ public class XmippMenuBar extends MenuBar
 			}
 		});
 
+	}
+	
+	private void saveAs()
+	{
+		XmippFileChooser fc = new XmippFileChooser();
+		int returnVal = fc.showOpenDialog(null);
+
+		try
+		{
+			if (returnVal == XmippFileChooser.APPROVE_OPTION)
+			{
+				File file = fc.getSelectedFile();
+				XmippMenuBar.this.xw.saveDataAs(file.getAbsolutePath());
+			}
+		}
+		catch (Exception ex)
+		{
+			JOptionPane.showMessageDialog(null, ex.getMessage());
+		}
 	}
 	
 	protected void useGeometry()

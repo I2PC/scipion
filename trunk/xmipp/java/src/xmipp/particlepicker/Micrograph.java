@@ -2,15 +2,14 @@ package xmipp.particlepicker;
 
 import ij.IJ;
 import ij.ImagePlus;
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippMessage;
 
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 
-import com.sun.xml.internal.ws.api.addressing.WSEndpointReference.Metadata;
+import xmipp.ij.commons.XmippImageConverter;
+import xmipp.jni.ImageGeneric;
+import xmipp.utils.XmippMessage;
 
 public abstract class Micrograph {
 

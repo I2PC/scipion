@@ -1,26 +1,19 @@
 package xmipp.particlepicker.training.model;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
-import sun.misc.MessageUtils;
-
-import xmipp.particlepicker.Family;
-import xmipp.particlepicker.ParticlePicker;
-import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
-import xmipp.utils.XmippMessage;
-
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.particlepicker.Family;
+import xmipp.particlepicker.ParticlePicker;
+import xmipp.utils.XmippMessage;
 
 public abstract class TrainingPicker extends ParticlePicker
 {
@@ -95,9 +88,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-				System.out.println(id);
-				if(id == 57)
-					System.out.println(57);
 				if (md.containsLabel(MDLabel.MDL_MICROGRAPH))
 					file = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				else if (md.containsLabel(MDLabel.MDL_IMAGE))
