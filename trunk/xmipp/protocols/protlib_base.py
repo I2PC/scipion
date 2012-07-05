@@ -368,6 +368,8 @@ class XmippProtocol(object):
         self.WorkingDir = project.getWorkingDir(protocolName, self.RunName)
         self.ParamsDict['WorkingDir'] = self.WorkingDir
         self.TmpDir = self.workingDirPath('tmp')
+        self.ExtraDir = self.workingDirPath('extra')
+        self.ParamsDict['ExtraDir'] = self.ExtraDir
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
