@@ -38,7 +38,7 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_Filename_isMetaDataFile
   XMIPP_JAVA_TRY
   {
       const char *fnStr = env->GetStringUTFChars(filename, false);
-      return FileName(fnStr).isMetaData();
+      return FileName(fnStr).isMetaData(false);
   }
   XMIPP_JAVA_CATCH;
 

@@ -70,26 +70,28 @@ public class XmippFileView extends FileView {
 		Icon icon = null;
 		try {
 			String filename = f.getPath();
-			String iconString = "generic_file.gif";
-			if (f.isDirectory())
-				iconString = "folderopen.gif";
-			if (Filename.isSingleImage(filename))
-				iconString = "image.gif";
-			else if (Filename.isMetadata(filename))
-				iconString = "md.gif";
-			else if (Filename.isVolume(filename))
-				iconString = "vol.gif";
-			else if (Filename.isStack(filename))
-				iconString = "stack.gif";
-			else if (filename.endsWith(Filename.EXT_ERR))
-				iconString = "err.gif";
-			else if (filename.endsWith(Filename.EXT_OUT))
-				iconString = "out.gif";
-			else if (filename.endsWith(Filename.EXT_LOG))
-				iconString = "log.gif";
-			else if (filename.endsWith(Filename.EXT_PY))
-				iconString = "python_file.gif";
-			return XmippResource.getIcon(iconString);
+			if (Filename.exists(filename)) {
+				String iconString = "generic_file.gif";
+				if (f.isDirectory())
+					iconString = "folderopen.gif";
+				if (Filename.isSingleImage(filename))
+					iconString = "image.gif";
+				else if (Filename.isMetadata(filename))
+					iconString = "md.gif";
+				else if (Filename.isVolume(filename))
+					iconString = "vol.gif";
+				else if (Filename.isStack(filename))
+					iconString = "stack.gif";
+				else if (filename.endsWith(Filename.EXT_ERR))
+					iconString = "err.gif";
+				else if (filename.endsWith(Filename.EXT_OUT))
+					iconString = "out.gif";
+				else if (filename.endsWith(Filename.EXT_LOG))
+					iconString = "log.gif";
+				else if (filename.endsWith(Filename.EXT_PY))
+					iconString = "python_file.gif";
+				return XmippResource.getIcon(iconString);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

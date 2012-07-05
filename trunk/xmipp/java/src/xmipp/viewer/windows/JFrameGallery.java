@@ -1041,17 +1041,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	private void tableMouseClicked(MouseEvent evt) {
 		final Point p = evt.getPoint();
-		int view_row = table.rowAtPoint(p);
-		int view_col = table.columnAtPoint(p);
+		int row = table.rowAtPoint(p);
+		int col = table.columnAtPoint(p);
 
 		if (evt.getButton() == MouseEvent.BUTTON1) { // Left click.
 			if (evt.getClickCount() > 1) {
 				try {
-					// String imageFn = gallery.getImageFilenameAt(view_row,
-					// view_col);
-					// if (imageFn != null)
-					// new XmippImageWindow(imageFn);
-					gallery.handleDoubleClick(view_row, view_col);
+					gallery.handleDoubleClick(row, col);
 				} catch (Exception e) {
 					XmippDialog.showError(this, e.getMessage());
 				}
@@ -1065,7 +1061,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 									.showWarning(this,
 											"You will lose previous selection.\nDo you want to proceed?")) {
 						gallery.clearSelection();
-						gallery.touchItem(view_row, view_col);
+						gallery.touchItem(row, col);
 
 					} else
 						move = false;
@@ -1075,31 +1071,31 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 					if (evt.isShiftDown()) {
 						gallery.selectRange(previousSelectedRow,
-								previousSelectedCol, view_row, view_col, true);
+								previousSelectedCol, row, col, true);
 					} else if (evt.isControlDown()) {
-						gallery.touchItem(view_row, view_col);
+						gallery.touchItem(row, col);
 					}
 				}
 				if (move) {
 					isUpdating = true;
-					int index = gallery.getIndex(view_row, view_col);
+					int index = gallery.getIndex(row, col);
 					if (gallery.isValidIndex(index))
 						jsGoToImage.setValue(index + 1);
 					isUpdating = false;
 				}
 				if (!evt.isShiftDown()) {
-					previousSelectedRow = view_row;
-					previousSelectedCol = view_col;
+					previousSelectedRow = row;
+					previousSelectedCol = col;
 				}
 			}
 
 		} else if (evt.getButton() == MouseEvent.BUTTON3) { // Right click.
 
 			final MouseEvent me = evt;
-			if (gallery.handleRightClick(view_row, view_col, jpopUpMenuTable)) {
+			if (gallery.handleRightClick(row, col, jpopUpMenuTable)) {
 				if (gallery.getSelectionCount() < 2) {
 					gallery.clearSelection();
-					gallery.touchItem(view_row, view_col);
+					gallery.touchItem(row, col);
 				}
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {

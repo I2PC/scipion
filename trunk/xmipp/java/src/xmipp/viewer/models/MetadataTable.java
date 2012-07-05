@@ -23,14 +23,17 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-
 package xmipp.viewer.models;
 
 import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.JTable;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageWindow;
@@ -42,6 +45,9 @@ import xmipp.viewer.FloatRenderer;
 
 public class MetadataTable extends MetadataGallery {
 	private static final long serialVersionUID = 1L;
+
+	int sortColumnIndex = -1;
+	boolean ascending = true;
 
 	public MetadataTable(GalleryData data) throws Exception {
 		super(data);
@@ -73,7 +79,7 @@ public class MetadataTable extends MetadataGallery {
 	public int getIndex(int row, int col) {
 		return row;
 	}
-	
+
 	@Override
 	public Object getValueAt(int row, int column) {
 		// DEBUG.printMessage(String.format("MetadataTable.getValueAt(%d, %d)",
@@ -88,7 +94,8 @@ public class MetadataTable extends MetadataGallery {
 					item = cache.get(key);
 				else {
 					// If not, create the item and store it for future
-					item = createImageItem(row, ci.getLabel(), ci.getLabel(), key);
+					item = createImageItem(row, ci.getLabel(), ci.getLabel(),
+							key);
 					cache.put(key, item);
 				}
 				setupItem(item, row);
@@ -124,7 +131,7 @@ public class MetadataTable extends MetadataGallery {
 		}
 
 		return null;
-	}//function getValueAt
+	}// function getValueAt
 
 	@Override
 	public void setValueAt(Object value, int row, int column) {
@@ -138,11 +145,14 @@ public class MetadataTable extends MetadataGallery {
 		}
 
 	}// function setValueAt
-	
-	/** Helper function to set the value of a cell 
-	 * @throws Exception */
+
+	/**
+	 * Helper function to set the value of a cell
+	 * 
+	 * @throws Exception
+	 */
 	protected void setMdValueAt(Object value, int row, int column,
-			ColumnInfo ci, long id) throws Exception{
+			ColumnInfo ci, long id) throws Exception {
 		if (!ci.render) {
 			int label = ci.getLabel();
 			int type = MetaData.getLabelType(label);
@@ -153,7 +163,7 @@ public class MetadataTable extends MetadataGallery {
 				break;
 			case MetaData.LABEL_INT:
 				if (label == MDLabel.MDL_ENABLED) {
-					md.setEnabled((Boolean)value, id);
+					md.setEnabled((Boolean) value, id);
 				} else
 					md.setValueInt(label, ((Integer) value).intValue(), id);
 				break;
@@ -180,25 +190,26 @@ public class MetadataTable extends MetadataGallery {
 		return ci.allowEdit && !ci.render;
 	}
 
-//	@Override
-//	public String getImageFilenameAt(int row, int col){
-//		ColumnInfo ci = visibleLabels.get(col);
-//		return (ci.render && data.isImageFile(ci))
-//				? data.getValueFromCol(row, ci) : null;
-//	}
+	// @Override
+	// public String getImageFilenameAt(int row, int col){
+	// ColumnInfo ci = visibleLabels.get(col);
+	// return (ci.render && data.isImageFile(ci))
+	// ? data.getValueFromCol(row, ci) : null;
+	// }
 	@Override
-	public boolean handleDoubleClick(int row, int col){
+	public boolean handleDoubleClick(int row, int col) {
 		try {
 			if (data.isImageFile(col)) {
-				new XmippImageWindow(new MdRowImageLoader(row, data.labels.get(col).getLabel()));
+				new XmippImageWindow(new MdRowImageLoader(row, data.labels.get(
+						col).getLabel()));
 				return true;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
-	}//function handleDoubleClick
-	
+	}// function handleDoubleClick
+
 	@Override
 	public void setColumns(int cols) {
 
@@ -224,12 +235,13 @@ public class MetadataTable extends MetadataGallery {
 			fireTableDataChanged();
 		}
 	}
-	
+
 	@Override
 	public String getLabel(int row, int col) {
 		try {
 			long objId = data.ids[row];
-			return data.md.getValueString(visibleLabels.get(col).getLabel(), objId);
+			return data.md.getValueString(visibleLabels.get(col).getLabel(),
+					objId);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -238,12 +250,12 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	protected void calculateCellSize() {
-		//DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
+		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
 		if (data.globalRender) {
 			super.calculateCellSize();
-//			DEBUG.printMessage(String.format(
-//					"MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
-//					cellDim.height));
+			// DEBUG.printMessage(String.format(
+			// "MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
+			// cellDim.height));
 
 		} else {
 			int font_height;
@@ -256,28 +268,33 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	public void setupTable(JTable table) {
-		//table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		table.setDefaultRenderer(ImageItem.class, renderer);
 		table.setDefaultRenderer(Double.class, new FloatRenderer());
-		table.setAutoCreateRowSorter(true);
+		// table.setAutoCreateRowSorter(true);
+		JTableHeader header = table.getTableHeader();
+		header.setUpdateTableInRealTime(true);
+		header.addMouseListener(new MetadataColumnListener(table));
+		header.setReorderingAllowed(true);
 		updateTableSelection(table);
 	}
-	
+
 	/** Update the table selection according with data selection */
 	@Override
-	public void updateTableSelection(JTable table){
+	public void updateTableSelection(JTable table) {
 		table.clearSelection();
 		for (int i = 0; i < n; ++i)
 			if (data.selection[i]) {
 				table.addRowSelectionInterval(i, i);
 			}
 	}
-	
+
 	@Override
-	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
+	public boolean handleRightClick(int row, int col,
+			XmippPopupMenuCreator xpopup) {
 		xpopup.initItems();
-		if (data.isFile(col)){
+		if (data.isFile(col)) {
 			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
 			if (!data.isImageFile(col))
 				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
@@ -290,7 +307,6 @@ public class MetadataTable extends MetadataGallery {
 	public GalleryColumnModel createColumnModel() {
 		return new MetadataColumnModel();
 	}
-	
 
 	public class MetadataColumnModel extends GalleryColumnModel {
 		public MetadataColumnModel() {
@@ -309,39 +325,76 @@ public class MetadataTable extends MetadataGallery {
 				TableCellRenderer rend;
 				Component comp;
 				boolean non_empty = data.md.size() > 0;
-				
+
 				for (int i = 0; i < visibleLabels.size(); ++i) {
 					ColumnInfo col = visibleLabels.get(i);
 					width = 0;
-					//Calculate width of the cell 
+					// Calculate width of the cell
 					if (col.render) {
 						width = cellDim.width;
-					} 
-					else if (non_empty) {
-					//else {
+					} else if (non_empty) {
+						// else {
 						rend = table.getCellRenderer(0, i);
-						comp = rend.getTableCellRendererComponent(
-								table, getValueAt(0, i), false, false, 0, 0);
+						comp = rend.getTableCellRendererComponent(table,
+								getValueAt(0, i), false, false, 0, 0);
 						width = comp.getPreferredSize().width + 10;
 					}
-					//Calculate width of the header
+					// Calculate width of the header
 					TableColumn tc = getColumn(i);
 					rend = tc.getHeaderRenderer();
 					if (rend == null)
 						rend = table.getTableHeader().getDefaultRenderer();
 					Object value = tc.getHeaderValue();
-					comp = rend.getTableCellRendererComponent(table, value, false, false, 0, i);
-					//Take max width
+					comp = rend.getTableCellRendererComponent(table, value,
+							false, false, 0, i);
+					// Take max width
 					width = Math.max(width, comp.getPreferredSize().width);
 					getColumn(i).setPreferredWidth(width + 10);
-//					DEBUG.printMessage(String.format("col: %d, width: %d", i, width));
+					// DEBUG.printMessage(String.format("col: %d, width: %d", i,
+					// width));
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}//function adjustColumnsWidth
+		}// function adjustColumnsWidth
 
-	}//class MetadataColumnModel
-	
-}//class MetadataTable
+	}// class MetadataColumnModel
+
+	class MetadataColumnListener extends MouseAdapter {
+		protected JTable table;
+
+		public MetadataColumnListener(JTable t) {
+			table = t;
+		}
+
+		public void mouseClicked(MouseEvent e) {
+			TableColumnModel colModel = table.getColumnModel();
+			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
+			int modelIndex = colModel.getColumn(columnModelIndex)
+					.getModelIndex();
+			DEBUG.printFormat("Sorting col index: %d", modelIndex);
+
+			if (modelIndex < 0)
+				return;
+			if (sortColumnIndex == modelIndex)
+				ascending = !ascending;
+			else
+				sortColumnIndex = modelIndex;
+			data.sortMd(sortColumnIndex, ascending);
+			fireTableDataChanged();
+
+			//
+			// for (int i = 0; i < columnsCount; i++) {
+			// TableColumn column = colModel.getColumn(i);
+			// column.setHeaderValue(getColumnName(column.getModelIndex()));
+			// }
+			// table.getTableHeader().repaint();
+			//
+			// Collections.sort(vector,new MyComparator(isSortAsc));
+			// table.tableChanged(new TableModelEvent(MyTableModel.this));
+			// table.repaint();
+		}
+	}
+
+}// class MetadataTable

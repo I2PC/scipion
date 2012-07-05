@@ -50,8 +50,10 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 			boolean isSelected, boolean hasFocus, int row, int column) {
 		ImageGallery.ImageItem item = (ImageGallery.ImageItem) object;
 		// DEBUG.printMessage("*** 1. Rendering: " + item.getLabel());
-		// Calls super class so foreground, background, borders and rest of
-		// stuff is set.
+		// DEBUG.printFormat("*** 1. Rendering: item: %s, index: %d, row: %d, col: %d", 
+		//		 item.getLabel(), item.getIndex(), row, column);
+//		 Calls super class so foreground, background, borders and rest of
+//		 stuff is set.
 		super.getTableCellRendererComponent(table, null, item != null
 				&& item.isSelected(), item != null && hasFocus, row, column);
 

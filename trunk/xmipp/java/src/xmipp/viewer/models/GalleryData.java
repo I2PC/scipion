@@ -277,6 +277,18 @@ public class GalleryData {
 		}
 	}
 	
+	/** Sort the metadata by a given column.
+	 * The sort could be ascending or descending
+	 */
+	public void sortMd(int col, boolean ascending){
+		try {
+			md.sort(getLabelFromCol(col), ascending);
+			hasMdChanges = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/** Reload current metadata from file*/
 	public void readMd(){
 		if (filename != null)
@@ -593,6 +605,10 @@ public class GalleryData {
 		return false;
 	}
 
+	public int getLabelFromCol(int col){
+		return labels.get(col).getLabel();
+	}
+	
 	public String getValueFromCol(int index, int col) {
 		return getValueFromCol(index, labels.get(col));
 	}
