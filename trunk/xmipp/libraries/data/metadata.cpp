@@ -1859,7 +1859,9 @@ bool MDLinealGenerator::fillValue(MetaData &md, size_t objId)
 {
     double value = initValue + step * counter++;
     if (MDL::isInt(label))
-        md.setValue(label, ROUND(value), objId);
+        md.setValue(label, (int)value, objId);
+    else if ( MDL::isLong(label))
+        md.setValue(label, (size_t)value, objId);
     else
         md.setValue(label, value, objId);
 }
