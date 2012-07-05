@@ -1,12 +1,12 @@
 package xmipp.particlepicker;
 
-public class Filter
+public class IJCommand
 {
 
 	private String command;
 	private String options;
 	
-	public Filter(String command, String options)
+	public IJCommand(String command, String options)
 	{
 		this.command = command;
 		this.options = options;
