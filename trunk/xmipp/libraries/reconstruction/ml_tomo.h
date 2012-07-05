@@ -134,6 +134,8 @@ public:
     MultidimArray<double> P_phi, Mr2;
     /** Flag for generation of initial models from random subsets */
     bool do_generate_refs;
+    /** Vector to assign reference number to stack positions*/
+    std::vector <size_t> convert_refno_to_stack_position;
 
     /** Optimal refno and angno from previous iteration */
     std::vector<int> imgs_optrefno, imgs_optangno;
