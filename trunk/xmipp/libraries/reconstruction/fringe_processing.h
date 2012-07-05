@@ -101,10 +101,14 @@ public:
     void demodulate2(MultidimArray<double> & im, double lambda, int size, int x, int y, int rmin, int rmax,
     				Matrix1D<double> & coeffs, int verbose=0);
 
-    void firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints, int rmin, int rmax, int numAngles);
+    void firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints, double rmin,
+    		double rmax, int numAngles, int verbose=0);
 
+    void fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, double & y0, double & majorAxis, double & minorAxis,
+    		double & ellipseAngle);
 
-
+    void calculateDefocus(double & defocusU,double & defocusV, double majorAxis, double minorAxis,  double Q0, double lambda, double Cs,
+    						double imgSize, double Ts);
 
 };
 

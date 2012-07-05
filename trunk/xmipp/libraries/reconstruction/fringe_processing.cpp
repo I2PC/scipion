@@ -778,13 +778,13 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
                                    Matrix1D<double> & coeffs, int verbose)
 {
     //Initial Setup :
-	// In : Normalized image after using methods normalizeWB or normalize
-	// orModMap : modulation map of im using
-//TODO : subtract orModMap
-	// dir : direction map. It can be obtained using direction method but in our case, we impose the direction map shape
-	// wphase : wrapped phase
-	// phase : absolute phase computed from wphase and method unwrapping
-	// mod : modulation map
+    // In : Normalized image after using methods normalizeWB or normalize
+    // orModMap : modulation map of im using
+    //TODO : subtract orModMap
+    // dir : direction map. It can be obtained using direction method but in our case, we impose the direction map shape
+    // wphase : wrapped phase
+    // phase : absolute phase computed from wphase and method unwrapping
+    // mod : modulation map
 
     MultidimArray< double > In, mod, dir, wphase, phase;
     MultidimArray< bool > ROI;
@@ -942,33 +942,196 @@ void FringeProcessing::demodulate2(MultidimArray<double> & im, double lambda, in
     }
 }
 
-void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints, int rmin, int rmax, int numAngles)
+void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints,Matrix1D<double> & yPoints,
+                                   double rmin, double rmax, int numAngles, int verbose)
 {
-	enhancedPSD.setXmippOrigin();
+    enhancedPSD.setXmippOrigin();
+    Histogram1D hist;
+    compute_hist(enhancedPSD, hist, 200);
 
-	Histogram1D hist;
-	compute_hist(enhancedPSD, hist, 200);
-	double eff0 = hist.percentil(0.1);
-	double effF = hist.percentil(90);
+    double eff0 = hist.percentil(0.1);
+    double effF = hist.percentil(98);
+    double thrs = (eff0 + effF)*0.5;
 
-	for (int nAngles = 0; nAngles < numAngles; nAngles++)
-	{
-		double minX = rmin*cos(nAngles);
-		double minY = rmin*sin(nAngles);
+    int index = 0;
+    double nAngles = 0;
 
-		double maxX = rmax*cos(nAngles);
-		double maxY = rmax*sin(nAngles);
+    while (nAngles < 2*PI)
+    {
+        double minX = (rmin/2)*std::cos(nAngles);
+        double minY = (rmin/2)*std::sin(nAngles);
+        double maxX = (rmax/2)*std::cos(nAngles);
+        double maxY = (rmax/2)*std::sin(nAngles);
+        int numPts = numAngles;
+        double x = minX;
+        double y = 0;
+        double step = (maxX-minX)/numPts;
+        double z;
+
+        for (int i = 0; i < numPts; i++)
+        {
+            y = ( ((maxY-minY)/(maxX-minX))*(x-minX)+minY );
+            z = A2D_ELEM(enhancedPSD,int(y),int(x));
+
+            if (z < thrs)
+            {
+                VEC_ELEM(xPoints,index)=x;
+                VEC_ELEM(yPoints,index)=y;
+                continue;
+            }
+
+            x = (x+step);
+        }
+
+        index++;
+        nAngles += 2*PI/numAngles;
+    }
 
 
-	}
+    double x0, y0, majorAxis, minorAxis, ellipseAngle;
+    fitEllipse(xPoints, yPoints, x0, y0, majorAxis,minorAxis,ellipseAngle);
 
+    //EXTERNAL FORCE FIELD CALCULATION
+    //We perform the gradient of enhancedPSD to calculate the external force field (balloon force)
+    //Calculation of the external force field normalized to maximum magnitude 1
 
-	    //We obtain the ROI from rmax and rmin parameters and the direction map
-	    //FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
-	   // {
+    int NR, NC,NZ;
+    size_t Ndim;
+    enhancedPSD.getDimensions(NR,NC,NZ,Ndim);
+    MultidimArray<double > fx, fy;
+    fx.resizeNoCopy(enhancedPSD);
+    fy.resizeNoCopy(enhancedPSD);
 
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(enhancedPSD)
+    {
+        if ( (i==STARTINGX(enhancedPSD)) || (i== (FINISHINGX(enhancedPSD)-1)) || (j == STARTINGY(enhancedPSD)) || (j== (FINISHINGY(enhancedPSD)-1)) )
+        {
+            A2D_ELEM(fx,i,j)  = 0;
+            A2D_ELEM(fy,i,j) = 0;
+        }
+        else
+        {
+        	A2D_ELEM(fx,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(enhancedPSD,i+1,j)-A2D_ELEM(enhancedPSD,i-1,j));
+            A2D_ELEM(fy,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(enhancedPSD,i,j+1)-A2D_ELEM(enhancedPSD,i,j-1));
+        }
+    }
 
-	STARTINGX(enhancedPSD)=STARTINGY(enhancedPSD)=0;
+    //We calculate accumulative derivatives in the area 2*wSize+1
+    int wSize = 5;
+    MultidimArray<double> mask;
+    mask.resizeNoCopy(enhancedPSD);
+    for (int i = -std::abs(wSize); i <= std::abs(wSize); i++ )
+        for (int j = -std::abs(wSize); j <= std::abs(wSize); j++ )
+            A2D_ELEM(mask,i,j) = double(1)/ double(wSize*wSize+1);
+
+    convolutionFFT(fx,mask,fx);
+    convolutionFFT(fy,mask,fy);
+
+    //From the derivatives we calculate kappa:
+    int imax,jmax;
+    MultidimArray<double> absFx;
+    absFx.resizeNoCopy(fx);
+    //absFx= fx.selfABS();
+    /*absFx.maxIndex(imax,jmax);
+    double maxFx = A2D_ELEM(fx,imax,jmax);
+
+    MultidimArray<double> absFy = (fy.selfABS());
+    absFy.maxIndex(imax,jmax);
+    double maxFy = A2D_ELEM(fy,imax,jmax);
+	*/
+    ///////////////////////
+    //
+
+    STARTINGX(enhancedPSD)=STARTINGY(enhancedPSD)=0;
+    //enhancedPSD
+
+    if (verbose != 0)
+    {
+    	Image<double> save;
+
+    	save() = enhancedPSD;
+    	save.write("PPP0.xmp");
+
+    	save() = fx;
+    	save.write("PPP1.xmp");
+
+    	save() = fy;
+    	save.write("PPP2.xmp");
+    }
+}
+
+//Obtained from: http://www.mathworks.com/matlabcentral/fileexchange/15125-fitellipse-m/content/fitellipse.m
+void FringeProcessing::fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, double & y0, double & majorAxis,
+                                  double & minorAxis, double & ellipseAngle)
+{
+    Matrix2D<double> B(VEC_XSIZE(xPts),5), A(2,2);
+    Matrix1D<double> V(5), squareXPts(VEC_XSIZE(xPts));
+
+    for (int nRow = 0; nRow < VEC_XSIZE(xPts); nRow++)
+    {
+        double tempX = VEC_ELEM(xPts,nRow);
+        double tempY = VEC_ELEM(yPts,nRow);
+
+        dMij(B,nRow,0) = 2*tempX*tempY;
+        dMij(B,nRow,1) = tempY*tempY-tempX*tempX;
+        dMij(B,nRow,2) = tempX;
+        dMij(B,nRow,3) = tempY;
+        dMij(B,nRow,4) = 1;
+        VEC_ELEM(squareXPts,nRow) = -tempX*tempX;
+
+    }
+
+    Matrix1D<double> bv(2);
+    Matrix2D<double> C =(B.inv());
+    V = C*(squareXPts);
+
+    dMij(A,0,0) = 1-VEC_ELEM(V,1);
+    dMij(A,0,1) = VEC_ELEM(V,0);
+    dMij(A,1,0) = VEC_ELEM(V,0);
+    dMij(A,1,1) = VEC_ELEM(V,1);
+    VEC_ELEM(bv,0) = VEC_ELEM(V,2);
+    VEC_ELEM(bv,1) = VEC_ELEM(V,3);
+
+    double c = VEC_ELEM(V,4);
+
+    Matrix2D<double> u(2,2),v(2,2);
+    Matrix1D<double> w(2);
+    svdcmp(A, u, w, v);
+
+    Matrix1D<double> t = -0.5*((A.inv())*bv);
+
+    Matrix1D<double> temp1 = (t*(A * t));//c_h = t.transpose() * A * t + bv.transpose() * t + c;
+    Matrix1D<double> temp2 = bv.transpose() * t;
+    double c_h = temp1.sum()+temp2.sum()+c;
+    x0 = VEC_ELEM(t,0);
+    y0 = VEC_ELEM(t,1);
+    majorAxis = std::sqrt(-c_h / VEC_ELEM(w,0));
+    minorAxis = std::sqrt(-c_h / VEC_ELEM(w,1));
+    ellipseAngle = std::atan2(dMij(u,0,0),-dMij(u,1,0));
+
+    double angle = 0;
+
+    for (int nPoint = 0; nPoint < VEC_XSIZE(xPts); nPoint++)
+    {
+    	//We impose that the origin always is zero and because this whe do not sum it
+    	VEC_ELEM(xPts,nPoint) = majorAxis*std::cos(-ellipseAngle)*std::cos(angle) - minorAxis*std::sin(-ellipseAngle)*std::sin(angle)+x0;
+    	VEC_ELEM(yPts,nPoint) = majorAxis*std::sin(-ellipseAngle)*std::cos(angle) + minorAxis*std::cos(-ellipseAngle)*std::sin(angle)+y0;
+    	angle += (2*PI)/VEC_XSIZE(xPts);
+    }
+
+}
+
+//Equivalent function in JAVA in : xmipp.svn/java/src/xmipp/viewer/ctf/EllipseCTF.java
+void FringeProcessing::calculateDefocus(double & defocusU,double & defocusV, double majorAxis, double minorAxis, double Q0, double lambda,
+                                        double Cs, double imgSize, double Ts)
+{
+    double R = majorAxis / (imgSize * Ts);
+    double a = lambda * R * R;
+    defocusU = -std::atan(-Q0) / (PI * a) - (1 / a) - 0.5 * (Cs * a * lambda);
+
+    R = minorAxis / (imgSize * Ts);
+    a = lambda * R * R;
+    defocusV = -std::atan(-Q0) / (PI * a) - (1 / a) - 0.5 * (Cs * a * lambda);
 
 }
 
