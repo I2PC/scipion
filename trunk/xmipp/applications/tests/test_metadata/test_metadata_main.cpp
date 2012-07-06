@@ -99,30 +99,6 @@ TEST_F( MetadataTest, AddLabel)
     EXPECT_EQ(v2,v1);
 }
 
-TEST_F( MetadataTest, testingDelete)
-{
-    //#include <data/metadata_extension.h>
-    MetaData md ;          // metadata object
-    FileName fn;           // metadata file Name
-    double Xoff;
-    fn.compose("two","metadata/ReadWriteAppendBlock.xmd"); //read metadata labeled two
-    md.read(fn);           // read metadata
-    String errorMessage;
-    FOR_ALL_OBJECTS_IN_METADATA(md) //loop through all lines
-    {
-        if (md.getValue(MDL_X, Xoff,__iter.objId))//get value for attribute ctf_sampling_rate
-            std::cerr << "The value is: " <<  Xoff;
-        else
-        {
-            errorMessage=formatString("Cannot find label %s ",(MDL::label2Str(MDL_X)).c_str());
-            REPORT_ERROR(ERR_MD_MISSINGLABEL,errorMessage);
-        }
-        md.setValue(MDL_X,Xoff*2.);//store the double of the sampling rate
-    }
-    fn.compose("three","/tmp/delete.xmd"); //write metadata labeled two
-    md.write(fn);                          //save metada in file
-    EXPECT_EQ(1,1);
-}
 
 TEST_F( MetadataTest, AddRow)
 {
