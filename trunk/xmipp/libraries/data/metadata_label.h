@@ -88,8 +88,7 @@ enum MDLabel
     MDL_CRYSTAL_DISAPPEAR_THRE,   /// < Disappearing threshold (double)
     MDL_CRYSTAL_SHFILE,   /// < Shift file for crystal projection
     MDL_CRYSTAL_ORTHO_PRJ,   /// <Orthogonal projection or not (bool)
-    MDL_CRYSTAL_PROJ,   /// < Have a crystal projection (boo)
-    MDL_CRYSTAL_POINTSASYMETRICUNIT, /// < Size of the orthogonal asymmetry unit (size_t)
+    MDL_CRYSTAL_PROJ,   /// < Have a crystal projection (bool)
     MDL_CRYSTAL_SHIFTX, ///< Shift for the image in the X axis (double) for crystals
     MDL_CRYSTAL_SHIFTY, ///< Shift for the image in the Y axis (double) for crystals
     MDL_CRYSTAL_SHIFTZ, ///< Shift for the image in the Z axis (double) for crystals
@@ -267,6 +266,7 @@ enum MDLabel
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
 
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
     MDL_PRJ_ANGFILE,  ///< File for generated angles
@@ -717,7 +717,6 @@ private:
         MDL::addLabel(MDL_CRYSTAL_LATTICE_B, LABEL_VECTOR_DOUBLE, "crystalLatticeB");
         MDL::addLabel(MDL_CRYSTAL_ORTHO_PRJ, LABEL_BOOL, "crystalOrthoProj");
         MDL::addLabel(MDL_CRYSTAL_PROJ, LABEL_BOOL, "crystalProj");
-        MDL::addLabel(MDL_CRYSTAL_POINTSASYMETRICUNIT, LABEL_SIZET, "crystalPointsAsymmetricUnit");
         MDL::addLabel(MDL_CRYSTAL_SHFILE, LABEL_STRING, "crystalShiftFile");
         MDL::addLabel(MDL_CRYSTAL_SHIFTX, LABEL_DOUBLE, "crystalShiftX");
         MDL::addLabel(MDL_CRYSTAL_SHIFTY, LABEL_DOUBLE, "crystalShiftY");
@@ -981,7 +980,8 @@ private:
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
         MDL::addLabelAlias(MDL_PMAX, "sumP");
-
+        MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_SIZET, "pointsAsymmetricUnit");
+        MDL::addLabelAlias(MDL_POINTSASYMETRICUNIT, "pointsasymmetricUnit");
         MDL::addLabel(MDL_PRJ_ANGFILE, LABEL_STRING, "projAngleFile");
         MDL::addLabelAlias(MDL_PRJ_ANGFILE, "angleFile");//3.0
         MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR_DOUBLE, "projDimensions");

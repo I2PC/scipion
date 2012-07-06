@@ -1439,7 +1439,7 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
 
     row.setValue(MDL_SAMPLINGRATE, sampling_rate_rad);
     row.setValue(MDL_NEIGHBORHOOD_RADIUS, cos_neighborhood_radius);
-    row.setValue(MDL_CRYSTAL_POINTSASYMETRICUNIT,numberSamplesAsymmetricUnit);
+    row.setValue(MDL_POINTSASYMETRICUNIT,numberSamplesAsymmetricUnit);
     md.setComment("data_extra -> sampling description;"\
                   " data_neighbors --> List with order of each"\
                   "experimental images and its neighbors"\
@@ -1526,7 +1526,7 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
     size_t id = md.firstObject();
     md.getValue(MDL_SAMPLINGRATE, sampling_rate_rad, id);
     md.getValue(MDL_NEIGHBORHOOD_RADIUS, cos_neighborhood_radius, id);
-    md.getValue(MDL_CRYSTAL_POINTSASYMETRICUNIT,numberSamplesAsymmetricUnit,id);
+    md.getValue(MDL_POINTSASYMETRICUNIT,numberSamplesAsymmetricUnit,id);
 
     //Read neighbors
     md.read(FN_SAMPLING_NEI(fn_base));
