@@ -117,6 +117,7 @@ def detectQt():
     from os.path import dirname
     possible_dirs = [s+'/qt3/include' for s in ['/usr/lib64', '/usr/lib', '/usr/share']]
     possible_dirs += [s+'/qt-3.3/include' for s in ['/usr/lib64', '/usr/lib', '/usr/share']]
+    possible_dirs += [s+'/qt-3.3.8/include' for s in ['/usr/lib64', '/usr/lib', '/usr/share']]
     inc_qt = findFilePath('qt.h', *possible_dirs)
     if inc_qt:
     	return dirname(inc_qt)
