@@ -450,11 +450,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	/** Return the number of selected elements */
 	public int getSelectionCount() {
-		int count = 0;
-		for (int i = 0; i < n; ++i)
-			if (data.selection[i])
-				++count;
-		return count;
+		return data.getSelectionCount();
 	}
 
 	/** Normalization utils */

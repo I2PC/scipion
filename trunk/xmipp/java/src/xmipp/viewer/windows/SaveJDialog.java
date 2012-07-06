@@ -208,6 +208,19 @@ public class SaveJDialog extends XmippDialog {
 		
 	}
 	
+	/** Save the metadata using the path and setting from the dialog */
+	public void saveMd(MetaData md){
+		try {
+			String path = getMdFilename();
+			if (isAppendMode())
+				md.writeBlock(path);
+			else
+				md.write(path);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	@Override
 	public void handleActionPerformed(ActionEvent evt){

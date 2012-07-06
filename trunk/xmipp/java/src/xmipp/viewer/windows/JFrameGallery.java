@@ -224,22 +224,21 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	public GalleryData getData() {
 		return data;
 	}
-	
+
 	/** Close the application, check if changes first */
-	public void close(){
-		if (proceedWithChanges()){
+	public void close() {
+		if (proceedWithChanges()) {
 			setVisible(false);
 			dispose();
 		}
-	}//function close
-	
+	}// function close
+
 	/** Check if there are changes to proceed */
-	public boolean proceedWithChanges(){
+	public boolean proceedWithChanges() {
 		boolean proceed = true;
 		if (data.hasMdChanges()) {
 			XmippQuestionDialog dlg = new XmippQuestionDialog(
-					JFrameGallery.this,
-					"Do you want to save metadata changes?");
+					JFrameGallery.this, "Do you want to save metadata changes?");
 			if (dlg.showDialog())
 				try {
 					save();
@@ -371,9 +370,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			gallery.setRows(data.parameters.rows);
 		else if (!data.isRotSpectraMode())
 			adjust = true;
-		
+
 		if (data.isMicrographsMode()) {
-			//setExtendedState(JFrame.MAXIMIZED_BOTH);
+			// setExtendedState(JFrame.MAXIMIZED_BOTH);
 			width = screenSize.width - 50;
 			int h = screenSize.height - 100;
 			setPreferredSize(new Dimension(width, h));
@@ -483,19 +482,19 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			rowHeader.setFixedCellHeight(dimension.height);
 			rowHeaderModel.setSize(gallery.getRowCount());
 		}
-			// Adjusts columns width
-			gallery.getColumnModel().adjustColumnsWidth(table);
-			// columnModel.setWidth(dimension.width);
+		// Adjusts columns width
+		gallery.getColumnModel().adjustColumnsWidth(table);
+		// columnModel.setWidth(dimension.width);
 
-			// If auto adjust columns is enabled, refresh!
-			jsRows.setValue(gallery.getRowCount());
-			jsColumns.setValue(gallery.getColumnCount());
+		// If auto adjust columns is enabled, refresh!
+		jsRows.setValue(gallery.getRowCount());
+		jsColumns.setValue(gallery.getColumnCount());
 
-			rowHeader.revalidate();
-			rowHeader.repaint();
-			// table.revalidate();
-			// repaint();
-		//}
+		rowHeader.revalidate();
+		rowHeader.repaint();
+		// table.revalidate();
+		// repaint();
+		// }
 
 		jsZoom.setValue(data.zoom);
 		isUpdating = updatingState;
@@ -626,21 +625,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	}
 
 	private void saveMd() throws Exception {
-		try {
-			String path = dlgSave.getMdFilename();
-			if (dlgSave.isAppendMode())
-				data.md.writeBlock(path);
-			else
-				data.md.write(path);
-			saved = true;
-			data.setMdChanges(false);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		dlgSave.saveMd(data.md);
+		saved = true;
+		data.setMdChanges(false);
 	}// function saveMd
 
-	private void save() throws Exception {		
+	private void save() throws Exception {
 		if (!saved)
 			saveAs();
 		else
@@ -791,6 +781,14 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			else
 				data.md.removeDisabled();
 			reloadMd();
+		}
+	}
+
+	/** Save selected items as a metadata */
+	public void saveSelection() throws Exception {
+		SaveJDialog dlg = new SaveJDialog(this);
+		if (dlg.showDialog()) {
+			dlg.saveMd(data.getSelectionMd());
 		}
 	}
 
@@ -1033,7 +1031,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	private void formComponentResized(java.awt.event.ComponentEvent evt) {
 		width = getSize().width;
-		if (!isUpdating && autoAdjustColumns){
+		if (!isUpdating && autoAdjustColumns) {
 			DEBUG.printMessage("formComponentResized");
 			adjustColumns();
 		}
@@ -1056,15 +1054,23 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				// removed.
 				boolean move = true;
 				if (!evt.isControlDown() && !evt.isShiftDown()) {
-					if (gallery.getSelectionCount() <= 1
-							|| XmippDialog
-									.showWarning(this,
-											"You will lose previous selection.\nDo you want to proceed?")) {
+
+					boolean clear = true;
+
+					if (gallery.getSelectionCount() > 1) {
+						clear = XmippDialog
+								.showQuestion(this,
+										"You will lose previous selection.\nDo you want to proceed?");
+					}
+
+					if (clear) {
 						gallery.clearSelection();
 						gallery.touchItem(row, col);
 
-					} else
+					} else {
+						gallery.fireTableDataChanged();
 						move = false;
+					}
 				}
 
 				else {
@@ -1165,6 +1171,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(MD_ADD_OBJECT, "Add new object", "new_object.gif");
 			addItem(MD_REMOVE_DISABLED, "Remove disabled", "delete.gif");
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
+			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
@@ -1182,7 +1189,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					&& data.useGeo);
 			setItemSelected(DISPLAY_WRAP, data.wrap);
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo);
-			//setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
+			// setItemSelected(DISPLAY_APPLYGEO, data.useGeo && data.wrap);
 			setItemEnabled(DISPLAY_RENDERIMAGES,
 					!galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.globalRender);
@@ -1192,7 +1199,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
 			setItemEnabled(MD_CLASSES, data.is2DClassificationMd());
-			setItemEnabled(MD_REMOVE_SELECTION, gallery.getSelectionCount() > 0);
+			// setItemEnabled(MD_REMOVE_SELECTION, gallery.getSelectionCount() >
+			// 0);
 			setItemEnabled(STATS, !volMode);
 		}// function update
 
@@ -1238,7 +1246,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				else if (cmd.equals(FILE_OPEN)) {
 					if (fc.showOpenDialog(JFrameGallery.this) != XmippFileChooser.CANCEL_OPTION) {
 						if (fc.getSelectedFile().exists())
-							ImagesWindowFactory.openFileAsDefault(fc.getSelectedPath());
+							ImagesWindowFactory.openFileAsDefault(fc
+									.getSelectedPath());
 						else
 							XmippDialog.showError(JFrameGallery.this, String
 									.format("File: '%s' doesn't exist.",
@@ -1284,9 +1293,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 							JFrameGallery.this);
 					dlg.showDialog();
 				} else if (cmd.equals(MD_REMOVE_SELECTION)) {
-					removeObjects(true);
+					if (gallery.getSelectionCount() > 0)
+						removeObjects(true);
 				} else if (cmd.equals(MD_REMOVE_DISABLED)) {
 					removeObjects(false);
+				} else if (cmd.equals(MD_SAVE_SELECTION)) {
+					saveSelection();
 				} else if (cmd.equals(MD_ADD_OBJECT)) {
 					AddObjectJDialog dlg = new AddObjectJDialog(
 							JFrameGallery.this);

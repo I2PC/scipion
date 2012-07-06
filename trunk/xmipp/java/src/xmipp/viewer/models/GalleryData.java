@@ -528,7 +528,34 @@ public class GalleryData {
 			e.printStackTrace();
 		}
 	}
-
+	
+	/** Return the number of selected elements */
+	public int getSelectionCount() {
+		int count = 0;
+		for (int i = 0; i < ids.length; ++i)
+			if (selection[i])
+				++count;
+		return count;
+	}
+	
+	/** Create a metadata just with selected items */
+	public MetaData getSelectionMd(){
+		MetaData selectionMd = null;
+		
+		long[] selectedIds = new long[getSelectionCount()];
+		int count = 0;
+		for (int i = 0; i < ids.length; ++i)
+			if (selection[i])
+				selectedIds[count++] = ids[i];
+		try {
+			selectionMd = new MetaData();
+			selectionMd.importObjects(md, selectedIds);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return selectionMd;
+	}
+	
 	/**
 	 * Compute the metadatas
 	 */

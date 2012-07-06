@@ -196,6 +196,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String MD_EDIT_COLS = "Metadata.EditCols_mi";
 	public final String MD_ADD_OBJECT = "Metadata.AddObject_mi";
 	public final String MD_REMOVE_SELECTION = "Metadata.RemoveSelection_mi";
+	public final String MD_SAVE_SELECTION = "Metadata.SaveSelection_mi";
 	public final String MD_REMOVE_DISABLED = "Metadata.RemoveDisabled_mi";
 	public final String STATS = "Metadata.Stats";
 	public final String STATS_AVGSTD = "Metadata.Stats.AvgStd_mi";
