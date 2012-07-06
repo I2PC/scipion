@@ -168,11 +168,11 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     MetaData MD;
     MD.read(fnCTF);
     size_t objId = MD.firstObject();
-    MD.getValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore,objId);
-    MD.getValue(MDL_CTF_CRITERION_FITTINGCORR13,evaluation.fittingCorr13,objId);
-    MD.getValue(MDL_CTF_CRITERION_PSDVARIANCE,evaluation.PSDVariance,objId);
-    MD.getValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,objId);
-    MD.getValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,objId);
+    MD.getValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore,objId);
+    MD.getValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13,objId);
+    MD.getValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance,objId);
+    MD.getValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,objId);
+    MD.getValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,objId);
 
     // Explore the CTF
     Matrix1D<double> u(2), freqZero1(2), freqZero2(2);
@@ -247,25 +247,25 @@ void ProgPSDSort::run()
         SF.getValue(MDL_PSD,fnPSD,__iter.objId);
         if (fnPSD=="NA")
         	continue;
-        SF.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
-        if (SF.containsLabel(MDL_CTFMODEL2))
-        	SF.getValue(MDL_CTFMODEL2,fnCTF2,__iter.objId);
+        SF.getValue(MDL_CTF_MODEL,fnCTF,__iter.objId);
+        if (SF.containsLabel(MDL_CTF_MODEL2))
+        	SF.getValue(MDL_CTF_MODEL2,fnCTF2,__iter.objId);
         evaluate(fnMicrograph, fnPSD, fnCTF, fnCTF2, evaluation);
         SF.setValue(MDL_CTF_DEFOCUSU,evaluation.defocusU,__iter.objId);
         SF.setValue(MDL_CTF_DEFOCUSV,evaluation.defocusV,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_FIRSTZEROAVG,evaluation.firstZeroAvg,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_DAMPING,evaluation.maxDampingAtBorder,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_FIRSTZEROAVG,evaluation.firstZeroAvg,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_DAMPING,evaluation.maxDampingAtBorder,__iter.objId);
         if (evaluation.firstZeroDisagreement>0)
-        	SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_FIRSTZERORATIO,evaluation.firstZeroRatio,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_FITTINGCORR13,evaluation.fittingCorr13,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_PSDCORRELATION90,evaluation.PSDcorrelation90,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_PSDVARIANCE,evaluation.PSDVariance,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_NORMALITY, evaluation.histogramNormality,__iter.objId);
+        	SF.setValue(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_FIRSTZERORATIO,evaluation.firstZeroRatio,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_PSDCORRELATION90,evaluation.PSDcorrelation90,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,__iter.objId);
+        SF.setValue(MDL_CTF_CRIT_NORMALITY, evaluation.histogramNormality,__iter.objId);
         progress_bar(++idx);
     }
     SF.write(fnSel);

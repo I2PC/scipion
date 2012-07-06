@@ -54,7 +54,7 @@ void buildReconsInfo(MetaData &selfile,
         is_there_ctf = true;
         is_ctf_unique = true;
     }
-    else if (selfile.containsLabel(MDL_CTFMODEL))
+    else if (selfile.containsLabel(MDL_CTF_MODEL))
     {
         is_there_ctf = true;
         is_ctf_unique = false;
@@ -73,7 +73,7 @@ void buildReconsInfo(MetaData &selfile,
         ReconsInfo &imgInfo = IMG_Inf[i];
         selfile.getValue(MDL_IMAGE,fn_proj,__iter.objId);
         if (is_there_ctf && !is_ctf_unique)
-            selfile.getValue(MDL_CTFMODEL,fn_ctf1,__iter.objId);
+            selfile.getValue(MDL_CTF_MODEL,fn_ctf1,__iter.objId);
         if (fn_proj != "")
         {
             //            read_proj.read(fn_proj, false, HEADER);
@@ -90,9 +90,9 @@ void buildReconsInfo(MetaData &selfile,
 
             imgInfo.rot = imgInfo.tilt = imgInfo.psi = 0;
 
-            selfile.getValue(MDL_ANGLEROT, imgInfo.rot,__iter.objId);
-            selfile.getValue(MDL_ANGLETILT, imgInfo.tilt,__iter.objId);
-            selfile.getValue(MDL_ANGLEPSI, imgInfo.psi,__iter.objId);
+            selfile.getValue(MDL_ANGLE_ROT, imgInfo.rot,__iter.objId);
+            selfile.getValue(MDL_ANGLE_TILT, imgInfo.tilt,__iter.objId);
+            selfile.getValue(MDL_ANGLE_PSI, imgInfo.psi,__iter.objId);
             //            read_proj.getEulerAngles(imgInfo.rot, imgInfo.tilt, imgInfo.psi);
             EULER_CLIPPING(imgInfo.rot, imgInfo.tilt, imgInfo.psi);
 

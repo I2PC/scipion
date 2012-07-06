@@ -33,9 +33,9 @@ public class MicrographsTable extends MetadataTable {
 				if (firstRender == null)
 					firstRender = ci;
 			}
-			if (ci.getLabel() == MDLabel.MDL_CTFMODEL)
+			if (ci.getLabel() == MDLabel.MDL_CTF_MODEL)
 				ctfModel = ci;
-			if (ci.getLabel() == MDLabel.MDL_CTFMODEL2)
+			if (ci.getLabel() == MDLabel.MDL_CTF_MODEL2)
 				ctfModel2 = ci;
 			//Remove common prefix CTFCrit_ from columns headers
 			ci.labelName = ci.labelName.replace("CTFCrit_", "");

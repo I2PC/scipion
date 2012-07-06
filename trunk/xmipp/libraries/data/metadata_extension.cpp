@@ -341,7 +341,7 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
             case 2:
                 id = MD.addObject();
                 MD.setValue(MDL_IMAGE,tokens[0], id);
-                MD.setValue(MDL_ASSOCIATED_IMAGE1,tokens[1], id);
+                MD.setValue(MDL_IMAGE1,tokens[1], id);
                 break;
             default:
                 REPORT_ERROR(ERR_MD_OBJECTNUMBER,

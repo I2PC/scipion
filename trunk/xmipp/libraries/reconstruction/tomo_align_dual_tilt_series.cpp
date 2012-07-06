@@ -84,7 +84,7 @@ void ProgAlignDualTiltSeries::readDual()
     FOR_ALL_OBJECTS_IN_METADATA(SFDual)
     {
         SFDual.getValue(MDL_IMAGE,fnImg, __iter.objId);
-        SFDual.getValue(MDL_ANGLETILT,tiltDual(i), __iter.objId);
+        SFDual.getValue(MDL_ANGLE_TILT,tiltDual(i), __iter.objId);
         if (fabs(tiltDual(i))<minAbsTilt)
         {
             minAbsTilt=fabs(tiltDual(i));
@@ -121,7 +121,7 @@ void ProgAlignDualTiltSeries::produceSideInfo()
     FOR_ALL_OBJECTS_IN_METADATA(SFRef)
     {
         SFRef.getValue(MDL_IMAGE,fnImg,__iter.objId);
-        SFRef.getValue(MDL_ANGLETILT,tiltRef(i),__iter.objId);
+        SFRef.getValue(MDL_ANGLE_TILT,tiltRef(i),__iter.objId);
         if (fabs(tiltRef(i))<minAbsTilt)
         {
             minAbsTilt=fabs(tiltRef(i));
@@ -423,9 +423,9 @@ void ProgAlignDualTiltSeries::alignDual()
         Idual.write(fn);
         size_t id = SFout.addObject();
         SFout.setValue(MDL_IMAGE, fn, id);
-        SFout.setValue(MDL_ANGLEROT, rot, id);
-        SFout.setValue(MDL_ANGLETILT, tilt, id);
-        SFout.setValue(MDL_ANGLEPSI, psi, id);
+        SFout.setValue(MDL_ANGLE_ROT, rot, id);
+        SFout.setValue(MDL_ANGLE_TILT, tilt, id);
+        SFout.setValue(MDL_ANGLE_PSI, psi, id);
         n++;
     }
     SFout.write(fnOut.removeDirectories()+".sel");

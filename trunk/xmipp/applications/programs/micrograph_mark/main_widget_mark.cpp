@@ -523,9 +523,9 @@ void QtMainWidgetMark::write_angles()
     MD.setColumnFormat(false);
     size_t id = MD.addObject();
     MD.setComment("Rot first micrograph, rot second, tilt angle and transformation matrix");
-    MD.setValue(MDL_ANGLEPSI,__alpha_u, id);
-    MD.setValue(MDL_ANGLEPSI2,__alpha_t, id);
-    MD.setValue(MDL_ANGLETILT,__gamma, id);
+    MD.setValue(MDL_ANGLE_PSI,__alpha_u, id);
+    MD.setValue(MDL_ANGLE_PSI2,__alpha_t, id);
+    MD.setValue(MDL_ANGLE_TILT,__gamma, id);
     std::vector<double> myVector;// ( &__Put.mdata[0], &__Put.mdata[9] );
     __Put.copyToVector(myVector);
     MD.setValue(MDL_TRANSFORMATIONMTRIX,myVector, id);

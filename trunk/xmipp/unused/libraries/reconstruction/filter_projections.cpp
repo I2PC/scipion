@@ -349,18 +349,18 @@ void Prog_Filter_Projections_Parameters::run()
         FOR_ALL_OBJECTS_IN_METADATA2(DF_movement0, DF_in)
         {
             double rot0, tilt0, psi0, shiftX0, shiftY0;
-            DF_movement0.getValue(MDL_ANGLEROT,rot0,__iter.objId);
-            DF_movement0.getValue(MDL_ANGLETILT,tilt0,__iter.objId);
-            DF_movement0.getValue(MDL_ANGLEPSI,psi0,__iter.objId);
-            DF_movement0.getValue(MDL_SHIFTX,shiftX0,__iter.objId);
-            DF_movement0.getValue(MDL_SHIFTY,shiftY0,__iter.objId);
+            DF_movement0.getValue(MDL_ANGLE_ROT,rot0,__iter.objId);
+            DF_movement0.getValue(MDL_ANGLE_TILT,tilt0,__iter.objId);
+            DF_movement0.getValue(MDL_ANGLE_PSI,psi0,__iter.objId);
+            DF_movement0.getValue(MDL_SHITF_X,shiftX0,__iter.objId);
+            DF_movement0.getValue(MDL_SHITF_Y,shiftY0,__iter.objId);
 
             double rotF, tiltF, psiF, shiftXF, shiftYF;
-            DF_in.getValue(MDL_ANGLEROT,rotF,__iter2.objId);
-            DF_in.getValue(MDL_ANGLETILT,tiltF,__iter2.objId);
-            DF_in.getValue(MDL_ANGLEPSI,psiF,__iter2.objId);
-            DF_in.getValue(MDL_SHIFTX,shiftXF,__iter2.objId);
-            DF_in.getValue(MDL_SHIFTY,shiftYF,__iter2.objId);
+            DF_in.getValue(MDL_ANGLE_ROT,rotF,__iter2.objId);
+            DF_in.getValue(MDL_ANGLE_TILT,tiltF,__iter2.objId);
+            DF_in.getValue(MDL_ANGLE_PSI,psiF,__iter2.objId);
+            DF_in.getValue(MDL_SHITF_X,shiftXF,__iter2.objId);
+            DF_in.getValue(MDL_SHITF_Y,shiftYF,__iter2.objId);
 
             double diffX=shiftXF-shiftX0;
             double diffY=shiftYF-shiftY0;
@@ -443,9 +443,9 @@ void Prog_Filter_Projections_Parameters::run()
 
             double rotF, tiltF, psiF, shiftXF, shiftYF;
             DF_in.getValue(MDL_IMAGE,imgFn,__iter.objId);
-            DF_in.getValue(MDL_ANGLEROT,rotF,__iter.objId);
-            DF_in.getValue(MDL_ANGLETILT,tiltF,__iter.objId);
-            DF_in.getValue(MDL_ANGLEPSI,psiF,__iter.objId);
+            DF_in.getValue(MDL_ANGLE_ROT,rotF,__iter.objId);
+            DF_in.getValue(MDL_ANGLE_TILT,tiltF,__iter.objId);
+            DF_in.getValue(MDL_ANGLE_PSI,psiF,__iter.objId);
             if (fn_vol!="")
             {
                 shiftXF=0;
@@ -453,16 +453,16 @@ void Prog_Filter_Projections_Parameters::run()
             }
             else
             {
-                DF_in.getValue(MDL_SHIFTX,shiftXF,__iter.objId);
-                DF_in.getValue(MDL_SHIFTY,shiftYF,__iter.objId);
+                DF_in.getValue(MDL_SHITF_X,shiftXF,__iter.objId);
+                DF_in.getValue(MDL_SHITF_Y,shiftYF,__iter.objId);
             }
             id = DF_out.addObject();
             DF_out.setValue(MDL_IMAGE,imgFn,id);
-            DF_out.setValue(MDL_ANGLEROT,rotF,id);
-            DF_out.setValue(MDL_ANGLETILT,tiltF,id);
-            DF_out.setValue(MDL_ANGLEPSI,psiF,id);
-            DF_out.setValue(MDL_SHIFTX,shiftXF,id);
-            DF_out.setValue(MDL_SHIFTY,shiftYF,id);
+            DF_out.setValue(MDL_ANGLE_ROT,rotF,id);
+            DF_out.setValue(MDL_ANGLE_TILT,tiltF,id);
+            DF_out.setValue(MDL_ANGLE_PSI,psiF,id);
+            DF_out.setValue(MDL_SHITF_X,shiftXF,id);
+            DF_out.setValue(MDL_SHITF_Y,shiftYF,id);
         }
         i++;
     }

@@ -178,8 +178,8 @@ public abstract class TrainingPicker extends ParticlePicker
 			for (long id : md.findObjects())
 			{
 
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
 				mfd.addManualParticle(particle);
 			}
@@ -215,8 +215,8 @@ public abstract class TrainingPicker extends ParticlePicker
 			for (long id : md.findObjects())
 			{
 
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				cost = md.getValueDouble(MDLabel.MDL_COST, id);
 				if(cost == null)
 					throw new IllegalArgumentException("Invalid format for " + file);
@@ -256,8 +256,8 @@ public abstract class TrainingPicker extends ParticlePicker
 						for (TrainingParticle p : mfd.getManualParticles())
 						{
 							id = md.addObject();
-							md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
-							md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
+							md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+							md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 						}
 						block = mfd.getFamily().getName() + "@" + file;
 						md.writeBlock(block);
@@ -300,8 +300,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				for (AutomaticParticle p : mfd.getAutomaticParticles())
 				{
 					id = md.addObject();
-					md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
-					md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
+					md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 					md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
 					md.setValueInt(MDLabel.MDL_ENABLED, (!p.isDeleted()) ? 1 : -1, id);
 				}
@@ -434,8 +434,8 @@ public abstract class TrainingPicker extends ParticlePicker
 					for (TrainingParticle p : mfd.getParticles())
 					{
 						id = md.addObject();
-						md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
-						md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
+						md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+						md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 						md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
 					}
 					if (!append)
@@ -525,8 +525,8 @@ public abstract class TrainingPicker extends ParticlePicker
 			for (long id : ids)
 			{
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				x = md.getValueInt(MDLabel.MDL_XINT, id) + size / 2;
-				y = md.getValueInt(MDLabel.MDL_YINT, id) + size / 2;
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id) + size / 2;
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id) + size / 2;
 				if(inverty)
 				{
 					height = mfd.getMicrograph().getImagePlus().getHeight();
@@ -585,8 +585,8 @@ public abstract class TrainingPicker extends ParticlePicker
 					for (long id : ids)
 					{
 
-						x = md.getValueInt(MDLabel.MDL_XINT, id);
-						y = md.getValueInt(MDLabel.MDL_YINT, id);
+						x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+						y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 						cost = md.getValueDouble(MDLabel.MDL_COST, id);
 						if (cost == null || cost == 0 || cost > 1)
 							m.addManualParticle(new TrainingParticle(x, y, family, m, cost));

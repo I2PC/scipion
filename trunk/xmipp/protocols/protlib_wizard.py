@@ -289,7 +289,7 @@ def wizardTiltPairs(self, var):
 
 #Select family from extraction run
 def wizardChooseFamilyToExtract(self, var):
-    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTFMODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
+    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)
@@ -338,11 +338,11 @@ def wizardChooseFamilyToExtract(self, var):
             self.setVarValue("DoFlip", str(False))
         else:
             md=MetaData(pickingProt.getFilename("micrographs"))
-            self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTFMODEL)))
+            self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTF_MODEL)))
 
 #Select family from extraction run
 def wizardChooseFamilyToExtractSupervised(self, var):
-    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTFMODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
+    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)

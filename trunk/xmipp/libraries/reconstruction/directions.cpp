@@ -184,7 +184,7 @@ void limit_tilt_range(MetaData &DF, double tilt_range0, double tilt_rangeF)
 {
 
     MetaData DFaux;
-    DFaux.importObjects(DF, MDValueRange(MDL_ANGLETILT, tilt_range0, tilt_rangeF));
+    DFaux.importObjects(DF, MDValueRange(MDL_ANGLE_TILT, tilt_range0, tilt_rangeF));
     DF = DFaux;
 }
 

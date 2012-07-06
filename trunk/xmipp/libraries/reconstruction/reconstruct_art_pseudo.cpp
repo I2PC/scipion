@@ -293,15 +293,15 @@ void ProgARTPseudo::run()
             FileName fnExp;
             DF.getValue( MDL_IMAGE, fnExp,__iter.objId);
             double rot;
-            DF.getValue( MDL_ANGLEROT, rot,__iter.objId);
+            DF.getValue( MDL_ANGLE_ROT, rot,__iter.objId);
             double tilt;
-            DF.getValue( MDL_ANGLETILT, tilt,__iter.objId);
+            DF.getValue( MDL_ANGLE_TILT, tilt,__iter.objId);
             double psi;
-            DF.getValue( MDL_ANGLEPSI, psi,__iter.objId);
+            DF.getValue( MDL_ANGLE_PSI, psi,__iter.objId);
             double shiftX;
-            DF.getValue( MDL_SHIFTX, shiftX,__iter.objId);
+            DF.getValue( MDL_SHITF_X, shiftX,__iter.objId);
             double shiftY;
-            DF.getValue( MDL_SHIFTY, shiftY,__iter.objId);
+            DF.getValue( MDL_SHITF_Y, shiftY,__iter.objId);
             std::vector<double> lambda;
             if (NMA.size()>0)
                 DF.getValue( MDL_NMA, lambda,__iter.objId);

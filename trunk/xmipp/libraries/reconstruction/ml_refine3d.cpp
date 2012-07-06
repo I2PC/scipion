@@ -582,9 +582,9 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
             id = mdProj.addObject();
             mdProj.setValue(MDL_IMAGE, fn_tmp, id);
             mdProj.setValue(MDL_ENABLED, 1, id);
-            mdProj.setValue(MDL_ANGLEROT, rot, id);
-            mdProj.setValue(MDL_ANGLETILT, tilt, id);
-            mdProj.setValue(MDL_ANGLEPSI, psi, id);
+            mdProj.setValue(MDL_ANGLE_ROT, rot, id);
+            mdProj.setValue(MDL_ANGLE_TILT, tilt, id);
+            mdProj.setValue(MDL_ANGLE_PSI, psi, id);
             mdProj.setValue(MDL_REF3D, volno, id);
 
             if (verbose && (nr_dir % bar_step == 0))
@@ -854,8 +854,8 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         FOR_ALL_OBJECTS_IN_METADATA(mdNoiseOne)
         {
             mdNoiseOne.getValue(MDL_WEIGHT, weight, __iter.objId);
-            mdNoiseOne.getValue(MDL_ANGLEROT, rot, __iter.objId);
-            mdNoiseOne.getValue(MDL_ANGLETILT, tilt, __iter.objId);
+            mdNoiseOne.getValue(MDL_ANGLE_ROT, rot, __iter.objId);
+            mdNoiseOne.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
 
             // alpha denominator
             if (c == 0)

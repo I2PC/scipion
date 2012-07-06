@@ -137,7 +137,7 @@ public:
             size_t objId = auxMd.firstObject();
             auxMd.getValue(MDL_ANGLE_Y, alpha_u, objId);
             auxMd.getValue(MDL_ANGLE_Y2, alpha_t, objId);
-            auxMd.getValue(MDL_ANGLETILT, tilt_angle, objId);
+            auxMd.getValue(MDL_ANGLE_TILT, tilt_angle, objId);
 
             // Generate the images for the untilted image
             Micrograph m;

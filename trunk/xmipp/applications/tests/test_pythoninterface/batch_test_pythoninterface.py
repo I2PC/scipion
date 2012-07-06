@@ -175,7 +175,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         md = MetaData()
         id = md.addObject()
         md.setValue(MDL_IMAGE, imgPath, id)
-        md.setValue(MDL_ANGLEPSI, 90., id)
+        md.setValue(MDL_ANGLE_PSI, 90., id)
         img2 = Image()
         img2.readApplyGeo(md, id)
         self.assertEquals(img, img2)
@@ -256,14 +256,14 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = md.addObject() 
             img = '%06d@pythoninterface/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
-            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_COUNT, (i * 10L), id)
         for i in range(1, 3):
             id = md2.addObject() 
             img = '%06d@pythoninterface/proj_ctf_1.stk' % i
             md2.setValue(MDL_IMAGE, img, id)
-            md2.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
-            md2.setValue(MDL_ANGLEPSI, 1., id)
+            md2.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
+            md2.setValue(MDL_ANGLE_PSI, 1., id)
         mdout.join (md, md2, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
 
         md.clear()
@@ -271,9 +271,9 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = md.addObject() 
             img = '%06d@pythoninterface/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
-            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_COUNT, (i * 10L), id)
-            md.setValue(MDL_ANGLEPSI, 1., id)
+            md.setValue(MDL_ANGLE_PSI, 1., id)
 
         self.assertEqual(mdout, md)
                  
@@ -287,9 +287,9 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = md.addObject() 
             img = '%06d@pythoninterface/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
-            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_COUNT, (i * 10L), id)
-            md.setValue(MDL_ANGLEPSI, 1., id)
+            md.setValue(MDL_ANGLE_PSI, 1., id)
         for i in range(1, 3):
             id = md2.addObject() 
             img = '%06d@pythoninterface/proj_ctf_1.stk' % i
@@ -300,9 +300,9 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = mdout.addObject() 
             img = '%06d@pythoninterface/proj_ctf_1.stk' % i
             mdout.setValue(MDL_IMAGE, img, id)
-            mdout.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            mdout.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             mdout.setValue(MDL_COUNT, (i * 10L), id)
-            mdout.setValue(MDL_ANGLEPSI, 1., id)
+            mdout.setValue(MDL_ANGLE_PSI, 1., id)
 
 
         self.assertEqual(mdout, md)
@@ -331,7 +331,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = md.addObject() 
             img = '00000%i@pythoninterface/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
-            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
             list = [x ** i for x in listOrig]
@@ -372,7 +372,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = md.addObject() 
             img = '00000%i@pythoninterface/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
-            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
             list = [x ** i for x in listOrig]
@@ -412,7 +412,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         id = md.addObject() 
         img = '000001@Images/proj_ctf_1.stk'
         md.setValue(MDL_IMAGE, img, id)
-        md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+        md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
         
         md.setColumnFormat(False)      
         rowFileName = '/tmp/test_row_tmp.xmd'
@@ -446,7 +446,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = md.addObject() 
             img = '00000%i@pythoninterface/proj_ctf_1.stk' % i
             md.setValue(MDL_IMAGE, img, id)
-            md.setValue(MDL_CTFMODEL, 'CTFs/10.ctfparam', id)
+            md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
             list = [x ** i for x in listOrig]

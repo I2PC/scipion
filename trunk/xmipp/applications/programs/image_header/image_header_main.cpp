@@ -119,15 +119,15 @@ protected:
     void roundShifts(MDRow &row)
     {
         double aux = 0.;
-        if (row.getValue(MDL_SHIFTX, aux))
+        if (row.getValue(MDL_SHITF_X, aux))
         {
             aux = (double)ROUND(aux);
-            row.setValue(MDL_SHIFTX, aux);
+            row.setValue(MDL_SHITF_X, aux);
         }
-        if (row.getValue(MDL_SHIFTY, aux))
+        if (row.getValue(MDL_SHITF_Y, aux))
         {
             aux = (double)ROUND(aux);
-            row.setValue(MDL_SHIFTY, aux);
+            row.setValue(MDL_SHITF_Y, aux);
         }
     }
 

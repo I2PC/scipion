@@ -3020,8 +3020,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         MetaData MD;
         MD.read(fn_rootCTFPARAM + ".ctfparam");
         size_t id = MD.firstObject();
-        MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE, fitness, id);
-        MD.setValue(MDL_CTF_CRITERION_FITTINGCORR13, global_corr13, id);
+        MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
+        MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);
         MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
     }

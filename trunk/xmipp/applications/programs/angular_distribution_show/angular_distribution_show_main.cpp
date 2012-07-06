@@ -90,7 +90,7 @@ public:
         MetaData angles;
         angles.read(fnIn);
         size_t AngleNo = angles.size();
-        if (AngleNo == 0 || !angles.containsLabel(MDL_ANGLEROT))
+        if (AngleNo == 0 || !angles.containsLabel(MDL_ANGLE_ROT))
             REPORT_ERROR(ERR_MD_BADLABEL, "Input file doesn't contain angular information");
 
         double maxWeight = -99.e99;
@@ -119,9 +119,9 @@ public:
         FOR_ALL_OBJECTS_IN_METADATA(angles)
         {
             double rot, tilt, psi;
-            angles.getValue(MDL_ANGLEROT,rot,__iter.objId);
-            angles.getValue(MDL_ANGLETILT,tilt,__iter.objId);
-            angles.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+            angles.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+            angles.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+            angles.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
             if (up_down_correction && fabs(tilt)>90)
                 \
                 Euler_up_down(rot,tilt,psi,rot,tilt,psi);

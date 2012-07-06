@@ -585,8 +585,8 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
 
     DataType datatype = datatypeDM3(dataHeaders[0].dataType);
 
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].pixelWidth);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].pixelHeight);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double)dataHeaders[0].pixelWidth);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double)dataHeaders[0].pixelHeight);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if (dataMode == HEADER) // Stop reading if not necessary

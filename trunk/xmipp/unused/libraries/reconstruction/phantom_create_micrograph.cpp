@@ -120,9 +120,9 @@ void ProgPhantomCreateMicrograph::run()
             P.write(dir_micrograph+"/"+fn_image);
             DF_out_clean.addObject();
             DF_out_clean.setValue(MDL_IMAGE,fn_image);
-            DF_out_clean.setValue(MDL_ANGLEROT,rot);
-            DF_out_clean.setValue(MDL_ANGLETILT,tilt);
-            DF_out_clean.setValue(MDL_ANGLEPSI,psi);
+            DF_out_clean.setValue(MDL_ANGLE_ROT,rot);
+            DF_out_clean.setValue(MDL_ANGLE_TILT,tilt);
+            DF_out_clean.setValue(MDL_ANGLE_PSI,psi);
             
             // Place this image in the micrograph
             int X=rnd_unif(Xproj,Xdim-Xproj);
@@ -162,12 +162,12 @@ void ProgPhantomCreateMicrograph::run()
             I().setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
                 I(i,j)=Md(particle.Y+i,particle.X+j);
-            double rot; DF_out.getValue(MDL_ANGLEROT,rot); I.setRot(rot);
-            double tilt; DF_out.getValue(MDL_ANGLETILT,tilt); I.setTilt(tilt);
-            double psi; DF_out.getValue(MDL_ANGLEPSI,psi); I.setPsi(psi);
+            double rot; DF_out.getValue(MDL_ANGLE_ROT,rot); I.setRot(rot);
+            double tilt; DF_out.getValue(MDL_ANGLE_TILT,tilt); I.setTilt(tilt);
+            double psi; DF_out.getValue(MDL_ANGLE_PSI,psi); I.setPsi(psi);
             I.write(dir_micrograph+"/"+fn_image);
             DF_out.setValue(MDL_IMAGE,I.name());
-            DF_out.setValue(MDL_CTFMODEL,microscope.fn_ctf);
+            DF_out.setValue(MDL_CTF_MODEL,microscope.fn_ctf);
         }
         DF_out.write(dir_micrograph+"/"+fn_micrograph+".doc");
         Md.write(dir_micrograph+"/"+fn_micrograph+".xmp");

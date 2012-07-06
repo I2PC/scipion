@@ -219,9 +219,9 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                     noisy_projection.write(fn_noise);
                     row.setValue(MDL_IMAGE, fn_noise);
                     row.setValue(MDL_ENABLED, 1);
-                    row.setValue(MDL_ANGLEPSI, read_proj.psi());
-                    row.setValue(MDL_ANGLEROT, read_proj.rot());
-                    row.setValue(MDL_ANGLETILT, read_proj.tilt());
+                    row.setValue(MDL_ANGLE_PSI, read_proj.psi());
+                    row.setValue(MDL_ANGLE_ROT, read_proj.rot());
+                    row.setValue(MDL_ANGLE_TILT, read_proj.tilt());
                     SF_noise.addRow(row);
 
                     row.setValue(MDL_IMAGE, read_proj.name());
@@ -760,9 +760,9 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
     for (int i=0; i<artPrm.numIMG; i++)
     {
         id=MD.addObject();
-        MD.setValue(MDL_ANGLEROT, artPrm.IMG_Inf[i].rot,id);
-        MD.setValue(MDL_ANGLETILT, artPrm.IMG_Inf[i].tilt,id);
-        MD.setValue(MDL_ANGLEPSI, artPrm.IMG_Inf[i].psi,id);
+        MD.setValue(MDL_ANGLE_ROT, artPrm.IMG_Inf[i].rot,id);
+        MD.setValue(MDL_ANGLE_TILT, artPrm.IMG_Inf[i].tilt,id);
+        MD.setValue(MDL_ANGLE_PSI, artPrm.IMG_Inf[i].psi,id);
         MD.setValue(MDL_SYMNO, artPrm.IMG_Inf[i].sym,id);
     }
 
@@ -770,9 +770,9 @@ void ARTReconsBase::initHistory(const GridVolume &vol_basis0)
     *artPrm.fh_hist << " Projection angles -----------------------------------------\n";
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-        MD.getValue(MDL_ANGLEROT, dfrot,__iter.objId);
-        MD.getValue(MDL_ANGLETILT, dftilt,__iter.objId);
-        MD.getValue(MDL_ANGLEPSI, dfpsi,__iter.objId);
+        MD.getValue(MDL_ANGLE_ROT, dfrot,__iter.objId);
+        MD.getValue(MDL_ANGLE_TILT, dftilt,__iter.objId);
+        MD.getValue(MDL_ANGLE_PSI, dfpsi,__iter.objId);
 
         *artPrm.fh_hist << "rot= "<<dfrot<<" tilt= "<<dftilt<<" psi= "<<dfpsi<<std::endl;
     }

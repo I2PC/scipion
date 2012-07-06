@@ -113,14 +113,14 @@ void ProgProjectTomography::run()
             projMD.setValue(MDL_IMAGE,fn_proj,objId);
         }
 
-        projMD.setValue(MDL_ANGLEROT,rot,objId);
-        projMD.setValue(MDL_ANGLETILT,tilt,objId);
-        projMD.setValue(MDL_ANGLEPSI,psi,objId);
-        projMD.setValue(MDL_ANGLEROT2,tRot,objId);
-        projMD.setValue(MDL_ANGLETILT2,tTilt,objId);
-        projMD.setValue(MDL_ANGLEPSI2,tPsi,objId);
-        projMD.setValue(MDL_SHIFTX,shiftX,objId);
-        projMD.setValue(MDL_SHIFTY,shiftY,objId);
+        projMD.setValue(MDL_ANGLE_ROT,rot,objId);
+        projMD.setValue(MDL_ANGLE_TILT,tilt,objId);
+        projMD.setValue(MDL_ANGLE_PSI,psi,objId);
+        projMD.setValue(MDL_ANGLE_ROT2,tRot,objId);
+        projMD.setValue(MDL_ANGLE_TILT2,tTilt,objId);
+        projMD.setValue(MDL_ANGLE_PSI2,tPsi,objId);
+        projMD.setValue(MDL_SHITF_X,shiftX,objId);
+        projMD.setValue(MDL_SHITF_Y,shiftY,objId);
 
         IMGMATRIX(proj).addNoise(projParam.Npixel_avg, projParam.Npixel_dev, "gaussian");
 

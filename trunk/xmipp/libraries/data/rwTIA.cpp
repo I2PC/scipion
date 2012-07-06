@@ -196,8 +196,8 @@ int ImageBase::readTIA(int select_img,bool isStack)
         break;
     }
 
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].PIXEL_WIDTH);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double)dataHeaders[0].PIXEL_WIDTH);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double)dataHeaders[0].PIXEL_HEIGHT);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
@@ -213,19 +213,19 @@ int ImageBase::readTIA(int select_img,bool isStack)
     {
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
-            if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
+            if(MDMainHeader.getValue(MDL_SAMPLINGRATE_X,aux))
             {
-                MD[i].setValue(MDL_SHIFTX, dataHeaders[i].CalibrationOffsetX/aux);
+                MD[i].setValue(MDL_SHITF_X, dataHeaders[i].CalibrationOffsetX/aux);
                 aux = ROUND(dataHeaders[i].CalibrationElementX - \
                             dataHeaders[i].CalibrationOffsetX/aux - _xDim/2);
-                MD[i].setValue(MDL_ORIGINX, aux);
+                MD[i].setValue(MDL_ORIGIN_X, aux);
             }
-            if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
+            if(MDMainHeader.getValue(MDL_SAMPLINGRATE_Y,aux))
             {
-                MD[i].setValue(MDL_SHIFTY, dataHeaders[i].CalibrationOffsetY/aux);
+                MD[i].setValue(MDL_SHITF_Y, dataHeaders[i].CalibrationOffsetY/aux);
                 aux = ROUND(dataHeaders[i].CalibrationElementY - \
                             dataHeaders[i].CalibrationOffsetY/aux -_yDim/2);
-                MD[i].setValue(MDL_ORIGINY, aux);
+                MD[i].setValue(MDL_ORIGIN_Y, aux);
             }
         }
     }

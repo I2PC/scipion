@@ -83,7 +83,7 @@ public:
     		fnSlice.compose((int)slice,fnStack);
     		size_t objId=MD.addObject();
     		MD.setValue(MDL_IMAGE,fnSlice,objId);
-    		MD.setValue(MDL_ANGLETILT,angle,objId);
+    		MD.setValue(MDL_ANGLE_TILT,angle,objId);
     		MD.setValue(MDL_ENABLED,1,objId);
     	}
     	MD.write(fnOut);

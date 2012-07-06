@@ -88,14 +88,14 @@ void ProgAngularNeighbourhood::run()
         // Read reference projection direction
         double rot2, tilt2;
         DF2.getValue(MDL_IMAGE,fn2,__iter.objId);
-        DF2.getValue(MDL_ANGLEROT,rot2,__iter.objId);
-        DF2.getValue(MDL_ANGLETILT,tilt2,__iter.objId);
+        DF2.getValue(MDL_ANGLE_ROT,rot2,__iter.objId);
+        DF2.getValue(MDL_ANGLE_TILT,tilt2,__iter.objId);
         FOR_ALL_OBJECTS_IN_METADATA(DF1)
         {
             // Read assigned angles from document file
             double rot1, tilt1;
-            DF1.getValue(MDL_ANGLEROT,rot1,__iter.objId);
-            DF1.getValue(MDL_ANGLETILT,tilt1,__iter.objId);
+            DF1.getValue(MDL_ANGLE_ROT,rot1,__iter.objId);
+            DF1.getValue(MDL_ANGLE_TILT,tilt1,__iter.objId);
             double psi1=0.;
             double dist = SL.computeDistance(rot2, tilt2, 0., rot1, tilt1, psi1,
                                              true, check_mirrors, false);

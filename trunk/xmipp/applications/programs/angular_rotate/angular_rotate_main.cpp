@@ -63,7 +63,7 @@ protected:
         mdIn.read(fnIn);
         int dim;
 
-        if (mdIn.containsLabel(MDL_ANGLEPSI) || mdIn.containsLabel(MDL_ANGLETILT))
+        if (mdIn.containsLabel(MDL_ANGLE_PSI) || mdIn.containsLabel(MDL_ANGLE_TILT))
             dim = 3;
         else
             dim = 2;

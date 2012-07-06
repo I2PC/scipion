@@ -262,8 +262,8 @@ public:
 
                 MetaData MD;
                 size_t id=MD.addObject();
-                MD.setValue(MDL_ANGLEROT,best_rot,id);
-                MD.setValue(MDL_ANGLETILT,best_tilt,id);
+                MD.setValue(MDL_ANGLE_ROT,best_rot,id);
+                MD.setValue(MDL_ANGLE_TILT,best_tilt,id);
                 MD.setValue(MDL_DIRECTION,direction,id);
                 MD.write(fn_output);
             }
@@ -323,8 +323,8 @@ public:
             {
                 MetaData MD;
                 size_t id=MD.addObject();
-                MD.setValue(MDL_ANGLEROT,best_rot,id);
-                MD.setValue(MDL_SHIFTZ,best_z,id);
+                MD.setValue(MDL_ANGLE_ROT,best_rot,id);
+                MD.setValue(MDL_SHITF_Z,best_z,id);
                 MD.write(fn_output);
                 if (!local)
                     helicalCorrelation.write(fn_output+".xmp");

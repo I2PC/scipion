@@ -678,19 +678,19 @@ public:
     /** Set Rotation angle to image */
     void setRot(double rot, const size_t n = 0)
     {
-        MD[n].setValue(MDL_ANGLEROT, rot);
+        MD[n].setValue(MDL_ANGLE_ROT, rot);
     }
 
     /** Set Tilt angle to image */
     void setTilt(double tilt, const size_t n = 0)
     {
-        MD[n].setValue(MDL_ANGLETILT, tilt);
+        MD[n].setValue(MDL_ANGLE_TILT, tilt);
     }
 
     /** Set Rotation angle to image */
     void setPsi(double psi, const size_t n = 0)
     {
-        MD[n].setValue(MDL_ANGLEPSI, psi);
+        MD[n].setValue(MDL_ANGLE_PSI, psi);
     }
 
     /** Set origin offsets in image header
@@ -707,21 +707,21 @@ public:
      */
     void setXoff(double xoff, const size_t n = 0)
     {
-        MD[n].setValue(MDL_SHIFTX, xoff);
+        MD[n].setValue(MDL_SHITF_X, xoff);
     }
 
     /** Set Y offset in image header
      */
     void setYoff(double yoff, const size_t n = 0)
     {
-        MD[n].setValue(MDL_SHIFTY, yoff);
+        MD[n].setValue(MDL_SHITF_Y, yoff);
     }
 
     /** Set Z offset in image header
      */
     void setZoff(double zoff, const size_t n = 0)
     {
-        MD[n].setValue(MDL_SHIFTZ, zoff);
+        MD[n].setValue(MDL_SHITF_Z, zoff);
     }
 
     /** Set scale in image header

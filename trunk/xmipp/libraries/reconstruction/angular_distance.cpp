@@ -133,17 +133,17 @@ void ProgAngularDistance::run()
         double X1, X2, Y1, Y2;
         DF1.getValue(MDL_IMAGE,fnImg,__iter.objId);
 
-        DF1.getValue(MDL_ANGLEROT,rot1,__iter.objId);
-        DF1.getValue(MDL_ANGLETILT,tilt1,__iter.objId);
-        DF1.getValue(MDL_ANGLEPSI,psi1,__iter.objId);
-        DF1.getValue(MDL_SHIFTX,X1,__iter.objId);
-        DF1.getValue(MDL_SHIFTY,Y1,__iter.objId);
+        DF1.getValue(MDL_ANGLE_ROT,rot1,__iter.objId);
+        DF1.getValue(MDL_ANGLE_TILT,tilt1,__iter.objId);
+        DF1.getValue(MDL_ANGLE_PSI,psi1,__iter.objId);
+        DF1.getValue(MDL_SHITF_X,X1,__iter.objId);
+        DF1.getValue(MDL_SHITF_Y,Y1,__iter.objId);
 
-        DF2.getValue(MDL_ANGLEROT,rot2,__iter2.objId);
-        DF2.getValue(MDL_ANGLETILT,tilt2,__iter2.objId);
-        DF2.getValue(MDL_ANGLEPSI,psi2,__iter2.objId);
-        DF2.getValue(MDL_SHIFTX,X2,__iter2.objId);
-        DF2.getValue(MDL_SHIFTY,Y2,__iter2.objId);
+        DF2.getValue(MDL_ANGLE_ROT,rot2,__iter2.objId);
+        DF2.getValue(MDL_ANGLE_TILT,tilt2,__iter2.objId);
+        DF2.getValue(MDL_ANGLE_PSI,psi2,__iter2.objId);
+        DF2.getValue(MDL_SHITF_X,X2,__iter2.objId);
+        DF2.getValue(MDL_SHITF_Y,Y2,__iter2.objId);
 
         // Bring both angles to a normalized set
         rot1 = realWRAP(rot1, -180, 180);

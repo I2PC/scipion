@@ -240,11 +240,11 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     else
         cost=-1;
 
-    rowOut.setValue(MDL_ANGLEROT,  new_rot);
-    rowOut.setValue(MDL_ANGLETILT, new_tilt);
-    rowOut.setValue(MDL_ANGLEPSI,  new_psi);
-    rowOut.setValue(MDL_SHIFTX,    new_shiftX);
-    rowOut.setValue(MDL_SHIFTY,    new_shiftY);
+    rowOut.setValue(MDL_ANGLE_ROT,  new_rot);
+    rowOut.setValue(MDL_ANGLE_TILT, new_tilt);
+    rowOut.setValue(MDL_ANGLE_PSI,  new_psi);
+    rowOut.setValue(MDL_SHITF_X,    new_shiftX);
+    rowOut.setValue(MDL_SHITF_Y,    new_shiftY);
     rowOut.setValue(MDL_COST,      cost);
 }
 

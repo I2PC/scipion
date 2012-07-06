@@ -225,15 +225,15 @@ void ProgReconsXrayART::run()
             FileName fnExp;
             MDin.getValue( MDL_IMAGE, fnExp,__iter.objId);
             double rot;
-            MDin.getValue( MDL_ANGLEROT, rot,__iter.objId);
+            MDin.getValue( MDL_ANGLE_ROT, rot,__iter.objId);
             double tilt;
-            MDin.getValue( MDL_ANGLETILT, tilt,__iter.objId);
+            MDin.getValue( MDL_ANGLE_TILT, tilt,__iter.objId);
             double psi;
-            MDin.getValue( MDL_ANGLEPSI, psi,__iter.objId);
+            MDin.getValue( MDL_ANGLE_PSI, psi,__iter.objId);
             double shiftX;
-            MDin.getValue( MDL_SHIFTX, shiftX,__iter.objId);
+            MDin.getValue( MDL_SHITF_X, shiftX,__iter.objId);
             double shiftY;
-            MDin.getValue( MDL_SHIFTY, shiftY,__iter.objId);
+            MDin.getValue( MDL_SHITF_Y, shiftY,__iter.objId);
 
             projExp.read(fnExp);
             projExp().setXmippOrigin();

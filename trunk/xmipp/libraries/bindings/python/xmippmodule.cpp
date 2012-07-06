@@ -4262,29 +4262,28 @@ PyMODINIT_FUNC initxmipp(void)
     //Metadata Labels
     addIntConstant(dict, "MDL_OBJID", (size_t) MDL_OBJID);
     addIntConstant(dict, "MDL_ANGLE_COMPARISON", (long) MDL_ANGLE_COMPARISON);
-    addIntConstant(dict, "MDL_ANGLEPSI2", (long) MDL_ANGLEPSI2);
-    addIntConstant(dict, "MDL_ANGLEPSI", (long) MDL_ANGLEPSI);
-    addIntConstant(dict, "MDL_ANGLEROT2", (long) MDL_ANGLEROT2);
-    addIntConstant(dict, "MDL_ANGLEROT", (long) MDL_ANGLEROT);
-    addIntConstant(dict, "MDL_ANGLETILT2", (long) MDL_ANGLETILT2);
-    addIntConstant(dict, "MDL_ANGLETILT", (long) MDL_ANGLETILT);
-    addIntConstant(dict, "MDL_ASSOCIATED_IMAGE1", (long) MDL_ASSOCIATED_IMAGE1);
-    addIntConstant(dict, "MDL_ASSOCIATED_IMAGE2", (long) MDL_ASSOCIATED_IMAGE2);
-    addIntConstant(dict, "MDL_ASSOCIATED_IMAGE3", (long) MDL_ASSOCIATED_IMAGE3);
-    addIntConstant(dict, "MDL_ASSOCIATED_IMAGE4", (long) MDL_ASSOCIATED_IMAGE4);
-    addIntConstant(dict, "MDL_ASSOCIATED_IMAGE5", (long) MDL_ASSOCIATED_IMAGE5);
+    addIntConstant(dict, "MDL_ANGLE_PSI2", (long) MDL_ANGLE_PSI2);
+    addIntConstant(dict, "MDL_ANGLE_PSI", (long) MDL_ANGLE_PSI);
+    addIntConstant(dict, "MDL_ANGLE_ROT2", (long) MDL_ANGLE_ROT2);
+    addIntConstant(dict, "MDL_ANGLE_ROT", (long) MDL_ANGLE_ROT);
+    addIntConstant(dict, "MDL_ANGLE_TILT2", (long) MDL_ANGLE_TILT2);
+    addIntConstant(dict, "MDL_ANGLE_TILT", (long) MDL_ANGLE_TILT);
+    addIntConstant(dict, "MDL_IMAGE1", (long) MDL_IMAGE1);
+    addIntConstant(dict, "MDL_IMAGE2", (long) MDL_IMAGE2);
+    addIntConstant(dict, "MDL_IMAGE3", (long) MDL_IMAGE3);
+    addIntConstant(dict, "MDL_IMAGE4", (long) MDL_IMAGE4);
+    addIntConstant(dict, "MDL_IMAGE5", (long) MDL_IMAGE5);
     addIntConstant(dict, "MDL_AVG", (long) MDL_AVG);
-    addIntConstant(dict, "MDL_AZIMUTALANGLE", (long) MDL_AZIMUTALANGLE);
     addIntConstant(dict, "MDL_BGMEAN", (long) MDL_BGMEAN);
-    addIntConstant(dict, "MDL_BLOCK", (long) MDL_BLOCK);
-    addIntConstant(dict, "MDL_CELLX", (long) MDL_CELLX);
-    addIntConstant(dict, "MDL_CELLY", (long) MDL_CELLY);
+    addIntConstant(dict, "MDL_BLOCK_NUMBER", (long) MDL_BLOCK_NUMBER);
+    addIntConstant(dict, "MDL_CRYSTAL_CELLX", (long) MDL_CRYSTAL_CELLX);
+    addIntConstant(dict, "MDL_CRYSTAL_CELLY", (long) MDL_CRYSTAL_CELLY);
     addIntConstant(dict, "MDL_COMMENT", (long) MDL_COMMENT);
     addIntConstant(dict, "MDL_COST", (long) MDL_COST);
     addIntConstant(dict, "MDL_COUNT", (long) MDL_COUNT);
-    addIntConstant(dict, "MDL_CTFINPUTPARAMS", (long) MDL_CTFINPUTPARAMS);
-    addIntConstant(dict, "MDL_CTFMODEL", (long) MDL_CTFMODEL);
-    addIntConstant(dict, "MDL_CTFMODEL2", (long) MDL_CTFMODEL2);
+    addIntConstant(dict, "MDL_CTF_INPUTPARAMS", (long) MDL_CTF_INPUTPARAMS);
+    addIntConstant(dict, "MDL_CTF_MODEL", (long) MDL_CTF_MODEL);
+    addIntConstant(dict, "MDL_CTF_MODEL2", (long) MDL_CTF_MODEL2);
     addIntConstant(dict, "MDL_CTF_SAMPLING_RATE", (long) MDL_CTF_SAMPLING_RATE);
     addIntConstant(dict, "MDL_CTF_VOLTAGE", (long) MDL_CTF_VOLTAGE);
     addIntConstant(dict, "MDL_CTF_DEFOCUSU", (long) MDL_CTF_DEFOCUSU);
@@ -4304,53 +4303,53 @@ PyMODINIT_FUNC initxmipp(void)
                    (long) MDL_CTF_TRANSVERSAL_DISPLACEMENT);
     addIntConstant(dict, "MDL_CTF_Q0", (long) MDL_CTF_Q0);
     addIntConstant(dict, "MDL_CTF_K", (long) MDL_CTF_K);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN_K", (long) MDL_CTFBG_GAUSSIAN_K);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN_SIGMAU",
-                   (long) MDL_CTFBG_GAUSSIAN_SIGMAU);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN_SIGMAV",
-                   (long) MDL_CTFBG_GAUSSIAN_SIGMAV);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN_CU", (long) MDL_CTFBG_GAUSSIAN_CU);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN_CV", (long) MDL_CTFBG_GAUSSIAN_CV);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN_ANGLE",
-                   (long) MDL_CTFBG_GAUSSIAN_ANGLE);
-    addIntConstant(dict, "MDL_CTFBG_SQRT_K", (long) MDL_CTFBG_SQRT_K);
-    addIntConstant(dict, "MDL_CTFBG_SQRT_U", (long) MDL_CTFBG_SQRT_U);
-    addIntConstant(dict, "MDL_CTFBG_SQRT_V", (long) MDL_CTFBG_SQRT_V);
-    addIntConstant(dict, "MDL_CTFBG_SQRT_ANGLE", (long) MDL_CTFBG_SQRT_ANGLE);
-    addIntConstant(dict, "MDL_CTFBG_BASELINE", (long) MDL_CTFBG_BASELINE);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN2_K", (long) MDL_CTFBG_GAUSSIAN2_K);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN2_SIGMAU",
-                   (long) MDL_CTFBG_GAUSSIAN2_SIGMAU);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN2_SIGMAV",
-                   (long) MDL_CTFBG_GAUSSIAN2_SIGMAV);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN2_CU",
-                   (long) MDL_CTFBG_GAUSSIAN2_CU);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN2_CV",
-                   (long) MDL_CTFBG_GAUSSIAN2_CV);
-    addIntConstant(dict, "MDL_CTFBG_GAUSSIAN2_ANGLE",
-                   (long) MDL_CTFBG_GAUSSIAN2_ANGLE);
-    addIntConstant(dict, "MDL_CTF_CRITERION_PSDCORRELATION90",
-                   (long) MDL_CTF_CRITERION_PSDCORRELATION90);
-    addIntConstant(dict, "MDL_CTF_CRITERION_FIRSTZERORATIO",
-                   (long) MDL_CTF_CRITERION_FIRSTZERORATIO);
-    addIntConstant(dict, "MDL_CTF_CRITERION_FIRSTZEROAVG",
-                   (long) MDL_CTF_CRITERION_FIRSTZEROAVG);
-    addIntConstant(dict, "MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT",
-                   (long) MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT);
-    addIntConstant(dict, "MDL_CTF_CRITERION_DAMPING",
-                   (long) MDL_CTF_CRITERION_DAMPING);
-    addIntConstant(dict, "MDL_CTF_CRITERION_PSDRADIALINTEGRAL",
-                   (long) MDL_CTF_CRITERION_PSDRADIALINTEGRAL);
-    addIntConstant(dict, "MDL_CTF_CRITERION_FITTINGSCORE",
-                   (long) MDL_CTF_CRITERION_FITTINGSCORE);
-    addIntConstant(dict, "MDL_CTF_CRITERION_FITTINGCORR13",
-                   (long) MDL_CTF_CRITERION_FITTINGCORR13);
-    addIntConstant(dict, "MDL_CTF_CRITERION_PSDVARIANCE",
-                   (long) MDL_CTF_CRITERION_PSDVARIANCE);
-    addIntConstant(dict, "MDL_CTF_CRITERION_PSDPCA1VARIANCE",
-                   (long) MDL_CTF_CRITERION_PSDPCA1VARIANCE);
-    addIntConstant(dict, "MDL_CTF_CRITERION_PSDPCARUNSTEST",
-                   (long) MDL_CTF_CRITERION_PSDPCARUNSTEST);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN_K", (long) MDL_CTF_BG_GAUSSIAN_K);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN_SIGMAU",
+                   (long) MDL_CTF_BG_GAUSSIAN_SIGMAU);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN_SIGMAV",
+                   (long) MDL_CTF_BG_GAUSSIAN_SIGMAV);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN_CU", (long) MDL_CTF_BG_GAUSSIAN_CU);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN_CV", (long) MDL_CTF_BG_GAUSSIAN_CV);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN_ANGLE",
+                   (long) MDL_CTF_BG_GAUSSIAN_ANGLE);
+    addIntConstant(dict, "MDL_CTF_BG_SQRT_K", (long) MDL_CTF_BG_SQRT_K);
+    addIntConstant(dict, "MDL_CTF_BG_SQRT_U", (long) MDL_CTF_BG_SQRT_U);
+    addIntConstant(dict, "MDL_CTF_BG_SQRT_V", (long) MDL_CTF_BG_SQRT_V);
+    addIntConstant(dict, "MDL_CTF_BG_SQRT_ANGLE", (long) MDL_CTF_BG_SQRT_ANGLE);
+    addIntConstant(dict, "MDL_CTF_BG_BASELINE", (long) MDL_CTF_BG_BASELINE);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN2_K", (long) MDL_CTF_BG_GAUSSIAN2_K);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN2_SIGMAU",
+                   (long) MDL_CTF_BG_GAUSSIAN2_SIGMAU);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN2_SIGMAV",
+                   (long) MDL_CTF_BG_GAUSSIAN2_SIGMAV);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN2_CU",
+                   (long) MDL_CTF_BG_GAUSSIAN2_CU);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN2_CV",
+                   (long) MDL_CTF_BG_GAUSSIAN2_CV);
+    addIntConstant(dict, "MDL_CTF_BG_GAUSSIAN2_ANGLE",
+                   (long) MDL_CTF_BG_GAUSSIAN2_ANGLE);
+    addIntConstant(dict, "MDL_CTF_CRIT_PSDCORRELATION90",
+                   (long) MDL_CTF_CRIT_PSDCORRELATION90);
+    addIntConstant(dict, "MDL_CTF_CRIT_FIRSTZERORATIO",
+                   (long) MDL_CTF_CRIT_FIRSTZERORATIO);
+    addIntConstant(dict, "MDL_CTF_CRIT_FIRSTZEROAVG",
+                   (long) MDL_CTF_CRIT_FIRSTZEROAVG);
+    addIntConstant(dict, "MDL_CTF_CRIT_FIRSTZERODISAGREEMENT",
+                   (long) MDL_CTF_CRIT_FIRSTZERODISAGREEMENT);
+    addIntConstant(dict, "MDL_CTF_CRIT_DAMPING",
+                   (long) MDL_CTF_CRIT_DAMPING);
+    addIntConstant(dict, "MDL_CTF_CRIT_PSDRADIALINTEGRAL",
+                   (long) MDL_CTF_CRIT_PSDRADIALINTEGRAL);
+    addIntConstant(dict, "MDL_CTF_CRIT_FITTINGSCORE",
+                   (long) MDL_CTF_CRIT_FITTINGSCORE);
+    addIntConstant(dict, "MDL_CTF_CRIT_FITTINGCORR13",
+                   (long) MDL_CTF_CRIT_FITTINGCORR13);
+    addIntConstant(dict, "MDL_CTF_CRIT_PSDVARIANCE",
+                   (long) MDL_CTF_CRIT_PSDVARIANCE);
+    addIntConstant(dict, "MDL_CTF_CRIT_PSDPCA1VARIANCE",
+                   (long) MDL_CTF_CRIT_PSDPCA1VARIANCE);
+    addIntConstant(dict, "MDL_CTF_CRIT_PSDPCARUNSTEST",
+                   (long) MDL_CTF_CRIT_PSDPCARUNSTEST);
     addIntConstant(dict, "MDL_DATATYPE", (long) MDL_DATATYPE);
     addIntConstant(dict, "MDL_DEFGROUP", (long) MDL_DEFGROUP);
     addIntConstant(dict, "MDL_DM3_IDTAG", (long) MDL_DM3_IDTAG);
@@ -4410,7 +4409,6 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_IMGMD", (long) MDL_IMGMD);
     addIntConstant(dict, "MDL_INTSCALE", (long) MDL_INTSCALE);
     addIntConstant(dict, "MDL_ITER", (long) MDL_ITER);
-    addIntConstant(dict, "MDL_K", (long) MDL_K);
     addIntConstant(dict, "MDL_KSTEST", (long) MDL_KSTEST);
     addIntConstant(dict, "MDL_LL", (long) MDL_LL);
     addIntConstant(dict, "MDL_MAGNIFICATION", (long) MDL_MAGNIFICATION);
@@ -4441,19 +4439,19 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_NOISE_COORD", (long)MDL_NOISE_COORD);
     addIntConstant(dict, "MDL_NOISE_PIXEL_LEVEL", (long)MDL_NOISE_PIXEL_LEVEL);
 
-    addIntConstant(dict, "MDL_2D_LATTICE_VECA", (long)MDL_2D_LATTICE_VECA);
-    addIntConstant(dict, "MDL_2D_LATTICE_VECB", (long)MDL_2D_LATTICE_VECB);
+    addIntConstant(dict, "MDL_CRYSTAL_LATTICE_A", (long)MDL_CRYSTAL_LATTICE_A);
+    addIntConstant(dict, "MDL_CRYSTAL_LATTICE_B", (long)MDL_CRYSTAL_LATTICE_B);
     addIntConstant(dict, "MDL_CRYSTAL_DISAPPEAR_THRE", (long)MDL_CRYSTAL_DISAPPEAR_THRE);
     addIntConstant(dict, "MDL_CRYSTAL_SHFILE", (long)MDL_CRYSTAL_SHFILE);
-    addIntConstant(dict, "MDL_ORTHOGONAL_PROJECTION", (long)MDL_ORTHOGONAL_PROJECTION);
+    addIntConstant(dict, "MDL_CRYSTAL_ORTHO_PRJ", (long)MDL_CRYSTAL_ORTHO_PRJ);
     addIntConstant(dict, "MDL_CRYSTAL_PROJ", (long)MDL_CRYSTAL_PROJ);
 
     addIntConstant(dict, "MDL_ORDER", (long) MDL_ORDER);
-    addIntConstant(dict, "MDL_ORIGINX", (long) MDL_ORIGINX);
-    addIntConstant(dict, "MDL_ORIGINY", (long) MDL_ORIGINY);
-    addIntConstant(dict, "MDL_ORIGINZ", (long) MDL_ORIGINZ);
+    addIntConstant(dict, "MDL_ORIGIN_X", (long) MDL_ORIGIN_X);
+    addIntConstant(dict, "MDL_ORIGIN_Y", (long) MDL_ORIGIN_Y);
+    addIntConstant(dict, "MDL_ORIGIN_Z", (long) MDL_ORIGIN_Z);
     addIntConstant(dict, "MDL_PICKING_FAMILY", (long) MDL_PICKING_FAMILY);
-    addIntConstant(dict, "MDL_PICKING_COLOR", (long) MDL_PICKING_COLOR);
+    addIntConstant(dict, "MDL_COLOR", (long) MDL_COLOR);
     addIntConstant(dict, "MDL_PICKING_PARTICLE_SIZE", (long) MDL_PICKING_PARTICLE_SIZE);
     addIntConstant(dict, "MDL_PICKING_FAMILY_STATE", (long) MDL_PICKING_FAMILY_STATE);
     addIntConstant(dict, "MDL_PICKING_MICROGRAPH_FAMILY_STATE", (long) MDL_PICKING_MICROGRAPH_FAMILY_STATE);
@@ -4490,22 +4488,21 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_RESOLUTION_FREQREAL",(long) MDL_RESOLUTION_FREQREAL);
     addIntConstant(dict, "MDL_SAMPLINGRATE", (long) MDL_SAMPLINGRATE);
     addIntConstant(dict, "MDL_SAMPLINGRATE_ORIGINAL", (long) MDL_SAMPLINGRATE_ORIGINAL);
-    addIntConstant(dict, "MDL_SAMPLINGRATEX", (long) MDL_SAMPLINGRATEX);
-    addIntConstant(dict, "MDL_SAMPLINGRATEY", (long) MDL_SAMPLINGRATEY);
-    addIntConstant(dict, "MDL_SAMPLINGRATEZ", (long) MDL_SAMPLINGRATEZ);
+    addIntConstant(dict, "MDL_SAMPLINGRATE_X", (long) MDL_SAMPLINGRATE_X);
+    addIntConstant(dict, "MDL_SAMPLINGRATE_Y", (long) MDL_SAMPLINGRATE_Y);
+    addIntConstant(dict, "MDL_SAMPLINGRATE_Z", (long) MDL_SAMPLINGRATE_Z);
     addIntConstant(dict, "MDL_SCALE", (long) MDL_SCALE);
     addIntConstant(dict, "MDL_SELFILE", (long) MDL_SELFILE);
     addIntConstant(dict, "MDL_SERIE", (long) MDL_SERIE);
-    addIntConstant(dict, "MDL_SHIFTX", (long) MDL_SHIFTX);
-    addIntConstant(dict, "MDL_SHIFTY", (long) MDL_SHIFTY);
-    addIntConstant(dict, "MDL_SHIFTZ", (long) MDL_SHIFTZ);
-    addIntConstant(dict, "MDL_SHIFT_CRYSTALX", (long) MDL_SHIFT_CRYSTALX);
-    addIntConstant(dict, "MDL_SHIFT_CRYSTALY", (long) MDL_SHIFT_CRYSTALY);
-    addIntConstant(dict, "MDL_SHIFT_CRYSTALZ", (long) MDL_SHIFT_CRYSTALZ);
+    addIntConstant(dict, "MDL_SHITF_X", (long) MDL_SHITF_X);
+    addIntConstant(dict, "MDL_SHITF_Y", (long) MDL_SHITF_Y);
+    addIntConstant(dict, "MDL_SHITF_Z", (long) MDL_SHITF_Z);
+    addIntConstant(dict, "MDL_CRYSTAL_SHIFTX", (long) MDL_CRYSTAL_SHIFTX);
+    addIntConstant(dict, "MDL_CRYSTAL_SHIFTY", (long) MDL_CRYSTAL_SHIFTY);
+    addIntConstant(dict, "MDL_CRYSTAL_SHIFTZ", (long) MDL_CRYSTAL_SHIFTZ);
     addIntConstant(dict, "MDL_SIGMANOISE", (long) MDL_SIGMANOISE);
     addIntConstant(dict, "MDL_SIGMAOFFSET", (long) MDL_SIGMAOFFSET);
     addIntConstant(dict, "MDL_SIGNALCHANGE", (long) MDL_SIGNALCHANGE);
-    addIntConstant(dict, "MDL_SPHERICALABERRATION",(long) MDL_SPHERICALABERRATION);
     addIntConstant(dict, "MDL_STDDEV", (long) MDL_STDDEV);
     addIntConstant(dict, "MDL_SUM", (long) MDL_SUM);
     addIntConstant(dict, "MDL_SUMWEIGHT", (long) MDL_SUMWEIGHT);
@@ -4514,15 +4511,15 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_VOLTAGE", (long) MDL_VOLTAGE);
     addIntConstant(dict, "MDL_WEIGHT", (long) MDL_WEIGHT);
     addIntConstant(dict, "MDL_WROBUST", (long) MDL_WROBUST);
-    addIntConstant(dict, "MDL_XINT", (long) MDL_XINT);
-    addIntConstant(dict, "MDL_XINTTILT", (long) MDL_XINTTILT);
+    addIntConstant(dict, "MDL_XCOOR", (long) MDL_XCOOR);
+    addIntConstant(dict, "MDL_XCOOR_TILT", (long) MDL_XCOOR_TILT);
     addIntConstant(dict, "MDL_XSIZE", (long) MDL_XSIZE);
     addIntConstant(dict, "MDL_X", (long) MDL_X);
-    addIntConstant(dict, "MDL_YINT", (long) MDL_YINT);
-    addIntConstant(dict, "MDL_YINTTILT", (long) MDL_YINTTILT);
+    addIntConstant(dict, "MDL_YCOOR", (long) MDL_YCOOR);
+    addIntConstant(dict, "MDL_YCOOR_TILT", (long) MDL_YCOOR_TILT);
     addIntConstant(dict, "MDL_Y", (long) MDL_Y);
     addIntConstant(dict, "MDL_YSIZE", (long) MDL_YSIZE);
-    addIntConstant(dict, "MDL_ZINT", (long) MDL_ZINT);
+    addIntConstant(dict, "MDL_ZCOOR", (long) MDL_ZCOOR);
     addIntConstant(dict, "MDL_Z", (long) MDL_Z);
     addIntConstant(dict, "MDL_ZSCORE", (long) MDL_ZSCORE);
     addIntConstant(dict, "MDL_LAST_LABEL", (long) MDL_LAST_LABEL);

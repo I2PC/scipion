@@ -243,15 +243,15 @@ void ProgAngularClassAverage::run()
                                  and 'this_image' is of type int...");
                     id = DF.firstObject(MDValueEQ(MDL_IMAGE, this_image));
 
-                    DF.setValue(MDL_ANGLEROT,
+                    DF.setValue(MDL_ANGLE_ROT,
                                 output_values[i * AVG_OUPUT_SIZE + 6], id);
-                    DF.setValue(MDL_ANGLETILT,
+                    DF.setValue(MDL_ANGLE_TILT,
                                 output_values[i * AVG_OUPUT_SIZE + 7], id);
-                    DF.setValue(MDL_ANGLEPSI,
+                    DF.setValue(MDL_ANGLE_PSI,
                                 output_values[i * AVG_OUPUT_SIZE + 8], id);
-                    DF.setValue(MDL_SHIFTX,
+                    DF.setValue(MDL_SHITF_X,
                                 output_values[i * AVG_OUPUT_SIZE + 9], id);
-                    DF.setValue(MDL_SHIFTY,
+                    DF.setValue(MDL_SHITF_Y,
                                 output_values[i * AVG_OUPUT_SIZE + 10], id);
                     DF.setValue(MDL_REF,
                                 output_values[i * AVG_OUPUT_SIZE + 11], id);
@@ -758,8 +758,8 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
     std::vector<Image<double> > exp_imgs;
     //CHECK ANGLE REFS
     // Get reference angles and preset to averages
-    DFlib.getValue(MDL_ANGLEROT, rot, dirno);
-    DFlib.getValue(MDL_ANGLETILT, tilt, dirno);
+    DFlib.getValue(MDL_ANGLE_ROT, rot, dirno);
+    DFlib.getValue(MDL_ANGLE_TILT, tilt, dirno);
     Iempty.setEulerAngles(rot, tilt, 0.);
     Iempty.setShifts(0., 0.);
     Iempty.setFlip(0.);
@@ -774,8 +774,8 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
         this_image++;
 
         _DF.getValue(MDL_REF, ref_number, __iter.objId);
-        _DF.getValue(MDL_ANGLEROT, current_rot, __iter.objId);
-        _DF.getValue(MDL_ANGLETILT, current_tilt, __iter.objId);
+        _DF.getValue(MDL_ANGLE_ROT, current_rot, __iter.objId);
+        _DF.getValue(MDL_ANGLE_TILT, current_tilt, __iter.objId);
         _DF.getValue(MDL_ORDER, order_number, __iter.objId);
         //if (ref_number == dirno)
         {
@@ -794,9 +794,9 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
             }
             if (is_selected)
             {
-                _DF.getValue(MDL_ANGLEPSI, psi, __iter.objId);
-                _DF.getValue(MDL_SHIFTX, xshift, __iter.objId);
-                _DF.getValue(MDL_SHIFTY, yshift, __iter.objId);
+                _DF.getValue(MDL_ANGLE_PSI, psi, __iter.objId);
+                _DF.getValue(MDL_SHITF_X, xshift, __iter.objId);
+                _DF.getValue(MDL_SHITF_Y, yshift, __iter.objId);
                 if (do_mirrors)
                     _DF.getValue(MDL_FLIP, mirror, __iter.objId);
                 _DF.getValue(MDL_SCALE, scale, __iter.objId);
@@ -846,8 +846,8 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
                     w1 += 1.;
                     id = SFclass1.addObject();
                     SFclass1.setValue(MDL_IMAGE, fn_img, id);
-                    SFclass1.setValue(MDL_ANGLEROT, current_rot, id);
-                    SFclass1.setValue(MDL_ANGLETILT, current_tilt, id);
+                    SFclass1.setValue(MDL_ANGLE_ROT, current_rot, id);
+                    SFclass1.setValue(MDL_ANGLE_TILT, current_tilt, id);
                     SFclass1.setValue(MDL_REF, ref_number, id);
                     SFclass1.setValue(MDL_ORDER, dirno, id);
                 }
@@ -857,8 +857,8 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
                     w2 += 1.;
                     id = SFclass2.addObject();
                     SFclass2.setValue(MDL_IMAGE, fn_img, id);
-                    SFclass2.setValue(MDL_ANGLEROT, current_rot, id);
-                    SFclass2.setValue(MDL_ANGLETILT, current_tilt, id);
+                    SFclass2.setValue(MDL_ANGLE_ROT, current_rot, id);
+                    SFclass2.setValue(MDL_ANGLE_TILT, current_tilt, id);
                     SFclass2.setValue(MDL_REF, ref_number, id);
                     SFclass2.setValue(MDL_ORDER, dirno, id);
                 }
@@ -867,8 +867,8 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
             {
                 id = SFclassDiscarded.addObject();
                 SFclassDiscarded.setValue(MDL_IMAGE, fn_img, id);
-                SFclassDiscarded.setValue(MDL_ANGLEROT, current_rot, id);
-                SFclassDiscarded.setValue(MDL_ANGLETILT, current_tilt, id);
+                SFclassDiscarded.setValue(MDL_ANGLE_ROT, current_rot, id);
+                SFclassDiscarded.setValue(MDL_ANGLE_TILT, current_tilt, id);
                 SFclassDiscarded.setValue(MDL_REF, ref_number, id);
                 SFclassDiscarded.setValue(MDL_ORDER, dirno, id);
             }
@@ -1017,8 +1017,8 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno, double w,
     double rot, tilt;
     FileName fn_tmp;
 
-    DFlib.getValue(MDL_ANGLEROT, rot, dirno);
-    DFlib.getValue(MDL_ANGLETILT, tilt, dirno);
+    DFlib.getValue(MDL_ANGLE_ROT, rot, dirno);
+    DFlib.getValue(MDL_ANGLE_TILT, tilt, dirno);
     double d = 0.;
     bool f = false;
     size_t id;
@@ -1031,12 +1031,12 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno, double w,
         fn_tmp.compose(dirno, fn_out + "_class", "stk");
         id = SFclasses.addObject();
         SFclasses.setValue(MDL_IMAGE, fn_tmp, id);
-        SFclasses.setValue(MDL_ANGLEROT, rot, id);
-        SFclasses.setValue(MDL_ANGLETILT, tilt, id);
+        SFclasses.setValue(MDL_ANGLE_ROT, rot, id);
+        SFclasses.setValue(MDL_ANGLE_TILT, tilt, id);
         //this may help to keep compatibility with the next program
-        SFclasses.setValue(MDL_ANGLEPSI, d, id);
-        SFclasses.setValue(MDL_SHIFTX, d, id);
-        SFclasses.setValue(MDL_SHIFTY, d, id);
+        SFclasses.setValue(MDL_ANGLE_PSI, d, id);
+        SFclasses.setValue(MDL_SHITF_X, d, id);
+        SFclasses.setValue(MDL_SHITF_Y, d, id);
 
         SFclasses.setValue(MDL_WEIGHT, w, id);
         //this may help to keep compatibility with the next program
@@ -1052,12 +1052,12 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno, double w,
             fn_tmp.compose(dirno, fn_out1 + "_class", "stk");
             id = SFclasses1.addObject();
             SFclasses1.setValue(MDL_IMAGE, fn_tmp, id);
-            SFclasses1.setValue(MDL_ANGLEROT, rot, id);
-            SFclasses1.setValue(MDL_ANGLETILT, tilt, id);
+            SFclasses1.setValue(MDL_ANGLE_ROT, rot, id);
+            SFclasses1.setValue(MDL_ANGLE_TILT, tilt, id);
             //this may help to keep compatibility with the next program
-            SFclasses1.setValue(MDL_ANGLEPSI, d, id);
-            SFclasses1.setValue(MDL_SHIFTX, d, id);
-            SFclasses1.setValue(MDL_SHIFTY, d, id);
+            SFclasses1.setValue(MDL_ANGLE_PSI, d, id);
+            SFclasses1.setValue(MDL_SHITF_X, d, id);
+            SFclasses1.setValue(MDL_SHITF_Y, d, id);
 
             SFclasses1.setValue(MDL_WEIGHT, w1, id);
 
@@ -1072,12 +1072,12 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno, double w,
             fn_tmp.compose(dirno, fn_out2 + "_class", "stk");
             id = SFclasses2.addObject();
             SFclasses2.setValue(MDL_IMAGE, fn_tmp, id);
-            SFclasses2.setValue(MDL_ANGLEROT, rot, id);
-            SFclasses2.setValue(MDL_ANGLETILT, tilt, id);
+            SFclasses2.setValue(MDL_ANGLE_ROT, rot, id);
+            SFclasses2.setValue(MDL_ANGLE_TILT, tilt, id);
             //this may help to keep compatibility with the next program
-            SFclasses2.setValue(MDL_ANGLEPSI, d, id);
-            SFclasses2.setValue(MDL_SHIFTX, d, id);
-            SFclasses2.setValue(MDL_SHIFTY, d, id);
+            SFclasses2.setValue(MDL_ANGLE_PSI, d, id);
+            SFclasses2.setValue(MDL_SHITF_X, d, id);
+            SFclasses2.setValue(MDL_SHITF_Y, d, id);
 
             SFclasses2.setValue(MDL_WEIGHT, w2, id);
 

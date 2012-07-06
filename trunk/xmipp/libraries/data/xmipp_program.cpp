@@ -282,6 +282,30 @@ int XmippProgram::tryRun()
     }
     return errorCode;
 }
+/** Init progress */
+void XmippProgram::initProgress(size_t total, size_t stepBin)
+{
+    if (verbose)
+    {
+      progressTotal = total;
+      progressStep = XMIPP_MAX(1, total / stepBin);
+      init_progress_bar(total);
+    }
+}
+
+/** Notify progress on work */
+void XmippProgram::setProgress(size_t value)
+{
+  if (verbose && value % progressStep == 0)
+    progress_bar(value);
+}
+
+/** Notify end of work */
+void XmippProgram::endProgress()
+{
+  if (verbose)
+    progress_bar(progressTotal);
+}
 
 void XmippProgram::setProgramName(const char * name)
 {

@@ -196,8 +196,8 @@ void MpiProgAngularClassAverage::run()
                     mdJobList.getValue(MDL_REF, ref2d,  __iterJobs.objId);
                     jobListRows[index_2DRef + ArraySize * i + 1] = (double) ref2d;
                     jobListRows[index_jobId + ArraySize * i + 1] = (double) __iterJobs.objId;
-                    mdJobList.getValue(MDL_ANGLEROT, jobListRows[index_Rot + ArraySize * i + 1],  __iterJobs.objId);
-                    mdJobList.getValue(MDL_ANGLETILT, jobListRows[index_Tilt + ArraySize * i + 1],  __iterJobs.objId);
+                    mdJobList.getValue(MDL_ANGLE_ROT, jobListRows[index_Rot + ArraySize * i + 1],  __iterJobs.objId);
+                    mdJobList.getValue(MDL_ANGLE_TILT, jobListRows[index_Tilt + ArraySize * i + 1],  __iterJobs.objId);
                     __iterJobs.moveNext();
                 }
                 jobListRows[0]=size;
@@ -421,9 +421,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     {
         _DF.getValue(MDL_IMAGE, fn_img, __iter.objId);
         this_image++;
-        _DF.getValue(MDL_ANGLEPSI, psi, __iter.objId);
-        _DF.getValue(MDL_SHIFTX, xshift, __iter.objId);
-        _DF.getValue(MDL_SHIFTY, yshift, __iter.objId);
+        _DF.getValue(MDL_ANGLE_PSI, psi, __iter.objId);
+        _DF.getValue(MDL_SHITF_X, xshift, __iter.objId);
+        _DF.getValue(MDL_SHITF_Y, yshift, __iter.objId);
         if (do_mirrors)
             _DF.getValue(MDL_FLIP, mirror, __iter.objId);
         _DF.getValue(MDL_SCALE, scale, __iter.objId);
@@ -461,8 +461,8 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             w1 += 1.;
             id = SFclass1.addObject();
             SFclass1.setValue(MDL_IMAGE, fn_img, id);
-            SFclass1.setValue(MDL_ANGLEROT, Def_3Dref_2Dref_JobNo[index_Rot], id);
-            SFclass1.setValue(MDL_ANGLETILT, Def_3Dref_2Dref_JobNo[index_Tilt], id);
+            SFclass1.setValue(MDL_ANGLE_ROT, Def_3Dref_2Dref_JobNo[index_Rot], id);
+            SFclass1.setValue(MDL_ANGLE_TILT, Def_3Dref_2Dref_JobNo[index_Tilt], id);
             SFclass1.setValue(MDL_REF, ref_number, id);
             SFclass1.setValue(MDL_REF3D, ref3d, id);
             SFclass1.setValue(MDL_DEFGROUP, defGroup, id);
@@ -474,8 +474,8 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             w2 += 1.;
             id = SFclass2.addObject();
             SFclass2.setValue(MDL_IMAGE, fn_img, id);
-            SFclass2.setValue(MDL_ANGLEROT, Def_3Dref_2Dref_JobNo[index_Rot], id);
-            SFclass2.setValue(MDL_ANGLETILT, Def_3Dref_2Dref_JobNo[index_Tilt], id);
+            SFclass2.setValue(MDL_ANGLE_ROT, Def_3Dref_2Dref_JobNo[index_Rot], id);
+            SFclass2.setValue(MDL_ANGLE_TILT, Def_3Dref_2Dref_JobNo[index_Tilt], id);
             SFclass2.setValue(MDL_REF, ref_number, id);
             SFclass2.setValue(MDL_REF3D, ref3d, id);
             SFclass2.setValue(MDL_DEFGROUP, defGroup, id);
@@ -850,7 +850,7 @@ void MpiProgAngularClassAverage::filterInputMetadata()
         //!a take 1: using a copy of mdJobList
         const MDLabel myGroupByLabels[] =
             {
-                MDL_REF3D, MDL_DEFGROUP, MDL_ORDER, MDL_REF, MDL_ANGLEROT, MDL_ANGLETILT
+                MDL_REF3D, MDL_DEFGROUP, MDL_ORDER, MDL_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT
             };
         std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
         auxMdJobList.aggregateGroupBy(auxDF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);
@@ -1064,14 +1064,14 @@ void MpiProgAngularClassAverage::mpi_postprocess()
 
         const MDLabel myGroupByLabels[] =
             {
-                MDL_REF3D, MDL_ORDER, MDL_REF, MDL_ANGLEROT, MDL_ANGLETILT
+                MDL_REF3D, MDL_ORDER, MDL_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT
             };
         std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+5);
         auxMd2.aggregateGroupBy(auxMd, AGGR_SUM, groupbyLabels, MDL_COUNT, MDL_WEIGHT);
 
         auxMd2.addLabel(MDL_IMAGE, 1);
-        auxMd2.addLabel(MDL_ANGLEPSI);
-        auxMd2.setValueCol(MDL_ANGLEPSI,0.);
+        auxMd2.addLabel(MDL_ANGLE_PSI);
+        auxMd2.setValueCol(MDL_ANGLE_PSI,0.);
 
         FOR_ALL_OBJECTS_IN_METADATA(auxMd2)
         {
@@ -1153,7 +1153,7 @@ void MpiProgAngularClassAverage::createJobList()
 {
     const MDLabel myGroupByLabels[] =
         {
-            MDL_REF3D, MDL_DEFGROUP, MDL_ORDER, MDL_REF, MDL_ANGLEROT, MDL_ANGLETILT
+            MDL_REF3D, MDL_DEFGROUP, MDL_ORDER, MDL_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT
         };
     std::vector<MDLabel> groupbyLabels(myGroupByLabels,myGroupByLabels+6);
     mdJobList.aggregateGroupBy(DF, AGGR_COUNT, groupbyLabels, MDL_ORDER, MDL_COUNT);

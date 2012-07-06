@@ -146,24 +146,24 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
 
     MDRow rowIn,rowOut;
     rowIn.setValue(MDL_SCALE,scale);
-    rowIn.setValue(MDL_ANGLEROT,rot);
-    rowIn.setValue(MDL_ANGLETILT,tilt);
-    rowIn.setValue(MDL_ANGLEPSI,psi);
-    rowIn.setValue(MDL_SHIFTX,x);
-    rowIn.setValue(MDL_SHIFTY,y);
-    rowIn.setValue(MDL_SHIFTZ,z);
+    rowIn.setValue(MDL_ANGLE_ROT,rot);
+    rowIn.setValue(MDL_ANGLE_TILT,tilt);
+    rowIn.setValue(MDL_ANGLE_PSI,psi);
+    rowIn.setValue(MDL_SHITF_X,x);
+    rowIn.setValue(MDL_SHITF_Y,y);
+    rowIn.setValue(MDL_SHITF_Z,z);
     rowIn.setValue(MDL_FLIP, flip);
     Matrix2D<double> A(4, 4);
 
     geo2TransformationMatrix(rowIn,A,false);
     transformationMatrix2Geo(A,rowOut);
     rowOut.getValue(MDL_SCALE,scale2);
-    rowOut.getValue(MDL_ANGLEROT,rot2);
-    rowOut.getValue(MDL_ANGLETILT,tilt2);
-    rowOut.getValue(MDL_ANGLEPSI,psi2);
-    rowOut.getValue(MDL_SHIFTX,x2);
-    rowOut.getValue(MDL_SHIFTY,y2);
-    rowOut.getValue(MDL_SHIFTZ,z2);
+    rowOut.getValue(MDL_ANGLE_ROT,rot2);
+    rowOut.getValue(MDL_ANGLE_TILT,tilt2);
+    rowOut.getValue(MDL_ANGLE_PSI,psi2);
+    rowOut.getValue(MDL_SHITF_X,x2);
+    rowOut.getValue(MDL_SHITF_Y,y2);
+    rowOut.getValue(MDL_SHITF_Z,z2);
     rowOut.getValue(MDL_FLIP, flip2);
 
     EXPECT_DOUBLE_EQ(scale, scale2);

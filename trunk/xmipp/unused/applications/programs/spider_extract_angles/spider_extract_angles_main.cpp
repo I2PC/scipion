@@ -81,9 +81,9 @@ protected:
         if (from_metadata)
         {
             double rot, tilt, psi;
-            mdIn.getValue(MDL_ANGLEROT,rot, objId);
-            mdIn.getValue(MDL_ANGLETILT,tilt, objId);
-            mdIn.getValue(MDL_ANGLEPSI,psi, objId);
+            mdIn.getValue(MDL_ANGLE_ROT,rot, objId);
+            mdIn.getValue(MDL_ANGLE_TILT,tilt, objId);
+            mdIn.getValue(MDL_ANGLE_PSI,psi, objId);
             DF_out.append_angles(rot, tilt, psi, ang1, ang2, ang3);
         }
         else

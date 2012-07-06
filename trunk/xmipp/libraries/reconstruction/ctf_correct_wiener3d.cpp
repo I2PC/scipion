@@ -85,7 +85,7 @@ void ProgCtfCorrectAmplitude3D::produceSideInfo()
     size_t id = ctfdat.firstObject();
     FileName fnVol, fnCTF;
     ctfdat.getValue(MDL_IMAGE,fnVol, id);
-    ctfdat.getValue(MDL_CTFMODEL,fnCTF, id);
+    ctfdat.getValue(MDL_CTF_MODEL,fnCTF, id);
     Image<double> V;
     V.read(fnVol, HEADER);
     size_t Ndim;
@@ -143,7 +143,7 @@ void ProgCtfCorrectAmplitude3D::generateWienerFilters()
     {
         // Calculate 1D CTF
         ctfdat.getValue(MDL_IMAGE,fnVol,__iter.objId);
-        ctfdat.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
+        ctfdat.getValue(MDL_CTF_MODEL,fnCTF,__iter.objId);
         generateCTF1D(fnCTF,nr_steps,CTF1D);
         Vctfs1D.push_back(CTF1D);
 
@@ -224,7 +224,7 @@ void ProgCtfCorrectAmplitude3D::generateVolumes()
     FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
         ctfdat.getValue(MDL_IMAGE,fnVol,__iter.objId);
-        ctfdat.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
+        ctfdat.getValue(MDL_CTF_MODEL,fnCTF,__iter.objId);
         V.read(fnVol);
         FourierTransform(V(),fft);
         if (ii == 0)
@@ -254,7 +254,7 @@ void ProgCtfCorrectAmplitude3D::generateVolumes()
     FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
         ctfdat.getValue(MDL_IMAGE,fnVol,__iter.objId);
-        ctfdat.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
+        ctfdat.getValue(MDL_CTF_MODEL,fnCTF,__iter.objId);
         MultidimArray<double>& Vwien1D_ii=Vwien1D[ii];
         FOR_ALL_ELEMENTS_IN_ARRAY3D(fft)
         {

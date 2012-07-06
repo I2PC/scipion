@@ -62,12 +62,12 @@ void Crystal_Projection_Parameters::read(const FileName &fn, double scale)
     crystal_Ydim = (int)ParamVec[1];
     crystal_Xdim = ROUND(scale * crystal_Xdim);
     crystal_Ydim = ROUND(scale * crystal_Ydim);
-    MD.getValue(MDL_2D_LATTICE_VECA, ParamVec, objId);
+    MD.getValue(MDL_CRYSTAL_LATTICE_A, ParamVec, objId);
     a.resize(3);
     XX(a) = scale * ParamVec[0];
     YY(a) = scale * ParamVec[1];
     ZZ(a) = 0;
-    MD.getValue(MDL_2D_LATTICE_VECB, ParamVec, objId);
+    MD.getValue(MDL_CRYSTAL_LATTICE_B, ParamVec, objId);
     b.resize(3);
     XX(b) = scale * ParamVec[0];
     YY(b) = scale * ParamVec[1];
@@ -79,7 +79,7 @@ void Crystal_Projection_Parameters::read(const FileName &fn, double scale)
     else
         Nshift_avg = scale * ParamVec[1];
     MD.getValue(MDL_CRYSTAL_DISAPPEAR_THRE,disappearing_th, objId);
-    MD.getValue(MDL_ORTHOGONAL_PROJECTION,orthogonal, objId);
+    MD.getValue(MDL_CRYSTAL_ORTHO_PRJ,orthogonal, objId);
     if (MD.getValue(MDL_CRYSTAL_SHFILE, fn_shift, objId))
         DF_shift_bool = true;
 
@@ -110,15 +110,15 @@ void Crystal_Projection_Parameters::write(const FileName &fn_crystal)
         MD1.setValue(MDL_DIMENSIONS_2D, TVector, id);
         TVector[0] = XX(a);
         TVector[1] = YY(a);
-        MD1.setValue(MDL_2D_LATTICE_VECA, TVector, id);
+        MD1.setValue(MDL_CRYSTAL_LATTICE_A, TVector, id);
         TVector[0] = XX(b);
         TVector[1] = YY(b);
-        MD1.setValue(MDL_2D_LATTICE_VECB, TVector, id);
+        MD1.setValue(MDL_CRYSTAL_LATTICE_B, TVector, id);
         TVector[0] = Nshift_dev;
         TVector[1] = Nshift_avg;
         MD1.setValue(MDL_NOISE_PIXEL_LEVEL, TVector, id);
         MD1.setValue(MDL_CRYSTAL_DISAPPEAR_THRE, disappearing_th, id);
-        MD1.setValue(MDL_ORTHOGONAL_PROJECTION, orthogonal, id);
+        MD1.setValue(MDL_CRYSTAL_ORTHO_PRJ, orthogonal, id);
         MD1.setValue(MDL_CRYSTAL_SHFILE, fn_shift.c_str(), id);
         //MD1.write(fn_crystal, MD_OVERWRITE);
     }
@@ -910,17 +910,17 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
     {
         //Check that we are not outside the matrix
         int xcell, ycell;
-        aux_DF_shift.getValue(MDL_CELLX,xcell,__iter.objId);
-        aux_DF_shift.getValue(MDL_CELLY,ycell,__iter.objId);
+        aux_DF_shift.getValue(MDL_CRYSTAL_CELLX,xcell,__iter.objId);
+        aux_DF_shift.getValue(MDL_CRYSTAL_CELLY,ycell,__iter.objId);
         if (!exp_shifts_matrix_X.outside(xcell,ycell))
         {
-            aux_DF_shift.getValue(MDL_SHIFTX,exp_shifts_matrix_X(ycell, xcell),__iter.objId);
-            aux_DF_shift.getValue(MDL_SHIFTY,exp_shifts_matrix_Y(ycell, xcell),__iter.objId);
-            aux_DF_shift.getValue(MDL_SHIFTZ,exp_shifts_matrix_Z(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_SHITF_X,exp_shifts_matrix_X(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_SHITF_Y,exp_shifts_matrix_Y(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_SHITF_Z,exp_shifts_matrix_Z(ycell, xcell),__iter.objId);
 
-            aux_DF_shift.getValue(MDL_SHIFT_CRYSTALX,exp_normal_shifts_matrix_X(ycell, xcell),__iter.objId);
-            aux_DF_shift.getValue(MDL_SHIFT_CRYSTALY,exp_normal_shifts_matrix_Y(ycell, xcell),__iter.objId);
-            aux_DF_shift.getValue(MDL_SHIFT_CRYSTALZ,exp_normal_shifts_matrix_Z(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_CRYSTAL_SHIFTX,exp_normal_shifts_matrix_X(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_CRYSTAL_SHIFTY,exp_normal_shifts_matrix_Y(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_CRYSTAL_SHIFTZ,exp_normal_shifts_matrix_Z(ycell, xcell),__iter.objId);
         }
     }
     //#define DEBUG2

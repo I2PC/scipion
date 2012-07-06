@@ -238,8 +238,8 @@ void Micrograph::write_coordinates(int label, double minCost,
                 && coords[i].label == label)
         {
             id = MD.addObject();
-            MD.setValue(MDL_XINT, coords[i].X, id);
-            MD.setValue(MDL_YINT, coords[i].Y, id);
+            MD.setValue(MDL_XCOOR, coords[i].X, id);
+            MD.setValue(MDL_YCOOR, coords[i].Y, id);
         }
     }
     MD.write(fn_coords);
@@ -268,8 +268,8 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         int x, y;
-        MD.getValue(MDL_XINT, aux.X, __iter.objId); //aux.X=x;
-        MD.getValue(MDL_YINT, aux.Y, __iter.objId); //aux.Y=y;
+        MD.getValue(MDL_XCOOR, aux.X, __iter.objId); //aux.X=x;
+        MD.getValue(MDL_YCOOR, aux.Y, __iter.objId); //aux.Y=y;
         coords.push_back(aux);
     }
 }
@@ -410,8 +410,8 @@ void Micrograph::produce_all_images(int label, double minCost,
             id = SF.addObject();
             SF.setValue(MDL_IMAGE, fn_aux, id);
             SF.setValue(MDL_MICROGRAPH, M->fn_micrograph, id);
-            SF.setValue(MDL_XINT, coords[n].X, id);
-            SF.setValue(MDL_YINT, coords[n].Y, id);
+            SF.setValue(MDL_XCOOR, coords[n].X, id);
+            SF.setValue(MDL_YCOOR, coords[n].Y, id);
             bool t = M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY);
             if (!t)
             {

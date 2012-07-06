@@ -89,28 +89,28 @@ protected:
         {
             switch (activeLabels[iter])
             {
-            case MDL_ANGLEROT:
-                mdIn.getValue( MDL_ANGLEROT, rot, objId);
+            case MDL_ANGLE_ROT:
+                mdIn.getValue( MDL_ANGLE_ROT, rot, objId);
                 img.setRot(rot);
                 break;
-            case MDL_ANGLETILT:
-                mdIn.getValue( MDL_ANGLETILT, tilt, objId);
+            case MDL_ANGLE_TILT:
+                mdIn.getValue( MDL_ANGLE_TILT, tilt, objId);
                 img.setTilt(tilt);
                 break;
-            case MDL_ANGLEPSI:
-                mdIn.getValue( MDL_ANGLEPSI, psi, objId);
+            case MDL_ANGLE_PSI:
+                mdIn.getValue( MDL_ANGLE_PSI, psi, objId);
                 img.setPsi(psi);
                 break;
-            case MDL_SHIFTX:
-                mdIn.getValue( MDL_SHIFTX, xshift, objId);
+            case MDL_SHITF_X:
+                mdIn.getValue( MDL_SHITF_X, xshift, objId);
                 if (levels != 0)
                     xshift /= pow(2.0, levels);
                 if (round_shifts)
                     xshift = (float)ROUND(xshift);
                 img.setXoff(xshift);
                 break;
-            case MDL_SHIFTY:
-                mdIn.getValue(MDL_SHIFTY, yshift, objId);
+            case MDL_SHITF_Y:
+                mdIn.getValue(MDL_SHITF_Y, yshift, objId);
                 if (levels != 0)
                     yshift /= pow(2.0, levels);
                 if (round_shifts)

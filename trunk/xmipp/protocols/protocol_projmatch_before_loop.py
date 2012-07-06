@@ -92,9 +92,9 @@ def initAngularReferenceFile(_log, BlockWithAllExpImages, CtfGroupDirectory, Ctf
         
     else:
         MD.read(SelFileName)
-        MD.addLabel(MDL_ANGLEROT)
-        MD.addLabel(MDL_ANGLETILT)
-        MD.addLabel(MDL_ANGLEPSI)
+        MD.addLabel(MDL_ANGLE_ROT)
+        MD.addLabel(MDL_ANGLE_TILT)
+        MD.addLabel(MDL_ANGLE_PSI)
     
     MD.write(BlockWithAllExpImages + '@'+ DocFileWithOriginalAngles)
     block_name= 'ctfGroup'+str(1).zfill(FILENAMENUMBERLENGTH) +\

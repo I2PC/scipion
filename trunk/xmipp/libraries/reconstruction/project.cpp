@@ -630,13 +630,13 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                     switch (idx)
                     {
                     case 0:
-                        DFaux.setValue(MDL_ANGLEROT,ang,idx_tmp);
+                        DFaux.setValue(MDL_ANGLE_ROT,ang,idx_tmp);
                         break;
                     case 1:
-                        DFaux.setValue(MDL_ANGLETILT,ang,idx_tmp);
+                        DFaux.setValue(MDL_ANGLE_TILT,ang,idx_tmp);
                         break;
                     case 2:
-                        DFaux.setValue(MDL_ANGLEPSI,ang,idx_tmp);
+                        DFaux.setValue(MDL_ANGLE_PSI,ang,idx_tmp);
                         break;
                     }
                 }
@@ -653,13 +653,13 @@ void generate_angles(int ExtProjs, const Angle_range &range,
             switch (idx)
             {
             case 0:
-                DFaux.setValue(MDL_ANGLEROT,ang,dfidx);
+                DFaux.setValue(MDL_ANGLE_ROT,ang,dfidx);
                 break;
             case 1:
-                DFaux.setValue(MDL_ANGLETILT,ang,dfidx);
+                DFaux.setValue(MDL_ANGLE_TILT,ang,dfidx);
                 break;
             case 2:
-                DFaux.setValue(MDL_ANGLEPSI,ang,dfidx);
+                DFaux.setValue(MDL_ANGLE_PSI,ang,dfidx);
                 break;
             }
         }
@@ -723,9 +723,9 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
                     idx_tmp=DFaux.addObject();
                     DFaux.setValue(MDL_ORDER,iproj,idx_tmp);
                 }
-                DFaux.setValue(MDL_ANGLEROT,rot,idx_tmp);
-                DFaux.setValue(MDL_ANGLETILT,tilt,idx_tmp);
-                DFaux.setValue(MDL_ANGLEPSI,psi,idx_tmp);
+                DFaux.setValue(MDL_ANGLE_ROT,rot,idx_tmp);
+                DFaux.setValue(MDL_ANGLE_TILT,tilt,idx_tmp);
+                DFaux.setValue(MDL_ANGLE_PSI,psi,idx_tmp);
             }
             N++;
         }
@@ -814,9 +814,9 @@ int Assign_angles(MetaData &DF, const ParametersProjection &prm,
                 for (size_t n=0; n<NN; ++n)
                 {
                     size_t DFid=DF.addObject();
-                    DF.setValue(MDL_ANGLEROT,rotList[n],DFid);
-                    DF.setValue(MDL_ANGLETILT,tiltList[n],DFid);
-                    DF.setValue(MDL_ANGLEPSI,0.0,DFid);
+                    DF.setValue(MDL_ANGLE_ROT,rotList[n],DFid);
+                    DF.setValue(MDL_ANGLE_TILT,tiltList[n],DFid);
+                    DF.setValue(MDL_ANGLE_PSI,0.0,DFid);
                 }
             }
         }
@@ -836,9 +836,9 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
     else
     {
         size_t DFid=DF.addObject();
-        DF.setValue(MDL_ANGLEROT,prog_prm.rotSingle,DFid);
-        DF.setValue(MDL_ANGLETILT,prog_prm.tiltSingle,DFid);
-        DF.setValue(MDL_ANGLEPSI,prog_prm.psiSingle,DFid);
+        DF.setValue(MDL_ANGLE_ROT,prog_prm.rotSingle,DFid);
+        DF.setValue(MDL_ANGLE_TILT,prog_prm.tiltSingle,DFid);
+        DF.setValue(MDL_ANGLE_PSI,prog_prm.psiSingle,DFid);
     }
 
     // Load Phantom and set working mode
@@ -949,12 +949,12 @@ int PROJECT_Effectively_project(const String &fnOut,
 
         // Choose angles .....................................................
         double rot, tilt, psi;         // Actual projecting angles
-        side.DF.getValue(MDL_ANGLEROT,rot,__iter.objId);
-        side.DF.getValue(MDL_ANGLETILT,tilt,__iter.objId);
-        side.DF.getValue(MDL_ANGLEPSI,psi,__iter.objId);
-        SF.setValue(MDL_ANGLEROT,realWRAP(rot, 0, 360),DFmov_objId);
-        SF.setValue(MDL_ANGLETILT,realWRAP(tilt, 0, 360),DFmov_objId);
-        SF.setValue(MDL_ANGLEPSI,realWRAP(psi, 0, 360),DFmov_objId);
+        side.DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+        side.DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+        side.DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+        SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
+        SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
+        SF.setValue(MDL_ANGLE_PSI,realWRAP(psi, 0, 360),DFmov_objId);
 
         if ((NumProjs % XMIPP_MAX(1, side.DF.size() / 60)) == 0)
             progress_bar(NumProjs);
@@ -962,22 +962,22 @@ int PROJECT_Effectively_project(const String &fnOut,
         // Choose Center displacement ........................................
         double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
         double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        SF.setValue(MDL_SHIFTX,-shiftX,DFmov_objId);
-        SF.setValue(MDL_SHIFTY,-shiftY,DFmov_objId);
+        SF.setValue(MDL_SHITF_X,-shiftX,DFmov_objId);
+        SF.setValue(MDL_SHITF_Y,-shiftY,DFmov_objId);
 #ifdef DEBUG
 
         mdShifts.addObject();
         mdShifts.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
-        mdShifts.setValue(MDL_SHIFTX,-shiftX,DFmov_objId);
-        mdShifts.setValue(MDL_SHIFTY,-shiftY,DFmov_objId);
+        mdShifts.setValue(MDL_SHITF_X,-shiftX,DFmov_objId);
+        mdShifts.setValue(MDL_SHITF_Y,-shiftY,DFmov_objId);
         mdShifts.setValue(MDL_ENABLED,1,DFmov_objId);
 
 
         mdRotations.addObject();
         mdRotations.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
-        mdRotations.setValue(MDL_ANGLEROT,-rot,DFmov_objId);
-        mdRotations.setValue(MDL_ANGLETILT,-tilt,DFmov_objId);
-        mdRotations.setValue(MDL_ANGLEPSI,-psi,DFmov_objId);
+        mdRotations.setValue(MDL_ANGLE_ROT,-rot,DFmov_objId);
+        mdRotations.setValue(MDL_ANGLE_TILT,-tilt,DFmov_objId);
+        mdRotations.setValue(MDL_ANGLE_PSI,-psi,DFmov_objId);
 
 
 #endif
@@ -1026,18 +1026,18 @@ int PROJECT_Effectively_project(const String &fnOut,
         }
 
         // Add noise in angles and voxels ....................................
-        SF.setValue(MDL_ANGLEROT2,rot,DFmov_objId);
-        SF.setValue(MDL_ANGLETILT2,tilt,DFmov_objId);
-        SF.setValue(MDL_ANGLEPSI2,psi,DFmov_objId);
+        SF.setValue(MDL_ANGLE_ROT2,rot,DFmov_objId);
+        SF.setValue(MDL_ANGLE_TILT2,tilt,DFmov_objId);
+        SF.setValue(MDL_ANGLE_PSI2,psi,DFmov_objId);
         rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
         tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
         psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
-        //        SF.setValue(MDL_ANGLEROT,rot,DFmov_objId);
-        //        SF.setValue(MDL_ANGLETILT,tilt,DFmov_objId);
-        //        SF.setValue(MDL_ANGLEPSI,psi,DFmov_objId);
-        SF.setValue(MDL_ANGLEROT,realWRAP(rot, 0, 360),DFmov_objId);
-        SF.setValue(MDL_ANGLETILT,realWRAP(tilt, 0, 360),DFmov_objId);
-        SF.setValue(MDL_ANGLEPSI,realWRAP(psi, 0, 360),DFmov_objId);
+        //        SF.setValue(MDL_ANGLE_ROT,rot,DFmov_objId);
+        //        SF.setValue(MDL_ANGLE_TILT,tilt,DFmov_objId);
+        //        SF.setValue(MDL_ANGLE_PSI,psi,DFmov_objId);
+        SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
+        SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
+        SF.setValue(MDL_ANGLE_PSI,realWRAP(psi, 0, 360),DFmov_objId);
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
@@ -1098,25 +1098,25 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
         FOR_ALL_OBJECTS_IN_METADATA(crystal_proj_prm.DF_shift)
         {
             double xcell, ycell;
-            crystal_proj_prm.DF_shift.getValue(MDL_CELLX,xcell,__iter.objId);
-            crystal_proj_prm.DF_shift.getValue(MDL_CELLY,ycell,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_CELLX,xcell*my_scale,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_CELLY,ycell*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_CRYSTAL_CELLX,xcell,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_CRYSTAL_CELLY,ycell,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_CRYSTAL_CELLX,xcell*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_CRYSTAL_CELLY,ycell*my_scale,__iter.objId);
 
             double x,y,z;
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTX,x,__iter.objId);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTY,y,__iter.objId);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTZ,z,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTX,x*my_scale,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTY,y*my_scale,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTZ,z*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHITF_X,x,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHITF_Y,y,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHITF_Z,z,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHITF_X,x*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHITF_Y,y*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHITF_Z,z*my_scale,__iter.objId);
 
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALX,x,__iter.objId);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALY,y,__iter.objId);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALZ,z,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALX,x*my_scale,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALY,y*my_scale,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALZ,z*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_CRYSTAL_SHIFTX,x,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_CRYSTAL_SHIFTY,y,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_CRYSTAL_SHIFTZ,z,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_CRYSTAL_SHIFTX,x*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_CRYSTAL_SHIFTY,y*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_CRYSTAL_SHIFTZ,z*my_scale,__iter.objId);
         }
     }
 

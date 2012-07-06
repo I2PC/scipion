@@ -846,8 +846,8 @@ void ProgTomographAlignment::produceSideInfo()
             img.push_back(img_i);
 
             double tiltAngle;
-            if (SF.containsLabel(MDL_ANGLETILT))
-                SF.getValue(MDL_ANGLETILT,tiltAngle,__iter.objId);
+            if (SF.containsLabel(MDL_ANGLE_TILT))
+                SF.getValue(MDL_ANGLE_TILT,tiltAngle,__iter.objId);
             else
                 tiltAngle=imgaux.tilt();
             tiltList.push_back(tiltAngle);
@@ -2373,9 +2373,9 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
         // Prepare data for the docfile
         size_t id = DF.addObject();
         DF.setValue(MDL_IMAGE, fn_corrected, id);
-        DF.setValue(MDL_ANGLEPSI, 90.-alignment.rot+alignment.psi(i), id);
-        DF.setValue(MDL_SHIFTX, XX(alignment.di[i]+alignment.diaxis[i]), id);
-        DF.setValue(MDL_SHIFTY, YY(alignment.di[i]+alignment.diaxis[i]), id);
+        DF.setValue(MDL_ANGLE_PSI, 90.-alignment.rot+alignment.psi(i), id);
+        DF.setValue(MDL_SHITF_X, XX(alignment.di[i]+alignment.diaxis[i]), id);
+        DF.setValue(MDL_SHITF_Y, YY(alignment.di[i]+alignment.diaxis[i]), id);
     }
     DF.write(fnRoot+"_correction_parameters.txt");
     delete iter;

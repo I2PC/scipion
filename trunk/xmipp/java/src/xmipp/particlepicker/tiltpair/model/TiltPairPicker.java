@@ -86,8 +86,8 @@ public class TiltPairPicker extends ParticlePicker
 			MetaData md = new MetaData(ufile);
 			for (long id : md.findObjects())
 			{
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				up = new UntiltedParticle(x, y, micrograph, family);
 				micrograph.addParticle(up);
 			}
@@ -96,8 +96,8 @@ public class TiltPairPicker extends ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				up = micrograph.getParticles().get(i);
 				tp = new TiltedParticle(x, y, up);
 				up.setTiltedParticle(tp);
@@ -185,7 +185,7 @@ public class TiltPairPicker extends ParticlePicker
 					id = micrographsDict.get(m.getFile());
 					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y, (double) m.getUntiltedAngle(), id);
 					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, (double) m.getTiltedAngle(), id);
-					anglesmd.setValueDouble(MDLabel.MDL_ANGLETILT, (double) m.getTiltAngle(), id);
+					anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, (double) m.getTiltAngle(), id);
 
 					for (UntiltedParticle p : m.getParticles())
 					{
@@ -193,12 +193,12 @@ public class TiltPairPicker extends ParticlePicker
 						if (tp != null)
 						{
 							id = md.addObject();
-							md.setValueInt(MDLabel.MDL_XINT, p.getX(), id);
-							md.setValueInt(MDLabel.MDL_YINT, p.getY(), id);
+							md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+							md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 
 							id = md2.addObject();
-							md2.setValueInt(MDLabel.MDL_XINT, tp.getX(), id);
-							md2.setValueInt(MDLabel.MDL_YINT, tp.getY(), id);
+							md2.setValueInt(MDLabel.MDL_XCOOR, tp.getX(), id);
+							md2.setValueInt(MDLabel.MDL_YCOOR, tp.getY(), id);
 						}
 					}
 					String template = family.getName() + "@%s";
@@ -239,8 +239,8 @@ public class TiltPairPicker extends ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				up = new UntiltedParticle(x, y, um, family);
 				um.addParticle(up);
 			}
@@ -267,8 +267,8 @@ public class TiltPairPicker extends ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				up = tm.getUntiltedMicrograph().getParticles().get(i);
 				tp = new TiltedParticle(x, y, up);
 				up.setTiltedParticle(tp);
@@ -313,8 +313,8 @@ public class TiltPairPicker extends ParticlePicker
 			ids = md.findObjects();
 			for (long id : ids)
 			{
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				up = new UntiltedParticle(x, y, um, family);
 				um.addParticle(up);
 			}
@@ -329,8 +329,8 @@ public class TiltPairPicker extends ParticlePicker
 			ids = md.findObjects();
 			for (long id : ids)
 			{
-				x = md.getValueInt(MDLabel.MDL_XINT, id);
-				y = md.getValueInt(MDLabel.MDL_YINT, id);
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				up = um.getParticles().get(i);
 				tp = new TiltedParticle(x, y, up);
 				up.setTiltedParticle(tp);

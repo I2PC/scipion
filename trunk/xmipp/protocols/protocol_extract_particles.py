@@ -10,7 +10,7 @@
 # Author: Carlos Oscar, August 2011
 #
 from protlib_base import *
-from xmipp import MetaData, AGGR_AVG, LEFT, MD_APPEND, MDL_IMAGE, MDL_CTFMODEL, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, \
+from xmipp import MetaData, AGGR_AVG, LEFT, MD_APPEND, MDL_IMAGE, MDL_CTF_MODEL, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, \
                   MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_ZSCORE, MDL_IMAGE_TILTED, MDL_ENABLED, \
                   MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL, getBlocksInMetaDataFile
 import glob
@@ -80,7 +80,7 @@ class ProtExtractParticles(XmippProtocol):
                             TsOriginal=self.TsOriginal, Ts=self.TsFinal, TsMode=self.downsamplingMode)
         
         md = MetaData(self.MicrographsMd)
-        self.containsCTF = md.containsLabel(MDL_CTFMODEL)
+        self.containsCTF = md.containsLabel(MDL_CTF_MODEL)
         # Create or look for the extract list
         destFnExtractList = _getFilename('extract_list', ExtraDir=self.ExtraDir, family=self.Family)
         if self.TiltPairs:
@@ -161,7 +161,7 @@ class ProtExtractParticles(XmippProtocol):
                 errors.append("Cannot find: \n<%s>" % self.MicrographsMd)
             else:
                 md = MetaData(self.MicrographsMd)
-                if self.DoFlip and not md.containsLabel(MDL_CTFMODEL):
+                if self.DoFlip and not md.containsLabel(MDL_CTF_MODEL):
                     errors.append("Micrographs metadata: <%s>\n does not contain CTF information for phase flipping" % self.MicrographsMd)
         else:
             errors.append("Picking run is not valid")
@@ -207,7 +207,7 @@ class ProtExtractParticles(XmippProtocol):
                 else:
                     micOriginalName = None
                 if self.containsCTF:
-                    ctfFile = md.getValue(MDL_CTFMODEL, objId)
+                    ctfFile = md.getValue(MDL_CTF_MODEL, objId)
                 else:
                     ctfFile = None
                 return (micFullName, micOriginalName, ctfFile)
@@ -374,7 +374,7 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
             md.operate("Xcoor=Xcoor*%f"%downsamplingFactor)
             md.operate("Ycoor=Ycoor*%f"%downsamplingFactor)
         if ctf != None:
-            md.setValueCol(MDL_CTFMODEL,ctf)
+            md.setValueCol(MDL_CTF_MODEL,ctf)
         md.write(selfile)
 
 def gatherSelfiles(log, WorkingDir, ExtraDir, family):

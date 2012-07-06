@@ -71,11 +71,11 @@ public:
         //test substract 90-omega and use all the symmetries on that
         FOR_ALL_OBJECTS_IN_METADATA(_mdIn)
         {
-            _mdIn.getValue(MDL_ANGLEROT,rot1);
-            _mdIn.getValue(MDL_ANGLETILT,tilt1);
-            _mdIn.getValue(MDL_ANGLEPSI,psi1);
-            _mdIn.getValue(MDL_SHIFTX,shiftX);
-            _mdIn.getValue(MDL_SHIFTY,shiftY);
+            _mdIn.getValue(MDL_ANGLE_ROT,rot1);
+            _mdIn.getValue(MDL_ANGLE_TILT,tilt1);
+            _mdIn.getValue(MDL_ANGLE_PSI,psi1);
+            _mdIn.getValue(MDL_SHITF_X,shiftX);
+            _mdIn.getValue(MDL_SHITF_Y,shiftY);
 
             rot2  = rot1;
             tilt2 = tilt1;
@@ -93,17 +93,17 @@ public:
             //out = in * temp.inv();
             Euler_matrix2angles(out, rot2, tilt2, psi2);
 
-            _mdIn.setValue(MDL_ANGLEROT,rot2);
-            _mdIn.setValue(MDL_ANGLETILT,tilt2);
-            _mdIn.setValue(MDL_ANGLEPSI,psi2);
+            _mdIn.setValue(MDL_ANGLE_ROT,rot2);
+            _mdIn.setValue(MDL_ANGLE_TILT,tilt2);
+            _mdIn.setValue(MDL_ANGLE_PSI,psi2);
 
             shiftX = (xdim/2) - shiftX;
             shiftY = (ydim/2) - shiftY;
             //shiftX =  - shiftX;
             //shiftY =  - shiftY;
 
-            _mdIn.setValue(MDL_SHIFTX, shiftX);
-            _mdIn.setValue(MDL_SHIFTY, shiftY);
+            _mdIn.setValue(MDL_SHITF_X, shiftX);
+            _mdIn.setValue(MDL_SHITF_Y, shiftY);
 
         }
 

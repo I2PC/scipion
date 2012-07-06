@@ -65,39 +65,39 @@ void CTFDescription::readFromMetadataRow(const MetaData &MD, size_t id, bool dis
     }
     if (enable_CTFnoise)
     {
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_K,gaussian_K,id))
             gaussian_K=0;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAU,sigmaU,id))
             sigmaU=0;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAV,sigmaV,id))
             sigmaV=sigmaU;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CU,cU,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CU,cU,id))
             cU=0;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CV,cV,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CV,cV,id))
             cV=cU;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_ANGLE,gaussian_angle,id))
             gaussian_angle=0;
-        if (!MD.getValue(MDL_CTFBG_SQRT_K,sqrt_K,id))
+        if (!MD.getValue(MDL_CTF_BG_SQRT_K,sqrt_K,id))
             sqrt_K=0;
-        if (!MD.getValue(MDL_CTFBG_SQRT_U,sqU,id))
+        if (!MD.getValue(MDL_CTF_BG_SQRT_U,sqU,id))
             sqU=0;
-        if (!MD.getValue(MDL_CTFBG_SQRT_V,sqV,id))
+        if (!MD.getValue(MDL_CTF_BG_SQRT_V,sqV,id))
             sqV=sqU;
-        if (!MD.getValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle,id))
+        if (!MD.getValue(MDL_CTF_BG_SQRT_ANGLE,sqrt_angle,id))
             sqrt_angle=0;
-        if (!MD.getValue(MDL_CTFBG_BASELINE,base_line,id))
+        if (!MD.getValue(MDL_CTF_BG_BASELINE,base_line,id))
             base_line=0;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_K,gaussian_K2,id))
             gaussian_K2=0;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAU,sigmaU2,id))
             sigmaU2=0;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAV,sigmaV2,id))
             sigmaV2=sigmaU2;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CU,cU2,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CU,cU2,id))
             cU2=0;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CV,cV2,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CV,cV2,id))
             cV2=cU2;
-        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
+        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
             gaussian_angle2=0;
         if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
             disable_if_not_K)
@@ -148,39 +148,39 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
         }
         if (enable_CTFnoise)
         {
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_K,gaussian_K,id))
                 gaussian_K=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAU,sigmaU,id))
                 sigmaU=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAV,sigmaV,id))
                 sigmaV=sigmaU;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CU,cU,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CU,cU,id))
                 cU=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CV,cV,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CV,cV,id))
                 cV=cU;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_ANGLE,gaussian_angle,id))
                 gaussian_angle=0;
-            if (!MD.getValue(MDL_CTFBG_SQRT_K,sqrt_K,id))
+            if (!MD.getValue(MDL_CTF_BG_SQRT_K,sqrt_K,id))
                 sqrt_K=0;
-            if (!MD.getValue(MDL_CTFBG_SQRT_U,sqU,id))
+            if (!MD.getValue(MDL_CTF_BG_SQRT_U,sqU,id))
                 sqU=0;
-            if (!MD.getValue(MDL_CTFBG_SQRT_V,sqV,id))
+            if (!MD.getValue(MDL_CTF_BG_SQRT_V,sqV,id))
                 sqV=sqU;
-            if (!MD.getValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle,id))
+            if (!MD.getValue(MDL_CTF_BG_SQRT_ANGLE,sqrt_angle,id))
                 sqrt_angle=0;
-            if (!MD.getValue(MDL_CTFBG_BASELINE,base_line,id))
+            if (!MD.getValue(MDL_CTF_BG_BASELINE,base_line,id))
                 base_line=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_K,gaussian_K2,id))
                 gaussian_K2=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAU,sigmaU2,id))
                 sigmaU2=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAV,sigmaV2,id))
                 sigmaV2=sigmaU2;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CU,cU2,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CU,cU2,id))
                 cU2=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CV,cV2,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CV,cV2,id))
                 cV2=cU2;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
+            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
                 gaussian_angle2=0;
             if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
                 disable_if_not_K)
@@ -214,23 +214,23 @@ void CTFDescription::write(const FileName &fn)
     }
     if (enable_CTFnoise)
     {
-        MD.setValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_CU,cU,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_CV,cV,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle,id);
-        MD.setValue(MDL_CTFBG_SQRT_K,sqrt_K,id);
-        MD.setValue(MDL_CTFBG_SQRT_U,sqU,id);
-        MD.setValue(MDL_CTFBG_SQRT_V,sqV,id);
-        MD.setValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle,id);
-        MD.setValue(MDL_CTFBG_BASELINE,base_line,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_CU,cU2,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_CV,cV2,id);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN_K,gaussian_K,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN_SIGMAU,sigmaU,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN_SIGMAV,sigmaV,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN_CU,cU,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN_CV,cV,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN_ANGLE,gaussian_angle,id);
+        MD.setValue(MDL_CTF_BG_SQRT_K,sqrt_K,id);
+        MD.setValue(MDL_CTF_BG_SQRT_U,sqU,id);
+        MD.setValue(MDL_CTF_BG_SQRT_V,sqV,id);
+        MD.setValue(MDL_CTF_BG_SQRT_ANGLE,sqrt_angle,id);
+        MD.setValue(MDL_CTF_BG_BASELINE,base_line,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN2_K,gaussian_K2,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN2_SIGMAU,sigmaU2,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN2_SIGMAV,sigmaV2,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN2_CU,cU2,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN2_CV,cV2,id);
+        MD.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE,gaussian_angle2,id);
     }
 
     MD.write(fn);

@@ -79,7 +79,7 @@ TEST_F( ImageTest, readApplyGeo)
     MetaData MD;
     size_t id = MD.addObject();
     MD.setValue(MDL_IMAGE, auxFn, id);
-    MD.setValue(MDL_ANGLEPSI, 45., id);
+    MD.setValue(MDL_ANGLE_PSI, 45., id);
     Image<double> auxImage, auxImage2;
     ApplyGeoParams params;
     params.wrap = false;

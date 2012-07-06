@@ -387,9 +387,9 @@ void ProgMLF2D::produceSideInfo()
         //CTF info now comes on input metadatas
         MetaData mdCTF;
         //number of different CTFs
-        if (!MDimg.containsLabel(MDL_CTFMODEL))
-            REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTFMODEL in input images metadata");
-        mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT);
+        if (!MDimg.containsLabel(MDL_CTF_MODEL))
+            REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTF_MODEL in input images metadata");
+        mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTF_MODEL, MDL_CTF_MODEL, MDL_COUNT);
         nr_focus = mdCTF.size();
 
         //todo: set defocus group for each image
@@ -415,7 +415,7 @@ void ProgMLF2D::produceSideInfo()
                 std::cerr << "WARNING%% CTF group " << (ifocus + 1) << " contains less than 50 images!" << std::endl;
 
             //Read ctf from disk
-            mdCTF.getValue(MDL_CTFMODEL, ctfname, id);
+            mdCTF.getValue(MDL_CTF_MODEL, ctfname, id);
             ctf.read(ctfname);
 
             double astigmCTFFactor = fabs( (ctf.DeltafV - ctf.DeltafU) / (std::max(ctf.DeltafV, ctf.DeltafU)) );
@@ -473,7 +473,7 @@ void ProgMLF2D::produceSideInfo()
         }
 
         MetaData md(MDimg);
-        MDimg.join(md, mdCTF, MDL_CTFMODEL);
+        MDimg.join(md, mdCTF, MDL_CTF_MODEL);
     }
 
     // Get a resolution pointer in Fourier-space
@@ -606,14 +606,14 @@ void ProgMLF2D::produceSideInfo2()
         //        {
         //            if (limit_rot || do_norm)
         //            {
-        //                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
-        //                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
+        //                MDimg.getValue(MDL_ANGLE_ROT, imgs_oldphi[IMG_LOCAL_INDEX]);
+        //                MDimg.getValue(MDL_ANGLE_TILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
         //            }
         //
         //            idum = (do_mirror ? 2 : 1) * model.n_ref;
         //            double xoff, yoff;
-        //            MDimg.getValue(MDL_SHIFTX, xoff);
-        //            MDimg.getValue(MDL_SHIFTY, yoff);
+        //            MDimg.getValue(MDL_SHITF_X, xoff);
+        //            MDimg.getValue(MDL_SHITF_Y, yoff);
         //            for (int refno = 0; refno < idum; refno++)
         //            {
         //                imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xoff;
@@ -730,35 +730,31 @@ void ProgMLF2D::produceSideInfo2()
 // For initial noise variances
 void ProgMLF2D::estimateInitialNoiseSpectra()
 {
-
-    MultidimArray<double>            Maux, Mallave;
-    MultidimArray<std::complex<double> >  Fimg, Faux, Fave;
-    MultidimArray<double>            rmean_noise, rmean_signal, rmean_avesignal;
-    std::vector<MultidimArray<double> >   Msigma2, Mave;
-    Matrix1D<int>               center(2);
-    MultidimArray<int>           radial_count;
-    Image<double>                       img;
-    FileName                    fn_tmp;
-    std::ofstream                    fh;
-
-    center.initZeros();
-
     // For first iteration only: calculate sigma2 (& spectral noise) from power
     // spectra of all images and subtract power spectrum of average image
     // (to take away low-res frequencies where the signal dominates!)
     if (istart == 1)
     {
-        int nn, c, focus = 0;
+
+        MultidimArray<double>            Maux, Mallave;
+        MultidimArray<std::complex<double> >  Fimg, Faux, Fave;
+        MultidimArray<double>            rmean_noise, rmean_signal, rmean_avesignal;
+        std::vector<MultidimArray<double> >   Msigma2, Mave;
+        Matrix1D<int>               center(2);
+        MultidimArray<int>           radial_count;
+        Image<double>                       img;
+        FileName                    fn_tmp;
+        std::ofstream                    fh;
+
+        center.initZeros();
+
+        int focus = 0;
 
         if (verbose > 0)
             std::cout << "--> Estimating initial noise models from average power spectra ..." << std::endl;
 
-        if (verbose > 0)
-        {
-            nn = MDimg.size();
-            init_progress_bar(nn);
-            c = XMIPP_MAX(1, nn / 60);
-        }
+        initProgress(MDimg.size());
+
         Msigma2.clear();
         Msigma2.resize(nr_focus);
         Mave.clear();
@@ -771,6 +767,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
             Mave[ifocus].initZeros(dim, dim);
             Mave[ifocus].setXmippOrigin();
         }
+
         Maux.initZeros(dim, dim);
         int imgno = 0;
 
@@ -790,15 +787,13 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
             Maux *= Maux;
             Msigma2[focus] += Maux;
             Mave[focus] += img();
-            imgno++;
-            if (verbose > 0)
-                if (imgno % c == 0)
-                    progress_bar(imgno);
+            setProgress(++imgno);
         }
-        if (verbose > 0)
-            progress_bar(nn);
+
+        endProgress();
 
         FileName fn_base = FN_ITER_BASE(istart - 1);
+
         // Calculate Vsig vectors and write them to disc
         FOR_ALL_DEFOCUS_GROUPS()
         {
@@ -2707,9 +2702,9 @@ void writeImage(Image<double> &img, const FileName &fn, MDRow &row)
     double rot = 0., tilt = 0., psi = 0.;
     img.getEulerAngles(rot, tilt, psi);
     row.setValue(MDL_WEIGHT, weight);
-    //    row.setValue(MDL_ANGLEROT, rot);
-    //    row.setValue(MDL_ANGLETILT, tilt);
-    //    row.setValue(MDL_ANGLEPSI, psi);
+    //    row.setValue(MDL_ANGLE_ROT, rot);
+    //    row.setValue(MDL_ANGLE_TILT, tilt);
+    //    row.setValue(MDL_ANGLE_PSI, psi);
 }
 
 void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
@@ -2884,11 +2879,11 @@ void ProgMLF2D::addPartialDocfileData(const MultidimArray<double> &data,
         size_t index = imgno - first;
         size_t id = img_id[imgno];
         //FIXME now directly to MDimg
-        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), id);
-        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), id);
-        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), id);
-        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), id);
-        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), id);
+        MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0), id);
+        MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1), id);
+        MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2), id);
+        MDimg.setValue(MDL_SHITF_X, dAij(data, index, 3), id);
+        MDimg.setValue(MDL_SHITF_Y, dAij(data, index, 4), id);
         MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5) + 1), id);
         if (do_mirror)
         {

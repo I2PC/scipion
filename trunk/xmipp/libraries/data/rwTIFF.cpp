@@ -238,8 +238,8 @@ int ImageBase::readTIFF(size_t select_img, bool isStack)
 
     //Set main header
     MDMainHeader.clear();
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX, xRes);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY, yRes);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X, xRes);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y, yRes);
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
     //Read header only
@@ -465,8 +465,8 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
 
     if (!MDMainHeader.empty())
     {
-        dhMain.xTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? (float) 1e8/aux : 0. ;
-        dhMain.yTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? (float) 1e8/aux : 0. ;
+        dhMain.xTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATE_X, aux)) ? (float) 1e8/aux : 0. ;
+        dhMain.yTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATE_X, aux)) ? (float) 1e8/aux : 0. ;
     }
 
     size_t imgStart = (mode == WRITE_APPEND)? replaceNsize : IMG_INDEX(select_img);

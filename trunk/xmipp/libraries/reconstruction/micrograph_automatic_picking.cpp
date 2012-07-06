@@ -1744,8 +1744,8 @@ int AutoParticlePicking::saveAutoParticles(const FileName &fn) const
         if (p.cost>0 && p.status==1)
         {
             size_t id = MD.addObject();
-			MD.setValue(MDL_XINT, p.x, id);
-			MD.setValue(MDL_YINT, p.y, id);
+			MD.setValue(MDL_XCOOR, p.x, id);
+			MD.setValue(MDL_YCOOR, p.y, id);
 			MD.setValue(MDL_COST, p.cost, id);
 			MD.setValue(MDL_ENABLED,1,id);
         }
@@ -1882,8 +1882,8 @@ void ProgMicrographAutomaticPicking::run()
             int x, y;
             FOR_ALL_OBJECTS_IN_METADATA(MD)
             {
-                MD.getValue(MDL_XINT, x, __iter.objId);
-                MD.getValue(MDL_YINT, y, __iter.objId);
+                MD.getValue(MDL_XCOOR, x, __iter.objId);
+                MD.getValue(MDL_YCOOR, y, __iter.objId);
                 m.add_coord(x, y, 0, 1);
             }
         }

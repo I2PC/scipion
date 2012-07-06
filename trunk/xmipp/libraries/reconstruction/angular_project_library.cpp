@@ -375,9 +375,9 @@ void ProgAngularProjectLibrary::run()
         FOR_ALL_OBJECTS_IN_METADATA(mySFin)
         {
             double x,y,z, rot, tilt, psi;
-            mySFin.getValue(MDL_ANGLEROT,rot,__iter.objId);
-            mySFin.getValue(MDL_ANGLETILT,tilt,__iter.objId);
-            mySFin.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+            mySFin.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+            mySFin.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+            mySFin.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
             mySFin.getValue(MDL_X,x,__iter.objId);
             mySFin.getValue(MDL_Y,y,__iter.objId);
             mySFin.getValue(MDL_Z,z,__iter.objId);
@@ -385,9 +385,9 @@ void ProgAngularProjectLibrary::run()
             id = mySFout.addObject();
             mySFout.setValue(MDL_IMAGE,fn_temp,id);
             mySFout.setValue(MDL_ENABLED,1,id);
-            mySFout.setValue(MDL_ANGLEROT,rot,id);
-            mySFout.setValue(MDL_ANGLETILT,tilt,id);
-            mySFout.setValue(MDL_ANGLEPSI,psi+mypsi,id);
+            mySFout.setValue(MDL_ANGLE_ROT,rot,id);
+            mySFout.setValue(MDL_ANGLE_TILT,tilt,id);
+            mySFout.setValue(MDL_ANGLE_PSI,psi+mypsi,id);
             mySFout.setValue(MDL_X,x,id);
             mySFout.setValue(MDL_Y,y,id);
             mySFout.setValue(MDL_Z,z,id);

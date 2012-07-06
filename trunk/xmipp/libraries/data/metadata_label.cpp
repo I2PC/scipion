@@ -35,15 +35,16 @@ MDRow MDL::emptyHeader;
 MDLabelStaticInit MDL::initialization; //Just for initialization
 
 
-void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, int tags, const String &name2, const String &name3)
+void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, int tags)
 {
     int index = (int)label;
     data[index] = new MDLabelData(type, name, tags);
     names[name] = label;
-    if (name2 != "")
-        names[name2] = label;
-    if (name3 != "")
-        names[name3] = label;
+}//close function addLabel
+
+void MDL::addLabelAlias(const MDLabel label, const String &alias)
+{
+    names[alias] = label;
 }//close function addLabel
 
 void MDL::str2LabelVector(const String &labelsStr, std::vector<MDLabel> &labels)

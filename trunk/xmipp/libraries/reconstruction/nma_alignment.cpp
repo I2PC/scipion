@@ -132,11 +132,11 @@ void ProgNmaAlignment::createWorkFiles() {
 	{
 		mdDone.addLabel(MDL_IMAGE);
 		mdDone.addLabel(MDL_ENABLED);
-		mdDone.addLabel(MDL_ANGLEROT);
-		mdDone.addLabel(MDL_ANGLETILT);
-		mdDone.addLabel(MDL_ANGLEPSI);
-		mdDone.addLabel(MDL_SHIFTX);
-		mdDone.addLabel(MDL_SHIFTY);
+		mdDone.addLabel(MDL_ANGLE_ROT);
+		mdDone.addLabel(MDL_ANGLE_TILT);
+		mdDone.addLabel(MDL_ANGLE_PSI);
+		mdDone.addLabel(MDL_SHITF_X);
+		mdDone.addLabel(MDL_SHITF_Y);
 		mdDone.addLabel(MDL_NMA);
 		mdDone.addLabel(MDL_COST);
 		mdDone.write(fn);
@@ -340,12 +340,12 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 	MetaData DF(fnResults);
 	MDRow row;
 	DF.getRow(row, DF.firstObject());
-	row.getValue(MDL_ANGLEROT, trial(VEC_XSIZE(trial) - 5));
-	row.getValue(MDL_ANGLETILT, trial(VEC_XSIZE(trial) - 4));
-	row.getValue(MDL_ANGLEPSI, trial(VEC_XSIZE(trial) - 3));
-	row.getValue(MDL_SHIFTX, trial(VEC_XSIZE(trial) - 2));
+	row.getValue(MDL_ANGLE_ROT, trial(VEC_XSIZE(trial) - 5));
+	row.getValue(MDL_ANGLE_TILT, trial(VEC_XSIZE(trial) - 4));
+	row.getValue(MDL_ANGLE_PSI, trial(VEC_XSIZE(trial) - 3));
+	row.getValue(MDL_SHITF_X, trial(VEC_XSIZE(trial) - 2));
 	trial(VEC_XSIZE(trial) - 2) *= pow(2.0, (double) pyramidLevel);
-	row.getValue(MDL_SHIFTY, trial(VEC_XSIZE(trial) - 1));
+	row.getValue(MDL_SHITF_Y, trial(VEC_XSIZE(trial) - 1));
 	trial(VEC_XSIZE(trial) - 1) *= pow(2.0, (double) pyramidLevel);
 	double tempvar;
 	if (!costSource) {
@@ -398,11 +398,11 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
 		FileName fnDown = formatString("downimg_%s.xmp", randStr);
 		DF.setValue(MDL_IMAGE, fnDown, objId);
 		DF.setValue(MDL_ENABLED, 1, objId);
-		DF.setValue(MDL_ANGLEROT, rot, objId);
-		DF.setValue(MDL_ANGLETILT, tilt, objId);
-		DF.setValue(MDL_ANGLEPSI, psi, objId);
-		DF.setValue(MDL_SHIFTX, xshift, objId);
-		DF.setValue(MDL_SHIFTY, yshift, objId);
+		DF.setValue(MDL_ANGLE_ROT, rot, objId);
+		DF.setValue(MDL_ANGLE_TILT, tilt, objId);
+		DF.setValue(MDL_ANGLE_PSI, psi, objId);
+		DF.setValue(MDL_SHITF_X, xshift, objId);
+		DF.setValue(MDL_SHITF_Y, yshift, objId);
 
 		DF.write(formatString("angledisc_%s.xmd", randStr));
 		link(global_NMA_prog->currentImgName.c_str(), fnDown.c_str());
@@ -535,11 +535,11 @@ void ProgNmaAlignment::writeImageParameters(const FileName &fnImg) {
 	size_t objId = md.addObject();
 	md.setValue(MDL_IMAGE, fnImg, objId);
 	md.setValue(MDL_ENABLED, 1, objId);
-	md.setValue(MDL_ANGLEROT, parameters(0), objId);
-	md.setValue(MDL_ANGLETILT, parameters(1), objId);
-	md.setValue(MDL_ANGLEPSI, parameters(2), objId);
-	md.setValue(MDL_SHIFTX, parameters(3), objId);
-	md.setValue(MDL_SHIFTY, parameters(4), objId);
+	md.setValue(MDL_ANGLE_ROT, parameters(0), objId);
+	md.setValue(MDL_ANGLE_TILT, parameters(1), objId);
+	md.setValue(MDL_ANGLE_PSI, parameters(2), objId);
+	md.setValue(MDL_SHITF_X, parameters(3), objId);
+	md.setValue(MDL_SHITF_Y, parameters(4), objId);
 
 	int dim = numberOfModes;
 	std::vector<double> vectortemp;

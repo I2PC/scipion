@@ -11,7 +11,7 @@ from os.path import join, exists
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
-getBlocksInMetaDataFile, MDL_ANGLEROT, MDL_ANGLETILT, MDValueEQ
+getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ
 from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr

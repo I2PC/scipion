@@ -27,7 +27,7 @@
 
 from os.path import basename, splitext
 from protlib_xmipp import XmippScript
-from xmipp import MetaData, MDL_CTFMODEL, MD_APPEND, MD_OVERWRITE
+from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE
 from protlib_import import convertCtfparam
 
 
@@ -59,7 +59,7 @@ class ScriptImportCtfdat(XmippScript):
         mode = MD_OVERWRITE
         
         for objId in md:
-            oldCtfparam = md.getValue(MDL_CTFMODEL, objId)
+            oldCtfparam = md.getValue(MDL_CTF_MODEL, objId)
             if oldCtfparam in ctfparamsDict:
                 newCtfparam = ctfparamsDict[oldCtfparam]
             else:
@@ -69,7 +69,7 @@ class ScriptImportCtfdat(XmippScript):
                 md2.write(newCtfparam, mode)
                 ctfparamsDict[oldCtfparam] = newCtfparam
                 mode = MD_APPEND
-            md.setValue(MDL_CTFMODEL, newCtfparam, objId)
+            md.setValue(MDL_CTF_MODEL, newCtfparam, objId)
             
         md.write("%s.ctfdat" % oroot)
         

@@ -373,8 +373,8 @@ void ProgML2D::produceSideInfo2()
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
-        MDref.getValue(MDL_ANGLEROT, rot, __iter.objId);
-        MDref.getValue(MDL_ANGLETILT, rot, __iter.objId);
+        MDref.getValue(MDL_ANGLE_ROT, rot, __iter.objId);
+        MDref.getValue(MDL_ANGLE_TILT, rot, __iter.objId);
         img.read(fn_tmp);
         img.setEulerAngles(rot, tilt, 0.);
         img().setXmippOrigin();
@@ -491,15 +491,15 @@ void ProgML2D::produceSideInfo2()
         //        {
         //            if (limit_rot)
         //            {
-        //                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
-        //                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
+        //                MDimg.getValue(MDL_ANGLE_ROT, imgs_oldphi[IMG_LOCAL_INDEX]);
+        //                MDimg.getValue(MDL_ANGLE_TILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
         //            }
         //            if (zero_offsets)
         //            {
         //                idum = (do_mirror ? 2 : 1) * model.n_ref;
         //                double xx, yy;
-        //                MDimg.getValue(MDL_SHIFTX, xx);
-        //                MDimg.getValue(MDL_SHIFTX, yy);
+        //                MDimg.getValue(MDL_SHITF_X, xx);
+        //                MDimg.getValue(MDL_SHITF_X, yy);
         //                for (int refno = 0; refno < idum; refno++)
         //                {
         //                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
@@ -2133,11 +2133,11 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
     {
         size_t index = imgno - first;
         size_t id = img_id[imgno];
-        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), id);
-        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), id);
-        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), id);
-        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), id);
-        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), id);
+        MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0), id);
+        MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1), id);
+        MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2), id);
+        MDimg.setValue(MDL_SHITF_X, dAij(data, index, 3), id);
+        MDimg.setValue(MDL_SHITF_Y, dAij(data, index, 4), id);
         MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), id);
         if (do_mirror)
         {
@@ -2242,7 +2242,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         static WriteModeMetaData mode = MD_OVERWRITE;
         // Write out current reference images and fill sel & log-file
         // Re-use the MDref metadata that was read in produceSideInfo2
-        // This way. MDL_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
+        // This way. MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_REF etc are treated ok for do_ML3D
         int refno = 0;
         size_t objId;
         int select_img;

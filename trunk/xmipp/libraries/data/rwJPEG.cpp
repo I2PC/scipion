@@ -45,9 +45,9 @@ int ImageBase::readJPEG(size_t select_img)
     MDMainHeader.setValue(MDL_MAX,zeroD);
     MDMainHeader.setValue(MDL_AVG,zeroD);
     MDMainHeader.setValue(MDL_STDDEV,zeroD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX,oneD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY,oneD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEZ,oneD);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,oneD);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,oneD);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,oneD);
     MDMainHeader.setValue(MDL_DATATYPE,(int) DT_UChar);
 
     ArrayDim aDim;

@@ -503,12 +503,12 @@ TEST_F( MetadataTest, InnerJoin1)
     MetaData auxMetadataRight;
 
     auxMetadataRight.setValue(MDL_Z,1.,auxMetadataRight.firstObject());
-    auxMetadataRight.setValue(MDL_ANGLEPSI,11.,auxMetadataRight.firstObject());
+    auxMetadataRight.setValue(MDL_ANGLE_PSI,11.,auxMetadataRight.firstObject());
 
     auxMetadata.join(auxMetadataLeft,auxMetadataRight,MDL_X,MDL_Z,INNER);
     auxMetadataResult.setValue(MDL_X,1.,auxMetadataRight.firstObject());
     auxMetadataResult.setValue(MDL_Y,2.,auxMetadataRight.firstObject());
-    auxMetadataResult.setValue(MDL_ANGLEPSI,11.,auxMetadataRight.firstObject());
+    auxMetadataResult.setValue(MDL_ANGLE_PSI,11.,auxMetadataRight.firstObject());
 
     EXPECT_EQ(auxMetadata,auxMetadataResult)<< mDjoin;//print mDjoin if error
 }
@@ -1031,13 +1031,13 @@ TEST_F( MetadataTest, getValueDefault)
     double rot=1., tilt=2., psi=3.;
     double rot2=0., tilt2=0., psi2=0.;
     id = auxMD1.addObject();
-    auxMD1.setValue(MDL_ANGLEROT,rot,id);
-    auxMD1.setValue(MDL_ANGLETILT,tilt,id);
+    auxMD1.setValue(MDL_ANGLE_ROT,rot,id);
+    auxMD1.setValue(MDL_ANGLE_TILT,tilt,id);
     //psi assigned by defaults
     id = auxMD1.firstObject();
-    auxMD1.getValueOrDefault(MDL_ANGLEROT,rot2, id, 0.);
-    auxMD1.getValueOrDefault(MDL_ANGLETILT,tilt2, id, 0.);
-    auxMD1.getValueOrDefault(MDL_ANGLEPSI,psi2, id, 3.);
+    auxMD1.getValueOrDefault(MDL_ANGLE_ROT,rot2, id, 0.);
+    auxMD1.getValueOrDefault(MDL_ANGLE_TILT,tilt2, id, 0.);
+    auxMD1.getValueOrDefault(MDL_ANGLE_PSI,psi2, id, 3.);
 
     EXPECT_EQ(rot,rot2);
     EXPECT_EQ(tilt,tilt2);
@@ -1046,7 +1046,7 @@ TEST_F( MetadataTest, getValueDefault)
     MDRow  rowIn;
     psi2=0;
     auxMD1.getRow(rowIn, id);
-    rowIn.getValueOrDefault(MDL_ANGLEPSI,psi2,3.);
+    rowIn.getValueOrDefault(MDL_ANGLE_PSI,psi2,3.);
     EXPECT_EQ(psi,psi2);
 
     XMIPP_CATCH
@@ -1057,13 +1057,13 @@ TEST_F( MetadataTest, getValueAbort)
     MetaData auxMD1;
     double rot=1.;
     id = auxMD1.addObject();
-    auxMD1.setValue(MDL_ANGLEROT,rot,id);
+    auxMD1.setValue(MDL_ANGLE_ROT,rot,id);
     //psi assigned by defaults
     id = auxMD1.firstObject();
     EXPECT_THROW(auxMD1.getValueOrAbort(MDL_ORDER, rot, id), XmippError);
     MDRow  rowIn;
     auxMD1.getRow(rowIn, id);
-    EXPECT_THROW(rowGetValueOrAbort(rowIn,MDL_ANGLEPSI,rot), XmippError);
+    EXPECT_THROW(rowGetValueOrAbort(rowIn,MDL_ANGLE_PSI,rot), XmippError);
     XMIPP_CATCH
 }
 

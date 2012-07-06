@@ -1299,9 +1299,9 @@ void Prog_Angular_CommonLine::run()
             I.write();
 
             id=DF.addObject();
-            DF.setValue(MDL_ANGLEROT,I.rot(),id);
-            DF.setValue(MDL_ANGLETILT,I.tilt(),id);
-            DF.setValue(MDL_ANGLEPSI,I.psi(),id);
+            DF.setValue(MDL_ANGLE_ROT,I.rot(),id);
+            DF.setValue(MDL_ANGLE_TILT,I.tilt(),id);
+            DF.setValue(MDL_ANGLE_PSI,I.psi(),id);
         }
         DF.write(fnOut);
     }

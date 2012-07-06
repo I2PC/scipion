@@ -106,8 +106,8 @@ def subtractionScript(_log
     mdRotations = MetaData(md) #rotations
     
     # Save Metadata with just rotations (shifts will be applied when reading)
-    mdRotations.setValueCol(MDL_SHIFTX, 0.)
-    mdRotations.setValueCol(MDL_SHIFTY, 0.)
+    mdRotations.setValueCol(MDL_SHITF_X, 0.)
+    mdRotations.setValueCol(MDL_SHITF_Y, 0.)
     mdRotations.operate('anglePsi=-anglePsi')
     
     mdResults = MetaData(mdRotations)
@@ -135,16 +135,16 @@ def subtractionScript(_log
         mdResults = MetaData(xmdOldResults)
     
     for id in md:
-        angRot = md.getValue(MDL_ANGLEROT, id)
-        angTilt = md.getValue(MDL_ANGLETILT, id)
-        psi = md.getValue(MDL_ANGLEPSI, id)
+        angRot = md.getValue(MDL_ANGLE_ROT, id)
+        angTilt = md.getValue(MDL_ANGLE_TILT, id)
+        psi = md.getValue(MDL_ANGLE_PSI, id)
         
         # Search for the closest idRef
         dist = -1.
         distMin = 999.
         for idRef in mdRef:
-            angRotRef  = mdRef.getValue(MDL_ANGLEROT, idRef)
-            angTiltRef = mdRef.getValue(MDL_ANGLETILT, idRef)
+            angRotRef  = mdRef.getValue(MDL_ANGLE_ROT, idRef)
+            angTiltRef = mdRef.getValue(MDL_ANGLE_TILT, idRef)
             
             dist = abs(float(angRotRef) - float(angRot)) +  abs(float(angTiltRef) - float(angTilt))
             if(dist < distMin or dist == -1):

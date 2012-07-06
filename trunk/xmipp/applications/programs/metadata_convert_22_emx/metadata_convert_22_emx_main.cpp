@@ -235,8 +235,8 @@ public:
             FOR_ALL_OBJECTS_IN_METADATA(mdCoordinateXmipp)
             {
                 mdCoordinateXmipp.getRow(rowIn, __iter.objId);
-                rowGetValueOrAbort(rowIn,MDL_XINT,x);
-                rowGetValueOrAbort(rowIn,MDL_YINT,y);
+                rowGetValueOrAbort(rowIn,MDL_XCOOR,x);
+                rowGetValueOrAbort(rowIn,MDL_YCOOR,y);
                 particleName=formatString("%s_%04d",micrographName.c_str(),__iter.objId);
                 rowOut.setValue(MDL_EMX_PARTICLE_URL,particleName);
                 rowOut.setValue(MDL_EMX_PARTICLE_MICROGRAPH_URL,micrographName);
@@ -406,8 +406,8 @@ public:
                 rowGetValueOrAbort(rowIn,MDL_EMX_PARTICLE_COORDINATE_Y,y);
                 if(rowIn.getValue(MDL_EMX_PARTICLE_URL,particleName))
                     rowOut.setValue(MDL_IMAGE,particleName);
-                rowOut.setValue(MDL_XINT,ROUND(x));
-                rowOut.setValue(MDL_YINT,ROUND(y));
+                rowOut.setValue(MDL_XCOOR,ROUND(x));
+                rowOut.setValue(MDL_YCOOR,ROUND(y));
                 mdCoordinateXmipp.addRow(rowOut);
             }
             blockOut.compose(micrographName,fn_out);

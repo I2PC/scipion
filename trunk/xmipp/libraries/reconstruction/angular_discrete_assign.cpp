@@ -152,8 +152,8 @@ void ProgAngularDiscreteAssign::preProcess()
     int i = 0;
     FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
-        SF_ref.getValue(MDL_ANGLEROT, rot[i],__iter.objId);
-        SF_ref.getValue(MDL_ANGLETILT, tilt[i],__iter.objId);
+        SF_ref.getValue(MDL_ANGLE_ROT, rot[i],__iter.objId);
+        SF_ref.getValue(MDL_ANGLE_TILT, tilt[i],__iter.objId);
         i++;
     }
 
@@ -1052,11 +1052,11 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     }
 
     // Save results
-    rowOut.setValue(MDL_ANGLEROT,  best_rot);
-    rowOut.setValue(MDL_ANGLETILT, best_tilt);
-    rowOut.setValue(MDL_ANGLEPSI,  -best_psi);
-    rowOut.setValue(MDL_SHIFTX,    best_shiftX);
-    rowOut.setValue(MDL_SHIFTY,    best_shiftY);
+    rowOut.setValue(MDL_ANGLE_ROT,  best_rot);
+    rowOut.setValue(MDL_ANGLE_TILT, best_tilt);
+    rowOut.setValue(MDL_ANGLE_PSI,  -best_psi);
+    rowOut.setValue(MDL_SHITF_X,    best_shiftX);
+    rowOut.setValue(MDL_SHITF_Y,    best_shiftY);
     rowOut.setValue(MDL_MAXCC,     best_score);
 }
 #undef DEBUG

@@ -272,7 +272,7 @@ void ImageBase::swapPage(char * page, size_t pageNrElements, DataType datatype, 
 double ImageBase::rot(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_ANGLEROT, dummy);
+    MD[n].getValue(MDL_ANGLE_ROT, dummy);
     return dummy;
 }
 
@@ -285,7 +285,7 @@ double ImageBase::rot(const size_t n) const
 double ImageBase::tilt(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_ANGLETILT, dummy);
+    MD[n].getValue(MDL_ANGLE_TILT, dummy);
     return dummy;
 }
 
@@ -298,7 +298,7 @@ double ImageBase::tilt(const size_t n) const
 double ImageBase::psi(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_ANGLEPSI, dummy);
+    MD[n].getValue(MDL_ANGLE_PSI, dummy);
     return dummy;
 }
 
@@ -311,7 +311,7 @@ double ImageBase::psi(const size_t n) const
 double ImageBase::Xoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_SHIFTX, dummy);
+    MD[n].getValue(MDL_SHITF_X, dummy);
     return dummy;
 }
 
@@ -324,7 +324,7 @@ double ImageBase::Xoff(const size_t n) const
 double ImageBase::Yoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_SHIFTY, dummy);
+    MD[n].getValue(MDL_SHITF_Y, dummy);
     return dummy;
 }
 
@@ -337,7 +337,7 @@ double ImageBase::Yoff(const size_t n) const
 double ImageBase::Zoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_SHIFTZ, dummy);
+    MD[n].getValue(MDL_SHITF_Z, dummy);
     return dummy;
 }
 
@@ -407,7 +407,7 @@ void ImageBase::setDatatype(DataType datatype)
 double ImageBase::samplingRateX() const
 {
     double dummy = 1.;
-    MDMainHeader.getValue(MDL_SAMPLINGRATEX, dummy);
+    MDMainHeader.getValue(MDL_SAMPLINGRATE_X, dummy);
     return dummy;
 }
 
@@ -416,9 +416,9 @@ double ImageBase::samplingRateX() const
 void ImageBase::setEulerAngles(double rot, double tilt, double psi,
                                const size_t n)
 {
-    MD[n].setValue(MDL_ANGLEROT, rot);
-    MD[n].setValue(MDL_ANGLETILT, tilt);
-    MD[n].setValue(MDL_ANGLEPSI, psi);
+    MD[n].setValue(MDL_ANGLE_ROT, rot);
+    MD[n].setValue(MDL_ANGLE_TILT, tilt);
+    MD[n].setValue(MDL_ANGLE_PSI, psi);
 }
 
 /** Get Euler angles from image header
@@ -426,26 +426,26 @@ void ImageBase::setEulerAngles(double rot, double tilt, double psi,
 void ImageBase::getEulerAngles(double &rot, double &tilt, double &psi,
                                const size_t n) const
 {
-    MD[n].getValue(MDL_ANGLEROT, rot);
-    MD[n].getValue(MDL_ANGLETILT, tilt);
-    MD[n].getValue(MDL_ANGLEPSI, psi);
+    MD[n].getValue(MDL_ANGLE_ROT, rot);
+    MD[n].getValue(MDL_ANGLE_TILT, tilt);
+    MD[n].getValue(MDL_ANGLE_PSI, psi);
 }
 
 /** Set origin offsets in image header
      */
 void ImageBase::setShifts(double xoff, double yoff, double zoff, const size_t n)
 {
-    MD[n].setValue(MDL_SHIFTX, xoff);
-    MD[n].setValue(MDL_SHIFTY, yoff);
-    MD[n].setValue(MDL_SHIFTZ, zoff);
+    MD[n].setValue(MDL_SHITF_X, xoff);
+    MD[n].setValue(MDL_SHITF_Y, yoff);
+    MD[n].setValue(MDL_SHITF_Z, zoff);
 }
 /** Get origin offsets from image header
   */
 void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t n) const
 {
-    MD[n].getValue(MDL_SHIFTX, xoff);
-    MD[n].getValue(MDL_SHIFTY, yoff);
-    MD[n].getValue(MDL_SHIFTZ, zoff);
+    MD[n].getValue(MDL_SHITF_X, xoff);
+    MD[n].getValue(MDL_SHITF_Y, yoff);
+    MD[n].getValue(MDL_SHITF_Z, zoff);
 }
 
 void ImageBase::getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
@@ -912,14 +912,14 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
 
     std::stringstream oGeo;
 
-    if (I.individualContainsLabel(MDL_ANGLEROT))
+    if (I.individualContainsLabel(MDL_ANGLE_ROT))
     {
         oGeo << "Euler angles   : " << std::endl;
         oGeo << "                 Phi   (rotation around Z axis)                  = " << I.rot() << std::endl;
         oGeo << "                 Theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
         oGeo << "                 Psi   (third rotation around new Z axis)        = " << I.psi() << std::endl;
     }
-    if (I.individualContainsLabel(MDL_SHIFTX))
+    if (I.individualContainsLabel(MDL_SHITF_X))
     {
         oGeo << "Origin Offsets : " << std::endl;
         oGeo << "                 Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;

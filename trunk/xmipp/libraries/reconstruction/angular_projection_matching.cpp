@@ -981,11 +981,11 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         //     std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
         //        std::cerr << "1 DEBUG_ROB, fn_img:" << pp << std::endl;
         //DFexp does not have angles
-        //        DFexp.getValue(MDL_ANGLEROT,kk, imgid);
+        //        DFexp.getValue(MDL_ANGLE_ROT,kk, imgid);
         //        std::cerr << "1 DEBUG_ROB, rot:" << kk << std::endl;
-        //        DFexp.getValue(MDL_ANGLETILT,kk, imgid);
+        //        DFexp.getValue(MDL_ANGLE_TILT,kk, imgid);
         //        std::cerr << "1 DEBUG_ROB, tilt:" << kk << std::endl;
-        //        DFexp.getValue(MDL_ANGLEPSI,kk, imgid);
+        //        DFexp.getValue(MDL_ANGLE_PSI,kk, imgid);
         //        std::cerr << "1 DEBUG_ROB, psi:" << kk << std::endl<< std::endl;
 
         /**/
@@ -1061,13 +1061,13 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFexp.getValue(MDL_IMAGE, fn, imgid);
         idNew = DFo.addObject();
         DFo.setValue(MDL_IMAGE, fn,idNew);
-        DFo.setValue(MDL_ANGLEROT, opt_rot,idNew);
-        DFo.setValue(MDL_ANGLETILT,opt_tilt,idNew);
-        DFo.setValue(MDL_ANGLEPSI, opt_psi,idNew);
+        DFo.setValue(MDL_ANGLE_ROT, opt_rot,idNew);
+        DFo.setValue(MDL_ANGLE_TILT,opt_tilt,idNew);
+        DFo.setValue(MDL_ANGLE_PSI, opt_psi,idNew);
         /**/
         //opt_xoff=0;
-        DFo.setValue(MDL_SHIFTX,   opt_xoff,idNew);
-        DFo.setValue(MDL_SHIFTY,   opt_yoff,idNew);
+        DFo.setValue(MDL_SHITF_X,   opt_xoff,idNew);
+        DFo.setValue(MDL_SHITF_Y,   opt_yoff,idNew);
         DFo.setValue(MDL_REF,      opt_refno /*+ FIRST_IMAGE*/,idNew);
         DFo.setValue(MDL_FLIP,     opt_flip,idNew);
         DFo.setValue(MDL_SCALE,    opt_scale,idNew);
@@ -1098,8 +1098,8 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
     // Store translation in header and apply it to the actual image
     //No need to get initial angles since those came with the reference projection
     double shiftX=0., shiftY=0.;
-    DFexp.getValue(MDL_SHIFTX,shiftX, imgid);
-    DFexp.getValue(MDL_SHIFTY,shiftY, imgid);
+    DFexp.getValue(MDL_SHITF_X,shiftX, imgid);
+    DFexp.getValue(MDL_SHITF_Y,shiftY, imgid);
 
     img.setShifts(shiftX,shiftY);
 

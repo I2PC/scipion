@@ -116,8 +116,8 @@ int ImageBase::readRAW(size_t select_img, bool isStack)
     // Map the parameters
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double) -1);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if (dataMode==HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary

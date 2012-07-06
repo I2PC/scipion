@@ -167,9 +167,9 @@ int  ImageBase::readIMAGIC(size_t select_img)
     MDMainHeader.setValue(MDL_MAX,(double)header->densmax);
     MDMainHeader.setValue(MDL_AVG,(double)header->avdens);
     MDMainHeader.setValue(MDL_STDDEV,(double)header->sigma);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)1.);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)1.);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)1.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double)1.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double)1.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,(double)1.);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     int _xDim,_yDim,_zDim;
@@ -213,12 +213,12 @@ int  ImageBase::readIMAGIC(size_t select_img)
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
-                MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->ixold);
-                MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->iyold);
-                MD[i].setValue(MDL_SHIFTZ,  zeroD);
-                MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
-                MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
-                MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
+                MD[i].setValue(MDL_SHITF_X,  (double)-1. * header->ixold);
+                MD[i].setValue(MDL_SHITF_Y,  (double)-1. * header->iyold);
+                MD[i].setValue(MDL_SHITF_Z,  zeroD);
+                MD[i].setValue(MDL_ANGLE_ROT, (double)-1. * header->euler_alpha);
+                MD[i].setValue(MDL_ANGLE_TILT,(double)-1. * header->euler_beta);
+                MD[i].setValue(MDL_ANGLE_PSI, (double)-1. * header->euler_gamma);
                 MD[i].setValue(MDL_WEIGHT,   (double)oneD);
                 MD[i].setValue(MDL_SCALE, daux);
             }
@@ -449,11 +449,11 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         {
 #define SET_HEADER_VALUE(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
 
-        	SET_HEADER_VALUE(ixold, MDL_SHIFTX);
-        	SET_HEADER_VALUE(iyold, MDL_SHIFTY);
-        	SET_HEADER_VALUE(euler_alpha, MDL_ANGLEROT);
-        	SET_HEADER_VALUE(euler_beta, MDL_ANGLETILT);
-        	SET_HEADER_VALUE(euler_gamma, MDL_ANGLEPSI);
+        	SET_HEADER_VALUE(ixold, MDL_SHITF_X);
+        	SET_HEADER_VALUE(iyold, MDL_SHITF_Y);
+        	SET_HEADER_VALUE(euler_alpha, MDL_ANGLE_ROT);
+        	SET_HEADER_VALUE(euler_beta, MDL_ANGLE_TILT);
+        	SET_HEADER_VALUE(euler_gamma, MDL_ANGLE_PSI);
         }
         // Update index number of image
         header.imn = imgStart + i + 1;

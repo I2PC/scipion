@@ -669,7 +669,7 @@ void ProgNormalize::preProcess()
             if (fn_img.empty())
                 break;
 
-            if (!md->getValue(MDL_ANGLETILT,tiltTemp,__iter.objId))
+            if (!md->getValue(MDL_ANGLE_TILT,tiltTemp,__iter.objId))
             {
                 Ig.readMapped(fn_img);
                 tiltTemp = ABS(Ig.tilt());

@@ -219,8 +219,8 @@ void ProgCtfGroup::produceSideInfo()
 
     MetaData ctfMD;
     //number of different CTFs
-    ctfMD.aggregate(SF, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT);
-    ctfMD.fillExpand(MDL_CTFMODEL);
+    ctfMD.aggregate(SF, AGGR_COUNT,MDL_CTF_MODEL,MDL_CTF_MODEL,MDL_COUNT);
+    ctfMD.fillExpand(MDL_CTF_MODEL);
     int nCTFs = ctfMD.size();
     //how much memory do I need to store them
     double _sizeGb = (double) ypaddim * xpaddim * sizeof(double) * nCTFs /1073741824.;
@@ -612,7 +612,7 @@ void ProgCtfGroup::writeOutputToDisc()
     //(3) make block-sel per image group
     MetaData ImagesMD;
     ImagesMD.read(fn_ctfdat);
-    ctfImagesGroup.join(ImagesMD,sortedCtfMD,MDL_CTFMODEL,INNER );
+    ctfImagesGroup.join(ImagesMD,sortedCtfMD,MDL_CTF_MODEL,INNER );
 
     unlink( (fn_root+"s_images.sel").c_str());
     FileName imagesInDefoculGroup;

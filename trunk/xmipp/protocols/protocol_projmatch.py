@@ -13,9 +13,9 @@
 import os
 from os.path import join
 from xmipp import MetaData, FileName, FILENAMENUMBERLENGTH, AGGR_COUNT,\
-         MDL_CTFMODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
+         MDL_CTF_MODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
          MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE,\
-         MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_WEIGHT,\
+         MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_WEIGHT,\
          MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR, MDValueEQ, MDL_REF3D
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector,\

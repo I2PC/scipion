@@ -670,12 +670,12 @@ ProgMLTomo::produceSideInfo()
     MDimg.findObjects(imgs_id);
 
     // Check whether MDimg contains orientations
-    //  mdimg_contains_angles = (MDimg.containsLabel(MDL_ANGLEROT)
-    //      && MDimg.containsLabel(MDL_ANGLETILT) && MDimg.containsLabel(MDL_ANGLEPSI)
-    //      && MDimg.containsLabel(MDL_SHIFTX) && MDimg.containsLabel(MDL_SHIFTY)
-    //      && MDimg.containsLabel(MDL_SHIFTZ));
+    //  mdimg_contains_angles = (MDimg.containsLabel(MDL_ANGLE_ROT)
+    //      && MDimg.containsLabel(MDL_ANGLE_TILT) && MDimg.containsLabel(MDL_ANGLE_PSI)
+    //      && MDimg.containsLabel(MDL_SHITF_X) && MDimg.containsLabel(MDL_SHITF_Y)
+    //      && MDimg.containsLabel(MDL_SHITF_Z));
     // Check angles and shifts are not present on input metadata, fill it with 0 value
-    MDLabel labels[6] = { MDL_ANGLEROT, MDL_ANGLETILT, MDL_ANGLEPSI, MDL_SHIFTX, MDL_SHIFTY, MDL_SHIFTZ };
+    MDLabel labels[6] = { MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_SHITF_X, MDL_SHITF_Y, MDL_SHITF_Z };
     String labelStr = "WARNING: Labels ";
     mdimg_contains_angles = true;
     for (int i = 0; i < 6; ++i)
@@ -704,7 +704,7 @@ ProgMLTomo::produceSideInfo()
     }
 
     //WHY ROB <<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    //MDimg.fillConstant(MDL_ANGLEPSI, "0");
+    //MDimg.fillConstant(MDL_ANGLE_PSI, "0");
 
     // Get original dimension
     getImageSize(MDimg, xdim, ydim, zdim, ndim);
@@ -958,13 +958,13 @@ ProgMLTomo::generateInitialReferences()
             if (do_keep_angles || dont_align || dont_rotate)
             {
                 // angles from MetaData
-                md.getValue(MDL_ANGLEROT, my_rot, __iter.objId);
-                md.getValue(MDL_ANGLETILT, my_tilt, __iter.objId);
-                md.getValue(MDL_ANGLEPSI, my_psi, __iter.objId);
+                md.getValue(MDL_ANGLE_ROT, my_rot, __iter.objId);
+                md.getValue(MDL_ANGLE_TILT, my_tilt, __iter.objId);
+                md.getValue(MDL_ANGLE_PSI, my_psi, __iter.objId);
 
-                md.getValue(MDL_SHIFTX, my_offsets(0), __iter.objId);
-                md.getValue(MDL_SHIFTY, my_offsets(1), __iter.objId);
-                md.getValue(MDL_SHIFTZ, my_offsets(2), __iter.objId);
+                md.getValue(MDL_SHITF_X, my_offsets(0), __iter.objId);
+                md.getValue(MDL_SHITF_Y, my_offsets(1), __iter.objId);
+                md.getValue(MDL_SHITF_Z, my_offsets(2), __iter.objId);
                 my_offsets *= scale_factor;
 
                 selfTranslate(LINEAR, Itmp(), my_offsets, DONT_WRAP);
@@ -1130,17 +1130,17 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
         // Generate a MetaData from the (possible subset of) images in SF
         if (ang_search > 0. || dont_align || do_only_average || dont_rotate)
         {
-            row.getValue(MDL_ANGLEROT, rot);
-            row.getValue(MDL_ANGLEPSI, psi);
-            row.getValue(MDL_ANGLETILT, tilt);
+            row.getValue(MDL_ANGLE_ROT, rot);
+            row.getValue(MDL_ANGLE_PSI, psi);
+            row.getValue(MDL_ANGLE_TILT, tilt);
 
             if (do_sym)
             {
                 imgs_optpsi[imgno] = rot; // for limited psi (now rot) searches
                 // Reverse rotation applied to the references!!
-                row.setValue(MDL_ANGLEROT, -psi);
-                row.setValue(MDL_ANGLETILT, -tilt);
-                row.setValue(MDL_ANGLEPSI, -rot);
+                row.setValue(MDL_ANGLE_ROT, -psi);
+                row.setValue(MDL_ANGLE_TILT, -tilt);
+                row.setValue(MDL_ANGLE_PSI, -rot);
             }
             else
                 imgs_optpsi[imgno] = psi; // for limited psi searches
@@ -1154,9 +1154,9 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
 
             if (dont_align || dont_rotate || do_only_average)
             {
-                row.getValue(MDL_SHIFTX, imgs_optoffsets[imgno](0));
-                row.getValue(MDL_SHIFTY, imgs_optoffsets[imgno](1));
-                row.getValue(MDL_SHIFTZ, imgs_optoffsets[imgno](2));
+                row.getValue(MDL_SHITF_X, imgs_optoffsets[imgno](0));
+                row.getValue(MDL_SHITF_Y, imgs_optoffsets[imgno](1));
+                row.getValue(MDL_SHITF_Z, imgs_optoffsets[imgno](2));
             }
         }
     }////////////////////<<<<<<<<<<<<<<<<<<<<<<<<
@@ -1200,9 +1200,9 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
         FOR_ALL_OBJECTS_IN_METADATA(MDsub)
         {
             MDsub.getRow(row, __iter.objId);
-            row.getValue(MDL_ANGLEROT, myinfo.rot);
-            row.getValue(MDL_ANGLETILT, myinfo.tilt);
-            row.getValue(MDL_ANGLEPSI, myinfo.psi);
+            row.getValue(MDL_ANGLE_ROT, myinfo.rot);
+            row.getValue(MDL_ANGLE_TILT, myinfo.tilt);
+            row.getValue(MDL_ANGLE_PSI, myinfo.psi);
             if (do_sym)
             {
                 rot = myinfo.rot;
@@ -1281,10 +1281,10 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
         double rot=all_angle_info[angno].rot;
         double tilt=all_angle_info[angno].tilt;
         double psi=all_angle_info[angno].psi;
-        DFt.setValue(MDL_ANGLEROT,rot,_id);
-        DFt.setValue(MDL_ANGLETILT,tilt,_id);
-        DFt.setValue(MDL_ANGLEPSI,psi,_id);
-        DFt.setValue(MDL_ANGLEPSI,psi,_id);
+        DFt.setValue(MDL_ANGLE_ROT,rot,_id);
+        DFt.setValue(MDL_ANGLE_TILT,tilt,_id);
+        DFt.setValue(MDL_ANGLE_PSI,psi,_id);
+        DFt.setValue(MDL_ANGLE_PSI,psi,_id);
         //        DFt.append_angles(rot,tilt,psi,"rot","tilt","psi");
     }
     FileName fnt;
@@ -3378,12 +3378,12 @@ ProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data,
     {
         index = imgno - first ;
         MDimg.getRow(row, imgs_id[imgno]);
-        row.setValue(MDL_ANGLEROT, dAij(data, index, 0));
-        row.setValue(MDL_ANGLETILT, dAij(data, index, 1));
-        row.setValue(MDL_ANGLEPSI, dAij(data, index, 2));
-        row.setValue(MDL_SHIFTX, dAij(data, index, 3));
-        row.setValue(MDL_SHIFTY, dAij(data, index, 4));
-        row.setValue(MDL_SHIFTZ, dAij(data, index, 5));
+        row.setValue(MDL_ANGLE_ROT, dAij(data, index, 0));
+        row.setValue(MDL_ANGLE_TILT, dAij(data, index, 1));
+        row.setValue(MDL_ANGLE_PSI, dAij(data, index, 2));
+        row.setValue(MDL_SHITF_X, dAij(data, index, 3));
+        row.setValue(MDL_SHITF_Y, dAij(data, index, 4));
+        row.setValue(MDL_SHITF_Z, dAij(data, index, 5));
         row.setValue(MDL_REF, ROUND(dAij(data, index, 6)));
         if (do_missing)
             row.setValue(MDL_REF, ROUND(dAij(data, index, 7)));

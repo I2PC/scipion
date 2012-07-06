@@ -75,11 +75,11 @@ protected:
             xx = (double)ROUND(xx);
             yy = (double)ROUND(yy);
         }
-        mdIn.setValue(MDL_ANGLEROT,  img.rot(),objId);
-        mdIn.setValue(MDL_ANGLETILT, img.tilt(),objId);
-        mdIn.setValue(MDL_ANGLEPSI,  img.psi(),objId);
-        mdIn.setValue(MDL_SHIFTX,    xx ,objId);
-        mdIn.setValue(MDL_SHIFTY,    yy ,objId);
+        mdIn.setValue(MDL_ANGLE_ROT,  img.rot(),objId);
+        mdIn.setValue(MDL_ANGLE_TILT, img.tilt(),objId);
+        mdIn.setValue(MDL_ANGLE_PSI,  img.psi(),objId);
+        mdIn.setValue(MDL_SHITF_X,    xx ,objId);
+        mdIn.setValue(MDL_SHITF_Y,    yy ,objId);
         mdIn.setValue(MDL_WEIGHT,    img.weight(),objId);
         mdIn.setValue(MDL_SCALE,     img.scale(),objId);
         mdIn.setValue(MDL_FLIP,      img.flip(),objId);

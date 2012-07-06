@@ -301,8 +301,8 @@ def check_angle_range(inFileName, outFileName):
     
     for id in mD: 
         doWrite2 = False
-        rot = mD.getValue(xmipp.MDL_ANGLEROT, id)
-        tilt = mD.getValue(xmipp.MDL_ANGLETILT, id)
+        rot = mD.getValue(xmipp.MDL_ANGLE_ROT, id)
+        tilt = mD.getValue(xmipp.MDL_ANGLE_TILT, id)
         if tilt > 90.: 
             tilt = -(int(tilt) - 180)
             rot += 180.
@@ -314,8 +314,8 @@ def check_angle_range(inFileName, outFileName):
             doWrite = True
             doWrite2 = True
         if (doWrite2):
-            mD.setValue(xmipp.MDL_ANGLEROT , rot, id)
-            mD.setValue(xmipp.MDL_ANGLETILT, tilt, id)
+            mD.setValue(xmipp.MDL_ANGLE_ROT , rot, id)
+            mD.setValue(xmipp.MDL_ANGLE_TILT, tilt, id)
         
     if(doWrite or inFileName != outFileName):
         mD.write(outFileName)

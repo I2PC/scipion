@@ -63,36 +63,36 @@ public class ClassesJDialog extends XmippDialog {
 	private JButton btnAdd, btnDelete, btnSave, btnOpen;
 	private ClassesTableModel model;
 	// This will be used for check for results from the dialog
-	private ArrayList<ClassInfo> classes;	
+	private ArrayList<ClassInfo> classes;
 	GridBagConstraints gbc = new GridBagConstraints();
 	ImageGallery gallery;
 	JPanel panelButtons;
-	
+
 	public ClassesJDialog(JFrameGallery parent) {
 		super(parent, "Classes", true);
-		//this.classes = classes;
+		// this.classes = classes;
 		this.gallery = parent.gallery;
 		this.classes = gallery.data.classesArray;
 		this.btnOkText = "Select";
-		//disposeOnClose = false;
+		// disposeOnClose = false;
 		initComponents();
 		enableDelete(false);
 	}// constructor ColumnsJDialog
 
-	private JButton createButton(String icon){
+	private JButton createButton(String icon) {
 		JButton btn = XmippWindowUtil.getIconButton(icon, this);
 		btn.setFocusable(false);
 		panelButtons.add(btn);
 		return btn;
 	}
-	
-	protected void createToolbarButtons(){
+
+	protected void createToolbarButtons() {
 		panelButtons = new JPanel();
 		btnAdd = createButton("add.gif");
 		btnDelete = createButton("delete.gif");
 		btnSave = createButton("save.gif");
 	}
-	
+
 	@Override
 	protected void createContent(JPanel panel) {
 		setResizable(false);
@@ -114,7 +114,7 @@ public class ClassesJDialog extends XmippDialog {
 		panel.add(groupstbpn, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 		createToolbarButtons();
 		panel.add(panelButtons, XmippWindowUtil.getConstraints(gbc, 1, 0));
-		
+
 		// listen to selection changes (only one row selected)
 		tableClasses.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tableClasses.getSelectionModel().addListSelectionListener(
@@ -125,21 +125,21 @@ public class ClassesJDialog extends XmippDialog {
 					}
 				});
 	}// function initComponents
-	
+
 	/** Override this method to update the class and image count */
-	@Override 
-	public boolean showDialog(){
+	@Override
+	public boolean showDialog() {
 		gallery.data.updateClassesInfo();
 		this.classes = gallery.data.classesArray;
 		return super.showDialog();
 	}
-	
-	public void resetClasses(){
+
+	public void resetClasses() {
 		this.classes = null;
 	}
 
 	private void enableDelete(boolean value) {
-		//btnAdd.setEnabled(value);
+		// btnAdd.setEnabled(value);
 		btnDelete.setEnabled(value);
 		btnOk.setEnabled(value);
 	}// function enableUpDown
@@ -147,35 +147,38 @@ public class ClassesJDialog extends XmippDialog {
 	@Override
 	public void handleActionPerformed(ActionEvent evt) {
 		JButton btn = (JButton) evt.getSource();
-		if (btn == btnAdd){
+		if (btn == btnAdd) {
 			model.addNewRow();
 			int row = model.getRowCount() - 1;
 			tableClasses.editCellAt(row, 0);
 			tableClasses.setRowSelectionInterval(row, row);
-		}
-		else if (btn == btnDelete){
+		} else if (btn == btnDelete) {
 			int row = getSelectedClass();
 			gallery.removeClass(row);
 			model.fireTableRowsDeleted(row, row);
-		}
-		else if (btn == btnSave){
+		} else if (btn == btnSave) {
 			try {
-			MetaData[] mds = gallery.data.getClassesMd();
-			XmippFileChooser fc = new XmippFileChooser();
-			if (fc.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION){
-				String filename = fc.getSelectedPath();
-				MetaData md = mds[0];
-				md.write("classes" + Filename.SEPARATOR + filename);
-				long[] ids = md.findObjects();
-				//DEBUG.printFormat("mds: %s, ids:%s", mds.length, ids.length);
-				int i = 1;
-				for (long id: ids) {
-					int ref = md.getValueInt(MDLabel.MDL_REF, id);
-					mds[i].writeBlock(Filename.getClassBlockName(ref) + Filename.SEPARATOR + filename);
-					++i;
+				//Read an array of metadatas containing the super-classes selection
+				// the first element will contain the metadata with the 'classes' block
+				// and then one 'images' block for each class
+				MetaData[] mds = gallery.data.getClassesMd();
+				XmippFileChooser fc = new XmippFileChooser();
+				if (fc.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+					String filename = fc.getSelectedPath();
+					MetaData md = mds[0];
+					md.write("classes" + Filename.SEPARATOR + filename);
+					long[] ids = md.findObjects();
+					// DEBUG.printFormat("mds: %s, ids:%s", mds.length,
+					// ids.length);
+					int i = 1;
+					for (long id : ids) {
+						int ref = md.getValueInt(MDLabel.MDL_REF, id);
+						mds[i].writeBlock(Filename.getClassBlockName(ref)
+								+ Filename.SEPARATOR + filename);
+						++i;
+					}
 				}
-			}
-			} catch (Exception e){
+			} catch (Exception e) {
 				showException(e);
 			}
 		}
@@ -193,9 +196,9 @@ public class ClassesJDialog extends XmippDialog {
 	public class ClassInfo {
 		private String comment;
 		private ColorIcon icon;
-		public int index; //index of the class
-		public int numberOfClasses; //Classes assigned to superclass
-		public long numberOfImages; //total images assigned to superclass
+		public int index; // index of the class
+		public int numberOfClasses; // Classes assigned to superclass
+		public long numberOfImages; // total images assigned to superclass
 
 		/** Constructor */
 		ClassInfo(String name, Color c) {
@@ -228,8 +231,8 @@ public class ClassesJDialog extends XmippDialog {
 	class ClassesTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = 1L;
 
-		private String[] columns = { "Comment", "# Classes",
-				"# Images" , "Color"};
+		private String[] columns = { "Comment", "# Classes", "# Images",
+				"Color" };
 
 		public ClassesTableModel() {
 		}
@@ -296,22 +299,22 @@ public class ClassesJDialog extends XmippDialog {
 				return null;
 			}
 		}
-		
-		public void addNewRow(){
+
+		public void addNewRow() {
 			int newPos = classes.size();
 			gallery.data.addClass(new ClassInfo("NewClass", getNextColor()));
 			fireTableRowsInserted(newPos, newPos);
 		}
-		
-		final int amount  = 100;
+
+		final int amount = 100;
 		final int lowerLimit = 0x101010;
 		final int upperLimit = 0xE0E0D0;
-		final int colorStep = (upperLimit-lowerLimit)/amount;
+		final int colorStep = (upperLimit - lowerLimit) / amount;
 		int colorCounter = 0;
-		
+
 		Color getNextColor() {
 			DEBUG.printFormat("getNextColor, counter:%d\n", colorCounter);
-		    return new Color(upperLimit-colorStep*colorCounter++);
+			return new Color(upperLimit - colorStep * colorCounter++);
 		}
 
 	}// class ColumnsTableModel

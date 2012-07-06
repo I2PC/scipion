@@ -96,7 +96,7 @@ public class MetadataTest {
     	for (int i=0; i < ids.length; ++i){
     		id = ids[i];
     		assertEquals(imageValues[i], md.getValueString(MDLabel.MDL_IMAGE, id));
-    		assertEquals(shiftXValues[i], md.getValueDouble(MDLabel.MDL_SHIFTX, id), XmippTest.EQUAL_ACCURACY);
+    		assertEquals(shiftXValues[i], md.getValueDouble(MDLabel.MDL_SHITF_X, id), XmippTest.EQUAL_ACCURACY);
     		assertEquals(refValues[i], md.getValueInt(MDLabel.MDL_REF, id));
     	}
     }//function testRead
@@ -110,11 +110,11 @@ public class MetadataTest {
     @Test
     public void testSort() throws Exception{
     	MetaData md = new MetaData(mdFn);
-    	//Sort by MDL_SHIFTX ascending
-    	md.sort(MDLabel.MDL_SHIFTX, true);
+    	//Sort by MDL_SHITF_X ascending
+    	md.sort(MDLabel.MDL_SHITF_X, true);
     	long [] ids = md.findObjects();
     	for (int i=0; i < ids.length; ++i)
-    		assertEquals(shiftXSorted[i], md.getValueDouble(MDLabel.MDL_SHIFTX, ids[i]), XmippTest.EQUAL_ACCURACY);
+    		assertEquals(shiftXSorted[i], md.getValueDouble(MDLabel.MDL_SHITF_X, ids[i]), XmippTest.EQUAL_ACCURACY);
     	//Sort by MDL_REF descending
     	md.sort(MDLabel.MDL_REF, false);
     	ids = md.findObjects();
@@ -145,22 +145,22 @@ public class MetadataTest {
     	//Test fillConstant
     	String imagePath = "resources/test/singleImage.img";
     	MetaData md = new MetaData(mdFn);
-    	md.fillConstant(MDLabel.MDL_ASSOCIATED_IMAGE1, imagePath);
+    	md.fillConstant(MDLabel.MDL_IMAGE1, imagePath);
     	long [] ids = md.findObjects();
     	for (int i=0; i < ids.length; ++i)
-    		assertEquals(imagePath, md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, ids[i]));
+    		assertEquals(imagePath, md.getValueString(MDLabel.MDL_IMAGE1, ids[i]));
     	
     	//Test fillLinear
-    	md.fillLinear(MDLabel.MDL_SHIFTY, 0.0, 0.5);
+    	md.fillLinear(MDLabel.MDL_SHITF_Y, 0.0, 0.5);
     	double value = 0.0;
     	for (int i=0; i < ids.length; ++i) {
-    		assertEquals(value, md.getValueDouble(MDLabel.MDL_SHIFTY, ids[i]), XmippTest.EQUAL_ACCURACY);
+    		assertEquals(value, md.getValueDouble(MDLabel.MDL_SHITF_Y, ids[i]), XmippTest.EQUAL_ACCURACY);
     		value += 0.5;
     	}
     	md.print();
     	
     	//Test fillRandom
-    	md.fillRandom(MDLabel.MDL_SHIFTY, "uniform", 2.0, 3.0);
+    	md.fillRandom(MDLabel.MDL_SHITF_Y, "uniform", 2.0, 3.0);
     	md.print();
     }//function testFill
     
@@ -174,7 +174,7 @@ public class MetadataTest {
     	assertEquals(2, md.size());
     	ids = md.findObjects();
     	for (int i=0; i < ids.length; ++i)
-    		assertEquals(localShiftXValues[i], md.getValueDouble(MDLabel.MDL_SHIFTX, ids[i]), XmippTest.EQUAL_ACCURACY);
+    		assertEquals(localShiftXValues[i], md.getValueDouble(MDLabel.MDL_SHITF_X, ids[i]), XmippTest.EQUAL_ACCURACY);
     	md.print();
     }
     

@@ -1360,10 +1360,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 		private void showCTF(boolean profile) {
 			try {
-				String ctfModel = data.md.getValueString(MDLabel.MDL_CTFMODEL,
+				String ctfModel = data.md.getValueString(MDLabel.MDL_CTF_MODEL,
 						data.ids[row]);
 				String displayFilename = data.md.getValueString(
-						MDLabel.MDL_ASSOCIATED_IMAGE2, data.ids[row]);
+						MDLabel.MDL_IMAGE2, data.ids[row]);
 				String psdFile = data.md.getValueString(MDLabel.MDL_PSD,
 						data.ids[row]);
 

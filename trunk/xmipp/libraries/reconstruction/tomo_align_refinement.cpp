@@ -275,11 +275,11 @@ void ProgTomoAlignRefinement::run()
         size_t id = DF.addObject();
         DF.setValue(MDL_IMAGE,fnImgOut,id);
         DF.setValue(MDL_IMAGE_ORIGINAL,list_of_assigned[i].fn_img,id);
-        DF.setValue(MDL_ANGLEROT,list_of_assigned[i].rot,id);
-        DF.setValue(MDL_ANGLETILT,list_of_assigned[i].tilt,id);
-        DF.setValue(MDL_ANGLEPSI,list_of_assigned[i].psi,id);
-        DF.setValue(MDL_SHIFTX,list_of_assigned[i].x,id);
-        DF.setValue(MDL_SHIFTY,list_of_assigned[i].y,id);
+        DF.setValue(MDL_ANGLE_ROT,list_of_assigned[i].rot,id);
+        DF.setValue(MDL_ANGLE_TILT,list_of_assigned[i].tilt,id);
+        DF.setValue(MDL_ANGLE_PSI,list_of_assigned[i].psi,id);
+        DF.setValue(MDL_SHITF_X,list_of_assigned[i].x,id);
+        DF.setValue(MDL_SHITF_Y,list_of_assigned[i].y,id);
         DF.setValue(MDL_MAXCC,list_of_assigned[i].corr,id);
     }
     DF.write(fn_out+".doc");

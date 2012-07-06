@@ -38,17 +38,17 @@ void ProgSimulateMicroscope::readParams()
     {
         //Fill the input metadata with the value of 'fn_ctf'
         MDConstGenerator generator(getParam("--ctf"));
-        generator.label = MDL_CTFMODEL;
+        generator.label = MDL_CTF_MODEL;
         generator.fill(*pmdIn);
     }
     else
     {
-        if (pmdIn->containsLabel(MDL_CTFMODEL))
+        if (pmdIn->containsLabel(MDL_CTF_MODEL))
         {
             //sort the images according to the ctf to avoid the recaculation of it
             //beeten images of the same ctf group
             MetaData md(*pmdIn);
-            pmdIn->sort(md, MDL_CTFMODEL);
+            pmdIn->sort(md, MDL_CTF_MODEL);
         }
         else
             REPORT_ERROR(ERR_ARG_MISSING, "You should provide param --ctf or it should be present on input metadata");
@@ -254,7 +254,7 @@ void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName 
     last_ctf = fn_ctf;
     img.readApplyGeo(fnImg, rowIn);
 
-    rowIn.getValue(MDL_CTFMODEL, fn_ctf);
+    rowIn.getValue(MDL_CTF_MODEL, fn_ctf);
     if (fn_ctf != last_ctf)
         updateCtfs();
 

@@ -289,7 +289,7 @@ def assign_images_to_references(_log
             MD.removeDuplicates()
             MD.setValueCol(MDL_REF3D, iRef3D)
             MD.setValueCol(MDL_DEFGROUP, iCTFGroup)
-            #MD.setValueCol(MDL_CTFMODEL,auxInputdocfile[:-1])
+            #MD.setValueCol(MDL_CTF_MODEL,auxInputdocfile[:-1])
             MDaux.unionAll(MD)
         MDaux.sort()
         MD.aggregate(MDaux, AGGR_MAX, MDL_IMAGE, MDL_MAXCC, MDL_MAXCC)

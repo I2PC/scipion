@@ -183,15 +183,15 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
         MD.getValue(MDL_PRJ_DIMENSIONS, vecD, objId);
         proj_Xdim = vecD[0];
         proj_Ydim = vecD[1];
-        MD.getValue(MDL_ANGLEROT, axisRot, objId);
-        MD.getValue(MDL_ANGLETILT, axisTilt, objId);
+        MD.getValue(MDL_ANGLE_ROT, axisRot, objId);
+        MD.getValue(MDL_ANGLE_TILT, axisTilt, objId);
 
         raxis.resize(3);
-        if (!MD.getValue(MDL_SHIFTX, XX(raxis), objId))
+        if (!MD.getValue(MDL_SHITF_X, XX(raxis), objId))
             XX(raxis) = 0;
-        if (!MD.getValue(MDL_SHIFTY, YY(raxis), objId))
+        if (!MD.getValue(MDL_SHITF_Y, YY(raxis), objId))
             YY(raxis) = 0;
-        if (!MD.getValue(MDL_SHIFTZ, ZZ(raxis), objId))
+        if (!MD.getValue(MDL_SHITF_Z, ZZ(raxis), objId))
             ZZ(raxis) = 0;
 
         MD.getValue(MDL_PRJ_TILT_RANGE, vecD, objId);

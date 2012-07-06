@@ -75,7 +75,7 @@ void ProgCtfCorrectIdr::defineParams()
 void ProgCtfCorrectIdr::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
     FileName fn_ctf;
-    rowIn.getValue(MDL_CTFMODEL,fn_ctf);
+    rowIn.getValue(MDL_CTF_MODEL,fn_ctf);
 
     // Read current input image
     Ireal.readApplyGeo(fnImg, rowIn);

@@ -222,16 +222,16 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
 #endif
 
     //    for (int imgno=imgno_start; imgno <imgno_end; imgno++)
-    rowIn.getValue(MDL_ANGLEROT,rot);
-    rowIn.getValue(MDL_ANGLETILT,tilt);
-    rowIn.getValue(MDL_ANGLEPSI,psi);
+    rowIn.getValue(MDL_ANGLE_ROT,rot);
+    rowIn.getValue(MDL_ANGLE_TILT,tilt);
+    rowIn.getValue(MDL_ANGLE_PSI,psi);
 
     double auxD;
-    rowIn.getValue(MDL_ORIGINX,auxD);
+    rowIn.getValue(MDL_ORIGIN_X,auxD);
     XX(doccenter) = auxD;
-    rowIn.getValue(MDL_ORIGINY,auxD);
+    rowIn.getValue(MDL_ORIGIN_Y,auxD);
     YY(doccenter) = auxD;
-    rowIn.getValue(MDL_ORIGINZ,auxD);
+    rowIn.getValue(MDL_ORIGIN_Z,auxD);
     ZZ(doccenter) = auxD;
 
     // Read volume
@@ -312,14 +312,14 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg, const FileNam
         oId=DFout.addObject();
 
         DFout.setValue(MDL_IMAGE,fnOutStack,oId);
-        DFout.setValue(MDL_ANGLEROT,rotp,oId);
-        DFout.setValue(MDL_ANGLETILT,tiltp,oId);
-        DFout.setValue(MDL_ANGLEPSI,psip,oId);
+        DFout.setValue(MDL_ANGLE_ROT,rotp,oId);
+        DFout.setValue(MDL_ANGLE_TILT,tiltp,oId);
+        DFout.setValue(MDL_ANGLE_PSI,psip,oId);
     }
     // 6. Output translations will be zero because subvolumes are centered by definition
-    DFout.setValueCol(MDL_ORIGINX,0.);
-    DFout.setValueCol(MDL_ORIGINY,0.);
-    DFout.setValueCol(MDL_ORIGINZ,0.);
+    DFout.setValueCol(MDL_ORIGIN_X,0.);
+    DFout.setValueCol(MDL_ORIGIN_Y,0.);
+    DFout.setValueCol(MDL_ORIGIN_Z,0.);
 
     DFout.write(fnOutMd);
     DFout.clear();

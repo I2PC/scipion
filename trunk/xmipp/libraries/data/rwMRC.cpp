@@ -211,11 +211,11 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if ( header->mx && header->a!=0)//ux
-        MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->a/header->mx);
+        MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double)header->a/header->mx);
     if ( header->my && header->b!=0)//yx
-        MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->b/header->my);
+        MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double)header->b/header->my);
     if ( header->mz && header->c!=0)//zx
-        MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
+        MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,(double)header->c/header->mz);
 
     if (dataMode==HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
     {
@@ -236,25 +236,25 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         double aux;
         for ( size_t i = 0; i < imgEnd - imgStart; ++i )
         {
-            MD[i].setValue(MDL_SHIFTX, (double) -header->nxStart);
-            MD[i].setValue(MDL_SHIFTY, (double) -header->nyStart);
-            MD[i].setValue(MDL_SHIFTZ, (double) -header->nzStart);
+            MD[i].setValue(MDL_SHITF_X, (double) -header->nxStart);
+            MD[i].setValue(MDL_SHITF_Y, (double) -header->nyStart);
+            MD[i].setValue(MDL_SHITF_Z, (double) -header->nzStart);
 
             // We include auto detection of MRC2000 or CCP4 style origin based on http://situs.biomachina.org/fmap.pdf
             if (header->xOrigin != 0)
-                MD[i].setValue(MDL_ORIGINX, -header->xOrigin);
-            else if (header->nxStart != 0 && MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
-                MD[i].setValue(MDL_ORIGINX, -header->nxStart/aux);
+                MD[i].setValue(MDL_ORIGIN_X, -header->xOrigin);
+            else if (header->nxStart != 0 && MDMainHeader.getValue(MDL_SAMPLINGRATE_X,aux))
+                MD[i].setValue(MDL_ORIGIN_X, -header->nxStart/aux);
 
             if (header->yOrigin !=0)
-                MD[i].setValue(MDL_ORIGINY, -header->yOrigin);
-            else if(header->nyStart !=0 && MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
-                MD[i].setValue(MDL_ORIGINY, -header->nyStart/aux);
+                MD[i].setValue(MDL_ORIGIN_Y, -header->yOrigin);
+            else if(header->nyStart !=0 && MDMainHeader.getValue(MDL_SAMPLINGRATE_Y,aux))
+                MD[i].setValue(MDL_ORIGIN_Y, -header->nyStart/aux);
 
             if (header->zOrigin != 0)
-                MD[i].setValue(MDL_ORIGINY, -header->zOrigin);
-            else if(header->nzStart !=0 && MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
-                MD[i].setValue(MDL_ORIGINZ, -header->nzStart/aux);
+                MD[i].setValue(MDL_ORIGIN_Y, -header->zOrigin);
+            else if(header->nzStart !=0 && MDMainHeader.getValue(MDL_SAMPLINGRATE_Z,aux))
+                MD[i].setValue(MDL_ORIGIN_Z, -header->nzStart/aux);
         }
     }
     //#define DEBUG
@@ -421,15 +421,15 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
 #define SET_HEADER_SHIFT(field, label)  MD[0].getValueOrDefault(label, aux, 0.); header->field = -(int) round(aux)
-            SET_HEADER_SHIFT(nxStart, MDL_SHIFTX);
-            SET_HEADER_SHIFT(nyStart, MDL_SHIFTY);
-            SET_HEADER_SHIFT(nzStart, MDL_SHIFTZ);
+            SET_HEADER_SHIFT(nxStart, MDL_SHITF_X);
+            SET_HEADER_SHIFT(nyStart, MDL_SHITF_Y);
+            SET_HEADER_SHIFT(nzStart, MDL_SHITF_Z);
 #define SET_HEADER_ORIGIN(field, label1, label2)  MD[0].getValueOrDefault(label1, aux, 0.);MDMainHeader.getValueOrDefault(label2, aux2, 0.);\
               header->field = (float) (aux * aux2)
 
-            SET_HEADER_ORIGIN(xOrigin, MDL_ORIGINX, MDL_SAMPLINGRATEX);
-            SET_HEADER_ORIGIN(yOrigin, MDL_ORIGINY, MDL_SAMPLINGRATEY);
-            SET_HEADER_ORIGIN(zOrigin, MDL_ORIGINZ, MDL_SAMPLINGRATEZ);
+            SET_HEADER_ORIGIN(xOrigin, MDL_ORIGIN_X, MDL_SAMPLINGRATE_X);
+            SET_HEADER_ORIGIN(yOrigin, MDL_ORIGIN_Y, MDL_SAMPLINGRATE_Y);
+            SET_HEADER_ORIGIN(zOrigin, MDL_ORIGIN_Z, MDL_SAMPLINGRATE_Z);
         }
         else
             header->nxStart = header->xOrigin = header->nyStart = \

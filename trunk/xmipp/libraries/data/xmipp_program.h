@@ -73,6 +73,10 @@ private:
     /** Create Wiki for help */
     void createWiki();
 
+    /** Variables related to progress notification */
+    size_t progressTotal;
+    size_t progressStep;
+
 protected:
     /** Define Commons */
     void defineCommons();
@@ -211,6 +215,21 @@ public:
      * and a value greater than 0 represents the error type
      * */
     virtual int tryRun();
+
+    /** Functions related to progress notification */
+
+    /** Set the total amount of work and initialize
+     * the progress to 0
+     * The update step is calculated as step = XMIPP_MAX(1, total/stepBin)
+     * so, the updates only are done at step multiples
+     */
+    void initProgress(size_t total, size_t stepBin = 60);
+
+    /** Notify progress on work */
+    void setProgress(size_t value);
+
+    /** Notify end of work */
+    void endProgress();
 
 
 

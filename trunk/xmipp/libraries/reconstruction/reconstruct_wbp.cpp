@@ -222,11 +222,11 @@ void ProgRecWbp::getAnglesForImage(size_t id, double &rot, double &tilt,
 {
     if (id != BAD_OBJID)
     {
-        SF.getValue(MDL_ANGLEROT, rot, id);
-        SF.getValue(MDL_ANGLETILT, tilt, id);
-        SF.getValue(MDL_ANGLEPSI, psi, id);
-        SF.getValue(MDL_SHIFTX, xoff, id);
-        SF.getValue(MDL_SHIFTY, yoff, id);
+        SF.getValue(MDL_ANGLE_ROT, rot, id);
+        SF.getValue(MDL_ANGLE_TILT, tilt, id);
+        SF.getValue(MDL_ANGLE_PSI, psi, id);
+        SF.getValue(MDL_SHITF_X, xoff, id);
+        SF.getValue(MDL_SHITF_Y, yoff, id);
         flip = 0;
         SF.getValue(MDL_FLIP, flip, id);
         weight = 1;

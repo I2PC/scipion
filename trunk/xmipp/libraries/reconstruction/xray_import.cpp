@@ -302,7 +302,7 @@ void runThread(ThreadArgument &thArg)
 
             size_t objId = localMD.addObject();
             localMD.setValue(MDL_IMAGE,fnImg,objId);
-            localMD.setValue(MDL_ANGLETILT,Iaux.tilt(),objId);
+            localMD.setValue(MDL_ANGLE_TILT,Iaux.tilt(),objId);
             Iaux.write(fnImg);
             if (thread_id==0)
                 progress_bar(i);
@@ -375,7 +375,7 @@ void ProgXrayImport::run()
 
     // Write Selfile and angles
     MetaData MDSorted;
-    MDSorted.sort(MD,MDL_ANGLETILT);
+    MDSorted.sort(MD,MDL_ANGLE_TILT);
     MDSorted.write(fnRoot+".sel");
     std::ofstream fhTlt;
     fhTlt.open((fnRoot+".tlt").c_str());
@@ -384,7 +384,7 @@ void ProgXrayImport::run()
     FOR_ALL_OBJECTS_IN_METADATA(MDSorted)
     {
         double tilt;
-        MDSorted.getValue(MDL_ANGLETILT,tilt,__iter.objId);
+        MDSorted.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         fhTlt << tilt << std::endl;
     }
     fhTlt.close();

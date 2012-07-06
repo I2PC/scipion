@@ -252,7 +252,7 @@ public abstract class ParticlePicker
 			{
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
-				md.setValueInt(MDLabel.MDL_PICKING_COLOR, f.getColor().getRGB(), id);
+				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
@@ -286,7 +286,7 @@ public abstract class ParticlePicker
 			for (long id : ids)
 			{
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
-				rgb = md.getValueInt(MDLabel.MDL_PICKING_COLOR, id);
+				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
@@ -375,9 +375,9 @@ public abstract class ParticlePicker
 			for (IJCommand f : filters)
 			{
 				id = md.addObject();
-				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, f.getCommand().replace(' ', '_'), id);
+				md.setValueString(MDLabel.MDL_IMAGE1, f.getCommand().replace(' ', '_'), id);
 				options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
-				md.setValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, options, id);
+				md.setValueString(MDLabel.MDL_IMAGE2, options, id);
 			}
 			md.write(file);
 		}
@@ -403,8 +403,8 @@ public abstract class ParticlePicker
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
-				command = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE1, id).replace('_', ' ');
-				options = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id).replace('_', ' ');
+				command = md.getValueString(MDLabel.MDL_IMAGE1, id).replace('_', ' ');
+				options = md.getValueString(MDLabel.MDL_IMAGE2, id).replace('_', ' ');
 				if (options.equals("NULL"))
 					options = "";
 				filters.add(new IJCommand(command, options));

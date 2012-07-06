@@ -109,14 +109,14 @@ void ProgMPIXrayProject::run()
             id = projMD.addObject();
             projMD.setValue(MDL_IMAGE,data.fn_proj, id);
 
-            projMD.setValue(MDL_ANGLEROT,data.tRot, id);
-            projMD.setValue(MDL_ANGLETILT,data.tTilt, id);
-            projMD.setValue(MDL_ANGLEPSI,data.tPsi, id);
-            projMD.setValue(MDL_ANGLEROT2,data.rot, id);
-            projMD.setValue(MDL_ANGLETILT2,data.tilt, id);
-            projMD.setValue(MDL_ANGLEPSI2,data.psi, id);
-            projMD.setValue(MDL_SHIFTX,shiftX, id);
-            projMD.setValue(MDL_SHIFTY,shiftY, id);
+            projMD.setValue(MDL_ANGLE_ROT,data.tRot, id);
+            projMD.setValue(MDL_ANGLE_TILT,data.tTilt, id);
+            projMD.setValue(MDL_ANGLE_PSI,data.tPsi, id);
+            projMD.setValue(MDL_ANGLE_ROT2,data.rot, id);
+            projMD.setValue(MDL_ANGLE_TILT2,data.tilt, id);
+            projMD.setValue(MDL_ANGLE_PSI2,data.psi, id);
+            projMD.setValue(MDL_SHITF_X,shiftX, id);
+            projMD.setValue(MDL_SHITF_Y,shiftY, id);
         }
 
         mpiData.push_back(data);
@@ -255,14 +255,14 @@ void ProgMPIXrayProject::run()
 //        if (node.isMaster())
 //        {
 //            id = DF_movements.addObject();
-//            DF_movements.setValue(MDL_ANGLEROT,data.tRot, id);
-//            DF_movements.setValue(MDL_ANGLETILT,data.tTilt, id);
-//            DF_movements.setValue(MDL_ANGLEPSI,data.tPsi, id);
-//            DF_movements.setValue(MDL_ANGLEROT2,data.rot, id);
-//            DF_movements.setValue(MDL_ANGLETILT2,data.tilt, id);
-//            DF_movements.setValue(MDL_ANGLEPSI2,data.psi, id);
-//            DF_movements.setValue(MDL_SHIFTX,shiftX, id);
-//            DF_movements.setValue(MDL_SHIFTY,shiftY, id);
+//            DF_movements.setValue(MDL_ANGLE_ROT,data.tRot, id);
+//            DF_movements.setValue(MDL_ANGLE_TILT,data.tTilt, id);
+//            DF_movements.setValue(MDL_ANGLE_PSI,data.tPsi, id);
+//            DF_movements.setValue(MDL_ANGLE_ROT2,data.rot, id);
+//            DF_movements.setValue(MDL_ANGLE_TILT2,data.tilt, id);
+//            DF_movements.setValue(MDL_ANGLE_PSI2,data.psi, id);
+//            DF_movements.setValue(MDL_SHITF_X,shiftX, id);
+//            DF_movements.setValue(MDL_SHITF_Y,shiftY, id);
 //
 //            id = SF.addObject();
 //            SF.setValue(MDL_IMAGE,data.fn_proj, id);

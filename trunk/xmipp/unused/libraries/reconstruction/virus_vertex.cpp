@@ -157,7 +157,7 @@ void VirusVertex::processAngles()
         if (imgno++%repaint==0)
             progress_bar(imgno);
         proj.read(fn_img, false); //true means apply shifts
-        if (!DF.containsLabel(MDL_ANGLEROT))
+        if (!DF.containsLabel(MDL_ANGLE_ROT))
         {
             rot  = proj.rot();
             tilt = proj.tilt();
@@ -169,11 +169,11 @@ void VirusVertex::processAngles()
         }
         else
         {
-                DF.getValue(MDL_ANGLEROT,rot,__iter.objId);
-                DF.getValue(MDL_ANGLETILT,tilt,__iter.objId);
-                DF.getValue(MDL_ANGLEPSI,psi,__iter.objId);
-                DF.getValue(MDL_SHIFTX,xoff,__iter.objId);
-                DF.getValue(MDL_SHIFTY,yoff,__iter.objId);
+                DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+                DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+                DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+                DF.getValue(MDL_SHITF_X,xoff,__iter.objId);
+                DF.getValue(MDL_SHITF_Y,yoff,__iter.objId);
                 DF.getValue(MDL_FLIP,flip,__iter.objId);
                 DF.getValue(MDL_WEIGHT,weight,__iter.objId);
                 proj.setEulerAngles(rot,tilt,psi);
@@ -241,11 +241,11 @@ void VirusVertex::processAngles()
 
                 size_t objId = DFout.addObject();
                 DFout.setValue(MDL_IMAGE,fn_tmp,objId);
-                DFout.setValue(MDL_ANGLEROT,rotp,objId);
-                DFout.setValue(MDL_ANGLETILT,tiltp,objId);
-                DFout.setValue(MDL_ANGLEPSI,psip,objId);
-                DFout.setValue(MDL_SHIFTX,0,objId);
-                DFout.setValue(MDL_SHIFTY,0,objId);
+                DFout.setValue(MDL_ANGLE_ROT,rotp,objId);
+                DFout.setValue(MDL_ANGLE_TILT,tiltp,objId);
+                DFout.setValue(MDL_ANGLE_PSI,psip,objId);
+                DFout.setValue(MDL_SHITF_X,0,objId);
+                DFout.setValue(MDL_SHITF_Y,0,objId);
                 DFout.setValue(MDL_FLIP,flip,objId);
                 DFout.setValue(MDL_WEIGHT,weight,objId);
             }

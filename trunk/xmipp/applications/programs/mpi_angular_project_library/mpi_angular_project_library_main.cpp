@@ -393,9 +393,9 @@ public:
                 {
 
                     double x,y,z, rot, tilt, psi;
-                    mySFin.getValue(MDL_ANGLEROT,rot,__iter.objId);
-                    mySFin.getValue(MDL_ANGLETILT,tilt,__iter.objId);
-                    mySFin.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+                    mySFin.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+                    mySFin.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+                    mySFin.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
                     mySFin.getValue(MDL_X,x,__iter.objId);
                     mySFin.getValue(MDL_Y,y,__iter.objId);
                     mySFin.getValue(MDL_Z,z,__iter.objId);
@@ -405,9 +405,9 @@ public:
                     mySF.setValue(MDL_IMAGE,fn_temp, id);
                     mySF.setValue(MDL_ENABLED,1, id);
 
-                    mySF.setValue(MDL_ANGLEROT,rot, id);
-                    mySF.setValue(MDL_ANGLETILT,tilt, id);
-                    mySF.setValue(MDL_ANGLEPSI,psi+mypsi, id);
+                    mySF.setValue(MDL_ANGLE_ROT,rot, id);
+                    mySF.setValue(MDL_ANGLE_TILT,tilt, id);
+                    mySF.setValue(MDL_ANGLE_PSI,psi+mypsi, id);
                     mySF.setValue(MDL_X,x, id);
                     mySF.setValue(MDL_Y,y, id);
                     mySF.setValue(MDL_Z,z, id);

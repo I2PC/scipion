@@ -451,7 +451,7 @@ void ProgCTFEstimateFromMicrograph::run()
                 double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                        ctfmodel, false);
                 if (psd_mode==OnePerParticle)
-                    posFile.setValue(MDL_CTFMODEL,fn_psd_piece.withoutExtension()+".ctfparam",
+                    posFile.setValue(MDL_CTF_MODEL,fn_psd_piece.withoutExtension()+".ctfparam",
                                      iterPosFile.objId);
             }
         }
@@ -539,9 +539,9 @@ void ProgCTFEstimateFromMicrograph::run()
                 MetaData MD;
                 MD.read(fn_psd.withoutExtension() + ".ctfparam");
                 size_t id = MD.firstObject();
-                MD.setValue(MDL_CTF_CRITERION_PSDVARIANCE,stdQ,id);
-                MD.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,pstd,id);
-                MD.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,zrandomness,id);
+                MD.setValue(MDL_CTF_CRIT_PSDVARIANCE,stdQ,id);
+                MD.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,pstd,id);
+                MD.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,zrandomness,id);
                 MD.write(fn_psd.withoutExtension() + ".ctfparam");
             }
             else
@@ -626,7 +626,7 @@ void ProgCTFEstimateFromMicrograph::run()
             fn_psd_piece.compose(N,fn_psd);
             fn_ctfparam_piece=fn_psd_piece.withoutExtension()+".ctfparam";
             posFile.setValue(MDL_PSD,fn_psd_piece,__iter.objId);
-            posFile.setValue(MDL_CTFMODEL,fn_ctfparam_piece,__iter.objId);
+            posFile.setValue(MDL_CTF_MODEL,fn_ctfparam_piece,__iter.objId);
         }
     }
     posFile.write(fn_pos);

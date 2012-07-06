@@ -48,12 +48,12 @@ public class MetaData {
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
 	// private final static int PATHS_FIELDS[] = {
-	// MDLabel.MDL_ASSOCIATED_IMAGE1,
-	// MDLabel.MDL_ASSOCIATED_IMAGE2,
-	// MDLabel.MDL_ASSOCIATED_IMAGE3,
+	// MDLabel.MDL_IMAGE1,
+	// MDLabel.MDL_IMAGE2,
+	// MDLabel.MDL_IMAGE3,
 	// MDLabel.MDL_IMAGE,
 	// MDLabel.MDL_PSD,
-	// MDLabel.MDL_CTFMODEL
+	// MDLabel.MDL_CTF_MODEL
 	// };
 	//
 	// static {
@@ -63,10 +63,10 @@ public class MetaData {
 	// }
 
 	public final static int GEOMETRY_LABELS[] = { MDLabel.MDL_FLIP,
-			MDLabel.MDL_ANGLEPSI, MDLabel.MDL_SHIFTX, MDLabel.MDL_SHIFTY };
+			MDLabel.MDL_ANGLE_PSI, MDLabel.MDL_SHITF_X, MDLabel.MDL_SHITF_Y };
 
 	public final static int MICROGRAPH_BASIC_LABELS[] = {
-			MDLabel.MDL_MICROGRAPH, MDLabel.MDL_PSD, MDLabel.MDL_CTFMODEL };
+			MDLabel.MDL_MICROGRAPH, MDLabel.MDL_PSD, MDLabel.MDL_CTF_MODEL };
 
 	public static final int MD_OVERWRITE = 0;
 	public static final int MD_APPEND = 1;

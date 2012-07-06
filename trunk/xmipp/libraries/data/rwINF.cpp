@@ -91,8 +91,8 @@ int ImageBase::readINF(size_t select_img,bool isStack)
         REPORT_ERROR(ERR_TYPE_INCORRECT, "rwINF::read: depth is not 8, 16 nor 32");
     }
 
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double) -1);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     // Map the parameters

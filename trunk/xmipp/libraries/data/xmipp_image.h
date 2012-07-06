@@ -1045,26 +1045,26 @@ protected:
 
         double aux;
         //origins
-        if (row.getValue(MDL_ORIGINX, aux))
-            rowAux.setValue(MDL_ORIGINX, aux);
-        if (row.getValue(MDL_ORIGINY, aux))
-            rowAux.setValue(MDL_ORIGINY, aux);
-        if (row.getValue(MDL_ORIGINZ, aux))
-            rowAux.setValue(MDL_ORIGINZ, aux);
+        if (row.getValue(MDL_ORIGIN_X, aux))
+            rowAux.setValue(MDL_ORIGIN_X, aux);
+        if (row.getValue(MDL_ORIGIN_Y, aux))
+            rowAux.setValue(MDL_ORIGIN_Y, aux);
+        if (row.getValue(MDL_ORIGIN_Z, aux))
+            rowAux.setValue(MDL_ORIGIN_Z, aux);
         //shifts
-        if (row.getValue(MDL_SHIFTX, aux))
-            rowAux.setValue(MDL_SHIFTX, aux);
-        if (row.getValue(MDL_SHIFTY, aux))
-            rowAux.setValue(MDL_SHIFTY, aux);
-        if (row.getValue(MDL_SHIFTZ, aux))
-            rowAux.setValue(MDL_SHIFTZ, aux);
+        if (row.getValue(MDL_SHITF_X, aux))
+            rowAux.setValue(MDL_SHITF_X, aux);
+        if (row.getValue(MDL_SHITF_Y, aux))
+            rowAux.setValue(MDL_SHITF_Y, aux);
+        if (row.getValue(MDL_SHITF_Z, aux))
+            rowAux.setValue(MDL_SHITF_Z, aux);
         //rotations
-        if (row.getValue(MDL_ANGLEROT, aux))
-            rowAux.setValue(MDL_ANGLEROT, aux);
-        if (row.getValue(MDL_ANGLETILT, aux))
-            rowAux.setValue(MDL_ANGLETILT, aux);
-        if (row.getValue(MDL_ANGLEPSI, aux))
-            rowAux.setValue(MDL_ANGLEPSI, aux);
+        if (row.getValue(MDL_ANGLE_ROT, aux))
+            rowAux.setValue(MDL_ANGLE_ROT, aux);
+        if (row.getValue(MDL_ANGLE_TILT, aux))
+            rowAux.setValue(MDL_ANGLE_TILT, aux);
+        if (row.getValue(MDL_ANGLE_PSI, aux))
+            rowAux.setValue(MDL_ANGLE_PSI, aux);
         //scale
         if (row.getValue(MDL_SCALE, aux))
             rowAux.setValue(MDL_SCALE, aux);

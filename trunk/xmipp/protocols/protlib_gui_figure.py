@@ -362,16 +362,16 @@ class XmippPlotter():
     def plotAngularDistribution(self, title, md, color='blue'):
         '''Create an special type of subplot, representing the angular
         distribution of weight projections. A metadata should be provided containing
-        labels: MDL_ANGLEROT, MDL_ANGLETILT, MDL_WEIGHT '''
+        labels: MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_WEIGHT '''
         from math import radians
-        from xmipp import MDL_ANGLEROT, MDL_ANGLETILT, MDL_WEIGHT
+        from xmipp import MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_WEIGHT
         
         max_p = 40
         min_p = 5
         max_w = 2
         min_w = 1
-        rot = [radians(md.getValue(MDL_ANGLEROT, objId)) for objId in md]
-        tilt = [md.getValue(MDL_ANGLETILT, objId) for objId in md]
+        rot = [radians(md.getValue(MDL_ANGLE_ROT, objId)) for objId in md]
+        tilt = [md.getValue(MDL_ANGLE_TILT, objId) for objId in md]
         weight = [md.getValue(MDL_WEIGHT, objId) for objId in md]
         
         if (len(weight) > 0):

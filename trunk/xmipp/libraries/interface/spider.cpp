@@ -116,11 +116,11 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
         if (fromMetadata)
         {
             double rot;
-            SF_in.getValue(MDL_ANGLEROT,rot, __iter.objId);
+            SF_in.getValue(MDL_ANGLE_ROT,rot, __iter.objId);
             double tilt;
-            SF_in.getValue(MDL_ANGLETILT,tilt, __iter.objId);
+            SF_in.getValue(MDL_ANGLE_TILT,tilt, __iter.objId);
             double psi;
-            SF_in.getValue(MDL_ANGLEPSI,psi, __iter.objId);
+            SF_in.getValue(MDL_ANGLE_PSI,psi, __iter.objId);
             DF_out.append_angles(rot, tilt, psi,
                                  ang1, ang2, ang3);
         }

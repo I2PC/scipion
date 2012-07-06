@@ -158,7 +158,7 @@ def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
         objId = md.addObject()
         md.setValue(xmipp.MDL_MICROGRAPH, inputFile, objId)
         ctfparam = _getFilename('ctfparam', micrographDir=micrographDir)
-        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_CTFMODEL,xmipp.MDL_ASSOCIATED_IMAGE1, xmipp.MDL_ASSOCIATED_IMAGE2]
+        labels = [xmipp.MDL_PSD, xmipp.MDL_PSD_ENHANCED, xmipp.MDL_CTF_MODEL,xmipp.MDL_IMAGE1, xmipp.MDL_IMAGE2]
         if exists(ctfparam): # Get filenames
             keys = ['psd', 'enhanced_psd', 'ctfparam', 'ctfmodel_quadrant', 'ctfmodel_halfplane']
             values = [_getFilename(key, micrographDir=micrographDir) for key in keys]

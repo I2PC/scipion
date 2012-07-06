@@ -109,8 +109,8 @@ void XRayPSF::read(const FileName &fn)
         else
         {
             std::vector<double> dimV;
-            if (!MD.getValue(MDL_CTF_XRAY_DIMENSIONS,dimV, id))
-                REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_DIMENSIONS) + " argument not present.");
+            if (!MD.getValue(MDL_CTF_DIMENSIONS,dimV, id))
+                REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_DIMENSIONS) + " argument not present.");
             Nox = dimV[0];
             Noy = dimV[1];
             Noz = dimV[2];
@@ -123,8 +123,8 @@ void XRayPSF::read(const FileName &fn)
         else
             type = IDEAL_FRESNEL_LENS;
 
-        if (!MD.getValue(MDL_CTF_XRAY_LAMBDA,lambda, id))
-            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_LAMBDA) + " argument not present.");
+        if (!MD.getValue(MDL_CTF_LAMBDA,lambda, id))
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_LAMBDA) + " argument not present.");
         lambda *= 1e-9;
         if (!MD.getValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_OUTER_ZONE_WIDTH) + " argument not present.");
@@ -188,7 +188,7 @@ void XRayPSF::write(const FileName &fn)
     MD.setValue(MDL_IMAGE, fnPSF, id);
     String typeS = (type==ANALYTIC_ZP)? "ZP": "ideal";
     MD.setValue(MDL_CTF_XRAY_LENS_TYPE, typeS, id);
-    MD.setValue(MDL_CTF_XRAY_LAMBDA,lambda*1e9, id);
+    MD.setValue(MDL_CTF_LAMBDA,lambda*1e9, id);
     MD.setValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR*1e9, id);
     MD.setValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp, id);
     MD.setValue(MDL_MAGNIFICATION,Ms, id);
@@ -199,7 +199,7 @@ void XRayPSF::write(const FileName &fn)
     dimV[0] = Nox;
     dimV[1] = Noy;
     dimV[2] = Noz;
-    MD.setValue(MDL_CTF_XRAY_DIMENSIONS,dimV, id);
+    MD.setValue(MDL_CTF_DIMENSIONS,dimV, id);
 
     MD.write(fn.withoutExtension().addExtension("xmd"));
     //    PSF->write(fnPSF);

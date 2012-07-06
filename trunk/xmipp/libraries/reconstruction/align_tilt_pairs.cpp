@@ -172,7 +172,7 @@ void ProgAlignTiltPairs::run() {
 
 		// Read untilted and tilted images
 		double inPlaneU;
-		MDin.getValue(MDL_ANGLEPSI, inPlaneU, __iter.objId);
+		MDin.getValue(MDL_ANGLE_PSI, inPlaneU, __iter.objId);
 		MDin.getValue(MDL_IMAGE, fnUntilted, __iter.objId);
 		imgU.read(fnUntilted);
 		imgU().setXmippOrigin();
@@ -194,9 +194,9 @@ void ProgAlignTiltPairs::run() {
 		double shiftXu, shiftYu;
 		MDin.getValue(MDL_ANGLE_Y, alphaU, __iter.objId);
 		MDin.getValue(MDL_ANGLE_Y2, alphaT, __iter.objId);
-		MDin.getValue(MDL_ANGLETILT, gamma, __iter.objId);
-		MDin.getValue(MDL_SHIFTX, shiftXu, __iter.objId);
-		MDin.getValue(MDL_SHIFTX, shiftYu, __iter.objId);
+		MDin.getValue(MDL_ANGLE_TILT, gamma, __iter.objId);
+		MDin.getValue(MDL_SHITF_X, shiftXu, __iter.objId);
+		MDin.getValue(MDL_SHITF_X, shiftYu, __iter.objId);
 
 		// Correct untilted alignment
 		if (flip)
@@ -222,17 +222,17 @@ void ProgAlignTiltPairs::run() {
 		size_t idOut = MDout.addObject();
 		MDout.setValue(MDL_IMAGE, fnTilted, idOut);
 		if (flip) {
-			MDout.setValue(MDL_ANGLEROT, -inPlaneU, idOut);
-			MDout.setValue(MDL_ANGLETILT, gamma + 180, idOut);
-			MDout.setValue(MDL_ANGLEPSI, alphaT, idOut);
-			MDout.setValue(MDL_SHIFTX, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
-			MDout.setValue(MDL_SHIFTY, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
+			MDout.setValue(MDL_ANGLE_ROT, -inPlaneU, idOut);
+			MDout.setValue(MDL_ANGLE_TILT, gamma + 180, idOut);
+			MDout.setValue(MDL_ANGLE_PSI, alphaT, idOut);
+			MDout.setValue(MDL_SHITF_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
+			MDout.setValue(MDL_SHITF_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
 		} else {
-			MDout.setValue(MDL_ANGLEROT, -inPlaneU, idOut);
-			MDout.setValue(MDL_ANGLETILT, gamma, idOut);
-			MDout.setValue(MDL_ANGLEPSI, alphaT, idOut);
-			MDout.setValue(MDL_SHIFTX, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
-			MDout.setValue(MDL_SHIFTY, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
+			MDout.setValue(MDL_ANGLE_ROT, -inPlaneU, idOut);
+			MDout.setValue(MDL_ANGLE_TILT, gamma, idOut);
+			MDout.setValue(MDL_ANGLE_PSI, alphaT, idOut);
+			MDout.setValue(MDL_SHITF_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
+			MDout.setValue(MDL_SHITF_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
 		}
 		MDout.setValue(MDL_ENABLED, (int) enable, idOut);
 

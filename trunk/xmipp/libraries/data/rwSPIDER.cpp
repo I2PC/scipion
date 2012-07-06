@@ -164,9 +164,9 @@ int  ImageBase::readSPIDER(size_t select_img)
     MDMainHeader.setValue(MDL_MAX,(double)header->fmax);
     MDMainHeader.setValue(MDL_AVG,(double)header->av);
     MDMainHeader.setValue(MDL_STDDEV,(double)header->sig);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->scale);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->scale);
-    MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->scale);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double)header->scale);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double)header->scale);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,(double)header->scale);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     bool isStack = ( header->istack > 0 );
@@ -243,17 +243,17 @@ int  ImageBase::readSPIDER(size_t select_img)
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
             daux = (double)header->xoff;
-            MD[n].setValue(MDL_SHIFTX, daux);
+            MD[n].setValue(MDL_SHITF_X, daux);
             daux = (double)header->yoff;
-            MD[n].setValue(MDL_SHIFTY, daux);
+            MD[n].setValue(MDL_SHITF_Y, daux);
             daux = (double)header->zoff;
-            MD[n].setValue(MDL_SHIFTZ, daux);
+            MD[n].setValue(MDL_SHITF_Z, daux);
             daux = (double)header->phi;
-            MD[n].setValue(MDL_ANGLEROT, daux);
+            MD[n].setValue(MDL_ANGLE_ROT, daux);
             daux = (double)header->theta;
-            MD[n].setValue(MDL_ANGLETILT, daux);
+            MD[n].setValue(MDL_ANGLE_TILT, daux);
             daux = (double)header->gamma;
-            MD[n].setValue(MDL_ANGLEPSI, daux);
+            MD[n].setValue(MDL_ANGLE_PSI, daux);
             daux = (double)header->weight;
             MD[n].setValue(MDL_WEIGHT, daux);
             bool baux = (header->flip == 1);
@@ -396,12 +396,12 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
 #define SET_HEADER_VALUE(field, label, aux)  MD[0].getValueOrDefault((label), (aux), 0.); header->field = (float)(aux)
-            SET_HEADER_VALUE(xoff, MDL_SHIFTX, aux);
-            SET_HEADER_VALUE(yoff, MDL_SHIFTY, aux);
-            SET_HEADER_VALUE(zoff, MDL_SHIFTZ, aux);
-            SET_HEADER_VALUE(phi, MDL_ANGLEROT, aux);
-            SET_HEADER_VALUE(theta, MDL_ANGLETILT, aux);
-            SET_HEADER_VALUE(gamma, MDL_ANGLEPSI, aux);
+            SET_HEADER_VALUE(xoff, MDL_SHITF_X, aux);
+            SET_HEADER_VALUE(yoff, MDL_SHITF_Y, aux);
+            SET_HEADER_VALUE(zoff, MDL_SHITF_Z, aux);
+            SET_HEADER_VALUE(phi, MDL_ANGLE_ROT, aux);
+            SET_HEADER_VALUE(theta, MDL_ANGLE_TILT, aux);
+            SET_HEADER_VALUE(gamma, MDL_ANGLE_PSI, aux);
             SET_HEADER_VALUE(weight, MDL_WEIGHT, aux);
             SET_HEADER_VALUE(flip, MDL_FLIP, baux);
             SET_HEADER_VALUE(scale, MDL_SCALE, aux);
@@ -524,12 +524,12 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             // Write the individual image header
             if ( it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
             {
-                SET_HEADER_VALUE(xoff, MDL_SHIFTX, aux);
-                SET_HEADER_VALUE(yoff, MDL_SHIFTY, aux);
-                SET_HEADER_VALUE(zoff, MDL_SHIFTZ, aux);
-                SET_HEADER_VALUE(phi, MDL_ANGLEROT, aux);
-                SET_HEADER_VALUE(theta, MDL_ANGLETILT, aux);
-                SET_HEADER_VALUE(gamma, MDL_ANGLEPSI, aux);
+                SET_HEADER_VALUE(xoff, MDL_SHITF_X, aux);
+                SET_HEADER_VALUE(yoff, MDL_SHITF_Y, aux);
+                SET_HEADER_VALUE(zoff, MDL_SHITF_Z, aux);
+                SET_HEADER_VALUE(phi, MDL_ANGLE_ROT, aux);
+                SET_HEADER_VALUE(theta, MDL_ANGLE_TILT, aux);
+                SET_HEADER_VALUE(gamma, MDL_ANGLE_PSI, aux);
                 SET_HEADER_VALUE(weight, MDL_WEIGHT, aux);
                 SET_HEADER_VALUE(flip, MDL_FLIP, baux);
                 SET_HEADER_VALUE(scale, MDL_SCALE, aux);

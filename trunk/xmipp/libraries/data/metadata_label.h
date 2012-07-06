@@ -51,25 +51,23 @@ enum MDLabel
     MDL_OBJID = MDL_FIRST_LABEL, ///< object id (int), NOTE: This label is special and shouldn't be used
 
     MDL_ANGLE_COMPARISON, ///< Angular comparison (see angular_distance.cpp)
-    MDL_ANGLEPSI, ///< Psi angle of an image (double,degrees)
-    MDL_ANGLEPSI2, ///< Psi angle of an image (double,degrees)
-    MDL_ANGLEROT, ///< Rotation angle of an image (double,degrees)
-    MDL_ANGLEROT2, ///< Rotation angle of an image (double,degrees)
-    MDL_ANGLETILT, ///< Tilting angle of an image (double,degrees)
-    MDL_ANGLETILT2, ///< Tilting angle of an image (double,degrees)
+    MDL_ANGLE_PSI, ///< Psi angle of an image (double,degrees)
+    MDL_ANGLE_PSI2, ///< Psi angle of an image (double,degrees)
+    MDL_ANGLE_ROT, ///< Rotation angle of an image (double,degrees)
+    MDL_ANGLE_ROT2, ///< Rotation angle of an image (double,degrees)
+    MDL_ANGLE_TILT, ///< Tilting angle of an image (double,degrees)
+    MDL_ANGLE_TILT2, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
-    MDL_ASSOCIATED_IMAGE1, ///< Image associated to this object (std::string)
-    MDL_ASSOCIATED_IMAGE2, ///< Image associated to this object (std::string)
-    MDL_ASSOCIATED_IMAGE3, ///< Image associated to this object (std::string)
-    MDL_ASSOCIATED_IMAGE4, ///< Image associated to this object (std::string)
-    MDL_ASSOCIATED_IMAGE5, ///< Image associated to this object (std::string)
+    MDL_IMAGE1, ///< Image associated to this object (std::string)
+    MDL_IMAGE2, ///< Image associated to this object (std::string)
+    MDL_IMAGE3, ///< Image associated to this object (std::string)
+    MDL_IMAGE4, ///< Image associated to this object (std::string)
+    MDL_IMAGE5, ///< Image associated to this object (std::string)
     MDL_AVG, ///< average value (double)
-    MDL_AZIMUTALANGLE, ///< ctf definition azimutal angle
     MDL_BGMEAN, ///< Mean background value for an image
-    MDL_BLOCK, ///< Current block number (for incremental EM)
-    MDL_CELLX, ///< Cell location for crystals
-    MDL_CELLY, ///< Cell location for crystals
+    MDL_BLOCK_NUMBER, ///< Current block number (for incremental EM)
+
     MDL_CL2D_CHANGES, ///< Number of changes between iterations
     MDL_CL2D_SIMILARITY, ///< Average cross-correlation for the image (double)
     MDL_CLASS_COUNT, ///< Number of images assigned to the same class as this image
@@ -82,9 +80,23 @@ enum MDLabel
     MDL_COST, ///< Cost for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_COUNT2, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
-    MDL_CTFINPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
-    MDL_CTFMODEL, ///< Name for the CTF Model (std::string)
-    MDL_CTFMODEL2, ///< Name for another CTF model (std::string)
+
+    MDL_CRYSTAL_CELLX, ///< Cell location for crystals
+    MDL_CRYSTAL_CELLY, ///< Cell location for crystals
+    MDL_CRYSTAL_LATTICE_A,   /// < Lattice vector for projection (vector double)
+    MDL_CRYSTAL_LATTICE_B,   /// < Lattice vector for projection (vector double)
+    MDL_CRYSTAL_DISAPPEAR_THRE,   /// < Disappearing threshold (double)
+    MDL_CRYSTAL_SHFILE,   /// < Shift file for crystal projection
+    MDL_CRYSTAL_ORTHO_PRJ,   /// <Orthogonal projection or not (bool)
+    MDL_CRYSTAL_PROJ,   /// < Have a crystal projection (boo)
+    MDL_CRYSTAL_POINTSASYMETRICUNIT, /// < Size of the orthogonal asymmetry unit (size_t)
+    MDL_CRYSTAL_SHIFTX, ///< Shift for the image in the X axis (double) for crystals
+    MDL_CRYSTAL_SHIFTY, ///< Shift for the image in the Y axis (double) for crystals
+    MDL_CRYSTAL_SHIFTZ, ///< Shift for the image in the Z axis (double) for crystals
+
+    MDL_CTF_INPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
+    MDL_CTF_MODEL, ///< Name for the CTF Model (std::string)
+    MDL_CTF_MODEL2, ///< Name for another CTF model (std::string)
     MDL_CTF_SAMPLING_RATE, ///< Sampling rate
     MDL_CTF_SAMPLING_RATE_Z, ///< Sampling rate in Z direction
     MDL_CTF_VOLTAGE, ///< Microscope voltage (kV)
@@ -102,40 +114,39 @@ enum MDLabel
     MDL_CTF_TRANSVERSAL_DISPLACEMENT, ///< Transversal displacemente
     MDL_CTF_Q0, ///< Inelastic absorption
     MDL_CTF_K, ///< CTF gain
-    MDL_CTFBG_GAUSSIAN_K, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_SIGMAU, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_SIGMAV, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_CU, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_CV, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_ANGLE, ///< CTF Background parameter
-    MDL_CTFBG_SQRT_K, ///< CTF Background parameter
-    MDL_CTFBG_SQRT_U, ///< CTF Background parameter
-    MDL_CTFBG_SQRT_V, ///< CTF Background parameter
-    MDL_CTFBG_SQRT_ANGLE, ///< CTF Background parameter
-    MDL_CTFBG_BASELINE, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_K, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_SIGMAU, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_SIGMAV, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_CU, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_CV, ///< CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_ANGLE, ///< CTF Background parameter
-    MDL_CTF_CRITERION_PSDCORRELATION90, ///< PSD correlation at 90 degrees
-    MDL_CTF_CRITERION_FIRSTZERORATIO, ///< First zero ratio
-    MDL_CTF_CRITERION_FIRSTZEROAVG, ///< First zero average (in Angstroms)
-    MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT, ///< First zero disagreement with second model (in Angstroms)
-    MDL_CTF_CRITERION_DAMPING, ///< Minimum damping at border
-    MDL_CTF_CRITERION_PSDRADIALINTEGRAL, ///< Integral of the radial PSD
-    MDL_CTF_CRITERION_FITTINGSCORE, ///< Score of the fitting
-    MDL_CTF_CRITERION_FITTINGCORR13, ///< Correlation between the 1st and 3rd ring of the CTF
-    MDL_CTF_CRITERION_PSDVARIANCE, ///< PSD variance
-    MDL_CTF_CRITERION_PSDPCA1VARIANCE, ///< Variance in the first principal component of the PSDs
-    MDL_CTF_CRITERION_PSDPCARUNSTEST, ///< Runs test on the projection of the PSD on the first principal component
-    MDL_CTF_CRITERION_NORMALITY, ///< Normality test between histogram of micrography and gaussian distribution
+    MDL_CTF_BG_GAUSSIAN_K, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN_SIGMAU, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN_SIGMAV, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN_CU, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN_CV, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN_ANGLE, ///< CTF Background parameter
+    MDL_CTF_BG_SQRT_K, ///< CTF Background parameter
+    MDL_CTF_BG_SQRT_U, ///< CTF Background parameter
+    MDL_CTF_BG_SQRT_V, ///< CTF Background parameter
+    MDL_CTF_BG_SQRT_ANGLE, ///< CTF Background parameter
+    MDL_CTF_BG_BASELINE, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN2_K, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN2_SIGMAU, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN2_SIGMAV, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN2_CU, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN2_CV, ///< CTF Background parameter
+    MDL_CTF_BG_GAUSSIAN2_ANGLE, ///< CTF Background parameter
+    MDL_CTF_CRIT_PSDCORRELATION90, ///< PSD correlation at 90 degrees
+    MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
+    MDL_CTF_CRIT_FIRSTZEROAVG, ///< First zero average (in Angstroms)
+    MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, ///< First zero disagreement with second model (in Angstroms)
+    MDL_CTF_CRIT_DAMPING, ///< Minimum damping at border
+    MDL_CTF_CRIT_PSDRADIALINTEGRAL, ///< Integral of the radial PSD
+    MDL_CTF_CRIT_FITTINGSCORE, ///< Score of the fitting
+    MDL_CTF_CRIT_FITTINGCORR13, ///< Correlation between the 1st and 3rd ring of the CTF
+    MDL_CTF_CRIT_PSDVARIANCE, ///< PSD variance
+    MDL_CTF_CRIT_PSDPCA1VARIANCE, ///< Variance in the first principal component of the PSDs
+    MDL_CTF_CRIT_PSDPCARUNSTEST, ///< Runs test on the projection of the PSD on the first principal component
+    MDL_CTF_CRIT_NORMALITY, ///< Normality test between histogram of micrography and gaussian distribution
     MDL_CTF_DOWNSAMPLE_PERFORMED, ///< Downsampling performed to estimate the CTF
-    MDL_CTF_XRAY_DIMENSIONS, // Size in pixels of the 3D PSF to be created (Xdim, Ydim, Zdim)
-    MDL_CTF_XRAY_LAMBDA, /// X-ray wavelength (nm)
+    MDL_CTF_DIMENSIONS, // Size in pixels of the 3D PSF to be created (Xdim, Ydim, Zdim)
+    MDL_CTF_LAMBDA, /// Wavelength (nm)
     MDL_CTF_XRAY_LENS_TYPE, ///Algorithm used to generate Xray PSF
-    MDL_MAGNIFICATION, /// Magnification of the X-ray microscope
     MDL_CTF_XRAY_OUTER_ZONE_WIDTH, /// Outermost zone width of the X-ray Fresnel lens (nm)
     MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
@@ -204,13 +215,13 @@ enum MDLabel
     MDL_IMGMD, ///< Name of Metadata file for all images (string)
     MDL_INTSCALE, ///< Intensity scale for an image
     MDL_ITER, ///< Current iteration number (int)
-    MDL_K, ///< //ctf definition K
     MDL_KERDENSOM_FUNCTIONAL, ///< Functional value (double)
     MDL_KERDENSOM_REGULARIZATION, ///< Regularization value (double)
     MDL_KERDENSOM_SIGMA, ///< Sigma value (double)
     MDL_KEYWORDS, ///< Keywords associated to this line, should be a single string block (do not use spaces as separators)
     MDL_KSTEST, ///<KS-test statistics
     MDL_LL, ///< contribution of an image to log-likelihood value
+    MDL_MAGNIFICATION, /// Magnification of microscope
     MDL_MAPTOPOLOGY, ///< Map topology (KerDenSOM, ...)
     MDL_MASK, ///< Name of a mask associated to image
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
@@ -238,16 +249,24 @@ enum MDLabel
     MDL_NOISE_COORD,  //Use instead of MDL_NOISE_PARTICLE_COORD in future
     MDL_NOISE_PIXEL_LEVEL, ///< Noise description for pixels' gray level (when projecting)
     MDL_ORDER, /// auxiliary label to be used as an index (long)
-    MDL_ORIGINX, ///< Origin for the image in the X axis (double)
-    MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
-    MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
-    MDL_PICKING_COLOR, ///< Color for particle picking
+    MDL_ORIGIN_X, ///< Origin for the image in the X axis (double)
+    MDL_ORIGIN_Y, ///< Origin for the image in the Y axis (double)
+    MDL_ORIGIN_Z, ///< Origin for the image in the Z axis (double)
+
+    MDL_PHANTOM_BGDENSITY, ///< Phantom background density (double)
+    MDL_PHANTOM_FEATURE_CENTER, ///< Center of the feature (vector double)
+    MDL_PHANTOM_FEATURE_DENSITY, ///< The density of the feature (double)
+    MDL_PHANTOM_FEATURE_OPERATION, ///< Operation in case of overlapping features (+,-)
+    MDL_PHANTOM_FEATURE_SPECIFIC, ///< Specific parameters for a feature (vector double)
+    MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
+    MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
+
+    MDL_COLOR, ///< Color for particle picking
     MDL_PICKING_FAMILY, ///< Family for particle picking
     MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-    MDL_POINTSASYMETRICUNIT, //number of points in asymmetric unit
 
     MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
     MDL_PRJ_ANGFILE,  ///< File for generated angles
@@ -269,6 +288,7 @@ enum MDLabel
     MDL_RANDOMSEED, ///< Seed for random number generator
     MDL_REF3D, ///< 3D Class to which the image belongs (int)
     MDL_REF, ///< Class to which the image belongs (int)
+    MDL_REF2, ///< Store a second class (int)
     MDL_REFMD, ///< Name of Metadata file for all references(string)
 
     MDL_RESOLUTION_DPR, ///<differential phase residual (double)
@@ -280,23 +300,19 @@ enum MDLabel
 
     MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATE_ORIGINAL, ///< original sampling rate in A/pixel (double)
-    MDL_SAMPLINGRATEX, ///< sampling rate in A/pixel (double)
-    MDL_SAMPLINGRATEY, ///< sampling rate in A/pixel (double)
-    MDL_SAMPLINGRATEZ, ///< sampling rate in A/pixel (double)
+    MDL_SAMPLINGRATE_X, ///< sampling rate in A/pixel (double)
+    MDL_SAMPLINGRATE_Y, ///< sampling rate in A/pixel (double)
+    MDL_SAMPLINGRATE_Z, ///< sampling rate in A/pixel (double)
 
     MDL_SCALE, ///< scaling factor for an image or volume (double)
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
-    MDL_SHIFTX, ///< Shift for the image in the X axis (double)
-    MDL_SHIFTY, ///< Shift for the image in the Y axis (double)
-    MDL_SHIFTZ, ///< Shift for the image in the Z axis (double)
-    MDL_SHIFT_CRYSTALX, ///< Shift for the image in the X axis (double) for crystals
-    MDL_SHIFT_CRYSTALY, ///< Shift for the image in the Y axis (double) for crystals
-    MDL_SHIFT_CRYSTALZ, ///< Shift for the image in the Z axis (double) for crystals
+    MDL_SHITF_X, ///< Shift for the image in the X axis (double)
+    MDL_SHITF_Y, ///< Shift for the image in the Y axis (double)
+    MDL_SHITF_Z, ///< Shift for the image in the Z axis (double)
     MDL_SIGMANOISE, ///< Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, ///< Standard deviation of the offsets in ML model
     MDL_SIGNALCHANGE, ///< Signal change for an image
-    MDL_SPHERICALABERRATION, ///<ctf definition azimutal angle
     MDL_STDDEV, ///<stdandard deviation value (double)
     MDL_SUM, ///< Sum of elements of a given type (double) [this is a genereic type do not use to transfer information to another program]
     MDL_SUMWEIGHT, ///< Sum of all weights in ML model
@@ -306,31 +322,17 @@ enum MDLabel
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_X, ///< X component (double)
-    MDL_XINT, ///< X component (int)
-    MDL_XINTTILT, ///< X component in tilted micrograph (int)
+    MDL_XCOOR, ///< X component (int)
+    MDL_XCOOR_TILT, ///< X component in tilted micrograph (int)
     MDL_XSIZE, ///< X size (int)
     MDL_Y, ///< Y component (double)
-    MDL_YINT, ///< Y component (int)
-    MDL_YINTTILT, ///< Y component in tilted micrograph (int)
+    MDL_YCOOR, ///< Y component (int)
+    MDL_YCOOR_TILT, ///< Y component in tilted micrograph (int)
     MDL_YSIZE, ///< Y size (int)
     MDL_Z, ///< Z component (double)
-    MDL_ZINT, ///< Z component (int)
+    MDL_ZCOOR, ///< Z component (int)
     MDL_ZSCORE, ///< Z Score (double)
     MDL_ZSIZE, ///< Z size (int)
-    MDL_PHANTOM_BGDENSITY, ///< Phantom background density (double)
-    MDL_PHANTOM_FEATURE_CENTER, ///< Center of the feature (vector double)
-    MDL_PHANTOM_FEATURE_DENSITY, ///< The density of the feature (double)
-    MDL_PHANTOM_FEATURE_OPERATION, ///< Operation in case of overlapping features (+,-)
-    MDL_PHANTOM_FEATURE_SPECIFIC, ///< Specific parameters for a feature (vector double)
-    MDL_PHANTOM_FEATURE_TYPE, ///< Type of the feature (Sphere, Blob, ...) (std::string)
-    MDL_PHANTOM_SCALE, ///< Number which will multiply all features (double)
-
-    MDL_2D_LATTICE_VECA,   /// < Lattice vector for projection (vector double)
-    MDL_2D_LATTICE_VECB,   /// < Lattice vector for projection (vector double)
-    MDL_CRYSTAL_DISAPPEAR_THRE,   /// < Disappearing threshold (double)
-    MDL_CRYSTAL_SHFILE,   /// < Shift file for crystal projection
-    MDL_ORTHOGONAL_PROJECTION,   /// <Orthogonal projection or not (bool)
-    MDL_CRYSTAL_PROJ,   /// < Have a crystal projection (boo)
 
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
@@ -643,8 +645,10 @@ private:
     static std::map<std::string, MDLabel> names;
     static MDLabelStaticInit initialization; //Just for initialization
 
-
-    static void addLabel(MDLabel label, MDLabelType type, const String &name, int tags=TAGLABEL_NOTAG, const String &name2 = "", const String &name3 = "");
+    /** Add predefined labels to be used in metadata */
+    static void addLabel(MDLabel label, MDLabelType type, const String &name, int tags=TAGLABEL_NOTAG);
+    /** Add an alias for an existing label */
+    static void addLabelAlias(MDLabel label, const String &alias);
 
     friend class MDLabelStaticInit;
 }
@@ -666,168 +670,267 @@ private:
         //The label MDL_OBJID is special and should not be used
         MDL::addLabel(MDL_OBJID, LABEL_SIZET, "objId");
 
-        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR_DOUBLE, "angleComparison", TAGLABEL_NOTAG, "psi2");
-        MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", TAGLABEL_NOTAG, "psi");
-        MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", TAGLABEL_NOTAG, "psi2");
-        MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", TAGLABEL_NOTAG, "rot");
-        MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", TAGLABEL_NOTAG, "rot2");
-        MDL::addLabel(MDL_ANGLETILT, LABEL_DOUBLE, "angleTilt", TAGLABEL_NOTAG, "tilt");
-        MDL::addLabel(MDL_ANGLETILT2, LABEL_DOUBLE, "angleTilt2", TAGLABEL_NOTAG, "tilt2");
-        MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY", TAGLABEL_NOTAG);
-        MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2", TAGLABEL_NOTAG);
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE1, LABEL_STRING, "associatedImage1", TAGLABEL_IMAGE);
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE2, LABEL_STRING, "associatedImage2", TAGLABEL_IMAGE);
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE3, LABEL_STRING, "associatedImage3", TAGLABEL_IMAGE);
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE4, LABEL_STRING, "associatedImage4", TAGLABEL_IMAGE);
-        MDL::addLabel(MDL_ASSOCIATED_IMAGE5, LABEL_STRING, "associatedImage5", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR_DOUBLE, "angle_comparison");
+        MDL::addLabelAlias(MDL_ANGLE_COMPARISON, "angleComparison"); //3.0
+
+        MDL::addLabel(MDL_ANGLE_PSI, LABEL_DOUBLE, "anglePsi");
+        MDL::addLabelAlias(MDL_ANGLE_PSI, "psi");
+        MDL::addLabel(MDL_ANGLE_PSI2, LABEL_DOUBLE, "anglePsi2");
+        MDL::addLabelAlias(MDL_ANGLE_PSI2, "psi2");
+        MDL::addLabel(MDL_ANGLE_ROT, LABEL_DOUBLE, "angleRot");
+        MDL::addLabelAlias(MDL_ANGLE_ROT, "rot");
+        MDL::addLabel(MDL_ANGLE_ROT2, LABEL_DOUBLE, "angleRot2");
+        MDL::addLabelAlias(MDL_ANGLE_ROT2, "rot2");
+        MDL::addLabel(MDL_ANGLE_TILT, LABEL_DOUBLE, "angleTilt");
+        MDL::addLabelAlias(MDL_ANGLE_TILT, "tilt");
+        MDL::addLabel(MDL_ANGLE_TILT2, LABEL_DOUBLE, "angleTilt2");
+        MDL::addLabelAlias(MDL_ANGLE_TILT2, "tilt2");
+        MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
+        MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY2");
+
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
-        MDL::addLabel(MDL_AZIMUTALANGLE, LABEL_DOUBLE, "azimutalAngle");
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
-        MDL::addLabel(MDL_BLOCK, LABEL_INT, "blockNumber");
-        MDL::addLabel(MDL_CELLX, LABEL_INT, "cellX");
-        MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
-        MDL::addLabel(MDL_CL2D_CHANGES, LABEL_INT, "cl2d_changes");
-        MDL::addLabel(MDL_CL2D_SIMILARITY, LABEL_DOUBLE, "cl2dsimilarity");
-        MDL::addLabel(MDL_CLASS_COUNT, LABEL_SIZET, "class_count");
-        MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR_DOUBLE, "ClassificationData");
-        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
-        MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "ClassificationDPR05");
-        MDL::addLabel(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, LABEL_DOUBLE, "ClassificationIntraclassDistance");
-        MDL::addLabel(MDL_CLASSIFICATION_FRC_05, LABEL_DOUBLE, "ClassificationFRC05");
+        MDL::addLabel(MDL_BLOCK_NUMBER, LABEL_INT, "blockNumber");
+
+        MDL::addLabel(MDL_CL2D_CHANGES, LABEL_INT, "cl2dChanges");
+        MDL::addLabel(MDL_CL2D_SIMILARITY, LABEL_DOUBLE, "cl2dSimilarity");
+        MDL::addLabel(MDL_CLASS_COUNT, LABEL_SIZET, "classCount");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR_DOUBLE, "classificationData");
+        MDL::addLabelAlias(MDL_CLASSIFICATION_DATA, "ClassificationData");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "classificationDatasize");
+        MDL::addLabelAlias(MDL_CLASSIFICATION_DATA_SIZE, "ClassificationDataSize");
+        MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "classificationDPR05");
+        MDL::addLabelAlias(MDL_CLASSIFICATION_DPR_05, "ClassificationDPR05");
+        MDL::addLabel(MDL_CLASSIFICATION_FRC_05, LABEL_DOUBLE, "classificationFRC05");
+        MDL::addLabelAlias(MDL_CLASSIFICATION_FRC_05, "ClassificationFRC05");
+        MDL::addLabel(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, LABEL_DOUBLE, "classificationIntraclassDistance");
+        MDL::addLabelAlias(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, "ClassificationIntraclassDistance");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
-        MDL::addLabel(MDL_COUNT, LABEL_SIZET, "count");
         MDL::addLabel(MDL_COUNT2, LABEL_SIZET, "count2");
-        MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams", TAGLABEL_TEXTFILE);
-        MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel", TAGLABEL_CTFPARAM);
-        MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2", TAGLABEL_CTFPARAM);
-        MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "CTF_Sampling_rate");
-        MDL::addLabel(MDL_CTF_SAMPLING_RATE_Z, LABEL_DOUBLE, "CTF_Sampling_rate_z");
-        MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "CTF_Voltage");
-        MDL::addLabel(MDL_CTF_DEFOCUSA, LABEL_DOUBLE, "CTF_Defocus_A");//average defocus
-        MDL::addLabel(MDL_CTF_DEFOCUSU, LABEL_DOUBLE, "CTF_Defocus_U");
-        MDL::addLabel(MDL_CTF_DEFOCUSV, LABEL_DOUBLE, "CTF_Defocus_V");
-        MDL::addLabel(MDL_CTF_DEFOCUS_ANGLE, LABEL_DOUBLE, "CTF_Defocus_angle");
-        MDL::addLabel(MDL_CTF_CS, LABEL_DOUBLE, "CTF_Spherical_aberration");
-        MDL::addLabel(MDL_CTF_CA, LABEL_DOUBLE, "CTF_Chromatic_aberration");
-        MDL::addLabel(MDL_CTF_GROUP, LABEL_INT, "CTFGroup");
-        MDL::addLabel(MDL_CTF_ENERGY_LOSS, LABEL_DOUBLE, "CTF_Energy_loss");
-        MDL::addLabel(MDL_CTF_LENS_STABILITY, LABEL_DOUBLE, "CTF_Lens_stability");
-        MDL::addLabel(MDL_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "CTF_Convergence_cone");
-        MDL::addLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT, LABEL_DOUBLE, "CTF_Longitudinal_displacement");
-        MDL::addLabel(MDL_CTF_TRANSVERSAL_DISPLACEMENT, LABEL_DOUBLE, "CTF_Transversal_displacement");
-        MDL::addLabel(MDL_CTF_Q0, LABEL_DOUBLE, "CTF_Q0");
-        MDL::addLabel(MDL_CTF_K, LABEL_DOUBLE, "CTF_K");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN_K, LABEL_DOUBLE, "CTFBG_Gaussian_K");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN_SIGMAU, LABEL_DOUBLE, "CTFBG_Gaussian_SigmaU");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN_SIGMAV, LABEL_DOUBLE, "CTFBG_Gaussian_SigmaV");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN_CU, LABEL_DOUBLE, "CTFBG_Gaussian_CU");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN_CV, LABEL_DOUBLE, "CTFBG_Gaussian_CV");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN_ANGLE, LABEL_DOUBLE, "CTFBG_Gaussian_Angle");
-        MDL::addLabel(MDL_CTFBG_SQRT_K, LABEL_DOUBLE, "CTFBG_Sqrt_K");
-        MDL::addLabel(MDL_CTFBG_SQRT_U, LABEL_DOUBLE, "CTFBG_Sqrt_U");
-        MDL::addLabel(MDL_CTFBG_SQRT_V, LABEL_DOUBLE, "CTFBG_Sqrt_V");
-        MDL::addLabel(MDL_CTFBG_SQRT_ANGLE, LABEL_DOUBLE, "CTFBG_Sqrt_Angle");
-        MDL::addLabel(MDL_CTFBG_BASELINE, LABEL_DOUBLE, "CTFBG_Baseline");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_K, LABEL_DOUBLE, "CTFBG_Gaussian2_K");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_SIGMAU, LABEL_DOUBLE, "CTFBG_Gaussian2_SigmaU");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_SIGMAV, LABEL_DOUBLE, "CTFBG_Gaussian2_SigmaV");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CU, LABEL_DOUBLE, "CTFBG_Gaussian2_CU");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CV, LABEL_DOUBLE, "CTFBG_Gaussian2_CV");
-        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "CTFBG_Gaussian2_Angle");
-        MDL::addLabel(MDL_CTF_CRITERION_PSDCORRELATION90, LABEL_DOUBLE, "CTFCrit_psdcorr90");
-        MDL::addLabel(MDL_CTF_CRITERION_FIRSTZERORATIO, LABEL_DOUBLE, "CTFCrit_firstZeroRatio");
-        MDL::addLabel(MDL_CTF_CRITERION_FIRSTZEROAVG, LABEL_DOUBLE, "CTFCrit_firstZero");
-        MDL::addLabel(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "CTFCrit_disagree");
-        MDL::addLabel(MDL_CTF_CRITERION_DAMPING, LABEL_DOUBLE, "CTFCrit_damping");
-        MDL::addLabel(MDL_CTF_CRITERION_PSDRADIALINTEGRAL, LABEL_DOUBLE, "CTFCrit_psdint");
-        MDL::addLabel(MDL_CTF_CRITERION_FITTINGSCORE, LABEL_DOUBLE, "CTFCrit_Fitting");
-        MDL::addLabel(MDL_CTF_CRITERION_FITTINGCORR13, LABEL_DOUBLE, "CTFCrit_Corr13");
-        MDL::addLabel(MDL_CTF_CRITERION_PSDVARIANCE, LABEL_DOUBLE, "CTFCrit_PSDStdQ");
-        MDL::addLabel(MDL_CTF_CRITERION_PSDPCA1VARIANCE, LABEL_DOUBLE, "CTFCrit_PSDPCA1");
-        MDL::addLabel(MDL_CTF_CRITERION_PSDPCARUNSTEST, LABEL_DOUBLE, "CTFCrit_PSDPCARuns");
-        MDL::addLabel(MDL_CTF_CRITERION_NORMALITY, LABEL_DOUBLE, "CTFCrit_Normality");
-        MDL::addLabel(MDL_CTF_DOWNSAMPLE_PERFORMED, LABEL_DOUBLE, "CTFDownsampleFactor");
+        MDL::addLabel(MDL_COUNT, LABEL_SIZET, "count");
 
-        MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR_DOUBLE, "CTF_Xray_dimensions");
-        MDL::addLabel(MDL_CTF_XRAY_LAMBDA, LABEL_DOUBLE, "CTF_Xray_lambda");
-        MDL::addLabel(MDL_CTF_XRAY_LENS_TYPE, LABEL_STRING, "CTF_Xray_lens_type");
-        MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "CTF_Xray_OuterZoneWidth");
-        MDL::addLabel(MDL_CTF_XRAY_ZONES_NUMBER, LABEL_DOUBLE, "CTF_Xray_ZonesN");
+        MDL::addLabel(MDL_CRYSTAL_CELLX, LABEL_INT, "crystalCellx");
+        MDL::addLabel(MDL_CRYSTAL_CELLY, LABEL_INT, "crystalCelly");
+        MDL::addLabel(MDL_CRYSTAL_DISAPPEAR_THRE, LABEL_DOUBLE, "crystalDisthresh");
+        MDL::addLabel(MDL_CRYSTAL_LATTICE_A, LABEL_VECTOR_DOUBLE, "crystalLatticeA");
+        MDL::addLabel(MDL_CRYSTAL_LATTICE_B, LABEL_VECTOR_DOUBLE, "crystalLatticeB");
+        MDL::addLabel(MDL_CRYSTAL_ORTHO_PRJ, LABEL_BOOL, "crystalOrthoProj");
+        MDL::addLabel(MDL_CRYSTAL_PROJ, LABEL_BOOL, "crystalProj");
+        MDL::addLabel(MDL_CRYSTAL_POINTSASYMETRICUNIT, LABEL_SIZET, "crystalPointsAsymmetricUnit");
+        MDL::addLabel(MDL_CRYSTAL_SHFILE, LABEL_STRING, "crystalShiftFile");
+        MDL::addLabel(MDL_CRYSTAL_SHIFTX, LABEL_DOUBLE, "crystalShiftX");
+        MDL::addLabel(MDL_CRYSTAL_SHIFTY, LABEL_DOUBLE, "crystalShiftY");
+        MDL::addLabel(MDL_CRYSTAL_SHIFTZ, LABEL_DOUBLE, "crystalShiftZ");
+
+        MDL::addLabel(MDL_CTF_BG_BASELINE, LABEL_DOUBLE, "ctfBgBaseline");
+        MDL::addLabelAlias(MDL_CTF_BG_BASELINE, "CTFBG_Baseline");//3.0
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
+
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CU, LABEL_DOUBLE, "ctfBgGaussian2CU");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CV, LABEL_DOUBLE, "ctfBgGaussian2CV");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_K, LABEL_DOUBLE, "ctfBgGaussian2K");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_SIGMAU, LABEL_DOUBLE, "ctfBgGaussian2SigmaU");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_SIGMAV, LABEL_DOUBLE, "ctfBgGaussian2SigmaV");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN_ANGLE, LABEL_DOUBLE, "ctfBgGaussianAngle");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN_CU, LABEL_DOUBLE, "ctfBgGaussianCU");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN_CV, LABEL_DOUBLE, "ctfBgGaussianCV");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN_K, LABEL_DOUBLE, "ctfBgGaussianK");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN_SIGMAU, LABEL_DOUBLE, "ctfBgGaussianSigmaU");
+        MDL::addLabel(MDL_CTF_BG_GAUSSIAN_SIGMAV, LABEL_DOUBLE, "ctfBgGaussianSigmaV");
+
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_CU, "CTFBG_Gaussian2_CU");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_CV, "CTFBG_Gaussian2_CV");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_K, "CTFBG_Gaussian2_K");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_SIGMAU, "CTFBG_Gaussian2_SigmaU");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_SIGMAV, "CTFBG_Gaussian2_SigmaV");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN_ANGLE, "CTFBG_Gaussian_Angle");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN_CU, "CTFBG_Gaussian_CU");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN_CV, "CTFBG_Gaussian_CV");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN_K, "CTFBG_Gaussian_K");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN_SIGMAU, "CTFBG_Gaussian_SigmaU");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN_SIGMAV, "CTFBG_Gaussian_SigmaV");//3.0
+
+        MDL::addLabel(MDL_CTF_BG_SQRT_ANGLE, LABEL_DOUBLE, "ctfBgSqrtAngle");
+        MDL::addLabel(MDL_CTF_BG_SQRT_K, LABEL_DOUBLE, "ctfBgSqrtK");
+        MDL::addLabel(MDL_CTF_BG_SQRT_U, LABEL_DOUBLE, "ctfBgSqrtU");
+        MDL::addLabel(MDL_CTF_BG_SQRT_V, LABEL_DOUBLE, "ctfBgSqrtV");
+        MDL::addLabelAlias(MDL_CTF_BG_SQRT_ANGLE, "CTFBG_Sqrt_Angle");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_SQRT_K, "CTFBG_Sqrt_K");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_SQRT_U, "CTFBG_Sqrt_U");//3.0
+        MDL::addLabelAlias(MDL_CTF_BG_SQRT_V, "CTFBG_Sqrt_V");  //3.0
+
+        MDL::addLabel(MDL_CTF_CA, LABEL_DOUBLE, "ctfChromaticAberration");
+        MDL::addLabel(MDL_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "ctfConvergenceCone");
+        MDL::addLabel(MDL_CTF_CRIT_DAMPING, LABEL_DOUBLE, "ctfCritDamping");
+        MDL::addLabel(MDL_CTF_CRIT_FIRSTZEROAVG, LABEL_DOUBLE, "ctfCritFirstZero");
+        MDL::addLabel(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "ctfCritDisagree");
+        MDL::addLabel(MDL_CTF_CRIT_FIRSTZERORATIO, LABEL_DOUBLE, "ctfCritfirstZeroRatio");
+        MDL::addLabel(MDL_CTF_CRIT_FITTINGCORR13, LABEL_DOUBLE, "ctfCritCorr13");
+        MDL::addLabel(MDL_CTF_CRIT_FITTINGSCORE, LABEL_DOUBLE, "ctfCritFitting");
+        MDL::addLabel(MDL_CTF_CRIT_NORMALITY, LABEL_DOUBLE, "ctfCritNormality");
+        MDL::addLabel(MDL_CTF_CRIT_PSDCORRELATION90, LABEL_DOUBLE, "ctfCritPsdCorr90");
+        MDL::addLabel(MDL_CTF_CRIT_PSDPCA1VARIANCE, LABEL_DOUBLE, "ctfCritPsdPCA1");
+        MDL::addLabel(MDL_CTF_CRIT_PSDPCARUNSTEST, LABEL_DOUBLE, "ctfCritPsdPCARuns");
+        MDL::addLabel(MDL_CTF_CRIT_PSDRADIALINTEGRAL, LABEL_DOUBLE, "ctfCritPsdInt");
+        MDL::addLabel(MDL_CTF_CRIT_PSDVARIANCE, LABEL_DOUBLE, "ctfCritPsdStdQ");
+        MDL::addLabel(MDL_CTF_CS, LABEL_DOUBLE, "ctfSphericalAberration");
+        MDL::addLabel(MDL_CTF_DEFOCUSA, LABEL_DOUBLE, "ctfDefocusA");//average defocus
+        MDL::addLabel(MDL_CTF_DEFOCUS_ANGLE, LABEL_DOUBLE, "ctfDefocusAngle");
+        MDL::addLabel(MDL_CTF_DEFOCUSU, LABEL_DOUBLE, "ctfDefocusU");
+        MDL::addLabel(MDL_CTF_DEFOCUSV, LABEL_DOUBLE, "ctfDefocusV");
+        MDL::addLabel(MDL_CTF_DIMENSIONS, LABEL_VECTOR_DOUBLE, "ctfDimensions");
+        MDL::addLabel(MDL_CTF_DOWNSAMPLE_PERFORMED, LABEL_DOUBLE, "CtfDownsampleFactor");
+        MDL::addLabel(MDL_CTF_ENERGY_LOSS, LABEL_DOUBLE, "ctfEnergyLoss");
+        MDL::addLabel(MDL_CTF_GROUP, LABEL_INT, "ctfGroup");
+        MDL::addLabel(MDL_CTF_INPUTPARAMS, LABEL_STRING, "ctfInputParams", TAGLABEL_TEXTFILE);
+        MDL::addLabel(MDL_CTF_K, LABEL_DOUBLE, "ctfK");
+        MDL::addLabel(MDL_CTF_LAMBDA, LABEL_DOUBLE, "ctfLambda");
+        MDL::addLabel(MDL_CTF_LENS_STABILITY, LABEL_DOUBLE, "ctfLensStability");
+        MDL::addLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT, LABEL_DOUBLE, "ctfLongitudinalDisplacement");
+        MDL::addLabel(MDL_CTF_MODEL2, LABEL_STRING, "ctfModel2", TAGLABEL_CTFPARAM);
+        MDL::addLabel(MDL_CTF_MODEL, LABEL_STRING, "ctfModel", TAGLABEL_CTFPARAM);
+        MDL::addLabel(MDL_CTF_Q0, LABEL_DOUBLE, "ctfQ0");
+        MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "ctfSamplingRate");
+        MDL::addLabel(MDL_CTF_SAMPLING_RATE_Z, LABEL_DOUBLE, "ctfSamplingRateZ");
+        MDL::addLabel(MDL_CTF_TRANSVERSAL_DISPLACEMENT, LABEL_DOUBLE, "ctfTransversalDisplacement");
+        MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "ctfVoltage");
+        MDL::addLabel(MDL_CTF_XRAY_LENS_TYPE, LABEL_STRING, "ctfXrayLensType");
+        MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "ctfXrayOuterZoneWidth");
+        MDL::addLabel(MDL_CTF_XRAY_ZONES_NUMBER, LABEL_DOUBLE, "ctfXrayZonesN");
+
+        MDL::addLabelAlias(MDL_CTF_CA, "CTF_Chromatic_aberration"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CONVERGENCE_CONE, "CTF_Convergence_cone"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_DAMPING, "CTFCrit_damping"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_FIRSTZEROAVG, "CTFCrit_firstZero"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, "CTFCrit_disagree"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_FIRSTZERORATIO, "CTFCrit_firstZeroRatio"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_FITTINGCORR13, "CTFCrit_Corr13"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_FITTINGSCORE, "CTFCrit_Fitting"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_NORMALITY, "CTFCrit_Normality"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_PSDCORRELATION90, "CTFCrit_psdcorr90"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_PSDPCA1VARIANCE, "CTFCrit_PSDPCA1"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_PSDPCARUNSTEST, "CTFCrit_PSDPCARuns"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_PSDRADIALINTEGRAL, "CTFCrit_psdint"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CRIT_PSDVARIANCE, "CTFCrit_PSDStdQ"); //3.0
+        MDL::addLabelAlias(MDL_CTF_CS, "CTF_Spherical_aberration"); //3.0
+        MDL::addLabelAlias(MDL_CTF_DEFOCUSA, "CTF_Defocus_A"); //3.0//average defocus
+        MDL::addLabelAlias(MDL_CTF_DEFOCUS_ANGLE, "CTF_Defocus_angle"); //3.0
+        MDL::addLabelAlias(MDL_CTF_DEFOCUSU, "CTF_Defocus_U"); //3.0
+        MDL::addLabelAlias(MDL_CTF_DEFOCUSV, "CTF_Defocus_V"); //3.0
+        MDL::addLabelAlias(MDL_CTF_DIMENSIONS, "CTF_Xray_dimensions"); //3.0
+        MDL::addLabelAlias(MDL_CTF_DOWNSAMPLE_PERFORMED, "CTFDownsampleFactor"); //3.0
+        MDL::addLabelAlias(MDL_CTF_ENERGY_LOSS, "CTF_Energy_loss"); //3.0
+        MDL::addLabelAlias(MDL_CTF_GROUP, "CTFGroup"); //3.0
+        MDL::addLabelAlias(MDL_CTF_INPUTPARAMS, "CTFInputParams"); //3.0
+        MDL::addLabelAlias(MDL_CTF_K, "CTF_K"); //3.0
+        MDL::addLabelAlias(MDL_CTF_LAMBDA, "CTF_Xray_lambda"); //3.0
+        MDL::addLabelAlias(MDL_CTF_LENS_STABILITY, "CTF_Lens_stability"); //3.0
+        MDL::addLabelAlias(MDL_CTF_LONGITUDINAL_DISPLACEMENT, "CTF_Longitudinal_displacement"); //3.0
+        MDL::addLabelAlias(MDL_CTF_MODEL2, "CTFModel2"); //3.0
+        MDL::addLabelAlias(MDL_CTF_MODEL, "CTFModel"); //3.0
+        MDL::addLabelAlias(MDL_CTF_Q0, "CTF_Q0"); //3.0
+        MDL::addLabelAlias(MDL_CTF_SAMPLING_RATE, "CTF_Sampling_rate"); //3.0
+        MDL::addLabelAlias(MDL_CTF_SAMPLING_RATE_Z, "CTF_Sampling_rate_z"); //3.0
+        MDL::addLabelAlias(MDL_CTF_TRANSVERSAL_DISPLACEMENT, "CTF_Transversal_displacement"); //3.0
+        MDL::addLabelAlias(MDL_CTF_VOLTAGE, "CTF_Voltage"); //3.0
+        MDL::addLabelAlias(MDL_CTF_XRAY_LENS_TYPE, "CTF_Xray_lens_type"); //3.0
+        MDL::addLabelAlias(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, "CTF_Xray_OuterZoneWidth"); //3.0
+        MDL::addLabelAlias(MDL_CTF_XRAY_ZONES_NUMBER, "CTF_Xray_ZonesN"); //3.0
+
+
 
         MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
+        MDL::addLabel(MDL_DIMENSIONS_2D, LABEL_VECTOR_DOUBLE, "dimensions2D");
+        MDL::addLabel(MDL_DIMENSIONS_3D, LABEL_VECTOR_DOUBLE, "dimensions3D");
         MDL::addLabel(MDL_DIRECTION, LABEL_VECTOR_DOUBLE, "direction");
+        MDL::addLabel(MDL_DM3_IDTAG, LABEL_INT, "dm3IdTag");
+        MDL::addLabel(MDL_DM3_NODEID, LABEL_INT, "dm3NodeId");
+        MDL::addLabel(MDL_DM3_NUMBER_TYPE, LABEL_INT, "dm3NumberType");
+        MDL::addLabel(MDL_DM3_PARENTID, LABEL_INT, "dm3ParentID");
+        MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "dm3Size");
+        MDL::addLabel(MDL_DM3_TAGCLASS, LABEL_STRING, "dm3TagClass");
+        MDL::addLabel(MDL_DM3_TAGNAME, LABEL_STRING, "dm3TagName");
+        MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR_DOUBLE, "dm3Value");
 
-        MDL::addLabel(MDL_DM3_IDTAG, LABEL_INT, "IdTag");
-        MDL::addLabel(MDL_DM3_NODEID, LABEL_INT, "NodeID");
-        MDL::addLabel(MDL_DM3_NUMBER_TYPE, LABEL_INT, "Number_Type");
-        MDL::addLabel(MDL_DM3_PARENTID, LABEL_INT, "ParentID");
-        MDL::addLabel(MDL_DM3_TAGCLASS, LABEL_STRING, "Tag_Class");
-        MDL::addLabel(MDL_DM3_TAGNAME, LABEL_STRING, "TagName");
-        MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "Size");
-        MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR_DOUBLE, "Value");
-
-        MDL::addLabel(MDL_EMX_MICROGRAPH_URL, LABEL_STRING, "emx_micrograph____url");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_SAMPLING, LABEL_DOUBLE, "emx_micrograph____samplingRate");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,LABEL_DOUBLE,"emx_micrograph____amplitude_contrast");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_micrograph____astigmatism_angle");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_CS, LABEL_DOUBLE,"emx_micrograph____Cs");
         MDL::addLabel(MDL_EMX_MICROGRAPH_DEFOCUSU, LABEL_DOUBLE, "emx_micrograph____defocus_U");
         MDL::addLabel(MDL_EMX_MICROGRAPH_DEFOCUSV, LABEL_DOUBLE, "emx_micrograph____defocus_V");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_micrograph____astigmatism_angle");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_VOLTAGE, LABEL_DOUBLE, "emx_micrograph____voltage");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_CS, LABEL_DOUBLE,"emx_micrograph____Cs");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,LABEL_DOUBLE,"emx_micrograph____amplitude_contrast");
         MDL::addLabel(MDL_EMX_MICROGRAPH_FOM, LABEL_DOUBLE,      "emx_micrograph____FOM");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_SAMPLING, LABEL_DOUBLE, "emx_micrograph____samplingRate");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_URL, LABEL_STRING, "emx_micrograph____url");
+        MDL::addLabel(MDL_EMX_MICROGRAPH_VOLTAGE, LABEL_DOUBLE, "emx_micrograph____voltage");
+        MDL::addLabel(MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_particle____astigmatism_angle");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x");
         MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y");
-
-        MDL::addLabel(MDL_EMX_PARTICLE_URL,    LABEL_STRING, "emx_particle____url", TAGLABEL_NOTAG,"emx_particle.url");
-        MDL::addLabel(MDL_EMX_PARTICLE_MICROGRAPH_URL, LABEL_STRING, "emx_particle____micrograph_url", TAGLABEL_NOTAG,"emx_particle.url");
         MDL::addLabel(MDL_EMX_PARTICLE_DEFOCUSU, LABEL_DOUBLE, "emx_particle____defocus_U");
         MDL::addLabel(MDL_EMX_PARTICLE_DEFOCUSV, LABEL_DOUBLE, "emx_particle____defocus_V");
-        MDL::addLabel(MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_particle____astigmatism_angle");
-
-        MDL::addLabel(MDL_EMX_P_PARTICLE_CLASS_ID, LABEL_STRING, "emx_p_particle____class_id");
+        MDL::addLabel(MDL_EMX_PARTICLE_MICROGRAPH_URL, LABEL_STRING, "emx_particle____micrograph_url");
+        MDL::addLabelAlias(MDL_EMX_PARTICLE_MICROGRAPH_URL, "emx_micrograph.url");
+        MDL::addLabel(MDL_EMX_PARTICLE_URL, LABEL_STRING, "emx_particle____url");
+        MDL::addLabelAlias(MDL_EMX_PARTICLE_URL, "emx_particle.url");
         MDL::addLabel(MDL_EMX_P_PARTICLE_ACTIVE_FLAG, LABEL_BOOL, "emx_p_particle____active_flag");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_CLASS_ID, LABEL_STRING, "emx_p_particle____class_id");
         MDL::addLabel(MDL_EMX_P_PARTICLE_FOM, LABEL_DOUBLE, "emx_p_particle____fom");
         MDL::addLabel(MDL_EMX_P_PARTICLE_PARTICLE_URL, LABEL_STRING, "emx_p_particle____particle_url");
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_1");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_1");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_1");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_x");
-
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_2");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_2");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_2");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_y");
-
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_3");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_3");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_3");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_z");
-
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_4");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_1");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_2");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_3");
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_4");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_1");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_2");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_3");
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_4");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_x");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_y");
+        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_z");
         MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_4_4");
 
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
-        MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", TAGLABEL_NOTAG, "Flip");
+        MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip");
+        MDL::addLabelAlias(MDL_FLIP, "Flip");
         MDL::addLabel(MDL_FOM, LABEL_DOUBLE, "fom");
         MDL::addLabel(MDL_IDX, LABEL_SIZET, "index");
+        MDL::addLabel(MDL_IMAGE1, LABEL_STRING, "image1", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE2, LABEL_STRING, "image2", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE3, LABEL_STRING, "image3", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE4, LABEL_STRING, "image4", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE5, LABEL_STRING, "image5", TAGLABEL_IMAGE);
+
+        MDL::addLabelAlias(MDL_IMAGE1, "associatedImage1"); //3.0
+        MDL::addLabelAlias(MDL_IMAGE2, "associatedImage2"); //3.0
+        MDL::addLabelAlias(MDL_IMAGE3, "associatedImage3"); //3.0
+        MDL::addLabelAlias(MDL_IMAGE4, "associatedImage4"); //3.0
+        MDL::addLabelAlias(MDL_IMAGE5, "associatedImage5"); //3.0
+
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image", TAGLABEL_IMAGE);
-        MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "original_image", TAGLABEL_IMAGE);
-        MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "tilted_image", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "imageOriginal", TAGLABEL_IMAGE);
+        MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "imageTilted", TAGLABEL_IMAGE);
+
+        MDL::addLabelAlias(MDL_IMAGE_ORIGINAL, "original_image"); //3.0
+        MDL::addLabelAlias(MDL_IMAGE_TILTED, "tilted_image"); //3.0
+
         MDL::addLabel(MDL_IMGMD, LABEL_STRING, "imageMetaData", TAGLABEL_METADATA);
         MDL::addLabel(MDL_INTSCALE, LABEL_DOUBLE, "intScale");
         MDL::addLabel(MDL_ITER, LABEL_INT, "iterationNumber");
-        MDL::addLabel(MDL_K, LABEL_DOUBLE, "K");
-        MDL::addLabel(MDL_KERDENSOM_FUNCTIONAL, LABEL_DOUBLE, "KerDenSOM_Functional");
-        MDL::addLabel(MDL_KERDENSOM_REGULARIZATION, LABEL_DOUBLE, "KerDenSOM_Regularization");
-        MDL::addLabel(MDL_KERDENSOM_SIGMA, LABEL_DOUBLE, "KerDenSOM_Sigma");
-        MDL::addLabel(MDL_KEYWORDS, LABEL_STRING, "Keywords");
-        MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "KStest");
-        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood", TAGLABEL_NOTAG, "LL");
-        MDL::addLabel(MDL_MAGNIFICATION, LABEL_DOUBLE, "Magnification");
+
+        MDL::addLabel(MDL_KERDENSOM_FUNCTIONAL, LABEL_DOUBLE, "kerdensomFunctional");
+        MDL::addLabel(MDL_KERDENSOM_REGULARIZATION, LABEL_DOUBLE, "kerdensomRegularization");
+        MDL::addLabel(MDL_KERDENSOM_SIGMA, LABEL_DOUBLE, "kerdensomSigma");
+
+        MDL::addLabel(MDL_KEYWORDS, LABEL_STRING, "keywords");
+        MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "kstest");
+        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood");
+        MDL::addLabelAlias(MDL_LL, "LL");
+        MDL::addLabel(MDL_MAGNIFICATION, LABEL_DOUBLE, "magnification");
         MDL::addLabel(MDL_MAPTOPOLOGY, LABEL_STRING, "mapTopology");
         MDL::addLabel(MDL_MASK, LABEL_STRING, "mask", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
@@ -838,120 +941,162 @@ private:
         MDL::addLabel(MDL_MICROGRAPH_TILTED_ORIGINAL, LABEL_STRING, "micrographTiltedOriginal", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MIN, LABEL_DOUBLE, "min");
         MDL::addLabel(MDL_MIRRORFRAC, LABEL_DOUBLE, "mirrorFraction");
-        MDL::addLabel(MDL_MISSINGREGION_NR, LABEL_INT, "missingRegionNumber", TAGLABEL_NOTAG, "Wedge");
-        MDL::addLabel(MDL_MISSINGREGION_TYPE, LABEL_STRING, "missingRegionType");
+        MDL::addLabel(MDL_MISSINGREGION_NR, LABEL_INT, "missingRegionNumber");
+        MDL::addLabelAlias(MDL_MISSINGREGION_NR, "Wedge");
         MDL::addLabel(MDL_MISSINGREGION_THX0, LABEL_DOUBLE, "missingRegionThetaX0");
         MDL::addLabel(MDL_MISSINGREGION_THXF, LABEL_DOUBLE, "missingRegionThetaXF");
         MDL::addLabel(MDL_MISSINGREGION_THY0, LABEL_DOUBLE, "missingRegionThetaY0");
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
+        MDL::addLabel(MDL_MISSINGREGION_TYPE, LABEL_STRING, "missingRegionType");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
-        MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_SIZET, "neighbors");
-        MDL::addLabel(MDL_NEIGHBOR, LABEL_SIZET, "neighbor");
         MDL::addLabel(MDL_NEIGHBORHOOD_RADIUS, LABEL_DOUBLE, "neighborhoodRadius");
-        MDL::addLabel(MDL_NMA, LABEL_VECTOR_DOUBLE, "NMADisplacements");
-        MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile", TAGLABEL_TEXTFILE);
+        MDL::addLabel(MDL_NEIGHBOR, LABEL_SIZET, "neighbor");
+        MDL::addLabel(MDL_NEIGHBORS, LABEL_VECTOR_SIZET, "neighbors");
+        MDL::addLabel(MDL_NMA, LABEL_VECTOR_DOUBLE, "nmaDisplacements");
+        MDL::addLabelAlias(MDL_NMA, "NMADisplacements");//3.0
+        MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "nmaModefile", TAGLABEL_TEXTFILE);
+        MDL::addLabelAlias(MDL_NMA_MODEFILE, "NMAModefile");//3.0
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR_DOUBLE, "noiseAngles");
         MDL::addLabel(MDL_NOISE_COORD, LABEL_VECTOR_DOUBLE, "noiseCoord");
         MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR_DOUBLE, "noiseParticleCoord");
         MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR_DOUBLE, "noisePixelLevel");
         MDL::addLabel(MDL_ORDER, LABEL_SIZET, "order_");
-        MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
-        MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
-        MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
-        MDL::addLabel(MDL_PICKING_FAMILY, LABEL_STRING, "family");
-        MDL::addLabel(MDL_PICKING_COLOR, LABEL_INT, "color");
+        MDL::addLabel(MDL_ORIGIN_X, LABEL_DOUBLE, "originX");
+        MDL::addLabel(MDL_ORIGIN_Y, LABEL_DOUBLE, "originY");
+        MDL::addLabel(MDL_ORIGIN_Z, LABEL_DOUBLE, "originZ");
+        MDL::addLabel(MDL_PHANTOM_BGDENSITY, LABEL_DOUBLE, "phantomBGDensity");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_CENTER, LABEL_VECTOR_DOUBLE, "featureCenter");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_DENSITY, LABEL_DOUBLE, "featureDensity");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_OPERATION, LABEL_STRING, "featureOperation");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
+        MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
+        MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
+        MDL::addLabel(MDL_PICKING_FAMILY, LABEL_STRING, "pickingFamily");
+        MDL::addLabelAlias(MDL_PICKING_FAMILY, "family");//3.0
+        MDL::addLabel(MDL_PICKING_FAMILY_STATE, LABEL_STRING, "pickingFamilyState");
+        MDL::addLabelAlias(MDL_PICKING_FAMILY_STATE, "family_state");//3.0
+        MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "pickingMicrographFamilyState");
+        MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_FAMILY_STATE, "micrograph_family_state");//3.0
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
-        MDL::addLabel(MDL_PICKING_FAMILY_STATE, LABEL_STRING, "family_state");
-        MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "micrograph_family_state");
-        MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", TAGLABEL_NOTAG, "Pmax", "sumP");
-        MDL::addLabel(MDL_POINTSASYMETRICUNIT, LABEL_SIZET, "pointsasymmetricunit");
+        MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
+        MDL::addLabelAlias(MDL_PMAX, "Pmax");
+        MDL::addLabelAlias(MDL_PMAX, "sumP");
+
+        MDL::addLabel(MDL_PRJ_ANGFILE, LABEL_STRING, "projAngleFile");
+        MDL::addLabelAlias(MDL_PRJ_ANGFILE, "angleFile");//3.0
         MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR_DOUBLE, "projDimensions");
+        MDL::addLabel(MDL_PRJ_PSI_NOISE, LABEL_VECTOR_DOUBLE, "projPsiNoise");
+        MDL::addLabel(MDL_PRJ_PSI_RANDSTR, LABEL_STRING, "projPsiRandomness");
+        MDL::addLabel(MDL_PRJ_PSI_RANGE, LABEL_VECTOR_DOUBLE, "projPsiRange");
+        MDL::addLabel(MDL_PRJ_ROT_NOISE, LABEL_VECTOR_DOUBLE, "projRotNoise");
+        MDL::addLabel(MDL_PRJ_ROT_RANDSTR, LABEL_STRING, "projRotRandomness");
+        MDL::addLabel(MDL_PRJ_ROT_RANGE, LABEL_VECTOR_DOUBLE, "projRotRange");
+        MDL::addLabel(MDL_PRJ_TILT_NOISE, LABEL_VECTOR_DOUBLE, "projTiltNoise");
+        MDL::addLabel(MDL_PRJ_TILT_RANDSTR, LABEL_STRING, "projTiltRandomness");
         MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR_DOUBLE, "projTiltRange");
         MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume", TAGLABEL_VOLUME);
-        MDL::addLabel(MDL_DIMENSIONS_3D, LABEL_VECTOR_DOUBLE, "dimensions3D");
-        MDL::addLabel(MDL_DIMENSIONS_2D, LABEL_VECTOR_DOUBLE, "dimensions2D");
-        MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum", TAGLABEL_PSD);
-        MDL::addLabel(MDL_PSD_ENHANCED, LABEL_STRING, "enhancedPowerSpectrum", TAGLABEL_IMAGE);
+
+        MDL::addLabel(MDL_PSD_ENHANCED, LABEL_STRING, "psdEnhanced", TAGLABEL_IMAGE);
+        MDL::addLabelAlias(MDL_PSD_ENHANCED, "enhancedPowerSpectrum");//3.0
+        MDL::addLabel(MDL_PSD, LABEL_STRING, "psd", TAGLABEL_PSD);
+        MDL::addLabelAlias(MDL_PSD, "powerSpectrum");//3.0
         MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
+        MDL::addLabel(MDL_REF2, LABEL_INT, "ref2");
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
-        MDL::addLabel(MDL_REF, LABEL_INT, "ref", TAGLABEL_NOTAG, "Ref");
+        MDL::addLabel(MDL_REF, LABEL_INT, "ref");
+        MDL::addLabelAlias(MDL_REF, "Ref");
         MDL::addLabel(MDL_REFMD, LABEL_STRING, "referenceMetaData", TAGLABEL_METADATA);
-        MDL::addLabel(MDL_RESOLUTION_DPR, LABEL_DOUBLE, "DPR");
-        MDL::addLabel(MDL_RESOLUTION_ERRORL2, LABEL_DOUBLE, "Error_l2");
-        MDL::addLabel(MDL_RESOLUTION_FRC, LABEL_DOUBLE, "FRC");
-        MDL::addLabel(MDL_RESOLUTION_FRCRANDOMNOISE, LABEL_DOUBLE, "FRC_random_noise");
-        MDL::addLabel(MDL_RESOLUTION_FREQ, LABEL_DOUBLE, "Resol_Inverse_Ang");
-        MDL::addLabel(MDL_RESOLUTION_FREQREAL, LABEL_DOUBLE, "Resol_Ang");
-        MDL::addLabel(MDL_SAMPLINGRATE, LABEL_DOUBLE, "sampling_rate");
-        MDL::addLabel(MDL_SAMPLINGRATE_ORIGINAL, LABEL_DOUBLE, "sampling_rate_original");
-        MDL::addLabel(MDL_SAMPLINGRATEX, LABEL_DOUBLE, "sampling_rateX");
-        MDL::addLabel(MDL_SAMPLINGRATEY, LABEL_DOUBLE, "sampling_rateY");
-        MDL::addLabel(MDL_SAMPLINGRATEZ, LABEL_DOUBLE, "sampling_rateZ");
-        MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale", TAGLABEL_NOTAG, "Scale");
+
+        MDL::addLabel(MDL_RESOLUTION_DPR, LABEL_DOUBLE, "resolutionDPR");
+        MDL::addLabel(MDL_RESOLUTION_ERRORL2, LABEL_DOUBLE, "resolutionErrorL2");
+        MDL::addLabel(MDL_RESOLUTION_FRC, LABEL_DOUBLE, "resolutionFRC");
+        MDL::addLabel(MDL_RESOLUTION_FRCRANDOMNOISE, LABEL_DOUBLE, "resolutionFRCRandomNoise");
+        MDL::addLabel(MDL_RESOLUTION_FREQ, LABEL_DOUBLE, "resolutionFreqFourier");
+        MDL::addLabel(MDL_RESOLUTION_FREQREAL, LABEL_DOUBLE, "resolutionFreqReal");
+
+        MDL::addLabelAlias(MDL_RESOLUTION_DPR, "DPR");
+        MDL::addLabelAlias(MDL_RESOLUTION_ERRORL2, "Error_l2");
+        MDL::addLabelAlias(MDL_RESOLUTION_FRC, "FRC");
+        MDL::addLabelAlias(MDL_RESOLUTION_FRCRANDOMNOISE, "FRC_random_noise");
+        MDL::addLabelAlias(MDL_RESOLUTION_FREQ, "Resol_Inverse_Ang");
+        MDL::addLabelAlias(MDL_RESOLUTION_FREQREAL, "Resol_Ang");
+
+        MDL::addLabel(MDL_SAMPLINGRATE, LABEL_DOUBLE, "samplingRate");
+        MDL::addLabel(MDL_SAMPLINGRATE_ORIGINAL, LABEL_DOUBLE, "samplingRateOriginal");
+        MDL::addLabel(MDL_SAMPLINGRATE_X, LABEL_DOUBLE, "samplingRateX");
+        MDL::addLabel(MDL_SAMPLINGRATE_Y, LABEL_DOUBLE, "samplingRateY");
+        MDL::addLabel(MDL_SAMPLINGRATE_Z, LABEL_DOUBLE, "samplingRateZ");
+
+        MDL::addLabelAlias(MDL_SAMPLINGRATE, "sampling_rate"); //3.0
+        MDL::addLabelAlias(MDL_SAMPLINGRATE_ORIGINAL, "sampling_rate_original"); //3.0
+        MDL::addLabelAlias(MDL_SAMPLINGRATE_X, "sampling_rateX"); //3.0
+        MDL::addLabelAlias(MDL_SAMPLINGRATE_Y, "sampling_rateY"); //3.0
+        MDL::addLabelAlias(MDL_SAMPLINGRATE_Z, "sampling_rateZ"); //3.0
+
+        MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale");
+        MDL::addLabelAlias(MDL_SCALE, "Scale");
         MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
         MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");
-        MDL::addLabel(MDL_SHIFTX, LABEL_DOUBLE, "shiftX", TAGLABEL_NOTAG, "Xoff");
-        MDL::addLabel(MDL_SHIFTY, LABEL_DOUBLE, "shiftY", TAGLABEL_NOTAG, "Yoff");
-        MDL::addLabel(MDL_SHIFTZ, LABEL_DOUBLE, "shiftZ", TAGLABEL_NOTAG, "Zoff");
-        MDL::addLabel(MDL_SHIFT_CRYSTALX, LABEL_DOUBLE, "crystalShiftX", TAGLABEL_NOTAG, "cXoff");
-        MDL::addLabel(MDL_SHIFT_CRYSTALY, LABEL_DOUBLE, "crystalShiftY", TAGLABEL_NOTAG, "cYoff");
-        MDL::addLabel(MDL_SHIFT_CRYSTALZ, LABEL_DOUBLE, "crystalShiftZ", TAGLABEL_NOTAG, "cZoff");
+
+        MDL::addLabel(MDL_SHITF_X, LABEL_DOUBLE, "shiftX");
+        MDL::addLabelAlias(MDL_SHITF_X, "Xoff");
+        MDL::addLabel(MDL_SHITF_Y, LABEL_DOUBLE, "shiftY");
+        MDL::addLabelAlias(MDL_SHITF_Y, "Yoff");
+        MDL::addLabel(MDL_SHITF_Z, LABEL_DOUBLE, "shiftZ");
+        MDL::addLabelAlias(MDL_SHITF_Z, "Zoff");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
-        MDL::addLabel(MDL_SPHERICALABERRATION, LABEL_DOUBLE, "sphericalAberration");
         MDL::addLabel(MDL_STDDEV, LABEL_DOUBLE, "stddev");
         MDL::addLabel(MDL_SUM, LABEL_DOUBLE, "sum");
         MDL::addLabel(MDL_SUMWEIGHT, LABEL_DOUBLE, "sumWeight");
         MDL::addLabel(MDL_SYMNO, LABEL_INT, "symNo");
         MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR_DOUBLE, "transMat");
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
-        MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", TAGLABEL_NOTAG, "Weight");
+        MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
+        MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
-        MDL::addLabel(MDL_X, LABEL_DOUBLE, "X");
-        MDL::addLabel(MDL_XINT, LABEL_INT, "Xcoor", TAGLABEL_NOTAG, "<X position>");
-        MDL::addLabel(MDL_XINTTILT, LABEL_INT, "XcoorTilt");
-        MDL::addLabel(MDL_XSIZE, LABEL_INT, "Xsize");
-        MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
-        MDL::addLabel(MDL_YINT, LABEL_INT, "Ycoor", TAGLABEL_NOTAG, "<Y position>");
-        MDL::addLabel(MDL_YINTTILT, LABEL_INT, "YcoorTilt");
-        MDL::addLabel(MDL_YSIZE, LABEL_INT, "Ysize");
-        MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
-        MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
-        MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "Zscore");
-        MDL::addLabel(MDL_ZSIZE, LABEL_INT, "Zsize");
-        MDL::addLabel(MDL_PHANTOM_BGDENSITY, LABEL_DOUBLE, "phantomBGDensity");
-        MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
-        MDL::addLabel(MDL_PHANTOM_FEATURE_OPERATION, LABEL_STRING, "featureOperation");
-        MDL::addLabel(MDL_PHANTOM_FEATURE_DENSITY, LABEL_DOUBLE, "featureDensity");
-        MDL::addLabel(MDL_PHANTOM_FEATURE_CENTER, LABEL_VECTOR_DOUBLE, "featureCenter");
-        MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
-        MDL::addLabel(MDL_PRJ_ANGFILE, LABEL_STRING, "angleFile");
-        MDL::addLabel(MDL_PRJ_ROT_RANGE, LABEL_VECTOR_DOUBLE, "projRotRange");
-        MDL::addLabel(MDL_PRJ_ROT_RANDSTR, LABEL_STRING, "projRotRandomness");
-        MDL::addLabel(MDL_PRJ_ROT_NOISE, LABEL_VECTOR_DOUBLE, "projRotNoise");
-        MDL::addLabel(MDL_PRJ_TILT_RANDSTR, LABEL_STRING, "projTiltRandomness");
-        MDL::addLabel(MDL_PRJ_TILT_NOISE, LABEL_VECTOR_DOUBLE, "projTiltNoise");
-        MDL::addLabel(MDL_PRJ_PSI_RANGE, LABEL_VECTOR_DOUBLE, "projPsiRange");
-        MDL::addLabel(MDL_PRJ_PSI_RANDSTR, LABEL_STRING, "projPsiRandomness");
-        MDL::addLabel(MDL_PRJ_PSI_NOISE, LABEL_VECTOR_DOUBLE, "projPsiNoise");
-        MDL::addLabel(MDL_2D_LATTICE_VECA, LABEL_VECTOR_DOUBLE, "latticeVec1");
-        MDL::addLabel(MDL_2D_LATTICE_VECB, LABEL_VECTOR_DOUBLE, "latticeVec2");
-        MDL::addLabel(MDL_CRYSTAL_DISAPPEAR_THRE, LABEL_DOUBLE, "crystalDisThresh");
-        MDL::addLabel(MDL_ORTHOGONAL_PROJECTION, LABEL_BOOL, "orthogonalProj");
-        MDL::addLabel( MDL_CRYSTAL_SHFILE, LABEL_STRING, "crystalShiftFile");
-        MDL::addLabel( MDL_CRYSTAL_PROJ, LABEL_BOOL, "crystalProj");
+        MDL::addLabel(MDL_XCOOR, LABEL_INT, "xcoor");
+        MDL::addLabel(MDL_XCOOR_TILT, LABEL_INT, "xcoorTilt");
+
+        MDL::addLabel(MDL_X, LABEL_DOUBLE, "x");
+        MDL::addLabel(MDL_XSIZE, LABEL_INT, "xSize");
+        MDL::addLabel(MDL_YCOOR, LABEL_INT, "ycoor");
+        MDL::addLabel(MDL_YCOOR_TILT, LABEL_INT, "ycoorTilt");
+        MDL::addLabel(MDL_Y, LABEL_DOUBLE, "y");
+        MDL::addLabel(MDL_YSIZE, LABEL_INT, "ySize");
+        MDL::addLabel(MDL_ZCOOR, LABEL_INT, "zcoor");
+        MDL::addLabel(MDL_Z, LABEL_DOUBLE, "z");
+        MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "zScore");
+        MDL::addLabel(MDL_ZSIZE, LABEL_INT, "zSize");
+
+
+        MDL::addLabelAlias(MDL_XCOOR, "Xcoor");//3.0
+        MDL::addLabelAlias(MDL_XCOOR, "<X position>");
+        MDL::addLabelAlias(MDL_XCOOR_TILT, "XcoorTilt");//3.0
+
+        MDL::addLabelAlias(MDL_X, "X"); //3.0
+        MDL::addLabelAlias(MDL_XSIZE, "Xsize"); //3.0
+        MDL::addLabelAlias(MDL_YCOOR, "Ycoor"); //3.0
+        MDL::addLabelAlias(MDL_YCOOR, "<Y position>");
+        MDL::addLabelAlias(MDL_YCOOR_TILT, "YcoorTilt"); //3.0
+        MDL::addLabelAlias(MDL_Y, "Y"); //3.0
+        MDL::addLabelAlias(MDL_YSIZE, "Ysize"); //3.0
+        MDL::addLabelAlias(MDL_ZCOOR, "Zcoor"); //3.0
+        MDL::addLabelAlias(MDL_Z, "Z"); //3.0
+        MDL::addLabelAlias(MDL_ZSCORE, "Zscore"); //3.0
+        MDL::addLabelAlias(MDL_ZSIZE, "Zsize"); //3.0
 
         //Create an static empty header for image initialization
-        MDL::emptyHeader.setValue(MDL_ORIGINX,  0.);
-        MDL::emptyHeader.setValue(MDL_ORIGINY,  0.);
-        MDL::emptyHeader.setValue(MDL_ORIGINZ,  0.);
-        MDL::emptyHeader.setValue(MDL_SHIFTX,   0.);
-        MDL::emptyHeader.setValue(MDL_SHIFTY,   0.);
-        MDL::emptyHeader.setValue(MDL_SHIFTZ,   0.);
-        MDL::emptyHeader.setValue(MDL_ANGLEROT, 0.);
-        MDL::emptyHeader.setValue(MDL_ANGLETILT,0.);
-        MDL::emptyHeader.setValue(MDL_ANGLEPSI, 0.);
+        MDL::emptyHeader.setValue(MDL_ORIGIN_X,  0.);
+        MDL::emptyHeader.setValue(MDL_ORIGIN_Y,  0.);
+        MDL::emptyHeader.setValue(MDL_ORIGIN_Z,  0.);
+        MDL::emptyHeader.setValue(MDL_SHITF_X,   0.);
+        MDL::emptyHeader.setValue(MDL_SHITF_Y,   0.);
+        MDL::emptyHeader.setValue(MDL_SHITF_Z,   0.);
+        MDL::emptyHeader.setValue(MDL_ANGLE_ROT, 0.);
+        MDL::emptyHeader.setValue(MDL_ANGLE_TILT,0.);
+        MDL::emptyHeader.setValue(MDL_ANGLE_PSI, 0.);
         MDL::emptyHeader.setValue(MDL_WEIGHT,   1.);
         MDL::emptyHeader.setValue(MDL_FLIP,     false);
         MDL::emptyHeader.setValue(MDL_SCALE,    1.);

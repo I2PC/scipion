@@ -118,7 +118,7 @@ public:
                 ctf.azimuthal_angle = azi;
                 fnctf.compose(oroot, ii, "ctfparam");
                 ctf.write(fnctf);
-                mdCtf.setValue(MDL_CTFMODEL, fnctf, mdCtf.addObject());
+                mdCtf.setValue(MDL_CTF_MODEL, fnctf, mdCtf.addObject());
                 if (verbose)
                   std::cout << formatString(" Saved CTF parameter file %s for micrograph number %d", fnctf.c_str(), ii) << std::endl;
             }
@@ -133,14 +133,14 @@ public:
         FOR_ALL_OBJECTS_IN_METADATA2(mdIn, mdCtf)
         {
             mdIn.getValue(MDL_SELFILE,fnsel,__iter.objId);
-            mdCtf.getValue(MDL_CTFMODEL,fnctf,__iter2.objId);
+            mdCtf.getValue(MDL_CTF_MODEL,fnctf,__iter2.objId);
             SFind.read(fnsel);
             FOR_ALL_OBJECTS_IN_METADATA(SFind)
             {
                 SFind.getValue(MDL_IMAGE,fnimg,__iter.objId);
                 id = ctfdat.addObject();
                 ctfdat.setValue(MDL_IMAGE,fnimg, id);
-                ctfdat.setValue(MDL_CTFMODEL,fnctf, id);
+                ctfdat.setValue(MDL_CTF_MODEL,fnctf, id);
             }
         }
 
