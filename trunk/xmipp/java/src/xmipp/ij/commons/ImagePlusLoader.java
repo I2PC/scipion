@@ -157,11 +157,16 @@ public class ImagePlusLoader
 	
 	public boolean existsFile()
 	{
-		String file;
-		if(fileName != null)
+		String file = null;
+		if(fileName != null && !fileName.equals(""))
 			file = fileName;
-		else 
+		else if(imp != null && imp.getOriginalFileInfo() != null)
 			file = imp.getOriginalFileInfo().directory + File.separator + imp.getOriginalFileInfo().fileName;
+		else if (ig!= null && ig.getFilename()!= null)
+			file = ig.getFilename();
+		if(file == null)
+			return false;
+		System.out.println(file);
 		if(!new File(file).exists())
 			return false;
 		return true;

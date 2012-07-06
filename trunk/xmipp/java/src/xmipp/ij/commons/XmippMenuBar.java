@@ -99,6 +99,7 @@ public class XmippMenuBar extends MenuBar
 				}
 				catch (Exception ex)
 				{
+					ex.printStackTrace();
 					JOptionPane.showMessageDialog(null, ex.getMessage());
 				}
 
