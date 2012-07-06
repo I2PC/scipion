@@ -56,6 +56,8 @@ class ProgClassifyCL2DCore: public XmippProgram
 public:
 	/** CL2D rootname */
 	FileName fnRoot;
+	/** CL2D output dir */
+	FileName fnODir;
 	/** Threshold junk Zscore */
 	double thZscore;
 	/** Threshold PCA Zscore */

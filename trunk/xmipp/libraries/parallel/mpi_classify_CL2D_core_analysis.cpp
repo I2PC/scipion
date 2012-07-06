@@ -56,7 +56,8 @@ ProgClassifyCL2DCore::~ProgClassifyCL2DCore()
 // Read arguments ==========================================================
 void ProgClassifyCL2DCore::readParams()
 {
-    fnRoot = getParam("-i");
+    fnRoot = getParam("--root");
+    fnODir = getParam("--dir");
     if (checkParam("--computeCore"))
     {
         thZscore = getDoubleParam("--computeCore",0);
@@ -75,7 +76,8 @@ void ProgClassifyCL2DCore::show()
 {
     if (!verbose)
         return;
-    std::cout << "CL2D rootname:        " << fnRoot << std::endl;
+    std::cout << "CL2D rootname:        " << fnRoot << std::endl
+    		  << "CL2D output dir:      " << fnODir << std::endl;
     if (action==COMPUTE_CORE)
         std::cout
         << "Tolerance:            " << tolerance << std::endl
@@ -88,7 +90,8 @@ void ProgClassifyCL2DCore::show()
 void ProgClassifyCL2DCore::defineParams()
 {
     addUsageLine("Compute the core of a CL2D clustering");
-    addParamsLine("    -i <rootname>              : Rootname of the CL2D");
+    addParamsLine("    --root <rootname>          : Rootname of the CL2D");
+    addParamsLine("    --dir <dir>                : Output directory of the CL2D");
     addParamsLine("    --computeCore <thZscore=3> <thPCAZscore=3> : The class cores are computed by thresholding the Zscore of");
     addParamsLine("                               : the class images and their projections onto a 2D PCA space");
     addParamsLine("or  --computeStableCore <tolerance=1> : The stable core is formed by all the images in the class that have been");
@@ -107,7 +110,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
     maxLevel=0;
     FileName fnLevel;
     do
-        fnLevel=formatString("%s_classes_level_%02d.xmd",fnRoot.c_str(),maxLevel++);
+        fnLevel=formatString("%s/level_%02d/%s_classes.xmd",fnODir.c_str(),maxLevel++,fnRoot.c_str());
     while (fnLevel.exists());
     maxLevel-=2;
     if (maxLevel==-1)
@@ -118,7 +121,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
     CL2DBlock block;
     for (int level=0; level<=maxLevel; level++)
     {
-        fnLevel=formatString("%s_classes_level_%02d.xmd",fnRoot.c_str(),level);
+        fnLevel=formatString("%s/level_%02d/%s_classes.xmd",fnODir.c_str(),level,fnRoot.c_str());
         getBlocksInMetaDataFile(fnLevel,blocksAux);
         block.level=level;
         block.fnLevel=fnLevel;
@@ -299,7 +302,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
         for (int level=firstLevel; level<=maxLevel; level++)
         {
             classes.clear();
-            fnSummary=formatString("%s_classes_level_%02d_%s",fnRoot.c_str(),level,suffix.c_str());
+            fnSummary=formatString("%s/level_%02d/%s_classes_%s",fnODir.c_str(),level,fnRoot.c_str(),suffix.c_str());
             for (int idx=0; idx<Nblocks; idx++)
             {
                 if (blocks[idx].level!=level)
@@ -308,7 +311,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
                 if (fileExists(fnBlock))
                 {
                     MD.read(fnBlock);
-                    MDoriginal.read(formatString("%s@%s_classes_level_%02d.xmd",blocks[idx].block.c_str(),fnRoot.c_str(),level));
+                    MDoriginal.read(formatString("%s@%s/level_%02d/%s_classes.xmd",blocks[idx].block.c_str(),fnODir.c_str(),level,fnRoot.c_str()));
                     int classNo=textToInteger(blocks[idx].block.substr(6,6));
                     size_t classSize=MD.size();
                     fnClass.compose(classNo,fnSummary,"stk");
@@ -333,7 +336,7 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
         // Write the rest of blocks
         for (int idx=0; idx<Nblocks; idx++)
         {
-            fnSummary=formatString("%s_classes_level_%02d_%s",fnRoot.c_str(),blocks[idx].level,suffix.c_str());
+            fnSummary=formatString("%s/level_%02d/%s_classes_%s",fnODir.c_str(),blocks[idx].level,fnRoot.c_str(),suffix.c_str());
             fnBlock=fnSummary+"_"+blocks[idx].block+".xmd";
             if (fileExists(fnBlock))
             {

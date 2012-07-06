@@ -765,12 +765,13 @@ void CL2D::initialize(MetaData &_SF,
 #undef DEBUG
 
 /* CL2D write --------------------------------------------------------- */
-void CL2D::write(const FileName &fnRoot, int level) const
+void CL2D::write(const FileName &fnODir, const FileName &fnRoot, int level) const
 {
     int Q = P.size();
     MetaData SFout;
     Image<double> I;
-    FileName fnOut = formatString("%s_classes_level_%02d.stk",fnRoot.c_str(),level), fnClass;
+    FileName fnResultsDir=formatString("%s/level_%02d",fnODir.c_str(),level);
+    FileName fnOut = formatString("%s/%s_classes.stk",fnResultsDir.c_str(),fnRoot.c_str()), fnClass;
     fnOut.deleteFile();
     for (int q = 0; q < Q; q++)
     {
@@ -782,7 +783,7 @@ void CL2D::write(const FileName &fnRoot, int level) const
         SFout.setValue(MDL_IMAGE, fnClass, id);
         SFout.setValue(MDL_CLASS_COUNT,P[q]->currentListImg.size(), id);
     }
-    FileName fnSFout = formatString("%s_classes_level_%02d.xmd",fnRoot.c_str(),level);
+    FileName fnSFout = formatString("%s/%s_classes.xmd",fnResultsDir.c_str(),fnRoot.c_str());
     SFout._write(fnSFout, "classes", MD_APPEND);
 
     // Make the selfiles of each class
@@ -886,7 +887,7 @@ void CL2D::transferUpdates()
 
 /* Run CL2D ------------------------------------------------------------------ */
 //#define DEBUG
-void CL2D::run(const FileName &fnOut, int level)
+void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 {
     int Q = P.size();
 
@@ -901,6 +902,8 @@ void CL2D::run(const FileName &fnOut, int level)
     Image<double> I;
     int progressStep = XMIPP_MAX(1,Nimgs/60);
     CL2DAssignment assignment;
+    FileName fnResultsDir=formatString("%s/level_%02d",fnODir.c_str(),level);
+    fnResultsDir.makePath(0755);
     while (goOn)
     {
         if (prm->node->rank == 0)
@@ -980,7 +983,7 @@ void CL2D::run(const FileName &fnOut, int level)
             << std::endl;
             MDChanges.setValue(MDL_CL2D_CHANGES, Nchanges, idMdChanges);
             MDChanges.write(
-                formatString("info@%s_classes_level_%02d.xmd",fnOut.c_str(), level));
+                formatString("info@%s/%s_classes.xmd",fnResultsDir.c_str(),fnOut.c_str()));
         }
 
         // Check if there are empty nodes
@@ -1058,7 +1061,7 @@ void CL2D::run(const FileName &fnOut, int level)
         }
 
         if (prm->node->rank == 0)
-            write(fnOut,level);
+            write(fnODir,fnOut,level);
 
         if (iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1 || iter >= prm->Niter)
             goOn = false;
@@ -1371,6 +1374,7 @@ void ProgClassifyCL2D::readParams()
 {
     fnSel = getParam("-i");
     fnOut = getParam("--oroot");
+    fnODir = getParam("--odir");
     fnCodes0 = getParam("--ref0");
     Niter = getIntParam("--iter");
     Nneighbours = getIntParam("--neigh");
@@ -1389,7 +1393,8 @@ void ProgClassifyCL2D::show() const {
 	if (!verbose)
 		return;
 	std::cout << "Input images:            " << fnSel << std::endl
-			<< "Output images:           " << fnOut << std::endl
+			<< "Output root:             " << fnOut << std::endl
+			<< "Output dir:              " << fnODir << std::endl
 			<< "Iterations:              " << Niter << std::endl
 			<< "CodesSel0:               " << fnCodes0 << std::endl
 			<< "Codes0:                  " << Ncodes0 << std::endl
@@ -1416,6 +1421,7 @@ void ProgClassifyCL2D::defineParams()
     addUsageLine("+If many images change class, it is likely that there is not enough SNR to determine so many classes. It is recommended to reduce the number of classes");
     addSeeAlsoLine("mpi_image_sort");
     addParamsLine("    -i <selfile>             : Selfile with the input images");
+    addParamsLine("   [--odir <dir=\".\">]      : Output directory");
     addParamsLine("   [--oroot <root=class>]    : Output rootname, by default, class");
     addParamsLine("   [--iter <N=20>]           : Number of iterations");
     addParamsLine("   [--nref0 <N=2>]           : Initial number of code vectors");
@@ -1430,7 +1436,7 @@ void ProgClassifyCL2D::defineParams()
     addParamsLine("   [--classicalMultiref]     : Instead of enhanced clustering");
     addParamsLine("   [--maxShift <d=10>]       : Maximum allowed shift");
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
-    addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --iter 10");
+    addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --odir CL2Dresults --iter 10");
 }
 
 void ProgClassifyCL2D::produceSideInfo()
@@ -1486,7 +1492,7 @@ void ProgClassifyCL2D::run()
     bool originalClassicalMultiref=classicalMultiref;
     if (Q==1)
     	classicalMultiref=true;
-    vq.run(fnOut, level);
+    vq.run(fnODir, fnOut, level);
 
     while (Q < Ncodes)
     {
@@ -1507,7 +1513,7 @@ void ProgClassifyCL2D::run()
         Q = vq.P.size();
         level++;
         classicalMultiref=originalClassicalMultiref || Q==1;
-        vq.run(fnOut, level);
+        vq.run(fnODir, fnOut, level);
     }
     if (node->rank == 0)
     {
@@ -1516,9 +1522,7 @@ void ProgClassifyCL2D::run()
         MetaData SFq, SFclassified, SFaux, SFaux2;
         for (int q = 0; q < Q; q++)
         {
-            SFq.read(
-                formatString("class%06d_images@%s_classes_level_%02d.xmd", q + 1,
-                             fnOut.c_str(), level));
+            SFq.read(formatString("class%06d_images@%s/level_%02d/%s_classes.xmd",q+1,fnODir.c_str(),level,fnOut.c_str()));
             SFq.fillConstant(MDL_REF, integerToString(q + 1));
             SFq.fillConstant(MDL_ENABLED, "1");
             SFclassified.unionAll(SFq);
@@ -1531,7 +1535,7 @@ void ProgClassifyCL2D::run()
         SFaux2.unionAll(SFaux);
         SFaux.clear();
         SFaux.sort(SFaux2, MDL_IMAGE);
-        SFaux.write(fnOut + "_images.xmd");
+        SFaux.write(fnODir+"/"+fnOut + "_images.xmd");
     }
     CLOSE_LOG();
 }

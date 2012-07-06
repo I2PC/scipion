@@ -174,7 +174,7 @@ public:
     void shareSplitAssignments(Matrix1D<int> &assignment, CL2DClass *node1, CL2DClass *node2) const;
 
     /// Write the nodes
-    void write(const FileName &fnRoot, int level) const;
+    void write(const FileName &fnODir, const FileName &fnRoot, int level) const;
 
     /** Look for a node suitable for this image.
         The image is rotationally and translationally aligned with
@@ -186,7 +186,7 @@ public:
     void transferUpdates();
 
     /** Quantize with the current number of codevectors */
-    void run(const FileName &fnOut, int level);
+    void run(const FileName &fnODir, const FileName &fnOut, int level);
 
     /** Clean empty nodes.
         The number of nodes removed is returned. */
@@ -212,6 +212,9 @@ public:
 
     /// Output rootname
     FileName fnOut;
+
+    /// Output directory
+    FileName fnODir;
 
     /// Number of iterations
     int Niter;
