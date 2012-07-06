@@ -38,7 +38,7 @@ SVMClassifier::SVMClassifier()
     param.eps = 0.001;
     param.p = 0.1;
     param.shrinking = 1;
-    param.probability = 0;
+    param.probability = 1;
     param.nr_weight = 0;
     param.weight_label = NULL;
     param.weight = NULL;
@@ -94,12 +94,12 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<doubl
     }
     model=svm_train(&prob,&param);
 }
-int SVMClassifier::predict(MultidimArray<double> &featVec)
+double SVMClassifier::predict(MultidimArray<double> &featVec,double &score)
 {
     svm_node *x_space;
     int cnt=0;
     int nr_class=svm_get_nr_class(model);
-    double *prob_estimates=(double *) malloc(nr_class*sizeof(double));
+    double *prob_estimates=new double[nr_class];//(double *) malloc(nr_class*sizeof(double));
     x_space=new svm_node[XSIZE(featVec)+1];
 
     for (int i=0;i<XSIZE(featVec);i++)
@@ -114,11 +114,16 @@ int SVMClassifier::predict(MultidimArray<double> &featVec)
         }
     }
     x_space[cnt].index=-1;
-    return svm_predict_probability(model,x_space,prob_estimates);
+    double label=svm_predict_probability(model,x_space,prob_estimates);
+    // Extracting the probability of the selected class
+    score=prob_estimates[0];
+    for (int i=1;i<nr_class;++i)
+        if (prob_estimates[i]>score)
+            score=prob_estimates[i];
+    return label;
 }
 void SVMClassifier::SaveModel(const FileName &fnModel)
 {
-    std::cerr<<svm_get_nr_class(model);
     svm_save_model(fnModel.c_str(),model);
 }
 void SVMClassifier::LoadModel(const FileName &fnModel)
