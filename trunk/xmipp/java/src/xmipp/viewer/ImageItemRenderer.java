@@ -19,7 +19,7 @@ import xmipp.utils.CompoundIcon;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippResource;
 import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
+import xmipp.viewer.models.ClassInfo;
 
 /**
  * 

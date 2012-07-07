@@ -25,8 +25,10 @@
 
 package xmipp.viewer.models;
 
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -34,7 +36,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
-import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
+import xmipp.viewer.models.ClassInfo;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -83,9 +85,8 @@ public class GalleryData {
 	public ArrayList<ClassInfo> classesArray;
 	// ClassInfo reference for each element
 	public ClassInfo[] classes;
-	//Flags to check if md or classes has changed 
+	// Flags to check if md or classes has changed
 	private boolean hasMdChanges, hasClassesChanges;
-	
 
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
@@ -111,7 +112,9 @@ public class GalleryData {
 			if (fn != null) {
 				if (Filename.hasPrefix(fn)) {
 					if (Filename.isMetadata(fn)) {
-						selectedBlock = Filename.getPrefix(fn); // FIXME: validate block exists
+						selectedBlock = Filename.getPrefix(fn); // FIXME:
+																// validate
+																// block exists
 						filename = Filename.getFilename(fn);
 					}
 				}
@@ -150,13 +153,14 @@ public class GalleryData {
 		numberOfVols = 0;
 		volumes = null;
 		if (!containsGeometryInfo())
-			useGeo = false;		
+			useGeo = false;
 		selection = new boolean[ids.length];
 		is2dClassification = checkifIs2DClassificationMd();
 
 		if (is2dClassification) {
 			classes = new ClassInfo[ids.length];
 			classesArray = new ArrayList<ClassInfo>();
+			loadClassesInfo();
 		}
 
 		if (isRotSpectraMd()) {
@@ -175,10 +179,10 @@ public class GalleryData {
 			String imageFn;
 			for (int i = 0; i < ids.length && image == null; ++i) {
 				imageFn = md.getValueString(renderLabel, ids[i]);
-				if (Filename.exists(imageFn)){
+				if (Filename.exists(imageFn)) {
 					try {
-					image = new ImageGeneric(imageFn);
-					}catch (Exception e){
+						image = new ImageGeneric(imageFn);
+					} catch (Exception e) {
 						image = null;
 					}
 				}
@@ -276,11 +280,12 @@ public class GalleryData {
 			ids = null;
 		}
 	}
-	
-	/** Sort the metadata by a given column.
-	 * The sort could be ascending or descending
+
+	/**
+	 * Sort the metadata by a given column. The sort could be ascending or
+	 * descending
 	 */
-	public void sortMd(int col, boolean ascending){
+	public void sortMd(int col, boolean ascending) {
 		try {
 			md.sort(getLabelFromCol(col), ascending);
 			hasMdChanges = true;
@@ -288,9 +293,9 @@ public class GalleryData {
 			e.printStackTrace();
 		}
 	}
-	
-	/** Reload current metadata from file*/
-	public void readMd(){
+
+	/** Reload current metadata from file */
+	public void readMd() {
 		if (filename != null)
 			readMetadata(getMdFilename());
 	}
@@ -424,7 +429,7 @@ public class GalleryData {
 	/** Set enabled state */
 	public void setEnabled(int index, boolean value) {
 		try {
-			if (!isVolumeMode()){ // slices in a volume are always enabled
+			if (!isVolumeMode()) { // slices in a volume are always enabled
 				md.setEnabled(value, ids[index]);
 				hasMdChanges = true;
 			}
@@ -461,10 +466,11 @@ public class GalleryData {
 	}
 
 	/** Return true if current metadata comes from 2d classification */
-	public boolean checkifIs2DClassificationMd() {		
+	public boolean checkifIs2DClassificationMd() {
 		try {
-			if (!selectedBlock.startsWith("classes") || 
-				!(md.containsLabel(MDLabel.MDL_REF) && md.containsLabel(MDLabel.MDL_CLASS_COUNT)))
+			if (!selectedBlock.startsWith("classes")
+					|| !(md.containsLabel(MDLabel.MDL_REF) && md
+							.containsLabel(MDLabel.MDL_CLASS_COUNT)))
 				return false;
 			for (long id : ids) {
 				int ref = md.getValueInt(MDLabel.MDL_REF, id);
@@ -490,10 +496,31 @@ public class GalleryData {
 		return null;
 	}
 
+	/** Set item class info in md */
+	private void setItemClassInfo(long id, ClassInfo cli) {
+		String comment = "None";
+		int ref2 = -1;
+		int color = -1;
+		try {
+			if (cli != null) {
+				ref2 = cli.index + 1;
+				color = cli.getColor().getRGB();
+				comment = cli.getComment();
+			}
+			md.setValueInt(MDLabel.MDL_REF2, ref2, id);
+			md.setValueString(MDLabel.MDL_KEYWORDS, comment, id);
+			md.setValueInt(MDLabel.MDL_COLOR, color, id);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
 	/** Set the class of an element */
 	public void setItemClass(int index, ClassInfo cli) {
 		hasClassesChanges = true;
 		classes[index] = cli;
+		long id = ids[index];
+		setItemClassInfo(id, cli);
 	}
 
 	public ClassInfo getClassInfo(int classNumber) {
@@ -515,20 +542,60 @@ public class GalleryData {
 			i = 0;
 			for (long id : ids) { // iterate over all references
 				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
-				// DEBUG.printFormat("id: %d, count: %d", id, count);
+
 				ClassInfo cli = getItemClassInfo(i);
 				if (cli != null) {
 					cli.numberOfClasses += 1;
 					cli.numberOfImages += count;
+					hasMdChanges = true;
 				}
+				setItemClassInfo(id, cli);
 				++i;
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-	
+	}// function upateClassesInfo
+
+	/** Load classes structure if previously stored */
+	public void loadClassesInfo() {
+		try {
+			if (md.containsLabel(MDLabel.MDL_REF2)) {
+				long id;
+				int ref2;
+				ClassInfo cli;
+
+				for (int i = 0; i < ids.length; ++i) {
+					id = ids[i];
+					ref2 = md.getValueInt(MDLabel.MDL_REF2, id);
+
+					if (ref2 > 0) {
+						cli = null;
+						
+						for (ClassInfo cli2: classesArray)
+							if (cli2.index == ref2){
+								cli = cli2;
+								break;
+							}
+						
+						if (cli == null) {
+							String comment = md.getValueString(
+									MDLabel.MDL_KEYWORDS, id);
+							int color = md.getValueInt(MDLabel.MDL_COLOR, id);
+							cli = new ClassInfo(comment, new Color(color));
+							cli.index = ref2;
+							classesArray.add(cli);
+						}
+						classes[i] = cli;
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}// function loadClassesInfo
+
 	/** Return the number of selected elements */
 	public int getSelectionCount() {
 		int count = 0;
@@ -537,11 +604,11 @@ public class GalleryData {
 				++count;
 		return count;
 	}
-	
+
 	/** Create a metadata just with selected items */
-	public MetaData getSelectionMd(){
+	public MetaData getSelectionMd() {
 		MetaData selectionMd = null;
-		
+
 		long[] selectedIds = new long[getSelectionCount()];
 		int count = 0;
 		for (int i = 0; i < ids.length; ++i)
@@ -555,7 +622,7 @@ public class GalleryData {
 		}
 		return selectionMd;
 	}
-	
+
 	/**
 	 * Compute the metadatas
 	 */
@@ -563,18 +630,20 @@ public class GalleryData {
 		try {
 			if (!classesArray.isEmpty()) {
 				updateClassesInfo();
+				// Count the number of non-empty classes
 				MetaData[] mds = new MetaData[classesArray.size() + 1];
 				mds[0] = new MetaData();
-				MetaData md = mds[0];
+				MetaData mdAux = mds[0];
 				int i = 0;
+				long id;
 				// Md for classes block
 				for (ClassInfo cli : classesArray) {
-					long id = md.addObject();
-					md.setValueInt(MDLabel.MDL_REF, ++i, id);
-					md.setValueLong(MDLabel.MDL_CLASS_COUNT,
+					id = mdAux.addObject();
+					mdAux.setValueInt(MDLabel.MDL_REF, ++i, id);
+					mdAux.setValueLong(MDLabel.MDL_CLASS_COUNT,
 							cli.numberOfImages, id);
-					md.setValueString(MDLabel.MDL_KEYWORDS, cli.getComment(),
-							id);
+					mdAux.setValueString(MDLabel.MDL_KEYWORDS,
+							cli.getComment(), id);
 					mds[i] = new MetaData();
 				}
 				i = 0;
@@ -582,9 +651,13 @@ public class GalleryData {
 				for (i = 0; i < ids.length; ++i) {
 					ClassInfo cli = getItemClassInfo(i);
 					if (cli != null) {
-						md = getClassImages(i);
-						if (md != null)
-							mds[cli.index + 1].unionAll(md);
+						id = ids[i];
+						md.setValueInt(MDLabel.MDL_REF2, cli.index + 1, id);
+						md.setValueString(MDLabel.MDL_KEYWORDS,
+								cli.getComment(), id);
+						mdAux = getClassImages(i);
+						if (mdAux != null)
+							mds[cli.index + 1].unionAll(mdAux);
 					}
 				}
 				return mds;
@@ -632,10 +705,10 @@ public class GalleryData {
 		return false;
 	}
 
-	public int getLabelFromCol(int col){
+	public int getLabelFromCol(int col) {
 		return labels.get(col).getLabel();
 	}
-	
+
 	public String getValueFromCol(int index, int col) {
 		return getValueFromCol(index, labels.get(col));
 	}
@@ -657,10 +730,10 @@ public class GalleryData {
 		}
 		return null;
 	}
-	
+
 	/** Delete from metadata selected items */
-	public void removeSelection() throws Exception{
-		for (int i = 0; i < ids.length; ++i){
+	public void removeSelection() throws Exception {
+		for (int i = 0; i < ids.length; ++i) {
 			if (selection[i]) {
 				md.removeObject(ids[i]);
 				hasMdChanges = true;
@@ -668,25 +741,31 @@ public class GalleryData {
 		}
 	}
 
+	/** Add a new class */
 	public void addClass(ClassInfo ci) {
 		classesArray.add(ci);
-		hasClassesChanges = true;		
+		hasClassesChanges = true;
 	}
 
+	/** Remove a class from the selection */
 	public void removeClass(int classNumber) {
+		ClassInfo cli = getClassInfo(classNumber);
+		for (int i = 0; i < ids.length; ++i)
+			if (getItemClassInfo(i) == cli)
+				setItemClass(i, null);
 		classesArray.remove(classNumber);
-		hasClassesChanges = true;	
+		hasClassesChanges = true;
 	}
-	
-	public boolean hasMdChanges(){
+
+	public boolean hasMdChanges() {
 		return hasMdChanges;
 	}
-	
-	public void setMdChanges(boolean value){
+
+	public void setMdChanges(boolean value) {
 		hasMdChanges = value;
 	}
-	
-	public boolean hasClassesChanges(){
+
+	public boolean hasClassesChanges() {
 		return hasClassesChanges;
 	}
 }// class GalleryData

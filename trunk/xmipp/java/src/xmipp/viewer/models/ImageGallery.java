@@ -38,7 +38,7 @@ import javax.swing.table.AbstractTableModel;
 
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.ImageItemRenderer;
-import xmipp.viewer.windows.ClassesJDialog.ClassInfo;
+import xmipp.viewer.models.ClassInfo;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
@@ -420,10 +420,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	/** Remove a class */
 	public void removeClass(int classNumber) {
-		ClassInfo cli = data.getClassInfo(classNumber);
-		for (int i = 0; i < n; ++i)
-			if (data.getItemClassInfo(i) == cli)
-				data.setItemClass(i, null);
 		data.removeClass(classNumber);
 		fireTableDataChanged();
 	}

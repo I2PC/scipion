@@ -30,11 +30,9 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
-import java.io.File;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -49,12 +47,12 @@ import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.ColorEditor;
-import xmipp.utils.ColorIcon;
 import xmipp.utils.ColorRenderer;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ImageGallery;
 
 public class ClassesJDialog extends XmippDialog {
@@ -191,41 +189,6 @@ public class ClassesJDialog extends XmippDialog {
 	public ClassInfo getClassInfo(int index) {
 		return classes.get(index);
 	}
-
-	/** Structure to store class info */
-	public class ClassInfo {
-		private String comment;
-		private ColorIcon icon;
-		public int index; // index of the class
-		public int numberOfClasses; // Classes assigned to superclass
-		public long numberOfImages; // total images assigned to superclass
-
-		/** Constructor */
-		ClassInfo(String name, Color c) {
-			comment = name;
-			icon = new ColorIcon(c, 16, 16, 3, true);
-		}
-
-		public String getComment() {
-			return comment;
-		}
-
-		public void setComment(String value) {
-			comment = value;
-		}
-
-		public Color getColor() {
-			return icon.getColor();
-		}
-
-		public void setColor(Color value) {
-			icon.setColor(value);
-		}
-
-		public Icon getIcon() {
-			return icon;
-		}
-	}// class ClassInfo
 
 	/** Table model based on the ArrayList of ClassInfo */
 	class ClassesTableModel extends AbstractTableModel {
