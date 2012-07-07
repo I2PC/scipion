@@ -92,7 +92,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			lastx = e.getX();
 			lasty = e.getY();
 
-			if (SwingUtilities.isLeftMouseButton(e) && e.isControlDown())
+			if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 			{
 				if (frame instanceof TrainingPickerJFrame)
 					((TrainingMicrograph) frame.getMicrograph()).removeParticle(particle, ((TrainingPickerJFrame) frame).getParticlePicker());

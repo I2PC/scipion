@@ -213,6 +213,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		importffilemi = new JMenuItem("Import from Files...", XmippResource.getIcon("import.gif"));
 		filemn.add(importffilemi);
+		importffilemi.setEnabled(picker.getMode() != FamilyState.ReadOnly);
 		importffilemi.addActionListener(new ActionListener()
 		{
 
@@ -263,6 +264,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		filemn.add(exitmi);
 
 		ijmi = new JMenuItem("ImageJ", XmippResource.getIcon("ij.gif"));
+		ijmi.setEnabled(picker.getMode() != FamilyState.ReadOnly);
 		ijmi.addActionListener(new ActionListener()
 		{
 
@@ -376,6 +378,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (defaultlistener)
 			mi.addActionListener(this);
 		filtersmn.add(mi);
+		mi.setEnabled(picker.getMode() != FamilyState.ReadOnly);
 		return mi;
 	}
 
