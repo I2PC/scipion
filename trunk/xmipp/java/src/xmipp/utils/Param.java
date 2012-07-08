@@ -59,6 +59,7 @@ public class Param {
     public boolean poll;
     public int zoom = 0;
     public boolean renderImages = false;
+    public String renderLabel = "first"; //Label to render, by default first
     public boolean debug = false;
     public int rows = -1, columns = -1;
     public double bad_pixels_factor;
@@ -98,7 +99,7 @@ public class Param {
         options.addOption(OPENING_MODE, true, "");
         options.addOption(POLL, false, "");
         options.addOption(ZOOM, true, "");
-        options.addOption(RENDER_IMAGES, false, "");
+        options.addOption(RENDER_IMAGES, true, "");
         options.addOption(DEBUG, false, "");
         options.addOption(TABLE_ROWS, true, "");
         options.addOption(TABLE_COLUMNS, true, "");
@@ -168,6 +169,10 @@ public class Param {
             }
 
             renderImages = cmdLine.hasOption(RENDER_IMAGES);
+            if (renderImages){
+            	renderLabel = cmdLine.getOptionValue(RENDER_IMAGES);
+            }
+            
             debug = cmdLine.hasOption(DEBUG);
 
             if (cmdLine.hasOption(TABLE_ROWS)) {

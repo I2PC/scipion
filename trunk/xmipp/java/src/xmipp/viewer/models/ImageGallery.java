@@ -236,7 +236,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public boolean adjustColumn(int width) {
 		last_width = width;
 		adjustColumns = true;
-		int new_cols = Math.min(width / cellDim.width, n);
+		int new_cols = Math.max(Math.min(width / cellDim.width, n), 1);
 		if (new_cols != cols) {
 			setColumnsValue(new_cols);
 			return true;
@@ -554,14 +554,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 		/**
 		 * First argument is the gallery to wich this item belongs Constructor
-		 * of ImageItem
-		 * 
-		 * @param g
-		 *            gallery to wich this item belongs
-		 * @param r
-		 *            row position of the item
-		 * @param c
-		 */
+		 * of ImageItem */
 		public ImageItem(int row, int col) {
 			index = ImageGallery.this.getIndex(row, col);
 		}

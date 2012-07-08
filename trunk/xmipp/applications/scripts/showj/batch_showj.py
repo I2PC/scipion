@@ -32,11 +32,11 @@ class ScriptShowJ(ScriptAppIJ):
 		
 	
 	def readOtherParams(self):
-		params = ['--mode', '--rows', '--columns', '--zoom', '--view']
+		params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render']
 		for p in params:
 			if self.checkParam(p):
 				self.args += " %s %s" % (p, self.getParam(p))
-		params = ['--poll', '--render', '--debug', '--dont_apply_geo', '--dont_wrap']
+		params = ['--poll', '--debug', '--dont_apply_geo', '--dont_wrap']
 		for p in params:
 			if self.checkParam(p):
 				self.args += " %s" % p

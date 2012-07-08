@@ -232,6 +232,13 @@ public class GalleryData {
 					lab.length);
 			ciFirstRender = null;
 			ColumnInfo ciFirstRenderVisible = null;
+			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
+			
+			DEBUG.printMessage("renderLabel: " + parameters.renderLabel);
+			
+			if (!parameters.renderLabel.equalsIgnoreCase("first")){
+				inputRenderLabel = MetaData.str2Label(parameters.renderLabel);
+			}
 
 			for (int i = 0; i < lab.length; ++i) {
 				ci = new ColumnInfo(lab[i]);
@@ -242,6 +249,12 @@ public class GalleryData {
 				} else if (ci.allowRender)
 					ci.render = globalRender;
 				newLabels.add(ci);
+				DEBUG.printFormat("i: %d, label: %d", lab[i], inputRenderLabel);
+				if (inputRenderLabel == lab[i] && ci.allowRender){
+					ciFirstRender = ci;
+					if (ci.visible)
+						ciFirstRenderVisible = ci;
+				}
 				if (ciFirstRender == null && ci.allowRender)
 					ciFirstRender = ci;
 				if (ciFirstRenderVisible == null && ci.allowRender
@@ -250,13 +263,13 @@ public class GalleryData {
 			}
 			if (ciFirstRenderVisible != null) {
 				ciFirstRender = ciFirstRenderVisible;
-				// Add MDL_ENABLED if not present
-				if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
-					newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
-					md.addLabel(MDLabel.MDL_ENABLED);
-					for (long id : ids)
-						md.setEnabled(true, id);
-				}
+			}
+			// Add MDL_ENABLED if not present
+			if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
+				newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
+				md.addLabel(MDLabel.MDL_ENABLED);
+				for (long id : ids)
+					md.setEnabled(true, id);
 			}
 
 			labels = newLabels;
@@ -572,13 +585,13 @@ public class GalleryData {
 
 					if (ref2 > 0) {
 						cli = null;
-						
-						for (ClassInfo cli2: classesArray)
-							if (cli2.index == ref2){
+
+						for (ClassInfo cli2 : classesArray)
+							if (cli2.index == ref2) {
 								cli = cli2;
 								break;
 							}
-						
+
 						if (cli == null) {
 							String comment = md.getValueString(
 									MDLabel.MDL_KEYWORDS, id);
