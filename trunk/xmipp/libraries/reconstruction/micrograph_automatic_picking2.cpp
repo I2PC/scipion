@@ -38,8 +38,8 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,in
     __m = _m;
     fn_micrograph = fn;
     microImage.read(fn_micrograph);
-    int t=std::max(0.25,50.0/size);
-    scaleRate=std::min(1,t);
+    double t=std::max(0.25,50.0/size);
+    scaleRate=std::min(1.0,t);
     particle_radius = (size*scaleRate)*0.5;
     particle_size = particle_radius*2;
     NRsteps=particle_size/2-3;
@@ -371,12 +371,13 @@ void AutoParticlePicking2::add2Dataset()
     classLabel.resize(1,1,1,YSIZE(trainSet));
     for (int n=yDataSet;n<XSIZE(classLabel);n++)
         classLabel(n)=3;
-    for (int i=yDataSet;i<YSIZE(trainSet);i++)
+    for (int i=0;i<auto_candidates.size();i++)
     {
         for (int j=0;j<XSIZE(trainSet);j++)
         {
-            DIRECT_A2D_ELEM(trainSet,i,j)=DIRECT_A1D_ELEM(auto_candidates[i].vec,j);
+            DIRECT_A2D_ELEM(trainSet,i+yDataSet,j)=DIRECT_A1D_ELEM(auto_candidates[i].vec,j);
         }
+        std::cerr<<auto_candidates[i].vec;
     }
 }
 
@@ -425,10 +426,10 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnFilterBank
     DIRECT_A1D_ELEM(randomValues,i)=randNum();
     randomValues.indexSort(randomIndexes);
     int numNegatives;
-    if (num_part>300)
+    if (num_part<100)
         numNegatives=num_part*2;
     else
-        numNegatives=300;
+        numNegatives=100;
     for (int i=0;i<numNegatives;i++)
     {
         int x = negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)].x;
@@ -550,8 +551,8 @@ int AutoParticlePicking2::saveAutoParticles(const FileName &fn) const
         if (p.cost>0 && p.status==1)
         {
             size_t id = MD.addObject();
-            MD.setValue(MDL_XCOOR, p.x, id);
-            MD.setValue(MDL_YCOOR, p.y, id);
+            MD.setValue(MDL_XCOOR, p.x*(1.0/scaleRate), id);
+            MD.setValue(MDL_YCOOR, p.y*(1.0/scaleRate), id);
             MD.setValue(MDL_COST, p.cost, id);
             MD.setValue(MDL_ENABLED,1,id);
         }
@@ -594,6 +595,7 @@ void AutoParticlePicking2::loadAutoVectors(const FileName &fn)
     for (int n = 0;n<numVector;++n)
     {
         Particle2 p;
+        p.vec.resize(1,1,1,numFeature);
         for (int j=0;j<numFeature;++j)
             fhVectors>>DIRECT_A1D_ELEM(p.vec,j);
         auto_candidates.push_back(p);
@@ -683,23 +685,26 @@ void ProgMicrographAutomaticPicking2::run()
     FileName fnFilterBank=fn_micrograph.removeLastExtension()+"_filterbank.stk";
     FileName familyName=fn_model.removeDirectories();
     FileName fnAutoParticles=familyName+"@"+fn_root+"_auto.pos";
-    FileName fnInvariant=fn_root + "_invariant";
-    FileName fnPCAModel=fn_root + "_pca_model.stk";
-    FileName fnSVMModel= fn_root + "_svm.txt";
-    FileName fnVector= fn_root + "_training.txt";
-    FileName fnAutoVectors= fn_root + "_auto_vector.txt";
-    FileName fnRejectedVectors= fn_root + "_rejected_vector.txt";
-    FileName fnAvgModel= fn_root + "_particle_avg.xmp";
+    FileName fnInvariant=fn_model + "_invariant";
+    FileName fnPCAModel=fn_model + "_pca_model.stk";
+    FileName fnSVMModel= fn_model + "_svm.txt";
+    FileName fnVector= fn_model + "_training.txt";
+    FileName fnAutoVectors= fn_model + "_auto_vector.txt";
+    FileName fnRejectedVectors= fn_model + "_rejected_vector.txt";
+    FileName fnAvgModel= fn_model + "_particle_avg.xmp";
     AutoParticlePicking2 *autoPicking = new AutoParticlePicking2(fn_micrograph,&m,size,filter_num,NPCA,corr_num);
 
-    // Resize the Micrograph
-    selfScaleToSizeFourier((m.Ydim)*autoPicking->scaleRate,(m.Xdim)*autoPicking->scaleRate,autoPicking->microImage(), 2);
-
-    if (mode == "buildinv")
+    if (mode !="train")
     {
+        // Resize the Micrograph
+        selfScaleToSizeFourier((m.Ydim)*autoPicking->scaleRate,(m.Xdim)*autoPicking->scaleRate,autoPicking->microImage(), 2);
         // Generating the filter bank
         filterBankGenerator(autoPicking->microImage(), fnFilterBank, filter_num);
         autoPicking->micrographStack.read(fnFilterBank, DATA);
+    }
+
+    if (mode == "buildinv")
+    {
         MetaData MD;
         // Insert all true positives
         if (fn_train!="")
@@ -725,9 +730,7 @@ void ProgMicrographAutomaticPicking2::run()
                         int enabled;
                         MD.getValue(MDL_ENABLED,enabled,__iter.objId);
                         if (enabled==-1)
-                        {
                             autoPicking->rejected_particles.push_back(autoPicking->auto_candidates[idx]);
-                        }
                         else
                         {
                             MD.getValue(MDL_XCOOR, x, __iter.objId);
@@ -759,8 +762,6 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode == "try" || mode == "autoselect")
     {
-        // Generating the filter bank
-        filterBankGenerator(autoPicking->microImage(), fnFilterBank, filter_num);
         autoPicking->micrographStack.read(fnFilterBank, DATA);
         // Read the PCA Model
         Image<double> II;

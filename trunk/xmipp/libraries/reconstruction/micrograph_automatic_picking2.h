@@ -23,8 +23,8 @@
 *  e-mail address 'xmipp@cnb.csic.es'
 ***************************************************************************/
 
-#ifndef MICROGRAPH_AUTOMATIC_PICKING_H
-#define MICROGRAPH_AUTOMATIC_PICKING_H
+#ifndef MICROGRAPH_AUTOMATIC_PICKING2_H
+#define MICROGRAPH_AUTOMATIC_PICKING2_H
 
 #include <data/micrograph.h>
 #include <data/mask.h>
