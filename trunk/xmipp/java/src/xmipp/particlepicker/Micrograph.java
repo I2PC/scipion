@@ -16,10 +16,10 @@ public abstract class Micrograph {
 	private String file;
 	private String name;
 	private ImagePlus imp;
-	private String posfile;
 	private String pos24file;
 	public static final String ext = ".pos";
 	private int width, height;
+	private String posfile;
 
 	public void setPosFileFromXmipp24(String posfile) {
 		this.pos24file = posfile;

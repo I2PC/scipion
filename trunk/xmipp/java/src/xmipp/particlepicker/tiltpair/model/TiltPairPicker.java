@@ -176,7 +176,7 @@ public class TiltPairPicker extends ParticlePicker
 			for (UntiltedMicrograph m : micrographs)
 			{
 				if (!m.hasData())
-					new File(m.getPosFile()).delete();
+					new File(getOutputPath(m.getPosFile())).delete();
 				else
 				{
 
