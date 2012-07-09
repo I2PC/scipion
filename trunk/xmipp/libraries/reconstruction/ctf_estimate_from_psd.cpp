@@ -2380,8 +2380,6 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
-
-
     if (global_prm->show_optimization)
         std::cout << "Looking for first defoci ...\n";
 
@@ -2407,7 +2405,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     DEBUG_TEXTFILE(formatString("centeredEnhancedPSD120x120 %f",centeredEnhancedPSD(120,120)));
     DEBUG_TEXTFILE(formatString("centeredEnhancedPSD160x160 %f",centeredEnhancedPSD(160,160)));
 
-    int numElem = 100;
+    int numElem = 10;
     kV = kV*1000;
     double K_so_far = global_ctfmodel.K;
     double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
@@ -2418,15 +2416,17 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     double eAngle;
     double deFocusAvg;
     double deFocusDiff;
+
+    max_freq = max_freq*0.8;
     double fmax = max_freq;
 
-    Matrix1D<double> arrayDefocusDiff(2*numElem);
+    Matrix1D<double> arrayDefocusDiff(numElem);
     arrayDefocusDiff.initZeros();
 
-    Matrix1D<double> arrayDefocusAvg(2*numElem);
+    Matrix1D<double> arrayDefocusAvg(numElem);
     arrayDefocusAvg.initZeros();
 
-    Matrix1D<double> arrayError(2*numElem);
+    Matrix1D<double> arrayError(numElem);
     arrayError.initConstant(-1);
 
     int iter;
@@ -2435,11 +2435,14 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     steps.initConstant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
-    double fmaxStep = 0.01;
+    double fmaxStep = (max_freq-min_freq)/numElem;
+
+    lambdaPhase = 0.8;
+    sizeWindowPhase = 10;
 
     for (int i = 1; i < numElem; i++)
     {
-        if ( ( ((fmax * max_freq - min_freq)/min_freq) > 0.5))
+        if ( ( ((fmax - min_freq)/min_freq) > 0.5))
         {
             fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
                           x,x,
@@ -2479,229 +2482,86 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                             fitness, iter, steps, false);
 
             VEC_ELEM(arrayError,i) = (-1)*fitness;
-
         }
 
     }
 
     int maxInd;
     arrayError.maxIndex(maxInd);
-    defocusU = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
-    defocusV = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
 
-    std::cout <<"defocusU " << defocusU << std::endl;
-    std::cout <<"defocusV " << defocusV << std::endl;
-    std::cout <<"error " << VEC_ELEM(arrayError,maxInd) << std::endl;
+    Matrix1D<double> arrayDefocusU(4);
+    arrayDefocusU.initZeros();
 
-/*
-     Matrix1D<double> sortedDefocusAvg = arrayDefocusAvg.sort();
-     double medianDefocusAvg = VEC_ELEM(sortedDefocusAvg,(int)std::floor(numElem/2));
+    Matrix1D<double> arrayDefocusV(4);
+    arrayDefocusV.initZeros();
 
-     for (int i = 1; i < numElem; i++)
-     {
-         if (medianDefocusAvg == VEC_ELEM(arrayDefocusAvg,i))
-         {
-             defocusU = VEC_ELEM(arrayDefocusAvg,i)+VEC_ELEM(arrayDefocusDiff,i);
-             defocusV = VEC_ELEM(arrayDefocusAvg,i)-VEC_ELEM(arrayDefocusDiff,i);
-             break;
-         }
-     }
+    Matrix1D<double> arrayError2(4);
+    arrayError2.initConstant(-1);
 
-*/
- //   std::cout << "defocusU : "  <<  defocusU << std::endl;
- //   std::cout << "defocusV : "  << defocusV << std::endl;
+    // We optimize for deltaU, deltaV
+     VEC_ELEM(arrayDefocusU,0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayDefocusV,0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayError2,0)   = VEC_ELEM(arrayError,maxInd);
 
+     // We optimize for deltaU, deltaU
+     (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+     (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+     (*global_adjust)(2) = eAngle;
+     (*global_adjust)(4) = K_so_far;
 
+     fitness =0;
+     powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                     fitness, iter, steps, false);
 
-    /*MultidimArray<double> mod, phase, mod2, phase2, mod3, phase3, mod4, phase4;
+     VEC_ELEM(arrayDefocusU,1) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayDefocusV,1) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayError2,1) = (-1)*fitness;
 
-    Matrix1D<double> coefs(13);
-    coefs.initConstant(0);
-    VEC_ELEM(coefs,0) = 1;
-    VEC_ELEM(coefs,3) = 1;
-    VEC_ELEM(coefs,4) = 1;
-    VEC_ELEM(coefs,5) = 1;
-    VEC_ELEM(coefs,12) =1;
+     // We optimize for deltaV, deltaV
+     (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+     (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+     (*global_adjust)(2) = eAngle;
+     (*global_adjust)(4) = K_so_far;
 
-    Matrix1D<double> coefs2(13);
-    coefs2.initConstant(0);
-    VEC_ELEM(coefs2,0) = 1;
-    VEC_ELEM(coefs2,3) = 1;
-    VEC_ELEM(coefs2,4) = 1;
-    VEC_ELEM(coefs2,5) = 1;
-    VEC_ELEM(coefs2,12) =1;
+     fitness =0;
+     powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                     fitness, iter, steps, false);
 
-    Matrix1D<double> coefs3(13);
-    coefs3.initConstant(1);
-    VEC_ELEM(coefs3,0) = 1;
-    VEC_ELEM(coefs3,3) = 1;
-    VEC_ELEM(coefs3,4) = 1;
-    VEC_ELEM(coefs3,5) = 1;
-    VEC_ELEM(coefs3,12) =1;
+     VEC_ELEM(arrayDefocusU,2) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayDefocusV,2) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayError2,2) = (-1)*fitness;
 
-    Matrix1D<double> coefs4(13);
-    coefs4.initConstant(0);
-    VEC_ELEM(coefs4,0) = 1;
-    VEC_ELEM(coefs4,3) = 1;
-    VEC_ELEM(coefs4,4) = 1;
-    VEC_ELEM(coefs4,5) = 1;
-    VEC_ELEM(coefs4,12) =1;
+     // We optimize for arrayDefocusAvg, arrayDefocusAvg
+     (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd);
+     (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd);
+     (*global_adjust)(2) = eAngle;
+     (*global_adjust)(4) = K_so_far;
 
-    int x=(int)((0.3*max_freq+0.7*min_freq)*std::cos(PI/4)*XSIZE(centeredEnhancedPSD)+XSIZE(centeredEnhancedPSD)/2);
-    DEBUG_TEXTFILE(formatString("Zernike1 %d",x));
-    DEBUG_TEXTFILE(formatString("centeredEnhancedPSD80x80 %f",centeredEnhancedPSD(80,80)));
-    DEBUG_TEXTFILE(formatString("centeredEnhancedPSD120x120 %f",centeredEnhancedPSD(120,120)));
-    DEBUG_TEXTFILE(formatString("centeredEnhancedPSD160x160 %f",centeredEnhancedPSD(160,160)));
+     fitness =0;
+     powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                     fitness, iter, steps, false);
 
-    std::cout << STARTINGX(centeredEnhancedPSD) << std::endl;
-    std::cout << STARTINGX(phase) << std::endl;
-    std::cout << STARTINGX(mod) << std::endl;
+     VEC_ELEM(arrayDefocusU,3) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayDefocusV,3) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+     VEC_ELEM(arrayError2,3) = (-1)*fitness;
 
-    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
-                  x,x,
-                  1*min_freq*XSIZE(centeredEnhancedPSD),
-                  1*max_freq*XSIZE(centeredEnhancedPSD),
-                  phase, mod, coefs, 0);
+     arrayError2.maxIndex(maxInd);
+     defocusU = VEC_ELEM(arrayDefocusU,maxInd);
+     defocusV = VEC_ELEM(arrayDefocusV,maxInd);
+
+     std::cout <<"defocusU " << defocusU << std::endl;
+     std::cout <<"defocusV " << defocusV << std::endl;
+     std::cout <<"error " << VEC_ELEM(arrayError2,maxInd) << std::endl;
 
 
-    std::cout << STARTINGX(centeredEnhancedPSD) << std::endl;
-    std::cout << STARTINGX(phase) << std::endl;
-    std::cout << STARTINGX(mod) << std::endl;
+    if (VEC_ELEM(arrayError,maxInd) <= -0.3)
+    {
+    	estimate_defoci();
+    }
 
-    kV = kV*1000;
-    double lambda=12.2643247/std::sqrt(kV*(1.+0.978466e-6*kV));
-    //double Z3=VEC_ELEM(coefs,4);
-    //double Z8=VEC_ELEM(coefs,12);
-    double Z8=VEC_ELEM(coefs,4);
-    double Z3=VEC_ELEM(coefs,12);
-    double Z4=VEC_ELEM(coefs,3);
-    double Z5=VEC_ELEM(coefs,5);
-
-    double ellipseAngle1 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    double deFocusAvg1  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
-    double deFocusDiff1 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
-    double deFocusAvgMean =  deFocusAvg1;
-
-    std::cout << "Defocus U : " <<  deFocusAvg1 + deFocusDiff1 << std::endl;
-    std::cout << "Defocus V : " <<  deFocusAvg1 - deFocusDiff1 << std::endl;
-
-    //STARTINGX(centeredEnhancedPSD)=STARTINGY(centeredEnhancedPSD)=0;
-    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
-                  x,x,
-                  0.76*min_freq*XSIZE(centeredEnhancedPSD),
-                  0.76*max_freq*XSIZE(centeredEnhancedPSD),
-                  phase2, mod2, coefs2, 0);
-
-
-    //Z3=VEC_ELEM(coefs2,4);
-    //Z8=VEC_ELEM(coefs2,12);
-    Z8=VEC_ELEM(coefs2,4);
-    Z3=VEC_ELEM(coefs2,12);
-    Z4=VEC_ELEM(coefs2,3);
-    Z5=VEC_ELEM(coefs2,5);
-
-    double deFocusAvg2  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
-    double deFocusDiff2 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
-    double ellipseAngle2 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    deFocusAvgMean +=  deFocusAvg2;
-
-    std::cout << "Defocus U : " <<  deFocusAvg2 + deFocusDiff2 << std::endl;
-    std::cout << "Defocus V : " <<  deFocusAvg2 - deFocusDiff2 << std::endl;
-
-    //STARTINGX(centeredEnhancedPSD)=STARTINGY(centeredEnhancedPSD)=0;
-    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
-                  x,x,
-                  0.88*min_freq*XSIZE(centeredEnhancedPSD),
-                  0.88*max_freq*XSIZE(centeredEnhancedPSD),
-                  phase3, mod3, coefs3, 0);
-
-
-    //std::cout << "coefs3 : " <<  coefs3 << std::endl;
-
-    Z8=VEC_ELEM(coefs3,4);
-    Z3=VEC_ELEM(coefs3,12);
-    Z4=VEC_ELEM(coefs3,3);
-    Z5=VEC_ELEM(coefs3,5);
-
-
-    double deFocusAvg3  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
-    double deFocusDiff3 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
-
-    std::cout << "Defocus U : " <<  deFocusAvg3 + deFocusDiff3 << std::endl;
-    std::cout << "Defocus V : " <<  deFocusAvg3 - deFocusDiff3 << std::endl;
-
-    double ellipseAngle3 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    deFocusAvgMean +=  deFocusAvg3;
-
-    //STARTINGX(centeredEnhancedPSD)=STARTINGY(centeredEnhancedPSD)=0;
-    fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
-                  x,x,
-                  0.64*min_freq*XSIZE(centeredEnhancedPSD),
-                  0.64*max_freq*XSIZE(centeredEnhancedPSD),
-                  phase4, mod4, coefs4, 0);
-
-
-    Z8=VEC_ELEM(coefs4,4);
-    Z3=VEC_ELEM(coefs4,12);
-    Z4=VEC_ELEM(coefs4,3);
-    Z5=VEC_ELEM(coefs4,5);
-
-    double deFocusAvg4  =  fabs(2*Tm*Tm*(2*Z3-6*Z8)/(PI*lambda));
-    double deFocusDiff4 =  fabs(2*Tm*Tm*(std::sqrt(Z4*Z4+Z5*Z5))/(PI*lambda));
-
-    std::cout << "Defocus U : " <<  deFocusAvg4 + deFocusDiff4 << std::endl;
-    std::cout << "Defocus V : " <<  deFocusAvg4 - deFocusDiff4 << std::endl;
-
-    double ellipseAngle4 = 0.5*RAD2DEG(std::atan2(Z5,Z4))+90.0;
-    deFocusAvgMean +=  deFocusAvg4;
-    deFocusAvgMean /= 4;
-
-    //if ( (deFocusDiff2 > deFocusDiff1) && (deFocusDiff3 > deFocusDiff1)
-    //  && (deFocusDiff4 > deFocusDiff1))
-    if ( ( fabs(deFocusAvg2-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean))
-         && ( fabs(deFocusAvg3-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean))
-         && ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg1-deFocusAvgMean)) )
-{
-        defocusU=deFocusAvg1+deFocusDiff1;
-        defocusV=deFocusAvg1-deFocusDiff1;
-        ellipseAngle = ellipseAngle1;
-}
-    else
-        if ( ( fabs(deFocusAvg2-deFocusAvgMean) > fabs(deFocusAvg3-deFocusAvgMean))
-             && ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg3-deFocusAvgMean)))
-        {
-            defocusU=deFocusAvg3+deFocusDiff3;
-            defocusV=deFocusAvg3-deFocusDiff3;
-            ellipseAngle = ellipseAngle3;
-        }
-        else
-            if ( ( fabs(deFocusAvg4-deFocusAvgMean) > fabs(deFocusAvg2-deFocusAvgMean)))
-            {
-                defocusU=deFocusAvg2+deFocusDiff2;
-                defocusV=deFocusAvg2-deFocusDiff2;
-                ellipseAngle = ellipseAngle2;
-            }
-            else
-            {
-                defocusU=deFocusAvg4+deFocusDiff4;
-                defocusV=deFocusAvg4-deFocusDiff4;
-                ellipseAngle = ellipseAngle4;
-            }
-
-
-    DEBUG_TEXTFILE(formatString("phase160x160 %f",phase(160,160)));
-    DEBUG_TEXTFILE(formatString("mod160x160 %f",mod(160,160)));
-
-    DEBUG_TEXTFILE(formatString("lambda %f",lambda));
-    DEBUG_TEXTFILE(formatString("Z3 %f",Z3));
-    DEBUG_TEXTFILE(formatString("Z8 %f",Z8));
-    DEBUG_TEXTFILE(formatString("Z4 %f",Z4));
-    DEBUG_TEXTFILE(formatString("Z5 %f",Z5));
-    DEBUG_TEXTFILE(formatString("ellipseAngle %f",ellipseAngle));
-    DEBUG_TEXTFILE(formatString("defocusU %f",defocusU));
-    DEBUG_TEXTFILE(formatString("defocusV %f",defocusV));
-
-    */
 }
 
 void estimate_defoci_Zernike()
