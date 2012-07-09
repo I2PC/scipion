@@ -76,6 +76,10 @@ class ProtImportMicrographs(XmippProtocol):
         message.append("Import of <%d> micrographs from [%s]" % (len(self.getMicrographs()), self.DirMicrographs))
         if self.TiltPairs:
             message.append("Micrographs are in tilt pairs")
+        fnAcquisition=self.getFilename('acquisition')
+        if os.path.exists(fnAcquisition):
+            MD=xmipp.MetaData(fnAcquisition)
+            message.append("Sampling rate=<"+str(MD.getValue(xmipp.MDL_SAMPLINGRATE,MD.firstObject()))+" A/pix>")
         return message
     
     def getMicrographs(self):
