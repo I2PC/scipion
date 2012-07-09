@@ -2489,13 +2489,13 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     int maxInd;
     arrayError.maxIndex(maxInd);
 
-    Matrix1D<double> arrayDefocusU(4);
+    Matrix1D<double> arrayDefocusU(5);
     arrayDefocusU.initZeros();
 
-    Matrix1D<double> arrayDefocusV(4);
+    Matrix1D<double> arrayDefocusV(5);
     arrayDefocusV.initZeros();
 
-    Matrix1D<double> arrayError2(4);
+    Matrix1D<double> arrayError2(5);
     arrayError2.initConstant(-1);
 
     // We optimize for deltaU, deltaV
@@ -2547,6 +2547,22 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
      VEC_ELEM(arrayDefocusU,3) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
      VEC_ELEM(arrayDefocusV,3) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
      VEC_ELEM(arrayError2,3) = (-1)*fitness;
+
+     // We optimize for deltaU, deltaU
+     (*global_adjust)(0) = (VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd))*2;
+     (*global_adjust)(1) = (VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd))*2;
+     (*global_adjust)(2) = eAngle;
+     (*global_adjust)(4) = K_so_far;
+
+     fitness =0;
+     powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                     fitness, iter, steps, false);
+
+     VEC_ELEM(arrayDefocusU,4) = (VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd))*2;
+     VEC_ELEM(arrayDefocusV,4) = (VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd))*2;
+     VEC_ELEM(arrayError2,4) = (-1)*fitness;
+
 
      arrayError2.maxIndex(maxInd);
      defocusU = VEC_ELEM(arrayDefocusU,maxInd);
