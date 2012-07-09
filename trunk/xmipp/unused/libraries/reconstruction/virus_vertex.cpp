@@ -172,8 +172,8 @@ void VirusVertex::processAngles()
                 DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
                 DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
                 DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-                DF.getValue(MDL_SHITF_X,xoff,__iter.objId);
-                DF.getValue(MDL_SHITF_Y,yoff,__iter.objId);
+                DF.getValue(MDL_SHIFT_X,xoff,__iter.objId);
+                DF.getValue(MDL_SHIFT_Y,yoff,__iter.objId);
                 DF.getValue(MDL_FLIP,flip,__iter.objId);
                 DF.getValue(MDL_WEIGHT,weight,__iter.objId);
                 proj.setEulerAngles(rot,tilt,psi);
@@ -244,8 +244,8 @@ void VirusVertex::processAngles()
                 DFout.setValue(MDL_ANGLE_ROT,rotp,objId);
                 DFout.setValue(MDL_ANGLE_TILT,tiltp,objId);
                 DFout.setValue(MDL_ANGLE_PSI,psip,objId);
-                DFout.setValue(MDL_SHITF_X,0,objId);
-                DFout.setValue(MDL_SHITF_Y,0,objId);
+                DFout.setValue(MDL_SHIFT_X,0,objId);
+                DFout.setValue(MDL_SHIFT_Y,0,objId);
                 DFout.setValue(MDL_FLIP,flip,objId);
                 DFout.setValue(MDL_WEIGHT,weight,objId);
             }

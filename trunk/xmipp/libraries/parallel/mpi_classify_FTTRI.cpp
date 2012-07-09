@@ -1171,8 +1171,8 @@ void ProgClassifyFTTRI::alignImagesWithinClasses()
                     bool flip;
                     double scale, shiftx, shifty, psi;
                     transformationMatrix2Parameters2D(M, flip, scale, shiftx, shifty, psi);
-                    MDclass.setValue(MDL_SHITF_X, shiftx, __iter.objId);
-                    MDclass.setValue(MDL_SHITF_Y, shifty, __iter.objId);
+                    MDclass.setValue(MDL_SHIFT_X, shiftx, __iter.objId);
+                    MDclass.setValue(MDL_SHIFT_Y, shifty, __iter.objId);
                     MDclass.setValue(MDL_ANGLE_PSI, psi, __iter.objId);
                     MDclass.setValue(MDL_MAXCC, corr, __iter.objId);
                 }

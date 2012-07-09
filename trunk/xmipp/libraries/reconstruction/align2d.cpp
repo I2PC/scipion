@@ -230,8 +230,8 @@ void ProgAlign2d::refinement()
         bool flip;
         double scale, shiftX, shiftY, psi;
         transformationMatrix2Parameters2D(M, flip, scale, shiftX, shiftY, psi);
-        SF.setValue(MDL_SHITF_X,shiftX,__iter.objId);
-        SF.setValue(MDL_SHITF_Y,shiftY,__iter.objId);
+        SF.setValue(MDL_SHIFT_X,shiftX,__iter.objId);
+        SF.setValue(MDL_SHIFT_Y,shiftY,__iter.objId);
         SF.setValue(MDL_ANGLE_PSI,psi,__iter.objId);
         SF.setValue(MDL_FLIP,flip,__iter.objId);
         SF.setValue(MDL_MAXCC,corr,__iter.objId);

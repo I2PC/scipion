@@ -299,9 +299,9 @@ void ProgARTPseudo::run()
             double psi;
             DF.getValue( MDL_ANGLE_PSI, psi,__iter.objId);
             double shiftX;
-            DF.getValue( MDL_SHITF_X, shiftX,__iter.objId);
+            DF.getValue( MDL_SHIFT_X, shiftX,__iter.objId);
             double shiftY;
-            DF.getValue( MDL_SHITF_Y, shiftY,__iter.objId);
+            DF.getValue( MDL_SHIFT_Y, shiftY,__iter.objId);
             std::vector<double> lambda;
             if (NMA.size()>0)
                 DF.getValue( MDL_NMA, lambda,__iter.objId);

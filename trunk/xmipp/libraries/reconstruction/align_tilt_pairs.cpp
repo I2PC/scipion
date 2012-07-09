@@ -195,8 +195,8 @@ void ProgAlignTiltPairs::run() {
 		MDin.getValue(MDL_ANGLE_Y, alphaU, __iter.objId);
 		MDin.getValue(MDL_ANGLE_Y2, alphaT, __iter.objId);
 		MDin.getValue(MDL_ANGLE_TILT, gamma, __iter.objId);
-		MDin.getValue(MDL_SHITF_X, shiftXu, __iter.objId);
-		MDin.getValue(MDL_SHITF_X, shiftYu, __iter.objId);
+		MDin.getValue(MDL_SHIFT_X, shiftXu, __iter.objId);
+		MDin.getValue(MDL_SHIFT_X, shiftYu, __iter.objId);
 
 		// Correct untilted alignment
 		if (flip)
@@ -225,14 +225,14 @@ void ProgAlignTiltPairs::run() {
 			MDout.setValue(MDL_ANGLE_ROT, -inPlaneU, idOut);
 			MDout.setValue(MDL_ANGLE_TILT, gamma + 180, idOut);
 			MDout.setValue(MDL_ANGLE_PSI, alphaT, idOut);
-			MDout.setValue(MDL_SHITF_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
-			MDout.setValue(MDL_SHITF_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
+			MDout.setValue(MDL_SHIFT_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
+			MDout.setValue(MDL_SHIFT_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
 		} else {
 			MDout.setValue(MDL_ANGLE_ROT, -inPlaneU, idOut);
 			MDout.setValue(MDL_ANGLE_TILT, gamma, idOut);
 			MDout.setValue(MDL_ANGLE_PSI, alphaT, idOut);
-			MDout.setValue(MDL_SHITF_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
-			MDout.setValue(MDL_SHITF_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
+			MDout.setValue(MDL_SHIFT_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
+			MDout.setValue(MDL_SHIFT_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
 		}
 		MDout.setValue(MDL_ENABLED, (int) enable, idOut);
 

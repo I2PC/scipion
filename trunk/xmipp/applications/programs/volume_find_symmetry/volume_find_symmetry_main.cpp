@@ -324,7 +324,7 @@ public:
                 MetaData MD;
                 size_t id=MD.addObject();
                 MD.setValue(MDL_ANGLE_ROT,best_rot,id);
-                MD.setValue(MDL_SHITF_Z,best_z,id);
+                MD.setValue(MDL_SHIFT_Z,best_z,id);
                 MD.write(fn_output);
                 if (!local)
                     helicalCorrelation.write(fn_output+".xmp");

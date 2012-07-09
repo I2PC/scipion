@@ -366,6 +366,8 @@ public class MetadataTable extends MetadataGallery {
 	class MetadataTableHeader extends JTableHeader {
 		public MetadataTableHeader(TableColumnModel columnModel){
 			super(columnModel);
+			//DEBUG.printFormat("col: %d, width: %d", i,
+			//width);
 		}
 		/** Show tooltips on columns header */
 		public String getToolTipText(MouseEvent e) {

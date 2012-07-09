@@ -106,8 +106,8 @@ def subtractionScript(_log
     mdRotations = MetaData(md) #rotations
     
     # Save Metadata with just rotations (shifts will be applied when reading)
-    mdRotations.setValueCol(MDL_SHITF_X, 0.)
-    mdRotations.setValueCol(MDL_SHITF_Y, 0.)
+    mdRotations.setValueCol(MDL_SHIFT_X, 0.)
+    mdRotations.setValueCol(MDL_SHIFT_Y, 0.)
     mdRotations.operate('anglePsi=-anglePsi')
     
     mdResults = MetaData(mdRotations)

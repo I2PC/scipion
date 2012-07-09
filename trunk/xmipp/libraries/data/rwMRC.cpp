@@ -236,9 +236,9 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         double aux;
         for ( size_t i = 0; i < imgEnd - imgStart; ++i )
         {
-            MD[i].setValue(MDL_SHITF_X, (double) -header->nxStart);
-            MD[i].setValue(MDL_SHITF_Y, (double) -header->nyStart);
-            MD[i].setValue(MDL_SHITF_Z, (double) -header->nzStart);
+            MD[i].setValue(MDL_SHIFT_X, (double) -header->nxStart);
+            MD[i].setValue(MDL_SHIFT_Y, (double) -header->nyStart);
+            MD[i].setValue(MDL_SHIFT_Z, (double) -header->nzStart);
 
             // We include auto detection of MRC2000 or CCP4 style origin based on http://situs.biomachina.org/fmap.pdf
             if (header->xOrigin != 0)
@@ -421,9 +421,9 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
 #define SET_HEADER_SHIFT(field, label)  MD[0].getValueOrDefault(label, aux, 0.); header->field = -(int) round(aux)
-            SET_HEADER_SHIFT(nxStart, MDL_SHITF_X);
-            SET_HEADER_SHIFT(nyStart, MDL_SHITF_Y);
-            SET_HEADER_SHIFT(nzStart, MDL_SHITF_Z);
+            SET_HEADER_SHIFT(nxStart, MDL_SHIFT_X);
+            SET_HEADER_SHIFT(nyStart, MDL_SHIFT_Y);
+            SET_HEADER_SHIFT(nzStart, MDL_SHIFT_Z);
 #define SET_HEADER_ORIGIN(field, label1, label2)  MD[0].getValueOrDefault(label1, aux, 0.);MDMainHeader.getValueOrDefault(label2, aux2, 0.);\
               header->field = (float) (aux * aux2)
 

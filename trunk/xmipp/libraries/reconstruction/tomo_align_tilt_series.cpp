@@ -2374,8 +2374,8 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
         size_t id = DF.addObject();
         DF.setValue(MDL_IMAGE, fn_corrected, id);
         DF.setValue(MDL_ANGLE_PSI, 90.-alignment.rot+alignment.psi(i), id);
-        DF.setValue(MDL_SHITF_X, XX(alignment.di[i]+alignment.diaxis[i]), id);
-        DF.setValue(MDL_SHITF_Y, YY(alignment.di[i]+alignment.diaxis[i]), id);
+        DF.setValue(MDL_SHIFT_X, XX(alignment.di[i]+alignment.diaxis[i]), id);
+        DF.setValue(MDL_SHIFT_Y, YY(alignment.di[i]+alignment.diaxis[i]), id);
     }
     DF.write(fnRoot+"_correction_parameters.txt");
     delete iter;

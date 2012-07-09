@@ -136,14 +136,14 @@ void ProgAngularDistance::run()
         DF1.getValue(MDL_ANGLE_ROT,rot1,__iter.objId);
         DF1.getValue(MDL_ANGLE_TILT,tilt1,__iter.objId);
         DF1.getValue(MDL_ANGLE_PSI,psi1,__iter.objId);
-        DF1.getValue(MDL_SHITF_X,X1,__iter.objId);
-        DF1.getValue(MDL_SHITF_Y,Y1,__iter.objId);
+        DF1.getValue(MDL_SHIFT_X,X1,__iter.objId);
+        DF1.getValue(MDL_SHIFT_Y,Y1,__iter.objId);
 
         DF2.getValue(MDL_ANGLE_ROT,rot2,__iter2.objId);
         DF2.getValue(MDL_ANGLE_TILT,tilt2,__iter2.objId);
         DF2.getValue(MDL_ANGLE_PSI,psi2,__iter2.objId);
-        DF2.getValue(MDL_SHITF_X,X2,__iter2.objId);
-        DF2.getValue(MDL_SHITF_Y,Y2,__iter2.objId);
+        DF2.getValue(MDL_SHIFT_X,X2,__iter2.objId);
+        DF2.getValue(MDL_SHIFT_Y,Y2,__iter2.objId);
 
         // Bring both angles to a normalized set
         rot1 = realWRAP(rot1, -180, 180);

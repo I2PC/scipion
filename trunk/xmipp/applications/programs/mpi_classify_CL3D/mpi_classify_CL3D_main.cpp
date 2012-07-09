@@ -863,9 +863,9 @@ void CL3D::write(const FileName &fnRoot, int level) const
         {
             const CL3DAssignment &assignment = currentListImg[i];
             SF->getRow(row,assignment.objId);
-            row.setValue(MDL_SHITF_X, assignment.shiftx);
-            row.setValue(MDL_SHITF_Y, assignment.shifty);
-            row.setValue(MDL_SHITF_Z, assignment.shiftz);
+            row.setValue(MDL_SHIFT_X, assignment.shiftx);
+            row.setValue(MDL_SHIFT_Y, assignment.shifty);
+            row.setValue(MDL_SHIFT_Z, assignment.shiftz);
             row.setValue(MDL_ANGLE_ROT, assignment.rot);
             row.setValue(MDL_ANGLE_TILT, assignment.tilt);
             row.setValue(MDL_ANGLE_PSI, assignment.psi);

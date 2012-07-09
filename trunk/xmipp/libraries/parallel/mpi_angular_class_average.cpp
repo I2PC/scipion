@@ -422,8 +422,8 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         _DF.getValue(MDL_IMAGE, fn_img, __iter.objId);
         this_image++;
         _DF.getValue(MDL_ANGLE_PSI, psi, __iter.objId);
-        _DF.getValue(MDL_SHITF_X, xshift, __iter.objId);
-        _DF.getValue(MDL_SHITF_Y, yshift, __iter.objId);
+        _DF.getValue(MDL_SHIFT_X, xshift, __iter.objId);
+        _DF.getValue(MDL_SHIFT_Y, yshift, __iter.objId);
         if (do_mirrors)
             _DF.getValue(MDL_FLIP, mirror, __iter.objId);
         _DF.getValue(MDL_SCALE, scale, __iter.objId);

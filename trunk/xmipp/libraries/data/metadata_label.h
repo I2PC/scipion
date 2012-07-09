@@ -307,9 +307,9 @@ enum MDLabel
     MDL_SCALE, ///< scaling factor for an image or volume (double)
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
-    MDL_SHITF_X, ///< Shift for the image in the X axis (double)
-    MDL_SHITF_Y, ///< Shift for the image in the Y axis (double)
-    MDL_SHITF_Z, ///< Shift for the image in the Z axis (double)
+    MDL_SHIFT_X, ///< Shift for the image in the X axis (double)
+    MDL_SHIFT_Y, ///< Shift for the image in the Y axis (double)
+    MDL_SHIFT_Z, ///< Shift for the image in the Z axis (double)
     MDL_SIGMANOISE, ///< Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, ///< Standard deviation of the offsets in ML model
     MDL_SIGNALCHANGE, ///< Signal change for an image
@@ -1037,12 +1037,12 @@ private:
         MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
         MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");
 
-        MDL::addLabel(MDL_SHITF_X, LABEL_DOUBLE, "shiftX");
-        MDL::addLabelAlias(MDL_SHITF_X, "Xoff");
-        MDL::addLabel(MDL_SHITF_Y, LABEL_DOUBLE, "shiftY");
-        MDL::addLabelAlias(MDL_SHITF_Y, "Yoff");
-        MDL::addLabel(MDL_SHITF_Z, LABEL_DOUBLE, "shiftZ");
-        MDL::addLabelAlias(MDL_SHITF_Z, "Zoff");
+        MDL::addLabel(MDL_SHIFT_X, LABEL_DOUBLE, "shiftX");
+        MDL::addLabelAlias(MDL_SHIFT_X, "Xoff");
+        MDL::addLabel(MDL_SHIFT_Y, LABEL_DOUBLE, "shiftY");
+        MDL::addLabelAlias(MDL_SHIFT_Y, "Yoff");
+        MDL::addLabel(MDL_SHIFT_Z, LABEL_DOUBLE, "shiftZ");
+        MDL::addLabelAlias(MDL_SHIFT_Z, "Zoff");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
@@ -1090,9 +1090,9 @@ private:
         MDL::emptyHeader.setValue(MDL_ORIGIN_X,  0.);
         MDL::emptyHeader.setValue(MDL_ORIGIN_Y,  0.);
         MDL::emptyHeader.setValue(MDL_ORIGIN_Z,  0.);
-        MDL::emptyHeader.setValue(MDL_SHITF_X,   0.);
-        MDL::emptyHeader.setValue(MDL_SHITF_Y,   0.);
-        MDL::emptyHeader.setValue(MDL_SHITF_Z,   0.);
+        MDL::emptyHeader.setValue(MDL_SHIFT_X,   0.);
+        MDL::emptyHeader.setValue(MDL_SHIFT_Y,   0.);
+        MDL::emptyHeader.setValue(MDL_SHIFT_Z,   0.);
         MDL::emptyHeader.setValue(MDL_ANGLE_ROT, 0.);
         MDL::emptyHeader.setValue(MDL_ANGLE_TILT,0.);
         MDL::emptyHeader.setValue(MDL_ANGLE_PSI, 0.);

@@ -311,7 +311,7 @@ double ImageBase::psi(const size_t n) const
 double ImageBase::Xoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_SHITF_X, dummy);
+    MD[n].getValue(MDL_SHIFT_X, dummy);
     return dummy;
 }
 
@@ -324,7 +324,7 @@ double ImageBase::Xoff(const size_t n) const
 double ImageBase::Yoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_SHITF_Y, dummy);
+    MD[n].getValue(MDL_SHIFT_Y, dummy);
     return dummy;
 }
 
@@ -337,7 +337,7 @@ double ImageBase::Yoff(const size_t n) const
 double ImageBase::Zoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_SHITF_Z, dummy);
+    MD[n].getValue(MDL_SHIFT_Z, dummy);
     return dummy;
 }
 
@@ -435,17 +435,17 @@ void ImageBase::getEulerAngles(double &rot, double &tilt, double &psi,
      */
 void ImageBase::setShifts(double xoff, double yoff, double zoff, const size_t n)
 {
-    MD[n].setValue(MDL_SHITF_X, xoff);
-    MD[n].setValue(MDL_SHITF_Y, yoff);
-    MD[n].setValue(MDL_SHITF_Z, zoff);
+    MD[n].setValue(MDL_SHIFT_X, xoff);
+    MD[n].setValue(MDL_SHIFT_Y, yoff);
+    MD[n].setValue(MDL_SHIFT_Z, zoff);
 }
 /** Get origin offsets from image header
   */
 void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t n) const
 {
-    MD[n].getValue(MDL_SHITF_X, xoff);
-    MD[n].getValue(MDL_SHITF_Y, yoff);
-    MD[n].getValue(MDL_SHITF_Z, zoff);
+    MD[n].getValue(MDL_SHIFT_X, xoff);
+    MD[n].getValue(MDL_SHIFT_Y, yoff);
+    MD[n].getValue(MDL_SHIFT_Z, zoff);
 }
 
 void ImageBase::getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
@@ -919,7 +919,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
         oGeo << "                 Theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
         oGeo << "                 Psi   (third rotation around new Z axis)        = " << I.psi() << std::endl;
     }
-    if (I.individualContainsLabel(MDL_SHITF_X))
+    if (I.individualContainsLabel(MDL_SHIFT_X))
     {
         oGeo << "Origin Offsets : " << std::endl;
         oGeo << "                 Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;

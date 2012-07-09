@@ -1239,8 +1239,8 @@ void alignSetOfImages(MetaData &MD, MultidimArray<double>& Iavg, int Niter,
 				transformationMatrix2Parameters2D(M, flip, scale, shiftx,
 						shifty, psi);
 				MD.setValue(MDL_FLIP, flip, __iter.objId);
-				MD.setValue(MDL_SHITF_X, shiftx, __iter.objId);
-				MD.setValue(MDL_SHITF_Y, shifty, __iter.objId);
+				MD.setValue(MDL_SHIFT_X, shiftx, __iter.objId);
+				MD.setValue(MDL_SHIFT_Y, shifty, __iter.objId);
 				MD.setValue(MDL_ANGLE_PSI, psi, __iter.objId);
 				MD.setValue(MDL_MAXCC, corr, __iter.objId);
 			}

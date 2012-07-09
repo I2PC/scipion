@@ -672,10 +672,10 @@ ProgMLTomo::produceSideInfo()
     // Check whether MDimg contains orientations
     //  mdimg_contains_angles = (MDimg.containsLabel(MDL_ANGLE_ROT)
     //      && MDimg.containsLabel(MDL_ANGLE_TILT) && MDimg.containsLabel(MDL_ANGLE_PSI)
-    //      && MDimg.containsLabel(MDL_SHITF_X) && MDimg.containsLabel(MDL_SHITF_Y)
-    //      && MDimg.containsLabel(MDL_SHITF_Z));
+    //      && MDimg.containsLabel(MDL_SHIFT_X) && MDimg.containsLabel(MDL_SHIFT_Y)
+    //      && MDimg.containsLabel(MDL_SHIFT_Z));
     // Check angles and shifts are not present on input metadata, fill it with 0 value
-    MDLabel labels[6] = { MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_SHITF_X, MDL_SHITF_Y, MDL_SHITF_Z };
+    MDLabel labels[6] = { MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z };
     String labelStr = "WARNING: Labels ";
     mdimg_contains_angles = true;
     for (int i = 0; i < 6; ++i)
@@ -962,9 +962,9 @@ ProgMLTomo::generateInitialReferences()
                 md.getValue(MDL_ANGLE_TILT, my_tilt, __iter.objId);
                 md.getValue(MDL_ANGLE_PSI, my_psi, __iter.objId);
 
-                md.getValue(MDL_SHITF_X, my_offsets(0), __iter.objId);
-                md.getValue(MDL_SHITF_Y, my_offsets(1), __iter.objId);
-                md.getValue(MDL_SHITF_Z, my_offsets(2), __iter.objId);
+                md.getValue(MDL_SHIFT_X, my_offsets(0), __iter.objId);
+                md.getValue(MDL_SHIFT_Y, my_offsets(1), __iter.objId);
+                md.getValue(MDL_SHIFT_Z, my_offsets(2), __iter.objId);
                 my_offsets *= scale_factor;
 
                 selfTranslate(LINEAR, Itmp(), my_offsets, DONT_WRAP);
@@ -1154,9 +1154,9 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
 
             if (dont_align || dont_rotate || do_only_average)
             {
-                row.getValue(MDL_SHITF_X, imgs_optoffsets[imgno](0));
-                row.getValue(MDL_SHITF_Y, imgs_optoffsets[imgno](1));
-                row.getValue(MDL_SHITF_Z, imgs_optoffsets[imgno](2));
+                row.getValue(MDL_SHIFT_X, imgs_optoffsets[imgno](0));
+                row.getValue(MDL_SHIFT_Y, imgs_optoffsets[imgno](1));
+                row.getValue(MDL_SHIFT_Z, imgs_optoffsets[imgno](2));
             }
         }
     }////////////////////<<<<<<<<<<<<<<<<<<<<<<<<
@@ -3381,9 +3381,9 @@ ProgMLTomo::addPartialDocfileData(const MultidimArray<double> &data,
         row.setValue(MDL_ANGLE_ROT, dAij(data, index, 0));
         row.setValue(MDL_ANGLE_TILT, dAij(data, index, 1));
         row.setValue(MDL_ANGLE_PSI, dAij(data, index, 2));
-        row.setValue(MDL_SHITF_X, dAij(data, index, 3));
-        row.setValue(MDL_SHITF_Y, dAij(data, index, 4));
-        row.setValue(MDL_SHITF_Z, dAij(data, index, 5));
+        row.setValue(MDL_SHIFT_X, dAij(data, index, 3));
+        row.setValue(MDL_SHIFT_Y, dAij(data, index, 4));
+        row.setValue(MDL_SHIFT_Z, dAij(data, index, 5));
         row.setValue(MDL_REF, ROUND(dAij(data, index, 6)));
         if (do_missing)
             row.setValue(MDL_REF, ROUND(dAij(data, index, 7)));

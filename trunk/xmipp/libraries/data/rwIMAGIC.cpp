@@ -213,9 +213,9 @@ int  ImageBase::readIMAGIC(size_t select_img)
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
-                MD[i].setValue(MDL_SHITF_X,  (double)-1. * header->ixold);
-                MD[i].setValue(MDL_SHITF_Y,  (double)-1. * header->iyold);
-                MD[i].setValue(MDL_SHITF_Z,  zeroD);
+                MD[i].setValue(MDL_SHIFT_X,  (double)-1. * header->ixold);
+                MD[i].setValue(MDL_SHIFT_Y,  (double)-1. * header->iyold);
+                MD[i].setValue(MDL_SHIFT_Z,  zeroD);
                 MD[i].setValue(MDL_ANGLE_ROT, (double)-1. * header->euler_alpha);
                 MD[i].setValue(MDL_ANGLE_TILT,(double)-1. * header->euler_beta);
                 MD[i].setValue(MDL_ANGLE_PSI, (double)-1. * header->euler_gamma);
@@ -449,8 +449,8 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         {
 #define SET_HEADER_VALUE(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
 
-        	SET_HEADER_VALUE(ixold, MDL_SHITF_X);
-        	SET_HEADER_VALUE(iyold, MDL_SHITF_Y);
+        	SET_HEADER_VALUE(ixold, MDL_SHIFT_X);
+        	SET_HEADER_VALUE(iyold, MDL_SHIFT_Y);
         	SET_HEADER_VALUE(euler_alpha, MDL_ANGLE_ROT);
         	SET_HEADER_VALUE(euler_beta, MDL_ANGLE_TILT);
         	SET_HEADER_VALUE(euler_gamma, MDL_ANGLE_PSI);

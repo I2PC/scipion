@@ -962,14 +962,14 @@ int PROJECT_Effectively_project(const String &fnOut,
         // Choose Center displacement ........................................
         double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
         double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        SF.setValue(MDL_SHITF_X,-shiftX,DFmov_objId);
-        SF.setValue(MDL_SHITF_Y,-shiftY,DFmov_objId);
+        SF.setValue(MDL_SHIFT_X,-shiftX,DFmov_objId);
+        SF.setValue(MDL_SHIFT_Y,-shiftY,DFmov_objId);
 #ifdef DEBUG
 
         mdShifts.addObject();
         mdShifts.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
-        mdShifts.setValue(MDL_SHITF_X,-shiftX,DFmov_objId);
-        mdShifts.setValue(MDL_SHITF_Y,-shiftY,DFmov_objId);
+        mdShifts.setValue(MDL_SHIFT_X,-shiftX,DFmov_objId);
+        mdShifts.setValue(MDL_SHIFT_Y,-shiftY,DFmov_objId);
         mdShifts.setValue(MDL_ENABLED,1,DFmov_objId);
 
 
@@ -1104,12 +1104,12 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
             crystal_proj_prm.DF_shift.setValue(MDL_CRYSTAL_CELLY,ycell*my_scale,__iter.objId);
 
             double x,y,z;
-            crystal_proj_prm.DF_shift.getValue(MDL_SHITF_X,x,__iter.objId);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHITF_Y,y,__iter.objId);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHITF_Z,z,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHITF_X,x*my_scale,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHITF_Y,y*my_scale,__iter.objId);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHITF_Z,z*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_X,x,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_Y,y,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_Z,z,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_X,x*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_Y,y*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_Z,z*my_scale,__iter.objId);
 
             crystal_proj_prm.DF_shift.getValue(MDL_CRYSTAL_SHIFTX,x,__iter.objId);
             crystal_proj_prm.DF_shift.getValue(MDL_CRYSTAL_SHIFTY,y,__iter.objId);

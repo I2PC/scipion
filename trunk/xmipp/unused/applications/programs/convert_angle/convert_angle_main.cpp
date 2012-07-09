@@ -74,8 +74,8 @@ public:
             _mdIn.getValue(MDL_ANGLE_ROT,rot1);
             _mdIn.getValue(MDL_ANGLE_TILT,tilt1);
             _mdIn.getValue(MDL_ANGLE_PSI,psi1);
-            _mdIn.getValue(MDL_SHITF_X,shiftX);
-            _mdIn.getValue(MDL_SHITF_Y,shiftY);
+            _mdIn.getValue(MDL_SHIFT_X,shiftX);
+            _mdIn.getValue(MDL_SHIFT_Y,shiftY);
 
             rot2  = rot1;
             tilt2 = tilt1;
@@ -102,8 +102,8 @@ public:
             //shiftX =  - shiftX;
             //shiftY =  - shiftY;
 
-            _mdIn.setValue(MDL_SHITF_X, shiftX);
-            _mdIn.setValue(MDL_SHITF_Y, shiftY);
+            _mdIn.setValue(MDL_SHIFT_X, shiftX);
+            _mdIn.setValue(MDL_SHIFT_Y, shiftY);
 
         }
 

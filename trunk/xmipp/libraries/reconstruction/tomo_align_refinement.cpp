@@ -278,8 +278,8 @@ void ProgTomoAlignRefinement::run()
         DF.setValue(MDL_ANGLE_ROT,list_of_assigned[i].rot,id);
         DF.setValue(MDL_ANGLE_TILT,list_of_assigned[i].tilt,id);
         DF.setValue(MDL_ANGLE_PSI,list_of_assigned[i].psi,id);
-        DF.setValue(MDL_SHITF_X,list_of_assigned[i].x,id);
-        DF.setValue(MDL_SHITF_Y,list_of_assigned[i].y,id);
+        DF.setValue(MDL_SHIFT_X,list_of_assigned[i].x,id);
+        DF.setValue(MDL_SHIFT_Y,list_of_assigned[i].y,id);
         DF.setValue(MDL_MAXCC,list_of_assigned[i].corr,id);
     }
     DF.write(fn_out+".doc");

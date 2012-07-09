@@ -249,9 +249,9 @@ void ProgAngularClassAverage::run()
                                 output_values[i * AVG_OUPUT_SIZE + 7], id);
                     DF.setValue(MDL_ANGLE_PSI,
                                 output_values[i * AVG_OUPUT_SIZE + 8], id);
-                    DF.setValue(MDL_SHITF_X,
+                    DF.setValue(MDL_SHIFT_X,
                                 output_values[i * AVG_OUPUT_SIZE + 9], id);
-                    DF.setValue(MDL_SHITF_Y,
+                    DF.setValue(MDL_SHIFT_Y,
                                 output_values[i * AVG_OUPUT_SIZE + 10], id);
                     DF.setValue(MDL_REF,
                                 output_values[i * AVG_OUPUT_SIZE + 11], id);
@@ -795,8 +795,8 @@ void ProgAngularClassAverage::processOneClass(size_t &dirno, double * my_output)
             if (is_selected)
             {
                 _DF.getValue(MDL_ANGLE_PSI, psi, __iter.objId);
-                _DF.getValue(MDL_SHITF_X, xshift, __iter.objId);
-                _DF.getValue(MDL_SHITF_Y, yshift, __iter.objId);
+                _DF.getValue(MDL_SHIFT_X, xshift, __iter.objId);
+                _DF.getValue(MDL_SHIFT_Y, yshift, __iter.objId);
                 if (do_mirrors)
                     _DF.getValue(MDL_FLIP, mirror, __iter.objId);
                 _DF.getValue(MDL_SCALE, scale, __iter.objId);
@@ -1035,8 +1035,8 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno, double w,
         SFclasses.setValue(MDL_ANGLE_TILT, tilt, id);
         //this may help to keep compatibility with the next program
         SFclasses.setValue(MDL_ANGLE_PSI, d, id);
-        SFclasses.setValue(MDL_SHITF_X, d, id);
-        SFclasses.setValue(MDL_SHITF_Y, d, id);
+        SFclasses.setValue(MDL_SHIFT_X, d, id);
+        SFclasses.setValue(MDL_SHIFT_Y, d, id);
 
         SFclasses.setValue(MDL_WEIGHT, w, id);
         //this may help to keep compatibility with the next program
@@ -1056,8 +1056,8 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno, double w,
             SFclasses1.setValue(MDL_ANGLE_TILT, tilt, id);
             //this may help to keep compatibility with the next program
             SFclasses1.setValue(MDL_ANGLE_PSI, d, id);
-            SFclasses1.setValue(MDL_SHITF_X, d, id);
-            SFclasses1.setValue(MDL_SHITF_Y, d, id);
+            SFclasses1.setValue(MDL_SHIFT_X, d, id);
+            SFclasses1.setValue(MDL_SHIFT_Y, d, id);
 
             SFclasses1.setValue(MDL_WEIGHT, w1, id);
 
@@ -1076,8 +1076,8 @@ void ProgAngularClassAverage::addClassAverage(size_t dirno, double w,
             SFclasses2.setValue(MDL_ANGLE_TILT, tilt, id);
             //this may help to keep compatibility with the next program
             SFclasses2.setValue(MDL_ANGLE_PSI, d, id);
-            SFclasses2.setValue(MDL_SHITF_X, d, id);
-            SFclasses2.setValue(MDL_SHITF_Y, d, id);
+            SFclasses2.setValue(MDL_SHIFT_X, d, id);
+            SFclasses2.setValue(MDL_SHIFT_Y, d, id);
 
             SFclasses2.setValue(MDL_WEIGHT, w2, id);
 

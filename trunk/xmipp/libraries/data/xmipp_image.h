@@ -1052,12 +1052,12 @@ protected:
         if (row.getValue(MDL_ORIGIN_Z, aux))
             rowAux.setValue(MDL_ORIGIN_Z, aux);
         //shifts
-        if (row.getValue(MDL_SHITF_X, aux))
-            rowAux.setValue(MDL_SHITF_X, aux);
-        if (row.getValue(MDL_SHITF_Y, aux))
-            rowAux.setValue(MDL_SHITF_Y, aux);
-        if (row.getValue(MDL_SHITF_Z, aux))
-            rowAux.setValue(MDL_SHITF_Z, aux);
+        if (row.getValue(MDL_SHIFT_X, aux))
+            rowAux.setValue(MDL_SHIFT_X, aux);
+        if (row.getValue(MDL_SHIFT_Y, aux))
+            rowAux.setValue(MDL_SHIFT_Y, aux);
+        if (row.getValue(MDL_SHIFT_Z, aux))
+            rowAux.setValue(MDL_SHIFT_Z, aux);
         //rotations
         if (row.getValue(MDL_ANGLE_ROT, aux))
             rowAux.setValue(MDL_ANGLE_ROT, aux);

@@ -119,8 +119,8 @@ void ProgProjectTomography::run()
         projMD.setValue(MDL_ANGLE_ROT2,tRot,objId);
         projMD.setValue(MDL_ANGLE_TILT2,tTilt,objId);
         projMD.setValue(MDL_ANGLE_PSI2,tPsi,objId);
-        projMD.setValue(MDL_SHITF_X,shiftX,objId);
-        projMD.setValue(MDL_SHITF_Y,shiftY,objId);
+        projMD.setValue(MDL_SHIFT_X,shiftX,objId);
+        projMD.setValue(MDL_SHIFT_Y,shiftY,objId);
 
         IMGMATRIX(proj).addNoise(projParam.Npixel_avg, projParam.Npixel_dev, "gaussian");
 

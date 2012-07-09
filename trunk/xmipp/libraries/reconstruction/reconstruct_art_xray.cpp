@@ -231,9 +231,9 @@ void ProgReconsXrayART::run()
             double psi;
             MDin.getValue( MDL_ANGLE_PSI, psi,__iter.objId);
             double shiftX;
-            MDin.getValue( MDL_SHITF_X, shiftX,__iter.objId);
+            MDin.getValue( MDL_SHIFT_X, shiftX,__iter.objId);
             double shiftY;
-            MDin.getValue( MDL_SHITF_Y, shiftY,__iter.objId);
+            MDin.getValue( MDL_SHIFT_Y, shiftY,__iter.objId);
 
             projExp.read(fnExp);
             projExp().setXmippOrigin();

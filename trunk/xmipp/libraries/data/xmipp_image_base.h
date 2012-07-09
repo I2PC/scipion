@@ -707,21 +707,21 @@ public:
      */
     void setXoff(double xoff, const size_t n = 0)
     {
-        MD[n].setValue(MDL_SHITF_X, xoff);
+        MD[n].setValue(MDL_SHIFT_X, xoff);
     }
 
     /** Set Y offset in image header
      */
     void setYoff(double yoff, const size_t n = 0)
     {
-        MD[n].setValue(MDL_SHITF_Y, yoff);
+        MD[n].setValue(MDL_SHIFT_Y, yoff);
     }
 
     /** Set Z offset in image header
      */
     void setZoff(double zoff, const size_t n = 0)
     {
-        MD[n].setValue(MDL_SHITF_Z, zoff);
+        MD[n].setValue(MDL_SHIFT_Z, zoff);
     }
 
     /** Set scale in image header

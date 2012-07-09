@@ -225,8 +225,8 @@ void ProgRecWbp::getAnglesForImage(size_t id, double &rot, double &tilt,
         SF.getValue(MDL_ANGLE_ROT, rot, id);
         SF.getValue(MDL_ANGLE_TILT, tilt, id);
         SF.getValue(MDL_ANGLE_PSI, psi, id);
-        SF.getValue(MDL_SHITF_X, xoff, id);
-        SF.getValue(MDL_SHITF_Y, yoff, id);
+        SF.getValue(MDL_SHIFT_X, xoff, id);
+        SF.getValue(MDL_SHIFT_Y, yoff, id);
         flip = 0;
         SF.getValue(MDL_FLIP, flip, id);
         weight = 1;

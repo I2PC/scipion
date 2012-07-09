@@ -1055,8 +1055,8 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     rowOut.setValue(MDL_ANGLE_ROT,  best_rot);
     rowOut.setValue(MDL_ANGLE_TILT, best_tilt);
     rowOut.setValue(MDL_ANGLE_PSI,  -best_psi);
-    rowOut.setValue(MDL_SHITF_X,    best_shiftX);
-    rowOut.setValue(MDL_SHITF_Y,    best_shiftY);
+    rowOut.setValue(MDL_SHIFT_X,    best_shiftX);
+    rowOut.setValue(MDL_SHIFT_Y,    best_shiftY);
     rowOut.setValue(MDL_MAXCC,     best_score);
 }
 #undef DEBUG

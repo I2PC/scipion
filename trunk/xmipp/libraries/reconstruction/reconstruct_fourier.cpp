@@ -250,8 +250,8 @@ void ProgRecFourier::get_angles_for_image(const FileName &fn, double &rot,
         (*docfile).getValue(MDL_ANGLE_ROT,rot,found[0]);
         (*docfile).getValue(MDL_ANGLE_TILT,tilt,found[0]);
         (*docfile).getValue(MDL_ANGLE_PSI,psi,found[0]);
-        (*docfile).getValue(MDL_SHITF_X,xoff,found[0]);
-        (*docfile).getValue(MDL_SHITF_Y,yoff,found[0]);
+        (*docfile).getValue(MDL_SHIFT_X,xoff,found[0]);
+        (*docfile).getValue(MDL_SHIFT_Y,yoff,found[0]);
         flip=0;
         weight=0;
         (*docfile).getValue(MDL_FLIP,flip,found[0]);

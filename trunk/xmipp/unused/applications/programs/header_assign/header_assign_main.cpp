@@ -101,16 +101,16 @@ protected:
                 mdIn.getValue( MDL_ANGLE_PSI, psi, objId);
                 img.setPsi(psi);
                 break;
-            case MDL_SHITF_X:
-                mdIn.getValue( MDL_SHITF_X, xshift, objId);
+            case MDL_SHIFT_X:
+                mdIn.getValue( MDL_SHIFT_X, xshift, objId);
                 if (levels != 0)
                     xshift /= pow(2.0, levels);
                 if (round_shifts)
                     xshift = (float)ROUND(xshift);
                 img.setXoff(xshift);
                 break;
-            case MDL_SHITF_Y:
-                mdIn.getValue(MDL_SHITF_Y, yshift, objId);
+            case MDL_SHIFT_Y:
+                mdIn.getValue(MDL_SHIFT_Y, yshift, objId);
                 if (levels != 0)
                     yshift /= pow(2.0, levels);
                 if (round_shifts)

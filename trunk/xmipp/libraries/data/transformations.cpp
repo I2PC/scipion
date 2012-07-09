@@ -34,8 +34,8 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
     bool flip = false;
 
     imageGeo.getValue(MDL_ANGLE_PSI, psi);
-    imageGeo.getValue(MDL_SHITF_X, shiftX);
-    imageGeo.getValue(MDL_SHITF_Y, shiftY);
+    imageGeo.getValue(MDL_SHIFT_X, shiftX);
+    imageGeo.getValue(MDL_SHIFT_Y, shiftY);
     imageGeo.getValue(MDL_SCALE, scale);
     imageGeo.getValue(MDL_FLIP, flip);
 
@@ -58,7 +58,7 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
         double rot = 0., tilt = 0., shiftZ = 0.;
         imageGeo.getValue(MDL_ANGLE_ROT, rot);
         imageGeo.getValue(MDL_ANGLE_TILT, tilt);
-        imageGeo.getValue(MDL_SHITF_Z, shiftZ);
+        imageGeo.getValue(MDL_SHIFT_Z, shiftZ);
         Euler_angles2matrix(rot, tilt, psi, A, true);
         MAT_ELEM(A, 2, dim) = shiftZ;
     }
@@ -158,9 +158,9 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
     ADD_IF_EXIST_NONZERO(MDL_ANGLE_ROT, rot);
     ADD_IF_EXIST_NONZERO(MDL_ANGLE_TILT, tilt);
     ADD_IF_EXIST_NONZERO(MDL_ANGLE_PSI, psi);
-    ADD_IF_EXIST_NONZERO(MDL_SHITF_X, dMij(A,0,3));
-    ADD_IF_EXIST_NONZERO(MDL_SHITF_Y, dMij(A,1,3));
-    ADD_IF_EXIST_NONZERO(MDL_SHITF_Z, dMij(A,2,3));
+    ADD_IF_EXIST_NONZERO(MDL_SHIFT_X, dMij(A,0,3));
+    ADD_IF_EXIST_NONZERO(MDL_SHIFT_Y, dMij(A,1,3));
+    ADD_IF_EXIST_NONZERO(MDL_SHIFT_Z, dMij(A,2,3));
 
     //if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
     if(!XMIPP_EQUAL_REAL(scale, 1.))

@@ -149,9 +149,9 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
     rowIn.setValue(MDL_ANGLE_ROT,rot);
     rowIn.setValue(MDL_ANGLE_TILT,tilt);
     rowIn.setValue(MDL_ANGLE_PSI,psi);
-    rowIn.setValue(MDL_SHITF_X,x);
-    rowIn.setValue(MDL_SHITF_Y,y);
-    rowIn.setValue(MDL_SHITF_Z,z);
+    rowIn.setValue(MDL_SHIFT_X,x);
+    rowIn.setValue(MDL_SHIFT_Y,y);
+    rowIn.setValue(MDL_SHIFT_Z,z);
     rowIn.setValue(MDL_FLIP, flip);
     Matrix2D<double> A(4, 4);
 
@@ -161,9 +161,9 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
     rowOut.getValue(MDL_ANGLE_ROT,rot2);
     rowOut.getValue(MDL_ANGLE_TILT,tilt2);
     rowOut.getValue(MDL_ANGLE_PSI,psi2);
-    rowOut.getValue(MDL_SHITF_X,x2);
-    rowOut.getValue(MDL_SHITF_Y,y2);
-    rowOut.getValue(MDL_SHITF_Z,z2);
+    rowOut.getValue(MDL_SHIFT_X,x2);
+    rowOut.getValue(MDL_SHIFT_Y,y2);
+    rowOut.getValue(MDL_SHIFT_Z,z2);
     rowOut.getValue(MDL_FLIP, flip2);
 
     EXPECT_DOUBLE_EQ(scale, scale2);

@@ -115,8 +115,8 @@ void ProgMPIXrayProject::run()
             projMD.setValue(MDL_ANGLE_ROT2,data.rot, id);
             projMD.setValue(MDL_ANGLE_TILT2,data.tilt, id);
             projMD.setValue(MDL_ANGLE_PSI2,data.psi, id);
-            projMD.setValue(MDL_SHITF_X,shiftX, id);
-            projMD.setValue(MDL_SHITF_Y,shiftY, id);
+            projMD.setValue(MDL_SHIFT_X,shiftX, id);
+            projMD.setValue(MDL_SHIFT_Y,shiftY, id);
         }
 
         mpiData.push_back(data);
@@ -261,8 +261,8 @@ void ProgMPIXrayProject::run()
 //            DF_movements.setValue(MDL_ANGLE_ROT2,data.rot, id);
 //            DF_movements.setValue(MDL_ANGLE_TILT2,data.tilt, id);
 //            DF_movements.setValue(MDL_ANGLE_PSI2,data.psi, id);
-//            DF_movements.setValue(MDL_SHITF_X,shiftX, id);
-//            DF_movements.setValue(MDL_SHITF_Y,shiftY, id);
+//            DF_movements.setValue(MDL_SHIFT_X,shiftX, id);
+//            DF_movements.setValue(MDL_SHIFT_Y,shiftY, id);
 //
 //            id = SF.addObject();
 //            SF.setValue(MDL_IMAGE,data.fn_proj, id);

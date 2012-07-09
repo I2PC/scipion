@@ -63,7 +63,7 @@ public class MetaData {
 	// }
 
 	public final static int GEOMETRY_LABELS[] = { MDLabel.MDL_FLIP,
-			MDLabel.MDL_ANGLE_PSI, MDLabel.MDL_SHITF_X, MDLabel.MDL_SHITF_Y };
+			MDLabel.MDL_ANGLE_PSI, MDLabel.MDL_SHIFT_X, MDLabel.MDL_SHIFT_Y };
 
 	public final static int MICROGRAPH_BASIC_LABELS[] = {
 			MDLabel.MDL_MICROGRAPH, MDLabel.MDL_PSD, MDLabel.MDL_CTF_MODEL };

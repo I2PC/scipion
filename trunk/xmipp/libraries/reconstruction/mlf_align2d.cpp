@@ -612,8 +612,8 @@ void ProgMLF2D::produceSideInfo2()
         //
         //            idum = (do_mirror ? 2 : 1) * model.n_ref;
         //            double xoff, yoff;
-        //            MDimg.getValue(MDL_SHITF_X, xoff);
-        //            MDimg.getValue(MDL_SHITF_Y, yoff);
+        //            MDimg.getValue(MDL_SHIFT_X, xoff);
+        //            MDimg.getValue(MDL_SHIFT_Y, yoff);
         //            for (int refno = 0; refno < idum; refno++)
         //            {
         //                imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xoff;
@@ -2882,8 +2882,8 @@ void ProgMLF2D::addPartialDocfileData(const MultidimArray<double> &data,
         MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0), id);
         MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1), id);
         MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2), id);
-        MDimg.setValue(MDL_SHITF_X, dAij(data, index, 3), id);
-        MDimg.setValue(MDL_SHITF_Y, dAij(data, index, 4), id);
+        MDimg.setValue(MDL_SHIFT_X, dAij(data, index, 3), id);
+        MDimg.setValue(MDL_SHIFT_Y, dAij(data, index, 4), id);
         MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5) + 1), id);
         if (do_mirror)
         {

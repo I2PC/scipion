@@ -153,10 +153,10 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
     {
         eprm->shift.resize(dim);
         id = eprm->shiftsIter.objId;
-        eprm->DF_shifts.getValue(MDL_SHITF_X,XX(eprm->shift), id);
-        eprm->DF_shifts.getValue(MDL_SHITF_Y,YY(eprm->shift), id);
+        eprm->DF_shifts.getValue(MDL_SHIFT_X,XX(eprm->shift), id);
+        eprm->DF_shifts.getValue(MDL_SHIFT_Y,YY(eprm->shift), id);
         if (dim==3)
-            eprm->DF_shifts.getValue(MDL_SHITF_Z,ZZ(eprm->shift), id);
+            eprm->DF_shifts.getValue(MDL_SHIFT_Z,ZZ(eprm->shift), id);
         eprm->shiftsIter.moveNext();
     }
     else if (eprm->Docfile)

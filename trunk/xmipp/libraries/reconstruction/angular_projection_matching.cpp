@@ -1066,8 +1066,8 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFo.setValue(MDL_ANGLE_PSI, opt_psi,idNew);
         /**/
         //opt_xoff=0;
-        DFo.setValue(MDL_SHITF_X,   opt_xoff,idNew);
-        DFo.setValue(MDL_SHITF_Y,   opt_yoff,idNew);
+        DFo.setValue(MDL_SHIFT_X,   opt_xoff,idNew);
+        DFo.setValue(MDL_SHIFT_Y,   opt_yoff,idNew);
         DFo.setValue(MDL_REF,      opt_refno /*+ FIRST_IMAGE*/,idNew);
         DFo.setValue(MDL_FLIP,     opt_flip,idNew);
         DFo.setValue(MDL_SCALE,    opt_scale,idNew);
@@ -1098,8 +1098,8 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
     // Store translation in header and apply it to the actual image
     //No need to get initial angles since those came with the reference projection
     double shiftX=0., shiftY=0.;
-    DFexp.getValue(MDL_SHITF_X,shiftX, imgid);
-    DFexp.getValue(MDL_SHITF_Y,shiftY, imgid);
+    DFexp.getValue(MDL_SHIFT_X,shiftX, imgid);
+    DFexp.getValue(MDL_SHIFT_Y,shiftY, imgid);
 
     img.setShifts(shiftX,shiftY);
 

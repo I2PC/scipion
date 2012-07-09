@@ -1947,9 +1947,9 @@ void Sampling::findClosestSamplingPoint(MetaData &DFi,
         comment+=floatToString(aux)+" ";
         DFi.getValue(MDL_ANGLE_PSI,aux, iter.objId);
         comment+=floatToString(aux)+" ";
-        DFi.getValue(MDL_SHITF_X,aux, iter.objId);
+        DFi.getValue(MDL_SHIFT_X,aux, iter.objId);
         comment+=floatToString(aux)+" ";
-        DFi.getValue(MDL_SHITF_Y,aux, iter.objId);
+        DFi.getValue(MDL_SHIFT_Y,aux, iter.objId);
         comment+=floatToString(aux);
         id = DFo.addObject();
         DFo.setValue(MDL_COMMENT,comment, id);

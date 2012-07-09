@@ -914,9 +914,9 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
         aux_DF_shift.getValue(MDL_CRYSTAL_CELLY,ycell,__iter.objId);
         if (!exp_shifts_matrix_X.outside(xcell,ycell))
         {
-            aux_DF_shift.getValue(MDL_SHITF_X,exp_shifts_matrix_X(ycell, xcell),__iter.objId);
-            aux_DF_shift.getValue(MDL_SHITF_Y,exp_shifts_matrix_Y(ycell, xcell),__iter.objId);
-            aux_DF_shift.getValue(MDL_SHITF_Z,exp_shifts_matrix_Z(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_SHIFT_X,exp_shifts_matrix_X(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_SHIFT_Y,exp_shifts_matrix_Y(ycell, xcell),__iter.objId);
+            aux_DF_shift.getValue(MDL_SHIFT_Z,exp_shifts_matrix_Z(ycell, xcell),__iter.objId);
 
             aux_DF_shift.getValue(MDL_CRYSTAL_SHIFTX,exp_normal_shifts_matrix_X(ycell, xcell),__iter.objId);
             aux_DF_shift.getValue(MDL_CRYSTAL_SHIFTY,exp_normal_shifts_matrix_Y(ycell, xcell),__iter.objId);

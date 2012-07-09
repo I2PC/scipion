@@ -135,8 +135,8 @@ void ProgNmaAlignment::createWorkFiles() {
 		mdDone.addLabel(MDL_ANGLE_ROT);
 		mdDone.addLabel(MDL_ANGLE_TILT);
 		mdDone.addLabel(MDL_ANGLE_PSI);
-		mdDone.addLabel(MDL_SHITF_X);
-		mdDone.addLabel(MDL_SHITF_Y);
+		mdDone.addLabel(MDL_SHIFT_X);
+		mdDone.addLabel(MDL_SHIFT_Y);
 		mdDone.addLabel(MDL_NMA);
 		mdDone.addLabel(MDL_COST);
 		mdDone.write(fn);
@@ -343,9 +343,9 @@ double ProgNmaAlignment::performContinuousAssignment(const FileName &fnRandom,
 	row.getValue(MDL_ANGLE_ROT, trial(VEC_XSIZE(trial) - 5));
 	row.getValue(MDL_ANGLE_TILT, trial(VEC_XSIZE(trial) - 4));
 	row.getValue(MDL_ANGLE_PSI, trial(VEC_XSIZE(trial) - 3));
-	row.getValue(MDL_SHITF_X, trial(VEC_XSIZE(trial) - 2));
+	row.getValue(MDL_SHIFT_X, trial(VEC_XSIZE(trial) - 2));
 	trial(VEC_XSIZE(trial) - 2) *= pow(2.0, (double) pyramidLevel);
-	row.getValue(MDL_SHITF_Y, trial(VEC_XSIZE(trial) - 1));
+	row.getValue(MDL_SHIFT_Y, trial(VEC_XSIZE(trial) - 1));
 	trial(VEC_XSIZE(trial) - 1) *= pow(2.0, (double) pyramidLevel);
 	double tempvar;
 	if (!costSource) {
@@ -401,8 +401,8 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
 		DF.setValue(MDL_ANGLE_ROT, rot, objId);
 		DF.setValue(MDL_ANGLE_TILT, tilt, objId);
 		DF.setValue(MDL_ANGLE_PSI, psi, objId);
-		DF.setValue(MDL_SHITF_X, xshift, objId);
-		DF.setValue(MDL_SHITF_Y, yshift, objId);
+		DF.setValue(MDL_SHIFT_X, xshift, objId);
+		DF.setValue(MDL_SHIFT_Y, yshift, objId);
 
 		DF.write(formatString("angledisc_%s.xmd", randStr));
 		link(global_NMA_prog->currentImgName.c_str(), fnDown.c_str());
@@ -538,8 +538,8 @@ void ProgNmaAlignment::writeImageParameters(const FileName &fnImg) {
 	md.setValue(MDL_ANGLE_ROT, parameters(0), objId);
 	md.setValue(MDL_ANGLE_TILT, parameters(1), objId);
 	md.setValue(MDL_ANGLE_PSI, parameters(2), objId);
-	md.setValue(MDL_SHITF_X, parameters(3), objId);
-	md.setValue(MDL_SHITF_Y, parameters(4), objId);
+	md.setValue(MDL_SHIFT_X, parameters(3), objId);
+	md.setValue(MDL_SHIFT_Y, parameters(4), objId);
 
 	int dim = numberOfModes;
 	std::vector<double> vectortemp;

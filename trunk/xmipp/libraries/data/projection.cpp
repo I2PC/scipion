@@ -187,11 +187,11 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
         MD.getValue(MDL_ANGLE_TILT, axisTilt, objId);
 
         raxis.resize(3);
-        if (!MD.getValue(MDL_SHITF_X, XX(raxis), objId))
+        if (!MD.getValue(MDL_SHIFT_X, XX(raxis), objId))
             XX(raxis) = 0;
-        if (!MD.getValue(MDL_SHITF_Y, YY(raxis), objId))
+        if (!MD.getValue(MDL_SHIFT_Y, YY(raxis), objId))
             YY(raxis) = 0;
-        if (!MD.getValue(MDL_SHITF_Z, ZZ(raxis), objId))
+        if (!MD.getValue(MDL_SHIFT_Z, ZZ(raxis), objId))
             ZZ(raxis) = 0;
 
         MD.getValue(MDL_PRJ_TILT_RANGE, vecD, objId);

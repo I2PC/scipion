@@ -146,8 +146,8 @@ TEST_F( FiltersTest, alignImages)
     MDRow row;
     row.setValue(MDL_FLIP,flip);
     row.setValue(MDL_SCALE,scale);
-    row.setValue(MDL_SHITF_X,shiftX);
-    row.setValue(MDL_SHITF_Y,shiftY);
+    row.setValue(MDL_SHIFT_X,shiftX);
+    row.setValue(MDL_SHIFT_Y,shiftY);
     row.setValue(MDL_ANGLE_PSI,psi);
     Image<double> Ialigned4;
     Ialigned4.readApplyGeo(fileTemp, row);

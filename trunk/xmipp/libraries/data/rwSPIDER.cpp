@@ -243,11 +243,11 @@ int  ImageBase::readSPIDER(size_t select_img)
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
             daux = (double)header->xoff;
-            MD[n].setValue(MDL_SHITF_X, daux);
+            MD[n].setValue(MDL_SHIFT_X, daux);
             daux = (double)header->yoff;
-            MD[n].setValue(MDL_SHITF_Y, daux);
+            MD[n].setValue(MDL_SHIFT_Y, daux);
             daux = (double)header->zoff;
-            MD[n].setValue(MDL_SHITF_Z, daux);
+            MD[n].setValue(MDL_SHIFT_Z, daux);
             daux = (double)header->phi;
             MD[n].setValue(MDL_ANGLE_ROT, daux);
             daux = (double)header->theta;
@@ -396,9 +396,9 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
 #define SET_HEADER_VALUE(field, label, aux)  MD[0].getValueOrDefault((label), (aux), 0.); header->field = (float)(aux)
-            SET_HEADER_VALUE(xoff, MDL_SHITF_X, aux);
-            SET_HEADER_VALUE(yoff, MDL_SHITF_Y, aux);
-            SET_HEADER_VALUE(zoff, MDL_SHITF_Z, aux);
+            SET_HEADER_VALUE(xoff, MDL_SHIFT_X, aux);
+            SET_HEADER_VALUE(yoff, MDL_SHIFT_Y, aux);
+            SET_HEADER_VALUE(zoff, MDL_SHIFT_Z, aux);
             SET_HEADER_VALUE(phi, MDL_ANGLE_ROT, aux);
             SET_HEADER_VALUE(theta, MDL_ANGLE_TILT, aux);
             SET_HEADER_VALUE(gamma, MDL_ANGLE_PSI, aux);
@@ -524,9 +524,9 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             // Write the individual image header
             if ( it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
             {
-                SET_HEADER_VALUE(xoff, MDL_SHITF_X, aux);
-                SET_HEADER_VALUE(yoff, MDL_SHITF_Y, aux);
-                SET_HEADER_VALUE(zoff, MDL_SHITF_Z, aux);
+                SET_HEADER_VALUE(xoff, MDL_SHIFT_X, aux);
+                SET_HEADER_VALUE(yoff, MDL_SHIFT_Y, aux);
+                SET_HEADER_VALUE(zoff, MDL_SHIFT_Z, aux);
                 SET_HEADER_VALUE(phi, MDL_ANGLE_ROT, aux);
                 SET_HEADER_VALUE(theta, MDL_ANGLE_TILT, aux);
                 SET_HEADER_VALUE(gamma, MDL_ANGLE_PSI, aux);

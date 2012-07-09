@@ -4494,9 +4494,9 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_SCALE", (long) MDL_SCALE);
     addIntConstant(dict, "MDL_SELFILE", (long) MDL_SELFILE);
     addIntConstant(dict, "MDL_SERIE", (long) MDL_SERIE);
-    addIntConstant(dict, "MDL_SHITF_X", (long) MDL_SHITF_X);
-    addIntConstant(dict, "MDL_SHITF_Y", (long) MDL_SHITF_Y);
-    addIntConstant(dict, "MDL_SHITF_Z", (long) MDL_SHITF_Z);
+    addIntConstant(dict, "MDL_SHIFT_X", (long) MDL_SHIFT_X);
+    addIntConstant(dict, "MDL_SHIFT_Y", (long) MDL_SHIFT_Y);
+    addIntConstant(dict, "MDL_SHIFT_Z", (long) MDL_SHIFT_Z);
     addIntConstant(dict, "MDL_CRYSTAL_SHIFTX", (long) MDL_CRYSTAL_SHIFTX);
     addIntConstant(dict, "MDL_CRYSTAL_SHIFTY", (long) MDL_CRYSTAL_SHIFTY);
     addIntConstant(dict, "MDL_CRYSTAL_SHIFTZ", (long) MDL_CRYSTAL_SHIFTZ);
