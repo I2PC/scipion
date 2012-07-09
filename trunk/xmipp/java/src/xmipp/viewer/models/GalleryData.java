@@ -234,8 +234,6 @@ public class GalleryData {
 			ColumnInfo ciFirstRenderVisible = null;
 			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 			
-			DEBUG.printMessage("renderLabel: " + parameters.renderLabel);
-			
 			if (!parameters.renderLabel.equalsIgnoreCase("first")){
 				inputRenderLabel = MetaData.str2Label(parameters.renderLabel);
 			}
@@ -249,7 +247,6 @@ public class GalleryData {
 				} else if (ci.allowRender)
 					ci.render = globalRender;
 				newLabels.add(ci);
-				DEBUG.printFormat("i: %d, label: %d", lab[i], inputRenderLabel);
 				if (inputRenderLabel == lab[i] && ci.allowRender){
 					ciFirstRender = ci;
 					if (ci.visible)
@@ -329,7 +326,6 @@ public class GalleryData {
 					return new MetadataGallery(this);
 				// else fall in the next case
 			case TABLE_MD:
-				DEBUG.printFormat("Mode.TABLE_MD");
 				mode = Mode.TABLE_MD; // this is necessary when coming from
 				// previous case
 				if (!md.isColumnFormat())
@@ -490,8 +486,8 @@ public class GalleryData {
 				long count = md.getValueLong(MDLabel.MDL_CLASS_COUNT, id);
 				String s = Filename.getClassBlockName(ref);
 				if (count > 0 && !containsBlock(s)) {
-					DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'",
-							ref, s);
+//					DEBUG.printFormat("2Dclass: for ref: %d, no block '%s'",
+//							ref, s);
 					return false;
 				}
 			}

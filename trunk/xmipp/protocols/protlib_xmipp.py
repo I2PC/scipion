@@ -170,20 +170,33 @@ class LabelData():
         pass
     
 def getXmippLabels():
+    ''' Parse the labels definition from the 'libraries/data/metadata_label.h' file '''
     labelHeader = getXmippPath(os.path.join('libraries', 'data', 'metadata_label.h'))
     f = open(labelHeader)
     labels = []
+    comments = {}
+    
     for line in f:
         line = line.strip()
+        if line.startswith('MDL_') and '///<' in line:
+            parts = line.split('///<')
+            mdl = parts[0].strip()[:-1] # remove last comma
+            comm = parts[1].strip()
+            comments[mdl] = comm
         if line.startswith('MDL::addLabel(MDL_'):
             l = line.find('(')
             r = line.find(')')
             parts = line[l + 1:r].split(',')
-            labels.append({'name':parts[2].replace('"', ''), 'type':parts[1], 'enum':parts[0]})
+            label = {}
+            label['name'] = parts[2].replace('"', '').strip()
+            label['type'] = parts[1].strip()
+            label['enum'] = parts[0].strip()
+            label['comment'] = comments.get(label['enum'], "")
+            labels.append(label)
     return labels
 
-'''Return the list of Xmipp's programs, taken from from bin/ folder'''     
 def getXmippPrograms():
+    '''Return the list of Xmipp's programs, taken from from bin/ folder'''     
     from glob import glob
     programs = [os.path.basename(p) for p in glob(os.path.join(getXmippPath(), 'bin', 'xmipp_*'))]
     programs.sort()
@@ -193,7 +206,7 @@ def getXmippPrograms():
 def skipProgram(programName):
     if programName in ['xmipp_sqlite3', 'xmipp_mpi_steps_runner',
                        'xmipp_angular_commonline', 'xmipp_python',
-                       'xmipp_transform_threshold']:
+                       'xmipp_transform_threshold', 'xmipp_mpi_write_test']:
         return True
     for p in ['xmipp_test', 'xmipp_template']:
         if programName.find(p) != -1:
@@ -211,36 +224,40 @@ def createProgramsDb(dbName=None):
     db.create()
     #Create categories dictionary to classify programs
     #looking in program name and category prefixes
-    categories = db.selectCategories()
-    categoryDict = {}
-    for c in categories:
-        prefixes = c['prefixes'].split()
-        for p in prefixes:
-            categoryDict[p] = c
-            
-    programs = getXmippPrograms()
-    for p in programs:
-        p = os.path.basename(p)
-        try:
-            print greenStr(p), skipProgram(p)
-            
-            if not skipProgram(p):
-                cmd = [p, "--xmipp_write_definition"]
-                if p.find('_mpi') != -1:                    
-                    cmd = ['mpirun', '-np', '1'] + cmd
-                print ' '.join(cmd)
-                from subprocess import Popen, PIPE
-                ps = Popen(cmd, stdout=PIPE, stderr=PIPE)
-                stderrdata = ps.communicate()[1]
-                if stderrdata != '':
-                    raise Exception(stderrdata)
-                for prefix, category in categoryDict.iteritems():
-                    if prefix in p:
-                        db.updateProgramCategory(p, category)
-                        break
-        except Exception, e:
-            print failStr("PROGRAM: " + p)
-            print failStr("ERROR: " + str(e)) 
+#    categories = db.selectCategories()
+#    categoryDict = {}
+#    for c in categories:
+#        prefixes = c['prefixes'].split()
+#        for p in prefixes:
+#            categoryDict[p] = c
+#            
+#    programs = getXmippPrograms()
+#    for p in programs:
+#        p = os.path.basename(p)
+#        try:
+#            print greenStr(p), skipProgram(p)
+#            
+#            if not skipProgram(p):
+#                cmd = [p, "--xmipp_write_definition"]
+#                if p.find('_mpi') != -1:                    
+#                    cmd = ['mpirun', '-np', '1'] + cmd
+#                print ' '.join(cmd)
+#                from subprocess import Popen, PIPE
+#                ps = Popen(cmd, stdout=PIPE, stderr=PIPE)
+#                stderrdata = ps.communicate()[1]
+#                if stderrdata != '':
+#                    raise Exception(stderrdata)
+#                for prefix, category in categoryDict.iteritems():
+#                    if prefix in p:
+#                        db.updateProgramCategory(p, category)
+#                        break
+#        except Exception, e:
+#            print failStr("PROGRAM: " + p)
+#            print failStr("ERROR: " + str(e))
+    labels = getXmippLabels()
+    for l in labels:
+        db.insertLabel(l)
+    db.commit()
     return db
 
 class ProgramKeywordsRank():

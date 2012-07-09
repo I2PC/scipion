@@ -198,6 +198,8 @@ public class MetaData {
 		}
 		return "UNKNOWN";
 	}// function getLabelTypeString
+	
+	public static native String getLabelComment(int label) throws Exception;
 
 	public static native boolean isTextFile(int label) throws Exception;
 

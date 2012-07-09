@@ -273,7 +273,9 @@ public class MetadataTable extends MetadataGallery {
 		table.setDefaultRenderer(ImageItem.class, renderer);
 		table.setDefaultRenderer(Double.class, new FloatRenderer());
 		// table.setAutoCreateRowSorter(true);
-		JTableHeader header = table.getTableHeader();
+		MetadataTableHeader header = new MetadataTableHeader(columnModel);
+		table.setTableHeader(header);
+		//JTableHeader header = table.getTableHeader();
 		header.setUpdateTableInRealTime(true);
 		header.addMouseListener(new MetadataColumnListener(table));
 		header.setReorderingAllowed(true);
@@ -358,8 +360,22 @@ public class MetadataTable extends MetadataGallery {
 				e.printStackTrace();
 			}
 		}// function adjustColumnsWidth
-
+		
 	}// class MetadataColumnModel
+	
+	class MetadataTableHeader extends JTableHeader {
+		public MetadataTableHeader(TableColumnModel columnModel){
+			super(columnModel);
+		}
+		/** Show tooltips on columns header */
+		public String getToolTipText(MouseEvent e) {
+            java.awt.Point p = e.getPoint();
+            int index = columnModel.getColumnIndexAtX(p.x);
+            if (index > -1)
+            	return visibleLabels.get(index).comment;
+            return null;
+        }
+	}
 
 	class MetadataColumnListener extends MouseAdapter {
 		protected JTable table;
@@ -373,7 +389,6 @@ public class MetadataTable extends MetadataGallery {
 			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
 			int modelIndex = colModel.getColumn(columnModelIndex)
 					.getModelIndex();
-			DEBUG.printFormat("Sorting col index: %d", modelIndex);
 
 			if (modelIndex < 0)
 				return;

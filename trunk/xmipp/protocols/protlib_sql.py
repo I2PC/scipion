@@ -651,6 +651,7 @@ def escapeStr(str):
     return "'%s'" % str.replace("'", "''") 
           
 class ProgramDb():
+    ''' Class to handle Programs DB in the Xmipp installation folder '''
     def __init__(self, dbName=None):
         if dbName is None:
             from protlib_xmipp import getProgramsDbName
@@ -663,6 +664,9 @@ class ProgramDb():
             
     def create(self):
         self.createTables()
+        
+    def commit(self):
+        self.connection.commit()
         
     def createTables(self):
             sqlCommand = """DROP TABLE IF EXISTS Category;
@@ -689,6 +693,14 @@ class ProgramDb():
                                usage TEXT,
                                examples TEXT,
                                keywords TEXT);
+                               
+                            DROP TABLE IF EXISTS Label;
+                            CREATE TABLE Label (
+                               id INTEGER PRIMARY KEY ASC AUTOINCREMENT,
+                               name TEXT UNIQUE,
+                               type TEXT,
+                               enum TEXT UNIQUE,
+                               comment TEXT);
                          """
             self.cursor.executescript(sqlCommand)
             self.connection.commit()
@@ -714,11 +726,24 @@ class ProgramDb():
         return self.cursor.fetchone()
         
     def selectCategories(self):
-        sqlCommand = "SELECT * FROM Category;"""
+        sqlCommand = "SELECT * FROM Category;"
         self.cursor.execute(sqlCommand)
         return self.cursor.fetchall()
     
     def updateProgramCategory(self, program_name, category):
         sqlCommand = "UPDATE Program SET category_id = %d WHERE name='%s';" % (category['id'], program_name)
         self.cursor.execute(sqlCommand)
-        self.connection.commit()        
+        self.connection.commit()
+        
+    def selectLabels(self):
+        sqlCommand = "SELECT * FROM Label;"
+        self.cursor.execute(sqlCommand)
+        return self.cursor.fetchall()
+    
+    def insertLabel(self, labelData):
+        print labelData['name']
+        labelData['comment'] = escapeStr(labelData['comment'])
+        sqlCommand = """INSERT INTO Label VALUES (
+                           NULL, '%(name)s', '%(type)s', '%(enum)s', %(comment)s);
+                     """ % labelData
+        self.cursor.execute(sqlCommand)

@@ -6,6 +6,7 @@
 #include <data/metadata.h>
 #include <data/metadata_label.h>
 #include <data/metadata_extension.h>
+#include <data/xmipp_program_sql.h>
 #include <classification/analyze_cluster.h>
 #include "xmipp_InternalData.h"
 
@@ -247,6 +248,20 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getLabelType(JNIEnv *env,
     XMIPP_JAVA_CATCH;
 
     return LABEL_NOTYPE;
+}
+
+JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_getLabelComment(JNIEnv *env,
+        jclass jclass_, jint label)
+{
+    XMIPP_JAVA_TRY
+    {
+        ProgramDb db;
+        String str = db.getLabelComment((MDLabel) label);
+        return env->NewStringUTF(str.data());
+    }
+    XMIPP_JAVA_CATCH;
+
+    return NULL;
 }
 
 JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_isTextFile(JNIEnv *env,

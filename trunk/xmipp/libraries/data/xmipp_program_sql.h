@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (josem@cnb.csic.es)
+ * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -61,6 +61,8 @@ public:
     bool createProgramTables();
     /** Insert a program into db, the id field will be filled */
     bool insertProgram(DictDB &program);
+    /** Get from the db the comment for a label */
+    String getLabelComment(MDLabel label);
 
     //Methods inherits from Program Printer
     virtual void printProgram(const ProgramDef &program, int v = 0);

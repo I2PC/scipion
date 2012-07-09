@@ -81,6 +81,7 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD);
  */
 void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
                               MDLabel label, bool skipFirstBlock);
+
 //@}
 
 #endif /* METADATA_EXTENSION_H_ */

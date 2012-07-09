@@ -157,6 +157,22 @@ bool ProgramDb::insertProgram(DictDB &program)
 //    return rc == SQLITE_OK;
 //}
 
+String ProgramDb::getLabelComment(MDLabel label)
+{
+      sqlite3_stmt *stmt;
+      String aux = MDL::label2Str(label);
+      String cmd = formatString("SELECT * FROM Label WHERE name='%s';", aux.c_str());
+
+      rc = sqlite3_prepare_v2(db, cmd.c_str(), -1, &stmt, NULL);
+
+      if ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+      {
+          aux.assign((char*)sqlite3_column_text(stmt, 4));
+      }
+      rc = sqlite3_finalize(stmt);
+
+      return aux;
+}
 
 //--------- SQLITE  PRINTER -----------------------
 void ProgramDb::printProgram(const ProgramDef &program, int v)

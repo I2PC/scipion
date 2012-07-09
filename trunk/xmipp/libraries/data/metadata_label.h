@@ -162,45 +162,45 @@ enum MDLabel
     MDL_DM3_VALUE,
 
     //label related with EM exchange
-    MDL_EMX_MICROGRAPH_URL,   /// <micrograph name (string)
-    MDL_EMX_MICROGRAPH_SAMPLING,/// < Angstroms / pixel (float)
-    MDL_EMX_MICROGRAPH_DEFOCUSU,/// <defocusu in Angstroms (float)
-    MDL_EMX_MICROGRAPH_DEFOCUSV,/// <defocusv in Angstroms (float)
+    MDL_EMX_MICROGRAPH_URL,   ///< micrograph name (string)
+    MDL_EMX_MICROGRAPH_SAMPLING,///< Angstroms / pixel (float)
+    MDL_EMX_MICROGRAPH_DEFOCUSU,///< defocusu in Angstroms (float)
+    MDL_EMX_MICROGRAPH_DEFOCUSV,///< defocusv in Angstroms (float)
     MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,/// <angle to main defoucs axis from axis x in degrees (float)
-    MDL_EMX_MICROGRAPH_VOLTAGE,/// <voltage in KV (float)
-    MDL_EMX_MICROGRAPH_CS,/// <spherical aberration mm (float)
-    MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,/// <amplitud contrast range 0-1 (float)
-    MDL_EMX_MICROGRAPH_FOM,///Quality index. 0 worst case, 1 best case
-    MDL_EMX_PARTICLE_COORDINATE_X,  /// <particle coordinate X in micrograph (float)
-    MDL_EMX_PARTICLE_COORDINATE_Y,  /// <particle coordinate Y in micrograph (float)
-    MDL_EMX_PARTICLE_URL,     /// <particle name (string)
-    MDL_EMX_PARTICLE_MICROGRAPH_URL,/// <particle has been extracted from micrograph
-    MDL_EMX_PARTICLE_DEFOCUSU,/// <defocusu in Angstroms (float)
-    MDL_EMX_PARTICLE_DEFOCUSV,/// <defocusv in Angstroms (float)
-    MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE,/// <angle to main defoucs axis from axis x in degrees (float)
-    MDL_EMX_P_PARTICLE_CLASS_ID,///class string
-    MDL_EMX_P_PARTICLE_ACTIVE_FLAG, // <particle enable bool
-    MDL_EMX_P_PARTICLE_FOM, // <particle fom (float)
-    MDL_EMX_P_PARTICLE_PARTICLE_URL, // <particle url
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,     ///element 1_1 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,     ///element 2_1 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1,     ///element 3_1 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1,     ///element 4_1 of transformation matrix (float)
+    MDL_EMX_MICROGRAPH_VOLTAGE,///< voltage in KV (float)
+    MDL_EMX_MICROGRAPH_CS,///< spherical aberration mm (float)
+    MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,///< amplitud contrast range 0-1 (float)
+    MDL_EMX_MICROGRAPH_FOM,///< Quality index. 0 worst case, 1 best case
+    MDL_EMX_PARTICLE_COORDINATE_X, ///< particle coordinate X in micrograph (float)
+    MDL_EMX_PARTICLE_COORDINATE_Y, ///< particle coordinate Y in micrograph (float)
+    MDL_EMX_PARTICLE_URL,     ///< particle name (string)
+    MDL_EMX_PARTICLE_MICROGRAPH_URL,///<particle has been extracted from micrograph
+    MDL_EMX_PARTICLE_DEFOCUSU,///< defocusu in Angstroms (float)
+    MDL_EMX_PARTICLE_DEFOCUSV,///< defocusv in Angstroms (float)
+    MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE, ///< angle to main defoucs axis from axis x in degrees (float)
+    MDL_EMX_P_PARTICLE_CLASS_ID,///< class string
+    MDL_EMX_P_PARTICLE_ACTIVE_FLAG, ///< particle enable bool
+    MDL_EMX_P_PARTICLE_FOM, ///< particle fom (float)
+    MDL_EMX_P_PARTICLE_PARTICLE_URL, ///< particle url
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,     ///< element 1_1 (x,y) of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,     ///< element 2_1 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1,     ///< element 3_1 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1,     ///< element 4_1 of transformation matrix (float)
 
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2,     ///element 1_2 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2,     ///element 2_2 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2,     ///element 3_2 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2,     ///element 4_2 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2,     ///< element 1_2 (x,y) of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2,     ///< element 2_2 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2,     ///< element 3_2 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2,     ///< element 4_2 of transformation matrix (float)
 
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3,     ///element 1_3 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3,     ///element 2_3 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3,     ///element 3_3 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3,     ///element 4_3 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3,     ///< element 1_3 (x,y) of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3,     ///< element 2_3 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3,     ///< element 3_3 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3,     ///< element 4_3 of transformation matrix (float)
 
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_4,     ///element 1_4 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_4,     ///element 2_4 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_4,     ///element 3_4 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_4,     ///element 4_4 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_4,     ///< element 1_4 (x,y) of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_4,     ///< element 2_4 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_4,     ///< element 3_4 of transformation matrix (float)
+    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_4,     ///< element 4_4 of transformation matrix (float)
 
     //End of labels
 
@@ -224,12 +224,12 @@ enum MDLabel
     MDL_MAPTOPOLOGY, ///< Map topology (KerDenSOM, ...)
     MDL_MASK, ///< Name of a mask associated to image
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
-    MDL_MAX, ///<maximum value (double)
+    MDL_MAX, ///< Maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
     MDL_MICROGRAPH_ORIGINAL, ///< Name of the original micrograph, MDL_MICROGRAPH is probably a downsampled version of this one (std::string)
     MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
     MDL_MICROGRAPH_TILTED_ORIGINAL, ///< Name of the corresponding original, tilted micrograph (std::string)
-    MDL_MIN, ///<minimum value (double)
+    MDL_MIN, ///< Minimum value (double)
     MDL_MIRRORFRAC, ///< Mirror fraction for a Maximum Likelihood model
     MDL_MISSINGREGION_NR, ///< Number of missing region in subtomogram
     MDL_MISSINGREGION_TYPE, ///< Type of missing region in subtomogram
@@ -239,7 +239,7 @@ enum MDLabel
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NEIGHBORS, ///< Vector of indexes to points some "neighbors"
-    MDL_NEIGHBOR, ///particular neighbor (pointed myNEIGHBORS)
+    MDL_NEIGHBOR, ///< Particular neighbor (pointed myNEIGHBORS)
     MDL_NEIGHBORHOOD_RADIUS, ///< Radius of the neigborhood (radians)
     MDL_NMA, ///< Normal mode displacements (vector double)
     MDL_NMA_MODEFILE, ///< File with an NMA mode
@@ -686,7 +686,7 @@ private:
         MDL::addLabel(MDL_ANGLE_TILT2, LABEL_DOUBLE, "angleTilt2");
         MDL::addLabelAlias(MDL_ANGLE_TILT2, "tilt2");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
-        MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY2");
+        MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
 
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
@@ -838,8 +838,6 @@ private:
         MDL::addLabelAlias(MDL_CTF_XRAY_LENS_TYPE, "CTF_Xray_lens_type"); //3.0
         MDL::addLabelAlias(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, "CTF_Xray_OuterZoneWidth"); //3.0
         MDL::addLabelAlias(MDL_CTF_XRAY_ZONES_NUMBER, "CTF_Xray_ZonesN"); //3.0
-
-
 
         MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");

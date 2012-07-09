@@ -457,6 +457,10 @@ class XmippProtocol(object):
     def tmpPath(self, *paths):
         ''' Return file paths prefixing the tmp dir'''
         return join(self.TmpDir, *paths)  
+    
+    def extraPath(self, *paths):
+        ''' Return file path prefixing the extra dir '''
+        return join(self.ExtraDir, *paths)
 
     def getRunState(self):
         return self.project.projectDb.getRunStateByName(self.Name, self.RunName)

@@ -26,6 +26,8 @@
 package xmipp.viewer.models;
 
 import xmipp.jni.MetaData;
+import xmipp.utils.DEBUG;
+
 import java.util.ArrayList;
 
 /** This class will store info about how to display label on gallery */
@@ -36,6 +38,7 @@ public class ColumnInfo {
 	public boolean render;
 	public boolean allowRender = false;
 	public boolean allowEdit = true;
+	public String comment;
 	
 	/** Constructors */
 	public ColumnInfo(int label, String name, boolean visible, boolean render){
@@ -45,6 +48,7 @@ public class ColumnInfo {
 		this.render = render;
 		try {
 			this.allowRender = MetaData.isImage(label);
+			comment = MetaData.getLabelComment(label);
 		} catch (Exception e){
 			e.printStackTrace();
 		}

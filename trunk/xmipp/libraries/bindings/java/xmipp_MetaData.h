@@ -139,6 +139,9 @@ JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels
 JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getLabelType
   (JNIEnv *, jclass, jint);
 
+JNIEXPORT jstring JNICALL Java_xmipp_jni_MetaData_getLabelComment
+(JNIEnv *env, jclass, jint);
+
 /*
  * Class:     xmipp_MetaData
  * Method:    isTextFile

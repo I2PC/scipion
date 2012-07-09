@@ -57,7 +57,7 @@ class ScriptApropos(XmippScript):
 			if self.checkParam("-i"):
 				labels = [l for l in labels if self.hasKeywords(l)]
 			for l in labels:
-				print '{name:<30} {type:<30} {enum:<30}'.format(**l)
+				print '{name:<30} {type:<30} {enum:<30} {comment}'.format(**l)
 		else:
 			dbName = getProgramsDbName()
 			if not os.path.exists(dbName):
