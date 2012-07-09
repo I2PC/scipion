@@ -39,7 +39,9 @@ import xmipp.particlepicker.Format;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
+import xmipp.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
+import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -419,6 +421,20 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		if (particlesdialog != null)
 			loadParticles();
 		
+	}
+
+
+
+
+	@Override
+	public boolean isValidSize(int size) {
+		for(UntiltedParticle p: untiltedmic.getParticles())
+			if(!untiltedmic.fits(p.getX(), p.getY(), size))
+				return false;
+		for(TiltedParticle p: untiltedmic.getTiltedMicrograph().getParticles())
+			if(!untiltedmic.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
+				return false;
+		return true;
 	}
 
 

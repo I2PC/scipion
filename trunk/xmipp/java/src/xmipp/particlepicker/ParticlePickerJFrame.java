@@ -30,6 +30,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -593,9 +594,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 
 	}
+	
+	
+	public abstract boolean isValidSize(int size) ;
 
 	public void updateSize(int size)
 	{
+		if(!isValidSize(size))
+		{
+			JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size"));
+			return;
+		}
 		sizetf.setText(Integer.toString(size));
 		sizesl.setValue(size);
 		getCanvas().repaint();

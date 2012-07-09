@@ -744,4 +744,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
+	@Override
+	public boolean isValidSize(int size) {
+		for(TrainingParticle p: getFamilyData().getParticles())
+			if(!micrograph.fits(p.getX(), p.getY(), size))
+				return false;
+		return true;
+	}
+
 }
