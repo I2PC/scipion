@@ -816,7 +816,6 @@ TEST_F( MetadataTest, WriteIntermediateBlock)
     FileName blockFileName;
     blockFileName.compose("two", filename);
     MetaData auxMetadata(blockFileName);
-    std::cerr << "DEBUG_ROB, auxMetadata:" << auxMetadata << std::endl;
     MDRow row;
     row.setValue(MDL_X, 11.);
     row.setValue(MDL_Y, 22.);
@@ -825,7 +824,6 @@ TEST_F( MetadataTest, WriteIntermediateBlock)
     row.setValue(MDL_Y, 44.);
     auxMetadata.addRow(row);
     auxMetadata.setValue(MDL_X,111.,auxMetadata.firstObject());
-    std::cerr << "DEBUG_ROB, auxMetadata2:" << auxMetadata << std::endl;
 
     //temporal file for modified metadata
     char sfn2[32] = "";
