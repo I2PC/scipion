@@ -25,6 +25,7 @@
 
 #include <regex.h>
 #include <algorithm>
+#include <malloc.h>
 #include "metadata.h"
 #include "xmipp_image.h"
 #include "xmipp_program_sql.h"
@@ -590,7 +591,10 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
     struct stat file_status;
     int fd;
     char *map;
-
+    char * tailMetadataFile;//auxiliary variable to keep metadata file tail in memory
+    size_t size=-1;
+    char * target, * target2;
+    tailMetadataFile=NULL;
     //check if file exists or not block name has been given
     //in our format no two identical data_xxx strings may exists
     if(mode==MD_OVERWRITE)
@@ -604,7 +608,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
         // get length of file:
         if(stat(outFile.data(), &file_status) != 0)
             REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not get filesize for file "+outFile);
-        size_t size = file_status.st_size;
+        size = file_status.st_size;
         if(size!=0)//size=0 for /dev/stderr
         {
             fd = open(outFile.data(),  O_RDWR, S_IREAD | S_IWRITE);
@@ -617,7 +621,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
 
             // Is this a START formatted FILE
 
-//            if(strncmp(map,"# XMIPP_STAR",12)!=0)
+            //            if(strncmp(map,"# XMIPP_STAR",12)!=0)
             if(strncmp(map+2,MetadataVersion.c_str(),MetadataVersion.length())!=0)
             {
                 mode=MD_OVERWRITE;
@@ -629,7 +633,6 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
                 size_t blockNameSize = _szBlockName.size();
 
                 //search for the string
-                char * target, * target2;
                 target = (char *) _memmem(map, size, _szBlockName.data(), blockNameSize);
                 if(target!=NULL)
                 {
@@ -637,10 +640,14 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
 
                     if (target2==NULL)//truncate file at target
                         ftruncate(fd, target - map+1);
-                    else//copy file from target2 to target and truncate
+                    else//copy file from target2 to auxiliary memory and truncate
                     {
-                        memmove(target,target2, (map + size) - target2);
-                        ftruncate(fd, (target-map) + ((map + size) - target2) );
+                        //malloc
+                        tailMetadataFile = (char *) malloc( ((map + size) - target2));
+                        memmove(tailMetadataFile,target2, (map + size) - target2);
+                        ftruncate(fd, target - map+1);
+                        //                        memmove(target,target2, (map + size) - target2);
+                        //                        ftruncate(fd, (target-map) + ((map + size) - target2) );
                     }
                 }
             }
@@ -662,6 +669,12 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
     std::ofstream ofs(outFile.data(), openMode);
 
     write(ofs, blockName, mode);
+    if (tailMetadataFile!=NULL)
+    {
+        //append memory buffer to file
+        //may a cat a buffer to a ofstream
+        ofs.write(tailMetadataFile,(map + size) - target2);
+    }
     ofs.close();
 }
 

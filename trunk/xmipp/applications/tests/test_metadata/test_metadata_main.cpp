@@ -4,6 +4,7 @@
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 #include <stdlib.h>
 #include <string.h>
+#include <fstream>
 /*
  * Define a "Fixure so we may reuse the metadatas
  */
@@ -80,12 +81,10 @@ TEST_F( MetadataTest, SimilarToOperator)
     auxMetadata.setPrecission(4);
     ASSERT_FALSE(auxMetadata==mDsource);
 
-
 }
 /** SORT FOR ROUTINE ALPHABETIC ORDER
  *
  */
-
 
 TEST_F( MetadataTest, AddLabel)
 {
@@ -803,12 +802,55 @@ TEST_F( MetadataTest, ReadWrite)
     strncpy(sfn, "/tmp/testWrite_XXXXXX", sizeof sfn);
     mkstemp(sfn);
     mDsource.write(sfn);
-
     MetaData auxMetadata;
     auxMetadata.read(sfn);
 
     EXPECT_EQ(mDsource,auxMetadata);
     unlink(sfn);
+}
+
+TEST_F( MetadataTest, WriteIntermediateBlock)
+{
+    //read metadata block between another two
+    FileName filename("metadata/WriteIntermediateBlock.xmd");
+    FileName blockFileName;
+    blockFileName.compose("two", filename);
+    MetaData auxMetadata(blockFileName);
+    std::cerr << "DEBUG_ROB, auxMetadata:" << auxMetadata << std::endl;
+    MDRow row;
+    row.setValue(MDL_X, 11.);
+    row.setValue(MDL_Y, 22.);
+    auxMetadata.addRow(row);
+    row.setValue(MDL_X, 33.);
+    row.setValue(MDL_Y, 44.);
+    auxMetadata.addRow(row);
+    auxMetadata.setValue(MDL_X,111.,auxMetadata.firstObject());
+    std::cerr << "DEBUG_ROB, auxMetadata2:" << auxMetadata << std::endl;
+
+    //temporal file for modified metadata
+    char sfn2[32] = "";
+    strncpy(sfn2, "/tmp/testWrite_XXXXXX", sizeof sfn2);
+    mkstemp(sfn2);
+
+    //copy input metadata file
+    std::ifstream src; // the source file
+    std::ofstream dest; // the destination file
+    src.open (filename.c_str(), std::ios::binary); // open in binary to prevent jargon at the end of the buffer
+    dest.open (sfn2, std::ios::binary); // same again, binary
+    if (!src.is_open())
+        std::cerr << "Can not open file: " << filename.c_str() <<std::endl; // could not be copied
+    if (!dest.is_open())
+        std::cerr << "Can not open file: " <<sfn2 <<std::endl; // could not be copied
+    dest << src.rdbuf (); // copy the content
+    dest.close (); // close destination file
+    src.close (); // close source file
+
+    blockFileName.compose("two", sfn2);
+    auxMetadata.write(blockFileName,MD_APPEND);
+    //file with correct values
+    FileName fn2("metadata/ReadWriteAppendBlock2.xmd");
+    EXPECT_TRUE(compareTwoFiles("metadata/WriteIntermediateBlock2.xmd",sfn2,0));
+    unlink(sfn2);
 }
 
 TEST_F( MetadataTest, ExistsBlock)
