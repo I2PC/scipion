@@ -784,7 +784,7 @@ void CL2D::write(const FileName &fnODir, const FileName &fnRoot, int level) cons
         SFout.setValue(MDL_CLASS_COUNT,P[q]->currentListImg.size(), id);
     }
     FileName fnSFout = formatString("%s/%s_classes.xmd",fnResultsDir.c_str(),fnRoot.c_str());
-    SFout._write(fnSFout, "classes", MD_APPEND);
+    SFout.write("classes@"+fnSFout, MD_APPEND);
 
     // Make the selfiles of each class
     FileName fnImg;
@@ -806,7 +806,7 @@ void CL2D::write(const FileName &fnODir, const FileName &fnRoot, int level) cons
         }
         MetaData SFq_sorted;
         SFq_sorted.sort(SFq, MDL_IMAGE);
-        SFq_sorted._write(fnSFout,formatString("class%06d_images",q+1),MD_APPEND);
+        SFq_sorted.write(formatString("class%06d_images@%s",q+1,fnSFout.c_str()),MD_APPEND);
     }
 }
 
