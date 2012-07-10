@@ -741,7 +741,6 @@ class ProgramDb():
         return self.cursor.fetchall()
     
     def insertLabel(self, labelData):
-        print labelData['name']
         labelData['comment'] = escapeStr(labelData['comment'])
         sqlCommand = """INSERT INTO Label VALUES (
                            NULL, '%(name)s', '%(type)s', '%(enum)s', %(comment)s);

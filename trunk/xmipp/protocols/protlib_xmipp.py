@@ -224,36 +224,36 @@ def createProgramsDb(dbName=None):
     db.create()
     #Create categories dictionary to classify programs
     #looking in program name and category prefixes
-#    categories = db.selectCategories()
-#    categoryDict = {}
-#    for c in categories:
-#        prefixes = c['prefixes'].split()
-#        for p in prefixes:
-#            categoryDict[p] = c
-#            
-#    programs = getXmippPrograms()
-#    for p in programs:
-#        p = os.path.basename(p)
-#        try:
-#            print greenStr(p), skipProgram(p)
-#            
-#            if not skipProgram(p):
-#                cmd = [p, "--xmipp_write_definition"]
-#                if p.find('_mpi') != -1:                    
-#                    cmd = ['mpirun', '-np', '1'] + cmd
-#                print ' '.join(cmd)
-#                from subprocess import Popen, PIPE
-#                ps = Popen(cmd, stdout=PIPE, stderr=PIPE)
-#                stderrdata = ps.communicate()[1]
-#                if stderrdata != '':
-#                    raise Exception(stderrdata)
-#                for prefix, category in categoryDict.iteritems():
-#                    if prefix in p:
-#                        db.updateProgramCategory(p, category)
-#                        break
-#        except Exception, e:
-#            print failStr("PROGRAM: " + p)
-#            print failStr("ERROR: " + str(e))
+    categories = db.selectCategories()
+    categoryDict = {}
+    for c in categories:
+        prefixes = c['prefixes'].split()
+        for p in prefixes:
+            categoryDict[p] = c
+            
+    programs = getXmippPrograms()
+    for p in programs:
+        p = os.path.basename(p)
+        try:
+            print greenStr(p), skipProgram(p)
+            
+            if not skipProgram(p):
+                cmd = [p, "--xmipp_write_definition"]
+                if p.find('_mpi') != -1:                    
+                    cmd = ['mpirun', '-np', '1'] + cmd
+                print ' '.join(cmd)
+                from subprocess import Popen, PIPE
+                ps = Popen(cmd, stdout=PIPE, stderr=PIPE)
+                stderrdata = ps.communicate()[1]
+                if stderrdata != '':
+                    raise Exception(stderrdata)
+                for prefix, category in categoryDict.iteritems():
+                    if prefix in p:
+                        db.updateProgramCategory(p, category)
+                        break
+        except Exception, e:
+            print failStr("PROGRAM: " + p)
+            print failStr("ERROR: " + str(e))
     labels = getXmippLabels()
     for l in labels:
         db.insertLabel(l)
