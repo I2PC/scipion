@@ -25,7 +25,7 @@ public class Family {
 										Color.CYAN, 
 										Color.GREEN,
 										Color.MAGENTA, Color.ORANGE, 
-										Color.PINK, Color.RED, Color.YELLOW};
+										Color.PINK, Color.YELLOW};
 	private static int nextcolor;
 	
 	

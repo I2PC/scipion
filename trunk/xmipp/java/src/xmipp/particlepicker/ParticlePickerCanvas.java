@@ -29,8 +29,8 @@ import xmipp.particlepicker.training.model.TrainingPicker;
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 
-	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke continuousst = new BasicStroke();
+	
+	
 
 	public ParticlePickerCanvas(ImagePlus imp)
 	{
@@ -113,9 +113,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all)
 	{
-		Stroke previous = g2.getStroke();
-		if (p instanceof AutomaticParticle)
-			g2.setStroke(dashedst);
+		
+		
 		int x0 = (int) getSrcRect().getX();
 		int y0 = (int) getSrcRect().getY();
 		int size = (int) (p.getFamily().getSize() * magnification);
@@ -133,7 +132,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			g2.drawLine(x, y - distance, x, y + distance);
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
-		g2.setStroke(previous);
+		
 	}
 
 	protected void drawLine(double alpha, Graphics2D g2)

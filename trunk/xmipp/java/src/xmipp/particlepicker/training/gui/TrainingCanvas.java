@@ -1,8 +1,11 @@
 package xmipp.particlepicker.training.gui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
@@ -25,6 +28,10 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
+	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+	final static BasicStroke continuousst = new BasicStroke();
+	final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+	final static BasicStroke activecst = new BasicStroke(2.0f);
 	
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
@@ -132,6 +139,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		if (active != null)
 		{
 			g2.setColor(Color.red);
+			BasicStroke activest = (active instanceof AutomaticParticle)? activedst: activecst;
+			g2.setStroke(activest);
 			drawShape(g2, active, true);
 		}
 
@@ -148,10 +157,13 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 			for (index = 0; index < particles.size(); index++)
 				drawShape(g2, particles.get(index), index == particles.size() - 1);
+			Stroke previous = g2.getStroke();
+			g2.setStroke(dashedst);
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
 					drawShape(g2, autoparticles.get(i), false);
+			g2.setStroke(previous);
 		}
 	}
 
