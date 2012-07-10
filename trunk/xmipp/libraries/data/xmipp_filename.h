@@ -39,6 +39,15 @@
 
 typedef struct stat Stat;
 
+//extern variable with magic Word  used to define metadata version
+// xmipp XMIPP_STAR_1
+// emx EMX1.0
+// sqlite SQLite format 3
+
+#define METADATA_XMIPP_STAR "# XMIPP_STAR_1"
+#define METADATA_EMX "# EMX1.0"
+#define METADATA_XMIPP_SQLITE "SQLite format 3"
+
 //@{
 /** Filenames.
  *
@@ -670,7 +679,7 @@ void copyImage(const FileName & source,const FileName & target);
 
 //Functions to make easy to change the magicWord used to identify the
 //file format of metadata
-extern String MetadataVersion;
+extern String FileNameVersion;
 void setMetadataVersion(String version);
 String getMetadataVersion(void);
 

@@ -53,6 +53,10 @@ static bool  falseb=false;
 #define BAD_OBJID 0
 #define BAD_INDEX -1
 
+#define FILENAME_XMIPP_STAR "# XMIPP_STAR_1"
+#define FILENAME_EMX "# EMX1.0"
+#define FILENAME_XMIPP_SQLITE "SQLite format 3"
+#define DEFAULT_BLOCK_NAME "noname"
 /** Write mode
  */
 typedef enum
@@ -60,6 +64,7 @@ typedef enum
     MD_OVERWRITE, //forget about the old file and overwrite it
     MD_APPEND,    //append a data_ at the file end or replace an existing one
 } WriteModeMetaData;
+
 /** Iterate over all elements in MetaData
  *
  * This macro is used to generate loops over all elements in the MetaData.
@@ -197,7 +202,6 @@ protected:
     // usual
     std::map<String, size_t> fastStringSearch;
     MDLabel fastStringSearchLabel;
-
     String path; ///< A parameter stored on MetaData Files
     String comment; ///< A general comment for the MetaData file
     ///comment is wraped in char_max lenght lines
@@ -359,7 +363,12 @@ public:
     /** Export medatada to xml file.
      *
      */
-    void convertXML(FileName fn);
+    void writeXML(const FileName fn, const FileName blockname, WriteModeMetaData mode) const;
+
+    /** Write metadata in sqlite3 file.
+     *
+     */
+    void writeDB(const FileName fn, const FileName blockname, WriteModeMetaData mode) const;
 
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)
@@ -700,7 +709,7 @@ public:
     /** Write metadata to disk.
      * This will write the metadata content to disk.
      */
-    void _write(const FileName &outFile,const String & blockName="", WriteModeMetaData mode=MD_OVERWRITE) const;
+    void writeStar(const FileName &outFile,const String & blockName="", WriteModeMetaData mode=MD_OVERWRITE) const;
     /** Write metadata to disk. Guess blockname from filename
      * @code
      * outFilename="first@md1.doc" -> filename = md1.doc, blockname = first

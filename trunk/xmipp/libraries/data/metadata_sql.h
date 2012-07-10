@@ -70,6 +70,10 @@ public:
     static void dumpToFile(const FileName &fileName);
 
 private:
+    /** write metadata in sqlite table
+     *
+     */
+    void copyTableToFileDB(const FileName blockname, const FileName &fileName);
 
     /** This will create the table to store the metada objects.
      * Will return false if the mdId table is already present.

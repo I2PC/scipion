@@ -1910,45 +1910,45 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
-/* write */
-static PyObject *
-MetaData_writeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-    MetaDataObject *self = (MetaDataObject*) obj;
-
-    if (self != NULL)
-    {
-        PyObject *input = NULL, *blockName = NULL;
-        int number = -1;
-        if (PyArg_ParseTuple(args, "OO", &input, &blockName))
-        {
-            try
-            {
-                String fn, block;
-                if (PyString_Check(input))
-                    fn = PyString_AsString(input);
-                else if (FileName_Check(input))
-                    fn = FileName_Value(input);
-                else
-                    return NULL;
-                if (PyString_Check(blockName))
-                    block = PyString_AsString(blockName);
-                else if (FileName_Check(blockName))
-                    block = FileName_Value(blockName);
-                else
-                    return NULL;
-                self->metadata->_write(fn, block, MD_APPEND);
-                Py_RETURN_NONE;
-            }
-            catch (XmippError &xe)
-            {
-                PyErr_SetString(PyXmippError, xe.msg.c_str());
-                return NULL;
-            }
-        }
-    }
-    return NULL;
-}
+///* write */
+//static PyObject *
+//MetaData_writeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
+//{
+//    MetaDataObject *self = (MetaDataObject*) obj;
+//
+//    if (self != NULL)
+//    {
+//        PyObject *input = NULL, *blockName = NULL;
+//        int number = -1;
+//        if (PyArg_ParseTuple(args, "OO", &input, &blockName))
+//        {
+//            try
+//            {
+//                String fn, block;
+//                if (PyString_Check(input))
+//                    fn = PyString_AsString(input);
+//                else if (FileName_Check(input))
+//                    fn = FileName_Value(input);
+//                else
+//                    return NULL;
+//                if (PyString_Check(blockName))
+//                    block = PyString_AsString(blockName);
+//                else if (FileName_Check(blockName))
+//                    block = FileName_Value(blockName);
+//                else
+//                    return NULL;
+//                self->metadata->_write(fn, block, MD_APPEND);
+//                Py_RETURN_NONE;
+//            }
+//            catch (XmippError &xe)
+//            {
+//                PyErr_SetString(PyXmippError, xe.msg.c_str());
+//                return NULL;
+//            }
+//        }
+//    }
+//    return NULL;
+//}
 
 /* append */
 static PyObject *
@@ -2627,8 +2627,8 @@ MetaData_methods[] =
           "Write MetaData content to disk" },
         { "readBlock", (PyCFunction) MetaData_readBlock,
           METH_VARARGS, "Read block from a metadata file" },
-        { "writeBlock", (PyCFunction) MetaData_writeBlock,
-          METH_VARARGS, "Append block to a metadata" },
+//        { "writeBlock", (PyCFunction) MetaData_writeBlock,
+//          METH_VARARGS, "Append block to a metadata" },
         { "append", (PyCFunction) MetaData_append,
           METH_VARARGS, "Append MetaData content to disk" },
         { "addObject", (PyCFunction) MetaData_addObject,

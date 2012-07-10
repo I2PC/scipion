@@ -413,7 +413,7 @@ double MDSql::aggregateSingleDouble(const AggregateOperation operation,
 }
 
 size_t MDSql::aggregateSingleSizeT(const AggregateOperation operation,
-                                    MDLabel operateLabel)
+                                   MDLabel operateLabel)
 {
     std::stringstream ss;
     ss << "SELECT ";
@@ -451,7 +451,7 @@ void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
     for (int i = 0; i < columns.size(); i++)
     {
         sep = "_";
-    	index_name << sep << MDL::label2SqlColumn(columns.at(i));
+        index_name << sep << MDL::label2SqlColumn(columns.at(i));
         sep = ", ";
         index_column << sep << MDL::label2SqlColumn(columns.at(i));
     }
@@ -689,11 +689,11 @@ void MDSql::setOperate(const MetaData *mdInLeft,
             }
     }
     ss << ";";
-//    std::cerr << "ss:" << ss.str() << std::endl;
-//    for (int j = 0; j < sizeLeft; j++)
-//    	std::cerr << "mdInRight->activeLabels:" << mdInRight->activeLabels[0] << std::endl;
-//    for (int j = 0; j < sizeLeft; j++)
-//    	std::cerr << "mdInLeft->activeLabels:"  << mdInLeft->activeLabels[1] << std::endl;
+    //    std::cerr << "ss:" << ss.str() << std::endl;
+    //    for (int j = 0; j < sizeLeft; j++)
+    //     std::cerr << "mdInRight->activeLabels:" << mdInRight->activeLabels[0] << std::endl;
+    //    for (int j = 0; j < sizeLeft; j++)
+    //     std::cerr << "mdInLeft->activeLabels:"  << mdInLeft->activeLabels[1] << std::endl;
     execSingleStmt(ss);
 }
 
@@ -725,6 +725,33 @@ void MDSql::dumpToFile(const FileName &fileName)
     else
         REPORT_ERROR(ERR_MD_SQL, "dumpToFile: error opening db file");
     sqlite3_close(pTo);
+    sqlBeginTrans();
+}
+
+void MDSql::copyTableToFileDB(const FileName blockname, const FileName &fileName)
+{
+    sqlCommitTrans();
+    String _blockname;
+    if(blockname.empty())
+    	_blockname="nonamed";
+    else
+    	_blockname=blockname;
+    String sqlCommand = (String)"ATTACH database '" + fileName+"' as save";
+    sqlCommand += (String)";drop table  if exists save." + blockname;
+    if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
+    {
+        std::cerr << "Couldn't attach or create table:  " << errmsg << std::endl;
+        return;
+    }
+    sqlCommand = (String)"create table save." +blockname
+    		   +" as select * from main."+tableName(tableId);
+    if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
+    {
+        std::cerr << (String)"Couldn't write table: " << blockname
+        		  << " "                             << errmsg << std::endl;
+        return;
+    }
+    sqlite3_exec(db, "DETACH save",NULL,NULL,&errmsg);
     sqlBeginTrans();
 }
 

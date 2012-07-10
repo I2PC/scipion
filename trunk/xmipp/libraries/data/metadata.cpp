@@ -576,14 +576,23 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 {
     String blockName;
     FileName outFile;
+    FileName extFile;
 
     blockName=_outFile.getBlockName();
+    if (blockName.empty())
+    	blockName = DEFAULT_BLOCK_NAME;
     outFile = _outFile.removeBlockName();
-    _write(outFile, blockName, mode);
+    extFile = _outFile.getExtension();
 
+    if (extFile=="xml")
+        writeXML(outFile, blockName, mode);
+    else if(extFile=="sqlite")
+        writeDB(outFile, blockName, mode);
+    else
+        writeStar(outFile, blockName, mode);
 }
 
-void MetaData::_write(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
+void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
 {
     if (outFile.hasImageExtension())
         REPORT_ERROR(ERR_IO,"Trying to write metadata with image extension");
@@ -611,6 +620,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
         size = file_status.st_size;
         if(size!=0)//size=0 for /dev/stderr
         {
+
             fd = open(outFile.data(),  O_RDWR, S_IREAD | S_IWRITE);
             if (fd == -1)
                 REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not read file named "+outFile);
@@ -619,10 +629,8 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
             if (map == MAP_FAILED)
                 REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
 
-            // Is this a START formatted FILE
-
-            //            if(strncmp(map,"# XMIPP_STAR",12)!=0)
-            if(strncmp(map+2,MetadataVersion.c_str(),MetadataVersion.length())!=0)
+            // Is this a metadata formatted FILE
+            if(strncmp(map,FileNameVersion.c_str(),FileNameVersion.length())!=0)
             {
                 mode=MD_OVERWRITE;
             }
@@ -656,11 +664,11 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
                 REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
             }
             close(fd);
+
         }
         else
             mode=MD_OVERWRITE;
     }
-
     std::ios_base::openmode openMode;
     if(mode==MD_OVERWRITE)
         openMode = std::ios_base::out;
@@ -676,6 +684,7 @@ void MetaData::_write(const FileName &outFile,const String &blockName, WriteMode
         ofs.write(tailMetadataFile,(map + size) - target2);
     }
     ofs.close();
+
 }
 
 void MetaData::append(const FileName &outFile)
@@ -720,7 +729,7 @@ void MetaData::print() const
 void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData mode ) const
 {
     if(mode==MD_OVERWRITE)
-        os << "# " << MetadataVersion << " * "// << (isColumnFormat ? "column" : "row")
+        os << FileNameVersion << " * "// << (isColumnFormat ? "column" : "row")
         << std::endl //write wich type of format (column or row) and the path;
         << WordWrap(comment, line_max);     //write md comment in the 2nd comment line of header
     //write data block
@@ -1159,7 +1168,7 @@ void MetaData::_read(const FileName &filename,
 
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
 
-    if (line.find(MetadataVersion) != String::npos)
+    if (line.find(FileNameVersion) != String::npos)
     {
         oldFormat=false;
 
@@ -1708,13 +1717,22 @@ void MetaData::makeAbsPath(const MDLabel label)
     }
 }
 
-void MetaData::convertXML(FileName fn)
+void MetaData::writeDB(const FileName fn, const FileName blockname, WriteModeMetaData mode) const
 {
+    if(mode==MD_OVERWRITE)
+        unlink(fn.c_str());
+    myMDSql->copyTableToFileDB(blockname,fn);
+}
 
-    std::ofstream ofs(fn.data(), std::ios_base::out);
-
+void MetaData::writeXML(const FileName fn, const FileName blockname, WriteModeMetaData mode) const
+{
+//fixme
+////THIS SHOULD BE IMPLEMENTED USING AN XML LIBRARY THAT HANDLES THE FILE PROPERLY
+    if(mode!=MD_OVERWRITE)
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"XML is only implemented for overwrite mode");
+    std::ofstream ofs(fn.data(), std::ios_base::out|std::ios_base::trunc);
     size_t size = activeLabels.size();
-    ofs <<  "<" << fn << ">"<< std::endl;
+    ofs <<  "<" << blockname << ">"<< std::endl;
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
         ofs <<  "<ROW ";
@@ -1732,7 +1750,7 @@ void MetaData::convertXML(FileName fn)
         }
         ofs <<  " />" << std::endl;
     }
-    ofs <<  "</" << fn << ">"<< std::endl;
+    ofs <<  "</" << blockname << ">"<< std::endl;
 }
 
 bool MetaData::operator==(const MetaData& op) const

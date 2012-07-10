@@ -363,6 +363,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
     StringVector filesOrig;
     MDorig.getColumnValues(MDL_IMAGE, filesOrig);
     MDorig.clear(); // Save memory
+    FileName auxFn;
 
     // Read the blocks available
     StringVector blocks;
@@ -388,6 +389,8 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
                 MD.setValue(label, filesOrig[stkNo], __iter.objId);
             }
         }
-        MD._write(fnOut,blocks[b],MD_APPEND);
+        auxFn.compose(blocks[b],fnOut);
+        MD.write(auxFn, MD_APPEND);
+        //MD._write(fnOut,blocks[b],MD_APPEND);
     }
 }
