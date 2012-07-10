@@ -37,7 +37,6 @@ void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
         return;
     if (inFile.getBlockName()!="")
         return;
-
     MetaData MDaux(inFile);
     blockList.clear();
     //map file
