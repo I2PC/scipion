@@ -164,7 +164,7 @@ protected:
         fn_out = getParam("-o");
         conversionType = string2EMXconversion[getParam("-t")];
 
-        setMetadataVersion("XMIPP_STAR_1");
+        setMetadataVersion(FILENAME_XMIPP_STAR);
         if (fn_in.isStar1(false))
         {
             toemx=true;
@@ -177,7 +177,7 @@ protected:
         }
         else
         {
-            setMetadataVersion("EMX1.0");
+            setMetadataVersion(FILENAME_EMX);
             if (fn_in.isStar1(false))
             {
                 toxmipp=true;
@@ -247,7 +247,7 @@ public:
         }
         FileName tmpFn;
         tmpFn.compose("particle",tmpname);
-        setMetadataVersion("EMX1.0");
+        setMetadataVersion(FILENAME_EMX);
         mdCoordinateEMX.setComment(comment);
         mdCoordinateEMX.write(tmpFn);
     }
@@ -290,7 +290,7 @@ public:
         }
         FileName tmpFn;
         tmpFn.compose("micrograph",tmpname);
-        setMetadataVersion("EMX1.0");
+        setMetadataVersion(FILENAME_EMX);
         mdMicrographEMX.setComment(comment);
         mdMicrographEMX.write(tmpFn);
     }
@@ -367,7 +367,7 @@ public:
         }
         FileName tmpFn;
         tmpFn.compose("p_particle",tmpname);
-        setMetadataVersion("EMX1.0");
+        setMetadataVersion(FILENAME_EMX);
         mdAlignmentEMX.setComment(comment);
         mdAlignmentEMX.write(tmpFn);
     }
@@ -411,7 +411,7 @@ public:
                 mdCoordinateXmipp.addRow(rowOut);
             }
             blockOut.compose(micrographName,fn_out);
-            setMetadataVersion("XMIPP_STAR_1");
+            setMetadataVersion(FILENAME_XMIPP_STAR);
             mdCoordinateXmipp.setComment(comment);
             mdCoordinateXmipp.write(blockOut,MD_APPEND);
         }
@@ -456,7 +456,7 @@ public:
 
             mdCTFMicrographXmipp.addRow(rowOut);
         }
-        setMetadataVersion("XMIPP_STAR_1");
+        setMetadataVersion(FILENAME_XMIPP_STAR);
         mdCTFMicrographXmipp.setComment(comment);
         mdCTFMicrographXmipp.write(fn_out);
     }
@@ -557,7 +557,7 @@ public:
             }
             mdAlignmentXmipp.addRow(rowOut);
         }
-        setMetadataVersion("XMIPP_STAR_1");
+        setMetadataVersion(FILENAME_XMIPP_STAR);
         mdAlignmentXmipp.setComment(comment);
         mdAlignmentXmipp.write(fn_out);
     }
