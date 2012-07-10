@@ -71,6 +71,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
 	private Family family;
+	private ImageWindow iw;
 
 	@Override
 	public TrainingPicker getParticlePicker() {
@@ -125,6 +126,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			XmippWindowUtil.setLocation(positionx, 0.25f, this);
 			setVisible(true);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
@@ -422,6 +424,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	protected void loadMicrograph() {
 		if (TrainingPickerJFrame.this.micrographstb.getSelectedRow() == -1)
 			return;// Probably from fireTableDataChanged raised
+		if(index == TrainingPickerJFrame.this.micrographstb.getSelectedRow() && iw != null && iw.isVisible())//same micrograph open
+			return;
+		System.out.println("loading");
 		index = TrainingPickerJFrame.this.micrographstb.getSelectedRow();
 		// by me.
 		micrograph.releaseImage();
@@ -446,6 +451,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		ppicker.resetFamilyData(getFamilyData());
 		canvas.setActive(null);
 		updateMicrographsModel();
+		setState(MicrographFamilyState.Available);
 
 	}
 
@@ -487,7 +493,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	protected void initializeCanvas() {
-		ImageWindow iw;
 		if (canvas == null) {
 			canvas = new TrainingCanvas(this);
 			iw = new ImageWindow(micrograph.getImagePlus(ppicker.getFilters()),

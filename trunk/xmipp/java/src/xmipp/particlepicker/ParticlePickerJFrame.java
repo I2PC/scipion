@@ -175,6 +175,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void mouseClicked(MouseEvent arg0)
 			{
+				if (micrographstb.getSelectedRow() == -1)
+					return;
 				loadMicrograph();
 			}
 		});
