@@ -2537,6 +2537,9 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
 
     if (VEC_ELEM(arrayError2,maxInd) <= 0)
     {
+    	double Error = VEC_ELEM(arrayError2,maxInd);
+    	std::cout << Error << std::endl;
+    	std::cout << " Entering in estimate_defoci, Performing exhaustive defocus search (SLOW)" << std::endl;
     	estimate_defoci();
     }
 
