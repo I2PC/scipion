@@ -87,8 +87,8 @@ protected:
         addParamsLine("   copy <directory> <label=image>  : Copy files in metadata md1 to directory path (file names at label column)");
         addParamsLine("   move <directory>  <label=image> : Move files in metadata md1 to directory path (file names at label column)");
         addParamsLine("   delete  <label=image>      : Delete files in metadata md1 (file names at label column)");
-        addParamsLine("   convert2db                 : Convert metadata to sqlite database");
-        addParamsLine("   convert2xml                : Convert metadata to xml file");
+//        addParamsLine("   convert2db                 : Convert metadata to sqlite database");
+//        addParamsLine("   convert2xml                : Convert metadata to xml file");
         addParamsLine("   import_txt <labels>        : Import a text file specifying its columns");
         addParamsLine("           alias -f;                                             ");
 
@@ -139,10 +139,10 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --fill CTFParams expand -o outExpanded.doc");
         addExampleLine("For check all options availables for 'filling' mode, use: ", false);
         addExampleLine ("   xmipp_metadata_utilities --help fill");
-        addExampleLine(" Dump metadata content to Sqlite3 database. (use xmipp_sqlite3 to visualize results)", false);
-        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate convert2db -o mD1.db; xmipp_sqlite3 out.db");
-        addExampleLine(" Dump metadata content to xml file.", false);
-        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate convert2xml -o mD1.xml");
+        addExampleLine(" write metadata as table in Sqlite3 database. (use xmipp_sqlite3 to visualize results)", false);
+        addExampleLine ("   xmipp_metadata_utilities -i blocknameIn@mD1.doc -o blocknameOut@mD1.sqlite");
+        addExampleLine(" write metadata as xml file.", false);
+        addExampleLine ("   xmipp_metadata_utilities -i blocknameIn@mD1.doc -o blocknameOut@mD1.xml");
         addExampleLine(" Copy files in metadata to a location. The metadata will be also copied to new location", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --file copy /home/pepe/newLocation");
         addExampleLine(" Delete files in metadata.", false);
@@ -311,17 +311,18 @@ protected:
     {
         operation = getParam("--file", 0);
 
-        if (operation == "convert2db")
-        {
-            doWrite = false;
-            MDSql::dumpToFile(fn_out);
-        }
-        else if (operation == "convert2xml")
-        {
-            doWrite = false;
-            mdIn.convertXML(fn_out);
-        }
-        else if (operation == "import_txt")
+//        if (operation == "convert2db")
+//        {
+//            doWrite = false;
+//            MDSql::dumpToFile(fn_out);
+//        }
+//        else if (operation == "convert2xml")
+//        {
+//        	fn_out.re
+//            doWrite = false;
+//            mdIn.writeXML(fn_out);
+//        }
+        if (operation == "import_txt")
         {
             mdIn.readPlain(fn_in, getParam("--file", 1));
         }
