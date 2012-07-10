@@ -270,22 +270,32 @@ TEST_F( MetadataTest, Copy)
     EXPECT_EQ(mDsource,auxMetadata);
 }
 
-//TEST_F( MetadataTest,writeXML)
-//TEST_F( MetadataTest,writeSTAR)
-//TEST_F( MetadataTest,writeDB)
-//{
-//    setMetadataVersion(METADATA_XMIPP_SQLITE);
-//    FileName fn="myblock@kk.sqlite";
-//    XMIPP_TRY
-//    mDsource.write(fn);
-//    FileName fn="myblock2@kk.sqlite";
-//    mDsource.write(fn,MD_APPEND);
-//    fn="myblock3@kk.sqlite";
-//    mDsource.write(fn);
-//    setMetadataVersion(METADATA_XMIPP_STAR);
-//    XMIPP_CATCH
-//    EXPECT_TRUE(1);
-//}
+TEST_F( MetadataTest,multiWrite)
+{
+    char sfn[64] = "";
+    strncpy(sfn, "/tmp/testGetBlocks_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    FileName fnDB   =(String)sfn+".sqlite";
+    FileName fnXML  =(String)sfn+".xml";
+    FileName fnSTAR =(String)sfn+".xmd";
+    FileName fnDBref   =(String)"metadata/mDsource.sqlite";
+    FileName fnXMLref  =(String)"metadata/mDsource.xml";
+    FileName fnSTARref =(String)"metadata/mDsource.xmd";
+
+    XMIPP_TRY
+    mDsource.write((String)"myblock@"+fnDB);
+    mDsource.write((String)"myblock@"+fnXML);
+    mDsource.write((String)"myblock@"+fnSTAR);
+    XMIPP_CATCH
+
+    EXPECT_TRUE(compareTwoFiles(fnDB, fnDBref));
+    EXPECT_TRUE(compareTwoFiles(fnXML, fnXMLref));
+    EXPECT_TRUE(compareTwoFiles(fnSTAR, fnSTARref));
+    unlink(fnDB.c_str());
+    unlink(fnXML.c_str());
+    unlink(fnSTAR.c_str());
+}
+
 TEST_F( MetadataTest, ReadEmptyBlock)
 {
     char sfn[64] = "";
