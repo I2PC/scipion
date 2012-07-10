@@ -801,6 +801,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
     else
         Mimg = img;
 
+
     // Perform the actual search for the optimal shift
     if (max_shift>0)
     {
@@ -849,12 +850,13 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         double &opt_scale,
         double &maxcorr)
 {
-    MultidimArray<double> Mscale,Mtrans,Mref;
+    MultidimArray<double> Mscale,Mtrans,Mref,Mimg;
     int refno;
 
     Mscale.setXmippOrigin();
     Mtrans.setXmippOrigin();
     Mref.setXmippOrigin();
+    Mimg.setXmippOrigin();
 
 #ifdef TIMING
 
@@ -868,14 +870,14 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     Matrix2D<double> A(3,3);
     A.initIdentity();
     double ang, cosine, sine;
-    ang = DEG2RAD(-opt_psi);
+    ang = DEG2RAD(opt_psi);
     cosine = cos(ang);
     sine = sin(ang);
 
     // Rotation
     MAT_ELEM(A,0, 0) = cosine;
-    MAT_ELEM(A,0, 1) = -sine;
-    MAT_ELEM(A,1, 0) = sine;
+    MAT_ELEM(A,0, 1) = sine;
+    MAT_ELEM(A,1, 0) = -sine;
     MAT_ELEM(A,1, 1) = cosine;
 
     // Shift
@@ -884,13 +886,11 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
     if (opt_flip)
     {
+        MAT_ELEM(A,0, 2) = opt_xoff;
         MAT_ELEM(A,0, 0) *= -1.;
         MAT_ELEM(A,0, 1) *= -1.;
     }
 
-    applyGeometry(LINEAR, Mtrans, img, A, IS_INV, DONT_WRAP);
-
-    // SCALE
     // Get pointer to the correct reference image in memory
     refno = pointer_allrefs2refsinmem[opt_refno];
     if (refno == -1)
@@ -899,21 +899,28 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         getCurrentReference(opt_refno,global_plans);
         refno = pointer_allrefs2refsinmem[opt_refno];
     }
-    Mref = proj_ref[refno];
+    applyGeometry(LINEAR, Mref, proj_ref[refno], A, IS_NOT_INV, DONT_WRAP);
+
+
+    Mtrans = img;
 
     // Scale search
     double corr;
     opt_scale = 1;
-    maxcorr = -999;
+    //maxcorr = -999;
 
     // 1 (0.01 * scale_step * scale_nsteps)
     for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
         scale <= 1 + 0.01 * scale_step * scale_nsteps;
         scale += 0.01 * scale_step)
     {
-        // apply current scale
+
+    	if(scale == 1.)
+    		continue;
+
+    	// apply current scale
         A.initIdentity();
-        A /= scale;
+        A *= scale;
         applyGeometry(LINEAR, Mscale, Mtrans, A, IS_INV, DONT_WRAP);
 
     	//Image spread correction (if scale != 1) for scale search
@@ -954,7 +961,7 @@ void ProgAngularProjectionMatching::processAllImages()
 void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> &imagesToProcess)
 {
     Image<double> img;
-    double 
+    double
 	  opt_rot=0.,
 	  opt_tilt=0.,
 	  opt_psi=0.,
@@ -968,9 +975,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     size_t nr_images = imagesToProcess.size();
     size_t idNew, imgid;
     FileName fn;
-    //    std::cerr << "DEBUG_ROB, DFexp.size():" << DFexp.size() << std::endl;
-    //    std::cerr << "DEBUG_ROB, nr_images:" << nr_images << std::endl;
-    //DFexp.write("/dev/stderr");
+
     for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
         imgid = imagesToProcess[imgno];
@@ -978,18 +983,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         double kk;
         FileName pp;
         DFexp.getValue(MDL_IMAGE,pp, imgid);
-        //     std::cerr << "DEBUG_ROB, imgno:" << imgno << std::endl;
-        //        std::cerr << "1 DEBUG_ROB, fn_img:" << pp << std::endl;
-        //DFexp does not have angles
-        //        DFexp.getValue(MDL_ANGLE_ROT,kk, imgid);
-        //        std::cerr << "1 DEBUG_ROB, rot:" << kk << std::endl;
-        //        DFexp.getValue(MDL_ANGLE_TILT,kk, imgid);
-        //        std::cerr << "1 DEBUG_ROB, tilt:" << kk << std::endl;
-        //        DFexp.getValue(MDL_ANGLE_PSI,kk, imgid);
-        //        std::cerr << "1 DEBUG_ROB, psi:" << kk << std::endl<< std::endl;
 
-        /**/
-        //std::cerr << "DEBUG_ROB, imgid:" << imgid << std::endl;
         getCurrentImage(imgid, img);
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
@@ -1021,26 +1015,15 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             }
             pthread_join(*(th_ids+c),NULL);
         }
+
         // Flip order to loop through references
         loop_forward_refs = !loop_forward_refs;
 
         opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
         opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
-        //std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
-        //std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
-        //        std::cerr << "3 DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
-        //        std::cerr << "3 DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
-        //        std::cerr << "3 DEBUG_ROB, opt_psi:" << opt_psi << std::endl;
 
         translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
-        // Add previously applied translation to the newly found one
-        opt_xoff += img.Xoff();
-        opt_yoff += img.Yoff();
 
-        //        std::cerr << "DEBUG_ROB, opt_rot:" << opt_rot << std::endl;
-        //        std::cerr << "DEBUG_ROB, opt_tilt:" << opt_tilt << std::endl;
-        //        std::cerr << "DEBUG_ROB, opt_xoff:" << opt_xoff << std::endl;
-        //        std::cerr << "DEBUG_ROB, opt_yoff:" << opt_yoff << std::endl;
         /* FIXME ROB     */
         //opt_psi += img.psi();
         /*         */
@@ -1056,7 +1039,10 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         //Add the previously applied scale to the newly found one
         opt_scale *= img.scale();
 
-        //#ifdef GGGGGG
+        // Add previously applied translation to the newly found one
+        opt_xoff += img.Xoff();
+        opt_yoff += img.Yoff();
+
         // Output
         DFexp.getValue(MDL_IMAGE, fn, imgid);
         idNew = DFo.addObject();
