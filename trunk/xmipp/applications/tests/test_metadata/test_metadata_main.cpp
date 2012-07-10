@@ -270,6 +270,22 @@ TEST_F( MetadataTest, Copy)
     EXPECT_EQ(mDsource,auxMetadata);
 }
 
+//TEST_F( MetadataTest,writeXML)
+//TEST_F( MetadataTest,writeSTAR)
+//TEST_F( MetadataTest,writeDB)
+//{
+//    setMetadataVersion(METADATA_XMIPP_SQLITE);
+//    FileName fn="myblock@kk.sqlite";
+//    XMIPP_TRY
+//    mDsource.write(fn);
+//    FileName fn="myblock2@kk.sqlite";
+//    mDsource.write(fn,MD_APPEND);
+//    fn="myblock3@kk.sqlite";
+//    mDsource.write(fn);
+//    setMetadataVersion(METADATA_XMIPP_STAR);
+//    XMIPP_CATCH
+//    EXPECT_TRUE(1);
+//}
 TEST_F( MetadataTest, ReadEmptyBlock)
 {
     char sfn[64] = "";
@@ -309,7 +325,7 @@ TEST_F( MetadataTest, GetBlocksInMetadata)
     auxMetadata.clear();
 
     StringVector compBlockList;
-    compBlockList.push_back("");
+    compBlockList.push_back(DEFAULT_BLOCK_NAME);
     compBlockList.push_back("block_000001");
     compBlockList.push_back("block_000002");
 

@@ -240,6 +240,6 @@ def collectResults(log, WorkingDir, Prefix):
         ref = mdRefs.getValue(MDL_REF, idx)
         mdRefs.setValue(MDL_CLASS_COUNT, long(round(mdRefs.getValue(MDL_WEIGHT, idx))), idx)
         mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
-        mdGroup.writeBlock(outRefs, 'class%06d_images' % ref)
-    mdRefs.writeBlock(outRefs, 'classes')
+        mdGroup.write('class%(ref)06d_images@%(outRefs)s' % locals(),MD_APPEND)
+    mdRefs.write('classes@'+outRefs,MD_APPEND)
     
