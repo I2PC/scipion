@@ -426,7 +426,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			return;// Probably from fireTableDataChanged raised
 		if(index == TrainingPickerJFrame.this.micrographstb.getSelectedRow() && iw != null && iw.isVisible())//same micrograph open
 			return;
-		System.out.println("loading");
 		index = TrainingPickerJFrame.this.micrographstb.getSelectedRow();
 		// by me.
 		micrograph.releaseImage();

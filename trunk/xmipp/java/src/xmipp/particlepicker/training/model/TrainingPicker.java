@@ -220,7 +220,6 @@ public abstract class TrainingPicker extends ParticlePicker
 				cost = md.getValueDouble(MDLabel.MDL_COST, id);
 				if(cost == null)
 					throw new IllegalArgumentException("Invalid format for " + file);
-				System.out.println(cost);
 				deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? false : true;
 				particle = new AutomaticParticle(x, y, f, mfd.getMicrograph(), cost, deleted);
 				mfd.addAutomaticParticle(particle, imported);

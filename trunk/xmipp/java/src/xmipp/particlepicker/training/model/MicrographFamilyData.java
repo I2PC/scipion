@@ -91,7 +91,6 @@ public class MicrographFamilyData
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("particle"));
 		if (p instanceof AutomaticParticle)
 		{
-			System.out.println("deleted automatic particle");
 			if (ppicker.getMode() != FamilyState.Review)
 				((AutomaticParticle) p).setDeleted(true);
 			else

@@ -125,7 +125,6 @@ public abstract class ParticlePicker
 			public String commandExecuting(String command)
 			{
 				ParticlePicker.this.command = command;
-				System.out.println(command);
 				return command;
 
 			}
@@ -156,7 +155,6 @@ public abstract class ParticlePicker
 
 	private void updateFilters()
 	{
-		System.out.println("Image updated");
 		if (command != null)
 		{
 			String options = "";
@@ -410,7 +408,6 @@ public abstract class ParticlePicker
 				filters.add(new IJCommand(command, options));
 
 			}
-			System.out.println(filters.size());
 		}
 		catch (Exception e)
 		{

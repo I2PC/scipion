@@ -166,7 +166,6 @@ public class ImagePlusLoader
 			file = ig.getFilename();
 		if(file == null)
 			return false;
-		System.out.println(file);
 		if(!new File(file).exists())
 			return false;
 		return true;

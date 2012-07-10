@@ -109,11 +109,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				}
 				close();
 				if (getParticlePicker().getMode() == FamilyState.Supervised)
-				{
-					System.out.println("exiting jvm in supervised mode");
 					System.exit(0);//temporarily
-					
-				}
 			}
 		});
 

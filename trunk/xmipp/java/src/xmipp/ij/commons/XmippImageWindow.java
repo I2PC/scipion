@@ -4,7 +4,6 @@ import ij.ImagePlus;
 import ij.gui.ImageWindow;
 import java.awt.event.WindowEvent;
 
-import xmipp.particlepicker.ParticlePickerCanvas;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
@@ -80,11 +79,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		super.windowClosing(e);
 		if(XmippIJUtil.getXmippImageJ() != null)
 			XmippIJUtil.getXmippImageJ().close();
-		if(getCanvas() instanceof ParticlePickerCanvas)
-		{
-			ParticlePickerCanvas c = (ParticlePickerCanvas)getCanvas();
-			c.getMicrograph().releaseImage();
-		}
+		
 	}
 
 
