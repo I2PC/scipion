@@ -241,10 +241,16 @@ class XmippProject():
                 state = run['run_state']
                 stateStr = SqliteDb.StateNames[state]
                 runName = getExtendedRunName(run)
+                done, total = self.projectDb.getRunProgress(run)
+                
+                if done == total:
+                    state = SqliteDb.RUN_FINISHED
+                
                 if state == SqliteDb.RUN_FINISHED:
                     cleanPossibleDead(runName)
+                
                 if not state in [SqliteDb.RUN_SAVED, SqliteDb.RUN_FINISHED]:
-                    stateStr += " - %d/%d" % self.projectDb.getRunProgress(run)
+                    stateStr += " - %d/%d" % (done, total)
                     if not state in [SqliteDb.RUN_ABORTED, SqliteDb.RUN_FAILED]:
                         from protlib_utils import ProcessManager
                         if checkDead and not ProcessManager(run).isAlive():

@@ -948,6 +948,7 @@ class ScriptProtocols(XmippScript):
                 gui.launchGUI()
             except Exception, e:
                 print cyanStr("Could not create Tk GUI, disabled")
+                print e
 
 if __name__ == '__main__':
     ScriptProtocols().tryRun()
