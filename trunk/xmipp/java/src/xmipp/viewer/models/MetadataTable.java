@@ -268,18 +268,22 @@ public class MetadataTable extends MetadataGallery {
 
 	@Override
 	public void setupTable(JTable table) {
-		// table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		table.setDefaultRenderer(ImageItem.class, renderer);
 		table.setDefaultRenderer(Double.class, new FloatRenderer());
-		// table.setAutoCreateRowSorter(true);
-		MetadataTableHeader header = new MetadataTableHeader(columnModel);
-		table.setTableHeader(header);
-		//JTableHeader header = table.getTableHeader();
+		//MetadataTableHeader header = new MetadataTableHeader(columnModel);
+		//JTableHeader header = new JTableHeader(table.getColumnModel());
+		//table.setTableHeader(header);
+		JTableHeader header = table.getTableHeader();
 		header.setUpdateTableInRealTime(true);
 		header.addMouseListener(new MetadataColumnListener(table));
-		header.setReorderingAllowed(true);
+		//header.setReorderingAllowed(true);
 		updateTableSelection(table);
+	}
+	
+	@Override
+	public JTableHeader getTableHeaderModel(){
+		return new MetadataTableHeader(columnModel);
 	}
 
 	/** Update the table selection according with data selection */
@@ -363,11 +367,9 @@ public class MetadataTable extends MetadataGallery {
 		
 	}// class MetadataColumnModel
 	
-	class MetadataTableHeader extends JTableHeader {
+	public class MetadataTableHeader extends JTableHeader {
 		public MetadataTableHeader(TableColumnModel columnModel){
-			super(columnModel);
-			//DEBUG.printFormat("col: %d, width: %d", i,
-			//width);
+			super(columnModel);			
 		}
 		/** Show tooltips on columns header */
 		public String getToolTipText(MouseEvent e) {
@@ -379,7 +381,7 @@ public class MetadataTable extends MetadataGallery {
         }
 	}
 
-	class MetadataColumnListener extends MouseAdapter {
+	public class MetadataColumnListener extends MouseAdapter {
 		protected JTable table;
 
 		public MetadataColumnListener(JTable t) {
@@ -400,17 +402,6 @@ public class MetadataTable extends MetadataGallery {
 				sortColumnIndex = modelIndex;
 			data.sortMd(sortColumnIndex, ascending);
 			fireTableDataChanged();
-
-			//
-			// for (int i = 0; i < columnsCount; i++) {
-			// TableColumn column = colModel.getColumn(i);
-			// column.setHeaderValue(getColumnName(column.getModelIndex()));
-			// }
-			// table.getTableHeader().repaint();
-			//
-			// Collections.sort(vector,new MyComparator(isSortAsc));
-			// table.tableChanged(new TableModelEvent(MyTableModel.this));
-			// table.repaint();
 		}
 	}
 

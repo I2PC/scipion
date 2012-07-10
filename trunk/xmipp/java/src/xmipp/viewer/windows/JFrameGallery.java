@@ -75,6 +75,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.JTableHeader;
 
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
@@ -388,7 +389,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			h = Math.min(Math.max(h, MIN_HEIGHT), MAX_HEIGHT);
 			setPreferredSize(new Dimension(width, h));
 		}
-		DEBUG.printFormat("width: %d", width);
 		setAutoAdjustColumns(adjust);
 	}
 
@@ -412,7 +412,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		rowHeader.setCellRenderer(new RowHeaderRenderer());
 		jspContent.setRowHeaderView(rowHeader);
 
-		table = new JTable();
+		table = new JTable() {
+			protected JTableHeader createDefaultTableHeader() {
+				return gallery.getTableHeaderModel();
+			}
+		};
 		// Create column model
 		table.setColumnModel(gallery.getColumnModel());
 		table.setModel(gallery);
@@ -1018,7 +1022,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	}
 
 	private void jsGoToImageStateChanged(javax.swing.event.ChangeEvent evt) {
-		DEBUG.printMessage("jsGotoImage...");
 		if (!isUpdating) {
 			Integer intValue = (Integer) jsGoToImage.getValue();
 			if (intValue < 0)
@@ -1032,7 +1035,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	private void formComponentResized(java.awt.event.ComponentEvent evt) {
 		width = getSize().width;
 		if (!isUpdating && autoAdjustColumns) {
-			DEBUG.printMessage("formComponentResized");
 			adjustColumns();
 		}
 	}

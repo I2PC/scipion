@@ -35,6 +35,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.JTableHeader;
 
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.ImageItemRenderer;
@@ -311,6 +312,10 @@ public abstract class ImageGallery extends AbstractTableModel {
 	/** Return the column model to be used with this table model */
 	public GalleryColumnModel getColumnModel() {
 		return columnModel;
+	}
+	
+	public JTableHeader getTableHeaderModel(){
+		return new JTableHeader(columnModel);
 	}
 
 	/** Internal method to create the column model */
