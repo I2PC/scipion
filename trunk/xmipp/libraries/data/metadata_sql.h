@@ -75,6 +75,13 @@ private:
      */
     void copyTableToFileDB(const FileName blockname, const FileName &fileName);
 
+    /** read metadata from sqlite table
+     *
+     */
+    void copyTableFromFileDB(const FileName blockname,
+                             const FileName filename,
+                             const std::vector<MDLabel> *desiredLabels
+                             );
     /** This will create the table to store the metada objects.
      * Will return false if the mdId table is already present.
      */

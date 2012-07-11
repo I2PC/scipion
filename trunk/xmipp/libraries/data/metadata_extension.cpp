@@ -376,7 +376,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
     for (int b=0; b<blocks.size(); b++)
     {
         MetaData MD;
-        MD._read(fn,NULL,blocks[b]);
+        MD.read(blocks[b]+"@"+fn);
         if (MD.containsLabel(label) && (!skipFirstBlock || b!=0))
         {
             FileName fnImg;

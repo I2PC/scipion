@@ -402,7 +402,7 @@ bool MetaData::containsLabel(const MDLabel label) const
     return vectorContainsLabel(activeLabels, label);
 }
 
-bool MetaData::addLabel(const MDLabel label, int pos)
+bool MetaData::addLabel(const MDLabel label, int pos, bool CreateTable)
 {
     if (containsLabel(label))
         return false;
@@ -410,7 +410,8 @@ bool MetaData::addLabel(const MDLabel label, int pos)
         activeLabels.push_back(label);
     else
         activeLabels.insert(activeLabels.begin() + pos, label);
-    myMDSql->addColumn(label);
+    if (CreateTable)
+        myMDSql->addColumn(label);
     return true;
 }
 
@@ -579,7 +580,7 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 
     blockName=_outFile.getBlockName();
     if (blockName.empty())
-    	blockName = DEFAULT_BLOCK_NAME;
+        blockName = DEFAULT_BLOCK_NAME;
     outFile = _outFile.removeBlockName();
     extFile = _outFile.getExtension();
 
@@ -703,7 +704,6 @@ void MetaData::_writeRows(std::ostream &os) const
 
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
-        //std::cerr << "id: " << __iter.objId << std::endl;
         for (int i = 0; i < activeLabels.size(); i++)
         {
             if (activeLabels[i] != MDL_COMMENT)
@@ -739,7 +739,6 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
         //write md columns in 3rd comment line of the header
         os << _szBlockName << std::endl;
         os << "loop_" << std::endl;
-
         for (int i = 0; i < activeLabels.size(); i++)
         {
             if (activeLabels.at(i) != MDL_COMMENT)
@@ -747,7 +746,6 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
                 os << " _" << MDL::label2Str(activeLabels.at(i)) << std::endl;
             }
         }
-
         _writeRows(os);
         //Put the activeObject to the first, if exists
     }
@@ -1007,12 +1005,28 @@ void MetaData::read(const FileName &_filename,
                     const std::vector<MDLabel> *desiredLabels,
                     bool decomposeStack)
 {
-    String BlockName;
-    FileName filename;
-    BlockName = _filename.getBlockName();
-    //filename is global, so we can write the filename when reporting errors
-    filename  = _filename.removeBlockName();
-    _read(filename,desiredLabels,BlockName,decomposeStack);
+    String blockName;
+    FileName inFile;
+    FileName extFile;
+
+    blockName=_filename.getBlockName();
+    if (blockName.empty())
+        blockName = DEFAULT_BLOCK_NAME;
+    inFile = _filename.removeBlockName();
+    extFile = _filename.getExtension();
+
+    _clear();
+    myMDSql->createMd();
+    _isColumnFormat = true;
+
+    if (extFile=="xml")
+        readXML(inFile, desiredLabels, blockName, decomposeStack);
+    else if(extFile=="sqlite")
+        readDB(inFile, desiredLabels, blockName, decomposeStack);
+    else
+        readStar(inFile, desiredLabels, blockName, decomposeStack);
+
+    //_read(filename,desiredLabels,BlockName,decomposeStack);
     //_read calls clean so I cannot use eFilename as filename ROB
     // since eFilename is reset in clean
     eFilename = _filename;
@@ -1113,15 +1127,30 @@ bool MetaData::existsBlock(const FileName &_inFile)
         close(fd);
     }
 }
-void MetaData::_read(const FileName &filename,
-                     const std::vector<MDLabel> *desiredLabels,
-                     const String & blockRegExp,
-                     bool decomposeStack)
+void MetaData::readXML(const FileName &filename,
+                       const std::vector<MDLabel> *desiredLabels,
+                       const String & blockRegExp,
+                       bool decomposeStack)
+{
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED,"readXML not implemented yet");
+}
+
+void MetaData::readDB(const FileName &filename,
+                      const std::vector<MDLabel> *desiredLabels,
+                      const String & blockRegExp,
+                      bool decomposeStack)//what is decompose stack for?
+{
+    String blockname = blockRegExp;
+
+    myMDSql->copyTableFromFileDB(blockname,filename,desiredLabels);
+}
+void MetaData::readStar(const FileName &filename,
+                        const std::vector<MDLabel> *desiredLabels,
+                        const String & blockRegExp,
+                        bool decomposeStack)
 {
     //First try to open the file as a metadata
-    _clear();
-    myMDSql->createMd();
-    _isColumnFormat = true;
+
 
     size_t id;
 
@@ -1725,8 +1754,8 @@ void MetaData::writeDB(const FileName fn, const FileName blockname, WriteModeMet
 
 void MetaData::writeXML(const FileName fn, const FileName blockname, WriteModeMetaData mode) const
 {
-//fixme
-////THIS SHOULD BE IMPLEMENTED USING AN XML LIBRARY THAT HANDLES THE FILE PROPERLY
+    //fixme
+    ////THIS SHOULD BE IMPLEMENTED USING AN XML LIBRARY THAT HANDLES THE FILE PROPERLY
     if(mode!=MD_OVERWRITE)
         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"XML is only implemented for overwrite mode");
     std::ofstream ofs(fn.data(), std::ios_base::out|std::ios_base::trunc);

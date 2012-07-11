@@ -728,14 +728,103 @@ void MDSql::dumpToFile(const FileName &fileName)
     sqlBeginTrans();
 }
 
+void MDSql::copyTableFromFileDB(const FileName blockname,
+                                const FileName filename,
+                                const std::vector<MDLabel> *desiredLabels
+                               )
+{
+    char **results;
+    int rows;
+    int columns;
+    char *Labels;
+
+    sqlite3 *db1;
+    String sql = (String)"PRAGMA table_info(" + blockname +")";
+    if (sqlite3_open(filename.c_str(), &db1))
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db1)));
+    if (sqlite3_get_table (db1, sql.c_str(), &results, &rows, &columns, NULL) != SQLITE_OK)
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db1)));
+    //This pragma returns one row for each column in the named table.
+    //Columns in the result set include the column name,
+    //data type, whether or not the column can be NULL, and the default value for the column.
+
+    String activeLabel;
+    MDLabel label;
+    if (rows < 1)
+        std::cerr << "Empty Metadata" <<std::endl;
+    else if (desiredLabels != NULL)
+    {
+        std::cerr << "30" <<std::endl;
+
+        myMd->activeLabels = *desiredLabels;
+        for(std::vector<MDLabel>::const_iterator  it = desiredLabels->
+                begin();
+            it != desiredLabels->end();
+            ++it)
+        {
+            activeLabel += *it + " ,";
+        }
+    }
+    else
+    {
+
+        activeLabel="*";
+        for (int i = 1; i <= rows; i++)
+        {
+            Labels = results[(i * columns) + 1];
+            label = MDL::str2Label(Labels);
+
+            if (label == MDL_UNDEFINED)
+            {
+                if(strcmp(Labels,"objID"))
+                    std::cout << (String)"WARNING: Ignoring unknown column: " + Labels << std::endl;
+            }
+            else
+            {
+                myMd->activeLabels.push_back(label);
+            }
+        }
+    }
+    sqlite3_free_table (results);
+    sqlite3_close(db1);
+
+    //Copy table to memory
+    //tableName(tableId);
+    sqlCommitTrans();
+
+    String _blockname;
+    if(blockname.empty())
+        _blockname="nonamed";
+    else
+        _blockname=blockname;
+    dropTable();
+    createMd();
+
+    String sqlCommand = (String)"ATTACH database '" + filename+"' as load";
+    if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
+    {
+        std::cerr << "Couldn't attach or create table:  " << errmsg << std::endl;
+        return;
+    }
+    sqlCommand = (String)"INSERT INTO " + tableName(tableId).c_str()
+                 +" select " + activeLabel + " from load."+blockname.c_str();
+    if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
+    {
+        std::cerr << (String)"Couldn't write table: " << tableName(tableId)
+        << " "                             << errmsg << std::endl;
+        return;
+    }
+    sqlite3_exec(db, "DETACH load",NULL,NULL,&errmsg);
+    sqlBeginTrans();
+}
 void MDSql::copyTableToFileDB(const FileName blockname, const FileName &fileName)
 {
     sqlCommitTrans();
     String _blockname;
     if(blockname.empty())
-    	_blockname="nonamed";
+        _blockname="nonamed";
     else
-    	_blockname=blockname;
+        _blockname=blockname;
     String sqlCommand = (String)"ATTACH database '" + fileName+"' as save";
     sqlCommand += (String)";drop table  if exists save." + blockname;
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
@@ -743,12 +832,16 @@ void MDSql::copyTableToFileDB(const FileName blockname, const FileName &fileName
         std::cerr << "Couldn't attach or create table:  " << errmsg << std::endl;
         return;
     }
+
     sqlCommand = (String)"create table save." +blockname
-    		   +" as select * from main."+tableName(tableId);
+                 +" as select * from main."+tableName(tableId);
+    //do not know how to create indexes in attached table
+    //    sqlCommand += (String)";CREATE INDEX IF NOT EXISTS save.obj_Id_INDEX ON "
+    //         + "save." +blockname +"(objID)";
     if (sqlite3_exec(db, sqlCommand.c_str(),NULL,NULL,&errmsg) != SQLITE_OK)
     {
         std::cerr << (String)"Couldn't write table: " << blockname
-        		  << " "                             << errmsg << std::endl;
+        << " "                             << errmsg << std::endl;
         return;
     }
     sqlite3_exec(db, "DETACH save",NULL,NULL,&errmsg);
