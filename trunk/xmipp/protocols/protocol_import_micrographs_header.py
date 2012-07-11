@@ -35,6 +35,10 @@ PairDescr = ""
 """Perform some preprocessing operations on micrographs"""
 DoPreprocess = False
 
+# {expert} Check image corners for problems
+"""After doing all the preprocess check that image borders have similar variance"""
+DoCheckBorders = True
+
 # {condition}(not DoPreprocess) Copy micrographs?
 """ 
 Set to <True> if you want to copy micrographs from input

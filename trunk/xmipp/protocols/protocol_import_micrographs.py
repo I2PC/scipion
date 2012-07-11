@@ -5,7 +5,8 @@
 
 from glob import glob
 from protlib_base import *
-import xmipp
+from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGRATE, MDL_CTF_VOLTAGE, \
+    MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
 
@@ -41,6 +42,9 @@ class ProtImportMicrographs(XmippProtocol):
             func(m, output)
         # Insert step for result metadatas creation     
         self.insertCreateResults(filenameDict)
+
+        if self.DoCheckBorders:
+            self.insertStep("checkBorders",MicrographFn=self.getFilename('micrographs'),WarningFn=self.workingDirPath('warnings.xmd'))
         
     def validate(self):
         errors = []
@@ -51,25 +55,12 @@ class ProtImportMicrographs(XmippProtocol):
         else:
             for micrograph in micrographList:
                 try:
-                    if not xmipp.checkImageFileSize(micrograph):
+                    if not checkImageFileSize(micrograph):
                         errors.append(micrograph+" seems to be corrupted")
                 except Exception:
                     errors.append(micrograph+" seems to be corrupted")
 
         return errors
-
-    def warnings(self):
-        warningList = []
-        # Check that there are any micrograph to process
-        micrographList=self.getMicrographs()
-        if len(micrographList) > 0 and not self.DoCrop:
-            for micrograph in micrographList:
-                try:
-                    if not xmipp.checkImageCorners(micrograph):
-                        warningList.append("Check corners of [%s]" % micrograph)
-                except Exception:
-                    pass
-        return warningList
 
     def summary(self):
         message = []
@@ -78,8 +69,11 @@ class ProtImportMicrographs(XmippProtocol):
             message.append("Micrographs are in tilt pairs")
         fnAcquisition=self.getFilename('acquisition')
         if os.path.exists(fnAcquisition):
-            MD=xmipp.MetaData(fnAcquisition)
-            message.append("Sampling rate=<"+str(MD.getValue(xmipp.MDL_SAMPLINGRATE,MD.firstObject()))+" A/pix>")
+            MD=MetaData(fnAcquisition)
+            message.append("Sampling rate=<"+str(MD.getValue(MDL_SAMPLINGRATE,MD.firstObject()))+" A/pix>")
+        fnWarning=self.workingDirPath('warnings.xmd')
+        if os.path.exists(fnWarning):
+            message.append("Warnings on the borders of some micrographs: [%s]"%fnWarning)
         return message
     
     def getMicrographs(self):
@@ -149,19 +143,18 @@ class ProtImportMicrographs(XmippProtocol):
             previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, verifyfiles=[outputMic], parent_step_id=previousId)
         
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
-    md = xmipp.MetaData()
+    md = MetaData()
     md.setColumnFormat(False)
     objId = md.addObject()
-    md.setValue(xmipp.MDL_CTF_VOLTAGE,float(Voltage),objId)    
-    md.setValue(xmipp.MDL_CTF_CS,float(SphericalAberration),objId)    
-    md.setValue(xmipp.MDL_CTF_SAMPLING_RATE,float(SamplingRate),objId)
-    md.setValue(xmipp.MDL_MAGNIFICATION,float(Magnification),objId)
+    md.setValue(MDL_CTF_VOLTAGE,float(Voltage),objId)    
+    md.setValue(MDL_CTF_CS,float(SphericalAberration),objId)    
+    md.setValue(MDL_CTF_SAMPLING_RATE,float(SamplingRate),objId)
+    md.setValue(MDL_MAGNIFICATION,float(Magnification),objId)
     md.write(fnOut)    
 
 def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn, PixelSize):
     ''' Create a metadata micrographs.xmd with all micrographs
     and if tilted pairs another one tilted_pairs.xmd'''
-    from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
     md = MetaData()
     micrographs = FilenameDict.values()
     micrographs.sort()
@@ -169,7 +162,7 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
         md.setValue(MDL_MICROGRAPH, m, md.addObject())
     md.write("micrographs@"+MicrographFn)
     mdAcquisition = MetaData()
-    mdAcquisition.setValue(xmipp.MDL_SAMPLINGRATE,float(PixelSize),mdAcquisition.addObject())
+    mdAcquisition.setValue(MDL_SAMPLINGRATE,float(PixelSize),mdAcquisition.addObject())
     mdAcquisition.write(os.path.join(WorkingDir,"acquisition_info.xmd"))
     
     if len(PairsMd):
@@ -182,3 +175,15 @@ def createResults(log, WorkingDir, PairsMd, FilenameDict, MicrographFn, TiltedFn
             md.setValue(MDL_MICROGRAPH, FilenameDict[u], id2)
             md.setValue(MDL_MICROGRAPH_TILTED, FilenameDict[t], id2)
         md.write("micrographPairs@"+TiltedFn)
+
+def checkBorders(log,MicrographFn,WarningFn):
+    md = MetaData()
+    md.read("micrographs@"+MicrographFn)
+    
+    mdOut = MetaData()
+    for objId in md:
+        micrograph=md.getValue(MDL_MICROGRAPH,objId)
+        if not checkImageCorners(micrograph):
+            mdOut.setValue(MDL_MICROGRAPH,micrograph,mdOut.addObject())
+    if mdOut.size()>0:
+        mdOut.write(WarningFn)
