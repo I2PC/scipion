@@ -1096,7 +1096,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     Matrix1D<int> newAssignment, oldAssignment, firstSplitAssignment;
     Image<double> I;
     MultidimArray<double> Iaux1, Iaux2, corrList;
-    Histogram1D hist;
+    MultidimArray<int> idx;
     CL2DAssignment assignment, assignment1, assignment2;
     CL2DClass *firstSplitNode1 = NULL;
     CL2DClass *firstSplitNode2 = NULL;
@@ -1144,8 +1144,8 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         newAssignment.initZeros(imax);
 
         // Compute threshold
-        compute_hist(corrList, hist, 200);
-        double corrThreshold = hist.percentil(50);
+        corrList.indexSort(idx);
+        double corrThreshold = corrList(idx(XSIZE(idx)/2)-1);
         if (corrThreshold == 0)
         {
             if (firstSplitNode1 != NULL)

@@ -134,7 +134,7 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
 //#define DEBUG
 void CL3DClass::transferUpdate()
 {
-    if (nextListImg.size() > 0)
+	if (nextListImg.size() > 0)
     {
         // Take from Pupdate
     	double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
@@ -1168,11 +1168,12 @@ int CL3D::cleanEmptyNodes()
 void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                      std::vector<size_t> &splitAssignment) const
 {
+	LOG(formatString("Splitting node 0: listsize=%d (volsize=%d)",node->currentListImg.size(),XSIZE(node->P)));
     std::vector<CL3DClass *> toDelete;
     Matrix1D<int> newAssignment, oldAssignment, firstSplitAssignment;
     Image<double> I;
     MultidimArray<double> Iaux1, Iaux2, corrList;
-    Histogram1D hist;
+    MultidimArray<int> idx;
     CL3DAssignment assignment, assignment1, assignment2;
     CL3DClass *firstSplitNode1 = NULL;
     CL3DClass *firstSplitNode2 = NULL;
@@ -1186,8 +1187,8 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     {
         finish = true;
         node2->neighboursIdx = node1->neighboursIdx = node->neighboursIdx;
-        node1->P = node->P; // *** AQUI ES DONDE FALLA
-        node2->P = node->P; // *** AQUI ES DONDE FALLA
+        node1->P = node->P;
+        node2->P = node->P;
 
         int imax = node->currentListImg.size();
         if (imax < minAllowedSize)
@@ -1221,8 +1222,9 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         newAssignment.initZeros(imax);
 
         // Compute threshold
-        compute_hist(corrList, hist, 200);
-        double corrThreshold = hist.percentil(50);
+        corrList.indexSort(idx);
+        double corrThreshold = corrList(idx(XSIZE(idx)/2)-1);
+        LOG(formatString("Splitting node corrThreshold=%f",corrThreshold));
         if (corrThreshold == 0)
         {
             if (firstSplitNode1 != NULL)
@@ -1234,6 +1236,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             }
             else
             {
+                LOG(((String)"Splitting at random"));
                 // Split at random
                 for (int i = 0; i < imax; i++)
                 {
@@ -1261,6 +1264,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         // Split according to stdK
         if (prm->node->rank == 0 && prm->verbose >= 2)
             std::cerr << "Splitting by stdK threshold ..." << std::endl;
+        LOG(((String)"Splitting by threshold"));
         for (int i = 0; i < imax; i++)
         {
             if ((i + 1) % (prm->node->size) == prm->node->rank)
@@ -1295,6 +1299,9 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             firstSplitNode1 = new CL3DClass(*node1);
             firstSplitNode2 = new CL3DClass(*node2);
         }
+
+    	LOG(formatString("Splitting node 1: listsize1=%d (volsize1=%d)",node1->currentListImg.size(),XSIZE(node1->P)));
+    	LOG(formatString("Splitting node 1: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
 
         // Split iterations
         for (int it = 0; it < prm->Niter; it++)
@@ -1350,6 +1357,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                 << std::endl;
 
             // Check if one of the nodes is too small
+        	LOG(formatString("Splitting node 1.5: list1.size=%d list2.size=%d",node1->currentListImg.size(),node2->currentListImg.size()));
             if (node1->currentListImg.size() < minAllowedSize
                 || node2->currentListImg.size() < minAllowedSize
                 || Nchanges < 0.005 * imax)
@@ -1369,6 +1377,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             node = node2;
             node2 = new CL3DClass();
             finish = false;
+        	LOG(formatString("Splitting node 2: Deleting small node 1: listsize1=%d (volsize1=%d)",node1->currentListImg.size(),XSIZE(node1->P)));
         }
         else if (node2->currentListImg.size() < minAllowedSize)
         {
@@ -1383,6 +1392,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             node = node1;
             node1 = new CL3DClass();
             finish = false;
+        	LOG(formatString("Splitting node 2: Deleting small node 2: listsize2=%d (volsize2=%d)",node2->currentListImg.size(),XSIZE(node2->P)));
         }
     }
     while (!finish);
