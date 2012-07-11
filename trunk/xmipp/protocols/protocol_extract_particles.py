@@ -134,7 +134,7 @@ class ProtExtractParticles(XmippProtocol):
                                   micrographToExtract=micrographToExtract,
                                   TsFinal=self.TsFinal, TsInput=self.TsInput, downsamplingMode=self.downsamplingMode,
                                   fnExtractList=destFnExtractList,particleSize=self.ParticleSize,
-                                  doFlip=self.DoFlip,doNorm=self.DoNorm,doLog=self.DoLog,doInvert=self.DoInvert,
+                                  doFlip=self.DoFlip,doNorm=self.DoNorm,doInvert=self.DoInvert,
                                   bgRadius=self.BackGroundRadius, doRemoveDust=self.DoRemoveDust,
                                   dustRemovalThreshold=self.DustRemovalThreshold)
             if self.downsamplingMode==DownsamplingMode.NewDownsample:
@@ -325,7 +325,7 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
 
 def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,
-                     fnExtractList, particleSize, doFlip, doNorm, doLog, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
+                     fnExtractList, particleSize, doFlip, doNorm, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
     
     
     fnBlock = _getFilename('mic_block_fn', micName=micrographName, fn=fnExtractList)
@@ -343,8 +343,6 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
         arguments+=" --downsampling "+str(TsFinal/TsInput)
     if doInvert:
         arguments += " --invert"
-    if doLog:
-        arguments += " --log"
     try:
         runJob(log,"xmipp_micrograph_scissor", arguments)
     except OSError, e:

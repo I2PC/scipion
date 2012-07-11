@@ -47,17 +47,9 @@ ParticleSize = 0
 """ Use the information from the CTF to compensate for phase reversals."""
 DoFlip = True
 
-# Take Logarithm
-""" 
-Depending on your acquisition system you may have to take the logarithm
-or not in order to have a linear relationship between the gray values
-in the image and those in the volume """
-DoLog = False 
-
 # Invert contrast
 """ Invert the contrast if your particles are black over a white background. """
 DoInvert = False
-
 
 # Normalize (Recommended)
 """ 

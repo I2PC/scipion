@@ -23,7 +23,7 @@ class ProtImportMicrographs(XmippProtocol):
         # Create microscope
         self.insertCreateMicroscope()
         # Decide name after preprocessing
-        doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixels)
+        doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixels or self.DoLog)
         micrographs = self.getMicrographs()
         if doPreprocess:
             func = self.insertPreprocessStep
@@ -133,6 +133,13 @@ class ProtImportMicrographs(XmippProtocol):
             previousId = self.insertParallelRunJobStep("xmipp_transform_window", " -i %s -o %s --crop %d -v 0" %(iname,outputMic, self.Crop),
                                                        verifyfiles=[outputMic])
             iname = outputMic
+        # Take logarithm
+        if self.DoLog:
+            params = " -i %s --log10 -v 0" % iname
+            if iname != outputMic:
+                params += " -o " + outputMic
+                iname = outputMic
+            previousId = self.insertParallelRunJobStep("xmipp_image_operate", params, verifyfiles=[outputMic], parent_step_id=previousId)
         # Remove bad pixels
         if self.DoRemoveBadPixels:
             params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
