@@ -796,6 +796,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         Matrix2D<double> A(3,3);
         A.initIdentity();
         MAT_ELEM(A,0, 0) = -1.;
+        MAT_ELEM(A,0, 1) = -1.;
         applyGeometry(LINEAR, Mimg, img, A, IS_INV, DONT_WRAP);
     }
     else
@@ -920,7 +921,7 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
     	// apply current scale
         A.initIdentity();
-        A *= scale;
+        A /= scale;
         applyGeometry(LINEAR, Mscale, Mtrans, A, IS_INV, DONT_WRAP);
 
     	//Image spread correction (if scale != 1) for scale search
