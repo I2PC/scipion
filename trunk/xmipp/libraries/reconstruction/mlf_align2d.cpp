@@ -507,6 +507,7 @@ void ProgMLF2D::produceSideInfo()
     }
 
     show();
+    estimateInitialNoiseSpectra();
 }
 
 // Read reference images to memory and initialize offset vectors
@@ -521,21 +522,8 @@ void ProgMLF2D::produceSideInfo2()
     Image<double>                img;
     std::vector<double>       Vdum, sumw_defocus;
 
-    estimateInitialNoiseSpectra();
-
     // Read in all reference images in memory
-    if (fn_ref.isMetaData())
-    {
-        MDref.read(fn_ref);
-    }
-    else
-    {
-
-        MDref.clear();
-        size_t id =  MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_ref, id);
-        MDref.setValue(MDL_ENABLED, 1, id);
-    }
+    MDref.read(fn_ref);
 
     model.n_ref = MDref.size();
     refno = 0;
@@ -696,10 +684,21 @@ void ProgMLF2D::produceSideInfo2()
 
     // Read in Vsig-vectors with fixed file names
     FileName fn_base = FN_ITER_BASE(istart - 1);
+    MetaData md;
 
     FOR_ALL_DEFOCUS_GROUPS()
     {
-        fn_tmp = FN_VSIG(fn_base, ifocus, ".noise");
+        fn_tmp = FN_VSIG(fn_base, ifocus, ".noise.xmd");
+
+        md.read(fn_tmp);
+
+        FOR_ALL_OBJECTS_IN_METADATA(md)
+        {
+          md.getValue(MDL_MLF_NOISE, aux, __iter.objId);
+          dAi(Vsig[ifocus], __iter.objIndex) = aux;
+        }
+
+#ifdef OLD_FILE
         fh.open((fn_tmp).c_str(), std::ios::in);
         if (!fh)
             REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
@@ -718,10 +717,10 @@ void ProgMLF2D::produceSideInfo2()
             }
         }
         fh.close();
+#endif
         // Initially set sumw_defocus equal to count_defocus
         sumw_defocus.push_back((double)count_defocus[ifocus]);
     }
-
     // Calculate all Wiener filters
     updateWienerFilters(spectral_signal, sumw_defocus, istart - 1);
 
@@ -795,6 +794,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
         FileName fn_base = FN_ITER_BASE(istart - 1);
 
         // Calculate Vsig vectors and write them to disc
+
         FOR_ALL_DEFOCUS_GROUPS()
         {
             Mave[ifocus] /= (double)count_defocus[ifocus];
@@ -813,12 +813,16 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
             // Subtract signal terms
             // Divide by factor 2 because of the 2D-Gaussian distribution!
             for (int irr = 0; irr < hdim; irr++)
-            {
                 dAi(Vsig[ifocus], irr) = (dAi(rmean_noise, irr) - dAi(rmean_signal, irr)) / 2.;
-            }
 
-            // write Vsig vector to disc
-            fn_tmp = FN_VSIG(fn_base, ifocus, ".noise");
+
+            // write Vsig vector to disc (only master)
+            if (IS_MASTER)
+              writeNoiseFile(fn_base, ifocus);
+
+            fn_tmp = FN_VSIG(fn_base, ifocus, ".noise.xmd");
+
+#ifdef OLD_FILE
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
                 REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
@@ -827,6 +831,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
                 fh << (double)irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
             }
             fh.close();
+#endif
         }
         Msigma2.clear();
         Mave.clear();
@@ -965,44 +970,38 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
     }
 
     // Write Wiener filters and spectral SNR to text files
+    double resol_step = 1. / (sampling * dim);
+    double resol_freq = 0;
+    double resol_real = 999.;
+    MDRow row;
+
     if (verbose > 0)
     {
         fn_base = FN_ITER_BASE(iter);
         // CTF group-specific Wiener filter files
         FOR_ALL_DEFOCUS_GROUPS()
         {
-            fn_tmp = FN_VSIG(fn_base, ifocus, ".ssnr");
-            fh.open((fn_tmp).c_str(), std::ios::out);
-            if (!fh)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
-            fh  << "#  Resol      SSNR       CTF    Wiener    signal     noise       Ang" << std::endl;
+            resol_freq = 0;
+            MetaData md;
             for (int irr = 0; irr < hdim; irr++)
             {
-                fh << floatToString((double)irr / (sampling*dim));
-                fh.width(10);
-                fh << floatToString(XMIPP_MIN(25., dAi(Vsnr[ifocus], irr)));
-                fh.width(10);
-                fh << floatToString(dAi(Vctf[ifocus], irr));
-                fh.width(10);
-                fh << floatToString(dAi(Vdec[ifocus], irr));
-                fh.width(10);
-                fh << floatToString(dAi(spectral_signal, irr));
-                fh.width(10);
                 noise = 2. * dAi(Vsig[ifocus], irr) * sumw_defocus[ifocus];
                 noise /= (sumw_defocus[ifocus] - 1);
-                fh << floatToString(noise);
-                fh.width(10);
-                if (irr>0)
-                {
-                    fh << floatToString((sampling*dim)/(double)irr);
-                }
-                else
-                {
-                    fh << floatToString(999.);
-                }
-                fh << std::endl;
+                if (irr > 0)
+                    resol_real = (sampling*dim)/(double)irr;
+                row.setValue(MDL_RESOLUTION_FREQ, resol_freq);
+                row.setValue(MDL_RESOLUTION_SSNR, XMIPP_MIN(25., dAi(Vsnr[ifocus], irr)));
+                row.setValue(MDL_MLF_CTF, dAi(Vctf[ifocus], irr));
+                row.setValue(MDL_MLF_WIENER, dAi(Vdec[ifocus], irr));
+                row.setValue(MDL_MLF_SIGNAL, dAi(spectral_signal, irr));
+                row.setValue(MDL_MLF_NOISE, noise);
+                row.setValue(MDL_RESOLUTION_FREQREAL, resol_real);
+                md.addRow(row);
+                resol_freq += resol_step;
             }
-            fh.close();
+            fn_tmp = FN_VSIG(fn_base, ifocus, ".ssnr.xmd");
+            md.write(fn_tmp);
+
         }
     }
 
@@ -2856,19 +2855,26 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     {
         FOR_ALL_DEFOCUS_GROUPS()
         {
-            fn_tmp = FN_VSIG(fn_base, ifocus, ".noise");
-            fh.open((fn_tmp).c_str(), std::ios::out);
-            if (!fh)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
-            for (int irr = 0; irr < hdim; irr++)
-            {
-                fh << irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
-            }
-            fh.close();
+          writeNoiseFile(fn_base, ifocus);
         }
     }
+}//function writeOutputFiles
 
-}
+void ProgMLF2D::writeNoiseFile(const FileName &fn_base, int ifocus)
+{
+   MetaData md;
+   // Calculate resolution step
+   double resol_step = 1. / (sampling * dim);
+   md.addLabel(MDL_RESOLUTION_FREQ);
+
+   for (int irr = 0; irr < hdim; irr++)
+      md.setValue(MDL_MLF_NOISE, dAi(Vsig[ifocus], irr), md.addObject());
+
+   md.fillLinear(MDL_RESOLUTION_FREQ, 0., resol_step);
+   // write Vsig vector to disc
+   md.write(FN_VSIG(fn_base, ifocus, ".noise.xmd"));
+
+}//function writeNoiseFile
 
 /// Add docfiledata to docfile
 void ProgMLF2D::addPartialDocfileData(const MultidimArray<double> &data,

@@ -285,6 +285,9 @@ public:
     /// Write out reference images, selfile and logfile
     virtual void writeOutputFiles(const ModelML2D &model, OutputType outputType);
 
+    /// Write noise estimation per resolution
+    void writeNoiseFile(const FileName &fn_base, int ifocus);
+
     virtual void addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last);
 
 };

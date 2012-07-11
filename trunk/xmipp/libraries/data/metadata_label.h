@@ -237,6 +237,12 @@ enum MDLabel
     MDL_MISSINGREGION_THYF, ///< Final tilt angle in Y for missing region in subtomogram
     MDL_MISSINGREGION_THX0, ///< Initial tilt angle in X for missing region in subtomogram
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
+
+    MDL_MLF_CTF,    ///< MLF CTF estimated value (double)
+    MDL_MLF_WIENER, ///< MLF Wiener filter (double)
+    MDL_MLF_SIGNAL, ///< MLF signal (double)
+    MDL_MLF_NOISE,  ///< MLF Wiener filter (double)
+
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NEIGHBORS, ///< Vector of indexes to points some "neighbors"
     MDL_NEIGHBOR, ///< Particular neighbor (pointed myNEIGHBORS)
@@ -297,6 +303,7 @@ enum MDLabel
     MDL_RESOLUTION_FRCRANDOMNOISE, ///<Fourier shell correlation noise (double)
     MDL_RESOLUTION_FREQ, ///<Frequency in 1/A (double)
     MDL_RESOLUTION_FREQREAL, ///< Frequency in A (double)
+    MDL_RESOLUTION_SSNR, ///<Fourier shell correlation (double)
 
     MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATE_ORIGINAL, ///< original sampling rate in A/pixel (double)
@@ -943,6 +950,12 @@ private:
         MDL::addLabelAlias(MDL_MISSINGREGION_NR, "Wedge");
         MDL::addLabel(MDL_MISSINGREGION_THX0, LABEL_DOUBLE, "missingRegionThetaX0");
         MDL::addLabel(MDL_MISSINGREGION_THXF, LABEL_DOUBLE, "missingRegionThetaXF");
+
+        MDL::addLabel(MDL_MLF_CTF,    LABEL_DOUBLE, "mlfCtf");
+        MDL::addLabel(MDL_MLF_WIENER, LABEL_DOUBLE, "mlfWiener");
+        MDL::addLabel(MDL_MLF_SIGNAL, LABEL_DOUBLE, "mlfSignal");
+        MDL::addLabel(MDL_MLF_NOISE,  LABEL_DOUBLE, "mlfNoise");
+
         MDL::addLabel(MDL_MISSINGREGION_THY0, LABEL_DOUBLE, "missingRegionThetaY0");
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MISSINGREGION_TYPE, LABEL_STRING, "missingRegionType");
@@ -1012,6 +1025,7 @@ private:
         MDL::addLabel(MDL_RESOLUTION_FRCRANDOMNOISE, LABEL_DOUBLE, "resolutionFRCRandomNoise");
         MDL::addLabel(MDL_RESOLUTION_FREQ, LABEL_DOUBLE, "resolutionFreqFourier");
         MDL::addLabel(MDL_RESOLUTION_FREQREAL, LABEL_DOUBLE, "resolutionFreqReal");
+        MDL::addLabel(MDL_RESOLUTION_SSNR, LABEL_DOUBLE, "resolutionSSNR");
 
         MDL::addLabelAlias(MDL_RESOLUTION_DPR, "DPR");
         MDL::addLabelAlias(MDL_RESOLUTION_ERRORL2, "Error_l2");
