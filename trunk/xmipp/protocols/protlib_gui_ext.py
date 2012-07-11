@@ -1880,12 +1880,12 @@ class XmippBrowserMask(XmippBrowser):
         # Read real dimension
         self.dim = 196
         img = Image()
-        self.volFn = self.fileList[0]
-        img.read(self.volFn, HEADER)
+        self.imgFn = self.fileList[0]
+        img.read(self.imgFn, HEADER)
         self.real_dim = float(img.getDimensions()[0])
         self.rate = self.dim / self.real_dim
         self.image = Image()
-        self.image.readPreview(self.volFn, self.dim)
+        self.image.readPreview(self.imgFn, self.dim)
         #self.root.minsize(600, 400)        
         self.preview = MaskPreview(self.detailstop, self.dim, label="Central slice", 
                                    outerRadius=self.outerRadius * self.rate, innerRadius=self.innerRadius * self.rate)
@@ -1911,7 +1911,11 @@ class XmippBrowserMask(XmippBrowser):
     def insertFiles(self, path):
         self.commonRoot = dirname(self.fileList[0])
         for f in self.fileList:
-            self.insertElement('', basename(f))
+            if '@' in f:
+                self.insertElement('', f)
+                self.commonRoot = ""
+            else:
+                self.insertElement('', basename(f))
         
     def updateMaskRadius(self):
         innerRadius = self.innerRadiusSlider.getValue() * self.rate

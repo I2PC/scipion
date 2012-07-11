@@ -38,7 +38,16 @@ class ProtPreprocessParticles(XmippProtocol):
         if self.DoNorm:
             self.Db.insertStep('doNorm',stack=self.OutStack,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
         if self.DoMask:
-            self.Db.insertStep('doMask',stack=self.OutStack,maskFile=self.MaskFile,substitute=self.Substitute,Nproc=self.NumberOfMpi)
+            if self.Substitute == "value":
+                self.Substitute = str(self.SubstituteValue)
+            params = "-i %s --substitute %s --mask %s " % (self.OutStack, self.Substitute, self.MaskType)
+            if self.MaskType == 'raised_cosine':
+                params += "-%d -%d" % (self.MaskRadius, self.MaskRadius + self.MaskRadiusOuter)
+            elif self.MaskType == 'circular':
+                params += '-%d' % self.MaskRadius
+            else: # from file:
+                params += self.MaskFile
+            self.insertRunJobStep("xmipp_transform_mask", params)
         
     def validate(self):
         errors = []
@@ -72,7 +81,7 @@ class ProtPreprocessParticles(XmippProtocol):
             else:
                 self.setStepMessage("Normalization applied: type = %(NormType)s backgroundRadius = %(BackGroundRadius)d")
         if self.DoMask:
-            self.setStepMessage("Mask applied: mask file = %(MaskFile)f substituted value = %(Substitute)f")
+            self.setStepMessage("Mask applied: mask file = %(MaskFile)s substituted value = %(Substitute)s")
         self.messages.append("Output: [%s]" % self.OutStack)
         return self.messages
 

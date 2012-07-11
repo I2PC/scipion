@@ -32,10 +32,11 @@ from subprocess import Popen
 from os.path import join, relpath, exists
 import Tkinter as tk
 import tkFont
-
+from xmipp import MetaData
 from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
     XmippProject
-from protlib_utils import loadModule, which, runShowJ
+from protlib_utils import loadModule, which, runShowJ,\
+    runImageJPluginWithResponse
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
     TaggedText
@@ -109,8 +110,7 @@ def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None, m
     return results
       
 #This wizard is specific for import_micrographs protocol
-def wizardBrowseCTF(self, var):
-    from xmipp import MetaData
+def wizardBrowseCTF(self, var):    
     importRunName = self.getVarValue('ImportRun')
     downsample = self.getVarValue('DownsampleFactor')
     prot = self.project.getProtocolFromRunName(importRunName)
@@ -220,14 +220,18 @@ def wizardChooseBadPixelsFilter(self, var):
 #Design mask wizard
 def wizardDesignMask(self, var):
     selfile = self.getVarValue('InSelFile')
-    workingDir = getWorkingDirFromRunName(self.getVarValue('RunName'))
+    ##workingDir = getWorkingDirFromRunName(self.getVarValue('RunName'))
+    from xmipp import MetaData, MDL_IMAGE
+    md = MetaData(selfile)
+    fnImg = md.getValue(MDL_IMAGE, md.firstObject())
+    runShowJ(fnImg)
     #fnMask=os.path.join(workingDir,"mask.xmp")
-    fnMask = self.project.projectTmpPath("mask.xmp")
-    from protlib_utils import runJavaIJapp
-    msg = runJavaIJapp("1g", "XmippMaskDesignWizard", "-i %(selfile)s -mask %(fnMask)s" % locals())
-    msg = msg.strip().splitlines()
-    if len(msg)>0:
-        var.setTkValue(fnMask)            
+#    fnMask = self.project.projectTmpPath("mask.xmp")
+#    from protlib_utils import runJavaIJapp
+#    msg = runImageJPluginWithResponse("1g", "Masks Tool Bar", "-i %(selfile)s -mask %(fnMask)s" % locals())
+#    msg = msg.strip().splitlines()
+#    if len(msg)>0:
+#        var.setTkValue(fnMask)            
 
 #Select micrograph extension
 def wizardMicrographExtension(self,var):
@@ -256,7 +260,7 @@ def wizardTiltPairs(self, var):
     resultFilename = var.getTkValue()
     uList = []
     tList = []
-    from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
+    from xmipp import MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
     
     if exists(resultFilename):
         md = MetaData(resultFilename)
@@ -289,7 +293,7 @@ def wizardTiltPairs(self, var):
 
 #Select family from extraction run
 def wizardChooseFamilyToExtract(self, var):
-    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
+    from xmipp import MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)
@@ -337,12 +341,12 @@ def wizardChooseFamilyToExtract(self, var):
         if getattr(pickingProt,'TiltPairs', False):
             self.setVarValue("DoFlip", str(False))
         else:
-            md=MetaData(pickingProt.getFilename("micrographs"))
+            md = MetaData(pickingProt.getFilename("micrographs"))
             self.setVarValue("DoFlip", str(md.containsLabel(MDL_CTF_MODEL)))
 
 #Select family from extraction run
 def wizardChooseFamilyToExtractSupervised(self, var):
-    from xmipp import MetaData, MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
+    from xmipp import MDL_PICKING_FAMILY, MDL_PICKING_PARTICLE_SIZE, MDL_CTF_MODEL, MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)
@@ -367,15 +371,14 @@ def wizardChooseFamilyToExtractSupervised(self, var):
 
 #This wizard is specific for cl2d protocol
 def wizardCL2DNumberOfClasses(self, var):
-    from xmipp import MetaData
     fnSel = self.getVarValue('InSelFile')
     if os.path.exists(fnSel):
         MD=MetaData(fnSel)
         self.setVarValue("NumberOfReferences", int(round(MD.size()/200.0)))
 
 #Select micrograph extension
-def wizardHelperSetRadii(self, outerVarName, innerVarName=None):
-    volumeList = self.getVarValue('ReferenceFileNames').split()
+def wizardHelperSetRadii(self, inputVarName, outerVarName, innerVarName=None, ):
+    fileList = self.getVarValue(inputVarName).split()
     showInner = innerVarName is not None
     innerRadius = 0
     try:
@@ -383,22 +386,47 @@ def wizardHelperSetRadii(self, outerVarName, innerVarName=None):
             innerRadius = int(self.getVarValue(innerVarName))
         outerRadius = int(self.getVarValue(outerVarName))
     except Exception, e:
-        showError("Conversion error", "Error trying to parse integer value from \ninnerRadius: <%(innerVarName)s> or\n outerRadius: <%(outerVarName)s>" % locals(), 
-                  parent=self.master)
+        showError("Conversion error", "Error trying to parse integer value from \ninnerRadius: <%(innerVarName)s> or\n outerRadius: <%(outerVarName)s>" % locals() 
+                  ,parent=self.master)
         return
     
+    from xmipp import Image, FileName, HEADER, MDL_IMAGE
+    
+    def getFilename():
+        if len(fileList) == 0:
+            showError("Input error", "File list is empty", parent=self.master)
+            return None
+        fn = FileName(fileList[0])  
+        if not xmippExists(fn):
+            showError("Input error", "Filename <%s> doesn't exists" % str(fn),parent=self.master)
+            return None
+        return fn
+    
+    fn = getFilename()
+    if fn is None:
+        return 
+    
+    if fn.isMetaData():
+        md = MetaData(fn)
+        fileList = []
+        for objId in md:
+            fileList.append(md.getValue(MDL_IMAGE, objId))
+            if len(fileList) > 10:
+                break                      
+        fn = getFilename()
+        if fn is None:
+            return 
+            
     if outerRadius < 0:
-        from xmipp import Image, FileName, HEADER
-        fnVol = FileName(volumeList[0])
-        if fnVol.exists() and fnVol.isImage():
-            vol = Image()
-            vol.read(fnVol, HEADER)
-            xdim = vol.getDimensions()[0]
+        if fn.isImage():
+            img = Image()
+            img.read(fn, HEADER)
+            xdim = img.getDimensions()[0]
             outerRadius = xdim / 2 
-            self.setVarValue("MaskRadius", outerRadius)
+            self.setVarValue(outerVarName, outerRadius)
     from protlib_gui_ext import XmippBrowserMask
     results = showBrowseDialog(parent=self.master, browser=XmippBrowserMask, title="Select mask radius", allowFilter=False, 
-                                    extra={'fileList': volumeList, 'outerRadius': outerRadius, 
+                                    extra={'fileList': fileList, 'outerRadius': outerRadius, 
                                            'innerRadius': innerRadius, 'showInner': showInner})
     if results:
         self.setVarValue(outerVarName, int(results[1]))
@@ -406,10 +434,13 @@ def wizardHelperSetRadii(self, outerVarName, innerVarName=None):
             self.setVarValue(innerVarName, int(results[0]))
         
 def wizardSetMaskRadius(self, var):
-    wizardHelperSetRadii(self, 'MaskRadius')
+    wizardHelperSetRadii(self, 'ReferenceFileNames', 'MaskRadius')
     
 def wizardSetAlignRadii(self, var):
-    wizardHelperSetRadii(self, 'OuterRadius', 'InnerRadius')
+    wizardHelperSetRadii(self, 'ReferenceFileNames', 'OuterRadius', 'InnerRadius')
+    
+def wizardSetBackgroundRadius(self, var):
+    wizardHelperSetRadii(self, 'InSelFile', var.name)
 
 # This group of functions are called Validator, and should serve
 # for validation of user input for each variable
