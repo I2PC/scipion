@@ -1010,8 +1010,8 @@ void MetaData::read(const FileName &_filename,
     FileName extFile;
 
     blockName=_filename.getBlockName();
-    if (blockName.empty())
-        blockName = DEFAULT_BLOCK_NAME;
+//    if (blockName.empty())
+//        blockName = DEFAULT_BLOCK_NAME;
     inFile = _filename.removeBlockName();
     extFile = _filename.getExtension();
 
