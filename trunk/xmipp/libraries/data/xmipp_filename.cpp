@@ -486,7 +486,8 @@ bool FileName::isMetaData(bool failIfNotExists) const
     //FIXME
     FileName ext = getFileFormat();
     if (ext == "sel" || ext == "xmd" || ext == "doc" ||
-        ext == "ctfdat" || ext == "ctfparam" || ext == "pos")
+        ext == "ctfdat" || ext == "ctfparam" || ext == "pos" ||
+        ext == "sqlite" || ext == "xml")
     {
         return true;
     }
@@ -511,7 +512,7 @@ bool FileName::isStar1(bool failIfNotExists) const
     char cline[128];
     infile.getline(cline, 128);
     line = cline;
-    size_t pos = line.find(FileNameVersion);
+    size_t pos = line.find(METADATA_XMIPP_STAR);
     return (pos != String::npos); // xmipp_star_1 token found
 }
 

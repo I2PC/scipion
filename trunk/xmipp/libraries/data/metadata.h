@@ -602,7 +602,7 @@ public:
      * if the position is specified and is between 0 and n-1
      * the new label is inserted at that position.
      */
-    bool addLabel(const MDLabel label, int pos = -1);
+    bool addLabel(const MDLabel label, int pos = -1, bool createTable=true);
 
     /** Remove a label from the metadata.
      * The data is still in the table. If you want to remove the data,
@@ -740,10 +740,26 @@ public:
 
     /** Read data from file.
      */
-    void _read(const FileName &inFile,
+    void readStar(const FileName &inFile,
                const std::vector<MDLabel> *desiredLabels = NULL,
-               const String & blockName="",
+               const String & blockName=DEFAULT_BLOCK_NAME,
                bool decomposeStack=true);
+    /** Read metadata from xml file
+     *
+     */
+    void readXML(const FileName &inFile,
+                         const std::vector<MDLabel> *desiredLabels= NULL,
+                         const String & blockRegExp=DEFAULT_BLOCK_NAME,
+                         bool decomposeStack=true);
+
+    /** Read metadata from sqlite file
+     *
+     */
+    void readDB(const FileName &inFile,
+                         const std::vector<MDLabel> *desiredLabels= NULL,
+                         const String & blockRegExp=DEFAULT_BLOCK_NAME,
+                         bool decomposeStack=true);
+
     /** Read data from file. Guess the blockname from the filename
      * @code
      * inFilename="first@md1.doc" -> filename = md1.doc, blockname = first
