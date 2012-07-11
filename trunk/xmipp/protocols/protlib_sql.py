@@ -24,7 +24,7 @@ runColumns = ['run_id',
 NO_MORE_GAPS = 0 #no more gaps to work on
 NO_AVAIL_GAP = 1 #no available gaps now, retry later
 STEP_GAP = 2 #step gap to work on
-DB_TIMEOUT = 300 # 300 ms for timeout waiting
+DB_TIMEOUT = 1000 # ms for timeout waiting
 
 def existsDB(dbName):
     """check if database has been created by checking if the table tableruns exist"""
