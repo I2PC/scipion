@@ -1,6 +1,6 @@
 # XMIPP_STAR_1 * 
 # CAREFULL if re3d is last label this does not work
-data_
+data_noname
 loop_
  _image
  _CTFModel
