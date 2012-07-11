@@ -10,7 +10,7 @@ from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob, getListFromRangeString
 from protlib_filesystem import createLink, deleteFile, linkAcquisitionInfoIfPresent
-from xmipp import MetaData, MD_APPEND
+from xmipp import MetaData, MD_APPEND, MDL_IMAGE
 
 class ProtCL2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -62,6 +62,9 @@ class ProtCL2D(XmippProtocol):
         errors = []
         if self.NumberOfInitialReferences>self.NumberOfReferences:
             errors.append("The number of initial classes cannot be larger than the number of final classes")
+        mD=MetaData(self.InSelFile)
+        if not mD.containsLabel(MDL_IMAGE):
+            errors.append("%s does not contain a column of images"%self.InSelFile)
         if self.Tolerance<0:
             errors.append("Tolerance must be larger than 0")
         return errors
