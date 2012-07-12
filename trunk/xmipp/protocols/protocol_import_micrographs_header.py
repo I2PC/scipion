@@ -58,11 +58,11 @@ DoCrop = False
 """ Amount of pixels you want to crop from borders """
 Crop = 10
 
-# Take Logarithm?
+# Take Logarithm ?
 """ 
 Depending on your acquisition system you may have to take the logarithm
 or not in order to have a linear relationship between the gray values
-in the image and those in the volume """
+in the image and those in the volume. (log (x+1)) """
 DoLog = False 
 
 # Remove bad pixels?
