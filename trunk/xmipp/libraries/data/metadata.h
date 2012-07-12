@@ -602,7 +602,7 @@ public:
      * if the position is specified and is between 0 and n-1
      * the new label is inserted at that position.
      */
-    bool addLabel(const MDLabel label, int pos = -1, bool createTable=true);
+    bool addLabel(const MDLabel label, int pos = -1);
 
     /** Remove a label from the metadata.
      * The data is still in the table. If you want to remove the data,
