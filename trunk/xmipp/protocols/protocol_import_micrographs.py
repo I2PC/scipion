@@ -129,7 +129,7 @@ class ProtImportMicrographs(XmippProtocol):
             iname = outputMic
         # Take logarithm
         if self.DoLog:
-            params = " -i %s --log10 -v 0" % iname
+            params = " -i %s --log10one -v 0" % iname
             if iname != outputMic:
                 params += " -o " + outputMic
                 iname = outputMic
