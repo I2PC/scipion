@@ -1080,6 +1080,7 @@ public:
      */
     void setMmap(bool mmap)
     {
+    	clear();
         mmapOn = mmap;
     }
 
