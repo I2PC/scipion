@@ -402,7 +402,7 @@ bool MetaData::containsLabel(const MDLabel label) const
     return vectorContainsLabel(activeLabels, label);
 }
 
-bool MetaData::addLabel(const MDLabel label, int pos, bool CreateTable)
+bool MetaData::addLabel(const MDLabel label, int pos)
 {
     if (containsLabel(label))
         return false;
@@ -410,7 +410,6 @@ bool MetaData::addLabel(const MDLabel label, int pos, bool CreateTable)
         activeLabels.push_back(label);
     else
         activeLabels.insert(activeLabels.begin() + pos, label);
-    if (CreateTable)
         myMDSql->addColumn(label);
     return true;
 }
