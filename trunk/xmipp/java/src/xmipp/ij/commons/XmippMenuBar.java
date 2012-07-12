@@ -412,32 +412,7 @@ public class XmippMenuBar extends MenuBar
 				try
 				{
 					String command = ((MenuItem) e.getSource()).getActionCommand();
-					if (requirements != null)
-						for (IJRequirement requirement : requirements)
-							switch (requirement)
-							{
-							case IMAGEJ:
-								XmippIJUtil.showImageJ(Tool.VIEWER);
-								break;
-							case BINARY:
-								IJ.run("Make Binary");
-								JOptionPane.showMessageDialog(null, "make binary applied");
-								break;
-							case EIGHTBIT:
-								IJ.run("8-bit");
-								JOptionPane.showMessageDialog(null, "8-bit applied");
-								break;
-							case THIRTYTWOBIT:
-								IJ.run("32-bit");
-								JOptionPane.showMessageDialog(null, "32-bit applied");
-								break;
-							case RGB:
-								IJ.run("RGB Color");
-								JOptionPane.showMessageDialog(null, "RGB color applied");
-								break;
-							
-							}
-					IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
+					runCommand(command, requirements);
 				}
 				catch (Exception ex)
 				{
@@ -445,6 +420,36 @@ public class XmippMenuBar extends MenuBar
 				}
 			}
 		});
-	}
+	}//function addCommand
+	
+	/** Run ImageJ command */
+	public void runCommand(String command, IJRequirement[] requirements){
+		if (requirements != null)
+			for (IJRequirement requirement : requirements)
+				switch (requirement)
+				{
+				case IMAGEJ:
+					XmippIJUtil.showImageJ(Tool.VIEWER);
+					break;
+				case BINARY:
+					IJ.run("Make Binary");
+					JOptionPane.showMessageDialog(null, "make binary applied");
+					break;
+				case EIGHTBIT:
+					IJ.run("8-bit");
+					JOptionPane.showMessageDialog(null, "8-bit applied");
+					break;
+				case THIRTYTWOBIT:
+					IJ.run("32-bit");
+					JOptionPane.showMessageDialog(null, "32-bit applied");
+					break;
+				case RGB:
+					IJ.run("RGB Color");
+					JOptionPane.showMessageDialog(null, "RGB color applied");
+					break;
+				
+				}
+		IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
+	}//function runCommand
 
 }

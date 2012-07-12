@@ -2,20 +2,21 @@ package xmipp.ij.commons;
 
 import ij.ImagePlus;
 import ij.gui.StackWindow;
-
 import java.awt.event.WindowEvent;
+import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 
 public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	private ImagePlusLoader ipl;
-
+	protected XmippMenuBar menu;
 
 	public XmippStackWindow(ImagePlusLoader ipl, String title)
 	{
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
 		this.ipl = ipl;
 		setTitle(title);
-		setMenuBar(new XmippMenuBar(this));
+		menu = new XmippMenuBar(this);
+		setMenuBar(menu);
 	}
 	
 	public XmippStackWindow(ImagePlusLoader ipl)
@@ -31,7 +32,9 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		updateImage(imp);//first one alone does not work
 	}
 
-	
+	public void openMaskToolbar(){
+		menu.runCommand("Masks Tool Bar", new IJRequirement[]{IJRequirement.IMAGEJ});
+	}
 
 	@Override
 	public void saveDataAs(String file) throws Exception

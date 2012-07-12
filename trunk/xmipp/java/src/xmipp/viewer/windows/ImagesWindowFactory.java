@@ -26,6 +26,7 @@ import javax.vecmath.Color3f;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
+import xmipp.ij.commons.XmippIJWindow;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippStackWindow;
@@ -93,7 +94,9 @@ public class ImagesWindowFactory {
 	public static void openFileAsImage(String filename, Param parameters) {
 		try {
 			ImagePlus imp = openFileAsImagePlus(filename, parameters);
-			openXmippImageWindow(imp, parameters.poll);
+			XmippIJWindow xiw = openXmippImageWindow(imp, parameters.poll);
+			if (parameters.mask_toolbar)
+				xiw.openMaskToolbar();
 		} catch (Exception e) {
 			XmippDialog.showError(null, String.format(
 					"Couldn't open file: '%s'\nError: %s", filename,
@@ -116,18 +119,18 @@ public class ImagesWindowFactory {
 		return imp;
 	}
 
-	public static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
+	public static XmippIJWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
 		return openXmippImageWindow(new ImagePlusLoader(imp), poll);
 	}
 	
-	public static ImageWindow openXmippImageWindow(ImagePlusLoader impLoader, boolean poll) {
+	public static XmippIJWindow openXmippImageWindow(ImagePlusLoader impLoader, boolean poll) {
 		ImagePlus imp = impLoader.getImagePlus();
-		ImageWindow iw;
+		XmippIJWindow iw;
 		if (imp.getStackSize() > 1)
 			iw = new XmippStackWindow(impLoader);
 		else
 			iw = new XmippImageWindow(impLoader);
-		iw.setVisible(true);
+		((ImageWindow)iw).setVisible(true);
 		return iw;
 	}
 

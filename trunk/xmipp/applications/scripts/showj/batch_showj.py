@@ -29,14 +29,14 @@ class ScriptShowJ(ScriptAppIJ):
 		self.addParamsLine('  [--dont_apply_geo]                        : Does not read geometrical information(for metadata only)')
 		self.addParamsLine('  [--dont_wrap]                             : Does not wrap (for metadata only)')
 		self.addParamsLine('  [--debug] : debug')
-		
+		self.addParamsLine('  [--mask_toolbar] : Open mask toolbar (only valid for images)')
 	
 	def readOtherParams(self):
 		params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render']
 		for p in params:
 			if self.checkParam(p):
 				self.args += " %s %s" % (p, self.getParam(p))
-		params = ['--poll', '--debug', '--dont_apply_geo', '--dont_wrap']
+		params = ['--poll', '--debug', '--dont_apply_geo', '--dont_wrap', '--mask_toolbar']
 		for p in params:
 			if self.checkParam(p):
 				self.args += " %s" % p

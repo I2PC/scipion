@@ -50,7 +50,7 @@ from protlib_include import *
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, greenStr
 
-   
+
 # This group of function are called Wizards and should help
 # to set some parameters  in the GUI, they will receive as parameters
 # ProtocolGUI instance and the variable to setup 
@@ -224,7 +224,7 @@ def wizardDesignMask(self, var):
     from xmipp import MetaData, MDL_IMAGE
     md = MetaData(selfile)
     fnImg = md.getValue(MDL_IMAGE, md.firstObject())
-    runShowJ(fnImg)
+    runShowJ(fnImg, extraParams="--mask_toolbar")
     #fnMask=os.path.join(workingDir,"mask.xmp")
 #    fnMask = self.project.projectTmpPath("mask.xmp")
 #    from protlib_utils import runJavaIJapp

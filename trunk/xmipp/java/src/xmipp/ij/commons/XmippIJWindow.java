@@ -1,7 +1,5 @@
 package xmipp.ij.commons;
 
-import ij.ImagePlus;
-
 public interface XmippIJWindow
 {
 	public void loadData();
@@ -15,4 +13,6 @@ public interface XmippIJWindow
 	public boolean isVolume();
 
 	public boolean isStack();
+	
+	public void openMaskToolbar();
 }

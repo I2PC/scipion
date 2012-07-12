@@ -4,11 +4,13 @@ import ij.ImagePlus;
 import ij.gui.ImageWindow;
 import java.awt.event.WindowEvent;
 
+import xmipp.ij.commons.XmippMenuBar.IJRequirement;
+
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
 
-	
+	protected XmippMenuBar menu;
 
 	public static void main(String[] args)
 	{
@@ -42,8 +44,12 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
 		this.ipl = ipl;
 		setTitle(title);
-		setMenuBar(new XmippMenuBar(this));
-		
+		menu = new XmippMenuBar(this);
+		setMenuBar(menu);		
+	}
+	
+	public void openMaskToolbar(){
+		menu.runCommand("Masks Tool Bar", new IJRequirement[]{IJRequirement.IMAGEJ});
 	}
 
 	

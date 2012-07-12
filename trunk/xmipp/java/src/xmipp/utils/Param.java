@@ -45,6 +45,7 @@ public class Param {
     public final static String RAISED_W = "raised_w";
     public final static String MASKFILENAME = "mask";
     public final static String DEBUG = "debug";
+    public final static String MASKTOOLBAR = "mask_toolbar";
     public final static String VIEW = "view";
     public final static String NO_GEO = "dont_apply_geo";
     public final static String NO_WRAP = "dont_wrap";
@@ -61,6 +62,7 @@ public class Param {
     public boolean renderImages = false;
     public String renderLabel = "first"; //Label to render, by default first
     public boolean debug = false;
+    public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
     public double bad_pixels_factor;
     public double w1;
@@ -101,6 +103,7 @@ public class Param {
         options.addOption(ZOOM, true, "");
         options.addOption(RENDER_IMAGES, true, "");
         options.addOption(DEBUG, false, "");
+        options.addOption(MASKTOOLBAR, false, "");
         options.addOption(TABLE_ROWS, true, "");
         options.addOption(TABLE_COLUMNS, true, "");
 
@@ -174,7 +177,8 @@ public class Param {
             }
             
             debug = cmdLine.hasOption(DEBUG);
-
+            mask_toolbar = cmdLine.hasOption(MASKTOOLBAR);
+            
             if (cmdLine.hasOption(TABLE_ROWS)) {
                 rows = Integer.parseInt(cmdLine.getOptionValue(TABLE_ROWS));
             }
