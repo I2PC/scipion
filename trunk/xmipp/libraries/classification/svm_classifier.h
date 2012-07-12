@@ -53,6 +53,7 @@ public:
     double  predict(MultidimArray<double> &featVec,double &score);
     void SaveModel(const FileName &fnModel);
     void LoadModel(const FileName &fnModel);
+    int getNumClasses();
 };
 //@}
 #endif

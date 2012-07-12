@@ -71,6 +71,7 @@ public:
     Image<double>                microImage;
     PCAMahalanobisAnalyzer       pcaAnalyzer;
     SVMClassifier                classifier;
+    SVMClassifier                classifier2;
     FileName                     fn_micrograph;
     int                          piece_xsize;
     int                          particle_size;
@@ -84,8 +85,11 @@ public:
 
     MultidimArray<double>        pcaModel;
     MultidimArray<double>        particleAvg;
-    MultidimArray<double>        trainSet;
+    MultidimArray<double>        dataSet;
+    MultidimArray<double>        dataSet1;
     MultidimArray<double>        classLabel;
+    MultidimArray<double>        classLabel1;
+
     std::vector<Particle2>       auto_candidates;
     std::vector<Particle2>       rejected_particles;
     Image<double>   micrographStack;
@@ -120,23 +124,22 @@ public:
     void extractNonParticle(std::vector<Particle2> &negativePosition);
 
     /// Extract different filter channels from particles and Non-Particles within a Micrograph
-    void extractInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
+    void extractInvariant(const FileName &fnInvariantFeat);
 
     /// Extract different filter channels from particles within a Micrograph
-    void extractPositiveInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
+    void extractPositiveInvariant(const FileName &fnInvariantFeat);
 
     /// Extract different filter channels from Non-Particles within a Micrograph
-    void extractNegativeInvariant(const FileName &fnFilterBank,const FileName &fnInvariantFeat);
+    void extractNegativeInvariant(const FileName &fnInvariantFeat);
 
     //Build a feature vector from samples
     void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &featureVec);
 
     /// Extract Invariant Features from a particle at x and y position
-    void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y,
-                        const FileName &fnInvariantFeat);
+    void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y);
 
     /// Train a PCA with negative and positive vectors
-    void trainSVM(const FileName &fnModel);
+    void trainSVM(const FileName &fnModel,int numClassifier);
 
     /// Train a PCA with negative and positive vectors
     void trainPCA(const FileName &fnPositiveFeat);
@@ -146,6 +149,9 @@ public:
 
     /// Add the false positives to the dataset
     void add2Dataset();
+
+    /// Normalize the dataset
+    void normalizeDataset(int a,int b);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;
@@ -169,7 +175,10 @@ public:
     void loadTrainingSet(const FileName &fn_root);
 
     /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(const FileName &fnFilterBank);
+    int automaticallySelectParticles();
+
+    /// Generate two different trainsets for two SVMs.
+    void generateTrainSet();
 };
 
 class ProgMicrographAutomaticPicking2: public XmippProgram

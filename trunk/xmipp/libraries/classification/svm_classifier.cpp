@@ -25,16 +25,24 @@
  ***************************************************************************/
 #include "svm_classifier.h"
 
+bool findElementIn1DArray(MultidimArray<double> &inputArray,double element)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(inputArray)
+    if (DIRECT_A1D_ELEM(inputArray,i)==element)
+        return true;
+    return false;
+}
+
 SVMClassifier::SVMClassifier()
 {
     param.svm_type = C_SVC;
-    param.kernel_type = LINEAR1;
+    param.kernel_type = RBF;
     param.degree = 3;
-    param.gamma = 0;
+    param.gamma = 0.0824692444233;
     param.coef0 = 0;
     param.nu = 0.5;
     param.cache_size = 100;
-    param.C = 1;
+    param.C = 4.0;
     param.eps = 0.001;
     param.p = 0.1;
     param.shrinking = 1;
@@ -50,14 +58,17 @@ SVMClassifier::~SVMClassifier()
     free(prob.y);
     free(prob.x);
 }
-void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &lable)
+void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &label)
 {
+	std::ofstream fh_training;
+	fh_training.open("data.txt");
     prob.l = YSIZE(trainSet);
     prob.y = new double[prob.l];
     prob.x = new svm_node *[prob.l+1];
     const char *error_msg;
     for (int i=0;i<YSIZE(trainSet);i++)
     {
+    	fh_training<<DIRECT_A1D_ELEM(label,i)<<" ";
         prob.x[i]=new svm_node[XSIZE(trainSet)+1];
         int cnt = 0;
         for (int j=0;j<XSIZE(trainSet);j++)
@@ -68,24 +79,16 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<doubl
             {
                 prob.x[i][cnt].value=DIRECT_A2D_ELEM(trainSet,i,j);
                 prob.x[i][cnt].index=j+1;
+                fh_training<< prob.x[i][cnt].index<<":"<<prob.x[i][cnt].value<<" ";
                 cnt++;
             }
         }
         prob.x[i][cnt].index=-1;
         prob.x[i][cnt].value=2;
-        prob.y[i] = DIRECT_A1D_ELEM(lable,i);
+        prob.y[i] = DIRECT_A1D_ELEM(label,i);
+        fh_training<<std::endl;
     }
-    std::ofstream fh_auto;
-    fh_auto.open("trainvectors.txt");
-    for (int i=0;i<YSIZE(trainSet);i++)
-    {
-        for (int j=0;j<=XSIZE(trainSet);j++)
-        {
-            fh_auto <<"("<<prob.x[i][j].value<<","<<prob.x[i][j].index<<")"<<" ";
-        }
-
-        fh_auto<<" "<<prob.y[i]<<std::endl;
-    }
+    fh_training.close();
     error_msg = svm_check_parameter(&prob,&param);
     if(error_msg)
     {
@@ -130,3 +133,8 @@ void SVMClassifier::LoadModel(const FileName &fnModel)
 {
     model=svm_load_model(fnModel.c_str());
 }
+int SVMClassifier::getNumClasses()
+{
+	return svm_get_nr_class(model);
+}
+
