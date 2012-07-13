@@ -191,13 +191,7 @@ public class MicrographFamilyData
 		return false;
 	}
 	
-	public boolean isActionAvailable(double threshold)
-	{
-
-		if (state == MicrographFamilyState.Correct)
-			return !manualparticles.isEmpty() || getAutomaticParticlesDeleted(threshold) > 0;
-		return true;
-	}
+	
 
 	public String getAction()
 	{

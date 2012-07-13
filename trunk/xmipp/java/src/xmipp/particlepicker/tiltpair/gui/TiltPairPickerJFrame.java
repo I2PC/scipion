@@ -438,4 +438,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 
 
+
+
+	@Override
+	protected void openHelpURl() {
+		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph__picking_v3");
+		
+	}
+
+
 }

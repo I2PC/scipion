@@ -435,7 +435,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		TrainingPickerJFrame.this.iconlb.setIcon(micrograph.getCTFIcon());
 		actionsbt.setText(getFamilyData().getAction());
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
-		actionsbt.setEnabled(getFamilyData().isActionAvailable(getThreshold()));
 		thresholdpn
 				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
@@ -458,8 +457,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		setChanged(true);
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
-		if (getFamilyData().getState() == MicrographFamilyState.Correct)
-			actionsbt.setEnabled(false);// enabled only after doing corrections
+//		if (getFamilyData().getState() == MicrographFamilyState.Correct)
+//			actionsbt.setEnabled(false);// enabled only after doing corrections
 		saveChanges();// to keep consistence between files of automatic picker
 						// and mines
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
@@ -484,9 +483,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(getFamilyData().getAction());
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
-
-		thresholdpn
-				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
+		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
 	}
@@ -575,7 +572,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family,
 				getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
-		actionsbt.setEnabled(getFamilyData().isActionAvailable(getThreshold()));
 	}
 
 	public ParticlePickerCanvas getCanvas() {
@@ -754,6 +750,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			if(!micrograph.fits(p.getX(), p.getY(), size))
 				return false;
 		return true;
+	}
+
+	@Override
+	protected void openHelpURl() {
+		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
+		
 	}
 
 }

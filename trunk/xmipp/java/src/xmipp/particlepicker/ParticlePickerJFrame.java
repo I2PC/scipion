@@ -283,7 +283,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				try
 				{
-					XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParticlePicker");
+					openHelpURl();
+					
 				}
 				catch (Exception ex)
 				{
@@ -354,6 +355,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
 		addFilterMenuItem("Invert LUT", true, picker);
 	}
+
+	protected abstract void openHelpURl();
 
 	protected abstract void resetMicrograph();
 
