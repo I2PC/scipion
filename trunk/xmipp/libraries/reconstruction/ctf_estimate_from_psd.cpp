@@ -2440,6 +2440,8 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     lambdaPhase = 0.8;
     sizeWindowPhase = 10;
 
+    Matrix1D<double> initialGlobalAdjust = (*global_adjust);
+
     for (int i = 1; i < numElem; i++)
     {
         if ( ( ((fmax - min_freq)/min_freq) > 0.5))
@@ -2472,6 +2474,8 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
             (*global_adjust)(1) = deFocusAvg-deFocusDiff;
             (*global_adjust)(2) = eAngle;
             (*global_adjust)(4) = K_so_far;
+            (*global_adjust)(6) = 2;
+
 
             fitness =0;
             powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
@@ -2496,51 +2500,113 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     Matrix1D<double> arrayError2(3);
     arrayError2.initConstant(-1);
 
+    //We want to take care about more parameters
     // We optimize for deltaU, deltaV
-     VEC_ELEM(arrayDefocusU,0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
-     VEC_ELEM(arrayDefocusV,0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
-     VEC_ELEM(arrayError2,0)   = VEC_ELEM(arrayError,maxInd);
+    (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+    (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+    (*global_adjust)(2) = eAngle;
+    (*global_adjust)(4) = K_so_far;
+    (*global_adjust)(6) = 2;
 
-     // We optimize for deltaU, deltaU
-     (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
-     (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
-     (*global_adjust)(2) = eAngle;
-     (*global_adjust)(4) = K_so_far;
+    fitness =0;
+    powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                    DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                    fitness, iter, steps, false);
 
-     fitness =0;
-     powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
-                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
-                     fitness, iter, steps, false);
+    VEC_ELEM(arrayDefocusU,0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+    VEC_ELEM(arrayDefocusV,0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+    VEC_ELEM(arrayError2,0)   = VEC_ELEM(arrayError,maxInd);
 
-     VEC_ELEM(arrayDefocusU,1) = (*global_adjust)(0);
-     VEC_ELEM(arrayDefocusV,1) = (*global_adjust)(0);
-     VEC_ELEM(arrayError2,1) = (-1)*fitness;
+    // We optimize for deltaU, deltaU
+    (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+    (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
+    (*global_adjust)(2) = eAngle;
+    (*global_adjust)(4) = K_so_far;
+    (*global_adjust)(6) = 2;
 
-     // We optimize for deltaV, deltaV
-     (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
-     (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
-     (*global_adjust)(2) = eAngle;
-     (*global_adjust)(4) = K_so_far;
+    fitness =0;
+    powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                    DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                    fitness, iter, steps, false);
 
-     fitness =0;
-     powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
-                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
-                     fitness, iter, steps, false);
+    VEC_ELEM(arrayDefocusU,1) = (*global_adjust)(0);
+    VEC_ELEM(arrayDefocusV,1) = (*global_adjust)(0);
+    VEC_ELEM(arrayError2,1) = (-1)*fitness;
 
-     VEC_ELEM(arrayDefocusU,2) = (*global_adjust)(1);
-     VEC_ELEM(arrayDefocusV,2) = (*global_adjust)(1);
-     VEC_ELEM(arrayError2,2) = (-1)*fitness;
+    // We optimize for deltaV, deltaV
+    (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+    (*global_adjust)(1) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
+    (*global_adjust)(2) = eAngle;
+    (*global_adjust)(4) = K_so_far;
+    (*global_adjust)(6) = 2;
 
-     arrayError2.maxIndex(maxInd);
-     defocusU = VEC_ELEM(arrayDefocusU,maxInd);
-     defocusV = VEC_ELEM(arrayDefocusV,maxInd);
+    fitness =0;
+    powellOptimizer(*global_adjust, FIRST_DEFOCUS_PARAMETER + 1,
+                    DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
+                    fitness, iter, steps, false);
+
+    VEC_ELEM(arrayDefocusU,2) = (*global_adjust)(1);
+    VEC_ELEM(arrayDefocusV,2) = (*global_adjust)(1);
+    VEC_ELEM(arrayError2,2) = (-1)*fitness;
+
+    //Here we select the best one
+    arrayError2.maxIndex(maxInd);
+    defocusU = VEC_ELEM(arrayDefocusU,maxInd);
+    defocusV = VEC_ELEM(arrayDefocusV,maxInd);
 
     if (VEC_ELEM(arrayError2,maxInd) <= 0)
     {
-    	double Error = VEC_ELEM(arrayError2,maxInd);
-    	std::cout << Error << std::endl;
-    	std::cout << " Entering in estimate_defoci, Performing exhaustive defocus search (SLOW)" << std::endl;
-    	estimate_defoci();
+        //global_ctfmodel.force_physical_meaning();
+        COPY_ctfmodel_TO_CURRENT_GUESS;
+        global_ctfmodel_defoci = global_ctfmodel;
+
+        //showFirstDefoci();
+
+        global_action = 5;
+        //estimate_background_gauss_parameters2();
+
+        steps.resize(ALL_CTF_PARAMETERS);
+        steps.initConstant(1);
+        steps(3) = 0; // kV
+        steps(5) = 0; // The spherical aberration (Cs) is not optimized
+
+        /*powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
+                        NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
+
+        COPY_ctfmodel_TO_CURRENT_GUESS;
+		*/
+        //global_ctfmodel.force_physical_meaning();
+        COPY_ctfmodel_TO_CURRENT_GUESS;
+
+        global_evaluation_reduction = 2;
+        powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
+                        NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
+        //global_ctfmodel.force_physical_meaning();
+        COPY_ctfmodel_TO_CURRENT_GUESS;
+
+        /*global_evaluation_reduction = 1;
+        powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
+                        NULL, 0.005, fitness, iter, steps, global_prm->show_optimization);
+        global_ctfmodel.force_physical_meaning();
+        COPY_ctfmodel_TO_CURRENT_GUESS;
+		*/
+        global_show=0;
+        global_action = 3;
+        global_evaluation_reduction = 1;
+
+        double error = -CTF_fitness(global_adjust->vdata-1,NULL);
+
+        std::cout << "Error : " << error << std::endl;
+
+        if ( error <= 0.2)
+        {
+        	*global_adjust = initialGlobalAdjust;
+        	COPY_ctfmodel_TO_CURRENT_GUESS;
+            //There is nothing to do and we have to perform an exhaustive search
+            std::cout << error << std::endl;
+            std::cout << " Entering in estimate_defoci, Performing exhaustive defocus search (SLOW)" << std::endl;
+            estimate_defoci();
+        }
     }
 
 }
