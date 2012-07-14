@@ -144,12 +144,12 @@ double log10(Image<double> &op)
         dAi(op(), n) = log10(dAi(op(), n));
     }
 }
-
-double log10one(Image<double> &op)
+//4.431-0.4018*LN(ABS(P1+336.6))
+double lognikon(Image<double> &op)
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
     {
-        dAi(op(), n) = log10(1. + dAi(op(), n));
+        dAi(op(), n) = 4.431-0.4018*log(336.6 + dAi(op(), n));
     }
 }
 
@@ -215,7 +215,7 @@ void ProgOperate::defineParams()
 
     addParamsLine("== Unary operations: ==");
     addParamsLine("or --log10                   :Computes the logarithm of an image");
-    addParamsLine("or --log10one                :Computes the logarithm + 1 of an image");
+    addParamsLine("or --lognikon                :Computes the logarithm + 1 of an image");
     addParamsLine("or --sqrt                    :Computes the square root of an image");
     addParamsLine("or --abs                     :Computes the absolute value of an image");
     addParamsLine("or --pow <value=2>           :Computes the power of an image");
@@ -322,8 +322,8 @@ void ProgOperate::readParams()
     ///Unary operations
     else if (checkParam("--log10"))
         unaryOperator = log10;
-    else if (checkParam("--log10one"))
-        unaryOperator = log10one;
+    else if (checkParam("--lognikon"))
+        unaryOperator = lognikon;
     else if (checkParam("--sqrt"))
         unaryOperator = sqrt;
     else if (checkParam("--abs"))
@@ -358,8 +358,8 @@ void ProgOperate::readParams()
     }
     else if (checkParam("--log10"))
         unaryOperator = log10;
-    else if (checkParam("--log10one"))
-        unaryOperator = log10one;
+    else if (checkParam("--lognikon"))
+        unaryOperator = lognikon;
     else
         REPORT_ERROR(ERR_VALUE_INCORRECT, "No valid operation specified");
     if (binaryOperator != NULL)
