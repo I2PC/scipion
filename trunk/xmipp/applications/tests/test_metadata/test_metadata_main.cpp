@@ -906,7 +906,6 @@ TEST_F( MetadataTest, ReadWriteAppendBlock)
     mDsource.write((String)"three@"+sfn,MD_APPEND);
     MetaData auxMetadata;
     FileName sfn2 = "metadata/ReadWriteAppendBlock.xmd";
-    auxMetadata.read(sfn);
     EXPECT_TRUE(compareTwoFiles(sfn,sfn2,0));
     unlink(sfn);
     XMIPP_CATCH
