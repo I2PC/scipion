@@ -62,15 +62,22 @@ public class ImagesWindowFactory {
 	public static void openFileAsDefault(String filename, Param parameters) {
 		try {
 			if (Filename.isMetadata(filename)) {
-				openMetadata(filename, parameters, Param.OPENING_MODE_GALLERY);
+				if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
+					openFileAsImage(filename, parameters);
+				else
+					openMetadata(filename, parameters,
+							Param.OPENING_MODE_GALLERY);
 			} else {
 				ImageGeneric img = new ImageGeneric(filename);
 
 				if (img.isSingleImage()) {
 					openFileAsImage(filename, parameters);
 				} else if (img.isStackOrVolume()) {
-					openMetadata(filename, parameters,
-							Param.OPENING_MODE_GALLERY);
+					if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
+						openFileAsImage(filename, parameters);
+					else
+						openMetadata(filename, parameters,
+								Param.OPENING_MODE_GALLERY);
 				}
 			}
 		} catch (Exception e) {
@@ -93,8 +100,10 @@ public class ImagesWindowFactory {
 
 	public static void openFileAsImage(String filename, Param parameters) {
 		try {
-			ImagePlus imp = openFileAsImagePlus(filename, parameters);
-			XmippIJWindow xiw = openXmippImageWindow(imp, parameters.poll);
+			//ImagePlus imp = openFileAsImagePlus(filename, parameters);
+			ImageGeneric ig = new ImageGeneric(filename);
+			ImagePlusLoader ipl = new ImagePlusLoader(ig);
+			XmippIJWindow xiw = openXmippImageWindow(ipl, parameters.poll);
 			if (parameters.mask_toolbar)
 				xiw.openMaskToolbar();
 		} catch (Exception e) {
@@ -110,8 +119,8 @@ public class ImagesWindowFactory {
 		ImagePlus imp;
 		if (Filename.isMetadata(path)) {
 			MetaData md = new MetaData(path);
-			imp = XmippImageConverter.readMetadataToImagePlus(MDLabel.MDL_IMAGE, md,
-					parameters.useGeo, parameters.wrap);
+			imp = XmippImageConverter.readMetadataToImagePlus(
+					MDLabel.MDL_IMAGE, md, parameters.useGeo, parameters.wrap);
 		} else {
 			imp = XmippImageConverter.loadImage(path,
 					parameters.zoom > 0 ? parameters.zoom : 100);
@@ -122,15 +131,16 @@ public class ImagesWindowFactory {
 	public static XmippIJWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
 		return openXmippImageWindow(new ImagePlusLoader(imp), poll);
 	}
-	
-	public static XmippIJWindow openXmippImageWindow(ImagePlusLoader impLoader, boolean poll) {
+
+	public static XmippIJWindow openXmippImageWindow(ImagePlusLoader impLoader,
+			boolean poll) {
 		ImagePlus imp = impLoader.getImagePlus();
 		XmippIJWindow iw;
 		if (imp.getStackSize() > 1)
 			iw = new XmippStackWindow(impLoader);
 		else
 			iw = new XmippImageWindow(impLoader);
-		((ImageWindow)iw).setVisible(true);
+		((ImageWindow) iw).setVisible(true);
 		return iw;
 	}
 
