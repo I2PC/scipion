@@ -60,10 +60,23 @@ Crop = 10
 
 # Take Logarithm ?
 """ 
-Depending on your acquisition system you may have to take the logarithm
-or not in order to have a linear relationship between the gray values
-in the image and those in the volume. (log (x+1)) """
+Depending on your acquisition system you may need to take the logarithm
+of the pixel values in order to have a linear relationship between the gray values
+in the image and those in the volume. a - b ln(x+c)
+by default 4.431-0.4018*LN((P1+336.6)) is applied (right one for nikon coolscan 9000)"""
 DoLog = False 
+
+#{condition}(DoLog) a
+""" parameter a in a - b ln(x+c)"""
+log_a=4.431
+
+#{condition}(DoLog) b
+""" parameter b in a - b ln(x+c)"""
+log_b=0.4018
+
+#{condition}(DoLog) c
+""" parameter c in a - b ln(x+c)"""
+log_c=336.6
 
 # Remove bad pixels?
 """ 
