@@ -129,11 +129,16 @@ class ProtImportMicrographs(XmippProtocol):
             iname = outputMic
         # Take logarithm
         if self.DoLog:
-            params = " -i %s --log10one -v 0" % iname
+            params = " -i %s --log --fa %f --fb %f --fc %f" % (iname,
+                                                               self.log_a,
+                                                               self.log_b,
+                                                               self.log_c)
             if iname != outputMic:
                 params += " -o " + outputMic
                 iname = outputMic
-            previousId = self.insertParallelRunJobStep("xmipp_image_operate", params, verifyfiles=[outputMic], parent_step_id=previousId)
+            previousId = self.insertParallelRunJobStep("xmipp_transform_filter", params, 
+                                                       verifyfiles=[outputMic], 
+                                                       parent_step_id=previousId)
         # Remove bad pixels
         if self.DoRemoveBadPixels:
             params = " -i %s --bad_pixels outliers %f -v 0" % (iname, self.Stddev)
