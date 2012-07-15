@@ -513,8 +513,8 @@ double alignImages(const MultidimArray< double >& Iref,
 class VolumeAlignmentAux
 {
 public:
-	MultidimArray<double> IrefCyl, Icyl, corr, I1, I12, I123;
-	Matrix2D<double> R1, R2, R3;
+    MultidimArray<double> IrefCyl, Icyl, corr, I1, I12, I123;
+    Matrix2D<double> R1, R2, R3;
 };
 
 /** Align two volumes by applying a rotation around Z.
@@ -522,34 +522,34 @@ public:
  * @ingroup Filters
  */
 double bestRotationAroundZ(const MultidimArray< double >& Iref,
-                   const MultidimArray< double >& I,
-                   CorrelationAux &aux,
-                   VolumeAlignmentAux &aux2);
+                           const MultidimArray< double >& I,
+                           CorrelationAux &aux,
+                           VolumeAlignmentAux &aux2);
 
 /** Find a ZYZ rotation that transforms I into Iref.
  * The rotation matrix is returned in R. I is modified to be aligned.
  */
 void fastBestRotation(const MultidimArray<double>& IrefCylZ,
-		const MultidimArray<double>& IrefCylY,
-		const MultidimArray<double>& IrefCylX,
-		MultidimArray<double>& I,
-		const String &eulerAngles,
-		Matrix2D<double> &R, CorrelationAux &aux, VolumeAlignmentAux &aux2);
+                      const MultidimArray<double>& IrefCylY,
+                      const MultidimArray<double>& IrefCylX,
+                      MultidimArray<double>& I,
+                      const String &eulerAngles,
+                      Matrix2D<double> &R, CorrelationAux &aux, VolumeAlignmentAux &aux2);
 
 /** Fast best rotation around Z */
 double fastBestRotationAroundZ(const MultidimArray<double>& IrefCylZ,
-		const MultidimArray<double>& I, CorrelationAux &aux,
-		VolumeAlignmentAux &aux2);
+                               const MultidimArray<double>& I, CorrelationAux &aux,
+                               VolumeAlignmentAux &aux2);
 
 /** Fast best rotation around Y */
 double fastBestRotationAroundY(const MultidimArray<double>& IrefCylY,
-		const MultidimArray<double>& I, CorrelationAux &aux,
-		VolumeAlignmentAux &aux2);
+                               const MultidimArray<double>& I, CorrelationAux &aux,
+                               VolumeAlignmentAux &aux2);
 
 /** Fast best rotation around X */
 double fastBestRotationAroundX(const MultidimArray<double>& IrefCylX,
-		const MultidimArray<double>& I, CorrelationAux &aux,
-		VolumeAlignmentAux &aux2);
+                               const MultidimArray<double>& I, CorrelationAux &aux,
+                               VolumeAlignmentAux &aux2);
 
 /** Align two images considering also the mirrors
  * @ingroup Filters
@@ -1400,6 +1400,25 @@ void pixelDesvFilter(MultidimArray< T > &V, double thresFactor)
     }
 }
 
+/** Compute logarithm.
+ *  * @ingroup Filters
+ *
+ *  apply transformation a+b*ln(x+c). i.e:  4.431-0.4018*LN(P1+336.6)
+ *
+ */
+//#include <math.h>
+
+template <typename T>
+void logFilter(MultidimArray< T > &V, double a, double b, double c)
+{
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
+    {
+        double x = DIRECT_MULTIDIM_ELEM(V, n);
+        DIRECT_MULTIDIM_ELEM(V, n) = a-b*log(x+c);
+    }
+}
+
 /** Compute edges with Sobel */
 void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
 
@@ -1438,6 +1457,21 @@ public:
     double factor;    //for the case of outliers bad pixels
     Image<char> *mask; //for the case of mask bad pixels
 
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
+class LogFilter: public XmippFilter
+{
+public:
+    /** Apply filter on bad pixels */
+    //4.431-0.4018*LN(ABS(P1+336.6))
+    //a-b*ln(x+c)
+    double a,b,c;
     /** Define the parameters for use inside an Xmipp program */
     static void defineParams(XmippProgram * program);
     /** Read from program command line */
