@@ -204,13 +204,6 @@ def wizardChooseGaussianFilter(self, var):
         var.setTkValue(results) #expecting single result            
 
 #Choose Bad pixels wizard
-def wizardChooseCropSizeFilter(self, var):
-    from protlib_gui_ext import XmippBrowserCropSizeFilter
-    results = wizardHelperFilter(self, XmippBrowserCropSizeFilter, "Crop Size", cropSize=self.getVarValue('CropSize'))
-    if results:
-        var.setTkValue(results) #expecting single result            
-
-#Choose Bad pixels wizard
 def wizardChooseBadPixelsFilter(self, var):
     from protlib_gui_ext import XmippBrowserBadpixelFilter
     results = wizardHelperFilter(self, XmippBrowserBadpixelFilter, "Gaussian Filter", dustRemovalThreshold=self.getVarValue('DustRemovalThreshold'))

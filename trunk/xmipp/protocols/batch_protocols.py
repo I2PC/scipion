@@ -443,33 +443,40 @@ class XmippProjectGUI():
         frame = tk.Frame(root)
         frame.grid(row=0, column=0, sticky='nsew')
         frame.columnconfigure(0, weight=1, minsize=400)
-        frame.rowconfigure(0, weight=1)       
-        tree = XmippTree(frame)
-        tree.grid(row=0, column=0, sticky='nsew')
+        frame.rowconfigure(1, weight=1)
         
-        r = tree.insert('', 'end', text=runName, image=self.getStateImage(run['run_state']))
-        tree.item(r, open=True)
-        steps = self.project.projectDb.getRunSteps(run)
-        for s in steps:    
-            t = "%s (id = %d)" % (s['command'], s['step_id'])
-            stepIcon = 'step_finished'
-            if s['finish'] is None:
-                stepIcon = 'step'
-            item = tree.insert(r, 'end', text=t, image=self.getImage(stepIcon))
-            p = tree.insert(item, 'end', text=' parameters', image=self.getImage('md_view'))
-            vf = tree.insert(item, 'end', text=' verify_files', image=self.getImage('copy'))
-            tree.insert(item, 'end', text='parent = %d' % s['parent_step_id'])
-            tree.insert(item, 'end', text='   init = %s' % str(s['init']))
-            tree.insert(item, 'end', text=' finish = %s' % str(s['finish']))
-            
-            params = pickle.loads(str(s['parameters']))
-            for k, v in params.iteritems():
-                tree.insert(p, 'end', text=" %s = %s" % (k, v))
-            
-            files = pickle.loads(str(s['verifyFiles']))        
-            for f in files:
-                tree.insert(vf, 'end', text=f)
+        tree = XmippTree(frame)
+        tree.grid(row=1, column=0, sticky='nsew')
+        
+        def insertSteps(e=None):
+            tree.clear()
+            r = tree.insert('', 'end', text=runName, image=self.getStateImage(run['run_state']))
+            tree.item(r, open=True)
+            steps = self.project.projectDb.getRunSteps(run)
+            for s in steps:    
+                t = "%s (id = %d)" % (s['command'], s['step_id'])
+                stepIcon = 'step_finished'
+                if s['finish'] is None:
+                    stepIcon = 'step'
+                item = tree.insert(r, 'end', text=t, image=self.getImage(stepIcon))
+                p = tree.insert(item, 'end', text=' parameters', image=self.getImage('md_view'))
+                vf = tree.insert(item, 'end', text=' verify_files', image=self.getImage('copy'))
+                tree.insert(item, 'end', text='parent = %d' % s['parent_step_id'])
+                tree.insert(item, 'end', text='   init = %s' % str(s['init']))
+                tree.insert(item, 'end', text=' finish = %s' % str(s['finish']))
+                
+                params = pickle.loads(str(s['parameters']))
+                for k, v in params.iteritems():
+                    tree.insert(p, 'end', text=" %s = %s" % (k, v))
+                
+                files = pickle.loads(str(s['verifyFiles']))        
+                for f in files:
+                    tree.insert(vf, 'end', text=f)
 
+        btn = XmippButton(frame, "Refresh", 'refresh.gif', command=insertSteps, tooltip='Refresh   F5')
+        btn.grid(row=0, column=0, padx=(0, 5), sticky='nw')
+        root.bind("<F5>", insertSteps)
+        insertSteps()
         centerWindows(root, refWindows=self.root)
         root.deiconify()
         root.mainloop()       

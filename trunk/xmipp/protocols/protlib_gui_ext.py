@@ -394,7 +394,7 @@ def getXmippImage(imagePath):
     return image
     
 class XmippButton(tk.Button):
-    def __init__(self, master, text, imagePath=None, **opts):
+    def __init__(self, master, text, imagePath=None, tooltip=None, **opts):
         defaults = {'activebackground': ButtonActiveBgColor, 'bg':ButtonBgColor}
         defaults.update(opts)
         btnImage = getXmippImage(imagePath)
@@ -407,6 +407,9 @@ class XmippButton(tk.Button):
             self.image = btnImage
         else:
             tk.Button.__init__(self, master, text=text, font=Fonts['button'], **defaults)
+            
+        if tooltip:
+            ToolTip(self, tooltip, 500)
 
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''
@@ -1268,9 +1271,10 @@ class XmippBrowser():
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
         self.seltype = seltype
         self.selmode = selmode
-        self.dir = initialDir
+        self.dir = os.path.abspath(initialDir)
         self.pattern = filter
         self.allowFilter = allowFilter
+        self.allowRefresh = True
         self.selectedFiles = None
         self.dim = previewDim
         self.commonRoot = "" # this will be used to avoid display of long path names
@@ -1304,7 +1308,7 @@ class XmippBrowser():
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
         addFm('stk', 'stack.gif', ['.stk', '.mrcs'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc', '.raw', '.dm3', '.psd'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.spi', '.mrc', '.raw', '.dm3', '.psd', '.spe'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
         addFm('vol', 'vol.gif', ['.vol'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
@@ -1316,6 +1320,7 @@ class XmippBrowser():
         addFm('log', 'log.gif', ['.log'],textFillMenu, defaultOnClick, textOnDoubleClick)
         addFm('folder', 'folderopen.gif', [])
         addFm('default', 'generic_file.gif', [])
+        addFm('up', 'up.gif', [])
         
     def createDetailsTop(self, parent):
         self.detailstop = tk.Frame(parent)
@@ -1371,10 +1376,16 @@ class XmippBrowser():
         #Create frame for tree
         frame = ttk.Frame(self.root, padding="3 3 12 12")
         frame.grid(column=0, row=0, sticky="nwes")
+        treeRow = 0
+        if self.allowRefresh:
+            btn = XmippButton(frame, "Refresh", 'refresh.gif', command=self.refresh, tooltip='Refresh   F5')
+            btn.grid(row=0, column=0, padx=(0, 5), sticky='nw')
+            self.root.bind("<F5>", self.refresh)
+            treeRow = 1
         frame.columnconfigure(0, weight=1)
-        frame.rowconfigure(0, weight=1)
+        frame.rowconfigure(treeRow, weight=1)
         tree = XmippTree(frame, selectmode=self.selmode)#, columns=('items'))
-        tree.grid(column=0, row=0, sticky="nwes")
+        tree.grid(column=0, row=treeRow, sticky="nwes")
         self.tree = tree
         # List for hidden tree items, (parent, item)
         self.hidden = []
@@ -1442,31 +1453,46 @@ class XmippBrowser():
             self.root.mainloop()
 
     def insertElement(self, root, elem, isFolder=False):
-        if root == self.dir: parent = ''
-        else: parent = root
+        if root == self.dir: 
+            parent = ''
+        else: 
+            parent = root
         fm = None
-        if isFolder:
+        if elem.endswith('..'):
+            fm = self.managers['up']
+        elif isFolder:
             fm = self.managers['folder']
         else:
             ext = os.path.splitext(elem)[1]
-            if self.extSet.has_key(ext):
-                fm = self.extSet[ext]
-            else:
-                fm = self.managers['default']
-        self.tree.insert(parent, 'end', join(root, elem), text=elem, image=fm.image)
+            fm = self.extSet.get(ext, self.managers['default'])
+        return self.tree.insert(parent, 'end', join(root, elem), text=elem, image=fm.image)
 
     def insertFiles(self, path):
-        for root, dirs, files in os.walk(path, followlinks=True):
-            if dirs:
-                dirs.sort()
-            if files:
-                files.sort()
-            for d in dirs: 
-                self.insertElement(root, d, True)
-            for f in files:
-                if not (f.startswith('.') or f.endswith('~') or f.endswith('.pyc')):
-                    self.insertElement(root, f)
+#        for root, dirs, files in os.walk(path, followlinks=True):
+#            if dirs:
+#                dirs.sort()
+#            if files:
+#                files.sort()
+#            for d in dirs: 
+#                self.insertElement(root, d, True)
+#            for f in files:
+#                if not (f.startswith('.') or f.endswith('~') or f.endswith('.pyc')):
+#                    self.insertElement(root, f)
+        files = os.listdir(path)
+        files.sort()
+        for f in files:
+            if not (f.startswith('.') or f.endswith('~') or f.endswith('.pyc')):
+                self.insertElement(path, f, os.path.isdir(join(path, f)))
     
+    def refresh(self, e=None):
+        self.changeDir(self.dir)
+        
+    def changeDir(self, newDir):
+        self.dir = newDir
+        self.tree.clear()
+        self.insertElement(newDir, '..', False)
+        self.insertFiles(newDir)
+        
     def unpostMenu(self):
         self.menu.unpost()
         
@@ -1485,8 +1511,13 @@ class XmippBrowser():
     #Functions for handling events
     def onDoubleClick(self, e=None):
         item, fm = self.getSelection()
-        if fm:
-            fm.onDoubleClick(item, self)
+        if item is not None:
+            if item.endswith('..'): # Move two levels up
+                self.changeDir(dirname(dirname(item)))
+            elif os.path.isdir(item):
+                self.changeDir(item)
+            if fm:
+                fm.onDoubleClick(item, self)
     
     def onRightClick(self, e):
         item, fm = self.getSelection()
@@ -1549,31 +1580,34 @@ class XmippBrowser():
     
     def filterResults(self, e=None):
         self.pattern = self.filterVar.get().split()
-        self.clearFilter()
-        
+        foundDirs = {}     
         if len(self.pattern):
-            self.filterTreeItems('', self.tree.get_children())
-    
-    def clearFilter(self):
-        for parent, child, index in self.hidden:
-            self.tree.reattach(child, parent, index)
-            self.hideItem(child)
-        del self.hidden[:]      
-
-    def hideItem(self, item):
-        while item != '':
-            self.tree.item(item, open=False)
-            item = self.tree.parent(item)
-         
+            self.tree.clear()
+            for root, dirs, files in os.walk(self.dir, followlinks=True):
+                if files:
+                    files.sort()
+                for f in files:
+                    if self.matchPattern(f):
+                        relRoot = os.path.relpath(root, self.dir)
+                        rootId = foundDirs.get(relRoot, None)
+                        if rootId is None: 
+                            rootId = self.insertElement(self.dir, relRoot, True)
+                            self.tree.item(rootId, open=tk.TRUE)
+                            foundDirs[relRoot] = rootId
+                        self.insertElement(rootId, f)
+        else:
+            self.changeDir(self.dir)
+            
     def matchPattern(self, item):
-        i = basename(item)
+        ##i = basename(item)
         from fnmatch import fnmatch
         for p in self.pattern:
-            if fnmatch(i, p):
+            if fnmatch(item, p):
                 return True
         return False
     
     def filterTreeItems(self, parent, items):
+        self.tree.clear()
         for i in items:
             if os.path.isdir(i):
                 self.filterTreeItems(i, self.tree.get_children(i))
