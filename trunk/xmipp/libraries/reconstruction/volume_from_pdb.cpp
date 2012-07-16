@@ -319,11 +319,11 @@ void ProgPdbConverter::createProteinAtHighSamplingRate()
         int jF = XMIPP_MIN(CEIL(XX(r) + radius), FINISHINGX(Vhigh()));
 
         // Fill the volume with this atom
+        Matrix1D<double> rdiff(3);
         for (int k = k0; k <= kF; k++)
             for (int i = i0; i <= iF; i++)
                 for (int j = j0; j <= jF; j++)
                 {
-                    Matrix1D<double> rdiff(3);
                     VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
                     rdiff*=highTs;
                     if (useBlobs)
@@ -420,7 +420,8 @@ void ProgPdbConverter::createProteinUsingScatteringProfiles()
 
         // Correct position
         VECTOR_R3(r, x, y, z);
-        r -= centerOfMass;
+        if (doCenter)
+            r -= centerOfMass;
         r *= iTs;
 
         // Characterize atom
