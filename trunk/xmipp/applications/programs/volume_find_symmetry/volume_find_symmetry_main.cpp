@@ -202,6 +202,7 @@ public:
         volume().setXmippOrigin();
         mask_prm.generate_mask(volume());
         double best_corr, best_rot, best_tilt, best_z;
+        td=NULL;
 
         if (!helical)
         {
