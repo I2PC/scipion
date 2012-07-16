@@ -130,8 +130,8 @@ public:
             local=checkParam("--localRot");
             if (local)
             {
-                rot0=getDoubleParam("--local",0);
-                tilt0=getDoubleParam("--local",1);
+                rot0=getDoubleParam("--localRot",0);
+                tilt0=getDoubleParam("--localRot",1);
             }
             else
             {
