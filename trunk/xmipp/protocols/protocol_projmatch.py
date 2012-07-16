@@ -857,7 +857,7 @@ data_
                                     )
 
             
-            #assign the images to the different references based on the crosscorrelation coheficient
+            #assign the images to the different references based on the crosscorrelation coefficient
             #if only one reference it just copy the docfile generated in the previous step
             _dataBase.insertStep('assign_images_to_references', verifyfiles=[self.DocFileInputAngles[iterN]]
                                      , BlockWithAllExpImages = self.BlockWithAllExpImages
@@ -904,81 +904,39 @@ data_
             
 
             for refN in range(1, self.numberOfReferences + 1):
+                def insertReconstructStep(verifyFilesKey, inputMdKey, outputVolKey):
+                    _VerifyFiles = [self.getFilename(verifyFilesKey, iter=iterN, ref=refN)]
+                    self.insertStep('reconstruction', verifyfiles=_VerifyFiles
+                                          , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
+                                          , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
+                                          , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
+                                          , Iteration_number  = iterN
+                                          , DoParallel=self.DoParallel#
+                                          , maskedFileNamesIter=maskedFileName
+                                          , MpiJobSize=self.MpiJobSize
+                                          , NumberOfMpi=self.NumberOfMpi#
+                                          , NumberOfThreads=self.NumberOfThreads#
+                                          , ReconstructionMethod = self.ReconstructionMethod
+                                          , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
+                                          , ARTLambda = self.ARTLambda
+                                          , SymmetryGroup = self.SymmetryGroup[iterN]
+                                          , ReconstructionXmd = self.getFilename(inputMdKey, iter=iterN, ref=refN)
+                                          , ReconstructedVolume = self.getFilename(outputVolKey, iter=iterN, ref=refN)
+                                          , PaddingFactor = self.PaddingFactor
+                                          , ResolSam = self.ResolSam
+                                          , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
+                                          , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
+                                          )
     
                 #self._ReconstructionMethod=arg.getComponentFromVector(_ReconstructionMethod, iterN-1)
                 #self._ARTLambda=arg.getComponentFromVector(_ARTLambda, iterN-1)
 
                 #if (DoReconstruction):
-                _VerifyFiles = [self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=refN)]
-                id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
-                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
-                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
-                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
-                                              , Iteration_number  = iterN
-                                              , DoParallel=self.DoParallel#
-                                              , maskedFileNamesIter=maskedFileName
-                                              , MpiJobSize=self.MpiJobSize
-                                              , NumberOfMpi=self.NumberOfMpi#
-                                              , NumberOfThreads=self.NumberOfThreads#
-                                              , ReconstructionMethod = self.ReconstructionMethod
-                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
-                                              , ARTLambda = self.ARTLambda
-                                              , SymmetryGroup = self.SymmetryGroup[iterN]
-                                              , ReconstructionXmd = self.getFilename('ReconstructionXmd', iter=iterN, ref=refN)
-                                              , ReconstructedVolume = self.getFilename('ReconstructedFileNamesIters', iter=iterN, ref=refN)
-                                              , PaddingFactor = self.PaddingFactor
-                                              , ResolSam = self.ResolSam
-                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
-                                              , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
-                                              )
+                insertReconstructStep('ReconstructedFileNamesIters', 'ReconstructionXmd', 'ReconstructedFileNamesIters')                
                     
                 if(self.DoSplitReferenceImages[iterN]):
-                    
-                    _VerifyFiles = [self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)]
-                    id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
-                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
-                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
-                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
-                                              , Iteration_number  = iterN
-                                              , DoParallel=self.DoParallel#
-                                              , maskedFileNamesIter=maskedFileName
-                                              , MpiJobSize=self.MpiJobSize
-                                              , NumberOfMpi=self.NumberOfMpi#
-                                              , NumberOfThreads=self.NumberOfThreads#
-                                              , ReconstructionMethod = self.ReconstructionMethod
-                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
-                                              , ARTLambda = self.ARTLambda
-                                              , SymmetryGroup = self.SymmetryGroup[iterN]
-                                              , ReconstructionXmd = self.getFilename('ReconstructionXmdSplit1', iter=iterN, ref=refN)
-                                              , ReconstructedVolume = self.getFilename('ReconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
-                                              , PaddingFactor = self.PaddingFactor
-                                              , ResolSam = self.ResolSam
-                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
-                                              , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
-                                              )
-
-                    _VerifyFiles = [self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)]
-                    id = _dataBase.insertStep('reconstruction', verifyfiles=_VerifyFiles
-                                              , ARTReconstructionExtraCommand = self.ARTReconstructionExtraCommand
-                                              , WBPReconstructionExtraCommand = self.WBPReconstructionExtraCommand
-                                              , FourierReconstructionExtraCommand = self.FourierReconstructionExtraCommand
-                                              , Iteration_number  = iterN
-                                              , DoParallel=self.DoParallel#
-                                              , MpiJobSize=self.MpiJobSize
-                                              , maskedFileNamesIter=maskedFileName
-                                              , NumberOfMpi=self.NumberOfMpi#
-                                              , NumberOfThreads=self.NumberOfThreads#
-                                              , ReconstructionMethod = self.ReconstructionMethod
-                                              , FourierMaxFrequencyOfInterest = self.FourierMaxFrequencyOfInterest[iterN]
-                                              , ARTLambda = self.ARTLambda
-                                              , SymmetryGroup = self.SymmetryGroup[iterN]
-                                              , ReconstructionXmd = self.getFilename('ReconstructionXmdSplit2', iter=iterN, ref=refN)
-                                              , ReconstructedVolume = self.getFilename('ReconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
-                                              , PaddingFactor = self.PaddingFactor
-                                              , ResolSam = self.ResolSam
-                                              , ResolutionXmdPrevIterMax = self.getFilename('ResolutionXmdMax', iter=iterN-1, ref=refN)
-                                              , ConstantToAddToFiltration = self.ConstantToAddToMaxReconstructionFrequency[iterN]
-                                              )
+                    insertReconstructStep('ReconstructedFileNamesItersSplit1', 'ReconstructionXmdSplit1', 'ReconstructedFileNamesItersSplit1')      
+                    insertReconstructStep('ReconstructedFileNamesItersSplit2', 'ReconstructionXmdSplit2', 'ReconstructedFileNamesItersSplit2')
                     
                     _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
                     id = _dataBase.insertStep('compute_resolution', verifyfiles=_VerifyFiles
