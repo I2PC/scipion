@@ -586,6 +586,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 						x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 						y = md.getValueInt(MDLabel.MDL_YCOOR, id);
+						
 						cost = md.getValueDouble(MDLabel.MDL_COST, id);
 						if (cost == null || cost == 0 || cost > 1)
 							m.addManualParticle(new TrainingParticle(x, y, family, m, cost));

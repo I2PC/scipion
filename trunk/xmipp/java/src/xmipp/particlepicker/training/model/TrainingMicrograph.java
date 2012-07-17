@@ -10,6 +10,7 @@ import java.util.List;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import xmipp.ij.commons.XmippIJUtil;
 import xmipp.jni.Filename;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
@@ -79,7 +80,8 @@ public class TrainingMicrograph extends Micrograph{
 				file = (Filename.getXmippPath("resources" + File.separator + "no-image.jpg"));
 			else
 				file = ctf;
-			Image image = new ImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
+			System.out.println(file);
+			Image image = XmippIJUtil.getImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(image);
 			
 		}

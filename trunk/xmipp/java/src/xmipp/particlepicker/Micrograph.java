@@ -18,7 +18,7 @@ public abstract class Micrograph {
 	private ImagePlus imp;
 	private String pos24file;
 	public static final String ext = ".pos";
-	private int width, height;
+	public final int width, height;
 	private String posfile;
 
 	public void setPosFileFromXmipp24(String posfile) {
@@ -126,6 +126,8 @@ public abstract class Micrograph {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	
 
 	public void runImageJFilters(List<IJCommand> filters) {
 		for (IJCommand f : filters)
