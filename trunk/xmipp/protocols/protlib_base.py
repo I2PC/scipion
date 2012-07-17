@@ -243,7 +243,7 @@ class XmippProject():
                 runName = getExtendedRunName(run)
                 done, total = self.projectDb.getRunProgress(run)
                 
-                if done == total:
+                if done > 0 and done == total:
                     state = SqliteDb.RUN_FINISHED
                 
                 if state == SqliteDb.RUN_FINISHED:

@@ -331,7 +331,7 @@ class XmippProjectDb(SqliteDb):
         sqlCommand = """ SELECT COUNT(step_id) FROM %(TableSteps)s WHERE run_id=%(run_id)d""" % self.sqlDict 
         steps_total = self.cur.execute(sqlCommand).fetchone()[0]
         steps_done = self.cur.execute(sqlCommand + ' AND finish IS NOT NULL').fetchone()[0]
-        if steps_done == steps_total:
+        if steps_done > 0 and steps_done == steps_total:
             self.updateRunState(SqliteDb.RUN_FINISHED, run['run_id'])
             #run['state'] = SqliteDb.RUN_FINISHED
         return (steps_done, steps_total)
