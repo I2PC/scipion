@@ -106,7 +106,7 @@ class ScriptIJBase(XmippScript):
     def defineParams(self):
         self.addParamsLine('  --input <...>                 : Input files to show');
         self.addParamsLine('         alias -i;');
-        self.addParamsLine('  [--memory <mem="1g">]              : Memory ammount for JVM');
+        self.addParamsLine('  [--memory <mem="2g">]              : Memory ammount for JVM');
         self.addParamsLine('         alias -m;');
         self.defineOtherParams()
     

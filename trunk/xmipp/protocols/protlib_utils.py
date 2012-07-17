@@ -562,7 +562,7 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     '''Launch an Java application based on ImageJ '''
     from protlib_filesystem import getXmippPath
     if len(memory) == 0:
-        memory = "1g"
+        memory = "2g"
         print "No memory size provided. Using default: " + memory
     imagej_home = getXmippPath("external", "imagej")
     javaLib = getXmippPath('java', 'lib')

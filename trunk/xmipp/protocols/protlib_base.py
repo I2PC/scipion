@@ -670,6 +670,68 @@ class CustomProtocol(XmippProtocol):
         
         self.Import = "from %s import *;" % importName
 
+class ProtocolExecutor():
+    ''' This class serve to create protocols runs and executing
+    them without the GUI. This is useful for writing protocols tests'''
+    def __init__(self, protocol_name, project=None, script=None, verbose=True):
+        from protlib_parser import ProtocolParser
+        if project is None:
+            project = XmippProject()
+            project.load()
+        self.project = project
+        self.protocol_name = protocol_name
+        if script is None:
+            self.run = project.newProtocol(protocol_name)
+        else:
+            self.run = project.copyProtocol(protocol_name, script)
+        self.run_name = self.run['run_name']
+        self.ext_name = getExtendedRunName(self.run)
+        self.parser = ProtocolParser(self.run["source"])
+        self.setValue('RunName', self.run_name)
+        self.verbose = verbose
+        self.run_id = None
+        self.process = None
+        
+    def setValue(self, varName, value):
+        self.parser.setValue(varName, value)
+        
+    def setValues(self, valuesDict):
+        for varName, value in valuesDict.iteritems():
+            self.setValue(varName, value)
+
+    def runProtocol(self, wait=True):
+        from subprocess import Popen
+        from protlib_xmipp import greenStr
+        # Save protocol script with updated settings
+        self.parser.save(self.run['script'])
+        #Execute command
+        cmd = 'xmipp_python %s --no_confirm ' % self.run['script']
+        if not wait:
+            cmd += ' &'
+        
+        if self.verbose:
+            print ">>>> Running protocol: %s, run_name: %s" % (self.protocol_name, self.run_name)
+            print '     Command: ', greenStr(cmd)
+        self.process = Popen(cmd, shell=True)
+        
+        if wait:
+            self.waitProtocol()
+            print "<<<< Run finished"
+        
+    def waitProtocol(self):
+        self.process.wait()
+        
+    def getRunId(self):
+        import time
+        while self.run_id is None:
+            time.sleep(1)
+            self.run_id = self.project.projectDb.getRunId(self.protocol_name, self.run_name)
+        
+        return self.run_id
+    
+    def getJobId(self):
+        return self.project.projectDb.getRunJobid(self.getRunId())
+            
 #----------Some helper functions ------------------
 
 def getExtendedRunName(run):
@@ -753,7 +815,7 @@ def protocolMain(ProtocolClass, script=None):
     #load project: read config file and open conection database
     project.load()
     #register run with runName, script, comment=''):
-    p = ProtocolClass(script, project)
+    p = ProtocolClass(script, project) 
     run_id = project.projectDb.getRunId(p.Name, mod.RunName)
     
     #1) just call the gui    
@@ -789,7 +851,7 @@ def protocolMain(ProtocolClass, script=None):
                       ,'run_name' : mod.RunName
                       ,'script'  : script 
                       }
-                project.projectDb.insertRun(_run)
+                project.projectDb.insertRun(_run)                
                 run_id = _run['run_id']
             else:
                 _run = {'run_id': run_id}
