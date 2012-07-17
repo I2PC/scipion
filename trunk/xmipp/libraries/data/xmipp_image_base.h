@@ -39,7 +39,7 @@
 /* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
  * image file is required
  */
-const size_t tiff_map_min_size = 200000000;
+const size_t tiff_map_min_size = 0x12000000;
 
 /// @defgroup Images Images
 /// @ingroup DataLibrary
