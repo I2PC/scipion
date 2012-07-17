@@ -740,7 +740,7 @@ public:
     virtual void computeDoubleMinMaxRange(double& minval, double& maxval,size_t offset, size_t size) const = 0;
     virtual void maxIndex(int &lmax, int& kmax, int& imax, int& jmax) const = 0;
     virtual void coreAllocateReuse() = 0;
-
+    virtual void coreDeallocate()= 0;
 
     /// @name Size
     //@{
@@ -1080,7 +1080,7 @@ public:
      */
     void setMmap(bool mmap)
     {
-    	clear();
+    	coreDeallocate();
         mmapOn = mmap;
     }
 
@@ -1357,6 +1357,7 @@ public:
         FILE* fMap = tmpfile();
         int Fd = fileno(fMap);
 
+        std::cerr << "DEBUG_ROB, nzyxDim:" << nzyxDim << std::endl;
         if ((lseek(Fd, nzyxDim*sizeof(T)-1, SEEK_SET) == -1) || (::write(Fd,"",1) == -1))
         {
             fclose(fMap);
