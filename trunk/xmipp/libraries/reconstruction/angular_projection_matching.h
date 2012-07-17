@@ -55,14 +55,13 @@ void * threadRotationallyAlignOneImage( void * data );
 // This structure is needed to pass parameters to threadRotationallyAlignOneImage
 typedef struct{
     int thread_id;
-    int thread_num;
     ProgAngularProjectionMatching *prm;
     MultidimArray<double> *img;
-    size_t *this_image;
-    int *opt_refno;
-    double *opt_psi;
-    bool *opt_flip;
-    double *maxcorr;
+    size_t this_image;
+    int opt_refno;
+    double opt_psi;
+    bool opt_flip;
+    double maxcorr;
 } structThreadRotationallyAlignOneImage ;
 
 /**@defgroup angular_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
