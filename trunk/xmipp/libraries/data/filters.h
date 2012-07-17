@@ -1415,7 +1415,8 @@ void logFilter(MultidimArray< T > &V, double a, double b, double c)
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
     {
         double x = DIRECT_MULTIDIM_ELEM(V, n);
-        DIRECT_MULTIDIM_ELEM(V, n) = a-b*log(x+c);
+        //this casting is kind of risky
+        DIRECT_MULTIDIM_ELEM(V, n) = (T)(a-b*log(x+c));
     }
 }
 
