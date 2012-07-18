@@ -524,29 +524,20 @@ public abstract class TrainingPicker extends ParticlePicker {
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
-			int total = 0;
 			for (TrainingMicrograph m : micrographs) {
 				m.reset();
 
 				block = "mic_" + m.getName();
-				System.out.format("block: %s\n", block);
 				if (blocks.contains(block)) {
 					String blockName = block + "@" + file;
-					System.out.format("creating md with blockName: %s\n",
-							blockName);
+				
 					md = new MetaData(blockName);
-					System.out.format("   created\n");
 
 					ids = md.findObjects();
-					total += ids.length;
-					System.out.format("   objects found: %d, total: %d\n",
-							ids.length, total);
 					for (long id : ids) {
-						x = y = 100;
-						cost = 0.0;
 						x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 						y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-						// cost = md.getValueDouble(MDLabel.MDL_COST, id);
+						cost = md.getValueDouble(MDLabel.MDL_COST, id);
 						if (cost == null || cost == 0 || cost > 1)
 							m.addManualParticle(new TrainingParticle(x, y,
 									family, m, cost));
@@ -554,7 +545,6 @@ public abstract class TrainingPicker extends ParticlePicker {
 							m.addAutomaticParticle(new AutomaticParticle(x, y,
 									family, m, cost, false), true);
 					}
-					System.out.format("   coords read\n");
 				}
 			}
 		} catch (Exception e) {
@@ -579,7 +569,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	public static void main(String[] args) {
 		try {
-			String file = "/gpfs/fs1/home/bioinfo/airen/DNABC/ParticlePicking/Auto/run_001/DefaultFamily_extract_list.xmd";
+			String file = "/home/airen/DNABC/ParticlePicking/Auto/run_001/DefaultFamily_extract_list.xmd";
 			MetaData md;
 			long[] ids;
 			int x, y;

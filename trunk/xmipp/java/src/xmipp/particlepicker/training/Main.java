@@ -78,6 +78,7 @@ class Main
 				}
 				catch (Exception e)
 				{
+					System.out.println("Error catched on main");
 					ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 					JOptionPane.showMessageDialog(null, e.getMessage());
 					

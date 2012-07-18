@@ -177,7 +177,7 @@ public abstract class ParticlePicker
 		return selfile;
 	}
 
-	void addFilter(String command, String options)
+	public void addFilter(String command, String options)
 	{
 		IJCommand f = new IJCommand(command, options);
 		filters.add(f);

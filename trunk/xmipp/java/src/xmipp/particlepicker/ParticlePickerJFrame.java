@@ -45,10 +45,17 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
+import xmipp.particlepicker.Family;
+import xmipp.particlepicker.Format;
+import xmipp.particlepicker.ImportParticlesFromFolderJDialog;
+import xmipp.particlepicker.Micrograph;
+import xmipp.particlepicker.ParticlePicker;
+import xmipp.particlepicker.ParticlePickerCanvas;
+import xmipp.particlepicker.ParticlesJDialog;
+import xmipp.particlepicker.Shape;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
-import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
