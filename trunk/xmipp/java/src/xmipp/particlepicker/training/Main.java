@@ -70,7 +70,7 @@ class Main
 					{
 						String reviewfile = myargs[3];
 						ppicker = (fname == null)? new ReviewParticlePicker(selfile, outputdir, reviewfile): new ReviewParticlePicker(selfile, outputdir, fname, reviewfile);
-
+						System.out.println("Particle Picker for Review mode created");
 					}
 					else if (mode == FamilyState.ReadOnly)
 						ppicker = new ReadOnlyParticlePicker(selfile, outputdir);

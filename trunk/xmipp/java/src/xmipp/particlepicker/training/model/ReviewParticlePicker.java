@@ -31,6 +31,7 @@ public class ReviewParticlePicker extends TrainingPicker
 			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("review file", reviewfile));
 		this.reviewfile = reviewfile;
 		family.setState(FamilyState.Review);
+		System.out.println("Loading micrographs");
 		loadMicrographs();
 		
 	}
@@ -76,7 +77,9 @@ public class ReviewParticlePicker extends TrainingPicker
 			}
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
+			System.out.println("before importAllParticles");
 			importAllParticles(reviewfile);
+			System.out.println("after importAllParticles");
 		}
 		catch (Exception e)
 		{
