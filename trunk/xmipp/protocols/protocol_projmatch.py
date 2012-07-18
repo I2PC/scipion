@@ -84,10 +84,14 @@ class ProtProjMatch(XmippProtocol):
                 errors.append("Reference %s and %s have not the same size" % \
                                (self.ReferenceFileNames[0], reference)) 
 
-        # Check that volume and projections have the same size        
-        (xdim2, ydim2, zdim2, ndim2) = ImgSize(self.SelFileName)
-        if (xdim2, ydim2) != (xdim, ydim):
-            errors.append("Volume and reference images have not the same size")
+        # Check that volume and projections have the same size
+        MD=MetaData(self.SelFileName)
+        if MD.containsLabel(MDL_IMAGE):        
+            (xdim2, ydim2, zdim2, ndim2) = ImgSize(self.SelFileName)
+            if (xdim2, ydim2) != (xdim, ydim):
+                errors.append("Volume and reference images have not the same size")
+        else:
+            errors.append("Input selfile does not contain an image column")
     
         # Check options compatibility
         #if self.DoAlign2D and self.DoCtfCorrection:
