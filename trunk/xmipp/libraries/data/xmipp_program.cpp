@@ -509,7 +509,7 @@ void XmippMetadataProgram::defineParams()
     addParamsLine("    where <mode>");
     addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
     addParamsLine("     append      : Write the Metadata as a new block, removing the old one");
-    addParamsLine(" [--label+ <image_label=image>]   : Label to be used to read/write images.");
+    defineLabelParam();
 
     if (produces_a_metadata)
         produces_an_output = true;
@@ -531,6 +531,11 @@ void XmippMetadataProgram::defineParams()
         addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
     }
 }//function defineParams
+
+void XmippMetadataProgram::defineLabelParam()
+{
+	addParamsLine(" [--label+ <image_label=image>]   : Label to be used to read/write images.");
+}
 
 void XmippMetadataProgram::readParams()
 {

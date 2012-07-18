@@ -359,6 +359,9 @@ protected:
      */
     virtual bool getImageToProcess(size_t &objId, size_t &objIndex);
 
+    /** Define the label param */
+    virtual void defineLabelParam();
+
 public:
     XmippMetadataProgram();
 
