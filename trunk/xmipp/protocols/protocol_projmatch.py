@@ -17,7 +17,7 @@ from xmipp import MetaData, FileName, FILENAMENUMBERLENGTH, AGGR_COUNT,\
          MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE,\
          MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_WEIGHT,\
          MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR, MDValueEQ, MDL_REF3D,\
-         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z
+         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z, Euler_angles2matrix
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector,\
      getComponentFromVector, runShowJ, runJob, createUniqueFileName
@@ -237,7 +237,7 @@ data_
                     else:
                     #Xmipp_showj (x,y and z shows the same)
                         try:
-                            runShowJ(file_name)
+                            runShowJ(file_name, extraParams = ' --dont_wrap ')
                         except Exception, e:
                             showError("Error launching java app", str(e))
                         
@@ -259,7 +259,7 @@ data_
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
-                                runShowJ(file_name)
+                                runShowJ(file_name, extraParams = ' --dont_wrap ')
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                             
@@ -281,7 +281,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name)
+                                runShowJ(file_name, extraParams = ' --dont_wrap ')
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                 
@@ -319,7 +319,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name_bfactor)
+                                runShowJ(file_name_bfactor, extraParams = ' --dont_wrap ')
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -359,7 +359,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn)
+                                runShowJ(sfn, extraParams = ' --dont_wrap ')
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -374,7 +374,7 @@ data_
                             print "Empty metadata: ", file_name
                         else:
                             try:
-                                runShowJ(file_name)
+                                runShowJ(file_name,extraParams = ' --dont_wrap ')
                             except Exception, e:
                                 showError("Error launching java app", str(e))
         
@@ -388,7 +388,6 @@ data_
                     file_nameReferences = 'projectionDirections@'+self.getFilename('ProjectLibrarySampling', iter=it, ref=ref3d)
                     #last reference name
                     mdReferences     = MetaData(file_nameReferences)
-                    print file_nameReferences
                     mdReferencesSize = mdReferences.size()
                     for id in mdReferences:
                         convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
@@ -397,28 +396,21 @@ data_
                         #print "OutClassesXmd", OutClassesXmd
                         MDin.read(file_nameAverages)
                         MDout.clear()
-                        print MDin
                         for i in MDin:
                             id1=MDout.addObject()
                             MDout.setValue(MDL_IMAGE,     MDin.getValue(MDL_IMAGE,i),id1)
-                            MDout.setValue(MDL_ANGLE_ROT, MDin.getValue(MDL_ANGLE_ROT,i),id1)
-                            MDout.setValue(MDL_ANGLE_TILT,MDin.getValue(MDL_ANGLE_TILT,i),id1)
-                            MDout.setValue(MDL_ANGLE_PSI, MDin.getValue(MDL_ANGLE_PSI,i),id1)
-                            MDout.setValue(MDL_SHIFT_X, MDin.getValue(MDL_SHIFT_X,i),id1)
-                            MDout.setValue(MDL_SHIFT_Y, MDin.getValue(MDL_SHIFT_Y,i),id1)
-                            MDout.setValue(MDL_SHIFT_Z, MDin.getValue(MDL_SHIFT_Z,i),id1)
+                            #MDout.setValue(MDL_SHIFT_X, MDin.getValue(MDL_SHIFT_X,i),id1)
+                            #MDout.setValue(MDL_SHIFT_Y, MDin.getValue(MDL_SHIFT_Y,i),id1)
+                            #MDout.setValue(MDL_SHIFT_Z, MDin.getValue(MDL_SHIFT_Z,i),id1)
                             ref2D = MDin.getValue(MDL_REF,i)
                             file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
                             file_reference=FileName()
                             file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
                             id2=MDout.addObject()
                             MDout.setValue(MDL_IMAGE,file_reference,id2)
-                            MDout.setValue(MDL_ANGLE_ROT, 0.,id2)
-                            MDout.setValue(MDL_ANGLE_TILT,0.,id2)
-                            MDout.setValue(MDL_ANGLE_PSI, 0.,id2)
-                            MDout.setValue(MDL_SHIFT_X,   0.,id1)
-                            MDout.setValue(MDL_SHIFT_Y,   0.,id1)
-                            MDout.setValue(MDL_SHIFT_Z,   0.,id1)
+                            #MDout.setValue(MDL_SHIFT_X,   0.,id1)
+                            #MDout.setValue(MDL_SHIFT_Y,   0.,id1)
+                            #MDout.setValue(MDL_SHIFT_Z,   0.,id1)
                         if MDout.size()==0:
                             print "Empty metadata: ", file_name
                         else:
@@ -427,11 +419,12 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn)
+                                runShowJ(sfn, extraParams = ' --dont_wrap ')
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
-        if doPlot('DisplayProjectionMatchingLibraryAndImages'):       
+        if doPlot('DisplayProjectionMatchingLibraryAndImages'):
+            from numpy  import array, dot
         #map stack position with ref number
             MDin  = MetaData()
             MDout = MetaData()
@@ -454,18 +447,32 @@ data_
                         for i in MDin:
                             id1=MDout.addObject()
                             MDout.setValue(MDL_IMAGE,MDin.getValue(MDL_IMAGE,i),id1)
-                            MDout.setValue(MDL_ANGLE_ROT, MDin.getValue(MDL_ANGLE_ROT,i),id1)
-                            MDout.setValue(MDL_ANGLE_TILT,MDin.getValue(MDL_ANGLE_TILT,i),id1)
-                            MDout.setValue(MDL_ANGLE_PSI, MDin.getValue(MDL_ANGLE_PSI,i),id1)
+#                            MDout.setValue(MDL_ANGLE_ROT, MDin.getValue(MDL_ANGLE_ROT,i),id1)
+#                            MDout.setValue(MDL_ANGLE_TILT,MDin.getValue(MDL_ANGLE_TILT,i),id1)
+                            psi =-1.*MDin.getValue(MDL_ANGLE_PSI,i)
+                            eulerMatrix = Euler_angles2matrix(0.,0.,psi)
+                            x = MDin.getValue(MDL_SHIFT_X,i)
+                            y = MDin.getValue(MDL_SHIFT_Y,i)
+                            
+                            shift       = array([x, y, 0])
+                            shiftOut    = dot(eulerMatrix, shift)
+                            [x,y,z]= shiftOut
+                            MDout.setValue(MDL_ANGLE_PSI, psi,id1)
+                            MDout.setValue(MDL_SHIFT_X, x,id1)
+                            MDout.setValue(MDL_SHIFT_Y, y,id1)
+                            
                             ref2D = MDin.getValue(MDL_REF,i)
                             file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
                             file_reference=FileName()
                             file_reference.compose(convert_refno_to_stack_position[ref2D],file_references)
                             id2=MDout.addObject()
                             MDout.setValue(MDL_IMAGE,file_reference,id2)
-                            MDout.setValue(MDL_ANGLE_ROT,0.,id2)
-                            MDout.setValue(MDL_ANGLE_TILT,0.,id2)
+#                            MDout.setValue(MDL_ANGLE_ROT,0.,id2)
+#                            MDout.setValue(MDL_ANGLE_TILT,0.,id2)
                             MDout.setValue(MDL_ANGLE_PSI,0.,id2)
+#                            MDout.setValue(MDL_SHIFT_X,   0.,id1)
+#                            MDout.setValue(MDL_SHIFT_Y,   0.,id1)
+
                         if MDout.size()==0:
                             print "Empty metadata: ", file_name
                         else:
@@ -474,7 +481,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn)
+                                runShowJ(sfn, extraParams = ' --dont_wrap ')
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -490,7 +497,7 @@ data_
                         print "Empty metadata: ", file_name
                     else:
                         try:
-                            runShowJ(file_name)
+                            runShowJ(file_name, extraParams = ' --dont_wrap ')
                         except Exception, e:
                             showError("Error launching java app", str(e))
             
