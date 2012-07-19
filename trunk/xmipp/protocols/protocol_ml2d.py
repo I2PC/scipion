@@ -128,7 +128,7 @@ class ProtML2D(XmippProtocol):
             blocks = getBlocksInMetaDataFile(refs)
             lastBlock = blocks[-1]
             try:
-                runShowJ("%(lastBlock)s@%(refs)s" % locals(), extraParams="--mode metadata --render")
+                runShowJ("%(lastBlock)s@%(refs)s" % locals(), extraParams="--mode metadata --render first")
             except Exception, e:
                 from protlib_gui_ext import showError
                 showError("Error launching java app", str(e))
