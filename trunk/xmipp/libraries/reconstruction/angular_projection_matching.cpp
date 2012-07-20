@@ -885,6 +885,9 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     MAT_ELEM(A,0, 2) = -opt_xoff;
     MAT_ELEM(A,1, 2) = -opt_yoff;
 
+    //!a
+    // Multiply shifts by old_scale
+
     if (opt_flip)
     {
         MAT_ELEM(A,0, 2) = opt_xoff;
@@ -1042,6 +1045,9 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         //Add the previously applied scale to the newly found one
         opt_scale *= img.scale();
+
+        //!a
+        // Divide opt_shifts by old_scale
 
         // Add previously applied translation to the newly found one
         opt_xoff += img.Xoff();
