@@ -693,6 +693,16 @@ bool XmippMetadataProgram::getImageToProcess(size_t &objId, size_t &objIndex)
     return ((objId = iter->objId) != BAD_OBJID);
 }
 
+void XmippMetadataProgram::setupRowOut(const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const
+{
+    if (keep_input_columns)
+        rowOut = rowIn;
+    else
+        rowOut.clear();
+    rowOut.setValue(image_label, fnImgOut);
+    rowOut.setValue(MDL_ENABLED, 1);
+}
+
 void XmippMetadataProgram::run()
 {
     FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
@@ -758,21 +768,10 @@ void XmippMetadataProgram::run()
             }
             else
                 fnImgOut = fnImg;
-
-            if (keep_input_columns)
-                rowOut = rowIn;
-            else
-                rowOut.clear();
-
-            rowOut.setValue(image_label, fnImgOut);
-            rowOut.setValue(MDL_ENABLED, 1);
-
+            setupRowOut(rowIn, fnImgOut, rowOut);
         }
         else if (produces_a_metadata)
-        {
-            rowOut.setValue(image_label, fnImgOut);
-            rowOut.setValue(MDL_ENABLED, 1);
-        }
+            setupRowOut(rowIn, fnImgOut, rowOut);
 
         processImage(fnImg, fnImgOut, rowIn, rowOut);
 

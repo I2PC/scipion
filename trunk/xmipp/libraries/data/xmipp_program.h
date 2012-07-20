@@ -395,6 +395,10 @@ public:
     {
         mode = _mode;
     }
+
+    /// Prepare rowout
+    void setupRowOut(const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const;
+
     virtual void run();
 }
 ;// end of class XmippMetadataProgram
