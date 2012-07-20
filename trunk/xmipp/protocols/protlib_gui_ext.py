@@ -1118,7 +1118,10 @@ def showj(filename, mode="default"):
     runShowJ(filename, extraParams="--mode %s" % mode)
     
 def chimera(filename):
-    os.system('chimera spider:%s &' % filename)
+    from protlib_filesystem import hasSpiderExt
+    if hasSpiderExt(filename):
+        filename = 'spider:%s' % filename
+    os.system('chimera %s &' % filename)
     
 def fileInfo(browser):
     from protlib_utils import pretty_date

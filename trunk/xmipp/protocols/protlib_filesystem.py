@@ -232,6 +232,14 @@ def xmippExists(path):
     from xmipp import FileName
     return FileName(path).exists()
 
+def hasSpiderExt(filename):
+    '''check if the file has Spider extension '''
+    spiderExt = ['xmp', 'vol', 'stk', 'spi']
+    for ext in spiderExt:
+        if filename.endswith(ext):
+            return True
+    return False
+
 acquisitionInfoFileName="acquisition_info.xmd"
 def linkAcquisitionInfoIfPresent(log,InputFile,dirDest):
     dirSrc=os.path.dirname(InputFile)
