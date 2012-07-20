@@ -56,12 +56,9 @@ public:
 
 /* Sort PSD Program Parameters ------------------------------------------ */
 /** Parameter class for the project program */
-class ProgPSDSort: public XmippProgram
+class ProgPSDSort: public XmippMetadataProgram
 {
 public:
-    /// List of micrographs to classify
-    FileName fnSel;
-
     /// Bandpass filter low frequency (in Fourier space, max 0.5)
     double filter_w1;
 
@@ -78,6 +75,12 @@ public:
     double mask_w2;
 
 public:
+    /** Empty constructor */
+    ProgPSDSort();
+
+    /** Use micrographs for iterating in the metadata */
+    void defineLabelParam();
+
     /** Read from a command line. */
     void readParams();
 
@@ -85,15 +88,10 @@ public:
     void defineParams();
 
     /** Show parameters. */
-    void show() const;
+    void show();
 
-    /** Evaluate micrograph */
-    double evaluate(const FileName &fnMicrograph,
-    	    const FileName &fnPSD, const FileName &fnCTF, const FileName &fnCTF2,
-    	    PSDEvaluation &evaluation) const;
-
-    /** Compute the correlation for all micrographs */
-    void run();
+    /** Process micrograph */
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 };
 //@}
 #endif

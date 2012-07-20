@@ -31,10 +31,23 @@
 #include <data/transformations.h>
 #include <data/histogram.h>
 
+/* Constructor ------------------------------------------------------------- */
+ProgPSDSort::ProgPSDSort()
+{
+	produces_an_output=true;
+	produces_a_metadata=true;
+	keep_input_columns=true;
+}
+
+void ProgPSDSort::defineLabelParam()
+{
+	addParamsLine(" [--label+ <image_label=micrograph>]   : Label to be used to read/write images.");
+}
+
 /* Read parameters --------------------------------------------------------- */
 void ProgPSDSort::readParams()
 {
-    fnSel = getParam("-i");
+	XmippMetadataProgram::readParams();
     filter_w1 = getDoubleParam("-f1");
     filter_w2 = getDoubleParam("-f2");
     decay_width = getDoubleParam("-decay");
@@ -45,6 +58,7 @@ void ProgPSDSort::readParams()
 /* Usage ------------------------------------------------------------------- */
 void ProgPSDSort::defineParams()
 {
+    XmippMetadataProgram::defineParams();
     addUsageLine("Evaluate the CTFs and PSDs of a set of micrographs.");
     addUsageLine("This process is strongly coupled to the output produced by the preprocessing micrographs step of the Xmipp protocols. ");
     addUsageLine("For each input PSD, the program writes its enhanced version since it is used in the computation of some of the criteria.");
@@ -97,8 +111,6 @@ void ProgPSDSort::defineParams()
     addUsageLine("+$ *PSD !PCA Runs test*: when computing the projections onto the first principal component, as discussed in the previous criterion, ");
     addUsageLine("+one might expect that the sign of the projection is random for untilted micrographs. Micrographs with a marked ");
     addUsageLine("+non-random pattern of projections are indicative of tilted micrographs. The larger the value of this criterion, the less random the pattern is.");
-    addParamsLine("   -i <selfile>              : Selfile with micrographs, it needs the columns image, psd and ctfmodel");
-    addParamsLine("                             : This file is modified by the addition of the evaluation criteria");
     addParamsLine("==+ Enhancement filter parameters");
     addParamsLine("  [-f1 <freq_low=0.02>]      : Low freq. for band pass filtration, max 0.5");
     addParamsLine("  [-f2 <freq_high=0.2>]      : High freq. for band pass filtration, max 0.5");
@@ -108,9 +120,12 @@ void ProgPSDSort::defineParams()
 }
 
 /* Show -------------------------------------------------------------------- */
-void ProgPSDSort::show() const
+void ProgPSDSort::show()
 {
-    std::cout << "Selfile:      " << fnSel << std::endl
+	if (verbose==0)
+		return;
+    XmippMetadataProgram::show();
+    std::cout
     << "Filter w1:    " << filter_w1 << std::endl
     << "Filter w2:    " << filter_w2 << std::endl
     << "Filter decay: " << decay_width << std::endl
@@ -119,10 +134,18 @@ void ProgPSDSort::show() const
 }
 
 /* Compute Correlation ----------------------------------------------------- */
-double ProgPSDSort::evaluate(const FileName &fnMicrograph,
-    const FileName &fnPSD, const FileName &fnCTF, const FileName &fnCTF2,
-    PSDEvaluation &evaluation) const
+void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+	PSDEvaluation evaluation;
+    FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
+    rowIn.getValue(MDL_MICROGRAPH,fnMicrograph);
+    rowIn.getValue(MDL_PSD,fnPSD);
+    if (fnPSD=="NA")
+    	return;
+    rowIn.getValue(MDL_CTF_MODEL,fnCTF);
+    if (rowIn.containsLabel(MDL_CTF_MODEL2))
+    	rowIn.getValue(MDL_CTF_MODEL2,fnCTF2);
+
     FileName fnRoot = fnMicrograph.withoutExtension();
 
     // Read input data
@@ -231,42 +254,22 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
 	}
 	evaluation.histogramNormality=0.5*(KLDistance(hist,histGaussian)+
 			                           KLDistance(histGaussian,hist));
+
+	// Write criteria
+	rowOut.setValue(MDL_CTF_DEFOCUSU,evaluation.defocusU);
+	rowOut.setValue(MDL_CTF_DEFOCUSV,evaluation.defocusV);
+	rowOut.setValue(MDL_CTF_CRIT_FIRSTZEROAVG,evaluation.firstZeroAvg);
+	rowOut.setValue(MDL_CTF_CRIT_DAMPING,evaluation.maxDampingAtBorder);
+    if (evaluation.firstZeroDisagreement>0)
+    	rowOut.setValue(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement);
+    rowOut.setValue(MDL_CTF_CRIT_FIRSTZERORATIO,evaluation.firstZeroRatio);
+    rowOut.setValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
+    rowOut.setValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13);
+    rowOut.setValue(MDL_CTF_CRIT_PSDCORRELATION90,evaluation.PSDcorrelation90);
+    rowOut.setValue(MDL_CTF_CRIT_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral);
+    rowOut.setValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance);
+    rowOut.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
+    rowOut.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
+    rowOut.setValue(MDL_CTF_CRIT_NORMALITY, evaluation.histogramNormality);
 }
 
-/* Run --------------------------------------------------------------------- */
-void ProgPSDSort::run()
-{
-    MetaData SF(fnSel);
-    PSDEvaluation evaluation;
-    init_progress_bar(SF.size());
-    int idx=0;
-    FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
-    {
-        SF.getValue(MDL_MICROGRAPH,fnMicrograph,__iter.objId);
-        SF.getValue(MDL_PSD,fnPSD,__iter.objId);
-        if (fnPSD=="NA")
-        	continue;
-        SF.getValue(MDL_CTF_MODEL,fnCTF,__iter.objId);
-        if (SF.containsLabel(MDL_CTF_MODEL2))
-        	SF.getValue(MDL_CTF_MODEL2,fnCTF2,__iter.objId);
-        evaluate(fnMicrograph, fnPSD, fnCTF, fnCTF2, evaluation);
-        SF.setValue(MDL_CTF_DEFOCUSU,evaluation.defocusU,__iter.objId);
-        SF.setValue(MDL_CTF_DEFOCUSV,evaluation.defocusV,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_FIRSTZEROAVG,evaluation.firstZeroAvg,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_DAMPING,evaluation.maxDampingAtBorder,__iter.objId);
-        if (evaluation.firstZeroDisagreement>0)
-        	SF.setValue(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_FIRSTZERORATIO,evaluation.firstZeroRatio,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_PSDCORRELATION90,evaluation.PSDcorrelation90,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,__iter.objId);
-        SF.setValue(MDL_CTF_CRIT_NORMALITY, evaluation.histogramNormality,__iter.objId);
-        progress_bar(++idx);
-    }
-    SF.write(fnSel);
-}

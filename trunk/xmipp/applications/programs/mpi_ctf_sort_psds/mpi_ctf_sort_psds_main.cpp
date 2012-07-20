@@ -1,7 +1,6 @@
 /***************************************************************************
  *
- * Authors: Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es)
- *          Slavica Jonic (slavica.jonic@impmc.jussieu.fr)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,6 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <parallel/xmipp_mpi.h>
 #include <reconstruction/ctf_sort_psds.h>
 
-RUN_XMIPP_PROGRAM(ProgPSDSort);
+CREATE_MPI_METADATA_PROGRAM(ProgPSDSort, MpiProgPSDSort);
+
+RUN_XMIPP_PROGRAM(MpiProgPSDSort);

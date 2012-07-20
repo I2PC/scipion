@@ -94,7 +94,8 @@ class ProtScreenMicrographs(XmippProtocol):
                            WorkingDir=self.WorkingDir,
                            summaryFile=self.micrographs,
                            importMicrographs=self.Input['micrographs'],
-                           Downsampling=self.DownsampleFactor)
+                           Downsampling=self.DownsampleFactor,
+                           NumberOfMpi=self.NumberOfMpi)
     
     def createFilenameTemplates(self):
         return _templateDict
@@ -140,9 +141,9 @@ class ProtScreenMicrographs(XmippProtocol):
         else:
             showWarning('Warning', 'There are not results yet',self.master)
     
-def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling):
+def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
     buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
-    runJob(log,"xmipp_ctf_sort_psds","-i " + summaryFile)
+    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s"%(summaryFile,summaryFile),NumberOfMpi=NumberOfMpi)
     if Downsampling!=1:
         runJob(log,"rm","-f "+TmpDir+"/*")
 
