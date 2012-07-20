@@ -1146,9 +1146,21 @@ def defaultFillMenu(filename, browser):
 def defaultOnDoubleClick(filename, browser):
     pass
 
+def isChimeraSession(filename):
+    ''' check if the file is a chimera .py session '''
+    # Check if it is a chimera .py session
+    if filename.endswith('.py'):
+        f = open(filename)
+        for l in f:
+            if 'chimera' in l and 'import' in l:
+                return True            
+    return False
+    
 def textFillMenu(filename, browser):
     menu = browser.menu
     menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
+    if isChimeraSession(filename):
+        menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
     return True
 
 def textOnDoubleClick(filename, browser):
