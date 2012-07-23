@@ -14,7 +14,7 @@ public class EstimateFromCTFTask extends CommandTask {
     private final static String XMIPP_CTF_ESTIMATE_FROM_PSD = "xmipp_ctf_estimate_from_psd";
 
     public EstimateFromCTFTask(EllipseCTF ellipseCTF, double angle, String PSDFilename, int modelSize,
-            iTaskCompletionListener commandsListener, int row) {
+            iTaskCompletionListener commandsListener, int row, String sortFn) {
         super(XMIPP_CTF_ESTIMATE_FROM_PSD
                 + " --sampling_rate " + ellipseCTF.getSamplingRate()
                 + " --kV " + ellipseCTF.getVoltage()
@@ -23,8 +23,16 @@ public class EstimateFromCTFTask extends CommandTask {
                 + " --defocusV " + ellipseCTF.getDefocusV()
                 + " --azimuthal_angle " + angle
                 + " --psd " + PSDFilename
-                + " --ctfmodelSize " + modelSize,
+                + " --ctfmodelSize " + modelSize
+                + " --min_freq " + ellipseCTF.getLowFreq()
+                + " --max_freq " + ellipseCTF.getHighFreq()
+                ,//+ " ; " + getSortCmd(sortFn),
                 row,
                 commandsListener);
+        addCommand(getSortCmd(sortFn));
+    }
+    
+    public static String getSortCmd(String filename){
+    	return String.format("xmipp_ctf_sort_psds -i %s -o %s", filename, filename);
     }
 }

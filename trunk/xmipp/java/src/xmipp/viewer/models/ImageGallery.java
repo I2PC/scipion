@@ -182,7 +182,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		}
 	}
 
-	/** Function to force the refresh of some item */
+	/** Function to force the refresh of some row */
 	public void refreshRow(int row) {
 		try {
 			int n = getColumnCount();
@@ -191,9 +191,9 @@ public abstract class ImageGallery extends AbstractTableModel {
 			for (int col = 0; col < n; ++col) {
 				index = getIndex(row, col);
 				key = getItemKey(index);
+				DEBUG.printFormat("Removing item: %s from cache", key);
 				cache.remove(key);
 			}
-			// Clear cache entry
 			fireTableRowsUpdated(row, row);
 		} catch (Exception e) {
 			e.printStackTrace();

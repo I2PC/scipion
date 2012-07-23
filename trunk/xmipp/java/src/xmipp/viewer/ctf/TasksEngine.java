@@ -39,10 +39,10 @@ public class TasksEngine implements iTaskCompletionListener {
 
             // It's done, so sortPSDS is executed in background, and after that,
             // main GUI is updated.
-            if (allDone()) {
-                SortPSDSTask sortPSDS = new SortPSDSTask(gui.getFilename(), this);
-                sortPSDS.start();
-            }
+//            if (allDone()) {
+//                SortPSDSTask sortPSDS = new SortPSDSTask(gui.getFilename(), this);
+//                sortPSDS.start();
+//            }
         }
     }
 }

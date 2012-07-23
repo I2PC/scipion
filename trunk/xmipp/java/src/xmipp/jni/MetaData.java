@@ -27,6 +27,8 @@ package xmipp.jni;
 
 import java.io.File;
 
+import xmipp.utils.DEBUG;
+
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
  */
@@ -91,29 +93,29 @@ public class MetaData {
 	private synchronized native void destroy();
 
 	// reading
-	public native void read_(String filename) throws Exception;
+	public native void read_(String filename);
 
-	public final void read(String filename) throws Exception {
+	public final void read(String filename) {
 		this.filename = filename;
 		read_(filename);
 		activeLabels = getActiveLabels();
 	}
 
-	public native int size() throws Exception;
+	public native int size();
 
-	public native void setColumnFormat(boolean format) throws Exception;
+	public native void setColumnFormat(boolean format);
 
-	public native void write(String filename) throws Exception;
+	public native void write(String filename);
 
-	public native void writeBlock(String filename) throws Exception;
+	public native void writeBlock(String filename);
 
-	public native void print() throws Exception;
+	public native void print();
 
-	public native boolean isColumnFormat() throws Exception;
+	public native boolean isColumnFormat();
 
-	public native boolean containsLabel(int label) throws Exception;
+	public native boolean containsLabel(int label);
 
-	public native boolean removeLabel(int label) throws Exception;
+	public native boolean removeLabel(int label);
 
 	public boolean containsGeometryInfo() {
 		try {
@@ -138,9 +140,9 @@ public class MetaData {
 		return true;
 	}
 
-	public static native String label2Str(int label) throws Exception;
+	public static native String label2Str(int label);
 
-	public static native int str2Label(String labelName) throws Exception;
+	public static native int str2Label(String labelName);
 
 	/** Same of before but handling the exception */
 	public static String getLabelName(int label) {
@@ -151,14 +153,13 @@ public class MetaData {
 		}
 	}
 
-	public static native String[] getBlocksInMetaDataFile(String filename)
-			throws Exception;
+	public static native String[] getBlocksInMetaDataFile(String filename);
 
-	public native int[] getActiveLabels() throws Exception;
+	public native int[] getActiveLabels();
 
-	public static native int getLabelType(int label) throws Exception;
+	public static native int getLabelType(int label);
 
-	public static Class getLabelClass(int label) throws Exception {
+	public static Class getLabelClass(int label) {
 		int type = getLabelType(label);
 		switch (type) {
 		case LABEL_INT:
@@ -179,7 +180,7 @@ public class MetaData {
 	}
 
 	/** Return an String representing the label type */
-	public static String getLabelTypeString(int labelType) throws Exception {
+	public static String getLabelTypeString(int labelType) {
 		switch (labelType) {
 		case LABEL_STRING:
 			return "STRING";
@@ -198,39 +199,38 @@ public class MetaData {
 		}
 		return "UNKNOWN";
 	}// function getLabelTypeString
-	
-	public static native String getLabelComment(int label) throws Exception;
 
-	public static native boolean isTextFile(int label) throws Exception;
+	public static native String getLabelComment(int label);
 
-	public static native boolean isMetadata(int label) throws Exception;
+	public static native boolean isTextFile(int label);
 
-	public static native boolean isCtfParam(int label) throws Exception;
+	public static native boolean isMetadata(int label);
 
-	public static native boolean isImage(int label) throws Exception;
+	public static native boolean isCtfParam(int label);
 
-	public static native boolean isStack(int label) throws Exception;
+	public static native boolean isImage(int label);
 
-	public static native boolean isMicrograph(int label) throws Exception;
+	public static native boolean isStack(int label);
 
-	public static native boolean isPSD(int label) throws Exception;
+	public static native boolean isMicrograph(int label);
 
-	public native boolean isMetadataFile() throws Exception;
+	public static native boolean isPSD(int label);
 
-	public native void makeAbsPath(int label) throws Exception;
+	public native boolean isMetadataFile();
+
+	public native void makeAbsPath(int label);
 
 	// get values from metadata
-	public native int getValueInt(int label, long objId) throws Exception;
+	public native int getValueInt(int label, long objId);
 
-	public native long getValueLong(int label, long objId) throws Exception;
+	public native long getValueLong(int label, long objId);
 
-	public native double getValueDouble(int label, long objId) throws Exception;
+	public native double getValueDouble(int label, long objId);
 
 	/** Return the value of some label as String */
-	public native String getValueString(int label, long objId) throws Exception;
+	public native String getValueString(int label, long objId);
 
-	public String getValueString(int label, long objId, boolean fixPaths)
-			throws Exception {
+	public String getValueString(int label, long objId, boolean fixPaths) {
 		String value = getValueString(label, objId);
 
 		// Try to fix paths.
@@ -244,14 +244,34 @@ public class MetaData {
 	/**
 	 * Return all values of the row as String[]
 	 * 
-	 * @throws Exception
+	 * @
 	 */
-	public String[] getRowValues(long objId) throws Exception {
+	public String[] getRowValues(long objId) {
 		String[] values = new String[activeLabels.length];
 		for (int i = 0; i < activeLabels.length; ++i)
 			values[i] = getValueString(activeLabels[i], objId);
 		return values;
 	}
+	
+	/** Return a new metadata containing the values of one row */
+	public MetaData getRow(long objId){
+		MetaData mdRow = new MetaData();
+		mdRow.importObjects(this, new long[]{objId});
+		return mdRow;
+	}
+	
+	public void setRow(MetaData mdRow, long objId){
+		int[] labels = getActiveLabels();
+		String value;
+		long rowId = mdRow.firstObject();
+		for (int l : labels){
+			value = mdRow.getValueString(l, rowId);
+			//DEBUG.printFormat("label: %d, value: %d", l, value);
+			setValueString(l, value, objId);
+		}
+	}
+	
+	
 
 	/**
 	 * Create a metadata row from another metadata Adding the activeLabels and
@@ -263,7 +283,7 @@ public class MetaData {
 			md = new MetaData();
 			md.setColumnFormat(false);
 			int[] labels = getActiveLabels();
-			for (int l: labels)
+			for (int l : labels)
 				md.addLabel(l);
 			md.addObject();
 		} catch (Exception e) {
@@ -272,7 +292,7 @@ public class MetaData {
 		return md;
 	}
 
-	public static boolean isPathField(int label) throws Exception {
+	public static boolean isPathField(int label) {
 		return isTextFile(label) || isMetadata(label) || isCtfParam(label)
 				|| isImage(label) || isStack(label) || isMicrograph(label)
 				|| isPSD(label);
@@ -289,8 +309,7 @@ public class MetaData {
 		return Filename.fixPath(value, baseDir, false);
 	}
 
-	public native boolean getValueBoolean(int label, long objId)
-			throws Exception;
+	public native boolean getValueBoolean(int label, long objId);
 
 	public String getFilename() {
 		return filename != null ? Filename.getFilename(filename) : "";
@@ -311,71 +330,62 @@ public class MetaData {
 		return f.getParent();
 	}
 
-	public native double[] getStatistics(boolean applyGeo) throws Exception;
+	public native double[] getStatistics(boolean applyGeo);
 
-	public native double[] getColumnValues(int label) throws Exception;
+	public native double[] getColumnValues(int label);
 
 	// set functions conection with MetaData class in C++
-	public boolean setEnabled(boolean value, long objId) throws Exception {
+	public boolean setEnabled(boolean value, long objId) {
 		return setValueInt(MDLabel.MDL_ENABLED, value ? 1 : -1, objId);
 	}
 
-	public boolean getEnabled(long objId) throws Exception {
+	public boolean getEnabled(long objId) {
 		return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
 	}
 
-	public native boolean setValueInt(int label, int value, long objId)
-			throws Exception;
+	public native boolean setValueInt(int label, int value, long objId);
 
-	public native boolean setValueLong(int label, long value, long objId)
-			throws Exception;
+	public native boolean setValueLong(int label, long value, long objId);
 
-	public native boolean setValueDouble(int label, double value, long objId)
-			throws Exception;
+	public native boolean setValueDouble(int label, double value, long objId);
 
-	public native boolean setValueString(int label, String value, long objId)
-			throws Exception;
+	public native boolean setValueString(int label, String value, long objId);
 
-	public native boolean setValueBoolean(int label, boolean value, long objId)
-			throws Exception;
+	public native boolean setValueBoolean(int label, boolean value, long objId);
 
 	/** Obtain all the objects ids in the MetaData */
-	public native long[] findObjects() throws Exception;
+	public native long[] findObjects();
 
 	/**
 	 * Order the metadata by some label. You can order ASCending or DESCending.
 	 */
-	public native void sort(int sortLabel, boolean ascending) throws Exception;
+	public native void sort(int sortLabel, boolean ascending);
 
 	/** Import objects from other MetaData */
-	public native void importObjects(MetaData from, long ids[])
-			throws Exception;
+	public native void importObjects(MetaData from, long ids[]);
 
 	/** Return the id of the first object */
-	public native long firstObject() throws Exception;
+	public native long firstObject();
 
 	/** Add a new object entry and return new id */
-	public native long addObject() throws Exception;
+	public native long addObject();
 
 	/** Remove an existing object from metadata */
-	public native boolean removeObject(long objId) throws Exception;
+	public native boolean removeObject(long objId);
 
 	/** Remove disabled objects */
-	public native void removeDisabled() throws Exception;
+	public native void removeDisabled();
 
 	/** Add new column to MetaData */
-	public native void addLabel(int label) throws Exception;
+	public native void addLabel(int label);
 
 	/** Get the average and std images, result is left on input image */
 	public native void getStatsImages(ImageGeneric imageAvg,
-			ImageGeneric imageStd, boolean applyGeo, int label)
-			throws Exception;
+			ImageGeneric imageStd, boolean applyGeo, int label);
 
-	public native void getPCAbasis(ImageGeneric basis, int label)
-			throws Exception;
+	public native void getPCAbasis(ImageGeneric basis, int label);
 
-	public native void computeFourierStatistics(MetaData mdIn, int label)
-			throws Exception;
+	public native void computeFourierStatistics(MetaData mdIn, int label);
 
 	/**
 	 * Union of all elements in two Metadata, duplicating common elements.
@@ -387,7 +397,7 @@ public class MetaData {
 	 * Fill all values in a column(label). Different types of fill are: Constant
 	 * Linear Random uniform Random gaussian
 	 * 
-	 * @throws Exception
+	 * @
 	 */
 	public native void fillConstant(int label, String value);
 
@@ -409,7 +419,7 @@ public class MetaData {
 	public native void fillLinear(int label, double start, double step);
 
 	/** Just for debugging purposes */
-	public native void enableDebug() throws Exception;
+	public native void enableDebug();
 
 	/*********** Non-native functions ********************/
 	/** Create empty metadata */
@@ -418,7 +428,7 @@ public class MetaData {
 	}
 
 	/** Create a metadata and read data from filename */
-	public MetaData(String filename) throws Exception {
+	public MetaData(String filename) {
 		create();
 		read(filename);
 	}
@@ -439,10 +449,9 @@ public class MetaData {
 	 * @param file
 	 *            filename from where to read
 	 * @param columns
-	 *            expected columns(labels) in file
-	 * @throws Exception
+	 *            expected columns(labels) in file @
 	 */
-	public native void readPlain(String file, String columns) throws Exception;
+	public native void readPlain(String file, String columns);
 
 	/**
 	 * Write the images on metadata to some location
@@ -452,9 +461,8 @@ public class MetaData {
 	 * @param independent
 	 *            if False write images to stack, if True using a prefix
 	 * @param image_label
-	 *            Which label have the images to write
-	 * @throws Exception
+	 *            Which label have the images to write @
 	 */
 	public native void writeImages(String output, boolean independent,
-			int image_label) throws Exception;
+			int image_label);
 }

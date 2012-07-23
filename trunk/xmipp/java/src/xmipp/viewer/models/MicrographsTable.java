@@ -3,6 +3,7 @@ package xmipp.viewer.models;
 import java.util.ArrayList;
 
 import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
@@ -38,7 +39,7 @@ public class MicrographsTable extends MetadataTable {
 			if (ci.getLabel() == MDLabel.MDL_CTF_MODEL2)
 				ctfModel2 = ci;
 			//Remove common prefix CTFCrit_ from columns headers
-			ci.labelName = ci.labelName.replace("CTFCrit_", "");
+			ci.labelName = ci.labelName.replace("ctfCrit", "");
 		}
 		//Move CTF_MODEL column to the end
 		if (ctfModel != null){
@@ -88,7 +89,33 @@ public class MicrographsTable extends MetadataTable {
 	public void setRowIdle(int row) {
 		DEBUG.printFormat("setting idle row: %d", row);
 		busyRows.remove(new Integer(row));	
+		long objId = data.ids[row];
+		String psdFile = data.md.getValueString(MDLabel.MDL_PSD, objId);
+		String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
+		MetaData mdRow = new MetaData(sortFn);
+		data.setRow(mdRow, objId);
 		refreshRow(row);
+	}
+	
+	/** Function to force the refresh of some row */
+	public void refreshRow(int row) {
+		try {
+			int n = getColumnCount();
+			int index;
+			String key;
+			ColumnInfo ci;
+			for (int col = 0; col < n; ++col) {
+				ci = data.getColumnInfo(col);
+				if (ci.allowRender){
+					key = getItemKey(row, ci.getLabel());
+					DEBUG.printFormat("Removing item: %s from cache", key);
+					cache.remove(key);
+				}
+			}
+			fireTableRowsUpdated(row, row);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
    
     

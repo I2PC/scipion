@@ -14,7 +14,7 @@ import xmipp.jni.MetaData;
  */
 public class EllipseCTF {
 
-    private double Q0, Cs, D, Ts, kV, lambda, downsampleFactor;
+    private double Q0, Cs, D, Ts, kV, lambda, downsampleFactor, lowFreq, highFreq;
     double defU, defV;
     private double defocusU, defocusV;
 
@@ -51,6 +51,20 @@ public class EllipseCTF {
 
     public double getDefocusV() {
         return defocusV;
+    }
+    
+    /** Set the frequencies range to calculate CTF */
+    public void setFreqRange(double lowFreq, double highFreq){
+    	this.lowFreq = lowFreq;
+    	this.highFreq = highFreq;
+    }
+    
+    public double getLowFreq(){
+    	return lowFreq;
+    }
+    
+    public double getHighFreq(){
+    	return highFreq;
     }
 
     // Calculates defocus U and V according to ellipse parameters.

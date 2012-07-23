@@ -158,10 +158,10 @@ public class SaveJDialog extends XmippDialog {
 //		btnBrowseMd = WindowUtil.getIconButton("folderopen.gif", this);
 //		panelMd.add(btnBrowseMd,  WindowUtil.getConstraints(gbc, 2, 0));
 		panelMd.add(panelBrowse,  XmippWindowUtil.getConstraints(gbc, 0, 0, 3));
-		rbMdOverride = new JRadioButton("Override");
+		rbMdOverride = new JRadioButton("Ovewrite file");
 		panelMd.add(rbMdOverride, XmippWindowUtil.getConstraints(gbc, 0, 1));
 		gbc.anchor = GridBagConstraints.WEST;	
-		rbMdAppend = new JRadioButton("Append", true);
+		rbMdAppend = new JRadioButton("Replace/Append block", true);
 		panelMd.add(rbMdAppend, XmippWindowUtil.getConstraints(gbc, 1, 1));
 		ButtonGroup group = new ButtonGroup();
 	    group.add(rbMdOverride);

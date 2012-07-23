@@ -10,13 +10,15 @@ package xmipp.viewer.ctf;
  */
 public class SortPSDSTask extends CommandTask {
 
-    private final static String XMIPP_CTF_SORT_PSDS = "xmipp_ctf_sort_psds";
-
     public SortPSDSTask(String filename) {
-        super(XMIPP_CTF_SORT_PSDS + " -i " + filename);
+        super(getCommand(filename));
     }
 
     public SortPSDSTask(String filename, iTaskCompletionListener commandsListener) {
-        super(XMIPP_CTF_SORT_PSDS + " -i " + filename, commandsListener);
+        super(getCommand(filename), commandsListener);
+    }
+    
+    public static String getCommand(String filename){
+    	return String.format("xmipp_ctf_sort_psds -i %s -o %s", filename, filename);
     }
 }

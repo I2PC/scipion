@@ -446,6 +446,12 @@ public class GalleryData {
 			e.printStackTrace();
 		}
 	}
+	
+	/** Set all values coming from a row md */
+	public void setRow(MetaData mdRow, long objId){
+		md.setRow(mdRow, objId);
+		setMdChanges(true);
+	}
 
 	/** This is only needed for metadata table galleries */
 	public boolean isFile(int col) {
@@ -716,6 +722,10 @@ public class GalleryData {
 
 	public int getLabelFromCol(int col) {
 		return labels.get(col).getLabel();
+	}
+	
+	public ColumnInfo getColumnInfo(int col){
+		return labels.get(col);
 	}
 
 	public String getValueFromCol(int index, int col) {

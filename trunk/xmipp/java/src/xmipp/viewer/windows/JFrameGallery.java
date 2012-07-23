@@ -1374,9 +1374,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 				if (profile)
 					ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
-				else
+				else {
+					MetaData mdRow = data.md.getRow(data.ids[row]);
+					String sortFn = psdFile.replace(".psd", ".tmpSort.xmd");
+					mdRow.write(sortFn);
 					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile,
-							ctfTasks, data.md.getFilename(), row);
+							ctfTasks, data.md.getFilename(), row, sortFn);
+				}
 
 			} catch (Exception e) {
 				XmippDialog.showError(JFrameGallery.this, e.getMessage());

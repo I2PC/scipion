@@ -14,6 +14,9 @@ import ij.process.ImageStatistics;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Panel;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -22,6 +25,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 
 import xmipp.utils.XmippWindowUtil;
 
@@ -35,14 +41,17 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     protected EllipseFitter ellipseFitter = new EllipseFitter();
     private EllipseCTF ellipseCTF;
     private TasksEngine tasksEngine;
-    private String PSDFilename;
+    private String PSDFilename, sortFn;
     private int row;
+    private JSpinner spinnerLowFreq;
+    private JSpinner spinnerHighFreq;
 
     public CTFRecalculateImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename,
-            TasksEngine tasksEngine, int row) {
+            TasksEngine tasksEngine, int row, String sortFn) {
         super(imp);
 
         this.PSDFilename = PSDFilename;
+        this.sortFn = sortFn;
         this.tasksEngine = tasksEngine;
         this.row = row;
 
@@ -84,14 +93,33 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 
         add(previousContent, BorderLayout.CENTER);
 
-        Panel panel = new Panel();
-        panel.add(button);
+        Panel panel = new Panel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        panel.add(new JLabel("Low freq"), XmippWindowUtil.getConstraints(gbc, 0, 0));
+        spinnerLowFreq = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 0.5, 0.01));
+        panel.add(spinnerLowFreq, XmippWindowUtil.getConstraints(gbc, 1, 0));
+        panel.add(new JLabel("High freq"), XmippWindowUtil.getConstraints(gbc, 2, 0));
+        spinnerHighFreq = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 0.5, 0.01));
+        panel.add(spinnerHighFreq, XmippWindowUtil.getConstraints(gbc, 3, 0));
+        panel.add(button,  XmippWindowUtil.getConstraints(gbc, 2, 1, 2));
+        
+        
         add(panel, BorderLayout.SOUTH);
 
         setMaximumSize(getPreferredSize());
 
         pack();
         imp.updateImage();
+    }
+    
+    public double getLowFreq(){
+    	return ((Double)spinnerLowFreq.getValue()).doubleValue();
+    }
+    
+    public double getHighFreq(){
+    	return ((Double)spinnerHighFreq.getValue()).doubleValue();
     }
 
     public boolean fitEllipse() {
@@ -131,10 +159,11 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 
     private void recalculateCTF() {
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
+        ellipseCTF.setFreqRange(getLowFreq(), getHighFreq());
         // Add "estimate..." to tasks.
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
                 ellipseCTF, 90 - ellipseFitter.angle, 
-                PSDFilename, imp.getWidth(), tasksEngine, row);
+                PSDFilename, imp.getWidth(), tasksEngine, row, sortFn);
         tasksEngine.add(estimateFromCTFTask);
         dispose();
     }
