@@ -306,12 +306,12 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 	}
 
-	public int getNextFreeMicrograph(Family f) {
-		int count = 0;
-		for (TrainingMicrograph m : micrographs) {
-			if (m.getFamilyData(f).getState() == MicrographFamilyState.Available)
-				return count;
-			count++;
+	public int getNextFreeMicrograph(int index) {
+		if(micrographs.size() < index)
+			return -1;
+		for (int i = index; i < micrographs.size(); i ++) {
+			if (micrographs.get(i).getFamilyData(family).getState() == MicrographFamilyState.Available)
+				return i;
 		}
 		return -1;
 	}

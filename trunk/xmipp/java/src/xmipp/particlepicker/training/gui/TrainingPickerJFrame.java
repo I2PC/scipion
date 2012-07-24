@@ -31,6 +31,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.particlepicker.Family;
@@ -216,7 +217,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		steplb = new JLabel();
 		steppn.add(steplb);
 
-		index = ppicker.getNextFreeMicrograph(family);
+		index = ppicker.getNextFreeMicrograph(0);
 		if (index == -1)
 			index = 0;
 		micrograph = ppicker.getMicrographs().get(index);
@@ -267,7 +268,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 				}
 				family = family2;
 				ppicker.setFamily(family);
-				index = ppicker.getNextFreeMicrograph(family);
+				index = ppicker.getNextFreeMicrograph(0);
 				micrographstb.getSelectionModel().setSelectionInterval(index,
 						index);
 				color = (family.getColor());
@@ -387,8 +388,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		JScrollPane sp = new JScrollPane();
 		JPanel ctfpn = new JPanel();
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF",
-				javax.swing.border.TitledBorder.CENTER,
-				javax.swing.border.TitledBorder.BELOW_BOTTOM));
+				TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
 		iconlb = new JLabel();
 		ctfpn.add(iconlb);
 		micrographsmd = new MicrographsTableModel(this);
@@ -535,8 +535,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	void updateFamilyComboBox() {
 		setChanged(true);
 		Family item = (Family) familiescb.getSelectedItem();
-		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker
-				.getFamilies().toArray());
+		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker.getFamilies().toArray());
 		familiescb.setModel(model);
 		familiescb.setSelectedItem(item);
 		micrographsmd.fireTableStructureChanged();
@@ -605,7 +604,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 						
 
 					}
-					int next = ppicker.getNextFreeMicrograph(family);
+					int next = ppicker.getNextFreeMicrograph(index);
 					if (next != -1)
 						micrographstb.setRowSelectionInterval(next,	next);
 					XmippWindowUtil.releaseGUI(getRootPane());
@@ -664,7 +663,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 				public void run() {
 					ppicker.runXmippProgram(
 							"xmipp_micrograph_automatic_picking", fargs);
-					int next = ppicker.getNextFreeMicrograph(family);
+					int next = ppicker.getNextFreeMicrograph(index + 1);
 					if (next != -1)
 						micrographstb.setRowSelectionInterval(next, next);
 					else

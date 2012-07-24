@@ -80,7 +80,6 @@ public class TrainingMicrograph extends Micrograph{
 				file = (Filename.getXmippPath("resources" + File.separator + "no-image.jpg"));
 			else
 				file = ctf;
-			System.out.println(file);
 			Image image = XmippIJUtil.getImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(image);
 			
