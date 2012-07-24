@@ -149,6 +149,7 @@ data_
                    % (iteration, self.NumberOfIterations, self.AngSamplingRateDeg)]
         filenames=(' '.join(self.ReferenceFileNames)).replace("'","")
         summary.append("Initial volume(s): [%s]"%filenames)
+        summary.append("Input images: [%s]"%self.SelFileName)
         if (iteration > 1):
             ResolutionXmdCurrIterMaxSummary = self.getFilename('ResolutionXmdMax', iter=iteration, ref=1)
             ResolutionXmdCurrIterMaxSummary1 = self.getFilename('ResolutionXmdMax', iter=iteration-1, ref=1)
