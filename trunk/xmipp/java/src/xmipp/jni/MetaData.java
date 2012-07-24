@@ -27,8 +27,6 @@ package xmipp.jni;
 
 import java.io.File;
 
-import xmipp.utils.DEBUG;
-
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
  */
