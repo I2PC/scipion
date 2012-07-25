@@ -214,19 +214,19 @@ VisualizeGSVolume = True
 VisualizeIter = 'last'
 
 # {condition}(VisualizeIter=='selection') Selected iterations
-''' Which iteration do you want to visualize'''
+""" Which iteration do you want to visualize """
 SelectedIters = ''
 
-# {view} Visualize weighted 2D-averages of last iteration?
+# {view} Visualize weighted 2D-averages?
 VisualizeML3DAvgs = True
 
-# {view} Visualize the reference volumes of last iteration?
+# {view} Visualize the 3D-references volumes?
 VisualizeML3DReferences = True
 
-# {view} Plot the angular distribution of the references?
+# {view} Plot angular distribution of 3D-references?
 VisualizeAngDistribution = True
 
-# {view} Plot data distribution over the distinct references?
+# {view} Plot data distribution over 3D-references?
 VisualizeClassDistribution = True
 
 #------------------------------------------------------------------------------------------------

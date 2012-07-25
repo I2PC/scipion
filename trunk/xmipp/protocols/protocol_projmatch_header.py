@@ -41,7 +41,7 @@ UseInitialAngles = False
 Write down the reference/es name. For example "Reference1.vol Reference2.vol"
 specifies two references
 """
-ReferenceFileNames ='ico1.vol ico2.vol ico3.vol'
+ReferenceFileNames = 'ico1.vol ico2.vol ico3.vol'
 
 # Number of iterations to perform
 NumberOfIterations = 4
@@ -51,7 +51,7 @@ NumberOfIterations = 4
 Be careful, many options of the visualization protocol will not work anymore, 
 since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles =False
+CleanUpFiles = False
 
 #-----------------------------------------------------------------------------
 # {section}{has_question} CTF correction
@@ -71,7 +71,7 @@ Make CTF groups based on a maximum differences at a given resolution limit.
 If this option is set to false, a docfile with the defocus values where to 
 split the images in distinct defocus group has to be provided (see expert option below)
 """
-DoAutoCtfGroup =True
+DoAutoCtfGroup = True
 
 # Maximum difference in CTF-values in one group
 """ If the difference between the CTF-values up to the resolution limit specified 
@@ -91,7 +91,7 @@ CtfGroupMaxResol = 5.6
     Note that the requested docfile can be made initially with the <xmipp_ctf_group> program,
     and then it can be edited manually to suit your needs. 
 """
-SplitDefocusDocFile =''
+SplitDefocusDocFile = ''
 
 # {expert} Padding factor
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
@@ -338,19 +338,23 @@ OnlyWinner ='0'
     classPercentage: Discard percentage of images in each projection direction with less CC.
     Value of each option is set below.
 """
-DiscardImages ='none'
+DiscardImages = 'none'
 
-# {condition}(DiscardImages=="maxCC") Discard images with ccf below
-""" Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
+# {condition}(DiscardImages=="maxCC") with CC below
+""" 
+    Discard images with cross-correlation (CC) below this value.
+    Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
     the first two set the value to 0.3, then two with 0.5.
     An alternative compact notation would be ("2x0.3 2x0.5").
     <Note:> if there are less values than iterations the last value is reused
     <Note:> if there are more values than iterations the extra value are ignored
 """
-MinimumCrossCorrelation ='0.1'
+MinimumCrossCorrelation = '0.1'
 
-# {condition}(DiscardImages=="percentage") Discard percentage of images with less ccf
-""" Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
+# {condition}(DiscardImages=="percentage") images percent with less CC
+""" 
+    Discard this percentage of images with less cross-correlation (CC)
+    Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
     the first two set the value to 20%, then two with 10%
     An alternative compact notation would be ("2x20 2x10").
     <Note:> if there are less values than iterations the last value is reused
@@ -359,8 +363,11 @@ MinimumCrossCorrelation ='0.1'
 """
 DiscardPercentage ='10'
 
-# {condition}(DiscardImages=="classPercentage") Discard percentage of images in each projection direction with less ccf
-""" Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
+# {condition}(DiscardImages=="classPercentage") images percent in each class with less CC
+""" 
+    Discard this percentage of images in each class(projection direction)
+    with less cross-correlation (CC)    
+    Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
     the first two set the value to 20%, then two with 10%
     An alternative compact notation would be ("2x20 2x10").
     <Note:> if there are less values than iterations the last value is reused
@@ -371,7 +378,8 @@ DiscardPercentagePerClass ='10'
 
 
 # Perform scale search?
-""" If true perform scale refinement
+""" 
+    If true perform scale refinement
 """
 DoScale = False
 
@@ -381,7 +389,8 @@ DoScale = False
 ScaleStep ='1'
 
 # {condition}(DoScale) Number of scale steps
-""" Number of scale steps.
+""" 
+    Number of scale steps.
     With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 +/-0.01 | +/-0.02 | +/-0.03.    
     With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
      1 +/-0.02 | +/-0.04 | +/-0.06 | +/-0.08.    
@@ -644,12 +653,6 @@ DoCenterVolume = False
 # {eval} expandParallel(jobsize=1)
 
 #------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript ='visualize_projmatch.py'
-
-#------------------------------------------------------------------------------------------------
 # {section}{visualize} Visualization
 #------------------------------------------------------------------------------------------------
 
@@ -665,6 +668,16 @@ DisplayIterationsNo='1 2 3'
 """
 DisplayRef3DNo='1 2'
 
+# {expert} Width of projection galleries
+""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
+    classes was performed and multiplied by 2 otherwise.
+"""
+MatrixWidth=3
+
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Volumes display
+#------------------------------------------------------------------------------------------------
+
 # {list}(x, y, z, surface) Display volumes as slices or surface rendering
 """ x -> Visualize volumes in slices along x
     y -> Visualize volumes in slices along y
@@ -673,16 +686,10 @@ DisplayRef3DNo='1 2'
 """
 DisplayVolumeSlicesAlong='z'
 
-# {expert} Width of projection galleries
-""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
-    classes was performed and multiplied by 2 otherwise.
-"""
-MatrixWidth=3
-
 # {view} Display reference volume
 """ Volume after filtration and masking
 """
-DisplayReference=False
+DisplayReference = False
 # {view} Display reconstructed volume
 """ Volume as given by the reconstruction algorithm
 """
@@ -715,26 +722,34 @@ MaxRes=12
 """
 CorrectBfactorExtraCommand='--auto'
 
-# {view} Show projection matching library
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Library, classes and images
+#------------------------------------------------------------------------------------------------
+
+# {view} Display library?
 DisplayProjectionMatchingLibrary=False
 
-# {view} Show projection matching classes
+# {view} Display classes?
 DisplayProjectionMatchingClasses=False
 
-# {view} Show projection matching Library and Clases in a single image
+# {view} Display library and classes in a single image?
 DisplayProjectionMatchingLibraryAndClasses=False
 
-# {view} Show projection matching Library and Experimental images in a single image
+# {view} Display library and experimental images in a single image?
 DisplayProjectionMatchingLibraryAndImages=False
 
-# {view} Show discarded images
+# {view} Display discarded images?
 DisplayDiscardedImages=False
 
-# {view} Display angular distribution
+#------------------------------------------------------------------------------------------------
+# {section}{visualize} Angular distribution and resolution plots
+#------------------------------------------------------------------------------------------------
+
+# {view} Display angular distribution?
 DisplayAngularDistribution=True
 
 # {condition}(DisplayAngularDistribution) {list} (2D, 3D) Display Angular distribution with
-""" 2D option uses gnuplot while 3D chimera
+""" 2D option uses matplotlib while 3D chimera
 """
 DisplayAngularDistributionWith='2D'
 

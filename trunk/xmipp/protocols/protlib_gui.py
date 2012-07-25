@@ -503,6 +503,7 @@ class ProtocolGUI(BasicGUI):
             
         label = tk.Label(frame, text=label_text, fg=label_color, bg=label_bgcolor)
         label.grid(row=label_row, column=0, sticky='e', padx=(5, 10))
+        
         self.maxLabelWidth = max(self.maxLabelWidth, label.winfo_reqwidth())
         w.widgetslist.append(label)
     

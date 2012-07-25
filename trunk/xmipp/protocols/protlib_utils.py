@@ -131,6 +131,7 @@ def getListFromRangeString(rangeStr):
     Examples:
     "1,5-8,10" -> [1,5,6,7,8,10]
     "2,6,9-11" -> [2,6,9,10,11]
+    "2 5, 6-8" -> [2,5,6,7,8]
     '''
     elements = rangeStr.split(',')
     values = []
@@ -138,8 +139,9 @@ def getListFromRangeString(rangeStr):
         if '-' in e:
             limits = e.split('-')
             values += range(int(limits[0]), int(limits[1])+1)
-        else: 
-            values.append(int(e))
+        else:
+            # If values are separated by comma also splitted 
+            values += map(int, e.split())
     return values
 
 def getRangeStringFromList(list):
