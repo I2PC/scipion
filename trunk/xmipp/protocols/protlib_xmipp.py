@@ -470,3 +470,33 @@ def findColor(color):
             return (k, fx, fy, color)
     return None
         
+def validateSameSize(fileList, errors, errorPrefix='References'):
+    '''Validate if a list of images(or volumes) have
+    the same dimensions. 
+    The dimensions tuple is returned'''
+    from xmipp import SingleImgSize
+    (xdim, ydim, zdim, ndim) = SingleImgSize(fileList[0])
+    for filename in fileList[1:]:
+        (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(filename)
+        if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
+            errors.append("%s: %s and %s have not the same size" % \
+                           (errorPrefix, fileList[0], filename)) 
+    return (xdim, ydim, zdim, ndim)
+
+def validateInputSize(references, images, errors):
+    '''This function will validate that all references
+    have the same size and also the input images
+    The images metadata file should contains the MDL_IMAGE label
+    '''
+    from xmipp import MetaData, MDL_IMAGE, ImgSize
+    # Check reference size
+    (xdim, ydim, zdim, ndim) = validateSameSize(references, errors)    
+    # Check that volume and images have the same size
+    md = MetaData(images)
+    if md.containsLabel(MDL_IMAGE):        
+        (xdim2, ydim2, zdim2, ndim2) = ImgSize(images)
+        if (xdim2, ydim2) != (xdim, ydim):
+            errors.append("References and images have not the same size")
+    else:
+        errors.append("Input metadata <%s> does not contain image column" % images)
+    

@@ -73,6 +73,21 @@ class ProtML3D(XmippProtocol):
         
         return lines
     
+    def validate(self):
+        errors = []
+        
+        md = MetaData(self.ImgMd)
+        if md.containsLabel(MDL_IMAGE):
+            # Check that have same size as images:
+            from protlib_xmipp import validateInputSize
+            mdRef = MetaData(self.RefMd)
+            references = mdRef.getColumnValues(MDL_IMAGE)
+            validateInputSize(references, self.ImgMd, errors)
+        else:
+            errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
+            
+        return errors 
+    
     def defineSteps(self):        
         restart = False
         if restart:            #Not yet implemented

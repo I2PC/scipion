@@ -65,7 +65,7 @@ class ProtProjMatch(XmippProtocol):
         self.ResolSam = AcquisitionInfoGetSamplingRate(self.SelFileName)
         
     def validate(self):
-        from xmipp import ImgSize, SingleImgSize, XmippError
+        from protlib_xmipp import validateInputSize
         errors = []
         
 #        # Check reference and projection size match
@@ -78,22 +78,8 @@ class ProtProjMatch(XmippProtocol):
         # Check that all volumes have the same size
         #getListFromVector(self.ReferenceFileNames,processX=False)
         #listOfReferences=self.ReferenceFileNames.split()
-        (xdim, ydim, zdim, ndim) = SingleImgSize(self.ReferenceFileNames[0])
-        for reference in self.ReferenceFileNames:
-            (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
-            if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
-                errors.append("Reference %s and %s have not the same size" % \
-                               (self.ReferenceFileNames[0], reference)) 
-
-        # Check that volume and projections have the same size
-        MD=MetaData(self.SelFileName)
-        if MD.containsLabel(MDL_IMAGE):        
-            (xdim2, ydim2, zdim2, ndim2) = ImgSize(self.SelFileName)
-            if (xdim2, ydim2) != (xdim, ydim):
-                errors.append("Volume and reference images have not the same size")
-        else:
-            errors.append("Input selfile does not contain an image column")
-    
+        validateInputSize(self.ReferenceFileNames, self.SelFileName, errors)
+            
         # Check options compatibility
         #if self.DoAlign2D and self.DoCtfCorrection:
         #    errors.append("Yyyou cannot realign classes AND perform CTF-correction. Switch either of them off!")

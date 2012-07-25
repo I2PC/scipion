@@ -8,7 +8,8 @@
 #
 
 from xmipp import MetaData, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ, getBlocksInMetaDataFile, \
-MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC, MDL_WEIGHT, MDL_CLASS_COUNT, MD_APPEND
+MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC, MDL_WEIGHT, MDL_CLASS_COUNT, MD_APPEND,\
+ImgSize, SingleImgSize, MDL_IMAGE
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
@@ -61,6 +62,22 @@ class ProtML2D(XmippProtocol):
             lines.append("Last classes: [iter%06d@%s]" % (iteration, mdRefs))
 
         return lines
+    
+    def validate(self):
+        errors = []
+        
+        md = MetaData(self.ImgMd)
+        if md.containsLabel(MDL_IMAGE):
+            # If using reference check that have same size as images:
+            if not self.DoGenerateReferences:
+                from protlib_xmipp import validateInputSize
+                mdRef = MetaData(self.RefMd)
+                references = mdRef.getColumnValues(MDL_IMAGE)
+                validateInputSize(references, self.ImgMd, errors)
+        else:
+            errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
+            
+        return errors 
     
     def getId(self):
         progId = "ml"
