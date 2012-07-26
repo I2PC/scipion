@@ -120,7 +120,7 @@ data_
                 tmpCTFDatName = self.SplitDefocusDocFile
             else:
                 tmpCTFDatName = self.SelFileName
-            tmpMd=Metadata('tmpCTFDatName')
+            tmpMd=MetaData(tmpCTFDatName)
             if not tmpMd.containsLabel(MDL_CTF_MODEL):
                 errors.append("input file: " + tmpCTFDatName + " has no CTF information available")
 
