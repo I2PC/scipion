@@ -55,8 +55,12 @@ class ProtProjMatch(XmippProtocol):
         # Now the CTF information and angles/shifts should come in images input file
         self.CTFDatName = self.DocFileName = ''
         
+        #FIXME ROB
         if self.DoCtfCorrection:
-            self.CTFDatName = self.SelFileName
+            if self.SplitDefocusDocFile:
+                self.CTFDatName = self.SplitDefocusDocFile
+            else:
+                self.CTFDatName = self.SelFileName
         
         if self.UseInitialAngles:
             self.DocFileName = self.SelFileName
@@ -108,6 +112,19 @@ EXAMPLE:
 data_
  _sampling_rate XXXXX
 """ %(self.SelFileName,self.SelFileName))
+            
+        #FIXME ROB
+        if self.DoCtfCorrection:
+            tmpCTFDatName=''
+            if self.SplitDefocusDocFile:
+                tmpCTFDatName = self.SplitDefocusDocFile
+            else:
+                tmpCTFDatName = self.SelFileName
+            tmpMd=Metadata('tmpCTFDatName')
+            if not tmpMd.containsLabel(MDL_CTF_MODEL):
+                errors.append("input file: " + tmpCTFDatName + " has no CTF information available")
+
+            
 
         return errors 
     
