@@ -7,7 +7,7 @@
 #
 # Authors: Roberto Marabini,
 #          Sjors Scheres,    March 2008
-#        Rewritten by Roberto Marabini
+#        Rewritten by Roberto Marabini 2012
 #
 
 import os
@@ -48,7 +48,7 @@ class ProtProjMatch(XmippProtocol):
         self.ReferenceFileNames = self.ReferenceFileNames.split()
         self.numberOfReferences = len(self.ReferenceFileNames)
 
-        self.Import = 'from protocol_projmatch_before_loop import *;\
+        self.Import = 'from protocol_projmatch_outside_loop import *;\
                        from protocol_projmatch_in_loop import *;' 
                 #Convert directories/files  to absolute path from projdir
                 
@@ -607,6 +607,7 @@ data_
         'BlockWithAllExpImages' : 'all_exp_images',
         'DocFileWithOriginalAngles': 'original_angles.doc',
         'Docfile_with_current_angles': 'current_angles',
+        'Docfile_with_final_results': 'results.xmd',
         'FilteredReconstruction': "filtered_reconstruction",
         'ReconstructedVolume': "reconstruction",
         'MaskReferenceVolume': "masked_reference",
@@ -1002,8 +1003,28 @@ data_
                                               )
         _dataBase.connection.commit()
 
+    def otherActionsToBePerformedAfterLoop(self):
+        _log = self.Log
+        _dataBase = self.Db
+        #creating results files
+        lastIteration   = self.NumberOfIterations
+        inDocfile       = self.getFilename('DocfileInputAnglesIters', iter=lastIteration)
+        resultsImages   = self.workingDirPath("results_images.xmd")
+        resultsClasses  = self.workingDirPath("results_classes.xmd")
+
+        _dataBase.insertStep('createResults'
+                            , verifyfiles     = [resultsImages,resultsClasses]
+                            , CTFDatName      = self.CTFDatName
+                            , DoCtfCorrection = self.DoCtfCorrection
+                            , inDocfile       = inDocfile
+                            , resultsImages   = resultsImages
+                            , resultsClasses  = resultsClasses
+                            )
+        _dataBase.connection.commit()
+        
     def defineSteps(self):
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
+        #self.otherActionsToBePerformedAfterLoop()
 
