@@ -187,6 +187,16 @@ class TestXmippPythonInterface(unittest.TestCase):
          fn2.compose("kk", 1, "xmp")
          self.assertEqual(str(fn1), str(fn2))
          self.assertNotEqual(str(fn1) + 'kk', str(fn2))
+         
+         fn1 = FileName("000001@kk.xmp")
+         fn2 = FileName("")
+         fn2.compose(1, "kk.xmp")
+         self.assertEqual(str(fn1), str(fn2))
+         
+         fn1 = FileName("jj@kk.xmp")
+         fn2 = FileName("")
+         fn2.compose("jj", "kk.xmp")
+         self.assertEqual(str(fn1), str(fn2))
 
     def test_FileName_isInStack(self):
          fn1 = FileName("1@.xmp")
