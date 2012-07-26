@@ -113,4 +113,27 @@ def initAngularReferenceFile(_log, BlockWithAllExpImages, CtfGroupDirectory, Ctf
         block_name= block+'@' +DocFileWithOriginalAngles
         MDctf.write(block_name, MD_APPEND)
         
+def createResults(log
+                 , CTFDatName
+                 , DoCtfCorrection
+                 , inDocfile
+                 , resultsImages
+                 , resultsClasses
+                  ):
+    ''' Create standard output results_images, result_classes'''
+    #read file with results
+    fn=FileName()
+    allExpImagesinDocfile=fn.compose("all_exp_images",inDocfile);
+    md = MetaData(allExpImagesinDocfile);
+    #read file with ctfs
+    if DoCtfCorrection:
+        #read only image and ctf_model
+        mdCTF = MetaData()
+        mdCTF.read(CTFDatName,[MDL_IMAGE,MDL_CTF_MODEL])
+        mdOut.intersection (md,mdCTF,MDL_IMAGE)
+    else:
+        mdOut=md
+    mdOut.write(fn.compose("images","resultsImages"))
+    #intersect
+    
 
