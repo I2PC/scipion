@@ -121,9 +121,12 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
     if (self != NULL)
     {
         PyObject *input = NULL, *pyStr = NULL;
+        PyObject *input2 = NULL, *pyStr2 = NULL;
         char *str = "", *ext = "";
+        char *str2 = "";
         int number = -1;
         size_t n = PyTuple_Size(args);
+        //"kk000001.xmp"
         if (n == 3 && PyArg_ParseTuple(args, "Ois", &input, &number, &ext))
         {
             pyStr = PyObject_Str(input);
@@ -131,12 +134,23 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
                 str = PyString_AsString(pyStr);
             self->filename->compose(str, number, ext);
         }
+        //"1@kk.xmp"
         else if (n == 2 && PyArg_ParseTuple(args, "iO", &number, &input))
         {
             pyStr = PyObject_Str(input);
             if (pyStr != NULL)
                 str = PyString_AsString(pyStr);
             self->filename->compose(number, str);
+        }
+        //"jj@kk.xmp"
+        else if (n == 2 && PyArg_ParseTuple(args, "OO", &input2, &input))
+        {
+            pyStr  = PyObject_Str(input);
+            pyStr2 = PyObject_Str(input2);
+            if (pyStr != NULL)
+                str = PyString_AsString(pyStr);
+                str2 = PyString_AsString(pyStr2);
+            self->filename->compose(str2, str);
         }
         else
             return NULL;
