@@ -38,6 +38,7 @@
 #include <data/polar.h>
 #include <data/normalize.h>
 #include <data/basic_pca.h>
+#include <data/morphology.h>
 
 /// @defgroup AutomaticPicking Image denoising
 /// @ingroup ReconsLibrary
@@ -81,18 +82,23 @@ public:
     int                          corr_num;
     int                          num_correlation;
     double                       scaleRate;
+    double                       datasetMax;
+    double                       datasetMin;
     int                          NRsteps;
 
+    MultidimArray<double>        convolveRes;
     MultidimArray<double>        pcaModel;
     MultidimArray<double>        particleAvg;
     MultidimArray<double>        dataSet;
     MultidimArray<double>        dataSet1;
     MultidimArray<double>        classLabel;
     MultidimArray<double>        classLabel1;
+    MultidimArray<double>        maxA;
+    MultidimArray<double>        minA;
 
     std::vector<Particle2>       auto_candidates;
     std::vector<Particle2>       rejected_particles;
-    Image<double>   micrographStack;
+    Image<double>                micrographStack;
 public:
 
     /// Empty constructor
@@ -107,11 +113,16 @@ public:
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
 
+    /// Extract statistical features
+    void extractStatics(MultidimArray<double> &inputVec,MultidimArray<double> &features);
     /// Convert an image to its polar form
     void convert2Polar(MultidimArray<double> &particleImage, MultidimArray<double> &polar);
 
     /// Calculate the correlation of different polar channels
     void polarCorrelation(MultidimArray<double> &Ipolar,MultidimArray<double> &IpolarCorr);
+
+    /// Do the convolution with the average of the particles
+    void applyConvolution();
 
     /// Project a vector in PCA space
     double PCAProject(MultidimArray<double> &pcaBasis,MultidimArray<double> &vec);
@@ -124,19 +135,22 @@ public:
     void extractNonParticle(std::vector<Particle2> &negativePosition);
 
     /// Extract different filter channels from particles and Non-Particles within a Micrograph
-    void extractInvariant(const FileName &fnInvariantFeat);
+    void extractInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles);
 
     /// Extract different filter channels from particles within a Micrograph
-    void extractPositiveInvariant(const FileName &fnInvariantFeat);
+    void extractPositiveInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles);
 
     /// Extract different filter channels from Non-Particles within a Micrograph
-    void extractNegativeInvariant(const FileName &fnInvariantFeat);
+    void extractNegativeInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles);
 
     //Build a feature vector from samples
-    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &featureVec);
+    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &staticVec,MultidimArray<double> &featureVec);
 
     /// Extract Invariant Features from a particle at x and y position
     void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y);
+
+    /// Provide the optimum search space for particles
+    void buildSearchSpace(std::vector<Particle2> &positionArray);
 
     /// Train a PCA with negative and positive vectors
     void trainSVM(const FileName &fnModel,int numClassifier);
@@ -145,7 +159,7 @@ public:
     void trainPCA(const FileName &fnPositiveFeat);
 
     /// Make dataset from the data in file
-    void add2Dataset(const FileName &fnInvariantFeat,int lable);
+    void add2Dataset(const FileName &fnInvariantFeat,const FileName &fnParticles,int lable);
 
     /// Add the false positives to the dataset
     void add2Dataset();
@@ -175,7 +189,7 @@ public:
     void loadTrainingSet(const FileName &fn_root);
 
     /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles();
+    int automaticallySelectParticles(bool use2Classifier);
 
     /// Generate two different trainsets for two SVMs.
     void generateTrainSet();
