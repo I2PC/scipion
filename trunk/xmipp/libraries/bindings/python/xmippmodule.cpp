@@ -117,6 +117,7 @@ static PyObject *
 FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     FileNameObject *self = (FileNameObject*) obj;
+    int ok;
 
     if (self != NULL)
     {
@@ -134,30 +135,33 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
                 str = PyString_AsString(pyStr);
             self->filename->compose(str, number, ext);
         }
-        //"1@kk.xmp"
-        else if (n == 2 && PyArg_ParseTuple(args, "iO", &number, &input))
+        else if (n == 2  && PyArg_ParseTuple(args, "OO", &input, &input2))
         {
-            pyStr = PyObject_Str(input);
-            if (pyStr != NULL)
-                str = PyString_AsString(pyStr);
-            self->filename->compose(number, str);
-        }
-        //"jj@kk.xmp"
-        else if (n == 2 && PyArg_ParseTuple(args, "OO", &input2, &input))
-        {
-            pyStr  = PyObject_Str(input);
-            pyStr2 = PyObject_Str(input2);
-            if (pyStr != NULL)
-                str = PyString_AsString(pyStr);
+            if( PyString_Check( input ) )
+            {
+                //"jj@kk.xmp"
+                pyStr  = PyObject_Str(input);
+                pyStr2 = PyObject_Str(input2);
+                if (pyStr != NULL)
+                    str = PyString_AsString(pyStr);
+                if (pyStr2 != NULL)
+                    str2 = PyString_AsString(pyStr2);
+                self->filename->compose(str, str2);
+            }
+            else if ( PyInt_Check( input ) )
+            {
+                //"1@kk.xmp"
+                number=PyInt_AsLong(input);
+                pyStr2  = PyObject_Str(input2);
                 str2 = PyString_AsString(pyStr2);
-            self->filename->compose(str2, str);
+                self->filename->compose(number, str2);
+            }
+            else
+                return NULL;
         }
-        else
-            return NULL;
+        Py_RETURN_NONE;//Return None(similar to void in C)
     }
-    Py_RETURN_NONE;//Return None(similar to void in C)
 }
-
 /* composeBlock */
 static PyObject *
 FileName_composeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1679,6 +1683,10 @@ MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_aggregateSingleInt(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_addIndex(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -2641,8 +2649,8 @@ MetaData_methods[] =
           "Write MetaData content to disk" },
         { "readBlock", (PyCFunction) MetaData_readBlock,
           METH_VARARGS, "Read block from a metadata file" },
-//        { "writeBlock", (PyCFunction) MetaData_writeBlock,
-//          METH_VARARGS, "Append block to a metadata" },
+        //        { "writeBlock", (PyCFunction) MetaData_writeBlock,
+        //          METH_VARARGS, "Append block to a metadata" },
         { "append", (PyCFunction) MetaData_append,
           METH_VARARGS, "Append MetaData content to disk" },
         { "addObject", (PyCFunction) MetaData_addObject,
@@ -2700,8 +2708,8 @@ MetaData_methods[] =
           METH_VARARGS, "Fill a column with constant value" },
         { "copyColumn", (PyCFunction) MetaData_copyColumn,
           METH_VARARGS, "Copy the values of one column to another" },
-          { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
-                    METH_VARARGS, "Copy the values of one column to another in other md" },
+        { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
+          METH_VARARGS, "Copy the values of one column to another in other md" },
         { "makeAbsPath", (PyCFunction) MetaData_makeAbsPath,
           METH_VARARGS,
           "Make filenames with absolute paths" },
@@ -2718,7 +2726,11 @@ MetaData_methods[] =
         { "aggregateSingle",
           (PyCFunction) MetaData_aggregateSingle,
           METH_VARARGS,
-          "Aggregate operation in metadata (single value result)" },
+          "Aggregate operation in metadata (double single value result)" },
+        { "aggregateSingleInt",
+          (PyCFunction) MetaData_aggregateSingleInt,
+          METH_VARARGS,
+          "Aggregate operation in metadata (int single value result)" },
         { "aggregate", (PyCFunction) MetaData_aggregate,
           METH_VARARGS,
           "Aggregate operation in metadata. The results is stored in self." },
@@ -2732,6 +2744,11 @@ MetaData_methods[] =
             (PyCFunction) MetaData_join,
             METH_VARARGS,
             "join between two metadatas, use MDL_UNDEFINED as label. The results is stored in self." },
+        {
+            "addIndex",
+            (PyCFunction) MetaData_addIndex,
+            METH_VARARGS,
+            "Create index so search is faster." },
         { "readPlain", (PyCFunction) MetaData_readPlain,
           METH_VARARGS,
           "Import metadata from a plain text file." },
@@ -2913,6 +2930,34 @@ MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* aggregateSingleInt */
+static PyObject *
+MetaData_aggregateSingleInt(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    AggregateOperation op;
+    MDLabel label;
+    PyObject *pyValue;
+
+    if (PyArg_ParseTuple(args, "ii", &op, &label))
+    {
+        try
+        {
+            MDObject * object = new MDObject((MDLabel) label);
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->aggregateSingleInt(*object, (AggregateOperation) op,
+                                               (MDLabel) label);
+            pyValue = getMDObjectValue(object);
+            delete object;
+            return pyValue;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /*aggregate*/
 static PyObject *
 MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -3038,6 +3083,26 @@ MetaData_getComment(PyObject *obj, PyObject *args, PyObject *kwargs)
     return PyString_FromString(self->metadata->getComment().c_str());
 }
 
+/* addIndex MetaData_join*/
+static PyObject *
+MetaData_addIndex(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    if (PyArg_ParseTuple(args, "i", &label))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->addIndex((MDLabel)label);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 /* join */
 static PyObject *
 MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -3283,11 +3348,11 @@ MetaData_copyColumnTo(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-          if (MetaData_Check(pyMd))
-          {
-              MetaData_Value(obj).copyColumnTo(MetaData_Value(pyMd), (MDLabel)labelDst, (MDLabel)labelSrc);
-              Py_RETURN_TRUE;
-          }
+            if (MetaData_Check(pyMd))
+            {
+                MetaData_Value(obj).copyColumnTo(MetaData_Value(pyMd), (MDLabel)labelDst, (MDLabel)labelSrc);
+                Py_RETURN_TRUE;
+            }
         }
         catch (XmippError &xe)
         {
