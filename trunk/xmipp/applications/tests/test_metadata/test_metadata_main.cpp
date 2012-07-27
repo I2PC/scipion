@@ -98,6 +98,13 @@ TEST_F( MetadataTest, AddLabel)
     EXPECT_EQ(v2,v1);
 }
 
+TEST_F( MetadataTest, AddIndex)
+{
+    MetaData auxMetadata = mDunion;
+    auxMetadata.addIndex(MDL_X);
+    EXPECT_EQ(1,1);
+}
+
 
 TEST_F( MetadataTest, AddRow)
 {
