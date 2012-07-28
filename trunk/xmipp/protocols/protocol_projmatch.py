@@ -17,7 +17,10 @@ from xmipp import MetaData, FileName, FILENAMENUMBERLENGTH, AGGR_COUNT,\
          MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE,\
          MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_WEIGHT,\
          MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR, MDValueEQ, MDL_REF3D,\
-         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z, Euler_angles2matrix
+         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z, Euler_angles2matrix,\
+         MD_APPEND,MDL_DEFGROUP
+         
+    
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector,\
      getComponentFromVector, runShowJ, runJob, createUniqueFileName
@@ -1026,5 +1029,5 @@ data_
         self.preRun()
         self.otherActionsToBePerformedBeforeLoop()
         self.actionsToBePerformedInsideLoop()
-        #self.otherActionsToBePerformedAfterLoop()
+        self.otherActionsToBePerformedAfterLoop()
 
