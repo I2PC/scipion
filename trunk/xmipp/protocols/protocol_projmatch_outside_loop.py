@@ -9,31 +9,31 @@ from os.path import join
 #------------------------------------------------------------------------
 #make ctf groups
 #------------------------------------------------------------------------
-def executeCtfGroups (_log, 
-                                 CTFDatName, 
+def executeCtfGroups (_log,
+                                 CTFDatName,
                                  CtfGroupDirectory,
-                                 CtfGroupMaxDiff, 
+                                 CtfGroupMaxDiff,
                                  CtfGroupMaxResol,
                                  CtfGroupRootName,
                                  DataArePhaseFlipped,
                                  DoAutoCtfGroup,
                                  DoCtfCorrection,
-                                 PaddingFactor, 
+                                 PaddingFactor,
                                  SamplingRate ,
                                  SelFileName,
                                  SplitDefocusDocFile,
-                                 WienerConstant, 
+                                 WienerConstant,
                                  ) :
-    import glob, sys,shutil
+    import glob, sys, shutil
     from protlib_utils import runJob
     if not os.path.exists(CtfGroupDirectory):
         os.makedirs(CtfGroupDirectory)
     printLog("executeCtfGroups01", _log)
 
     if(not DoCtfCorrection):
-        MD=MetaData(SelFileName)
-        block_name= 'ctfGroup'+str(1).zfill(FILENAMENUMBERLENGTH) +\
-                    '@' + join(CtfGroupDirectory, CtfGroupRootName) +'_images.sel'
+        MD = MetaData(SelFileName)
+        block_name = 'ctfGroup' + str(1).zfill(FILENAMENUMBERLENGTH) + \
+                    '@' + join(CtfGroupDirectory, CtfGroupRootName) + '_images.sel'
         MD.write(block_name)
         return 1
 
@@ -46,7 +46,7 @@ def executeCtfGroups (_log,
 
     MDsel = MetaData();
     MDsel.read(SelFileName)
-    MDctfdata.intersection(MDsel,MDL_IMAGE)
+    MDctfdata.intersection(MDsel, MDL_IMAGE)
     tmpCtfdat = uniqueFilename(CTFDatName)
     MDctfdata.write(tmpCtfdat)
     command = \
@@ -71,7 +71,7 @@ def executeCtfGroups (_log,
             _log.info(message)
             sys.exit()
     
-    if runJob(_log,"xmipp_ctf_group",command):
+    if runJob(_log, "xmipp_ctf_group", command):
         return 1
 #    fn = CtfGroupDirectory + '/'+\
 #                  CtfGroupRootName+\
@@ -83,9 +83,9 @@ def initAngularReferenceFile(_log, BlockWithAllExpImages, CtfGroupDirectory, Ctf
     printLog("initAngularReferenceFile", _log)
     import shutil
     
-    MD=MetaData()
+    MD = MetaData()
 
-    if len(DocFileName)>1:
+    if len(DocFileName) > 1:
         #shutil.copy(DocFileName,DocFileWithOriginalAngles)
         MD.read(DocFileName)
         
@@ -96,21 +96,21 @@ def initAngularReferenceFile(_log, BlockWithAllExpImages, CtfGroupDirectory, Ctf
         MD.addLabel(MDL_ANGLE_TILT)
         MD.addLabel(MDL_ANGLE_PSI)
     
-    MD.write(BlockWithAllExpImages + '@'+ DocFileWithOriginalAngles)
-    block_name= 'ctfGroup'+str(1).zfill(FILENAMENUMBERLENGTH) +\
-                    '@' + join(CtfGroupDirectory, CtfGroupRootName) +'_images.sel'
-    blocklist = getBlocksInMetaDataFile(join(CtfGroupDirectory, CtfGroupRootName) +'_images.sel')
+    MD.write(BlockWithAllExpImages + '@' + DocFileWithOriginalAngles)
+    block_name = 'ctfGroup' + str(1).zfill(FILENAMENUMBERLENGTH) + \
+                    '@' + join(CtfGroupDirectory, CtfGroupRootName) + '_images.sel'
+    blocklist = getBlocksInMetaDataFile(join(CtfGroupDirectory, CtfGroupRootName) + '_images.sel')
     
     MDctf = MetaData()
     mDaux = MetaData()
     mdList = [MDL_IMAGE]
     for block in blocklist:
         #read blocks
-        MDctf.read(block+'@'+join(CtfGroupDirectory, CtfGroupRootName)+'_images.sel', mdList)
+        MDctf.read(block + '@' + join(CtfGroupDirectory, CtfGroupRootName) + '_images.sel', mdList)
         #add angles to blocks
-        mDaux.join(MD,MDctf, MDL_UNDEFINED,MDL_UNDEFINED,NATURAL)
+        mDaux.join(MD, MDctf, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
         #MDctf.intersection(MD, MDL_IMAGE)
-        block_name= block+'@' +DocFileWithOriginalAngles
+        block_name = block + '@' + DocFileWithOriginalAngles
         MDctf.write(block_name, MD_APPEND)
         
 def createResults(log
@@ -121,19 +121,58 @@ def createResults(log
                  , resultsClasses
                   ):
     ''' Create standard output results_images, result_classes'''
+    from os import remove
+    from os.path import exists
     #read file with results
-    fn=FileName()
-    allExpImagesinDocfile=fn.compose("all_exp_images",inDocfile);
-    md = MetaData(allExpImagesinDocfile);
+    allExpImagesinDocfile = FileName()
+    all_exp_images="all_exp_images"
+    allExpImagesinDocfile.compose(all_exp_images, inDocfile)
+    md = MetaData(allExpImagesinDocfile)
     #read file with ctfs
+    mdOut = MetaData()
     if DoCtfCorrection:
         #read only image and ctf_model
         mdCTF = MetaData()
-        mdCTF.read(CTFDatName,[MDL_IMAGE,MDL_CTF_MODEL])
-        mdOut.intersection (md,mdCTF,MDL_IMAGE)
+        mdCTF.read(CTFDatName, [MDL_IMAGE, MDL_CTF_MODEL])
+        md.addIndex(MDL_IMAGE)
+        mdCTF.addIndex(MDL_IMAGE)
+        mdOut.join (md, mdCTF, MDL_IMAGE, MDL_IMAGE, NATURAL_JOIN)
     else:
-        mdOut=md
-    mdOut.write(fn.compose("images","resultsImages"))
-    #intersect
-    
+        mdOut = mdCTF
+    mdref3D = MetaData()
+    mdrefCTFgroup = MetaData()
+    mdref3D.aggregate(mdOut, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
+    mdrefCTFgroup.aggregate(mdOut, AGGR_COUNT, MDL_DEFGROUP, MDL_DEFGROUP, MDL_COUNT)
+    #total number Image
+    numberImages = mdOut.size()
+    #total number CTF
+    numberDefocusGroups = mdrefCTFgroup.size()
+    #total number volumes 
+    numberRef3D = mdref3D.size()
+    fnResultImages=FileName()
+    fnResultClasses=FileName()
 
+    fnResultImages.compose("images",resultsImages)
+    comment  = " numberImages=%d..................................................... "%numberImages
+    comment += " numberDefocusGroups=%d................................................."%numberDefocusGroups
+    comment += " numberRef3D=%d........................................................."%numberRef3D
+    mdOut.setComment(comment)
+    mdOut.write(fnResultImages)
+    
+    #make query and store ref3d with all
+    for id in mdref3D:
+        ref3D = mdref3D.getValue(MDL_REF3D, id)
+        md.importObjects(mdOut, MDValueEQ(MDL_REF3D, ref3D))
+        fnResultClasses.compose(("images_ref3d%06d"%ref3D),resultsClasses)
+        md.write(fnResultClasses,MD_APPEND)
+    
+    md2=MetaData()
+    for id in mdref3D:
+        ref3D = mdref3D.getValue(MDL_REF3D, id)
+        #a multiquey would be better but I do not know how to implement it in python
+        md.importObjects(mdOut, MDValueEQ(MDL_REF3D, ref3D))
+        for id in mdrefCTFgroup:
+            defocusGroup = mdrefCTFgroup.getValue(MDL_DEFGROUP, id)
+            md2.importObjects(md, MDValueEQ(MDL_DEFGROUP, defocusGroup))
+            fnResultClasses.compose(("images_ref3d%06d_defocusGroup%06d"%(ref3D,defocusGroup)),resultsClasses)
+            md2.write(fnResultClasses,MD_APPEND)
