@@ -130,13 +130,14 @@ void Histogram1D::write(const FileName &fn,
     MetaData auxMD;
     MDRow row;
     double auxD;
+    size_t auxT;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(*this)
     {
         index2val(i, auxD);
         this->index2val(i, auxD);
         row.setValue(mdlValue,auxD);
-        auxD=A1D_ELEM(*this, i);
-        row.setValue(mdlCount,auxD);
+        auxT=(size_t)A1D_ELEM(*this, i);
+        row.setValue(mdlCount,auxT);
         auxMD.addRow(row);
     }
     auxMD.write(fn);
