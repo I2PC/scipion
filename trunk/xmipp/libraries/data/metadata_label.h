@@ -50,13 +50,16 @@ enum MDLabel
     MDL_FIRST_LABEL, ///< The label MDL_OBJID is special and should not be used
     MDL_OBJID = MDL_FIRST_LABEL, ///< object id (int), NOTE: This label is special and shouldn't be used
 
-    MDL_ANGLE_COMPARISON, ///< Angular comparison (see angular_distance.cpp)
     MDL_ANGLE_PSI, ///< Psi angle of an image (double,degrees)
     MDL_ANGLE_PSI2, ///< Psi angle of an image (double,degrees)
+    MDL_ANGLE_PSI_DIFF, ///< difference between psi angles (double,degrees)
     MDL_ANGLE_ROT, ///< Rotation angle of an image (double,degrees)
     MDL_ANGLE_ROT2, ///< Rotation angle of an image (double,degrees)
+    MDL_ANGLE_ROT_DIFF, ///< difference between rot angles (double,degrees)
     MDL_ANGLE_TILT, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_TILT2, ///< Tilting angle of an image (double,degrees)
+    MDL_ANGLE_TILT_DIFF, ///< difference between tilt angles (double,degrees)
+    MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
     MDL_IMAGE1, ///< Image associated to this object (std::string)
@@ -315,8 +318,13 @@ enum MDLabel
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
     MDL_SHIFT_X, ///< Shift for the image in the X axis (double)
+    MDL_SHIFT_X2, ///< Shift for the image in the X axis (double)
+    MDL_SHIFT_X_DIFF, ///< difference in Shift along X axis (double)
     MDL_SHIFT_Y, ///< Shift for the image in the Y axis (double)
+    MDL_SHIFT_Y2, ///< Shift for the image in the Y axis (double)
+    MDL_SHIFT_Y_DIFF, ///< difference in Shift along  Y axis (double)
     MDL_SHIFT_Z, ///< Shift for the image in the Z axis (double)
+    MDL_SHIFT_DIFF, ///< shift difference (double)
     MDL_SIGMANOISE, ///< Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, ///< Standard deviation of the offsets in ML model
     MDL_SIGNALCHANGE, ///< Signal change for an image
@@ -677,21 +685,25 @@ private:
         //The label MDL_OBJID is special and should not be used
         MDL::addLabel(MDL_OBJID, LABEL_SIZET, "objId");
 
-        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR_DOUBLE, "angle_comparison");
-        MDL::addLabelAlias(MDL_ANGLE_COMPARISON, "angleComparison"); //3.0
+        //MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR_DOUBLE, "angle_comparison");
+        //MDL::addLabelAlias(MDL_ANGLE_COMPARISON, "angleComparison"); //3.0
 
         MDL::addLabel(MDL_ANGLE_PSI, LABEL_DOUBLE, "anglePsi");
         MDL::addLabelAlias(MDL_ANGLE_PSI, "psi");
         MDL::addLabel(MDL_ANGLE_PSI2, LABEL_DOUBLE, "anglePsi2");
         MDL::addLabelAlias(MDL_ANGLE_PSI2, "psi2");
+        MDL::addLabel(MDL_ANGLE_PSI_DIFF, LABEL_DOUBLE, "anglePsiDiff");
         MDL::addLabel(MDL_ANGLE_ROT, LABEL_DOUBLE, "angleRot");
         MDL::addLabelAlias(MDL_ANGLE_ROT, "rot");
         MDL::addLabel(MDL_ANGLE_ROT2, LABEL_DOUBLE, "angleRot2");
         MDL::addLabelAlias(MDL_ANGLE_ROT2, "rot2");
+        MDL::addLabel(MDL_ANGLE_ROT_DIFF, LABEL_DOUBLE, "angleRotDiff");
         MDL::addLabel(MDL_ANGLE_TILT, LABEL_DOUBLE, "angleTilt");
         MDL::addLabelAlias(MDL_ANGLE_TILT, "tilt");
         MDL::addLabel(MDL_ANGLE_TILT2, LABEL_DOUBLE, "angleTilt2");
         MDL::addLabelAlias(MDL_ANGLE_TILT2, "tilt2");
+        MDL::addLabel(MDL_ANGLE_TILT_DIFF, LABEL_DOUBLE, "angleTiltDiff");
+        MDL::addLabel(MDL_ANGLE_DIFF, LABEL_DOUBLE, "angleDiff");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
 
@@ -1053,10 +1065,15 @@ private:
 
         MDL::addLabel(MDL_SHIFT_X, LABEL_DOUBLE, "shiftX");
         MDL::addLabelAlias(MDL_SHIFT_X, "Xoff");
+        MDL::addLabel(MDL_SHIFT_X2, LABEL_DOUBLE, "shiftX2");
+        MDL::addLabel(MDL_SHIFT_X_DIFF, LABEL_DOUBLE, "shiftXDiff");
         MDL::addLabel(MDL_SHIFT_Y, LABEL_DOUBLE, "shiftY");
         MDL::addLabelAlias(MDL_SHIFT_Y, "Yoff");
+        MDL::addLabel(MDL_SHIFT_Y2, LABEL_DOUBLE, "shiftY2");
+        MDL::addLabel(MDL_SHIFT_Y_DIFF, LABEL_DOUBLE, "shiftYDiff");
         MDL::addLabel(MDL_SHIFT_Z, LABEL_DOUBLE, "shiftZ");
         MDL::addLabelAlias(MDL_SHIFT_Z, "Zoff");
+        MDL::addLabel(MDL_SHIFT_DIFF, LABEL_DOUBLE, "shiftDIFF");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
