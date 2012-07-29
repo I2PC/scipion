@@ -1061,9 +1061,9 @@ TEST_F( MetadataTest, getValue)
     v1[0]=1.;
     v1[1]=2.;
     v1[2]=3.;
-    auxMD1.setValue(MDL_ANGLE_COMPARISON,v1,id);
+    auxMD1.setValue(MDL_CLASSIFICATION_DATA,v1,id);
     id = auxMD1.firstObject();
-    auxMD1.getValue(MDL_ANGLE_COMPARISON,v2, id);
+    auxMD1.getValue(MDL_CLASSIFICATION_DATA,v2, id);
 
     EXPECT_EQ(v1[0],v2[0]);
     EXPECT_EQ(v1[1],v2[1]);

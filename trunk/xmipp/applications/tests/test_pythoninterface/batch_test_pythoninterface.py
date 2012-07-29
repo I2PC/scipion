@@ -229,7 +229,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertAlmostEqual(defocus, 200)
         count = mD.getValue(MDL_COUNT, 3L)
         self.assertEqual(count, 30)
-        list = mD.getValue(MDL_ANGLE_COMPARISON, 1L)
+        list = mD.getValue(MDL_CLASSIFICATION_DATA, 1L)
         self.assertEqual(list, [1.0, 2.0, 3.0])
         ref = mD.getValue(MDL_REF3D, 2L)
         self.assertEqual(ref, 2)
@@ -326,7 +326,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          _CTFModel
          _CTF_Defocus_U
          _count
-         _angleComparison
+         _classificationData
          _ref3d
          000001@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10 ' 1.000000     2.000000     3.000000 '         -1
          000002@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 ' 1.000000     4.000000     9.000000 '          2
@@ -345,7 +345,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
             list = [x ** i for x in listOrig]
-            md.setValue(MDL_ANGLE_COMPARISON, list, id)
+            md.setValue(MDL_CLASSIFICATION_DATA, list, id)
             md.setValue(MDL_REF3D, (i * ii), id)
             ii *= -1
             
@@ -386,7 +386,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
             list = [x ** i for x in listOrig]
-            md.setValue(MDL_ANGLE_COMPARISON, list, id)
+            md.setValue(MDL_CLASSIFICATION_DATA, list, id)
             md.setValue(MDL_REF3D, (i * ii), id)
             ii *= -1
             
@@ -460,7 +460,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             md.setValue(MDL_CTF_DEFOCUSU, (i * ii * 100.0), id)
             md.setValue(MDL_COUNT, (i * 10L), id)
             list = [x ** i for x in listOrig]
-            md.setValue(MDL_ANGLE_COMPARISON, list, id)
+            md.setValue(MDL_CLASSIFICATION_DATA, list, id)
             md.setValue(MDL_REF3D, (i * ii), id)
             ii *= -1
             
@@ -525,6 +525,12 @@ class TestXmippPythonInterface(unittest.TestCase):
             
         except Exception, e:
             print str(e)
+
+    def test_SymList_readSymmetryFile(self):
+        '''SymList'''
+        a=SymList()
+        a.readSymmetryFile("i3")
+        self.assertEqual(True, True)
 
        
 from  XmippPythonTestResult import XmippPythonTestResult
