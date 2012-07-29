@@ -32,6 +32,7 @@
 #include <data/xmipp_image_generic.h>
 #include <data/xmipp_image_extension.h>
 #include <data/xmipp_color.h>
+#include <data/symmetries.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
 
 static PyObject * PyXmippError;
@@ -44,6 +45,9 @@ static PyObject * PyXmippError;
 
 #define MDQuery_Check(v) (((v)->ob_type == &MDQueryType))
 #define MDQuery_Value(v)  ((*((MDQueryObject*)(v))->query))
+
+#define SymList_Check(v) (((v)->ob_type == &SymListType))
+#define SymList_Value(v)  ((*((SymListObject*)(v))->symlist))
 
 #define Image_Check(v) (((v)->ob_type == &ImageType))
 #define Image_Value(v) ((*((ImageObject*)(v))->image))
@@ -1655,6 +1659,150 @@ static PyTypeObject MDQueryType = {
                                       0, /* tp_alloc */
                                       0, /* tp_new */
                                   };
+
+/***************************************************************/
+/*                            SymList                          */
+/***************************************************************/
+
+/*SymList Object*/
+typedef struct
+{
+    PyObject_HEAD
+    SymList * symlist;
+}
+SymListObject;
+
+/* Destructor */
+static void SymList_dealloc(SymListObject* self)
+{
+    delete self->symlist;
+    self->ob_type->tp_free((PyObject*) self);
+}
+static PyObject *
+SymList_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+
+/* String representation */
+static PyObject *
+SymList_readSymmetryFile(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+    char *str = "";
+    if (PyArg_ParseTuple(args, "s", &str))
+    {
+        try
+        {
+            SymListObject *self = (SymListObject*) obj;
+            self->symlist->readSymmetryFile(str);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+///* String representation */
+//static PyObject *
+//SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs)
+//{
+//    double rot1;
+//    double tilt1;
+//    double psi1;
+//    double rot2;
+//    double tilt2;
+//    double psi2;
+//    bool projdir_mode;
+//    bool check_mirrors;
+//    bool object_rotation
+//
+//    if (PyArg_ParseTuple(args, "dddddd|OOO"),
+//            &rot1, &rot2,
+//            &tilt1, &tilt2,
+//            &psi1, &psi2,
+//            &projdir_mode, &check_mirrors,<<<<<PYOBJ
+//            &object_rotation
+//    		))
+//    {
+//        try
+//        {
+//            SymListObject *self = (SymListObject*) obj;
+//            self->symlist->computeDistance(double rot1, double tilt1, double psi1,
+//                                           double &rot2, double &tilt2, double &psi2,
+//                                           bool projdir_mode, bool check_mirrors,
+//                                           bool object_rotation);
+//            Py_RETURN_NONE;
+//        }
+//        catch (XmippError &xe)
+//        {
+//            PyErr_SetString(PyXmippError, xe.msg.c_str());
+//        }
+//    }
+//    return NULL;
+//}
+
+/* SymList methods */
+static PyMethodDef SymList_methods[] = {
+                                           { "readSymmetryFile", (PyCFunction) SymList_readSymmetryFile,
+                                             METH_VARARGS, "read symmetry file" },
+                                           { NULL } /* Sentinel */
+                                       };
+
+/*SymList Type */
+static PyTypeObject SymListType = {
+                                      PyObject_HEAD_INIT(NULL)
+                                      0, /*ob_size*/
+                                      "xmipp.SymList", /*tp_name*/
+                                      sizeof(SymListObject), /*tp_basicsize*/
+                                      0, /*tp_itemsize*/
+                                      (destructor)SymList_dealloc, /*tp_dealloc*/
+                                      0, /*tp_print*/
+                                      0, /*tp_getattr*/
+                                      0, /*tp_setattr*/
+                                      0, /*tp_compare*/
+                                      0, /*tp_repr*/
+                                      0, /*tp_as_number*/
+                                      0, /*tp_as_sequence*/
+                                      0, /*tp_as_mapping*/
+                                      0, /*tp_hash */
+                                      0, /*tp_call*/
+                                      0, /*tp_str*/
+                                      0, /*tp_getattro*/
+                                      0, /*tp_setattro*/
+                                      0, /*tp_as_buffer*/
+                                      Py_TPFLAGS_DEFAULT, /*tp_flags*/
+                                      "Python wrapper to Xmipp SymList class",/* tp_doc */
+                                      0, /* tp_traverse */
+                                      0, /* tp_clear */
+                                      0, /* tp_richcompare */
+                                      0, /* tp_weaklistoffset */
+                                      0, /* tp_iter */
+                                      0, /* tp_iternext */
+                                      SymList_methods, /* tp_methods */
+                                      0, /* tp_members */
+                                      0, /* tp_getset */
+                                      0, /* tp_base */
+                                      0, /* tp_dict */
+                                      0, /* tp_descr_get */
+                                      0, /* tp_descr_set */
+                                      0, /* tp_dictoffset */
+                                      0, /* tp_init */
+                                      0, /* tp_alloc */
+                                      SymList_new, /* tp_new */
+                                  };
+
+/* Constructor */
+static PyObject *
+SymList_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    SymListObject *self = (SymListObject*) type->tp_alloc(type, 0);
+    if (self != NULL)
+    {
+        self->symlist = new SymList();
+        //self->symlist->readSymmetryFile("i3");
+    }
+    return (PyObject *) self;
+}
 
 /***************************************************************/
 /*                            MetaData                         */
@@ -4297,6 +4445,12 @@ PyMODINIT_FUNC initxmipp(void)
     Py_INCREF(&MDQueryType);
     PyModule_AddObject(module, "MDQuery", (PyObject *) &MDQueryType);
 
+    // Add SymList type,
+    if (PyType_Ready(&SymListType) < 0)
+        return;
+    Py_INCREF(&SymListType);
+    PyModule_AddObject(module, "SymList", (PyObject *) &SymListType);
+
     //Add MetaData type
     if (PyType_Ready(&MetaDataType) < 0)
         return;
@@ -4340,7 +4494,6 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_FIRST_LABEL", (long) MDL_FIRST_LABEL);
     //Metadata Labels
     addIntConstant(dict, "MDL_OBJID", (size_t) MDL_OBJID);
-    addIntConstant(dict, "MDL_ANGLE_COMPARISON", (long) MDL_ANGLE_COMPARISON);
     addIntConstant(dict, "MDL_ANGLE_PSI2", (long) MDL_ANGLE_PSI2);
     addIntConstant(dict, "MDL_ANGLE_PSI", (long) MDL_ANGLE_PSI);
     addIntConstant(dict, "MDL_ANGLE_ROT2", (long) MDL_ANGLE_ROT2);
@@ -4355,6 +4508,7 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_AVG", (long) MDL_AVG);
     addIntConstant(dict, "MDL_BGMEAN", (long) MDL_BGMEAN);
     addIntConstant(dict, "MDL_BLOCK_NUMBER", (long) MDL_BLOCK_NUMBER);
+    addIntConstant(dict, "MDL_CLASSIFICATION_DATA", (long) MDL_CLASSIFICATION_DATA);
     addIntConstant(dict, "MDL_CRYSTAL_CELLX", (long) MDL_CRYSTAL_CELLX);
     addIntConstant(dict, "MDL_CRYSTAL_CELLY", (long) MDL_CRYSTAL_CELLY);
     addIntConstant(dict, "MDL_COMMENT", (long) MDL_COMMENT);
