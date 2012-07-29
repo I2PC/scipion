@@ -29,6 +29,7 @@
 
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
+#include "metadata_label.h"
 
 /// @defgroup Histograms Histograms
 /// @ingroup DataLibrary
@@ -255,7 +256,7 @@ public:
 
     /** Write an histogram to disk.
      */
-    void write(const FileName& fn);
+    void write(const FileName& fn, MDLabel=MDL_X, MDLabel=MDL_COUNT);
 
     /** Value --> Index
      *
