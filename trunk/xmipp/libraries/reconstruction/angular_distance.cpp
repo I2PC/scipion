@@ -115,7 +115,7 @@ void ProgAngularDistance::run()
     shift_diff.resize(rot_diff);
 
     // Build output comment
-    DF_out.setComment("image rot1 rot2 diff_rot tilt1 tilt2 diff_tilt psi1 psi2 diff_psi ang_dist X1 X2 Xdiff Y1 Y2 Ydiff ShiftDiff");
+    /////DF_out.setComment("image rot1 rot2 diff_rot tilt1 tilt2 diff_tilt psi1 psi2 diff_psi ang_dist X1 X2 Xdiff Y1 Y2 Ydiff ShiftDiff");
 
     int i = 0;
     size_t id;
@@ -123,6 +123,7 @@ void ProgAngularDistance::run()
     std::vector<double> output;
     output.resize(17,0);
     bool fillOutput=fn_out!="";
+    MDRow row;
     FOR_ALL_OBJECTS_IN_METADATA2(DF1, DF2)
     {
         // Read input data
@@ -175,27 +176,45 @@ void ProgAngularDistance::run()
         // Fill the output result
         if (fillOutput)
         {
-            output[0]=rot1;
-            output[1]=rot2p;
-            output[2]=rot_diff(i);
-            output[3]=tilt1;
-            output[4]=tilt2p;
-            output[5]=tilt_diff(i);
-            output[6]=psi1;
-            output[7]=psi2p;
-            output[8]=psi_diff(i);
-            output[9]=distp;
-            output[10]=X1;
-            output[11]=X2;
-            output[12]=X_diff(i);
-            output[13]=Y1;
-            output[14]=Y2;
-            output[15]=Y_diff(i);
-            output[16]=shift_diff(i);
+            //output[0]=rot1;
+            row.setValue(MDL_ANGLE_ROT, rot1);
+            //output[1]=rot2p;
+            row.setValue(MDL_ANGLE_ROT2, rot2p);
+            //output[2]=rot_diff(i);
+            row.setValue(MDL_ANGLE_ROT_DIFF, rot_diff(i));
+            //output[3]=tilt1;
+            row.setValue(MDL_ANGLE_TILT, tilt1);
+            //output[4]=tilt2p;
+            row.setValue(MDL_ANGLE_TILT2, tilt2p);
+            //output[5]=tilt_diff(i);
+            row.setValue(MDL_ANGLE_TILT_DIFF,tilt_diff(i) );
+            //output[6]=psi1;
+            row.setValue(MDL_ANGLE_PSI, psi1);
+            //output[7]=psi2p;
+            row.setValue(MDL_ANGLE_PSI2, psi2);
+            //output[8]=psi_diff(i);
+            row.setValue(MDL_ANGLE_PSI_DIFF, psi_diff(i));
+            //output[9]=distp;
+            row.setValue(MDL_ANGLE_DIFF, distp);
+            //output[10]=X1;
+            row.setValue(MDL_SHIFT_X,X1);
+            //output[11]=X2;
+            row.setValue(MDL_SHIFT_X2, X2);
+            //output[12]=X_diff(i);
+            row.setValue(MDL_SHIFT_X_DIFF, X_diff(i));
+            //output[13]=Y1;
+            row.setValue(MDL_SHIFT_Y, Y1);
+            //output[14]=Y2;
+            row.setValue(MDL_SHIFT_Y2, Y2);
+            //output[15]=Y_diff(i);
+            row.setValue(MDL_SHIFT_Y_DIFF, Y_diff(i));
+            //output[16]=shift_diff(i);
+            row.setValue(MDL_SHIFT_DIFF,shift_diff(i));
 
-            id = DF_out.addObject();
+            id = DF_out.addRow(row);
+            //id = DF_out.addObject();
             DF_out.setValue(MDL_IMAGE,fnImg,id);
-            DF_out.setValue(MDL_ANGLE_COMPARISON,output, id);
+            //DF_out.setValue(MDL_ANGLE_COMPARISON,output, id);
         }
 
         i++;
@@ -208,9 +227,9 @@ void ProgAngularDistance::run()
         DF_out.write(fn_out + ".xmd");
         Histogram1D hist;
         compute_hist(vec_diff, hist, 0, 180, 180);
-        hist.write(fn_out + "_vec_diff_hist.txt");
+        hist.write(fn_out + "_vec_diff_hist.txt",MDL_ANGLE_DIFF,MDL_COUNT);
         compute_hist(shift_diff, hist, 20);
-        hist.write(fn_out + "_shift_diff_hist.txt");
+        hist.write(fn_out + "_shift_diff_hist.txt",MDL_SHIFT_DIFF,MDL_COUNT);
         if (verbose==2)
         {
             compute_hist(rot_diff, hist, 100);
