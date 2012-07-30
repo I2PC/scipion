@@ -99,7 +99,10 @@ private:
     /** Add a new column to a metadata.
      */
     bool addColumn(MDLabel column);
-
+   /** Rename Column
+    * SQLite itself does not support it. So some hacking is needed here
+    */
+    bool renameColumn(MDLabel oldLabel, MDLabel newLabel);
     /**Set the value of an object in an specified column.
      */
     bool setObjectValue(const int objId, const MDObject &value);
@@ -125,7 +128,7 @@ private:
      */
     size_t deleteObjects(const MDQuery *queryPtr = NULL);
 
-    /** Coppy the objects from a metada to other.
+    /** Copy the objects from a metada to other.
      * return the number of objects copied
      * */
     size_t copyObjects(MDSql * sqlOut,
