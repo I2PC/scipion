@@ -111,6 +111,53 @@ bool MDSql::addColumn(MDLabel column)
     << " ADD COLUMN " << MDL::label2SqlColumn(column) <<";";
     return execSingleStmt(ss);
 }
+
+bool MDSql::renameColumn(MDLabel oldLabel, MDLabel newlabel)
+{
+    //1 Create an new table that matches your original table,
+    // but with the changed columns.
+    bool result;
+    std::vector<MDLabel> v1(myMd->activeLabels);
+    std::replace(v1.begin(), v1.end(), oldLabel, newlabel);
+    // I know this is horrible but do not have a better idea
+    int oldTableId = tableId;
+    //finish horrible thing
+    sqlMutex.lock();
+    tableId = getUniqueId();
+    createTable(&v1);
+    sqlMutex.unlock();
+    //2 Now we can copy the original data to the new table:
+    String oldLabelString=" objID";
+    String newLabelString=" objID";
+    for(std::vector<MDLabel>::const_iterator  it = (myMd->activeLabels)
+            .begin();
+        it != (myMd->activeLabels).end();
+        ++it)
+        oldLabelString += ", " + MDL::label2Str(*it);
+        for(std::vector<MDLabel>
+        ::const_iterator  it = v1.begin();
+        it != v1.end();
+        ++it)
+        newLabelString += ", " + MDL::label2Str(*it);
+    std::stringstream sqlCommand;
+    sqlCommand << " INSERT INTO " + tableName(tableId)
+				<< " ("+ newLabelString +") "
+				<< " SELECT " + oldLabelString
+				<< " FROM " + tableName(oldTableId) ;
+    execSingleStmt(sqlCommand);
+    //drop old table
+    sqlCommand.str(std::string());
+    sqlCommand << "DROP TABLE " << tableName(oldTableId);
+    execSingleStmt(sqlCommand);
+    //rename new table
+    sqlCommand.str(std::string());
+    sqlCommand << " ALTER TABLE  " << tableName(tableId)
+    << " RENAME TO " << tableName(oldTableId);
+    result = execSingleStmt(sqlCommand);
+    tableId=oldTableId;
+    myMd->activeLabels=v1;
+    return result;
+}
 //set column with a given value
 bool MDSql::setObjectValue(const MDObject &value)
 {
@@ -755,7 +802,6 @@ void MDSql::copyTableFromFileDB(const FileName blockname,
         std::cerr << "Empty Metadata" <<std::endl;
     else if (desiredLabels != NULL)
     {
-        std::cerr << "30" <<std::endl;
 
         myMd->activeLabels = *desiredLabels;
         for(std::vector<MDLabel>::const_iterator  it = desiredLabels->
