@@ -1133,6 +1133,24 @@ TEST_F( MetadataTest, CopyColumn)
     XMIPP_CATCH
 }
 
+TEST_F( MetadataTest, RenameColumn)
+{
+    XMIPP_TRY
+    MetaData md1(mDsource);
+    MetaData md2;
+    md1.renameColumn(MDL_Y,MDL_Z);
+    id = md2.addObject();
+    md2.setValue(MDL_X,1.,id);
+    md2.setValue(MDL_Z,2.,id);
+    id = md2.addObject();
+    md2.setValue(MDL_X,3.,id);
+    md2.setValue(MDL_Z,4.,id);
+
+
+    EXPECT_EQ(md1, md2);
+    XMIPP_CATCH
+}
+
 //Copy images on metadata using ImageConvert logic
 TEST_F( MetadataTest, copyImages)
 {
