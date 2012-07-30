@@ -1368,6 +1368,15 @@ void MetaData::copyColumnTo(MetaData &md, MDLabel labelDest, MDLabel labelSrc)
     md.setColumnValues(values);
 }
 
+void MetaData::renameColumn(MDLabel oldLabel, MDLabel newLabel)
+{
+    if (!containsLabel(oldLabel))
+    {
+        const char * srcName = MDL::label2Str(oldLabel).c_str();
+        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", oldLabel));
+    }
+    myMDSql->renameColumn(oldLabel,newLabel);
+}
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                                MDLabel aggregateLabel)
 

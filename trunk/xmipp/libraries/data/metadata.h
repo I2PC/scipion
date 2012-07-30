@@ -991,6 +991,12 @@ public:
     /** Same as previous, but copy to another metadata */
     void copyColumnTo(MetaData& md, MDLabel labelDest, MDLabel labelSrc);
 
+    /** Rename column.
+     *
+     */
+    void renameColumn(MDLabel oldLabel, MDLabel newLabel);
+
+
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
 }
