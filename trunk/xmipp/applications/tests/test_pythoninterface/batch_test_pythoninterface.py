@@ -255,10 +255,35 @@ class TestXmippPythonInterface(unittest.TestCase):
              #expImg = '00000%d@Images/proj_ctf_1.stk' % i
              self.assertEqual(img, expImg)
              i += 1
+        
+    def test_Metadata_operate(self):
+        md=MetaData()
+        id=md.addObject()
+        md.setValue(MDL_ANGLE_ROT,1.,id)
+        md.setValue(MDL_ANGLE_TILT,2.,id)
+        md.setValue(MDL_ANGLE_PSI,3.,id)
+        md.setValue(MDL_ANGLE_ROT2,6.,id)
+        md.setValue(MDL_ANGLE_TILT2,5.,id)
+        md.setValue(MDL_ANGLE_PSI2,4.,id)
+        id=md.addObject()
+        md.setValue(MDL_ANGLE_ROT,11.,id)
+        md.setValue(MDL_ANGLE_TILT,12.,id)
+        md.setValue(MDL_ANGLE_PSI,13.,id)
+        md.setValue(MDL_ANGLE_ROT2,16.,id)
+        md.setValue(MDL_ANGLE_TILT2,15.,id)
+        md.setValue(MDL_ANGLE_PSI2,14.,id)
+        
+        md2=MetaData(md)
+        anglePsiLabel=label2Str(MDL_ANGLE_PSI)
+        operateString= anglePsiLabel+"=2*"+anglePsiLabel
+        md.operate(operateString)
+        for id in md2:
+            md2.setValue(MDL_ANGLE_PSI,md2.getValue(MDL_ANGLE_PSI,id)*2.,id);
+        self.assertEqual(md, md2)
 
     def test_Metadata_join(self):
          #create metadta
-        md = MetaData()
+        md = MetaData() 
         md2 = MetaData()
         mdout = MetaData()
         listOrig = [1.0, 2.0, 3.0]
@@ -527,10 +552,41 @@ class TestXmippPythonInterface(unittest.TestCase):
             print str(e)
 
     def test_SymList_readSymmetryFile(self):
-        '''SymList'''
+        '''readSymmetryFile'''
         a=SymList()
         a.readSymmetryFile("i3")
         self.assertEqual(True, True)
+
+    def test_SymList_computeDistance(self):
+        '''computeDistance'''
+        SL=SymList()
+        SL.readSymmetryFile("i3h")
+        md=MetaData()
+        
+        
+        self.assertEqual(True, True)
+        id=md.addObject()
+        md.setValue(MDL_ANGLE_ROT,1.,id)
+        md.setValue(MDL_ANGLE_TILT,2.,id)
+        md.setValue(MDL_ANGLE_PSI,3.,id)
+        md.setValue(MDL_ANGLE_ROT2,6.,id)
+        md.setValue(MDL_ANGLE_TILT2,5.,id)
+        md.setValue(MDL_ANGLE_PSI2,4.,id)
+        id=md.addObject()
+        md.setValue(MDL_ANGLE_ROT,11.,id)
+        md.setValue(MDL_ANGLE_TILT,12.,id)
+        md.setValue(MDL_ANGLE_PSI,13.,id)
+        md.setValue(MDL_ANGLE_ROT2,16.,id)
+        md.setValue(MDL_ANGLE_TILT2,15.,id)
+        md.setValue(MDL_ANGLE_PSI2,14.,id)
+        mdOut = MetaData(md)
+        SL.computeDistance(md,False,False,False)
+        id=md.firstObject()
+        total = md.getValue(MDL_ANGLE_DIFF,id)
+        self.assertAlmostEqual(total, 5.23652,4)
+#    //EXPECT_NEAR (total, 5.23652,0.00001);
+#    XMIPP_CATCH
+#}
 
        
 from  XmippPythonTestResult import XmippPythonTestResult
