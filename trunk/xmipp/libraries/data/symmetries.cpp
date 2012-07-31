@@ -344,7 +344,7 @@ int SymList::readSymmetryFile(FileName fn_sym, double accuracy)
 
 // Get matrix ==============================================================
 void SymList::getMatrices(int i, Matrix2D<double> &L, Matrix2D<double> &R,
-                           bool homogeneous)
+                          bool homogeneous)
 const
 {
     int k, kp, l;
@@ -374,7 +374,7 @@ const
 
 // Set matrix ==============================================================
 void SymList::setMatrices(int i, const Matrix2D<double> &L,
-                           const Matrix2D<double> &R)
+                          const Matrix2D<double> &R)
 {
     int k, l;
     for (k = 4 * i; k < 4*i + 4; k++)
@@ -414,7 +414,7 @@ void SymList::addShift(const Matrix1D<double> &shift)
 
 // Add matrix ==============================================================
 void SymList::addMatrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
-                           int chain_length)
+                          int chain_length)
 {
     if (MAT_XSIZE(L) != 4 || MAT_YSIZE(L) != 4 || MAT_XSIZE(R) != 4 || MAT_YSIZE(R) != 4)
         REPORT_ERROR(ERR_MATRIX_SIZE, "SymList::add_matrix: Transformation matrix is not 4x4");
@@ -609,12 +609,12 @@ int  SymList::crystallographicSpaceGroup(double mag_a, double mag_b,
 //if not the wrong angles are assigned to the different matrices
 
 void symmetrizeCrystalVectors(Matrix1D<double> &aint,
-                                Matrix1D<double> &bint,
-                                Matrix1D<double> &shift,
-                                int space_group,
-                                int sym_no,
-                                const Matrix1D<double> &eprm_aint,
-                                const Matrix1D<double> &eprm_bint)
+                              Matrix1D<double> &bint,
+                              Matrix1D<double> &shift,
+                              int space_group,
+                              int sym_no,
+                              const Matrix1D<double> &eprm_aint,
+                              const Matrix1D<double> &eprm_bint)
 {
     //Notice that we should use R.inv and not R to relate eprm.aint and aint
     shift.initZeros();//I think this init is OK even the vector dim=0
@@ -839,10 +839,10 @@ void symmetrizeCrystalVectors(Matrix1D<double> &aint,
 //IMPORTANT: matrix orden should match the one used in "readSymmetryFile"
 //if not the wrong angles are assigned to the different matrices
 void symmetrizeCrystalVolume(GridVolume &vol_in,
-                               const Matrix1D<double> &eprm_aint,
-                               const Matrix1D<double> &eprm_bint,
-                               int eprm_space_group,
-                               const MultidimArray<int> &mask, int grid_type)
+                             const Matrix1D<double> &eprm_aint,
+                             const Matrix1D<double> &eprm_bint,
+                             int eprm_space_group,
+                             const MultidimArray<int> &mask, int grid_type)
 {
     //SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER
     //ONE SINCE REQUIRE INTERPOLATION IS IGNORED
@@ -2400,7 +2400,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
     return return_true;
 }
 void SymList::fillSymmetryClass(const FileName &symmetry, int pgGroup, int pgOrder,
-                                  std::vector<std::string> &fileContent)
+                                std::vector<std::string> &fileContent)
 {
     std::ostringstream line1;
     std::ostringstream line2;
@@ -2677,6 +2677,39 @@ double SymList::nonRedundantProjectionSphere(int pgGroup, int pgOrder)
     }
 }
 
+void SymList::computeDistance(MetaData &md,
+                                bool projdir_mode, bool check_mirrors,
+                                bool object_rotation)
+{
+    MDRow row;
+    double rot1, tilt1, psi1;
+    double rot2, tilt2, psi2;
+    double angDistance;
+    FOR_ALL_OBJECTS_IN_METADATA(md)
+    {
+        md.getRow(row,__iter.objId);
+
+        row.getValue(MDL_ANGLE_ROT,rot1);
+        row.getValue(MDL_ANGLE_ROT2,rot2);
+
+        row.getValue(MDL_ANGLE_TILT,tilt1);
+        row.getValue(MDL_ANGLE_TILT2,tilt2);
+
+        row.getValue(MDL_ANGLE_PSI,psi1);
+        row.getValue(MDL_ANGLE_PSI2,psi2);
+
+        angDistance=computeDistance( rot1,  tilt1,  psi1,
+                         rot2,  tilt2,  psi2,
+                         projdir_mode,  check_mirrors,
+                         object_rotation);
+
+        md.setValue(MDL_ANGLE_ROT_DIFF,rot1 - rot2,__iter.objId);
+        md.setValue(MDL_ANGLE_TILT_DIFF,tilt1 - tilt2,__iter.objId);
+        md.setValue(MDL_ANGLE_PSI_DIFF,psi1 - psi2,__iter.objId);
+        md.setValue(MDL_ANGLE_DIFF,angDistance,__iter.objId);
+    }
+
+}
 double SymList::computeDistance(double rot1, double tilt1, double psi1,
                                 double &rot2, double &tilt2, double &psi2,
                                 bool projdir_mode, bool check_mirrors,

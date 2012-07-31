@@ -267,7 +267,13 @@ public:
     {
         return MAT_YSIZE(__L) / 4;
     }
-
+    /** Return space group
+     *
+     */
+    int spaceGroup() const
+    {
+    	return space_group;
+    }
     /** Number of symmetry matrices which generated the structure.
         This is the number of the matrices which generated the structure,
         notice that it should be always less or equal to the total number
@@ -304,6 +310,36 @@ public:
      */
     double computeDistance(double rot1, double tilt1,
                            double psi1, double &rot2, double &tilt2, double &psi2,
+                           bool projdir_mode, bool check_mirrors, bool object_rotation=false);
+    /** auxiliary function that calls
+     *  double computeDistance(double rot1, double tilt1,
+                           double psi1, double &rot2, double &tilt2, double &psi2,
+                           bool projdir_mode, bool check_mirrors, bool object_rotation=false);
+     * from a metadata. Input metadata
+     * _angleRot
+ _angleRot2
+ _angleTilt
+ _angleTilt2
+ _anglePsi
+ _anglePsi2
+ _anglePsiDiff
+ _image
+
+ output metadata
+
+  _angleRot
+ _angleRot2
+ _angleRotDiff
+ _angleTilt
+ _angleTilt2
+ _angleTiltDiff
+ _anglePsi
+ _anglePsi2
+ _anglePsiDiff
+ _angleDiff
+ _image
+     */
+    void computeDistance(MetaData &md,
                            bool projdir_mode, bool check_mirrors, bool object_rotation=false);
 };
 
