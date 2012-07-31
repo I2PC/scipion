@@ -473,13 +473,16 @@ void ProgMLRefine3D::run()
 
         } // end loop blocks
 
+        LOG(formatString("ML3D: Before calculate3DSSNR").c_str());
         if (fourier_mode)
             calculate3DSSNR(ml2d->spectral_signal);
 
         // Check convergence
+        LOG(formatString("ML3D: Before checkConvergence").c_str());
         converged = checkConvergence();
 
         // End 2D iteration
+        LOG(formatString("ML3D: Before ml2d->endIteration").c_str());
         ml2d->endIteration();
         LOG(formatString("ML3D: END Iteration %d of %d", iter, Niter).c_str());
     } // end loop iterations

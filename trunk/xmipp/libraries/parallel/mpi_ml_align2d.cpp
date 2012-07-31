@@ -396,9 +396,13 @@ void MpiProgMLF2D::produceSideInfo()
 void MpiProgMLF2D::endIteration()
 {
     // Write output files
+    LOG("MpiProgMLF2D::endIteration : before sendDocfile");
     sendDocfile(docfiledata);
+    LOG("MpiProgMLF2D::endIteration : before writeOutputFiles");
     writeOutputFiles(model, OUT_ITER);
+    LOG("MpiProgMLF2D::endIteration : before updateWienerFilters");
     updateWienerFilters(spectral_signal, sumw_defocus, iter);
+    LOG("MpiProgMLF2D::endIteration : before barrierWait");
     node->barrierWait();
 }
 
