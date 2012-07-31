@@ -564,9 +564,16 @@ INRIASources = Glob('external/inria', '*.cc', [])
 # Condor
 CondorSources = Glob('external/condor', '*.cpp', [])
 
+# sqliteExt
+SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
+
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
+
+AddLibrary('XmippSqliteExt', 'external',
+   SqliteExtSources,
+   ['#'])
 
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
@@ -939,6 +946,7 @@ if int(env['gtest']):
      AddXmippCTest('test_multidim')
      AddXmippCTest('test_polar')
      AddXmippCTest('test_sampling')
+     AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
