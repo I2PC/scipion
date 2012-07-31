@@ -285,6 +285,7 @@ bool MpiProgMLRefine3D::checkConvergence()
       LOG("           MpiProgMLRefine3D::checkConvergence: master checkConvergence");
         result = ProgMLRefine3D::checkConvergence() ? 1 : 0;
     }
+    node->barrierWait();
     LOG("           MpiProgMLRefine3D::checkConvergence: before Bcast");
     MPI_Bcast(&result, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
