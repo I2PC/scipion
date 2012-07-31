@@ -280,14 +280,15 @@ bool MpiProgMLRefine3D::checkConvergence()
     int result = -1;
     LOG("           MpiProgMLRefine3D::checkConvergence: inside");
     //only master check
-    if (node->isMaster())
+    //if (node->isMaster())
+    if (node->rank == 1)
     {
       LOG("           MpiProgMLRefine3D::checkConvergence: master checkConvergence");
         result = ProgMLRefine3D::checkConvergence() ? 1 : 0;
     }
     node->barrierWait();
     LOG("           MpiProgMLRefine3D::checkConvergence: before Bcast");
-    MPI_Bcast(&result, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&result, 1, MPI_INT, 1, MPI_COMM_WORLD);
 
     LOG("           MpiProgMLRefine3D::checkConvergence: leaving...");
     return result == 1;
