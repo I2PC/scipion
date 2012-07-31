@@ -278,11 +278,19 @@ void MpiProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 bool MpiProgMLRefine3D::checkConvergence()
 {
     int result = -1;
+    LOG("           MpiProgMLRefine3D::checkConvergence: inside");
     //only master check
     if (node->isMaster())
+    {
+      LOG("           MpiProgMLRefine3D::checkConvergence: master checkConvergence");
         result = ProgMLRefine3D::checkConvergence() ? 1 : 0;
+    }
+    LOG("           MpiProgMLRefine3D::checkConvergence: before Bcast");
     MPI_Bcast(&result, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    LOG("           MpiProgMLRefine3D::checkConvergence: leaving...");
     return result == 1;
+
 
 }
 
