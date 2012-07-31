@@ -405,13 +405,21 @@ void MpiProgMLF2D::endIteration()
 void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
     //All nodes should arrive to writeOutput files at same time
+    LOG("MpiProgMLF2D::writeOutputFiles : waiting before writing");
     node->barrierWait();
     //Only master write files
     if (node->isMaster())
+    {
         ProgMLF2D::writeOutputFiles(model, outputType);
+        LOG("MpiProgMLF2D::writeOutputFiles : master writing ");
+    }
     else if (outputType == OUT_REFS)
+    {
       outRefsMd = FN_ITER_REFS();
+      LOG(formatString("MpiProgMLF2D::writeOutputFiles : slave setting outRefsMd = %s", outRefsMd.c_str()).c_str());
+    }
     //All nodes wait until files are written
+    LOG("MpiProgMLF2D::writeOutputFiles : waiting after writing");
     node->barrierWait();
 }
 
