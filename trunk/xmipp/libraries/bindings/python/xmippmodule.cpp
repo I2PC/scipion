@@ -4527,10 +4527,13 @@ PyMODINIT_FUNC initxmipp(void)
     addIntConstant(dict, "MDL_OBJID", (size_t) MDL_OBJID);
     addIntConstant(dict, "MDL_ANGLE_PSI2",  (long) MDL_ANGLE_PSI2);
     addIntConstant(dict, "MDL_ANGLE_PSI",   (long) MDL_ANGLE_PSI);
+    addIntConstant(dict, "MDL_ANGLE_PSI_DIFF",   (long) MDL_ANGLE_PSI);
     addIntConstant(dict, "MDL_ANGLE_ROT2",  (long) MDL_ANGLE_ROT2);
     addIntConstant(dict, "MDL_ANGLE_ROT",   (long) MDL_ANGLE_ROT);
+    addIntConstant(dict, "MDL_ANGLE_ROT_DIFF",   (long) MDL_ANGLE_ROT);
     addIntConstant(dict, "MDL_ANGLE_TILT2", (long) MDL_ANGLE_TILT2);
     addIntConstant(dict, "MDL_ANGLE_TILT",  (long) MDL_ANGLE_TILT);
+    addIntConstant(dict, "MDL_ANGLE_TILT_DIFF",  (long) MDL_ANGLE_TILT);
     addIntConstant(dict, "MDL_ANGLE_DIFF",  (long) MDL_ANGLE_DIFF);
     addIntConstant(dict, "MDL_IMAGE1", (long) MDL_IMAGE1);
     addIntConstant(dict, "MDL_IMAGE2", (long) MDL_IMAGE2);
