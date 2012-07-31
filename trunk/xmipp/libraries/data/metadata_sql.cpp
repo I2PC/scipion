@@ -512,7 +512,6 @@ void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
     {
         ss << "DROP INDEX IF EXISTS " << index_name.str() << "_INDEX ";
     }
-    std::cerr << "DEBUG_ROB, ss.str():" << ss.str() << std::endl;
     execSingleStmt(ss);
 }
 
