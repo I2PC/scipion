@@ -656,8 +656,8 @@ public:
     /** Add and remove indexes for fast search
      * in other labels, but insert are more expensive
      */
-    void addIndex(MDLabel label);
-    void addIndex(const std::vector<MDLabel> desiredLabels);
+    void addIndex(MDLabel label) const;
+    void addIndex(const std::vector<MDLabel> desiredLabels) const;
     void removeIndex(MDLabel label);
     void removeIndex(const std::vector<MDLabel> desiredLabels);
 

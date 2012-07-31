@@ -488,13 +488,13 @@ int MetaData::removeObjects()
     return removed;
 }
 
-void MetaData::addIndex(MDLabel label)
+void MetaData::addIndex(MDLabel label) const
 {
     std::vector<MDLabel> labels(1);
     labels[0]=label;
     addIndex(labels);
 }
-void MetaData::addIndex(const std::vector<MDLabel> desiredLabels)
+void MetaData::addIndex(const std::vector<MDLabel> desiredLabels) const
 {
 
     myMDSql->indexModify(desiredLabels, true);
@@ -1562,6 +1562,8 @@ void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const M
                     const MDLabel labelRight, JoinType type)
 {
     clear();
+    mdInRight.addIndex(labelRight);
+    mdInLeft.addIndex(labelLeft);
     _setOperates(mdInLeft, mdInRight, labelLeft,labelRight, (SetOperation)type);
 }
 
