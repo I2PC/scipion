@@ -2722,7 +2722,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     if (iter == 0)
         write_conv = false;
 
-    fn_base = fn_root;
+    fn_base = fn_root + "_final";
     fn_prefix = FN_FINAL_PREFIX();
 
     if (outputType == OUT_ITER || outputType == OUT_REFS)
@@ -2782,7 +2782,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     id = mdLog.addObject();
     mdLog.setValue(MDL_ITER, iter, id);
     mdLog.setValue(MDL_LL, LL, id);
-    mdLog.setValue(MDL_PMAX, sumw_allrefs, id);
+    mdLog.setValue(MDL_PMAX, sumcorr, id);
     mdLog.setValue(MDL_SIGMAOFFSET, sigma_offset, id);
     mdLog.setValue(MDL_RANDOMSEED, seed, id);
     if (do_norm)

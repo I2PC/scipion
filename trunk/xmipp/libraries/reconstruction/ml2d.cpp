@@ -126,7 +126,7 @@ bool ML2DBaseProgram::checkConvergence()
         return false;
 
     bool converged = true;
-    double convv;
+    double convv, avg2;
     MultidimArray<double> Maux;
 
     Maux.resize(dim, dim);
@@ -136,22 +136,23 @@ bool ML2DBaseProgram::checkConvergence()
 
     for (int refno = 0; refno < model.n_ref; refno++)
     {
+        convv = -1;
+
         if (model.Iref[refno].weight() > 0.)
         {
             Maux = Iold[refno]() * Iold[refno]();
-            convv = 1. / (Maux.computeAvg());
-            Maux = Iold[refno]() - model.Iref[refno]();
-            Maux = Maux * Maux;
-            convv *= Maux.computeAvg();
-            conv.push_back(convv);
-
-            if (convv > eps)
-                converged = false;
+            avg2 = Maux.computeAvg();
+            if (avg2 > 0.)
+            {
+              convv = 1. / avg2;
+              Maux = Iold[refno]() - model.Iref[refno]();
+              Maux = Maux * Maux;
+              convv *= Maux.computeAvg();
+              if (convv > eps)
+                  converged = false;
+            }
         }
-        else
-        {
-            conv.push_back(-1.);
-        }
+        conv.push_back(convv);
     }
 
 #ifdef DEBUG_JM

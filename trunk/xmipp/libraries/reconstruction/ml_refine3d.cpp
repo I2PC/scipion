@@ -496,6 +496,8 @@ void ProgMLRefine3D::run()
     ml2d->writeOutputFiles(ml2d->model, OUT_FINAL);
     ml2d->destroyThreads();
 
+    CLOSE_LOG();
+
 }//end of function run
 
 void ProgMLRefine3D::createEmptyFiles(int type)
