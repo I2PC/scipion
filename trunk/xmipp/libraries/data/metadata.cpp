@@ -1562,8 +1562,6 @@ void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const M
                     const MDLabel labelRight, JoinType type)
 {
     clear();
-    mdInRight.addIndex(labelRight);
-    mdInLeft.addIndex(labelLeft);
     _setOperates(mdInLeft, mdInRight, labelLeft,labelRight, (SetOperation)type);
 }
 
