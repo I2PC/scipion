@@ -2620,6 +2620,27 @@ MetaData_copyColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* copyColumn */
+static PyObject *
+MetaData_renameColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int labelDst, labelSrc;
+    if (PyArg_ParseTuple(args, "ii", &labelDst, &labelSrc))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            self->metadata->renameColumn((MDLabel)labelDst, (MDLabel)labelSrc);
+            Py_RETURN_TRUE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* copyColumnTo */
 static PyObject *
 MetaData_copyColumnTo(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -2922,6 +2943,8 @@ MetaData_methods[] =
          "select a part of another metadata starting from start and with a number of objects" },
         { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
           METH_VARARGS, "Remove duplicate rows" },
+          { "renameColumn", (PyCFunction) MetaData_renameColumn,
+            METH_VARARGS, "Renam one column" },
         {
             "sort", (PyCFunction) MetaData_sort,
             METH_VARARGS,
