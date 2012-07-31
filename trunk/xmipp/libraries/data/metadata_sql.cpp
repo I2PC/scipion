@@ -119,9 +119,8 @@ bool MDSql::renameColumn(MDLabel oldLabel, MDLabel newlabel)
     bool result;
     std::vector<MDLabel> v1(myMd->activeLabels);
     std::replace(v1.begin(), v1.end(), oldLabel, newlabel);
-    // I know this is horrible but do not have a better idea
+
     int oldTableId = tableId;
-    //finish horrible thing
     sqlMutex.lock();
     tableId = getUniqueId();
     createTable(&v1);
@@ -134,16 +133,16 @@ bool MDSql::renameColumn(MDLabel oldLabel, MDLabel newlabel)
         it != (myMd->activeLabels).end();
         ++it)
         oldLabelString += ", " + MDL::label2Str(*it);
-        for(std::vector<MDLabel>
+    for(std::vector<MDLabel>
         ::const_iterator  it = v1.begin();
         it != v1.end();
         ++it)
         newLabelString += ", " + MDL::label2Str(*it);
     std::stringstream sqlCommand;
     sqlCommand << " INSERT INTO " + tableName(tableId)
-				<< " ("+ newLabelString +") "
-				<< " SELECT " + oldLabelString
-				<< " FROM " + tableName(oldTableId) ;
+    << " ("+ newLabelString +") "
+    << " SELECT " + oldLabelString
+    << " FROM " + tableName(oldTableId) ;
     execSingleStmt(sqlCommand);
     //drop old table
     sqlCommand.str(std::string());
@@ -513,6 +512,7 @@ void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
     {
         ss << "DROP INDEX IF EXISTS " << index_name.str() << "_INDEX ";
     }
+    std::cerr << "DEBUG_ROB, ss.str():" << ss.str() << std::endl;
     execSingleStmt(ss);
 }
 
@@ -692,6 +692,22 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         join_type = " INNER ";
         columnLeft = columnRight = MDL_UNDEFINED;
         break;
+    }
+    if(operation==NATURAL_JOIN)
+    {
+    	std::vector<MDLabel> intersectLabels;
+        set_intersection((mdInRight->activeLabels).begin(),
+        		              (mdInRight->activeLabels).end(),
+        		              (mdInLeft->activeLabels).begin(),
+        		              (mdInLeft->activeLabels).end(),
+        		         std::back_inserter(intersectLabels));
+        mdInRight->addIndex(intersectLabels);
+        mdInLeft->addIndex(intersectLabels);
+    }
+    else
+    {
+        mdInRight->addIndex(columnRight);
+        mdInLeft->addIndex(columnLeft);
     }
     size = myMd->activeLabels.size();
     int sizeLeft;
@@ -965,7 +981,7 @@ bool MDSql::createTable(const std::vector<MDLabel> * labelsVector, bool withObjI
         }
     }
     ss << ");";
-    execSingleStmt(ss);
+    return execSingleStmt(ss);
 }
 
 void MDSql::prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt)
