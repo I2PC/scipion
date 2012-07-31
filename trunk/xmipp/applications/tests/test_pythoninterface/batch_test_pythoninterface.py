@@ -275,9 +275,12 @@ class TestXmippPythonInterface(unittest.TestCase):
         
         md2=MetaData(md)
         anglePsiLabel=label2Str(MDL_ANGLE_PSI)
-        operateString= anglePsiLabel+"=2*"+anglePsiLabel
+        angleRotLabel=label2Str(MDL_ANGLE_ROT)
+        operateString  =        angleRotLabel+"=3*"+angleRotLabel
+        operateString  += "," + anglePsiLabel+"=2*"+anglePsiLabel
         md.operate(operateString)
         for id in md2:
+            md2.setValue(MDL_ANGLE_ROT,md2.getValue(MDL_ANGLE_ROT,id)*3.,id);
             md2.setValue(MDL_ANGLE_PSI,md2.getValue(MDL_ANGLE_PSI,id)*2.,id);
         self.assertEqual(md, md2)
 
