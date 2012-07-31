@@ -136,11 +136,11 @@ public:
 class AutoParticlePicking
 {
 public:
-	static const double __penalization = 10;
-	static const double __gray_bins = 8;
-	static const double __radial_bins = 16;
-	static const double __highpass_cutoff = 0.02;
-	static const int    __reduction=2; // Of the piece with respect to the micrograph
+#define __penalization  10.
+#define __gray_bins  8.
+#define __radial_bins 16.
+#define  __highpass_cutoff  0.02
+#define   __reduction 2 // Of the piece with respect to the micrograph
 
 	Micrograph                *__m;
 	Image<double>		       __I;

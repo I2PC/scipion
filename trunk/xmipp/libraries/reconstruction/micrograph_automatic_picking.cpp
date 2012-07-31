@@ -942,8 +942,8 @@ void * automaticallySelectParticlesThread(void * args)
             }
 
             // Express the skip values in the reduced image
-            skip_x /= autoPicking->__reduction;
-            skip_y /= autoPicking->__reduction;
+            skip_x /= __reduction;
+            skip_y /= __reduction;
 #ifdef DEBUG_MORE_AUTO
 
             std::cout << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
@@ -990,8 +990,8 @@ void * automaticallySelectParticlesThread(void * args)
 #endif
 
                         // Build the Particle structure
-                        p.x = left + posx * autoPicking->__reduction;
-                        p.y = top + posy * autoPicking->__reduction;
+                        p.x = left + posx * __reduction;
+                        p.y = top + posy *  __reduction;
                         p.vec = v;
                         p.cost = cost;
                         threadCandidates.push_back(p);
