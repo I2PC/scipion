@@ -186,7 +186,7 @@ public class MetadataTest {
     	System.out.println("------------------------------------");   	
     	for (int i=0; i < ids.length; ++i){
     		System.out.println(md.getValueString(MDLabel.MDL_IMAGE, ids[i]));
-    		System.out.println(md.getValueString(MDLabel.MDL_ANGLE_COMPARISON, ids[i]));
+    		System.out.println(md.getValueString(MDLabel.MDL_ANGLE_DIFF, ids[i]));
     	}
     	//md.print();
     }  
