@@ -678,8 +678,8 @@ struct ArrayCoord
  */
 enum RandomMode
 {
-    RND_Uniform = 0,
-    RND_Gaussian = 1
+    RND_UNIFORM = 0,
+    RND_GAUSSIAN = 1
 } ;
 
 /** Template class for Xmipp arrays.
@@ -3960,14 +3960,14 @@ public:
      * // gaussian distribution with 0 mean and stddev=1
      * @endcode
      */
-    void initRandom(double op1, double op2, RandomMode mode = RND_Uniform)
+    void initRandom(double op1, double op2, RandomMode mode = RND_UNIFORM)
     {
         T* ptr=NULL;
         size_t n;
-        if (mode == RND_Uniform)
+        if (mode == RND_UNIFORM)
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = static_cast< T >(rnd_unif(op1, op2));
-        else if (mode == RND_Gaussian)
+        else if (mode == RND_GAUSSIAN)
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = static_cast< T >(rnd_gaus(op1, op2));
         else

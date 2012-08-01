@@ -276,7 +276,7 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
     // Add noise before CTF
     MultidimArray<double> noisy;
     noisy.resize(I);
-    noisy.initRandom(0, sigma_before_CTF, RND_Gaussian);
+    noisy.initRandom(0, sigma_before_CTF, RND_GAUSSIAN);
     if (low_pass_before_CTF < 0.5)
         lowpass.applyMaskSpace(noisy);
     I += noisy;
@@ -298,7 +298,7 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
     ctf.applyMaskSpace(I);
 
     // Add noise after CTF
-    noisy.initRandom(0, sigma_after_CTF, RND_Gaussian);
+    noisy.initRandom(0, sigma_after_CTF, RND_GAUSSIAN);
     if (after_ctf_noise)
         after_ctf.applyMaskSpace(noisy);
     I += noisy;

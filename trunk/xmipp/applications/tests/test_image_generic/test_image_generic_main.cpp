@@ -170,7 +170,7 @@ TEST_F( ImageGenericTest, initRandom)
     img.setDatatype(DT_Double);
     img.data->im->setDimensions(1024,1024,1,1);
     img.data->im->coreAllocateReuse();
-    img.initRandom(0,1, RND_Gaussian);
+    img.initRandom(0,1, RND_GAUSSIAN);
     double mean, dev, min, max;
     img.data->computeStats(mean, dev, min, max);
     EXPECT_TRUE(ABS(mean) < 0.001);

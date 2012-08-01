@@ -407,7 +407,7 @@ public:
 
     /** Init random
      */
-    inline void initRandom(double op1, double op2, RandomMode mode = RND_Uniform) const
+    inline void initRandom(double op1, double op2, RandomMode mode = RND_UNIFORM) const
     {
 #define INITRND(type) (*(MultidimArray<type>*)(data->im)).initRandom(op1, op2, mode);
         CHECK_IMG(SWITCHDATATYPE(datatype,INITRND))
