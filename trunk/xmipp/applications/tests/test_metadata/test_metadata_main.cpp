@@ -666,22 +666,22 @@ TEST_F( MetadataTest, Operate)
 
     EXPECT_EQ(auxMetadata,auxMetadata2);
 }
-//#include <math.h>
-//TEST_F( MetadataTest, OperateExt)
-//{
-//    MetaData auxMetadata = mDunion;
-//    MetaData auxMetadata2 = mDunion;
-//    auxMetadata.activateMathExtensions();
-//    auxMetadata.operate((String)"X=sqrt(X)");
-//    double x;
-//    FOR_ALL_OBJECTS_IN_METADATA(auxMetadata2)
-//    {
-//        auxMetadata2.getValue(MDL_X,x,__iter.objId);
-//        auxMetadata2.setValue(MDL_X,sqrt(x),__iter.objId);
-//    }
-//
-//    EXPECT_EQ(auxMetadata,auxMetadata2);
-//}
+#include <math.h>
+TEST_F( MetadataTest, OperateExt)
+{
+    MetaData auxMetadata = mDunion;
+    MetaData auxMetadata2 = mDunion;
+	MDSql::activateMathExtensions();
+    auxMetadata.operate((String)"X=sqrt(X)");
+    double x;
+    FOR_ALL_OBJECTS_IN_METADATA(auxMetadata2)
+    {
+        auxMetadata2.getValue(MDL_X,x,__iter.objId);
+        auxMetadata2.setValue(MDL_X,sqrt(x),__iter.objId);
+    }
+
+    EXPECT_EQ(auxMetadata,auxMetadata2);
+}
 
 TEST_F( MetadataTest, Query)
 {
