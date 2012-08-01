@@ -571,9 +571,9 @@ AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
-#AddLibrary('XmippSqliteExt', 'external',
-#   SqliteExtSources,
-#   ['#'],[''],['-lm'],'lib','.so')
+AddLibrary('XmippSqliteExt', 'external',
+   SqliteExtSources,
+   ['#'],[''],['-lm'],'lib','.so')
 
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
