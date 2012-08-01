@@ -197,8 +197,6 @@ PyMethodDef MetaData_methods[] =
           "Read data from file" },
         { "write", (PyCFunction) MetaData_write, METH_VARARGS,
           "Write MetaData content to disk" },
-        { "activateMathExtensions", (PyCFunction) MetaData_activateMathExtensions,
-          METH_VARARGS, "activate math function in metadatas" },
         { "readBlock", (PyCFunction) MetaData_readBlock,
           METH_VARARGS, "Read block from a metadata file" },
         { "append", (PyCFunction) MetaData_append,
@@ -650,23 +648,6 @@ MetaData_firstObject(PyObject *obj, PyObject *args, PyObject *kwargs)
     MetaDataObject *self = (MetaDataObject*) obj;
     return PyLong_FromUnsignedLong(self->metadata->firstObject());
 }
-/* firstObject */
-PyObject *
-MetaData_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-    try
-    {
-        if (MDSql::activateMathExtensions())
-            Py_RETURN_TRUE;
-        else
-            Py_RETURN_FALSE;
-    }
-    catch (XmippError &xe)
-    {
-        PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-    return NULL;
-    }
 /* lastObject */
 PyObject *
 MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs)

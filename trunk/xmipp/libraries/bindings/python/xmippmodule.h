@@ -138,6 +138,9 @@ xmipp_dumpToFile(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+PyObject *
+MetaData_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 void addIntConstant(PyObject * dict, const char * name, const long &value);
 void addLabels(PyObject * dict);
 

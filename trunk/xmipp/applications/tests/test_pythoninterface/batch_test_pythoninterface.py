@@ -51,7 +51,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         """
         os.chdir(self.testsPath)
         
-    def test_Euler_angles2matrix(self):
+    def test_xmipp_Euler_angles2matrix(self):
         from numpy  import array
 
         a = array([[ 0.70710678, 0.70710678, -0.        ],
@@ -62,7 +62,29 @@ class TestXmippPythonInterface(unittest.TestCase):
         psi = 0.
         b = Euler_angles2matrix(rot, tilt, psi)
         self.assertAlmostEqual(a.all(), b.all(), 2)
-        
+
+    def test_xmipp_activateMathExtensions(self):
+        '''activateMathExtensions'''
+        md1 = MetaData()
+        activateMathExtensions()
+        id = md1.addObject()
+        md1.setValue(MDL_ANGLE_ROT, 4., id)
+        md1.setValue(MDL_ANGLE_TILT, 3., id)
+        id = md1.addObject()
+        md1.setValue(MDL_ANGLE_ROT, 9., id)
+        md1.setValue(MDL_ANGLE_TILT, 5., id)
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 2., id)
+        md2.setValue(MDL_ANGLE_TILT, 3., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 3., id)
+        md2.setValue(MDL_ANGLE_TILT, 5., id)
+        angleRotLabel = label2Str(MDL_ANGLE_ROT)
+        operateString = angleRotLabel + "= sqrt(" + angleRotLabel+")"
+        md1.operate(operateString)
+        self.assertEqual(md1, md2)
+    
     def test_FileName_compose(self):
          fn1 = FileName("kk000001.xmp")
          fn2 = FileName("")
@@ -513,6 +535,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             
             auxMd.setValue(MDL_IMAGE, "image_1.xmp", auxMd.addObject())
             auxMd.setValue(MDL_IMAGE, "image_2.xmp", auxMd.addObject())
+        
             auxMd.write("block_000000@" + sfn.name, MD_OVERWRITE)
             auxMd.clear()
             auxMd.setValue(MDL_IMAGE, "image_data_1_1.xmp", auxMd.addObject())
@@ -556,28 +579,6 @@ class TestXmippPythonInterface(unittest.TestCase):
         except Exception, e:
             print str(e)
 
-    def test_Metadata_activateMathExtensions(self):
-        '''activateMathExtensions'''
-        md1 = MetaData()
-        md1.activateMathExtensions()
-        id = md1.addObject()
-        md1.setValue(MDL_ANGLE_ROT, 4., id)
-        md1.setValue(MDL_ANGLE_TILT, 3., id)
-        id = md1.addObject()
-        md1.setValue(MDL_ANGLE_ROT, 9., id)
-        md1.setValue(MDL_ANGLE_TILT, 5., id)
-        md2 = MetaData()
-        id = md2.addObject()
-        md2.setValue(MDL_ANGLE_ROT, 2., id)
-        md2.setValue(MDL_ANGLE_TILT, 3., id)
-        id = md2.addObject()
-        md2.setValue(MDL_ANGLE_ROT, 3., id)
-        md2.setValue(MDL_ANGLE_TILT, 5., id)
-        angleRotLabel = label2Str(MDL_ANGLE_ROT)
-        operateString = angleRotLabel + "= sqrt(" + angleRotLabel+")"
-        md1.operate(operateString)
-        self.assertEqual(md1, md2)
-        
     def test_SymList_readSymmetryFile(self):
         '''readSymmetryFile'''
         a = SymList()

@@ -604,75 +604,95 @@ xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 }
 
+/* activateMathExtensions */
+PyObject *
+xmipp_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    try
+    {
+        if (MDSql::activateMathExtensions())
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
+
 static PyMethodDef
 xmipp_methods[] =
-{
-    { "getBlocksInMetaDataFile",
-      xmipp_getBlocksInMetaDataFile, METH_VARARGS,
-      "return list with metadata blocks in a file" },
-    { "label2Str", xmipp_label2Str, METH_VARARGS,
-      "Convert MDLabel to string" },
-    { "colorStr", xmipp_colorStr, METH_VARARGS,
-      "Create a string with color characters sequence for print in console" },
-    { "labelType", xmipp_labelType, METH_VARARGS,
-      "Return the type of a label" },
-    { "str2Label", xmipp_str2Label, METH_VARARGS,
-      "Convert an string to MDLabel" },
-    { "isValidLabel", (PyCFunction) xmipp_isValidLabel,
-      METH_VARARGS,
-      "Check if the label is a valid one" },
-    { "MDValueRelational",
-      (PyCFunction) xmipp_MDValueRelational,
-      METH_VARARGS, "Construct a relational query" },
-    { "MDValueEQ", (PyCFunction) xmipp_MDValueEQ,
-      METH_VARARGS, "Construct a relational query" },
-    { "MDValueNE", (PyCFunction) xmipp_MDValueNE,
-      METH_VARARGS, "Construct a relational query" },
-    { "MDValueLT", (PyCFunction) xmipp_MDValueLT,
-      METH_VARARGS, "Construct a relational query" },
-    { "MDValueLE", (PyCFunction) xmipp_MDValueLE,
-      METH_VARARGS, "Construct a relational query" },
-    { "MDValueGT", (PyCFunction) xmipp_MDValueGT,
-      METH_VARARGS, "Construct a relational query" },
-    { "MDValueGE", (PyCFunction) xmipp_MDValueGE,
-      METH_VARARGS, "Construct a relational query" },
-    { "MDValueRange", (PyCFunction) xmipp_MDValueRange,
-      METH_VARARGS, "Construct a range query" },
-    { "createEmptyFile", (PyCFunction) xmipp_createEmptyFile,
-      METH_VARARGS, "create empty stack (speed up things)" },
-    { "SingleImgSize", (PyCFunction) xmipp_SingleImgSize,
-      METH_VARARGS, "Get image dimensions" },
-    { "ImgSize", (PyCFunction) xmipp_ImgSize, METH_VARARGS,
-      "Get image dimensions of first metadata entry" },
-    { "ImgCompare", (PyCFunction) xmipp_ImgCompare,  METH_VARARGS,
-      "return true if both files are identical" },
-    { "checkImageFileSize", (PyCFunction) xmipp_CheckImageFileSize,  METH_VARARGS,
-      "return true if the file has at least as many bytes as needed to read the image" },
-    { "checkImageCorners", (PyCFunction) xmipp_CheckImageCorners,  METH_VARARGS,
-      "return false if the image has repeated pixels at some corner" },
-    { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
-      "return true if both files are identical" },
-    { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
-      "Read a 1 or two column list of micrographs" },
-    { "substituteOriginalImages", (PyCFunction) xmipp_substituteOriginalImages, METH_VARARGS,
-      "Substitute the original images into a given column of a metadata" },
-    { "fastEstimateEnhancedPSD", (PyCFunction) xmipp_fastEstimateEnhancedPSD, METH_VARARGS,
-      "Utility function to calculate PSD preview" },
-    { "compareTwoMetadataFiles", (PyCFunction) xmipp_compareTwoMetadataFiles, METH_VARARGS,
-      "Compare two metadata files" },
-    { "bandPassFilter", (PyCFunction) xmipp_bandPassFilter, METH_VARARGS,
-      "Utility function to apply bandpass filter" },
-    { "gaussianFilter", (PyCFunction) xmipp_gaussianFilter, METH_VARARGS,
-      "Utility function to apply gaussian filter in Fourier space" },
-    { "badPixelFilter", (PyCFunction) xmipp_badPixelFilter, METH_VARARGS,
-      "Bad pixel filter" },
-    { "dumpToFile", (PyCFunction) xmipp_dumpToFile, METH_VARARGS,
-      "dump metadata to sqlite database" },
-    { "Euler_angles2matrix", (PyCFunction) xmipp_Euler_angles2matrix, METH_VARARGS,
-      "convert euler angles to transformation matrix" },
+    {
+        { "getBlocksInMetaDataFile",
+          xmipp_getBlocksInMetaDataFile, METH_VARARGS,
+          "return list with metadata blocks in a file" },
+        { "label2Str", xmipp_label2Str, METH_VARARGS,
+          "Convert MDLabel to string" },
+        { "colorStr", xmipp_colorStr, METH_VARARGS,
+          "Create a string with color characters sequence for print in console" },
+        { "labelType", xmipp_labelType, METH_VARARGS,
+          "Return the type of a label" },
+        { "str2Label", xmipp_str2Label, METH_VARARGS,
+          "Convert an string to MDLabel" },
+        { "isValidLabel", (PyCFunction) xmipp_isValidLabel,
+          METH_VARARGS,
+          "Check if the label is a valid one" },
+        { "MDValueRelational",
+          (PyCFunction) xmipp_MDValueRelational,
+          METH_VARARGS, "Construct a relational query" },
+        { "MDValueEQ", (PyCFunction) xmipp_MDValueEQ,
+          METH_VARARGS, "Construct a relational query" },
+        { "MDValueNE", (PyCFunction) xmipp_MDValueNE,
+          METH_VARARGS, "Construct a relational query" },
+        { "MDValueLT", (PyCFunction) xmipp_MDValueLT,
+          METH_VARARGS, "Construct a relational query" },
+        { "MDValueLE", (PyCFunction) xmipp_MDValueLE,
+          METH_VARARGS, "Construct a relational query" },
+        { "MDValueGT", (PyCFunction) xmipp_MDValueGT,
+          METH_VARARGS, "Construct a relational query" },
+        { "MDValueGE", (PyCFunction) xmipp_MDValueGE,
+          METH_VARARGS, "Construct a relational query" },
+        { "MDValueRange", (PyCFunction) xmipp_MDValueRange,
+          METH_VARARGS, "Construct a range query" },
+        { "createEmptyFile", (PyCFunction) xmipp_createEmptyFile,
+          METH_VARARGS, "create empty stack (speed up things)" },
+        { "SingleImgSize", (PyCFunction) xmipp_SingleImgSize,
+          METH_VARARGS, "Get image dimensions" },
+        { "ImgSize", (PyCFunction) xmipp_ImgSize, METH_VARARGS,
+          "Get image dimensions of first metadata entry" },
+        { "ImgCompare", (PyCFunction) xmipp_ImgCompare,  METH_VARARGS,
+          "return true if both files are identical" },
+        { "checkImageFileSize", (PyCFunction) xmipp_CheckImageFileSize,  METH_VARARGS,
+          "return true if the file has at least as many bytes as needed to read the image" },
+        { "checkImageCorners", (PyCFunction) xmipp_CheckImageCorners,  METH_VARARGS,
+          "return false if the image has repeated pixels at some corner" },
+        { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
+          "return true if both files are identical" },
+        { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
+          "Read a 1 or two column list of micrographs" },
+        { "substituteOriginalImages", (PyCFunction) xmipp_substituteOriginalImages, METH_VARARGS,
+          "Substitute the original images into a given column of a metadata" },
+        { "fastEstimateEnhancedPSD", (PyCFunction) xmipp_fastEstimateEnhancedPSD, METH_VARARGS,
+          "Utility function to calculate PSD preview" },
+        { "compareTwoMetadataFiles", (PyCFunction) xmipp_compareTwoMetadataFiles, METH_VARARGS,
+          "Compare two metadata files" },
+        { "bandPassFilter", (PyCFunction) xmipp_bandPassFilter, METH_VARARGS,
+          "Utility function to apply bandpass filter" },
+        { "gaussianFilter", (PyCFunction) xmipp_gaussianFilter, METH_VARARGS,
+          "Utility function to apply gaussian filter in Fourier space" },
+        { "badPixelFilter", (PyCFunction) xmipp_badPixelFilter, METH_VARARGS,
+          "Bad pixel filter" },
+        { "dumpToFile", (PyCFunction) xmipp_dumpToFile, METH_VARARGS,
+          "dump metadata to sqlite database" },
+        { "Euler_angles2matrix", (PyCFunction) xmipp_Euler_angles2matrix, METH_VARARGS,
+          "convert euler angles to transformation matrix" },
+        { "activateMathExtensions", (PyCFunction) MetaData_activateMathExtensions,
+          METH_VARARGS, "activate math function in metadatas" },
 
-    { NULL } /* Sentinel */
-};//xmipp_methods
+        { NULL } /* Sentinel */
+    };//xmipp_methods
 
 #define INIT_TYPE(type) if (PyType_Ready(&type##Type) < 0) return; Py_INCREF(&type##Type);\
     PyModule_AddObject(module, #type, (PyObject *) &type##Type);
