@@ -30,50 +30,50 @@
 /***************************************************************/
 
 PyTypeObject MDQueryType =
-{
-    PyObject_HEAD_INIT(NULL)
-    0, /*ob_size*/
-    "xmipp.MDQuery", /*tp_name*/
-    sizeof(MDQueryObject), /*tp_basicsize*/
-    0, /*tp_itemsize*/
-    (destructor)MDQuery_dealloc, /*tp_dealloc*/
-    0, /*tp_print*/
-    0, /*tp_getattr*/
-    0, /*tp_setattr*/
-    0, /*tp_compare*/
-    MDQuery_repr, /*tp_repr*/
-    0, /*tp_as_number*/
-    0, /*tp_as_sequence*/
-    0, /*tp_as_mapping*/
-    0, /*tp_hash */
-    0, /*tp_call*/
-    0, /*tp_str*/
-    0, /*tp_getattro*/
-    0, /*tp_setattro*/
-    0, /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT, /*tp_flags*/
-    "Python wrapper to Xmipp MDQuery class",/* tp_doc */
-    0, /* tp_traverse */
-    0, /* tp_clear */
-    0, /* tp_richcompare */
-    0, /* tp_weaklistoffset */
-    0, /* tp_iter */
-    0, /* tp_iternext */
-    MDQuery_methods, /* tp_methods */
-    0, /* tp_members */
-    0, /* tp_getset */
-    0, /* tp_base */
-    0, /* tp_dict */
-    0, /* tp_descr_get */
-    0, /* tp_descr_set */
-    0, /* tp_dictoffset */
-    0, /* tp_init */
-    0, /* tp_alloc */
-    0, /* tp_new */
-}; //MDQueryType
+    {
+        PyObject_HEAD_INIT(NULL)
+        0, /*ob_size*/
+        "xmipp.MDQuery", /*tp_name*/
+        sizeof(MDQueryObject), /*tp_basicsize*/
+        0, /*tp_itemsize*/
+        (destructor)MDQuery_dealloc, /*tp_dealloc*/
+        0, /*tp_print*/
+        0, /*tp_getattr*/
+        0, /*tp_setattr*/
+        0, /*tp_compare*/
+        MDQuery_repr, /*tp_repr*/
+        0, /*tp_as_number*/
+        0, /*tp_as_sequence*/
+        0, /*tp_as_mapping*/
+        0, /*tp_hash */
+        0, /*tp_call*/
+        0, /*tp_str*/
+        0, /*tp_getattro*/
+        0, /*tp_setattro*/
+        0, /*tp_as_buffer*/
+        Py_TPFLAGS_DEFAULT, /*tp_flags*/
+        "Python wrapper to Xmipp MDQuery class",/* tp_doc */
+        0, /* tp_traverse */
+        0, /* tp_clear */
+        0, /* tp_richcompare */
+        0, /* tp_weaklistoffset */
+        0, /* tp_iter */
+        0, /* tp_iternext */
+        MDQuery_methods, /* tp_methods */
+        0, /* tp_members */
+        0, /* tp_getset */
+        0, /* tp_base */
+        0, /* tp_dict */
+        0, /* tp_descr_get */
+        0, /* tp_descr_set */
+        0, /* tp_dictoffset */
+        0, /* tp_init */
+        0, /* tp_alloc */
+        0, /* tp_new */
+    }; //MDQueryType
 
 PyMethodDef MDQuery_methods[] = { { NULL } /* Sentinel */
-};
+                                };
 
 /* Destructor */
 void MDQuery_dealloc(MDQueryObject* self)
@@ -100,7 +100,7 @@ MDQuery_repr(PyObject * obj)
 /* Methods for constructing concrete queries */
 
 /* Helper function to create relational queries */
- PyObject *
+PyObject *
 createMDValueRelational(PyObject *args, int op)
 {
     int label, limit = -1, offset = 0, orderLabel = (int) MDL_OBJID;
@@ -122,49 +122,49 @@ createMDValueRelational(PyObject *args, int op)
     return NULL;
 }
 /* MDValue Relational */
- PyObject *
+PyObject *
 xmipp_MDValueRelational(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     return createMDValueRelational(args, -1);
 }
 /* MDValueEQ */
- PyObject *
+PyObject *
 xmipp_MDValueEQ(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     return createMDValueRelational(args, EQ);
 }
 /* MDValueEQ */
- PyObject *
+PyObject *
 xmipp_MDValueNE(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     return createMDValueRelational(args, NE);
 }
 /* MDValueLT */
- PyObject *
+PyObject *
 xmipp_MDValueLT(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     return createMDValueRelational(args, LT);
 }
 /* MDValueLE */
- PyObject *
+PyObject *
 xmipp_MDValueLE(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     return createMDValueRelational(args, LE);
 }
 /* MDValueLT */
- PyObject *
+PyObject *
 xmipp_MDValueGT(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     return createMDValueRelational(args, GT);
 }
 /* MDValueLE */
- PyObject *
+PyObject *
 xmipp_MDValueGE(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     return createMDValueRelational(args, GE);
 }
 /* MDValueRange */
- PyObject *
+PyObject *
 xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label, limit = -1, offset = 0, orderLabel = (int) MDL_OBJID;
@@ -192,188 +192,190 @@ xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
 /*                            MetaData                         */
 /**************************************************************/
 PyMethodDef MetaData_methods[] =
-{
-    { "read", (PyCFunction) MetaData_read, METH_VARARGS,
-      "Read data from file" },
-    { "write", (PyCFunction) MetaData_write, METH_VARARGS,
-      "Write MetaData content to disk" },
-    { "readBlock", (PyCFunction) MetaData_readBlock,
-      METH_VARARGS, "Read block from a metadata file" },
-    { "append", (PyCFunction) MetaData_append,
-      METH_VARARGS, "Append MetaData content to disk" },
-    { "addObject", (PyCFunction) MetaData_addObject,
-      METH_NOARGS,
-      "Add a new object and return its id" },
-    { "firstObject", (PyCFunction) MetaData_firstObject,
-      METH_NOARGS,
-      "Goto first metadata object, return its object id" },
-    { "lastObject", (PyCFunction) MetaData_lastObject,
-      METH_NOARGS,
-      "Goto last metadata object, return its object id" },
-    { "size", (PyCFunction) MetaData_size, METH_NOARGS,
-      "Return number of objects in MetaData" },
-    { "isEmpty", (PyCFunction) MetaData_isEmpty,
-      METH_NOARGS,
-      "Check whether the MetaData is empty" },
-    { "clear", (PyCFunction) MetaData_clear, METH_NOARGS,
-      "Clear MetaData" },
-    { "getColumnFormat",
-      (PyCFunction) MetaData_getColumnFormat,
-      METH_NOARGS, "Get column format info" },
-    { "setColumnFormat",
-      (PyCFunction) MetaData_setColumnFormat,
-      METH_VARARGS, "Set column format info" },
-    { "setValue", (PyCFunction) MetaData_setValue,
-      METH_VARARGS,
-      "Set the value for column(label) for a given object" },
-    { "setValueCol", (PyCFunction) MetaData_setValueCol,
-      METH_VARARGS,
-      "Set the same value for column(label) for all objects" },
-    { "removeLabel", (PyCFunction) MetaData_removeLabel,
-      METH_VARARGS,
-      "Remove a label if exists. The values are still in the table." },
-    { "getValue", (PyCFunction) MetaData_getValue,
-      METH_VARARGS, "Get the value for column(label)" },
-    { "getColumnValues", (PyCFunction) MetaData_getColumnValues,
-      METH_VARARGS, "Get all values value from column(label)" },
-    { "setColumnValues", (PyCFunction) MetaData_setColumnValues,
-      METH_VARARGS, "Set all values value from column(label)" },
-    { "getActiveLabels",
-      (PyCFunction) MetaData_getActiveLabels,
-      METH_VARARGS,
-      "Return a list with the labels of the Metadata" },
-    { "getMaxStringLength",
-      (PyCFunction) MetaData_getMaxStringLength,
-      METH_VARARGS,
-      "Return the maximun lenght of a value on this column(label)" },
-    { "containsLabel",
-      (PyCFunction) MetaData_containsLabel,
-      METH_VARARGS,
-      "True if this metadata contains this label" },
-    { "addLabel", (PyCFunction) MetaData_addLabel,
-      METH_VARARGS, "Add a new label to MetaData" },
-    { "fillConstant", (PyCFunction) MetaData_fillConstant,
-      METH_VARARGS, "Fill a column with constant value" },
-    { "copyColumn", (PyCFunction) MetaData_copyColumn,
-      METH_VARARGS, "Copy the values of one column to another" },
-    { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
-      METH_VARARGS, "Copy the values of one column to another in other md" },
-    { "makeAbsPath", (PyCFunction) MetaData_makeAbsPath,
-      METH_VARARGS,
-      "Make filenames with absolute paths" },
-    { "importObjects",
-      (PyCFunction) MetaData_importObjects,
-      METH_VARARGS,
-      "Import objects from another metadata" },
-    { "removeObjects",
-      (PyCFunction) MetaData_removeObjects,
-      METH_VARARGS, "Remove objects from metadata" },
-    { "removeDisabled",
-      (PyCFunction) MetaData_removeDisabled,
-      METH_VARARGS, "Remove disabled objects from metadata" },
-    { "aggregateSingle",
-      (PyCFunction) MetaData_aggregateSingle,
-      METH_VARARGS,
-      "Aggregate operation in metadata (double single value result)" },
-    { "aggregateSingleInt",
-      (PyCFunction) MetaData_aggregateSingleInt,
-      METH_VARARGS,
-      "Aggregate operation in metadata (int single value result)" },
-    { "aggregate", (PyCFunction) MetaData_aggregate,
-      METH_VARARGS,
-      "Aggregate operation in metadata. The results is stored in self." },
-    { "unionAll", (PyCFunction) MetaData_unionAll,
-      METH_VARARGS,
-      "Union of two metadatas. The results is stored in self." },
-    { "merge", (PyCFunction) MetaData_merge, METH_VARARGS,
-      "Merge columns of two metadatas. The results is stored in self." },
     {
-        "join",
-        (PyCFunction) MetaData_join,
-        METH_VARARGS,
-        "join between two metadatas, use MDL_UNDEFINED as label. The results is stored in self." },
-    {
-        "addIndex",
-        (PyCFunction) MetaData_addIndex,
-        METH_VARARGS,
-        "Create index so search is faster." },
-    { "readPlain", (PyCFunction) MetaData_readPlain,
-      METH_VARARGS,
-      "Import metadata from a plain text file." },
-    {"intersection",
-     (PyCFunction) MetaData_intersection,
-     METH_VARARGS,
-     "Intersection of two metadatas using a common label. The results is stored in self." },
-    { "setComment", (PyCFunction) MetaData_setComment,
-      METH_VARARGS, "Set comment in Metadata." },
-    { "getComment", (PyCFunction) MetaData_getComment,
-      METH_VARARGS, "Get comment in Metadata." },
-    { "operate", (PyCFunction) MetaData_operate,
-      METH_VARARGS, "Replace strings values in some column." },
-    { "replace", (PyCFunction) MetaData_replace,
-      METH_VARARGS, "Basic operations on columns data." },
-    {"randomize",
-     (PyCFunction) MetaData_randomize,
-     METH_VARARGS,
-     "Randomize another metadata and keep in self." },
-    {"selectPart",
-     (PyCFunction) MetaData_selectPart,
-     METH_VARARGS,
-     "select a part of another metadata starting from start and with a number of objects" },
-    { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
-      METH_VARARGS, "Remove duplicate rows" },
-    { "renameColumn", (PyCFunction) MetaData_renameColumn,
-      METH_VARARGS, "Renam one column" },
-    {
-        "sort", (PyCFunction) MetaData_sort,
-        METH_VARARGS,
-        "Sort metadata according to a label" },
-    { NULL } /* Sentinel */
-};//MetaData_methods
+        { "read", (PyCFunction) MetaData_read, METH_VARARGS,
+          "Read data from file" },
+        { "write", (PyCFunction) MetaData_write, METH_VARARGS,
+          "Write MetaData content to disk" },
+        { "activateMathExtensions", (PyCFunction) MetaData_activateMathExtensions,
+          METH_VARARGS, "activate math function in metadatas" },
+        { "readBlock", (PyCFunction) MetaData_readBlock,
+          METH_VARARGS, "Read block from a metadata file" },
+        { "append", (PyCFunction) MetaData_append,
+          METH_VARARGS, "Append MetaData content to disk" },
+        { "addObject", (PyCFunction) MetaData_addObject,
+          METH_NOARGS,
+          "Add a new object and return its id" },
+        { "firstObject", (PyCFunction) MetaData_firstObject,
+          METH_NOARGS,
+          "Goto first metadata object, return its object id" },
+        { "lastObject", (PyCFunction) MetaData_lastObject,
+          METH_NOARGS,
+          "Goto last metadata object, return its object id" },
+        { "size", (PyCFunction) MetaData_size, METH_NOARGS,
+          "Return number of objects in MetaData" },
+        { "isEmpty", (PyCFunction) MetaData_isEmpty,
+          METH_NOARGS,
+          "Check whether the MetaData is empty" },
+        { "clear", (PyCFunction) MetaData_clear, METH_NOARGS,
+          "Clear MetaData" },
+        { "getColumnFormat",
+          (PyCFunction) MetaData_getColumnFormat,
+          METH_NOARGS, "Get column format info" },
+        { "setColumnFormat",
+          (PyCFunction) MetaData_setColumnFormat,
+          METH_VARARGS, "Set column format info" },
+        { "setValue", (PyCFunction) MetaData_setValue,
+          METH_VARARGS,
+          "Set the value for column(label) for a given object" },
+        { "setValueCol", (PyCFunction) MetaData_setValueCol,
+          METH_VARARGS,
+          "Set the same value for column(label) for all objects" },
+        { "removeLabel", (PyCFunction) MetaData_removeLabel,
+          METH_VARARGS,
+          "Remove a label if exists. The values are still in the table." },
+        { "getValue", (PyCFunction) MetaData_getValue,
+          METH_VARARGS, "Get the value for column(label)" },
+        { "getColumnValues", (PyCFunction) MetaData_getColumnValues,
+          METH_VARARGS, "Get all values value from column(label)" },
+        { "setColumnValues", (PyCFunction) MetaData_setColumnValues,
+          METH_VARARGS, "Set all values value from column(label)" },
+        { "getActiveLabels",
+          (PyCFunction) MetaData_getActiveLabels,
+          METH_VARARGS,
+          "Return a list with the labels of the Metadata" },
+        { "getMaxStringLength",
+          (PyCFunction) MetaData_getMaxStringLength,
+          METH_VARARGS,
+          "Return the maximun lenght of a value on this column(label)" },
+        { "containsLabel",
+          (PyCFunction) MetaData_containsLabel,
+          METH_VARARGS,
+          "True if this metadata contains this label" },
+        { "addLabel", (PyCFunction) MetaData_addLabel,
+          METH_VARARGS, "Add a new label to MetaData" },
+        { "fillConstant", (PyCFunction) MetaData_fillConstant,
+          METH_VARARGS, "Fill a column with constant value" },
+        { "copyColumn", (PyCFunction) MetaData_copyColumn,
+          METH_VARARGS, "Copy the values of one column to another" },
+        { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
+          METH_VARARGS, "Copy the values of one column to another in other md" },
+        { "makeAbsPath", (PyCFunction) MetaData_makeAbsPath,
+          METH_VARARGS,
+          "Make filenames with absolute paths" },
+        { "importObjects",
+          (PyCFunction) MetaData_importObjects,
+          METH_VARARGS,
+          "Import objects from another metadata" },
+        { "removeObjects",
+          (PyCFunction) MetaData_removeObjects,
+          METH_VARARGS, "Remove objects from metadata" },
+        { "removeDisabled",
+          (PyCFunction) MetaData_removeDisabled,
+          METH_VARARGS, "Remove disabled objects from metadata" },
+        { "aggregateSingle",
+          (PyCFunction) MetaData_aggregateSingle,
+          METH_VARARGS,
+          "Aggregate operation in metadata (double single value result)" },
+        { "aggregateSingleInt",
+          (PyCFunction) MetaData_aggregateSingleInt,
+          METH_VARARGS,
+          "Aggregate operation in metadata (int single value result)" },
+        { "aggregate", (PyCFunction) MetaData_aggregate,
+          METH_VARARGS,
+          "Aggregate operation in metadata. The results is stored in self." },
+        { "unionAll", (PyCFunction) MetaData_unionAll,
+          METH_VARARGS,
+          "Union of two metadatas. The results is stored in self." },
+        { "merge", (PyCFunction) MetaData_merge, METH_VARARGS,
+          "Merge columns of two metadatas. The results is stored in self." },
+        {
+            "join",
+            (PyCFunction) MetaData_join,
+            METH_VARARGS,
+            "join between two metadatas, use MDL_UNDEFINED as label. The results is stored in self." },
+        {
+            "addIndex",
+            (PyCFunction) MetaData_addIndex,
+            METH_VARARGS,
+            "Create index so search is faster." },
+        { "readPlain", (PyCFunction) MetaData_readPlain,
+          METH_VARARGS,
+          "Import metadata from a plain text file." },
+        {"intersection",
+         (PyCFunction) MetaData_intersection,
+         METH_VARARGS,
+         "Intersection of two metadatas using a common label. The results is stored in self." },
+        { "setComment", (PyCFunction) MetaData_setComment,
+          METH_VARARGS, "Set comment in Metadata." },
+        { "getComment", (PyCFunction) MetaData_getComment,
+          METH_VARARGS, "Get comment in Metadata." },
+        { "operate", (PyCFunction) MetaData_operate,
+          METH_VARARGS, "Replace strings values in some column." },
+        { "replace", (PyCFunction) MetaData_replace,
+          METH_VARARGS, "Basic operations on columns data." },
+        {"randomize",
+         (PyCFunction) MetaData_randomize,
+         METH_VARARGS,
+         "Randomize another metadata and keep in self." },
+        {"selectPart",
+         (PyCFunction) MetaData_selectPart,
+         METH_VARARGS,
+         "select a part of another metadata starting from start and with a number of objects" },
+        { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
+          METH_VARARGS, "Remove duplicate rows" },
+        { "renameColumn", (PyCFunction) MetaData_renameColumn,
+          METH_VARARGS, "Renam one column" },
+        {
+            "sort", (PyCFunction) MetaData_sort,
+            METH_VARARGS,
+            "Sort metadata according to a label" },
+        { NULL } /* Sentinel */
+    };//MetaData_methods
 
 
 PyTypeObject MetaDataType =
-{
-     PyObject_HEAD_INIT(NULL)
-     0, /*ob_size*/
-     "xmipp.MetaData", /*tp_name*/
-     sizeof(MetaDataObject), /*tp_basicsize*/
-     0, /*tp_itemsize*/
-     (destructor)MetaData_dealloc, /*tp_dealloc*/
-     MetaData_print, /*tp_print*/
-     0, /*tp_getattr*/
-     0, /*tp_setattr*/
-     MetaData_compare, /*tp_compare*/
-     MetaData_repr, /*tp_repr*/
-     0, /*tp_as_number*/
-     0, /*tp_as_sequence*/
-     0, /*tp_as_mapping*/
-     0, /*tp_hash */
-     0, /*tp_call*/
-     0, /*tp_str*/
-     0, /*tp_getattro*/
-     0, /*tp_setattro*/
-     0, /*tp_as_buffer*/
-     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, /*tp_flags*/
-     "Python wrapper to Xmipp MetaData class",/* tp_doc */
-     0, /* tp_traverse */
-     0, /* tp_clear */
-     0, /* tp_richcompare */
-     0, /* tp_weaklistoffset */
-     MetaData_iter, /* tp_iter */
-     MetaData_iternext, /* tp_iternext */
-     MetaData_methods, /* tp_methods */
-     0, /* tp_members */
-     0, /* tp_getset */
-     0, /* tp_base */
-     0, /* tp_dict */
-     0, /* tp_descr_get */
-     0, /* tp_descr_set */
-     0, /* tp_dictoffset */
-     0, /* tp_init */
-     0, /* tp_alloc */
-     MetaData_new, /* tp_new */
-};//MetaDataType
+    {
+        PyObject_HEAD_INIT(NULL)
+        0, /*ob_size*/
+        "xmipp.MetaData", /*tp_name*/
+        sizeof(MetaDataObject), /*tp_basicsize*/
+        0, /*tp_itemsize*/
+        (destructor)MetaData_dealloc, /*tp_dealloc*/
+        MetaData_print, /*tp_print*/
+        0, /*tp_getattr*/
+        0, /*tp_setattr*/
+        MetaData_compare, /*tp_compare*/
+        MetaData_repr, /*tp_repr*/
+        0, /*tp_as_number*/
+        0, /*tp_as_sequence*/
+        0, /*tp_as_mapping*/
+        0, /*tp_hash */
+        0, /*tp_call*/
+        0, /*tp_str*/
+        0, /*tp_getattro*/
+        0, /*tp_setattro*/
+        0, /*tp_as_buffer*/
+        Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER, /*tp_flags*/
+        "Python wrapper to Xmipp MetaData class",/* tp_doc */
+        0, /* tp_traverse */
+        0, /* tp_clear */
+        0, /* tp_richcompare */
+        0, /* tp_weaklistoffset */
+        MetaData_iter, /* tp_iter */
+        MetaData_iternext, /* tp_iternext */
+        MetaData_methods, /* tp_methods */
+        0, /* tp_members */
+        0, /* tp_getset */
+        0, /* tp_base */
+        0, /* tp_dict */
+        0, /* tp_descr_get */
+        0, /* tp_descr_set */
+        0, /* tp_dictoffset */
+        0, /* tp_init */
+        0, /* tp_alloc */
+        MetaData_new, /* tp_new */
+    };//MetaDataType
 
 /* Destructor */
 void MetaData_dealloc(MetaDataObject* self)
@@ -648,6 +650,23 @@ MetaData_firstObject(PyObject *obj, PyObject *args, PyObject *kwargs)
     MetaDataObject *self = (MetaDataObject*) obj;
     return PyLong_FromUnsignedLong(self->metadata->firstObject());
 }
+/* firstObject */
+PyObject *
+MetaData_activateMathExtensions(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    try
+    {
+        if (MDSql::activateMathExtensions())
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+    }
 /* lastObject */
 PyObject *
 MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs)
