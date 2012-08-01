@@ -112,12 +112,14 @@ bool MDSql::addColumn(MDLabel column)
     return execSingleStmt(ss);
 }
 
-void  MDSql::activateMathExtensions(void)
+bool  MDSql::activateMathExtensions(void)
 {
     const char* lib = "libXmippSqliteExt.so";
     sqlite3_enable_load_extension(db, 1);
     if( sqlite3_load_extension(db, lib, 0, 0)!= SQLITE_OK)
         REPORT_ERROR(ERR_MD_SQL,"Cannot activa sqlite extensions");
+    else
+    	return true;
 }
 bool MDSql::renameColumn(MDLabel oldLabel, MDLabel newlabel)
 {
