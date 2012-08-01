@@ -76,7 +76,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
-		if(!e.isControlDown())
+		if(!e.isShiftDown())
 			return;
 		int x = e.getX();
 		int y = e.getY();

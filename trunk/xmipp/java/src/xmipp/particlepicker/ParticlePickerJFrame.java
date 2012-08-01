@@ -130,6 +130,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				resetMicrograph();
 			}
 		});
+		
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -185,6 +186,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 	}
 	
+
 	protected abstract void loadMicrograph();
 	
 	private void initMenuBar(ParticlePicker picker)

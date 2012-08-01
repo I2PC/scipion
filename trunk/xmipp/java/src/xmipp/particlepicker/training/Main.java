@@ -63,14 +63,12 @@ class Main
 						boolean fastmode = Boolean.parseBoolean(myargs[index + 1]);
 						boolean incore = Boolean.parseBoolean(myargs[index + 2]);
 						ppicker = (fname == null)? new SupervisedParticlePicker(selfile, outputdir, threads, fastmode, incore): new SupervisedParticlePicker(selfile, outputdir, fname, threads, fastmode, incore);
-						
 					}
 
 					else if (mode == FamilyState.Review)
 					{
 						String reviewfile = myargs[3];
 						ppicker = (fname == null)? new ReviewParticlePicker(selfile, outputdir, reviewfile): new ReviewParticlePicker(selfile, outputdir, fname, reviewfile);
-						System.out.println("Particle Picker for Review mode created");
 					}
 					else if (mode == FamilyState.ReadOnly)
 						ppicker = new ReadOnlyParticlePicker(selfile, outputdir);

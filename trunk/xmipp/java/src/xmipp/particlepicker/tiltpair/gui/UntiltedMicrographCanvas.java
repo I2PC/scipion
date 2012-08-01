@@ -165,6 +165,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
+		if(!e.isShiftDown())
+			return;
 		int x = e.getX();
 		int y = e.getY();
 		frame.getTiltedCanvas().setMagnification(magnification);
