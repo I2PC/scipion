@@ -87,8 +87,8 @@ protected:
         addParamsLine("   copy <directory> <label=image>  : Copy files in metadata md1 to directory path (file names at label column)");
         addParamsLine("   move <directory>  <label=image> : Move files in metadata md1 to directory path (file names at label column)");
         addParamsLine("   delete  <label=image>      : Delete files in metadata md1 (file names at label column)");
-//        addParamsLine("   convert2db                 : Convert metadata to sqlite database");
-//        addParamsLine("   convert2xml                : Convert metadata to xml file");
+        //        addParamsLine("   convert2db                 : Convert metadata to sqlite database");
+        //        addParamsLine("   convert2xml                : Convert metadata to xml file");
         addParamsLine("   import_txt <labels>        : Import a text file specifying its columns");
         addParamsLine("           alias -f;                                             ");
 
@@ -150,7 +150,10 @@ protected:
         addExampleLine(" Select elements in metadata that satisfy a given constrain.", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query select \"angleRot > 10 AND anglePsi < 0.5\" -o out.doc");
         addExampleLine(" You can also modify your data using SQLite syntax expression", false);
-        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o b.doc");
+        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=2.*angleRot\" -o b.doc");
+        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=radians(angleRot)\" -o b.doc");
+        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=sin(radians(angleRot))\" -o b.doc");
+        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=sqrt(angleRot)\" -o b.doc");
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o b.doc");
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image='new_prefix_dir/'||image\" -o b.doc");
         addExampleLine(" Count number of images per CTF", false);
@@ -216,8 +219,10 @@ protected:
                 mdIn.removeLabel(labels[i]);
         }
         else if (operation == "modify_values")// modify_values
+        {
+        	MDSql::activateMathExtensions();
             mdIn.operate(getParam("--operate", 1));
-        else
+        }else
         {
             MetaData md(mdIn);
             if (operation == "sort")
@@ -311,17 +316,17 @@ protected:
     {
         operation = getParam("--file", 0);
 
-//        if (operation == "convert2db")
-//        {
-//            doWrite = false;
-//            MDSql::dumpToFile(fn_out);
-//        }
-//        else if (operation == "convert2xml")
-//        {
-//        	fn_out.re
-//            doWrite = false;
-//            mdIn.writeXML(fn_out);
-//        }
+        //        if (operation == "convert2db")
+        //        {
+        //            doWrite = false;
+        //            MDSql::dumpToFile(fn_out);
+        //        }
+        //        else if (operation == "convert2xml")
+        //        {
+        //         fn_out.re
+        //            doWrite = false;
+        //            mdIn.writeXML(fn_out);
+        //        }
         if (operation == "import_txt")
         {
             mdIn.readPlain(fn_in, getParam("--file", 1));
