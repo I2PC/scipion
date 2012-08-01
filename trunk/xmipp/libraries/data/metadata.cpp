@@ -1377,6 +1377,13 @@ void MetaData::renameColumn(MDLabel oldLabel, MDLabel newLabel)
     }
     myMDSql->renameColumn(oldLabel,newLabel);
 }
+
+void MetaData::activateMathExtensions(void)
+{
+//	const char* lib = "./libsqliteext.so";
+//	sqlite3_load_extension(db, lib, 0, &errmsg);
+    myMDSql->activateMathExtensions();
+}
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                                MDLabel aggregateLabel)
 
