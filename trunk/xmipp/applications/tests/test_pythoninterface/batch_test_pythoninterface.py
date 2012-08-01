@@ -54,14 +54,14 @@ class TestXmippPythonInterface(unittest.TestCase):
     def test_Euler_angles2matrix(self):
         from numpy  import array
 
-        a = array([[ 0.70710678,  0.70710678, -0.        ],
-           [-0.70710678,  0.70710678,  0.        ],
-           [ 0.,          0.,          1.        ]])
-        rot  = 45.
-        tilt =  0.
-        psi  =  0.
-        b = Euler_angles2matrix(rot,tilt,psi)
-        self.assertAlmostEqual(a.all(), b.all(),2)
+        a = array([[ 0.70710678, 0.70710678, -0.        ],
+           [-0.70710678, 0.70710678, 0.        ],
+           [ 0., 0., 1.        ]])
+        rot = 45.
+        tilt = 0.
+        psi = 0.
+        b = Euler_angles2matrix(rot, tilt, psi)
+        self.assertAlmostEqual(a.all(), b.all(), 2)
         
     def test_FileName_compose(self):
          fn1 = FileName("kk000001.xmp")
@@ -87,7 +87,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          self.assertFalse(fn2.isInStack())
          
     def test_FileName_isMetaData(self):
-         imgPath = testFile( "smallStack.stk")
+         imgPath = testFile("smallStack.stk")
          fn1 = FileName(imgPath)
          try: 
              result = fn1.isMetaData()
@@ -95,16 +95,16 @@ class TestXmippPythonInterface(unittest.TestCase):
              print "cannot open file:", fn1 ; exit()
          self.assertFalse(result)
          
-         imgPath = testFile( "test.xmd")
+         imgPath = testFile("test.xmd")
          fn2 = FileName(imgPath)
          self.assertTrue (fn2.isMetaData())
 
     def test_Image_add(self):
-        stackPath = testFile( "smallStack.stk")
+        stackPath = testFile("smallStack.stk")
         img1 = Image("1@" + stackPath)
         img2 = Image("2@" + stackPath)
         sum = img1 + img2
-        sumRef = Image(testFile( "sum.spi"))
+        sumRef = Image(testFile("sum.spi"))
         self.assertEqual(sum, sumRef)
         img1 += img2     
         self.assertEqual(sum, img1)
@@ -112,19 +112,19 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertNotEqual(sum, img1)   
     
     def test_Image_compare(self):
-        imgPath = testFile( "singleImage.spi")
+        imgPath = testFile("singleImage.spi")
         img1 = Image()
         img1.read(imgPath)
         img2 = Image(imgPath)
         # Test that image is equal to itself
         self.assertEqual(img1, img2)
         # Test different images
-        imgPath = "1@" + testFile( "smallStack.stk")
+        imgPath = "1@" + testFile("smallStack.stk")
         img2.read(imgPath)
         self.assertNotEqual(img1, img2)
              
     def test_Image_computeStatistics(self):
-        stackPath = testFile( "smallStack.stk")
+        stackPath = testFile("smallStack.stk")
         img1 = Image("1@" + stackPath)
         mean, dev, min, max = img1.computeStats()
         self.assertAlmostEqual(mean, -0.000360, 5)
@@ -146,7 +146,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertTrue(img.equal(img2, 0.1))
  
     def test_Image_initConstant(self):
-        imgPath = testFile( "tinyImage.spi")
+        imgPath = testFile("tinyImage.spi")
         img = Image(imgPath)
         img.initConstant(1.) 
         for i in range(0, 3):
@@ -155,7 +155,7 @@ class TestXmippPythonInterface(unittest.TestCase):
                 self.assertAlmostEquals(p, 1.0)
     
     def test_Image_initRandom(self):
-        imgPath = testFile( "tinyImage.spi")
+        imgPath = testFile("tinyImage.spi")
         img = Image(imgPath)
         img.resize(1024, 1024) 
         img.initRandom(0., 1., XMIPP_RND_GAUSSIAN)
@@ -164,18 +164,18 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertAlmostEqual(dev, 1., 2)
               
     def test_Image_minus(self):
-        pathSum = testFile( "sum.spi")
+        pathSum = testFile("sum.spi")
         imgAdd = Image(pathSum)
-        path1 = "1@" + testFile( "smallStack.stk")
+        path1 = "1@" + testFile("smallStack.stk")
         img1 = Image(path1)
-        path2 = "2@" + testFile( "smallStack.stk")
+        path2 = "2@" + testFile("smallStack.stk")
         img2 = Image(path2)
         
         imgAdd -= img2
         self.assertEqual(img1, imgAdd)   
         
     def test_Image_read(self):
-        imgPath = testFile( "tinyImage.spi")
+        imgPath = testFile("tinyImage.spi")
         img = Image(imgPath)        
         count = 0.
         for i in range(0, 3):
@@ -185,7 +185,7 @@ class TestXmippPythonInterface(unittest.TestCase):
                 count += 1.
                 
     def test_Image_read_header(self):
-        imgPath = testFile( "tinyImage.spi")
+        imgPath = testFile("tinyImage.spi")
         img = Image()
         img.read(imgPath, HEADER)        
         
@@ -197,9 +197,9 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertEqual(n, 1)   
                 
     def test_Image_readApplyGeo(self):
-        imgPath = testFile( "tinyRotated.spi")
+        imgPath = testFile("tinyRotated.spi")
         img = Image(imgPath)  
-        imgPath = testFile( "tinyImage.spi")
+        imgPath = testFile("tinyImage.spi")
         md = MetaData()
         id = md.addObject()
         md.setValue(MDL_IMAGE, imgPath, id)
@@ -222,8 +222,8 @@ class TestXmippPythonInterface(unittest.TestCase):
         
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
-        mdPath = testFile( "test.xmd")
-        mdPath2 = testFile( "proj_ctf_1.stk")
+        mdPath = testFile("test.xmd")
+        mdPath2 = testFile("proj_ctf_1.stk")
         mD = MetaData(mdPath)
         img = mD.getValue(MDL_IMAGE, 1L)
         self.assertEqual(img, '000001@' + mdPath2)
@@ -238,52 +238,52 @@ class TestXmippPythonInterface(unittest.TestCase):
         
     def test_Metadata_importObjects(self):
         '''import metadata subset'''
-        mdPath = testFile( "test.xmd")
+        mdPath = testFile("test.xmd")
         mD = MetaData(mdPath)
         mDout = MetaData()
         mDout.importObjects(mD, MDValueEQ(MDL_REF3D, -1))
-        mdPath = testFile( "importObject.xmd")
+        mdPath = testFile("importObject.xmd")
         mD = MetaData(mdPath)
         self.assertEqual(mD, mDout)
         
     def test_Metadata_iter(self):
-         mdPath = testFile( "test.xmd")
+         mdPath = testFile("test.xmd")
          mD = MetaData(mdPath)
          i = 1
          for id in mD:
              img = mD.getValue(MDL_IMAGE, id)
-             expImg = testFile( "test.xmd")
-             expImg = ("00000%d@" % i) + testFile( "proj_ctf_1.stk")
+             expImg = testFile("test.xmd")
+             expImg = ("00000%d@" % i) + testFile("proj_ctf_1.stk")
              #expImg = '00000%d@Images/proj_ctf_1.stk' % i
              self.assertEqual(img, expImg)
              i += 1
         
     def test_Metadata_operate(self):
-        md=MetaData()
-        id=md.addObject()
-        md.setValue(MDL_ANGLE_ROT,1.,id)
-        md.setValue(MDL_ANGLE_TILT,2.,id)
-        md.setValue(MDL_ANGLE_PSI,3.,id)
-        md.setValue(MDL_ANGLE_ROT2,6.,id)
-        md.setValue(MDL_ANGLE_TILT2,5.,id)
-        md.setValue(MDL_ANGLE_PSI2,4.,id)
-        id=md.addObject()
-        md.setValue(MDL_ANGLE_ROT,11.,id)
-        md.setValue(MDL_ANGLE_TILT,12.,id)
-        md.setValue(MDL_ANGLE_PSI,13.,id)
-        md.setValue(MDL_ANGLE_ROT2,16.,id)
-        md.setValue(MDL_ANGLE_TILT2,15.,id)
-        md.setValue(MDL_ANGLE_PSI2,14.,id)
+        md = MetaData()
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 1., id)
+        md.setValue(MDL_ANGLE_TILT, 2., id)
+        md.setValue(MDL_ANGLE_PSI, 3., id)
+        md.setValue(MDL_ANGLE_ROT2, 6., id)
+        md.setValue(MDL_ANGLE_TILT2, 5., id)
+        md.setValue(MDL_ANGLE_PSI2, 4., id)
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 11., id)
+        md.setValue(MDL_ANGLE_TILT, 12., id)
+        md.setValue(MDL_ANGLE_PSI, 13., id)
+        md.setValue(MDL_ANGLE_ROT2, 16., id)
+        md.setValue(MDL_ANGLE_TILT2, 15., id)
+        md.setValue(MDL_ANGLE_PSI2, 14., id)
         
-        md2=MetaData(md)
-        anglePsiLabel=label2Str(MDL_ANGLE_PSI)
-        angleRotLabel=label2Str(MDL_ANGLE_ROT)
-        operateString  =        angleRotLabel+"=3*"+angleRotLabel
-        operateString  += "," + anglePsiLabel+"=2*"+anglePsiLabel
+        md2 = MetaData(md)
+        anglePsiLabel = label2Str(MDL_ANGLE_PSI)
+        angleRotLabel = label2Str(MDL_ANGLE_ROT)
+        operateString = angleRotLabel + "=3*" + angleRotLabel
+        operateString += "," + anglePsiLabel + "=2*" + anglePsiLabel
         md.operate(operateString)
         for id in md2:
-            md2.setValue(MDL_ANGLE_ROT,md2.getValue(MDL_ANGLE_ROT,id)*3.,id);
-            md2.setValue(MDL_ANGLE_PSI,md2.getValue(MDL_ANGLE_PSI,id)*2.,id);
+            md2.setValue(MDL_ANGLE_ROT, md2.getValue(MDL_ANGLE_ROT, id) * 3., id);
+            md2.setValue(MDL_ANGLE_PSI, md2.getValue(MDL_ANGLE_PSI, id) * 2., id);
         self.assertEqual(md, md2)
 
     def test_Metadata_join(self):
@@ -334,7 +334,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             id = md2.addObject() 
             img = '%06d@pythoninterface/proj_ctf_1.stk' % i
             md2.setValue(MDL_IMAGE, img, id)
-        md.intersection (md2,MDL_IMAGE)
+        md.intersection (md2, MDL_IMAGE)
 
         for i in range(1, 3):
             id = mdout.addObject() 
@@ -362,7 +362,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          000002@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 ' 1.000000     4.000000     9.000000 '          2
          000003@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 ' 1.000000     8.000000    27.000000 '         -3
         ''' 
-        mdPath = testFile( "test.xmd")
+        mdPath = testFile("test.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
@@ -403,7 +403,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          000002@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 ' 1.000000     4.000000     9.000000 '          2
          000003@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 ' 1.000000     8.000000    27.000000 '         -3
         ''' 
-        mdPath = testFile( "test.xmd")
+        mdPath = testFile("test.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
@@ -444,7 +444,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          _image 000001@Images/proj_ctf_1.stk
          _CTFModel CTFs/10.ctfparam
         ''' 
-        mdPath = testFile( "test_row.xmd")
+        mdPath = testFile("test_row.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
@@ -477,7 +477,7 @@ class TestXmippPythonInterface(unittest.TestCase):
          000002@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam   200.000000         20 [     1.000000     4.000000     9.000000 ]          2
          000003@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam  -300.000000         30 [     1.000000     8.000000    27.000000 ]         -3
         ''' 
-        mdPath = testFile( "test.xmd")
+        mdPath = testFile("test.xmd")
         mdRef = MetaData(mdPath)
         md = MetaData()
         ii = -1
@@ -556,39 +556,58 @@ class TestXmippPythonInterface(unittest.TestCase):
         except Exception, e:
             print str(e)
 
+    def test_Metadata_activateMathExtensions(self):
+        '''activateMathExtensions'''
+        md1 = MetaData()
+        md1.activateMathExtensions()
+        id = md1.addObject()
+        md1.setValue(MDL_ANGLE_ROT, 4., id)
+        md1.setValue(MDL_ANGLE_TILT, 3., id)
+        id = md1.addObject()
+        md1.setValue(MDL_ANGLE_ROT, 9., id)
+        md1.setValue(MDL_ANGLE_TILT, 5., id)
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 2., id)
+        md2.setValue(MDL_ANGLE_TILT, 3., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 3., id)
+        md2.setValue(MDL_ANGLE_TILT, 5., id)
+        angleRotLabel = label2Str(MDL_ANGLE_ROT)
+        operateString = angleRotLabel + "= sqrt(" + angleRotLabel+")"
+        md1.operate(operateString)
+        self.assertEqual(md1, md2)
+        
     def test_SymList_readSymmetryFile(self):
         '''readSymmetryFile'''
-        a=SymList()
+        a = SymList()
         a.readSymmetryFile("i3")
         self.assertEqual(True, True)
-
+        
     def test_SymList_computeDistance(self):
         '''computeDistance'''
-        SL=SymList()
+        SL = SymList()
         SL.readSymmetryFile("i3h")
-        md=MetaData()
-        
-        
-        self.assertEqual(True, True)
-        id=md.addObject()
-        md.setValue(MDL_ANGLE_ROT,1.,id)
-        md.setValue(MDL_ANGLE_TILT,2.,id)
-        md.setValue(MDL_ANGLE_PSI,3.,id)
-        md.setValue(MDL_ANGLE_ROT2,6.,id)
-        md.setValue(MDL_ANGLE_TILT2,5.,id)
-        md.setValue(MDL_ANGLE_PSI2,4.,id)
-        id=md.addObject()
-        md.setValue(MDL_ANGLE_ROT,11.,id)
-        md.setValue(MDL_ANGLE_TILT,12.,id)
-        md.setValue(MDL_ANGLE_PSI,13.,id)
-        md.setValue(MDL_ANGLE_ROT2,16.,id)
-        md.setValue(MDL_ANGLE_TILT2,15.,id)
-        md.setValue(MDL_ANGLE_PSI2,14.,id)
+        md = MetaData()
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 1., id)
+        md.setValue(MDL_ANGLE_TILT, 2., id)
+        md.setValue(MDL_ANGLE_PSI, 3., id)
+        md.setValue(MDL_ANGLE_ROT2, 6., id)
+        md.setValue(MDL_ANGLE_TILT2, 5., id)
+        md.setValue(MDL_ANGLE_PSI2, 4., id)
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 11., id)
+        md.setValue(MDL_ANGLE_TILT, 12., id)
+        md.setValue(MDL_ANGLE_PSI, 13., id)
+        md.setValue(MDL_ANGLE_ROT2, 16., id)
+        md.setValue(MDL_ANGLE_TILT2, 15., id)
+        md.setValue(MDL_ANGLE_PSI2, 14., id)
         mdOut = MetaData(md)
-        SL.computeDistance(md,False,False,False)
-        id=md.firstObject()
-        total = md.getValue(MDL_ANGLE_DIFF,id)
-        self.assertAlmostEqual(total, 5.23652,4)
+        SL.computeDistance(md, False, False, False)
+        id = md.firstObject()
+        total = md.getValue(MDL_ANGLE_DIFF, id)
+        self.assertAlmostEqual(total, 5.23652, 4)
 #    //EXPECT_NEAR (total, 5.23652,0.00001);
 #    XMIPP_CATCH
 #}
