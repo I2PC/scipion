@@ -565,7 +565,7 @@ INRIASources = Glob('external/inria', '*.cc', [])
 CondorSources = Glob('external/condor', '*.cpp', [])
 
 # sqliteExt
-#SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
+SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
 
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
@@ -573,7 +573,7 @@ AddLibrary('XmippExternal', 'external',
 
 #AddLibrary('XmippSqliteExt', 'external',
 #   SqliteExtSources,
-#   ['#'])
+#   ['#'],[''],['-lm'],'lib','.so')
 
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
