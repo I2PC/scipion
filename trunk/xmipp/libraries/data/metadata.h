@@ -996,6 +996,21 @@ public:
      */
     void renameColumn(MDLabel oldLabel, MDLabel newLabel);
 
+    /**Activate math functions in sqlite
+     *This library will provide common mathematical and string functions
+
+Math: acos, asin, atan, atn2, atan2, acosh, asinh, atanh, difference,
+degrees, radians, cos, sin, tan, cot, cosh, sinh, tanh, coth, exp,
+log, log10, power, sign, sqrt, square, ceil, floor, pi.
+
+String: replicate, charindex, leftstr, rightstr, ltrim, rtrim, trim,
+replace, reverse, proper, padl, padr, padc, strfilter.
+
+Aggregate: stdev, variance, mode, median, lower_quartile,
+upper_quartile.
+     *
+     */
+    void activateMathExtensions(void);
 
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
