@@ -112,6 +112,13 @@ bool MDSql::addColumn(MDLabel column)
     return execSingleStmt(ss);
 }
 
+void  MDSql::activateMathExtensions(void)
+{
+    const char* lib = "libXmippSqliteExt.so";
+    sqlite3_enable_load_extension(db, 1);
+    if( sqlite3_load_extension(db, lib, 0, 0)!= SQLITE_OK)
+        REPORT_ERROR(ERR_MD_SQL,"Cannot activa sqlite extensions");
+}
 bool MDSql::renameColumn(MDLabel oldLabel, MDLabel newlabel)
 {
     //1 Create an new table that matches your original table,
@@ -694,12 +701,12 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     }
     if(operation==NATURAL_JOIN)
     {
-    	std::vector<MDLabel> intersectLabels;
+        std::vector<MDLabel> intersectLabels;
         set_intersection((mdInRight->activeLabels).begin(),
-        		              (mdInRight->activeLabels).end(),
-        		              (mdInLeft->activeLabels).begin(),
-        		              (mdInLeft->activeLabels).end(),
-        		         std::back_inserter(intersectLabels));
+                         (mdInRight->activeLabels).end(),
+                         (mdInLeft->activeLabels).begin(),
+                         (mdInLeft->activeLabels).end(),
+                         std::back_inserter(intersectLabels));
         mdInRight->addIndex(intersectLabels);
         mdInLeft->addIndex(intersectLabels);
     }

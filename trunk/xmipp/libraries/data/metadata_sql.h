@@ -99,6 +99,24 @@ private:
     /** Add a new column to a metadata.
      */
     bool addColumn(MDLabel column);
+    /**This library will provide common mathematical and string functions in
+SQL queries using the operating system libraries or provided
+definitions.  It includes the following functions:
+
+Math: acos, asin, atan, atn2, atan2, acosh, asinh, atanh, difference,
+degrees, radians, cos, sin, tan, cot, cosh, sinh, tanh, coth, exp,
+log, log10, power, sign, sqrt, square, ceil, floor, pi.
+
+String: replicate, charindex, leftstr, rightstr, ltrim, rtrim, trim,
+replace, reverse, proper, padl, padr, padc, strfilter.
+
+Aggregate: stdev, variance, mode, median, lower_quartile,
+upper_quartile.
+     *
+     *
+     */
+    void activateMathExtensions(void);
+
    /** Rename Column
     * SQLite itself does not support it. So some hacking is needed here
     */
