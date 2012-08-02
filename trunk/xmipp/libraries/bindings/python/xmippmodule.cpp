@@ -688,7 +688,7 @@ xmipp_methods[] =
           "dump metadata to sqlite database" },
         { "Euler_angles2matrix", (PyCFunction) xmipp_Euler_angles2matrix, METH_VARARGS,
           "convert euler angles to transformation matrix" },
-        { "activateMathExtensions", (PyCFunction) MetaData_activateMathExtensions,
+        { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
 
         { NULL } /* Sentinel */
