@@ -102,10 +102,9 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
-		if (SwingUtilities.isRightMouseButton(e))
+		if (isDragImage(e))
 			frame.getTiltedCanvas().mousePressed(x, y);
-
-		if (frame.isPickingAvailable(e))
+		else if (frame.isPickingAvailable(e))
 		{
 			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
 				um.addParticleToAligner(active,true);
@@ -146,7 +145,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		if (SwingUtilities.isRightMouseButton(e))
+		if (isDragImage(e))
 		{
 			frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
 			return;
