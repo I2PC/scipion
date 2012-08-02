@@ -27,6 +27,7 @@
 #include <data/mask.h>
 #include <data/polar.h>
 #include <data/xmipp_image_generic.h>
+#include <reconstruction/symmetrize.h>
 
 // Pointer to parameters
 ProgClassifyCL3D *prm = NULL;
@@ -82,9 +83,9 @@ void CL3DAssignment::copyAlignment(const CL3DAssignment &alignment)
 /* CL3DClass basics ---------------------------------------------------- */
 CL3DClass::CL3DClass()
 {
-    P.initZeros(prm->Zdim, prm->Ydim, prm->Xdim);
-    P.setXmippOrigin();
-    transformer.setReal(P);
+    Paux.initZeros(prm->Zdim, prm->Ydim, prm->Xdim);
+    Paux.setXmippOrigin();
+    transformer.setReal(Paux);
     Pupdate.initZeros(transformer.fFourier);
     PupdateMask.initZeros(Pupdate);
 }
@@ -150,8 +151,22 @@ void CL3DClass::transferUpdate()
     		ptrPupdate+=2;
 		}
     	Pfourier=Pupdate;
-    	transformer.inverseFourierTransform(Pupdate,P);
+    	transformer.inverseFourierTransform(Pupdate,Paux);
 
+    	// Compact support in real space
+    	double mean;
+    	detectBackground(Paux,bgMask,0.01,mean);
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Paux)
+        if (DIRECT_MULTIDIM_ELEM(bgMask,n))
+        	DIRECT_MULTIDIM_ELEM(Paux,n) = 0;
+
+    	// Compact support in wavelet space
+    	forceDWTSparsity(Paux,1.0-prm->DWTsparsity);
+
+    	// Symmetrize
+        symmetrizeVolume(prm->SL,Paux,P,WRAP);
+
+        // Normalize and remove outside sphere
         P.statisticsAdjust(0, 1);
         const MultidimArray<int> &mask=prm->mask.get_binary_mask();
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
@@ -1469,6 +1484,7 @@ void ProgClassifyCL3D::readParams()
     Ncodes = getIntParam("--nref");
     PminSize = getDoubleParam("--minsize");
     sparsity = getDoubleParam("--sparsity");
+    DWTsparsity = getDoubleParam("--DWTsparsity");
     String aux;
     aux = getParam("--distance");
     useCorrelation = aux == "correlation";
@@ -1480,6 +1496,7 @@ void ProgClassifyCL3D::readParams()
     maxTilt = getDoubleParam("--maxTilt");
     maxPsi = getDoubleParam("--maxPsi");
 	classifyAllImages = checkParam("--classifyAllImages");
+	fnSym = getParam("--sym");
 	if (checkParam("--mask"))
 		mask.readParams(this);
 }
@@ -1498,6 +1515,7 @@ void ProgClassifyCL3D::show() const {
 			<< "Neighbours:              " << Nneighbours << std::endl
 			<< "Minimum node size:       " << PminSize << std::endl
 			<< "Sparsity:                " << sparsity << std::endl
+			<< "DWT Sparsity:            " << DWTsparsity << std::endl
 			<< "Use Correlation:         " << useCorrelation << std::endl
 			<< "Classical Multiref:      " << classicalMultiref << std::endl
 			<< "Maximum shift Z:         " << maxShiftZ << std::endl
@@ -1507,6 +1525,7 @@ void ProgClassifyCL3D::show() const {
 			<< "Maximum tilt:            " << maxTilt << std::endl
 			<< "Maximum psi:             " << maxPsi << std::endl
 			<< "Classify all images:     " << classifyAllImages << std::endl
+			<< "Symmetry:                " << fnSym << std::endl
 	;
 	mask.show();
 }
@@ -1533,6 +1552,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("                             : Set -1 for all");
     addParamsLine("   [--minsize+ <N=20>]       : Percentage minimum node size");
     addParamsLine("   [--sparsity+ <f=0.975>]   : Percentage of Fourier coefficients to drop");
+    addParamsLine("   [--DWTsparsity+ <f=0.99>] : Percentage of wavelet coefficients to drop");
     addParamsLine("   [--distance <type=correntropy>]       : Distance type");
     addParamsLine("            where <type>");
     addParamsLine("                       correntropy correlation: See CL3D paper for the definition of correntropy");
@@ -1544,6 +1564,7 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--maxTilt <d=180>]       : Maximum allowed tilt angle in absolute value");
     addParamsLine("   [--maxPsi <d=180>]        : Maximum allowed in-plane angle in absolute value");
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
+	addParamsLine("   [--sym <s=c1>]            : Symmetry of the classes to be reconstructed");
 	Mask::defineParams(this);
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL3D` -i images.stk --nref 256 --oroot class --iter 10");
 }
@@ -1556,6 +1577,9 @@ void ProgClassifyCL3D::produceSideInfo()
     SF.read(fnSel);
     size_t Ndim;
     getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
+
+    // Prepare symmetry list
+    SL.readSymmetryFile(fnSym);
 
     // Prepare the Task distributor
     SF.findObjects(objId);

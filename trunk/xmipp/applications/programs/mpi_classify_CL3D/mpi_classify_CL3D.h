@@ -34,6 +34,7 @@
 #include <data/histogram.h>
 #include <data/numerical_tools.h>
 #include <data/xmipp_program.h>
+#include <data/symmetries.h>
 #include <vector>
 
 /**@defgroup VQforProjections Vector Quantization for Projections
@@ -70,7 +71,7 @@ std::ostream & operator << (std::ostream &out, const CL3DAssignment& assigned);
 class CL3DClass {
 public:
     // Centroid
-    MultidimArray<double> P;
+    MultidimArray<double> P, Paux, bgMask;
     
     // Centroid in Fourier space
     MultidimArray< std::complex<double> > Pfourier;
@@ -122,6 +123,7 @@ public:
 
     // List of neighbour indexes
     std::vector<int> neighboursIdx;
+
 public:
     /** Empty constructor */
     CL3DClass();
@@ -231,6 +233,9 @@ public:
     /// Output rootname
     FileName fnOut;
 
+    /// Symmetry file or code
+    FileName fnSym;
+
     /// Number of iterations
     int Niter;
 
@@ -248,6 +253,9 @@ public:
     
     /// Sparsity factor (0<f<1; 1=drop all coefficients, 0=do not drop any coefficient)
     double sparsity;
+
+    /// DWT Sparsity factor (0<f<1; 1=drop all coefficients, 0=do not drop any coefficient)
+    double DWTsparsity;
 
     /// Use Correlation instead of Correntropy
     bool useCorrelation;
@@ -278,6 +286,9 @@ public:
 
     /// Mask
     Mask mask;
+
+    // Symmetry List
+    SymList SL;
 
     /// MPI constructor
     ProgClassifyCL3D(int argc, char** argv);
