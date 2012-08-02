@@ -25,7 +25,10 @@ class ProtParticlePicking(XmippProtocol):
         self.setPreviousRun(self.ImportRun)
         self.importDir = self.PrevRun.WorkingDir
         self.inputProperty('TiltPairs')
-        self.MicrographsMd = self.PrevRun.getFilename("micrographs")
+        if self.TiltPairs:
+            self.MicrographsMd = self.PrevRun.getFilename('tilted_pairs')
+        else:
+            self.MicrographsMd = self.PrevRun.getFilename('micrographs')
         self.Input['micrographs'] = self.MicrographsMd
         self.inputFilename('microscope', 'acquisition')
         self.MicrographsMd = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
@@ -96,6 +99,7 @@ def validateMicrographs(inputMicrographs, tiltPairs=False):
             checkMicrograph(xmipp.MDL_MICROGRAPH_TILTED, objId)
     
     if len(missingMicrographs):
+        print missingMicrographs
         errors.append("Cannot find the following micrographs: " + "\n".join(missingMicrographs))
     return errors    
 
