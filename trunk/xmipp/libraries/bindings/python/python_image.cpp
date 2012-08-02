@@ -458,6 +458,18 @@ Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 }
 
+ /** Just to statically call the function import_array
+  * required to work with NumPy arrays
+  */
+class NumpyStaticImport
+{
+public:
+  NumpyStaticImport() { import_array(); }
+};//class NumpyStaticImport
+
+//Declare a variable to call the constructor
+static NumpyStaticImport _npyImport;
+
 /* getData */
  PyObject *
 Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs)

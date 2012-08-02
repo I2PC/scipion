@@ -166,6 +166,15 @@ class TestXmippPythonInterface(unittest.TestCase):
 
         self.assertFalse(img.equal(img2, 0.005))
         self.assertTrue(img.equal(img2, 0.1))
+        
+    def test_Image_getData(self):
+        from numpy import array
+        img1 = Image(testFile("singleImage.spi"))
+        Z = img1.getData()
+        Zref = array([[-0.27623099,-0.13268562, 0.32305956],
+                      [ 1.07257104, 0.73135602, 0.49813408],
+                      [ 0.90717429, 0.6812411, -0.09380955]])
+        self.assertEqual(Z.all(), Zref.all())
  
     def test_Image_initConstant(self):
         imgPath = testFile("tinyImage.spi")

@@ -703,7 +703,6 @@ PyMODINIT_FUNC initxmipp(void)
     PyObject* module;
     module = Py_InitModule3("xmipp", xmipp_methods,
                             "Xmipp module as a Python extension.");
-    //Required to use numpy array functions
     import_array();
 
     //Check types and add to module
