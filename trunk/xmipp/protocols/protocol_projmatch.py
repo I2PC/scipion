@@ -33,6 +33,7 @@ from protlib_filesystem import linkAcquisitionInfoIfPresent\
                                , AcquisitionInfoExists\
                                , AcquisitionInfoGetSamplingRate
 from math import radians
+from protlib_xmipp import validateSameSize
 
 class ProtProjMatch(XmippProtocol):
 #    def __init__(self, scriptname, workingdir, projectdir=None, logdir='Logs', restartStep=1, isIter=True):
@@ -100,7 +101,12 @@ class ProtProjMatch(XmippProtocol):
         _InnerRadius = int(getComponentFromVector(self.InnerRadius, 1))
         if _OuterRadius <= _InnerRadius:
             errors.append("OuterRadius must be larger than InnerRadius")
-
+        #check mask radius is noot bigger than half the volume size
+        (xdim, ydim, zdim, ndim) = validateSameSize(self.ReferenceFileNames,errors)
+        if _OuterRadius * 2  > xdim:
+            errors.append("OuterRadius should be less than half the volume size")
+    
+        
         #Check that acquisition info file is available
         if not AcquisitionInfoExists(self.SelFileName):
             errors.append("""Acquisition file for metadata %s is not available. 
