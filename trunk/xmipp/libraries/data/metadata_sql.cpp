@@ -119,7 +119,7 @@ bool  MDSql::activateMathExtensions(void)
     if( sqlite3_load_extension(db, lib, 0, 0)!= SQLITE_OK)
         REPORT_ERROR(ERR_MD_SQL,"Cannot activa sqlite extensions");
     else
-    	return true;
+        return true;
 }
 bool MDSql::renameColumn(MDLabel oldLabel, MDLabel newlabel)
 {
@@ -704,11 +704,19 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     if(operation==NATURAL_JOIN)
     {
         std::vector<MDLabel> intersectLabels;
-        set_intersection((mdInRight->activeLabels).begin(),
-                         (mdInRight->activeLabels).end(),
-                         (mdInLeft->activeLabels).begin(),
-                         (mdInLeft->activeLabels).end(),
-                         std::back_inserter(intersectLabels));
+
+        for (std::vector<MDLabel>
+             ::const_iterator right=(mdInRight->activeLabels).begin();
+        		right!=(mdInRight->activeLabels).end();
+             ++right)
+            for (std::vector<MDLabel>
+                 ::const_iterator left=(mdInLeft->activeLabels).begin();
+            		left!=(mdInLeft->activeLabels).end();
+                 ++left)
+        {
+            	if (*left == *right)
+            		intersectLabels.push_back(*left);
+        }
         mdInRight->addIndex(intersectLabels);
         mdInLeft->addIndex(intersectLabels);
     }
