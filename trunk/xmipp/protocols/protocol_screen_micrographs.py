@@ -143,7 +143,9 @@ class ProtScreenMicrographs(XmippProtocol):
     
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
     buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
-    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s"%(summaryFile,summaryFile),NumberOfMpi=NumberOfMpi)
+    dirSummary,fnSummary=os.path.split(summaryFile)
+    runJob(log,"xmipp_ctf_sort_psds","-i %s -o %s/aux_%s"%(summaryFile,dirSummary,fnSummary),NumberOfMpi=NumberOfMpi)
+    runJob(log,"mv","-f %s/aux_%s %s"%(dirSummary,fnSummary,summaryFile))
     if Downsampling!=1:
         runJob(log,"rm","-f "+TmpDir+"/*")
 
@@ -169,7 +171,7 @@ def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
         # Set values in metadata
         for label, value in zip(labels, values):
             md.setValue(label, value, objId)
-            
+    
     if not md.isEmpty():
         md.sort(xmipp.MDL_MICROGRAPH)
         md.write(summaryFile)
