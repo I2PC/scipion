@@ -132,13 +132,14 @@ def createResults(log
     mdOut = MetaData()
     if DoCtfCorrection:
         #read only image and ctf_model
+        mdOut = MetaData()
         mdCTF = MetaData()
         mdCTF.read(CTFDatName, [MDL_IMAGE, MDL_CTF_MODEL])
         md.addIndex(MDL_IMAGE)
         mdCTF.addIndex(MDL_IMAGE)
         mdOut.join (md, mdCTF, MDL_IMAGE, MDL_IMAGE, NATURAL_JOIN)
     else:
-        mdOut = mdCTF
+        mdOut = MetaData(md)#becarefull with copy metadata since it only copies pointers
     mdref3D = MetaData()
     mdrefCTFgroup = MetaData()
     mdref3D.aggregate(mdOut, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
