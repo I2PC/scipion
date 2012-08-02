@@ -1423,6 +1423,11 @@ void logFilter(MultidimArray< T > &V, double a, double b, double c)
 /** Compute edges with Sobel */
 void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
 
+/** Force sparsity.
+ * Only eps*100  % of the DWT coefficients are kept. It is assumed that the input volume
+ * is cubic.
+ */
+void forceDWTSparsity(MultidimArray<double> &V, double eps);
 
 /** Abstract class that will be the base for all filters */
 class XmippFilter

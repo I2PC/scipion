@@ -357,27 +357,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
             {
                 artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                                             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
-                selfScaleToSize(BSPLINE3,vol_voxels(),
-                                NEXT_POWER_OF_2(XSIZE(vol_voxels())),
-                                NEXT_POWER_OF_2(YSIZE(vol_voxels())),
-                                NEXT_POWER_OF_2(ZSIZE(vol_voxels())));
-                Image<double> vol_wavelets, vol_wavelets_abs;
-                set_DWT_type(DAUB12);
-                DWT(vol_voxels(),vol_wavelets());
-                vol_wavelets_abs()=vol_wavelets();
-                vol_wavelets_abs().selfABS();
-                double *begin=MULTIDIM_ARRAY(vol_wavelets_abs());
-                double *end=MULTIDIM_ARRAY(vol_wavelets_abs())+
-                            MULTIDIM_SIZE(vol_wavelets_abs());
-                std::sort(begin,end);
-                double threshold1=DIRECT_MULTIDIM_ELEM(vol_wavelets_abs(),
-                                                       (long int)((1-artPrm.sparseEps)*MULTIDIM_SIZE(vol_wavelets_abs())));
-                vol_wavelets().threshold("abs_below", threshold1, 0.0);
-                IDWT(vol_wavelets(),vol_voxels());
-                selfScaleToSize(BSPLINE3,vol_voxels(),
-                                Xoutput_volume_size,
-                                Youtput_volume_size,
-                                Zoutput_volume_size);
+                forceDWTSparsity(vol_voxels(),artPrm.sparseEps);
                 artPrm.basis.changeFromVoxels(vol_voxels(),vol_basis,artPrm.grid_type,
                                               artPrm.grid_relative_size, NULL, NULL, artPrm.R, artPrm.threads);
             }

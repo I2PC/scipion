@@ -26,6 +26,7 @@
 #include "filters.h"
 #include <list>
 #include "morphology.h"
+#include "wavelet.h"
 
 /* Substract background ---------------------------------------------------- */
 void substractBackgroundPlane(MultidimArray<double> &I)
@@ -2646,6 +2647,26 @@ void computeEdges(const MultidimArray<double>& vol,
                                        (V_dx * V_dx) + (V_dy * V_dy) + (V_dz * V_dz));
 
     }
+}
+
+void forceDWTSparsity(MultidimArray<double> &V, double eps)
+{
+	int size0=XSIZE(V);
+	int sizeF=NEXT_POWER_OF_2(size0);
+    selfScaleToSize(BSPLINE3,V,sizeF,sizeF,sizeF);
+    MultidimArray<double> vol_wavelets, vol_wavelets_abs;
+    set_DWT_type(DAUB12);
+    DWT(V,vol_wavelets);
+    vol_wavelets_abs=vol_wavelets;
+    vol_wavelets_abs.selfABS();
+    double *begin=MULTIDIM_ARRAY(vol_wavelets_abs);
+    double *end=MULTIDIM_ARRAY(vol_wavelets_abs)+MULTIDIM_SIZE(vol_wavelets_abs);
+    std::sort(begin,end);
+    double threshold1=DIRECT_MULTIDIM_ELEM(vol_wavelets_abs,
+                                           (long int)((1.0-eps)*MULTIDIM_SIZE(vol_wavelets_abs)));
+    vol_wavelets.threshold("abs_below", threshold1, 0.0);
+    IDWT(vol_wavelets,V);
+    selfScaleToSize(BSPLINE3,V,size0, size0, size0);
 }
 
 /////////////// FILTERS IMPLEMENTATIONS /////////////////
