@@ -1018,6 +1018,7 @@ void scaleToSize(int SplineDegree,
     else
         REPORT_ERROR(ERR_MULTIDIM_DIM,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
 
+    V2.setXmippOrigin();
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, WRAP, (T)0);
 }
 
@@ -1072,7 +1073,6 @@ void selfScaleToSize(int SplineDegree,
                      int Xdim, int Ydim, int Zdim = 1)
 {
     MultidimArray<T> aux = V1;
-    V1.initZeros();
     scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
 }
 
