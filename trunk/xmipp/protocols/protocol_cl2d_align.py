@@ -9,7 +9,8 @@ import glob, os, sys, shutil,time
 from os.path import exists
 from protlib_base import *
 from config_protocols import protDict
-from protlib_filesystem import renameFile, deleteFile
+from protlib_filesystem import renameFile
+from protlib_utils import runJob
 from xmipp import MetaData, Image
 
 class ProtCL2DAlignment(XmippProtocol):
@@ -49,7 +50,7 @@ class ProtCL2DAlignment(XmippProtocol):
                 runShowJ("%s %s" % (self.workingDirPath("results_level_00_classes.stk"),self.workingDirPath("results_level_00_classes.xmd")))
     
     def insertCl2dStep(self):
-        params= '-i %s --oroot %s/results --nref 1 --iter %d --maxShift %d' % \
+        params= '-i %s --oroot results --odir %s --nref 1 --iter %d --maxShift %d' % \
                 (self.InSelFile, self.WorkingDir, self.NumberOfIterations, self.MaxShift)
                 
         if self.ReferenceImage!="":
@@ -61,8 +62,7 @@ class ProtCL2DAlignment(XmippProtocol):
 def gatherResults(log, WorkingDir):
     wdPath = lambda path: os.path.join(WorkingDir, path)
     renameFile(log, wdPath("results_images.xmd"), wdPath("alignment.xmd"))
-    fnStack=wdPath("results_classes_level_00.stk")
+    fnStack=wdPath("level_00/results_classes.stk")
     I=Image("1@"+fnStack)
     I.write(wdPath("average.xmp"))
-    deleteFile(log,fnStack)
-    deleteFile(log,wdPath("results_classes_level_00.xmd"))
+    runJob(log,"rm","-rf "+wdPath("level_00"))
