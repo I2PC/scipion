@@ -2354,66 +2354,41 @@ std::ostream& operator << (std::ostream &o, const Phantom &P)
 /* Write Volume Description ------------------------------------------------ */
 void Phantom::write(const FileName &fn_phantom)
 {
-
-	if (fn_phantom.isMetaData())
-	{
-		MetaData MD1;  //MetaData for phanto global parameters
-		MetaData MD2;  //MetaData for Feature parameters
-		std::vector<double> FCVect(3);  //For the center of feature
-		size_t id;
+	MetaData MD1;  //MetaData for phanto global parameters
+	MetaData MD2;  //MetaData for Feature parameters
+	std::vector<double> FCVect(3);  //For the center of feature
+	size_t id;
 	// Write global parameters to the first block
-		std::vector<double> PCVector;  //For the center of Phantom
-		MD1.setColumnFormat(false);
-		id = MD1.addObject();
-		PCVector.push_back(xdim);
-		PCVector.push_back(ydim);
-		PCVector.push_back(zdim);
-		MD1.setValue(MDL_DIMENSIONS_3D, PCVector, id);
-		MD1.setValue(MDL_PHANTOM_BGDENSITY, Background_Density, id);
-		if (current_scale != 1)
-			MD1.setValue(MDL_SCALE, current_scale, id);
-		else
-			MD1.setValue(MDL_SCALE, 1.0, id);
-		MD1.write((std::string)"block1@"+fn_phantom.c_str(), MD_OVERWRITE);
+	std::vector<double> PCVector;  //For the center of Phantom
+	MD1.setColumnFormat(false);
+	id = MD1.addObject();
+	PCVector.push_back(xdim);
+	PCVector.push_back(ydim);
+	PCVector.push_back(zdim);
+	MD1.setValue(MDL_DIMENSIONS_3D, PCVector, id);
+	MD1.setValue(MDL_PHANTOM_BGDENSITY, Background_Density, id);
+	if (current_scale != 1)
+		MD1.setValue(MDL_SCALE, current_scale, id);
+	else
+		MD1.setValue(MDL_SCALE, 1.0, id);
+	MD1.write((std::string)"block1@"+fn_phantom.c_str(), MD_OVERWRITE);
 
 	// Write specific parameters
-		std::string SAddAssign;  // string variab for feature operation (+/=)
-		for (int i = 0; i < VF.size(); i++)
-		{
-			id = MD2.addObject();
-			SAddAssign = VF[i]->Add_Assign;
-			MD2.setValue(MDL_PHANTOM_FEATURE_TYPE,VF[i]->Type, id);
-			MD2.setValue(MDL_PHANTOM_FEATURE_OPERATION, SAddAssign, id);
-			MD2.setValue(MDL_PHANTOM_FEATURE_DENSITY, VF[i]->Density, id);
-			FCVect[0] = XX(VF[i]->Center);
-			FCVect[1] = YY(VF[i]->Center);
-			FCVect[2] = ZZ(VF[i]->Center);
-			MD2.setValue(MDL_PHANTOM_FEATURE_CENTER, FCVect, id);
-			VF[i]->feat_printm(MD2, id);
-		}
-		MD2.write((std::string)"block2@"+fn_phantom.c_str(), MD_APPEND);
-	}
-	else
+	std::string SAddAssign;  // string variab for feature operation (+/=)
+	for (int i = 0; i < VF.size(); i++)
 	{
-		FILE *fh_phantom;
-		char line[201];
-
-	// Open Volume Description File
-		if ((fh_phantom = fopen(fn_phantom.c_str(), "w")) == NULL)
-			REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::write: Cannot open the phantom file "
-						 + fn_phantom + " for output");
-
-	// Write global comment and size
-		fprintf(fh_phantom, "#Phantom Xdim Ydim Zdim Background density\n");
-		fprintf(fh_phantom, "       %d    %d   %d   %f", xdim, ydim, zdim, Background_Density);
-		if (current_scale != 1) fprintf(fh_phantom, "   %f", current_scale);
-		fprintf(fh_phantom, "\n");
-
-	// Write description comment and features
-		fprintf(fh_phantom, "#Type +/= Density X_Center Y_Center Z_Center\n");
-		for (int i = 0; i < VF.size(); i++) VF[i]->feat_printf(fh_phantom);
-		fclose(fh_phantom);
+		id = MD2.addObject();
+		SAddAssign = VF[i]->Add_Assign;
+		MD2.setValue(MDL_PHANTOM_FEATURE_TYPE,VF[i]->Type, id);
+		MD2.setValue(MDL_PHANTOM_FEATURE_OPERATION, SAddAssign, id);
+		MD2.setValue(MDL_PHANTOM_FEATURE_DENSITY, VF[i]->Density, id);
+		FCVect[0] = XX(VF[i]->Center);
+		FCVect[1] = YY(VF[i]->Center);
+		FCVect[2] = ZZ(VF[i]->Center);
+		MD2.setValue(MDL_PHANTOM_FEATURE_CENTER, FCVect, id);
+		VF[i]->feat_printm(MD2, id);
 	}
+	MD2.write((std::string)"block2@"+fn_phantom.c_str(), MD_APPEND);
 }
 
 /* Voxel Inside any feature ------------------------------------------------ */
