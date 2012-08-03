@@ -18,10 +18,10 @@ class ProtRCT(XmippProtocol):
     def defineSteps(self):
         extractionProt = self.getProtocolFromRunName(self.ExtractionRun)
         pickingDir = getWorkingDirFromRunName(extractionProt.PickingRun)
-        self.insertStep("createLink2",filename="acquisition_info.xmd",dirSrc=pickingDir,destDir=self.WorkingDir)
+        self.insertStep("createLink2",filename="acquisition_info.xmd",dirSrc=pickingDir,dirDest=self.WorkingDir)
 
         classNumbers = getListFromRangeString(self.SelectedClasses)
-        extractRootName = os.path.join(getWorkingDirFromRunName(self.ExtractionRun),"Default")
+        extractRootName = os.path.join(getWorkingDirFromRunName(self.ExtractionRun),"DefaultFamily")
         self.insertStep('gatherPairs',verifyfiles=[os.path.join(self.WorkingDir,"classes.xmd")],
                                WorkingDir=self.WorkingDir,ClassNumbers=classNumbers,
                                ClassFile=self.ClassifMd,ExtractRootName=extractRootName,
@@ -35,7 +35,7 @@ class ProtRCT(XmippProtocol):
                 if MDrepresentatives.getValue(MDL_REF,id)==classNo:
                     classRepresentative=MDrepresentatives.getValue(MDL_IMAGE,id)
             if classRepresentative!="":
-                classNameIn="class_%06d@%s"%(classNo,self.workingDirPath("classes.xmd"))
+                classNameIn="class%06d_images@%s"%(classNo,self.workingDirPath("classes.xmd"))
                 classNameOut=self.workingDirPath("rct_%06d.xmd"%classNo)
                 classVolumeOut=self.workingDirPath("rct_%06d.vol"%classNo)
                 self.insertParallelStep('reconstructClass',verifyfiles=[classNameOut,classVolumeOut],
@@ -69,7 +69,7 @@ class ProtRCT(XmippProtocol):
         from xmipp import MetaData
         for classNo in classNumbers:
             try:
-                blockName="class_%06d"%classNo
+                blockName="class%06d_images"%classNo
                 mD=MetaData(blockName+"@"+self.ClassifMd)
             except:
                 errors.append(blockName+" cannot be found at "+self.ClassifMd)
@@ -109,12 +109,12 @@ def gatherPairs(log,WorkingDir,ClassNumbers,ClassFile,ExtractRootName,PickingDir
     MDjoin4=MetaData()
     fnOut=os.path.join(WorkingDir,"classes.xmd")
     for classNo in ClassNumbers:
-        MDclass=MetaData("class_%06d@%s"%(classNo,ClassFile))
+        MDclass=MetaData("class%06d_images@%s"%(classNo,ClassFile))
         MDjoin1.join(MDclass,MDpairs,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
         MDjoin2.join(MDjoin1,MDuntiltedAux,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
         MDjoin3.join(MDjoin2,MDtiltedAux,MDL_IMAGE_TILTED,MDL_IMAGE_TILTED,LEFT_JOIN)
         MDjoin4.join(MDjoin3,MDtiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
-        MDjoin4.write("class_%06d@%s"%(classNo,fnOut),MD_APPEND)
+        MDjoin4.write("class%06d_images@%s"%(classNo,fnOut),MD_APPEND)
 
 def reconstructClass(log,WorkingDir,ClassNameIn,ClassNameOut,ClassRepresentative,
                      CenterMaxShift,ThinObject,SkipTiltedTranslations,ClassVolumeOut,
