@@ -230,7 +230,7 @@ class ProtExtractParticles(XmippProtocol):
         else:
             from protlib_utils import runShowJ
             if self.TiltPairs:
-                runShowJ(selfile,extraParams="--mode metadata --render")
+                runShowJ(selfile,extraParams="--mode metadata --render first")
             else:
                 runShowJ(selfile)
                 
@@ -243,7 +243,6 @@ class ProtExtractParticles(XmippProtocol):
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMdFile(fnSorted, False, mdLabelY=MDL_ZSCORE)
                 xplotter.show()
-                #runShowJ(fnSorted, extraParams=" --mode metadata --render")
     
     def createBlocksInExtractFile(self,fnMicrographsSel):
         md = MetaData(fnMicrographsSel)
