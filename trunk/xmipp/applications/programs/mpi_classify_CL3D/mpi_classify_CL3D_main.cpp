@@ -461,6 +461,7 @@ void CL3DClass::fit(MultidimArray<double> &I, CL3DAssignment &result)
         for (int i = 0; i <= idx; i++)
             likelihoodNonClass += DIRECT_A1D_ELEM(histNonClass,i);
         result.likelihood = likelihoodClass * likelihoodNonClass;
+        std::cout << "Result.likelihood=" << result.likelihood << std::endl;
     }
     std::cout << "Fit: " << result.stdK << std::endl;
 }
@@ -934,7 +935,7 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 			P[q]->fit(Iaux, assignment);
 
 		    VEC_ELEM(corrList,q) = assignment.stdK;
-			if (!prm->classicalMultiref && assignment.likelihood < bestAssignment.likelihood ||
+			if (!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood ||
 				 prm->classicalMultiref && assignment.stdK < bestAssignment.stdK ||
 				 prm->classifyAllImages) {
 				bestq = q;
@@ -1343,13 +1344,13 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                     Iaux2 = I();
                     node2->fit(Iaux2, assignment2);
 
-                    if (assignment1.likelihood < assignment2.likelihood)
+                    if (assignment1.likelihood > assignment2.likelihood)
                     {
                         node1->updateProjection(Iaux1, assignment1);
                         VEC_ELEM(newAssignment,i) = 1;
                         node2->updateNonProjection(assignment2.stdK);
                     }
-                    else if (assignment2.likelihood < assignment1.likelihood)
+                    else if (assignment2.likelihood > assignment1.likelihood)
                     {
                         node2->updateProjection(Iaux2, assignment2);
                         VEC_ELEM(newAssignment,i) = 2;
