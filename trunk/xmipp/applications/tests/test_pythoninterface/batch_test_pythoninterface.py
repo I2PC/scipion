@@ -317,6 +317,48 @@ class TestXmippPythonInterface(unittest.TestCase):
             md2.setValue(MDL_ANGLE_PSI, md2.getValue(MDL_ANGLE_PSI, id) * 2., id);
         self.assertEqual(md, md2)
 
+    def test_Metadata_renameColumn(self):
+        '''test_Metadata_renameColumn'''
+        md = MetaData()
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 1., id)
+        md.setValue(MDL_ANGLE_TILT, 2., id)
+        md.setValue(MDL_ANGLE_PSI, 3., id)
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 11., id)
+        md.setValue(MDL_ANGLE_TILT, 12., id)
+        md.setValue(MDL_ANGLE_PSI, 13., id)
+        
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT2, 1., id)
+        md2.setValue(MDL_ANGLE_TILT2, 2., id)
+        md2.setValue(MDL_ANGLE_PSI2, 3., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT2, 11., id)
+        md2.setValue(MDL_ANGLE_TILT2, 12., id)
+        md2.setValue(MDL_ANGLE_PSI2, 13., id)
+
+        md.renameColumn(MDL_ANGLE_ROT,MDL_ANGLE_ROT2)        
+        md.renameColumn(MDL_ANGLE_TILT,MDL_ANGLE_TILT2)        
+        md.renameColumn(MDL_ANGLE_PSI,MDL_ANGLE_PSI2)        
+        self.assertEqual(md, md2)
+
+        
+        md.clear()
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 1., id)
+        md.setValue(MDL_ANGLE_TILT, 2., id)
+        md.setValue(MDL_ANGLE_PSI, 3., id)
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 11., id)
+        md.setValue(MDL_ANGLE_TILT, 12., id)
+        md.setValue(MDL_ANGLE_PSI, 13., id)
+        oldLabel=[MDL_ANGLE_ROT,MDL_ANGLE_TILT,MDL_ANGLE_PSI]
+        newLabel=[MDL_ANGLE_ROT2,MDL_ANGLE_TILT2,MDL_ANGLE_PSI2]
+        md.renameColumn(oldLabel,newLabel)        
+        self.assertEqual(md, md2)
+
     def test_Metadata_join(self):
          #create metadta
         md = MetaData() 
