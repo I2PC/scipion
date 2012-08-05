@@ -31,7 +31,7 @@
 #include "xmipp_strings.h"
 #include <external/sqlite-3.6.23/sqlite3.h>
 #include "metadata_label.h"
-
+#include <vector>
 class MDSqlStaticInit;
 class MDQuery;
 class MetaData;
@@ -121,7 +121,7 @@ private:
    /** Rename Column
     * SQLite itself does not support it. So some hacking is needed here
     */
-    bool renameColumn(MDLabel oldLabel, MDLabel newLabel);
+    bool renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<MDLabel> newlabel);
     /**Set the value of an object in an specified column.
      */
     bool setObjectValue(const int objId, const MDObject &value);

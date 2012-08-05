@@ -121,13 +121,18 @@ bool  MDSql::activateMathExtensions(void)
     else
         return true;
 }
-bool MDSql::renameColumn(MDLabel oldLabel, MDLabel newlabel)
+bool MDSql::renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<MDLabel> newlabel)
 {
     //1 Create an new table that matches your original table,
     // but with the changed columns.
     bool result;
     std::vector<MDLabel> v1(myMd->activeLabels);
-    std::replace(v1.begin(), v1.end(), oldLabel, newlabel);
+    std::vector<MDLabel>::const_iterator itOld;
+    std::vector<MDLabel>::const_iterator itNew;
+    for( itOld = oldLabel.begin(), itNew = newlabel.begin();
+    		itOld < oldLabel.end();
+         ++itOld, ++itNew )
+        std::replace(v1.begin(), v1.end(), *itOld, *itNew);
 
     int oldTableId = tableId;
     sqlMutex.lock();
@@ -706,17 +711,18 @@ void MDSql::setOperate(const MetaData *mdInLeft,
         std::vector<MDLabel> intersectLabels;
 
         for (std::vector<MDLabel>
-             ::const_iterator right=(mdInRight->activeLabels).begin();
-        		right!=(mdInRight->activeLabels).end();
+             ::const_iterator right=(mdInRight->activeLabels)
+                                    .begin();
+             right!=(mdInRight->activeLabels).end();
              ++right)
             for (std::vector<MDLabel>
                  ::const_iterator left=(mdInLeft->activeLabels).begin();
-            		left!=(mdInLeft->activeLabels).end();
+                 left!=(mdInLeft->activeLabels).end();
                  ++left)
-        {
-            	if (*left == *right)
-            		intersectLabels.push_back(*left);
-        }
+            {
+                if (*left == *right)
+                    intersectLabels.push_back(*left);
+            }
         mdInRight->addIndex(intersectLabels);
         mdInLeft->addIndex(intersectLabels);
     }
