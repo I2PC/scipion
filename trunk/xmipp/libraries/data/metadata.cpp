@@ -1376,7 +1376,17 @@ void MetaData::renameColumn(MDLabel oldLabel, MDLabel newLabel)
         REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata",
         		srcName));
     }
-    myMDSql->renameColumn(oldLabel,newLabel);
+    std::vector<MDLabel> vOldLabel(1);
+    vOldLabel[0]=oldLabel;
+    std::vector<MDLabel> vNewLabel(1);
+    vNewLabel[0]=newLabel;
+    renameColumn(vOldLabel,vNewLabel);
+}
+
+void MetaData::renameColumn(std::vector<MDLabel> vOldLabel,
+		                    std::vector<MDLabel> vNewLabel)
+{
+    myMDSql->renameColumn(vOldLabel,vNewLabel);
 }
 
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,

@@ -996,6 +996,13 @@ public:
      */
     void renameColumn(MDLabel oldLabel, MDLabel newLabel);
 
+    /** Rename several columns. This is an expensive operations so if several
+     * columns need to be changed do it using this function instead one by one
+     *
+     */
+    void renameColumn(std::vector<MDLabel> oldLabel,
+    		          std::vector<MDLabel> newLabel);
+
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
 }
