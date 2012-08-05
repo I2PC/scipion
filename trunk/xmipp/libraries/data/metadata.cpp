@@ -1373,7 +1373,8 @@ void MetaData::renameColumn(MDLabel oldLabel, MDLabel newLabel)
     if (!containsLabel(oldLabel))
     {
         const char * srcName = MDL::label2Str(oldLabel).c_str();
-        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", oldLabel));
+        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata",
+        		srcName));
     }
     myMDSql->renameColumn(oldLabel,newLabel);
 }
