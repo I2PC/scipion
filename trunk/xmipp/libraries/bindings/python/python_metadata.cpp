@@ -1106,13 +1106,46 @@ MetaData_copyColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_renameColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int labelDst, labelSrc;
-    if (PyArg_ParseTuple(args, "ii", &labelDst, &labelSrc))
+    PyObject * oldLabel = NULL;
+    PyObject * newLabel = NULL;
+    if (PyArg_ParseTuple(args, "OO", &oldLabel, &newLabel))
     {
         try
         {
             MetaDataObject *self = (MetaDataObject*) obj;
-            self->metadata->renameColumn((MDLabel)labelDst, (MDLabel)labelSrc);
+            if(PyInt_Check ( oldLabel ) && PyInt_Check ( newLabel ))
+            {
+            	self->metadata->renameColumn((MDLabel) PyInt_AsLong (oldLabel),
+                		                     (MDLabel) PyInt_AsLong (newLabel));
+            }
+                else if (PyList_Check(oldLabel)&& PyList_Check ( newLabel ))
+            {
+                size_t size = PyList_Size(oldLabel);
+                PyObject * itemOld = NULL;
+                PyObject * itemNew = NULL;
+                int iOldValue = 0;
+                int iNewValue = 0;
+                std::vector<MDLabel> vOldValue(size);
+                std::vector<MDLabel> vNewValue(size);
+                for (size_t i = 0; i < size; ++i)
+                {
+                    itemOld = PyList_GetItem(oldLabel, i);
+                    itemNew = PyList_GetItem(newLabel, i);
+                    if (!PyInt_Check(itemOld) || !PyInt_Check(itemNew))
+                    {
+                        PyErr_SetString(PyExc_TypeError,
+                                        "MDL labels must be integers (MDLABEL)");
+                        return NULL;
+                    }
+                    iOldValue = PyInt_AsLong(itemOld);
+                    iNewValue = PyInt_AsLong(itemNew);
+                    vOldValue[i] = (MDLabel)iOldValue;
+                    vNewValue[i] = (MDLabel)iNewValue;
+                }
+                //self->metadata->read(str,&vValue);
+                self->metadata->renameColumn(vOldValue,vNewValue);
+            }
+
             Py_RETURN_TRUE;
         }
         catch (XmippError &xe)
