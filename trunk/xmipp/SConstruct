@@ -187,10 +187,10 @@ if (ARGUMENTS['mode'] == 'configure'):
         AppendIfNotExists(LINKFLAGS='$STATIC_FLAG')
 
     # osx?
-    if env['PLATFORM'] == 'darwin':
-        AppendIfNotExists(CCFLAGS='-m64')
-        AppendIfNotExists(CXXFLAGS='-m64')
-        AppendIfNotExists(LINKFLAGS='-m64')
+#    if env['PLATFORM'] == 'darwin':
+#        AppendIfNotExists(CCFLAGS='-m64')
+#        AppendIfNotExists(CXXFLAGS='-m64')
+#        AppendIfNotExists(LINKFLAGS='-m64')
 
     # QT
     if int(env['qt']):
@@ -362,13 +362,13 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CCFLAGS=['-O2'])
         AppendIfNotExists(LINKFLAGS=['-s'])
 
-    if env['PLATFORM'] == 'darwin':
+#    if env['PLATFORM'] == 'darwin':
 #        env.Append(CXXFLAGS=['-m64'])
 #        env.Append(CCFLAGS=['-m64'])
 #        env.Append(LINKFLAGS=['-m64'])
-        AppendIfNotExists(CXXFLAGS=['-m64'])
-        AppendIfNotExists(CCFLAGS=['-m64'])
-        AppendIfNotExists(LINKFLAGS=['-m64'])
+#        AppendIfNotExists(CXXFLAGS=['-m64'])
+#        AppendIfNotExists(CCFLAGS=['-m64'])
+#        AppendIfNotExists(LINKFLAGS=['-m64'])
 
 
 # stdout_handle = os.popen('svnversion -n .')
