@@ -80,7 +80,20 @@ protected:
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
+        addParamsLine(":+ Some of the function allowed are,");
+        addParamsLine(":+ Math: +, -, *, /, abs");
+        addParamsLine(":+       acos, asin, atan, atn2, atan2, acosh, asinh, atanh,");
+        addParamsLine(":+       difference,");
+        addParamsLine(":+       degrees, radians, cos, sin, tan, cot, cosh, sinh, tanh,");
+        addParamsLine(":+       coth, exp,");
+        addParamsLine(":+       log, log10, power, sign, sqrt, square, ceil, floor, pi.");
+        addParamsLine(":+ String: replicate, charindex, leftstr, rightstr, ltrim, rtrim, trim,");
+        addParamsLine(":+         replace, reverse, proper, padl, padr, padc, strfilter.");
+
+        addParamsLine(":+ Aggregate: max, min, avg, sum, mstdev, variance, mode, median,");
+        addParamsLine(":+            lower_quartile, upper_quartile.");
         addParamsLine("           alias -e;                                             ");
+
 
         addParamsLine("or  --file <file_operation>     : File operations");
         addParamsLine("         where <file_operation>");
@@ -220,7 +233,7 @@ protected:
         }
         else if (operation == "modify_values")// modify_values
         {
-        	MDSql::activateMathExtensions();
+            MDSql::activateMathExtensions();
             mdIn.operate(getParam("--operate", 1));
         }else
         {
