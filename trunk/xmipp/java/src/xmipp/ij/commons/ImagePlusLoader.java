@@ -50,19 +50,20 @@ public class ImagePlusLoader
 	public ImagePlusLoader(ImagePlus imp)
 	{
 		this.imp = imp;
+		allowsPoll = existsFile();
 	}
 
 	public ImagePlusLoader(String fileName)
 	{
 		this.fileName = fileName;
 		this.modified = new File(fileName).lastModified();
-		allowsPoll = true;
+		allowsPoll = existsFile();
 	}
 
 	public ImagePlusLoader(ImageGeneric ig)
 	{
 		this.ig = ig;
-		allowsPoll = false;
+		allowsPoll = existsFile();
 	}
 
 	public ImagePlus getImagePlus()

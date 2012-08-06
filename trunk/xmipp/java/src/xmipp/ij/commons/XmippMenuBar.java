@@ -139,6 +139,7 @@ public class XmippMenuBar extends MenuBar
 		addIJMenuItem(filemn, "Open with Volume Viewer/3D Slicer", "Volume Viewer", IJRequirement.VOLUME);
 		addIJMenuItem(filemn, "Open with VolumeJ", "VolumeJ ", IJRequirement.VOLUME);
 		refreshmi = new MenuItem("Refresh");
+		refreshmi.setEnabled(xw.getImagePlusLoader().allowsPoll());
 		refreshmi.setShortcut(new MenuShortcut(KeyEvent.VK_F5));
 		refreshmi.addActionListener(new ActionListener()
 		{
@@ -199,6 +200,7 @@ public class XmippMenuBar extends MenuBar
 		});
 		
 		exitmi = new MenuItem("Exit");
+		exitmi.setShortcut(new MenuShortcut(KeyEvent.VK_Q));
 		exitmi.addActionListener(new ActionListener() {
 			
 			@Override

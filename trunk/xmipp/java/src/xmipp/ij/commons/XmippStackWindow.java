@@ -27,9 +27,11 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	@Override
 	public void loadData()
 	{
+		double zoom = getCanvas().getMagnification();
 		ImagePlus imp = ipl.loadImagePlus();
 		setImage(imp);//second alone does not work
 		updateImage(imp);//first one alone does not work
+		getCanvas().setMagnification(zoom);
 	}
 
 	public void openMaskToolbar(){
