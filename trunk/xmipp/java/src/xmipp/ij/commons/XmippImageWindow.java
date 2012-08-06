@@ -2,6 +2,8 @@ package xmipp.ij.commons;
 
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
+
+import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
@@ -18,7 +20,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		{
 			// openImageJ(Tool.VIEWER);
 			//XmippStackWindow w = new XmippStackWindow(new ImagePlusLoader("/home/airen/hand.vol"));
-			XmippImageWindow w = new XmippImageWindow(new ImagePlusLoader("/home/airen/xprojects/1/Micrographs/KLH_Dataset_I_Training_0001.mrc"));
+			XmippImageWindow w = new XmippImageWindow(new ImagePlusLoader("/home/airen/coss/PPPIauxRS_afterRotation.xmp"));
 			// IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
 
 		}
@@ -58,11 +60,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		try
 		{
-				ImagePlus imp = ipl.loadImagePlus();
-				double zoom = getCanvas().getMagnification();
-				setImage(imp);// second alone does not work
-				updateImage(imp);// first one alone does not work
-				getCanvas().setMagnification(zoom);
+				((XmippImageCanvas)getCanvas()).loadData(this);
 		}
 		catch (Exception e)
 		{

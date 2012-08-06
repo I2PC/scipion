@@ -1,5 +1,6 @@
 package xmipp.ij.commons;
 
+
 public interface XmippIJWindow
 {
 	public void loadData();
@@ -15,4 +16,5 @@ public interface XmippIJWindow
 	public boolean isStack();
 	
 	public void openMaskToolbar();
+	
 }

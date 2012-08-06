@@ -2,6 +2,8 @@ package xmipp.ij.commons;
 
 import ij.ImagePlus;
 import ij.gui.StackWindow;
+
+import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 
@@ -27,11 +29,9 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	@Override
 	public void loadData()
 	{
-		double zoom = getCanvas().getMagnification();
-		ImagePlus imp = ipl.loadImagePlus();
-		setImage(imp);//second alone does not work
-		updateImage(imp);//first one alone does not work
-		getCanvas().setMagnification(zoom);
+		XmippImageCanvas canvas = (XmippImageCanvas)getCanvas();
+		canvas.loadData(this);
+		
 	}
 
 	public void openMaskToolbar(){
@@ -77,6 +77,8 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	{
 		return true;
 	}
+
+	
 
 
 }
