@@ -1469,6 +1469,12 @@ void ProgClassifyCL2D::produceSideInfo()
         Image<double> I;
         MetaData SFCodes(fnCodes0);
 
+        int Xdim0, Ydim0, Zdim0;
+        size_t Ndim0;
+        getImageSize(SFCodes, Xdim0, Ydim0, Zdim0, Ndim0);
+        if (Xdim0!=Xdim || Ydim0!=Ydim)
+        	REPORT_ERROR(ERR_MULTIDIM_SIZE,"Input reference and images are not of the same size");
+
         FOR_ALL_OBJECTS_IN_METADATA(SFCodes)
         {
             I.readApplyGeo(SFCodes, __iter.objId);
