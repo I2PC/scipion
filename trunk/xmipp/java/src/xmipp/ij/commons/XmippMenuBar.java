@@ -62,6 +62,7 @@ public class XmippMenuBar extends MenuBar
 	private MenuItem refreshmi;
 	private CheckboxMenuItem wrapmi;
 	private CheckboxMenuItem ugmi;
+	private MenuItem exitmi;
 
 	enum IJRequirement
 	{
@@ -196,6 +197,17 @@ public class XmippMenuBar extends MenuBar
 				
 			}
 		});
+		
+		exitmi = new MenuItem("Exit");
+		exitmi.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+				
+			}
+		});
+
 
 
 		filemn.add(savemi);
@@ -205,6 +217,7 @@ public class XmippMenuBar extends MenuBar
 		filemn.add(pollmi);
 		filemn.add(ugmi);
 		filemn.add(wrapmi);
+		filemn.add(exitmi);
 
 		// menubar image menu
 		infomn = new Menu("Info");
