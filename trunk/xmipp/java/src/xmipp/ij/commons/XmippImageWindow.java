@@ -59,8 +59,10 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 				ImagePlus imp = ipl.loadImagePlus();
+				double zoom = getCanvas().getMagnification();
 				setImage(imp);// second alone does not work
 				updateImage(imp);// first one alone does not work
+				getCanvas().setMagnification(zoom);
 		}
 		catch (Exception e)
 		{
