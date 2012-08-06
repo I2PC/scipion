@@ -104,13 +104,14 @@ class ProtCL2D(XmippProtocol):
     def insertCl2dStep(self):
         params= '-i %(InSelFile)s --odir %(WorkingDir)s --oroot results '+\
                 ' --nref %(NumberOfReferences)d'+\
-                ' --nref0 %(NumberOfInitialReferences)d'+\
                 ' --iter %(NumberOfIterations)d'+\
                 ' %(AdditionalParameters)s'
         if self.ComparisonMethod=='correlation':
             params+= ' --distance correlation '
         if self.ClusteringMethod=='classical':
             params+= ' --classicalMultiref '
+        if self.AdditionalParameters.find("--ref0")==-1:
+            params+=' --nref0 %(NumberOfInitialReferences)d'
     
         self.insertRunJobStep("xmipp_classify_CL2D", params % self.ParamsDict, 
                               [self.workingDirPath("results_images.xmd")])
