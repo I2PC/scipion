@@ -122,6 +122,7 @@ private:
     * SQLite itself does not support it. So some hacking is needed here
     */
     bool renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<MDLabel> newlabel);
+
     /**Set the value of an object in an specified column.
      */
     bool setObjectValue(const int objId, const MDObject &value);
@@ -142,6 +143,10 @@ private:
      */
     void selectObjects(std::vector<size_t> &objectsOut, const MDQuery *queryPtr = NULL);
 
+    /** return metadata size
+     *
+     */
+    size_t size(void);
     /** This function will delete elements that match the query.
      * If not query is provided, all rows are deleted
      */
