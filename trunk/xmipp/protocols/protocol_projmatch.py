@@ -16,9 +16,15 @@ from xmipp import MetaData, FileName, FILENAMENUMBERLENGTH, AGGR_COUNT,\
          MDL_CTF_MODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
          MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE,\
          MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_WEIGHT,\
+         MDL_ANGLE_ROT2, MDL_ANGLE_TILT2, MDL_ANGLE_PSI2,MDL_ANGLE_DIFF,\
+         MDL_ANGLE_ROT_DIFF, MDL_ANGLE_TILT_DIFF, MDL_ANGLE_PSI_DIFF,\
          MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR, MDValueEQ, MDL_REF3D,\
-         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z, Euler_angles2matrix,\
-         MD_APPEND,MDL_DEFGROUP
+         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z, INNER_JOIN,\
+         MDL_SHIFT_X2, MDL_SHIFT_Y2, MDL_SHIFT_DIFF
+from xmipp import  activateMathExtensions,MDL_SHIFT_X_DIFF, MDL_SHIFT_Y_DIFF, MDL_UNDEFINED, \
+         Euler_angles2matrix, MD_APPEND,MDL_DEFGROUP, SymList, label2Str,\
+         MD_OVERWRITE, MDL_ENABLED
+from datetime import datetime, timedelta
          
     
 from protlib_base import XmippProtocol, protocolMain
@@ -196,8 +202,10 @@ data_
                            , 'DisplayProjectionMatchingLibraryAndClasses'
                            , 'DisplayProjectionMatchingLibraryAndImages'
                            , 'DisplayDiscardedImages'
+                           , 'PlotHistogramAngularMovement'
                            , 'DisplayAngularDistribution'
-                           , 'DisplayResolutionPlots'] if self.ParamsDict[k]]
+                           , 'DisplayResolutionPlots'
+                           ] if self.ParamsDict[k]]
         if len(plots):
             self.launchProjmatchPlots(plots)
 
@@ -228,8 +236,9 @@ data_
         
         def doPlot(plotName):
             return plotName in selectedPlots
-        
+        self.DisplayRef3DNo = self.parser.getTkValue('DisplayRef3DNo')
         ref3Ds = map(int, getListFromVector(self.DisplayRef3DNo))
+        self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
         
         if doPlot('DisplayReference'):
@@ -513,6 +522,145 @@ data_
                             runShowJ(file_name, extraParams = ' --dont_wrap ')
                         except Exception, e:
                             showError("Error launching java app", str(e))
+            
+        if doPlot('PlotHistogramAngularMovement'):
+            #print "Preprocessing Data"
+            #dtBegin = datetime.now()
+            colors = ['g', 'b', 'r', 'y', 'c', 'm', 'k']
+            lenColors=len(colors)    
+
+            DocFileInputAngles = [self.DocFileWithOriginalAngles] + \
+            [self.getFilename('DocfileInputAnglesIters', iter=i) \
+             for i in range(1, self.NumberOfIterations + 1)]
+            SymmetryGroup = [-1] + getListFromVector(self.SymmetryGroup, self.NumberOfIterations)
+            SL=SymList()
+            mdIter=MetaData()
+            self.NumberOfBins = self.parser.getTkValue('NumberOfBins')
+            UsePsi = self.parser.getTkBoolValue('UsePsi')
+            AngleSort = self.parser.getTkBoolValue('AngleSort')
+            ShiftSort = self.parser.getTkBoolValue('ShiftSort')
+            #tdEnd = datetime.now() - dtBegin
+            #print "Preprocessing took: %d seconds" % (tdEnd.total_seconds())
+            for it in iterations:
+                print "Processing iteration %d (this may take a while)"%it
+                dtBegin = datetime.now()
+                timeStr = str(dtBegin)
+                mdIter.clear()
+                SL.readSymmetryFile(SymmetryGroup[it])
+                md1 = MetaData(DocFileInputAngles[it])
+                md2 = MetaData(DocFileInputAngles[it-1])
+                #ignore disabled,
+                md1.removeDisabled()
+                md2.removeDisabled()
+                
+                #first metadata file may not have shiftx and shifty
+                if not md2.containsLabel(MDL_SHIFT_X):
+                    md2.addLabel(MDL_SHIFT_X)
+                    md2.addLabel(MDL_SHIFT_Y)
+                    md2.fillConstant(MDL_SHIFT_X,0.)
+                    md2.fillConstant(MDL_SHIFT_Y,0.)
+                if not UsePsi: 
+                    md1.fillConstant(MDL_ANGLE_PSI,0.)
+                    md2.fillConstant(MDL_ANGLE_PSI,0.)
+                oldLabels=[MDL_ANGLE_ROT,
+                          MDL_ANGLE_TILT,
+                          MDL_ANGLE_PSI,
+                          MDL_SHIFT_X,
+                          MDL_SHIFT_Y]
+                newLabels=[MDL_ANGLE_ROT2,
+                          MDL_ANGLE_TILT2,
+                          MDL_ANGLE_PSI2,
+                          MDL_SHIFT_X2,
+                          MDL_SHIFT_Y2]
+                #tdEnd = datetime.now() - dtBegin
+                #print "Up to renameColumn took: %d seconds" % (tdEnd.total_seconds())
+                md2.renameColumn(oldLabels,newLabels)
+                md2.addLabel(MDL_SHIFT_X_DIFF)
+                md2.addLabel(MDL_SHIFT_Y_DIFF)
+                md2.addLabel(MDL_SHIFT_DIFF)
+                mdIter.join (md1, md2, MDL_IMAGE, MDL_IMAGE, INNER_JOIN)
+                #tdEnd = datetime.now() - dtBegin
+                #print "Up to computeDistance took: %d seconds" % (tdEnd.total_seconds())
+                SL.computeDistance(mdIter,False,False,False)
+                #md1.write("kk1.xmd")
+                #md2.write("kk2.xmd")
+                #mdIter.write("mdIter.xmd")
+                #exit()
+                activateMathExtensions()
+                #tdEnd = datetime.now() - dtBegin
+                #print "Up to activateMathExtensions took: %d seconds" % (tdEnd.total_seconds())
+                #operate in sqlite
+                shiftXLabel     = label2Str(MDL_SHIFT_X)
+                shiftX2Label    = label2Str(MDL_SHIFT_X2)
+                shiftXDiff      = label2Str(MDL_SHIFT_X_DIFF)
+                shiftYLabel     = label2Str(MDL_SHIFT_Y)
+                shiftY2Label    = label2Str(MDL_SHIFT_Y2)
+                shiftYDiff      = label2Str(MDL_SHIFT_Y_DIFF)
+                shiftDiff       = label2Str(MDL_SHIFT_DIFF)
+                #timeStr = str(dtBegin)
+                operateString   =       shiftXDiff+"="+shiftXLabel+"-"+shiftX2Label
+                operateString  += "," + shiftYDiff+"="+shiftYLabel+"-"+shiftY2Label
+                mdIter.operate(operateString)
+                operateString  =  shiftDiff+"=sqrt("\
+                                      +shiftXDiff+"*"+shiftXDiff+"+"\
+                                      +shiftYDiff+"*"+shiftYDiff+");"
+                mdIter.operate(operateString)
+                #mdIter.write("afterOperate@mdIter.sqlite",MD_APPEND)
+                tdEnd = datetime.now() - dtBegin
+                print "Prepare iteration %d took: %d seconds" % (it,tdEnd.total_seconds())
+                mdIter.write("mdIter.xmd")#######################
+                if(len(ref3Ds) == 1):
+                    gridsize1 = [1, 1]
+                elif (len(ref3Ds) == 2):
+                    gridsize1 = [2, 1]
+                else:
+                    gridsize1 = [(len(ref3Ds)+1)/2, 2]
+                
+                xplotterShift = XmippPlotter(*gridsize1, mainTitle='Iteration_%d\n' % it, windowTitle="ShiftDistribution")
+                xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
+                for ref3d in ref3Ds:
+                    xplotterShift.createSubPlot("%s_ref3D_%d"%(label2Str(MDL_SHIFT_DIFF),ref3d), "pixels", "Frequency") 
+                    xplotter.createSubPlot("%s_ref3D_%d"%(label2Str(MDL_ANGLE_DIFF),ref3d), "degrees", "Frequency") 
+                    mDoutRef3D = MetaData()
+                    mDoutRef3D.importObjects(mdIter, MDValueEQ(MDL_REF3D, ref3d))
+                    #mDoutRef3D.write("afterimportObject@mdIter.sqlite",MD_APPEND)
+                    xplotter.plotMd(mDoutRef3D, 
+                                    MDL_ANGLE_DIFF, 
+                                    MDL_ANGLE_DIFF, 
+                                    color=colors[ref3d%lenColors], 
+                                    #nbins=50
+                                    nbins=int(self.NumberOfBins)
+                                    )#if nbins is present do an histogram
+                    xplotterShift.plotMd(mDoutRef3D, 
+                                    MDL_SHIFT_DIFF, 
+                                    MDL_SHIFT_DIFF, 
+                                    color=colors[ref3d%lenColors], 
+                                    nbins=int(self.NumberOfBins)
+                                    )#if nbins is present do an histogram
+                    if AngleSort:
+                        mDoutRef3D.sort(MDL_ANGLE_DIFF)
+                        fn = FileName()
+                        baseFileName   = self.workingDirPath("angle_sort.xmd")
+                        blockName = "angle_iter"  + str(it).zfill(FILENAMENUMBERLENGTH)+\
+                                    "_ref3D" + str(ref3d).zfill(FILENAMENUMBERLENGTH)
+                        fn.compose(blockName,baseFileName)
+                        mDoutRef3D.write(fn,MD_APPEND)
+                        print "File with sorted angles saved in:", fn
+                    if ShiftSort:
+                        mDoutRef3D.sort(MDL_SHIFT_DIFF)
+                        fn = FileName()
+                        baseFileName   = self.workingDirPath("angle_sort.xmd")
+                        blockName = "shift_iter"  + str(it).zfill(FILENAMENUMBERLENGTH)+\
+                                    "_ref3D" + str(ref3d).zfill(FILENAMENUMBERLENGTH)
+                        fn.compose(blockName,baseFileName)
+                        mDoutRef3D.write(fn,MD_APPEND)
+                        print "File with sorted shifts saved in:", fn
+
+                    xplotterShift.draw()
+                    xplotter.draw()
+                    #tdEnd = datetime.now() - dtBegin
+                    #print "make plot took: %d seconds" % (tdEnd.total_seconds())
+            
             
         if doPlot('DisplayAngularDistribution'):
             if(self.DisplayAngularDistributionWith == '3D'):
