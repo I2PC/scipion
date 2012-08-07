@@ -1073,7 +1073,7 @@ private:
         MDL::addLabel(MDL_SHIFT_Y_DIFF, LABEL_DOUBLE, "shiftYDiff");
         MDL::addLabel(MDL_SHIFT_Z, LABEL_DOUBLE, "shiftZ");
         MDL::addLabelAlias(MDL_SHIFT_Z, "Zoff");
-        MDL::addLabel(MDL_SHIFT_DIFF, LABEL_DOUBLE, "shiftDIFF");
+        MDL::addLabel(MDL_SHIFT_DIFF, LABEL_DOUBLE, "shiftDiff");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
