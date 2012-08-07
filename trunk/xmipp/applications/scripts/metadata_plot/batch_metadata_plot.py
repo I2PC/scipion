@@ -93,6 +93,7 @@ class ScriptPlotMetadata(XmippScript):
             colors = self.getParam('--colors').split()
         else:
             colors = ['g', 'b', 'r', 'y', 'c', 'm', 'k']
+	lenColors=len(colors)    
         if self.checkParam('--nbins'):
             nBins = self.getIntParam('--nbins')
         else:
@@ -105,9 +106,9 @@ class ScriptPlotMetadata(XmippScript):
         
         for i, l in enumerate(ylabels):
             if nBins:
-                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i], nbins=nBins)#if nbins is present do an histogram
+                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i%lenColors], nbins=nBins)#if nbins is present do an histogram
             else:
-                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i])#if nbins presnts do an histogram
+                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i%lenColors])#if nbins presnts do an histogram
         
         legendLocation = self.getParam('--legend')
         if legendLocation != 'none':
