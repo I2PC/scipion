@@ -309,7 +309,7 @@ PyMethodDef MetaData_methods[] =
         { "getComment", (PyCFunction) MetaData_getComment,
           METH_VARARGS, "Get comment in Metadata." },
         { "operate", (PyCFunction) MetaData_operate,
-          METH_VARARGS, "Replace strings values in some column." },
+          METH_VARARGS, "Replace values in some column." },
         { "replace", (PyCFunction) MetaData_replace,
           METH_VARARGS, "Basic operations on columns data." },
         {"randomize",
@@ -323,7 +323,7 @@ PyMethodDef MetaData_methods[] =
         { "removeDuplicates", (PyCFunction) MetaData_removeDuplicates,
           METH_VARARGS, "Remove duplicate rows" },
         { "renameColumn", (PyCFunction) MetaData_renameColumn,
-          METH_VARARGS, "Renam one column" },
+          METH_VARARGS, "Rename one column" },
         {
             "sort", (PyCFunction) MetaData_sort,
             METH_VARARGS,
