@@ -391,10 +391,7 @@ bool MetaData::isEmpty() const
 
 size_t MetaData::size() const
 {
-    std::vector<size_t> objects;
-    myMDSql->selectObjects(objects);
-
-    return objects.size();
+    return myMDSql->size();
 }
 
 bool MetaData::containsLabel(const MDLabel label) const
@@ -410,7 +407,7 @@ bool MetaData::addLabel(const MDLabel label, int pos)
         activeLabels.push_back(label);
     else
         activeLabels.insert(activeLabels.begin() + pos, label);
-        myMDSql->addColumn(label);
+    myMDSql->addColumn(label);
     return true;
 }
 
@@ -1009,8 +1006,8 @@ void MetaData::read(const FileName &_filename,
     FileName extFile;
 
     blockName=_filename.getBlockName();
-//    if (blockName.empty())
-//        blockName = DEFAULT_BLOCK_NAME;
+    //    if (blockName.empty())
+    //        blockName = DEFAULT_BLOCK_NAME;
     inFile = _filename.removeBlockName();
     extFile = _filename.getExtension();
 
@@ -1374,7 +1371,7 @@ void MetaData::renameColumn(MDLabel oldLabel, MDLabel newLabel)
     {
         const char * srcName = MDL::label2Str(oldLabel).c_str();
         REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata",
-        		srcName));
+                     srcName));
     }
     std::vector<MDLabel> vOldLabel(1);
     vOldLabel[0]=oldLabel;
@@ -1384,7 +1381,7 @@ void MetaData::renameColumn(MDLabel oldLabel, MDLabel newLabel)
 }
 
 void MetaData::renameColumn(std::vector<MDLabel> vOldLabel,
-		                    std::vector<MDLabel> vNewLabel)
+                            std::vector<MDLabel> vNewLabel)
 {
     myMDSql->renameColumn(vOldLabel,vNewLabel);
 }
@@ -1612,6 +1609,8 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc, int limit,
     {
         init(&(MDin.activeLabels));
         copyInfo(MDin);
+        //if you sort just once the index will not help much
+        addIndex(sortLabel);
         MDQuery query(limit, offset, sortLabel,asc);
         MDin.myMDSql->copyObjects(this, &query);
     }
