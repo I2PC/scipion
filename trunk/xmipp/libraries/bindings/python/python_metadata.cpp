@@ -1286,15 +1286,21 @@ MetaData_iternext(PyObject *obj)
 PyObject *
 MetaData_sort(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label = (MDLabel) MDL_IMAGE;
-    if (PyArg_ParseTuple(args, "|i", &label))
+    int label   =  MDL_IMAGE;
+    PyObject *ascPy = Py_True;
+    bool asc=true;
+    int limit   = -1;
+    int offset  =  0;
+    if (PyArg_ParseTuple(args, "|iOii", &label,&ascPy,&limit,&offset))
     {
         try
         {
+            if (PyBool_Check(ascPy))
+            	asc = (ascPy == Py_True);
             MetaDataObject *self = (MetaDataObject*) obj;
             MetaData MDaux = *(self->metadata);
             self->metadata->clear();
-            self->metadata->sort(MDaux, (MDLabel) label);
+            self->metadata->sort(MDaux, (MDLabel) label,asc,limit,offset);
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)
