@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include <algorithm>
+#include <math.h>
 #include "metadata_sql.h"
 #include "xmipp_threads.h"
 //#define DEBUG
@@ -171,6 +172,14 @@ bool MDSql::renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<
     myMd->activeLabels=v1;
     return result;
 }
+
+size_t MDSql::size(void)
+{
+    std::stringstream ss;
+    ss << "SELECT COUNT(*) FROM "<< tableName(tableId) << ";";
+    return execSingleIntStmt(ss);
+}
+
 //set column with a given value
 bool MDSql::setObjectValue(const MDObject &value)
 {
