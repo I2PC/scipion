@@ -508,14 +508,14 @@ public:
     void getValueOrAbort(const MDLabel label, T &valueOut, size_t id) const
     {
         if (!getValue(label, valueOut,id))
-        	REPORT_ERROR(ERR_ARG_MISSING,(String)"Cannot find label: " + MDL::label2Str(label));
+            REPORT_ERROR(ERR_ARG_MISSING,(String)"Cannot find label: " + MDL::label2Str(label));
     }
 
     template <typename T, typename T1>
     void getValueOrDefault(const MDLabel label, T &valueOut, size_t id, const T1 &_default) const
     {
         if (!getValue(label, valueOut,id))
-        	valueOut = (T) _default;
+            valueOut = (T) _default;
     }
 
     /** Get all values of a column as a vector.
@@ -741,24 +741,24 @@ public:
     /** Read data from file.
      */
     void readStar(const FileName &inFile,
-               const std::vector<MDLabel> *desiredLabels = NULL,
-               const String & blockName=DEFAULT_BLOCK_NAME,
-               bool decomposeStack=true);
+                  const std::vector<MDLabel> *desiredLabels = NULL,
+                  const String & blockName=DEFAULT_BLOCK_NAME,
+                  bool decomposeStack=true);
     /** Read metadata from xml file
      *
      */
     void readXML(const FileName &inFile,
-                         const std::vector<MDLabel> *desiredLabels= NULL,
-                         const String & blockRegExp=DEFAULT_BLOCK_NAME,
-                         bool decomposeStack=true);
+                 const std::vector<MDLabel> *desiredLabels= NULL,
+                 const String & blockRegExp=DEFAULT_BLOCK_NAME,
+                 bool decomposeStack=true);
 
     /** Read metadata from sqlite file
      *
      */
     void readDB(const FileName &inFile,
-                         const std::vector<MDLabel> *desiredLabels= NULL,
-                         const String & blockRegExp=DEFAULT_BLOCK_NAME,
-                         bool decomposeStack=true);
+                const std::vector<MDLabel> *desiredLabels= NULL,
+                const String & blockRegExp=DEFAULT_BLOCK_NAME,
+                bool decomposeStack=true);
 
     /** Read data from file. Guess the blockname from the filename
      * @code
@@ -904,7 +904,11 @@ public:
     * Limit fixes the maximum number of returned rows
     * Offset skips the first N rows
     */
-    void sort(MetaData &MDin, const MDLabel sortLabel, bool asc=true, int limit=-1, int offset=0);
+    void sort(MetaData &MDin,
+              const MDLabel sortLabel,
+              bool asc=true,
+              int limit=-1,
+              int offset=0);
 
     /*
     * Sort a Metadata by a label.
@@ -1001,7 +1005,7 @@ public:
      *
      */
     void renameColumn(std::vector<MDLabel> oldLabel,
-    		          std::vector<MDLabel> newLabel);
+                      std::vector<MDLabel> newLabel);
 
     /** 'is equal to' (equality).*/
     bool operator==(const MetaData& op) const;
