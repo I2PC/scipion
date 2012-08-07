@@ -159,7 +159,8 @@ void ProgAngularDistance::run()
         rot2p = rot2;
         tilt2p = tilt2;
         psi2p = psi2;
-        distp = SL.computeDistance(rot1, tilt1, psi1, rot2p, tilt2p, psi2p, false,
+        distp = SL.computeDistance(rot1, tilt1, psi1,
+        		                   rot2p, tilt2p, psi2p, false,
                                    check_mirrors, object_rotation);
         angular_distance += distp;
 
