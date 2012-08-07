@@ -741,6 +741,36 @@ DisplayProjectionMatchingLibraryAndImages=False
 # {view} Display discarded images?
 DisplayDiscardedImages=False
 
+#-----------------------------------------------------------------------------
+# {section}{visualize} Convergence 
+#-----------------------------------------------------------------------------
+# {view} Plot histogram with angular/shift changes
+""" Plot histogram with angular changes from one iteration to next. 
+Iteration 0 -> initial values
+"""
+PlotHistogramAngularMovement=False
+
+# {expert}{condition}(PlotHistogramAngularMovement) Number of bins (for histogram)
+""" Number of bins in histograms
+"""
+NumberOfBins=50
+
+# {condition}(PlotHistogramAngularMovement) Use Psi to compute angular distances
+""" Use Psi
+"""
+UsePsi = False
+
+# {condition}(PlotHistogramAngularMovement) Sort angular metadata and save it.
+""" Sort metadata with  experimental images a save it. 
+Sorting made by angle
+"""
+AngleSort = False 
+# {condition}(PlotHistogramAngularMovement) Sort shift metadata and save it.
+""" Sort metadata with  experimental images a save it. 
+Sorting made by shift
+"""
+ShiftSort = False 
+
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Angular distribution and resolution plots
 #------------------------------------------------------------------------------------------------
