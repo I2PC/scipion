@@ -364,6 +364,9 @@ class ProtocolParser():
     def getTkValue(self, varName):
         return self.variables[varName].getTkValue()
     
+    def getTkBoolValue(self, varName):
+        return self.getTkValue(varName) == 'True'
+    
     def getLiteralValue(self, varName):
         return self.variables[varName].getLiteralValue()
     
