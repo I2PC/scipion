@@ -174,8 +174,12 @@ def addTabs(nb):
     addTabOption(tab,'CC', 'The C compiler', 'gcc')
     addTabOption(tab,'CXX', 'The C++ compiler', 'g++')
     addTabOption(tab,'LINKERFORPROGRAMS', 'Linker for programs', 'g++')
-    addTabOption(tab,'CCFLAGS', 'The C compiler flags', '')
-    addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '')
+    if sys.platform  == 'darwin':
+        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '-I/usr/include/malloc')
+        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '-I/usr/include/malloc')
+    else:
+        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '')
+        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '')
     
     tab = nb.addTab("  MPI  ")
     addTabOption(tab,'mpi', 'Build the MPI programs?', 'yes')

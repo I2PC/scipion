@@ -362,12 +362,12 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CCFLAGS=['-O2'])
         AppendIfNotExists(LINKFLAGS=['-s'])
 
-#    if env['PLATFORM'] == 'darwin':
+    if env['PLATFORM'] == 'darwin':
 #        env.Append(CXXFLAGS=['-m64'])
 #        env.Append(CCFLAGS=['-m64'])
 #        env.Append(LINKFLAGS=['-m64'])
-#        AppendIfNotExists(CXXFLAGS=['-m64'])
-#        AppendIfNotExists(CCFLAGS=['-m64'])
+        AppendIfNotExists(CXXFLAGS=['-I/usr/include/malloc'])
+        AppendIfNotExists(CCFLAGS=['-I/usr/include/malloc'])
 #        AppendIfNotExists(LINKFLAGS=['-m64'])
 
 
