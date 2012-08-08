@@ -1360,12 +1360,9 @@ void radialAverage(const MultidimArray< T >& m,
         XX(idx) = j - XX(center_of_rot);
 
         // Determine distance to the center
-        int distance;
-        double module=sqrt(ZZ(idx)*ZZ(idx)+YY(idx)*YY(idx)+XX(idx)*XX(idx));
-        if (rounding)
-            distance = (int) round(module);
-        else
-            distance = (int) floor(module);
+        ;
+        double module = sqrt(ZZ(idx)*ZZ(idx)+YY(idx)*YY(idx)+XX(idx)*XX(idx));
+        int distance = (rounding) ? (int) round(module) : (int) floor(module);
 
         // Sum te value to the pixels with the same distance
         DIRECT_MULTIDIM_ELEM(radial_mean,distance) += A3D_ELEM(m, k, i, j);
@@ -1375,8 +1372,9 @@ void radialAverage(const MultidimArray< T >& m,
     }
 
     // Perform the mean
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
-    DIRECT_MULTIDIM_ELEM(radial_mean,i) /= (T) DIRECT_MULTIDIM_ELEM(radial_count,i);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(radial_mean)
+      if (DIRECT_MULTIDIM_ELEM(radial_count,i) > 0)
+        DIRECT_MULTIDIM_ELEM(radial_mean,i) /= DIRECT_MULTIDIM_ELEM(radial_count,i);
 }
 
 template<typename T>
@@ -1465,8 +1463,9 @@ void fastRadialAverage(const MultidimArray< T >& m,
     }
 
     // Perform the mean
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
-    A1D_ELEM(radial_mean,i) /= A1D_ELEM(radial_count,i);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(radial_mean)
+      if (DIRECT_MULTIDIM_ELEM(radial_count,i) > 0)
+        DIRECT_MULTIDIM_ELEM(radial_mean,i) /= DIRECT_MULTIDIM_ELEM(radial_count,i);
 }
 
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
