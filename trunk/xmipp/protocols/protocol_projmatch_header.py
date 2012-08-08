@@ -771,6 +771,13 @@ Sorting made by shift
 """
 ShiftSort = False 
 
+# {condition}(PlotHistogramAngularMovement) save worst particles (percentage) 
+"""save a metadata file with the particles 
+than move more than a 100-xx percent in all the iteration selected.
+If negative file will not be saved.
+"""
+Percentage = -1 
+
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Angular distribution and resolution plots
 #------------------------------------------------------------------------------------------------
