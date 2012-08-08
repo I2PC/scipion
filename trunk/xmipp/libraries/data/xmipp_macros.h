@@ -360,6 +360,17 @@
  */
 #define LAST_XMIPP_INDEX(size) FIRST_XMIPP_INDEX(size) + (size) - 1
 
+/** Sum values, initializing with the first one
+ * @ingroup MacrosMisc
+ *
+ * Inside a loop, the first time the value will be assigned
+ * and after that it will be summed. This macro assumes there
+ * exists a boolean flag named first_time
+ * The second macro is the same but allowing a diffent flag name
+ */
+#define SUM_INIT(var, value) if (first_time) var = (value); else var += (value);
+#define SUM_INIT_COND(var, value, cond) if (cond) var = (value); else var += (value);
+
 // Added for compatibility
 #ifdef __CYGWIN__
 #ifndef isnan
