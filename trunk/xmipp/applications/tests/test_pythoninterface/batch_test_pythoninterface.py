@@ -359,6 +359,63 @@ class TestXmippPythonInterface(unittest.TestCase):
         md.renameColumn(oldLabel,newLabel)        
         self.assertEqual(md, md2)
 
+    def test_Metadata_sort(self):
+        '''test_Metadata_sort'''
+        md = MetaData()
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 1., id)
+        md.setValue(MDL_ANGLE_TILT, 2., id)
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 11., id)
+        md.setValue(MDL_ANGLE_TILT, 12., id)
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 5., id)
+        md.setValue(MDL_ANGLE_TILT, 12., id)
+        id = md.addObject()
+        md.setValue(MDL_ANGLE_ROT, 6., id)
+        md.setValue(MDL_ANGLE_TILT, 12., id)
+        
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 11., id)
+        md2.setValue(MDL_ANGLE_TILT, 12., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 6., id)
+        md2.setValue(MDL_ANGLE_TILT, 12., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 5., id)
+        md2.setValue(MDL_ANGLE_TILT, 12., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 1., id)
+        md2.setValue(MDL_ANGLE_TILT, 2., id)
+
+        mdAux=MetaData(md)
+        mdAux.sort(MDL_ANGLE_ROT,False)
+        self.assertEqual(mdAux, md2)
+
+        mdAux=MetaData(md)
+        mdAux.sort(MDL_ANGLE_ROT,False,2)#limit
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 11., id)
+        md2.setValue(MDL_ANGLE_TILT, 12., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 6., id)
+        md2.setValue(MDL_ANGLE_TILT, 12., id)
+        self.assertEqual(mdAux, md2)
+
+        mdAux=MetaData(md)
+        mdAux.sort(MDL_ANGLE_ROT,False,2,1)#limit && offset
+        md2 = MetaData()
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 6., id)
+        md2.setValue(MDL_ANGLE_TILT, 12., id)
+        id = md2.addObject()
+        md2.setValue(MDL_ANGLE_ROT, 5., id)
+        md2.setValue(MDL_ANGLE_TILT, 12., id)
+        self.assertEqual(mdAux, md2)
+
+
     def test_Metadata_join(self):
          #create metadta
         md = MetaData() 
