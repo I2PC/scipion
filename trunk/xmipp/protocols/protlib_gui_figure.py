@@ -402,7 +402,6 @@ class XmippPlotter():
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
         if args.has_key('nbins'):
-            print "nnbins",args['nbins']
             nbins = args.pop('nbins', None)
             
             self.hist(yy,nbins, facecolor=color,**args)
