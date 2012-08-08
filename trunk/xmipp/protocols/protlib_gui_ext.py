@@ -1215,10 +1215,14 @@ def mdFillMenu(filename, browser):
     menu.add_command(label="Open as Images table", command=lambda:showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda: showj(filename, 'image'))
     menu.add_command(label="Open as Text", command=lambda: showTextfileViewer(filename, [filename], browser.parent))
-    from xmipp import MetaData, MDL_MICROGRAPH
-    md = MetaData(filename)
-    if md.containsLabel(MDL_MICROGRAPH):
-        menu.add_command(label="PSD preview", command=lambda: showCTFPreview(filename, parent=browser.parent, md=md))
+    try:
+        from xmipp import MetaData, MDL_MICROGRAPH
+        md = MetaData(filename)
+        if md.containsLabel(MDL_MICROGRAPH):
+            menu.add_command(label="PSD preview", command=lambda: showCTFPreview(filename, parent=browser.parent, md=md))
+    except Exception, e:
+        print e
+        
     return True
 
 def mdOnDoubleClick(filename, browser):
