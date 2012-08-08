@@ -520,7 +520,8 @@ void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
     std::string sep2=" ";
     for (int i = 0; i < columns.size(); i++)
     {
-        index_name << sep1 << MDL::label2Str(columns.at(i));
+        index_name << sep1 << tableName(tableId) << "_"
+        		   << MDL::label2Str(columns.at(i));
         sep1 = "_";
         index_column << sep2 << MDL::label2Str(columns.at(i));
         sep2 = ", ";
@@ -790,6 +791,9 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     //    for (int j = 0; j < sizeLeft; j++)
     //     std::cerr << "mdInLeft->activeLabels:"  << mdInLeft->activeLabels[1] << std::endl;
     execSingleStmt(ss);
+    //std::cerr << "ss:" << ss.str() << std::endl;
+    //dumpToFile("kk.sqlite");
+	//exit(0);
 }
 
 bool MDSql::operate(const String &expression)
