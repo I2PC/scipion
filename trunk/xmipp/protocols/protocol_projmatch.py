@@ -25,8 +25,7 @@ from xmipp import  activateMathExtensions,MDL_SHIFT_X_DIFF, MDL_SHIFT_Y_DIFF, MD
          Euler_angles2matrix, MD_APPEND,MDL_DEFGROUP, SymList, label2Str,\
          MD_OVERWRITE, MDL_ENABLED
 from datetime import datetime, timedelta
-         
-    
+from math import floor    
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector,\
      getComponentFromVector, runShowJ, runJob, createUniqueFileName
@@ -524,23 +523,23 @@ data_
                             showError("Error launching java app", str(e))
             
         if doPlot('PlotHistogramAngularMovement'):
-            #print "Preprocessing Data"
-            #dtBegin = datetime.now()
             colors = ['g', 'b', 'r', 'y', 'c', 'm', 'k']
             lenColors=len(colors)    
 
-            DocFileInputAngles = [self.DocFileWithOriginalAngles] + \
-            [self.getFilename('DocfileInputAnglesIters', iter=i) \
+            DocFileInputAngles = ["all_exp_images@"+self.DocFileWithOriginalAngles] + \
+            ["all_exp_images@"+self.getFilename('DocfileInputAnglesIters', iter=i) \
              for i in range(1, self.NumberOfIterations + 1)]
             SymmetryGroup = [-1] + getListFromVector(self.SymmetryGroup, self.NumberOfIterations)
             SL=SymList()
             mdIter=MetaData()
             self.NumberOfBins = self.parser.getTkValue('NumberOfBins')
-            UsePsi = self.parser.getTkBoolValue('UsePsi')
-            AngleSort = self.parser.getTkBoolValue('AngleSort')
-            ShiftSort = self.parser.getTkBoolValue('ShiftSort')
-            #tdEnd = datetime.now() - dtBegin
-            #print "Preprocessing took: %d seconds" % (tdEnd.total_seconds())
+            UsePsi     = self.parser.getTkBoolValue('UsePsi')
+            AngleSort  = self.parser.getTkBoolValue('AngleSort')
+            ShiftSort  = self.parser.getTkBoolValue('ShiftSort')
+            Percentage = float(self.parser.getTkValue('Percentage'))
+            if Percentage>0:
+                mdIntersectAngle=MetaData(DocFileInputAngles[iterations[0]-1])
+                mdIntersectShift=MetaData(DocFileInputAngles[iterations[0]-1])
             for it in iterations:
                 print "Processing iteration %d (this may take a while)"%it
                 dtBegin = datetime.now()
@@ -552,6 +551,7 @@ data_
                 #ignore disabled,
                 md1.removeDisabled()
                 md2.removeDisabled()
+                tdEnd = datetime.now() - dtBegin
                 
                 #first metadata file may not have shiftx and shifty
                 if not md2.containsLabel(MDL_SHIFT_X):
@@ -572,23 +572,23 @@ data_
                           MDL_ANGLE_PSI2,
                           MDL_SHIFT_X2,
                           MDL_SHIFT_Y2]
-                #tdEnd = datetime.now() - dtBegin
-                #print "Up to renameColumn took: %d seconds" % (tdEnd.total_seconds())
+                tdEnd = datetime.now() - dtBegin
                 md2.renameColumn(oldLabels,newLabels)
+                tdEnd = datetime.now() - dtBegin
                 md2.addLabel(MDL_SHIFT_X_DIFF)
                 md2.addLabel(MDL_SHIFT_Y_DIFF)
                 md2.addLabel(MDL_SHIFT_DIFF)
+                tdEnd = datetime.now() - dtBegin
                 mdIter.join (md1, md2, MDL_IMAGE, MDL_IMAGE, INNER_JOIN)
-                #tdEnd = datetime.now() - dtBegin
-                #print "Up to computeDistance took: %d seconds" % (tdEnd.total_seconds())
+                tdEnd = datetime.now() - dtBegin
                 SL.computeDistance(mdIter,False,False,False)
                 #md1.write("kk1.xmd")
                 #md2.write("kk2.xmd")
                 #mdIter.write("mdIter.xmd")
                 #exit()
+                tdEnd = datetime.now() - dtBegin
                 activateMathExtensions()
-                #tdEnd = datetime.now() - dtBegin
-                #print "Up to activateMathExtensions took: %d seconds" % (tdEnd.total_seconds())
+                tdEnd = datetime.now() - dtBegin
                 #operate in sqlite
                 shiftXLabel     = label2Str(MDL_SHIFT_X)
                 shiftX2Label    = label2Str(MDL_SHIFT_X2)
@@ -605,10 +605,8 @@ data_
                                       +shiftXDiff+"*"+shiftXDiff+"+"\
                                       +shiftYDiff+"*"+shiftYDiff+");"
                 mdIter.operate(operateString)
-                #mdIter.write("afterOperate@mdIter.sqlite",MD_APPEND)
                 tdEnd = datetime.now() - dtBegin
                 print "Prepare iteration %d took: %d seconds" % (it,tdEnd.total_seconds())
-                mdIter.write("mdIter.xmd")#######################
                 if(len(ref3Ds) == 1):
                     gridsize1 = [1, 1]
                 elif (len(ref3Ds) == 2):
@@ -618,11 +616,24 @@ data_
                 
                 xplotterShift = XmippPlotter(*gridsize1, mainTitle='Iteration_%d\n' % it, windowTitle="ShiftDistribution")
                 xplotter = XmippPlotter(*gridsize1, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
+                if Percentage>0:
+                    mdAux = MetaData(mdIter)
+                    iPercentage = int (floor(Percentage * mdAux.size()/100.))
+                    mdAux.sort(MDL_ANGLE_DIFF,False,iPercentage)
+                    mdIntersectAngle.intersection(mdAux,MDL_IMAGE)
+                    mdAux.sort(MDL_SHIFT_DIFF,False,iPercentage)
+                    mdIntersectShift.intersection(mdAux,MDL_IMAGE)
+#                    #########SAVE mdAux per iteration
+#                    fileName = "aux_%d.xmd"%it
+#                    mdAux.write(fileName) 
+#                    fileName = "intersect_%d.xmd"%it
+#                    mdIntersect.write(fileName) 
                 for ref3d in ref3Ds:
-                    xplotterShift.createSubPlot("%s_ref3D_%d"%(label2Str(MDL_SHIFT_DIFF),ref3d), "pixels", "Frequency") 
-                    xplotter.createSubPlot("%s_ref3D_%d"%(label2Str(MDL_ANGLE_DIFF),ref3d), "degrees", "Frequency") 
                     mDoutRef3D = MetaData()
                     mDoutRef3D.importObjects(mdIter, MDValueEQ(MDL_REF3D, ref3d))
+                    _frequency="Frequency (%d)"%mDoutRef3D.size()
+                    xplotterShift.createSubPlot("%s_ref3D_%d"%(label2Str(MDL_SHIFT_DIFF),ref3d), "pixels", _frequency) 
+                    xplotter.createSubPlot("%s_ref3D_%d"%(label2Str(MDL_ANGLE_DIFF),ref3d), "degrees", _frequency) 
                     #mDoutRef3D.write("afterimportObject@mdIter.sqlite",MD_APPEND)
                     xplotter.plotMd(mDoutRef3D, 
                                     MDL_ANGLE_DIFF, 
@@ -658,8 +669,16 @@ data_
 
                     xplotterShift.draw()
                     xplotter.draw()
-                    #tdEnd = datetime.now() - dtBegin
-                    #print "make plot took: %d seconds" % (tdEnd.total_seconds())
+            if Percentage>0:
+                fn = FileName()
+                baseFileName   = self.workingDirPath("intersects.xmd")
+                fn.compose("angle",baseFileName)
+                mdIntersectAngle.write(fn,MD_OVERWRITE)
+                fn.compose("shift",baseFileName)
+                mdIntersectShift.write(fn,MD_APPEND)
+                print "Metadata with worst imags saved to", fn
+                #tdEnd = datetime.now() - dtBegin
+                #print "make plot took: %d seconds" % (tdEnd.total_seconds())
             
             
         if doPlot('DisplayAngularDistribution'):
