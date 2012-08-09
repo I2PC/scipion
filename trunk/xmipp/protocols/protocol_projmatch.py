@@ -676,7 +676,8 @@ data_
                 mdIntersectAngle.write(fn,MD_OVERWRITE)
                 fn.compose("shift",baseFileName)
                 mdIntersectShift.write(fn,MD_APPEND)
-                print "Metadata with worst imags saved to", fn
+                print "Metadata with worst imags saved to", baseFileName
+                print "in blocks 'angle' and 'shift'"
                 #tdEnd = datetime.now() - dtBegin
                 #print "make plot took: %d seconds" % (tdEnd.total_seconds())
             
