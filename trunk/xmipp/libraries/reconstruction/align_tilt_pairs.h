@@ -71,7 +71,8 @@ public:
 
     /// Center one tilted image
     bool centerTiltedImage(const MultidimArray<double> &imgU, bool flip,
-    		double inPlaneU, double alphaT, double alphaU, double tilt,
+    		double inPlaneU, double shiftXu, double shiftYu,
+    		double alphaT, double alphaU, double tilt,
     		MultidimArray<double> &imgT,
     		double &shiftX, double &shiftY, CorrelationAux &auxCorr);
 };

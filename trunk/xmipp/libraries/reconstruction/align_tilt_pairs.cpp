@@ -74,17 +74,19 @@ void ProgAlignTiltPairs::show() {
 }
 
 // Center one tilted image  =====================================================
+//#define DEBUG
 bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 		bool flip,
-		double inPlaneU, double alphaT, double alphaU,
+		double inPlaneU, double shiftXu, double shiftYu,
+		double alphaT, double alphaU,
 		double tilt, MultidimArray<double> &imgT, double &shiftX,
 		double &shiftY, CorrelationAux &auxCorr) {
 	// Cosine stretching, store stretched image in imgTaux
 	MultidimArray<double> imgTaux;
-	Matrix2D<double> E, E2D;
+	Matrix2D<double> E, E2D, Mu2D, A2D;
 	if (!do_stretch)
 		tilt=0.;
-	Euler_angles2matrix(-alphaU-inPlaneU,tilt,alphaT,E,true);
+	Euler_angles2matrix(-alphaU,tilt,alphaT,E,true);
 	if (flip)
 	{
 		MAT_ELEM(E,0,0)*=-1;
@@ -94,30 +96,34 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 		MAT_ELEM(E,1,2)*=-1;
 		MAT_ELEM(E,2,2)*=-1;
 	}
+    rotation2DMatrix(inPlaneU, Mu2D, true);
+    MAT_ELEM(Mu2D,0,2)=shiftXu;
+    MAT_ELEM(Mu2D,1,2)=shiftYu;
 	E2D.initIdentity(3);
 	MAT_ELEM(E2D,0,0)=MAT_ELEM(E,0,0);
 	MAT_ELEM(E2D,0,1)=MAT_ELEM(E,0,1);
 	MAT_ELEM(E2D,1,0)=MAT_ELEM(E,1,0);
 	MAT_ELEM(E2D,1,1)=MAT_ELEM(E,1,1);
-	applyGeometry(LINEAR, imgTaux, imgT, E2D, IS_INV, WRAP);
+	A2D=Mu2D*E2D.inv();
+	applyGeometry(LINEAR, imgTaux, imgT, A2D, IS_NOT_INV, WRAP);
 
 	// Calculate best shift
 	CorrelationAux aux;
 	bestShift(imgU, imgTaux, shiftX, shiftY, auxCorr);
 #ifdef DEBUG
-	std::cout << shiftX << " " << shiftY << std::endl;
+	std::cout << "alphaU=" << alphaU << " inplaneU=" << inPlaneU << " tilt=" << tilt << " alphaT=" << alphaT << std::endl;
+	std::cout << "Best shift= " << shiftX << " " << shiftY << std::endl;
 #endif
-	Matrix1D<double> vShift(3);
+	Matrix1D<double> vShift(2);
 	XX(vShift)=shiftX;
 	YY(vShift)=shiftY;
-	ZZ(vShift)=0;
-	Matrix2D<double> Tt, Ttp;
-	translation3DMatrix(vShift, Tt);
-	Ttp=E.inv()*Tt*E;
+	Matrix2D<double> Tt, Tt2D;
+	translation2DMatrix(vShift, Tt2D,true);
+	Tt=A2D.inv()*Tt2D.inv()*A2D;
 
 	// Readjust shift
-	shiftX=MAT_ELEM(Ttp,0,3);
-	shiftY=MAT_ELEM(Ttp,1,3);
+	shiftX=MAT_ELEM(Tt,0,2);
+	shiftY=MAT_ELEM(Tt,1,2);
 	double shift = sqrt(shiftX * shiftX + shiftY * shiftY);
 
 #ifdef DEBUG
@@ -128,7 +134,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	save.write("PPPuntiltedRef.xmp");
 	save() = imgTaux;
 	save.write("PPPtiltedAdjusted.xmp");
-	std::cout << shiftX << " " << shiftY << std::endl;
+	std::cout << "Corrected shift= " << shiftX << " " << shiftY << std::endl;
 	std::cout << "Press any key\n";
 	char c;
 	std::cin >> c;
@@ -136,6 +142,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 
 	return (shift < max_shift/100.0*XSIZE(imgT));
 }
+#undef DEBUG
 
 // Main program  ===============================================================
 void ProgAlignTiltPairs::run() {
@@ -160,7 +167,7 @@ void ProgAlignTiltPairs::run() {
 	size_t imgno = 0;
 	FileName fnTilted, fnUntilted;
 
-	double alphaU, alphaT, gamma;
+	double alphaU, alphaT, tilt;
 	size_t nDiscarded = 0;
 	Matrix2D<double> E, Tu, Tup;
 	Matrix1D<double> vShift(3);
@@ -194,15 +201,15 @@ void ProgAlignTiltPairs::run() {
 		double shiftXu, shiftYu;
 		MDin.getValue(MDL_ANGLE_Y, alphaU, __iter.objId);
 		MDin.getValue(MDL_ANGLE_Y2, alphaT, __iter.objId);
-		MDin.getValue(MDL_ANGLE_TILT, gamma, __iter.objId);
+		MDin.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
 		MDin.getValue(MDL_SHIFT_X, shiftXu, __iter.objId);
-		MDin.getValue(MDL_SHIFT_X, shiftYu, __iter.objId);
+		MDin.getValue(MDL_SHIFT_Y, shiftYu, __iter.objId);
 
 		// Correct untilted alignment
 		if (flip)
-			Euler_angles2matrix(-inPlaneU, gamma, -alphaT, E, true);
+			Euler_angles2matrix(-inPlaneU, tilt, -alphaT, E, true);
 		else
-			Euler_angles2matrix(-inPlaneU, gamma, alphaT, E, true);
+			Euler_angles2matrix(-inPlaneU, tilt, alphaT, E, true);
 		XX(vShift) = shiftXu;
 		YY(vShift) = shiftYu;
 		translation3DMatrix(vShift, Tu);
@@ -212,7 +219,8 @@ void ProgAlignTiltPairs::run() {
 		double shiftX = 0, shiftY = 0;
 		bool enable = true;
 		if (max_shift > 0)
-			enable = centerTiltedImage(imgRef(), flip, inPlaneU, alphaT, alphaU, gamma, imgT(), shiftX, shiftY, auxCorr);
+			enable = centerTiltedImage(imgRef(), flip, inPlaneU, shiftXu, shiftYu,
+					alphaT, alphaU, tilt, imgT(), shiftX, shiftY, auxCorr);
 		if (!enable) {
 			++nDiscarded;
 			shiftX = shiftY = 0;
@@ -223,13 +231,13 @@ void ProgAlignTiltPairs::run() {
 		MDout.setValue(MDL_IMAGE, fnTilted, idOut);
 		if (flip) {
 			MDout.setValue(MDL_ANGLE_ROT, -inPlaneU, idOut);
-			MDout.setValue(MDL_ANGLE_TILT, gamma + 180, idOut);
+			MDout.setValue(MDL_ANGLE_TILT, tilt + 180, idOut);
 			MDout.setValue(MDL_ANGLE_PSI, alphaT, idOut);
 			MDout.setValue(MDL_SHIFT_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
 			MDout.setValue(MDL_SHIFT_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
 		} else {
 			MDout.setValue(MDL_ANGLE_ROT, -inPlaneU, idOut);
-			MDout.setValue(MDL_ANGLE_TILT, gamma, idOut);
+			MDout.setValue(MDL_ANGLE_TILT, tilt, idOut);
 			MDout.setValue(MDL_ANGLE_PSI, alphaT, idOut);
 			MDout.setValue(MDL_SHIFT_X, -MAT_ELEM(Tup,0,3) + shiftX, idOut);
 			MDout.setValue(MDL_SHIFT_Y, -MAT_ELEM(Tup,1,3) + shiftY, idOut);
