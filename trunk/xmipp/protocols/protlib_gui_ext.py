@@ -1751,9 +1751,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
     def insertFilesFromMd(self, path):
         from xmipp import MDL_MICROGRAPH
         files = [self.md.getValue(MDL_MICROGRAPH, objId) for objId in self.md]
-        prefix = os.path.commonprefix(files)
-        if not exists(prefix):
-            prefix = dirname(prefix)
+        prefix = dirname(os.path.commonprefix(files))
         self.commonRoot = prefix
         prefix = join(prefix, '')
         for fn in files:
