@@ -137,7 +137,7 @@ void CL2DClass::transferUpdate()
 
         // Compute the polar Fourier transform of the full image
         normalizedPolarFourierTransform(P, polarFourierP, false, XSIZE(P) / 5,
-                                        XSIZE(P) / 2, plans, 1);
+                                        XSIZE(P) / 2-2, plans, 1);
         int finalSize = 2 * polarFourierP.getSampleNoOuterRing() - 1;
         if (XSIZE(rotationalCorr) != finalSize)
             rotationalCorr.resize(finalSize);
@@ -193,6 +193,7 @@ void CL2DClass::transferUpdate()
 #undef DEBUG
 
 //#define DEBUG
+//#define DEBUG_MORE
 void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
                          bool reverse)
 {
@@ -207,6 +208,11 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
     ASR = ARS;
     MultidimArray<double> IauxSR = I, IauxRS = I;
     Polar<std::complex<double> > polarFourierI;
+#ifdef DEBUG_MORE
+    Image<double> save2;
+    save2()=P;
+    save2.write("PPPI1.xmp");
+#endif
 
 	// Align the image with the node
 	for (int i = 0; i < 3; i++) {
@@ -217,28 +223,52 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
         MAT_ELEM(ASR,0,2) += shiftX;
         MAT_ELEM(ASR,1,2) += shiftY;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+#ifdef DEBUG_MORE
+        save2()=IauxSR;
+        save2.write("PPPIauxSR_afterShift.xmp");
+        std::cout << "ASR\n" << ASR << std::endl;
+#endif
 
         normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
-                                        XSIZE(P) / 5, XSIZE(P) / 2, plans, 1);
+                                        XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
 
         bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
         rotation2DMatrix(bestRot, R);
         SPEED_UP_temps;
         M3x3_BY_M3x3(ASR,R,ASR);
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+#ifdef DEBUG_MORE
+        save2()=IauxSR;
+        save2.write("PPPIauxSR_afterShiftAndRotation.xmp");
+        std::cout << "ASR\n" << ASR << std::endl;
+#endif
 
         // Rotate then shift
         normalizedPolarFourierTransform(IauxRS, polarFourierI, true,
-                                        XSIZE(P) / 5, XSIZE(P) / 2, plans, 1);
+                                        XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
         bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
         rotation2DMatrix(bestRot, R);
         M3x3_BY_M3x3(ARS,R,ARS);
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+#ifdef DEBUG_MORE
+        save2()=IauxRS;
+        save2.write("PPPIauxRS_afterRotation.xmp");
+        std::cout << "ARS\n" << ARS << std::endl;
+#endif
 
         bestShift(P, IauxRS, shiftX, shiftY, corrAux);
         MAT_ELEM(ARS,0,2) += shiftX;
         MAT_ELEM(ARS,1,2) += shiftY;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+#ifdef DEBUG_MORE
+        save2()=IauxRS;
+        save2.write("PPPIauxRS_afterRotationAndShift.xmp");
+        std::cout << "ARS\n" << ARS << std::endl;
+
+        char c;
+        std::cout << "Press any key\n";
+        std::cin >> c;
+#endif
     }
 
     // Compute the correntropy
@@ -268,6 +298,11 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
         corrSR = fastCorrentropy(P, IauxSR, prm->sigma,
                                  prm->gaussianInterpolator, imask);
     }
+#ifdef DEBUG_MORE
+       std::cout << "corrRS=" << corrRS << std::endl;
+       std::cout << "corrSR=" << corrSR << std::endl;
+#endif
+
 
     // Prepare result
     if (reverse)
@@ -293,7 +328,7 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
     else
         candidateSR.corr = corrSR;
 
-    if (corrRS >= corrSR)
+    if (candidateRS.corr >= candidateSR.corr)
     {
         I = IauxRS;
         result.copyAlignment(candidateRS);
@@ -322,6 +357,7 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
 #endif
 }
 #undef DEBUG
+#undef DEBUG_MORE
 
 void CL2DClass::fit(MultidimArray<double> &I, CL2DAssignment &result)
 {
