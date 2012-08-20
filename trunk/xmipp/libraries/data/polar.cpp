@@ -151,7 +151,7 @@ double best_rotation(const Polar<std::complex<double> > &I1,
 		}
 
 	// Return the corresponding angle
-	return angles(imax);
+	return DIRECT_A1D_ELEM(angles,imax);
 }
 
 // Align rotationally ------------------------------------------------------
