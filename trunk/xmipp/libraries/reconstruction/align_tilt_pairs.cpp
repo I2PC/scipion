@@ -86,25 +86,32 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	Matrix2D<double> E, E2D, Mu2D, A2D;
 	if (!do_stretch)
 		tilt=0.;
-	Euler_angles2matrix(-alphaU,tilt,alphaT,E,true);
 	if (flip)
-	{
-		MAT_ELEM(E,0,0)*=-1;
-		MAT_ELEM(E,1,0)*=-1;
-		MAT_ELEM(E,2,0)*=-1;
-		MAT_ELEM(E,0,2)*=-1;
-		MAT_ELEM(E,1,2)*=-1;
-		MAT_ELEM(E,2,2)*=-1;
-	}
+		Euler_angles2matrix( alphaU,tilt+180,alphaT,E,true);
+	else
+		Euler_angles2matrix(-alphaU,tilt,alphaT,E,true);
     rotation2DMatrix(inPlaneU, Mu2D, true);
     MAT_ELEM(Mu2D,0,2)=shiftXu;
     MAT_ELEM(Mu2D,1,2)=shiftYu;
+    if (flip)
+    {
+    	// We need to multiply the first column by -1, because
+    	// in Xmipp the Mu2D order is: first flip (if necessary), then rot, then shift
+    	//MAT_ELEM(Mu2D,0,0)*=-1;
+    	MAT_ELEM(Mu2D,1,0)*=-1;
+    	MAT_ELEM(Mu2D,2,0)*=-1;
+    	// We need to multiply the first row by -1, as needed by the RCT theory
+    	MAT_ELEM(Mu2D,0,1)*=-1;
+    	MAT_ELEM(Mu2D,0,2)*=-1;
+    }
+
 	E2D.initIdentity(3);
 	MAT_ELEM(E2D,0,0)=MAT_ELEM(E,0,0);
 	MAT_ELEM(E2D,0,1)=MAT_ELEM(E,0,1);
 	MAT_ELEM(E2D,1,0)=MAT_ELEM(E,1,0);
 	MAT_ELEM(E2D,1,1)=MAT_ELEM(E,1,1);
 	A2D=Mu2D*E2D.inv();
+
 	applyGeometry(LINEAR, imgTaux, imgT, A2D, IS_NOT_INV, WRAP);
 
 	// Calculate best shift
@@ -207,10 +214,15 @@ void ProgAlignTiltPairs::run() {
 
 		// Correct untilted alignment
 		if (flip)
-			Euler_angles2matrix(-inPlaneU, tilt, -alphaT, E, true);
+		{
+			Euler_angles2matrix( -inPlaneU, tilt+180, alphaT, E, true);
+			XX(vShift) = -shiftXu;
+		}
 		else
+		{
 			Euler_angles2matrix(-inPlaneU, tilt, alphaT, E, true);
-		XX(vShift) = shiftXu;
+			XX(vShift) = shiftXu;
+		}
 		YY(vShift) = shiftYu;
 		translation3DMatrix(vShift, Tu);
 		Tup = E * Tu * E.inv();
