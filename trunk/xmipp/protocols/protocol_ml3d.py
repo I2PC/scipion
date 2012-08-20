@@ -16,6 +16,7 @@ from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
+from protlib_filesystem import xmippExists
 
 class ProtML3D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -85,7 +86,11 @@ class ProtML3D(XmippProtocol):
             from protlib_xmipp import validateInputSize
             mdRef = MetaData(self.RefMd)
             references = mdRef.getColumnValues(MDL_IMAGE)
-            validateInputSize(references, self.ImgMd, errors)
+            for ref in references:
+                if not xmippExists(ref):
+                    errors.append("Reference: <%s> doesn't exists" % ref)
+            if len(errors) == 0:
+                validateInputSize(references, self.ImgMd, errors)
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
             
