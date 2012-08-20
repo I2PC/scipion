@@ -49,6 +49,8 @@
 //@{
 /** Get geometric transformation matrix from image geometry
  * Now this info is stored in metadata
+ * The order is: first flip (if necessary), then rotate, then shift
+ * A=Translation*Rotation*(Mirror)
   */
 void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
                               bool only_apply_shifts = false);
