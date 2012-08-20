@@ -60,16 +60,19 @@ class ProtML3D(XmippProtocol):
         logs = self.getFilename('iter_logs')    
         
         if exists(logs):
-            md = MetaData(logs)
-            id = md.lastObject()
-            iteration = md.getValue(MDL_ITER, id)
-            lines.append("Last iteration:  <%d>" % iteration)
-            LL = md.getValue(MDL_LL, id)
-            lines.append("LogLikelihood:  %f" % LL)
-            fnRefs = self.getFilename('refs', iter=iteration)
-            lines.append("Last 2D classes: [%s]" % fnRefs)
-            fnVols = self.getFilename('vols', iter=iteration)
-            lines.append("Last 3D classes: [%s]" % fnVols)
+            try:
+                md = MetaData(logs)
+                id = md.lastObject()
+                iteration = md.getValue(MDL_ITER, id)
+                lines.append("Last iteration:  <%d>" % iteration)
+                LL = md.getValue(MDL_LL, id)
+                lines.append("LogLikelihood:  %f" % LL)
+                fnRefs = self.getFilename('refs', iter=iteration)
+                lines.append("Last 2D classes: [%s]" % fnRefs)
+                fnVols = self.getFilename('vols', iter=iteration)
+                lines.append("Last 3D classes: [%s]" % fnVols)
+            except Exception, e:
+                lines.append(str(e))
         
         return lines
     
@@ -114,7 +117,8 @@ class ProtML3D(XmippProtocol):
                 self.insertGenerateRefSteps()
                 
             if self.DoML3DClassification:
-                self.insertML3DStep(self.ImgMd, self.ORoot, self.ParamsDict['InitialVols'], self.NumberOfIterations)
+                self.insertML3DStep(self.ImgMd, self.ORoot, self.ParamsDict['InitialVols'], 
+                                    self.NumberOfIterations, self.SeedsAreAmplitudeCorrected)
             
     # Insert the step of launch some program
     def insertRunJob(self, prog, vf=[], files=None, useProcs=True):
@@ -137,6 +141,8 @@ class ProtML3D(XmippProtocol):
         cgsDir = self.workingDirPath('CorrectGreyscale')
         self.insertStep('createDir', path=cgsDir)
         volStack = self.ParamsDict['InitialVols'] = self.getFilename('corrected_vols')
+        # Grey-scale correction always leads to an amplitude uncorrected map
+        self.InitialMapIsAmplitudeCorrected = False
         index = 1
         outputVol = ''
         for idx in self.mdVols:
@@ -205,7 +211,8 @@ class ProtML3D(XmippProtocol):
                 outputVol = "%d@%s" % (index, volStack)
                 generatedVol = join(grDir, "vol%03d_iter%06d_vol%06d.vol" % (index, 1, 1))
                 copyVols.append((outputVol, generatedVol))
-                self.insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(MDL_IMAGE, idx), 1)
+                self.insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(MDL_IMAGE, idx), 1, 
+                                    self.InitialMapIsAmplitudeCorrected)
                 #self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
                 index += 1
                 
@@ -213,9 +220,12 @@ class ProtML3D(XmippProtocol):
             self.ParamsDict.update({'outVol': outVol, 'genVol':genVol})
             self.ParamsStr = '-i %(genVol)s -o %(outVol)s'
             self.insertRunJob('xmipp_image_convert', files=[volStack], useProcs=False)
+            
+        # Seed generation with MLF always does amplitude correction
+        self.SeedsAreAmplitudeCorrected = True
         
         
-    def insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters):
+    def insertML3DStep(self, inputImg, oRoot, initialVols, numberOfIters, amplitudCorrected):
         self.ParamsDict.update({
                          '_ImgMd': inputImg,
                          '_ORoot': oRoot,
@@ -233,15 +243,22 @@ class ProtML3D(XmippProtocol):
         
         if self.DoMlf:
             if not self.DoCorrectAmplitudes:
-                self.ParamsStr += ' --no_ctf %(PixelSize)f'
+                self.ParamsStr += " --no_ctf %(PixelSize)f"
             if not self.ImagesArePhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
+            if self.HighResLimit > 0:
+                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"
 
         self.ParamsStr += " --recons %(ReconstructionMethod)s "
+        
         if self.ReconstructionMethod == 'wslART':
             self.ParamsStr += " %(ARTExtraParams)s"
         else:
             self.ParamsStr += " %(FourierExtraParams)s" 
+        
+        if not amplitudCorrected:
+            self.ParamsStr += " --ctf_affected_refs"
+            
         self.insertRunJob('xmipp_%s_refine3d' % self.progId, [])
         
     def setVisualizeIterations(self):
