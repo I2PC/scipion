@@ -878,7 +878,7 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
     }
     Vavgctf2 /= sum_sumw_defocus;
 
-    std::cerr << "DEBUG_JM, updateWienerFilters: spectral_signal: " << spectral_signal << std::endl;
+   // std::cerr << "DEBUG_JM, updateWienerFilters: spectral_signal: " << spectral_signal << std::endl;
 
     // Calculate SSNR for all CTF groups
     // For each group the spectral noise is estimated via (2*Vsig)/(sumw_defocus-1)
