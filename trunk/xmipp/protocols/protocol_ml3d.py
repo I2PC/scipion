@@ -246,8 +246,10 @@ class ProtML3D(XmippProtocol):
                 self.ParamsStr += " --no_ctf %(PixelSize)f"
             if not self.ImagesArePhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
+            if not amplitudCorrected:
+                self.ParamsStr += " --ctf_affected_refs"
             if self.HighResLimit > 0:
-                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"
+                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"            
 
         self.ParamsStr += " --recons %(ReconstructionMethod)s "
         
@@ -255,9 +257,6 @@ class ProtML3D(XmippProtocol):
             self.ParamsStr += " %(ARTExtraParams)s"
         else:
             self.ParamsStr += " %(FourierExtraParams)s" 
-        
-        if not amplitudCorrected:
-            self.ParamsStr += " --ctf_affected_refs"
             
         self.insertRunJob('xmipp_%s_refine3d' % self.progId, [])
         
