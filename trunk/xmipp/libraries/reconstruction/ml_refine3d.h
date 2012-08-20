@@ -46,7 +46,6 @@
 class ProgMLRefine3D: public XmippProgram
 {
 public:
-FILE * _logML; //DEBUG LOGGING
     // Filenames for input images, reference volumes, symmetry file and output rootname
     FileName fn_sel, fn_ref, fn_sym, fn_root, fn_solv, fn_iter, fn_symmask;
     // Metadata with reference volumes

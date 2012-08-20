@@ -37,7 +37,6 @@ ProgML2D::ProgML2D()
 {
     do_ML3D = false;
     refs_per_class = 1;
-    _logML = NULL;
 }
 
 
@@ -1743,17 +1742,11 @@ void ProgML2D::expectation()
     sumfracweight = 0.;
 
     Fdzero.initZeros();
-
-    for (int i = 0; i < num_output_refs * nr_psi; i++)
-    {
-        //todo: change this with vector.assign
-        wsumimgs.push_back(Fdzero);
-    }
-
+    wsumimgs.assign(num_output_refs * nr_psi, Fdzero);
 
     // Local variables of old threadExpectationSingleImage
     Image<double> img;
-    FileName fn_img, fn_trans;
+    FileName fn_img, fn_tkrans;
     Matrix1D<double> opt_offsets(2);
     double old_phi = -999., old_theta = -999.;
     double opt_flip;
@@ -1763,14 +1756,12 @@ void ProgML2D::expectation()
 
     Msignificant.resizeNoCopy(model.n_ref, nr_psi * nr_flip);
 
-    static int img_done;
-    if (verbose > 0 && current_block == 0) //when not iem current block is always 0
+    static size_t img_done;
+    if (current_block == 0) //when not iem current block is always 0
     {
-        init_progress_bar(nr_images_local);
+        initProgress(nr_images_local);
         img_done = 0;
     }
-
-    int c = XMIPP_MAX(1, nr_images_local / 60);
 
     String _msg = formatString("Images: %lu, first: %lu, last: %lu", nr_images_local, myFirstImg, myLastImg);
     LOG(_msg.c_str());
@@ -1896,16 +1887,8 @@ void ProgML2D::expectation()
                 dAij(docfiledata,IMG_LOCAL_INDEX,11) = maxweight2; // Robustness weight
             }
 
-            if (verbose > 0 && img_done % c == 0)
-                progress_bar(img_done);
-
-//            //fixme: this only for debugging
-//            if (img_done % c == 0){
-//            	_msg = formatString("               done: %lu", img_done);
-//            	LOG(_msg.c_str());
-//            }
-
-            img_done++;
+            //Report progress and increment the images done
+            setProgress(img_done++);
 
 //#define DEBUG_JM1
 #ifdef DEBUG_JM1
@@ -1921,11 +1904,8 @@ void ProgML2D::expectation()
         }//close if current_block, also close of for all images
     }//close for all images
 
-    ///FIXME: Remove this printing, only for debug
-
-
-    if (verbose > 0 && current_block == (blocks - 1))
-        progress_bar(nr_images_local);
+    if (current_block == (blocks - 1))
+      endProgress();
 
     //Changes temporally the model n_ref for the
     //refno loop, but not yet n_ref because in iem
@@ -2032,7 +2012,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
 
 void ProgML2D::maximization()
 {
-	LOG("      ProgML2D::maximization BEGIN");
+	LOG("   ProgML2D::maximization BEGIN");
     if (blocks == 1) //ie not IEM, normal maximization
     {
         maximizeModel(model);

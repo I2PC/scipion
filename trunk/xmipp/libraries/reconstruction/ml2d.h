@@ -41,6 +41,7 @@
 #include <data/ctf.h>
 #include <data/xmipp_threads.h>
 #include <data/xmipp_program.h>
+#include <data/xmipp_log.h>
 
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
@@ -48,11 +49,7 @@
 #define DATALINELENGTH 12
 
 
-#define CREATE_LOG(root) _logML = fopen(formatString("%s_nodo%02d.log", root.c_str(), rank).c_str(), "w+")
-#define LOG(msg) do{fprintf(_logML, "%s\t%s\n", getCurrentTimeString(), msg); fflush(_logML); }while(0)
-#define CLOSE_LOG() fclose(_logML)
-//#define LOG(msg) printf("%s\t%s\n", getCurrentTimeString(), msg)
-
+#define LOG_FN(root) formatString("%s_nodo%02d.log", root.c_str(), rank)
 
 ///******** Some macro definitions ****************
 #define FOR_ALL_GLOBAL_IMAGES() \
@@ -125,7 +122,6 @@ public:
 class ML2DBaseProgram: public XmippProgram
 {
 public:
-FILE * _logML; //DEBUG LOGGING
     /** Filenames reference selfile/image, fraction docfile & output rootname */
     FileName fn_img, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */
@@ -215,6 +211,8 @@ FILE * _logML; //DEBUG LOGGING
     int refs_per_class;
     /** Store convergence */
     std::vector<double> conv;
+    //Just for debbuging
+    size_t current_image;
 
     /** Model */
     ModelML2D model, *current_model;

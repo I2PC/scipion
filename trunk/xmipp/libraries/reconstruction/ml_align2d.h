@@ -110,13 +110,10 @@ public:
     int refno_index, refno_count, refno_load, refno_load_param;
     // Which group does this image belong to in iteration 0 (generation of K references)
     int mygroup;
-    //Just for debbuging
-    size_t current_image;
     /// Read arguments from command line
     void readParams();
     /// Params definition
     void defineParams();
-
 
 public:
     ProgML2D();

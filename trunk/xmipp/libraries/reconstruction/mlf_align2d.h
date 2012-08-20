@@ -38,6 +38,16 @@
 #define FOR_ALL_FLIPS() for (int iflip=0; iflip<nr_flip; iflip++)
 #define FOR_ALL_LIMITED_TRANSLATIONS() for (int itrans=0; itrans<nr_trans; itrans++)
 #define FOR_ALL_DEFOCUS_GROUPS() for (int ifocus=0; ifocus<nr_focus; ifocus++)
+#define FOR_ALL_DIGITAL_FREQS() for (int irr = 0; irr < hdim; irr++)
+#define FOR_ALL_POINTS() for (int ipoint = 0; ipoint < nr_points_2d; ++ipoint)
+
+//Helper macros to define the elements of vectors:
+//Vsig, Vctf and Vsnr indexed by ifocus and irr
+#define VSNR_ITEM dAi(Vsnr[ifocus], irr)
+#define VCTF_ITEM dAi(Vctf[ifocus], irr)
+#define VDEC_ITEM dAi(Vdec[ifocus], irr)
+#define VSIG_ITEM dAi(Vsig[ifocus], irr)
+
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLVALUE 1e-4
 #define HISTMIN -6.
@@ -151,6 +161,8 @@ public:
     std::vector<MultidimArray<double> > wsum_Mref, wsum_ctfMref;
     std::vector< std::vector<double> > Mwsum_sigma2;
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
+    std::vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs;
+
 
     /** Constructor
      * nr_vols: Used for 3D case, if 0, then doML3D = false
@@ -247,17 +259,7 @@ public:
     /// Perform expectation step for a single image
     void processOneImage(const MultidimArray<double> &Mimg,
                          const int focus, bool apply_ctf,
-                         const std::vector<double> &Fref,
-                         std::vector<double> &Fwsum_imgs,
-                         std::vector<double> &Fwsum_ctfimgs,
-                         std::vector<double> &Mwsum_sigma2,
-                         double &wsum_sigma_offset,
-                         std::vector<double> &sumw,
-                         std::vector<double> &sumw2,
-                         std::vector<double> &sumwsc,
-                         std::vector<double> &sumwsc2,
-                         std::vector<double> &sumw_mirror,
-                         double &LL, double &fracweight,  double &maxweight2, double &sum_refw2,
+                         double &fracweight,  double &maxweight2, double &sum_refw2,
                          double &opt_scale, int &opt_refno, double &opt_psi,
                          int &opt_ipsi, int &opt_iflip,
                          MultidimArray<double> &opt_offsets,

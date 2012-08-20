@@ -42,6 +42,7 @@
 #include "symmetrize.h"
 #include "volume_segment.h"
 
+
 //#define DEBUG
 //Macro to obtain the iteration base name
 #define FN_ITER_BASE(iter) formatString("%s_iter%06d_vol", fn_root.c_str(), (iter))
@@ -63,11 +64,11 @@ ProgMLRefine3D::ProgMLRefine3D(bool fourier)
         ml2d = new ProgML2D();
     rank = 0;
     size = 1;
-    _logML = NULL;
 }
 
 ProgMLRefine3D::~ProgMLRefine3D()
 {
+    CLOSE_LOG();
     delete ml2d;
 }
 
@@ -289,10 +290,13 @@ void ProgMLRefine3D::readParams()
         reconsMdFn.push_back(FN_NOISE_IMG_MD);
 
     }
+    CREATE_LOG(LOG_FN(fn_root));
 }
 
 void ProgMLRefine3D::show()
 {
+    LOG_LEVEL(show);
+
     if (verbose == 0)
         return;
 
@@ -335,6 +339,7 @@ void ProgMLRefine3D::show()
 
 void ProgMLRefine3D::createSampling()
 {
+    LOG_LEVEL(createSampling);
     FileName fn_sym_loc;
     // Precalculate sampling
     mysampling.setSampling(angular);
@@ -351,50 +356,42 @@ void ProgMLRefine3D::createSampling()
 // Fill sampling and create DFlib
 void ProgMLRefine3D::produceSideInfo()
 {
+    LOG_LEVEL(produceSideInfo);
     //Create sampling
-    LOG("   ProgMLRefine3D::produceSideInfo: createSampling");
     createSampling();
-    LOG("   ProgMLRefine3D::produceSideInfo: show");
     show();
     // Write starting volume(s) to disc with correct name for iteration loop
-    LOG("   ProgMLRefine3D::produceSideInfo: copyVolumes");
     copyVolumes();
     // Project volumes and store projections in a metadata
-    LOG("   ProgMLRefine3D::produceSideInfo: projectVolumes");
     projectVolumes(ml2d->MDref);
 //    //FIXME: this is for concurrency problem...remove after that
     FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
     MetaData(fn_sel).write(myImg);
     ml2d->fn_img = myImg;
     //2d initialization
-    LOG("   ProgMLRefine3D::produceSideInfo: ml2d->produceSideInfo");
+    LOG("before ml2d->produceSideInfo");
     ml2d->produceSideInfo();
-    LOG("   ProgMLRefine3D::produceSideInfo2: end");
 }
 
 void ProgMLRefine3D::produceSideInfo2()
 {
-    LOG("   ProgMLRefine3D::produceSideInfo2: ml2d->produceSideInfo2");
+    LOG_LEVEL(produceSideInfo2);
     ml2d->produceSideInfo2();
     ml2d->refs_per_class = nr_projections;
     ml2d->show();
     Nvols *= ml2d->factor_nref;
     ml2d->Iold.clear(); // To save memory
-    LOG("   ProgMLRefine3D::produceSideInfo2: end");
 }
 
 void ProgMLRefine3D::run()
 {
+    LOG_LEVEL(RUN);
     bool converged = false;
-    CREATE_LOG(fn_root);
-    ml2d->_logML = _logML;
+
 
     // Get input parameters
-    LOG("ML3D: before produceSideInfo");
     produceSideInfo();
-    LOG("ML3D: before produceSideInfo2");
     produceSideInfo2();
-    LOG("ML3D: before ml2d->createThreads");
     ml2d->createThreads();
 
     //Local image to read data
@@ -411,15 +408,16 @@ void ProgMLRefine3D::run()
             std::cout << formatString("--> 3D-EM volume refinement:  iteration %d of %d", iter, Niter) << std::endl;
 
         LOG("==============================================");
-        LOG(formatString("ML3D: BEGIN Iteration %d of %d", iter, Niter).c_str());
+        LOG(formatString("ML3D: Iteration %d of %d", iter, Niter));
+        LOG_LEVEL(Iteration);
 
         for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
-            LOG(formatString("ML3D: BEGIN BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
+            LOG(formatString("ML3D: BEGIN BLOCK %d of %d", ml2d->current_block, ml2d->blocks));
+            LOG_LEVEL(Block);
             // Project volumes, already done for first iteration, first block
             if (doProject)// || ml2d->current_block > 0)
             {
-                LOG("   ML3D: Projecting volumes");
                 projectVolumes(ml2d->MDref);
                 size_t refno = 0;
 
@@ -434,17 +432,17 @@ void ProgMLRefine3D::run()
                         break;
                 }
             }
-            LOG("   ML3D: Calling ML2D E-M");
+            LOG("Calling ML2D Expectation");
             // Integrate over all images
             ml2d->expectation();
-
+            LOG("Calling ML2D Maximization");
             ml2d->maximization();
 
             //do not reconstruction on special iteration 0 until last block
             if (iter > SPECIAL_ITER || ml2d->current_block == ml2d->blocks - 1)//last block
             {
 
-                LOG("   ML3D: Writing ML2D references");
+                LOG("Writing ML2D references");
                 // Write out 2D reference images (to be used in reconstruction)
                 ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
 
@@ -455,36 +453,28 @@ void ProgMLRefine3D::run()
 
                 if (fourier_mode)
                     makeNoiseImages();
-                LOG("   ML3D: Reconstructing volumes");
                 // Reconstruct new volumes from the reference images
                 //update the base name for current iteration
                 reconsOutFnBase[0] = FN_ITER_BASE(iter);
                 reconsMdFn[0] = ml2d->outRefsMd;
                 reconstructVolumes();
-                LOG("   ML3D: updateVolumesMetadata");
                 // Update the reference volume selection file
                 updateVolumesMetadata();
                 // post-process the volumes
-                LOG("   ML3D: postProcessVolumes");
                 postProcessVolumes();
                 doProject = true;
             }
-            LOG(formatString("ML3D: END BLOCK %d of %d", ml2d->current_block, ml2d->blocks).c_str());
-
         } // end loop blocks
 
-        LOG(formatString("ML3D: Before calculate3DSSNR").c_str());
         if (fourier_mode)
             calculate3DSSNR(ml2d->spectral_signal);
 
         // Check convergence
-        LOG(formatString("ML3D: Before checkConvergence").c_str());
         converged = checkConvergence();
 
         // End 2D iteration
-        LOG(formatString("ML3D: Before ml2d->endIteration").c_str());
+        LOG("Calling ml2d->endIteration");
         ml2d->endIteration();
-        LOG(formatString("ML3D: END Iteration %d of %d", iter, Niter).c_str());
     } // end loop iterations
 
     if (verbose)
@@ -496,10 +486,9 @@ void ProgMLRefine3D::run()
     }
 
     // Write converged output ML2D files
+    LOG("Calling ml2d->writeOutputFiles, OUT_FINAL");
     ml2d->writeOutputFiles(ml2d->model, OUT_FINAL);
     ml2d->destroyThreads();
-
-    CLOSE_LOG();
 
 }//end of function run
 
@@ -529,13 +518,14 @@ void ProgMLRefine3D::createEmptyFiles(int type)
 void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
 {
 
+    LOG_LEVEL(projectVolumes);
+
     Image<double>                vol;
     FileName                      fn_base = FN_PROJECTIONS, fn_tmp;
     Projection                    proj;
     double                       rot, tilt, psi = 0.;
     size_t                        nl, nr_dir, id, bar_step;
     int                           volno, dim;
-
 
     // Here all nodes fill SFlib and DFlib, but each node actually projects
     // only a part of the projections. In this way parallellization is obtained
@@ -580,6 +570,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
             {
                 projectVolume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
                 //proj.setEulerAngles(rot, tilt, psi);
+                //std::cerr << formatString("DEBUG_JM: Proyecting vol: %s, rot: %f, tilt: %f, psi: %f", fn_tmp.c_str(), rot, tilt, psi) <<std::endl;
                 proj.write(fn_tmp);
                 //proj.write(formatString("%s_iter%d.stk", fn_tmp.c_str(), iter));
             }
@@ -744,6 +735,8 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &
 // Reconstruction using the ML-weights ==========================================
 void ProgMLRefine3D::reconstructVolumes()
 {
+  LOG_LEVEL(reconstructVolumes);
+
     FileName fn_vol, fn_vol_prev, fn_one;
     MetaData mdOne, mdProj, mdOutVols;
     size_t id;
@@ -752,7 +745,6 @@ void ProgMLRefine3D::reconstructVolumes()
     ProgReconsBase * reconsProgram;
     int volno_index  = 0;
 
-    LOG("           ProgMLRefine3D::reconstructVolumes");
     createEmptyFiles(EMPTY_VOLUMES);
 
     for (int i = 0; i < reconsOutFnBase.size(); ++i)
@@ -765,12 +757,9 @@ void ProgMLRefine3D::reconstructVolumes()
             //for now each node reconstruct one volume
             if (volno_index % size == rank)
             {
-				LOG(formatString("              Projections: : %s", reconsMdFn[i].c_str()).c_str());
                 //fn_vol.compose(volno, fn_base);
-				LOG(formatString("              Base: : %s", fn_base.c_str()).c_str());
 				mdProj.read(reconsMdFn[i]);
                 fn_one.compose(fn_base, volno, "projections.xmd");
-            	LOG(formatString("              Reconstructing volume: %s", fn_vol.c_str()).c_str());
                 // Select only relevant projections to reconstruct
                 mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
                 mdOne.write(fn_one);
@@ -778,7 +767,6 @@ void ProgMLRefine3D::reconstructVolumes()
 				reconsProgram = createReconsProgram(fn_one, fn_vol);
                 reconsProgram->run();
 				delete reconsProgram;
-				LOG(formatString("           END Reconstructing volume: %s", fn_vol.c_str()).c_str());
             }
             //Store output volumes, avoid noise and cref volumes
             //Only need to be done by master node
@@ -797,11 +785,12 @@ void ProgMLRefine3D::reconstructVolumes()
       mdOutVols.write(fn, MD_APPEND);
     }
 
-    LOG("           END ProgMLRefine3D::reconstructVolumes");
 }
 
 void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 {
+
+  LOG_LEVEL(calculate3DSSNR);
 
     MetaData                    mdNoiseAll, mdNoiseOne;
     MultidimArray<std::complex<double> >  Faux;
@@ -830,7 +819,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
     if (verbose)
     {
         std::cout << "--> calculating 3D-SSNR ..." << std::endl;
-        init_progress_bar(mdNoiseAll.size());
+        initProgress(mdNoiseAll.size());
     }
 
     FileName fn_noise_base = FN_NOISE_VOLBASE;
@@ -856,17 +845,16 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         mdNoiseOne.importObjects(mdNoiseAll, MDValueEQ(MDL_REF3D, volno));
         c = 0;
         volweight = 0.;
+        bool first_time = true;
+
         FOR_ALL_OBJECTS_IN_METADATA(mdNoiseOne)
         {
             mdNoiseOne.getValue(MDL_WEIGHT, weight, __iter.objId);
             mdNoiseOne.getValue(MDL_ANGLE_ROT, rot, __iter.objId);
             mdNoiseOne.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
 
-            // alpha denominator
-            if (c == 0)
-                alpha_N = Mone * weight;
-            else
-                alpha_N += Mone * weight;
+            // accumulate alpha denominator
+            SUM_INIT(alpha_N, Mone * weight);
             // alpha nominator
             projectVolume(nvol(), proj, dim, dim, rot, tilt, psi);
             apply_cont_mask(mask, proj(), proj());
@@ -875,10 +863,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
             CenterFFT(Maux, true);
             Maux.setXmippOrigin();
             Maux *= Maux;
-            if (c == 0)
-                alpha_T = Maux * weight;
-            else
-                alpha_T += Maux * weight;
+            SUM_INIT(alpha_T, Maux * weight);
             // input signal
             projectVolume(vol(), proj, dim, dim, rot, tilt, psi);
             apply_cont_mask(mask, proj(), proj());
@@ -887,14 +872,10 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
             CenterFFT(Maux, true);
             Maux.setXmippOrigin();
             Maux *= Maux;
-            if (c == 0)
-                Msignal = Maux * weight;
-            else
-                Msignal += Maux * weight;
+            SUM_INIT(Msignal, Maux * weight);
             volweight += weight;
-            c++;
-            if (c % XMIPP_MAX(1, mdNoiseAll.size() / 60) == 0 && verbose)
-                progress_bar(c);
+            setProgress(++c);
+            first_time = false;
         }
 
         alpha_T.setXmippOrigin();
@@ -907,13 +888,18 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
         radialAverage(alpha_N, center, alpha_noise, radial_count, true);
         radialAverage(Msignal, center, input_signal, radial_count, true);
 
+//        std::cerr << "DEBUG_JM: alpha_T: " << alpha_T << std::endl;
+//        std::cerr << "DEBUG_JM: alpha_N: " << alpha_N << std::endl;
+//        std::cerr << "DEBUG_JM: Msignal: " << Msignal << std::endl;
+
         input_signal *= 1./volweight;
 
         // Calculate spectral_signal =input_signal/alpha!!
         // Also store averages of alphaN and alphaS for output
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(input_signal)
         {
-            dAi(input_signal, i) = dAi(input_signal, i) * dAi(alpha_noise, i) / dAi(alpha_signal, i);
+          dAi(input_signal, i) = (dAi(alpha_signal, i) > 0.) ? dAi(input_signal, i) * dAi(alpha_noise, i) / dAi(alpha_signal, i) : 0.;
+
         }
 
         if (volno == 1)
@@ -929,8 +915,8 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
             avg_alphaS += alpha_signal;
         }
     }
-    if (verbose)
-        progress_bar(mdNoiseAll.size());
+    endProgress();
+
     double inv_Nvols = 1. / (double)Nvols;
     spectral_signal *= inv_Nvols;
     avg_alphaN *= inv_Nvols;
@@ -965,6 +951,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 
 void ProgMLRefine3D::copyVolumes()
 {
+  LOG_LEVEL(copyVolumes);
     ImageGeneric img;
     FileName fn_vol, fn_base = FN_INITIAL_BASE;
     size_t volno = 0;
@@ -983,7 +970,7 @@ void ProgMLRefine3D::copyVolumes()
 
 void ProgMLRefine3D::updateVolumesMetadata()
 {
-
+  LOG_LEVEL(updateVolumesMetadata);
     FileName fn_vol, fn_base;
     mdVol.clear();
 
@@ -1003,8 +990,9 @@ void ProgMLRefine3D::updateVolumesMetadata()
 // Modify reference volume ======================================================
 void ProgMLRefine3D::postProcessVolumes()
 {
+  LOG_LEVEL(postProcessVolumes);
 
-    ProgVolumeSegment            segm_prm;
+  ProgVolumeSegment            segm_prm;
     FileName               fn_vol, fn_tmp;
     Image<double>          vol, Vaux, Vsymmask, Vsolv;
     MultidimArray<int>     mask3D;
@@ -1012,7 +1000,6 @@ void ProgMLRefine3D::postProcessVolumes()
     int                    dim;
     Sampling               locsampling;
 
-    LOG("   ProgMLRefine3D::postProcessVolumes INSIDE");
     // Use local sampling because of symmask
     if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(ERR_NUMERICAL, (String)"ml_refine3d::run Invalid symmetry" +  fn_sym);
@@ -1178,20 +1165,20 @@ void ProgMLRefine3D::postProcessVolumes()
             }
 
             // (Re-) write post-processed volume to disc
-            LOG("   ProgMLRefine3D::postProcessVolumes WRITING vol");
+            LOG("Before WRITING vol");
             vol.write(fn_vol);
-            LOG("   ProgMLRefine3D::postProcessVolumes WRITING vol END");
+            LOG("After WRITING vol");
 
         }
         if (verbose)
             std::cout << " -----------------------------------------------------------------" << std::endl;
     }
-    LOG("   ProgMLRefine3D::postProcessVolumes LEAVING");
 }
 
 // Convergence check ===============================================================
 bool ProgMLRefine3D::checkConvergence()
 {
+    LOG_LEVEL(checkConvergence);
 
     Image<double>        vol, old_vol, diff_vol;
     FileName               fn_base, fn_base_old, fn_vol;
