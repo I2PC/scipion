@@ -214,15 +214,10 @@ void ProgAlignTiltPairs::run() {
 
 		// Correct untilted alignment
 		if (flip)
-		{
 			Euler_angles2matrix( -inPlaneU, tilt+180, alphaT, E, true);
-			XX(vShift) = -shiftXu;
-		}
 		else
-		{
 			Euler_angles2matrix(-inPlaneU, tilt, alphaT, E, true);
-			XX(vShift) = shiftXu;
-		}
+		XX(vShift) = shiftXu;
 		YY(vShift) = shiftYu;
 		translation3DMatrix(vShift, Tu);
 		Tup = E * Tu * E.inv();
