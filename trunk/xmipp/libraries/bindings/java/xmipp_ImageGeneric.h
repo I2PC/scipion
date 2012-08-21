@@ -277,6 +277,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_convertPSD
 
 /*
  * Class:     xmipp_ImageGeneric
+ * Method:    generateImageWithTwoCTFs
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
+  (JNIEnv *, jobject, jstring, jstring, jint);
+
+/*
+ * Class:     xmipp_ImageGeneric
  * Method:    reslice
  * Signature: (Z,Z,I)V
  */

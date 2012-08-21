@@ -66,7 +66,8 @@ public:
             double CTF_at_f=0;
             double N=0;
             for(double ang=0; ang<2*PI; ang+=0.01) {
-               CTF_at_f+=CTF.CTF_at(f*cos(ang),f*sin(ang));
+               CTF.precomputeValues(f*cos(ang),f*sin(ang));
+               CTF_at_f+=CTF.CTF_at();
                N++;
             }
             std::cout << f << " " << CTF_at_f/N << std::endl;
@@ -609,5 +610,9 @@ public:
     /** Force physical meaning.*/
     void force_physical_meaning();
 };
+
+/** Generate CTF 2D image with two CTFs.
+ * The two CTFs are in fn1 and fn2. The output image is written to the file fnOut and has size Xdim x Xdim. */
+void generateCTFImageWith2CTFs(const FileName &fn1, const FileName &fn2, int Xdim, MultidimArray<double> &imgOut);
 //@}
 #endif

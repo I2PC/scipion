@@ -885,3 +885,41 @@ void CTFDescription::force_physical_meaning()
     }
 }
 #undef DEBUG
+
+void generateCTFImageWith2CTFs(const FileName &fn1, const FileName &fn2, int Xdim, MultidimArray<double> &imgOut)
+{
+    CTFDescription CTF1, CTF2;
+    CTF1.enable_CTF=true;
+    CTF1.enable_CTFnoise=false;
+    CTF1.read(fn1);
+    CTF1.Produce_Side_Info();
+
+    CTF2.enable_CTF=true;
+    CTF2.enable_CTFnoise=false;
+    CTF2.read(fn2);
+    CTF2.Produce_Side_Info();
+
+    imgOut.initZeros(Xdim,Xdim);
+    Matrix1D<int> idx(2);
+    Matrix1D<double> freq(2);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(imgOut)
+    {
+        XX(idx) = j;
+        YY(idx) = i;
+
+        // Digital frequency
+        FFT_idx2digfreq(imgOut, idx, freq);
+        digfreq2contfreq(freq, freq, CTF1.Tm);
+        if (XX(freq)>=0)
+        {
+        	CTF1.precomputeValues(XX(freq),YY(freq));
+        	A2D_ELEM(imgOut,i,j)=CTF1.CTF_at();
+        }
+        else
+        {
+        	CTF2.precomputeValues(XX(freq),YY(freq));
+        	A2D_ELEM(imgOut,i,j)=CTF2.CTF_at();
+        }
+    }
+    CenterFFT(imgOut,false);
+}

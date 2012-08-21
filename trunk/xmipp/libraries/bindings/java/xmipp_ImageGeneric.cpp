@@ -6,6 +6,7 @@
 #include "xmipp_ExceptionsHandler.h"
 #include <data/xmipp_image_generic.h>
 #include <data/xmipp_fft.h>
+#include <data/ctf.h>
 #include <reconstruction/transform_downsample.h>
 
 JNIEXPORT void JNICALL
@@ -710,6 +711,22 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
         MultidimArray<double> *in;
         MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
         xmipp2PSD(*in, *in, useLogarithm);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
+  (JNIEnv *env, jobject jobj, jstring fn1, jstring fn2, jint xdim)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        image->convert2Datatype(DT_Double);
+        MultidimArray<double> *in;
+        MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
+        const char *fnC1 = env->GetStringUTFChars(fn1, false);
+        const char *fnC2 = env->GetStringUTFChars(fn2, false);
+        generateCTFImageWith2CTFs(fnC1, fnC2, xdim, *in);
     }
     XMIPP_JAVA_CATCH;
 }
