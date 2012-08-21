@@ -716,7 +716,7 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
-  (JNIEnv *env, jobject jobj, jstring fn1, jstring fn2, jint xdim)
+  (JNIEnv *env, jobject jobj, jobject md1, jobject md2, jint xdim)
 {
     XMIPP_JAVA_TRY
     {
@@ -724,9 +724,9 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
         image->convert2Datatype(DT_Double);
         MultidimArray<double> *in;
         MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
-        const char *fnC1 = env->GetStringUTFChars(fn1, false);
-        const char *fnC2 = env->GetStringUTFChars(fn2, false);
-        generateCTFImageWith2CTFs(fnC1, fnC2, xdim, *in);
+        MetaData * mdC1 = GET_INTERNAL_METADATA(md1);
+        MetaData * mdC2 = GET_INTERNAL_METADATA(md2);
+        generateCTFImageWith2CTFs(*mdC1, *mdC2, xdim, *in);
     }
     XMIPP_JAVA_CATCH;
 }

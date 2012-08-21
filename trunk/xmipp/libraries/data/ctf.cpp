@@ -886,17 +886,17 @@ void CTFDescription::force_physical_meaning()
 }
 #undef DEBUG
 
-void generateCTFImageWith2CTFs(const FileName &fn1, const FileName &fn2, int Xdim, MultidimArray<double> &imgOut)
+void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdim, MultidimArray<double> &imgOut)
 {
     CTFDescription CTF1, CTF2;
     CTF1.enable_CTF=true;
     CTF1.enable_CTFnoise=false;
-    CTF1.read(fn1);
+    CTF1.readFromMetadataRow(MD1,MD1.firstObject());
     CTF1.Produce_Side_Info();
 
     CTF2.enable_CTF=true;
     CTF2.enable_CTFnoise=false;
-    CTF2.read(fn2);
+    CTF1.readFromMetadataRow(MD2,MD2.firstObject());
     CTF2.Produce_Side_Info();
 
     imgOut.initZeros(Xdim,Xdim);
