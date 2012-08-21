@@ -26,7 +26,7 @@
  '''
 
 import os
-from os.path import join, exists, basename, dirname
+from os.path import join, exists, basename, dirname, commonprefix, relpath
 import Tkinter as tk
 
 from tkSimpleDialog import Dialog
@@ -1102,7 +1102,7 @@ class AutoCompleteEntry(tk.Entry):
         for e in self.choices:
             if e.startswith(self.get()):
                 hits.append(e)
-        prefix = os.path.commonprefix(hits)
+        prefix = commonprefix(hits)
         if len(prefix):
             self.delete(0, tk.END)
             self.insert(0, prefix)
@@ -1201,9 +1201,11 @@ def mdOnClick(filename, browser):
             if len(browser.tree.get_children(filename)) == 0:
                 fm = browser.managers['md']
                 
+                bnameSuffix = "@" + relpath(filename, browser.dir)
+                btextSuffix = "@" + basename(filename)
                 for b in blocks:
-                    bname = "%s@%s" % (b, filename)                    
-                    btext = "%s@%s" % (b, basename(filename))
+                    bname = b + bnameSuffix                    
+                    btext = b + btextSuffix
                     browser.tree.insert(filename, 'end', bname, text=btext, image=fm.image)
     else:
         msg = "<Metadata Block>\n" + getMdString(filename, browser)
@@ -1278,16 +1280,16 @@ class FileManager():
             setattr(self, k, v)
 
 class XmippBrowser():
-    ''' seltype is the selection type, it could be:
-        - file -> only allow files selection
-        - folder -> only allow folder selection
-        - both -> allow any selection
-        - none -> doesn't select, only explore
-        - selmode is the selection mode, it could be:
-            browse -> only single file selection
-            extended -> multiple file selection
-    '''
     def __init__(self, initialDir='.', parent=None, root=None, seltype="both", selmode="browse", allowFilter=True, filter=None, previewDim=144):
+        ''' seltype is the selection type, it could be:
+              - file -> only allow files selection
+              - folder -> only allow folder selection
+              - both -> allow any selection
+              - none -> doesn't select, only explore
+            selmode is the selection mode, it could be:
+              - browse -> only single file selection
+              - extended -> multiple file selection
+        '''
         self.seltype = seltype
         self.selmode = selmode
         self.dir = os.path.abspath(initialDir)
@@ -1607,7 +1609,7 @@ class XmippBrowser():
                     files.sort()
                 for f in files:
                     if self.matchPattern(f):
-                        relRoot = os.path.relpath(root, self.dir)
+                        relRoot = relpath(root, self.dir)
                         rootId = foundDirs.get(relRoot, None)
                         if rootId is None: 
                             rootId = self.insertElement(self.dir, relRoot, True)
@@ -1751,7 +1753,7 @@ class XmippBrowserCTF(XmippBrowserPreview):
     def insertFilesFromMd(self, path):
         from xmipp import MDL_MICROGRAPH
         files = [self.md.getValue(MDL_MICROGRAPH, objId) for objId in self.md]
-        prefix = dirname(os.path.commonprefix(files))
+        prefix = dirname(commonprefix(files))
         self.commonRoot = prefix
         prefix = join(prefix, '')
         for fn in files:
