@@ -896,7 +896,7 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
 
     CTF2.enable_CTF=true;
     CTF2.enable_CTFnoise=false;
-    CTF1.readFromMetadataRow(MD2,MD2.firstObject());
+    CTF2.readFromMetadataRow(MD2,MD2.firstObject());
     CTF2.Produce_Side_Info();
 
     imgOut.initZeros(Xdim,Xdim);
@@ -910,7 +910,7 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
         // Digital frequency
         FFT_idx2digfreq(imgOut, idx, freq);
         digfreq2contfreq(freq, freq, CTF1.Tm);
-        if (XX(freq)>=0)
+        if (XX(freq)>0)
         {
         	CTF1.precomputeValues(XX(freq),YY(freq));
         	A2D_ELEM(imgOut,i,j)=CTF1.CTF_at();

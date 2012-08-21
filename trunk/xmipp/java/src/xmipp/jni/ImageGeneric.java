@@ -216,6 +216,8 @@ public class ImageGeneric {
 
     public native void convertPSD(boolean useLogarithm) throws Exception;
     
+    public native void generateImageWithTwoCTFs(MetaData md1, MetaData md2, int xdim) throws Exception;
+    
     public native void getReslice(ImageGeneric imgOut, int view) throws Exception;
     
     public native void reslice(int view) throws Exception;
