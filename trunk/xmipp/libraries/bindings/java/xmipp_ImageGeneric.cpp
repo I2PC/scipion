@@ -721,6 +721,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generatePSDCTF
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        image->convert2Datatype(DT_Double);
         MultidimArray<double> *in;
         MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
         MetaData * mdC = GET_INTERNAL_METADATA(md);
