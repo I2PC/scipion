@@ -728,7 +728,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
         MetaData * mdC1 = GET_INTERNAL_METADATA(md1);
         MetaData * mdC2 = GET_INTERNAL_METADATA(md2);
         generateCTFImageWith2CTFs(*mdC1, *mdC2, xdim, *in);
-        in->rangeAdjust(0,255);
     }
     XMIPP_JAVA_CATCH;
 }
