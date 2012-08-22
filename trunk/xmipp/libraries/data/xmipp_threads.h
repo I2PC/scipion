@@ -136,28 +136,6 @@ public:
 }
 ;//end of class Barrier
 
-/** Class to pass arguments to threads functions.
- * The argument passed can be obtained casting
- * the void * data received in the function.
- * @see ThreadManager
- */
-class ThreadArgument
-{
-private:
-    ThreadManager * manager;
-public:
-    int thread_id; ///< The thread id
-    int threads;   ///< Number of threads
-    void * workClass; ///< The class in wich threads will be working
-    void * data; // Pointer to void *
-
-    ThreadArgument();
-    ThreadArgument(int id, ThreadManager * manager = NULL, void * data = NULL);
-
-    friend class ThreadManager;
-    friend void * _threadMain(void * data);
-};
-
 void * _threadMain(void * data);
 
 /** Class for manage a group of threads performing one or several tasks.
@@ -257,9 +235,33 @@ public:
      * Should be external and declared as friend */
     friend void * _threadMain(void * data);
 
-
+    /** Get number of threads */
+    int getNumberOfThreads() {return threads;}
 }
 ;//end of class ThreadManager
+
+/** Class to pass arguments to threads functions.
+ * The argument passed can be obtained casting
+ * the void * data received in the function.
+ * @see ThreadManager
+ */
+class ThreadArgument
+{
+private:
+    ThreadManager * manager;
+public:
+    int thread_id; ///< The thread id
+    int threads;   ///< Number of threads
+    void * workClass; ///< The class in wich threads will be working
+    void * data; // Pointer to void *
+
+    ThreadArgument();
+    ThreadArgument(int id, ThreadManager * manager = NULL, void * data = NULL);
+
+    friend class ThreadManager;
+    friend void * _threadMain(void * data);
+    int getNumberOfThreads() {return manager->getNumberOfThreads();}
+};
 
 /** This class distributes dynamically N tasks between parallel workers.
  * @ingroup ParallelLibrary
