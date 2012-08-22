@@ -715,6 +715,20 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generatePSDCTF
+  (JNIEnv *env, jobject jobj, jobject md)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        MultidimArray<double> *in;
+        MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
+        MetaData * mdC = GET_INTERNAL_METADATA(md);
+        generatePSDCTFImage(*in, *mdC);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
   (JNIEnv *env, jobject jobj, jobject md1, jobject md2, jint xdim)
 {

@@ -909,9 +909,9 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
 
         // Digital frequency
         FFT_idx2digfreq(imgOut, idx, freq);
-        digfreq2contfreq(freq, freq, CTF1.Tm);
-        if (XX(freq)>0)
+        if (XX(freq)>=0 && XX(freq)<0.5)
         {
+            digfreq2contfreq(freq, freq, CTF1.Tm);
         	CTF1.precomputeValues(XX(freq),YY(freq));
         	A2D_ELEM(imgOut,i,j)=CTF1.CTF_at();
         }
@@ -922,4 +922,34 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
         }
     }
     CenterFFT(imgOut,false);
+}
+
+void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)
+{
+	img.rangeAdjust(-1,1);
+    CenterFFT(img,false);
+
+    CTFDescription CTF;
+    CTF.enable_CTF=true;
+    CTF.enable_CTFnoise=false;
+    CTF.readFromMetadataRow(MD,MD.firstObject());
+    CTF.Produce_Side_Info();
+
+    Matrix1D<int> idx(2);
+    Matrix1D<double> freq(2);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(img)
+    {
+        XX(idx) = j;
+        YY(idx) = i;
+
+        // Digital frequency
+        FFT_idx2digfreq(img, idx, freq);
+        if (XX(freq)>=0 && XX(freq)<0.5)
+        {
+            digfreq2contfreq(freq, freq, CTF.Tm);
+        	CTF.precomputeValues(XX(freq),YY(freq));
+        	A2D_ELEM(img,i,j)=CTF.CTF_at();
+        }
+    }
+    CenterFFT(img,true);
 }

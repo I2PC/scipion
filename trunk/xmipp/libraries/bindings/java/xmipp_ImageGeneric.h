@@ -280,6 +280,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_convertPSD
  * Method:    generateImageWithTwoCTFs
  * Signature: (Ljava/lang/String;)V
  */
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generatePSDCTF
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     xmipp_ImageGeneric
+ * Method:    generateImageWithTwoCTFs
+ * Signature: (Ljava/lang/String;)V
+ */
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
   (JNIEnv *, jobject, jobject, jobject, jint);
 

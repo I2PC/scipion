@@ -614,5 +614,9 @@ public:
 /** Generate CTF 2D image with two CTFs.
  * The two CTFs are in fn1 and fn2. The output image is written to the file fnOut and has size Xdim x Xdim. */
 void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdim, MultidimArray<double> &imgOut);
+
+/** Generate an image with the PSD and the CTF
+ *  Before calling the function img must have the enhanced PSD. The enhanced PSD image is modified to add the CTF. */
+void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD);
 //@}
 #endif
