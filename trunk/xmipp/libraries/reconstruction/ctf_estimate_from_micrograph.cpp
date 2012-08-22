@@ -646,8 +646,7 @@ public:
 void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
 {
 	ThreadFastEstimateEnhancedPSDParams *args=(ThreadFastEstimateEnhancedPSDParams*)thArg.workClass;
-	// COSS int Nthreads=thArg.manager->threads;
-	int Nthreads=3;
+	int Nthreads=thArg.getNumberOfThreads();
     int id=thArg.thread_id;
     ImageGeneric &I=*(args->I);
     const MultidimArrayGeneric& mI=I();
