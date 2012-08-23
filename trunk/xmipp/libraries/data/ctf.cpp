@@ -917,6 +917,7 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
         }
         else
         {
+        	digfreq2contfreq(freq, freq, CTF2.Tm);
         	CTF2.precomputeValues(XX(freq),YY(freq));
         	A2D_ELEM(imgOut,i,j)=CTF2.CTF_at();
         }
