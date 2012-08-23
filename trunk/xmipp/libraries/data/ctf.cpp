@@ -948,7 +948,8 @@ void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)
         {
             digfreq2contfreq(freq, freq, CTF.Tm);
         	CTF.precomputeValues(XX(freq),YY(freq));
-        	A2D_ELEM(img,i,j)=CTF.CTF_at();
+        	double aux=CTF.CTF_at();
+        	A2D_ELEM(img,i,j)=aux*aux;
         }
     }
     CenterFFT(img,true);
