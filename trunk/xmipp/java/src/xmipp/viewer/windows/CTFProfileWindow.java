@@ -98,6 +98,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             imc.setEnabled(false);  // Clicks won't remove selection ;)
 
             Tm = getSamplingRate(CTFFilename);
+            System.out.println("Tm="+Tm);
 
             ctfmodel = new CTFDescription(CTFFilename);
             ImageGeneric image = new ImageGeneric(PSDFilename);
@@ -446,7 +447,8 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
         try {
             MetaData md = new MetaData(CTFFilename);
             samplingRate = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, md.firstObject());
-            downsampling = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, md.firstObject());
+            if (md.containsLabel(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED))
+            	downsampling = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, md.firstObject());
         } catch (Exception ex) {
             ex.printStackTrace();
         }

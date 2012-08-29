@@ -8,6 +8,7 @@ public class CTFDescription {
     public static final int CTF = 3;
     public double[][] profiles, avgprofiles;
     public double FMAX; // Calculated when a file is loaded.
+    public double downsampling;
     // pointer to Image class in C++ space. Needed by native library.
     long peer;
 
@@ -31,7 +32,12 @@ public class CTFDescription {
 
     public void read(String filename) throws Exception {
         read_(filename);
-        FMAX = getFMAX();
+        MetaData md=new MetaData(filename);
+        if (md.containsLabel(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED))
+        	downsampling = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, md.firstObject());
+        else
+        	downsampling = 1.0;
+        FMAX = getFMAX()/downsampling;
     }
 
     // Data.
