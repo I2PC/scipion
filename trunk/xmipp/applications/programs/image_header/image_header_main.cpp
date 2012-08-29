@@ -58,11 +58,11 @@ protected:
         addParamsLine("       alias -r;");
         addParamsLine("   [--round_shifts]    :Round shifts to integers");
         addExampleLine("Print the header of the images in metadata: ", false);
-        addExampleLine("xmipp_header -i images.sel");
+        addExampleLine("xmipp_image_header -i images.sel");
         addExampleLine("Extract geometrical transformations from image file headers: ", false);
-        addExampleLine("xmipp_header -i smallStack.stk --extract -o header.doc");
+        addExampleLine("xmipp_image_header -i smallStack.stk --extract -o header.doc");
         addExampleLine("Assign the geometrical transformations from the metadata to header: ", false);
-        addExampleLine("xmipp_header -i header.doc --assign");
+        addExampleLine("xmipp_image_header -i header.doc --assign");
         addSeeAlsoLine("transform_geometry");
         addKeywords("header, geometric, transformation, print");
     }
