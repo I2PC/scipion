@@ -441,15 +441,17 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
 
     private double getSamplingRate(String CTFFilename) {
         double samplingRate = 1.0;
+        double downsampling = 1.0;
 
         try {
             MetaData md = new MetaData(CTFFilename);
             samplingRate = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, md.firstObject());
+            downsampling = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, md.firstObject());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
-        return samplingRate;
+        return samplingRate * downsampling;
     }
 
     private void calculatePlots() {
