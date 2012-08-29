@@ -149,6 +149,8 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
     std::cin >> c;
 #endif
 
+    STARTINGX(original_piece)=STARTINGX(ipiece)=STARTINGX(piece);
+    STARTINGY(original_piece)=STARTINGY(ipiece)=STARTINGY(piece);
     return true;
 }
 
