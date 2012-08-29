@@ -33,6 +33,7 @@ from tkSimpleDialog import Dialog
 import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
 from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix
+from protlib_utils import runChimera
 from Tkinter import TclError
 
 RESOURCES = getXmippPath('resources')
@@ -1118,10 +1119,7 @@ def showj(filename, mode="default"):
     runShowJ(filename, extraParams="--mode %s" % mode)
     
 def chimera(filename):
-    from protlib_filesystem import hasSpiderExt
-    if hasSpiderExt(filename):
-        filename = 'spider:%s' % filename
-    os.system('chimera %s &' % filename)
+    runChimera(filename)
     
 def fileInfo(browser):
     from protlib_utils import pretty_date

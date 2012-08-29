@@ -28,7 +28,7 @@ from datetime import datetime, timedelta
 from math import floor    
 from protlib_base import XmippProtocol, protocolMain
 from protlib_utils import getListFromVector, getBoolListFromVector,\
-     getComponentFromVector, runShowJ, runJob, createUniqueFileName
+     getComponentFromVector, runShowJ, runJob, createUniqueFileName, runChimera
 from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning, showError
@@ -249,12 +249,7 @@ data_
                 if xmippExists(file_name):
                     #Chimera
                     if(self.DisplayVolumeSlicesAlong == 'surface'):
-                        parameters =  ' spider:' + file_name 
-                        #print 'parameters: ',parameters
-                        runJob(_log,
-                               'chimera',
-                               parameters
-                               )
+                        runChimera(file_name)
                     else:
                     #Xmipp_showj (x,y and z shows the same)
                         try:
@@ -271,12 +266,7 @@ data_
                     if xmippExists(file_name):
                         #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
-                            parameters =  ' spider:' + file_name 
-                            #print 'parameters: ',parameters
-                            runJob(_log,
-                                   'chimera',
-                                   parameters
-                                   )
+                            runChimera(file_name)
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
@@ -290,14 +280,9 @@ data_
                     file_name = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
                     #print 'it: ',it, ' | file_name:',file_name
                     if xmippExists(file_name):
-                                                #Chimera
+                        #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
-                            parameters =  ' spider:' + file_name 
-                            #print 'parameters: ',parameters
-                            runJob(_log,
-                                   'chimera',
-                                   parameters
-                                   )
+                            runChimera(file_name)
                         else:
                         #Xmipp_showj (x,y and z shows the same)
 
@@ -327,15 +312,9 @@ data_
                            )
 
                     if xmippExists(file_name_bfactor):
-                        
-                                                                        #Chimera
+                        #Chimera
                         if(self.DisplayVolumeSlicesAlong == 'surface'):
-                            parameters =  ' spider:' + file_name_bfactor 
-                            #print 'parameters: ',parameters
-                            runJob(_log,
-                                   'chimera',
-                                   parameters
-                                   )
+                            runChimera(file_name_bfactor)
                         else:
                         #Xmipp_showj (x,y and z shows the same)
 
@@ -695,20 +674,12 @@ data_
                         parameters =  ' -i ' + file_name + \
                             ' -o ' + file_name_bild + \
                             ' chimera ' + str(float(_OuterRadius) * 1.1)
-                            
                         runJob(_log,
                                'xmipp_angular_distribution_show',
                                parameters
                                )
-                        
                         file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
-                        
-                        parameters =  ' ' + file_name_bild + ' spider:' + file_name_rec_filt 
-                            
-                        runJob(_log,
-                               'chimera',
-                               parameters
-                               )
+                        runChimera(file_name_rec_filt,file_name_bild)
             else: #DisplayAngularDistributionWith == '2D'
                 for it in iterations:
                     if(len(ref3Ds) == 1):

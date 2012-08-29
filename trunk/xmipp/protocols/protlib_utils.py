@@ -600,9 +600,12 @@ def runJavaIJappWithResponse(memory, appName, args):
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
-def runChimera(inputFile):
+def runChimera(inputFile,extraParams=""):
     if which("chimera") and os.path.exists(inputFile):
-        os.system("chimera %s &" % inputFile)
+        from protlib_filesystem import hasSpiderExt
+        if hasSpiderExt(inputFile):
+            inputFile = 'spider:%s' % inputFile
+        os.system("chimera %s %s&" % (inputFile,extraParams))
     
 """ Return the machine name """
 def getHostname():
