@@ -28,7 +28,7 @@
 
 from xmipp import MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
 MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_CA, MDL_CTF_Q0, MDL_CTF_K, label2Str, MetaData,\
-MDL_XCOOR, MDL_YCOOR, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE
+MDL_XCOOR, MDL_YCOOR, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE, MD_APPEND
 
 CTF_BASIC_LABELS = [MDL_CTF_SAMPLING_RATE, 
                     MDL_CTF_VOLTAGE, 
@@ -97,7 +97,7 @@ def convertBox(boxFile, posFile, ysize, family='DefaultFamily', particleSize=Non
     mdFamily.setValue(MDL_PICKING_FAMILY, family, objId)
     mdFamily.setValue(MDL_PICKING_MICROGRAPH_FAMILY_STATE, 'Manual', objId)
     mdFamily.write('families@%s' % posFile)
-    md.writeBlock(posFile, family)
+    md.write("%s@%s" % (family, posFile), MD_APPEND)
     
 def renameMdLabels(inputMd, outputMd, labelsDict):
     '''Change the labels' name on inputMd and write as outputMd
