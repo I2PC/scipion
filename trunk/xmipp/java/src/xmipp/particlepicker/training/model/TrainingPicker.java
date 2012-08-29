@@ -580,8 +580,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 			for (String block : blocksArray) {
 				System.out.format("block: %s\n", block);
 				String blockName = block + "@" + file;
-				System.out
-						.format("creating md with blockName: %s\n", blockName);
+				System.out.format("creating md with blockName: %s\n", blockName);
 				md = new MetaData(blockName);
 				System.out.format("   created\n");
 
