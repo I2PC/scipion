@@ -248,6 +248,9 @@ def collectResults(log, WorkingDir, Prefix):
     oroot = os.path.join(WorkingDir, Prefix)
     mdImgs = MetaData(oroot + '_final_images.xmd')
     outImages = os.path.join(WorkingDir, 'result_images.xmd')
+    # change the sign of the angle, since is the expected one
+    # to align the images agains the reference
+    mdImgs.operate("anglePsi=360-anglePsi")
     mdImgs.write('images@' + outImages)
     mdRefs = MetaData(oroot + '_final_refs.xmd')
     outRefs = os.path.join(WorkingDir, 'result_classes.xmd')
