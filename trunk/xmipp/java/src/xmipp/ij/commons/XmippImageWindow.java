@@ -8,7 +8,6 @@ import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 
-
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
 
@@ -37,7 +36,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	public XmippImageWindow(ImagePlusLoader ipl)
 	{
 		this(ipl, ipl.getFileName());
-		
 	}
 
 
@@ -85,10 +83,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		super.windowClosing(e);
 		if(XmippIJUtil.getXmippImageJ() != null)
 			XmippIJUtil.getXmippImageJ().close();
-		
 	}
-
-
 	
 	public ImagePlusLoader getImagePlusLoader()
 	{
@@ -99,7 +94,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	@Override
 	public boolean isVolume()
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -107,7 +101,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	@Override
 	public boolean isStack()
 	{
-		
 		return false;
 	}
 }// class XmippImageWindow
