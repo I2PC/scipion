@@ -21,6 +21,12 @@ runColumns = ['run_id',
               'comment',
               'group_name', 'pid', 'jobid']
 
+def getRunDict(run):
+    ''' Convert the sqlite3 row to a python dict '''
+    zrun = dict(zip(runColumns, run))
+    zrun['source'] = zrun['script']        
+    return zrun   
+
 NO_MORE_GAPS = 0 #no more gaps to work on
 NO_AVAIL_GAP = 1 #no available gaps now, retry later
 STEP_GAP = 2 #step gap to work on

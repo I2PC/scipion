@@ -38,7 +38,7 @@ from protlib_gui_ext import ToolTip, centerWindows, askYesNo, showInfo, XmippTre
     FlashMessage, showWarning, YesNoDialog, getXmippImage
 from config_protocols import *
 from protlib_base import XmippProject, getExtendedRunName, splitExtendedRunName,\
-    getScriptFromRunName
+    getScriptFromRunName, ProtocolExecutor
 from protlib_utils import ProcessManager,  getHostname, loadModule
 from protlib_sql import SqliteDb, ProgramDb
 from protlib_filesystem import getXmippPath, copyFile
@@ -610,15 +610,9 @@ class XmippProjectGUI():
             
     def getLastRunDict(self):
         if self.lastRunSelected:
-            return self.getZippedRun(self.lastRunSelected)
+            from protlib_sql import getRunDict
+            return getRunDict(self.lastRunSelected)
         return None
-    
-    def getZippedRun(self, run):
-        from protlib_sql import runColumns
-        zrun = dict(zip(runColumns, run))
-        zrun['source'] = zrun['script']        
-        return zrun
-        
     
     def runButtonClick(self, event=None):
         #FlashMessage(self.root, 'Opening...', delay=1)
@@ -845,12 +839,12 @@ class ScriptProtocols(XmippScript):
         self.addParamsLine("   alias -l;"); 
         self.addParamsLine("[ --details <runName>  ]            : Print details about some run");
         self.addParamsLine("   alias -e;"); 
-        self.addParamsLine("[ --new_run <protName>  ]        : Create a new run of a protocol");
+        self.addParamsLine("[ --new_run <protName>  ]           : Create a new run of a protocol");
         self.addParamsLine("   alias -n;");
         self.addParamsLine("[ --copy_run <runName>  ]           : Create a copy of an existing run");
         self.addParamsLine("   alias -p;");
-        self.addParamsLine("[ --start_run <runName>  ]           : Start an existing run");
-        
+        self.addParamsLine("[ --start_run <runName> <mode=Resume> ] : Start(or launch to queue) an existing run");
+        self.addParamsLine("   alias -s;");        
         self.addParamsLine("[ --delete_run <protName>  ]        : Delete an existing run");
         self.addParamsLine("   alias -d;");
         self.addParamsLine("[ --clean  ]                        : Clean ALL project data");
@@ -917,17 +911,28 @@ class ScriptProtocols(XmippScript):
             extRunName = self.getParam('--copy_run')
             self.loadProjectFromCli()
             protName, runName = splitExtendedRunName(extRunName)
-            source = getScriptFromRunName(extRunName)
-            run = self.project.newProtocol(protName) #Create new run for this protocol
+            script = getScriptFromRunName(extRunName)
+            run = self.project.copyProtocol(protName, script) #Copy parameter from existing run
             self.project.projectDb.insertRun(run) # Register the run in Db
-            ProtocolParser(source).save(run['script']) # Save the .py file
+            ProtocolParser(script).save(run['script']) # Save the .py file
             print "Run %s was created from %s" % (greenStr(getExtendedRunName(run)), greenStr(extRunName))
             print "Edit file %s and launch it" % greenStr(run['script'])
-            pass
         elif self.checkParam('--delete_run'):
-            pass      
+            extRunName = self.getParam('--delete_run')
+            self.loadProjectFromCli()
+            protName, runName = splitExtendedRunName(extRunName)
+            self.project.deleteRunByName(protName, runName)
+            print "Run deleted"      
         elif self.checkParam('--start_run'):
-            pass
+            self.loadProjectFromCli()
+            extRunName = self.getParam('--start_run')
+            print 'extRunName', extRunName
+            mode = self.getParam('--start_run', 1) # read the mode argument
+            protName, runName = splitExtendedRunName(extRunName)
+            print 'protName, runName', protName, runName
+            pe = ProtocolExecutor(protName, self.project, runName=runName)
+            pe.setValue('Behavior', mode)
+            pe.runProtocol()
         elif self.checkParam('--clean'):
             self.printProjectName()
             self.launch = self.confirm('%s, are you sure to clean?' % cyanStr('ALL RESULTS will be DELETED'), False)

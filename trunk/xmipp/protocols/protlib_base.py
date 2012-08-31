@@ -32,8 +32,9 @@ import sys
 import shutil
 import ConfigParser
 from config_protocols import projectDefaults, sections, protDict
-from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb
-from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix
+from protlib_sql import SqliteDb, XmippProjectDb, XmippProtocolDb, getRunDict
+from protlib_utils import XmippLog, loadModule, reportError, getScriptPrefix,\
+    which
 from protlib_xmipp import failStr
 from protlib_filesystem import deleteFiles, xmippExists, removeBasenameExt
 
@@ -130,6 +131,7 @@ class XmippProject():
     
     def cleanRun(self, run):
         script = run['script']
+        print "removing script: ", script
         toDelete = [script.replace(self.runsDir, self.logsDir).replace(".py", ext) for ext in ['.log', '.err', '.out']]
         deleteFiles(None, toDelete, False)
         workingDir = self.getWorkingDir(run['protocol_name'], run['run_name'])
@@ -146,10 +148,14 @@ class XmippProject():
             deleteFiles(None, [script, script+'c'], False)
             self.cleanRun(run)
         except Exception, e:
-            return "Error on <deleteRun>: %s" % e
+            print "Error on <deleteRun>: %s" % e
             raise
         return None
     
+    def deleteRunByName(self, protocol_name, runName):
+        run = getRunDict(self.projectDb.selectRunByName(protocol_name, runName))
+        self.deleteRun(run)
+            
     def deleteTmpFiles(self):
         for section, groupList in sections:
             for group in groupList:
@@ -160,7 +166,7 @@ class XmippProject():
                     if exists(tmpDir):
                         shutil.rmtree(tmpDir)
 
-    def getWorkingDir(self,protocol_name,run_name):
+    def getWorkingDir(self, protocol_name, run_name):
         return join(protDict[protocol_name].dir,run_name)
             
     def getRunScriptFileName(self, protocol_name, runName):
@@ -192,9 +198,9 @@ class XmippProject():
         return self.createRunFromScript(protocol_name, script, prefix)
         
     def loadProtocol(self, protocol_name, runName):
-        run = self.projectDb.selectRunByName(self, protocol_name, runName)
+        run = self.projectDb.selectRunByName(protocol_name, runName)
         if not run is None:
-            run['source'] = run['script']
+            run = getRunDict(run)
         return run
     
     def newOrLoadProtocol(self, protocol_name, runName):
@@ -673,17 +679,20 @@ class CustomProtocol(XmippProtocol):
 class ProtocolExecutor():
     ''' This class serve to create protocols runs and executing
     them without the GUI. This is useful for writing protocols tests'''
-    def __init__(self, protocol_name, project=None, script=None, verbose=True):
+    def __init__(self, protocol_name, project=None, script=None, verbose=True, runName=None):
         from protlib_parser import ProtocolParser
         if project is None:
             project = XmippProject()
             project.load()
         self.project = project
         self.protocol_name = protocol_name
-        if script is None:
-            self.run = project.newProtocol(protocol_name)
+        if runName is None:
+            if script is None:
+                self.run = project.newProtocol(protocol_name)
+            else:
+                self.run = project.copyProtocol(protocol_name, script)
         else:
-            self.run = project.copyProtocol(protocol_name, script)
+            self.run = project.loadProtocol(protocol_name, runName)
         self.run_name = self.run['run_name']
         self.ext_name = getExtendedRunName(self.run)
         self.parser = ProtocolParser(self.run["source"])
@@ -698,10 +707,15 @@ class ProtocolExecutor():
     def setValues(self, valuesDict):
         for varName, value in valuesDict.iteritems():
             self.setValue(varName, value)
-
+            
+    def hasVar(self, varName):
+        return self.parser.hasVariable(varName)
+        
     def runProtocol(self, wait=True):
         from subprocess import Popen
         from protlib_xmipp import greenStr
+        # Check if qsub and mpirun are availables
+        self.checkParallel()        
         # Save protocol script with updated settings
         self.parser.save(self.run['script'])
         #Execute command
@@ -731,6 +745,18 @@ class ProtocolExecutor():
     
     def getJobId(self):
         return self.project.projectDb.getRunJobid(self.getRunId())
+    
+    def checkProgramAvailable(self, varName, program):
+        if self.hasVar(varName):    
+            if which(program) == '':
+                self.setValue(varName, False)
+                
+    def checkParallel(self):
+        from protlib_utils import loadLaunchModule
+        launch = loadLaunchModule()
+        # Check if mpi and queue are availables
+        self.checkProgramAvailable('NumberOfMpi', launch.MpiProgram)
+        self.checkProgramAvailable('SubmitToQueue', launch.Program)
             
 #----------Some helper functions ------------------
 
