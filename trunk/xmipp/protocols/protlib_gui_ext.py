@@ -34,6 +34,7 @@ import ttk
 from config_protocols import LabelBgColor, ButtonBgColor, ButtonActiveBgColor, SectionTextColor
 from protlib_filesystem import getXmippPath, xmippExists, removeFilenamePrefix
 from protlib_utils import runChimera
+from protlib_filesystem import splitFilename
 from Tkinter import TclError
 
 RESOURCES = getXmippPath('resources')
@@ -1206,6 +1207,8 @@ def mdOnClick(filename, browser):
                     btext = b + btextSuffix
                     browser.tree.insert(filename, 'end', bname, text=btext, image=fm.image)
     else:
+        block, filename = splitFilename(filename)
+        filename = join(browser.dir, filename)
         msg = "<Metadata Block>\n" + getMdString(filename, browser)
     return msg
         
@@ -1226,6 +1229,10 @@ def mdFillMenu(filename, browser):
     return True
 
 def mdOnDoubleClick(filename, browser):
+    if '@' in filename:
+        block, filename = splitFilename(filename)
+        filename = join(browser.dir, filename)
+        filename = '%(block)s@%(filename)s' % locals()
     showj(filename, 'metadata')
 
 def imgOnClick(filename, browser):

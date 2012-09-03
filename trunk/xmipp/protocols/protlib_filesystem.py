@@ -165,6 +165,15 @@ def removeFilenamePrefix(filename):
 def replaceFilenameExt(filename, new_ext):
     ''' Replace the current filename extension by a new one'''
     return os.path.splitext(filename)[0] + new_ext
+
+def splitFilename(filename):
+    ''' Split filename separating by @ 
+    separating in block and filename'''
+    if '@' in filename:
+        block, filename = filename.split('@')
+    else:
+        block = None
+    return block, filename
     
 def findFilePath(filename, *pathList):
     '''Search recursively in path to find filename path(excluding filename)
