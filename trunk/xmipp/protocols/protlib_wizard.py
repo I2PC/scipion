@@ -36,7 +36,7 @@ from xmipp import MetaData
 from protlib_base import getWorkingDirFromRunName, getExtendedRunName,\
     XmippProject
 from protlib_utils import loadModule, which, runShowJ,\
-    runImageJPluginWithResponse
+    runImageJPluginWithResponse, runMaskToolbar
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
     TaggedText
@@ -217,7 +217,8 @@ def wizardDesignMask(self, var):
     from xmipp import MetaData, MDL_IMAGE
     md = MetaData(selfile)
     fnImg = md.getValue(MDL_IMAGE, md.firstObject())
-    runShowJ(fnImg, extraParams="--mask_toolbar")
+    #runShowJ(fnImg, extraParams="--mask_toolbar")
+    runMaskToolbar(fnImg)
     #fnMask=os.path.join(workingDir,"mask.xmp")
 #    fnMask = self.project.projectTmpPath("mask.xmp")
 #    from protlib_utils import runJavaIJapp

@@ -1272,7 +1272,8 @@ def volFillMenu( filename, browser):
     menu.add_command(label="Open", command=lambda: showj(filename, 'gallery'))
     menu.add_command(label="Open as ImageJ gallery", command=lambda:showj(filename, 'image'))
     menu.add_command(label="Open with Chimera", command=lambda:chimera(filename))
-    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, volFn=filename, allowFilter=False))
+    menu.add_command(label="Open mask wizard", command=lambda:showBrowseDialog(parent=browser.parent, browser=XmippBrowserMask, 
+                                                                               allowFilter=False, extra={'fileList': [filename]}))
     return True
 
 def volOnDoubleClick(filename, browser):
@@ -1944,7 +1945,10 @@ class XmippBrowserMask(XmippBrowser):
         self.rate = self.dim / self.real_dim
         self.image = Image()
         self.image.readPreview(self.imgFn, self.dim)
-        #self.root.minsize(600, 400)        
+        #self.root.minsize(600, 400)
+        self.outerRadius = getattr(self, 'outerRadius', int(self.real_dim / 2))
+        self.innerRadius = getattr(self, 'innerRadius', 0)
+        self.showInner = getattr(self, 'showInner', False)
         self.preview = MaskPreview(self.detailstop, self.dim, label="Central slice", 
                                    outerRadius=self.outerRadius * self.rate, innerRadius=self.innerRadius * self.rate)
         self.detailstop.columnconfigure(1, weight=1)

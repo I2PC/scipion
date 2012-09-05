@@ -600,6 +600,9 @@ def runJavaIJappWithResponse(memory, appName, args):
 def runShowJ(inputFiles, memory="1g", extraParams=""):
     runJavaIJapp(memory, "'xmipp.viewer.Viewer'", "-i %s %s" % (inputFiles, extraParams), True)
     
+def runMaskToolbar(inputFile, memory="1g", extraParams=""):
+    runShowJ(inputFile, memory, extraParams + " --mask_toolbar")
+    
 def runChimera(inputFile,extraParams=""):
     if which("chimera") and os.path.exists(inputFile):
         from protlib_filesystem import hasSpiderExt
