@@ -520,13 +520,13 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
             queryNodeId.setValue(nodeID);
             id = header->tags.firstObject(queryNodeId);
             header->tags.getValue(MDL_DM3_VALUE, vValue, id);
-            dataHeaders[header->nIm].imageHeight = (int) vValue[0];
+            dataHeaders[header->nIm].imageWidth = (int) vValue[0];
 
             nodeID++;
             queryNodeId.setValue(nodeID);
             id = header->tags.firstObject(queryNodeId);
             header->tags.getValue(MDL_DM3_VALUE, vValue, id);
-            dataHeaders[header->nIm].imageWidth = (int) vValue[0];
+            dataHeaders[header->nIm].imageHeight = (int) vValue[0];
 
             nodeID++;
             queryNodeId.setValue(nodeID);
