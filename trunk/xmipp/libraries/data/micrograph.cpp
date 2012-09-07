@@ -394,17 +394,18 @@ void Micrograph::produce_all_images(int label, double minCost,
     FileName fn_out;
     FileName fn_root = fn_rootIn.removeFileFormat().removeLastExtension();
     if (_ext.empty())
-        fn_out=fn_root + ".stk";
+        fn_out=fn_root.addExtension("stk");
+    else if (_ext!=".stk")
+    	fn_out=fn_rootIn.addExtension("stk");
     else
         fn_out=fn_root.addExtension(_ext);
 
-        if (rmStack)
-            fn_out.deleteFile();
+    if (rmStack)
+        fn_out.deleteFile();
     size_t ii = 0;
     size_t id;
     for (int n = 0; n < nmax; n++)
-        if (coords[n].valid && coords[n].cost > minCost
-                && coords[n].label == label)
+        if (coords[n].valid && coords[n].cost > minCost && coords[n].label == label)
         {
             fn_aux.compose(++ii, fn_out);
             id = SF.addObject();
@@ -425,7 +426,7 @@ void Micrograph::produce_all_images(int label, double minCost,
             //  if (ang!=0) I().rotate(-ang);
             I.write(fn_out, ii, true, WRITE_APPEND);
         }
-    SF.write(fn_root + ".xmd");
+    SF.write(fn_out.withoutExtension() + ".xmd");
 
 
     // Free source image??
