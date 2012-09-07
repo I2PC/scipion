@@ -187,8 +187,100 @@ void ProgSortByStatistics::processInput(MetaData &SF, bool do_prepare, bool mult
     }
 }
 
+//majorAxis and minorAxis is the estimated particle size in px
+void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double minorAxis)
+{
+    Image<double> img;
+    MultidimArray<double> img2;
+    Matrix1D<double> center(2);
+    center.initZeros();
+    FringeProcessing fp;
+
+
+    if (verbose>0)
+    {
+        std::cout << " Sorting particle set by new xmipp method..." << std::endl;
+    }
+
+    int nr_imgs = SF.size();
+    if (verbose>0)
+        init_progress_bar(nr_imgs);
+
+    int c = XMIPP_MAX(1, nr_imgs / 60);
+
+    //JV : imgnoPCA? hay que hacer PCA?, v?
+    int imgno = 0, imgnoPCA=0;
+    MultidimArray<float> v;
+    MultidimArray<int> distance;
+    int dim;
+
+    Zscore.initZeros(SF.size());
+    bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
+    bool first=true;
+
+    // We assume that at least there is one particle
+    img.readApplyGeo(SF,1);
+    MultidimArray<double> nI, modI;
+    MultidimArray<bool> mask;
+    nI.resizeNoCopy(img());
+    modI.resizeNoCopy(img());
+    mask.resizeNoCopy(img());
+    mask.initConstant(true);
+
+    FileName fpName = "test.txt";
+
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    {
+
+        if (thereIsEnable)
+        {
+            int enabled;
+            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+            if (enabled==-1)
+            {
+                Zscore(imgno)=1000;
+                imgno++;
+                continue;
+            }
+
+            img.readApplyGeo(SF,__iter.objId);
+            MultidimArray<double> &mI=img();
+            mI.setXmippOrigin();
+            mI.statisticsAdjust(0,1);
+
+            mask.setXmippOrigin();
+
+            //Here
+            fp.normalizeWB(mI,nI,modI,20,150,mask);
+            nI.binarize();
+            int imax = labelImage2D(nI,nI,4);
+
+            //keepBiggestComponent(mI,0.8,8);
+
+            if (imgno ==10){
+            	nI.write(fpName);
+            	std::cout << imax << std::endl;
+            }
+
+            imgno++;
+        }
+    }
+
+
+
+
+
+}
+
 void ProgSortByStatistics::run()
 {
+    //Process input selfile ..............................................
+    /*SF.read(fn);
+    SF.removeDisabled();
+    pcaAnalyzer.clear();
+    processInput2(SF, 2, 2);
+    */
+
     // Process input selfile ..............................................
     SF.read(fn);
     SF.removeDisabled();
@@ -196,7 +288,7 @@ void ProgSortByStatistics::run()
     if (fn_train != "")
     {
         SFtrain.read(fn_train);
-        processInput(SFtrain, true, multivariate);
+        //processInput(SFtrain, true, multivariate);
     }
     else
         processInput(SF, true, multivariate);
@@ -272,4 +364,5 @@ void ProgSortByStatistics::run()
         SFout.write(fn_out,MD_OVERWRITE);
     if (addToInput)
         SF.write(fn,MD_APPEND);
+
 }
