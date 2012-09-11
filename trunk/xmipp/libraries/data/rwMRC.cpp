@@ -296,8 +296,9 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             wDType = DT_Float;
             header->mode = 2;
             break;
-        case DT_Short:
         case DT_UShort:
+            castMode = CW_CONVERT;
+        case DT_Short:
             wDType = DT_Short;
             header->mode = 1;
             break;
