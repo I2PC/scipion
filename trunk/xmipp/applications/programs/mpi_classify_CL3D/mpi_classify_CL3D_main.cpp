@@ -48,13 +48,13 @@ FILE * _logCL3D = NULL;
 std::ostream & operator <<(std::ostream &out, const CL3DAssignment& assigned)
 {
     out << "(" << assigned.objId << " Angles=" << assigned.rot << "," << assigned.tilt << "," << assigned.psi
-    	<< " Shifts=" << assigned.shiftx << "," << assigned.shifty << "," << assigned.shiftz << " -> " << assigned.stdK << ")";
+    	<< " Shifts=" << assigned.shiftx << "," << assigned.shifty << "," << assigned.shiftz << " -> " << assigned.score << ")";
     return out;
 }
 
 CL3DAssignment::CL3DAssignment()
 {
-    likelihood = stdK = psi = tilt = rot = shiftx = shifty = shiftz = 0;
+    score = psi = tilt = rot = shiftx = shifty = shiftz = 0;
     objId = BAD_OBJID;
 }
 
@@ -70,8 +70,7 @@ void CL3DAssignment::readAlignment(const Matrix2D<double> &M)
 
 void CL3DAssignment::copyAlignment(const CL3DAssignment &alignment)
 {
-    stdK = alignment.stdK;
-    likelihood = alignment.likelihood;
+    score = alignment.score;
     psi = alignment.psi;
     tilt = alignment.tilt;
     rot = alignment.rot;
@@ -93,13 +92,11 @@ CL3DClass::CL3DClass()
 CL3DClass::CL3DClass(const CL3DClass &other)
 {
     CL3DAssignment assignment;
-    assignment.stdK = 1e38;
+    assignment.score = 1e38;
     updateProjection((MultidimArray<double> &)other.P,assignment);
     transferUpdate();
 
     currentListImg = other.currentListImg;
-    histClass = other.histClass;
-    histNonClass = other.histNonClass;
     neighboursIdx = other.neighboursIdx;
 }
 
@@ -107,7 +104,7 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
                                  const CL3DAssignment &assigned,
                                  bool force)
 {
-    if (assigned.stdK < 1e37 && assigned.objId != BAD_OBJID || force)
+    if (assigned.score < 1e37 && assigned.objId != BAD_OBJID || force)
     {
     	transformer.FourierTransform(I,Ifourier,false);
 
@@ -116,17 +113,14 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
     	IfourierMag.sort(IfourierMagSorted);
     	const double percentage=0.975;
         double minMagnitude=A1D_ELEM(IfourierMagSorted,(int)(percentage*XSIZE(IfourierMag)));
-        double weight=1.0;
-        if (assigned.stdK<1 && assigned.stdK>0)
-        	weight=1.0/assigned.stdK;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Ifourier)
         if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
         {
             double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
             double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,n);
-            *(ptrPupdate)+=weight * (*(ptrIfourier));
-            *(ptrPupdate+1)+=weight * (*(ptrIfourier+1));
-            DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=weight;
+            *(ptrPupdate)+=(*(ptrIfourier));
+            *(ptrPupdate+1)+=(*(ptrIfourier+1));
+            DIRECT_MULTIDIM_ELEM(PupdateMask,n)+=1;
         }
         nextListImg.push_back(assigned);
     }
@@ -197,41 +191,14 @@ void CL3DClass::transferUpdate()
         nextListImg.clear();
 
         // Update the histogram of corrs of elements inside and outside the class
-        if (!prm->classicalMultiref)
-        {
-            MultidimArray<double> classCorr, nonClassCorr;
+		MultidimArray<double> classCorr, nonClassCorr;
 
-            classCorr.initZeros(currentListImg.size());
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classCorr)
-            DIRECT_A1D_ELEM(classCorr,i) = currentListImg[i].stdK;
+		classCorr.initZeros(currentListImg.size());
+		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classCorr)
+		DIRECT_A1D_ELEM(classCorr,i) = currentListImg[i].score;
 
-            nonClassCorr.initZeros(nextNonClassCorr.size());
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(nonClassCorr)
-            DIRECT_A1D_ELEM(nonClassCorr,i) = nextNonClassCorr[i];
-            nextNonClassCorr.clear();
-
-            double minC, maxC;
-            classCorr.computeDoubleMinMax(minC, maxC);
-            double minN, maxN;
-            nonClassCorr.computeDoubleMinMax(minN, maxN);
-            double c0 = XMIPP_MIN(minC,minN);
-            double cF = XMIPP_MAX(maxC,maxN);
-            compute_hist(classCorr, histClass, c0, cF, 200);
-            compute_hist(nonClassCorr, histNonClass, c0, cF, 200);
-            histClass += 1; // Laplace correction
-            histNonClass += 1;
-            histClass /= histClass.sum();
-            histNonClass /= histNonClass.sum();
-        }
-
-#ifdef DEBUG
-        histClass.write("PPPclass.txt");
-        histNonClass.write("PPPnonClass.txt");
-        std::cout << "Histograms have been written. Press any key\n";
-        char c;
-        std::cin >> c;
-#endif
-
+		double minC, maxC;
+		classCorr.computeDoubleMinMax(minC, maxC);
     }
     else
     {
@@ -241,7 +208,7 @@ void CL3DClass::transferUpdate()
 }
 #undef DEBUG
 
-void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK)
+void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance)
 {
 	transformer.FourierTransform(I,Ifourier,false);
 
@@ -272,9 +239,9 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
         normP+=auxP*auxP;
         double normI=den;
 
-        if (den!=0.)
+        if (den!=0. && num!=0.)
         {
-			double K=num/den;
+			double K=fabs(num/den);
 			avgK+=K;
 			stdK+=K*K;
 
@@ -284,8 +251,8 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 				double angle=acos(num/sqrt(fabs(normPI))); // Angle between I(w) and P(w)
 				stdAngle+=angle*angle;
 			}
+	        N+=1;
         }
-        N+=1;
     }
     avgK/=N;
 	if (N > 1)
@@ -298,6 +265,24 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 	}
 	else
 		stdK = 0;
+
+    L1distance=0;
+    for (size_t n=1; n<MULTIDIM_SIZE(Ifourier); ++n)
+    if (DIRECT_MULTIDIM_ELEM(IfourierMag,n)>minMagnitude)
+    {
+        double *ptrIfourier=(double*)&DIRECT_MULTIDIM_ELEM(Ifourier,n);
+        double *ptrPfourier=(double*)&DIRECT_MULTIDIM_ELEM(Pfourier,n);
+
+        // Scale factor for the real part
+        // This is the least squares solution of I(w)K=P(w)
+        double auxI=(*ptrIfourier)*avgK;
+        double auxP=(*ptrPfourier);
+        L1distance+=fabs(auxI-auxP);
+        auxI=(*(ptrIfourier+1))*avgK;
+        auxP=(*(ptrPfourier+1));
+        L1distance+=fabs(auxI-auxP);
+    }
+    L1distance/=N;
 }
 
 //#define DEBUG
@@ -312,10 +297,13 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     save2()=I;
     save2.write("PPP0.xmp");
 #endif
+    if (currentListImg.size() == 0)
+        return;
+
     Matrix2D<double> ARS, ASR, R(4, 4);
     MultidimArray<double> IauxSR, IauxRS, bestI;
 
-    result.stdK=1e38;
+    result.score=1e38;
     for (int neuler=0; neuler<12; neuler++)
     {
 		ARS.initIdentity(4);
@@ -352,14 +340,14 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
 		if (!DIRECT_MULTIDIM_ELEM(imask,n))
 			DIRECT_MULTIDIM_ELEM(IauxRS,n)=DIRECT_MULTIDIM_ELEM(IauxSR,n)=0.;
-		double avgKSR, avgKRS, stdKSR, stdKRS;
-		sparseDistanceToCentroid(IauxRS,avgKRS, stdKRS);
-		sparseDistanceToCentroid(IauxSR,avgKSR, stdKSR);
+		double avgKSR, avgKRS, stdKSR, stdKRS, L1RS, L1SR;
+		sparseDistanceToCentroid(IauxRS,avgKRS, stdKRS, L1RS);
+		sparseDistanceToCentroid(IauxSR,avgKSR, stdKSR, L1SR);
 
 		double corrRS=correlationIndex(P,IauxRS);
 		double corrSR=correlationIndex(P,IauxSR);
-		double scoreRS=stdKRS*(1-corrRS);
-		double scoreSR=stdKSR*(1-corrSR);
+		double scoreRS=L1RS; // stdKRS*(1-corrRS);
+		double scoreSR=L1SR; // stdKSR*(1-corrSR);
 
 		// Prepare result
 		CL3DAssignment candidateRS, candidateSR;
@@ -371,49 +359,51 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 			std::abs(candidateRS.rot)>prm->maxRot ||
 			std::abs(candidateRS.tilt)>prm->maxTilt ||
 			std::abs(candidateRS.psi)>prm->maxPsi)
-			candidateRS.stdK = 1e38;
+			candidateRS.score = 1e38;
 		else
-			candidateRS.stdK = scoreRS;
+			candidateRS.score = scoreRS;
 		if (std::abs(candidateSR.shiftx)>prm->maxShiftX ||
 			std::abs(candidateSR.shifty)>prm->maxShiftY ||
 			std::abs(candidateSR.shiftz)>prm->maxShiftZ ||
 			std::abs(candidateSR.rot)>prm->maxRot ||
 			std::abs(candidateSR.tilt)>prm->maxTilt ||
 			std::abs(candidateSR.psi)>prm->maxPsi)
-			candidateSR.stdK = 1e38;
+			candidateSR.score = 1e38;
 		else
-			candidateSR.stdK = scoreSR;
+			candidateSR.score = scoreSR;
 
-		if (candidateRS.stdK < result.stdK)
+		if (candidateRS.score < result.score)
 		{
 			bestI = IauxRS;
 			result.copyAlignment(candidateRS);
 		}
-		if (candidateSR.stdK < result.stdK)
+		if (candidateSR.score < result.score)
 		{
 			bestI = IauxSR;
 			result.copyAlignment(candidateSR);
 		}
 #ifdef DEBUG
 		std::cout << eulerSeqs[neuler] << " avgRS= " << avgKRS << " stdRS= " << stdKRS << " avgSR= " << avgKSR << " stdSR= " << stdKSR
-				  << " -> bestSoFar= " << result.stdK << std::endl;
+				  << " -> bestSoFar= " << result.score << std::endl;
 #ifdef DEBUG_MORE
-	    //Image<double> save;
-	    //save()=P;
-	    //save.write("PPPI1.xmp");
-	    //save()=IauxRS;
-	    //save.write("PPPI2RS.xmp");
-	    //save()=IauxSR;
-	    //save.write("PPPI2SR.xmp");
-	    std::cout << "    corr  RS=" << corrRS << " corr  SR=" << corrSR << std::endl;
+	    Image<double> save;
+	    save()=P;
+	    save.write("PPPI1.xmp");
+	    save()=IauxRS;
+	    save.write("PPPI2RS.xmp");
+	    save()=IauxSR;
+	    save.write("PPPI2SR.xmp");
+	    std::cout << "    corr  RS=" << corrRS  << " corr  SR=" << corrSR << std::endl;
+	    std::cout << "    L1    RS=" << L1RS    << " L1    SR=" << L1SR << std::endl;
+	    std::cout << "    stdK  RS=" << stdKRS  << " stdK  SR=" << stdKSR << std::endl;
 	    std::cout << "    score RS=" << scoreRS << " score SR=" << scoreSR << std::endl;
 	    char c;
-	    //std::cin >> c;
+	    std::cin >> c;
 #endif
 #endif
     }
 
-    if (result.stdK<1e37)
+    if (result.score<1e37)
     	I=bestI;
     else
     	I.initZeros();
@@ -427,44 +417,13 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
     save.write("PPPI2.xmp");
     save()=P-I;
     save.write("PPPdiff.xmp");
-    std::cout << "sigma=" << prm->sigma << " stdK=" << result.stdK
+    std::cout << "sigma=" << prm->sigma << " score=" << result.score
     << ". Press" << std::endl;
     char c;
     //std::cin >> c;
 #endif
 }
 #undef DEBUG
-
-void CL3DClass::fit(MultidimArray<double> &I, CL3DAssignment &result)
-{
-    if (currentListImg.size() == 0)
-        return;
-
-    // Try this image
-    fitBasic(I, result);
-
-    result.likelihood = 0;
-    if (!prm->classicalMultiref)
-    {
-        // Find the likelihood
-        int idx;
-        histClass.val2index(result.stdK, idx);
-        if (idx < 0)
-            return;
-        double likelihoodClass = 0;
-        for (int i = 0; i <= idx; i++)
-            likelihoodClass += DIRECT_A1D_ELEM(histClass,i);
-        histNonClass.val2index(result.stdK, idx);
-        if (idx < 0)
-            return;
-        double likelihoodNonClass = 0;
-        for (int i = 0; i <= idx; i++)
-            likelihoodNonClass += DIRECT_A1D_ELEM(histNonClass,i);
-        result.likelihood = likelihoodClass * likelihoodNonClass;
-        std::cout << "Result.likelihood=" << result.likelihood << std::endl;
-    }
-    std::cout << "Fit: " << result.stdK << std::endl;
-}
 
 /* Look for K neighbours in a list ----------------------------------------- */
 //#define DEBUG
@@ -491,8 +450,8 @@ void CL3DClass::lookForNeighbours(const std::vector<CL3DClass *> listP, int K)
             else
             {
                 I = listP[q]->P;
-                fit(I, assignment);
-                A1D_ELEM(distanceCode,q) = assignment.stdK;
+                fitBasic(I, assignment);
+                A1D_ELEM(distanceCode,q) = assignment.score;
             }
         }
 
@@ -518,8 +477,7 @@ void CL3DClass::lookForNeighbours(const std::vector<CL3DClass *> listP, int K)
 #undef DEBUG
 
 /* Share assignments and classes -------------------------------------- */
-void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates,
-                            bool shareNonCorr)
+void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates)
 {
     if (shareAssignment)
     {
@@ -559,14 +517,6 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates,
                     MPI_Bcast(&(P[q]->nextListImg[0]),
                               P[q]->nextListImg.size() * sizeof(CL3DAssignment),
                               MPI_CHAR, rank, MPI_COMM_WORLD);
-                    if (shareNonCorr)
-                    {
-                        listSize = P[q]->nextNonClassCorr.size();
-                        MPI_Bcast(&listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
-                        MPI_Bcast(&(P[q]->nextNonClassCorr[0]),
-                                  P[q]->nextNonClassCorr.size(), MPI_DOUBLE,
-                                  rank, MPI_COMM_WORLD);
-                    }
                 }
                 else
                 {
@@ -578,17 +528,6 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates,
                         receivedNextListImage.size() + listSize);
                     for (int j = 0; j < listSize; j++)
                         receivedNextListImage.push_back(auxList[j]);
-                    if (shareNonCorr)
-                    {
-                        MPI_Bcast(&listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
-                        auxList2.resize(listSize);
-                        MPI_Bcast(&(auxList2[0]), listSize, MPI_DOUBLE, rank,
-                                  MPI_COMM_WORLD);
-                        receivedNonClassCorr.reserve(
-                            receivedNonClassCorr.size() + listSize);
-                        for (int j = 0; j < listSize; j++)
-                            receivedNonClassCorr.push_back(auxList2[j]);
-                    }
                 }
             }
             // Copy the received elements
@@ -596,11 +535,6 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates,
             P[q]->nextListImg.reserve(P[q]->nextListImg.size() + listSize);
             for (int j = 0; j < listSize; j++)
                 P[q]->nextListImg.push_back(receivedNextListImage[j]);
-            listSize = receivedNonClassCorr.size();
-            P[q]->nextNonClassCorr.reserve(
-                P[q]->nextNonClassCorr.size() + listSize);
-            for (int j = 0; j < listSize; j++)
-                P[q]->nextNonClassCorr.push_back(receivedNonClassCorr[j]);
         }
 
         transferUpdates();
@@ -643,12 +577,6 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
                 MPI_Bcast(&(node->nextListImg[0]),
                           node->nextListImg.size() * sizeof(CL3DAssignment),
                           MPI_CHAR, rank, MPI_COMM_WORLD);
-                // Transmit node 1 non class stdK
-                listSize = node->nextNonClassCorr.size();
-                MPI_Bcast(&listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
-                MPI_Bcast(&(node->nextNonClassCorr[0]),
-                          node->nextNonClassCorr.size(), MPI_DOUBLE, rank,
-                          MPI_COMM_WORLD);
             }
             else
             {
@@ -661,15 +589,6 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
                     receivedNextListImage.size() + listSize);
                 for (int j = 0; j < listSize; j++)
                     receivedNextListImage.push_back(auxList[j]);
-                // Receive node 1 non class stdK
-                MPI_Bcast(&listSize, 1, MPI_INT, rank, MPI_COMM_WORLD);
-                auxList2.resize(listSize);
-                MPI_Bcast(&(auxList2[0]), listSize, MPI_DOUBLE, rank,
-                          MPI_COMM_WORLD);
-                receivedNonClassCorr.reserve(
-                    receivedNonClassCorr.size() + listSize);
-                for (int j = 0; j < listSize; j++)
-                    receivedNonClassCorr.push_back(auxList2[j]);
             }
         }
         // Copy the received elements
@@ -677,10 +596,6 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
         node->nextListImg.reserve(node->nextListImg.size() + listSize);
         for (int j = 0; j < listSize; j++)
             node->nextListImg.push_back(receivedNextListImage[j]);
-        listSize = receivedNonClassCorr.size();
-        node->nextNonClassCorr.reserve(node->nextNonClassCorr.size() + listSize);
-        for (int j = 0; j < listSize; j++)
-            node->nextNonClassCorr.push_back(receivedNonClassCorr[j]);
     }
 
     node1->transferUpdate();
@@ -733,8 +648,6 @@ void CL3D::initialize(MetaData &_SF,
         init_progress_bar(Nimgs);
     Image<double> I;
     MultidimArray<double> Iaux, Ibest;
-    bool oldUseCorrelation = prm->useCorrelation;
-    prm->useCorrelation = true; // Since we cannot make the assignment before calculating sigma
     CL3DAssignment bestAssignment;
     size_t first, last;
     while (prm->taskDistributor->getTasks(first, last))
@@ -756,18 +669,18 @@ void CL3D::initialize(MetaData &_SF,
             bestAssignment.objId = assignment.objId = objId;
             if (!initialCodesGiven)
             {
-                bestAssignment.stdK = 1;
+                bestAssignment.score = 1;
                 P[q]->updateProjection(I(), bestAssignment);
             }
             else
             {
-                bestAssignment.stdK = 1e38;
+                bestAssignment.score = 1e38;
                 q = -1;
                 for (int qp = 0; qp < prm->Ncodes0; qp++)
                 {
                     Iaux = I();
-                    P[qp]->fit(Iaux, assignment);
-                    if (assignment.stdK < bestAssignment.stdK)
+                    P[qp]->fitBasic(Iaux, assignment);
+                    if (assignment.score < bestAssignment.score)
                     {
                         bestAssignment = assignment;
                         Ibest = Iaux;
@@ -784,7 +697,6 @@ void CL3D::initialize(MetaData &_SF,
     }
     if (prm->node->rank == 0)
         progress_bar(Nimgs);
-    prm->useCorrelation = oldUseCorrelation;
 
     // Put sigma in common
     MPI_Allreduce(MPI_IN_PLACE, &(prm->sigma), 1, MPI_DOUBLE, MPI_SUM,
@@ -792,57 +704,53 @@ void CL3D::initialize(MetaData &_SF,
     prm->sigma *= sqrt(2.0) / Nimgs;
 
     // Share all assignments
-    shareAssignments(true, true, false);
+    shareAssignments(true, true);
 
-    // Now compute the histogram of stdK values
-    if (!prm->classicalMultiref)
-    {
-        if (prm->node->rank == 0)
-        {
-            std::cout << "Computing histogram of correlation values\n";
-            init_progress_bar(Nimgs);
-        }
+    // Now compute the histogram of score values
+	if (prm->node->rank == 0)
+	{
+		std::cout << "Computing histogram of score values\n";
+		init_progress_bar(Nimgs);
+	}
 
-        CL3DAssignment inClass, outClass;
-        prm->taskDistributor->reset();
-        while (prm->taskDistributor->getTasks(first, last))
-        {
-            for (size_t idx = first; idx <= last; ++idx)
-            {
-                size_t objId = prm->objId[idx];
-                readImage(I, objId, false);
+	CL3DAssignment inClass, outClass;
+	prm->taskDistributor->reset();
+	while (prm->taskDistributor->getTasks(first, last))
+	{
+		for (size_t idx = first; idx <= last; ++idx)
+		{
+			size_t objId = prm->objId[idx];
+			readImage(I, objId, false);
 
-                int q;
-                SF->getValue(MDL_REF, q, objId);
-                if (q == -1)
-                    continue;
-                q -= 1;
+			int q;
+			SF->getValue(MDL_REF, q, objId);
+			if (q == -1)
+				continue;
+			q -= 1;
 
-                outClass.objId = inClass.objId = objId;
-                if (q != -1)
-                {
-                    Iaux = I();
-                    P[q]->fit(Iaux, inClass);
-                    P[q]->updateProjection(Iaux, inClass);
-                    if (prm->Ncodes0 > 1)
-                        for (int qp = 0; qp < prm->Ncodes0; qp++)
-                        {
-                            if (qp == q)
-                                continue;
-                            Iaux = I();
-                            P[qp]->fit(Iaux, outClass);
-                            P[qp]->updateNonProjection(outClass.stdK);
-                        }
-                }
-                if (prm->node->rank == 0 && idx % 100 == 0)
-                    progress_bar(idx);
-            }
-        }
-        if (prm->node->rank == 0)
-            progress_bar(Nimgs);
+			outClass.objId = inClass.objId = objId;
+			if (q != -1)
+			{
+				Iaux = I();
+				P[q]->fitBasic(Iaux, inClass);
+				P[q]->updateProjection(Iaux, inClass);
+				if (prm->Ncodes0 > 1)
+					for (int qp = 0; qp < prm->Ncodes0; qp++)
+					{
+						if (qp == q)
+							continue;
+						Iaux = I();
+						P[qp]->fitBasic(Iaux, outClass);
+					}
+			}
+			if (prm->node->rank == 0 && idx % 100 == 0)
+				progress_bar(idx);
+		}
+	}
+	if (prm->node->rank == 0)
+		progress_bar(Nimgs);
 
-        shareAssignments(false, true, true);
-    }
+	shareAssignments(false, true);
 }
 #undef DEBUG
 
@@ -902,8 +810,7 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
     Matrix1D<double> corrList;
     corrList.resizeNoCopy(Q);
     CL3DAssignment assignment;
-    bestAssignment.likelihood = 0;
-    bestAssignment.stdK = 1e38;
+    bestAssignment.score = 1e38;
     size_t objId = bestAssignment.objId;
     for (int q = 0; q < Q; q++)
     {
@@ -932,11 +839,10 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 		if (proceed) {
 			// Try this image
 			Iaux = I;
-			P[q]->fit(Iaux, assignment);
+			P[q]->fitBasic(Iaux, assignment);
 
-		    VEC_ELEM(corrList,q) = assignment.stdK;
-			if (!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood ||
-				 prm->classicalMultiref && assignment.stdK < bestAssignment.stdK ||
+		    VEC_ELEM(corrList,q) = assignment.score;
+			if (assignment.score < bestAssignment.score ||
 				 prm->classifyAllImages) {
 				bestq = q;
 				bestImg = Iaux;
@@ -949,16 +855,9 @@ void CL3D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
     newnode = bestq;
     bestAssignment.objId = objId;
 
-    // Assign it to the new node and remove it from the rest
-    // of nodes if it was among the best
+    // Assign it to the new node
     if (newnode != -1)
-    {
         P[newnode]->updateProjection(I, bestAssignment);
-        if (!prm->classicalMultiref)
-            for (int q = 0; q < Q; q++)
-                if (q != newnode && corrList(q) > 0)
-                    P[q]->updateNonProjection(corrList(q));
-    }
 }
 
 void CL3D::transferUpdates()
@@ -1021,8 +920,8 @@ void CL3D::run(const FileName &fnOut, int level)
                 lookNode(I(), oldAssignment[idx], node, assignment);
                 LOG(formatString("Analyzing %s oldAssignment=%d newAssignment=%d",I.name().c_str(),oldAssignment[idx], node));
                 SF->setValue(MDL_REF, node + 1, objId);
-                if (assignment.stdK<1e10)
-                	corrSum += assignment.stdK;
+                if (assignment.score<1e10)
+                	corrSum += assignment.score;
                 if (prm->node->rank == 0 && idx % progressStep == 0)
                     progress_bar(idx);
             }
@@ -1040,7 +939,7 @@ void CL3D::run(const FileName &fnOut, int level)
         // Gather all pieces computed by nodes
         MPI_Allreduce(MPI_IN_PLACE, &corrSum, 1, MPI_DOUBLE, MPI_SUM,
                       MPI_COMM_WORLD);
-        shareAssignments(true, true, true);
+        shareAssignments(true, true);
 
         // Some report
         size_t idMdChanges;
@@ -1195,8 +1094,6 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     CL3DClass *firstSplitNode2 = NULL;
     int minAllowedSize = prm->PminSize * 0.01 * node->currentListImg.size();
 
-    bool oldclassicalMultiref = prm->classicalMultiref;
-    prm->classicalMultiref = false;
     bool finish;
     bool success = true;
     do
@@ -1215,9 +1112,9 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             break;
         }
 
-        // Compute the stdK histogram
+        // Compute the score histogram
         if (prm->node->rank == 0 && prm->verbose >= 2)
-            std::cerr << "Calculating stdK distribution at split ..."
+            std::cerr << "Calculating score distribution at split ..."
             << std::endl;
         corrList.initZeros(imax);
         for (int i = 0; i < imax; i++)
@@ -1225,8 +1122,8 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             if ((i + 1) % (prm->node->size) == prm->node->rank)
             {
                 readImage(I, node->currentListImg[i].objId, false);
-                node->fit(I(), assignment);
-                A1D_ELEM(corrList,i) = assignment.stdK;
+                node->fitBasic(I(), assignment);
+                A1D_ELEM(corrList,i) = assignment.score;
             }
             if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
                 progress_bar(i);
@@ -1258,18 +1155,16 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                 {
                     assignment.objId = node->currentListImg[i].objId;
                     readImage(I, assignment.objId, false);
-                    node->fit(I(), assignment);
+                    node->fitBasic(I(), assignment);
                     if ((i + 1) % 2 == 0)
                     {
                         node1->updateProjection(I(), assignment);
                         VEC_ELEM(newAssignment,i) = 1;
-                        node2->updateNonProjection(assignment.stdK);
                     }
                     else
                     {
                         node2->updateProjection(I(), assignment);
                         VEC_ELEM(newAssignment,i) = 2;
-                        node1->updateNonProjection(assignment.stdK);
                     }
                 }
                 success = true;
@@ -1277,9 +1172,9 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             }
         }
 
-        // Split according to stdK
+        // Split according to score
         if (prm->node->rank == 0 && prm->verbose >= 2)
-            std::cerr << "Splitting by stdK threshold ..." << std::endl;
+            std::cerr << "Splitting by score threshold ..." << std::endl;
         LOG(((String)"Splitting by threshold"));
         for (int i = 0; i < imax; i++)
         {
@@ -1287,18 +1182,16 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             {
                 assignment.objId = node->currentListImg[i].objId;
                 readImage(I, assignment.objId, false);
-                node->fit(I(), assignment);
-                if (assignment.stdK > corrThreshold)
+                node->fitBasic(I(), assignment);
+                if (assignment.score > corrThreshold)
                 {
                     node1->updateProjection(I(), assignment);
                     VEC_ELEM(newAssignment,i) = 1;
-                    node2->updateNonProjection(assignment.stdK);
                 }
                 else
                 {
                     node2->updateProjection(I(), assignment);
                     VEC_ELEM(newAssignment,i) = 2;
-                    node1->updateNonProjection(assignment.stdK);
                 }
             }
             if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
@@ -1340,21 +1233,19 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
                     readImage(I, assignment.objId, false);
 
                     Iaux1 = I();
-                    node1->fit(Iaux1, assignment1);
+                    node1->fitBasic(Iaux1, assignment1);
                     Iaux2 = I();
-                    node2->fit(Iaux2, assignment2);
+                    node2->fitBasic(Iaux2, assignment2);
 
-                    if (assignment1.likelihood > assignment2.likelihood)
+                    if (assignment1.score < assignment2.score)
                     {
                         node1->updateProjection(Iaux1, assignment1);
                         VEC_ELEM(newAssignment,i) = 1;
-                        node2->updateNonProjection(assignment2.stdK);
                     }
-                    else if (assignment2.likelihood > assignment1.likelihood)
+                    else if (assignment2.score < assignment1.score)
                     {
                         node2->updateProjection(Iaux2, assignment2);
                         VEC_ELEM(newAssignment,i) = 2;
-                        node1->updateNonProjection(assignment1.stdK);
                     }
                 }
                 if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
@@ -1439,7 +1330,6 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         FOR_ALL_ELEMENTS_IN_MATRIX1D(firstSplitAssignment)
         splitAssignment.push_back(VEC_ELEM(firstSplitAssignment,i));
     }
-    prm->classicalMultiref = oldclassicalMultiref;
 }
 #undef DEBUG
 
@@ -1486,10 +1376,6 @@ void ProgClassifyCL3D::readParams()
     PminSize = getDoubleParam("--minsize");
     sparsity = getDoubleParam("--sparsity");
     DWTsparsity = getDoubleParam("--DWTsparsity");
-    String aux;
-    aux = getParam("--distance");
-    useCorrelation = aux == "correlation";
-    classicalMultiref = checkParam("--classicalMultiref");
     maxShiftZ = getDoubleParam("--maxShiftZ");
     maxShiftY = getDoubleParam("--maxShiftY");
     maxShiftX = getDoubleParam("--maxShiftX");
@@ -1517,8 +1403,6 @@ void ProgClassifyCL3D::show() const {
 			<< "Minimum node size:       " << PminSize << std::endl
 			<< "Sparsity:                " << sparsity << std::endl
 			<< "DWT Sparsity:            " << DWTsparsity << std::endl
-			<< "Use Correlation:         " << useCorrelation << std::endl
-			<< "Classical Multiref:      " << classicalMultiref << std::endl
 			<< "Maximum shift Z:         " << maxShiftZ << std::endl
 			<< "Maximum shift Y:         " << maxShiftY << std::endl
 			<< "Maximum shift X:         " << maxShiftX << std::endl
@@ -1557,7 +1441,6 @@ void ProgClassifyCL3D::defineParams()
     addParamsLine("   [--distance <type=correntropy>]       : Distance type");
     addParamsLine("            where <type>");
     addParamsLine("                       correntropy correlation: See CL3D paper for the definition of correntropy");
-    addParamsLine("   [--classicalMultiref]     : Instead of enhanced clustering");
     addParamsLine("   [--maxShiftX <d=10>]      : Maximum allowed shift in X");
     addParamsLine("   [--maxShiftY <d=10>]      : Maximum allowed shift in Y");
     addParamsLine("   [--maxShiftZ <d=10>]      : Maximum allowed shift in Z");
@@ -1628,9 +1511,6 @@ void ProgClassifyCL3D::run()
     // Run all iterations
     int level = 0;
     int Q = vq.P.size();
-    bool originalClassicalMultiref=classicalMultiref;
-    if (Q==1)
-    	classicalMultiref=true;
     vq.run(fnOut, level);
 
     while (Q < Ncodes)
@@ -1651,7 +1531,6 @@ void ProgClassifyCL3D::run()
 
         Q = vq.P.size();
         level++;
-        classicalMultiref=originalClassicalMultiref || Q==1;
         vq.run(fnOut, level);
     }
     if (node->rank == 0)
@@ -1685,7 +1564,5 @@ int main(int argc, char** argv)
 {
     ProgClassifyCL3D progprm(argc, argv);
     progprm.read(argc, argv);
-    prm = &progprm;
-    int e = progprm.tryRun();
-    return e;
+    return progprm.tryRun();
 }

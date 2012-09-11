@@ -44,8 +44,7 @@
 class CL3DAssignment
 {
 public:
-	double stdK;   // Negative corrCodes indicate invalid particles
-	double likelihood; // Only valid if robust criterion
+	double score;   // Negative corrCodes indicate invalid particles
 	double shiftx;
 	double shifty;
 	double shiftz;
@@ -83,7 +82,7 @@ public:
     MultidimArray< std::complex<double> > Ifourier;
 
     // Auxiliary Fourier image magnitude
-    MultidimArray<double> IfourierMag,IfourierMagSorted;
+    MultidimArray<double> IfourierMag, IfourierMagSorted;
 
     // Update for next iteration
     MultidimArray< std::complex<double> > Pupdate;
@@ -112,15 +111,6 @@ public:
     // List of images assigned
     std::vector<CL3DAssignment> nextListImg;
 
-    // Correlations of the next non-class members
-    std::vector<double> nextNonClassCorr;
-
-    // Histogram of the correlations of the current class members
-    Histogram1D histClass;
-
-    // Histogram of the correlations of the current non-class members
-    Histogram1D histNonClass;
-
     // List of neighbour indexes
     std::vector<int> neighboursIdx;
 
@@ -134,26 +124,16 @@ public:
     /** Update projection. */
     void updateProjection(MultidimArray<double> &I, const CL3DAssignment &assigned, bool force=false);
 
-    /** Update non-projection */
-    inline void updateNonProjection(double corr)
-    {
-    	if (corr>0)
-    		nextNonClassCorr.push_back(corr);
-    }
-
     /** Transfer update */
     void transferUpdate();
 
     /** Sparse distance to centroid */
-    void sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK);
+    void sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK, double &stdK, double &L1distance);
 
     /** Compute the fit of the input image with this node.
         The input image is rotationally and traslationally aligned
         (2 iterations), to make it fit with the node. */
     void fitBasic(MultidimArray<double> &I, CL3DAssignment &result);
-
-    /** Compute the fit of the input image with this node (check mirrors). */
-    void fit(MultidimArray<double> &I, CL3DAssignment &result);
 
     /// Look for K-nearest neighbours
     void lookForNeighbours(const std::vector<CL3DClass *> listP, int K);
@@ -188,7 +168,7 @@ public:
     		        std::vector< MultidimArray<double> > &_codes0);
     
     /// Share assignments
-    void shareAssignments(bool shareAssignment, bool shareUpdates, bool shareNonCorr);
+    void shareAssignments(bool shareAssignment, bool shareUpdates);
 
     /// Share split assignment
     void shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1, CL3DClass *node2) const;
@@ -257,12 +237,6 @@ public:
     /// DWT Sparsity factor (0<f<1; 1=drop all coefficients, 0=do not drop any coefficient)
     double DWTsparsity;
 
-    /// Use Correlation instead of Correntropy
-    bool useCorrelation;
-
-    /// Classical Multiref
-    bool classicalMultiref;
-    
     /// Clasify all images
     bool classifyAllImages;
 
