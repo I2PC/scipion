@@ -227,7 +227,12 @@ void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double 
     mask.resizeNoCopy(img());
     mask.initConstant(true);
 
-    FileName fpName = "test.txt";
+    FileName fpName    = "test.txt";
+    FileName fpName2   = "test2.txt";
+    FileName fpName3   = "test3.txt";
+    FileName fpName4   = "test4.txt";
+
+    Histogram1D hist;
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -250,16 +255,40 @@ void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double 
 
             mask.setXmippOrigin();
 
-            //Here
-            fp.normalizeWB(mI,nI,modI,20,150,mask);
+            //Here is done all the processing. Here we will need probably
+            //some input arguments to tune the desired frequencies and tune
+            //the filer
+            fp.normalizeWB(mI,nI,modI,250,2,mask);
+        	nI.write(fpName);
+
             nI.binarize();
-            int imax = labelImage2D(nI,nI,4);
+            nI.write(fpName2);
 
-            //keepBiggestComponent(mI,0.8,8);
+            int im = labelImage2D(nI,nI,8);
+            nI.write(fpName3);
+            compute_hist(nI, hist, 0, im, im+1);
 
-            if (imgno ==10){
-            	nI.write(fpName);
-            	std::cout << imax << std::endl;
+            int l,k,i,j;
+            //We supose that the biggest part if the background!
+            //This can be problematic
+            hist.maxIndex(l,k,i,j);
+            A1D_ELEM(hist,j)=0;
+            hist.maxIndex(l,k,i,j);
+            nI.binarizeRange(j-1,j+1);
+            nI.write(fpName4);
+
+            if (imgno ==20){
+
+            	std::cout << im << std::endl;
+            	std::cout << "Max hist " << hist.hmax << std::endl;
+            	std::cout << "Min hist " << hist.hmin << std::endl;
+
+            	std::cout << "i " << i << std::endl;
+            	std::cout << "j " << j << std::endl;
+            	std::cout << "l " << l << std::endl;
+            	std::cout << "k " << k << std::endl;
+
+            	REPORT_ERROR(ERR_MEM_NOTDEALLOC, "do not allocate space for an image if you have not deallocate it first");;
             }
 
             imgno++;
@@ -274,8 +303,9 @@ void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double 
 
 void ProgSortByStatistics::run()
 {
+	/*
     //Process input selfile ..............................................
-    /*SF.read(fn);
+    SF.read(fn);
     SF.removeDisabled();
     pcaAnalyzer.clear();
     processInput2(SF, 2, 2);

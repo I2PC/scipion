@@ -4436,6 +4436,24 @@ public:
                 *ptr = 1;
     }
 
+    /** Binarize using a range
+     *
+     * This functions substitutes all values in a volume which are in the range between valMin
+     * and valMax by 1 and the rest are set to 0.
+     */
+    void binarizeRange(double valMin = 0, double valMax = 255,
+                       MultidimArray<int> * mask = NULL )
+    {
+        T* ptr=NULL;
+        size_t n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+        if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+            if ( (*ptr < valMax) &&  (*ptr > valMin) )
+                *ptr = 1;
+            else
+                *ptr = 0;
+    }
+
     /** ROUND
      *
      * Applies a ROUND (look for the nearest integer) to each array element.

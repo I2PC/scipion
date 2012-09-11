@@ -69,9 +69,11 @@ public:
     //pattern normalization", Optics Communications, 224, Pages 221-227 (2003)
     void normalize(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double R, double S, MultidimArray<bool> & ROI);
 
-    //This method is similar to the method normalize but it uses an isotropic bank of Gaussian filters instead a single isotropic annular filter tuned at R with
-    //variance S. In this case we use a bank of ten filters tuned at minimum and maximum frequency Rmin Rmax
+    //This method is similar to the method normalize but it uses a different Fourier Filter H.
     void normalizeWB(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double rmax, double rmin, MultidimArray<bool> & ROI);
+
+    //This method is similar to the method normalize and normalizeWB2 but it uses a different Fourier Filter H.
+    void normalizeWB2(MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap, double rmax, double rmin, MultidimArray<bool> & ROI);
 
     //This method obtains the phase direction map from the fringe orientation map solving the sign ambiguity problem that exists in the fringe orientation map.
     //Once computed the phase direction map the modulating phase can be obtained from the SPTH transform.
