@@ -21,7 +21,7 @@ public class TomoSerieAligner {
 	
 	public static void main(String[] args)
 	{
-		TomoSerieAligner aligner = new TomoSerieAligner(args[0], args[1]);
+		TomoSerieAligner aligner = new TomoSerieAligner(args[0], args[1], 50, 45);
 		aligner.alignTomographies();
 	}
 	

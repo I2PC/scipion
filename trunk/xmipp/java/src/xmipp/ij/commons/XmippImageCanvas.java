@@ -1,19 +1,16 @@
 package xmipp.ij.commons;
 
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import javax.swing.SwingUtilities;
-
-import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
-
-import xmipp.ij.commons.Tool;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+
+import javax.swing.SwingUtilities;
 
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
