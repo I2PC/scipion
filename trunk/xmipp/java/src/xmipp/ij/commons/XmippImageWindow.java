@@ -1,9 +1,9 @@
 package xmipp.ij.commons;
 
-import ij.ImagePlus;
+import ij.IJ;
+import ij.WindowManager;
 import ij.gui.ImageWindow;
 
-import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
@@ -103,4 +103,16 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		return false;
 	}
+	
+	//overwriting ImageJ event to avoid switching menu
+	public void windowActivated(WindowEvent e) {
+//		if (IJ.isMacintosh())
+//			this.setMenuBar(Menus.getMenuBar());
+		if (IJ.debugMode) IJ.write(imp.getTitle() + ": Activated");
+		if (!closed) {
+			//ic.requestFocus();
+			WindowManager.setCurrentWindow(this);
+		}
+	}
+
 }// class XmippImageWindow
