@@ -1,6 +1,0 @@
-xmipp_project -i random_projection.param -o g0ta.sel
-xmipp_headerinfo -reset -i g0ta.sel
-mpirun -np 3 /media/usb_linux/trunk/Xmipp/bin/xmipp_mpi_angular_predict -i g0ta.sel -ref Volumen-ccp4-35A_64_center.vol -oang angles.txt -proj_step 10
-xmipp_art -i g0ta.sel -l 0.1 -show_error -o dwt -sym symmetry.txt
-mpirun -np 3 /media/usb_linux/trunk/Xmipp/bin/xmipp_mpi_angular_predict_continuous -i g0ta.sel -ref Volumen-ccp4-35A_64_center.vol -ang angles.txt -oang angles_cont.txt
-xmipp_art -i g0ta.sel -l 0.1 -show_error -o splines -sym symmetry.txt
