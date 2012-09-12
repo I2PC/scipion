@@ -100,9 +100,9 @@ projectDefaults = {
 #--------------------------------------------------------------------------------
 
 #Font
-#FontName = "Helvetica"
-FontName = "Verdana"
-FontSize = 10
+FontName = "Helvetica"
+#FontName = "Verdana"
+FontSize = 14
 
 #TextColor
 CitationTextColor = "dark olive green"
@@ -127,6 +127,6 @@ ButtonSelectColor = "DeepSkyBlue2"
 #Dimensions limits
 MaxHeight = 650
 MaxWidth = 800
-MaxFontSize = 14
-MinFontSize = 6
+MaxFontSize = 18
+MinFontSize = 12
 WrapLenght = MaxWidth - 50
