@@ -1,0 +1,12 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _shiftX
+ _ref
+ 000001@tux.stk          1     0.000000     3 
+ 000002@tux.stk          1     1.404060     4 
+ 000003@tux.stk          1     1.715445     1 
+ 000004@tux.stk          1     1.266333     2

@@ -1,0 +1,296 @@
+/***************************************************************************
+ *
+ * Authors: Sjors Scheres (scheres@cnb.csic.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
+#include <mpi.h>
+
+#include <reconstruction/ml_refine3d.h>
+#define TAG_DOCFILE 12
+#define TAG_DOCFILESIZE 13
+ 
+
+int main(int argc, char **argv)
+{
+    int                         c, volno, converged = 0, argc2 = 0;
+    char                        **argv2=NULL;
+    double                      convv, aux;
+
+    // For parallelization
+    int rank, size, num_img_tot;
+    Matrix2D<double>            Maux;
+    Matrix1D<double>            Vaux;
+    SelFile                      SFo;
+
+    Prog_Refine3d_prm            prm;
+    Prog_MLalign2D_prm           ML2D_prm;
+
+    // Set to false for ML3D
+    prm.fourier_mode = false;
+
+    // Init Parallel interface
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Status status;
+
+    // Get input parameters
+    try
+    {
+
+        // Read command line
+        prm.read(argc, argv, argc2, argv2);
+        prm.produceSideInfo(rank);
+
+        // Write starting volumes to disc with correct name for iteration loop
+        if (rank == 0)
+        {
+            prm.show();
+            prm.remake_SFvol(prm.istart - 1, true, false);
+        }
+        else prm.remake_SFvol(prm.istart - 1, false, false);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        // Read and set general MLalign2D-stuff
+        ML2D_prm.read(argc2, argv2, true);
+        if (rank != 0) ML2D_prm.verb = prm.verb = 0;
+        if (!checkParameter(argc2, argv2, "-psi_step")) ML2D_prm.psi_step = prm.angular;
+        ML2D_prm.fn_root = prm.fn_root;
+        ML2D_prm.fast_mode = true;
+        ML2D_prm.do_mirror = true;
+        ML2D_prm.save_mem2 = true;
+        ML2D_prm.fn_ref = prm.fn_root + "_lib.sel";
+
+        // Check that there are enough computing nodes
+        if (prm.Nvols > size)
+            REPORT_ERROR(1, "mpi_MLrefine3D requires that you use more CPUs than reference volumes");
+
+        // Project the reference volume
+        prm.project_reference_volume(ML2D_prm.SFr, rank, size);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        // All nodes produce general side-info
+        ML2D_prm.produceSideInfo();
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        // Select only relevant part of selfile for this rank
+        ML2D_prm.SF.mpi_select_part(rank, size, num_img_tot);
+
+        // All nodes read node-specific side-info into memory
+        ML2D_prm.produceSideInfo2(prm.Nvols);
+        ML2D_prm.Iold.clear(); // To save memory
+        ML2D_prm.createThreads();
+
+        // Some output to screen
+        if (rank == 0) ML2D_prm.show(true);
+
+    }
+    catch (Xmipp_error XE)
+    {
+        if (rank == 0)
+        {
+            std::cout << XE;
+            prm.usage();
+        }
+        MPI_Finalize();
+        exit(1);
+    }
+
+    try
+    {
+        // Initialize some additional stuff
+        Maux.resize(ML2D_prm.dim, ML2D_prm.dim);
+        Maux.setXmippOrigin();
+
+        // Loop over all iterations
+        ML2D_prm.iter = prm.istart;
+        while (!converged && ML2D_prm.iter <= prm.Niter)
+        {
+
+            if (prm.verb > 0)
+            {
+                std::cerr        << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+            }
+
+            // Initialize
+            ML2D_prm.DFo.clear();
+
+            // Integrate over all images
+            ML2D_prm.expectation();
+
+            // Here MPI_allreduce of all weighted sums, LL, etc.
+            // All nodes need the answer to calculate internally
+            // sigma_noise etc. for the next iteration!
+            MPI_Allreduce(&ML2D_prm.LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            ML2D_prm.LL = aux;
+            MPI_Allreduce(&ML2D_prm.sumfracweight, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            ML2D_prm.sumfracweight = aux;
+            MPI_Allreduce(&ML2D_prm.wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            ML2D_prm.wsum_sigma_noise = aux;
+            MPI_Allreduce(&ML2D_prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            ML2D_prm.wsum_sigma_offset = aux;
+            for (int refno = 0;refno < ML2D_prm.model.n_ref; refno++)
+            {
+                MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
+                              MULTIDIM_SIZE(ML2D_prm.wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                ML2D_prm.wsum_Mref[refno] = Maux;
+                MPI_Allreduce(&ML2D_prm.sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                ML2D_prm.sumw[refno] = aux;
+                MPI_Allreduce(&ML2D_prm.sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                ML2D_prm.sumw_mirror[refno] = aux;
+                MPI_Allreduce(&ML2D_prm.sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                ML2D_prm.sumw2[refno] = aux;
+                MPI_Allreduce(&ML2D_prm.sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                ML2D_prm.sumwsc[refno] = aux;
+                MPI_Allreduce(&ML2D_prm.sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                ML2D_prm.sumwsc2[refno] = aux;
+            }
+
+            // Update model parameters
+            ML2D_prm.maximization(ML2D_prm.model, prm.eachvol_end[0]+1);
+            
+
+            // Write intermediate files 
+            if (rank != 0)
+            {
+                // All slaves send docfile to the master
+                std::ostringstream doc;
+                doc << ML2D_prm.DFo;
+                int s_size=  doc.str().size();
+                char results[s_size];
+                strncpy(results,doc.str().c_str(),s_size);
+                results[s_size]='\0';
+                MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
+                MPI_Send(results, s_size, MPI_CHAR, 0, TAG_DOCFILE, MPI_COMM_WORLD);
+            }
+            else
+            {
+                // Master fills docfile 
+                std::ofstream myDocFile;
+                FileName fn_tmp;
+                fn_tmp.compose(prm.fn_root + "_it",ML2D_prm.iter,"doc");
+                myDocFile.open (fn_tmp.c_str());
+                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
+
+                // Master's own contribution
+                myDocFile << ML2D_prm.DFo;
+                int docCounter=1;
+                while (docCounter < size)
+                {
+                    // receive in order
+                    int iNumber, s_size;
+                    MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
+                    char results[s_size];
+                    MPI_Recv(results, s_size, MPI_CHAR, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+                    results[s_size]='\0';
+                    myDocFile<<results ;
+                    docCounter++;
+                }
+
+                //save doc_file and renumber it
+                myDocFile.close();
+                ML2D_prm.DFo.clear();
+                ML2D_prm.DFo.read(fn_tmp);
+                ML2D_prm.DFo.renum();
+
+                // Output all intermediate files
+                ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
+                prm.concatenate_selfiles(ML2D_prm.iter);
+            }
+            MPI_Barrier(MPI_COMM_WORLD);
+
+            // Reconstruct the new reference volumes also in parallel
+            // Assume that the number of processors is larger than the
+            // number of volumes to reconstruct ...
+            if (rank < prm.Nvols)
+                // new reference reconstruction
+                prm.reconstruction(argc2, argv2, ML2D_prm.iter, rank, 0);
+            MPI_Barrier(MPI_COMM_WORLD);
+
+            // Only the master does post-processing & convergence check (i.e. sequentially)
+            if (rank == 0)
+            {
+
+                // Solvent flattening and/or symmetrization (if requested)
+                prm.remake_SFvol(ML2D_prm.iter, false, false);
+                prm.post_process_volumes(argc2, argv2);
+
+                // Check convergence
+                if (prm.check_convergence(ML2D_prm.iter))
+                {
+                    converged = 1;
+                    if (prm.verb > 0) std::cerr << "--> Optimization converged!" << std::endl;
+                }
+
+            }
+
+            // Broadcast new spectral_signal and converged to all nodes
+            MPI_Bcast(&converged, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+            // Update filenames in SFvol (now without noise volumes!)
+            prm.remake_SFvol(ML2D_prm.iter, false, false);
+
+            if (!converged && ML2D_prm.iter + 1 <= prm.Niter)
+            {
+                // All nodes again: project and read new references from disc
+                prm.project_reference_volume(ML2D_prm.SFr, rank, size);
+                MPI_Barrier(MPI_COMM_WORLD);
+                ML2D_prm.SFr.go_beginning();
+                c = 0;
+                while (!ML2D_prm.SFr.eof())
+                {
+                    ML2D_prm.model.Iref[c].read(ML2D_prm.SFr.NextImg(), false, false, false, false);
+                    ML2D_prm.model.Iref[c]().setXmippOrigin();
+                    c++;
+                }
+            }
+
+            ML2D_prm.iter++;
+        } // end loop iterations
+
+	if (rank == 0)
+	{
+	    ML2D_prm.writeOutputFiles(ML2D_prm.model);
+	}
+
+        if (!converged && prm.verb > 0)
+            std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
+
+        ML2D_prm.destroyThreads();
+
+    }
+    catch (Xmipp_error XE)
+    {
+        if (rank == 0)
+        {
+            std::cout << XE;
+            prm.usage();
+        }
+        MPI_Finalize();
+        exit(1);
+    }
+
+    MPI_Finalize();
+    return 0;
+}

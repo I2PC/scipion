@@ -1,0 +1,102 @@
+/** Core array by scalar.
+  * @ingroup ArrayByScalar
+ */
+template<typename T>
+void coreArrayByScalar(const maT& op1,
+                          const T& op2,
+                          maT& result,
+                          char operation)
+{
+    for (int i = 0; i < result.size; i++)
+        switch (operation)
+        {
+        case '+':
+            result.data[i] = op1.data[i] + op2;
+            break;
+        case '-':
+            result.data[i] = op1.data[i] - op2;
+            break;
+        case '*':
+            result.data[i] = op1.data[i] * op2;
+            break;
+        case '/':
+            result.data[i] = op1.data[i] / op2;
+            break;
+        case '^':
+            result.data[i] = static_cast< T >(pow(
+                                                  static_cast< double >(op1.data[i]), static_cast< double >(op2)));
+            break;
+        }
+}
+
+/** Scalar by array.
+  * @ingroup ScalarByArray
+ */
+template<typename T>
+void coreScalarByArray(const T& op1,
+                          const maT& op2,
+                          maT& result,
+                          char operation)
+{
+    for (int i = 0; i < result.size; i++)
+        switch (operation)
+        {
+        case '+':
+            result.data[i] = op1 + op2.data[i];
+            break;
+        case '-':
+            result.data[i] = op1 - op2.data[i];
+            break;
+        case '*':
+            result.data[i] = op1 * op2.data[i];
+            break;
+        case '/':
+            result.data[i] = op1 / op2.data[i];
+            break;
+        case '^':
+            result.data[i] = static_cast< T >(pow(
+                                                  static_cast< double >(op1), static_cast< double >(op2.data[i])));
+            break;
+        }
+}
+
+/** Array by array.
+  * @ingroup ArrayByArray
+ */
+template<typename T>
+void coreArrayByArray(const maT& op1,
+                         const maT& op2,
+                         maT& result,
+                         char operation)
+{
+    for (int i = 0; i < result.size; i++)
+        switch (operation)
+        {
+        case '+':
+            result.data[i] = op1.data[i] + op2.data[i];
+            break;
+        case '-':
+            result.data[i] = op1.data[i] - op2.data[i];
+            break;
+        case '*':
+            result.data[i] = op1.data[i] * op2.data[i];
+            break;
+        case '/':
+            result.data[i] = op1.data[i] / op2.data[i];
+            break;
+        case '^':
+            result.data[i] = static_cast< T >(pow(
+                                                  static_cast< double >(op1.data[i]),
+                                                  static_cast< double >(op2.data[i])));
+            break;
+        }
+}
+
+/** Equality for normal data types.
+  * @ingroup MultidimUtilities
+ */
+template<typename T>
+bool operator==(const maT& op1, const maT& op2)
+{
+    return op1.equal(op2);
+}

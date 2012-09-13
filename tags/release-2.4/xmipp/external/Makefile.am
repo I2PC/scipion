@@ -1,0 +1,2 @@
+SUBDIRS = bilib inria cuba
+

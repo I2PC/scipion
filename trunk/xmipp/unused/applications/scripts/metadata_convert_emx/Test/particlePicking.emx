@@ -1,0 +1,45 @@
+#EMX1.0 
+##########################################################################
+#               3DEM Exchange file 
+#               Produced by PyCifRW module
+# 
+#  This is a EMX file.  EMX has been adopted by the EMX comitee 
+#  as the standard for data archiving and transmission.
+#
+#  Information on this file format is available at 
+#  http://conventions.cnb.csic.es
+##########################################################################
+
+data_mic_kk11
+_emx_micrograph.url                     kk1
+loop_
+  _emx_particle.coordinate_x
+  _emx_particle.coordinate_y
+   549.3  136.7
+   549  204
+   371  235
+   266  325
+   277  255
+   232  267
+   263  217
+   589  269
+   657  278
+   701  336
+ 
+
+data_mic_kk22
+_emx_micrograph.url                     kk2
+loop_
+  _emx_particle.coordinate_x
+  _emx_particle.coordinate_y
+   549  136
+   410  204
+   371  235
+   266  325
+   277  255
+   232  267
+   263  217
+   589  269
+   657  278
+   701  336
+ 

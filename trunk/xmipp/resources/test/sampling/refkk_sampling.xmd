@@ -1,0 +1,10 @@
+# XMIPP_STAR_1 * 
+# data_extra -> sampling description; data_neighbors --> List with order of eachexperimental images and its neighbors
+data_extra
+ _sampling_rate 0.0523599
+ _neighborhoodRadius -1.01
+ _pointsAsymmetricUnit 18446744073709551615
+data_neighbors
+loop_
+data_projectionDirections
+loop_

@@ -1,0 +1,16 @@
+# XMIPP_STAR_1 * 
+# 
+data_noname
+loop_
+ _image
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _shiftX
+ _shiftY
+ _ref
+ _flip
+ _maxCC
+ images/proj_sh000001.spi    2.5645    39.456     10.000000   262.800000    -4.009100     2.004250          1 0     0.996680 
+ images/proj_sh000002.spi    9.456    52.456      20.000000    -3.031010    -4.991070         73 0     0.919700 
+ images/proj_sh000003.spi   25.456    57.456      30.000000    1.058730    -1.993350         41 0     0.991690 

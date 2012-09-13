@@ -1,0 +1,39 @@
+/*! \mainpage Xmipp documentation
+*
+* Xmipp is a set of programs and libraries for 3D reconstruction and image
+* processing of electron micrographs. This part of the documentation is meant
+* for programmers wanting to see the internals of Xmipp or needing to call
+* a function.
+*
+* For a more user oriented documentation visit: http://xmipp.cnb.csic.es
+*
+*/
+
+/// @defgroup Libraries Libraries
+
+/// @defgroup Programs Programs
+
+/// @defgroup DataLibrary Basic data library
+/// @ingroup Libraries
+/// @defgroup MultidimensionalArrays Multidimensional Arrays
+/// @ingroup DataLibrary
+/// @defgroup DataLibraryPrograms Programs whose implementation is in the basic data library
+/// @ingroup Libraries
+
+/// @defgroup ReconsLibrary Reconstruction library
+/// @ingroup Libraries
+/// @defgroup ReconsLibraryPrograms Programs whose implementation is in the reconstruction library
+/// @ingroup Libraries
+
+/// @defgroup ClassificationLibrary Classification library
+/// @ingroup Libraries
+
+/// @defgroup GraphicsLibrary Graphics library
+/// @ingroup Libraries
+
+/// @defgroup InterfaceLibrary Interface library
+/// @ingroup Libraries
+
+/// @defgroup BilibLibrary Bilib library
+/// @ingroup Libraries
+

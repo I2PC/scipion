@@ -1,0 +1,312 @@
+#!/usr/bin/env python
+
+# basic setup, import all environment and custom tools
+import os
+import SCons.Script
+env = Environment(ENV = os.environ, tools = ['default', 'disttar'], toolpath =
+                  ['scons/ToolsFromWiki'])
+
+# avoid cruft in top dir
+base_dir = 'build'
+if not os.path.exists(base_dir):
+    Execute(Mkdir(base_dir))
+base_dir +=  '/'
+
+# use only one signature file
+env.SConsignFile(base_dir + 'SCons.dblite')
+
+# read -or not- the cached -non default- options
+if (ARGUMENTS['mode'] == 'configure'):
+    opts = Options(None, ARGUMENTS)
+else:
+    opts = Options('options.cache', ARGUMENTS)
+
+opts.Add('CC', 'The C compiler', 'gcc')
+opts.Add('CXX', 'The C++ compiler', 'g++')
+
+# Hack, some architectures required this (Coss?)
+opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
+
+# FIXME With ARGUMENTS these should be read... right?
+#opts.Add('CCFLAGS', 'The C compiler flags', None)
+opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
+
+opts.Add(BoolOption('debug', 'Build debug version?', 'no'))
+opts.Add(BoolOption('warn', 'Show warnings?', 'no'))
+opts.Add(BoolOption('fast', 'Fast?', 'no'))
+opts.Add(BoolOption('static', 'Prevent dynamic linking?', 'no'))
+
+opts.Add(BoolOption('gui', 'Build the GUI programs?', 'yes'))
+opts.Add('QTDIR', 'Where is QT installed', '/usr/share/qt3')
+opts.Add('QT_LIB', 'QT library to use', 'qt-mt')
+
+opts.Add('prepend', 'What to prepend to executable names', 'xmipp')
+opts.Add(BoolOption('quiet', 'Hide command line?', 'yes'))
+
+opts.Add(BoolOption('tiff', 'Build the Tiff programs?', 'yes'))
+opts.Add('TIFF_INCLUDE', 'TIFF headers dir', '/usr/include')
+opts.Add('TIFF_LIBDIR', 'TIFF libraries dir', '/usr/lib')
+
+opts.Add(BoolOption('mpi', 'Build the MPI programs?', 'yes'))
+opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
+opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
+opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
+opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
+opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
+opts.Add('MPI_LIB', 'MPI library', 'mpich')
+
+opts.Add(BoolOption('swig', 'Build the Xmipp pythonization?', 'no'))
+opts.Add('SWIG', 'SWIG compiler', 'swig')
+
+opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
+
+opts.Add(BoolOption('matlab', 'Build the Matlab bindings?', 'no'))
+opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
+
+opts.Update(env)
+
+# generate help for options
+Help(opts.GenerateHelpText(env, sort=cmp))
+
+# FIXME Hack, for several flags in command-line
+env['CCFLAGS'] = Split(env['CCFLAGS'])
+env['CXXFLAGS'] = Split(env['CXXFLAGS'])
+
+# These defaults are needed for both the custom tests and the compilation
+env.SetDefault(LIBS = '')
+env.SetDefault(LIBPATH = '')
+env.SetDefault(CPPPATH = '')
+
+# This is required for both modes
+env['STATIC_FLAG'] = '-static'
+
+if (ARGUMENTS['mode'] == 'configure'):
+    # --- This is the configure mode
+
+    # Custom tests
+    def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx):
+        context.Message('Checking for MPI ... ')
+
+        lastLIBS = context.env['LIBS']
+        lastLIBPATH = context.env['LIBPATH']
+        lastCPPPATH = context.env['CPPPATH']
+        lastCC = context.env['CC']
+        lastCXX = context.env['CXX']
+
+        # TODO Replace() also here?
+        context.env.Append(LIBS = mpi_lib, LIBPATH = mpi_libpath,
+                           CPPPATH = mpi_inc)
+        context.env.Replace(LINK = context.env['MPI_LINKERFORPROGRAMS'])
+        context.env.Replace(CC = mpi_cc, CXX = mpi_cxx)
+
+        # Test only C++ mpi compiler
+        ret = context.TryLink('''
+        #include <mpi.h>
+        int main(int argc, char** argv)
+        {
+            MPI_Init(0, 0);
+            MPI_Finalize();
+            return 0;
+        }
+        ''', '.cpp')
+
+        # NOTE: We don't want MPI flags for not-mpi programs (always revert)
+        # env['mpi'] remains 1 so those can be enabled again when needed
+
+        context.env.Replace(LIBS = lastLIBS)
+        context.env.Replace(LIBPATH = lastLIBPATH)
+        context.env.Replace(CPPPATH = lastCPPPATH)
+        context.env.Replace(CC = lastCC)
+        context.env.Replace(CXX = lastCXX)
+
+        context.Result(ret)
+        return ret
+
+    # Configuration or cleaning
+    if env.GetOption('clean'):
+        print '* Cleaning  ...'
+        if 'distclean' in COMMAND_LINE_TARGETS:
+            print '* Deleting configuration ...'
+            Execute(Delete(base_dir))
+            Execute(Delete(env['prefix']))
+    else:
+        print '* Configuring  ...'
+        config_dir = base_dir + 'config.tests'
+        config_log = base_dir + 'config.log'
+
+    # static?
+    if int(env['static']):
+        env.Append(CCFLAGS = '$STATIC_FLAG')
+        env.Append(LINKFLAGS = '$STATIC_FLAG')
+
+    # osx?
+    if env['PLATFORM'] == 'darwin':
+        env.Append(CCFLAGS = '-m32')
+        env.Append(CXXFLAGS = '-m32')
+        env.Append(LINKFLAGS = '-m32')
+
+    # QT
+    if int(env['gui']):
+        if ARGUMENTS.get('QTDIR'):
+            print '* Trying user-supplied QTDIR: ' + ARGUMENTS.get('QTDIR')
+            env['QTDIR'] = ARGUMENTS.get('QTDIR')
+        else:
+            print '* Trying environment\'s $QTDIR'
+            if os.environ.has_key('QTDIR'):
+                env['QTDIR'] = os.environ['QTDIR']
+            else:
+                print '* QTDIR not in environment nor supplied' \
+                      ' (default value won\'t probably work)'
+                print '  Please set it correctly, i.e.: export ' \
+                      'QTDIR=/path/to/qt'
+                print '  or specify one directly in command line: '\
+                      'QTDIR=/path/to/qt'
+                print '* Trying default value: ' + env['QTDIR']
+
+            # Create a new environment with Qt tool enabled to see if it works
+            envQT = env.Copy()
+            envQT.Tool('qt')
+
+            # FIXME Copy() does not work well (adds twice the library, 'qt' ...)
+            envQT.Replace(QT_LIB = env['QT_LIB'])
+            envQT.Replace(LINK = env['LINKERFORPROGRAMS'])
+
+            confQT = Configure(envQT, {}, config_dir, config_log)
+
+            if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h',
+                                             'c++', 'QApplication qapp(0,0);',
+                                             0):
+                print '* Did not find QT. Disabling ...'
+                env['gui'] = 0
+
+            envQT = confQT.Finish()
+
+    # Non-GUI configuration environment
+    conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
+
+    # TIFF
+    if int(env['tiff']):
+        # Temporarily add Tiff headers/libraries
+        lastLIBPATH = env['LIBPATH']
+        lastCPPPATH = env['CPPPATH']
+        env.Append(LIBPATH = env['TIFF_LIBDIR'], CPPPATH = env['TIFF_INCLUDE'])
+
+        if not conf.CheckLibWithHeader('tiff', 'tiff.h', 'c',
+                                       'TIFFGetVersion();', 0):
+            print '* Did not find TIFF library. Disabling ...'
+            env['tiff'] = 0
+
+        # Restore previous conditions
+        env.Replace(LIBPATH = lastLIBPATH)
+        env.Replace(CPPPATH = lastCPPPATH)
+
+    # MPI
+    if int(env['mpi']):
+        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
+                             env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
+            print '* Did not find MPI library. Disabling ...'
+            env['mpi'] = 0
+
+    # MATLAB
+    if int(env['matlab']):
+	print 'Checking for Matlab ... ',
+	if not os.path.exists(env['MATLAB_DIR'] + '/bin/matlab'):
+	    print 'no'
+	    print '* Did not find Matlab. Disabling ...'
+            env['matlab'] = 0
+	else:
+	    print 'yes'
+	     
+    # FFTW
+    #sorry about this but I do not know how to do it inside scons
+    #create configuration file for fftw
+    print "* Configuring FFTW ... "
+    os.system("cd external/fftw-3.1.2;./configure");
+
+    env = conf.Finish()
+    opts.Save('options.cache', env)
+    
+elif (ARGUMENTS['mode'] == 'compile'):
+    # --- This is the compilation mode
+    
+    
+    # add separator to prepend (not shown in help)
+    env['prepend'] = env['prepend'] + '_'
+
+    # debug?
+    if int(env['debug']):
+        env.Append(CXXFLAGS = ['-g'])
+        env.Append(CXXFLAGS = ['-pg'])
+        env.Append(LINKFLAGS = ['-pg'])
+    else:
+        # "safe" optimization
+        env.Append(CXXFLAGS = ['-O2'])
+        env.Append(LINKFLAGS = ['-s'])
+
+    # Add threads
+    env.Append(LINKFLAGS = ['-pthread'])
+    env.Append(CXXFLAGS = ['-pthread'])
+
+    # warnings?
+    if int(env['warn']):
+        env.Append(CXXFLAGS = ['-Wall'])
+    else:
+        env.Append(CXXFLAGS = ['-w'])
+        # TODO suppress linker warnings too... what's the flag?
+        # env.Append(LINKFLAGS = ['-Wl,???'])
+
+    # fast?
+    # COSS' work. I dont like this. Classic debug vs release (asolano) 
+    if int(env['fast']):
+        env.Append(CXXFLAGS = ['-O3', '-fomit-frame-pointer', '-ffast-math',
+                   '-finline-functions', '-funroll-loops'])
+
+    # verbosity (for $SCONS_VERSION < 0.96.2 option has no effect)
+    if int(env['quiet']):
+        env['CCCOMSTR'] = 'Compiling $SOURCE'
+        env['CXXCOMSTR'] = 'Compiling $SOURCE'
+        env['SHCXXCOMSTR'] = 'Compiling $SOURCE'
+        env['SHCCCOMSTR'] = 'Compiling $SOURCE'
+        env['LINKCOMSTR'] = 'Linking $SOURCE'
+        env['ARCOMSTR'] = 'Archiving $TARGET'
+        env['SHLINKCOMSTR'] = 'Linking $TARGET'
+        env['RANLIBCOMSTR'] = 'Indexing $TARGET'
+        env['QT_UICCOMSTR'] = 'UICing $SOURCE'
+        env['QT_MOCFROMHCOMSTR'] = 'MOCing header $SOURCE'
+        env['QT_MOCFROMCXXCOMSTR'] = 'MOCing source $SOURCE'
+        env['TARCOMSTR'] = 'Archiving $TARGET'
+        env['INSTALLSTR'] = 'Installing $TARGET'
+
+    # SWIG
+    if int(env['swig']):
+        import distutils.sysconfig
+        SWIGScanner = SCons.Scanner.ClassicCPP(
+            "SWIGScan",
+            ".i",
+            "CPPPATH",
+            '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
+        )
+        env.Prepend(SCANNERS=[SWIGScanner])
+        env.Append(SWIGFLAGS=["-python","-c++"])
+        env.Append(SWIGCPPPATH=[distutils.sysconfig.get_python_inc()]);
+
+    Export('env')
+    env.SConscript('SConscript')
+
+elif (ARGUMENTS['mode'] == 'docs'):
+    action = env.Action("doxygen")
+    env.Execute(action)
+
+# TODO: make specific modes for generation of dist
+
+# distribution
+""" FIXME Testing, not ready for production
+env['DISTTAR_FORMAT'] = 'bz2'
+env.Append(DISTTAR_EXCLUDEEXTS = ['.o', '.os', '.so', '.a', '.dll', '.cc',
+    '.cache', '.pyc', '.cvsignore', '.dblite', '.log', '.bz2'],
+DISTTAR_EXCLUDEDIRS = ['CVS', '.svn', '.sconf_temp', 'dist']
+)
+disttar = env.DistTar(os.path.join(base_dir, 'Xmipp-1.1'), [env.Dir('#')])
+env.Alias('dist', disttar)
+"""
+

@@ -1,0 +1,11 @@
+# XMIPP_STAR_1 * 
+# 
+data_noname
+loop_
+ _image
+ _CTFModel
+ _CTF_Defocus_U
+ _count
+ _classificationData
+ _ref3d
+ 000001@pythoninterface/proj_ctf_1.stk  CTFs/10.ctfparam  -100.000000         10  ' 1.000000     2.000000     3.000000 '  -1

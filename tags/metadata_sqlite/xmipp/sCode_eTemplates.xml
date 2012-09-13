@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.comment" deleted="false" description="author name" enabled="true" id="org.eclipse.cdt.ui.text.templates.comment.author" name="author">author ${user}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="catch block" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.catch" name="catch">catch (${Exception} e) 
+{
+	${cursor}
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="print to standard error" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.fprintf" name="cerr">std::cerr &lt;&lt; ${cursor} &lt;&lt;std::endl;</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="class declaration" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.class" name="class">class ${name} 
+{
+public:
+	${cursor}
+
+private:
+};</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="default multiline comment" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.comment" name="comment">
+/*
+ * author ${user}
+ *
+ * To change this generated comment edit the template variable "comment":
+ * Window &gt; Preferences &gt; C/C++ &gt; Editor &gt; Templates.
+ */
+</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="print to standard output" enabled="true" name="cout">std::cout &lt;&lt; ${cursor} &lt;&lt;std::endl;</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="do while statement" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.do" name="do">do 
+{
+	${line_selection}${cursor}
+} 
+while (${condition});</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="else block" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.else" name="else">else 
+{
+	${cursor}
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="else if block" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.elseif" name="elseif">else if (${condition}) 
+{
+	${cursor}
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="for loop" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.for" name="for">for (${var} = 0; ${var} &lt; ${max}; ${var}++) 
+{
+	${line_selection}${cursor}
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="for loop with temporary variable" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.for" name="for">for (int ${var} = 0; ${var} &lt; ${max}; ${var}++) 
+{
+	${line_selection}${cursor}
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="if statement" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.if" name="if">if (${condition}) 
+{
+	${line_selection}${cursor}
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="if else statement" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.ifelse" name="ifelse">if (${condition}) 
+{
+	${cursor}
+} 
+else 
+{
+	
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="main method" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.main" name="main">int main(int argc, char **argv) 
+{
+	${cursor}
+}
+</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="namespace declaration" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.namespace" name="namespace">namespace ${name} 
+{
+
+${cursor}
+
+}  // namespace ${name}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="create new object" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.new" name="new">${type} ${name} = new ${type}(${arguments});</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="XMIPP ERROR" enabled="true" name="REPORT_ERROR">REPORT_ERROR(${var},"${cursor}");</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="switch case statement" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.switch" name="switch">switch (${key}) 
+{
+	case ${value}:
+		${cursor}
+		break;
+	default:
+		break;
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="try catch block" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.try" name="try">try 
+{
+	${line_selection}${cursor}
+} 
+catch (${Exception} e) 
+{
+}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="using a namespace" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.using" name="using">using namespace ${name};
+</template></templates>
