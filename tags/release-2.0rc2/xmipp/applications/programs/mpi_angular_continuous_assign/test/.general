@@ -1,8 +1,0 @@
-file = 
-points = XXX  138rmat = ascii
-interleaving = field
-field = locations
-structure = 3-vector
-type = float
-
-end
