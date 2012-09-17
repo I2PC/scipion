@@ -11,7 +11,7 @@
 # {eval} expandCommentRun()
 
 #-----------------------------------------------------------------------------
-# {section} Extracting parameters
+# {section} Screening parameters
 #-----------------------------------------------------------------------------
 # {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images
 """ Stack file or metadata file with a selection file"""
