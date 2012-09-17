@@ -93,11 +93,11 @@ have a handedness and may fall either face-up or face-down on the grid.
 Note that when you want to use this <ML2D> run for later <RCT> 
 reconstruction, you can <NOT include the mirror> transformation here.
 """
-DoMirror = False
+DoMirror = True
 
 # {condition}(not DoMlf) Use the fast version of this algorithm?
 """
-For detaisl see:
+For details see:
 <See Scheres et al., Bioinformatics, 21 (Suppl. 2), ii243-ii244>
 [http://dx.doi.org/10.1093/bioinformatics/bti1140]
 """
