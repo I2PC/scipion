@@ -298,12 +298,14 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             break;
         case DT_UShort:
             castMode = CW_CONVERT;
+            /* no break */
         case DT_Short:
             wDType = DT_Short;
             header->mode = 1;
             break;
         case DT_SChar:
             castMode = CW_CONVERT;
+            /* no break */
         case DT_UChar:
             wDType = DT_UChar;
             header->mode = 0;
@@ -431,6 +433,13 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             SET_HEADER_ORIGIN(xOrigin, MDL_ORIGIN_X, MDL_SAMPLINGRATE_X);
             SET_HEADER_ORIGIN(yOrigin, MDL_ORIGIN_Y, MDL_SAMPLINGRATE_Y);
             SET_HEADER_ORIGIN(zOrigin, MDL_ORIGIN_Z, MDL_SAMPLINGRATE_Z);
+
+#define SET_HEADER_CELL_DIM(field, label1, dimSize)  MDMainHeader.getValueOrDefault(label1, aux, 0.);\
+              header->field = (float) (aux * dimSize)
+
+            SET_HEADER_CELL_DIM(a, MDL_SAMPLINGRATE_X, Xdim);
+            SET_HEADER_CELL_DIM(b, MDL_SAMPLINGRATE_Y, Ydim);
+            SET_HEADER_CELL_DIM(c, MDL_SAMPLINGRATE_Z, Zdim);
         }
         else
             header->nxStart = header->xOrigin = header->nyStart = \
