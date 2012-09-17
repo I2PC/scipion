@@ -1,0 +1,24 @@
+####C++
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.os
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+####Java
+
+####Python
+*.pyc
+
+####Eclipse
+.project
+.cproject
+.pydevproject
