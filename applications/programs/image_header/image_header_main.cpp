@@ -86,6 +86,8 @@ protected:
         {
             operation = HEADER_SAMPLINGRATE;
             sampling = getDoubleParam("--sampling_rate");
+            if (sampling < 0)
+                verbose = 0;
         }
         else
         {
@@ -102,6 +104,9 @@ protected:
 
     void show()
     {
+        if (verbose == 0)
+            return;
+
         String msg;
         switch (operation)
         {
@@ -187,6 +192,8 @@ protected:
             else
             {
                 img.MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
+                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_Y, sampling);
+                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_Z, sampling);
                 img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
                 std::cout << "New sampling rate (Angstrom) = " << sampling << std::endl;
             }
