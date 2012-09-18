@@ -14,7 +14,7 @@ import xmipp
 from glob import glob
 from os.path import exists, join
 
-from protocol_particle_pick import getPosFiles, validateMicrographs,\
+from protocol_particle_pick import getPosFiles, validateMicrographs, \
     launchParticlePickingGUI, PM_READONLY, PM_SUPERVISED, countParticles
 
 # Create a GUI automatically from a selfile of micrographs
@@ -36,7 +36,12 @@ class ProtParticlePickingSupervised(XmippProtocol):
         return {
                 'training': join('%(WorkingDir)s', '%(family)s_training.txt'),
                      'pos': join('%(WorkingDir)s', '%(micrograph)s.pos'),
-                    'mask': join('%(WorkingDir)s', '%(family)s_mask.xmp')
+                    'mask': join('%(WorkingDir)s', '%(family)s_mask.xmp'),
+                    'pca': join('%(WorkingDir)s', '%(family)s_pca_model.stk'),
+                    'maxmin': join('%(WorkingDir)s', '%(family)s_maxmin_dataset.txt'),
+                    'svm': join('%(WorkingDir)s', '%(family)s_svm.txt'),
+                    'svm2': join('%(WorkingDir)s', '%(family)s_svm2.txt'),
+                    'average': join('%(WorkingDir)s', '%(family)s_particle_avg.xmp')
                 }
 
     def defineSteps(self):
@@ -44,7 +49,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
         filesToImport += getPosFiles(self.PrevRun)
         self.insertImportOfFiles(filesToImport)
         modeWithArgs = PM_SUPERVISED + " %(NumberOfThreads)d %(Fast)s %(InCore)s" % self.ParamsDict
-        self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
+        self.insertStep('launchParticlePickingGUI', execution_mode=SqliteDb.EXEC_ALWAYS,
                            InputMicrographs=self.micrographsMd, WorkingDir=self.WorkingDir,
                            PickingMode=modeWithArgs, Memory=self.Memory, Family=self.Family)       
         

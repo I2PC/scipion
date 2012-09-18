@@ -41,7 +41,6 @@ public abstract class ParticlePicker
 	protected String command;
 	protected Family family;
 	
-	
 	public int getSize()
 	{
 		return family.getSize();
@@ -253,6 +252,7 @@ public abstract class ParticlePicker
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
 				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
 			md.write(file);
@@ -275,7 +275,7 @@ public abstract class ParticlePicker
 		}
 
 		Family family;
-		int rgb, size;
+		int rgb, size, templates;
 		FamilyState state;
 		String name;
 		try
@@ -287,12 +287,13 @@ public abstract class ParticlePicker
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
+				templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
-				if (state == FamilyState.Supervised && this instanceof SupervisedParticlePicker)
-					if (!new File(((SupervisedParticlePicker) this).getTrainingFile(name)).exists())
-						throw new IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode", state));
-				family = new Family(name, new Color(rgb), size, state, this);
+//				if (state == FamilyState.Supervised && this instanceof SupervisedParticlePicker)
+//					if (!new File(((SupervisedParticlePicker) this).getTrainingFile(name)).exists())
+//						throw new IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode", state));
+				family = new Family(name, new Color(rgb), size, state, templates, this);
 				families.add(family);
 			}
 			if (families.size() == 0)
@@ -458,9 +459,5 @@ public abstract class ParticlePicker
 			throw new IllegalArgumentException(e);
 		}
 	}
-
-
-
-	
 
 }

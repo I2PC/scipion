@@ -118,7 +118,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				micrograph.addManualParticle(active);
 			}
 			else
+			{
 				moveActiveParticle(x, y);
+				if(frame.templatesdialog != null)
+					frame.loadTemplates();
+			}
 			frame.setChanged(true);
 			repaint();
 		}

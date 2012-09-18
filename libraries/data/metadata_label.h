@@ -271,6 +271,7 @@ enum MDLabel
 
     MDL_COLOR, ///< Color for particle picking
     MDL_PICKING_FAMILY, ///< Family for particle picking
+    MDL_PICKING_FAMILY_TEMPLATES, ///< Number of templates for the family
     MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
@@ -1001,6 +1002,7 @@ private:
         MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "pickingMicrographFamilyState");
         MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_FAMILY_STATE, "micrograph_family_state");//3.0
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
+        MDL::addLabel(MDL_PICKING_FAMILY_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
         MDL::addLabelAlias(MDL_PMAX, "sumP");

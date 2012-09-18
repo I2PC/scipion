@@ -33,6 +33,7 @@
 #include <reconstruction/transform_geometry.h>
 #include <classification/naive_bayes.h>
 #include <classification/svm_classifier.h>
+#include <classification/knn_classifier.h>
 
 #include <data/xmipp_image.h>
 #include <data/polar.h>
@@ -73,6 +74,8 @@ public:
     PCAMahalanobisAnalyzer       pcaAnalyzer;
     SVMClassifier                classifier;
     SVMClassifier                classifier2;
+//    KNN                          *classifier;
+//    KNN                          *classifier2;
     FileName                     fn_micrograph;
     int                          piece_xsize;
     int                          particle_size;
@@ -93,6 +96,7 @@ public:
     MultidimArray<double>        dataSet1;
     MultidimArray<double>        classLabel;
     MultidimArray<double>        classLabel1;
+    MultidimArray<double>        labelSet;
     MultidimArray<double>        maxA;
     MultidimArray<double>        minA;
 
@@ -129,7 +133,7 @@ public:
 
     /// Extract the particles from the Micrograph
     void extractParticle(const int x, const int y, MultidimArray<double> &filter,
-                         MultidimArray<double> &particleImage);
+                         MultidimArray<double> &particleImage,bool normal);
 
     //Extract the particles from the Micrograph
     void extractNonParticle(std::vector<Particle2> &negativePosition);
@@ -165,7 +169,7 @@ public:
     void add2Dataset();
 
     /// Normalize the dataset
-    void normalizeDataset(int a,int b);
+    void normalizeDataset(int a,int b,const FileName &fn);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;
@@ -184,6 +188,9 @@ public:
 
     /// Load the feature vectors of the particles
     void loadAutoVectors(const FileName &fn);
+
+    /// Load min and max of training set
+    void loadMinMaxTrainset(const FileName &fn_root);
 
     /// Load training set
     void loadTrainingSet(const FileName &fn_root);

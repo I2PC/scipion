@@ -564,16 +564,9 @@ INRIASources = Glob('external/inria', '*.cc', [])
 # Condor
 CondorSources = Glob('external/condor', '*.cpp', [])
 
-# sqliteExt
-SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
-
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
-
-AddLibrary('XmippSqliteExt', 'external',
-   SqliteExtSources,
-   ['#'],[''],['-lm'],'lib','.so')
 
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
@@ -828,7 +821,8 @@ AddXmippProgram('transform_range_adjust')
 AddXmippProgram('transform_symmetrize', ['XmippRecons'])
 AddXmippProgram('transform_threshold', ['XmippRecons'])
 AddXmippProgram('transform_window')
-#AddXmippProgram('test_program', ['XmippRecons'])
+#AddXmippProgram('vahid', ['XmippClassif'])
+#AddXmippProgram('fourier_projection', ['XmippRecons'])
 #AddXmippProgram('test_sql')
 #AddXmippProgram('template_threads')
 if not int(env['release']):
@@ -946,7 +940,6 @@ if int(env['gtest']):
      AddXmippCTest('test_multidim')
      AddXmippCTest('test_polar')
      AddXmippCTest('test_sampling')
-     AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests

@@ -47,6 +47,21 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,in
     corr_num = corrNum;
     num_correlation=filter_num+((filter_num-corr_num)*corr_num);
     NPCA = pcaNum;
+    classifier.setParameters(8.0,0.125);
+    classifier2.setParameters(1.0,0.25);
+    //classifier SVMClassifier(8.0,0.125);//SVMClassifier(32.0,0.0625);//SVMClassifier(8.0,0.125);//new SVMClassifier(8.0,0.0625);
+    //classifier2 SVMClassifier(1.0,0.25);//SVMClassifier(8.0,0.0625);//SVMClassifier(16.0,0.125);//SVMClassifier(2.0,1.0);//new SVMClassifier(2.0,0.0625);
+    //(32,0.0625)(1,0.25) 84;
+    //(4,0.125)(2,0.125) 84.47;
+    //(16,0.0625) (4,0.0625) 83.51;
+    //(8.0,0.125) (4,0.0625) 84.75;
+    //(8.0,0.125) (1,0.25)   84.84;
+    //    labelSet.resize(1,1,1,2);
+    //    DIRECT_A1D_ELEM(labelSet,0)=1;
+    //    DIRECT_A1D_ELEM(labelSet,1)=2;
+
+    //    classifier=new KNN(20);
+    //    classifier2=new KNN(40);
 }
 
 //Generate filter bank from the micrograph image
@@ -154,7 +169,11 @@ void  AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,Multi
 }
 
 AutoParticlePicking2::~AutoParticlePicking2()
-{}
+{
+//	delete classifier;
+//	delete classifier2;
+	std::cerr<<"We Are Here in des auto!";
+}
 
 void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,MultidimArray<double> &features)
 {
@@ -162,6 +181,7 @@ void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,Multid
     features.resize(1,1,1,12);
     DIRECT_A1D_ELEM(features,0)=inputVec.computeAvg();
     DIRECT_A1D_ELEM(features,1)=inputVec.computeStddev();
+    normalize_OldXmipp(inputVec);
     inputVec.sort(sortedVec);
     int step=floor(XSIZE(sortedVec)*0.1);
     for (int i=2;i<12;i++)
@@ -205,7 +225,7 @@ void AutoParticlePicking2::buildInvariant(MultidimArray<double> &invariantChanne
     for (int j=0;j<filter_num;++j)
     {
         filter.aliasImageInStack(micrographStack(),j);
-        extractParticle(x,y,filter,pieceImage);
+        extractParticle(x,y,filter,pieceImage,true);
         mIpolar.aliasImageInStack(Ipolar,j);
         convert2Polar(pieceImage,mIpolar);
     }
@@ -249,12 +269,20 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,int numClassifier)
     {
         classifier.SVMTrain(dataSet,classLabel);
         classifier.SaveModel(fnModel);
+        //classifier->~SVMClassifier();
+        //delete classifier;
+        //        //        std::cerr<<"SVM1 Has Been Trained!!!! "<<fnModel.c_str()<<std::endl;
+        //        classifier->train(dataSet,classLabel,labelSet);
+        //        classifier->saveModel(fnModel);
         std::cerr<<"SVM1 Has Been Trained!!!! "<<fnModel.c_str()<<std::endl;
     }
     else
     {
+        //        classifier2->train(dataSet1,classLabel1,labelSet);
+        //        classifier2->saveModel(fnModel);
         classifier2.SVMTrain(dataSet1,classLabel1);
         classifier2.SaveModel(fnModel);
+        //delete classifier2;
         std::cerr<<"SVM2 Has Been Trained!!!! "<<fnModel.c_str()<<std::endl;
     }
 }
@@ -279,7 +307,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
         int i=positionArray[k].y;
         fh_training<<j*(1.0/scaleRate)<<" "<<i*(1.0/scaleRate)<<" "<<positionArray[k].cost<<std::endl;
         buildInvariant(IpolarCorr,j,i);
-        extractParticle(j,i,microImage(),pieceImage);
+        extractParticle(j,i,microImage(),pieceImage,false);
         //        gaussianFilter(pieceImage,4.0/particle_size);
         //        dilatedVec.initZeros(pieceImage);
         //        dilatedVec.setXmippOrigin();
@@ -302,7 +330,12 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
         double max=featVec.computeMax();
         double min=featVec.computeMin();
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-        DIRECT_A1D_ELEM(featVec,i)=-1+((2)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+        {
+            //            double max=DIRECT_A1D_ELEM(maxA,i);
+            //            double min=DIRECT_A1D_ELEM(minA,i);
+            //td::cerr<<max<<" "<<min<<std::endl;
+            DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+        }
         label=classifier.predict(featVec,score);
         if (label==1)
         {
@@ -497,14 +530,16 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
         int y = (__m->coord(i).Y)*scaleRate;
 
         buildInvariant(IpolarCorr,x,y);
-        extractParticle(x,y,microImage(),pieceImage);
+        extractParticle(x,y,microImage(),pieceImage,false);
         II() = pieceImage;
         II.write(fnPositiveParticles,ALL_IMAGES,true,WRITE_APPEND);
+        II.write("AllPostivesParticles.xmp",ALL_IMAGES,true,WRITE_APPEND);
         pieceImage.setXmippOrigin();
         particleAvg.setXmippOrigin();
         particleAvg=particleAvg+pieceImage;
         II() = IpolarCorr;
         II.write(fnPositiveInvariatn,ALL_IMAGES,true,WRITE_APPEND);
+        II.write("AllPostivesInvariant.xmp",ALL_IMAGES,true,WRITE_APPEND);
     }
     particleAvg/=num_part;
 }
@@ -530,20 +565,22 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
     DIRECT_A1D_ELEM(randomValues,i)=randNum();
     randomValues.indexSort(randomIndexes);
     int numNegatives;
-    if (num_part<50)
-        numNegatives=50;
+    if (num_part<40)
+        numNegatives=40;
     else
         numNegatives=num_part*2;
     for (int i=0;i<numNegatives;i++)
     {
-        int x = negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)].x;
-        int y = negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)].y;
-        extractParticle(x,y,microImage(),pieceImage);
+        int x = negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)-1].x;
+        int y = negativeSamples[DIRECT_A1D_ELEM(randomIndexes,i)-1].y;
+        extractParticle(x,y,microImage(),pieceImage,false);
         II() = pieceImage;
         II.write(fnNegativeParticles,ALL_IMAGES,true,WRITE_APPEND);
+        II.write("AllNegativeParticles.xmp",ALL_IMAGES,true,WRITE_APPEND);
         buildInvariant(IpolarCorr,x,y);
         II() = IpolarCorr;
         II.write(fnNegativeInvariatn,ALL_IMAGES,true,WRITE_APPEND);
+        II.write("AllNegativeInvariant.xmp",ALL_IMAGES,true,WRITE_APPEND);
     }
 }
 
@@ -554,7 +591,7 @@ void AutoParticlePicking2::extractInvariant(const FileName &fnInvariantFeat,cons
 }
 
 void AutoParticlePicking2::extractParticle(const int x, const int y, MultidimArray<double> &filter,
-        MultidimArray<double> &particleImage)
+        MultidimArray<double> &particleImage,bool normal)
 {
     int startX, startY, endX, endY;
     startX=x-particle_radius;
@@ -563,7 +600,8 @@ void AutoParticlePicking2::extractParticle(const int x, const int y, MultidimArr
     endY=y+particle_radius;
 
     filter.window(particleImage,startY,startX,endY,endX);
-    normalize_OldXmipp(particleImage);
+    if (normal)
+        normalize_OldXmipp(particleImage);
 }
 
 void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePosition)
@@ -571,16 +609,21 @@ void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePo
     int endX, endY;
     int gridStep=particle_radius/2;
     Particle2 negSample;
-    endX=XSIZE(microImage())-particle_radius;
-    endY=YSIZE(microImage())-particle_radius;
+    endX=XSIZE(microImage())-particle_radius*2;
+    endY=YSIZE(microImage())-particle_radius*2;
+    MultidimArray<double> pieceImage;
+    Image<double> II;
 
-    for (int i=particle_radius;i<endY;i=i+gridStep)
-        for (int j=particle_radius;j<endX;j=j+gridStep)
+    for (int i=particle_radius*2;i<endY;i=i+gridStep)
+        for (int j=particle_radius*2;j<endX;j=j+gridStep)
         {
             negSample.y=i;
             negSample.x=j;
             if (checkDist(negSample))
             {
+                extractParticle(j,i,microImage(),pieceImage,false);
+                II()=pieceImage;
+                II.write("negatives.xmp",ALL_IMAGES,true,WRITE_APPEND);
                 negativePosition.push_back(negSample);
             }
         }
@@ -611,19 +654,43 @@ void AutoParticlePicking2::loadTrainingSet(const FileName &fn)
     fhTrain.close();
 }
 
+void AutoParticlePicking2::loadMinMaxTrainset(const FileName &fn)
+{
+    int size;
+    FileName fnMaxMinVal=fn+"_maxmin_dataset.txt";
+    std::ifstream fh;
+    fh.open(fnMaxMinVal.c_str());
+    fh>>size;
+    minA.resize(1,1,1,size);
+    maxA.resize(1,1,1,size);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(maxA)
+    {
+        fh>>DIRECT_A1D_ELEM(maxA,i);
+        fh>>DIRECT_A1D_ELEM(minA,i);
+    }
+    fh.close();
+}
+
 void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 {
-    std::ofstream fhTrain;
+    std::ofstream fhTrain,fhtest;
     fhTrain.open(fn.c_str());
+    fhtest.open("vahid.txt");
     fhTrain<<YSIZE(dataSet)<<" "<<XSIZE(dataSet)<<std::endl;
     for (int i=0;i<YSIZE(dataSet);i++)
     {
         fhTrain<<classLabel(i)<<std::endl;
+        fhtest<<classLabel(i)<<" ";
         for (int j=0;j<XSIZE(dataSet);j++)
+        {
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+            fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+        }
         fhTrain<<std::endl;
+        fhtest<<std::endl;
     }
     fhTrain.close();
+    fhtest.close();
 }
 
 void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
@@ -729,8 +796,12 @@ void AutoParticlePicking2::saveRejectedVectors(const FileName &fn)
     fhVectors.close();
 }
 
+
 void AutoParticlePicking2::generateTrainSet()
 {
+    std::ofstream a1,b1;
+    a1.open("dataset1.txt");
+    b1.open("dataset2.txt");
     int cnt=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classLabel)
     if (DIRECT_A1D_ELEM(classLabel,i)==1 || DIRECT_A1D_ELEM(classLabel,i)==3)
@@ -739,28 +810,65 @@ void AutoParticlePicking2::generateTrainSet()
     classLabel1.resize(1,1,1,cnt);
     cnt=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classLabel)
-    if (DIRECT_A1D_ELEM(classLabel,i)==1 || DIRECT_A1D_ELEM(classLabel,i)==3)
     {
+        if (DIRECT_A1D_ELEM(classLabel,i)==1 || DIRECT_A1D_ELEM(classLabel,i)==3)
+        {
+            if (DIRECT_A1D_ELEM(classLabel,i)==3)
+            {
+                DIRECT_A1D_ELEM(classLabel1,cnt)=2;
+                DIRECT_A1D_ELEM(classLabel,i)=2;
+            }
+            else
+                DIRECT_A1D_ELEM(classLabel1,cnt)=1;
+            b1<<DIRECT_A1D_ELEM(classLabel1,cnt)<<" ";
+            for (int j=0;j<XSIZE(dataSet);j++)
+            {
+                DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
+                b1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet1,cnt,j)<<" ";
+            }
+            b1<<std::endl;
+            cnt++;
+        }
+        a1<<DIRECT_A1D_ELEM(classLabel,i)<<" ";
         for (int j=0;j<XSIZE(dataSet);j++)
-        {
-            DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
-        }
-        if (DIRECT_A1D_ELEM(classLabel,i)==3)
-        {
-            DIRECT_A1D_ELEM(classLabel1,cnt)=2;
-            //DIRECT_A1D_ELEM(classLabel,i)=2;
-        }
-        else
-            DIRECT_A1D_ELEM(classLabel1,cnt)=1;
-
-        cnt++;
+            a1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+        a1<<std::endl;
     }
+    a1.close();
+    b1.close();
 }
 
-void AutoParticlePicking2::normalizeDataset(int a,int b)
+void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
 {
+    //    FileName fnMaxMinVal=fn+"_maxmin_dataset.txt";
+    //    std::ofstream fh;
     double max,min;
-    MultidimArray<double> maxA,minA;
+    //    maxA.resize(1,1,1,XSIZE(dataSet));
+    //    minA.resize(1,1,1,XSIZE(dataSet));
+    //    fh.open(fnMaxMinVal.c_str());
+    //    fh<<XSIZE(dataSet)<<std::endl;
+    //    for (int i=0;i<XSIZE(dataSet);i++)
+    //    {
+    //        max=min=DIRECT_A2D_ELEM(dataSet,0,i);
+    //        for (int j=1;j<YSIZE(dataSet);j++)
+    //        {
+    //            if (max<DIRECT_A2D_ELEM(dataSet,j,i))
+    //                max=DIRECT_A2D_ELEM(dataSet,j,i);
+    //            if (min>DIRECT_A2D_ELEM(dataSet,j,i))
+    //                min=DIRECT_A2D_ELEM(dataSet,j,i);
+    //        }
+    //        DIRECT_A1D_ELEM(maxA,i)=max;
+    //        DIRECT_A1D_ELEM(minA,i)=min;
+    //        fh<<max<<" "<<min<<" ";
+    //    }
+    //    for (int i=0;i<XSIZE(dataSet);i++)
+    //    {
+    //        max=DIRECT_A1D_ELEM(maxA,i);
+    //        min=DIRECT_A1D_ELEM(minA,i);
+    //        for (int j=0;j<YSIZE(dataSet);j++)
+    //            DIRECT_A2D_ELEM(dataSet,j,i)=a+((b-a)*((DIRECT_A2D_ELEM(dataSet,j,i)-min)/(max-min)));
+    //    }
+    //    fh.close();
     maxA.resize(1,1,1,YSIZE(dataSet));
     minA.resize(1,1,1,YSIZE(dataSet));
     for (int i=0;i<YSIZE(dataSet);i++)
@@ -907,7 +1015,6 @@ void ProgMicrographAutomaticPicking2::run()
     FileName fnAutoVectors= fn_model + "_auto_vector.txt";
     FileName fnRejectedVectors= fn_model + "_rejected_vector.txt";
     FileName fnAvgModel= fn_model + "_particle_avg.xmp";
-    FileName fnMaxVal= fn_model + "_max_val";
     AutoParticlePicking2 *autoPicking = new AutoParticlePicking2(fn_micrograph,&m,size,filter_num,NPCA,corr_num);
 
     if (mode !="train")
@@ -989,9 +1096,12 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->particleAvg=II();
         // Read the SVM model
         autoPicking->classifier.LoadModel(fnSVMModel);
+        //        autoPicking->classifier->loadModel(fnSVMModel);
+        //        autoPicking->loadMinMaxTrainset(fn_model);
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
+            //            autoPicking->classifier2->loadModel(fnSVMModel2);
             int num=autoPicking->automaticallySelectParticles(true);
         }
         else
@@ -1019,10 +1129,13 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->add2Dataset();
             fnRejectedVectors.deleteFile();
         }
-        autoPicking->normalizeDataset(-1,1);
         autoPicking->saveTrainingSet(fnVector);
+        autoPicking->normalizeDataset(0,1,fn_model);
         autoPicking->generateTrainSet();
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);
+        //        autoPicking->classifier->~SVMClassifier();
+        //        autoPicking->classifier2->~SVMClassifier();
     }
+    delete autoPicking;
 }
