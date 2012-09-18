@@ -86,8 +86,6 @@ protected:
         {
             operation = HEADER_SAMPLINGRATE;
             sampling = getDoubleParam("--sampling_rate");
-            if (sampling < 0)
-                verbose = 0;
         }
         else
         {
