@@ -75,8 +75,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	private JFormattedTextField thresholdtf;
 	private Family family;
 	private ImageWindow iw;
-	private JMenuItem templatesmi;
-	TemplatesJDialog templatesdialog;
+	//private JMenuItem templatesmi;
+	//TemplatesJDialog templatesdialog;
 
 	@Override
 	public TrainingPicker getParticlePicker() {
@@ -158,11 +158,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
 		
-		templatesmi = new JMenuItem("Templates");
+		//templatesmi = new JMenuItem("Templates");
 		editfamiliesmi = new JMenuItem("Edit Families",
 				XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
-		windowmn.add(templatesmi);
+		//windowmn.add(templatesmi);
 		helpmn.add(hcontentsmi);
 
 		// Setting menu item listeners
@@ -175,38 +175,38 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 			}
 		});
-		templatesmi.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				loadTemplates();
-				
-			}
-		});
+//		templatesmi.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				loadTemplates();
+//				
+//			}
+//		});
 
 	}
 	
-	public void loadTemplates()
-	{
-		try
-		{
-			if (templatesdialog == null)
-				templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-			else
-			{
-
-				templatesdialog.loadTemplates(true);
-				templatesdialog.setVisible(true);
-			}
-		}
-		catch (Exception ex)
-		{
-			JOptionPane.showMessageDialog(this, ex.getMessage());
-			if (templatesdialog != null)
-				templatesdialog.close();
-			templatesdialog = null;
-		}
-	}
+//	public void loadTemplates()
+//	{
+//		try
+//		{
+//			if (templatesdialog == null)
+//				templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+//			else
+//			{
+//
+//				templatesdialog.loadTemplates(true);
+//				templatesdialog.setVisible(true);
+//			}
+//		}
+//		catch (Exception ex)
+//		{
+//			JOptionPane.showMessageDialog(this, ex.getMessage());
+//			if (templatesdialog != null)
+//				templatesdialog.close();
+//			templatesdialog = null;
+//		}
+//	}
 
 	private void initFamilyPane() {
 		familypn = new JPanel();
@@ -601,8 +601,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	public void updateMicrographsModel() {
 		super.updateMicrographsModel();
-		if(templatesdialog != null)
-			loadTemplates();
+//		if(templatesdialog != null)
+//			loadTemplates();
 		micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		manuallb.setText(Integer.toString(ppicker
@@ -802,17 +802,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		
 	}
 
-	public void updateTemplates() {
-		ppicker.updateFamilyTemplates(family);
-		
-		
-	}
+//	public void updateTemplates() {
+//		ppicker.updateFamilyTemplates(family);
+//		
+//		
+//	}
 	
 	public void updateSize(int size)
 	{
 		super.updateSize(size);
-		if(templatesdialog != null)
-			loadTemplates();
+//		if(templatesdialog != null)
+//			loadTemplates();
 	}
 }
 
