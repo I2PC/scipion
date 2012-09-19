@@ -1,0 +1,55 @@
+#### C++
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.os
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+#### Java
+*.class
+
+#### Python
+*.pyc
+
+#### Eclipse
+.project
+.cproject
+.pydevproject
+
+#### Xmipp
+# Config files
+.xmipp*
+
+# Qt files
+moc_*.cc
+
+# External libs
+external/*
+applications/programs/*
+!applications/programs/*.cpp
+applications/tests/*
+!applications/tests/*.cpp
+
+# Java compilation
+java/lib/Xmipp*.jar
+java/build/
+java/lib/ij.jar
+java/src/xmipp/jni/MDLabel.java
+java/src/xmipp/jni/XmippError.java
+
+# Other
+bin/
+build/
+lib/
+gmon.out
+*~
+

@@ -910,6 +910,18 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     o << "Dimensions     : " << ndim << " x " << zdim << " x " << ydim << " x " << xdim;
     o << "  ((N)Objects x (Z)Slices x (Y)Rows x (X)Columns)" << std::endl;
 
+    double sampling;
+    I.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
+    if (sampling > 0)
+    {
+        o << "Sampling rate  : " << std::endl;
+        o << "                 X-rate (Angstrom/pixel) = " << sampling << std::endl;
+        I.MDMainHeader.getValue(MDL_SAMPLINGRATE_Y, sampling);
+        o << "                 Y-rate (Angstrom/pixel) = " << sampling << std::endl;
+        I.MDMainHeader.getValue(MDL_SAMPLINGRATE_Z, sampling);
+        o << "                 Z-rate (Angstrom/pixel) = " << sampling << std::endl;
+    }
+
     std::stringstream oGeo;
 
     if (I.individualContainsLabel(MDL_ANGLE_ROT))

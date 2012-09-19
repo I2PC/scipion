@@ -28,7 +28,7 @@
 #include <data/metadata.h>
 #include <data/xmipp_program.h>
 
-typedef enum { HEADER_PRINT, HEADER_EXTRACT, HEADER_ASSIGN, HEADER_RESET } HeaderOperation;
+typedef enum { HEADER_PRINT, HEADER_EXTRACT, HEADER_ASSIGN, HEADER_RESET, HEADER_SAMPLINGRATE } HeaderOperation;
 
 class ProgHeader: public XmippMetadataProgram
 {
@@ -37,6 +37,7 @@ protected:
     bool round_shifts;
     MDRow row;
     ApplyGeoParams params;
+    double sampling;
 
     void defineParams()
     {
@@ -56,6 +57,9 @@ protected:
         addParamsLine("       alias -a;");
         addParamsLine("or --reset      : Reset the geometrical transformations in image file headers.");
         addParamsLine("       alias -r;");
+        addParamsLine("or --sampling_rate <Ts=-1>  : Change the sampling rate (in Angstrom units) in the image file header.");
+        addParamsLine("          : If no value is passed then current value in header is print.");
+        addParamsLine("       alias -s;");
         addParamsLine("   [--round_shifts]    :Round shifts to integers");
         addExampleLine("Print the header of the images in metadata: ", false);
         addExampleLine("xmipp_image_header -i images.sel");
@@ -78,6 +82,11 @@ protected:
             operation = HEADER_ASSIGN;
         else if (checkParam("--reset"))
             operation = HEADER_RESET;
+        else if (checkParam("--sampling_rate"))
+        {
+            operation = HEADER_SAMPLINGRATE;
+            sampling = getDoubleParam("--sampling_rate");
+        }
         else
         {
             operation = HEADER_PRINT;
@@ -93,6 +102,9 @@ protected:
 
     void show()
     {
+        if (verbose == 0)
+            return;
+
         String msg;
         switch (operation)
         {
@@ -107,6 +119,12 @@ protected:
             break;
         case HEADER_RESET:
             msg = "Reseting geometrical transformations from headers...";
+            break;
+        case HEADER_SAMPLINGRATE:
+            if (sampling > 0)
+                msg = "Setting sampling rate into headers...";
+            else
+                msg = "Showing sampling rate from headers...";
             break;
         }
         std::cout << msg << std::endl << "Input: " << fn_in << std::endl;
@@ -161,6 +179,23 @@ protected:
             img.read(fnImg, _HEADER_ALL);
             img.initGeometry();
             img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
+            break;
+        case HEADER_SAMPLINGRATE:
+            img.read(fnImg, _HEADER_ALL);
+            if (sampling < 0)
+            {
+                img.MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
+                std::cout << sampling << std::endl;
+            }
+            else
+            {
+                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
+                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_Y, sampling);
+                img.MDMainHeader.setValue(MDL_SAMPLINGRATE_Z, sampling);
+                img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
+                std::cout << "New sampling rate (Angstrom) = " << sampling << std::endl;
+            }
+
             break;
         }
     }
