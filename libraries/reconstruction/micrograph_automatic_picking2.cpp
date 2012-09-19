@@ -518,6 +518,10 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
 
     MultidimArray<double> IpolarCorr;
     MultidimArray<double>  pieceImage;
+    AlignmentAux aux;
+    CorrelationAux aux2;
+    RotationalCorrelationAux aux3;
+    Matrix2D<double> M;
     int num_part = __m->ParticleNo();
     Image<double> II;
     FileName fnPositiveInvariatn=fnInvariantFeat+"_Positive.stk";
@@ -536,7 +540,13 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
         II.write("AllPostivesParticles.xmp",ALL_IMAGES,true,WRITE_APPEND);
         pieceImage.setXmippOrigin();
         particleAvg.setXmippOrigin();
-        particleAvg=particleAvg+pieceImage;
+        if (particleAvg.computeMax() ==0)
+        	particleAvg=particleAvg+pieceImage;
+        else
+        {
+        	alignImages(particleAvg,pieceImage,M,true,aux,aux2,aux3);
+        	particleAvg=particleAvg+pieceImage;
+        }
         II() = IpolarCorr;
         II.write(fnPositiveInvariatn,ALL_IMAGES,true,WRITE_APPEND);
         II.write("AllPostivesInvariant.xmp",ALL_IMAGES,true,WRITE_APPEND);
