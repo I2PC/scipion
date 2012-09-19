@@ -763,7 +763,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
 {
     XMIPP_JAVA_TRY
     {
-    	std::cerr<<"I am Vahid";
     	std::cerr<<"We Are At First!";
         Matrix2D<double> M;
         MultidimArray<double>* I;
