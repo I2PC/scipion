@@ -275,7 +275,7 @@ public abstract class ParticlePicker
 		}
 
 		Family family;
-		int rgb, size, templates;
+		int rgb, size, templates=1;
 		FamilyState state;
 		String name;
 		try

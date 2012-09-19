@@ -136,8 +136,7 @@ public class EditFamiliesJDialog extends JDialog {
 
 	class FamiliesTableModel extends AbstractTableModel {
 
-//		private String[] columns = new String[] { "Name", "Color", "Size",
-//				"Templates" };
+		private String[] columns = new String[] { "Name", "Color", "Size" };//, "Templates" };
 		private TrainingPickerJFrame frame;
 
 		public FamiliesTableModel(TrainingPickerJFrame frame) {

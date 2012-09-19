@@ -120,8 +120,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			else
 			{
 				moveActiveParticle(x, y);
-				if(frame.templatesdialog != null)
-					frame.loadTemplates();
+//				if(frame.templatesdialog != null)
+//					frame.loadTemplates();
 			}
 			frame.setChanged(true);
 			repaint();
