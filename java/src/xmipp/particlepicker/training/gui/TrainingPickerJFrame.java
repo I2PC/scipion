@@ -209,6 +209,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 //	}
 
 	private void initFamilyPane() {
+		
 		familypn = new JPanel();
 		GridLayout gl = new GridLayout(2, 1);
 		familypn.setLayout(gl);

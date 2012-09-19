@@ -54,7 +54,7 @@ import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.Shape;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
-import xmipp.particlepicker.training.gui.TemplatesJDialog;
+//import xmipp.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -98,7 +98,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	private JMenuItem exitmi;
 
-	public TemplatesJDialog templatesdialog;
+//	public TemplatesJDialog templatesdialog;
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
