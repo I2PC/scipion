@@ -29,7 +29,6 @@ package xmipp.viewer.models;
 import java.awt.Image;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -104,12 +103,10 @@ public class RotSpectraGallery extends MetadataGallery {
 
 		// Load vectors.
 		DataInputStream in = new DataInputStream(new FileInputStream(filename));
-		byte[] buffer = new byte[4]; // This is for reading little endian 
+
 		for (int i = 0; i < nvectors; i++) {
 			for (int j = 0; j < size; j++) {
-				in.read(buffer);
-				int a = (buffer[0] & 0xFF) | (buffer[1] & 0xFF) << 8 | (buffer[2] & 0xFF) << 16 | (buffer[3] & 0xFF) << 24;
-				vectors[i][j] = Float.intBitsToFloat(a);
+				vectors[i][j] = in.readFloat();
 			}
 		}
 		in.close();
