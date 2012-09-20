@@ -122,7 +122,7 @@ def wizardBrowseCTF(self, var):
     fnMicrographs=os.path.join(path,"tilted_pairs.xmd")
     if os.path.exists(fnMicrographs):
         MD.read(fnMicrographs)
-    wizardHelperSetDownsampling(self, var, None, None, downsample, md=MD)
+    wizardHelperSetDownsampling(self, var, '.', None, downsample, md=MD)
     
 #This wizard is specific for screen_micrographs protocol
 #it will help to select downsampling, and frequencies cutoffs
