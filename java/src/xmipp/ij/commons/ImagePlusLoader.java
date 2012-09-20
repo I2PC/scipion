@@ -146,7 +146,8 @@ public class ImagePlusLoader
 	{
 		try
 		{
-			
+			if (ig == null)
+				return false;
 			return ig.isVolume();
 
 		}

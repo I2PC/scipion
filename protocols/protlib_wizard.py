@@ -29,7 +29,7 @@
 import os
 from glob import glob
 from subprocess import Popen
-from os.path import join, relpath, exists
+from os.path import join, relpath, exists, splitext, split
 import Tkinter as tk
 import tkFont
 from xmipp import MetaData
@@ -115,14 +115,14 @@ def wizardBrowseCTF(self, var):
     downsample = self.getVarValue('DownsampleFactor')
     prot = self.project.getProtocolFromRunName(importRunName)
     path = prot.WorkingDir
-    MD=MetaData()
-    fnMicrographs=os.path.join(path,"micrographs.xmd")
-    if os.path.exists(fnMicrographs):
-        MD.read(fnMicrographs)
-    fnMicrographs=os.path.join(path,"tilted_pairs.xmd")
-    if os.path.exists(fnMicrographs):
-        MD.read(fnMicrographs)
-    wizardHelperSetDownsampling(self, var, '.', None, downsample, md=MD)
+    md = MetaData()
+    fnMicrographs = join(path, "micrographs.xmd")
+    if exists(fnMicrographs):
+        md.read(fnMicrographs)
+    fnMicrographs = join(path, "tilted_pairs.xmd")
+    if exists(fnMicrographs):
+        md.read(fnMicrographs)
+    wizardHelperSetDownsampling(self, var, '.', None, downsample, md=md)
     
 #This wizard is specific for screen_micrographs protocol
 #it will help to select downsampling, and frequencies cutoffs
@@ -141,7 +141,7 @@ def wizardBrowseCTF2(self, var):
             if md.size():
                 image = md.getValue(MDL_MICROGRAPH, md.firstObject())     
                 if image:         
-                    filterExt = "*" + os.path.splitext(image)[1]
+                    filterExt = "*" + splitext(image)[1]
                     value = self.getVarValue('DownsampleFactor')
                     results = wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs, md)
                     if results:
@@ -170,7 +170,7 @@ def wizardChooseFamily(self, var):
         return
     familyList = []
     for file in glob(join(extractionDir, "*_sorted.sel")):
-        familyList.append(os.path.split(file)[1].replace("_sorted.sel",""))
+        familyList.append(split(file)[1].replace("_sorted.sel",""))
     if len(familyList)==1:
         var.setTkValue(familyList[0])
     else:
@@ -180,7 +180,7 @@ def wizardHelperFilter(self, browser, title, **args):
     extra = {'previewLabel': 'Image', 'computingMessage': 'Applying filter...'}
     extra.update(args)
     selfile = self.getVarValue('InSelFile')
-    path, filename = os.path.split(selfile)
+    path, filename = split(selfile)
     if not exists(selfile):
         showWarning("Warning", "The input selfile is not a valid file", parent=self.master)
         return
@@ -240,10 +240,10 @@ def wizardMicrographExtension(self,var):
     for ext in imgExt:
         for root, dirnames, filenames in os.walk(currentDir):
             if len(fnmatch.filter(filenames, '*'+ext))>0:
-                possibleLocations.append(os.path.join(root, '*'+ext))
+                possibleLocations.append(join(root, '*'+ext))
     selected=wizardSelectFromList(self.master, self.frame, possibleLocations)
     if selected is not None:
-        dir,ext=os.path.split(selected)
+        dir,ext = split(selected)
         self.setVarValue('DirMicrographs',dir)
         self.setVarValue('ExtMicrographs',ext)
                 
@@ -366,9 +366,9 @@ def wizardChooseFamilyToExtractSupervised(self, var):
 #This wizard is specific for cl2d protocol
 def wizardCL2DNumberOfClasses(self, var):
     fnSel = self.getVarValue('InSelFile')
-    if os.path.exists(fnSel):
-        MD=MetaData(fnSel)
-        self.setVarValue("NumberOfReferences", int(round(MD.size()/200.0)))
+    if exists(fnSel):
+        md = MetaData(fnSel)
+        self.setVarValue("NumberOfReferences", int(round(md.size()/200.0)))
 
 #Select micrograph extension
 def wizardHelperSetRadii(self, inputVarName, outerVarName, innerVarName=None, ):
