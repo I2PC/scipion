@@ -417,6 +417,7 @@ void ProgMLF2D::produceSideInfo()
             //Read ctf from disk
             mdCTF.getValue(MDL_CTF_MODEL, ctfname, id);
             ctf.read(ctfname);
+            std::cerr << "DEBUG_JM: ctf_file: " << ctfname << std::endl;
 
             double astigmCTFFactor = fabs( (ctf.DeltafV - ctf.DeltafU) / (std::max(ctf.DeltafV, ctf.DeltafU)) );
             // we discard the CTF with a normalized diference between deltaU and deltaV of 10%

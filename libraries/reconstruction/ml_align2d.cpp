@@ -1956,7 +1956,8 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
     local_model.sumw_allrefs2 = 0.;
 
 
-#define ASSIGN(var) if (var > SIGNIFICANT_WEIGHT_LOW) local_model.var = var
+//#define ASSIGN(var) if (var > SIGNIFICANT_WEIGHT_LOW) local_model.var = var
+#define ASSIGN(var) local_model.var = var
 
     ASSIGN(dim);
     ASSIGN(sumfracweight);
@@ -2065,6 +2066,11 @@ void ProgML2D::maximization()
         correctScaleAverage();
 	
 	LOG("      ProgML2D::maximization END");
+
+//    static int times = 0;
+//    if (times > 1)
+//      exit(1);
+//    ++times;
 }//close function maximizationBlocks
 
 void ProgML2D::correctScaleAverage()
@@ -2248,7 +2254,12 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             MDref.setValue(MDL_ENABLED, 1, objId);
             MDref.setValue(MDL_WEIGHT, model.WsumMref[refno].weight(), objId);
             if (do_mirror)
+            {
+
+              //std::cerr << "DEBUG_JM: refno: " << refno << "  mirror: " << (*ptrMirror)[refno] << std::endl;
+
                 MDref.setValue(MDL_MIRRORFRAC, (*ptrMirror)[refno], objId);
+            }
             if (write_conv)
                 MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, objId);
             if (write_norm)
