@@ -150,6 +150,9 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     _yDim = header->ny;
     _zDim = header->nz;
 
+    if (!filename.contains(":")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
+        isStack = ((header->ispg == 1) && (header->nsymbt == 0));
+
     if(isStack)
     {
         if ( select_img > _zDim ) // When isStack slices in Z are supposed to be a stack of images
@@ -463,6 +466,9 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
 
     size_t imgStart = 0;
 
+    if (!filename.contains(":mrcs")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
+        isStack = true;
+
     if (isStack)
     {
         imgStart = IMG_INDEX(select_img);
@@ -480,7 +486,11 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         }
         else if (Ndim > replaceNsize)
             header->nz = Ndim;
+
+        header->ispg = 0;
     }
+    else // To set in the header that the file is a volume not a stack
+        header->ispg = 1;
 
     //locking
     struct flock fl;
