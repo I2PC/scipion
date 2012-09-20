@@ -23,11 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/micrograph_automatic_picking.h>
+#include <reconstruction/micrograph_automatic_picking2.h>
 
 int main(int argc, char **argv)
 {
-	ProgMicrographAutomaticPicking program;
+	ProgMicrographAutomaticPicking2 program;
     program.read(argc, argv);
     return program.tryRun();
 }
