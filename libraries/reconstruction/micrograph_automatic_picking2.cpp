@@ -1036,8 +1036,7 @@ void ProgMicrographAutomaticPicking2::defineParams()
 
 void ProgMicrographAutomaticPicking2::run()
 {
-	std::cerr<<"We are at the run"<<std::endl;
-    Micrograph m;
+	Micrograph m;
     m.open_micrograph(fn_micrograph);
 
     FileName fnFilterBank=fn_root+"_filterbank.stk";
@@ -1056,8 +1055,7 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode !="train")
     {
-    	std::cerr<<"We are at the train"<<std::endl;
-        // Resize the Micrograph
+    	// Resize the Micrograph
         selfScaleToSizeFourier((m.Ydim)*autoPicking->scaleRate,(m.Xdim)*autoPicking->scaleRate,autoPicking->microImage(), 2);
         // Generating the filter bank
         filterBankGenerator(autoPicking->microImage(), fnFilterBank, filter_num);
@@ -1124,8 +1122,7 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode == "try" || mode == "autoselect")
     {
-    	std::cerr<<"We are at the automatic"<<std::endl;
-        autoPicking->micrographStack.read(fnFilterBank, DATA);
+    	autoPicking->micrographStack.read(fnFilterBank, DATA);
         // Read the PCA Model
         Image<double> II;
         II.read(fnPCAModel);
