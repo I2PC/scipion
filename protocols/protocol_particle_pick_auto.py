@@ -50,7 +50,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         for family in self.familiesForAuto:
             filesToImport.append(self.PrevRun.getFilename('training', family=family))
             filesToImport.append(self.PrevRun.getFilename('pca', family=family))
-            filesToImport.append(self.PrevRun.getFilename('maxmin', family=family))
+#            filesToImport.append(self.PrevRun.getFilename('maxmin', family=family))
             filesToImport.append(self.PrevRun.getFilename('svm', family=family))
             filesToImport.append(self.PrevRun.getFilename('svm2', family=family))
             filesToImport.append(self.PrevRun.getFilename('average', family=family))

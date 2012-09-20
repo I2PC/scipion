@@ -541,9 +541,13 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
         pieceImage.setXmippOrigin();
         particleAvg.setXmippOrigin();
         if (particleAvg.computeMax() ==0)
+        {
+        	std::cerr<<"First Image";
         	particleAvg=particleAvg+pieceImage;
+        }
         else
         {
+        	std::cerr<<"Aligning Images";
         	alignImages(particleAvg,pieceImage,M,true,aux,aux2,aux3);
         	particleAvg=particleAvg+pieceImage;
         }
@@ -935,6 +939,8 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
 
 void AutoParticlePicking2::applyConvolution()
 {
+	MultidimArray<double> tempConvolve;
+	MultidimArray<double> avgRotated;
     MultidimArray<int> mask;
     CorrelationAux aux;
     FourierFilter filter;
@@ -948,11 +954,31 @@ void AutoParticlePicking2::applyConvolution()
     particleAvg.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
     correlation_matrix(microImage(),particleAvg,convolveRes,aux);
     filter.raised_w = 0.02;
-    filter.FilterShape = RAISED_COSINE;
-    filter.FilterBand = BANDPASS;
-    filter.w1 =1.0/double(particle_size);
-    filter.w2 =1.0/(double(particle_size)/3);
-    filter.applyMaskSpace(convolveRes);
+	filter.FilterShape = RAISED_COSINE;
+	filter.FilterBand = BANDPASS;
+	filter.w1 =1.0/double(particle_size);
+	filter.w2 =1.0/(double(particle_size)/3);
+	filter.do_generate_3dmask=true;
+	filter.applyMaskSpace(convolveRes);
+	//filter.generateMask(particleAvg);
+	filter.applyMaskSpace(convolveRes);
+	Image<double> II;
+	int cnt=1;
+	for (int deg=2;deg<360;deg+=2)
+    {
+		rotate(LINEAR,avgRotated,particleAvg,double(deg));
+//		II()=avgRotated;
+//		II.write("rotatedImages.stk",cnt,true,WRITE_APPEND);
+		correlation_matrix(microImage(),avgRotated,tempConvolve,aux);
+		filter.applyMaskSpace(tempConvolve);
+		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
+		if (DIRECT_A2D_ELEM(tempConvolve,i,j)>DIRECT_A2D_ELEM(convolveRes,i,j))
+			DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
+//	    II()=tempConvolve;
+//	    II.write("ConvolvedImages.stk",cnt,true,WRITE_APPEND);
+    }
+    II()=convolveRes;
+    II.write("ConvolvedImages.xmp");
 }
 
 // ==========================================================================
@@ -1010,6 +1036,7 @@ void ProgMicrographAutomaticPicking2::defineParams()
 
 void ProgMicrographAutomaticPicking2::run()
 {
+	std::cerr<<"We are at the run"<<std::endl;
     Micrograph m;
     m.open_micrograph(fn_micrograph);
 
@@ -1029,6 +1056,7 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode !="train")
     {
+    	std::cerr<<"We are at the train"<<std::endl;
         // Resize the Micrograph
         selfScaleToSizeFourier((m.Ydim)*autoPicking->scaleRate,(m.Xdim)*autoPicking->scaleRate,autoPicking->microImage(), 2);
         // Generating the filter bank
@@ -1096,6 +1124,7 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode == "try" || mode == "autoselect")
     {
+    	std::cerr<<"We are at the automatic"<<std::endl;
         autoPicking->micrographStack.read(fnFilterBank, DATA);
         // Read the PCA Model
         Image<double> II;

@@ -480,7 +480,6 @@ void FourierFilter::applyMaskFourierSpace(const MultidimArray<double> &v, Multid
     }
     else
     {
-        std::cout << "Aqui3" << std::endl;
         w.resizeNoCopy(3);
         for (int k=0; k<ZSIZE(V); k++)
         {
