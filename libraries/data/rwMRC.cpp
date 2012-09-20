@@ -151,7 +151,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     _zDim = header->nz;
 
     if (!filename.contains(":")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
-        isStack = ((header->ispg == 1) && (header->nsymbt == 0));
+        isStack = ((header->ispg == 0) && (header->nsymbt == 0));
 
     if(isStack)
     {
@@ -466,7 +466,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
 
     size_t imgStart = 0;
 
-    if (!filename.contains(":mrcs")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
+    if (filename.contains(":mrcs")) // If format is forced through ":" flag suffix, then ignore the stack behavior in header
         isStack = true;
 
     if (isStack)
