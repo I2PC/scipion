@@ -588,12 +588,13 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
   */
 void ImageBase::closeFile(ImageFHandler* hFile) const
 {
-    FileName ext_name;
+    FileName ext_name, fileName;
     FILE* fimg, *fhed;
     TIFF* tif;
 
     if (hFile != NULL)
     {
+        fileName = hFile->fileName;
         ext_name = hFile->ext_name;
         fimg = hFile->fimg;
         fhed = hFile->fhed;
@@ -601,6 +602,7 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
     }
     else
     {
+        fileName = filename;
         ext_name = filename.getFileFormat();
         fimg = this->fimg;
         fhed = this->fhed;
@@ -608,7 +610,15 @@ void ImageBase::closeFile(ImageFHandler* hFile) const
     }
 
     if (ext_name.contains("tif"))
+    {
         TIFFClose(tif);
+        /* Since when creating a TIFF file without adding an image the file is 8 bytes
+         * and this same file returns an error when trying to open again, we are going
+         * to suppose that under 8 bytes this is empty.
+        */
+        if (fileName.getFileSize() < 9)
+            filename.deleteFile();
+    }
     else
     {
         if (fclose(fimg) != 0 )
@@ -831,8 +841,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         err = writeSPIDER(select_img,isStack,mode);
     else if (ext_name.contains("stk"))
         err = writeSPIDER(select_img,true,mode);
-//    else if (ext_name.contains("mrcs"))
-//        writeMRC(select_img,true,mode,imParam,castMode);
+    //    else if (ext_name.contains("mrcs"))
+    //        writeMRC(select_img,true,mode,imParam,castMode);
     else if (ext_name.contains("mrc")||ext_name.contains("map")||ext_name.contains("mrcs"))
         writeMRC(select_img,isStack,mode,imParam,castMode);
     else if (ext_name.contains("img") || ext_name.contains("hed"))
