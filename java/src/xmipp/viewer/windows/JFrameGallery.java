@@ -252,6 +252,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		return proceed;
 	}
 
+	/** Set the title of the main windows depending on the gallery */
+	private void setGalleryTitle() {
+		setTitle(gallery.getTitle());
+	}
+	
 	/**
 	 * Function to create general GUI base on a TableModel. It will use helper
 	 * functions to create different components of the GUI
@@ -264,7 +269,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 		isUpdating = true; // avoid handling some changes events
 
-		setTitle(gallery.getTitle());
+		setGalleryTitle();
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 		addWindowListener(new WindowAdapter() {
@@ -647,6 +652,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		dlgSave.setMdFilename(data.getMdFilename());
 		if (dlgSave.showDialog()) {
 			saveMd();
+			gallery.updateFilename(dlgSave.getMdFilename());
+			setGalleryTitle();
 			if (dlgSave.doSaveImages())
 				data.md.writeImages(dlgSave.getOutput(),
 						dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
@@ -732,7 +739,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			if (dlgSave != null)
 				dlgSave.setInitialValues();
 			saved = false;
-			setTitle(gallery.getTitle());
+			setGalleryTitle();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -937,6 +944,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			public void setSelectedItem(Object item) {
 				if (proceedWithChanges()) {
 					data.selectBlock((String) item);
+
+//					if (data.isVolumeMode())//Select first volume when changing block
+//						data.selectVolume(data.volumes[0]);
 					reloadTableData();
 				}
 			}
