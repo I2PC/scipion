@@ -256,8 +256,10 @@ void Euler::toMatrix(Matrix2D<double>& M) const
     angles = vectorR3(x,y,z);
 
     if ( !_parityEven )
+    {
+    	std::cerr << "DEBUG_ROB, _parityEven:" << _parityEven << std::endl;
         angles *= -1.0;
-
+    }
     double ci = cos(XX(angles));
     double cj = cos(YY(angles));
     double ch = cos(ZZ(angles));
