@@ -226,15 +226,23 @@ public:
 
 protected:
 
-	bool  _frameStatic  :
-		1; // relative or static rotations
-	bool  _initialRepeated :
-		1; // init axis repeated as last
-	bool  _parityEven  :
-		1; // "parity of axis permutation"
-	Axis  _initialAxis  :
-		2; // First axis of rotation
+bool  _frameStatic  :
+    1; // relative or static rotations
+bool  _initialRepeated :
+    1; // init axis repeated as last
+bool  _parityEven  :
+    1; // "parity of axis permutation"
+Axis  _initialAxis  :
+    2; // First axis of rotation
 };
+#define eulerOrderNumber 24
+Euler::eulerOrder eulerOrderList[eulerOrderNumber] =
+    {
+        Euler::XYZ , Euler::XZY , Euler::YZX , Euler::YXZ , Euler::ZXY , Euler::ZYX ,
+        Euler::XZX , Euler::XYX , Euler::YXY , Euler::YZY , Euler::ZYZ , Euler::ZXZ ,
+        Euler::XYZr, Euler::XZYr, Euler::YZXr, Euler::YXZr, Euler::ZXYr, Euler::ZYXr,
+        Euler::XZXr, Euler::XYXr, Euler::YXYr, Euler::YZYr, Euler::ZYZr, Euler::ZXZr
+    };
 
-//@}
+    //@}
 #endif
