@@ -11,9 +11,6 @@ protected:
     virtual void SetUp()
     {
         chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
-        alpha  =  0.123;
-        beta   = -1.234;
-        gamma  =  2.345;
     }
 
     Matrix1D<double> origin,xaxis,yaxis,zaxis;
@@ -220,53 +217,35 @@ TEST_F( EulerTest, eulerAnglesXZY)
 }
 
 
-/////////////Euler Rotate plus extract
 TEST_F( EulerTest, extract)
 {
     Matrix2D<double> m(4,4);
     Matrix2D<double> M(4,4);
     Euler _euler;
-    //    double _z = -3.05844 ;
-    //    double _y =  -0.233197;
-    //    double _x =  0.369401;
-
-    //cout << "special angles" << endl;
 
     for (int _e = 0; _e < eulerOrderNumber; _e++)
-//    double __z=-0.523599;
-//    double __y =  -0.;
-//    double __x =  0.;
-
     {
         Euler::eulerOrder order = eulerOrderList[_e];//Euler::XYX;
-order = Euler::XYZr;
         //Euler::eulerOrder order = Euler::XYZ;
         _euler.init();
         _euler.setOrder(order);
-    	std::cerr << "DEBUG_ROB, reorder:" << std::hex << order << std::dec << std::endl;
         for (int _z = 0; _z < 360; _z += 30)
             for (int _y = 0; _y < 360; _y += 30)
                 for (int _x = 0; _x < 360; _x += 30)
                 {
-                	std::cerr << "DEBUG_ROB, x:" << _x << std::endl;
-                	std::cerr << "DEBUG_ROB, y:" << _y << std::endl;
-                	std::cerr << "DEBUG_ROB, z:" << _z << std::endl;
-                	std::cerr << "DEBUG_ROB, order:" << std::hex << order << std::dec << std::endl;
-
                 	//NOTE that x,y and z order should match the order "order" but since
                 	//_z,_y and _x are never used but here I do not bother to order them
                 	Euler angles(DEG2RAD(_x),DEG2RAD( _y), DEG2RAD(_z), order);
                     angles.toMatrix(m);
                     _euler.extract(m);
                     _euler.toMatrix(M);
-                    std::cerr << "DEBUG_ROB, m:" << m << std::endl;
-                    std::cerr << "DEBUG_ROB, M:" << M << std::endl;
+                    //std::cerr << "DEBUG_ROB, m:" << m << std::endl;
+                    //std::cerr << "DEBUG_ROB, M:" << M << std::endl;
                     FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
                     {
                         EXPECT_TRUE( fabs(M(i,j)-m(i,j))< XMIPP_EQUAL_ACCURACY);
                     }
                 }
-
     }
 }
 

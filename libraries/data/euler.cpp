@@ -159,7 +159,6 @@ void Euler::extract(const Matrix2D<double> &M)
     angleOrder(i,j,k);
     if (_initialRepeated)
     {
-    	std::cerr << "_initialRepeated" <<std::endl;
         // Extract the first angle, x.
         //
 
@@ -196,7 +195,6 @@ void Euler::extract(const Matrix2D<double> &M)
         //
         // Extract the first angle, x.
         //
-    	std::cerr << "ONNONONONON" <<std::endl;
         //        x = Math<T>::atan2 (M[j][k], M[k][k]);
         x = atan2 (dMij(M,j,k),dMij(M,k,k));
         //
@@ -208,13 +206,13 @@ void Euler::extract(const Matrix2D<double> &M)
         Matrix1D <double> r;
         r.initZeros(3);
         VEC_ELEM(r,i) = (_parityEven? -x: x);
-        std::cerr << "DEBUG_ROB, r:" << r << std::endl;
+        //std::cerr << "DEBUG_ROB, r:" << r << std::endl;
         Matrix2D<double> N(4,4);
         N.initIdentity();
         eulerRotate(N,r);
-        std::cerr << "DEBUG_ROB, N:" << N << std::endl;
+        //std::cerr << "DEBUG_ROB, N:" << N << std::endl;
         N = N * M;
-        std::cerr << "DEBUG_ROB, NN:" << N << std::endl;
+        //std::cerr << "DEBUG_ROB, NN:" << N << std::endl;
 
         //
         // Extract the other two angles, y and z, from N.
@@ -253,22 +251,17 @@ void Euler::toMatrix(Matrix2D<double>& M) const
     angleOrder(i,j,k);
 
     Matrix1D<double> angles;
-    //    if ( _frameStatic )
-    //    {
-    //        std::cerr << "toMatrix_0.1, vec3:" << vec3 << std::endl;
-    //        angles = *this->vec3;
-    //    }
-    //    else
-    //    {
-    //        std::cerr << "toMatrix_0.1, x,y,x:" << x << " " << y << " " << z << std::endl;
-    //        angles = vectorR3(z,y,x);
-    //    }
-    angles = vectorR3(x,y,z);
+
+    if ( _frameStatic )
+        angles = vectorR3(x,y,z);
+    else
+        angles=vectorR3(z,y,x);
 
     if ( !_parityEven )
     {
         angles *= -1.0;
     }
+
     double ci = cos(XX(angles));
     double cj = cos(YY(angles));
     double ch = cos(ZZ(angles));
