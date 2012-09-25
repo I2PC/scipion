@@ -4,16 +4,13 @@
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
-class MatrixTest : public ::testing::Test
+class EulerTest : public ::testing::Test
 {
 protected:
     //init metadatas
     virtual void SetUp()
     {
         chdir(((String)(getXmippPath() + (String)"/resources/test")).c_str());
-        alpha  =  0.123;
-        beta   = -1.234;
-        gamma  =  2.345;
     }
 
     Matrix1D<double> origin,xaxis,yaxis,zaxis;
@@ -24,7 +21,7 @@ protected:
 
 
 ////////////////Ruler Rotate
-TEST_F( MatrixTest, eulerRotateX)
+TEST_F( EulerTest, eulerRotateX)
 {
     Matrix2D<double> M(4,4);
     Matrix2D<double> m(4,4);
@@ -53,7 +50,7 @@ TEST_F( MatrixTest, eulerRotateX)
     }
 }
 
-TEST_F( MatrixTest, eulerRotateY)
+TEST_F( EulerTest, eulerRotateY)
 {
     Matrix2D<double> M(4,4);
     Matrix2D<double> m(4,4);
@@ -83,7 +80,7 @@ TEST_F( MatrixTest, eulerRotateY)
     }
 }
 
-TEST_F( MatrixTest, eulerRotateZ)
+TEST_F( EulerTest, eulerRotateZ)
 {
     Matrix2D<double> M(4,4);
     Matrix2D<double> m(4,4);
@@ -113,7 +110,7 @@ TEST_F( MatrixTest, eulerRotateZ)
     }
 }
 
-TEST_F( MatrixTest, eulerRotateXYZ)
+TEST_F( EulerTest, eulerRotateXYZ)
 {
     Matrix2D<double> M(4,4);
     Matrix2D<double> m(4,4);
@@ -145,7 +142,7 @@ TEST_F( MatrixTest, eulerRotateXYZ)
 
 /////////////////euler Angles
 
-TEST_F( MatrixTest, eulerAnglesXYZ)
+TEST_F( EulerTest, eulerAnglesXYZ)
 {
     Matrix2D<double> M(4,4);
     M.initIdentity();
@@ -181,7 +178,7 @@ TEST_F( MatrixTest, eulerAnglesXYZ)
 
 }
 
-TEST_F( MatrixTest, eulerAnglesXZY)
+TEST_F( EulerTest, eulerAnglesXZY)
 {
     Matrix2D<double> M(4,4);
     M.initIdentity();
@@ -190,7 +187,7 @@ TEST_F( MatrixTest, eulerAnglesXZY)
     double _y =  -0.233197;
     double _x =  0.369401;
 
-    Euler angles(_z, _y, _x, Euler::XZY);
+    Euler angles(_x, _y, _z, Euler::XYZ);
     angles.toMatrix(M);
 
     m(0,0)=0.9073022;
@@ -219,39 +216,37 @@ TEST_F( MatrixTest, eulerAnglesXZY)
     }
 }
 
-/////////////Euler Rotate plus extract
-TEST_F( MatrixTest, extract)
+
+TEST_F( EulerTest, extract)
 {
     Matrix2D<double> m(4,4);
     Matrix2D<double> M(4,4);
     Euler _euler;
-//    double _z = -3.05844 ;
-//    double _y =  -0.233197;
-//    double _x =  0.369401;
 
-    //cout << "special angles" << endl;
-
-    for (int _z = 0; _z < 360; _z += 30)
-        for (int _y = 0; _y < 360; _y += 30)
-            for (int _x = 0; _x < 360; _x += 30)
-            {
-                Euler::eulerOrder order;
-                //make loop using enum
-                //order = Euler::XYZ;
-                order = Euler::XYX;
-                Euler angles(DEG2RAD(_z),DEG2RAD( _y), DEG2RAD(_x), order);
-                angles.toMatrix(m);
-
-                _euler.setOrder(order);
-                _euler.extract(m);
-                _euler.toMatrix(M);
-
-                //std::cerr << "DEBUG_ROB, M:" << M << std::endl;
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
+    for (int _e = 0; _e < eulerOrderNumber; _e++)
+    {
+        Euler::eulerOrder order = eulerOrderList[_e];//Euler::XYX;
+        //Euler::eulerOrder order = Euler::XYZ;
+        _euler.init();
+        _euler.setOrder(order);
+        for (int _z = 0; _z < 360; _z += 30)
+            for (int _y = 0; _y < 360; _y += 30)
+                for (int _x = 0; _x < 360; _x += 30)
                 {
-                    EXPECT_TRUE( fabs(M(i,j)-m(i,j))< XMIPP_EQUAL_ACCURACY);
+                	//NOTE that x,y and z order should match the order "order" but since
+                	//_z,_y and _x are never used but here I do not bother to order them
+                	Euler angles(DEG2RAD(_x),DEG2RAD( _y), DEG2RAD(_z), order);
+                    angles.toMatrix(m);
+                    _euler.extract(m);
+                    _euler.toMatrix(M);
+                    //std::cerr << "DEBUG_ROB, m:" << m << std::endl;
+                    //std::cerr << "DEBUG_ROB, M:" << M << std::endl;
+                    FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
+                    {
+                        EXPECT_TRUE( fabs(M(i,j)-m(i,j))< XMIPP_EQUAL_ACCURACY);
+                    }
                 }
-            }
+    }
 }
 
 ///TEST ALL CONVINATION
