@@ -105,6 +105,12 @@ public abstract class ImageGallery extends AbstractTableModel {
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
 		resizeCache();
 	}
+	
+	//Set filename
+	public void updateFilename(String filename){
+		this.filename = filename;
+		data.filename = filename;
+	}
 
 	// Load initial dimensions
 	protected abstract ImageDimension loadDimension() throws Exception;
