@@ -148,11 +148,6 @@ inline Euler::Euler( const Matrix2D<double> &M, typename Euler::eulerOrder p )
     extract(M);
 }
 
-//inline void Euler::extract(const Quat<T> &q)
-//{
-//    extract(q.toMatrix33());
-//}
-
 void Euler::extract(const Matrix2D<double> &M)
 {
     int i,j,k;
