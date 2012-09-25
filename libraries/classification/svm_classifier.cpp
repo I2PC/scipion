@@ -61,7 +61,7 @@ void SVMClassifier::setParameters(double c,double gamma)
     param.nu = 0.1;
     param.cache_size = 1000;
     param.C = c;//1;//64;
-    param.eps = 0.001;
+    param.eps = 0.000001;
     param.p = 0.1;
     param.shrinking = 1;
     param.probability = 1;
@@ -82,11 +82,10 @@ SVMClassifier::~SVMClassifier()
     {
     	std::cerr<<"we are about to del!!!"<<std::endl<<prob.l;
         for(int i=0;i<prob.l;i++)
-//            free(prob.x[i]);
             delete [] prob.x[i];
         delete [] prob.x;
     }
-    std::cerr<<"We are here in des clasiifier!";
+//    std::cerr<<"We are here in des clasiifier!";
     //    free(prob.x)
 }
 void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &label)

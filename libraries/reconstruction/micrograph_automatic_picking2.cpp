@@ -47,8 +47,8 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,in
     corr_num = corrNum;
     num_correlation=filter_num+((filter_num-corr_num)*corr_num);
     NPCA = pcaNum;
-    classifier.setParameters(8.0,0.125);
-    classifier2.setParameters(1.0,0.25);
+    classifier.setParameters(8.0,0.125);//(16,0.0625);//(8.0,0.125);//(4,0125);///(8.0,0.125);
+    classifier2.setParameters(1,0.25);//(1.0,0.25);//(8,0.125);//(1.0,1.0);//(1,0.25);//
     //classifier SVMClassifier(8.0,0.125);//SVMClassifier(32.0,0.0625);//SVMClassifier(8.0,0.125);//new SVMClassifier(8.0,0.0625);
     //classifier2 SVMClassifier(1.0,0.25);//SVMClassifier(8.0,0.0625);//SVMClassifier(16.0,0.125);//SVMClassifier(2.0,1.0);//new SVMClassifier(2.0,0.0625);
     //(32,0.0625)(1,0.25) 84;
@@ -172,7 +172,7 @@ AutoParticlePicking2::~AutoParticlePicking2()
 {
 //	delete classifier;
 //	delete classifier2;
-	std::cerr<<"We Are Here in des auto!";
+//	std::cerr<<"We Are Here in des auto!";
 }
 
 void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,MultidimArray<double> &features)
@@ -538,24 +538,25 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
         II() = pieceImage;
         II.write(fnPositiveParticles,ALL_IMAGES,true,WRITE_APPEND);
         II.write("AllPostivesParticles.xmp",ALL_IMAGES,true,WRITE_APPEND);
-        pieceImage.setXmippOrigin();
-        particleAvg.setXmippOrigin();
-        if (particleAvg.computeMax() ==0)
-        {
-        	std::cerr<<"First Image";
-        	particleAvg=particleAvg+pieceImage;
-        }
-        else
-        {
-        	std::cerr<<"Aligning Images";
-        	alignImages(particleAvg,pieceImage,M,true,aux,aux2,aux3);
-        	particleAvg=particleAvg+pieceImage;
-        }
+     			pieceImage.setXmippOrigin();
+			particleAvg.setXmippOrigin();
+//			particleAvg=particleAvg+pieceImage;
+//			if (particleAvg.computeMax() ==0)
+//			{
+//				//std::cerr<<"First Image";
+				particleAvg=particleAvg+pieceImage;
+//			}
+//			else
+//			{
+//				std::cerr<<"Aligning Images";
+//				alignImages(particleAvg,pieceImage,M,true,aux,aux2,aux3);
+//				particleAvg=particleAvg+pieceImage;
+//			}
         II() = IpolarCorr;
         II.write(fnPositiveInvariatn,ALL_IMAGES,true,WRITE_APPEND);
         II.write("AllPostivesInvariant.xmp",ALL_IMAGES,true,WRITE_APPEND);
     }
-    particleAvg/=num_part;
+	particleAvg/=num_part;
 }
 
 void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles)
@@ -939,9 +940,8 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
 
 void AutoParticlePicking2::applyConvolution()
 {
-	MultidimArray<double> tempConvolve;
-	MultidimArray<double> avgRotated;
-    MultidimArray<int> mask;
+	//MultidimArray<double> tempConvolve;
+	MultidimArray<int> mask;
     CorrelationAux aux;
     FourierFilter filter;
     int size=XSIZE(microImage());
@@ -958,27 +958,28 @@ void AutoParticlePicking2::applyConvolution()
 	filter.FilterBand = BANDPASS;
 	filter.w1 =1.0/double(particle_size);
 	filter.w2 =1.0/(double(particle_size)/3);
-	filter.do_generate_3dmask=true;
+//	filter.do_generate_3dmask=true;
 	filter.applyMaskSpace(convolveRes);
 	//filter.generateMask(particleAvg);
-	filter.applyMaskSpace(convolveRes);
-	Image<double> II;
-	int cnt=1;
-	for (int deg=2;deg<360;deg+=2)
-    {
-		rotate(LINEAR,avgRotated,particleAvg,double(deg));
-//		II()=avgRotated;
-//		II.write("rotatedImages.stk",cnt,true,WRITE_APPEND);
-		correlation_matrix(microImage(),avgRotated,tempConvolve,aux);
-		filter.applyMaskSpace(tempConvolve);
-		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
-		if (DIRECT_A2D_ELEM(tempConvolve,i,j)>DIRECT_A2D_ELEM(convolveRes,i,j))
-			DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
+//	filter.applyMaskSpace(convolveRes);
+//	Image<double> II;
+//	int cnt=1;
+//	for (int deg=2;deg<360;deg+=2)
+//    {
+//		MultidimArray<double> avgRotated;
+//		rotate(LINEAR,avgRotated,particleAvg,double(deg));
+////		II()=avgRotated;
+////		II.write("rotatedImages.stk",cnt,true,WRITE_APPEND);
+//		correlation_matrix(microImage(),avgRotated,tempConvolve,aux);
+//		filter.applyMaskSpace(tempConvolve);
+//		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
+//		if (DIRECT_A2D_ELEM(tempConvolve,i,j)>DIRECT_A2D_ELEM(convolveRes,i,j))
+//			DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
 //	    II()=tempConvolve;
 //	    II.write("ConvolvedImages.stk",cnt,true,WRITE_APPEND);
-    }
-    II()=convolveRes;
-    II.write("ConvolvedImages.xmp");
+//    }
+//    II()=convolveRes;
+//    II.write("ConvolvedImages.xmp");
 }
 
 // ==========================================================================
