@@ -729,6 +729,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	/** Reload table data */
 	public void reloadTableData() {
 		try {
+			DEBUG.printMessage("reloadTableData...");
 			table.removeAll();
 			createModel();
 			// gallery.setShowLabels(menu.getShowLabel());
@@ -947,6 +948,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 //					if (data.isVolumeMode())//Select first volume when changing block
 //						data.selectVolume(data.volumes[0]);
+					System.out.println("selected: " + data.selectedVolFn);
+					jcbVolumes.invalidate();
 					reloadTableData();
 				}
 			}
@@ -979,18 +982,18 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 			@Override
 			public Object getElementAt(int index) {
-				return data.getVolumeAt(index);
+				return removePrefix(data.getVolumeAt(index));
 			}
 
 			@Override
 			public void setSelectedItem(Object anItem) {
-				data.selectVolume((String) anItem);
+				data.selectVolume(data.commonVolPrefix + (String) anItem);
 				reloadTableData();
 			}
 
 			@Override
 			public Object getSelectedItem() {
-				return data.selectedVolFn;
+				return removePrefix(data.selectedVolFn);
 			}
 
 			@Override
@@ -1003,6 +1006,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			public void removeListDataListener(ListDataListener arg0) {
 				// TODO Auto-generated method stub
 
+			}
+			
+			public String removePrefix(String value){
+				return value.replaceFirst(data.commonVolPrefix, "");
 			}
 		});
 		cbPanel.add(jcbVolumes);
