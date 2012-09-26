@@ -28,15 +28,8 @@ TEST_F(GeometryTest, angles2Matrix2Angles)
         for (double _y = 0; _y < 360; _y += 30)
             for (double _x = 0; _x < 360; _x += 30)
             {
-
                 Euler_angles2matrix(_x, _y, _z, eulerMatrix);
                 Euler_matrix2angles(eulerMatrix, rot, tilt, psi);
-
-                std::cerr << "DEBUG_XMIPP: eulerMatrix: " << eulerMatrix << std::endl;
-                std::cerr << "DEBUG_XMIPP: _x: " << _x << std::endl;
-                std::cerr << "DEBUG_XMIPP: _y: " << _y << std::endl;
-                std::cerr << "DEBUG_XMIPP: _z: " << _z << std::endl;
-                std::cerr << "-------------------------------"  << std::endl;
 
                 rot = DEG2RAD(rot);
                 tilt = DEG2RAD(tilt);
@@ -45,15 +38,12 @@ TEST_F(GeometryTest, angles2Matrix2Angles)
                 yrad = DEG2RAD(_y);
                 zrad = DEG2RAD(_z);
 
-
-
                 double r11 = cos(psi)*cos(tilt)*cos(rot)-sin(psi)*sin(rot);
                 double r12 = cos(psi)*cos(tilt)*sin(rot)+sin(psi)*cos(rot)     ;
                 double r13 = -cos(psi)*sin(tilt)                               ;
                 double r22 = -sin(psi)*cos(tilt)*sin(rot)+cos(psi)*cos(rot)    ;
                 double r23 = sin(psi)*sin(tilt)                                ;
                 double r33 = cos(tilt)                                         ;
-
 
                 double r011 = cos(zrad)*cos(yrad)*cos(xrad)-sin(zrad)*sin(xrad);
                 double r012 = cos(zrad)*cos(yrad)*sin(xrad)+sin(zrad)*cos(xrad)     ;
