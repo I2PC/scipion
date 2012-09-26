@@ -52,6 +52,7 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.DEBUG;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippWindowUtil;
 
@@ -73,6 +74,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
     private final static Color COLOR_ENVELOPE = Color.GREEN;
     private final static Color COLOR_PSD = Color.BLUE;
     private final static Color COLOR_CTF = Color.MAGENTA;
+    private final static Color COLOR_DIFFERENCE = Color.orange;
     private final static Color COLOR_DISABLED = UIManager.getColor("ComboBox.disabledForeground");
     private ImagePlus psdimage;
     private Scrollbar scrollbar;
@@ -277,11 +279,6 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             plot.setDataset(0, datasetProfile);
             plot.getRangeAxis().setLabel(show_ctf ? XmippLabel.LABEL_CTF : XmippLabel.LABEL_PSD);
         } else {
-//            JFreeChart chart = createChart("",
-//                    LABELS.LABEL_SAMPLING,
-//                    show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
-//                    datasetProfile);
-
             JFreeChart chart = ChartFactory.createXYLineChart(
                     "", XmippLabel.LABEL_SAMPLING,
                     show_ctf ? XmippLabel.LABEL_CTF : XmippLabel.LABEL_PSD,
@@ -290,11 +287,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
                     true, true, false);
 
             chartPanelProfile = createChartPanel(chart);
-
-//            chartPanelProfile.setPreferredSize(new Dimension(chartPanelProfile.getPreferredSize().width, getImagePlus().getHeight()));
-
             panelPlot.add(chartPanelProfile);
-//            pack();
         }
 
         customizeSeriesRenderes((XYPlot) chartPanelProfile.getChart().getPlot(),
@@ -311,10 +304,6 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             plot.setDataset(0, datasetAVG);
             plot.getRangeAxis().setLabel(show_ctf ? XmippLabel.LABEL_CTF : XmippLabel.LABEL_PSD);
         } else {
-//            JFreeChart chart = createChart("",
-//                    LABELS.LABEL_SAMPLING,
-//                    show_ctf ? LABELS.LABEL_CTF : LABELS.LABEL_PSD,
-//                    datasetAVG);
             JFreeChart chart = ChartFactory.createXYLineChart(
                     "",
                     XmippLabel.LABEL_SAMPLING,
@@ -323,11 +312,7 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
                     true, true, false);
 
             chartPanelAVG = createChartPanel(chart);
-
-//            chartPanelAVG.setPreferredSize(new Dimension(chartPanelAVG.getPreferredSize().width, getImagePlus().getHeight()));
-
             panelPlotAVG.add(chartPanelAVG);
-//            pack();
         }
 
         customizeSeriesRenderes((XYPlot) chartPanelAVG.getChart().getPlot(),
@@ -349,58 +334,41 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
         return new ChartPanel(chart);
     }
 
-//    private static JFreeChart createChart(String title, String xLabel, String yLabel, XYDataset dataset) {
-//        JFreeChart chart = ChartFactory.createXYLineChart(
-//                title, xLabel, yLabel, dataset, PlotOrientation.VERTICAL,
-//                true, true, false);
-//
-//        XYPlot plot = (XYPlot) chart.getPlot();
-//        plot.setDomainPannable(true);
-//        plot.setRangePannable(true);
-//
-//        java.util.List list = Arrays.asList(new Integer[]{
-//                    new Integer(0), new Integer(1)
-//                });
-//        plot.mapDatasetToDomainAxes(0, list);
-//        plot.mapDatasetToRangeAxes(0, list);
-//        ChartUtilities.applyCurrentTheme(chart);
-//
-//        return chart;
-//    }
+   
+    private int serie_index;
+    
+    private void customizeSerie(XYPlot plot, Color c){
+    	XYItemRenderer renderer = plot.getRenderer();
+    	renderer.setSeriesPaint(serie_index, c);
+        plot.getRenderer().setSeriesStroke(serie_index, plotsStroke);
+        ++serie_index;
+    }
+    
     private void customizeSeriesRenderes(XYPlot plot, boolean show_bgnoise, boolean show_envelope,
             boolean show_psd, boolean show_ctf) {
 
-        XYItemRenderer renderer = plot.getRenderer();
-
+        
+        serie_index = 0;
+        
         if (show_ctf) {
-            renderer.setSeriesPaint(0, COLOR_CTF);
-            plot.getRenderer().setSeriesStroke(0, plotsStroke);
+        	customizeSerie(plot, COLOR_CTF);
         } else {
             // 0: Profile.
-            renderer.setSeriesPaint(0, COLOR_PROFILE);
-            plot.getRenderer().setSeriesStroke(0, plotsStroke);
+        	customizeSerie(plot, COLOR_PROFILE);
 
-            int index = 1;
             // 1: BGNoise.
             if (show_bgnoise) {
-                renderer.setSeriesPaint(index, COLOR_BACKGROUND_NOISE);
-                plot.getRenderer().setSeriesStroke(index, plotsStroke);
-                index++;
+            	customizeSerie(plot, COLOR_BACKGROUND_NOISE);
+            	customizeSerie(plot, COLOR_DIFFERENCE);
             }
 
             // 2: BGNoise.
-            if (show_envelope) {
-                renderer.setSeriesPaint(index, COLOR_ENVELOPE);
-                plot.getRenderer().setSeriesStroke(index, plotsStroke);
-                index++;
-            }
+            if (show_envelope) 
+            	customizeSerie(plot, COLOR_ENVELOPE);
 
             // 3: PSD.
-            if (show_psd) {
-                renderer.setSeriesPaint(index, COLOR_PSD);
-                plot.getRenderer().setSeriesStroke(index, plotsStroke);
-                index++;
-            }
+            if (show_psd) 
+            	customizeSerie(plot, COLOR_PSD);
         }
     }
 
@@ -409,32 +377,47 @@ public class CTFProfileWindow extends ImageWindow implements ItemListener, Actio
             double ctf[], boolean show_bgnoise, boolean show_envelope,
             boolean show_psd, boolean show_ctf) {
 
+    	double max = Double.MAX_VALUE;
+    	double min = -1;
         XYSeriesCollection collection = new XYSeriesCollection();
 
         if (show_ctf) {
-            collection.addSeries(createSeries(XmippLabel.CB_PLOT_CTF, xs, ctf));
+            collection.addSeries(createSeries(XmippLabel.CB_PLOT_CTF, xs, ctf, max, min));
         } else {
-            collection.addSeries(createSeries(XmippLabel.CB_PLOT_PROFILE, xs, profile));
-
+            collection.addSeries(createSeries(XmippLabel.CB_PLOT_PROFILE, xs, profile, max, min));
+            
+            //min = max; 
+            max = -max;
+            for (int i = 0; i < xs.length; i++){
+            	max = Math.max(max, profile[i]);
+            	//min = Math.min(min, profile[i]);
+            }
+            max += Math.abs(max) * 0.1;
+            //min -= Math.abs(min) * 0.1;
+            
             if (show_bgnoise) {
-                collection.addSeries(createSeries(XmippLabel.CB_PLOT_BGNOISE, xs, bgNoise));
+            	collection.addSeries(createSeries(XmippLabel.CB_PLOT_BGNOISE, xs, bgNoise, max, min));
+            	double[] difference = new double[bgNoise.length];
+            	for (int i = 0; i < xs.length; i++)
+            		difference[i] = profile[i] - bgNoise[i];
+            	collection.addSeries(createSeries(XmippLabel.CB_PLOT_DIFFERENCE, xs, difference, max, min));
             }
             if (show_envelope) {
-                collection.addSeries(createSeries(XmippLabel.CB_PLOT_ENVELOPE, xs, envelope));
+                collection.addSeries(createSeries(XmippLabel.CB_PLOT_ENVELOPE, xs, envelope, max, min));
             }
             if (show_psd) {
-                collection.addSeries(createSeries(XmippLabel.CB_PLOT_PSD, xs, psd));
+                collection.addSeries(createSeries(XmippLabel.CB_PLOT_PSD, xs, psd, max, min));
             }
         }
 
         return collection;
     }
 
-    private static XYSeries createSeries(String name, double[] xs, double[] values) {
+    private static XYSeries createSeries(String name, double[] xs, double[] values, double max, double min) {
         XYSeries series = new XYSeries(name);
-
         for (int i = 0; i < xs.length; i++) {
-            series.add(xs[i], values[i]);
+        	if (values[i] > min && values[i] < max)
+        		series.add(xs[i], values[i]);
         }
 
         return series;

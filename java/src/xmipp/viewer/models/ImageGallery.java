@@ -55,7 +55,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	// Image original dimensions
 	protected int image_width, image_height;
 	// Thumbnails dimensions
-	protected int thumb_width, thumb_height;
+	protected int thumb_width, thumb_height, font_height;
 	// Table cell dimensions, this is redundant, but to avoid to be recalculated
 	public Dimension cellDim = new Dimension();
 
@@ -270,7 +270,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		thumb_width = (int) (image_width * scale);
 		thumb_height = (int) (image_height * scale);
 
-		int font_height = 0;
+		font_height = 0;
 		if (data.showLabel) {
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
