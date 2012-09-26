@@ -1,6 +1,7 @@
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 #include <data/euler.h>
+#include <data/geometry.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -19,6 +20,36 @@ protected:
 
 };
 
+TEST_F( EulerTest, eulerXmippMatch)
+{
+    double xp,yp,zp;
+    _euler.setOrder(Euler::ZYZ);
+    for (int _z = 0; _z < 360; _z += 30)
+        for (int _y = 0; _y < 360; _y += 30)
+            for (int _x = 0; _x < 360; _x += 30)
+            {
+                //note euler and xmipp are inverse
+                Euler angles(DEG2RAD(_z),DEG2RAD( _y), DEG2RAD(_x), Euler::ZYZ);
+                Matrix2D<double> m(4,4);
+                Matrix2D<double> M(4,4);
+                m.initIdentity();
+                angles.toMatrix(m);
+                Euler_angles2matrix(_x,_y,_z,M);
+
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
+                {
+                    EXPECT_TRUE( fabs(M(i,j)-m(i,j))< XMIPP_EQUAL_ACCURACY);
+                }
+                _euler.extract(m);
+                _euler.toMatrix(m);
+                Euler_matrix2angles(M,xp,yp,zp);
+                Euler_angles2matrix(xp,yp,zp,M);
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
+                {
+                    EXPECT_TRUE( fabs(M(i,j)-m(i,j))< XMIPP_EQUAL_ACCURACY);
+                }
+            }
+}
 
 ////////////////Ruler Rotate
 TEST_F( EulerTest, eulerRotateX)
@@ -190,25 +221,25 @@ TEST_F( EulerTest, eulerAnglesXZY)
     Euler angles(_x, _y, _z, Euler::XYZ);
     angles.toMatrix(M);
 
-    m(0,0)=0.9073022;
-    m(0,1)=-0.23108916;
-    m(0,2)=-0.35128403;
+    m(0,0)=-0.96957093;
+    m(0,1)=-0.080808729;
+    m(0,2)=0.23108916;
     m(0,3)=0.000000e+00;
 
-    m(1,0)=-0.24474442;
-    m(1,1)=-0.96957093;
-    m(1,2)=0.0056938892;
+    m(1,0)=0.16060221;
+    m(1,1)=-0.92239171;
+    m(1,2)=0.35128403;
     m(1,3)=0.000000e+00;
 
-    m(2,0)=-0.34191057;
-    m(2,1)=0.080808729;
-    m(2,2)=-0.93625164;
+    m(2,0)=0.18476792;
+    m(2,1)=0.3777082;
+    m(2,2)=0.9073022;
     m(2,3)=0.000000e+00;
+
     m(3,0)=0.000000e+00;
     m(3,1)=0.000000e+00;
     m(3,2)=0.000000e+00;
     m(3,3)=1.000000e+00;
-
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
     {
@@ -229,13 +260,13 @@ TEST_F( EulerTest, extract)
         //Euler::eulerOrder order = Euler::XYZ;
         _euler.init();
         _euler.setOrder(order);
-        for (int _z = 0; _z < 360; _z += 30)
-            for (int _y = 0; _y < 360; _y += 30)
-                for (int _x = 0; _x < 360; _x += 30)
+        for (int _z = -360; _z < 360; _z += 30)
+            for (int _y = -360; _y < 360; _y += 30)
+                for (int _x = -360; _x < 360; _x += 30)
                 {
-                	//NOTE that x,y and z order should match the order "order" but since
-                	//_z,_y and _x are never used but here I do not bother to order them
-                	Euler angles(DEG2RAD(_x),DEG2RAD( _y), DEG2RAD(_z), order);
+                    //NOTE that x,y and z order should match the order "order" but since
+                    //_z,_y and _x are never used but here I do not bother to order them
+                    Euler angles(DEG2RAD(_x),DEG2RAD( _y), DEG2RAD(_z), order);
                     angles.toMatrix(m);
                     _euler.extract(m);
                     _euler.toMatrix(M);
@@ -249,8 +280,6 @@ TEST_F( EulerTest, extract)
     }
 }
 
-///TEST ALL CONVINATION
-///TEST USINg NEGATIVE NUMBERS
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
