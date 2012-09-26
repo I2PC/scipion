@@ -693,6 +693,7 @@ Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
      {
          try
          {
+        	 MULTIDIM_ARRAY_GENERIC(Image_Value(self)).setXmippOrigin();
         	 selfScaleToSize(BSPLINE2, MULTIDIM_ARRAY_GENERIC(Image_Value(self)), xDim, yDim, zDim);
              Py_RETURN_NONE;
          }
