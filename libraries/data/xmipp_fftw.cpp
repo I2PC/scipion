@@ -351,10 +351,10 @@ void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
     double * ptrv=(double *)MULTIDIM_ARRAY(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
     {
-    	double re=*ptrv;
-    	double im=*(ptrv+1);
-    	DIRECT_MULTIDIM_ELEM(mag, n) = sqrt(re*re+im*im);
-    	ptrv+=2;
+        double re=*ptrv;
+        double im=*(ptrv+1);
+        DIRECT_MULTIDIM_ELEM(mag, n) = sqrt(re*re+im*im);
+        ptrv+=2;
     }
 }
 
@@ -685,4 +685,48 @@ void adaptSpectrum(MultidimArray<double> &Min,
     Mout=Min;
     multiplyBySpectrum(Mout,spectrum,leave_origin_intact);
 
+}
+void correlation_matrix(const MultidimArray<double> & m1,
+                        const MultidimArray<double> & m2,
+                        MultidimArray< double >& R,
+                        CorrelationAux &aux,
+                        bool center)
+{
+    // Compute the Fourier Transforms
+    aux.transformer1.FourierTransform((MultidimArray<double> &)m1, aux.FFT1, false);
+    correlation_matrix(aux.FFT1,m2,R,aux,center);
+}
+
+
+void correlation_matrix(const MultidimArray< std::complex< double > > & FF1,
+                        const MultidimArray<double> & m2,
+                        MultidimArray<double>& R,
+                        CorrelationAux &aux,
+                        bool center)
+{
+    R=m2;
+    aux.transformer2.FourierTransform(R, aux.FFT2, false);
+
+    // Multiply FFT1 * FFT2'
+    double dSize=MULTIDIM_SIZE(R);
+    double mdSize=-dSize;
+    double a, b, c, d; // a+bi, c+di
+    double *ptrFFT2=(double*)MULTIDIM_ARRAY(aux.FFT2);
+    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FF1);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FF1)
+    {
+        a=*ptrFFT1++;
+        b=*ptrFFT1++;
+        c=(*ptrFFT2)*dSize;
+        d=(*(ptrFFT2+1))*mdSize;
+        *ptrFFT2++ = a*c-b*d;
+        *ptrFFT2++ = b*c+a*d;
+    }
+
+    // Invert the product, in order to obtain the correlation image
+    aux.transformer2.inverseFourierTransform();
+
+    // Center the resulting image to obtain a centered autocorrelation
+    if (center)
+        CenterFFT(R, true);
 }

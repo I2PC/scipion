@@ -518,41 +518,18 @@ public:
  * Transform. (Using the correlation theorem). The output matrix must be already
  * resized
  */
-template <typename T>
-void correlation_matrix(const MultidimArray< T > & m1,
-                        const MultidimArray< T > & m2,
+
+void correlation_matrix(const MultidimArray<double> & m1,
+                        const MultidimArray<double> & m2,
                         MultidimArray< double >& R,
                         CorrelationAux &aux,
-                        bool center=true)
-{
-    // Compute the Fourier Transforms
-    R=m1;
-    aux.transformer1.FourierTransform(R, aux.FFT1, false);
-    aux.transformer2.FourierTransform((MultidimArray<T> &)m2, aux.FFT2, false);
+                        bool center=true);
 
-    // Multiply FFT1 * FFT2'
-    double dSize=MULTIDIM_SIZE(R);
-    double mdSize=-dSize;
-    double a, b, c, d; // a+bi, c+di
-    double *ptrFFT2=(double*)MULTIDIM_ARRAY(aux.FFT2);
-    double *ptrFFT1=(double*)MULTIDIM_ARRAY(aux.FFT1);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux.FFT1)
-    {
-        a=*ptrFFT1;
-        b=*(ptrFFT1+1);
-        c=(*ptrFFT2++)*dSize;
-        d=(*ptrFFT2++)*mdSize;
-        *ptrFFT1++ = a*c-b*d;
-        *ptrFFT1++ = b*c+a*d;
-    }
-
-    // Invert the product, in order to obtain the correlation image
-    aux.transformer1.inverseFourierTransform();
-
-    // Center the resulting image to obtain a centered autocorrelation
-    if (center)
-    	CenterFFT(R, true);
-}
+void correlation_matrix(const MultidimArray< std::complex< double > > & FFT1,
+                        const MultidimArray<double> & m2,
+                        MultidimArray<double>& R,
+                        CorrelationAux &aux,
+                        bool center=true);
 
 /** Autocorrelation function of an image
  * @ingroup FourierOperations
