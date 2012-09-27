@@ -212,7 +212,8 @@ class ConfigNotebook(ttk.Notebook):
         self.img = tk.PhotoImage(file=imgPath)
         tk.Label(leftFrame, image=self.img, bg=bgColor).grid(column=0, row=0, sticky='we')
         tk.Label(leftFrame, text='Xmipp 3.0',  font=Fonts['button'], bg=bgColor).grid(column=0, row=1, sticky='we')
-        tk.Label(leftFrame, text='r12.4.3.11834', bg=bgColor).grid(column=0, row=2, sticky='we')
+#       TODO: insert label extracting it from git repository
+#        tk.Label(leftFrame, text='r12.4.3.11834', bg=bgColor).grid(column=0, row=2, sticky='we')
         leftFrame.grid(column=0, row=0, sticky='nsew', padx=5, pady=5, rowspan=2)
         self.grid(column=1, row=0, sticky='nsew', padx=5, pady=5)
         #bottom panel
