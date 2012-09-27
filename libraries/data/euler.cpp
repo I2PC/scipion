@@ -81,7 +81,7 @@ Euler::Euler() :
     init();
 }
 
-Euler::Euler(typename Euler::eulerOrder p) :
+Euler::Euler(Euler::eulerOrder p) :
         _frameStatic(true),
         _initialRepeated(false),
         _parityEven(true),
@@ -92,8 +92,8 @@ Euler::Euler(typename Euler::eulerOrder p) :
 }
 
 inline Euler::Euler( const Matrix1D <double> &v,
-                     typename Euler::eulerOrder p,
-                     typename Euler::InputLayout l )
+                     Euler::eulerOrder p,
+                     Euler::InputLayout l )
 {
     init();
     setOrder(p);
@@ -125,8 +125,8 @@ inline Euler::Euler(const Euler &euler,eulerOrder p)
 
 
 inline Euler::Euler( double xi, double yi, double zi,
-                     typename Euler::eulerOrder p,
-                     typename Euler::InputLayout l)
+                     Euler::eulerOrder p,
+                     Euler::InputLayout l)
 {
     setOrder(p);
     if ( l == XYZLayout )
@@ -142,7 +142,7 @@ inline Euler::Euler( double xi, double yi, double zi,
     }
 }
 
-inline Euler::Euler( const Matrix2D<double> &M, typename Euler::eulerOrder p )
+inline Euler::Euler( const Matrix2D<double> &M, Euler::eulerOrder p )
 {
     setOrder(p);
     extract(M);
@@ -303,7 +303,7 @@ void Euler::toMatrix(Matrix2D<double>& M) const
 
 
 inline bool
-Euler::legal(typename Euler::eulerOrder order)
+Euler::legal(Euler::eulerOrder order)
 {
     return (order & ~Legal) ? false : true;
 }
@@ -324,7 +324,7 @@ Euler::eulerOrder Euler::order() const
 }
 
 
-inline void Euler::setOrder(typename Euler::eulerOrder p)
+inline void Euler::setOrder(Euler::eulerOrder p)
 {
     set( p & 0x2000 ? axisZ : (p & 0x1000 ? axisY : axisX), // initial axis
          !(p & 0x1),        // static?
@@ -333,7 +333,7 @@ inline void Euler::setOrder(typename Euler::eulerOrder p)
 }
 
 
-void Euler::set(typename Euler::Axis axis,
+void Euler::set(Euler::Axis axis,
                 bool relative,
                 bool parityEven,
                 bool firstRepeats)
