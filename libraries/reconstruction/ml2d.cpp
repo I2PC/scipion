@@ -424,9 +424,13 @@ void ModelML2D::update()
 
     double weight, inv_weight;
 
+//    std::cerr << "DEBUG_JM: sumw_allrefs: " << sumw_allrefs << std::endl;
+
     for (int refno = 0; refno < n_ref; ++refno)
     {
         weight = WsumMref[refno].weight();
+
+//        std::cerr << "    DEBUG_JM: refno: " << refno << std::endl;
 
         if (weight > 0.)
         {
@@ -439,9 +443,12 @@ void ModelML2D::update()
             alpha_k[refno] = weight / sumw_allrefs;
             mirror_fraction[refno] = sumw_mirror[refno] * inv_weight;
             scale[refno] = sumwsc[refno] * inv_weight;
+//            std::cerr << "    DEBUG_JM: weight:     " << weight << std::endl;
+//            std::cerr << "    DEBUG_JM: sumw_mirror[refno]: " << sumw_mirror[refno] << std::endl;
         }
         else
         {
+//          std::cerr << "    DEBUG_JM: all zeros... " << std::endl;
             //zero weights
             Iref[refno].setWeight(0.);
             Iref[refno]().initZeros(WsumMref[refno]());

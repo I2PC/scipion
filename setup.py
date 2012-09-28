@@ -238,7 +238,7 @@ def run(notebook):
         os.remove(out)
     
     if options.hasOption('update'):
-        cmd += 'echo "*** RUNNING SVN UPDATE..." >> %(out)s 2>&1\n svn up >> %(out)s 2>&1\n'
+        cmd += 'echo "*** RUNNING GIT PULL..." >> %(out)s 2>&1\n git pull >> %(out)s 2>&1\n'
     
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()

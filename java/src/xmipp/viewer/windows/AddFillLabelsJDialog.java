@@ -128,7 +128,8 @@ public class AddFillLabelsJDialog extends XmippDialog {
 				}
 			if (!found) {
 				String name = MetaData.getLabelName(label);
-				jcbLabel.addItem(name);
+				if (!name.startsWith("emx_"))
+					jcbLabel.addItem(name);
 			}
 		}
 		jcbLabel.addActionListener(this);

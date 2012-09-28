@@ -36,6 +36,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
+import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ClassInfo;
 
 /** This class will serve to store important data about the gallery */
@@ -46,6 +47,7 @@ public class GalleryData {
 	public String selectedBlock;
 	// The following is only used in VolumeGallery mode
 	public String selectedVolFn = "";
+	public String commonVolPrefix = "";
 	public String[] volumes = null;
 
 	public ArrayList<ColumnInfo> labels = null;
@@ -205,11 +207,18 @@ public class GalleryData {
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
 
-					for (int i = 0; i < numberOfVols; ++i)
+					DEBUG.printMessage("Volumes:\n");
+					
+					for (int i = 0; i < numberOfVols; ++i){
 						volumes[i] = md.getValueString(
 								ciFirstRender.getLabel(), ids[i]);
+						DEBUG.printMessage("  volume: " + volumes[i] + "\n");
+					}
+					commonVolPrefix = XmippStringUtils.commonPathPrefix(volumes);
+
 					if (selectedVolFn.isEmpty())
 						selectVolume(volumes[0]);
+					
 				}
 				image.destroy();
 			}
@@ -313,6 +322,7 @@ public class GalleryData {
 	/** Select one of the blocks */
 	public void selectBlock(String block) {
 		selectedBlock = block;
+		selectedVolFn = ""; //Set to empty string to get the first vol
 		readMd();
 	}
 
