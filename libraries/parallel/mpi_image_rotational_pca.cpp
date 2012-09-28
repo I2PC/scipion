@@ -63,9 +63,6 @@ void MpiProgImageRotationalPCA::selectPartFromMd(MetaData &MDin)
 
 void MpiProgImageRotationalPCA::comunicateMatrix(Matrix2D<double> &W)
 {
-  if (IS_MASTER) // Master send the matrix to workers
-    MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
- else // Worker receive the matrix
     MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
 }
 
@@ -85,7 +82,8 @@ void  MpiProgImageRotationalPCA::allReduceApplyT(Matrix2D<double> &Wnode_0)
 
 void MpiProgImageRotationalPCA::comunicateQrDim(int &qrDim)
 {
-  ProgImageRotationalPCA::comunicateQrDim(qrDim);
+  if (IS_MASTER)
+    ProgImageRotationalPCA::comunicateQrDim(qrDim);
   node->barrierWait();
   MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
 }
@@ -107,7 +105,8 @@ void MpiProgImageRotationalPCA::mapMatrix(int qrDim)
 
 void MpiProgImageRotationalPCA::applySVD()
 {
-  ProgImageRotationalPCA::applySVD();
+  if (IS_MASTER)
+    ProgImageRotationalPCA::applySVD();
   node->barrierWait();
 }
 

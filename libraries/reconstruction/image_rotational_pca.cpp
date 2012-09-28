@@ -31,6 +31,7 @@
 // Empty constructor =======================================================
 ProgImageRotationalPCA::ProgImageRotationalPCA()
 {
+  rank = 0;
   verbose = 1;
   fileMutex = NULL;
   threadMutex = NULL;
@@ -112,30 +113,12 @@ ProgImageRotationalPCA::defineParams()
 
 void ProgImageRotationalPCA::selectPartFromMd(MetaData &MDin)
 {
-//  if (node->rank == 0)
-//  {
     MetaData MDaux;
     MDaux.randomize(MDin);
     MDin.selectPart(MDaux, 0, maxNimgs);
-    //ONLY FOR MPI
-    //MDin.write(fnRoot + "_temp.xmd");
-    //node->barrierWait();
-    //node->barrierWait();
-    //unlink((fnRoot + "_temp.xmd").c_str());
-//  }
-//  else
-//  {
-    //node->barrierWait();
-    //MDin.read(fnRoot + "_temp.xmd");
-    //node->barrierWait();
- // }
 }
 void ProgImageRotationalPCA::comunicateMatrix(Matrix2D<double> &W)
 {
-//  if (IS_MASTER) // Master send the matrix to workers
-//    MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
-// else // Worker receive the matrix
-//   MPI_Bcast(&MAT_ELEM(W,0,0),MAT_XSIZE(W)*MAT_YSIZE(W),MPI_DOUBLE,0,MPI_COMM_WORLD);
 }
 
 void ProgImageRotationalPCA::createMutexes(size_t Nimgs)
@@ -143,11 +126,6 @@ void ProgImageRotationalPCA::createMutexes(size_t Nimgs)
   fileMutex = new Mutex();
   threadMutex = new Mutex();
   taskDistributor = new ThreadTaskDistributor(Nimgs, XMIPP_MAX(1,Nimgs/5));
-
-  //FOR MPI
-//  fileMutex = new MpiFileMutex(node);
-//  threadMutex = new Mutex();
-//  taskDistributor = new FileTaskDistributor(Nimgs, XMIPP_MAX(1,Nimgs/(5*node->size)), node);
 }
 
 // Produce side info =====================================================
@@ -209,7 +187,6 @@ void ProgImageRotationalPCA::produceSideInfo()
       // Initialize with random numbers between -1 and 1
       FOR_ALL_ELEMENTS_IN_MATRIX2D(W)
         MAT_ELEM(W,i,j)=rnd_unif(-1.0,1.0);
-
     }
 
     comunicateMatrix(W);
@@ -354,10 +331,6 @@ void threadApplyT(ThreadArgument &thArg)
 
 void ProgImageRotationalPCA::allReduceApplyT(Matrix2D<double> &Wnode_0)
 {
-  // and from all MPI processes
-//  MPI_Allreduce(MPI_IN_PLACE, MATRIX2D_ARRAY(Wnode_0), MAT_XSIZE(Wnode_0)*MAT_YSIZE(Wnode_0),
-//      MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
 }
 
 void ProgImageRotationalPCA::applyT()
@@ -547,49 +520,28 @@ int ProgImageRotationalPCA::QR()
 // Copy H to F ============================================================
 void ProgImageRotationalPCA::copyHtoF(int block)
 {
-//  if (IS_MASTER)
-//  {
     size_t Hidx=block*MAT_XSIZE(H);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
     MAT_ELEM(F,Hidx+j,i)=MAT_ELEM(H,i,j);
-//  }
-//  node->barrierWait();
 }
 
 void ProgImageRotationalPCA::comunicateQrDim(int &qrDim)
 {
-//  if (IS_MASTER)
-//  {
     std::cerr << "Performing QR decomposition ..." << std::endl;
     qrDim = QR();
-//  }
-//  node->barrierWait();
-//  MPI_Bcast(&qrDim,1,MPI_INT,0,MPI_COMM_WORLD);
 }
 
 void ProgImageRotationalPCA::mapMatrix(int qrDim)
 {
-// Load the first qrDim columns of F in matrix H
-//  if (IS_MASTER)
-//  {
     FileName(fnRoot+"_matrixH.raw").createEmptyFileWithGivenLength(Nimg*2*Nangles*Nshifts*qrDim*sizeof(double));
     H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(H)
-    MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
-//    node->barrierWait();
-//  }
-//  else
-//  {
-//    node->barrierWait();
-//    H.mapToFile(fnRoot+"_matrixH.raw",MAT_XSIZE(F),qrDim);
-//  }
+      MAT_ELEM(H,i,j)=MAT_ELEM(F,j,i);
 }
 
 void ProgImageRotationalPCA::applySVD()
 {
   // Apply SVD and extract the basis
-  if (IS_MASTER)
-  {
     std::cerr << "Performing SVD decomposition ..." << std::endl;
     // SVD of W
     Matrix2D<double> U,V;
@@ -615,8 +567,6 @@ void ProgImageRotationalPCA::applySVD()
       MD.setValue(MDL_WEIGHT,VEC_ELEM(S,eig),id);
     }
     MD.write(fnRoot+".xmd");
-  }
-//  node->barrierWait();
 }
 
 
