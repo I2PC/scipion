@@ -1078,6 +1078,11 @@ void selfScaleToSize(int SplineDegree,
     scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
 }
 
+void selfScaleToSize(int SplineDegree,
+                     MultidimArrayGeneric &V1,
+                     int Xdim, int Ydim, int Zdim = 1);
+
+
 // Special case for complex arrays
 void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,

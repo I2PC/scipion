@@ -24,6 +24,7 @@
 .project
 .cproject
 .pydevproject
+.classpath
 
 #### Xmipp
 # Config files

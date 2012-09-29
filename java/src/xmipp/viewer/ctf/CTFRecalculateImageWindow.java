@@ -28,14 +28,17 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import xmipp.utils.DEBUG;
 import xmipp.utils.XmippWindowUtil;
 
 /**
  *
  * @author Juanjo Vega
  */
-public class CTFRecalculateImageWindow extends ImageWindow implements ActionListener{
+public class CTFRecalculateImageWindow extends ImageWindow implements ActionListener, ChangeListener{
 
     private JButton button;
     protected EllipseFitter ellipseFitter = new EllipseFitter();
@@ -45,10 +48,12 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     private int row;
     private JSpinner spinnerLowFreq;
     private JSpinner spinnerHighFreq;
-
+    private CTFCanvas canvas;
+    
     public CTFRecalculateImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename,
             TasksEngine tasksEngine, int row, String sortFn) {
-        super(imp);
+        super(imp, new CTFCanvas(imp));
+        
 
         this.PSDFilename = PSDFilename;
         this.sortFn = sortFn;
@@ -60,7 +65,8 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         button = XmippWindowUtil.getTextButton("Recalculate CTF", this);
         button.setEnabled(false);
 
-        imp.getCanvas().addMouseListener(new MouseListener() {
+        canvas = (CTFCanvas)imp.getCanvas();
+        canvas.addMouseListener(new MouseListener() {
 
             public void mouseClicked(MouseEvent e) {
             }
@@ -79,6 +85,9 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
             public void mouseExited(MouseEvent e) {
             }
         });
+        
+        canvas.setMaster(this);       
+        
 
         Panel previousContent = new Panel();
         previousContent.setLayout(new ImageLayout(ic));
@@ -101,10 +110,12 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         spinnerLowFreq = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 0.5, 0.01));
         panel.add(spinnerLowFreq, XmippWindowUtil.getConstraints(gbc, 1, 0));
         panel.add(new JLabel("High freq"), XmippWindowUtil.getConstraints(gbc, 2, 0));
-        spinnerHighFreq = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 0.5, 0.01));
+        spinnerLowFreq.addChangeListener(this);        
+        
+        spinnerHighFreq = new JSpinner(new SpinnerNumberModel(0.5, 0.0, 0.5, 0.01));
         panel.add(spinnerHighFreq, XmippWindowUtil.getConstraints(gbc, 3, 0));
         panel.add(button,  XmippWindowUtil.getConstraints(gbc, 2, 1, 2));
-        
+        spinnerHighFreq.addChangeListener(this);   
         
         add(panel, BorderLayout.SOUTH);
 
@@ -171,5 +182,10 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		recalculateCTF();
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent arg0) {
+		getImagePlus().updateAndRepaintWindow();		
 	}
 }

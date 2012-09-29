@@ -177,7 +177,7 @@ public class RotSpectraGallery extends MetadataGallery {
 
 	    @Override
 	    public Image getImage() {
-	        return chart.createBufferedImage(cellDim.width, cellDim.height);
+	        return chart.createBufferedImage(cellDim.width, cellDim.height - font_height);
 	    }
 
 	    public JFrame getChart() {
@@ -187,10 +187,5 @@ public class RotSpectraGallery extends MetadataGallery {
 	        frame.pack();
 	        return frame;
 	    }
-		
-		@Override
-		public String getLabel(){
-			return String.format("class %d", index);
-		}
 	}//class RotSpectraItem
 }// class RotSpectraGallery

@@ -33,6 +33,7 @@ import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 
@@ -54,6 +55,7 @@ public class VolumeGallery extends ImageGallery {
 	// Load initial dimensions
 	protected ImageDimension loadDimension() throws Exception {
 		volFn = Filename.getFilename(data.selectedVolFn);
+		DEBUG.printFormat("loading volFn: %s", volFn);
 		volNumber = Filename.getNimage(data.selectedVolFn);
 		volume = new ImageGeneric(data.selectedVolFn); // read image header
 		volume.read(volNumber);
