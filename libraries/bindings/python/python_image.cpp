@@ -115,7 +115,9 @@ PyMethodDef Image_methods[] =
    { "initRandom", (PyCFunction) Image_initRandom, METH_VARARGS,
      "Initialize to random value" },
    { "resize", (PyCFunction) Image_resize, METH_VARARGS,
-     "resize the image dimensions" },
+     "Resize the image dimensions" },
+   { "scale", (PyCFunction) Image_scale, METH_VARARGS,
+     "Scale the image" },
    { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
      "set DataType for Image" },
    { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
@@ -124,7 +126,15 @@ PyMethodDef Image_methods[] =
      "Return image dimensions as a tuple" },
    { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
      "Return euler angles as a tuple" },
-   { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
+   { "getMainHeaderValue", (PyCFunction) Image_getMainHeaderValue, METH_VARARGS,
+     "Return value from MainHeader" },
+   { "setMainHeaderValue", (PyCFunction) Image_setMainHeaderValue, METH_VARARGS,
+     "Set value to MainHeader" },
+   { "getHeaderValue", (PyCFunction) Image_getHeaderValue, METH_VARARGS,
+     "Return value from Header" },
+   { "setHeaderValue", (PyCFunction) Image_setHeaderValue, METH_VARARGS,
+     "Set value to Header" },
+                             { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
      "Compute image statistics, return mean, dev, min and max" },
    { NULL } /* Sentinel */
 };//Image_methods
@@ -672,6 +682,30 @@ Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_resize
 
+ /* Scale Image */
+ PyObject *
+ Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs)
+ {
+     ImageObject *self = (ImageObject*) obj;
+     double xDim = 0, yDim = 0, zDim = 1;
+
+     if (self != NULL && PyArg_ParseTuple(args, "dd|d", &xDim, &yDim, &zDim))
+     {
+         try
+         {
+        	 MULTIDIM_ARRAY_GENERIC(Image_Value(self)).setXmippOrigin();
+        	 selfScaleToSize(BSPLINE2, MULTIDIM_ARRAY_GENERIC(Image_Value(self)), xDim, yDim, zDim);
+             Py_RETURN_NONE;
+         }
+         catch (XmippError &xe)
+         {
+             PyErr_SetString(PyXmippError, xe.msg.c_str());
+         }
+     }
+     return NULL;
+ }//function Image_scale
+
+
 /* Set Data Type */
  PyObject *
 Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -737,6 +771,128 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }//function Image_getEulerAngles
+
+
+ /* Return value from MainHeader*/
+ PyObject *
+ Image_getMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+ {
+	ImageObject *self = (ImageObject*) obj;
+    PyObject *pyValue;
+    int label;
+
+	if (self != NULL && PyArg_ParseTuple(args, "i", &label))
+	{
+	    try
+	    {
+	    	MDRow &mainHeader = self->image->image->MDMainHeader;
+	    	if (mainHeader.containsLabel((MDLabel)label))
+	    	{
+				MDObject * object = mainHeader.getObject((MDLabel) label);
+				pyValue = getMDObjectValue(object);
+				return pyValue;
+	    	}
+	    	else
+	    		Py_RETURN_NONE;
+	    }
+	    catch (XmippError &xe)
+	    {
+	        PyErr_SetString(PyXmippError, xe.msg.c_str());
+	    }
+	}
+	return NULL;
+ }
+
+ /* Set value to MainHeader*/
+ PyObject *
+ Image_setMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+ {
+	ImageObject *self = (ImageObject*) obj;
+
+	int label;
+	PyObject *pyValue; //Only used to skip label and value
+
+	if (self != NULL && PyArg_ParseTuple(args, "iO", &label, &pyValue))
+	{
+		try
+		{
+			MDRow &mainHeader = self->image->image->MDMainHeader;
+
+			MDObject * object = createMDObject(label, pyValue);
+			if (!object)
+				return NULL;
+			mainHeader.setValue(*object);
+			delete object;
+			Py_RETURN_TRUE;
+		}
+		catch (XmippError &xe)
+		{
+			PyErr_SetString(PyXmippError, xe.msg.c_str());
+		}
+	}
+	return NULL;
+ }
+
+ /* Return value from Header, now using only the first image*/
+ PyObject *
+ Image_getHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+ {
+		ImageObject *self = (ImageObject*) obj;
+	    PyObject *pyValue;
+	    int label;
+
+		if (self != NULL && PyArg_ParseTuple(args, "i", &label))
+		{
+		    try
+		    {
+		    	MDRow &mainHeader = self->image->image->MD[0];
+		    	if (mainHeader.containsLabel((MDLabel)label))
+		    	{
+					MDObject * object = mainHeader.getObject((MDLabel) label);
+					pyValue = getMDObjectValue(object);
+					return pyValue;
+		    	}
+		    	else
+		    		Py_RETURN_NONE;
+		    }
+		    catch (XmippError &xe)
+		    {
+		        PyErr_SetString(PyXmippError, xe.msg.c_str());
+		    }
+		}
+		return NULL;
+ }
+ /* Set value to Header, now using only the first image*/
+ PyObject *
+ Image_setHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+ {
+		ImageObject *self = (ImageObject*) obj;
+
+		int label;
+		PyObject *pyValue; //Only used to skip label and value
+
+		if (self != NULL && PyArg_ParseTuple(args, "iO", &label, &pyValue))
+		{
+			try
+			{
+				MDRow &mainHeader = self->image->image->MD[0];
+
+				MDObject * object = createMDObject(label, pyValue);
+				if (!object)
+					return NULL;
+				mainHeader.setValue(*object);
+				delete object;
+				Py_RETURN_TRUE;
+			}
+			catch (XmippError &xe)
+			{
+				PyErr_SetString(PyXmippError, xe.msg.c_str());
+			}
+		}
+		return NULL;
+ }
+
+
 
 
 /* Return image dimensions as a tuple */

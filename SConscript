@@ -248,7 +248,7 @@ def AddXmippMPIProgram(name, libs=[]):
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
-	finalLibs.append("XmippReconsCuda");
+		finalLibs.append("XmippReconsCuda");
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -609,7 +609,7 @@ ReconsIncDir=['#libraries', '#external', '#']
 ReconsLibDir=['lib']
 if int(env['arpack']):
     ReconsSources.append("angular_gcar.cpp")
-    ReconsDependLibraries += ['arpack', 'lapack', 'blas']
+    ReconsLib += ['arpack', 'lapack', 'blas']
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
            ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=int(env['cuda']))
 
@@ -936,17 +936,19 @@ if int(env['mpi']):
 
 #---- Tests
 if int(env['gtest']):
+     AddXmippCTest('test_euler')
      AddXmippCTest('test_fftw')
      AddXmippCTest('test_filters')
+     AddXmippCTest('test_fringe_processing')          
      AddXmippCTest('test_funcs')
+     AddXmippCTest('test_geometry')
      AddXmippCTest('test_image')
      AddXmippCTest('test_image_generic')
      AddXmippCTest('test_matrix')
-     AddXmippCTest('test_polynomials')          
-     AddXmippCTest('test_fringe_processing')          
      AddXmippCTest('test_metadata')
      AddXmippCTest('test_multidim')
      AddXmippCTest('test_polar')
+     AddXmippCTest('test_polynomials')          
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')

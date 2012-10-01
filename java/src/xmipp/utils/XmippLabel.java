@@ -63,6 +63,7 @@ public class XmippLabel {
     public final static String CB_PLOT_ENVELOPE = "Envelope";
     public final static String CB_PLOT_PSD = "PSD";
     public final static String CB_PLOT_CTF = "CTF";
+    public final static String CB_PLOT_DIFFERENCE = "Difference";
 //    public final static String SAMPLING_DIRECT = "A";
 //    public final static String SAMPLING_INVERSE = "1/A";
     /**

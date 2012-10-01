@@ -62,12 +62,16 @@ protected:
 
     void readParams()
     {
-      psf.verbose = verbose;
+        psf.verbose = verbose;
 
         if (checkParam("-i"))
         {
             fnParam = getParam("-i");
             psf.read(fnParam);
+            /* This forces always the creation of the PSF Volume file, even if the input already includes the
+             name of a volume in the "image" label
+             */
+            psf.mode = XRayPSF::GENERATE_PSF;
         }
         else
             psf.readParams(this);
