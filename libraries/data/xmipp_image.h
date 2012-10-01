@@ -1038,7 +1038,7 @@ protected:
         //This implementation does not handle stacks,
         //read in a block
         if (data.ndim != 1)
-            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Hgeometric transformation cannot be applied to stacks!!!");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Geometric transformation cannot be applied to stacks!!!");
         if (MD.size()==0)
             MD.push_back(MDL::emptyHeader);
         MDRow &rowAux = MD[0];

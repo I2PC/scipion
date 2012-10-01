@@ -60,13 +60,14 @@ void  ProgConvImg::defineParams()
     CommentList &comments = defaultComments["-i"];
     comments.addComment("++ Supported read formats are:");
     comments.addComment("++ dm3 : Digital Micrograph 3");
+    comments.addComment("++ jpg : JEPG");
     comments.addComment("++ img : Imagic");
     comments.addComment("++ inf,raw : RAW file with header INF file");
-    comments.addComment("++ mrc : CCP4");
+    comments.addComment("++ mrc, map : CCP4");
+    comments.addComment("++ ser : Tecnai Imaging and Analysis");
     comments.addComment("++ spe : Princeton Instruments CCD camera");
     comments.addComment("++ spi, xmp : Spider");
     comments.addComment("++ tif : TIFF");
-    comments.addComment("++ ser : Tecnai Imaging and Analysis");
     comments.addComment("++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file");
     comments.addComment("++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,");
     comments.addComment("++                        cint16,cint32,cfloat,cdouble,bool");
@@ -89,6 +90,7 @@ void  ProgConvImg::defineParams()
     addParamsLine("         spi : Spider (Data types: float* and cfloat).");
     addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
     addParamsLine("         tif : TIFF (Data types: uint8*, uint16, uint32 and float).");
+    addParamsLine("         jpg : JPEG (Data types: uint8*).");
     addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
     addParamsLine("  [--type <output_type=auto>] : Force output file type.");
     addParamsLine("          where <output_type>");

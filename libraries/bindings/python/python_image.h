@@ -28,6 +28,7 @@
 #define _PYTHON_IMAGE_H
 
 #include "Python.h"
+#include "python_metadata.h"
 
 /***************************************************************/
 /*                            Image                         */
@@ -122,6 +123,10 @@ Image_initRandom(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* Scale Image */
+PyObject *
+Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 /* Set Data Type */
 PyObject *
 Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -133,6 +138,22 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs);
 /* Return image dimensions as a tuple */
 PyObject *
 Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* Return value from MainHeader*/
+PyObject *
+Image_getMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* Set value to MainHeader*/
+PyObject *
+Image_setMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* Return value from Header, now using only the first image*/
+PyObject *
+Image_getHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* Set value to Header, now using only the first image*/
+PyObject *
+Image_setHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* Return image dimensions as a tuple */
 PyObject *

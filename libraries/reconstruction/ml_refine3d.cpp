@@ -1202,6 +1202,7 @@ bool ProgMLRefine3D::checkConvergence()
         // Read corresponding volume from disc
     	COMPOSE_VOL_FN(fn_vol, volno, fn_base);
         //fn_vol.compose(volno, fn_base);
+    	std::cerr << "DEBUG_JM: fn_vol: " << fn_vol << std::endl;
         vol.read(fn_vol);
         vol().setXmippOrigin();
         dim = vol().rowNumber();
@@ -1216,11 +1217,14 @@ bool ProgMLRefine3D::checkConvergence()
         //fn_vol.compose(volno, fn_base_old);
         COMPOSE_VOL_FN(fn_vol, volno, fn_base_old);
         old_vol.read(fn_vol);
+        std::cerr << "DEBUG_JM: oldVol: " << fn_vol << std::endl;
         diff_vol() = vol() - old_vol();
         mask_prm.apply_mask(old_vol(), old_vol());
         mask_prm.apply_mask(diff_vol(), diff_vol());
         change = diff_vol().sum2();
         signal = old_vol().sum2();
+        std::cerr << "DEBUG_JM: change: " << change << std::endl;
+        std::cerr << "DEBUG_JM: signal: " << signal << std::endl;
         if (change / signal > eps)
             converged = false;
         if (verbose)

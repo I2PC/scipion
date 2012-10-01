@@ -454,6 +454,16 @@ void produceSplineCoefficients(int SplineDegree,
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Spline coefficients of a complex matrix is not implemented.");
 }
 
+
+void selfScaleToSize(int SplineDegree,
+                     MultidimArrayGeneric &V1,
+                     int Xdim, int Ydim, int Zdim)
+{
+#define SELFSCALETOSIZE(type) selfScaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V1,type),Xdim,Ydim,Zdim);
+    SWITCHDATATYPE(V1.datatype,SELFSCALETOSIZE)
+#undef SELFSCALETOSIZE
+}
+
 // Special case for complex arrays
 void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,

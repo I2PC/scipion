@@ -250,8 +250,8 @@ bool FileName::hasStackExtension() const
 {
     String ext = getFileFormat();
     if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
-        ext=="img" || ext=="hed" || ext=="tif" || ext=="dm3" ||
-        ext=="ser")
+        ext=="mrc" || ext=="img" || ext=="hed" || ext=="tif" ||
+       ext=="dm3" ||  ext=="ser")
         return true;
     else
         return false;
