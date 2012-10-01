@@ -286,7 +286,7 @@ void commonLineTwoImages(std::vector< MultidimArray<double> > &RTsi, int idxi,
     {
     	memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RTi,ii,0),XSIZE(RTi)*sizeof(double));
 
-        for (int jj=0; jj<YSIZE(RTj); jj++)
+        for (int jj=0; jj<YSIZE(RTj)/2; jj++)
         {
         	memcpy(&(DIRECT_A1D_ELEM(linej,0)),&DIRECT_A2D_ELEM(RTj,jj,0),XSIZE(RTj)*sizeof(double));
 
