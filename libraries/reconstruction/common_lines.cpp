@@ -169,27 +169,29 @@ void * threadPrepareImages( void * args )
     int Nsigma=0;
     Image<double> I;
     FileName fnImg;
+    MultidimArray<double> RT;
     FOR_ALL_OBJECTS_IN_METADATA(SFi)
     {
         if ((i+1)%parent->Nthr==master->myThreadID)
         {
             I.readApplyGeo(SFi,__iter.objId);
             I().setXmippOrigin();
+            MultidimArray<double> &mI=I();
 
             // Bandpass filter images
             if (Filter.w1>0)
             {
                 if (first)
                 {
-                    Filter.generateMask(I());
+                    Filter.generateMask(mI);
                     first=false;
                 }
-                Filter.applyMaskSpace(I());
+                Filter.applyMaskSpace(mI);
             }
 
             // Compute sigma outside the largest circle
             double min_val, max_val, avg, stddev;
-            computeStats_within_binary_mask(mask,I(),
+            computeStats_within_binary_mask(mask,mI,
                                             min_val, max_val, avg, stddev);
             master->sigma+=stddev;
             Nsigma++;
@@ -198,19 +200,18 @@ void * threadPrepareImages( void * args )
             // And compute the DC value inside the mask
             double meanInside=0;
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-            if (mask(i,j))
-                I(i,j)=0;
+            if (A2D_ELEM(mask,i,j))
+                A2D_ELEM(mI,i,j)=0;
             else
-                meanInside+=I(i,j);
+                meanInside+=A2D_ELEM(mI,i,j);
             meanInside/=NInsideMask;
 
             // Substract the mean inside the circle
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-            if (!mask(i,j))
-                I(i,j)-=meanInside;
+            if (!A2D_ELEM(mask,i,j))
+                A2D_ELEM(mI,i,j)-=meanInside;
 
             // Compute the Radon transform
-            MultidimArray<double> RT;
             Radon_Transform(I(),parent->stepAng,RT);
             (*(master->blockRTs))[i]=RT;
         }
@@ -280,13 +281,13 @@ void commonLineTwoImages(std::vector< MultidimArray<double> > &RTsi, int idxi,
     {
         linei.initZeros(XSIZE(RTi));
         linei.setXmippOrigin();
-        FOR_ALL_ELEMENTS_IN_ARRAY1D(linei) linei(i) = RTi(ii,i);
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(linei) A1D_ELEM(linei,i) = A2D_ELEM(RTi,ii,i);
 
         for (int jj=0; jj<YSIZE(RTj); jj++)
         {
             linej.initZeros(XSIZE(RTi));
             linej.setXmippOrigin();
-            FOR_ALL_ELEMENTS_IN_ARRAY1D(linej) linej(i) = RTj(jj,i);
+            FOR_ALL_ELEMENTS_IN_ARRAY1D(linej) A1D_ELEM(linej,i) = A2D_ELEM(RTj,jj,i);
 
             // Compute distance between the two lines
             double distance=0;
