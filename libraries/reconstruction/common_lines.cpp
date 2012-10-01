@@ -64,7 +64,7 @@ void ProgCommonLine::defineParams()
 {
 	addUsageLine("For every pair of images in the metadata, find the common line");
 	addParamsLine("    -i <file_in>         : input selfile");
-	addParamsLine("   [-o <file_out>]       : if no name is given, commonlines.txt");
+	addParamsLine("   [-o <file_out=\"commonlines.txt\">]  : Output matrix");
 	addParamsLine("   [--correlation]       : use correlation instead of correntropy");
 	addParamsLine("   [--euclidean]         : use euclidean distance instead of correntropy");
 	addParamsLine("   [--lpf <f=0.01>]      : low pass frequency (0<lpf<0.5)");
@@ -275,16 +275,15 @@ void commonLineTwoImages(std::vector< MultidimArray<double> > &RTsi, int idxi,
     result.distanceij=1e60;
     result.angi=-1;
     result.angj=-1;
+	MultidimArray<double> linei, linej;
     for (int ii=0; ii<YSIZE(RTi)/2+1; ii++)
     {
-    	MultidimArray<double> linei;
         linei.initZeros(XSIZE(RTi));
         linei.setXmippOrigin();
         FOR_ALL_ELEMENTS_IN_ARRAY1D(linei) linei(i) = RTi(ii,i);
 
         for (int jj=0; jj<YSIZE(RTj); jj++)
         {
-        	MultidimArray<double> linej;
             linej.initZeros(XSIZE(RTi));
             linej.setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY1D(linej) linej(i) = RTj(jj,i);
