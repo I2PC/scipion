@@ -64,6 +64,8 @@ public:
     FileName        fn_out;
     /// Distance measure
     DistanceType    distance;
+    /// Scale output measure
+    bool scaleDistance;
     /// Low pass filter
     double          lpf;
     /// High pass filter

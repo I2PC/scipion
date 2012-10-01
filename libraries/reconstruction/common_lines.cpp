@@ -51,6 +51,7 @@ void ProgCommonLine::readParams()
     qualify= checkParam("--qualify");
     mem    = getDoubleParam("--mem");
     Nthr   = getIntParam("--thr");
+    scaleDistance = checkParam("--scaleDistance");
     Nmpi   = 1;
     distance=CORRENTROPY;
     if (checkParam("--correlation"))
@@ -74,6 +75,7 @@ void ProgCommonLine::defineParams()
 	addParamsLine("   [--qualify]           : assess the quality of each common line");
 	addParamsLine("   [--mem <m=1>]         : float number with the memory available in Gb");
 	addParamsLine("   [--thr <thr=1>]       : number of threads for each process");
+	addParamsLine("   [--scaleDistance]     : scale the output distance to 16-bit integers");
 }
 
 /* Side info --------------------------------------------------------------- */
@@ -277,17 +279,16 @@ void commonLineTwoImages(std::vector< MultidimArray<double> > &RTsi, int idxi,
     result.angi=-1;
     result.angj=-1;
 	MultidimArray<double> linei, linej;
+	linei.initZeros(XSIZE(RTi));
+	linei.setXmippOrigin();
+	linej=linei;
     for (int ii=0; ii<YSIZE(RTi)/2+1; ii++)
     {
-        linei.initZeros(XSIZE(RTi));
-        linei.setXmippOrigin();
-        FOR_ALL_ELEMENTS_IN_ARRAY1D(linei) A1D_ELEM(linei,i) = A2D_ELEM(RTi,ii,i);
+    	memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RTi,ii,0),XSIZE(RTi)*sizeof(double));
 
         for (int jj=0; jj<YSIZE(RTj); jj++)
         {
-            linej.initZeros(XSIZE(RTi));
-            linej.setXmippOrigin();
-            FOR_ALL_ELEMENTS_IN_ARRAY1D(linej) A1D_ELEM(linej,i) = A2D_ELEM(RTj,jj,i);
+        	memcpy(&(DIRECT_A1D_ELEM(linej,0)),&DIRECT_A2D_ELEM(RTj,jj,0),XSIZE(RTj)*sizeof(double));
 
             // Compute distance between the two lines
             double distance=0;
@@ -497,11 +498,14 @@ void ProgCommonLine::writeResults()
             int ii=i*Nimg+j;
             if (CLmatrix[ii].distanceij>0)
             {
-                fh_out << j << " " << i << " "
-                << ROUND(65535*(CLmatrix[ii].distanceij-minVal)/
-                         (maxVal-minVal)) << " "
-                << ROUND(CLmatrix[ii].angi/stepAng) << " "
-                << ROUND(CLmatrix[ii].angj/stepAng);
+                fh_out << j << " " << i << " ";
+                if (scaleDistance)
+                	fh_out << ROUND(65535*(CLmatrix[ii].distanceij-minVal)/
+                         (maxVal-minVal)) << " ";
+                else
+                	fh_out << CLmatrix[ii].distanceij << " ";
+                fh_out << ROUND(CLmatrix[ii].angi/stepAng) << " "
+                       << ROUND(CLmatrix[ii].angj/stepAng);
                 if (qualify)
                     fh_out << " " << qualification[ii];
                 fh_out << std::endl;
