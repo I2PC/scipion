@@ -62,6 +62,8 @@ public:
     FileName        fn_sel;
     /// output file
     FileName        fn_out;
+    /// Output style
+    String          outputStyle;
     /// Distance measure
     DistanceType    distance;
     /// Scale output measure
