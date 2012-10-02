@@ -61,7 +61,7 @@ void SVMClassifier::setParameters(double c,double gamma)
     param.nu = 0.1;
     param.cache_size = 1000;
     param.C = c;//1;//64;
-    param.eps = 0.000001;
+    param.eps = 0.001;
     param.p = 0.1;
     param.shrinking = 1;
     param.probability = 1;
