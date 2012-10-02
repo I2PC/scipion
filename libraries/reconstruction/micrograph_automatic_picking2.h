@@ -34,6 +34,8 @@
 #include <classification/naive_bayes.h>
 #include <classification/svm_classifier.h>
 #include <classification/knn_classifier.h>
+//#include "parallel/mpi_image_rotational_pca.h"
+
 
 #include <data/xmipp_image.h>
 #include <data/polar.h>
@@ -74,6 +76,9 @@ public:
     PCAMahalanobisAnalyzer       pcaAnalyzer;
     SVMClassifier                classifier;
     SVMClassifier                classifier2;
+//    ProgImageRotationalPCA       rotPca;
+//    ProgImageRotationalPCA       rotPcaAnalyzer;
+
 //    KNN                          *classifier;
 //    KNN                          *classifier2;
     FileName                     fn_micrograph;
@@ -82,6 +87,7 @@ public:
     int                          particle_radius;
     int                          filter_num;
     int                          NPCA;
+    int                          NRPCA;
     int                          corr_num;
     int                          num_correlation;
     double                       scaleRate;
@@ -91,6 +97,7 @@ public:
 
     MultidimArray<double>        convolveRes;
     MultidimArray<double>        pcaModel;
+    MultidimArray<double>        pcaRotModel;
     MultidimArray<double>        particleAvg;
     MultidimArray<double>        dataSet;
     MultidimArray<double>        dataSet1;
@@ -139,16 +146,17 @@ public:
     void extractNonParticle(std::vector<Particle2> &negativePosition);
 
     /// Extract different filter channels from particles and Non-Particles within a Micrograph
-    void extractInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles);
+    void extractInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles,bool avgFlag);
 
     /// Extract different filter channels from particles within a Micrograph
-    void extractPositiveInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles);
+    void extractPositiveInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles,bool avgFlag);
 
     /// Extract different filter channels from Non-Particles within a Micrograph
     void extractNegativeInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles);
 
     //Build a feature vector from samples
-    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &staticVec,MultidimArray<double> &featureVec);
+    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &staticVec,
+    		         MultidimArray<double> &featureVec,MultidimArray<double> &pieceImage);
 
     /// Extract Invariant Features from a particle at x and y position
     void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y);
