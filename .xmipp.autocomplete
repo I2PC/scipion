@@ -46,13 +46,13 @@ _testPrograms()
     
     #  The basic options we'll complete.
     #
-    opts="--outputdirectory --programname --continue"
+    opts="--outputdirectory --programname --continue --help --more --verbose"
 
   #
     #  Complete the arguments to some of the basic commands.
     #
     case "${prev}" in
-        --programname)
+        --programname | -p )
 	    local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_*`; do echo ${x/\/*\//} ; done )
             COMPREPLY=( $(compgen -W "${names}" -- ${cur}) )
             return 0
