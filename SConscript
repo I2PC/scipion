@@ -771,6 +771,8 @@ AddXmippProgram('ctf_phase_flip', ['XmippRecons'])
 AddXmippProgram('ctf_show', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
+if not int(env['release']):
+    AddXmippProgram('idr_xray_tomo', ['XmippRecons'])
 AddXmippProgram('image_align', ['XmippRecons'])
 AddXmippProgram('image_align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('image_convert')
