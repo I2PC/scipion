@@ -210,8 +210,18 @@ void * threadPrepareImages(void * args) {
 			FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
 				if (!A2D_ELEM(mask,i,j))A2D_ELEM(mI,i,j)-=meanInside;
 
-				// Compute the Radon transform
+			// Compute the Radon transform
 			Radon_Transform(I(), parent->stepAng, RT);
+
+			// Normalize each line in the Radon Transform so that the
+			// multiplication of any two lines is actually their correlation index
+			MultidimArray<double> linei(XSIZE(RT));
+			for (int i = 0; i < YSIZE(RT); i++) {
+				memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RT,i,0),XSIZE(RT)*sizeof(double));
+				linei.statisticsAdjust(0,1);
+				memcpy(&DIRECT_A2D_ELEM(RT,i,0),&(DIRECT_A1D_ELEM(linei,0)),XSIZE(RT)*sizeof(double));
+			}
+
 			(*(master->blockRTs))[i] = RT;
 		}
 		i++;
@@ -285,10 +295,23 @@ void commonLineTwoImages(std::vector<MultidimArray<double> > &RTsi, int idxi,
 			// Compute distance between the two lines
 			double distance=0;
 			if (parent->distance==CORRELATION)
-			distance=1-(correlationIndex(linei,linej)+1)/2;
+			{
+				double corr=0;
+		        size_t imax=(XSIZE(linei)/4)*4;
+		        for (size_t i=0; i<imax; i+=4)
+		        {
+		        	corr+=DIRECT_A1D_ELEM(linei,i)*DIRECT_A1D_ELEM(linej,i);
+		        	corr+=DIRECT_A1D_ELEM(linei,i+1)*DIRECT_A1D_ELEM(linej,i+1);
+		        	corr+=DIRECT_A1D_ELEM(linei,i+2)*DIRECT_A1D_ELEM(linej,i+2);
+		        	corr+=DIRECT_A1D_ELEM(linei,i+3)*DIRECT_A1D_ELEM(linej,i+3);
+		        }
+		        for (size_t i=imax; i<XSIZE(linei); ++i)
+					corr+=DIRECT_A1D_ELEM(linei,i)*DIRECT_A1D_ELEM(linej,i);
+				corr/=XSIZE(linei);
+				distance=1-(corr+1)/2;
+			}
 			else if (parent->distance==CORRENTROPY)
-			distance=1-fastCorrentropy(linei,linej,parent->sigma,
-					parent->gaussianInterpolator);
+				distance=1-fastCorrentropy(linei,linej,parent->sigma, parent->gaussianInterpolator);
 			else if (parent->distance==EUCLIDEAN)
 			{
 				FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(linei)
@@ -345,8 +368,7 @@ void * threadCompareImages(void * args) {
 
 			// Compute the symmetric element
 			long int idx_ji = jj * parent->Nimg + ii;
-			parent->CLmatrix[idx_ji].distanceij =
-					parent->CLmatrix[idx_ij].distanceij;
+			parent->CLmatrix[idx_ji].distanceij = parent->CLmatrix[idx_ij].distanceij;
 			parent->CLmatrix[idx_ji].angi = parent->CLmatrix[idx_ij].angj;
 			parent->CLmatrix[idx_ji].angj = parent->CLmatrix[idx_ij].angi;
 		}
