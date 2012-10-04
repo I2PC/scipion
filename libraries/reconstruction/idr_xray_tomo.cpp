@@ -31,13 +31,13 @@ void ProgIDRXrayTomo::defineParams()
     addUsageLine("Iterative Data Refinement applied to the reconstruction of X-ray tomography projections.");
     addSeeAlsoLine("xray_psf_create, xray_import, xray_project");
     //Params
-    projParam.defineParams(this); // Projection parameters
+    //    projParam.defineParams(this); // Projection parameters
     addParamsLine("-i <md_file>  : Metadata file with input projections");
     addParamsLine("alias --input");
     addParamsLine("--oroot <rootname=\"idr_xray\">  : Rootname used for refined projections");
-    addParamsLine("-o <Vol_file> 				 : Filename for refined output volume");
+    addParamsLine("-o <Vol_file>      : Filename for refined output volume");
     addParamsLine("alias --output");
-    addParamsLine(" [-s <Ts>]     				 : Sampling rate (nm)");
+    addParamsLine(" [-s <Ts>]          : Sampling rate (nm)");
     addParamsLine("alias --sampling_rate;");
     addParamsLine("[--thr <threads=1>]           : Number of concurrent threads.");
 
@@ -65,3 +65,26 @@ void ProgIDRXrayTomo::defineParams()
     addExampleLine(" ",false);
     addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/xray_psf.xmd",false);
 }
+
+/* Read from command line ================================================== */
+void ProgIDRXrayTomo::readParams()
+{
+    //    fn_proj_param = getParam("-i");
+    //    fn_sel_file   = getParam("-o");
+//    projParam.readParams(this);
+
+    fn_psf_xr = getParam("--psf");
+    dxo  = (checkParam("-s"))? getDoubleParam("-s")*1e-9 : -1 ;
+    psfThr = getDoubleParam("--threshold");
+    nThr = getIntParam("--thr");
+
+    psf.read(fn_psf_xr);
+    psf.verbose = verbose;
+    psf.nThr = nThr;
+}//readParams
+
+
+void ProgIDRXrayTomo::run()
+{}
+
+
