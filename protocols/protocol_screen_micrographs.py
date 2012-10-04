@@ -46,8 +46,10 @@ class ProtScreenMicrographs(XmippProtocol):
         objId = MD.firstObject()
         Voltage = MD.getValue(xmipp.MDL_CTF_VOLTAGE,objId)
         SphericalAberration = MD.getValue(xmipp.MDL_CTF_CS,objId)
-        AngPix = MD.getValue(xmipp.MDL_CTF_SAMPLING_RATE,objId)
         Magnification = MD.getValue(xmipp.MDL_MAGNIFICATION,objId)
+        #This must come from acquisition info
+        MD2 = xmipp.MetaData(self.Input['acquisition'])
+        AngPix = MD2.getValue(xmipp.MDL_SAMPLINGRATE,objId)
 
         # Create verifyFiles for the MPI and output directories
         MD = xmipp.MetaData(self.Input['micrographs'])
