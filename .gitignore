@@ -51,6 +51,7 @@ java/src/xmipp/jni/XmippError.java
 bin/
 build/
 lib/
+documentation/
 gmon.out
 *~
 
