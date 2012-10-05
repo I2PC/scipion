@@ -1405,6 +1405,26 @@ public:
         this->destroyData = false;
     }
 
+    /** Alias a row in an image.
+         *
+         * Treat the multidimarray as if it were a single slice. The data is not copied
+         * into new memory, but a pointer to the selected slice in the multidimarray is copied.
+         * You should not make any operation on this volume such that the
+         * memory locations are changed.
+         * Select_slice starts at 0 towards Zsize.
+         */
+    void aliasRow(const MultidimArray<T> &m, int select_row)
+    {
+        if (select_row >= YSIZE(m))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasRow: Selected row cannot be higher than Y size.");
+
+        coreDeallocate();
+        setDimensions(XSIZE(m),1, 1, 1);
+        this->data = m.data + XSIZE(m)*select_row;
+        this->nzyxdimAlloc = this->nzyxdim;
+        this->destroyData = false;
+    }
+
     /** Alias a slice in a multidimarray.
          *
          * Treat the multidimarray as if it were a single slice. The data is not copied
