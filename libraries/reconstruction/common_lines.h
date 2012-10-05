@@ -133,6 +133,80 @@ public:
     // Gaussian interpolator
     GaussianInterpolator gaussianInterpolator;
 };
+
+#define POW2(x) (x*x)
+
+
+/**
+* Class to hold the common lines info between
+* two projection images k1 and k2
+* It will store the indexes of commonline in k1 and k2
+* and the vector direction
+*/
+class CommonLineInfo
+{
+public:
+    size_t nRays; //Number of rays in Fourier space
+    int k[2]; //image projection indexes;
+    int idx[2]; //commonlines indexes in k1 and k2;
+    DVector vector; //direction vector
+
+    CommonLineInfo(int n, int k1=0, int k2=0)
+    {
+        nRays = n;
+        setImages(k1, k2);
+        idx[0] = idx[1] = 0;
+        vector.initZeros(3);
+    }
+
+    int getImage(int i)
+    {
+        return k[i];
+    }
+
+    int getIndex(int i)
+    {
+        return idx[i];
+    }
+
+    void setImages(int k1, int k2)
+    {
+        k[0] = k1;
+        k[1] = k2;
+    }
+
+    void setIndex(int i, double theta)
+    {
+        idx[i] = ROUND(theta/TWOPI * nRays) % nRays;
+    }
+}
+;//class CommonLineInfo
+
+void randomQuaternions(int k, DMatrix &qArray);
+
+void saveMatrix(const char *fn, DMatrix &array);
+
+void quaternionToMatrix(const DVector &q, DMatrix &rotMatrix);
+
+void quaternionCommonLines(const DMatrix &quaternions, CommonLineInfo &clInfo);
+
+void commonlineMatrixCheat(const DMatrix &quaternions, size_t nRays,
+                           DMatrix &clMatrix, DMatrix &clCorr);
+
+void anglesRotationMatrix(const DMatrix &clMatrix, size_t nRays, int i, int j, DMatrix &U);
+
+#define SMALL_TRIANGLE -101
+/** Negative output means error
+ * -101 Triangle too small
+ */
+int tripletRotationMatrix(const DMatrix &clMatrix, size_t nRays, int k1, int k2, int k3, DMatrix &R);
+
+void computeSyncMatrix(const DMatrix &clMatrix, size_t nRays, DMatrix &sMatrix, DMatrix * pQuaternions=NULL);
+
+void rotationsFromSyncMatrix(const DMatrix &sMatrix, DMatrix * pQuaternions = NULL);
+
+
+
 //@}
 
 #endif

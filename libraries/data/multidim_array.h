@@ -673,15 +673,6 @@ struct ArrayCoord
 }
 ;
 
-/**
- *  Structure to define random generation mode
- */
-enum RandomMode
-{
-    RND_UNIFORM = 0,
-    RND_GAUSSIAN = 1
-} ;
-
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
 */

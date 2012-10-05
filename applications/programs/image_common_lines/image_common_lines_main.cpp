@@ -25,33 +25,70 @@
 
 #include <reconstruction/common_lines.h>
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-    ProgCommonLine prm;
-
+    //    ProgCommonLine prm;
+    //
+    //    try
+    //    {
+    //        prm.read(argc, argv);
+    //    }
+    //    catch (XmippError XE)
+    //    {
+    //        std::cout << XE;
+    //        prm.usage();
+    //        exit(1);
+    //    }
+    //
+    //    try
+    //    {
+    //        prm.produceSideInfo();
+    //        prm.show();
+    //        prm.run();
+    //        prm.qualifyCommonLines();
+    //        prm.writeResults();
+    //    }
+    //    catch (XmippError XE)
+    //    {
+    //        std::cout << XE << std::endl;
+    //        exit(1);
+    //    }
+    //    exit(0);
     try
     {
-        prm.read(argc, argv);
+        int k = atoi(argv[1]);
+        Matrix2D<double> quaternions;
+        std::cerr << "DEBUG_JM: calling randomQuaternions" << std::endl;
+        randomQuaternions(k, quaternions);
+
+        //std::cerr << "DEBUG_JM: quaternions: " << quaternions << std::endl;
+        Matrix2D<double> clMatrix, clCorr;
+        size_t L = 10e+15;
+        L = 3600;
+
+        commonlineMatrixCheat(quaternions, L, clMatrix, clCorr);
+        clMatrix.resize(100,100);
+        clMatrix.read("Yoel/commonlines.txt");
+
+        std::cerr << "DEBUG_JM: clMatrix: " << clMatrix << std::endl;
+
+        int k1(0), k2(1), k3(2);
+        DMatrix sMatrix, R;
+
+        //  tripletRotationMatrix(clMatrix, L, 0, 1, 2, R);
+        //  std::cerr << "DEBUG_JM: R: " << R << std::endl;
+        std::cerr << "DEBUG_JM: calling syncMatrix" << std::endl;
+        computeSyncMatrix(clMatrix, L, sMatrix, &quaternions);
+
+        //std::cerr << "DEBUG_JM: sMatrix: " << sMatrix << std::endl;
+
+        rotationsFromSyncMatrix(sMatrix, &quaternions);
     }
-    catch (XmippError XE)
+    catch (XmippError &xe)
     {
-        std::cout << XE;
-        prm.usage();
+        std::cout << xe;
         exit(1);
     }
 
-    try
-    {
-        prm.produceSideInfo();
-        prm.show();
-        prm.run();
-        prm.qualifyCommonLines();
-        prm.writeResults();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE << std::endl;
-        exit(1);
-    }
-    exit(0);
 }

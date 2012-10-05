@@ -217,6 +217,16 @@ int solve_2nd_degree_eq(double a,
                         double& x2,
                         double prec = XMIPP_EQUAL_ACCURACY);
 
+
+/**
+ *  Structure to define random generation mode
+ */
+enum RandomMode
+{
+    RND_UNIFORM = 0,
+    RND_GAUSSIAN = 1
+} ;
+
 /** 1D gaussian value
  *
  * This function returns the value of a univariate gaussian function at the

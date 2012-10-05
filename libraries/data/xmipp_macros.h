@@ -55,6 +55,13 @@
 #define PI 3.14159265358979323846
 #endif
 
+/** 2 * Pi
+ * @ingroup MacrosConstants
+ */
+#ifndef TWOPI
+#define TWOPI  6.283185307179586
+#endif
+
 /** Equal accuracy
  *
  * In a comparison if two values are closer than this epsilon they are said to
