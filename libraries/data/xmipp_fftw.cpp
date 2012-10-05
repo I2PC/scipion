@@ -202,7 +202,7 @@ void FourierTransformer::setReal(MultidimArray<std::complex<double> > &input)
     }
 }
 
-void FourierTransformer::setFourier(MultidimArray<std::complex<double> > &inputFourier)
+void FourierTransformer::setFourier(const MultidimArray<std::complex<double> > &inputFourier)
 {
     memcpy(MULTIDIM_ARRAY(fFourier),MULTIDIM_ARRAY(inputFourier),
            MULTIDIM_SIZE(inputFourier)*2*sizeof(double));
@@ -685,4 +685,38 @@ void adaptSpectrum(MultidimArray<double> &Min,
     Mout=Min;
     multiplyBySpectrum(Mout,spectrum,leave_origin_intact);
 
+}
+
+void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
+                        const MultidimArray< std::complex<double> > & FFT2,
+                        MultidimArray< double >& R,
+                        FourierTransformer &transformer)
+{
+	transformer.setFourier(FFT1);
+
+    // Multiply FFT1 * FFT2'
+    double dSize=XSIZE(*transformer.fReal);
+    double mdSize=-dSize;
+    double a, b, c, d; // a+bi, c+di
+    double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
+    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FFT1);
+    std::cout << "FFT1: " << FFT1 << std::endl;
+    std::cout << "FFT2: " << FFT2 << std::endl;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
+    {
+        a=*ptrFFT1;
+        b=*(ptrFFT1+1);
+        c=(*ptrFFT2++)*dSize;
+        d=(*ptrFFT2++)*mdSize;
+        *ptrFFT1++ = a*c-b*d;
+        *ptrFFT1++ = b*c+a*d;
+    }
+    std::cout << "FFT1p: " << FFT1 << std::endl;
+
+    // Invert the product, in order to obtain the correlation image
+    transformer.inverseFourierTransform();
+
+    // Center the resulting image to obtain a centered autocorrelation
+    R=*transformer.fReal;
+    CenterFFT(R, true);
 }
