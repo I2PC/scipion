@@ -52,11 +52,6 @@ void ProgCommonLine::readParams() {
 	Nthr = getIntParam("--thr");
 	scaleDistance = checkParam("--scaleDistance");
 	Nmpi = 1;
-	distance = CORRENTROPY;
-	if (checkParam("--correlation"))
-		distance = CORRELATION;
-	if (checkParam("--euclidean"))
-		distance = EUCLIDEAN;
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -67,28 +62,16 @@ void ProgCommonLine::defineParams() {
 	addParamsLine("   [-o <file_out=\"commonlines.txt\">]  : Output filename");
 	addParamsLine("   [--ostyle <style=matrix>]  : Output style");
 	addParamsLine("          where <style>");
-	addParamsLine(
-			"                matrix: Text file with the indexes of the corresponding common lines");
-	addParamsLine(
-			"                line_entries: Text file with an entry in each line");
-	addParamsLine(
-			"   [--correlation]       : use correlation instead of correntropy");
-	addParamsLine(
-			"   [--euclidean]         : use euclidean distance instead of correntropy");
+	addParamsLine("                matrix: Text file with the indexes of the corresponding common lines");
+	addParamsLine("                line_entries: Text file with an entry in each line");
 	addParamsLine("   [--lpf <f=0.01>]      : low pass frequency (0<lpf<0.5)");
-	addParamsLine(
-			"   [--hpf <f=0.35>]      : high pass frequency (lpf<hpf<0.5)");
-	addParamsLine(
-			"                         : Set both frequencies to -1 for no filter");
+	addParamsLine("   [--hpf <f=0.35>]      : high pass frequency (lpf<hpf<0.5)");
+	addParamsLine("                         : Set both frequencies to -1 for no filter");
 	addParamsLine("   [--stepAng <s=1>]     : angular step");
-	addParamsLine(
-			"   [--qualify]           : assess the quality of each common line");
-	addParamsLine(
-			"   [--mem <m=1>]         : float number with the memory available in Gb");
-	addParamsLine(
-			"   [--thr <thr=1>]       : number of threads for each process");
-	addParamsLine(
-			"   [--scaleDistance]     : scale the output distance to 16-bit integers");
+	addParamsLine("   [--qualify]           : assess the quality of each common line");
+	addParamsLine("   [--mem <m=1>]         : float number with the memory available in Gb");
+	addParamsLine("   [--thr <thr=1>]       : number of threads for each process");
+	addParamsLine("   [--scaleDistance]     : scale the output distance to 16-bit integers");
 }
 
 /* Side info --------------------------------------------------------------- */
@@ -97,7 +80,7 @@ void ProgCommonLine::produceSideInfo() {
 	Nimg = SF.size();
 
 	// Compute the number of images in each block
-	int Xdim, Ydim, Zdim;
+	int Ydim, Zdim;
 	size_t Ndim;
 	getImageSize(SF, Ydim, Xdim, Zdim, Ndim);
 	Nblock = FLOOR(sqrt(mem*pow(2.0,30.0)/(Ydim*(360/stepAng)*sizeof(double))));
@@ -107,9 +90,6 @@ void ProgCommonLine::produceSideInfo() {
 	CommonLine dummy;
 	for (int i = 0; i < Nimg * Nimg; i++)
 		CLmatrix.push_back(dummy);
-
-	// Initialize the Gaussian interpolator
-	gaussianInterpolator.initialize(6, 60000, false);
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -120,12 +100,6 @@ void ProgCommonLine::show() {
 			<< stepAng << std::endl << "Memory(Gb):    " << mem << std::endl
 			<< "Block size:    " << Nblock << std::endl << "N.Threads:     "
 			<< Nthr << std::endl;
-	if (distance == CORRENTROPY)
-		std::cout << "Distance:      Correntropy\n";
-	else if (distance == CORRELATION)
-		std::cout << "Distance:      Correlation\n";
-	else if (distance == EUCLIDEAN)
-		std::cout << "Distance:      Euclidean distance\n";
 }
 
 /* Get and prepare block --------------------------------------------------- */
@@ -133,9 +107,7 @@ struct ThreadPrepareImages {
 	int myThreadID;
 	ProgCommonLine * parent;
 	MetaData *SFi;
-	std::vector<MultidimArray<double> > *blockRTs;
-
-	double sigma;
+	std::vector<MultidimArray<std::complex<double> > > *blockRTs;
 };
 
 void * threadPrepareImages(void * args) {
@@ -169,11 +141,13 @@ void * threadPrepareImages(void * args) {
 
 	int i = 0;
 	bool first = true;
-	master->sigma = 0;
-	int Nsigma = 0;
 	Image<double> I;
 	FileName fnImg;
-	MultidimArray<double> RT;
+	MultidimArray<double> RT, linei(Xdim);
+	FourierTransformer transformer;
+	transformer.setReal(linei);
+	MultidimArray<std::complex<double> >&mlineiFourier=transformer.fFourier;
+	MultidimArray<std::complex<double> > RTFourier;
 	FOR_ALL_OBJECTS_IN_METADATA(SFi)
 	{
 		if ((i + 1) % parent->Nthr == master->myThreadID) {
@@ -189,13 +163,6 @@ void * threadPrepareImages(void * args) {
 				}
 				Filter.applyMaskSpace(mI);
 			}
-
-			// Compute sigma outside the largest circle
-			double min_val, max_val, avg, stddev;
-			computeStats_within_binary_mask(mask, mI, min_val, max_val, avg,
-					stddev);
-			master->sigma += stddev;
-			Nsigma++;
 
 			// Cut the image outside the largest circle
 			// And compute the DC value inside the mask
@@ -215,29 +182,35 @@ void * threadPrepareImages(void * args) {
 
 			// Normalize each line in the Radon Transform so that the
 			// multiplication of any two lines is actually their correlation index
-			MultidimArray<double> linei(XSIZE(RT));
+			RTFourier.resize(YSIZE(RT), XSIZE(mlineiFourier));
 			for (int i = 0; i < YSIZE(RT); i++) {
-				memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RT,i,0),XSIZE(RT)*sizeof(double));
+				memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RT,i,0),XSIZE(linei)*sizeof(double));
 				linei.statisticsAdjust(0,1);
-				memcpy(&DIRECT_A2D_ELEM(RT,i,0),&(DIRECT_A1D_ELEM(linei,0)),XSIZE(RT)*sizeof(double));
+			    std::cout << "linei: " << linei << std::endl;
+			    std::cout << "transformer real: " << *transformer.fReal << std::endl;
+				transformer.FourierTransform();
+			    std::cout << "transformer fourier: " << transformer.fFourier << std::endl;
+			    transformer.inverseFourierTransform();
+			    transformer.fReal->initZeros();
+			    std::cout << "transformer real2: " << *transformer.fReal << std::endl;
+				memcpy(&DIRECT_A2D_ELEM(RTFourier,i,0),&(DIRECT_A1D_ELEM(mlineiFourier,0)),XSIZE(mlineiFourier)*sizeof(std::complex<double>));
 			}
 
-			(*(master->blockRTs))[i] = RT;
+			(*(master->blockRTs))[i] = RTFourier;
 		}
 		i++;
 	}
-	master->sigma /= Nsigma;
 }
 
 void ProgCommonLine::getAndPrepareBlock(int i,
-		std::vector<MultidimArray<double> > &blockRTs) {
+		std::vector<MultidimArray<std::complex<double> > > &blockRTs) {
 	// Get the selfile
 	MetaData SFi;
 	SFi.selectPart(SF, i * Nblock, Nblock);
 
 	// Ask for space for all the block images
 	int jmax = SFi.size();
-	MultidimArray<double> dummy;
+	MultidimArray<std::complex<double> > dummy;
 	for (int j = 0; j < jmax; j++)
 		blockRTs.push_back(dummy);
 
@@ -255,16 +228,8 @@ void ProgCommonLine::getAndPrepareBlock(int i,
 	}
 
 	// Waiting for threads to finish
-	sigma = 0;
-	for (int nt = 0; nt < Nthr; nt++) {
+	for (int nt = 0; nt < Nthr; nt++)
 		pthread_join(*(th_ids + nt), NULL);
-		sigma += th_args[nt].sigma;
-	}
-	sigma /= Nthr;
-	int Xdim, Ydim, Zdim;
-	size_t Ndim;
-	getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
-	sigma *= sqrt(2.0 * Xdim);
 
 	// Threads structures are not needed any more
 	delete (th_ids);
@@ -272,55 +237,29 @@ void ProgCommonLine::getAndPrepareBlock(int i,
 }
 
 /* Process block ----------------------------------------------------------- */
-void commonLineTwoImages(std::vector<MultidimArray<double> > &RTsi, int idxi,
-		std::vector<MultidimArray<double> >&RTsj, int idxj,
-		ProgCommonLine *parent, CommonLine &result) {
-	MultidimArray<double> &RTi = RTsi[idxi];
-	MultidimArray<double> &RTj = RTsj[idxj];
+void commonLineTwoImages(std::vector<MultidimArray<std::complex<double> > > &RTsi, int idxi,
+		std::vector<MultidimArray<std::complex<double> > >&RTsj, int idxj,
+		ProgCommonLine *parent, CommonLine &result, FourierTransformer &transformer) {
+	MultidimArray<std::complex<double> > &RTi = RTsi[idxi];
+	MultidimArray<std::complex<double> > &RTj = RTsj[idxj];
 
 	result.distanceij = 1e60;
 	result.angi = -1;
 	result.angj = -1;
-	MultidimArray<double> linei, linej;
-	linei.initZeros(XSIZE(RTi));
-	linei.setXmippOrigin();
-	linej = linei;
+	MultidimArray<std::complex<double> > linei, linej;
+	MultidimArray<double> correlationFunction;
 	for (int ii = 0; ii < YSIZE(RTi) / 2 + 1; ii++) {
-		memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RTi,ii,0),XSIZE(RTi)*sizeof(double));
+		linei.aliasRow(RTi,ii);
 
 		for (int jj=0; jj<YSIZE(RTj); jj++)
 		{
-			memcpy(&(DIRECT_A1D_ELEM(linej,0)),&DIRECT_A2D_ELEM(RTj,jj,0),XSIZE(RTj)*sizeof(double));
+			linej.aliasRow(RTj,jj);
 
 			// Compute distance between the two lines
-			double distance=0;
-			if (parent->distance==CORRELATION)
-			{
-				double corr=0;
-		        size_t imax=(XSIZE(linei)/4)*4;
-		        for (size_t i=0; i<imax; i+=4)
-		        {
-		        	corr+=DIRECT_A1D_ELEM(linei,i)*DIRECT_A1D_ELEM(linej,i);
-		        	corr+=DIRECT_A1D_ELEM(linei,i+1)*DIRECT_A1D_ELEM(linej,i+1);
-		        	corr+=DIRECT_A1D_ELEM(linei,i+2)*DIRECT_A1D_ELEM(linej,i+2);
-		        	corr+=DIRECT_A1D_ELEM(linei,i+3)*DIRECT_A1D_ELEM(linej,i+3);
-		        }
-		        for (size_t i=imax; i<XSIZE(linei); ++i)
-					corr+=DIRECT_A1D_ELEM(linei,i)*DIRECT_A1D_ELEM(linej,i);
-				corr/=XSIZE(linei);
-				distance=1-(corr+1)/2;
-			}
-			else if (parent->distance==CORRENTROPY)
-				distance=1-fastCorrentropy(linei,linej,parent->sigma, parent->gaussianInterpolator);
-			else if (parent->distance==EUCLIDEAN)
-			{
-				FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(linei)
-				{
-					double diff=DIRECT_A1D_ELEM(linei,i)-
-					DIRECT_A1D_ELEM(linej,i);
-					distance+=diff*diff;
-				}
-			}
+			fast_correlation_vector(linei, linej, correlationFunction, transformer);
+			correlationFunction.setXmippOrigin();
+			double distance=A1D_ELEM(correlationFunction,0);
+			std::cout << "Distance: " << distance << std::endl;
 
 			// Check if this is the best match
 			if (distance<result.distanceij)
@@ -340,8 +279,8 @@ struct ThreadCompareImages {
 	ProgCommonLine * parent;
 	int i;
 	int j;
-	std::vector<MultidimArray<double> > *RTsi;
-	std::vector<MultidimArray<double> > *RTsj;
+	std::vector<MultidimArray<std::complex<double> > > *RTsi;
+	std::vector<MultidimArray<std::complex<double> > > *RTsj;
 }
 ;
 
@@ -351,6 +290,10 @@ void * threadCompareImages(void * args) {
 
 	int blockIsize = master->RTsi->size();
 	int blockJsize = master->RTsj->size();
+	FourierTransformer transformer;
+	MultidimArray<double> linei;
+	linei.resize(parent->Xdim);
+	transformer.setReal(linei);
 	for (int i = 0; i < blockIsize; i++) {
 		long int ii = parent->Nblock * master->i + i;
 		for (int j = 0; j < blockJsize; j++) {
@@ -364,7 +307,7 @@ void * threadCompareImages(void * args) {
 			// Effectively compare the two images
 			long int idx_ij = ii * parent->Nimg + jj;
 			commonLineTwoImages(*(master->RTsi), i, *(master->RTsj), j, parent,
-					parent->CLmatrix[idx_ij]);
+					parent->CLmatrix[idx_ij], transformer);
 
 			// Compute the symmetric element
 			long int idx_ji = jj * parent->Nimg + ii;
@@ -380,7 +323,7 @@ void ProgCommonLine::processBlock(int i, int j) {
 		return;
 
 	// Preprocess each one of the selfiles
-	std::vector<MultidimArray<double> > RTsi, RTsj;
+	std::vector<MultidimArray<std::complex<double> > > RTsi, RTsj;
 	getAndPrepareBlock(i, RTsi);
 	if (i != j)
 		getAndPrepareBlock(j, RTsj);
@@ -446,12 +389,7 @@ void ProgCommonLine::qualifyCommonLines() {
 
 				// Update histogram if necessary
 				if (1 + 2 * a * b * c > a * a + b * b + c * c) {
-					double alpha12 =
-							180 / PI
-									* acos(
-											(a - b * c)
-													/ (sqrt(1 - b * b)
-															* sqrt(1 - c * c)));
+					double alpha12 = 180 / PI * acos( (a - b * c) / (sqrt(1 - b * b) * sqrt(1 - c * c)));
 					int idxAlpha12 = ROUND(alpha12);
 					int idx0 = XMIPP_MAX( 0,idxAlpha12-10);
 					int idxF = XMIPP_MIN(180,idxAlpha12+10);

@@ -37,8 +37,6 @@
    @ingroup ReconsLibrary */
 //@{
 /* Parameters -------------------------------------------------------------- */
-typedef enum {CORRENTROPY=0, CORRELATION=1, EUCLIDEAN=2} DistanceType;
-
 /// Commonline
 class CommonLine
 {
@@ -64,8 +62,6 @@ public:
     FileName        fn_out;
     /// Output style
     String          outputStyle;
-    /// Distance measure
-    DistanceType    distance;
     /// Scale output measure
     bool scaleDistance;
     /// Low pass filter
@@ -98,7 +94,7 @@ public:
 
     /** Get and prepare block */
     void getAndPrepareBlock(int i,
-        std::vector< MultidimArray<double> > &blockImgs);
+        std::vector< MultidimArray<std::complex<double> > > &blockImgs);
 
     /** Show parameters */
     void show();
@@ -121,17 +117,14 @@ public:
     // Number of images
     int Nimg;
 
-    // Sigma for the correntropy
-    double sigma;
+    // Xdim size of the images
+    int Xdim;
 
     // Common line matrix
     std::vector<CommonLine> CLmatrix;
 
     // Common line matrix
     std::vector<double> qualification;
-
-    // Gaussian interpolator
-    GaussianInterpolator gaussianInterpolator;
 };
 //@}
 
