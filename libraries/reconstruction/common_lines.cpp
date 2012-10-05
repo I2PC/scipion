@@ -190,8 +190,8 @@ void * threadPrepareImages(void * args) {
 			    std::cout << "transformer real: " << *transformer.fReal << std::endl;
 				transformer.FourierTransform();
 			    std::cout << "transformer fourier: " << transformer.fFourier << std::endl;
-			    transformer.inverseFourierTransform();
 			    transformer.fReal->initZeros();
+			    transformer.inverseFourierTransform();
 			    std::cout << "transformer real2: " << *transformer.fReal << std::endl;
 				memcpy(&DIRECT_A2D_ELEM(RTFourier,i,0),&(DIRECT_A1D_ELEM(mlineiFourier,0)),XSIZE(mlineiFourier)*sizeof(std::complex<double>));
 			}
