@@ -115,6 +115,8 @@ echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 echo '# Load configuration file ' >> $INC_FILE
 echo "test -s $XMIPP_HOME/.xmipp.cfg && . $XMIPP_HOME/.xmipp.cfg || true" >> $INC_FILE
+echo '# Load global autocomplete file ' >> $INC_FILE
+echo "test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true" >> $INC_FILE
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
