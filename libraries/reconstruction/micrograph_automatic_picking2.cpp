@@ -634,23 +634,6 @@ void AutoParticlePicking2::loadTrainingSet(const FileName &fn)
     fhTrain.close();
 }
 
-void AutoParticlePicking2::loadMinMaxTrainset(const FileName &fn)
-{
-    int size;
-    FileName fnMaxMinVal=fn+"_maxmin_dataset.txt";
-    std::ifstream fh;
-    fh.open(fnMaxMinVal.c_str());
-    fh>>size;
-    minA.resize(1,1,1,size);
-    maxA.resize(1,1,1,size);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(maxA)
-    {
-        fh>>DIRECT_A1D_ELEM(maxA,i);
-        fh>>DIRECT_A1D_ELEM(minA,i);
-    }
-    fh.close();
-}
-
 void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 {
     std::ofstream fhTrain,fhtest;
@@ -822,6 +805,9 @@ void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
 {
 
     double max,min;
+    MultidimArray<double> maxA;
+    MultidimArray<double> minA;
+
     maxA.resize(1,1,1,YSIZE(dataSet));
     minA.resize(1,1,1,YSIZE(dataSet));
 

@@ -84,8 +84,6 @@ public:
     int                          corr_num;
     int                          num_correlation;
     double                       scaleRate;
-    double                       datasetMax;
-    double                       datasetMin;
     int                          NRsteps;
 
     MultidimArray<double>        convolveRes;
@@ -97,8 +95,6 @@ public:
     MultidimArray<double>        classLabel;
     MultidimArray<double>        classLabel1;
     MultidimArray<double>        labelSet;
-    MultidimArray<double>        maxA;
-    MultidimArray<double>        minA;
 
     std::vector<Particle2>       auto_candidates;
     std::vector<Particle2>       rejected_particles;
@@ -150,33 +146,33 @@ public:
 
     /* Extract non partiles from the micrograph and put these
      * positions in a vector. Later we select some of them in a
-     * random manner in order to train the classifier.
+     * random manner in order to train the classifier with negative
+     * samples.
      */
     void extractNonParticle(std::vector<Particle2> &negativePosition);
 
     /*
-     *Extract the invariants from the particles and non particles.
-     *The invariants are the correlations between different channels
-     *in polar form.
+     * Extract the invariants from the particles and non particles
+     * in the micrograph.The invariants are the correlations between
+     * different channels in polar form.
      */
     void extractInvariant(const FileName &fnInvariantFeat,
                           const FileName &fnParticles,
                           bool avgFlag);
 
     /*
-     * This method extracts the invariants from the positions of the
-     * particles which are in fnInvariantFeat.If the flag is true
-     * then the average of the particles is also computed.
-     * The particles are saved in fnParticles.
+     * This method extracts the invariants from the particles
+     * in a micrograph. If the flag is true then the average
+     * of the particles is also computed.The particles are
+     * saved in fnParticles.
      */
     void extractPositiveInvariant(const FileName &fnInvariantFeat,
                                   const FileName &fnParticles,
                                   bool avgFlag);
 
     /*
-     * This method extracts the invariants from the positions of the
-     * non particles which are in fnInvariantFeat.The particles are
-     * saved in fnParticles.
+     * This method extracts the invariants from the non particles
+     * in a micrograph.The non particles are saved in fnParticles.
      */
     void extractNegativeInvariant(const FileName &fnInvariantFeat,
                                   const FileName &fnParticles);
@@ -190,7 +186,10 @@ public:
                      MultidimArray<double> &featureVec,
                      MultidimArray<double> &pieceImage);
 
-    /// Extract Invariant Features from a particle at x and y position
+    /*Extract the invariants from the particles and non particles.
+     *The invariants are the correlations between different channels
+     *in polar form.
+     */
     void buildInvariant(MultidimArray<double> &invariantChannel,
                         int x,int y);
 
@@ -230,9 +229,6 @@ public:
 
     /// Load the feature vectors of the particles
     void loadAutoVectors(const FileName &fn);
-
-    /// Load min and max of training set
-    void loadMinMaxTrainset(const FileName &fn_root);
 
     /// Load training set
     void loadTrainingSet(const FileName &fn_root);
