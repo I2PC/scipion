@@ -82,6 +82,12 @@ void filterBankGenerator(MultidimArray<double> &inputMicrograph,
         Iaux.write(fnFilterBankStack,i+1,true,WRITE_APPEND);
     }
 }
+
+/*
+ *This method do the correlation between two polar images
+ *n1 and n2 in mIPolar (Stack) and put it at the nF place
+ *of the mIpolarCorr (Stack)
+ */
 void correlationBetweenPolarChannels(int n1,int n2,int nF,
                                      MultidimArray<double> &mIpolar,
                                      MultidimArray<double> &mIpolarCorr,
@@ -127,6 +133,10 @@ bool AutoParticlePicking2::checkDist(Particle2 &p)
         return false;
 }
 
+/*
+ * This method check if a point is local maximum according to
+ * the eight neighbors.
+ */
 bool isLocalMaxima(MultidimArray<double> &inputArray, int x, int y)
 {
     if (DIRECT_A2D_ELEM(inputArray,y-1,x-1)<DIRECT_A2D_ELEM(inputArray,y,x) &&
@@ -1114,8 +1124,6 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->generateTrainSet();
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);
-        //        autoPicking->classifier->~SVMClassifier();
-        //        autoPicking->classifier2->~SVMClassifier();
     }
     delete autoPicking;
 }

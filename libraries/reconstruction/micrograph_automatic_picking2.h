@@ -34,8 +34,6 @@
 #include <classification/naive_bayes.h>
 #include <classification/svm_classifier.h>
 #include <classification/knn_classifier.h>
-//#include "parallel/mpi_image_rotational_pca.h"
-
 
 #include <data/xmipp_image.h>
 #include <data/polar.h>
@@ -76,11 +74,6 @@ public:
     PCAMahalanobisAnalyzer       pcaAnalyzer;
     SVMClassifier                classifier;
     SVMClassifier                classifier2;
-//    ProgImageRotationalPCA       rotPca;
-//    ProgImageRotationalPCA       rotPcaAnalyzer;
-
-//    KNN                          *classifier;
-//    KNN                          *classifier2;
     FileName                     fn_micrograph;
     int                          piece_xsize;
     int                          particle_size;
@@ -110,10 +103,13 @@ public:
     std::vector<Particle2>       auto_candidates;
     std::vector<Particle2>       rejected_particles;
     Image<double>                micrographStack;
+
 public:
 
     /// Empty constructor
-    AutoParticlePicking2(const FileName &fn, Micrograph *_m,int size, int filterNum,int pcaNum,int corrNum);
+    AutoParticlePicking2(const FileName &fn, Micrograph *_m,
+                         int size, int filterNum,
+                         int pcaNum,int corrNum);
 
     /// Destructor
     ~AutoParticlePicking2();
@@ -125,41 +121,78 @@ public:
     bool checkDist(Particle2 &p);
 
     /// Extract statistical features
-    void extractStatics(MultidimArray<double> &inputVec,MultidimArray<double> &features);
+    void extractStatics(MultidimArray<double> &inputVec,
+                        MultidimArray<double> &features);
+
     /// Convert an image to its polar form
-    void convert2Polar(MultidimArray<double> &particleImage, MultidimArray<double> &polar);
+    void convert2Polar(MultidimArray<double> &particleImage,
+                       MultidimArray<double> &polar);
 
     /// Calculate the correlation of different polar channels
-    void polarCorrelation(MultidimArray<double> &Ipolar,MultidimArray<double> &IpolarCorr);
+    void polarCorrelation(MultidimArray<double> &Ipolar,
+                          MultidimArray<double> &IpolarCorr);
 
-    /// Do the convolution with the average of the particles
+    /// Convolve the micrograph with the different templates
     void applyConvolution();
 
-    /// Project a vector in PCA space
-    double PCAProject(MultidimArray<double> &pcaBasis,MultidimArray<double> &vec);
+    /// Project a vector on one pca basis
+    double PCAProject(MultidimArray<double> &pcaBasis,
+                      MultidimArray<double> &vec);
 
-    /// Extract the particles from the Micrograph
-    void extractParticle(const int x, const int y, MultidimArray<double> &filter,
-                         MultidimArray<double> &particleImage,bool normal);
+    /*
+     * Extract the particle from the micrograph at x and y
+     * and normalize it if the flag normal is true.
+     */
+    void extractParticle(const int x, const int y,
+                         MultidimArray<double> &filter,
+                         MultidimArray<double> &particleImage,
+                         bool normal);
 
-    //Extract the particles from the Micrograph
+    /* Extract non partiles from the micrograph and put these
+     * positions in a vector. Later we select some of them in a
+     * random manner in order to train the classifier.
+     */
     void extractNonParticle(std::vector<Particle2> &negativePosition);
 
-    /// Extract different filter channels from particles and Non-Particles within a Micrograph
-    void extractInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles,bool avgFlag);
+    /*
+     *Extract the invariants from the particles and non particles.
+     *The invariants are the correlations between different channels
+     *in polar form.
+     */
+    void extractInvariant(const FileName &fnInvariantFeat,
+                          const FileName &fnParticles,
+                          bool avgFlag);
 
-    /// Extract different filter channels from particles within a Micrograph
-    void extractPositiveInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles,bool avgFlag);
+    /*
+     * This method extracts the invariants from the positions of the
+     * particles which are in fnInvariantFeat.If the flag is true
+     * then the average of the particles is also computed.
+     * The particles are saved in fnParticles.
+     */
+    void extractPositiveInvariant(const FileName &fnInvariantFeat,
+                                  const FileName &fnParticles,
+                                  bool avgFlag);
 
-    /// Extract different filter channels from Non-Particles within a Micrograph
-    void extractNegativeInvariant(const FileName &fnInvariantFeat,const FileName &fnParticles);
+    /*
+     * This method extracts the invariants from the positions of the
+     * non particles which are in fnInvariantFeat.The particles are
+     * saved in fnParticles.
+     */
+    void extractNegativeInvariant(const FileName &fnInvariantFeat,
+                                  const FileName &fnParticles);
 
-    //Build a feature vector from samples
-    void buildVector(MultidimArray<double> &inputVec,MultidimArray<double> &staticVec,
-    		         MultidimArray<double> &featureVec,MultidimArray<double> &pieceImage);
+    /*
+     * This method is used in order to extract all the features
+     * from an input (Can be particle or non particle)
+     */
+    void buildVector(MultidimArray<double> &inputVec,
+                     MultidimArray<double> &staticVec,
+                     MultidimArray<double> &featureVec,
+                     MultidimArray<double> &pieceImage);
 
     /// Extract Invariant Features from a particle at x and y position
-    void buildInvariant(MultidimArray<double> &invariantChannel,int x,int y);
+    void buildInvariant(MultidimArray<double> &invariantChannel,
+                        int x,int y);
 
     /// Provide the optimum search space for particles
     void buildSearchSpace(std::vector<Particle2> &positionArray);
@@ -171,7 +204,8 @@ public:
     void trainPCA(const FileName &fnPositiveFeat);
 
     /// Make dataset from the data in file
-    void add2Dataset(const FileName &fnInvariantFeat,const FileName &fnParticles,int lable);
+    void add2Dataset(const FileName &fnInvariantFeat,
+                     const FileName &fnParticles,int lable);
 
     /// Add the false positives to the dataset
     void add2Dataset();
