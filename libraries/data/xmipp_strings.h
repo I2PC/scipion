@@ -406,5 +406,10 @@ bool matchRegExp(const String &inputString, const String &pattern);
 /** split long comments in several lines starting with # */
 String WordWrap(const String &inputString, size_t lineLength);
 
+/** Escape for regular expressions.
+ * Escape characters that could be misunderstood by regular expressions
+ */
+String escapeForRegularExpressions(const String &str);
+
 //@}
 #endif
