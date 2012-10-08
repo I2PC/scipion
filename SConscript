@@ -1076,8 +1076,9 @@ if int(env['qt']):
         AddQtProgram(name, 'applications/programs/' + name, '*.cpp', [], mocs,
     	    finalIncludePath, finalLibPath, finalLibs, [], [])
 
-    AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
-    AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
+    #do not compile micrograph mark
+    #AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
+    #AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
 
 if int(env['matlab']):
     
