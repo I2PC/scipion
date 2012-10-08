@@ -358,7 +358,7 @@ void projectXrayVolume(MultidimArray<double> &muVol,
      */
     std::vector<int> phantomSlabIdx, psfSlicesIdx;
 
-    // Search for the PSFslab of the begining of the volume
+    // Search for the PSFslab of the beginning of the volume
     int firstSlab = STARTINGZ(muVol)*psf.dzo/psf.dzoPSF;
 
     if (!XMIPP_EQUAL_ZERO(psf.slabThr))
@@ -490,7 +490,7 @@ void threadXrayProject(ThreadArgument &thArg)
         int kini = phantomSlabIdx[first];
         int kend = phantomSlabIdx[last + 1] - 1 ;
 
-        double deltaZSlab =  psf.dzo*(kend-kini+1);
+//        double deltaZSlab =  psf.dzo*(kend-kini+1);
 
         intExp.initZeros();
 
