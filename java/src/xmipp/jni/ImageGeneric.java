@@ -70,7 +70,6 @@ public class ImageGeneric {
 
     public ImageGeneric(String filename) throws Exception {
         this();
-        System.out.println("Calling setFilename: " + filename);
         setFilename(filename);
     }
     
