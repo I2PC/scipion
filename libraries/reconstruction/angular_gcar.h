@@ -27,6 +27,7 @@
 
 #include <data/xmipp_program.h>
 #include <data/matrix2d.h>
+#include <data/sparse_matrix2d.h>
 #include <data/matrix1d.h>
 #include <data/xmipp_funcs.h>
 #include <math.h>
