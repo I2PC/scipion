@@ -135,7 +135,6 @@ void ProgImageRotationalPCA::produceSideInfo()
   MetaData MDin(fnIn);
 
   if (maxNimgs > 0)
-  {
     selectPartFromMd(MDin);
 
     Nimg = MDin.size();
@@ -204,7 +203,6 @@ void ProgImageRotationalPCA::produceSideInfo()
     MDin.findObjects(objId);
     size_t Nimgs = objId.size();
     createMutexes(Nimgs);
-  }
 }
 
 // Buffer =================================================================

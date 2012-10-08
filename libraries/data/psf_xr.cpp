@@ -310,8 +310,15 @@ void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
         applyGeometry(LINEAR, mdaPsfVol, psfGen(), T,
                       IS_INV, DONT_WRAP);
 
+        psfGen.clear(); // Free mem in case image is not mapped
+
+        // Rescale the PSF values to keep the normalization
+        mdaPsfVol *= scaleFactor*scaleFactor;
+
+        // Reset the sampling values so now psfVol matches input phantom's sampling
         dxoPSF = dxo;
         dzoPSF = dzo;
+        T.initIdentity(4);
 
         if (threshold != 0.)
             reducePSF2Slabs(threshold);
@@ -455,13 +462,14 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
 
             const MultidimArray<double> &mPsfVol = MULTIDIM_ARRAY(psfVol);
 
-            double zIndexPSF = (Zo - Zpos)/dzoPSF;
+            double zIndexPSF = (Zo - Zpos)/dzoPSF; // Slice index for Zpos
 
             if (zIndexPSF < STARTINGZ(mPsfVol) ||
                 zIndexPSF > FINISHINGZ(mPsfVol))
                 PSFi.initZeros();
             else
-            {
+            {   /* Actually T transform matrix is set to identity, as sampling is the same for both psfVol and phantom
+                 * It is only missing to set Z shift to select the slice */
                 dMij(T, 2, 3) = zIndexPSF; // Distance from the focal plane
                 applyGeometry(LINEAR, PSFi, mPsfVol, T,
                               IS_INV, DONT_WRAP, dAkij(mPsfVol,0,0,0));
@@ -545,11 +553,15 @@ void XRayPSF::generatePSF()
 
         progress_bar(k2+1);
     }
-    if (Nix != Nox || Niy != Noy)
-        mPsfVol.selfWindow(STARTINGZ(mPsfVol),
-                           FIRST_XMIPP_INDEX(Noy),FIRST_XMIPP_INDEX(Nox),
-                           FINISHINGZ(mPsfVol),
-                           FIRST_XMIPP_INDEX(Noy)+Noy-1,FIRST_XMIPP_INDEX(Nox)+Nox-1);
+
+    /* When PSF is generated from IDEAL_FRESNEL_LENS, dimensions are adjusted to avoid subsampling,
+     * in that case it is not recommended to crop XY plane to avoid the loss of normalization in PSF plane. */
+
+//    if (Nix != Nox || Niy != Noy)
+//        mPsfVol.selfWindow(STARTINGZ(mPsfVol),
+//                           FIRST_XMIPP_INDEX(Noy),FIRST_XMIPP_INDEX(Nox),
+//                           FINISHINGZ(mPsfVol),
+//                           FIRST_XMIPP_INDEX(Noy)+Noy-1,FIRST_XMIPP_INDEX(Nox)+Nox-1);
 }
 
 /* Generate the PSF for a ideal lens --------------------------------------- */
