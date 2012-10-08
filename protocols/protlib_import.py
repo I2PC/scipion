@@ -80,17 +80,23 @@ def convertBox(boxFile, posFile, ysize, family='DefaultFamily', particleSize=Non
     
     md = MetaData()
     md.readPlain(boxFile, 'Xcoor Ycoor')
+    eman1 = False
     
     if particleSize is None: #Find the EMAN particle size
         for line in f:
             if len(line.strip()):
                 parts = line.strip().split()
+                if len(parts) == 5:
+                    eman1 = True # the y should be inverted
                 particleSize = int(parts[2])                    
                 break
                 
     half = particleSize / 2
     # Move coordinates to the center and also invert the y-coordinate
-    md.operate('Xcoor=Xcoor+%(half)d,Ycoor=Ycoor+%(half)d' % locals())
+    if eman1: #invert y
+        md.operate('Xcoor=Xcoor+%(half)d,Ycoor=%(ysize)d-(Ycoor+%(half)d)' % locals())
+    else:
+        md.operate('Xcoor=Xcoor+%(half)d,Ycoor=Ycoor+%(half)d' % locals())
     
     mdFamily = MetaData()
     objId = mdFamily.addObject()
