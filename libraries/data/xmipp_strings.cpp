@@ -662,3 +662,9 @@ String WordWrap(const String &inputString, size_t lineLength)
     return ss.str();
 }
 
+String escapeForRegularExpressions(const String &str)
+{
+	String aux;
+	aux=findAndReplace(str,"+","\\+");
+	return aux;
+}
