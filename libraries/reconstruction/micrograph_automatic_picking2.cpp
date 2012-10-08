@@ -279,6 +279,21 @@ void AutoParticlePicking2::trainPCA(const FileName &fnPositiveFeat)
     }
 }
 
+void AutoParticlePicking2::trainRotPCA(const FileName &fnAvgModel,const FileName &fnPCARotModel)
+{
+    rotPcaAnalyzer.fnIn=fnAvgModel;
+    rotPcaAnalyzer.fnRoot=fnPCARotModel;
+    rotPcaAnalyzer.psi_step=2;
+    rotPcaAnalyzer.Nthreads=4;
+    rotPcaAnalyzer.Neigen=20;
+    rotPcaAnalyzer.shift_step=1;
+    rotPcaAnalyzer.Nits=2;
+    rotPcaAnalyzer.maxNimgs=-1;
+    rotPcaAnalyzer.max_shift_change=1;
+    rotPcaAnalyzer.run();
+
+}
+
 void AutoParticlePicking2::trainSVM(const FileName &fnModel,
                                     int numClassifier)
 {
