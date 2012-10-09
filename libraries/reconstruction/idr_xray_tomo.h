@@ -39,14 +39,19 @@ class ProgIDRXrayTomo: public virtual XmippProgram
 {
 public:
 
-	/// Metadafile with angles and projection file names
-	FileName fnInputProj;
-	/// Rootname for intermediate/exchange projections metadatas and files
-	FileName fnIntermProjs;
-	/// Reconstructed output volume file name
-	FileName fnOutVol;
+    /// Metadafile with angles and projection file names
+    FileName fnInputProj;
+    /// Rootname for intermediate/exchange projections metadatas and files
+    FileName fnIntermProjs;
+    /// Reconstructed output volume file name
+    FileName fnOutVol;
+    /// Initial volume
+    FileName fnStart;
 
     // Microscope optics parameters
+    /// Xray Microscope PSF Parameters
+    FileName fnPSF;
+    /// Xray PSF Object
     XRayPSF psf;
     /// threshold for psfSlabs
     double psfThr;
@@ -55,12 +60,14 @@ public:
     /// Number of threads;
     int nThr;
 
-    /// IDR Params
+    // IDR Params
     /// Number of iterations
     int itNum;
     /// Relaxation parameter
     Matrix1D<double> lambda_list;
 
+
+    Image<double> muVol;
 
     XrayProjPhantom phantom;
     Projection   proj;
@@ -83,6 +90,16 @@ protected:
     void postRun();
 
 };
+
+
+/** Reconstruct tomogram projections using external tomo3D
+ *
+ * @param MD Includes tilt angle values and projections file names
+ * @param fn Reconstructed output volume name
+ * @param params Other parameters to be passed to tomo3D
+ * @return True if external system call ran right. Otherwise False
+ */
+int reconsTomo3D(const MetaData &MD, const FileName fn, const String& params = "");
 
 
 //@}

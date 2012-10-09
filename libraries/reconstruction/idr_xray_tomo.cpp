@@ -33,10 +33,11 @@ void ProgIDRXrayTomo::defineParams()
     //Params
     //    projParam.defineParams(this); // Projection parameters
     addParamsLine("-i <md_file>  : Metadata file with input projections");
-    addParamsLine("alias --input");
-    addParamsLine("--oroot <rootname=\"idr_xray\">  : Rootname used for refined projections");
-    addParamsLine("-o <Vol_file>      : Filename for refined output volume");
-    addParamsLine("alias --output");
+    addParamsLine("alias --input;");
+    addParamsLine(" [--oroot <rootname=\"idr_xray\">]  : Rootname used for refined projections");
+    addParamsLine(" [-o <Vol_file=\"idr_recon_vol.mrc\">]  : Filename for refined output volume");
+    addParamsLine("alias --output;");
+    addParamsLine(" [--start <start_vol_file=\"\">]  : Start from this basis volume. The reconstruction is performed in the same grid as the one ");
     addParamsLine(" [-s <Ts>]          : Sampling rate (nm)");
     addParamsLine("alias --sampling_rate;");
     addParamsLine("[--thr <threads=1>]           : Number of concurrent threads.");
@@ -69,22 +70,97 @@ void ProgIDRXrayTomo::defineParams()
 /* Read from command line ================================================== */
 void ProgIDRXrayTomo::readParams()
 {
-    //    fn_proj_param = getParam("-i");
-    //    fn_sel_file   = getParam("-o");
-//    projParam.readParams(this);
+    fnInputProj = getParam("-i");
+    fnOutVol = getParam("-o");
+    fnIntermProjs = getParam("--oroot");
+    fnStart = getParam("--start");
+    //    projParam.readParams(this);
 
-    fn_psf_xr = getParam("--psf");
+    fnPSF = getParam("--psf");
     dxo  = (checkParam("-s"))? getDoubleParam("-s")*1e-9 : -1 ;
     psfThr = getDoubleParam("--threshold");
     nThr = getIntParam("--thr");
 
-    psf.read(fn_psf_xr);
+    // Iteration parameters
+    StringVector list;
+    getListParam("-l", list);
+    size_t listSize = list.size();
+
+    if (listSize != 0)
+    {
+        lambda_list.resizeNoCopy(listSize);
+
+        for (size_t k = 0; k < listSize; k++)
+            VEC_ELEM(lambda_list, k) = textToFloat(list[k]);
+    }
+
+    itNum = getIntParam("-n");
+
+    psf.read(fnPSF);
     psf.verbose = verbose;
     psf.nThr = nThr;
 }//readParams
 
 
+
+void ProgIDRXrayTomo::preRun()
+{
+    psf.calculateParams(dxo, -1, psfThr);
+
+    // Threads stuff
+    barrier = new Barrier(nThr);
+    //Create threads to start working
+    thMgr = new ThreadManager(nThr);
+
+    // Reading the input projections. Tilt angle values are needed
+    MetaData mdIn(fnInputProj);
+
+
+    if (fnStart.empty()) // if initial volume is not passed,then we must calculate it
+    {
+
+
+    }
+    else
+        muVol.read(fnStart);
+
+
+}
+
 void ProgIDRXrayTomo::run()
-{}
+{
+    preRun();
+
+
+
+}
+
+int reconsTomo3D(const MetaData &MD, const FileName fn, const String& params)
+{
+    // Saving angles in plain text to pass to tomo3D
+    FileName fnAngles("idr_xray_tomo_to_tomo3d_angles.txt");
+    std::vector<MDLabel> desiredLabels;
+    desiredLabels.push_back(MDL_ANGLE_TILT);
+    MD.writeText(fnAngles, &desiredLabels);
+
+    FileName fnProjs;
+
+    MD.getValue(MDL_IMAGE, fnProjs, MD.firstObject());
+
+    // Projections must be in an MRC stack to be passed
+    if ( !(fnProjs.isInStack() && (fnProjs.contains("mrc") || fnProjs.contains("st"))))
+    {
+        //FIXME: To be implemented the conversion to an MRC stack
+
+        REPORT_ERROR(ERR_IMG_NOREAD, "reconsTromo3D: Image format cannot be read by tomo3D.");
+    }
+
+    String exec("tomo3D -a "+fnAngles+" -i "+fnProjs.removeBlockNameOrSliceNumber()+" -o "+fn+" "+params);
+
+    return system(exec.c_str());
+
+}
+
+
 
 
