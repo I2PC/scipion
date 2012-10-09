@@ -695,23 +695,18 @@ void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
 	transformer.setFourier(FFT1);
 
     // Multiply FFT1 * FFT2'
-    double dSize=XSIZE(*transformer.fReal);
-    double mdSize=-dSize;
     double a, b, c, d; // a+bi, c+di
     double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
-    double *ptrFFT1=(double*)MULTIDIM_ARRAY(FFT1);
-    std::cout << "FFT1: " << FFT1 << std::endl;
-    std::cout << "FFT2: " << FFT2 << std::endl;
+    double *ptrFFT1=(double*)&(A1D_ELEM(transformer.fFourier,0));
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
     {
         a=*ptrFFT1;
         b=*(ptrFFT1+1);
-        c=(*ptrFFT2++)*dSize;
-        d=(*ptrFFT2++)*mdSize;
+        c=(*ptrFFT2++);
+        d=(*ptrFFT2++)*(-1);
         *ptrFFT1++ = a*c-b*d;
         *ptrFFT1++ = b*c+a*d;
     }
-    std::cout << "FFT1p: " << FFT1 << std::endl;
 
     // Invert the product, in order to obtain the correlation image
     transformer.inverseFourierTransform();
@@ -719,4 +714,5 @@ void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
     // Center the resulting image to obtain a centered autocorrelation
     R=*transformer.fReal;
     CenterFFT(R, true);
+    R.setXmippOrigin();
 }
