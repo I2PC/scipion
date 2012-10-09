@@ -61,6 +61,78 @@ TEST_F(GeometryTest, angles2Matrix2Angles)
 
             }
 }
+TEST_F(GeometryTest, rotateAngleAroundAxis)
+{
+    double xrad, yrad, zrad;
+
+    double ang, rot, tilt, psi;
+
+    Matrix1D<double> axis(3);
+    Matrix2D<double> matrix, rMatrix;
+
+
+    ang = 90;
+    // Around X
+    XX(axis) = 1;
+    YY(axis) = 0;
+    ZZ(axis) = 0;
+
+    for (int sign = -1; sign < 2; sign+=2)
+    {
+        rotation3DMatrix(ang*sign, axis, rMatrix, false);
+
+        EXPECT_NEAR(sign, MAT_ELEM(rMatrix,1,2), XMIPP_EQUAL_ACCURACY);
+        EXPECT_NEAR(-sign, MAT_ELEM(rMatrix,2,1), XMIPP_EQUAL_ACCURACY);
+    }
+
+    // Around Y
+    XX(axis) = 0;
+    YY(axis) = 1;
+    ZZ(axis) = 0;
+
+    for (int sign = -1; sign < 2; sign+=2)
+    {
+        rotation3DMatrix(ang*sign, axis, rMatrix, false);
+
+        EXPECT_NEAR(-sign, MAT_ELEM(rMatrix,0,2), XMIPP_EQUAL_ACCURACY);
+        EXPECT_NEAR(sign, MAT_ELEM(rMatrix,2,0), XMIPP_EQUAL_ACCURACY);
+    }
+
+    // Around Z
+    XX(axis) = 0;
+    YY(axis) = 0;
+    ZZ(axis) = 1;
+
+    for (int sign = -1; sign < 2; sign+=2)
+    {
+        rotation3DMatrix(ang*sign, axis, rMatrix, false);
+
+        EXPECT_NEAR(sign, MAT_ELEM(rMatrix,0,1), XMIPP_EQUAL_ACCURACY);
+        EXPECT_NEAR(-sign, MAT_ELEM(rMatrix,1,0), XMIPP_EQUAL_ACCURACY);
+    }
+
+
+    //    EXPECT_NEAR(ang, tilt, XMIPP_EQUAL_ACCURACY);
+    //    EXPECT_NEAR(0, rot, XMIPP_EQUAL_ACCURACY);
+    //    EXPECT_NEAR(0, psi, XMIPP_EQUAL_ACCURACY);
+
+    // Around Y negative
+    //    ang = -90;
+    //    rotation3DMatrix(ang, axis, rMatrix, false);
+    //    Euler_matrix2angles(rMatrix, rot, tilt, psi);
+    //
+    //    rot = realWRAP(rot,-180,180);
+    //    tilt = realWRAP(tilt,-180,180);
+    //    psi = realWRAP(psi,-180,180);
+    //
+    //    if (ang * tilt < 0)
+    //        Euler_another_set(rot, tilt, psi, rot, tilt, psi);
+    //
+    //    EXPECT_NEAR(ang, tilt, XMIPP_EQUAL_ACCURACY);
+    //    EXPECT_NEAR(0, rot, XMIPP_EQUAL_ACCURACY);
+    //    EXPECT_NEAR(0, psi, XMIPP_EQUAL_ACCURACY);
+
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {

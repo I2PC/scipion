@@ -122,7 +122,18 @@ public abstract class Micrograph {
 			}
 			return imp;
 		} catch (Exception e) {
-			ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			//Check why is given other exception: 
+//			java.io.IOException: Couldn't get lock for PPicker.log
+//			00014:   	at java.util.logging.FileHandler.openFiles(FileHandler.java:389)
+//			00015:   	at java.util.logging.FileHandler.<init>(FileHandler.java:287)
+//			00016:   	at xmipp.particlepicker.ParticlePicker.getLogger(ParticlePicker.java:213)
+//			00017:   	at xmipp.particlepicker.Micrograph.getImagePlus(Micrograph.java:125)
+//			00018:   	at xmipp.particlepicker.ParticlePickerCanvas.updateMicrographData(ParticlePickerCanvas.java:195)
+//			00019:   	at xmipp.particlepicker.training.gui.TrainingCanvas.updateMicrograph(TrainingCanvas.java:53)
+//			00020:   	at xmipp.particlepicker.training.gui.TrainingPickerJFrame.initializeCanvas(TrainingPickerJFrame.java:498)
+//			00021:   	at xmipp.particlepicker.training.gui.TrainingPickerJFrame.loadMicrograph(TrainingPickerJFrame.java:434)
+			//
+			//ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}

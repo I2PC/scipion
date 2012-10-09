@@ -73,7 +73,8 @@ public class MicrographFamilyData
 	public void addManualParticle(TrainingParticle p)
 	{
 		if(!p.getMicrograph().fits(p.getX(), p.getY(), p.getFamily().getSize()))
-			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
+			System.err.format("Warning: ignoring particle out of bounds: x=%d, y=%d in micrograph: %s\n", p.getX(), p.getY(), p.getMicrograph());
+			//throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Particle"));
 		manualparticles.add(p);
 		if (state == MicrographFamilyState.Available || state == MicrographFamilyState.Auto)//to put micrograph family data on new state, done only for first particle
 		{
