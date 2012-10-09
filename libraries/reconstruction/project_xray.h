@@ -134,6 +134,11 @@ void projectXrayVolume(MultidimArray<double> &muVol,
                        MultidimArray<double> &IgeoVol,
                        XRayPSF &psf, Projection &P, MultidimArray<double> * projNorm=NULL, ThreadManager * ThrMgr=NULL);
 
+//Some global threads management variables
+extern Mutex mutex;
+extern Barrier * barrier;
+extern ThreadManager * thMgr;
+
 /// Thread Job to generate an X-ray microscope projection
 void threadXrayProject(ThreadArgument &thArg);
 
