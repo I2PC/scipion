@@ -121,16 +121,19 @@ TEST_F(TransformationTest, scaleToSizeNearest)
     mulDouble.setXmippOrigin();
     scaleToSize(NEAREST, imOut, mulDouble, 2, 2);
 
-   
-                 FOR_ALL_ELEMENTS_IN_ARRAY2D(auxMul)
-                {
-                    EXPECT_TRUE( fabs(auxMul(i,j)-imOut(i,j))< XMIPP_EQUAL_ACCURACY);
-                }
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(auxMul)
+    {
+        EXPECT_TRUE( fabs(DIRECT_A2D_ELEM(auxMul,0,0)-DIRECT_A2D_ELEM(mulDouble,0,0))< XMIPP_EQUAL_ACCURACY);
+        EXPECT_TRUE( fabs(DIRECT_A2D_ELEM(auxMul,0,1)-DIRECT_A2D_ELEM(mulDouble,0,1))< XMIPP_EQUAL_ACCURACY);
+        EXPECT_TRUE( fabs(DIRECT_A2D_ELEM(auxMul,1,0)-DIRECT_A2D_ELEM(mulDouble,1,0))< XMIPP_EQUAL_ACCURACY);
+        EXPECT_TRUE( fabs(DIRECT_A2D_ELEM(auxMul,1,1)-DIRECT_A2D_ELEM(mulDouble,1,1))< XMIPP_EQUAL_ACCURACY);
+    }
 }
 
 TEST_F(TransformationTest, geo2TransformationMatrix)
 {
-	//It would be nice to have a operator == for mdrow
+    //It would be nice to have a operator == for mdrow
     double scale = 1.;
     double rot = 40.9090909091;
     double tilt=81.8181818182;
