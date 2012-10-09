@@ -55,7 +55,7 @@ opts.Add(BoolVariable('java', 'Build the java programs?', 'yes'))
 
 opts.Add(BoolVariable('arpack', 'Build the arpack programs?', 'no'))
 
-opts.Add(BoolVariable('gtest', 'Build tests?', 'no'))
+opts.Add(BoolVariable('gtest', 'Build tests?', 'yes'))
 
 opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
 
