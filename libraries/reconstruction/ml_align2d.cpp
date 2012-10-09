@@ -287,7 +287,7 @@ void ProgML2D::printModel(const String &msg, const ModelML2D & model)
 // Trying to merge produceSideInfo 1 y 2
 void ProgML2D::produceSideInfo()
 {
-	LOG("      ProgML2D::produceSideInfo: start");
+    LOG("      ProgML2D::produceSideInfo: start");
     // Read selfile with experimental images
     // and set some global variables
     LOG("      ProgML2D::produceSideInfo: reading MDimg");
@@ -326,7 +326,7 @@ void ProgML2D::produceSideInfo()
     if (fn_ref.empty())
     {
         //generate an initial reference just by averaging the experimental images
-	LOG("      ProgML2D::produceSideInfo: generate an initial reference just by averaging the experimental images");
+        LOG("      ProgML2D::produceSideInfo: generate an initial reference just by averaging the experimental images");
         FileName fn_tmp;
         Image<double> img, avg(dim, dim);
         avg().initZeros();
@@ -895,7 +895,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
         //FileName fn = fn_root + (current_image % 2 == 0 ? "_images.even" : "_images.odd");
         //log.open(fn.c_str(), mode);
         //std::cerr << "    IMAGE " << current_image << "----------------------------->>>" << std::endl;
-      std::cerr << "----------------------------->>>" << std::endl;
+        std::cerr << "----------------------------->>>" << std::endl;
         std::cerr << "                             dLL: " << dLL << std::endl;
         std::cerr << "                        sum_refw: " << sum_refw << std::endl;
         std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
@@ -904,16 +904,16 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
         //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
         std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
         std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
-//        std::cerr << "                            refw: ";
-//        for (int refno = 0; refno < model.n_ref; ++refno)
-//            std::cerr << std::setw(15) << refw[refno];
-//        std::cerr<< std::endl;
-//        std::cerr << "                     refw_mirror: ";
-//        for (int refno = 0; refno < model.n_ref; ++refno)
-//            std::cerr << std::setw(15) << refw_mirror[refno];
-//        std::cerr<< std::endl;
-//        log.close();
-//        mode = std::ios::out|std::ios::app;
+        //        std::cerr << "                            refw: ";
+        //        for (int refno = 0; refno < model.n_ref; ++refno)
+        //            std::cerr << std::setw(15) << refw[refno];
+        //        std::cerr<< std::endl;
+        //        std::cerr << "                     refw_mirror: ";
+        //        for (int refno = 0; refno < model.n_ref; ++refno)
+        //            std::cerr << std::setw(15) << refw_mirror[refno];
+        //        std::cerr<< std::endl;
+        //        log.close();
+        //        mode = std::ios::out|std::ios::app;
     }
 #endif
 #undef DEBUG_JM1
@@ -1322,9 +1322,9 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
     {
 
         int output_refno = mygroup * model.n_ref + refno;
-//        std::cerr << "DEBUG_JM:           refno: " << refno << std::endl;
-//        std::cerr << "DEBUG_JM:     model.n_ref: " <<    model.n_ref << std::endl;
-//        std::cerr << "DEBUG_JM:    output_refno: " <<    output_refno << std::endl;
+        //        std::cerr << "DEBUG_JM:           refno: " << refno << std::endl;
+        //        std::cerr << "DEBUG_JM:     model.n_ref: " <<    model.n_ref << std::endl;
+        //        std::cerr << "DEBUG_JM:    output_refno: " <<    output_refno << std::endl;
         refw[output_refno] = refw2[output_refno] = refw_mirror[output_refno] = 0.;
         local_maxweight = -99.e99;
         local_mindiff = 99.e99;
@@ -1706,7 +1706,7 @@ void ProgML2D::expectation()
 {
     MultidimArray<std::complex<double> > Fdzero(dim, hdim + 1);
     int num_output_refs = factor_nref * model.n_ref;
-    
+
     LOG("      ProgML2D::expectation BEGIN");
 #ifdef DEBUG
 
@@ -1784,7 +1784,7 @@ void ProgML2D::expectation()
             Mimg = img();
 
 
-//#define DEBUG_JM1
+            //#define DEBUG_JM1
 #ifdef DEBUG_JM1
 
             //if (iter >= 2 && current_image == myFirstImg)
@@ -1890,22 +1890,23 @@ void ProgML2D::expectation()
             //Report progress and increment the images done
             setProgress(img_done++);
 
-//#define DEBUG_JM1
+            //#define DEBUG_JM1
 #ifdef DEBUG_JM1
-//            {
-//              //std::cerr << "---------------------- DEBUG_JM: current_image: " << current_image << std::endl;
-                std::cerr << "                              LL: " << LL << std::endl;
-                std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-                std::cerr << "               wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
-                std::cerr << "                   sumfracweight: " << sumfracweight << std::endl;
-//            }
+            //            {
+            //              //std::cerr << "---------------------- DEBUG_JM: current_image: " << current_image << std::endl;
+            std::cerr << "                              LL: " << LL << std::endl;
+            std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+            std::cerr << "               wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+            std::cerr << "                   sumfracweight: " << sumfracweight << std::endl;
+            //            }
 #endif
 #undef DEBUG_JM1
+
         }//close if current_block, also close of for all images
     }//close for all images
 
     if (current_block == (blocks - 1))
-      endProgress();
+        endProgress();
 
     //Changes temporally the model n_ref for the
     //refno loop, but not yet n_ref because in iem
@@ -1956,7 +1957,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
     local_model.sumw_allrefs2 = 0.;
 
 
-//#define ASSIGN(var) if (var > SIGNIFICANT_WEIGHT_LOW) local_model.var = var
+    //#define ASSIGN(var) if (var > SIGNIFICANT_WEIGHT_LOW) local_model.var = var
 #define ASSIGN(var) local_model.var = var
 
     ASSIGN(dim);
@@ -2013,7 +2014,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
 
 void ProgML2D::maximization()
 {
-	LOG("   ProgML2D::maximization BEGIN");
+    LOG("   ProgML2D::maximization BEGIN");
     if (blocks == 1) //ie not IEM, normal maximization
     {
         maximizeModel(model);
@@ -2064,13 +2065,13 @@ void ProgML2D::maximization()
 
     if (model.do_norm)
         correctScaleAverage();
-	
-	LOG("      ProgML2D::maximization END");
 
-//    static int times = 0;
-//    if (times > 1)
-//      exit(1);
-//    ++times;
+    LOG("      ProgML2D::maximization END");
+
+    //    static int times = 0;
+    //    if (times > 1)
+    //      exit(1);
+    //    ++times;
 }//close function maximizationBlocks
 
 void ProgML2D::correctScaleAverage()
@@ -2154,7 +2155,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 
 void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
-    FileName fn_tmp, fn_prefix;
+    FileName fn_tmp, fn_prefix, fn_base(fn_root);
     Image<double> Itmp;
     MetaData MDo;
     bool write_img_xmd = true, write_refs_log = true, write_conv = !do_ML3D;
@@ -2208,18 +2209,28 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         break;
     }
 
-    const char * rootStr = fn_root.c_str(), * prefixStr = fn_prefix.c_str();
+    if (fn_prefix == ITER_PREFIX) //All intermediate iteration files should go to "extra" folder
+    {
+        fn_base += formatString("_extra/iter%03d/", iter);
+        fn_base.makePath();
+    }
+    else
+      fn_base += "_";
+
+    const char * rootStr = fn_base.c_str(), * prefixStr = fn_prefix.c_str();
 
     if (write_img_xmd)
     {
-        static WriteModeMetaData mode = MD_OVERWRITE;
+        //static WriteModeMetaData mode = MD_OVERWRITE;
         //Write image metadata, for each iteration a new block will be written
-        if (fn_prefix == ITER_PREFIX)
-            fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
-        else
-            fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
-        MDimg.write(fn_tmp, mode);
-        mode = MD_APPEND;
+        fn_tmp = fn_base + "result_images.xmd";
+        MDimg.write(fn_tmp);
+//        if (fn_prefix == ITER_PREFIX)
+//            fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
+//        else
+//            fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
+        //MDimg.write(fn_tmp, mode);
+        //mode = MD_APPEND;
     }
 
 
@@ -2233,10 +2244,12 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         size_t objId;
         int select_img;
 
-        if (fn_prefix == ITER_PREFIX)
-            fn_tmp = formatString("%s_iter%06d_refs.stk", rootStr, iter);
-        else
-            fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
+        fn_tmp = fn_base + "result_classes.stk";
+//
+//        if (fn_prefix == ITER_PREFIX)
+//            fn_tmp = formatString("%s_iter%06d_refs.stk", rootStr, iter);
+//        else
+//            fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
 
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
@@ -2256,7 +2269,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             if (do_mirror)
             {
 
-              //std::cerr << "DEBUG_JM: refno: " << refno << "  mirror: " << (*ptrMirror)[refno] << std::endl;
+                //std::cerr << "DEBUG_JM: refno: " << refno << "  mirror: " << (*ptrMirror)[refno] << std::endl;
 
                 MDref.setValue(MDL_MIRRORFRAC, (*ptrMirror)[refno], objId);
             }
@@ -2268,15 +2281,17 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         }
         //fn_tmp.copyFile(formatString("%s_output_block%d.stk", fn_tmp.c_str(), current_block));
 
-        fn_tmp = formatString("%s_%s", rootStr, prefixStr);
-        FileName fn_ref = fn_tmp + "_refs.xmd";
-
-        if (!fn_prefix.contains("block"))
-            fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
-        MDref.write(fn_ref, mode);
+//        fn_tmp = formatString("%s_%s", rootStr, prefixStr);
+//        FileName fn_ref = fn_tmp + "_refs.xmd";
+//
+//        if (!fn_prefix.contains("block"))
+//            fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
+//        MDref.write(fn_ref, mode);
+        fn_tmp = fn_base + "result_classes.xmd";
+        MDref.write(fn_tmp);
 
         if (outputType == OUT_REFS)
-            outRefsMd = fn_ref;
+            outRefsMd = fn_tmp;
 
         // Write out log-file
         MetaData mdLog;
@@ -2287,12 +2302,13 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         mdLog.setValue(MDL_SIGMANOISE, sigma_noise, objId);
         mdLog.setValue(MDL_SIGMAOFFSET, sigma_offset, objId);
         mdLog.setValue(MDL_RANDOMSEED, seed, objId);
+        fn_tmp = fn_base + "logs.xmd";
         if (write_norm)
             mdLog.setValue(MDL_INTSCALE, average_scale, objId);
         if (fn_prefix.contains("block") || mode == MD_OVERWRITE)
-            mdLog.write(fn_tmp + "_logs.xmd");
+            mdLog.write(fn_tmp);
         else
-            mdLog.append(fn_tmp + "_logs.xmd");
+            mdLog.append(fn_tmp);
         mode = MD_APPEND;
     }
 
