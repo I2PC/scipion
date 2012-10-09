@@ -94,7 +94,8 @@ public:
 
     /** Get and prepare block */
     void getAndPrepareBlock(int i,
-        std::vector< MultidimArray<std::complex<double> > > &blockImgs);
+        std::vector< MultidimArray<std::complex<double> > > &blockRTFs,
+        std::vector<MultidimArray<double> > &blockRTs);
 
     /** Show parameters */
     void show();

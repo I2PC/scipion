@@ -83,7 +83,7 @@ void ProgCommonLine::produceSideInfo() {
 	int Ydim, Zdim;
 	size_t Ndim;
 	getImageSize(SF, Ydim, Xdim, Zdim, Ndim);
-	Nblock = FLOOR(sqrt(mem*pow(2.0,30.0)/(Ydim*(360/stepAng)*sizeof(double))));
+	Nblock = FLOOR(sqrt(mem*pow(2.0,30.0)/(2*Ydim*(360/stepAng)*sizeof(double))));
 	Nblock = XMIPP_MIN(Nblock,CEIL(((float)Nimg)/Nmpi));
 
 	// Ask for memory for the common line matrix
@@ -107,7 +107,8 @@ struct ThreadPrepareImages {
 	int myThreadID;
 	ProgCommonLine * parent;
 	MetaData *SFi;
-	std::vector<MultidimArray<std::complex<double> > > *blockRTs;
+	std::vector<MultidimArray<std::complex<double> > > *blockRTFs;
+	std::vector<MultidimArray<double> > *blockRTs;
 };
 
 void * threadPrepareImages(void * args) {
@@ -186,33 +187,37 @@ void * threadPrepareImages(void * args) {
 			for (int i = 0; i < YSIZE(RT); i++) {
 				memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RT,i,0),XSIZE(linei)*sizeof(double));
 				linei.statisticsAdjust(0,1);
-			    std::cout << "linei: " << linei << std::endl;
-			    std::cout << "transformer real: " << *transformer.fReal << std::endl;
 				transformer.FourierTransform();
-			    std::cout << "transformer fourier: " << transformer.fFourier << std::endl;
 			    transformer.fReal->initZeros();
 			    transformer.inverseFourierTransform();
-			    std::cout << "transformer real2: " << *transformer.fReal << std::endl;
 				memcpy(&DIRECT_A2D_ELEM(RTFourier,i,0),&(DIRECT_A1D_ELEM(mlineiFourier,0)),XSIZE(mlineiFourier)*sizeof(std::complex<double>));
+
+				memcpy(&DIRECT_A2D_ELEM(RT,i,0),&(DIRECT_A1D_ELEM(linei,0)),XSIZE(linei)*sizeof(double));
 			}
 
-			(*(master->blockRTs))[i] = RTFourier;
+			(*(master->blockRTFs))[i] = RTFourier;
+			(*(master->blockRTs))[i] = RT;
 		}
 		i++;
 	}
 }
 
 void ProgCommonLine::getAndPrepareBlock(int i,
-		std::vector<MultidimArray<std::complex<double> > > &blockRTs) {
+		std::vector<MultidimArray<std::complex<double> > > &blockRTFs,
+		std::vector<MultidimArray<double> > &blockRTs) {
 	// Get the selfile
 	MetaData SFi;
 	SFi.selectPart(SF, i * Nblock, Nblock);
 
 	// Ask for space for all the block images
 	int jmax = SFi.size();
-	MultidimArray<std::complex<double> > dummy;
+	MultidimArray<std::complex<double> > dummyF;
+	MultidimArray<double> dummy;
 	for (int j = 0; j < jmax; j++)
+	{
+		blockRTFs.push_back(dummyF);
 		blockRTs.push_back(dummy);
+	}
 
 	// Read and preprocess the images
 	pthread_t * th_ids = new pthread_t[Nthr];
@@ -222,6 +227,7 @@ void ProgCommonLine::getAndPrepareBlock(int i,
 		th_args[nt].parent = this;
 		th_args[nt].myThreadID = nt;
 		th_args[nt].SFi = &SFi;
+		th_args[nt].blockRTFs = &blockRTFs;
 		th_args[nt].blockRTs = &blockRTs;
 		pthread_create((th_ids + nt), NULL, threadPrepareImages,
 				(void *) (th_args + nt));
@@ -237,29 +243,37 @@ void ProgCommonLine::getAndPrepareBlock(int i,
 }
 
 /* Process block ----------------------------------------------------------- */
-void commonLineTwoImages(std::vector<MultidimArray<std::complex<double> > > &RTsi, int idxi,
-		std::vector<MultidimArray<std::complex<double> > >&RTsj, int idxj,
+void commonLineTwoImages(
+		std::vector<MultidimArray<std::complex<double> > > &RTFsi,
+		std::vector<MultidimArray<double> > &RTsi,
+		int idxi,
+		std::vector<MultidimArray<std::complex<double> > >&RTFsj,
+		std::vector<MultidimArray<double> > &RTsj,
+		int idxj,
 		ProgCommonLine *parent, CommonLine &result, FourierTransformer &transformer) {
-	MultidimArray<std::complex<double> > &RTi = RTsi[idxi];
-	MultidimArray<std::complex<double> > &RTj = RTsj[idxj];
+	MultidimArray<std::complex<double> > &RTFi = RTFsi[idxi];
+	MultidimArray<std::complex<double> > &RTFj = RTFsj[idxj];
+	MultidimArray<double> &RTi = RTsi[idxi];
+	MultidimArray<double> &RTj = RTsj[idxj];
 
 	result.distanceij = 1e60;
 	result.angi = -1;
 	result.angj = -1;
-	MultidimArray<std::complex<double> > linei, linej;
+	MultidimArray<std::complex<double> > lineFi, lineFj;
+	MultidimArray<double> linei, linej;
 	MultidimArray<double> correlationFunction;
-	for (int ii = 0; ii < YSIZE(RTi) / 2 + 1; ii++) {
+	for (int ii = 0; ii < YSIZE(RTFi) / 2 + 1; ii++) {
+		lineFi.aliasRow(RTFi,ii);
 		linei.aliasRow(RTi,ii);
 
-		for (int jj=0; jj<YSIZE(RTj); jj++)
+		for (int jj=0; jj<YSIZE(RTFj); jj++)
 		{
+			lineFj.aliasRow(RTFj,jj);
 			linej.aliasRow(RTj,jj);
 
 			// Compute distance between the two lines
-			fast_correlation_vector(linei, linej, correlationFunction, transformer);
-			correlationFunction.setXmippOrigin();
+			fast_correlation_vector(lineFi, lineFj, correlationFunction, transformer);
 			double distance=A1D_ELEM(correlationFunction,0);
-			std::cout << "Distance: " << distance << std::endl;
 
 			// Check if this is the best match
 			if (distance<result.distanceij)
@@ -279,8 +293,10 @@ struct ThreadCompareImages {
 	ProgCommonLine * parent;
 	int i;
 	int j;
-	std::vector<MultidimArray<std::complex<double> > > *RTsi;
-	std::vector<MultidimArray<std::complex<double> > > *RTsj;
+	std::vector<MultidimArray<std::complex<double> > > *RTFsi;
+	std::vector<MultidimArray<std::complex<double> > > *RTFsj;
+	std::vector<MultidimArray<double> > *RTsi;
+	std::vector<MultidimArray<double> > *RTsj;
 }
 ;
 
@@ -288,8 +304,8 @@ void * threadCompareImages(void * args) {
 	ThreadCompareImages * master = (ThreadCompareImages *) args;
 	ProgCommonLine * parent = master->parent;
 
-	int blockIsize = master->RTsi->size();
-	int blockJsize = master->RTsj->size();
+	int blockIsize = master->RTFsi->size();
+	int blockJsize = master->RTFsj->size();
 	FourierTransformer transformer;
 	MultidimArray<double> linei;
 	linei.resize(parent->Xdim);
@@ -306,8 +322,10 @@ void * threadCompareImages(void * args) {
 
 			// Effectively compare the two images
 			long int idx_ij = ii * parent->Nimg + jj;
-			commonLineTwoImages(*(master->RTsi), i, *(master->RTsj), j, parent,
-					parent->CLmatrix[idx_ij], transformer);
+			commonLineTwoImages(
+					*(master->RTFsi), *(master->RTsi), i,
+					*(master->RTFsj), *(master->RTsj), j,
+					parent, parent->CLmatrix[idx_ij], transformer);
 
 			// Compute the symmetric element
 			long int idx_ji = jj * parent->Nimg + ii;
@@ -323,10 +341,11 @@ void ProgCommonLine::processBlock(int i, int j) {
 		return;
 
 	// Preprocess each one of the selfiles
-	std::vector<MultidimArray<std::complex<double> > > RTsi, RTsj;
-	getAndPrepareBlock(i, RTsi);
+	std::vector<MultidimArray<std::complex<double> > > RTFsi, RTFsj;
+	std::vector<MultidimArray<double> > RTsi, RTsj;
+	getAndPrepareBlock(i, RTFsi, RTsi);
 	if (i != j)
-		getAndPrepareBlock(j, RTsj);
+		getAndPrepareBlock(j, RTFsj, RTsj);
 
 	// Compare all versus all
 	// Read and preprocess the images
@@ -338,11 +357,18 @@ void ProgCommonLine::processBlock(int i, int j) {
 		th_args[nt].myThreadID = nt;
 		th_args[nt].i = i;
 		th_args[nt].j = j;
+		th_args[nt].RTFsi = &RTFsi;
 		th_args[nt].RTsi = &RTsi;
 		if (i != j)
+		{
+			th_args[nt].RTFsj = &RTFsj;
 			th_args[nt].RTsj = &RTsj;
+		}
 		else
+		{
+			th_args[nt].RTFsj = &RTFsi;
 			th_args[nt].RTsj = &RTsi;
+		}
 		pthread_create((th_ids + nt), NULL, threadCompareImages,
 				(void *) (th_args + nt));
 	}
