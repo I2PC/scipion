@@ -683,7 +683,7 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
 
 }
 
-void MetaData::append(const FileName &outFile)
+void MetaData::append(const FileName &outFile) const
 {
     if (outFile.exists())
     {
@@ -1010,6 +1010,7 @@ void MetaData::read(const FileName &_filename,
     //        blockName = DEFAULT_BLOCK_NAME;
     inFile = _filename.removeBlockName();
     extFile = _filename.getExtension();
+    blockName=escapeForRegularExpressions(blockName);
 
     _clear();
     myMDSql->createMd();
@@ -1799,6 +1800,22 @@ void MetaData::writeXML(const FileName fn, const FileName blockname, WriteModeMe
     }
     ofs <<  "</" << blockname << ">"<< std::endl;
 }
+
+void MetaData::writeText(const FileName fn,  const std::vector<MDLabel>* desiredLabels) const
+{
+    std::ofstream ofs(fn.data(), std::ios_base::trunc|std::ios_base::out);
+
+    if (desiredLabels != NULL)
+    {
+        MetaData mdAux(*this);
+        mdAux.activeLabels = *desiredLabels;
+        mdAux._writeRows(ofs);
+    }
+    else
+        _writeRows(ofs);
+    ofs.close();
+}
+
 
 bool MetaData::operator==(const MetaData& op) const
 {
