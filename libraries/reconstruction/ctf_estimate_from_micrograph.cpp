@@ -448,6 +448,7 @@ void ProgCTFEstimateFromMicrograph::run()
                 // Estimate the CTF parameters of this piece
                 prmEstimateCTFFromPSD.fn_psd=fn_psd_piece;
                 CTFDescription ctfmodel;
+
                 double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                        ctfmodel, false);
                 if (psd_mode==OnePerParticle)
