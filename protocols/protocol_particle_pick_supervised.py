@@ -38,7 +38,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
                      'pos': join('%(WorkingDir)s', '%(micrograph)s.pos'),
 #                    'mask': join('%(WorkingDir)s', '%(family)s_mask.xmp'),
                     'pca': join('%(WorkingDir)s', '%(family)s_pca_model.stk'),
-#                    'maxmin': join('%(WorkingDir)s', '%(family)s_maxmin_dataset.txt'),
+                    'rotpca': join('%(WorkingDir)s', '%(family)s_rotpca_model.stk'),
                     'svm': join('%(WorkingDir)s', '%(family)s_svm.txt'),
                     'svm2': join('%(WorkingDir)s', '%(family)s_svm2.txt'),
                     'average': join('%(WorkingDir)s', '%(family)s_particle_avg.xmp')
