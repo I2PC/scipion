@@ -121,7 +121,11 @@ TEST_F(TransformationTest, scaleToSizeNearest)
     mulDouble.setXmippOrigin();
     scaleToSize(NEAREST, imOut, mulDouble, 2, 2);
 
-    EXPECT_EQ(auxMul, imOut);
+   
+                 FOR_ALL_ELEMENTS_IN_ARRAY2D(auxMul)
+                {
+                    EXPECT_TRUE( fabs(auxMul(i,j)-imOut(i,j))< XMIPP_EQUAL_ACCURACY);
+                }
 }
 
 TEST_F(TransformationTest, geo2TransformationMatrix)
