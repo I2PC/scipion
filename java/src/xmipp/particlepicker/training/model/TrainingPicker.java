@@ -483,18 +483,25 @@ public abstract class TrainingPicker extends ParticlePicker {
 			MetaData md = new MetaData();
 			md.readPlain(file, "Xcoor Ycoor particleSize");
 			long[] ids;
-			int x, y, size = 0, height;
+			Micrograph mic = mfd.getMicrograph();
+			Family family = mfd.getFamily();
+			int x, y, size = 0, height = mic.height;
 			Double cost = 2.0;
-			ids = md.findObjects();
+
+			long fid = md.firstObject();
+			size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
+			int half = size / 2;
+			
+			ids = md.findObjects();			
 			for (long id : ids) {
-				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				x = md.getValueInt(MDLabel.MDL_XCOOR, id) + size / 2;
-				y = md.getValueInt(MDLabel.MDL_YCOOR, id) + size / 2;
+				x = md.getValueInt(MDLabel.MDL_XCOOR, id) + half;
+				y = md.getValueInt(MDLabel.MDL_YCOOR, id) + half;
 				if (inverty) {
-					height = mfd.getMicrograph().getImagePlus().getHeight();
+					
+					//height = mfd.getMicrograph().getImagePlus().getHeight();
 					y = height - y;
 				}
-				if (!mfd.getMicrograph().fits(x, y, size))// ignore out of
+				if (!mic.fits(x, y, size))// ignore out of
 															// bounds particle
 				{
 					System.out.println(XmippMessage
@@ -502,12 +509,11 @@ public abstract class TrainingPicker extends ParticlePicker {
 							+ String.format(" on x:%s y:%s", x, y));
 					continue;
 				}
-				mfd.addManualParticle(new TrainingParticle(x, y, mfd
-						.getFamily(), mfd.getMicrograph(), cost));
+				mfd.addManualParticle(new TrainingParticle(x, y, family, mic, cost));
 
 			}
 			if (size > 0)
-				mfd.getFamily().setSize(size);
+				family.setSize(size);
 
 		} catch (Exception e) {
 

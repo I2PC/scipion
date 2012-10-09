@@ -244,9 +244,12 @@ public class Filename {
 	}
 
 	public static String getFilename(String filename) {
-		if (filename.contains(SEPARATOR)) {
-			return filename.split(SEPARATOR)[1];
-		}
+		
+		if (filename.contains(SEPARATOR)) 
+			filename = filename.split(SEPARATOR)[1];
+
+		if (filename.contains(":"))
+			filename = filename.split(":")[0];
 
 		return filename;
 	}
