@@ -1010,6 +1010,7 @@ void MetaData::read(const FileName &_filename,
     //        blockName = DEFAULT_BLOCK_NAME;
     inFile = _filename.removeBlockName();
     extFile = _filename.getExtension();
+    blockName=escapeForRegularExpressions(blockName);
 
     _clear();
     myMDSql->createMd();
