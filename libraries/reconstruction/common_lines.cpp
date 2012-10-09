@@ -262,6 +262,8 @@ void commonLineTwoImages(
 	MultidimArray<std::complex<double> > lineFi, lineFj;
 	MultidimArray<double> linei, linej;
 	MultidimArray<double> correlationFunction;
+	int jmax;
+	std::cout << "Comparing images " << idxi << " " << idxj << std::endl;
 	for (int ii = 0; ii < YSIZE(RTFi) / 2 + 1; ii++) {
 		lineFi.aliasRow(RTFi,ii);
 		linei.aliasRow(RTi,ii);
@@ -273,7 +275,8 @@ void commonLineTwoImages(
 
 			// Compute distance between the two lines
 			fast_correlation_vector(lineFi, lineFj, correlationFunction, transformer);
-			double distance=A1D_ELEM(correlationFunction,0);
+			correlationFunction.maxIndex(jmax);
+			double distance=1-A1D_ELEM(correlationFunction,jmax);
 
 			// Check if this is the best match
 			if (distance<result.distanceij)
@@ -281,6 +284,7 @@ void commonLineTwoImages(
 				result.distanceij=distance;
 				result.angi=ii;
 				result.angj=jj;
+				result.jmax=jmax;
 			}
 		}
 	}
@@ -486,7 +490,8 @@ void ProgCommonLine::writeResults() {
 					else
 						fh_out << CLmatrix[ii].distanceij << " ";
 					fh_out << round(CLmatrix[ii].angi/stepAng) << " "
-							<< round(CLmatrix[ii].angj/stepAng);
+							<< round(CLmatrix[ii].angj/stepAng) << " "
+							<< CLmatrix[ii].jmax;
 					if (qualify)
 						fh_out << " " << qualification[ii];
 					fh_out << std::endl;

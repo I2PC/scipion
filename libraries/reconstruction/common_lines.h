@@ -47,6 +47,10 @@ public:
     double angj;
     /// Distance between both common lines
     double distanceij;
+    /// Index of the maximum
+    /// jmax=-5 -> line j has to be shifted 5 pixels to the left  to match line i
+    /// jmax= 5 -> line j has to be shifted 5 pixels to the right to match line i
+    int jmax;
 public:
     /// Empty constructor
     CommonLine();
