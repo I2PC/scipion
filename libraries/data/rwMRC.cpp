@@ -392,9 +392,16 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
-    header->a = header->mx =header->nx = Xdim;
-    header->b = header->my =header->ny = Ydim;
-    header->c = header->mz =header->nz = Zdim;
+    /* header->a,b,c info is related to sampling rate, so it is
+     * only written when writing header, so it is initialized to
+     * zero to avoid a mistaken value.*/
+    header->a = 0;
+    header->b = 0;
+    header->c = 0;
+
+    header->mx =header->nx = Xdim;
+    header->my =header->ny = Ydim;
+    header->mz =header->nz = Zdim;
 
     if ( transform == CentHerm )
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
