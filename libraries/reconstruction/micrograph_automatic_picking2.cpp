@@ -289,9 +289,8 @@ void AutoParticlePicking2::trainRotPCA(const FileName &fnAvgModel,const FileName
     rotPcaAnalyzer.shift_step=1;
     rotPcaAnalyzer.Nits=2;
     rotPcaAnalyzer.maxNimgs=-1;
-    rotPcaAnalyzer.max_shift_change=1;
+    rotPcaAnalyzer.max_shift_change=0;
     rotPcaAnalyzer.run();
-
 }
 
 void AutoParticlePicking2::trainSVM(const FileName &fnModel,
@@ -349,7 +348,6 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
                 label=classifier2.predict(featVec,score);
                 if (label==1)
                 {
-                    std::cerr << "We are in classifier 2!!!";
                     p.x=j;
                     p.y=i;
                     p.status=1;
@@ -378,7 +376,6 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
                 auto_candidates[j+1]=auto_candidates[j];
                 auto_candidates[j]=p;
             }
-    std::cerr<< "Sorting is Done!!!"<< std::endl;
     for (int i=0;i<auto_candidates.size()-1;++i)
     {
         if (auto_candidates[i].status==-1)
@@ -401,7 +398,6 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
             }
         }
     }
-    std::cerr <<"Ocllusion is resolved!!!"<<std::endl;
     return auto_candidates.size();
 }
 
@@ -807,7 +803,6 @@ void AutoParticlePicking2::generateTrainSet()
             cnt++;
         }
         a1<<DIRECT_A1D_ELEM(classLabel,i)<<" ";
-        std::cerr<<"number of feature is:"<<XSIZE(dataSet);
         for (int j=0;j<XSIZE(dataSet);j++)
             a1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
         a1<<std::endl;
@@ -988,7 +983,7 @@ void ProgMicrographAutomaticPicking2::run()
     FileName fnInvariant=fn_model+"_invariant";
     FileName fnParticles=fn_model+"_particle";
     FileName fnPCAModel=fn_model+"_pca_model.stk";
-    FileName fnPCARotModel="DefaultFamily_rotpca.stk";
+    FileName fnPCARotModel=fn_model+"_rotpca_model.stk";
     FileName fnSVMModel=fn_model+"_svm.txt";
     FileName fnSVMModel2=fn_model+"_svm2.txt";
     FileName fnVector=fn_model+"_training.txt";
@@ -1069,6 +1064,7 @@ void ProgMicrographAutomaticPicking2::run()
 
             autoPicking->extractInvariant(fnInvariant,fnParticles,false);
             Image<double> II;
+            //normalize_OldXmipp(autoPicking->particleAvg);
             II()=autoPicking->particleAvg;
             II.write(fnAvgModel);
         }
@@ -1096,15 +1092,15 @@ void ProgMicrographAutomaticPicking2::run()
         else
             int num=autoPicking->automaticallySelectParticles(false);
         autoPicking->saveAutoParticles(fnAutoParticles);
-        std::cerr<<"The positions are saved!!!";
         if (mode=="try")
             autoPicking->saveAutoVectors(fnAutoVectors);
-        std::cerr<<"The vectors are saved!!!";
     }
     if (mode=="train")
     {
         if (!fnPCAModel.exists())
             autoPicking->trainPCA(fn_model);
+        if (!fnPCARotModel.exists())
+            autoPicking->trainRotPCA(fnAvgModel,fnPCARotModel.removeAllExtensions());
         Image<double> II;
         II.read(fnPCAModel);
         autoPicking->pcaModel=II();

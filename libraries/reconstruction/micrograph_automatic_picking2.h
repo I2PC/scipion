@@ -34,6 +34,7 @@
 #include <classification/naive_bayes.h>
 #include <classification/svm_classifier.h>
 #include <classification/knn_classifier.h>
+#include <reconstruction/image_rotational_pca.h>
 
 #include <data/xmipp_image.h>
 #include <data/polar.h>
@@ -72,6 +73,7 @@ public:
     Micrograph                  *__m;
     Image<double>                microImage;
     PCAMahalanobisAnalyzer       pcaAnalyzer;
+    ProgImageRotationalPCA       rotPcaAnalyzer;
     SVMClassifier                classifier;
     SVMClassifier                classifier2;
     FileName                     fn_micrograph;
@@ -201,6 +203,8 @@ public:
 
     /// Train a PCA with negative and positive vectors
     void trainPCA(const FileName &fnPositiveFeat);
+
+    void trainRotPCA(const FileName &fnAvgModel,const FileName &fnPCARotModel);
 
     /// Make dataset from the data in file
     void add2Dataset(const FileName &fnInvariantFeat,
