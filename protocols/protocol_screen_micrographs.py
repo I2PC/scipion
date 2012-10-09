@@ -39,6 +39,8 @@ class ProtScreenMicrographs(XmippProtocol):
 
     def defineSteps(self):
         filesToImport = [self.Input[k] for k in ['microscope', 'acquisition']]
+        if self.TiltPairs:
+            filesToImport.append(self.MicrographsMd)
         self.insertImportOfFiles(filesToImport)
 
         # Read Microscope parameters

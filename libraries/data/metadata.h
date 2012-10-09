@@ -370,6 +370,12 @@ public:
      */
     void writeDB(const FileName fn, const FileName blockname, WriteModeMetaData mode) const;
 
+    /** Write metadata in text file as plain data without header.
+     *
+     */
+    void writeText(const FileName fn,  const std::vector<MDLabel>* desiredLabels) const;
+
+
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)
      * and if parsing fails, an error will be raised
@@ -730,7 +736,7 @@ public:
      * For now it will not check any compatibility beetween the
      * existent metadata and the new data to append.
      */
-    void append(const FileName &outFile);
+    void append(const FileName &outFile) const;
 
     /** Check if block exists in metadata file
      * input full parh block@filename
