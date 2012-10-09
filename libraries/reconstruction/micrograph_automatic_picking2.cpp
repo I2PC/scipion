@@ -506,7 +506,6 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
         extractParticle(x,y,microImage(),pieceImage,false);
         II()=pieceImage;
         II.write(fnPositiveParticles,ALL_IMAGES,true,WRITE_APPEND);
-        II.write("AllPostivesParticles.xmp",ALL_IMAGES,true,WRITE_APPEND);
         if (avgFlag==false)
         {
             pieceImage.setXmippOrigin();
@@ -523,7 +522,6 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
         }
         II()=IpolarCorr;
         II.write(fnPositiveInvariatn,ALL_IMAGES,true,WRITE_APPEND);
-        II.write("AllPostivesInvariant.xmp",ALL_IMAGES,true,WRITE_APPEND);
     }
     if (avgFlag==false)
         particleAvg/=num_part;
@@ -562,11 +560,9 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
         extractParticle(x,y,microImage(),pieceImage,false);
         II()=pieceImage;
         II.write(fnNegativeParticles,ALL_IMAGES,true,WRITE_APPEND);
-        II.write("AllNegativeParticles.xmp",ALL_IMAGES,true,WRITE_APPEND);
         buildInvariant(IpolarCorr,x,y);
         II()=IpolarCorr;
         II.write(fnNegativeInvariatn,ALL_IMAGES,true,WRITE_APPEND);
-        II.write("AllNegativeInvariant.xmp",ALL_IMAGES,true,WRITE_APPEND);
     }
 }
 
@@ -613,7 +609,6 @@ void AutoParticlePicking2::extractNonParticle(std::vector<Particle2> &negativePo
             {
                 extractParticle(j,i,microImage(),pieceImage,false);
                 II()=pieceImage;
-                II.write("negatives.xmp",ALL_IMAGES,true,WRITE_APPEND);
                 negativePosition.push_back(negSample);
             }
         }
@@ -910,8 +905,6 @@ void AutoParticlePicking2::applyConvolution()
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
         if (DIRECT_A2D_ELEM(tempConvolve,i,j)>DIRECT_A2D_ELEM(convolveRes,i,j))
             DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
-        //        II().alias(tempConvolve);
-        //        II.write("ConvolvedImages.stk", cnt, true, WRITE_APPEND);
     }
     CenterFFT(convolveRes,true);
     Image<double> save;

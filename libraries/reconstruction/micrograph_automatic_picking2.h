@@ -188,29 +188,52 @@ public:
                      MultidimArray<double> &featureVec,
                      MultidimArray<double> &pieceImage);
 
-    /*Extract the invariants from the particles and non particles.
+    /*Extract the invariants from just one particle at x,y
      *The invariants are the correlations between different channels
      *in polar form.
      */
     void buildInvariant(MultidimArray<double> &invariantChannel,
                         int x,int y);
 
-    /// Provide the optimum search space for particles
+    /*
+     * This method does a convolution in order to find an approximation
+     * about the place of the particles.
+     */
     void buildSearchSpace(std::vector<Particle2> &positionArray);
 
-    /// Train a PCA with negative and positive vectors
+    /*
+     * This method is used in order to train an support vector
+     * machine. It receives the file which contains the dataset
+     * and also which classifier we want to train. In this case
+     * we have two classifiers.
+     */
     void trainSVM(const FileName &fnModel,int numClassifier);
 
-    /// Train a PCA with negative and positive vectors
+    /*
+     * This method uses the extracted invariants from the
+     * particles in order to find some pca basis to reduce
+     * the number of features.
+     */
     void trainPCA(const FileName &fnPositiveFeat);
 
+    /*
+	 * This method is used to generate some pca basis according
+	 * to different rotation of the template.
+	 */
     void trainRotPCA(const FileName &fnAvgModel,const FileName &fnPCARotModel);
 
-    /// Make dataset from the data in file
+    /*
+     * Extracts all the features related to particles and non
+     * particles and put them in an array with the related
+     * labels.
+     */
     void add2Dataset(const FileName &fnInvariantFeat,
                      const FileName &fnParticles,int lable);
 
-    /// Add the false positives to the dataset
+    /*
+     * It is the same as previous one but it does not extract
+     * the features. It just puts the data in array for dataset.
+     */
     void add2Dataset();
 
     /// Normalize the dataset
