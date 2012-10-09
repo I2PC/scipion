@@ -2797,6 +2797,16 @@ public:
         return maxval;
     }
 
+    /** 1D Indices for the maximum element.
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& jmax) const
+    {
+        int zeroInt=0;
+        maxIndex(zeroInt,zeroInt,zeroInt,jmax);
+    }
+
     /** Minimum of the values in the array.
      *
      * The returned value is of the same type as the type of the array.
