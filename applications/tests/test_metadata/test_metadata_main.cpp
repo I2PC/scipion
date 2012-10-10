@@ -298,9 +298,6 @@ TEST_F( MetadataTest,multiWrite)
     EXPECT_TRUE(compareTwoFiles(fnDB, fnDBref));
     EXPECT_TRUE(compareTwoFiles(fnXML, fnXMLref));
     EXPECT_TRUE(compareTwoFiles(fnSTAR, fnSTARref));
-    unlink(fnDB.c_str());
-    unlink(fnXML.c_str());
-    unlink(fnSTAR.c_str());
 }
 
 TEST_F( MetadataTest, ReadEmptyBlock)
