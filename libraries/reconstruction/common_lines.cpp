@@ -267,7 +267,6 @@ void commonLineTwoImages(
 	MultidimArray<double> &RTj = RTsj[idxj];
 
 	result.distanceij = 1e60;
-	result.angi = -1;
 	result.angj = -1;
 	MultidimArray<std::complex<double> > lineFi, lineFj;
 	MultidimArray<double> linei, linej;
@@ -346,6 +345,7 @@ void * threadCompareImages(void * args)
 			parent->CLmatrix[idx_ji].distanceij = parent->CLmatrix[idx_ij].distanceij;
 			parent->CLmatrix[idx_ji].angi = parent->CLmatrix[idx_ij].angj;
 			parent->CLmatrix[idx_ji].angj = parent->CLmatrix[idx_ij].angi;
+			parent->CLmatrix[idx_ji].jmax = -parent->CLmatrix[idx_ij].jmax;
 		}
 	}
 }
@@ -477,6 +477,39 @@ void ProgCommonLine::writeResults()
 }
 
 /* Main program ------------------------------------------------------------ */
+void ProgCommonLine::solveForShifts()
+{
+	WeightedLeastSquaresHelper solver;
+    int nmax=Nimg*(Nimg-1)/2;
+	solver.A.resize(nmax,Nimg*2);
+	solver.w.resize(nmax);
+	solver.b.resize(nmax);
+	int n=0;
+	for (int j = 1; j < Nimg; j++)
+		for (int i = 0; i < j; i++, n++) {
+			int ii = i * Nimg + j;
+			if (CLmatrix[ii].distanceij > 0) {
+				const CommonLine& cl=CLmatrix[ii];
+				double sini, cosi, sinj, cosj;
+				sincos(DEG2RAD(cl.angi),&sini,&cosi);
+				sincos(DEG2RAD(cl.angj),&sinj,&cosj);
+				int idxi=2*i;
+				int idxj=2*j;
+				MAT_ELEM(solver.A,n,idxi)=cosi;
+				MAT_ELEM(solver.A,n,idxi+1)=sini;
+				MAT_ELEM(solver.A,n,idxj)=-cosj;
+				MAT_ELEM(solver.A,n,idxj+1)=-sinj;
+				VEC_ELEM(solver.b,n)=cl.jmax;
+				VEC_ELEM(solver.w,n)=cl.percentile;
+			}
+		}
+
+	solver.A.write("A.txt");
+	solver.b.write("b.txt");
+	solver.w.write("w.txt");
+}
+
+/* Main program ------------------------------------------------------------ */
 void ProgCommonLine::run()
 {
 	produceSideInfo();
@@ -499,6 +532,8 @@ void ProgCommonLine::run()
         progress_bar(maxBlock * maxBlock);
         qualifyCommonLines();
         writeResults();
+
+        solveForShifts();
     }
 }
 

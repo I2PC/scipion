@@ -112,6 +112,9 @@ public:
     /** Qualify common lines */
     void qualifyCommonLines();
 
+    /** Solve for shifts */
+    void solveForShifts();
+
     /** Write results */
     void writeResults();
     
