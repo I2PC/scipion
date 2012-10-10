@@ -1,0 +1,73 @@
+
+_xcompile() 
+{
+    local cur prev opts base
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    #  The basic options we'll complete.
+    #
+    opts="debug profile warn fast static prepend quiet java gtest mpi matlab cuda --help --help-options
+    --clean"
+
+   COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
+   if [ ${#COMPREPLY[*]} != 0 ]; then
+       return 0
+   fi
+   
+   case "${cur}" in
+   # match start of string
+   "r"*) # run_tests 
+       local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_test_*`; do echo ${x/\/*\//}| sed 's/xmipp/run/g' ; done )
+       COMPREPLY=( $(compgen -W "run_tests ${names}" -- ${cur}) )
+       return 0
+       ;;
+   "x"*) # xmipp_programs
+       local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_*`; do echo ${x/\/*\//} ; done )
+       COMPREPLY=( $(compgen -W "${names}" -- ${cur}) )
+       return 0
+       ;;
+    *)COMPREPLY=()
+        return 0
+	;;
+    esac
+    COMPREPLY=()
+    return 0
+}
+complete  -o nospace -F _xcompile xcompile setup.py
+
+
+_testPrograms() 
+{
+    local cur prev opts base
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    #  The basic options we'll complete.
+    #
+    opts="--outputdirectory --programname --continue --help --more --verbose"
+
+  #
+    #  Complete the arguments to some of the basic commands.
+    #
+    case "${prev}" in
+        --programname | -p )
+	    local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_*`; do echo ${x/\/*\//} ; done )
+            COMPREPLY=( $(compgen -W "${names}" -- ${cur}) )
+            return 0
+            ;;
+	--outputdirectory | -d )
+	    COMPREPLY=( $(compgen -d ${cur}) )
+	    return 0
+	    ;;
+        *)
+        ;;
+    esac
+
+   COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
+   return 0
+}
+complete  -F _testPrograms testPrograms.py
+

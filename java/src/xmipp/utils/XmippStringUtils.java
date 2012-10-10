@@ -57,9 +57,12 @@ public class XmippStringUtils {
 		String prefix = commonPrefix(strings);
 		
 		int pos = prefix.lastIndexOf('/');
-		if (pos > 0)
+		if (pos > 0) {
 			++pos; //If found /, also include in prefix
-		prefix = prefix.substring(0, pos);
+			prefix = prefix.substring(0, pos);
+		}
+		else 
+			prefix = "";
 		
 		return prefix;
 	}
