@@ -337,7 +337,7 @@ class ProcessManager():
         script = 'xmipp_protocol_script %s' % os.path.abspath(self.run['script'])
         return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%(script)s" | grep -v grep ' % locals())
 
-    def stopProcessGroup(self):
+    def stopProcessGroup(self, project=None):
         if self.isBatch:
             launch = loadLaunchModule()
             cmd = launch.StopCommand + " " + launch.StopArgsTemplate
@@ -347,6 +347,8 @@ class ProcessManager():
             childs = self.getProcessGroup()
             for c in childs:
                 c.terminate()
+	if project != None:
+	    project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
                 
     def isAlive(self):
         if self.isBatch:
