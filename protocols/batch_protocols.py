@@ -350,8 +350,8 @@ class XmippProjectGUI():
         def stopRun():
             if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
                 #p = pm.getProcessFromPid(run['pid'])
-                pm.stopProcessGroup()
-                self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
+                pm.stopProcessGroup(self.project)
+                #self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
                 updateAndClose()
                 
         def processWorker():
