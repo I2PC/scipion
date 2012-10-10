@@ -872,7 +872,7 @@ void AutoParticlePicking2::applyConvolution()
 {
 
     MultidimArray<double> tempConvolve;
-    MultidimArray<double> avgRotated;
+    MultidimArray<double> avgRotated, avgRotatedLarge;
     MultidimArray<int> mask;
     CorrelationAux aux;
     FourierFilter filter;
@@ -883,10 +883,10 @@ void AutoParticlePicking2::applyConvolution()
     BinaryCircularMask(mask, XSIZE(particleAvg)/2);
     normalize_NewXmipp(particleAvg,mask);
     particleAvg.setXmippOrigin();
-    particleAvg.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                           LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
-    Image<double> II;
-    correlation_matrix(microImage(),particleAvg,convolveRes,aux,false);
+    avgRotatedLarge=particleAvg;
+    avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
+                               LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+    correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
     filter.raised_w=0.02;
     filter.FilterShape=RAISED_COSINE;
     filter.FilterBand=BANDPASS;
@@ -900,16 +900,17 @@ void AutoParticlePicking2::applyConvolution()
     for (int deg=3;deg<360;deg+=3)
     {
         rotate(LINEAR,avgRotated,particleAvg,double(deg));
-        correlation_matrix(aux.FFT1,avgRotated,tempConvolve,aux,false);
+        avgRotatedLarge=avgRotated;
+        avgRotatedLarge.setXmippOrigin();
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
+                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        correlation_matrix(aux.FFT1,avgRotatedLarge,tempConvolve,aux,false);
         filter.applyMaskSpace(tempConvolve);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
         if (DIRECT_A2D_ELEM(tempConvolve,i,j)>DIRECT_A2D_ELEM(convolveRes,i,j))
             DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
     }
     CenterFFT(convolveRes,true);
-    Image<double> save;
-    save()=convolveRes;
-    save.write("PPPconvolveRes.xmp");
 }
 
 // ==========================================================================
