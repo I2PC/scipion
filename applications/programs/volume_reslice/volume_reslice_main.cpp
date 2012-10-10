@@ -34,6 +34,7 @@ private:
     ImageGeneric imgIn;   // Input Volume
     ImageGeneric imgOut;  // Output Volume
     String      face;
+    bool  flip;
 
     void defineParams()
     {
@@ -49,6 +50,7 @@ private:
         addParamsLine("                 left   : Align -X axis to Z axis, rotating -90 degrees around Y axis");
         addParamsLine("                 bottom : Align Y axis to Z axis, rotating -90 degrees around X axis");
         addParamsLine("                 right  : Align X axis to Z axis, rotating 90 degrees around Y axis");
+        addParamsLine("  [--flip]              : Flip the slices along Z axis after reslice");
 
         addExampleLine("Reslice a volume showing left face as new front face:", false);
         addExampleLine("xmipp_volume_reslice -i original.vol -o resliced.vol --face left ");
@@ -59,6 +61,7 @@ private:
         fnImgIn = getParam("-i");
         fnImgOut = (checkParam("-o"))? getParam("-o") : fnImgIn;
         face = getParam("--face");
+        flip = checkParam("--flip");
     }
 
     void show()
@@ -67,7 +70,7 @@ private:
         << "Input file     : " << fnImgIn   << std::endl
         << "Output file    : " << fnImgOut  << std::endl
         << "New front face : " << face      << std::endl
-        ;
+        << "flip Z         : " << flip      << std::endl ;
     }
 
     void run()
@@ -99,6 +102,8 @@ private:
             reverse = (face == "left");
         }
 
+        flip = flip^reverse;
+
         // Create output file
         imgOut.setDatatype(imgIn.getDatatype());
         imgOut.mapFile2Write(XdimOut, yDimOut, zDimOut, fnImgOut, fnImgIn == fnImgOut);
@@ -111,7 +116,7 @@ private:
         for (int k = 0; k < zDimOut; k++)
         {
             imTemp.aliasSlice(imgOut(), k);
-            index = k + (zDimOut - 1 - 2*k) * (int)reverse;
+            index = k + (zDimOut - 1 - 2*k) * (int)flip;
             imgIn().getSlice(index, &imTemp, axis, !reverse);
 
             progress_bar(k);
