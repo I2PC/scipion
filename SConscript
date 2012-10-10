@@ -908,7 +908,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_operate')
     AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
+    # AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
     AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
     AddProgramLink('image_sort', 'mpi_image_sort')
