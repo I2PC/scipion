@@ -168,7 +168,7 @@ void FileTaskDistributor::reset()
 {
     if (node == NULL || node->isMaster())
         setAssignedTasks(0);
-    if (node!=NULL)
+    if (node != NULL)
         node->barrierWait();
 }
 
