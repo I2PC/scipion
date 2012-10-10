@@ -642,6 +642,9 @@ void ProgCTFEstimateFromPSD::defineParams()
 void ProgCTFEstimateFromPSD::produce_side_info()
 {
     adjust.resize(ALL_CTF_PARAMETERS);
+    adjust.initZeros();
+    global_ctfmodel.clear();
+    global_ctfmodel_defoci.clear();
     assign_parameters_from_CTF(initial_ctfmodel, MATRIX1D_ARRAY(adjust), 0,
                                ALL_CTF_PARAMETERS, true);
 
@@ -1314,8 +1317,8 @@ double CTF_fitness(double *p, void *)
         retval = global_heavy_penalization;
     if (global_show == 3)
         std::cout << "Fitness1=" << retval << std::endl;
-    if ((global_action >= 3 && global_action <= 4 || global_action == 6)
-        && Ncorr > 0 && global_prm->enhanced_weight != 0)
+    if ( (((global_action >= 3) && (global_action <= 4)) || (global_action == 6))
+        && (Ncorr > 0) && (global_prm->enhanced_weight != 0) )
     {
         model_avg /= Ncorr;
         enhanced_avg /= Ncorr;
@@ -1570,7 +1573,9 @@ void estimate_background_sqrt_parameters()
         b(1) += weight * unexplained;
     }
     A(1, 0) = A(0, 1);
+
     b = A.inv() * b;
+
     global_ctfmodel.sqU = global_ctfmodel.sqV = b(0);
     global_ctfmodel.sqrt_K = exp(b(1));
     global_ctfmodel.sqrt_angle = 0;
@@ -1636,6 +1641,7 @@ void estimate_background_sqrt_parameters()
 //#define DEBUG
 void estimate_background_gauss_parameters()
 {
+
     if (global_prm->show_optimization)
         std::cout << "Computing first background Gaussian parameters ...\n";
 
@@ -1775,6 +1781,7 @@ void estimate_background_gauss_parameters()
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
+
     FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j) <= 0)
@@ -1790,35 +1797,43 @@ void estimate_background_gauss_parameters()
         global_ctfmodel.precomputeValues(global_x_contfreq(i, j),
                                          global_y_contfreq(i, j));
         double explained = global_ctfmodel.CTFnoise_at();
+
         double unexplained = (*f)(i, j) - explained;
         if (unexplained <= 0)
             continue;
         unexplained = log(unexplained);
         double F = -(fmod - fmax) * (fmod - fmax);
+
         A(0, 0) += weight * 1;
         A(0, 1) += weight * F;
         A(1, 1) += weight * F * F;
         b(0) += weight * unexplained;
         b(1) += F * weight * unexplained;
     }
+
     A(1, 0) = A(0, 1);
-    b = A.inv() * b;
-    global_ctfmodel.sigmaU = XMIPP_MIN(fabs(b(1)), 95e3); // This value should be
-    global_ctfmodel.sigmaV = XMIPP_MIN(fabs(b(1)), 95e3); // conformant with the physical
-    // meaning routine in CTF.cc
-    global_ctfmodel.gaussian_K = exp(b(0));
-
-    // Store the CTF values in global_prm->adjust
-    global_ctfmodel.force_physical_meaning();
-    COPY_ctfmodel_TO_CURRENT_GUESS;
-
-    if (global_prm->show_optimization)
+    if ( (A(0, 0)== 0) && (A(1, 0)== 0) && (A(1, 1)== 0))
     {
-        std::cout << "First Background Fit:\n" << global_ctfmodel << std::endl;
-        save_intermediate_results("step01c_first_background_fit");
+    	std::cout << "A matrix es zero" << std::endl;
     }
+    else
+    {
+        b = A.inv() * b;
+        global_ctfmodel.sigmaU = XMIPP_MIN(fabs(b(1)), 95e3); // This value should be
+        global_ctfmodel.sigmaV = XMIPP_MIN(fabs(b(1)), 95e3); // conformant with the physical
+        // meaning routine in CTF.cc
+        global_ctfmodel.gaussian_K = exp(b(0));
+        // Store the CTF values in global_prm->adjust
+        global_ctfmodel.force_physical_meaning();
+        COPY_ctfmodel_TO_CURRENT_GUESS;
 
-    center_optimization_focus(false, true, 1.5);
+        if (global_prm->show_optimization)
+        {
+            std::cout << "First Background Fit:\n" << global_ctfmodel << std::endl;
+            save_intermediate_results("step01c_first_background_fit");
+        }
+        center_optimization_focus(false, true, 1.5);
+    }
 }
 #undef DEBUG
 
@@ -2574,7 +2589,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                         NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
 
         COPY_ctfmodel_TO_CURRENT_GUESS;
-		*/
+        */
         //global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
 
@@ -2589,7 +2604,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                         NULL, 0.005, fitness, iter, steps, global_prm->show_optimization);
         global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
-		*/
+        */
         global_show=0;
         global_action = 3;
         global_evaluation_reduction = 1;
@@ -2597,11 +2612,11 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
         double error = -CTF_fitness(global_adjust->vdata-1,NULL);
 
         std::cout << "Error : " << error << std::endl;
-
-        if ( error <= 0.2)
+        //exit;
+        if ( error <= -0.1)
         {
-        	*global_adjust = initialGlobalAdjust;
-        	COPY_ctfmodel_TO_CURRENT_GUESS;
+            *global_adjust = initialGlobalAdjust;
+            COPY_ctfmodel_TO_CURRENT_GUESS;
             //There is nothing to do and we have to perform an exhaustive search
             std::cout << error << std::endl;
             std::cout << " Entering in estimate_defoci, Performing exhaustive defocus search (SLOW)" << std::endl;
@@ -2680,6 +2695,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     /************************************************************************
      STEPs 1, 2, 3 and 4:  Find background which best fits the CTF
      /************************************************************************/
+
     global_ctfmodel.enable_CTFnoise = true;
     global_ctfmodel.enable_CTF = false;
     global_evaluation_reduction = 4;
@@ -2691,6 +2707,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     {
         estimate_background_sqrt_parameters();
         estimate_background_gauss_parameters();
+
+
     }
 
     // Optimize the current background
@@ -2718,7 +2736,6 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     }
     DEBUG_TEXTFILE(formatString("Step 4: CTF_fitness=%f",CTF_fitness));
     DEBUG_MODEL_TEXTFILE;
-
 
     /************************************************************************
      STEPs 5 and 6:  Find envelope which best fits the CTF
@@ -2752,10 +2769,10 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     }
     DEBUG_TEXTFILE(formatString("Step 6: espr=%f",global_ctfmodel.espr));
     DEBUG_MODEL_TEXTFILE;
-
     /************************************************************************
      STEP 7:  the defocus and angular parameters
      /************************************************************************/
+
     global_action = 3;
     global_evaluation_reduction = 1;
     if (prm.fastDefocusEstimate)
@@ -2923,14 +2940,16 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 
         save_intermediate_results(fn_rootMODEL, false);
         global_ctfmodel.Tm /= prm.downsampleFactor;
-        global_ctfmodel.write(fn_rootCTFPARAM + ".ctfparam");
+        global_ctfmodel.write(fn_rootCTFPARAM + ".ctfparam_tmp");
         MetaData MD;
-        MD.read(fn_rootCTFPARAM + ".ctfparam");
+        MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");
         size_t id = MD.firstObject();
         MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);
         MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
+        fn_rootCTFPARAM = fn_rootCTFPARAM + ".ctfparam_tmp";
+        fn_rootCTFPARAM.deleteFile();
     }
     output_ctfmodel = global_ctfmodel;
 
