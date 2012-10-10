@@ -2928,14 +2928,24 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 
         // Save results
         FileName fn_rootCTFPARAM = prm.fn_psd.withoutExtension();
+
+        std::cout << "fn_rootCTFPARAM " << fn_rootCTFPARAM << std::endl;
+
         FileName fn_rootMODEL = fn_rootCTFPARAM;
         int atPosition=fn_rootCTFPARAM.find('@');
+
+        std::cout << "prm.fn_psd.withoutExtension() " << prm.fn_psd.withoutExtension() << std::endl;
+        std::cout << "atPosition " << atPosition << std::endl;
+
         if (atPosition!=std::string::npos)
         {
             fn_rootMODEL=formatString("%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
                                       fn_rootCTFPARAM.substr(atPosition+1).c_str());
             fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
                                          fn_rootCTFPARAM.substr(atPosition+1).c_str());
+
+            std::cout << "fn_rootCTFPARAM " << fn_rootCTFPARAM << std::endl;
+
         }
 
         save_intermediate_results(fn_rootMODEL, false);
@@ -2944,6 +2954,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         MetaData MD;
         MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");
         size_t id = MD.firstObject();
+        MD.setValue(MDL_CTF_ID, fn_rootCTFPARAM, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);

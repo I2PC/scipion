@@ -459,8 +459,8 @@ void ProgCTFEstimateFromMicrograph::run()
 
                 //We write the region where is valid the estimated CTF
                 MetaData MD;
-                //MD.read(fn_psd.withoutExtension() + ".ctfparam");
                 size_t id = MD.addObject();
+                MD.setValue(MDL_CTF_ID, fn_psd_piece, id);
                 MD.setValue(MDL_CTF_X0, (double)i,id);
                 MD.setValue(MDL_CTF_XF,(double)(i/pieceDim+1)*pieceDim,id);
                 MD.setValue(MDL_CTF_Y0,(double)j,id);

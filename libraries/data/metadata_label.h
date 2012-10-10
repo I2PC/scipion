@@ -105,6 +105,7 @@ enum MDLabel
     MDL_CTF_DEFOCUSA, ///< average defocus (Angtroms)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
     MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
+    MDL_CTF_ID, // < ID for the CTFs when are processed locally
     MDL_CTF_X0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
     MDL_CTF_Y0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
     MDL_CTF_XF, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
@@ -757,6 +758,7 @@ private:
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
 
+        MDL::addLabel(MDL_CTF_ID, LABEL_STRING, "ctfId");
         MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
         MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
         MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
