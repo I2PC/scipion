@@ -51,6 +51,8 @@ public:
     /// jmax=-5 -> line j has to be shifted 5 pixels to the left  to match line i
     /// jmax= 5 -> line j has to be shifted 5 pixels to the right to match line i
     int jmax;
+    /// Percentile (good common lines have very high percentiles)
+    double percentile;
 public:
     /// Empty constructor
     CommonLine();
@@ -74,8 +76,6 @@ public:
     double          hpf;
     /// Angular sampling
     double          stepAng;
-    /// Qualify
-    bool            qualify;
 
     /// Memory limit
     double          mem;
@@ -83,7 +83,12 @@ public:
     int             Nthr;
     /// Number of processors
     int             Nmpi;
+    /// MPI Rank
+    int rank;
 public:
+    /** Empty constructor */
+    ProgCommonLine(): rank(0) {};
+
     /** Read parameters from command line. */
     void readParams();
 
@@ -111,7 +116,7 @@ public:
     void writeResults();
     
     /** Run */
-    void run(int rank=0);
+    void run();
 public:
     // Block size
     int Nblock;
@@ -127,9 +132,6 @@ public:
 
     // Common line matrix
     std::vector<CommonLine> CLmatrix;
-
-    // Common line matrix
-    std::vector<double> qualification;
 };
 
 #define POW2(x) (x*x)

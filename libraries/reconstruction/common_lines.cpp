@@ -49,7 +49,6 @@ void ProgCommonLine::readParams() {
 	lpf = getDoubleParam("--lpf");
 	hpf = getDoubleParam("--hpf");
 	stepAng = getDoubleParam("--stepAng");
-	qualify = checkParam("--qualify");
 	mem = getDoubleParam("--mem");
 	Nthr = getIntParam("--thr");
 	scaleDistance = checkParam("--scaleDistance");
@@ -65,12 +64,11 @@ void ProgCommonLine::defineParams() {
 	addParamsLine("   [--ostyle <style=matrix>]  : Output style");
 	addParamsLine("          where <style>");
 	addParamsLine("                matrix: Text file with the indexes of the corresponding common lines");
-	addParamsLine("                line_entries: Text file with an entry in each line");
+	addParamsLine("                line_entries: Text file with a line for each matrix entry");
 	addParamsLine("   [--lpf <f=0.01>]      : low pass frequency (0<lpf<0.5)");
 	addParamsLine("   [--hpf <f=0.35>]      : high pass frequency (lpf<hpf<0.5)");
 	addParamsLine("                         : Set both frequencies to -1 for no filter");
 	addParamsLine("   [--stepAng <s=1>]     : angular step");
-	addParamsLine("   [--qualify]           : assess the quality of each common line");
 	addParamsLine("   [--mem <m=1>]         : float number with the memory available in Gb");
 	addParamsLine("   [--thr <thr=1>]       : number of threads for each process");
 	addParamsLine("   [--scaleDistance]     : scale the output distance to 16-bit integers");
@@ -275,7 +273,6 @@ void commonLineTwoImages(
 	MultidimArray<double> linei, linej;
 	MultidimArray<double> correlationFunction;
 	int jmax;
-	std::cout << "Comparing images " << idxi << " " << idxj << std::endl;
 	for (int ii = 0; ii < YSIZE(RTFi) / 2 + 1; ii++) {
 		lineFi.aliasRow(RTFi,ii);
 		linei.aliasRow(RTi,ii);
@@ -403,67 +400,25 @@ void ProgCommonLine::processBlock(int i, int j)
 /* Qualify common lines ---------------------------------------------------- */
 void ProgCommonLine::qualifyCommonLines()
 {
-    if (!qualify)
+    if (outputStyle=="matrix")
         return;
-    qualification.resize(CLmatrix.size());
-    MultidimArray<double> peaks;
-    peaks.initZeros(Nimg * (Nimg - 1) / 2);
-    int iPeak = 0;
-    for (int k1 = 0; k1 < Nimg; k1++)
-        for (int k2 = k1 + 1; k2 < Nimg; k2++)
-        {
-            // Locate the common line between k1 and k2
-            long int idx12 = k1 * Nimg + k2;
 
-            // Initialize alpha_12 angle histogram
-            MultidimArray<double> h;
-            h.initZeros(181);
+    std::vector<double> distance;
+    size_t imax=CLmatrix.size();
+    distance.reserve(imax);
+    double dmax=imax;
+    for (size_t i=0; i<imax; ++i)
+    	distance.push_back(CLmatrix[i].distanceij);
 
-            // Iterate over all images except k1 and k2
-            for (int k3 = 0; k3 < Nimg; k3++)
-            {
-                if (k3 == k1 || k3 == k2)
-                    continue;
+    std::sort(distance.begin(),distance.end());
 
-                // Locate the corresponding common lines
-                long int idx13 = k1 * Nimg + k3;
-                long int idx23 = k2 * Nimg + k3;
-
-                // Compute a,b,c
-                double a = COSD(CLmatrix[idx23].angj-CLmatrix[idx13].angj);
-                double b = COSD(CLmatrix[idx23].angi-CLmatrix[idx12].angj);
-                double c = COSD(CLmatrix[idx13].angi-CLmatrix[idx12].angi);
-
-				// Update histogram if necessary
-				if (1 + 2 * a * b * c > a * a + b * b + c * c) {
-					double alpha12 = 180 / PI * acos( (a - b * c) / (sqrt(1 - b * b) * sqrt(1 - c * c)));
-					int idxAlpha12 = ROUND(alpha12);
-					int idx0 = XMIPP_MAX( 0,idxAlpha12-10);
-					int idxF = XMIPP_MIN(180,idxAlpha12+10);
-					for (int idx = idx0; idx <= idxF; idx++) {
-						double diff = idx - alpha12;
-						h(idx) += exp(-0.5 * diff * diff / 9);
-					}
-				}
-			}
-
-            // Compute the histogram peak
-            qualification[idx12] = h.computeMax();
-            peaks(iPeak++) = qualification[idx12];
-        }
-
-    // Compute the histogram of the peaks
-    Histogram1D hist;
-    compute_hist(peaks, hist, 400);
-    hist /= hist.sum();
-
-    // Reevaluate the peaks
-    for (int k1 = 0; k1 < Nimg; k1++)
-        for (int k2 = k1 + 1; k2 < Nimg; k2++)
-        {
-            long int idx12 = k1 * Nimg + k2;
-            qualification[idx12] = hist.mass_below(qualification[idx12]);
-        }
+    std::vector<double>::iterator dbegin=distance.begin();
+    std::vector<double>::iterator low;
+    for (size_t i=0; i<imax; ++i)
+    {
+    	low=std::lower_bound(dbegin, distance.end(), CLmatrix[i].distanceij);
+    	CLmatrix[i].percentile=1.0-(double)(low-dbegin)/dmax;
+    }
 }
 
 /* Write results ----------------------------------------------------------- */
@@ -512,11 +467,9 @@ void ProgCommonLine::writeResults()
 					else
 						fh_out << CLmatrix[ii].distanceij << " ";
 					fh_out << round(CLmatrix[ii].angi/stepAng) << " "
-							<< round(CLmatrix[ii].angj/stepAng) << " "
-							<< CLmatrix[ii].jmax;
-					if (qualify)
-						fh_out << " " << qualification[ii];
-					fh_out << std::endl;
+						   << round(CLmatrix[ii].angj/stepAng) << " "
+						   << CLmatrix[ii].jmax << " "
+						   << CLmatrix[ii].percentile << std::endl;
 				}
 			}
 		fh_out.close();
@@ -524,8 +477,10 @@ void ProgCommonLine::writeResults()
 }
 
 /* Main program ------------------------------------------------------------ */
-void ProgCommonLine::run(int rank)
+void ProgCommonLine::run()
 {
+	produceSideInfo();
+
     // Process all blocks
     int maxBlock = CEIL(((float)Nimg)/Nblock);
     if (rank == 0)
@@ -540,7 +495,11 @@ void ProgCommonLine::run(int rank)
                 progress_bar(i * maxBlock + j);
         }
     if (rank == 0)
+    {
         progress_bar(maxBlock * maxBlock);
+        qualifyCommonLines();
+        writeResults();
+    }
 }
 
 
