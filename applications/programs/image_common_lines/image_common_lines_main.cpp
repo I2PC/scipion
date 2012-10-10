@@ -25,37 +25,11 @@
 
 #include <reconstruction/common_lines.h>
 
-int
-main(int argc, char *argv[])
+RUN_XMIPP_PROGRAM(ProgCommonLine);
+#ifdef NEVERDEFINED
+int main(int argc, char *argv[])
 {
-    //    ProgCommonLine prm;
-    //
-    //    try
-    //    {
-    //        prm.read(argc, argv);
-    //    }
-    //    catch (XmippError XE)
-    //    {
-    //        std::cout << XE;
-    //        prm.usage();
-    //        exit(1);
-    //    }
-    //
-    //    try
-    //    {
-    //        prm.produceSideInfo();
-    //        prm.show();
-    //        prm.run();
-    //        prm.qualifyCommonLines();
-    //        prm.writeResults();
-    //    }
-    //    catch (XmippError XE)
-    //    {
-    //        std::cout << XE << std::endl;
-    //        exit(1);
-    //    }
-    //    exit(0);
-    try
+	try
     {
         int k = atoi(argv[1]);
         Matrix2D<double> quaternions;
@@ -90,5 +64,5 @@ main(int argc, char *argv[])
         std::cout << xe;
         exit(1);
     }
-
 }
+#endif
