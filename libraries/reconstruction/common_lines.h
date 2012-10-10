@@ -37,8 +37,6 @@
    @ingroup ReconsLibrary */
 //@{
 /* Parameters -------------------------------------------------------------- */
-typedef enum {CORRENTROPY=0, CORRELATION=1, EUCLIDEAN=2} DistanceType;
-
 /// Commonline
 class CommonLine
 {
@@ -49,6 +47,10 @@ public:
     double angj;
     /// Distance between both common lines
     double distanceij;
+    /// Index of the maximum
+    /// jmax=-5 -> line j has to be shifted 5 pixels to the left  to match line i
+    /// jmax= 5 -> line j has to be shifted 5 pixels to the right to match line i
+    int jmax;
 public:
     /// Empty constructor
     CommonLine();
@@ -64,8 +66,6 @@ public:
     FileName        fn_out;
     /// Output style
     String          outputStyle;
-    /// Distance measure
-    DistanceType    distance;
     /// Scale output measure
     bool scaleDistance;
     /// Low pass filter
@@ -98,7 +98,8 @@ public:
 
     /** Get and prepare block */
     void getAndPrepareBlock(int i,
-        std::vector< MultidimArray<double> > &blockImgs);
+        std::vector< MultidimArray<std::complex<double> > > &blockRTFs,
+        std::vector<MultidimArray<double> > &blockRTs);
 
     /** Show parameters */
     void show();
@@ -121,17 +122,14 @@ public:
     // Number of images
     int Nimg;
 
-    // Sigma for the correntropy
-    double sigma;
+    // Xdim size of the images
+    int Xdim;
 
     // Common line matrix
     std::vector<CommonLine> CLmatrix;
 
     // Common line matrix
     std::vector<double> qualification;
-
-    // Gaussian interpolator
-    GaussianInterpolator gaussianInterpolator;
 };
 
 #define POW2(x) (x*x)
