@@ -38,6 +38,8 @@ import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
+import xmipp.particlepicker.ParticlesJDialog;
+import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.MicrographFamilyState;
@@ -73,6 +75,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	private JFormattedTextField thresholdtf;
 	private Family family;
 	private ImageWindow iw;
+	//private JMenuItem templatesmi;
+	//TemplatesJDialog templatesdialog;
 
 	@Override
 	public TrainingPicker getParticlePicker() {
@@ -153,10 +157,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
+		
+		//templatesmi = new JMenuItem("Templates");
 		editfamiliesmi = new JMenuItem("Edit Families",
 				XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
-
+		//windowmn.add(templatesmi);
 		helpmn.add(hcontentsmi);
 
 		// Setting menu item listeners
@@ -169,10 +175,41 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 			}
 		});
+//		templatesmi.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				loadTemplates();
+//				
+//			}
+//		});
 
 	}
+	
+//	public void loadTemplates()
+//	{
+//		try
+//		{
+//			if (templatesdialog == null)
+//				templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+//			else
+//			{
+//
+//				templatesdialog.loadTemplates(true);
+//				templatesdialog.setVisible(true);
+//			}
+//		}
+//		catch (Exception ex)
+//		{
+//			JOptionPane.showMessageDialog(this, ex.getMessage());
+//			if (templatesdialog != null)
+//				templatesdialog.close();
+//			templatesdialog = null;
+//		}
+//	}
 
 	private void initFamilyPane() {
+		
 		familypn = new JPanel();
 		GridLayout gl = new GridLayout(2, 1);
 		familypn.setLayout(gl);
@@ -442,6 +479,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 						// Coss suggestion
 		if (particlesdialog != null)
 			loadParticles();
+	
 
 	}
 
@@ -564,6 +602,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	public void updateMicrographsModel() {
 		super.updateMicrographsModel();
+//		if(templatesdialog != null)
+//			loadTemplates();
 		micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		manuallb.setText(Integer.toString(ppicker
@@ -592,18 +632,20 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 				public void run() {
 					MicrographFamilyData mfd;
 					String args;
+					SupervisedParticlePicker sppicker = ((SupervisedParticlePicker) ppicker);
 					for (TrainingMicrograph micrograph : ppicker.getMicrographs()) {
 						mfd = micrograph.getFamilyData(family);
 						if (!mfd.isEmpty())
 						{	
-							args = ((SupervisedParticlePicker) ppicker).getTrainCommandLineArgs(mfd);
-							System.out.println(args);
+							args = sppicker.getBuildInvariantCommandLineArgs(mfd);
 							ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
-							
+							System.out.println(args);
 						}
-						
-
 					}
+
+					args = sppicker.getTrainCommandLineArgs();
+					System.out.println(args);
+					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
 					int next = ppicker.getNextFreeMicrograph(index);
 					if (next != -1)
 						micrographstb.setRowSelectionInterval(next,	next);
@@ -654,15 +696,19 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		setState(MicrographFamilyState.ReadOnly);
 		ppicker.persistAutomaticParticles(getFamilyData());
 
-		final String fargs = ((SupervisedParticlePicker) ppicker)
-				.getCorrectCommandLineArgs(getFamilyData());
+		 
 		try {
 			canvas.setEnabled(false);
 			XmippWindowUtil.blockGUI(getRootPane(), "Correcting...");
+			
 			Thread t = new Thread(new Runnable() {
 				public void run() {
-					ppicker.runXmippProgram(
-							"xmipp_micrograph_automatic_picking", fargs);
+					SupervisedParticlePicker sppicker = ((SupervisedParticlePicker) ppicker);
+					String args;
+					args = sppicker.getBuildInvariantCommandLineArgs(getFamilyData());
+					sppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);//build invariants
+					args = sppicker.getCorrectCommandLineArgs(getFamilyData());
+					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);//correct
 					int next = ppicker.getNextFreeMicrograph(index + 1);
 					if (next != -1)
 						micrographstb.setRowSelectionInterval(next, next);
@@ -757,7 +803,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		
 	}
 
+//	public void updateTemplates() {
+//		ppicker.updateFamilyTemplates(family);
+//		
+//		
+//	}
 	
-
-	
+	public void updateSize(int size)
+	{
+		super.updateSize(size);
+//		if(templatesdialog != null)
+//			loadTemplates();
+	}
 }
+
