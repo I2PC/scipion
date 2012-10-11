@@ -732,6 +732,7 @@ void correlation_matrix(const MultidimArray< std::complex< double > > & FF1,
         CenterFFT(R, true);
 }
 
+
 void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
                         const MultidimArray< std::complex<double> > & FFT2,
                         MultidimArray< double >& R,
