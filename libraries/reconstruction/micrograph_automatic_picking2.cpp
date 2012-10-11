@@ -911,6 +911,10 @@ void AutoParticlePicking2::applyConvolution()
             DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
     }
     CenterFFT(convolveRes,true);
+    Image<double> II;
+    II().alias(convolveRes);
+    II.write("testvv.xmp");
+
 }
 
 // ==========================================================================
