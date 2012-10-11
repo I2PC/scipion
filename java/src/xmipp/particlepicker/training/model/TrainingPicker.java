@@ -15,6 +15,7 @@ import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
+import xmipp.utils.DEBUG;
 import xmipp.utils.XmippMessage;
 
 public abstract class TrainingPicker extends ParticlePicker {
@@ -222,6 +223,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 	public void persistMicrographs() {
 		long id;
 		try {
+			System.out.println("persisting all micrographs");
 			MetaData md;
 			String block = null;
 			String file;

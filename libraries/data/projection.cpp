@@ -66,7 +66,7 @@ void Projection::read(const FileName &fn, const bool only_apply_shifts,
 {
     Image<double>::read(fn, datamode);
     if (row != NULL)
-      applyGeo(*row, only_apply_shifts);
+        applyGeo(*row, only_apply_shifts);
     Euler_angles2matrix(rot(), tilt(), psi(), euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
@@ -329,6 +329,19 @@ void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, do
     rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
     double rot, tilt, psi;
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
+
+
+    /** As, usually, the tomographic rotation angle is the tilt angle,
+     *  we are forcing to keep the sign of the resulting tilt angle coincides
+     *  the sign of the incoming angle
+     */
+
+    if (angle * tilt < 0)
+        Euler_another_set(rot, tilt, psi, rot, tilt, psi);
+
+    rot  = realWRAP(rot,-180,180);
+    tilt = realWRAP(tilt,-180,180);
+    psi  = realWRAP(psi,-180,180);
     P.setAngles(rot, tilt, psi);
 
     // Find displacement because of axis offset and inplane shift
@@ -857,7 +870,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
     grid.Gdir_project_to_plane(actprj, Eulerg, prjaint);
     VECTOR_R3(actprj, XX(bint), YY(bint), 0);
     grid.Gdir_project_to_plane(actprj, Eulerg, prjbint);
-//#define DEBUG_LITTLE
+    //#define DEBUG_LITTLE
 #ifdef DEBUG_LITTLE
 
     double rot, tilt, psi;
