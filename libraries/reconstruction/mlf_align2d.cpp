@@ -294,7 +294,8 @@ void ProgMLF2D::show(bool ML3D)
 // all processors! (in contrast to produceSideInfo2)
 void ProgMLF2D::produceSideInfo()
 {
-    LOG_LEVEL(produceSideInfo);
+    //LOG_LEVEL(produceSideInfo);
+    LOG_FUNCTION();
 
     FileName                    fn_tmp, fn_base, fn_tmp2;
     Image<double>              img;
@@ -729,7 +730,7 @@ void ProgMLF2D::produceSideInfo2()
 // For initial noise variances
 void ProgMLF2D::estimateInitialNoiseSpectra()
 {
-    LOG_LEVEL(estimateInitialNoiseSpectra);
+  LOG_FUNCTION();
     // For first iteration only: calculate sigma2 (& spectral noise) from power
     // spectra of all images and subtract power spectrum of average image
     // (to take away low-res frequencies where the signal dominates!)
@@ -846,7 +847,7 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
                                     std::vector<double> &sumw_defocus,
                                     int iter)
 {
-    LOG_LEVEL(updateWienerFilters);
+    LOG_FUNCTION();
     // Use formula 2.32b on p60 from Frank's book 2nd ed.,
     // Assume that Vctf, Vdec and Vsig exist (with their right sizes)
     // and that Vctf, Vsig are already filled with the right values

@@ -81,6 +81,7 @@ extern XmippLog * __xmippLog;
 #define LOG(msg) __xmippLog->logMessage(msg)
 #define CLOSE_LOG() delete __xmippLog
 #define LOG_LEVEL(var) XmippLogBlock __logBlock##var(__xmippLog, #var)
+#define LOG_FUNCTION() XmippLogBlock __logBlock___function(__xmippLog, __FUNCTION__)
 #else
 #define CREATE_LOG(filename) ;
 #define LOG(msg) ;

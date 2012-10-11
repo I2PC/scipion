@@ -13,11 +13,12 @@ ImgSize, SingleImgSize, MDL_IMAGE
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
-from os.path import exists
+from os.path import exists, join
 from protlib_utils import runShowJ
 from protlib_gui_ext import showWarning
 from protlib_xmipp import greenStr, redStr
-from protlib_filesystem import deleteFile
+from protlib_filesystem import deleteFile, xmippExists, renameFile
+
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -25,13 +26,24 @@ class ProtML2D(XmippProtocol):
         self.Import = 'from protocol_ml2d import *'
         
     def createFilenameTemplates(self):
-        tmpl = self.workingDirPath(self.getId() + '2d_iter_%s.xmd')
+        extra = self.workingDirPath(self.getId() + '2d_extra')
+        extraIter = join(extra, 'iter%(iter)03d')
+        extraRefs = join(extraIter, "result_classes.xmd")
         return {
-                'iter_logs': tmpl % 'logs',
-                'iter_refs': tmpl % 'refs'
+                'iter_logs': "info@" + extraRefs,
+                'iter_refs': "classes@" + extraRefs
                 }
         #self.fnIterLogs = self.workingDirPath('ml2d_iter_logs.xmd')
         #self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
+        
+    def lastIteration(self):
+        iter = 0        
+        while True:
+            if not xmippExists(self.getFilename('iter_logs', iter=iter+1)):
+                break
+            iter = iter + 1
+        return iter
+            
     def summary(self):
         md = MetaData(self.ImgMd)
         lines = ["Input images:  [%s] (<%u>)" % (self.ImgMd, md.size())]
@@ -49,17 +61,18 @@ class ProtML2D(XmippProtocol):
             lines.append("Reference image(s): [%s]" % self.RefMd)
         
         
-        logs = self.getFilename('iter_logs')    
-        
-        if exists(logs):
+        #logs = self.getFilename('iter_logs')   
+        lastIter = self.lastIteration() 
+        if lastIter > 0:#exists(logs):
+            logs = self.getFilename('iter_logs', iter=lastIter)
             md = MetaData(logs)
             id = md.lastObject()
-            iteration = md.getValue(MDL_ITER, id)
-            lines.append("Last iteration:  <%d>" % iteration)
+            #iteration = md.getValue(MDL_ITER, id)
+            lines.append("Last iteration:  <%d>" % lastIter)
             LL = md.getValue(MDL_LL, id)
             lines.append("LogLikelihood:  %f" % LL)
-            mdRefs = self.getFilename('iter_refs')
-            lines.append("Last classes: [iter%06d@%s]" % (iteration, mdRefs))
+            mdRefs = self.getFilename('iter_refs', iter=lastIter)
+            lines.append("Last classes: [%s]" % mdRefs)
 
         return lines
     
@@ -130,7 +143,7 @@ class ProtML2D(XmippProtocol):
         self.insertRunJobStep(program, params)
 
         self.Db.insertStep('collectResults', WorkingDir=self.WorkingDir, Prefix=prefix,
-                           verifyfiles=[self.workingDirPath(f) for f in ['result_images.xmd', 'result_classes.xmd']])
+                           verifyfiles=[self.workingDirPath('result_%s.xmd' % k) for k in ['images', 'classes']])
 
     def visualize(self):
         plots = [k for k in ['DoShowLL', 'DoShowPmax', 'DoShowSignalChange', 'DoShowMirror'] if self.ParamsDict[k]]
@@ -140,12 +153,10 @@ class ProtML2D(XmippProtocol):
             self.launchPlots(plots)
          
     def visualizeReferences(self):
-        refs = self.getFilename('iter_refs')
-        if exists(refs):
-            blocks = getBlocksInMetaDataFile(refs)
-            lastBlock = blocks[-1]
+        refs = self.getFilename('iter_refs', iter=self.lastIteration())
+        if xmippExists(refs):
             try:
-                runShowJ("%(lastBlock)s@%(refs)s" % locals(), extraParams="--mode metadata --render first")
+                runShowJ(refs, extraParams="--mode metadata --render first")
             except Exception, e:
                 from protlib_gui_ext import showError
                 showError("Error launching java app", str(e))
@@ -167,11 +178,14 @@ def launchML2DPlots(protML, selectedPlots):
     from protlib_gui_figure import XmippPlotter
 
     protML._plot_count = 0
-    refs = protML.getFilename('iter_refs')
-    if not exists(refs):
-        return 
-    blocks = getBlocksInMetaDataFile(refs)
-    lastBlock = blocks[-1]
+    lastIter = protML.lastIteration()
+    if lastIter == 0:
+        return
+    refs = protML.getFilename('iter_refs', iter=lastIter)
+#    if not exists(refs):
+#        return 
+#    blocks = getBlocksInMetaDataFile(refs)
+#    lastBlock = blocks[-1]
     
     def doPlot(plotName):
         return plotName in selectedPlots
@@ -194,17 +208,18 @@ def launchML2DPlots(protML, selectedPlots):
     xplotter = XmippPlotter(*gridsize)
         
     # Create data to plot
-    logs = protML.getFilename('iter_logs')
-    md = MetaData(logs)
-    iters = []
+    iters = range(1, lastIter+1)
     ll = []
     pmax = []
-    for id in md:
-        iter = md.getValue(MDL_ITER, id)
-        if iter > 0:
-            iters.append(iter)
-            ll.append(md.getValue(MDL_LL, id))
-            pmax.append(md.getValue(MDL_PMAX, id))
+    for iter in iters:
+#    for id in md:
+#        iter = md.getValue(MDL_ITER, id)
+#        if iter > 0:
+        logs = protML.getFilename('iter_logs', iter=iter)
+        md = MetaData(logs)
+        id = md.firstObject()
+        ll.append(md.getValue(MDL_LL, id))
+        pmax.append(md.getValue(MDL_PMAX, id))
             
     if doPlot('DoShowLL'):
         a = xplotter.createSubPlot('Log-likelihood (should increase)', 'iterations', 'LL', yformat=True)
@@ -214,7 +229,7 @@ def launchML2DPlots(protML, selectedPlots):
     if doPlot('DoShowMirror'):
         from numpy import arange
         from matplotlib.ticker import FormatStrFormatter
-        md = MetaData('%(lastBlock)s@%(refs)s' % locals())
+        md = MetaData(refs)
         mirrors = [md.getValue(MDL_MIRRORFRAC, id) for id in md]
         nrefs = len(mirrors)
         ind = arange(1, nrefs + 1)
@@ -231,10 +246,15 @@ def launchML2DPlots(protML, selectedPlots):
         a.plot(iters, pmax, color='green')
     
     if doPlot('DoShowSignalChange'):
-        # Read all iteration block into one metadata (iter 0 is avoided)
-        md = MetaData('iter(.*[1-9].*)@%s' % refs)
+        md = MetaData()
+        for iter in iters:
+            fn = protML.getFilename('iter_refs', iter=iter)
+            md2 = MetaData(fn)
+            md2.fillConstant(MDL_ITER, str(iter))
+            md.unionAll(md2)
         # 'iter(.*[1-9].*)@2D/ML2D/run_004/ml2d_iter_refs.xmd')
         #a = plt.subplot(gs[1, 1])
+        #print "md:", md
         md2 = MetaData()    
         md2.aggregate(md, AGGR_MAX, MDL_ITER, MDL_SIGNALCHANGE, MDL_MAX)
         signal_change = [md2.getValue(MDL_MAX, id) for id in md2]
@@ -245,21 +265,33 @@ def launchML2DPlots(protML, selectedPlots):
     
              
 def collectResults(log, WorkingDir, Prefix):
-    oroot = os.path.join(WorkingDir, Prefix)
-    mdImgs = MetaData(oroot + '_final_images.xmd')
-    outImages = os.path.join(WorkingDir, 'result_images.xmd')
-    # change the sign of the angle, since is the expected one
-    # to align the images agains the reference
-    mdImgs.operate("anglePsi=360-anglePsi")
-    mdImgs.write('images@' + outImages)
-    mdRefs = MetaData(oroot + '_final_refs.xmd')
-    outRefs = os.path.join(WorkingDir, 'result_classes.xmd')
-    mdGroup = MetaData()
-    deleteFile(log, outRefs)
-    for idx in mdRefs:
-        ref = mdRefs.getValue(MDL_REF, idx)
-        mdRefs.setValue(MDL_CLASS_COUNT, long(round(mdRefs.getValue(MDL_WEIGHT, idx))), idx)
-        mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
-        mdGroup.write('class%(ref)06d_images@%(outRefs)s' % locals(),MD_APPEND)
-    mdRefs.write('classes@'+outRefs,MD_APPEND)
+    for k in ['images', 'classes']:
+        src = join(WorkingDir, Prefix  + '_result_%s.xmd' % k)
+        dst = join(WorkingDir, 'result_%s.xmd' % k)
+        renameFile(log, src, dst)
+#        
+#    imgs = join(WorkingDir, Prefix  + 'result_images.xmd')
+#    refs = join(WorkingDir, Prefix  + 'result_classes.xmd')
+#    
+#    
+#    c
+#    for iter in range(LastIter):
+#        fnIter = join(orootRoot, "iter%03d" % (iter+1))
+#    
+#    mdImgs = MetaData(oroot + '_final_images.xmd')
+#    outImages = os.path.join(WorkingDir, 'result_images.xmd')
+#    # change the sign of the angle, since is the expected one
+#    # to align the images agains the reference
+#    mdImgs.operate("anglePsi=360-anglePsi")
+#    mdImgs.write('images@' + outImages)
+#    mdRefs = MetaData(oroot + '_final_refs.xmd')
+#    outRefs = os.path.join(WorkingDir, 'result_classes.xmd')
+#    mdGroup = MetaData()
+#    deleteFile(log, outRefs)
+#    for idx in mdRefs:
+#        ref = mdRefs.getValue(MDL_REF, idx)
+#        mdRefs.setValue(MDL_CLASS_COUNT, long(round(mdRefs.getValue(MDL_WEIGHT, idx))), idx)
+#        mdGroup.importObjects( mdImgs, MDValueEQ(MDL_REF, ref))
+#        mdGroup.write('class%(ref)06d_images@%(outRefs)s' % locals(),MD_APPEND)
+#    mdRefs.write('classes@'+outRefs,MD_APPEND)
     
