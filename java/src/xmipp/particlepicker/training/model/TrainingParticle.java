@@ -13,6 +13,8 @@ import xmipp.particlepicker.ParticleCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.utils.XmippMessage;
+import xmipp.ij.commons.XmippImageConverter;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
 
 public class TrainingParticle extends Particle{
@@ -127,6 +129,14 @@ public class TrainingParticle extends Particle{
 	public void resetParticleCanvas()
 	{
 		canvas = null;
+	}
+
+	public ImageGeneric getImageGeneric() {
+		try {
+			return XmippImageConverter.convertToImageGeneric(getImagePlus());
+		} catch (Exception e) {
+			throw new IllegalArgumentException(e.getMessage());
+		}
 	}
 
 	

@@ -34,6 +34,7 @@
 #include "pdb_nma_deform.h"
 #include "angular_continuous_assign.h"
 #include "micrograph_automatic_picking.h"
+#include "micrograph_automatic_picking2.h"
 #include "data/mask.h"
 #include <classification/analyze_cluster.h>
 
@@ -81,7 +82,7 @@ XmippProgram * getProgramByName(const String &programName)
         return new ProgPdbNmaDeform();
 
     if (programName == "xmipp_micrograph_automatic_picking")
-        return new ProgMicrographAutomaticPicking();
+        return new ProgMicrographAutomaticPicking2();
 
     if (programName == "xmipp_classify_analyze_cluster")
         return new ProgAnalyzeCluster();

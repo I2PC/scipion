@@ -47,12 +47,13 @@ public:
     svm_model *model;
 public:
 
-    SVMClassifier();
+    //SVMClassifier(double c,double gamma);
     ~SVMClassifier();
     void SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &lable);
     double  predict(MultidimArray<double> &featVec,double &score);
     void SaveModel(const FileName &fnModel);
     void LoadModel(const FileName &fnModel);
+    void setParameters(double c,double gamma);
     int getNumClasses();
 };
 //@}
