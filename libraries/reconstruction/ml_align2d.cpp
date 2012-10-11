@@ -2120,9 +2120,16 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
     {
         size_t index = imgno - first;
         size_t id = img_id[imgno];
-        MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0), id);
-        MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1), id);
-        MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2), id);
+        if (do_ML3D)
+        {
+            MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0), id);
+            MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1), id);
+        }
+        //Here we change the sign of the angle becase in the code
+        //is represent the rotation of the reference and we want
+        //to store the rotation of the image
+        double psi = -dAij(data, index, 2);
+        MDimg.setValue(MDL_ANGLE_PSI, psi, id);
         MDimg.setValue(MDL_SHIFT_X, dAij(data, index, 3), id);
         MDimg.setValue(MDL_SHIFT_Y, dAij(data, index, 4), id);
         MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), id);
@@ -2155,7 +2162,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 
 void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
-    FileName fn_tmp, fn_prefix, fn_base(fn_root);
+    FileName fn_tmp, fn_prefix, fn_base;
     Image<double> Itmp;
     MetaData MDo;
     bool write_img_xmd = true, write_refs_log = true, write_conv = !do_ML3D;
@@ -2202,6 +2209,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         break;
     case OUT_REFS:
         //std::cerr << "OUT_REFS" <<std::endl;
+        LOG("OUT_REFS");
         write_img_xmd = false;
         write_conv = false;
         //fn_base = getBaseName("_it", iter);
@@ -2209,13 +2217,8 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         break;
     }
 
-    if (fn_prefix == ITER_PREFIX) //All intermediate iteration files should go to "extra" folder
-    {
-        fn_base += formatString("_extra/iter%03d/", iter);
-        fn_base.makePath();
-    }
-    else
-      fn_base += "_";
+    fn_base = (fn_prefix == ITER_PREFIX) ? //All intermediate iteration files should go to "extra" folder
+              getIterExtraPath(fn_root, iter) : fn_root + "_";
 
     const char * rootStr = fn_base.c_str(), * prefixStr = fn_prefix.c_str();
 
@@ -2223,12 +2226,12 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     {
         //static WriteModeMetaData mode = MD_OVERWRITE;
         //Write image metadata, for each iteration a new block will be written
-        fn_tmp = fn_base + "result_images.xmd";
+        fn_tmp = FN_IMAGES_MD(fn_base);
         MDimg.write(fn_tmp);
-//        if (fn_prefix == ITER_PREFIX)
-//            fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
-//        else
-//            fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
+        //        if (fn_prefix == ITER_PREFIX)
+        //            fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
+        //        else
+        //            fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
         //MDimg.write(fn_tmp, mode);
         //mode = MD_APPEND;
     }
@@ -2243,13 +2246,15 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         int refno = 0;
         size_t objId;
         int select_img;
+        double weight;
+        size_t count;
 
-        fn_tmp = fn_base + "result_classes.stk";
-//
-//        if (fn_prefix == ITER_PREFIX)
-//            fn_tmp = formatString("%s_iter%06d_refs.stk", rootStr, iter);
-//        else
-//            fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
+        fn_tmp = FN_CLASSES_STK(fn_base);
+        //
+        //        if (fn_prefix == ITER_PREFIX)
+        //            fn_tmp = formatString("%s_iter%06d_refs.stk", rootStr, iter);
+        //        else
+        //            fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
 
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
@@ -2261,18 +2266,16 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
             //std::cerr << "DEBUG_JM: select_img: " << select_img << std::endl;
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
-            MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
+            //MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
             MDref.setValue(MDL_IMAGE, formatString("%06d@%s", select_img, fn_tmp.c_str()), objId);
             MDref.setValue(MDL_ENABLED, 1, objId);
-            MDref.setValue(MDL_WEIGHT, model.WsumMref[refno].weight(), objId);
+            weight = model.WsumMref[refno].weight();
+            MDref.setValue(MDL_WEIGHT, weight, objId);
+            count = ROUND(weight);
+            MDref.setValue(MDL_CLASS_COUNT, count, objId);
             if (do_mirror)
-            {
-
-                //std::cerr << "DEBUG_JM: refno: " << refno << "  mirror: " << (*ptrMirror)[refno] << std::endl;
-
                 MDref.setValue(MDL_MIRRORFRAC, (*ptrMirror)[refno], objId);
-            }
             if (write_conv)
                 MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, objId);
             if (write_norm)
@@ -2281,13 +2284,13 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         }
         //fn_tmp.copyFile(formatString("%s_output_block%d.stk", fn_tmp.c_str(), current_block));
 
-//        fn_tmp = formatString("%s_%s", rootStr, prefixStr);
-//        FileName fn_ref = fn_tmp + "_refs.xmd";
-//
-//        if (!fn_prefix.contains("block"))
-//            fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
-//        MDref.write(fn_ref, mode);
-        fn_tmp = fn_base + "result_classes.xmd";
+        //        fn_tmp = formatString("%s_%s", rootStr, prefixStr);
+        //        FileName fn_ref = fn_tmp + "_refs.xmd";
+        //
+        //        if (!fn_prefix.contains("block"))
+        //            fn_ref = formatString("iter%06d@%s", iter, fn_ref.c_str());
+        //        MDref.write(fn_ref, mode);
+        fn_tmp = FN_CLASSES_MD(fn_base);
         MDref.write(fn_tmp);
 
         if (outputType == OUT_REFS)
@@ -2302,14 +2305,27 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         mdLog.setValue(MDL_SIGMANOISE, sigma_noise, objId);
         mdLog.setValue(MDL_SIGMAOFFSET, sigma_offset, objId);
         mdLog.setValue(MDL_RANDOMSEED, seed, objId);
-        fn_tmp = fn_base + "logs.xmd";
         if (write_norm)
             mdLog.setValue(MDL_INTSCALE, average_scale, objId);
-        if (fn_prefix.contains("block") || mode == MD_OVERWRITE)
-            mdLog.write(fn_tmp);
-        else
-            mdLog.append(fn_tmp);
-        mode = MD_APPEND;
+
+        mdLog.write(FN_LOGS_MD(fn_base), MD_APPEND);
+
+        if (write_img_xmd)
+        {
+            MetaData mdImgs;
+            size_t n = MDref.size();
+            for (int ref = 1; ref <= n; ++ref)
+            {
+                mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, ref));
+                mdImgs.write(FN_CLASS_IMAGES_MD(fn_base, ref), MD_APPEND);
+            }
+        }
+
+        //        if (fn_prefix.contains("block") || mode == MD_OVERWRITE)
+        //            mdLog.write(fn_tmp);
+        //        else
+        //            mdLog.append(fn_tmp);
+        //        mode = MD_APPEND;
     }
 
 }//close function writeModel

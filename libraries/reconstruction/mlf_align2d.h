@@ -58,17 +58,18 @@
 /** Some filename convetions for output files */
 #define FN_NOISE_IMG_MD (fn_root + "_noise_images.xmd")
 #define FN_NOISE_IMG (fn_root + "_noise_images.stk")
-#define FN_CREF_IMG (fn_root + "_cref_images.stk")
-#define FN_CREF_IMG_MD (fn_root + "_cref_images.xmd")
+#define FN_CREF_IMG (fn_root + "_cref_classes.stk")
+#define FN_CREF_IMG_MD (fn_root + "_cref_classes.xmd")
 
-#define FN_ITER_BASE(iter) formatString("%s_iter%06d", fn_root.c_str(), (iter))
-#define FN_ITER_PREFIX(iter) formatString("iter%06d@%s_iter", (iter), fn_root.c_str())
-#define FN_FINAL_PREFIX() formatString("%s_final", fn_root.c_str())
-#define FN_REFMD(base) ((base) + "_refs.xmd")
-#define FN_IMGMD(base) ((base) + "_images.xmd")
-#define FN_LOGMD(base) ((base) + "_logs.xmd")
-#define FN_REF(base, refno) formatString("%06d@%s_refs.stk", (refno), (base).c_str())
-#define FN_VSIG(base, ifocus, ext) ((nr_focus > 1) ? formatString("%s_ctf%06d%s", (base).c_str(), ((ifocus) + 1), (ext)) : ((base) + "_ctf" + (ext)))
+#define FN_ITER_BASE(iter) getIterExtraPath(fn_root, iter)
+//formatString("%s_extraiter%06d", fn_root.c_str(), (iter))
+//#define FN_ITER_PREFIX(iter) formatString("iter%06d@%s_iter", (iter), fn_root.c_str())
+//#define FN_FINAL_PREFIX() formatString("%s_final", fn_root.c_str())
+//#define FN_REFMD(base) ((base) + "_result_classes.xmd")
+//#define FN_IMGMD(base) ((base) + "_result_images.xmd")
+//#define FN_LOGMD(base) ((base) + "_logs.xmd")
+#define FN_REF(base, refno) formatString("%06d@%sresult_classes.stk", (refno), (base).c_str())
+#define FN_VSIG(base, ifocus, ext) ((nr_focus > 1) ? formatString("ctf%06d@%s%s", ((ifocus) + 1), (base).c_str(), (ext)) : ((base) + "_ctf" + (ext)))
 
 
 /** MLFalign2D parameters. */

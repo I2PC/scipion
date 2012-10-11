@@ -74,7 +74,9 @@ extern XmippLog * __xmippLog;
 
 #define LOG_ENABLED 1
 
+
 #ifdef LOG_ENABLED
+#define LOG_FN(root) formatString("%s_nodo%02d_debug.log", root.c_str(), rank)
 #define CREATE_LOG(filename) __xmippLog = new XmippLog(filename)
 #define LOG(msg) __xmippLog->logMessage(msg)
 #define CLOSE_LOG() delete __xmippLog
