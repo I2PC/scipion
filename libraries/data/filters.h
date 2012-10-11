@@ -363,11 +363,9 @@ double correlationIndex(const MultidimArray< T >& x,
         if (mask==NULL && x.sameShape(y))
         {
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
-            {
-                retval += (DIRECT_MULTIDIM_ELEM(x, n) - mean_x) *
-                          (DIRECT_MULTIDIM_ELEM(y, n) - mean_y);
-                ++N;
-            }
+                retval += DIRECT_MULTIDIM_ELEM(x, n)*DIRECT_MULTIDIM_ELEM(y, n);
+            N=MULTIDIM_SIZE(x);
+            retval-=N*mean_x*mean_y;
         }
         else
         {
