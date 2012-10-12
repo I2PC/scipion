@@ -294,6 +294,8 @@ void ProgMLF2D::show(bool ML3D)
 // all processors! (in contrast to produceSideInfo2)
 void ProgMLF2D::produceSideInfo()
 {
+    //LOG_LEVEL(produceSideInfo);
+    LOG_FUNCTION();
 
     FileName                    fn_tmp, fn_base, fn_tmp2;
     Image<double>              img;
@@ -417,7 +419,6 @@ void ProgMLF2D::produceSideInfo()
             //Read ctf from disk
             mdCTF.getValue(MDL_CTF_MODEL, ctfname, id);
             ctf.read(ctfname);
-            std::cerr << "DEBUG_JM: ctf_file: " << ctfname << std::endl;
 
             double astigmCTFFactor = fabs( (ctf.DeltafV - ctf.DeltafU) / (std::max(ctf.DeltafV, ctf.DeltafU)) );
             // we discard the CTF with a normalized diference between deltaU and deltaV of 10%
@@ -497,7 +498,7 @@ void ProgMLF2D::produceSideInfo()
     {
         if (model.n_ref > 0)
         {
-            fn_ref = FN_REFMD(FN_ITER_BASE(0));
+            fn_ref = FN_CLASSES_MD(getIterExtraPath(fn_root, 0));
             do_generate_refs = true;
 
             if (rank == 0)
@@ -516,7 +517,7 @@ void ProgMLF2D::produceSideInfo()
 // same for all processors! (in contrast to produce_Side_info)
 void ProgMLF2D::produceSideInfo2()
 {
-
+    LOG_LEVEL(produceSideInfo2);
     int                       c, idum, refno = 0;
     double                    aux = 0.;
     FileName                  fn_tmp;
@@ -689,14 +690,13 @@ void ProgMLF2D::produceSideInfo2()
 
     FOR_ALL_DEFOCUS_GROUPS()
     {
-        fn_tmp = FN_VSIG(fn_base, ifocus, ".noise.xmd");
-
+        fn_tmp = FN_VSIG(fn_base, ifocus, "noise.xmd");
         md.read(fn_tmp);
 
         FOR_ALL_OBJECTS_IN_METADATA(md)
         {
-          md.getValue(MDL_MLF_NOISE, aux, __iter.objId);
-          dAi(Vsig[ifocus], __iter.objIndex) = aux;
+            md.getValue(MDL_MLF_NOISE, aux, __iter.objId);
+            dAi(Vsig[ifocus], __iter.objIndex) = aux;
         }
 
 #ifdef OLD_FILE
@@ -730,6 +730,7 @@ void ProgMLF2D::produceSideInfo2()
 // For initial noise variances
 void ProgMLF2D::estimateInitialNoiseSpectra()
 {
+  LOG_FUNCTION();
     // For first iteration only: calculate sigma2 (& spectral noise) from power
     // spectra of all images and subtract power spectrum of average image
     // (to take away low-res frequencies where the signal dominates!)
@@ -814,16 +815,17 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
             // Subtract signal terms
             // Divide by factor 2 because of the 2D-Gaussian distribution!
             FOR_ALL_DIGITAL_FREQS()
-                VSIG_ITEM = (dAi(rmean_noise, irr) - dAi(rmean_signal, irr)) / 2.;
+            VSIG_ITEM = (dAi(rmean_noise, irr) - dAi(rmean_signal, irr)) / 2.;
 
 
             // write Vsig vector to disc (only master)
             if (IS_MASTER)
-              writeNoiseFile(fn_base, ifocus);
+                writeNoiseFile(fn_base, ifocus);
 
-            fn_tmp = FN_VSIG(fn_base, ifocus, ".noise.xmd");
+            fn_tmp = FN_VSIG(fn_base, ifocus, "noise.xmd");
 
 #ifdef OLD_FILE
+
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
                 REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
@@ -833,6 +835,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
             }
             fh.close();
 #endif
+
         }
         Msigma2.clear();
         Mave.clear();
@@ -844,7 +847,7 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
                                     std::vector<double> &sumw_defocus,
                                     int iter)
 {
-
+    LOG_FUNCTION();
     // Use formula 2.32b on p60 from Frank's book 2nd ed.,
     // Assume that Vctf, Vdec and Vsig exist (with their right sizes)
     // and that Vctf, Vsig are already filled with the right values
@@ -875,11 +878,11 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
         double & defocus_weight = sumw_defocus[ifocus];
         sum_sumw_defocus += defocus_weight;
         FOR_ALL_DIGITAL_FREQS()
-            dAi(Vavgctf2, irr) += VCTF_ITEM * VCTF_ITEM * defocus_weight;
+        dAi(Vavgctf2, irr) += VCTF_ITEM * VCTF_ITEM * defocus_weight;
     }
     Vavgctf2 /= sum_sumw_defocus;
 
-   // std::cerr << "DEBUG_JM, updateWienerFilters: spectral_signal: " << spectral_signal << std::endl;
+    // std::cerr << "DEBUG_JM, updateWienerFilters: spectral_signal: " << spectral_signal << std::endl;
 
     // Calculate SSNR for all CTF groups
     // For each group the spectral noise is estimated via (2*Vsig)/(sumw_defocus-1)
@@ -890,26 +893,26 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
     {
         FOR_ALL_DIGITAL_FREQS()
         {
-          //if (verbose) std::cerr << "DEBUG_JM: ifocus: " << ifocus << std::endl;
-          //if (verbose) std::cerr << "DEBUG_JM: irr: " << irr << std::endl;
+            //if (verbose) std::cerr << "DEBUG_JM: ifocus: " << ifocus << std::endl;
+            //if (verbose) std::cerr << "DEBUG_JM: irr: " << irr << std::endl;
 
             noise = 2. * VSIG_ITEM * sumw_defocus[ifocus];
             noise /= sumw_defocus[ifocus] - 1;
 
-           //if (verbose) std::cerr << "DEBUG_JM: noise: " << noise << std::endl;
-           //if (verbose) std::cerr << "DEBUG_JM: VSNR_ITEM: " << VSNR_ITEM << std::endl;
+            //if (verbose) std::cerr << "DEBUG_JM: noise: " << noise << std::endl;
+            //if (verbose) std::cerr << "DEBUG_JM: VSNR_ITEM: " << VSNR_ITEM << std::endl;
             VSNR_ITEM = 0.;
 
             if (noise > 1e-20 && dAi(Vavgctf2, irr) > 0.)
             {
                 VSNR_ITEM = reduce_snr * VCTF_ITEM * VCTF_ITEM *
-                                         dAi(spectral_signal, irr) / (dAi(Vavgctf2, irr) * noise);
-              //if (verbose) std::cerr << "DEBUG_JM: inside cond: (noise > 1e-20 && dAi(Vavgctf2, irr)" <<std::endl;
-              //if (verbose) std::cerr << "DEBUG_JM: VCTF_ITEM: " << VCTF_ITEM << std::endl;
-              //if (verbose) std::cerr << "DEBUG_JM: dAi(spectral_signal, irr): " << dAi(spectral_signal, irr) << std::endl;
-              //if (verbose) std::cerr << "DEBUG_JM: dAi(Vavgctf2, irr): " << dAi(Vavgctf2, irr) << std::endl;
-              //if (verbose) std::cerr << "DEBUG_JM: noise: " << noise << std::endl;
-              //if (verbose) std::cerr << "DEBUG_JM: VSNR_ITEM: " << VSNR_ITEM << std::endl;
+                            dAi(spectral_signal, irr) / (dAi(Vavgctf2, irr) * noise);
+                //if (verbose) std::cerr << "DEBUG_JM: inside cond: (noise > 1e-20 && dAi(Vavgctf2, irr)" <<std::endl;
+                //if (verbose) std::cerr << "DEBUG_JM: VCTF_ITEM: " << VCTF_ITEM << std::endl;
+                //if (verbose) std::cerr << "DEBUG_JM: dAi(spectral_signal, irr): " << dAi(spectral_signal, irr) << std::endl;
+                //if (verbose) std::cerr << "DEBUG_JM: dAi(Vavgctf2, irr): " << dAi(Vavgctf2, irr) << std::endl;
+                //if (verbose) std::cerr << "DEBUG_JM: noise: " << noise << std::endl;
+                //if (verbose) std::cerr << "DEBUG_JM: VSNR_ITEM: " << VSNR_ITEM << std::endl;
             }
             // For start from already CTF-deconvoluted references:
             if ((iter == istart - 1) && !first_iter_noctf)
@@ -1011,8 +1014,8 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
                 md.addRow(row);
                 resol_freq += resol_step;
             }
-            fn_tmp = FN_VSIG(fn_base, ifocus, ".ssnr.xmd");
-            md.write(fn_tmp);
+            fn_tmp = FN_VSIG(fn_base, ifocus, "ssnr.xmd");
+            md.write(fn_tmp, (ifocus > 0 ? MD_APPEND : MD_OVERWRITE));
 
         }
     }
@@ -1197,7 +1200,7 @@ void ProgMLF2D::generateInitialReferences()
 
     Image<double> IRef, ITemp;
     FileName fn_tmp;
-    FileName fn_base = FN_ITER_BASE(0);
+    FileName fn_base = getIterExtraPath(fn_root, 0);
 
     //randomizeImagesOrder();
 
@@ -1235,7 +1238,7 @@ void ProgMLF2D::generateInitialReferences()
     if (verbose > 0)
         progress_bar(model.n_ref);
 
-    fn_ref = FN_REFMD(fn_base);
+    fn_ref = FN_CLASSES_MD(fn_base);
     MDref.write(fn_ref);
 }
 
@@ -1642,7 +1645,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     if (!apply_ctf)
     {
         FOR_ALL_POINTS()
-            ctf[ipoint] = 1.;
+        ctf[ipoint] = 1.;
     }
 
     // Precalculate normalization constant
@@ -1650,7 +1653,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     double factor = (do_student) ? PI * df * 0.5 : PI;
     // Multiply by two because we treat real and imaginary parts!
     for (int ipoint = 0; ipoint < nr_points_prob; ipoint++)
-      logsigma2 += 2 * log( sqrt(factor * sigma2[ipoint]));
+        logsigma2 += 2 * log( sqrt(factor * sigma2[ipoint]));
 
     // Precalculate Fimg_trans, on pruned and expanded offset list
     calculateFourierOffsets(Mimg, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
@@ -1678,7 +1681,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 iy = ROUND(opt_offsets_ref[2*irefmir+1]);
                 Pmax_refmir[irefmir] = 0.;
                 point_trans = (iflip < nr_nomirror_flips) ? point_trans = A2D_ELEM(Moffsets, iy, ix) :
-                                                            point_trans = A2D_ELEM(Moffsets_mirror, iy, ix);
+                              point_trans = A2D_ELEM(Moffsets_mirror, iy, ix);
                 if (point_trans < 0 || point_trans > dim2)
                 {
                     std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
@@ -2307,12 +2310,12 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
               - logsigma2
               + gammln(-df2) - gammln(df/2.);
 
-//    if (rank == 0)
-//    {
-//      std::cerr << "DEBUG_JM: current_image : " << current_image
-//          << " sum_refw: " << sum_refw
-//         << " LL: " << LL << std::endl;
-//    }
+    //    if (rank == 0)
+    //    {
+    //      std::cerr << "DEBUG_JM: current_image : " << current_image
+    //          << " sum_refw: " << sum_refw
+    //         << " LL: " << LL << std::endl;
+    //    }
 }
 
 void ProgMLF2D::iteration()
@@ -2676,16 +2679,16 @@ void ProgMLF2D::maximization()
             else
                 spectral_signal += rmean_signal2;
             c++;
-//            std::cerr << "DEBUG_JM: ====================" <<std::endl;
-//            std::cerr << "DEBUG_JM: refno: " << refno << std::endl;
-//            std::cerr << "DEBUG_JM: rmean_signal2: " << rmean_signal2 << std::endl;
-//            std::cerr << "DEBUG_JM: spectral_signal: " << spectral_signal << std::endl;
+            //            std::cerr << "DEBUG_JM: ====================" <<std::endl;
+            //            std::cerr << "DEBUG_JM: refno: " << refno << std::endl;
+            //            std::cerr << "DEBUG_JM: rmean_signal2: " << rmean_signal2 << std::endl;
+            //            std::cerr << "DEBUG_JM: spectral_signal: " << spectral_signal << std::endl;
         }
     }
     double inv_nref = 1./(double)model.n_ref;
     spectral_signal *= inv_nref;
-//    std::cerr << "DEBUG_JM: inv_nref: " << inv_nref << std::endl;
-//    std::cerr << "DEBUG_JM, maximization: spectral_signal: " << spectral_signal << std::endl;
+    //    std::cerr << "DEBUG_JM: inv_nref: " << inv_nref << std::endl;
+    //    std::cerr << "DEBUG_JM, maximization: spectral_signal: " << spectral_signal << std::endl;
 }
 
 void ProgMLF2D::endIteration()
@@ -2704,6 +2707,8 @@ void writeImage(Image<double> &img, const FileName &fn, MDRow &row)
     double rot = 0., tilt = 0., psi = 0.;
     img.getEulerAngles(rot, tilt, psi);
     row.setValue(MDL_WEIGHT, weight);
+    size_t count = ROUND(weight);
+    row.setValue(MDL_CLASS_COUNT, count);
     //    row.setValue(MDL_ANGLE_ROT, rot);
     //    row.setValue(MDL_ANGLE_TILT, tilt);
     //    row.setValue(MDL_ANGLE_PSI, psi);
@@ -2712,7 +2717,7 @@ void writeImage(Image<double> &img, const FileName &fn, MDRow &row)
 void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
 
-    FileName          fn_tmp, fn_base, fn_prefix;
+    FileName          fn_tmp, fn_base;
     Image<double>        Itmp;
     MetaData          MDo;
     String       comment;
@@ -2725,19 +2730,17 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     if (iter == 0)
         write_conv = false;
 
-    fn_base = fn_root + "_final";
-    fn_prefix = FN_FINAL_PREFIX();
-
-    if (outputType == OUT_ITER || outputType == OUT_REFS)
-    {
-        fn_base = FN_ITER_BASE(iter);
-        fn_prefix = FN_ITER_PREFIX(iter);
-
-    }
+    fn_base = (outputType == OUT_ITER || outputType == OUT_REFS) ?
+              getIterExtraPath(fn_root, iter) : fn_root + "_";
+    //    {
+    //        fn_base = getIterExtraPath(fn_root, iter);
+    //        fn_prefix = FN_ITER_PREFIX(iter);
+    //
+    //    }
 
     // Write out optimal image orientations
-    fn_tmp = FN_IMGMD(fn_prefix);
-    MDimg.write(fn_tmp, mode);
+    fn_tmp = FN_IMAGES_MD(fn_base);
+    MDimg.write(fn_tmp);
 
     // Write out current reference images and fill sel & log-file
     // First time for _ref, second time for _cref
@@ -2750,7 +2753,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
     for (int refno = 0; refno < model.n_ref; ++refno, mdIter.moveNext())
     {
-        row.setValue(MDL_ITER, iter);
+        //row.setValue(MDL_ITER, iter);
         row.setValue(MDL_REF, refno + 1);
 
         if (do_mirror)
@@ -2776,8 +2779,8 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
     // Write out reference md file
     MDo.write(FN_CREF_IMG_MD);
-    outRefsMd = FN_REFMD(fn_prefix);
-    MDref.write(outRefsMd, mode);
+    outRefsMd = FN_CLASSES_MD(fn_base);
+    MDref.write(outRefsMd);
 
     // Write out log-file
     MetaData mdLog;
@@ -2790,18 +2793,31 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     mdLog.setValue(MDL_RANDOMSEED, seed, id);
     if (do_norm)
         mdLog.setValue(MDL_INTSCALE, average_scale, id);
-    fn_tmp = FN_IMGMD(fn_prefix);
-    mdLog.setValue(MDL_IMGMD, fn_tmp, id);
-    mdLog.setValue(MDL_REFMD, outRefsMd, id);
-    if (outputType == OUT_ITER)
-      fn_prefix = fn_root + "_iter";
-    fn_tmp = FN_LOGMD(fn_prefix);
-    if (mode == MD_OVERWRITE)
-      mdLog.write(fn_tmp);
-    else
-      mdLog.append(fn_tmp);
+    //    fn_tmp = FN_IMGMD(fn_prefix);
+    //    mdLog.setValue(MDL_IMGMD, fn_tmp, id);
+    //    mdLog.setValue(MDL_REFMD, outRefsMd, id);
+    //    if (outputType == OUT_ITER)
+    //      fn_prefix = fn_root + "_iter";
 
-    mode = MD_APPEND;
+    mdLog.write(FN_LOGS_MD(fn_base), MD_APPEND);
+
+    if (outputType != OUT_REFS)
+    {
+        MetaData mdImgs;
+        size_t n = MDref.size();
+        for (int ref = 1; ref <= n; ++ref)
+        {
+            mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, ref));
+            mdImgs.write(FN_CLASS_IMAGES_MD(fn_base, ref), MD_APPEND);
+        }
+    }
+    //    fn_tmp = FN_LOGMD(fn_prefix);
+    //    if (mode == MD_OVERWRITE)
+    //      mdLog.write(fn_tmp);
+    //    else
+    //      mdLog.append(fn_tmp);
+    //
+    //    mode = MD_APPEND;
 
 
     // Write out average and resolution-dependent histograms
@@ -2810,7 +2826,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         double          val;
         std::ofstream fh_hist;
 
-        fn_tmp = fn_base + "_avg.hist";
+        fn_tmp = fn_base + "avg.hist.log";
         fh_hist.open((fn_tmp).c_str(), std::ios::out);
         if (!fh_hist)
             REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Cannot write histogram file "+ fn_tmp);
@@ -2858,24 +2874,25 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     {
         FOR_ALL_DEFOCUS_GROUPS()
         {
-          writeNoiseFile(fn_base, ifocus);
+            writeNoiseFile(fn_base, ifocus);
         }
     }
 }//function writeOutputFiles
 
 void ProgMLF2D::writeNoiseFile(const FileName &fn_base, int ifocus)
 {
-   MetaData md;
-   // Calculate resolution step
-   double resol_step = 1. / (sampling * dim);
-   md.addLabel(MDL_RESOLUTION_FREQ);
+    LOG_LEVEL(writeNoiseFile);
+    MetaData md;
+    // Calculate resolution step
+    double resol_step = 1. / (sampling * dim);
+    md.addLabel(MDL_RESOLUTION_FREQ);
 
-   FOR_ALL_DIGITAL_FREQS()
-      md.setValue(MDL_MLF_NOISE, VSIG_ITEM, md.addObject());
+    FOR_ALL_DIGITAL_FREQS()
+    md.setValue(MDL_MLF_NOISE, VSIG_ITEM, md.addObject());
 
-   md.fillLinear(MDL_RESOLUTION_FREQ, 0., resol_step);
-   // write Vsig vector to disc
-   md.write(FN_VSIG(fn_base, ifocus, ".noise.xmd"));
+    md.fillLinear(MDL_RESOLUTION_FREQ, 0., resol_step);
+    // write Vsig vector to disc
+    md.write(FN_VSIG(fn_base, ifocus, "noise.xmd"), (ifocus > 0 ? MD_APPEND : MD_OVERWRITE));
 
 }//function writeNoiseFile
 
@@ -2883,17 +2900,26 @@ void ProgMLF2D::writeNoiseFile(const FileName &fn_base, int ifocus)
 void ProgMLF2D::addPartialDocfileData(const MultidimArray<double> &data,
                                       size_t first, size_t last)
 {
+    LOG_LEVEL(addPartialDocfile);
     for (size_t imgno = first; imgno <= last; imgno++)
     {
         size_t index = imgno - first;
         size_t id = img_id[imgno];
         //FIXME now directly to MDimg
-        MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0), id);
-        MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1), id);
-        MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2), id);
+        if (do_ML3D)
+        {
+            MDimg.setValue(MDL_ANGLE_ROT, dAij(data, index, 0), id);
+            MDimg.setValue(MDL_ANGLE_TILT, dAij(data, index, 1), id);
+        }
+        //Here we change the sign of the angle becase in the code
+        //is represent the rotation of the reference and we want
+        //to store the rotation of the image
+        double psi = -dAij(data, index, 2);
+        MDimg.setValue(MDL_ANGLE_PSI, psi, id);
+        //MDimg.setValue(MDL_ANGLE_PSI, dAij(data, index, 2), id);
         MDimg.setValue(MDL_SHIFT_X, dAij(data, index, 3), id);
         MDimg.setValue(MDL_SHIFT_Y, dAij(data, index, 4), id);
-        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5) + 1), id);
+        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), id);
         if (do_mirror)
         {
             MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., id);
