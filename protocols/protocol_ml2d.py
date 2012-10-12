@@ -19,6 +19,14 @@ from protlib_gui_ext import showWarning
 from protlib_xmipp import greenStr, redStr
 from protlib_filesystem import deleteFile, xmippExists, renameFile
 
+def lastIteration(self, key='iter_logs'):
+    ''' Find the last iteration number '''
+    iter = 0        
+    while True:
+        if not xmippExists(self.getFilename(key, iter=iter+1)):
+            break
+        iter = iter + 1
+    return iter
 
 class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -36,13 +44,6 @@ class ProtML2D(XmippProtocol):
         #self.fnIterLogs = self.workingDirPath('ml2d_iter_logs.xmd')
         #self.fnIterRefs = self.workingDirPath('ml2d_iter_refs.xmd')
         
-    def lastIteration(self):
-        iter = 0        
-        while True:
-            if not xmippExists(self.getFilename('iter_logs', iter=iter+1)):
-                break
-            iter = iter + 1
-        return iter
             
     def summary(self):
         md = MetaData(self.ImgMd)
@@ -62,7 +63,7 @@ class ProtML2D(XmippProtocol):
         
         
         #logs = self.getFilename('iter_logs')   
-        lastIter = self.lastIteration() 
+        lastIter = lastIteration(self) 
         if lastIter > 0:#exists(logs):
             logs = self.getFilename('iter_logs', iter=lastIter)
             md = MetaData(logs)
@@ -153,7 +154,7 @@ class ProtML2D(XmippProtocol):
             self.launchPlots(plots)
          
     def visualizeReferences(self):
-        refs = self.getFilename('iter_refs', iter=self.lastIteration())
+        refs = self.getFilename('iter_refs', iter=lastIteration(self))
         if xmippExists(refs):
             try:
                 runShowJ(refs, extraParams="--mode metadata --render first")
@@ -178,7 +179,7 @@ def launchML2DPlots(protML, selectedPlots):
     from protlib_gui_figure import XmippPlotter
 
     protML._plot_count = 0
-    lastIter = protML.lastIteration()
+    lastIter = lastIteration(protML)
     if lastIter == 0:
         return
     refs = protML.getFilename('iter_refs', iter=lastIter)

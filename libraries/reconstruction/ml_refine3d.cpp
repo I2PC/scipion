@@ -297,7 +297,7 @@ void ProgMLRefine3D::readParams()
 
 void ProgMLRefine3D::show()
 {
-    LOG_LEVEL(show);
+    LOG_FUNCTION();
 
     if (verbose == 0)
         return;
@@ -341,7 +341,7 @@ void ProgMLRefine3D::show()
 
 void ProgMLRefine3D::createSampling()
 {
-    LOG_LEVEL(createSampling);
+    LOG_FUNCTION();
     FileName fn_sym_loc;
     // Precalculate sampling
     mysampling.setSampling(angular);
@@ -358,7 +358,7 @@ void ProgMLRefine3D::createSampling()
 // Fill sampling and create DFlib
 void ProgMLRefine3D::produceSideInfo()
 {
-    LOG_LEVEL(produceSideInfo);
+    LOG_FUNCTION();
     //Create sampling
     createSampling();
     show();
@@ -377,7 +377,7 @@ void ProgMLRefine3D::produceSideInfo()
 
 void ProgMLRefine3D::produceSideInfo2()
 {
-    LOG_LEVEL(produceSideInfo2);
+    LOG_FUNCTION();
     ml2d->produceSideInfo2();
     ml2d->refs_per_class = nr_projections;
     ml2d->show();
@@ -387,7 +387,7 @@ void ProgMLRefine3D::produceSideInfo2()
 
 void ProgMLRefine3D::run()
 {
-    LOG_LEVEL(RUN);
+    LOG_FUNCTION();
     bool converged = false;
 
 
@@ -523,7 +523,7 @@ void ProgMLRefine3D::createEmptyFiles(int type)
 void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
 {
 
-    LOG_LEVEL(projectVolumes);
+    LOG_FUNCTION();
 
     Image<double>                vol;
     FileName                      fn_base = FN_PROJECTIONS, fn_tmp;
@@ -740,7 +740,7 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram(FileName &input, FileName &
 // Reconstruction using the ML-weights ==========================================
 void ProgMLRefine3D::reconstructVolumes()
 {
-  LOG_LEVEL(reconstructVolumes);
+  LOG_FUNCTION();
 
     FileName fn_vol, fn_vol_prev, fn_one;
     MetaData mdOne, mdProj, mdOutVols;
@@ -786,8 +786,8 @@ void ProgMLRefine3D::reconstructVolumes()
 
     if (rank == 0)
     {
-      FileName fn = formatString("iter%06d@%s_vols.xmd", iter, fn_root.c_str());
-      mdOutVols.write(fn, MD_APPEND);
+      FileName fn = FN_ITER_VOLMD();
+      mdOutVols.write(fn);
     }
 
 }
@@ -795,7 +795,7 @@ void ProgMLRefine3D::reconstructVolumes()
 void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 {
 
-  LOG_LEVEL(calculate3DSSNR);
+  LOG_FUNCTION();
 
     MetaData                    mdNoiseAll, mdNoiseOne;
     MultidimArray<std::complex<double> >  Faux;
@@ -955,7 +955,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 
 void ProgMLRefine3D::copyVolumes()
 {
-  LOG_LEVEL(copyVolumes);
+  LOG_FUNCTION();
     ImageGeneric img;
     getIterExtraPath(fn_root, 0); //Create folder to store volume
     FileName fn_vol, fn_base = FN_INITIAL_BASE;
@@ -975,7 +975,7 @@ void ProgMLRefine3D::copyVolumes()
 
 void ProgMLRefine3D::updateVolumesMetadata()
 {
-  LOG_LEVEL(updateVolumesMetadata);
+  LOG_FUNCTION();
     FileName fn_vol, fn_base;
     mdVol.clear();
 
@@ -995,7 +995,7 @@ void ProgMLRefine3D::updateVolumesMetadata()
 // Modify reference volume ======================================================
 void ProgMLRefine3D::postProcessVolumes()
 {
-  LOG_LEVEL(postProcessVolumes);
+  LOG_FUNCTION();
 
   ProgVolumeSegment            segm_prm;
     FileName               fn_vol, fn_tmp;
@@ -1013,7 +1013,8 @@ void ProgMLRefine3D::postProcessVolumes()
     if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
          (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))
     {
-    	LOG("   ProgMLRefine3D::postProcessVolumes IF");
+    	LOG_LEVEL(postProcessVolumes_IF);
+
         FOR_ALL_OBJECTS_IN_METADATA(mdVol)
         {
             mdVol.getValue(MDL_IMAGE, fn_vol, __iter.objId);
@@ -1023,7 +1024,9 @@ void ProgMLRefine3D::postProcessVolumes()
             vol().setXmippOrigin();
             dim = vol().rowNumber();
             // Store the original volume on disc
-            fn_tmp = fn_vol + ".original";
+            fn_tmp = fn_vol;
+            fn_tmp.insertBeforeExtension(".original");
+            //fn_tmp = fn_vol + ".original";
             LOG("   ProgMLRefine3D::postProcessVolumes writing ORIGINAL vol");
             vol.write(fn_tmp);
 
@@ -1183,7 +1186,7 @@ void ProgMLRefine3D::postProcessVolumes()
 // Convergence check ===============================================================
 bool ProgMLRefine3D::checkConvergence()
 {
-    LOG_LEVEL(checkConvergence);
+    LOG_FUNCTION();
 
     Image<double>        vol, old_vol, diff_vol;
     FileName               fn_base, fn_base_old, fn_vol;

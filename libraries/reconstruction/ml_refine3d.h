@@ -38,6 +38,8 @@
 #define EMPTY_PROJECTIONS 0
 #define EMPTY_VOLUMES 1
 
+#define FN_ITER_VOLMD() getIterExtraPath(fn_root, iter) + "volumes.xmd"
+
 
 /**@defgroup Refine3d ml_refine3d (Maximum likelihood 3D refinement)
    @ingroup ReconsLibrary */
