@@ -398,6 +398,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 		for (int i = 0; i < n; ++i)
 			data.selection[i] = false;
 	}
+	
+	public int getFirstSelectedIndex(){
+		for (int i = 0; i < n; ++i)
+			if (data.selection[i])
+				return i;
+		return -1;
+	}
 
 	/** Select a range of elements given the indexes */
 	public void selectRange(int first_index, int last_index, boolean value) {

@@ -542,23 +542,27 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		jsRows.setEnabled(!autoAdjustColumns);
 	}
 
-	private void goToImage(int index) {
-		gallery.gotoItem(index);
-
+	private void makeVisible(int index)
+	{
 		int coords[] = gallery.getCoords(index);
 		DEBUG.printMessage(String.format(
 				"gotoImage, index: %d, row: %d, col:%d", index, coords[0],
 				coords[1]));
-
+		
 		// Gets current selected cell bounds.
 		Rectangle rect = table.getCellRect(coords[0], coords[1], true);
-
+		
 		// Ensures item is visible
 		Point pos = jspContent.getViewport().getViewPosition();
 		rect.translate(-pos.x, -pos.y);
 		jspContent.getViewport().scrollRectToVisible(rect);
-
+		
 		repaint();
+	}
+	
+	private void goToImage(int index) {
+		gallery.gotoItem(index);
+		makeVisible(index);
 	}
 
 	public class Worker implements Runnable {
@@ -826,6 +830,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			public void actionPerformed(ActionEvent e) {
 				data.changeMode();
 				reloadTableData();
+				makeVisible(gallery.getFirstSelectedIndex());
 			}
 		});
 
@@ -844,6 +849,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			public void stateChanged(javax.swing.event.ChangeEvent evt) {
 				Integer zoom = (Integer) jsZoom.getValue();
 				gallery.setZoom(zoom);
+				makeVisible(gallery.getFirstSelectedIndex());
 				// gallery.updateTableSelection(table);
 			}
 		});
@@ -1242,6 +1248,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					gallery.setShowLabels(getItemSelected(DISPLAY_SHOWLABELS));
 				} else if (cmd.equals(DISPLAY_RENDERIMAGES)) {
 					gallery.setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
+					makeVisible(gallery.getFirstSelectedIndex());
 				} else if (cmd.equals(DISPLAY_COLUMNS)) {
 					ColumnsJDialog dialog = new ColumnsJDialog(
 							JFrameGallery.this);
