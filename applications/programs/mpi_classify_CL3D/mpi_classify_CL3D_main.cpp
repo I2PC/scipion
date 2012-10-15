@@ -288,8 +288,8 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 //#define DEBUG
 const String eulerSeqs[12]={"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"};
 
-#define DEBUG
-#define DEBUG_MORE
+//#define DEBUG
+//#define DEBUG_MORE
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
 #ifdef DEBUG
