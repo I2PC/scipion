@@ -1183,15 +1183,14 @@ double CTF_fitness(double *p, void *)
     {
         // If there is an initial model, the true solution
         // cannot be too far
-        if (fabs(global_prm->initial_ctfmodel.DeltafU - global_ctfmodel.DeltafU)
-            > global_prm->defocus_range
-            || fabs(
-                global_prm->initial_ctfmodel.DeltafV
-                - global_ctfmodel.DeltafV)
-            > global_prm->defocus_range)
+        if (fabs(global_prm->initial_ctfmodel.DeltafU - global_ctfmodel.DeltafU) > global_prm->defocus_range ||
+        	fabs(global_prm->initial_ctfmodel.DeltafV - global_ctfmodel.DeltafV) > global_prm->defocus_range)
         {
-            if (global_show >= 2)
-                std::cout << "Too far from hint\n";
+            if (global_show >= 2) {
+                std::cout << "Too far from hint: Initial (" << global_prm->initial_ctfmodel.DeltafU << "," << global_prm->initial_ctfmodel.DeltafV << ")"
+                		  << " current guess (" << global_ctfmodel.DeltafU << "," << global_ctfmodel.DeltafV << ") max allowed difference: "
+                		  << global_prm->defocus_range << std::endl;
+            }
             return global_heavy_penalization;
         }
     }
@@ -1315,7 +1314,7 @@ double CTF_fitness(double *p, void *)
         retval = distsum / N;
     else
         retval = global_heavy_penalization;
-    if (global_show == 3)
+    if (global_show >=2)
         std::cout << "Fitness1=" << retval << std::endl;
     if ( (((global_action >= 3) && (global_action <= 4)) || (global_action == 6))
         && (Ncorr > 0) && (global_prm->enhanced_weight != 0) )
@@ -1329,8 +1328,12 @@ double CTF_fitness(double *p, void *)
         double sigma2 = sqrt(fabs(model2 / Ncorr - model_avg * model_avg));
         double maxSigma = std::max(sigma1, sigma2);
         if (sigma1 < XMIPP_EQUAL_ACCURACY || sigma2 < XMIPP_EQUAL_ACCURACY
-            || fabs(sigma1 - sigma2) / maxSigma > 0.9)
+            || (fabs(sigma1 - sigma2) / maxSigma > 0.9 && global_action>=5))
+        {
             retval = global_heavy_penalization;
+            if (global_show>=2)
+            	std::cout << "Fitness2=" << global_heavy_penalization << " sigma1=" << sigma1 << " sigma2=" << sigma2 << std::endl;
+        }
         else
         {
             correlation_coeff /= sigma1 * sigma2;
@@ -1338,7 +1341,7 @@ double CTF_fitness(double *p, void *)
                 global_corr13 = correlation_coeff;
             else
                 retval -= global_prm->enhanced_weight * correlation_coeff;
-            if (global_show == 3)
+            if (global_show >= 2)
             {
                 std::cout << "model_avg=" << model_avg << std::endl;
                 std::cout << "enhanced_avg=" << enhanced_avg << std::endl;
@@ -2666,7 +2669,6 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     //gethostname(hostname,1023);
     //std::cout << prm.fn_psd << " " << hostname << std::endl;
 
-    std::cout << prm.fn_psd.removeLastExtension() << std::endl;
     DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
     global_prm = &prm;
     if (standalone || prm.show_optimization)
@@ -2780,9 +2782,6 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     else
         estimate_defoci();
 
-    std::cout << "estimate_defoci : DeltaU : " << global_ctfmodel.DeltafU << std::endl;
-    std::cout << "estimate_defoci : DeltaV : " << global_ctfmodel.DeltafV << std::endl;
-
     DEBUG_TEXTFILE(formatString("Step 7: DeltafU=%f",global_ctfmodel.DeltafU));
     DEBUG_TEXTFILE(formatString("Step 7: DeltafV=%f",global_ctfmodel.DeltafV));
     DEBUG_TEXTFILE(formatString("Step 7: azimutalAngle=%f",global_ctfmodel.azimuthal_angle));
@@ -2887,9 +2886,6 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     }
     DEBUG_TEXTFILE(formatString("Step 11: DeltafU=%f fitness=%f",global_ctfmodel.DeltafU,fitness));
     DEBUG_MODEL_TEXTFILE;
-
-    std::cout << "DeltaU : " << global_ctfmodel.DeltafU << std::endl;
-    std::cout << "DeltaV : " << global_ctfmodel.DeltafV << std::endl;
 
     //We adopt that always  DeltafU > DeltafV so if this is not the case we change the values and the angle
     if ( global_ctfmodel.DeltafV > global_ctfmodel.DeltafU)
