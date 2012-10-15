@@ -216,10 +216,6 @@ public class ImageGeneric {
 
     public native void convertPSD(boolean useLogarithm) throws Exception;
     
-    public native void generatePSDCTF(MetaData md) throws Exception;
-    
-    public native void generateImageWithTwoCTFs(MetaData md1, MetaData md2, int xdim) throws Exception;
-    
     public native void getReslice(ImageGeneric imgOut, int view) throws Exception;
     
     public native void reslice(int view) throws Exception;
@@ -227,6 +223,8 @@ public class ImageGeneric {
     
     public native void getPreview(ImageGeneric imgOut, int xdim, int ydim, 
     		int select_slice, long select_image) throws Exception;
+    
+    public native void alignImages(ImageGeneric img) throws Exception;
 
     //Check if two images have same values to some accuracy
     public native boolean equal(ImageGeneric img, double accuracy) throws Exception;

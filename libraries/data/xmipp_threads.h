@@ -61,7 +61,7 @@ public:
     Mutex();
 
     /** Destructor. */
-    ~Mutex();
+    virtual ~Mutex();
 
     /** Function to get the access to the mutex.
      * If the some thread has the mutex and other
@@ -372,6 +372,8 @@ protected:
     virtual void lock();
     virtual void unlock();
     virtual bool distribute(size_t &first, size_t &last);
+public:
+    virtual void reset() { setAssignedTasks(0); };
 }
 ;//end of class ThreadTaskDistributor
 

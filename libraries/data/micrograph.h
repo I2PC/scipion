@@ -83,7 +83,7 @@ public:
     int                      X_window_size;
     int                      Y_window_size;
     int                      Xdim,Ydim,Zdim;
-    size_t	             Ndim;
+    size_t                   Ndim;
     int                      datatype;
     int                      swapbyte;
     int                      __offset;
@@ -91,7 +91,7 @@ public:
     bool                     compute_inverse;
     int                      fh_micrograph;
     std::vector<std::string> labels;
-    double 				     stdevFilter;
+    double                   stdevFilter;
 public:
     Image<char>                * auxI;
     Image<unsigned char>       * IUChar;
@@ -134,7 +134,7 @@ public:
     /** Set micrograph filename. */
     void set_micrograph_name(const FileName& fn)
     {
-	fn_micrograph = fn;
+        fn_micrograph = fn;
     }
     void setStdevFilter(double d)
     {
@@ -199,7 +199,7 @@ public:
 
     void setDataType(DataType _datatype)
     {
-      datatype = _datatype;
+        datatype = _datatype;
     }
     /** Get Transmitance flag.
         When cutting images, 1/log10 is computed over the pixel values
@@ -385,7 +385,7 @@ public:
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
             // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
-	    return 0;
+            return 0;
         if (datatype == DT_UChar)
         {
             return IMGPIXEL(*IUChar,y,x);
@@ -411,7 +411,7 @@ public:
             return IMGPIXEL(*IFloat,y,x);
         }
         else
-        	REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): unknown datatype");
+            REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): unknown datatype");
     }
 
     /** Micrograph max min*/
@@ -442,7 +442,8 @@ public:
             return (*IFloat)().computeDoubleMinMax(Dmin,Dmax);
         }
 
-        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::computeDoubleMinMax::(): unknown datatype");
+        else
+            REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::computeDoubleMinMax::(): unknown datatype");
     }
 
     /** Pixel access for writing. */
@@ -452,30 +453,31 @@ public:
     {
         if (datatype == DT_UChar)
         {
-        	IMGPIXEL(*IUChar,y,x) = (unsigned char) new_val;
+            IMGPIXEL(*IUChar,y,x) = (unsigned char) new_val;
         }
         else if (datatype == DT_UShort)
         {
-        	IMGPIXEL(*IUShort,y,x) = (unsigned short) new_val;
+            IMGPIXEL(*IUShort,y,x) = (unsigned short) new_val;
         }
         else if (datatype == DT_Short)
         {
-        	IMGPIXEL(*IShort,y,x) = (short) new_val;
+            IMGPIXEL(*IShort,y,x) = (short) new_val;
         }
         else if (datatype == DT_UInt)
         {
-        	IMGPIXEL(*IUInt,y,x) = (unsigned int) new_val;
+            IMGPIXEL(*IUInt,y,x) = (unsigned int) new_val;
         }
         else if (datatype == DT_Int)
         {
-        	IMGPIXEL(*IInt,y,x) = (int) new_val;
+            IMGPIXEL(*IInt,y,x) = (int) new_val;
         }
         else if (datatype == DT_Float)
         {
-        	IMGPIXEL(*IFloat,y,x) = (float) new_val;
+            IMGPIXEL(*IFloat,y,x) = (float) new_val;
         }
 
-        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
+        else
+            REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
 
     }
 
@@ -540,7 +542,7 @@ public:
     std::string & get_label(int n)
     {
         if (n < 0 || n > LabelNo())
-        	REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::get_label(): index out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::get_label(): index out of range");
         return labels[n];
     }
 
@@ -569,38 +571,39 @@ public:
 };
 
 /** Class for aligning two tilted micrographs */
-class TiltPairAligner {
+class TiltPairAligner
+{
 public:
-	/// Untilted coordinates
-	std::vector<int> coordU;
-	/// Tilted coordinates
-	std::vector<int> coordT;
+    /// Untilted coordinates
+    std::vector<int> coordU;
+    /// Tilted coordinates
+    std::vector<int> coordT;
 public:
-	/// Empty constructor
-	TiltPairAligner();
+    /// Empty constructor
+    TiltPairAligner();
 
-	/// Clear set of coordinates
-	void clear();
+    /// Clear set of coordinates
+    void clear();
 
-	/// Add coordinates pair
-	void addCoordinatePair(int _muX, int _muY, int _mtX, int _mtY);
+    /// Add coordinates pair
+    void addCoordinatePair(int _muX, int _muY, int _mtX, int _mtY);
 
-	/// Adjust passing matrix
-	void adjustPassingMatrix(int _muX, int _muY, int _mtX, int _mtY);
+    /// Adjust passing matrix
+    void adjustPassingMatrix(int _muX, int _muY, int _mtX, int _mtY);
 
-	/// Pass to tilted
-	void passToTilted(int _muX, int _muY, int &_mtX, int &_mtY);
+    /// Pass to tilted
+    void passToTilted(int _muX, int _muY, int &_mtX, int &_mtY);
 
-	/// Pass to untilted
-	void passToUntilted(int _mtX, int _mtY, int &_muX, int &_muY);
+    /// Pass to untilted
+    void passToUntilted(int _mtX, int _mtY, int &_muX, int &_muY);
 
-	/// Compute gamma
-	void computeGamma();
+    /// Compute gamma
+    void computeGamma();
 
-	/** Compute alphas.
-	 * Make sure of calling computeGamma before calling this function.
-	 */
-	void computeAngles(double &ualpha, double &talpha, double &ogamma);
+    /** Compute alphas.
+     * Make sure of calling computeGamma before calling this function.
+     */
+    void computeAngles(double &ualpha, double &talpha, double &ogamma);
 public:
     // For tilted-untilted correspondance
     Matrix2D<double>    Au;     // Untilted "positions"

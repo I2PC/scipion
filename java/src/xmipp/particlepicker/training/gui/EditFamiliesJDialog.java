@@ -59,7 +59,7 @@ public class EditFamiliesJDialog extends JDialog {
 		float position = 0.9f;
 		model = new FamiliesTableModel(parent);
 		familiestb = new JTable(model);
-		familiestb.setPreferredScrollableViewportSize(new Dimension(200, 200));
+		familiestb.setPreferredScrollableViewportSize(new Dimension(300, 200));
 		familiestb
 				.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		familiestb.setDefaultRenderer(Color.class, new ColorRenderer());
@@ -113,18 +113,19 @@ public class EditFamiliesJDialog extends JDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<Family> families = parent.getParticlePicker().getFamilies();
+				List<Family> families = parent.getParticlePicker()
+						.getFamilies();
 				try {
-					
+
 					int index = familiestb.getSelectedRow();
 					Family f = families.get(index);
-					if(f.equals(parent.getFamily()))
-						throw new IllegalArgumentException("Can not remove active family");
+					if (f.equals(parent.getFamily()))
+						throw new IllegalArgumentException(
+								"Can not remove active family");
 					parent.removeFamily(f);
 					model.fireTableStructureChanged();
 					EditFamiliesJDialog.this.deletebt.setEnabled(false);
-				} 
-				catch (Exception ex) {
+				} catch (Exception ex) {
 					JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
 							ex.getMessage());
 
@@ -135,7 +136,7 @@ public class EditFamiliesJDialog extends JDialog {
 
 	class FamiliesTableModel extends AbstractTableModel {
 
-		private String[] columns = new String[] { "Name", "Color", "Size" };
+		private String[] columns = new String[] { "Name", "Color", "Size" };//, "Templates" };
 		private TrainingPickerJFrame frame;
 
 		public FamiliesTableModel(TrainingPickerJFrame frame) {
@@ -198,6 +199,14 @@ public class EditFamiliesJDialog extends JDialog {
 					f.setSize(size);
 					frame.updateSize(size);
 				}
+//				} else if (column == 3) {
+//					
+//					int templates = (Integer)value;
+//					if(templates  < 1)
+//						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
+//					f.setTemplatesNumber(templates);
+//				}
+				frame.setChanged(true);
 
 			} catch (IllegalArgumentException e) {
 				JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
@@ -214,13 +223,15 @@ public class EditFamiliesJDialog extends JDialog {
 				return f.getColor();
 			if (column == 2)
 				return f.getSize();
+//			if (column == 3)
+//				return f.getTemplatesNumber();
 			return null;
 		}
 
 	}
 
 	public void addFamily(Family g) {
-		
+
 		parent.addFamily(g);
 		model.fireTableStructureChanged();
 	}

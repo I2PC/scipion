@@ -248,7 +248,7 @@ def AddXmippMPIProgram(name, libs=[]):
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
         finalLibs.append('XmippClassif')
     if 'XmippRecons' in finalLibs and int(env['cuda']):
-	finalLibs.append("XmippReconsCuda");
+		finalLibs.append("XmippReconsCuda");
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -564,16 +564,9 @@ INRIASources = Glob('external/inria', '*.cc', [])
 # Condor
 CondorSources = Glob('external/condor', '*.cpp', [])
 
-# sqliteExt
-SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
-
 AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
-
-AddLibrary('XmippSqliteExt', 'external',
-   SqliteExtSources,
-   ['#'],[''],['-lm'],'lib','.so')
 
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
@@ -609,7 +602,7 @@ ReconsIncDir=['#libraries', '#external', '#']
 ReconsLibDir=['lib']
 if int(env['arpack']):
     ReconsSources.append("angular_gcar.cpp")
-    ReconsDependLibraries += ['arpack', 'lapack', 'blas']
+    ReconsLib += ['arpack', 'lapack', 'blas']
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
            ReconsIncDir, ReconsLibDir, ReconsLib, useCudaEnvironment=int(env['cuda']))
 
@@ -778,6 +771,7 @@ AddXmippProgram('image_find_center')
 AddXmippProgram('image_header')
 AddXmippProgram('image_histogram')
 AddXmippProgram('image_operate')
+AddXmippMPIProgram('image_rotational_pca', ['XmippRecons'])
 AddXmippProgram('image_rotational_spectra', ['XmippRecons'])
 AddXmippProgram('image_sort_by_statistics', ['XmippRecons'])
 AddXmippProgram('image_separate_objects')
@@ -828,7 +822,7 @@ AddXmippProgram('transform_range_adjust')
 AddXmippProgram('transform_symmetrize', ['XmippRecons'])
 AddXmippProgram('transform_threshold', ['XmippRecons'])
 AddXmippProgram('transform_window')
-#AddXmippProgram('test_program', ['XmippRecons'])
+#AddXmippProgram('fourier_projection', ['XmippRecons'])
 #AddXmippProgram('test_sql')
 #AddXmippProgram('template_threads')
 if not int(env['release']):
@@ -934,6 +928,7 @@ if int(env['mpi']):
 
 #---- Tests
 if int(env['gtest']):
+     AddXmippCTest('test_euler')
      AddXmippCTest('test_fftw')
      AddXmippCTest('test_filters')
      AddXmippCTest('test_fringe_processing')          
@@ -947,7 +942,6 @@ if int(env['gtest']):
      AddXmippCTest('test_polar')
      AddXmippCTest('test_polynomials')          
      AddXmippCTest('test_sampling')
-     AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
@@ -1075,8 +1069,9 @@ if int(env['qt']):
         AddQtProgram(name, 'applications/programs/' + name, '*.cpp', [], mocs,
     	    finalIncludePath, finalLibPath, finalLibs, [], [])
 
-    AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
-    AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
+    #do not compile micrograph mark
+    #AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
+    #AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
 
 if int(env['matlab']):
     

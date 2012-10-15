@@ -24,11 +24,6 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <parallel/mpi_image_rotational_pca.h>
+#include <reconstruction/image_rotational_pca.h>
 
-int main(int argc, char **argv)
-{
-	MpiProgImageRotationalPCA program(argc, argv);
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgImageRotationalPCA);

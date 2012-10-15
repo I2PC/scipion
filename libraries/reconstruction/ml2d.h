@@ -48,8 +48,13 @@
 #define SMALLANGLE 1.75
 #define DATALINELENGTH 12
 
-
-#define LOG_FN(root) formatString("%s_nodo%02d.log", root.c_str(), rank)
+///******** ML2D filenames convention *************
+#define FN_EXTRA(file) formatString("%s_extra/%s", fn_root.c_str(), file)
+#define FN_IMAGES_MD(base)   (base) + "result_images.xmd"
+#define FN_CLASSES_MD(base)  formatString("classes@%sresult_classes.xmd", (base).c_str())
+#define FN_LOGS_MD(base)  formatString("info@%sresult_classes.xmd", (base).c_str())
+#define FN_CLASS_IMAGES_MD(base, ref)  formatString("class%06d_images@%sresult_classes.xmd", (ref), (base).c_str())
+#define FN_CLASSES_STK(base) (base) + "result_classes.stk"
 
 ///******** Some macro definitions ****************
 #define FOR_ALL_GLOBAL_IMAGES() \
@@ -307,9 +312,12 @@ public:
     virtual void defineAdditionalParams(XmippProgram * prog, const char * sectionLine);
     virtual void defineHiddenParams(XmippProgram *prog);
 
+
 }
 ;//end of class ML2DBaseProgram
 
+/** Return the extra path to store iterations files */
+FileName getIterExtraPath(const FileName &fn_root, int iter, bool makePath=true);
 
 
 //@}
