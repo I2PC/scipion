@@ -1357,7 +1357,6 @@ public:
         FILE* fMap = tmpfile();
         int Fd = fileno(fMap);
 
-        std::cerr << "DEBUG_ROB, nzyxDim:" << nzyxDim << std::endl;
         if ((lseek(Fd, nzyxDim*sizeof(T)-1, SEEK_SET) == -1) || (::write(Fd,"",1) == -1))
         {
             fclose(fMap);
