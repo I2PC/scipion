@@ -308,12 +308,12 @@ void ProgCTFEstimateFromMicrograph::run()
     pieceMask.initConstant(1);
 
     //Multidimensional data variables to store the defocus obtained locally for plane fitting
-    MultidimArray<double> defocusPlanefittingU(div_NumberX, div_NumberX);
-    MultidimArray<double> defocusPlanefittingV(div_NumberX, div_NumberX);
-    MultidimArray<double> X0(div_NumberX, div_NumberX);
-    MultidimArray<double> XF(div_NumberX, div_NumberX);
-    MultidimArray<double> Y0(div_NumberX, div_NumberX);
-    MultidimArray<double> YF(div_NumberX, div_NumberX);
+    MultidimArray<double> defocusPlanefittingU(div_NumberX, div_NumberY);
+    MultidimArray<double> defocusPlanefittingV(div_NumberX, div_NumberY);
+    MultidimArray<double> X0(div_NumberX, div_NumberY);
+    MultidimArray<double> XF(div_NumberX, div_NumberY);
+    MultidimArray<double> Y0(div_NumberX, div_NumberY);
+    MultidimArray<double> YF(div_NumberX, div_NumberY);
 
     // Attenuate borders to avoid discontinuities
     MultidimArray<double> pieceSmoother;
@@ -457,16 +457,11 @@ void ProgCTFEstimateFromMicrograph::run()
                 prmEstimateCTFFromPSD.fn_psd=fn_psd_piece;
                 CTFDescription ctfmodel;
 
-                //We write the region where is valid the estimated CTF
-                MetaData MD;
-                size_t id = MD.addObject();
-                MD.setValue(MDL_CTF_ID, fn_psd_piece, id);
-                MD.setValue(MDL_CTF_X0, (double)i,id);
-                MD.setValue(MDL_CTF_XF,(double)(i/pieceDim+1)*pieceDim,id);
-                MD.setValue(MDL_CTF_Y0,(double)j,id);
-                MD.setValue(MDL_CTF_YF,(double)(j/pieceDim+1)*pieceDim,id);
-                MD.write((String)"region@"+fn_psd.withoutExtension() + ".ctfparam",MD_APPEND);
-
+                ctfmodel.isLocalCTF = true;
+                ctfmodel.x0 = i;
+                ctfmodel.xF = (i/pieceDim+1)*pieceDim;
+                ctfmodel.y0 = i;
+                ctfmodel.yF = (j/pieceDim+1)*pieceDim;
                 double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                        ctfmodel, false);
 
@@ -643,16 +638,22 @@ void ProgCTFEstimateFromMicrograph::run()
     if (psd_mode==OnePerRegion && estimate_ctf)
     {
         double p0=0, p1=0, p2=0;
-        //planeFit(defocusPlanefittingU,p0,p1,p2);
-        std::cout << "p0 " << p0 << " p1 " << p1 << " p2 " << p2 << std::endl;
+        planeFit(defocusPlanefittingU,p0,p1,p2);
+
+        FileName fn_psd_piece;
+        fn_psd_piece.compose(N,fn_psd);
+        FileName fn_rootCTFPARAM = fn_psd_piece.withoutExtension();
+        int atPosition=fn_rootCTFPARAM.find('@');
+
+        fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
+                                     fn_rootCTFPARAM.substr(atPosition+1).c_str());
 
         MetaData MD;
-        MD.read(fn_psd.withoutExtension() + ".ctfparam");
-        size_t id = MD.firstObject();
-        //MD.setValue(MDL_CTF_CRIT_PSDVARIANCE,stdQ,id);
-        //MD.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,pstd,id);
-        //MD.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,zrandomness,id);
-        //MD.write(fn_psd.withoutExtension() + ".ctfparam", MD_APPEND);
+        size_t id = MD.addObject();
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEUA,p1,id);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEUB,p2,id);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEUC,p0,id);
+        MD.write(fn_rootCTFPARAM + ".ctfparam", MD_APPEND);
 
         if ( fn_pos != "")
         {
