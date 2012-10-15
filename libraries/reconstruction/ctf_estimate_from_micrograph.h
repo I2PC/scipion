@@ -59,6 +59,9 @@ public:
     int                     pieceDim;
     /** Overlap among pieces (0=No overlap, 1=Full overlap */
     double                  overlap;
+    /** Skip borders.
+     * The number of pieces around the border that must be skipped. */
+    int                     skipBorders;
     /** Number of pieces (Nsubpiece x Nsubpiece) for the piece averaging */
     int                     Nsubpiece;
     /** PSDEstimator_mode */
