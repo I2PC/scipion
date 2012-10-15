@@ -131,7 +131,6 @@ class XmippProject():
     
     def cleanRun(self, run):
         script = run['script']
-        print "removing script: ", script
         toDelete = [script.replace(self.runsDir, self.logsDir).replace(".py", ext) for ext in ['.log', '.err', '.out']]
         deleteFiles(None, toDelete, False)
         workingDir = self.getWorkingDir(run['protocol_name'], run['run_name'])

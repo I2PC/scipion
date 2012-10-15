@@ -9,6 +9,7 @@ from xmipp import MetaData, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, MDL_SAMPLINGR
     MDL_CTF_CS, MDL_CTF_SAMPLING_RATE, MDL_MAGNIFICATION, checkImageFileSize, checkImageCorners
 from protlib_filesystem import replaceBasenameExt, renameFile
 from protlib_utils import runJob
+from protlib_xmipp import redStr
 
 class ProtImportMicrographs(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -73,7 +74,8 @@ class ProtImportMicrographs(XmippProtocol):
             message.append("Sampling rate=<"+str(MD.getValue(MDL_SAMPLINGRATE,MD.firstObject()))+" A/pix>")
         fnWarning=self.workingDirPath('warnings.xmd')
         if os.path.exists(fnWarning):
-            message.append("Warnings on the borders of some micrographs: [%s]"%fnWarning)
+            message.append(redStr("WARNINGS ON THE BORDERS OF SOME MICROGRAPHS:"))
+            message.append("[%s]"%fnWarning)
         return message
     
     def getMicrographs(self):

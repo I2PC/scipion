@@ -1357,7 +1357,6 @@ public:
         FILE* fMap = tmpfile();
         int Fd = fileno(fMap);
 
-        std::cerr << "DEBUG_ROB, nzyxDim:" << nzyxDim << std::endl;
         if ((lseek(Fd, nzyxDim*sizeof(T)-1, SEEK_SET) == -1) || (::write(Fd,"",1) == -1))
         {
             fclose(fMap);
@@ -5049,6 +5048,10 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
 /** Get Sin and Cos of vector x.
  */
 void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimArray<double> &c);
+
+/** Obtains the plane parameters p0+p1x+p2y of the 2x2 MultidimArray x.
+ */
+void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2);
 
 /*
    mod    Modulus after division.

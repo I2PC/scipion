@@ -176,12 +176,15 @@ void ML2DBaseProgram::run()
 {
     bool converged = false;
     int rank = 0;
-    CREATE_LOG(fn_root);
+    CREATE_LOG(LOG_FN(fn_root));
+
     LOG(" starting produceSideInfo\n");
     produceSideInfo();
+
     //Do some initialization work
     LOG(" starting produceSideInfo2\n");
     produceSideInfo2();
+
     //Create threads to be ready for work
     LOG(" createThreads\n");
     createThreads();
@@ -299,6 +302,13 @@ void ML2DBaseProgram::defineHiddenParams(XmippProgram *prog)
     prog->addParamsLine("[--no_iem] : bla bla bla");
 }
 
+FileName getIterExtraPath(const FileName &fn_root, int iter, bool makePath)
+{
+  FileName fn = formatString("%s_extra/iter%03d/", fn_root.c_str(), iter);
+  if (makePath)
+    fn.makePath();
+  return fn;
+}
 
 
 
@@ -497,6 +507,8 @@ void ModelML2D::print(int tabs) const
     << ss4.str() << std::endl<< ss5.str() << std::endl << ss6.str() << std::endl << ss7.str()<< std::endl;
 
 }//close function print
+
+
 
 
 

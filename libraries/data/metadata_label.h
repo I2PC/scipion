@@ -105,6 +105,17 @@ enum MDLabel
     MDL_CTF_DEFOCUSA, ///< average defocus (Angtroms)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
     MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
+    MDL_CTF_ID, // < ID for the CTFs when are processed locally
+    MDL_CTF_X0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_Y0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_XF, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_YF, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_DEFOCUS_PLANEUA, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEUB, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEUC, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVA, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVB, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVC, ///< Defocus = A*x+B*y+C
     MDL_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
     MDL_CTF_CS, ///< Spherical aberration
     MDL_CTF_CA, ///< Chromatic aberration
@@ -747,6 +758,19 @@ private:
         MDL::addLabelAlias(MDL_CTF_BG_BASELINE, "CTFBG_Baseline");//3.0
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
+
+        MDL::addLabel(MDL_CTF_ID, LABEL_STRING, "ctfId");
+        MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
+        MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
+        MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
+        MDL::addLabel(MDL_CTF_YF, LABEL_DOUBLE, "ctfYF");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUA, LABEL_DOUBLE, "ctfDefocusPlaneUA");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUB, LABEL_DOUBLE, "ctfDefocusPlaneUB");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUC, LABEL_DOUBLE, "ctfDefocusPlaneUC");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVA, LABEL_DOUBLE, "ctfDefocusPlaneVA");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVB, LABEL_DOUBLE, "ctfDefocusPlaneVB");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVC, LABEL_DOUBLE, "ctfDefocusPlaneVC");
+
 
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CU, LABEL_DOUBLE, "ctfBgGaussian2CU");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CV, LABEL_DOUBLE, "ctfBgGaussian2CV");
