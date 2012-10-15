@@ -648,12 +648,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		setVisible(false);
 		dispose();
-		for (Window w : getWindows())
-		{
-			w.setVisible(false);
-			w.dispose();
-
-		}
+		System.exit(0);
+//		for (Window w : getWindows())
+//		{
+//			w.setVisible(false);
+//			w.dispose();
+//
+//		}
 	}
 	
 	
