@@ -5050,6 +5050,10 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
  */
 void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimArray<double> &c);
 
+/** Obtains the plane parameters p0+p1x+p2y of the 2x2 MultidimArray x.
+ */
+void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2);
+
 /*
    mod    Modulus after division.
     mod(x,y) is x - n.*y where n = floor(x./y) if y ~= 0.  If y is not an

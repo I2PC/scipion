@@ -1317,8 +1317,8 @@ double CTF_fitness(double *p, void *)
         retval = global_heavy_penalization;
     if (global_show == 3)
         std::cout << "Fitness1=" << retval << std::endl;
-    if ( (((global_action >= 3) && (global_action <= 4)) || (global_action == 6))
-        && (Ncorr > 0) && (global_prm->enhanced_weight != 0) )
+    if ((global_action >= 3 && global_action <= 4 || global_action == 6)
+        && Ncorr > 0 && global_prm->enhanced_weight != 0)
     {
         model_avg /= Ncorr;
         enhanced_avg /= Ncorr;
@@ -2928,17 +2928,14 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 
         // Save results
         FileName fn_rootCTFPARAM = prm.fn_psd.withoutExtension();
-
         FileName fn_rootMODEL = fn_rootCTFPARAM;
         int atPosition=fn_rootCTFPARAM.find('@');
-
         if (atPosition!=std::string::npos)
         {
             fn_rootMODEL=formatString("%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
                                       fn_rootCTFPARAM.substr(atPosition+1).c_str());
             fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
                                          fn_rootCTFPARAM.substr(atPosition+1).c_str());
-
         }
 
         save_intermediate_results(fn_rootMODEL, false);
@@ -2947,21 +2944,11 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         MetaData MD;
         MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");
         size_t id = MD.firstObject();
-        MD.setValue(MDL_CTF_ID, fn_rootCTFPARAM+ ".ctfparam", id);
-        if (output_ctfmodel.isLocalCTF)
-        {
-        	MD.setValue(MDL_CTF_X0, (double)output_ctfmodel.x0, id);
-        	MD.setValue(MDL_CTF_XF, (double)output_ctfmodel.xF, id);
-        	MD.setValue(MDL_CTF_Y0, (double)output_ctfmodel.y0, id);
-        	MD.setValue(MDL_CTF_YF, (double)output_ctfmodel.yF, id);
-
-        }
         MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);
         MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
-        fn_rootCTFPARAM = fn_rootCTFPARAM + ".ctfparam_tmp";
-        fn_rootCTFPARAM.deleteFile();
+
     }
     output_ctfmodel = global_ctfmodel;
 

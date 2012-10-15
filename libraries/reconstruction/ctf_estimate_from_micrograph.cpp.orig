@@ -307,20 +307,12 @@ void ProgCTFEstimateFromMicrograph::run()
     pieceMask.resizeNoCopy(piece);
     pieceMask.initConstant(1);
 
-    //Multidimensional data variables to store the defocus obtained locally for plane fitting
-    MultidimArray<double> defocusPlanefittingU(div_NumberX, div_NumberY);
-    MultidimArray<double> defocusPlanefittingV(div_NumberX, div_NumberY);
-    MultidimArray<double> X0(div_NumberX, div_NumberY);
-    MultidimArray<double> XF(div_NumberX, div_NumberY);
-    MultidimArray<double> Y0(div_NumberX, div_NumberY);
-    MultidimArray<double> YF(div_NumberX, div_NumberY);
-
     // Attenuate borders to avoid discontinuities
     MultidimArray<double> pieceSmoother;
     constructPieceSmoother(piece,pieceSmoother);
 
     if (verbose)
-        std::cerr << "Computing models of each piece ...\n";
+    	std::cerr << "Computing models of each piece ...\n";
 
     // Prepare these filenames in case they are needed
     FileName fn_psd;
@@ -330,7 +322,7 @@ void ProgCTFEstimateFromMicrograph::run()
         fn_psd=fn_root+".psdstk";
 
     if (verbose)
-        init_progress_bar(div_Number);
+    	init_progress_bar(div_Number);
     int N = 1; // Index of current piece
     int i = 0, j = 0; // top-left corner of the current piece
     FourierTransformer transformer;
@@ -381,7 +373,7 @@ void ProgCTFEstimateFromMicrograph::run()
             }
             else
             {
-                transformer.completeFourierTransform(piece,Periodogram);
+            	transformer.completeFourierTransform(piece,Periodogram);
                 FFT_magnitude(Periodogram, mpsd);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd)
                 DIRECT_MULTIDIM_ELEM(mpsd,n)*=DIRECT_MULTIDIM_ELEM(mpsd,n)*pieceDim2;
@@ -456,40 +448,23 @@ void ProgCTFEstimateFromMicrograph::run()
                 // Estimate the CTF parameters of this piece
                 prmEstimateCTFFromPSD.fn_psd=fn_psd_piece;
                 CTFDescription ctfmodel;
-
-                ctfmodel.isLocalCTF = true;
-                ctfmodel.x0 = i;
-                ctfmodel.xF = (i/pieceDim+1)*pieceDim;
-                ctfmodel.y0 = i;
-                ctfmodel.yF = (j/pieceDim+1)*pieceDim;
                 double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                        ctfmodel, false);
-
-                A2D_ELEM(defocusPlanefittingU,i/pieceDim,j/pieceDim)=ctfmodel.DeltafU;
-                A2D_ELEM(defocusPlanefittingV,i/pieceDim,j/pieceDim)=ctfmodel.DeltafV;
-
-                A2D_ELEM(X0,i/pieceDim,j/pieceDim)=i;
-                A2D_ELEM(XF,i/pieceDim,j/pieceDim)=(i/pieceDim+1)*pieceDim;
-
-                A2D_ELEM(Y0,i/pieceDim,j/pieceDim)=j;
-                A2D_ELEM(YF,i/pieceDim,j/pieceDim)=(j/pieceDim+1)*pieceDim;
-
                 if (psd_mode==OnePerParticle)
                     posFile.setValue(MDL_CTF_MODEL,fn_psd_piece.withoutExtension()+".ctfparam",
                                      iterPosFile.objId);
             }
         }
+
         // Increment the division counter
         ++N;
         if (verbose)
-            progress_bar(N);
+        	progress_bar(N);
         if (psd_mode==OnePerParticle)
             iterPosFile.moveNext();
     }
-
-
     if (verbose)
-        progress_bar(div_Number);
+    	progress_bar(div_Number);
 
     // If averaging, compute the CTF model ----------------------------------
     if (psd_mode==OnePerMicrograph)
@@ -635,44 +610,23 @@ void ProgCTFEstimateFromMicrograph::run()
     }
 
     // Assign a CTF to each particle ----------------------------------------
-    if (psd_mode==OnePerRegion && estimate_ctf)
+    if (psd_mode==OnePerRegion && fn_pos != "" && estimate_ctf)
     {
-        double p0=0, p1=0, p2=0;
-        planeFit(defocusPlanefittingU,p0,p1,p2);
-
-        FileName fn_psd_piece;
-        fn_psd_piece.compose(N,fn_psd);
-        FileName fn_rootCTFPARAM = fn_psd_piece.withoutExtension();
-        int atPosition=fn_rootCTFPARAM.find('@');
-
-        fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
-                                     fn_rootCTFPARAM.substr(atPosition+1).c_str());
-
-        MetaData MD;
-        size_t id = MD.addObject();
-        MD.setValue(MDL_CTF_DEFOCUS_PLANEUA,p1,id);
-        MD.setValue(MDL_CTF_DEFOCUS_PLANEUB,p2,id);
-        MD.setValue(MDL_CTF_DEFOCUS_PLANEUC,p0,id);
-        MD.write(fn_rootCTFPARAM + ".ctfparam", MD_APPEND);
-
-        if ( fn_pos != "")
+        FileName fn_img, fn_psd_piece, fn_ctfparam_piece;
+        int Y, X;
+        FOR_ALL_OBJECTS_IN_METADATA(posFile)
         {
-            FileName fn_img, fn_psd_piece, fn_ctfparam_piece;
-            int Y, X;
-            FOR_ALL_OBJECTS_IN_METADATA(posFile)
-            {
-                posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
-                posFile.getValue(MDL_X,X,__iter.objId);
-                posFile.getValue(MDL_Y,Y,__iter.objId);
-                int idx_X = floor((double)X / pieceDim);
-                int idx_Y = floor((double)Y / pieceDim);
-                int N = idx_Y * div_NumberX + idx_X + 1;
+            posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
+            posFile.getValue(MDL_X,X,__iter.objId);
+            posFile.getValue(MDL_Y,Y,__iter.objId);
+            int idx_X = floor((double)X / pieceDim);
+            int idx_Y = floor((double)Y / pieceDim);
+            int N = idx_Y * div_NumberX + idx_X + 1;
 
-                fn_psd_piece.compose(N,fn_psd);
-                fn_ctfparam_piece=fn_psd_piece.withoutExtension()+".ctfparam";
-                posFile.setValue(MDL_PSD,fn_psd_piece,__iter.objId);
-                posFile.setValue(MDL_CTF_MODEL,fn_ctfparam_piece,__iter.objId);
-            }
+            fn_psd_piece.compose(N,fn_psd);
+            fn_ctfparam_piece=fn_psd_piece.withoutExtension()+".ctfparam";
+            posFile.setValue(MDL_PSD,fn_psd_piece,__iter.objId);
+            posFile.setValue(MDL_CTF_MODEL,fn_ctfparam_piece,__iter.objId);
         }
     }
     posFile.write(fn_pos);
@@ -682,17 +636,17 @@ void ProgCTFEstimateFromMicrograph::run()
 class ThreadFastEstimateEnhancedPSDParams
 {
 public:
-    ImageGeneric *I;
-    MultidimArray<double> *PSD, *pieceSmoother;
+	ImageGeneric *I;
+	MultidimArray<double> *PSD, *pieceSmoother;
     MultidimArray<int> *pieceMask;
-    Mutex *mutex;
-    int Nprocessed;
+	Mutex *mutex;
+	int Nprocessed;
 };
 
 void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
 {
-    ThreadFastEstimateEnhancedPSDParams *args=(ThreadFastEstimateEnhancedPSDParams*)thArg.workClass;
-    int Nthreads=thArg.getNumberOfThreads();
+	ThreadFastEstimateEnhancedPSDParams *args=(ThreadFastEstimateEnhancedPSDParams*)thArg.workClass;
+	int Nthreads=thArg.getNumberOfThreads();
     int id=thArg.thread_id;
     ImageGeneric &I=*(args->I);
     const MultidimArrayGeneric& mI=I();
@@ -712,32 +666,32 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
     int Nprocessed=0;
     double pieceDim2=XSIZE(piece)*XSIZE(piece);
     for (int i=0; i<(IYdim-YSIZE(piece)); i+=YSIZE(piece))
-        for (int j=0; j<(IXdim-XSIZE(piece)); j+=XSIZE(piece), pieceNumber++)
-        {
-            if ((pieceNumber+1)%Nthreads!=id)
-                continue;
-            Nprocessed++;
+    	for (int j=0; j<(IXdim-XSIZE(piece)); j+=XSIZE(piece), pieceNumber++)
+    	{
+    		if ((pieceNumber+1)%Nthreads!=id)
+    			continue;
+    		Nprocessed++;
 
-            // Extract micrograph piece ..........................................
-            for (int k = 0; k < YSIZE(piece); k++)
-                for (int l = 0; l < XSIZE(piece); l++)
-                    DIRECT_A2D_ELEM(piece, k, l) = mI(i+k, j+l);
-            piece.statisticsAdjust(0, 1);
-            normalize_ramp(piece,pieceMask);
-            piece*=pieceSmoother;
+			// Extract micrograph piece ..........................................
+			for (int k = 0; k < YSIZE(piece); k++)
+				for (int l = 0; l < XSIZE(piece); l++)
+					DIRECT_A2D_ELEM(piece, k, l) = mI(i+k, j+l);
+			piece.statisticsAdjust(0, 1);
+			normalize_ramp(piece,pieceMask);
+			piece*=pieceSmoother;
 
-            // Estimate the power spectrum .......................................
-            transformer.FourierTransform();
-            transformer.getCompleteFourier(Periodogram);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(localPSD)
-            {
-                double *ptr=(double*) &DIRECT_MULTIDIM_ELEM(Periodogram, n);
-                double re=*ptr;
-                double im=*(ptr+1);
-                double magnitude2=re*re+im*im;
-                DIRECT_MULTIDIM_ELEM(localPSD,n)+=magnitude2*pieceDim2;
-            }
-        }
+		    // Estimate the power spectrum .......................................
+			transformer.FourierTransform();
+			transformer.getCompleteFourier(Periodogram);
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(localPSD)
+			{
+				double *ptr=(double*) &DIRECT_MULTIDIM_ELEM(Periodogram, n);
+				double re=*ptr;
+				double im=*(ptr+1);
+				double magnitude2=re*re+im*im;
+				DIRECT_MULTIDIM_ELEM(localPSD,n)+=magnitude2*pieceDim2;
+			}
+    	}
 
     // Gather results
     args->mutex->lock();
@@ -750,27 +704,27 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
                              MultidimArray<double> &enhancedPSD,
                              int numberOfThreads)
 {
-    int Xdim,Ydim,Zdim;
-    size_t Ndim;
-    getImageSizeFromFilename(fnMicrograph,Xdim,Ydim,Zdim,Ndim);
-    int minSize=2*(std::max(Xdim,Ydim)/10);
-    minSize=std::min((double)std::min(Xdim,Ydim),NEXT_POWER_OF_2(minSize));
-    minSize=std::min(1024,minSize);
+	int Xdim,Ydim,Zdim;
+	size_t Ndim;
+	getImageSizeFromFilename(fnMicrograph,Xdim,Ydim,Zdim,Ndim);
+	int minSize=2*(std::max(Xdim,Ydim)/10);
+	minSize=std::min((double)std::min(Xdim,Ydim),NEXT_POWER_OF_2(minSize));
+	minSize=std::min(1024,minSize);
 
-    /*
-    ProgCTFEstimateFromMicrograph prog1;
-    prog1.fn_micrograph=fnMicrograph;
-    prog1.fn_root=fnMicrograph.withoutExtension()+"_tmp";
-       prog1.pieceDim=(int)(minSize*downsampling);
-       prog1.PSDEstimator_mode=ProgCTFEstimateFromMicrograph::Periodogram;
-       prog1.Nsubpiece=1;
-       prog1.psd_mode=ProgCTFEstimateFromMicrograph::OnePerMicrograph;
-       prog1.estimate_ctf=false;
-       prog1.bootstrapN=-1;
-       prog1.verbose=1;
-       prog1.overlap=0;
-       prog1.run();
-    */
+	/*
+	ProgCTFEstimateFromMicrograph prog1;
+	prog1.fn_micrograph=fnMicrograph;
+	prog1.fn_root=fnMicrograph.withoutExtension()+"_tmp";
+    prog1.pieceDim=(int)(minSize*downsampling);
+    prog1.PSDEstimator_mode=ProgCTFEstimateFromMicrograph::Periodogram;
+    prog1.Nsubpiece=1;
+    prog1.psd_mode=ProgCTFEstimateFromMicrograph::OnePerMicrograph;
+    prog1.estimate_ctf=false;
+    prog1.bootstrapN=-1;
+    prog1.verbose=1;
+    prog1.overlap=0;
+    prog1.run();
+*/
     // Prepare auxiliary variables
     ImageGeneric I;
     I.read(fnMicrograph);
@@ -797,7 +751,7 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     ThreadManager *thMgr = new ThreadManager(numberOfThreads,&args);
     thMgr->run(threadFastEstimateEnhancedPSD);
     if (args.Nprocessed!=0)
-        *(args.PSD)/=args.Nprocessed;
+    	*(args.PSD)/=args.Nprocessed;
 
     ProgCTFEnhancePSD prog2;
     prog2.filter_w1 = 0.02;

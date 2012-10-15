@@ -539,3 +539,66 @@ void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimAr
     sincos(*ptr, ptrS++,ptrC++);
 }
 
+
+void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2)
+{
+	 if (x.zdim > 1)
+	 {
+		 REPORT_ERROR(ERR_MATRIX_SIZE, "Outside: the input MultidimArray has to have size 2 x 2");
+	 }
+	 if (x.nzyxdim < 10)
+	 {
+		 REPORT_ERROR(ERR_MATRIX_SIZE, "Outside: matrix has not got enough components");
+	 }
+
+	 double m11=0, m12=0, m13=0, m21=0, m22=0, m23=0, m31=0, m32=0, m33=0;
+	 double b1=0, b2=0, b3=0;
+
+	 for (int i = 0; i < x.xdim; ++i)
+		 for (int j = 0; j < x.ydim; ++j)
+		 {
+			 m11+=i*i;
+			 m12+=i*j;
+			 m13+=i;
+
+			 m21=m12;
+			 m22+=i*j;
+			 m23+=j;
+
+			 m31=m13;
+			 m32+=m23;
+
+			 b1+=i*A2D_ELEM(x,i,j);
+			 b2+=j*A2D_ELEM(x,i,j);
+			 b3+=A2D_ELEM(x,i,j);
+		 }
+
+	 m33=x.ndim;
+
+	 Matrix2D<double> A(3, 3);
+	 A.initZeros();
+	 Matrix1D<double> b(3);
+	 b.initZeros();
+	 Matrix1D<double> c(3);
+	 c.initZeros();
+
+	 A(0,0)=m11;
+	 A(0,1)=m12;
+	 A(0,2)=m13;
+	 A(1,0)=m21;
+	 A(1,1)=m22;
+	 A(1,2)=m23;
+	 A(2,0)=m31;
+	 A(2,1)=m32;
+	 A(2,2)=m33;
+
+	 b(0)=b1;
+	 b(1)=b2;
+	 b(2)=b3;
+
+	 c = A.inv() * b;
+	 p0 = c(2);
+	 p2 = c(1);
+	 p1 = c(0);
+
+}
