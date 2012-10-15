@@ -846,6 +846,9 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
     endX=XSIZE(microImage())-particle_radius;
     endY=YSIZE(microImage())-particle_radius;
     applyConvolution();
+    Image<double> II;
+    II().alias(convolveRes);
+    II.write("testvv.xmp");
     for (int i=particle_radius;i<endY;i++)
         for (int j=particle_radius;j<endX;j++)
         {
@@ -911,10 +914,6 @@ void AutoParticlePicking2::applyConvolution()
             DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
     }
     CenterFFT(convolveRes,true);
-    Image<double> II;
-    II().alias(convolveRes);
-    II.write("testvv.xmp");
-
 }
 
 // ==========================================================================
