@@ -5052,7 +5052,7 @@ void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimAr
 
 /** Obtains the plane parameters p0+p1x+p2y of the 2x2 MultidimArray x.
  */
-void planeFit(const MultidimArray<double> &x, double p0, double p1, double p2);
+void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2);
 
 /*
    mod    Modulus after division.

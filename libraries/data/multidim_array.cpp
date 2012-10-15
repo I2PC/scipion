@@ -540,7 +540,7 @@ void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimAr
 }
 
 
-void planeFit(const MultidimArray<double> &x, double p0, double p1, double p2)
+void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2)
 {
 	 if (x.zdim > 1)
 	 {
@@ -575,11 +575,11 @@ void planeFit(const MultidimArray<double> &x, double p0, double p1, double p2)
 
 	 m33=x.ndim;
 
-	 Matrix2D<double> A(2, 2);
+	 Matrix2D<double> A(3, 3);
 	 A.initZeros();
-	 Matrix1D<double> b(2);
+	 Matrix1D<double> b(3);
 	 b.initZeros();
-	 Matrix1D<double> c(2);
+	 Matrix1D<double> c(3);
 	 c.initZeros();
 
 	 A(0,0)=m11;
@@ -600,4 +600,5 @@ void planeFit(const MultidimArray<double> &x, double p0, double p1, double p2)
 	 p0 = c(2);
 	 p2 = c(1);
 	 p1 = c(0);
+
 }
