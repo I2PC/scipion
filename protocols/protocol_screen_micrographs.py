@@ -78,7 +78,7 @@ class ProtScreenMicrographs(XmippProtocol):
                 
             if(self.DoCtffind):
                 verifyFiles=[]
-                self.insertParallelStep('estimateCtfCtffind1', verifyfiles=verifyFiles,
+                self.insertStep('estimateCtfCtffind1', verifyfiles=verifyFiles,
                                      micrograph=finalname,
                                      oroot=_getFilename('prefix', micrographDir=micrographDir),
                                      kV=(Voltage),
@@ -92,8 +92,7 @@ class ProtScreenMicrographs(XmippProtocol):
                                      pieceDim=(self.WinSize),
                                      defocus_range=((self.MaxFocus-self.MinFocus)*10000/2),
                                      defocusU=((self.MaxFocus+self.MinFocus)*10000/2),
-                                     StepFocus=self.StepFocus,
-                                     parent_step_id=parent_id
+                                     StepFocus=self.StepFocus
                                      )
 
             else:
