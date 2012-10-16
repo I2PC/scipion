@@ -2113,12 +2113,12 @@ public:
      *
      * @param face Select the face to become the new Z direction
      * @param out  The resliced volume is returned
-     * @param reverse Invert the positions of Z planes, keeping the X-Y orientation
+     * @param flip Invert the positions of Z planes, keeping the X-Y orientation
      * @param n Select the number of image in case of stacks
      */
 
     template <typename T1>
-    void reslice(AxisView face, MultidimArray<T1>& out, bool flip = false, size_t n = 0) const
+    void reslice(MultidimArray<T1>& out, AxisView face, bool flip = false, size_t n = 0) const
     {
         ArrayDim aDim, aDimOut;
         getDimensions(aDim);
@@ -2158,6 +2158,19 @@ public:
             this->getSlice(index, imTemp, axis, !reverse);
         }
 
+    }
+
+    /** Reslice the current volume
+     *
+     * @param face Select the face to become the new Z direction
+     * @param flip Invert the positions of Z planes, keeping the X-Y orientation
+     * @param n Select the number of image in case of stacks
+     */
+    void reslice(AxisView face, bool flip = false, size_t n = 0) const
+    {
+        MultidimArray<T> mTemp;
+        reslice(mTemp, face, flip, n);
+        *this = mTemp;
     }
 
     /** Get Column

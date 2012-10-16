@@ -191,7 +191,7 @@ TEST( MultidimTest, reslice)
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imgRef)
     dAi(imgRef, n) = n;
 
-    imgRef.reslice(VIEW_Y_NEG, imgSliced);
+    imgRef.reslice(imgSliced, VIEW_Y_NEG);
 
 
     //    imgSliced.reslice(ImageGeneric::Y_NEG);
@@ -201,7 +201,7 @@ TEST( MultidimTest, reslice)
         EXPECT_EQ(DIRECT_ZYX_ELEM(imgRef,k,i,j), DIRECT_ZYX_ELEM(imgSliced,ZSIZE(imgSliced)-1-i,k,j));
     }
 
-    imgRef.reslice(VIEW_X_NEG, imgSliced);
+    imgRef.reslice(imgSliced, VIEW_X_NEG);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(imgRef)
     {
