@@ -77,6 +77,7 @@ class ProtScreenMicrographs(XmippProtocol):
                 finalname = inputFile
                 
             if(self.DoCtffind):
+                print "CTFFIND"
                 verifyFiles=[]
                 self.insertParallelStep('estimateCtfCtffind', verifyfiles=verifyFiles,
                                      micrograph=finalname,
@@ -97,6 +98,7 @@ class ProtScreenMicrographs(XmippProtocol):
                                      )
 
             else:
+                print "CTFXMIPP"
                 # CTF estimation with Xmipp
                 args="--micrograph "+finalname+\
                      " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
