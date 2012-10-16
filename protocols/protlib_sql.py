@@ -629,6 +629,8 @@ class XmippProtocolDb(SqliteDb):
     def _execSingleStep(self, stepRow, info):
         # Execute Python function
         print "_execSingleStep", self.Import
+        print "info.command", info.command
+        print "info.args", info.args
         exec(self.Import)
         if stepRow['passDb']:
             exec ( info.command + '(self, **info.args)')
