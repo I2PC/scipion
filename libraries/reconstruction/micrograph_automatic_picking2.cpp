@@ -50,11 +50,6 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
     num_correlation=filter_num+((filter_num-corr_num)*corr_num);
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);//(2.0, 0.5);
-    //    rotPca.psi_step=2;
-    //    rotPca.Nthreads=4;
-    //    rotPca.Neigen=20;
-
-
 }
 
 //Generate filter bank from the micrograph image
@@ -998,7 +993,6 @@ void ProgMicrographAutomaticPicking2::run()
         // Generating the filter bank
         filterBankGenerator(autoPicking->microImage(),fnFilterBank,filter_num);
         autoPicking->micrographStack.read(fnFilterBank,DATA);
-
     }
 
     if (mode=="buildinv")
