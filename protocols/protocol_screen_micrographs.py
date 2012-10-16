@@ -85,7 +85,7 @@ class ProtScreenMicrographs(XmippProtocol):
                                      kV=(Voltage),
                                      Cs=(SphericalAberration),
                                      sampling_rate=(AngPix*self.DownsampleFactor),
-                                     downSamplingPerformed=str(self.DownsampleFactor),
+                                     downSamplingPerformed=(self.DownsampleFactor),
                                      ctfmodelSize=256,
                                      Q0=(self.AmplitudeContrast),
                                      min_freq=(self.LowResolCutoff),
