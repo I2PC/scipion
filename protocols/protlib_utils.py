@@ -348,7 +348,8 @@ class ProcessManager():
             for c in childs:
                 c.terminate()
 	if project != None:
-	    project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
+	    from protlib_sql import SqliteDb
+	    project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, self.run['run_id'])
                 
     def isAlive(self):
         if self.isBatch:
