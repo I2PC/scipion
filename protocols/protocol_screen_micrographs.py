@@ -76,7 +76,7 @@ class ProtScreenMicrographs(XmippProtocol):
             else:
                 finalname = inputFile
                 
-            if(DoCtffind):
+            if(self.DoCtffind):
                 verifyFiles=[]
                 self.insertParallelRunJobStep('estimateCtfCtffind', verifyfiles=verifyFiles,
                                      micrograph=finalname,
