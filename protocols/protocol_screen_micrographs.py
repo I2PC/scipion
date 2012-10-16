@@ -80,6 +80,7 @@ class ProtScreenMicrographs(XmippProtocol):
                 verifyFiles=[]
                 self.insertStep('estimateCtfCtffind1', verifyfiles=verifyFiles,
                                      micrograph=finalname,
+                                     micrographDir=micrographDir,
                                      oroot=_getFilename('prefix', micrographDir=micrographDir),
                                      kV=(Voltage),
                                      Cs=(SphericalAberration),
@@ -175,6 +176,7 @@ class ProtScreenMicrographs(XmippProtocol):
             showWarning('Warning', 'There are not results yet',self.master)
     
 def estimateCtfCtffind1(_log, micrograph,
+                          micrographDir,
                           oroot,
                           kV,
                           Cs,
