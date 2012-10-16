@@ -33,8 +33,6 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-        if self.DoCtffind:
-            self.CtffindExec =  which('ctffind3.exe')
 
         #TODO: check all the possible casses
         if not self.TiltPairs:
@@ -231,7 +229,8 @@ def estimateCtfCtffind1(_log, micrograph,
                   str(min_freq*10000) + ',' + \
                   str(max_freq*10000) + ',' + \
                   str(StepFocus*10000) + "\n"
-        
+
+        CtffindExec =  which('ctffind3.exe')
         runJob(_log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
     
         fnOut = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
