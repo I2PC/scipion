@@ -176,6 +176,8 @@ class ProtScreenMicrographs(XmippProtocol):
                   str(min_freq*10000) + ',' + \
                   str(max_freq*10000) + ',' + \
                   str(StepFocus*10000) + "\n"
+        print "LOG", CtffindExec, params
+        
         runJob(log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
     
         fnOut = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
