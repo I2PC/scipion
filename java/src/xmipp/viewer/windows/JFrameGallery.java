@@ -112,6 +112,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	private final static int DELAY_TO_UPDATE = 500;
 	private static int update_counter = 0;
+	 //The following counter will be used to keep track of how many
+	// windows are opened, the last one, should do System.exit
+	private static short windows_counter = 0;
 	public ImageGallery gallery;
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
@@ -181,6 +184,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			this.data = data;
 			createModel();
 			createGUI();
+			++windows_counter;
 		} catch (Exception e) {
 			DEBUG.printException(e);
 		}
@@ -197,14 +201,14 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		init(new GalleryData(filename, parameters, md));
 	}
 
-	public JFrameGallery(String filenames[], Param parameters) {
-		this(filenames, null, parameters);
-	}
+//	public JFrameGallery(String filenames[], Param parameters) {
+//		this(filenames, null, parameters);
+//	}
 
-	public JFrameGallery(String filenames[], boolean enabled[], Param parameters) {
-		super();
-		// createGUI(new MDTableModel(filenames, enabled), parameters);
-	}
+//	public JFrameGallery(String filenames[], boolean enabled[], Param parameters) {
+//		super();
+//		// createGUI(new MDTableModel(filenames, enabled), parameters);
+//	}
 
 	/**
 	 * Open another metadata separataly *
@@ -231,6 +235,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		if (proceedWithChanges()) {
 			setVisible(false);
 			dispose();
+			if (--windows_counter == 0)
+				System.exit(0);
 		}
 	}// function close
 
@@ -964,7 +970,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 //						data.selectVolume(data.volumes[0]);
 					//System.out.println("selected: " + data.selectedVolFn);
 					jcbVolumes.invalidate();
-					reloadTableData();
+					try {
+						data.loadMd();
+						reloadTableData();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 
