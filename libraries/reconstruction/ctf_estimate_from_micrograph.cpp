@@ -375,6 +375,7 @@ void ProgCTFEstimateFromMicrograph::run()
             j = Xdim - pieceDim;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         // Extract micrograph piece ..........................................
         M_in().window(piece,0,0,i,j,0,0,i+YSIZE(piece)-1,j+XSIZE(piece)-1);
         piece.statisticsAdjust(0, 1);
@@ -399,15 +400,14 @@ void ProgCTFEstimateFromMicrograph::run()
             PSD_piece_by_averaging(piece, mpsd);
         mpsd2.resizeNoCopy(mpsd);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd2)
-=======
         if (!skip)
->>>>>>> 3.0
         {
 			// Extract micrograph piece ..........................................
 			M_in().window(piece,0,0,i,j,0,0,i+YSIZE(piece)-1,j+XSIZE(piece)-1);
 			piece.statisticsAdjust(0, 1);
 			normalize_ramp(piece,pieceMask);
 			piece*=pieceSmoother;
+<<<<<<< HEAD
 
 			// Estimate the power spectrum .......................................
 			if (Nsubpiece==1)
@@ -512,6 +512,83 @@ void ProgCTFEstimateFromMicrograph::run()
                                      iterPosFile.objId);
             }
 =======
+=======
+
+			// Estimate the power spectrum .......................................
+			if (Nsubpiece==1)
+				if (PSDEstimator_mode == ARMA)
+				{
+					CausalARMA(piece, ARMA_prm);
+					ARMAFilter(piece, mpsd, ARMA_prm);
+				}
+				else
+				{
+					transformer.completeFourierTransform(piece,Periodogram);
+					FFT_magnitude(Periodogram, mpsd);
+					FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd)
+					DIRECT_MULTIDIM_ELEM(mpsd,n)*=DIRECT_MULTIDIM_ELEM(mpsd,n)*pieceDim2;
+				}
+			else
+				PSD_piece_by_averaging(piece, mpsd);
+			mpsd2.resizeNoCopy(mpsd);
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd2)
+			{
+				double psdval=DIRECT_MULTIDIM_ELEM(mpsd,n);
+				DIRECT_MULTIDIM_ELEM(mpsd2,n)=psdval*psdval;
+			}
+
+			// Perform averaging if applicable ...................................
+			if (psd_mode==OnePerMicrograph)
+			{
+				actualDiv_Number+=1;
+				// Compute average and standard deviation
+				if (XSIZE(psd_avg())!=XSIZE(mpsd))
+				{
+					psd_avg() = mpsd;
+					psd_std() = psd2();
+				}
+				else
+				{
+					psd_avg() += mpsd;
+					psd_std() += psd2();
+				}
+
+				// Keep psd for the PCA
+				if (XSIZE(PCAmask)==0)
+				{
+					PCAmask.initZeros(mpsd);
+					Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+					Matrix1D<double> freq(2); // Frequencies for Fourier plane
+					size_t PCAdim=0;
+					FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
+					{
+						VECTOR_R2(idx, j, i);
+						FFT_idx2digfreq(mpsd, idx, freq);
+						double w = freq.module();
+						if (w>0.05 && w<0.4)
+						{
+							A2D_ELEM(PCAmask,i,j)=1;
+							++PCAdim;
+						}
+					}
+					PCAv.initZeros(PCAdim);
+				}
+
+				size_t ii=-1;
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PCAmask)
+				if (DIRECT_MULTIDIM_ELEM(PCAmask,n))
+					A1D_ELEM(PCAv,++ii)=(float)DIRECT_MULTIDIM_ELEM(mpsd,n);
+				pcaAnalyzer.addVector(PCAv);
+			}
+
+			// Compute the theoretical model if not averaging ....................
+			if (psd_mode!=OnePerMicrograph)
+			{
+				if (bootstrapN!=-1)
+					REPORT_ERROR(ERR_VALUE_INCORRECT,
+								 "Bootstrapping is only available for micrograph averages");
+
+>>>>>>> 3.0
 				FileName fn_psd_piece;
 				fn_psd_piece.compose(N,fn_psd);
 				psd.write(fn_psd_piece);
@@ -530,6 +607,9 @@ void ProgCTFEstimateFromMicrograph::run()
 										 iterPosFile.objId);
 				}
 			}
+<<<<<<< HEAD
+>>>>>>> 3.0
+=======
 >>>>>>> 3.0
         }
         // Increment the division counter
