@@ -124,6 +124,56 @@ class ProtScreenMicrographs(XmippProtocol):
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
     
+    
+    def createFilenameTemplates(self):
+        return _templateDict
+    
+    def validate(self):
+        errors = []
+        if self.DownsampleFactor<1:
+            errors.append("Downsampling must be >=1");
+
+        # Check that there are any micrograph to process
+        if xmippExists(self.Input['micrographs']):
+            md = xmipp.MetaData(self.Input['micrographs'])
+            if md.isEmpty():
+                errors.append("Imported micrographs file <%(micrographs)s> is empty" % self.Input)
+        
+        if self.AmplitudeContrast < 0:
+            errors.append("Q0 should be positive")
+        
+        if self.MinFocus < 0 or self.MaxFocus<0:
+            errors.append("Defoci range must be positive (minFocus, maxFocus)>0")
+            
+        if self.MaxFocus < self.MinFocus:
+            errors.append("maxFocus must be larger than minFocus")
+
+        if self.DoCtffind:
+            self.CtffindExec =  which('ctffind3.exe')
+            if self.CtffindExec =='':
+                errors.append("cannot find ctffind3.exe")
+        
+        return errors
+
+    def summary(self):
+        message = []
+        md = xmipp.MetaData(self.Input['micrographs'])
+        message.append("CTF screening of <%d> micrographs." % md.size())
+        message.append("Input directory: [%s]" % self.PrevRun.WorkingDir)
+        return message
+    
+    def visualize(self):
+        summaryFile = self.getFilename('micrographs')
+        
+        if not exists(summaryFile): # Try to create partial summary file
+            summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
+            buildSummaryMetadata(self.WorkingDir, self.Input['micrographs'], summaryFile)
+            
+        if exists(summaryFile):
+            runShowJ(summaryFile, extraParams = "--mode metadata")
+        else:
+            showWarning('Warning', 'There are not results yet',self.master)
+    
 def estimateCtfCtffind1(_log, micrograph,
                           oroot,
                           kV,
@@ -224,56 +274,7 @@ def estimateCtfCtffind1(_log, micrograph,
         MD.setValue(xmipp.MDL_CTF_Q0,            float(-Q0), objId)
         MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
         MD.write(fnOut)
-    
-    def createFilenameTemplates(self):
-        return _templateDict
-    
-    def validate(self):
-        errors = []
-        if self.DownsampleFactor<1:
-            errors.append("Downsampling must be >=1");
 
-        # Check that there are any micrograph to process
-        if xmippExists(self.Input['micrographs']):
-            md = xmipp.MetaData(self.Input['micrographs'])
-            if md.isEmpty():
-                errors.append("Imported micrographs file <%(micrographs)s> is empty" % self.Input)
-        
-        if self.AmplitudeContrast < 0:
-            errors.append("Q0 should be positive")
-        
-        if self.MinFocus < 0 or self.MaxFocus<0:
-            errors.append("Defoci range must be positive (minFocus, maxFocus)>0")
-            
-        if self.MaxFocus < self.MinFocus:
-            errors.append("maxFocus must be larger than minFocus")
-
-        if self.DoCtffind:
-            self.CtffindExec =  which('ctffind3.exe')
-            if self.CtffindExec =='':
-                errors.append("cannot find ctffind3.exe")
-        
-        return errors
-
-    def summary(self):
-        message = []
-        md = xmipp.MetaData(self.Input['micrographs'])
-        message.append("CTF screening of <%d> micrographs." % md.size())
-        message.append("Input directory: [%s]" % self.PrevRun.WorkingDir)
-        return message
-    
-    def visualize(self):
-        summaryFile = self.getFilename('micrographs')
-        
-        if not exists(summaryFile): # Try to create partial summary file
-            summaryFile = summaryFile.replace(self.WorkingDir, self.TmpDir)
-            buildSummaryMetadata(self.WorkingDir, self.Input['micrographs'], summaryFile)
-            
-        if exists(summaryFile):
-            runShowJ(summaryFile, extraParams = "--mode metadata")
-        else:
-            showWarning('Warning', 'There are not results yet',self.master)
-    
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
     buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
     dirSummary,fnSummary=os.path.split(summaryFile)
