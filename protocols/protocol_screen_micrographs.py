@@ -84,7 +84,7 @@ class ProtScreenMicrographs(XmippProtocol):
                                      oroot=_getFilename('prefix', micrographDir=micrographDir),
                                      kV=(Voltage),
                                      Cs=(SphericalAberration),
-                                     sampling_rate=str(AngPix*self.DownsampleFactor),
+                                     sampling_rate=(AngPix*self.DownsampleFactor),
                                      downSamplingPerformed=str(self.DownsampleFactor),
                                      ctfmodelSize=256,
                                      Q0=(self.AmplitudeContrast),
