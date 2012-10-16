@@ -4,7 +4,7 @@
 
 #from config_protocols import protDict
 from protlib_base import *
-from protlib_utils import which, runJob, runShowJ
+from protlib_utils import which, runJob, runShowJ,printLog
 from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt
 import xmipp
 from protlib_gui_ext import showWarning
@@ -140,10 +140,11 @@ class ProtScreenMicrographs(XmippProtocol):
                           defocusU,
                           StepFocus
                           ):
-#def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
-#                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
+        #def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
+        #                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
         # Convert image to MRC
         print "LOG estimateCtfCtffind"
+        printLog(_log)
         if not micrograph.endswith('.mrc'):
             from protlib_filesystem import uniqueRandomFilename
             deleteTempMicrograph = True
