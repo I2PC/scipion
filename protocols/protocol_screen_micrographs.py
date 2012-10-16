@@ -219,8 +219,7 @@ def estimateCtfCtffind1(_log, micrograph,
         Magnification=60000
         params = '  << eof > ' + micrographDir + '/ctffind.log\n'
         params += mrcMicrograph + "\n"
-#        params += micrographDir + '/ctffind_spectrum.mrc\n'
-        params += micrographDir + _getFilename('ctffind_spectrum', micrographDir=micrographDir)+'\n'
+        params += micrographDir + '/ctffind_spectrum.mrc\n'
         params += str(Cs) + ',' + \
                   str(kV) + ',' + \
                   str(Q0 ) + ',' + \
