@@ -43,11 +43,6 @@ opts.Add(BoolVariable('warn', 'Show warnings?', 'no'))
 opts.Add(BoolVariable('fast', 'Fast?', 'no'))
 opts.Add(BoolVariable('static', 'Prevent dynamic linking?', 'no'))
 
-opts.Add(BoolVariable('qt', 'Build the GUI (qt) programs?', 'yes'))
-opts.Add('QTDIR', 'Where is QT installed', '/usr/share/qt3')
-opts.Add('QT_LIB', 'QT library to use', 'qt-mt')
-opts.Add(BoolVariable('QT4', 'Use Qt4 instead of Qt3?', 'no'))
-
 opts.Add('prepend', 'What to prepend to executable names', 'xmipp')
 opts.Add(BoolVariable('quiet', 'Hide command line?', 'yes'))
 
@@ -191,61 +186,6 @@ if (ARGUMENTS['mode'] == 'configure'):
 #        AppendIfNotExists(CCFLAGS='-m64')
 #        AppendIfNotExists(CXXFLAGS='-m64')
 #        AppendIfNotExists(LINKFLAGS='-m64')
-
-    # QT
-    if int(env['qt']):
-        if int(env['QT4']):
-            print '* QT4 selected!'
-            # FIXME /usr/lib/qt4
-            env['QTDIR'] = ''
-            env['QT_LIB'] = ''
-        else:
-            print '* QT3 selected!'
-
-        # QT3 makes use of QTDIR
-        if ARGUMENTS.get('QTDIR'):
-            print '* Trying user-supplied QTDIR: ' + ARGUMENTS.get('QTDIR')
-            env['QTDIR'] = ARGUMENTS.get('QTDIR')
-        else:
-            print '* Trying environment\'s $QTDIR'
-            if os.environ.has_key('QTDIR'):
-                env['QTDIR'] = os.environ['QTDIR']
-            else:
-                print '* QTDIR not in environment nor supplied' \
-                     ' (default value won\'t probably work)'
-                print '  Please set it correctly, i.e.: export ' \
-                      'QTDIR=/path/to/qt'
-                print '  or specify one directly in command line: '\
-                      'QTDIR=/path/to/qt'
-                print '* Trying default value: ' + env['QTDIR']
-
-        # Create a new environment with Qt tool enabled to see if it works
-        envQT = env.Clone()
-
-        if int(env['QT4']):
-            # DBG
-            try:
-                envQT.Tool('qt4')
-                envQT.EnableQt4Modules(['QtCore', 'QtGui', 'Qt3Support'], debug=False)
-            except:
-                print "*QT4 not found! Disabling..."
-                env['qt'] = 0
-        else:
-            envQT.Tool('qt')
-
-        # FIXME Copy() does not work well (adds twice the library, 'qt' ...)
-        # envQT.Replace(QT_LIB = env['QT_LIB'])
-        envQT.Replace(LINK=env['LINKERFORPROGRAMS'])
-
-        confQT = Configure(envQT, {}, config_dir, config_log)
-
-        if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h',
-                                         'c++', 'QApplication qapp(0,0);',
-                                         0):
-            print '* Did not find QT. Disabling ...'
-            env['qt'] = 0
-
-        envQT = confQT.Finish()
 
     # Non-GUI configuration environment
     conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
@@ -405,9 +345,6 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env['ARCOMSTR'] = 'Archiving $TARGET'
         env['SHLINKCOMSTR'] = 'Linking $TARGET'
         env['RANLIBCOMSTR'] = 'Indexing $TARGET'
-        env['QT_UICCOMSTR'] = 'UICing $SOURCE'
-        env['QT_MOCFROMHCOMSTR'] = 'MOCing header $SOURCE'
-        env['QT_MOCFROMCXXCOMSTR'] = 'MOCing source $SOURCE'
         env['TARCOMSTR'] = 'Archiving $TARGET'
         env['INSTALLSTR'] = 'Installing $TARGET'
 

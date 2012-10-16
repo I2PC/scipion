@@ -729,7 +729,7 @@ Java_xmipp_jni_ImageGeneric_getReslice(JNIEnv *env, jobject jobj, jobject jimgOu
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         ImageGeneric *imageOut = GET_INTERNAL_IMAGE_GENERIC(jimgOut);
-        image->reslice((ImageGeneric::AxisView)view, *imageOut);
+        image->reslice((AxisView)view, *imageOut);
     }
     XMIPP_JAVA_CATCH;
 }
@@ -740,7 +740,7 @@ Java_xmipp_jni_ImageGeneric_reslice(JNIEnv *env, jobject jobj, jint view)
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        image->reslice((ImageGeneric::AxisView)view);
+        image->reslice((AxisView)view);
     }
     XMIPP_JAVA_CATCH;
 }
