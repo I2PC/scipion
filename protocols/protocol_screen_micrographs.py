@@ -81,18 +81,18 @@ class ProtScreenMicrographs(XmippProtocol):
                 self.insertParallelRunJobStep('estimateCtfCtffind', verifyfiles=verifyFiles,
                                      micrograph=finalname,
                                      oroot=_getFilename('prefix', micrographDir=micrographDir),
-                                     kV=str(Voltage),
-                                     Cs=str(SphericalAberration),
+                                     kV=(Voltage),
+                                     Cs=(SphericalAberration),
                                      sampling_rate=str(AngPix*self.DownsampleFactor),
                                      downSamplingPerformed=str(self.DownsampleFactor),
                                      ctfmodelSize=256,
-                                     Q0=str(self.AmplitudeContrast),
-                                     min_freq=str(self.LowResolCutoff),
-                                     max_freq=str(self.HighResolCutoff),
-                                     pieceDim=str(self.WinSize),
-                                     defocus_range=str((self.MaxFocus-self.MinFocus)*10000/2),
-                                     defocusU=str((self.MaxFocus+self.MinFocus)*10000/2),
-                                     StepFocus=StepFocus
+                                     Q0=(self.AmplitudeContrast),
+                                     min_freq=(self.LowResolCutoff),
+                                     max_freq=(self.HighResolCutoff),
+                                     pieceDim=(self.WinSize),
+                                     defocus_range=((self.MaxFocus-self.MinFocus)*10000/2),
+                                     defocusU=((self.MaxFocus+self.MinFocus)*10000/2),
+                                     StepFocus=self.StepFocus
                                      )
 
             else:
@@ -169,7 +169,7 @@ class ProtScreenMicrographs(XmippProtocol):
                   str(-1. * Q0 ) + ',' + \
                   str(Magnification/downSamplingPerformed) + ',' + \
                   str(Magnification/downSamplingPerformed*sampling_rate*1e-4) + "\n"
-        params += str(WinSize) + ',' + \
+        params += str(pieceDim) + ',' + \
                   str(AngPix*downSamplingPerformed / LowResolCutoff) + ',' + \
                   str(AngPix*downSamplingPerformed / HighResolCutoff) + ',' + \
                   str(min_freq*10000) + ',' + \
