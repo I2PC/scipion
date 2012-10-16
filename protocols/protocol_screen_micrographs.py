@@ -77,7 +77,6 @@ class ProtScreenMicrographs(XmippProtocol):
                 finalname = inputFile
                 
             if(self.DoCtffind):
-                print "CTFFIND"
                 verifyFiles=[]
                 self.insertParallelStep('estimateCtfCtffind', verifyfiles=verifyFiles,
                                      micrograph=finalname,
@@ -98,7 +97,6 @@ class ProtScreenMicrographs(XmippProtocol):
                                      )
 
             else:
-                print "CTFXMIPP"
                 # CTF estimation with Xmipp
                 args="--micrograph "+finalname+\
                      " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
@@ -145,6 +143,7 @@ class ProtScreenMicrographs(XmippProtocol):
 #def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
 #                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
         # Convert image to MRC
+        print "LOG estimateCtfCtffind", micrograph
         if not micrograph.endswith('.mrc'):
             from protlib_filesystem import uniqueRandomFilename
             deleteTempMicrograph = True
