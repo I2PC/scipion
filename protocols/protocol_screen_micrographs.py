@@ -124,7 +124,7 @@ class ProtScreenMicrographs(XmippProtocol):
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
     
-    def estimateCtfCtffind1(_log, micrograph,
+def estimateCtfCtffind1(_log, micrograph,
                           oroot,
                           kV,
                           Cs,
