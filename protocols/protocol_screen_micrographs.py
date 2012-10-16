@@ -19,7 +19,9 @@ _templateDict = {
         'psd': _prefix + '.psd',
         'enhanced_psd': _prefix + '_enhanced_psd.xmp',
         'ctfmodel_quadrant': _prefix + '_ctfmodel_quadrant.xmp',
-        'ctfmodel_halfplane': _prefix + '_ctfmodel_halfplane.xmp'
+        'ctfmodel_halfplane': _prefix + '_ctfmodel_halfplane.xmp',
+        'ctffind_ctfparam': join('%(micrographDir)s', 'ctffind.ctfparam'),
+        'ctffind_spectrum': join('%(micrographDir)s', 'ctffind_spectrum.mrc')
         }
 
 def _getFilename(key, **args):
@@ -217,10 +219,11 @@ def estimateCtfCtffind1(_log, micrograph,
         Magnification=60000
         params = '  << eof > ' + micrographDir + '/ctffind.log\n'
         params += mrcMicrograph + "\n"
-        params += micrographDir + '/ctffind_spectrum.mrc\n'
+#        params += micrographDir + '/ctffind_spectrum.mrc\n'
+        params += micrographDir + _getFilename('ctffind_spectrum', micrographDir=micrographDir)+'\n'
         params += str(Cs) + ',' + \
                   str(kV) + ',' + \
-                  str(-1. * Q0 ) + ',' + \
+                  str(Q0 ) + ',' + \
                   str(Magnification/downSamplingPerformed) + ',' + \
                   str(Magnification/downSamplingPerformed*sampling_rate*1e-4) + "\n"
         params += str(pieceDim) + ',' + \
@@ -273,7 +276,7 @@ def estimateCtfCtffind1(_log, micrograph,
         MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      float(DF1), objId)
         MD.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, float(Angle), objId)
         MD.setValue(xmipp.MDL_CTF_CS,            float(Cs), objId)
-        MD.setValue(xmipp.MDL_CTF_Q0,            float(-Q0), objId)
+        MD.setValue(xmipp.MDL_CTF_Q0,            float(Q0), objId)
         MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
         MD.write(fnOut)
 
