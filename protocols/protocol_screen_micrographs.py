@@ -160,7 +160,7 @@ class ProtScreenMicrographs(XmippProtocol):
         #eof
 
         # Prepare parameters for CTFTILT
-        # ¿multiply Q0 by -1?
+        # multiply Q0 by -1?
         params = '  << eof > ' + micrographDir + '/ctffind.log\n'
         params += mrcMicrograph + "\n"
         params += micrographDir + '/ctffind_spectrum.mrc\n'
