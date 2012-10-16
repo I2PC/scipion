@@ -633,8 +633,10 @@ class XmippProtocolDb(SqliteDb):
         print "info.args", info.args
         exec(self.Import)
         if stepRow['passDb']:
+            print 'passDb'
             exec ( info.command + '(self, **info.args)')
         else:
+            print 'NO passDb'
             exec ( info.command + '(self.Log, **info.args)')
         # Check that expected result files were produced
         self.verifyStepFiles(pickle.loads(str(stepRow["verifyFiles"])))
