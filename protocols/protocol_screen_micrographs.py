@@ -232,7 +232,7 @@ def estimateCtfCtffind1(_log, micrograph,
                   str(max_freq*10000) + ',' + \
                   str(StepFocus*10000) + "\n"
         
-        runJob(log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
+        runJob(_log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
     
         fnOut = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
     
