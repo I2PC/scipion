@@ -33,7 +33,7 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-        if DoCtffind:
+        if self.DoCtffind:
             self.CtffindExec =  which('ctffind3.exe')
 
         #TODO: check all the possible casses
@@ -244,7 +244,7 @@ class ProtScreenMicrographs(XmippProtocol):
         if self.MaxFocus < self.MinFocus:
             errors.append("maxFocus must be larger than minFocus")
 
-        if DoCtffind:
+        if self.DoCtffind:
             self.CtffindExec =  which('ctffind3.exe')
             if self.CtffindExec =='':
                 errors.append("cannot find ctffind3.exe")
