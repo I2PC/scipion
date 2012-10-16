@@ -292,7 +292,7 @@ TEST_F( ImageGenericTest, reslice)
     MultidimArray<float> * dataS, *dataR;
     imgRef().getMultidimArrayPointer(dataR);
 
-    imgSliced.reslice(ImageGeneric::Y_NEG);
+    imgSliced.reslice(VIEW_Y_NEG);
     imgSliced().getMultidimArrayPointer(dataS);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
@@ -300,19 +300,19 @@ TEST_F( ImageGenericTest, reslice)
         EXPECT_EQ(DIRECT_ZYX_ELEM(*dataR,k,i,j), DIRECT_ZYX_ELEM(*dataS,ZSIZE(*dataS)-1-i,k,j));
     }
 
-    imgSliced.reslice(ImageGeneric::Y_POS);
+    imgSliced.reslice(VIEW_Y_POS);
     imgSliced().getMultidimArrayPointer(dataS);
 
     EXPECT_EQ(*dataR, *dataS);
 
-    imgSliced.reslice(ImageGeneric::X_NEG);
+    imgSliced.reslice(VIEW_X_NEG);
     imgSliced().getMultidimArrayPointer(dataS);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
     {
         EXPECT_EQ(DIRECT_ZYX_ELEM(*dataR,k,i,j), DIRECT_ZYX_ELEM(*dataS,ZSIZE(*dataS)-1-j,i,k));
     }
-    imgSliced.reslice(ImageGeneric::X_POS);
+    imgSliced.reslice(VIEW_X_POS);
     imgSliced().getMultidimArrayPointer(dataS);
 
     EXPECT_EQ(*dataR, *dataS);

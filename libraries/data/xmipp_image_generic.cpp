@@ -352,19 +352,19 @@ void ImageGeneric::reslice(AxisView face, ImageGeneric &imgOut)
 
     aDimOut = aDim;
 
-    if (face == Y_NEG || face == Y_POS)
+    if (face == VIEW_Y_NEG || face == VIEW_Y_POS)
     {
         axis = 'Y';
         aDimOut.ydim = aDim.zdim;
         aDimOut.zdim = aDim.ydim;
-        reverse = (face == Y_NEG);
+        reverse = (face == VIEW_Y_NEG);
     }
-    else if (face == X_NEG || face == X_POS)
+    else if (face == VIEW_X_NEG || face == VIEW_X_POS)
     {
         axis = 'X';
         aDimOut.xdim = aDim.zdim;
         aDimOut.zdim = aDim.xdim;
-        reverse = (face == X_NEG);
+        reverse = (face == VIEW_X_NEG);
     }
 
     DataType dtype = getDatatype();

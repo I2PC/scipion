@@ -670,17 +670,29 @@ struct ArrayCoord
     int y;
     // Number of elements in X
     int x;
-}
-;
+} ;
+
+/**
+ * Possible views for 3D MuldimArray
+ */
+typedef enum
+{
+    VIEW_Z_NEG,    // Front view (Z negative)
+    VIEW_Z_POS,    //  Z positve
+    VIEW_Y_NEG,    // Align -Y axis to Z axis, rotating 90 degrees around X axis");
+    VIEW_Y_POS, // Align Y axis to Z axis, rotating -90 degrees around X axis");
+    VIEW_X_NEG,   // Align -X axis to Z axis, rotating -90 degrees around Y axis");
+    VIEW_X_POS   // Align X axis to Z axis, rotating 90 degrees around Y axis");
+} AxisView;
 
 /**
  *  Structure to define random generation mode
  */
-enum RandomMode
+typedef enum
 {
     RND_UNIFORM = 0,
     RND_GAUSSIAN = 1
-} ;
+} RandomMode;
 
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
@@ -1080,7 +1092,7 @@ public:
      */
     void setMmap(bool mmap)
     {
-    	coreDeallocate();
+        coreDeallocate();
         mmapOn = mmap;
     }
 
@@ -2095,6 +2107,57 @@ public:
         T *ptr=&(DIRECT_NZYX_ELEM(*this, n, k, 0, 0));
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
         *(ptr++) = (T) DIRECT_MULTIDIM_ELEM(v, n);
+    }
+
+    /** Reslice the volume aliging any X or Y direction with Z axis
+     *
+     * @param face Select the face to become the new Z direction
+     * @param out  The resliced volume is returned
+     * @param reverse Invert the positions of Z planes, keeping the X-Y orientation
+     * @param n Select the number of image in case of stacks
+     */
+
+    template <typename T1>
+    void reslice(AxisView face, MultidimArray<T1>& out, bool flip = false, size_t n = 0) const
+    {
+        ArrayDim aDim, aDimOut;
+        getDimensions(aDim);
+
+        char axis;
+        bool reverse;
+
+        aDimOut = aDim;
+
+        if (face == VIEW_Y_NEG || face == VIEW_Y_POS)
+        {
+            axis = 'Y';
+            aDimOut.ydim = aDim.zdim;
+            aDimOut.zdim = aDim.ydim;
+            reverse = (face == VIEW_Y_NEG);
+        }
+        else if (face == VIEW_X_NEG || face == VIEW_X_POS)
+        {
+            axis = 'X';
+            aDimOut.xdim = aDim.zdim;
+            aDimOut.zdim = aDim.xdim;
+            reverse = (face == VIEW_X_NEG);
+        }
+
+        flip = flip^reverse;
+
+        out.resize(aDimOut, false);
+
+        MultidimArray<T1> imTemp;
+
+        int index;
+
+        for (int k = 0; k < aDimOut.zdim; k++)
+        {
+            imTemp.aliasSlice(out, k);
+            index = k + (aDimOut.zdim - 1 - 2*k) * (int)flip;
+            this->getSlice(index, imTemp, axis, !reverse);
+        }
+
     }
 
     /** Get Column

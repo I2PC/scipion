@@ -19,12 +19,12 @@ TEST( MultidimTest, Size)
 
 TEST( MultidimTest, Assign)
 {
-	MultidimArray<double> * array = new MultidimArray<double>[5];
+    MultidimArray<double> * array = new MultidimArray<double>[5];
     MultidimArray<double> source(10);
     MultidimArray<double> source5(5);
     source5.initConstant(5.);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(source)
-    	source(i)=(double)i;
+    source(i)=(double)i;
     array[0] = source;
     EXPECT_EQ(array[0], source);
     array[0] = source5;
@@ -178,6 +178,38 @@ TEST( MultidimTest, modulo)
     ASSERT_TRUE( (A2D_ELEM(mTarget,2,2) - 0)       < 1e-3);
 
 }
+
+
+// check the reslicing is right
+TEST( MultidimTest, reslice)
+{
+    XMIPP_TRY
+    MultidimArray<float> imgSliced, imgRef;
+
+    imgRef.resize(3,3,3);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imgRef)
+    dAi(imgRef, n) = n;
+
+    imgRef.reslice(VIEW_Y_NEG, imgSliced);
+
+
+    //    imgSliced.reslice(ImageGeneric::Y_NEG);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(imgRef)
+    {
+        EXPECT_EQ(DIRECT_ZYX_ELEM(imgRef,k,i,j), DIRECT_ZYX_ELEM(imgSliced,ZSIZE(imgSliced)-1-i,k,j));
+    }
+
+    imgRef.reslice(VIEW_X_NEG, imgSliced);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(imgRef)
+    {
+        EXPECT_EQ(DIRECT_ZYX_ELEM(imgRef,k,i,j), DIRECT_ZYX_ELEM(imgSliced,ZSIZE(imgSliced)-1-j,i,k));
+    }
+    XMIPP_CATCH
+}
+
 
 
 TEST( MultidimTest, mapFile)
