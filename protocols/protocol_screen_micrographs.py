@@ -226,8 +226,8 @@ def estimateCtfCtffind1(_log, micrograph,
                   str(Magnification/downSamplingPerformed) + ',' + \
                   str(Magnification/downSamplingPerformed*sampling_rate*1e-4) + "\n"
         params += str(pieceDim) + ',' + \
-                  str(sampling_rate*downSamplingPerformed / LowResolCutoff) + ',' + \
-                  str(sampling_rate*downSamplingPerformed / HighResolCutoff) + ',' + \
+                  str(sampling_rate*downSamplingPerformed / min_freq) + ',' + \
+                  str(sampling_rate*downSamplingPerformed / max_freq) + ',' + \
                   str(min_freq*10000) + ',' + \
                   str(max_freq*10000) + ',' + \
                   str(StepFocus*10000) + "\n"
