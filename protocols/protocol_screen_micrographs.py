@@ -143,7 +143,7 @@ class ProtScreenMicrographs(XmippProtocol):
 #def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
 #                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
         # Convert image to MRC
-        print "LOG estimateCtfCtffind", micrograph
+        print "LOG estimateCtfCtffind"
         if not micrograph.endswith('.mrc'):
             from protlib_filesystem import uniqueRandomFilename
             deleteTempMicrograph = True
