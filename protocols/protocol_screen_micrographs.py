@@ -33,6 +33,9 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
+        if DoCtffind:
+            self.CtffindExec =  which('ctffind3.exe')
+
         #TODO: check all the possible casses
         if not self.TiltPairs:
             self.MicrographsMd = self.micrographs
@@ -72,25 +75,45 @@ class ProtScreenMicrographs(XmippProtocol):
                                                    [finalname],parent_step_id=parent_id)
             else:
                 finalname = inputFile
-            
-            # CTF estimation with Xmipp
-            args="--micrograph "+finalname+\
-                 " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
-                 " --kV "+str(Voltage)+\
-                 " --Cs "+str(SphericalAberration)+\
-                 " --sampling_rate "+str(AngPix*self.DownsampleFactor)+\
-                 " --downSamplingPerformed "+str(self.DownsampleFactor)+\
-                 " --ctfmodelSize 256"+\
-                 " --Q0 "+str(self.AmplitudeContrast)+\
-                 " --min_freq "+str(self.LowResolCutoff)+\
-                 " --max_freq "+str(self.HighResolCutoff)+\
-                 " --pieceDim "+str(self.WinSize)+\
-                 " --defocus_range "+str((self.MaxFocus-self.MinFocus)*10000/2)+\
-                 " --defocusU "+str((self.MaxFocus+self.MinFocus)*10000/2)
-            if (self.FastDefocus):
-                args+=" --fastDefocus"
-            self.insertParallelRunJobStep('xmipp_ctf_estimate_from_micrograph', args,
-                                     verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],parent_step_id=parent_id)
+                
+            if(DoCtffind):
+                verifyFiles=[]
+                self.insertParallelRunJobStep('estimateCtfCtffind', verifyfiles=verifyFiles,
+                                     micrograph=finalname,
+                                     oroot=_getFilename('prefix', micrographDir=micrographDir),
+                                     kV=str(Voltage),
+                                     Cs=str(SphericalAberration),
+                                     sampling_rate=str(AngPix*self.DownsampleFactor),
+                                     downSamplingPerformed=str(self.DownsampleFactor),
+                                     ctfmodelSize=256,
+                                     Q0=str(self.AmplitudeContrast),
+                                     min_freq=str(self.LowResolCutoff),
+                                     max_freq=str(self.HighResolCutoff),
+                                     pieceDim=str(self.WinSize),
+                                     defocus_range=str((self.MaxFocus-self.MinFocus)*10000/2),
+                                     defocusU=str((self.MaxFocus+self.MinFocus)*10000/2),
+                                     StepFocus=StepFocus
+                                     )
+
+            else:
+                # CTF estimation with Xmipp
+                args="--micrograph "+finalname+\
+                     " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
+                     " --kV "+str(Voltage)+\
+                     " --Cs "+str(SphericalAberration)+\
+                     " --sampling_rate "+str(AngPix*self.DownsampleFactor)+\
+                     " --downSamplingPerformed "+str(self.DownsampleFactor)+\
+                     " --ctfmodelSize 256"+\
+                     " --Q0 "+str(self.AmplitudeContrast)+\
+                     " --min_freq "+str(self.LowResolCutoff)+\
+                     " --max_freq "+str(self.HighResolCutoff)+\
+                     " --pieceDim "+str(self.WinSize)+\
+                     " --defocus_range "+str((self.MaxFocus-self.MinFocus)*10000/2)+\
+                     " --defocusU "+str((self.MaxFocus+self.MinFocus)*10000/2)
+                if (self.FastDefocus):
+                    args+=" --fastDefocus"
+                self.insertParallelRunJobStep('xmipp_ctf_estimate_from_micrograph', args,
+                                         verifyfiles=[_getFilename('ctfparam', micrographDir=micrographDir)],parent_step_id=parent_id)
         
         # Gather results after external actions
         self.insertStep('gatherResults',verifyfiles=[self.micrographs],
@@ -100,6 +123,103 @@ class ProtScreenMicrographs(XmippProtocol):
                            importMicrographs=self.Input['micrographs'],
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
+    
+    def estimateCtfCtffind(_log, micrograph,
+                          oroot,
+                          kV,
+                          Cs,
+                          sampling_rate,
+                          downSamplingPerformed,
+                          ctfmodelSize,
+                          Q0,
+                          min_freq,
+                          max_freq,
+                          pieceDim,
+                          defocus_range,
+                          defocusU,
+                          StepFocus
+                          ):
+#def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
+#                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
+        # Convert image to MRC
+        if not micrograph.endswith('.mrc'):
+            from protlib_filesystem import uniqueRandomFilename
+            deleteTempMicrograph = True
+            fnMicrograph=os.path.split(micrograph)[1]
+            mrcMicrograph =  join(tmpDir,uniqueRandomFilename(os.path.splitext(fnMicrograph)[0]+'.mrc'))
+            runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
+        else:
+            deleteTempMicrograph = False
+            mrcMicrograph = micrograph;
+
+        #ctffind3.exe << eof
+        #$1.mrc
+        #test.mrc
+        #2.26,200.0,0.10,60000.0,14.4
+        #256,96,0.8,5000.0,100000,1000.0
+        #eof
+
+        # Prepare parameters for CTFTILT
+        # ¿multiply Q0 by -1?
+        params = '  << eof > ' + micrographDir + '/ctffind.log\n'
+        params += mrcMicrograph + "\n"
+        params += micrographDir + '/ctffind_spectrum.mrc\n'
+        params += str(Cs) + ',' + \
+                  str(kV) + ',' + \
+                  str(-1. * Q0 ) + ',' + \
+                  str(Magnification/downSamplingPerformed) + ',' + \
+                  str(Magnification/downSamplingPerformed*sampling_rate*1e-4) + "\n"
+        params += str(WinSize) + ',' + \
+                  str(AngPix*downSamplingPerformed / LowResolCutoff) + ',' + \
+                  str(AngPix*downSamplingPerformed / HighResolCutoff) + ',' + \
+                  str(min_freq*10000) + ',' + \
+                  str(max_freq*10000) + ',' + \
+                  str(StepFocus*10000) + "\n"
+        runJob(log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
+    
+        fnOut = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
+    
+        # Remove temporary files
+        if deleteTempMicrograph:
+            deleteFile(log, mrcMicrograph)
+    
+        # Pick values from ctffind
+        ctffindLog = join(micrographDir,'ctffind.log')
+        if not exists(ctffindLog):
+            raise xmipp.XmippError("Cannot find "+ctffindLog)
+        
+        # Effectively pickup results
+        fh = open(ctffindLog, 'r')
+        lines = fh.readlines()
+        fh.close()
+        DF1 = 0.
+        DF2 = 0.
+        Angle = 0.
+        found = False
+        for i in range(len(lines)):
+            if not (lines[i].find('Final Values') == -1):
+                words = lines[i].split()
+                DF1 = float(words[0])
+                DF2 = float(words[1])
+                Angle = float(words[2])
+                found = True
+                break
+        if not found:
+            raise xmipp.XmippError("Cannot find defocus values in "+ctffindLog)
+        
+        # Generate Xmipp .ctfparam file:
+        MD = xmipp.MetaData()
+        MD.setColumnFormat(False)
+        objId = MD.addObject()
+        MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE, float(sampling_rate), objId)
+        MD.setValue(xmipp.MDL_CTF_VOLTAGE,       float(kV), objId)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUSU,      float(DF2), objId)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      float(DF1), objId)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, float(Angle), objId)
+        MD.setValue(xmipp.MDL_CTF_CS,            float(Cs), objId)
+        MD.setValue(xmipp.MDL_CTF_Q0,            float(-Q0), objId)
+        MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
+        MD.write(fnOut)
     
     def createFilenameTemplates(self):
         return _templateDict
@@ -123,6 +243,11 @@ class ProtScreenMicrographs(XmippProtocol):
             
         if self.MaxFocus < self.MinFocus:
             errors.append("maxFocus must be larger than minFocus")
+
+        if DoCtffind:
+            self.CtffindExec =  which('ctffind3.exe')
+            if self.CtffindExec =='':
+                errors.append("cannot find ctffind3.exe")
         
         return errors
 
