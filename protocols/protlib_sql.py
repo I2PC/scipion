@@ -628,15 +628,10 @@ class XmippProtocolDb(SqliteDb):
         
     def _execSingleStep(self, stepRow, info):
         # Execute Python function
-        print "_execSingleStep", self.Import
-        print "info.command", info.command
-        print "info.args", info.args
         exec(self.Import)
         if stepRow['passDb']:
-            print 'passDb'
             exec ( info.command + '(self, **info.args)')
         else:
-            print 'NO passDb'
             exec ( info.command + '(self.Log, **info.args)')
         # Check that expected result files were produced
         self.verifyStepFiles(pickle.loads(str(stepRow["verifyFiles"])))
