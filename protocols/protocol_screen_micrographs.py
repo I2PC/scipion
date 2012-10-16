@@ -78,7 +78,7 @@ class ProtScreenMicrographs(XmippProtocol):
                 
             if(self.DoCtffind):
                 verifyFiles=[]
-                self.insertParallelRunJobStep('estimateCtfCtffind', verifyfiles=verifyFiles,
+                self.insertParallelStep('estimateCtfCtffind', verifyfiles=verifyFiles,
                                      micrograph=finalname,
                                      oroot=_getFilename('prefix', micrographDir=micrographDir),
                                      kV=(Voltage),
