@@ -194,7 +194,6 @@ def estimateCtfCtffind1(_log, micrograph,
         #def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
         #                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
         # Convert image to MRC
-        print "LOG estimateCtfCtffind"
         printLog(_log)
         if not micrograph.endswith('.mrc'):
             from protlib_filesystem import uniqueRandomFilename
@@ -215,6 +214,9 @@ def estimateCtfCtffind1(_log, micrograph,
 
         # Prepare parameters for CTFTILT
         # multiply Q0 by -1?
+        
+        #since we only have sampling rate set magnification to a suitable constant
+        Magnification=60000
         params = '  << eof > ' + micrographDir + '/ctffind.log\n'
         params += mrcMicrograph + "\n"
         params += micrographDir + '/ctffind_spectrum.mrc\n'
