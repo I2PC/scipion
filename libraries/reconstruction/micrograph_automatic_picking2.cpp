@@ -50,11 +50,6 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
     num_correlation=filter_num+((filter_num-corr_num)*corr_num);
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);//(2.0, 0.5);
-    //    rotPca.psi_step=2;
-    //    rotPca.Nthreads=4;
-    //    rotPca.Neigen=20;
-
-
 }
 
 //Generate filter bank from the micrograph image
@@ -308,7 +303,7 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
     }
 }
 
-int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
+int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool fast)
 {
 
     double label, score;
@@ -319,7 +314,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
     MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    buildSearchSpace(positionArray);
+    buildSearchSpace(positionArray,fast);
     std::ofstream fh_training;
     fh_training.open("particles_cord1.txt");
     int num=positionArray.size()*(10.0/100.0);
@@ -838,14 +833,17 @@ void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
     }
 }
 
-void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArray)
+void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArray,bool fast)
 {
     int endX,endY;
     Particle2 p;
 
     endX=XSIZE(microImage())-particle_radius;
     endY=YSIZE(microImage())-particle_radius;
-    applyConvolution();
+    applyConvolution(fast);
+    Image<double> II;
+    II().alias(convolveRes);
+    II.write("testvv.xmp");
     for (int i=particle_radius;i<endY;i++)
         for (int j=particle_radius;j<endX;j++)
         {
@@ -868,7 +866,7 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
             }
 }
 
-void AutoParticlePicking2::applyConvolution()
+void AutoParticlePicking2::applyConvolution(bool fast)
 {
 
     MultidimArray<double> tempConvolve;
@@ -883,32 +881,53 @@ void AutoParticlePicking2::applyConvolution()
     BinaryCircularMask(mask, XSIZE(particleAvg)/2);
     normalize_NewXmipp(particleAvg,mask);
     particleAvg.setXmippOrigin();
-    avgRotatedLarge=particleAvg;
-    avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                               LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
-    correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
     filter.raised_w=0.02;
     filter.FilterShape=RAISED_COSINE;
     filter.FilterBand=BANDPASS;
     filter.w1=1.0/double(particle_size);
     filter.w2=1.0/(double(particle_size)/3);
-    filter.do_generate_3dmask=true;
-    filter.generateMask(convolveRes);
-    filter.applyMaskSpace(convolveRes);
-
-    int cnt=1;
-    for (int deg=3;deg<360;deg+=3)
+    if (fast)
     {
-        rotate(LINEAR,avgRotated,particleAvg,double(deg));
-        avgRotatedLarge=avgRotated;
-        avgRotatedLarge.setXmippOrigin();
+        avgRotatedLarge=particleAvg;
+        for (int deg=3;deg<360;deg+=3)
+        {
+            rotate(LINEAR,avgRotated,particleAvg,double(deg));
+            avgRotated.setXmippOrigin();
+            avgRotatedLarge.setXmippOrigin();
+            avgRotatedLarge+=avgRotated;
+        }
+        avgRotatedLarge/=120;
         avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
                                    LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
-        correlation_matrix(aux.FFT1,avgRotatedLarge,tempConvolve,aux,false);
-        filter.applyMaskSpace(tempConvolve);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
-        if (DIRECT_A2D_ELEM(tempConvolve,i,j)>DIRECT_A2D_ELEM(convolveRes,i,j))
-            DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
+        correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
+        filter.do_generate_3dmask=true;
+        filter.generateMask(convolveRes);
+        filter.applyMaskSpace(convolveRes);
+    }
+    else
+    {
+        avgRotatedLarge=particleAvg;
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
+                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
+        filter.do_generate_3dmask=true;
+        filter.generateMask(convolveRes);
+        filter.applyMaskSpace(convolveRes);
+
+        int cnt=1;
+        for (int deg=3;deg<360;deg+=3)
+        {
+            rotate(LINEAR,avgRotated,particleAvg,double(deg));
+            avgRotatedLarge=avgRotated;
+            avgRotatedLarge.setXmippOrigin();
+            avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
+                                       LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+            correlation_matrix(aux.FFT1,avgRotatedLarge,tempConvolve,aux,false);
+            filter.applyMaskSpace(tempConvolve);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
+            if (DIRECT_A2D_ELEM(tempConvolve,i,j)>DIRECT_A2D_ELEM(convolveRes,i,j))
+                DIRECT_A2D_ELEM(convolveRes,i,j)=DIRECT_A2D_ELEM(tempConvolve,i,j);
+        }
     }
     CenterFFT(convolveRes,true);
 }
@@ -995,7 +1014,6 @@ void ProgMicrographAutomaticPicking2::run()
         // Generating the filter bank
         filterBankGenerator(autoPicking->microImage(),fnFilterBank,filter_num);
         autoPicking->micrographStack.read(fnFilterBank,DATA);
-
     }
 
     if (mode=="buildinv")
@@ -1081,10 +1099,10 @@ void ProgMicrographAutomaticPicking2::run()
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            int num=autoPicking->automaticallySelectParticles(true);
+            int num=autoPicking->automaticallySelectParticles(true,true);
         }
         else
-            int num=autoPicking->automaticallySelectParticles(false);
+            int num=autoPicking->automaticallySelectParticles(false,true);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
             autoPicking->saveAutoVectors(fnAutoVectors);

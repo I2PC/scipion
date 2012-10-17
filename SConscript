@@ -69,7 +69,7 @@ def SymLink(target, source, env=None):
     
     if CYGWIN:
     	from shutil import copyfile
-        copyfile(source,link)
+        copyfile(source, link)
     else:    
         source = os.path.relpath(source, os.path.split(link)[0])
         if os.path.lexists(link):
@@ -186,12 +186,12 @@ def AddXmippProgram(name, libs=[], folder='programs', incPaths=[], libPaths=[],
     finalIncludePath.append(incPaths)
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs + JPEGLibs
     if useCudaEnvironment:
-    	finalLibs+=['cudart','cutil', 'shrutil_x86_64' ]
-    	finalIncludePath+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/inc",
-                           env['CUDA_SDK_PATH']+"/shared/inc"]
-    	finalLibPath+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib",
-                       env['CUDA_SDK_PATH']+"/shared/lib",
-                       env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib/linux",
+    	finalLibs += ['cudart', 'cutil', 'shrutil_x86_64' ]
+    	finalIncludePath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
+                           env['CUDA_SDK_PATH'] + "/shared/inc"]
+    	finalLibPath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib",
+                       env['CUDA_SDK_PATH'] + "/shared/lib",
+                       env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib/linux",
 		       "/usr/local/cuda/lib64",
                        env['CUDA_LIB_PATH']]
     if 'XmippRecons' in finalLibs and not 'XmippClassif' in finalLibs:
@@ -220,7 +220,7 @@ def AddXmippTest(name, testprog, command):
 
 
 def AddXmippCTest(name):
-    testprog = AddXmippProgram(name, ['gtest','XmippRecons'], 'tests')
+    testprog = AddXmippProgram(name, ['gtest', 'XmippRecons'], 'tests')
     AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
 
 def AddXmippPythonTest(name):
@@ -307,16 +307,16 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     env.Default(alias)
 
 def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
-    shlibprefix='lib',shlibsuffix=env['SHLIBSUFFIX'], useCudaEnvironment=False):
+    shlibprefix='lib', shlibsuffix=env['SHLIBSUFFIX'], useCudaEnvironment=False):
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = join(env['prefix'], 'lib')
-    cudaFiles=False
+    cudaFiles = False
     for x in sources:
         if x.find(basedir) == -1:
             sources[sources.index(x)] = basedir + x
 	if x.endswith(".cu"):
-	    cudaFiles=True
+	    cudaFiles = True
 
     # separate local and global includes
     for x in includes:
@@ -324,21 +324,21 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
             includes[includes.index(x)] = basedir + x
 
     if useCudaEnvironment:
-        envToUse=env.Clone()
+        envToUse = env.Clone()
         envToUse.Tool('cuda')
         envToUse.Append(CXXFLAGS=['-DWITH_CUDA'])
 	if cudaFiles:
             envToUse.Append(NVCCFLAGS="-shared --compiler-options '-fPIC'")
-        libs+=['cutil_x86_64', 'shrutil_x86_64', 'cudart']
-    	includes+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/inc",
-                   env['CUDA_SDK_PATH']+"/shared/inc"]
-    	libpath+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib",
-                       env['CUDA_SDK_PATH']+"/shared/lib",
-                       env['CUDA_SDK_PATH']+"/CUDALibraries/common/lib/linux",
+        libs += ['cutil_x86_64', 'shrutil_x86_64', 'cudart']
+    	includes += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/inc",
+                   env['CUDA_SDK_PATH'] + "/shared/inc"]
+    	libpath += [env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib",
+                       env['CUDA_SDK_PATH'] + "/shared/lib",
+                       env['CUDA_SDK_PATH'] + "/CUDALibraries/common/lib/linux",
 		       "/usr/local/cuda/lib64",
                        env['CUDA_LIB_PATH']]
     else:
-        envToUse=env
+        envToUse = env
 
     if int(envToUse['static']):
         library = envToUse.StaticLibrary(
@@ -400,7 +400,7 @@ def CompileJava(name, dependencies=[]):
     target = javaBuildName(name + '.class')
     buildDir = javaBuildName()
     cmd = env['JAVAC'] + ' -cp "java/lib/*"'
-    compileCmd = env.Command(target, source,'%(cmd)s -d %(buildDir)s %(source)s' %locals())
+    compileCmd = env.Command(target, source, '%(cmd)s -d %(buildDir)s %(source)s' % locals())
     dependencies.append('XmippJNI') # XmippJNI dependency is added by default
     deps = [javaLibName(name + '.jar') for name in dependencies]
     for lib in deps:
@@ -424,7 +424,7 @@ def CompileJavaJar(target, source, env):
     configFile = 'plugins.config'
     pluginDest = ''
     if os.path.exists(join(srcDir, configFile)):
-    	pluginDest =   join(classDir, configFile)
+    	pluginDest = join(classDir, configFile)
     	Cmd('cp %s %s' % (join(srcDir, configFile), pluginDest))
     # We need to create a txt file with the list of all .class files 
     # with the following format:
@@ -588,7 +588,7 @@ if CYGWIN or MACOSX:
 
 pythonbinding = AddLibrary(pythonLibName, 'libraries/bindings/python', PyExtSources,
            ['#libraries', "#"] + pythonIncludes,
-           libpath, libraries,'')
+           libpath, libraries, '')
 
 # in MACOSX Python requires module libraries as .so instead of .dylib
 if MACOSX:
@@ -597,9 +597,9 @@ if MACOSX:
 
 # Reconstruction
 ReconsSources = Glob('libraries/reconstruction', '*.cpp', ["angular_gcar.cpp"])
-ReconsLib =['XmippExternal', 'XmippData', 'pthread','XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
-ReconsIncDir=['#libraries', '#external', '#']
-ReconsLibDir=['lib']
+ReconsLib = ['XmippExternal', 'XmippData', 'pthread', 'XmippClassif'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs
+ReconsIncDir = ['#libraries', '#external', '#']
+ReconsLibDir = ['lib']
 if int(env['arpack']):
     ReconsSources.append("angular_gcar.cpp")
     ReconsLib += ['arpack', 'lapack', 'blas']
@@ -706,10 +706,10 @@ if int(env['java']):
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     JavaDependLibraries = ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal']
     if int(env['arpack']):
-        JavaDependLibraries += ['arpack++','arpack','lapack','blas']
+        JavaDependLibraries += ['arpack++', 'arpack', 'lapack', 'blas']
     # Compilation of the c code needed for java jni binding
     javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources,
-    ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
+    ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'], JavaDependLibraries)
 
     # Create some jar links
     cmd = env.Command(join(libDir, 'ij.jar'), 'external/imagej/ij.jar', SymLink)
@@ -718,7 +718,7 @@ if int(env['java']):
     env.Depends(javaJni, javaJniC)
     AddJavaLibrary('XmippUtils', 'utils', ['ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippIJ', 'ij/commons', ['XmippUtils'])
-    AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils','ij'])
+    AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils', 'ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
     AddJavaLibrary('XmippTest', 'test', ['XmippViewer', 'junit4-4.8.2', 'core-1.1'])
     AddJavaIJPlugin('XmippIJPlugin_MasksToolbar', 'ij/plugins/maskstoolbar', [])
@@ -830,7 +830,7 @@ AddXmippProgram('transform_window')
 if not int(env['release']):
 	AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 	AddXmippProgram('tomo_align_refinement', ['XmippRecons'])
-AddXmippProgram('tomo_align_tilt_series', ['XmippRecons' ],useCudaEnvironment=int(env['cuda']))
+AddXmippProgram('tomo_align_tilt_series', ['XmippRecons' ], useCudaEnvironment=int(env['cuda']))
 AddXmippProgram('tomo_detect_missing_wedge', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
@@ -892,10 +892,10 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
-    AddProgramLink('classify_CL2D','mpi_classify_CL2D')
+    AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
     if not int(env['release']):
         AddXmippMPIProgram('mpi_classify_CL3D', ['XmippRecons'])
-        AddProgramLink('classify_CL3D','mpi_classify_CL3D')
+        AddProgramLink('classify_CL3D', 'mpi_classify_CL3D')
     AddXmippMPIProgram('mpi_classify_CL2D_core_analysis', ['XmippRecons'])
     if not int(env['release']):
         AddXmippMPIProgram('mpi_classify_FTTRI', ['XmippRecons'])

@@ -131,7 +131,7 @@ public:
                           MultidimArray<double> &IpolarCorr);
 
     /// Convolve the micrograph with the different templates
-    void applyConvolution();
+    void applyConvolution(bool fast);
 
     /// Project a vector on one pca basis
     double PCAProject(MultidimArray<double> &pcaBasis,
@@ -199,7 +199,7 @@ public:
      * This method does a convolution in order to find an approximation
      * about the place of the particles.
      */
-    void buildSearchSpace(std::vector<Particle2> &positionArray);
+    void buildSearchSpace(std::vector<Particle2> &positionArray,bool fast);
 
     /*
      * This method is used in order to train an support vector
@@ -261,7 +261,7 @@ public:
     void loadTrainingSet(const FileName &fn_root);
 
     /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier);
+    int automaticallySelectParticles(bool use2Classifier,bool fast);
 
     /// Generate two different trainsets for two SVMs.
     void generateTrainSet();
