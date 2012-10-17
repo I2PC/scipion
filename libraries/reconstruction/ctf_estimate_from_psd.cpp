@@ -2503,11 +2503,20 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
             VEC_ELEM(arrayDefocusAvg,i)  = ((*global_adjust)(0) +(*global_adjust)(1))/2;
             VEC_ELEM(arrayDefocusDiff,i) = ((*global_adjust)(0) -(*global_adjust)(1))/2;
             VEC_ELEM(arrayError,i) = (-1)*fitness;
+
         }
     }
 
     int maxInd;
     arrayError.maxIndex(maxInd);
+
+    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 2000) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 80000) )
+    {
+    	VEC_ELEM(arrayError,maxInd) = -1e3;
+    	VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
+    	VEC_ELEM(arrayDefocusDiff,maxInd) = global_prm->initial_ctfmodel.DeltafV;
+    	arrayError.maxIndex(maxInd);
+    }
 
     Matrix1D<double> arrayDefocusU(3);
     arrayDefocusU.initZeros();

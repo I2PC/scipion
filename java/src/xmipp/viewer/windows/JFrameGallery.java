@@ -970,7 +970,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 //						data.selectVolume(data.volumes[0]);
 					//System.out.println("selected: " + data.selectedVolFn);
 					jcbVolumes.invalidate();
-					reloadTableData();
+					try {
+						data.loadMd();
+						reloadTableData();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 
