@@ -232,6 +232,13 @@ void CTFDescription::write(const FileName &fn)
         MD.setValue(MDL_CTF_BG_GAUSSIAN2_CV,cV2,id);
         MD.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE,gaussian_angle2,id);
     }
+    if (isLocalCTF)
+    {
+    	MD.setValue(MDL_CTF_X0,x0,id);
+    	MD.setValue(MDL_CTF_XF,xF,id);
+    	MD.setValue(MDL_CTF_Y0,y0,id);
+    	MD.setValue(MDL_CTF_YF,yF,id);
+    }
 
     MD.write(fn);
 }
@@ -351,6 +358,7 @@ void CTFDescription::clear()
 {
     enable_CTF = true;
     enable_CTFnoise = false;
+    isLocalCTF = false;
     clear_noise();
     clear_pure_ctf();
 }
@@ -361,6 +369,7 @@ void CTFDescription::clear_noise()
     cU = cV = sigmaU = sigmaV = gaussian_angle = gaussian_K = 0;
     sqU = sqV = sqrt_K = sqrt_angle = 0;
     cU2 = cV2 = sigmaU2 = sigmaV2 = gaussian_angle2 = gaussian_K2 = 0;
+    isLocalCTF = false;
 }
 
 void CTFDescription::clear_pure_ctf()
@@ -373,6 +382,7 @@ void CTFDescription::clear_pure_ctf()
     Cs = Ca = espr = ispr = alpha = DeltaF = DeltaR = 0;
     K = 1;
     Q0 = 0;
+    isLocalCTF = false;
 }
 
 /* Produce Side Information ------------------------------------------------ */

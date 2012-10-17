@@ -30,7 +30,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 
 	Border BORDER_SELECTED = new StrokeBorder(Color.RED, 3);
 	Border BORDER_FOCUSED = BorderFactory.createLineBorder(Color.RED, 3);
-	boolean hackBorders = true;
+	public boolean hackBorders = true;
 
 	public ImageItemRenderer() {
 		super();

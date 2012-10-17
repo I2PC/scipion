@@ -53,6 +53,7 @@ public class MetadataTable extends MetadataGallery {
 		super(data);
 		cols = visibleLabels.size();
 		rows = n;
+		renderer.hackBorders = false;
 	}
 
 	@Override
@@ -78,6 +79,14 @@ public class MetadataTable extends MetadataGallery {
 	@Override
 	public int getIndex(int row, int col) {
 		return row;
+	}
+	
+	@Override 
+	public int[] getCoords(int index) {
+		int[] coords = new int[2];
+		coords[0] = index;
+		coords[1] = 0;
+		return coords;
 	}
 
 	@Override

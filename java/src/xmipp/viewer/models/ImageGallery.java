@@ -41,6 +41,7 @@ import xmipp.viewer.ImageDimension;
 import xmipp.viewer.ImageItemRenderer;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.ij.commons.ImagePlusLoader;
+import xmipp.jni.Filename;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -108,8 +109,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	
 	//Set filename
 	public void updateFilename(String filename){
-		this.filename = filename;
-		data.filename = filename;
+		this.filename = data.filename = Filename.getFilename(filename);
 	}
 
 	// Load initial dimensions
@@ -398,6 +398,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 		for (int i = 0; i < n; ++i)
 			data.selection[i] = false;
 	}
+	
+	public int getFirstSelectedIndex(){
+		for (int i = 0; i < n; ++i)
+			if (data.selection[i])
+				return i;
+		return -1;
+	}
 
 	/** Select a range of elements given the indexes */
 	public void selectRange(int first_index, int last_index, boolean value) {
@@ -443,7 +450,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 			fireTableCellUpdated(row, col);
 		}
 	}
-
+	
 	/**
 	 * Goto and select specified item, if there is a selection it will be
 	 * cleared
