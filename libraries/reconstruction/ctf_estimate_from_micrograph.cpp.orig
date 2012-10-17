@@ -44,7 +44,6 @@ void ProgCTFEstimateFromMicrograph::readParams()
     if (fn_root=="")
         fn_root=fn_micrograph.withoutExtension();
     pieceDim = getIntParam("--pieceDim");
-    skipBorders = getIntParam("--skipBorders");
     overlap = getDoubleParam("--overlap");
     String aux=getParam("--psd_estimator");
     if (aux=="periodogram")
@@ -94,7 +93,6 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addParamsLine("                  ARMA");
     addParamsLine("  [--pieceDim <d=512>]       : Size of the piece");
     addParamsLine("  [--overlap <o=0.5>]        : Overlap (0=no overlap, 1=full overlap)");
-    addParamsLine("  [--skipBorders <s=2>]      : Number of pieces around the border to skip");
     addParamsLine("  [--Nsubpiece <N=1>]        : Each piece is further subdivided into NxN subpieces.");
     addParamsLine("                              : This option is useful for small micrographs in which ");
     addParamsLine("                              : not many pieces of size pieceDim x pieceDim can be defined. ");
@@ -309,20 +307,12 @@ void ProgCTFEstimateFromMicrograph::run()
     pieceMask.resizeNoCopy(piece);
     pieceMask.initConstant(1);
 
-    //Multidimensional data variables to store the defocus obtained locally for plane fitting
-    MultidimArray<double> defocusPlanefittingU(div_NumberX, div_NumberY);
-    MultidimArray<double> defocusPlanefittingV(div_NumberX, div_NumberY);
-    MultidimArray<double> X0(div_NumberX, div_NumberY);
-    MultidimArray<double> XF(div_NumberX, div_NumberY);
-    MultidimArray<double> Y0(div_NumberX, div_NumberY);
-    MultidimArray<double> YF(div_NumberX, div_NumberY);
-
     // Attenuate borders to avoid discontinuities
     MultidimArray<double> pieceSmoother;
     constructPieceSmoother(piece,pieceSmoother);
 
     if (verbose)
-        std::cerr << "Computing models of each piece ...\n";
+    	std::cerr << "Computing models of each piece ...\n";
 
     // Prepare these filenames in case they are needed
     FileName fn_psd;
@@ -332,14 +322,12 @@ void ProgCTFEstimateFromMicrograph::run()
         fn_psd=fn_root+".psdstk";
 
     if (verbose)
-        init_progress_bar(div_Number);
+    	init_progress_bar(div_Number);
     int N = 1; // Index of current piece
     int i = 0, j = 0; // top-left corner of the current piece
     FourierTransformer transformer;
-    int actualDiv_Number=0;
     while (N <= div_Number)
     {
-        bool skip=false;
         // Compute the top-left corner of the piece ..........................
         if (psd_mode==OnePerParticle)
         {
@@ -360,12 +348,8 @@ void ProgCTFEstimateFromMicrograph::run()
             int step = pieceDim;
             if (psd_mode==OnePerMicrograph)
                 step = (int)((1-overlap) * step);
-            int blocki=(N - 1) / div_NumberX;
-            int blockj=(N - 1) % div_NumberX;
-            if (blocki<skipBorders || blockj<skipBorders || blocki>(div_NumberY-skipBorders-1) || blockj>(div_NumberX-skipBorders-1))
-                skip=true;
-            i = blocki * step;
-            j = blockj * step;
+            i = ((N - 1) / div_NumberX) * step;
+            j = ((N - 1) % div_NumberX) * step;
         }
 
         // test if the full piece is inside the micrograph
@@ -374,336 +358,295 @@ void ProgCTFEstimateFromMicrograph::run()
         if (j + pieceDim > Xdim)
             j = Xdim - pieceDim;
 
-        if (!skip)
-        {
-            // Extract micrograph piece ..........................................
-            M_in().window(piece,0,0,i,j,0,0,i+YSIZE(piece)-1,j+XSIZE(piece)-1);
-            piece.statisticsAdjust(0, 1);
-            normalize_ramp(piece,pieceMask);
-            piece*=pieceSmoother;
+        // Extract micrograph piece ..........................................
+        M_in().window(piece,0,0,i,j,0,0,i+YSIZE(piece)-1,j+XSIZE(piece)-1);
+        piece.statisticsAdjust(0, 1);
+        normalize_ramp(piece,pieceMask);
+        piece*=pieceSmoother;
 
-            // Estimate the power spectrum .......................................
-            if (Nsubpiece==1)
-                if (PSDEstimator_mode == ARMA)
-                {
-                    CausalARMA(piece, ARMA_prm);
-                    ARMAFilter(piece, mpsd, ARMA_prm);
-                }
-                else
-                {
-                    transformer.completeFourierTransform(piece,Periodogram);
-                    FFT_magnitude(Periodogram, mpsd);
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd)
-                    DIRECT_MULTIDIM_ELEM(mpsd,n)*=DIRECT_MULTIDIM_ELEM(mpsd,n)*pieceDim2;
-                }
+        // Estimate the power spectrum .......................................
+        if (Nsubpiece==1)
+            if (PSDEstimator_mode == ARMA)
+            {
+                CausalARMA(piece, ARMA_prm);
+                ARMAFilter(piece, mpsd, ARMA_prm);
+            }
             else
-                PSD_piece_by_averaging(piece, mpsd);
-            mpsd2.resizeNoCopy(mpsd);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd2)
             {
-                double psdval=DIRECT_MULTIDIM_ELEM(mpsd,n);
-                DIRECT_MULTIDIM_ELEM(mpsd2,n)=psdval*psdval;
+            	transformer.completeFourierTransform(piece,Periodogram);
+                FFT_magnitude(Periodogram, mpsd);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd)
+                DIRECT_MULTIDIM_ELEM(mpsd,n)*=DIRECT_MULTIDIM_ELEM(mpsd,n)*pieceDim2;
             }
-
-            // Perform averaging if applicable ...................................
-            if (psd_mode==OnePerMicrograph)
-            {
-                actualDiv_Number+=1;
-                // Compute average and standard deviation
-                if (XSIZE(psd_avg())!=XSIZE(mpsd))
-                {
-                    psd_avg() = mpsd;
-                    psd_std() = psd2();
-                }
-                else
-                {
-                    psd_avg() += mpsd;
-                    psd_std() += psd2();
-                }
-
-                // Keep psd for the PCA
-                if (XSIZE(PCAmask)==0)
-                {
-                    PCAmask.initZeros(mpsd);
-                    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
-                    Matrix1D<double> freq(2); // Frequencies for Fourier plane
-                    size_t PCAdim=0;
-                    FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
-                    {
-                        VECTOR_R2(idx, j, i);
-                        FFT_idx2digfreq(mpsd, idx, freq);
-                        double w = freq.module();
-                        if (w>0.05 && w<0.4)
-                        {
-                            A2D_ELEM(PCAmask,i,j)=1;
-                            ++PCAdim;
-                        }
-                    }
-                    PCAv.initZeros(PCAdim);
-                }
-
-                size_t ii=-1;
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PCAmask)
-                if (DIRECT_MULTIDIM_ELEM(PCAmask,n))
-                    A1D_ELEM(PCAv,++ii)=(float)DIRECT_MULTIDIM_ELEM(mpsd,n);
-                pcaAnalyzer.addVector(PCAv);
-            }
-
-            // Compute the theoretical model if not averaging ....................
-            if (psd_mode!=OnePerMicrograph)
-            {
-                if (bootstrapN!=-1)
-                    REPORT_ERROR(ERR_VALUE_INCORRECT,
-                                 "Bootstrapping is only available for micrograph averages");
-
-                FileName fn_psd_piece;
-                fn_psd_piece.compose(N,fn_psd);
-                psd.write(fn_psd_piece);
-                if (psd_mode==OnePerParticle)
-                    posFile.setValue(MDL_PSD,fn_psd_piece,iterPosFile.objId);
-                if (estimate_ctf)
-                {
-                    // Estimate the CTF parameters of this piece
-                    prmEstimateCTFFromPSD.fn_psd=fn_psd_piece;
-                    CTFDescription ctfmodel;
-
-                    ctfmodel.isLocalCTF = true;
-                    ctfmodel.x0 = i;
-                    ctfmodel.xF = (i/pieceDim+1)*pieceDim;
-                    ctfmodel.y0 = i;
-                    ctfmodel.yF = (j/pieceDim+1)*pieceDim;
-                    double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
-                                                           ctfmodel, false);
-
-                    A2D_ELEM(defocusPlanefittingU,i/pieceDim,j/pieceDim)=ctfmodel.DeltafU;
-                    A2D_ELEM(defocusPlanefittingV,i/pieceDim,j/pieceDim)=ctfmodel.DeltafV;
-
-                    A2D_ELEM(X0,i/pieceDim,j/pieceDim)=i;
-                    A2D_ELEM(XF,i/pieceDim,j/pieceDim)=(i/pieceDim+1)*pieceDim;
-
-                    A2D_ELEM(Y0,i/pieceDim,j/pieceDim)=j;
-                    A2D_ELEM(YF,i/pieceDim,j/pieceDim)=(j/pieceDim+1)*pieceDim;
-
-                    if (psd_mode==OnePerParticle)
-                        posFile.setValue(MDL_CTF_MODEL,fn_psd_piece.withoutExtension()+".ctfparam",
-                                         iterPosFile.objId);
-                }
-            }
-            // Increment the division counter
-            ++N;
-            if (verbose)
-                progress_bar(N);
-            if (psd_mode==OnePerParticle)
-                iterPosFile.moveNext();
+        else
+            PSD_piece_by_averaging(piece, mpsd);
+        mpsd2.resizeNoCopy(mpsd);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd2)
+        {
+            double psdval=DIRECT_MULTIDIM_ELEM(mpsd,n);
+            DIRECT_MULTIDIM_ELEM(mpsd2,n)=psdval*psdval;
         }
 
-
-        if (verbose)
-            progress_bar(div_Number);
-
-        // If averaging, compute the CTF model ----------------------------------
+        // Perform averaging if applicable ...................................
         if (psd_mode==OnePerMicrograph)
         {
-            // Compute the avg and stddev of the local PSDs
-            const MultidimArray<double> &mpsd_std=psd_std();
-            const MultidimArray<double> &mpsd_avg=psd_avg();
-            double idiv_Number=1.0/actualDiv_Number;
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd_avg)
+            // Compute average and standard deviation
+            if (N == 1)
             {
-                DIRECT_MULTIDIM_ELEM(mpsd_avg,n)*=idiv_Number;
-                DIRECT_MULTIDIM_ELEM(mpsd_std,n)*=idiv_Number;
-                DIRECT_MULTIDIM_ELEM(mpsd_std,n)-=DIRECT_MULTIDIM_ELEM(mpsd_avg,n)*
-                                                  DIRECT_MULTIDIM_ELEM(mpsd_avg,n);
-                if (DIRECT_MULTIDIM_ELEM(mpsd_std,n)<0)
-                    DIRECT_MULTIDIM_ELEM(mpsd_std,n)=0;
-                else
-                    DIRECT_MULTIDIM_ELEM(mpsd_std,n)=sqrt(DIRECT_MULTIDIM_ELEM(mpsd_std,n));
+                psd_avg() = mpsd;
+                psd_std() = psd2();
             }
-            psd_avg.write(fn_psd);
-
-            if (estimate_ctf)
+            else
             {
-                // Estimate the CTF parameters
-                std::cerr << "Adjusting CTF model to the PSD ...\n";
-                prmEstimateCTFFromPSD.fn_psd = fn_psd;
-                CTFDescription ctfmodel;
-                if (bootstrapN==-1)
+                psd_avg() += mpsd;
+                psd_std() += psd2();
+            }
+
+            // Keep psd for the PCA
+            if (XSIZE(PCAmask)==0)
+            {
+                PCAmask.initZeros(mpsd);
+                Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+                Matrix1D<double> freq(2); // Frequencies for Fourier plane
+                size_t PCAdim=0;
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
                 {
-                    // No bootstrapping
-                    // Compute the PCA of the local PSDs
-                    pcaAnalyzer.standardarizeVariables();
-                    // pcaAnalyzer.subtractAvg();
-                    pcaAnalyzer.learnPCABasis(1,10);
-
-#ifdef DEBUG
-
-                    Image<double> save;
-                    save().initZeros(psd());
-                    int ii=-1;
-                    FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
-                    if (PCAmask(i,j))
-                        save(i,j)=pcaAnalyzer.PCAbasis[0](++ii);
-                    save.write("PPPbasis.xmp");
-#endif
-
-                    Matrix2D<double> CtY;
-                    pcaAnalyzer.projectOnPCABasis(CtY);
-                    Matrix1D<double> p;
-                    CtY.toVector(p);
-                    double pavg=p.sum(true);
-                    double pstd=p.sum2()/VEC_XSIZE(p)-pavg*pavg;
-                    pstd=(pstd<0)?0:sqrt(pstd);
-
-                    std::string psign;
-                    FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
-                    if (p(i)<0)
-                        psign+="-";
-                    else
-                        psign+="+";
-                    double zrandomness=checkRandomness(psign);
-
-                    double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
-                                                           ctfmodel, false);
-
-                    // Evaluate PSD variance and write into the CTF
-                    double stdQ=0;
-                    FOR_ALL_ELEMENTS_IN_ARRAY2D(mpsd_std)
-                    stdQ+=A2D_ELEM(mpsd_std,i,j)/A2D_ELEM(mpsd_avg,i,j);
-                    stdQ/=MULTIDIM_SIZE(psd_std());
-
-                    MetaData MD;
-                    MD.read(fn_psd.withoutExtension() + ".ctfparam");
-                    size_t id = MD.firstObject();
-                    MD.setValue(MDL_CTF_CRIT_PSDVARIANCE,stdQ,id);
-                    MD.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,pstd,id);
-                    MD.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,zrandomness,id);
-                    MD.write(fn_psd.withoutExtension() + ".ctfparam");
-                }
-                else
-                {
-                    // If bootstrapping
-                    MultidimArray<double> CTFs(bootstrapN,32);
-                    prmEstimateCTFFromPSD.bootstrap=true;
-                    prmEstimateCTFFromPSD.show_optimization=true;
-                    FileName fnBase=fn_psd.withoutExtension();
-                    std::cerr << "Computing bootstrap ...\n";
-                    init_progress_bar(bootstrapN);
-                    for (int n=0; n<bootstrapN; n++)
+                    VECTOR_R2(idx, j, i);
+                    FFT_idx2digfreq(mpsd, idx, freq);
+                    double w = freq.module();
+                    if (w>0.05 && w<0.4)
                     {
-                        CTFs(n,31) = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
-                                                     ctfmodel, false);
-                        CTFs(n, 0)=ctfmodel.Tm;
-                        CTFs(n, 1)=ctfmodel.kV;
-                        CTFs(n, 2)=ctfmodel.DeltafU;
-                        CTFs(n, 3)=ctfmodel.DeltafV;
-                        CTFs(n, 4)=ctfmodel.azimuthal_angle;
-                        CTFs(n, 5)=ctfmodel.Cs;
-                        CTFs(n, 6)=ctfmodel.Ca;
-                        CTFs(n, 7)=ctfmodel.espr;
-                        CTFs(n, 8)=ctfmodel.ispr;
-                        CTFs(n, 9)=ctfmodel.alpha;
-                        CTFs(n,10)=ctfmodel.DeltaF;
-                        CTFs(n,11)=ctfmodel.DeltaR;
-                        CTFs(n,12)=ctfmodel.Q0;
-                        CTFs(n,13)=ctfmodel.K;
-                        CTFs(n,14)=ctfmodel.gaussian_K;
-                        CTFs(n,15)=ctfmodel.sigmaU;
-                        CTFs(n,16)=ctfmodel.sigmaV;
-                        CTFs(n,17)=ctfmodel.cU;
-                        CTFs(n,18)=ctfmodel.cV;
-                        CTFs(n,19)=ctfmodel.gaussian_angle;
-                        CTFs(n,20)=ctfmodel.sqrt_K;
-                        CTFs(n,21)=ctfmodel.sqU;
-                        CTFs(n,22)=ctfmodel.sqV;
-                        CTFs(n,23)=ctfmodel.sqrt_angle;
-                        CTFs(n,24)=ctfmodel.base_line;
-                        CTFs(n,25)=ctfmodel.gaussian_K2;
-                        CTFs(n,26)=ctfmodel.sigmaU2;
-                        CTFs(n,27)=ctfmodel.sigmaV2;
-                        CTFs(n,28)=ctfmodel.cU2;
-                        CTFs(n,29)=ctfmodel.cV2;
-                        CTFs(n,30)=ctfmodel.gaussian_angle2;
-
-                        std::string command=(std::string)"mv -i "+fnBase+
-                                            ".ctfparam "+fnBase+"_bootstrap_"+
-                                            integerToString(n,4)+".ctfparam";
-                        system(command.c_str());
-                        command=(std::string)"mv -i "+fnBase+
-                                ".ctfmodel_quadrant "+fnBase+"_bootstrap_"+
-                                integerToString(n,4)+".ctfmodel_quadrant";
-                        system(command.c_str());
-                        command=(std::string)"mv -i "+fnBase+
-                                ".ctfmodel_halfplane "+fnBase+"_bootstrap_"+
-                                integerToString(n,4)+".ctfmodel_halfplane";
-                        system(command.c_str());
-
-                        progress_bar(n);
+                        A2D_ELEM(PCAmask,i,j)=1;
+                        ++PCAdim;
                     }
-                    progress_bar(bootstrapN);
                 }
+                PCAv.initZeros(PCAdim);
             }
+
+            size_t ii=-1;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PCAmask)
+            if (DIRECT_MULTIDIM_ELEM(PCAmask,n))
+                A1D_ELEM(PCAv,++ii)=(float)DIRECT_MULTIDIM_ELEM(mpsd,n);
+            pcaAnalyzer.addVector(PCAv);
         }
 
-        // Assign a CTF to each particle ----------------------------------------
-        if (psd_mode==OnePerRegion && estimate_ctf)
+        // Compute the theoretical model if not averaging ....................
+        if (psd_mode!=OnePerMicrograph)
         {
-            double p0=0, p1=0, p2=0;
-            planeFit(defocusPlanefittingU,p0,p1,p2);
+            if (bootstrapN!=-1)
+                REPORT_ERROR(ERR_VALUE_INCORRECT,
+                             "Bootstrapping is only available for micrograph averages");
 
             FileName fn_psd_piece;
             fn_psd_piece.compose(N,fn_psd);
-            FileName fn_rootCTFPARAM = fn_psd_piece.withoutExtension();
-            int atPosition=fn_rootCTFPARAM.find('@');
+            psd.write(fn_psd_piece);
+            if (psd_mode==OnePerParticle)
+                posFile.setValue(MDL_PSD,fn_psd_piece,iterPosFile.objId);
 
-            fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
-                                         fn_rootCTFPARAM.substr(atPosition+1).c_str());
-
-            MetaData MD;
-            size_t id = MD.addObject();
-            MD.setValue(MDL_CTF_DEFOCUS_PLANEUA,p1,id);
-            MD.setValue(MDL_CTF_DEFOCUS_PLANEUB,p2,id);
-            MD.setValue(MDL_CTF_DEFOCUS_PLANEUC,p0,id);
-            MD.write(fn_rootCTFPARAM + ".ctfparam", MD_APPEND);
-
-            if ( fn_pos != "")
+            if (estimate_ctf)
             {
-                FileName fn_img, fn_psd_piece, fn_ctfparam_piece;
-                int Y, X;
-                FOR_ALL_OBJECTS_IN_METADATA(posFile)
-                {
-                    posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
-                    posFile.getValue(MDL_X,X,__iter.objId);
-                    posFile.getValue(MDL_Y,Y,__iter.objId);
-                    int idx_X = floor((double)X / pieceDim);
-                    int idx_Y = floor((double)Y / pieceDim);
-                    int N = idx_Y * div_NumberX + idx_X + 1;
-
-                    fn_psd_piece.compose(N,fn_psd);
-                    fn_ctfparam_piece=fn_psd_piece.withoutExtension()+".ctfparam";
-                    posFile.setValue(MDL_PSD,fn_psd_piece,__iter.objId);
-                    posFile.setValue(MDL_CTF_MODEL,fn_ctfparam_piece,__iter.objId);
-                }
+                // Estimate the CTF parameters of this piece
+                prmEstimateCTFFromPSD.fn_psd=fn_psd_piece;
+                CTFDescription ctfmodel;
+                double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
+                                                       ctfmodel, false);
+                if (psd_mode==OnePerParticle)
+                    posFile.setValue(MDL_CTF_MODEL,fn_psd_piece.withoutExtension()+".ctfparam",
+                                     iterPosFile.objId);
             }
         }
-        posFile.write(fn_pos);
+
+        // Increment the division counter
+        ++N;
+        if (verbose)
+        	progress_bar(N);
+        if (psd_mode==OnePerParticle)
+            iterPosFile.moveNext();
     }
+    if (verbose)
+    	progress_bar(div_Number);
+
+    // If averaging, compute the CTF model ----------------------------------
+    if (psd_mode==OnePerMicrograph)
+    {
+        // Compute the avg and stddev of the local PSDs
+        const MultidimArray<double> &mpsd_std=psd_std();
+        const MultidimArray<double> &mpsd_avg=psd_avg();
+        double idiv_Number=1.0/div_Number;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd_avg)
+        {
+            DIRECT_MULTIDIM_ELEM(mpsd_avg,n)*=idiv_Number;
+            DIRECT_MULTIDIM_ELEM(mpsd_std,n)*=idiv_Number;
+            DIRECT_MULTIDIM_ELEM(mpsd_std,n)-=DIRECT_MULTIDIM_ELEM(mpsd_avg,n)*
+                                              DIRECT_MULTIDIM_ELEM(mpsd_avg,n);
+            if (DIRECT_MULTIDIM_ELEM(mpsd_std,n)<0)
+                DIRECT_MULTIDIM_ELEM(mpsd_std,n)=0;
+            else
+                DIRECT_MULTIDIM_ELEM(mpsd_std,n)=sqrt(DIRECT_MULTIDIM_ELEM(mpsd_std,n));
+        }
+        psd_avg.write(fn_psd);
+
+        if (estimate_ctf)
+        {
+            // Estimate the CTF parameters
+            std::cerr << "Adjusting CTF model to the PSD ...\n";
+            prmEstimateCTFFromPSD.fn_psd = fn_psd;
+            CTFDescription ctfmodel;
+            if (bootstrapN==-1)
+            {
+                // No bootstrapping
+                // Compute the PCA of the local PSDs
+                pcaAnalyzer.standardarizeVariables();
+                // pcaAnalyzer.subtractAvg();
+                pcaAnalyzer.learnPCABasis(1,10);
+
+#ifdef DEBUG
+
+                Image<double> save;
+                save().initZeros(psd());
+                int ii=-1;
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
+                if (PCAmask(i,j))
+                    save(i,j)=pcaAnalyzer.PCAbasis[0](++ii);
+                save.write("PPPbasis.xmp");
+#endif
+
+                Matrix2D<double> CtY;
+                pcaAnalyzer.projectOnPCABasis(CtY);
+                Matrix1D<double> p;
+                CtY.toVector(p);
+                double pavg=p.sum(true);
+                double pstd=p.sum2()/VEC_XSIZE(p)-pavg*pavg;
+                pstd=(pstd<0)?0:sqrt(pstd);
+
+                std::string psign;
+                FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
+                if (p(i)<0)
+                    psign+="-";
+                else
+                    psign+="+";
+                double zrandomness=checkRandomness(psign);
+
+                double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
+                                                       ctfmodel, false);
+
+                // Evaluate PSD variance and write into the CTF
+                double stdQ=0;
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(mpsd_std)
+                stdQ+=A2D_ELEM(mpsd_std,i,j)/A2D_ELEM(mpsd_avg,i,j);
+                stdQ/=MULTIDIM_SIZE(psd_std());
+
+                MetaData MD;
+                MD.read(fn_psd.withoutExtension() + ".ctfparam");
+                size_t id = MD.firstObject();
+                MD.setValue(MDL_CTF_CRIT_PSDVARIANCE,stdQ,id);
+                MD.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,pstd,id);
+                MD.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST,zrandomness,id);
+                MD.write(fn_psd.withoutExtension() + ".ctfparam");
+            }
+            else
+            {
+                // If bootstrapping
+                MultidimArray<double> CTFs(bootstrapN,32);
+                prmEstimateCTFFromPSD.bootstrap=true;
+                prmEstimateCTFFromPSD.show_optimization=true;
+                FileName fnBase=fn_psd.withoutExtension();
+                std::cerr << "Computing bootstrap ...\n";
+                init_progress_bar(bootstrapN);
+                for (int n=0; n<bootstrapN; n++)
+                {
+                    CTFs(n,31) = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
+                                                 ctfmodel, false);
+                    CTFs(n, 0)=ctfmodel.Tm;
+                    CTFs(n, 1)=ctfmodel.kV;
+                    CTFs(n, 2)=ctfmodel.DeltafU;
+                    CTFs(n, 3)=ctfmodel.DeltafV;
+                    CTFs(n, 4)=ctfmodel.azimuthal_angle;
+                    CTFs(n, 5)=ctfmodel.Cs;
+                    CTFs(n, 6)=ctfmodel.Ca;
+                    CTFs(n, 7)=ctfmodel.espr;
+                    CTFs(n, 8)=ctfmodel.ispr;
+                    CTFs(n, 9)=ctfmodel.alpha;
+                    CTFs(n,10)=ctfmodel.DeltaF;
+                    CTFs(n,11)=ctfmodel.DeltaR;
+                    CTFs(n,12)=ctfmodel.Q0;
+                    CTFs(n,13)=ctfmodel.K;
+                    CTFs(n,14)=ctfmodel.gaussian_K;
+                    CTFs(n,15)=ctfmodel.sigmaU;
+                    CTFs(n,16)=ctfmodel.sigmaV;
+                    CTFs(n,17)=ctfmodel.cU;
+                    CTFs(n,18)=ctfmodel.cV;
+                    CTFs(n,19)=ctfmodel.gaussian_angle;
+                    CTFs(n,20)=ctfmodel.sqrt_K;
+                    CTFs(n,21)=ctfmodel.sqU;
+                    CTFs(n,22)=ctfmodel.sqV;
+                    CTFs(n,23)=ctfmodel.sqrt_angle;
+                    CTFs(n,24)=ctfmodel.base_line;
+                    CTFs(n,25)=ctfmodel.gaussian_K2;
+                    CTFs(n,26)=ctfmodel.sigmaU2;
+                    CTFs(n,27)=ctfmodel.sigmaV2;
+                    CTFs(n,28)=ctfmodel.cU2;
+                    CTFs(n,29)=ctfmodel.cV2;
+                    CTFs(n,30)=ctfmodel.gaussian_angle2;
+
+                    std::string command=(std::string)"mv -i "+fnBase+
+                                        ".ctfparam "+fnBase+"_bootstrap_"+
+                                        integerToString(n,4)+".ctfparam";
+                    system(command.c_str());
+                    command=(std::string)"mv -i "+fnBase+
+                            ".ctfmodel_quadrant "+fnBase+"_bootstrap_"+
+                            integerToString(n,4)+".ctfmodel_quadrant";
+                    system(command.c_str());
+                    command=(std::string)"mv -i "+fnBase+
+                            ".ctfmodel_halfplane "+fnBase+"_bootstrap_"+
+                            integerToString(n,4)+".ctfmodel_halfplane";
+                    system(command.c_str());
+
+                    progress_bar(n);
+                }
+                progress_bar(bootstrapN);
+            }
+        }
+    }
+
+    // Assign a CTF to each particle ----------------------------------------
+    if (psd_mode==OnePerRegion && fn_pos != "" && estimate_ctf)
+    {
+        FileName fn_img, fn_psd_piece, fn_ctfparam_piece;
+        int Y, X;
+        FOR_ALL_OBJECTS_IN_METADATA(posFile)
+        {
+            posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
+            posFile.getValue(MDL_X,X,__iter.objId);
+            posFile.getValue(MDL_Y,Y,__iter.objId);
+            int idx_X = floor((double)X / pieceDim);
+            int idx_Y = floor((double)Y / pieceDim);
+            int N = idx_Y * div_NumberX + idx_X + 1;
+
+            fn_psd_piece.compose(N,fn_psd);
+            fn_ctfparam_piece=fn_psd_piece.withoutExtension()+".ctfparam";
+            posFile.setValue(MDL_PSD,fn_psd_piece,__iter.objId);
+            posFile.setValue(MDL_CTF_MODEL,fn_ctfparam_piece,__iter.objId);
+        }
+    }
+    posFile.write(fn_pos);
 }
 
 /* Fast estimate of PSD --------------------------------------------------- */
 class ThreadFastEstimateEnhancedPSDParams
 {
 public:
-    ImageGeneric *I;
-    MultidimArray<double> *PSD, *pieceSmoother;
+	ImageGeneric *I;
+	MultidimArray<double> *PSD, *pieceSmoother;
     MultidimArray<int> *pieceMask;
-    Mutex *mutex;
-    int Nprocessed;
+	Mutex *mutex;
+	int Nprocessed;
 };
 
 void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
 {
-    ThreadFastEstimateEnhancedPSDParams *args=(ThreadFastEstimateEnhancedPSDParams*)thArg.workClass;
-    int Nthreads=thArg.getNumberOfThreads();
+	ThreadFastEstimateEnhancedPSDParams *args=(ThreadFastEstimateEnhancedPSDParams*)thArg.workClass;
+	int Nthreads=thArg.getNumberOfThreads();
     int id=thArg.thread_id;
     ImageGeneric &I=*(args->I);
     const MultidimArrayGeneric& mI=I();
@@ -723,32 +666,32 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
     int Nprocessed=0;
     double pieceDim2=XSIZE(piece)*XSIZE(piece);
     for (int i=0; i<(IYdim-YSIZE(piece)); i+=YSIZE(piece))
-        for (int j=0; j<(IXdim-XSIZE(piece)); j+=XSIZE(piece), pieceNumber++)
-        {
-            if ((pieceNumber+1)%Nthreads!=id)
-                continue;
-            Nprocessed++;
+    	for (int j=0; j<(IXdim-XSIZE(piece)); j+=XSIZE(piece), pieceNumber++)
+    	{
+    		if ((pieceNumber+1)%Nthreads!=id)
+    			continue;
+    		Nprocessed++;
 
-            // Extract micrograph piece ..........................................
-            for (int k = 0; k < YSIZE(piece); k++)
-                for (int l = 0; l < XSIZE(piece); l++)
-                    DIRECT_A2D_ELEM(piece, k, l) = mI(i+k, j+l);
-            piece.statisticsAdjust(0, 1);
-            normalize_ramp(piece,pieceMask);
-            piece*=pieceSmoother;
+			// Extract micrograph piece ..........................................
+			for (int k = 0; k < YSIZE(piece); k++)
+				for (int l = 0; l < XSIZE(piece); l++)
+					DIRECT_A2D_ELEM(piece, k, l) = mI(i+k, j+l);
+			piece.statisticsAdjust(0, 1);
+			normalize_ramp(piece,pieceMask);
+			piece*=pieceSmoother;
 
-            // Estimate the power spectrum .......................................
-            transformer.FourierTransform();
-            transformer.getCompleteFourier(Periodogram);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(localPSD)
-            {
-                double *ptr=(double*) &DIRECT_MULTIDIM_ELEM(Periodogram, n);
-                double re=*ptr;
-                double im=*(ptr+1);
-                double magnitude2=re*re+im*im;
-                DIRECT_MULTIDIM_ELEM(localPSD,n)+=magnitude2*pieceDim2;
-            }
-        }
+		    // Estimate the power spectrum .......................................
+			transformer.FourierTransform();
+			transformer.getCompleteFourier(Periodogram);
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(localPSD)
+			{
+				double *ptr=(double*) &DIRECT_MULTIDIM_ELEM(Periodogram, n);
+				double re=*ptr;
+				double im=*(ptr+1);
+				double magnitude2=re*re+im*im;
+				DIRECT_MULTIDIM_ELEM(localPSD,n)+=magnitude2*pieceDim2;
+			}
+    	}
 
     // Gather results
     args->mutex->lock();
@@ -761,27 +704,27 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
                              MultidimArray<double> &enhancedPSD,
                              int numberOfThreads)
 {
-    int Xdim,Ydim,Zdim;
-    size_t Ndim;
-    getImageSizeFromFilename(fnMicrograph,Xdim,Ydim,Zdim,Ndim);
-    int minSize=2*(std::max(Xdim,Ydim)/10);
-    minSize=std::min((double)std::min(Xdim,Ydim),NEXT_POWER_OF_2(minSize));
-    minSize=std::min(1024,minSize);
+	int Xdim,Ydim,Zdim;
+	size_t Ndim;
+	getImageSizeFromFilename(fnMicrograph,Xdim,Ydim,Zdim,Ndim);
+	int minSize=2*(std::max(Xdim,Ydim)/10);
+	minSize=std::min((double)std::min(Xdim,Ydim),NEXT_POWER_OF_2(minSize));
+	minSize=std::min(1024,minSize);
 
-    /*
-    ProgCTFEstimateFromMicrograph prog1;
-    prog1.fn_micrograph=fnMicrograph;
-    prog1.fn_root=fnMicrograph.withoutExtension()+"_tmp";
-       prog1.pieceDim=(int)(minSize*downsampling);
-       prog1.PSDEstimator_mode=ProgCTFEstimateFromMicrograph::Periodogram;
-       prog1.Nsubpiece=1;
-       prog1.psd_mode=ProgCTFEstimateFromMicrograph::OnePerMicrograph;
-       prog1.estimate_ctf=false;
-       prog1.bootstrapN=-1;
-       prog1.verbose=1;
-       prog1.overlap=0;
-       prog1.run();
-    */
+	/*
+	ProgCTFEstimateFromMicrograph prog1;
+	prog1.fn_micrograph=fnMicrograph;
+	prog1.fn_root=fnMicrograph.withoutExtension()+"_tmp";
+    prog1.pieceDim=(int)(minSize*downsampling);
+    prog1.PSDEstimator_mode=ProgCTFEstimateFromMicrograph::Periodogram;
+    prog1.Nsubpiece=1;
+    prog1.psd_mode=ProgCTFEstimateFromMicrograph::OnePerMicrograph;
+    prog1.estimate_ctf=false;
+    prog1.bootstrapN=-1;
+    prog1.verbose=1;
+    prog1.overlap=0;
+    prog1.run();
+*/
     // Prepare auxiliary variables
     ImageGeneric I;
     I.read(fnMicrograph);
@@ -808,7 +751,7 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     ThreadManager *thMgr = new ThreadManager(numberOfThreads,&args);
     thMgr->run(threadFastEstimateEnhancedPSD);
     if (args.Nprocessed!=0)
-        *(args.PSD)/=args.Nprocessed;
+    	*(args.PSD)/=args.Nprocessed;
 
     ProgCTFEnhancePSD prog2;
     prog2.filter_w1 = 0.02;

@@ -1,8 +1,12 @@
 package xmipp.particlepicker.training.model;
 
+import ij.ImagePlus;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.ij.commons.XmippImageConverter;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePicker;
@@ -85,6 +89,9 @@ public class MicrographFamilyData
 		}
 		
 	}
+	
+	
+	
 
 	public void removeParticle(TrainingParticle p, TrainingPicker ppicker)
 	{
