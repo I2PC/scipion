@@ -29,7 +29,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         if xmippExists(self.PrevRun.getFilename('macros')):
             self.keysToImport.append('macros')
         self.inputFilename(*self.keysToImport)
-        self.inputProperty('TiltPairs', 'MicrographsMd')
+        self.inputProperty('TiltPairs', 'MicrographsMd', 'Fast')
         self.micrographs = self.getFilename('micrographs')
         self.families = self.getFilename('families')
         self.familiesForAuto = []
@@ -77,9 +77,13 @@ class ProtParticlePickingAuto(XmippProtocol):
                                 break
                 if proceed:
                     oroot = self.workingDirPath(micrographName)
-                    cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
-                    self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
-                                             
+                    fast = self.Fast
+                    if fast:
+                        cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect --fast " % locals()
+                        self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
+                    else:
+                        cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect " % locals()
+                        self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)                  
         for family in self.familiesForAuto:
             self.insertStep('gatherResults', Family=family, WorkingDir=self.WorkingDir, PickingDir=self.pickingDir)
         self.insertStep('deleteTempFiles', WorkingDir=self.WorkingDir)

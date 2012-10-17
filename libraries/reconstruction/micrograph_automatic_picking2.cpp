@@ -1099,10 +1099,10 @@ void ProgMicrographAutomaticPicking2::run()
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            int num=autoPicking->automaticallySelectParticles(true,true);
+            int num=autoPicking->automaticallySelectParticles(true,fast);
         }
         else
-            int num=autoPicking->automaticallySelectParticles(false,true);
+            int num=autoPicking->automaticallySelectParticles(false,fast);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
             autoPicking->saveAutoVectors(fnAutoVectors);
