@@ -475,10 +475,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		thresholdpn
 				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
-		//FIXME: Here should be saved only the current micrograph
-		// before the change, because saving all of them and all particles
-		// could be very very slow....
-		//saveChanges();// Saving changes when switching micrographs, by
+		saveChanges();// Saving changes when switching micrographs, by
 						// Coss suggestion
 		if (particlesdialog != null)
 			loadParticles();
