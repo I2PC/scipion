@@ -91,8 +91,8 @@ class ProtScreenMicrographs(XmippProtocol):
                                      min_freq=(self.LowResolCutoff),
                                      max_freq=(self.HighResolCutoff),
                                      pieceDim=(self.WinSize),
-                                     defocus_range=((self.MaxFocus-self.MinFocus)*10000/2),
-                                     defocusU=((self.MaxFocus+self.MinFocus)*10000/2),
+                                     MinFocus=self.MinFocus,
+                                     MaxFocus=self.MaxFocus,
                                      StepFocus=self.StepFocus
                                      )
 
@@ -187,8 +187,8 @@ def estimateCtfCtffind1(_log, micrograph,
                           min_freq,
                           max_freq,
                           pieceDim,
-                          defocus_range,
-                          defocusU,
+                          MinFocus,
+                          MaxFocus,
                           StepFocus
                           ):
         #def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
@@ -228,8 +228,8 @@ def estimateCtfCtffind1(_log, micrograph,
         params += str(pieceDim) + ',' + \
                   str(sampling_rate*downSamplingPerformed / min_freq) + ',' + \
                   str(sampling_rate*downSamplingPerformed / max_freq) + ',' + \
-                  str(min_freq*10000) + ',' + \
-                  str(max_freq*10000) + ',' + \
+                  str(MinFocus*10000) + ',' + \
+                  str(MaxFocus*10000) + ',' + \
                   str(StepFocus*10000) + "\n"
 
         CtffindExec =  which('ctffind3.exe')
