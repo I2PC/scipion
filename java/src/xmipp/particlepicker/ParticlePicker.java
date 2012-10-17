@@ -252,7 +252,7 @@ public abstract class ParticlePicker
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
 				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
-				//md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
 			md.write(file);
@@ -275,7 +275,7 @@ public abstract class ParticlePicker
 		}
 
 		Family family;
-		int rgb, size, templates=1;
+		int rgb, size, templates;
 		FamilyState state;
 		String name;
 		try
@@ -287,7 +287,7 @@ public abstract class ParticlePicker
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				//templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
 //				if (state == FamilyState.Supervised && this instanceof SupervisedParticlePicker)
