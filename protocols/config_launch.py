@@ -39,13 +39,14 @@ QueryArgsTemplate = "%(jobid)d"
 # Mpi executable
 MpiProgram = "mpirun"
 # Mpi run arguments template
-MpiArgsTemplate = "-np %(nodes)d --bynode %(command)s"
+MpiArgsTemplate = "-np %(nodes)d %(command)s"
 
 # Other templates for other environments: 
 # Using nodefile setted as environment variable or at home
-# hostfile = os.environ.get('HOSFILE')
+#import os
+#hostfile = os.environ.get('XMIPP_HOSTFILE')
 # hostfile = os.environ.get('HOME') + "/machinefile.txt" 
-# MpiArgsTemplate = "-n %(nodes)d -hostfile " + hostfile
+#MpiArgsTemplate = "-n %(nodes)d -hostfile " + hostfile + " %(command)s"
 #
 # For SGE-OPENMPI
 #MpiProgram = "mpiexec"
