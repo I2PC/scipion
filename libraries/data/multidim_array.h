@@ -3372,6 +3372,13 @@ public:
         double b=0;
         if (denom!=0)
             b=(N*sumxy-sumx*sumy)/denom;
+        if (b<0)
+        {
+        	std::cerr << "DEBUG_ROB, b:" << b << std::endl;
+        	b = -b;
+        	std::cerr << "WARNING b is negative" <<  std::endl;
+        }
+
         double a=sumy/N-b*sumx/N;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
