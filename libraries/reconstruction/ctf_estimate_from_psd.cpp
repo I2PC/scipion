@@ -992,7 +992,8 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
         if ((j >= Xdim / 2 && i >= Ydim / 2)
             || (j < Xdim / 2 && i < Ydim / 2))
         {
-            mask(i, j) = (enhancedPSD(i, j) > 1e-3);
+            //mask(i, j) = (enhancedPSD(i, j) > 1e-3);
+            mask(i,j)=1;
             XX(idx) = j;
             YY(idx) = i;
             FFT_idx2digfreq(model, idx, freq);
@@ -1008,6 +1009,7 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
     // the enhanced PSD
     model.rangeAdjust(enhancedPSD, &mask);
 
+
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
@@ -1017,6 +1019,14 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
 
     // Produce a centered image
     CenterFFT(model, true);
+    int centerI = Ydim / 2;
+    int centerJ = Xdim / 2;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
+    {
+        if (((i-centerI)*(i-centerI) + (j-centerJ)*(j-centerJ)) < (global_prm->min_freq*global_prm->min_freq*(Xdim )*(Ydim )))
+            model(i, j)=0;
+    }
+
 }
 
 void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
@@ -1044,8 +1054,8 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
     {
         if (j >= Xdim / 2)
             continue;
-        mask(i, j) = (enhancedPSD(i, j) > 1e-3);
-
+        //mask(i, j) = (enhancedPSD(i, j) > 1e-3);
+        mask(i,j)=1;
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(model, idx, freq);
@@ -1069,6 +1079,15 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
 
     // Produce a centered image
     CenterFFT(model, true);
+    int centerI = Ydim / 2;
+    int centerJ = Xdim / 2;
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
+    {
+        if (((i-centerI)*(i-centerI) + (j-centerJ)*(j-centerJ)) < (global_prm->min_freq*global_prm->min_freq*(Xdim )*(Ydim )))
+            model(i, j)=0;
+    }
+
 }
 
 /* CTF fitness ------------------------------------------------------------- */
