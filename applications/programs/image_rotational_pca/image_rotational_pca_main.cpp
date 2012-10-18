@@ -1,9 +1,9 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Carlos Manzanares       (cmanzana@cnb.csic.es)
+ * Authors:  Carlos Oscar Sanchez Sorzano coss.eps@ceu.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ * Lab. de Bioingenieria, Univ. San Pablo CEU
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,39 +21,9 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.csic.es'
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "filter_menu.h"
-#include "widget_micrograph.h"
+#include <reconstruction/image_rotational_pca.h>
 
-/* Constructor ------------------------------------------------------------- */
-QtFilterMenu::QtFilterMenu(QtWidgetMicrograph* _parent) :
-        QtPopupMenuMark(_parent)
-{
-    insertItem("Adjust contrast", this, SLOT(slotAdjustContrast()));
-    insertItem("Crop micrograph", this, SLOT(slotCrop()));
-    insertItem("Add filter", this, SLOT(slotAddFilter()));
-    insertItem("Clean filters", this, SLOT(slotCleanFilters()));
-}
-
-/* Add Filter -------------------------------------------------------------- */
-void QtFilterMenu::slotAdjustContrast()
-{
-    emit signalAdjustContrast();
-}
-
-void QtFilterMenu::slotCrop()
-{
-    emit signalCrop();
-}
-
-void QtFilterMenu::slotAddFilter()
-{
-    emit signalAddFilter();
-}
-
-void QtFilterMenu::slotCleanFilters()
-{
-    emit signalCleanFilters();
-}
+RUN_XMIPP_PROGRAM(ProgImageRotationalPCA);

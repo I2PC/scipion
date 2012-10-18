@@ -128,7 +128,7 @@ protected:
         addParamsLine("                                : this option is useful for extrating data blocks inside a metadata.");
         addParamsLine("           alias -p;                                             ");
 
-        addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
+        addParamsLine(" [--mode <mode=overwrite>]   : Metadata writing mode.");
         addParamsLine("    where <mode>");
         addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
         addParamsLine("     append      : Write the Metadata as a new block, removing the old one");

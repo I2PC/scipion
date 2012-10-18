@@ -114,8 +114,8 @@ public class SupervisedParticlePicker extends TrainingPicker {
 				getOutputPath(micrograph.getName())// --outputRoot
 		);
 
-		if (mfd.getManualParticles().size() > 0)
-			args += family.getName() + "@" + getOutputPath(micrograph.getPosFile());
+//		if (mfd.getManualParticles().size() > 0)
+//			args += family.getName() + "@" + getOutputPath(micrograph.getPosFile());
 		if (isFastMode())
 			args += " --fast";
 		if (isIncore())
@@ -141,20 +141,42 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		return args;
 	}
 	
-	public String getTrainCommandLineArgs(MicrographFamilyData mfd)
+	public String getTrainCommandLineArgs()
 	{
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train",
+				getOutputPath(family.getName()) + "_particle_avg.xmp",//this is temporarily so it works
+				family.getSize(), // --particleSize
+				getOutputPath(family.getName()),// --model
+				getOutputPath(family.getName()) // --outputRoot
+				);// train
+		// parameter
+//		if (isFastMode())
+//			args += " --fast";
+//		if (isIncore())
+//			args += " --in_core";
+		return args;
+	}
+
+	public String getBuildInvariantCommandLineArgs(MicrographFamilyData mfd)
+	{
+		int filternum = 6;
+		int NPCA = 4;
+		int NCORR = 2;
 		Family family = mfd.getFamily();
 		Micrograph micrograph = mfd.getMicrograph();
-		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode train %s", micrograph.getFile(),// -i
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode buildinv %s --filter_num %s --NPCA %s --NCORR %s", micrograph.getFile(),// -i
 				family.getSize(), // --particleSize
 				getOutputPath(family.getName()),// --model
 				getOutputPath(micrograph.getName()), // --outputRoot
-				family.getName() + "@" + getOutputPath(micrograph.getPosFile()));// train
+				family.getName() + "@" + getOutputPath(micrograph.getPosFile()), 
+				filternum,
+				NPCA, 
+				NCORR);// train
 		// parameter
-		if (isFastMode())
-			args += " --fast";
-		if (isIncore())
-			args += " --in_core";
+//		if (isFastMode())
+//			args += " --fast";
+//		if (isIncore())
+//			args += " --in_core";
 		return args;
 	}
 

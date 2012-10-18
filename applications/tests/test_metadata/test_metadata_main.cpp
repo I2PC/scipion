@@ -301,6 +301,7 @@ TEST_F( MetadataTest,multiWrite)
     unlink(fnDB.c_str());
     unlink(fnXML.c_str());
     unlink(fnSTAR.c_str());
+
 }
 
 TEST_F( MetadataTest, ReadEmptyBlock)

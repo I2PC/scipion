@@ -28,7 +28,7 @@
 
 int main(int argc, char **argv)
 {
-	ProgImageRotationalPCA program(argc, argv);
+	MpiProgImageRotationalPCA program(argc, argv);
     program.read(argc, argv);
     return program.tryRun();
 }

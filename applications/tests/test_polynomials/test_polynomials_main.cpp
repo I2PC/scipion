@@ -80,7 +80,7 @@ TEST_F( PolynomialsTest, ZernikeFit)
     weight.resizeNoCopy(im());
     weight.initConstant(1.0);
 
-    polynom.fit(coefs,MULTIDIM_ARRAY(im),weight,ROI,1);
+    polynom.fit(coefs,MULTIDIM_ARRAY(im),weight,ROI,0);
     xmippCoeffs = COEFFICIENTS(polynom);
 
     Matrix1D<double> error = xmippCoeffs - matlabCoeffs;

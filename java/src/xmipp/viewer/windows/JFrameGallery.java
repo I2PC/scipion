@@ -821,6 +821,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			dlg.saveMd(data.getSelectionMd());
 		}
 	}
+	
+	/** Find and replace in metadata */
+	public void findReplace() throws Exception {
+		MDSearchJDialog dlg = new MDSearchJDialog(this, table, data.md);
+		dlg.setVisible(true);
+	}
 
 	/** Drop some label from the metadata */
 	public void removeLabel(int label) throws Exception {
@@ -1082,6 +1088,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		}
 	}
 
+	public void selectIndex(int index){
+		gallery.clearSelection();
+		gallery.touchItem(index, 0);
+		makeVisible(index);
+	}
+	
 	private void tableMouseClicked(MouseEvent evt) {
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
@@ -1217,6 +1229,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(MD_REMOVE_DISABLED, "Remove disabled", "delete.gif");
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
 			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
+			addSeparator(METADATA);
+			addItem(MD_FIND_REPLACE, "Find & Replace", "search.gif", "control released F");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
@@ -1249,6 +1263,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			setItemEnabled(MD_REMOVE_DISABLED,isCol);
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
 			setItemEnabled(MD_SAVE_SELECTION,isCol); 
+			setItemEnabled(MD_FIND_REPLACE,isCol && !galMode);
 		}// function update
 
 		@Override
@@ -1346,6 +1361,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					removeObjects(false);
 				} else if (cmd.equals(MD_SAVE_SELECTION)) {
 					saveSelection();
+				} else if (cmd.equals(MD_FIND_REPLACE)) {
+					findReplace();
 				} else if (cmd.equals(MD_ADD_OBJECT)) {
 					AddObjectJDialog dlg = new AddObjectJDialog(
 							JFrameGallery.this);
