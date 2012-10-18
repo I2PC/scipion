@@ -254,7 +254,24 @@ TEST_F( ImageGenericTest, convert2Datatype)
     // Now both arrays are equal
     EXPECT_EQ(*uintMaP, uintMa);
 
-    // Checking that convert2Datatype works after movePointer2
+    /// Checking convert2Datatype works with stacks in memory
+    img.read(stackName);
+
+    img().getMultidimArrayPointer(ma);
+    auxMa = *ma;
+
+    // Change of datatype and conversion of values
+    img.convert2Datatype(DT_Double);
+    MultidimArray<double> *dMaP;
+    MultidimArray<double> dMa;
+    typeCast(auxMa, dMa);
+    img().getMultidimArrayPointer(dMaP);
+
+    // Now both arrays are equal
+    EXPECT_EQ(*dMaP, dMa);
+
+
+    /// Checking that convert2Datatype works after movePointer2
     ArrayDim befAdim, aftAdim;
     FileName auxFn = "image/smallVolume.vol";
     myImageGeneric.readMapped(auxFn);
