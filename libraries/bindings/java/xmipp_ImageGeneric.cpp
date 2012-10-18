@@ -12,17 +12,25 @@
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = new ImageGeneric();
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = new ImageGeneric();
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_destroy(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-    delete image;
-    image = NULL;
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        delete image;
+        image = NULL;
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
@@ -541,19 +549,19 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
             break;
         default:
             {
-//#define CAST_PAGE(type) Image<type> *imageAux = (Image<type> *)image->image; \
-//             type *data = MULTIDIM_ARRAY(imageAux->data); \
-//             size_t page_size = rw_max_page_size; \
-//             char * buffer = new char[rw_max_page_size * gettypesize(DT_Float)]; \
-//             for (size_t written = 0; written < size; written += page_size) \
-//             { \
-//              page_size = std::min(page_size, size - written); \
-//              imageAux->castPage2Datatype(data + written, buffer, DT_Float, page_size); \
-//              env->GetFloatArrayRegion(array, written, page_size, (jfloat*) buffer); \
-//             }
-//
-//             SWITCHDATATYPE(image->getDatatype(), CAST_PAGE);
-//             delete [] buffer;
+                //#define CAST_PAGE(type) Image<type> *imageAux = (Image<type> *)image->image; \
+                //             type *data = MULTIDIM_ARRAY(imageAux->data); \
+                //             size_t page_size = rw_max_page_size; \
+                //             char * buffer = new char[rw_max_page_size * gettypesize(DT_Float)]; \
+                //             for (size_t written = 0; written < size; written += page_size) \
+                //             { \
+                //              page_size = std::min(page_size, size - written); \
+                //              imageAux->castPage2Datatype(data + written, buffer, DT_Float, page_size); \
+                //              env->GetFloatArrayRegion(array, written, page_size, (jfloat*) buffer); \
+                //             }
+                //
+                //             SWITCHDATATYPE(image->getDatatype(), CAST_PAGE);
+                //             delete [] buffer;
 
             }
             break;
@@ -763,7 +771,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
 {
     XMIPP_JAVA_TRY
     {
-    	std::cerr<<"We Are At First!";
+        std::cerr<<"We Are At First!";
         Matrix2D<double> M;
         MultidimArray<double>* I;
         MultidimArray<double>* Tp;
@@ -784,8 +792,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
         double corr,max=0;
         int maxIndex=0;
         for (int i=0;i<dim.ndim;++i)
-		{
-			T.aliasImageInStack(*Tp,i);
+    {
+        T.aliasImageInStack(*Tp,i);
             corr = alignImages(T,*I,M,true,aux,aux2,aux3);
             T.printShape();
             if (corr>max)
