@@ -137,6 +137,8 @@ echo "alias xp='xmipp_protocols'             "    >> $INC_FILE
 echo "alias xmipp='xmipp_protocols'          "    >> $INC_FILE
 echo "alias xs='xmipp_show'                  "    >> $INC_FILE
 echo "alias xsj='xmipp_showj'                "    >> $INC_FILE
+echo "alias xmipp_imagej='java -Xmx512m -jar $XMIPP_HOME/external/imagej/ij.jar'" >> $INC_FILE
+echo "alias xij='xmipp_imagej'               "    >> $INC_FILE
 echo "## Image ##                            "    >> $INC_FILE
 echo "alias xic='xmipp_image_convert'        "    >> $INC_FILE
 echo "alias xih='xmipp_image_header'         "    >> $INC_FILE
