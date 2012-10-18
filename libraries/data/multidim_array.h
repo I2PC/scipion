@@ -33,7 +33,6 @@
 #include "matrix1d.h"
 #include "matrix2d.h"
 
-
 extern int bestPrecision(float F, int _width);
 extern String floatToString(float F, int _width, int _prec);
 
@@ -3374,14 +3373,14 @@ public:
             b=(N*sumxy-sumx*sumy)/denom;
         if (b<0)
         {
-        	std::cerr << "DEBUG_ROB, b:" << b << std::endl;
         	b = -b;
-        	std::cerr << "WARNING b is negative" <<  std::endl;
+        	std::cerr << "WARNING b is negative: -" << b << std::endl;
         }
 
         double a=sumy/N-b*sumx/N;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-        *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
+#define __factor 2.5
+        *ptr = static_cast< double >(a+__factor*b * static_cast< double > (*ptr));
     }
 
     /** Adjust the average and stddev of the array to given values.
