@@ -3337,50 +3337,26 @@ public:
         if (NZYXSIZE(*this) <= 0)
             return;
 
-        // y=a+bx
-        double sumx=0, sumy=0, sumxy=0, sumx2=0;
-
-        T* ptrExample=MULTIDIM_ARRAY(example);
-        int* ptrMask=NULL;
+        double avgExample, stddevExample, avgThis, stddevThis;
         if (mask!=NULL)
-            ptrMask=MULTIDIM_ARRAY(*mask);
-        T* ptr=NULL;
-        size_t n;
-        double N=0;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-            bool process=true;
-            if (mask!=NULL)
-                if (*ptrMask==0)
-                    process=false;
-            if (process)
-            {
-                T x=*ptr;
-                T y=*ptrExample;
-                sumy+=y;
-                sumxy+=x*y;
-                sumx+=x;
-                sumx2+=x*x;
-                N++;
-            }
-            ptrExample++;
-            if (mask!=NULL)
-                ptrMask++;
+        	computeAvgStdev_within_binary_mask(*mask,example,avgExample,stddevExample);
+        	computeAvgStdev_within_binary_mask(*mask,*this,avgThis,stddevThis);
         }
-        double denom=N*sumx2-sumx*sumx;
-        double b=0;
-        if (denom!=0)
-            b=(N*sumxy-sumx*sumy)/denom;
-        if (b<0)
+        else
         {
-        	b = -b;
-        	std::cerr << "WARNING b is negative: -" << b << std::endl;
+        	computeAvgStdev(avgThis,stddevThis);
+        	example.computeAvgStdev(avgExample,stddevExample);
         }
 
-        double a=sumy/N-b*sumx/N;
+        // y=a+bx
+        double b=stddevThis>0? stddevExample/stddevThis:0;
+        double a=avgExample-avgThis*b;
+
+        size_t n;
+        T *ptr=NULL;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-#define __factor 2.5
-        *ptr = static_cast< double >(a+__factor*b * static_cast< double > (*ptr));
+        *ptr = static_cast< T >(a+b * static_cast< double > (*ptr));
     }
 
     /** Adjust the average and stddev of the array to given values.
