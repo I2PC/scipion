@@ -38,6 +38,9 @@ class ProtScreenMicrographs(XmippProtocol):
             self.MicrographsMd = self.micrographs
 
     def defineSteps(self):
+        extraDir=self.workingDirPath('extra')
+        parent_id = self.insertStep('createDir',verifyfiles=[extraDir],path=extraDir)
+
         filesToImport = [self.Input[k] for k in ['microscope', 'acquisition']]
         if self.TiltPairs:
             filesToImport.append(self.MicrographsMd)
@@ -49,7 +52,6 @@ class ProtScreenMicrographs(XmippProtocol):
         Voltage = MD.getValue(xmipp.MDL_CTF_VOLTAGE,objId)
         SphericalAberration = MD.getValue(xmipp.MDL_CTF_CS,objId)
         Magnification = MD.getValue(xmipp.MDL_MAGNIFICATION,objId)
-        #This must come from acquisition info
         MD2 = xmipp.MetaData(self.Input['acquisition'])
         AngPix = MD2.getValue(xmipp.MDL_SAMPLINGRATE,objId)
 
@@ -61,7 +63,7 @@ class ProtScreenMicrographs(XmippProtocol):
             inputFile = MD.getValue(xmipp.MDL_MICROGRAPH, objId)
             micrographName = os.path.basename(inputFile)
             shortname = os.path.splitext(micrographName)[0]
-            micrographDir = self.workingDirPath(shortname)                    
+            micrographDir = os.path.join(extraDir,shortname)                    
             parent_id = self.insertParallelStep('createDir',verifyfiles=[micrographDir],path=micrographDir,parent_step_id=XmippProjectDb.FIRST_STEP)
 
             # Downsample if necessary
@@ -160,7 +162,7 @@ def buildSummaryMetadata(WorkingDir,importMicrographs,summaryFile):
         inputFile = importMd.getValue(xmipp.MDL_MICROGRAPH,id)
         micrographName = os.path.basename(inputFile)
         shortname = replaceFilenameExt(micrographName, '')
-        micrographDir = join(WorkingDir, shortname)                    
+        micrographDir = join(WorkingDir, 'extra', shortname)                    
         
         objId = md.addObject()
         md.setValue(xmipp.MDL_MICROGRAPH, inputFile, objId)
