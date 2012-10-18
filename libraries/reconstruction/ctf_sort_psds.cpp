@@ -205,6 +205,11 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     evaluation.maxDampingAtBorder=0;
     evaluation.firstZeroDisagreement=-1;
     evaluation.firstZeroAvg=0;
+    evaluation.maxFreq=1000;
+
+    CTF1.precomputeValues(0.0,0.0);
+	double idamping0=1.0/CTF1.CTFdamping_at();
+
     for (double alpha=0; alpha<=PI; alpha+=PI/180, N++)
     {
     	VECTOR_R2(u,cos(alpha),sin(alpha));
@@ -221,6 +226,16 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     	double damping=CTF1.CTFdamping_at();
     	damping=damping*damping;
     	evaluation.maxDampingAtBorder=XMIPP_MAX(evaluation.maxDampingAtBorder,damping);
+
+    	for (double w=0; w<wmax; w+=wmax/100.0)
+    	{
+        	wx=w*XX(u);
+        	wy=w*YY(u);
+        	CTF1.precomputeValues(wx,wy);
+        	double normalizedDamping=fabs(CTF1.CTFdamping_at()*idamping0);
+        	if (normalizedDamping>0.1)
+        		evaluation.maxFreq=std::min(evaluation.maxFreq,1.0/w);
+    	}
     	if (fnCTF2!="") {
         	CTF2.zero(1, u, freqZero2);
         	double module2=1.0/freqZero2.module();
@@ -259,6 +274,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 	rowOut.setValue(MDL_CTF_DEFOCUSU,evaluation.defocusU);
 	rowOut.setValue(MDL_CTF_DEFOCUSV,evaluation.defocusV);
 	rowOut.setValue(MDL_CTF_CRIT_FIRSTZEROAVG,evaluation.firstZeroAvg);
+	rowOut.setValue(MDL_CTF_CRIT_MAXFREQ,evaluation.maxFreq);
 	rowOut.setValue(MDL_CTF_CRIT_DAMPING,evaluation.maxDampingAtBorder);
     if (evaluation.firstZeroDisagreement>0)
     	rowOut.setValue(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement);

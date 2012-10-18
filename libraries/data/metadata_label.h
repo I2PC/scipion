@@ -148,6 +148,7 @@ enum MDLabel
     MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
     MDL_CTF_CRIT_FIRSTZEROAVG, ///< First zero average (in Angstroms)
     MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, ///< First zero disagreement with second model (in Angstroms)
+    MDL_CTF_CRIT_MAXFREQ, ///< Maximum frequency at which the envelope drops below 0.1 (in Angstroms)
     MDL_CTF_CRIT_DAMPING, ///< Minimum damping at border
     MDL_CTF_CRIT_PSDRADIALINTEGRAL, ///< Integral of the radial PSD
     MDL_CTF_CRIT_FITTINGSCORE, ///< Score of the fitting
@@ -810,6 +811,7 @@ private:
         MDL::addLabel(MDL_CTF_CRIT_DAMPING, LABEL_DOUBLE, "ctfCritDamping");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZEROAVG, LABEL_DOUBLE, "ctfCritFirstZero");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "ctfCritDisagree");
+        MDL::addLabel(MDL_CTF_CRIT_MAXFREQ, LABEL_DOUBLE, "ctfCritMaxFreq");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERORATIO, LABEL_DOUBLE, "ctfCritfirstZeroRatio");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGCORR13, LABEL_DOUBLE, "ctfCritCorr13");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGSCORE, LABEL_DOUBLE, "ctfCritFitting");

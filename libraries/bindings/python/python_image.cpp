@@ -120,6 +120,8 @@ PyMethodDef Image_methods[] =
      "Scale the image" },
    { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
      "set DataType for Image" },
+   { "convert2DataType", (PyCFunction) Image_convert2DataType, METH_VARARGS,
+     "Convert datatype of Image" },
    { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
      "Set the value of some pixel" },
    { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
@@ -726,6 +728,28 @@ Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
+}//function Image_setDataType
+
+/* Set Data Type */
+PyObject *
+Image_convert2DataType(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+   ImageObject *self = (ImageObject*) obj;
+   int datatype;
+
+   if (self != NULL && PyArg_ParseTuple(args, "i", &datatype))
+   {
+       try
+       {
+           self->image->convert2Datatype((DataType)datatype);
+           Py_RETURN_NONE;
+       }
+       catch (XmippError &xe)
+       {
+           PyErr_SetString(PyXmippError, xe.msg.c_str());
+       }
+   }
+   return NULL;
 }//function Image_setDataType
 
 /* Return image dimensions as a tuple */
