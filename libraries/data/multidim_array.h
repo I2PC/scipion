@@ -2165,7 +2165,7 @@ public:
      * @param flip Invert the positions of Z planes, keeping the X-Y orientation
      * @param n Select the number of image in case of stacks
      */
-    void reslice(AxisView face, bool flip = false, size_t n = 0) const
+    void reslice(AxisView face, bool flip = false, size_t n = 0)
     {
         MultidimArray<T> mTemp;
         reslice(mTemp, face, flip, n);
