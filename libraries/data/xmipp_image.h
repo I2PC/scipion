@@ -887,7 +887,7 @@ public:
         /* If we select a single slice, we are forced to chose also an image.
          * as at this moment we cannot select the same slice from different images at a time.
          */
-        if (newDim.zdim == 1 && select_img == ALL_IMAGES)
+        if (select_slice > 0 && select_img == ALL_IMAGES)
             select_img = FIRST_IMAGE;
         if (select_img > ALL_IMAGES)
             newDim.ndim = 1;

@@ -212,7 +212,6 @@ public class MDSearchJDialog extends XmippDialog {
 			else if (next >= ids.length)
 				next = 0;
 		}
-		System.out.format("nextIndex->index: %d,  next: %d\n, dir: %d", index, next, direction);
 		return next;
 	}
 
