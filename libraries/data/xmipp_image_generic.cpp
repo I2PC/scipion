@@ -322,7 +322,7 @@ void ImageGeneric::convert2Datatype(DataType _datatype, CastWriteMode castMode)
          pMAG->resize(aDim);\
          double min, max;\
          data->computeDoubleMinMax(min, max);\
-         ((Image<double>*) image)->getCastConvertPageFromT(0, (char*)pMAG->data, _datatype, aDim.zyxdim, min, max, castMode);\
+         ((Image<double>*) image)->getCastConvertPageFromT(0, (char*)pMAG->data, _datatype, aDim.nzyxdim, min, max, castMode);\
         }\
 
     SWITCHDATATYPE(_datatype, CONVERTTYPE)
