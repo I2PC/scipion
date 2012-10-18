@@ -32,6 +32,12 @@ void minus(Image<double> &op1, const Image<double> &op2)
     op1() -= op2();
 }
 
+void imageDotProduct(Image<double> &op1, const Image<double> &op2)
+{
+    double dot=op1().dotProduct(op2());
+    std::cout << "<" << op1.name() << "," << op2.name() << ">=" << dot << std::endl;
+}
+
 void plus(Image<double> &op1, const Image<double> &op2)
 {
     op1() += op2();
@@ -197,6 +203,7 @@ void ProgOperate::defineParams()
     addParamsLine("or --min <file_or_value>     :Minimum of two images, volumes, or number (pixel-wise)");
     addParamsLine("or --max <file_or_value>     :Maximum of two images, volumes, or number (pixel-wise)");
     addParamsLine("or --compare <file_or_value> :Returns -1 if the left value is less, 0 if are equal or 1 if greater.(pixel-wise)");
+    addParamsLine("or --dot_product <file>      :Dot product between two images or volumes");
     addParamsLine("==+ Relational operations: ==");
     addParamsLine("or --eq <file_or_value>      :Returns 1 if the pixels values are equal, 0 otherwise (pixel-wise)");
     addParamsLine("or --le <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
@@ -278,6 +285,11 @@ void ProgOperate::readParams()
     {
         file_or_value = getParam("--compare");
         binaryOperator = compare;
+    }
+    else if (checkParam("--dot_product"))
+    {
+        file_or_value = getParam("--dot_product");
+        binaryOperator = imageDotProduct;
     }
     ///Relational operations
     else if (checkParam("--eq"))
@@ -375,6 +387,8 @@ void ProgOperate::readParams()
                 img2.read(fn2);
             }
         }
+        if (isValue && checkParam("--dot_product"))
+        	REPORT_ERROR(ERR_ARG_INCORRECT,"Dot product can only be computed between two files");
     }
 }
 

@@ -43,7 +43,7 @@ protected:
 
 TEST_F( ImageGenericTest, equalsOperator)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     ImageGeneric auxImageG;
     auxImageG.readMapped(imageName);
     ASSERT_TRUE(myImageGeneric==myImageGeneric);
@@ -54,7 +54,7 @@ TEST_F( ImageGenericTest, equalsOperator)
 
 TEST_F( ImageGenericTest, equalsFunction)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     ImageGeneric auxImageG;
     auxImageG.read(imageName);
     ASSERT_TRUE (myImageGeneric.equal(auxImageG) );
@@ -81,7 +81,7 @@ TEST_F( ImageGenericTest, copy)
 // Check if swapped images are read correctly, mapped and unmapped.
 TEST_F( ImageGenericTest, readMapSwapFile)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     FileName auxFn = imageName.insertBeforeExtension("_swap");
     ImageGeneric auxImageGeneric;
     auxImageGeneric.read(auxFn);
@@ -93,7 +93,7 @@ TEST_F( ImageGenericTest, readMapSwapFile)
 
 TEST_F( ImageGenericTest, add)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     FileName auxFilename1((String)"1@"+stackName);
     FileName auxFilename2((String)"2@"+stackName);
     ImageGeneric auxImageGeneric1(auxFilename1);
@@ -123,7 +123,7 @@ TEST_F( ImageGenericTest, subtract)
 // check if an empty file is correctly created
 TEST_F( ImageGenericTest, createEmptyFile)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     FileName tempFn;
     tempFn.initUniqueName("/tmp/emptyFile_XXXXXX");
     tempFn = tempFn + ":stk";
@@ -180,7 +180,7 @@ TEST_F( ImageGenericTest, initRandom)
 // check if a pointer to data array is correctly passed
 TEST_F( ImageGenericTest, getArrayPointer)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     ImageGeneric img, img2;
     img.read(imageName);
     MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
@@ -203,7 +203,7 @@ TEST_F( ImageGenericTest, getArrayPointer)
 // check if a pointer to MultidimArray is correctly passed
 TEST_F( ImageGenericTest, getMultidimArrayPointer)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     ImageGeneric img, img2;
     img.read(imageName);
     MultidimArrayGeneric & mag = MULTIDIM_ARRAY_GENERIC(img);
@@ -228,7 +228,7 @@ TEST_F( ImageGenericTest, getMultidimArrayPointer)
  */
 TEST_F( ImageGenericTest, convert2Datatype)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     ImageGeneric img;
     img.read(imageName);
     MultidimArray<float> * ma;
@@ -254,7 +254,24 @@ TEST_F( ImageGenericTest, convert2Datatype)
     // Now both arrays are equal
     EXPECT_EQ(*uintMaP, uintMa);
 
-    // Checking that convert2Datatype works after movePointer2
+    /// Checking convert2Datatype works with stacks in memory
+    img.read(stackName);
+
+    img().getMultidimArrayPointer(ma);
+    auxMa = *ma;
+
+    // Change of datatype and conversion of values
+    img.convert2Datatype(DT_Double);
+    MultidimArray<double> *dMaP;
+    MultidimArray<double> dMa;
+    typeCast(auxMa, dMa);
+    img().getMultidimArrayPointer(dMaP);
+
+    // Now both arrays are equal
+    EXPECT_EQ(*dMaP, dMa);
+
+
+    /// Checking that convert2Datatype works after movePointer2
     ArrayDim befAdim, aftAdim;
     FileName auxFn = "image/smallVolume.vol";
     myImageGeneric.readMapped(auxFn);
@@ -283,7 +300,7 @@ TEST_F( ImageGenericTest, convert2Datatype)
 // check the reslicing is right
 TEST_F( ImageGenericTest, reslice)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     FileName fnVol = "image/progVol.vol";
     ImageGeneric imgSliced, imgRef;
     imgSliced.read(fnVol);
@@ -292,7 +309,7 @@ TEST_F( ImageGenericTest, reslice)
     MultidimArray<float> * dataS, *dataR;
     imgRef().getMultidimArrayPointer(dataR);
 
-    imgSliced.reslice(ImageGeneric::Y_NEG);
+    imgSliced.reslice(VIEW_Y_NEG);
     imgSliced().getMultidimArrayPointer(dataS);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
@@ -300,19 +317,19 @@ TEST_F( ImageGenericTest, reslice)
         EXPECT_EQ(DIRECT_ZYX_ELEM(*dataR,k,i,j), DIRECT_ZYX_ELEM(*dataS,ZSIZE(*dataS)-1-i,k,j));
     }
 
-    imgSliced.reslice(ImageGeneric::Y_POS);
+    imgSliced.reslice(VIEW_Y_POS);
     imgSliced().getMultidimArrayPointer(dataS);
 
     EXPECT_EQ(*dataR, *dataS);
 
-    imgSliced.reslice(ImageGeneric::X_NEG);
+    imgSliced.reslice(VIEW_X_NEG);
     imgSliced().getMultidimArrayPointer(dataS);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*dataR)
     {
         EXPECT_EQ(DIRECT_ZYX_ELEM(*dataR,k,i,j), DIRECT_ZYX_ELEM(*dataS,ZSIZE(*dataS)-1-j,i,k));
     }
-    imgSliced.reslice(ImageGeneric::X_POS);
+    imgSliced.reslice(VIEW_X_POS);
     imgSliced().getMultidimArrayPointer(dataS);
 
     EXPECT_EQ(*dataR, *dataS);
@@ -321,7 +338,7 @@ TEST_F( ImageGenericTest, reslice)
 
 TEST_F( ImageGenericTest, getPreview)
 {
-	XMIPP_TRY
+    XMIPP_TRY
     FileName auxFn = "image/smallVolume.vol";
     ImageGeneric img1, img2, imgTemp;
     imgTemp.read(auxFn);
@@ -342,6 +359,76 @@ TEST_F( ImageGenericTest, getPreview)
     }
     XMIPP_CATCH
 }
+
+TEST_F( ImageGenericTest, movePointerTo)
+{
+    XMIPP_TRY
+    FileName auxFn= "image/smallVolumeStack.stk";
+    ImageGeneric img1, img2;
+    img1.read(auxFn);
+
+    ArrayDim aDim;
+    img1().getDimensions(aDim);
+
+    for (size_t n = 1; +n <= aDim.ndim; ++n)
+    {
+        img2.read(auxFn, DATA, n);
+
+        for (int k = 1; k <= aDim.zdim; ++k)
+        {
+            img1.movePointerTo(k, n);
+            img2.movePointerTo(k);
+
+            img1().setXmippOrigin();
+            img2().setXmippOrigin();
+
+            EXPECT_TRUE(img1 == img2);
+        }
+    }
+    XMIPP_CATCH
+}
+
+TEST_F( ImageGenericTest, MovePointerToCheckDimensions)
+{
+    XMIPP_TRY
+    ImageGeneric img1, img2;
+
+    img1.setDatatype(DT_Float);
+    img1.resize(32, 32, 1, 4, false);
+
+    ArrayDim aDim, newADim, aDimN, aDimS;
+    img1().getDimensions(aDim);
+    aDimN = aDim;
+    aDimN.ndim = 1;
+    aDimS = aDimN;
+    aDimS.zdim = 1;
+
+
+
+    for (size_t n = 1; +n <= aDim.ndim; ++n)
+    {
+        img1.movePointerTo(ALL_SLICES, n);
+        img1().getDimensions(newADim);
+        EXPECT_TRUE(aDimN == newADim);
+
+        img1.movePointerTo();
+        img1().getDimensions(newADim);
+        EXPECT_TRUE(aDim == newADim);
+
+        for (int k = 1; k <= aDim.zdim; ++k)
+        {
+            img1.movePointerTo(k, n);
+            img1().getDimensions(newADim);
+            EXPECT_TRUE(aDimS == newADim);
+
+            img1.movePointerTo();
+            img1().getDimensions(newADim);
+            EXPECT_TRUE(aDim == newADim);
+        }
+    }
+    XMIPP_CATCH
+}
+
 
 GTEST_API_ int main(int argc, char **argv)
 {

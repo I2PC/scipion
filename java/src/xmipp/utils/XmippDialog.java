@@ -55,16 +55,18 @@ public class XmippDialog extends JDialog implements ActionListener {
 	protected boolean btnCancelDisplay = true;
 	protected JPanel panelBtn;
 	protected boolean disposeOnClose = true;
+	protected boolean closeOnAction = true;
 
 	public XmippDialog(JFrame parent, String title, boolean modal) {
 		super(parent, title, modal);
 		this.parent = parent;
 	}
+
 	public XmippDialog(Dialog parent, String title, boolean modal) {
 		super(parent, title, modal);
 		this.parent = parent;
 	}
-	
+
 	/**
 	 * this is the general method to init the components. It should be called
 	 * from every subclass constructor after some settings of values
@@ -82,15 +84,18 @@ public class XmippDialog extends JDialog implements ActionListener {
 			XmippWindowUtil.centerWindows(this, parent);
 	}
 
+	protected JButton addButton(String text) {
+		JButton btn = XmippWindowUtil.getTextButton(text, this);
+		panelBtn.add(btn);
+		return btn;
+	}
+
 	protected void createButtons() {
 		// Create panel for Ok and Cancel buttons
 		panelBtn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-		btnOk = XmippWindowUtil.getTextButton(btnOkText, this);
-		panelBtn.add(btnOk);
-		if (btnCancelDisplay) {
-			btnCancel = XmippWindowUtil.getTextButton(btnCancelText, this);
-			panelBtn.add(btnCancel);
-		}
+		btnOk = addButton(btnOkText);
+		if (btnCancelDisplay)
+			btnCancel = addButton(btnCancelText);
 	}
 
 	/** Function to display the Dialog and return the result state */
@@ -113,23 +118,25 @@ public class XmippDialog extends JDialog implements ActionListener {
 	public void handleActionPerformed(ActionEvent evt) {
 
 	}
-	
+
 	/**
 	 * Function called before close after ok pressed
 	 */
-	public void handleOk(){}
-	
+	public void handleOk() {
+	}
+
 	/**
 	 * Function called before close after cancel pressed
 	 */
-	public void handleCancel(){}
+	public void handleCancel() {
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		Object obj = evt.getSource();
-		if (obj == btnOk)
+		if (obj == btnOk) {
 			close(true);
-		else if (obj == btnCancel) {
+		} else if (obj == btnCancel) {
 			close(false);
 		} else
 			handleActionPerformed(evt);
@@ -141,10 +148,13 @@ public class XmippDialog extends JDialog implements ActionListener {
 			handleOk();
 		else
 			handleCancel();
-		this.result = result;
-		setVisible(false);
-		if (disposeOnClose)
-			dispose();
+		
+		if (closeOnAction) {
+			this.result = result;
+			setVisible(false);
+			if (disposeOnClose)
+				dispose();
+		}
 	}// function close
 
 	/** Change the default dispose on close behavior */
@@ -152,13 +162,18 @@ public class XmippDialog extends JDialog implements ActionListener {
 		disposeOnClose = value;
 	}
 
+	/** Set to false if don't want to close on close */
+	public void setCloseOnOk(boolean value) {
+		closeOnAction = value;
+	}
+
 	/** Some methods to show dialog using the current as parent */
 	public boolean showInfo(String message) {
-		XmippMessageDialog dlg = new XmippMessageDialog(this, "INFO",
-				message, "info.gif");
+		XmippMessageDialog dlg = new XmippMessageDialog(this, "INFO", message,
+				"info.gif");
 		return dlg.showDialog();
 	}
-	
+
 	public boolean showWarning(String message) {
 		XmippMessageDialog dlg = new XmippMessageDialog(this, "WARNING",
 				message, "warning.gif");
@@ -166,8 +181,8 @@ public class XmippDialog extends JDialog implements ActionListener {
 	}
 
 	public boolean showError(String message) {
-		XmippMessageDialog dlg = new XmippMessageDialog(this, "ERROR",
-				message, "error.gif");
+		XmippMessageDialog dlg = new XmippMessageDialog(this, "ERROR", message,
+				"error.gif");
 		return dlg.showDialog();
 	}
 
@@ -178,7 +193,7 @@ public class XmippDialog extends JDialog implements ActionListener {
 		e.printStackTrace();
 		return dlg.showDialog();
 	}
-		
+
 	/** Some static methods to display some message dialogs */
 	public static boolean showInfo(JFrame parent, String message) {
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "INFO",
@@ -205,23 +220,23 @@ public class XmippDialog extends JDialog implements ActionListener {
 		e.printStackTrace();
 		return dlg.showDialog();
 	}
-	
+
 	public static boolean showQuestion(JFrame parent, String message) {
 		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message);
 		return dlg.showDialog();
-	}	
-	
+	}
+
 	public static boolean showQuestion(JDialog parent, String message) {
 		XmippMessageDialog dlg = new XmippQuestionDialog(parent, message);
 		return dlg.showDialog();
-	}	
-	
+	}
+
 	public static String removeColors(String message) {
 		if (message == null)
 			return null;
-		String redPrefix=String.format("%c[%d;%dm",0x1B,1,31);
-		String redSuffix=String.format("%c[0m",0x1B);
-		return message.replace(redPrefix,"").replace(redSuffix,"");
+		String redPrefix = String.format("%c[%d;%dm", 0x1B, 1, 31);
+		String redSuffix = String.format("%c[0m", 0x1B);
+		return message.replace(redPrefix, "").replace(redSuffix, "");
 	}
 
 }// class XmippDialog

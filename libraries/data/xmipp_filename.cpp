@@ -511,9 +511,10 @@ bool FileName::isStar1(bool failIfNotExists) const
     // Search for xmipp_3,
     char cline[128];
     infile.getline(cline, 128);
+    infile.close();
     line = cline;
     size_t pos = line.find(METADATA_XMIPP_STAR);
-    return (pos != String::npos); // xmipp_star_1 token found
+    return (pos != npos); // xmipp_star_1 token found
 }
 
 // Replace one substring by other .......................................

@@ -116,6 +116,14 @@ class ProtExtractParticles(XmippProtocol):
                                                         parent_step_id=parent_id)
                 micrographToExtract=micrographDownsampled
 
+            # Removing dust?
+            if self.DoRemoveDust:
+                micrographNoDust = self.tmpPath(micrographName+"_noDust.xmp")
+                threshold=self.DustRemovalThreshold
+                args=" -i %(micrographToExtract)s -o %(micrographNoDust)s --bad_pixels outliers %(threshold)f" % locals()
+                parent_id=self.insertParallelRunJobStep("xmipp_transform_filter", args, parent_step_id=parent_id)
+                micrographToExtract=micrographNoDust
+            
             # Flipping?
             if self.DoFlip:
                 micrographFlipped = self.tmpPath(micrographName+"_flipped.xmp")
@@ -135,8 +143,9 @@ class ProtExtractParticles(XmippProtocol):
                                   TsFinal=self.TsFinal, TsInput=self.TsInput, downsamplingMode=self.downsamplingMode,
                                   fnExtractList=destFnExtractList,particleSize=self.ParticleSize,
                                   doFlip=self.DoFlip,doNorm=self.DoNorm,doInvert=self.DoInvert,
-                                  bgRadius=self.BackGroundRadius, doRemoveDust=self.DoRemoveDust,
-                                  dustRemovalThreshold=self.DustRemovalThreshold)
+                                  bgRadius=self.BackGroundRadius)
+            if self.DoRemoveDust:
+                self.insertParallelStep('deleteFile', parent_step_id=parent_id,filename=micrographNoDust,verbose=True)
             if self.downsamplingMode==DownsamplingMode.NewDownsample:
                 self.insertParallelStep('deleteFile', parent_step_id=parent_id,filename=micrographDownsampled,verbose=True)
             if self.DoFlip:
@@ -324,7 +333,7 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
 
 def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,
-                     fnExtractList, particleSize, doFlip, doNorm, doInvert, bgRadius, doRemoveDust, dustRemovalThreshold):
+                     fnExtractList, particleSize, doFlip, doNorm, doInvert, bgRadius):
     
     
     fnBlock = _getFilename('mic_block_fn', micName=micrographName, fn=fnExtractList)
@@ -351,9 +360,6 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
         if bgRadius == 0:
             bgRadius = int(particleSize/2)
         arguments = "-i "+rootname+'.stk --method Ramp --background circle '+str(bgRadius)
-
-        if doRemoveDust:
-            arguments+=' --thr_black_dust -' + str(dustRemovalThreshold)+' --thr_white_dust ' + str(dustRemovalThreshold)
         runJob(log,"xmipp_transform_normalize",arguments)
 
     # Substitute the micrograph name if it comes from the flipped version

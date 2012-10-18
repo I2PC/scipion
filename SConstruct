@@ -55,11 +55,6 @@ opts.Add(BoolVariable('warn', 'Show warnings?', 'no'))
 opts.Add(BoolVariable('fast', 'Fast?', 'no'))
 opts.Add(BoolVariable('static', 'Prevent dynamic linking?', 'no'))
 
-opts.Add(BoolVariable('qt', 'Build the GUI (qt) programs?', 'yes'))
-opts.Add('QTDIR', 'Where is QT installed', '/usr/share/qt3')
-opts.Add('QT_LIB', 'QT library to use', 'qt-mt')
-opts.Add(BoolVariable('QT4', 'Use Qt4 instead of Qt3?', 'no'))
-
 opts.Add('prepend', 'What to prepend to executable names', 'xmipp')
 opts.Add(BoolVariable('quiet', 'Hide command line?', 'yes'))
 
@@ -422,9 +417,6 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env['ARCOMSTR'] = 'Archiving $TARGET'
         env['SHLINKCOMSTR'] = 'Linking $TARGET'
         env['RANLIBCOMSTR'] = 'Indexing $TARGET'
-        env['QT_UICCOMSTR'] = 'UICing $SOURCE'
-        env['QT_MOCFROMHCOMSTR'] = 'MOCing header $SOURCE'
-        env['QT_MOCFROMCXXCOMSTR'] = 'MOCing source $SOURCE'
         env['TARCOMSTR'] = 'Archiving $TARGET'
         env['INSTALLSTR'] = 'Installing $TARGET'
 

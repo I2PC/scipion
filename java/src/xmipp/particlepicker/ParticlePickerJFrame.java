@@ -54,6 +54,7 @@ import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.Shape;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
+//import xmipp.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -97,6 +98,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	private JMenuItem exitmi;
 
+//	public TemplatesJDialog templatesdialog;
+
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -130,7 +133,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				resetMicrograph();
 			}
 		});
-		
 		micrographstb = new JTable();
 		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -186,7 +188,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 	}
 	
-
 	protected abstract void loadMicrograph();
 	
 	private void initMenuBar(ParticlePicker picker)
@@ -468,12 +469,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				particlesdialog.close();
 			particlesdialog = null;
 		}
+		
 	}
 
 	public void updateMicrographsModel()
 	{
 		if (particlesdialog != null)
 			loadParticles();
+		
 	}
 
 	public ParticlesJDialog getParticlesJDialog()
@@ -681,5 +684,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().setActive(null);
 	}
 
+	
 
 }

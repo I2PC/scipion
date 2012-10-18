@@ -35,7 +35,6 @@
 #include "matrix1d.h"
 #include "matrix2d.h"
 
-
 extern int bestPrecision(float F, int _width);
 extern String floatToString(float F, int _width, int _prec);
 
@@ -672,17 +671,29 @@ struct ArrayCoord
     int y;
     // Number of elements in X
     int x;
-}
-;
+} ;
+
+/**
+ * Possible views for 3D MuldimArray
+ */
+typedef enum
+{
+    VIEW_Z_NEG,    // Front view (Z negative)
+    VIEW_Z_POS,    //  Z positve
+    VIEW_Y_NEG,    // Align -Y axis to Z axis, rotating 90 degrees around X axis");
+    VIEW_Y_POS, // Align Y axis to Z axis, rotating -90 degrees around X axis");
+    VIEW_X_NEG,   // Align -X axis to Z axis, rotating -90 degrees around Y axis");
+    VIEW_X_POS   // Align X axis to Z axis, rotating 90 degrees around Y axis");
+} AxisView;
 
 /**
  *  Structure to define random generation mode
  */
-enum RandomMode
+typedef enum
 {
     RND_UNIFORM = 0,
     RND_GAUSSIAN = 1
-} ;
+} RandomMode;
 
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
@@ -1082,7 +1093,7 @@ public:
      */
     void setMmap(bool mmap)
     {
-    	coreDeallocate();
+        coreDeallocate();
         mmapOn = mmap;
     }
 
@@ -2105,6 +2116,70 @@ public:
         T *ptr=&(DIRECT_NZYX_ELEM(*this, n, k, 0, 0));
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
         *(ptr++) = (T) DIRECT_MULTIDIM_ELEM(v, n);
+    }
+
+    /** Reslice the volume aliging any X or Y direction with Z axis
+     *
+     * @param face Select the face to become the new Z direction
+     * @param out  The resliced volume is returned
+     * @param flip Invert the positions of Z planes, keeping the X-Y orientation
+     * @param n Select the number of image in case of stacks
+     */
+
+    template <typename T1>
+    void reslice(MultidimArray<T1>& out, AxisView face, bool flip = false, size_t n = 0) const
+    {
+        ArrayDim aDim, aDimOut;
+        getDimensions(aDim);
+
+        char axis;
+        bool reverse;
+
+        aDimOut = aDim;
+
+        if (face == VIEW_Y_NEG || face == VIEW_Y_POS)
+        {
+            axis = 'Y';
+            aDimOut.ydim = aDim.zdim;
+            aDimOut.zdim = aDim.ydim;
+            reverse = (face == VIEW_Y_NEG);
+        }
+        else if (face == VIEW_X_NEG || face == VIEW_X_POS)
+        {
+            axis = 'X';
+            aDimOut.xdim = aDim.zdim;
+            aDimOut.zdim = aDim.xdim;
+            reverse = (face == VIEW_X_NEG);
+        }
+
+        flip = flip^reverse;
+
+        out.resize(aDimOut, false);
+
+        MultidimArray<T1> imTemp;
+
+        int index;
+
+        for (int k = 0; k < aDimOut.zdim; k++)
+        {
+            imTemp.aliasSlice(out, k);
+            index = k + (aDimOut.zdim - 1 - 2*k) * (int)flip;
+            this->getSlice(index, imTemp, axis, !reverse);
+        }
+
+    }
+
+    /** Reslice the current volume
+     *
+     * @param face Select the face to become the new Z direction
+     * @param flip Invert the positions of Z planes, keeping the X-Y orientation
+     * @param n Select the number of image in case of stacks
+     */
+    void reslice(AxisView face, bool flip = false, size_t n = 0)
+    {
+        MultidimArray<T> mTemp;
+        reslice(mTemp, face, flip, n);
+        *this = mTemp;
     }
 
     /** Get Column
@@ -3272,43 +3347,26 @@ public:
         if (NZYXSIZE(*this) <= 0)
             return;
 
-        // y=a+bx
-        double sumx=0, sumy=0, sumxy=0, sumx2=0;
-
-        T* ptrExample=MULTIDIM_ARRAY(example);
-        int* ptrMask=NULL;
+        double avgExample, stddevExample, avgThis, stddevThis;
         if (mask!=NULL)
-            ptrMask=MULTIDIM_ARRAY(*mask);
-        T* ptr=NULL;
-        size_t n;
-        double N=0;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-            bool process=true;
-            if (mask!=NULL)
-                if (*ptrMask==0)
-                    process=false;
-            if (process)
-            {
-                T x=*ptr;
-                T y=*ptrExample;
-                sumy+=y;
-                sumxy+=x*y;
-                sumx+=x;
-                sumx2+=x*x;
-                N++;
-            }
-            ptrExample++;
-            if (mask!=NULL)
-                ptrMask++;
+        	computeAvgStdev_within_binary_mask(*mask,example,avgExample,stddevExample);
+        	computeAvgStdev_within_binary_mask(*mask,*this,avgThis,stddevThis);
         }
-        double denom=N*sumx2-sumx*sumx;
-        double b=0;
-        if (denom!=0)
-            b=(N*sumxy-sumx*sumy)/denom;
-        double a=sumy/N-b*sumx/N;
+        else
+        {
+        	computeAvgStdev(avgThis,stddevThis);
+        	example.computeAvgStdev(avgExample,stddevExample);
+        }
+
+        // y=a+bx
+        double b=stddevThis>0? stddevExample/stddevThis:0;
+        double a=avgExample-avgThis*b;
+
+        size_t n;
+        T *ptr=NULL;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-        *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
+        *ptr = static_cast< T >(a+b * static_cast< double > (*ptr));
     }
 
     /** Adjust the average and stddev of the array to given values.
@@ -5058,6 +5116,10 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
 /** Get Sin and Cos of vector x.
  */
 void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimArray<double> &c);
+
+/** Obtains the plane parameters p0+p1x+p2y of the 2x2 MultidimArray x.
+ */
+void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2);
 
 /*
    mod    Modulus after division.

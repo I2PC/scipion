@@ -992,11 +992,10 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
         if ((j >= Xdim / 2 && i >= Ydim / 2)
             || (j < Xdim / 2 && i < Ydim / 2))
         {
+            mask(i, j) = (enhancedPSD(i, j) > 1e-3);
             XX(idx) = j;
             YY(idx) = i;
             FFT_idx2digfreq(model, idx, freq);
-            if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
-                mask(i,j)=global_mask(i,j);
             digfreq2contfreq(freq, freq, global_prm->Tm);
 
             global_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -1011,8 +1010,10 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
+    {
         if (!((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2)))
             model(i, j) = enhancedPSD(i, j);
+    }
 
     // Produce a centered image
     CenterFFT(model, true);
@@ -1043,12 +1044,11 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
     {
         if (j >= Xdim / 2)
             continue;
+        mask(i, j) = (enhancedPSD(i, j) > 1e-3);
 
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(model, idx, freq);
-        if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
-        	mask(i,j)=global_mask(i,j);
         digfreq2contfreq(freq, freq, global_prm->Tm);
 
         global_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -1062,8 +1062,10 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
+    {
         if (j >= Xdim / 2)
             model(i, j) = enhancedPSD(i, j);
+    }
 
     // Produce a centered image
     CenterFFT(model, true);
@@ -1181,14 +1183,15 @@ double CTF_fitness(double *p, void *)
     {
         // If there is an initial model, the true solution
         // cannot be too far
-        if (fabs(global_prm->initial_ctfmodel.DeltafU - global_ctfmodel.DeltafU) > global_prm->defocus_range ||
-        	fabs(global_prm->initial_ctfmodel.DeltafV - global_ctfmodel.DeltafV) > global_prm->defocus_range)
+        if (fabs(global_prm->initial_ctfmodel.DeltafU - global_ctfmodel.DeltafU)
+            > global_prm->defocus_range
+            || fabs(
+                global_prm->initial_ctfmodel.DeltafV
+                - global_ctfmodel.DeltafV)
+            > global_prm->defocus_range)
         {
-            if (global_show >= 2) {
-                std::cout << "Too far from hint: Initial (" << global_prm->initial_ctfmodel.DeltafU << "," << global_prm->initial_ctfmodel.DeltafV << ")"
-                		  << " current guess (" << global_ctfmodel.DeltafU << "," << global_ctfmodel.DeltafV << ") max allowed difference: "
-                		  << global_prm->defocus_range << std::endl;
-            }
+            if (global_show >= 2)
+                std::cout << "Too far from hint\n";
             return global_heavy_penalization;
         }
     }
@@ -1312,10 +1315,10 @@ double CTF_fitness(double *p, void *)
         retval = distsum / N;
     else
         retval = global_heavy_penalization;
-    if (global_show >=2)
+    if (global_show == 3)
         std::cout << "Fitness1=" << retval << std::endl;
-    if ( (((global_action >= 3) && (global_action <= 4)) || (global_action == 6))
-        && (Ncorr > 0) && (global_prm->enhanced_weight != 0) )
+    if ((global_action >= 3 && global_action <= 4 || global_action == 6)
+        && Ncorr > 0 && global_prm->enhanced_weight != 0)
     {
         model_avg /= Ncorr;
         enhanced_avg /= Ncorr;
@@ -1326,12 +1329,8 @@ double CTF_fitness(double *p, void *)
         double sigma2 = sqrt(fabs(model2 / Ncorr - model_avg * model_avg));
         double maxSigma = std::max(sigma1, sigma2);
         if (sigma1 < XMIPP_EQUAL_ACCURACY || sigma2 < XMIPP_EQUAL_ACCURACY
-            || (fabs(sigma1 - sigma2) / maxSigma > 0.9 && global_action>=5))
-        {
+            || fabs(sigma1 - sigma2) / maxSigma > 0.9)
             retval = global_heavy_penalization;
-            if (global_show>=2)
-            	std::cout << "Fitness2=" << global_heavy_penalization << " sigma1=" << sigma1 << " sigma2=" << sigma2 << std::endl;
-        }
         else
         {
             correlation_coeff /= sigma1 * sigma2;
@@ -1339,7 +1338,7 @@ double CTF_fitness(double *p, void *)
                 global_corr13 = correlation_coeff;
             else
                 retval -= global_prm->enhanced_weight * correlation_coeff;
-            if (global_show >= 2)
+            if (global_show == 3)
             {
                 std::cout << "model_avg=" << model_avg << std::endl;
                 std::cout << "enhanced_avg=" << enhanced_avg << std::endl;
@@ -2396,6 +2395,9 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
+    if (global_prm->show_optimization)
+        std::cout << "Looking for first defoci ...\n";
+
     // Center enhanced PSD
     MultidimArray<double> centeredEnhancedPSD=psdToModelFullSize;
     CenterFFT(centeredEnhancedPSD,true);
@@ -2498,20 +2500,11 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
             VEC_ELEM(arrayDefocusAvg,i)  = ((*global_adjust)(0) +(*global_adjust)(1))/2;
             VEC_ELEM(arrayDefocusDiff,i) = ((*global_adjust)(0) -(*global_adjust)(1))/2;
             VEC_ELEM(arrayError,i) = (-1)*fitness;
-
         }
     }
 
     int maxInd;
     arrayError.maxIndex(maxInd);
-
-    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 300) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 80000) )
-    {
-    	VEC_ELEM(arrayError,maxInd) = -1e3;
-    	VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
-    	VEC_ELEM(arrayDefocusDiff,maxInd) = global_prm->initial_ctfmodel.DeltafV;
-    	arrayError.maxIndex(maxInd);
-    }
 
     Matrix1D<double> arrayDefocusU(3);
     arrayDefocusU.initZeros();
@@ -2673,6 +2666,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     //gethostname(hostname,1023);
     //std::cout << prm.fn_psd << " " << hostname << std::endl;
 
+    std::cout << prm.fn_psd.removeLastExtension() << std::endl;
     DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
     global_prm = &prm;
     if (standalone || prm.show_optimization)
@@ -2786,6 +2780,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     else
         estimate_defoci();
 
+    std::cout << "estimate_defoci : DeltaU : " << global_ctfmodel.DeltafU << std::endl;
+    std::cout << "estimate_defoci : DeltaV : " << global_ctfmodel.DeltafV << std::endl;
+
     DEBUG_TEXTFILE(formatString("Step 7: DeltafU=%f",global_ctfmodel.DeltafU));
     DEBUG_TEXTFILE(formatString("Step 7: DeltafV=%f",global_ctfmodel.DeltafV));
     DEBUG_TEXTFILE(formatString("Step 7: azimutalAngle=%f",global_ctfmodel.azimuthal_angle));
@@ -2891,6 +2888,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     DEBUG_TEXTFILE(formatString("Step 11: DeltafU=%f fitness=%f",global_ctfmodel.DeltafU,fitness));
     DEBUG_MODEL_TEXTFILE;
 
+    std::cout << "DeltaU : " << global_ctfmodel.DeltafU << std::endl;
+    std::cout << "DeltaV : " << global_ctfmodel.DeltafV << std::endl;
+
     //We adopt that always  DeltafU > DeltafV so if this is not the case we change the values and the angle
     if ( global_ctfmodel.DeltafV > global_ctfmodel.DeltafU)
     {
@@ -2928,17 +2928,14 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 
         // Save results
         FileName fn_rootCTFPARAM = prm.fn_psd.withoutExtension();
-
         FileName fn_rootMODEL = fn_rootCTFPARAM;
         int atPosition=fn_rootCTFPARAM.find('@');
-
         if (atPosition!=std::string::npos)
         {
             fn_rootMODEL=formatString("%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
                                       fn_rootCTFPARAM.substr(atPosition+1).c_str());
             fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
                                          fn_rootCTFPARAM.substr(atPosition+1).c_str());
-
         }
 
         save_intermediate_results(fn_rootMODEL, false);
@@ -2947,21 +2944,11 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         MetaData MD;
         MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");
         size_t id = MD.firstObject();
-        MD.setValue(MDL_CTF_ID, fn_rootCTFPARAM+ ".ctfparam", id);
-        if (output_ctfmodel.isLocalCTF)
-        {
-        	MD.setValue(MDL_CTF_X0, (double)output_ctfmodel.x0, id);
-        	MD.setValue(MDL_CTF_XF, (double)output_ctfmodel.xF, id);
-        	MD.setValue(MDL_CTF_Y0, (double)output_ctfmodel.y0, id);
-        	MD.setValue(MDL_CTF_YF, (double)output_ctfmodel.yF, id);
-
-        }
         MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);
         MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
-        fn_rootCTFPARAM = fn_rootCTFPARAM + ".ctfparam_tmp";
-        fn_rootCTFPARAM.deleteFile();
+
     }
     output_ctfmodel = global_ctfmodel;
 

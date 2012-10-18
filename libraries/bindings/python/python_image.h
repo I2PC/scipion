@@ -131,6 +131,10 @@ Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* Set Data Type */
+PyObject *
+Image_convert2DataType(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 /* Return image dimensions as a tuple */
 PyObject *
 Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs);

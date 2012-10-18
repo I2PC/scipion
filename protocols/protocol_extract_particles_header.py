@@ -43,6 +43,22 @@ Family = ''
 actual particles may be smaller than this. """
 ParticleSize = 0
 
+# Dust particles removal (Recommended)
+""" 
+Sets pixels with unusually large values to random values from a Gaussian
+with zero-mean and unity-standard deviation. 
+"""
+DoRemoveDust = True
+
+# {expert}{condition}(DoRemoveDust) Threshold for dust removal:
+""" 
+Pixels with a signal higher or lower than this value times the standard 
+deviation of the image will be affected. For cryo, 3.5 is a good value.
+For high-contrast negative stain, the signal itself may be affected so 
+that a higher value may be preferable.
+"""
+DustRemovalThreshold = 3.5
+
 # Phase flipping (Recommended)
 """ Use the information from the CTF to compensate for phase reversals."""
 DoFlip = True
@@ -63,24 +79,6 @@ Pixels outside this circle are assumed to be noise and their stddev
 is set to 1. Radius for background circle definition (in pix.).
 If this value is 0, then half the box size is used. """
 BackGroundRadius = 0
-
-# {condition}(DoNorm) Dust particles removal
-""" 
-Sets pixels with unusually large values to random values from a Gaussian
-with zero-mean and unity-standard deviation. 
-"""
-DoRemoveDust = False
-
-# {expert}{condition}(DoRemoveDust) Threshold for dust removal:
-""" 
-Pixels with a signal higher or lower than this value times the standard 
-deviation of the image will be affected. For cryo, 3.5 is a good value.
-For high-contrast negative stain, the signal itself may be affected so 
-that a higher value may be preferable.
-"""
-DustRemovalThreshold = 3.5
-
-
 
 # {eval} expandParallel(threads=0, hours=12, mpi=8)
 #
