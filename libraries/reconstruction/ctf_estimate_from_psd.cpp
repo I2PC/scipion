@@ -2398,9 +2398,6 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
-    if (global_prm->show_optimization)
-        std::cout << "Looking for first defoci ...\n";
-
     // Center enhanced PSD
     MultidimArray<double> centeredEnhancedPSD=psdToModelFullSize;
     CenterFFT(centeredEnhancedPSD,true);
@@ -2510,7 +2507,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     int maxInd;
     arrayError.maxIndex(maxInd);
 
-    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 2000) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 80000) )
+    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 300) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 80000) )
     {
     	VEC_ELEM(arrayError,maxInd) = -1e3;
     	VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
