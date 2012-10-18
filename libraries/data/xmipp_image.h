@@ -34,6 +34,9 @@
 #include "xmipp_image_base.h"
 #include "xmipp_image_generic.h"
 #include "xmipp_color.h"
+#ifndef __MINGW32__
+#include <limits.h>
+#endif
 
 /// @addtogroup Images
 //@{
@@ -1262,6 +1265,7 @@ private:
      */
     void mmapFile()
     {
+#ifndef __MINGW32__
         if (this->hFile->mode == WRITE_READONLY)
             mFd = open(dataFName.c_str(), O_RDONLY, S_IREAD);
         else
@@ -1275,7 +1279,7 @@ private:
                 REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::mmapFile: Error opening the image file to be mapped.");
         }
         char * map;
-        const size_t pagesize = sysconf(_SC_PAGESIZE);
+        const size_t pagesize=sysconf(_SC_PAGESIZE);
         size_t offsetPages = (mappedOffset/pagesize)*pagesize;
         mappedOffset -= offsetPages;
         mappedSize -= offsetPages;
@@ -1289,16 +1293,23 @@ private:
             REPORT_ERROR(ERR_MMAP_NOTADDR,formatString("Image Class::mmapFile: mmap of image file failed. Error: %s", strerror(errno)));
         data.data = reinterpret_cast<T*> (map+mappedOffset);
         data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);
+#else
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
     }
 
     /* Munmap the image file.
      */
     void munmapFile()
     {
+#ifndef __MINGW32__
         munmap((char*)(data.data)-mappedOffset,mappedSize);
         close(mFd);
         data.data = NULL;
         mappedSize = mappedOffset = 0;
+#else
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
     }
 
     /* Return the datatype of the current image object

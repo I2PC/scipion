@@ -5,6 +5,7 @@ Import('env')
 # Required for custom functions
 import os
 from os.path import join
+from types import *
 
 FFTWDir = "external/fftw-3.3.1"
 FFTWLibs = ['fftw3', 'fftw3_threads']
@@ -14,6 +15,7 @@ JPEGDir = "external/jpeg-8c"
 JPEGLibs = ['jpeg']
 CYGWIN = env['PLATFORM'] == 'cygwin'
 MACOSX = env['PLATFORM'] == 'darwin'
+MINGW = env['PLATFORM'] == 'win32'
 if CYGWIN:
 	TIFFLibs.append('z')
 ARPACKppDir = "external/arpack++-2.3"
@@ -124,7 +126,7 @@ def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     if env['static']:
         cxxflags += [env['STATIC_FLAG']]
         linkflags += [env['STATIC_FLAG']]
-
+    Decider('MD5-timestamp')
     # action
     program = env.Program(
         join(basedir, fullname),
@@ -320,8 +322,14 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 
     # separate local and global includes
     for x in includes:
-        if x[0] != '#' and x[0] != '/':
-            includes[includes.index(x)] = basedir + x
+        if type(x) is ListType: 
+            y=x
+            includes.remove(x)
+            for j in y:
+                includes.append(j)
+        else:
+            if x[0] != '#' and x[0] != '/':
+                includes[includes.index(x)] = basedir + x
 
     if useCudaEnvironment:
         envToUse = env.Clone()
@@ -358,11 +366,11 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
             SHLIBPREFIX=shlibprefix,
             SHLIBSUFFIX=shlibsuffix
             )
-	for lib in libs:
-		for ext in ['.a', '.so', '.dll', '.dylib']:
-			rootname = 'lib/lib' + lib
-			if os.path.exists(rootname + ext):
-				Depends(library, rootname + ext)
+    for lib in libs:
+        for ext in ['.a', '.so', '.dll', '.dylib']:
+            rootname = 'lib/lib' + lib
+            if os.path.exists(rootname + ext):
+                Depends(library, rootname + ext)
 
     install = envToUse.Install(libprefix, library)
     alias = envToUse.Alias(name, install)
@@ -570,8 +578,18 @@ AddLibrary('XmippExternal', 'external',
 
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
-AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
-           ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+
+libraries=['#']
+if MINGW:
+    import sys
+    sys.setrecursionlimit(22500)
+    libraries.append(env['MINGW_PATHS'])
+    AddLibrary('XmippData', '', DataSources, libraries, 
+               ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+else:
+    AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
+               ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)  
+
 
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
@@ -708,8 +726,7 @@ if int(env['java']):
     if int(env['arpack']):
         JavaDependLibraries += ['arpack++', 'arpack', 'lapack', 'blas']
     # Compilation of the c code needed for java jni binding
-    javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources,
-    ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'], JavaDependLibraries)
+    javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
     # Create some jar links
     cmd = env.Command(join(libDir, 'ij.jar'), 'external/imagej/ij.jar', SymLink)

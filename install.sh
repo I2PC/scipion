@@ -33,12 +33,15 @@ GUI_ARGS="gui"
 OS_TYPE=`uname`
 IS_MAC=false
 IS_CYGWIN=false
+IS_MINGW=false
 echo "The OS is $OS_TYPE"
 if test  $OS_TYPE = Darwin ; then
 	IS_MAC=true;
 	CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
 elif test $OS_TYPE = CYGWIN* ; then
 	IS_CYGWIN=true;
+elif test $OS_TYPE=MINGW* ; then
+    IS_MINGW=true
 fi
 
 
@@ -106,6 +109,7 @@ export PATH=$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
 if $IS_MAC; then
 	export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH
+	export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH
 fi
 
 #create file to include from BASH this Xmipp installation
@@ -120,6 +124,7 @@ echo "test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomple
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
+	echo 'export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH' >> $INC_FILE
 fi
 echo " "    >> $INC_FILE
 echo " "    >> $INC_FILE
@@ -300,13 +305,15 @@ install_libs()
 {
   cd $XMIPP_HOME
   LIBPATH=../external/$1; shift
-  COMMON="$1."; shift
+  COMMON="$1"; shift
   VERSION=$1
-  SUFFIXES="a la "
+  SUFFIXES=".a .la "
   if $IS_MAC; then
-	SUFFIXES="$SUFFIXES dylib $VERSION.dylib"
+	SUFFIXES="$SUFFIXES .dylib .$VERSION.dylib"
+  elif $IS_MINGW; then
+        SUFFIXES="$SUFFIXES .dll.a -$VERSION.dll"
   else 
-	SUFFIXES="$SUFFIXES so so.$VERSION"
+	SUFFIXES="$SUFFIXES .so .so.$VERSION"
   fi
   
   for suffix in $SUFFIXES; do
@@ -372,7 +379,11 @@ fi
 
 #################### FFTW ###########################
 if $DO_FFTW; then
-  compile_library $VFFTW "." "." "--enable-threads"
+  if test $IS_MINGW; then
+    compile_library $VFFTW "." "." "--enable-threads CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
+  else
+    compile_library $VFFTW "." "." "--enable-threads"
+  fi
   install_libs $VFFTW/.libs libfftw3 3
   install_libs $VFFTW/threads/.libs libfftw3_threads 3
 fi
@@ -394,6 +405,9 @@ if $DO_TCLTK; then
   if $IS_MAC; then
     compile_library tcl$VTCLTK python macosx "--disable-xft"
     compile_library tk$VTCLTK python macosx "--disable-xft"
+  elif $IS_MINGW; then
+    compile_library tcl$VTCLTK python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
+    compile_library tk$VTCLTK python win "--disable-xft --with-tcl=../../tcl$VTCLTK/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
   else
     compile_library tcl$VTCLTK python unix "--disable-xft"
     compile_library tk$VTCLTK python unix "--disable-xft"
@@ -404,103 +418,130 @@ fi
 EXT_PYTHON=$EXT_PATH/python
 
 if $DO_PYTHON; then
-    echoGreen "PYTHON SETUP"
-    export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
-    if $IS_CYGWIN; then
-      export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
-      export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
-      export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-      echo "--> export CPPFLAGS=$CPPFLAGS"
-      echo "--> export LDFLAGS=$LDFLAGS"
-      echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-    elif $IS_MAC; then
-      export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
-      export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-      export DYLD_FALLBACK_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH"
-      echo "--> export CPPFLAGS=$CPPFLAGS"
-      echo "--> export LDFLAGS=$LDFLAGS"
-      echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-      echo "--> export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH"
-    else
-      export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
-      export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-      echo "--> export CPPFLAGS=$CPPFLAGS"
-      echo "--> export LDFLAGS=$LDFLAGS"
-      echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"     
-    fi
-    echoGreen "Copying our custom python files ..."
-    echoExec "cd $EXT_PYTHON"
-    echoExec "cp ./xmipp_setup.py $VPYTHON/setup.py"
-    echoExec "chmod a+x $VPYTHON/setup.py"
-    #cp ./xmipp_setup.py $VPYTHON/setup.py
-    #I thick these two are not needed
-    #cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
-    #echo "--> cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h"
+  echoGreen "PYTHON SETUP"
+  export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
+  if $IS_CYGWIN; then
+    export CPPFLAGS="-I/usr/include -I/usr/include/ncurses $CPPFLAGS"
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    echo "--> export CPPFLAGS=$CPPFLAGS"
+    echo "--> export LDFLAGS=$LDFLAGS"
+    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"	 
+  elif $IS_MAC; then
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    export DYLD_FALLBACK_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH"
+    echo "--> export CPPFLAGS=$CPPFLAGS"
+    echo "--> export LDFLAGS=$LDFLAGS"
+    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    echo "--> export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH"
+  elif $IS_MINGW; then
+    export CPPFLAGS="-I/usr/include -I/usr/include/ncurses -I/c/MinGW/include $CPPFLAGS -D__MINGW32__ -I$EXT_PYTHON/$VPYTHON/Include -I$EXT_PYTHON/$VPYTHON/PC "
+    export CFLAGS="$CPPFLAGS"
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/win -L$EXT_PYTHON/tcl$VTCLTK/win"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/win:$EXT_PYTHON/tcl$VTCLTK/win:$LD_LIBRARY_PATH"
+    echo "--> export CPPFLAGS=$CPPFLAGS"
+    echo "--> export LDFLAGS=$LDFLAGS"
+    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+  else
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    echo "--> export CPPFLAGS=$CPPFLAGS"
+    echo "--> export LDFLAGS=$LDFLAGS"
+    echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"     
+  fi
+  echoGreen "Copying our custom python files ..."
+  echoExec "cd $EXT_PYTHON"
+  echoExec "cp ./xmipp_setup.py $VPYTHON/setup.py"
+  echoExec "chmod a+x $VPYTHON/setup.py"
+  #cp ./xmipp_setup.py $VPYTHON/setup.py
+  #I thick these two are not needed
+  #cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h
+  #echo "--> cp ./xmipp__iomodule.h $VPYTHON/Modules/_io/_iomodule.h"
     
+  compile_library $VPYTHON python "." ""
 
-   compile_library $VPYTHON python "." ""
-
-    # Create the python launch script with necessary environment variable settings
-    PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
-    echo "--> Creating python launch script $PYTHON_BIN ..."
-    printf "#!/bin/sh\n\n" > $PYTHON_BIN
+  # Create the python launch script with necessary environment variable settings
+  PYTHON_BIN=$XMIPP_HOME/bin/xmipp_python
+  echo "--> Creating python launch script $PYTHON_BIN ..."
+  printf "#!/bin/sh\n\n" > $PYTHON_BIN
+  if $IS_CYGWIN; then
     printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
     printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-	if $IS_CYGWIN; then
-          printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
-          printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
-          printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
-          printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-	  printf 'PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
-	  printf 'export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
-	  printf 'export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
-	  printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
-	elif $IS_MAC; then
-          printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
-          printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
-          printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
-          printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-	  printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
-	  printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
-	else
-          printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
-          printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
-          printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
-          printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
-	  printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
-	fi
-	
-    echoExec "chmod a+x $PYTHON_BIN"    
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
+    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
+    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
+    printf 'PYTHONCYGWINLIB=`find $EXT_PYTHON/$VPYTHON/build -name "lib.cygwin*" -type d`\n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$PYTHONCYGWINLIB:$LD_LIBRARY_PATH\n' >> $PYTHON_BIN
+    printf 'export PYTHONPATH=$PYTHONCYGWINLIB:$PYTHONPATH\n' >> $PYTHON_BIN
+    printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+  elif $IS_MINGW; then
+    printf 'VPYTHON=Python27 \n' >> $PYTHON_BIN
+    printf 'VTCLTK=8.5 \n\n' >> $PYTHON_BIN
+    printf 'EXT_PYTHON=/c \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/$VPYTHON/tcl/tcl$VTCLTK:$EXT_PYTHON/$VPYTHON/tcl/tk$VTCLTK:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$EXT_PYTHON/$VPYTHON:$XMIPP_HOME/lib:$PYTHONPATH \n' >> $PYTHON_BIN
+    printf 'export TCL_LIBRARY=$EXT_PYTHON/$VPYTHON/tcl/tcl$VTCLTK \n' >> $PYTHON_BIN
+    printf 'export TK_LIBRARY=$EXT_PYTHON/$VPYTHON/tcl/tk$VTCLTK \n\n' >> $PYTHON_BIN
+    printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+  elif $IS_MAC; then
+    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
+    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
+    printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
+    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
+    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
+    printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
+    printf '$EXT_PYTHON/$VPYTHON/python.exe "$@"\n' >> $PYTHON_BIN
+  else
+    printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
+    printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
+    printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
+    printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
+    printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
+    printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
+  fi
+  echoExec "chmod a+x $PYTHON_BIN"    
 fi    
 
 #################### PYTHON MODULES ###########################
 if $DO_PYMOD; then
-    compile_pymodule $VNUMPY
-	export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
-	if $IS_MAC; then
-          export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
-          export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$LD_LIBRARY_PATH"
-          echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
-	  echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
-	  echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/pythonXmipp" 
-	  echoExec "make -f make.osx clean"
-	  echoExec "make -f make.osx PREFIX=$XMIPP_HOME PYVERSION=Xmipp fetch deps mpl_install"
-	  echoExec "rm $XMIPP_HOME/bin/pythonXmipp"
-	  echoExec "rm $XMIPP_HOME/bin/python2.7"
-	else
-          export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
-          export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
-          echoExec "cp $EXT_PYTHON/matplotlib_setupext.py $EXT_PYTHON/$VMATLIBPLOT/setupext.py"
-	  #The following is needed from matplotlib to works
-	  echoExec "cd $EXT_PYTHON/tk$VTCLTK/unix/"
-	  echoExec "ln -sf libtk8.5.so  libtk.so"
-	  echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
-	  echoExec "ln -sf libtcl8.5.so  libtcl.so"
-	  compile_pymodule $VMATLIBPLOT
-	fi
-    compile_pymodule $VPYMPI
-    compile_pymodule $VPYCIFRW
+  compile_pymodule $VNUMPY
+  export CPPFLAGS="-I$EXT_PATH/$VSQLITE/ -I$EXT_PYTHON/tk$VTCLTK/generic -I$EXT_PYTHON/tcl$VTCLTK/generic"
+  if $IS_MAC; then
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$LD_LIBRARY_PATH"
+    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
+    echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
+    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/pythonXmipp" 
+    echoExec "make -f make.osx clean"
+    echoExec "make -f make.osx PREFIX=$XMIPP_HOME PYVERSION=Xmipp fetch deps mpl_install"
+    echoExec "rm $XMIPP_HOME/bin/pythonXmipp"
+    echoExec "rm $XMIPP_HOME/bin/python2.7"
+  elif $IS_MINGW; then
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/win -L$EXT_PYTHON/tcl$VTCLTK/win"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/win:$EXT_PYTHON/tcl$VTCLTK/win:$LD_LIBRARY_PATH"
+    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
+    echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
+    echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/pythonXmipp"
+  else
+    export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/unix -L$EXT_PYTHON/tcl$VTCLTK/unix"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    echoExec "cp $EXT_PYTHON/matplotlib_setupext.py $EXT_PYTHON/$VMATLIBPLOT/setupext.py"
+    #The following is needed from matplotlib to works
+    echoExec "cd $EXT_PYTHON/tk$VTCLTK/unix/"
+    echoExec "ln -sf libtk8.5.so  libtk.so"
+    echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
+    echoExec "ln -sf libtcl8.5.so  libtcl.so"
+    compile_pymodule $VMATLIBPLOT
+  fi
+compile_pymodule $VPYMPI
+compile_pymodule $VPYCIFRW
 fi
 
 #################### ARPACK ###########################

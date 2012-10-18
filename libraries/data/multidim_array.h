@@ -26,9 +26,11 @@
 #ifndef MULTIDIM_ARRAY_H
 #define MULTIDIM_ARRAY_H
 
+#ifndef __MINGW32__
 #include <sys/mman.h>
-#include <external/bilib/types/tsplinebasis.h>
-#include <external/bilib/headers/kernel.h>
+#endif
+#include "../../external/bilib/types/tsplinebasis.h"
+#include "../../external/bilib/headers/kernel.h"
 #include "xmipp_strings.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
@@ -1365,6 +1367,7 @@ public:
      */
     FILE* mmapFile(T* &_data, size_t nzyxDim) const
     {
+#ifndef __MINGW32__
         FILE* fMap = tmpfile();
         int Fd = fileno(fMap);
 
@@ -1377,6 +1380,9 @@ public:
             REPORT_ERROR(ERR_MMAP_NOTADDR,formatString("MultidimArray::resize: mmap failed. Error %s", strerror(errno)));
 
         return fMap;
+#else
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
     }
 
     /** Core deallocate.
@@ -1384,6 +1390,7 @@ public:
      */
     void coreDeallocate()
     {
+#ifndef __MINGW32__
         if (data != NULL && destroyData)
         {
             if (mmapOn)
@@ -1397,6 +1404,9 @@ public:
         data = NULL;
         destroyData = true;
         nzyxdimAlloc = 0;
+#else
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
     }
 
     /** Alias a multidimarray.

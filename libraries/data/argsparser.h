@@ -49,7 +49,7 @@ typedef std::vector<String> StringVector;
  */
 
 /** Type of tokens for lexical analysis */
-enum TokenType {
+typedef enum {
     TOK_ID,     //identifier
     TOK_OPT,    // -ID or --ID
     TOK_INT,    //integer number
@@ -73,8 +73,7 @@ enum TokenType {
     TOK_OR,     // 'OR' keyword
     TOK_REQUIRES,// 'REQUIRES' keyword
     TOK_SECTION,// section defined by == Section ==
-
-};
+} ArgTokenType;
 
 class ProgramDef;
 
@@ -82,7 +81,7 @@ class ProgramDef;
 class ArgToken
 {
 public:
-    TokenType type; ///< Type of the token
+    ArgTokenType type; ///< Type of the token
     String lexeme; ///< the string literal value of the token
     int line; ///< line where token was found
     int start, end; ///< start and end position of the lexeme.
@@ -94,7 +93,7 @@ public:
     /// Some special mark to tokens
     bool starred;
 
-    static const char * typeString(TokenType type);
+    static const char * typeString(ArgTokenType type);
 };
 
 /** This class will split the input stream into tokens.
@@ -110,13 +109,13 @@ private:
     size_t offset; ///< the offset from pos of each token
     ArgToken * pToken; ///< pointer to the input token.
     ///Dictionary for identify reserved words
-    std::map<String, TokenType> reservedWords;
+    std::map<String, ArgTokenType> reservedWords;
 
     //Some utils functions
     void readSpaces();
     void readDigits();
     void readId();
-    void setupToken(TokenType type);
+    void setupToken(ArgTokenType type);
     void checkVisibility();
     void checkIndependent();
     void nextLine();
@@ -134,7 +133,7 @@ public:
      */
     bool nextToken();
     ArgToken * currentToken() const;
-    TokenType lookahead() const;
+    ArgTokenType lookahead() const;
 
 };
 
@@ -178,9 +177,9 @@ public:
 
     virtual bool parse() = 0; //abstract function
     virtual void check(std::stringstream & errors) = 0; //abstract function
-    virtual bool consume(TokenType type);
-    TokenType lookahead() const;
-    bool lookahead(TokenType type) const;
+    virtual bool consume(ArgTokenType type);
+    ArgTokenType lookahead() const;
+    bool lookahead(ArgTokenType type) const;
     ArgToken * currentToken() const;
     void nextToken();
     bool parseCommentList(CommentList &comments);
@@ -231,7 +230,7 @@ public:
     //Empty constructor
     ParamDef(ArgLexer *lexer, ASTNode * parent);
     ~ParamDef();
-    bool parseParamList(TokenType startToken, ProgramDef * prog, StringVector &paramList, bool addName);
+    bool parseParamList(ArgTokenType startToken, ProgramDef * prog, StringVector &paramList, bool addName);
     bool parseArgumentList();
     virtual bool parse();
     bool checkRequires(std::stringstream & errors, ProgramDef * prog);
