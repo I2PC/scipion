@@ -49,7 +49,7 @@ typedef std::vector<String> StringVector;
  */
 
 /** Type of tokens for lexical analysis */
-enum TokenType {
+typedef enum {
     TOK_ID,     //identifier
     TOK_OPT,    // -ID or --ID
     TOK_INT,    //integer number
@@ -74,7 +74,7 @@ enum TokenType {
     TOK_REQUIRES,// 'REQUIRES' keyword
     TOK_SECTION,// section defined by == Section ==
 
-};
+} TokenType;
 
 class ProgramDef;
 
