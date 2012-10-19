@@ -2,10 +2,17 @@
 
 # basic setup, import all environment and custom tools
 import os
+import platform 
 import SCons.Script
-env = Environment(ENV=os.environ,
-      tools=['default', 'disttar'],
-      toolpath=['external/scons/ToolsFromWiki'])
+if platform.system() == 'Windows':
+    env = Environment(ENV=os.environ)
+    env['ENV']['JAVA_HOME'] = "/c/Java/jdk1.6.0_34"
+    env.PrependENVPath('PATH', 'C:\\MinGW\\bin')
+    env.PrependENVPath('LIB', 'C:\\MinGW\\lib') 
+else:
+    env = Environment(ENV=os.environ,
+          tools=['default', 'disttar'],
+          toolpath=['external/scons/ToolsFromWiki'])
 
 # avoid cruft in top dir
 base_dir = 'build'
@@ -32,9 +39,14 @@ opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 
 # FIXME With ARGUMENTS these should be read... right?
 #hope is OK roberto
-opts.Add('CCFLAGS', 'The C compiler flags', None)
-opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
-opts.Add(BoolVariable('release', 'Release mode', 'yes'))
+if platform.system()=='Windows':
+    opts.Add('CCFLAGS', 'The C compiler flags', '-fpermissive -I/c/MinGW/include')
+    opts.Add('CXXFLAGS', 'The C++ compiler flags', '-fpermissive -I/c/MinGW/include')
+    opts.Add(BoolVariable('release', 'Release mode', 'yes'))
+else:
+    opts.Add('CCFLAGS', 'The C compiler flags', None)
+    opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
+    opts.Add(BoolVariable('release', 'Release mode', 'yes'))
 
 opts.Add(BoolVariable('debug', 'Build debug version?', 'no'))
 #Profile version implies debug and then it will be ignored
@@ -60,6 +72,9 @@ opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
 opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpi')
+
+#MINGW 
+opts.Add('MINGW_PATHS', 'Include path for MinGW', '')
 
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 
@@ -187,6 +202,67 @@ if (ARGUMENTS['mode'] == 'configure'):
 #        AppendIfNotExists(CXXFLAGS='-m64')
 #        AppendIfNotExists(LINKFLAGS='-m64')
 
+    # mingw?
+    if platform.system() == 'Windows':
+         AppendIfNotExists(CCFLAGS='-f permissive -Ilibraries/data -I/c/MinGW/include')
+         AppendIfNotExists(CXXFLAGS='-f permissive -Ilibraries/data -I/c/MinGW/include')
+#         AppendIfNotExists(LINKFLAGS='')
+
+    # QT
+    if int(env['qt']):
+        if int(env['QT4']):
+            print '* QT4 selected!'
+            # FIXME /usr/lib/qt4
+            env['QTDIR'] = ''
+            env['QT_LIB'] = ''
+        else:
+            print '* QT3 selected!'
+
+        # QT3 makes use of QTDIR
+        if ARGUMENTS.get('QTDIR'):
+            print '* Trying user-supplied QTDIR: ' + ARGUMENTS.get('QTDIR')
+            env['QTDIR'] = ARGUMENTS.get('QTDIR')
+        else:
+            print '* Trying environment\'s $QTDIR'
+            if os.environ.has_key('QTDIR'):
+                env['QTDIR'] = os.environ['QTDIR']
+            else:
+                print '* QTDIR not in environment nor supplied' \
+                     ' (default value won\'t probably work)'
+                print '  Please set it correctly, i.e.: export ' \
+                      'QTDIR=/path/to/qt'
+                print '  or specify one directly in command line: '\
+                      'QTDIR=/path/to/qt'
+                print '* Trying default value: ' + env['QTDIR']
+
+        # Create a new environment with Qt tool enabled to see if it works
+        envQT = env.Clone()
+
+        if int(env['QT4']):
+            # DBG
+            try:
+                envQT.Tool('qt4')
+                envQT.EnableQt4Modules(['QtCore', 'QtGui', 'Qt3Support'], debug=False)
+            except:
+                print "*QT4 not found! Disabling..."
+                env['qt'] = 0
+        else:
+            envQT.Tool('qt')
+
+        # FIXME Copy() does not work well (adds twice the library, 'qt' ...)
+        # envQT.Replace(QT_LIB = env['QT_LIB'])
+        envQT.Replace(LINK=env['LINKERFORPROGRAMS'])
+
+        confQT = Configure(envQT, {}, config_dir, config_log)
+
+        if not confQT.CheckLibWithHeader(env['QT_LIB'], 'qapplication.h',
+                                         'c++', 'QApplication qapp(0,0);',
+                                         0):
+            print '* Did not find QT. Disabling ...'
+            env['qt'] = 0
+
+        envQT = confQT.Finish()
+
     # Non-GUI configuration environment
     conf = Configure(env, {'CheckMPI' : CheckMPI}, config_dir, config_log)
 
@@ -247,18 +323,14 @@ if (ARGUMENTS['mode'] == 'configure'):
     
 #    ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
 #                             'sqlite-3.6.23', int(env['verbose_sqlite']))
-#    
 #    ConfigureExternalLibrary('python', env['PYTHONFLAGS'], 
 #                             'Python-2.7.2', int(env['verbose_python']))
-                         
 #    ConfigureExternalLibrary('fftw', env['FFTWFLAGS'], 
-#                         'fftw-3.2.2', int(env['verbose_fftw']))
-#    
+#                             'fftw-3.2.2', int(env['verbose_fftw']))
 #    ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
-#                     'tiff-3.9.4', int(env['verbose_tiff']))
-#
+#                             'tiff-3.9.4', int(env['verbose_tiff']))
 #    ConfigureExternalLibrary('arpack++', env['ARPACKFLAGS'], 
-#                     'arpack++-2.3', int(env['verbose_arpack']))
+#                             'arpack++-2.3', int(env['verbose_arpack']))
 
     # Finish configuration
     env = conf.Finish()
@@ -293,7 +365,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
         AppendIfNotExists(CXXFLAGS=['-DRELEASE_MODE'])
         
     if not int(env['cuda']):
-	if env['PLATFORM'] != 'cygwin':
+	if env['PLATFORM'] != 'cygwin' and env['PLATFORM'] != 'win32':
             AppendIfNotExists(CXXFLAGS=['-rdynamic'])
         AppendIfNotExists(CXXFLAGS=['-O0'])
     else:

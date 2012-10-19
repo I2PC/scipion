@@ -36,6 +36,7 @@ public class Filename {
 	public final static String EXT_ERR = ".err";
 	public final static String EXT_PY = ".py";
 	public final static String EXT_TXT = ".txt";
+	public final static String EXT_BOX = ".txt";
 
 	// Initialize library.
 	static {
@@ -45,7 +46,7 @@ public class Filename {
 
 	public final static String[] SINGLE_IMAGES = new String[] { EXT_XMP,
 			EXT_IMG, EXT_HED, EXT_PSD, EXT_SER, EXT_DM3, EXT_RAW, EXT_INF,
-			EXT_SPE, EXT_SPI, EXT_TIF };
+			EXT_SPE, EXT_SPI, EXT_TIF, EXT_MRC };
 	public final static String[] VOLUMES = new String[] { EXT_MRC, EXT_VOL };
 	public final static String[] STACKS = new String[] { EXT_MRCS, EXT_MRCS2,
 			EXT_STK };
@@ -56,7 +57,7 @@ public class Filename {
 	public final static String[] SPIDER = new String[] { EXT_SPI, EXT_VOL };
 
 	public final static String[] TEXT = new String[] { EXT_TXT, EXT_LOG,
-			EXT_ERR, EXT_OUT };
+			EXT_ERR, EXT_OUT, EXT_BOX};
 
 	public static boolean isPSD(String filename) {
 		return filename != null && filename.endsWith(EXT_PSD);
@@ -116,6 +117,10 @@ public class Filename {
 			return filename != null && isFileType(filename, SINGLE_IMAGES);
 		}
 	}
+	
+	public static boolean isSingleImageExt(String filename){
+		return filename != null && isFileType(filename, SINGLE_IMAGES);
+	}
 
 	public static boolean isVolume(String filename) {
 		try {
@@ -124,6 +129,10 @@ public class Filename {
 			return filename != null && isFileType(filename, VOLUMES);
 		}
 	}
+	
+	public static boolean isVolumeExt(String filename){
+		return filename != null && isFileType(filename, VOLUMES);
+	}
 
 	public static boolean isStack(String filename) throws Exception {
 		try {
@@ -131,6 +140,10 @@ public class Filename {
 		} catch (Exception ex) {
 			return filename != null && isFileType(filename, STACKS);
 		}
+	}
+	
+	public static boolean isStackExt(String filename){
+		return filename != null && isFileType(filename, STACKS);
 	}
 
 	public static boolean isMetadata(String filename) {
@@ -144,8 +157,12 @@ public class Filename {
 		return false;
 	}//function isMetadata
 
+	public static boolean isMetadataExt(String filename){
+		return filename != null && isFileType(filename, METADATAS);
+	}
+	
 	public static boolean isTextfile(String filename) {
-		return isMetadata(filename) || isFileType(filename, TEXT);
+		return isFileType(filename, TEXT) || isFileType(filename, METADATAS) || isMetadata(filename);
 	}
 
 	private static boolean isFileType(String filename, String filetypes[]) {
@@ -207,9 +224,11 @@ public class Filename {
 
 	public static boolean exists(String path) {
 		File f = new File(Filename.getFilename(path));
+		boolean exists = f.exists();
+		
 		return f.exists();
 	}
-
+	
 	public String findProjectDir(String metadata) {
 		File f = new File(metadata);
 		String startingdir = f.isDirectory() ? metadata : f.getParent();

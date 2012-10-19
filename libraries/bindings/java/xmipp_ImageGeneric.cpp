@@ -12,17 +12,25 @@
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = new ImageGeneric();
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = new ImageGeneric();
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_destroy(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-    delete image;
-    image = NULL;
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        delete image;
+        image = NULL;
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
@@ -354,14 +362,12 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        DataType dataType = image->getDatatype();
 
         // Go to slice.
         image->movePointerTo(nslice, select_image);
 
         size_t size = image->getSize();
-        jbyteArray array = env->NewByteArray(size);
-
-        DataType dataType = image->getDatatype();
 
         switch (dataType)
     {
@@ -410,8 +416,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
                 { \
                     page_size = std::min(page_size, size - written); \
                     env->GetByteArrayRegion(data, written, page_size, (jbyte *) buffer); \
-                    type * iter = mdarray + written; \
-                    imageAux->castPage2T(buffer, iter, DT_UChar, page_size); \
+                    imageAux->castPage2T(written, buffer, DT_UChar, page_size); \
                 } \
                 SWITCHDATATYPE(image->getDatatype(), CAST_PAGE);\
                   delete [] buffer;
@@ -488,11 +493,8 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
                     for (size_t written = 0; written < size; written += page_size)
                 {
                     page_size = std::min(page_size, size - written);
-
                         env->GetShortArrayRegion(data, written, page_size, (jshort *) buffer);
-
-                        float * iter = mdarray + written;
-                        imageAux->castPage2T(buffer, iter, DT_UShort, page_size);
+                        imageAux->setPage2T(written, buffer, DT_UShort, page_size);
                     }
                 delete [] buffer;
             }
@@ -547,9 +549,7 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
                 for (size_t written = 0; written < size; written += page_size)
                 {
                     page_size = std::min(page_size, size - written);
-
                     env->GetFloatArrayRegion(data, written, page_size, (jfloat *) buffer);
-
                     imageAux->setPage2T(written, buffer, DT_Float, page_size);
                 }
                 delete [] buffer;
