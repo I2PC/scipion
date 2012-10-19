@@ -519,14 +519,11 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        image->print();
 
         // Go to slice.
         image->movePointerTo(nslice, select_image);
 
         size_t size = image->getSize();
-        //jfloatArray array = env->NewFloatArray(size);
-        image->print();
         switch (image->getDatatype())
     {
     case DT_Float:
@@ -553,7 +550,7 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
 
                     env->GetFloatArrayRegion(data, written, page_size, (jfloat *) buffer);
 
-                    imageAux->setPage2T(written, buffer, DT_UShort, page_size);
+                    imageAux->setPage2T(written, buffer, DT_Float, page_size);
                 }
                 delete [] buffer;
             }
@@ -568,9 +565,8 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
         }
 
         // Resets slice pointer.
-        image->print();
         image->movePointerTo();
-        image->print();
+
     }
     XMIPP_JAVA_CATCH;
 }
@@ -771,14 +767,15 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
 {
     XMIPP_JAVA_TRY
     {
-        std::cerr<<"We Are At First!";
-        Matrix2D<double> M;
         MultidimArray<double>* I;
+        MultidimArray<double> tmpI;
+        MultidimArray<double> alignedI;
         MultidimArray<double>* Tp;
         MultidimArray<double> T;
         AlignmentAux aux;
         CorrelationAux aux2;
         RotationalCorrelationAux aux3;
+        Matrix2D<double> M;
         ArrayDim dim;
         ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
         ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
@@ -786,27 +783,26 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
         templates->convert2Datatype(DT_Double);
         MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
         MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
-        templates->print();
-
         templates->getDimensions(dim);
         double corr,max=0;
         int maxIndex=0;
+
         for (int i=0;i<dim.ndim;++i)
-    {
-        T.aliasImageInStack(*Tp,i);
-            corr = alignImages(T,*I,M,true,aux,aux2,aux3);
-            T.printShape();
+        {
+        	T.aliasImageInStack(*Tp,i);
+            tmpI=*I;
+            T.setXmippOrigin();
+            tmpI.setXmippOrigin();
+            corr = alignImages(T,tmpI,M,true,aux,aux2,aux3);
             if (corr>max)
             {
                 max=corr;
                 maxIndex=i;
+                alignedI=tmpI;
             }
         }
         T.aliasImageInStack(*Tp,maxIndex);
-        T+=(*I);
-        templates->print();
-        img->convert2Datatype(DT_Float);
-        templates->convert2Datatype(DT_Float);
+        T+=alignedI;
     }
     XMIPP_JAVA_CATCH;
 }

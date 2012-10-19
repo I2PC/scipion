@@ -61,13 +61,11 @@ public class Family {
 		this.templatesNumber = templatesNumber;
 		initTemplates();
 	}
-	
-	public void initTemplates()
-	{
+
+	public void initTemplates() {
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
-			System.out.println("NDim on initTemplates: " + templates.getNDim());
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -197,11 +195,9 @@ public class Family {
 	public void setTemplate(int index, ImageGeneric ig) {
 		float[] matrix;
 		try {
-			ig.printShape();
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
 					ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
-//			templates.printShape();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());

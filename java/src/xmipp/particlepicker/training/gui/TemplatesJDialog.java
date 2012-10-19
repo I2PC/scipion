@@ -50,7 +50,6 @@ public class TemplatesJDialog extends JDialog {
 	}
 
 	public void loadTemplates(boolean resize) {
-		System.out.println("loading templates");
 		try {
 			frame.updateTemplates();
 			ImageGeneric templates = frame.getFamily().getTemplates();
@@ -66,9 +65,7 @@ public class TemplatesJDialog extends JDialog {
 
 			templatespn.removeAll();
 			ImagePlus template;
-			System.out.println("NDim on loadTemplates: " + templates.getNDim());
 			for (int index = 0; index < templates.getNDim(); index++) {
-				System.out.println("Index:" + index);
 				template = XmippImageConverter.convertToImagePlus(templates,
 						ImageGeneric.FIRST_IMAGE + index);
 				templatespn.add(new ImageCanvas(template));
@@ -81,8 +78,6 @@ public class TemplatesJDialog extends JDialog {
 		templatespn.repaint();
 		pack();
 	}
-
-
 
 	private void initComponents() {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
