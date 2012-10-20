@@ -42,7 +42,9 @@ public:
     /// Metadafile with angles and projection file names
     FileName fnInputProj;
     /// Rootname for intermediate/exchange projections metadatas and files
-    FileName fnIntermProjs;
+    FileName fnRootInter;
+    FileName fnInterProjs;
+    FileName fnInterAngles;
     /// Reconstructed output volume file name
     FileName fnOutVol;
     /// Initial volume
@@ -95,11 +97,22 @@ protected:
 /** Reconstruct tomogram projections using external tomo3D
  *
  * @param MD Includes tilt angle values and projections file names
- * @param fn Reconstructed output volume name
+ * @param fnOut Reconstructed output volume name
  * @param params Other parameters to be passed to tomo3D
  * @return True if external system call ran right. Otherwise False
  */
-int reconsTomo3D(const MetaData &MD, const FileName fn, const String& params = "");
+int reconsTomo3D(const MetaData& MD, const FileName& fnOut, const String& params = "");
+
+/** Reconstruct tomogram projections using external tomo3D
+ *
+ * @param fnAngles Text file with angles sequence
+ * @param fnProjs  MRC stack file with projections
+ * @param fnOut    Reconstructed output volume name
+ * @param params   Other parameters to be passed to tomo3D
+ * @return True if external system call ran right. Otherwise False
+ */
+int reconsTomo3D(const FileName& fnAngles, const FileName& fnProjs,
+                 const FileName& fnOut, const String& params = "");
 
 
 //@}

@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "idr_xray_tomo.h"
+#include "data/xmipp_image_convert.h"
 
 
 void ProgIDRXrayTomo::defineParams()
@@ -72,7 +73,7 @@ void ProgIDRXrayTomo::readParams()
 {
     fnInputProj = getParam("-i");
     fnOutVol = getParam("-o");
-    fnIntermProjs = getParam("--oroot");
+    fnRootInter = getParam("--oroot");
     fnStart = getParam("--start");
     //    projParam.readParams(this);
 
@@ -105,7 +106,7 @@ void ProgIDRXrayTomo::readParams()
 
 void ProgIDRXrayTomo::preRun()
 {
-    psf.calculateParams(dxo, -1, psfThr);
+    psf.calculateParams(dxo, dxo, psfThr);
 
     // Threads stuff
     barrier = new Barrier(nThr);
@@ -113,16 +114,38 @@ void ProgIDRXrayTomo::preRun()
     thMgr = new ThreadManager(nThr);
 
     // Reading the input projections. Tilt angle values are needed
-    MetaData mdIn(fnInputProj);
+    projMD.read(fnInputProj);
+
+    // Setting the intermediate filenames
+    fnInterProjs = fnRootInter.addExtension("mrc");
+    fnInterAngles = fnRootInter + "_angles.txt";
 
 
     if (fnStart.empty()) // if initial volume is not passed,then we must calculate it
     {
+        FileName fnProjs;
+        projMD.getValue(MDL_IMAGE, fnProjs, projMD.firstObject());
 
+        // Projections must be in an MRC stack to be passed
+        if ( !fnProjs.contains("mrc") )
+        {
+            ProgConvImg conv;
+            conv.setup(&projMD, fnInterProjs);
+            conv.tryRun();
+            fnProjs = fnInterProjs;
+        }
+        // Saving angles in plain text to pass to tomo3D
+        std::vector<MDLabel> desiredLabels;
+        desiredLabels.push_back(MDL_ANGLE_TILT);
+        projMD.writeText(fnInterAngles, &desiredLabels);
 
+        std::cerr << "DEBUG_XMIPP: reconstruction with tomo3D: " << reconsTomo3D(fnInterAngles, fnProjs, fnOutVol) << std::endl;
+        //        muVol.read(fnOutVol);
+        phantom.read(fnOutVol);
+        MULTIDIM_ARRAY(phantom.iniVol).reslice(VIEW_Y_NEG,true);
     }
     else
-        muVol.read(fnStart);
+        phantom.read(fnStart);
 
 
 }
@@ -131,11 +154,32 @@ void ProgIDRXrayTomo::run()
 {
     preRun();
 
+    Projection proj;
+    double rot, tilt, psi;
+
+    size_t n = 1; // Image number
+
+
+    FOR_ALL_OBJECTS_IN_METADATA(projMD)
+    {
+        projMD.getValue(MDL_ANGLE_ROT , rot, __iter.objId);
+        projMD.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
+        projMD.getValue(MDL_ANGLE_PSI , psi, __iter.objId);
+        proj.setAngles(rot, tilt, psi);
+
+        XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj,YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),
+                                              XSIZE(MULTIDIM_ARRAY(phantom.iniVol)));
+
+        proj.write(fnInterProjs, n);
+
+
+    }
+
 
 
 }
 
-int reconsTomo3D(const MetaData &MD, const FileName fn, const String& params)
+int reconsTomo3D(const MetaData& MD, const FileName& fnOut, const String& params)
 {
     // Saving angles in plain text to pass to tomo3D
     FileName fnAngles("idr_xray_tomo_to_tomo3d_angles.txt");
@@ -155,10 +199,14 @@ int reconsTomo3D(const MetaData &MD, const FileName fn, const String& params)
         REPORT_ERROR(ERR_IMG_NOREAD, "reconsTromo3D: Image format cannot be read by tomo3D.");
     }
 
-    String exec("tomo3D -a "+fnAngles+" -i "+fnProjs.removeBlockNameOrSliceNumber()+" -o "+fn+" "+params);
+    return reconsTomo3D(fnAngles, fnProjs.removeSliceNumber(), fnOut, params);
+}
 
+int reconsTomo3D(const FileName& fnAngles, const FileName& fnProjs,
+                 const FileName& fnOut, const String& params)
+{
+    String exec("tomo3d -f -v 0 -a "+fnAngles+" -i "+fnProjs.removeBlockNameOrSliceNumber()+" -o "+fnOut+" "+params);
     return system(exec.c_str());
-
 }
 
 

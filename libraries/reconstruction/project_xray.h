@@ -66,6 +66,12 @@ public:
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
     void read(const ParametersProjectionTomography &prm);
+
+    /** Read the phantom the volume
+     *
+     * @param fnVol Volume filename
+     */
+    void read(const FileName &fnVol);
 };
 
 /* Projection XR Program -------------------------------- */
@@ -128,7 +134,7 @@ protected:
     Off-centered not implemented. Rotations are around volume center
 */
 void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
-        int Ydim, int Xdim, int  idxSlice = 1);
+        int Ydim, int Xdim);
 
 void projectXrayVolume(MultidimArray<double> &muVol,
                        MultidimArray<double> &IgeoVol,
@@ -145,9 +151,10 @@ void threadXrayProject(ThreadArgument &thArg);
 struct CIGTArgument
 {
     double samplingZ;
-    MultidimArray<double> *muVol;
-    MultidimArray<double> *IgeoVol;
-    MultidimArray<double> *IgeoZb;
+    MultidimArray<double> *muVol;   /// Phantom volume
+    MultidimArray<double> *cumMu;   /// Accumulated Mu == Standard EM projection used as reference for reconstruction
+    MultidimArray<double> *IgeoVol; /// Igeo accumulated along Z axis
+    MultidimArray<double> *IgeoZb;  /// Intensity in the beginning of the volume to project
     ParallelTaskDistributor * td;
 };
 

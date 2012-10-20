@@ -236,7 +236,7 @@ public:
 
     /** Read from file.
         An exception is thrown if the file cannot be open.*/
-    void read(const FileName &fn);
+    void read(const FileName &fn, bool readVolume = true);
 
     /** Write to file.
         An exception is thrown if the file cannot be open.*/
