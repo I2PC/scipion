@@ -566,7 +566,9 @@ bool MetaData::containsObject(const MDQuery &query)
 //--------------IO functions -----------------------
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifndef __MINGW32__
 #include <sys/mman.h>
+#endif
 
 void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 {
@@ -590,6 +592,7 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 
 void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
 {
+#ifndef __MINGW32__
     if (outFile.hasImageExtension())
         REPORT_ERROR(ERR_IO,"Trying to write metadata with image extension");
 
@@ -680,7 +683,9 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
         ofs.write(tailMetadataFile,(map + size) - target2);
     }
     ofs.close();
-
+#else
+    REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
 }
 
 void MetaData::append(const FileName &outFile) const
@@ -1075,6 +1080,7 @@ void MetaData::addPlain(const FileName &inFile, const String &labelsString, cons
 
 bool MetaData::existsBlock(const FileName &_inFile)
 {
+#ifndef __MINGW32__
     String blockName;
     FileName outFile;
 
@@ -1123,6 +1129,9 @@ bool MetaData::existsBlock(const FileName &_inFile)
         }
         close(fd);
     }
+#else
+    REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
 }
 void MetaData::readXML(const FileName &filename,
                        const std::vector<MDLabel> *desiredLabels,

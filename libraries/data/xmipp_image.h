@@ -34,7 +34,7 @@
 #include "xmipp_image_base.h"
 #include "xmipp_image_generic.h"
 #include "xmipp_color.h"
-#ifndef __MINGW32__
+#ifdef __MINGW32__
 #include <limits.h>
 #endif
 

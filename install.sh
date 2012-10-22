@@ -40,7 +40,7 @@ if test  $OS_TYPE = Darwin ; then
 	CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
 elif test $OS_TYPE = CYGWIN* ; then
 	IS_CYGWIN=true;
-elif test $OS_TYPE=MINGW* ; then
+elif test $OS_TYPE = MINGW* ; then
     IS_MINGW=true
 fi
 
