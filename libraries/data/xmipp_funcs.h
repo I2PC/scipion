@@ -34,14 +34,7 @@
 #include "xmipp_macros.h"
 #include "xmipp_error.h"
 
-#ifdef __MINGW32__
-#include "windows.h"
-void sincos(double x, double *sinVar, double *cosVar)
-{
-  *sinVar=sin(x);
-  *cosVar=cos(x);
-}
-#endif
+
 
 // For timing functions
 // Uncomment next line timing functions are giving problems in your system

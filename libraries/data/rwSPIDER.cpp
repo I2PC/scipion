@@ -468,22 +468,9 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         writeMainHeaderReplace=true;
     }
 
-    //locking
-    struct flock fl;
-
-    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-    fl.l_start  = 0;        /* Offset from l_whence         */
-    fl.l_len    = 0;        /* length, 0 = to EOF           */
-    fl.l_pid    = getpid(); /* our PID                      */
-
-    /*
-     * BLOCK HEADER IF NEEDED
-     */
-    fl.l_type   = F_WRLCK;
-    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked if a shared or exclusive lock is
-                                                                                               blocked by other locks, the thread shall
-                                                                                               wait until the request can be satisfied*/
+    //locking the file
+    FileLock flock;
+    flock.lock(fimg);
 
     // Write main header
     if( mode == WRITE_OVERWRITE ||
@@ -561,8 +548,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         }
     }
     //I guess I do not need to unlock since we are going to close the file
-    fl.l_type   = F_UNLCK;
-    fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
+    flock.unlock();
 
     if (mmapOnWrite)
         mmapFile();

@@ -42,6 +42,46 @@
 #define MAXFLOAT  1e30
 #endif
 
+
+// Added for compatibility
+#ifdef __CYGWIN__
+#ifndef isnan
+#define ISNAN(x) ((x)!=(x))
+#else
+#define ISNAN(x) isnan(x)
+#endif
+
+// Added for compatibility
+#ifndef isinf
+#define ISINF(x) (!ISNAN (x) && ISNAN ((x) - (x)))
+#else
+#define ISINF(x) isinf(x)
+#endif
+#else
+#define ISNAN(x) std::isnan(x)
+#define ISINF(x) std::isinf(x)
+#endif
+
+#ifdef __APPLE__
+#include <math.h>
+#endif
+
+/// MINGW Stuff
+#ifdef __MINGW32__
+#include <windows.h>
+#endif
+
+
+#if defined(__APPLE__) || defined(__MINGW32__)
+void sincos(double angle, double * sine, double * cosine);
+#endif
+
+/// Definition of macro to allow mmap
+#ifndef __MINGW32__
+#define XMIPP_MMAP
+#endif
+
+
 /// @defgroup Macros Macros
 /// @ingroup DataLibrary
 //@{
@@ -148,6 +188,7 @@
  * a = ROUND(0.8); // a = 1
  * @endcode
  */
+
 #ifndef ROUND
 #define ROUND(x) (((x) > 0) ? (int)((x) + 0.5) : (int)((x) - 0.5))
 #endif
@@ -371,29 +412,6 @@
 #define SUM_INIT(var, value) if (first_time) var = (value); else var += (value);
 #define SUM_INIT_COND(var, value, cond) if (cond) var = (value); else var += (value);
 
-// Added for compatibility
-#ifdef __CYGWIN__
-#ifndef isnan
-#define ISNAN(x) ((x)!=(x))
-#else
-#define ISNAN(x) isnan(x)
-#endif
-
-// Added for compatibility
-#ifndef isinf
-#define ISINF(x) (!ISNAN (x) && ISNAN ((x) - (x)))
-#else
-#define ISINF(x) isinf(x)
-#endif
-#else
-#define ISNAN(x) std::isnan(x)
-#define ISINF(x) std::isinf(x)
-#endif
-
-#ifdef __APPLE__
-#include <math.h>
-void sincos(double angle, double * sine, double * cosine);
-#endif
 
 //@}
 //@}

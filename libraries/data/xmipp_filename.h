@@ -35,6 +35,10 @@
 
 #include "xmipp_strings.h"
 
+#ifndef __MINGW32__
+#include <fcntl.h>
+#endif
+
 #define FILENAMENUMBERLENGTH 6
 
 typedef struct stat Stat;
@@ -95,7 +99,8 @@ public:
 
     /** Assignment constructor
      */
-    FileName& operator=(const FileName& op){
+    FileName& operator=(const FileName& op)
+    {
         return (FileName&) std::string::operator=(op);
     }
 
@@ -699,6 +704,52 @@ public:
     {
         return fn1<fn2;
     }
+};
+
+
+/** Lock/unlock files
+ *
+ */
+class FileLock
+{
+protected:
+
+
+#ifndef __MINGW32__
+    struct flock fl;
+#endif
+
+    bool islocked;
+    int  filenum;
+
+public:
+
+    /// constructor
+    FileLock()
+    {
+        fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+        fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+        fl.l_start  = 0;        /* Offset from l_whence         */
+        fl.l_len    = 0;        /* length, 0 = to EOF           */
+        fl.l_pid    = getpid(); /* our PID                      */
+
+        islocked = false;
+        filenum = NULL;
+    }
+
+    FileLock(int fileno)
+    {
+        FileLock();
+        this->filenum = fileno;
+    }
+
+    /// Lock file
+    void lock(int fileno = NULL);
+    void lock(FILE* file);
+
+    ///Unlock
+    void unlock();
+
 };
 
 //@}
