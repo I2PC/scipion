@@ -841,9 +841,7 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
     endX=XSIZE(microImage())-particle_radius;
     endY=YSIZE(microImage())-particle_radius;
     applyConvolution(fast);
-    Image<double> II;
-    II().alias(convolveRes);
-    II.write("testvv.xmp");
+
     for (int i=particle_radius;i<endY;i++)
         for (int j=particle_radius;j<endX;j++)
         {
