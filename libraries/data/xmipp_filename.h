@@ -727,6 +727,7 @@ public:
     /// constructor
     FileLock()
     {
+#ifndef __MINGW32__
         fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
         fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
         fl.l_start  = 0;        /* Offset from l_whence         */
@@ -735,6 +736,7 @@ public:
 
         islocked = false;
         filenum = NULL;
+#endif
     }
 
     FileLock(int fileno)
