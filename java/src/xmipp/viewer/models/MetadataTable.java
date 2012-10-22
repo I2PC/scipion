@@ -410,6 +410,7 @@ public class MetadataTable extends MetadataGallery {
 			else
 				sortColumnIndex = modelIndex;
 			data.sortMd(sortColumnIndex, ascending);
+			cache.clear();
 			fireTableDataChanged();
 		}
 	}
