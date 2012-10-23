@@ -35,12 +35,12 @@ String FileNameVersion=METADATA_XMIPP_STAR;
 
 void setMetadataVersion(String version)
 {
-	FileNameVersion=version;
+    FileNameVersion=version;
 }
 
 String getMetadataVersion(void)
 {
-	return FileNameVersion;
+    return FileNameVersion;
 }
 
 // Constructor with root, number and extension .............................
@@ -251,7 +251,7 @@ bool FileName::hasStackExtension() const
     String ext = getFileFormat();
     if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
         ext=="mrc" || ext=="img" || ext=="hed" || ext=="tif" ||
-       ext=="dm3" ||  ext=="ser")
+        ext=="dm3" ||  ext=="ser")
         return true;
     else
         return false;
@@ -532,7 +532,7 @@ FileName FileName::replaceSubstring(const String &subOld, const String &subNew) 
 // Substitute one extension by other .......................................
 FileName FileName::replaceExtension(const String &newExt) const
 {
-  return removeLastExtension() + "." + newExt;
+    return removeLastExtension() + "." + newExt;
 }
 
 // Remove a substring ......................................................
@@ -779,6 +779,46 @@ void copyImage(const FileName & source, const FileName & target)
 }
 
 
+void FileLock::lock(int _fileno)
+{
+#ifndef __MINGW32__
+    if (islocked)
+        unlock();
+
+    if (_fileno != NULL)
+        filenum = _fileno;
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+    islocked = true;
+#endif
+}
+
+void FileLock::lock(FILE * hFile)
+{
+#ifndef __MINGW32__
+    if (islocked)
+        unlock();
+
+    if (hFile != NULL)
+        this->filenum = fileno(hFile);
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+    islocked = true;
+#endif
+}
 
 
+void FileLock::unlock()
+{
+#ifndef __MINGW32__
+    if (islocked)
+    {
+        fl.l_type = F_UNLCK;
+        fcntl(filenum, F_SETLK, &fl);
+        islocked = false;
+    }
+#endif
+}
 

@@ -29,16 +29,16 @@
 #include <fstream>
 #include <errno.h>
 #include <fcntl.h>
-#ifndef __MINGW32__
-#include <sys/mman.h>
-#else
-#include <windows.h>
-#endif
 #include "../../external/bilib/headers/linearalgebra.h"
 #include "xmipp_macros.h"
 #include "xmipp_filename.h"
 #include "xmipp_error.h"
 #include "matrix1d.h"
+
+#ifdef XMIPP_MMAP
+#include <sys/mman.h>
+#endif
+
 
 // Forward declarations
 template<typename T>
@@ -478,7 +478,7 @@ public:
      * Offset is in bytes. */
     void coreInit(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
     {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
 
     	mdimx=Xdim;
         mdimy=Ydim;
@@ -542,7 +542,7 @@ public:
             delete[] mdata;
         if (mappedData)
         {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
             munmap(mdataOriginal,mdimx*mdimy*sizeof(T));
             close(fdMap);
 #else

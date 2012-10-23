@@ -33,9 +33,11 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-        #TODO: check all the possible casses
         if not self.TiltPairs:
-            self.MicrographsMd = self.micrographs
+            self.MicrographsMd = self.Input['micrographs']
+        else:
+            self.inputFilename('tilted_pairs')
+            self.MicrographsMd = self.Input['tilted_pairs']
 
     def defineSteps(self):
         extraDir=self.workingDirPath('extra')
@@ -56,7 +58,7 @@ class ProtScreenMicrographs(XmippProtocol):
         AngPix = MD2.getValue(xmipp.MDL_SAMPLINGRATE,objId)
 
         # Create verifyFiles for the MPI and output directories
-        MD = xmipp.MetaData(self.Input['micrographs'])
+        MD = xmipp.MetaData(self.MicrographsMd)
         
         # Now the estimation actions
         for objId in MD:
@@ -99,7 +101,7 @@ class ProtScreenMicrographs(XmippProtocol):
                            TmpDir=self.TmpDir,
                            WorkingDir=self.WorkingDir,
                            summaryFile=self.micrographs,
-                           importMicrographs=self.Input['micrographs'],
+                           importMicrographs=self.MicrographsMd,
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
     
