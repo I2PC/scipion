@@ -726,7 +726,6 @@ if int(env['java']):
     if int(env['arpack']):
         JavaDependLibraries += ['arpack++', 'arpack', 'lapack', 'blas']
     # Compilation of the c code needed for java jni binding
-    print "YEAH" + env['JNI_CPPPATH']
     javaJniC = AddLibrary('XmippJNI', 'libraries/bindings/java', JavaInterfaceSources, ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],JavaDependLibraries)
 
     # Create some jar links
