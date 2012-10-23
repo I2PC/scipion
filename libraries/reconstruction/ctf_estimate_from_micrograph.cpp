@@ -538,11 +538,19 @@ void ProgCTFEstimateFromMicrograph::run()
             CTFDescription ctfmodel;
             if (bootstrapN == -1)
             {
-                // No bootstrapping
-                // Compute the PCA of the local PSDs
-                pcaAnalyzer.standardarizeVariables();
-                // pcaAnalyzer.subtractAvg();
-                pcaAnalyzer.learnPCABasis(1, 10);
+                try {
+					// No bootstrapping
+					// Compute the PCA of the local PSDs
+					pcaAnalyzer.standardarizeVariables();
+					// pcaAnalyzer.subtractAvg();
+                    pcaAnalyzer.learnPCABasis(1, 10);
+                } catch (XmippError xe)
+                {
+                	if (xe.__errno==ERR_NUMERICAL)
+                		REPORT_ERROR(ERR_NUMERICAL,"There is no variance in the PSD, check that the micrograph is not constant");
+                	else
+                		throw(xe);
+                }
 
 #ifdef DEBUG
 
