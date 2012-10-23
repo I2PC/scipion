@@ -796,29 +796,44 @@ void FileLock::lock(int _fileno)
 
 void FileLock::lock(FILE * hFile)
 {
-#ifndef __MINGW32__
     if (islocked)
         unlock();
 
     if (hFile != NULL)
         this->filenum = fileno(hFile);
 
+#ifdef __MINGW32__
+
+    HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+    DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+    if (LockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+        REPORT_ERROR(ERR_IO_LOCKED,"File cannot be locked.");
+#else
+
     fl.l_type = F_WRLCK;
     fcntl(filenum, F_SETLKW, &fl);
-    islocked = true;
 #endif
+
+    islocked = true;
 }
 
 
 void FileLock::unlock()
 {
-#ifndef __MINGW32__
     if (islocked)
     {
+#ifdef __MINGW32__
+        HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+        DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+        if (UnLockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+            REPORT_ERROR(ERR_IO_LOCKED,"File cannot be unlocked.");
+#else
+
         fl.l_type = F_UNLCK;
         fcntl(filenum, F_SETLK, &fl);
+#endif
+
         islocked = false;
     }
-#endif
 }
 
