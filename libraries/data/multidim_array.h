@@ -26,7 +26,7 @@
 #ifndef MULTIDIM_ARRAY_H
 #define MULTIDIM_ARRAY_H
 
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
 #include <sys/mman.h>
 #endif
 #include "../../external/bilib/types/tsplinebasis.h"
@@ -1367,7 +1367,7 @@ public:
      */
     FILE* mmapFile(T* &_data, size_t nzyxDim) const
     {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
         FILE* fMap = tmpfile();
         int Fd = fileno(fMap);
 
@@ -1390,7 +1390,7 @@ public:
      */
     void coreDeallocate()
     {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
         if (data != NULL && destroyData)
         {
             if (mmapOn)
