@@ -400,16 +400,9 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     /*
      * BLOCK HEADER IF NEEDED
      */
-    struct flock fl;
-
-    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-    fl.l_start  = 0;        /* Offset from l_whence         */
-    fl.l_len    = 0;        /* length, 0 = to EOF           */
-    fl.l_pid    = getpid(); /* our PID                      */
-    fcntl(fileno(fimg),       F_SETLKW, &fl); /* locked */
-    fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
-
+    FileLock flockHead, flockImg;
+    flockHead.lock(fhed);
+    flockImg.lock(fimg);
 
     if (replaceNsize == 0) // Header written first time
     {
@@ -449,11 +442,11 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         {
 #define SET_HEADER_VALUE(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
 
-        	SET_HEADER_VALUE(ixold, MDL_SHIFT_X);
-        	SET_HEADER_VALUE(iyold, MDL_SHIFT_Y);
-        	SET_HEADER_VALUE(euler_alpha, MDL_ANGLE_ROT);
-        	SET_HEADER_VALUE(euler_beta, MDL_ANGLE_TILT);
-        	SET_HEADER_VALUE(euler_gamma, MDL_ANGLE_PSI);
+            SET_HEADER_VALUE(ixold, MDL_SHIFT_X);
+            SET_HEADER_VALUE(iyold, MDL_SHIFT_Y);
+            SET_HEADER_VALUE(euler_alpha, MDL_ANGLE_ROT);
+            SET_HEADER_VALUE(euler_beta, MDL_ANGLE_TILT);
+            SET_HEADER_VALUE(euler_gamma, MDL_ANGLE_PSI);
         }
         // Update index number of image
         header.imn = imgStart + i + 1;
@@ -479,9 +472,8 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     }
 
     //Unlock
-    fl.l_type   = F_UNLCK;
-    fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
-    fcntl(fileno(fhed), F_SETLK, &fl); /* unlocked */
+    flockHead.unlock();
+    flockImg.unlock();
 
     if (mmapOnWrite)
         mmapFile();
