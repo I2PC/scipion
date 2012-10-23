@@ -297,6 +297,8 @@ void ProgCTFEstimateFromMicrograph::run()
     {
         div_NumberX = CEIL((double)Xdim / pieceDim);
         div_NumberY = CEIL((double)Ydim / pieceDim);
+        if (div_NumberX<=2*skipBorders || div_NumberY<=2*skipBorders)
+        	REPORT_ERROR(ERR_ARG_INCORRECT,formatString("The micrograph is not big enough to skip %d pieces on each side",skipBorders));
         div_Number = div_NumberX * div_NumberY;
     }
 
@@ -316,12 +318,10 @@ void ProgCTFEstimateFromMicrograph::run()
     pieceMask.initConstant(1);
 
     //Multidimensional data variables to store the defocus obtained locally for plane fitting
-    MultidimArray<double> defocusPlanefittingU(div_NumberX, div_NumberY);
-    MultidimArray<double> defocusPlanefittingV(div_NumberX, div_NumberY);
-    MultidimArray<double> X0(div_NumberX, div_NumberY);
-    MultidimArray<double> XF(div_NumberX, div_NumberY);
-    MultidimArray<double> Y0(div_NumberX, div_NumberY);
-    MultidimArray<double> YF(div_NumberX, div_NumberY);
+    MultidimArray<double> defocusPlanefittingU(div_NumberX-2*skipBorders, div_NumberY-2*skipBorders);
+    MultidimArray<double> defocusPlanefittingV(defocusPlanefittingU);
+    MultidimArray<double> Xm(defocusPlanefittingU);
+    MultidimArray<double> Ym(defocusPlanefittingU);
 
     // Attenuate borders to avoid discontinuities
     MultidimArray<double> pieceSmoother;
@@ -336,6 +336,10 @@ void ProgCTFEstimateFromMicrograph::run()
         fn_psd = fn_root + ".psd";
     else
         fn_psd = fn_root + ".psdstk";
+    if (fileExists(fn_psd))
+    	fn_psd.deleteFile();
+    if (fileExists(fn_root+".ctfparam"))
+    	FileName(fn_root+".ctfparam").deleteFile();
 
     if (verbose)
         init_progress_bar(div_Number);
@@ -346,6 +350,7 @@ void ProgCTFEstimateFromMicrograph::run()
     while (N <= div_Number)
     {
         bool skip = false;
+        int blocki, blockj;
         // Compute the top-left corner of the piece ..........................
         if (psd_mode == OnePerParticle)
         {
@@ -366,8 +371,8 @@ void ProgCTFEstimateFromMicrograph::run()
             int step = pieceDim;
             if (psd_mode == OnePerMicrograph)
                 step = (int) ((1 - overlap) * step);
-            int blocki = (N - 1) / div_NumberX;
-            int blockj = (N - 1) % div_NumberX;
+            blocki = (N - 1) / div_NumberX;
+            blockj = (N - 1) % div_NumberX;
             if (blocki < skipBorders || blockj < skipBorders
                 || blocki > (div_NumberY - skipBorders - 1)
                 || blockj > (div_NumberX - skipBorders - 1))
@@ -477,21 +482,20 @@ void ProgCTFEstimateFromMicrograph::run()
                     CTFDescription ctfmodel;
 
                     ctfmodel.isLocalCTF = true;
-                    ctfmodel.x0 = i;
-                    ctfmodel.xF = (i / pieceDim + 1) * pieceDim;
-                    ctfmodel.y0 = i;
-                    ctfmodel.yF = (j / pieceDim + 1) * pieceDim;
+                    ctfmodel.x0 = i*ctfmodel.Tm;
+                    ctfmodel.xF = (i + pieceDim-1)*ctfmodel.Tm;
+                    ctfmodel.y0 = i*ctfmodel.Tm;
+                    ctfmodel.yF = (j + pieceDim-1)*ctfmodel.Tm;
                     double fitting_error = ROUT_Adjust_CTF(
                                                prmEstimateCTFFromPSD, ctfmodel, false);
 
-                    A2D_ELEM(defocusPlanefittingU,i/pieceDim,j/pieceDim)=ctfmodel.DeltafU;
-                    A2D_ELEM(defocusPlanefittingV,i/pieceDim,j/pieceDim)=ctfmodel.DeltafV;
+                    int idxi=blocki-skipBorders;
+                    int idxj=blockj-skipBorders;
+                    A2D_ELEM(defocusPlanefittingU,idxi,idxj)=ctfmodel.DeltafU;
+                    A2D_ELEM(defocusPlanefittingV,idxi,idxj)=ctfmodel.DeltafV;
 
-                    A2D_ELEM(X0,i/pieceDim,j/pieceDim)=i;
-                    A2D_ELEM(XF,i/pieceDim,j/pieceDim)=(i/pieceDim+1)*pieceDim;
-
-                    A2D_ELEM(Y0,i/pieceDim,j/pieceDim)=j;
-                    A2D_ELEM(YF,i/pieceDim,j/pieceDim)=(j/pieceDim+1)*pieceDim;
+                    A2D_ELEM(Xm,idxi,idxj)=(i+pieceDim/2)*ctfmodel.Tm;
+                    A2D_ELEM(Ym,idxi,idxj)=(j+pieceDim/2)*ctfmodel.Tm;
 
                     if (psd_mode == OnePerParticle)
                         posFile.setValue(MDL_CTF_MODEL,
@@ -579,6 +583,11 @@ void ProgCTFEstimateFromMicrograph::run()
                     psign += "+";
                 double zrandomness = checkRandomness(psign);
 
+                ctfmodel.isLocalCTF = false;
+                ctfmodel.x0 = 0;
+                ctfmodel.xF = (Xdim-1)*ctfmodel.Tm;
+                ctfmodel.y0 = 0;
+                ctfmodel.yF = (Ydim-1)*ctfmodel.Tm;
                 double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                        ctfmodel, false);
 
@@ -664,24 +673,20 @@ void ProgCTFEstimateFromMicrograph::run()
     // Assign a CTF to each particle ----------------------------------------
     if (psd_mode == OnePerRegion && estimate_ctf)
     {
-        double p0 = 0, p1 = 0, p2 = 0;
-        planeFit(defocusPlanefittingU, p0, p1, p2);
-
-        FileName fn_psd_piece;
-        fn_psd_piece.compose(N, fn_psd);
-        FileName fn_rootCTFPARAM = fn_psd_piece.withoutExtension();
-        int atPosition = fn_rootCTFPARAM.find('@');
-
-        fn_rootCTFPARAM = formatString("region%03d@%s",
-                                       textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
-                                       fn_rootCTFPARAM.substr(atPosition + 1).c_str());
+        double pU0 = 0, pU1 = 0, pU2 = 0;
+        planeFit(defocusPlanefittingU, Xm, Ym, pU0, pU1, pU2);
+        double pV0 = 0, pV1 = 0, pV2 = 0;
+        planeFit(defocusPlanefittingV, Xm, Ym, pV0, pV1, pV2);
 
         MetaData MD;
         size_t id = MD.addObject();
-        MD.setValue(MDL_CTF_DEFOCUS_PLANEUA, p1, id);
-        MD.setValue(MDL_CTF_DEFOCUS_PLANEUB, p2, id);
-        MD.setValue(MDL_CTF_DEFOCUS_PLANEUC, p0, id);
-        MD.write(fn_rootCTFPARAM + ".ctfparam", MD_APPEND);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEUA, pU1, id);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEUB, pU2, id);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEUC, pU0, id);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEVA, pV1, id);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEVB, pV2, id);
+        MD.setValue(MDL_CTF_DEFOCUS_PLANEVC, pV0, id);
+        MD.write((String)"fullMicrograph@"+fn_root+".ctfparam", MD_APPEND);
 
         if (fn_pos != "")
         {
