@@ -62,21 +62,23 @@
 #define ISINF(x) std::isinf(x)
 #endif
 
+/// Includes needed in APPLE Platforms
 #ifdef __APPLE__
 #include <math.h>
 #endif
 
-/// MINGW Stuff
+/// Includes needed in Windows Platforms using MINGW
 #ifdef __MINGW32__
 #include <windows.h>
+#include <limits.h>
 #endif
 
-
+/// Definition of sincos for APPLE and MINGW
 #if defined(__APPLE__) || defined(__MINGW32__)
 void sincos(double angle, double * sine, double * cosine);
 #endif
 
-/// Definition of macro to allow mmap
+/// Definition of macro to allow mmap, not valid in MINGW
 #ifndef __MINGW32__
 #define XMIPP_MMAP
 #endif
@@ -411,7 +413,6 @@ void sincos(double angle, double * sine, double * cosine);
  */
 #define SUM_INIT(var, value) if (first_time) var = (value); else var += (value);
 #define SUM_INIT_COND(var, value, cond) if (cond) var = (value); else var += (value);
-
 
 //@}
 //@}
