@@ -566,7 +566,7 @@ bool MetaData::containsObject(const MDQuery &query)
 //--------------IO functions -----------------------
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
 #include <sys/mman.h>
 #endif
 
@@ -592,7 +592,7 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 
 void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
 {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
     if (outFile.hasImageExtension())
         REPORT_ERROR(ERR_IO,"Trying to write metadata with image extension");
 
@@ -684,6 +684,7 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
     }
     ofs.close();
 #else
+
     REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
 }
@@ -1080,7 +1081,7 @@ void MetaData::addPlain(const FileName &inFile, const String &labelsString, cons
 
 bool MetaData::existsBlock(const FileName &_inFile)
 {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
     String blockName;
     FileName outFile;
 
@@ -1118,10 +1119,7 @@ bool MetaData::existsBlock(const FileName &_inFile)
             String _szBlockName = (String)("\ndata_") + blockName;
             size_t blockNameSize = _szBlockName.size();
 
-            if (_memmem(map, size, _szBlockName.data(), blockNameSize) == NULL)
-                return false;
-            else
-                return true;
+            return _memmem(map, size, _szBlockName.data(), blockNameSize) != NULL;
         }
         if (munmap(map, size) == -1)
         {

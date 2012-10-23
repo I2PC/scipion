@@ -31,9 +31,6 @@
 
 #include <fstream>
 #include <stdio.h>
-#ifndef __MINGW32__
-#include <sys/mman.h>
-#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>

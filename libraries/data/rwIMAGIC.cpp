@@ -24,9 +24,6 @@
  ***************************************************************************/
 
 #include "xmipp_image_base.h"
-#ifdef __MINGW32__
-#include <windows.h>
-#endif
 
 /*
  * rwIMAGIC.h
