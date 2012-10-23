@@ -70,17 +70,20 @@ public class XmippFileView extends FileView {
 		Icon icon = null;
 		try {
 			String filename = f.getPath();
-			if (Filename.exists(filename)) {
+			//if (Filename.exists(filename)) 
+			{
 				String iconString = "generic_file.gif";
 				if (f.isDirectory())
 					iconString = "folderopen.gif";
-				if (Filename.isSingleImage(filename))
+				if (Filename.isSingleImageExt(filename))
 					iconString = "image.gif";
-				else if (Filename.isMetadata(filename))
+				else if (Filename.isMetadata(filename)){
+					//System.out.format("file: %s is metadata\n", filename);
 					iconString = "md.gif";
-				else if (Filename.isVolume(filename))
+				}
+				else if (Filename.isVolumeExt(filename))
 					iconString = "vol.gif";
-				else if (Filename.isStack(filename))
+				else if (Filename.isStackExt(filename))
 					iconString = "stack.gif";
 				else if (filename.endsWith(Filename.EXT_ERR))
 					iconString = "err.gif";

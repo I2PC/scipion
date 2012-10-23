@@ -35,12 +35,15 @@
 #include "xmipp_error.h"
 
 
+
 // For timing functions
 // Uncomment next line timing functions are giving problems in your system
 //#define _NO_TIME
 #ifndef _NO_TIME
 #include <unistd.h>
+#ifndef __MINGW32__
 #include <sys/times.h>
+#endif
 #ifdef _IRIX65
 #include <sys/types.h>
 #include <time.h>

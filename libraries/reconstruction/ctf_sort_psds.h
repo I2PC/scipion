@@ -43,6 +43,7 @@ public:
 	double PSDcorrelation90;
 	double firstZeroRatio;
 	double firstZeroAvg;
+	double maxFreq;
 	double firstZeroDisagreement;
 	double maxDampingAtBorder;
 	double PSDradialIntegral;

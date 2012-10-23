@@ -309,9 +309,9 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	public int getNextFreeMicrograph(int index) {
-		if(micrographs.size() < index)
+		if (micrographs.size() < index)
 			return -1;
-		for (int i = index; i < micrographs.size(); i ++) {
+		for (int i = index; i < micrographs.size(); i++) {
 			if (micrographs.get(i).getFamilyData(family).getState() == MicrographFamilyState.Available)
 				return i;
 		}
@@ -355,11 +355,11 @@ public abstract class TrainingPicker extends ParticlePicker {
 		if (isChanged()) {
 			super.saveData();
 			persistMicrographs();
-//			for(Family f: families)
-//			{
+//			for (Family f : families) {
 //				updateFamilyTemplates(f);
 //				try {
-//					f.getTemplates().write(getOutputPath(f.getName() + "_template.stk"));
+//					f.getTemplates().write(
+//							getOutputPath(f.getName() + "_template.stk"));
 //				} catch (Exception e) {
 //					getLogger().log(Level.SEVERE, e.getMessage(), e);
 //					throw new IllegalArgumentException(e);
@@ -493,25 +493,26 @@ public abstract class TrainingPicker extends ParticlePicker {
 			long fid = md.firstObject();
 			size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
 			int half = size / 2;
-			
-			ids = md.findObjects();			
+
+			ids = md.findObjects();
 			for (long id : ids) {
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id) + half;
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id) + half;
 				if (inverty) {
-					
-					//height = mfd.getMicrograph().getImagePlus().getHeight();
+
+					// height = mfd.getMicrograph().getImagePlus().getHeight();
 					y = height - y;
 				}
 				if (!mic.fits(x, y, size))// ignore out of
-															// bounds particle
+											// bounds particle
 				{
 					System.out.println(XmippMessage
 							.getOutOfBoundsMsg("Particle")
 							+ String.format(" on x:%s y:%s", x, y));
 					continue;
 				}
-				mfd.addManualParticle(new TrainingParticle(x, y, family, mic, cost));
+				mfd.addManualParticle(new TrainingParticle(x, y, family, mic,
+						cost));
 
 			}
 			if (size > 0)
@@ -548,7 +549,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 				block = "mic_" + m.getName();
 				if (blocks.contains(block)) {
 					String blockName = block + "@" + file;
-				
+
 					md = new MetaData(blockName);
 
 					ids = md.findObjects();
@@ -622,29 +623,27 @@ public abstract class TrainingPicker extends ParticlePicker {
 			throw new IllegalArgumentException(e);
 		}
 	}
-	
-	
-//	public void updateFamilyTemplates(Family f) {
-//		ImageGeneric igp;
-//		List<TrainingParticle> particles;
-//		MicrographFamilyData mfd;
-//		for(TrainingMicrograph m: micrographs)
-//		{
-//			mfd = m.getFamilyData(f);
-//			for (int i = 0; i < mfd.getManualParticles().size(); i++) {
-//				particles = mfd.getManualParticles();
-//				igp = particles.get(i).getImageGeneric();
-//				if (i < f.getTemplatesNumber())
-//					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-//				else
-//					try {
-//						f.getTemplates().alignImages(igp);
-//					} catch (Exception e) {
-//						throw new IllegalArgumentException(e.getMessage());
-//					}
-//			}
-//		}
-//
-//	}
+
+	public void updateFamilyTemplates(Family f) {
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		for (TrainingMicrograph m : micrographs) {
+			mfd = m.getFamilyData(f);
+			for (int i = 0; i < mfd.getManualParticles().size(); i++) {
+				particles = mfd.getManualParticles();
+				igp = particles.get(i).getImageGeneric();
+				if (i < f.getTemplatesNumber())
+					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+				else
+					try {
+						f.getTemplates().alignImages(igp);
+					} catch (Exception e) {
+						throw new IllegalArgumentException(e.getMessage());
+					}
+			}
+		}
+
+	}
 
 }

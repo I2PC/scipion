@@ -29,12 +29,16 @@
 #include <fstream>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/mman.h>
-#include <external/bilib/headers/linearalgebra.h>
+#include "../../external/bilib/headers/linearalgebra.h"
 #include "xmipp_macros.h"
 #include "xmipp_filename.h"
 #include "xmipp_error.h"
 #include "matrix1d.h"
+
+#ifdef XMIPP_MMAP
+#include <sys/mman.h>
+#endif
+
 
 // Forward declarations
 template<typename T>
@@ -474,7 +478,9 @@ public:
      * Offset is in bytes. */
     void coreInit(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
     {
-        mdimx=Xdim;
+#ifdef XMIPP_MMAP
+
+    	mdimx=Xdim;
         mdimy=Ydim;
         mdim=mdimx*mdimy;
         destroyData=false;
@@ -488,6 +494,9 @@ public:
         if ( (mdataOriginal = (char*) mmap(0,Ydim*Xdim*sizeof(T)+offsetDiff, PROT_READ | PROT_WRITE, MAP_SHARED, fdMap, offsetPages)) == MAP_FAILED )
             REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"mmap failed "+integerToString(errno));
         mdata=(T*)(mdataOriginal+offsetDiff);
+#else
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
     }
 
     /** Core init.
@@ -533,8 +542,12 @@ public:
             delete[] mdata;
         if (mappedData)
         {
+#ifdef XMIPP_MMAP
             munmap(mdataOriginal,mdimx*mdimy*sizeof(T));
             close(fdMap);
+#else
+            REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
         }
         mdata=NULL;
         mdataOriginal=NULL;
