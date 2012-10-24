@@ -482,10 +482,10 @@ void ProgCTFEstimateFromMicrograph::run()
                     CTFDescription ctfmodel;
 
                     ctfmodel.isLocalCTF = true;
-                    ctfmodel.x0 = piecei;
-                    ctfmodel.xF = (piecei + pieceDim-1);
+                    ctfmodel.x0 = piecej;
+                    ctfmodel.xF = (piecej + pieceDim-1);
                     ctfmodel.y0 = piecei;
-                    ctfmodel.yF = (piecej + pieceDim-1);
+                    ctfmodel.yF = (piecei + pieceDim-1);
                     double fitting_error = ROUT_Adjust_CTF(
                                                prmEstimateCTFFromPSD, ctfmodel, false);
 
