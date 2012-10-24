@@ -678,14 +678,26 @@ void ProgCTFEstimateFromMicrograph::run()
         double pV0 = 0, pV1 = 0, pV2 = 0;
         planeFit(defocusPlanefittingV, Xm, Ym, pV0, pV1, pV2);
 
+        MetaData MDctf;
+        MDctf.read(fn_root+".ctfparam");
+        double Tm, downsampling;
+        size_t id=MDctf.firstObject();
+        MDctf.getValue(MDL_CTF_SAMPLING_RATE,Tm,id);
+        MDctf.getValue(MDL_CTF_DOWNSAMPLE_PERFORMED,downsampling,id);
+
         MetaData MD;
-        size_t id = MD.addObject();
+        MD.setColumnFormat(false);
+        id = MD.addObject();
         MD.setValue(MDL_CTF_DEFOCUS_PLANEUA, pU1, id);
         MD.setValue(MDL_CTF_DEFOCUS_PLANEUB, pU2, id);
         MD.setValue(MDL_CTF_DEFOCUS_PLANEUC, pU0, id);
         MD.setValue(MDL_CTF_DEFOCUS_PLANEVA, pV1, id);
         MD.setValue(MDL_CTF_DEFOCUS_PLANEVB, pV2, id);
         MD.setValue(MDL_CTF_DEFOCUS_PLANEVC, pV0, id);
+        MD.setValue(MDL_CTF_X0, 0., id);
+        MD.setValue(MDL_CTF_Y0, 0., id);
+        MD.setValue(MDL_CTF_XF, (Xdim-1)*Tm*downsampling, id);
+        MD.setValue(MDL_CTF_YF, (Ydim-1)*Tm*downsampling, id);
         MD.write((String)"fullMicrograph@"+fn_root+".ctfparam", MD_APPEND);
 
         if (fn_pos != "")
