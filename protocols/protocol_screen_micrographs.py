@@ -152,11 +152,6 @@ class ProtScreenMicrographs(XmippProtocol):
         if self.MaxFocus < self.MinFocus:
             errors.append("maxFocus must be larger than minFocus")
 
-        if self.DoCtffind:
-            self.CtffindExec =  which('ctffind3.exe')
-            if self.CtffindExec =='':
-                errors.append("cannot find ctffind3.exe")
-        
         return errors
 
     def summary(self):
