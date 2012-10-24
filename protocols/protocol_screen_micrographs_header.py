@@ -79,15 +79,6 @@ estimations are noisier.
 """
 WinSize = 256
 
-# Use CTFFIND
-""" use ctffind3.exe instead of xmipp to compute CTF.
-"""
-DoCtffind = False
-
-# {condition}(DoCtffind){expert} Defocus step for CTFFIND (in microns)
-""" Step size for defocus search (in microns)
-"""
-StepFocus = 0.1
 
 # {eval} expandParallel(threads=0,hours=12)
 
