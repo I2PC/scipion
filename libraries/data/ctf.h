@@ -230,13 +230,13 @@ public:
     /// Factor for the importance of the Amplitude contrast.
     double Q0;
     /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
-    int x0;
+    double x0;
     /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
-    int xF;
+    double xF;
     /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
-    int y0;
+    double y0;
     /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
-    int yF;
+    double yF;
     /// Local CTF determination
     bool isLocalCTF;
     /// Enable CTFnoise part
