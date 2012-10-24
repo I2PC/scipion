@@ -34,15 +34,23 @@ OS_TYPE=`uname`
 IS_MAC=false
 IS_CYGWIN=false
 IS_MINGW=false
+IS_LINUX=false
 echo "The OS is $OS_TYPE"
-if test "${OSTYPE#*Darwin}" = "$OSTYPE" ; then
-	IS_MAC=true;
-	CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
-elif test "${OSTYPE#*CYGWIN}" = "$OSTYPE" ; then
-	IS_CYGWIN=true;
-elif test "${OSTYPE#*MINGW}" = "$OSTYPE" ; then
+case "$OSTYPE" in
+  Darwin)
+    IS_MAC=true
+    CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
+    ;;
+  CYGWIN*)
+    IS_CYGWIN=true
+    ;;
+  MINGW*)
     IS_MINGW=true
-fi
+    ;;
+  *)
+    IS_LINUX=true
+    ;;
+esac
 
 
 for param in $@; do
