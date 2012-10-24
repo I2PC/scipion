@@ -35,12 +35,12 @@ IS_MAC=false
 IS_CYGWIN=false
 IS_MINGW=false
 echo "The OS is $OS_TYPE"
-if test  $OS_TYPE = Darwin ; then
+if test "${OSTYPE#*Darwin}" = "$OSTYPE" ; then
 	IS_MAC=true;
 	CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"
-elif test $OS_TYPE = CYGWIN* ; then
+elif test "${OSTYPE#*CYGWIN}" = "$OSTYPE" ; then
 	IS_CYGWIN=true;
-elif test $OS_TYPE = MINGW* ; then
+elif test "${OSTYPE#*MINGW}" = "$OSTYPE" ; then
     IS_MINGW=true
 fi
 

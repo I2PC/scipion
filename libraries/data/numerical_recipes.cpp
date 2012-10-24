@@ -28,6 +28,7 @@
 #include <string.h>
 #include "numerical_recipes.h"
 
+
 /* NUMERICAL UTILITIES ----------------------------------------------------- */
 void nrerror(const char error_text[])
 {
@@ -4506,7 +4507,7 @@ estlam(int, int, int *, double, double **, double *, double *, double *,
        struct _constraint *, double *, double *, double *, double *);
 static double  *colvec(double **, int, int);
 static double  scaprd(int, double *, double *);
-static double  small(void);
+static double  smallNumber();
 static int  fuscmp(double, double);
 static int  indexs(int, int);
 static void  matrcp(int, double **, int, double **);
@@ -4529,7 +4530,7 @@ static void  error();
 static void  estlam();
 static double  *colvec();
 static double  scaprd();
-static double  small();
+static double  smallNumber();
 static int  fuscmp();
 static int  indexs();
 static void  matrcp();
@@ -4952,7 +4953,7 @@ void    *cd;
     glob_prnt.iter = 0;
     nstop = 1;
     nn = nineqn + neqn;
-    glob_grd.epsmac = small();
+    glob_grd.epsmac = smallNumber();
     tolfea = glob_grd.epsmac * 1.e2;
     bgbnd = bigbnd;
     glob_grd.rteps = sqrt(glob_grd.epsmac);
@@ -8754,7 +8755,7 @@ int n;
 }
 
 /***********************************************************/
-/*    Used by small()                                      */
+/*    Used by smallNumber()                                      */
 /***********************************************************/
 
 #ifdef __STDC__
@@ -8772,7 +8773,7 @@ double x, y, *z;
 /*    Computes the machine precision                      */
 /**********************************************************/
 
-static double small()
+static double smallNumber()
 {
     double one, two, z, tsmall;
 

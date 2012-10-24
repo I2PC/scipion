@@ -26,7 +26,11 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#ifndef __MINGW32__
 #include <sys/mman.h>
+#else
+#include <time.h>
+#endif
 #include "xmipp_funcs.h"
 #include "numerical_recipes.h"
 
@@ -597,7 +601,11 @@ int XmippTICKS;
 // The clock frequency for each machine must be known
 void time_config()
 {
+#ifndef __MINGW32__
     XmippTICKS = sysconf(_SC_CLK_TCK);
+#else
+    XmippTICKS = CLK_TCK;
+#endif
 }
 
 // Annotate actual time ....................................................
