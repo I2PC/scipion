@@ -344,7 +344,7 @@ void ProgCTFEstimateFromMicrograph::run()
     if (verbose)
         init_progress_bar(div_Number);
     int N = 1; // Index of current piece
-    int i = 0, j = 0; // top-left corner of the current piece
+    int piecei = 0, piecej = 0; // top-left corner of the current piece
     FourierTransformer transformer;
     int actualDiv_Number = 0;
     while (N <= div_Number)
@@ -355,16 +355,16 @@ void ProgCTFEstimateFromMicrograph::run()
         if (psd_mode == OnePerParticle)
         {
             // Read position of the particle
-            posFile.getValue(MDL_X, j, iterPosFile.objId);
-            posFile.getValue(MDL_Y, i, iterPosFile.objId);
+            posFile.getValue(MDL_X, piecej, iterPosFile.objId);
+            posFile.getValue(MDL_Y, piecei, iterPosFile.objId);
 
             // j,i are the selfWindow center, we need the top-left corner
-            j -= (int) (pieceDim / 2);
-            i -= (int) (pieceDim / 2);
-            if (i < 0)
-                i = 0;
-            if (j < 0)
-                j = 0;
+            piecej -= (int) (pieceDim / 2);
+            piecei -= (int) (pieceDim / 2);
+            if (piecei < 0)
+            	piecei = 0;
+            if (piecej < 0)
+            	piecej = 0;
         }
         else
         {
@@ -377,21 +377,21 @@ void ProgCTFEstimateFromMicrograph::run()
                 || blocki > (div_NumberY - skipBorders - 1)
                 || blockj > (div_NumberX - skipBorders - 1))
                 skip = true;
-            i = blocki * step;
-            j = blockj * step;
+            piecei = blocki * step;
+            piecej = blockj * step;
         }
 
         // test if the full piece is inside the micrograph
-        if (i + pieceDim > Ydim)
-            i = Ydim - pieceDim;
-        if (j + pieceDim > Xdim)
-            j = Xdim - pieceDim;
+        if (piecei + pieceDim > Ydim)
+        	piecei = Ydim - pieceDim;
+        if (piecej + pieceDim > Xdim)
+        	piecej = Xdim - pieceDim;
 
         if (!skip)
         {
             // Extract micrograph piece ..........................................
-            M_in().window(piece, 0, 0, i, j, 0, 0, i + YSIZE(piece) - 1,
-                          j + XSIZE(piece) - 1);
+            M_in().window(piece, 0, 0, piecei, piecej, 0, 0, piecei + YSIZE(piece) - 1,
+            		      piecej + XSIZE(piece) - 1);
             piece.statisticsAdjust(0, 1);
             normalize_ramp(piece, pieceMask);
             piece *= pieceSmoother;
@@ -482,10 +482,10 @@ void ProgCTFEstimateFromMicrograph::run()
                     CTFDescription ctfmodel;
 
                     ctfmodel.isLocalCTF = true;
-                    ctfmodel.x0 = i*ctfmodel.Tm;
-                    ctfmodel.xF = (i + pieceDim-1)*ctfmodel.Tm;
-                    ctfmodel.y0 = i*ctfmodel.Tm;
-                    ctfmodel.yF = (j + pieceDim-1)*ctfmodel.Tm;
+                    ctfmodel.x0 = piecei;
+                    ctfmodel.xF = (piecei + pieceDim-1);
+                    ctfmodel.y0 = piecei;
+                    ctfmodel.yF = (piecej + pieceDim-1);
                     double fitting_error = ROUT_Adjust_CTF(
                                                prmEstimateCTFFromPSD, ctfmodel, false);
 
@@ -494,8 +494,8 @@ void ProgCTFEstimateFromMicrograph::run()
                     A2D_ELEM(defocusPlanefittingU,idxi,idxj)=ctfmodel.DeltafU;
                     A2D_ELEM(defocusPlanefittingV,idxi,idxj)=ctfmodel.DeltafV;
 
-                    A2D_ELEM(Xm,idxi,idxj)=(i+pieceDim/2)*ctfmodel.Tm;
-                    A2D_ELEM(Ym,idxi,idxj)=(j+pieceDim/2)*ctfmodel.Tm;
+                    A2D_ELEM(Xm,idxi,idxj)=(piecei+pieceDim/2)*ctfmodel.Tm;
+                    A2D_ELEM(Ym,idxi,idxj)=(piecej+pieceDim/2)*ctfmodel.Tm;
 
                     if (psd_mode == OnePerParticle)
                         posFile.setValue(MDL_CTF_MODEL,
@@ -585,9 +585,9 @@ void ProgCTFEstimateFromMicrograph::run()
 
                 ctfmodel.isLocalCTF = false;
                 ctfmodel.x0 = 0;
-                ctfmodel.xF = (Xdim-1)*ctfmodel.Tm;
+                ctfmodel.xF = (Xdim-1);
                 ctfmodel.y0 = 0;
-                ctfmodel.yF = (Ydim-1)*ctfmodel.Tm;
+                ctfmodel.yF = (Ydim-1);
                 double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                        ctfmodel, false);
 
@@ -603,7 +603,7 @@ void ProgCTFEstimateFromMicrograph::run()
                 MD.setValue(MDL_CTF_CRIT_PSDVARIANCE, stdQ, id);
                 MD.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE, pstd, id);
                 MD.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST, zrandomness, id);
-                MD.write(fn_psd.withoutExtension() + ".ctfparam");
+                MD.write((String)"fullMicrograph@"+fn_psd.withoutExtension() + ".ctfparam");
             }
             else
             {
