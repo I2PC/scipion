@@ -207,7 +207,10 @@ def run(notebook):
     options = notebook.options
     out = OUTPUT
     procs = options.getNumberOfCpu()
-    scons = os.path.join("external", "scons", "scons.py")
+    if sys.platform  == 'win32':
+        scons = "external/scons/scons.py"
+    else:
+        scons = os.path.join("external", "scons", "scons.py")
     os.environ['JAVA_HOME'] = notebook.getValue('Java', 'JAVA_HOME')
     cmd = ''   
     if out != STDOUT and os.path.exists(out):

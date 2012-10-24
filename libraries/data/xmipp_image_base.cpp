@@ -122,7 +122,12 @@ int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int s
 void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                               bool createTempFile, size_t select_img, bool isStack, int mode)
 {
+    /** If XMIPP_MMAP is not defined this function is supposed to create
+     *  the empty file only */
+#ifdef XMIPP_MMAP
     mmapOnWrite = true;
+#endif
+
     setDimensions(Xdim, Ydim, Zdim, 1); // Images with Ndim >1 cannot be mapped to image file
     MD.resize(1);
     filename = _filename;
@@ -652,7 +657,10 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         munmapFile();
 
     // Check whether to map the data or not
+#ifdef XMIPP_MMAP
+
     mmapOnRead = mapData;
+#endif
 
     FileName ext_name = hFile->ext_name;
     fimg = hFile->fimg;

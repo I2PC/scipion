@@ -500,18 +500,8 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         header->ispg = 1;
 
     //locking
-    struct flock fl;
-
-    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-    fl.l_start  = 0;        /* Offset from l_whence         */
-    fl.l_len    = 0;        /* length, 0 = to EOF           */
-    fl.l_pid    = getpid(); /* our PID                      */
-
-
-    //BLOCK
-    fl.l_type   = F_WRLCK;
-    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
+    FileLock flock;
+    flock.lock(fimg);
 
     // Write header when needed
     if(!isStack || replaceNsize < header->nz)
@@ -547,8 +537,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     }
 
     // Unlock the file
-    fl.l_type   = F_UNLCK;
-    fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
+    flock.unlock();
 
     if (mmapOnWrite)
         mmapFile();
