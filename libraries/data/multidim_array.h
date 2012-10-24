@@ -5117,9 +5117,10 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
  */
 void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimArray<double> &c);
 
-/** Obtains the plane parameters p0+p1x+p2y of the 2x2 MultidimArray x.
+/** Obtains the plane parameters z=p0+p1*x+p2*y.
  */
-void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2);
+void planeFit(const MultidimArray<double> &z, const MultidimArray<double> &x, const MultidimArray<double> &y,
+		double &p0, double &p1, double &p2);
 
 /*
    mod    Modulus after division.
