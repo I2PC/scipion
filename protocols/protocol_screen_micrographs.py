@@ -35,11 +35,6 @@ class ProtScreenMicrographs(XmippProtocol):
         self.inputFilename('microscope', 'micrographs', 'acquisition')
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getFilename('micrographs')
-<<<<<<< HEAD
-
-        #TODO: check all the possible casses
-=======
->>>>>>> 1a75735ef2c2c8fc175c06ab56a42a8fa1528f43
         if not self.TiltPairs:
             self.MicrographsMd = self.Input['micrographs']
         else:
