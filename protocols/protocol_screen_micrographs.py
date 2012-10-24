@@ -79,27 +79,6 @@ class ProtScreenMicrographs(XmippProtocol):
             else:
                 finalname = inputFile
                 
-            if(self.DoCtffind):
-                verifyFiles=[]
-                self.insertStep('estimateCtfCtffind1', verifyfiles=verifyFiles,
-                                     micrograph=finalname,
-                                     micrographDir=micrographDir,
-                                     oroot=_getFilename('prefix', micrographDir=micrographDir),
-                                     kV=(Voltage),
-                                     Cs=(SphericalAberration),
-                                     sampling_rate=(AngPix*self.DownsampleFactor),
-                                     downSamplingPerformed=(self.DownsampleFactor),
-                                     ctfmodelSize=256,
-                                     Q0=(self.AmplitudeContrast),
-                                     min_freq=(self.LowResolCutoff),
-                                     max_freq=(self.HighResolCutoff),
-                                     pieceDim=(self.WinSize),
-                                     MinFocus=self.MinFocus,
-                                     MaxFocus=self.MaxFocus,
-                                     StepFocus=self.StepFocus
-                                     )
-
-            else:
                 # CTF estimation with Xmipp
                 args="--micrograph "+finalname+\
                      " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
@@ -152,11 +131,6 @@ class ProtScreenMicrographs(XmippProtocol):
         if self.MaxFocus < self.MinFocus:
             errors.append("maxFocus must be larger than minFocus")
 
-        if self.DoCtffind:
-            self.CtffindExec =  which('ctffind3.exe')
-            if self.CtffindExec =='':
-                errors.append("cannot find ctffind3.exe")
-        
         return errors
 
     def summary(self):
