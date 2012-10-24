@@ -309,6 +309,7 @@ void FileName::initRandom(int length)
 // Init Unique .............................................................
 void FileName::initUniqueName(const char *templateStr)
 {
+#ifndef __MINGW32__
     int fd;
     int len = 256;
     char filename[len];
@@ -322,6 +323,7 @@ void FileName::initUniqueName(const char *templateStr)
     }
     close(fd);
     *this = filename;
+#endif
 }
 
 // Add at beginning ........................................................
@@ -709,8 +711,12 @@ int do_mkdir(const char *path, mode_t mode)
     if (stat(path, &st) != 0)
     {
         /* Directory does not exist */
+#ifndef __MINGW32__
         if (mkdir(path, mode) != 0)
-            status = -1;
+#else
+        if (mkdir(path) != 0)
+#endif
+        status = -1;
     }
     else if (!S_ISDIR(st.st_mode))
     {
@@ -794,19 +800,18 @@ void FileLock::lock(int _fileno)
 #endif
 }
 
-void FileLock::lock(FILE * hFile)
+void FileLock::lock(FILE * hdlFile)
 {
     if (islocked)
         unlock();
 
-    if (hFile != NULL)
-        this->filenum = fileno(hFile);
+    if (hdlFile != NULL)
+        this->filenum = fileno(hdlFile);
 
 #ifdef __MINGW32__
-
     HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
     DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
-    if (LockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+    if (LockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
         REPORT_ERROR(ERR_IO_LOCKED,"File cannot be locked.");
 #else
 
@@ -825,7 +830,7 @@ void FileLock::unlock()
 #ifdef __MINGW32__
         HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
         DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
-        if (UnLockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+        if (UnlockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
             REPORT_ERROR(ERR_IO_LOCKED,"File cannot be unlocked.");
 #else
 
