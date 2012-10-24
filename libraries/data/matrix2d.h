@@ -29,16 +29,16 @@
 #include <fstream>
 #include <errno.h>
 #include <fcntl.h>
-#ifndef __MINGW32__
-#include <sys/mman.h>
-#else
-#include <windows.h>
-#endif
 #include "../../external/bilib/headers/linearalgebra.h"
 #include "xmipp_macros.h"
 #include "xmipp_filename.h"
 #include "xmipp_error.h"
 #include "matrix1d.h"
+
+#ifdef XMIPP_MMAP
+#include <sys/mman.h>
+#endif
+
 
 // Forward declarations
 template<typename T>
@@ -271,9 +271,9 @@ void svbksb(Matrix2D< double >& u,
  * already resized.
  */
 #define M2x2_INV(Ainv, A) { \
-		spduptmp0 = dMn(A,0) * dMn(A,3) - dMn(A,1) * dMn(A,2);\
-		if (spduptmp0==0.0)	\
-			REPORT_ERROR(ERR_NUMERICAL,"2x2 matrix is not invertible"); \
+  spduptmp0 = dMn(A,0) * dMn(A,3) - dMn(A,1) * dMn(A,2);\
+  if (spduptmp0==0.0) \
+   REPORT_ERROR(ERR_NUMERICAL,"2x2 matrix is not invertible"); \
         spduptmp0 = 1.0 / spduptmp0; \
         dMn(Ainv, 0) =  dMn(A,3); \
         dMn(Ainv, 1) = -dMn(A,1); \
@@ -297,9 +297,9 @@ void svbksb(Matrix2D< double >& u,
         dMn(Ainv, 7) = -(dMn(A,7)*dMn(A,0)-dMn(A,6)*dMn(A,1)); \
         dMn(Ainv, 8) =   dMn(A,4)*dMn(A,0)-dMn(A,3)*dMn(A,1); \
         spduptmp0 = dMn(A,0)*dMn(Ainv,0)+dMn(A,3)*dMn(Ainv,1)+dMn(A,6)*dMn(Ainv,2); \
-		if (spduptmp0==0.0)	\
-			REPORT_ERROR(ERR_NUMERICAL,"3x3 matrix is not invertible"); \
-	    spduptmp0 = 1.0 / spduptmp0; \
+  if (spduptmp0==0.0) \
+   REPORT_ERROR(ERR_NUMERICAL,"3x3 matrix is not invertible"); \
+     spduptmp0 = 1.0 / spduptmp0; \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
 /** Inverse of a matrix (4x4)
@@ -368,9 +368,9 @@ void svbksb(Matrix2D< double >& u,
         +dMn(A,3)*(dMn(A,4)*(dMn(A,10)*dMn(A,13)-dMn(A,9) *dMn(A,14))\
          +dMn(A,5)*(dMn(A,8) *dMn(A,14)-dMn(A,10)*dMn(A,12))\
          +dMn(A,6)*(dMn(A,9) *dMn(A,12)-dMn(A,8) *dMn(A,13))); \
-		if (spduptmp0==0.0)	\
-			REPORT_ERROR(ERR_NUMERICAL,"4x4 matrix is not invertible"); \
-		spduptmp0 = 1.0 / spduptmp0; \
+  if (spduptmp0==0.0) \
+   REPORT_ERROR(ERR_NUMERICAL,"4x4 matrix is not invertible"); \
+  spduptmp0 = 1.0 / spduptmp0; \
         M4x4_BY_CT(Ainv, Ainv, spduptmp0); }
 
 /** Matrix2D class */
@@ -478,9 +478,9 @@ public:
      * Offset is in bytes. */
     void coreInit(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
     {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
 
-    	mdimx=Xdim;
+        mdimx=Xdim;
         mdimy=Ydim;
         mdim=mdimx*mdimy;
         destroyData=false;
@@ -495,8 +495,10 @@ public:
             REPORT_ERROR(ERR_MMAP_NOTADDR,(String)"mmap failed "+integerToString(errno));
         mdata=(T*)(mdataOriginal+offsetDiff);
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
     }
 
     /** Core init.
@@ -542,12 +544,14 @@ public:
             delete[] mdata;
         if (mappedData)
         {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
             munmap(mdataOriginal,mdimx*mdimy*sizeof(T));
             close(fdMap);
 #else
+
             REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
         }
         mdata=NULL;
         mdataOriginal=NULL;
@@ -657,7 +661,15 @@ public:
     {
         if (mdata!=NULL)
             clear();
+
+#ifdef XMIPP_MMAP
+
         coreInit(fn,Ydim,Xdim,offset);
+#else
+
+        resizeNoCopy(Ydim, Xdim);
+#endif
+
     }
 
     /** Extract submatrix and assign to this object.

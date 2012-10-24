@@ -35,12 +35,12 @@ String FileNameVersion=METADATA_XMIPP_STAR;
 
 void setMetadataVersion(String version)
 {
-	FileNameVersion=version;
+    FileNameVersion=version;
 }
 
 String getMetadataVersion(void)
 {
-	return FileNameVersion;
+    return FileNameVersion;
 }
 
 // Constructor with root, number and extension .............................
@@ -251,7 +251,7 @@ bool FileName::hasStackExtension() const
     String ext = getFileFormat();
     if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
         ext=="mrc" || ext=="img" || ext=="hed" || ext=="tif" ||
-       ext=="dm3" ||  ext=="ser")
+        ext=="dm3" ||  ext=="ser")
         return true;
     else
         return false;
@@ -532,7 +532,7 @@ FileName FileName::replaceSubstring(const String &subOld, const String &subNew) 
 // Substitute one extension by other .......................................
 FileName FileName::replaceExtension(const String &newExt) const
 {
-  return removeLastExtension() + "." + newExt;
+    return removeLastExtension() + "." + newExt;
 }
 
 // Remove a substring ......................................................
@@ -779,6 +779,61 @@ void copyImage(const FileName & source, const FileName & target)
 }
 
 
+void FileLock::lock(int _fileno)
+{
+#ifndef __MINGW32__
+    if (islocked)
+        unlock();
+
+    if (_fileno != NULL)
+        filenum = _fileno;
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+    islocked = true;
+#endif
+}
+
+void FileLock::lock(FILE * hFile)
+{
+    if (islocked)
+        unlock();
+
+    if (hFile != NULL)
+        this->filenum = fileno(hFile);
+
+#ifdef __MINGW32__
+
+    HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+    DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+    if (LockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+        REPORT_ERROR(ERR_IO_LOCKED,"File cannot be locked.");
+#else
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+#endif
+
+    islocked = true;
+}
 
 
+void FileLock::unlock()
+{
+    if (islocked)
+    {
+#ifdef __MINGW32__
+        HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+        DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+        if (UnLockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+            REPORT_ERROR(ERR_IO_LOCKED,"File cannot be unlocked.");
+#else
+
+        fl.l_type = F_UNLCK;
+        fcntl(filenum, F_SETLK, &fl);
+#endif
+
+        islocked = false;
+    }
+}
 
