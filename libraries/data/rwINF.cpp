@@ -206,13 +206,6 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
     _depth = gettypesize(wDType);
 
     //locking
-    struct flock fl;
-
-    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-    fl.l_start  = 0;        /* Offset from l_whence         */
-    fl.l_len    = 0;        /* length, 0 = to EOF           */
-    fl.l_pid    = getpid(); /* our PID                      */
 
     // Lock Header file
     FileLock flock;
