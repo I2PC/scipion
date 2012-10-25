@@ -47,10 +47,14 @@ XmippError::XmippError(const ErrorType nerr, const String &what,
     file= fileArg;
     line=lineArg;
 
-    //Store information about the stack calls
-    void *array[10];
-#ifdef LINUX
+    std::cerr << "DEBUG_JM: __errno: " << __errno << std::endl;
+    std::cerr << "DEBUG_JM: msg: " << msg << std::endl;
+    std::cerr << "DEBUG_JM: file: " << file << std::endl;
+    std::cerr << "DEBUG_JM: line: " << line << std::endl;
 
+    //Store information about the stack calls
+#ifdef LINUX
+    void *array[10];
     size = backtrace(array, 10);
     strings = backtrace_symbols(array, size);
 #endif

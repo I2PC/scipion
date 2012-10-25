@@ -1888,7 +1888,7 @@ void ProgML2D::expectation()
             }
 
             //Report progress and increment the images done
-            setProgress(img_done++);
+            setProgress(++img_done);
 
             //#define DEBUG_JM1
 #ifdef DEBUG_JM1

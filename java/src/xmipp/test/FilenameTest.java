@@ -25,15 +25,11 @@
  ***************************************************************************/
 package xmipp.test;
 
- import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import org.junit.*;
 import xmipp.jni.Filename;
 
-/**
- *
- * @author Juanjo Vega
- */
 public class FilenameTest {
 
     // Xmipp dir

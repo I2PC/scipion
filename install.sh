@@ -36,7 +36,7 @@ IS_CYGWIN=false
 IS_MINGW=false
 IS_LINUX=false
 echo "The OS is $OS_TYPE"
-case "$OSTYPE" in
+case "$OS_TYPE" in
   Darwin)
     IS_MAC=true
     CONFIGURE_ARGS="mpi=True MPI_CXX=mpic++ MPI_LINKERFORPROGRAMS=mpic++"

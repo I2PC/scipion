@@ -2459,8 +2459,8 @@ void ProgMLF2D::expectation()
             dAij(docfiledata,IMG_LOCAL_INDEX,10) = KSprob;
         }
 
-        // Output docfile
-        setProgress(imgno);
+        // Report progress bar
+        setProgress();
     }
 
     endProgress();
