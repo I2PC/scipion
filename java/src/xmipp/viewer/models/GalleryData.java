@@ -285,7 +285,7 @@ public class GalleryData {
 				md.addLabel(MDLabel.MDL_ENABLED);
 				for (long id : ids)
 					md.setEnabled(true, id);
-				hasMdChanges = true;
+				//hasMdChanges = true;
 			}
 
 			labels = newLabels;
