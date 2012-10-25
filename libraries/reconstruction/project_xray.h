@@ -43,7 +43,7 @@ struct XrayThreadArgument
     MultidimArray<double> *IgeoZb;
     Projection            *projOut;
     MultidimArray<double> *projNorm;
-    int 				   forw;
+    int        forw;
     std::vector<int>    *phantomSlabIdx;
     std::vector<int>    *psfSlicesIdx;
     ParallelTaskDistributor * td;
@@ -96,9 +96,11 @@ public:
     double dxo;
     /// Number of threads;
     int nThr;
+    /// Save standard projections
+    bool save_std_projs;
 
     XrayProjPhantom phantom;
-    Projection   proj;
+    Projection   proj, stdProj;
     MetaData     projMD;
     ParallelTaskDistributor * td;
 
@@ -133,7 +135,7 @@ protected:
 
     Off-centered not implemented. Rotations are around volume center
 */
-void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
+void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P, Projection &standardP,
         int Ydim, int Xdim);
 
 void projectXrayVolume(MultidimArray<double> &muVol,
@@ -156,11 +158,19 @@ struct CIGTArgument
     MultidimArray<double> *IgeoVol; /// Igeo accumulated along Z axis
     MultidimArray<double> *IgeoZb;  /// Intensity in the beginning of the volume to project
     ParallelTaskDistributor * td;
+
+    CIGTArgument()
+    {
+        samplingZ = 0;
+        muVol = cumMu = IgeoVol = IgeoZb = NULL;
+        td = NULL;
+    }
 };
 
 /// Calculate the volume of the information of Igeometric at each plane of the phantom
 void calculateIgeo(MultidimArray<double> &muVol, double sampling, MultidimArray<double> &IgeoVol,
-                   MultidimArray<double> &IgeoZb,int nThreads = 1 , ThreadManager * ThrMgr = NULL);
+                   MultidimArray<double> &cumMu, MultidimArray<double> &IgeoZb,
+                   int nThreads = 1 , ThreadManager * ThrMgr = NULL);
 
 void calculateIgeoThread(ThreadArgument &thArg);
 

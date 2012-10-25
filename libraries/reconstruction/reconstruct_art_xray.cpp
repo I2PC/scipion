@@ -160,7 +160,7 @@ double ProgReconsXrayART::singleStep(MultidimArray<double> &muVol, const Project
     IgeoZb.resize(1, 1, YSIZE(rotVol), XSIZE(rotVol),false);
     IgeoZb.initConstant(1.);
 
-    calculateIgeo(rotVol, psf.dzo, IgeoVol, IgeoZb, psf.nThr, thMgr);
+//    calculateIgeo(rotVol, psf.dzo, IgeoVol, IgeoZb, psf.nThr, thMgr);
 
     Image<double> imTemp;
     imTemp().alias(IgeoVol);
