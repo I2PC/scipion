@@ -4,7 +4,7 @@
 
 #from config_protocols import protDict
 from protlib_base import *
-from protlib_utils import which, runJob, runShowJ
+from protlib_utils import which, runJob, runShowJ,printLog
 from protlib_filesystem import deleteFile, createLink2, exists, replaceFilenameExt
 import xmipp
 from protlib_gui_ext import showWarning
@@ -19,7 +19,9 @@ _templateDict = {
         'psd': _prefix + '.psd',
         'enhanced_psd': _prefix + '_enhanced_psd.xmp',
         'ctfmodel_quadrant': _prefix + '_ctfmodel_quadrant.xmp',
-        'ctfmodel_halfplane': _prefix + '_ctfmodel_halfplane.xmp'
+        'ctfmodel_halfplane': _prefix + '_ctfmodel_halfplane.xmp',
+        'ctffind_ctfparam': join('%(micrographDir)s', 'ctffind.ctfparam'),
+        'ctffind_spectrum': join('%(micrographDir)s', 'ctffind_spectrum.mrc')
         }
 
 def _getFilename(key, **args):
@@ -76,7 +78,7 @@ class ProtScreenMicrographs(XmippProtocol):
                                                    [finalname],parent_step_id=parent_id)
             else:
                 finalname = inputFile
-            
+                
             # CTF estimation with Xmipp
             args="--micrograph "+finalname+\
                  " --oroot " + _getFilename('prefix', micrographDir=micrographDir)+\
@@ -105,6 +107,7 @@ class ProtScreenMicrographs(XmippProtocol):
                            Downsampling=self.DownsampleFactor,
                            NumberOfMpi=self.NumberOfMpi)
     
+    
     def createFilenameTemplates(self):
         return _templateDict
     
@@ -127,7 +130,7 @@ class ProtScreenMicrographs(XmippProtocol):
             
         if self.MaxFocus < self.MinFocus:
             errors.append("maxFocus must be larger than minFocus")
-        
+
         return errors
 
     def summary(self):
@@ -149,6 +152,110 @@ class ProtScreenMicrographs(XmippProtocol):
         else:
             showWarning('Warning', 'There are not results yet',self.master)
     
+def estimateCtfCtffind1(_log, micrograph,
+                          micrographDir,
+                          oroot,
+                          kV,
+                          Cs,
+                          sampling_rate,
+                          downSamplingPerformed,
+                          ctfmodelSize,
+                          Q0,
+                          min_freq,
+                          max_freq,
+                          pieceDim,
+                          MinFocus,
+                          MaxFocus,
+                          StepFocus
+                          ):
+        #def estimateCtfCtffind(log,CtffindExec,micrograph,micrographDir,tmpDir,Voltage,SphericalAberration,AngPix,Magnification,
+        #                       DownsampleFactor,AmplitudeContrast,LowResolCutoff,HighResolCutoff,MinFocus,MaxFocus,StepFocus,WinSize):
+        # Convert image to MRC
+        printLog(_log)
+        if not micrograph.endswith('.mrc'):
+            from protlib_filesystem import uniqueRandomFilename
+            deleteTempMicrograph = True
+            fnMicrograph=os.path.split(micrograph)[1]
+            mrcMicrograph =  join(tmpDir,uniqueRandomFilename(os.path.splitext(fnMicrograph)[0]+'.mrc'))
+            runJob(log,'xmipp_image_convert','-i ' + micrograph + ' -o ' + mrcMicrograph + ' -v 0')
+        else:
+            deleteTempMicrograph = False
+            mrcMicrograph = micrograph;
+
+        #ctffind3.exe << eof
+        #$1.mrc
+        #test.mrc
+        #2.26,200.0,0.10,60000.0,14.4
+        #256,96,0.8,5000.0,100000,1000.0
+        #eof
+
+        # Prepare parameters for CTFTILT
+        # multiply Q0 by -1?
+        
+        #since we only have sampling rate set magnification to a suitable constant
+        Magnification=60000
+        params = '  << eof > ' + micrographDir + '/ctffind.log\n'
+        params += mrcMicrograph + "\n"
+        params += micrographDir + '/ctffind_spectrum.mrc\n'
+        params += str(Cs) + ',' + \
+                  str(kV) + ',' + \
+                  str(Q0 ) + ',' + \
+                  str(Magnification/downSamplingPerformed) + ',' + \
+                  str(Magnification/downSamplingPerformed*sampling_rate*1e-4) + "\n"
+        params += str(pieceDim) + ',' + \
+                  str(sampling_rate*downSamplingPerformed / min_freq) + ',' + \
+                  str(sampling_rate*downSamplingPerformed / max_freq) + ',' + \
+                  str(MinFocus*10000) + ',' + \
+                  str(MaxFocus*10000) + ',' + \
+                  str(StepFocus*10000) + "\n"
+
+        CtffindExec =  which('ctffind3.exe')
+        runJob(_log, "export NATIVEMTZ=kk ; "+CtffindExec,params)
+    
+        fnOut = _getFilename('ctffind_ctfparam', micrographDir=micrographDir)
+    
+        # Remove temporary files
+        if deleteTempMicrograph:
+            deleteFile(log, mrcMicrograph)
+    
+        # Pick values from ctffind
+        ctffindLog = join(micrographDir,'ctffind.log')
+        if not exists(ctffindLog):
+            raise xmipp.XmippError("Cannot find "+ctffindLog)
+        
+        # Effectively pickup results
+        fh = open(ctffindLog, 'r')
+        lines = fh.readlines()
+        fh.close()
+        DF1 = 0.
+        DF2 = 0.
+        Angle = 0.
+        found = False
+        for i in range(len(lines)):
+            if not (lines[i].find('Final Values') == -1):
+                words = lines[i].split()
+                DF1 = float(words[0])
+                DF2 = float(words[1])
+                Angle = float(words[2])
+                found = True
+                break
+        if not found:
+            raise xmipp.XmippError("Cannot find defocus values in "+ctffindLog)
+        
+        # Generate Xmipp .ctfparam file:
+        MD = xmipp.MetaData()
+        MD.setColumnFormat(False)
+        objId = MD.addObject()
+        MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE, float(sampling_rate), objId)
+        MD.setValue(xmipp.MDL_CTF_VOLTAGE,       float(kV), objId)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUSU,      float(DF2), objId)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      float(DF1), objId)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, float(Angle), objId)
+        MD.setValue(xmipp.MDL_CTF_CS,            float(Cs), objId)
+        MD.setValue(xmipp.MDL_CTF_Q0,            float(Q0), objId)
+        MD.setValue(xmipp.MDL_CTF_K,             1.0, objId)
+        MD.write(fnOut)
+
 def gatherResults(log,TmpDir,WorkingDir,summaryFile, importMicrographs,Downsampling,NumberOfMpi):
     buildSummaryMetadata(WorkingDir, importMicrographs, summaryFile)
     dirSummary,fnSummary=os.path.split(summaryFile)
