@@ -35,12 +35,12 @@ String FileNameVersion=METADATA_XMIPP_STAR;
 
 void setMetadataVersion(String version)
 {
-	FileNameVersion=version;
+    FileNameVersion=version;
 }
 
 String getMetadataVersion(void)
 {
-	return FileNameVersion;
+    return FileNameVersion;
 }
 
 // Constructor with root, number and extension .............................
@@ -251,7 +251,7 @@ bool FileName::hasStackExtension() const
     String ext = getFileFormat();
     if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
         ext=="mrc" || ext=="img" || ext=="hed" || ext=="tif" ||
-       ext=="dm3" ||  ext=="ser")
+        ext=="dm3" ||  ext=="ser")
         return true;
     else
         return false;
@@ -309,6 +309,7 @@ void FileName::initRandom(int length)
 // Init Unique .............................................................
 void FileName::initUniqueName(const char *templateStr)
 {
+#ifndef __MINGW32__
     int fd;
     int len = 256;
     char filename[len];
@@ -322,6 +323,7 @@ void FileName::initUniqueName(const char *templateStr)
     }
     close(fd);
     *this = filename;
+#endif
 }
 
 // Add at beginning ........................................................
@@ -532,7 +534,7 @@ FileName FileName::replaceSubstring(const String &subOld, const String &subNew) 
 // Substitute one extension by other .......................................
 FileName FileName::replaceExtension(const String &newExt) const
 {
-  return removeLastExtension() + "." + newExt;
+    return removeLastExtension() + "." + newExt;
 }
 
 // Remove a substring ......................................................
@@ -709,8 +711,12 @@ int do_mkdir(const char *path, mode_t mode)
     if (stat(path, &st) != 0)
     {
         /* Directory does not exist */
+#ifndef __MINGW32__
         if (mkdir(path, mode) != 0)
-            status = -1;
+#else
+        if (mkdir(path) != 0)
+#endif
+        status = -1;
     }
     else if (!S_ISDIR(st.st_mode))
     {
@@ -779,6 +785,60 @@ void copyImage(const FileName & source, const FileName & target)
 }
 
 
+void FileLock::lock(int _fileno)
+{
+#ifndef __MINGW32__
+    if (islocked)
+        unlock();
+
+    if (_fileno != NULL)
+        filenum = _fileno;
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+    islocked = true;
+#endif
+}
+
+void FileLock::lock(FILE * hdlFile)
+{
+    if (islocked)
+        unlock();
+
+    if (hdlFile != NULL)
+        this->filenum = fileno(hdlFile);
+
+#ifdef __MINGW32__
+    HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+    DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+    if (LockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
+        REPORT_ERROR(ERR_IO_LOCKED,"File cannot be locked.");
+#else
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+#endif
+
+    islocked = true;
+}
 
 
+void FileLock::unlock()
+{
+    if (islocked)
+    {
+#ifdef __MINGW32__
+        HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+        DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+        if (UnlockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
+            REPORT_ERROR(ERR_IO_LOCKED,"File cannot be unlocked.");
+#else
+
+        fl.l_type = F_UNLCK;
+        fcntl(filenum, F_SETLK, &fl);
+#endif
+
+        islocked = false;
+    }
+}
 

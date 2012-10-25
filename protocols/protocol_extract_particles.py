@@ -176,6 +176,8 @@ class ProtExtractParticles(XmippProtocol):
             errors.append("Picking run is not valid")
         if self.DownsampleFactor<1:
             errors.append("Downsampling factor must be >=1")
+        if self.TiltPairs and self.DoFlip:
+            errors.append("Phase cannot be corrected on tilt pairs")
         return errors
 
     def summary(self):

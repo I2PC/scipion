@@ -79,6 +79,7 @@ estimations are noisier.
 """
 WinSize = 256
 
+
 # {eval} expandParallel(threads=0,hours=12)
 
 # {eval} expandExpert()
