@@ -485,7 +485,7 @@ public:
         mdim=mdimx*mdimy;
         destroyData=false;
         mappedData=true;
-        fdMap = open(fn.data(),  O_RDWR, S_IREAD | S_IWRITE);
+        fdMap = open(fn.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
         if (fdMap == -1)
             REPORT_ERROR(ERR_IO_NOTOPEN,fn);
         const size_t pagesize=sysconf(_SC_PAGESIZE);

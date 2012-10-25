@@ -497,7 +497,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-    std::ifstream infile( this->removeBlockNameOrSliceNumber().data(), std::ios_base::in);
+    std::ifstream infile( this->removeBlockNameOrSliceNumber().c_str(), std::ios_base::in);
     String line;
 
     if (infile.fail())
