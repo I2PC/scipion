@@ -35,6 +35,17 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_destroy
     STORE_PEER_ID(jobj, md);
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_clear
+(JNIEnv *env, jobject jobj)
+{
+  XMIPP_JAVA_TRY
+  {
+      MetaData * md = GET_INTERNAL_METADATA(jobj);
+      md->clear();
+  }
+  XMIPP_JAVA_CATCH;
+}
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_read_1
 (JNIEnv *env, jobject jobj, jstring filename)
 {

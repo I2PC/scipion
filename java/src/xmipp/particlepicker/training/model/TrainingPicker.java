@@ -100,6 +100,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 				micrographs.add(micrograph);
 			}
+			md.destroy();
 			if (micrographs.size() == 0)
 				throw new IllegalArgumentException(String.format(
 						"No micrographs specified on %s", selfile));
@@ -140,6 +141,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 				mfdatas.add(mfd);
 			}
 			micrograph.setFamiliesState(mfdatas);
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -161,9 +163,8 @@ public abstract class TrainingPicker extends ParticlePicker {
 		int x, y;
 		TrainingParticle particle;
 
-		MetaData md;
 		try {
-			md = new MetaData(family.getName() + "@" + file);
+			MetaData md = new MetaData(family.getName() + "@" + file);
 
 			for (long id : md.findObjects()) {
 
@@ -173,6 +174,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 						mfd.getMicrograph());
 				mfd.addManualParticle(particle);
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -194,10 +196,9 @@ public abstract class TrainingPicker extends ParticlePicker {
 		int x, y;
 		AutomaticParticle particle;
 		Double cost;
-		MetaData md;
 		boolean deleted;
 		try {
-			md = new MetaData(f.getName() + "@" + file);
+			MetaData md = new MetaData(f.getName() + "@" + file);
 
 			for (long id : md.findObjects()) {
 
@@ -213,6 +214,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 						cost, deleted);
 				mfd.addAutomaticParticle(particle, imported);
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -223,7 +225,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 		long id;
 		try {
 			System.out.println("persisting all micrographs");
-			MetaData md;
+			MetaData md = new MetaData();
 			String block = null;
 			String file;
 			for (TrainingMicrograph m : micrographs) {
@@ -233,7 +235,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 				else {
 					persistMicrographFamilies(m);
 					for (MicrographFamilyData mfd : m.getFamiliesData()) {
-						md = new MetaData();
+
 						for (TrainingParticle p : mfd.getManualParticles()) {
 							id = md.addObject();
 							md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
@@ -241,10 +243,12 @@ public abstract class TrainingPicker extends ParticlePicker {
 						}
 						block = mfd.getFamily().getName() + "@" + file;
 						md.writeBlock(block);
+						md.clear();
 					}
 				}
 				persistAutomaticParticles(m);
 			}
+			md.destroy();
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -280,6 +284,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 							: -1, id);
 				}
 				md.write(section);
+				md.destroy();
 			}
 
 		} catch (Exception e) {
@@ -301,6 +306,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 						mfd.getState().toString(), id);
 			}
 			md.writeBlock("families@" + file);
+			md.destroy();
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -320,8 +326,8 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	public void resetFamilyData(MicrographFamilyData mfd) {
 		String block;
-		MetaData emptymd = new MetaData();
 		try {
+			MetaData emptymd = new MetaData();
 			// just in case of user reset
 			if (this instanceof SupervisedParticlePicker)
 				new File(
@@ -343,6 +349,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 				emptymd.writeBlock(block);
 			}
 			mfd.reset();// Resetting family data
+			emptymd.destroy();
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -355,16 +362,17 @@ public abstract class TrainingPicker extends ParticlePicker {
 		if (isChanged()) {
 			super.saveData();
 			persistMicrographs();
-//			for (Family f : families) {
-//				updateFamilyTemplates(f);
-//				try {
-//					f.getTemplates().write(
-//							getOutputPath(f.getName() + "_template.stk"));
-//				} catch (Exception e) {
-//					getLogger().log(Level.SEVERE, e.getMessage(), e);
-//					throw new IllegalArgumentException(e);
-//				}
-//			}
+			// for(Family f: families)
+			// {
+			// updateFamilyTemplates(f);
+			// try {
+			// f.getTemplates().write(getOutputPath(f.getName() +
+			// "_template.stk"));
+			// } catch (Exception e) {
+			// getLogger().log(Level.SEVERE, e.getMessage(), e);
+			// throw new IllegalArgumentException(e);
+			// }
+			// }
 		}
 	}
 
@@ -389,7 +397,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 	public void exportParticles(String file) {
 
 		try {
-			MetaData md;
+			MetaData md = new MetaData();
 			MicrographFamilyData mfd;
 			boolean append = false;
 			long id;
@@ -397,7 +405,6 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 				mfd = m.getFamilyData(family);
 				if (!mfd.isEmpty()) {
-					md = new MetaData();
 					for (TrainingParticle p : mfd.getParticles()) {
 						id = md.addObject();
 						md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
@@ -409,8 +416,10 @@ public abstract class TrainingPicker extends ParticlePicker {
 					else
 						md.writeBlock("mic_" + m.getName() + "@" + file);
 					append = true;
+					md.clear();
 				}
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
@@ -518,6 +527,8 @@ public abstract class TrainingPicker extends ParticlePicker {
 			if (size > 0)
 				family.setSize(size);
 
+			md.destroy();
+
 		} catch (Exception e) {
 
 			if (reader != null)
@@ -536,7 +547,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 	public void importAllParticles(String file) {// Expected a file for all
 													// micrographs
 		try {
-			MetaData md;
+			MetaData md = new MetaData();
 			long[] ids;
 			int x, y;
 			Double cost;
@@ -550,7 +561,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 				if (blocks.contains(block)) {
 					String blockName = block + "@" + file;
 
-					md = new MetaData(blockName);
+					md.read(blockName);
 
 					ids = md.findObjects();
 					for (long id : ids) {
@@ -566,6 +577,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 					}
 				}
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
@@ -589,35 +601,26 @@ public abstract class TrainingPicker extends ParticlePicker {
 	public static void main(String[] args) {
 		try {
 			String file = "/home/airen/DNABC/ParticlePicking/Auto/run_001/DefaultFamily_extract_list.xmd";
-			MetaData md;
+			MetaData md = new MetaData();
 			long[] ids;
 			int x, y;
 			Double cost;
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
-			int total = 0;
 			for (String block : blocksArray) {
-				System.out.format("block: %s\n", block);
 				String blockName = block + "@" + file;
-				System.out
-						.format("creating md with blockName: %s\n", blockName);
-				md = new MetaData(blockName);
-				System.out.format("   created\n");
+				md.read(blockName);
 
 				ids = md.findObjects();
-				total += ids.length;
-				System.out.format("   objects found: %d, total: %d\n",
-						ids.length, total);
 				for (long id : ids) {
 					x = y = 100;
 					cost = 0.0;
 					x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 					y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 					cost = md.getValueDouble(MDLabel.MDL_COST, id);
-					System.out.format("   x: %d, y:%d, cost: %f\n", x, y, cost);
 				}
-				System.out.format("   coords read\n");
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
@@ -645,5 +648,6 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 
 	}
+
 
 }
