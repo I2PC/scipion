@@ -256,6 +256,7 @@ public abstract class ParticlePicker
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
 			md.write(file);
+			md.destroy();
 		}
 		catch (Exception e)
 		{
@@ -296,6 +297,7 @@ public abstract class ParticlePicker
 				family = new Family(name, new Color(rgb), size, state, templates, this);
 				families.add(family);
 			}
+			md.destroy();
 			if (families.size() == 0)
 				throw new IllegalArgumentException(String.format("No families specified on %s", file));
 		}
@@ -380,6 +382,7 @@ public abstract class ParticlePicker
 				md.setValueString(MDLabel.MDL_IMAGE2, options, id);
 			}
 			md.write(file);
+			md.destroy();
 		}
 		catch (Exception e)
 		{
@@ -410,6 +413,7 @@ public abstract class ParticlePicker
 				filters.add(new IJCommand(command, options));
 
 			}
+			md.destroy();
 		}
 		catch (Exception e)
 		{
