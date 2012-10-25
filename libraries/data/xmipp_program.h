@@ -76,6 +76,7 @@ private:
     /** Variables related to progress notification */
     size_t progressTotal;
     size_t progressStep;
+    size_t progressLast;
 
 protected:
     /** Define Commons */
@@ -226,7 +227,7 @@ public:
     void initProgress(size_t total, size_t stepBin = 60);
 
     /** Notify progress on work */
-    void setProgress(size_t value);
+    void setProgress(size_t value = 0);
 
     /** Notify end of work */
     void endProgress();
