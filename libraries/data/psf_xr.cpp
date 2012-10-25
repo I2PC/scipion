@@ -489,24 +489,25 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
 #ifdef DEBUG
 
     Image<double> _Im;
-    _Im() = PSFi;
+    //    _Im() = PSFi;
+    CenterFFT(PSFi, false);
+    _Im().alias(PSFi);
     _Im.write("psfxr-psfi.spi");
+    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
+    //    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
+    //    _Im.write("psfxr-psfi.spi");
     //    CenterOriginFFT(OTFTemp,1);
     //    _Im().resize(OTFTemp);
     //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
     //    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
     //    _Im.write("psfxr-otf1.spi");
     //    CenterOriginFFT(OTFTemp,0);
+    _Im.clear();
     _Im().resize(OTF);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
     dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
     _Im.write("psfxr-otf2.spi");
 
-    //    CenterOriginFFT(PSFi,1);
-    //    _Im().resize(PSFi);
-    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
-    //    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
-    //    _Im.write("psfxr-psfi.spi");
 #endif
 #undef DEBUG
 }
