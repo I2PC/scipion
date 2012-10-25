@@ -27,7 +27,7 @@
 #define IDR_XRAY_TOMO_H_
 
 #include "project_xray.h"
-
+#include "recons.h"
 
 /**@defgroup IDRXrayTomo IDR Xray Tomography
    @ingroup ReconsLibrary */
@@ -40,10 +40,11 @@ class ProgIDRXrayTomo: public virtual XmippProgram
 public:
 
     /// Metadafile with angles and projection file names
-    FileName fnInputProj;
+    FileName fnInputProjMD;
     /// Rootname for intermediate/exchange projections metadatas and files
     FileName fnRootInter;
     FileName fnInterProjs;
+    FileName fnInterProjsMD;
     FileName fnInterAngles;
     /// Reconstructed output volume file name
     FileName fnOutVol;
@@ -57,8 +58,8 @@ public:
     XRayPSF psf;
     /// threshold for psfSlabs
     double psfThr;
-    // Input volume sampling
-    double dxo;
+    // Input projections sampling
+    double sampling;
     /// Number of threads;
     int nThr;
 
@@ -69,11 +70,21 @@ public:
     Matrix1D<double> lambda_list;
 
 
-    Image<double> muVol;
+    // Reconstruction method
+    enum
+    {
+        RECONS_ART,
+        RECONS_FOURIER,
+        RECONS_TOMO3D
+    } reconsMethod;
 
+    ProgReconsBase *reconsProgram;
+
+    Image<double> muVol;
+    MetaData     projMD;
+    MetaData     interProjMD;
     XrayProjPhantom phantom;
     Projection   proj;
-    MetaData     projMD;
     ParallelTaskDistributor * td;
 
 
@@ -81,16 +92,14 @@ protected:
 
     virtual void defineParams();
     virtual void readParams();
+    void preRun();
+    void postRun();
 
 public:
 
     virtual void run();
-
-protected:
-
-    void preRun();
-    void postRun();
-
+    void reconstruct(const FileName &fnProjs, const FileName &fnVol);
+    ProgReconsBase * createReconsProgram(const FileName &input, const FileName &output);
 };
 
 

@@ -25,7 +25,8 @@
 
 #include "idr_xray_tomo.h"
 #include "data/xmipp_image_convert.h"
-
+#include "reconstruct_fourier.h"
+#include "reconstruct_art.h"
 
 void ProgIDRXrayTomo::defineParams()
 {
@@ -48,37 +49,45 @@ void ProgIDRXrayTomo::defineParams()
     addParamsLine("                              : A list of lambda values is also accepted as \"-l lambda0 lambda1 ...\"");
     addParamsLine("  [-n <noit=1>]               : Number of iterations");
 
+    addParamsLine("== Reconstruction options == ");
+    addParamsLine("[--recons <recons_type=ART>]        : Reconstruction method to be used");
+    addParamsLine("       where <recons_type>           ");
+    addParamsLine("           ART  <params=\"\">        : wlsART parameters");
+    addParamsLine("           fourier <params=\"\">     : fourier parameters");
+    addParamsLine("           tomo3d  <params=\"\">     : fourier parameters");
+
+
     addParamsLine("== Xray options == ");
     addParamsLine("[--psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
     addParamsLine("[--threshold <thr=0.0>]       :+ Normalized threshold relative to maximum of PSF to reduce the volume into slabs");
     //Examples
-    addExampleLine("Generating a set of projections using a projection parameter file and two threads:", false);
-    addExampleLine("xmipp_xray_project -i volume.vol --oroot images --params projParams.xmd -s 10 --psf psf_560.xmd --thr 2");
-    addExampleLine("Generating a single projection at 45 degrees around X axis:", false);
-    addExampleLine("xmipp_xray_project -i volume.vol -o image.spi --angles 45 0 90 -s 10 --psf psf_560.xmd");
-    addExampleLine("Generating a single projection at 45 degrees around Y axis with default PSF:", false);
-    addExampleLine("xmipp_xray_project -i volume.vol -o image.spi --angles 45 90 90 -s 10");
+    //    addExampleLine("Generating a set of projections using a projection parameter file and two threads:", false);
+    //    addExampleLine("xmipp_xray_project -i volume.vol --oroot images --params projParams.xmd -s 10 --psf psf_560.xmd --thr 2");
+    //    addExampleLine("Generating a single projection at 45 degrees around X axis:", false);
+    //    addExampleLine("xmipp_xray_project -i volume.vol -o image.spi --angles 45 0 90 -s 10 --psf psf_560.xmd");
+    //    addExampleLine("Generating a single projection at 45 degrees around Y axis with default PSF:", false);
+    //    addExampleLine("xmipp_xray_project -i volume.vol -o image.spi --angles 45 90 90 -s 10");
     //Example projection file
-    addExampleLine("In the following link you can find an example of projection parameter file:",false);
-    addExampleLine(" ",false);
-    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/tomoProjection.param",false);
-    addExampleLine(" ",false);
-    addExampleLine("In the following link you can find an example of X-ray microscope parameters file:",false);
-    addExampleLine(" ",false);
-    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/xray_psf.xmd",false);
+    //    addExampleLine("In the following link you can find an example of projection parameter file:",false);
+    //    addExampleLine(" ",false);
+    //    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/tomoProjection.param",false);
+    //    addExampleLine(" ",false);
+    //    addExampleLine("In the following link you can find an example of X-ray microscope parameters file:",false);
+    //    addExampleLine(" ",false);
+    //    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/xray_psf.xmd",false);
 }
 
 /* Read from command line ================================================== */
 void ProgIDRXrayTomo::readParams()
 {
-    fnInputProj = getParam("-i");
+    fnInputProjMD = getParam("-i");
     fnOutVol = getParam("-o");
     fnRootInter = getParam("--oroot");
     fnStart = getParam("--start");
     //    projParam.readParams(this);
 
     fnPSF = getParam("--psf");
-    dxo  = (checkParam("-s"))? getDoubleParam("-s")*1e-9 : -1 ;
+    sampling  = (checkParam("-s"))? getDoubleParam("-s")*1e-9 : -1 ;
     psfThr = getDoubleParam("--threshold");
     nThr = getIntParam("--thr");
 
@@ -97,16 +106,27 @@ void ProgIDRXrayTomo::readParams()
 
     itNum = getIntParam("-n");
 
-    psf.read(fnPSF);
-    psf.verbose = verbose;
-    psf.nThr = nThr;
+    // Reconstruction
+    if (STR_EQUAL(getParam("--recons"), "ART"))
+        reconsMethod = RECONS_ART;
+    else if (STR_EQUAL(getParam("--recons"), "fourier"))
+        reconsMethod = RECONS_FOURIER;
+    else if (STR_EQUAL(getParam("--recons"), "tomo3d"))
+        reconsMethod = RECONS_TOMO3D;
+
+
+
 }//readParams
 
 
 
 void ProgIDRXrayTomo::preRun()
 {
-    psf.calculateParams(dxo, dxo, psfThr);
+    psf.read(fnPSF);
+    psf.verbose = verbose;
+    psf.nThr = nThr;
+
+    psf.calculateParams(sampling, sampling, psfThr);
 
     // Threads stuff
     barrier = new Barrier(nThr);
@@ -114,39 +134,47 @@ void ProgIDRXrayTomo::preRun()
     thMgr = new ThreadManager(nThr);
 
     // Reading the input projections. Tilt angle values are needed
-    projMD.read(fnInputProj);
+    projMD.read(fnInputProjMD);
 
     // Setting the intermediate filenames
-    fnInterProjs = fnRootInter.addExtension("mrc");
+    fnInterProjs = fnRootInter + "_inter_projs.mrc";
+    fnInterProjsMD = fnInterProjs.replaceExtension("xmd");
     fnInterAngles = fnRootInter + "_angles.txt";
 
+    FileName fnProjs;
+    projMD.getValue(MDL_IMAGE, fnProjs, projMD.firstObject());
+    // We generate the MD of temporary projections to be used for further reconstructions
+    interProjMD = projMD;
+    interProjMD.replace(MDL_IMAGE, fnProjs.removeSliceNumber(), fnInterProjs);
+    interProjMD.write(fnInterProjsMD);
 
     if (fnStart.empty()) // if initial volume is not passed,then we must calculate it
     {
-        FileName fnProjs;
-        projMD.getValue(MDL_IMAGE, fnProjs, projMD.firstObject());
-
         // Projections must be in an MRC stack to be passed
-        if ( !fnProjs.contains("mrc") )
+        if ( reconsMethod == RECONS_TOMO3D && !fnProjs.contains("mrc") )
         {
+            String arguments = formatString("-i %s -o %s -s",
+                                            fnInputProjMD.c_str(), fnInterProjs.c_str());
             ProgConvImg conv;
-            conv.setup(&projMD, fnInterProjs);
-            conv.tryRun();
-            fnProjs = fnInterProjs;
-        }
-        // Saving angles in plain text to pass to tomo3D
-        std::vector<MDLabel> desiredLabels;
-        desiredLabels.push_back(MDL_ANGLE_TILT);
-        projMD.writeText(fnInterAngles, &desiredLabels);
 
-        std::cerr << "DEBUG_XMIPP: reconstruction with tomo3D: " << reconsTomo3D(fnInterAngles, fnProjs, fnOutVol) << std::endl;
-        //        muVol.read(fnOutVol);
-        phantom.read(fnOutVol);
-        MULTIDIM_ARRAY(phantom.iniVol).reslice(VIEW_Y_NEG,true);
+            //            conv.setup(&projMD, fnInterProjs);
+            conv.read(arguments);
+            conv.run();
+
+            // Saving angles in plain text to pass to tomo3D
+            std::vector<MDLabel> desiredLabels;
+            desiredLabels.push_back(MDL_ANGLE_TILT);
+            projMD.writeText(fnInterAngles, &desiredLabels);
+
+            reconstruct(fnInterProjsMD, fnOutVol);
+        }
+        else
+            reconstruct(fnInputProjMD, fnOutVol);
     }
     else
+    {
         phantom.read(fnStart);
-
+    }
 
 }
 
@@ -154,29 +182,89 @@ void ProgIDRXrayTomo::run()
 {
     preRun();
 
-    Projection proj;
+    Projection proj, stdProj;
+    Image<double> fixedProj;
+    MultidimArray<double> mFixedProj;
+
+    mFixedProj.alias(MULTIDIM_ARRAY(fixedProj));
     double rot, tilt, psi;
 
-    size_t n = 1; // Image number
+
+    FileName fnProj;
+
+    double lambda = VEC_ELEM(lambda_list, 0);
+
+    initProgress(projMD.size()*itNum);
 
 
-    FOR_ALL_OBJECTS_IN_METADATA(projMD)
+    for (int iter = 0; iter < itNum; iter++)
     {
-        projMD.getValue(MDL_ANGLE_ROT , rot, __iter.objId);
-        projMD.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
-        projMD.getValue(MDL_ANGLE_PSI , psi, __iter.objId);
-        proj.setAngles(rot, tilt, psi);
+        if (reconsMethod != RECONS_TOMO3D) // Since we process the output of tomo3d, this is already read
+            phantom.read(fnOutVol);
 
-        XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj,YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),
-                                              XSIZE(MULTIDIM_ARRAY(phantom.iniVol)));
+        // Fix the reconstructed volume to physical density values
+        double factor = 1/sampling;
+        MULTIDIM_ARRAY(phantom.iniVol) *= factor;
 
-        proj.write(fnInterProjs, n);
+        size_t n = 1; // Image number
+        FOR_ALL_OBJECTS_IN_METADATA(projMD)
+        {
+            projMD.getValue(MDL_IMAGE , fnProj, __iter.objId);
+            projMD.getValue(MDL_ANGLE_ROT , rot, __iter.objId);
+            projMD.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
+            projMD.getValue(MDL_ANGLE_PSI , psi, __iter.objId);
+            proj.setAngles(rot, tilt, psi);
 
+            XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj, stdProj, YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),
+                                                  XSIZE(MULTIDIM_ARRAY(phantom.iniVol)));
 
+            fixedProj.read(fnProj);
+
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
+            dAi(mFixedProj, n) = (dAi(mFixedProj, n) - dAi(MULTIDIM_ARRAY(proj),n))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
+
+            fixedProj.write(fnInterProjs, n, true, WRITE_REPLACE);
+
+            proj.write("idr_debug_proj.mrc", n , true, WRITE_REPLACE);
+            stdProj.write("idr_debug_std_proj.mrc", n , true, WRITE_REPLACE);
+
+            ++n;
+            // Update progress bar
+            setProgress();
+        }
+        // Once calculated all fixed projection, let reconstruct again
+        reconstruct(fnInterProjs, fnOutVol);
     }
 
+    // Finish progress bar
+    endProgress();
 
+    if (reconsMethod != RECONS_TOMO3D) // Trick to save the processed output of tomo3d
+        phantom.iniVol.write(fnOutVol);
 
+}
+
+void ProgIDRXrayTomo::reconstruct(const FileName &fnProjsMD, const FileName &fnVol)
+{
+    if (reconsMethod == RECONS_TOMO3D)
+    {
+        MetaData MD(fnProjsMD);
+        FileName fnProjs;
+        MD.getValue(MDL_IMAGE, fnProjs, MD.firstObject());
+
+        reconsTomo3D(fnInterAngles, fnProjs, fnVol);
+        phantom.read(fnVol);
+        MULTIDIM_ARRAY(phantom.iniVol).reslice(VIEW_Y_NEG);
+        //FIXME: this is a temporary fixing to match the reconstructed volume with phantom
+        double factor = 1/13.734;
+        MULTIDIM_ARRAY(phantom.iniVol) *= factor;
+    }
+    else
+    {
+        reconsProgram = createReconsProgram(fnProjsMD, fnVol);
+        reconsProgram->run();
+        delete reconsProgram;
+    }
 }
 
 int reconsTomo3D(const MetaData& MD, const FileName& fnOut, const String& params)
@@ -205,10 +293,51 @@ int reconsTomo3D(const MetaData& MD, const FileName& fnOut, const String& params
 int reconsTomo3D(const FileName& fnAngles, const FileName& fnProjs,
                  const FileName& fnOut, const String& params)
 {
-    String exec("tomo3d -f -v 0 -a "+fnAngles+" -i "+fnProjs.removeBlockNameOrSliceNumber()+" -o "+fnOut+" "+params);
+    String exec("tomo3d -n -f -v 0 -a "+fnAngles+" -i "+fnProjs.removeBlockNameOrSliceNumber()+" -o "+fnOut+" "+params);
     return system(exec.c_str());
 }
 
+
+ProgReconsBase * ProgIDRXrayTomo::createReconsProgram(const FileName &input, const FileName &output)
+{
+    //get reconstruction extra params
+    String arguments = getParam("--recons", 1) +
+                       formatString(" -v 0 --thr %d -i %s -o %s", nThr, input.c_str(), output.c_str());
+    ProgReconsBase * program;
+    //    std::cerr << "DEBUG_JM: ProgMLRefine3D::createReconsProgram" <<std::endl;
+    //    std::cerr << "DEBUG_JM: arguments: " << arguments << std::endl;
+    //    std::cerr << "DEBUG_JM: input: " << input << std::endl;
+
+    if (reconsMethod == RECONS_FOURIER)
+    {
+        program = new ProgRecFourier();
+        //force use of weights and the verbosity will be the same of this program
+        //-i and -o options are passed for avoiding errors, this should be changed
+        //when reconstructing
+        //        arguments += " --weight";
+        program->read(arguments);
+        return program;
+    }
+    else if (reconsMethod == RECONS_ART)//use of Art
+    {
+        //REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction throught wlsArt");
+        program = new ProgReconsART();
+        FileName fn_tmp(arguments);
+        //        arguments += " --WLS";
+        //        if (fn_symmask.empty() && checkParam("--sym"))
+        //            arguments += " --sym " + fn_sym;
+        if (!fn_tmp.contains("-n "))
+            arguments += " -n 10";
+        if (!fn_tmp.contains("-l "))
+            arguments += " -l 0.2";
+        //        if (!fn_tmp.contains("-k "))
+        //            arguments += " -k 0.5";
+
+        program->read(arguments);
+        return program;
+    }
+    return NULL;
+}
 
 
 
