@@ -71,11 +71,7 @@
 #ifdef __MINGW32__
 #include <windows.h>
 #include <limits.h>
-#endif
-
-/// Definition of sincos for APPLE and MINGW
-#if defined(__APPLE__) || defined(__MINGW32__)
-void sincos(double angle, double * sine, double * cosine);
+#include <time.h>
 #endif
 
 /// Definition of macro to allow mmap, not valid in MINGW

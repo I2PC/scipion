@@ -1612,11 +1612,6 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     int    opt_itrans, iflip_start, iflip_stop, nr_mir;
     int    img_start, ref_start, wsum_start;
 
-    ProcessorTimeStamp t0;
-    time_config();
-
-    annotate_processor_time(&t0);
-
     if (!do_norm)
         opt_scale =1.;
 
@@ -1657,13 +1652,6 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
     // Precalculate Fimg_trans, on pruned and expanded offset list
     calculateFourierOffsets(Mimg, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
-
-    if (debug==1)
-    {
-        std::cout<<"processOneImage 1 ";
-        print_elapsed_time(t0);
-        annotate_processor_time(&t0);
-    }
 
     Mweight.initZeros(nr_trans, model.n_ref, nr_flip*nr_psi);
 
@@ -1856,13 +1844,6 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 }
             }
         }
-    }
-
-    if (debug==1)
-    {
-        std::cout<<"processOneImage 2 ";
-        print_elapsed_time(t0);
-        annotate_processor_time(&t0);
     }
 
     //std::cerr << "DEBUG_JM: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" <<std::endl;
@@ -2146,13 +2127,6 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
     }
 
-    if (debug==1)
-    {
-        std::cout<<"processOneImage 3 ";
-        print_elapsed_time(t0);
-        annotate_processor_time(&t0);
-    }
-
     // Update opt_scale
     if (do_norm)
     {
@@ -2277,13 +2251,6 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 opt_offsets_ref[2*irefmir+1] += Vtrans[opt_itrans](1);
             }
         }
-    }
-
-    if (debug==1)
-    {
-        std::cout<<"processOneImage 4 ";
-        print_elapsed_time(t0);
-        annotate_processor_time(&t0);
     }
 
     // Distribution widths
