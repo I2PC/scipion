@@ -898,16 +898,16 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescriptor, bool readOnly)
 {
     struct stat file_status;
-    if(stat(filename.data(), &file_status) != 0)
+    if(stat(filename.c_str(), &file_status) != 0)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot get filesize for file "+filename);
     size = file_status.st_size;
     if(size==0)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"File size=0, cannot read it ("+filename+")");
 
     if (readOnly)
-        fileDescriptor = open(filename.data(),  O_RDONLY, S_IREAD);
+        fileDescriptor = open(filename.c_str(),  O_RDONLY, S_IREAD);
     else
-        fileDescriptor = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
+        fileDescriptor = open(filename.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
     if (fileDescriptor == -1)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot read file named "+filename);
 
