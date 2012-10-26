@@ -137,9 +137,15 @@ void ProgIDRXrayTomo::preRun()
     projMD.read(fnInputProjMD);
 
     // Setting the intermediate filenames
-    fnInterProjs = fnRootInter + "_inter_projs.mrc";
+    fnInterProjs = fnRootInter + "_inter_projs";
+    fnInterProjs += (reconsMethod == RECONS_TOMO3D)? ".mrc" : ".stk";
+
     fnInterProjsMD = fnInterProjs.replaceExtension("xmd");
     fnInterAngles = fnRootInter + "_angles.txt";
+
+    // We make sure to delete intermediate files
+    fnInterProjs.deleteFile();
+    fnInterProjsMD.deleteFile();
 
     FileName fnProjs;
     projMD.getValue(MDL_IMAGE, fnProjs, projMD.firstObject());
@@ -148,34 +154,33 @@ void ProgIDRXrayTomo::preRun()
     interProjMD.replace(MDL_IMAGE, fnProjs.removeSliceNumber(), fnInterProjs);
     interProjMD.write(fnInterProjsMD);
 
+    String arguments = formatString("-i %s -o %s -s",
+                                    fnInputProjMD.c_str(), fnInterProjs.c_str());
+    ProgConvImg conv;
+    conv.read(arguments);
+    conv.run();
+
+    // Saving angles in plain text to pass to tomo3D
+    if ( reconsMethod == RECONS_TOMO3D )
+    {
+        std::vector<MDLabel> desiredLabels;
+        desiredLabels.push_back(MDL_ANGLE_TILT);
+        projMD.writeText(fnInterAngles, &desiredLabels);
+    }
+
     if (fnStart.empty()) // if initial volume is not passed,then we must calculate it
     {
         // Projections must be in an MRC stack to be passed
-        if ( reconsMethod == RECONS_TOMO3D && !fnProjs.contains("mrc") )
-        {
-            String arguments = formatString("-i %s -o %s -s",
-                                            fnInputProjMD.c_str(), fnInterProjs.c_str());
-            ProgConvImg conv;
-
-            //            conv.setup(&projMD, fnInterProjs);
-            conv.read(arguments);
-            conv.run();
-
-            // Saving angles in plain text to pass to tomo3D
-            std::vector<MDLabel> desiredLabels;
-            desiredLabels.push_back(MDL_ANGLE_TILT);
-            projMD.writeText(fnInterAngles, &desiredLabels);
-
+        if ( reconsMethod == RECONS_TOMO3D )
             reconstruct(fnInterProjsMD, fnOutVol);
-        }
         else
+        {
             reconstruct(fnInputProjMD, fnOutVol);
+            phantom.read(fnOutVol);
+        }
     }
     else
-    {
         phantom.read(fnStart);
-    }
-
 }
 
 void ProgIDRXrayTomo::run()
@@ -183,30 +188,29 @@ void ProgIDRXrayTomo::run()
     preRun();
 
     Projection proj, stdProj;
-    Image<double> fixedProj;
-    MultidimArray<double> mFixedProj;
+    Image<double> fixedProj, prevFProj;
+    MultidimArray<double> mFixedProj, mPrevFProj;
 
-    mFixedProj.alias(MULTIDIM_ARRAY(fixedProj));
+
     double rot, tilt, psi;
-
-
-    FileName fnProj;
 
     double lambda = VEC_ELEM(lambda_list, 0);
 
-    initProgress(projMD.size()*itNum);
-
+    FileName fnProj;
 
     for (int iter = 0; iter < itNum; iter++)
     {
-        if (reconsMethod != RECONS_TOMO3D) // Since we process the output of tomo3d, this is already read
-            phantom.read(fnOutVol);
+        std::cout << "== Iteration " << iter << std::endl;
+        std::cout << "Projecting ..." <<std::endl;
 
         // Fix the reconstructed volume to physical density values
         double factor = 1/sampling;
         MULTIDIM_ARRAY(phantom.iniVol) *= factor;
 
+        initProgress(projMD.size());
         size_t n = 1; // Image number
+        double meanError = 0.;
+
         FOR_ALL_OBJECTS_IN_METADATA(projMD)
         {
             projMD.getValue(MDL_IMAGE , fnProj, __iter.objId);
@@ -219,27 +223,46 @@ void ProgIDRXrayTomo::run()
                                                   XSIZE(MULTIDIM_ARRAY(phantom.iniVol)));
 
             fixedProj.read(fnProj);
+            mFixedProj.alias(MULTIDIM_ARRAY(fixedProj));
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
             dAi(mFixedProj, n) = (dAi(mFixedProj, n) - dAi(MULTIDIM_ARRAY(proj),n))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
 
+            prevFProj.read(fnInterProjs, DATA, n); // To calculate meanError
+            mPrevFProj.alias(MULTIDIM_ARRAY(prevFProj));
+
             fixedProj.write(fnInterProjs, n, true, WRITE_REPLACE);
 
-            proj.write("idr_debug_proj.mrc", n , true, WRITE_REPLACE);
-            stdProj.write("idr_debug_std_proj.mrc", n , true, WRITE_REPLACE);
+            // debug stuff //
+            proj.write("idr_debug_proj.vol", n , true, WRITE_REPLACE);
+            stdProj.write("idr_debug_std_proj.vol", n , true, WRITE_REPLACE);
+
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
+            meanError += abs(dAi(mPrevFProj, n) - dAi(mFixedProj, n));
+
 
             ++n;
             // Update progress bar
             setProgress();
         }
         // Once calculated all fixed projection, let reconstruct again
-        reconstruct(fnInterProjs, fnOutVol);
+        endProgress();
+
+        meanError /= (NZYXSIZE(mFixedProj)*projMD.size());
+
+        std::cout << "Mean error = " << meanError <<std::endl;
+
+        std::cout << "Reconstructing ..." << std::endl;
+        reconstruct(fnInterProjsMD, fnOutVol);
+
+        if ( (iter < itNum-1) && (reconsMethod != RECONS_TOMO3D) ) // Since we process the output of tomo3d, this is already read
+            phantom.read(fnOutVol);
+
     }
 
     // Finish progress bar
-    endProgress();
 
-    if (reconsMethod != RECONS_TOMO3D) // Trick to save the processed output of tomo3d
+    if (reconsMethod == RECONS_TOMO3D) // Trick to save the processed output of tomo3d
         phantom.iniVol.write(fnOutVol);
 
 }
@@ -252,8 +275,9 @@ void ProgIDRXrayTomo::reconstruct(const FileName &fnProjsMD, const FileName &fnV
         FileName fnProjs;
         MD.getValue(MDL_IMAGE, fnProjs, MD.firstObject());
 
-        reconsTomo3D(fnInterAngles, fnProjs, fnVol);
+        reconsTomo3D(fnInterAngles, fnProjs.removeSliceNumber(), fnVol);
         phantom.read(fnVol);
+        MULTIDIM_ARRAY(phantom.iniVol).resetOrigin();
         MULTIDIM_ARRAY(phantom.iniVol).reslice(VIEW_Y_NEG);
         //FIXME: this is a temporary fixing to match the reconstructed volume with phantom
         double factor = 1/13.734;
