@@ -636,7 +636,7 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
             else
             {
                 //block name
-                String _szBlockName = (String)("\ndata_") + blockName;
+                String _szBlockName = formatString("\ndata_%s\n", blockName.c_str());
                 size_t blockNameSize = _szBlockName.size();
 
                 //search for the string
@@ -734,7 +734,8 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
         << std::endl //write wich type of format (column or row) and the path;
         << WordWrap(comment, line_max);     //write md comment in the 2nd comment line of header
     //write data block
-    String _szBlockName = (String)("data_") + blockName;
+    String _szBlockName("data_");
+    _szBlockName += blockName;
 
     if (_isColumnFormat)
     {
@@ -1243,6 +1244,7 @@ void MetaData::readStar(const FileName &filename,
         BUFFER_COPY(bufferMap, buffer);
         bool firstBlock = true;
         bool singleBlock = blockRegExp.find_first_of(".[*+")==String::npos;
+
         String blockName;
 
         while (nextBlock(buffer, block))
