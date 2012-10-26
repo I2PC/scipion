@@ -88,7 +88,10 @@ public class MetaData {
 	private native void create();
 
 	// destructor
-	private synchronized native void destroy();
+	public synchronized native void destroy();
+	
+	// clear metadata
+	public native void clear();
 
 	// reading
 	public native void read_(String filename);

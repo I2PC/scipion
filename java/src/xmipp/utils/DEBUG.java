@@ -40,4 +40,21 @@ public class DEBUG {
     		ex.printStackTrace();
     	}
     }
+    
+    //Timing
+    public static long millisecs;
+    
+    public static long tic(){
+    	millisecs = System.currentTimeMillis();
+    	return millisecs;
+    }
+    
+    public static long toc(){
+    	long current = System.currentTimeMillis();
+    	long result = current - millisecs;
+    	millisecs = current;
+    	System.out.format("took: %d milliseconds %n", result);
+    	return result;
+    }
+
 }
