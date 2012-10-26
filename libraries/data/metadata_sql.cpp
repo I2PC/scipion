@@ -1045,8 +1045,9 @@ bool MDSql::execSingleStmt(const std::stringstream &ss)
 bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
 {
     rc = sqlite3_step(stmt);
-    if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
-        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db)));
+    if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE){
+      REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s\n  Sqlite query: %s",rc,sqlite3_errmsg(db), ss->str().c_str()));
+    }
     return true;
 }
 

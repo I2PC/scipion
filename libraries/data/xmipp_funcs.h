@@ -35,6 +35,7 @@
 #include "xmipp_error.h"
 
 
+
 // For timing functions
 // Uncomment next line timing functions are giving problems in your system
 //#define _NO_TIME
@@ -202,6 +203,13 @@ public:
         return K;
     }
 };
+
+#if defined(__APPLE__) || defined(__MINGW32__)
+/** Calculate sin and cos at the same time
+ *
+ */
+void sincos(double angle, double * sine, double * cosine);
+#endif
 
 /** Solve second degree equation
  *
@@ -817,9 +825,10 @@ double rnd_log(double a, double b);
  * These functions is not ported to Python.
  */
 //@{
-#ifdef _NO_TIME
+#if defined _NO_TIME || defined __MINGW32__
 typedef int ProcessorTimeStamp; // Any other kind of data will do
 typedef int TimeStamp; // Any other kind of data will do
+struct tm* localtime_r (const time_t *clock, struct tm *result);
 #else
 typedef struct tms ProcessorTimeStamp; // Renaming of the time structure
 typedef size_t TimeStamp;              // Timestamp in miliseconds
@@ -838,6 +847,7 @@ typedef size_t TimeStamp;              // Timestamp in miliseconds
  */
 void time_config();
 
+#if !defined _NO_TIME && !defined __MINGW32__
 /** Annotate actual time
  *
  * This annotation is used later to compute the elapsed time.
@@ -850,6 +860,7 @@ void time_config();
  * This function is not ported to Python.
  */
 void annotate_processor_time(ProcessorTimeStamp* time);
+#endif
 
 /** Annotate actual time
  *
@@ -864,6 +875,7 @@ void annotate_processor_time(ProcessorTimeStamp* time);
  */
 void annotate_time(TimeStamp* time);
 
+#if !defined _NO_TIME && !defined __MINGW32__
 /** Accumulate time
  *
  * Initially dest_time should be set to orig time. Then you acumulate succesive
@@ -874,6 +886,7 @@ void annotate_time(TimeStamp* time);
  * This function is not ported to Python.
  */
 void acum_time(ProcessorTimeStamp* orig, ProcessorTimeStamp* dest);
+#endif
 
 /** Compute elapsed time since a given annotation
  *
@@ -898,6 +911,7 @@ void acum_time(ProcessorTimeStamp* orig, ProcessorTimeStamp* dest);
  */
 double elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
 
+#if !defined _NO_TIME && !defined __MINGW32__
 /** Show on screen the elapsed time since a given annotation
  *
  * The format of the printing is "Elapsed time: User(13) System(1)" that means
@@ -917,6 +931,7 @@ double elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
  * This function is not ported to Python.
  */
 void print_elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
+#endif
 
 /** Show on screen the elapsed time since a given annotation
  *
@@ -938,6 +953,7 @@ void print_elapsed_time(ProcessorTimeStamp& time, bool _IN_SECS = true);
  */
 void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
+#if !defined _NO_TIME && !defined __MINGW32__
 /** Returns the estimated time left to finish
  *
  * To make this estimation the starting time must have been annotated before and
@@ -947,6 +963,7 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
  * This function is not ported to Python.
  */
 double time_to_go(ProcessorTimeStamp& time, double fraction_done);
+#endif
 
 /** Initialise the progress bar
  *
@@ -1160,7 +1177,11 @@ size_t xmippFWRITE(const void* src,
                    FILE*& fp,
                    bool reverse = false);
 
-/** Map file to memory */
+/** Map file to memory.
+ *
+ * If size is less than 0, then the whole file is mapped, and the size
+ * is correctly set to the file size.
+ * */
 void mapFile(const FileName &filename, char*&map,size_t &size, int &fileDescriptor, bool readOnly=true);
 
 /** Unmap file*/

@@ -566,7 +566,9 @@ bool MetaData::containsObject(const MDQuery &query)
 //--------------IO functions -----------------------
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef XMIPP_MMAP
 #include <sys/mman.h>
+#endif
 
 void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 {
@@ -590,6 +592,7 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 
 void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteModeMetaData mode) const
 {
+#ifdef XMIPP_MMAP
     if (outFile.hasImageExtension())
         REPORT_ERROR(ERR_IO,"Trying to write metadata with image extension");
 
@@ -611,13 +614,13 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
         //does blockname exists?
         //remove it from file in this case
         // get length of file:
-        if(stat(outFile.data(), &file_status) != 0)
+        if(stat(outFile.c_str(), &file_status) != 0)
             REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not get filesize for file "+outFile);
         size = file_status.st_size;
         if(size!=0)//size=0 for /dev/stderr
         {
 
-            fd = open(outFile.data(),  O_RDWR, S_IREAD | S_IWRITE);
+            fd = open(outFile.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
             if (fd == -1)
                 REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not read file named "+outFile);
 
@@ -633,11 +636,11 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
             else
             {
                 //block name
-                String _szBlockName = (String)("\ndata_") + blockName;
+                String _szBlockName = formatString("\ndata_%s\n", blockName.c_str());
                 size_t blockNameSize = _szBlockName.size();
 
                 //search for the string
-                target = (char *) _memmem(map, size, _szBlockName.data(), blockNameSize);
+                target = (char *) _memmem(map, size, _szBlockName.c_str(), blockNameSize);
                 if(target!=NULL)
                 {
                     target2 = (char *) _memmem(target+1, size - (target - map), "\ndata_", 6);
@@ -670,7 +673,7 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
         openMode = std::ios_base::out;
     else if(mode=MD_APPEND)
         openMode = std::ios_base::app;
-    std::ofstream ofs(outFile.data(), openMode);
+    std::ofstream ofs(outFile.c_str(), openMode);
 
     write(ofs, blockName, mode);
     if (tailMetadataFile!=NULL)
@@ -680,14 +683,17 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
         ofs.write(tailMetadataFile,(map + size) - target2);
     }
     ofs.close();
+#else
 
+    REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
 }
 
 void MetaData::append(const FileName &outFile) const
 {
     if (outFile.exists())
     {
-        std::ofstream ofs(outFile.data(), std::ios_base::app);
+        std::ofstream ofs(outFile.c_str(), std::ios_base::app);
         _writeRows(ofs);
         ofs.close();
     }
@@ -728,7 +734,8 @@ void MetaData::write(std::ostream &os,const String &blockName, WriteModeMetaData
         << std::endl //write wich type of format (column or row) and the path;
         << WordWrap(comment, line_max);     //write md comment in the 2nd comment line of header
     //write data block
-    String _szBlockName = (String)("data_") + blockName;
+    String _szBlockName("data_");
+    _szBlockName += blockName;
 
     if (_isColumnFormat)
     {
@@ -1039,7 +1046,7 @@ void MetaData::readPlain(const FileName &inFile, const String &labelsString, con
 
     char lineBuffer[LINE_LENGTH];
     String line;
-    std::ifstream is(inFile.data(), std::ios_base::in);
+    std::ifstream is(inFile.c_str(), std::ios_base::in);
     size_t lineCounter = 0;
     size_t columnsNumber = labels.size();
     size_t objId;
@@ -1075,6 +1082,7 @@ void MetaData::addPlain(const FileName &inFile, const String &labelsString, cons
 
 bool MetaData::existsBlock(const FileName &_inFile)
 {
+#ifdef XMIPP_MMAP
     String blockName;
     FileName outFile;
 
@@ -1095,12 +1103,12 @@ bool MetaData::existsBlock(const FileName &_inFile)
         //does blockname exists?
         //remove it from file in this case
         // get length of file:
-        if(stat(outFile.data(), &file_status) != 0)
+        if(stat(outFile.c_str(), &file_status) != 0)
             REPORT_ERROR(ERR_IO_NOPATH,"Metadata:existsBlock can not get filesize for file "+outFile);
         size_t size = file_status.st_size;
         if(size!=0)//size=0 for /dev/stderr
         {
-            fd = open(outFile.data(),  O_RDWR, S_IREAD | S_IWRITE);
+            fd = open(outFile.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
             if (fd == -1)
                 REPORT_ERROR(ERR_IO_NOPATH,"Metadata:existsBlock can not read file named "+outFile);
 
@@ -1112,10 +1120,8 @@ bool MetaData::existsBlock(const FileName &_inFile)
             String _szBlockName = (String)("\ndata_") + blockName;
             size_t blockNameSize = _szBlockName.size();
 
-            if (_memmem(map, size, _szBlockName.data(), blockNameSize) == NULL)
-                return false;
-            else
-                return true;
+            return _memmem(map, size, _szBlockName.data(), blockNameSize) != NULL;
+
         }
         if (munmap(map, size) == -1)
         {
@@ -1123,6 +1129,9 @@ bool MetaData::existsBlock(const FileName &_inFile)
         }
         close(fd);
     }
+#else
+    REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
 }
 void MetaData::readXML(const FileName &filename,
                        const std::vector<MDLabel> *desiredLabels,
@@ -1175,7 +1184,7 @@ void MetaData::readStar(const FileName &filename,
         return;
     }
 
-    std::ifstream is(filename.data(), std::ios_base::in);
+    std::ifstream is(filename.c_str(), std::ios_base::in);
     std::stringstream ss;
     String line, token,_comment;
     std::vector<MDObject*> columnValues;
@@ -1235,6 +1244,7 @@ void MetaData::readStar(const FileName &filename,
         BUFFER_COPY(bufferMap, buffer);
         bool firstBlock = true;
         bool singleBlock = blockRegExp.find_first_of(".[*+")==String::npos;
+
         String blockName;
 
         while (nextBlock(buffer, block))
@@ -1302,6 +1312,8 @@ void MetaData::readStar(const FileName &filename,
     int nCols = columnValues.size();
     for (int i = 0; i < nCols; ++i)
         delete columnValues[i];
+
+    is.close();
 }
 
 void MetaData::merge(const MetaData &md2)
@@ -1778,7 +1790,7 @@ void MetaData::writeXML(const FileName fn, const FileName blockname, WriteModeMe
     ////THIS SHOULD BE IMPLEMENTED USING AN XML LIBRARY THAT HANDLES THE FILE PROPERLY
     if(mode!=MD_OVERWRITE)
         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"XML is only implemented for overwrite mode");
-    std::ofstream ofs(fn.data(), std::ios_base::out|std::ios_base::trunc);
+    std::ofstream ofs(fn.c_str(), std::ios_base::out|std::ios_base::trunc);
     size_t size = activeLabels.size();
     ofs <<  "<" << blockname << ">"<< std::endl;
     FOR_ALL_OBJECTS_IN_METADATA(*this)
@@ -1803,7 +1815,7 @@ void MetaData::writeXML(const FileName fn, const FileName blockname, WriteModeMe
 
 void MetaData::writeText(const FileName fn,  const std::vector<MDLabel>* desiredLabels) const
 {
-    std::ofstream ofs(fn.data(), std::ios_base::trunc|std::ios_base::out);
+    std::ofstream ofs(fn.c_str(), std::ios_base::trunc|std::ios_base::out);
 
     if (desiredLabels != NULL)
     {
