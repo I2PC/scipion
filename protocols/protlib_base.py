@@ -324,16 +324,17 @@ class XmippProject():
             for r2 in runs:
                 dd2 = runsDict[getExtendedRunName(r2)]
                 if dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
-                    for v in dd.prot.ParamsDict.values():
-                        if type(v) == str and dd2.prot.WorkingDir in v:
+                    for k, v in dd.prot.ParamsDict.iteritems():
+                        if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
+			    print "adding dep from %s to %s\n   because: key: %s, value: %s" % (dd2.extRunName, dd.extRunName, k, v)
                             dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
         roots = [k for k, v in runsDict.iteritems() if v.isRoot]
         ddRoot = DepData(runsDict, 'PROJECT', None)
         ddRoot.state = 6
-        ddRoot.deps = roots
-        
+        ddRoot.deps = roots        
+
         if printGraph:
             self._printGraph(runsDict)
                 
