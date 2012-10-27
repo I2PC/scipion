@@ -53,7 +53,7 @@ JNIEXPORT jstring JNICALL Java_xmipp_jni_Filename_compose
         FileName fnTemp;
         String filestring= String(fnStr);
         fnTemp.compose(slice,filestring);
-        return env->NewStringUTF(fnTemp.data());;
+        return env->NewStringUTF(fnTemp.c_str());;
     }
     XMIPP_JAVA_CATCH;
 }

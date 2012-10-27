@@ -29,6 +29,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_destroy
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    clear
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_clear
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    read_
  * Signature: (Ljava/lang/String;)V
  */

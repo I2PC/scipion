@@ -29,7 +29,7 @@ import xmipp.particlepicker.training.model.TrainingPicker;
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 
-	
+	private static boolean tongleSetSelected=false;
 	
 
 	public ParticlePickerCanvas(ImagePlus imp)
@@ -65,6 +65,13 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 					moveActiveParticle(active.getX() - step, active.getY());
 				else if (code == KeyEvent.VK_RIGHT)
 					moveActiveParticle(active.getX() + step, active.getY());
+				else if (code == KeyEvent.VK_SPACE){
+					getFrame().circlechb.setSelected(tongleSetSelected);
+					getFrame().rectanglechb.setSelected(tongleSetSelected);
+				        tongleSetSelected = ! tongleSetSelected;
+					}
+				else 
+				     return;//do not repaint if not needed
 				repaint();
 
 			}
