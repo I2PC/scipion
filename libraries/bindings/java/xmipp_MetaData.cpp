@@ -929,3 +929,15 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
     }
     XMIPP_JAVA_CATCH;
 }
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_operate
+(JNIEnv * env, jobject jobj, jstring operateString)
+{
+    XMIPP_JAVA_TRY
+    {
+        const char * opStr = env->GetStringUTFChars(operateString, false);
+        MetaData * md = GET_INTERNAL_METADATA(jobj);
+        md->operate(opStr);
+    }
+    XMIPP_JAVA_CATCH;
+}

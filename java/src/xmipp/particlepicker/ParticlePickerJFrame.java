@@ -216,7 +216,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				new ImportParticlesFromFolderJDialog(ParticlePickerJFrame.this, true);
+				ImportParticlesFromFolderJDialog dlg = new ImportParticlesFromFolderJDialog(ParticlePickerJFrame.this, true);
+				dlg.showDialog();
 			}
 		});
 
@@ -666,18 +667,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			((TrainingPickerJFrame)this).getFamilyData().reset();
 		else
 			getMicrograph().reset();
-		switch (format)
-		{
-			case Xmipp24:
-				getParticlePicker().importParticlesFromXmipp24Folder( dir);
-				break;
-			case Xmipp30:
-				getParticlePicker().importParticlesFromXmipp30Folder(dir);
-				break;
-			case Eman:
-				getParticlePicker().importParticlesFromEmanFolder(dir);
+		
+		getParticlePicker().importParticlesFromFolder(dir, format);
 
-		}
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();

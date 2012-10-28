@@ -752,11 +752,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
-	public void importParticlesFromXmipp24File(String file) {
-		throw new UnsupportedOperationException(
-				XmippMessage.getNotImplementedYetMsg());
-	}
-
 	@Override
 	protected void displayImportDialog() {
 		new ImportParticlesFromFileJDialog(TrainingPickerJFrame.this, true);
@@ -773,17 +768,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	public void importParticlesFromFile(Format format, String file) {
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
-		switch (format) {
-		case Xmipp24:
-			ppicker.importParticlesFromXmipp24File(mfd, file);
-			break;
-		case Xmipp30:
-			ppicker.importParticlesFromXmipp30File(mfd, file);
-			break;
-		case Eman:
-			ppicker.importParticlesFromEmanFile(mfd, file);
-			break;
-		}
+		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph());
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();

@@ -344,28 +344,15 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	public void importParticlesFromFolder(Format format, String dir)
 	{
-		super.importParticlesFromFolder(format, dir);
-		untiltedmic.initAligner();
+		pppicker.importParticlesFromFolder(dir, format);
 		tiltedcanvas.repaint();
 	}
 
 	
-	public void importParticlesFromFiles(Format format, String ufile, String tfile)
+	public void importParticlesFromFiles(Format format, String uFile, String tFile)
 	{
 		untiltedmic.reset();
-		switch(format)
-		{
-		case Xmipp24:
-			pppicker.importParticlesFromXmipp24Files(untiltedmic, ufile, tfile);
-			break;
-		case Xmipp30:
-			pppicker.importParticlesFromXmipp30Files(untiltedmic, ufile, tfile);
-			break;
-		case Eman:
-			pppicker.importParticlesFromEmanFiles(untiltedmic, ufile, tfile);
-			break;
-		}
-		untiltedmic.initAligner();
+		pppicker.importParticlesFromFiles(uFile, tFile, format, untiltedmic);
 		setChanged(true);
 		getCanvas().repaint();
 		tiltedcanvas.repaint();

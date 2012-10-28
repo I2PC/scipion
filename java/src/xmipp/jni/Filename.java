@@ -390,6 +390,28 @@ public class Filename {
 
 	/** Get the last part of the filename */
 	public static String getBaseName(String path) {
-		return new File(path).getName();
+		int index = path.lastIndexOf(File.separatorChar);
+		if (index != -1)
+			path = path.substring(index, path.length());
+		return path;
+	}
+	
+	public static String removeExtension(String path){
+		int index = path.lastIndexOf(".");
+		if (index != -1)
+			path = path.substring(0, index);
+		return path;
+	}
+	
+	
+	/** Join a set of paths */
+	public static String join(String ... paths){
+		String joined = paths[0];
+		for (int i = 1; i < paths.length; ++i){
+			if (!joined.endsWith(File.separator))
+				joined += File.separator;
+			joined += paths[i];
+		}
+		return joined;
 	}
 }
