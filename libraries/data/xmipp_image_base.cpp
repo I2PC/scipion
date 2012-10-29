@@ -708,6 +708,8 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readTIA(select_img,false);
     else if (ext_name.contains("dm3"))//DM3
         err = readDM3(select_img,false);
+    else if (ext_name.contains("em"))//EM
+        err = readEM(select_img);
     else if (ext_name.contains("inf"))//RAW with INF file
         err = readINF(select_img,false);
     else if (ext_name.contains("raw"))//RAW without INF file
