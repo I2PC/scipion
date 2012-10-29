@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <string.h>
 #ifndef __MINGW32__
 #include <sys/mman.h>
 #else
@@ -594,6 +595,19 @@ void TimeMessage(const std::string &message)
 void progress_bar(long rlen)
 {}
 #else
+#ifdef __MINGW32__
+struct tm* localtime_r (const time_t *clock, struct tm *result) {
+       if (!clock || !result) return NULL;
+       memcpy(result,localtime(clock),sizeof(*result));
+       return result;
+}
+void sincos(double angle, double * sine, double * cosine)
+{
+	*sine = sin(angle);
+	*cosine = cos(angle);
+}
+#endif
+
 // A global ................................................................
 int XmippTICKS;
 
@@ -608,11 +622,13 @@ void time_config()
 #endif
 }
 
+#if !defined _NO_TIME && !defined __MINGW32__
 // Annotate actual time ....................................................
 void annotate_processor_time(ProcessorTimeStamp *time)
 {
     times(time);
 }
+#endif
 
 void annotate_time(TimeStamp *time)
 {
@@ -624,6 +640,7 @@ void annotate_time(TimeStamp *time)
             tv.tv_usec / 1000;
 }
 
+#if !defined _NO_TIME && !defined __MINGW32__
 // Acumulative time
 void acum_time(ProcessorTimeStamp *orig, ProcessorTimeStamp *dest)
 {
@@ -632,7 +649,9 @@ void acum_time(ProcessorTimeStamp *orig, ProcessorTimeStamp *dest)
     (*dest).tms_utime += (*dest).tms_utime + (now.tms_utime - (*orig).tms_utime);
     (*dest).tms_stime += (*dest).tms_stime + (now.tms_utime - (*orig).tms_utime);
 }
+#endif
 
+#if !defined _NO_TIME && !defined __MINGW32__
 // Show elapsed time since last annotation .................................
 void print_elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
 {
@@ -648,6 +667,7 @@ void print_elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
     std::cout << "Elapsed time: User(" << userTime << ") System(" << sysTime
     << ")\n";
 }
+#endif
 
 void print_elapsed_time(TimeStamp& time, bool _IN_SECS)
 {
@@ -669,6 +689,7 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS)
 // Calculate elapsed time since last annotation .............................
 double elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
 {
+#if !defined _NO_TIME && !defined __MINGW32__
     ProcessorTimeStamp now;
     times(&now);
     double userTime = now.tms_utime - time.tms_utime;
@@ -679,8 +700,10 @@ double elapsed_time(ProcessorTimeStamp &time, bool _IN_SECS)
         sysTime /= XmippTICKS;
     }
     return userTime + sysTime;
+#endif
 }
 
+#if !defined _NO_TIME && !defined __MINGW32__
 // Compute the predicted time left .........................................
 double time_to_go(ProcessorTimeStamp &time, double fraction_done)
 {
@@ -690,6 +713,7 @@ double time_to_go(ProcessorTimeStamp &time, double fraction_done)
                         now.tms_stime - time.tms_stime) / XmippTICKS;
     return totalTime*(1 - fraction_done) / fraction_done;
 }
+#endif
 
 // Show a message with the time it is produced .............................
 void TimeMessage(const std::string & message)
@@ -897,33 +921,55 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 /* Map file */
 void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescriptor, bool readOnly)
 {
+	if (size<0)
+	{
+	   struct stat file_status;
+       if(stat(filename.c_str(), &file_status) != 0)
+           REPORT_ERROR(ERR_IO_NOPATH,"Cannot get filesize for file "+filename);
+       size = file_status.st_size;
+	}
+#ifdef XMIPP_MMAP
     struct stat file_status;
-    if(stat(filename.data(), &file_status) != 0)
+    if(stat(filename.c_str(), &file_status) != 0)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot get filesize for file "+filename);
     size = file_status.st_size;
     if(size==0)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"File size=0, cannot read it ("+filename+")");
 
     if (readOnly)
-        fileDescriptor = open(filename.data(),  O_RDONLY, S_IREAD);
+        fileDescriptor = open(filename.c_str(),  O_RDONLY, S_IREAD);
     else
-        fileDescriptor = open(filename.data(),  O_RDWR, S_IREAD | S_IWRITE);
+        fileDescriptor = open(filename.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
     if (fileDescriptor == -1)
-        REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot read file named "+filename);
+        REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot open file named "+filename);
 
     if (readOnly)
         map = (char *) mmap(0, size, PROT_READ, MAP_SHARED, fileDescriptor, 0);
     else
         map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileDescriptor, 0);
     if (map == MAP_FAILED)
-        REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
+        REPORT_ERROR(ERR_MEM_BADREQUEST,"Write can not map memory ");
+#else
+    map = new char[size];
+    fileDescriptor = open(filename.data(), O_RDONLY);
+    if (fileDescriptor == -1)
+        REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot open file named "+filename);
+    int ok=read(fileDescriptor,map,size);
+    if (ok==-1)
+    	REPORT_ERROR(ERR_IO_NOREAD,(String)"Cannot read from file named"+filename);
+#endif
 }
 
 /* Unmap file*/
 void unmapFile(char *&map, size_t &size, int& fileDescriptor)
 {
+#ifdef XMIPP_MMAP
     if (munmap(map, size) == -1)
         REPORT_ERROR(ERR_MEM_NOTDEALLOC,"Cannot unmap memory");
+#else
+    delete []map;
+    map=NULL;
+#endif
     close(fileDescriptor);
 }
 
@@ -1034,49 +1080,13 @@ size_t divide_equally_group(size_t N, size_t size, size_t myself)
 /**Compare two files **/
 bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset)
 {
-    //map files
     char *map1,*map2;
-    size_t size;
-    struct stat file_status;
-
-    if(stat(fn1.c_str(), &file_status) != 0)
-        REPORT_ERROR(ERR_IO_NOPATH,"compareTwoFiles:write can not get filesize for file "+fn1);
-    size_t size1 = file_status.st_size;
-
-    if(stat(fn2.c_str(), &file_status) != 0)
-        REPORT_ERROR(ERR_IO_NOPATH,"compareTwoFiles:write can not get filesize for file "+fn2);
-    size_t size2 = file_status.st_size;
-    if(size1!=size2)
-        return false;
-    size = size1;
-    int fd1 = open(fn1.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
-    if (fd1 == -1)
-        REPORT_ERROR(ERR_IO_NOTEXIST,"Can not read file named "+fn1);
-    int fd2 = open(fn2.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
-    if (fd2 == -1)
-        REPORT_ERROR(ERR_IO_NOTEXIST,"Can not read file named "+fn1);
-
-    map1 = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd1, 0);
-    if (map1 == MAP_FAILED)
-        REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
-
-    map2 = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0);
-    if (map2 == MAP_FAILED)
-        REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
-
-#include <string.h>
-
-    int result=memcmp(map1+offset,map2+offset,size-offset);
-    if (munmap(map1, size) == -1)
-    {
-        REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
-    }
-    close(fd1);
-    if (munmap(map2, size) == -1)
-    {
-        REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
-    }
-    close(fd2);
-
+    int fd1, fd2;
+    size_t size1=-1, size2=-1;
+    mapFile(fn1,map1,size1,fd1,true);
+    mapFile(fn2,map2,size2,fd2,true);
+    int result=memcmp(map1+offset,map2+offset,size1-offset);
+    unmapFile(map1,size1,fd1);
+    unmapFile(map2,size2,fd2);
     return (result==0);
 }

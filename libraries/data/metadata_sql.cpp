@@ -131,7 +131,7 @@ bool MDSql::renameColumn(const std::vector<MDLabel> oldLabel, const std::vector<
     std::vector<MDLabel>::const_iterator itOld;
     std::vector<MDLabel>::const_iterator itNew;
     for( itOld = oldLabel.begin(), itNew = newlabel.begin();
-    		itOld < oldLabel.end();
+         itOld < oldLabel.end();
          ++itOld, ++itNew )
         std::replace(v1.begin(), v1.end(), *itOld, *itNew);
 
@@ -521,7 +521,7 @@ void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
     for (int i = 0; i < columns.size(); i++)
     {
         index_name << sep1 << tableName(tableId) << "_"
-        		   << MDL::label2Str(columns.at(i));
+        << MDL::label2Str(columns.at(i));
         sep1 = "_";
         index_column << sep2 << MDL::label2Str(columns.at(i));
         sep2 = ", ";
@@ -793,7 +793,7 @@ void MDSql::setOperate(const MetaData *mdInLeft,
     execSingleStmt(ss);
     //std::cerr << "ss:" << ss.str() << std::endl;
     //dumpToFile("kk.sqlite");
-	//exit(0);
+    //exit(0);
 }
 
 bool MDSql::operate(const String &expression)
@@ -1046,7 +1046,7 @@ bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
 {
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
-        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s",rc,sqlite3_errmsg(db)));
+        REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s\n  Sqlite query: %s",rc,sqlite3_errmsg(db), ss->str().c_str()));
     return true;
 }
 
