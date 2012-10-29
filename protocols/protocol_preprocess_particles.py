@@ -51,9 +51,15 @@ class ProtPreprocessParticles(XmippProtocol):
         fnTiltPair=os.path.join(self.InputDir,'tilted_pairs.xmd')
         if os.path.exists(fnTiltPair):
             if self.InSelFile.find("_untilted")!=-1:
-                fnFamily=os.path.split(self.InSelFile)[1]
-                fnFamily=fnFamily.replace("_untilted","")
-                self.Db.insertStep('translateTiltPair',WorkingDir=self.WorkingDir,InputDir=self.InputDir,FnFamily=fnFamily,OutStack=self.OutStack)
+                fnBase=os.path.split(self.InSelFile)[1]
+                fnFamily=fnBase.replace("_untilted","")
+                self.Db.insertStep('translateTiltPair',verifyfiles=[self.workingDirPath(fnFamily)],
+                                   WorkingDir=self.WorkingDir,InputDir=self.InputDir,FnFamily=fnFamily,OutStack=self.OutStack)
+                fnTilted=fnBase.replace("_untilted","_tilted")
+                self.Db.insertStep('copyFile',verifyfiles=[self.workingDirPath(fnTilted)],source=self.InSelFile.replace('_untilted','_tilted'),
+                                   dest=self.workingDirPath(fnTilted))
+                self.Db.insertStep('copyFile',verifyfiles=[self.workingDirPath('tilted_pairs.xmd')],source=os.path.join(self.InputDir,'tilted_pairs.xmd'),
+                                   dest=self.workingDirPath('tilted_pairs.xmd'))
         
     def validate(self):
         errors = []
