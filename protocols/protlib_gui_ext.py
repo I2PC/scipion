@@ -1333,11 +1333,11 @@ class XmippBrowser():
         addFm = self.addFileManager
         addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr'], 
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
-        addFm('stk', 'stack.gif', ['.stk', '.mrcs'],
+        addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.raw', '.inf', '.dm3', '.psd', '.spe', '.img', '.hed', '.jpeg', '.jpg'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
-        addFm('vol', 'vol.gif', ['.vol'], 
+        addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
         addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'],
               textFillMenu, defaultOnClick, textOnDoubleClick)

@@ -859,6 +859,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         writeIMAGIC(select_img,mode,imParam,castMode);
     else if (ext_name.contains("dm3"))
         writeDM3(select_img,false,mode);
+    else if (ext_name.contains("em"))
+        writeEM(select_img,false,mode);
     else if (ext_name.contains("ser"))
         writeTIA(select_img,false,mode);
     else if (ext_name.contains("raw") || ext_name.contains("inf"))
