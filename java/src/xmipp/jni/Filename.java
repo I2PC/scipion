@@ -8,19 +8,26 @@ public class Filename {
 
 	public final static String PROJECT_FILE = ".project.sqlite";
 	public final static String SEPARATOR = "@";
+	// image extensions
+	public final static String EXT_SPI = ".spi";
 	public final static String EXT_XMP = ".xmp";
+	public final static String EXT_VOL = ".vol";
+	public final static String EXT_STK = ".stk";
+	public final static String EXT_MRC = ".mrc";
+	public final static String EXT_MRC2 = ".map";
+	public final static String EXT_MRCS = ".mrcs";
+	public final static String EXT_MRCS2 = ".st";
 	public final static String EXT_IMG = ".img";
 	public final static String EXT_HED = ".hed";
-	public final static String EXT_PSD = ".psd";
 	public final static String EXT_SER = ".ser";
 	public final static String EXT_DM3 = ".dm3";
+	public final static String EXT_EM  = ".em";
 	public final static String EXT_RAW = ".raw";
 	public final static String EXT_INF = ".inf";
 	public final static String EXT_SPE = ".spe";
-	public final static String EXT_MRC = ".mrc";
-	public final static String EXT_MRCS = ".mrcs";
-	public final static String EXT_MRCS2 = ".st";
-	public final static String EXT_STK = ".stk";
+	public final static String EXT_TIF = ".tif";
+	public final static String EXT_JPG = ".jpg";
+	public final static String EXT_PSD = ".psd";
 	// metadata extensions
 	public final static String EXT_XMD = ".xmd";
 	public final static String EXT_SEL = ".sel";
@@ -28,9 +35,6 @@ public class Filename {
 	public final static String EXT_CTFPARAM = ".ctfparam";
 	public final static String EXT_CTFDAT = ".ctfdat";
 	public final static String EXT_POS = ".pos";
-	public final static String EXT_VOL = ".vol";
-	public final static String EXT_SPI = ".spi";
-	public final static String EXT_TIF = ".tif";
 	public final static String EXT_LOG = ".log";
 	public final static String EXT_OUT = ".out";
 	public final static String EXT_ERR = ".err";
@@ -45,9 +49,9 @@ public class Filename {
 	}
 
 	public final static String[] SINGLE_IMAGES = new String[] { EXT_XMP,
-			EXT_IMG, EXT_HED, EXT_PSD, EXT_SER, EXT_DM3, EXT_RAW, EXT_INF,
-			EXT_SPE, EXT_SPI, EXT_TIF, EXT_MRC };
-	public final static String[] VOLUMES = new String[] { EXT_MRC, EXT_VOL };
+			EXT_IMG, EXT_HED, EXT_PSD, EXT_SER, EXT_DM3, EXT_EM, EXT_RAW, EXT_INF,
+			EXT_SPE, EXT_SPI, EXT_TIF, EXT_MRC, EXT_MRC2 };
+	public final static String[] VOLUMES = new String[] { EXT_MRC, EXT_MRC2, EXT_VOL, EXT_EM};
 	public final static String[] STACKS = new String[] { EXT_MRCS, EXT_MRCS2,
 			EXT_STK };
 
@@ -57,7 +61,7 @@ public class Filename {
 	public final static String[] SPIDER = new String[] { EXT_SPI, EXT_VOL };
 
 	public final static String[] TEXT = new String[] { EXT_TXT, EXT_LOG,
-			EXT_ERR, EXT_OUT, EXT_BOX};
+			EXT_ERR, EXT_OUT, EXT_BOX };
 
 	public static boolean isPSD(String filename) {
 		return filename != null && filename.endsWith(EXT_PSD);
@@ -117,8 +121,8 @@ public class Filename {
 			return filename != null && isFileType(filename, SINGLE_IMAGES);
 		}
 	}
-	
-	public static boolean isSingleImageExt(String filename){
+
+	public static boolean isSingleImageExt(String filename) {
 		return filename != null && isFileType(filename, SINGLE_IMAGES);
 	}
 
@@ -129,8 +133,8 @@ public class Filename {
 			return filename != null && isFileType(filename, VOLUMES);
 		}
 	}
-	
-	public static boolean isVolumeExt(String filename){
+
+	public static boolean isVolumeExt(String filename) {
 		return filename != null && isFileType(filename, VOLUMES);
 	}
 
@@ -141,28 +145,28 @@ public class Filename {
 			return filename != null && isFileType(filename, STACKS);
 		}
 	}
-	
-	public static boolean isStackExt(String filename){
+
+	public static boolean isStackExt(String filename) {
 		return filename != null && isFileType(filename, STACKS);
 	}
 
 	public static boolean isMetadata(String filename) {
 		try {
-		if (filename != null)
-			return isMetaDataFile(filename);
-		}
-		 catch (Exception e){
+			if (filename != null)
+				return isMetaDataFile(filename);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
-	}//function isMetadata
+	}// function isMetadata
 
-	public static boolean isMetadataExt(String filename){
+	public static boolean isMetadataExt(String filename) {
 		return filename != null && isFileType(filename, METADATAS);
 	}
-	
+
 	public static boolean isTextfile(String filename) {
-		return isFileType(filename, TEXT) || isFileType(filename, METADATAS) || isMetadata(filename);
+		return isFileType(filename, TEXT) || isFileType(filename, METADATAS)
+				|| isMetadata(filename);
 	}
 
 	private static boolean isFileType(String filename, String filetypes[]) {
@@ -225,10 +229,10 @@ public class Filename {
 	public static boolean exists(String path) {
 		File f = new File(Filename.getFilename(path));
 		boolean exists = f.exists();
-		
+
 		return f.exists();
 	}
-	
+
 	public String findProjectDir(String metadata) {
 		File f = new File(metadata);
 		String startingdir = f.isDirectory() ? metadata : f.getParent();
@@ -263,8 +267,8 @@ public class Filename {
 	}
 
 	public static String getFilename(String filename) {
-		
-		if (filename.contains(SEPARATOR)) 
+
+		if (filename.contains(SEPARATOR))
 			filename = filename.split(SEPARATOR)[1];
 
 		if (filename.contains(":"))

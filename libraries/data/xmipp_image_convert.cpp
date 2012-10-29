@@ -60,6 +60,7 @@ void  ProgConvImg::defineParams()
     CommentList &comments = defaultComments["-i"];
     comments.addComment("++ Supported read formats are:");
     comments.addComment("++ dm3 : Digital Micrograph 3");
+    comments.addComment("++ em  : Electron Microscopy");
     comments.addComment("++ jpg : JEPG");
     comments.addComment("++ img : Imagic");
     comments.addComment("++ inf,raw : RAW file with header INF file");
