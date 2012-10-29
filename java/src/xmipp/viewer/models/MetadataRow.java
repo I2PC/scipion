@@ -67,7 +67,7 @@ public class MetadataRow extends MetadataTable {
 	
 	@Override
 	public void setValueAt(Object value, int row, int column) {
-		super.setValueAt(value, 0, row);
+		data.setValueToCol(0, data.getColumnInfo(row), value.toString());
 	}// function setValueAt
 	
 	@Override
