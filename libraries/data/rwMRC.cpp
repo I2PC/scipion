@@ -255,7 +255,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
                 MD[i].setValue(MDL_ORIGIN_Y, -header->nyStart/aux);
 
             if (header->zOrigin != 0)
-                MD[i].setValue(MDL_ORIGIN_Y, -header->zOrigin);
+                MD[i].setValue(MDL_ORIGIN_Z, -header->zOrigin);
             else if(header->nzStart !=0 && MDMainHeader.getValue(MDL_SAMPLINGRATE_Z,aux))
                 MD[i].setValue(MDL_ORIGIN_Z, -header->nzStart/aux);
         }
