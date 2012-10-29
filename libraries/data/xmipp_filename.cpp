@@ -238,8 +238,9 @@ bool FileName::hasImageExtension() const
 {
     String ext = getFileFormat();
     if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
-        ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
-        ext=="ser" || ext=="stk" || ext=="mrcs"|| ext=="jpg")
+        ext=="map" || ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" ||
+        ext=="spe" || ext=="em"  || ext=="ser" || ext=="stk" || ext=="mrcs"||
+        ext=="jpg")
         return true;
     else
         return false;
@@ -261,8 +262,8 @@ bool FileName::hasStackExtension() const
 bool FileName::hasVolumeExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="vol" || ext=="spi" || ext=="xmp" ||
-        ext=="mrc" || ext=="inf" || ext=="raw")
+    if (ext=="vol" || ext=="spi" || ext=="xmp" || ext=="mrc" || ext=="map" ||
+        ext=="em"  || ext=="inf" || ext=="raw")
         return true;
     else
         return false;
@@ -714,9 +715,11 @@ int do_mkdir(const char *path, mode_t mode)
 #ifndef __MINGW32__
         if (mkdir(path, mode) != 0)
 #else
-        if (mkdir(path) != 0)
+
+            if (mkdir(path) != 0)
 #endif
-        status = -1;
+
+                status = -1;
     }
     else if (!S_ISDIR(st.st_mode))
     {
@@ -809,6 +812,7 @@ void FileLock::lock(FILE * hdlFile)
         this->filenum = fileno(hdlFile);
 
 #ifdef __MINGW32__
+
     HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
     DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
     if (LockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
