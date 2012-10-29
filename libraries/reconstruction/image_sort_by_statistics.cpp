@@ -188,7 +188,7 @@ void ProgSortByStatistics::processInput(MetaData &SF, bool do_prepare, bool mult
 }
 
 //majorAxis and minorAxis is the estimated particle size in px
-void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double minorAxis)
+void ProgSortByStatistics::processInput2(MetaData &SF)
 {
     Image<double> img;
     MultidimArray<double> img2;
@@ -196,6 +196,10 @@ void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double 
     center.initZeros();
     FringeProcessing fp;
 
+    int numHistElem = 31;
+    int numDescriptors =5;
+
+    MultidimArray<float> v(5);
 
     if (verbose>0)
     {
@@ -207,12 +211,7 @@ void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double 
         init_progress_bar(nr_imgs);
 
     int c = XMIPP_MAX(1, nr_imgs / 60);
-
-    //JV : imgnoPCA? hay que hacer PCA?, v?
     int imgno = 0, imgnoPCA=0;
-    MultidimArray<float> v;
-    MultidimArray<int> distance;
-    int dim;
 
     Zscore.initZeros(SF.size());
     bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
@@ -226,17 +225,13 @@ void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double 
     modI.resizeNoCopy(img());
     mask.resizeNoCopy(img());
     mask.initConstant(true);
-
-    FileName fpName    = "test.txt";
-    FileName fpName2   = "test2.txt";
-    FileName fpName3   = "test3.txt";
-    FileName fpName4   = "test4.txt";
-
+    MultidimArray<double> autoCorr(2*img().ydim,2*img().xdim);
+    MultidimArray<double> smallAutoCorr;
     Histogram1D hist;
-
+    Matrix2D<double> U,V,temp;
+    Matrix1D<double> D;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-
         if (thereIsEnable)
         {
             int enabled;
@@ -252,63 +247,94 @@ void ProgSortByStatistics::processInput2(MetaData &SF, double majorAxis, double 
             MultidimArray<double> &mI=img();
             mI.setXmippOrigin();
             mI.statisticsAdjust(0,1);
-
             mask.setXmippOrigin();
 
+            auto_correlation_matrix(mI,autoCorr);
+            mI.setXmippOrigin();
+            autoCorr.window(smallAutoCorr,-15,-15, 15, 15);
+            smallAutoCorr.copy(temp);
+            svdcmp(temp,U,D,V);
             //Here is done all the processing. Here we will need probably
             //some input arguments to tune the desired frequencies and tune
             //the filer
-            fp.normalizeWB(mI,nI,modI,250,2,mask);
-        	nI.write(fpName);
-
+            //ftrans.auto_correlation_matrix
+        	fp.normalize(mI,nI,modI,0.8,2,mask);
             nI.binarize();
-            nI.write(fpName2);
-
             int im = labelImage2D(nI,nI,8);
-            nI.write(fpName3);
             compute_hist(nI, hist, 0, im, im+1);
 
             int l,k,i,j;
+
             //We supose that the biggest part if the background!
             //This can be problematic
             hist.maxIndex(l,k,i,j);
             A1D_ELEM(hist,j)=0;
             hist.maxIndex(l,k,i,j);
             nI.binarizeRange(j-1,j+1);
-            nI.write(fpName4);
 
-            if (imgno ==20){
+            FringeProcessing fp;
+            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
+            fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
+
+            // Build vector
+            v.initZeros(numDescriptors);
+            v(0)=x0;
+            v(1)=y0;
+            v(2)=majorAxis;
+            v(3)=minorAxis;
+            v(4)=area;
+
+            //auto_correlation_vector(mI,mI);
+/*          int idx = 5;
+
+            double minI=0, maxI=0;
+            mI.computeDoubleMinMax(minI,maxI);
+            compute_hist(mI,hist,minI,maxI,numHistElem);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
+            v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
+*/
+            pcaAnalyzer.addVector(v);
+
+            if (imgno % c == 0 && verbose>0)
+                progress_bar(imgno);
+
+            if (imgno == 248)
+            {
 
             	std::cout << im << std::endl;
             	std::cout << "Max hist " << hist.hmax << std::endl;
             	std::cout << "Min hist " << hist.hmin << std::endl;
 
-            	std::cout << "i " << i << std::endl;
-            	std::cout << "j " << j << std::endl;
-            	std::cout << "l " << l << std::endl;
-            	std::cout << "k " << k << std::endl;
+            	std::cout << "x0 " << x0 << std::endl;
+            	std::cout << "y0 " << y0 << std::endl;
+            	std::cout << "majorAxis " << majorAxis << std::endl;
+            	std::cout << "minorAxis " << minorAxis << std::endl;
+            	std::cout << "ellipAng " << ellipAng << std::endl;
 
-            	REPORT_ERROR(ERR_MEM_NOTDEALLOC, "do not allocate space for an image if you have not deallocate it first");;
+            	FileName fpName    = "test.txt";
+            	mI.write(fpName);
             }
 
             imgno++;
+            imgnoPCA++;
         }
+
     }
 
-
-
-
+    pcaAnalyzer.computeStatistics(vavg,vstddev);
+    pcaAnalyzer.evaluateZScore(2,20);
 
 }
 
 void ProgSortByStatistics::run()
 {
-	/*
+
     //Process input selfile ..............................................
-    SF.read(fn);
+    /*SF.read(fn);
     SF.removeDisabled();
     pcaAnalyzer.clear();
-    processInput2(SF, 2, 2);
+    processInput2(SF);
+    processInput(SF, false, multivariate);
     */
 
     // Process input selfile ..............................................
