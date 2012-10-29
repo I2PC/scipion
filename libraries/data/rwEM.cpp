@@ -30,7 +30,7 @@
 int ImageBase::readEM(size_t select_img)
 {
     // EM File formats does not support stacks
-    if (select_img > ALL_IMAGES)
+    if (select_img > FIRST_IMAGE)
         REPORT_ERROR(ERR_ARG_INCORRECT, "readEM: EM file format does not support stacks.");
 
     EMHead header;
@@ -129,3 +129,9 @@ int ImageBase::readEM(size_t select_img)
     return(0);
 }
 
+
+int ImageBase::writeEM(size_t select_img, bool isStack, int mode)
+{
+    REPORT_ERROR(ERR_IO_NOWRITE, "ERROR: writeEM is not implemented.");
+    return(-1);
+}
