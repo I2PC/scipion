@@ -1,5 +1,6 @@
 /***************************************************************************
  * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+ * 				Javier Vargas (jvargas@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -43,8 +44,8 @@ public:
 
 public:
     double cutoff;
-    MultidimArray<double> vavg, vstddev, Zscore, ZscoreMultivariate;
-    PCAMahalanobisAnalyzer pcaAnalyzer;
+
+    std::vector<PCAMahalanobisAnalyzer> pcaAnalyzer;
     MetaData SF, SFtrain;
 
 public:
@@ -52,14 +53,14 @@ public:
 
     void defineParams();
 
-    void processInput(MetaData &SF, bool do_prepare, bool multivariate);
+    void processInputPrepare(MetaData &SF);
 
     //Method to obtain a zScore of each extracted particle. The process is based on a segmentation approach using
     //the Spiral Phase Transform (SPT), then the respective binary image is fitted to an ellipse and we obtain the major
     //and minor axis. Also a other coarser descriptor based on the image histogram is used to detect outliers. Additionaly,
     //the centroid of the normalized image (SPT) is used as a descriptor but with a very low weight in the zScore
     //JavierVargas : September 2012 BCU
-    void processInput2(MetaData &SF);
+    void processInprocessInputPrepareSPTH(MetaData &SF);
 
     void run();
 };
