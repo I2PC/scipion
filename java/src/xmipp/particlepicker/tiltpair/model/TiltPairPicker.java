@@ -72,7 +72,8 @@ public class TiltPairPicker extends ParticlePicker
 	{
 		String ufile = getOutputPath(micrograph.getPosFile());
 		String tfile = getOutputPath(micrograph.getTiltedMicrograph().getPosFile());
-		loadMicrographData(micrograph, ufile, tfile);
+		if (Filename.exists(ufile) && Filename.exists(tfile))
+			loadMicrographData(micrograph, ufile, tfile);
 	}
 	
 	/* Return number of particles loaded */
@@ -145,6 +146,12 @@ public class TiltPairPicker extends ParticlePicker
 	public void resetMicrograph(UntiltedMicrograph m)
 	{
 		m.reset();
+		setChanged(true);
+	}
+	
+	public void resetAllMicrographs(){
+		for (UntiltedMicrograph um: micrographs)
+			um.reset();
 		setChanged(true);
 	}
 
@@ -223,7 +230,6 @@ public class TiltPairPicker extends ParticlePicker
 
 	}
 
-	
 	@Override
 	public int getManualParticlesNumber(Family f)
 	{
@@ -273,9 +279,14 @@ public class TiltPairPicker extends ParticlePicker
 	}//function importParticlesFromFolder
 	
 	public int importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um){
-		MetaData uMd = getParticlesMdFromFile(uPath, f, um);
-		MetaData tMd = getParticlesMdFromFile(tPath, f, um.getTiltedMicrograph());
+		MetaData uMd = new MetaData(); 
+		fillParticlesMdFromFile(uPath, f, um, uMd);
+		MetaData tMd = new MetaData();
+		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd);
 		
-		return loadMicrographParticles(um, uMd, tMd);
+		int particles = loadMicrographParticles(um, uMd, tMd);
+		uMd.destroy();
+		tMd.destroy();
+		return particles;
 	}//function importParticlesFromFiles
 }//class TiltPairPicker

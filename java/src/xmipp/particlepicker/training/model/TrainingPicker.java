@@ -1,24 +1,18 @@
 package xmipp.particlepicker.training.model;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 
 import xmipp.jni.Filename;
-import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippMessage;
 
 public abstract class TrainingPicker extends ParticlePicker {
@@ -435,18 +429,21 @@ public abstract class TrainingPicker extends ParticlePicker {
 		Format [] formats = {Format.Xmipp24, Format.Xmipp30, Format.Eman};
 		
 		for (TrainingMicrograph m : micrographs) {
-			for (Format f: formats)
+			for (Format f: formats){
 				if (Filename.exists(getImportMicrographName(path, m.getFile(), f)))
 					return f;
+			}
 		}
 		return Format.Unknown; 
 	}
 	
 	/** Return the number of particles imported from a file */
 	public int importParticlesFromFile(String path, Format f, Micrograph m) {
-		MetaData md = getParticlesMdFromFile(path, f, m);
-		
-		return (md != null) ? importParticlesFromMd(m, md) : 0;
+		MetaData md = new MetaData();
+		fillParticlesMdFromFile(path, f, m, md);
+		int particles = (md != null) ? importParticlesFromMd(m, md) : 0;
+		md.destroy();
+		return particles;
 	}// function importParticlesFromFile
 
 	@Override
@@ -460,21 +457,21 @@ public abstract class TrainingPicker extends ParticlePicker {
 		String filename;
 		int particles = 0;
 		
-		System.out.println("==========MICROGRAPHS==========");
-		for (TrainingMicrograph m : micrographs) 
-			System.out.println("      name: " + m.getFile());
-		System.out.format("  number: %d\n", micrographs.size());
-		
-		System.out.println("==========IMPORTING==========");
+//		System.out.println("==========MICROGRAPHS==========");
+//		for (TrainingMicrograph m : micrographs) 
+//			System.out.println("      name: " + m.getFile());
+//		System.out.format("  number: %d\n", micrographs.size());
+//		
+		//System.out.println("==========IMPORTING==========");
 		for (TrainingMicrograph m : micrographs) {
 			filename = getImportMicrographName(path, m.getFile(), f);
 			System.out.println("  filename: " + filename);
 			if (Filename.exists(filename)){
-				System.out.println("    ........EXISTS");
+				//System.out.println("    ........EXISTS");
 				particles += importParticlesFromFile(filename, f, m);
 			}
 		}
-		System.out.format("==========PARTICLES: %d\n", particles);
+		//System.out.format("==========PARTICLES: %d\n", particles);
 		return particles;
 	}//function importParticlesFromFolder
 

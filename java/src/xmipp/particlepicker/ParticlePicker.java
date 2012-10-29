@@ -406,6 +406,16 @@ public abstract class ParticlePicker {
 	public Format detectFormat(String path) {
 		return Format.Unknown;
 	}
+	
+	public Format detectFileFormat(String path) {
+		if (path.endsWith(".raw.Common.pos"))
+			return Format.Xmipp24;
+		if (path.endsWith(".pos"))
+			return Format.Xmipp30;
+		if (path.endsWith(".box"))
+			return Format.Eman;
+		return Format.Unknown;
+	}
 
 	public String getImportMicrographName(String path, String filename, Format f) {
 		String base = Filename.removeExtension(Filename.getBaseName(filename));
@@ -426,33 +436,29 @@ public abstract class ParticlePicker {
 	public abstract int importParticlesFromFolder(String path, Format f);
 
 	/** Return the number of particles imported from a file */
-	public MetaData getParticlesMdFromFile(String path, Format f, Micrograph m) {
+	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md) {
+		
+		if (f == Format.Auto)
+			f = detectFileFormat(path);
+		
 		switch (f) {
 		case Xmipp24:
-			return getParticlesMdFromXmipp24File(path, m);
+			md.readPlain(path, "xcoor ycoor");
+			break;
 		case Xmipp30:
-			return getParticlesMdFromXmipp30File(path, m);
+			md.read(String.format("%s@%s", family.getName(), path));
+			break;
 		case Eman:
-			return getParticlesMdFromEmanFile(path, m);
+			fillParticlesMdFromEmanFile(path, m, md);
+			break;
 		default:
-			return null;
+			md.clear();
 		}
 	}// function importParticlesFromFile
 
-	public MetaData getParticlesMdFromXmipp24File(String file, Micrograph m) {
-		MetaData md = new MetaData();
-		md.readPlain(file, "xcoor ycoor");
-		return md;
-	}
-
-	public MetaData getParticlesMdFromXmipp30File(String file, Micrograph m) {
-		String fn = String.format("%s@%s", family.getName(), file);
-		MetaData md = new MetaData(fn);
-		return md;
-	}
-
-	public MetaData getParticlesMdFromEmanFile(String file, Micrograph m) {
+	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md) {
 		String line = "";
+		//System.out.println("Importing from EMAN, file: " + file);
 		try {
 			BufferedReader reader = null;
 			reader = new BufferedReader(new FileReader(file));
@@ -462,7 +468,7 @@ public abstract class ParticlePicker {
 			e.printStackTrace();
 		}
 		boolean inverty = (line.split("\t").length > 4);// eman 1.0
-		MetaData md = new MetaData();
+		//inverty = true;
 		md.readPlain(file, "xcoor ycoor particleSize");
 
 		long fid = md.firstObject();
@@ -471,15 +477,16 @@ public abstract class ParticlePicker {
 			family.setSize(size);
 		int half = size / 2;
 		// Move coordinates to the center and also invert the y-coordinate
-		if (inverty)
+		if (inverty){
+			System.out.println("EMAN1 detected, inverting y...");
 			md.operate(String.format("xcoor=xcoor+%d,ycoor=%d-(ycoor+%d)",
 					half, m.height, half));
+		}
 		else
 			md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half,
 					half));
 
-		return md;
-	}
+	}//function fillParticlesMdFromEmanFile
 
 	public void runXmippProgram(String program, String args) {
 		try {

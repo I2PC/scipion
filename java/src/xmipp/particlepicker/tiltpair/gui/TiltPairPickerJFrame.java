@@ -36,6 +36,7 @@ import javax.swing.event.ListSelectionListener;
 
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
+import xmipp.particlepicker.ImportParticlesJDialog;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
@@ -46,6 +47,7 @@ import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 
 
@@ -72,9 +74,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		return pppicker;
 	}
-	
-
-	
 
 	public TiltPairPickerJFrame(TiltPairPicker picker)
 	{
@@ -120,8 +119,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		mb.add(filtersmn);
 		mb.add(viewmn);
 		mb.add(helpmn);
-
-		
 		
 		anglesmi = new JCheckBoxMenuItem("Angles");
 		anglesmi.setEnabled(false);
@@ -140,9 +137,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		viewmn.add(ijmi);
 		helpmn.add(hcontentsmi);
 	}
-
-
-
 
 	private void initParticlesPane()
 	{
@@ -200,7 +194,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		}
 	}
 
-
 	private void initMicrographsPane()
 	{
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -236,8 +229,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	}
 	
-	
-
 	protected void saveChanges()
 	{
 		pppicker.saveData();
@@ -306,14 +297,11 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		return pppicker.getColor();
 	}
 
-	
-
 	@Override
 	public Family getFamily()
 	{
 		return pppicker.getFamily();
 	}
-
 
 	@Override
 	public List<? extends TrainingParticle> getAvailableParticles()
@@ -332,22 +320,18 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		return anglesmi.isSelected();
 	}
 	
-	
-
 	@Override
 	public void changeShapes()
 	{
 		canvas.repaint();
 		tiltedcanvas.repaint();
-		
 	}
 
 	public void importParticlesFromFolder(Format format, String dir)
 	{
-		pppicker.importParticlesFromFolder(dir, format);
+		super.importParticlesFromFolder(format, dir);
 		tiltedcanvas.repaint();
 	}
-
 	
 	public void importParticlesFromFiles(Format format, String uFile, String tFile)
 	{
@@ -358,18 +342,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		tiltedcanvas.repaint();
 		updateMicrographsModel();
 		canvas.setActive(null);
-		
 	}
-
-
-
-	@Override
-	protected void displayImportDialog()
-	{
-		new ImportParticlesFromFilesJDialog(this, true);
-		
-	}
-
 
 	@Override
 	protected void resetMicrograph()
@@ -391,9 +364,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		
 	}
 
-
-
-
 	@Override
 	protected void loadMicrograph()
 	{
@@ -407,11 +377,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		pack();
 		if (particlesdialog != null)
 			loadParticles();
-		
 	}
-
-
-
 
 	@Override
 	public boolean isValidSize(int size) {
@@ -424,23 +390,34 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		return true;
 	}
 
-
-
-
 	@Override
 	protected void openHelpURl() {
 		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph__picking_v3");
-		
 	}
 
-
-
-
+	@Override
+	protected void resetData(){
+		pppicker.resetAllMicrographs();		
+		canvas.setActive(null);
+		updateMicrographsModel();
+		setChanged(true);
+	}
 	
-
-
-
+	@Override
+	public void importParticlesFromFile(Format format, String path){
+		String[] parts = path.split(" ");
+		if (parts.length != 2)
+			XmippDialog.showError(this, "You should select only two files to import tilt pairs particles");
+		else
+			getParticlePicker().importParticlesFromFiles(parts[0], parts[1], format, getMicrograph());
+	}
 	
+	@Override
+	protected void showImportDialog(){
+		if (importpjd == null)
+			importpjd = new ImportParticlesJDialog(this);
+		importpjd.setMultiselectionEnabled(true);
+		importpjd.showDialog();
+	}
 
-
-}
+}//class TiltPairPickerJFrame

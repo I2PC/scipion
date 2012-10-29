@@ -153,7 +153,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		mb.add(filtersmn);
 		mb.add(windowmn);
 		mb.add(helpmn);
-		importffilemi.setText("Import from File...");
+		//importffilemi.setText("Import from File...");
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
@@ -753,18 +753,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	@Override
-	protected void displayImportDialog() {
-		new ImportParticlesFromFileJDialog(TrainingPickerJFrame.this, true);
-
-	}
-
-	@Override
 	protected void reloadImage() {
 		getCanvas().getMicrograph().releaseImage();
 		getCanvas().updateMicrographData();
 
 	}
 
+	@Override
 	public void importParticlesFromFile(Format format, String file) {
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
@@ -774,7 +769,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		updateMicrographsModel();
 		updateSize(family.getSize());
 		canvas.setActive(null);
-
 	}
 
 	@Override
@@ -802,6 +796,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		super.updateSize(size);
 //		if(templatesdialog != null)
 //			loadTemplates();
+	}
+	
+	@Override
+	protected void resetData(){
+		getFamilyData().reset();
 	}
 }
 
