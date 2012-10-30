@@ -238,8 +238,9 @@ bool FileName::hasImageExtension() const
 {
     String ext = getFileFormat();
     if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
-        ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
-        ext=="ser" || ext=="stk" || ext=="mrcs"|| ext=="jpg")
+        ext=="map" || ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" ||
+        ext=="spe" || ext=="em"  || ext=="ser" || ext=="stk" || ext=="mrcs"||
+        ext=="jpg")
         return true;
     else
         return false;
@@ -261,8 +262,8 @@ bool FileName::hasStackExtension() const
 bool FileName::hasVolumeExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="vol" || ext=="spi" || ext=="xmp" ||
-        ext=="mrc" || ext=="inf" || ext=="raw")
+    if (ext=="vol" || ext=="spi" || ext=="xmp" || ext=="mrc" || ext=="map" ||
+        ext=="em"  || ext=="inf" || ext=="raw")
         return true;
     else
         return false;
@@ -309,6 +310,7 @@ void FileName::initRandom(int length)
 // Init Unique .............................................................
 void FileName::initUniqueName(const char *templateStr)
 {
+#ifndef __MINGW32__
     int fd;
     int len = 256;
     char filename[len];
@@ -322,6 +324,7 @@ void FileName::initUniqueName(const char *templateStr)
     }
     close(fd);
     *this = filename;
+#endif
 }
 
 // Add at beginning ........................................................
@@ -497,7 +500,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-    std::ifstream infile( this->removeBlockNameOrSliceNumber().data(), std::ios_base::in);
+    std::ifstream infile( this->removeBlockNameOrSliceNumber().c_str(), std::ios_base::in);
     String line;
 
     if (infile.fail())
@@ -709,8 +712,14 @@ int do_mkdir(const char *path, mode_t mode)
     if (stat(path, &st) != 0)
     {
         /* Directory does not exist */
+#ifndef __MINGW32__
         if (mkdir(path, mode) != 0)
-            status = -1;
+#else
+
+            if (mkdir(path) != 0)
+#endif
+
+                status = -1;
     }
     else if (!S_ISDIR(st.st_mode))
     {
@@ -794,19 +803,19 @@ void FileLock::lock(int _fileno)
 #endif
 }
 
-void FileLock::lock(FILE * hFile)
+void FileLock::lock(FILE * hdlFile)
 {
     if (islocked)
         unlock();
 
-    if (hFile != NULL)
-        this->filenum = fileno(hFile);
+    if (hdlFile != NULL)
+        this->filenum = fileno(hdlFile);
 
 #ifdef __MINGW32__
 
     HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
     DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
-    if (LockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+    if (LockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
         REPORT_ERROR(ERR_IO_LOCKED,"File cannot be locked.");
 #else
 
@@ -825,7 +834,7 @@ void FileLock::unlock()
 #ifdef __MINGW32__
         HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
         DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
-        if (UnLockFile(hFile, 0, 0, dwLsatPos, 0) != NULL)
+        if (UnlockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
             REPORT_ERROR(ERR_IO_LOCKED,"File cannot be unlocked.");
 #else
 

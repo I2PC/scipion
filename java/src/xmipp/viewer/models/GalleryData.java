@@ -285,7 +285,7 @@ public class GalleryData {
 				md.addLabel(MDLabel.MDL_ENABLED);
 				for (long id : ids)
 					md.setEnabled(true, id);
-				hasMdChanges = true;
+				//hasMdChanges = true;
 			}
 
 			labels = newLabels;
@@ -777,6 +777,15 @@ public class GalleryData {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public void setValueToCol(int index, ColumnInfo ci, String value) {
+		try {
+			md.setValueString(ci.getLabel(), value, ids[index]);
+			setMdChanges(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/** Delete from metadata selected items */

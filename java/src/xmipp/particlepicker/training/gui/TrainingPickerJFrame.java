@@ -153,7 +153,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		mb.add(filtersmn);
 		mb.add(windowmn);
 		mb.add(helpmn);
-		importffilemi.setText("Import from File...");
+		//importffilemi.setText("Import from File...");
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
@@ -756,17 +756,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
-	public void importParticlesFromXmipp24File(String file) {
-		throw new UnsupportedOperationException(
-				XmippMessage.getNotImplementedYetMsg());
-	}
-
-	@Override
-	protected void displayImportDialog() {
-		new ImportParticlesFromFileJDialog(TrainingPickerJFrame.this, true);
-
-	}
-
 	@Override
 	protected void reloadImage() {
 		getCanvas().getMicrograph().releaseImage();
@@ -774,26 +763,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
+	@Override
 	public void importParticlesFromFile(Format format, String file) {
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
-		switch (format) {
-		case Xmipp24:
-			ppicker.importParticlesFromXmipp24File(mfd, file);
-			break;
-		case Xmipp30:
-			ppicker.importParticlesFromXmipp30File(mfd, file);
-			break;
-		case Eman:
-			ppicker.importParticlesFromEmanFile(mfd, file);
-			break;
-		}
+		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph());
 		setChanged(true);
 		getCanvas().repaint();
 		updateMicrographsModel();
 		updateSize(family.getSize());
 		canvas.setActive(null);
-
 	}
 
 	@Override
@@ -820,5 +799,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		super.updateSize(size);
 		if (templatesdialog != null)
 			loadTemplates();
+	}
+	
+	@Override
+	protected void resetData(){
+		getFamilyData().reset();
 	}
 }

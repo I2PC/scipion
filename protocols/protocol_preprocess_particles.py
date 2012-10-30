@@ -17,7 +17,7 @@ class ProtPreprocessParticles(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_preprocess_particles import *'
-        file=os.path.split(self.InSelFile)[1]
+        (self.InputDir,file)=os.path.split(self.InSelFile)
         baseFile=os.path.splitext(file)[0]
         self.OutStack=self.workingDirPath(baseFile+".stk")
         self.OutMetadata=self.workingDirPath(baseFile+".xmd")
@@ -48,6 +48,18 @@ class ProtPreprocessParticles(XmippProtocol):
             else: # from file:
                 params += self.MaskFile
             self.insertRunJobStep("xmipp_transform_mask", params)
+        fnTiltPair=os.path.join(self.InputDir,'tilted_pairs.xmd')
+        if os.path.exists(fnTiltPair):
+            if self.InSelFile.find("_untilted")!=-1:
+                fnBase=os.path.split(self.InSelFile)[1]
+                fnFamily=fnBase.replace("_untilted","")
+                self.Db.insertStep('translateTiltPair',verifyfiles=[self.workingDirPath(fnFamily)],
+                                   WorkingDir=self.WorkingDir,InputDir=self.InputDir,FnFamily=fnFamily,OutStack=self.OutStack)
+                fnTilted=fnBase.replace("_untilted","_tilted")
+                self.Db.insertStep('copyFile',verifyfiles=[self.workingDirPath(fnTilted)],source=self.InSelFile.replace('_untilted','_tilted'),
+                                   dest=self.workingDirPath(fnTilted))
+                self.Db.insertStep('copyFile',verifyfiles=[self.workingDirPath('tilted_pairs.xmd')],source=os.path.join(self.InputDir,'tilted_pairs.xmd'),
+                                   dest=self.workingDirPath('tilted_pairs.xmd'))
         
     def validate(self):
         errors = []
@@ -82,7 +94,7 @@ class ProtPreprocessParticles(XmippProtocol):
                 self.setStepMessage("Normalization applied: type = %(NormType)s backgroundRadius = %(BackGroundRadius)d")
         if self.DoMask:
             self.setStepMessage("Mask applied: mask file = %(MaskFile)s substituted value = %(Substitute)s")
-        self.messages.append("Output: [%s]" % self.OutStack)
+        self.messages.append("Output: [%s]" % self.OutMetadata)
         return self.messages
 
     def visualize(self):
@@ -152,4 +164,10 @@ def doNorm(log,stack,normType,bgRadius,Nproc):
 
 def doMask(log,stack,maskFile,substitute,Nproc):
     runJob(log,"xmipp_transform_mask","-i %(stack)s --mask binary_file %(maskFile)s %(substitute)s"%locals(),Nproc)
+
+def translateTiltPair(log,WorkingDir,InputDir,FnFamily,OutStack):
+    MDoutStack=xmipp.MetaData(OutStack)
+    MDfamily=xmipp.MetaData(os.path.join(InputDir,FnFamily))
+    MDfamily.merge(MDoutStack)
+    MDfamily.write(os.path.join(WorkingDir,FnFamily))
 

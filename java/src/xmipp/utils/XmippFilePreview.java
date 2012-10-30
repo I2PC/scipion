@@ -74,7 +74,7 @@ public class XmippFilePreview extends JComponent implements
 
 		try {
 			String filename = file.getPath();
-			if (!file.exists()){
+			if (!file.exists() || file.isDirectory()){
 				thumbnail = null;
 				return;
 			}
