@@ -16,7 +16,7 @@
 # {section} Input
 #-----------------------------------------------------------------------------
 
-# {run}(extract_particles) Particles extraction RUN
+# {run}(extract_particles,preprocess_particles) Particles extraction RUN
 """ 
 Select a previous run of Particles extraction protocol.
 In the run directory should be a file named <tilted_pairs.xmd>

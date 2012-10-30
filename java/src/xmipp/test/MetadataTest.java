@@ -301,4 +301,18 @@ public class MetadataTest {
 		}
 	}
 
+    
+    @Test
+    public void testOperate() throws Exception{
+    	MetaData md = new MetaData(mdFn);
+    	md.operate("shiftX=2*shiftX, ref=ref+10");
+    	long[] ids = md.findObjects();
+    	long id;
+    	for (int i=0; i < ids.length; ++i){
+    		id = ids[i];    		
+    		assertEquals(shiftXValues[i]*2, md.getValueDouble(MDLabel.MDL_SHIFT_X, id), XmippTest.EQUAL_ACCURACY);
+    		assertEquals(refValues[i]+10, md.getValueInt(MDLabel.MDL_REF, id));
+    	}
+    }//function testRead
+    
 }// class MetadataTest

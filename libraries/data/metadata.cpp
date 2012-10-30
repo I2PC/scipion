@@ -594,44 +594,47 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
 {
 #ifdef XMIPP_MMAP
     if (outFile.hasImageExtension())
-        REPORT_ERROR(ERR_IO,"Trying to write metadata with image extension");
+        REPORT_ERROR(ERR_IO,"MetaData:writeStar Trying to write metadata with image extension");
 
     struct stat file_status;
     int fd;
     char *map;
-    char * tailMetadataFile;//auxiliary variable to keep metadata file tail in memory
+    char * tailMetadataFile = NULL;//auxiliary variable to keep metadata file tail in memory
     size_t size=-1;
     char * target, * target2;
-    tailMetadataFile=NULL;
+
     //check if file exists or not block name has been given
     //in our format no two identical data_xxx strings may exists
-    if(mode==MD_OVERWRITE)
-        ;
-    else if (blockName.empty() || !outFile.exists())
-        mode = MD_OVERWRITE;
-    else
+    if(mode == MD_APPEND)
     {
-        //does blockname exists?
-        //remove it from file in this case
-        // get length of file:
-        if(stat(outFile.c_str(), &file_status) != 0)
-            REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not get filesize for file "+outFile);
-        size = file_status.st_size;
-        if(size!=0)//size=0 for /dev/stderr
+        if (blockName.empty() || !outFile.exists())
+            mode = MD_OVERWRITE;
+        else
         {
+            //does blockname exists?
+            //remove it from file in this case
+            // get length of file:
+            if(stat(outFile.c_str(), &file_status) != 0)
+                REPORT_ERROR(ERR_IO_NOPATH,"MetaData:writeStar can not get filesize for file "+outFile);
+            size = file_status.st_size;
+            if (size == 0)
+              mode = MD_OVERWRITE;
+        }
 
+        if (mode == MD_APPEND)//size=0 for /dev/stderr
+        {
             fd = open(outFile.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
             if (fd == -1)
-                REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not read file named "+outFile);
+                REPORT_ERROR(ERR_IO_NOPATH,"MetaData:writeStar can not read file named "+outFile);
 
             map = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
             if (map == MAP_FAILED)
-                REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
+                REPORT_ERROR(ERR_MEM_BADREQUEST,"MetaData:writeStar can not map memory ");
 
             // Is this a metadata formatted FILE
-            if(strncmp(map,FileNameVersion.c_str(),FileNameVersion.length())!=0)
+            if(strncmp(map,FileNameVersion.c_str(),FileNameVersion.length()) !=0 )
             {
-                mode=MD_OVERWRITE;
+                mode = MD_OVERWRITE;
             }
             else
             {
@@ -641,53 +644,48 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
 
                 //search for the string
                 target = (char *) _memmem(map, size, _szBlockName.c_str(), blockNameSize);
-                if(target!=NULL)
+
+                if (target != NULL)
                 {
                     target2 = (char *) _memmem(target+1, size - (target - map), "\ndata_", 6);
 
-                    if (target2==NULL)//truncate file at target
-                        ftruncate(fd, target - map+1);
-                    else//copy file from target2 to auxiliary memory and truncate
+                    if (target2 != NULL)
                     {
-                        //malloc
+                        //target block is not the last one, so we need to
+                        //copy file from target2 to auxiliary memory and truncate
                         tailMetadataFile = (char *) malloc( ((map + size) - target2));
                         memmove(tailMetadataFile,target2, (map + size) - target2);
-                        ftruncate(fd, target - map+1);
-                        //                        memmove(target,target2, (map + size) - target2);
-                        //                        ftruncate(fd, (target-map) + ((map + size) - target2) );
                     }
+                    ftruncate(fd, target - map+1); //truncate rest of the file
                 }
-            }
-            if (munmap(map, size) == -1)
-            {
-                REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
             }
             close(fd);
 
+            if (munmap(map, size) == -1)
+                REPORT_ERROR(ERR_MEM_NOTDEALLOC, "MetaData:writeStar, Can not unmap memory");
         }
-        else
-            mode=MD_OVERWRITE;
     }
-    std::ios_base::openmode openMode;
-    if(mode==MD_OVERWRITE)
-        openMode = std::ios_base::out;
-    else if(mode=MD_APPEND)
-        openMode = std::ios_base::app;
+
+    std::ios_base::openmode openMode = (mode == MD_OVERWRITE) ? std::ios_base::out : std::ios_base::app;
     std::ofstream ofs(outFile.c_str(), openMode);
 
     write(ofs, blockName, mode);
-    if (tailMetadataFile!=NULL)
+
+    if (tailMetadataFile != NULL)
     {
         //append memory buffer to file
         //may a cat a buffer to a ofstream
         ofs.write(tailMetadataFile,(map + size) - target2);
+        free(tailMetadataFile);
     }
     ofs.close();
+
 #else
 
     REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
-}
+
+}//function writeStar
 
 void MetaData::append(const FileName &outFile) const
 {
