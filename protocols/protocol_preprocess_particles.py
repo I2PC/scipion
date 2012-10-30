@@ -21,6 +21,7 @@ class ProtPreprocessParticles(XmippProtocol):
         baseFile=os.path.splitext(file)[0]
         self.OutStack=self.workingDirPath(baseFile+".stk")
         self.OutMetadata=self.workingDirPath(baseFile+".xmd")
+        self.TiltPair=os.path.exists(os.path.join(self.InputDir,'tilted_pairs.xmd'))
 
     def defineSteps(self):
         self.Db.insertStep('copyFiles',verifyfiles=[self.OutStack],InputFile=self.InSelFile,OutputStack=self.OutStack,OutputMetadata=self.OutMetadata)
@@ -48,8 +49,7 @@ class ProtPreprocessParticles(XmippProtocol):
             else: # from file:
                 params += self.MaskFile
             self.insertRunJobStep("xmipp_transform_mask", params)
-        fnTiltPair=os.path.join(self.InputDir,'tilted_pairs.xmd')
-        if os.path.exists(fnTiltPair):
+        if self.TiltPair:
             if self.InSelFile.find("_untilted")!=-1:
                 fnBase=os.path.split(self.InSelFile)[1]
                 fnFamily=fnBase.replace("_untilted","")
@@ -65,6 +65,8 @@ class ProtPreprocessParticles(XmippProtocol):
         errors = []
         if self.DoScale and self.NewSize<=0:
             errors.append("New size for scale have not correctly set")
+        if self.DoScale and self.TiltPair:
+            errors.append("Cannot scale particles extracted from tilt pairs. Re-extract the particles at a different sampling rate, instead.")
         return errors
 
     def setStepMessage(self, stepMsg):
