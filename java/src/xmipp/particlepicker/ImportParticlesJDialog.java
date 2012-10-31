@@ -4,13 +4,12 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -23,33 +22,32 @@ import xmipp.utils.XmippWindowUtil;
 
 public class ImportParticlesJDialog extends XmippDialog {
 
-	ParticlePickerJFrame parent;
-	private JTextField sourcetf;
-	private JButton browsebt;
-	private JComboBox jcbFormat;
+	protected ParticlePickerJFrame parent;
+	protected JTextField sourcetf;
+	protected JButton browsebt;
+	protected JComboBox jcbFormat;
 	public Format format = Format.Auto;
-	private XmippFileChooser xfc = null;
+	protected XmippFileChooser xfc = null;
 	protected String path;
-	private String message;
-	private boolean singleSelection = true;
 
-	private static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
+	protected static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
 			"Xmipp 3.0", "Eman" };
-	private static Format[] FormatList = { Format.Auto, Format.Xmipp24,
+	protected static Format[] FormatList = { Format.Auto, Format.Xmipp24,
 			Format.Xmipp30, Format.Eman };
 
-	public ImportParticlesJDialog(JFrame parent) {
+	public ImportParticlesJDialog(ParticlePickerJFrame parent) {
 		super(parent, "Import Particles", true);
-		this.parent = (ParticlePickerJFrame) parent;
+		this.parent = parent;
 		xfc = new XmippFileChooser();
-		xfc.setFileSelectionMode(XmippFileChooser.FILES_AND_DIRECTORIES);
+		if(parent instanceof TrainingPickerJFrame)
+			xfc.setFileSelectionMode(XmippFileChooser.FILES_AND_DIRECTORIES);
+		else
+			xfc.setFileSelectionMode(XmippFileChooser.FILES_ONLY);
+		xfc.setMultiSelectionEnabled(false);
 		initComponents();
 	}// constructor
 	
-	public void setMultiselectionEnabled(boolean value){
-		singleSelection = !value;
-		xfc.setMultiSelectionEnabled(value);
-	}
+	
 
 	@Override
 	protected void createContent(JPanel panel) {
@@ -67,7 +65,14 @@ public class ImportParticlesJDialog extends XmippDialog {
 		gbc.anchor = GridBagConstraints.WEST;
 		/** Create a combobox with possible formats */
 		jcbFormat = new JComboBox(FormatStrings);
-		jcbFormat.addActionListener(this);
+		jcbFormat.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				format = FormatList[jcbFormat.getSelectedIndex()];
+				
+			}
+		});
 		panel.add(jcbFormat, XmippWindowUtil.getConstraints(gbc, 1, 0, 1));
 		sourcetf = new JTextField(20);
 		panel.add(sourcetf, XmippWindowUtil.getConstraints(gbc, 1, 1, 1));
@@ -77,26 +82,15 @@ public class ImportParticlesJDialog extends XmippDialog {
 
 	@Override
 	public void handleActionPerformed(ActionEvent evt) {
-		Object o = evt.getSource();
-		if (o == browsebt)
-			browseDirectory();
-		else if (o == jcbFormat) {
-			format = FormatList[jcbFormat.getSelectedIndex()];
-		}
+			browseDirectory(sourcetf);
+		
 	}// function actionPerformed
 
-	private void browseDirectory() {
+	protected void browseDirectory(JTextField sourcetf) {
 		int returnVal = xfc.showOpenDialog(this);
 		try {
 			if (returnVal == XmippFileChooser.APPROVE_OPTION) {
-				if (singleSelection)
-					path = xfc.getSelectedPath();
-				else {
-					path = "";
-					for (File f: xfc.getSelectedFiles())
-						path += f.getPath() + " ";
-				}
-				path = path.trim();
+				path = xfc.getSelectedPath();
 				sourcetf.setText(path);
 			}
 		} catch (Exception ex) {
@@ -118,29 +112,25 @@ public class ImportParticlesJDialog extends XmippDialog {
 		((TrainingPickerJFrame)parent).importParticlesFromFile(format, path);
 	}
 	
-	private boolean existsSelectedPaths(){
-		if (singleSelection)
+	private boolean existsSelectedPath(){
 			return Filename.exists(path);
 		
-		String[] parts = path.split(" ");		
-		for (String s: parts)
-			if (!Filename.exists(s))
-				return false;
-		return true;
 	}//function existsSelectedPaths
 
-	private void importParticles() {
+	protected void importParticles() {
 		path = sourcetf.getText().trim();
 
 		if (path == null || path.equals(""))
-			showError(XmippMessage.getEmptyFieldMsg("directory"));
-		else if (!existsSelectedPaths())
+			showError(XmippMessage.getEmptyFieldMsg("source"));
+		else if (!existsSelectedPath())
 			showError(XmippMessage.getPathNotExistsMsg(path));
 		else {			
 			if (new File(path).isDirectory()) 
 				parent.importParticlesFromFolder(format, path);
-			else
-				parent.importParticlesFromFile(format, path);
+			else //only can choose file if TrainingPickerJFrame instance
+				((TrainingPickerJFrame)parent).importParticlesFromFile(format, path);
 		}
 	}
+	
+	
 }
