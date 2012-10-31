@@ -152,61 +152,54 @@ class ProtImportMicrographs(XmippProtocol):
         
     def merge(self, PrevRun1, PrevRun2):
 
-        #if tilt pair report error since it is not implemented
-        file_name1 = PrevRun1.getFilename('TiltPairs')
-        if exists(file_name1):
-            raise Exception('Error (%s): Merging for "%s" is not yet implemented' 
-                             % (self.scriptName,'tilt pairs'))
-            
-        #check acquisition is OK
-        file_name1 = PrevRun1.getFilename('acquisition')
-        file_name2 = PrevRun2.getFilename('acquisition')
-        mdAcquisition1 = MetaData(file_name1)
-        mdAcquisition2 = MetaData(file_name2)
-        id1=mdAcquisition1.firstObject()
-        id2=mdAcquisition2.firstObject()
-        for label in md.getActiveLabels() : 
-            check1 = mdAcquisition1.getValue(label,id1)
-            check2 = mdAcquisition2.getValue(label,id2)
-            if math.fabs(check1-check2) > EQUAL_ACCURACY:
-                raise Exception('Error (%s): %s is not the same for both runs. run1=%f while run2=%f' 
-                             % (self.scriptName,label2Str(label),check1,check2))
-        #check Microscope is OK
-        file_name1 = PrevRun1.getFilename('microscope')
-        file_name2 = PrevRun2.getFilename('microscope')
-        mdMicroscope1 = MetaData(file_name1)
-        mdMicroscope2 = MetaData(file_name2)
-        id1=mdMicroscope1.firstObject()
-        id2=mdMicroscope2.firstObject()
-        for label in md.getActiveLabels() : 
-            check1 = mdMicroscope1.getValue(label,id1)
-            check2 = mdMicroscope2.getValue(label,id2)
-            if math.fabs(check1-check2) > EQUAL_ACCURACY:
-                raise Exception('Error (%s): %s is not the same for both runs. run1=%f while run2=%f' 
-                             % (self.scriptName,label2Str(label),check1,check2))
+        try:
+	    #if tilt pair report error since it is not implemented
+	    file_name1 = PrevRun1.getFilename('TiltPairs')
+	    if exists(file_name1):
+        	raise Exception('Error (%s): Merging for "%s" is not yet implemented' 
+                        	 % (self.scriptName,'tilt pairs'))
 
-        #open micrographs and union them
-        file_name1 = PrevRun1.getFilename('micrographs')
-        file_name2 = PrevRun2.getFilename('micrographs')
-        mdMicrographs1 = MetaData(file_name1)
-        mdMicrographs2 = MetaData(file_name2)
-        mdMicrographs1.union (mdMicrographs2, MDL_MICROGRAPH)
-        
-        #create new run with given name, create directory and save stuff
-        #No se como se crea un nuevo run
-#        from protlib_base import XmippProject
-#        project = XmippProject(projectDir)#de donde saco el project dir
-#        project.deleteRunByName()#delete if exists ?
-#        project.create()
-#        TAL vez usar?
-#        ProtocolExecutor
-#        
-        
-        #now save everything in the right place
-        mdMicroscope1.write(self.getFilename('microscope'))
-        mdAcquisition1.write(self.getFilename('acquisition'))
-        mdMicrographs1.write(self.getFilename('micrographs'))
-        
+	    #check acquisition is identical in both runs 
+	    file_name1 = PrevRun1.getFilename('acquisition')
+	    file_name2 = PrevRun2.getFilename('acquisition')
+	    mdAcquisition1 = MetaData(file_name1)
+	    mdAcquisition2 = MetaData(file_name2)
+	    id1=mdAcquisition1.firstObject()
+	    id2=mdAcquisition2.firstObject()
+	    for label in md.getActiveLabels() : 
+        	check1 = mdAcquisition1.getValue(label,id1)
+        	check2 = mdAcquisition2.getValue(label,id2)
+        	if math.fabs(check1-check2) > EQUAL_ACCURACY:
+        	    raise Exception('Error (%s): %s is not the same for both runs. run1=%f while run2=%f' 
+                        	 % (self.scriptName,label2Str(label),check1,check2))
+	    #check Microscope is identical in both runs 
+	    file_name1 = PrevRun1.getFilename('microscope')
+	    file_name2 = PrevRun2.getFilename('microscope')
+	    mdMicroscope1 = MetaData(file_name1)
+	    mdMicroscope2 = MetaData(file_name2)
+	    id1=mdMicroscope1.firstObject()
+	    id2=mdMicroscope2.firstObject()
+	    for label in md.getActiveLabels() : 
+        	check1 = mdMicroscope1.getValue(label,id1)
+        	check2 = mdMicroscope2.getValue(label,id2)
+        	if math.fabs(check1-check2) > EQUAL_ACCURACY:
+        	    raise Exception('Error (%s): %s is not the same for both runs. run1=%f while run2=%f' 
+                        	 % (self.scriptName,label2Str(label),check1,check2))
+
+	    #open micrographs and union them
+	    file_name1 = PrevRun1.getFilename('micrographs')
+	    file_name2 = PrevRun2.getFilename('micrographs')
+	    mdMicrographs1 = MetaData(file_name1)
+	    mdMicrographs2 = MetaData(file_name2)
+	    mdMicrographs1.union (mdMicrographs2, MDL_MICROGRAPH)
+
+	    #now save everything in the right place
+	    mdMicroscope1.write(self.getFilename('microscope'))
+	    mdAcquisition1.write(self.getFilename('acquisition'))
+	    mdMicrographs1.write(self.getFilename('micrographs'))
+        except Exception, ex:
+               return str(ex)
+	return ''
 def createMicroscope(log,fnOut,Voltage,SphericalAberration,SamplingRate,Magnification):
     md = MetaData()
     md.setColumnFormat(False)
