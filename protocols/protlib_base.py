@@ -156,8 +156,12 @@ class XmippProject():
         return None
     
     def deleteRunByName(self, protocol_name, runName):
-        run = getRunDict(self.projectDb.selectRunByName(protocol_name, runName))
-        self.deleteRun(run)
+	run=self.projectDb.selectRunByName(protocol_name, runName)
+	if run is None:
+		raise Exception ("Run %s_%s does not exist" % (protocol_name, runName))
+
+        run = getRunDict(run)
+       	self.deleteRun(run)
             
     def deleteTmpFiles(self):
         for section, groupList in sections:
