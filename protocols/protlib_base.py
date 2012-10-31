@@ -533,9 +533,13 @@ class XmippProtocol(object):
         '''Visualizes the results of this run'''
         pass
     
-    def merge(self, RunName, PrevRun1, PrevRun2):
-        '''Merge to protocols of the same kind. Run NAme is the new run name'''
-        return []
+    def merge(self, PrevRun1, PrevRun2):
+        '''Merge to protocols of the same kind.
+	returns Empty string -> OK
+		None -> not implemented
+	        Error String -> error merging
+	'''
+        return None
     
     def warningsBase(self):
         '''Output some warnings that can be errors and require user confirmation to proceed'''
