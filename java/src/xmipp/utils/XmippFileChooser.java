@@ -47,11 +47,6 @@ public class XmippFileChooser extends JFileChooser {
 	
 	/** Perform customization */
 	private void init(){		
-		//Add a custom file filter and disable the default
-		//(Accept All) file filter.
-		//   fc.addChoosableFileFilter(new ImageFilter());
-		//   fc.setAcceptAllFileFilterUsed(false);
-		
 		//Add custom icons for file types.
 		setFileView(new XmippFileView());
 		

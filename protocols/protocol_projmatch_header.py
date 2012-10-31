@@ -41,7 +41,7 @@ UseInitialAngles = False
 Write down the reference/es name. For example "Reference1.vol Reference2.vol"
 specifies two references
 """
-ReferenceFileNames = 'ico1.vol ico2.vol ico3.vol'
+ReferenceFileNames = ''
 
 # Number of iterations to perform
 NumberOfIterations = 4
@@ -304,7 +304,7 @@ TiltF = 91
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup ='i3'
+SymmetryGroup ='c1'
 
 # {expert} Symmetry group for Neighbourhood computations
 """ If you do not know what this is leave it blank.
