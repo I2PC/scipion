@@ -689,7 +689,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().setActive(null);
 	}
 	
-	public abstract void importParticlesFromFile(Format format, String path);
+	
 
 	protected void showImportDialog(){
 		if (importpjd == null)

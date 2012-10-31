@@ -478,11 +478,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		thresholdpn
 				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
-		//FIXME: Here should be saved only the current micrograph
-		// before the change, because saving all of them and all particles
-		// could be very very slow....
-		//saveChanges();// Saving changes when switching micrographs, by
-						// Coss suggestion
+		ppicker.saveData(getMicrograph());// Saving changes when switching micrographs, by Coss suggestion
 		if (particlesdialog != null)
 			loadParticles();
 
@@ -541,11 +537,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			iw.setTitle(micrograph.getName());
 		} else {
 			canvas.updateMicrograph();
-			iw = new ImageWindow(canvas.getImage(), canvas);// seems to keep
-															// previous window
-															// instead of
-															// creating a new
-															// one
+			// seems to keep previous window instead of creating a new one
+			iw = new ImageWindow(canvas.getImage(), canvas);
 
 		}
 		micrograph.runImageJFilters(ppicker.getFilters());
@@ -779,15 +772,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
-	@Override
+	
 	public void importParticlesFromFile(Format format, String file) {
 		String filename = Micrograph.getName(file, 1);
-		System.out.println(filename);
-		if(!filename.equals(getMicrograph().getName()))
+		if(!filename.equals(getMicrograph().getName()))//validating you want use this file for this micrograph with different name
 		{
-			String msg = String.format("Are you sure you want to import data from file %s to micrograph %s", file, getMicrograph().getName());
+			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
 			int result = JOptionPane.showConfirmDialog(this, msg);
-			if(result == JOptionPane.NO_OPTION)
+			if(result != JOptionPane.YES_OPTION)
 				return;
 		}
 		MicrographFamilyData mfd = getFamilyData();
