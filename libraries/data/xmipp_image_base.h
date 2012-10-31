@@ -781,6 +781,7 @@ protected:
 #include "rwTIA.h"
 #include "rwJPEG.h"
 #include "rwTIFF.h"
+#include "rwEM.h"
 
     /// ----------------------------------------------------------
 

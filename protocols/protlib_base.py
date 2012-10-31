@@ -56,6 +56,7 @@ class XmippProject():
         exists'''
         for filename in [self.logsDir, self.runsDir, self.tmpDir, self.cfgName, self.dbName]:
             if not exists(filename):
+                print "Not exists: ", filename
                 return False
         return True        
     
@@ -91,6 +92,9 @@ class XmippProject():
         #Check if project exists
         if not self.exists():
             raise Exception('Trying to load project from %s, but not project found' % self.projectDir)
+            # Create Tmp folder if not exists
+            if not exists(self.tmpDir):
+                os.mkdir(self.tmpDir)
         # Load config file
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.cfgName)
@@ -532,6 +536,14 @@ class XmippProtocol(object):
     def visualize(self):
         '''Visualizes the results of this run'''
         pass
+    
+    def merge(self, PrevRun1, PrevRun2):
+        '''Merge to protocols of the same kind.
+	returns Empty string -> OK
+		None -> not implemented
+	        Error String -> error merging
+	'''
+        return None
     
     def warningsBase(self):
         '''Output some warnings that can be errors and require user confirmation to proceed'''

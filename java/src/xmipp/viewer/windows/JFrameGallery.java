@@ -39,6 +39,8 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -73,6 +75,8 @@ import javax.swing.LookAndFeel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
@@ -112,7 +116,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 
 	private final static int DELAY_TO_UPDATE = 500;
 	private static int update_counter = 0;
-	 //The following counter will be used to keep track of how many
+	// The following counter will be used to keep track of how many
 	// windows are opened, the last one, should do System.exit
 	private static short windows_counter = 0;
 	public ImageGallery gallery;
@@ -201,14 +205,15 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		init(new GalleryData(filename, parameters, md));
 	}
 
-//	public JFrameGallery(String filenames[], Param parameters) {
-//		this(filenames, null, parameters);
-//	}
+	// public JFrameGallery(String filenames[], Param parameters) {
+	// this(filenames, null, parameters);
+	// }
 
-//	public JFrameGallery(String filenames[], boolean enabled[], Param parameters) {
-//		super();
-//		// createGUI(new MDTableModel(filenames, enabled), parameters);
-//	}
+	// public JFrameGallery(String filenames[], boolean enabled[], Param
+	// parameters) {
+	// super();
+	// // createGUI(new MDTableModel(filenames, enabled), parameters);
+	// }
 
 	/**
 	 * Open another metadata separataly *
@@ -262,7 +267,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	private void setGalleryTitle() {
 		setTitle(gallery.getTitle());
 	}
-	
+
 	/**
 	 * Function to create general GUI base on a TableModel. It will use helper
 	 * functions to create different components of the GUI
@@ -454,18 +459,52 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			}
 		});
 
-		// Zoom with Ctrl + MouseWeel
+		// Zoom with Shift + MouseWeel
 		table.addMouseWheelListener(new MouseWheelListener() {
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent evt) {
-				if (evt.isControlDown())
+				if (evt.isShiftDown())
 					zoomChange(evt.getWheelRotation() < 0);
 				else
 					table.getParent().dispatchEvent(evt);
 			}
 		});
 
+		//Add listener to recognize UP and DOWN keys
+		table.addKeyListener(new KeyListener() {
+			@Override
+			public void keyTyped(KeyEvent arg0) {
+			}
+
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+			}
+
+			@Override
+			public void keyPressed(KeyEvent arg0) {
+				int dir = 0;
+
+				switch (arg0.getKeyCode()) {
+				case KeyEvent.VK_DELETE:
+						removeObjects(true);
+					break;
+				case KeyEvent.VK_UP:
+					dir = -1;
+					break;
+				case KeyEvent.VK_DOWN:
+					dir = 1;
+					break;
+				}
+				if (dir != 0) {
+					int newRow = table.getSelectedRow() + dir;
+					if (newRow >=0 && newRow <= table.getRowCount() - 1) 
+						selectIndex(newRow);
+				}
+			}//function keyPressed
+		});
+
 		updateViewState();
+
 		if (!adjustColumns())
 			updateTable(); // update table if columns have not changed
 	}// function createTable
@@ -548,24 +587,23 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		jsRows.setEnabled(!autoAdjustColumns);
 	}
 
-	private void makeVisible(int index)
-	{
+	private void makeVisible(int index) {
 		int coords[] = gallery.getCoords(index);
 		DEBUG.printMessage(String.format(
 				"gotoImage, index: %d, row: %d, col:%d", index, coords[0],
 				coords[1]));
-		
+
 		// Gets current selected cell bounds.
 		Rectangle rect = table.getCellRect(coords[0], coords[1], true);
-		
+
 		// Ensures item is visible
 		Point pos = jspContent.getViewport().getViewPosition();
 		rect.translate(-pos.x, -pos.y);
 		jspContent.getViewport().scrollRectToVisible(rect);
-		
+
 		repaint();
 	}
-	
+
 	private void goToImage(int index) {
 		gallery.gotoItem(index);
 		makeVisible(index);
@@ -727,6 +765,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		}
 		btnChangeView.setIcon(icon);
 		btnChangeView.setToolTipText(text);
+		boolean allowColsResize = true;
 		if (data.isTableMode()) { // if we are in table mode only allow change
 									// if exist render label
 			boolean hasRender = data.allowGallery();
@@ -734,14 +773,15 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			jsZoom.setEnabled(hasRender);
 			jlZoom.setEnabled(hasRender);
 			boolean isCol = data.isColumnFormat();
+			allowColsResize = false;
 			jsGoToImage.setEnabled(isCol);
 			jlGoToImage.setEnabled(isCol);
-			jsColumns.setEnabled(isCol);
-			jlColumns.setEnabled(isCol);
-			jsRows.setEnabled(isCol);
-			jlRows.setEnabled(isCol);
-			jcbAutoAdjustColumns.setEnabled(isCol);
 		}
+		jsColumns.setEnabled(allowColsResize);
+		jlColumns.setEnabled(allowColsResize);
+		jsRows.setEnabled(allowColsResize);
+		jlRows.setEnabled(allowColsResize);
+		jcbAutoAdjustColumns.setEnabled(allowColsResize);
 	}
 
 	/** Reload table data */
@@ -802,7 +842,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	 * Delete selected or disabled items if 'selected' is true, selection is
 	 * removed if false, the disabled items
 	 * */
-	public void removeObjects(boolean selected) throws Exception {
+	public void removeObjects(boolean selected) {
+		try {
 		String type = selected ? "selected" : "disabled";
 		if (XmippDialog.showWarning(this,
 				String.format("Are you sure to delete %s items?", type))) {
@@ -812,6 +853,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				data.md.removeDisabled();
 			reloadMd();
 		}
+		} catch (Exception ex){
+			showException(ex);
+		}
 	}
 
 	/** Save selected items as a metadata */
@@ -820,6 +864,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		if (dlg.showDialog()) {
 			dlg.saveMd(data.getSelectionMd());
 		}
+	}
+
+	/** Find and replace in metadata */
+	public void findReplace() throws Exception {
+		MDSearchJDialog dlg = new MDSearchJDialog(this, table, data.md);
+		dlg.setVisible(true);
 	}
 
 	/** Drop some label from the metadata */
@@ -965,10 +1015,6 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			public void setSelectedItem(Object item) {
 				if (proceedWithChanges()) {
 					data.selectBlock((String) item);
-
-//					if (data.isVolumeMode())//Select first volume when changing block
-//						data.selectVolume(data.volumes[0]);
-					//System.out.println("selected: " + data.selectedVolFn);
 					jcbVolumes.invalidate();
 					try {
 						data.loadMd();
@@ -1033,8 +1079,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				// TODO Auto-generated method stub
 
 			}
-			
-			public String removePrefix(String value){
+
+			public String removePrefix(String value) {
 				return value.replaceFirst(data.commonVolPrefix, "");
 			}
 		});
@@ -1082,6 +1128,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		}
 	}
 
+	public void selectIndex(int index) {
+		gallery.clearSelection();
+		gallery.touchItem(index, 0);
+		makeVisible(index);
+	}
+
 	private void tableMouseClicked(MouseEvent evt) {
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
@@ -1116,10 +1168,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 						gallery.fireTableDataChanged();
 						move = false;
 					}
-				}
-
-				else {
-
+				} else {
 					if (evt.isShiftDown()) {
 						gallery.selectRange(previousSelectedRow,
 								previousSelectedCol, row, col, true);
@@ -1217,6 +1266,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(MD_REMOVE_DISABLED, "Remove disabled", "delete.gif");
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
 			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
+			addSeparator(METADATA);
+			addItem(MD_FIND_REPLACE, "Find & Replace", "search.gif",
+					"control released F");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
@@ -1246,9 +1298,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			boolean isCol = data.isColumnFormat();
 			setItemEnabled(STATS, isCol && !volMode);
 			setItemEnabled(MD_ADD_OBJECT, isCol);
-			setItemEnabled(MD_REMOVE_DISABLED,isCol);
+			setItemEnabled(MD_REMOVE_DISABLED, isCol);
 			setItemEnabled(MD_REMOVE_SELECTION, isCol);
-			setItemEnabled(MD_SAVE_SELECTION,isCol); 
+			setItemEnabled(MD_SAVE_SELECTION, isCol);
+			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 		}// function update
 
 		@Override
@@ -1276,7 +1329,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 							JFrameGallery.this);
 					boolean result = dialog.showDialog();
 					if (result) {
-						ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
+						ArrayList<ColumnInfo> columns = dialog
+								.getColumnsResult();
 						isUpdating = true;
 						((MetadataGallery) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
@@ -1346,6 +1400,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 					removeObjects(false);
 				} else if (cmd.equals(MD_SAVE_SELECTION)) {
 					saveSelection();
+				} else if (cmd.equals(MD_FIND_REPLACE)) {
+					findReplace();
 				} else if (cmd.equals(MD_ADD_OBJECT)) {
 					AddObjectJDialog dlg = new AddObjectJDialog(
 							JFrameGallery.this);
@@ -1522,4 +1578,5 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	public void done() {
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 	}
+
 }// class JFrameGallery

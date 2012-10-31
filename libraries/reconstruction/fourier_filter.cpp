@@ -461,8 +461,13 @@ void FourierFilter::applyMaskFourierSpace(const MultidimArray<double> &v, Multid
     }
     else if (XSIZE(maskFourierd)!=0)
     {
+    	double *ptrV=(double*)&DIRECT_MULTIDIM_ELEM(V,0);
+    	double *ptrMask=(double*)&DIRECT_MULTIDIM_ELEM(maskFourierd,0);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
-        DIRECT_MULTIDIM_ELEM(V,n)*=DIRECT_MULTIDIM_ELEM(maskFourierd,n);
+    	{
+        	*ptrV++ *= *ptrMask;
+        	*ptrV++ *= *ptrMask++;
+    	}
     }
     else if (FilterShape==SPARSIFY)
     {
@@ -480,7 +485,6 @@ void FourierFilter::applyMaskFourierSpace(const MultidimArray<double> &v, Multid
     }
     else
     {
-        std::cout << "Aqui3" << std::endl;
         w.resizeNoCopy(3);
         for (int k=0; k<ZSIZE(V); k++)
         {

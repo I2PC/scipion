@@ -36,6 +36,8 @@
 import os, sys
 
 from subprocess import Popen
+import platform
+WINDOWS=platform.system()=="Windows"
 
 ################ Classes for a Console based configuration ######################
 class ConsoleOptionsTab():
@@ -112,18 +114,6 @@ def detectMpi():
     
     return (inc_mpi, lib_mpi)
 
-def detectQt():
-    from protlib_filesystem import findFilePath
-    from os.path import dirname
-    possible_dirs = [s+'/qt3/include' for s in ['/usr/lib64', '/usr/lib', '/usr/share']]
-    possible_dirs += [s+'/qt-3.3/include' for s in ['/usr/lib64', '/usr/lib', '/usr/share']]
-    possible_dirs += [s+'/qt-3.3.8/include' for s in ['/usr/lib64', '/usr/lib', '/usr/share']]
-    inc_qt = findFilePath('qt.h', *possible_dirs)
-    if inc_qt:
-    	return dirname(inc_qt)
-    else:
-    	return None
-
 def addTabOption(tab, option, comment, default, cond=None, wiz=None, browse=False):
     defaultsDic = globals()
     if defaultsDic.has_key(option):
@@ -162,13 +152,6 @@ def wizardJava(tab_java):
         return ""
     return "JAVA_HOME could not be found."  
     
-def wizardQt(tab_qt):
-    qtdir = detectQt()
-    if qtdir:
-        tab_qt.setValue('QTDIR', qtdir)  
-        return ""
-    return "QTDIR could not be found."  
-
 def addTabs(nb):
     tab = nb.addTab("Compiler")
     addTabOption(tab,'CC', 'The C compiler', 'gcc')
@@ -177,6 +160,9 @@ def addTabs(nb):
     if sys.platform  == 'darwin':
         addTabOption(tab,'CCFLAGS', 'The C compiler flags', '-I/usr/include/malloc')
         addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '-I/usr/include/malloc')
+    elif sys.platform == 'win32':
+        addTabOption(tab,'CCFLAGS', 'The C compiler flags', '-fpermissive -I/c/MinGW/include')
+        addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '-fpermissive -I/c/MinGW/include')
     else:
         addTabOption(tab,'CCFLAGS', 'The C compiler flags', '')
         addTabOption(tab,'CXXFLAGS', 'The C++ compiler flags', '')
@@ -191,15 +177,10 @@ def addTabs(nb):
     addTabOption(tab,'MPI_LIB', 'MPI library', 'mpi', cond='mpi')
     tab_mpi = tab
     
-    tab = nb.addTab("Java & QT")
+    tab = nb.addTab("Java")
     addTabOption(tab,'java', 'Build the java programs?', 'yes')
     addTabOption(tab,'JAVAC', 'Java compiler', 'javac', cond='java')
     addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', cond='java', wiz=wizardJava, browse=True)
-    tab.addSeparator()
-    addTabOption(tab,'qt', 'Build the GUI (qt) programs?', 'yes')
-    addTabOption(tab,'QTDIR', 'Where is QT installed', '/usr/share/qt3', cond='qt', wiz=wizardQt, browse=True)
-    addTabOption(tab,'QT_LIB', 'QT library to use', 'qt-mt', cond='qt', browse=True)
-    addTabOption(tab,'QT4', 'Use Qt4 instead of Qt3?', 'no', cond='qt', browse=True)
     tab_gui = tab
     
     tab = nb.addTab("Advanced")
@@ -222,17 +203,15 @@ def addTabs(nb):
     if not defaultsDic.has_key('MPI_INCLUDE'):
         wizardMpi(tab_mpi)
         
-    if not defaultsDic.has_key('QTDIR'):
-        wizardQt(tab_gui)
-        
-        
 def run(notebook):
-    
     options = notebook.options
     out = OUTPUT
     procs = options.getNumberOfCpu()
-    scons = os.path.join("external", "scons", "scons.py")
-    os.environ['JAVA_HOME'] = notebook.getValue('Java & QT', 'JAVA_HOME')
+    if sys.platform  == 'win32':
+        scons = "external/scons/scons.py"
+    else:
+        scons = os.path.join("external", "scons", "scons.py")
+    os.environ['JAVA_HOME'] = notebook.getValue('Java', 'JAVA_HOME')
     cmd = ''   
     if out != STDOUT and os.path.exists(out):
         os.remove(out)
@@ -246,6 +225,8 @@ def run(notebook):
         cmd1 = "xmipp_python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
         cmd += 'echo "%(cmd1)s" >> %(out)s \n'
         cmd += cmd1 + '\n'
+        if WINDOWS:
+            print cmd1
     
     if options.hasOption('compile'):
         opts = ' '.join(options.getOption('compile'))
@@ -253,11 +234,16 @@ def run(notebook):
         cmd2 = "xmipp_python %(scons)s mode=compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
         cmd += 'echo "%(cmd2)s" >> %(out)s \n'
         cmd += cmd2 + '\n'
+        if WINDOWS:
+            print cmd2
+
     if options.hasOption('install'):
         cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
         
     proc = Popen(cmd % locals(), shell=True)    
     notebook.notifyRun(proc)   
+    if WINDOWS:
+        print cmd 
     
 ####### Simple parsing of arguments ###########
 # Acepted options:
@@ -312,7 +298,10 @@ options = ArgDict(sys.argv)
 
 # Output file
 OUTPUT = 'build/scons_output.log'
-STDOUT = '/dev/stdout'
+if WINDOWS:
+    STDOUT = 'build/scons_output_stdout.log'
+else:
+    STDOUT = '/dev/stdout'
 if os.path.exists(OUTPUT):
     os.remove(OUTPUT)
 # TRY TO READ CONFIG FILE

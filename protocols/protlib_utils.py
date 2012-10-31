@@ -393,7 +393,7 @@ def runJob(log,
         if log:
             printLog("Process returned with code %d" % retcode,log)
             if retcode != 0:
-                raise Exception("Process returned with code %d" % retcode)
+                raise Exception("Process returned with code %d snd command %s" % (retcode,command))
     except OSError, e:
         raise Exception("Execution failed %s, command: %s" % (e, command))
 

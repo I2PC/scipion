@@ -105,6 +105,16 @@ enum MDLabel
     MDL_CTF_DEFOCUSA, ///< average defocus (Angtroms)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
     MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
+    MDL_CTF_X0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_Y0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_XF, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_YF, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_DEFOCUS_PLANEUA, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEUB, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEUC, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVA, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVB, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVC, ///< Defocus = A*x+B*y+C
     MDL_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
     MDL_CTF_CS, ///< Spherical aberration
     MDL_CTF_CA, ///< Chromatic aberration
@@ -137,6 +147,7 @@ enum MDLabel
     MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
     MDL_CTF_CRIT_FIRSTZEROAVG, ///< First zero average (in Angstroms)
     MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, ///< First zero disagreement with second model (in Angstroms)
+    MDL_CTF_CRIT_MAXFREQ, ///< Maximum frequency at which the envelope drops below 0.1 (in Angstroms)
     MDL_CTF_CRIT_DAMPING, ///< Minimum damping at border
     MDL_CTF_CRIT_PSDRADIALINTEGRAL, ///< Integral of the radial PSD
     MDL_CTF_CRIT_FITTINGSCORE, ///< Score of the fitting
@@ -271,6 +282,7 @@ enum MDLabel
 
     MDL_COLOR, ///< Color for particle picking
     MDL_PICKING_FAMILY, ///< Family for particle picking
+    MDL_PICKING_FAMILY_TEMPLATES, ///< Number of templates for the family
     MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
@@ -747,6 +759,18 @@ private:
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
 
+        MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
+        MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
+        MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
+        MDL::addLabel(MDL_CTF_YF, LABEL_DOUBLE, "ctfYF");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUA, LABEL_DOUBLE, "ctfDefocusPlaneUA");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUB, LABEL_DOUBLE, "ctfDefocusPlaneUB");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUC, LABEL_DOUBLE, "ctfDefocusPlaneUC");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVA, LABEL_DOUBLE, "ctfDefocusPlaneVA");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVB, LABEL_DOUBLE, "ctfDefocusPlaneVB");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVC, LABEL_DOUBLE, "ctfDefocusPlaneVC");
+
+
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CU, LABEL_DOUBLE, "ctfBgGaussian2CU");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CV, LABEL_DOUBLE, "ctfBgGaussian2CV");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_K, LABEL_DOUBLE, "ctfBgGaussian2K");
@@ -785,6 +809,7 @@ private:
         MDL::addLabel(MDL_CTF_CRIT_DAMPING, LABEL_DOUBLE, "ctfCritDamping");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZEROAVG, LABEL_DOUBLE, "ctfCritFirstZero");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "ctfCritDisagree");
+        MDL::addLabel(MDL_CTF_CRIT_MAXFREQ, LABEL_DOUBLE, "ctfCritMaxFreq");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERORATIO, LABEL_DOUBLE, "ctfCritfirstZeroRatio");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGCORR13, LABEL_DOUBLE, "ctfCritCorr13");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGSCORE, LABEL_DOUBLE, "ctfCritFitting");
@@ -1001,6 +1026,7 @@ private:
         MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "pickingMicrographFamilyState");
         MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_FAMILY_STATE, "micrograph_family_state");//3.0
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
+        MDL::addLabel(MDL_PICKING_FAMILY_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
         MDL::addLabelAlias(MDL_PMAX, "sumP");

@@ -88,7 +88,10 @@ public class MetaData {
 	private native void create();
 
 	// destructor
-	private synchronized native void destroy();
+	public synchronized native void destroy();
+	
+	// clear metadata
+	public native void clear();
 
 	// reading
 	public native void read_(String filename);
@@ -444,23 +447,24 @@ public class MetaData {
 	/**
 	 * Read a metadata from plain textfile.
 	 * 
-	 * @param file
-	 *            filename from where to read
-	 * @param columns
-	 *            expected columns(labels) in file @
+	 * @param file filename from where to read
+	 * @param columns expected columns(labels) in file @
 	 */
 	public native void readPlain(String file, String columns);
 
 	/**
 	 * Write the images on metadata to some location
 	 * 
-	 * @param output
-	 *            Stack name or prefix, depending on indepent param
-	 * @param independent
-	 *            if False write images to stack, if True using a prefix
-	 * @param image_label
-	 *            Which label have the images to write @
+	 * @param output Stack name or prefix, depending on indepent param
+	 * @param independent if False write images to stack, if True using a prefix
+	 * @param image_label Which label have the images to write @
 	 */
 	public native void writeImages(String output, boolean independent,
 			int image_label);
+	
+	/**
+	 * Operate directly in metadata
+	 * @param operateStr sql syntanx string of the operation 
+	 */
+	public native void operate(String operateStr);
 }

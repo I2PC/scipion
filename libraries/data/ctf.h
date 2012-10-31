@@ -229,7 +229,16 @@ public:
     double DeltaR;
     /// Factor for the importance of the Amplitude contrast.
     double Q0;
-
+    /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+    double x0;
+    /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+    double xF;
+    /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+    double y0;
+    /// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+    double yF;
+    /// Local CTF determination
+    bool isLocalCTF;
     /// Enable CTFnoise part
     bool enable_CTFnoise;
     /// Enable CTF part

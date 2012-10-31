@@ -22,138 +22,54 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _PROG_IMAGE_ROTATIONAL_PCA
-#define _PROG_IMAGE_ROTATIONAL_PCA
+#ifndef _MPI_PROG_IMAGE_ROTATIONAL_PCA
+#define _MPI_PROG_IMAGE_ROTATIONAL_PCA
 
 #include <data/metadata.h>
 #include <classification/pca.h>
 #include <parallel/xmipp_mpi.h>
+#include <reconstruction/image_rotational_pca.h>
 
 /**@defgroup RotationalPCA Rotational invariant PCA
    @ingroup ReconsLibrary */
 //@{
 /** Rotational invariant PCA parameters. */
-class ProgImageRotationalPCA: public XmippProgram
+class MpiProgImageRotationalPCA: public ProgImageRotationalPCA
 {
 public:
-	/** Input selfile */
-	FileName fnIn;
-	/** Output root */
-	FileName fnRoot;
-	/** Number of eigenvectors */
-	int Neigen;
-	/** Number of iterations */
-	int Nits;
-    /** Psi step */
-    double psi_step;
-    /** Maximum shift change */
-    double max_shift_change;
-    /** Shift step */
-    double shift_step;
-    /** Maximum number of images */
-    int maxNimgs;
-    /** Number of threads */
-    int Nthreads;
-public:
-    // Input metadata
-    std::vector<MetaData> MD;
-    // Number of images
-    size_t Nimg;
-    // Number of angles
-    int Nangles;
-    // Number of shifts
-    int Nshifts;
-    // Image size
-    int Xdim;
-    // Number of pixels
-    int Npixels;
     // Mpi node
     MpiNode *node;
     // H buffer
-    std::vector<double *> Hbuffer;
-    // H buffer destination addresses
-    std::vector<double *> HbufferDestination;
-    // Buffer maximum length
-    static const int HbufferMax=20;
-    // Mpi file lock
-    MpiFileMutex *fileMutex;
-    // Thread mutex
-    Mutex *threadMutex;
-    // SVD matrix
-    Matrix2D<double> H;
-    // SVD matrix
-    Matrix2D<double> F;
-public:
-    // Input image
-    std::vector< Image<double> > I;
-    // Rotated and shifted image
-    std::vector< MultidimArray<double> > Iaux;
-    // Geometric transformation
-    std::vector< Matrix2D<double> > A;
-    // H block
-    std::vector< Matrix2D<double> > Hblock;
-    // W node
-    std::vector< Matrix2D<double> > Wnode;
-    // W transpose
-    Matrix2D<double> Wtranspose;
-    // Mask
-    MultidimArray< unsigned char > mask;
-    // FileTaskDistributor
-    FileTaskDistributor *taskDistributor;
-    // Thread Manager
-    ThreadManager *thMgr;
-    // Vector of object ids
-    std::vector<size_t> objId;
-public:
+
     /// Empty constructor
-    ProgImageRotationalPCA(int argc, char **argv);
+    MpiProgImageRotationalPCA(int argc, char **argv);
 
     /// Destructor
-    ~ProgImageRotationalPCA();
+    ~MpiProgImageRotationalPCA();
 
-    /// Read argument from command line
-    void readParams();
+    /** Read input images */
+    virtual void selectPartFromMd(MetaData &MDin);
 
-    /// Show
-    void show();
+    /** Comunicate matrix, only meanful for MPI */
+    virtual void comunicateMatrix(Matrix2D<double> &W);
 
-    /// Usage
-    void defineParams();
+    /** Create mutexes and distributor */
+    virtual void createMutexes(size_t Nimgs);
 
-    /// Produce side info
-    void produceSideInfo();
+    /** Last part of function applyT */
+    virtual void allReduceApplyT(Matrix2D<double> &Wnode_0);
 
-    /** Write to H buffer */
-    void writeToHBuffer(int idx, double *dest);
+    /** Comunicate int param */
+    virtual void comunicateQrDim(int &qrDim);
 
-    /** Flush buffer */
-    void flushHBuffer();
+    /** Map matrix */
+    virtual void mapMatrix(int qrDim);
 
-    /** Clear H buffer */
-    void clearHbuffer();
+    /** Apply SVD */
+    virtual void applySVD();
 
-    /** Copy H to F.
-     */
-    void copyHtoF(int block);
-
-    /** Apply T.
-     * W=T(H).
-     */
-    void applyT();
-
-    /** Apply Tt.
-     * H=Tt(W).
-     */
-    void applyTt();
-
-    /** QR decomposition.
-     * In fact, only Q is computed. It returns the number of columns
-     * of Q different from 0.
-     */
-    int QR();
-
-    /** Run. */
-    void run();
+    /** Copy H to F. */
+    virtual void copyHtoF(int block);
 };
 //@}
 #endif

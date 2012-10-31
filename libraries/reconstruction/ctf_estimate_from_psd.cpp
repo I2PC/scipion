@@ -992,10 +992,11 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
         if ((j >= Xdim / 2 && i >= Ydim / 2)
             || (j < Xdim / 2 && i < Ydim / 2))
         {
-            mask(i, j) = (enhancedPSD(i, j) > 1e-3);
             XX(idx) = j;
             YY(idx) = i;
             FFT_idx2digfreq(model, idx, freq);
+            if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
+                mask(i,j)=global_mask(i,j);
             digfreq2contfreq(freq, freq, global_prm->Tm);
 
             global_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -1010,10 +1011,8 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
-    {
         if (!((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2)))
             model(i, j) = enhancedPSD(i, j);
-    }
 
     // Produce a centered image
     CenterFFT(model, true);
@@ -1044,11 +1043,12 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
     {
         if (j >= Xdim / 2)
             continue;
-        mask(i, j) = (enhancedPSD(i, j) > 1e-3);
 
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(model, idx, freq);
+        if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
+        	mask(i,j)=global_mask(i,j);
         digfreq2contfreq(freq, freq, global_prm->Tm);
 
         global_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -1062,10 +1062,8 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
-    {
         if (j >= Xdim / 2)
             model(i, j) = enhancedPSD(i, j);
-    }
 
     // Produce a centered image
     CenterFFT(model, true);
@@ -2398,9 +2396,6 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
-    if (global_prm->show_optimization)
-        std::cout << "Looking for first defoci ...\n";
-
     // Center enhanced PSD
     MultidimArray<double> centeredEnhancedPSD=psdToModelFullSize;
     CenterFFT(centeredEnhancedPSD,true);
@@ -2503,11 +2498,20 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
             VEC_ELEM(arrayDefocusAvg,i)  = ((*global_adjust)(0) +(*global_adjust)(1))/2;
             VEC_ELEM(arrayDefocusDiff,i) = ((*global_adjust)(0) -(*global_adjust)(1))/2;
             VEC_ELEM(arrayError,i) = (-1)*fitness;
+
         }
     }
 
     int maxInd;
     arrayError.maxIndex(maxInd);
+
+    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 300) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 80000) )
+    {
+    	VEC_ELEM(arrayError,maxInd) = -1e3;
+    	VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
+    	VEC_ELEM(arrayDefocusDiff,maxInd) = global_prm->initial_ctfmodel.DeltafV;
+    	arrayError.maxIndex(maxInd);
+    }
 
     Matrix1D<double> arrayDefocusU(3);
     arrayDefocusU.initZeros();
@@ -2614,15 +2618,15 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
 
         double error = -CTF_fitness(global_adjust->vdata-1,NULL);
 
-        std::cout << "Error : " << error << std::endl;
         //exit;
         if ( error <= -0.1)
         {
             *global_adjust = initialGlobalAdjust;
             COPY_ctfmodel_TO_CURRENT_GUESS;
             //There is nothing to do and we have to perform an exhaustive search
-            std::cout << error << std::endl;
+#ifndef RELEASE_MODE
             std::cout << " Entering in estimate_defoci, Performing exhaustive defocus search (SLOW)" << std::endl;
+#endif
             estimate_defoci();
         }
     }
@@ -2924,8 +2928,10 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 
         // Save results
         FileName fn_rootCTFPARAM = prm.fn_psd.withoutExtension();
+
         FileName fn_rootMODEL = fn_rootCTFPARAM;
         int atPosition=fn_rootCTFPARAM.find('@');
+
         if (atPosition!=std::string::npos)
         {
             fn_rootMODEL=formatString("%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
@@ -2933,6 +2939,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
             fn_rootCTFPARAM=formatString("region%03d@%s",textToInteger(fn_rootCTFPARAM.substr(0, atPosition)),
                                          fn_rootCTFPARAM.substr(atPosition+1).c_str());
         }
+        else
+        	fn_rootCTFPARAM=(String)"fullMicrograph@"+fn_rootCTFPARAM;
 
         save_intermediate_results(fn_rootMODEL, false);
         global_ctfmodel.Tm /= prm.downsampleFactor;
@@ -2940,6 +2948,10 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         MetaData MD;
         MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");
         size_t id = MD.firstObject();
+		MD.setValue(MDL_CTF_X0, (double)output_ctfmodel.x0*prm.Tm, id);
+		MD.setValue(MDL_CTF_XF, (double)output_ctfmodel.xF*prm.Tm, id);
+		MD.setValue(MDL_CTF_Y0, (double)output_ctfmodel.y0*prm.Tm, id);
+		MD.setValue(MDL_CTF_YF, (double)output_ctfmodel.yF*prm.Tm, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, global_corr13, id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);

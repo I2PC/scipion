@@ -63,5 +63,14 @@ public class XmippMessage {
 		return "Not implemented yet";
 	}
 	
+	public static String getIllegalValueMsg(String field, Object value)
+	{
+		return String.format("Illegal value for %s: %s", field, value);
+	}
+	
+	public static String getPathNotExistsMsg(String path){
+		return String.format("Path '%s' doesn't exists.", path);
+	}
+	
 	
 }

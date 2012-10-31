@@ -23,14 +23,15 @@ import javax.swing.event.ChangeListener;
 import xmipp.particlepicker.Family;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 
-public class AddFamilyJDialog extends JDialog implements ActionListener
-{
+public class AddFamilyJDialog extends JDialog implements ActionListener {
 
 	private JButton addbt;
 	private JButton cancelbt;
 	private JTextField nametf;
+	private JFormattedTextField templatestf;
 	private JButton colorbt;
 	private float position = 0.9f;
 	private Color color;
@@ -40,8 +41,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 	private JFormattedTextField sizetf;
 	private JPanel sizepn;
 
-	public AddFamilyJDialog(EditFamiliesJDialog parent, boolean modal)
-	{
+	public AddFamilyJDialog(EditFamiliesJDialog parent, boolean modal) {
 		super(parent, modal);
 		setResizable(false);
 		this.parent = parent;
@@ -52,69 +52,80 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 		constraints.insets = new Insets(5, 5, 5, 5);
 		constraints.anchor = GridBagConstraints.WEST;
 
-		add(new JLabel("Name"), XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+		add(new JLabel("Name"),
+				XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+
 		nametf = new JTextField(20);
+
 		add(nametf, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
-		add(new JLabel("Color"), XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
+		add(new JLabel("Color"),
+				XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		colorbt = new JButton();
 		color = Family.getNextColor();
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
 		add(colorbt, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));
 
-		add(new JLabel("Size"), XmippWindowUtil.getConstraints(constraints, 0, 2, 1));
+		add(new JLabel("Size"),
+				XmippWindowUtil.getConstraints(constraints, 0, 2, 1));
 		initSizePane();
 
 		add(sizepn, XmippWindowUtil.getConstraints(constraints, 1, 2, 1));
+
+		add(new JLabel("Templates"),
+				XmippWindowUtil.getConstraints(constraints, 0, 3, 1));
+		templatestf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		templatestf.setText("1");
+		templatestf.setColumns(2);
+		add(templatestf, XmippWindowUtil.getConstraints(constraints, 1, 3, 1));
+
 		addbt = XmippWindowUtil.getTextButton("Add", null);
 		getRootPane().setDefaultButton(addbt);
 		cancelbt = XmippWindowUtil.getTextButton("Cancel", null);
 
-		add(addbt, XmippWindowUtil.getConstraints(constraints, 0, 3, 1));
-		add(cancelbt, XmippWindowUtil.getConstraints(constraints, 1, 3, 1));
+		add(addbt, XmippWindowUtil.getConstraints(constraints, 0, 4, 1));
+		add(cancelbt, XmippWindowUtil.getConstraints(constraints, 1, 4, 1));
 		setListeners();
 		pack();
 		XmippWindowUtil.setLocation(position, 0.5f, this);
 		setVisible(true);
 	}
 
-	private void setListeners()
-	{
+	private void setListeners() {
 
 		colorbt.addActionListener(this);
 
-		addbt.addActionListener(new ActionListener()
-		{
+		addbt.addActionListener(new ActionListener() {
 
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				String name = nametf.getText();
 				if (sizetf.getValue() == null)
 					sizetf.setValue(sizesl.getValue());
-				int size = ((Number) sizetf.getValue()).intValue();
-				try
-				{
-					Family g = new Family(name, color, size);
+				try {
+					if (templatestf.getValue() == null || templatestf.getText().equals(""))
+						throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Templates"));
+					int size = ((Number) sizetf.getValue()).intValue();
+					int templatesNumber = ((Number) templatestf.getValue()).intValue();
+					if(templatesNumber < 1)
+						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templatesNumber));
+					Family g = new Family(name, color, size, templatesNumber);
 
 					AddFamilyJDialog.this.parent.addFamily(g);
 					setVisible(false);
 					dispose();
-				}
-				catch (IllegalArgumentException ex)
-				{
+				} catch (IllegalArgumentException ex) {
 					ex.printStackTrace();
-					JOptionPane.showMessageDialog(AddFamilyJDialog.this, ex.getMessage());
+					JOptionPane.showMessageDialog(AddFamilyJDialog.this,
+							ex.getMessage());
 				}
 
 			}
 		});
-		cancelbt.addActionListener(new ActionListener()
-		{
+		cancelbt.addActionListener(new ActionListener() {
 
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				setVisible(false);
 				dispose();
 
@@ -123,8 +134,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 
 	}
 
-	private void initSizePane()
-	{
+	private void initSizePane() {
 		int size = Family.getDefaultSize();
 		sizepn = new JPanel();
 		sizesl = new JSlider(0, 500, size);
@@ -136,49 +146,44 @@ public class AddFamilyJDialog extends JDialog implements ActionListener
 		;
 		sizetf.setText(Integer.toString(size));
 		sizepn.add(sizetf);
-		sizetf.addActionListener(new ActionListener()
-		{
+		sizetf.addActionListener(new ActionListener() {
 
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				int size = Integer.parseInt(sizetf.getText());
 				sizesl.setValue(size);
 			}
 		});
 
-		sizesl.addChangeListener(new ChangeListener()
-		{
+		sizesl.addChangeListener(new ChangeListener() {
 
 			@Override
-			public void stateChanged(ChangeEvent e)
-			{
+			public void stateChanged(ChangeEvent e) {
 				int size = sizesl.getValue();
 				sizetf.setText(Integer.toString(size));
 			}
 		});
 	}
 
-
-
 	@Override
-	public void actionPerformed(ActionEvent e)
-	{
+	public void actionPerformed(ActionEvent e) {
 		// Set up the dialog that the button brings up.
 		colorChooser = new JColorChooser();
-		JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
-				colorChooser, new ActionListener()
-				{
+		JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color",
+				true, // modal
+				colorChooser, new ActionListener() {
 
 					@Override
-					public void actionPerformed(ActionEvent e)
-					{
-						AddFamilyJDialog.this.color = AddFamilyJDialog.this.colorChooser.getColor();
-						AddFamilyJDialog.this.colorbt.setIcon(new ColorIcon(color));
+					public void actionPerformed(ActionEvent e) {
+						AddFamilyJDialog.this.color = AddFamilyJDialog.this.colorChooser
+								.getColor();
+						AddFamilyJDialog.this.colorbt.setIcon(new ColorIcon(
+								color));
 					}
 				}, // OK button handler
 				null); // no CANCEL button handler
-		XmippWindowUtil.setLocation(AddFamilyJDialog.this.position, 0.5f, dialog);
+		XmippWindowUtil.setLocation(AddFamilyJDialog.this.position, 0.5f,
+				dialog);
 		dialog.setVisible(true);
 	}
 

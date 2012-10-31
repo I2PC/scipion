@@ -288,8 +288,8 @@ void CL3DClass::sparseDistanceToCentroid(MultidimArray<double> &I, double &avgK,
 //#define DEBUG
 const String eulerSeqs[12]={"XZX","XYX","YXY","YZY","ZYZ","ZXZ","XZY","XYZ","YXZ","YZX","ZYX","ZXY"};
 
-#define DEBUG
-#define DEBUG_MORE
+//#define DEBUG
+//#define DEBUG_MORE
 void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 {
 #ifdef DEBUG
@@ -1473,11 +1473,11 @@ void ProgClassifyCL3D::produceSideInfo()
 
     // Prepare mask for evaluating the noise outside
     MultidimArray<int> sphericalMask;
-    sphericalMask.resize(prm->Zdim, prm->Ydim, prm->Xdim);
+    sphericalMask.resize(Zdim, Ydim, Xdim);
     sphericalMask.setXmippOrigin();
-    BinaryCircularMask(sphericalMask, prm->Xdim / 2, INNER_MASK);
+    BinaryCircularMask(sphericalMask, Xdim / 2, INNER_MASK);
 
-    mask.generate_mask(prm->Zdim, prm->Ydim, prm->Xdim);
+    mask.generate_mask(Zdim, Ydim, Xdim);
     MultidimArray<int> &mMask=mask.get_binary_mask();
     mMask.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(sphericalMask)
@@ -1564,5 +1564,6 @@ int main(int argc, char** argv)
 {
     ProgClassifyCL3D progprm(argc, argv);
     progprm.read(argc, argv);
+    prm = &progprm;
     return progprm.tryRun();
 }
