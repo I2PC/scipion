@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
