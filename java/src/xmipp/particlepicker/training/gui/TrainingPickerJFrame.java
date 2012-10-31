@@ -34,12 +34,16 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import Jama.examples.MagicSquareExample;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
+import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
+import xmipp.particlepicker.training.gui.TrainingCanvas;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
 import xmipp.particlepicker.training.model.MicrographFamilyState;
@@ -116,11 +120,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			constraints.anchor = GridBagConstraints.WEST;
 			setLayout(new GridBagLayout());
 
+			initImagePane();
+			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+			
 			initFamilyPane();
-			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 
-			initSymbolPane();
-			add(symbolpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
+			
 
 			initMicrographsPane();
 			add(micrographpn,
@@ -530,6 +536,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	protected void initializeCanvas() {
+		
 		if (canvas == null) {
 			canvas = new TrainingCanvas(this);
 			iw = new ImageWindow(micrograph.getImagePlus(ppicker.getFilters()),
@@ -545,6 +552,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 		}
 		micrograph.runImageJFilters(ppicker.getFilters());
+		
+		double zoom = Double.parseDouble(usezoombt.getText());
+		if(zoom == -1. || ( zoom != -1. && !usezoombt.isSelected()))//setting canvas magnification
+		{
+			zoom = canvas.getMagnification();
+			usezoombt.setText(String.format("%.2f", zoom));
+		}
+		else if(usezoombt.isSelected())
+			canvas.setZoom(zoom);
 	}
 
 	private void formatMicrographsTable() {
@@ -761,6 +777,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	@Override
 	public void importParticlesFromFile(Format format, String file) {
+		String filename = Micrograph.getName(file, 1);
+		System.out.println(filename);
+		if(!filename.equals(getMicrograph().getName()))
+		{
+			String msg = String.format("Are you sure you want to import data from file %s to micrograph %s", file, getMicrograph().getName());
+			int result = JOptionPane.showConfirmDialog(this, msg);
+			if(result == JOptionPane.NO_OPTION)
+				return;
+		}
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
 		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph());
