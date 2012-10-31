@@ -1,6 +1,5 @@
 package xmipp.particlepicker.training.model;
 
-import ij.ImagePlus;
 
 import java.awt.Image;
 import java.io.File;
