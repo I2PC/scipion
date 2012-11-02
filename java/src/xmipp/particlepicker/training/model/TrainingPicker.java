@@ -98,14 +98,13 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	public void loadMicrographData(TrainingMicrograph micrograph) {
 		try {
-			String file = getOutputPath(micrograph.getPosFile());
 			String fname;
 			Family family;
 			MicrographFamilyState state;
 			MicrographFamilyData mfd;
 			List<MicrographFamilyData> mfdatas = new ArrayList<MicrographFamilyData>();
-			if (!new File(file).exists()) return;
-			MetaData md = new MetaData("families@" + file);
+			if (!new File(getOutputPath(micrograph.getPosFile())).exists()) return;
+			MetaData md = new MetaData("families@" + getOutputPath(micrograph.getPosFile()));
 			for (long id : md.findObjects()) {
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
@@ -116,9 +115,8 @@ public abstract class TrainingPicker extends ParticlePicker {
 					mfd.setState(MicrographFamilyState.Review);
 					setChanged(true);
 				}
-				loadManualParticles(mfd, file);
-				file = getOutputPath(micrograph.getAutoPosFile());
-				loadAutomaticParticles(mfd, file, false);
+				loadManualParticles(mfd, getOutputPath(micrograph.getPosFile()));
+				loadAutomaticParticles(mfd, getOutputPath(micrograph.getAutoPosFile()), false);
 				mfdatas.add(mfd);
 			}
 			micrograph.setFamiliesState(mfdatas);

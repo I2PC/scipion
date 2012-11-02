@@ -499,7 +499,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	private void setState(MicrographFamilyState state) {
-		setChanged(true);
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
 //		if (getFamilyData().getState() == MicrographFamilyState.Correct)
