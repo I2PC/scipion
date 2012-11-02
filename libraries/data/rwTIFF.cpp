@@ -193,8 +193,8 @@ int ImageBase::readTIFF(size_t select_img, bool isStack)
             if (dirHead[0].imageLength != dirHead[i].imageLength || \
                 dirHead[0].imageWidth != dirHead[i].imageWidth)
                 dirHead.resize(i);
-                //REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
-                //             " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));
+            //REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
+            //             " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));
         }
     }
 
@@ -421,7 +421,7 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
         default:
             wDType = DT_Unknown;
             REPORT_ERROR(ERR_TYPE_INCORRECT,formatString("rwTIFF: TIFF format does not support %s " \
-                                     "datatype.",datatype2Str(myTypeID).c_str()));
+                         "datatype.",datatype2Str(myTypeID).c_str()));
         }
     }
 
@@ -515,17 +515,18 @@ int ImageBase::writeTIFF(size_t select_img, bool isStack, int mode, String bitDe
             TIFFSetField(tif, TIFFTAG_PAGENUMBER, (uint16) i, (uint16) aDim.ndim);
         }
 
+        double min0, max0;
+
+        if (castMode != CW_CAST)
+            mdaBase->computeDoubleMinMaxRange(min0, max0, i*datasize_n, datasize_n);
+
         for (uint32 y = 0; y < aDim.ydim; y++)
         {
             if (castMode == CW_CAST)
                 getPageFromT(i*datasize_n + y*aDim.xdim, (char *)tif_buf, wDType, (size_t) aDim.xdim);
             else
-            {
-                double min0, max0;
-                mdaBase->computeDoubleMinMaxRange(min0, max0, i*datasize_n, datasize_n);
                 getCastConvertPageFromT(i*datasize_n + y*aDim.xdim,
-                                        (char *)tif_buf, wDType, (size_t) aDim.xdim,min0 ,max0, castMode);
-            }
+                                        (char *)tif_buf, wDType, (size_t) aDim.xdim, min0, max0, castMode);
 
             TIFFWriteScanline(tif, tif_buf,y,0);
         }
