@@ -44,134 +44,111 @@ int  ImageBase::readPIF(size_t select_img)
         swapPage((char *) &mainHeader, PIFHEADERSIZE, DT_Int);
 
 
+    DataType datatype;
+    switch (mainHeader.mode)
+    {
+    case 0:
+        datatype = DT_SChar;
+        break;
+    case 1:
+    case 7: // Actually it's floatint*2, but it isn't moved to float
+        datatype = DT_Short;
+        break;
+    case 2:
+    case 46: // This case is not documented, but I think this is floatInt*4
+        datatype = DT_Int; // We aren't moving to float actually
+        break;
+    case 3:
+    case 8: // Actually it's complex floatint*2, but it isn't moved to float
+        datatype = DT_CShort;
+        break;
+    case 4:
+        datatype = DT_CInt; // We aren't moving to float actually
+        break;
+    case 9:
+        datatype = DT_Float;
+        break;
+    case 10:
+        datatype = DT_CFloat;
+        break;
+    case 97:
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED, "readPIF: Reading from colormap datatype file not implemented.\n"
+                     "If you're interested in this feature, please contact us at xmipp@cnb.csic.es \n"
+                     "and send us an example image file to help implementing.");
+        break;
+    default:
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED, formatString("readPIF: Reading from datatype code %d file not implemented.\n"
+                     "If you're interested in this feature, please contact us at xmipp@cnb.csic.es \n"
+                     "and send us an example image file to help implementing.", mainHeader.mode));
+        break;
+    }
+    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
+
+
+    // Check selected image
+    if (select_img > mainHeader.numImages)
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readPIF (%s): Image number %lu exceeds stack size %lu" ,filename.c_str(),select_img, mainHeader.numImages));
+
     // Setting image dimensions
     ArrayDim aDim;
 
-    aDim.ndim = mainHeader.numImages;
+    aDim.ndim = (select_img == ALL_IMAGES)? mainHeader.numImages : 1;
     aDim.zdim = mainHeader.nz;
     aDim.ydim = mainHeader.ny;
     aDim.xdim = mainHeader.nx;
 
     replaceNsize = aDim.ndim;
 
+    setDimensions(aDim);
 
-    offset = (size_t) header->labbyt;
-    DataType datatype  = DT_Float;
 
-    MDMainHeader.setValue(MDL_MIN,(double)header->fmin);
-    MDMainHeader.setValue(MDL_MAX,(double)header->fmax);
-    MDMainHeader.setValue(MDL_AVG,(double)header->av);
-    MDMainHeader.setValue(MDL_STDDEV,(double)header->sig);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,(double)header->scale);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double)header->scale);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,(double)header->scale);
-    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
+    size_t imgStart = IMG_INDEX(select_img);
+    size_t datatypeSize = gettypesize(datatype);
+    offset = PIFHEADERSIZE*2;// + (aDimFile.zyxdim*datatypeSize + PIFHEADERSIZE)*imgStart;
 
-    bool isStack = ( header->istack > 0 );
-    int _xDim,_yDim,_zDim;
-    size_t _nDim, _nDimSet;
-    _xDim = (int) header->nsam;
-    _yDim = (int) header->nrow;
-    _zDim = (int) header->nslice;
-    _nDim = (isStack)? header->maxim : 1;
-
-    if (_xDim < 1 || _yDim < 1 || _zDim < 1 || _nDim < 1)
-        REPORT_ERROR(ERR_IO_NOTFILE,formatString("Invalid Spider file:  %s", filename.c_str()));
-
-    replaceNsize = _nDim;
-
-    /************
-     * BELLOW HERE DO NOT USE HEADER BUT LOCAL VARIABLES
-     */
-
-    // Map the parameters, REad the whole object (-1) or a slide
-    // Only handle stacks of images not of volumes
-    if(!isStack)
-        _nDimSet = 1;
-    else
-        _nDimSet = (select_img == ALL_IMAGES) ? _nDim : 1;
-
-    setDimensions(_xDim, _yDim, _zDim, _nDimSet);
-
-    //image is in stack? and set right initial and final image
-    size_t header_size = offset;
-
-    if ( isStack)
-    {
-        if ( select_img > _nDim )
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readSpider (%s): Image number %lu exceeds stack size %lu" ,filename.c_str(),select_img, _nDim));
-        offset += offset;
-    }
-
-    if (dataMode == HEADER || (dataMode == _HEADER_ALL && _nDimSet > 1)) // Stop reading if not necessary
-    {
-        delete header;
+    if (dataMode == HEADER || (dataMode == _HEADER_ALL && aDim.ndim > 1)) // Stop reading if not necessary
         return 0;
-    }
 
-    size_t datasize_n  = _xDim*_yDim*_zDim;
-    size_t image_size  = header_size + datasize_n*sizeof(float);
-    size_t pad         = (size_t) header->labbyt;
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
-    size_t   img_seek = header_size + imgStart * image_size;
-    char*   hend;
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : aDim.ndim;
+
+    size_t imageSize = PIFHEADERSIZE + aDimFile.zyxdim*datatypeSize;
+    size_t pad       = PIFHEADERSIZE;
+    size_t headerOffset  = PIFHEADERSIZE;
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double daux;
 
-    //std::cerr << formatString("DEBUG_JM: header_size: %10lu, datasize_n: %10lu, image_size: %10lu, imgStart: %10lu, img_seek: %10lu",
-    //    header_size, datasize_n, image_size, imgStart, img_seek) <<std::endl;
+    PIFDataHeader dataHeader;
 
-    for (size_t n = 0, i = imgStart; i < imgEnd; ++i, ++n, img_seek += image_size )
+    for (size_t n = 0, i = imgStart; i < imgEnd; ++i, ++n )
     {
-        if (fseek( fimg, img_seek, SEEK_SET ) != 0)//fseek return 0 on success
-            REPORT_ERROR(ERR_IO, formatString("rwSPIDER: error seeking %lu for read image %lu", img_seek, i));
+        if (fseek( fimg, headerOffset + i*imageSize, SEEK_SET ) != 0)//fseek return 0 on success
+            REPORT_ERROR(ERR_IO, formatString("rwPIF: error seeking %lu to read image %lu", headerOffset, i));
 
-        // std::cerr << formatString("DEBUG_JM: rwSPIDER: seeking %lu for read image %lu", img_seek, i) <<std::endl;
+        if ( fread( &dataHeader, PIFHEADERSIZE, 1, fimg ) != 1 )
+            REPORT_ERROR(ERR_IO_NOREAD, formatString("rwPIF: cannot read PIF image %lu header", i));
 
-        if(isStack)
-        {
-            if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
-                REPORT_ERROR(ERR_IO_NOREAD, formatString("rwSPIDER: cannot read Spider image %lu header", i));
-            if ( swap )
-                swapPage((char *) header, SPIDERSIZE - 180, DT_Float);
-        }
+        if ( swap )
+            swapPage((char *) &dataHeader, PIFHEADERSIZE, DT_Int);
+
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
-            daux = (double)header->xoff;
-            MD[n].setValue(MDL_SHIFT_X, daux);
-            daux = (double)header->yoff;
-            MD[n].setValue(MDL_SHIFT_Y, daux);
-            daux = (double)header->zoff;
-            MD[n].setValue(MDL_SHIFT_Z, daux);
-            daux = (double)header->phi;
-            MD[n].setValue(MDL_ANGLE_ROT, daux);
-            daux = (double)header->theta;
-            MD[n].setValue(MDL_ANGLE_TILT, daux);
-            daux = (double)header->gamma;
-            MD[n].setValue(MDL_ANGLE_PSI, daux);
-            daux = (double)header->weight;
-            MD[n].setValue(MDL_WEIGHT, daux);
-            bool baux = (header->flip == 1);
-            MD[n].setValue(MDL_FLIP, baux);
-            daux = (double) header->scale;
-            if (daux==0.)
-                daux=1.0;
-            MD[n].setValue(MDL_SCALE, daux);
+            MD[n].setValue(MDL_ORIGIN_X, (double)dataHeader.nxstart);
+            MD[n].setValue(MDL_ORIGIN_Y, (double)dataHeader.nystart);
+            MD[n].setValue(MDL_ORIGIN_Z, (double)dataHeader.nzstart);
+            MD[n].setValue(MDL_ANGLE_ROT, (double)dataHeader.alpha);
+            MD[n].setValue(MDL_ANGLE_TILT, (double)dataHeader.beta);
+            MD[n].setValue(MDL_ANGLE_PSI, (double)dataHeader.gamma);
+            MD[n].setValue(MDL_SAMPLINGRATE_X, (double)dataHeader.xlength/aDim.xdim);
+            MD[n].setValue(MDL_SAMPLINGRATE_Y, (double)dataHeader.ylength/aDim.ydim);
+            MD[n].setValue(MDL_SAMPLINGRATE_Z, (double)dataHeader.zlength/aDim.zdim);
         }
     }
-    delete header;
 
     if (dataMode < DATA)   // Don't read  data if not necessary but read the header
         return 0;
 
-#ifdef DEBUG
-
-    std::cerr<<"DEBUG readSPIDER: header_size = "<<header_size<<" image_size = "<<image_size<<std::endl;
-    std::cerr<<"DEBUG readSPIDER: select_img= "<<select_img<<" n= "<<Ndim<<" pad = "<<pad<<std::endl;
-#endif
     //offset should point to the begin of the data
     readData(fimg, select_img, datatype, pad );
 

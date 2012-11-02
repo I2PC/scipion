@@ -239,8 +239,8 @@ bool FileName::hasImageExtension() const
     String ext = getFileFormat();
     if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
         ext=="map" || ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" ||
-        ext=="spe" || ext=="em"  || ext=="ser" || ext=="stk" || ext=="mrcs"||
-        ext=="jpg")
+        ext=="spe" || ext=="em"  || ext=="pif" || ext=="ser" || ext=="stk" ||
+        ext=="mrcs"|| ext=="jpg")
         return true;
     else
         return false;
@@ -250,9 +250,9 @@ bool FileName::hasImageExtension() const
 bool FileName::hasStackExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
-        ext=="mrc" || ext=="img" || ext=="hed" || ext=="tif" ||
-        ext=="dm3" ||  ext=="ser")
+    if (ext=="stk" || ext=="spi" || ext=="xmp" || ext=="mrcs" || ext=="mrc" ||
+        ext=="img" || ext=="hed" || ext=="pif" || ext=="tif"  || ext=="dm3" ||
+        ext=="ser")
         return true;
     else
         return false;
@@ -263,7 +263,7 @@ bool FileName::hasVolumeExtension() const
 {
     String ext = getFileFormat();
     if (ext=="vol" || ext=="spi" || ext=="xmp" || ext=="mrc" || ext=="map" ||
-        ext=="em"  || ext=="inf" || ext=="raw")
+        ext=="em"  || ext=="pif" || ext=="inf" || ext=="raw")
         return true;
     else
         return false;
