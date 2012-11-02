@@ -4,8 +4,8 @@ import ij.CommandListener;
 import ij.Executer;
 import ij.ImageListener;
 import ij.ImagePlus;
-import ij.gui.SaveChangesDialog;
 import ij.plugin.frame.Recorder;
+
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,23 +13,18 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
-import xmipp.particlepicker.training.model.FamilyState;
-import xmipp.particlepicker.training.model.MicrographFamilyData;
-import xmipp.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.particlepicker.training.model.TrainingPicker;
-import xmipp.utils.XmippMessage;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
+import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.particlepicker.training.model.TrainingPicker;
 
 public abstract class ParticlePicker {
 
@@ -55,12 +50,12 @@ public abstract class ParticlePicker {
 
 	public void setColor(Color color) {
 		family.setColor(color);
-		setChanged(true);
+		persistFamilies();
 	}
 
 	public void setSize(int size) {
 		family.setSize(size);
-		setChanged(true);
+		persistFamilies();
 	}
 
 	public Family getFamily() {
@@ -153,7 +148,7 @@ public abstract class ParticlePicker {
 				for (IJCommand f : filters)
 					if (f.getCommand().equals(command))
 						f.setOptions(options);
-			setChanged(true);
+			persistFilters();
 			command = null;
 
 		}
@@ -388,7 +383,7 @@ public abstract class ParticlePicker {
 		for (IJCommand f : filters)
 			if (f.getCommand().equals(filter)) {
 				filters.remove(f);
-				setChanged(true);
+				persistFilters();
 				break;
 			}
 	}// function removeFilter
