@@ -464,12 +464,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		
 	}
 
-	public void updateMicrographsModel()
-	{
-		if (particlesdialog != null)
-			loadParticles();
-		
+	
+	
+	public void updateMicrographsModel() {
+		updateMicrographsModel(false);
 	}
+	
+	public abstract void updateMicrographsModel(boolean all);
+	
 
 	public ParticlesJDialog getParticlesJDialog()
 	{
@@ -681,11 +683,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public void importParticlesFromFolder(Format format, String dir)
 	{
-		resetData();
 		getParticlePicker().importParticlesFromFolder(dir, format);
 		saveChanges();
 		getCanvas().repaint();
-		updateMicrographsModel();
+		updateMicrographsModel(true);
 		getCanvas().setActive(null);
 	}
 	
