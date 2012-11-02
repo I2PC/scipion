@@ -611,7 +611,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 
-	public void updateMicrographsModel() {
+	public void updateMicrographsModel(boolean all) {
 		super.updateMicrographsModel();
 		if (templatesdialog != null)
 			loadTemplates();
