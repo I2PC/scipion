@@ -53,6 +53,7 @@ ACTION_DELETE = 'Delete'
 ACTION_REFRESH = 'Refresh'
 ACTION_STEPS = 'Show_Steps'
 ACTION_TREE = 'Show_DepsTree'
+ACTION_STOP = 'Stop'
 ACTION_DEFAULT = 'Default'
 
 ActionIcons = {
@@ -61,7 +62,8 @@ ActionIcons = {
     ACTION_DELETE:  'delete.gif',
     ACTION_REFRESH:  'refresh.gif',
     ACTION_STEPS:  'run_steps.gif',
-    ACTION_TREE:  'tree.gif'
+    ACTION_TREE:  'tree.gif',
+    ACTION_STOP: 'stop.gif'
                }
 
 
@@ -332,6 +334,12 @@ class XmippProjectGUI():
         root.deiconify()
         root.mainloop() 
 
+    def stopRun(self):        
+        if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=self.root):
+            run = self.getLastRunDict()
+            pm = ProcessManager(run)
+            pm.stopProcessGroup(self.project)
+            
     def launchRunJobMonitorGUI(self, run):
         runName = getExtendedRunName(run)
         script = run['script']
@@ -355,9 +363,7 @@ class XmippProjectGUI():
             
         def stopRun():
             if askYesNo("Confirm action", "Are you sure to <STOP> run execution?" , parent=root):
-                #p = pm.getProcessFromPid(run['pid'])
                 pm.stopProcessGroup(self.project)
-                #self.project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, run['run_id'])
                 updateAndClose()
                 
         def processWorker():
@@ -547,6 +553,7 @@ class XmippProjectGUI():
                  (ACTION_COPY, 'Duplicate   '),
                  (ACTION_DELETE, 'Delete    '),
                  (None, None),
+                 (ACTION_STOP, 'Stop'),
                  (ACTION_STEPS, 'Show steps')]
         
         def addMenuOption(action, label):
@@ -656,7 +663,7 @@ class XmippProjectGUI():
                 self.launchProtocolGUI(self.project.copyProtocol(run['protocol_name'], run['script']))
             elif event == ACTION_DELETE:
                 if state in [SqliteDb.RUN_STARTED, SqliteDb.RUN_LAUNCHED]:
-                    showWarning("Delete warning", "This RUN is LAUNCHED or RUNNING, you need to stopped it before delete", parent=self.root) 
+                    showWarning("Delete warning", "This RUN is LAUNCHED or RUNNING, you need to stop it before DELETE", parent=self.root) 
                 else:
                     runsDict = self.project.getRunsDependencies()
                     deps = ['<%s>' % d for d in runsDict[getExtendedRunName(run)].deps]
@@ -676,6 +683,8 @@ class XmippProjectGUI():
             elif event == ACTION_REFRESH:
                 self.historyRefreshRate = 1
                 self.updateRunHistory(self.lastDisplayGroup, False, True)
+            elif event == ACTION_STOP:
+                self.stopRun()
         
     def createToolbarFrame(self, parent):
         #Configure toolbar frame

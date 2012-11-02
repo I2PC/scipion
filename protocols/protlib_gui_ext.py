@@ -1331,13 +1331,13 @@ class XmippBrowser():
         self.managers = {}
         self.extSet = {}
         addFm = self.addFileManager
-        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr'], 
+        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param'], 
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
-        addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st'],
+        addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st', '.pif'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
-        addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em'], 
+        addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
         addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'],
               textFillMenu, defaultOnClick, textOnDoubleClick)
