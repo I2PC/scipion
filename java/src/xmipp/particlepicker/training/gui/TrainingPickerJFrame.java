@@ -504,10 +504,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		actionsbt.setText(getFamilyData().getAction());
 //		if (getFamilyData().getState() == MicrographFamilyState.Correct)
 //			actionsbt.setEnabled(false);// enabled only after doing corrections
-		saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
+		ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
 		setChanged(false);
 		
-	}
+	
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		pack();
@@ -657,7 +657,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 							System.out.println(args);
 						}
 					}
-
 					args = sppicker.getTrainCommandLineArgs();
 					System.out.println(args);
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
