@@ -479,6 +479,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 		ppicker.saveData(getMicrograph());// Saving changes when switching micrographs, by Coss suggestion
+		setChanged(false);
 		if (particlesdialog != null)
 			loadParticles();
 
@@ -498,8 +499,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		actionsbt.setText(getFamilyData().getAction());
 		// if (getFamilyData().getState() == MicrographFamilyState.Correct)
 		// actionsbt.setEnabled(false);// enabled only after doing corrections
-		saveChanges();// to keep consistence between files of automatic picker
-						// and mines
+		if(state != MicrographFamilyState.Autopick)
+		{
+			ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines, the rest of micrographs are already saved
+			setChanged(false);
+		}
+						
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		pack();
@@ -632,7 +637,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-		saveChanges();// persist changes
 
 		try {
 			canvas.setEnabled(false);
