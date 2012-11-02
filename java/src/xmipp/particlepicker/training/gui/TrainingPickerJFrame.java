@@ -469,6 +469,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			return;// Probably from fireTableDataChanged raised
 		if(index == TrainingPickerJFrame.this.micrographstb.getSelectedRow() && iw != null && iw.isVisible())//same micrograph open
 			return;
+		ppicker.saveData(getMicrograph());// Saving changes when switching micrographs, by Coss suggestion
+		setChanged(false);
 		index = TrainingPickerJFrame.this.micrographstb.getSelectedRow();
 		// by me.
 		micrograph.releaseImage();
@@ -481,8 +483,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		thresholdpn
 				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
-		ppicker.saveData(getMicrograph());// Saving changes when switching micrographs, by Coss suggestion
-		setChanged(false);
+		
 		if (particlesdialog != null)
 			loadParticles();
 	
@@ -498,15 +499,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	private void setState(MicrographFamilyState state) {
-		setChanged(true);
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
 //		if (getFamilyData().getState() == MicrographFamilyState.Correct)
 //			actionsbt.setEnabled(false);// enabled only after doing corrections
-		saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
+		ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
 		setChanged(false);
 		
-	}
+	
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		pack();
@@ -656,7 +656,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 							System.out.println(args);
 						}
 					}
-
 					args = sppicker.getTrainCommandLineArgs();
 					System.out.println(args);
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);
@@ -783,7 +782,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
 		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph());
-		setChanged(true);
+		ppicker.saveData(getMicrograph());
+		setChanged(false);
 		getCanvas().repaint();
 		updateMicrographsModel();
 		updateSize(family.getSize());
