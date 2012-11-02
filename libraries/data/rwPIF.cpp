@@ -154,3 +154,9 @@ int  ImageBase::readPIF(size_t select_img)
 
     return(0);
 }
+
+int ImageBase::writePIF(size_t select_img, bool isStack, int mode)
+{
+    REPORT_ERROR(ERR_IO_NOWRITE, "ERROR: writePIF is not implemented.");
+    return(-1);
+}
