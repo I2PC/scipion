@@ -98,14 +98,13 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	public void loadMicrographData(TrainingMicrograph micrograph) {
 		try {
-			String file = getOutputPath(micrograph.getPosFile());
 			String fname;
 			Family family;
 			MicrographFamilyState state;
 			MicrographFamilyData mfd;
 			List<MicrographFamilyData> mfdatas = new ArrayList<MicrographFamilyData>();
-			if (!new File(file).exists()) return;
-			MetaData md = new MetaData("families@" + file);
+			if (!new File(getOutputPath(micrograph.getPosFile())).exists()) return;
+			MetaData md = new MetaData("families@" + getOutputPath(micrograph.getPosFile()));
 			for (long id : md.findObjects()) {
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
@@ -116,9 +115,8 @@ public abstract class TrainingPicker extends ParticlePicker {
 					mfd.setState(MicrographFamilyState.Review);
 					setChanged(true);
 				}
-				loadManualParticles(mfd, file);
-				file = getOutputPath(micrograph.getAutoPosFile());
-				loadAutomaticParticles(mfd, file, false);
+				loadManualParticles(mfd, getOutputPath(micrograph.getPosFile()));
+				loadAutomaticParticles(mfd, getOutputPath(micrograph.getAutoPosFile()), false);
 				mfdatas.add(mfd);
 			}
 			micrograph.setFamiliesState(mfdatas);
@@ -206,7 +204,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 		TrainingMicrograph tm = (TrainingMicrograph) m;
 		long id;
 		try {
-			MetaData md = new MetaData();
+			MetaData md;
 			String block = null;
 			String file;
 			file = getOutputPath(m.getPosFile());
@@ -215,19 +213,20 @@ public abstract class TrainingPicker extends ParticlePicker {
 			else {
 				persistMicrographFamilies(tm);
 				for (MicrographFamilyData mfd : tm.getFamiliesData()) {
-
+					md = new MetaData();
 					for (TrainingParticle p : mfd.getManualParticles()) {
 						id = md.addObject();
 						md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
 						md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 					}
 					block = mfd.getFamily().getName() + "@" + file;
+					System.out.println(block);
 					md.writeBlock(block);
-					md.clear();
+					md.destroy();
 				}
 			}
 			persistAutomaticParticles(tm);
-			md.destroy();
+			
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
