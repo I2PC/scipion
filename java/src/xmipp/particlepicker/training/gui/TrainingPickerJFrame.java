@@ -490,7 +490,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		canvas.setActive(null);
 		updateMicrographsModel();
 		setState(MicrographFamilyState.Available);
-
 	}
 
 	private void setState(MicrographFamilyState state) {
@@ -498,7 +497,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
 
-		saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
+		ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
 		setChanged(false);
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
