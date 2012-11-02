@@ -413,7 +413,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	private void setThresholdChanges() {
-		setChanged(true);
+		//setChanged(true);
 		updateMicrographsModel();
 		canvas.repaint();
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
@@ -482,6 +482,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 		ppicker.saveData(getMicrograph());// Saving changes when switching micrographs, by Coss suggestion
+		setChanged(false);
 		if (particlesdialog != null)
 			loadParticles();
 	
@@ -502,8 +503,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		actionsbt.setText(getFamilyData().getAction());
 //		if (getFamilyData().getState() == MicrographFamilyState.Correct)
 //			actionsbt.setEnabled(false);// enabled only after doing corrections
-		saveChanges();// to keep consistence between files of automatic picker
-						// and mines
+		saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
+		setChanged(false);
+		
+	}
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		pack();
@@ -576,14 +579,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	void updateFamilyColor() {
-		setChanged(true);
 		color = family.getColor();
 		colorbt.setIcon(new ColorIcon(color));
 		canvas.repaint();
+		ppicker.persistFamilies();
 	}
 
 	void updateFamilyComboBox() {
-		setChanged(true);
 		Family item = (Family) familiescb.getSelectedItem();
 		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker.getFamilies().toArray());
 		familiescb.setModel(model);
@@ -592,6 +594,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		
 		formatMicrographsTable();
 		pack();
+		ppicker.persistFamilies();
 	}
 
 	public void addFamily(Family g) {
@@ -634,7 +637,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-		saveChanges();// persist changes
 
 		try {
 			canvas.setEnabled(false);
