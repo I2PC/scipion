@@ -710,6 +710,8 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readDM3(select_img,false);
     else if (ext_name.contains("em"))//EM
         err = readEM(select_img);
+    else if (ext_name.contains("pif"))//PIF
+        err = readPIF(select_img);
     else if (ext_name.contains("inf"))//RAW with INF file
         err = readINF(select_img,false);
     else if (ext_name.contains("raw"))//RAW without INF file
@@ -861,6 +863,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         writeDM3(select_img,false,mode);
     else if (ext_name.contains("em"))
         writeEM(select_img,false,mode);
+    else if (ext_name.contains("pif"))
+        writePIF(select_img,false,mode);
     else if (ext_name.contains("ser"))
         writeTIA(select_img,false,mode);
     else if (ext_name.contains("raw") || ext_name.contains("inf"))
