@@ -43,6 +43,7 @@ import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
+import xmipp.particlepicker.training.gui.MicrographsTableModel;
 import xmipp.particlepicker.training.gui.TrainingCanvas;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
@@ -615,11 +616,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		savemi.setEnabled(changed);
 	}
 
-	public void updateMicrographsModel() {
-		super.updateMicrographsModel();
+	public void updateMicrographsModel(boolean all) {
+		if (particlesdialog != null)
+			loadParticles();
 //		if(templatesdialog != null)
 //			loadTemplates();
-		micrographsmd.fireTableRowsUpdated(index, index);
+		if(all)
+			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1 );
+		else
+			micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		manuallb.setText(Integer.toString(ppicker
 				.getManualParticlesNumber(family)));
@@ -627,6 +632,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 				getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
 	}
+	
+	
 
 	public ParticlePickerCanvas getCanvas() {
 		return canvas;
