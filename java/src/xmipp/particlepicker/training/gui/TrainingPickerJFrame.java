@@ -409,7 +409,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	private void setThresholdChanges() {
-		setChanged(true);
+		//setChanged(true);
 		updateMicrographsModel();
 		canvas.repaint();
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
@@ -497,14 +497,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		setChanged(true);
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
-		// if (getFamilyData().getState() == MicrographFamilyState.Correct)
-		// actionsbt.setEnabled(false);// enabled only after doing corrections
-		if(state != MicrographFamilyState.Autopick)
-		{
-			ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines, the rest of micrographs are already saved
-			setChanged(false);
-		}
-						
+
+		saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
+		setChanged(false);
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		pack();
@@ -578,14 +573,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	void updateFamilyColor() {
-		setChanged(true);
 		color = family.getColor();
 		colorbt.setIcon(new ColorIcon(color));
 		canvas.repaint();
+		ppicker.persistFamilies();
 	}
 
 	void updateFamilyComboBox() {
-		setChanged(true);
 		Family item = (Family) familiescb.getSelectedItem();
 		DefaultComboBoxModel model = new DefaultComboBoxModel(ppicker
 				.getFamilies().toArray());
@@ -595,6 +589,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 		formatMicrographsTable();
 		pack();
+		ppicker.persistFamilies();
 	}
 
 	public void addFamily(Family g) {
