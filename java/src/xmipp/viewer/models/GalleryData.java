@@ -778,6 +778,15 @@ public class GalleryData {
 		}
 		return null;
 	}
+	
+	public void setValueToCol(int index, ColumnInfo ci, String value) {
+		try {
+			md.setValueString(ci.getLabel(), value, ids[index]);
+			setMdChanges(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	/** Delete from metadata selected items */
 	public void removeSelection() throws Exception {

@@ -77,6 +77,14 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			}
 		});
 	}
+	
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e)
+	{
+		super.mouseWheelMoved(e);
+		if(e.isShiftDown())//zoom change detected	
+			getFrame().displayZoom();
+	}
 
 	public void moveTo(TrainingParticle p)
 	{

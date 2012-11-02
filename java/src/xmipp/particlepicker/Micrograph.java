@@ -64,6 +64,7 @@ public abstract class Micrograph {
 	}
 
 	public static String getName(String file, int level) {
+		//level can start at 1 for file name, 2 is for parent directory name
 		String[] tokens = file.split(File.separator);
 		if (tokens.length < level)
 			throw new IllegalArgumentException(String.format("Name for micrograph is taken from level %s, invalid path ", level, file));

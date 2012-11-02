@@ -459,6 +459,11 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
   (JNIEnv *, jobject, jstring, jboolean, jint);
 
+
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_operate
+(JNIEnv * , jobject , jstring );
+
+
 #ifdef __cplusplus
 }
 #endif
