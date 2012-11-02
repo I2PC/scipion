@@ -44,9 +44,9 @@ public class XmippFileView extends FileView {
 		try {
 			if (!f.isDirectory()) {
 				String filename = f.getPath();
-				if (Filename.isSingleImage(filename)
-						|| Filename.isStack(filename)
-						|| Filename.isVolume(filename)) {
+				if (Filename.isSingleImageExt(filename)
+						|| Filename.isStackExt(filename)
+						|| Filename.isVolumeExt(filename)) {
 					ImageGeneric image = new ImageGeneric(filename);
 					String desc = String.format("<Image dimensions: %d x %d",
 							image.getXDim(), image.getYDim());
@@ -79,7 +79,7 @@ public class XmippFileView extends FileView {
 					iconString = "folderopen.gif";
 				else if (Filename.isSingleImageExt(filename))
 					iconString = "image.gif";
-				else if (Filename.isMetadata(filename)) 
+				else if (Filename.isMetadataExt(filename)) 
 					iconString = "md.gif";
 				else if (Filename.isVolumeExt(filename))
 					iconString = "vol.gif";

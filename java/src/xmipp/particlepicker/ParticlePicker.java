@@ -326,6 +326,8 @@ public abstract class ParticlePicker {
 		persistFamilies();
 	}// function saveData
 
+	public abstract void saveData(Micrograph m);
+	
 	public abstract int getManualParticlesNumber(Family f);
 
 	public void persistFilters() {

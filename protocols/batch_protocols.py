@@ -47,13 +47,24 @@ from protlib_parser import ProtocolParser
 # Redefine BgColor
 BgColor = "white"
 
-ACTION_DELETE = 'Delete'
 ACTION_EDIT = 'Edit'
 ACTION_COPY = 'Copy'
+ACTION_DELETE = 'Delete'
 ACTION_REFRESH = 'Refresh'
+ACTION_STEPS = 'Show_Steps'
+ACTION_TREE = 'Show_DepsTree'
 ACTION_DEFAULT = 'Default'
-ACTION_STEPS = 'Show Steps'
-ACTION_TREE = 'Show run dependency tree'
+
+ActionIcons = {
+    ACTION_EDIT:  'edit.gif',
+    ACTION_COPY:  'copy.gif',
+    ACTION_DELETE:  'delete.gif',
+    ACTION_REFRESH:  'refresh.gif',
+    ACTION_STEPS:  'run_steps.gif',
+    ACTION_TREE:  'tree.gif'
+               }
+
+
 GROUP_ALL = 'All'
 GROUP_XMIPP = protDict.xmipp.title
         
@@ -145,10 +156,6 @@ class XmippProjectGUI():
         return self.images[imgName]
               
     def addBindings(self):
-        #self.root.bind('<Configure>', self.unpostMenu)
-        #self.root.bind("<Unmap>", self.unpostMenu)
-        #self.root.bind("<Map>", self.unpostMenu)
-        #self.Frames['main'].bind("<Leave>", self.unpostMenu)
         self.root.bind('<FocusOut>', self.unpostMenu)
         self.root.bind('<Button-1>', self.unpostMenu)
         self.root.bind('<Return>', lambda e: self.runButtonClick(ACTION_DEFAULT))
@@ -161,7 +168,7 @@ class XmippProjectGUI():
         self.root.bind('<Down>', self.lbHist.selection_down)
         self.root.bind('<Alt_L><c>', self.close )
         self.root.bind('<Alt_L><o>', self.showOutput)
-        self.root.bind('<Alt_L><a>', self.visualizeRun)
+        self.root.bind('<Alt_L><a>', self.visualizeRun)        
         
     def createMainMenu(self):
         self.menubar = tk.Menu(self.root)
@@ -170,23 +177,22 @@ class XmippProjectGUI():
         self.menubar.add_cascade(label="Project", menu=self.menuProject)
         self.browseFolderImg = tk.PhotoImage(file=getXmippPath('resources', 'folderopen.gif'))
         self.menuProject.add_command(label=" Browse files", command=self.browseFiles, 
-                                     image=self.browseFolderImg, compound=tk.LEFT)
-        self.delImg = tk.PhotoImage(file=getXmippPath('resources', 'delete.gif'))
+                                     image=self.getImage('folderopen'), compound=tk.LEFT)
         self.menuProject.add_command(label=" Remove temporary files", command=self.deleteTmpFiles,
-                                     image=self.delImg, compound=tk.LEFT) 
-        self.cleanImg = tk.PhotoImage(file=getXmippPath('resources', 'clean.gif'))       
+                                     image=self.getImage('delete'), compound=tk.LEFT) 
         self.menuProject.add_command(label=" Clean project", command=self.cleanProject,
-                                     image=self.cleanImg, compound=tk.LEFT)
+                                     image=self.getImage('clean'), compound=tk.LEFT)
         self.menuProject.add_separator()
         self.menuProject.add_command(label=" Exit", command=self.close)
         # Help menu
         self.menuHelp = tk.Menu(self.root, tearoff=0)
         self.menubar.add_cascade(label="Help", menu=self.menuHelp)
-        self.helpImg = tk.PhotoImage(file=getXmippPath('resources', 'online_help.gif'))
         self.menuHelp.add_command(label=" Online help", command=self.openHelp,
-                                     image=self.helpImg, compound=tk.LEFT)
+                                     image=self.getImage('online_help'), compound=tk.LEFT)
         self.menuHelp.add_command(label=" About Xmipp", command=self.openAbout,
-                                     compound=tk.LEFT)
+                                     compound=tk.LEFT)        
+        self.menuRun = tk.Menu(self.root, tearoff=0)
+        
     def openHelp(self, e=None):
         from protlib_gui_ext import openLink
         openLink('http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/WebHome')
@@ -481,7 +487,6 @@ class XmippProjectGUI():
         root.deiconify()
         root.mainloop()       
         
-        
     def launchProtocolGUI(self, run, visualizeMode=False):
         run['group_name'] = self.lastDisplayGroup
         top = tk.Toplevel()
@@ -534,7 +539,28 @@ class XmippProjectGUI():
         if self.lastMenu:
             self.lastMenu.unpost()
             self.lastMenu = None
+        self.menuRun.unpost()
+            
+    def onRightClick(self, e=None):
+        self.menuRun.delete(0, tk.END)
+        aList = [(ACTION_EDIT, 'Edit     '),
+                 (ACTION_COPY, 'Duplicate   '),
+                 (ACTION_DELETE, 'Delete    '),
+                 (None, None),
+                 (ACTION_STEPS, 'Show steps')]
         
+        def addMenuOption(action, label):
+            if action is None: 
+                self.menuRun.add_separator()
+            else:
+                imgName = ActionIcons[action].replace('.gif', '')
+                self.menuRun.add_command(label=" "  + label, command=lambda: self.runButtonClick(action),
+                                         image=self.getImage(imgName), compound=tk.LEFT)
+        
+        for action, label in aList:
+            addMenuOption(action, label)
+        self.menuRun.post(e.x_root, e.y_root)
+                
     def clickToolbarButton(self, index, showMenu=True):
         key, btn, menu = self.ToolbarButtonsDict[index]
         if menu:
@@ -721,18 +747,17 @@ class XmippProjectGUI():
         self.cbDisplayGroup.bind('<<ComboboxSelected>>', self.cbDisplayGroupChanged)
         #cb.set(GROUP_ALL)
         
-        aList = [(ACTION_EDIT, 'edit.gif', 'Edit    Alt-E/(Enter)'), 
-                (ACTION_COPY, 'copy.gif', 'Duplicate   Alt-D/Ctrl-Enter'),
-                (ACTION_REFRESH, 'refresh.gif', 'Refresh   F5'), 
-                (ACTION_DELETE, 'delete.gif', 'Delete    Del'),
-                (ACTION_STEPS, 'run_steps.gif', 'Show run steps'),
-                (ACTION_TREE, 'tree.gif', 'Show runs dependency tree')]
+        aList = [(ACTION_EDIT, 'Edit    Alt-E/(Enter)'), 
+                (ACTION_COPY, 'Duplicate   Alt-D/Ctrl-Enter'),
+                (ACTION_DELETE, 'Delete    Del'),
+                (ACTION_TREE, 'Show runs dependency tree'),
+                (ACTION_REFRESH, 'Refresh   F5')]
         def setupButton(k, v, t):
             btn =  history.addButton(k, v, command=lambda:self.runButtonClick(k), bg=HighlightBgColor)
             ToolTip(btn, t, 500)
             self.runButtonsDict[k] = btn
-        for k, v, t in aList:
-            setupButton(k, v, t)
+        for k, v in aList:
+            setupButton(k, ActionIcons[k], v)
         
         columns = ('State', 'Modified')
         tree = XmippTree(history.frameContent, columns=columns)
@@ -743,6 +768,7 @@ class XmippProjectGUI():
         tree.heading('#0', text='Run')
         tree.bind('<<TreeviewSelect>>', self.runSelectCallback)
         tree.bind('<Double-1>', lambda e:self.runButtonClick(ACTION_DEFAULT))
+        tree.bind("<Button-3>", self.onRightClick)
         tree.grid(row=0, column=0, sticky='nsew')
         history.frameContent.columnconfigure(0, weight=1)
         history.frameContent.rowconfigure(0, weight=1)

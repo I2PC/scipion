@@ -35,9 +35,9 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
-#ifdef LINUX
-#include <unistd.h>
-#endif
+//#ifdef LINUX
+//#include <unistd.h>
+//#endif
 Micrograph::Micrograph()
 {
     auxI = new (Image<char> );
