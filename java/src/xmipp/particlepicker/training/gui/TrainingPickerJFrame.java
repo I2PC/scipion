@@ -166,6 +166,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		windowmn.add(ijmi);
 
 		templatesmi = new JMenuItem("Templates");
+		templatesmi.setEnabled(ppicker.getMode() == FamilyState.Manual);
 		editfamiliesmi = new JMenuItem("Edit Families",
 				XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
@@ -497,18 +498,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	private void setState(MicrographFamilyState state) {
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
-<<<<<<< HEAD
-
 		ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
 		setChanged(false);
-=======
-//		if (getFamilyData().getState() == MicrographFamilyState.Correct)
-//			actionsbt.setEnabled(false);// enabled only after doing corrections
-		ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
-		setChanged(false);
-		
-	
->>>>>>> az_ppicker
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		pack();
@@ -619,23 +610,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		savemi.setEnabled(changed);
 	}
 
-<<<<<<< HEAD
+
 	public void updateMicrographsModel() {
 		super.updateMicrographsModel();
 		if (templatesdialog != null)
 			loadTemplates();
-		micrographsmd.fireTableRowsUpdated(index, index);
-=======
-	public void updateMicrographsModel(boolean all) {
-		if (particlesdialog != null)
-			loadParticles();
-//		if(templatesdialog != null)
-//			loadTemplates();
+		
 		if(all)
 			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1 );
 		else
 			micrographsmd.fireTableRowsUpdated(index, index);
->>>>>>> az_ppicker
+
 		micrographstb.setRowSelectionInterval(index, index);
 		manuallb.setText(Integer.toString(ppicker
 				.getManualParticlesNumber(family)));
