@@ -206,7 +206,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 		TrainingMicrograph tm = (TrainingMicrograph) m;
 		long id;
 		try {
-			MetaData md = new MetaData();
+			MetaData md;
 			String block = null;
 			String file;
 			file = getOutputPath(m.getPosFile());
@@ -215,19 +215,20 @@ public abstract class TrainingPicker extends ParticlePicker {
 			else {
 				persistMicrographFamilies(tm);
 				for (MicrographFamilyData mfd : tm.getFamiliesData()) {
-
+					md = new MetaData();
 					for (TrainingParticle p : mfd.getManualParticles()) {
 						id = md.addObject();
 						md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
 						md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 					}
 					block = mfd.getFamily().getName() + "@" + file;
+					System.out.println(block);
 					md.writeBlock(block);
-					md.clear();
+					md.destroy();
 				}
 			}
 			persistAutomaticParticles(tm);
-			md.destroy();
+			
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);

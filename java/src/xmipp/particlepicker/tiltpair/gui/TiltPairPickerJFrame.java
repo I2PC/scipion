@@ -382,13 +382,15 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			return;// Probably from fireTableDataChanged raised
 		if(index == this.micrographstb.getSelectedRow() && iw != null && iw.isVisible())//micrograph open, no need to reopen
 			return;
+		pppicker.saveData(getMicrograph());
+		setChanged(false);
 		index = micrographstb.getSelectedRow();
 		// by me.
 		untiltedmic.releaseImage();
 		untiltedmic = pppicker.getMicrographs().get(index);
 		anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);
 		initializeCanvas();
-		pppicker.saveData(getMicrograph());
+		
 		pack();
 		if (particlesdialog != null)
 			loadParticles();
@@ -431,7 +433,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			untiltedmic.reset();
 			getParticlePicker().importParticlesFromFiles(file1, file2, format, getMicrograph());
 			pppicker.importParticlesFromFiles(file1, file2, format, untiltedmic);
-			setChanged(true);
+			pppicker.saveData(getMicrograph());
+			setChanged(false);
 			getCanvas().repaint();
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
