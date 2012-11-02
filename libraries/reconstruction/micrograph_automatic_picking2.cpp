@@ -1155,7 +1155,8 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->particleAvg.initZeros(autoPicking->particle_size+1,autoPicking->particle_size+1);
             autoPicking->particleAvg.setXmippOrigin();
         }
-        // If the PCA model exist then do not compute the average any more
+        // If the PCA model exist then we have obtain the template and then we do not want
+        // to continue it anymore
         if (fnPCAModel.exists())
             autoPicking->extractInvariant(fnInvariant,fnParticles,true);
         else
@@ -1175,6 +1176,7 @@ void ProgMicrographAutomaticPicking2::run()
         Image<double> II;
         II.read(fnPCAModel);
         autoPicking->pcaModel=II();
+        // Read rotational PCA model
         II.read(fnPCARotModel);
         autoPicking->pcaRotModel=II();
         // Read the average of the particles for convolution
@@ -1182,7 +1184,7 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->particleAvg=II();
         // Read the SVM model
         autoPicking->classifier.LoadModel(fnSVMModel);
-        // If we have generated the second svm model then we use
+        // If we have generated the second SVM model then we use
         // two classifiers.
         if (fnSVMModel2.exists())
         {
@@ -1197,10 +1199,13 @@ void ProgMicrographAutomaticPicking2::run()
     }
     if (mode=="train")
     {
+    	// If PCA does not exist obtain the PCA basis and save them
         if (!fnPCAModel.exists())
             autoPicking->trainPCA(fn_model);
         if (!fnPCARotModel.exists())
             autoPicking->trainRotPCA(fnAvgModel,fnPCARotModel.removeAllExtensions());
+
+        // If we have the models then we just load it
         Image<double> II;
         II.read(fnPCAModel);
         autoPicking->pcaModel=II();
@@ -1210,14 +1215,18 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->loadTrainingSet(fnVector);
         autoPicking->add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
         autoPicking->add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
+        // If we have some false positives also add it
         if (fnRejectedVectors.exists())
         {
+        	// Load the rejected vectors features as false positives
             autoPicking->loadAutoVectors(fnRejectedVectors);
             autoPicking->add2Dataset();
             fnRejectedVectors.deleteFile();
         }
+        // We just save the un normalized dataset
         autoPicking->saveTrainingSet(fnVector);
         autoPicking->normalizeDataset(0,1,fn_model);
+        // Generate two different dataset
         autoPicking->generateTrainSet();
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);

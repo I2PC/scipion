@@ -53,11 +53,11 @@ XmippError::XmippError(const ErrorType nerr, const String &what,
     std::cerr << "DEBUG_JM: line: " << line << std::endl;
 
     //Store information about the stack calls
-#ifdef LINUX
-    void *array[10];
-    size = backtrace(array, 10);
-    strings = backtrace_symbols(array, size);
-#endif
+//#ifdef LINUX
+//    void *array[10];
+//    size = backtrace(array, 10);
+//    strings = backtrace_symbols(array, size);
+//#endif
 }
 
 //Object Destructor

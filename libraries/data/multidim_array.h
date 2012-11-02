@@ -1381,8 +1381,10 @@ public:
 
         return fMap;
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
     }
 
     /** Core deallocate.
@@ -1405,8 +1407,10 @@ public:
         destroyData = true;
         nzyxdimAlloc = 0;
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
     }
 
     /** Alias a multidimarray.
@@ -3350,13 +3354,13 @@ public:
         double avgExample, stddevExample, avgThis, stddevThis;
         if (mask!=NULL)
         {
-        	computeAvgStdev_within_binary_mask(*mask,example,avgExample,stddevExample);
-        	computeAvgStdev_within_binary_mask(*mask,*this,avgThis,stddevThis);
+            computeAvgStdev_within_binary_mask(*mask,example,avgExample,stddevExample);
+            computeAvgStdev_within_binary_mask(*mask,*this,avgThis,stddevThis);
         }
         else
         {
-        	computeAvgStdev(avgThis,stddevThis);
-        	example.computeAvgStdev(avgExample,stddevExample);
+            computeAvgStdev(avgThis,stddevThis);
+            example.computeAvgStdev(avgExample,stddevExample);
         }
 
         // y=a+bx
@@ -4951,6 +4955,12 @@ public:
         return in;
     }
 
+    void copy(Matrix2D<T>& op1) const
+    {
+        op1.resizeNoCopy(YSIZE(*this), XSIZE(*this));
+        memcpy(MATRIX2D_ARRAY(op1), MULTIDIM_ARRAY(*this), MULTIDIM_SIZE(*this)*sizeof(T));
+    }
+
     /** Equality.
      *
      * Returns true if this object has got the same shape (origin and size)
@@ -4971,6 +4981,8 @@ public:
     }
     //@}
 };
+
+
 
 /// @name Functions for all multidimensional arrays
 /// @{
@@ -5120,7 +5132,7 @@ void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimAr
 /** Obtains the plane parameters z=p0+p1*x+p2*y.
  */
 void planeFit(const MultidimArray<double> &z, const MultidimArray<double> &x, const MultidimArray<double> &y,
-		double &p0, double &p1, double &p2);
+              double &p0, double &p1, double &p2);
 
 /*
    mod    Modulus after division.

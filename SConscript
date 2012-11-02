@@ -585,7 +585,7 @@ if MINGW:
     sys.setrecursionlimit(22500)
     libraries.append(env['MINGW_PATHS'])
     AddLibrary('XmippData', '', DataSources, libraries, 
-               ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
+               ['lib'], ['XmippExternal','regex'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)
 else:
     AddLibrary('XmippData', 'libraries/data', DataSources, libraries,
                ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + JPEGLibs + SQLiteLibs)  

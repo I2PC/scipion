@@ -5,7 +5,7 @@ import os
 import platform 
 import SCons.Script
 if platform.system() == 'Windows':
-    env = Environment(ENV=os.environ)
+    env = Environment(tools = ['mingw'], ENV = os.environ)
     env['ENV']['JAVA_HOME'] = "/c/Java/jdk1.6.0_34"
     env.PrependENVPath('PATH', 'C:\\MinGW\\bin')
     env.PrependENVPath('LIB', 'C:\\MinGW\\lib') 
@@ -206,7 +206,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     if platform.system() == 'Windows':
          AppendIfNotExists(CCFLAGS='-f permissive -Ilibraries/data -I/c/MinGW/include')
          AppendIfNotExists(CXXFLAGS='-f permissive -Ilibraries/data -I/c/MinGW/include')
-#         AppendIfNotExists(LINKFLAGS='')
+#         AppendIfNotExists(LINKFLAGS='-pthread')
 
     # QT
     if int(env['qt']):

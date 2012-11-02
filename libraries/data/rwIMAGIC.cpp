@@ -194,9 +194,6 @@ int  ImageBase::readIMAGIC(size_t select_img)
         return 0;
     }
 
-    size_t   j = 0;
-    char*   hend;
-
     // Get the header information
     fseek( fhed, IMG_INDEX(select_img) * IMAGICSIZE, SEEK_SET );
 
@@ -222,7 +219,6 @@ int  ImageBase::readIMAGIC(size_t select_img)
                 MD[i].setValue(MDL_WEIGHT,   (double)oneD);
                 MD[i].setValue(MDL_SCALE, daux);
             }
-            j++;
         }
     }
     delete header;
