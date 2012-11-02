@@ -127,8 +127,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			initFamilyPane();
 			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 
-			
-
 			initMicrographsPane();
 			add(micrographpn,
 					XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
