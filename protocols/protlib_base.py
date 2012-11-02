@@ -330,7 +330,6 @@ class XmippProject():
                 if dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
                     for k, v in dd.prot.ParamsDict.iteritems():
                         if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
-			    print "adding dep from %s to %s\n   because: key: %s, value: %s" % (dd2.extRunName, dd.extRunName, k, v)
                             dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
