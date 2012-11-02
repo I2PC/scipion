@@ -412,7 +412,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				reloadImage();
 			}
 
-			setChanged(true);
+			getParticlePicker().persistFilters();
 		}
 		catch (Exception ex)
 		{
@@ -654,7 +654,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				p.resetParticleCanvas();
 			loadParticles();
 		}
-		setChanged(true);
+		getParticlePicker().persistFamilies();
 	}
 
 	
