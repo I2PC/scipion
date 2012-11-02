@@ -267,10 +267,14 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		savemi.setEnabled(changed);
 	}
 
-	public void updateMicrographsModel()
+	public void updateMicrographsModel(boolean all)
 	{
-		super.updateMicrographsModel();
-		micrographsmd.fireTableRowsUpdated(index, index);
+		if (particlesdialog != null)
+			loadParticles();
+		if(all)
+			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1 );
+		else
+			micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		upslb.setText(Integer.toString(pppicker.getUntiltedNumber()));
 		anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);

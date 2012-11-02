@@ -472,6 +472,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 	 * an md and call this function
 	 */
 	public int importParticlesFromMd(Micrograph m, MetaData md) {
+		m.reset();
 		TrainingMicrograph tm = (TrainingMicrograph) m;
 		long[] ids = md.findObjects();
 		int x, y;
