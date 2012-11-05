@@ -782,6 +782,7 @@ protected:
 #include "rwJPEG.h"
 #include "rwTIFF.h"
 #include "rwEM.h"
+#include "rwPIF.h"
 
     /// ----------------------------------------------------------
 

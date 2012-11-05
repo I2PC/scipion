@@ -77,7 +77,10 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			}
 			catch (Exception ex)
 			{
+				canvas.repaint();
+				repaint();
 				JOptionPane.showMessageDialog(this, ex.getMessage());
+				
 			}
 		}
 		lastx = e.getX();
