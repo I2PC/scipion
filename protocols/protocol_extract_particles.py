@@ -250,7 +250,7 @@ class ProtExtractParticles(XmippProtocol):
                 from xmipp import MDL_ZSCORE
                 MD=MetaData(fnMD)
                 if MD.containsLabel(MDL_ZSCORE):
-                    MD.sort(MDL_ZSCORE,MD)
+                    #MD.sort(MDL_ZSCORE)
                     xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
                     xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                     xplotter.plotMd(MD, False, mdLabelY=MDL_ZSCORE)
@@ -419,7 +419,10 @@ def sortImagesInFamily(log, selfileRoot):
     md = MetaData(fn)
     if not md.isEmpty():
         runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput" % locals())
-
+        md.read(fn) # Should have ZScore label after runJob
+        md.sort(MDL_ZSCORE)
+        md.write(fn)
+ 
 def avgZscore(log,WorkingDir,family,micrographSelfile):
     allParticles = MetaData(join(WorkingDir, family + ".xmd"))
     mdavgZscore = MetaData()
