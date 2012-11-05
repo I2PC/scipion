@@ -4,8 +4,31 @@
 
 #{eval} expandCommentRun()
 
+#------------------------------------------------------------------------------------------------
+# {section}{has_question} Merge 
+#------------------------------------------------------------------------------------------------
+# Merge previous imports?
+"""
+You can create a new run of import micrographs by merging
+two previous runs of import micrographs.
+"""
+DoMerge2 = False
+
+# Merge previous imports?
+"""
+You can create a new run of import micrographs by merging
+two previous runs of import micrographs.
+"""
+DoMerge = False
+
+# {run}(import_micrographs) Import Micrographs Run 1
+ImportRun1 = ''
+
+# {run}(import_micrographs) Import Micrographs Run 2
+ImportRun2 = ''
+
 #-----------------------------------------------------------------------------
-# {section} Input micrographs
+# {condition}(not DoMerge) {section} Input micrographs
 #-----------------------------------------------------------------------------
 # {dir} Micrographs directory
 """Directory name from where to process all scanned micrographs"""
@@ -47,7 +70,7 @@ folder to the protocol working directory
 CopyMicrographs = False
 
 #------------------------------------------------------------------------------------------------
-# {condition}(DoPreprocess){section} Preprocessing
+# {condition}(DoPreprocess and not DoMerge){section} Preprocessing
 #------------------------------------------------------------------------------------------------
 
 # Crop borders?
@@ -68,15 +91,15 @@ DoLog = False
 
 #{condition}(DoLog) a
 """ parameter a in a - b ln(x+c)"""
-log_a=4.431
+log_a = 4.431
 
 #{condition}(DoLog) b
 """ parameter b in a - b ln(x+c)"""
-log_b=0.4018
+log_b = 0.4018
 
 #{condition}(DoLog) c
 """ parameter c in a - b ln(x+c)"""
-log_c=336.6
+log_c = 336.6
 
 # Remove bad pixels?
 """ 
@@ -90,7 +113,7 @@ DoRemoveBadPixels = False
 Stddev = 5
 
 #------------------------------------------------------------------------------------------------
-# {section} Microscope description
+# {condition}(not DoMerge){section} Microscope description
 #------------------------------------------------------------------------------------------------
 # Microscope voltage (in kV)
 Voltage = 200

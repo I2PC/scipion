@@ -120,13 +120,11 @@ if $IS_MAC; then
 	export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH
 fi
 
-#create file to include from BASH this Xmipp installation
+# Create file to include from BASH this Xmipp installation
 INC_FILE=.xmipp.bashrc
 echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
-echo '# Load configuration file ' >> $INC_FILE
-echo "test -s $XMIPP_HOME/.xmipp.cfg && . $XMIPP_HOME/.xmipp.cfg || true" >> $INC_FILE
 echo '# Load global autocomplete file ' >> $INC_FILE
 echo "test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true" >> $INC_FILE
 
@@ -134,7 +132,6 @@ if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 	echo 'export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH' >> $INC_FILE
 fi
-echo " "    >> $INC_FILE
 echo " "    >> $INC_FILE
 echo " "    >> $INC_FILE
 
@@ -167,24 +164,49 @@ echo "alias xtn='xmipp_transform_normalize'  "    >> $INC_FILE
 echo "## Other ##                            "    >> $INC_FILE
 echo "alias xrf='xmipp_resolution_fsc'       "    >> $INC_FILE
 echo "alias xrs='xmipp_resolution_ssnr'      "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "## Configuration ##                                                          "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "# This file will serve to customize some settings of you Xmipp installation  "    >> $INC_FILE
+echo "# Each setting will be in the form o a shell variable set to some value      "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "#---------- GUI ----------                                                   "    >> $INC_FILE
+echo "# If you set to 1 the value of this variable, by default the programs        "    >> $INC_FILE
+echo "# will launch the gui when call without argments, default is print the help  "    >> $INC_FILE
+echo "export XMIPP_GUI_DEFAULT=0                                                   "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "# If you set to 0 the value of this variable the script generated            "    >> $INC_FILE
+echo "# by programs gui will not be erased and you can use the same parameters     "    >> $INC_FILE
+echo "export XMIPP_GUI_CLEAN=1                                                     "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "#---------- Parallel ----------                                              "    >> $INC_FILE
+echo "# This variable will point to your job submition template file               "    >> $INC_FILE
+echo "export XMIPP_PARALLEL_LAUNCH=config_launch.py                                "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
+echo "# this configurations                                                        "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "test -s ~/.xmipp.cfg && . ~/.xmipp.cfg || true                               "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+
 chmod a+x $INC_FILE
+
 
 # for CSH or TCSH
 INC_FILE=.xmipp.csh
 echo "setenv XMIPP_HOME $PWD" > $INC_FILE
 echo 'setenv PATH $XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
-echo '# Load configuration file ' >> $INC_FILE
-echo "test -s $XMIPP_HOME/.xmipp.cfg && . $XMIPP_HOME/.xmipp.cfg || true" >> $INC_FILE
 
 if $IS_MAC; then
 	echo 'setenv DYLD_FALLBACK_LIBRARY_PATH $XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
 fi
-echo 'test -s $XMIPP_HOME/.xmipp.alias && . $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
+echo 'test -s $XMIPP_HOME/.xmipp.alias && source $XMIPP_HOME/.xmipp.alias || true' >> $INC_FILE
 
 echo " "    >> $INC_FILE
 echo " "    >> $INC_FILE
-echo " "    >> $INC_FILE
+
 echo "# Xmipp Aliases 						 "    >> $INC_FILE
 echo "## Setup ##                        "    >> $INC_FILE
 echo "alias xconfigure './setup.py -j $NUMBER_OF_CPU configure compile ' " >> $INC_FILE
@@ -212,6 +234,32 @@ echo "alias xtn 'xmipp_transform_normalize'  "    >> $INC_FILE
 echo "## Other ##                            "    >> $INC_FILE
 echo "alias xrf 'xmipp_resolution_fsc'       "    >> $INC_FILE
 echo "alias xrs 'xmipp_resolution_ssnr'      "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "## Configuration ##                                                          "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "# This file will serve to customize some settings of you Xmipp installation  "    >> $INC_FILE
+echo "# Each setting will be in the form o a shell variable set to some value      "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "#---------- GUI ----------                                                   "    >> $INC_FILE
+echo "# If you set to 1 the value of this variable, by default the programs        "    >> $INC_FILE
+echo "# will launch the gui when call without argments, default is print the help  "    >> $INC_FILE
+echo "setenv XMIPP_GUI_DEFAULT 0                                                   "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "# If you set to 0 the value of this variable the script generated            "    >> $INC_FILE
+echo "# by programs gui will not be erased and you can use the same parameters     "    >> $INC_FILE
+echo "setenv XMIPP_GUI_CLEAN 1                                                     "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "#---------- Parallel ----------                                              "    >> $INC_FILE
+echo "# This variable will point to your job submition template file               "    >> $INC_FILE
+echo "setenv XMIPP_PARALLEL_LAUNCH config_launch.py                                "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "# If you have .xmipp.cfg in your home folder it will override                "    >> $INC_FILE
+echo "# this configurations                                                        "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+echo "test -s ~/.xmipp.cfg && source ~/.xmipp.cfg || true                          "    >> $INC_FILE
+echo "                                                                             "    >> $INC_FILE
+
 chmod a+x $INC_FILE
 
 
