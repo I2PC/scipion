@@ -560,4 +560,13 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 
 	}
+
+	public boolean hasParticles() {
+		System.out.println("Looking for particles");
+		for(TrainingMicrograph m: micrographs)
+			for(MicrographFamilyData mfd: m.getFamiliesData())
+				if(mfd.hasManualParticles())
+					return true;
+		return false;
+	}
 }

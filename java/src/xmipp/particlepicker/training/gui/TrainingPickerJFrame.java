@@ -123,11 +123,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 			initImagePane();
 			add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
-			
+
 			initFamilyPane();
 			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
-
-			
 
 			initMicrographsPane();
 			add(micrographpn,
@@ -160,7 +158,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		mb.add(filtersmn);
 		mb.add(windowmn);
 		mb.add(helpmn);
-		//importffilemi.setText("Import from File...");
+		// importffilemi.setText("Import from File...");
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
@@ -194,21 +192,35 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
-	public void loadTemplates() {
+	public void loadTemplates() 
+	{
 		try {
-			if (templatesdialog == null)
-				templatesdialog = new TemplatesJDialog(
-						TrainingPickerJFrame.this);
-			else {
+			canvas.setEnabled(false);
+			XmippWindowUtil.blockGUI(getRootPane(), "Generating Templates...");
 
-				templatesdialog.loadTemplates(true);
-				templatesdialog.setVisible(true);
-			}
-		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(this, ex.getMessage());
+			Thread t = new Thread(new Runnable() {
+				public void run() {
+					if (templatesdialog == null)
+						templatesdialog = new TemplatesJDialog(
+								TrainingPickerJFrame.this);
+					else {
+
+						templatesdialog.loadTemplates(true);
+						templatesdialog.setVisible(true);
+					}
+					canvas.setEnabled(true);
+					XmippWindowUtil.releaseGUI(getRootPane());
+				}
+			});
+			t.start();
+
+		} catch (Exception e) {
+			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+			
 			if (templatesdialog != null)
 				templatesdialog.close();
 			templatesdialog = null;
+			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
@@ -411,7 +423,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	private void setThresholdChanges() {
-		//setChanged(true);
+		// setChanged(true);
 		updateMicrographsModel();
 		canvas.repaint();
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
@@ -468,7 +480,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		if (index == TrainingPickerJFrame.this.micrographstb.getSelectedRow()
 				&& iw != null && iw.isVisible())// same micrograph open
 			return;
-		ppicker.saveData(getMicrograph());// Saving changes when switching micrographs, by Coss suggestion
+		ppicker.saveData(getMicrograph());// Saving changes when switching
+											// micrographs, by Coss suggestion
 		setChanged(false);
 		index = TrainingPickerJFrame.this.micrographstb.getSelectedRow();
 		// by me.
@@ -482,7 +495,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		thresholdpn
 				.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
-		
+
 		if (particlesdialog != null)
 			loadParticles();
 
@@ -498,7 +511,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	private void setState(MicrographFamilyState state) {
 		getFamilyData().setState(state);
 		actionsbt.setText(getFamilyData().getAction());
-		ppicker.saveData(getMicrograph());// to keep consistence between files of automatic picker and mines
+		ppicker.saveData(getMicrograph());// to keep consistence between files
+											// of automatic picker and mines
 		setChanged(false);
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
@@ -529,7 +543,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	protected void initializeCanvas() {
-		
+
 		if (canvas == null) {
 			canvas = new TrainingCanvas(this);
 			iw = new ImageWindow(micrograph.getImagePlus(ppicker.getFilters()),
@@ -542,14 +556,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 		}
 		micrograph.runImageJFilters(ppicker.getFilters());
-		
+
 		double zoom = Double.parseDouble(usezoombt.getText());
-		if(zoom == -1. || ( zoom != -1. && !usezoombt.isSelected()))//setting canvas magnification
+		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))// setting
+																	// canvas
+																	// magnification
 		{
 			zoom = canvas.getMagnification();
 			usezoombt.setText(String.format("%.2f", zoom));
-		}
-		else if(usezoombt.isSelected())
+		} else if (usezoombt.isSelected())
 			canvas.setZoom(zoom);
 	}
 
@@ -610,14 +625,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		savemi.setEnabled(changed);
 	}
 
-
 	public void updateMicrographsModel(boolean all) {
 
 		if (templatesdialog != null)
 			loadTemplates();
-		
-		if(all)
-			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1 );
+
+		if (all)
+			micrographsmd.fireTableRowsUpdated(0,
+					micrographsmd.getRowCount() - 1);
 		else
 			micrographsmd.fireTableRowsUpdated(index, index);
 
@@ -628,8 +643,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 				getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
 	}
-	
-	
 
 	public ParticlePickerCanvas getCanvas() {
 		return canvas;
@@ -778,14 +791,18 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
-	
 	public void importParticlesFromFile(Format format, String file) {
 		String filename = Micrograph.getName(file, 1);
-		if(!filename.equals(getMicrograph().getName()))//validating you want use this file for this micrograph with different name
+		if (!filename.equals(getMicrograph().getName()))// validating you want
+														// use this file for
+														// this micrograph with
+														// different name
 		{
-			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
+			String msg = String
+					.format("Are you sure you want to import data from file\n%s to micrograph %s ?",
+							file, getMicrograph().getName());
 			int result = JOptionPane.showConfirmDialog(this, msg);
-			if(result != JOptionPane.YES_OPTION)
+			if (result != JOptionPane.YES_OPTION)
 				return;
 		}
 		MicrographFamilyData mfd = getFamilyData();
@@ -824,9 +841,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		if (templatesdialog != null)
 			loadTemplates();
 	}
-	
+
 	@Override
-	protected void resetData(){
+	protected void resetData() {
 		getFamilyData().reset();
 	}
 }
