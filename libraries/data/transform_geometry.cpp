@@ -1,5 +1,6 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (aerey@cnb.csic.es)
+ * Authors:     Joaquin Oton    (joton@cnb.csic.es)
+ *              J.M. De la Rosa (jmdelarosa@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -164,7 +165,6 @@ void ProgTransformGeometry::preProcess()
                   int c = i % 3;
                   MAT_ELEM(R, r, c) =  getDoubleParam("--rotate", i+1);
                 }
-                std::cerr << "DEBUG_JM: R: " << R << std::endl;
             }
             else if (STR_EQUAL(rotateType, "alignZ"))
             {
@@ -230,9 +230,8 @@ void ProgTransformGeometry::preProcess()
             //if scale factor is large splines s not the way to go, print a warning
             if( fabs(1.0-XX(scaleV)) > 0.1 )
             {
-                std::cerr << "WARNING: Do not apply large scale factor using B-splines "
-                << " choose fourier option ()"
-                << std::endl;
+              reportWarning("Do not apply large scale factor using B-splines "
+                            "choose fourier option.");
             }
             if (isVol)
             {
@@ -248,6 +247,7 @@ void ProgTransformGeometry::preProcess()
                     ZZ(scaleV) = factor;
                 }
             }
+            scale_type = SCALE_FACTOR;
         }
         else if (STR_EQUAL(getParam("--scale"), "fourier"))
         {
@@ -285,9 +285,10 @@ void ProgTransformGeometry::preProcess()
             if (factor <= 0)
                 REPORT_ERROR(ERR_VALUE_INCORRECT,"Factor must be a positive number");
             scaleV.initConstant(factor);
+            scale_type = SCALE_FACTOR_NORESIZE;
         }
 
-        if (scale_type != SCALE_FACTOR)
+        if (scale_type != SCALE_FACTOR_NORESIZE)
             applyTransform = true;
 
         if (isVol)
