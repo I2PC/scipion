@@ -152,7 +152,7 @@ void ProgVolumeToPseudoatoms::defineParams()
     addParamsLine("                         Bfactor");
     addParamsLine("  [--Nclosest+ <N=3>]                : N closest atoms, it is used only for the");
     addParamsLine("                                     : distance histogram");
-    addParamsLine("  [--minDistance+ <d=0.001>]         : Minimum distance between two pseudoatoms");
+    addParamsLine("  [--minDistance+ <d=0.001>]         : Minimum distance between two pseudoatoms (in Angstroms)");
     addParamsLine("                                     : Set it to -1 to disable");
     addParamsLine("  [--penalty+ <p=10>]                : Penalty for overshooting");
     addParamsLine("  [--sampling_rate <Ts=1>]           : Sampling rate Angstroms/pixel");
@@ -166,6 +166,7 @@ void ProgVolumeToPseudoatoms::defineParams()
 void ProgVolumeToPseudoatoms::produceSideInfo()
 {
     sigma/=sampling;
+    minDistance/=sampling;
 
     if (intensityColumn!="occupancy" && intensityColumn!="Bfactor")
         REPORT_ERROR(ERR_VALUE_INCORRECT,(std::string)"Unknown column: "+intensityColumn);
