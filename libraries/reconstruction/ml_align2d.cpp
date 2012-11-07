@@ -1888,7 +1888,7 @@ void ProgML2D::expectation()
             }
 
             //Report progress and increment the images done
-            setProgress(img_done++);
+            setProgress(++img_done);
 
             //#define DEBUG_JM1
 #ifdef DEBUG_JM1
@@ -2294,7 +2294,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         MDref.write(fn_tmp);
 
         if (outputType == OUT_REFS)
-            outRefsMd = fn_tmp;
+          outRefsMd = fn_tmp;
 
         // Write out log-file
         MetaData mdLog;

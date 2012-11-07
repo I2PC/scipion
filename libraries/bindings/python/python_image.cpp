@@ -30,162 +30,164 @@
 /**************************************************************/
 
 /* Destructor */
- void Image_dealloc(ImageObject* self)
+void Image_dealloc(ImageObject* self)
 {
     delete self->image;
     self->ob_type->tp_free((PyObject*) self);
 }//function Image_dealloc
 
 
- /* Image methods that behave like numbers */
+/* Image methods that behave like numbers */
 PyNumberMethods Image_NumberMethods =
-{
-     Image_add, //binaryfunc  nb_add;
-     Image_subtract, //binaryfunc  nb_subtract;
-     0, //binaryfunc  nb_multiply;
-     0, //binaryfunc  nb_divide;
-     0, //binaryfunc  nb_remainder;
-     0, //binaryfunc  nb_divmod;
-     0, //ternaryfunc nb_power;
-     0, //unaryfunc nb_negative;
-     0, //unaryfunc nb_positive;
-     0, //unaryfunc nb_absolute;
-     0, //inquiry nb_nonzero;       /* Used by PyObject_IsTrue */
-     0, //unaryfunc nb_invert;
-     0, //binaryfunc  nb_lshift;
-     0, //binaryfunc  nb_rshift;
-     0, //binaryfunc  nb_and;
-     0, //binaryfunc  nb_xor;
-     0, //binaryfunc  nb_or;
-     0, //coercion nb_coerce;       /* Used by the coerce() function */
-     0, //unaryfunc nb_int;
-     0, //unaryfunc nb_long;
-     0, //unaryfunc nb_float;
-     0, //unaryfunc nb_oct;
-     0, //unaryfunc nb_hex;
+    {
+        Image_add, //binaryfunc  nb_add;
+        Image_subtract, //binaryfunc  nb_subtract;
+        0, //binaryfunc  nb_multiply;
+        0, //binaryfunc  nb_divide;
+        0, //binaryfunc  nb_remainder;
+        0, //binaryfunc  nb_divmod;
+        0, //ternaryfunc nb_power;
+        0, //unaryfunc nb_negative;
+        0, //unaryfunc nb_positive;
+        0, //unaryfunc nb_absolute;
+        0, //inquiry nb_nonzero;       /* Used by PyObject_IsTrue */
+        0, //unaryfunc nb_invert;
+        0, //binaryfunc  nb_lshift;
+        0, //binaryfunc  nb_rshift;
+        0, //binaryfunc  nb_and;
+        0, //binaryfunc  nb_xor;
+        0, //binaryfunc  nb_or;
+        0, //coercion nb_coerce;       /* Used by the coerce() function */
+        0, //unaryfunc nb_int;
+        0, //unaryfunc nb_long;
+        0, //unaryfunc nb_float;
+        0, //unaryfunc nb_oct;
+        0, //unaryfunc nb_hex;
 
-     /* Added in release 2.0 */
-     Image_iadd, //binaryfunc  nb_inplace_add;
-     Image_isubtract, //binaryfunc  nb_inplace_subtract;
-     0, //binaryfunc  nb_inplace_multiply;
-     0, //binaryfunc  nb_inplace_divide;
-     0, //binaryfunc  nb_inplace_remainder;
-     0, //ternaryfunc nb_inplace_power;
-     0, //binaryfunc  nb_inplace_lshift;
-     0, //binaryfunc  nb_inplace_rshift;
-     0, //binaryfunc  nb_inplace_and;
-     0, //binaryfunc  nb_inplace_xor;
-     0, //binaryfunc  nb_inplace_or;
+        /* Added in release 2.0 */
+        Image_iadd, //binaryfunc  nb_inplace_add;
+        Image_isubtract, //binaryfunc  nb_inplace_subtract;
+        0, //binaryfunc  nb_inplace_multiply;
+        0, //binaryfunc  nb_inplace_divide;
+        0, //binaryfunc  nb_inplace_remainder;
+        0, //ternaryfunc nb_inplace_power;
+        0, //binaryfunc  nb_inplace_lshift;
+        0, //binaryfunc  nb_inplace_rshift;
+        0, //binaryfunc  nb_inplace_and;
+        0, //binaryfunc  nb_inplace_xor;
+        0, //binaryfunc  nb_inplace_or;
 
-     /* Added in release 2.2 */
-     0, //binaryfunc  nb_floor_divide;
-     0, //binaryfunc  nb_true_divide;
-     0, //binaryfunc  nb_inplace_floor_divide;
-     0, //binaryfunc  nb_inplace_true_divide;
+        /* Added in release 2.2 */
+        0, //binaryfunc  nb_floor_divide;
+        0, //binaryfunc  nb_true_divide;
+        0, //binaryfunc  nb_inplace_floor_divide;
+        0, //binaryfunc  nb_inplace_true_divide;
 
-     /* Added in release 2.5 */
-     0 //unaryfunc nb_index;
- };//Image_NumberMethods
+        /* Added in release 2.5 */
+        0 //unaryfunc nb_index;
+    };//Image_NumberMethods
 
 /* Image methods */
 PyMethodDef Image_methods[] =
-   {
-   { "applyGeo", (PyCFunction) Image_applyGeo, METH_VARARGS,
-     "Apply geometry in refering metadata to an image" },
-   { "read", (PyCFunction) Image_read, METH_VARARGS,
-     "Read image from disk" },
-   { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
-     "Read image preview" },
-   { "equal", (PyCFunction) Image_equal, METH_VARARGS,
-     "return true if both images are equal up to precision" },
-   { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
-     "Convert to PSD: center FFT and use logarithm" },
-   { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
-     "Read image from disk applying geometry in refering metadata" },
-   { "write", (PyCFunction) Image_write, METH_VARARGS,
-     "Write image to disk" },
-   { "getData", (PyCFunction) Image_getData, METH_VARARGS,
-     "Return NumPy array from image data" },
-   { "setData", (PyCFunction) Image_setData, METH_VARARGS,
-     "Copy NumPy array to image data" },
-   { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
-     "Return a pixel value" },
-   { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
-     "Initialize to value" },
-   { "initRandom", (PyCFunction) Image_initRandom, METH_VARARGS,
-     "Initialize to random value" },
-   { "resize", (PyCFunction) Image_resize, METH_VARARGS,
-     "Resize the image dimensions" },
-   { "scale", (PyCFunction) Image_scale, METH_VARARGS,
-     "Scale the image" },
-   { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
-     "set DataType for Image" },
-   { "convert2DataType", (PyCFunction) Image_convert2DataType, METH_VARARGS,
-     "Convert datatype of Image" },
-   { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
-     "Set the value of some pixel" },
-   { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
-     "Return image dimensions as a tuple" },
-   { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
-     "Return euler angles as a tuple" },
-   { "getMainHeaderValue", (PyCFunction) Image_getMainHeaderValue, METH_VARARGS,
-     "Return value from MainHeader" },
-   { "setMainHeaderValue", (PyCFunction) Image_setMainHeaderValue, METH_VARARGS,
-     "Set value to MainHeader" },
-   { "getHeaderValue", (PyCFunction) Image_getHeaderValue, METH_VARARGS,
-     "Return value from Header" },
-   { "setHeaderValue", (PyCFunction) Image_setHeaderValue, METH_VARARGS,
-     "Set value to Header" },
-                             { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
-     "Compute image statistics, return mean, dev, min and max" },
-   { NULL } /* Sentinel */
-};//Image_methods
+    {
+        { "applyGeo", (PyCFunction) Image_applyGeo, METH_VARARGS,
+          "Apply geometry in refering metadata to an image" },
+        { "read", (PyCFunction) Image_read, METH_VARARGS,
+          "Read image from disk" },
+        { "readPreview", (PyCFunction) Image_readPreview, METH_VARARGS,
+          "Read image preview" },
+        { "equal", (PyCFunction) Image_equal, METH_VARARGS,
+          "return true if both images are equal up to precision" },
+        { "convertPSD", (PyCFunction) Image_convertPSD, METH_VARARGS,
+          "Convert to PSD: center FFT and use logarithm" },
+        { "readApplyGeo", (PyCFunction) Image_readApplyGeo, METH_VARARGS,
+          "Read image from disk applying geometry in refering metadata" },
+        { "write", (PyCFunction) Image_write, METH_VARARGS,
+          "Write image to disk" },
+        { "getData", (PyCFunction) Image_getData, METH_VARARGS,
+          "Return NumPy array from image data" },
+        { "projectVolumeDouble", (PyCFunction) Image_projectVolumeDouble, METH_VARARGS,
+          "project a volume using Euler angles" },
+        { "setData", (PyCFunction) Image_setData, METH_VARARGS,
+          "Copy NumPy array to image data" },
+        { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
+          "Return a pixel value" },
+        { "initConstant", (PyCFunction) Image_initConstant, METH_VARARGS,
+          "Initialize to value" },
+        { "initRandom", (PyCFunction) Image_initRandom, METH_VARARGS,
+          "Initialize to random value" },
+        { "resize", (PyCFunction) Image_resize, METH_VARARGS,
+          "Resize the image dimensions" },
+        { "scale", (PyCFunction) Image_scale, METH_VARARGS,
+          "Scale the image" },
+        { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
+          "set DataType for Image" },
+        { "convert2DataType", (PyCFunction) Image_convert2DataType, METH_VARARGS,
+          "Convert datatype of Image" },
+        { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
+          "Set the value of some pixel" },
+        { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
+          "Return image dimensions as a tuple" },
+        { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
+          "Return euler angles as a tuple" },
+        { "getMainHeaderValue", (PyCFunction) Image_getMainHeaderValue, METH_VARARGS,
+          "Return value from MainHeader" },
+        { "setMainHeaderValue", (PyCFunction) Image_setMainHeaderValue, METH_VARARGS,
+          "Set value to MainHeader" },
+        { "getHeaderValue", (PyCFunction) Image_getHeaderValue, METH_VARARGS,
+          "Return value from Header" },
+        { "setHeaderValue", (PyCFunction) Image_setHeaderValue, METH_VARARGS,
+          "Set value to Header" },
+        { "computeStats", (PyCFunction) Image_computeStats, METH_VARARGS,
+          "Compute image statistics, return mean, dev, min and max" },
+        { NULL } /* Sentinel */
+    };//Image_methods
 
 /*Image Type */
 PyTypeObject ImageType = {
-   PyObject_HEAD_INIT(NULL)
-   0, /*ob_size*/
-   "xmipp.Image", /*tp_name*/
-   sizeof(ImageObject), /*tp_basicsize*/
-   0, /*tp_itemsize*/
-   (destructor)Image_dealloc, /*tp_dealloc*/
-   0, /*tp_print*/
-   0, /*tp_getattr*/
-   0, /*tp_setattr*/
-   Image_compare, /*tp_compare*/
-   Image_repr, /*tp_repr*/
-   &Image_NumberMethods, /*tp_as_number*/
-   0, /*tp_as_sequence*/
-   0, /*tp_as_mapping*/
-   0, /*tp_hash */
-   0, /*tp_call*/
-   0, /*tp_str*/
-   0, /*tp_getattro*/
-   0, /*tp_setattro*/
-   0, /*tp_as_buffer*/
-   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-   "Python wrapper to Xmipp Image class",/* tp_doc */
-   0, /* tp_traverse */
-   0, /* tp_clear */
-   0, /* tp_richcompare */
-   0, /* tp_weaklistoffset */
-   0, /* tp_iter */
-   0, /* tp_iternext */
-   Image_methods, /* tp_methods */
-   0, /* tp_members */
-   0, /* tp_getset */
-   0, /* tp_base */
-   0, /* tp_dict */
-   0, /* tp_descr_get */
-   0, /* tp_descr_set */
-   0, /* tp_dictoffset */
-   0, /* tp_init */
-   0, /* tp_alloc */
-   Image_new, /* tp_new */
-};//ImageType
+                             PyObject_HEAD_INIT(NULL)
+                             0, /*ob_size*/
+                             "xmipp.Image", /*tp_name*/
+                             sizeof(ImageObject), /*tp_basicsize*/
+                             0, /*tp_itemsize*/
+                             (destructor)Image_dealloc, /*tp_dealloc*/
+                             0, /*tp_print*/
+                             0, /*tp_getattr*/
+                             0, /*tp_setattr*/
+                             Image_compare, /*tp_compare*/
+                             Image_repr, /*tp_repr*/
+                             &Image_NumberMethods, /*tp_as_number*/
+                             0, /*tp_as_sequence*/
+                             0, /*tp_as_mapping*/
+                             0, /*tp_hash */
+                             0, /*tp_call*/
+                             0, /*tp_str*/
+                             0, /*tp_getattro*/
+                             0, /*tp_setattro*/
+                             0, /*tp_as_buffer*/
+                             Py_TPFLAGS_DEFAULT, /*tp_flags*/
+                             "Python wrapper to Xmipp Image class",/* tp_doc */
+                             0, /* tp_traverse */
+                             0, /* tp_clear */
+                             0, /* tp_richcompare */
+                             0, /* tp_weaklistoffset */
+                             0, /* tp_iter */
+                             0, /* tp_iternext */
+                             Image_methods, /* tp_methods */
+                             0, /* tp_members */
+                             0, /* tp_getset */
+                             0, /* tp_base */
+                             0, /* tp_dict */
+                             0, /* tp_descr_get */
+                             0, /* tp_descr_set */
+                             0, /* tp_dictoffset */
+                             0, /* tp_init */
+                             0, /* tp_alloc */
+                             Image_new, /* tp_new */
+                         };//ImageType
 
 /* Constructor */
- PyObject *
+PyObject *
 Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) type->tp_alloc(type, 0);
@@ -231,7 +233,7 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 }//function Image_new
 
 /* Image string representation */
- PyObject *
+PyObject *
 Image_repr(PyObject * obj)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -241,7 +243,7 @@ Image_repr(PyObject * obj)
 }//function Image_repr
 
 /* Image compare function */
- int
+int
 Image_compare(PyObject * obj, PyObject * obj2)
 {
     int result = -1;
@@ -262,7 +264,7 @@ Image_compare(PyObject * obj, PyObject * obj2)
 }//function Image_compare
 
 /* Compare two images up to a precision */
- PyObject *
+PyObject *
 Image_equal(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     XMIPP_TRY
@@ -291,7 +293,7 @@ Image_equal(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_equal
 
 /* write */
- PyObject *
+PyObject *
 Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -320,7 +322,7 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_write
 
 /* read */
- PyObject *
+PyObject *
 Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -352,7 +354,7 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_read
 
 /* read preview*/
- PyObject *
+PyObject *
 Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -383,7 +385,7 @@ Image_readPreview(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_readPreview
 
 /* convert to psd */
- PyObject *
+PyObject *
 Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -408,7 +410,7 @@ Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_convertPSD
 
- NPY_TYPES datatype2NpyType(DataType dt)
+NPY_TYPES datatype2NpyType(DataType dt)
 {
     switch (dt)
     {
@@ -439,7 +441,7 @@ Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 }
 
- DataType npyType2Datatype(int npy)
+DataType npyType2Datatype(int npy)
 {
     switch (npy)
     {
@@ -470,20 +472,24 @@ Image_convertPSD(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 }
 
- /** Just to statically call the function import_array
-  * required to work with NumPy arrays
-  */
+/** Just to statically call the function import_array
+ * required to work with NumPy arrays
+ */
 class NumpyStaticImport
 {
 public:
-  NumpyStaticImport() { import_array(); }
-};//class NumpyStaticImport
+    NumpyStaticImport()
+    {
+        import_array();
+    }
+}
+;//class NumpyStaticImport
 
 //Declare a variable to call the constructor
 static NumpyStaticImport _npyImport;
 
 /* getData */
- PyObject *
+PyObject *
 Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -520,8 +526,42 @@ Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_getData
 
+/* projectVolumeDouble */
+PyObject *
+Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+
+    ImageObject *self = (ImageObject*) obj;
+    double rot, tilt, psi;
+    if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
+    {
+        try
+        {
+            Projection P;
+            MultidimArray<double> * pVolume;
+            self->image->data->getMultidimArrayPointer(pVolume);
+            ArrayDim aDim;
+            pVolume->getDimensions(aDim);
+            pVolume->setXmippOrigin();
+            projectVolume(*pVolume, P, aDim.xdim, aDim.ydim,rot, tilt, psi);
+            ImageObject * result = PyObject_New(ImageObject, &ImageType);
+            Image <double> I;
+
+            result->image = new ImageGeneric();
+            result->image->setDatatype(DT_Double);
+            result->image->data->setImage(MULTIDIM_ARRAY(P));
+            return (PyObject *)result;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_projectVolumeDouble
+
 /* setData */
- PyObject *
+PyObject *
 Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -566,7 +606,7 @@ Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_setData
 
 /* getPixel */
- PyObject *
+PyObject *
 Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -589,7 +629,7 @@ Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_getPixel
 
 /* setPixel */
- PyObject *
+PyObject *
 Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -612,7 +652,7 @@ Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_setPixel
 
 /* initConstant */
- PyObject *
+PyObject *
 Image_initConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -634,7 +674,7 @@ Image_initConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_initConstant
 
 /* initRandom */
- PyObject *
+PyObject *
 Image_initRandom(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -662,7 +702,7 @@ Image_initRandom(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_initRandom
 
 /* Resize Image */
- PyObject *
+PyObject *
 Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -684,32 +724,32 @@ Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_resize
 
- /* Scale Image */
- PyObject *
- Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-     ImageObject *self = (ImageObject*) obj;
-     double xDim = 0, yDim = 0, zDim = 1;
+/* Scale Image */
+PyObject *
+Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    double xDim = 0, yDim = 0, zDim = 1;
 
-     if (self != NULL && PyArg_ParseTuple(args, "dd|d", &xDim, &yDim, &zDim))
-     {
-         try
-         {
-        	 MULTIDIM_ARRAY_GENERIC(Image_Value(self)).setXmippOrigin();
-        	 selfScaleToSize(BSPLINE2, MULTIDIM_ARRAY_GENERIC(Image_Value(self)), xDim, yDim, zDim);
-             Py_RETURN_NONE;
-         }
-         catch (XmippError &xe)
-         {
-             PyErr_SetString(PyXmippError, xe.msg.c_str());
-         }
-     }
-     return NULL;
- }//function Image_scale
+    if (self != NULL && PyArg_ParseTuple(args, "dd|d", &xDim, &yDim, &zDim))
+    {
+        try
+        {
+            MULTIDIM_ARRAY_GENERIC(Image_Value(self)).setXmippOrigin();
+            selfScaleToSize(BSPLINE2, MULTIDIM_ARRAY_GENERIC(Image_Value(self)), xDim, yDim, zDim);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_scale
 
 
 /* Set Data Type */
- PyObject *
+PyObject *
 Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -734,26 +774,26 @@ Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 Image_convert2DataType(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-   ImageObject *self = (ImageObject*) obj;
-   int datatype;
+    ImageObject *self = (ImageObject*) obj;
+    int datatype;
 
-   if (self != NULL && PyArg_ParseTuple(args, "i", &datatype))
-   {
-       try
-       {
-           self->image->convert2Datatype((DataType)datatype);
-           Py_RETURN_NONE;
-       }
-       catch (XmippError &xe)
-       {
-           PyErr_SetString(PyXmippError, xe.msg.c_str());
-       }
-   }
-   return NULL;
+    if (self != NULL && PyArg_ParseTuple(args, "i", &datatype))
+    {
+        try
+        {
+            self->image->convert2Datatype((DataType)datatype);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
 }//function Image_setDataType
 
 /* Return image dimensions as a tuple */
- PyObject *
+PyObject *
 Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -775,7 +815,7 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_getDimensions
 
 /* Return image dimensions as a tuple */
- PyObject *
+PyObject *
 Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -797,130 +837,130 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_getEulerAngles
 
 
- /* Return value from MainHeader*/
- PyObject *
- Image_getMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-	ImageObject *self = (ImageObject*) obj;
+/* Return value from MainHeader*/
+PyObject *
+Image_getMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
     PyObject *pyValue;
     int label;
 
-	if (self != NULL && PyArg_ParseTuple(args, "i", &label))
-	{
-	    try
-	    {
-	    	MDRow &mainHeader = self->image->image->MDMainHeader;
-	    	if (mainHeader.containsLabel((MDLabel)label))
-	    	{
-				MDObject * object = mainHeader.getObject((MDLabel) label);
-				pyValue = getMDObjectValue(object);
-				return pyValue;
-	    	}
-	    	else
-	    		Py_RETURN_NONE;
-	    }
-	    catch (XmippError &xe)
-	    {
-	        PyErr_SetString(PyXmippError, xe.msg.c_str());
-	    }
-	}
-	return NULL;
- }
+    if (self != NULL && PyArg_ParseTuple(args, "i", &label))
+    {
+        try
+        {
+            MDRow &mainHeader = self->image->image->MDMainHeader;
+            if (mainHeader.containsLabel((MDLabel)label))
+            {
+                MDObject * object = mainHeader.getObject((MDLabel) label);
+                pyValue = getMDObjectValue(object);
+                return pyValue;
+            }
+            else
+                Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 
- /* Set value to MainHeader*/
- PyObject *
- Image_setMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-	ImageObject *self = (ImageObject*) obj;
+/* Set value to MainHeader*/
+PyObject *
+Image_setMainHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
 
-	int label;
-	PyObject *pyValue; //Only used to skip label and value
+    int label;
+    PyObject *pyValue; //Only used to skip label and value
 
-	if (self != NULL && PyArg_ParseTuple(args, "iO", &label, &pyValue))
-	{
-		try
-		{
-			MDRow &mainHeader = self->image->image->MDMainHeader;
+    if (self != NULL && PyArg_ParseTuple(args, "iO", &label, &pyValue))
+    {
+        try
+        {
+            MDRow &mainHeader = self->image->image->MDMainHeader;
 
-			MDObject * object = createMDObject(label, pyValue);
-			if (!object)
-				return NULL;
-			mainHeader.setValue(*object);
-			delete object;
-			Py_RETURN_TRUE;
-		}
-		catch (XmippError &xe)
-		{
-			PyErr_SetString(PyXmippError, xe.msg.c_str());
-		}
-	}
-	return NULL;
- }
+            MDObject * object = createMDObject(label, pyValue);
+            if (!object)
+                return NULL;
+            mainHeader.setValue(*object);
+            delete object;
+            Py_RETURN_TRUE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 
- /* Return value from Header, now using only the first image*/
- PyObject *
- Image_getHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-		ImageObject *self = (ImageObject*) obj;
-	    PyObject *pyValue;
-	    int label;
+/* Return value from Header, now using only the first image*/
+PyObject *
+Image_getHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    PyObject *pyValue;
+    int label;
 
-		if (self != NULL && PyArg_ParseTuple(args, "i", &label))
-		{
-		    try
-		    {
-		    	MDRow &mainHeader = self->image->image->MD[0];
-		    	if (mainHeader.containsLabel((MDLabel)label))
-		    	{
-					MDObject * object = mainHeader.getObject((MDLabel) label);
-					pyValue = getMDObjectValue(object);
-					return pyValue;
-		    	}
-		    	else
-		    		Py_RETURN_NONE;
-		    }
-		    catch (XmippError &xe)
-		    {
-		        PyErr_SetString(PyXmippError, xe.msg.c_str());
-		    }
-		}
-		return NULL;
- }
- /* Set value to Header, now using only the first image*/
- PyObject *
- Image_setHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-		ImageObject *self = (ImageObject*) obj;
+    if (self != NULL && PyArg_ParseTuple(args, "i", &label))
+    {
+        try
+        {
+            MDRow &mainHeader = self->image->image->MD[0];
+            if (mainHeader.containsLabel((MDLabel)label))
+            {
+                MDObject * object = mainHeader.getObject((MDLabel) label);
+                pyValue = getMDObjectValue(object);
+                return pyValue;
+            }
+            else
+                Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+/* Set value to Header, now using only the first image*/
+PyObject *
+Image_setHeaderValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
 
-		int label;
-		PyObject *pyValue; //Only used to skip label and value
+    int label;
+    PyObject *pyValue; //Only used to skip label and value
 
-		if (self != NULL && PyArg_ParseTuple(args, "iO", &label, &pyValue))
-		{
-			try
-			{
-				MDRow &mainHeader = self->image->image->MD[0];
+    if (self != NULL && PyArg_ParseTuple(args, "iO", &label, &pyValue))
+    {
+        try
+        {
+            MDRow &mainHeader = self->image->image->MD[0];
 
-				MDObject * object = createMDObject(label, pyValue);
-				if (!object)
-					return NULL;
-				mainHeader.setValue(*object);
-				delete object;
-				Py_RETURN_TRUE;
-			}
-			catch (XmippError &xe)
-			{
-				PyErr_SetString(PyXmippError, xe.msg.c_str());
-			}
-		}
-		return NULL;
- }
+            MDObject * object = createMDObject(label, pyValue);
+            if (!object)
+                return NULL;
+            mainHeader.setValue(*object);
+            delete object;
+            Py_RETURN_TRUE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 
 
 
 
 /* Return image dimensions as a tuple */
- PyObject *
+PyObject *
 Image_computeStats(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
@@ -944,7 +984,7 @@ Image_computeStats(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//function Image_computeStats
 
 /* Add two images, operator + */
- PyObject *
+PyObject *
 Image_add(PyObject *obj1, PyObject *obj2)
 {
     ImageObject * result = PyObject_New(ImageObject, &ImageType);
@@ -964,7 +1004,7 @@ Image_add(PyObject *obj1, PyObject *obj2)
 }//operator +
 
 /** Image inplace add, equivalent to += operator */
- PyObject *
+PyObject *
 Image_iadd(PyObject *obj1, PyObject *obj2)
 {
     ImageObject * result = NULL;
@@ -983,7 +1023,7 @@ Image_iadd(PyObject *obj1, PyObject *obj2)
 }//operator +=
 
 /* Subtract two images, operator - */
- PyObject *
+PyObject *
 Image_subtract(PyObject *obj1, PyObject *obj2)
 {
     ImageObject * result = PyObject_New(ImageObject, &ImageType);
@@ -1003,7 +1043,7 @@ Image_subtract(PyObject *obj1, PyObject *obj2)
 }//operator +
 
 /** Image inplace subtraction, equivalent to -= operator */
- PyObject *
+PyObject *
 Image_isubtract(PyObject *obj1, PyObject *obj2)
 {
     ImageObject * result = NULL;
@@ -1020,88 +1060,88 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
     return (PyObject *)result;
 }//operator +=
 
- PyObject *
- Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-     ImageObject *self = (ImageObject*) obj;
+PyObject *
+Image_readApplyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
 
-     if (self != NULL)
-     {
-         PyObject *md = NULL;
-         PyObject *only_apply_shifts = Py_False;
-         PyObject *wrap = (WRAP ? Py_True : Py_False);
-         size_t objectId = BAD_OBJID;
-         bool boolOnly_apply_shifts = false;
-         bool boolWrap = WRAP;
-         int datamode = DATA;
-         size_t select_img = ALL_IMAGES;
+    if (self != NULL)
+    {
+        PyObject *md = NULL;
+        PyObject *only_apply_shifts = Py_False;
+        PyObject *wrap = (WRAP ? Py_True : Py_False);
+        size_t objectId = BAD_OBJID;
+        bool boolOnly_apply_shifts = false;
+        bool boolWrap = WRAP;
+        int datamode = DATA;
+        size_t select_img = ALL_IMAGES;
 
-         if (PyArg_ParseTuple(args, "Ok|OikO", &md, &objectId, &only_apply_shifts, &datamode, &select_img, &wrap))
-         {
-             try
-             {
-                 if (PyBool_Check(only_apply_shifts))
-                     boolOnly_apply_shifts = (only_apply_shifts == Py_True);
-                 else
-                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
-                 if (PyBool_Check(wrap))
-                     boolWrap = (wrap == Py_True);
-                 else
-                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
-                 ApplyGeoParams params;
-                 params.only_apply_shifts = boolOnly_apply_shifts;
-                 params.datamode = (DataMode)datamode;
-                 params.select_img = select_img;
-                 params.wrap = boolWrap;
-                 self->image->readApplyGeo(MetaData_Value(md), objectId, params);
-                 Py_RETURN_NONE;
-             }
-             catch (XmippError &xe)
-             {
-                 PyErr_SetString(PyXmippError, xe.msg.c_str());
-             }
-         }
-     }
-     return NULL;
- }
+        if (PyArg_ParseTuple(args, "Ok|OikO", &md, &objectId, &only_apply_shifts, &datamode, &select_img, &wrap))
+        {
+            try
+            {
+                if (PyBool_Check(only_apply_shifts))
+                    boolOnly_apply_shifts = (only_apply_shifts == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
+                if (PyBool_Check(wrap))
+                    boolWrap = (wrap == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::readApplyGeo: Expecting boolean value");
+                ApplyGeoParams params;
+                params.only_apply_shifts = boolOnly_apply_shifts;
+                params.datamode = (DataMode)datamode;
+                params.select_img = select_img;
+                params.wrap = boolWrap;
+                self->image->readApplyGeo(MetaData_Value(md), objectId, params);
+                Py_RETURN_NONE;
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}
 
- PyObject *
- Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
- {
-     ImageObject *self = (ImageObject*) obj;
+PyObject *
+Image_applyGeo(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
 
-     if (self != NULL)
-     {
-         PyObject *md = NULL;
-         PyObject *only_apply_shifts = Py_False;
-         PyObject *wrap = (WRAP ? Py_True : Py_False);
-         size_t objectId = BAD_OBJID;
-         bool boolOnly_apply_shifts = false;
-         bool boolWrap = WRAP;
+    if (self != NULL)
+    {
+        PyObject *md = NULL;
+        PyObject *only_apply_shifts = Py_False;
+        PyObject *wrap = (WRAP ? Py_True : Py_False);
+        size_t objectId = BAD_OBJID;
+        bool boolOnly_apply_shifts = false;
+        bool boolWrap = WRAP;
 
-         if (PyArg_ParseTuple(args, "Ok|OO", &md, &objectId, &only_apply_shifts, &wrap))
-         {
-             try
-             {
-                 if (PyBool_Check(only_apply_shifts))
-                     boolOnly_apply_shifts = (only_apply_shifts == Py_True);
-                 else
-                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
-                 if (PyBool_Check(wrap))
-                     boolWrap = (wrap == Py_True);
-                 else
-                     PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
-                 ApplyGeoParams params;
-                 params.only_apply_shifts = boolOnly_apply_shifts;
-                 params.wrap = boolWrap;
-                 self->image->applyGeo(MetaData_Value(md), objectId, params);
-                 Py_RETURN_NONE;
-             }
-             catch (XmippError &xe)
-             {
-                 PyErr_SetString(PyXmippError, xe.msg.c_str());
-             }
-         }
-     }
-     return NULL;
- }
+        if (PyArg_ParseTuple(args, "Ok|OO", &md, &objectId, &only_apply_shifts, &wrap))
+        {
+            try
+            {
+                if (PyBool_Check(only_apply_shifts))
+                    boolOnly_apply_shifts = (only_apply_shifts == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+                if (PyBool_Check(wrap))
+                    boolWrap = (wrap == Py_True);
+                else
+                    PyErr_SetString(PyExc_TypeError, "ImageGeneric::applyGeo: Expecting boolean value");
+                ApplyGeoParams params;
+                params.only_apply_shifts = boolOnly_apply_shifts;
+                params.wrap = boolWrap;
+                self->image->applyGeo(MetaData_Value(md), objectId, params);
+                Py_RETURN_NONE;
+            }
+            catch (XmippError &xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}

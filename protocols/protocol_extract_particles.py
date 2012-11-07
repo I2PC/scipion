@@ -26,7 +26,6 @@ _templateDict = {
         # This templates are relative to a micrographDir
         'mic_block': _mic_block,
         'mic_block_fn': _mic_block+'@%(fn)s',
-        'sorted': '%(root)s_sorted.xmd',
         'extract_list':  join('%(ExtraDir)s', "%(family)s_extract_list.xmd")      
         }
 
@@ -158,8 +157,7 @@ class ProtExtractParticles(XmippProtocol):
         else:
             self.insertStep('gatherSelfiles',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,family=self.Family)
             selfileRoot=self.workingDirPath(self.Family)
-            fnOut = _getFilename('sorted', root=selfileRoot)
-            self.insertStep('sortImagesInFamily',verifyfiles=[fnOut],selfileRoot=selfileRoot)
+            self.insertStep('sortImagesInFamily',selfileRoot=selfileRoot)
             self.insertStep('avgZscore',WorkingDir=self.WorkingDir,family=self.Family,
                                micrographSelfile=self.micrographs)
 
@@ -176,6 +174,8 @@ class ProtExtractParticles(XmippProtocol):
             errors.append("Picking run is not valid")
         if self.DownsampleFactor<1:
             errors.append("Downsampling factor must be >=1")
+        if self.TiltPairs and self.DoFlip:
+            errors.append("Phase cannot be corrected on tilt pairs")
         return errors
 
     def summary(self):
@@ -244,14 +244,17 @@ class ProtExtractParticles(XmippProtocol):
                 runShowJ(selfile)
                 
             selfileRoot = self.workingDirPath(self.Family)
-            fnSorted = _getFilename('sorted', root=selfileRoot)
-            if exists(fnSorted):
+            fnMD = selfileRoot+".xmd"
+            if exists(fnMD):
                 from protlib_gui_figure import XmippPlotter
                 from xmipp import MDL_ZSCORE
-                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                xplotter.plotMdFile(fnSorted, False, mdLabelY=MDL_ZSCORE)
-                xplotter.show()
+                MD=MetaData(fnMD)
+                if MD.containsLabel(MDL_ZSCORE):
+                    #MD.sort(MDL_ZSCORE)
+                    xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
+                    xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                    xplotter.plotMd(MD, False, mdLabelY=MDL_ZSCORE)
+                    xplotter.show()
     
     def createBlocksInExtractFile(self,fnMicrographsSel):
         md = MetaData(fnMicrographsSel)
@@ -413,13 +416,13 @@ def gatherTiltPairSelfiles(log, family, WorkingDir, ExtraDir, fnMicrographs):
 
 def sortImagesInFamily(log, selfileRoot):
     fn = selfileRoot + '.xmd'
-    fnSorted = _getFilename('sorted', root=selfileRoot)
     md = MetaData(fn)
     if not md.isEmpty():
-        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput -o %(fnSorted)s" % locals())
-    else:
-        createLink(log, fn, fnSorted)
-
+        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput" % locals())
+        md.read(fn) # Should have ZScore label after runJob
+        md.sort(MDL_ZSCORE)
+        md.write(fn)
+ 
 def avgZscore(log,WorkingDir,family,micrographSelfile):
     allParticles = MetaData(join(WorkingDir, family + ".xmd"))
     mdavgZscore = MetaData()

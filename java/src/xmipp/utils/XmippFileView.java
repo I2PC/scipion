@@ -42,14 +42,16 @@ public class XmippFileView extends FileView {
 
 	public String getDescription(File f) {
 		try {
-			String filename = f.getPath();
-			if (Filename.isSingleImage(filename) ||
-				Filename.isStack(filename) ||
-				Filename.isVolume(filename)){
-				ImageGeneric image = new ImageGeneric(filename);
-				String desc = String.format("<Image dimensions: %d x %d", 
-						image.getXDim(), image.getYDim());
-				return desc;
+			if (!f.isDirectory()) {
+				String filename = f.getPath();
+				if (Filename.isSingleImageExt(filename)
+						|| Filename.isStackExt(filename)
+						|| Filename.isVolumeExt(filename)) {
+					ImageGeneric image = new ImageGeneric(filename);
+					String desc = String.format("<Image dimensions: %d x %d",
+							image.getXDim(), image.getYDim());
+					return desc;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -70,17 +72,15 @@ public class XmippFileView extends FileView {
 		Icon icon = null;
 		try {
 			String filename = f.getPath();
-			//if (Filename.exists(filename)) 
+			// if (Filename.exists(filename))
 			{
 				String iconString = "generic_file.gif";
 				if (f.isDirectory())
 					iconString = "folderopen.gif";
-				if (Filename.isSingleImageExt(filename))
+				else if (Filename.isSingleImageExt(filename))
 					iconString = "image.gif";
-				else if (Filename.isMetadata(filename)){
-					//System.out.format("file: %s is metadata\n", filename);
+				else if (Filename.isMetadataExt(filename)) 
 					iconString = "md.gif";
-				}
 				else if (Filename.isVolumeExt(filename))
 					iconString = "vol.gif";
 				else if (Filename.isStackExt(filename))

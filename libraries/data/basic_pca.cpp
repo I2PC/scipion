@@ -89,8 +89,17 @@ void PCAMahalanobisAnalyzer::standardarizeVariables()
     // Divide by stddev
     MultidimArray<float> istddevF;
     istddevF.resize(stddev);
+    int NoInformation=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(stddev)
-    DIRECT_A1D_ELEM(istddevF,i)=(float)(1.0/DIRECT_A1D_ELEM(stddev,i));
+    if (DIRECT_A1D_ELEM(stddev,i)>XMIPP_EQUAL_ACCURACY)
+    	DIRECT_A1D_ELEM(istddevF,i)=(float)(1.0/DIRECT_A1D_ELEM(stddev,i));
+    else
+    {
+    	DIRECT_A1D_ELEM(istddevF,i)=0.0;
+    	NoInformation++;
+    }
+    if (NoInformation==XSIZE(stddev))
+    	REPORT_ERROR(ERR_NUMERICAL,"There is no information to perform PCA");
     for (int n=0; n<N; n++)
     {
         MultidimArray<float> &aux=v[n];

@@ -37,6 +37,7 @@
 #include <data/xmipp_image_extension.h>
 #include <data/xmipp_color.h>
 #include <data/symmetries.h>
+#include <data/projection.h>
 #include <reconstruction/ctf_estimate_from_micrograph.h>
 
 #include "python_filename.h"

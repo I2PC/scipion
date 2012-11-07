@@ -74,15 +74,15 @@ public class XmippFilePreview extends JComponent implements
 
 		try {
 			String filename = file.getPath();
-			if (!file.exists()){
+			if (!file.exists() || file.isDirectory()){
 				thumbnail = null;
 				return;
 			}
-			if (Filename.isSingleImage(filename) ||
-					Filename.isStack(filename) ||
-					Filename.isVolume(filename))
+			if (Filename.isSingleImageExt(filename) ||
+					Filename.isStackExt(filename) ||
+					Filename.isVolumeExt(filename))
 				loadImage(filename);
-			else if (Filename.isMetadata(filename)){
+			else if (Filename.isMetadataExt(filename)){
 				MetaData md = new MetaData(filename);
 				int[] labels = md.getActiveLabels();
 				for (int l: labels)

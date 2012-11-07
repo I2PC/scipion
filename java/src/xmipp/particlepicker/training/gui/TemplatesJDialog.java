@@ -55,7 +55,7 @@ public class TemplatesJDialog extends JDialog {
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			int size = frame.getFamily().getSize();
 
-			if (frame.getAvailableParticles().isEmpty()) {
+			if (!frame.getParticlePicker().hasParticles()) {
 				templatespn.removeAll();
 				templatespn.setPreferredSize(new Dimension(
 						(int) (size * templates.getNDim()), size));
