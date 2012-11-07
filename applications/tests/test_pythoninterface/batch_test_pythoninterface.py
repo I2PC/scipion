@@ -221,7 +221,14 @@ class TestXmippPythonInterface(unittest.TestCase):
         
         imgAdd -= img2
         self.assertEqual(img1, imgAdd)   
-        
+
+    def test_Image_project(self):
+        vol=Image(testFile('progVol.vol'))
+        vol.convert2DataType(DT_DOUBLE)
+        proj=vol.projectVolumeDouble(0.,0.,0.)
+        proj.write("/tmp/kk.spi") 
+        self.assertEqual(1,1)
+                
     def test_Image_read(self):
         imgPath = testFile("tinyImage.spi")
         img = Image(imgPath)        
