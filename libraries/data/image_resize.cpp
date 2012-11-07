@@ -36,6 +36,7 @@ void ProgImageResize::defineParams()
     each_image_produces_an_output = true;
     save_metadata_stack = true;
     keep_input_columns = true;
+    allow_apply_geo = true;
     temporaryOutput = false;
     XmippMetadataProgram::defineParams();
     //usage
@@ -44,7 +45,12 @@ void ProgImageResize::defineParams()
     //keywords
     addKeywords("transform, dimension, pyramid, fourier, scale");
     //examples
-
+    addExampleLine("Resize a group of images to half size", false);
+    addExampleLine("xmipp_image_resize -i images.xmd --factor 0.5 --oroot halvedOriginal");
+    addExampleLine("For pyramid resizing(increase volume size 4 times):", false);
+    addExampleLine("xmipp_image_resize -i input/bacteriorhodopsin.vol --pyramid 2 -o bdr_x4.vol");
+    addExampleLine("Resize from 128 to 64 using Fourier", false);
+    addExampleLine("xmipp_image_resize -i images.xmd --fourier 64 --oroot halvedFourierDim");
     //params
     addParamsLine("--factor <n=0.5>                 : Resize a factor of dimensions, 0.5 halves and 2 doubles.");
     addParamsLine(" alias -n;");
@@ -64,28 +70,26 @@ void ProgImageResize::readParams()
 {
     XmippMetadataProgram::readParams();
     String degree = getParam("--interp");
+
     if (degree == "spline")
         splineDegree = BSPLINE3;
     else if (degree == "linear")
         splineDegree = LINEAR;
+
     scale_type = RESIZE_NONE;
-    apply_geo = !checkParam("--dont_apply_geo");
 }
 
 
 void ProgImageResize::preProcess()
 {
     double factor;
+    double oxdim = xdimOut, oydim = ydimOut, ozdim = zdimOut;
 
     //If zdimOut greater than 1, is a volume and should apply transform
     dim = (isVol = (zdimOut > 1)) ? 3 : 2;
-    //Check that fourier interpolation is only for scale in 2d
-    if (splineDegree == INTERP_FOURIER &&
-        (checkParam("--shift") || checkParam("--rotate") || isVol))
-        REPORT_ERROR(ERR_ARG_INCORRECT, "Fourier interpolation is only allowed for scale in 2D");
 
-    scaleV.resizeNoCopy(dim);
-    scaleV.initConstant(1.);
+    resizeFactor.resizeNoCopy(dim);
+    resizeFactor.initConstant(1.);
 
     if (fn_out.empty() && oroot.empty())
     {
@@ -99,14 +103,14 @@ void ProgImageResize::preProcess()
         //Calculate scale factor from images sizes and given dimensions
         //this approach assumes that all images have equal size
 
-        double oxdim = xdimOut, oydim = ydimOut, ozdim = zdimOut;
+
 
         if (checkParam("--dim"))
         {
             xdimOut = getIntParam("--dim", 0);
             ydimOut = STR_EQUAL(getParam("--dim", 1), "x") ? xdimOut : getIntParam("--dim", 1);
-            XX(scaleV) = (double)xdimOut / oxdim;
-            YY(scaleV) = (double)ydimOut / oydim;
+            XX(resizeFactor) = (double)xdimOut / oxdim;
+            YY(resizeFactor) = (double)ydimOut / oydim;
         }
         else
         {
@@ -115,12 +119,11 @@ void ProgImageResize::preProcess()
                 REPORT_ERROR(ERR_VALUE_INCORRECT,"Resize factor must be a positive number");
             xdimOut = (int) (xdimOut * factor);
             ydimOut = (int) (ydimOut * factor);
-            XX(scaleV) = factor;
-            YY(scaleV) = factor;
+            resizeFactor.initConstant(factor);
         }
 
         //if scale factor is large splines s not the way to go, print a warning
-        if( fabs(1.0-XX(scaleV)) > 0.1 )
+        if( fabs(1.0-XX(resizeFactor)) > 0.1 )
         {
             reportWarning("Do not apply large scale factor using B-splines "
                           "choose fourier option.");
@@ -132,13 +135,10 @@ void ProgImageResize::preProcess()
             {
                 zdimOut = STR_EQUAL(getParam("--dim", 2), "x")
                           ? xdimOut : getIntParam("--dim", 2);
-                ZZ(scaleV) = (double)zdimOut / ozdim;
+                ZZ(resizeFactor) = (double)zdimOut / ozdim;
             }
             else
-            {
                 zdimOut = (int) (zdimOut * factor);
-                ZZ(scaleV) = factor;
-            }
         }
         scale_type = RESIZE_FACTOR;
     }
@@ -150,8 +150,10 @@ void ProgImageResize::preProcess()
         scale_type = RESIZE_FOURIER;
 
         xdimOut = getIntParam("--fourier", 0);
-        ydimOut = STR_EQUAL(getParam("--fourier", 1), "x") ? xdimOut : getIntParam("--scale", 1);
+        ydimOut = STR_EQUAL(getParam("--fourier", 1), "x") ? xdimOut : getIntParam("--fourier", 1);
         fourier_threads = getIntParam("--fourier", 2);
+        XX(resizeFactor) = (double)xdimOut / oxdim;
+        YY(resizeFactor) = (double)ydimOut / oydim;
         //Do not think this is true
         //            if (oxdim < xdimOut || oydim < ydimOut)
         //                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
@@ -170,35 +172,48 @@ void ProgImageResize::preProcess()
             pyramid_level *= -1; //change sign, negative means reduce operation
             scale_type = RESIZE_PYRAMID_REDUCE;
         }
+        resizeFactor.initConstant(factor);
     }
 }
 
+#define SCALE_SHIFT(shiftLabel, resizeFactor) if (rowIn.containsLabel(shiftLabel)) {\
+    rowIn.getValue(shiftLabel, aux); aux *= (resizeFactor); rowOut.setValue(shiftLabel, aux); }
+
 void ProgImageResize::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
-
-//    if (!apply_geo)
-//        geo2TransformationMatrix(rowOut, B);
+    double aux;
+    if (apply_geo)
+    {
+      SCALE_SHIFT(MDL_SHIFT_X, XX(resizeFactor));
+      SCALE_SHIFT(MDL_SHIFT_Y, YY(resizeFactor));
+      if (isVol)
+        SCALE_SHIFT(MDL_SHIFT_Z, ZZ(resizeFactor));
+    }
+    else
+    {
+      rowOut.clear();
+      rowOut.setValue(MDL_IMAGE, fnImgOut);
+    }
 
     img.read(fnImg);
     img().setXmippOrigin();
 
-    imgOut.setDatatype(img.getDatatype());
-    imgOut().resize(1, zdimOut, ydimOut, xdimOut, false);
-    imgOut().setXmippOrigin();
-
     switch (scale_type)
     {
+    case RESIZE_FACTOR:
+        selfScaleToSize(splineDegree, img(), xdimOut, ydimOut, zdimOut);
+        break;
     case RESIZE_PYRAMID_EXPAND:
-        selfPyramidExpand(splineDegree, imgOut(), pyramid_level);
+        selfPyramidExpand(splineDegree, img(), pyramid_level);
         break;
     case RESIZE_PYRAMID_REDUCE:
-        selfPyramidReduce(splineDegree, imgOut(), pyramid_level);
+        selfPyramidReduce(splineDegree, img(), pyramid_level);
         break;
     case RESIZE_FOURIER:
-        selfScaleToSizeFourier(ydimOut, xdimOut,imgOut(), fourier_threads);
+        selfScaleToSizeFourier(ydimOut, xdimOut, img(), fourier_threads);
         break;
     }
-    imgOut.write(fnImgOut);
+    img.write(fnImgOut);
 }
 
 void ProgImageResize::postProcess()
