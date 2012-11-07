@@ -184,8 +184,6 @@ void MpiProgML2D::endIteration()
     writeOutputFiles(model, OUT_ITER);
 }
 
-#define FN_ITER_REFS() formatString("iter%06d@%s_iter_refs.xmd", iter, fn_root.c_str())
-
 void MpiProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
     //All nodes should arrive to writeOutput files at same time
@@ -194,7 +192,7 @@ void MpiProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType
     if (node->isMaster())
         ProgML2D::writeOutputFiles(model, outputType);
     else if (outputType == OUT_REFS)
-        outRefsMd = FN_ITER_REFS();
+        outRefsMd = FN_CLASSES_MD(getIterExtraPath(fn_root, iter));
     //All nodes wait until files are written
     node->barrierWait();
 }
@@ -429,7 +427,7 @@ void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputTyp
     }
     else if (outputType == OUT_REFS)
     {
-      outRefsMd = FN_ITER_REFS();
+      outRefsMd = FN_CLASSES_MD(getIterExtraPath(fn_root, iter));
       LOG(formatString("MpiProgMLF2D::writeOutputFiles : slave setting outRefsMd = %s", outRefsMd.c_str()).c_str());
     }
     //All nodes wait until files are written

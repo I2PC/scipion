@@ -34,9 +34,6 @@
 #include "xmipp_image_base.h"
 #include "xmipp_image_generic.h"
 #include "xmipp_color.h"
-#ifndef __MINGW32__
-#include <limits.h>
-#endif
 
 /// @addtogroup Images
 //@{
@@ -1265,7 +1262,7 @@ private:
      */
     void mmapFile()
     {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
         if (this->hFile->mode == WRITE_READONLY)
             mFd = open(dataFName.c_str(), O_RDONLY, S_IREAD);
         else
@@ -1294,22 +1291,26 @@ private:
         data.data = reinterpret_cast<T*> (map+mappedOffset);
         data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
     }
 
     /* Munmap the image file.
      */
     void munmapFile()
     {
-#ifndef __MINGW32__
+#ifdef XMIPP_MMAP
         munmap((char*)(data.data)-mappedOffset,mappedSize);
         close(mFd);
         data.data = NULL;
         mappedSize = mappedOffset = 0;
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
     }
 
     /* Return the datatype of the current image object

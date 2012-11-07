@@ -1,20 +1,18 @@
 package xmipp.particlepicker.training.model;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-import xmipp.jni.ImageGeneric;
+
+import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
+import xmipp.particlepicker.Format;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippMessage;
 
 public abstract class TrainingPicker extends ParticlePicker {
@@ -22,15 +20,12 @@ public abstract class TrainingPicker extends ParticlePicker {
 	protected List<TrainingMicrograph> micrographs;
 
 	public static FamilyState previousStep(FamilyState step) {
-		if (step == FamilyState.Manual)
-			return null;
-		if (step == FamilyState.Supervised)
-			return FamilyState.Manual;
+		if (step == FamilyState.Manual) return null;
+		if (step == FamilyState.Supervised) return FamilyState.Manual;
 		return null;
 	}
 
-	public TrainingPicker(String selfile, String outputdir, String fname,
-			FamilyState mode) {
+	public TrainingPicker(String selfile, String outputdir, String fname, FamilyState mode) {
 		super(selfile, outputdir, fname, mode);
 		this.micrographs = new ArrayList<TrainingMicrograph>();
 
@@ -44,16 +39,13 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	public boolean hasEmptyMicrographs(Family f) {
 		for (TrainingMicrograph m : micrographs)
-			if (m.getFamilyData(f).isEmpty())
-				return true;
+			if (m.getFamilyData(f).isEmpty()) return true;
 		return false;
 	}
 
 	public static FamilyState nextStep(FamilyState step) {
-		if (step == FamilyState.Manual)
-			return FamilyState.Supervised;
-		if (step == FamilyState.Supervised)
-			return FamilyState.Review;
+		if (step == FamilyState.Manual) return FamilyState.Supervised;
+		if (step == FamilyState.Supervised) return FamilyState.Review;
 		return null;
 	}
 
@@ -63,8 +55,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	public TrainingMicrograph getMicrograph(String name) {
 		for (TrainingMicrograph m : getMicrographs())
-			if (m.getName().equalsIgnoreCase(name))
-				return m;
+			if (m.getName().equalsIgnoreCase(name)) return m;
 		return null;
 	}
 
@@ -85,24 +76,18 @@ public abstract class TrainingPicker extends ParticlePicker {
 			else if (md.containsLabel(MDLabel.MDL_IMAGE))
 				fileLabel = MDLabel.MDL_IMAGE;
 			else
-				throw new IllegalArgumentException(
-						String.format(
-								"Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s",
-								selfile));
+				throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
 
 			for (long id : ids) {
 				file = md.getValueString(fileLabel, id);
-				if (existsctf)
-					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
-				micrograph = new TrainingMicrograph(file, ctf, families,
-						getMode());
+				if (existsctf) ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+				micrograph = new TrainingMicrograph(file, ctf, families, getMode());
 				loadMicrographData(micrograph);
 
 				micrographs.add(micrograph);
 			}
-			if (micrographs.size() == 0)
-				throw new IllegalArgumentException(String.format(
-						"No micrographs specified on %s", selfile));
+			md.destroy();
+			if (micrographs.size() == 0) throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -113,33 +98,29 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	public void loadMicrographData(TrainingMicrograph micrograph) {
 		try {
-			String file = getOutputPath(micrograph.getPosFile());
 			String fname;
 			Family family;
 			MicrographFamilyState state;
 			MicrographFamilyData mfd;
 			List<MicrographFamilyData> mfdatas = new ArrayList<MicrographFamilyData>();
-			if (!new File(file).exists())
-				return;
-			MetaData md = new MetaData("families@" + file);
+			if (!new File(getOutputPath(micrograph.getPosFile())).exists()) return;
+			MetaData md = new MetaData("families@" + getOutputPath(micrograph.getPosFile()));
 			for (long id : md.findObjects()) {
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
-				state = MicrographFamilyState.valueOf(md.getValueString(
-						MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
+				state = MicrographFamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
 				family = getFamily(fname);
 				mfd = new MicrographFamilyData(micrograph, family, state);
-				if (getMode() == FamilyState.Review
-						&& mfd.getStep() != FamilyState.Review) {
+				if (getMode() == FamilyState.Review && mfd.getStep() != FamilyState.Review) {
 					mfd.setState(MicrographFamilyState.Review);
 					setChanged(true);
 				}
-				loadManualParticles(mfd, file);
-				file = getOutputPath(micrograph.getAutoPosFile());
-				loadAutomaticParticles(mfd, file, false);
+				loadManualParticles(mfd, getOutputPath(micrograph.getPosFile()));
+				loadAutomaticParticles(mfd, getOutputPath(micrograph.getAutoPosFile()), false);
 				mfdatas.add(mfd);
 			}
 			micrograph.setFamiliesState(mfdatas);
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -148,31 +129,27 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	public void loadManualParticles(MicrographFamilyData mfd) {
-		loadManualParticles(mfd,
-				getOutputPath(mfd.getMicrograph().getPosFile()));
+		loadManualParticles(mfd, getOutputPath(mfd.getMicrograph().getPosFile()));
 	}
 
 	public void loadManualParticles(MicrographFamilyData mfd, String file) {
-		if (!new File(file).exists())
-			return;
+		if (!new File(file).exists()) return;
 		Family family = mfd.getFamily();
-		if (!containsBlock(file, family.getName()))
-			return;
+		if (!containsBlock(file, family.getName())) return;
 		int x, y;
 		TrainingParticle particle;
 
-		MetaData md;
 		try {
-			md = new MetaData(family.getName() + "@" + file);
+			MetaData md = new MetaData(family.getName() + "@" + file);
 
 			for (long id : md.findObjects()) {
 
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-				particle = new TrainingParticle(x, y, family,
-						mfd.getMicrograph());
+				particle = new TrainingParticle(x, y, family, mfd.getMicrograph());
 				mfd.addManualParticle(particle);
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -180,39 +157,31 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	public void loadAutomaticParticles(MicrographFamilyData mfd) {
-		loadAutomaticParticles(mfd, getOutputPath(mfd.getMicrograph()
-				.getAutoPosFile()), false);
+		loadAutomaticParticles(mfd, getOutputPath(mfd.getMicrograph().getAutoPosFile()), false);
 	}
 
-	public void loadAutomaticParticles(MicrographFamilyData mfd, String file,
-			boolean imported) {
-		if (!new File(file).exists())
-			return;
+	public void loadAutomaticParticles(MicrographFamilyData mfd, String file, boolean imported) {
+		if (!new File(file).exists()) return;
 		Family f = mfd.getFamily();
-		if (!containsBlock(file, f.getName()))
-			return;
+		if (!containsBlock(file, f.getName())) return;
 		int x, y;
 		AutomaticParticle particle;
 		Double cost;
-		MetaData md;
 		boolean deleted;
 		try {
-			md = new MetaData(f.getName() + "@" + file);
+			MetaData md = new MetaData(f.getName() + "@" + file);
 
 			for (long id : md.findObjects()) {
 
 				x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 				cost = md.getValueDouble(MDLabel.MDL_COST, id);
-				if (cost == null)
-					throw new IllegalArgumentException("Invalid format for "
-							+ file);
-				deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? false
-						: true;
-				particle = new AutomaticParticle(x, y, f, mfd.getMicrograph(),
-						cost, deleted);
+				if (cost == null) throw new IllegalArgumentException("Invalid format for " + file);
+				deleted = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? false : true;
+				particle = new AutomaticParticle(x, y, f, mfd.getMicrograph(), cost, deleted);
 				mfd.addAutomaticParticle(particle, imported);
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
@@ -220,31 +189,44 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	public void persistMicrographs() {
+		try {
+			for (TrainingMicrograph m : micrographs) 
+				saveData(m);
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+
+	}
+
+	public void saveData(Micrograph m) {
+		TrainingMicrograph tm = (TrainingMicrograph) m;
 		long id;
 		try {
-			System.out.println("persisting all micrographs");
 			MetaData md;
 			String block = null;
 			String file;
-			for (TrainingMicrograph m : micrographs) {
-				file = getOutputPath(m.getPosFile());
-				if (!m.hasData())
-					new File(file).delete();
-				else {
-					persistMicrographFamilies(m);
-					for (MicrographFamilyData mfd : m.getFamiliesData()) {
-						md = new MetaData();
-						for (TrainingParticle p : mfd.getManualParticles()) {
-							id = md.addObject();
-							md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
-							md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
-						}
-						block = mfd.getFamily().getName() + "@" + file;
-						md.writeBlock(block);
+			file = getOutputPath(m.getPosFile());
+			if (!m.hasData())
+				new File(file).delete();
+			else {
+				persistMicrographFamilies(tm);
+				for (MicrographFamilyData mfd : tm.getFamiliesData()) {
+					md = new MetaData();
+					for (TrainingParticle p : mfd.getManualParticles()) {
+						id = md.addObject();
+						md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+						md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 					}
+					block = mfd.getFamily().getName() + "@" + file;
+					System.out.println(block);
+					md.writeBlock(block);
+					md.destroy();
 				}
-				persistAutomaticParticles(m);
 			}
+			persistAutomaticParticles(tm);
+			
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -267,8 +249,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 			long id;
 			if (mfd.hasAutomaticParticles()) {
-				String file = getOutputPath(mfd.getMicrograph()
-						.getAutoPosFile());
+				String file = getOutputPath(mfd.getMicrograph().getAutoPosFile());
 				String section = mfd.getFamily().getName() + "@" + file;
 				MetaData md = new MetaData();
 				for (AutomaticParticle p : mfd.getAutomaticParticles()) {
@@ -276,10 +257,10 @@ public abstract class TrainingPicker extends ParticlePicker {
 					md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
 					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 					md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
-					md.setValueInt(MDLabel.MDL_ENABLED, (!p.isDeleted()) ? 1
-							: -1, id);
+					md.setValueInt(MDLabel.MDL_ENABLED, (!p.isDeleted()) ? 1 : -1, id);
 				}
 				md.write(section);
+				md.destroy();
 			}
 
 		} catch (Exception e) {
@@ -295,12 +276,11 @@ public abstract class TrainingPicker extends ParticlePicker {
 			MetaData md = new MetaData();
 			for (MicrographFamilyData mfd : m.getFamiliesData()) {
 				id = md.addObject();
-				md.setValueString(MDLabel.MDL_PICKING_FAMILY, mfd.getFamily()
-						.getName(), id);
-				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE,
-						mfd.getState().toString(), id);
+				md.setValueString(MDLabel.MDL_PICKING_FAMILY, mfd.getFamily().getName(), id);
+				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, mfd.getState().toString(), id);
 			}
 			md.writeBlock("families@" + file);
+			md.destroy();
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -309,40 +289,34 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	public int getNextFreeMicrograph(int index) {
-		if(micrographs.size() < index)
-			return -1;
-		for (int i = index; i < micrographs.size(); i ++) {
-			if (micrographs.get(i).getFamilyData(family).getState() == MicrographFamilyState.Available)
-				return i;
+		if (micrographs.size() < index) return -1;
+		for (int i = index; i < micrographs.size(); i++) {
+			if (micrographs.get(i).getFamilyData(family).getState() == MicrographFamilyState.Available) return i;
 		}
 		return -1;
 	}
 
 	public void resetFamilyData(MicrographFamilyData mfd) {
 		String block;
-		MetaData emptymd = new MetaData();
 		try {
+			MetaData emptymd = new MetaData();
 			// just in case of user reset
 			if (this instanceof SupervisedParticlePicker)
-				new File(
-						((SupervisedParticlePicker) this)
-								.getTrainingAutoFeaturesVectorFile(mfd))
-						.delete();
+				new File(((SupervisedParticlePicker) this).getTrainingAutoFeaturesVectorFile(mfd)).delete();
 
 			if (!mfd.getAutomaticParticles().isEmpty()) {
 				// removing automatic particles
-				block = String.format("%s@%s", mfd.getFamily().getName(),
-						getOutputPath(mfd.getMicrograph().getAutoPosFile()));
+				block = String.format("%s@%s", mfd.getFamily().getName(), getOutputPath(mfd.getMicrograph().getAutoPosFile()));
 
 				emptymd.writeBlock(block);
 			}
 			if (!mfd.getManualParticles().isEmpty()) {
 				// removing manual particles
-				block = String.format("%s@%s", mfd.getFamily().getName(),
-						getOutputPath(mfd.getMicrograph().getPosFile()));
+				block = String.format("%s@%s", mfd.getFamily().getName(), getOutputPath(mfd.getMicrograph().getPosFile()));
 				emptymd.writeBlock(block);
 			}
 			mfd.reset();// Resetting family data
+			emptymd.destroy();
 
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
@@ -355,16 +329,17 @@ public abstract class TrainingPicker extends ParticlePicker {
 		if (isChanged()) {
 			super.saveData();
 			persistMicrographs();
-//			for(Family f: families)
-//			{
-//				updateFamilyTemplates(f);
-//				try {
-//					f.getTemplates().write(getOutputPath(f.getName() + "_template.stk"));
-//				} catch (Exception e) {
-//					getLogger().log(Level.SEVERE, e.getMessage(), e);
-//					throw new IllegalArgumentException(e);
-//				}
-//			}
+			// for(Family f: families)
+			// {
+			// updateFamilyTemplates(f);
+			// try {
+			// f.getTemplates().write(getOutputPath(f.getName() +
+			// "_template.stk"));
+			// } catch (Exception e) {
+			// getLogger().log(Level.SEVERE, e.getMessage(), e);
+			// throw new IllegalArgumentException(e);
+			// }
+			// }
 		}
 	}
 
@@ -389,7 +364,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 	public void exportParticles(String file) {
 
 		try {
-			MetaData md;
+			MetaData md = new MetaData();
 			MicrographFamilyData mfd;
 			boolean append = false;
 			long id;
@@ -397,7 +372,6 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 				mfd = m.getFamilyData(family);
 				if (!mfd.isEmpty()) {
-					md = new MetaData();
 					for (TrainingParticle p : mfd.getParticles()) {
 						id = md.addObject();
 						md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
@@ -409,8 +383,10 @@ public abstract class TrainingPicker extends ParticlePicker {
 					else
 						md.writeBlock("mic_" + m.getName() + "@" + file);
 					append = true;
+					md.clear();
 				}
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
@@ -418,168 +394,116 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	@Override
-	public void importParticlesFromXmipp24Folder(String path) {
-		throw new UnsupportedOperationException(
-				XmippMessage.getNotImplementedYetMsg());
+	public Format detectFormat(String path) {
+		Format[] formats = { Format.Xmipp24, Format.Xmipp30, Format.Eman };
 
-	}
-
-	@Override
-	public void importParticlesFromXmipp30Folder(String dir) {
-		MicrographFamilyData mfd;
 		for (TrainingMicrograph m : micrographs) {
-			mfd = m.getFamilyData(family);
-			loadManualParticles(mfd, dir + File.separator + m.getPosFile());
-			loadAutomaticParticles(mfd,
-					dir + File.separator + m.getAutoPosFile(), true);// boolean
-																		// for
-																		// imported,
-																		// so
-																		// that
-																		// available
-																		// micrographs
-																		// can
-																		// have
-																		// automatic
-																		// particles
-		}
-	}
-
-	public void importParticlesFromEmanFolder(String folder) {
-		String file;
-		for (TrainingMicrograph tm : micrographs) {
-			file = folder + "/" + tm.getName() + ".box";
-			importParticlesFromEmanFile(tm.getFamilyData(family), file);
-		}
-	}
-
-	public void importParticlesFromXmipp24File(MicrographFamilyData familyData,
-			String file) {
-		throw new UnsupportedOperationException(
-				XmippMessage.getNotImplementedYetMsg());
-
-	}
-
-	public void importParticlesFromXmipp30File(MicrographFamilyData mfd,
-			String file) {
-		try {
-			loadAutomaticParticles(mfd, file, true);// if manual raises
-													// exception
-		} catch (Exception e) {
-			loadManualParticles(mfd, file);
-		}
-	}
-
-	public void importParticlesFromEmanFile(MicrographFamilyData mfd,
-			String file) {
-		if (!new File(file).exists())
-			return;
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new FileReader(file));
-			boolean inverty = false;
-			String line = reader.readLine();
-			reader.close();
-			if (line.split("\t").length > 4)// eman 1.0
-				inverty = true;
-			MetaData md = new MetaData();
-			md.readPlain(file, "Xcoor Ycoor particleSize");
-			long[] ids;
-			Micrograph mic = mfd.getMicrograph();
-			Family family = mfd.getFamily();
-			int x, y, size = 0, height = mic.height;
-			Double cost = 2.0;
-
-			long fid = md.firstObject();
-			size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
-			int half = size / 2;
-			
-			ids = md.findObjects();			
-			for (long id : ids) {
-				x = md.getValueInt(MDLabel.MDL_XCOOR, id) + half;
-				y = md.getValueInt(MDLabel.MDL_YCOOR, id) + half;
-				if (inverty) {
-					
-					//height = mfd.getMicrograph().getImagePlus().getHeight();
-					y = height - y;
-				}
-				if (!mic.fits(x, y, size))// ignore out of
-															// bounds particle
-				{
-					System.out.println(XmippMessage
-							.getOutOfBoundsMsg("Particle")
-							+ String.format(" on x:%s y:%s", x, y));
-					continue;
-				}
-				mfd.addManualParticle(new TrainingParticle(x, y, family, mic, cost));
-
+			for (Format f : formats) {
+				if (Filename.exists(getImportMicrographName(path, m.getFile(), f))) return f;
 			}
-			if (size > 0)
-				family.setSize(size);
-
-		} catch (Exception e) {
-
-			if (reader != null)
-				try {
-					reader.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
 		}
-
+		return Format.Unknown;
 	}
+
+	/** Return the number of particles imported from a file */
+	public int importParticlesFromFile(String path, Format f, Micrograph m) {
+		MetaData md = new MetaData();
+		fillParticlesMdFromFile(path, f, m, md);
+		int particles = (md != null) ? importParticlesFromMd(m, md) : 0;
+		md.destroy();
+		return particles;
+	}// function importParticlesFromFile
+
+	@Override
+	/** Return the number of particles imported */
+	public int importParticlesFromFolder(String path, Format f) {
+		if (f == Format.Auto) f = detectFormat(path);
+		if (f == Format.Unknown) return 0;
+
+		String filename;
+		int particles = 0;
+
+		// System.out.println("==========MICROGRAPHS==========");
+		// for (TrainingMicrograph m : micrographs)
+		// System.out.println("      name: " + m.getFile());
+		// System.out.format("  number: %d\n", micrographs.size());
+		//
+		// System.out.println("==========IMPORTING==========");
+		for (TrainingMicrograph m : micrographs) {
+			filename = getImportMicrographName(path, m.getFile(), f);
+			System.out.println("  filename: " + filename);
+			if (Filename.exists(filename)) {
+				// System.out.println("    ........EXISTS");
+				particles += importParticlesFromFile(filename, f, m);
+			}
+		}
+		// System.out.format("==========PARTICLES: %d\n", particles);
+		return particles;
+	}// function importParticlesFromFolder
 
 	public void importAllParticles(String file) {// Expected a file for all
 													// micrographs
 		try {
-			MetaData md;
-			long[] ids;
-			int x, y;
-			Double cost;
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
 			String block;
+			MetaData md = new MetaData();
+
 			for (TrainingMicrograph m : micrographs) {
 				m.reset();
-
 				block = "mic_" + m.getName();
 				if (blocks.contains(block)) {
 					String blockName = block + "@" + file;
-				
-					md = new MetaData(blockName);
-
-					ids = md.findObjects();
-					for (long id : ids) {
-						x = md.getValueInt(MDLabel.MDL_XCOOR, id);
-						y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-						cost = md.getValueDouble(MDLabel.MDL_COST, id);
-						if (cost == null || cost == 0 || cost > 1)
-							m.addManualParticle(new TrainingParticle(x, y,
-									family, m, cost));
-						else
-							m.addAutomaticParticle(new AutomaticParticle(x, y,
-									family, m, cost, false), true);
-					}
+					md.read(blockName);
+					importParticlesFromMd(m, md);
 				}
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
 
-	}
+	}// function importAllParticles
+
+	/**
+	 * Import particles from md, all method to import from files should create
+	 * an md and call this function
+	 */
+	public int importParticlesFromMd(Micrograph m, MetaData md) {
+		m.reset();
+		TrainingMicrograph tm = (TrainingMicrograph) m;
+		long[] ids = md.findObjects();
+		int x, y;
+		double cost;
+		boolean hasCost = md.containsLabel(MDLabel.MDL_COST);
+		int particles = 0;
+		int size = family.getSize();
+
+		for (long id : ids) {
+			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
+			if (!m.fits(x, y, size))// ignore out of
+			// bounds particle
+			{
+				System.out.println(XmippMessage.getOutOfBoundsMsg("Particle") + String.format(" on x:%s y:%s", x, y));
+				continue;
+			}
+			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
+			if (cost == 0 || cost > 1)
+				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost));
+			else
+				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
+			++particles;
+		}
+		return particles;
+	}// function importParticlesFromMd
 
 	public void removeFamily(Family family) {
-		if (getManualParticlesNumber(family) > 0)// perhaps I have to check
+		if (getManualParticlesNumber(family) > 0) // perhaps I have to check
 													// automatic particles
-			throw new IllegalArgumentException(
-					XmippMessage.getAssociatedDataMsg("family"));
-		if (families.size() == 1)
-			throw new IllegalArgumentException(
-					XmippMessage.getIllegalDeleteMsg("family"));
+			throw new IllegalArgumentException(XmippMessage.getAssociatedDataMsg("family"));
+		if (families.size() == 1) throw new IllegalArgumentException(XmippMessage.getIllegalDeleteMsg("family"));
 		families.remove(family);
 		for (TrainingMicrograph m : micrographs)
 			m.removeFamilyData(family);
@@ -588,63 +512,53 @@ public abstract class TrainingPicker extends ParticlePicker {
 	public static void main(String[] args) {
 		try {
 			String file = "/home/airen/DNABC/ParticlePicking/Auto/run_001/DefaultFamily_extract_list.xmd";
-			MetaData md;
+			MetaData md = new MetaData();
 			long[] ids;
 			int x, y;
 			Double cost;
 			String[] blocksArray = MetaData.getBlocksInMetaDataFile(file);
 			List<String> blocks = Arrays.asList(blocksArray);
-			int total = 0;
 			for (String block : blocksArray) {
-				System.out.format("block: %s\n", block);
 				String blockName = block + "@" + file;
-				System.out
-						.format("creating md with blockName: %s\n", blockName);
-				md = new MetaData(blockName);
-				System.out.format("   created\n");
+				md.read(blockName);
 
 				ids = md.findObjects();
-				total += ids.length;
-				System.out.format("   objects found: %d, total: %d\n",
-						ids.length, total);
 				for (long id : ids) {
 					x = y = 100;
 					cost = 0.0;
 					x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 					y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 					cost = md.getValueDouble(MDLabel.MDL_COST, id);
-					System.out.format("   x: %d, y:%d, cost: %f\n", x, y, cost);
 				}
-				System.out.format("   coords read\n");
 			}
+			md.destroy();
 		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
 	}
-	
-	
-//	public void updateFamilyTemplates(Family f) {
-//		ImageGeneric igp;
-//		List<TrainingParticle> particles;
-//		MicrographFamilyData mfd;
-//		for(TrainingMicrograph m: micrographs)
-//		{
-//			mfd = m.getFamilyData(f);
-//			for (int i = 0; i < mfd.getManualParticles().size(); i++) {
-//				particles = mfd.getManualParticles();
-//				igp = particles.get(i).getImageGeneric();
-//				if (i < f.getTemplatesNumber())
-//					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-//				else
-//					try {
-//						f.getTemplates().alignImages(igp);
-//					} catch (Exception e) {
-//						throw new IllegalArgumentException(e.getMessage());
-//					}
-//			}
-//		}
-//
-//	}
+
+	// public void updateFamilyTemplates(Family f) {
+	// ImageGeneric igp;
+	// List<TrainingParticle> particles;
+	// MicrographFamilyData mfd;
+	// for(TrainingMicrograph m: micrographs)
+	// {
+	// mfd = m.getFamilyData(f);
+	// for (int i = 0; i < mfd.getManualParticles().size(); i++) {
+	// particles = mfd.getManualParticles();
+	// igp = particles.get(i).getImageGeneric();
+	// if (i < f.getTemplatesNumber())
+	// f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+	// else
+	// try {
+	// f.getTemplates().alignImages(igp);
+	// } catch (Exception e) {
+	// throw new IllegalArgumentException(e.getMessage());
+	// }
+	// }
+	// }
+	//
+	// }
 
 }

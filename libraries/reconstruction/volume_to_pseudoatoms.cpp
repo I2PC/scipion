@@ -152,7 +152,7 @@ void ProgVolumeToPseudoatoms::defineParams()
     addParamsLine("                         Bfactor");
     addParamsLine("  [--Nclosest+ <N=3>]                : N closest atoms, it is used only for the");
     addParamsLine("                                     : distance histogram");
-    addParamsLine("  [--minDistance+ <d=0.001>]         : Minimum distance between two pseudoatoms");
+    addParamsLine("  [--minDistance+ <d=0.001>]         : Minimum distance between two pseudoatoms (in Angstroms)");
     addParamsLine("                                     : Set it to -1 to disable");
     addParamsLine("  [--penalty+ <p=10>]                : Penalty for overshooting");
     addParamsLine("  [--sampling_rate <Ts=1>]           : Sampling rate Angstroms/pixel");
@@ -166,6 +166,7 @@ void ProgVolumeToPseudoatoms::defineParams()
 void ProgVolumeToPseudoatoms::produceSideInfo()
 {
     sigma/=sampling;
+    minDistance/=sampling;
 
     if (intensityColumn!="occupancy" && intensityColumn!="Bfactor")
         REPORT_ERROR(ERR_VALUE_INCORRECT,(std::string)"Unknown column: "+intensityColumn);
@@ -347,12 +348,12 @@ void ProgVolumeToPseudoatoms::removeSeeds(int Nseeds)
                         {
                             if (useMask && iMask3D(k,i,j)==0)
                                 continue;
-                            if (Vdiff(k,i,j)<v)
+                            if (A3D_ELEM(Vdiff,k,i,j)<v)
                             {
                                 kneg=k;
                                 ineg=i;
                                 jneg=j;
-                                Vdiff(k,i,j)=0;
+                                A3D_ELEM(Vdiff,k,i,j)=0;
                                 found=true;
                             }
                         }
@@ -469,15 +470,17 @@ void ProgVolumeToPseudoatoms::drawApproximation()
     double N=0;
     percentageDiff=0;
     const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vcurrent())
+    const MultidimArray<double> &mVcurrent=Vcurrent();
+    const MultidimArray<double> &mVin=Vin();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVcurrent)
     {
-        if (useMask && iMask3D(k,i,j)==0)
+        if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
             continue;
-        double Vinv=Vin(k,i,j);
+        double Vinv=A3D_ELEM(mVin,k,i,j);
         if (Vinv<=0)
             continue;
-        double vdiff=Vinv-Vcurrent(k,i,j);
-        double vperc=ABS(vdiff);
+        double vdiff=Vinv-A3D_ELEM(mVcurrent,k,i,j);
+        double vperc=fabs(vdiff);
         energyDiff+=vdiff*vdiff;
         percentageDiff+=vperc;
         N++;
@@ -572,9 +575,7 @@ const
     FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
     {
         double Vinv=A3D_ELEM(mVin,k,i,j);
-        if (Vinv<=0)
-            continue;
-        if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
+        if (Vinv<=0 || (useMask && A3D_ELEM(iMask3D,k,i,j)==0))
             continue;
         double vdiff=A3D_ELEM(region,k,i,j)-Vinv;
         double vperc=(vdiff<0)?-vdiff:penalty*vdiff;

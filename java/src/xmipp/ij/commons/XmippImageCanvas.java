@@ -70,6 +70,22 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		}
 	}
 	
+	public void setZoom(double zoom)
+	{
+		if(Math.abs(getMagnification() - zoom) <= 0.025)
+		{
+			if (getMagnification() <= 1.0)
+				imp.repaintWindow();
+			return;
+		}
+		if (getMagnification() < zoom)
+			zoomIn(0, 0);
+		else
+			zoomOut(0, 0);
+		
+		setZoom(zoom);
+	}
+	
 	public void mouseReleased(MouseEvent e)
 	{
 		if (getTool() == Tool.IMAGEJ)//do nothing for ImageJ tool is mine is selected

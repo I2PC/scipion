@@ -16,8 +16,7 @@ class ProtRCT(XmippProtocol):
         self.Import = 'from protocol_rct import *'
 
     def defineSteps(self):
-        extractionProt = self.getProtocolFromRunName(self.ExtractionRun)
-        pickingDir = getWorkingDirFromRunName(extractionProt.PickingRun)
+        pickingDir = getWorkingDirFromRunName(self.ExtractionRun)
         self.insertStep("createLink2",filename="acquisition_info.xmd",dirSrc=pickingDir,dirDest=self.WorkingDir)
 
         classNumbers = getListFromRangeString(self.SelectedClasses)
@@ -77,6 +76,21 @@ class ProtRCT(XmippProtocol):
             errors.append("Maximum shift must be in the range 0-100")
         if self.LowPassFilter>0.5 or self.LowPassFilter<0:
             errors.append("Low pass filter must be in the range 0-0.5")
+        extractRootName = os.path.join(getWorkingDirFromRunName(self.ExtractionRun),"DefaultFamily")
+        fn=extractRootName+".xmd"
+        if not os.path.exists(fn):
+            errors.append("Cannot find "+fn)
+        fn=extractRootName+"_untilted.xmd"
+        if not os.path.exists(fn):
+            errors.append("Cannot find "+fn)
+        fn=extractRootName+"_tilted.xmd"
+        if not os.path.exists(fn):
+            errors.append("Cannot find "+fn)
+        pickingDir = getWorkingDirFromRunName(self.ExtractionRun)
+        fn=os.path.join(pickingDir,"tilted_pairs.xmd")
+        if not os.path.exists(fn):
+            errors.append("Cannot find "+fn)
+            
         return errors    
 
     def visualize(self):
@@ -110,11 +124,17 @@ def gatherPairs(log,WorkingDir,ClassNumbers,ClassFile,ExtractRootName,PickingDir
     fnOut=os.path.join(WorkingDir,"classes.xmd")
     for classNo in ClassNumbers:
         MDclass=MetaData("class%06d_images@%s"%(classNo,ClassFile))
+        MDclass.write("PPPclass.xmd")
+        MDpairs.write("PPPpairs.xmd")
         MDjoin1.join(MDclass,MDpairs,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
+        MDjoin1.write("PPP1.xmd")
         MDjoin2.join(MDjoin1,MDuntiltedAux,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
+        MDjoin2.write("PPP2.xmd")
         MDjoin3.join(MDjoin2,MDtiltedAux,MDL_IMAGE_TILTED,MDL_IMAGE_TILTED,LEFT_JOIN)
+        MDjoin3.write("PPP3.xmd")
         MDjoin4.join(MDjoin3,MDtiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
         MDjoin4.write("class%06d_images@%s"%(classNo,fnOut),MD_APPEND)
+        MDjoin4.write("PPP4.xmd")
 
 def reconstructClass(log,WorkingDir,ClassNameIn,ClassNameOut,ClassRepresentative,
                      CenterMaxShift,ThinObject,SkipTiltedTranslations,ClassVolumeOut,

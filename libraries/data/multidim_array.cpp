@@ -540,47 +540,41 @@ void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimAr
 }
 
 
-void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2)
+void planeFit(const MultidimArray<double> &z, const MultidimArray<double> &x, const MultidimArray<double> &y,
+		double &p0, double &p1, double &p2)
 {
-	 if (x.zdim > 1)
-	 {
-		 REPORT_ERROR(ERR_MATRIX_SIZE, "Outside: the input MultidimArray has to have size 2 x 2");
-	 }
-	 if (x.nzyxdim < 10)
-	 {
-		 REPORT_ERROR(ERR_MATRIX_SIZE, "Outside: matrix has not got enough components");
-	 }
+	 if (MULTIDIM_SIZE(z)!=MULTIDIM_SIZE(y) || MULTIDIM_SIZE(z)!=MULTIDIM_SIZE(x))
+		 REPORT_ERROR(ERR_MULTIDIM_SIZE,"Not all vectors are of the same size");
+	 if (MULTIDIM_SIZE(z) < 10)
+		 REPORT_ERROR(ERR_MULTIDIM_SIZE, "Not enough elements to compute Least Squares plane fit");
 
 	 double m11=0, m12=0, m13=0, m21=0, m22=0, m23=0, m31=0, m32=0, m33=0;
 	 double b1=0, b2=0, b3=0;
 
-	 for (int i = 0; i < x.xdim; ++i)
-		 for (int j = 0; j < x.ydim; ++j)
-		 {
-			 m11+=i*i;
-			 m12+=i*j;
-			 m13+=i;
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(z)
+	 {
+		 double X=DIRECT_MULTIDIM_ELEM(x,n);
+		 double Y=DIRECT_MULTIDIM_ELEM(y,n);
+		 double Z=DIRECT_MULTIDIM_ELEM(z,n);
+		 m11+=X*X;
+		 m12+=X*Y;
+		 m13+=X;
 
-			 m21=m12;
-			 m22+=i*j;
-			 m23+=j;
+		 m22+=Y*Y;
+		 m23+=Y;
 
-			 m31=m13;
-			 m32+=m23;
-
-			 b1+=i*A2D_ELEM(x,i,j);
-			 b2+=j*A2D_ELEM(x,i,j);
-			 b3+=A2D_ELEM(x,i,j);
-		 }
-
-	 m33=x.ndim;
+		 b1+=X*Z;
+		 b2+=Y*Z;
+		 b3+=Z;
+	 }
+	 m21=m12;
+	 m31=m13;
+	 m32=m23;
+	 m33=MULTIDIM_SIZE(z);
 
 	 Matrix2D<double> A(3, 3);
-	 A.initZeros();
 	 Matrix1D<double> b(3);
-	 b.initZeros();
 	 Matrix1D<double> c(3);
-	 c.initZeros();
 
 	 A(0,0)=m11;
 	 A(0,1)=m12;
@@ -600,5 +594,4 @@ void planeFit(const MultidimArray<double> &x, double &p0, double &p1, double &p2
 	 p0 = c(2);
 	 p2 = c(1);
 	 p1 = c(0);
-
 }

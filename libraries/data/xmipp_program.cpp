@@ -194,7 +194,7 @@ int XmippMetadataProgram::tryRead(int argc, char ** argv, bool reportErrors )
 {
     try
     {
-		this->read( argc, argv,  reportErrors );
+        this->read( argc, argv,  reportErrors );
     }
     catch (XmippError &xe)
     {
@@ -222,7 +222,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
             doRun = true;
         else
         {
-           const char * gui_default = getenv("XMIPP_GUI_DEFAULT");
+            const char * gui_default = getenv("XMIPP_GUI_DEFAULT");
             if (gui_default != NULL && STR_EQUAL(gui_default, "1"))
                 createGUI();
             else
@@ -241,7 +241,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
                 if (verbose) //if 0, ignore the parameter, useful for mpi programs
                     verbose = getIntParam("--verbose");
                 this->readParams();
-              doRun = !checkParam("--xmipp_validate_params"); //just validation, not run
+                doRun = !checkParam("--xmipp_validate_params"); //just validation, not run
             }
         }
         catch (XmippError &xe)
@@ -287,24 +287,26 @@ void XmippProgram::initProgress(size_t total, size_t stepBin)
 {
     if (verbose)
     {
-      progressTotal = total;
-      progressStep = XMIPP_MAX(1, total / stepBin);
-      init_progress_bar(total);
+        progressTotal = total;
+        progressStep = XMIPP_MAX(1, total / stepBin);
+        progressLast = 0;
+        init_progress_bar(total);
     }
 }
 
 /** Notify progress on work */
 void XmippProgram::setProgress(size_t value)
 {
-  if (verbose && value % progressStep == 0)
-    progress_bar(value);
+    progressLast = value ? value : progressLast + 1;
+    if (verbose && progressLast % progressStep == 0)
+        progress_bar(progressLast);
 }
 
 /** Notify end of work */
 void XmippProgram::endProgress()
 {
-  if (verbose)
-    progress_bar(progressTotal);
+    if (verbose)
+        progress_bar(progressTotal);
 }
 
 void XmippProgram::setProgramName(const char * name)
@@ -534,7 +536,7 @@ void XmippMetadataProgram::defineParams()
 
 void XmippMetadataProgram::defineLabelParam()
 {
-	addParamsLine(" [--label+ <image_label=image>]   : Label to be used to read/write images.");
+    addParamsLine(" [--label+ <image_label=image>]   : Label to be used to read/write images.");
 }
 
 void XmippMetadataProgram::readParams()
@@ -625,7 +627,7 @@ void XmippMetadataProgram::show()
         return;
     std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo)
-        std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
+        std::cout << "Reading geometrical transformations stored in metadata" << std::endl;
     if (!fn_out.empty())
         std::cout << "Output File: " << fn_out << std::endl;
     if (!oroot.empty())
