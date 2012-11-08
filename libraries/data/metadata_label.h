@@ -558,6 +558,11 @@ public:
     /** Function to test whether is empty */
     bool empty() const;
 
+    /** Reset the values of the labels related to
+     *  geometry to their default values
+     */
+    void resetGeo(bool addLabels = true);
+
     /** Get object */
     MDObject * getObject(MDLabel label) const;
 
@@ -594,18 +599,23 @@ public:
 
     bool getValue(MDObject &object) const;
 
-    /** Set value */
+    /** Set value
+     *
+     * @param label    Metadata label to be set
+     * @param d        Value of the label
+     * @param addLabel Add label if is not already contained
+     */
     template <typename T>
-    void setValue(MDLabel label, const T &d)
+    void setValue(MDLabel label, const T &d, bool addLabel = true)
     {
-        if (objects[label] == NULL)
+        if (objects[label] != NULL)
+            objects[label]->setValue(d);
+        else if (addLabel)
         {
             objects[label] = new MDObject(label, d);
             order[_size] = label;
             ++_size;
         }
-        else
-            objects[label]->setValue(d);
     }
 
     void setValue(const MDObject &object);
@@ -1144,18 +1154,9 @@ private:
         MDL::addLabelAlias(MDL_ZSIZE, "Zsize"); //3.0
 
         //Create an static empty header for image initialization
-        MDL::emptyHeader.setValue(MDL_ORIGIN_X,  0.);
-        MDL::emptyHeader.setValue(MDL_ORIGIN_Y,  0.);
-        MDL::emptyHeader.setValue(MDL_ORIGIN_Z,  0.);
-        MDL::emptyHeader.setValue(MDL_SHIFT_X,   0.);
-        MDL::emptyHeader.setValue(MDL_SHIFT_Y,   0.);
-        MDL::emptyHeader.setValue(MDL_SHIFT_Z,   0.);
+        MDL::emptyHeader.resetGeo();
         MDL::emptyHeader.setValue(MDL_ANGLE_ROT, 0.);
         MDL::emptyHeader.setValue(MDL_ANGLE_TILT,0.);
-        MDL::emptyHeader.setValue(MDL_ANGLE_PSI, 0.);
-        MDL::emptyHeader.setValue(MDL_WEIGHT,   1.);
-        MDL::emptyHeader.setValue(MDL_FLIP,     false);
-        MDL::emptyHeader.setValue(MDL_SCALE,    1.);
 
     }
 
