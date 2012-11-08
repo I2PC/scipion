@@ -435,7 +435,7 @@ fi
 
 #################### FFTW ###########################
 if $DO_FFTW; then
-  if test $IS_MINGW; then
+  if $IS_MINGW; then
     compile_library $VFFTW "." "." "--enable-threads CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
   else
     compile_library $VFFTW "." "." "--enable-threads"
