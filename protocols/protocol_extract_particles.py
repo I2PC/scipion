@@ -418,7 +418,7 @@ def sortImagesInFamily(log, selfileRoot):
     fn = selfileRoot + '.xmd'
     md = MetaData(fn)
     if not md.isEmpty():
-        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput" % locals())
+        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --addToInput" % locals())
         md.read(fn) # Should have ZScore label after runJob
         md.sort(MDL_ZSCORE)
         md.write(fn)
