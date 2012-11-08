@@ -418,7 +418,7 @@ def sortImagesInFamily(log, selfileRoot):
     fnSorted = _getFilename('sorted', root=selfileRoot)
     md = MetaData(fn)
     if not md.isEmpty():
-        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput -o %(fnSorted)s" % locals())
+        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --addToInput -o %(fnSorted)s" % locals())
     else:
         createLink(log, fn, fnSorted)
 

@@ -1,0 +1,60 @@
+# Sample .bashrc for SuSE Linux
+# Copyright (c) SuSE GmbH Nuernberg
+
+# There are 3 different types of shells in bash: the login shell, normal shell
+# and interactive shell. Login shells read ~/.profile and interactive shells
+# read ~/.bashrc; in our setup, /etc/profile sources ~/.bashrc - thus all
+# settings made here will also take effect in a login shell.
+#
+# NOTE: It is recommended to make language settings in ~/.profile rather than
+# here, since multilingual X sessions would not work properly if LANG is over-
+# ridden in every subshell.
+
+# Some applications read the EDITOR variable to determine your favourite text
+# editor. So uncomment the line below and enter the editor of your choice :-)
+#export EDITOR=/usr/bin/vim
+#export EDITOR=/usr/bin/mcedit
+
+# For some news readers it makes sense to specify the NEWSSERVER variable here
+#export NEWSSERVER=your.news.server
+
+# If you want to use a Palm device with Linux, uncomment the two lines below.
+# For some (older) Palm Pilots, you might need to set a lower baud rate
+# e.g. 57600 or 38400; lowest is 9600 (very slow!)
+#
+#export PILOTPORT=/dev/pilot
+#export PILOTRATE=115200
+
+test -s ~/.alias && . ~/.alias || true
+
+export HISTSIZE=9000
+export HISTFILESIZE=100000
+
+alias crunchyfs='sshfs crunchy: ~/crunchy/'
+alias sconsConfig='./scons.configure MPI_LIBDIR=/usr/lib64/mpi/gcc/openmpi/lib MPI_INCLUDE=/usr/lib64/mpi/gcc/openmpi/include MPI_LIB=''mpi''  QTDIR=/usr/lib/qt3  debug=1 java=1'
+
+alias ssh='ssh -X'
+alias jumilla='ssh biologia@jumilla.cnb.csic.es -o ServerAliveInterval=300'
+alias bioinfo='ssh joton@bioinfo.cnb.csic.es -o ServerAliveInterval=300'
+alias centauro='ssh joton@centauro.ii.uam.es -o ServerAliveInterval=300'
+alias sourceforge='ssh -t joaquinoton,newxmipp@shell.sourceforge.net create'
+
+#alias ij='(cd ~/opt/ImageJ ; java -Xmx2g -Dplugins.dir=~/opt/ImageJ/plugins -classpath ij.jar ij.ImageJ)'
+alias ij='(cd ~/opt/ImageJCrunchy ; ./run)'
+alias jabref='java -jar ~/opt/jabref/JabRef-2.6.jar'
+
+export PATH=/usr/lib64/mpi/gcc/openmpi/bin/:~/optc/ImageJ:~/opt/android-sdk-linux_86/tools:~/opt/android-sdk-linux_86/platform-tools:$PATH
+export LD_LIBRARY_PATH=/usr/lib64/mpi/gcc/openmpi/lib64/:$LD_LIBRARY_PATH
+
+alias svnchanged='svn st |grep -v ?'
+function ghist {
+		history | grep $1
+	       }
+
+# XMIPP STUFF
+. ~/.myXmipp.bashrc
+. ~/xmipp/.xmipp.bashrc
+
+
+# Custom prompt to show git branch
+export PS1='$(ppwd \l)\u@\h:\w\[$(tput setaf 2)\]$(__git_ps1 "[%s]")\[$(tput sgr0)\]> '
