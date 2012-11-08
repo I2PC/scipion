@@ -627,7 +627,7 @@ void XmippMetadataProgram::show()
         return;
     std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo)
-        std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
+        std::cout << "Reading geometrical transformations stored in metadata" << std::endl;
     if (!fn_out.empty())
         std::cout << "Output File: " << fn_out << std::endl;
     if (!oroot.empty())

@@ -25,12 +25,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/transform_geometry.h>
+#include "data/image_resize.h"
 
-int main(int argc, char **argv)
-{
-    ProgTransformGeometry program;
-    program.read(argc, argv);
-    return program.tryRun();
-} //main
+RUN_XMIPP_PROGRAM(ProgImageResize);
 
