@@ -290,6 +290,9 @@ public:
      */
     bool hasVolumeExtension() const;
 
+    /** True if the extension of this filename is of a metadata file
+     */
+    bool hasMetadataExtension() const;
 
     /** Get the size of the file.
      */
