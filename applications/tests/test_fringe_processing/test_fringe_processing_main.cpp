@@ -380,6 +380,7 @@ TEST_F( FringeProcessingTests, unwrapping)
 
 
 #ifdef DEBUG
+
     comPhase.write(uPName);
     wphase.write(PName);
 #endif
@@ -468,7 +469,7 @@ TEST_F( FringeProcessingTests, firsPSDZero)
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
-    	A2D_ELEM(im,i,j) = A2D_ELEM(im,i,j)* A2D_ELEM(im,i,j)*dMij(envM,i,j);
+        A2D_ELEM(im,i,j) = A2D_ELEM(im,i,j)* A2D_ELEM(im,i,j)*dMij(envM,i,j);
     }
 
     int numPts = 100;
@@ -512,26 +513,26 @@ TEST_F( FringeProcessingTests, fitEllipse)
 
 #endif
 
-	int numPoints = 100;
-	double angle = 0;
-	double angleStep = 2*PI/numPoints;
-	double radiusX = 20;
-	double radiusY = 50;
+    int numPoints = 100;
+    double angle = 0;
+    double angleStep = 2*PI/numPoints;
+    double radiusX = 20;
+    double radiusY = 50;
 
-	Matrix1D<double> ptsX(numPoints), ptsY(numPoints);
-	for (int var = 0; var < numPoints; var++)
-	{
-		VEC_ELEM(ptsX,var) = radiusX*cos(angle)+radiusY*sin(angle)+10;
-		VEC_ELEM(ptsY,var) = -radiusY*sin(angle)+radiusX*cos(angle)+25;
-		angle += angleStep;
+    Matrix1D<double> ptsX(numPoints), ptsY(numPoints);
+    for (int var = 0; var < numPoints; var++)
+    {
+        VEC_ELEM(ptsX,var) = radiusX*cos(angle)+radiusY*sin(angle)+10;
+        VEC_ELEM(ptsY,var) = -radiusY*sin(angle)+radiusX*cos(angle)+25;
+        angle += angleStep;
 
-	}
+    }
 
-	double x0,y0,majorAxis, minorAxis, ellipseAngle;
-	FringeProcessing fp;
-	Matrix1D<double> ptsX2 = ptsX;
-	Matrix1D<double> ptsY2 = ptsY;
-	fp.fitEllipse(ptsX2, ptsY2, x0, y0, majorAxis, minorAxis, ellipseAngle);
+    double x0,y0,majorAxis, minorAxis, ellipseAngle;
+    FringeProcessing fp;
+    Matrix1D<double> ptsX2 = ptsX;
+    Matrix1D<double> ptsY2 = ptsY;
+    fp.fitEllipse(ptsX2, ptsY2, x0, y0, majorAxis, minorAxis, ellipseAngle);
 
     ASSERT_TRUE( (x0  - 20)   < 1e-2);
     ASSERT_TRUE( (y0  - 50)  < 1e-2);
@@ -552,6 +553,51 @@ TEST_F( FringeProcessingTests, fitEllipse)
 #endif
 
 }
+
+/*
+TEST_F( FringeProcessingTests, testVahid)
+{
+
+    mkdir( ((String)(getXmippPath() + (String)"/resources/test/fringe")).c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+    chdir(((String)(getXmippPath() + (String)"/resources/test/fringe")).c_str());
+
+    FileName fpName, Iname, ModName;
+    fpName = "I.txt";
+    Iname  = "IN.txt";
+    ModName= "Mod.txt";
+
+    FringeProcessing fp;
+    MultidimArray<double> im, In, Mod;
+    MultidimArray<bool> ROI;
+
+    Image<double> img;
+    img.read("KLH_Dataset_I_Test_0001.mrc");
+
+    im = img();
+    In.resizeNoCopy(im);
+    Mod.resizeNoCopy(im);
+    ROI.resizeNoCopy(im);
+
+
+    int rmin = 30;
+    int rmax = 60;
+
+    ROI.setXmippOrigin();
+    ROI.initConstant(true);
+
+    double R = 50;
+    double S = 15;
+    fp.normalize(im,In,Mod, R, S, ROI);
+
+    //aprox there are 5 fringe in the image
+    //double R = 1;
+    //double S = 20;
+    //fp.normalize(im,In,Mod, R, S, ROI);
+
+    In.write(fpName);
+
+}
+*/
 
 GTEST_API_ int main(int argc, char **argv)
 {
