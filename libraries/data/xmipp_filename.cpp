@@ -237,37 +237,38 @@ String FileName::getExtension() const
 bool FileName::hasImageExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
-        ext=="map" || ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" ||
-        ext=="spe" || ext=="em"  || ext=="pif" || ext=="ser" || ext=="stk" ||
-        ext=="mrcs"|| ext=="jpg")
-        return true;
-    else
-        return false;
+    return (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
+            ext=="map" || ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" ||
+            ext=="spe" || ext=="em"  || ext=="pif" || ext=="ser" || ext=="stk" ||
+            ext=="mrcs"|| ext=="jpg");
 }
 
 // Has image extension .....................................................
 bool FileName::hasStackExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="stk" || ext=="spi" || ext=="xmp" || ext=="mrcs" || ext=="mrc" ||
-        ext=="img" || ext=="hed" || ext=="pif" || ext=="tif"  || ext=="dm3" ||
-        ext=="ser")
-        return true;
-    else
-        return false;
+    return (ext=="stk" || ext=="spi" || ext=="xmp" || ext=="mrcs" || ext=="mrc" ||
+            ext=="img" || ext=="hed" || ext=="pif" || ext=="tif"  || ext=="dm3" ||
+            ext=="ser");
 }
 
 // Has image extension .....................................................
 bool FileName::hasVolumeExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="vol" || ext=="spi" || ext=="xmp" || ext=="mrc" || ext=="map" ||
-        ext=="em"  || ext=="pif" || ext=="inf" || ext=="raw")
-        return true;
-    else
-        return false;
+    return (ext=="vol" || ext=="spi" || ext=="xmp" || ext=="mrc" || ext=="map" ||
+            ext=="em"  || ext=="pif" || ext=="inf" || ext=="raw");
 }
+
+// Has image extension .....................................................
+bool FileName::hasMetadataExtension() const
+{
+    String ext = getFileFormat();
+    return (ext == "sel"    || ext == "xmd" || ext == "doc" ||
+            ext == "ctfdat" || ext == "ctfparam" || ext == "pos" ||
+            ext == "sqlite" || ext == "xml");
+}
+
 
 // Get number from file ....................................................
 int FileName::getNumber() const
@@ -325,6 +326,7 @@ void FileName::initUniqueName(const char *templateStr)
     close(fd);
     *this = filename;
 #endif
+
 }
 
 // Add at beginning ........................................................
@@ -801,6 +803,7 @@ void FileLock::lock(int _fileno)
     fcntl(filenum, F_SETLKW, &fl);
     islocked = true;
 #endif
+
 }
 
 void FileLock::lock(FILE * hdlFile)
