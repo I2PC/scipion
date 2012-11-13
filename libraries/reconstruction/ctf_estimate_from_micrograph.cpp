@@ -548,7 +548,7 @@ void ProgCTFEstimateFromMicrograph::run()
 					pcaAnalyzer.standardarizeVariables();
 					// pcaAnalyzer.subtractAvg();
                     pcaAnalyzer.learnPCABasis(1, 10);
-                } catch (XmippError xe)
+                } catch (XmippError &xe)
                 {
                 	if (xe.__errno==ERR_NUMERICAL)
                 		REPORT_ERROR(ERR_NUMERICAL,"There is no variance in the PSD, check that the micrograph is not constant");
