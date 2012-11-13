@@ -464,6 +464,17 @@ void selfScaleToSize(int SplineDegree,
 #undef SELFSCALETOSIZE
 }
 
+void scaleToSize(int SplineDegree,
+                        MultidimArrayGeneric &V2,
+                        const MultidimArrayGeneric &V1,int Xdim, int Ydim, int Zdim)
+{
+  if (V1.datatype != V2.datatype)
+    REPORT_ERROR(ERR_PARAM_INCORRECT, "scaleToSize: MultidimArrayGeneric requires same datatype");
+#define SCALETOSIZE(type) scaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type),Xdim,Ydim,Zdim);
+    SWITCHDATATYPE(V1.datatype, SCALETOSIZE)
+#undef SCALETOSIZE
+}
+
 // Special case for complex arrays
 void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,
@@ -521,6 +532,30 @@ void selfPyramidExpand(int SplineDegree,
 #define SELFPYRAMIDEXPAND(type) selfPyramidExpand(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels);
     SWITCHDATATYPE(V1.datatype,SELFPYRAMIDEXPAND);
 #undef SELFPYRAMIDEXPAND
+}
+
+void pyramidExpand(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   int levels)
+{
+  if (V1.datatype != V2.datatype)
+    REPORT_ERROR(ERR_PARAM_INCORRECT, "pyramidExpand: MultidimArrayGeneric requires same datatype");
+#define PYRAMIDEXPAND(type) pyramidExpand(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type), levels);
+    SWITCHDATATYPE(V1.datatype, PYRAMIDEXPAND)
+#undef PYRAMIDEXPAND
+}
+
+void pyramidReduce(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   int levels)
+{
+  if (V1.datatype != V2.datatype)
+    REPORT_ERROR(ERR_PARAM_INCORRECT, "pyramidReduce: MultidimArrayGeneric requires same datatype");
+#define PYRAMIDREDUCE(type) pyramidReduce(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type), levels);
+    SWITCHDATATYPE(V1.datatype, PYRAMIDREDUCE)
+#undef PYRAMIDREDUCE
 }
 
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
