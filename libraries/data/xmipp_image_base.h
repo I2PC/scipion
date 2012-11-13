@@ -288,7 +288,7 @@ public:
         {
             return !read(name, HEADER);
         }
-        catch (XmippError XE)
+        catch (XmippError &xe)
         {
             return false;
         }
