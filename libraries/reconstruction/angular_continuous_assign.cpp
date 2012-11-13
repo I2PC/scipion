@@ -194,13 +194,15 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     Image<double> img;
-    img.readApplyGeo(fnImg, rowIn);
+    img.read(fnImg);
+    img().setXmippOrigin();
 
-    double old_rot=img.rot();
-    double old_tilt=img.tilt();
-    double old_psi=img.psi();
-    double old_shiftX=img.Xoff();
-    double old_shiftY=img.Yoff();
+    double old_rot, old_tilt, old_psi, old_shiftX, old_shiftY;
+    rowIn.getValue(MDL_ANGLE_ROT,old_rot);
+    rowIn.getValue(MDL_ANGLE_TILT,old_tilt);
+    rowIn.getValue(MDL_ANGLE_PSI,old_psi);
+    rowIn.getValue(MDL_SHIFT_X,old_shiftX);
+    rowIn.getValue(MDL_SHIFT_Y,old_shiftY);
 
     Matrix1D<double> pose(5);
     pose(0) = old_rot;

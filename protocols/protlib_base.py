@@ -360,7 +360,25 @@ class DepData():
     def hasDep(self, extRunName):
         return extRunName in self.deps
         
-    
+_baseProtocolNames = {
+        'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
+        'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
+        'families':     join('%(WorkingDir)s', 'families.xmd'),
+        'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
+        'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
+        'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
+        'microscope':   join('%(WorkingDir)s','microscope.xmd'),
+        'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
+     }
+
+def getProtocolFilename(key, **params):
+    # Is desirable the names comming in params doesn't overlap
+    # with the variables in the header dictionary
+    params.update(_baseProtocolNames)
+    if _baseProtocolNames.has_key(key):
+        return _baseProtocolNames[key] % params
+    raise Exception("Key: '%s' not found" % key)  
+ 
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):
@@ -427,18 +445,8 @@ class XmippProtocol(object):
     def createFilenameDict(self):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
-        d = {
-                'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
-                'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
-                'families':     join('%(WorkingDir)s', 'families.xmd'),
-                'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
-                'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
-                'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
-                'microscope':   join('%(WorkingDir)s','microscope.xmd'),
-                'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
-             }
-        d.update(self.createFilenameTemplates())
-        return d
+        _baseProtocolNames.update(self.createFilenameTemplates())
+        return _baseProtocolNames
         
     def inputProperty(self, *keys):
         ''' Take property Key from self.PrevRun and set to self.
@@ -536,14 +544,6 @@ class XmippProtocol(object):
     def visualize(self):
         '''Visualizes the results of this run'''
         pass
-    
-    def merge(self, PrevRun1, PrevRun2):
-        '''Merge to protocols of the same kind.
-	returns Empty string -> OK
-		None -> not implemented
-	        Error String -> error merging
-	'''
-        return None
     
     def warningsBase(self):
         '''Output some warnings that can be errors and require user confirmation to proceed'''

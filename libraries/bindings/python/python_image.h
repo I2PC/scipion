@@ -99,6 +99,10 @@ DataType npyType2Datatype(int npy);
 PyObject *
 Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* projectVolumeDouble */
+PyObject *
+Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 /* setData */
 PyObject *
 Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs);

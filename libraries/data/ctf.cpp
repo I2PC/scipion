@@ -293,6 +293,8 @@ void CTFDescription::readParams(XmippProgram * program)
         DeltafU=program->getDoubleParam("--defocusU");
     if (program->checkParam("--defocusV"))
         DeltafV=program->getDoubleParam("--defocusV");
+    if (program->checkParam("--Q0"))
+        Q0=program->getDoubleParam("--Q0");
     else
         DeltafV=DeltafU;
     azimuthal_angle=program->getDoubleParam("--azimuthal_angle");

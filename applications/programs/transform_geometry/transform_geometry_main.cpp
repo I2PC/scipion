@@ -25,7 +25,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "reconstruction/transform_geometry.h"
+#include "data/transform_geometry.h"
 
 RUN_XMIPP_PROGRAM(ProgTransformGeometry);
 
