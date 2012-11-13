@@ -26,6 +26,8 @@ public class EstimateFromCTFTask extends CommandTask {
                 + " --ctfmodelSize " + modelSize
                 + " --min_freq " + ellipseCTF.getLowFreq()
                 + " --max_freq " + ellipseCTF.getHighFreq()
+                + " --Q0 " + ellipseCTF.getQ0()
+                
                 ,//+ " ; " + getSortCmd(sortFn),
                 row,
                 commandsListener);
