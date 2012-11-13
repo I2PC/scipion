@@ -32,7 +32,9 @@ to create this metadata.
 PairDescr = ""
 
 # Preprocess micrographs?
-"""Perform some preprocessing operations on micrographs"""
+"""Perform some preprocessing operations on micrographs. 
+If set to yes a new section will appear in the protocol window 
+displaying the possible options"""
 DoPreprocess = False
 
 # {expert} Check image corners for problems
