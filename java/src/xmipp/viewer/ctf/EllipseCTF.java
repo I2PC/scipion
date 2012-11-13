@@ -67,6 +67,10 @@ public class EllipseCTF {
     	return highFreq;
     }
 
+    public double getQ0(){
+    	return Q0;
+    }
+
     // Calculates defocus U and V according to ellipse parameters.
     public void calculateDefocus(double minor, double major) {
         defocusU = defocus(minor, Q0, lambda, Cs, D, Ts);
