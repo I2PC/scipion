@@ -269,6 +269,7 @@ BUILD_PATH=$XMIPP_HOME/build
 
 #External libraries versions
 VSQLITE=sqlite-3.6.23
+VSQLITE_EXT=sqliteExt
 VTCLTK=8.5.10
 VPYTHON=Python-2.7.2
 VFFTW=fftw-3.3.1
@@ -428,9 +429,25 @@ fi
 
 #################### SQLITE ###########################
 if $DO_SQLITE; then
-  compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  if $IS_MAC
+    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 -I/opt/local/include -I/opt/local/lib -I/sw/include -I/sw/lib -lsqlite3" ".libs"
+  else
+    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  fi
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
   install_libs $VSQLITE/.libs libsqlite3 0
+  #compile math library for sqlite
+  cd $EXT_PATH/$VSQLITE_EXT
+  if $IS_MINGW; then
+    gcc -shared -I. -o libsqlitefunctions.dll extension-functions.c
+    cp libsqlitefunctions.dll $XMIPP_HOME/lib/libXmippSqliteExt.dll
+  elif $IS_MAC; then
+    gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
+    cp libsqlitefunctions.dylib $XMIPP_HOME/lib/libXmippSqliteExt.dylib
+  else  
+    gcc -fPIC -lm -shared  extension-functions.c -o libsqlitefunctions.so
+    cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
+  fi
 fi
 
 #################### FFTW ###########################
