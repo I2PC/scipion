@@ -105,7 +105,7 @@ public abstract class Micrograph {
 					if (f.getCommand().equals("Smooth Filter")) { // this filter
 																	// should be
 																	// the first
-																	// applied
+						System.out.println("getImagePlus on Smooth Filter before convert2DataType")	;										// applied
 						ig.convert2Datatype(ImageGeneric.UChar);
 						ImageGeneric igsmooth = new ImageGeneric(ImageGeneric.UChar);
 						System.out.printf("width: %s height: %s\n", ig.getXDim(), ig.getYDim());
