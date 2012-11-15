@@ -1047,7 +1047,7 @@ ParamDef* ProgramDef::findAndFillParam(const String &param)
 {
     ParamDef * paramDef = findParam(param);
     if (paramDef == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Doesn't exists param: %s", param.c_str()));
     ///Param was provided, not need to fill it
     //if (paramDef->counter == 1)
     //    return paramDef;
@@ -1065,7 +1065,10 @@ ParamDef* ProgramDef::findAndFillParam(const String &param)
 const char * ProgramDef::getParam(const char * paramName, int argNumber)
 {
     ParamDef * param = findAndFillParam(paramName);
-
+    if (param == NULL)
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Doesn't exists param: %s", paramName));
+    if (argNumber < 0 || argNumber >= param->cmdArguments.size())
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Argument index %d in param %s out of bounds.", argNumber, paramName));
     return param->cmdArguments.at(argNumber);
 }
 
@@ -1079,7 +1082,7 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
             break;
 
     if (i == param->cmdArguments.size())
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Sub-param " + subParam + " was not supplied in command line."));
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Sub-param %s was not supplied in command line.", subParam));
 
     return param->cmdArguments.at(i + 1 + argNumber);
 }

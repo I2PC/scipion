@@ -98,7 +98,7 @@ public:
     void defineParams();
 
     /// Produce side information
-    void produce_side_info();
+    void produceSideInfo();
 
     /** Generate half-plane model at a given size.
         It is assumed that ROUT_Adjust_CTF has been already run */

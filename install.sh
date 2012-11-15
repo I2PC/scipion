@@ -269,6 +269,7 @@ BUILD_PATH=$XMIPP_HOME/build
 
 #External libraries versions
 VSQLITE=sqlite-3.6.23
+VSQLITE_EXT=sqliteExt
 VTCLTK=8.5.10
 VPYTHON=Python-2.7.2
 VFFTW=fftw-3.3.1
@@ -431,11 +432,36 @@ if $DO_SQLITE; then
   compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
   install_libs $VSQLITE/.libs libsqlite3 0
+  #compile math library for sqlite
+  cd $EXT_PATH/$VSQLITE_EXT
+  gcc -fPIC -lm -shared  extension-functions.c -o libsqlitefunctions.so
+  cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
+
+
+# * Linux:
+#   gcc -fPIC -lm -shared extension-functions.c -o libsqlitefunctions.so
+# * Mac OS X:
+#   gcc -fno-common -dynamiclib extension-functions.c -o #libsqlitefunctions.dylib
+# (You may need to add flags
+#  -I /opt/local/include/ -L/opt/local/lib -lsqlite3
+#  if your sqlite3 is installed from Mac ports, or
+#  -I /sw/include/ -L/sw/lib -lsqlite3
+#  if installed with Fink.)
+# * Windows:
+#  1. Install MinGW (http://www.mingw.org/) and you will get the gcc
+#  (gnu compiler collection)
+#  2. add the path to your path variable (isn't done during the
+#   installation!)
+#  3. compile:
+#   gcc -shared -I "path" -o libsqlitefunctions.so extension-functions.c
+#   (path = path of sqlite3ext.h; i.e. C:\programs\sqlite)
+
+  
 fi
 
 #################### FFTW ###########################
 if $DO_FFTW; then
-  if test $IS_MINGW; then
+  if $IS_MINGW; then
     compile_library $VFFTW "." "." "--enable-threads CPPFLAGS=-I/c/MinGW/include CFLAGS=-I/c/MinGW/include"
   else
     compile_library $VFFTW "." "." "--enable-threads"

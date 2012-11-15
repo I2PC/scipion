@@ -1,6 +1,6 @@
 /***************************************************************************
  * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
- *
+ *    Javier Vargas (jvargas@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -29,7 +29,6 @@ void ProgSortByStatistics::readParams()
 {
     fn = getParam("-i");
     fn_out = getParam("-o");
-    multivariate = checkParam("--multivariate");
     addToInput = checkParam("--addToInput");
     fn_train = getParam("--train");
     cutoff = getDoubleParam("--zcut");
@@ -45,7 +44,7 @@ void ProgSortByStatistics::defineParams()
     addUsageLine("+the image squared.");
     addUsageLine("+");
     addUsageLine("+These vectors are then scored according to a Gaussian distribution");
-    addUsageLine("+that can be chosen to be univariate or multivariate. The multivariate");
+    //addUsageLine("+that can be chosen to be univariate or multivariate. The multivariate");
     addUsageLine("+gaussian is more powerful in the sense that it can capture relationships");
     addUsageLine("+among variables.");
     addUsageLine("+");
@@ -60,146 +59,40 @@ void ProgSortByStatistics::defineParams()
     addParamsLine(" [--train <selfile=\"\">]: Train on selfile with good particles");
     addParamsLine(" [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) ");
     addParamsLine("                         : Images whose Z-score is larger than the cutoff are disabled");
-    addParamsLine(" [--multivariate]        : Identify also multivariate outliers");
     addParamsLine(" [--addToInput]          : Add columns also to input MetaData");
 }
 
-void ProgSortByStatistics::processInput(MetaData &SF, bool do_prepare, bool multivariate)
-{
-    Image<double> img;
-    MultidimArray<double> img2;
-    MultidimArray<int> radial_count;
-    MultidimArray<double> radial_avg;
-    Matrix1D<int> center(2);
-    center.initZeros();
-
-    if (verbose>0)
-    {
-        if (do_prepare)
-            std::cout << " Processing training set ..." << std::endl;
-        else
-            std::cout << " Sorting particle set ..." << std::endl;
-    }
-
-    int nr_imgs = SF.size();
-    if (verbose>0)
-        init_progress_bar(nr_imgs);
-    int c = XMIPP_MAX(1, nr_imgs / 60);
-    int imgno = 0, imgnoPCA=0;
-    MultidimArray<float> v;
-    MultidimArray<int> distance;
-    int dim;
-    if (do_prepare)
-    {
-        Zscore.initZeros(SF.size());
-        ZscoreMultivariate=Zscore;
-    }
-    bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
-    bool first=true;
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
-    {
-        if (do_prepare)
-        {
-            if (thereIsEnable)
-            {
-                int enabled;
-                SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-                if (enabled==-1)
-                    continue;
-            }
-            img.readApplyGeo(SF,__iter.objId);
-            MultidimArray<double> &mI=img();
-            mI.setXmippOrigin();
-            mI.statisticsAdjust(0,1);
-
-            // Overall statistics
-            Histogram1D hist;
-            compute_hist(mI,hist,-4,4,31);
-
-            // Radial profile
-            img2.resizeNoCopy(mI);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img2)
-            {
-                double val=DIRECT_MULTIDIM_ELEM(mI,n);
-                DIRECT_MULTIDIM_ELEM(img2,n)=val*val;
-            }
-            if (first)
-            {
-                radialAveragePrecomputeDistance(img2, center, distance, dim);
-                first=false;
-            }
-            fastRadialAverage(img2, distance, dim, radial_avg, radial_count);
-
-            // Build vector
-            v.initZeros(XSIZE(hist)+XSIZE(img2)/2);
-            int idx=0;
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
-            v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
-            for (int i=0; i<XSIZE(img2)/2; i++)
-                v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
-            pcaAnalyzer.addVector(v);
-        }
-        else
-        {
-            if (thereIsEnable)
-            {
-                int enabled;
-                SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-                if (enabled==-1)
-                {
-                    Zscore(imgno)=1000;
-                    if (multivariate)
-                        ZscoreMultivariate(imgno)=1000;
-                    imgno++;
-                    continue;
-                }
-            }
-            v=pcaAnalyzer.v[imgnoPCA];
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
-            {
-                if (DIRECT_A1D_ELEM(vstddev,i)>0)
-                {
-                    DIRECT_A1D_ELEM(v,i)=(DIRECT_A1D_ELEM(v,i)-DIRECT_A1D_ELEM(vavg,i))/
-                                         DIRECT_A1D_ELEM(vstddev,i);
-                    DIRECT_A1D_ELEM(v,i)=ABS(DIRECT_A1D_ELEM(v,i));
-                }
-                else
-                    DIRECT_A1D_ELEM(v,i)=0;
-            }
-            Zscore(imgno)=v.computeAvg();
-            if (multivariate)
-                ZscoreMultivariate(imgno)=pcaAnalyzer.getZscore(imgno);
-        }
-
-        if (imgno % c == 0 && verbose>0)
-            progress_bar(imgno);
-        imgno++;
-        imgnoPCA++;
-    }
-    if (verbose>0)
-        progress_bar(nr_imgs);
-
-    if (do_prepare)
-    {
-        pcaAnalyzer.computeStatistics(vavg,vstddev);
-        if (multivariate)
-            pcaAnalyzer.evaluateZScore(2,20);
-    }
-}
 
 //majorAxis and minorAxis is the estimated particle size in px
-void ProgSortByStatistics::processInput2(MetaData &SF)
+void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
+#define DEBUG
+
+    pcaAnalyzer[2];
+    PCAMahalanobisAnalyzer tempPcaAnalyzer0;
+    PCAMahalanobisAnalyzer tempPcaAnalyzer1;
+    PCAMahalanobisAnalyzer tempPcaAnalyzer2;
+
+    //Morphology
+    tempPcaAnalyzer0.clear();
+    //Signal to noise ratio
+    tempPcaAnalyzer1.clear();
+    //Histogram analysis, to detect black points and saturated parts
+    tempPcaAnalyzer2.clear();
+
     Image<double> img;
     MultidimArray<double> img2;
     Matrix1D<double> center(2);
     center.initZeros();
     FringeProcessing fp;
 
-    int numHistElem = 31;
-    int numDescriptors =5;
+    int numHistElem = 21;
+    int numDescriptors=4;
+    int numDescriptors2=3;
 
-    MultidimArray<float> v(5);
+    MultidimArray<float> v(numDescriptors);
+    MultidimArray<float> v2(numHistElem);
+    MultidimArray<float> v3(numDescriptors2);
 
     if (verbose>0)
     {
@@ -213,23 +106,226 @@ void ProgSortByStatistics::processInput2(MetaData &SF)
     int c = XMIPP_MAX(1, nr_imgs / 60);
     int imgno = 0, imgnoPCA=0;
 
-    Zscore.initZeros(SF.size());
     bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
     bool first=true;
 
     // We assume that at least there is one particle
     img.readApplyGeo(SF,1);
-    MultidimArray<double> nI, modI;
+
+    MultidimArray<double> nI, modI, tempI, tempM, Imean;
     MultidimArray<bool> mask;
     nI.resizeNoCopy(img());
     modI.resizeNoCopy(img());
+    Imean.resizeNoCopy(img());
+    tempI.resizeNoCopy(img());
+    tempM.resizeNoCopy(img());
     mask.resizeNoCopy(img());
+
+    Imean.initConstant(0);
     mask.initConstant(true);
+
     MultidimArray<double> autoCorr(2*img().ydim,2*img().xdim);
     MultidimArray<double> smallAutoCorr;
+
     Histogram1D hist;
     Matrix2D<double> U,V,temp;
     Matrix1D<double> D;
+    v.initZeros(numDescriptors);
+    v2.initZeros(numHistElem);
+    v3.initZeros(numDescriptors2);
+
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    {
+        if (thereIsEnable)
+        {
+            int enabled;
+            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+            if ( (enabled==-1)  )
+            {
+                continue;
+            }
+            img.readApplyGeo(SF,__iter.objId);
+            //
+            img().statisticsAdjust(0,1);
+            Imean += img();
+        }
+    }
+
+    Imean /= SF.size();
+    Imean.setXmippOrigin();
+
+#ifdef DEBUG
+
+    FileName fpName    = "test0.txt";
+    Imean.write(fpName);
+#endif
+
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    {
+        if (thereIsEnable)
+        {
+
+            int enabled;
+            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+            if ( (enabled==-1)  )
+            {
+                imgno++;
+                continue;
+            }
+
+            img.readApplyGeo(SF,__iter.objId);
+            bool debug=false;
+
+            MultidimArray<double> &mI=img();
+            mI.setXmippOrigin();
+            mI.statisticsAdjust(0,1);
+            mask.setXmippOrigin();
+
+            fp.normalize(mI,tempI,modI,1,5,mask);
+            modI.setXmippOrigin();
+            tempI.setXmippOrigin();
+            nI = tempI*(modI*modI);
+            tempM = (modI*modI);
+
+            //fp.normalize(mI,tempI,modI,1,4,mask);
+            //tempI.setXmippOrigin();
+            //modI.setXmippOrigin();
+            //nI += (tempI*(modI*modI));
+            //tempM += (modI*modI);
+
+            //fp.normalize(mI,tempI,modI,1,6,mask);
+            //tempI.setXmippOrigin();
+            //modI.setXmippOrigin();
+            //nI += (tempI*(modI*modI));
+            //tempM += (modI*modI);
+
+            nI /= tempM;
+
+#ifdef DEBUG
+            //fn = img.name().removeLastExtension().addExtension("spi");
+            //nI.write(fn);
+            //SF.setValue(MDL_IMAGE,fn,__iter.objId);
+            if (img.name()=="002870@Images/Extracted/run_001/DefaultFamily5")
+            {
+                FileName fpName    = "test2.txt";
+                nI.write(fpName);
+                fpName    = "test4.txt";
+                tempM.write(fpName);
+            }
+#endif
+            nI.binarize();
+            int im = labelImage2D(nI,nI,8);
+            compute_hist(nI, hist, 0, im, im+1);
+            int l,k,i,j;
+            hist.maxIndex(l,k,i,j);
+            A1D_ELEM(hist,j)=0;
+            hist.maxIndex(l,k,i,j);
+            nI.binarizeRange(j-1,j+1);
+            FringeProcessing fp;
+            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
+            fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
+            // Build vector
+            v(0)=majorAxis;
+            v(1)=minorAxis;
+            v(2)= fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0) ;
+            v(3)=area;
+
+            for (int n=0 ; n < numDescriptors ; n++)
+            {
+                if ( std::isnan(v(n)) )
+                    v(n)=0;
+            }
+            tempPcaAnalyzer0.addVector(v);
+
+
+            //tempI = (Imean*mI)/mI.sum();
+            //double val = tempI.sum();
+
+            mI-=Imean;
+            mI.setXmippOrigin();
+            auto_correlation_matrix(mI,autoCorr);
+            autoCorr.window(smallAutoCorr,-10,-10, 10, 10);
+            smallAutoCorr.copy(temp);
+            svdcmp(temp,U,D,V);
+
+            for (int n = 0; n < numHistElem; ++n)
+            	v2(n)=(float)VEC_ELEM(D,n);
+            tempPcaAnalyzer1.addVector(v2);
+
+
+            double minVal;
+            double maxVal;
+            mI.computeDoubleMinMax(minVal,maxVal);
+            compute_hist(mI, hist, minVal, maxVal, 100);
+
+            v3(0)= fabs(hist.percentil(5));
+            v3(1)= fabs(hist.percentil(95));
+            v3(2) = fabs(hist.percentil(50));
+            tempPcaAnalyzer2.addVector(v3);
+
+#ifdef DEBUG
+
+            if (img.name()=="002870@Images/Extracted/run_001/DefaultFamily5")
+            {
+
+                FileName fpName    = "test.txt";
+                mI.write(fpName);
+                fpName    = "test3.txt";
+                nI.write(fpName);
+            }
+#endif
+            imgno++;
+            imgnoPCA++;
+
+            if (imgno % c == 0 && verbose>0)
+                progress_bar(imgno);
+        }
+    }
+
+
+    MultidimArray<double> vavg,vstddev;
+    tempPcaAnalyzer0.computeStatistics(vavg,vstddev);
+    tempPcaAnalyzer1.computeStatistics(vavg,vstddev);
+    tempPcaAnalyzer2.computeStatistics(vavg,vstddev);
+
+    tempPcaAnalyzer0.evaluateZScore(2,20);
+    tempPcaAnalyzer1.evaluateZScore(2,20);
+    tempPcaAnalyzer2.evaluateZScore(2,20);
+
+    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer2);
+    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer1);
+    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer0);
+
+}
+
+void ProgSortByStatistics::processInputPrepare(MetaData &SF)
+{
+
+    pcaAnalyzer[1];
+    PCAMahalanobisAnalyzer tempPcaAnalyzer;
+    tempPcaAnalyzer.clear();
+
+    Image<double> img;
+    MultidimArray<double> img2;
+    MultidimArray<int> radial_count;
+    MultidimArray<double> radial_avg;
+    Matrix1D<int> center(2);
+    center.initZeros();
+
+    if (verbose>0)
+        std::cout << " Processing training set ..." << std::endl;
+
+    int nr_imgs = SF.size();
+    if (verbose>0)
+        init_progress_bar(nr_imgs);
+    int c = XMIPP_MAX(1, nr_imgs / 60);
+    int imgno = 0, imgnoPCA=0;
+    MultidimArray<float> v;
+    MultidimArray<int> distance;
+    int dim;
+
+    bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
+    bool first=true;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (thereIsEnable)
@@ -237,131 +333,105 @@ void ProgSortByStatistics::processInput2(MetaData &SF)
             int enabled;
             SF.getValue(MDL_ENABLED,enabled,__iter.objId);
             if (enabled==-1)
-            {
-                Zscore(imgno)=1000;
-                imgno++;
                 continue;
-            }
-
-            img.readApplyGeo(SF,__iter.objId);
-            MultidimArray<double> &mI=img();
-            mI.setXmippOrigin();
-            mI.statisticsAdjust(0,1);
-            mask.setXmippOrigin();
-
-            auto_correlation_matrix(mI,autoCorr);
-            mI.setXmippOrigin();
-            autoCorr.window(smallAutoCorr,-15,-15, 15, 15);
-            smallAutoCorr.copy(temp);
-            svdcmp(temp,U,D,V);
-            //Here is done all the processing. Here we will need probably
-            //some input arguments to tune the desired frequencies and tune
-            //the filer
-            //ftrans.auto_correlation_matrix
-        	fp.normalize(mI,nI,modI,0.8,2,mask);
-            nI.binarize();
-            int im = labelImage2D(nI,nI,8);
-            compute_hist(nI, hist, 0, im, im+1);
-
-            int l,k,i,j;
-
-            //We supose that the biggest part if the background!
-            //This can be problematic
-            hist.maxIndex(l,k,i,j);
-            A1D_ELEM(hist,j)=0;
-            hist.maxIndex(l,k,i,j);
-            nI.binarizeRange(j-1,j+1);
-
-            FringeProcessing fp;
-            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
-            fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
-
-            // Build vector
-            v.initZeros(numDescriptors);
-            v(0)=x0;
-            v(1)=y0;
-            v(2)=majorAxis;
-            v(3)=minorAxis;
-            v(4)=area;
-
-            //auto_correlation_vector(mI,mI);
-/*          int idx = 5;
-
-            double minI=0, maxI=0;
-            mI.computeDoubleMinMax(minI,maxI);
-            compute_hist(mI,hist,minI,maxI,numHistElem);
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
-            v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
-*/
-            pcaAnalyzer.addVector(v);
-
-            if (imgno % c == 0 && verbose>0)
-                progress_bar(imgno);
-
-            if (imgno == 248)
-            {
-
-            	std::cout << im << std::endl;
-            	std::cout << "Max hist " << hist.hmax << std::endl;
-            	std::cout << "Min hist " << hist.hmin << std::endl;
-
-            	std::cout << "x0 " << x0 << std::endl;
-            	std::cout << "y0 " << y0 << std::endl;
-            	std::cout << "majorAxis " << majorAxis << std::endl;
-            	std::cout << "minorAxis " << minorAxis << std::endl;
-            	std::cout << "ellipAng " << ellipAng << std::endl;
-
-            	FileName fpName    = "test.txt";
-            	mI.write(fpName);
-            }
-
-            imgno++;
-            imgnoPCA++;
         }
+        img.readApplyGeo(SF,__iter.objId);
+        MultidimArray<double> &mI=img();
+        mI.setXmippOrigin();
+        mI.statisticsAdjust(0,1);
 
+        // Overall statistics
+        Histogram1D hist;
+        compute_hist(mI,hist,-4,4,31);
+
+        // Radial profile
+        img2.resizeNoCopy(mI);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img2)
+        {
+            double val=DIRECT_MULTIDIM_ELEM(mI,n);
+            DIRECT_MULTIDIM_ELEM(img2,n)=val*val;
+        }
+        if (first)
+        {
+            radialAveragePrecomputeDistance(img2, center, distance, dim);
+            first=false;
+        }
+        fastRadialAverage(img2, distance, dim, radial_avg, radial_count);
+
+        // Build vector
+        v.initZeros(XSIZE(hist)+XSIZE(img2)/2);
+        int idx=0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
+        v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
+        for (int i=0; i<XSIZE(img2)/2; i++)
+            v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
+
+        tempPcaAnalyzer.addVector(v);
+
+        if (imgno % c == 0 && verbose>0)
+            progress_bar(imgno);
+        imgno++;
+        imgnoPCA++;
     }
+    if (verbose>0)
+        progress_bar(nr_imgs);
 
-    pcaAnalyzer.computeStatistics(vavg,vstddev);
-    pcaAnalyzer.evaluateZScore(2,20);
-
+    MultidimArray<double> vavg,vstddev;
+    tempPcaAnalyzer.computeStatistics(vavg,vstddev);
+    tempPcaAnalyzer.evaluateZScore(2,20);
+    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer);
 }
 
 void ProgSortByStatistics::run()
 {
 
-    //Process input selfile ..............................................
-    /*SF.read(fn);
-    SF.removeDisabled();
-    pcaAnalyzer.clear();
-    processInput2(SF);
-    processInput(SF, false, multivariate);
-    */
-
     // Process input selfile ..............................................
     SF.read(fn);
     SF.removeDisabled();
-    pcaAnalyzer.clear();
+
     if (fn_train != "")
-    {
         SFtrain.read(fn_train);
-        //processInput(SFtrain, true, multivariate);
-    }
+
     else
-        processInput(SF, true, multivariate);
-    processInput(SF, false, multivariate);
+        processInprocessInputPrepareSPTH(SF);
+    //processInputPrepare(SF);
+
+    std::cout << " OUT " << std::endl;
+    int imgno = 0;
+    int numPCAs = pcaAnalyzer.size();
+
+    MultidimArray<double> ZscoreMultivariate(SF.size());
+    MultidimArray<double> weights(numPCAs);
+    ZscoreMultivariate.initConstant(0);
+    weights.initConstant(1);
+    weights(0) = 0.3;
+    weights(1) = 0.5;
+    weights(2) = 0.2;
+
+    int enabled;
+
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    {
+        for (int num = 0; num < numPCAs; ++num)
+        {
+            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+            ZscoreMultivariate(imgno)+=(pcaAnalyzer[num].getZscore(imgno))*weights(num)*(pcaAnalyzer[num].getZscore(imgno));
+
+        }
+        imgno++;
+    }
 
     // Produce output .....................................................
     MetaData SFout;
     std::ofstream fh_zind;
+
     if (verbose==2 && !fn_out.empty())
         fh_zind.open((fn_out.withoutExtension() + "_vectors.xmd").c_str(), std::ios::out);
-    MultidimArray<double> finalZscore=Zscore;
+    MultidimArray<double> finalZscore=ZscoreMultivariate;
     double L=1;
-    if (multivariate)
-    {
-        finalZscore*=ZscoreMultivariate;
-        L++;
-    }
+
+    finalZscore*=ZscoreMultivariate;
+    L++;
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(finalZscore)
     DIRECT_A1D_ELEM(finalZscore,i)=pow(DIRECT_A1D_ELEM(finalZscore,i),1.0/L);
@@ -409,8 +479,8 @@ void ProgSortByStatistics::run()
         if (verbose==2)
         {
             fh_zind << fnImg << " : ";
-            FOR_ALL_ELEMENTS_IN_ARRAY1D(pcaAnalyzer.v[isort])
-            fh_zind << pcaAnalyzer.v[isort](i) << "\n";
+            //FOR_ALL_ELEMENTS_IN_ARRAY1D(tempPcaAnalyzer.v[isort])
+            //fh_zind << tempPcaAnalyzer.v[isort](i) << "\n";
         }
         SFout.addRow(row);
     }

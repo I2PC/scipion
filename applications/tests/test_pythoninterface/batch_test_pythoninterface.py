@@ -63,6 +63,23 @@ class TestXmippPythonInterface(unittest.TestCase):
         b = Euler_angles2matrix(rot, tilt, psi)
         self.assertAlmostEqual(a.all(), b.all(), 2)
 
+    def test_xmipp_Euler_matrix2angles(self):
+        from numpy  import array
+
+        a = array([[ 0.70710678, 0.70710678, -0.        ],
+           [-0.70710678, 0.70710678, 0.        ],
+           [ 0., 0., 1.        ]])
+        rot = 45.
+        tilt = 0.
+        psi = 0.
+        rot1,tilt1,psi1 = Euler_matrix2angles(a)
+        if psi1 > 1:
+            rot1 = psi1
+            psi1=0.
+        self.assertAlmostEqual(rot, rot1, 4)
+        self.assertAlmostEqual(tilt, tilt1, 4)
+        self.assertAlmostEqual(psi, psi1, 4)
+
     def test_xmipp_activateMathExtensions(self):
         '''activateMathExtensions'''
         md1 = MetaData()
@@ -204,7 +221,14 @@ class TestXmippPythonInterface(unittest.TestCase):
         
         imgAdd -= img2
         self.assertEqual(img1, imgAdd)   
-        
+
+    def test_Image_project(self):
+        vol=Image(testFile('progVol.vol'))
+        vol.convert2DataType(DT_DOUBLE)
+        proj=vol.projectVolumeDouble(0.,0.,0.)
+        proj.write("/tmp/kk.spi") 
+        self.assertEqual(1,1)
+                
     def test_Image_read(self):
         imgPath = testFile("tinyImage.spi")
         img = Image(imgPath)        

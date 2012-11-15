@@ -1,8 +1,7 @@
 /***************************************************************************
+ * Authors:     Joaquin Oton    (joton@cnb.csic.es)
+ *              J.M. De la Rosa (jmdelarosa@cnb.csic.es)
  *
- * Authors:     Carlos Oscar (           coss@cnb.csic.es (2000)
- *              Roberto Marabini (added fourier option)
- *              Jose Miguel de la Rosa Trevin (fusion of shift, rotate and scale)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -25,7 +24,38 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "data/transform_geometry.h"
+#ifndef TRANSFORMGEOMETRY_H
+#define TRANSFORMGEOMETRY_H
 
-RUN_XMIPP_PROGRAM(ProgTransformGeometry);
+#include "transformations.h"
+#include "xmipp_image_generic.h"
+#include "metadata_extension.h"
+#include "xmipp_fftw.h"
+#include "xmipp_program.h"
+#include "matrix2d.h"
 
+
+class ProgTransformGeometry: public XmippMetadataProgram
+{
+public:
+    /** Constructor and destructor, just to avoid vtable undefined references errors */
+    ProgTransformGeometry();
+    ~ProgTransformGeometry();
+
+protected:
+    int             splineDegree, dim;
+    bool            applyTransform, inverse, wrap, isVol, flip;
+    Matrix2D<double> R, A, B, T;
+    ImageGeneric img, imgOut;
+
+    void defineParams();
+    void readParams();
+
+    /** Calculate the rotation matrix according to the parameters
+     */
+    void calculateRotationMatrix();
+    void preProcess();
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
+
+};
+#endif //TRANSFORMGEOMETRY_H

@@ -29,8 +29,8 @@
 #include <data/micrograph.h>
 #include <data/mask.h>
 #include <data/xmipp_program.h>
+#include <data/transform_geometry.h>
 #include <reconstruction/fourier_filter.h>
-#include <reconstruction/transform_geometry.h>
 #include <classification/naive_bayes.h>
 #include <classification/svm_classifier.h>
 #include <classification/knn_classifier.h>

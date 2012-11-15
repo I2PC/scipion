@@ -58,7 +58,7 @@ def sortImages(log, inputFile, outputFile, addToSelf):
     (Xdim, Ydim, Zdim, Ndim) = ImgSize(inputFile)
     if Ndim > 0:
         if addToSelf: 
-            runJob(log,"xmipp_image_sort_by_statistics","-i "+outputFile+" --multivariate --addToInput")
+            runJob(log,"xmipp_image_sort_by_statistics","-i "+outputFile+" --addToInput")
         else:
-            runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" --multivariate -o "+outputFile)
+            runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" -o "+outputFile)
 
