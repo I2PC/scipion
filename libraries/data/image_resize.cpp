@@ -102,9 +102,6 @@ void ProgImageResize::preProcess()
     {
         //Calculate scale factor from images sizes and given dimensions
         //this approach assumes that all images have equal size
-
-
-
         if (checkParam("--dim"))
         {
             xdimOut = getIntParam("--dim", 0);
@@ -184,36 +181,38 @@ void ProgImageResize::processImage(const FileName &fnImg, const FileName &fnImgO
     double aux;
     if (apply_geo)
     {
-      SCALE_SHIFT(MDL_SHIFT_X, XX(resizeFactor));
-      SCALE_SHIFT(MDL_SHIFT_Y, YY(resizeFactor));
-      if (isVol)
-        SCALE_SHIFT(MDL_SHIFT_Z, ZZ(resizeFactor));
+        SCALE_SHIFT(MDL_SHIFT_X, XX(resizeFactor));
+        SCALE_SHIFT(MDL_SHIFT_Y, YY(resizeFactor));
+        if (isVol)
+            SCALE_SHIFT(MDL_SHIFT_Z, ZZ(resizeFactor));
     }
     else
-    {
-      rowOut.clear();
-      rowOut.setValue(MDL_IMAGE, fnImgOut);
-    }
+        rowOut.resetGeo(false);
 
     img.read(fnImg);
     img().setXmippOrigin();
+    imgOut.setDatatype(img.getDatatype());
 
     switch (scale_type)
     {
     case RESIZE_FACTOR:
-        selfScaleToSize(splineDegree, img(), xdimOut, ydimOut, zdimOut);
+        //selfScaleToSize(splineDegree, img(), xdimOut, ydimOut, zdimOut);
+        scaleToSize(splineDegree, imgOut(), img(), xdimOut, ydimOut, zdimOut);
         break;
     case RESIZE_PYRAMID_EXPAND:
-        selfPyramidExpand(splineDegree, img(), pyramid_level);
+        pyramidExpand(splineDegree, imgOut(), img(), pyramid_level);
+        //selfPyramidExpand(splineDegree, img(), pyramid_level);
         break;
     case RESIZE_PYRAMID_REDUCE:
-        selfPyramidReduce(splineDegree, img(), pyramid_level);
+        pyramidReduce(splineDegree, imgOut(), img(), pyramid_level);
+        //selfPyramidReduce(splineDegree, img(), pyramid_level);
         break;
     case RESIZE_FOURIER:
         selfScaleToSizeFourier(ydimOut, xdimOut, img(), fourier_threads);
-        break;
+        img.write(fnImgOut);
+        return;
     }
-    img.write(fnImgOut);
+    imgOut.write(fnImgOut);
 }
 
 void ProgImageResize::postProcess()

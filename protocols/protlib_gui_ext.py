@@ -1514,7 +1514,7 @@ class XmippBrowser():
                 self.insertElement(path, f, os.path.isdir(join(path, f)))
     
     def refresh(self, e=None):
-        self.changeDir(self.dir)
+        self.filterResults()
         
     def changeDir(self, newDir):
         self.dir = newDir
@@ -1605,7 +1605,8 @@ class XmippBrowser():
     
     def filterResults(self, e=None):
         self.pattern = self.filterVar.get().split()
-        foundDirs = {}     
+        foundDirs = {}    
+        self.changeDir(self.dir)
         if len(self.pattern):
             self.tree.clear()
             for root, dirs, files in os.walk(self.dir, followlinks=True):
@@ -1620,8 +1621,8 @@ class XmippBrowser():
                             self.tree.item(rootId, open=tk.TRUE)
                             foundDirs[relRoot] = rootId
                         self.insertElement(rootId, f)
-        else:
-            self.changeDir(self.dir)
+        #else:
+        #    self.changeDir(self.dir)
             
     def matchPattern(self, item):
         ##i = basename(item)

@@ -1067,6 +1067,20 @@ inline void scaleToSize(int SplineDegree,
 /** Scales to a new size.
  * @ingroup GeometricalTransformations
  *
+ * The volume is scaled (resampled) to fill a new size.
+ * Same as previous, but in this case the input is a MultidimArrayGeneric.
+ *
+ * @code
+ * scaleToSize(VolumeOut, VolumeGenericInput, 128, 128, 128);
+ * @endcode
+ */
+void scaleToSize(int SplineDegree,
+                        MultidimArrayGeneric &V2,
+                        const MultidimArrayGeneric &V1,int Xdim, int Ydim, int Zdim = 1);
+
+/** Scales to a new size.
+ * @ingroup GeometricalTransformations
+ *
  * The same as the previous function, but input array is overwritten
  */
 template<typename T>
@@ -1264,6 +1278,16 @@ void pyramidExpand(int SplineDegree,
     produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
 
 }
+
+void pyramidExpand(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   int levels = 1);
+
+void pyramidReduce(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   int levels = 1);
 
 /** Expand the nth volume by 2 using a BSpline pyramid.
  * @ingroup GeometricalTransformations
