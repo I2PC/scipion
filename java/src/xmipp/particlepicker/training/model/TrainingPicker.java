@@ -406,9 +406,9 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	/** Return the number of particles imported from a file */
-	public int importParticlesFromFile(String path, Format f, Micrograph m) {
+	public int importParticlesFromFile(String path, Format f, Micrograph m, float scale) {
 		MetaData md = new MetaData();
-		fillParticlesMdFromFile(path, f, m, md);
+		fillParticlesMdFromFile(path, f, m, md, scale);
 		int particles = (md != null) ? importParticlesFromMd(m, md) : 0;
 		md.destroy();
 		return particles;
@@ -416,7 +416,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	@Override
 	/** Return the number of particles imported */
-	public int importParticlesFromFolder(String path, Format f) {
+	public int importParticlesFromFolder(String path, Format f, float scale) {
 		if (f == Format.Auto) f = detectFormat(path);
 		if (f == Format.Unknown) return 0;
 
@@ -434,7 +434,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 			System.out.println("  filename: " + filename);
 			if (Filename.exists(filename)) {
 				// System.out.println("    ........EXISTS");
-				particles += importParticlesFromFile(filename, f, m);
+				particles += importParticlesFromFile(filename, f, m, scale);
 			}
 		}
 		// System.out.format("==========PARTICLES: %d\n", particles);
