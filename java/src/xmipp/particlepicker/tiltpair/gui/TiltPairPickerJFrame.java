@@ -435,13 +435,13 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 					return;
 			}
 			untiltedmic.reset();
-			getParticlePicker().importParticlesFromFiles(file1, file2, format, getMicrograph(), scale);
 			pppicker.importParticlesFromFiles(file1, file2, format, untiltedmic, scale);
 			pppicker.saveData(getMicrograph());
 			setChanged(false);
 			getCanvas().repaint();
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
+			updateSize(getFamily().getSize());
 			canvas.setActive(null);
 	}
 	
