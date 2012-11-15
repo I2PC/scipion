@@ -118,7 +118,7 @@ bool  MDSql::activateMathExtensions(void)
     const char* lib = "libXmippSqliteExt.so";
     sqlite3_enable_load_extension(db, 1);
     if( sqlite3_load_extension(db, lib, 0, 0)!= SQLITE_OK)
-        REPORT_ERROR(ERR_MD_SQL,"Cannot activa sqlite extensions");
+        REPORT_ERROR(ERR_MD_SQL,"Cannot activate sqlite extensions");
     else
         return true;
 }
