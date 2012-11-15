@@ -429,34 +429,25 @@ fi
 
 #################### SQLITE ###########################
 if $DO_SQLITE; then
-  compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  if $IS_MAC
+    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 -I/opt/local/include -I/opt/local/lib -I/sw/include -I/sw/lib -lsqlite3" ".libs"
+  else
+    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  fi
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
   install_libs $VSQLITE/.libs libsqlite3 0
   #compile math library for sqlite
   cd $EXT_PATH/$VSQLITE_EXT
-  gcc -fPIC -lm -shared  extension-functions.c -o libsqlitefunctions.so
-  cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
-
-
-# * Linux:
-#   gcc -fPIC -lm -shared extension-functions.c -o libsqlitefunctions.so
-# * Mac OS X:
-#   gcc -fno-common -dynamiclib extension-functions.c -o #libsqlitefunctions.dylib
-# (You may need to add flags
-#  -I /opt/local/include/ -L/opt/local/lib -lsqlite3
-#  if your sqlite3 is installed from Mac ports, or
-#  -I /sw/include/ -L/sw/lib -lsqlite3
-#  if installed with Fink.)
-# * Windows:
-#  1. Install MinGW (http://www.mingw.org/) and you will get the gcc
-#  (gnu compiler collection)
-#  2. add the path to your path variable (isn't done during the
-#   installation!)
-#  3. compile:
-#   gcc -shared -I "path" -o libsqlitefunctions.so extension-functions.c
-#   (path = path of sqlite3ext.h; i.e. C:\programs\sqlite)
-
-  
+  if $IS_MINGW; then
+    gcc -shared -I. -o libsqlitefunctions.dll extension-functions.c
+    cp libsqlitefunctions.dll $XMIPP_HOME/lib/libXmippSqliteExt.dll
+  elif $IS_MAC; then
+    gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
+    cp libsqlitefunctions.dylib $XMIPP_HOME/lib/libXmippSqliteExt.dylib
+  else  
+    gcc -fPIC -lm -shared  extension-functions.c -o libsqlitefunctions.so
+    cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
+  fi
 fi
 
 #################### FFTW ###########################
