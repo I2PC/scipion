@@ -499,6 +499,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 		return particles;
 	}// function importParticlesFromMd
+	
 
 	public void removeFamily(Family family) {
 		if (getManualParticlesNumber(family) > 0) // perhaps I have to check

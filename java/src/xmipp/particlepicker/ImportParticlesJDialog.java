@@ -45,7 +45,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 		if(parent instanceof TrainingPickerJFrame)
 			xfc.setFileSelectionMode(XmippFileChooser.FILES_AND_DIRECTORIES);
 		else
-			xfc.setFileSelectionMode(XmippFileChooser.FILES_ONLY);
+			xfc.setFileSelectionMode(XmippFileChooser.DIRECTORIES_ONLY);
 		xfc.setMultiSelectionEnabled(false);
 		initComponents();
 	}// constructor
