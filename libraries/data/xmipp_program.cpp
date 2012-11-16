@@ -531,7 +531,7 @@ void XmippMetadataProgram::defineParams()
 
     if (allow_apply_geo)
     {
-        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
+        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in metadata");
     }
 }//function defineParams
 
