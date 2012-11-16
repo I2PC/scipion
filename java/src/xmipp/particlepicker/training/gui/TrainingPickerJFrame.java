@@ -116,6 +116,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			initMenuBar();
 			setJMenuBar(mb);
 
+			
 			GridBagConstraints constraints = new GridBagConstraints();
 			constraints.insets = new Insets(0, 5, 0, 5);
 			constraints.anchor = GridBagConstraints.WEST;
@@ -128,10 +129,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 			add(familypn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 
 			
-
 			initMicrographsPane();
 			add(micrographpn,
 					XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
+			
+			if(getFamily().getStep() != FamilyState.Manual)
+				importffmi.setEnabled(false);
 
 			pack();
 			positionx = 0.995f;
@@ -777,7 +780,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	
-	public void importParticlesFromFile(Format format, String file) {
+	public void importParticlesFromFile(Format format, String file, float scale) {
+		
 		String filename = Micrograph.getName(file, 1);
 		if(!filename.equals(getMicrograph().getName()))//validating you want use this file for this micrograph with different name
 		{
@@ -788,7 +792,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		}
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
-		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph());
+		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph(), scale);
 		ppicker.saveData(getMicrograph());
 		setChanged(false);
 		getCanvas().repaint();
