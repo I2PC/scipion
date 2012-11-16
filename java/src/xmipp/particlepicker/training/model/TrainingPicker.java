@@ -562,5 +562,20 @@ public abstract class TrainingPicker extends ParticlePicker {
 	// }
 	//
 	// }
+	
+	public String getImportMicrographName(String path, String filename, Format f) {
+		String base = Filename.removeExtension(Filename.getBaseName(filename));
+		switch (f) {
+		case Xmipp24:
+			return Filename.join(path, base, base + ".raw.Common.pos");
+		case Xmipp30:
+			return Filename.join(path, base + ".pos");
+		case Eman:
+			return Filename.join(path, base + ".box");
+
+		default:
+			return null;
+		}
+	}
 
 }
