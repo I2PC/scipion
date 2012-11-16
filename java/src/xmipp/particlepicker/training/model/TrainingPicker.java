@@ -407,9 +407,9 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	/** Return the number of particles imported from a file */
-	public int importParticlesFromFile(String path, Format f, Micrograph m) {
+	public int importParticlesFromFile(String path, Format f, Micrograph m, float scale) {
 		MetaData md = new MetaData();
-		fillParticlesMdFromFile(path, f, m, md);
+		fillParticlesMdFromFile(path, f, m, md, scale);
 		int particles = (md != null) ? importParticlesFromMd(m, md) : 0;
 		md.destroy();
 		return particles;
@@ -417,7 +417,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	@Override
 	/** Return the number of particles imported */
-	public int importParticlesFromFolder(String path, Format f) {
+	public int importParticlesFromFolder(String path, Format f, float scale) {
 		if (f == Format.Auto) f = detectFormat(path);
 		if (f == Format.Unknown) return 0;
 
@@ -435,7 +435,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 			System.out.println("  filename: " + filename);
 			if (Filename.exists(filename)) {
 				// System.out.println("    ........EXISTS");
-				particles += importParticlesFromFile(filename, f, m);
+				particles += importParticlesFromFile(filename, f, m, scale);
 			}
 		}
 		// System.out.format("==========PARTICLES: %d\n", particles);
@@ -472,6 +472,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 	 * an md and call this function
 	 */
 	public int importParticlesFromMd(Micrograph m, MetaData md) {
+		
 		m.reset();
 		TrainingMicrograph tm = (TrainingMicrograph) m;
 		long[] ids = md.findObjects();
@@ -499,6 +500,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 		return particles;
 	}// function importParticlesFromMd
+	
 
 	public void removeFamily(Family family) {
 		if (getManualParticlesNumber(family) > 0) // perhaps I have to check
@@ -539,24 +541,42 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 	}
 
-	public void updateFamilyTemplates(Family f) {
-		ImageGeneric igp;
-		List<TrainingParticle> particles;
-		MicrographFamilyData mfd;
-		for (TrainingMicrograph m : micrographs) {
-			mfd = m.getFamilyData(f);
-			for (int i = 0; i < mfd.getManualParticles().size(); i++) {
-				particles = mfd.getManualParticles();
-				igp = particles.get(i).getImageGeneric();
-				if (i < f.getTemplatesNumber())
-					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-				else
-					try {
-						f.getTemplates().alignImages(igp);
-					} catch (Exception e) {
-						throw new IllegalArgumentException(e.getMessage());
-					}
-			}
+
+	// public void updateFamilyTemplates(Family f) {
+	// ImageGeneric igp;
+	// List<TrainingParticle> particles;
+	// MicrographFamilyData mfd;
+	// for(TrainingMicrograph m: micrographs)
+	// {
+	// mfd = m.getFamilyData(f);
+	// for (int i = 0; i < mfd.getManualParticles().size(); i++) {
+	// particles = mfd.getManualParticles();
+	// igp = particles.get(i).getImageGeneric();
+	// if (i < f.getTemplatesNumber())
+	// f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+	// else
+	// try {
+	// f.getTemplates().alignImages(igp);
+	// } catch (Exception e) {
+	// throw new IllegalArgumentException(e.getMessage());
+	// }
+	// }
+	// }
+	//
+	// }
+	
+	public String getImportMicrographName(String path, String filename, Format f) {
+		String base = Filename.removeExtension(Filename.getBaseName(filename));
+		switch (f) {
+		case Xmipp24:
+			return Filename.join(path, base, base + ".raw.Common.pos");
+		case Xmipp30:
+			return Filename.join(path, base + ".pos");
+		case Eman:
+			return Filename.join(path, base + ".box");
+
+		default:
+			return null;
 		}
 
 	}

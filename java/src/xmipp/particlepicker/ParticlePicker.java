@@ -411,26 +411,12 @@ public abstract class ParticlePicker {
 		return Format.Unknown;
 	}
 
-	public String getImportMicrographName(String path, String filename, Format f) {
-		String base = Filename.removeExtension(Filename.getBaseName(filename));
-		switch (f) {
-		case Xmipp24:
-			return Filename.join(path, base, base + ".raw.Common.pos");
-		case Xmipp30:
-			return Filename.join(path, base + ".pos");
-		case Eman:
-			return Filename.join(path, base + ".box");
-
-		default:
-			return null;
-		}
-	}
-
+	public abstract String getImportMicrographName(String path, String filename, Format f) ;
 	/** Return the number of particles imported */
-	public abstract int importParticlesFromFolder(String path, Format f);
+	public abstract int importParticlesFromFolder(String path, Format f, float scale);
 
 	/** Return the number of particles imported from a file */
-	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md) {
+	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale) {
 		
 		if (f == Format.Auto)
 			f = detectFileFormat(path);
@@ -443,14 +429,16 @@ public abstract class ParticlePicker {
 			md.read(String.format("%s@%s", family.getName(), path));
 			break;
 		case Eman:
-			fillParticlesMdFromEmanFile(path, m, md);
+			fillParticlesMdFromEmanFile(path, m, md, scale);
 			break;
 		default:
 			md.clear();
 		}
+		if (scale != 1.f)
+			md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
 	}// function importParticlesFromFile
 
-	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md) {
+	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
 		String line = "";
 		//System.out.println("Importing from EMAN, file: " + file);
 		try {
@@ -468,13 +456,14 @@ public abstract class ParticlePicker {
 		long fid = md.firstObject();
 		int size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
 		if (size > 0)
-			family.setSize(size);
+			family.setSize(Math.round(size * scale));
 		int half = size / 2;
+		int height = (int)(m.height / scale);
 		// Move coordinates to the center and also invert the y-coordinate
 		if (inverty){
 			System.out.println("EMAN1 detected, inverting y...");
 			md.operate(String.format("xcoor=xcoor+%d,ycoor=%d-(ycoor+%d)",
-					half, m.height, half));
+					half, height, half));
 		}
 		else
 			md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half,
