@@ -795,13 +795,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	}
 
-<<<<<<< HEAD
-	public void importParticlesFromFile(Format format, String file, float scale) {
-=======
-	
+
 	public void importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty) {
-		
->>>>>>> 3.0
 		String filename = Micrograph.getName(file, 1);
 		if (!filename.equals(getMicrograph().getName()))// validating you want
 														// use this file for
