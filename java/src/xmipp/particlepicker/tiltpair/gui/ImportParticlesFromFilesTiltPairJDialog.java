@@ -9,6 +9,7 @@ import java.io.File;
 import java.text.NumberFormat;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -33,6 +34,8 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 	private JButton browsebt2;
 	private String path2;
 	private JFormattedTextField scaletf;
+	private JCheckBox invertycb;
+	private JCheckBox invertxcb;
 
 	public ImportParticlesFromFilesTiltPairJDialog(TiltPairPickerJFrame parent) {
 		super(parent);
@@ -87,6 +90,16 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 		scaletf.setValue(1);
 		panel.add(scaletf, XmippWindowUtil.getConstraints(gbc, 1, 3));
 		
+		panel.add(new JLabel("Invert X:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 4));
+		invertxcb = new JCheckBox();
+		panel.add(invertxcb, XmippWindowUtil.getConstraints(gbc, 1, 4));
+		
+		panel.add(new JLabel("Invert Y:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 5));
+		invertycb = new JCheckBox();
+		panel.add(invertycb, XmippWindowUtil.getConstraints(gbc, 1, 5));
+		
 		
 	}// function createContent
 
@@ -111,7 +124,7 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 
 		if (path2 == null || path2.equals("") )
 			showError(XmippMessage.getEmptyFieldMsg("Tilted Source"));
-		((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2, ((Number)scaletf.getValue()).floatValue());
+		((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		
 	}
 	

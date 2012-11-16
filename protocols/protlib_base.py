@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join, exists
+from os.path import join, exists, dirname
 import sys
 import shutil
 import ConfigParser
