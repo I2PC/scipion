@@ -13,11 +13,13 @@ import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
+import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.utils.XmippMessage;
 
 public abstract class TrainingPicker extends ParticlePicker {
 
 	protected List<TrainingMicrograph> micrographs;
+	private TrainingMicrograph micrograph;
 
 	public static FamilyState previousStep(FamilyState step) {
 		if (step == FamilyState.Manual) return null;
@@ -53,11 +55,11 @@ public abstract class TrainingPicker extends ParticlePicker {
 		return micrographs;
 	}
 
-	public TrainingMicrograph getMicrograph(String name) {
-		for (TrainingMicrograph m : getMicrographs())
-			if (m.getName().equalsIgnoreCase(name)) return m;
-		return null;
+	public TrainingMicrograph getMicrograph()
+	{
+		return micrograph;
 	}
+	
 
 	public void loadMicrographs() {
 
@@ -220,7 +222,6 @@ public abstract class TrainingPicker extends ParticlePicker {
 						md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 					}
 					block = mfd.getFamily().getName() + "@" + file;
-					System.out.println(block);
 					md.writeBlock(block);
 					md.destroy();
 				}
@@ -576,6 +577,12 @@ public abstract class TrainingPicker extends ParticlePicker {
 		default:
 			return null;
 		}
+	}
+	
+	@Override
+	public void setMicrograph(Micrograph m) {
+		this.micrograph = (TrainingMicrograph)m;
+		
 	}
 
 }

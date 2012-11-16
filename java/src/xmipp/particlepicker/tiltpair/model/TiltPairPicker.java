@@ -22,6 +22,7 @@ import java.util.Hashtable;
 public class TiltPairPicker extends ParticlePicker {
 
 	protected List<UntiltedMicrograph> micrographs;
+	private UntiltedMicrograph micrograph;
 
 	public TiltPairPicker(String selfile, String outputdir, FamilyState state) {
 		super(selfile, outputdir, state);
@@ -286,5 +287,18 @@ public class TiltPairPicker extends ParticlePicker {
 			return null;
 		}
 	}
+	
+	public UntiltedMicrograph getMicrograph()
+	{
+		return micrograph;
+	}
+
+	@Override
+	public void setMicrograph(Micrograph m) {
+		this.micrograph = (UntiltedMicrograph)m;
+		
+	}
+	
+
 
 }// class TiltPairPicker
