@@ -1,4 +1,43 @@
 
+_setup.py() 
+{
+    local cur prev opts base
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    #  The basic options we'll complete.
+    #
+    opts="configure compile update clean gui install -j"
+
+   COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
+   
+   #if [ ${#COMPREPLY[*]} != 0 ]; then
+   #    return 0
+   #fi
+   
+   
+   
+   case "${prev}" in
+   # match start of string
+   "compile"*) # run_tests 
+       _xcompile
+       return 0
+       ;;
+   "x"*) # xmipp_programs
+       local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_*`; do echo ${x/\/*\//} ; done )
+       COMPREPLY=( $(compgen -W "${names}" -- ${cur}) )
+       return 0
+       ;;
+ #   *)COMPREPLY=()
+ #       return 0
+ #   ;;
+    esac
+  #  COMPREPLY=()
+    return 0
+}
+complete -F _setup.py  setup.py
+
 _xcompile() 
 {
     local cur prev opts base
@@ -35,7 +74,7 @@ _xcompile()
     COMPREPLY=()
     return 0
 }
-complete  -o nospace -F _xcompile xcompile setup.py
+complete  -o nospace -F _xcompile xcompile
 
 
 _testPrograms() 
