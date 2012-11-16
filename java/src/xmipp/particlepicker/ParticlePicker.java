@@ -422,7 +422,7 @@ public abstract class ParticlePicker {
 		case Xmipp30:
 			return Filename.join(path, base + ".pos");
 		case Eman:
-			return Filename.join(path, base + ".box");
+			return Filename.join(path, base + "_ptcls.box");
 
 		default:
 			return null;
