@@ -414,26 +414,12 @@ public abstract class ParticlePicker {
 		return Format.Unknown;
 	}
 
-	public String getImportMicrographName(String path, String filename, Format f) {
-		String base = Filename.removeExtension(Filename.getBaseName(filename));
-		switch (f) {
-		case Xmipp24:
-			return Filename.join(path, base, base + ".raw.Common.pos");
-		case Xmipp30:
-			return Filename.join(path, base + ".pos");
-		case Eman:
-			return Filename.join(path, base + "_ptcls.box");
-
-		default:
-			return null;
-		}
-	}
-
+	public abstract String getImportMicrographName(String path, String filename, Format f) ;
 	/** Return the number of particles imported */
-	public abstract int importParticlesFromFolder(String path, Format f, float scale);
+	public abstract int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty);
 
 	/** Return the number of particles imported from a file */
-	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale) {
+	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty) {
 		
 		if (f == Format.Auto)
 			f = detectFileFormat(path);
@@ -451,8 +437,15 @@ public abstract class ParticlePicker {
 		default:
 			md.clear();
 		}
+		int width = (int)(m.width / scale);//original width
+		int height = (int)(m.height / scale);//original height
+		if (invertx)
+			md.operate(String.format("xcoor=%d-xcoor", width));
+		if (inverty)
+			md.operate(String.format("ycoor=%d-ycoor", height));
 		if (scale != 1.f)
 			md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
+		
 	}// function importParticlesFromFile
 
 	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
@@ -466,7 +459,6 @@ public abstract class ParticlePicker {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		boolean inverty = (line.split("\t").length > 4);// eman 1.0
 		//inverty = true;
 		md.readPlain(file, "xcoor ycoor particleSize");
 
@@ -475,15 +467,7 @@ public abstract class ParticlePicker {
 		if (size > 0)
 			family.setSize(Math.round(size * scale));
 		int half = size / 2;
-		int height = (int)(m.height / scale);
-		// Move coordinates to the center and also invert the y-coordinate
-		if (inverty){
-			System.out.println("EMAN1 detected, inverting y...");
-			md.operate(String.format("xcoor=xcoor+%d,ycoor=%d-(ycoor+%d)",
-					half, height, half));
-		}
-		else
-			md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half,
+		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half,
 					half));
 
 	}//function fillParticlesMdFromEmanFile

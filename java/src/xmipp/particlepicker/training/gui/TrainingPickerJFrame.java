@@ -780,7 +780,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	
-	public void importParticlesFromFile(Format format, String file, float scale) {
+	public void importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty) {
 		
 		String filename = Micrograph.getName(file, 1);
 		if(!filename.equals(getMicrograph().getName()))//validating you want use this file for this micrograph with different name
@@ -792,7 +792,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		}
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
-		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph(), scale);
+		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
 		setChanged(false);
 		getCanvas().repaint();
