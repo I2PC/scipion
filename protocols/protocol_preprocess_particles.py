@@ -9,7 +9,7 @@ from protlib_base import *
 import xmipp
 import os
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import deleteFile,linkAcquisitionInfoIfPresent, moveFile
+from protlib_filesystem import deleteFile,linkAcquisitionInfo, moveFile
 import glob
 from protlib_gui_ext import showError
 
@@ -107,7 +107,7 @@ class ProtPreprocessParticles(XmippProtocol):
 
 def createAcquisition(log,InputFile,WorkingDir,DoScale,NewSize):
     if not DoScale:
-        linkAcquisitionInfoIfPresent("acquisition_info.xmd", InputFile, WorkingDir)
+        linkAcquisitionInfo("acquisition_info.xmd", InputFile, WorkingDir)
     else:
         dirSrc=os.path.dirname(InputFile)
         fnAcquisitionIn=os.path.join(dirSrc,"acquisition_info.xmd")
