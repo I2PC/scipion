@@ -244,7 +244,7 @@ public class TiltPairPicker extends ParticlePicker {
 	}// function detectFormat
 
 	@Override
-	public int importParticlesFromFolder(String path, Format f) {
+	public int importParticlesFromFolder(String path, Format f, float scale) {
 		if (f == Format.Auto) f = detectFormat(path);
 		if (f == Format.Unknown) return 0;
 
@@ -254,17 +254,17 @@ public class TiltPairPicker extends ParticlePicker {
 		for (UntiltedMicrograph um : micrographs) {
 			uFn = getImportMicrographName(path, um.getFile(), f);
 			tFn = getImportMicrographName(path, um.getTiltedMicrograph().getFile(), f);
-			if (Filename.exists(uFn) && Filename.exists(tFn)) particles += importParticlesFromFiles(uFn, tFn, f, um);
+			if (Filename.exists(uFn) && Filename.exists(tFn)) particles += importParticlesFromFiles(uFn, tFn, f, um, scale);
 		}
 
 		return particles;
 	}// function importParticlesFromFolder
 
-	public int importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um) {
+	public int importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale) {
 		MetaData uMd = new MetaData();
-		fillParticlesMdFromFile(uPath, f, um, uMd);
+		fillParticlesMdFromFile(uPath, f, um, uMd, scale);
 		MetaData tMd = new MetaData();
-		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd);
+		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale);
 
 		int particles = loadMicrographParticles(um, uMd, tMd);
 		uMd.destroy();
