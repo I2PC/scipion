@@ -84,6 +84,8 @@ public abstract class ParticlePicker {
 		this.selfile = selfile;
 		this.mode = mode;
 		initializeFilters();
+		loadEmptyMicrographs();
+		loadConfig();
 	}
 
 	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
@@ -99,7 +101,11 @@ public abstract class ParticlePicker {
 		this.outputdir = outputdir;
 		this.mode = mode;
 		initializeFilters();
+		loadEmptyMicrographs();
+		loadConfig();
 	}
+	
+	public abstract void loadEmptyMicrographs() ;
 
 	private void initializeFilters() {
 		this.macrosfile = getOutputPath("macros.xmd");

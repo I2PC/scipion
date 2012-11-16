@@ -1,23 +1,19 @@
 package xmipp.particlepicker.tiltpair.model;
 
-import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.particlepicker.training.model.FamilyState;
-import xmipp.particlepicker.training.model.MicrographFamilyData;
-import xmipp.particlepicker.training.model.TrainingMicrograph;
-import xmipp.utils.XmippMessage;
-import xmipp.jni.Filename;
-import xmipp.jni.MDLabel;
-import xmipp.jni.MetaData;
-import java.util.Hashtable;
 
 public class TiltPairPicker extends ParticlePicker {
 
@@ -26,15 +22,31 @@ public class TiltPairPicker extends ParticlePicker {
 
 	public TiltPairPicker(String selfile, String outputdir, FamilyState state) {
 		super(selfile, outputdir, state);
-		this.micrographs = new ArrayList<UntiltedMicrograph>();
+		
 		loadData();
 	}
 
-	private void loadData() {
+	public void loadData() {
+		try {
+			loadEmptyMicrographs();
+			for(UntiltedMicrograph um: micrographs)
+				loadMicrographParticles(um);
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+	
+	public void loadEmptyMicrographs() {
 		try {
 			MetaData md = new MetaData(selfile);
 			// md.readPlain(pairsfile, "image tilted_image");
-			micrographs.clear();
+			if(micrographs == null)
+				this.micrographs = new ArrayList<UntiltedMicrograph>();
+			else
+				micrographs.clear();
 			UntiltedMicrograph untiltedmicrograph;
 			TiltedMicrograph tiltedmicrograph;
 			String image, tiltedimage;
@@ -47,7 +59,7 @@ public class TiltPairPicker extends ParticlePicker {
 				untiltedmicrograph = new UntiltedMicrograph(image, tiltedmicrograph);
 				tiltedmicrograph.setUntiltedMicrograph(untiltedmicrograph);
 				micrographs.add(untiltedmicrograph);
-				loadMicrographParticles(untiltedmicrograph);
+				
 			}
 			if (micrographs.size() == 0) throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
 
