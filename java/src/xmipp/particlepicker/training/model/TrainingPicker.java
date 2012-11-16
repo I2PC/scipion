@@ -406,9 +406,9 @@ public abstract class TrainingPicker extends ParticlePicker {
 	}
 
 	/** Return the number of particles imported from a file */
-	public int importParticlesFromFile(String path, Format f, Micrograph m, float scale) {
+	public int importParticlesFromFile(String path, Format f, Micrograph m, float scale, boolean invertx, boolean inverty) {
 		MetaData md = new MetaData();
-		fillParticlesMdFromFile(path, f, m, md, scale);
+		fillParticlesMdFromFile(path, f, m, md, scale, invertx, inverty);
 		int particles = (md != null) ? importParticlesFromMd(m, md) : 0;
 		md.destroy();
 		return particles;
@@ -416,7 +416,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 
 	@Override
 	/** Return the number of particles imported */
-	public int importParticlesFromFolder(String path, Format f, float scale) {
+	public int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty) {
 		if (f == Format.Auto) f = detectFormat(path);
 		if (f == Format.Unknown) return 0;
 
@@ -434,7 +434,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 			System.out.println("  filename: " + filename);
 			if (Filename.exists(filename)) {
 				// System.out.println("    ........EXISTS");
-				particles += importParticlesFromFile(filename, f, m, scale);
+				particles += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
 			}
 		}
 		// System.out.format("==========PARTICLES: %d\n", particles);
@@ -562,5 +562,20 @@ public abstract class TrainingPicker extends ParticlePicker {
 	// }
 	//
 	// }
+	
+	public String getImportMicrographName(String path, String filename, Format f) {
+		String base = Filename.removeExtension(Filename.getBaseName(filename));
+		switch (f) {
+		case Xmipp24:
+			return Filename.join(path, base, base + ".raw.Common.pos");
+		case Xmipp30:
+			return Filename.join(path, base + ".pos");
+		case Eman:
+			return Filename.join(path, base + ".box");
+
+		default:
+			return null;
+		}
+	}
 
 }

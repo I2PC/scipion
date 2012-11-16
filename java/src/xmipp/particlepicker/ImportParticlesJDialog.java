@@ -9,6 +9,7 @@ import java.io.File;
 import java.text.NumberFormat;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -16,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import xmipp.jni.Filename;
+import xmipp.particlepicker.tiltpair.gui.ImportParticlesFromFilesTiltPairJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -32,6 +34,8 @@ public class ImportParticlesJDialog extends XmippDialog {
 	protected XmippFileChooser xfc = null;
 	protected String path;
 	private JFormattedTextField scaletf;
+	private JCheckBox invertxcb;
+	private JCheckBox invertycb;
 
 	protected static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
 			"Xmipp 3.0", "Eman" };
@@ -44,8 +48,11 @@ public class ImportParticlesJDialog extends XmippDialog {
 		xfc = new XmippFileChooser();
 		if(parent instanceof TrainingPickerJFrame)
 			xfc.setFileSelectionMode(XmippFileChooser.FILES_AND_DIRECTORIES);
-		else
+		else if (this instanceof ImportParticlesFromFilesTiltPairJDialog)
+			xfc.setFileSelectionMode(XmippFileChooser.FILES_ONLY);
+		else 
 			xfc.setFileSelectionMode(XmippFileChooser.DIRECTORIES_ONLY);
+		
 		xfc.setMultiSelectionEnabled(false);
 		initComponents();
 	}// constructor
@@ -90,6 +97,16 @@ public class ImportParticlesJDialog extends XmippDialog {
 		scaletf.setColumns(3);
 		scaletf.setValue(1);
 		panel.add(scaletf, XmippWindowUtil.getConstraints(gbc, 1, 2));
+		
+		panel.add(new JLabel("Invert X:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 3));
+		invertxcb = new JCheckBox();
+		panel.add(invertxcb, XmippWindowUtil.getConstraints(gbc, 1, 3));
+		
+		panel.add(new JLabel("Invert Y:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 4));
+		invertycb = new JCheckBox();
+		panel.add(invertycb, XmippWindowUtil.getConstraints(gbc, 1, 4));
 		
 	}// function createContent
 
@@ -138,9 +155,9 @@ public class ImportParticlesJDialog extends XmippDialog {
 			showError(XmippMessage.getPathNotExistsMsg(path));
 		else {			
 			if (new File(path).isDirectory()) 
-				parent.importParticlesFromFolder(format, path, ((Number)scaletf.getValue()).floatValue());
+				parent.importParticlesFromFolder(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 			else //only can choose file if TrainingPickerJFrame instance
-				((TrainingPickerJFrame)parent).importParticlesFromFile(format, path, ((Number)scaletf.getValue()).floatValue());
+				((TrainingPickerJFrame)parent).importParticlesFromFile(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		}
 	}
 	
