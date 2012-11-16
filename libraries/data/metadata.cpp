@@ -423,6 +423,20 @@ bool MetaData::removeLabel(const MDLabel label)
     return true;
 }
 
+bool MetaData::keepLabels(const std::vector<MDLabel> &labels)
+{
+    for (size_t i = 0; i < activeLabels.size();)
+    {
+    	if (!vectorContainsLabel(labels, activeLabels[i]))
+    		removeLabel(activeLabels[i]);
+    	else
+    		++i;
+    }
+    return true;
+}
+
+
+
 size_t MetaData::addObject()
 {
     return (size_t)myMDSql->addRow();
@@ -618,7 +632,7 @@ void MetaData::writeStar(const FileName &outFile,const String &blockName, WriteM
                 REPORT_ERROR(ERR_IO_NOPATH,"MetaData:writeStar can not get filesize for file "+outFile);
             size = file_status.st_size;
             if (size == 0)
-              mode = MD_OVERWRITE;
+                mode = MD_OVERWRITE;
         }
 
         if (mode == MD_APPEND)//size=0 for /dev/stderr

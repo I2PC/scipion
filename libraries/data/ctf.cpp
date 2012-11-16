@@ -363,6 +363,7 @@ void CTFDescription::clear()
     isLocalCTF = false;
     clear_noise();
     clear_pure_ctf();
+    y0=x0=xF=yF=0;
 }
 
 void CTFDescription::clear_noise()
