@@ -6,9 +6,11 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.NumberFormat;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -29,6 +31,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 	public Format format = Format.Auto;
 	protected XmippFileChooser xfc = null;
 	protected String path;
+	private JFormattedTextField scaletf;
 
 	protected static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
 			"Xmipp 3.0", "Eman" };
@@ -74,10 +77,20 @@ public class ImportParticlesJDialog extends XmippDialog {
 			}
 		});
 		panel.add(jcbFormat, XmippWindowUtil.getConstraints(gbc, 1, 0, 1));
+		
 		sourcetf = new JTextField(20);
 		panel.add(sourcetf, XmippWindowUtil.getConstraints(gbc, 1, 1, 1));
+		
 		browsebt = XmippWindowUtil.getIconButton("folderopen.gif", this);
 		panel.add(browsebt, XmippWindowUtil.getConstraints(gbc, 2, 1, 1));
+		
+		panel.add(new JLabel("Scale To:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
+		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance());
+		scaletf.setColumns(3);
+		scaletf.setValue(1);
+		panel.add(scaletf, XmippWindowUtil.getConstraints(gbc, 1, 2));
+		
 	}// function createContent
 
 	@Override
@@ -108,9 +121,8 @@ public class ImportParticlesJDialog extends XmippDialog {
 		}
 	}
 	
-	protected void importParticlesFromFile(){
-		((TrainingPickerJFrame)parent).importParticlesFromFile(format, path);
-	}
+	
+	
 	
 	private boolean existsSelectedPath(){
 			return Filename.exists(path);
@@ -126,9 +138,9 @@ public class ImportParticlesJDialog extends XmippDialog {
 			showError(XmippMessage.getPathNotExistsMsg(path));
 		else {			
 			if (new File(path).isDirectory()) 
-				parent.importParticlesFromFolder(format, path);
+				parent.importParticlesFromFolder(format, path, ((Number)scaletf.getValue()).floatValue());
 			else //only can choose file if TrainingPickerJFrame instance
-				((TrainingPickerJFrame)parent).importParticlesFromFile(format, path);
+				((TrainingPickerJFrame)parent).importParticlesFromFile(format, path, ((Number)scaletf.getValue()).floatValue());
 		}
 	}
 	
