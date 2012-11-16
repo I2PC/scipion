@@ -500,6 +500,7 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 		return particles;
 	}// function importParticlesFromMd
+	
 
 	public void removeFamily(Family family) {
 		if (getManualParticlesNumber(family) > 0) // perhaps I have to check
@@ -540,24 +541,42 @@ public abstract class TrainingPicker extends ParticlePicker {
 		}
 	}
 
-	public void updateFamilyTemplates(Family f) {
-		ImageGeneric igp;
-		List<TrainingParticle> particles;
-		MicrographFamilyData mfd;
-		for (TrainingMicrograph m : micrographs) {
-			mfd = m.getFamilyData(f);
-			for (int i = 0; i < mfd.getManualParticles().size(); i++) {
-				particles = mfd.getManualParticles();
-				igp = particles.get(i).getImageGeneric();
-				if (i < f.getTemplatesNumber())
-					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-				else
-					try {
-						f.getTemplates().alignImages(igp);
-					} catch (Exception e) {
-						throw new IllegalArgumentException(e.getMessage());
-					}
-			}
+
+	// public void updateFamilyTemplates(Family f) {
+	// ImageGeneric igp;
+	// List<TrainingParticle> particles;
+	// MicrographFamilyData mfd;
+	// for(TrainingMicrograph m: micrographs)
+	// {
+	// mfd = m.getFamilyData(f);
+	// for (int i = 0; i < mfd.getManualParticles().size(); i++) {
+	// particles = mfd.getManualParticles();
+	// igp = particles.get(i).getImageGeneric();
+	// if (i < f.getTemplatesNumber())
+	// f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+	// else
+	// try {
+	// f.getTemplates().alignImages(igp);
+	// } catch (Exception e) {
+	// throw new IllegalArgumentException(e.getMessage());
+	// }
+	// }
+	// }
+	//
+	// }
+	
+	public String getImportMicrographName(String path, String filename, Format f) {
+		String base = Filename.removeExtension(Filename.getBaseName(filename));
+		switch (f) {
+		case Xmipp24:
+			return Filename.join(path, base, base + ".raw.Common.pos");
+		case Xmipp30:
+			return Filename.join(path, base + ".pos");
+		case Eman:
+			return Filename.join(path, base + ".box");
+
+		default:
+			return null;
 		}
 
 	}

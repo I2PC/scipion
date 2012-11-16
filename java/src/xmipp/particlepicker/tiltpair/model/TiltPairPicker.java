@@ -271,5 +271,20 @@ public class TiltPairPicker extends ParticlePicker {
 		tMd.destroy();
 		return particles;
 	}// function importParticlesFromFiles
+	
+	public String getImportMicrographName(String path, String filename, Format f) {
+		String base = Filename.removeExtension(Filename.getBaseName(filename));
+		switch (f) {
+		case Xmipp24:
+			return Filename.join(path, base, base + ".raw.Common.pos");
+		case Xmipp30:
+			return Filename.join(path, base + ".pos");
+		case Eman:
+			return Filename.join(path, base + "_ptcls.box");
+
+		default:
+			return null;
+		}
+	}
 
 }// class TiltPairPicker
