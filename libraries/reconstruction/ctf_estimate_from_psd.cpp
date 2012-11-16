@@ -2366,7 +2366,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     defocusU = VEC_ELEM(arrayDefocusU,maxInd);
     defocusV = VEC_ELEM(arrayDefocusV,maxInd);
 
-    if (VEC_ELEM(arrayError2,maxInd) >= 0)
+    if (VEC_ELEM(arrayError2,maxInd) <= 0)
     {
         COPY_ctfmodel_TO_CURRENT_GUESS;
         global_ctfmodel_defoci = global_ctfmodel;
