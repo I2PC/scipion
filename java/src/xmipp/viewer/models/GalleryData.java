@@ -478,13 +478,17 @@ public class GalleryData {
 	}
 
 	/** This is only needed for metadata table galleries */
-	public boolean isFile(int col) {
+	public boolean isFile(ColumnInfo ci) {
 		try {
-			return MetaData.isPathField(labels.get(col).getLabel());
+			return MetaData.isPathField(ci.getLabel());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	public boolean isFile(int col) {
+		return isFile(labels.get(col));
 	}
 
 	public boolean isImageFile(int col) {

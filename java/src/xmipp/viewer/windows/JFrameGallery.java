@@ -1515,10 +1515,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			} else if (cmd.equals(REFRESH)) {
 				gallery.refreshAt(row, col);
 			} else if (cmd.equals(OPEN)) {
-				if (data.labels.get(col).allowRender)
+				MetadataGallery mg = (MetadataGallery)gallery;
+				ColumnInfo ci = mg.visibleLabels.get(col);				
+				if (ci.allowRender)
 					gallery.handleDoubleClick(row, col);
 				else {
-					String file = data.getValueFromCol(row, col);
+					String file = data.getValueFromCol(row, ci);
 					ImagesWindowFactory.openFileAsDefault(file);
 				}
 			} else if (cmd.equals(OPEN_ASTEXT)) {
