@@ -125,4 +125,22 @@ public:
 
 };
 
+/** Print out to create Protocol header script */
+class AutocompletePrinter: public Printer
+{
+protected:
+  FILE * output;
+
+
+public:
+  /** Constructor */
+  AutocompletePrinter(const char * scriptfile, bool programGui = false);
+  virtual ~AutocompletePrinter();
+  virtual void printProgram(const ProgramDef &program, int v = 0);
+  virtual void printSection(const SectionDef &section, int v = 0);
+  virtual void printParam(const ParamDef &param, int v = 0);
+  virtual void printArgument(const ArgumentDef & argument, int v = 0);
+  virtual void printCommentList(const CommentList &comments, int v = 0);
+};
+
 #endif /* ARGSPRINTER_H_ */
