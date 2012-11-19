@@ -351,9 +351,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		tiltedcanvas.repaint();
 	}
 
-	public void importParticlesFromFolder(Format format, String dir)
+	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		super.importParticlesFromFolder(format, dir);
+		super.importParticlesFromFolder(format, dir, scale, invertx, inverty);
 		tiltedcanvas.repaint();
 	}
 	
@@ -424,24 +424,16 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		setChanged(true);
 	}
 	
-	public void importParticlesFromFiles(Format format, String file1, String file2){
-			String filename1 = Micrograph.getName(file1, 1);
-			String filename2 = Micrograph.getName(file2, 1);
-			if(!filename1.equals(getMicrograph().getName()) || !filename2.equals(getMicrograph().getTiltedMicrograph().getName()))//validating you want use this files for this micrograph pair with different name
-			{
-				String msg = String.format("Are you sure you want to import data from files \n%s\n%s to micrograph pair %s ?", file1, file2, getMicrograph().getName());
-				int result = JOptionPane.showConfirmDialog(this, msg);
-				if(result != JOptionPane.YES_OPTION)
-					return;
-			}
+	public void importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
+			
 			untiltedmic.reset();
-			getParticlePicker().importParticlesFromFiles(file1, file2, format, getMicrograph());
-			pppicker.importParticlesFromFiles(file1, file2, format, untiltedmic);
+			pppicker.importParticlesFromFiles(file1, file2, format, untiltedmic, scale, invertx, inverty);
 			pppicker.saveData(getMicrograph());
 			setChanged(false);
 			getCanvas().repaint();
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
+			updateSize(getFamily().getSize());
 			canvas.setActive(null);
 	}
 	

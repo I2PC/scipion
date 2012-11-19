@@ -474,7 +474,8 @@ XmippMetadataProgram::XmippMetadataProgram()
     keep_input_columns = false;
     delete_output_stack = true;
     remove_disabled = true;
-    single_image = input_is_stack = output_is_stack = false;
+    single_image = input_is_metadata = input_is_stack = output_is_stack = false;
+    mdInSize = 0;
     iter = NULL;
     zdimOut = ydimOut = xdimOut = 0;
     image_label = MDL_IMAGE;
@@ -530,7 +531,7 @@ void XmippMetadataProgram::defineParams()
 
     if (allow_apply_geo)
     {
-        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
+        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in metadata");
     }
 }//function defineParams
 
@@ -579,7 +580,9 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
 
     mdInSize = mdIn->size();
 
-    if (!mdIn->isMetadataFile)
+    if (mdIn->isMetadataFile)
+        input_is_metadata = true;
+    else
     {
         if (mdInSize == 1)
             single_image = true;
@@ -606,7 +609,7 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
      * and output is a stack.*/
     save_metadata_stack = save_metadata_stack && mdIn->isMetadataFile && output_is_stack;
 
-    // Only delete output stack in case we are not overwritting input
+    // Only delete output stack in case we are not overwriting input
     delete_output_stack = (output_is_stack && delete_output_stack) ?
                           !(fn_out.empty() && oroot.empty()) : false;
 
@@ -627,7 +630,7 @@ void XmippMetadataProgram::show()
         return;
     std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo)
-        std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
+        std::cout << "Reading geometrical transformations stored in metadata" << std::endl;
     if (!fn_out.empty())
         std::cout << "Output File: " << fn_out << std::endl;
     if (!oroot.empty())
@@ -790,12 +793,18 @@ void XmippMetadataProgram::run()
      * the dirBaseName in order not overwriting files when repeating same command on
      * different directories. If baseName is set it is used, otherwise, input name is used.
      * Then, the suffix _oext is added.*/
-
-    if (fn_out.empty() && !oroot.empty())
-        if (!baseName.empty() )
-            fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
-        else
-            fn_out = findAndReplace(pathBaseName,"/","_") + fn_in.getBaseName() + "_" + oextBaseName + ".xmd";
+    if (fn_out.empty() )
+    {
+        if (!oroot.empty())
+        {
+            if (!baseName.empty() )
+                fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
+            else
+                fn_out = findAndReplace(pathBaseName,"/","_") + fn_in.getBaseName() + "_" + oextBaseName + ".xmd";
+        }
+        else if (input_is_metadata) /// When nor -o neither --oroot is passed and want to overwrite input metadata
+            fn_out = fn_in;
+    }
 
     finishProcessing();
 

@@ -5,8 +5,10 @@ import ij.ImagePlus;
 import ij.gui.ImageWindow;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
@@ -99,6 +101,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
+		
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
@@ -150,7 +153,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
 			return;
 		}
-		if (active != null && um.fits(x, y, frame.getParticleSize()))
+		if (frame.isPickingAvailable(e) && active != null && um.fits(x, y, frame.getParticleSize()))
 		{
 			moveActiveParticle(x, y);
 			if (active.isAdded())
@@ -181,8 +184,16 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 	public void paint(Graphics g)
 	{
-		super.paint(g);
-		Graphics2D g2 = (Graphics2D) g;
+		Graphics offgc;
+		Image offscreen = null;
+		Dimension d = getSize();
+
+		// create the offscreen buffer and associated Graphics
+		offscreen = createImage(d.width, d.height);
+		offgc = offscreen.getGraphics();
+		
+		super.paint(offgc);
+		Graphics2D g2 = (Graphics2D) offgc;
 		g2.setColor(frame.getColor());
 		int index = 0;
 
@@ -198,6 +209,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 		if (frame.drawAngles())
 			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);
+		g.drawImage(offscreen, 0, 0, this);
 	}
 
 	private void addParticle(int x, int y)

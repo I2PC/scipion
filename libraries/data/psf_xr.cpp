@@ -75,7 +75,7 @@ void XRayPSF::readParams(XmippProgram * program)
 }
 
 /* Read -------------------------------------------------------------------- */
-void XRayPSF::read(const FileName &fn)
+void XRayPSF::read(const FileName &fn, bool readVolume)
 {
 
     if (fn == "")
@@ -91,7 +91,7 @@ void XRayPSF::read(const FileName &fn)
         size_t id = MD.firstObject();
 
         FileName fnPSF;
-        if (MD.getValue(MDL_IMAGE,fnPSF, id))
+        if ( MD.getValue(MDL_IMAGE,fnPSF, id) && readVolume )
         {
             mode = PSF_FROM_FILE;
             psfGen.readMapped(fn.getDir()+fnPSF);
@@ -294,14 +294,18 @@ void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
     {
         T.initIdentity(4);
         double scaleFactor = dxo/dxoPSF;
-        double scaleFactorZ = dxo/dzoPSF;
+        //        double scaleFactorZ = dxo/dzoPSF;
+        double scaleFactorZ = 1;
+
         dMij(T, 0, 0) = scaleFactor;
         dMij(T, 1, 1) = scaleFactor;
         dMij(T, 2, 2) = scaleFactorZ;
+        /** TODO: The scale in Z may not be necessary to save memory
+         *  and should be used the nearest PSF slice for each Z plane */
 
         MultidimArray<double> &mdaPsfVol = psfVol();
 
-        mdaPsfVol.resize(1, Noz*dzoPSF/dxo,
+        mdaPsfVol.resize(1, Noz/scaleFactorZ,
                          Noy/scaleFactor,
                          Nox/scaleFactor, false);
 
@@ -312,12 +316,12 @@ void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
 
         psfGen.clear(); // Free mem in case image is not mapped
 
-        // Rescale the PSF values to keep the normalization
+        // Rescale the PSF values to keep the normalization in each X-Y plane
         mdaPsfVol *= scaleFactor*scaleFactor;
 
         // Reset the sampling values so now psfVol matches input phantom's sampling
         dxoPSF = dxo;
-        dzoPSF = dzo;
+        //        dzoPSF = dzo;
         T.initIdentity(4);
 
         if (threshold != 0.)
@@ -469,7 +473,7 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
                 PSFi.initZeros();
             else
             {   /* Actually T transform matrix is set to identity, as sampling is the same for both psfVol and phantom
-                 * It is only missing to set Z shift to select the slice */
+                                 * It is only missing to set Z shift to select the slice */
                 dMij(T, 2, 3) = zIndexPSF; // Distance from the focal plane
                 applyGeometry(LINEAR, PSFi, mPsfVol, T,
                               IS_INV, DONT_WRAP, dAkij(mPsfVol,0,0,0));
@@ -485,24 +489,25 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
 #ifdef DEBUG
 
     Image<double> _Im;
-    _Im() = PSFi;
+    //    _Im() = PSFi;
+    CenterFFT(PSFi, false);
+    _Im().alias(PSFi);
     _Im.write("psfxr-psfi.spi");
+    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
+    //    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
+    //    _Im.write("psfxr-psfi.spi");
     //    CenterOriginFFT(OTFTemp,1);
     //    _Im().resize(OTFTemp);
     //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
     //    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
     //    _Im.write("psfxr-otf1.spi");
     //    CenterOriginFFT(OTFTemp,0);
+    _Im.clear();
     _Im().resize(OTF);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
     dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
     _Im.write("psfxr-otf2.spi");
 
-    //    CenterOriginFFT(PSFi,1);
-    //    _Im().resize(PSFi);
-    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
-    //    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
-    //    _Im.write("psfxr-psfi.spi");
 #endif
 #undef DEBUG
 }
@@ -557,11 +562,11 @@ void XRayPSF::generatePSF()
     /* When PSF is generated from IDEAL_FRESNEL_LENS, dimensions are adjusted to avoid subsampling,
      * in that case it is not recommended to crop XY plane to avoid the loss of normalization in PSF plane. */
 
-//    if (Nix != Nox || Niy != Noy)
-//        mPsfVol.selfWindow(STARTINGZ(mPsfVol),
-//                           FIRST_XMIPP_INDEX(Noy),FIRST_XMIPP_INDEX(Nox),
-//                           FINISHINGZ(mPsfVol),
-//                           FIRST_XMIPP_INDEX(Noy)+Noy-1,FIRST_XMIPP_INDEX(Nox)+Nox-1);
+    //    if (Nix != Nox || Niy != Noy)
+    //        mPsfVol.selfWindow(STARTINGZ(mPsfVol),
+    //                           FIRST_XMIPP_INDEX(Noy),FIRST_XMIPP_INDEX(Nox),
+    //                           FINISHINGZ(mPsfVol),
+    //                           FIRST_XMIPP_INDEX(Noy)+Noy-1,FIRST_XMIPP_INDEX(Nox)+Nox-1);
 }
 
 /* Generate the PSF for a ideal lens --------------------------------------- */

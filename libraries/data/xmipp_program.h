@@ -325,6 +325,8 @@ protected:
     bool allow_time_bar; // Default true
 
     // DEDUCED FLAGS
+    /// Input is a metadata
+    bool input_is_metadata;
     /// Input is a single image
     bool single_image;
     /// Input is a stack

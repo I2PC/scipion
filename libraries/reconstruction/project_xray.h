@@ -43,7 +43,7 @@ struct XrayThreadArgument
     MultidimArray<double> *IgeoZb;
     Projection            *projOut;
     MultidimArray<double> *projNorm;
-    int 				   forw;
+    int        forw;
     std::vector<int>    *phantomSlabIdx;
     std::vector<int>    *psfSlicesIdx;
     ParallelTaskDistributor * td;
@@ -66,6 +66,12 @@ public:
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
     void read(const ParametersProjectionTomography &prm);
+
+    /** Read the phantom the volume
+     *
+     * @param fnVol Volume filename
+     */
+    void read(const FileName &fnVol);
 };
 
 /* Projection XR Program -------------------------------- */
@@ -90,9 +96,11 @@ public:
     double dxo;
     /// Number of threads;
     int nThr;
+    /// Save standard projections
+    bool save_std_projs;
 
     XrayProjPhantom phantom;
-    Projection   proj;
+    Projection   proj, stdProj;
     MetaData     projMD;
     ParallelTaskDistributor * td;
 
@@ -127,12 +135,17 @@ protected:
 
     Off-centered not implemented. Rotations are around volume center
 */
-void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
-        int Ydim, int Xdim, int  idxSlice = 1);
+void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P, Projection &standardP,
+        int Ydim, int Xdim);
 
 void projectXrayVolume(MultidimArray<double> &muVol,
                        MultidimArray<double> &IgeoVol,
                        XRayPSF &psf, Projection &P, MultidimArray<double> * projNorm=NULL, ThreadManager * ThrMgr=NULL);
+
+//Some global threads management variables
+extern Mutex mutex;
+extern Barrier * barrier;
+extern ThreadManager * thMgr;
 
 /// Thread Job to generate an X-ray microscope projection
 void threadXrayProject(ThreadArgument &thArg);
@@ -140,15 +153,24 @@ void threadXrayProject(ThreadArgument &thArg);
 struct CIGTArgument
 {
     double samplingZ;
-    MultidimArray<double> *muVol;
-    MultidimArray<double> *IgeoVol;
-    MultidimArray<double> *IgeoZb;
+    MultidimArray<double> *muVol;   /// Phantom volume
+    MultidimArray<double> *cumMu;   /// Accumulated Mu == Standard EM projection used as reference for reconstruction
+    MultidimArray<double> *IgeoVol; /// Igeo accumulated along Z axis
+    MultidimArray<double> *IgeoZb;  /// Intensity in the beginning of the volume to project
     ParallelTaskDistributor * td;
+
+    CIGTArgument()
+    {
+        samplingZ = 0;
+        muVol = cumMu = IgeoVol = IgeoZb = NULL;
+        td = NULL;
+    }
 };
 
 /// Calculate the volume of the information of Igeometric at each plane of the phantom
 void calculateIgeo(MultidimArray<double> &muVol, double sampling, MultidimArray<double> &IgeoVol,
-                   MultidimArray<double> &IgeoZb,int nThreads = 1 , ThreadManager * ThrMgr = NULL);
+                   MultidimArray<double> &cumMu, MultidimArray<double> &IgeoZb,
+                   int nThreads = 1 , ThreadManager * ThrMgr = NULL);
 
 void calculateIgeoThread(ThreadArgument &thArg);
 

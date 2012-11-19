@@ -295,6 +295,8 @@ void CTFDescription::readParams(XmippProgram * program)
         DeltafV=program->getDoubleParam("--defocusV");
     else
         DeltafV=DeltafU;
+    if (program->checkParam("--Q0"))
+        Q0=program->getDoubleParam("--Q0");
     azimuthal_angle=program->getDoubleParam("--azimuthal_angle");
     Ca=program->getDoubleParam("--chromatic_aberration");
     espr=program->getDoubleParam("--energy_loss");
@@ -361,6 +363,7 @@ void CTFDescription::clear()
     isLocalCTF = false;
     clear_noise();
     clear_pure_ctf();
+    y0=x0=xF=yF=0;
 }
 
 void CTFDescription::clear_noise()

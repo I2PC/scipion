@@ -100,7 +100,7 @@ class ProtML2D(XmippProtocol):
         return progId
         
     def defineSteps(self):
-        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.ImgMd,dirDest=self.WorkingDir)
+        self.Db.insertStep("linkAcquisitionInfo",InputFile=self.ImgMd,dirDest=self.WorkingDir)
         progId = self.getId()
         
         program = "xmipp_%s_align2d" % progId

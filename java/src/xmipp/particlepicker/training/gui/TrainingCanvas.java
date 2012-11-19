@@ -2,9 +2,11 @@ package xmipp.particlepicker.training.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -133,8 +135,15 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 	public void paint(Graphics g)
 	{
-		super.paint(g);
-		Graphics2D g2 = (Graphics2D) g;
+		Graphics offgc;
+		Image offscreen = null;
+		Dimension d = getSize();
+
+		// create the offscreen buffer and associated Graphics
+		offscreen = createImage(d.width, d.height);
+		offgc = offscreen.getGraphics();
+		super.paint(offgc);
+		Graphics2D g2 = (Graphics2D) offgc;
 		if (frame.getFamily().getStep() == FamilyState.Manual)
 			for (MicrographFamilyData mfdata : micrograph.getFamiliesData())
 				drawFamily(g2, mfdata);
@@ -147,7 +156,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			g2.setStroke(activest);
 			drawShape(g2, active, true);
 		}
-
+		g.drawImage(offscreen, 0, 0, this);
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)

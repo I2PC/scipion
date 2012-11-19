@@ -47,7 +47,7 @@ protected:
         addSeeAlsoLine("xray_project");
         addParamsLine("[-i <psf_param_file>] : XRay-Microscope parameters file.");
         addParamsLine(" alias --input;");
-        addParamsLine("-o <output_name_file>  : Name for output files. It creates a PSF volume file and a PSF parameters file.");
+        addParamsLine("[-o <output_name_file>]  : Name for output files. It creates a PSF volume file and a PSF parameters file.");
         addParamsLine(" alias --output;");
         psf.defineParams(this);
         // Examples
@@ -67,16 +67,18 @@ protected:
         if (checkParam("-i"))
         {
             fnParam = getParam("-i");
-            psf.read(fnParam);
             /* This forces always the creation of the PSF Volume file, even if the input already includes the
              name of a volume in the "image" label
              */
-            psf.mode = XRayPSF::GENERATE_PSF;
+            psf.read(fnParam, false);
         }
         else
             psf.readParams(this);
 
-        fnPSF = getParam("-o");
+        if (checkParam("-o"))
+            fnPSF = getParam("-o");
+        else
+            fnPSF = fnParam;
     }
 
 public:

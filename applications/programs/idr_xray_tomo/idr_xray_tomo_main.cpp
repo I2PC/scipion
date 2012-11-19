@@ -1,8 +1,7 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar (           coss@cnb.csic.es (2000)
- *              Roberto Marabini (added fourier option)
- *              Jose Miguel de la Rosa Trevin (fusion of shift, rotate and scale)
+ * Authors:     Joaquin Oton (joton@cnb.csic.es)
+ *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -25,12 +24,14 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/transform_geometry.h>
 
-int main(int argc, char **argv)
+#include <reconstruction/idr_xray_tomo.h>
+
+int main(int argc, char *argv[])
 {
-    ProgTransformGeometry program;
-    program.read(argc, argv);
-    return program.tryRun();
-} //main
+    ProgIDRXrayTomo prog;
+
+    prog.read(argc, argv);
+    return prog.tryRun();
+}
 

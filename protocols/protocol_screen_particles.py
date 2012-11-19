@@ -13,7 +13,7 @@ from protlib_base import *
 import glob
 import os
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import createLink, linkAcquisitionInfoIfPresent
+from protlib_filesystem import createLink, linkAcquisitionInfo
 
 class ProtScreenParticles(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -29,7 +29,7 @@ class ProtScreenParticles(XmippProtocol):
             self.addToSelf=False;
 
     def defineSteps(self):
-        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.InputFile,dirDest=self.WorkingDir)
+        self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InputFile,dirDest=self.WorkingDir)
         if self.addToSelf:
             self.Db.insertStep("copyFile",verifyfiles=[self.outputFile],source=self.InputFile,dest=self.outputFile)
         self.Db.insertStep('sortImages',inputFile=self.InputFile,outputFile=self.outputFile,addToSelf=self.addToSelf)
@@ -58,7 +58,7 @@ def sortImages(log, inputFile, outputFile, addToSelf):
     (Xdim, Ydim, Zdim, Ndim) = ImgSize(inputFile)
     if Ndim > 0:
         if addToSelf: 
-            runJob(log,"xmipp_image_sort_by_statistics","-i "+outputFile+" --multivariate --addToInput")
+            runJob(log,"xmipp_image_sort_by_statistics","-i "+outputFile+" --addToInput")
         else:
-            runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" --multivariate -o "+outputFile)
+            runJob(log,"xmipp_image_sort_by_statistics","-i "+inputFile+" -o "+outputFile)
 
