@@ -2,7 +2,8 @@ setenv XMIPP_HOME /usr/local/xmipp.3.0
 setenv PATH $XMIPP_HOME/bin:$PATH
 setenv LD_LIBRARY_PATH $XMIPP_HOME/lib:$LD_LIBRARY_PATH
 test -s $XMIPP_HOME/.xmipp.alias && source $XMIPP_HOME/.xmipp.alias || true
-test -s $XMIPP_HOME/.xmipp_programs.autocomplete && source $XMIPP_HOME/.xmipp_programs.autocomplete || true
+#csh does not have autocomplexion
+#test -s $XMIPP_HOME/.xmipp_programs.autocomplete && source $XMIPP_HOME/.xmipp_programs.autocomplete || true
  
  
 # Xmipp Aliases 						 
