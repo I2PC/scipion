@@ -581,7 +581,10 @@ if $DO_PYTHON; then
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
     printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
   fi
-  echoExec "chmod a+x $PYTHON_BIN"    
+  echoExec "chmod a+x $PYTHON_BIN"
+  #make python directory accesible by anybody
+  echoExec "chmod -R a+x $XMIPP_HOME/external/python/Python-2.7.2"
+
 fi    
 
 #################### PYTHON MODULES ###########################
