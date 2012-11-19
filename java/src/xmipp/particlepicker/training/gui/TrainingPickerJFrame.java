@@ -728,11 +728,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 					sppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);//build invariants
 					args = sppicker.getCorrectCommandLineArgs(getFamilyData());
 					ppicker.runXmippProgram("xmipp_micrograph_automatic_picking", args);//correct
-//					int next = ppicker.getNextFreeMicrograph(index + 1);
-//					if (next != -1)
-//						micrographstb.setRowSelectionInterval(next, next);
-//					else
-//						actionsbt.setVisible(false);
+					actionsbt.setVisible(false);
 					canvas.setEnabled(true);
 					XmippWindowUtil.releaseGUI(getRootPane());
 				}
