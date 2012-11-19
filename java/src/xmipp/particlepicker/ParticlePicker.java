@@ -104,8 +104,8 @@ public abstract class ParticlePicker {
 		loadEmptyMicrographs();
 		loadConfig();
 	}
-	
-	public abstract void loadEmptyMicrographs() ;
+
+	public abstract void loadEmptyMicrographs();
 
 	private void initializeFilters() {
 		this.macrosfile = getOutputPath("macros.xmd");
@@ -217,9 +217,11 @@ public abstract class ParticlePicker {
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
 				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
-				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(),id);
-				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES,
-				f.getTemplatesNumber(), id);
+
+				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, 0, id);//saved for compatibility with future versions
+				//md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
+
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
 			md.write(file);
@@ -231,6 +233,11 @@ public abstract class ParticlePicker {
 	}
 
 	public abstract List<? extends Micrograph> getMicrographs();
+	
+	public int getMicrographIndex()
+	{
+		return getMicrographs().indexOf(getMicrograph());
+	}
 
 	public void loadFamilies() {
 		families.clear();
@@ -367,17 +374,15 @@ public abstract class ParticlePicker {
 			if (m.getName().equalsIgnoreCase(name)) return m;
 		return null;
 	}
-	
-	
 
-	public void persistConfig() {
+	public void saveConfig() {
 		try {
 			MetaData md;
 			String file = configfile;
 			md = new MetaData();
 			long id = md.addObject();
 			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
-			md.setValueString(MDLabel.MDL_MICROGRAPH, family.getName(), id);
+			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
 			md.write(file);
 			md.destroy();
 
@@ -389,7 +394,12 @@ public abstract class ParticlePicker {
 
 	public void loadConfig() {
 		String file = configfile;
-		if (!new File(file).exists()) return;
+		if (!new File(file).exists()) {
+			family = families.get(0);
+			setMicrograph(getMicrographs().get(0));
+			return;
+
+		}
 
 		String mname, fname;
 		try {
@@ -398,6 +408,7 @@ public abstract class ParticlePicker {
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				family = getFamily(fname);
+				
 				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				setMicrograph(getMicrograph(mname));
 			}
@@ -497,9 +508,9 @@ public abstract class ParticlePicker {
 			throw new IllegalArgumentException(e);
 		}
 	}
-	
+
 	public abstract Micrograph getMicrograph();
-	
+
 	public abstract void setMicrograph(Micrograph m);
 
 }
