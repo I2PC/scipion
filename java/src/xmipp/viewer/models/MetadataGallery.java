@@ -49,7 +49,7 @@ public class MetadataGallery extends ImageGallery {
 	protected ImageGeneric image;
 
 	// Also store the visible ones to fast access
-	ArrayList<ColumnInfo> visibleLabels;
+	public ArrayList<ColumnInfo> visibleLabels;
 
 	public MetadataGallery(GalleryData data) throws Exception {
 		super(data);

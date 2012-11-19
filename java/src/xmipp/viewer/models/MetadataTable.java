@@ -208,9 +208,9 @@ public class MetadataTable extends MetadataGallery {
 	@Override
 	public boolean handleDoubleClick(int row, int col) {
 		try {
-			if (data.isImageFile(col)) {
-				new XmippImageWindow(new MdRowImageLoader(row, data.labels.get(
-						col).getLabel()));
+			ColumnInfo ci = visibleLabels.get(col);
+			if (ci.allowRender && data.isImageFile(ci)) {
+				new XmippImageWindow(new MdRowImageLoader(row, ci.getLabel()));
 				return true;
 			}
 		} catch (Exception e) {
@@ -309,9 +309,10 @@ public class MetadataTable extends MetadataGallery {
 	public boolean handleRightClick(int row, int col,
 			XmippPopupMenuCreator xpopup) {
 		xpopup.initItems();
-		if (data.isFile(col)) {
+		
+		if (data.isFile(visibleLabels.get(col))) {
 			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
-			if (!data.isImageFile(col))
+			if (!data.isImageFile(visibleLabels.get(col)))
 				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
 		}
 		return true;

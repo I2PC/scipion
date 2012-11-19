@@ -260,6 +260,31 @@ def createProgramsDb(dbName=None):
     db.commit()
     return db
 
+def createProgramsAutocomplete(script='.xmipp_programs.autocomplete'):
+    programs = getXmippPrograms()
+    
+    if os.path.exists(script):
+        os.remove(script)
+        
+    for p in programs:
+        p = os.path.basename(p)
+        try:
+            print greenStr(p), skipProgram(p)
+            
+            if not skipProgram(p):
+                cmd = [p, "--xmipp_write_autocomplete", script]
+                if '_mpi' in p:                    
+                    cmd = ['mpirun', '-np', '1'] + cmd
+                print ' '.join(cmd)
+                from subprocess import Popen, PIPE
+                ps = Popen(cmd, stdout=PIPE, stderr=PIPE)
+                stderrdata = ps.communicate()[1]
+                if stderrdata != '':
+                    raise Exception(stderrdata)                
+        except Exception, e:
+            print failStr("PROGRAM: " + p)
+            print failStr("ERROR: " + str(e))
+
 class ProgramKeywordsRank():
     def __init__(self, keywords=None):
         self.keywords = keywords
