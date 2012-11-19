@@ -23,7 +23,8 @@ public class TiltPairPicker extends ParticlePicker {
 	public TiltPairPicker(String selfile, String outputdir, FamilyState state) {
 		super(selfile, outputdir, state);
 		
-		loadData();
+		for(UntiltedMicrograph um: micrographs)
+			loadMicrographParticles(um);
 	}
 
 	public void loadData() {

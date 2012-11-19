@@ -590,4 +590,8 @@ public abstract class TrainingPicker extends ParticlePicker {
 			throw new IllegalArgumentException(e);
 		}
 	}
+	
+	public MicrographFamilyData getFamilyData() {
+		return micrograph.getFamilyData(family);
+	}
 }
