@@ -922,6 +922,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_image_operate')
     AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
     AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
     AddProgramLink('image_sort', 'mpi_image_sort')
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
