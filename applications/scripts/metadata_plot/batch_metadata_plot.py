@@ -119,10 +119,6 @@ class ScriptPlotMetadata(XmippScript):
         
         for i, l in enumerate(ylabels):
             c = colors[i % lenColors]
-            if c.startswith('('): # Convert rgb format to tuples
-                #p = c[1:-1].split(',')
-                #c = (int(p[0]), int(p[1]), int(p[2]))
-                c = (255, 0, 0)
             m = markers[i % lenMarkers]
             if m == "none":
                 m = None
