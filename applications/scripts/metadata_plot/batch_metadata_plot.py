@@ -45,8 +45,12 @@ class ScriptPlotMetadata(XmippScript):
         self.addParamsLine(' [--title <title="">]   : Plot title')
         self.addParamsLine(' [--xtitle <title>]     : Plot x axis label')
         self.addParamsLine(' [--ytitle <title>]     : Plot y axis label')
-        self.addParamsLine(' [--colors <colors>]          : Colors for each plot')
+        self.addParamsLine(' [--colors <colors>]    : Colors for each plot')
         self.addParamsLine('   alias -c;')
+        self.addParamsLine(' [--markers <markers>]  : Markers for each plot')
+        self.addParamsLine('   alias -m;')
+        self.addParamsLine(' [--style <linestyle>]  : Line style for each plot')
+        self.addParamsLine('   alias -s;')
         self.addParamsLine(' [--nbins <nbin>]          : Create histogram with Y data and nbin bins')
         self.addParamsLine('   alias -n;')
         self.addParamsLine(' [--legend <location=best>] : Select where to place legend')
@@ -63,13 +67,22 @@ class ScriptPlotMetadata(XmippScript):
         self.addExampleLine('Plot using dots:', False)
         self.addExampleLine('xmipp_metadata_plot -i results.xmd -x iterationNumber  \
         -y "sigmaNoise sigmaOffset iterationNumber" \
-        --title "My figure" --colors "yellowo blueo greeno"')
+        --title "My figure" --colors "yo bo go"')
         self.addExampleLine('Plot using different line styles:', False)
         self.addExampleLine('xmipp_metadata_plot -i results.xmd -x iterationNumber  \
         -y "sigmaNoise sigmaOffset iterationNumber" \
         --title "My figure" --colors "yellow-- blue. green.."')
         self.addExampleLine('Colors, markers and style lines are described here: http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot', False)
 
+    def getList(self, paramName, defaultValue=[None]):
+        '''Return list and len of it '''
+        if self.checkParam(paramName):
+            paramList = self.getParam(paramName).split()
+        else:
+            paramList = defaultValue
+        return paramList, len(paramList)
+        
+        
     def run(self):        
         from xmipp import MetaData, str2Label
         from protlib_gui_figure import XmippPlotter        
@@ -89,11 +102,11 @@ class ScriptPlotMetadata(XmippScript):
             ylabel = self.getParam('--ytitle')
         else:
             ylabel = ylabels[0]
-        if self.checkParam('--colors'):
-            colors = self.getParam('--colors').split()
-        else:
-            colors = ['g', 'b', 'r', 'y', 'c', 'm', 'k']
-	lenColors=len(colors)    
+        
+        colors, lenColors = self.getList('--colors', ['g', 'b', 'r', 'y', 'c', 'm', 'k'])
+        markers, lenMarkers = self.getList('--markers')
+        styles, lenStyles = self.getList('--style')
+        
         if self.checkParam('--nbins'):
             nBins = self.getIntParam('--nbins')
         else:
@@ -105,10 +118,18 @@ class ScriptPlotMetadata(XmippScript):
         xplotter.createSubPlot(title, xlabel, ylabel)
         
         for i, l in enumerate(ylabels):
-            if nBins:
-                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i%lenColors], nbins=nBins)#if nbins is present do an histogram
-            else:
-                xplotter.plotMd(md, mdLabelX, str2Label(l), color=colors[i%lenColors])#if nbins presnts do an histogram
+            c = colors[i % lenColors]
+            if c.startswith('('): # Convert rgb format to tuples
+                #p = c[1:-1].split(',')
+                #c = (int(p[0]), int(p[1]), int(p[2]))
+                c = (255, 0, 0)
+            m = markers[i % lenMarkers]
+            if m == "none":
+                m = None
+            s = styles[i % lenStyles]
+            if s == "none":
+                s = None
+            xplotter.plotMd(md, mdLabelX, str2Label(l), color=c, marker=m, linestyle=s, nbins=nBins)#if nbins is present do an histogram
         
         legendLocation = self.getParam('--legend')
         if legendLocation != 'none':

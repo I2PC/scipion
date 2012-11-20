@@ -45,7 +45,6 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.ClassInfo;
 
 public class EditLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
