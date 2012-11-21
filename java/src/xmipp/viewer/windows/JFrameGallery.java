@@ -1390,6 +1390,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 							break;
 						}
 				} else if (cmd.equals(MD_PLOT)) {
+                                        //Does this do anything?
+                                        //where is defined PlotJDialog
 					PlotJDialog dlg = new PlotJDialog(JFrameGallery.this);
 					dlg.showDialog();
 				} else if (cmd.equals(MD_CLASSES)) {
