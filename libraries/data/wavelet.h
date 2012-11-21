@@ -63,6 +63,16 @@ void Bilib_DWT(const MultidimArray< double >& input,
  */
 void set_DWT_type(int DWT_type);
 
+/** Get maximum scale.
+ *
+ * This function returns the maximum scale achievable by the DWT transform of
+ * a given size.
+ */
+inline int Get_Max_Scale(int size)
+{
+    return ROUND(log10(static_cast< double >(size)) / log10(2.0));
+}
+
 /** DWT of a MultidimArray
  *
  * The output vector can be the same as the input one. Previously the type of
@@ -160,6 +170,7 @@ void SelectDWTBlock(int scale,
     I.toLogical(y2, x2, y2, x2);
 }
 
+
 /** Select Block 3D.
  *
  * Given the scale (s=0 is the finest) and the quadrant "xyz"="000", "001",
@@ -193,15 +204,6 @@ void SelectDWTBlock(int scale,
     I.toLogical(z2, y2, x2, z2, y2, x2);
 }
 
-/** Get maximum scale.
- *
- * This function returns the maximum scale achievable by the DWT transform of
- * a given size.
- */
-inline int Get_Max_Scale(int size)
-{
-    return ROUND(log10(static_cast< double >(size)) / log10(2.0));
-}
 
 /** Given a quadrant number it returns the string associated to it.
  *
