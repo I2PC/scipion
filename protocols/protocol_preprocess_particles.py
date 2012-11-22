@@ -133,7 +133,7 @@ def copyFiles(log,InputFile,OutputStack,OutputMetadata):
     mDstack.write(OutputMetadata)
 
 def doScale(log,stack,new_size,Nproc):
-    runJob(log,"xmipp_transform_geometry","-i %(stack)s --scale dim %(new_size)d"%locals(),Nproc)
+    runJob(log,"xmipp_image_resize","-i %(stack)s --fourier %(new_size)d"%locals(),Nproc)
 
 def doFourier(log,stack,freq_low,freq_high,freq_decay,Nproc):
     if freq_low==0:

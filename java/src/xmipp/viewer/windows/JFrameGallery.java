@@ -1260,6 +1260,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
 			addItem(STATS_FSC, "FSC");
+			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
 			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
 			addItem(MD_ADD_OBJECT, "Add new object", "new_object.gif");
@@ -1295,6 +1296,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
 			setItemEnabled(DISPLAY_RESLICE, volMode);
 			setItemEnabled(MD_CLASSES, data.is2DClassificationMd());
+			setItemEnabled(MD_PLOT, data.isTableMode());
 			boolean isCol = data.isColumnFormat();
 			setItemEnabled(STATS, isCol && !volMode);
 			setItemEnabled(MD_ADD_OBJECT, isCol);
@@ -1387,6 +1389,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 							setResliceView(ImageGeneric.VIEWS[i]);
 							break;
 						}
+				} else if (cmd.equals(MD_PLOT)) {
+					PlotJDialog dlg = new PlotJDialog(JFrameGallery.this);
+					dlg.showDialog();
 				} else if (cmd.equals(MD_CLASSES)) {
 					openClassesDialog();
 				} else if (cmd.equals(MD_EDIT_COLS)) {
