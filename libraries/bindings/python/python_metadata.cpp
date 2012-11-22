@@ -254,6 +254,8 @@ PyMethodDef MetaData_methods[] =
           METH_VARARGS, "Add a new label to MetaData" },
         { "fillConstant", (PyCFunction) MetaData_fillConstant,
           METH_VARARGS, "Fill a column with constant value" },
+        { "fillRandom", (PyCFunction) MetaData_fillRandom,
+          METH_VARARGS, "Fill a column with random value" },
         { "copyColumn", (PyCFunction) MetaData_copyColumn,
           METH_VARARGS, "Copy the values of one column to another" },
         { "copyColumnTo", (PyCFunction) MetaData_copyColumnTo,
@@ -1081,6 +1083,38 @@ MetaData_fillConstant(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* fillConstant */
+PyObject *
+MetaData_fillRandom(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    double op1, op2, op3 = 0.;
+    PyObject *pyValue = NULL, *pyStr = NULL;
+
+    if (PyArg_ParseTuple(args, "iOdd|d", &label, &pyValue, &op1, &op2, &op3))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            if ((pyStr = PyObject_Str(pyValue)) != NULL)
+            {
+                char * str = PyString_AsString(pyStr);
+                if (str != NULL)
+                {
+                    self->metadata->fillRandom((MDLabel) label, str, op1, op2, op3);
+                    Py_RETURN_TRUE;
+                }
+            }
+            PyErr_SetString(PyXmippError, "MetaData.fillRandom: couldn't convert second argument to string");
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* copyColumn */
 PyObject *
 MetaData_copyColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1115,10 +1149,10 @@ MetaData_renameColumn(PyObject *obj, PyObject *args, PyObject *kwargs)
             MetaDataObject *self = (MetaDataObject*) obj;
             if(PyInt_Check ( oldLabel ) && PyInt_Check ( newLabel ))
             {
-            	self->metadata->renameColumn((MDLabel) PyInt_AsLong (oldLabel),
-                		                     (MDLabel) PyInt_AsLong (newLabel));
+                self->metadata->renameColumn((MDLabel) PyInt_AsLong (oldLabel),
+                                             (MDLabel) PyInt_AsLong (newLabel));
             }
-                else if (PyList_Check(oldLabel)&& PyList_Check ( newLabel ))
+            else if (PyList_Check(oldLabel)&& PyList_Check ( newLabel ))
             {
                 size_t size = PyList_Size(oldLabel);
                 PyObject * itemOld = NULL;
@@ -1296,7 +1330,7 @@ MetaData_sort(PyObject *obj, PyObject *args, PyObject *kwargs)
         try
         {
             if (PyBool_Check(ascPy))
-            	asc = (ascPy == Py_True);
+                asc = (ascPy == Py_True);
             MetaDataObject *self = (MetaDataObject*) obj;
             MetaData MDaux = *(self->metadata);
             self->metadata->clear();
