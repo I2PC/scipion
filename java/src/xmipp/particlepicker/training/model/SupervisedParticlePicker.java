@@ -28,7 +28,8 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		this.threads = threads;
 		this.fastmode = fastmode;
 		this.incore = incore;
-		loadMicrographs();
+		for (TrainingMicrograph m : micrographs)
+			loadMicrographData(m);
 
 	}
 	
@@ -38,7 +39,8 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		this.threads = threads;
 		this.fastmode = fastmode;
 		this.incore = incore;
-		loadMicrographs();
+		for (TrainingMicrograph m : micrographs)
+			loadMicrographData(m);
 
 	}
 	

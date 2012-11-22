@@ -484,14 +484,13 @@ ProtPrinter::ProtPrinter(const char * scriptfile, bool programGui)
 {
     output = fopen(scriptfile, "w");
     if (output == NULL)
-      REPORT_ERROR(ERR_IO, "Couldn't open file to write program header script");
+        REPORT_ERROR(ERR_IO, "Couldn't open file to write program header script");
     keyCounter = 1;
     this->programGui = programGui;
 }
 
 ProtPrinter::~ProtPrinter()
-{
-}
+{}
 
 void printBegin(FILE * output, const ProgramDef &program, int v, bool programGui)
 {
@@ -501,13 +500,13 @@ void printBegin(FILE * output, const ProgramDef &program, int v, bool programGui
     fprintf(output, "#{begin_of_header}\n\n");
 
     if (!programGui)
-      fprintf(output, "#{eval} expandCommentRun()\n\n");
+        fprintf(output, "#{eval} expandCommentRun()\n\n");
 }
 
 void printEnd(FILE * output,  const ProgramDef &program, int v, bool programGui)
 {
     if (program.name.find("mpi") != String::npos)
-      fprintf(output, "#{eval} expandParallel()\n\n");
+        fprintf(output, "#{eval} expandParallel()\n\n");
 
     fprintf(output,
             "\n# {hidden} Program name\n"
@@ -535,9 +534,9 @@ void printEnd(FILE * output,  const ProgramDef &program, int v, bool programGui)
             "from protlib_gui import launchProgramGUI\n\n"
             "if __name__ == '__main__':\n");
     if (!programGui)
-       fprintf(output, "    protocolMain(ProtXmippProgram)\n");
+        fprintf(output, "    protocolMain(ProtXmippProgram)\n");
     else
-       fprintf(output, "    launchProgramGUI(sys.argv[0])\n");
+        fprintf(output, "    launchProgramGUI(sys.argv[0])\n");
     fclose(output);
 }
 
@@ -580,7 +579,7 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
     std::vector<ParamDef*> &exclusive = *(param.exclusiveGroup);
     if (exclusive.size() > 1)
     {
-    	parentName = (String)"P_L_" + removeChar(param.name, '-');
+        parentName = (String)"P_L_" + removeChar(param.name, '-');
         if (param.name == exclusive[0]->name)
         {
             exclusiveGroupName = KEY_PREFIX("L_");
@@ -588,20 +587,20 @@ void ProtPrinter::printParam(const ParamDef &param, int v)
             String firstItem("none");
             if (param.notOptional)
             {
-              i = 1;
-              firstItem = param.name;
+                i = 1;
+                firstItem = param.name;
             }
             fprintf(output, "#  %s{list} (%s", (param_expert ? "{expert}" : ""), firstItem.c_str());
             for (; i < exclusive.size(); ++i)
                 fprintf(output, ",%s", exclusive[i]->name.c_str());
             fprintf(output, ") Select option\n%s = \"%s\"\n",
-                   exclusiveGroupName.c_str(), firstItem.c_str());
+                    exclusiveGroupName.c_str(), firstItem.c_str());
         }
         condition = formatString("%s==\"%s\"", exclusiveGroupName.c_str(), param.name.c_str());
     }
     else
     {
-    	parentName = (String)"P_" + removeChar(param.name, '-');
+        parentName = (String)"P_" + removeChar(param.name, '-');
         if (n_args == 0)
         {
             String varName = KEY_PREFIX(parentName.c_str());
@@ -626,21 +625,26 @@ void ProtPrinter::addCondition(const String &newcondition)
 
 bool matchArgInList(const String &argName, int n, const char** list)
 {
-	for (size_t i = 0; i < n; ++i)
-		if (argName.find(list[i]) != String::npos)
-			return true;
-	return false;
+    for (size_t i = 0; i < n; ++i)
+        if (argName.find(list[i]) != String::npos)
+            return true;
+    return false;
 }
+
 bool isArgFile(const String &argName)
 {
-	const char* list[3] = {"file", "metadata", "selfile"};
-	return matchArgInList(argName, 3,
-			list);
+    const char* list[3] =
+        {"file", "metadata", "selfile"
+        };
+    return matchArgInList(argName, 3,
+                          list);
 }
 bool isArgDir(const String &argName)
 {
-	const char* list[3] = {"directory"};
-	return matchArgInList(argName, 1, list);
+    const char* list[3] =
+        {"directory"
+        };
+    return matchArgInList(argName, 1, list);
 }
 
 void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
@@ -649,20 +653,20 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 
     size_t argSubParamsSize = argument.subParams.size();
     if (isArgFile(argument.name))
-    	tags += "{file}";
+        tags += "{file}";
     if (isArgDir(argument.name))
-    	tags += "{dir}";
+        tags += "{dir}";
 
     if (argSubParamsSize > 0)
     {
-       ParamDef * param = (ParamDef*)argument.parent;
-       String firstItem("");
-       size_t j = 0;
-       if (param->notOptional)
-       {
-          firstItem = argument.subParams[0]->name;
-          j = 1;
-       }
+        ParamDef * param = (ParamDef*)argument.parent;
+        String firstItem("");
+        size_t j = 0;
+        if (param->notOptional)
+        {
+            firstItem = argument.subParams[0]->name;
+            j = 1;
+        }
         tags += "{list_combo}(" + firstItem;
         for (; j < argSubParamsSize; ++j)
             tags += "," + argument.subParams[j]->name;
@@ -675,7 +679,7 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 
     String argName(argument.name);
     if (argName == "...")
-      argName = "arglist";
+        argName = "arglist";
 
     label += "   " + argName;
     fprintf(output, "# %s %s\n", tags.c_str(), label.c_str());
@@ -713,10 +717,110 @@ void ProtPrinter::printArgument(const ArgumentDef & argument, int v)
 }
 
 void ProtPrinter::printCommentList(const CommentList &comments, int v)
+{}
+
+
+//-------------------   AUTOCOMPLETE PRINTER IMPLEMENTATIONS   --------------------------------
+
+
+AutocompletePrinter::AutocompletePrinter(const char * scriptfile, bool programGui)
 {
-    fprintf(output, "\"\"\"\n");
-    for (size_t i = 0; i < comments.size(); ++i)
-        fprintf(output, "%s\n", comments.comments[i].c_str());
-    fprintf(output, "\"\"\"\n");
+    output = fopen(scriptfile, "a");
+    if (output == NULL)
+        REPORT_ERROR(ERR_IO, "Couldn't open file to write program autocomplete script");
 }
+
+AutocompletePrinter::~AutocompletePrinter()
+{
+    fclose(output);
+}
+
+
+void AutocompletePrinter::printProgram(const ProgramDef &program, int v)
+{
+
+    const char * progStr = program.name.c_str();
+    fprintf(output, "_%s()\n", progStr);
+    fprintf(output, "{ \n");
+    fprintf(output, "local cur prev opts base \n");
+    fprintf(output, "COMPREPLY=() \n");
+    fprintf(output, "cur=\"${COMP_WORDS[COMP_CWORD]}\" \n");
+    fprintf(output, "prev=\"${COMP_WORDS[COMP_CWORD-1]}\" \n");
+
+    StringVector::const_iterator iter;
+    std::vector<SectionDef*>::const_iterator siter;
+    std::vector<ParamDef*>::const_iterator piter;
+
+    String opts = "";
+    fprintf(output, "# Autocomplete options: \n");
+    fprintf(output, "case \"${prev}\" in\n");
+
+    for (siter = program.sections.begin(); siter != program.sections.end(); siter++)
+    {
+        SectionDef &section = **siter;
+        if (section.visible < v)
+        {
+            for (piter = section.params.begin(); piter != section.params.end(); ++piter)
+            {
+                ParamDef &param = **piter;
+                opts += param.name + " ";
+                for (iter = param.aliases.begin(); iter != param.aliases.end(); iter++)
+                    opts += *iter + " ";
+                printParam(param, v);
+            }
+        }
+    }
+
+    fprintf(output, "   *)\n   ;;\nesac\n");
+
+    fprintf(output, "# Options: \n");
+    fprintf(output, "opts=\"%s\" \n", opts.c_str());
+
+    fprintf(output, "COMPREPLY=($(compgen -W \"${opts}\" -- ${cur}))\n");
+    fprintf(output, "return 0 \n");
+    fprintf(output, "} \n");
+
+    fprintf(output, "complete -o bashdefault -o default -o filenames -F _%s %s \n",
+            progStr, progStr);
+
+}
+
+void AutocompletePrinter::printSection(const SectionDef &section, int v)
+{}
+
+void AutocompletePrinter::printParam(const ParamDef &param, int v)
+{
+    String caseStr = param.name;
+    StringVector::const_iterator iter;
+
+    for (iter = param.aliases.begin(); iter != param.aliases.end(); iter++)
+        caseStr += " | " + *iter;
+    fprintf(output, "   %s)\n", caseStr.c_str());
+
+    if (param.arguments.size())
+    {
+        ArgumentDef &arg = *(param.arguments[0]);
+        if (!arg.subParams.empty())
+        {
+            String where_opts = "";
+            for (size_t j = 0; j < arg.subParams.size(); ++j)
+                where_opts += arg.subParams[j]->name + " ";
+            fprintf(output, "      local where_opts=\"%s\"\n", where_opts.c_str());
+            fprintf(output, "      COMPREPLY=( $(compgen -W \"${where_opts}\" -- ${cur}) )\n");
+            fprintf(output, "      return 0\n");
+        }
+        else if (isArgFile(arg.name))
+            fprintf(output, "      return 0\n");
+    }
+    else
+        fprintf(output, "      COMPREPLY=()\n");
+    fprintf(output, "      ;;\n");
+}
+
+void AutocompletePrinter::printArgument(const ArgumentDef & argument, int v)
+{}
+
+void AutocompletePrinter::printCommentList(const CommentList &comments, int v)
+{}
+
 

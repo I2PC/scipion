@@ -74,15 +74,15 @@ void ProgAlignTiltPairs::show() {
 }
 
 // Center one tilted image  =====================================================
-//#define DEBUG
+#define DEBUG
 bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 		bool flip,
 		double inPlaneU, double shiftXu, double shiftYu,
 		double alphaT, double alphaU,
 		double tilt, MultidimArray<double> &imgT, double &shiftX,
 		double &shiftY, CorrelationAux &auxCorr) {
-	// Cosine stretching, store stretched image in imgTaux
-	MultidimArray<double> imgTaux;
+	// Cosine stretching, store stretched image in imgT2DClass
+	MultidimArray<double> imgT2DClass;
 	Matrix2D<double> E, E2D, Mu2D, A2D;
 	if (!do_stretch)
 		tilt=0.;
@@ -91,8 +91,9 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	else
 		Euler_angles2matrix(-alphaU,tilt,alphaT,E,true);
     rotation2DMatrix(inPlaneU, Mu2D, true);
-    MAT_ELEM(Mu2D,0,2)=shiftXu;
-    MAT_ELEM(Mu2D,1,2)=shiftYu;
+    MAT_ELEM(Mu2D,0,2)=-shiftXu;
+    MAT_ELEM(Mu2D,1,2)=-shiftYu;
+
     if (flip)
     {
     	// We need to multiply the first column by -1, because
@@ -110,13 +111,13 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	MAT_ELEM(E2D,0,1)=MAT_ELEM(E,0,1);
 	MAT_ELEM(E2D,1,0)=MAT_ELEM(E,1,0);
 	MAT_ELEM(E2D,1,1)=MAT_ELEM(E,1,1);
-	A2D=Mu2D*E2D.inv();
+	A2D = Mu2D * E2D.inv();
 
-	applyGeometry(LINEAR, imgTaux, imgT, A2D, IS_NOT_INV, WRAP);
+	applyGeometry(LINEAR, imgT2DClass, imgT, A2D, IS_NOT_INV, WRAP);
 
 	// Calculate best shift
 	CorrelationAux aux;
-	bestShift(imgU, imgTaux, shiftX, shiftY, auxCorr);
+	bestShift(imgU, imgT2DClass, shiftX, shiftY, auxCorr);
 #ifdef DEBUG
 	std::cout << "alphaU=" << alphaU << " inplaneU=" << inPlaneU << " tilt=" << tilt << " alphaT=" << alphaT << std::endl;
 	std::cout << "Best shift= " << shiftX << " " << shiftY << std::endl;
@@ -139,7 +140,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 	save.write("PPPtilted.xmp");
 	save() = imgU;
 	save.write("PPPuntiltedRef.xmp");
-	save() = imgTaux;
+	save() = imgT2DClass;
 	save.write("PPPtiltedAdjusted.xmp");
 	std::cout << "Corrected shift= " << shiftX << " " << shiftY << std::endl;
 	std::cout << "Press any key\n";
@@ -149,11 +150,11 @@ bool ProgAlignTiltPairs::centerTiltedImage(const MultidimArray<double> &imgU,
 
 	return (shift < max_shift/100.0*XSIZE(imgT));
 }
-#undef DEBUG
+//#undef DEBUG
 
 // Main program  ===============================================================
 void ProgAlignTiltPairs::run() {
-	Image<double> imgU, imgT;
+	Image<double> imgT;
 	MultidimArray<double> Maux;
 	Matrix2D<double> A(3, 3);
 
@@ -188,19 +189,25 @@ void ProgAlignTiltPairs::run() {
 		double inPlaneU;
 		MDin.getValue(MDL_ANGLE_PSI, inPlaneU, __iter.objId);
 		MDin.getValue(MDL_IMAGE, fnUntilted, __iter.objId);
-		imgU.read(fnUntilted);
-		imgU().setXmippOrigin();
 		MDin.getValue(MDL_IMAGE_TILTED, fnTilted, __iter.objId);
 		imgT.read(fnTilted);
 		imgT().setXmippOrigin();
 
 #ifdef DEBUG
+		Image<double> imgU;
+		imgU.read(fnUntilted);
+		imgU().setXmippOrigin();
 		Image<double> save;
 		save() = imgU();
 		save.write("PPPuntilted.xmp");
 		Matrix2D<double> E;
-		rotation2DMatrix(-inPlaneU,E);
-		applyGeometry(LINEAR, save(), imgU(), E, IS_INV, WRAP);
+		MDRow row;
+		MDin.getRow(row, __iter.objId);
+
+		//geo2TransformationMatrix(row, E);
+		//rotation2DMatrix(-inPlaneU,E);
+		//applyGeometry(LINEAR, save(), imgU(), E, IS_NOT_INV, WRAP);
+		save.readApplyGeo(fnUntilted, row);
 		save.write("PPPuntiltedAligned.xmp");
 #endif
 

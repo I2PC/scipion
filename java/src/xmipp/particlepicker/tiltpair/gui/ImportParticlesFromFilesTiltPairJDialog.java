@@ -6,9 +6,12 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.NumberFormat;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -30,6 +33,9 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 	private JTextField sourcetf2;
 	private JButton browsebt2;
 	private String path2;
+	private JFormattedTextField scaletf;
+	private JCheckBox invertycb;
+	private JCheckBox invertxcb;
 
 	public ImportParticlesFromFilesTiltPairJDialog(TiltPairPickerJFrame parent) {
 		super(parent);
@@ -77,6 +83,24 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 		browsebt2.setActionCommand("browse2");
 		panel.add(browsebt, XmippWindowUtil.getConstraints(gbc, 2, 1, 1));
 		panel.add(browsebt2, XmippWindowUtil.getConstraints(gbc, 2, 2, 1));
+		panel.add(new JLabel("Scale To:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 3, 1));
+		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance());
+		scaletf.setColumns(3);
+		scaletf.setValue(1);
+		panel.add(scaletf, XmippWindowUtil.getConstraints(gbc, 1, 3));
+		
+		panel.add(new JLabel("Invert X:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 4));
+		invertxcb = new JCheckBox();
+		panel.add(invertxcb, XmippWindowUtil.getConstraints(gbc, 1, 4));
+		
+		panel.add(new JLabel("Invert Y:"),
+				XmippWindowUtil.getConstraints(gbc, 0, 5));
+		invertycb = new JCheckBox();
+		panel.add(invertycb, XmippWindowUtil.getConstraints(gbc, 1, 5));
+		
+		
 	}// function createContent
 
 	@Override
@@ -100,7 +124,7 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 
 		if (path2 == null || path2.equals("") )
 			showError(XmippMessage.getEmptyFieldMsg("Tilted Source"));
-		((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2);
+		((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		
 	}
 	

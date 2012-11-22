@@ -129,7 +129,7 @@ int global_show; // 0: Do not show
 
 using namespace AdjustCTF;
 
-#define ASSIGN_CTF_PARAM(index, paramName) if (ia <= index && l-- < 0) ctfmodel.paramName = p[index]
+#define ASSIGN_CTF_PARAM(index, paramName) if (ia <= index && l > 0) { ctfmodel.paramName = p[index]; --l; }
 
 /* Assign ctfmodel from a vector and viceversa ----------------------------- */
 void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
@@ -158,16 +158,42 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
     ASSIGN_CTF_PARAM(18, gaussian_K);
     ASSIGN_CTF_PARAM(19, sigmaU);
 
-    if (ia <= 20 && l-- > 0)
-        ctfmodel.sigmaV = modelSimplification < 3 ? p[20] : p[19];
-
-    if (ia <= 21 && l-- > 0)
-        ctfmodel.gaussian_angle = modelSimplification < 3 ? p[21] : 0.;
+    if (ia <= 20 && l > 0)
+        if (modelSimplification < 3)
+        {
+            ctfmodel.sigmaV = p[20];
+            l--;
+        } //     7 *
+        else
+        {
+            ctfmodel.sigmaV = p[19];
+            l--;
+        }
+    if (ia <= 21 && l > 0)
+        if (modelSimplification < 3)
+        {
+            ctfmodel.gaussian_angle = p[21];
+            l--;
+        } //     8 *
+        else
+        {
+            ctfmodel.gaussian_angle = 0;
+            l--;
+        }
 
     ASSIGN_CTF_PARAM(22, cU);
 
-    if (ia <= 23 && l-- > 0)
-        ctfmodel.cV = modelSimplification < 3 ? p[23] : p[22];
+    if (ia <= 23 && l > 0)
+        if (modelSimplification < 3)
+        {
+            ctfmodel.cV = p[23];
+            l--;
+        } //    10 *
+        else
+        {
+            ctfmodel.cV = p[22];
+            l--;
+        }
 
     ASSIGN_CTF_PARAM(24, gaussian_K2);
     ASSIGN_CTF_PARAM(25, sigmaU2);
@@ -178,7 +204,7 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
 }//function assignCTFfromParameters
 
 
-#define ASSIGN_PARAM_CTF(index, paramName) if (ia <= index && l-- < 0) p[index] = ctfmodel.paramName
+#define ASSIGN_PARAM_CTF(index, paramName) if (ia <= index && l > 0) { p[index] = ctfmodel.paramName; --l; }
 
 void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
                              int l, int modelSimplification)
@@ -204,16 +230,42 @@ void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
     ASSIGN_PARAM_CTF(18, gaussian_K);
     ASSIGN_PARAM_CTF(19, sigmaU);
 
-    if (ia <= 20 && l-- > 0)
-        p[20] = modelSimplification < 3 ? ctfmodel.sigmaV : 0.;
-
-    if (ia <= 21 && l-- > 0)
-        p[21] =  modelSimplification < 3 ? ctfmodel.gaussian_angle : 0.;
+    if (ia <= 20 && l > 0)
+        if (modelSimplification < 3)
+        {
+            p[20] = ctfmodel.sigmaV;
+            l--;
+        }
+        else
+        {
+            p[20] = 0;
+            l--;
+        }
+    if (ia <= 21 && l > 0)
+        if (modelSimplification < 3)
+        {
+            p[21] = ctfmodel.gaussian_angle;
+            l--;
+        }
+        else
+        {
+            p[21] = 0;
+            l--;
+        }
 
     ASSIGN_PARAM_CTF(22, cU);
 
-    if (ia <= 23 && l-- > 0)
-        p[23] = modelSimplification < 3 ? ctfmodel.cV : 0.;
+    if (ia <= 23 && l > 0)
+        if (modelSimplification < 3)
+        {
+            p[23] = ctfmodel.cV;
+            l--;
+        }
+        else
+        {
+            p[23] = 0;
+            l--;
+        }
 
     ASSIGN_PARAM_CTF(24, gaussian_K2);
     ASSIGN_PARAM_CTF(25, sigmaU2);
@@ -2134,7 +2186,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
-    // Center enhanced PSD
+	// Center enhanced PSD
     MultidimArray<double> centeredEnhancedPSD=psdToModelFullSize;
     CenterFFT(centeredEnhancedPSD,true);
 
@@ -2243,7 +2295,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     int maxInd;
     arrayError.maxIndex(maxInd);
 
-    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 300) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 80000) )
+    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 3000) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 50000) )
     {
         VEC_ELEM(arrayError,maxInd) = -1e3;
         VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
@@ -2273,9 +2325,9 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
                     fitness, iter, steps, false);
 
-    VEC_ELEM(arrayDefocusU,0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
-    VEC_ELEM(arrayDefocusV,0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
-    VEC_ELEM(arrayError2,0)   = VEC_ELEM(arrayError,maxInd);
+    VEC_ELEM(arrayDefocusU,0) = (*global_adjust)(0);
+    VEC_ELEM(arrayDefocusV,0) = (*global_adjust)(1);
+    VEC_ELEM(arrayError2,0) = (-1)*fitness;
 
     // We optimize for deltaU, deltaU
     (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
@@ -2290,7 +2342,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                     fitness, iter, steps, false);
 
     VEC_ELEM(arrayDefocusU,1) = (*global_adjust)(0);
-    VEC_ELEM(arrayDefocusV,1) = (*global_adjust)(0);
+    VEC_ELEM(arrayDefocusV,1) = (*global_adjust)(1);
     VEC_ELEM(arrayError2,1) = (-1)*fitness;
 
     // We optimize for deltaV, deltaV
@@ -2305,7 +2357,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
                     fitness, iter, steps, false);
 
-    VEC_ELEM(arrayDefocusU,2) = (*global_adjust)(1);
+    VEC_ELEM(arrayDefocusU,2) = (*global_adjust)(0);
     VEC_ELEM(arrayDefocusV,2) = (*global_adjust)(1);
     VEC_ELEM(arrayError2,2) = (-1)*fitness;
 
@@ -2314,63 +2366,67 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     defocusU = VEC_ELEM(arrayDefocusU,maxInd);
     defocusV = VEC_ELEM(arrayDefocusV,maxInd);
 
+    (*global_adjust)(0) = defocusU;
+    (*global_adjust)(1) = defocusV;
+    (*global_adjust)(2) = eAngle;
+    (*global_adjust)(4) = K_so_far;
+    (*global_adjust)(6) = 2;
+
+    while ( (0.5*(defocusU+defocusV) < 2500) || (0.5*(defocusU+defocusV) > 60000) )
+    {
+        VEC_ELEM(arrayError2,maxInd) = -1e3;
+        VEC_ELEM(arrayDefocusU,maxInd) = global_prm->initial_ctfmodel.DeltafU;
+        VEC_ELEM(arrayDefocusV,maxInd) = global_prm->initial_ctfmodel.DeltafV;
+
+        arrayError2.maxIndex(maxInd);
+        defocusU = VEC_ELEM(arrayDefocusU,maxInd);
+        defocusV = VEC_ELEM(arrayDefocusV,maxInd);
+        (*global_adjust)(0) = defocusU;
+        (*global_adjust)(1) = defocusV;
+        (*global_adjust)(2) = eAngle;
+        (*global_adjust)(4) = K_so_far;
+        (*global_adjust)(6) = 2;
+
+    }
+
+
     if (VEC_ELEM(arrayError2,maxInd) <= 0)
     {
-        //global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
         global_ctfmodel_defoci = global_ctfmodel;
 
-        //showFirstDefoci();
-
         global_action = 5;
-        //estimate_background_gauss_parameters2();
 
         steps.resize(ALL_CTF_PARAMETERS);
         steps.initConstant(1);
         steps(3) = 0; // kV
         steps(5) = 0; // The spherical aberration (Cs) is not optimized
+        if (global_ctfmodel.Q0!=0)
+        	steps(12)=0;
 
-        /*powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
-                        NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
-
-        COPY_ctfmodel_TO_CURRENT_GUESS;
-        */
-        //global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
 
         global_evaluation_reduction = 2;
         powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
                         NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
-        //global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
 
-        /*global_evaluation_reduction = 1;
-        powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
-                        NULL, 0.005, fitness, iter, steps, global_prm->show_optimization);
-        global_ctfmodel.force_physical_meaning();
-        COPY_ctfmodel_TO_CURRENT_GUESS;
-        */
         global_show=0;
         global_action = 3;
         global_evaluation_reduction = 1;
 
         double error = -CTF_fitness(global_adjust->vdata-1,NULL);
-
-        //exit;
         if ( error <= -0.1)
         {
             *global_adjust = initialGlobalAdjust;
             COPY_ctfmodel_TO_CURRENT_GUESS;
             //There is nothing to do and we have to perform an exhaustive search
 #ifndef RELEASE_MODE
-
             std::cout << " Entering in estimate_defoci, Performing exhaustive defocus search (SLOW)" << std::endl;
 #endif
-
             estimate_defoci();
         }
     }
-
 }
 
 void estimate_defoci_Zernike()
@@ -2401,18 +2457,6 @@ void estimate_defoci_Zernike()
 double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
                        CTFDescription &output_ctfmodel, bool standalone)
 {
-    // Sleep randomly to avoid some problems while reading the images by many processors
-    // at the same time
-    //randomize_random_generator();
-    //struct timespec tim, tim2;
-    //tim.tv_sec = 1;
-    //tim.tv_nsec = 1e9*rnd_unif(0,10);
-    //nanosleep(&tim , &tim2);
-
-    //char hostname[1024];
-    //gethostname(hostname,1023);
-    //std::cout << prm.fn_psd << " " << hostname << std::endl;
-
     DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
     global_prm = &prm;
     if (standalone || prm.show_optimization)
@@ -2453,8 +2497,6 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     {
         estimate_background_sqrt_parameters();
         estimate_background_gauss_parameters();
-
-
     }
 
     // Optimize the current background
@@ -2535,51 +2577,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     //exit(1);
 
     /************************************************************************
-     STEP 8:  all parameters
-     /************************************************************************/
-    /*
-    global_action = 4;
-    global_evaluation_reduction = 4;
-
-    steps.resize(CTF_PARAMETERS);
-    steps.initConstant(1);
-    steps(3) = 0; // kV
-    steps(5) = 0; // The spherical aberration (Cs) is not optimized
-    if (prm.initial_ctfmodel.Q0 != 0)
-     steps(12) = 0; // Q0
-    if (!global_prm->modelSimplification >= 3)
-     steps(20) = steps(21) = steps(23) = 0;
-    if (prm.modelSimplification >= 1)
-     steps(10) = steps(11) = 0;
-
-    global_mask_between_zeroes.initZeros(global_mask);
-    Matrix1D<double> u(2), z1(2), z3(2);
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_mask_between_zeroes)
-{
-     VECTOR_R2(u, global_x_digfreq(i, j), global_y_digfreq(i, j));
-     u /= u.module();
-     global_ctfmodel.zero(1, u, z1);
-     global_ctfmodel.zero(3, u, z3);
-     if (z1.module() < global_w_contfreq(i, j)
-       && global_w_contfreq(i, j) < z3.module())
-      global_mask_between_zeroes(i, j) = 1;
-}
-
-    powellOptimizer(*global_adjust, 0 + 1, CTF_PARAMETERS, &CTF_fitness, NULL,
-      0.01, fitness, iter, steps, global_prm->show_optimization);
-    global_ctfmodel.force_physical_meaning();
-    COPY_ctfmodel_TO_CURRENT_GUESS;
-
-    if (global_prm->show_optimization) {
-     std::cout << "Best fast Fit:\n" << global_ctfmodel << std::endl;
-     saveIntermediateResults("step03b_best_fast_fit");
-}
-    */
-
-    /************************************************************************
      STEPs 9, 10 and 11: all parameters included second Gaussian
      /************************************************************************/
-
     global_action = 5;
     if (prm.modelSimplification < 2)
         estimate_background_gauss_parameters2();

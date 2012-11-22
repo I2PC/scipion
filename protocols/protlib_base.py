@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join, exists
+from os.path import join, exists, dirname
 import sys
 import shutil
 import ConfigParser
@@ -348,6 +348,10 @@ class DepData():
     def __init__(self, runsDict, extRunName, protocol):
         self.runsDict = runsDict
         self.extRunName = extRunName
+        
+        if protocol is not None:
+            self.protName = protocol.Name
+            self.runName = protocol.RunName
         self.prot = protocol
         self.deps = []
         self.isRoot = True
