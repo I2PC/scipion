@@ -764,20 +764,14 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     if (select_img == ALL_IMAGES)
         select_img = aux;
 
+    /// Datatype info must be from filename after "%" symbol
     size_t found = filNamePlusExt.find_first_of("%");
-
     String imParam = "";
-
     if (found!=String::npos)
     {
         imParam =  filNamePlusExt.substr(found+1).c_str();
         filNamePlusExt = filNamePlusExt.substr(0, found) ;
     }
-
-    found = filNamePlusExt.find_first_of(":");
-    if ( found!=String::npos)
-        filNamePlusExt   = filNamePlusExt.substr(0, found);
-
 
     //#define DEBUG
 #ifdef DEBUG
