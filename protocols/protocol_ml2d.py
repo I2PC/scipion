@@ -136,7 +136,7 @@ class ProtML2D(XmippProtocol):
                     params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
                     params += ' --limit_resolution 0 %f' % self.HighResLimit
-                params += ' --sampling_rate ' % self.SamplingRate
+                params += ' --sampling_rate %f' % self.SamplingRate
             if self.MaxIters != 100:
                 params += " --iter %d" % self.MaxIters
             #Add all boolean options if true
