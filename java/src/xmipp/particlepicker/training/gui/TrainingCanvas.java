@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Stroke;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
@@ -23,7 +24,7 @@ import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 
-public class TrainingCanvas extends ParticlePickerCanvas
+public class TrainingCanvas extends ParticlePickerCanvas 
 {
 
 	private TrainingPickerJFrame frame;
@@ -48,6 +49,9 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			active = null;
 
 	}
+	
+	
+
 
 	public void updateMicrograph()
 	{
