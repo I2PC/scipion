@@ -179,7 +179,7 @@ class ProtML3D(XmippProtocol):
                 })
             self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
             self.ParamsStr = ' -i %(inputVol)s --experimental_images %(ImgMd)s -o %(projRefs)s' + \
-                    ' --sampling_rate %(ProjMatchSampling)d --sym %(Symmetry)s' + \
+                    ' --sampling_rate %(ProjMatchSampling)f --sym %(Symmetry)s' + \
                     'h --compute_neighbors --angular_distance -1' 
                        
             self.insertRunJob('xmipp_angular_project_library', ['projRefs', 'docRefs'])
@@ -203,7 +203,7 @@ class ProtML3D(XmippProtocol):
             outputVol = "%(index)d@%(volStack)s" % locals()
             self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
             index += 1
-        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter) --sampling %(PixelSize)s'
+        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter) --sampling %(SamplingRate)f'
         self.insertRunJob('xmipp_transform_filter', ['FilteredVols'], useProcs=False)
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
             
@@ -267,7 +267,7 @@ class ProtML3D(XmippProtocol):
                 self.ParamsStr += " --ctf_affected_refs"
             if self.HighResLimit > 0:
                 self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"
-            params += ' --sampling_rate ' % self.SamplingRate
+            params += ' --sampling_rate %f' % self.SamplingRate
 
         self.ParamsStr += " --recons %(ReconstructionMethod)s "
         
