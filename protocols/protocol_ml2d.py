@@ -17,7 +17,7 @@ from os.path import exists, join
 from protlib_utils import runShowJ
 from protlib_gui_ext import showWarning
 from protlib_xmipp import greenStr, redStr
-from protlib_filesystem import deleteFile, xmippExists, renameFile
+from protlib_filesystem import deleteFile, xmippExists, renameFile, findAcquisitionInfo
 
 def lastIteration(self, key='iter_logs'):
     ''' Find the last iteration number '''

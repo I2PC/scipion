@@ -16,7 +16,7 @@ from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
-from protlib_filesystem import xmippExists
+from protlib_filesystem import xmippExists, findAcquisitionInfo
 from protocol_ml2d import lastIteration
 
 class ProtML3D(XmippProtocol):
