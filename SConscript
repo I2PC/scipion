@@ -576,6 +576,12 @@ AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
+# sqliteExt
+SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
+AddLibrary('XmippSqliteExt', 'external',
+   SqliteExtSources,
+   ['#'],[''],['-lm'],'lib','.so')
+
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
 
@@ -963,6 +969,7 @@ if int(env['gtest']):
      AddXmippCTest('test_polar')
      AddXmippCTest('test_polynomials')          
      AddXmippCTest('test_sampling')
+     AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
