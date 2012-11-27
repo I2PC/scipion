@@ -66,6 +66,10 @@ class ProtProjMatch(XmippProtocol):
         if not acquisionInfo is None: 
             md = MetaData(acquisionInfo)
             self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
+        if self.MaskRadius == -1:
+           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           self.MaskRadius = Xdim/2
+
         
     def validate(self):
         from protlib_xmipp import validateInputSize
