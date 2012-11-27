@@ -44,8 +44,10 @@ ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
 void  ProgMLF2D::defineBasicParams(XmippProgram * prog)
 {
     ML2DBaseProgram::defineBasicParams(prog);
-    prog->addParamsLine("[--no_ctf <pixel_size=1>]    : do not use any CTF correction, pixel size should be provided");
-    prog->addParamsLine("                             : by defaut the CTF info is read from input images metadata");
+    prog->addParamsLine("[--no_ctf]          : do not use any CTF correction, you should provide sampling rate");
+    prog->addParamsLine("     requires --sampling_rate");
+    prog->addParamsLine("                    : by defaut the CTF info is read from input images metadata");
+    prog->addParamsLine("   [--sampling_rate <Ts>]    : If provided, this sampling rate will overwrites the one in the ctf file");
 }
 
 void ProgMLF2D::defineAdditionalParams(XmippProgram * prog, const char * sectionLine)
@@ -132,8 +134,8 @@ void ProgMLF2D::readParams()
     fn_img = getParam("-i");
     bool a = checkParam("--no_ctf");
     do_ctf_correction = !a;//checkParam("--no_ctf");
-    if (!do_ctf_correction)
-        sampling = getDoubleParam("--no_ctf");
+
+    sampling = checkParam("--sampling_rate") ? getDoubleParam("--sampling_rate") : -1;
     fn_root = getParam("--oroot");
     search_shift = getIntParam("--search_shift");
     psi_step = getDoubleParam("--psi_step");
@@ -391,7 +393,13 @@ void ProgMLF2D::produceSideInfo()
         //number of different CTFs
         if (!MDimg.containsLabel(MDL_CTF_MODEL))
             REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTF_MODEL in input images metadata");
+
         mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTF_MODEL, MDL_CTF_MODEL, MDL_COUNT);
+        mdCTF.fillExpand(MDL_CTF_MODEL);
+
+        if (sampling > 0)
+          mdCTF.setValueCol(MDL_CTF_SAMPLING_RATE, sampling);
+
         nr_focus = mdCTF.size();
 
         //todo: set defocus group for each image
@@ -403,7 +411,7 @@ void ProgMLF2D::produceSideInfo()
         count_defocus.resize(nr_focus);
         size_t id;
         MultidimArray<double> dum(hdim);
-        FileName ctfname;
+
         FOR_ALL_OBJECTS_IN_METADATA(mdCTF)
         {
             id = __iter.objId;
@@ -417,13 +425,14 @@ void ProgMLF2D::produceSideInfo()
                 std::cerr << "WARNING%% CTF group " << (ifocus + 1) << " contains less than 50 images!" << std::endl;
 
             //Read ctf from disk
-            mdCTF.getValue(MDL_CTF_MODEL, ctfname, id);
-            ctf.read(ctfname);
+            ctf.readFromMetadataRow(mdCTF, id);
 
             double astigmCTFFactor = fabs( (ctf.DeltafV - ctf.DeltafU) / (std::max(ctf.DeltafV, ctf.DeltafU)) );
             // we discard the CTF with a normalized diference between deltaU and deltaV of 10%
-            if (astigmCTFFactor >0.1)
+            if (astigmCTFFactor > 0.1)
             {
+                FileName ctfname;
+                mdCTF.getValue(MDL_CTF_MODEL, ctfname, id);
                 //REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
                 std::cerr << "CTF file " << ctfname << " is too astigmatic. We ill ignore it." << std::endl;
                 std::cerr << "astigmCTFFactor " << astigmCTFFactor <<  std::endl;
@@ -434,8 +443,8 @@ void ProgMLF2D::produceSideInfo()
 
             ctf.K = 1.;
             ctf.enable_CTF = true;
-            ctf.Produce_Side_Info();
-            ctf.Generate_CTF(dim, dim, ctfmask);
+            ctf.produceSideInfo();
+            ctf.generateCTF(dim, dim, ctfmask);
             if (ifocus == 0)
             {
                 sampling = ctf.Tm;
