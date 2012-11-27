@@ -32,6 +32,10 @@ class ProtML3D(XmippProtocol):
         self.ORoot = self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
         self.Extra = self.ParamsDict['Extra'] = self.ORoot + "_extra/"
         self.Extra2D = self.ParamsDict['Extra2D'] = "%s_%s2d_extra/" % (self.ORoot, self.progId)
+        acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
+        if not acquisionInfo is None: 
+            md = MetaData(acquisionInfo)
+            self.SamplingRate = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
                         
     def createFilenameTemplates(self):
         extraRefs = '%(Extra2D)siter%(iter)03d/result_classes.xmd'
@@ -256,13 +260,14 @@ class ProtML3D(XmippProtocol):
         
         if self.DoMlf:
             if not self.DoCorrectAmplitudes:
-                self.ParamsStr += " --no_ctf %(PixelSize)f"
+                self.ParamsStr += " --no_ctf"
             if not self.ImagesArePhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
             if not amplitudCorrected:
                 self.ParamsStr += " --ctf_affected_refs"
             if self.HighResLimit > 0:
-                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"            
+                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"
+            params += ' --sampling_rate ' % self.SamplingRate
 
         self.ParamsStr += " --recons %(ReconstructionMethod)s "
         

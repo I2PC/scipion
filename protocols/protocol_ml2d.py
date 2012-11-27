@@ -32,6 +32,10 @@ class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.name, scriptname, project)
         self.Import = 'from protocol_ml2d import *'
+        acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
+        if not acquisionInfo is None: 
+            md = MetaData(acquisionInfo)
+            self.SamplingRate = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
         
     def createFilenameTemplates(self):
         extra = self.workingDirPath(self.getId() + '2d_extra')
@@ -127,11 +131,12 @@ class ProtML2D(XmippProtocol):
                 params += ' --thr %i' % self.NumberOfThreads
             if (self.DoMlf):
                 if not self.DoCorrectAmplitudes:
-                    params += ' --no_ctf %f' % self.PixelSize
+                    params += ' --no_ctf'                    
                 if (not self.ImagesArePhaseFlipped):
                     params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
                     params += ' --limit_resolution 0 %f' % self.HighResLimit
+                params += ' --sampling_rate ' % self.SamplingRate
             if self.MaxIters != 100:
                 params += " --iter %d" % self.MaxIters
             #Add all boolean options if true
