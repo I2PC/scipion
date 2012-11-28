@@ -6,6 +6,7 @@
 #include "xmipp_ExceptionsHandler.h"
 #include "data/xmipp_image_generic.h"
 #include "data/xmipp_fft.h"
+#include "data/ctf.h"
 #include "reconstruction/transform_downsample.h"
 #include "data/filters.h"
 
@@ -513,14 +514,12 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        image->print();
 
         // Go to slice.
         image->movePointerTo(nslice, select_image);
 
         size_t size = image->getSize();
         //jfloatArray array = env->NewFloatArray(size);
-        image->print();
         switch (image->getDatatype())
     {
     case DT_Float:
@@ -560,9 +559,7 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
         }
 
         // Resets slice pointer.
-        image->print();
         image->movePointerTo();
-        image->print();
     }
     XMIPP_JAVA_CATCH;
 }
@@ -721,6 +718,38 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generatePSDCTF
+  (JNIEnv *env, jobject jobj, jobject md)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        image->convert2Datatype(DT_Double);
+        MultidimArray<double> *in;
+        MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
+        MetaData * mdC = GET_INTERNAL_METADATA(md);
+        generatePSDCTFImage(*in, *mdC);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
+  (JNIEnv *env, jobject jobj, jobject md1, jobject md2, jint xdim)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        image->setDatatype(DT_Double);
+        image->resize(xdim,xdim,1,1);
+        MultidimArray<double> *in;
+        MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
+        MetaData * mdC1 = GET_INTERNAL_METADATA(md1);
+        MetaData * mdC2 = GET_INTERNAL_METADATA(md2);
+        generateCTFImageWith2CTFs(*mdC1, *mdC2, xdim, *in);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_getReslice(JNIEnv *env, jobject jobj, jobject jimgOut,
                                        jint view)
@@ -763,7 +792,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
 {
     XMIPP_JAVA_TRY
     {
-        std::cerr<<"We Are At First!";
         Matrix2D<double> M;
         MultidimArray<double>* I;
         MultidimArray<double>* Tp;
@@ -778,7 +806,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
         templates->convert2Datatype(DT_Double);
         MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
         MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
-        templates->print();
 
         templates->getDimensions(dim);
         double corr,max=0;
@@ -787,7 +814,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
     {
         T.aliasImageInStack(*Tp,i);
             corr = alignImages(T,*I,M,true,aux,aux2,aux3);
-            T.printShape();
             if (corr>max)
             {
                 max=corr;
@@ -796,7 +822,6 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
         }
         T.aliasImageInStack(*Tp,maxIndex);
         T+=(*I);
-        templates->print();
         img->convert2Datatype(DT_Float);
         templates->convert2Datatype(DT_Float);
     }
