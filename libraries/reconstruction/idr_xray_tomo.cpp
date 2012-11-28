@@ -234,12 +234,14 @@ void ProgIDRXrayTomo::run()
             fixedProj.write(fnInterProjs, n, true, WRITE_REPLACE);
 
             // debug stuff //
-            proj.write("idr_debug_proj.vol", n , true, WRITE_REPLACE);
-            stdProj.write("idr_debug_std_proj.vol", n , true, WRITE_REPLACE);
+            if (verbose > 5)
+            {
+                proj.write(fnRootInter + "_debug_proj.stk", n , true, WRITE_REPLACE);
+                stdProj.write(fnRootInter + "_debug_std_proj.stk", n , true, WRITE_REPLACE);
+            }
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
             meanError += abs(dAi(mPrevFProj, n) - dAi(mFixedProj, n));
-
 
             ++n;
             // Update progress bar
