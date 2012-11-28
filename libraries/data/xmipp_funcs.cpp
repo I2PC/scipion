@@ -595,7 +595,7 @@ void TimeMessage(const std::string &message)
 void progress_bar(long rlen)
 {}
 #else
-#ifdef __MINGW32__
+#if defined __MINGW32__ || defined __APPLE__
 struct tm* localtime_r (const time_t *clock, struct tm *result) {
        if (!clock || !result) return NULL;
        memcpy(result,localtime(clock),sizeof(*result));
