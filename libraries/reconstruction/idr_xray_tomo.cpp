@@ -45,7 +45,7 @@ void ProgIDRXrayTomo::defineParams()
     addParamsLine("[--thr <threads=1>]           : Number of concurrent threads.");
 
     addParamsLine("== Iterations options == ");
-    addParamsLine("  [-l <...>]                  : Relaxation factor, by default 0.01 (recommended range 0.0 - 0.1). ");
+    addParamsLine("  [-l <...>]                  : Relaxation factor, by default 1.8 (recommended range 0.0 - 2.0). ");
     addParamsLine("                              : A list of lambda values is also accepted as \"-l lambda0 lambda1 ...\"");
     addParamsLine("  [-n <noit=1>]               : Number of iterations");
 
@@ -102,6 +102,11 @@ void ProgIDRXrayTomo::readParams()
 
         for (size_t k = 0; k < listSize; k++)
             VEC_ELEM(lambda_list, k) = textToFloat(list[k]);
+    }
+    else
+    {
+        lambda_list.resizeNoCopy(1);
+        VEC_ELEM(lambda_list, 0) = 1.8;
     }
 
     itNum = getIntParam("-n");
