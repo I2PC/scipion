@@ -141,18 +141,22 @@ void ProgImageResize::preProcess()
     }
     else if (checkParam("--fourier"))
     {
-//        if (isVol)
-//            REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
+        //        if (isVol)
+        //            REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
         int oxdim = xdimOut, oydim = ydimOut, ozdim = zdimOut;
         scale_type = RESIZE_FOURIER;
 
         xdimOut = getIntParam("--fourier", 0);
         ydimOut = STR_EQUAL(getParam("--fourier", 1), "x") ? xdimOut : getIntParam("--fourier", 1);
-        zdimOut = STR_EQUAL(getParam("--fourier", 2), "x") ? xdimOut : getIntParam("--fourier", 2);
+        if (isVol)
+            zdimOut = STR_EQUAL(getParam("--fourier", 2), "x") ? xdimOut : getIntParam("--fourier", 2);
+        else
+        	zdimOut=1;
         fourier_threads = getIntParam("--fourier", 3);
         XX(resizeFactor) = (double)xdimOut / oxdim;
         YY(resizeFactor) = (double)ydimOut / oydim;
-        ZZ(resizeFactor) = (double)zdimOut / ozdim;
+        if (isVol)
+        	ZZ(resizeFactor) = (double)zdimOut / ozdim;
         //Do not think this is true
         //            if (oxdim < xdimOut || oydim < ydimOut)
         //                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
