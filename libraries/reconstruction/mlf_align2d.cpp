@@ -45,8 +45,8 @@ void  ProgMLF2D::defineBasicParams(XmippProgram * prog)
 {
     ML2DBaseProgram::defineBasicParams(prog);
     prog->addParamsLine("[--no_ctf]          : do not use any CTF correction, you should provide sampling rate");
-    prog->addParamsLine("     requires --sampling_rate");
-    prog->addParamsLine("                    : by defaut the CTF info is read from input images metadata");
+    prog->addParamsLine("     requires --sampling_rate;");
+    //prog->addParamsLine("                    : by defaut the CTF info is read from input images metadata");
     prog->addParamsLine("   [--sampling_rate <Ts>]    : If provided, this sampling rate will overwrites the one in the ctf file");
 }
 
