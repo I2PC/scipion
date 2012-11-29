@@ -65,9 +65,6 @@ If set to <No>, provide the images pixel size in Angstrom
 """
 DoCorrectAmplitudes = True
 
-# {condition}(not DoCorrectAmplitudes)Image pixel size (in Angstroms)
-PixelSize = 5.6
-
 # Are the images CTF phase flipped?
 """ You can run MLF with or without having phase flipped the images.
 """

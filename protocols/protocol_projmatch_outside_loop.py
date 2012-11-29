@@ -54,7 +54,7 @@ def executeCtfGroups (_log,
               ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + ':stk'\
               ' --wiener --wc ' + str(WienerConstant) + \
               ' --pad ' + str(PaddingFactor) + \
-              ' --samplingrate ' + str (SamplingRate)
+              ' --sampling_rate ' + str (SamplingRate)
 
     if (DataArePhaseFlipped):
         command += ' --phase_flipped '
