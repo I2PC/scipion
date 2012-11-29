@@ -586,8 +586,11 @@ void frc_dpr(MultidimArray< double > & m1,
  * @ingroup FourierOperations
  * Ydim and Xdim define the output size, Mpmem is the matrix to scale
  */
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nthreads=1);
+
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nthreads=1);
 /** MultidimArrayGeneric version */
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nthreads=1);
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nthreads=1);
 
 #define POWER_SPECTRUM 0

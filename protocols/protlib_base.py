@@ -852,9 +852,9 @@ def protocolMain(ProtocolClass, script=None):
         no_check = options.no_check
         no_confirm = options.no_confirm
     
-    script = os.path.abspath(script)
+    script_absolute = os.path.abspath(script)
     
-    mod = loadModule(script)
+    mod = loadModule(script_absolute)
     #init project
     project = XmippProject()
     #load project: read config file and open conection database
@@ -871,7 +871,7 @@ def protocolMain(ProtocolClass, script=None):
            'run_name': mod.RunName, 
            'script': script, 
            'comment': "",
-           'source': script
+           'source': script_absolute
            }
         from protlib_gui import ProtocolGUI 
         gui = ProtocolGUI()

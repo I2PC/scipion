@@ -429,12 +429,18 @@ class XmippPlotter():
             if mdLabelX:
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
-        if args.has_key('nbins'):
-            nbins = args.pop('nbins', None)
-            
-            self.hist(yy,nbins, facecolor=color,**args)
+        
+        nbins = args.pop('nbins', None)
+        marker = args.pop('marker', None)
+        linestyle = args.pop('linestyle', None)
+        if nbins is None:
+            if not marker is None:
+                args['marker'] = marker     
+            if not linestyle is None:
+                args['linestyle'] = linestyle
+            self.plot(xx, yy, color, **args) #no histogram
         else:
-            self.plot(xx, yy, color,**args) #no histogram
+            self.hist(yy,nbins, facecolor=color, **args)
         
     def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
         """ plot metadataFile columns mdLabelX and mdLabelY
