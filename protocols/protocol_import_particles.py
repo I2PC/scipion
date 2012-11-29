@@ -152,4 +152,4 @@ def normalize(log,FamilySel,bgRadius,Nproc):
     runJob(log,"xmipp_transform_normalize","-i "+FamilySel+' --method Ramp --background circle '+str(bgRadius),Nproc)
 
 def sortImageInFamily(log,selfileRoot):
-    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".xmd --multivariate --addToInput -o "+selfileRoot+"_sorted")
+    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".xmd --addToInput -o "+selfileRoot+"_sorted")

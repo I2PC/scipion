@@ -148,6 +148,8 @@ void ProgMPIXrayProject::run()
         std::cout << "Projecting ...\n";
     }
 
+    node->barrierWait();
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Parallel node jobs
@@ -165,7 +167,7 @@ void ProgMPIXrayProject::run()
             // Really project ....................................................
             if (!projParam.only_create_angles)
             {
-                XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim);
+                XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj, stdProj, projParam.proj_Ydim, projParam.proj_Xdim);
                 proj.write(mpiData[k].fn_proj);
             }
 

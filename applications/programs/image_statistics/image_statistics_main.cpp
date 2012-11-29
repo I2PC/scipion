@@ -54,7 +54,7 @@ protected:
     int max_length;
 
 
-    FileName maskFileName, statFileNameRoot;
+    FileName maskFileName, statsRoot;
 
     void defineParams()
     {
@@ -68,10 +68,11 @@ protected:
         addParamsLine("[--short_format]  : Do not show labels for statistics.");
         addParamsLine("[--show_angles]   : Also show angles in the image header.");
         addParamsLine("[--save_mask        <maskFileName>] : Save 2D and 3D masks.");
-        addParamsLine("[--save_image_stats <statFilename>]: Save average and standard deviation images");
+        addParamsLine("[--save_image_stats <stats_root=\"\">]: Save average and standard deviation images");
         addUsageLine ("           Mask is ignored  for this operation");
         mask.defineParams(this,INT_MASK,NULL,"Statistics restricted to the mask area.");
         addUsageLine ("NOTE: Geometry will NOT be applied to volumes even if apply_geo flag is on");
+        addKeywords("statistics average mean std");
     }
 
     void readParams()
@@ -79,18 +80,17 @@ protected:
         XmippMetadataProgram::readParams();
         short_format = checkParam("--short_format");
 
-        save_mask           = checkParam("--save_mask");
-        if(save_mask)
-            maskFileName    =  getParam("--save_mask");
+        if (save_mask = checkParam("--save_mask"))
+            maskFileName = getParam("--save_mask");
 
-        save_image_stats    = checkParam("--save_image_stats");
-        if(save_image_stats)
-            statFileNameRoot =  getParam("--save_image_stats");
+        if (save_image_stats = checkParam("--save_image_stats"))
+            statsRoot = getParam("--save_image_stats");
 
         show_angles  = checkParam("--show_angles");
         fn_out = (checkParam("-o"))? getParam("-o"): "";
 
         mask.allowed_data_types = INT_MASK;
+
         if (apply_mask = checkParam("--mask"))
             mask.readParams(this);
     }
@@ -242,18 +242,12 @@ protected:
         {
             Image<double> dummyImage;
             dummyImage()=averageArray;
-            dummyImage.write((String)"avg_"+statFileNameRoot+".xmp");
+            dummyImage.write(statsRoot  + "average.xmp");
             dummyImage()=stdArray;
-            dummyImage.write((String)"stdDev_"+statFileNameRoot+".xmp");
+            dummyImage.write(statsRoot + "stddev.xmp");
         }
     }
-}
-;// end of class ProgStatistics
+};// end of class ProgStatistics
 
-/* MAIN -------------------------------------------------------------------- */
-int main(int argc, char *argv[])
-{
-    ProgStatistics program;
-    program.read(argc, argv);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgStatistics);
+

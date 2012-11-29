@@ -4,25 +4,34 @@
 #include "xmipp_ImageGeneric.h"
 #include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
-#include <data/xmipp_image_generic.h>
-#include <data/xmipp_fft.h>
-#include <reconstruction/transform_downsample.h>
-#include <data/filters.h>
+#include "data/xmipp_image_generic.h"
+#include "data/xmipp_fft.h"
+#include "data/ctf.h"
+#include "reconstruction/transform_downsample.h"
+#include "data/filters.h"
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = new ImageGeneric();
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = new ImageGeneric();
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_destroy(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-    delete image;
-    image = NULL;
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        delete image;
+        image = NULL;
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
@@ -354,14 +363,12 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        DataType dataType = image->getDatatype();
 
         // Go to slice.
         image->movePointerTo(nslice, select_image);
 
         size_t size = image->getSize();
-        jbyteArray array = env->NewByteArray(size);
-
-        DataType dataType = image->getDatatype();
 
         switch (dataType)
     {
@@ -410,8 +417,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
                 { \
                     page_size = std::min(page_size, size - written); \
                     env->GetByteArrayRegion(data, written, page_size, (jbyte *) buffer); \
-                    type * iter = mdarray + written; \
-                    imageAux->castPage2T(buffer, iter, DT_UChar, page_size); \
+                    imageAux->castPage2T(written, buffer, DT_UChar, page_size); \
                 } \
                 SWITCHDATATYPE(image->getDatatype(), CAST_PAGE);\
                   delete [] buffer;
@@ -488,11 +494,8 @@ Java_xmipp_jni_ImageGeneric_setArrayShort(JNIEnv *env, jobject jobj,
                     for (size_t written = 0; written < size; written += page_size)
                 {
                     page_size = std::min(page_size, size - written);
-
                         env->GetShortArrayRegion(data, written, page_size, (jshort *) buffer);
-
-                        float * iter = mdarray + written;
-                        imageAux->castPage2T(buffer, iter, DT_UShort, page_size);
+                        imageAux->setPage2T(written, buffer, DT_UShort, page_size);
                     }
                 delete [] buffer;
             }
@@ -519,14 +522,12 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        image->print();
 
         // Go to slice.
         image->movePointerTo(nslice, select_image);
 
         size_t size = image->getSize();
         //jfloatArray array = env->NewFloatArray(size);
-        image->print();
         switch (image->getDatatype())
     {
     case DT_Float:
@@ -539,30 +540,34 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
                 env->GetFloatArrayRegion(data, 0, size, mdarray);
             }
             break;
+        case DT_Double:
+            {
+                // Get slice array.
+                Image<double> *imageAux = (Image<double> *) image->image;
+
+                char * buffer = new char[rw_max_page_size * sizeof(float)];
+                size_t page_size = rw_max_page_size;
+
+                for (size_t written = 0; written < size; written += page_size)
+                {
+                    page_size = std::min(page_size, size - written);
+                    env->GetFloatArrayRegion(data, written, page_size, (jfloat *) buffer);
+                    imageAux->setPage2T(written, buffer, DT_Float, page_size);
+                }
+                delete [] buffer;
+            }
+            break;
         default:
             {
-//#define CAST_PAGE(type) Image<type> *imageAux = (Image<type> *)image->image; \
-//             type *data = MULTIDIM_ARRAY(imageAux->data); \
-//             size_t page_size = rw_max_page_size; \
-//             char * buffer = new char[rw_max_page_size * gettypesize(DT_Float)]; \
-//             for (size_t written = 0; written < size; written += page_size) \
-//             { \
-//              page_size = std::min(page_size, size - written); \
-//              imageAux->castPage2Datatype(data + written, buffer, DT_Float, page_size); \
-//              env->GetFloatArrayRegion(array, written, page_size, (jfloat*) buffer); \
-//             }
-//
-//             SWITCHDATATYPE(image->getDatatype(), CAST_PAGE);
-//             delete [] buffer;
-
+                REPORT_ERROR(
+                    ERR_IO_NOWRITE,
+                    (String)"Not supported conversion From jfloat to dataType: " + datatype2Str(image->getDatatype()));
             }
             break;
         }
 
         // Resets slice pointer.
-        image->print();
         image->movePointerTo();
-        image->print();
     }
     XMIPP_JAVA_CATCH;
 }
@@ -721,6 +726,38 @@ Java_xmipp_jni_ImageGeneric_convertPSD(JNIEnv *env, jobject jobj,
     XMIPP_JAVA_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generatePSDCTF
+  (JNIEnv *env, jobject jobj, jobject md)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        image->convert2Datatype(DT_Double);
+        MultidimArray<double> *in;
+        MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
+        MetaData * mdC = GET_INTERNAL_METADATA(md);
+        generatePSDCTFImage(*in, *mdC);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_generateImageWithTwoCTFs
+  (JNIEnv *env, jobject jobj, jobject md1, jobject md2, jint xdim)
+{
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        image->setDatatype(DT_Double);
+        image->resize(xdim,xdim,1,1);
+        MultidimArray<double> *in;
+        MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(in);
+        MetaData * mdC1 = GET_INTERNAL_METADATA(md1);
+        MetaData * mdC2 = GET_INTERNAL_METADATA(md2);
+        generateCTFImageWith2CTFs(*mdC1, *mdC2, xdim, *in);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_getReslice(JNIEnv *env, jobject jobj, jobject jimgOut,
                                        jint view)
@@ -729,7 +766,7 @@ Java_xmipp_jni_ImageGeneric_getReslice(JNIEnv *env, jobject jobj, jobject jimgOu
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         ImageGeneric *imageOut = GET_INTERNAL_IMAGE_GENERIC(jimgOut);
-        image->reslice((ImageGeneric::AxisView)view, *imageOut);
+        image->reslice((AxisView)view, *imageOut);
     }
     XMIPP_JAVA_CATCH;
 }
@@ -740,7 +777,7 @@ Java_xmipp_jni_ImageGeneric_reslice(JNIEnv *env, jobject jobj, jint view)
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        image->reslice((ImageGeneric::AxisView)view);
+        image->reslice((AxisView)view);
     }
     XMIPP_JAVA_CATCH;
 }
@@ -763,14 +800,15 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
 {
     XMIPP_JAVA_TRY
     {
-    	std::cerr<<"We Are At First!";
-        Matrix2D<double> M;
         MultidimArray<double>* I;
+        MultidimArray<double> tmpI;
+        MultidimArray<double> alignedI;
         MultidimArray<double>* Tp;
         MultidimArray<double> T;
         AlignmentAux aux;
         CorrelationAux aux2;
         RotationalCorrelationAux aux3;
+        Matrix2D<double> M;
         ArrayDim dim;
         ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
         ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
@@ -778,27 +816,27 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
         templates->convert2Datatype(DT_Double);
         MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
         MULTIDIM_ARRAY_GENERIC(*templates).getMultidimArrayPointer(Tp);
-        templates->print();
 
         templates->getDimensions(dim);
         double corr,max=0;
         int maxIndex=0;
+
         for (int i=0;i<dim.ndim;++i)
-		{
-			T.aliasImageInStack(*Tp,i);
-            corr = alignImages(T,*I,M,true,aux,aux2,aux3);
-            T.printShape();
+        {
+        	T.aliasImageInStack(*Tp,i);
+            tmpI=*I;
+            T.setXmippOrigin();
+            tmpI.setXmippOrigin();
+            corr = alignImages(T,tmpI,M,true,aux,aux2,aux3);
             if (corr>max)
             {
                 max=corr;
                 maxIndex=i;
+                alignedI=tmpI;
             }
         }
         T.aliasImageInStack(*Tp,maxIndex);
-        T+=(*I);
-        templates->print();
-        img->convert2Datatype(DT_Float);
-        templates->convert2Datatype(DT_Float);
+        T+=alignedI;
     }
     XMIPP_JAVA_CATCH;
 }

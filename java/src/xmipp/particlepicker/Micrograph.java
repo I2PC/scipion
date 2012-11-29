@@ -54,7 +54,7 @@ public abstract class Micrograph {
 
 	public boolean fits(int x, int y, int size) {
 		if (x < 0 || y < 0) return false;
-		
+
 		int radius = size / 2;
 		if (x - radius < 0) return false;
 		if (x + radius > width) return false;
@@ -64,6 +64,7 @@ public abstract class Micrograph {
 	}
 
 	public static String getName(String file, int level) {
+		// level can start at 1 for file name, 2 is for parent directory name
 		String[] tokens = file.split(File.separator);
 		if (tokens.length < level)
 			throw new IllegalArgumentException(String.format("Name for micrograph is taken from level %s, invalid path ", level, file));
@@ -100,51 +101,30 @@ public abstract class Micrograph {
 			if (imp == null) {
 				ImageGeneric ig = new ImageGeneric(file);
 				ig.read(ImageGeneric.FIRST_IMAGE);
+
+				// Smooth filter should be the first one
+				// because it is applied in Xmipp
 				for (IJCommand f : filters)
-					if (f.getCommand().equals("Smooth Filter")) { // this filter
-																	// should be
-																	// the first
-																	// applied
+					if (f.getCommand().equals("Smooth Filter")) {
 						ig.convert2Datatype(ImageGeneric.UChar);
 						ImageGeneric igsmooth = new ImageGeneric(ImageGeneric.UChar);
-						System.out.printf("width: %s height: %s\n", ig.getXDim(), ig.getYDim());
 						igsmooth.resize(ig.getXDim(), ig.getYDim());
 						ig.smooth(igsmooth);
-						imp = XmippImageConverter.convertToImagePlus(igsmooth);
-						ig.destroy();
-					} else {
-						if (imp == null) {
-							imp = XmippImageConverter.convertToImagePlus(ig);
-							ig.destroy();
-						}
-
+						break;
 					}
+				imp = XmippImageConverter.convertToImagePlus(ig);
+				ig.destroy();
+
 			}
 			return imp;
 		} catch (Exception e) {
-			//Check why is given other exception: 
-//			java.io.IOException: Couldn't get lock for PPicker.log
-//			00014:   	at java.util.logging.FileHandler.openFiles(FileHandler.java:389)
-//			00015:   	at java.util.logging.FileHandler.<init>(FileHandler.java:287)
-//			00016:   	at xmipp.particlepicker.ParticlePicker.getLogger(ParticlePicker.java:213)
-//			00017:   	at xmipp.particlepicker.Micrograph.getImagePlus(Micrograph.java:125)
-//			00018:   	at xmipp.particlepicker.ParticlePickerCanvas.updateMicrographData(ParticlePickerCanvas.java:195)
-//			00019:   	at xmipp.particlepicker.training.gui.TrainingCanvas.updateMicrograph(TrainingCanvas.java:53)
-//			00020:   	at xmipp.particlepicker.training.gui.TrainingPickerJFrame.initializeCanvas(TrainingPickerJFrame.java:498)
-//			00021:   	at xmipp.particlepicker.training.gui.TrainingPickerJFrame.loadMicrograph(TrainingPickerJFrame.java:434)
-			//
-			//ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
-	
 
 	public void runImageJFilters(List<IJCommand> filters) {
 		for (IJCommand f : filters)
-			if (!f.getCommand().equals("Smooth Filter")) // this filter should
-															// be the first
-															// applied
+			if (!f.getCommand().equals("Smooth Filter")) // this filter was applied
 				IJ.run(imp, f.getCommand(), f.getOptions());
 	}
 

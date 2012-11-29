@@ -887,7 +887,7 @@ public:
         /* If we select a single slice, we are forced to chose also an image.
          * as at this moment we cannot select the same slice from different images at a time.
          */
-        if (newDim.zdim == 1 && select_img == ALL_IMAGES)
+        if (select_slice > 0 && select_img == ALL_IMAGES)
             select_img = FIRST_IMAGE;
         if (select_img > ALL_IMAGES)
             newDim.ndim = 1;
@@ -1262,6 +1262,7 @@ private:
      */
     void mmapFile()
     {
+#ifdef XMIPP_MMAP
         if (this->hFile->mode == WRITE_READONLY)
             mFd = open(dataFName.c_str(), O_RDONLY, S_IREAD);
         else
@@ -1275,7 +1276,7 @@ private:
                 REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::mmapFile: Error opening the image file to be mapped.");
         }
         char * map;
-        const size_t pagesize = sysconf(_SC_PAGESIZE);
+        const size_t pagesize=sysconf(_SC_PAGESIZE);
         size_t offsetPages = (mappedOffset/pagesize)*pagesize;
         mappedOffset -= offsetPages;
         mappedSize -= offsetPages;
@@ -1289,16 +1290,27 @@ private:
             REPORT_ERROR(ERR_MMAP_NOTADDR,formatString("Image Class::mmapFile: mmap of image file failed. Error: %s", strerror(errno)));
         data.data = reinterpret_cast<T*> (map+mappedOffset);
         data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);
+#else
+
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
+
     }
 
     /* Munmap the image file.
      */
     void munmapFile()
     {
+#ifdef XMIPP_MMAP
         munmap((char*)(data.data)-mappedOffset,mappedSize);
         close(mFd);
         data.data = NULL;
         mappedSize = mappedOffset = 0;
+#else
+
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
+
     }
 
     /* Return the datatype of the current image object

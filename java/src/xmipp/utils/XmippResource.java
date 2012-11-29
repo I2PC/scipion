@@ -5,6 +5,8 @@
 package xmipp.utils;
 
 import java.io.File;
+import java.util.Hashtable;
+import java.util.Dictionary;
 
 import ij.ImagePlus;
 import xmipp.jni.Filename;
@@ -42,6 +44,8 @@ public class XmippResource {
     public static ImageIcon VIEW_GALLERY_ICON;
     public static ImageIcon MISSING_ICON;
     
+    private static Hashtable<String, ImageIcon> iconsPool;
+    
 
     static { //this block will be called just once, at class initialization
     	try {
@@ -51,6 +55,8 @@ public class XmippResource {
     		PATH_ICONS = ".";
     	}
     	DEBUG.printMessage(PATH_ICONS);
+    	iconsPool = new Hashtable<String, ImageIcon>();
+    	
     	WAIT_ICON = getIcon(WAIT);
     	LOCK_ICON = getIcon("locked.png");
     	DELETE_ICON = getIcon("delete_item.png");
@@ -65,6 +71,13 @@ public class XmippResource {
     
     // Create an icon using the xmipp resource path
     public static ImageIcon getIcon(String name){
-    	return new ImageIcon(String.format("%s%sresources%s%s", PATH_ICONS, File.separator, File.separator, name));
+    	ImageIcon ii;
+    	if (iconsPool.containsKey(name))
+    		ii = iconsPool.get(name);
+    	else {
+    		ii = new ImageIcon(String.format("%s%sresources%s%s", PATH_ICONS, File.separator, File.separator, name));
+    		iconsPool.put(name, ii);
+    	}
+    	return ii;
     }
 }

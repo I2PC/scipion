@@ -299,6 +299,7 @@ void centerFFT2(MultidimArray<double> &v)
         else
         {
             //todo: implementation for the odd case needed
+            CenterFFT(v, true);
         }
     }
     else

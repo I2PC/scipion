@@ -49,7 +49,7 @@ public class MetadataGallery extends ImageGallery {
 	protected ImageGeneric image;
 
 	// Also store the visible ones to fast access
-	ArrayList<ColumnInfo> visibleLabels;
+	public ArrayList<ColumnInfo> visibleLabels;
 
 	public MetadataGallery(GalleryData data) throws Exception {
 		super(data);
@@ -191,14 +191,14 @@ public class MetadataGallery extends ImageGallery {
 	 * Return a key string using label
 	 */
 	protected String getItemKey(int index, int label) throws Exception {
-		String format = data.getValueFromLabel(index, label) + "(%d,%d)";
+		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
 		if (data.wrap)
 			format += "_wrap";
 		// String key = String.format(format, thumb_width, thumb_height);
 		// DEBUG.printMessage(String.format("key: %s", key));
-		return String.format(format, thumb_width, thumb_height);
+		return String.format(format, index, thumb_width, thumb_height);
 	}
 
 	@Override

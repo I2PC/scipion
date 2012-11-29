@@ -62,8 +62,10 @@ private:
 
     /** Write Program info to DB */
     void writeToDB();
-    /** Print some information to stdout */
+    /** Write protocol header information */
     void writeToProtocol();
+    /** Write bash autocomplete options */
+    void writeToAutocomplete();
 
     /** Create program GUI */
     /** By default, a simple Tk GUI is create based on parameters definition.
@@ -76,6 +78,7 @@ private:
     /** Variables related to progress notification */
     size_t progressTotal;
     size_t progressStep;
+    size_t progressLast;
 
 protected:
     /** Define Commons */
@@ -226,7 +229,7 @@ public:
     void initProgress(size_t total, size_t stepBin = 60);
 
     /** Notify progress on work */
-    void setProgress(size_t value);
+    void setProgress(size_t value = 0);
 
     /** Notify end of work */
     void endProgress();
@@ -324,6 +327,8 @@ protected:
     bool allow_time_bar; // Default true
 
     // DEDUCED FLAGS
+    /// Input is a metadata
+    bool input_is_metadata;
     /// Input is a single image
     bool single_image;
     /// Input is a stack

@@ -206,17 +206,10 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
     _depth = gettypesize(wDType);
 
     //locking
-    struct flock fl;
-
-    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-    fl.l_start  = 0;        /* Offset from l_whence         */
-    fl.l_len    = 0;        /* length, 0 = to EOF           */
-    fl.l_pid    = getpid(); /* our PID                      */
 
     // Lock Header file
-    fl.l_type   = F_WRLCK;
-    fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
+    FileLock flock;
+    flock.lock(fhed);
 
     /* Write INF file ==================================*/
     fprintf(fhed,"# Bits per sample\n");
@@ -241,8 +234,7 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
         fprintf(fhed,"endianess= little\n");
 
     //Unlock Header file
-    fl.l_type = F_UNLCK;
-    fcntl(fileno(fhed), F_SETLK, &fl);
+    flock.unlock();
 
     /* Write Image file ==================================*/
     size_t datasize_n, datasize;
@@ -250,8 +242,7 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
     datasize = datasize_n * gettypesize(wDType);
 
     // Lock Image file
-    fl.l_type   = F_WRLCK;
-    fcntl(fileno(fimg), F_SETLKW, &fl);
+    flock.lock(fimg);
 
     if (mmapOnWrite)
     {
@@ -265,8 +256,7 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
         writeData(fimg, 0, wDType, datasize_n, castMode);
 
     // Unlock Image file
-    fl.l_type   = F_UNLCK;
-    fcntl(fileno(fimg), F_SETLK, &fl);
+    flock.unlock();
 
     return(0);
 }

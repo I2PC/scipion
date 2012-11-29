@@ -61,6 +61,7 @@ void XmippProgram::defineCommons()
     addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program to sqlite database");
     addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
     addParamsLine("[--xmipp_write_protocol* <scriptfile>] : Generate protocol header file");
+    addParamsLine("[--xmipp_write_autocomplete* <scriptfile>] : Add program autocomplete bash options to script file");
     addParamsLine("[--xmipp_protocol_script <script>] : This is only meanful when execute throught protocols");
     addParamsLine("[--xmipp_validate_params] : Validate input params");
 }
@@ -111,6 +112,8 @@ bool XmippProgram::checkBuiltIns()
         createWiki();
     else if (checkParam("--xmipp_write_protocol"))
         writeToProtocol();
+    else if (checkParam("--xmipp_write_autocomplete"))
+      writeToAutocomplete();
     else if (checkParam("--gui"))
         createGUI();
     else
@@ -129,6 +132,13 @@ void XmippProgram::writeToProtocol( )
     String scriptfile = getParam("--xmipp_write_protocol");
     ProtPrinter pp(scriptfile.c_str());
     pp.printProgram(*progDef);
+}
+
+void XmippProgram::writeToAutocomplete( )
+{
+    String scriptfile = getParam("--xmipp_write_autocomplete");
+    AutocompletePrinter ap(scriptfile.c_str());
+    ap.printProgram(*progDef, 3);
 }
 
 void XmippProgram::createGUI()
@@ -194,7 +204,7 @@ int XmippMetadataProgram::tryRead(int argc, char ** argv, bool reportErrors )
 {
     try
     {
-		this->read( argc, argv,  reportErrors );
+        this->read( argc, argv,  reportErrors );
     }
     catch (XmippError &xe)
     {
@@ -222,7 +232,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
             doRun = true;
         else
         {
-           const char * gui_default = getenv("XMIPP_GUI_DEFAULT");
+            const char * gui_default = getenv("XMIPP_GUI_DEFAULT");
             if (gui_default != NULL && STR_EQUAL(gui_default, "1"))
                 createGUI();
             else
@@ -241,7 +251,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
                 if (verbose) //if 0, ignore the parameter, useful for mpi programs
                     verbose = getIntParam("--verbose");
                 this->readParams();
-              doRun = !checkParam("--xmipp_validate_params"); //just validation, not run
+                doRun = !checkParam("--xmipp_validate_params"); //just validation, not run
             }
         }
         catch (XmippError &xe)
@@ -287,24 +297,26 @@ void XmippProgram::initProgress(size_t total, size_t stepBin)
 {
     if (verbose)
     {
-      progressTotal = total;
-      progressStep = XMIPP_MAX(1, total / stepBin);
-      init_progress_bar(total);
+        progressTotal = total;
+        progressStep = XMIPP_MAX(1, total / stepBin);
+        progressLast = 0;
+        init_progress_bar(total);
     }
 }
 
 /** Notify progress on work */
 void XmippProgram::setProgress(size_t value)
 {
-  if (verbose && value % progressStep == 0)
-    progress_bar(value);
+    progressLast = value ? value : progressLast + 1;
+    if (verbose && progressLast % progressStep == 0)
+        progress_bar(progressLast);
 }
 
 /** Notify end of work */
 void XmippProgram::endProgress()
 {
-  if (verbose)
-    progress_bar(progressTotal);
+    if (verbose)
+        progress_bar(progressTotal);
 }
 
 void XmippProgram::setProgramName(const char * name)
@@ -472,7 +484,8 @@ XmippMetadataProgram::XmippMetadataProgram()
     keep_input_columns = false;
     delete_output_stack = true;
     remove_disabled = true;
-    single_image = input_is_stack = output_is_stack = false;
+    single_image = input_is_metadata = input_is_stack = output_is_stack = false;
+    mdInSize = 0;
     iter = NULL;
     zdimOut = ydimOut = xdimOut = 0;
     image_label = MDL_IMAGE;
@@ -528,13 +541,13 @@ void XmippMetadataProgram::defineParams()
 
     if (allow_apply_geo)
     {
-        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
+        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in metadata");
     }
 }//function defineParams
 
 void XmippMetadataProgram::defineLabelParam()
 {
-	addParamsLine(" [--label+ <image_label=image>]   : Label to be used to read/write images.");
+    addParamsLine(" [--label+ <image_label=image>]   : Label to be used to read/write images.");
 }
 
 void XmippMetadataProgram::readParams()
@@ -577,7 +590,9 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
 
     mdInSize = mdIn->size();
 
-    if (!mdIn->isMetadataFile)
+    if (mdIn->isMetadataFile)
+        input_is_metadata = true;
+    else
     {
         if (mdInSize == 1)
             single_image = true;
@@ -604,7 +619,7 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
      * and output is a stack.*/
     save_metadata_stack = save_metadata_stack && mdIn->isMetadataFile && output_is_stack;
 
-    // Only delete output stack in case we are not overwritting input
+    // Only delete output stack in case we are not overwriting input
     delete_output_stack = (output_is_stack && delete_output_stack) ?
                           !(fn_out.empty() && oroot.empty()) : false;
 
@@ -625,7 +640,7 @@ void XmippMetadataProgram::show()
         return;
     std::cout << "Input File: " << fn_in << std::endl;
     if (apply_geo)
-        std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
+        std::cout << "Reading geometrical transformations stored in metadata" << std::endl;
     if (!fn_out.empty())
         std::cout << "Output File: " << fn_out << std::endl;
     if (!oroot.empty())
@@ -788,12 +803,18 @@ void XmippMetadataProgram::run()
      * the dirBaseName in order not overwriting files when repeating same command on
      * different directories. If baseName is set it is used, otherwise, input name is used.
      * Then, the suffix _oext is added.*/
-
-    if (fn_out.empty() && !oroot.empty())
-        if (!baseName.empty() )
-            fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
-        else
-            fn_out = findAndReplace(pathBaseName,"/","_") + fn_in.getBaseName() + "_" + oextBaseName + ".xmd";
+    if (fn_out.empty() )
+    {
+        if (!oroot.empty())
+        {
+            if (!baseName.empty() )
+                fn_out = findAndReplace(pathBaseName,"/","_") + baseName + "_" + oextBaseName + ".xmd";
+            else
+                fn_out = findAndReplace(pathBaseName,"/","_") + fn_in.getBaseName() + "_" + oextBaseName + ".xmd";
+        }
+        else if (input_is_metadata) /// When nor -o neither --oroot is passed and want to overwrite input metadata
+            fn_out = fn_in;
+    }
 
     finishProcessing();
 

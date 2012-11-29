@@ -171,6 +171,13 @@ public class GalleryData {
 				zoom = 100;
 			return;
 		}
+		
+		if (!md.isColumnFormat())
+		{
+			mode = Mode.TABLE_MD;
+			if (zoom == 0)
+				zoom = 100;
+		}
 
 		if (isGalleryMode())
 			mode = Mode.GALLERY_MD;
@@ -271,11 +278,14 @@ public class GalleryData {
 				ciFirstRender = ciFirstRenderVisible;
 			}
 			// Add MDL_ENABLED if not present
-			if (!md.containsLabel(MDLabel.MDL_ENABLED)) {
+			if (!md.containsLabel(MDLabel.MDL_ENABLED) &&
+					(md.containsLabel(MDLabel.MDL_IMAGE) || 
+					md.containsLabel(MDLabel.MDL_MICROGRAPH))) {
 				newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
 				md.addLabel(MDLabel.MDL_ENABLED);
 				for (long id : ids)
 					md.setEnabled(true, id);
+				//hasMdChanges = true;
 			}
 
 			labels = newLabels;
@@ -290,7 +300,6 @@ public class GalleryData {
 			hasMdChanges = false;
 			hasClassesChanges = false;
 			md.read(fn);
-			loadMd();
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -393,6 +402,11 @@ public class GalleryData {
 	public boolean isTableMode() {
 		return mode == Mode.TABLE_MD;
 	}
+	
+	/** Return true if the underlying metadata is in row format */
+	public boolean isColumnFormat(){
+		return md.isColumnFormat();
+	}
 
 	public boolean isRotSpectraMode() {
 		return mode == Mode.GALLERY_ROTSPECTRA;
@@ -464,13 +478,17 @@ public class GalleryData {
 	}
 
 	/** This is only needed for metadata table galleries */
-	public boolean isFile(int col) {
+	public boolean isFile(ColumnInfo ci) {
 		try {
-			return MetaData.isPathField(labels.get(col).getLabel());
+			return MetaData.isPathField(ci.getLabel());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	public boolean isFile(int col) {
+		return isFile(labels.get(col));
 	}
 
 	public boolean isImageFile(int col) {
@@ -739,6 +757,11 @@ public class GalleryData {
 	}
 
 	public String getValueFromCol(int index, int col) {
+		if (!isColumnFormat())
+		{
+			col = index;
+			index = 0;			
+		}
 		return getValueFromCol(index, labels.get(col));
 	}
 
@@ -758,6 +781,15 @@ public class GalleryData {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public void setValueToCol(int index, ColumnInfo ci, String value) {
+		try {
+			md.setValueString(ci.getLabel(), value, ids[index]);
+			setMdChanges(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/** Delete from metadata selected items */

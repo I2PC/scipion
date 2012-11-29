@@ -601,7 +601,26 @@ xmipp_Euler_angles2matrix(PyObject *obj, PyObject *args, PyObject *kwargs)
         return (PyObject*)arr;
     }
     return NULL;
+}
 
+PyObject *
+xmipp_Euler_matrix2angles(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject * input;
+    if (PyArg_ParseTuple(args, "O", &input))
+    {
+        PyArrayObject * arr = (PyArrayObject*) input;
+        //this is 3*4 matrix so he need to delete last column
+        //try first 3x3
+        //IS DE DATA DOUBLE? CREATE NUMPY DOUBLE
+        void * data = PyArray_DATA(arr);
+        Matrix2D<double> euler(3,3);
+        memcpy((euler.mdata),data, 9 * sizeof(double));
+        double rot, tilt, psi;
+        Euler_matrix2angles(euler,rot, tilt, psi);
+        return Py_BuildValue("fff", rot, tilt, psi);//fff three real
+    }
+    return NULL;
 }
 
 /* activateMathExtensions */
@@ -688,6 +707,8 @@ xmipp_methods[] =
           "dump metadata to sqlite database" },
         { "Euler_angles2matrix", (PyCFunction) xmipp_Euler_angles2matrix, METH_VARARGS,
           "convert euler angles to transformation matrix" },
+        { "Euler_matrix2angles", (PyCFunction) xmipp_Euler_matrix2angles, METH_VARARGS,
+          "convert transformation matrix to euler angles" },
         { "activateMathExtensions", (PyCFunction) xmipp_activateMathExtensions,
           METH_VARARGS, "activate math function in metadatas" },
 

@@ -37,7 +37,7 @@
 
 //-------------------   LEXER IMPLEMENTATIONS --------------------------------
 
-const char * ArgToken::typeString(TokenType type)
+const char * ArgToken::typeString(ArgTokenType type)
 {
     switch (type)
     {
@@ -113,7 +113,7 @@ inline void ArgLexer::nextLine()
     pos = 0;
 }
 
-void ArgLexer::setupToken(TokenType type)
+void ArgLexer::setupToken(ArgTokenType type)
 {
     pToken->type = type;
     if (type != TOK_END)
@@ -128,7 +128,7 @@ void ArgLexer::setupToken(TokenType type)
             String s = pToken->lexeme;
             std::transform(s.begin(), s.end(), s.begin(),
                            ::toupper);
-            std::map<String, TokenType>::iterator it;
+            std::map<String, ArgTokenType>::iterator it;
             it = reservedWords.find(s);
             if (it != reservedWords.end())
             {
@@ -204,7 +204,7 @@ bool ArgLexer::nextToken()
     else if (isalnum(c) || (c == '-' && isdigit(input[line][pos + 1])))
     {
         offset = 1;
-        TokenType t = TOK_INT;
+        ArgTokenType t = TOK_INT;
         while (isdigit(input[line][pos + offset]))
             ++offset;
         if (input[line][pos + offset] == '.')
@@ -341,7 +341,7 @@ ArgToken * ArgLexer::currentToken() const
 {
     return pToken;
 }
-TokenType ArgLexer::lookahead() const
+ArgTokenType ArgLexer::lookahead() const
 {
     return pToken->type;
 }
@@ -380,12 +380,12 @@ ASTNode::ASTNode(ArgLexer * lexer, ASTNode * parent)
     this->parent = parent;
 }
 
-TokenType ASTNode::lookahead() const
+ArgTokenType ASTNode::lookahead() const
 {
     return pLexer->lookahead();
 }
 
-bool ASTNode::lookahead(TokenType type) const
+bool ASTNode::lookahead(ArgTokenType type) const
 {
     return pLexer->lookahead() == type;
 }
@@ -400,9 +400,9 @@ void ASTNode::nextToken()
     pLexer->nextToken();
 }
 
-bool ASTNode::consume(TokenType type)
+bool ASTNode::consume(ArgTokenType type)
 {
-    TokenType t = lookahead();
+    ArgTokenType t = lookahead();
     if (t != type)
         unexpectedToken();
     //Store consumed token
@@ -472,7 +472,7 @@ bool ArgumentDef::parse()
         {
             consume(TOK_EQ);
             //Consume a value, that can be int, float or string
-            TokenType t = lookahead();
+            ArgTokenType t = lookahead();
 
             if (t == TOK_INT || t == TOK_FLOAT || t == TOK_STR || t == TOK_ID)
                 consume(t);
@@ -692,7 +692,7 @@ bool ParamDef::parseArgumentList()
     return true;
 }
 
-bool ParamDef::parseParamList(TokenType startToken, ProgramDef * prog, StringVector &paramList,
+bool ParamDef::parseParamList(ArgTokenType startToken, ProgramDef * prog, StringVector &paramList,
                               bool isAlias)
 {
     paramList.clear();
@@ -818,7 +818,7 @@ bool SectionDef::parse()
     }
 
     //OL -> params OD ODL | SD ODL | e
-    TokenType t = lookahead();
+    ArgTokenType t = lookahead();
 
     if (!(t == TOK_OPT || t == TOK_OR || t == TOK_LBRA))
         unexpectedToken("parsing section, expecting param definition");
@@ -1047,7 +1047,7 @@ ParamDef* ProgramDef::findAndFillParam(const String &param)
 {
     ParamDef * paramDef = findParam(param);
     if (paramDef == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Doesn't exists param: %s", param.c_str()));
     ///Param was provided, not need to fill it
     //if (paramDef->counter == 1)
     //    return paramDef;
@@ -1065,7 +1065,10 @@ ParamDef* ProgramDef::findAndFillParam(const String &param)
 const char * ProgramDef::getParam(const char * paramName, int argNumber)
 {
     ParamDef * param = findAndFillParam(paramName);
-
+    if (param == NULL)
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Doesn't exists param: %s", paramName));
+    if (argNumber < 0 || argNumber >= param->cmdArguments.size())
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Argument index %d in param %s out of bounds.", argNumber, paramName));
     return param->cmdArguments.at(argNumber);
 }
 
@@ -1079,7 +1082,7 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
             break;
 
     if (i == param->cmdArguments.size())
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Sub-param " + subParam + " was not supplied in command line."));
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("Sub-param %s was not supplied in command line.", subParam));
 
     return param->cmdArguments.at(i + 1 + argNumber);
 }

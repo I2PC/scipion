@@ -1,0 +1,9 @@
+AuthUserFile /home/xmipp/public_html/Downloads/Ver/.htpasswd
+AuthGroupFile /dev/null
+AuthName "Magic Website"
+AuthType Basic
+
+
+<Limit GET>
+require valid-user
+</Limit>

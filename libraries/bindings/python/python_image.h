@@ -99,6 +99,10 @@ DataType npyType2Datatype(int npy);
 PyObject *
 Image_getData(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* projectVolumeDouble */
+PyObject *
+Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 /* setData */
 PyObject *
 Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -130,6 +134,10 @@ Image_scale(PyObject *obj, PyObject *args, PyObject *kwargs);
 /* Set Data Type */
 PyObject *
 Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* Set Data Type */
+PyObject *
+Image_convert2DataType(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* Return image dimensions as a tuple */
 PyObject *

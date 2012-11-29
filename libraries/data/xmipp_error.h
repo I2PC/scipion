@@ -145,6 +145,7 @@ enum ErrorType
     ERR_IO_NOTFILE,         ///< It is not a file.
     ERR_IO_NOTDIR,          ///< It is not a directory.
     ERR_IO_NOPATH,          ///< Environment PATH cannot be read.
+    ERR_IO_LOCKED,	    	///< Error when locking/unloking a file.
     ERR_IO_SIZE,            ///< Incorrect file size.
 
     ERR_MATRIX,             ///< Matrix error.

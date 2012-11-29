@@ -77,6 +77,7 @@ protected:
         addParamsLine("                            : use label:col, e.g., NMADisplacements:0");
         addParamsLine("                            : The first column is column number 0");
         addParamsLine("   randomize                            : Randomize elements of metadata");
+        addParamsLine("    keep_column <labels>                : Keep some columns(label list) from metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
@@ -225,12 +226,20 @@ protected:
     {
         operation = getParam("--operate", 0);
 
-        if ( operation == "drop_column")
+        if ( operation == "keep_column")
         {
             MDL::str2LabelVector(getParam("--operate", 1), labels);
-            for (int i = 0; i < labels.size(); ++i)
-                mdIn.removeLabel(labels[i]);
+            mdIn.keepLabels(labels);
+            std::cout << labels.size() << std::endl;
+            //for (int i = 0; i < labels.size(); ++i)
+            //    mdIn.addLabel(labels[i]);//removeLabel(labels[i]);
         }
+        else if ( operation == "drop_column")
+               {
+                   MDL::str2LabelVector(getParam("--operate", 1), labels);
+                   for (int i = 0; i < labels.size(); ++i)
+                       mdIn.removeLabel(labels[i]);
+               }
         else if (operation == "modify_values")// modify_values
         {
             MDSql::activateMathExtensions();

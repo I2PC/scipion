@@ -68,5 +68,11 @@ public class XmippMessage {
 		return String.format("Illegal value for %s: %s", field, value);
 	}
 	
+	public static String getPathNotExistsMsg(String path){
+		return String.format("Path '%s' doesn't exists.", path);
+	}
 	
+	public static String getIllegalStateForOperationMsg(String field, String value){
+		return String.format("Invalid operation for %s on state %s", field, value);
+	}
 }

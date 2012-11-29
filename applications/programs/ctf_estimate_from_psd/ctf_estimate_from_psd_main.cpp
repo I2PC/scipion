@@ -25,8 +25,5 @@
 
 #include <reconstruction/ctf_estimate_from_psd.h>
 
-int main (int argc,char *argv[]) {
-   ProgCTFEstimateFromPSD prog_prm;
-   prog_prm.read(argc,argv);
-   return prog_prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgCTFEstimateFromPSD);
+

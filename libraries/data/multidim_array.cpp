@@ -539,3 +539,59 @@ void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimAr
     sincos(*ptr, ptrS++,ptrC++);
 }
 
+
+void planeFit(const MultidimArray<double> &z, const MultidimArray<double> &x, const MultidimArray<double> &y,
+		double &p0, double &p1, double &p2)
+{
+	 if (MULTIDIM_SIZE(z)!=MULTIDIM_SIZE(y) || MULTIDIM_SIZE(z)!=MULTIDIM_SIZE(x))
+		 REPORT_ERROR(ERR_MULTIDIM_SIZE,"Not all vectors are of the same size");
+	 if (MULTIDIM_SIZE(z) < 10)
+		 REPORT_ERROR(ERR_MULTIDIM_SIZE, "Not enough elements to compute Least Squares plane fit");
+
+	 double m11=0, m12=0, m13=0, m21=0, m22=0, m23=0, m31=0, m32=0, m33=0;
+	 double b1=0, b2=0, b3=0;
+
+	 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(z)
+	 {
+		 double X=DIRECT_MULTIDIM_ELEM(x,n);
+		 double Y=DIRECT_MULTIDIM_ELEM(y,n);
+		 double Z=DIRECT_MULTIDIM_ELEM(z,n);
+		 m11+=X*X;
+		 m12+=X*Y;
+		 m13+=X;
+
+		 m22+=Y*Y;
+		 m23+=Y;
+
+		 b1+=X*Z;
+		 b2+=Y*Z;
+		 b3+=Z;
+	 }
+	 m21=m12;
+	 m31=m13;
+	 m32=m23;
+	 m33=MULTIDIM_SIZE(z);
+
+	 Matrix2D<double> A(3, 3);
+	 Matrix1D<double> b(3);
+	 Matrix1D<double> c(3);
+
+	 A(0,0)=m11;
+	 A(0,1)=m12;
+	 A(0,2)=m13;
+	 A(1,0)=m21;
+	 A(1,1)=m22;
+	 A(1,2)=m23;
+	 A(2,0)=m31;
+	 A(2,1)=m32;
+	 A(2,2)=m33;
+
+	 b(0)=b1;
+	 b(1)=b2;
+	 b(2)=b3;
+
+	 c = A.inv() * b;
+	 p0 = c(2);
+	 p2 = c(1);
+	 p1 = c(0);
+}

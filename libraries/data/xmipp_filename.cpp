@@ -35,12 +35,12 @@ String FileNameVersion=METADATA_XMIPP_STAR;
 
 void setMetadataVersion(String version)
 {
-	FileNameVersion=version;
+    FileNameVersion=version;
 }
 
 String getMetadataVersion(void)
 {
-	return FileNameVersion;
+    return FileNameVersion;
 }
 
 // Constructor with root, number and extension .............................
@@ -237,36 +237,38 @@ String FileName::getExtension() const
 bool FileName::hasImageExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
-        ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" || ext=="spe" ||
-        ext=="ser" || ext=="stk" || ext=="mrcs"|| ext=="jpg")
-        return true;
-    else
-        return false;
+    return (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
+            ext=="map" || ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" ||
+            ext=="spe" || ext=="em"  || ext=="pif" || ext=="ser" || ext=="stk" ||
+            ext=="mrcs"|| ext=="jpg");
 }
 
 // Has image extension .....................................................
 bool FileName::hasStackExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="stk" || ext=="spi" || ext=="xmp" ||ext=="mrcs" ||
-        ext=="mrc" || ext=="img" || ext=="hed" || ext=="tif" ||
-       ext=="dm3" ||  ext=="ser")
-        return true;
-    else
-        return false;
+    return (ext=="stk" || ext=="spi" || ext=="xmp" || ext=="mrcs" || ext=="mrc" ||
+            ext=="img" || ext=="hed" || ext=="pif" || ext=="tif"  || ext=="dm3" ||
+            ext=="ser");
 }
 
 // Has image extension .....................................................
 bool FileName::hasVolumeExtension() const
 {
     String ext = getFileFormat();
-    if (ext=="vol" || ext=="spi" || ext=="xmp" ||
-        ext=="mrc" || ext=="inf" || ext=="raw")
-        return true;
-    else
-        return false;
+    return (ext=="vol" || ext=="spi" || ext=="xmp" || ext=="mrc" || ext=="map" ||
+            ext=="em"  || ext=="pif" || ext=="inf" || ext=="raw");
 }
+
+// Has image extension .....................................................
+bool FileName::hasMetadataExtension() const
+{
+    String ext = getFileFormat();
+    return (ext == "sel"    || ext == "xmd" || ext == "doc" ||
+            ext == "ctfdat" || ext == "ctfparam" || ext == "pos" ||
+            ext == "sqlite" || ext == "xml");
+}
+
 
 // Get number from file ....................................................
 int FileName::getNumber() const
@@ -309,6 +311,7 @@ void FileName::initRandom(int length)
 // Init Unique .............................................................
 void FileName::initUniqueName(const char *templateStr)
 {
+#ifndef __MINGW32__
     int fd;
     int len = 256;
     char filename[len];
@@ -322,6 +325,8 @@ void FileName::initUniqueName(const char *templateStr)
     }
     close(fd);
     *this = filename;
+#endif
+
 }
 
 // Add at beginning ........................................................
@@ -478,26 +483,18 @@ bool FileName::isMetaData(bool failIfNotExists) const
         return false;
 
     //check if file exists
-    if (!existsTrim())
+    if (failIfNotExists && !existsTrim())
         REPORT_ERROR(ERR_IO_NOTFILE, formatString("FileName::isMetaData: File: '%s' does not exist", c_str()));
     //This is dangerous and should be removed
     //in next version. only star1 files should be OK
     //ROB
     //FIXME
-    FileName ext = getFileFormat();
-    if (ext == "sel" || ext == "xmd" || ext == "doc" ||
-        ext == "ctfdat" || ext == "ctfparam" || ext == "pos" ||
-        ext == "sqlite" || ext == "xml")
-    {
-        return true;
-    }
-    else
-        return isStar1(failIfNotExists);
+    return (hasMetadataExtension() || isStar1(failIfNotExists));
 }
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-    std::ifstream infile( this->removeBlockNameOrSliceNumber().data(), std::ios_base::in);
+    std::ifstream infile( this->removeBlockNameOrSliceNumber().c_str(), std::ios_base::in);
     String line;
 
     if (infile.fail())
@@ -511,9 +508,10 @@ bool FileName::isStar1(bool failIfNotExists) const
     // Search for xmipp_3,
     char cline[128];
     infile.getline(cline, 128);
+    infile.close();
     line = cline;
     size_t pos = line.find(METADATA_XMIPP_STAR);
-    return (pos != String::npos); // xmipp_star_1 token found
+    return (pos != npos); // xmipp_star_1 token found
 }
 
 // Replace one substring by other .......................................
@@ -531,7 +529,7 @@ FileName FileName::replaceSubstring(const String &subOld, const String &subNew) 
 // Substitute one extension by other .......................................
 FileName FileName::replaceExtension(const String &newExt) const
 {
-  return removeLastExtension() + "." + newExt;
+    return removeLastExtension() + "." + newExt;
 }
 
 // Remove a substring ......................................................
@@ -708,8 +706,14 @@ int do_mkdir(const char *path, mode_t mode)
     if (stat(path, &st) != 0)
     {
         /* Directory does not exist */
+#ifndef __MINGW32__
         if (mkdir(path, mode) != 0)
-            status = -1;
+#else
+
+            if (mkdir(path) != 0)
+#endif
+
+                status = -1;
     }
     else if (!S_ISDIR(st.st_mode))
     {
@@ -778,6 +782,62 @@ void copyImage(const FileName & source, const FileName & target)
 }
 
 
+void FileLock::lock(int _fileno)
+{
+#ifndef __MINGW32__
+    if (islocked)
+        unlock();
+
+    if (_fileno != NULL)
+        filenum = _fileno;
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+    islocked = true;
+#endif
+
+}
+
+void FileLock::lock(FILE * hdlFile)
+{
+    if (islocked)
+        unlock();
+
+    if (hdlFile != NULL)
+        this->filenum = fileno(hdlFile);
+
+#ifdef __MINGW32__
+
+    HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+    DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+    if (LockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
+        REPORT_ERROR(ERR_IO_LOCKED,"File cannot be locked.");
+#else
+
+    fl.l_type = F_WRLCK;
+    fcntl(filenum, F_SETLKW, &fl);
+#endif
+
+    islocked = true;
+}
 
 
+void FileLock::unlock()
+{
+    if (islocked)
+    {
+#ifdef __MINGW32__
+        HANDLE hFile = (HANDLE)_get_osfhandle(filenum);
+        DWORD dwLastPos = SetFilePointer(hFile, 0, NULL, FILE_END);
+        if (UnlockFile(hFile, 0, 0, dwLastPos, 0) != NULL)
+            REPORT_ERROR(ERR_IO_LOCKED,"File cannot be unlocked.");
+#else
+
+        fl.l_type = F_UNLCK;
+        fcntl(filenum, F_SETLK, &fl);
+#endif
+
+        islocked = false;
+    }
+}
 

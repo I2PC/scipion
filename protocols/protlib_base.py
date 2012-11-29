@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join, exists
+from os.path import join, exists, dirname
 import sys
 import shutil
 import ConfigParser
@@ -56,6 +56,7 @@ class XmippProject():
         exists'''
         for filename in [self.logsDir, self.runsDir, self.tmpDir, self.cfgName, self.dbName]:
             if not exists(filename):
+                print "Not exists: ", filename
                 return False
         return True        
     
@@ -91,6 +92,9 @@ class XmippProject():
         #Check if project exists
         if not self.exists():
             raise Exception('Trying to load project from %s, but not project found' % self.projectDir)
+            # Create Tmp folder if not exists
+            if not exists(self.tmpDir):
+                os.mkdir(self.tmpDir)
         # Load config file
         self.config = ConfigParser.RawConfigParser()
         self.config.read(self.cfgName)
@@ -131,7 +135,6 @@ class XmippProject():
     
     def cleanRun(self, run):
         script = run['script']
-        print "removing script: ", script
         toDelete = [script.replace(self.runsDir, self.logsDir).replace(".py", ext) for ext in ['.log', '.err', '.out']]
         deleteFiles(None, toDelete, False)
         workingDir = self.getWorkingDir(run['protocol_name'], run['run_name'])
@@ -153,8 +156,12 @@ class XmippProject():
         return None
     
     def deleteRunByName(self, protocol_name, runName):
-        run = getRunDict(self.projectDb.selectRunByName(protocol_name, runName))
-        self.deleteRun(run)
+	run=self.projectDb.selectRunByName(protocol_name, runName)
+	if run is None:
+		raise Exception ("Run %s_%s does not exist" % (protocol_name, runName))
+
+        run = getRunDict(run)
+       	self.deleteRun(run)
             
     def deleteTmpFiles(self):
         for section, groupList in sections:
@@ -321,16 +328,16 @@ class XmippProject():
             for r2 in runs:
                 dd2 = runsDict[getExtendedRunName(r2)]
                 if dd.extRunName != dd2.extRunName and not dd2.hasDep(dd.extRunName):
-                    for v in dd.prot.ParamsDict.values():
-                        if type(v) == str and dd2.prot.WorkingDir in v:
+                    for k, v in dd.prot.ParamsDict.iteritems():
+                        if k != 'RunName' and type(v) == str and v.startswith(dd2.prot.WorkingDir + '/'):
                             dd2.addDep(dd.extRunName)
         
         #Create special node ROOT
         roots = [k for k, v in runsDict.iteritems() if v.isRoot]
         ddRoot = DepData(runsDict, 'PROJECT', None)
         ddRoot.state = 6
-        ddRoot.deps = roots
-        
+        ddRoot.deps = roots        
+
         if printGraph:
             self._printGraph(runsDict)
                 
@@ -341,6 +348,10 @@ class DepData():
     def __init__(self, runsDict, extRunName, protocol):
         self.runsDict = runsDict
         self.extRunName = extRunName
+        
+        if protocol is not None:
+            self.protName = protocol.Name
+            self.runName = protocol.RunName
         self.prot = protocol
         self.deps = []
         self.isRoot = True
@@ -353,7 +364,25 @@ class DepData():
     def hasDep(self, extRunName):
         return extRunName in self.deps
         
-    
+_baseProtocolNames = {
+        'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
+        'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
+        'families':     join('%(WorkingDir)s', 'families.xmd'),
+        'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
+        'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
+        'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
+        'microscope':   join('%(WorkingDir)s','microscope.xmd'),
+        'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
+     }
+
+def getProtocolFilename(key, **params):
+    # Is desirable the names comming in params doesn't overlap
+    # with the variables in the header dictionary
+    params.update(_baseProtocolNames)
+    if _baseProtocolNames.has_key(key):
+        return _baseProtocolNames[key] % params
+    raise Exception("Key: '%s' not found" % key)  
+ 
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):
@@ -420,18 +449,8 @@ class XmippProtocol(object):
     def createFilenameDict(self):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
-        d = {
-                'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
-                'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
-                'families':     join('%(WorkingDir)s', 'families.xmd'),
-                'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
-                'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
-                'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
-                'microscope':   join('%(WorkingDir)s','microscope.xmd'),
-                'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
-             }
-        d.update(self.createFilenameTemplates())
-        return d
+        _baseProtocolNames.update(self.createFilenameTemplates())
+        return _baseProtocolNames
         
     def inputProperty(self, *keys):
         ''' Take property Key from self.PrevRun and set to self.
@@ -833,9 +852,9 @@ def protocolMain(ProtocolClass, script=None):
         no_check = options.no_check
         no_confirm = options.no_confirm
     
-    script = os.path.abspath(script)
+    script_absolute = os.path.abspath(script)
     
-    mod = loadModule(script)
+    mod = loadModule(script_absolute)
     #init project
     project = XmippProject()
     #load project: read config file and open conection database
@@ -852,7 +871,7 @@ def protocolMain(ProtocolClass, script=None):
            'run_name': mod.RunName, 
            'script': script, 
            'comment': "",
-           'source': script
+           'source': script_absolute
            }
         from protlib_gui import ProtocolGUI 
         gui = ProtocolGUI()

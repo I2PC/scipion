@@ -1074,7 +1074,7 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
         }
         else
         {
-        	A2D_ELEM(fx,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(enhancedPSD,i+1,j)-A2D_ELEM(enhancedPSD,i-1,j));
+            A2D_ELEM(fx,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(enhancedPSD,i+1,j)-A2D_ELEM(enhancedPSD,i-1,j));
             A2D_ELEM(fy,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(enhancedPSD,i,j+1)-A2D_ELEM(enhancedPSD,i,j-1));
         }
     }
@@ -1101,7 +1101,7 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
     MultidimArray<double> absFy = (fy.selfABS());
     absFy.maxIndex(imax,jmax);
     double maxFy = A2D_ELEM(fy,imax,jmax);
-	*/
+    */
     ///////////////////////
     //
 
@@ -1110,16 +1110,16 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
 
     if (verbose != 0)
     {
-    	Image<double> save;
+        Image<double> save;
 
-    	save() = enhancedPSD;
-    	save.write("PPP0.xmp");
+        save() = enhancedPSD;
+        save.write("PPP0.xmp");
 
-    	save() = fx;
-    	save.write("PPP1.xmp");
+        save() = fx;
+        save.write("PPP1.xmp");
 
-    	save() = fy;
-    	save.write("PPP2.xmp");
+        save() = fy;
+        save.write("PPP2.xmp");
     }
 }
 
@@ -1176,12 +1176,33 @@ void FringeProcessing::fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yP
 
     for (int nPoint = 0; nPoint < VEC_XSIZE(xPts); nPoint++)
     {
-    	//We impose that the origin always is zero and because this whe do not sum it
-    	VEC_ELEM(xPts,nPoint) = majorAxis*std::cos(-ellipseAngle)*std::cos(angle) - minorAxis*std::sin(-ellipseAngle)*std::sin(angle)+x0;
-    	VEC_ELEM(yPts,nPoint) = majorAxis*std::sin(-ellipseAngle)*std::cos(angle) + minorAxis*std::cos(-ellipseAngle)*std::sin(angle)+y0;
-    	angle += (2*PI)/VEC_XSIZE(xPts);
+        //We impose that the origin always is zero and because this whe do not sum it
+        VEC_ELEM(xPts,nPoint) = majorAxis*std::cos(-ellipseAngle)*std::cos(angle) - minorAxis*std::sin(-ellipseAngle)*std::sin(angle)+x0;
+        VEC_ELEM(yPts,nPoint) = majorAxis*std::sin(-ellipseAngle)*std::cos(angle) + minorAxis*std::cos(-ellipseAngle)*std::sin(angle)+y0;
+        angle += (2*PI)/VEC_XSIZE(xPts);
     }
 
+}
+
+void FringeProcessing::fitEllipse(MultidimArray<double> & normImag, double & x0, double & y0, double & majorAxis,
+                                  double & minorAxis, double & ellipseAngle, double & area)
+{
+    area = normImag.sum();
+    Matrix1D<double> xPts(area);
+    Matrix1D<double> yPts(area);
+    int index = 0;
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(normImag)
+    {
+        if ( A2D_ELEM(normImag,i,j)==1 )
+        {
+        	VEC_ELEM(xPts,index)=j;
+        	VEC_ELEM(yPts,index)=i;
+        	index++;
+        }
+    }
+
+    fitEllipse(xPts,yPts,x0,y0,majorAxis,minorAxis,ellipseAngle);
 }
 
 //Equivalent function in JAVA in : xmipp.svn/java/src/xmipp/viewer/ctf/EllipseCTF.java

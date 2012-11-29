@@ -29,8 +29,8 @@
 #include <data/micrograph.h>
 #include <data/mask.h>
 #include <data/xmipp_program.h>
+#include <data/transform_geometry.h>
 #include <reconstruction/fourier_filter.h>
-#include <reconstruction/transform_geometry.h>
 #include <classification/naive_bayes.h>
 #include <classification/svm_classifier.h>
 #include <classification/knn_classifier.h>
@@ -118,7 +118,10 @@ public:
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
 
-    /// Extract statistical features
+    /*
+     * This method extracts statics features such as
+     * average, variance and quantiles of a particle.
+     */
     void extractStatics(MultidimArray<double> &inputVec,
                         MultidimArray<double> &features);
 
@@ -131,7 +134,7 @@ public:
                           MultidimArray<double> &IpolarCorr);
 
     /// Convolve the micrograph with the different templates
-    void applyConvolution();
+    void applyConvolution(bool fast);
 
     /// Project a vector on one pca basis
     double PCAProject(MultidimArray<double> &pcaBasis,
@@ -199,7 +202,7 @@ public:
      * This method does a convolution in order to find an approximation
      * about the place of the particles.
      */
-    void buildSearchSpace(std::vector<Particle2> &positionArray);
+    void buildSearchSpace(std::vector<Particle2> &positionArray,bool fast);
 
     /*
      * This method is used in order to train an support vector
@@ -217,9 +220,9 @@ public:
     void trainPCA(const FileName &fnPositiveFeat);
 
     /*
-	 * This method is used to generate some pca basis according
-	 * to different rotation of the template.
-	 */
+    * This method is used to generate some pca basis according
+    * to different rotation of the template.
+    */
     void trainRotPCA(const FileName &fnAvgModel,const FileName &fnPCARotModel);
 
     /*
@@ -232,38 +235,54 @@ public:
 
     /*
      * It is the same as previous one but it does not extract
-     * the features. It just puts the data in array for dataset.
+     * the features. It just puts the data in an array for dataset.
      */
     void add2Dataset();
 
-    /// Normalize the dataset
+    /* Normalize the data of a dataset according to
+     * a and b.
+     */
     void normalizeDataset(int a,int b,const FileName &fn);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;
 
-    /// Save the feature vectors of the particles
+    /*
+     * In Semi-Automatic step, we save all the feature
+     * vectors in order to have them to retrain the
+     * classifier.
+     */
     void saveAutoVectors(const FileName &fn);
 
-    /// Save the feature vectors of the particles
+    /// Save the feature vectors of the false positives
     void saveRejectedVectors(const FileName &fn);
 
-    /// Save PCA model
+    /// Save the PCA basis and average for each channel
     void savePCAModel(const FileName &fn_root);
 
-    /// Save training set
+    /// Save training set into memory
     void saveTrainingSet(const FileName &fn_root);
 
-    /// Load the feature vectors of the particles
+    /*
+     * In Semi-Automatic step, we save all the feature
+     * vectors in order to have them to retrain the
+     * classifier.
+     */
     void loadAutoVectors(const FileName &fn);
 
-    /// Load training set
+    /// Load training set into the related array.
     void loadTrainingSet(const FileName &fn_root);
 
-    /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier);
+    /* Select particles from the micrograph in an automatic way.
+     * This is the main method for automatic picking.
+     */
+    int automaticallySelectParticles(bool use2Classifier,bool fast);
 
-    /// Generate two different trainsets for two SVMs.
+    /*
+     * This method generates two different datasets. One for the
+     * particles and non particles and the other one for the
+     * particles and the false positives.
+     */
     void generateTrainSet();
 };
 

@@ -17,6 +17,7 @@ from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
 from protlib_filesystem import xmippExists
+from protocol_ml2d import lastIteration
 
 class ProtML3D(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -29,18 +30,20 @@ class ProtML3D(XmippProtocol):
             self.progId = 'ml'
         self.ParamsDict['ProgId'] = self.progId
         self.ORoot = self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
+        self.Extra = self.ParamsDict['Extra'] = self.ORoot + "_extra/"
+        self.Extra2D = self.ParamsDict['Extra2D'] = "%s_%s2d_extra/" % (self.ORoot, self.progId)
                         
     def createFilenameTemplates(self):
-        mdRefs = '%(ORoot)s_%(ProgId)s2d_iter_refs.xmd'
+        extraRefs = '%(Extra2D)siter%(iter)03d/result_classes.xmd'
         return {
-                'iter_logs': '%(ORoot)s_%(ProgId)s2d_iter_logs.xmd',
-                'iter_refs': mdRefs,
-                'vols': 'iter%(iter)06d@%(ORoot)s_vols.xmd',
-                'refs': 'iter%(iter)06d@' + mdRefs,
-                'initial_vols':  '%(ORoot)s_initial_volumes.stk',
-                'corrected_vols': '%(ORoot)s_corrected_volumes.stk',
-                'filtered_vols': '%(ORoot)s_filtered_volumes.stk',
-                'generated_vols': '%(ORoot)s_generated_volumes.stk'
+                'iter_logs': "info@" + extraRefs,
+                'iter_refs': "classes@" + extraRefs,
+                'iter_vols': '%(Extra)siter%(iter)03d/volumes.xmd',
+                #'refs': 'iter%(iter)06d@' + extraRefs,
+                'initial_vols':  '%(Extra)sinitial_volumes.stk',
+                'corrected_vols': '%(Extra)scorrected_volumes.stk',
+                'filtered_vols': '%(Extra)sfiltered_volumes.stk',
+                'generated_vols': '%(Extra)sgenerated_volumes.stk'
                 }
         
     def summary(self):
@@ -58,19 +61,21 @@ class ProtML3D(XmippProtocol):
         if self.NumberOfReferences > 1:
             lines.append("Number of references per volume: <%d>" % self.NumberOfReferences)
         
-        logs = self.getFilename('iter_logs')    
-        
-        if exists(logs):
+        lastIter = lastIteration(self, 'iter_vols')
+
+        if lastIter > 0:
+            logs = self.getFilename('iter_logs', iter=lastIter) 
+        #if exists(logs):
             try:
                 md = MetaData(logs)
-                id = md.lastObject()
-                iteration = md.getValue(MDL_ITER, id)
-                lines.append("Last iteration:  <%d>" % iteration)
+                id = md.firstObject()
+                #iteration = md.getValue(MDL_ITER, id)
+                lines.append("Last iteration:  <%d>" % lastIter)
                 LL = md.getValue(MDL_LL, id)
                 lines.append("LogLikelihood:  %f" % LL)
-                fnRefs = self.getFilename('refs', iter=iteration)
+                fnRefs = self.getFilename('iter_refs', iter=lastIter)
                 lines.append("Last 2D classes: [%s]" % fnRefs)
-                fnVols = self.getFilename('vols', iter=iteration)
+                fnVols = self.getFilename('iter_vols', iter=lastIter)
                 lines.append("Last 3D classes: [%s]" % fnVols)
             except Exception, e:
                 lines.append(str(e))
@@ -108,6 +113,9 @@ class ProtML3D(XmippProtocol):
         else:
             initVols = self.ParamsDict['InitialVols'] = self.getFilename('initial_vols')
             self.mdVols = MetaData(self.RefMd)
+            
+            
+            self.insertStep('createDir', [self.Extra], path=self.Extra)
             
             self.insertStep('copyVolumes', [initVols], 
                                inputMd=self.RefMd, outputStack=initVols)
@@ -214,7 +222,7 @@ class ProtML3D(XmippProtocol):
         for idx in self.mdVols:
             for i in range(self.NumberOfReferences):
                 outputVol = "%d@%s" % (index, volStack)
-                generatedVol = join(grDir, "vol%03d_iter%06d_vol%06d.vol" % (index, 1, 1))
+                generatedVol = join(grDir, "vol%03d_extra/iter%03d/vol%06d.vol" % (index, 1, 1))
                 copyVols.append((outputVol, generatedVol))
                 self.insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(MDL_IMAGE, idx), 1, 
                                     self.InitialMapIsAmplitudeCorrected)
@@ -268,11 +276,9 @@ class ProtML3D(XmippProtocol):
     def setVisualizeIterations(self):
         '''Validate and set the set of iterations to visualize.
         If not set is selected, only use the last iteration'''
-        logs = self.getFilename('iter_logs')    
-        md = MetaData(logs)
-        lastIter = md.getValue(MDL_ITER, md.lastObject())
+        self.lastIter = lastIter = lastIteration(self)
         self.VisualizeIter = self.parser.getTkValue('VisualizeIter')
-        self.lastIter = lastIter
+        
         if self.VisualizeIter == 'last':
             self.visualizeIters = [lastIter]
         elif self.VisualizeIter == 'all':
@@ -300,18 +306,17 @@ class ProtML3D(XmippProtocol):
         self._visualizeVar(varName)
         self.showPlot()
         
-    def _visualizeVar(self, varName):
-        logs = self.getFilename('iter_logs')    
-        if exists(logs):
-            iteration = self.visualizeIters[0]
-            visualizeVolVar = {'VisualizeCRVolume': self.getFilename('corrected_vols'), 
+    def _visualizeVar(self, varName):        
+        if len(self.visualizeIters) > 0:
+            iter = self.visualizeIters[0]
+            inputVolVar = {'VisualizeCRVolume': self.getFilename('corrected_vols'), 
                                'VisualizeFRVolume': self.getFilename('filtered_vols'),
-                               'VisualizeGSVolume':self.getFilename( 'generated_vols'),
-                               'VisualizeML3DAvgs': self.getFilename('refs', iter=iteration),
-                               'VisualizeML3DReferences': self.getFilename('vols', iter=iteration)                             
-                               }
-            if varName in visualizeVolVar:
-                runShowJ(visualizeVolVar[varName])
+                               'VisualizeGSVolume':self.getFilename( 'generated_vols')
+                            }
+            iterShowVar = { 'VisualizeML3DAvgs': 'iter_refs', 'VisualizeML3DReferences': 'iter_vols'}                          
+
+            if varName in inputVolVar:
+                runShowJ(inputVolVar[varName])
             elif varName == 'DoShowStats':
                 from protocol_ml2d import launchML2DPlots
                 xplotter = launchML2DPlots(self, ['DoShowLL', 'DoShowPmax'])
@@ -322,10 +327,13 @@ class ProtML3D(XmippProtocol):
             elif varName == 'VisualizeAngDistribution':
                 for it in self.visualizeIters:
                     self.plotAngularDistribution(it)
+            elif varName in iterShowVar:
+                for it in self.visualizeIters:
+                    runShowJ(self.getFilename(iterShowVar[varName], iter=it))
                     
     def getRefsMd(self, iteration):
         ''' Read the references metadata for a give iteration. '''
-        fn = 'iter%06d@%s' % (iteration, self.getFilename('iter_refs'))
+        fn = self.getFilename('iter_refs', iter=iteration)        
         return MetaData(fn)
         
     def drawPlot(self, xplotter):

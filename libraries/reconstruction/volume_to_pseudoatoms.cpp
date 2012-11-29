@@ -152,7 +152,7 @@ void ProgVolumeToPseudoatoms::defineParams()
     addParamsLine("                         Bfactor");
     addParamsLine("  [--Nclosest+ <N=3>]                : N closest atoms, it is used only for the");
     addParamsLine("                                     : distance histogram");
-    addParamsLine("  [--minDistance+ <d=0.001>]         : Minimum distance between two pseudoatoms");
+    addParamsLine("  [--minDistance+ <d=0.001>]         : Minimum distance between two pseudoatoms (in Angstroms)");
     addParamsLine("                                     : Set it to -1 to disable");
     addParamsLine("  [--penalty+ <p=10>]                : Penalty for overshooting");
     addParamsLine("  [--sampling_rate <Ts=1>]           : Sampling rate Angstroms/pixel");
@@ -166,6 +166,7 @@ void ProgVolumeToPseudoatoms::defineParams()
 void ProgVolumeToPseudoatoms::produceSideInfo()
 {
     sigma/=sampling;
+    minDistance/=sampling;
 
     if (intensityColumn!="occupancy" && intensityColumn!="Bfactor")
         REPORT_ERROR(ERR_VALUE_INCORRECT,(std::string)"Unknown column: "+intensityColumn);
@@ -347,12 +348,12 @@ void ProgVolumeToPseudoatoms::removeSeeds(int Nseeds)
                         {
                             if (useMask && iMask3D(k,i,j)==0)
                                 continue;
-                            if (Vdiff(k,i,j)<v)
+                            if (A3D_ELEM(Vdiff,k,i,j)<v)
                             {
                                 kneg=k;
                                 ineg=i;
                                 jneg=j;
-                                Vdiff(k,i,j)=0;
+                                A3D_ELEM(Vdiff,k,i,j)=0;
                                 found=true;
                             }
                         }
@@ -469,15 +470,17 @@ void ProgVolumeToPseudoatoms::drawApproximation()
     double N=0;
     percentageDiff=0;
     const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vcurrent())
+    const MultidimArray<double> &mVcurrent=Vcurrent();
+    const MultidimArray<double> &mVin=Vin();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVcurrent)
     {
-        if (useMask && iMask3D(k,i,j)==0)
+        if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
             continue;
-        double Vinv=Vin(k,i,j);
+        double Vinv=A3D_ELEM(mVin,k,i,j);
         if (Vinv<=0)
             continue;
-        double vdiff=Vinv-Vcurrent(k,i,j);
-        double vperc=ABS(vdiff);
+        double vdiff=Vinv-A3D_ELEM(mVcurrent,k,i,j);
+        double vperc=fabs(vdiff);
         energyDiff+=vdiff*vdiff;
         percentageDiff+=vperc;
         N++;
@@ -562,6 +565,7 @@ void ProgVolumeToPseudoatoms::extractRegion(int idxGaussian,
                 A3D_ELEM(region,k,i,j)=A3D_ELEM(mVcurrent,k,i,j);
 }
 
+//#define DEBUG
 double ProgVolumeToPseudoatoms::evaluateRegion(const MultidimArray<double> &region)
 const
 {
@@ -569,20 +573,38 @@ const
     double N=0;
     const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
     const MultidimArray<double> &mVin=Vin();
+#ifdef DEBUG
+    Image<double> save, save2;
+    save().initZeros(region);
+    save2().initZeros(region);
+#endif
     FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
     {
         double Vinv=A3D_ELEM(mVin,k,i,j);
-        if (Vinv<=0)
+        if (Vinv<=0 || (useMask && A3D_ELEM(iMask3D,k,i,j)==0))
             continue;
-        if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
-            continue;
+#ifdef DEBUG
+        save(k,i,j)=Vinv;
+        save2(k,i,j)=A3D_ELEM(region,k,i,j);
+#endif
         double vdiff=A3D_ELEM(region,k,i,j)-Vinv;
         double vperc=(vdiff<0)?-vdiff:penalty*vdiff;
         avgDiff+=vperc;
+#ifdef DEBUG
+        std::cout << "(k,i,j)=(" << k << "," << i << "," << j << ") toSimulate=" << Vinv << " simulated=" << A3D_ELEM(region,k,i,j) << " vdiff=" << vdiff << " vperc=" << vperc << std::endl;
+#endif
         ++N;
     }
+#ifdef DEBUG
+    save.write("PPPtoSimulate.vol");
+    save2.write("PPPsimulated.vol");
+    std::cout << "Error=" << avgDiff/(N*range) << std::endl;
+    std::cout << "Press any key\n";
+    char c; std::cin >> c;
+#endif
     return avgDiff/(N*range);
 }
+#undef DEBUG
 
 void ProgVolumeToPseudoatoms::insertRegion(const MultidimArray<double> &region)
 {
@@ -594,6 +616,7 @@ void ProgVolumeToPseudoatoms::insertRegion(const MultidimArray<double> &region)
 /* Optimize ---------------------------------------------------------------- */
 static pthread_mutex_t mutexUpdateVolume=PTHREAD_MUTEX_INITIALIZER;
 
+//#define DEBUG
 void* ProgVolumeToPseudoatoms::optimizeCurrentAtomsThread(
     void * threadArgs)
 {
@@ -626,14 +649,17 @@ void* ProgVolumeToPseudoatoms::optimizeCurrentAtomsThread(
                                  atoms[n].location(2),region,-atoms[n].intensity);
             regionBackup=region;
 
+#ifdef DEBUG
+            std::cout << "Atom n=" << n << " current intensity=" << atoms[n].intensity << " -> " << currentRegionEval << std::endl;
+#endif
             // Change intensity
             if (allowIntensity)
             {
                 // Try with a Gaussian that is of different intensity
-                double tryCoeffs[5]={0, 0.9, 0.99, 1.01, 1.1};
+                double tryCoeffs[8]={0, 0.1, 0.2, 0.5, 0.9, 0.99, 1.01, 1.1};
                 double bestRed=0;
                 int bestT=-1;
-                for (int t=0; t<5; t++)
+                for (int t=0; t<8; t++)
                 {
                     region=regionBackup;
                     parent->drawGaussian(atoms[n].location(0),
@@ -645,6 +671,9 @@ void* ProgVolumeToPseudoatoms::optimizeCurrentAtomsThread(
                     {
                         bestRed=reduction;
                         bestT=t;
+#ifdef DEBUG
+                        std::cout << "    better -> " << trialRegionEval << " (factor=" << tryCoeffs[t]  << ")" << std::endl;
+#endif
                     }
                 }
                 if (bestT!=-1)
@@ -661,6 +690,9 @@ void* ProgVolumeToPseudoatoms::optimizeCurrentAtomsThread(
                                          atoms[n].location(1), atoms[n].location(2),region,
                                          -atoms[n].intensity);
                     regionBackup=region;
+#ifdef DEBUG
+                    std::cout << "    finally -> " << currentRegionEval << " (intensity=" << atoms[n].intensity  << ")" << std::endl;
+#endif
                     myArgs->Nintensity++;
                 }
             }
@@ -885,6 +917,7 @@ void ProgVolumeToPseudoatoms::run()
             placeSeeds(FLOOR(Natoms*growSeeds/100));
         }
         drawApproximation();
+
         if (iter==0)
             std::cout << "Initial error with " << atoms.size()
             << " pseudo-atoms " << percentageDiff << std::endl;

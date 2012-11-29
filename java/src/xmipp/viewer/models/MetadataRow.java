@@ -27,8 +27,10 @@ package xmipp.viewer.models;
 
 import javax.swing.JTable;
 
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MetaData;
 import xmipp.utils.Param;
+import xmipp.utils.XmippPopupMenuCreator;
 
 /** This is a data model designed for Row metadatas */
 @SuppressWarnings("serial")
@@ -60,25 +62,12 @@ public class MetadataRow extends MetadataTable {
 	
 	@Override
 	public Object getValueAt(int row, int column){
-		try {
-			return data.md.getValueString(visibleLabels.get(row).getLabel(), id);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+		return super.getValueAt(0, row);
 	}
 	
 	@Override
 	public void setValueAt(Object value, int row, int column) {
-		try {
-			ColumnInfo ci = visibleLabels.get(row);
-			data.md.setValueString(ci.getLabel(), (String)value, id);
-			//setMdValueAt(value, row, column, ci, id);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
+		data.setValueToCol(0, data.getColumnInfo(row), value.toString());
 	}// function setValueAt
 	
 	@Override
@@ -92,4 +81,11 @@ public class MetadataRow extends MetadataTable {
 		super.setupTable(table);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 	}
+	
+	@Override
+	public boolean handleRightClick(int row, int col,
+			XmippPopupMenuCreator xpopup) {
+		return super.handleRightClick(0, row, xpopup);
+	}
+	
 }//class MetadataRow

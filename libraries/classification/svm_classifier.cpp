@@ -1,7 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Enrique Recarte Llorens   (erecallo@hotmail.com)
- *              Carlos Oscar S. Sorzano   (coss@cnb.csic.es)
+ * Authors:     Vahid Abrishami   (vabrishami@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -33,24 +32,6 @@ bool findElementIn1DArray(MultidimArray<double> &inputArray,double element)
     return false;
 }
 
-//SVMClassifier::SVMClassifier(double c,double gamma)
-//{
-//    param.svm_type = C_SVC;
-//    param.kernel_type = LINEAR1;
-//    param.degree = 2;
-//    param.gamma = gamma;//0.2;//0.0824692444233;
-//    param.coef0 = 0;
-//    param.nu = 0.1;
-//    param.cache_size = 1000;
-//    param.C = c;//1;//64;
-//    param.eps = 0.001;
-//    param.p = 0.1;
-//    param.shrinking = 1;
-//    param.probability = 1;
-//    param.nr_weight = 0;
-//    param.weight_label = NULL;
-//    param.weight = NULL;
-//}
 void SVMClassifier::setParameters(double c,double gamma)
 {
     param.svm_type = C_SVC;
@@ -132,7 +113,7 @@ double SVMClassifier::predict(MultidimArray<double> &featVec,double &score)
     svm_node *x_space;
     int cnt=0;
     int nr_class=svm_get_nr_class(model);
-    double *prob_estimates=new double[nr_class];//(double *) malloc(nr_class*sizeof(double));
+    double *prob_estimates=new double[nr_class];
     x_space=new svm_node[XSIZE(featVec)+1];
 
     for (int i=0;i<XSIZE(featVec);i++)

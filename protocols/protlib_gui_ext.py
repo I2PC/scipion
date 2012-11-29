@@ -1331,13 +1331,13 @@ class XmippBrowser():
         self.managers = {}
         self.extSet = {}
         addFm = self.addFileManager
-        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr'], 
+        addFm('md', 'md.gif', ['.xmd', '.sel', '.doc', '.ctfparam', '.ctfdat', '.pos', '.descr', '.param'], 
                             mdFillMenu, mdOnClick, mdOnDoubleClick)
-        addFm('stk', 'stack.gif', ['.stk', '.mrcs'],
+        addFm('stk', 'stack.gif', ['.stk', '.mrcs', '.st', '.pif'],
                             stackFillMenu, imgOnClick, stackOnDoubleClick)
-        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.raw', '.dm3', '.psd', '.spe'],
+        addFm('img', 'image.gif', ['.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img', '.hed', '.jpeg', '.jpg'],
                             imgFillMenu, imgOnClick, imgOnDoubleClick)
-        addFm('vol', 'vol.gif', ['.vol'], 
+        addFm('vol', 'vol.gif', ['.vol', '.mrc', '.map', '.em', '.pif'], 
                             volFillMenu, imgOnClick, volOnDoubleClick)
         addFm('text', 'fileopen.gif', ['.txt', '.c', '.h', '.cpp', '.java', '.sh'],
               textFillMenu, defaultOnClick, textOnDoubleClick)
@@ -1459,13 +1459,15 @@ class XmippBrowser():
         self.menu = tk.Menu(self.root, tearoff=0)
         self.menu.add_command(label="Open", command=self.onDoubleClick)
         self.menu.add_command(label="Redo", command=self.onDoubleClick) 
-             
+        
         # add bindings
         tree.bind("<Double-1>", self.onDoubleClick)
         tree.bind("<Return>", self.onDoubleClick)
         tree.bind("<Button-3>", self.onRightClick)
         self.root.bind('<<TreeviewSelect>>', self.onClick)
-        self.root.bind("<Key>", self.onKeyPress)
+        self.root.bind("<Key>", self.unpostMenu)
+        self.root.bind('<FocusOut>', self.unpostMenu)
+        self.root.bind('<Button-1>', self.unpostMenu)
         
         #Create a dictionary with extensions and icon type
         self.insertFiles(self.dir)
@@ -1512,7 +1514,7 @@ class XmippBrowser():
                 self.insertElement(path, f, os.path.isdir(join(path, f)))
     
     def refresh(self, e=None):
-        self.changeDir(self.dir)
+        self.filterResults()
         
     def changeDir(self, newDir):
         self.dir = newDir
@@ -1520,7 +1522,7 @@ class XmippBrowser():
         self.insertElement(newDir, '..', False)
         self.insertFiles(newDir)
         
-    def unpostMenu(self):
+    def unpostMenu(self, e=None):
         self.menu.unpost()
         
     def getSelection(self):
@@ -1554,7 +1556,6 @@ class XmippBrowser():
                 self.menu.post(e.x_root, e.y_root)
 
     def onClick(self, e):
-        self.unpostMenu()
         item, fm = self.getSelection()        
         if fm:
             msg = ""
@@ -1577,9 +1578,6 @@ class XmippBrowser():
                 self.text.clear()
                 self.text.addText(msg) 
         return item
-        
-    def onKeyPress(self, e):
-        self.unpostMenu()
        
     def updatePreview(self, filename):
         if self.matplotlibEnabled:
@@ -1607,7 +1605,8 @@ class XmippBrowser():
     
     def filterResults(self, e=None):
         self.pattern = self.filterVar.get().split()
-        foundDirs = {}     
+        foundDirs = {}    
+        self.changeDir(self.dir)
         if len(self.pattern):
             self.tree.clear()
             for root, dirs, files in os.walk(self.dir, followlinks=True):
@@ -1622,8 +1621,8 @@ class XmippBrowser():
                             self.tree.item(rootId, open=tk.TRUE)
                             foundDirs[relRoot] = rootId
                         self.insertElement(rootId, f)
-        else:
-            self.changeDir(self.dir)
+        #else:
+        #    self.changeDir(self.dir)
             
     def matchPattern(self, item):
         ##i = basename(item)

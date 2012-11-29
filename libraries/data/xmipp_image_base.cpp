@@ -122,7 +122,12 @@ int ImageBase::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int s
 void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                               bool createTempFile, size_t select_img, bool isStack, int mode)
 {
+    /** If XMIPP_MMAP is not defined this function is supposed to create
+     *  the empty file only */
+#ifdef XMIPP_MMAP
     mmapOnWrite = true;
+#endif
+
     setDimensions(Xdim, Ydim, Zdim, 1); // Images with Ndim >1 cannot be mapped to image file
     MD.resize(1);
     filename = _filename;
@@ -652,7 +657,10 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         munmapFile();
 
     // Check whether to map the data or not
+#ifdef XMIPP_MMAP
+
     mmapOnRead = mapData;
+#endif
 
     FileName ext_name = hFile->ext_name;
     fimg = hFile->fimg;
@@ -700,6 +708,10 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readTIA(select_img,false);
     else if (ext_name.contains("dm3"))//DM3
         err = readDM3(select_img,false);
+    else if (ext_name.contains("em"))//EM
+        err = readEM(select_img);
+    else if (ext_name.contains("pif"))//PIF
+        err = readPIF(select_img);
     else if (ext_name.contains("inf"))//RAW with INF file
         err = readINF(select_img,false);
     else if (ext_name.contains("raw"))//RAW without INF file
@@ -752,20 +764,14 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     if (select_img == ALL_IMAGES)
         select_img = aux;
 
+    /// Datatype info must be from filename after "%" symbol
     size_t found = filNamePlusExt.find_first_of("%");
-
     String imParam = "";
-
     if (found!=String::npos)
     {
         imParam =  filNamePlusExt.substr(found+1).c_str();
         filNamePlusExt = filNamePlusExt.substr(0, found) ;
     }
-
-    found = filNamePlusExt.find_first_of(":");
-    if ( found!=String::npos)
-        filNamePlusExt   = filNamePlusExt.substr(0, found);
-
 
     //#define DEBUG
 #ifdef DEBUG
@@ -849,6 +855,10 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         writeIMAGIC(select_img,mode,imParam,castMode);
     else if (ext_name.contains("dm3"))
         writeDM3(select_img,false,mode);
+    else if (ext_name.contains("em"))
+        writeEM(select_img,false,mode);
+    else if (ext_name.contains("pif"))
+        writePIF(select_img,false,mode);
     else if (ext_name.contains("ser"))
         writeTIA(select_img,false,mode);
     else if (ext_name.contains("raw") || ext_name.contains("inf"))

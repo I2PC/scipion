@@ -105,6 +105,16 @@ enum MDLabel
     MDL_CTF_DEFOCUSA, ///< average defocus (Angtroms)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
     MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
+    MDL_CTF_X0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_Y0, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_XF, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_YF, ///< The CTF is valid within (x0,y0) to (xF,yF) in the micrograph coordinates
+    MDL_CTF_DEFOCUS_PLANEUA, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEUB, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEUC, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVA, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVB, ///< Defocus = A*x+B*y+C
+    MDL_CTF_DEFOCUS_PLANEVC, ///< Defocus = A*x+B*y+C
     MDL_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
     MDL_CTF_CS, ///< Spherical aberration
     MDL_CTF_CA, ///< Chromatic aberration
@@ -137,6 +147,7 @@ enum MDLabel
     MDL_CTF_CRIT_FIRSTZERORATIO, ///< First zero ratio
     MDL_CTF_CRIT_FIRSTZEROAVG, ///< First zero average (in Angstroms)
     MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, ///< First zero disagreement with second model (in Angstroms)
+    MDL_CTF_CRIT_MAXFREQ, ///< Maximum frequency at which the envelope drops below 0.1 (in Angstroms)
     MDL_CTF_CRIT_DAMPING, ///< Minimum damping at border
     MDL_CTF_CRIT_PSDRADIALINTEGRAL, ///< Integral of the radial PSD
     MDL_CTF_CRIT_FITTINGSCORE, ///< Score of the fitting
@@ -547,6 +558,11 @@ public:
     /** Function to test whether is empty */
     bool empty() const;
 
+    /** Reset the values of the labels related to
+     *  geometry to their default values
+     */
+    void resetGeo(bool addLabels = true);
+
     /** Get object */
     MDObject * getObject(MDLabel label) const;
 
@@ -583,18 +599,23 @@ public:
 
     bool getValue(MDObject &object) const;
 
-    /** Set value */
+    /** Set value
+     *
+     * @param label    Metadata label to be set
+     * @param d        Value of the label
+     * @param addLabel Add label if is not already contained
+     */
     template <typename T>
-    void setValue(MDLabel label, const T &d)
+    void setValue(MDLabel label, const T &d, bool addLabel = true)
     {
-        if (objects[label] == NULL)
+        if (objects[label] != NULL)
+            objects[label]->setValue(d);
+        else if (addLabel)
         {
             objects[label] = new MDObject(label, d);
             order[_size] = label;
             ++_size;
         }
-        else
-            objects[label]->setValue(d);
     }
 
     void setValue(const MDObject &object);
@@ -748,6 +769,18 @@ private:
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "ctfBgGaussian2Angle");
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_ANGLE, "CTFBG_Gaussian2_Angle"); //3.0
 
+        MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
+        MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
+        MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
+        MDL::addLabel(MDL_CTF_YF, LABEL_DOUBLE, "ctfYF");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUA, LABEL_DOUBLE, "ctfDefocusPlaneUA");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUB, LABEL_DOUBLE, "ctfDefocusPlaneUB");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEUC, LABEL_DOUBLE, "ctfDefocusPlaneUC");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVA, LABEL_DOUBLE, "ctfDefocusPlaneVA");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVB, LABEL_DOUBLE, "ctfDefocusPlaneVB");
+        MDL::addLabel(MDL_CTF_DEFOCUS_PLANEVC, LABEL_DOUBLE, "ctfDefocusPlaneVC");
+
+
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CU, LABEL_DOUBLE, "ctfBgGaussian2CU");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_CV, LABEL_DOUBLE, "ctfBgGaussian2CV");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN2_K, LABEL_DOUBLE, "ctfBgGaussian2K");
@@ -786,6 +819,7 @@ private:
         MDL::addLabel(MDL_CTF_CRIT_DAMPING, LABEL_DOUBLE, "ctfCritDamping");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZEROAVG, LABEL_DOUBLE, "ctfCritFirstZero");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "ctfCritDisagree");
+        MDL::addLabel(MDL_CTF_CRIT_MAXFREQ, LABEL_DOUBLE, "ctfCritMaxFreq");
         MDL::addLabel(MDL_CTF_CRIT_FIRSTZERORATIO, LABEL_DOUBLE, "ctfCritfirstZeroRatio");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGCORR13, LABEL_DOUBLE, "ctfCritCorr13");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGSCORE, LABEL_DOUBLE, "ctfCritFitting");
@@ -1120,18 +1154,9 @@ private:
         MDL::addLabelAlias(MDL_ZSIZE, "Zsize"); //3.0
 
         //Create an static empty header for image initialization
-        MDL::emptyHeader.setValue(MDL_ORIGIN_X,  0.);
-        MDL::emptyHeader.setValue(MDL_ORIGIN_Y,  0.);
-        MDL::emptyHeader.setValue(MDL_ORIGIN_Z,  0.);
-        MDL::emptyHeader.setValue(MDL_SHIFT_X,   0.);
-        MDL::emptyHeader.setValue(MDL_SHIFT_Y,   0.);
-        MDL::emptyHeader.setValue(MDL_SHIFT_Z,   0.);
+        MDL::emptyHeader.resetGeo();
         MDL::emptyHeader.setValue(MDL_ANGLE_ROT, 0.);
         MDL::emptyHeader.setValue(MDL_ANGLE_TILT,0.);
-        MDL::emptyHeader.setValue(MDL_ANGLE_PSI, 0.);
-        MDL::emptyHeader.setValue(MDL_WEIGHT,   1.);
-        MDL::emptyHeader.setValue(MDL_FLIP,     false);
-        MDL::emptyHeader.setValue(MDL_SCALE,    1.);
 
     }
 

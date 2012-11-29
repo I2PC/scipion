@@ -60,10 +60,10 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
         imageGeo.getValue(MDL_ANGLE_TILT, tilt);
         imageGeo.getValue(MDL_SHIFT_Z, shiftZ);
         Euler_angles2matrix(rot, tilt, psi, A, true);
-        MAT_ELEM(A, 2, dim) = shiftZ;
+        dMij(A, 2, dim) = shiftZ;
     }
-    MAT_ELEM(A, 0, dim) = shiftX;
-    MAT_ELEM(A, 1, dim) = shiftY;
+    dMij(A, 0, dim) = shiftX;
+    dMij(A, 1, dim) = shiftY;
 
     if (scale != 1.)
     {
@@ -75,15 +75,15 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
         {
             M4x4_BY_CT(A, A, scale);
         }
-        MAT_ELEM(A, dim, dim) = 1.;
+        dMij(A, dim, dim) = 1.;
     }
 
     if (flip)
     {
-        MAT_ELEM(A, 0, 0) *= -1.;
-        MAT_ELEM(A, 0, 1) *= -1.;
+        dMij(A, 0, 0) *= -1.;
+        dMij(A, 0, 1) *= -1.;
         if (dim == 3)
-            MAT_ELEM(A, 0, 2) *= -1.;
+            dMij(A, 0, 2) *= -1.;
     }
 }
 
@@ -106,69 +106,61 @@ void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, do
                                        double &shiftX, double &shiftY, double &shiftZ,
                                        double &rot, double &tilt, double &psi)
 {
+    scale =  sqrt(dMij(A,2,0)*dMij(A,2,0) \
+                  + dMij(A,2,1)*dMij(A,2,1)\
+                  + dMij(A,2,2)*dMij(A,2,2) );
+    double invScale = 1./ scale;
+
+    Matrix2D<double> tmpMatrix(4,4);
+    M4x4_BY_CT(tmpMatrix, A, invScale);
+
     Matrix2D<double> eulerMatrix(3,3);
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(eulerMatrix)
-    dMij(eulerMatrix,i,j) = dMij(A, i, j);
+    dMij(eulerMatrix,i,j) = dMij(tmpMatrix, i, j);
     //check determinant if -1 then flip = true
-    double result = A.det3x3();
-    flip = result  < 0;
+    flip = tmpMatrix.det3x3() < 0;
     if (flip)
     {
-        int dim = A.Xdim() - 1;//A.xdim and not eulerMatrix.xdim
-        MAT_ELEM(eulerMatrix, 0, 0) *= -1.;
-        MAT_ELEM(eulerMatrix, 0, 1) *= -1.;
-        if (dim == 3)
-            MAT_ELEM(eulerMatrix, 0, 2) *= -1.;
+        dMij(eulerMatrix, 0, 0) *= -1.;
+        dMij(eulerMatrix, 0, 1) *= -1.;
+        dMij(eulerMatrix, 0, 2) *= -1.;
     }
     Euler_matrix2angles(eulerMatrix, rot, tilt, psi);
-    if (MAT_XSIZE(A)==4)
-    {
-    	shiftX=MAT_ELEM(A,0,3);
-    	shiftY=MAT_ELEM(A,1,3);
-    	shiftZ=MAT_ELEM(A,2,3);
-    }
+
+    shiftX = dMij(tmpMatrix,0,3);
+    shiftY = dMij(tmpMatrix,1,3);
+    shiftZ = dMij(tmpMatrix,2,3);
 }
 
 #define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
                                                   imageGeo.setValue(label, value);
 void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
 {
-    bool flip;
-    double scale, shiftX, shiftY, psi, shiftZ = 0, rot = 0, tilt = 0;
+    bool flip = false;
+    double scale = 1 , shiftX = 0, shiftY = 0, psi = 0, shiftZ = 0, rot = 0, tilt = 0;
 
-    int dim = A.Xdim() -1;
-    //deal with scale
-    scale =  sqrt(dMij(A,2,0)*dMij(A,2,0) \
-                  + dMij(A,2,1)*dMij(A,2,1)\
-                  + dMij(A,2,2)*dMij(A,2,2) );
-    double invScale = 1./ scale;
+    int dim = A.Xdim() - 1;
 
     if (dim == 2)
-    {
-        M3x3_BY_CT(A, A, invScale)
-        transformationMatrix2Parameters2D(A,flip, scale, shiftX, shiftY, psi);
-    }
+        transformationMatrix2Parameters2D(A, flip, scale, shiftX, shiftY, psi);
     else if (dim == 3)
     {
-        M4x4_BY_CT(A, A, invScale)
         transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
+        ADD_IF_EXIST_NONZERO(MDL_ANGLE_ROT, rot);
+        ADD_IF_EXIST_NONZERO(MDL_ANGLE_TILT, tilt);
+        ADD_IF_EXIST_NONZERO(MDL_SHIFT_Z, shiftZ);
     }
 
-    ADD_IF_EXIST_NONZERO(MDL_ANGLE_ROT, rot);
-    ADD_IF_EXIST_NONZERO(MDL_ANGLE_TILT, tilt);
     ADD_IF_EXIST_NONZERO(MDL_ANGLE_PSI, psi);
-    ADD_IF_EXIST_NONZERO(MDL_SHIFT_X, dMij(A,0,3));
-    ADD_IF_EXIST_NONZERO(MDL_SHIFT_Y, dMij(A,1,3));
-    ADD_IF_EXIST_NONZERO(MDL_SHIFT_Z, dMij(A,2,3));
+    ADD_IF_EXIST_NONZERO(MDL_SHIFT_X, shiftX);
+    ADD_IF_EXIST_NONZERO(MDL_SHIFT_Y, shiftY);
 
-    //if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
-    if(!XMIPP_EQUAL_REAL(scale, 1.))
+    if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
         imageGeo.setValue(MDL_SCALE, scale);
-    else
-        imageGeo.setValue(MDL_SCALE, 1.);
-    //if (imageGeo.containsLabel(MDL_FLIP) || flip)
-    imageGeo.setValue(MDL_FLIP, flip);
+
+    if (imageGeo.containsLabel(MDL_FLIP) || flip)
+        imageGeo.setValue(MDL_FLIP, flip);
 }
 
 /* Rotation 2D ------------------------------------------------------------- */
@@ -184,19 +176,19 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
     {
         if (MAT_XSIZE(result)!=3 || MAT_YSIZE(result)!=3)
             result.resizeNoCopy(3,3);
-        MAT_ELEM(result,0, 2) = 0;
-        MAT_ELEM(result,1, 2) = 0;
-        MAT_ELEM(result,2, 0) = 0;
-        MAT_ELEM(result,2, 1) = 0;
-        MAT_ELEM(result,2, 2) = 1;
+        dMij(result,0, 2) = 0;
+        dMij(result,1, 2) = 0;
+        dMij(result,2, 0) = 0;
+        dMij(result,2, 1) = 0;
+        dMij(result,2, 2) = 1;
     }
     else
         if (MAT_XSIZE(result)!=2 || MAT_YSIZE(result)!=2)
             result.resizeNoCopy(2,2);
-    MAT_ELEM(result,0, 0) = cosine;
-    MAT_ELEM(result,0, 1) = sine;
-    MAT_ELEM(result,1, 0) = -sine;
-    MAT_ELEM(result,1, 1) = cosine;
+    dMij(result,0, 0) = cosine;
+    dMij(result,0, 1) = sine;
+    dMij(result,1, 0) = -sine;
+    dMij(result,1, 1) = cosine;
 }
 
 /* Translation 2D ---------------------------------------------------------- */
@@ -210,13 +202,13 @@ void translation2DMatrix(const Matrix1D<double> &v,
     result.initIdentity(3);
     if (inverse)
     {
-        MAT_ELEM(result,0, 2) = -XX(v);
-        MAT_ELEM(result,1, 2) = -YY(v);
+        dMij(result,0, 2) = -XX(v);
+        dMij(result,1, 2) = -YY(v);
     }
     else
     {
-        MAT_ELEM(result,0, 2) = XX(v);
-        MAT_ELEM(result,1, 2) = YY(v);
+        dMij(result,0, 2) = XX(v);
+        dMij(result,1, 2) = YY(v);
     }
 
 }
@@ -228,7 +220,7 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
     if (homogeneous)
     {
         result.initZeros(4,4);
-        MAT_ELEM(result,3, 3) = 1;
+        dMij(result,3, 3) = 1;
     }
     else
         result.initZeros(3,3);
@@ -241,25 +233,25 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
     switch (axis)
     {
     case 'Z':
-        MAT_ELEM(result,0, 0) = cosine;
-        MAT_ELEM(result,0, 1) = sine;
-        MAT_ELEM(result,1, 0) = -sine;
-        MAT_ELEM(result,1, 1) = cosine;
-        MAT_ELEM(result,2, 2) = 1;
+        dMij(result,0, 0) = cosine;
+        dMij(result,0, 1) = sine;
+        dMij(result,1, 0) = -sine;
+        dMij(result,1, 1) = cosine;
+        dMij(result,2, 2) = 1;
         break;
     case 'Y':
-        MAT_ELEM(result,0, 0) = cosine;
-        MAT_ELEM(result,0, 2) = sine;
-        MAT_ELEM(result,2, 0) = -sine;
-        MAT_ELEM(result,2, 2) = cosine;
-        MAT_ELEM(result,1, 1) = 1;
+        dMij(result,0, 0) = cosine;
+        dMij(result,0, 2) = sine;
+        dMij(result,2, 0) = -sine;
+        dMij(result,2, 2) = cosine;
+        dMij(result,1, 1) = 1;
         break;
     case 'X':
-        MAT_ELEM(result,1, 1) = cosine;
-        MAT_ELEM(result,1, 2) = sine;
-        MAT_ELEM(result,2, 1) = -sine;
-        MAT_ELEM(result,2, 2) = cosine;
-        MAT_ELEM(result,0, 0) = 1;
+        dMij(result,1, 1) = cosine;
+        dMij(result,1, 2) = sine;
+        dMij(result,2, 1) = -sine;
+        dMij(result,2, 2) = cosine;
+        dMij(result,0, 0) = 1;
         break;
     default:
         REPORT_ERROR(ERR_VALUE_INCORRECT, "rotation3DMatrix: Unknown axis");
@@ -275,7 +267,7 @@ void alignWithZ(const Matrix1D<double> &axis, Matrix2D<double>& result,
     if (homogeneous)
     {
         result.initZeros(4,4);
-        MAT_ELEM(result,3, 3) = 1;
+        dMij(result,3, 3) = 1;
     }
     else
         result.initZeros(3,3);
@@ -287,28 +279,28 @@ void alignWithZ(const Matrix1D<double> &axis, Matrix2D<double>& result,
     if (proj_mod > XMIPP_EQUAL_ACCURACY)
     {   // proj_mod!=0
         // Build Matrix result, which makes the turning axis coincident with Z
-        MAT_ELEM(result,0, 0) = proj_mod;
-        MAT_ELEM(result,0, 1) = -XX(Axis) * YY(Axis) / proj_mod;
-        MAT_ELEM(result,0, 2) = -XX(Axis) * ZZ(Axis) / proj_mod;
-        MAT_ELEM(result,1, 0) = 0;
-        MAT_ELEM(result,1, 1) = ZZ(Axis) / proj_mod;
-        MAT_ELEM(result,1, 2) = -YY(Axis) / proj_mod;
-        MAT_ELEM(result,2, 0) = XX(Axis);
-        MAT_ELEM(result,2, 1) = YY(Axis);
-        MAT_ELEM(result,2, 2) = ZZ(Axis);
+        dMij(result,0, 0) = proj_mod;
+        dMij(result,0, 1) = -XX(Axis) * YY(Axis) / proj_mod;
+        dMij(result,0, 2) = -XX(Axis) * ZZ(Axis) / proj_mod;
+        dMij(result,1, 0) = 0;
+        dMij(result,1, 1) = ZZ(Axis) / proj_mod;
+        dMij(result,1, 2) = -YY(Axis) / proj_mod;
+        dMij(result,2, 0) = XX(Axis);
+        dMij(result,2, 1) = YY(Axis);
+        dMij(result,2, 2) = ZZ(Axis);
     }
     else
     {
         // I know that the Axis is the X axis, EITHER POSITIVE OR NEGATIVE!!
-        MAT_ELEM(result,0, 0) = 0;
-        MAT_ELEM(result,0, 1) = 0;
-        MAT_ELEM(result,0, 2) = (XX(Axis) > 0)? -1 : 1;
-        MAT_ELEM(result,1, 0) = 0;
-        MAT_ELEM(result,1, 1) = 1;
-        MAT_ELEM(result,1, 2) = 0;
-        MAT_ELEM(result,2, 0) = (XX(Axis) > 0)? 1 : -1;
-        MAT_ELEM(result,2, 1) = 0;
-        MAT_ELEM(result,2, 2) = 0;
+        dMij(result,0, 0) = 0;
+        dMij(result,0, 1) = 0;
+        dMij(result,0, 2) = (XX(Axis) > 0)? -1 : 1;
+        dMij(result,1, 0) = 0;
+        dMij(result,1, 1) = 1;
+        dMij(result,1, 2) = 0;
+        dMij(result,2, 0) = (XX(Axis) > 0)? 1 : -1;
+        dMij(result,2, 1) = 0;
+        dMij(result,2, 2) = 0;
     }
 }
 
@@ -317,7 +309,7 @@ void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
                       Matrix2D<double> &result, bool homogeneous)
 {
 #ifdef NEVERDEFINED
-	// Compute a matrix which makes the turning axis coincident with Z
+    // Compute a matrix which makes the turning axis coincident with Z
     // And turn around this axis
     Matrix2D<double> A, R;
     alignWithZ(axis, A, homogeneous);
@@ -326,9 +318,9 @@ void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
 #else
     // http://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
     if (homogeneous)
-    	result.initIdentity(4);
+        result.initIdentity(4);
     else
-    	result.initIdentity(3);
+        result.initIdentity(3);
     double s,c;
     sincos(-DEG2RAD(ang),&s,&c);
     double c1=1-c;
@@ -341,9 +333,15 @@ void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
     double x2=x*x;
     double y2=y*y;
     double z2=z*z;
-    MAT_ELEM(result,0,0)=c+x2*c1;   MAT_ELEM(result,0,1)=xy*c1-z*s; MAT_ELEM(result,0,2)=xz*c1+y*s;
-    MAT_ELEM(result,1,0)=xy*c1+z*s; MAT_ELEM(result,1,1)=c+y2*c1;   MAT_ELEM(result,1,2)=yz*c1-x*s;
-    MAT_ELEM(result,2,0)=xz*c1-y*s; MAT_ELEM(result,2,1)=yz*c1+x*s; MAT_ELEM(result,2,2)=c+z2*c1;
+    dMij(result,0,0)=c+x2*c1;
+    dMij(result,0,1)=xy*c1-z*s;
+    dMij(result,0,2)=xz*c1+y*s;
+    dMij(result,1,0)=xy*c1+z*s;
+    dMij(result,1,1)=c+y2*c1;
+    dMij(result,1,2)=yz*c1-x*s;
+    dMij(result,2,0)=xz*c1-y*s;
+    dMij(result,2,1)=yz*c1+x*s;
+    dMij(result,2,2)=c+z2*c1;
 #endif
 }
 
@@ -356,15 +354,15 @@ void translation3DMatrix(const Matrix1D<double> &v, Matrix2D<double> &result, bo
     result.initIdentity(4);
     if (inverse)
     {
-        MAT_ELEM(result,0, 3) = -XX(v);
-        MAT_ELEM(result,1, 3) = -YY(v);
-        MAT_ELEM(result,2, 3) = -ZZ(v);
+        dMij(result,0, 3) = -XX(v);
+        dMij(result,1, 3) = -YY(v);
+        dMij(result,2, 3) = -ZZ(v);
     }
     else
     {
-        MAT_ELEM(result,0, 3) = XX(v);
-        MAT_ELEM(result,1, 3) = YY(v);
-        MAT_ELEM(result,2, 3) = ZZ(v);
+        dMij(result,0, 3) = XX(v);
+        dMij(result,1, 3) = YY(v);
+        dMij(result,2, 3) = ZZ(v);
     }
 }
 
@@ -378,13 +376,13 @@ void scale3DMatrix(const Matrix1D<double> &sc, Matrix2D<double>& result,
     if (homogeneous)
     {
         result.initZeros(4,4);
-        MAT_ELEM(result,3, 3) = 1;
+        dMij(result,3, 3) = 1;
     }
     else
         result.initZeros(3,3);
-    MAT_ELEM(result,0, 0) = XX(sc);
-    MAT_ELEM(result,1, 1) = YY(sc);
-    MAT_ELEM(result,2, 2) = ZZ(sc);
+    dMij(result,0, 0) = XX(sc);
+    dMij(result,1, 1) = YY(sc);
+    dMij(result,2, 2) = ZZ(sc);
 }
 
 // Special case for complex numbers
@@ -464,6 +462,17 @@ void selfScaleToSize(int SplineDegree,
 #undef SELFSCALETOSIZE
 }
 
+void scaleToSize(int SplineDegree,
+                        MultidimArrayGeneric &V2,
+                        const MultidimArrayGeneric &V1,int Xdim, int Ydim, int Zdim)
+{
+  if (V1.datatype != V2.datatype)
+    REPORT_ERROR(ERR_PARAM_INCORRECT, "scaleToSize: MultidimArrayGeneric requires same datatype");
+#define SCALETOSIZE(type) scaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type),Xdim,Ydim,Zdim);
+    SWITCHDATATYPE(V1.datatype, SCALETOSIZE)
+#undef SCALETOSIZE
+}
+
 // Special case for complex arrays
 void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,
@@ -521,6 +530,30 @@ void selfPyramidExpand(int SplineDegree,
 #define SELFPYRAMIDEXPAND(type) selfPyramidExpand(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels);
     SWITCHDATATYPE(V1.datatype,SELFPYRAMIDEXPAND);
 #undef SELFPYRAMIDEXPAND
+}
+
+void pyramidExpand(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   int levels)
+{
+  if (V1.datatype != V2.datatype)
+    REPORT_ERROR(ERR_PARAM_INCORRECT, "pyramidExpand: MultidimArrayGeneric requires same datatype");
+#define PYRAMIDEXPAND(type) pyramidExpand(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type), levels);
+    SWITCHDATATYPE(V1.datatype, PYRAMIDEXPAND)
+#undef PYRAMIDEXPAND
+}
+
+void pyramidReduce(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   int levels)
+{
+  if (V1.datatype != V2.datatype)
+    REPORT_ERROR(ERR_PARAM_INCORRECT, "pyramidReduce: MultidimArrayGeneric requires same datatype");
+#define PYRAMIDREDUCE(type) pyramidReduce(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type), levels);
+    SWITCHDATATYPE(V1.datatype, PYRAMIDREDUCE)
+#undef PYRAMIDREDUCE
 }
 
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing

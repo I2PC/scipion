@@ -40,6 +40,11 @@ public class MicrographsTable extends MetadataTable {
 				ctfModel2 = ci;
 			//Remove common prefix CTFCrit_ from columns headers
 			ci.labelName = ci.labelName.replace("ctfCrit", "");
+			
+			//Set invisible some colums by default
+			if (ci.labelName.startsWith("Psd") || ci.labelName.startsWith("Normality"))
+				ci.visible = false;
+				
 		}
 		//Move CTF_MODEL column to the end
 		if (ctfModel != null){
