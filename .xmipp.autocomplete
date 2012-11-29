@@ -61,7 +61,7 @@ _xcompile()
 complete  -o nospace -F _xcompile xcompile
 
 
-_testPrograms() 
+_test_programs() 
 {
     local cur prev opts base
     COMPREPLY=()
@@ -92,5 +92,5 @@ _testPrograms()
    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
    return 0
 }
-complete  -F _testPrograms testPrograms.py
+complete  -F _test_programs test_programs.py
 
