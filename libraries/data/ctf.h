@@ -57,7 +57,7 @@ public:
         CTF.enable_CTF=true;
         CTF.enable_CTFnoise=false;
         CTF.read("ctf_crio.param");
-        CTF.Produce_Side_Info();
+        CTF.produceSideInfo();
 
         // Compute the CTF radial average
         double sampling_rate=3.5; // in Angstroms/pixel
@@ -67,7 +67,7 @@ public:
             double N=0;
             for(double ang=0; ang<2*PI; ang+=0.01) {
                CTF.precomputeValues(f*cos(ang),f*sin(ang));
-               CTF_at_f+=CTF.CTF_at();
+               CTF_at_f+=CTF.getValueAt();
                N++;
             }
             std::cout << f << " " << CTF_at_f/N << std::endl;
@@ -119,14 +119,14 @@ int main(int argc, char **argv)
         ctf.enable_CTF=true;
         ctf.enable_CTFnoise=true;
         ctf.read(fn_ctf);
-        ctf.Produce_Side_Info();
+        ctf.produceSideInfo();
 
         double avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
         ctf.DeltafU = avgdef;
         ctf.DeltafV = avgdef;
         MultidimArray<std::complex<double> >  ctfVal;
 
-        ctf.Generate_CTF(Xdim, Xdim, ctfVal);
+        ctf.generateCTF(Xdim, Xdim, ctfVal);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(ctfVal)
         {
             img(i,j)=ctfVal(i,j).real();
@@ -137,8 +137,8 @@ int main(int argc, char **argv)
         ctf.enable_CTF=true;
         ctf.enable_CTFnoise=false;
         ctf.read(fn_ctf);
-        ctf.Produce_Side_Info();
-        ctf.Generate_CTF(Xdim, Xdim, ctfVal);
+        ctf.produceSideInfo();
+        ctf.generateCTF(Xdim, Xdim, ctfVal);
 
         FOR_ALL_ELEMENTS_IN_ARRAY2D(ctfVal)
         {
@@ -298,8 +298,14 @@ public:
         If no K or sqrt_K are given then it is assumed that the user
         does not want to activate that part and the noise or the CTF
         are removed from the model unless the disable_if_not_K is set
-        to false*/
+        to false
+        This function should be used usually if you have all ctf parameters
+        in columns format metadata or after calling fillExpand having CTF_MODEL
+        */
     void readFromMetadataRow(const MetaData &MD, size_t id, bool disable_if_not_K=true);
+
+    /** Same as previuous reading function but providing the MDRow */
+    void readFromMdRow(const MDRow &row, bool disable_if_not_K=true);
 
     /** Write to file.
         An exception is thrown if the file cannot be open.*/
@@ -318,10 +324,10 @@ public:
     void clear();
 
     /// Clear noise
-    void clear_noise();
+    void clearNoise();
 
     /// Clear pure CTF
-    void clear_pure_ctf();
+    void clearPureCtf();
 
     /** Change sampling rate.
      * It is advisable to change the sampling rate just after reading the CTF parameters.
@@ -334,7 +340,7 @@ public:
     }
 
     /// Produce Side information
-    void Produce_Side_Info();
+    void produceSideInfo();
 
     /// Precompute values for a given frequency
     void precomputeValues(double X, double Y)
@@ -381,21 +387,14 @@ public:
     }
 
     /// Compute CTF at (U,V). Continuous frequencies
-    double CTF_at(bool show = false) const
+    double getValueAt(bool show = false) const
     {
-        double pure_CTF;
-        if (enable_CTF)
-            pure_CTF = CTFpure_at(show);
-        else
-            pure_CTF = 0;
-        if (enable_CTFnoise)
-            return sqrt(pure_CTF*pure_CTF + CTFnoise_at(show));
-        else
-            return pure_CTF;
+        double pure_CTF = enable_CTF ? getValuePureAt(show) : 0;
+        return enable_CTFnoise ? sqrt(pure_CTF*pure_CTF + getValueNoiseAt(show)) : pure_CTF;
     }
 
     /// Compute pure CTF without damping at (U,V). Continuous frequencies
-    double CTFpure_without_damping_at(bool show = false) const
+    double getValuePureWithoutDampingAt(bool show = false) const
     {
         double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
         double sine_part, cosine_part;
@@ -415,7 +414,7 @@ public:
     }
 
     /// Compute CTF damping at (U,V). Continuous frequencies
-    inline double CTFdamping_at(bool show = false) const
+    inline double getValueDampingAt(bool show = false) const
     {
         double Eespr = exp(-K3 * precomputed.u4); // OK
         double EdeltaF = bessj0(K5 * precomputed.u2); // OK
@@ -441,7 +440,7 @@ public:
     }
 
     /// Compute CTF pure at (U,V). Continuous frequencies
-    inline double CTFpure_at(bool show = false) const
+    inline double getValuePureAt(bool show = false) const
     {
         double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
         double sine_part, cosine_part;
@@ -476,13 +475,13 @@ public:
     }
 
     /// Compute CTF pure at (U,V). Continuous frequencies
-    inline double CTFpure_atNoPrecomputed(double X, double Y, bool show = false) const
+    inline double getValuePureNoPrecomputedAt(double X, double Y, bool show = false) const
     {
         double u2 = X * X + Y * Y;
         double u = sqrt(u2);
         double u4 = u2 * u2;
         // if (u2>=ua2) return 0;
-        double deltaf = DeltafNoPrecomputed(X, Y);
+        double deltaf = getDeltafNoPrecomputed(X, Y);
         double argument = K1 * deltaf * u2 + K2 * u4;
         double sine_part, cosine_part;
         sincos(argument,&sine_part, &cosine_part); // OK
@@ -514,7 +513,7 @@ public:
     }
 
     /// Deltaf at a given direction
-    double DeltafNoPrecomputed(double X, double Y) const
+    double getDeltafNoPrecomputed(double X, double Y) const
     {
         if (fabs(X) < XMIPP_EQUAL_ACCURACY &&
             fabs(Y) < XMIPP_EQUAL_ACCURACY)
@@ -526,7 +525,7 @@ public:
 
     /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
     //#define DEBUG
-    inline double CTFnoise_at(bool show = false) const
+    inline double getValueNoiseAt(bool show = false) const
     {
         double ellipsoid_ang = precomputed.ang - rad_gaussian;
         double ellipsoid_ang2 = precomputed.ang - rad_gaussian2;
@@ -579,17 +578,17 @@ public:
     void zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq);
 
     /// Apply CTF to an image
-    void Apply_CTF(MultidimArray < std::complex<double> > &FFTI);
+    void applyCTF(MultidimArray < std::complex<double> > &FFTI);
 
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
     template <class T>
-    void Generate_CTF(const MultidimArray<T> &sample_image,
+    void generateCTF(const MultidimArray<T> &sample_image,
                       MultidimArray < std::complex<double> > &CTF)
     {
         if ( ZSIZE(sample_image) > 1 )
             REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Generate_CTF only works with 2D sample images, not 3D.");
-        Generate_CTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
+        generateCTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
         STARTINGX(CTF) = STARTINGX(sample_image);
         STARTINGY(CTF) = STARTINGY(sample_image);
     }
@@ -608,16 +607,16 @@ public:
     void getAverageProfile(double fmax, int nsamples, MultidimArray<double> &profiles);
 
     /// Generate CTF image.
-    void Generate_CTF(int Ydim, int Xdim,
+    void generateCTF(int Ydim, int Xdim,
                       MultidimArray < std::complex<double> > &CTF);
 
     /** Check physical meaning.
         true if the CTF parameters have physical meaning.
         Call this function after produstd::cing side information */
-    bool physical_meaning();
+    bool hasPhysicalMeaning();
 
     /** Force physical meaning.*/
-    void force_physical_meaning();
+    void forcePhysicalMeaning();
 };
 
 /** Generate CTF 2D image with two CTFs.

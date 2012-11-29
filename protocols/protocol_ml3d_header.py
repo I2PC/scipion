@@ -68,9 +68,6 @@ DoLowPassFilterReference = True
 # {condition}(DoLowPassFilterReference) Resolution of the low-pass filter (Ang):
 LowPassFilter = 50
 
-# {condition}(DoLowPassFilterReference) Pixel size (Ang):
-PixelSize = 5.6
-
 #------------------------------------------------------------------------------------------------
 # {section}{has_question} ML3D classification
 #------------------------------------------------------------------------------------------------

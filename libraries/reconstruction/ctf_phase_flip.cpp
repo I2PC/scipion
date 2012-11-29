@@ -76,7 +76,7 @@ void ProgCTFPhaseFlipping::run()
     ctf.clear();
     ctf.read(fnt_ctf);
     ctf.changeSamplingRate(ctf.Tm*downsampling);
-    ctf.Produce_Side_Info();
+    ctf.produceSideInfo();
 
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
     int yDim=YSIZE(M_in());
@@ -91,7 +91,7 @@ void ProgCTFPhaseFlipping::run()
         	FFT_IDX2DIGFREQ(j, xDim, XX(freq));
         	XX(freq) *= iTm;
             ctf.precomputeValues(XX(freq),YY(freq));
-            if (ctf.CTFpure_without_damping_at()<0)
+            if (ctf.getValuePureWithoutDampingAt()<0)
                 DIRECT_A2D_ELEM(M_inFourier,i,j)*=-1;
         }
     }
