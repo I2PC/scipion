@@ -1766,6 +1766,14 @@ void solveLinearSystem(PseudoInverseHelper &h, Matrix1D<double> &result);
  * where W is a diagonal matrix whose entries are in the vector w. */
 void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result);
 
+/** Solve Weighted least square problem Ax=b and weights w, with RANSAC.
+ * Tol is a tolerance value: if an equation is fulfilled with an error smaller than tol,
+ * then it is considered to fulfill the model. Niter is the number of RANSAC iterations to perform.
+ * The outlier fraction is the fraction of equations that, at maximum, can be considered as outliers.
+ */
+void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
+		double tol, int Niter=10000, double outlierFraction=0.25);
+
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
 class SparseElement

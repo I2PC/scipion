@@ -109,4 +109,112 @@ void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &resul
 	solveLinearSystem(h,result);
 }
 
+// Solve linear system with RANSAC ----------------------------------------
+void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
+		double tol, int Niter, double outlierFraction)
+{
+	int N=MAT_YSIZE(h.A); // Number of equations
+	int M=MAT_XSIZE(h.A); // Number of unknowns
 
+	// Initialize a vector with all equation indexes
+	std::vector<int> eqIdx;
+	eqIdx.reserve(N);
+	for (int n=0; n<N; ++N)
+		eqIdx.push_back(n);
+	int *eqIdxPtr=&eqIdx[0];
+
+	// Resize a WLS helper for solving the MxM equation systems
+	PseudoInverseHelper haux;
+	haux.A.resizeNoCopy(M,M);
+	haux.b.resizeNoCopy(M);
+	Matrix2D<double> &A=haux.A;
+	Matrix1D<double> &b=haux.b;
+
+	// Solve Niter randomly chosen equation systems
+	double bestError=1e38;
+	const int Mfloat=M*sizeof(float);
+	int minNewM=(int)((1.0-outlierFraction)*N-M);
+	if (minNewM<0)
+		minNewM=0;
+
+	Matrix1D<double> resultAux;
+	Matrix1D<int> idxIn(N);
+	WeightedLeastSquaresHelper haux2;
+	for (int it=0; it<Niter; ++it)
+	{
+        idxIn.initZeros();
+
+        // Randomly select M equations
+        std::random_shuffle(eqIdx.begin(), eqIdx.end());
+
+        // Select the equation system
+        for (int i=0; i<M; ++i)
+        {
+        	int idx=eqIdxPtr[i];
+        	memcpy(&MAT_ELEM(A,i,0),&MAT_ELEM(h.A,idx,0),Mfloat);
+        	VEC_ELEM(b,i)=VEC_ELEM(h.b,idx);
+        	VEC_ELEM(idxIn,idx)=1;
+        }
+
+        // Solve the equation system
+        // We use LS because the weight of some of the equations might be too low
+        // and then the system is ill conditioned
+        solveLinearSystem(haux, resultAux);
+
+        // Study the residuals of the rest
+        int newM=0;
+        for (int i=M+1; i<N; ++i)
+        {
+        	int idx=eqIdxPtr[i];
+        	double bp=0;
+        	for (int j=0; j<M; ++j)
+        		bp+=MAT_ELEM(h.A,idx,j)*VEC_ELEM(resultAux,j);
+        	if (fabs(bp-VEC_ELEM(h.b,idx))<tol)
+        	{
+        		VEC_ELEM(idxIn,idx)=1;
+        		++newM;
+        	}
+        }
+
+        // If the model represent more points
+        if (newM>minNewM)
+        {
+        	Matrix2D<double> &A2=haux2.A;
+        	Matrix1D<double> &b2=haux2.b;
+        	Matrix1D<double> &w2=haux2.w;
+        	A2.resizeNoCopy(M+newM,M);
+        	b2.resizeNoCopy(M+newM);
+        	w2.resizeNoCopy(M+newM);
+
+            // Select the equation system
+        	int targeti=0;
+            for (int i=0; i<N; ++i)
+            	if (VEC_ELEM(idxIn,i))
+            	{
+					memcpy(&MAT_ELEM(A2,targeti,0),&MAT_ELEM(h.A,i,0),Mfloat);
+					VEC_ELEM(b2,targeti)=VEC_ELEM(h.b,i);
+					VEC_ELEM(w2,targeti)=VEC_ELEM(h.w,i);
+					++targeti;
+            	}
+
+            // Solve it with WLS
+            weightedLeastSquares(haux2, resultAux);
+
+            // Compute the mean error
+            double err=0;
+            for (int i=0; i<M+newM; ++i)
+			{
+				double bp=0;
+				for (int j=0; j<M; ++j)
+					bp+=MAT_ELEM(A2,i,j)*VEC_ELEM(resultAux,j);
+				err+=fabs(VEC_ELEM(b2,i)-bp)*VEC_ELEM(w2,i);
+			}
+            err/=(M+newM);
+            if (err<bestError)
+            {
+            	bestError=err;
+            	result=resultAux;
+            }
+        }
+	}
+}

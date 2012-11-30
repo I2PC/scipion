@@ -134,6 +134,43 @@ TEST_F( MatrixTest, solveLinearSystem)
     EXPECT_EQ(auxX,X) << "MatrixTest_solveLinearSystem failed";
 }
 
+TEST_F( MatrixTest, solveLinearSystem)
+{
+	 PseudoInverseHelper pseudoInverter;
+	 Matrix2D<double> &A = pseudoInverter.A;
+	 Matrix1D<double> &b = pseudoInverter.b;
+	 A.resizeNoCopy(4,3);
+	 b.resizeNoCopy(4);
+
+	 A(0,0) = 1;
+	 A(0,1) = -2;
+	 A(0,2) = -3;
+	 A(1,0) = 4;
+	 A(1,1) = 5;
+	 A(1,2) = -6;
+	 A(2,0) = -7;
+	 A(2,1) = -8;
+	 A(2,2) = -9;
+	 A(3,0) = 10;
+	 A(3,1) = -11;
+	 A(3,2) = -12;
+
+	 b(0) = 14;
+	 b(1) = 32;
+	 b(2) = 50;
+	 b(3) = 68;
+
+    Matrix1D<double> auxX(3), X(3);
+
+    auxX(0) =  0.064431;
+    auxX(1) = -0.183922;
+    auxX(2) = -5.412896;
+
+    solveLinearSystem(pseudoInverter, X);
+
+    EXPECT_EQ(auxX,X) << "MatrixTest_solveLinearSystem failed";
+}
+
 TEST_F( MatrixTest, initGaussian)
 {
     Matrix2D<double> A;
