@@ -119,7 +119,7 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
 	// Initialize a vector with all equation indexes
 	std::vector<int> eqIdx;
 	eqIdx.reserve(N);
-	for (int n=0; n<N; ++N)
+	for (int n=0; n<N; ++n)
 		eqIdx.push_back(n);
 	int *eqIdxPtr=&eqIdx[0];
 
@@ -132,7 +132,7 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
 
 	// Solve Niter randomly chosen equation systems
 	double bestError=1e38;
-	const int Mfloat=M*sizeof(float);
+	const int Mdouble=M*sizeof(double);
 	int minNewM=(int)((1.0-outlierFraction)*N-M);
 	if (minNewM<0)
 		minNewM=0;
@@ -151,7 +151,7 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
         for (int i=0; i<M; ++i)
         {
         	int idx=eqIdxPtr[i];
-        	memcpy(&MAT_ELEM(A,i,0),&MAT_ELEM(h.A,idx,0),Mfloat);
+        	memcpy(&MAT_ELEM(A,i,0),&MAT_ELEM(h.A,idx,0),Mdouble);
         	VEC_ELEM(b,i)=VEC_ELEM(h.b,idx);
         	VEC_ELEM(idxIn,idx)=1;
         }
@@ -191,7 +191,7 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
             for (int i=0; i<N; ++i)
             	if (VEC_ELEM(idxIn,i))
             	{
-					memcpy(&MAT_ELEM(A2,targeti,0),&MAT_ELEM(h.A,i,0),Mfloat);
+					memcpy(&MAT_ELEM(A2,targeti,0),&MAT_ELEM(h.A,i,0),Mdouble);
 					VEC_ELEM(b2,targeti)=VEC_ELEM(h.b,i);
 					VEC_ELEM(w2,targeti)=VEC_ELEM(h.w,i);
 					++targeti;
