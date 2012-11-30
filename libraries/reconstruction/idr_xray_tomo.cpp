@@ -236,6 +236,7 @@ void ProgIDRXrayTomo::run()
             prevFProj.read(fnInterProjs, DATA, n); // To calculate meanError
             mPrevFProj.alias(MULTIDIM_ARRAY(prevFProj));
 
+            // Write the refined projection
             fixedProj.write(fnInterProjs, n, true, WRITE_REPLACE);
 
             // debug stuff //
@@ -243,6 +244,11 @@ void ProgIDRXrayTomo::run()
             {
                 proj.write(fnRootInter + "_debug_proj.stk", n , true, WRITE_REPLACE);
                 stdProj.write(fnRootInter + "_debug_std_proj.stk", n , true, WRITE_REPLACE);
+
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
+                dAi(mFixedProj, n) = dAi(MULTIDIM_ARRAY(stdProj),n) - dAi(MULTIDIM_ARRAY(proj),n)*lambda ;
+
+                fixedProj.write(fnRootInter + "_debug_diff_proj.stk", n , true, WRITE_REPLACE);
             }
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
