@@ -61,7 +61,7 @@ void ProgCTFShow::run()
     CTFDescription ctf;
     ctf.clear();
     ctf.read(fn_in);
-    ctf.Produce_Side_Info();
+    ctf.produceSideInfo();
 
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
     int yDim=dim;
@@ -83,7 +83,7 @@ void ProgCTFShow::run()
             ctf.precomputeValues(XX(freq),YY(freq));
             DIRECT_A2D_ELEM(dummy,intWRAP(i+x2Dim,0,xDim-1),
             		              intWRAP(j+y2Dim,0,yDim-1))
-                              =ctf.CTFpure_without_damping_at();
+                              =ctf.getValuePureWithoutDampingAt();
         }
     }
 

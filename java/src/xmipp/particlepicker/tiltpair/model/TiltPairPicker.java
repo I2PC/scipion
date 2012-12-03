@@ -1,39 +1,53 @@
 package xmipp.particlepicker.tiltpair.model;
 
-import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.particlepicker.training.model.FamilyState;
-import xmipp.particlepicker.training.model.MicrographFamilyData;
-import xmipp.particlepicker.training.model.TrainingMicrograph;
-import xmipp.utils.XmippMessage;
-import xmipp.jni.Filename;
-import xmipp.jni.MDLabel;
-import xmipp.jni.MetaData;
-import java.util.Hashtable;
 
 public class TiltPairPicker extends ParticlePicker {
 
 	protected List<UntiltedMicrograph> micrographs;
+	private UntiltedMicrograph micrograph;
 
 	public TiltPairPicker(String selfile, String outputdir, FamilyState state) {
 		super(selfile, outputdir, state);
-		this.micrographs = new ArrayList<UntiltedMicrograph>();
-		loadData();
+		
+		for(UntiltedMicrograph um: micrographs)
+			loadMicrographParticles(um);
 	}
 
-	private void loadData() {
+	public void loadData() {
+		try {
+			loadEmptyMicrographs();
+			for(UntiltedMicrograph um: micrographs)
+				loadMicrographParticles(um);
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+	
+	public void loadEmptyMicrographs() {
 		try {
 			MetaData md = new MetaData(selfile);
 			// md.readPlain(pairsfile, "image tilted_image");
-			micrographs.clear();
+			if(micrographs == null)
+				this.micrographs = new ArrayList<UntiltedMicrograph>();
+			else
+				micrographs.clear();
 			UntiltedMicrograph untiltedmicrograph;
 			TiltedMicrograph tiltedmicrograph;
 			String image, tiltedimage;
@@ -46,7 +60,7 @@ public class TiltPairPicker extends ParticlePicker {
 				untiltedmicrograph = new UntiltedMicrograph(image, tiltedmicrograph);
 				tiltedmicrograph.setUntiltedMicrograph(untiltedmicrograph);
 				micrographs.add(untiltedmicrograph);
-				loadMicrographParticles(untiltedmicrograph);
+				
 			}
 			if (micrographs.size() == 0) throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
 
@@ -244,7 +258,7 @@ public class TiltPairPicker extends ParticlePicker {
 	}// function detectFormat
 
 	@Override
-	public int importParticlesFromFolder(String path, Format f) {
+	public int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty) {
 		if (f == Format.Auto) f = detectFormat(path);
 		if (f == Format.Unknown) return 0;
 
@@ -254,22 +268,50 @@ public class TiltPairPicker extends ParticlePicker {
 		for (UntiltedMicrograph um : micrographs) {
 			uFn = getImportMicrographName(path, um.getFile(), f);
 			tFn = getImportMicrographName(path, um.getTiltedMicrograph().getFile(), f);
-			if (Filename.exists(uFn) && Filename.exists(tFn)) particles += importParticlesFromFiles(uFn, tFn, f, um);
+			if (Filename.exists(uFn) && Filename.exists(tFn)) particles += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
 		}
 
 		return particles;
 	}// function importParticlesFromFolder
 
-	public int importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um) {
+	public int importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty) {
 		MetaData uMd = new MetaData();
-		fillParticlesMdFromFile(uPath, f, um, uMd);
+		fillParticlesMdFromFile(uPath, f, um, uMd, scale, invertx, inverty);
 		MetaData tMd = new MetaData();
-		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd);
+		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale, invertx, inverty);
 
 		int particles = loadMicrographParticles(um, uMd, tMd);
 		uMd.destroy();
 		tMd.destroy();
 		return particles;
 	}// function importParticlesFromFiles
+	
+	public String getImportMicrographName(String path, String filename, Format f) {
+		String base = Filename.removeExtension(Filename.getBaseName(filename));
+		switch (f) {
+		case Xmipp24:
+			return Filename.join(path, base, base + ".raw.Common.pos");
+		case Xmipp30:
+			return Filename.join(path, base + ".pos");
+		case Eman:
+			return Filename.join(path, base + "_ptcls.box");
+
+		default:
+			return null;
+		}
+	}
+	
+	public UntiltedMicrograph getMicrograph()
+	{
+		return micrograph;
+	}
+
+	@Override
+	public void setMicrograph(Micrograph m) {
+		this.micrograph = (UntiltedMicrograph)m;
+		
+	}
+	
+
 
 }// class TiltPairPicker

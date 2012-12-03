@@ -153,14 +153,14 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     PSD.read(fnPSD);
     CTFDescription CTF1, CTF2;
     CTF1.read(fnCTF);
-    CTF1.Produce_Side_Info();
+    CTF1.produceSideInfo();
     evaluation.defocusU=CTF1.DeltafU;
     evaluation.defocusV=CTF1.DeltafV;
 
     if (!fnCTF2.empty() && fnCTF2 != "NA")
     {
     	CTF2.read(fnCTF2);
-    	CTF2.Produce_Side_Info();
+    	CTF2.produceSideInfo();
     }
 
     // Enhance the PSD
@@ -208,7 +208,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     evaluation.maxFreq=1000;
 
     CTF1.precomputeValues(0.0,0.0);
-	double idamping0=1.0/CTF1.CTFdamping_at();
+	double idamping0=1.0/CTF1.getValueDampingAt();
 
     for (double alpha=0; alpha<=PI; alpha+=PI/180, N++)
     {
@@ -223,7 +223,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     	double wx=wmax*XX(u);
     	double wy=wmax*YY(u);
     	CTF1.precomputeValues(wx,wy);
-    	double damping=CTF1.CTFdamping_at();
+    	double damping=CTF1.getValueDampingAt();
     	damping=damping*damping;
     	evaluation.maxDampingAtBorder=XMIPP_MAX(evaluation.maxDampingAtBorder,damping);
 
@@ -232,7 +232,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
         	wx=w*XX(u);
         	wy=w*YY(u);
         	CTF1.precomputeValues(wx,wy);
-        	double normalizedDamping=fabs(CTF1.CTFdamping_at()*idamping0);
+        	double normalizedDamping=fabs(CTF1.getValueDampingAt()*idamping0);
         	if (normalizedDamping>0.1)
         		evaluation.maxFreq=std::min(evaluation.maxFreq,1.0/w);
     	}

@@ -83,6 +83,15 @@ public class ColumnInfo {
 		return label;
 	}
 	
+	public int getType(){
+		try {
+			return MetaData.getLabelType(label);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
 	public String getLabelTypeString(){
 		try {
 			int type = MetaData.getLabelType(label);
@@ -120,6 +129,18 @@ public class ColumnInfo {
 		return label == col.label && 
 				visible == col.visible && 
 				render == col.render;
+	}
+	
+	public class ColumnExtraInfo {
+		public String color;
+		public String marker;
+		public String linestyle;
+		
+		public ColumnExtraInfo(String c){
+			color = c;
+			linestyle = "solid";
+			marker = "none";
+		}
 	}
 	
 }//class ColumnInfo

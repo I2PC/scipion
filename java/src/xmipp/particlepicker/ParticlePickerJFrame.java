@@ -681,9 +681,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	
 	protected abstract void resetData();
 
-	public void importParticlesFromFolder(Format format, String dir)
+	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		getParticlePicker().importParticlesFromFolder(dir, format);
+		getParticlePicker().importParticlesFromFolder(dir, format, scale, invertx, inverty);
 		saveChanges();
 		getCanvas().repaint();
 		updateMicrographsModel(true);

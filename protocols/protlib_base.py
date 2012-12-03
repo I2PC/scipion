@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join, exists
+from os.path import join, exists, dirname
 import sys
 import shutil
 import ConfigParser
@@ -348,6 +348,10 @@ class DepData():
     def __init__(self, runsDict, extRunName, protocol):
         self.runsDict = runsDict
         self.extRunName = extRunName
+        
+        if protocol is not None:
+            self.protName = protocol.Name
+            self.runName = protocol.RunName
         self.prot = protocol
         self.deps = []
         self.isRoot = True
@@ -848,9 +852,9 @@ def protocolMain(ProtocolClass, script=None):
         no_check = options.no_check
         no_confirm = options.no_confirm
     
-    script = os.path.abspath(script)
+    absolute_script = os.path.abspath(script)
     
-    mod = loadModule(script)
+    mod = loadModule(absolute_script)
     #init project
     project = XmippProject()
     #load project: read config file and open conection database
@@ -867,7 +871,7 @@ def protocolMain(ProtocolClass, script=None):
            'run_name': mod.RunName, 
            'script': script, 
            'comment': "",
-           'source': script
+           'source': absolute_script
            }
         from protlib_gui import ProtocolGUI 
         gui = ProtocolGUI()

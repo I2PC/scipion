@@ -39,8 +39,8 @@ class ProgConvImg: public XmippMetadataProgram
 {
 
 private:
-    std::string  type;       // Type of output conversion
-    std::string  depth;
+    String  type;       // Type of output conversion
+    String  depth;
     ImageGeneric imIn, *imOut;
     MDRow        row;
     ImageConv    convMode;
@@ -53,6 +53,10 @@ private:
 public:
     /** Constructor */
     ProgConvImg();
+    void setType(const String &sType)
+    {
+    	type = sType;
+    }
 protected:
     void init();
     void defineParams();

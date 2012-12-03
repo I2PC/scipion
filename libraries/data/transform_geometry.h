@@ -35,29 +35,26 @@
 #include "matrix2d.h"
 
 
-typedef enum { SCALE_NONE, SCALE_FACTOR, SCALE_FACTOR_NORESIZE, SCALE_DIM, SCALE_FOURIER, SCALE_PYRAMID_EXPAND, SCALE_PYRAMID_REDUCE } ScaleType;
-#define INTERP_FOURIER -1
-
 class ProgTransformGeometry: public XmippMetadataProgram
 {
 public:
-  /** Constructor and destructor, just to avoid vtable undefined references errors */
-  ProgTransformGeometry();
-  ~ProgTransformGeometry();
+    /** Constructor and destructor, just to avoid vtable undefined references errors */
+    ProgTransformGeometry();
+    ~ProgTransformGeometry();
 
 protected:
-    ScaleType scale_type;
-
-    int             splineDegree, dim, pyramid_level, fourier_threads;
-    bool            applyTransform, inverse, wrap, isVol, flip, disableMetadata, temporaryOutput;
-    Matrix2D<double> R, T, S, A, B;
-    Matrix1D<double>          shiftV, rotV, scaleV;
+    int             splineDegree, dim;
+    bool            applyTransform, inverse, wrap, isVol, flip;
+    Matrix2D<double> R, A, B, T;
     ImageGeneric img, imgOut;
 
     void defineParams();
     void readParams();
+
+    /** Calculate the rotation matrix according to the parameters
+     */
+    void calculateRotationMatrix();
     void preProcess();
-    void postProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
 
 };
