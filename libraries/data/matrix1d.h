@@ -244,6 +244,10 @@ class Matrix2D;
 /** Direct access to vector element
  */
 #define VEC_ELEM(v,i) ((v).vdata[(i)])
+#define dMi(v, i) ((v).vdata[(i)])
+
+#define VEC_SWAP(v, i, j, aux) {aux = dMi(v, i); dMi(v, i) = dMi(v, j); dMi(v, j) = aux; }
+
 //@}
 
 /** Matrix1D class.*/
@@ -607,6 +611,23 @@ public:
     {
         for (int j = 0; j < vdim; j++)
             vdata[j] = val;
+    }
+
+    /** Initialize to constant with a given size.
+     */
+    void initConstant(size_t Xdim, T val)
+    {
+        if (vdim != Xdim)
+            resizeNoCopy(Xdim);
+        initConstant(val);
+    }
+
+    /** Enumerate starting from 0 to size
+     */
+    void enumerate()
+    {
+      for (int j = 0; j < vdim; j++)
+          vdata[j] = j;
     }
 
     /** Initialize to zeros with current size.
@@ -1657,6 +1678,10 @@ public:
     //@}
 };
 
+
+ typedef Matrix1D<double> DVector;
+ typedef Matrix1D<int> IVector;
+
 /**@name Vector Related functions
  * These functions are not methods of Matrix1D
  */
@@ -1737,10 +1762,7 @@ Matrix1D<T> vectorProduct(const Matrix1D<T>& v1, const Matrix1D<T>& v2)
                      "Vector_product: vectors are of different shape");
 
     Matrix1D<T> result(3);
-    XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
-    YY(result) = ZZ(v1) * XX(v2) - XX(v1) * ZZ(v2);
-    ZZ(result) = XX(v1) * YY(v2) - YY(v1) * XX(v2);
-
+    vectorProduct(v1, v2, result);
     return result;
 }
 

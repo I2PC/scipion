@@ -255,9 +255,9 @@ protected:
                           int n, int part, size_t mdSize,
                           const MDLabel sortLabel);
 
-    /** This function is for generalizate the sets operations
-     * of unionDistinct, intersection, substraction
-     * wich can be expressed in terms of
+    /** This function is for generalize the sets operations
+     * of unionDistinct, intersection, subtraction
+     * which can be expressed in terms of
      * ADD, SUBSTRACT of intersection part
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
@@ -615,6 +615,11 @@ public:
      * make a copy of the MetaData.
      */
     bool removeLabel(const MDLabel label);
+
+    /** Remove all the labels from the metadata but the
+     * ones given in labels vector.
+     */
+    bool keepLabels(const std::vector<MDLabel> &labels);
 
     /** Adds a new, empty object to the objects map. If objectId == -1
      * the new ID will be that for the last object inserted + 1, else

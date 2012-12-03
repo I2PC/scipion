@@ -27,220 +27,129 @@
 #include "xmipp_fft.h"
 
 /* Read -------------------------------------------------------------------- */
-void CTFDescription::readFromMetadataRow(const MetaData &MD, size_t id, bool disable_if_not_K)
+void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 {
+    row.getValueOrDefault(MDL_CTF_SAMPLING_RATE, Tm, 1);
 
-    if (!MD.getValue(MDL_CTF_SAMPLING_RATE,Tm,id))
-        Tm=1;
     if (enable_CTF)
     {
-        if (!MD.getValue(MDL_CTF_VOLTAGE,kV,id))
-            kV=100;
-        if (!MD.getValue(MDL_CTF_DEFOCUSU,DeltafU,id))
-            DeltafU=0;
-        if (!MD.getValue(MDL_CTF_DEFOCUSV,DeltafV,id))
-            DeltafV=DeltafU;
-        if (!MD.getValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle,id))
-            azimuthal_angle=0;
-        if (!MD.getValue(MDL_CTF_CS,Cs,id))
-            Cs=0;
-        if (!MD.getValue(MDL_CTF_CA,Ca,id))
-            Ca=0;
-        if (!MD.getValue(MDL_CTF_ENERGY_LOSS,espr,id))
-            espr=0;
-        if (!MD.getValue(MDL_CTF_LENS_STABILITY,ispr,id))
-            ispr=0;
-        if (!MD.getValue(MDL_CTF_CONVERGENCE_CONE,alpha,id))
-            alpha=0;
-        if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF,id))
-            DeltaF=0;
-        if (!MD.getValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR,id))
-            DeltaR=0;
-        if (!MD.getValue(MDL_CTF_Q0,Q0,id))
-            Q0=0;
-        if (!MD.getValue(MDL_CTF_K,K,id))
-            K=1;
+        row.getValueOrDefault(MDL_CTF_VOLTAGE, kV, 100);
+        row.getValueOrDefault(MDL_CTF_DEFOCUSU, DeltafU, 0);
+        row.getValueOrDefault(MDL_CTF_DEFOCUSV, DeltafV, DeltafU);
+        row.getValueOrDefault(MDL_CTF_DEFOCUS_ANGLE, azimuthal_angle, 0);
+        row.getValueOrDefault(MDL_CTF_CS, Cs, 0);
+        row.getValueOrDefault(MDL_CTF_CA, Ca, 0);
+        row.getValueOrDefault(MDL_CTF_ENERGY_LOSS, espr, 0);
+        row.getValueOrDefault(MDL_CTF_LENS_STABILITY, ispr, 0);
+        row.getValueOrDefault(MDL_CTF_CONVERGENCE_CONE, alpha, 0);
+        row.getValueOrDefault(MDL_CTF_LONGITUDINAL_DISPLACEMENT, DeltaF, 0);
+        row.getValueOrDefault(MDL_CTF_TRANSVERSAL_DISPLACEMENT, DeltaR, 0);
+        row.getValueOrDefault(MDL_CTF_Q0, Q0, 0);
+        row.getValueOrDefault(MDL_CTF_K, K, 1);
+
         if (K == 0 && disable_if_not_K)
             enable_CTF = false;
     }
     if (enable_CTFnoise)
     {
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_K,gaussian_K,id))
-            gaussian_K=0;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAU,sigmaU,id))
-            sigmaU=0;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAV,sigmaV,id))
-            sigmaV=sigmaU;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CU,cU,id))
-            cU=0;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CV,cV,id))
-            cV=cU;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_ANGLE,gaussian_angle,id))
-            gaussian_angle=0;
-        if (!MD.getValue(MDL_CTF_BG_SQRT_K,sqrt_K,id))
-            sqrt_K=0;
-        if (!MD.getValue(MDL_CTF_BG_SQRT_U,sqU,id))
-            sqU=0;
-        if (!MD.getValue(MDL_CTF_BG_SQRT_V,sqV,id))
-            sqV=sqU;
-        if (!MD.getValue(MDL_CTF_BG_SQRT_ANGLE,sqrt_angle,id))
-            sqrt_angle=0;
-        if (!MD.getValue(MDL_CTF_BG_BASELINE,base_line,id))
-            base_line=0;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_K,gaussian_K2,id))
-            gaussian_K2=0;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAU,sigmaU2,id))
-            sigmaU2=0;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAV,sigmaV2,id))
-            sigmaV2=sigmaU2;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CU,cU2,id))
-            cU2=0;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CV,cV2,id))
-            cV2=cU2;
-        if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
-            gaussian_angle2=0;
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_K, gaussian_K, 0);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_SIGMAU, sigmaU, 0);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_SIGMAV, sigmaV, sigmaU);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_CU, cU, 0);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_CV, cV, cU);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_ANGLE, gaussian_angle, 0);
+        row.getValueOrDefault(MDL_CTF_BG_SQRT_K, sqrt_K, 0);
+        row.getValueOrDefault(MDL_CTF_BG_SQRT_U, sqU, 0);
+        row.getValueOrDefault(MDL_CTF_BG_SQRT_V, sqV, sqU);
+        row.getValueOrDefault(MDL_CTF_BG_SQRT_ANGLE, sqrt_angle, 0);
+        row.getValueOrDefault(MDL_CTF_BG_BASELINE, base_line, 0);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_K, gaussian_K2, 0);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_SIGMAU, sigmaU2, 0);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_SIGMAV, sigmaV2, sigmaU2);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_CU, cU2, 0);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_CV, cV2, cU2);
+        row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2, 0);
+
         if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
             disable_if_not_K)
             enable_CTFnoise = false;
     }
 }
 
+/* Read -------------------------------------------------------------------- */
+void CTFDescription::readFromMetadataRow(const MetaData &md, size_t id, bool disable_if_not_K)
+{
+    MDRow row;
+    md.getRow(row, id);
+    readFromMdRow(row, disable_if_not_K);
+}
+
 void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
 {
     if (fn.isMetaData())
     {
-        MetaData MD;
-        MD.read(fn);
-        size_t id = MD.firstObject();
-
-        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,Tm,id))
-            Tm=1;
-        if (enable_CTF)
-        {
-            if (!MD.getValue(MDL_CTF_VOLTAGE,kV,id))
-                kV=100;
-            if (!MD.getValue(MDL_CTF_DEFOCUSU,DeltafU,id))
-                DeltafU=0;
-            if (!MD.getValue(MDL_CTF_DEFOCUSV,DeltafV,id))
-                DeltafV=DeltafU;
-            if (!MD.getValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle,id))
-                azimuthal_angle=0;
-            if (!MD.getValue(MDL_CTF_CS,Cs,id))
-                Cs=0;
-            if (!MD.getValue(MDL_CTF_CA,Ca,id))
-                Ca=0;
-            if (!MD.getValue(MDL_CTF_ENERGY_LOSS,espr,id))
-                espr=0;
-            if (!MD.getValue(MDL_CTF_LENS_STABILITY,ispr,id))
-                ispr=0;
-            if (!MD.getValue(MDL_CTF_CONVERGENCE_CONE,alpha,id))
-                alpha=0;
-            if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF,id))
-                DeltaF=0;
-            if (!MD.getValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR,id))
-                DeltaR=0;
-            if (!MD.getValue(MDL_CTF_Q0,Q0,id))
-                Q0=0;
-            if (!MD.getValue(MDL_CTF_K,K,id))
-                K=1;
-            if (K == 0 && disable_if_not_K)
-                enable_CTF = false;
-        }
-        if (enable_CTFnoise)
-        {
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_K,gaussian_K,id))
-                gaussian_K=0;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAU,sigmaU,id))
-                sigmaU=0;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_SIGMAV,sigmaV,id))
-                sigmaV=sigmaU;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CU,cU,id))
-                cU=0;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_CV,cV,id))
-                cV=cU;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN_ANGLE,gaussian_angle,id))
-                gaussian_angle=0;
-            if (!MD.getValue(MDL_CTF_BG_SQRT_K,sqrt_K,id))
-                sqrt_K=0;
-            if (!MD.getValue(MDL_CTF_BG_SQRT_U,sqU,id))
-                sqU=0;
-            if (!MD.getValue(MDL_CTF_BG_SQRT_V,sqV,id))
-                sqV=sqU;
-            if (!MD.getValue(MDL_CTF_BG_SQRT_ANGLE,sqrt_angle,id))
-                sqrt_angle=0;
-            if (!MD.getValue(MDL_CTF_BG_BASELINE,base_line,id))
-                base_line=0;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_K,gaussian_K2,id))
-                gaussian_K2=0;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAU,sigmaU2,id))
-                sigmaU2=0;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_SIGMAV,sigmaV2,id))
-                sigmaV2=sigmaU2;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CU,cU2,id))
-                cU2=0;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_CV,cV2,id))
-                cV2=cU2;
-            if (!MD.getValue(MDL_CTF_BG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
-                gaussian_angle2=0;
-            if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
-                disable_if_not_K)
-                enable_CTFnoise = false;
-        }
+        MetaData md;
+        md.read(fn);
+        MDRow row;
+        md.getRow(row, md.firstObject());
+        readFromMdRow(row, disable_if_not_K);
     }
 }
 
 /* Write ------------------------------------------------------------------- */
 void CTFDescription::write(const FileName &fn)
 {
-    MetaData MD;
-    MD.setColumnFormat(false);
-    size_t id = MD.addObject();
-    MD.setValue(MDL_CTF_SAMPLING_RATE,Tm,id);
+
+    MDRow row;
+    row.setValue(MDL_CTF_SAMPLING_RATE, Tm);
     if (enable_CTF)
     {
-        MD.setValue(MDL_CTF_VOLTAGE,kV,id);
-        MD.setValue(MDL_CTF_DEFOCUSU,DeltafU,id);
-        MD.setValue(MDL_CTF_DEFOCUSV,DeltafV,id);
-        MD.setValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle,id);
-        MD.setValue(MDL_CTF_CS,Cs,id);
-        MD.setValue(MDL_CTF_CA,Ca,id);
-        MD.setValue(MDL_CTF_ENERGY_LOSS,espr,id);
-        MD.setValue(MDL_CTF_LENS_STABILITY,ispr,id);
-        MD.setValue(MDL_CTF_CONVERGENCE_CONE,alpha,id);
-        MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF,id);
-        MD.setValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR,id);
-        MD.setValue(MDL_CTF_Q0,Q0,id);
-        MD.setValue(MDL_CTF_K,K,id);
+        row.setValue(MDL_CTF_VOLTAGE, kV);
+        row.setValue(MDL_CTF_DEFOCUSU, DeltafU);
+        row.setValue(MDL_CTF_DEFOCUSV, DeltafV);
+        row.setValue(MDL_CTF_DEFOCUS_ANGLE, azimuthal_angle);
+        row.setValue(MDL_CTF_CS, Cs);
+        row.setValue(MDL_CTF_CA, Ca);
+        row.setValue(MDL_CTF_ENERGY_LOSS, espr);
+        row.setValue(MDL_CTF_LENS_STABILITY, ispr);
+        row.setValue(MDL_CTF_CONVERGENCE_CONE, alpha);
+        row.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT, DeltaF);
+        row.setValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT, DeltaR);
+        row.setValue(MDL_CTF_Q0, Q0);
+        row.setValue(MDL_CTF_K, K);
     }
     if (enable_CTFnoise)
     {
-        MD.setValue(MDL_CTF_BG_GAUSSIAN_K,gaussian_K,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN_SIGMAU,sigmaU,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN_SIGMAV,sigmaV,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN_CU,cU,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN_CV,cV,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN_ANGLE,gaussian_angle,id);
-        MD.setValue(MDL_CTF_BG_SQRT_K,sqrt_K,id);
-        MD.setValue(MDL_CTF_BG_SQRT_U,sqU,id);
-        MD.setValue(MDL_CTF_BG_SQRT_V,sqV,id);
-        MD.setValue(MDL_CTF_BG_SQRT_ANGLE,sqrt_angle,id);
-        MD.setValue(MDL_CTF_BG_BASELINE,base_line,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN2_K,gaussian_K2,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN2_SIGMAU,sigmaU2,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN2_SIGMAV,sigmaV2,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN2_CU,cU2,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN2_CV,cV2,id);
-        MD.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE,gaussian_angle2,id);
+        row.setValue(MDL_CTF_BG_GAUSSIAN_K, gaussian_K);
+        row.setValue(MDL_CTF_BG_GAUSSIAN_SIGMAU, sigmaU);
+        row.setValue(MDL_CTF_BG_GAUSSIAN_SIGMAV, sigmaV);
+        row.setValue(MDL_CTF_BG_GAUSSIAN_CU, cU);
+        row.setValue(MDL_CTF_BG_GAUSSIAN_CV, cV);
+        row.setValue(MDL_CTF_BG_GAUSSIAN_ANGLE, gaussian_angle);
+        row.setValue(MDL_CTF_BG_SQRT_K, sqrt_K);
+        row.setValue(MDL_CTF_BG_SQRT_U, sqU);
+        row.setValue(MDL_CTF_BG_SQRT_V, sqV);
+        row.setValue(MDL_CTF_BG_SQRT_ANGLE, sqrt_angle);
+        row.setValue(MDL_CTF_BG_BASELINE, base_line);
+        row.setValue(MDL_CTF_BG_GAUSSIAN2_K, gaussian_K2);
+        row.setValue(MDL_CTF_BG_GAUSSIAN2_SIGMAU, sigmaU2);
+        row.setValue(MDL_CTF_BG_GAUSSIAN2_SIGMAV, sigmaV2);
+        row.setValue(MDL_CTF_BG_GAUSSIAN2_CU, cU2);
+        row.setValue(MDL_CTF_BG_GAUSSIAN2_CV, cV2);
+        row.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2);
     }
     if (isLocalCTF)
     {
-    	MD.setValue(MDL_CTF_X0,x0,id);
-    	MD.setValue(MDL_CTF_XF,xF,id);
-    	MD.setValue(MDL_CTF_Y0,y0,id);
-    	MD.setValue(MDL_CTF_YF,yF,id);
+    	row.setValue(MDL_CTF_X0, x0);
+    	row.setValue(MDL_CTF_XF, xF);
+    	row.setValue(MDL_CTF_Y0, y0);
+    	row.setValue(MDL_CTF_YF, yF);
     }
 
-    MD.write(fn);
+    MetaData md;
+    md.setColumnFormat(false);
+    md.addRow(row);
+    md.write(fn);
 }
 
 /* Define Params ------------------------------------------------------------------- */
@@ -295,6 +204,8 @@ void CTFDescription::readParams(XmippProgram * program)
         DeltafV=program->getDoubleParam("--defocusV");
     else
         DeltafV=DeltafU;
+    if (program->checkParam("--Q0"))
+        Q0=program->getDoubleParam("--Q0");
     azimuthal_angle=program->getDoubleParam("--azimuthal_angle");
     Ca=program->getDoubleParam("--chromatic_aberration");
     espr=program->getDoubleParam("--energy_loss");
@@ -359,11 +270,12 @@ void CTFDescription::clear()
     enable_CTF = true;
     enable_CTFnoise = false;
     isLocalCTF = false;
-    clear_noise();
-    clear_pure_ctf();
+    clearNoise();
+    clearPureCtf();
+    y0=x0=xF=yF=0;
 }
 
-void CTFDescription::clear_noise()
+void CTFDescription::clearNoise()
 {
     base_line = 0;
     cU = cV = sigmaU = sigmaV = gaussian_angle = gaussian_K = 0;
@@ -372,7 +284,7 @@ void CTFDescription::clear_noise()
     isLocalCTF = false;
 }
 
-void CTFDescription::clear_pure_ctf()
+void CTFDescription::clearPureCtf()
 {
     enable_CTF = true;
     enable_CTFnoise = false;
@@ -386,7 +298,7 @@ void CTFDescription::clear_pure_ctf()
 }
 
 /* Produce Side Information ------------------------------------------------ */
-void CTFDescription::Produce_Side_Info()
+void CTFDescription::produceSideInfo()
 {
     // Change units
     double local_alpha = alpha / 1000;
@@ -461,12 +373,12 @@ void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &fr
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
     int sign_changes = 0;
-    double last_ctf = CTFpure_atNoPrecomputed(0,0), ctf;
+    double last_ctf = getValuePureNoPrecomputedAt(0,0), ctf;
     double w;
     for (w = 0; w <= wmax; w += wstep)
     {
         V2_BY_CT(freq, u, w);
-        ctf = CTFpure_atNoPrecomputed(XX(freq), YY(freq));
+        ctf = getValuePureNoPrecomputedAt(XX(freq), YY(freq));
         if (SGN(ctf) != SGN(last_ctf))
         {
             sign_changes++;
@@ -500,7 +412,7 @@ void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &fr
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI)
+void CTFDescription::applyCTF(MultidimArray < std::complex<double> > &FFTI)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -513,7 +425,7 @@ void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI)
         YY(idx) = i;
         FFT_idx2digfreq(FFTI, idx, freq);
         precomputeValues(XX(freq), YY(freq));
-        double ctf = CTF_at();
+        double ctf = getValueAt();
         FFTI(i, j) *= ctf;
     }
 }
@@ -538,9 +450,9 @@ void CTFDescription::getProfile(double angle, double fmax, int nsamples,
 		precomputeValues(fx, fy);
 
 		// Store values.
-		double bgNoise = CTFnoise_at();
-		double ctf = CTFpure_at();
-		double E = CTFdamping_at();
+		double bgNoise = getValueNoiseAt();
+		double ctf = getValuePureAt();
+		double E = getValueDampingAt();
 
 		A2D_ELEM(profiles, i, 0) = bgNoise;
 		A2D_ELEM(profiles, i, 1) = bgNoise + E * E;
@@ -569,9 +481,9 @@ void CTFDescription::getAverageProfile(double fmax, int nsamples,
 			precomputeValues(fx, fy);
 
 			// Store values.
-			double bgNoise = CTFnoise_at();
-			double ctf = CTFpure_at();
-			double E = CTFdamping_at();
+	        double bgNoise = getValueNoiseAt();
+	        double ctf = getValuePureAt();
+	        double E = getValueDampingAt();
 
 			A2D_ELEM(profiles, i, 0) += bgNoise;
 			A2D_ELEM(profiles, i, 1) += bgNoise + E * E;
@@ -584,7 +496,7 @@ void CTFDescription::getAverageProfile(double fmax, int nsamples,
 
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
-void CTFDescription::Generate_CTF(int Ydim, int Xdim,
+void CTFDescription::generateCTF(int Ydim, int Xdim,
                                   MultidimArray < std::complex<double> > &CTF)
 {
     Matrix1D<int>    idx(2);
@@ -602,7 +514,8 @@ void CTFDescription::Generate_CTF(int Ydim, int Xdim,
         FFT_idx2digfreq(CTF, idx, freq);
         digfreq2contfreq(freq, freq, Tm);
         precomputeValues(XX(freq), YY(freq));
-        CTF(i, j) = CTF_at();
+        //FIXME: Check why not to use the macro
+        CTF(i, j) = getValueAt();
 #ifdef DEBUG
 
         if (i == 0)
@@ -616,7 +529,7 @@ void CTFDescription::Generate_CTF(int Ydim, int Xdim,
 
 /* Physical meaning -------------------------------------------------------- */
 //#define DEBUG
-bool CTFDescription::physical_meaning()
+bool CTFDescription::hasPhysicalMeaning()
 {
     bool retval;
     if (enable_CTF)
@@ -634,7 +547,7 @@ bool CTFDescription::physical_meaning()
             DeltaR >= 0  && DeltaR <= 100   &&
             Q0 >= 0      && Q0 <= 0.40      &&
             DeltafU >= 0 && DeltafV >= 0    &&
-            CTF_at() >= 0;
+            getValueAt() >= 0;
 #ifdef DEBUG
 
         if (retval == false)
@@ -651,9 +564,9 @@ bool CTFDescription::physical_meaning()
             << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
             << "Q0>=0      && Q0<=0.4       " << (Q0 >= 0      && Q0 <= 0.4)      << std::endl
             << "DeltafU>=0 && DeltafV>=0    " << (DeltafU >= 0 && DeltafV >= 0)   << std::endl
-            << "CTF_at(0,0)>=0       " << (CTF_at() >= 0)         << std::endl
+            << "getValueAt(0,0)>=0       " << (getValueAt() >= 0)         << std::endl
             ;
-            std::cout << "CTF_at(0,0)=" << CTF_at(true) << std::endl;
+            std::cout << "getValueAt(0,0)=" << getValueAt(true) << std::endl;
         }
 #endif
 
@@ -743,7 +656,7 @@ bool CTFDescription::physical_meaning()
 #undef DEBUG
 
 /* Force Physical meaning -------------------------------------------------- */
-void CTFDescription::force_physical_meaning()
+void CTFDescription::forcePhysicalMeaning()
 {
     if (enable_CTF)
     {
@@ -902,12 +815,12 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
     CTF1.enable_CTF=true;
     CTF1.enable_CTFnoise=false;
     CTF1.readFromMetadataRow(MD1,MD1.firstObject());
-    CTF1.Produce_Side_Info();
+    CTF1.produceSideInfo();
 
     CTF2.enable_CTF=true;
     CTF2.enable_CTFnoise=false;
     CTF2.readFromMetadataRow(MD2,MD2.firstObject());
-    CTF2.Produce_Side_Info();
+    CTF2.produceSideInfo();
 
     imgOut.initZeros(Xdim,Xdim);
     Matrix1D<int> idx(2);
@@ -923,13 +836,13 @@ void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdi
         {
             digfreq2contfreq(freq, freq, CTF1.Tm);
         	CTF1.precomputeValues(XX(freq),YY(freq));
-        	A2D_ELEM(imgOut,i,j)=CTF1.CTF_at();
+        	A2D_ELEM(imgOut,i,j)=CTF1.getValueAt();
         }
         else
         {
         	digfreq2contfreq(freq, freq, CTF2.Tm);
         	CTF2.precomputeValues(XX(freq),YY(freq));
-        	A2D_ELEM(imgOut,i,j)=CTF2.CTF_at();
+        	A2D_ELEM(imgOut,i,j)=CTF2.getValueAt();
         }
     }
     CenterFFT(imgOut,false);
@@ -944,7 +857,7 @@ void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)
     CTF.enable_CTF=true;
     CTF.enable_CTFnoise=false;
     CTF.readFromMetadataRow(MD,MD.firstObject());
-    CTF.Produce_Side_Info();
+    CTF.produceSideInfo();
 
     Matrix1D<int> idx(2);
     Matrix1D<double> freq(2);
@@ -959,7 +872,7 @@ void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD)
         {
             digfreq2contfreq(freq, freq, CTF.Tm);
         	CTF.precomputeValues(XX(freq),YY(freq));
-        	double aux=CTF.CTF_at();
+        	double aux=CTF.getValueAt();
         	A2D_ELEM(img,i,j)=aux*aux;
         }
     }

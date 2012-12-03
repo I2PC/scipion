@@ -2,7 +2,7 @@
 
 import os
 
-from protlib_xmipp import XmippScript, createProgramsDb, ProgramKeywordsRank, getProgramsDbName,\
+from protlib_xmipp import XmippScript, createProgramsDb, createProgramsAutocomplete, ProgramKeywordsRank, getProgramsDbName,\
 	getXmippLabels, blueStr, redStr
 from protlib_filesystem import getXmippPath
 
@@ -52,6 +52,7 @@ class ScriptApropos(XmippScript):
 	def run(self):
 		if self.checkParam('-u'):
 			db = createProgramsDb()
+			createProgramsAutocomplete()
 		elif self.type == 'labels':
 			labels = getXmippLabels()
 			if self.checkParam("-i"):

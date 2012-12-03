@@ -40,6 +40,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
@@ -92,5 +94,22 @@ public class ColorEditor extends AbstractCellEditor implements TableCellEditor,
 			boolean isSelected, int row, int column) {
 		currentColor = (Color) value;
 		return button;
+	}
+
+	public static Color stringToColor(String input) {
+		try {
+			return Color.decode("0x" + input);			
+		}
+		catch (Exception ex){
+			ex.printStackTrace();
+			return null;
+		}
+	}
+
+	public static String colorToString(Color c) {
+		if (c == null)
+			return null;
+		String rgb = Integer.toHexString(c.getRGB());
+		return rgb.substring(2, rgb.length());
 	}
 }

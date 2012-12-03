@@ -134,7 +134,7 @@ TEST_F(TransformationTest, scaleToSizeNearest)
 TEST_F(TransformationTest, geo2TransformationMatrix)
 {
     //It would be nice to have a operator == for mdrow
-    double scale = 1.;
+    double scale = 2.;
     double rot = 40.9090909091;
     double tilt=81.8181818182;
     double psi=54.5454545455;
@@ -142,25 +142,44 @@ TEST_F(TransformationTest, geo2TransformationMatrix)
     double y=2.;
     double z=3;
     bool flip = true;
-    double scale2 = 1.;
-    double rot2 = 0.;
-    double tilt2=0.;
-    double psi2=0.;
-    double x2 =0.;
-    double y2=0.;
-    double z2=0.;
-    bool flip2 = true;
+    double scale2 = -MAXDOUBLE;
+    double rot2 = -MAXDOUBLE;
+    double tilt2=-MAXDOUBLE;
+    double psi2=-MAXDOUBLE;
+    double x2 =-MAXDOUBLE;
+    double y2=-MAXDOUBLE;
+    double z2=-MAXDOUBLE;
+    bool flip2 = false;
 
     MDRow rowIn,rowOut;
     rowIn.setValue(MDL_SCALE,scale);
-    rowIn.setValue(MDL_ANGLE_ROT,rot);
-    rowIn.setValue(MDL_ANGLE_TILT,tilt);
     rowIn.setValue(MDL_ANGLE_PSI,psi);
     rowIn.setValue(MDL_SHIFT_X,x);
     rowIn.setValue(MDL_SHIFT_Y,y);
-    rowIn.setValue(MDL_SHIFT_Z,z);
     rowIn.setValue(MDL_FLIP, flip);
-    Matrix2D<double> A(4, 4);
+
+
+    Matrix2D<double> A(3, 3);
+
+    geo2TransformationMatrix(rowIn,A,false);
+    transformationMatrix2Geo(A,rowOut);
+    rowOut.getValue(MDL_SCALE,scale2);
+    rowOut.getValue(MDL_ANGLE_PSI,psi2);
+    rowOut.getValue(MDL_SHIFT_X,x2);
+    rowOut.getValue(MDL_SHIFT_Y,y2);
+    rowOut.getValue(MDL_FLIP, flip2);
+
+    EXPECT_DOUBLE_EQ(scale, scale2);
+    EXPECT_DOUBLE_EQ(psi, psi2);
+    EXPECT_DOUBLE_EQ(x, x2);
+    EXPECT_DOUBLE_EQ(y, y2);
+    EXPECT_EQ(flip, flip2);
+
+    rowIn.setValue(MDL_ANGLE_ROT,rot);
+    rowIn.setValue(MDL_ANGLE_TILT,tilt);
+    rowIn.setValue(MDL_SHIFT_Z,z);
+
+    A.initZeros(4, 4);
 
     geo2TransformationMatrix(rowIn,A,false);
     transformationMatrix2Geo(A,rowOut);

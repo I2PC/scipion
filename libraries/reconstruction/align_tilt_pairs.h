@@ -23,6 +23,10 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+
+#ifndef ALIGN_TILT_PAIRS_H
+#define ALIGN_TILT_PAIRS_H
+
 #include <data/xmipp_fftw.h>
 #include <data/args.h>
 #include <data/xmipp_funcs.h>
@@ -77,3 +81,4 @@ public:
     		double &shiftX, double &shiftY, CorrelationAux &auxCorr);
 };
 //@}
+#endif //ALIGN_TILT_PAIRS_H

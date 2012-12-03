@@ -230,7 +230,7 @@ def wizardDesignMask(self, var):
 #Select micrograph extension
 def wizardMicrographExtension(self,var):
     import fnmatch
-    imgExt=['.raw','.tif','.mrc','.dm3','.em','.ser','.spi']
+    imgExt=['.raw','.tif','.mrc','.dm3','.em','.ser','.spi', '.xmp']
     files = []
     currentDir=self.getVarValue('DirMicrographs')
     if currentDir=="":

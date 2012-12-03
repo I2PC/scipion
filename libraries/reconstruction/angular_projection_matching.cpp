@@ -377,8 +377,8 @@ void ProgAngularProjectionMatching::produceSideInfo()
                              "ERROR!! Only non-astigmatic CTFs are allowed!");
             }
             ctf.enable_CTF = true;
-            ctf.Produce_Side_Info();
-            ctf.Generate_CTF(paddim, paddim, ctfmask);
+            ctf.produceSideInfo();
+            ctf.generateCTF(paddim, paddim, ctfmask);
             Mctf.resize(paddim,paddim);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mctf)
             {

@@ -31,7 +31,7 @@ public class ReviewParticlePicker extends TrainingPicker
 			throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("review file", reviewfile));
 		this.reviewfile = reviewfile;
 		family.setState(FamilyState.Review);
-		loadMicrographs();
+		importAllParticles(reviewfile);
 		
 	}
 
@@ -53,29 +53,16 @@ public class ReviewParticlePicker extends TrainingPicker
 	{
 		exportParticles(reviewfile);
 	}
+	
+	
 
 	@Override
 	public void loadMicrographs()
 	{
-		micrographs.clear();
-		TrainingMicrograph micrograph;
-		String ctf = null, filename;
+		
 		try
 		{
-			MetaData md = new MetaData(getMicrographsSelFile());
-			boolean existsctf = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
-			long[] ids = md.findObjects();
-			for (long id : ids)
-			{
-
-				filename = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-				if (existsctf)
-					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
-				micrograph = new TrainingMicrograph(filename, ctf, families, getMode());
-				micrographs.add(micrograph);
-			}
-			if (micrographs.size() == 0)
-				throw new IllegalArgumentException(String.format("No micrographs specified on %s", getMicrographsSelFile()));
+			loadEmptyMicrographs();
 			importAllParticles(reviewfile);
 		}
 		catch (Exception e)

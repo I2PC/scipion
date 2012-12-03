@@ -117,7 +117,6 @@ export PATH=$XMIPP_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH
 if $IS_MAC; then
 	export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH
-	export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH
 fi
 
 # Create file to include from BASH this Xmipp installation
@@ -127,6 +126,8 @@ echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 echo '# Load global autocomplete file ' >> $INC_FILE
 echo "test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true" >> $INC_FILE
+echo '# Load programs autocomplete file ' >> $INC_FILE
+echo "test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true" >> $INC_FILE
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
@@ -269,6 +270,7 @@ BUILD_PATH=$XMIPP_HOME/build
 
 #External libraries versions
 VSQLITE=sqlite-3.6.23
+VSQLITE_EXT=sqliteExt
 VTCLTK=8.5.10
 VPYTHON=Python-2.7.2
 VFFTW=fftw-3.3.1
@@ -428,9 +430,26 @@ fi
 
 #################### SQLITE ###########################
 if $DO_SQLITE; then
-  compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  if $IS_MAC; then
+    #compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 -I/opt/local/include -I/opt/local/lib -I/sw/include -I/sw/lib -lsqlite3" ".libs"
+    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  else
+    compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
+  fi
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
   install_libs $VSQLITE/.libs libsqlite3 0
+  #compile math library for sqlite
+  cd $EXT_PATH/$VSQLITE_EXT
+  if $IS_MINGW; then
+    gcc -shared -I. -o libsqlitefunctions.dll extension-functions.c
+    cp libsqlitefunctions.dll $XMIPP_HOME/lib/libXmippSqliteExt.dll
+  elif $IS_MAC; then
+    gcc -fno-common -dynamiclib extension-functions.c -o libsqlitefunctions.dylib
+    cp libsqlitefunctions.dylib $XMIPP_HOME/lib/libXmippSqliteExt.dylib
+  else  
+    gcc -fPIC -lm -shared  extension-functions.c -o libsqlitefunctions.so
+    cp libsqlitefunctions.so $XMIPP_HOME/lib/libXmippSqliteExt.so
+  fi
 fi
 
 #################### FFTW ###########################
@@ -465,8 +484,8 @@ if $DO_TCLTK; then
     compile_library tcl$VTCLTK python win "--disable-xft CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
     compile_library tk$VTCLTK python win "--disable-xft --with-tcl=../../tcl$VTCLTK/win CFLAGS=-I/c/MinGW/include CPPFLAGS=-I/c/MinGW/include"
   else
-    compile_library tcl$VTCLTK python unix "--disable-xft"
-    compile_library tk$VTCLTK python unix "--disable-xft"
+    compile_library tcl$VTCLTK python unix "--disable-xft --enable-threads"
+    compile_library tk$VTCLTK python unix "--disable-xft --enable-threads"
   fi
 fi
 
@@ -485,7 +504,7 @@ if $DO_PYTHON; then
     echo "--> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"	 
   elif $IS_MAC; then
     export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
-    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/unix:$EXT_PYTHON/tcl$VTCLTK/unix:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$LD_LIBRARY_PATH"
     export DYLD_FALLBACK_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH"
     echo "--> export CPPFLAGS=$CPPFLAGS"
     echo "--> export LDFLAGS=$LDFLAGS"
@@ -556,13 +575,17 @@ if $DO_PYTHON; then
     printf 'VPYTHON=%b \n' "$VPYTHON" >> $PYTHON_BIN
     printf 'VTCLTK=%b \n\n' "$VTCLTK" >> $PYTHON_BIN
     printf 'EXT_PYTHON=$XMIPP_HOME/external/python \n' >> $PYTHON_BIN
-    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/unix:$EXT_PYTHON/tk$VTCLTK/unix:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
+    printf 'export LD_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$LD_LIBRARY_PATH \n' >> $PYTHON_BIN
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
+    printf 'export DYLD_FALLBACK_LIBRARY_PATH=$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tcl$VTCLTK/macosx:$EXT_PYTHON/tk$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH \n' >> $PYTHON_BIN	
     printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
   fi
-  echoExec "chmod a+x $PYTHON_BIN"    
+  echoExec "chmod a+x $PYTHON_BIN"
+  #make python directory accesible by anybody
+  echoExec "chmod -R a+x $XMIPP_HOME/external/python/Python-2.7.2"
+
 fi    
 
 #################### PYTHON MODULES ###########################
@@ -572,6 +595,7 @@ if $DO_PYMOD; then
   if $IS_MAC; then
     export LDFLAGS="-L$EXT_PYTHON/$VPYTHON -L$XMIPP_HOME/lib -L$EXT_PYTHON/tk$VTCLTK/macosx -L$EXT_PYTHON/tcl$VTCLTK/macosx"
     export LD_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$LD_LIBRARY_PATH"
+    export DYLD_FALLBACK_LIBRARY_PATH="$EXT_PYTHON/$VPYTHON:$EXT_PYTHON/tk$VTCLTK/macosx:$EXT_PYTHON/tcl$VTCLTK/macosx:$DYLD_FALLBACK_LIBRARY_PATH"
     echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/python2.7"
     echoExec "cd $EXT_PYTHON/$VMATLIBPLOT"
     echoExec "ln -s $XMIPP_HOME/bin/xmipp_python $XMIPP_HOME/bin/pythonXmipp" 
@@ -594,8 +618,8 @@ if $DO_PYMOD; then
     echoExec "ln -sf libtk8.5.so  libtk.so"
     echoExec "cd $EXT_PYTHON/tcl$VTCLTK/unix/"
     echoExec "ln -sf libtcl8.5.so  libtcl.so"
-    compile_pymodule $VMATLIBPLOT
   fi
+compile_pymodule $VMATLIBPLOT
 compile_pymodule $VPYMPI
 compile_pymodule $VPYCIFRW
 fi

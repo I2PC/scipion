@@ -153,6 +153,8 @@ void  ProgConvImg::defineParams()
     addExampleLine("xmipp_image_convert -i selFile.sel -o stackFile.stk --append");
     addExampleLine("Replace a single image into a stack:",false);
     addExampleLine("xmipp_image_convert -i img.spi -o 3@stackFile.stk");
+    addExampleLine("Convert a MRC stack to a MRC volume:",false);
+    addExampleLine("xmipp_image_convert -i stack.mrc -o volume.mrc -t vol");
 }
 
 void ProgConvImg::readParams()

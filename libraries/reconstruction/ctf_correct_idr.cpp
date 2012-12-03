@@ -97,7 +97,7 @@ void ProgCtfCorrectIdr::processImage(const FileName &fnImg, const FileName &fnIm
         ctf.FilterBand = CTF;
         ctf.ctf.read(fn_ctf);
         ctf.ctf.enable_CTFnoise = false;
-        ctf.ctf.Produce_Side_Info();
+        ctf.ctf.produceSideInfo();
         ctf.generateMask(Itheo_CTF);
         ctf.correctPhase();
         last_fn_ctf=fn_ctf;

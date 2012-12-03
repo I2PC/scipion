@@ -190,7 +190,7 @@ def addTabs(nb):
     addTabOption(tab,'fast', 'Fast?', 'no')
     addTabOption(tab,'static', 'Prevent dynamic linking?', 'no')
     addTabOption(tab,'prepend', 'What to prepend to executable names', 'xmipp')
-    addTabOption(tab, 'gtest', 'Build tests?', 'no')
+    addTabOption(tab, 'gtest', 'Build tests?', 'yes')
     addTabOption(tab, 'cuda', 'Build CUDA support?', 'no')
     addTabOption(tab, 'release', 'Release mode', 'yes')
    
@@ -221,7 +221,7 @@ def run(notebook):
     
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
-        cmd += 'echo "*** RUNNING SCONS.CONFIGURE..." >> %(out)s 2>&1 \n'
+        cmd += 'echo "*** RUNNING SCONS CONFIGURE..." >> %(out)s 2>&1 \n'
         cmd1 = "xmipp_python %(scons)s mode=configure -j %(procs)s --config=force %(opts)s >> %(out)s 2>&1 " % locals()
         cmd += 'echo "%(cmd1)s" >> %(out)s \n'
         cmd += cmd1 + '\n'
@@ -230,8 +230,17 @@ def run(notebook):
     
     if options.hasOption('compile'):
         opts = ' '.join(options.getOption('compile'))
-        cmd += 'echo "*** RUNNING SCONS.COMPILE..." >> %(out)s \n'
+        cmd += 'echo "*** RUNNING SCONS COMPILE..." >> %(out)s \n'
         cmd2 = "xmipp_python %(scons)s mode=compile -j %(procs)s  %(opts)s >> %(out)s 2>&1 "% locals()
+        cmd += 'echo "%(cmd2)s" >> %(out)s \n'
+        cmd += cmd2 + '\n'
+        if WINDOWS:
+            print cmd2
+
+    if options.hasOption('clean'):
+        opts = ' '.join(options.getOption('clean'))
+        cmd += 'echo "*** RUNNING SCONS CLEAN..." >> %(out)s \n'
+        cmd2 = "xmipp_python %(scons)s mode=compile -j %(procs)s  --clean %(opts)s >> %(out)s 2>&1 "% locals()
         cmd += 'echo "%(cmd2)s" >> %(out)s \n'
         cmd += cmd2 + '\n'
         if WINDOWS:

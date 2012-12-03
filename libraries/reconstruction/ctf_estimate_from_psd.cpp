@@ -129,7 +129,7 @@ int global_show; // 0: Do not show
 
 using namespace AdjustCTF;
 
-#define ASSIGN_CTF_PARAM(index, paramName) if (ia <= index && l-- < 0) ctfmodel.paramName = p[index]
+#define ASSIGN_CTF_PARAM(index, paramName) if (ia <= index && l > 0) { ctfmodel.paramName = p[index]; --l; }
 
 /* Assign ctfmodel from a vector and viceversa ----------------------------- */
 void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
@@ -158,16 +158,42 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
     ASSIGN_CTF_PARAM(18, gaussian_K);
     ASSIGN_CTF_PARAM(19, sigmaU);
 
-    if (ia <= 20 && l-- > 0)
-        ctfmodel.sigmaV = modelSimplification < 3 ? p[20] : p[19];
-
-    if (ia <= 21 && l-- > 0)
-        ctfmodel.gaussian_angle = modelSimplification < 3 ? p[21] : 0.;
+    if (ia <= 20 && l > 0)
+        if (modelSimplification < 3)
+        {
+            ctfmodel.sigmaV = p[20];
+            l--;
+        } //     7 *
+        else
+        {
+            ctfmodel.sigmaV = p[19];
+            l--;
+        }
+    if (ia <= 21 && l > 0)
+        if (modelSimplification < 3)
+        {
+            ctfmodel.gaussian_angle = p[21];
+            l--;
+        } //     8 *
+        else
+        {
+            ctfmodel.gaussian_angle = 0;
+            l--;
+        }
 
     ASSIGN_CTF_PARAM(22, cU);
 
-    if (ia <= 23 && l-- > 0)
-        ctfmodel.cV = modelSimplification < 3 ? p[23] : p[22];
+    if (ia <= 23 && l > 0)
+        if (modelSimplification < 3)
+        {
+            ctfmodel.cV = p[23];
+            l--;
+        } //    10 *
+        else
+        {
+            ctfmodel.cV = p[22];
+            l--;
+        }
 
     ASSIGN_CTF_PARAM(24, gaussian_K2);
     ASSIGN_CTF_PARAM(25, sigmaU2);
@@ -178,7 +204,7 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
 }//function assignCTFfromParameters
 
 
-#define ASSIGN_PARAM_CTF(index, paramName) if (ia <= index && l-- < 0) p[index] = ctfmodel.paramName
+#define ASSIGN_PARAM_CTF(index, paramName) if (ia <= index && l > 0) { p[index] = ctfmodel.paramName; --l; }
 
 void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
                              int l, int modelSimplification)
@@ -204,16 +230,42 @@ void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
     ASSIGN_PARAM_CTF(18, gaussian_K);
     ASSIGN_PARAM_CTF(19, sigmaU);
 
-    if (ia <= 20 && l-- > 0)
-        p[20] = modelSimplification < 3 ? ctfmodel.sigmaV : 0.;
-
-    if (ia <= 21 && l-- > 0)
-        p[21] =  modelSimplification < 3 ? ctfmodel.gaussian_angle : 0.;
+    if (ia <= 20 && l > 0)
+        if (modelSimplification < 3)
+        {
+            p[20] = ctfmodel.sigmaV;
+            l--;
+        }
+        else
+        {
+            p[20] = 0;
+            l--;
+        }
+    if (ia <= 21 && l > 0)
+        if (modelSimplification < 3)
+        {
+            p[21] = ctfmodel.gaussian_angle;
+            l--;
+        }
+        else
+        {
+            p[21] = 0;
+            l--;
+        }
 
     ASSIGN_PARAM_CTF(22, cU);
 
-    if (ia <= 23 && l-- > 0)
-        p[23] = modelSimplification < 3 ? ctfmodel.cV : 0.;
+    if (ia <= 23 && l > 0)
+        if (modelSimplification < 3)
+        {
+            p[23] = ctfmodel.cV;
+            l--;
+        }
+        else
+        {
+            p[23] = 0;
+            l--;
+        }
 
     ASSIGN_PARAM_CTF(24, gaussian_K2);
     ASSIGN_PARAM_CTF(25, sigmaU2);
@@ -561,7 +613,7 @@ void generateModelSoFar(Image<double> &I, bool apply_log = false)
 
     assignCTFfromParameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
                             0, ALL_CTF_PARAMETERS, global_prm->modelSimplification);
-    global_ctfmodel.Produce_Side_Info();
+    global_ctfmodel.produceSideInfo();
 
     I().resize(*f);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
@@ -575,20 +627,20 @@ void generateModelSoFar(Image<double> &I, bool apply_log = false)
         double param;
         global_ctfmodel.precomputeValues(XX(freq), YY(freq));
         if (global_action <= 1)
-            I()(i, j) = global_ctfmodel.CTFnoise_at();
+            I()(i, j) = global_ctfmodel.getValueNoiseAt();
         else if (global_action == 2)
         {
-            double E = global_ctfmodel.CTFdamping_at();
-            I()(i, j) = global_ctfmodel.CTFnoise_at() + E * E;
+            double E = global_ctfmodel.getValueDampingAt();
+            I()(i, j) = global_ctfmodel.getValueNoiseAt() + E * E;
         }
         else if (global_action >= 3 && global_action <= 5)
         {
-            double ctf = global_ctfmodel.CTFpure_at();
-            I()(i, j) = global_ctfmodel.CTFnoise_at() + ctf * ctf;
+            double ctf = global_ctfmodel.getValuePureAt();
+            I()(i, j) = global_ctfmodel.getValueNoiseAt() + ctf * ctf;
         }
         else
         {
-            double ctf = global_ctfmodel.CTFpure_at();
+            double ctf = global_ctfmodel.getValuePureAt();
             I()(i, j) = ctf;
         }
         if (apply_log)
@@ -718,7 +770,7 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
     // Generate the CTF model
     assignCTFfromParameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
                             0, ALL_CTF_PARAMETERS, global_prm->modelSimplification);
-    global_ctfmodel.Produce_Side_Info();
+    global_ctfmodel.produceSideInfo();
 
     // Write the two model quadrants
     MultidimArray<int> mask;
@@ -737,7 +789,7 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
             digfreq2contfreq(freq, freq, global_prm->Tm);
 
             global_ctfmodel.precomputeValues(XX(freq), YY(freq));
-            model(i, j) = global_ctfmodel.CTFpure_at();
+            model(i, j) = global_ctfmodel.getValuePureAt();
             model(i, j) *= model(i, j);
         }
     }
@@ -771,7 +823,7 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
     // The left part is the CTF model
     assignCTFfromParameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
                             0, CTF_PARAMETERS, global_prm->modelSimplification);
-    global_ctfmodel.Produce_Side_Info();
+    global_ctfmodel.produceSideInfo();
 
     MultidimArray<int> mask;
     mask.initZeros(enhancedPSD);
@@ -789,7 +841,7 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
         digfreq2contfreq(freq, freq, global_prm->Tm);
 
         global_ctfmodel.precomputeValues(XX(freq), YY(freq));
-        model(i, j) = global_ctfmodel.CTFpure_at();
+        model(i, j) = global_ctfmodel.getValuePureAt();
         model(i, j) *= model(i, j);
     }
 
@@ -892,10 +944,10 @@ double CTF_fitness(double *p, void *)
         }
         break;
     }
-    global_ctfmodel.Produce_Side_Info();
+    global_ctfmodel.produceSideInfo();
     if (global_show >= 2)
         std::cout << "Model:\n" << global_ctfmodel << std::endl;
-    if (!global_ctfmodel.physical_meaning())
+    if (!global_ctfmodel.hasPhysicalMeaning())
     {
         if (global_show >= 2)
             std::cout << "Does not have physical meaning\n";
@@ -954,7 +1006,7 @@ double CTF_fitness(double *p, void *)
 
             // Compute each component
             global_ctfmodel.precomputeValues(i, j);
-            double bg = global_ctfmodel.CTFnoise_at();
+            double bg = global_ctfmodel.getValueNoiseAt();
             double envelope, ctf_without_damping, ctf_with_damping;
             double ctf2_th;
             switch (global_action)
@@ -964,16 +1016,16 @@ double CTF_fitness(double *p, void *)
                 ctf2_th = bg;
                 break;
             case 2:
-                envelope = global_ctfmodel.CTFdamping_at();
+                envelope = global_ctfmodel.getValueDampingAt();
                 ctf2_th = bg + envelope * envelope;
                 break;
             case 3:
             case 4:
             case 5:
             case 6:
-                envelope = global_ctfmodel.CTFdamping_at();
+                envelope = global_ctfmodel.getValueDampingAt();
                 ctf_without_damping =
-                    global_ctfmodel.CTFpure_without_damping_at();
+                    global_ctfmodel.getValuePureWithoutDampingAt();
                 ctf_with_damping = envelope * ctf_without_damping;
                 ctf2_th = bg + ctf_with_damping * ctf_with_damping;
                 break;
@@ -1298,7 +1350,7 @@ void estimate_background_sqrt_parameters()
         // Compute error
         global_ctfmodel.precomputeValues(global_x_contfreq(i, j),
                                          global_y_contfreq(i, j));
-        double explained = global_ctfmodel.CTFnoise_at();
+        double explained = global_ctfmodel.getValueNoiseAt();
         double unexplained = (*f)(i, j) - explained;
         if (unexplained <= 0)
             continue;
@@ -1363,7 +1415,7 @@ void estimate_background_sqrt_parameters()
             XMIPP_MIN(global_current_penalty, global_penalty);
     }
     // Keep the result in global_prm->adjust
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     if (global_prm->show_optimization)
@@ -1400,7 +1452,7 @@ void estimate_background_gauss_parameters()
         int r = FLOOR(w * (double)YSIZE(*f));
         global_ctfmodel.precomputeValues(global_x_contfreq(i, j),
                                          global_y_contfreq(i, j));
-        radial_CTFmodel_avg(r) += global_ctfmodel.CTFnoise_at();
+        radial_CTFmodel_avg(r) += global_ctfmodel.getValueNoiseAt();
         radial_CTFampl_avg(r) += (*f)(i, j);
         radial_N(r)++;
     }
@@ -1535,7 +1587,7 @@ void estimate_background_gauss_parameters()
         // Compute error
         global_ctfmodel.precomputeValues(global_x_contfreq(i, j),
                                          global_y_contfreq(i, j));
-        double explained = global_ctfmodel.CTFnoise_at();
+        double explained = global_ctfmodel.getValueNoiseAt();
 
         double unexplained = (*f)(i, j) - explained;
         if (unexplained <= 0)
@@ -1563,7 +1615,7 @@ void estimate_background_gauss_parameters()
         // meaning routine in CTF.cc
         global_ctfmodel.gaussian_K = exp(b(0));
         // Store the CTF values in global_prm->adjust
-        global_ctfmodel.force_physical_meaning();
+        global_ctfmodel.forcePhysicalMeaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
 
         if (global_prm->show_optimization)
@@ -1600,10 +1652,10 @@ void estimate_background_gauss_parameters2()
         double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
         double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
         global_ctfmodel.precomputeValues(f_x, f_y);
-        double bg = global_ctfmodel.CTFnoise_at();
-        double envelope = global_ctfmodel.CTFdamping_at();
+        double bg = global_ctfmodel.getValueNoiseAt();
+        double envelope = global_ctfmodel.getValueDampingAt();
         double ctf_without_damping =
-            global_ctfmodel.CTFpure_without_damping_at();
+            global_ctfmodel.getValuePureWithoutDampingAt();
         double ctf_with_damping = envelope * ctf_without_damping;
         double ctf2_th = bg + ctf_with_damping * ctf_with_damping;
         radial_CTFmodel_avg(r) += ctf2_th;
@@ -1680,10 +1732,10 @@ void estimate_background_gauss_parameters2()
         double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
         double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
         global_ctfmodel.precomputeValues(f_x, f_y);
-        double bg = global_ctfmodel.CTFnoise_at();
-        double envelope = global_ctfmodel.CTFdamping_at();
+        double bg = global_ctfmodel.getValueNoiseAt();
+        double envelope = global_ctfmodel.getValueDampingAt();
         double ctf_without_damping =
-            global_ctfmodel.CTFpure_without_damping_at();
+            global_ctfmodel.getValuePureWithoutDampingAt();
         double ctf_with_damping = envelope * ctf_without_damping;
         double ctf2_th = bg + ctf_with_damping * ctf_with_damping;
         double explained = ctf2_th;
@@ -1726,7 +1778,7 @@ void estimate_background_gauss_parameters2()
     }
 
     // Store the CTF values in global_prm->adjust
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
 #ifdef DEBUG
@@ -1750,9 +1802,9 @@ void estimate_background_gauss_parameters2()
         // Compute error
         double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
         double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-        double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
-        double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
-        double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
+        double bg = global_ctfmodel.getValueNoiseAt(f_x, f_y);
+        double envelope = global_ctfmodel.getValueDampingAt(f_x, f_y);
+        double ctf_without_damping = global_ctfmodel.getValuePureWithoutDampingAt(f_x, f_y);
         double ctf_with_damping = envelope * ctf_without_damping;
         double ctf2_th = bg + ctf_with_damping * ctf_with_damping;
         double explained = ctf2_th;
@@ -1810,7 +1862,7 @@ void estimate_envelope_parameters()
                     global_prm->show_optimization);
 
     // Keep the result in global_prm->adjust
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     if (global_prm->show_optimization)
@@ -1838,7 +1890,7 @@ void estimate_envelope_parameters()
             XMIPP_MIN(global_current_penalty, global_penalty);
     }
     // Keep the result in global_prm->adjust
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     if (global_prm->show_optimization)
@@ -1868,7 +1920,7 @@ void showFirstDefoci()
             double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
             global_ctfmodel.precomputeValues(f_x, f_y);
             double ctf_without_damping =
-                global_ctfmodel.CTFpure_without_damping_at();
+                global_ctfmodel.getValuePureWithoutDampingAt();
             save2()(i, j) = ctf_without_damping * ctf_without_damping;
             save3()(i, j) = -global_prm->enhanced_ctftomodel()(i, j)
                             * ctf_without_damping * ctf_without_damping;
@@ -2027,8 +2079,8 @@ void estimate_defoci()
                                             continue;
                                         double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
                                         double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-                                        double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
-                                        double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
+                                        double envelope = global_ctfmodel.getValueDampingAt(f_x, f_y);
+                                        double ctf_without_damping = global_ctfmodel.getValuePureWithoutDampingAt(f_x, f_y);
                                         double ctf_with_damping = envelope * ctf_without_damping;
                                         double ctf_with_damping2 = ctf_with_damping * ctf_with_damping;
                                         save(i, j) = ctf_with_damping2;
@@ -2121,7 +2173,7 @@ void estimate_defoci()
     global_ctfmodel.K = best_K;
 
     // Keep the result in global_prm->adjust
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
     global_ctfmodel_defoci = global_ctfmodel;
 
@@ -2134,7 +2186,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                              double kV, double lambdaPhase, double sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
-    // Center enhanced PSD
+	// Center enhanced PSD
     MultidimArray<double> centeredEnhancedPSD=psdToModelFullSize;
     CenterFFT(centeredEnhancedPSD,true);
 
@@ -2243,7 +2295,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     int maxInd;
     arrayError.maxIndex(maxInd);
 
-    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 300) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 80000) )
+    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 3000) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 50000) )
     {
         VEC_ELEM(arrayError,maxInd) = -1e3;
         VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
@@ -2273,9 +2325,9 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
                     fitness, iter, steps, false);
 
-    VEC_ELEM(arrayDefocusU,0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
-    VEC_ELEM(arrayDefocusV,0) = VEC_ELEM(arrayDefocusAvg,maxInd)-VEC_ELEM(arrayDefocusDiff,maxInd);
-    VEC_ELEM(arrayError2,0)   = VEC_ELEM(arrayError,maxInd);
+    VEC_ELEM(arrayDefocusU,0) = (*global_adjust)(0);
+    VEC_ELEM(arrayDefocusV,0) = (*global_adjust)(1);
+    VEC_ELEM(arrayError2,0) = (-1)*fitness;
 
     // We optimize for deltaU, deltaU
     (*global_adjust)(0) = VEC_ELEM(arrayDefocusAvg,maxInd)+VEC_ELEM(arrayDefocusDiff,maxInd);
@@ -2290,7 +2342,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                     fitness, iter, steps, false);
 
     VEC_ELEM(arrayDefocusU,1) = (*global_adjust)(0);
-    VEC_ELEM(arrayDefocusV,1) = (*global_adjust)(0);
+    VEC_ELEM(arrayDefocusV,1) = (*global_adjust)(1);
     VEC_ELEM(arrayError2,1) = (-1)*fitness;
 
     // We optimize for deltaV, deltaV
@@ -2305,7 +2357,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
                     DEFOCUS_PARAMETERS, &CTF_fitness, NULL, 0.05,
                     fitness, iter, steps, false);
 
-    VEC_ELEM(arrayDefocusU,2) = (*global_adjust)(1);
+    VEC_ELEM(arrayDefocusU,2) = (*global_adjust)(0);
     VEC_ELEM(arrayDefocusV,2) = (*global_adjust)(1);
     VEC_ELEM(arrayError2,2) = (-1)*fitness;
 
@@ -2314,63 +2366,67 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     defocusU = VEC_ELEM(arrayDefocusU,maxInd);
     defocusV = VEC_ELEM(arrayDefocusV,maxInd);
 
+    (*global_adjust)(0) = defocusU;
+    (*global_adjust)(1) = defocusV;
+    (*global_adjust)(2) = eAngle;
+    (*global_adjust)(4) = K_so_far;
+    (*global_adjust)(6) = 2;
+
+    while ( (0.5*(defocusU+defocusV) < 2500) || (0.5*(defocusU+defocusV) > 60000) )
+    {
+        VEC_ELEM(arrayError2,maxInd) = -1e3;
+        VEC_ELEM(arrayDefocusU,maxInd) = global_prm->initial_ctfmodel.DeltafU;
+        VEC_ELEM(arrayDefocusV,maxInd) = global_prm->initial_ctfmodel.DeltafV;
+
+        arrayError2.maxIndex(maxInd);
+        defocusU = VEC_ELEM(arrayDefocusU,maxInd);
+        defocusV = VEC_ELEM(arrayDefocusV,maxInd);
+        (*global_adjust)(0) = defocusU;
+        (*global_adjust)(1) = defocusV;
+        (*global_adjust)(2) = eAngle;
+        (*global_adjust)(4) = K_so_far;
+        (*global_adjust)(6) = 2;
+
+    }
+
+
     if (VEC_ELEM(arrayError2,maxInd) <= 0)
     {
-        //global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
         global_ctfmodel_defoci = global_ctfmodel;
 
-        //showFirstDefoci();
-
         global_action = 5;
-        //estimate_background_gauss_parameters2();
 
         steps.resize(ALL_CTF_PARAMETERS);
         steps.initConstant(1);
         steps(3) = 0; // kV
         steps(5) = 0; // The spherical aberration (Cs) is not optimized
+        if (global_ctfmodel.Q0!=0)
+        	steps(12)=0;
 
-        /*powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
-                        NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
-
-        COPY_ctfmodel_TO_CURRENT_GUESS;
-        */
-        //global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
 
         global_evaluation_reduction = 2;
         powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
                         NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
-        //global_ctfmodel.force_physical_meaning();
         COPY_ctfmodel_TO_CURRENT_GUESS;
 
-        /*global_evaluation_reduction = 1;
-        powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
-                        NULL, 0.005, fitness, iter, steps, global_prm->show_optimization);
-        global_ctfmodel.force_physical_meaning();
-        COPY_ctfmodel_TO_CURRENT_GUESS;
-        */
         global_show=0;
         global_action = 3;
         global_evaluation_reduction = 1;
 
         double error = -CTF_fitness(global_adjust->vdata-1,NULL);
-
-        //exit;
         if ( error <= -0.1)
         {
             *global_adjust = initialGlobalAdjust;
             COPY_ctfmodel_TO_CURRENT_GUESS;
             //There is nothing to do and we have to perform an exhaustive search
 #ifndef RELEASE_MODE
-
             std::cout << " Entering in estimate_defoci, Performing exhaustive defocus search (SLOW)" << std::endl;
 #endif
-
             estimate_defoci();
         }
     }
-
 }
 
 void estimate_defoci_Zernike()
@@ -2389,7 +2445,7 @@ void estimate_defoci_Zernike()
     DEBUG_TEXTFILE("Step 6.2");
     DEBUG_MODEL_TEXTFILE;
 
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
     global_ctfmodel_defoci = global_ctfmodel;
 
@@ -2401,18 +2457,6 @@ void estimate_defoci_Zernike()
 double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
                        CTFDescription &output_ctfmodel, bool standalone)
 {
-    // Sleep randomly to avoid some problems while reading the images by many processors
-    // at the same time
-    //randomize_random_generator();
-    //struct timespec tim, tim2;
-    //tim.tv_sec = 1;
-    //tim.tv_nsec = 1e9*rnd_unif(0,10);
-    //nanosleep(&tim , &tim2);
-
-    //char hostname[1024];
-    //gethostname(hostname,1023);
-    //std::cout << prm.fn_psd << " " << hostname << std::endl;
-
     DEBUG_OPEN_TEXTFILE(prm.fn_psd.removeLastExtension());
     global_prm = &prm;
     if (standalone || prm.show_optimization)
@@ -2453,8 +2497,6 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     {
         estimate_background_sqrt_parameters();
         estimate_background_gauss_parameters();
-
-
     }
 
     // Optimize the current background
@@ -2472,7 +2514,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     // Make sure that the model has physical meaning
     // (In some machines due to numerical imprecission this check is necessary
     // at the end)
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     if (global_prm->show_optimization)
@@ -2535,51 +2577,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     //exit(1);
 
     /************************************************************************
-     STEP 8:  all parameters
-     /************************************************************************/
-    /*
-    global_action = 4;
-    global_evaluation_reduction = 4;
-
-    steps.resize(CTF_PARAMETERS);
-    steps.initConstant(1);
-    steps(3) = 0; // kV
-    steps(5) = 0; // The spherical aberration (Cs) is not optimized
-    if (prm.initial_ctfmodel.Q0 != 0)
-     steps(12) = 0; // Q0
-    if (!global_prm->modelSimplification >= 3)
-     steps(20) = steps(21) = steps(23) = 0;
-    if (prm.modelSimplification >= 1)
-     steps(10) = steps(11) = 0;
-
-    global_mask_between_zeroes.initZeros(global_mask);
-    Matrix1D<double> u(2), z1(2), z3(2);
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_mask_between_zeroes)
-{
-     VECTOR_R2(u, global_x_digfreq(i, j), global_y_digfreq(i, j));
-     u /= u.module();
-     global_ctfmodel.zero(1, u, z1);
-     global_ctfmodel.zero(3, u, z3);
-     if (z1.module() < global_w_contfreq(i, j)
-       && global_w_contfreq(i, j) < z3.module())
-      global_mask_between_zeroes(i, j) = 1;
-}
-
-    powellOptimizer(*global_adjust, 0 + 1, CTF_PARAMETERS, &CTF_fitness, NULL,
-      0.01, fitness, iter, steps, global_prm->show_optimization);
-    global_ctfmodel.force_physical_meaning();
-    COPY_ctfmodel_TO_CURRENT_GUESS;
-
-    if (global_prm->show_optimization) {
-     std::cout << "Best fast Fit:\n" << global_ctfmodel << std::endl;
-     saveIntermediateResults("step03b_best_fast_fit");
-}
-    */
-
-    /************************************************************************
      STEPs 9, 10 and 11: all parameters included second Gaussian
      /************************************************************************/
-
     global_action = 5;
     if (prm.modelSimplification < 2)
         estimate_background_gauss_parameters2();
@@ -2601,7 +2600,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
                     NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
 
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     if (global_prm->show_optimization)
@@ -2614,13 +2613,13 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     global_evaluation_reduction = 2;
     powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
                     NULL, 0.01, fitness, iter, steps, global_prm->show_optimization);
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     global_evaluation_reduction = 1;
     powellOptimizer(*global_adjust, 0 + 1, ALL_CTF_PARAMETERS, &CTF_fitness,
                     NULL, 0.005, fitness, iter, steps, global_prm->show_optimization);
-    global_ctfmodel.force_physical_meaning();
+    global_ctfmodel.forcePhysicalMeaning();
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     if (global_prm->show_optimization)

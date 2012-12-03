@@ -62,8 +62,10 @@ private:
 
     /** Write Program info to DB */
     void writeToDB();
-    /** Print some information to stdout */
+    /** Write protocol header information */
     void writeToProtocol();
+    /** Write bash autocomplete options */
+    void writeToAutocomplete();
 
     /** Create program GUI */
     /** By default, a simple Tk GUI is create based on parameters definition.
@@ -325,6 +327,8 @@ protected:
     bool allow_time_bar; // Default true
 
     // DEDUCED FLAGS
+    /// Input is a metadata
+    bool input_is_metadata;
     /// Input is a single image
     bool single_image;
     /// Input is a stack

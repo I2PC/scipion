@@ -31,11 +31,12 @@ void ProgXrayProject::defineParams()
     //Params
     projParam.defineParams(this); // Projection parameters
     addParamsLine("== Xray options == ");
-    addParamsLine(" [-s <Ts>]     : Sampling rate of the volume to be projected (nm).");
+    addParamsLine(" [--sampling_rate <Ts>]       : Sampling rate of the volume to be projected (nm).");
     addParamsLine("                              : If empty, same value as X-Y plane sampling from PSF.");
-    addParamsLine("alias --sampling_rate;");
+    addParamsLine("alias -s;");
     addParamsLine("[--psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
-    addParamsLine("  [--threshold <thr=0.0>]  : Normalized threshold relative to maximum of PSF to reduce the volume into slabs");
+    addParamsLine("  [--threshold <thr=0.0>]     : Normalized threshold relative to maximum of PSF to reduce the volume into slabs");
+    addParamsLine("[--std_proj]                  : Save also standard projections, adding _std suffix to filenames");
     addParamsLine("[--thr <threads=1>]           : Number of concurrent threads.");
     //Examples
     addExampleLine("Generating a set of projections using a projection parameter file and two threads:", false);
@@ -65,6 +66,7 @@ void ProgXrayProject::readParams()
     dxo  = (checkParam("-s"))? getDoubleParam("-s")*1e-9 : -1 ;
     psfThr = getDoubleParam("--threshold");
     nThr = getIntParam("--thr");
+    save_std_projs = checkParam("--std_proj");
 
     psf.read(fn_psf_xr);
     psf.verbose = verbose;
@@ -143,7 +145,7 @@ void ProgXrayProject::run()
 
         // Really project ....................................................
         if (!projParam.only_create_angles)
-            XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
+            XrayRotateAndProjectVolumeOffCentered(phantom, psf, proj, stdProj, projParam.proj_Ydim, projParam.proj_Xdim);
 
         // Add noise in angles and voxels ....................................
         proj.getEulerAngles(tRot, tTilt,tPsi);
@@ -157,7 +159,13 @@ void ProgXrayProject::run()
         size_t objId = projMD.addObject();
         if (!projParam.only_create_angles)
         {
+            // Here we subtract the differences to the background illumination (at this moment normalized to 1)
+            MULTIDIM_ARRAY(proj) = 1.0 - MULTIDIM_ARRAY(proj);
             proj.write(fn_proj, ALL_IMAGES, !projParam.singleProjection, WRITE_REPLACE);
+
+            if (save_std_projs)
+                stdProj.write(fn_proj.insertBeforeExtension("_std"), ALL_IMAGES, !projParam.singleProjection, WRITE_REPLACE);
+
             projMD.setValue(MDL_IMAGE,fn_proj,objId);
         }
 
@@ -200,8 +208,8 @@ void ProgXrayProject::run()
     return;
 }
 
-void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
-        int Ydim, int Xdim, int idxSlice)
+void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P, Projection &standardP,
+        int Ydim, int Xdim)
 {
 
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
@@ -323,11 +331,11 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
 
     /// Calculation of IgeoVol to optimize process
     MultidimArray<double> IgeoVol, IgeoZb;
-    IgeoVol.resize(phantom.rotVol, false);
     IgeoZb.resize(1, 1, YSIZE(phantom.rotVol), XSIZE(phantom.rotVol),false);
     IgeoZb.initConstant(1.);
 
-    calculateIgeo(phantom.rotVol, psf.dzo, IgeoVol, IgeoZb, psf.nThr, thMgr);
+    calculateIgeo(phantom.rotVol, psf.dzo, IgeoVol, MULTIDIM_ARRAY(standardP), IgeoZb, psf.nThr, thMgr);
+
 
 
     projectXrayVolume(phantom.rotVol, IgeoVol, psf, P, NULL, thMgr);
@@ -435,10 +443,16 @@ void projectXrayVolume(MultidimArray<double> &muVol,
 void XrayProjPhantom::read(
     const ParametersProjectionTomography &prm)
 {
+    read(prm.fnPhantom);
+}
+
+void XrayProjPhantom::read(const FileName &fnVol)
+{
     //    iniVol.readMapped(prm.fnPhantom);
-    iniVol.read(prm.fnPhantom);
-    MULTIDIM_ARRAY(iniVol).setXmippOrigin();
+    iniVol.read(fnVol);
+    //    MULTIDIM_ARRAY(iniVol).setXmippOrigin();
     //    rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
+
 }
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
@@ -490,7 +504,7 @@ void threadXrayProject(ThreadArgument &thArg)
         int kini = phantomSlabIdx[first];
         int kend = phantomSlabIdx[last + 1] - 1 ;
 
-//        double deltaZSlab =  psf.dzo*(kend-kini+1);
+        //        double deltaZSlab =  psf.dzo*(kend-kini+1);
 
         intExp.initZeros();
 
@@ -541,7 +555,7 @@ void threadXrayProject(ThreadArgument &thArg)
         _Im.write("projectXR-imTempEsc_after.spi");
 #endif
 
-        // Adding to the imOut and correcting with the width of the slab
+        // Adding to the thread temporal imOut
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
         dAij(imOut,i,j) += dAij(*imTempP,i,j);
 
@@ -569,7 +583,7 @@ void threadXrayProject(ThreadArgument &thArg)
 
     }
 
-    //Lock to update the total addition
+    //Lock to update the total addition and multiply for the pixel width (to avoid multiply several times)
     mutex.lock();
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imOut)
     dAij(MULTIDIM_ARRAY(imOutGlobal),i,j) += dAij(imOut,i,j);
@@ -589,7 +603,8 @@ void threadXrayProject(ThreadArgument &thArg)
 
     if (thread_id==0)
     {
-        MULTIDIM_ARRAY(imOutGlobal) = 1.0- MULTIDIM_ARRAY(imOutGlobal);
+        // The output is the addition of the  accumulated differences, the real projection is background illumination minus this
+        //        MULTIDIM_ARRAY(imOutGlobal) = 1.0- MULTIDIM_ARRAY(imOutGlobal);
 
         switch (psf.AdjustType)
         {
@@ -615,9 +630,16 @@ void threadXrayProject(ThreadArgument &thArg)
 }
 
 void calculateIgeo(MultidimArray<double> &muVol, double sampling,
-                   MultidimArray<double> &IgeoVol, MultidimArray<double> &IgeoZb,
-                   int nThreads, ThreadManager * ThrMgr)
+                   MultidimArray<double> &IgeoVol, MultidimArray<double> &cumMu,
+                   MultidimArray<double> &IgeoZb, int nThreads, ThreadManager * ThrMgr)
 {
+    // Checking sizes
+    if ( (XSIZE(muVol) != XSIZE(IgeoZb)) || (YSIZE(muVol) != YSIZE(IgeoZb)) )
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "CalculateIgeo: IgeoZb size does not match muVol size.");
+
+    IgeoVol.initZeros(muVol);
+    cumMu.initZeros(YSIZE(muVol), XSIZE(muVol));
+
     ThreadManager * myThMgr;
 
     if (ThrMgr == NULL)
@@ -629,10 +651,10 @@ void calculateIgeo(MultidimArray<double> &muVol, double sampling,
     iGeoArgs.samplingZ = sampling;
     iGeoArgs.muVol = &muVol;
     iGeoArgs.IgeoVol = &IgeoVol;
+    iGeoArgs.cumMu = &cumMu;
     iGeoArgs.IgeoZb = & IgeoZb;
     iGeoArgs.td = new ThreadTaskDistributor(YSIZE(muVol),YSIZE(muVol)/nThreads/2);
 
-    IgeoVol.resizeNoCopy(muVol);
     myThMgr->run(calculateIgeoThread,&iGeoArgs);
 
     delete iGeoArgs.td;
@@ -648,26 +670,35 @@ void calculateIgeoThread(ThreadArgument &thArg)
     double sampling = dataThread->samplingZ;
     MultidimArray<double> &muVol = *(dataThread->muVol);
     MultidimArray<double> &IgeoVol = *(dataThread->IgeoVol);
+    MultidimArray<double> &cumMu = *(dataThread->cumMu);
     MultidimArray<double> &IgeoZb = *(dataThread->IgeoZb);
     ParallelTaskDistributor * td = dataThread->td;
 
-    size_t first, last;
+    // Resizing
+    //    IgeoVol.resize(muVol, false);
 
+    size_t first, last;
     while (td->getTasks(first, last))
     {
         //        first--;
         //        last--;
         for (int i = first; i <= last; ++i)
         {
-            for (int j=0; j<XSIZE(muVol); ++j)
-                dAkij(IgeoVol,0,i,j) = dAij(IgeoZb,i,j)*exp(-dAkij(muVol,0,i,j)*sampling);
+            //            for (int j=0; j<XSIZE(muVol); ++j)
+            //                dAkij(IgeoVol,0,i,j) = dAij(IgeoZb,i,j)*exp(-dAkij(muVol,0,i,j)*sampling);
+            //
+            //            for (int k = 1; k < ZSIZE(muVol); ++k)
+            //                for (int j=0; j<XSIZE(muVol); ++j)
+            //                    dAkij(IgeoVol,k,i,j) = dAkij(IgeoVol,k-1,i,j)*exp(-dAkij(muVol,k,i,j)*sampling);
 
-            for (int k = 1; k < ZSIZE(muVol); k++)
+            for (int k = 0; k < ZSIZE(muVol); ++k)
                 for (int j=0; j<XSIZE(muVol); ++j)
-                    dAkij(IgeoVol,k,i,j) = dAkij(IgeoVol,k-1,i,j)*exp(-dAkij(muVol,k,i,j)*sampling);
+                {
+                    dAij(cumMu,i,j) += dAkij(muVol,k,i,j)*sampling;
+                    dAkij(IgeoVol,k,i,j) = dAij(IgeoZb,i,j)*exp(-dAij(cumMu,i,j));
+                }
         }
     }
-
 }
 
 void projectXrayGridVolume(

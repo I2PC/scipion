@@ -62,6 +62,13 @@ void svbksb(Matrix2D< double >& u,
             Matrix1D< double >& b,
             Matrix1D< double >& x);
 
+
+/** Cholesky decomposition.
+ * Given M, this function decomposes M as M=L*L^t where L is a lower triangular matrix.
+ * M must be positive semi-definite.
+ */
+void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
+
 /** @defgroup Matrices Matrix2D Matrices
  * @ingroup DataLibrary
  */
@@ -734,6 +741,15 @@ public:
             mdata[j] = val;
     }
 
+    /** Initialize to zeros with a given size.
+     */
+    void initConstant(int Ydim, int Xdim, T val)
+    {
+        if (mdimx!=Xdim || mdimy!=Ydim)
+            resizeNoCopy(Ydim, Xdim);
+        initConstant(val);
+    }
+
     /** Initialize to zeros with current size.
      *
      * All values are set to 0. The current size and origin are kept. It is not
@@ -772,6 +788,22 @@ public:
         if (mdimx!=op.mdimx || mdimy!=op.mdimy)
             resizeNoCopy(op);
         memset(mdata,0,mdimx*mdimy*sizeof(T));
+    }
+
+    /** Initialize to random random numbers, uniform or gaussian
+     */
+    void initRandom(int Ydim, int Xdim, double op1, double op2, RandomMode mode = RND_UNIFORM)
+    {
+        if (mdimx!=Xdim || mdimy!=Ydim)
+            resizeNoCopy(Ydim, Xdim);
+        for (int j = 0; j < mdim; j++)
+           mdata[j] = static_cast< T > (mode == RND_UNIFORM ? rnd_unif(op1, op2) : rnd_gaus(op1, op2));
+    }
+
+    /** Initialize to gaussian numbers */
+    void initGaussian(int Ydim, int Xdim, double op1=0., double op2=1.)
+    {
+      initRandom(Ydim, Xdim, op1, op2, RND_GAUSSIAN);
     }
 
     /** 2D Identity matrix of current size
@@ -1515,6 +1547,37 @@ public:
         }
     }
 
+    /** Perform SVD decomposition
+     *  *this = U * W * V^t
+     * */
+
+    void svd(Matrix2D<double> &U, Matrix1D<double> &W, Matrix2D<double> &V) const
+    {
+      svdcmp(*this, U, W, V);
+    }
+
+    /** Perform SVD decomposition and add an index vector
+     * with the descending order of eigenvalues
+     */
+    void eigs(Matrix2D<double> &U, Matrix1D<double> &W, Matrix2D<double> &V, Matrix1D<int> &indexes) const
+    {
+      svdcmp(*this, U, W, V);
+      indexes.resizeNoCopy(W);
+      indexes.enumerate();
+
+      double dAux;
+      int iAux;
+
+      FOR_ALL_ELEMENTS_IN_MATRIX1D(W)
+      {
+          for (int j = i; j > 0 && dMi(W, j) > dMi(W, j-1); --j)
+          {
+            VEC_SWAP(W, j, j-1, dAux);
+            VEC_SWAP(indexes, j, j-1, iAux);
+          }
+      }
+    }
+
     /** Inverse of a matrix
      */
     Matrix2D<double> inv() const
@@ -1523,6 +1586,14 @@ public:
         inv(result);
 
         return result;
+    }
+
+    /** Inverse the current matrix
+     */
+    void selfInverse()
+    {
+        Matrix2D<T> auxMatrix(*this);
+        auxMatrix.inv(*this);
     }
 
     /** True if the matrix is identity
@@ -1551,6 +1622,9 @@ public:
     //@}
 };
 
+typedef Matrix2D<double> DMatrix;
+typedef Matrix2D<int> IMatrix;
+
 template<typename T>
 bool operator==(const Matrix2D<T>& op1, const Matrix2D<T>& op2)
 {
@@ -1574,11 +1648,6 @@ void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
            indx.adaptForNumericalRecipes(), &d);
 }
 
-/** Cholesky decomposition.
- * Given M, this function decomposes M as M=L*L^t where L is a lower triangular matrix.
- * M must be positive semi-definite.
- */
-void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
 
 /** LU Backsubstitution
  */
@@ -1696,6 +1765,14 @@ void solveLinearSystem(PseudoInverseHelper &h, Matrix1D<double> &result);
  * The normal equations of this problem are A^t W A x = A^t W b,
  * where W is a diagonal matrix whose entries are in the vector w. */
 void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result);
+
+/** Solve Weighted least square problem Ax=b and weights w, with RANSAC.
+ * Tol is a tolerance value: if an equation is fulfilled with an error smaller than tol,
+ * then it is considered to fulfill the model. Niter is the number of RANSAC iterations to perform.
+ * The outlier fraction is the fraction of equations that, at maximum, can be considered as outliers.
+ */
+void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
+		double tol, int Niter=10000, double outlierFraction=0.25, int Nthreads=1);
 
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */

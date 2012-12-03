@@ -843,7 +843,7 @@ void SinPartARTRecons::singleStep(GridVolume &vol_in, GridVolume *vol_out,
         ctf.ctf.enable_CTFnoise = false;
         ctf.ctf.read(fn_ctf);
         ctf.ctf.Tm /= BLOB_SUBSAMPLING;
-        ctf.ctf.Produce_Side_Info();
+        ctf.ctf.produceSideInfo();
 
         // Create new footprints
         footprint = new ImageOver;

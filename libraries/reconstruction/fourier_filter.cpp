@@ -156,14 +156,14 @@ void FourierFilter::readParams(XmippProgram *program)
         FilterShape = FilterBand = CTF;
         ctf.enable_CTFnoise = false;
         ctf.read( program->getParam("--fourier", "ctf") );
-        ctf.Produce_Side_Info();
+        ctf.produceSideInfo();
     }
     else if (filter_type == "ctfpos")
     {
         FilterShape = FilterBand = CTFPOS;
         ctf.enable_CTFnoise = false;
         ctf.read( program->getParam("--fourier", "ctfpos") );
-        ctf.Produce_Side_Info();
+        ctf.produceSideInfo();
         do_correct_phase = true;
     }
     else if (filter_type == "bfactor")
@@ -356,11 +356,11 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
         break;
     case CTF:
         ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
-        return ctf.CTF_at();
+        return ctf.getValueAt();
         break;
     case CTFPOS:
         ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
-        return ABS(ctf.CTF_at());
+        return ABS(ctf.getValueAt());
         break;
     case BFACTOR:
         double R = absw / w2;

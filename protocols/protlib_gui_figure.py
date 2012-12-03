@@ -158,52 +158,75 @@ class MaskPreview(ImagePreview):
            
                
     
-w = None
-def showImage(filename=None, dim=512, dpi=96, image=None):
-    
-    if filename is None and image is None:
-        reportError("You should provide image or filename")
-    
-    import xmipp
-    #from pylab import axes, Slider
-    from protlib_xmipp import getImageData
-    
-    
-    h = 0.5
-    lf0 = 0.15
-    hf0 = 0.35
-    axcolor = 'lightgoldenrodyellow'
-    
-    if image is None:
-        image = xmipp.Image()
-        image.readPreview(filename, dim)
-    if filename is None:
-        filename = "No filename"
+#w = None
+class ImageWindow():
+    def __init__(self, filename=None, dim=512, dpi=96, image=None, label=None):
         
-    xdim, ydim, zdim, n = image.getDimensions()
-    Z = getImageData(image)
-    xdim += 10
-    ydim += 10
-    figure = Figure(figsize=(xdim/dpi, ydim/dpi), dpi=dpi, frameon=False)
-    # a tk.DrawingArea
-    root = tk.Tk()
-    root.title(filename)
-    canvas = FigureCanvasTkAgg(figure, master=root)
-    canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
-    ax = figure.add_axes([0.2,0.2,0.6,0.6], frameon=False)
-    ax.set_xlim(-0.5, 0.5)
-    ax.set_ylim(-0.5, 0.5)
-    ax.imshow(Z, cmap=cm.gray, extent=[-h, h, -h, h])
+        if filename is None and image is None:
+            reportError("You should provide image or filename")
     
-    def update(hf, lf):
-        global w
-        w.remove()
-        w2 = Wedge((0,0), hf, 0, 360, width=lf, alpha=0.2)
-        ax.add_patch(w2)
-        w = w2
-        canvas.draw()
+        import xmipp
+        #from pylab import axes, Slider
+        from protlib_xmipp import getImageData
         
-    root.mainloop()
+        
+        h = 0.5
+        lf0 = 0.15
+        hf0 = 0.35
+        axcolor = 'lightgoldenrodyellow'
+        
+        if image is None:
+            image = xmipp.Image()
+            image.readPreview(filename, dim)
+        if filename is None:
+            filename = "No filename"
+            
+        xdim, ydim, zdim, n = image.getDimensions()
+        Z = getImageData(image)
+        xdim += 10
+        ydim += 10
+        figure = Figure(figsize=(xdim/dpi, ydim/dpi), dpi=dpi, frameon=False)
+        # a tk.DrawingArea
+        self.root = tk.Tk()
+        self.root.title(filename)
+        self.imagePreview=ImagePreview(self.root,dim, dpi)
+        self.imagePreview.updateData(Z)
+        
+    def show(self):
+        self.root.mainloop()
+    
+    def updateData(self, Z):
+        self.imagePreview.updateData(Z)
+    
+    def updateImage(self, image):
+        from protlib_xmipp import getImageData
+        Z = getImageData(image)
+        self.imagePreview.updateData(Z)
+            
+
+def showImage(filename=None, dim=512, dpi=96, image=None, label=None):
+    ImageWindow(filename, dim, dpi, image, label).show()
+    
+    
+    
+    
+    
+#    canvas = FigureCanvasTkAgg(figure, master=root)
+#    canvas.get_tk_widget().grid(column=0, row=0)#, sticky=(N, W, E, S))
+#    ax = figure.add_axes([0.2,0.2,0.6,0.6], frameon=False)
+#    ax.set_xlim(-0.5, 0.5)
+#    ax.set_ylim(-0.5, 0.5)
+#    self.figureimg = ax.imshow(Z, cmap=cm.gray, extent=[-h, h, -h, h])
+#    
+#    def update(hf, lf):
+#        global w
+#        w.remove()
+#        w2 = Wedge((0,0), hf, 0, 360, width=lf, alpha=0.2)
+#        ax.add_patch(w2)
+#        w = w2
+#        canvas.draw()
+        
+
     
 def getPngData(filename):  
     import matplotlib.image as mpimg
@@ -217,7 +240,7 @@ def showDependencyTree(runsDict):
     XSIZE, YSIZE = 8, 6
     DPI = 100
     XDIM, YDIM = XSIZE*DPI, YSIZE*DPI
-    DY = 50
+    DY = 56
     DX = 50
     FONT = "sans-serif"
     FONTSIZE = 9
@@ -233,7 +256,12 @@ def showDependencyTree(runsDict):
     a.set_ylim(top=0, bottom=YDIM)
     
     def showNode(dd, x, y):
-        t = a.text(x, y, dd.extRunName, family=FONT, size=FONTSIZE, 
+        if dd.prot is None:
+            nodeText = dd.extRunName
+        else:
+            nodeText = "%s\n%s" % (dd.protName, dd.runName)
+        
+        t = a.text(x, y, nodeText, family=FONT, size=FONTSIZE, 
                        bbox = dict(boxstyle="round", fc=colors[dd.state]))
         xplotter.draw()
         box = t.get_bbox_patch()
@@ -261,7 +289,7 @@ def showDependencyTree(runsDict):
             t.set_position((dd.start, y))            
             hLimits[level] = dd.start + dd.width     
             xx = [dd.start + dd.width/2, 0]
-            yy = [y + dd.height - 5, 0]
+            yy = [y + dd.height - 18, 0]
             for c in childs:
                 xx[1] = c.start + c.width/2
                 yy[1] = y + DY - c.height
@@ -401,12 +429,18 @@ class XmippPlotter():
             if mdLabelX:
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
-        if args.has_key('nbins'):
-            nbins = args.pop('nbins', None)
-            
-            self.hist(yy,nbins, facecolor=color,**args)
+        
+        nbins = args.pop('nbins', None)
+        marker = args.pop('marker', None)
+        linestyle = args.pop('linestyle', None)
+        if nbins is None:
+            if not marker is None:
+                args['marker'] = marker     
+            if not linestyle is None:
+                args['linestyle'] = linestyle
+            self.plot(xx, yy, color, **args) #no histogram
         else:
-            self.plot(xx, yy, color,**args) #no histogram
+            self.hist(yy,nbins, facecolor=color, **args)
         
     def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
         """ plot metadataFile columns mdLabelX and mdLabelY
