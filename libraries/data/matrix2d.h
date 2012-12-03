@@ -1772,7 +1772,7 @@ void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &resul
  * The outlier fraction is the fraction of equations that, at maximum, can be considered as outliers.
  */
 void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
-		double tol, int Niter=10000, double outlierFraction=0.25);
+		double tol, int Niter=10000, double outlierFraction=0.25, int Nthreads=1);
 
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */

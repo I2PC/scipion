@@ -110,7 +110,9 @@ void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &resul
 }
 
 // Solve linear system with RANSAC ----------------------------------------
-void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
+//#define DEBUG
+//#define DEBUG_MORE
+double ransacWeightedLeastSquaresBasic(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
 		double tol, int Niter, double outlierFraction)
 {
 	int N=MAT_YSIZE(h.A); // Number of equations
@@ -122,6 +124,17 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
 	for (int n=0; n<N; ++n)
 		eqIdx.push_back(n);
 	int *eqIdxPtr=&eqIdx[0];
+
+#ifdef DEBUG_MORE
+	// Show all equations
+	for (int n=0; n<N; n++)
+	{
+		std::cout << "Eq. " << n << " w=" << VEC_ELEM(h.w,n) << " b=" << VEC_ELEM(h.b,n) << " a=";
+		for (int j=0; j<M; j++)
+			std::cout << MAT_ELEM(h.A,n,j) << " ";
+		std::cout << std::endl;
+	}
+#endif
 
 	// Resize a WLS helper for solving the MxM equation systems
 	PseudoInverseHelper haux;
@@ -142,6 +155,9 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
 	WeightedLeastSquaresHelper haux2;
 	for (int it=0; it<Niter; ++it)
 	{
+#ifdef DEBUG_MORE
+		std::cout << "Iter: " << it << std::endl;
+#endif
         idxIn.initZeros();
 
         // Randomly select M equations
@@ -154,6 +170,9 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
         	memcpy(&MAT_ELEM(A,i,0),&MAT_ELEM(h.A,idx,0),Mdouble);
         	VEC_ELEM(b,i)=VEC_ELEM(h.b,idx);
         	VEC_ELEM(idxIn,idx)=1;
+#ifdef DEBUG_MORE
+		std::cout << "    Using Eq.: " << idx << " for first solution" << std::endl;
+#endif
         }
 
         // Solve the equation system
@@ -174,6 +193,9 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
         		VEC_ELEM(idxIn,idx)=1;
         		++newM;
         	}
+#ifdef DEBUG_MORE
+		std::cout << "    Checking Eq.: " << idx << " err=" << bp-VEC_ELEM(h.b,idx) << std::endl;
+#endif
         }
 
         // If the model represent more points
@@ -214,7 +236,77 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
             {
             	bestError=err;
             	result=resultAux;
+#ifdef DEBUG
+            	std::cout << "Best solution iter: " << it << " Error=" << err << " frac=" << (float)(M+newM)/VEC_XSIZE(h.b) << std::endl;
+#ifdef DEBUG_MORE
+            	std::cout << "Result:" << result << std::endl;
+                for (int i=0; i<M+newM; ++i)
+    			{
+    				double bp=0;
+    				for (int j=0; j<M; ++j)
+    					bp+=MAT_ELEM(A2,i,j)*VEC_ELEM(resultAux,j);
+    				std::cout << "Eq. " << i << " w=" << VEC_ELEM(w2,i) << " b2=" << VEC_ELEM(b2,i) << " bp=" << bp << std::endl;
+    				err+=fabs(VEC_ELEM(b2,i)-bp)*VEC_ELEM(w2,i);
+    			}
+#endif
+#endif
             }
         }
 	}
+	return bestError;
+}
+#undef DEBUG
+
+struct ThreadRansacArgs {
+	// Input
+	int myThreadID;
+	WeightedLeastSquaresHelper * h;
+	double tol;
+	int Niter;
+	double outlierFraction;
+
+	// Output
+	Matrix1D<double> result;
+	double error;
+};
+
+void * threadRansacWeightedLeastSquares(void * args)
+{
+	ThreadRansacArgs * master = (ThreadRansacArgs *) args;
+	master->error=ransacWeightedLeastSquaresBasic(*(master->h), master->result,
+			master->tol, master->Niter, master->outlierFraction);
+}
+
+void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
+		double tol, int Niter, double outlierFraction, int Nthreads)
+{
+	// Read and preprocess the images
+	pthread_t * th_ids = new pthread_t[Nthreads];
+	ThreadRansacArgs * th_args = new ThreadRansacArgs[Nthreads];
+	for (int nt = 0; nt < Nthreads; nt++) {
+		// Passing parameters to each thread
+		th_args[nt].myThreadID = nt;
+		th_args[nt].h = &h;
+		th_args[nt].tol = tol;
+		th_args[nt].Niter = Niter/Nthreads;
+		th_args[nt].outlierFraction = outlierFraction;
+		pthread_create((th_ids + nt), NULL, threadRansacWeightedLeastSquares,
+				(void *) (th_args + nt));
+	}
+
+	// Waiting for threads to finish
+	double err=1e38;
+	for (int nt = 0; nt < Nthreads; nt++)
+	{
+		pthread_join(*(th_ids + nt), NULL);
+		if (th_args[nt].error<err)
+		{
+			err=th_args[nt].error;
+			result=th_args[nt].result;
+		}
+	}
+
+    // Threads structures are not needed any more
+    delete []th_ids;
+    delete []th_args;
 }
