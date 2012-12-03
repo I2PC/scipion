@@ -483,21 +483,13 @@ bool FileName::isMetaData(bool failIfNotExists) const
         return false;
 
     //check if file exists
-    if (!existsTrim())
+    if (failIfNotExists && !existsTrim())
         REPORT_ERROR(ERR_IO_NOTFILE, formatString("FileName::isMetaData: File: '%s' does not exist", c_str()));
     //This is dangerous and should be removed
     //in next version. only star1 files should be OK
     //ROB
     //FIXME
-    FileName ext = getFileFormat();
-    if (ext == "sel" || ext == "xmd" || ext == "doc" ||
-        ext == "ctfdat" || ext == "ctfparam" || ext == "pos" ||
-        ext == "sqlite" || ext == "xml")
-    {
-        return true;
-    }
-    else
-        return isStar1(failIfNotExists);
+    return (hasMetadataExtension() || isStar1(failIfNotExists));
 }
 
 bool FileName::isStar1(bool failIfNotExists) const

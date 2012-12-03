@@ -217,7 +217,7 @@ def showDependencyTree(runsDict):
     XSIZE, YSIZE = 8, 6
     DPI = 100
     XDIM, YDIM = XSIZE*DPI, YSIZE*DPI
-    DY = 50
+    DY = 56
     DX = 50
     FONT = "sans-serif"
     FONTSIZE = 9
@@ -233,7 +233,12 @@ def showDependencyTree(runsDict):
     a.set_ylim(top=0, bottom=YDIM)
     
     def showNode(dd, x, y):
-        t = a.text(x, y, dd.extRunName, family=FONT, size=FONTSIZE, 
+        if dd.prot is None:
+            nodeText = dd.extRunName
+        else:
+            nodeText = "%s\n%s" % (dd.protName, dd.runName)
+        
+        t = a.text(x, y, nodeText, family=FONT, size=FONTSIZE, 
                        bbox = dict(boxstyle="round", fc=colors[dd.state]))
         xplotter.draw()
         box = t.get_bbox_patch()
@@ -261,7 +266,7 @@ def showDependencyTree(runsDict):
             t.set_position((dd.start, y))            
             hLimits[level] = dd.start + dd.width     
             xx = [dd.start + dd.width/2, 0]
-            yy = [y + dd.height - 5, 0]
+            yy = [y + dd.height - 18, 0]
             for c in childs:
                 xx[1] = c.start + c.width/2
                 yy[1] = y + DY - c.height
@@ -401,12 +406,18 @@ class XmippPlotter():
             if mdLabelX:
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
-        if args.has_key('nbins'):
-            nbins = args.pop('nbins', None)
-            
-            self.hist(yy,nbins, facecolor=color,**args)
+        
+        nbins = args.pop('nbins', None)
+        marker = args.pop('marker', None)
+        linestyle = args.pop('linestyle', None)
+        if nbins is None:
+            if not marker is None:
+                args['marker'] = marker     
+            if not linestyle is None:
+                args['linestyle'] = linestyle
+            self.plot(xx, yy, color, **args) #no histogram
         else:
-            self.plot(xx, yy, color,**args) #no histogram
+            self.hist(yy,nbins, facecolor=color, **args)
         
     def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
         """ plot metadataFile columns mdLabelX and mdLabelY

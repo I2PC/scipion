@@ -18,7 +18,7 @@ class ProtRotSpectra(XmippProtocol):
         self.Import = 'from protocol_rotspectra import *'    
        
     def defineSteps(self):
-        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.InSelFile,dirDest=self.WorkingDir)
+        self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.Db.insertStep('findCenter', [join(self.WorkingDir, "center2d_center.xmd")],
                            HowCenter=self.HowCenter,
                            Selfile=self.InSelFile, WorkingDir=self.WorkingDir,

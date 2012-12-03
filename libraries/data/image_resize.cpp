@@ -56,7 +56,7 @@ void ProgImageResize::defineParams()
     addParamsLine(" alias -n;");
     addParamsLine("or --dim <x> <y=x> <z=x>         : New x,y and z dimensions");
     addParamsLine(" alias -d;");
-    addParamsLine("or --fourier <x> <y=x> <thr=1>   : Use padding/windowing in Fourier Space to resize");
+    addParamsLine("or --fourier <x> <y=x> <z=x> <thr=1>   : Use padding/windowing in Fourier Space to resize");
     addParamsLine(" alias -f;");
     addParamsLine("or --pyramid <levels=1>          : Use positive value to expand and negative to reduce");
     addParamsLine(" alias -p;");
@@ -102,9 +102,6 @@ void ProgImageResize::preProcess()
     {
         //Calculate scale factor from images sizes and given dimensions
         //this approach assumes that all images have equal size
-
-
-
         if (checkParam("--dim"))
         {
             xdimOut = getIntParam("--dim", 0);
@@ -144,16 +141,22 @@ void ProgImageResize::preProcess()
     }
     else if (checkParam("--fourier"))
     {
-        if (isVol)
-            REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
-        int oxdim = xdimOut, oydim = ydimOut;
+        //        if (isVol)
+        //            REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
+        int oxdim = xdimOut, oydim = ydimOut, ozdim = zdimOut;
         scale_type = RESIZE_FOURIER;
 
         xdimOut = getIntParam("--fourier", 0);
         ydimOut = STR_EQUAL(getParam("--fourier", 1), "x") ? xdimOut : getIntParam("--fourier", 1);
-        fourier_threads = getIntParam("--fourier", 2);
+        if (isVol)
+            zdimOut = STR_EQUAL(getParam("--fourier", 2), "x") ? xdimOut : getIntParam("--fourier", 2);
+        else
+        	zdimOut=1;
+        fourier_threads = getIntParam("--fourier", 3);
         XX(resizeFactor) = (double)xdimOut / oxdim;
         YY(resizeFactor) = (double)ydimOut / oydim;
+        if (isVol)
+        	ZZ(resizeFactor) = (double)zdimOut / ozdim;
         //Do not think this is true
         //            if (oxdim < xdimOut || oydim < ydimOut)
         //                REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
@@ -184,36 +187,38 @@ void ProgImageResize::processImage(const FileName &fnImg, const FileName &fnImgO
     double aux;
     if (apply_geo)
     {
-      SCALE_SHIFT(MDL_SHIFT_X, XX(resizeFactor));
-      SCALE_SHIFT(MDL_SHIFT_Y, YY(resizeFactor));
-      if (isVol)
-        SCALE_SHIFT(MDL_SHIFT_Z, ZZ(resizeFactor));
+        SCALE_SHIFT(MDL_SHIFT_X, XX(resizeFactor));
+        SCALE_SHIFT(MDL_SHIFT_Y, YY(resizeFactor));
+        if (isVol)
+            SCALE_SHIFT(MDL_SHIFT_Z, ZZ(resizeFactor));
     }
     else
-    {
-      rowOut.clear();
-      rowOut.setValue(MDL_IMAGE, fnImgOut);
-    }
+        rowOut.resetGeo(false);
 
     img.read(fnImg);
     img().setXmippOrigin();
+    imgOut.setDatatype(img.getDatatype());
 
     switch (scale_type)
     {
     case RESIZE_FACTOR:
-        selfScaleToSize(splineDegree, img(), xdimOut, ydimOut, zdimOut);
+        //selfScaleToSize(splineDegree, img(), xdimOut, ydimOut, zdimOut);
+        scaleToSize(splineDegree, imgOut(), img(), xdimOut, ydimOut, zdimOut);
         break;
     case RESIZE_PYRAMID_EXPAND:
-        selfPyramidExpand(splineDegree, img(), pyramid_level);
+        pyramidExpand(splineDegree, imgOut(), img(), pyramid_level);
+        //selfPyramidExpand(splineDegree, img(), pyramid_level);
         break;
     case RESIZE_PYRAMID_REDUCE:
-        selfPyramidReduce(splineDegree, img(), pyramid_level);
+        pyramidReduce(splineDegree, imgOut(), img(), pyramid_level);
+        //selfPyramidReduce(splineDegree, img(), pyramid_level);
         break;
     case RESIZE_FOURIER:
-        selfScaleToSizeFourier(ydimOut, xdimOut, img(), fourier_threads);
-        break;
+        selfScaleToSizeFourier(zdimOut, ydimOut, xdimOut, img(), fourier_threads);
+        img.write(fnImgOut);
+        return;
     }
-    img.write(fnImgOut);
+    imgOut.write(fnImgOut);
 }
 
 void ProgImageResize::postProcess()

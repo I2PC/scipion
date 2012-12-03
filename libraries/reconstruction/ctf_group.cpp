@@ -54,9 +54,9 @@ void ProgCtfGroup::readParams()
         fn_split = getParam("--split");
     }
     do_wiener        = checkParam("--wiener");
-    replaceSampling  = checkParam("--samplingrate");
+    replaceSampling  = checkParam("--sampling_rate");
     if(replaceSampling)
-        samplingRate       =  getDoubleParam("--samplingrate");
+        samplingRate       =  getDoubleParam("--sampling_rate");
     memory           = getDoubleParam("--memory");
     do1Dctf          = checkParam("--do1Dctf");
     wiener_constant  = getDoubleParam("--wc");
@@ -133,7 +133,7 @@ void ProgCtfGroup::defineParams()
     addParamsLine("   [--phase_flipped]          : Output filters for phase-flipped data");
     addParamsLine("   [--discard_anisotropy]     : Exclude anisotropic CTFs from groups");
     addParamsLine("   [--wiener]                 : Also calculate Wiener filters");
-    addParamsLine("   [--samplingrate <s>]       : This sampling rate overwrites the one in the ctf.param files");
+    addParamsLine("   [--sampling_rate <s>]       : This sampling rate overwrites the one in the ctf.param files");
     addParamsLine("   [--memory <double=1.>]     : Available memory in Gb");
     addParamsLine("   [--do1Dctf]                : Compute Groups using 1D CTF, select this option is you have many \
                   non astismatic CTFs");
@@ -224,10 +224,7 @@ void ProgCtfGroup::produceSideInfo()
     int nCTFs = ctfMD.size();
     //how much memory do I need to store them
     double _sizeGb = (double) ypaddim * xpaddim * sizeof(double) * nCTFs /1073741824.;
-    if (_sizeGb > memory)
-        mmapOn=true;
-    else
-        mmapOn=false;
+    mmapOn = _sizeGb > memory;
     mics_ctf2d.setMmap(mmapOn);
     mics_ctf2d.resize(nCTFs,1,ypaddim,ctfxpaddim);
 
@@ -269,7 +266,7 @@ void ProgCtfGroup::produceSideInfo()
         ctf.readFromMetadataRow(ctfMD, __iter.objId);
         ctf.enable_CTF = true;
         ctf.enable_CTFnoise = false;
-        ctf.Produce_Side_Info();
+        ctf.produceSideInfo();
         if (pixel_size != ctf.Tm)
             REPORT_ERROR(ERR_VALUE_INCORRECT,
                          "Cannot mix CTFs with different sampling rates!");
@@ -279,7 +276,7 @@ void ProgCtfGroup::produceSideInfo()
             avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
             ctf.DeltafU = avgdef;
             ctf.DeltafV = avgdef;
-            ctf.Generate_CTF(ypaddim, ctfxpaddim, ctfmask);
+            ctf.generateCTF(ypaddim, ctfxpaddim, ctfmask);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctfmask)
             {
                 if (phase_flipped)
@@ -421,13 +418,13 @@ bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
         YY(freq) = sinp * digres;
         digfreq2contfreq(freq, freq, pixel_size);
         ctf.precomputeValues(XX(freq), YY(freq));
-        ctfp = ctf.CTF_at();
+        ctfp = ctf.getValueAt();
         ctf.precomputeValues(YY(freq), XX(freq));
-        diff = ABS(ctfp - ctf.CTF_at());
+        diff = ABS(ctfp - ctf.getValueAt());
         if (diff > max_error)
         {
             std::cout<<" Anisotropy!"<<digres<<" "<<max_error<<" "<<diff<<" "<<ctfp
-            <<" "<<ctf.CTF_at()<<std::endl;
+            <<" "<<ctf.getValueAt()<<std::endl;
             return false;
         }
     }

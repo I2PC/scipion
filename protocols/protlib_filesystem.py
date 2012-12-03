@@ -115,7 +115,7 @@ def createLink(log, source, dest):
         printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
 def createLink2(log, filename, dirSrc, dirDest):
-    createLink(log,os.path.join(dirSrc,filename),os.path.join(dirDest,filename))
+    createLink(log, join(dirSrc,filename), join(dirDest,filename))
 
 def uniqueFilename(file_name):
     ''' Create a unique filename (not file handler)
@@ -249,28 +249,28 @@ def hasSpiderExt(filename):
             return True
     return False
 
-acquisitionInfoFileName="acquisition_info.xmd"
-def linkAcquisitionInfoIfPresent(log,InputFile,dirDest):
-    dirSrc=os.path.dirname(InputFile)
-    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
-    if os.path.exists(fnAcquisitionIn):
-        createLink2(log, acquisitionInfoFileName, dirSrc, dirDest)
+ACQUISITION_INFO = "acquisition_info.xmd"
+
+def findAcquisitionInfo(inputFile):
+    '''Try to find acquision_info.xmd file from the location
+      of inputFile and moving up'''
+    d = inputFile
+    while len(d) > 0:
+        d = dirname(d)
+        ai = join(d, ACQUISITION_INFO)
+        if exists(ai):
+            return ai
+    return None
+
+def linkAcquisitionInfo(log, InputFile, dirDest):
+    ''' Search for the acquisition info file and if 
+    exists create a link in the specified folder'''
+    acquisitionInfo = findAcquisitionInfo(InputFile)
+    if acquisitionInfo is None:
+        printLog("Couldn't find acquisition_info.xmd from file path: '%(InputFile)s'" % locals(), 
+                 log, err=True, isError=True)
+    else:        
+        createLink(log, acquisitionInfo, join(dirDest, ACQUISITION_INFO))
         
-def AcquisitionInfoExists(InputFile):
-    dirSrc=os.path.dirname(removeFilenamePrefix(InputFile))
-    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
-    if os.path.exists(fnAcquisitionIn):
-        return True
-    else:
-        return False
+
     
-def AcquisitionInfoGetSamplingRate(InputFile):
-    from xmipp import MetaData,MDL_SAMPLINGRATE
-    dirSrc=os.path.dirname(removeFilenamePrefix(InputFile))
-    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
-    if os.path.exists(fnAcquisitionIn):
-        mD =MetaData(fnAcquisitionIn)
-        id = mD.firstObject()
-        return(mD.getValue(MDL_SAMPLINGRATE,id))
-    else:
-        return -1.

@@ -63,7 +63,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JPanel micrographpn;
 	private UntiltedMicrographCanvas canvas;
 	private MicrographPairsTableModel micrographsmd;
-	private UntiltedMicrograph untiltedmic;
+	
 	
 	private float position;
 	private int index;
@@ -180,10 +180,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		initImagePane();
 		particlespn.add(symbolpn, 1);
 
-		index = pppicker.getNextFreeMicrograph();
-		if (index == -1)
-			index = 0;
-		untiltedmic = pppicker.getMicrographs().get(index);
+		index = pppicker.getMicrographIndex();
+		System.out.println(index);
 
 		colorbt.addActionListener(new ColorActionListener());
 
@@ -224,14 +222,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		JScrollPane sp = new JScrollPane();
 		micrographsmd = new MicrographPairsTableModel(this);
 		micrographstb.setModel(micrographsmd);
-		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(120);
-		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(120);
-		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
-		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(60);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(395, 304));
-		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		formatMicrographsTable();
 
 		sp.setViewportView(micrographstb);
 		micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
@@ -245,9 +236,23 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		buttonspn.add(resetbt);
 		micrographpn.add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 		
-		micrographstb.getSelectionModel().setSelectionInterval(index, index);
 
 	}
+	
+	private void formatMicrographsTable() {
+		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(120);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(120);
+		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
+		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(60);
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(395, 304));
+		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		System.out.println(index);
+		if(index != -1)
+			micrographstb.setRowSelectionInterval(index, index);
+	}
+
 	
 	protected void saveChanges()
 	{
@@ -277,7 +282,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			micrographsmd.fireTableRowsUpdated(index, index);
 		micrographstb.setRowSelectionInterval(index, index);
 		upslb.setText(Integer.toString(pppicker.getUntiltedNumber()));
-		anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);
+		anglesmi.setEnabled(pppicker.getMicrograph().getAddedCount() >= 4);
 	}
 
 	void initializeCanvas()
@@ -285,9 +290,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		if (canvas == null)
 		{
 			canvas = new UntiltedMicrographCanvas(this);
+			iw = new ImageWindow(getMicrograph().getImagePlus(pppicker.getFilters()), canvas);
+			XmippWindowUtil.setLocation(0, 0, iw);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
-			if(!untiltedmic.getParticles().isEmpty())
-				canvas.setActive(untiltedmic.getParticles().get(untiltedmic.getParticles().size() - 1));//needs both canvas to be initialized
+			List<UntiltedParticle> particles = getMicrograph().getParticles();
+			if(!particles.isEmpty())
+				canvas.setActive(particles.get(particles.size() - 1));//needs both canvas to be initialized
 		}
 		else
 		{
@@ -297,8 +305,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			new ImageWindow(tiltedcanvas.getImage(), tiltedcanvas);//seems to keep previous window instead of creating a new one
 			
 		}
-		untiltedmic.runImageJFilters(pppicker.getFilters());
-		untiltedmic.getTiltedMicrograph().runImageJFilters(pppicker.getFilters());
+		getMicrograph().runImageJFilters(pppicker.getFilters());
+		getMicrograph().getTiltedMicrograph().runImageJFilters(pppicker.getFilters());
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -308,7 +316,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	public UntiltedMicrograph getMicrograph()
 	{
-		return untiltedmic;
+		return pppicker.getMicrograph();
 	}
 
 	public int getParticleSize()
@@ -330,7 +338,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	@Override
 	public List<? extends TrainingParticle> getAvailableParticles()
 	{
-		return untiltedmic.getParticles();
+		return getMicrograph().getParticles();
 	}
 
 
@@ -351,9 +359,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		tiltedcanvas.repaint();
 	}
 
-	public void importParticlesFromFolder(Format format, String dir)
+	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		super.importParticlesFromFolder(format, dir);
+		super.importParticlesFromFolder(format, dir, scale, invertx, inverty);
 		tiltedcanvas.repaint();
 	}
 	
@@ -362,7 +370,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void resetMicrograph()
 	{
-		pppicker.resetMicrograph(untiltedmic);
+		pppicker.resetMicrograph(getMicrograph());
 		canvas.setActive(null);
 		updateMicrographsModel();
 		setChanged(true);
@@ -384,15 +392,16 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		if (this.micrographstb.getSelectedRow() == -1)
 			return;// Probably from fireTableDataChanged raised
-		if(index == this.micrographstb.getSelectedRow() && iw != null && iw.isVisible())//micrograph open, no need to reopen
+		if(index == micrographstb.getSelectedRow() && iw != null && iw.isVisible())//micrograph open, no need to reopen
 			return;
 		pppicker.saveData(getMicrograph());
-		setChanged(false);
+		getMicrograph().releaseImage();
+		
 		index = micrographstb.getSelectedRow();
-		// by me.
-		untiltedmic.releaseImage();
-		untiltedmic = pppicker.getMicrographs().get(index);
-		anglesmi.setEnabled(untiltedmic.getAddedCount() >= 4);
+		pppicker.setMicrograph(pppicker.getMicrographs().get(index));
+		pppicker.saveConfig();
+		setChanged(false);
+		anglesmi.setEnabled(getMicrograph().getAddedCount() >= 4);
 		initializeCanvas();
 		
 		pack();
@@ -402,11 +411,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	@Override
 	public boolean isValidSize(int size) {
-		for(UntiltedParticle p: untiltedmic.getParticles())
-			if(!untiltedmic.fits(p.getX(), p.getY(), size))
+		UntiltedMicrograph um = pppicker.getMicrograph();
+		for(UntiltedParticle p: um.getParticles())
+			if(!pppicker.getMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
-		for(TiltedParticle p: untiltedmic.getTiltedMicrograph().getParticles())
-			if(!untiltedmic.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
+		for(TiltedParticle p: um.getTiltedMicrograph().getParticles())
+			if(!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
 				return false;
 		return true;
 	}
@@ -424,24 +434,16 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		setChanged(true);
 	}
 	
-	public void importParticlesFromFiles(Format format, String file1, String file2){
-			String filename1 = Micrograph.getName(file1, 1);
-			String filename2 = Micrograph.getName(file2, 1);
-			if(!filename1.equals(getMicrograph().getName()) || !filename2.equals(getMicrograph().getTiltedMicrograph().getName()))//validating you want use this files for this micrograph pair with different name
-			{
-				String msg = String.format("Are you sure you want to import data from files \n%s\n%s to micrograph pair %s ?", file1, file2, getMicrograph().getName());
-				int result = JOptionPane.showConfirmDialog(this, msg);
-				if(result != JOptionPane.YES_OPTION)
-					return;
-			}
-			untiltedmic.reset();
-			getParticlePicker().importParticlesFromFiles(file1, file2, format, getMicrograph());
-			pppicker.importParticlesFromFiles(file1, file2, format, untiltedmic);
+	public void importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
+			
+			getMicrograph().reset();
+			pppicker.importParticlesFromFiles(file1, file2, format, getMicrograph(), scale, invertx, inverty);
 			pppicker.saveData(getMicrograph());
 			setChanged(false);
 			getCanvas().repaint();
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
+			updateSize(getFamily().getSize());
 			canvas.setActive(null);
 	}
 	
