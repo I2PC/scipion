@@ -70,6 +70,8 @@ public:
     String          outputStyle;
     /// Scale output measure
     bool scaleDistance;
+    /// Outlier fraction
+    double outlierFraction;
     /// Low pass filter
     double          lpf;
     /// High pass filter
@@ -135,6 +137,9 @@ public:
 
     // Common line matrix
     std::vector<CommonLine> CLmatrix;
+
+    // Estimated shifts
+    Matrix1D<double> shift;
 };
 
 #define POW2(x) (x*x)

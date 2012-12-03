@@ -52,6 +52,7 @@ void ProgCommonLine::readParams() {
 	mem = getDoubleParam("--mem");
 	Nthr = getIntParam("--thr");
 	scaleDistance = checkParam("--scaleDistance");
+	outlierFraction = getDoubleParam("--outlierFraction");
 	Nmpi = 1;
 }
 
@@ -72,6 +73,7 @@ void ProgCommonLine::defineParams() {
 	addParamsLine("   [--mem <m=1>]         : float number with the memory available in Gb");
 	addParamsLine("   [--thr <thr=1>]       : number of threads for each process");
 	addParamsLine("   [--scaleDistance]     : scale the output distance to 16-bit integers");
+	addParamsLine("   [--outlierFraction <f=0.25>] : Fraction of expected outliers in the detection of common lines");
 }
 
 /* Side info --------------------------------------------------------------- */
@@ -248,8 +250,8 @@ void ProgCommonLine::getAndPrepareBlock(int i,
 		pthread_join(*(th_ids + nt), NULL);
 
     // Threads structures are not needed any more
-    delete (th_ids);
-    delete (th_args);
+    delete []th_ids;
+    delete []th_args;
 }
 
 /* Process block ----------------------------------------------------------- */
@@ -400,9 +402,6 @@ void ProgCommonLine::processBlock(int i, int j)
 /* Qualify common lines ---------------------------------------------------- */
 void ProgCommonLine::qualifyCommonLines()
 {
-    if (outputStyle=="matrix")
-        return;
-
     std::vector<double> distance;
     size_t imax=CLmatrix.size();
     distance.reserve(imax);
@@ -474,6 +473,15 @@ void ProgCommonLine::writeResults()
 			}
 		fh_out.close();
 	}
+
+	// Write the aligned images
+    int idx=0;
+	FOR_ALL_OBJECTS_IN_METADATA(SF)
+	{
+		SF.setValue(MDL_SHIFT_X,-shift(idx++)/2,__iter.objId); // *** FIXME: COSS Why /2?
+		SF.setValue(MDL_SHIFT_Y,-shift(idx++)/2,__iter.objId);
+	}
+	SF.write(fn_out.insertBeforeExtension("_aligned_images"));
 }
 
 /* Main program ------------------------------------------------------------ */
@@ -504,9 +512,8 @@ void ProgCommonLine::solveForShifts()
 			}
 		}
 
-	solver.A.write("A.txt");
-	solver.b.write("b.txt");
-	solver.w.write("w.txt");
+	const double maxShiftError=1;
+	ransacWeightedLeastSquares(solver,shift,maxShiftError,10000,outlierFraction,Nthr);
 }
 
 /* Main program ------------------------------------------------------------ */
@@ -531,9 +538,8 @@ void ProgCommonLine::run()
     {
         progress_bar(maxBlock * maxBlock);
         qualifyCommonLines();
-        writeResults();
-
         solveForShifts();
+        writeResults();
     }
 }
 
