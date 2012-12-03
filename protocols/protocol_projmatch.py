@@ -71,6 +71,9 @@ class ProtProjMatch(XmippProtocol):
            self.MaskRadius = Xdim/2
 
         
+        if self.MaskRadius == -1:
+           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           self.MaskRadius = Xdim/2
     def validate(self):
         from protlib_xmipp import validateInputSize
         errors = []
@@ -432,9 +435,7 @@ data_
                     mdReferencesSize = mdReferences.size()
                     for id in mdReferences:
                         convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
-                    #file_nameImages = self.getFilename('DocfileInputAnglesIters', iter=it)
                     file_nameImages = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@"+self.getFilename('DocfileInputAnglesIters', iter=it)
-
                     if xmippExists(file_nameImages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDtmp.read(file_nameImages)#query with ref3D

@@ -1,6 +1,6 @@
 To look at the number of different IP addresses that downloaded xmipp in 2008:
 
-psql xmipp -U xmippRO
+psql xmipp -U UUUUUUU
 passwd: whatever was in ver.php
 
 select count ( (direction)) from xmipp_users where extract (year from my_date)='2008';
