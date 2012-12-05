@@ -163,7 +163,6 @@ void ProgClassifyCL2DCore::computeCores()
 
     ProgSortByStatistics sortJunk;
     sortJunk.verbose=0;
-    sortJunk.multivariate=true;
     sortJunk.addToInput=true;
     sortJunk.cutoff=thZscore;
 
