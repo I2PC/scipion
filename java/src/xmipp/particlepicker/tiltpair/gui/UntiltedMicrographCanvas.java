@@ -76,7 +76,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.frame = frame;
 		
 		this.pppicker = frame.getParticlePicker();
-		
+		um.runImageJFilters(pppicker.getFilters());
 
 	}
 

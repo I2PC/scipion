@@ -72,7 +72,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JCheckBoxMenuItem anglesmi;
 	private JMenuItem importffilesmi;
 	private ImportParticlesFromFilesTiltPairJDialog importffilesjd;
-	private ImageWindow iw;
+	private ImageWindow tw;
 
 	public TiltPairPicker getParticlePicker()
 	{
@@ -290,8 +290,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		if (canvas == null)
 		{
 			canvas = new UntiltedMicrographCanvas(this);
-			iw = new ImageWindow(getMicrograph().getImagePlus(pppicker.getFilters()), canvas);
-			XmippWindowUtil.setLocation(0, 0, iw);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
 			if(!particles.isEmpty())
@@ -301,12 +299,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		{
 			canvas.updateMicrograph();
 			tiltedcanvas.updateMicrograph();
-			iw = new ImageWindow(canvas.getImage(), canvas);//seems to keep previous window instead of creating a new one
-			new ImageWindow(tiltedcanvas.getImage(), tiltedcanvas);//seems to keep previous window instead of creating a new one
-			
+						
 		}
-		getMicrograph().runImageJFilters(pppicker.getFilters());
-		getMicrograph().getTiltedMicrograph().runImageJFilters(pppicker.getFilters());
+		canvas.display();
+		tiltedcanvas.display(0.7f, 0);
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -384,6 +380,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		getCanvas().updateMicrographData();
 		getTiltedCanvas().getMicrograph().releaseImage();
 		getTiltedCanvas().updateMicrographData();
+		canvas.display();
+		getTiltedCanvas().display();
 		
 	}
 
@@ -392,7 +390,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		if (this.micrographstb.getSelectedRow() == -1)
 			return;// Probably from fireTableDataChanged raised
-		if(index == micrographstb.getSelectedRow() && iw != null && iw.isVisible())//micrograph open, no need to reopen
+		if(index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())//micrograph open, no need to reopen
 			return;
 		pppicker.saveData(getMicrograph());
 		getMicrograph().releaseImage();
