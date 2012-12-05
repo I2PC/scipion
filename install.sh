@@ -578,6 +578,7 @@ if $DO_PYTHON; then
     printf 'export PYTHONPATH=$XMIPP_HOME/lib:$XMIPP_HOME/protocols:$XMIPP_HOME/applications/tests/pythonlib:$XMIPP_HOME/lib/python2.7/site-packages:$PYTHONPATH \n' >> $PYTHON_BIN
     printf 'export TCL_LIBRARY=$EXT_PYTHON/tcl$VTCLTK/library \n' >> $PYTHON_BIN
     printf 'export TK_LIBRARY=$EXT_PYTHON/tk$VTCLTK/library \n\n' >> $PYTHON_BIN
+
     printf '$EXT_PYTHON/$VPYTHON/python "$@"\n' >> $PYTHON_BIN
   fi
   echoExec "chmod a+x $PYTHON_BIN"
