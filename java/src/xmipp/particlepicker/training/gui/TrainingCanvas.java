@@ -39,11 +39,13 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
+		
 		this.micrograph = frame.getMicrograph();
 		this.frame = frame;
 		this.ppicker = frame.getParticlePicker();
+		micrograph.runImageJFilters(ppicker.getFilters());
 		if(!frame.getFamilyData().getParticles().isEmpty())
-			active = frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
+			active = getLastParticle();
 		else
 			active = null;
 
@@ -54,10 +56,15 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		this.micrograph = frame.getMicrograph();
 		updateMicrographData();
 		if(!frame.getFamilyData().getParticles().isEmpty())
-			setActive(frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1));
+			setActive(getLastParticle());
 		else
 			active = null;
 		
+	}
+	
+	TrainingParticle getLastParticle()
+	{
+		return frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
 	}
 
 
