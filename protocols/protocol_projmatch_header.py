@@ -379,7 +379,7 @@ DiscardPercentagePerClass ='10'
 
 # Perform scale search?
 """ 
-    If true perform scale refinement
+    If true perform scale refinement. (Under development)
 """
 DoScale = False
 
@@ -669,10 +669,10 @@ DisplayIterationsNo='1 2 3'
 DisplayRef3DNo='1 2'
 
 # {expert} Width of projection galleries
-""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
-    classes was performed and multiplied by 2 otherwise.
+""" 
+    Usually a multiple of 2 is the right value.
 """
-MatrixWidth=3
+MatrixWidth=4
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Volumes display
