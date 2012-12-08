@@ -411,9 +411,11 @@ ScaleNumberOfSteps ='3'
 """
 ProjMatchingExtra =''
 
-# Save images assigned to each class?
+# {expert}Save images assigned to each class?
 """ If true, save images assigned to each class to a metadata file
     Be aware that for a very fine angular sampling it can be time consuming.
+    Not a very parameter any longer since you can get this information in 
+    visualize results
 """
 DoSaveImagesAssignedToClasses = False
 
@@ -645,10 +647,6 @@ ConstantToAddToFiltration ='-0.05'
     <Note:> if there are more values than iterations the extra value are ignored
 """
 ConstantToAddToMaxReconstructionFrequency ='0.1'
-
-# {expert} Center volume
-""" Center volume after each iteration """
-DoCenterVolume = False
 
 # {eval} expandParallel(jobsize=1)
 
