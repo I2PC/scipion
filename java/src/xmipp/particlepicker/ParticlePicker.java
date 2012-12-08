@@ -477,6 +477,8 @@ public abstract class ParticlePicker {
 		if (scale != 1.f) md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
 
 	}// function importParticlesFromFile
+	
+	
 
 	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
 		String line = "";

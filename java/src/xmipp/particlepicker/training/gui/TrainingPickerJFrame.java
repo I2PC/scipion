@@ -1,5 +1,6 @@
 package xmipp.particlepicker.training.gui;
 
+import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 
 import java.awt.Dimension;
@@ -80,10 +81,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	private JFormattedTextField thresholdtf;
 	private Family family;
 	
-	private ImageWindow iw;
+
+	
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
 
+	
 	@Override
 	public TrainingPicker getParticlePicker() {
 		return ppicker;
@@ -480,7 +483,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		if (micrographstb.getSelectedRow() == -1)
 			return;// Probably from fireTableDataChanged raised
 
-		if(index == micrographstb.getSelectedRow() && iw != null && iw.isVisible())//same micrograph open
+		if(index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())//same micrograph open
 			return;
 		ppicker.saveData(getMicrograph());// Saving changes when switching micrographs, by Coss suggestion
 
@@ -545,20 +548,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 
 	protected void initializeCanvas() {
 
-		if (canvas == null) {
-			canvas = new TrainingCanvas(this);
-			iw = new ImageWindow(ppicker.getMicrograph().getImagePlus(ppicker.getFilters()),
-					canvas);
-			iw.setTitle(ppicker.getMicrograph().getName());
-		} else {
-			canvas.updateMicrograph();
-			// seems to keep previous window instead of creating a new one
-			iw = new ImageWindow(canvas.getImage(), canvas);
-
-		}
-
-		ppicker.getMicrograph().runImageJFilters(ppicker.getFilters());
 		
+		if (canvas == null)
+
+			canvas = new TrainingCanvas(this);
+			
+		else
+			canvas.updateMicrograph();
+
+		
+		canvas.display();		
 		double zoom = Double.parseDouble(usezoombt.getText());
 		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))// setting
 																	// canvas
@@ -569,7 +568,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		} else if (usezoombt.isSelected())
 			canvas.setZoom(zoom);
 	}
-
+	
+	
 	private void formatMicrographsTable() {
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
@@ -785,11 +785,28 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 	protected void reloadImage() {
 		getCanvas().getMicrograph().releaseImage();
 		getCanvas().updateMicrographData();
-
+		canvas.display();
 	}
 
 
 	public void importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty) {
+
+		if(ppicker.isReviewFile(file))
+		{
+			ppicker.importAllParticles(file, scale, invertx, inverty);
+			ppicker.saveData();
+		}
+		else
+			importMicrographParticles(format, file, scale, invertx, inverty);
+		setChanged(false);
+		getCanvas().repaint();
+		updateMicrographsModel();
+		updateSize(family.getSize());
+		canvas.setActive(null);
+	}
+	
+	public void importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty) {
+
 		String filename = Micrograph.getName(file, 1);
 		if (!filename.equals(getMicrograph().getName()))// validating you want
 														// use this file for
@@ -807,11 +824,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		mfd.reset();
 		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
-		setChanged(false);
-		getCanvas().repaint();
-		updateMicrographsModel();
-		updateSize(family.getSize());
-		canvas.setActive(null);
+	
 	}
 
 	@Override

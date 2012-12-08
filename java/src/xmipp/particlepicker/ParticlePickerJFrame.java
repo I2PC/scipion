@@ -2,6 +2,8 @@ package xmipp.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
+import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -102,7 +104,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	private JMenuItem exitmi;
 	protected JPanel imagepn;
 	protected JLabel positionlb;
-
 	protected JToggleButton usezoombt;
 
 	public TemplatesJDialog templatesdialog;
@@ -180,6 +181,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 	}
+
 
 	protected abstract void loadMicrograph();
 
@@ -467,8 +469,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	protected void displayZoom() {
-
+	
+	
+	
+	protected void displayZoom()
+	{
+		
 		usezoombt.setText(String.format("%.2f", getCanvas().getMagnification()));
 		pack();
 	}
