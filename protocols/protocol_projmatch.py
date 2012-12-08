@@ -236,8 +236,7 @@ data_
         ref3Ds = map(int, getListFromVector(self.DisplayRef3DNo))
         self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
-        runShowJExtraParameters = ' --dont_wrap --view '+ self.DisplayVolumeSlicesAlong +
-                                  ' --columns ' + self.MatrixWidth
+        runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
         if doPlot('DisplayReference'):
             VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames

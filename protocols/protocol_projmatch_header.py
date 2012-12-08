@@ -670,9 +670,9 @@ DisplayRef3DNo='1 2'
 
 # {expert} Width of projection galleries
 """ 
-    Usually a multiple of 2 is the right value.
+    Usually a multiple of 2 is the right value. -1 => authomatic
 """
-MatrixWidth=4
+MatrixWidth=-1
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Volumes display
