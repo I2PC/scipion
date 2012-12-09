@@ -75,11 +75,11 @@ SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs)
 {
 
     PyObject *pyMd = NULL;
-    PyObject *pyProjdirMode = NULL;
-    PyObject *pyCheckMirrors = NULL;
-    PyObject *pyObjectRotation = NULL;
+    PyObject *pyProjdirMode = Py_False;
+    PyObject *pyCheckMirrors = Py_False;
+    PyObject *pyObjectRotation = Py_False;
 
-    if (PyArg_ParseTuple(args, "O|OOO", &pyMd,
+    if (PyArg_ParseTuple(args, "|OOO", &pyMd,
                          &pyProjdirMode,
                          &pyCheckMirrors,
                          &pyObjectRotation))
@@ -112,6 +112,43 @@ SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* computeDistance */
+PyObject *
+SymList_computeDistanceAngles(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+	double rot1, tilt1, psi1, rot2, tilt2, psi2;
+    PyObject *pyProjdirMode = Py_False;
+    PyObject *pyCheckMirrors = Py_False;
+    PyObject *pyObjectRotation = Py_False;
+
+    if (PyArg_ParseTuple(args, "dddddd|OOO", &rot1, &tilt1, &psi1, &rot2, &tilt2, &psi2,
+                         &pyProjdirMode,
+                         &pyCheckMirrors,
+                         &pyObjectRotation))
+    {
+        try
+        {
+            bool projdir_mode    = false;
+            bool check_mirrors   = false;
+            bool object_rotation = false;
+            if (PyBool_Check(pyProjdirMode))
+                projdir_mode = (pyProjdirMode == Py_True);
+            if (PyBool_Check(pyCheckMirrors))
+                check_mirrors = (pyCheckMirrors == Py_True);
+            if (PyBool_Check(pyObjectRotation))
+                object_rotation = (pyObjectRotation == Py_True);
+            SymListObject *self = (SymListObject*) obj;
+            double dist=self->symlist->computeDistance(rot1,tilt1,psi1,rot2,tilt2,psi2,
+            		projdir_mode,check_mirrors,object_rotation);
+            return PyFloat_FromDouble(dist);
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 
 /* SymList methods */
 PyMethodDef SymList_methods[] =
@@ -120,6 +157,8 @@ PyMethodDef SymList_methods[] =
      METH_VARARGS, "read symmetry file" },
    { "computeDistance", (PyCFunction) SymList_computeDistance,
        METH_VARARGS, "compute angular distance in a metadata" },
+   { "computeDistanceAngles", (PyCFunction) SymList_computeDistanceAngles,
+	   METH_VARARGS, "compute angular distance between two sets of angles" },
    { NULL } /* Sentinel */
 };//SymList_methods
 
