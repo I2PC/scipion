@@ -59,10 +59,13 @@ public class Family {
 		this.size = size;
 		this.state = state;
 		this.templatesNumber = templatesNumber;
+		
 		initTemplates();
 	}
 
 	public void initTemplates() {
+		if(templatesNumber == 0)
+			return;
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
