@@ -62,7 +62,7 @@ class SqliteDb:
     NO_JOBID = -1
     UNKNOWN_JOBID = 0
     
-    StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed', 'Aborted']
+    StateNames = ['Saved', 'Launched', 'Running', 'Finished', 'Failed', 'Aborted']
     
     def execSqlCommand(self, sqlCmd, errMsg):
         """Helper function to execute sqlite commands"""
@@ -600,7 +600,7 @@ class XmippProtocolDb(SqliteDb):
         try:
             self._execSingleStep(stepRow, info)
         except Exception as e:
-            err = "         Step finish with error: %s: %s" % (info.stepStr, e)
+            err = "         Step finished with error: %s: %s" % (info.stepStr, e)
             printLog(err, self.Log, out=True, err=True, isError=True)
             raise
         self._endSingleStep(_connection, _cursor, stepRow, info)
@@ -655,7 +655,7 @@ class XmippProtocolDb(SqliteDb):
         
     def _endSingleStep(self, _connection, _cursor, stepRow, info):  
         # Report step finish and update database
-        msg = greenStr("         Step finish: %s" % info.stepStr)
+        msg = greenStr("         Step finished: %s" % info.stepStr)
         printLog(msg, self.Log, out=True, err=True)
         sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d

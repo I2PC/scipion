@@ -626,7 +626,7 @@ class XmippProtocol(object):
             print >> self.stderr, failStr("ERROR(PROBABLY A BUG): %s" %  e)
             import traceback
             traceback.print_exc(file=self.stderr)
-            
+            self.updateRunState(SqliteDb.RUN_FAILED)
         finally:
             self.fOut.close()
             self.fErr.close()  
