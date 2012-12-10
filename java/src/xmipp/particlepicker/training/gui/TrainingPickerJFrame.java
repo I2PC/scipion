@@ -641,7 +641,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame {
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-
+		ppicker.persistFamilies();
 		try {
 			canvas.setEnabled(false);
 			XmippWindowUtil.blockGUI(getRootPane(), "Training...");
