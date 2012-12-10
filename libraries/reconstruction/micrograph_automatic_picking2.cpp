@@ -317,7 +317,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     buildSearchSpace(positionArray,fast);
     std::ofstream fh_training;
     fh_training.open("particles_cord1.txt");
-    int num=positionArray.size()*(10.0/100.0);
+    int num=positionArray.size()*(80.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
@@ -874,7 +874,9 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     MultidimArray<int> mask;
     CorrelationAux aux;
     FourierFilter filter;
-    int size = XSIZE(microImage());
+    int sizeX = XSIZE(microImage());
+    int sizeY = YSIZE(microImage());
+
     //Generating Mask
     mask.resize(particleAvg);
     mask.setXmippOrigin();
@@ -897,8 +899,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
             avgRotatedLarge+=avgRotated;
         }
         avgRotatedLarge/=120;
-        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                   LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
         correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
         filter.do_generate_3dmask=true;
         filter.generateMask(convolveRes);
@@ -907,8 +909,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     else
     {
         avgRotatedLarge=particleAvg;
-        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                   LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
         correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
         filter.do_generate_3dmask=true;
         filter.generateMask(convolveRes);
@@ -920,8 +922,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
             rotate(LINEAR,avgRotated,particleAvg,double(deg));
             avgRotatedLarge=avgRotated;
             avgRotatedLarge.setXmippOrigin();
-            avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                       LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+            avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                       LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
             correlation_matrix(aux.FFT1,avgRotatedLarge,tempConvolve,aux,false);
             filter.applyMaskSpace(tempConvolve);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)

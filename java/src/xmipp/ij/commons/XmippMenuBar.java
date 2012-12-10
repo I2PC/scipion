@@ -426,7 +426,9 @@ public class XmippMenuBar extends MenuBar
 
 				try
 				{
-					String command = ((MenuItem) e.getSource()).getActionCommand();
+					CheckboxMenuItem mi = (CheckboxMenuItem) e.getSource();
+					
+					String command = mi.getActionCommand();
 					runCommand(command, requirements);
 				}
 				catch (Exception ex)

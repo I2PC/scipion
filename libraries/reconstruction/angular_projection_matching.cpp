@@ -796,7 +796,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         Matrix2D<double> A(3,3);
         A.initIdentity();
         MAT_ELEM(A,0, 0) = -1.;
-        MAT_ELEM(A,0, 1) = -1.;
+        //MAT_ELEM(A,0, 1) *= -1.;
         applyGeometry(LINEAR, Mimg, img, A, IS_INV, DONT_WRAP);
     }
     else
