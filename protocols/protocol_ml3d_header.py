@@ -56,7 +56,7 @@ Angular sampling for a quick projection matching to obtain right grey scale.
 As the resolution of the intial reference should be low, this sampling can
 be relatively crude, e.g. 15
 """
-ProjMatchSampling = 15
+ProjMatchSampling = 15.0
 
 # Low-pass filter initial references?
 """ 
