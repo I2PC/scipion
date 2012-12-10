@@ -153,6 +153,8 @@ void  ProgConvImg::defineParams()
     addExampleLine("xmipp_image_convert -i selFile.sel -o stackFile.stk --append");
     addExampleLine("Replace a single image into a stack:",false);
     addExampleLine("xmipp_image_convert -i img.spi -o 3@stackFile.stk");
+    addExampleLine("Convert a MRC stack to a MRC volume:",false);
+    addExampleLine("xmipp_image_convert -i stack.mrc -o volume.mrc -t vol");
 }
 
 void ProgConvImg::readParams()
@@ -193,9 +195,9 @@ void ProgConvImg::preProcess()
             /* It is stack if extension is stack compatible, or if --oroot is not passed
              * and there are more than one image. Same for volumes.
              * Firstly, we must check extensions, then stack and volume sizes.*/
-            if (fn_out.hasStackExtension())
+            if (( mdInSize > 1 || zdimOut > 1 ) && fn_out.hasStackExtension())
                 type = "stk";
-            else if (fn_out.hasVolumeExtension()) // if it is volume
+            else if (( mdInSize > 1 || zdimOut > 1 ) && fn_out.hasVolumeExtension()) // if it is volume
                 type = "vol";
             else if (mdInSize > 1)
                 type = "stk";

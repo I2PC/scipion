@@ -126,7 +126,7 @@ void ProgSimulateMicroscope::estimateSigma()
     ctf.ctf.enable_CTFnoise = false;
     ctf.ctf.read(getParam("--ctf"));
     ctf.ctf.changeSamplingRate(ctf.ctf.Tm*downsampling);
-    ctf.ctf.Produce_Side_Info();
+    ctf.ctf.produceSideInfo();
 
     size_t N_stats = pmdIn->size();
 
@@ -192,7 +192,7 @@ void ProgSimulateMicroscope::setupFourierFilter(FourierFilter &filter, bool isBa
     filter.ctf.read(fn_ctf);
     filter.ctf.enable_CTF = !isBackground;
     filter.ctf.enable_CTFnoise = isBackground;
-    filter.ctf.Produce_Side_Info();
+    filter.ctf.produceSideInfo();
     aux.resizeNoCopy(dYdim, dXdim);
     aux.setXmippOrigin();
     filter.do_generate_3dmask=true;

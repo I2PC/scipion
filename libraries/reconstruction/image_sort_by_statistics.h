@@ -40,7 +40,7 @@ class ProgSortByStatistics: public XmippProgram
 {
 public:
     FileName fn, fn_out, fn_train;
-    bool multivariate,addToInput;
+    bool addToInput;
 
 public:
     double cutoff;
@@ -49,6 +49,8 @@ public:
     MetaData SF, SFtrain;
 
 public:
+    void clear();
+
     void readParams();
 
     void defineParams();

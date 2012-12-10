@@ -25,6 +25,11 @@
 
 #include "image_sort_by_statistics.h"
 
+void ProgSortByStatistics::clear()
+{
+	pcaAnalyzer.clear();
+}
+
 void ProgSortByStatistics::readParams()
 {
     fn = getParam("-i");
@@ -43,10 +48,7 @@ void ProgSortByStatistics::defineParams()
     addUsageLine("+description of the image gray levels) and the radial profile of");
     addUsageLine("+the image squared.");
     addUsageLine("+");
-    addUsageLine("+These vectors are then scored according to a Gaussian distribution");
-    //addUsageLine("+that can be chosen to be univariate or multivariate. The multivariate");
-    addUsageLine("+gaussian is more powerful in the sense that it can capture relationships");
-    addUsageLine("+among variables.");
+    addUsageLine("+These vectors are then scored according to a multivariate Gaussian distribution");
     addUsageLine("+");
     addUsageLine("+If you choose a threshold, you must take into account that it is a zscore.");
     addUsageLine("+For univariate and mulivariate Gaussian distributions, 99% of the individuals");
@@ -66,8 +68,7 @@ void ProgSortByStatistics::defineParams()
 //majorAxis and minorAxis is the estimated particle size in px
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
-#define DEBUG
-
+//#define DEBUG
     pcaAnalyzer[2];
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
     PCAMahalanobisAnalyzer tempPcaAnalyzer1;
@@ -384,6 +385,7 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
 
 void ProgSortByStatistics::run()
 {
+	clear();
 
     // Process input selfile ..............................................
     SF.read(fn);
@@ -391,12 +393,9 @@ void ProgSortByStatistics::run()
 
     if (fn_train != "")
         SFtrain.read(fn_train);
-
     else
         processInprocessInputPrepareSPTH(SF);
-    //processInputPrepare(SF);
 
-    std::cout << " OUT " << std::endl;
     int imgno = 0;
     int numPCAs = pcaAnalyzer.size();
 
@@ -416,7 +415,6 @@ void ProgSortByStatistics::run()
         {
             SF.getValue(MDL_ENABLED,enabled,__iter.objId);
             ZscoreMultivariate(imgno)+=(pcaAnalyzer[num].getZscore(imgno))*weights(num)*(pcaAnalyzer[num].getZscore(imgno));
-
         }
         imgno++;
     }

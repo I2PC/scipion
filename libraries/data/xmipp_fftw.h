@@ -386,7 +386,7 @@ public:
         It is assumed that the container for the real image as well as
         the one for the Fourier array are already resized.
         No plan is updated. */
-    void setFourier(MultidimArray<std::complex<double> > &imgFourier);
+    void setFourier(const MultidimArray<std::complex<double> > &imgFourier);
 
     /* Set normalization sign.
      * It defines when the normalization must be applied, when doing
@@ -478,6 +478,18 @@ void correlation_vector(const MultidimArray< T > & m1,
     // Center the resulting image to obtain a centered autocorrelation
     CenterFFT(R, true);
 }
+
+/** Autocorrelation function of a Xmipp vector
+ * @ingroup FourierOperations
+ *
+ * Same as correlation_vector, but the Fourier transforms have already been computed
+ * and the transformer is reused. The transformer internal variables must have already
+ * been resized.
+ */
+void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
+                        const MultidimArray< std::complex<double> > & FFT2,
+                        MultidimArray< double >& R,
+                        FourierTransformer &transformer);
 
 /** Compute the correlation vector without using Fourier.
  * @ingroup FourierOperations

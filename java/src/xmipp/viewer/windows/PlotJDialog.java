@@ -34,6 +34,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
@@ -63,6 +64,7 @@ public class PlotJDialog extends XmippDialog {
 	private ColumnsTableModel model;
 	private JTextField tfTitle, tfXLabel, tfYLabel, tfBins;
 	private JCheckBox jchHist;
+	private JComboBox jcbXAxis;
 	// This will be used for check for results from the dialog
 	boolean fireEvent = true;
 	GridBagConstraints gbc = new GridBagConstraints();
@@ -113,6 +115,11 @@ public class PlotJDialog extends XmippDialog {
 		addPair("Y label:", tfYLabel, 2);
 		addPair("Histogram:", jchHist, 3);
 		addPair("Bins: ", tfBins, 4);
+		jcbXAxis = new JComboBox();
+		jcbXAxis.addItem("");
+		for (ColumnInfo ci : rows)
+			jcbXAxis.addItem(ci.labelName);
+		addPair("X Axis:", jcbXAxis, 5);
 	}
 
 	@Override
@@ -182,31 +189,31 @@ public class PlotJDialog extends XmippDialog {
 		if (!checked)
 			return;
 
-		String binsArg = jchHist.isSelected() ? "--nbins" : "";
-		String binsVal = jchHist.isSelected() ? tfBins.getText().trim() : "";
-		String args = String
-				.format(" %s -y \"%s\" --colors \"%s\" --style \"%s\" --markers \"%s\" %s %s",
-						gallery.data.filename, labels, colors, styles, markers,
-						binsArg, binsVal);
 		try {
-			System.out.println("xmipp_metadata_plot" + args);
-			if (!jchHist.isSelected())
-				Runtime.getRuntime().exec(
-						new String[] { "xmipp_metadata_plot",
-								gallery.data.filename, "-y", labels,
-								"--colors", colors, "--style", styles,
-								"--markers", markers, "--title",
-								tfTitle.getText().trim(), "--ytitle", ylabel,
-								"--xtitle", tfXLabel.getText().trim()});
-			else
-				Runtime.getRuntime().exec(
-						new String[] { "xmipp_metadata_plot",
-								gallery.data.filename, "-y", labels,
-								"--colors", colors, "--style", styles,
-								"--markers", markers, "--title",
-								tfTitle.getText().trim(), "--ytitle", ylabel,
-								"--xtitle", tfXLabel.getText().trim(),
-								"--nbins", tfBins.getText().trim()});
+			String[] argsBasic = { "xmipp_metadata_plot",
+					gallery.data.filename, "-y", labels, "--colors", colors,
+					"--style", styles, "--markers", markers, "--title",
+					tfTitle.getText().trim(), "--ytitle", ylabel, "--xtitle",
+					tfXLabel.getText().trim() };
+			ArrayList<String> argsArray = new ArrayList<String>(
+					Arrays.asList(argsBasic));
+
+			if (jchHist.isSelected()) {
+				argsArray.add("--nbins");
+				argsArray.add(tfBins.getText().trim());
+			}
+
+			if (jcbXAxis.getSelectedIndex() != 0) {
+				argsArray.add("-x");
+				argsArray.add(jcbXAxis.getSelectedItem().toString());
+			}
+			
+			for (String a: argsArray)
+				System.out.print(a + " ");
+			System.out.println("");
+			
+			argsBasic = argsArray.toArray(argsBasic);
+			Runtime.getRuntime().exec((String[]) argsBasic);
 
 		} catch (IOException e) {
 			e.printStackTrace();

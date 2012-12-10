@@ -71,6 +71,9 @@ class ProtProjMatch(XmippProtocol):
            self.MaskRadius = Xdim/2
 
         
+        if self.MaskRadius == -1:
+           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           self.MaskRadius = Xdim/2
     def validate(self):
         from protlib_xmipp import validateInputSize
         errors = []
@@ -233,7 +236,7 @@ data_
         ref3Ds = map(int, getListFromVector(self.DisplayRef3DNo))
         self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
-        
+        runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
         if doPlot('DisplayReference'):
             VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
@@ -247,7 +250,7 @@ data_
                     else:
                     #Xmipp_showj (x,y and z shows the same)
                         try:
-                            runShowJ(file_name, extraParams = ' --dont_wrap ')
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
                         except Exception, e:
                             showError("Error launching java app", str(e))
                         
@@ -264,7 +267,7 @@ data_
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
-                                runShowJ(file_name, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                             
@@ -281,7 +284,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                 
@@ -313,7 +316,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name_bfactor, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name_bfactor, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -353,7 +356,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -368,7 +371,7 @@ data_
                             print "Empty metadata: ", file_name
                         else:
                             try:
-                                runShowJ(file_name,extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
         
@@ -413,7 +416,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -432,9 +435,7 @@ data_
                     mdReferencesSize = mdReferences.size()
                     for id in mdReferences:
                         convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
-                    #file_nameImages = self.getFilename('DocfileInputAnglesIters', iter=it)
                     file_nameImages = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@"+self.getFilename('DocfileInputAnglesIters', iter=it)
-
                     if xmippExists(file_nameImages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDtmp.read(file_nameImages)#query with ref3D
@@ -477,7 +478,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -493,7 +494,7 @@ data_
                         print "Empty metadata: ", file_name
                     else:
                         try:
-                            runShowJ(file_name, extraParams = ' --dont_wrap ')
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
                         except Exception, e:
                             showError("Error launching java app", str(e))
             

@@ -134,6 +134,46 @@ TEST_F( MatrixTest, solveLinearSystem)
     EXPECT_EQ(auxX,X) << "MatrixTest_solveLinearSystem failed";
 }
 
+TEST_F( MatrixTest, RANSAC)
+{
+	 WeightedLeastSquaresHelper h;
+	 Matrix2D<double> &A = h.A;
+	 Matrix1D<double> &b = h.b;
+	 Matrix1D<double> &w = h.w;
+	 A.resizeNoCopy(100,2);
+	 b.resizeNoCopy(100);
+	 w.resizeNoCopy(100);
+
+	 int Nsteps=60;
+	 double iNsteps=1.0/Nsteps;
+	 for (int i=0; i<Nsteps; i++)
+	 {
+		 double x=i*iNsteps;
+		 A(i,0)=x;
+		 A(i,1)=1;
+		 b(i)=0.5*x+1;
+		 w(i)=1;
+	 }
+	 for (int i=Nsteps; i<VEC_XSIZE(b); i++)
+	 {
+		 double x=rnd_unif(0,1);
+		 A(i,0)=x;
+		 A(i,1)=1;
+		 b(i)=rnd_unif(1,1.5);
+		 w(i)=1;
+	 }
+
+    Matrix1D<double> auxX(2), X(2);
+
+    auxX(0) =  0.5;
+    auxX(1) =  1;
+
+    ransacWeightedLeastSquares(h, X, 0.1, 10000, 0.5);
+
+    EXPECT_NEAR(auxX(0),X(0),1e-2) << "MatrixTest_ransacWeightedLeastSquares failed";
+    EXPECT_NEAR(auxX(1),X(1),1e-2) << "MatrixTest_ransacWeightedLeastSquares failed";
+}
+
 TEST_F( MatrixTest, initGaussian)
 {
     Matrix2D<double> A;

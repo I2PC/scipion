@@ -377,8 +377,8 @@ void ProgAngularProjectionMatching::produceSideInfo()
                              "ERROR!! Only non-astigmatic CTFs are allowed!");
             }
             ctf.enable_CTF = true;
-            ctf.Produce_Side_Info();
-            ctf.Generate_CTF(paddim, paddim, ctfmask);
+            ctf.produceSideInfo();
+            ctf.generateCTF(paddim, paddim, ctfmask);
             Mctf.resize(paddim,paddim);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mctf)
             {
@@ -796,7 +796,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         Matrix2D<double> A(3,3);
         A.initIdentity();
         MAT_ELEM(A,0, 0) = -1.;
-        MAT_ELEM(A,0, 1) = -1.;
+        //MAT_ELEM(A,0, 1) *= -1.;
         applyGeometry(LINEAR, Mimg, img, A, IS_INV, DONT_WRAP);
     }
     else
@@ -813,7 +813,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         opt_xoff = opt_yoff = 0.;
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
         opt_xoff = opt_yoff = 0.;
-    //#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     std::cerr<<"optimal shift "<<opt_xoff<<" "<<opt_yoff<<std::endl;
@@ -1029,7 +1029,18 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
         opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
 
-        translationallyAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr);
+//#define DEBUG
+#ifdef DEBUG
+      std::cerr << "DEBUG_ROB, img.name():" << img.name() << std::endl;
+#endif
+#undef DEBUG
+        translationallyAlignOneImage(img(),
+        		                     opt_refno,
+        		                     opt_psi,
+        		                     opt_flip,
+        		                     opt_xoff,
+        		                     opt_yoff,
+        		                     maxcorr);
 
         /* FIXME ROB     */
         //opt_psi += img.psi();

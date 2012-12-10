@@ -64,6 +64,7 @@ void ProgClassifyFTTRI::readParams()
     nref = getIntParam("--nref");
     nMinImages = getIntParam("--nmin");
     Niter = getIntParam("--iter");
+    doPhase  = checkParam("--doPhase");
 }
 
 // Show ====================================================================
@@ -82,6 +83,7 @@ void ProgClassifyFTTRI::show()
     << "N.Classes:   " << nref       << std::endl
     << "N.Minimum:   " << nMinImages << std::endl
     << "Iterations:  " << Niter      << std::endl
+    << "Do phase:    " << doPhase    << std::endl
     ;
 }
 
@@ -103,6 +105,7 @@ void ProgClassifyFTTRI::defineParams()
     addParamsLine("                               : is smaller than nmin are removed from the classification");
     addParamsLine("   [--sigma1+ <s=0.707>]       : First weight in the FTTRI, see paper for documentation");
     addParamsLine("   [--sigma2+ <s=1.5>]         : Second weight in the FTTRI, see paper for documentation");
+    addParamsLine("   [--doPhase]                 : Do also an amplitude and phase classification");
     addExampleLine("mpirun -np 4 `which xmipp_mpi_classify_FTTRI` -i images.xmd --oroot class --nref 64");
 }
 
@@ -1069,6 +1072,7 @@ void ProgClassifyFTTRI::writeResults(bool FTTRI)
         size_t id=MDsummary.addObject();
         MDsummary.setValue(MDL_REF, i+1, id);
         MDsummary.setValue(MDL_CLASS_COUNT,nmax,id);
+        MDsummary.setValue(MDL_CLASSIFICATION_INTRACLASS_DISTANCE,classEpsilon(i),id);
 
         // Measure the distance of each class and sort
         if (FTTRI)
@@ -1099,17 +1103,21 @@ void ProgClassifyFTTRI::writeResults(bool FTTRI)
         distance.indexSort(idx);
 
         // Write the class
+        MDRow row;
         for (int n=0; n<nmax; n++)
         {
             int trueIdx=A1D_ELEM(idx,n)-1;
-            mdIn.getValue(MDL_IMAGE,fnImg,imgsId[class_i[trueIdx]]);
-            size_t idClass=MDclass.addObject();
-            MDclass.setValue(MDL_IMAGE,fnImg,idClass);
+            size_t trueId=imgsId[class_i[trueIdx]];
+            mdIn.getRow(row,trueId);
+            size_t idClass=MDclass.addRow(row);
             MDclass.setValue(MDL_COST,A1D_ELEM(distance,trueIdx),idClass);
+            MDclass.setValue(MDL_REF,i+1,idClass);
+            mdIn.setValue(MDL_REF,i+1,trueId);
         }
-        MDclass.write(formatString("class_%05d@%s",i+1,fnClasses.c_str()),MD_APPEND);
+        MDclass.write(formatString("class%06d_images@%s",i+1,fnClasses.c_str()),MD_APPEND);
     }
     MDsummary.write(formatString("classes@%s",fnClasses.c_str()),MD_APPEND);
+    mdIn.write(fnRoot+"_images.xmd");
 }
 
 // Align images within classes ============================================
@@ -1138,6 +1146,7 @@ void ProgClassifyFTTRI::alignImagesWithinClasses()
     MultidimArray<int> &mMask=mask();
     MetaData MDclass, MDaux;
     Matrix2D<double> M;
+    MDRow row;
     for (int i=0; i<nref; i++)
         if (((i+1)%node->size)==node->rank)
         {
@@ -1151,8 +1160,9 @@ void ProgClassifyFTTRI::alignImagesWithinClasses()
                 for (int n=0; n<nmax; n++)
                 {
                     size_t trueIdx=class_i[n];
-                    mdIn.getValue(MDL_IMAGE,fnCandidate,imgsId[trueIdx]);
-                    MDclass.setValue(MDL_IMAGE,fnCandidate,MDclass.addObject());
+                    size_t trueId=imgsId[trueIdx];
+                    mdIn.getRow(row,trueId);
+                    MDclass.addRow(row);
                 }
 
                 // Create centroid
@@ -1181,7 +1191,7 @@ void ProgClassifyFTTRI::alignImagesWithinClasses()
             // Write new centroid
             centroid.write(fnCentroids,i+1,true,WRITE_REPLACE);
             MDaux.sort(MDclass,MDL_MAXCC,false);
-            MDaux.write(formatString("%s_class_%05d.xmd",fnRoot.c_str(),i+1));
+            MDaux.write(formatString("%s_class%06d.xmd",fnRoot.c_str(),i+1));
             if (node->isMaster())
                 progress_bar(i);
         }
@@ -1192,11 +1202,23 @@ void ProgClassifyFTTRI::alignImagesWithinClasses()
         FileName fnClasses=fnRoot+"_classes.xmd", fnClass;
         for (int i=0; i<nref; i++)
         {
-        	fnClass=formatString("%s_class_%05d.xmd",fnRoot.c_str(),i+1);
+        	fnClass=formatString("%s_class%06d.xmd",fnRoot.c_str(),i+1);
         	MDclass.read(fnClass);
-        	MDclass.write(formatString("class_%05d@%s",i+1,fnClasses.c_str()),MD_APPEND);
+        	MDclass.write(formatString("class%06d_images@%s",i+1,fnClasses.c_str()),MD_APPEND);
         	fnClass.deleteFile();
         }
+
+        MetaData MDsummary;
+        FileName classesBlock=(String)"classes@"+fnClasses;
+        MDsummary.read(classesBlock);
+        int nref=1;
+        FileName fnRef;
+        FOR_ALL_OBJECTS_IN_METADATA(MDsummary)
+        {
+        	fnRef.compose(nref++,fnCentroids);
+        	MDsummary.setValue(MDL_IMAGE,fnRef,__iter.objId);
+        }
+        MDsummary.write(classesBlock,MD_APPEND);
     }
 }
 
@@ -1238,22 +1260,26 @@ void ProgClassifyFTTRI::run()
         writeResults(true);
 
     // Amplitude and phase classification
-    if (node->isMaster())
-        std::cout << std::endl << "Amplitude and phase classification ..." << std::endl;
-    for (int n=0; n<Niter; n++)
+    if (doPhase)
     {
-        if (node->isMaster())
-            std::cout << std::endl << "Iteration " << n << std::endl;
-        splitLargeClasses(false);
-        computeClassCentroids(false);
-        computeClassNeighbours(false);
-        size_t changes=reassignImagesToClasses(false);
-        removeSmallClasses();
+		if (node->isMaster())
+			std::cout << std::endl << "Amplitude and phase classification ..." << std::endl;
+		for (int n=0; n<Niter; n++)
+		{
+			if (node->isMaster())
+				std::cout << std::endl << "Iteration " << n << std::endl;
+			splitLargeClasses(false);
+			computeClassCentroids(false);
+			computeClassNeighbours(false);
+			size_t changes=reassignImagesToClasses(false);
+			removeSmallClasses();
+		}
+		if (node->isMaster())
+			writeResults(false);
     }
-    if (node->isMaster())
-        writeResults(false);
 
     // Align images within classes
     node->barrierWait();
     alignImagesWithinClasses();
+
 }
