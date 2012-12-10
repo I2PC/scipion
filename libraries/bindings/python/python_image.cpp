@@ -118,6 +118,8 @@ PyMethodDef Image_methods[] =
      "Resize the image dimensions" },
    { "scale", (PyCFunction) Image_scale, METH_VARARGS,
      "Scale the image" },
+     { "patch", (PyCFunction) Image_patch, METH_VARARGS,
+       "Make a patch with other image" },
    { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
      "set DataType for Image" },
    { "convert2DataType", (PyCFunction) Image_convert2DataType, METH_VARARGS,
@@ -706,6 +708,29 @@ Image_resize(PyObject *obj, PyObject *args, PyObject *kwargs)
      }
      return NULL;
  }//function Image_scale
+
+ /* Patch Image */
+ PyObject *
+ Image_patch(PyObject *obj, PyObject *args, PyObject *kwargs)
+ {
+     ImageObject *self = (ImageObject*) obj;
+     PyObject *patch;
+     int x = 0, y = 0;
+
+     if (self != NULL && PyArg_ParseTuple(args, "Oii", &patch, &x, &y))
+     {
+         try
+         {
+             MULTIDIM_ARRAY_GENERIC(Image_Value(self)).patch(MULTIDIM_ARRAY_GENERIC(Image_Value(patch)), x, y);
+             Py_RETURN_NONE;
+         }
+         catch (XmippError &xe)
+         {
+             PyErr_SetString(PyXmippError, xe.msg.c_str());
+         }
+     }
+     return NULL;
+ }//function Image_patch
 
 
 /* Set Data Type */

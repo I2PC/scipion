@@ -253,6 +253,14 @@ public:
 
     }
 
+    void patch(MultidimArrayGeneric &patchArray, int x, int y)
+    {
+#define PATCH(type) ((MultidimArray<type>*)im)->patch(*((MultidimArray<type>*)(patchArray.im)), x, y);
+        SWITCHDATATYPE(datatype, PATCH)
+#undef PATCH
+
+    }
+
     /**
      *  Copy a specific slice of the linked array.
      */
