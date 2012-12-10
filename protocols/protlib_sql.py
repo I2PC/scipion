@@ -412,6 +412,12 @@ class XmippProtocolDb(SqliteDb):
 
     def checkRunOk(self, cursor):
         return self.getRunState(cursor) == SqliteDb.RUN_STARTED 
+    
+    def runAborted(self):
+        ''' Return true if the run has been aborted '''
+        state = self.getRunState(self.cur)
+        print "CHECKING RUN ABORTED, STATE: %d", state
+        return state == SqliteDb.RUN_ABORTED 
         
     def differentParams(self, Parameters, RowParameters):
         coreParameters=dict(Parameters)
@@ -535,6 +541,8 @@ class XmippProtocolDb(SqliteDb):
         printLog(msg, self.Log, out=True, err=True)
         
         i = 0
+        final_status = (SqliteDb.RUN_FINISHED, 'FINISHED')
+        
         while i < n:
             #Execute the step
             try:
@@ -554,13 +562,19 @@ class XmippProtocolDb(SqliteDb):
                     self.runSingleStep(self.connection, self.cur, steps[i])
                 i += 1
             except Exception as e:
-                msg = "Stopping batch execution since one of the steps could not be performed: %s" % e
+                msg = "Stopping batch execution"
+                if self.runAborted():
+                    msg += " ABORTED by user request"
+                    final_status = (SqliteDb.RUN_ABORTED, 'ABORTED')
+                else:
+                    msg += " since one of the steps could not be performed: %s" % str(e)
+                    final_status = (SqliteDb.RUN_FAILED, 'FAILED')                    
                 printLog(msg, self.Log, out=True, err=True, isError=True)
-                self.updateRunState(SqliteDb.RUN_FAILED)
-                raise
-        msg = '***************************** Protocol FINISHED'
+                break
+        
+        self.updateRunState(final_status[0])
+        msg = '***************************** Protocol %s' % final_status[1]
         printLog(msg, self.Log, out=True, err=True)
-        self.updateRunState(SqliteDb.RUN_FINISHED)
         
     def runParallelSteps(self, fromStep, toStep, mpiForParallelSteps):
         '''This should run in parallel steps from fromStep and to toStep-1'''
