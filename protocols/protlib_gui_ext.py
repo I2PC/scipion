@@ -1209,7 +1209,7 @@ def mdOnClick(filename, browser):
     else:
         block, filename = splitFilename(filename)
         filename = join(browser.dir, filename)
-        msg = "<Metadata Block>\n" + getMdString(filename, browser)
+        msg = "<Metadata Block>\n" + getMdString("%s@%s" % (block, filename), browser)
     return msg
         
 def mdFillMenu(filename, browser):
