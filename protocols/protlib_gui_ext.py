@@ -1200,7 +1200,8 @@ def mdOnClick(filename, browser):
             if len(browser.tree.get_children(filename)) == 0:
                 fm = browser.managers['md']
                 
-                bnameSuffix = "@" + relpath(filename, browser.dir)
+                #bnameSuffix = "@" + relpath(filename, browser.dir)
+                bnameSuffix = "@" + filename
                 btextSuffix = "@" + basename(filename)
                 for b in blocks:
                     bname = b + bnameSuffix                    
@@ -1556,7 +1557,7 @@ class XmippBrowser():
                 self.menu.post(e.x_root, e.y_root)
 
     def onClick(self, e):
-        item, fm = self.getSelection()        
+        item, fm = self.getSelection()    
         if fm:
             msg = ""
             if exists(item):
