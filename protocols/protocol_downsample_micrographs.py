@@ -21,7 +21,7 @@ class ProtDownsampleMicrographs(XmippProtocol):
     def defineSteps(self):
         self.insertImportOfFiles([self.Input['microscope']])
         #self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
-        fnExtra=self.workingDirPath("extra")
+        fnExtra=self.getFilename("extra")
         self.insertStep("createDir",verifyfiles=[fnExtra],path=fnExtra)
         self.insertStep("changeSamplingRate",fnIn=self.Input['acquisition'], fnOut=self.getFilename('acquisition'),
                         downsampleFactor=self.DownsampleFactor)
