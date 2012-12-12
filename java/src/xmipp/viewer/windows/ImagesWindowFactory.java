@@ -16,6 +16,7 @@ import ij3d.Image3DUniverse;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Frame;
 import java.awt.Toolkit;
 import java.io.File;
 
@@ -63,7 +64,7 @@ public class ImagesWindowFactory {
 		try {
 			if (Filename.isMetadata(filename)) {
 				if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
-					openFileAsImage(filename, parameters);
+					openFileAsImage(null, filename, parameters);
 				else
 					openMetadata(filename, parameters,
 							Param.OPENING_MODE_GALLERY);
@@ -71,10 +72,10 @@ public class ImagesWindowFactory {
 				ImageGeneric img = new ImageGeneric(filename);
 
 				if (img.isSingleImage()) {
-					openFileAsImage(filename, parameters);
+					openFileAsImage(null, filename, parameters);
 				} else if (img.isStackOrVolume()) {
 					if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_IMAGE))
-						openFileAsImage(filename, parameters);
+						openFileAsImage(null, filename, parameters);
 					else
 						openMetadata(filename, parameters,
 								Param.OPENING_MODE_GALLERY);
@@ -90,20 +91,20 @@ public class ImagesWindowFactory {
 
 	public static void openFilesAsImages(String filenames[], Param parameters) {
 		for (int i = 0; i < filenames.length; i++) {
-			openFileAsImage(filenames[i], parameters);
+			openFileAsImage(null, filenames[i], parameters);
 		}
 	}
 
 	public static void openFileAsImage(String path) {
-		openFileAsImage(path, new Param());
+		openFileAsImage(null, path, new Param());
 	}
 
-	public static void openFileAsImage(String filename, Param parameters) {
+	public static void openFileAsImage(Frame pframe, String filename, Param parameters) {
 		try {
 			//ImagePlus imp = openFileAsImagePlus(filename, parameters);
 			ImageGeneric ig = new ImageGeneric(filename);
 			ImagePlusLoader ipl = new ImagePlusLoader(ig);
-			XmippIJWindow xiw = openXmippImageWindow(ipl, parameters.poll);
+			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl, parameters.poll);
 			if (parameters.mask_toolbar)
 				xiw.openMaskToolbar();
 		} catch (Exception e) {
@@ -128,18 +129,18 @@ public class ImagesWindowFactory {
 		return imp;
 	}
 
-	public static XmippIJWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
-		return openXmippImageWindow(new ImagePlusLoader(imp), poll);
+	public static XmippIJWindow openXmippImageWindow(Frame pframe, ImagePlus imp, boolean poll) {
+		return openXmippImageWindow(pframe, new ImagePlusLoader(imp), poll);
 	}
 
-	public static XmippIJWindow openXmippImageWindow(ImagePlusLoader impLoader,
+	public static XmippIJWindow openXmippImageWindow(Frame pframe, ImagePlusLoader impLoader,
 			boolean poll) {
 		ImagePlus imp = impLoader.getImagePlus();
 		XmippIJWindow iw;
 		if (imp.getStackSize() > 1)
-			iw = new XmippStackWindow(impLoader);
+			iw = new XmippStackWindow(pframe, impLoader);
 		else
-			iw = new XmippImageWindow(impLoader);
+			iw = new XmippImageWindow(pframe, impLoader);
 		((ImageWindow) iw).setVisible(true);
 		return iw;
 	}
