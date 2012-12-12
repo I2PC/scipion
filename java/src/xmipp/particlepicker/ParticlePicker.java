@@ -73,19 +73,8 @@ public abstract class ParticlePicker {
 	}
 
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
-		this.outputdir = outputdir;
-		this.familiesfile = getOutputPath("families.xmd");
-		configfile = getOutputPath("config.xmd");
+		
 
-		this.families = new ArrayList<Family>();
-		loadFamilies();
-		family = families.get(0);
-
-		this.selfile = selfile;
-		this.mode = mode;
-		initializeFilters();
-		loadEmptyMicrographs();
-		loadConfig();
 	}
 
 	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
@@ -94,7 +83,10 @@ public abstract class ParticlePicker {
 		configfile = getOutputPath("config.xmd");
 		this.families = new ArrayList<Family>();
 		loadFamilies();
-		family = getFamily(fname);
+		if(fname == null)
+			family = families.get(0);
+		else
+			family = getFamily(fname);
 		if (family == null) throw new IllegalArgumentException("Invalid family " + fname);
 
 		this.selfile = selfile;
@@ -293,6 +285,8 @@ public abstract class ParticlePicker {
 	}// function validateState
 
 	public Family getFamily(String name) {
+		if(name == null)
+			return null;
 		for (Family f : getFamilies())
 			if (f.getName().equalsIgnoreCase(name)) return f;
 		return null;
