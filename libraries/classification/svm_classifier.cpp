@@ -61,13 +61,10 @@ SVMClassifier::~SVMClassifier()
         delete [] prob.y;
     if (prob.x!=NULL)
     {
-    	std::cerr<<"we are about to del!!!"<<std::endl<<prob.l;
         for(int i=0;i<prob.l;i++)
             delete [] prob.x[i];
         delete [] prob.x;
     }
-//    std::cerr<<"We are here in des clasiifier!";
-    //    free(prob.x)
 }
 void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &label)
 {
