@@ -52,7 +52,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 			public void windowClosing(WindowEvent winEvt)
 			{
 
-				System.exit(0);//temporarily
+				System.exit(0);
 			}
 		});
 	}
