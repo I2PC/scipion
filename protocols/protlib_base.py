@@ -620,13 +620,13 @@ class XmippProtocol(object):
             self.Db.runSteps()
             self.postRun()
         except Exception, e:
-            retcode = 1;
-            print >> sys.stderr, failStr("ERROR: %s" %  e)
+            #THIS SHOULD NEVER HAPPENS
+            print >> sys.stderr, failStr("ERROR(PROBABLY A BUG): %s" %  e)
             #THIS IS DURING DEVELOPMENT ONLY
-            print >> self.stderr, failStr("ERROR: %s" %  e)
+            print >> self.stderr, failStr("ERROR(PROBABLY A BUG): %s" %  e)
             import traceback
             traceback.print_exc(file=self.stderr)
-            
+            self.updateRunState(SqliteDb.RUN_FAILED)
         finally:
             self.fOut.close()
             self.fErr.close()  
@@ -926,5 +926,5 @@ def protocolMain(ProtocolClass, script=None):
             _run['pid'] = os.getpid()
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
-            os.environ['PROTOCOL_SCRIPT'] = script
+            os.environ['PROTOCOL_SCRIPT'] = absolute_script
             return p.run()
