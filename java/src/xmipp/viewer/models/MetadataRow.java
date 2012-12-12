@@ -25,6 +25,8 @@
 
 package xmipp.viewer.models;
 
+import java.awt.Window;
+
 import javax.swing.JTable;
 
 import xmipp.ij.commons.XmippImageWindow;
@@ -38,8 +40,8 @@ public class MetadataRow extends MetadataTable {
 	protected long id;
 	
 	/** Constructor using a metadata row */
-	public MetadataRow(MetaData md) throws Exception {
-		this(new GalleryData(null, new Param(), md));
+	public MetadataRow(Window window, MetaData md) throws Exception {
+		this(new GalleryData(window, null, new Param(), md));
 	}
 	
 	public MetadataRow(GalleryData data) throws Exception {
