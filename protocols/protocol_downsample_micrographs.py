@@ -6,7 +6,7 @@
 from glob import glob
 from protlib_base import *
 import xmipp
-from protlib_filesystem import replaceBasenameExt, createLink
+from protlib_filesystem import replaceBasenameExt, createLink, createDir
 from protlib_utils import runJob
 
 class ProtDownsampleMicrographs(XmippProtocol):
@@ -21,6 +21,8 @@ class ProtDownsampleMicrographs(XmippProtocol):
     def defineSteps(self):
         self.insertImportOfFiles([self.Input['microscope']])
         #self.insertStep('createLink2', filename="microscope.xmd",dirSrc=self.importDir,dirDest=self.WorkingDir)
+        fnExtra=self.workingDirPath("extra")
+        self.insertStep("createDir",verifyfiles=[fnExtra],path=fnExtra)
         self.insertStep("changeSamplingRate",fnIn=self.Input['acquisition'], fnOut=self.getFilename('acquisition'),
                         downsampleFactor=self.DownsampleFactor)
 
@@ -30,7 +32,7 @@ class ProtDownsampleMicrographs(XmippProtocol):
         MD.removeDisabled();
         for i in MD:
             fnMicrograph = MD.getValue(xmipp.MDL_MICROGRAPH,i)
-            fnOut = self.workingDirPath(replaceBasenameExt(fnMicrograph, '.mrc'))
+            fnOut = os.path.join(fnExtra,replaceBasenameExt(fnMicrograph, '.mrc'))
             IOTable[fnMicrograph] = fnOut
             self.insertParallelStep("doDownsample", verifyfiles=[fnOut], parent_step_id=XmippProjectDb.FIRST_STEP, 
                             fnMicrograph=fnMicrograph, fnOut=fnOut, downsampleFactor=self.DownsampleFactor)
