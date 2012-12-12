@@ -73,7 +73,7 @@ public abstract class ParticlePicker {
 	}
 
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
-		
+		this(selfile, outputdir, null, mode);
 
 	}
 
