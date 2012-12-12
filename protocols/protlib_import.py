@@ -129,3 +129,31 @@ def removeMdHeader(inputMd, outputFile):
     fIn.close()
     fOut.close()
     
+def exportSpiderParticles(inputMd, outputFile):
+    ''' Read an Xmipp3.0 .pos metadata containing particles
+    from one micrograph and export as expected in Spider'''
+    md = MetaData(inputMd)
+    fOut = open(outputFile, 'w+')
+    
+    i = 0
+    for objId in md:
+        i = i + 1
+        x = float(md.getValue(MDL_XCOOR, objId))
+        y = float(md.getValue(MDL_YCOOR, objId))
+        print >> fOut, " %(i)04d 6        %(i)04d  %(x)f  %(y)f  %(x)f  %(y)f           1" % locals()
+    fOut.close()
+    
+def exportEman2Boxes(inputMd, outputFile, dim):
+    ''' Read an Xmipp3.0 .pos metadata containing particles
+    from one micrograph and export as expected in Eman2'''
+    md = MetaData(inputMd)
+    fOut = open(outputFile, 'w+')
+    half = dim / 2
+    
+    for objId in md:
+        x = md.getValue(MDL_XCOOR, objId) - half
+        y = md.getValue(MDL_YCOOR, objId) - half
+        print >> fOut, "%(x)d  %(y)d  %(dim)d %(dim)d" % locals()
+    fOut.close()    
+        
+    
