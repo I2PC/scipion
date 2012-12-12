@@ -432,14 +432,15 @@ class XmippProtocol(object):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
         d = {
-                'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
+                'acquisition':   join('%(WorkingDir)s', 'acquisition_info.xmd'),     
+                'extra':         join('%(WorkingDir)s', "extra"),      
                 'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
-                'families':     join('%(WorkingDir)s', 'families.xmd'),
-                'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
-                'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
-                'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
-                'microscope':   join('%(WorkingDir)s','microscope.xmd'),
-                'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
+                'families':      join('%(WorkingDir)s', 'extra/families.xmd'),
+                'family':        join('%(WorkingDir)s', '%(family)s.xmd'),
+                'macros':        join('%(WorkingDir)s', 'macros.xmd'), 
+                'micrographs':   join('%(WorkingDir)s', 'micrographs.xmd'),
+                'microscope':    join('%(WorkingDir)s', 'microscope.xmd'),
+                'tilted_pairs':  join('%(WorkingDir)s', 'tilted_pairs.xmd')
              }
         d.update(self.createFilenameTemplates())
         return d
