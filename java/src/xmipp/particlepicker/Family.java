@@ -64,6 +64,8 @@ public class Family {
 	
 //	public void initTemplates()
 //	{
+//		if(templatesNumber == 0)
+//			return;
 //		try {
 //			this.templates = new ImageGeneric(ImageGeneric.Float);
 //			templates.resize(size, size, 1, templatesNumber);
