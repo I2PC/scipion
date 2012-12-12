@@ -288,13 +288,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				if (actionsbt.getText().equals(MicrographFamilyState.Autopick.toString()))
 					autopick();
 				else if (actionsbt.getText().equals(MicrographFamilyState.Correct.toString()))
-				{
 					correct();
-
-					if (index < micrographsmd.getRowCount())
-						micrographstb.setRowSelectionInterval(index + 1, index + 1);
-
-				}
 			}
 		});
 		setStep(step);
@@ -766,6 +760,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 					actionsbt.setVisible(false);
 					canvas.setEnabled(true);
 					XmippWindowUtil.releaseGUI(getRootPane());
+					if (index < micrographsmd.getRowCount())
+						micrographstb.setRowSelectionInterval(index + 1, index + 1);
 				}
 			});
 			t.start();
