@@ -8,9 +8,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
-import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.particlepicker.training.model.FamilyState;
-import xmipp.utils.XmippQuestionDialog;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
