@@ -434,7 +434,7 @@ class XmippProtocol(object):
         d = {
                 'acquisition':   join('%(WorkingDir)s', 'acquisition_info.xmd'),     
                 'extra':         join('%(WorkingDir)s', "extra"),      
-                'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
+                'extract_list':  join('%(WorkingDir)s', "extract_list.xmd"),      
                 'families':      join('%(WorkingDir)s', 'extra/families.xmd'),
                 'family':        join('%(WorkingDir)s', '%(family)s.xmd'),
                 'macros':        join('%(WorkingDir)s', 'macros.xmd'), 
