@@ -197,12 +197,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	/** Constructors */
 	public JFrameGallery(String filename, Param parameters) {
 		super();
-		init(new GalleryData(filename, parameters, null));
+		init(new GalleryData(this, filename, parameters, null));
 	}
 
 	public JFrameGallery(String filename, MetaData md, Param parameters) {
 		super();
-		init(new GalleryData(filename, parameters, md));
+		init(new GalleryData(this, filename, parameters, md));
 	}
 
 	// public JFrameGallery(String filenames[], Param parameters) {
@@ -671,11 +671,11 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
 		imgAvg.destroy();
 		imgStd.destroy();
-		XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(
+		XmippImageWindow winAvg = new XmippImageWindow(this, new ImagePlusLoader(
 				impAvg), "AVG: " + data.filename);
 		XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
 		winAvg.setVisible(true);
-		XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(
+		XmippImageWindow winStd = new XmippImageWindow(this, new ImagePlusLoader(
 				impStd), "STD: " + data.filename);
 		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
 		winStd.setVisible(true);
@@ -727,7 +727,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 		data.md.getPCAbasis(image, data.getRenderLabel());
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
 		imp.setTitle("PCA: " + data.filename);
-		ImagesWindowFactory.openXmippImageWindow(imp, false);
+		ImagesWindowFactory.openXmippImageWindow(this, imp, false);
 
 	}
 
@@ -1375,7 +1375,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				} else if (cmd.equals(FILE_OPENWITH_IJ)) {
 					try {
 						ImagePlusLoader loader = gallery.getImageLoader();
-						ImagesWindowFactory.openXmippImageWindow(loader, true);
+						ImagesWindowFactory.openXmippImageWindow(JFrameGallery.this, loader, true);
 						XmippIJUtil.showImageJ(Tool.VIEWER);
 					} catch (Exception e1) {
 						e1.printStackTrace();

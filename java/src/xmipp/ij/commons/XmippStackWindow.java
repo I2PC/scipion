@@ -3,7 +3,9 @@ package xmipp.ij.commons;
 import ij.ImagePlus;
 import ij.gui.StackWindow;
 
+import java.awt.Frame;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.awt.event.WindowEvent;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 
@@ -11,10 +13,12 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	private ImagePlusLoader ipl;
 	protected XmippMenuBar menu;
+	private Window window;
 
-	public XmippStackWindow(ImagePlusLoader ipl, String title)
+	public XmippStackWindow(Window window, ImagePlusLoader ipl, String title)
 	{
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
+		this.window = window;
 		this.ipl = ipl;
 		setTitle(title);
 		menu = new XmippMenuBar(this);
@@ -23,8 +27,19 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	public XmippStackWindow(ImagePlusLoader ipl)
 	{
-		this(ipl, ipl.getFileName());
+		this(null, ipl, ipl.getFileName());
 	}
+	
+	public XmippStackWindow(Window window, ImagePlusLoader ipl)
+	{
+		this(window, ipl, ipl.getFileName());
+	}
+	
+	public XmippStackWindow(ImagePlusLoader ipl, String title)
+	{
+		this(null, ipl,title);
+	}
+
 
 	@Override
 	public void loadData()
@@ -54,6 +69,8 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
 	@Override
 	public void windowClosing(WindowEvent e) {
+		if(window == null)//if I am the main process I can close java
+			System.exit(0);
 		super.windowClosing(e);
 		close();//it works for stack
 		if(XmippIJUtil.getXmippImageJ() != null)

@@ -72,7 +72,7 @@ public class AddObjectJDialog extends XmippDialog {
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
 		try {
-			model = new MetadataRow(md);
+			model = new MetadataRow(this, md);
 			JList rowHeader = new JList();
 			rowHeader.setModel(new GalleryRowHeaderModel(model.data));
 			LookAndFeel.installColorsAndFont(rowHeader, "TableHeader.background",
