@@ -390,7 +390,8 @@ class XmippProjectGUI():
                 for c in self.process_childs:
                     c.info['pname'] = pname = os.path.basename(c.args.split()[0])
                     if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
-                        line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        #line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        
                         if c.host != lastHost:
                             #txt.insert(tk.END, "%s\n" % c.host, 'bold')
                             tree.insert('', 'end', c.host, text=c.host)
@@ -910,7 +911,6 @@ class ScriptProtocols(XmippScript):
         self.project = XmippProject(self.proj_dir)
         self.launch = True
 
-
         if self.checkParam('--list'):
             self.loadProjectFromCli()
             runs, stateList = self.project.getStateRunList(checkDead=True)
@@ -921,6 +921,7 @@ class ScriptProtocols(XmippScript):
                     print "%s | %s | %s " % (name.rjust(35), stateStr.rjust(15), modified)
             else:
                 print cyanStr("No runs found")
+                
         elif self.checkParam('--details'):
             self.loadProjectFromCli()
             runName = self.getParam('--details')
@@ -934,6 +935,7 @@ class ScriptProtocols(XmippScript):
                     print "   ", line
             except Exception, e:
                 print redStr("Run %s not found" % runName)
+                
         elif self.checkParam('--new_run'):
             protName = self.getParam('--new_run')
             self.loadProjectFromCli()
@@ -942,6 +944,7 @@ class ScriptProtocols(XmippScript):
             ProtocolParser(run['source']).save(run['script']) # Save the .py file
             print "Run %s was created" % greenStr(getExtendedRunName(run))
             print "Edit file %s and launch it" % greenStr(run['script'])
+            
         elif self.checkParam('--copy_run'):
             extRunName = self.getParam('--copy_run')
             self.loadProjectFromCli()
@@ -952,12 +955,14 @@ class ScriptProtocols(XmippScript):
             ProtocolParser(script).save(run['script']) # Save the .py file
             print "Run %s was created from %s" % (greenStr(getExtendedRunName(run)), greenStr(extRunName))
             print "Edit file %s and launch it" % greenStr(run['script'])
+            
         elif self.checkParam('--delete_run'):
             extRunName = self.getParam('--delete_run')
             self.loadProjectFromCli()
             protName, runName = splitExtendedRunName(extRunName)
             self.project.deleteRunByName(protName, runName)
             print "Run deleted"      
+            
         elif self.checkParam('--start_run'):
             self.loadProjectFromCli()
             extRunName = self.getParam('--start_run')
@@ -968,13 +973,15 @@ class ScriptProtocols(XmippScript):
             pe = ProtocolExecutor(protName, self.project, runName=runName)
             pe.setValue('Behavior', mode)
             pe.runProtocol()
+            
         elif self.checkParam('--clean'):
             self.printProjectName()
             self.launch = self.confirm('%s, are you sure to clean?' % cyanStr('ALL RESULTS will be DELETED'), False)
             if self.launch:
                 self.project.clean()
             else:
-                print cyanStr("CLEAN aborted.")        
+                print cyanStr("CLEAN aborted.") 
+                       
         else: #lauch project     
             if not self.project.exists():    
                 print 'You are in directory: %s' % greenStr(self.proj_dir)
@@ -986,6 +993,7 @@ class ScriptProtocols(XmippScript):
                     print cyanStr("PROJECT CREATION aborted")
             else:
                 self.project.load()
+        
         if self.launch:
             try:
                 self.root = tk.Tk()

@@ -686,15 +686,6 @@ typedef enum
     VIEW_X_POS   // Align X axis to Z axis, rotating 90 degrees around Y axis");
 } AxisView;
 
-/**
- *  Structure to define random generation mode
- */
-typedef enum
-{
-    RND_UNIFORM = 0,
-    RND_GAUSSIAN = 1
-} RandomMode;
-
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
 */
@@ -1429,6 +1420,26 @@ public:
         this->destroyData = false;
     }
 
+    /** Alias a row in an image.
+         *
+         * Treat the multidimarray as if it were a single slice. The data is not copied
+         * into new memory, but a pointer to the selected slice in the multidimarray is copied.
+         * You should not make any operation on this volume such that the
+         * memory locations are changed.
+         * Select_slice starts at 0 towards Zsize.
+         */
+    void aliasRow(const MultidimArray<T> &m, int select_row)
+    {
+        if (select_row >= YSIZE(m))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasRow: Selected row cannot be higher than Y size.");
+
+        coreDeallocate();
+        setDimensions(XSIZE(m),1, 1, 1);
+        this->data = m.data + XSIZE(m)*select_row;
+        this->nzyxdimAlloc = this->nzyxdim;
+        this->destroyData = false;
+    }
+
     /** Alias a slice in a multidimarray.
          *
          * Treat the multidimarray as if it were a single slice. The data is not copied
@@ -1845,6 +1856,15 @@ public:
         MultidimArray<T> result;
         window(result,x0,xF,init_value);
         *this=result;
+    }
+
+    /** Make a patch with the input array in the given positions */
+    void patch(MultidimArray<T> patchArray, int x, int y)
+    {
+        int n = XSIZE(patchArray)*sizeof(T);
+
+        for (int i=0, y2 = 0; i < YSIZE(patchArray); ++i)
+            memcpy(&dAij(*this, y+i, x), &dAij(patchArray, i, 0), n);
     }
 
     //@}
@@ -2863,6 +2883,16 @@ public:
             maxval = *ptr;
 
         return maxval;
+    }
+
+    /** 1D Indices for the maximum element.
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& jmax) const
+    {
+        int zeroInt=0;
+        maxIndex(zeroInt,zeroInt,zeroInt,jmax);
     }
 
     /** Minimum of the values in the array.

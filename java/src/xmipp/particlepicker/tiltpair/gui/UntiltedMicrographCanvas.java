@@ -37,7 +37,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	private UntiltedParticle active;
 	private TiltPairPicker pppicker;
 	private UntiltedMicrograph um;
-	private ImageWindow iw;
 	private boolean reload = false;
 
 	@Override
@@ -77,8 +76,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.frame = frame;
 		
 		this.pppicker = frame.getParticlePicker();
-		iw = new ImageWindow(imp, this);
-		XmippWindowUtil.setLocation(0, 0, iw);
+		um.runImageJFilters(pppicker.getFilters());
 
 	}
 

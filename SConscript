@@ -576,6 +576,12 @@ AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
+# sqliteExt
+SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
+AddLibrary('XmippSqliteExt', 'external',
+   SqliteExtSources,
+   ['#'],[''],['-lm'],'lib','.so')
+
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
 
@@ -785,6 +791,7 @@ if not int(env['release']):
     AddXmippProgram('idr_xray_tomo', ['XmippRecons'])
 AddXmippProgram('image_align', ['XmippRecons'])
 AddXmippProgram('image_align_tilt_pairs', ['XmippRecons'])
+AddXmippProgram('image_common_lines', ['XmippRecons'])
 AddXmippProgram('image_convert')
 AddXmippProgram('image_find_center')
 AddXmippProgram('image_header')
@@ -921,7 +928,9 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_operate')
     AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
+    # AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
     AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
     AddProgramLink('image_sort', 'mpi_image_sort')
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
@@ -962,6 +971,7 @@ if int(env['gtest']):
      AddXmippCTest('test_polar')
      AddXmippCTest('test_polynomials')          
      AddXmippCTest('test_sampling')
+     AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests

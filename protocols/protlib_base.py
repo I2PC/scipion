@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join, exists
+from os.path import join, exists, dirname
 import sys
 import shutil
 import ConfigParser
@@ -620,13 +620,13 @@ class XmippProtocol(object):
             self.Db.runSteps()
             self.postRun()
         except Exception, e:
-            retcode = 1;
-            print >> sys.stderr, failStr("ERROR: %s" %  e)
+            #THIS SHOULD NEVER HAPPENS
+            print >> sys.stderr, failStr("ERROR(PROBABLY A BUG): %s" %  e)
             #THIS IS DURING DEVELOPMENT ONLY
-            print >> self.stderr, failStr("ERROR: %s" %  e)
+            print >> self.stderr, failStr("ERROR(PROBABLY A BUG): %s" %  e)
             import traceback
             traceback.print_exc(file=self.stderr)
-            
+            self.updateRunState(SqliteDb.RUN_FAILED)
         finally:
             self.fOut.close()
             self.fErr.close()  
@@ -852,9 +852,9 @@ def protocolMain(ProtocolClass, script=None):
         no_check = options.no_check
         no_confirm = options.no_confirm
     
-    script = os.path.abspath(script)
+    script_absolute = os.path.abspath(script)
     
-    mod = loadModule(script)
+    mod = loadModule(script_absolute)
     #init project
     project = XmippProject()
     #load project: read config file and open conection database
@@ -871,7 +871,7 @@ def protocolMain(ProtocolClass, script=None):
            'run_name': mod.RunName, 
            'script': script, 
            'comment': "",
-           'source': script
+           'source': script_absolute
            }
         from protlib_gui import ProtocolGUI 
         gui = ProtocolGUI()
@@ -926,5 +926,5 @@ def protocolMain(ProtocolClass, script=None):
             _run['pid'] = os.getpid()
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
-            os.environ['PROTOCOL_SCRIPT'] = script
+            os.environ['PROTOCOL_SCRIPT'] = absolute_script
             return p.run()

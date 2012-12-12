@@ -671,7 +671,12 @@ char* getXmippPath();
 inline bool fileExists( const char *filename )
 {
     Stat buffer ;
-    return ( stat(filename, &buffer) == 0 ? true : false );
+    // do not use stat since updates the atime flag. This may be dangerous
+    // for mpi processes in which the same file is accessed many times
+    // from different computers even if not writting is made 
+    //return ( stat(filename, &buffer) == 0 ? true : false );
+    return ( access (filename, F_OK)  == 0 ? true : false);
+
 }
 
 /** Check if the file exists using the stat function

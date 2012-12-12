@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Stroke;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
@@ -23,7 +24,7 @@ import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 
-public class TrainingCanvas extends ParticlePickerCanvas
+public class TrainingCanvas extends ParticlePickerCanvas 
 {
 
 	private TrainingPickerJFrame frame;
@@ -39,25 +40,35 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
+		
 		this.micrograph = frame.getMicrograph();
 		this.frame = frame;
 		this.ppicker = frame.getParticlePicker();
+		micrograph.runImageJFilters(ppicker.getFilters());
 		if(!frame.getFamilyData().getParticles().isEmpty())
-			active = frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
+			active = getLastParticle();
 		else
 			active = null;
 
 	}
+	
+	
+
 
 	public void updateMicrograph()
 	{
 		this.micrograph = frame.getMicrograph();
 		updateMicrographData();
 		if(!frame.getFamilyData().getParticles().isEmpty())
-			setActive(frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1));
+			setActive(getLastParticle());
 		else
 			active = null;
 		
+	}
+	
+	TrainingParticle getLastParticle()
+	{
+		return frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
 	}
 
 

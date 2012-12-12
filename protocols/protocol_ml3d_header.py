@@ -56,7 +56,7 @@ Angular sampling for a quick projection matching to obtain right grey scale.
 As the resolution of the intial reference should be low, this sampling can
 be relatively crude, e.g. 15
 """
-ProjMatchSampling = 15
+ProjMatchSampling = 15.0
 
 # Low-pass filter initial references?
 """ 
@@ -67,9 +67,6 @@ DoLowPassFilterReference = True
 
 # {condition}(DoLowPassFilterReference) Resolution of the low-pass filter (Ang):
 LowPassFilter = 50
-
-# {condition}(DoLowPassFilterReference) Pixel size (Ang):
-PixelSize = 5.6
 
 #------------------------------------------------------------------------------------------------
 # {section}{has_question} ML3D classification

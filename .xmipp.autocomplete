@@ -12,28 +12,12 @@ _setup.py()
 
    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
    
-   #if [ ${#COMPREPLY[*]} != 0 ]; then
-   #    return 0
-   #fi
-   
-   
-   
    case "${prev}" in
-   # match start of string
-   "compile"*) # run_tests 
+   "compile"*) # show xcompile options 
        _xcompile
        return 0
        ;;
-   "x"*) # xmipp_programs
-       local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_*`; do echo ${x/\/*\//} ; done )
-       COMPREPLY=( $(compgen -W "${names}" -- ${cur}) )
-       return 0
-       ;;
- #   *)COMPREPLY=()
- #       return 0
- #   ;;
     esac
-  #  COMPREPLY=()
     return 0
 }
 complete -F _setup.py  setup.py
@@ -57,7 +41,7 @@ _xcompile()
    
    case "${cur}" in
    # match start of string
-   "r"*) # run_tests 
+   "r"*) # run_tests: remove xmipp from the beginning of testprograms filename 
        local names=$(for x in `ls $XMIPP_HOME/bin/xmipp_test_*`; do echo ${x/\/*\//}| sed 's/xmipp/run/g' ; done )
        COMPREPLY=( $(compgen -W "run_tests ${names}" -- ${cur}) )
        return 0
@@ -77,7 +61,7 @@ _xcompile()
 complete  -o nospace -F _xcompile xcompile
 
 
-_testPrograms() 
+_test_programs() 
 {
     local cur prev opts base
     COMPREPLY=()
@@ -108,5 +92,5 @@ _testPrograms()
    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
    return 0
 }
-complete  -F _testPrograms testPrograms.py
+complete  -F _test_programs test_programs.py
 

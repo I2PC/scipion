@@ -190,7 +190,7 @@ def addTabs(nb):
     addTabOption(tab,'fast', 'Fast?', 'no')
     addTabOption(tab,'static', 'Prevent dynamic linking?', 'no')
     addTabOption(tab,'prepend', 'What to prepend to executable names', 'xmipp')
-    addTabOption(tab, 'gtest', 'Build tests?', 'no')
+    addTabOption(tab, 'gtest', 'Build tests?', 'yes')
     addTabOption(tab, 'cuda', 'Build CUDA support?', 'no')
     addTabOption(tab, 'release', 'Release mode', 'yes')
    

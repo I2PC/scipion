@@ -12,18 +12,7 @@
 
 import os
 from os.path import join
-from xmipp import MetaData, FileName, FILENAMENUMBERLENGTH, AGGR_COUNT,\
-         MDL_CTF_MODEL, MDL_COUNT, MDL_RESOLUTION_FREQREAL, \
-         MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_FRCRANDOMNOISE,\
-         MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_WEIGHT,\
-         MDL_ANGLE_ROT2, MDL_ANGLE_TILT2, MDL_ANGLE_PSI2,MDL_ANGLE_DIFF,\
-         MDL_ANGLE_ROT_DIFF, MDL_ANGLE_TILT_DIFF, MDL_ANGLE_PSI_DIFF,\
-         MDL_IMAGE, MDL_ORDER, MDL_REF, MDL_NEIGHBOR, MDValueEQ, MDL_REF3D,\
-         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_SHIFT_Z, INNER_JOIN,\
-         MDL_SHIFT_X2, MDL_SHIFT_Y2, MDL_SHIFT_DIFF
-from xmipp import  activateMathExtensions,MDL_SHIFT_X_DIFF, MDL_SHIFT_Y_DIFF, MDL_UNDEFINED, \
-         Euler_angles2matrix, MD_APPEND,MDL_DEFGROUP, SymList, label2Str,\
-         MD_OVERWRITE, MDL_ENABLED
+from xmipp import *
 from datetime import datetime, timedelta
 from math import floor    
 from protlib_base import XmippProtocol, protocolMain
@@ -33,10 +22,8 @@ from protlib_sql import XmippProjectDb, SqliteDb
 from config_protocols import protDict
 from protlib_gui_ext import showWarning, showError
 from protlib_gui_figure import XmippPlotter
-from protlib_filesystem import linkAcquisitionInfoIfPresent\
-                               , xmippExists\
-                               , AcquisitionInfoExists\
-                               , AcquisitionInfoGetSamplingRate
+from protlib_filesystem import linkAcquisitionInfo, xmippExists, findAcquisitionInfo
+
 from math import radians
 from protlib_xmipp import validateSameSize
 
@@ -75,8 +62,18 @@ class ProtProjMatch(XmippProtocol):
             self.DocFileName = self.SelFileName
         #sampling is now in acquisition info
         #self.ResolSam=float(self.ResolSam)
-        self.ResolSam = AcquisitionInfoGetSamplingRate(self.SelFileName)
+        acquisionInfo = self.findAcquisitionInfo(self.SelFileName)
+        if not acquisionInfo is None: 
+            md = MetaData(acquisionInfo)
+            self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
+        if self.MaskRadius == -1:
+           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           self.MaskRadius = Xdim/2
+
         
+        if self.MaskRadius == -1:
+           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           self.MaskRadius = Xdim/2
     def validate(self):
         from protlib_xmipp import validateInputSize
         errors = []
@@ -113,7 +110,7 @@ class ProtProjMatch(XmippProtocol):
     
         
         #Check that acquisition info file is available
-        if not AcquisitionInfoExists(self.SelFileName):
+        if not self.findAcquisitionInfo(self.SelFileName):
             errors.append("""Acquisition file for metadata %s is not available. 
 Either import images before using them
 or create a file named acquisition_info.xmd 
@@ -239,7 +236,7 @@ data_
         ref3Ds = map(int, getListFromVector(self.DisplayRef3DNo))
         self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
-        
+        runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
         if doPlot('DisplayReference'):
             VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
@@ -253,7 +250,7 @@ data_
                     else:
                     #Xmipp_showj (x,y and z shows the same)
                         try:
-                            runShowJ(file_name, extraParams = ' --dont_wrap ')
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
                         except Exception, e:
                             showError("Error launching java app", str(e))
                         
@@ -270,7 +267,7 @@ data_
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
-                                runShowJ(file_name, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                             
@@ -287,7 +284,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                 
@@ -319,7 +316,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name_bfactor, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name_bfactor, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -359,7 +356,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -374,7 +371,7 @@ data_
                             print "Empty metadata: ", file_name
                         else:
                             try:
-                                runShowJ(file_name,extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
         
@@ -419,7 +416,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -438,7 +435,7 @@ data_
                     mdReferencesSize = mdReferences.size()
                     for id in mdReferences:
                         convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
-                    file_nameImages = self.getFilename('DocfileInputAnglesIters', iter=it)
+                    file_nameImages = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@"+self.getFilename('DocfileInputAnglesIters', iter=it)
                     if xmippExists(file_nameImages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDtmp.read(file_nameImages)#query with ref3D
@@ -481,7 +478,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -497,7 +494,7 @@ data_
                         print "Empty metadata: ", file_name
                     else:
                         try:
-                            runShowJ(file_name, extraParams = ' --dont_wrap ')
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
                         except Exception, e:
                             showError("Error launching java app", str(e))
             
@@ -828,7 +825,7 @@ data_
 #        _dataBase.insertStep('createAcquisitionData',verifyfiles=[fnOut],samplingRate=self.AngSamplingRateDeg, fnOut=fnOut)
 #        print "createAcquisitionData|| fnOut=",fnOut, " samplingRate=", self.AngSamplingRateDeg
 
-        _dataBase.insertStep("linkAcquisitionInfoIfPresent",
+        _dataBase.insertStep("linkAcquisitionInfo",
                         InputFile=self.SelFileName,
                         dirDest=self.WorkingDir)
         
