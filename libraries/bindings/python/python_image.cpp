@@ -577,8 +577,6 @@ Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs)
             ImageGeneric & image = Image_Value(self);
             DataType dt = npyType2Datatype(PyArray_TYPE(arr));
             int nd = PyArray_NDIM(arr);
-            std::cerr << "DEBUG_JM: nd: " << nd << std::endl;
-            std::cerr << "DEBUG_JM: dt: " << datatype2Str(dt) << std::endl;
             //Setup of image
             image.setDatatype(dt);
             ArrayDim adim;
@@ -587,14 +585,7 @@ Image_setData(PyObject *obj, PyObject *args, PyObject *kwargs)
             adim.ydim = PyArray_DIM(arr, nd - 2);
             adim.xdim = PyArray_DIM(arr, nd - 1);
 
-            std::cerr << "DEBUG_JM: adim.ndim: " << adim.ndim << std::endl;
-            std::cerr << "DEBUG_JM: adim.zdim: " << adim.zdim << std::endl;
-            std::cerr << "DEBUG_JM: adim.ydim: " << adim.ydim << std::endl;
-            std::cerr << "DEBUG_JM: adim.xdim: " << adim.xdim << std::endl;
-
-
             MULTIDIM_ARRAY_GENERIC(image).resize(adim, false);
-            std::cerr << "DEBUG_JM: adim.nzyxdim: " << adim.nzyxdim << std::endl;
             void *mymem = image().getArrayPointer();
             void * data = PyArray_DATA(arr);
             memcpy(mymem, data, adim.nzyxdim * gettypesize(dt));
