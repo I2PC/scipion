@@ -4,9 +4,13 @@ import ij.IJ;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
 
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
+import xmipp.particlepicker.ParticlePickerJFrame;
+import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.utils.XmippQuestionDialog;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
@@ -46,6 +50,14 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);		
+		addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent winEvt)
+			{
+
+				System.exit(0);//temporarily
+			}
+		});
 	}
 	
 	public void openMaskToolbar(){
