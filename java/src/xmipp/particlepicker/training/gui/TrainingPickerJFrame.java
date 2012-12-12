@@ -311,12 +311,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				if (actionsbt.getText().equals(MicrographFamilyState.Autopick.toString()))
 					autopick();
 				else if (actionsbt.getText().equals(MicrographFamilyState.Correct.toString()))
-
-				{
 					correct();
-					if (index < micrographsmd.getRowCount())
-						micrographstb.setRowSelectionInterval(index + 1, index + 1);
-				}
 			}
 		});
 		setStep(step);
@@ -461,7 +456,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// setChanged(true);
 		updateMicrographsModel();
 		canvas.repaint();
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
 		if (particlesdialog != null)
 			loadParticles();
 
@@ -515,15 +509,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 
 		index = micrographstb.getSelectedRow();
-		System.out.println("Loading micrograph " + index);
+		
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
+		System.out.println("Loading micrograph " + getMicrograph().getName());
 		ppicker.saveConfig();
 		setChanged(false);
 		initializeCanvas();
 		TrainingPickerJFrame.this.iconlb.setIcon(ppicker.getMicrograph().getCTFIcon());
 		actionsbt.setText(getFamilyData().getAction());
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		actionsbt.setVisible(getFamilyData().isActionVisible());
+		System.out.printf("state:%s actionvisible:%s\n", getFamilyData().getState(), getFamilyData().isActionVisible());
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
@@ -570,7 +566,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		sizetf.setEnabled(step == FamilyState.Manual);
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(getFamilyData().getAction());
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		actionsbt.setVisible(getFamilyData().isActionVisible());
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
@@ -677,7 +673,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		micrographstb.setRowSelectionInterval(index, index);
 		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		actionsbt.setVisible(getFamilyData().isActionVisible());
+		System.out.println(getFamilyData().isActionVisible());
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -794,6 +791,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 					canvas.setEnabled(true);
 					XmippWindowUtil.releaseGUI(getRootPane());
+					if (index < micrographsmd.getRowCount())
+						micrographstb.setRowSelectionInterval(index + 1, index + 1);
 				}
 			});
 			t.start();
