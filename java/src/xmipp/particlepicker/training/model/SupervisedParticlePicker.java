@@ -5,6 +5,7 @@ import java.util.logging.Level;
 
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
+import xmipp.utils.XmippMessage;
 
 
 
@@ -24,12 +25,9 @@ public class SupervisedParticlePicker extends TrainingPicker {
 	
 	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads,
 			boolean fastmode, boolean incore) {
-		super(selfile, outputdir, FamilyState.Supervised);
-		this.threads = threads;
-		this.fastmode = fastmode;
-		this.incore = incore;
-		for (TrainingMicrograph m : micrographs)
-			loadMicrographData(m);
+		this(selfile, outputdir, null, threads, fastmode, incore);
+		
+		
 
 	}
 	
@@ -39,9 +37,14 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		this.threads = threads;
 		this.fastmode = fastmode;
 		this.incore = incore;
+		int count = 0;
 		for (TrainingMicrograph m : micrographs)
+		{
 			loadMicrographData(m);
-
+			count += m.getFamilyData(family).getParticles().size();
+		}
+		if(count < mintraining)
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsgWithInfo(String.format("Training Min:%s", count), "Must provide at least " + mintraining));
 	}
 	
 	public boolean isFastMode() {
