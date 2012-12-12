@@ -23,7 +23,7 @@ class ProtImportMicrographs(XmippProtocol):
             self.MicrographsMd = self.getFilename('micrographs')
         
     def defineSteps(self):
-        fnExtra=self.workingDirPath("extra")
+        fnExtra=self.getFilename("extra")
         # Create microscope
         self.insertCreateMicroscope()
         # Decide name after preprocessing
