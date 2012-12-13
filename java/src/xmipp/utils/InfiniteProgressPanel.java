@@ -6,9 +6,11 @@ package xmipp.utils;
  * Subject to the BSD license.
  */
 import java.awt.Color;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.FontRenderContext;
@@ -75,6 +77,7 @@ public class InfiniteProgressPanel extends JComponent implements MouseListener {
     protected float fps = 15.0f;
     /** Rendering hints to set anti aliasing. */
     protected RenderingHints hints = null;
+	private Window window;
 
     /**
      * Creates a new progress panel with default values:<br />
@@ -102,6 +105,12 @@ public class InfiniteProgressPanel extends JComponent implements MouseListener {
      */
     public InfiniteProgressPanel(String text) {
         this(text, 14);
+    }
+    
+    public InfiniteProgressPanel(Window window, String text) {
+    	
+        this(text, 14);
+        this.window = window;
     }
 
     /**
@@ -231,24 +240,25 @@ public class InfiniteProgressPanel extends JComponent implements MouseListener {
             setVisible(false);
         }
     }
+    
+   
 
     @Override
     public void paintComponent(Graphics g) {
         if (started) {
-            int width = getWidth();
-            int height = getHeight();
-
+            int width = (window != null)? window.getWidth(): getWidth();
+            int height = (window != null)? window.getHeight(): getHeight();
             double maxY = 0.0;
 
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHints(hints);
 
             g2.setColor(new Color(255, 255, 255, (int) (alphaLevel * shield)));
-            g2.fillRect(0, 0, getWidth(), getHeight());
+            g2.fillRect(0, 0, width, height);
 
             AffineTransform oCenterT = AffineTransform.getTranslateInstance(
-                    (double) getWidth() / 2.,
-                    (double) getHeight() / 2.);
+                    (double) width / 2.,
+                    (double) height / 2.);
 
             g2.transform(oCenterT);
 

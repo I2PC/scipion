@@ -657,7 +657,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	/** Function to create and launch the worker, blocking the gui */
 	public void runInBackground(int operation) {
 		Worker w = new Worker(operation);
-		XmippWindowUtil.blockGUI(getRootPane(), w.getMessage());
+		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
 	}

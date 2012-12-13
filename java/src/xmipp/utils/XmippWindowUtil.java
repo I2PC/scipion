@@ -33,8 +33,10 @@ import java.awt.Rectangle;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRootPane;
+
 
 
 public class XmippWindowUtil {
@@ -146,12 +148,12 @@ public class XmippWindowUtil {
 		}
 	}
 	
+	
+	
 	/** Block the gui and show the InfiniteProgressPanel */
-	public static void blockGUI(JRootPane panel, String status) {
-		final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel(
-				status);
-		progressPanel.setSize(panel.getSize());
-		panel.setGlassPane(progressPanel);
+	public static void blockGUI(JFrame window, String status) {
+		final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel(window, status);
+		window.setGlassPane(progressPanel);
 		progressPanel.start();
 	}
 
