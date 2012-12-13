@@ -28,6 +28,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -54,6 +55,7 @@ import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
@@ -692,7 +694,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		try
 		{
 			canvas.setEnabled(false);
-			XmippWindowUtil.blockGUI(getRootPane(), "Training...");
+			XmippWindowUtil.blockGUI(this, "Training...");
+			
+			
 			Thread t = new Thread(new Runnable()
 			{
 
@@ -734,13 +738,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private void autopick()
 	{
 		setState(MicrographFamilyState.Autopick);
-
+		
 		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
 		System.out.println(fargs);
 		try
 		{
 			canvas.setEnabled(false);
-			XmippWindowUtil.blockGUI(getRootPane(), "Autopicking...");
+			XmippWindowUtil.blockGUI(this, "Autopicking...");
 			Thread t = new Thread(new Runnable()
 			{
 
@@ -773,7 +777,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		try
 		{
 			canvas.setEnabled(false);
-			XmippWindowUtil.blockGUI(getRootPane(), "Correcting...");
+			XmippWindowUtil.blockGUI(this, "Correcting...");
 
 			Thread t = new Thread(new Runnable()
 			{

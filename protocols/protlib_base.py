@@ -677,8 +677,8 @@ class XmippProtocol(object):
         ''' This function will take a filename relative to some protocol
         and will create the same filename but in the current protocol 
         working dir'''
-        #return filename.replace(prot.WorkingDir, self.WorkingDir)
-        return self.workingDirPath(os.path.basename(filename))
+        return filename.replace(prot.WorkingDir, self.WorkingDir)
+        #return self.workingDirPath(os.path.basename(filename))
     
     def getExtendedRunName(self):
         ''' Return the extended run name of this run '''

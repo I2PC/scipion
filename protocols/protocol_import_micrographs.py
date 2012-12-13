@@ -29,20 +29,19 @@ class ProtImportMicrographs(XmippProtocol):
             self.insertStep('merge', [self.getFilename('micrographs'), self.getFilename('microscope')],
                             OutWd=self.WorkingDir, InWd1=prev1.WorkingDir, InWd2=prev2.WorkingDir)
         else:
-            fnExtra=self.workingDirPath("extra")
             # Create microscope
             self.insertCreateMicroscope()
             # Decide name after preprocessing
             doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixels or self.DoLog)
             micrographs = self.getMicrographs()
             if doPreprocess:
-                self.insertStep("createDir",verifyfiles=[fnExtra],path=fnExtra)
+                self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
                 func = self.insertPreprocessStep
-                funcOutput = lambda i: os.path.join(fnExtra,replaceBasenameExt(i, '.mrc'))
+                funcOutput = lambda i: os.path.join(self.ExtraDir,replaceBasenameExt(i, '.mrc'))
             elif self.CopyMicrographs:
-                self.insertStep("createDir",verifyfiles=[fnExtra],path=fnExtra)
+                self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
                 func = self.insertCopyMicrograph
-                funcOutput = lambda i: os.path.join(fnExtra,os.path.basename(i))
+                funcOutput = lambda i: os.path.join(self.ExtraDir,os.path.basename(i))
             else:
                 func = lambda i, o: i #Do nothing
                 funcOutput = lambda i: i 
