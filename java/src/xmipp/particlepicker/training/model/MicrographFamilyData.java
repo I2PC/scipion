@@ -180,7 +180,7 @@ public class MicrographFamilyData
 		return false;
 	}
 
-	public boolean isActionVisible(double threshold)
+	public boolean isActionVisible()
 	{
 
 		if (family.getStep() != FamilyState.Supervised)
@@ -274,13 +274,13 @@ public class MicrographFamilyData
 		return result;
 	}
 	
-	public TrainingParticle getLastAvailableParticle()
+	public TrainingParticle getLastAvailableParticle(double threshold)
 	{
 		AutomaticParticle ap;
 		for(int i = autoparticles.size() - 1; i >= 0; i --)
 		{
 			ap = autoparticles.get(i);
-			if(!ap.isDeleted())
+			if(!ap.isDeleted() && ap.getCost() >= threshold)
 				return ap;
 		}
 		if(!manualparticles.isEmpty())

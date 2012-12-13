@@ -44,7 +44,7 @@ public class SupervisedParticlePicker extends TrainingPicker {
 			count += m.getFamilyData(family).getParticles().size();
 		}
 		if(count < mintraining)
-			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsgWithInfo(String.format("Training Min:%s", count), "Must provide at least " + mintraining));
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsgWithInfo(String.format("Particles provided:%s", count), "Must enter at least " + mintraining));
 	}
 	
 	public boolean isFastMode() {

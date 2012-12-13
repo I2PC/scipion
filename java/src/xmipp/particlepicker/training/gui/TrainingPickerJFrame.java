@@ -85,6 +85,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
 
+
 	@Override
 	public TrainingPicker getParticlePicker()
 	{
@@ -178,11 +179,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
 
+
 		templatesmi = new JMenuItem("Templates");
 		templatesmi.setEnabled(ppicker.getMode() == FamilyState.Manual);
 		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
+
 		helpmn.add(hcontentsmi);
 
 		// Setting menu item listeners
@@ -197,6 +200,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 			}
 		});
+
 		templatesmi.addActionListener(new ActionListener()
 		{
 
@@ -246,6 +250,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+
 
 	private void initFamilyPane()
 	{
@@ -339,7 +344,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				family = family2;
 				ppicker.setFamily(family);
 				ppicker.saveConfig();
-				micrographstb.getSelectionModel().setSelectionInterval(index, index);
+
+				micrographstb.setRowSelectionInterval(index, index);
 				color = (family.getColor());
 				colorbt.setIcon(new ColorIcon(color));
 				sizesl.setValue(family.getSize());
@@ -450,7 +456,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// setChanged(true);
 		updateMicrographsModel();
 		canvas.repaint();
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
 		if (particlesdialog != null)
 			loadParticles();
 
@@ -492,26 +497,29 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	protected void loadMicrograph()
 	{
+
+		
 		if (micrographstb.getSelectedRow() == -1)
 			return;// Probably from fireTableDataChanged raised
-
-		if (index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())// same
-																									// micrograph
-																									// open
+		// is same micrograph??
+		if (index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())
 			return;
 		ppicker.saveData(getMicrograph());// Saving changes when switching
 											// micrographs, by Coss suggestion
 
-		index = TrainingPickerJFrame.this.micrographstb.getSelectedRow();
-		// by me.
+
+		index = micrographstb.getSelectedRow();
+		
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
+		System.out.println("Loading micrograph " + getMicrograph().getName());
 		ppicker.saveConfig();
 		setChanged(false);
 		initializeCanvas();
 		TrainingPickerJFrame.this.iconlb.setIcon(ppicker.getMicrograph().getCTFIcon());
 		actionsbt.setText(getFamilyData().getAction());
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		actionsbt.setVisible(getFamilyData().isActionVisible());
+		System.out.printf("state:%s actionvisible:%s\n", getFamilyData().getState(), getFamilyData().isActionVisible());
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
@@ -558,7 +566,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		sizetf.setEnabled(step == FamilyState.Manual);
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(getFamilyData().getAction());
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		actionsbt.setVisible(getFamilyData().isActionVisible());
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
@@ -654,6 +662,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		if (templatesdialog != null)
 			loadTemplates();
 
+		if (particlesdialog != null)
+			loadParticles();
+
 		if (all)
 			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1);
 		else
@@ -662,7 +673,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		micrographstb.setRowSelectionInterval(index, index);
 		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		actionsbt.setVisible(getFamilyData().isActionVisible());
+		System.out.println(getFamilyData().isActionVisible());
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -779,6 +791,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 					canvas.setEnabled(true);
 					XmippWindowUtil.releaseGUI(getRootPane());
+					if (index < micrographsmd.getRowCount())
+						micrographstb.setRowSelectionInterval(index + 1, index + 1);
 				}
 			});
 			t.start();
@@ -879,6 +893,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
 
+
 	}
 
 	public void updateTemplates()
@@ -892,6 +907,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		super.updateSize(size);
 		if (templatesdialog != null)
 			loadTemplates();
+
 	}
 
 	@Override
