@@ -435,8 +435,8 @@ class XmippProtocol(object):
                 'acquisition':   join('%(WorkingDir)s', 'acquisition_info.xmd'),     
                 'extra':         join('%(WorkingDir)s', "extra"),      
                 'extract_list':  join('%(WorkingDir)s', "extract_list.xmd"),      
-                'families':      join('%(WorkingDir)s', 'extra/families.xmd'),
-                'family':        join('%(WorkingDir)s', '%(family)s.xmd'),
+                'families':      join('%(ExtraDir)s', 'families.xmd'),
+                'family':        join('%(ExtraDir)s', '%(family)s.xmd'),
                 'macros':        join('%(WorkingDir)s', 'macros.xmd'), 
                 'micrographs':   join('%(WorkingDir)s', 'micrographs.xmd'),
                 'microscope':    join('%(WorkingDir)s', 'microscope.xmd'),
@@ -678,8 +678,8 @@ class XmippProtocol(object):
         ''' This function will take a filename relative to some protocol
         and will create the same filename but in the current protocol 
         working dir'''
-        #return filename.replace(prot.WorkingDir, self.WorkingDir)
-        return self.workingDirPath(os.path.basename(filename))
+        return filename.replace(prot.WorkingDir, self.WorkingDir)
+        #return self.workingDirPath(os.path.basename(filename))
     
     def getExtendedRunName(self):
         ''' Return the extended run name of this run '''
