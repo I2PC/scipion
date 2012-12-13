@@ -26,7 +26,7 @@ _templateDict = {
         # This templates are relative to a micrographDir
         'mic_block': _mic_block,
         'mic_block_fn': _mic_block+'@%(fn)s',
-        'extract_list':  join('%(ExtraDir)s', "%(family)s_extract_list.xmd")      
+        'extract_list':  join('%(ExtraDir)s', "extract_list.xmd")      
         }
 
 def _getFilename(key, **args):
@@ -81,14 +81,14 @@ class ProtExtractParticles(XmippProtocol):
         md = MetaData(self.MicrographsMd)
         self.containsCTF = md.containsLabel(MDL_CTF_MODEL)
         # Create or look for the extract list
-        destFnExtractList = _getFilename('extract_list', ExtraDir=self.ExtraDir, family=self.Family)
+        destFnExtractList = _getFilename('extract_list', ExtraDir=self.ExtraDir)
         if self.TiltPairs:
             self.insertStep("createExtractListTiltPairs", family=self.Family,
                                fnMicrographs=self.MicrographsMd, pickingDir=self.pickingDir,
                                fnExtractList=destFnExtractList)
             micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
         else:
-            srcFnExtractList = self.PrevRun.getFilename('extract_list', family=self.Family)
+            srcFnExtractList = self.PrevRun.getFilename('extract_list')
             if exists(srcFnExtractList):
                 self.insertCopyFile(srcFnExtractList, destFnExtractList)
                 micrographs = getBlocksInMetaDataFile(srcFnExtractList)
@@ -152,13 +152,12 @@ class ProtExtractParticles(XmippProtocol):
 
         # Gather results
         if self.TiltPairs:
-            self.insertStep('gatherTiltPairSelfiles',family=self.Family,
+            self.insertStep('gatherTiltPairSelfiles',
                                WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, fnMicrographs=self.micrographs)
         else:
-            self.insertStep('gatherSelfiles',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,family=self.Family)
-            selfileRoot=self.workingDirPath(self.Family)
-            self.insertStep('sortImagesInFamily',selfileRoot=selfileRoot)
-            self.insertStep('avgZscore',WorkingDir=self.WorkingDir,family=self.Family,
+            self.insertStep('gatherSelfiles',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir)
+            self.insertStep('sortImagesInFamily',WorkingDir=self.WorkingDir)
+            self.insertStep('avgZscore',WorkingDir=self.WorkingDir,
                                micrographSelfile=self.micrographs)
 
     def validate(self):
@@ -288,8 +287,8 @@ def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
     for objId in md:
         micName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         
-        fnManual = join(pickingDir, micName + ".pos")
-        fnAuto1 = join(pickingDir, micName + "_auto.pos")
+        fnManual = join(pickingDir, "extra", micName + ".pos")
+        fnAuto1 = join(pickingDir, "extra", micName + "_auto.pos")
         
         mdpos.clear()
         if exists(fnManual):
@@ -317,8 +316,8 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
         umicName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         tmicName =removeBasenameExt(md.getValue(MDL_MICROGRAPH_TILTED, objId))
         
-        fnUntilted = join(pickingDir,umicName + ".pos")
-        fnTilted = join(pickingDir,tmicName + ".pos")
+        fnUntilted = join(pickingDir,"extra",umicName + ".pos")
+        fnTilted = join(pickingDir,"extra",tmicName + ".pos")
 
         mdUntiltedPos.clear()
         mdTiltedPos.clear()
@@ -383,7 +382,7 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
             md.setValueCol(MDL_CTF_MODEL,ctf)
         md.write(selfile)
 
-def gatherSelfiles(log, WorkingDir, ExtraDir, family):
+def gatherSelfiles(log, WorkingDir, ExtraDir):
     stackFiles = glob.glob(join(ExtraDir,"*.stk"))
     stackFiles.sort()
     familySelfile=MetaData()
@@ -391,9 +390,9 @@ def gatherSelfiles(log, WorkingDir, ExtraDir, family):
         selfile=stackFile.replace(".stk",".xmd")
         md=MetaData(selfile)
         familySelfile.unionAll(md)
-    familySelfile.write(join(WorkingDir,family + ".xmd"))
+    familySelfile.write(join(WorkingDir,"images.xmd"))
 
-def gatherTiltPairSelfiles(log, family, WorkingDir, ExtraDir, fnMicrographs):
+def gatherTiltPairSelfiles(log, WorkingDir, ExtraDir, fnMicrographs):
     mdPairs = MetaData(fnMicrographs)
     mdUntilted = MetaData()
     mdTilted = MetaData()
@@ -406,16 +405,16 @@ def gatherTiltPairSelfiles(log, family, WorkingDir, ExtraDir, fnMicrographs):
             tmicName = removeBasenameExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,objId))
             mdTilted.unionAll(MetaData(join(ExtraDir, tmicName + ".xmd")))
         
-    mdUntilted.write(join(WorkingDir, "%s_untilted.xmd" % family))
-    mdTilted.write(join(WorkingDir, "%s_tilted.xmd" % family))
+    mdUntilted.write(join(WorkingDir, "images_untilted.xmd"))
+    mdTilted.write(join(WorkingDir, "images_tilted.xmd"))
 
     mdTiltedPairs = MetaData()
     mdTiltedPairs.setColumnValues(MDL_IMAGE, mdUntilted.getColumnValues(MDL_IMAGE))
     mdTiltedPairs.setColumnValues(MDL_IMAGE_TILTED, mdTilted.getColumnValues(MDL_IMAGE))
-    mdTiltedPairs.write(join(WorkingDir,"%s.xmd" % family))
+    mdTiltedPairs.write(join(WorkingDir,"images.xmd"))
 
-def sortImagesInFamily(log, selfileRoot):
-    fn = selfileRoot + '.xmd'
+def sortImagesInFamily(log, WorkingDir):
+    fn = os.path.join(WorkingDir, 'images.xmd')
     md = MetaData(fn)
     if not md.isEmpty():
         runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --addToInput" % locals())
@@ -423,8 +422,8 @@ def sortImagesInFamily(log, selfileRoot):
         md.sort(MDL_ZSCORE)
         md.write(fn)
  
-def avgZscore(log,WorkingDir,family,micrographSelfile):
-    allParticles = MetaData(join(WorkingDir, family + ".xmd"))
+def avgZscore(log,WorkingDir,micrographSelfile):
+    allParticles = MetaData(join(WorkingDir, "images.xmd"))
     mdavgZscore = MetaData()
     mdavgZscore.aggregate(allParticles, AGGR_AVG, MDL_MICROGRAPH, MDL_ZSCORE, MDL_ZSCORE)
     oldMicrographsSel = MetaData(micrographSelfile)

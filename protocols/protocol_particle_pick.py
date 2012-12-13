@@ -34,10 +34,12 @@ class ProtParticlePicking(XmippProtocol):
         self.MicrographsMd = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
 
     def defineSteps(self):
+        fnExtra=self.workingDirPath("extra")
+        self.insertStep("createDir",verifyfiles=[fnExtra],path=fnExtra)
         self.insertImportOfFiles([self.Input['micrographs'], self.Input['acquisition']])
         if getattr(self, 'LaunchGUI', True):
             self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
-                           InputMicrographs=self.MicrographsMd, WorkingDir=self.WorkingDir,
+                           InputMicrographs=self.MicrographsMd, WorkingDir=self.getFilename('extra'),
                            TiltPairs=self.TiltPairs, Memory=self.Memory)       
         
     def summary(self):
@@ -63,19 +65,19 @@ class ProtParticlePicking(XmippProtocol):
             if self.TiltPairs:
                 particles /= 2
             summary.append("Family <%(family)s>: <%(particles)u> %(items)s" % locals())
-        
+
         return summary
     
     def validate(self):
         return validateMicrographs(self.Input['micrographs'], self.TiltPairs)
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.MicrographsMd, self.WorkingDir, PM_READONLY, self.TiltPairs)
+        launchParticlePickingGUI(None, self.MicrographsMd, self.getFilename('extra'), PM_READONLY, self.TiltPairs)
 
 
 def getPosFiles(prot, pattern=''):
     '''Return the .pos files of this picking protocol'''
-    return glob(prot.workingDirPath('*%s.pos' % pattern))
+    return glob(os.path.join(prot.getFilename('extra'),'*%s.pos' % pattern))
 
 def validateMicrographs(inputMicrographs, tiltPairs=False):
     ''' Validate the existence of input micrographs metadata file 
