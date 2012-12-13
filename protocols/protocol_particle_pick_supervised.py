@@ -45,7 +45,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
                 }
 
     def defineSteps(self):
-        if not os.path.exists(self.getFilename('svm')) and os.path.exists(self.ExtraDir):
+        if not os.path.exists(self.getFilename('svm',family=self.Family)) and os.path.exists(self.ExtraDir):
             deleteDir(self.ExtraDir)
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         filesToImport = [self.Input[k] for k in self.keysToImport]
