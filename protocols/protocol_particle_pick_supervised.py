@@ -9,7 +9,7 @@
 from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
-from protlib_filesystem import createLink, copyFile
+from protlib_filesystem import createLink, copyFile, deleteDir
 import xmipp
 from glob import glob
 from os.path import exists, join
@@ -35,7 +35,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
     def createFilenameTemplates(self):
         return {
                 'training': join('%(WorkingDir)s', '%(family)s_training.txt'),
-                     'pos': join('%(WorkingDir)s', '%(micrograph)s.pos'),
+                     'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
 #                    'mask': join('%(WorkingDir)s', '%(family)s_mask.xmp'),
                     'pca': join('%(WorkingDir)s', '%(family)s_pca_model.stk'),
                     'rotpca': join('%(WorkingDir)s', '%(family)s_rotpca_model.stk'),
@@ -45,12 +45,15 @@ class ProtParticlePickingSupervised(XmippProtocol):
                 }
 
     def defineSteps(self):
+        if not os.path.exists(self.getFilename('svm')) and os.path.exists(self.ExtraDir):
+            deleteDir(self.ExtraDir)
+        self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getPosFiles(self.PrevRun)
         self.insertImportOfFiles(filesToImport)
         modeWithArgs = PM_SUPERVISED + " %(NumberOfThreads)d %(Fast)s %(InCore)s" % self.ParamsDict
         self.insertStep('launchParticlePickingGUI', execution_mode=SqliteDb.EXEC_ALWAYS,
-                           InputMicrographs=self.micrographsMd, WorkingDir=self.WorkingDir,
+                           InputMicrographs=self.micrographsMd, ExtraDir=self.ExtraDir,
                            PickingMode=modeWithArgs, Memory=self.Memory, Family=self.Family)       
         
     def summary(self):
