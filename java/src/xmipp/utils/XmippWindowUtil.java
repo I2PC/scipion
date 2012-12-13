@@ -150,6 +150,7 @@ public class XmippWindowUtil {
 	public static void blockGUI(JRootPane panel, String status) {
 		final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel(
 				status);
+		progressPanel.setSize(panel.getSize());
 		panel.setGlassPane(progressPanel);
 		progressPanel.start();
 	}
