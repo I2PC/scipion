@@ -2,6 +2,7 @@ package xmipp.particlepicker.training.gui;
 
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+import ij.plugin.FolderOpener;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -32,6 +33,7 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -83,6 +85,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
 	private Family family;
+	private JTextField autopickpercenttf;
+	private JPanel autopickpercentpn;
 
 	// private JMenuItem templatesmi;
 	// TemplatesJDialog templatesdialog;
@@ -247,15 +251,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		familiescb = new JComboBox(ppicker.getFamilies().toArray());
 		family = ppicker.getFamily();
 		familiescb.setSelectedItem(family);
-		familiescb.setEnabled(ppicker.getMode() == FamilyState.Manual || ppicker.getMode() == FamilyState.ReadOnly);// available
-																													// families
-																													// are
-																													// marked
-																													// by
-																													// pickers
-																													// at
-																													// start
-
+		familiescb.setEnabled(ppicker.getMode() == FamilyState.Manual || ppicker.getMode() == FamilyState.ReadOnly);
 		if (ppicker.getMode() == FamilyState.Manual && family.getStep() != FamilyState.Manual)
 			throw new IllegalArgumentException(
 					String.format("Application not enabled for %s mode. Family %s could not be loaded", family.getStep(), family.getName()));
@@ -293,8 +289,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 					correct();
 			}
 		});
+		autopickpercentpn = new JPanel();
+		autopickpercentpn.add(new JLabel("Percent to Check"));
+		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		autopickpercentpn.add(autopickpercenttf);
+		
 		setStep(step);
 		steppn.add(actionsbt);
+
+		steppn.add(autopickpercentpn);
 
 		colorbt.addActionListener(new ColorActionListener());
 
@@ -476,7 +479,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	protected void loadMicrograph()
 	{
-		
+
 		if (micrographstb.getSelectedRow() == -1)
 			return;// Probably from fireTableDataChanged raised
 		// is same micrograph??
@@ -485,7 +488,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		ppicker.saveData(getMicrograph());// Saving changes when switching
 											// micrographs, by Coss suggestion
 
-		
 		index = micrographstb.getSelectedRow();
 		System.out.println("Loading micrograph " + index);
 		ppicker.getMicrograph().releaseImage();
@@ -515,8 +517,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private void setState(MicrographFamilyState state)
 	{
-		getFamilyData().setState(state);
-		actionsbt.setText(getFamilyData().getAction());
+		MicrographFamilyData mfd = getFamilyData();
+		mfd.setState(state);
+		actionsbt.setText(mfd.getAction());
+		autopickpercentpn.setVisible(mfd.getState() == MicrographFamilyState.Autopick);
 		// if (getFamilyData().getState() == MicrographFamilyState.Correct)
 		// actionsbt.setEnabled(false);// enabled only after doing corrections
 		ppicker.saveData(getMicrograph());// to keep consistence between files
@@ -547,6 +551,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(getFamilyData().getAction());
 		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		autopickpercentpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Autopick);
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
@@ -667,8 +672,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		{
 			canvas.setEnabled(false);
 			XmippWindowUtil.blockGUI(this, "Training...");
-			
-			
+
 			Thread t = new Thread(new Runnable()
 			{
 
@@ -709,7 +713,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private void autopick()
 	{
 		setState(MicrographFamilyState.Autopick);
-		
+
 		final String fargs = ((SupervisedParticlePicker) ppicker).getAutopickCommandLineArgs(getFamilyData());
 		System.out.println(fargs);
 		try

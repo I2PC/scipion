@@ -285,6 +285,7 @@ enum MDLabel
     MDL_PICKING_FAMILY_TEMPLATES, ///< Number of templates for the family
     MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
+    MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
     MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
