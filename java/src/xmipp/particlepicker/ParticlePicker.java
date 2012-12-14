@@ -39,6 +39,7 @@ public abstract class ParticlePicker {
 	protected String command;
 	protected Family family;
 	protected String configfile;
+	private int autopickpercent;
 
 	public int getSize() {
 		return family.getSize();
@@ -367,6 +368,17 @@ public abstract class ParticlePicker {
 		return null;
 	}
 
+	public void setAutopickpercent(int autopickpercent)
+	{
+		this.autopickpercent = autopickpercent;
+		System.out.println(autopickpercent);
+	}
+	
+	public int getAutopickpercent()
+	{
+		return autopickpercent;
+	}
+	
 	public void saveConfig() {
 		try {
 			MetaData md;
@@ -375,6 +387,7 @@ public abstract class ParticlePicker {
 			long id = md.addObject();
 			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
 			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 			md.write(file);
 			md.destroy();
 
@@ -396,6 +409,7 @@ public abstract class ParticlePicker {
 		String mname, fname;
 		try {
 			MetaData md = new MetaData(file);
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 			for (long id : md.findObjects()) {
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
@@ -403,6 +417,10 @@ public abstract class ParticlePicker {
 				
 				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				setMicrograph(getMicrograph(mname));
+				if(hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+				else
+					autopickpercent = 50;//compatibility with previous projects
 			}
 			md.destroy();
 		} catch (Exception e) {
@@ -410,6 +428,7 @@ public abstract class ParticlePicker {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
 
 	void removeFilter(String filter) {
 		for (IJCommand f : filters)

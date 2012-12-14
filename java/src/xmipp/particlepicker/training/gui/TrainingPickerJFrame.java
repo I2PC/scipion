@@ -292,8 +292,29 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		autopickpercentpn = new JPanel();
 		autopickpercentpn.add(new JLabel("Percent to Check"));
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		autopickpercenttf.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				if(autopickpercenttf.getValue() == null)
+				{
+					JOptionPane.showMessageDialog(TrainingPickerJFrame.this, XmippMessage.getEmptyFieldMsg("Percent to Check"));
+					autopickpercenttf.setValue(getFamilyData().getAutopickpercent());
+					return;
+				}
+					
+				int autopickpercent = ((Number)autopickpercenttf.getValue()).intValue();
+				getFamilyData().setAutopickpercent(autopickpercent);
+				ppicker.setAutopickpercent(autopickpercent);
+				ppicker.saveConfig();
+				
+			}
+		});
+		autopickpercenttf.setColumns(3);
 		autopickpercentpn.add(autopickpercenttf);
-
+		
 		setStep(step);
 		steppn.add(actionsbt);
 
@@ -489,21 +510,32 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 											// micrographs, by Coss suggestion
 
 		index = micrographstb.getSelectedRow();
-		System.out.println("Loading micrograph " + index);
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
+		
 		ppicker.saveConfig();
 		setChanged(false);
 		initializeCanvas();
 		TrainingPickerJFrame.this.iconlb.setIcon(ppicker.getMicrograph().getCTFIcon());
-		actionsbt.setText(getFamilyData().getAction());
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
+		manageAction();
+		
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
 		if (particlesdialog != null)
 			loadParticles();
 
+	}
+	
+	private void manageAction()
+	{
+		MicrographFamilyData mfd = getFamilyData();
+		actionsbt.setText(mfd.getAction());
+		boolean isautopick = isAutopick();
+		autopickpercentpn.setVisible(isautopick);
+		if(isautopick)
+			autopickpercenttf.setValue(ppicker.getAutopickpercent());
+		actionsbt.setVisible(mfd.isActionVisible(getThreshold()));
 	}
 
 	protected void resetMicrograph()
@@ -519,9 +551,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.setState(state);
-		actionsbt.setText(mfd.getAction());
-		autopickpercentpn.setVisible(actionsbt.getText().equalsIgnoreCase(MicrographFamilyState.Autopick));
-		autopickpercenttf.setValue(mfd.getAutopickpercent());
+		manageAction();
+		
 		// if (getFamilyData().getState() == MicrographFamilyState.Correct)
 		// actionsbt.setEnabled(false);// enabled only after doing corrections
 		ppicker.saveData(getMicrograph());// to keep consistence between files
@@ -531,6 +562,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		thresholdpn.setVisible(state == MicrographFamilyState.Correct);
 		updateMicrographsModel();
 		pack();
+	}
+	
+	private boolean isAutopick()
+	{
+		String action = getFamilyData().getAction();
+		if(action == null)
+			return false;
+		return action.equalsIgnoreCase(MicrographFamilyState.Autopick.toString());
+			
 	}
 
 	public MicrographFamilyData getFamilyData()
@@ -551,10 +591,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		sizesl.setEnabled(step == FamilyState.Manual);
 		sizetf.setEnabled(step == FamilyState.Manual);
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
-		actionsbt.setText(mfd.getAction());
-		actionsbt.setVisible(mfd.isActionVisible(getThreshold()));
-		autopickpercentpn.setVisible(actionsbt.getText().equalsIgnoreCase(MicrographFamilyState.Autopick));
-		autopickpercenttf.setValue(mfd.getAutopickpercent());
+		manageAction();
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 

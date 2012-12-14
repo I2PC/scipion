@@ -1,3 +1,4 @@
+
 package xmipp.particlepicker.training.gui;
 
 import java.awt.BasicStroke;

@@ -1037,6 +1037,7 @@ private:
         MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "pickingMicrographFamilyState");
         MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_FAMILY_STATE, "micrograph_family_state");//3.0
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
+        MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
         MDL::addLabel(MDL_PICKING_FAMILY_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");

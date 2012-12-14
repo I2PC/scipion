@@ -2,7 +2,6 @@ package xmipp.particlepicker.training.model;
 
 import java.io.File;
 import java.util.logging.Level;
-
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
 import xmipp.utils.XmippMessage;
@@ -47,6 +46,8 @@ public class SupervisedParticlePicker extends TrainingPicker {
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Particles provided", count, "Must enter at least " + mintraining));
 	}
 	
+	
+
 	public boolean isFastMode() {
 		return fastmode;
 	}
@@ -133,7 +134,7 @@ public class SupervisedParticlePicker extends TrainingPicker {
 		Family family = mfd.getFamily();
 		Micrograph micrograph = mfd.getMicrograph();
 		//String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent", micrograph.getFile(),// -i
-		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent", micrograph.getFile(),// -i
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s", micrograph.getFile(),// -i
 				family.getSize(), // --particleSize
 				getOutputPath(family.getName()),// --model
 				getOutputPath(micrograph.getName()),// --outputRoot
