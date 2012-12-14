@@ -72,7 +72,6 @@ class ProtRCT(XmippProtocol):
         errors = []
         classSelection = getListFromRangeString(self.SelectedClasses)
         blocks = getBlocksInMetaDataFile(self.ClassifMd)
-        print "extraction run: ", self.ExtractionRun
         self.ExtractDir = getWorkingDirFromRunName(self.ExtractionRun)
         
         for classNo in classSelection:
@@ -84,7 +83,6 @@ class ProtRCT(XmippProtocol):
         if self.LowPassFilter > 0.5 or self.LowPassFilter < 0:
             errors.append("Low pass filter must be in the range 0-0.5")
         
-        print "extract dir: ", self.ExtractDir
         files = [getImagesFilename(self.ExtractDir, s) for s in ['', 'untilted', 'tilted']]
         files.append(getProtocolFilename('tilted_pairs', WorkingDir=self.ExtractDir))
         
