@@ -107,8 +107,11 @@ def doCrop(log, stack, cropSize, tmpStack):
     runJob(log,"xmipp_transform_window","-i %(stack)s --size %(cropSize)d -o %(tmpStack)s" % locals())
     moveFile(log, tmpStack, stack)
     
-def doRemoveDust(log,stack,threshold,Nproc):
-    runJob(log,"xmipp_transform_filter","-i %(stack)s --bad_pixels outliers %(threshold)f" % locals(), Nproc)
+def invert(log,ImagesMd,Nproc):
+    runJob(log,'xmipp_image_operate','-i %(ImagesMd)s --mult -1' % locals(),Nproc)
+
+def removeDust(log,ImagesMd,threshold,Nproc):
+    runJob(log,'xmipp_transform_filter','-i %(ImagesMd)s --bad_pixels outliers %(threshold)f' % locals(),Nproc)
 
 def runNormalize(log,stack,normType,bgRadius,Nproc):
     program = "xmipp_transform_normalize"

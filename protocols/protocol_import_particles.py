@@ -18,13 +18,14 @@ from protlib_utils import runJob
 from protlib_filesystem import deleteFile, createDir, copyFile, fixPath, \
 findProjectInPathTree, xmippRelpath, splitFilename
 
-
 class ProtImportParticles(ProtParticlesBase):
     def __init__(self, scriptname, project):
         ProtParticlesBase.__init__(self, protDict.import_particles.name, scriptname, project)
         self.Import += 'from protocol_import_particles import *'
 
     def defineSteps(self):
+        if self.DoInvert or self.DoRemoveDust or self.DoNorm:
+            self.DoCopy = True 
         fnOut = self.getFilename('acquisition')
         self.insertStep('createAcquisitionMd',verifyfiles=[fnOut],samplingRate=self.SamplingRate, fnOut=fnOut)
         
@@ -36,17 +37,18 @@ class ProtImportParticles(ProtParticlesBase):
                            InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
                            ImportAll=self.ImportAll, SubsetMode=self.SubsetMode, Nsubset=self.Nsubset)
         
-        if self.DoInvert and self.ImportAll:
+        if self.DoInvert:
             self.insertStep('invert', ImagesMd=fnOut,Nproc=self.NumberOfMpi)
         
-        if self.DoRemoveDust and self.ImportAll:
+        if self.DoRemoveDust:
             self.insertStep('removeDust', ImagesMd=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
         
-        if self.DoNorm and self.ImportAll:
-            self.insertStep('normalize', ImagesMd=fnOut,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
+        if self.DoNorm:
+            self.insertStep('runNormalize', stack=fnOut, normType=self.NormType, 
+                            bgRadius=self.BackGroundRadius, Nproc=self.NumberOfMpi)
         
         if self.DoSort:
-            self.insertStep('sortImages', verifyfiles=[fnOut], fn=fnOut)
+            self.insertStep('sortImages', verifyfiles=[fnOut], ImagesFn=fnOut)
             
     def validate(self):
         errors = []
@@ -76,7 +78,6 @@ class ProtImportParticles(ProtParticlesBase):
             message.append("Steps applied: "+",".join(steps))
             
         return message
-       
 
 def createAcquisitionMd(log, samplingRate, fnOut):
     md = MetaData()
@@ -122,14 +123,3 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
     writeImagesMd(log, md, ImportAll, SubsetMode, Nsubset, imagesFn, imagesStk, DoCopy)
        
 
-def invert(log,ImagesMd,Nproc):
-    runJob(log,'xmipp_image_operate','-i %(ImagesMd)s --mult -1' % locals(),Nproc)
-
-def removeDust(log,ImagesMd,threshold,Nproc):
-    runJob(log,'xmipp_transform_filter','-i %(ImagesMd)s --bad_pixels outliers %(threshold)f' % locals(),Nproc)
-
-def normalize(log,ImagesMd,bgRadius,Nproc):
-    if bgRadius <= 0:
-        particleSize = ImgSize(ImagesMd)[0]
-        bgRadius = int(particleSize/2)
-    runJob(log,"xmipp_transform_normalize", '-i %(ImagesMd)s --method Ramp --background circle %(bgRadius)d' % locals(),Nproc)
