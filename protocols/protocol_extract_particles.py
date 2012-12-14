@@ -129,7 +129,6 @@ class ProtExtractParticles(ProtParticlesBase):
                 micrographToExtract=micrographFlipped
             
             # Actually extract
-            fnOut = self.workingDirPath(micrographName + ".stk")
             parent_id = self.insertParallelStep('extractParticles', parent_step_id=parent_id,
                                   ExtraDir=self.ExtraDir,
                                   micrographName=micrographName,ctf=ctf,
@@ -146,13 +145,14 @@ class ProtExtractParticles(ProtParticlesBase):
             if self.DoFlip:
                 self.insertParallelStep('deleteFile', parent_step_id=parent_id,filename=micrographFlipped,verbose=True)
 
-        # Gather results
+        # Create results metadata
+        ImagesFn = self.getFilename('images')
         if self.TiltPairs:
-            self.insertStep('createTiltPairsImagesMd', WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, 
+            self.insertStep('createTiltPairsImagesMd', verifyfiles=[ImagesFn], WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, 
                             fnMicrographs=self.micrographs)
         else:
-            self.insertStep('createImagesMd',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir)
-            self.insertStep('sortImages',WorkingDir=self.WorkingDir)
+            self.insertStep('createImagesMd', verifyfiles=[ImagesFn], ImagesMd=ImagesFn, ExtraDir=self.ExtraDir)
+            self.insertStep('sortImages',ImagesFn=ImagesFn)
             self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
 
     def validate(self):
@@ -321,20 +321,17 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
     
     # Extract 
     rootname = join(ExtraDir, micrographName)
-    arguments="-i "+micrographToExtract+" --pos "+fnBlock+" -o "+rootname+" --Xdim "+str(particleSize)
+    arguments="-i %(micrographToExtract)s --pos %(fnBlock)s -o %(rootname)s --Xdim %(particleSize)d" % locals()
     if abs(TsFinal-TsInput)>0.001:
         arguments+=" --downsampling "+str(TsFinal/TsInput)
     if doInvert:
         arguments += " --invert"
-    try:
-        runJob(log,"xmipp_micrograph_scissor", arguments)
-    except OSError, e:
-       print ("Execution failed %s, command: %s" % (e, 'xmipp_micrograph_scissor'))
+    runJob(log,"xmipp_micrograph_scissor", arguments)
     # Normalize 
     if doNorm:
         if bgRadius == 0:
             bgRadius = int(particleSize/2)
-        arguments = "-i "+rootname+'.stk --method Ramp --background circle '+str(bgRadius)
+        arguments = "-i %(rootname)s.stk --method Ramp --background circle %(bgRadius)d" % locals()
         runJob(log,"xmipp_transform_normalize",arguments)
 
     # Substitute the micrograph name if it comes from the flipped version
@@ -355,7 +352,7 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
             md.setValueCol(MDL_CTF_MODEL,ctf)
         md.write(selfile)
 
-def createImagesMd(log, WorkingDir, ExtraDir):
+def createImagesMd(log, ImagesFn, ExtraDir):
     stackFiles = glob.glob(join(ExtraDir,"*.stk"))
     stackFiles.sort()
     imagesMd = MetaData()
@@ -363,7 +360,7 @@ def createImagesMd(log, WorkingDir, ExtraDir):
         fn = stack.replace(".stk",".xmd")
         md = MetaData(fn)
         imagesMd.unionAll(md)
-    imagesMd.write(getImagesFilename(WorkingDir))
+    imagesMd.write(ImagesFn)
 
 def createTiltPairsImagesMd(log, WorkingDir, ExtraDir, fnMicrographs):
     mdPairs = MetaData(fnMicrographs)
@@ -385,15 +382,6 @@ def createTiltPairsImagesMd(log, WorkingDir, ExtraDir, fnMicrographs):
     mdTiltedPairs.setColumnValues(MDL_IMAGE, mdUntilted.getColumnValues(MDL_IMAGE))
     mdTiltedPairs.setColumnValues(MDL_IMAGE_TILTED, mdTilted.getColumnValues(MDL_IMAGE))
     mdTiltedPairs.write(fn)
- 
-def sortImages(log, WorkingDir):
-    fn = os.path.join(WorkingDir, 'images.xmd')
-    md = MetaData(fn)
-    if not md.isEmpty():
-        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput" % locals())
-        md.read(fn) # Should have ZScore label after runJob
-        md.sort(MDL_ZSCORE)
-        md.write(fn)
  
 def avgZscore(log,WorkingDir,micrographSelfile):
     allParticles = MetaData(getImagesFilename(WorkingDir))

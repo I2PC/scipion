@@ -42,7 +42,7 @@ A higher ZScore means a more different particles.
 """ 
 DoSort = False
 
-# {eval} expandPreprocessFilterMask(allowFlip=False)
+# {eval} expandParticlesPreprocess(allowFlip=False)
 
 # {eval} expandParallel(threads=0, mpi=8, hours=12, condition="ImportAll")
 

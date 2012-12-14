@@ -378,9 +378,10 @@ CommonTemplates = {
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
         'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd'),
         'images':       join('%(WorkingDir)s', 'images.xmd'),
-        'images_tilted': join("%(WorkingDir", 'images_tilted.xmd'),
-        'images_untilted': join("%(WorkingDir", 'images_untilted.xmd'),
-        'classes':      join('%(WorkingDir)s', 'classes.xmd')
+        'images_tilted': join("%(WorkingDir)s", 'images_tilted.xmd'),
+        'images_untilted': join("%(WorkingDir)s", 'images_untilted.xmd'),
+        'classes':      join('%(WorkingDir)s', 'classes.xmd'),
+        'class_block':  'class%(ClassNo)06d_images@%(ClassMd)s'
      }
 
 def getProtocolFilename(key, **params):
@@ -389,10 +390,20 @@ def getProtocolFilename(key, **params):
         return CommonTemplates[key] % params
     raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
 
-def getImagesFilename(workingDir):
+def getImagesFilename(workingDir, suffix=''):
     '''Shortcut to getProtocolFilename('images',...)'''
-    return getProtocolFilename('images', WorkingDir=workingDir)
-    
+    key = 'images'
+    if len(suffix):
+        key = 'images_%s' % suffix
+    return getProtocolFilename(key, WorkingDir=workingDir)
+
+def getClassBlock(block, classMd):
+    return getProtocolFilename('class_block', ClassNo=block, ClassMd=classMd)
+
+def getImagesMd(workingDir, suffix=''):
+    from xmipp import MetaData
+    return MetaData(getImagesFilename(workingDir, suffix))
+
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):

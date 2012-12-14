@@ -8,7 +8,7 @@
 # Author: Sjors Scheres, March 2007
 #
 from os.path import join, exists
-from xmipp import MetaData, MDL_IMAGE, MDL_IMAGE_TILTED, MDL_REF,\
+from xmipp import MetaData, getBlocksInMetaDataFile, MDL_IMAGE, MDL_IMAGE_TILTED, MDL_REF,\
 MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, LEFT_JOIN, MD_APPEND
 
 from protlib_base import *
@@ -18,17 +18,16 @@ class ProtRCT(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.rct.name, scriptname, project)
         self.Import = 'from protocol_rct import *'
+        self.ExtractDir = getWorkingDirFromRunName(self.ExtractionRun)        
 
     def defineSteps(self):
         pickingDir = getWorkingDirFromRunName(self.ExtractionRun)
         self.insertStep("createLink2",filename="acquisition_info.xmd",dirSrc=pickingDir,dirDest=self.WorkingDir)
 
         classSelection = getListFromRangeString(self.SelectedClasses)
-        extractRoot = join(getWorkingDirFromRunName(self.ExtractionRun),"DefaultFamily")
-        
-        self.insertStep('gatherPairs',verifyfiles=[self.workingDirPath("classes.xmd")],
+        self.insertStep('gatherPairs',verifyfiles=[self.getFilename('classes')],
                                WorkingDir=self.WorkingDir,ClassSelection=classSelection,
-                               ClassFile=self.ClassifMd, ExtractRootName=extractRoot,
+                               ClassFile=self.ClassifMd, ExtractDir=self.ExtractDir,
                                PickingDir=pickingDir)
         
         mdClasses = MetaData("classes@" + self.ClassifMd)
@@ -72,21 +71,19 @@ class ProtRCT(XmippProtocol):
     def validate(self):
         errors = []
         classSelection = getListFromRangeString(self.SelectedClasses)
+        blocks = getBlocksInMetaDataFile(self.ClassifMd)
+        
         for classNo in classSelection:
-            try:
-                blockName="class%06d_images"%classNo
-                mD=MetaData(blockName+"@"+self.ClassifMd)
-            except:
-                errors.append(blockName+" cannot be found at "+self.ClassifMd)
+            blockName = "class%06d_images" % classNo
+            if not blockName in blocks:
+                errors.append("%s cannot be found at %s" % (blockName, self.ClassifMd))
         if self.CenterMaxShift > 100 or self.CenterMaxShift < 0:
             errors.append("Maximum shift must be in the range 0-100")
         if self.LowPassFilter > 0.5 or self.LowPassFilter < 0:
             errors.append("Low pass filter must be in the range 0-0.5")
         
-        extractRoot = getWorkingDirFromRunName(self.ExtractionRun)
-        extractFamily = join(extractRoot, "DefaultFamily")        
-        files = ["%s%s.xmd" % (extractFamily, s) for s in ['', '_untilted', '_tilted']]
-        files.append(join(extractRoot, "tilted_pairs.xmd"))
+        files = [getImagesFilename(self.ExtractDir, s) for s in ['', 'untilted', 'tilted']]
+        files.append(getProtocolFilename('tilted_pairs', WorkingDir=self.ExtractDir))
         
         for f in files:
             if not exists(f):
@@ -101,18 +98,17 @@ class ProtRCT(XmippProtocol):
             if exists(fnVol):
                 runShowJ(fnVol)
 
-def gatherPairs(log,WorkingDir,ClassSelection,ClassFile,ExtractRootName,PickingDir):
+def gatherPairs(log,WorkingDir,ClassSelection,ClassFile,ExtractDir,PickingDir):
 
-    MDpairs = MetaData(ExtractRootName+".xmd")
-    
-    MDtiltAngles = MetaData(join(PickingDir,"tilted_pairs.xmd"))
+    mdImages = getImagesMd(ExtractDir)    
+    mdTiltAngles = MetaData(getProtocolFilename("tilted_pairs", WorkingDir=PickingDir))
 
-    mdU = MetaData(ExtractRootName+"_untilted.xmd")
+    mdU = getImagesMd(ExtractDir, "untilted")
     mdUAux = MetaData()
     mdUAux.setColumnValues(MDL_IMAGE,mdU.getColumnValues(MDL_IMAGE))
     mdUAux.setColumnValues(MDL_MICROGRAPH,mdU.getColumnValues(MDL_MICROGRAPH))
 
-    mdT = MetaData(ExtractRootName+"_tilted.xmd")
+    mdT = getImagesMd(ExtractDir, "tilted")
     mdTAux = MetaData()
     mdTAux.setColumnValues(MDL_IMAGE_TILTED,mdT.getColumnValues(MDL_IMAGE))
     mdTAux.setColumnValues(MDL_MICROGRAPH_TILTED,mdT.getColumnValues(MDL_MICROGRAPH))
@@ -121,14 +117,14 @@ def gatherPairs(log,WorkingDir,ClassSelection,ClassFile,ExtractRootName,PickingD
     mdJoin2 = MetaData()
     mdJoin3 = MetaData()
     mdJoin4 = MetaData()
-    fnOut = join(WorkingDir,"classes.xmd")
+    fnOut = getProtocolFilename('classes', WorkingDir=WorkingDir)
     for classNo in ClassSelection:
-        MDclass = MetaData("class%06d_images@%s"%(classNo,ClassFile))
-        mdJoin1.join(MDclass,MDpairs,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
-        mdJoin2.join(mdJoin1,mdUAux,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
-        mdJoin3.join(mdJoin2,mdTAux,MDL_IMAGE_TILTED,MDL_IMAGE_TILTED,LEFT_JOIN)
-        mdJoin4.join(mdJoin3,MDtiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
-        mdJoin4.write("class%06d_images@%s"%(classNo,fnOut),MD_APPEND)
+        MDclass = MetaData(getClassBlock(classNo, ClassFile))
+        mdJoin1.join(MDclass,mdImages,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
+        mdJoin2.join(mdJoin1,mdUAux, MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
+        mdJoin3.join(mdJoin2,mdTAux, MDL_IMAGE_TILTED,MDL_IMAGE_TILTED,LEFT_JOIN)
+        mdJoin4.join(mdJoin3,mdTiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
+        mdJoin4.write(getClassBlock(classNo, fnOut), MD_APPEND)
 
 def reconstructClass(log,WorkingDir,ClassNameIn,ClassNameOut,ClassImage,
                      CenterMaxShift,ThinObject,SkipTiltedTranslations,ClassVolumeOut,

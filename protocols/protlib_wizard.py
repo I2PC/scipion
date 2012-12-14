@@ -291,7 +291,7 @@ def wizardChooseFamilyToExtract(self, var):
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.getFilename("families")    
+    fnFamilies = pickingProt.getFilename("families")  
     if not exists(fnFamilies):
         showWarning("Warning", "No elements to select", parent=self.master)
         return

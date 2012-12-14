@@ -43,7 +43,7 @@ Family = ''
 actual particles may be smaller than this. """
 ParticleSize = 0
 
-# {eval} expandPreprocessFilterMask(allowFlip=True)
+# {eval} expandParticlesPreprocess(allowFlip=True)
 
 # {eval} expandParallel(threads=0, hours=12, mpi=8)
 #
