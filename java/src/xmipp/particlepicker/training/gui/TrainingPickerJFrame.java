@@ -221,7 +221,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		try
 		{
 			canvas.setEnabled(false);
-			XmippWindowUtil.blockGUI(getRootPane(), "Generating Templates...");
+			XmippWindowUtil.blockGUI(this, "Generating Templates...");
 
 			Thread t = new Thread(new Runnable()
 			{
