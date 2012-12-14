@@ -99,15 +99,18 @@ public abstract class TrainingPicker extends ParticlePicker
 			List<MicrographFamilyData> mfdatas = new ArrayList<MicrographFamilyData>();
 			if (!new File(getOutputPath(micrograph.getPosFile())).exists())
 				return;
+			
 			MetaData md = new MetaData("families@" + getOutputPath(micrograph.getPosFile()));
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 			for (long id : md.findObjects())
 			{
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				state = MicrographFamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
 				family = getFamily(fname);
-				autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				if(autopickpercent == null)
+				if(hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+				else
 					autopickpercent = 50;//compatibility with previous projects
 				mfd = new MicrographFamilyData(micrograph, family, state, autopickpercent);
 				if (getMode() == FamilyState.Review && mfd.getStep() != FamilyState.Review)

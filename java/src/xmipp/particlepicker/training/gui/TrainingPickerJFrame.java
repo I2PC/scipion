@@ -85,7 +85,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private JPanel thresholdpn;
 	private JFormattedTextField thresholdtf;
 	private Family family;
-	private JTextField autopickpercenttf;
+	private JFormattedTextField autopickpercenttf;
 	private JPanel autopickpercentpn;
 
 	// private JMenuItem templatesmi;
@@ -293,7 +293,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		autopickpercentpn.add(new JLabel("Percent to Check"));
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		autopickpercentpn.add(autopickpercenttf);
-		
+
 		setStep(step);
 		steppn.add(actionsbt);
 
@@ -521,6 +521,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mfd.setState(state);
 		actionsbt.setText(mfd.getAction());
 		autopickpercentpn.setVisible(mfd.getState() == MicrographFamilyState.Autopick);
+		autopickpercenttf.setValue(mfd.getAutopickpercent());
 		// if (getFamilyData().getState() == MicrographFamilyState.Correct)
 		// actionsbt.setEnabled(false);// enabled only after doing corrections
 		ppicker.saveData(getMicrograph());// to keep consistence between files
@@ -539,6 +540,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private void setStep(FamilyState step)
 	{
+		MicrographFamilyData mfd = getFamilyData();
 		if (micrographsmd != null)
 		{
 			updateMicrographsModel();
@@ -549,9 +551,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		sizesl.setEnabled(step == FamilyState.Manual);
 		sizetf.setEnabled(step == FamilyState.Manual);
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
-		actionsbt.setText(getFamilyData().getAction());
-		actionsbt.setVisible(getFamilyData().isActionVisible(getThreshold()));
-		autopickpercentpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Autopick);
+		actionsbt.setText(mfd.getAction());
+		actionsbt.setVisible(mfd.isActionVisible(getThreshold()));
+		autopickpercentpn.setVisible(mfd.getState() == MicrographFamilyState.Autopick);
+		autopickpercenttf.setValue(mfd.getAutopickpercent());
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
 
