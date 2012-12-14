@@ -20,8 +20,11 @@ public class MicrographFamilyData
 	private List<AutomaticParticle> autoparticles;
 	private TrainingMicrograph micrograph;
 	private MicrographFamilyState state;
+	private int autopickpercent;
+	
+	
 
-	public MicrographFamilyData(TrainingMicrograph micrograph, Family family)
+	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state, int autopickpercent)
 	{
 		if (family == null)
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("family"));
@@ -29,13 +32,31 @@ public class MicrographFamilyData
 		this.manualparticles = new ArrayList<TrainingParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		this.micrograph = micrograph;
-		setState(MicrographFamilyState.Available);
+		this.autopickpercent = autopickpercent;
+		setState(state);
 	}
 
+	public MicrographFamilyData(TrainingMicrograph micrograph, Family family)
+	{
+		this(micrograph, family, MicrographFamilyState.Available);
+	}
+	
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state)
 	{
-		this(micrograph, family);
-		setState(state);
+		this(micrograph, family, state, 50);
+	}
+	
+	
+	
+
+	public int getAutopickpercent()
+	{
+		return autopickpercent;
+	}
+
+	public void setAutopickpercent(int autopickpercent)
+	{
+		this.autopickpercent = autopickpercent;
 	}
 
 	public MicrographFamilyState getState()
