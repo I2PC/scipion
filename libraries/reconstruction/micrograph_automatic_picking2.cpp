@@ -1108,7 +1108,7 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);
     }
-//    if (mode!="train")
-//        fnFilterBank.deleteFile();
+    if (mode!="train")
+        fnFilterBank.deleteFile();
     delete autoPicking;
 }
