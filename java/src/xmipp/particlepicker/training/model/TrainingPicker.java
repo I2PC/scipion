@@ -105,6 +105,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				state = MicrographFamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
 				family = getFamily(fname);
+				if(family == null)
+					throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("family", fname));
 				mfd = new MicrographFamilyData(micrograph, family, state);
 				if (getMode() == FamilyState.Review && mfd.getStep() != FamilyState.Review)
 				{

@@ -178,7 +178,7 @@ public abstract class ParticlePicker {
 				FileHandler fh = new FileHandler("PPicker.log", true);
 				fh.setFormatter(new SimpleFormatter());
 				logger = Logger.getLogger("PPickerLogger");
-				logger.addHandler(fh);
+//				logger.addHandler(fh);
 			}
 			return logger;
 		} catch (Exception e) {
