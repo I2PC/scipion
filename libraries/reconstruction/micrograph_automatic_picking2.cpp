@@ -315,7 +315,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     std::vector<Particle2> positionArray;
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,fast);
-    int num=positionArray.size()*(10.0/100.0);
+    int num=positionArray.size()*(90.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
