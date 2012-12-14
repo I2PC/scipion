@@ -20,7 +20,6 @@ from protlib_utils import runJob, printLog
 from protlib_filesystem import createLink, removeFilenameExt
 from protlib_gui_ext import showError
 
-
 class DownsamplingMode:
     SameAsPicking, SameAsOriginal, NewDownsample = range(3)
     
@@ -39,8 +38,7 @@ class ProtExtractParticles(ProtParticlesBase):
         _mic_block = 'mic_%(Micrograph)s'
         return {
             'mic_block': _mic_block,
-            'mic_block_fn': _mic_block+'@%(ExtractList)s',
-            'extract_list':  join('%(ExtraDir)s', "%(Family)s_extract_list.xmd")      
+            'mic_block_fn': _mic_block+'@%(ExtractList)s'
             }
     
     def setSamplingMode(self):
@@ -86,7 +84,7 @@ class ProtExtractParticles(ProtParticlesBase):
                                fnExtractList=destFnExtractList)
             micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
         else:
-            srcFnExtractList = self.PrevRun.getFilename('extract_list', Family=self.Family)
+            srcFnExtractList = self.PrevRun.getFilename('extract_list')
             if exists(srcFnExtractList):
                 self.insertCopyFile(srcFnExtractList, destFnExtractList)
                 micrographs = getBlocksInMetaDataFile(srcFnExtractList)
@@ -148,17 +146,14 @@ class ProtExtractParticles(ProtParticlesBase):
             if self.DoFlip:
                 self.insertParallelStep('deleteFile', parent_step_id=parent_id,filename=micrographFlipped,verbose=True)
 
-            self.OutStack = fnOut # This is needed for next function
-            self.insertFilterMaskSteps()
         # Gather results
         if self.TiltPairs:
-            self.insertStep('createTiltPairsImagesMd',family=self.Family,
-                               WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, fnMicrographs=self.micrographs)
+            self.insertStep('createTiltPairsImagesMd', WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, 
+                            fnMicrographs=self.micrographs)
         else:
-            self.insertStep('createImagesMd',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,family=self.Family)
-            self.insertStep('sortImages',fn=self.getFilename('images'))
-            self.insertStep('avgZscore',WorkingDir=self.WorkingDir,family=self.Family,
-                               micrographSelfile=self.micrographs)
+            self.insertStep('createImagesMd',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir)
+            self.insertStep('sortImages',WorkingDir=self.WorkingDir)
+            self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
 
     def validate(self):
         errors = []
@@ -265,8 +260,8 @@ def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
     for objId in md:
         micName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         
-        fnManual = join(pickingDir, micName + ".pos")
-        fnAuto1 = join(pickingDir, micName + "_auto.pos")
+        fnManual = join(pickingDir, "extra", micName + ".pos")
+        fnAuto1 = join(pickingDir, "extra", micName + "_auto.pos")
         
         mdpos.clear()
         if exists(fnManual):
@@ -294,8 +289,8 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
         umicName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         tmicName =removeBasenameExt(md.getValue(MDL_MICROGRAPH_TILTED, objId))
         
-        fnUntilted = join(pickingDir,umicName + ".pos")
-        fnTilted = join(pickingDir,tmicName + ".pos")
+        fnUntilted = join(pickingDir,"extra",umicName + ".pos")
+        fnTilted = join(pickingDir,"extra",tmicName + ".pos")
 
         mdUntiltedPos.clear()
         mdTiltedPos.clear()
@@ -360,7 +355,7 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
             md.setValueCol(MDL_CTF_MODEL,ctf)
         md.write(selfile)
 
-def createImagesMd(log, WorkingDir, ExtraDir, family):
+def createImagesMd(log, WorkingDir, ExtraDir):
     stackFiles = glob.glob(join(ExtraDir,"*.stk"))
     stackFiles.sort()
     imagesMd = MetaData()
@@ -370,7 +365,7 @@ def createImagesMd(log, WorkingDir, ExtraDir, family):
         imagesMd.unionAll(md)
     imagesMd.write(getImagesFilename(WorkingDir))
 
-def createTiltPairsImagesMd(log, family, WorkingDir, ExtraDir, fnMicrographs):
+def createTiltPairsImagesMd(log, WorkingDir, ExtraDir, fnMicrographs):
     mdPairs = MetaData(fnMicrographs)
     mdUntilted = MetaData()
     mdTilted = MetaData()
@@ -383,16 +378,24 @@ def createTiltPairsImagesMd(log, family, WorkingDir, ExtraDir, fnMicrographs):
             tmicName = removeBasenameExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,objId))
             mdTilted.unionAll(MetaData(join(ExtraDir, tmicName + ".xmd")))
         
-    fn = getImagesFilename(WorkingDir)
-    mdUntilted.write(fn.replace("images.", "images_untilted."))
-    mdTilted.write(fn.replace("images.", "images_tilted."))
-
+    fn = getImagesFilename(WorkingDir)    
+    mdUntilted.write(getProtocolFilename('images_untilted', WorkingDir=WorkingDir))
+    mdTilted.write(getProtocolFilename('images_tilted', WorkingDir=WorkingDir))
     mdTiltedPairs = MetaData()
     mdTiltedPairs.setColumnValues(MDL_IMAGE, mdUntilted.getColumnValues(MDL_IMAGE))
     mdTiltedPairs.setColumnValues(MDL_IMAGE_TILTED, mdTilted.getColumnValues(MDL_IMAGE))
     mdTiltedPairs.write(fn)
  
-def avgZscore(log,WorkingDir,family,micrographSelfile):
+def sortImages(log, WorkingDir):
+    fn = os.path.join(WorkingDir, 'images.xmd')
+    md = MetaData(fn)
+    if not md.isEmpty():
+        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput" % locals())
+        md.read(fn) # Should have ZScore label after runJob
+        md.sort(MDL_ZSCORE)
+        md.write(fn)
+ 
+def avgZscore(log,WorkingDir,micrographSelfile):
     allParticles = MetaData(getImagesFilename(WorkingDir))
     mdavgZscore = MetaData()
     mdavgZscore.aggregate(allParticles, AGGR_AVG, MDL_MICROGRAPH, MDL_ZSCORE, MDL_ZSCORE)

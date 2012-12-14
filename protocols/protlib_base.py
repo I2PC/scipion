@@ -370,14 +370,16 @@ class DepData():
 ## This are the common protocols filename templates ##
 CommonTemplates = {
         'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
-        'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
-        'families':     join('%(WorkingDir)s', 'families.xmd'),
+        'extract_list':  join('%(ExtraDir)s', "extract_list.xmd"),      
+        'families':     join('%(ExtraDir)s', 'families.xmd'),
         'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
         'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
         'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd'),
         'images':       join('%(WorkingDir)s', 'images.xmd'),
+        'images_tilted': join("%(WorkingDir", 'images_tilted.xmd'),
+        'images_untilted': join("%(WorkingDir", 'images_untilted.xmd'),
         'classes':      join('%(WorkingDir)s', 'classes.xmd')
      }
 
@@ -461,7 +463,7 @@ class XmippProtocol(object):
         with each protocol particular dictionary'''
         CommonTemplates.update(self.createFilenameTemplates())
         return CommonTemplates
-        
+       
     def inputProperty(self, *keys):
         ''' Take property Key from self.PrevRun and set to self.
         Equivalent to: self.Variable = self.PrevRun.Variable '''
@@ -695,8 +697,8 @@ class XmippProtocol(object):
         ''' This function will take a filename relative to some protocol
         and will create the same filename but in the current protocol 
         working dir'''
-        #return filename.replace(prot.WorkingDir, self.WorkingDir)
-        return self.workingDirPath(os.path.basename(filename))
+        return filename.replace(prot.WorkingDir, self.WorkingDir)
+        #return self.workingDirPath(os.path.basename(filename))
     
     def getExtendedRunName(self):
         ''' Return the extended run name of this run '''
