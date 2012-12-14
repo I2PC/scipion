@@ -25,7 +25,7 @@ for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 # {section} Input
 #------------------------------------------------------------------------------------------
 
-# {file}(*.xmd){validate}(PathExists) Input images:
+# {file}(images.xmd){validate}(PathExists) Input images:
 """ 
 Provide a list of images from a stack or metadata file that make up 
 your data set. The filenames should be relative to the <ProjectDir> 

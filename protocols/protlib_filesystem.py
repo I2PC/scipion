@@ -218,15 +218,6 @@ def findProjectInPathTree(filename):
     else:
         return None
 
-def fixPath(filename, *pathList):
-    if isabs(filename):
-        return filename
-    for path in pathList:
-        filepath = join(path, filename)
-        if exists(filepath):
-            return filepath
-    return None
-
 def findRealFile(path, recursive=True):
     '''This function behaves like readlink with -f in shell'''
     from os import readlink
@@ -241,11 +232,22 @@ def xmippExists(path):
     from xmipp import FileName
     return FileName(path).exists()
 
-def xmippRelpath(path):
+def fixPath(filename, *pathList):
+    print "fixPath"
+    if isabs(filename):
+        return filename
+    for path in pathList:
+        filepath = join(path, filename)
+        print "fixPath: ", filepath
+        if xmippExists(filepath):
+            return filepath
+    return None
+
+def xmippRelpath(path, *args):
     ''' As os.relpath but taking into account names containing @ '''
     if '@' in path:
         block, base = splitFilename(path)
-        return '%s@%s' % (block, relpath(base))
+        return '%s@%s' % (block, relpath(base, *args))
     return relpath(path)
         
 def hasSpiderExt(filename):

@@ -8,35 +8,45 @@
 # Author: Carlos Oscar, August 2011
 #
 from protlib_base import *
+from protlib_particles import *
 import xmipp
+from xmipp import MetaData, FileName, ImgSize, MDL_IMAGE, MDL_SAMPLINGRATE
 import glob
 import os
+from os.path import relpath, dirname
 from protlib_utils import runJob
-from protlib_filesystem import deleteFile, createDir, copyFile, fixPath, findProjectInPathTree
-from httplib import CREATED
+from protlib_filesystem import deleteFile, createDir, copyFile, fixPath, \
+findProjectInPathTree, xmippRelpath, splitFilename
 
-class ProtImportParticles(XmippProtocol):
+
+class ProtImportParticles(ProtParticlesBase):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.import_particles.name, scriptname, project)
-        self.Import = 'from protocol_import_particles import *'
+        ProtParticlesBase.__init__(self, protDict.import_particles.name, scriptname, project)
+        self.Import += 'from protocol_import_particles import *'
 
     def defineSteps(self):
-        fnOut=self.workingDirPath("acquisition_info.xmd")
-        self.insertStep('createAcquisitionData',verifyfiles=[fnOut],samplingRate=self.SamplingRate, fnOut=fnOut)
-        fnOut=self.workingDirPath("micrographs.xmd")
-        self.Db.insertStep('createEmptyMicrographSel',verifyfiles=[fnOut],fnOut=fnOut)
-        selfileRoot=self.workingDirPath(self.Family)
-        fnOut=selfileRoot+".xmd"
-        self.Db.insertStep('linkOrCopy', verifyfiles=[fnOut],
-                           Family=self.Family,InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
-                           ImportAll=self.ImportAll, SubsetMode=self.SubsetMode, Nsubset=self.Nsubset, TmpDir=self.TmpDir)
+        fnOut = self.getFilename('acquisition')
+        self.insertStep('createAcquisitionMd',verifyfiles=[fnOut],samplingRate=self.SamplingRate, fnOut=fnOut)
+        
+        fnOut = self.getFilename('micrographs')
+        self.insertStep('createEmptyMicrographSel',verifyfiles=[fnOut],fnOut=fnOut)
+        
+        fnOut = self.getFilename('images')
+        self.insertStep('importImages', verifyfiles=[fnOut],
+                           InputFile=self.InputFile, WorkingDir=self.WorkingDir, DoCopy=self.DoCopy,
+                           ImportAll=self.ImportAll, SubsetMode=self.SubsetMode, Nsubset=self.Nsubset)
+        
         if self.DoInvert and self.ImportAll:
-            self.Db.insertStep('invert', FamilySel=fnOut,Nproc=self.NumberOfMpi)
+            self.insertStep('invert', ImagesMd=fnOut,Nproc=self.NumberOfMpi)
+        
         if self.DoRemoveDust and self.ImportAll:
-            self.Db.insertStep('removeDust', FamilySel=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
+            self.insertStep('removeDust', ImagesMd=fnOut,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
+        
         if self.DoNorm and self.ImportAll:
-            self.Db.insertStep('normalize', FamilySel=fnOut,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
-        self.Db.insertStep('sortImageInFamily', verifyfiles=[selfileRoot+".xmd"],selfileRoot=selfileRoot)
+            self.insertStep('normalize', ImagesMd=fnOut,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
+        
+        if self.DoSort:
+            self.insertStep('sortImages', verifyfiles=[fnOut], fn=fnOut)
             
     def validate(self):
         errors = []
@@ -45,8 +55,8 @@ class ProtImportParticles(XmippProtocol):
             errors.append("Input file must be stack or metadata (valid extensions are .mrc, .stk, .sel, .xmd, .hed, .img, .ctfdat")
         else:
             if inputExt in ['.sel', '.xmd', '.ctfdat']:
-                mD=xmipp.MetaData(self.InputFile)
-                if not mD.containsLabel(xmipp.MDL_IMAGE):
+                md = MetaData(self.InputFile)
+                if not md.containsLabel(MDL_IMAGE):
                     errors.append("Cannot find label for images in the input file")
         return errors
 
@@ -66,90 +76,60 @@ class ProtImportParticles(XmippProtocol):
             message.append("Steps applied: "+",".join(steps))
             
         return message
+       
 
-    def visualize(self):
-        from protlib_utils import runShowJ
-        runShowJ(self.workingDirPath(self.Family+".xmd"), memory='1024m')        
+def createAcquisitionMd(log, samplingRate, fnOut):
+    md = MetaData()
+    md.setValue(MDL_SAMPLINGRATE, float(samplingRate), md.addObject())
+    md.write(fnOut)
 
-def createAcquisitionData(log,samplingRate,fnOut):
-    mdAcquisition = xmipp.MetaData()
-    mdAcquisition.setValue(xmipp.MDL_SAMPLINGRATE,float(samplingRate),mdAcquisition.addObject())
-    mdAcquisition.write(fnOut)
+def createEmptyMicrographSel(log, fnOut):
+    md = MetaData()
+    md.setValue(MDL_IMAGE,"ImportedImages", md.addObject())
+    md.write(fnOut)
 
-def createEmptyMicrographSel(log,fnOut):
-    mD = xmipp.MetaData()
-    id = mD.addObject()
-    mD.setValue(xmipp.MDL_IMAGE,"ImportedImages",id)
-    mD.write(fnOut)
-
-def linkOrCopy(log,Family,InputFile,WorkingDir,DoCopy,ImportAll,SubsetMode,Nsubset,TmpDir):
-    familySel = os.path.join(WorkingDir,Family+".xmd")
+def writeImagesMd(log, md, ImportAll, SubsetMode, Nsubset, imagesFn, imagesStk, DoCopy):
+    if not ImportAll:
+        if SubsetMode=="Random particles":
+            mdaux=MetaData()
+            mdaux.randomize(md)
+        else:
+            mdaux=MetaData(md)
+        md.selectPart(mdaux, 0, Nsubset)
+    md.write(imagesFn)
     if DoCopy:
-        familyDir=os.path.join(WorkingDir,Family)
-        createDir(log,familyDir)
-    if xmipp.FileName.isMetaData(xmipp.FileName(InputFile)):
-        mD=xmipp.MetaData(InputFile)
-        inputRelativePath=os.path.split(os.path.relpath(InputFile,'.'))[0]
-        projectDir=findProjectInPathTree(InputFile)
-        for id in mD:
-            file=mD.getValue(xmipp.MDL_IMAGE,id)
-            if '@' in file:
-                (num,file)=file.split('@')
-                file=os.path.relpath(fixPath(file,'.',inputRelativePath),'.')
-                file='%(num)s@%(file)s'%locals()
-            else:
-                file=os.path.relpath(fixPath(file,'.',inputRelativePath),'.')
-            mD.setValue(xmipp.MDL_IMAGE,file,id)
-        if not ImportAll:
-            if SubsetMode=="Random subset":
-                mDaux=xmipp.MetaData()
-                mDaux.randomize(mD)
-            else:
-                mDaux=xmipp.MetaData(mD)
-            mD.selectPart(mDaux,0,Nsubset)
-        mD.write(familySel)
-        if DoCopy:
-            newStack=os.path.join(familyDir,Family+".stk")
-            runJob(log,"xmipp_image_convert","-i "+familySel+" -o "+newStack)
-            mD=xmipp.MetaData(newStack)
-            mD.write(familySel)
+        runJob(log,"xmipp_image_convert","-i %(imagesFn)s -o %(imagesStk)s" % locals())
+        md = MetaData(imagesStk)
+        md.write(imagesFn)      
+   
+def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsubset):
+    imagesFn = getImagesFilename(WorkingDir)
+    fnInput = FileName(InputFile)    
+    md = MetaData(InputFile)
+    
+    if fnInput.isMetaData():        
+        inputRelativePath = dirname(relpath(InputFile, '.'))
+        projectPath = findProjectInPathTree(InputFile)
+        for id in md:
+            imgFn = md.getValue(MDL_IMAGE, id)
+            imgNo, imgFn = splitFilename(imgFn)
+            imgFn = xmippRelpath(fixPath(imgFn, projectPath, inputRelativePath, '.'))
+            md.setValue(MDL_IMAGE, "%s@%s" % (imgNo, imgFn), id)
+        outExt = '.stk'
     else:
-        mD=xmipp.MetaData(InputFile)
-        if not ImportAll:
-            if SubsetMode=="Random subset":
-                mDaux=xmipp.MetaData()
-                mDaux.randomize(mD)
-            else:
-                mDaux=xmipp.MetaData(mD)
-            mD.selectPart(mDaux,0,Nsubset)
-        mD.write(familySel)
-        if DoCopy:
-            if ImportAll:
-                fileName=os.path.split(InputFile)[1]
-                destination=os.path.join(familyDir,fileName)
-                copyFile(log,InputFile,destination)
-                (inputRoot,inputExt)=os.path.splitext(fileName)
-                if inputExt=='hed':
-                    copyFile(log,InputFile.replace(".hed",".img"),destination.replace(".hed",".img"))
-                elif inputExt=="img":
-                    copyFile(log,InputFile.replace(".img",".hed"),destination.replace(".img",".hed"))
-            else:
-                destination=os.path.join(familyDir,Family+".stk")
-                runJob(log,"xmipp_image_convert","-i "+familySel+" -o "+destination)
-            mD=xmipp.MetaData(destination)
-            mD.write(familySel)
+        outExt = '.%s' % fnInput.getExtension()
+    imagesStk = imagesFn.replace('.xmd', outExt)
+    writeImagesMd(log, md, ImportAll, SubsetMode, Nsubset, imagesFn, imagesStk, DoCopy)
+       
 
-def invert(log,FamilySel,Nproc):
-    runJob(log,'xmipp_image_operate','-i '+FamilySel+" --mult -1",Nproc)
+def invert(log,ImagesMd,Nproc):
+    runJob(log,'xmipp_image_operate','-i %(ImagesMd)s --mult -1' % locals(),Nproc)
 
-def removeDust(log,FamilySel,threshold,Nproc):
-    runJob(log,'xmipp_transform_filter','-i '+FamilySel+" --bad_pixels outliers %f"%threshold,Nproc)
+def removeDust(log,ImagesMd,threshold,Nproc):
+    runJob(log,'xmipp_transform_filter','-i %(ImagesMd)s --bad_pixels outliers %(threshold)f' % locals(),Nproc)
 
-def normalize(log,FamilySel,bgRadius,Nproc):
-    if bgRadius==0:
-        particleSize=xmipp.ImgSize(FamilySel)[0]
-        bgRadius=int(particleSize/2)
-    runJob(log,"xmipp_transform_normalize","-i "+FamilySel+' --method Ramp --background circle '+str(bgRadius),Nproc)
-
-def sortImageInFamily(log,selfileRoot):
-    runJob(log,"xmipp_image_sort_by_statistics","-i "+selfileRoot+".xmd --multivariate --addToInput -o "+selfileRoot+"_sorted")
+def normalize(log,ImagesMd,bgRadius,Nproc):
+    if bgRadius <= 0:
+        particleSize = ImgSize(ImagesMd)[0]
+        bgRadius = int(particleSize/2)
+    runJob(log,"xmipp_transform_normalize", '-i %(ImagesMd)s --method Ramp --background circle %(bgRadius)d' % locals(),Nproc)

@@ -627,6 +627,8 @@ class XmippProjectGUI():
                           '\n<Comment>: ' + comment + '\n\n<Summary>:\n' + summary   
             except Exception, e:
                 labels = 'Error creating protocol: <%s>' % str(e)
+                import traceback
+                labels += '\n' + traceback.format_exc()
             self.detailsText.clear()
             self.detailsText.addText(labels)
             details.displayButtons(showButtons)

@@ -154,8 +154,8 @@ def doRemoveDust(log,stack,threshold,Nproc):
     runJob(log,"xmipp_transform_filter","-i %(stack)s --bad_pixels outliers %(threshold)f"%locals(),Nproc)
 
 def doNorm(log,stack,normType,bgRadius,Nproc):
-    if bgRadius==0:
-        particleSize=xmipp.ImgSize(stack)[0]
+    if bgRadius <= 0:
+        particleSize = xmipp.ImgSize(stack)[0]
         bgRadius=int(particleSize/2)
     if normType=="OldXmipp":
         runJob(log,"xmipp_transform_normalize","-i %(stack)s --method OldXmipp"%locals(),Nproc)

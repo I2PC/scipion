@@ -228,8 +228,11 @@ class XmippProject():
         mod = loadModule(script)
         from inspect import isclass
         for v in mod.__dict__.values():
-            if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol and v != CustomProtocol:
-                return v(script, self)
+            # v should be a class, inherit(directly or indirectly from XmippProtocol
+            # also check that is not XmippProtocol, CustomProtocol, or has 'Base' in its name
+            if isclass(v) and issubclass(v, XmippProtocol):
+                if v != XmippProtocol and v != CustomProtocol and 'Base' not in v.__name__:
+                    return v(script, self)
         reportError("Can't load protocol from " + script)
 
     def getProtocolFromRunName(self, extendedRunName):
@@ -364,6 +367,29 @@ class DepData():
     def hasDep(self, extRunName):
         return extRunName in self.deps
         
+## This are the common protocols filename templates ##
+CommonTemplates = {
+        'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
+        'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
+        'families':     join('%(WorkingDir)s', 'families.xmd'),
+        'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
+        'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
+        'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
+        'microscope':   join('%(WorkingDir)s','microscope.xmd'),
+        'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd'),
+        'images':       join('%(WorkingDir)s', 'images.xmd'),
+        'classes':      join('%(WorkingDir)s', 'classes.xmd')
+     }
+
+def getProtocolFilename(key, **params):
+    """Use the CommonTemplates to retrieve filenames passing key arguments """
+    if CommonTemplates.has_key(key):
+        return CommonTemplates[key] % params
+    raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
+
+def getImagesFilename(workingDir):
+    '''Shortcut to getProtocolFilename('images',...)'''
+    return getProtocolFilename('images', WorkingDir=workingDir)
     
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
@@ -411,12 +437,14 @@ class XmippProtocol(object):
         self.parser = None # This is only used in GUI
         
     def getFilename(self, key, **params):
-        # Is desirable the names comming in params doesn't overlap
-        # with the variables in the header dictionary
+        """Has the same function as getProtocolFilename but using 
+        the internal params dictionary 
+        Is desirable the names comming in params doesn't overlap
+        with the variables in the header dictionary """
         params.update(self.ParamsDict)
         if self.FilenamesDict.has_key(key):
             return self.FilenamesDict[key] % params
-        raise Exception("Key: '%s' not found" % key)
+        raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
     
     def getFileList(self, *keyList):
         ''' Return a list of filename using the getFilename function '''
@@ -431,18 +459,8 @@ class XmippProtocol(object):
     def createFilenameDict(self):
         ''' This will create some common templates and update
         with each protocol particular dictionary'''
-        d = {
-                'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
-                'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
-                'families':     join('%(WorkingDir)s', 'families.xmd'),
-                'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
-                'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
-                'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
-                'microscope':   join('%(WorkingDir)s','microscope.xmd'),
-                'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
-             }
-        d.update(self.createFilenameTemplates())
-        return d
+        CommonTemplates.update(self.createFilenameTemplates())
+        return CommonTemplates
         
     def inputProperty(self, *keys):
         ''' Take property Key from self.PrevRun and set to self.
