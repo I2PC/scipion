@@ -44,7 +44,7 @@ DoSort = False
 
 # {eval} expandParticlesPreprocess(allowFlip=False)
 
-# {eval} expandParallel(threads=0, mpi=8, hours=12, condition="ImportAll")
+# {eval} expandParallel(threads=0, mpi=8, hours=12)
 
 #------------------------------------------------------------------------------------------------
 # {end_of_header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
