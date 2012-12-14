@@ -520,7 +520,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.setState(state);
 		actionsbt.setText(mfd.getAction());
-		autopickpercentpn.setVisible(mfd.getState() == MicrographFamilyState.Autopick);
+		autopickpercentpn.setVisible(actionsbt.getText().equalsIgnoreCase(MicrographFamilyState.Autopick));
 		autopickpercenttf.setValue(mfd.getAutopickpercent());
 		// if (getFamilyData().getState() == MicrographFamilyState.Correct)
 		// actionsbt.setEnabled(false);// enabled only after doing corrections
@@ -553,7 +553,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		editfamiliesmi.setEnabled(step == FamilyState.Manual);
 		actionsbt.setText(mfd.getAction());
 		actionsbt.setVisible(mfd.isActionVisible(getThreshold()));
-		autopickpercentpn.setVisible(mfd.getState() == MicrographFamilyState.Autopick);
+		autopickpercentpn.setVisible(actionsbt.getText().equalsIgnoreCase(MicrographFamilyState.Autopick));
 		autopickpercenttf.setValue(mfd.getAutopickpercent());
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
