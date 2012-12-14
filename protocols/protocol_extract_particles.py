@@ -136,7 +136,8 @@ class ProtExtractParticles(ProtParticlesBase):
                                   micrographToExtract=micrographToExtract,
                                   TsFinal=self.TsFinal, TsInput=self.TsInput, downsamplingMode=self.downsamplingMode,
                                   fnExtractList=destFnExtractList,particleSize=self.ParticleSize,
-                                  doFlip=self.DoFlip,doNorm=self.DoNorm,doInvert=self.DoInvert,
+                                  doFlip=self.DoFlip,doInvert=self.DoInvert,
+                                  doNorm=self.DoNorm, normType=self.NormType,
                                   bgRadius=self.BackGroundRadius)
             if self.DoRemoveDust:
                 self.insertParallelStep('deleteFile', parent_step_id=parent_id,filename=micrographNoDust,verbose=True)
@@ -151,7 +152,7 @@ class ProtExtractParticles(ProtParticlesBase):
             self.insertStep('createTiltPairsImagesMd', verifyfiles=[ImagesFn], WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, 
                             fnMicrographs=self.micrographs)
         else:
-            self.insertStep('createImagesMd', verifyfiles=[ImagesFn], ImagesMd=ImagesFn, ExtraDir=self.ExtraDir)
+            self.insertStep('createImagesMd', verifyfiles=[ImagesFn], ImagesFn=ImagesFn, ExtraDir=self.ExtraDir)
             self.insertStep('sortImages',ImagesFn=ImagesFn)
             self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
 
@@ -308,7 +309,7 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
 
 def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,
-                     fnExtractList, particleSize, doFlip, doNorm, doInvert, bgRadius):
+                     fnExtractList, particleSize, doFlip, doInvert, doNorm, normType, bgRadius):
     
     
     fnBlock = getMicBlockFilename(micrographName, fnExtractList)
@@ -329,10 +330,7 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
     runJob(log,"xmipp_micrograph_scissor", arguments)
     # Normalize 
     if doNorm:
-        if bgRadius == 0:
-            bgRadius = int(particleSize/2)
-        arguments = "-i %(rootname)s.stk --method Ramp --background circle %(bgRadius)d" % locals()
-        runJob(log,"xmipp_transform_normalize",arguments)
+        runNormalize(log, rootname+'.stk',normType, bgRadius, 1)        
 
     # Substitute the micrograph name if it comes from the flipped version
     # Add information about the ctf if available
