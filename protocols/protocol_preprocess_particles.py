@@ -6,17 +6,18 @@
 # Author: Carlos Oscar, August 2011
 #
 from protlib_base import *
-from xmipp import MetaData, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_ZSCORE
+from protlib_particles import *
+from xmipp import MetaData, ImgSize, FileName, MDL_SAMPLINGRATE, MDL_IMAGE, MDL_ZSCORE
 import os
 from os.path import exists, split, splitext
 from protlib_utils import runJob, runShowJ
-from protlib_filesystem import deleteFile,linkAcquisitionInfo, moveFile, removeBasenameExt
+from protlib_filesystem import deleteFile,findAcquisitionInfo, moveFile, createLink, removeBasenameExt
 import glob
 from protlib_gui_ext import showError
 
-class ProtPreprocessParticles(XmippProtocol):
+class ProtPreprocessParticles(ProtParticlesBase):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.preprocess_particles.name, scriptname, project)
+        ProtParticlesBase.__init__(self, protDict.preprocess_particles.name, scriptname, project)
         self.Import = 'from protocol_preprocess_particles import *'
         (self.InputDir,file)=split(self.InSelFile)
         baseFile = removeBasenameExt(file)
@@ -77,38 +78,22 @@ class ProtPreprocessParticles(XmippProtocol):
             if self.DoCrop and self.OutputSize > self.NewSize:
                 errors.append("Crop output size cannot be greater than resize output size")
         return errors
-
-    def setStepMessage(self, stepMsg):
-        step = len(self.messages) # assumed just one message before calling this function
-        msg = "Step %d -> " % step
-        msg += stepMsg % self.ParamsDict
-        self.messages.append(msg)            
         
     def summary(self):
-        self.messages = []
-        self.messages.append("Input images: [%s]" % self.InSelFile)
-        self.messages.append("Steps applied:")
-        
-        if self.DoFourier:
-            self.setStepMessage("Fourier filter: freq_low = %(Freq_low)f freq_high = %(Freq_high)f freq_decay = %(Freq_decay)f")            
-        if self.DoGaussian:
-            self.setStepMessage("Gaussian filter: freq_sigma = %(Freq_sigma)f")
-        
-        if self.DoMask:
-            self.setStepMessage("Mask: mask file = %(MaskFile)s substituted value = %(Substitute)s")
-        self.messages.append("Output: [%s]" % self.OutMetadata)
+        messages = []        
+        messages.append("Input images: [%s]" % self.InSelFile)
 
-        if self.DoResize:
-            self.setStepMessage("Resize: NewSize = %(NewSize)d")            
-        if self.DoCrop:
-            self.setStepMessage("Crop: CropSize = %(CropSize)d")
-        return self.messages
+        self.addSummaryStep(self.DoFourier, "Fourier filter: freq_low = %(Freq_low)f freq_high = %(Freq_high)f freq_decay = %(Freq_decay)f")            
+        self.addSummaryStep(self.DoGaussian, "Gaussian filter: freq_sigma = %(Freq_sigma)f")
+        self.addSummaryStep(self.DoMask, "Mask: mask file = %(MaskFile)s substituted value = %(Substitute)s")
+        self.addSummaryStep(self.DoResize, "Resize: NewSize = %(NewSize)d")            
+        self.addSummaryStep(self.DoCrop, "Crop: CropSize = %(CropSize)d")
+        self.addStepsSummary(messages)
+        
+        messages.append("Output: [%s]" % self.OutMetadata)
+        
+        return messages
 
-    def visualize(self):
-        if not exists(self.OutStack):
-            showError("Error", "There is no result yet")
-        else:
-            runShowJ(self.OutMetadata)
 
 def createAcquisition(log,InputFile,WorkingDir,DoResize,NewSize):
     fnAcqIn = findAcquisitionInfo(InputFile)
@@ -121,21 +106,21 @@ def createAcquisition(log,InputFile,WorkingDir,DoResize,NewSize):
             md = MetaData(fnAcqIn)
             id = md.firstObject()
             Ts = md.getValue(MDL_SAMPLINGRATE, id)
-            (Xdim, Ydim, Zdim, Ndim) = xmipp.ImgSize(InputFile)
+            (Xdim, Ydim, Zdim, Ndim) = ImgSize(InputFile)
             downsampling = float(Xdim)/NewSize;
             md.setValue(MDL_SAMPLINGRATE,Ts*downsampling,id)
-            md.write(getProtocolFilename('acquisition_info', WorkingDir=WorkingDir))
+            md.write(getProtocolFilename('acquisition', WorkingDir=WorkingDir))
 
 def copyImages(log,InputFile,OutputStack,OutputMetadata):
     runJob(log,"xmipp_image_convert","-i %(InputFile)s -o %(OutputStack)s" % locals())
     mDstack = MetaData(OutputStack)
-    if xmipp.FileName.isMetaData(xmipp.FileName(InputFile)):
-        mDin = MetaData(InputFile)
-        mDin.removeDisabled()
-        mDin.removeLabel(MDL_IMAGE)
-        mDin.removeLabel(MDL_ZSCORE)
-        mDaux = MetaData(mDin)
-        mDstack.merge(mDaux)
+    if FileName(InputFile).isMetaData():
+        mdIn = MetaData(InputFile)
+        mdIn.removeDisabled()
+        mdIn.removeLabel(MDL_IMAGE)
+        mdIn.removeLabel(MDL_ZSCORE)
+        mdAux = MetaData(mdIn)
+        mDstack.merge(mdAux)
     mDstack.write(OutputMetadata)
 
 def translateTiltPair(log,WorkingDir,InputDir,FnFamily,OutStack):

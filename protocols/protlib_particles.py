@@ -39,31 +39,7 @@ class ProtParticlesBase(XmippProtocol):
     def __init__(self, protocolName, scriptname, project):
         XmippProtocol.__init__(self, protocolName, scriptname, project)        
         self.Import = 'from protlib_particles import *; '
-        
-    def insertFilterMaskSteps(self, stackFn):
-        if getattr(self, 'DoScale', False):
-            self.insertStep('doScale',stack=stackFn,new_size=self.NewSize,Nproc=self.NumberOfMpi)
-        if self.DoFourier:
-            self.insertStep('doFourier',stack=stackFn,freq_low=self.Freq_low,freq_high=self.Freq_high,freq_decay=self.Freq_decay,Nproc=self.NumberOfMpi)
-        if self.DoGaussian:
-            self.insertStep('doGaussian',stack=stackFn,freq_sigma=self.Freq_sigma, Nproc=self.NumberOfMpi)
-        if getattr(self, 'DoCrop', False):
-            self.insertStep('doCrop',stack=stackFn, cropSize=self.CropSize, tmpStack=self.tmpPath('tmpCrop.stk'))
-        if self.DoRemoveDust:
-            self.insertStep('doRemoveDust',stack=stackFn,threshold=self.DustRemovalThreshold,Nproc=self.NumberOfMpi)
-        if self.DoNorm:
-            self.insertStep('doNorm',stack=stackFn,normType=self.NormType,bgRadius=self.BackGroundRadius,Nproc=self.NumberOfMpi)
-        if self.DoMask:
-            if self.Substitute == "value":
-                self.Substitute = str(self.SubstituteValue)
-            params = "-i %s --substitute %s --mask %s " % (stackFn, self.Substitute, self.MaskType)
-            if self.MaskType == 'raised_cosine':
-                params += "-%d -%d" % (self.MaskRadius, self.MaskRadius + self.MaskRadiusOuter)
-            elif self.MaskType == 'circular':
-                params += '-%d' % self.MaskRadius
-            else: # from file:
-                params += self.MaskFile
-            self.insertRunJobStep("xmipp_transform_mask", params)
+        self.Steps = [] # This list will be used for summary of steps applied
         
     def visualize(self):
         fn = self.getFilename('images')        
@@ -84,7 +60,23 @@ class ProtParticlesBase(XmippProtocol):
                 xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMd(md, False, mdLabelY=MDL_ZSCORE)
-                xplotter.show()   
+                xplotter.show() 
+                
+    def addBasicPreprocessSteps(self):
+        self.addSummaryStep(self.DoInvert, "Constrast inversion")
+        self.addSummaryStep(self.DoRemoveDust, "Dust removal")
+        self.addSummaryStep(self.DoNorm, "Ramp normalization")
+        
+    def addSummaryStep(self, condition, stepMsg):
+        if condition:
+            self.Steps.append(stepMsg)
+            
+    def addStepsSummary(self, messages):
+        '''Add all steps applied to images '''
+        if len(self.Steps):
+            messages.append("Steps applied:")
+            for i, m in enumerate(self.Steps):
+                messages.append("  %d -> %s" % (i+1, m % self.ParamsDict))
 
 def runFourierFilter(log,stack,freq_low,freq_high,freq_decay,Nproc):
     program = "xmipp_transform_filter"

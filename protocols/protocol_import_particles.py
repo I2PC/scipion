@@ -63,21 +63,15 @@ class ProtImportParticles(ProtParticlesBase):
         return errors
 
     def summary(self):
-        message=[]
-        message.append("Stack imported from: [%s]"%self.InputFile)
+        messages = []
+        messages.append("Import from: [%s]" % self.InputFile)
+        self.addBasicPreprocessSteps()
+        self.addStepsSummary(messages)
+        
         if self.DoCopy:
-            message.append("Copied into [%s]"%self.WorkingDir)
-        steps=[]
-        if self.DoInvert:
-            steps.append("Constrast inversion")
-        if self.DoRemoveDust:
-            steps.append("Dust removal")
-        if self.DoNorm:
-            steps.append("Ramp normalization")
-        if len(steps)>0:
-            message.append("Steps applied: "+",".join(steps))
-            
-        return message
+            messages.append("Copied into [%s]"%self.WorkingDir)
+       
+        return messages
 
 def createAcquisitionMd(log, samplingRate, fnOut):
     md = MetaData()
