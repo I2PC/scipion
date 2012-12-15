@@ -11,35 +11,16 @@
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Selfile with the input images:
+# {file}(images.xmd){validate}(PathExists) Input images:
 """ This selfile points to the stack or metadata containing your images 
 """
 InSelFile = ''
 
-# Scale
-""" Change the scale of the input images """
-DoScale = False
-
-#{condition}(DoScale) New image size
-NewSize = 0
-
-# Crop
-"""
-This is the desired output size(in pixels) after cropping.
-"""
-DoCrop = False
-
-# {condition}(DoCrop) Output size:
-""" 
-In pixels
-"""
-CropSize = 64
-
-# {eval} expandParticlesPreprocess(allowFlip=False)
-
 # {eval} expandFilter()
 
 # {eval} expandMask()
+
+# {eval} expandResize()
 
 # {eval} expandParallel(mpi=8, threads=0, hours=6)
 #

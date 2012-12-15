@@ -238,6 +238,31 @@ Substitute = "value"
 """Valid values are a number, min, max and avg """
 SubstituteValue = 0
 '''
+    
+def expandResize():
+    return '''
+#-----------------------------------------------------------------------------
+# {section} Resize
+#-----------------------------------------------------------------------------
+# Resize
+""" Change the dimensions of the input images """
+DoResize = False
+
+#{condition}(DoResize) New image size
+NewSize = 0
+
+# Crop
+"""
+This is the desired output size(in pixels) after cropping.
+"""
+DoCrop = False
+
+# {condition}(DoCrop) Output size:
+""" 
+In pixels
+"""
+CropSize = 0
+'''
 
 def expandPreprocessFilterMask(allowFlip):
     return expandParticlesPreprocess(allowFlip) + \

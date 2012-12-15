@@ -378,6 +378,7 @@ CommonTemplates = {
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
         'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd'),
         'images':       join('%(WorkingDir)s', 'images.xmd'),
+        'images_stk':       join('%(WorkingDir)s', 'images.stk'),
         'images_tilted': join("%(WorkingDir)s", 'images_tilted.xmd'),
         'images_untilted': join("%(WorkingDir)s", 'images_untilted.xmd'),
         'classes':      join('%(WorkingDir)s', 'classes.xmd'),

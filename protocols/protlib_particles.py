@@ -86,10 +86,7 @@ class ProtParticlesBase(XmippProtocol):
                 xplotter.plotMd(md, False, mdLabelY=MDL_ZSCORE)
                 xplotter.show()   
 
-def doScale(log,stack,new_size,Nproc):
-    runJob(log,"xmipp_image_resize","-i %(stack)s --fourier %(new_size)d" % locals(),Nproc)
-
-def doFourier(log,stack,freq_low,freq_high,freq_decay,Nproc):
+def runFourierFilter(log,stack,freq_low,freq_high,freq_decay,Nproc):
     program = "xmipp_transform_filter"
     args = "-i %(stack)s --fourier "
     if freq_low == 0:
@@ -100,13 +97,16 @@ def doFourier(log,stack,freq_low,freq_high,freq_decay,Nproc):
         args += "band_pass %(freq_low)f %(freq_high)f %(freq_decay)f"
     runJob(log, program, args % locals())
 
-def doGaussian(log, stack, freq_sigma, Nproc):
+def runGaussianFilter(log, stack, freq_sigma, Nproc):
     runJob(log,"xmipp_transform_filter","-i %(stack)s --fourier gaussian %(freq_sigma)f" % locals(),Nproc)
 
-def doCrop(log, stack, cropSize, tmpStack):
+def runCrop(log, stack, cropSize, tmpStack):
     runJob(log,"xmipp_transform_window","-i %(stack)s --size %(cropSize)d -o %(tmpStack)s" % locals())
     moveFile(log, tmpStack, stack)
-    
+
+def runResize(log,stack,new_size,Nproc):
+    runJob(log,"xmipp_image_resize","-i %(stack)s --fourier %(new_size)d" % locals(),Nproc)
+
 def invert(log,ImagesMd,Nproc):
     runJob(log,'xmipp_image_operate','-i %(ImagesMd)s --mult -1' % locals(),Nproc)
 
