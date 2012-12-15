@@ -12,7 +12,8 @@
 # {section} Input
 #-----------------------------------------------------------------------------
 # {file}(images.xmd){validate}(PathExists) Input images:
-""" This selfile points to the stack or metadata containing your images 
+""" 
+This selfile points to the stack or metadata containing your images 
 """
 InSelFile = ''
 

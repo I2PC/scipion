@@ -1015,11 +1015,17 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
         }
         if (prm->node->rank == 0)
         {
+            FileName fnClasses=formatString("%s/%s_classes.xmd",fnResultsDir.c_str(),fnOut.c_str());
+        	if (iter==1)
+        	{
+        		MetaData dummy;
+        		dummy.write(formatString("classes@%s",fnClasses.c_str()));
+        	}
+
             std::cout << "Number of assignment changes=" << Nchanges
             << std::endl;
             MDChanges.setValue(MDL_CL2D_CHANGES, Nchanges, idMdChanges);
-            MDChanges.write(
-                formatString("info@%s/%s_classes.xmd",fnResultsDir.c_str(),fnOut.c_str()));
+            MDChanges.write(formatString("info@%s",fnClasses.c_str()));
         }
 
         // Check if there are empty nodes
@@ -1577,7 +1583,7 @@ void ProgClassifyCL2D::run()
         SFaux2.unionAll(SFaux);
         SFaux.clear();
         SFaux.sort(SFaux2, MDL_IMAGE);
-        SFaux.write(fnODir+"/"+fnOut + "_images.xmd");
+        SFaux.write(fnODir+"/images.xmd");
     }
     CLOSE_LOG();
 }
