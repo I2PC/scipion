@@ -53,7 +53,6 @@ class ProtParticlePickingAuto(XmippProtocol):
             filesToImport.append(self.PrevRun.getFilename('pca', family=family))
             filesToImport.append(self.PrevRun.getFilename('rotpca', family=family))
             filesToImport.append(self.PrevRun.getFilename('svm', family=family))
-            filesToImport.append(self.PrevRun.getFilename('svm2', family=family))
             filesToImport.append(self.PrevRun.getFilename('average', family=family))
         self.insertImportOfFiles(filesToImport)
 
