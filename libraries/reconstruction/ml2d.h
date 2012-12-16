@@ -50,11 +50,11 @@
 
 ///******** ML2D filenames convention *************
 #define FN_EXTRA(file) formatString("%s_extra/%s", fn_root.c_str(), file)
-#define FN_IMAGES_MD(base)   (base) + "result_images.xmd"
-#define FN_CLASSES_MD(base)  formatString("classes@%sresult_classes.xmd", (base).c_str())
-#define FN_LOGS_MD(base)  formatString("info@%sresult_classes.xmd", (base).c_str())
-#define FN_CLASS_IMAGES_MD(base, ref)  formatString("class%06d_images@%sresult_classes.xmd", (ref), (base).c_str())
-#define FN_CLASSES_STK(base) (base) + "result_classes.stk"
+#define FN_IMAGES_MD(base)   (base) + "images.xmd"
+#define FN_CLASSES_MD(base)  formatString("classes@%sclasses.xmd", (base).c_str())
+#define FN_LOGS_MD(base)  formatString("info@%sclasses.xmd", (base).c_str())
+#define FN_CLASS_IMAGES_MD(base, ref)  formatString("class%06d_images@%sclasses.xmd", (ref), (base).c_str())
+#define FN_CLASSES_STK(base) (base) + "classes.stk"
 
 ///******** Some macro definitions ****************
 #define FOR_ALL_GLOBAL_IMAGES() \

@@ -367,9 +367,9 @@ void ProgMLRefine3D::produceSideInfo()
     // Project volumes and store projections in a metadata
     projectVolumes(ml2d->MDref);
 //    //FIXME: this is for concurrency problem...remove after that
-    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
-    MetaData(fn_sel).write(myImg);
-    ml2d->fn_img = myImg;
+//    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
+//    MetaData(fn_sel).write(myImg);
+//    ml2d->fn_img = myImg;
     //2d initialization
     LOG("before ml2d->produceSideInfo");
     ml2d->produceSideInfo();

@@ -81,7 +81,11 @@ class XmippProject():
                 prots = group[1:]
                 self.projectDb.insertGroup(groupName)
                 for p in prots:
-                    self.projectDb.insertProtocol(groupName, p)
+                    if type(p) != list:                        
+                        self.projectDb.insertProtocol(groupName, p)
+                    else:
+                        for p2 in p[1:]:
+                           self.projectDb.insertProtocol(groupName, p2) 
         #Hard coded insertion of xmipp_program protocol
         #this is an special case of protocols
         self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
