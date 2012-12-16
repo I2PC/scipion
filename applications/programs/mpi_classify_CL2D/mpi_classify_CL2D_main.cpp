@@ -1025,7 +1025,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
             std::cout << "Number of assignment changes=" << Nchanges
             << std::endl;
             MDChanges.setValue(MDL_CL2D_CHANGES, Nchanges, idMdChanges);
-            MDChanges.write(formatString("info@%s",fnClasses.c_str()));
+            MDChanges.write(formatString("info@%s",fnClasses.c_str()),MD_APPEND);
         }
 
         // Check if there are empty nodes
