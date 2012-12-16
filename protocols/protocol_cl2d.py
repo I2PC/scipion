@@ -17,22 +17,28 @@ class ProtCL2D(XmippProtocol):
         XmippProtocol.__init__(self, protDict.cl2d.name, scriptname, project)
         self.Import = 'from protocol_cl2d import *'    
 
+    def createFilenameTemplates(self):
+        return {
+            'hierarchy': "%(ExtraDir)s/classes%(subset)s_hierarchy.txt"
+            }
+
     def defineSteps(self):
+        self.insertStep('createDir',path=self.ExtraDir)
         self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.insertCl2dStep()
-        self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="")
+        self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="")
         if self.NumberOfReferences > self.NumberOfInitialReferences:
             # core analysis
             params= "--dir %(WorkingDir)s --root level --computeCore %(thZscore)f %(thPCAZscore)f" % self.ParamsDict
             self.insertRunJobStep("xmipp_classify_CL2D_core_analysis",params,
                       [self.workingDirPath("level_00/level_classes_core.xmd")])
             # evaluate classes 
-            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="_core")
+            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="_core")
             # stable core analysis
             params= "--dir %(WorkingDir)s --root level --computeStableCore %(Tolerance)d" % self.ParamsDict
             self.insertRunJobStep("xmipp_classify_CL2D_core_analysis", params)
             # evaluate classes again
-            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="_stable_core")
+            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="_stable_core")
         self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="")
         self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="_core")
         self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="_stable_core")
@@ -97,7 +103,7 @@ class ProtCL2D(XmippProtocol):
                     if files!="":
                         runShowJ(files)
         if self.DoShowHierarchy:
-            fnHierarchy=self.workingDirPath("classes"+fnSubset+"_hierarchy.txt")
+            fnHierarchy=self.getFilename("hierarchy",subset=fnSubset)
             if os.path.exists(fnHierarchy):
                 from protlib_gui_ext import showTextfileViewer
                 showTextfileViewer(fnHierarchy,[fnHierarchy])
@@ -141,7 +147,7 @@ def sortClasses(log,WorkingDir,Nproc,suffix):
         mD.write("classes_sorted@"+filename,MD_APPEND)
         deleteFile(log,fnRoot+".xmd")
 
-def evaluateClasses(log,WorkingDir,subset):
+def evaluateClasses(log,WorkingDir,ExtraDir,subset):
     levelFiles=glob.glob(os.path.join(WorkingDir,"level_??/level_classes%s.xmd"%subset))
     levelFiles.sort()
     for filename in levelFiles:
@@ -150,7 +156,7 @@ def evaluateClasses(log,WorkingDir,subset):
         if level>0:
             previousFile=os.path.join(WorkingDir,"level_%02d/level_classes%s.xmd"%(level-1,subset))
             if os.path.exists(previousFile):
-                fnOut=os.path.join(WorkingDir,"classes"+subset+"_hierarchy.txt")
+                fnOut=getProtocolFilename("hierarchy",ExtraDir=ExtraDir,subset=subset)
                 args="--i1 %s --i2 %s -o %s"%(previousFile,filename,fnOut)
                 if os.path.exists(fnOut):
                     args+=" --append"

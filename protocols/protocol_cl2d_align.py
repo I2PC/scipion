@@ -22,12 +22,12 @@ class ProtCL2DAlignment(XmippProtocol):
         self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.insertCl2dStep()
         self.Db.insertStep('gatherResults',
-                           verifyfiles=[self.workingDirPath("average.xmp"),self.workingDirPath("alignment.xmd")],
+                           verifyfiles=[self.workingDirPath("average.xmp"),self.workingDirPath("images.xmd")],
                            WorkingDir=self.WorkingDir)
     
     def summary(self):
         message=["Alignment of "+self.InSelFile]
-        fnAlignment=self.workingDirPath("results_level_00_classes.xmd")
+        fnAlignment=self.workingDirPath("level_00/level_classes.xmd")
         if exists(fnAlignment):
             mD=MetaData("info@"+fnAlignment)
             date=time.ctime(os.path.getmtime(fnAlignment))
@@ -44,25 +44,25 @@ class ProtCL2DAlignment(XmippProtocol):
     def visualize(self):
         from protlib_utils import runShowJ
         if self.getRunState() == SqliteDb.RUN_FINISHED:
-            runShowJ("%s %s" % (self.workingDirPath("average.xmp"),self.workingDirPath("alignment.xmd")))
+            runShowJ("%s %s" % (self.workingDirPath("average.xmp"),self.workingDirPath("images.xmd")))
         else:
-            if exists(self.workingDirPath("results_level_00_classes.stk")):
-                runShowJ("%s %s" % (self.workingDirPath("results_level_00_classes.stk"),self.workingDirPath("results_level_00_classes.xmd")))
+            if exists(self.workingDirPath("level_00/level_classes.stk")):
+                runShowJ("%s %s" % (self.workingDirPath("level_00/level_classes.stk"),self.workingDirPath("level_00/level_classes.xmd")))
     
     def insertCl2dStep(self):
-        params= '-i %s --oroot results --odir %s --nref 1 --iter %d --maxShift %d' % \
+        params= '-i %s --oroot level --odir %s --nref 1 --iter %d --maxShift %d' % \
                 (self.InSelFile, self.WorkingDir, self.NumberOfIterations, self.MaxShift)
                 
         if self.ReferenceImage!="":
             params += " --ref0 " + self.ReferenceImage
         else:
             params += " --nref0 1"
-        self.insertRunJobStep("xmipp_classify_CL2D", params, [self.workingDirPath("results_images.xmd")])
+        self.insertRunJobStep("xmipp_classify_CL2D", params, [self.workingDirPath("images.xmd")])
 
 def gatherResults(log, WorkingDir):
     wdPath = lambda path: os.path.join(WorkingDir, path)
-    renameFile(log, wdPath("results_images.xmd"), wdPath("alignment.xmd"))
-    fnStack=wdPath("level_00/results_classes.stk")
+    renameFile(log, wdPath("level_images.xmd"), wdPath("images.xmd"))
+    fnStack=wdPath("level_00/level_classes.stk")
     I=Image("1@"+fnStack)
     I.write(wdPath("average.xmp"))
     runJob(log,"rm","-rf "+wdPath("level_00"))
