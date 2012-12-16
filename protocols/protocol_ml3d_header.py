@@ -69,10 +69,8 @@ DoLowPassFilterReference = True
 LowPassFilter = 50
 
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} ML3D classification
+# {section} ML3D classification
 #------------------------------------------------------------------------------------------------
-# Perform ML(F)3D classification
-DoML3DClassification = True
 
 # Angular sampling for classification:
 """ 

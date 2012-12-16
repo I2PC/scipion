@@ -94,7 +94,9 @@ def writeImagesMd(log, md, ImportAll, SubsetMode, Nsubset, imagesFn, imagesStk, 
     md.write(imagesFn)
     if DoCopy:
         runJob(log,"xmipp_image_convert","-i %(imagesFn)s -o %(imagesStk)s" % locals())
-        md = MetaData(imagesStk)
+        md = MetaData(imagesFn)
+        mdStk = MetaData(imagesStk)
+        md.merge(mdStk) # Change MDL_IMAGE to point to new stack
         md.write(imagesFn)      
    
 def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsubset):
@@ -109,7 +111,9 @@ def importImages(log, InputFile, WorkingDir, DoCopy, ImportAll, SubsetMode, Nsub
             imgFn = md.getValue(MDL_IMAGE, id)
             imgNo, imgFn = splitFilename(imgFn)
             imgFn = xmippRelpath(fixPath(imgFn, projectPath, inputRelativePath, '.'))
-            md.setValue(MDL_IMAGE, "%s@%s" % (imgNo, imgFn), id)
+            if imgNo != None:
+                imgFn = "%s@%s" % (imgNo, imgFn)
+            md.setValue(MDL_IMAGE, imgFn, id)
         outExt = '.stk'
     else:
         outExt = '.%s' % fnInput.getExtension()
