@@ -36,8 +36,7 @@ sections = [
     ['Particle picking', 'particle_pick', 'particle_pick_supervised', 'particle_pick_auto'], 
     ['Particles', 'extract_particles', 'import_particles', ['Other', 'preprocess_particles', 'screen_particles']]]),
 ('2D', 
-   [['Align+Classify', 'ml2d', 'cl2d', 'cl2d_align'], 
-    ['Tools', 'kerdensom', 'rotspectra']]),
+   [['Align+Classify', 'ml2d', 'cl2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra']]]),
 ('3D', 
    [['Initial Model', 'rct'], 
     ['Model Refinement', 'projmatch', 'ml3d']])
