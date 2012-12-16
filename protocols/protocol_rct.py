@@ -13,6 +13,7 @@ MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, LEFT_JOIN, MD_APPEND
 
 from protlib_base import *
 from protlib_utils import getListFromRangeString, runJob, runShowJ
+from protlib_filesystem import deleteFile
 
 class ProtRCT(XmippProtocol):
     def __init__(self, scriptname, project):
@@ -21,12 +22,14 @@ class ProtRCT(XmippProtocol):
         self.ExtractDir = getWorkingDirFromRunName(self.ExtractionRun)        
 
     def defineSteps(self):
+        self.insertStep('createDir',path=self.ExtraDir)
         pickingDir = getWorkingDirFromRunName(self.ExtractionRun)
         self.insertStep("createLink2",filename="acquisition_info.xmd",dirSrc=pickingDir,dirDest=self.WorkingDir)
 
         classSelection = getListFromRangeString(self.SelectedClasses)
-        self.insertStep('gatherPairs',verifyfiles=[self.getFilename('classes')],
-                               WorkingDir=self.WorkingDir,ClassSelection=classSelection,
+        fnRCTClasses=self.extraPath('rct_classes.xmd')
+        self.insertStep('gatherPairs',verifyfiles=[fnRCTClasses],
+                               WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,ClassSelection=classSelection,
                                ClassFile=self.ClassifMd, ExtractDir=self.ExtractDir,
                                PickingDir=pickingDir)
         
@@ -40,11 +43,11 @@ class ProtRCT(XmippProtocol):
                 classImage = ""
                 if hasImage:
                     classImage = mdClasses.getValue(MDL_IMAGE, classId)                    
-                classNameIn = "class%06d_images@%s" % (classNo, self.workingDirPath("classes.xmd"))
-                classNameOut = self.workingDirPath("rct_%06d.xmd" % classNo)
+                classNameIn = "class%06d_images@%s" % (classNo, fnRCTClasses)
+                classNameOut = self.extraPath("rct_images_%06d.xmd" % classNo)
                 classVolumeOut = self.workingDirPath("rct_%06d.vol" % classNo)
                 self.insertParallelStep('reconstructClass',verifyfiles=[classNameOut, classVolumeOut],
-                                   WorkingDir=self.WorkingDir,
+                                   WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,
                                    ClassNameIn=classNameIn, ClassNameOut=classNameOut,
                                    ClassImage=classImage,
                                    CenterMaxShift=self.CenterMaxShift,
@@ -99,7 +102,7 @@ class ProtRCT(XmippProtocol):
             if exists(fnVol):
                 runShowJ(fnVol)
 
-def gatherPairs(log,WorkingDir,ClassSelection,ClassFile,ExtractDir,PickingDir):
+def gatherPairs(log,WorkingDir,ExtraDir,ClassSelection,ClassFile,ExtractDir,PickingDir):
 
     mdImages = getImagesMd(ExtractDir)    
     mdTiltAngles = MetaData(getProtocolFilename("tilted_pairs", WorkingDir=PickingDir))
@@ -118,7 +121,7 @@ def gatherPairs(log,WorkingDir,ClassSelection,ClassFile,ExtractDir,PickingDir):
     mdJoin2 = MetaData()
     mdJoin3 = MetaData()
     mdJoin4 = MetaData()
-    fnOut = getProtocolFilename('classes', WorkingDir=WorkingDir)
+    fnOut = join(ExtraDir,'rct_classes.xmd')
     for classNo in ClassSelection:
         MDclass = MetaData(getClassBlock(classNo, ClassFile))
         mdJoin1.join(MDclass,mdImages,MDL_IMAGE,MDL_IMAGE,LEFT_JOIN)
@@ -127,15 +130,17 @@ def gatherPairs(log,WorkingDir,ClassSelection,ClassFile,ExtractDir,PickingDir):
         mdJoin4.join(mdJoin3,mdTiltAngles,MDL_MICROGRAPH,MDL_MICROGRAPH,LEFT_JOIN)
         mdJoin4.write(getClassBlock(classNo, fnOut), MD_APPEND)
 
-def reconstructClass(log,WorkingDir,ClassNameIn,ClassNameOut,ClassImage,
+def reconstructClass(log,WorkingDir,ExtraDir,ClassNameIn,ClassNameOut,ClassImage,
                      CenterMaxShift,ThinObject,SkipTiltedTranslations,ClassVolumeOut,
                      ReconstructAdditionalParams,DoLowPassFilter,LowPassFilter):
     # If class image doesn't exists, generate it by averaging
     if len(ClassImage) == 0:
         classRootOut = ClassNameOut.replace(".xmd", "") + "_"
-        params = "-i %(ClassNameIn)s --save_image_stats %(classRootOut)s -o %(WorkingDir)s/stats.xmd" % locals()
+        params = "-i %(ClassNameIn)s --save_image_stats %(classRootOut)s -o %(ExtraDir)s/stats.xmd" % locals()
         runJob(log, "xmipp_image_statistics", params)
         ClassImage = classRootOut + "average.xmp"
+        deleteFile(log,classRootOut+"stddev.xmp")
+        deleteFile(log,"%(ExtraDir)s/stats.xmd" % locals())
         
     params = "-i %(ClassNameIn)s -o %(ClassNameOut)s --ref %(ClassImage)s --max_shift %(CenterMaxShift)d" % locals()
     
