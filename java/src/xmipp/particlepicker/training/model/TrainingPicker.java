@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.particlepicker.Family;
@@ -671,28 +672,33 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	// public void updateFamilyTemplates(Family f) {
-	// ImageGeneric igp;
-	// List<TrainingParticle> particles;
-	// MicrographFamilyData mfd;
-	// for(TrainingMicrograph m: micrographs)
-	// {
-	// mfd = m.getFamilyData(f);
-	// for (int i = 0; i < mfd.getManualParticles().size(); i++) {
-	// particles = mfd.getManualParticles();
-	// igp = particles.get(i).getImageGeneric();
-	// if (i < f.getTemplatesNumber())
-	// f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-	// else
-	// try {
-	// f.getTemplates().alignImages(igp);
-	// } catch (Exception e) {
-	// throw new IllegalArgumentException(e.getMessage());
-	// }
-	// }
-	// }
-	//
-	// }
+	public void updateFamilyTemplates(Family f)
+	{
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		for (TrainingMicrograph m : micrographs)
+		{
+			mfd = m.getFamilyData(f);
+			for (int i = 0; i < mfd.getManualParticles().size(); i++)
+			{
+				particles = mfd.getManualParticles();
+				igp = particles.get(i).getImageGeneric();
+				if (i < f.getTemplatesNumber())
+					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+				else
+					try
+					{
+						f.getTemplates().alignImages(igp);
+					}
+					catch (Exception e)
+					{
+						throw new IllegalArgumentException(e.getMessage());
+					}
+			}
+		}
+
+	}
 
 	public String getImportMicrographName(String path, String filename, Format f)
 	{
