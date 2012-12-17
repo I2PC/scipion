@@ -697,7 +697,6 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
             fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
 #endif
 
-        }
         fhTrain<<std::endl;
 #ifdef DEBUG_SAVETRAINSET
 
@@ -872,7 +871,6 @@ void AutoParticlePicking2::generateTrainSet()
         a1<<std::endl;
 #endif
 
-    }
 #ifdef DEBUG_GENTRAINSET
     a1.close();
     b1.close();
