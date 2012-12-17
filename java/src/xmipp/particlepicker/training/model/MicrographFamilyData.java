@@ -224,7 +224,7 @@ public class MicrographFamilyData
 
 	public String getAction()
 	{
-		if (family.getStep() == FamilyState.Manual)
+		if (family.getStep() != FamilyState.Supervised)
 			return null;
 		if (state == MicrographFamilyState.Manual)
 			return null;
