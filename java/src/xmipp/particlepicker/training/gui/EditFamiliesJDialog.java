@@ -198,7 +198,7 @@ public class EditFamiliesJDialog extends JDialog {
 					int size = (Integer) value;
 					f.setSize(size);
 					frame.updateSize(size);
-				}
+				
 				} else if (column == 3) {
 					
 					int templates = (Integer)value;
