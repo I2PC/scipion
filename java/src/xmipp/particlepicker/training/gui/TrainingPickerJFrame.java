@@ -61,6 +61,7 @@ import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame
 {
@@ -74,7 +75,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private MicrographsTableModel micrographsmd;
 
 	private float positionx;
-	private JLabel iconlb;
+	private JButton iconbt;
 	private JLabel steplb;
 	private JButton actionsbt;
 	private JMenuItem editfamiliesmi;
@@ -476,8 +477,20 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		JScrollPane sp = new JScrollPane();
 		JPanel ctfpn = new JPanel();
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
-		iconlb = new JLabel();
-		ctfpn.add(iconlb);
+		iconbt = new JButton();
+		iconbt.setBackground(ctfpn.getBackground());
+		iconbt.setBorderPainted(false);
+		iconbt.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				//ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTFFilename(), null);
+				
+			}
+		});
+		ctfpn.add(iconbt);
 		micrographsmd = new MicrographsTableModel(this);
 		micrographstb.setModel(micrographsmd);
 		formatMicrographsTable();
@@ -518,7 +531,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		ppicker.saveConfig();
 		setChanged(false);
 		initializeCanvas();
-		TrainingPickerJFrame.this.iconlb.setIcon(ppicker.getMicrograph().getCTFIcon());
+		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
 		manageAction();
 
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);

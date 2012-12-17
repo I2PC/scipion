@@ -86,6 +86,11 @@ public class TrainingMicrograph extends Micrograph{
 		return ctficon;
 	}
 	
+	public String getCTFFilename()
+	{
+		return ctf;
+	}
+	
 	
 	
 	public List<MicrographFamilyData> getFamiliesData()
