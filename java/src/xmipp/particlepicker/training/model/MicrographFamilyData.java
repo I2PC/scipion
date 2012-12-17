@@ -224,6 +224,7 @@ public class MicrographFamilyData
 
 	public String getAction()
 	{
+		
 		if (state == MicrographFamilyState.Manual)
 			return null;
 		if (state == MicrographFamilyState.Available)
