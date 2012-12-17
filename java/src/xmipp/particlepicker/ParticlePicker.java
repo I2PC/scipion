@@ -30,6 +30,7 @@ public abstract class ParticlePicker {
 	protected String familiesfile;
 	protected String macrosfile;
 	protected static Logger logger;
+	public static final int defAutopickPercent = 90;
 	protected String outputdir = ".";
 	protected boolean changed;
 	protected List<Family> families;
@@ -40,6 +41,7 @@ public abstract class ParticlePicker {
 	protected Family family;
 	protected String configfile;
 	private int autopickpercent;
+	
 
 	public int getSize() {
 		return family.getSize();
@@ -422,7 +424,7 @@ public abstract class ParticlePicker {
 				if(hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
 				else
-					autopickpercent = 50;//compatibility with previous projects
+					autopickpercent = defAutopickPercent;//compatibility with previous projects
 			}
 			md.destroy();
 		} catch (Exception e) {
