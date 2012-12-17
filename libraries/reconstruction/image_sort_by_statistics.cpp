@@ -68,32 +68,40 @@ void ProgSortByStatistics::defineParams()
 //majorAxis and minorAxis is the estimated particle size in px
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
-//#define DEBUG
-    pcaAnalyzer[2];
+#define DEBUG
+
+	String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
+	//String name = "000004@Images/Extracted/run_002/extra/KLH_Dataset_I_Training_0010.stk";
+
+    pcaAnalyzer[1];
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
     PCAMahalanobisAnalyzer tempPcaAnalyzer1;
     PCAMahalanobisAnalyzer tempPcaAnalyzer2;
+    PCAMahalanobisAnalyzer tempPcaAnalyzer3;
 
     //Morphology
     tempPcaAnalyzer0.clear();
     //Signal to noise ratio
     tempPcaAnalyzer1.clear();
-    //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer2.clear();
+    //Histogram analysis, to detect black points and saturated parts
+    tempPcaAnalyzer3.clear();
 
     Image<double> img;
-    MultidimArray<double> img2;
     Matrix1D<double> center(2);
     center.initZeros();
     FringeProcessing fp;
 
-    int numHistElem = 21;
-    int numDescriptors=4;
-    int numDescriptors2=3;
+    int sign = 1;
+    int numDescriptors0=3;
+    int numDescriptors1=4;
+    int numDescriptors2=21;
+    int numDescriptors3 = 3;
 
-    MultidimArray<float> v(numDescriptors);
-    MultidimArray<float> v2(numHistElem);
-    MultidimArray<float> v3(numDescriptors2);
+    MultidimArray<float> v0(numDescriptors0);
+    MultidimArray<float> v1(numDescriptors1);
+    MultidimArray<float> v2(numDescriptors2);
+    MultidimArray<float> v3(numDescriptors3);
 
     if (verbose>0)
     {
@@ -113,16 +121,14 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     // We assume that at least there is one particle
     img.readApplyGeo(SF,1);
 
-    MultidimArray<double> nI, modI, tempI, tempM, Imean;
+    //Initialization:
+    MultidimArray<double> nI, modI, tempI, tempM, ROI;
     MultidimArray<bool> mask;
     nI.resizeNoCopy(img());
     modI.resizeNoCopy(img());
-    Imean.resizeNoCopy(img());
     tempI.resizeNoCopy(img());
     tempM.resizeNoCopy(img());
     mask.resizeNoCopy(img());
-
-    Imean.initConstant(0);
     mask.initConstant(true);
 
     MultidimArray<double> autoCorr(2*img().ydim,2*img().xdim);
@@ -131,35 +137,22 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     Histogram1D hist;
     Matrix2D<double> U,V,temp;
     Matrix1D<double> D;
-    v.initZeros(numDescriptors);
-    v2.initZeros(numHistElem);
-    v3.initZeros(numDescriptors2);
 
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    v0.initZeros(numDescriptors0);
+    v1.initZeros(numDescriptors1);
+    v2.initZeros(numDescriptors2);
+    v3.initZeros(numDescriptors3);
+
+    ROI.resizeNoCopy(img());
+    ROI.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
     {
-        if (thereIsEnable)
-        {
-            int enabled;
-            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-            if ( (enabled==-1)  )
-            {
-                continue;
-            }
-            img.readApplyGeo(SF,__iter.objId);
-            //
-            img().statisticsAdjust(0,1);
-            Imean += img();
-        }
+    	double temp = std::sqrt(i*i+j*j);
+        if ( temp < ((img().xdim)/3))
+        	A2D_ELEM(ROI,i,j)= 1;
+        else
+            A2D_ELEM(ROI,i,j)= 0;
     }
-
-    Imean /= SF.size();
-    Imean.setXmippOrigin();
-
-#ifdef DEBUG
-
-    FileName fpName    = "test0.txt";
-    Imean.write(fpName);
-#endif
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -182,31 +175,29 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mI.statisticsAdjust(0,1);
             mask.setXmippOrigin();
 
-            fp.normalize(mI,tempI,modI,1,5,mask);
+        	fp.normalize(mI,tempI,modI,0,1,mask);
             modI.setXmippOrigin();
             tempI.setXmippOrigin();
-            nI = tempI*(modI*modI);
+            nI = sign*tempI*(modI*modI);
             tempM = (modI*modI);
 
-            //fp.normalize(mI,tempI,modI,1,4,mask);
-            //tempI.setXmippOrigin();
-            //modI.setXmippOrigin();
-            //nI += (tempI*(modI*modI));
-            //tempM += (modI*modI);
+            v0(0) = (tempM*ROI).sum();
+            int index = 1;
+            for (double var = 5; var < 15; var+=5) {
 
-            //fp.normalize(mI,tempI,modI,1,6,mask);
-            //tempI.setXmippOrigin();
-            //modI.setXmippOrigin();
-            //nI += (tempI*(modI*modI));
-            //tempM += (modI*modI);
-
+            	fp.normalize(mI,tempI,modI,0,var,mask);
+                modI.setXmippOrigin();
+                tempI.setXmippOrigin();
+                nI += sign*tempI*(modI*modI);
+                tempM += (modI*modI);
+                v0(index) = (tempM*ROI).sum();
+                index++;
+			}
             nI /= tempM;
 
 #ifdef DEBUG
-            //fn = img.name().removeLastExtension().addExtension("spi");
-            //nI.write(fn);
-            //SF.setValue(MDL_IMAGE,fn,__iter.objId);
-            if (img.name()=="002870@Images/Extracted/run_001/DefaultFamily5")
+
+            if (img.name()==name)
             {
                 FileName fpName    = "test2.txt";
                 nI.write(fpName);
@@ -214,7 +205,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
                 tempM.write(fpName);
             }
 #endif
-            nI.binarize();
+            nI.binarize(-0.1);
             int im = labelImage2D(nI,nI,8);
             compute_hist(nI, hist, 0, im, im+1);
             int l,k,i,j;
@@ -222,53 +213,47 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             A1D_ELEM(hist,j)=0;
             hist.maxIndex(l,k,i,j);
             nI.binarizeRange(j-1,j+1);
-            FringeProcessing fp;
+
             double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
             fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
+
             // Build vector
-            v(0)=majorAxis;
-            v(1)=minorAxis;
-            v(2)= fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0) ;
-            v(3)=area;
+            v1(0)=majorAxis/((img().xdim)/5 );
+            v1(1)=minorAxis/((img().xdim)/5 );
+            v1(2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
+            v1(3)=area/( ((img().xdim)/2)*((img().ydim)/2) );
 
-            for (int n=0 ; n < numDescriptors ; n++)
+            for (int n=0 ; n < numDescriptors1 ; n++)
             {
-                if ( std::isnan(v(n)) )
-                    v(n)=0;
+                if ( std::isnan(v1(n)) )
+                    v1(n)=0;
             }
-            tempPcaAnalyzer0.addVector(v);
+            tempPcaAnalyzer1.addVector(v1);
 
-
-            //tempI = (Imean*mI)/mI.sum();
-            //double val = tempI.sum();
-
-            mI-=Imean;
             mI.setXmippOrigin();
-            auto_correlation_matrix(mI,autoCorr);
+            auto_correlation_matrix(mI*ROI,autoCorr);
             autoCorr.window(smallAutoCorr,-10,-10, 10, 10);
             smallAutoCorr.copy(temp);
             svdcmp(temp,U,D,V);
 
-            for (int n = 0; n < numHistElem; ++n)
-            	v2(n)=(float)VEC_ELEM(D,n);
-            tempPcaAnalyzer1.addVector(v2);
-
+            for (int n = 0; n < numDescriptors2; ++n)
+            	v2(n)=(float)VEC_ELEM(D,n)/VEC_ELEM(D,0);
+            tempPcaAnalyzer2.addVector(v2);
 
             double minVal;
             double maxVal;
             mI.computeDoubleMinMax(minVal,maxVal);
             compute_hist(mI, hist, minVal, maxVal, 100);
 
-            v3(0)= fabs(hist.percentil(5));
-            v3(1)= fabs(hist.percentil(95));
-            v3(2) = fabs(hist.percentil(50));
-            tempPcaAnalyzer2.addVector(v3);
+            v3(0)= (hist.percentil(5));
+            v3(1)= (hist.percentil(50));
+            v3(2)= (hist.percentil(95));
+
+            tempPcaAnalyzer3.addVector(v3);
 
 #ifdef DEBUG
-
-            if (img.name()=="002870@Images/Extracted/run_001/DefaultFamily5")
+            if (img.name()==name)
             {
-
                 FileName fpName    = "test.txt";
                 mI.write(fpName);
                 fpName    = "test3.txt";
@@ -288,13 +273,16 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     tempPcaAnalyzer0.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer1.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer2.computeStatistics(vavg,vstddev);
+    tempPcaAnalyzer3.computeStatistics(vavg,vstddev);
 
-    tempPcaAnalyzer0.evaluateZScore(2,20);
+    tempPcaAnalyzer0.evaluateZScore(1,20);
     tempPcaAnalyzer1.evaluateZScore(2,20);
-    tempPcaAnalyzer2.evaluateZScore(2,20);
+    tempPcaAnalyzer2.evaluateZScore(1,20);
+    tempPcaAnalyzer3.evaluateZScore(3,20);
 
-    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer2);
-    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer1);
+    //pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer3);
+    //pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer2);
+    //pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer1);
     pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer0);
 
 }
@@ -385,7 +373,7 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
 
 void ProgSortByStatistics::run()
 {
-	clear();
+	//clear();
 
     // Process input selfile ..............................................
     SF.read(fn);
@@ -400,23 +388,30 @@ void ProgSortByStatistics::run()
     int numPCAs = pcaAnalyzer.size();
 
     MultidimArray<double> ZscoreMultivariate(SF.size());
-    MultidimArray<double> weights(numPCAs);
     ZscoreMultivariate.initConstant(0);
-    weights.initConstant(1);
-    weights(0) = 0.3;
-    weights(1) = 0.5;
-    weights(2) = 0.2;
 
+    //MultidimArray<double> weights(numPCAs);
+    //weights.initConstant(1);
+    //weights(0) = 0.3;
+    //weights(1) = 0.5;
+    //weights(2) = 0.2;
+
+    double zScore=0;
     int enabled;
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        for (int num = 0; num < numPCAs; ++num)
-        {
-            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-            ZscoreMultivariate(imgno)+=(pcaAnalyzer[num].getZscore(imgno))*weights(num)*(pcaAnalyzer[num].getZscore(imgno));
-        }
+        //for (int num = 0; num < numPCAs; ++num)
+        //{
+        //    SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+        //    if(zScore < pcaAnalyzer[num].getZscore(imgno))
+        //    	zScore = pcaAnalyzer[num].getZscore(imgno);
+        //}
+
+        //ZscoreMultivariate(imgno)=zScore;
+    	ZscoreMultivariate(imgno)=pcaAnalyzer[0].getZscore(imgno);
         imgno++;
+        zScore = 0;
     }
 
     // Produce output .....................................................
