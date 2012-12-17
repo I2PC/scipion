@@ -4,6 +4,7 @@ import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.plugin.FolderOpener;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -478,14 +479,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		JPanel ctfpn = new JPanel();
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
 		iconbt = new JButton();
-		iconbt.setBackground(ctfpn.getBackground());
-		iconbt.setBorderPainted(false);
+		iconbt.setBorderPainted(false); 
+	    iconbt.setContentAreaFilled(false); 
+	    iconbt.setFocusPainted(false); 
+	    iconbt.setOpaque(false);
 		iconbt.addActionListener(new ActionListener()
 		{
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
+				JOptionPane.showMessageDialog(TrainingPickerJFrame.this, "ctf profile coming...");
 				//ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTFFilename(), null);
 				
 			}
