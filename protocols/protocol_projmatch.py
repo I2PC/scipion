@@ -241,6 +241,7 @@ data_
             #VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
             for ref3d in ref3Ds:
+<<<<<<< HEAD
                 for it in iterations:
 #                file_name = VisualizationReferenceFileNames[ref3d]
                     file_name = self.getFilename('MaskedFileNamesIters', iter=it, ref=ref3d)
@@ -254,6 +255,19 @@ data_
                                 runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
+=======
+              for it in iterations:
+                file_name = self.getFilename('MaskedFileNamesIters', iter=it, ref=ref3d)
+                if xmippExists(file_name):
+                    #Chimera
+                    if(self.DisplayVolumeSlicesAlong == 'surface'):
+                        runChimera(file_name)
+                    else:
+                        try:
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
+                        except Exception, e:
+                            showError("Error launching java app", str(e))
+>>>>>>> 904b71f16ad828f0f90e79e2248ee52e7f61309b
                         
             
         if doPlot('DisplayReconstruction'):
