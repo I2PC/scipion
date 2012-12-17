@@ -21,7 +21,7 @@ Select previous RUN of the <Manual> particle picking.
 """
 PickingRun = ""
 
-# {wizard}(wizardChooseFamilyToExtractSupervised) Family
+# {wizard}(wizardChooseFamilyToExtractSupervised) Family manually picked
 """ 
 Select family within run
 """
