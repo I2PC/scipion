@@ -489,8 +489,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				JOptionPane.showMessageDialog(TrainingPickerJFrame.this, "ctf profile coming...");
-				//ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTFFilename(), null);
+				ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTF(), getMicrograph().getPSD());
 				
 			}
 		});
