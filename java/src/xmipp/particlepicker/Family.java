@@ -58,8 +58,7 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
-		this.templatesNumber = templatesNumber;
-		initTemplates();
+		setTemplatesNumber(templatesNumber);
 	}
 	
 	public void initTemplates()
@@ -148,6 +147,8 @@ public class Family {
 	}
 
 	public void setTemplatesNumber(int num) {
+		if(num <= 0)
+			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must be bigger than one"));
 		this.templatesNumber = num;
 		initTemplates();
 	}
