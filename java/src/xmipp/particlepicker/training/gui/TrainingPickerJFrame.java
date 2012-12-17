@@ -556,7 +556,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		autopickpercentpn.setVisible(isautopick);
 		if(isautopick)
 			autopickpercenttf.setValue(ppicker.getAutopickpercent());
-		actionsbt.setVisible(mfd.isActionVisible(getThreshold()));
+		actionsbt.setVisible(mfd.isActionVisible());
 	}
 
 	protected void resetMicrograph()
