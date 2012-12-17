@@ -389,17 +389,19 @@ public abstract class TrainingPicker extends ParticlePicker
 		{
 			super.saveData();
 			persistMicrographs();
-			// for(Family f: families)
-			// {
-			// updateFamilyTemplates(f);
-			// try {
-			// f.getTemplates().write(getOutputPath(f.getName() +
-			// "_template.stk"));
-			// } catch (Exception e) {
-			// getLogger().log(Level.SEVERE, e.getMessage(), e);
-			// throw new IllegalArgumentException(e);
-			// }
-			// }
+			for (Family f : families)
+			{
+				updateFamilyTemplates(f);
+				try
+				{
+					f.getTemplates().write(getOutputPath(f.getName() + "_template.stk"));
+				}
+				catch (Exception e)
+				{
+					getLogger().log(Level.SEVERE, e.getMessage(), e);
+					throw new IllegalArgumentException(e);
+				}
+			}
 		}
 	}
 

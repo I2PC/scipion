@@ -238,7 +238,8 @@ public abstract class ParticlePicker {
 		}
 
 		Family family;
-		int rgb, size, templates = 1;
+		int rgb, size;
+		Integer templates = 1;
 		FamilyState state;
 		String name;
 		try {
@@ -248,8 +249,9 @@ public abstract class ParticlePicker {
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				// templates =
-				// md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				if( templates == null || templates == 0)
+					templates = 1;//for compatibility with previous projects
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
 				// if (state == FamilyState.Supervised && this instanceof
