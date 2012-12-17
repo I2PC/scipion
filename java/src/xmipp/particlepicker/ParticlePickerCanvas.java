@@ -87,7 +87,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		{
 			iw.setImage(getImage());
 			iw.updateImage(getImage());
-			System.out.println("updating iw");
 		}
 		else
 			this.iw = new ImageWindow(getImage(), this);//if you dont provide iw, I init mine

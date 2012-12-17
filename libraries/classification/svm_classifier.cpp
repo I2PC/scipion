@@ -37,11 +37,11 @@ void SVMClassifier::setParameters(double c,double gamma)
     param.svm_type = C_SVC;
     param.kernel_type = RBF;
     param.degree = 2;
-    param.gamma = gamma;//0.2;//0.0824692444233;
+    param.gamma = gamma;
     param.coef0 = 0;
     param.nu = 0.1;
     param.cache_size = 1000;
-    param.C = c;//1;//64;
+    param.C = c;
     param.eps = 0.001;
     param.p = 0.1;
     param.shrinking = 1;
@@ -70,6 +70,7 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<doubl
 {
 //    std::ofstream fh_training;
 //    fh_training.open("data.txt");
+
     prob.l = YSIZE(trainSet);
     prob.y = new double[prob.l];
     prob.x = new svm_node *[prob.l+1];

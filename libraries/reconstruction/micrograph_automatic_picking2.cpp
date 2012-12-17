@@ -333,7 +333,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     std::ofstream fh_training;
     fh_training.open("particles_cord1.txt");
 #endif
-    int num=positionArray.size()*(10.0/100.0);
+    int num=positionArray.size()*(90.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
@@ -343,7 +343,6 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         fh_training << j * (1.0 / scaleRate) << " " << i * (1.0 / scaleRate)
         << " " << positionArray[k].cost << std::endl;
 #endif
-
         buildInvariant(IpolarCorr,j,i);
         extractParticle(j,i,microImage(),pieceImage,false);
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
@@ -688,12 +687,10 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
     {
         fhTrain<<classLabel(i)<< std::endl;
 #ifdef DEBUG_SAVETRAINSET
-
         fhtest<<classLabel(i)<<" ";
 #endif
 
         for (int j=0;j<XSIZE(dataSet);j++)
-        {
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
 #ifdef DEBUG_SAVETRAINSET
 
@@ -713,6 +710,7 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 
     fhtest.close();
 #endif
+
 }
 
 void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
@@ -851,8 +849,8 @@ void AutoParticlePicking2::generateTrainSet()
             b1<<DIRECT_A1D_ELEM(classLabel1,cnt)<<" ";
 #endif
 
+
             for (int j=0;j<XSIZE(dataSet);j++)
-            {
                 DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
 #ifdef DEBUG_GENTRAINSET
 
@@ -1232,5 +1230,7 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);
     }
+    if (mode!="train")
+        fnFilterBank.deleteFile();
     delete autoPicking;
 }

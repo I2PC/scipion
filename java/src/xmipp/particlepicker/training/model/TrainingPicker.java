@@ -96,17 +96,27 @@ public abstract class TrainingPicker extends ParticlePicker
 			Family family;
 			MicrographFamilyState state;
 			MicrographFamilyData mfd;
+			Integer autopickpercent;
 			List<MicrographFamilyData> mfdatas = new ArrayList<MicrographFamilyData>();
 			if (!new File(getOutputPath(micrograph.getPosFile())).exists())
 				return;
+			
 			MetaData md = new MetaData("families@" + getOutputPath(micrograph.getPosFile()));
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 			for (long id : md.findObjects())
 			{
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				state = MicrographFamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, id));
 				family = getFamily(fname);
-				mfd = new MicrographFamilyData(micrograph, family, state);
+				if(family == null)
+					throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("family", fname));
+				if(hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+				else
+					autopickpercent = 50;//compatibility with previous projects
+				mfd = new MicrographFamilyData(micrograph, family, state, autopickpercent);
+				
 				if (getMode() == FamilyState.Review && mfd.getStep() != FamilyState.Review)
 				{
 					mfd.setState(MicrographFamilyState.Review);
@@ -234,7 +244,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				new File(file).delete();
 			else
 			{
-				persistMicrographFamilies(tm);
+				persistMicrographState(tm);
 				for (MicrographFamilyData mfd : tm.getFamiliesData())
 				{
 					md = new MetaData();
@@ -301,7 +311,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void persistMicrographFamilies(TrainingMicrograph m)
+	public void persistMicrographState(TrainingMicrograph m)
 	{
 		long id;
 		try
@@ -313,6 +323,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, mfd.getFamily().getName(), id);
 				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_FAMILY_STATE, mfd.getState().toString(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, mfd.getAutopickpercent(), id);
 			}
 			md.writeBlock("families@" + file);
 			md.destroy();

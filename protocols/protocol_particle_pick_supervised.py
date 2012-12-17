@@ -34,19 +34,18 @@ class ProtParticlePickingSupervised(XmippProtocol):
         
     def createFilenameTemplates(self):
         return {
-                'training': join('%(WorkingDir)s', '%(family)s_training.txt'),
+                'training': join('%(ExtraDir)s', '%(family)s_training.txt'),
                      'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
-#                    'mask': join('%(WorkingDir)s', '%(family)s_mask.xmp'),
-                    'pca': join('%(WorkingDir)s', '%(family)s_pca_model.stk'),
-                    'rotpca': join('%(WorkingDir)s', '%(family)s_rotpca_model.stk'),
-                    'svm': join('%(WorkingDir)s', '%(family)s_svm.txt'),
-                    'svm2': join('%(WorkingDir)s', '%(family)s_svm2.txt'),
-                    'average': join('%(WorkingDir)s', '%(family)s_particle_avg.xmp')
+#                    'mask': join('%(ExtraDir)s', '%(family)s_mask.xmp'),
+                    'pca': join('%(ExtraDir)s', '%(family)s_pca_model.stk'),
+                    'rotpca': join('%(ExtraDir)s', '%(family)s_rotpca_model.stk'),
+                    'svm': join('%(ExtraDir)s', '%(family)s_svm.txt'),
+                    'average': join('%(ExtraDir)s', '%(family)s_particle_avg.xmp')
                 }
 
     def defineSteps(self):
         if not os.path.exists(self.getFilename('svm',family=self.Family)) and os.path.exists(self.ExtraDir):
-            deleteDir(self.ExtraDir)
+            self.insertStep('deleteDir',path=self.ExtraDir)
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getPosFiles(self.PrevRun)
@@ -71,7 +70,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
         return validateMicrographs(self.Input['micrographs'])
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.micrographsMd, self.WorkingDir, PM_READONLY)
+        launchParticlePickingGUI(None, self.micrographsMd, self.ExtraDir, PM_READONLY)
 
 # Main
 #     

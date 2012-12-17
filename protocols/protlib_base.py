@@ -81,7 +81,11 @@ class XmippProject():
                 prots = group[1:]
                 self.projectDb.insertGroup(groupName)
                 for p in prots:
-                    self.projectDb.insertProtocol(groupName, p)
+                    if type(p) != list:                        
+                        self.projectDb.insertProtocol(groupName, p)
+                    else:
+                        for p2 in p[1:]:
+                           self.projectDb.insertProtocol(groupName, p2) 
         #Hard coded insertion of xmipp_program protocol
         #this is an special case of protocols
         self.projectDb.insertProtocol(protDict.xmipp.title, protDict.xmipp.name)
@@ -228,8 +232,11 @@ class XmippProject():
         mod = loadModule(script)
         from inspect import isclass
         for v in mod.__dict__.values():
-            if isclass(v) and issubclass(v, XmippProtocol) and v != XmippProtocol and v != CustomProtocol:
-                return v(script, self)
+            # v should be a class, inherit(directly or indirectly from XmippProtocol
+            # also check that is not XmippProtocol, CustomProtocol, or has 'Base' in its name
+            if isclass(v) and issubclass(v, XmippProtocol):
+                if v != XmippProtocol and v != CustomProtocol and 'Base' not in v.__name__:
+                    return v(script, self)
         reportError("Can't load protocol from " + script)
 
     def getProtocolFromRunName(self, extendedRunName):
@@ -366,13 +373,19 @@ class DepData():
         
 _baseProtocolNames = {
         'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
-        'extract_list':  join('%(WorkingDir)s', "%(family)s_extract_list.xmd"),      
-        'families':     join('%(WorkingDir)s', 'families.xmd'),
-        'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
+        'extract_list':  join('%(ExtraDir)s', "extract_list.xmd"),      
+        'families':     join('%(ExtraDir)s', 'families.xmd'),
+        'family':       join('%(WorkingDir)s', '%(family)s.xmd'),
         'macros':       join('%(WorkingDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
         'tilted_pairs': join('%(WorkingDir)s','tilted_pairs.xmd')
+        'images':       join('%(WorkingDir)s', 'images.xmd'),
+        'images_stk':       join('%(WorkingDir)s', 'images.stk'),
+        'images_tilted': join("%(WorkingDir)s", 'images_tilted.xmd'),
+        'images_untilted': join("%(WorkingDir)s", 'images_untilted.xmd'),
+        'classes':      join('%(WorkingDir)s', 'classes.xmd'),
+        'class_block':  'class%(ClassNo)06d_images@%(ClassMd)s'
      }
 
 def getProtocolFilename(key, **params):
@@ -382,7 +395,21 @@ def getProtocolFilename(key, **params):
     if _baseProtocolNames.has_key(key):
         return _baseProtocolNames[key] % params
     raise Exception("Key: '%s' not found" % key)  
- 
+
+def getImagesFilename(workingDir, suffix=''):
+    '''Shortcut to getProtocolFilename('images',...)'''
+    key = 'images'
+    if len(suffix):
+        key = 'images_%s' % suffix
+    return getProtocolFilename(key, WorkingDir=workingDir)
+
+def getClassBlock(block, classMd):
+    return getProtocolFilename('class_block', ClassNo=block, ClassMd=classMd)
+
+def getImagesMd(workingDir, suffix=''):
+    from xmipp import MetaData
+    return MetaData(getImagesFilename(workingDir, suffix))
+
 class XmippProtocol(object):
     '''This class will serve as base for all Xmipp Protocols'''
     def __init__(self, protocolName, scriptname, project):
@@ -406,11 +433,9 @@ class XmippProtocol(object):
         #A protocol must be able to find its own project
         self.project = project
         self.Import = '' # this can be used by database for import modules
-        self.WorkingDir = project.getWorkingDir(protocolName, self.RunName)
-        self.ParamsDict['WorkingDir'] = self.WorkingDir
-        self.TmpDir = self.workingDirPath('tmp')
-        self.ExtraDir = self.workingDirPath('extra')
-        self.ParamsDict['ExtraDir'] = self.ExtraDir
+        self.addParam('WorkingDir', project.getWorkingDir(protocolName, self.RunName))
+        self.addParam('TmpDir', self.workingDirPath('tmp'))
+        self.addParam('ExtraDir', self.workingDirPath('extra'))
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
@@ -427,14 +452,20 @@ class XmippProtocol(object):
         self.PrevRunName = None
         self.Input = {}
         self.parser = None # This is only used in GUI
+    
+    def addParam(self, key, value):
+        self.ParamsDict[key] = value
+        setattr(self, key, value)
         
     def getFilename(self, key, **params):
-        # Is desirable the names comming in params doesn't overlap
-        # with the variables in the header dictionary
+        """Has the same function as getProtocolFilename but using 
+        the internal params dictionary 
+        Is desirable the names comming in params doesn't overlap
+        with the variables in the header dictionary """
         params.update(self.ParamsDict)
         if self.FilenamesDict.has_key(key):
             return self.FilenamesDict[key] % params
-        raise Exception("Key: '%s' not found" % key)
+        raise Exception("XmippProtocol.getFilename: key '%s' not found" % key)
     
     def getFileList(self, *keyList):
         ''' Return a list of filename using the getFilename function '''
