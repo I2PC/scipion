@@ -158,8 +158,9 @@ class XmippProjectGUI():
         return self.images[imgName]
               
     def addBindings(self):
-        self.root.bind('<FocusOut>', self.unpostMenu)
-        self.root.bind('<Button-1>', self.unpostMenu)
+        #self.root.bind('<FocusOut>', self.unpostMenu)
+        self.root.bind("<Key>", self.unpostMenu)
+        #self.root.bind('<Button-1>', self.unpostMenu)
         self.root.bind('<Return>', lambda e: self.runButtonClick(ACTION_DEFAULT))
         self.root.bind('<Control_L><Return>', lambda e: self.runButtonClick(ACTION_COPY))
         self.root.bind('<Alt_L><e>', lambda e: self.runButtonClick(ACTION_EDIT))
@@ -212,20 +213,30 @@ class XmippProjectGUI():
     def createToolbarMenu(self, parent, opts=[]):
         if len(opts) > 0:
             menu = tk.Menu(parent, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
-            prots = [protDict[o] for o in opts]
-            for p in prots:
+#            prots = [protDict[o] for o in opts]
+            for o in opts:
                 #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
                 # and menu items command setting
                 def item_command(prot): 
                     def new_command(): 
                         self.launchProtocolGUI(self.project.newProtocol(prot.name))
                     return new_command 
-                # Treat special case of "custom" protocol
-                if p.title == 'Custom':
-                    menu.add_command(label=p.title, command=self.selectCustomProtocol)
+                # If p is a list, means is a submenu
+                if type(o) == list:
+                    menu2 = tk.Menu(menu, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
+                    menu.add_cascade(label=o[0], menu=menu2)
+                    for o2 in o[1:]:
+                        p = protDict[o2]
+                        menu2.add_command(label=p.title, command=item_command(p))
+                    #menu2.bind("<Leave>", self.unpostMenu)
                 else:
-                    menu.add_command(label=p.title, command=item_command(p))
-            menu.bind("<Leave>", self.unpostMenu)
+                    p = protDict[o]                  
+                    # Treat special case of "custom" protocol
+                    if p.title == 'Custom':
+                        menu.add_command(label=p.title, command=self.selectCustomProtocol)
+                    else:
+                        menu.add_command(label=p.title, command=item_command(p))
+            #menu.bind("<Leave>", self.unpostMenu)
             return menu
         return None
 
@@ -571,11 +582,14 @@ class XmippProjectGUI():
                 
     def clickToolbarButton(self, index, showMenu=True):
         key, btn, menu = self.ToolbarButtonsDict[index]
+        self.unpostMenu()
         if menu:
             # Post menu
             x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
             xroot, yroot = self.root.winfo_x() + btn.master.winfo_x(), self.root.winfo_y()+ btn.master.winfo_y()
             menu.post(xroot + x + w + 10, yroot + y)
+            #if self.lastMenu:
+            #    self.lastMenu.unpost()
             self.lastMenu = menu
             
     def cbDisplayGroupChanged(self, e=None):
@@ -627,6 +641,8 @@ class XmippProjectGUI():
                           '\n<Comment>: ' + comment + '\n\n<Summary>:\n' + summary   
             except Exception, e:
                 labels = 'Error creating protocol: <%s>' % str(e)
+                import traceback
+                labels += '\n' + traceback.format_exc()
             self.detailsText.clear()
             self.detailsText.addText(labels)
             details.displayButtons(showButtons)
@@ -1003,7 +1019,9 @@ class ScriptProtocols(XmippScript):
                 gui.launchGUI()
             except Exception, e:
                 print cyanStr("Could not create Tk GUI, disabled")
-                print e
+                import traceback
+                import sys
+                traceback.print_exc(file=sys.stderr)
 
 if __name__ == '__main__':
     ScriptProtocols().tryRun()
