@@ -489,7 +489,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTF(), getMicrograph().getPSD());
+				String psd = getMicrograph().getPSD();
+				String ctf = getMicrograph().getCTF();
+				if(psd != null && ctf != null)
+					ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTF(), getMicrograph().getPSD());
 				
 			}
 		});
