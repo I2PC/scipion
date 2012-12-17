@@ -694,6 +694,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					}
 					catch (Exception e)
 					{
+						e.printStackTrace();
 						throw new IllegalArgumentException(e.getMessage());
 					}
 			}

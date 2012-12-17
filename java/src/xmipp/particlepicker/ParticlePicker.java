@@ -214,8 +214,7 @@ public abstract class ParticlePicker {
 				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
 
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
-				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, 0, id);//saved for compatibility with future versions
-				//md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
 
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
@@ -243,7 +242,8 @@ public abstract class ParticlePicker {
 		}
 
 		Family family;
-		int rgb, size, templates = 1;
+		int rgb, size;
+		Integer templates = 1;
 		FamilyState state;
 		String name;
 		try {
@@ -253,7 +253,9 @@ public abstract class ParticlePicker {
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				templates =md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				if(templates == null || templates <= 0)
+					templates = 1;//compatibility with previous projects
 				state = FamilyState.valueOf(md.getValueString(
 						MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
@@ -406,6 +408,7 @@ public abstract class ParticlePicker {
 		if (!new File(file).exists()) {
 			family = families.get(0);
 			setMicrograph(getMicrographs().get(0));
+			
 			return;
 
 		}
