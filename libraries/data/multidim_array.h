@@ -1858,6 +1858,15 @@ public:
         *this=result;
     }
 
+    /** Make a patch with the input array in the given positions */
+    void patch(MultidimArray<T> patchArray, int x, int y)
+    {
+        int n = XSIZE(patchArray)*sizeof(T);
+
+        for (int i=0, y2 = 0; i < YSIZE(patchArray); ++i)
+            memcpy(&dAij(*this, y+i, x), &dAij(patchArray, i, 0), n);
+    }
+
     //@}
 
     ///@name Access to the pixel values

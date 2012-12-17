@@ -620,13 +620,13 @@ class XmippProtocol(object):
             self.Db.runSteps()
             self.postRun()
         except Exception, e:
-            retcode = 1;
-            print >> sys.stderr, failStr("ERROR: %s" %  e)
+            #THIS SHOULD NEVER HAPPENS
+            print >> sys.stderr, failStr("ERROR(PROBABLY A BUG): %s" %  e)
             #THIS IS DURING DEVELOPMENT ONLY
-            print >> self.stderr, failStr("ERROR: %s" %  e)
+            print >> self.stderr, failStr("ERROR(PROBABLY A BUG): %s" %  e)
             import traceback
             traceback.print_exc(file=self.stderr)
-            
+            self.updateRunState(SqliteDb.RUN_FAILED)
         finally:
             self.fOut.close()
             self.fErr.close()  
@@ -677,8 +677,8 @@ class XmippProtocol(object):
         ''' This function will take a filename relative to some protocol
         and will create the same filename but in the current protocol 
         working dir'''
-        #return filename.replace(prot.WorkingDir, self.WorkingDir)
-        return self.workingDirPath(os.path.basename(filename))
+        return filename.replace(prot.WorkingDir, self.WorkingDir)
+        #return self.workingDirPath(os.path.basename(filename))
     
     def getExtendedRunName(self):
         ''' Return the extended run name of this run '''
@@ -852,9 +852,9 @@ def protocolMain(ProtocolClass, script=None):
         no_check = options.no_check
         no_confirm = options.no_confirm
     
-    script_absolute = os.path.abspath(script)
+    absolute_script = os.path.abspath(script)
     
-    mod = loadModule(script_absolute)
+    mod = loadModule(absolute_script)
     #init project
     project = XmippProject()
     #load project: read config file and open conection database
@@ -871,7 +871,7 @@ def protocolMain(ProtocolClass, script=None):
            'run_name': mod.RunName, 
            'script': script, 
            'comment': "",
-           'source': script_absolute
+           'source': absolute_script
            }
         from protlib_gui import ProtocolGUI 
         gui = ProtocolGUI()
@@ -926,5 +926,5 @@ def protocolMain(ProtocolClass, script=None):
             _run['pid'] = os.getpid()
             # Update run's process info in DB
             project.projectDb.updateRunPid(_run)
-            os.environ['PROTOCOL_SCRIPT'] = script
+            os.environ['PROTOCOL_SCRIPT'] = absolute_script
             return p.run()

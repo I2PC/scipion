@@ -390,7 +390,8 @@ class XmippProjectGUI():
                 for c in self.process_childs:
                     c.info['pname'] = pname = os.path.basename(c.args.split()[0])
                     if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
-                        line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        #line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        
                         if c.host != lastHost:
                             #txt.insert(tk.END, "%s\n" % c.host, 'bold')
                             tree.insert('', 'end', c.host, text=c.host)

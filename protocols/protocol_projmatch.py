@@ -236,20 +236,18 @@ data_
         ref3Ds = map(int, getListFromVector(self.DisplayRef3DNo))
         self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
-        runShowJExtraParameters = ' --dont_wrap --view '+ self.DisplayVolumeSlicesAlong +
-                                  ' --columns ' + self.MatrixWidth
+        runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
         if doPlot('DisplayReference'):
-            VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
+            #VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
             for ref3d in ref3Ds:
-                file_name = VisualizationReferenceFileNames[ref3d]
-                #print 'ref3d: ',ref3d, ' | file_name:',file_name
+              for it in iterations:
+                file_name = self.getFilename('MaskedFileNamesIters', iter=it, ref=ref3d)
                 if xmippExists(file_name):
                     #Chimera
                     if(self.DisplayVolumeSlicesAlong == 'surface'):
                         runChimera(file_name)
                     else:
-                    #Xmipp_showj (x,y and z shows the same)
                         try:
                             runShowJ(file_name, extraParams = runShowJExtraParameters)
                         except Exception, e:

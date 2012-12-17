@@ -210,7 +210,7 @@ public class MetadataTable extends MetadataGallery {
 		try {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
-				new XmippImageWindow(new MdRowImageLoader(row, ci.getLabel()));
+				new XmippImageWindow(data.window, new MdRowImageLoader(row, ci.getLabel()));
 				return true;
 			}
 		} catch (Exception e) {

@@ -379,7 +379,7 @@ DiscardPercentagePerClass ='10'
 
 # Perform scale search?
 """ 
-    If true perform scale refinement
+    If true perform scale refinement. (Under development)
 """
 DoScale = False
 
@@ -411,9 +411,11 @@ ScaleNumberOfSteps ='3'
 """
 ProjMatchingExtra =''
 
-# Save images assigned to each class?
+# {expert}Save images assigned to each class?
 """ If true, save images assigned to each class to a metadata file
     Be aware that for a very fine angular sampling it can be time consuming.
+    Not a very parameter any longer since you can get this information in 
+    visualize results
 """
 DoSaveImagesAssignedToClasses = False
 
@@ -646,10 +648,6 @@ ConstantToAddToFiltration ='-0.05'
 """
 ConstantToAddToMaxReconstructionFrequency ='0.1'
 
-# {expert} Center volume
-""" Center volume after each iteration """
-DoCenterVolume = False
-
 # {eval} expandParallel(jobsize=1)
 
 #------------------------------------------------------------------------------------------------
@@ -669,10 +667,10 @@ DisplayIterationsNo='1 2 3'
 DisplayRef3DNo='1 2'
 
 # {expert} Width of projection galleries
-""" In number of reference projections. This number will be multiplied by 3 if re-alignment of 
-    classes was performed and multiplied by 2 otherwise.
+""" 
+    Usually a multiple of 2 is the right value. -1 => authomatic
 """
-MatrixWidth=3
+MatrixWidth=-1
 
 #------------------------------------------------------------------------------------------------
 # {section}{visualize} Volumes display

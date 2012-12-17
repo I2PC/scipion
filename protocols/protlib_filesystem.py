@@ -29,7 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
-from os.path import join, exists, dirname, basename
+from os.path import join, exists, dirname, basename, relpath, split, splitext, isabs, isfile, abspath
 from protlib_utils import printLog 
 from shutil import copyfile
 #from xmipp import *
@@ -106,10 +106,10 @@ def deleteFiles(log, filelist, verbose):
 
 def createLink(log, source, dest):
     try:
-        if os.path.exists(dest):
+        if exists(dest):
             os.remove(dest)
-        destDir=os.path.split(dest)[0]
-        os.symlink(os.path.relpath(source,destDir),dest)
+        destDir = split(dest)[0]
+        os.symlink(relpath(source,destDir),dest)
         printLog("Linked '%s' to '%s'" % (source, dest))
     except Exception, e:
         printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
@@ -121,8 +121,8 @@ def uniqueFilename(file_name):
     ''' Create a unique filename (not file handler)
        this approach is insecure but good enough for most purposes'''
     counter = 1
-    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
-    while os.path.isfile(file_name):
+    file_name_parts = splitext(file_name) # returns ('/path/file', '.ext')
+    while isfile(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
     return file_name 
@@ -138,9 +138,9 @@ def uniqueRandomFilename(file_name,randomLength=5):
     ''' Create a unique filename (not file handler)
        this approach is insecure but good enough for most purposes'''
     counter = 1
-    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    file_name_parts = splitext(file_name) # returns ('/path/file', '.ext')
     file_name = file_name_parts[0] + '_' + random_alphanumeric(randomLength) + file_name_parts[1]
-    while os.path.isfile(file_name):
+    while isfile(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
     return file_name 
@@ -164,7 +164,7 @@ def removeFilenamePrefix(filename):
 
 def replaceFilenameExt(filename, new_ext):
     ''' Replace the current filename extension by a new one'''
-    return os.path.splitext(filename)[0] + new_ext
+    return splitext(filename)[0] + new_ext
 
 def splitFilename(filename):
     ''' Split filename separating by @ 
@@ -207,7 +207,7 @@ def getProtocolTemplate(prot):
 
 def findProjectInPathTree(filename):
     found=False
-    filename = os.path.abspath(filename)
+    filename = abspath(filename)
     while filename!="/" and not found:
         if exists(join(filename,".project.sqlite")):
             found=True
@@ -219,7 +219,7 @@ def findProjectInPathTree(filename):
         return None
 
 def fixPath(filename, *pathList):
-    if os.path.isabs(filename):
+    if isabs(filename):
         return filename
     for path in pathList:
         filepath = join(path, filename)
@@ -241,6 +241,13 @@ def xmippExists(path):
     from xmipp import FileName
     return FileName(path).exists()
 
+def xmippRelpath(path):
+    ''' As os.relpath but taking into account names containing @ '''
+    if '@' in path:
+        block, base = splitFilename(path)
+        return '%s@%s' % (block, relpath(base))
+    return relpath(path)
+        
 def hasSpiderExt(filename):
     '''check if the file has Spider extension '''
     spiderExt = ['xmp', 'vol', 'stk', 'spi']

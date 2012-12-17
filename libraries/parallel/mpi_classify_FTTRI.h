@@ -78,6 +78,9 @@ public:
 
 	/// Number of iterations
 	int Niter;
+
+	/// Do phase optimization
+	bool doPhase;
 public:
 	// Name of the invariants;
 	FileName fnFTTRI;

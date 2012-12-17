@@ -75,4 +75,9 @@ public class XmippMessage {
 	public static String getIllegalStateForOperationMsg(String field, String value){
 		return String.format("Invalid operation for %s on state %s", field, value);
 	}
+
+	public static String getOutOfBoundsMsgWithInfo(String value, String message)
+	{
+		return String.format("%s out of bounds\n" + message, value );
+	}
 }

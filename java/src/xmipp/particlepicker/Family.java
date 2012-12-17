@@ -1,11 +1,6 @@
 package xmipp.particlepicker;
 
-import ij.ImagePlus;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-
 import java.awt.Color;
-import java.io.File;
 import java.lang.reflect.Field;
 
 import xmipp.jni.ImageGeneric;
@@ -59,10 +54,14 @@ public class Family {
 		this.size = size;
 		this.state = state;
 		this.templatesNumber = templatesNumber;
+		
 		initTemplates();
 	}
 
+
 	public void initTemplates() {
+		if(templatesNumber == 0)
+			return;
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
