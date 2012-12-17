@@ -233,12 +233,10 @@ def xmippExists(path):
     return FileName(path).exists()
 
 def fixPath(filename, *pathList):
-    print "fixPath"
     if isabs(filename):
         return filename
     for path in pathList:
         filepath = join(path, filename)
-        print "fixPath: ", filepath
         if xmippExists(filepath):
             return filepath
     return None

@@ -2218,7 +2218,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     }
 
     fn_base = (fn_prefix == ITER_PREFIX) ? //All intermediate iteration files should go to "extra" folder
-              getIterExtraPath(fn_root, iter) : fn_root + "_";
+              getIterExtraPath(fn_root, iter) : fn_root;
 
     const char * rootStr = fn_base.c_str(), * prefixStr = fn_prefix.c_str();
 

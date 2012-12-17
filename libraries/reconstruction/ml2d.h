@@ -49,7 +49,7 @@
 #define DATALINELENGTH 12
 
 ///******** ML2D filenames convention *************
-#define FN_EXTRA(file) formatString("%s_extra/%s", fn_root.c_str(), file)
+#define FN_EXTRA(file) formatString("%sextra/%s", fn_root.c_str(), file)
 #define FN_IMAGES_MD(base)   (base) + "images.xmd"
 #define FN_CLASSES_MD(base)  formatString("classes@%sclasses.xmd", (base).c_str())
 #define FN_LOGS_MD(base)  formatString("info@%sclasses.xmd", (base).c_str())

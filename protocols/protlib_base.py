@@ -432,11 +432,9 @@ class XmippProtocol(object):
         #A protocol must be able to find its own project
         self.project = project
         self.Import = '' # this can be used by database for import modules
-        self.WorkingDir = project.getWorkingDir(protocolName, self.RunName)
-        self.ParamsDict['WorkingDir'] = self.WorkingDir
-        self.TmpDir = self.workingDirPath('tmp')
-        self.ExtraDir = self.workingDirPath('extra')
-        self.ParamsDict['ExtraDir'] = self.ExtraDir
+        self.addParam('WorkingDir', project.getWorkingDir(protocolName, self.RunName))
+        self.addParam('TmpDir', self.workingDirPath('tmp'))
+        self.addParam('ExtraDir', self.workingDirPath('extra'))
         self.projectDir = project.projectDir  
         #Setup the Log for the Protocol
         self.LogDir = project.logsDir
@@ -453,6 +451,10 @@ class XmippProtocol(object):
         self.PrevRunName = None
         self.Input = {}
         self.parser = None # This is only used in GUI
+    
+    def addParam(self, key, value):
+        self.ParamsDict[key] = value
+        setattr(self, key, value)
         
     def getFilename(self, key, **params):
         """Has the same function as getProtocolFilename but using 

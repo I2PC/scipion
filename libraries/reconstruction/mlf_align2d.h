@@ -56,10 +56,11 @@
 #define DATALINELENGTH 11
 
 /** Some filename convetions for output files */
-#define FN_NOISE_IMG_MD (fn_root + "_noise_images.xmd")
-#define FN_NOISE_IMG (fn_root + "_noise_images.stk")
-#define FN_CREF_IMG (fn_root + "_cref_classes.stk")
-#define FN_CREF_IMG_MD (fn_root + "_cref_classes.xmd")
+#define FN_EXTRA(file) formatString("%sextra/%s", fn_root.c_str(), file)
+#define FN_NOISE_IMG_MD FN_EXTRA("noise_images.xmd")
+#define FN_NOISE_IMG    FN_EXTRA("noise_images.stk")
+#define FN_CREF_IMG     FN_EXTRA("cref_classes.stk")
+#define FN_CREF_IMG_MD  FN_EXTRA("cref_classes.xmd")
 
 #define FN_ITER_BASE(iter) getIterExtraPath(fn_root, iter)
 #define FN_REF(base, refno) formatString("%06d@%sclasses.stk", (refno), (base).c_str())
