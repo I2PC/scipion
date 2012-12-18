@@ -72,7 +72,7 @@ public:
 /** Global log pointer and macros to use it */
 extern XmippLog * __xmippLog;
 
-#define LOG_ENABLED 1
+//#define LOG_ENABLED 1
 
 
 #ifdef LOG_ENABLED
@@ -87,6 +87,7 @@ extern XmippLog * __xmippLog;
 #define LOG(msg) ;
 #define CLOSE_LOG() ;
 #define LOG_LEVEL(msg) ;
+#define LOG_FUNCTION() ;
 #endif
 
 

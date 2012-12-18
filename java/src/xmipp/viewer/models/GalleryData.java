@@ -26,9 +26,12 @@
 package xmipp.viewer.models;
 
 import java.awt.Color;
+import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
+
+import javax.swing.JFrame;
 
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -38,6 +41,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ClassInfo;
+import xmipp.viewer.windows.JFrameGallery;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -89,12 +93,15 @@ public class GalleryData {
 	public ClassInfo[] classes;
 	// Flags to check if md or classes has changed
 	private boolean hasMdChanges, hasClassesChanges;
+	public Window window;
 
 	/**
 	 * The constructor receive the filename of a metadata The metadata can also
 	 * be passed, if null, it will be readed from filename
+	 * @param jFrameGallery 
 	 */
-	public GalleryData(String fn, Param param, MetaData md) {
+	public GalleryData(Window window, String fn, Param param, MetaData md) {
+		this.window = window;
 		try {
 			selectedBlock = "";
 			parameters = param;

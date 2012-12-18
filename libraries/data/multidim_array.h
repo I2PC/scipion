@@ -1381,8 +1381,10 @@ public:
 
         return fMap;
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
     }
 
     /** Core deallocate.
@@ -1405,8 +1407,10 @@ public:
         destroyData = true;
         nzyxdimAlloc = 0;
 #else
+
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
+
     }
 
     /** Alias a multidimarray.
@@ -1841,6 +1845,15 @@ public:
         MultidimArray<T> result;
         window(result,x0,xF,init_value);
         *this=result;
+    }
+
+    /** Make a patch with the input array in the given positions */
+    void patch(MultidimArray<T> patchArray, int x, int y)
+    {
+        int n = XSIZE(patchArray)*sizeof(T);
+
+        for (int i=0, y2 = 0; i < YSIZE(patchArray); ++i)
+            memcpy(&dAij(*this, y+i, x), &dAij(patchArray, i, 0), n);
     }
 
     //@}
@@ -3350,13 +3363,13 @@ public:
         double avgExample, stddevExample, avgThis, stddevThis;
         if (mask!=NULL)
         {
-        	computeAvgStdev_within_binary_mask(*mask,example,avgExample,stddevExample);
-        	computeAvgStdev_within_binary_mask(*mask,*this,avgThis,stddevThis);
+            computeAvgStdev_within_binary_mask(*mask,example,avgExample,stddevExample);
+            computeAvgStdev_within_binary_mask(*mask,*this,avgThis,stddevThis);
         }
         else
         {
-        	computeAvgStdev(avgThis,stddevThis);
-        	example.computeAvgStdev(avgExample,stddevExample);
+            computeAvgStdev(avgThis,stddevThis);
+            example.computeAvgStdev(avgExample,stddevExample);
         }
 
         // y=a+bx
@@ -5120,7 +5133,7 @@ void sincos(const MultidimArray<double> &x, MultidimArray<double> &s, MultidimAr
 /** Obtains the plane parameters z=p0+p1*x+p2*y.
  */
 void planeFit(const MultidimArray<double> &z, const MultidimArray<double> &x, const MultidimArray<double> &y,
-		double &p0, double &p1, double &p2);
+              double &p0, double &p1, double &p2);
 
 /*
    mod    Modulus after division.

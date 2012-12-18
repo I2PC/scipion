@@ -131,7 +131,6 @@ echo "test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_p
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE
-	echo 'export DYLD_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_LIBRARY_PATH' >> $INC_FILE
 fi
 echo " "    >> $INC_FILE
 echo " "    >> $INC_FILE
@@ -436,6 +435,8 @@ if $DO_SQLITE; then
   else
     compile_library $VSQLITE "." "." "CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1" ".libs"
   fi
+  #execute sqlite to avoid relinking in the future
+  echo "select 1+1 ;" | $VSQLITE/sqlite3
   install_bin $VSQLITE/sqlite3 xmipp_sqlite3
   install_libs $VSQLITE/.libs libsqlite3 0
   #compile math library for sqlite

@@ -315,15 +315,11 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     std::vector<Particle2> positionArray;
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,fast);
-    std::ofstream fh_training;
-    fh_training.open("particles_cord1.txt");
-    int num=positionArray.size()*(10.0/100.0);
+    int num=positionArray.size()*(90.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
         int i=positionArray[k].y;
-        fh_training << j * (1.0 / scaleRate) << " " << i * (1.0 / scaleRate)
-        << " " << positionArray[k].cost << std::endl;
         buildInvariant(IpolarCorr,j,i);
         extractParticle(j,i,microImage(),pieceImage,false);
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
@@ -637,24 +633,17 @@ void AutoParticlePicking2::loadTrainingSet(const FileName &fn)
 
 void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 {
-    std::ofstream fhTrain,fhtest;
+    std::ofstream fhTrain;
     fhTrain.open(fn.c_str());
-    fhtest.open("vahid.txt");
     fhTrain<<YSIZE(dataSet)<< " "<< XSIZE(dataSet)<< std::endl;
     for (int i=0;i<YSIZE(dataSet);i++)
     {
         fhTrain<<classLabel(i)<< std::endl;
-        fhtest<<classLabel(i)<<" ";
         for (int j=0;j<XSIZE(dataSet);j++)
-        {
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
-            fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
-        }
         fhTrain<<std::endl;
-        fhtest<<std::endl;
     }
     fhTrain.close();
-    fhtest.close();
 }
 
 void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
@@ -762,9 +751,6 @@ void AutoParticlePicking2::saveRejectedVectors(const FileName &fn)
 
 void AutoParticlePicking2::generateTrainSet()
 {
-    std::ofstream a1,b1;
-    a1.open("dataset1.txt");
-    b1.open("dataset2.txt");
     int cnt=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classLabel)
     if (DIRECT_A1D_ELEM(classLabel,i)==1 || DIRECT_A1D_ELEM(classLabel,i)==3)
@@ -783,22 +769,11 @@ void AutoParticlePicking2::generateTrainSet()
             }
             else
                 DIRECT_A1D_ELEM(classLabel1,cnt)=1;
-            b1<<DIRECT_A1D_ELEM(classLabel1,cnt)<<" ";
             for (int j=0;j<XSIZE(dataSet);j++)
-            {
                 DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
-                b1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet1,cnt,j)<<" ";
-            }
-            b1<<std::endl;
             cnt++;
         }
-        a1<<DIRECT_A1D_ELEM(classLabel,i)<<" ";
-        for (int j=0;j<XSIZE(dataSet);j++)
-            a1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
-        a1<<std::endl;
     }
-    a1.close();
-    b1.close();
 }
 
 void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
@@ -841,9 +816,6 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
     endX=XSIZE(microImage())-particle_radius;
     endY=YSIZE(microImage())-particle_radius;
     applyConvolution(fast);
-    Image<double> II;
-    II().alias(convolveRes);
-    II.write("testvv.xmp");
     for (int i=particle_radius;i<endY;i++)
         for (int j=particle_radius;j<endX;j++)
         {
@@ -874,7 +846,9 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     MultidimArray<int> mask;
     CorrelationAux aux;
     FourierFilter filter;
-    int size = XSIZE(microImage());
+    int sizeX = XSIZE(microImage());
+    int sizeY = YSIZE(microImage());
+
     //Generating Mask
     mask.resize(particleAvg);
     mask.setXmippOrigin();
@@ -897,8 +871,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
             avgRotatedLarge+=avgRotated;
         }
         avgRotatedLarge/=120;
-        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                   LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
         correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
         filter.do_generate_3dmask=true;
         filter.generateMask(convolveRes);
@@ -907,8 +881,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     else
     {
         avgRotatedLarge=particleAvg;
-        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                   LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
         correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
         filter.do_generate_3dmask=true;
         filter.generateMask(convolveRes);
@@ -920,8 +894,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
             rotate(LINEAR,avgRotated,particleAvg,double(deg));
             avgRotatedLarge=avgRotated;
             avgRotatedLarge.setXmippOrigin();
-            avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                       LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+            avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                       LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
             correlation_matrix(aux.FFT1,avgRotatedLarge,tempConvolve,aux,false);
             filter.applyMaskSpace(tempConvolve);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
@@ -1134,5 +1108,7 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);
     }
+    if (mode!="train")
+        fnFilterBank.deleteFile();
     delete autoPicking;
 }

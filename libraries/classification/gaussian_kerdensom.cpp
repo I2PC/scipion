@@ -227,7 +227,7 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
         } // if annSteps
 
     } // for
-    MDconvergence.write(formatString("KerDenSOM_Convergence@%s",_fn.c_str()));
+    MDconvergence.write(formatString("KerDenSOM_Convergence@%s",_fn.c_str()),MD_APPEND);
 
     tmpV.clear();
     tmpDens.clear();
