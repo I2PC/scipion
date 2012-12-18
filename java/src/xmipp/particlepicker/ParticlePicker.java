@@ -41,6 +41,7 @@ public abstract class ParticlePicker {
 	protected Family family;
 	protected String configfile;
 	private int autopickpercent;
+	public static final int defAutoPickPercent = 90;
 
 	public int getSize() {
 		return family.getSize();
@@ -423,7 +424,7 @@ public abstract class ParticlePicker {
 				if(hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
 				else
-					autopickpercent = 50;//compatibility with previous projects
+					autopickpercent = defAutoPickPercent;//compatibility with previous projects
 			}
 			md.destroy();
 		} catch (Exception e) {
