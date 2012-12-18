@@ -54,6 +54,7 @@ public class Family {
 		this.size = size;
 		this.state = state;
 		setTemplatesNumber(templatesNumber);
+
 	}
 
 
@@ -67,6 +68,7 @@ public class Family {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+
 
 	public ImageGeneric getTemplates() {
 		return templates;
@@ -142,7 +144,9 @@ public class Family {
 
 	public void setTemplatesNumber(int num) {
 		if(num <= 0)
+
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Should have at least one template"));
+
 		this.templatesNumber = num;
 		initTemplates();
 	}
@@ -197,6 +201,7 @@ public class Family {
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
 					ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());

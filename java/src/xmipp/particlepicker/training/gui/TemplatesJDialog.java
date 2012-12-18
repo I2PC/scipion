@@ -50,10 +50,12 @@ public class TemplatesJDialog extends JDialog {
 	}
 
 	public void loadTemplates(boolean resize) {
+
 		try {
 			frame.updateTemplates();
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			int size = frame.getFamily().getSize();
+
 
 			if (!frame.getParticlePicker().hasParticles()) {
 				templatespn.removeAll();
@@ -65,6 +67,7 @@ public class TemplatesJDialog extends JDialog {
 
 			templatespn.removeAll();
 			ImagePlus template;
+
 			for (int index = 0; index < templates.getNDim(); index++) {
 				template = XmippImageConverter.convertToImagePlus(templates,
 						ImageGeneric.FIRST_IMAGE + index);

@@ -4,6 +4,7 @@ import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.plugin.FolderOpener;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -61,6 +62,7 @@ import xmipp.utils.InfiniteProgressPanel;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class TrainingPickerJFrame extends ParticlePickerJFrame
 {
@@ -74,7 +76,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	private MicrographsTableModel micrographsmd;
 
 	private float positionx;
-	private JLabel iconlb;
+	private JButton iconbt;
 	private JLabel steplb;
 	private JButton actionsbt;
 	private JMenuItem editfamiliesmi;
@@ -186,11 +188,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		windowmn.add(ijmi);
 
 
+
 		templatesmi = new JMenuItem("Templates");
 		templatesmi.setEnabled(ppicker.getMode() == FamilyState.Manual);
 		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
+
 
 		helpmn.add(hcontentsmi);
 
@@ -217,6 +221,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 			}
 		});
+
 
 	}
 
@@ -256,6 +261,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+
+
 
 
 	private void initFamilyPane()
@@ -317,27 +324,27 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		autopickpercenttf.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
-				if(autopickpercenttf.getValue() == null)
+				if (autopickpercenttf.getValue() == null)
 				{
 					JOptionPane.showMessageDialog(TrainingPickerJFrame.this, XmippMessage.getEmptyFieldMsg("Percent to Check"));
 					autopickpercenttf.setValue(getFamilyData().getAutopickpercent());
 					return;
 				}
-					
-				int autopickpercent = ((Number)autopickpercenttf.getValue()).intValue();
+
+				int autopickpercent = ((Number) autopickpercenttf.getValue()).intValue();
 				getFamilyData().setAutopickpercent(autopickpercent);
 				ppicker.setAutopickpercent(autopickpercent);
 				ppicker.saveConfig();
-				
+
 			}
 		});
 		autopickpercenttf.setColumns(3);
 		autopickpercentpn.add(autopickpercenttf);
-		
+
 		setStep(step);
 		steppn.add(actionsbt);
 
@@ -497,8 +504,25 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		JScrollPane sp = new JScrollPane();
 		JPanel ctfpn = new JPanel();
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
-		iconlb = new JLabel();
-		ctfpn.add(iconlb);
+		iconbt = new JButton();
+		iconbt.setBorderPainted(false); 
+	    iconbt.setContentAreaFilled(false); 
+	    iconbt.setFocusPainted(false); 
+	    iconbt.setOpaque(false);
+		iconbt.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				String psd = getMicrograph().getPSD();
+				String ctf = getMicrograph().getCTF();
+				if(psd != null && ctf != null)
+					ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTF(), getMicrograph().getPSD());
+				
+			}
+		});
+		ctfpn.add(iconbt);
 		micrographsmd = new MicrographsTableModel(this);
 		micrographstb.setModel(micrographsmd);
 		formatMicrographsTable();
@@ -535,10 +559,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
+
 		ppicker.saveConfig();
 		setChanged(false);
 		initializeCanvas();
-		TrainingPickerJFrame.this.iconlb.setIcon(ppicker.getMicrograph().getCTFIcon());
+		iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
 		manageAction();
 		thresholdpn.setVisible(getFamilyData().getState() == MicrographFamilyState.Correct);
 		pack();
@@ -547,14 +572,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			loadParticles();
 
 	}
-	
+
 	private void manageAction()
 	{
 		MicrographFamilyData mfd = getFamilyData();
 		actionsbt.setText(mfd.getAction());
 		boolean isautopick = isAutopick();
 		autopickpercentpn.setVisible(isautopick);
-		if(isautopick)
+		if (isautopick)
 			autopickpercenttf.setValue(ppicker.getAutopickpercent());
 		actionsbt.setVisible(mfd.isActionVisible());
 	}
@@ -572,7 +597,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.setState(state);
 		manageAction();
-		
 		ppicker.saveData(getMicrograph());// to keep consistence between files
 											// of automatic picker and mines
 		setChanged(false);
@@ -580,14 +604,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		updateMicrographsModel();
 		pack();
 	}
-	
+
 	private boolean isAutopick()
 	{
 		String action = getFamilyData().getAction();
-		if(action == null)
+		if (action == null)
 			return false;
 		return action.equalsIgnoreCase(MicrographFamilyState.Autopick.toString());
-			
+
 	}
 
 	public MicrographFamilyData getFamilyData()
