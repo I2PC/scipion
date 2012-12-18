@@ -29,11 +29,13 @@ class ProtImportMicrographs(XmippProtocol):
         doPreprocess = self.DoPreprocess and (self.DoCrop or self.DoRemoveBadPixels or self.DoLog)
         micrographs = self.getMicrographs()
         if doPreprocess:
+            self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
             func = self.insertPreprocessStep
-            funcOutput = lambda i: self.workingDirPath(replaceBasenameExt(i, '.mrc'))
+            funcOutput = lambda i: os.path.join(self.ExtraDir,replaceBasenameExt(i, '.mrc'))
         elif self.CopyMicrographs:
+            self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
             func = self.insertCopyMicrograph
-            funcOutput = lambda i: self.workingDirPath(os.path.basename(i))
+            funcOutput = lambda i: os.path.join(self.ExtraDir,os.path.basename(i))
         else:
             func = lambda i, o: i #Do nothing
             funcOutput = lambda i: i 

@@ -34,10 +34,11 @@ class ProtParticlePicking(XmippProtocol):
         self.MicrographsMd = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
 
     def defineSteps(self):
+        self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         self.insertImportOfFiles([self.Input['micrographs'], self.Input['acquisition']])
         if getattr(self, 'LaunchGUI', True):
             self.insertStep('launchParticlePickingGUI',execution_mode=SqliteDb.EXEC_ALWAYS,
-                           InputMicrographs=self.MicrographsMd, WorkingDir=self.WorkingDir,
+                           InputMicrographs=self.MicrographsMd, ExtraDir=self.ExtraDir,
                            TiltPairs=self.TiltPairs, Memory=self.Memory)       
         
     def summary(self):
@@ -63,19 +64,19 @@ class ProtParticlePicking(XmippProtocol):
             if self.TiltPairs:
                 particles /= 2
             summary.append("Family <%(family)s>: <%(particles)u> %(items)s" % locals())
-        
+
         return summary
     
     def validate(self):
         return validateMicrographs(self.Input['micrographs'], self.TiltPairs)
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.MicrographsMd, self.WorkingDir, PM_READONLY, self.TiltPairs)
+        launchParticlePickingGUI(None, self.MicrographsMd, self.ExtraDir, PM_READONLY, self.TiltPairs)
 
 
 def getPosFiles(prot, pattern=''):
     '''Return the .pos files of this picking protocol'''
-    return glob(prot.workingDirPath('*%s.pos' % pattern))
+    return glob(os.path.join(prot.ExtraDir,'*%s.pos' % pattern))
 
 def validateMicrographs(inputMicrographs, tiltPairs=False):
     ''' Validate the existence of input micrographs metadata file 
@@ -128,10 +129,10 @@ def countParticles(prot, pattern=''):
             micrographs += 1
     return micrographs, particles, familiesDict
 
-def launchParticlePickingGUI(log, InputMicrographs, WorkingDir, PickingMode=PM_MANUAL,
+def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MANUAL,
                              TiltPairs=False, Memory=2, Family=""):
     ''' Utility function to launch the Particle Picking application '''
-    args = "-i %(InputMicrographs)s -o %(WorkingDir)s --mode %(PickingMode)s --memory %(Memory)dg"
+    args = "-i %(InputMicrographs)s -o %(ExtraDir)s --mode %(PickingMode)s --memory %(Memory)dg"
     if Family!="":
         args+=" --family %(Family)s"
     if TiltPairs:

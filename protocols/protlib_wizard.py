@@ -29,7 +29,7 @@
 import os
 from glob import glob
 from subprocess import Popen
-from os.path import join, relpath, exists, splitext, split
+from os.path import join, exists, splitext, split
 import Tkinter as tk
 import tkFont
 from xmipp import MetaData
@@ -40,7 +40,7 @@ from protlib_utils import loadModule, which, runShowJ,\
 from protlib_gui_ext import centerWindows, changeFontSize, askYesNo, Fonts, registerCommonFonts, \
     showError, showInfo, showBrowseDialog, showWarning, AutoScrollbar, FlashMessage,\
     TaggedText
-from protlib_filesystem import getXmippPath, xmippExists
+from protlib_filesystem import getXmippPath, xmippExists, xmippRelpath
 from config_protocols import protDict
 from config_protocols import FontName, FontSize, MaxHeight, MaxWidth, WrapLenght
 from config_protocols import LabelTextColor, SectionTextColor, CitationTextColor
@@ -96,7 +96,7 @@ def wizardBrowse(self, var):
         filterExt = ''
     files = showBrowseDialog(parent=self.master, seltype=seltype, filter=filterExt)
     if files:
-        var.setTkValue(', '.join([relpath(f) for f in files]))
+        var.setTkValue(', '.join([xmippRelpath(f) for f in files]))
 
 #Helper function to select Downsampling wizards
 def wizardHelperSetDownsampling(self, var, path, filterExt, value, freqs=None, md=None):  
@@ -291,7 +291,7 @@ def wizardChooseFamilyToExtract(self, var):
     from protlib_gui_ext import ListboxDialog
     pickingRun = self.getVarValue('PickingRun')
     pickingProt = self.project.getProtocolFromRunName(pickingRun)
-    fnFamilies = pickingProt.getFilename("families")    
+    fnFamilies = pickingProt.getFilename("families")  
     if not exists(fnFamilies):
         showWarning("Warning", "No elements to select", parent=self.master)
         return

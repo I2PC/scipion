@@ -75,7 +75,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		add(new JLabel("Templates"),
 				XmippWindowUtil.getConstraints(constraints, 0, 3, 1));
 		templatestf = new JFormattedTextField(NumberFormat.getIntegerInstance());
-		templatestf.setText("1");
+		templatestf.setValue(1);
 		templatestf.setColumns(2);
 		add(templatestf, XmippWindowUtil.getConstraints(constraints, 1, 3, 1));
 

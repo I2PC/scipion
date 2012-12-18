@@ -304,9 +304,10 @@ void ML2DBaseProgram::defineHiddenParams(XmippProgram *prog)
 
 FileName getIterExtraPath(const FileName &fn_root, int iter, bool makePath)
 {
-  FileName fn = formatString("%s_extra/iter%03d/", fn_root.c_str(), iter);
+  FileName fn = formatString("%sextra/iter%03d/", fn_root.c_str(), iter);
   if (makePath)
     fn.makePath();
+  fn += "iter_";
   return fn;
 }
 

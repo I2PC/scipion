@@ -18,24 +18,29 @@ class ProtRotSpectra(XmippProtocol):
         self.Import = 'from protocol_rotspectra import *'    
        
     def defineSteps(self):
+        self.insertStep('createDir',path=self.ExtraDir)
         self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InSelFile,dirDest=self.WorkingDir)
-        self.Db.insertStep('findCenter', [join(self.WorkingDir, "center2d_center.xmd")],
+        self.Db.insertStep('findCenter', [join(self.ExtraDir, "center2d_center.xmd")],
                            HowCenter=self.HowCenter,
-                           Selfile=self.InSelFile, WorkingDir=self.WorkingDir,
+                           Selfile=self.InSelFile, ExtraDir=self.ExtraDir,
                            SpectraInnerRadius=self.SpectraInnerRadius,
                            SpectraOuterRadius=self.SpectraOuterRadius)
-        self.Db.insertStep('calculateSpectra', [join(self.WorkingDir, "rotSpectra.xmd")],
-                           Selfile=self.InSelFile, WorkingDir=self.WorkingDir,
+        self.Db.insertStep('calculateSpectra', [join(self.ExtraDir, "rotSpectra.xmd")],
+                           Selfile=self.InSelFile, ExtraDir=self.ExtraDir,
                            SpectraInnerRadius=self.SpectraInnerRadius,
                            SpectraOuterRadius=self.SpectraOuterRadius,
                            SpectraLowHarmonic=self.SpectraLowHarmonic,
                            SpectraHighHarmonic=self.SpectraHighHarmonic)
-        self.Db.insertStep('kerdensom', [self.workingDirPath("results_vectors.xmd"),
-                                        self.workingDirPath("results_classes.xmd"),
-                                        self.workingDirPath("results_images.xmd")],
-                           WorkingDir=self.WorkingDir, SomXdim=self.SomXdim, SomYdim=self.SomYdim,
+        self.Db.insertStep('kerdensom', [self.extraPath("kerdensom_vectors.xmd"),
+                                        self.extraPath("kerdensom_classes.xmd"),
+                                        self.extraPath("kerdensom_images.xmd")],
+                           ExtraDir=self.ExtraDir, SomXdim=self.SomXdim, SomYdim=self.SomYdim,
                            SomReg0=self.SomReg0, SomReg1=self.SomReg1, SomSteps=self.SomSteps,
                            KerdensomExtraCommand=self.KerdensomExtraCommand)
+        fnClasses=self.workingDirPath('classes.xmd')
+        self.Db.insertStep('createLink',verifyfiles=[fnClasses],source=self.extraPath("kerdensom_classes.xmd"),dest=fnClasses)
+        fnImages=self.workingDirPath('images.xmd')
+        self.Db.insertStep('createLink',verifyfiles=[fnImages],source=self.extraPath("kerdensom_images.xmd"),dest=fnImages)
 
     def validate(self):
         errors = []
@@ -58,9 +63,9 @@ class ProtRotSpectra(XmippProtocol):
         return message
     
     def visualize(self):
-        runShowJ("classes@%s" % self.workingDirPath("results_classes.xmd"), extraParams="--mode rotspectra --columns %d" % self.SomXdim)
+        runShowJ("classes@%s" % self.extraPath("kerdensom_classes.xmd"), extraParams="--mode rotspectra --columns %d" % self.SomXdim)
   
-def findCenter(log, HowCenter, Selfile, WorkingDir, SpectraInnerRadius, SpectraOuterRadius):
+def findCenter(log, HowCenter, Selfile, ExtraDir, SpectraInnerRadius, SpectraOuterRadius):
     if HowCenter == 'Minimize first harmonic':
         if SpectraOuterRadius + 20 > 100:
             R3 = SpectraOuterRadius + (100 - SpectraOuterRadius) / 2
@@ -70,7 +75,7 @@ def findCenter(log, HowCenter, Selfile, WorkingDir, SpectraInnerRadius, SpectraO
             R4 = SpectraOuterRadius + 20
         runJob(log, 'xmipp_image_find_center',
                 '-i ' + Selfile + \
-                ' --oroot ' + WorkingDir + "/center2d" + \
+                ' --oroot ' + ExtraDir + "/center2d" + \
                 ' --r1 ' + str(SpectraInnerRadius) + \
                 ' --r2 ' + str(SpectraOuterRadius) + \
                 ' --r3 ' + str(R3) + ' --r4 ' + str(R4))
@@ -81,18 +86,18 @@ def findCenter(log, HowCenter, Selfile, WorkingDir, SpectraInnerRadius, SpectraO
         id = MD.addObject()
         MD.setValue(MDL_X, float(dims[0] / 2), id)
         MD.setValue(MDL_Y, float(dims[1] / 2), id)
-        MD.write(join(WorkingDir, "center2d_center.xmd"))
+        MD.write(join(ExtraDir, "center2d_center.xmd"))
 
-def calculateSpectra(log, Selfile, WorkingDir, SpectraInnerRadius, SpectraOuterRadius,
+def calculateSpectra(log, Selfile, ExtraDir, SpectraInnerRadius, SpectraOuterRadius,
                      SpectraLowHarmonic, SpectraHighHarmonic):
-    MD = MetaData(join(WorkingDir, "center2d_center.xmd"))
+    MD = MetaData(join(ExtraDir, "center2d_center.xmd"))
     id = MD.firstObject()
     xOffset=MD.getValue(MDL_X, id)
     yOffset=MD.getValue(MDL_Y, id)
     
     runJob(log, "xmipp_image_rotational_spectra",
          ' -i ' + Selfile + \
-         ' -o ' + join(WorkingDir,"rotSpectra.xmd") + \
+         ' -o ' + join(ExtraDir,"rotSpectra.xmd") + \
          ' --x0 ' + str(xOffset) + \
          ' --y0 ' + str(yOffset) + \
          ' --r1 ' + str(SpectraInnerRadius) + \
@@ -100,13 +105,13 @@ def calculateSpectra(log, Selfile, WorkingDir, SpectraInnerRadius, SpectraOuterR
          ' --low ' + str(SpectraLowHarmonic) + \
          ' --high ' + str(SpectraHighHarmonic))
 
-def kerdensom(log,WorkingDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomExtraCommand):
-    args='-i '+join(WorkingDir,"rotSpectra.xmd")+\
-         ' --oroot '+join(WorkingDir,"results")+\
+def kerdensom(log,ExtraDir,SomXdim,SomYdim,SomReg0,SomReg1,SomSteps,KerdensomExtraCommand):
+    args='-i '+join(ExtraDir,"rotSpectra.xmd")+\
+         ' --oroot '+join(ExtraDir,"kerdensom")+\
          ' --xdim ' + str(SomXdim) + \
          ' --ydim ' + str(SomYdim) + \
          ' --deterministic_annealing %f %f %f'%(SomSteps,SomReg0,SomReg1) + \
          ' '+ str(KerdensomExtraCommand)
     runJob(log,"xmipp_classify_kerdensom",args)
-    deleteFiles(log, [os.path.join(WorkingDir,"rotSpectra.xmd"),os.path.join(WorkingDir,"rotSpectra.vec")], True)
+    deleteFiles(log, [os.path.join(ExtraDir,"rotSpectra.xmd"),os.path.join(ExtraDir,"rotSpectra.vec")], True)
     

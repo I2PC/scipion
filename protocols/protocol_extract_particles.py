@@ -10,6 +10,7 @@
 # Author: Carlos Oscar, August 2011
 #
 from protlib_base import *
+from protlib_particles import *
 from xmipp import MetaData, AGGR_AVG, LEFT, MD_APPEND, MDL_IMAGE, MDL_CTF_MODEL, MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED, \
                   MDL_MICROGRAPH_ORIGINAL, MDL_MICROGRAPH_TILTED_ORIGINAL, MDL_ZSCORE, MDL_IMAGE_TILTED, MDL_ENABLED, \
                   MDL_SAMPLINGRATE, MDL_SAMPLINGRATE_ORIGINAL, getBlocksInMetaDataFile
@@ -19,26 +20,13 @@ from protlib_utils import runJob, printLog
 from protlib_filesystem import createLink, removeFilenameExt
 from protlib_gui_ext import showError
 
-# The dictionary with specific filename templates 
-# is defined here to allow use of it outside the protocol
-_mic_block = 'mic_%(micName)s'
-_templateDict = {
-        # This templates are relative to a micrographDir
-        'mic_block': _mic_block,
-        'mic_block_fn': _mic_block+'@%(fn)s',
-        'extract_list':  join('%(ExtraDir)s', "%(family)s_extract_list.xmd")      
-        }
-
-def _getFilename(key, **args):
-    return _templateDict[key] % args
-
 class DownsamplingMode:
     SameAsPicking, SameAsOriginal, NewDownsample = range(3)
     
-class ProtExtractParticles(XmippProtocol):
+class ProtExtractParticles(ProtParticlesBase):
     def __init__(self, scriptname, project):
-        XmippProtocol.__init__(self, protDict.extract_particles.name, scriptname, project)
-        self.Import = 'from protocol_extract_particles import *'
+        ProtParticlesBase.__init__(self, protDict.extract_particles.name, scriptname, project)
+        self.Import += 'from protocol_extract_particles import *'
         # Take some parameter from previous picking protocol run
         self.setPreviousRun(self.PickingRun)
         self.pickingDir = self.PrevRun.WorkingDir
@@ -46,10 +34,18 @@ class ProtExtractParticles(XmippProtocol):
         self.inputProperty('TiltPairs', 'MicrographsMd')
         self.micrographs = self.getEquivalentFilename(self.PrevRun, self.MicrographsMd)
         
+    def createFilenameTemplates(self):
+        _mic_block = 'mic_%(Micrograph)s'
+        return {
+            'mic_block': _mic_block,
+            'mic_block_fn': _mic_block+'@%(ExtractList)s'
+            }
+    
     def setSamplingMode(self):
         md = MetaData(self.PrevRun.getFilename('acquisition'))
         objId = md.firstObject()
         self.TsOriginal= self.TsInput = md.getValue(MDL_SAMPLINGRATE, objId)        
+        
         if md.containsLabel(MDL_SAMPLINGRATE_ORIGINAL):
             self.TsOriginal = md.getValue(MDL_SAMPLINGRATE_ORIGINAL, objId)
 
@@ -60,9 +56,9 @@ class ProtExtractParticles(XmippProtocol):
         else:
             self.TsFinal = self.TsOriginal*self.DownsampleFactor
         
-        if abs(self.TsFinal-self.TsInput)<0.001:
+        if abs(self.TsFinal-self.TsInput) < 0.001:
             self.downsamplingMode=DownsamplingMode.SameAsPicking
-        elif abs(self.TsFinal-self.TsOriginal)<0.001:
+        elif abs(self.TsFinal-self.TsOriginal) < 0.001:
             self.downsamplingMode=DownsamplingMode.SameAsOriginal
         else:
             self.downsamplingMode=DownsamplingMode.NewDownsample
@@ -81,14 +77,14 @@ class ProtExtractParticles(XmippProtocol):
         md = MetaData(self.MicrographsMd)
         self.containsCTF = md.containsLabel(MDL_CTF_MODEL)
         # Create or look for the extract list
-        destFnExtractList = _getFilename('extract_list', ExtraDir=self.ExtraDir, family=self.Family)
+        destFnExtractList = self.getFilename('extract_list')
         if self.TiltPairs:
             self.insertStep("createExtractListTiltPairs", family=self.Family,
                                fnMicrographs=self.MicrographsMd, pickingDir=self.pickingDir,
                                fnExtractList=destFnExtractList)
             micrographs = self.createBlocksInExtractFile(self.MicrographsMd)
         else:
-            srcFnExtractList = self.PrevRun.getFilename('extract_list', family=self.Family)
+            srcFnExtractList = self.PrevRun.getFilename('extract_list')
             if exists(srcFnExtractList):
                 self.insertCopyFile(srcFnExtractList, destFnExtractList)
                 micrographs = getBlocksInMetaDataFile(srcFnExtractList)
@@ -133,7 +129,6 @@ class ProtExtractParticles(XmippProtocol):
                 micrographToExtract=micrographFlipped
             
             # Actually extract
-            fnOut = self.workingDirPath(micrographName + ".stk")
             parent_id = self.insertParallelStep('extractParticles', parent_step_id=parent_id,
                                   ExtraDir=self.ExtraDir,
                                   micrographName=micrographName,ctf=ctf,
@@ -141,7 +136,8 @@ class ProtExtractParticles(XmippProtocol):
                                   micrographToExtract=micrographToExtract,
                                   TsFinal=self.TsFinal, TsInput=self.TsInput, downsamplingMode=self.downsamplingMode,
                                   fnExtractList=destFnExtractList,particleSize=self.ParticleSize,
-                                  doFlip=self.DoFlip,doNorm=self.DoNorm,doInvert=self.DoInvert,
+                                  doFlip=self.DoFlip,doInvert=self.DoInvert,
+                                  doNorm=self.DoNorm, normType=self.NormType,
                                   bgRadius=self.BackGroundRadius)
             if self.DoRemoveDust:
                 self.insertParallelStep('deleteFile', parent_step_id=parent_id,filename=micrographNoDust,verbose=True)
@@ -150,16 +146,15 @@ class ProtExtractParticles(XmippProtocol):
             if self.DoFlip:
                 self.insertParallelStep('deleteFile', parent_step_id=parent_id,filename=micrographFlipped,verbose=True)
 
-        # Gather results
+        # Create results metadata
+        ImagesFn = self.getFilename('images')
         if self.TiltPairs:
-            self.insertStep('gatherTiltPairSelfiles',family=self.Family,
-                               WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, fnMicrographs=self.micrographs)
+            self.insertStep('createTiltPairsImagesMd', verifyfiles=[ImagesFn], WorkingDir=self.WorkingDir, ExtraDir=self.ExtraDir, 
+                            fnMicrographs=self.micrographs)
         else:
-            self.insertStep('gatherSelfiles',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,family=self.Family)
-            selfileRoot=self.workingDirPath(self.Family)
-            self.insertStep('sortImagesInFamily',selfileRoot=selfileRoot)
-            self.insertStep('avgZscore',WorkingDir=self.WorkingDir,family=self.Family,
-                               micrographSelfile=self.micrographs)
+            self.insertStep('createImagesMd', verifyfiles=[ImagesFn], ImagesFn=ImagesFn, ExtraDir=self.ExtraDir)
+            self.insertStep('sortImages',ImagesFn=ImagesFn)
+            self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
 
     def validate(self):
         errors = []
@@ -180,89 +175,63 @@ class ProtExtractParticles(XmippProtocol):
 
     def summary(self):
         self.setSamplingMode()
-        message=[]
-        familyFn = self.getFilename("family", family=self.Family)
+        message = ["Picking run: [%s]" % self.pickingDir]
         if self.TiltPairs:
-            part1 = "tilt pairs"
-            part2 = "particle pairs"
+            part1 = "Tilt pairs"
+            part2 = "Particle pairs"
         else:
-            part1 = "family <%s>" % self.Family
-            part2 = "particles"
-        message.append("Picking %s with size  <%d> from [%s]" % (part1, self.ParticleSize,self.pickingDir))
+            part1 = "Family: <%s>" % self.Family
+            part2 = "Particles"
+        message.append("%s with size  <%d>" % (part1, self.ParticleSize))
 
-        msg="Extraction sampling rate <%3.2f> (" % (self.TsFinal)
+        msg = "Sampling rate: <%3.2f> (" % (self.TsFinal)
         if self.downsamplingMode==DownsamplingMode.SameAsPicking:
-            msg+="same as the one used in picking)"
+            msg += "same as the one used in picking)"
         elif self.downsamplingMode==DownsamplingMode.SameAsOriginal:
-            msg+="same as the original micrographs)"
+            msg += "same as the original micrographs)"
         else:
-            msg+="new sampling)"
+            msg += "different sampling)"
         message.append(msg)
     
-        if exists(familyFn):
-            md = MetaData(familyFn)
-            message.append("%d %s extracted" % (md.size(), part2))
+        fn = self.getFilename("images")
+        if exists(fn):
+            md = MetaData(fn)
+            message.append("%s extracted: <%d>" % (part2, md.size()))
         return message
 
+    def checkMicrograph(self, micrograph, md, objId, label1, label2, allowCTF):
+        micFullName = md.getValue(label1, objId)
+        micName = removeBasenameExt(micFullName)
+        if micrograph == micName:
+            micOriginalName = micFullName
+            ctfFile = None
+            if md.containsLabel(label2):
+                micOriginalName = md.getValue(label2, objId)            
+            if self.containsCTF and allowCTF:
+                ctfFile = md.getValue(MDL_CTF_MODEL, objId)           
+            return (micFullName, micOriginalName, ctfFile)
+        return None
+        
     def getMicrographInfo(self, micrograph, md):
         for objId in md:
-            micFullName = md.getValue(MDL_MICROGRAPH,objId)
-            micName = removeBasenameExt(micFullName)
-            if micrograph==micName:
-                if md.containsLabel(MDL_MICROGRAPH_ORIGINAL):
-                    micOriginalName = md.getValue(MDL_MICROGRAPH_ORIGINAL,objId)
-                elif md.containsLabel(MDL_MICROGRAPH):
-                    micOriginalName = md.getValue(MDL_MICROGRAPH,objId)
-                else:
-                    micOriginalName = None
-                if self.containsCTF:
-                    ctfFile = md.getValue(MDL_CTF_MODEL, objId)
-                else:
-                    ctfFile = None
-                return (micFullName, micOriginalName, ctfFile)
+            result = self.checkMicrograph(micrograph, md, objId, MDL_MICROGRAPH, 
+                                          MDL_MICROGRAPH_ORIGINAL, True)
+            if not result is None:
+                return result 
+            
             if self.TiltPairs:
-                micFullName = md.getValue(MDL_MICROGRAPH_TILTED, objId)
-                micName = removeBasenameExt(micFullName)
-                if micrograph == micName:
-                    if md.containsLabel(MDL_MICROGRAPH_TILTED_ORIGINAL):
-                        micOriginalName=md.getValue(MDL_MICROGRAPH_TILTED_ORIGINAL,objId)
-                    elif md.containsLabel(MDL_MICROGRAPH_TILTED):
-                        micOriginalName=md.getValue(MDL_MICROGRAPH_TILTED, objId)
-                    else:
-                        micOriginalName=None
-                    return (micFullName, micOriginalName, None)
+                result = self.checkMicrograph(micrograph, md, objId, MDL_MICROGRAPH_TILTED, 
+                                          MDL_MICROGRAPH_TILTED_ORIGINAL, True)
+                if not result is None:
+                    return result               
 
-    def visualize(self):
-        selfile = self.getFilename("family", family=self.Family)
-        if not exists(selfile):
-            showError("Error", "There is no result yet")
-        else:
-            from protlib_utils import runShowJ
-            if self.TiltPairs:
-                runShowJ(selfile,extraParams="--mode metadata --render first")
-            else:
-                runShowJ(selfile)
-                
-            selfileRoot = self.workingDirPath(self.Family)
-            fnMD = selfileRoot+".xmd"
-            if exists(fnMD):
-                from protlib_gui_figure import XmippPlotter
-                from xmipp import MDL_ZSCORE
-                MD=MetaData(fnMD)
-                if MD.containsLabel(MDL_ZSCORE):
-                    #MD.sort(MDL_ZSCORE)
-                    xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-                    xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                    xplotter.plotMd(MD, False, mdLabelY=MDL_ZSCORE)
-                    xplotter.show()
-    
     def createBlocksInExtractFile(self,fnMicrographsSel):
         md = MetaData(fnMicrographsSel)
         blocks = []
         tiltPairs = md.containsLabel(MDL_MICROGRAPH_TILTED)
         def addBlock(label, objId): 
             micName = removeBasenameExt(md.getValue(label, objId)) 
-            blocks.append(_getFilename('mic_block', micName=micName))
+            blocks.append(getProtocolFilename('mic_block', Micrograph=micName))
         for objId in md:
             addBlock(MDL_MICROGRAPH, objId)            
             if tiltPairs:
@@ -281,6 +250,10 @@ def updateSampling(log, SamplingMd, TsOriginal, Ts, TsMode):
     md.setValue(MDL_SAMPLINGRATE, Ts, objId)
     md.write(SamplingMd)
 
+def getMicBlockFilename(micrograph, extractList):
+    '''Shortcut to getProtocolFilename('mic_block_fn'...)'''
+    return getProtocolFilename('mic_block_fn', Micrograph=micrograph, ExtractList=extractList)
+    
 def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
     md=MetaData(fnMicrographsSel)
     mdpos=MetaData()
@@ -288,8 +261,8 @@ def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
     for objId in md:
         micName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         
-        fnManual = join(pickingDir, micName + ".pos")
-        fnAuto1 = join(pickingDir, micName + "_auto.pos")
+        fnManual = join(pickingDir, "extra", micName + ".pos")
+        fnAuto1 = join(pickingDir, "extra", micName + "_auto.pos")
         
         mdpos.clear()
         if exists(fnManual):
@@ -306,7 +279,7 @@ def createExtractList(log,Family,fnMicrographsSel,pickingDir,fnExtractList):
             except:
                 pass
         # Append alphanumeric prefix to help identifying the block 
-        fn = _getFilename('mic_block_fn', micName=micName, fn=fnExtractList)
+        fn = getMicBlockFilename(micName, fnExtractList)
         mdpos.write(fn, MD_APPEND)
 
 def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtractList):
@@ -317,8 +290,8 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
         umicName = removeBasenameExt(md.getValue(MDL_MICROGRAPH, objId))
         tmicName =removeBasenameExt(md.getValue(MDL_MICROGRAPH_TILTED, objId))
         
-        fnUntilted = join(pickingDir,umicName + ".pos")
-        fnTilted = join(pickingDir,tmicName + ".pos")
+        fnUntilted = join(pickingDir,"extra",umicName + ".pos")
+        fnTilted = join(pickingDir,"extra",tmicName + ".pos")
 
         mdUntiltedPos.clear()
         mdTiltedPos.clear()
@@ -329,17 +302,17 @@ def createExtractListTiltPairs(log, family, fnMicrographs, pickingDir, fnExtract
             except:
                 pass
         # Append alphanumeric prefix to help identifying the block 
-        fn = _getFilename('mic_block_fn', micName=umicName, fn=fnExtractList)
+        fn = getMicBlockFilename(umicName, fnExtractList)
         mdUntiltedPos.write(fn, MD_APPEND)
-        fn =_getFilename('mic_block_fn', micName=tmicName, fn=fnExtractList)
+        fn = getMicBlockFilename(tmicName, fnExtractList)
         mdTiltedPos.write(fn, MD_APPEND)
 
 def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, originalMicrograph, micrographToExtract,
                      TsFinal, TsInput, downsamplingMode,
-                     fnExtractList, particleSize, doFlip, doNorm, doInvert, bgRadius):
+                     fnExtractList, particleSize, doFlip, doInvert, doNorm, normType, bgRadius):
     
     
-    fnBlock = _getFilename('mic_block_fn', micName=micrographName, fn=fnExtractList)
+    fnBlock = getMicBlockFilename(micrographName, fnExtractList)
     md = MetaData(fnBlock)
     printLog( 'Metadata block: %s' % fnBlock, log)
     if md.isEmpty():
@@ -349,21 +322,15 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
     
     # Extract 
     rootname = join(ExtraDir, micrographName)
-    arguments="-i "+micrographToExtract+" --pos "+fnBlock+" -o "+rootname+" --Xdim "+str(particleSize)
+    arguments="-i %(micrographToExtract)s --pos %(fnBlock)s -o %(rootname)s --Xdim %(particleSize)d" % locals()
     if abs(TsFinal-TsInput)>0.001:
         arguments+=" --downsampling "+str(TsFinal/TsInput)
     if doInvert:
         arguments += " --invert"
-    try:
-        runJob(log,"xmipp_micrograph_scissor", arguments)
-    except OSError, e:
-       print ("Execution failed %s, command: %s" % (e, 'xmipp_micrograph_scissor'))
+    runJob(log,"xmipp_micrograph_scissor", arguments)
     # Normalize 
     if doNorm:
-        if bgRadius == 0:
-            bgRadius = int(particleSize/2)
-        arguments = "-i "+rootname+'.stk --method Ramp --background circle '+str(bgRadius)
-        runJob(log,"xmipp_transform_normalize",arguments)
+        runNormalize(log, rootname+'.stk',normType, bgRadius, 1)        
 
     # Substitute the micrograph name if it comes from the flipped version
     # Add information about the ctf if available
@@ -383,17 +350,17 @@ def extractParticles(log,ExtraDir,micrographName, ctf, fullMicrographName, origi
             md.setValueCol(MDL_CTF_MODEL,ctf)
         md.write(selfile)
 
-def gatherSelfiles(log, WorkingDir, ExtraDir, family):
+def createImagesMd(log, ImagesFn, ExtraDir):
     stackFiles = glob.glob(join(ExtraDir,"*.stk"))
     stackFiles.sort()
-    familySelfile=MetaData()
-    for stackFile in stackFiles:
-        selfile=stackFile.replace(".stk",".xmd")
-        md=MetaData(selfile)
-        familySelfile.unionAll(md)
-    familySelfile.write(join(WorkingDir,family + ".xmd"))
+    imagesMd = MetaData()
+    for stack in stackFiles:
+        fn = stack.replace(".stk",".xmd")
+        md = MetaData(fn)
+        imagesMd.unionAll(md)
+    imagesMd.write(ImagesFn)
 
-def gatherTiltPairSelfiles(log, family, WorkingDir, ExtraDir, fnMicrographs):
+def createTiltPairsImagesMd(log, WorkingDir, ExtraDir, fnMicrographs):
     mdPairs = MetaData(fnMicrographs)
     mdUntilted = MetaData()
     mdTilted = MetaData()
@@ -406,25 +373,16 @@ def gatherTiltPairSelfiles(log, family, WorkingDir, ExtraDir, fnMicrographs):
             tmicName = removeBasenameExt(mdPairs.getValue(MDL_MICROGRAPH_TILTED,objId))
             mdTilted.unionAll(MetaData(join(ExtraDir, tmicName + ".xmd")))
         
-    mdUntilted.write(join(WorkingDir, "%s_untilted.xmd" % family))
-    mdTilted.write(join(WorkingDir, "%s_tilted.xmd" % family))
-
+    fn = getImagesFilename(WorkingDir)    
+    mdUntilted.write(getProtocolFilename('images_untilted', WorkingDir=WorkingDir))
+    mdTilted.write(getProtocolFilename('images_tilted', WorkingDir=WorkingDir))
     mdTiltedPairs = MetaData()
     mdTiltedPairs.setColumnValues(MDL_IMAGE, mdUntilted.getColumnValues(MDL_IMAGE))
     mdTiltedPairs.setColumnValues(MDL_IMAGE_TILTED, mdTilted.getColumnValues(MDL_IMAGE))
-    mdTiltedPairs.write(join(WorkingDir,"%s.xmd" % family))
-
-def sortImagesInFamily(log, selfileRoot):
-    fn = selfileRoot + '.xmd'
-    md = MetaData(fn)
-    if not md.isEmpty():
-        runJob(log, "xmipp_image_sort_by_statistics","-i %(fn)s --multivariate --addToInput" % locals())
-        md.read(fn) # Should have ZScore label after runJob
-        md.sort(MDL_ZSCORE)
-        md.write(fn)
+    mdTiltedPairs.write(fn)
  
-def avgZscore(log,WorkingDir,family,micrographSelfile):
-    allParticles = MetaData(join(WorkingDir, family + ".xmd"))
+def avgZscore(log,WorkingDir,micrographSelfile):
+    allParticles = MetaData(getImagesFilename(WorkingDir))
     mdavgZscore = MetaData()
     mdavgZscore.aggregate(allParticles, AGGR_AVG, MDL_MICROGRAPH, MDL_ZSCORE, MDL_ZSCORE)
     oldMicrographsSel = MetaData(micrographSelfile)
