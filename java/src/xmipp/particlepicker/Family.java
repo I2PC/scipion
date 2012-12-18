@@ -148,7 +148,7 @@ public class Family {
 
 	public void setTemplatesNumber(int num) {
 		if(num <= 0)
-			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must be bigger than one"));
+			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must be at least one"));
 		this.templatesNumber = num;
 		initTemplates();
 	}

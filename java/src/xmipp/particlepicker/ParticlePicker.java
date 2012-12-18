@@ -24,6 +24,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.XmippMessage;
 
 public abstract class ParticlePicker {
 
@@ -234,6 +235,7 @@ public abstract class ParticlePicker {
 		String file = familiesfile;
 		if (!new File(file).exists()) {
 			families.add(Family.getDefaultFamily());
+			persistFamilies();
 			return;
 		}
 
@@ -474,6 +476,8 @@ public abstract class ParticlePicker {
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
+			if(!containsBlock(path, family.getName()))
+				throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
 			md.read(String.format("%s@%s", family.getName(), path));
 			break;
 		case Eman:
