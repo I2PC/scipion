@@ -144,7 +144,6 @@ public class Family {
 
 	public void setTemplatesNumber(int num) {
 		if(num <= 0)
-
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 
 		this.templatesNumber = num;

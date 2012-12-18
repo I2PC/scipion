@@ -1,13 +1,7 @@
 package xmipp.particlepicker.training.model;
 
-import ij.ImagePlus;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.jni.ImageGeneric;
-import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.utils.XmippMessage;
@@ -44,6 +38,7 @@ public class MicrographFamilyData
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state)
 	{
 		this(micrograph, family, state, ParticlePicker.defAutopickPercent);
+
 	}
 	
 	

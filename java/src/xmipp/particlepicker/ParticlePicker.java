@@ -41,8 +41,9 @@ public abstract class ParticlePicker {
 	protected String command;
 	protected Family family;
 	protected String configfile;
-	private int autopickpercent;
-	
+
+	public static final int defAutoPickPercent = 90;
+	private int autopickpercent = defAutoPickPercent;
 
 	public int getSize() {
 		return family.getSize();
@@ -96,6 +97,7 @@ public abstract class ParticlePicker {
 		this.selfile = selfile;
 		this.outputdir = outputdir;
 		this.mode = mode;
+		
 		initializeFilters();
 		loadEmptyMicrographs();
 		loadConfig();
@@ -430,8 +432,7 @@ public abstract class ParticlePicker {
 				setMicrograph(getMicrograph(mname));
 				if(hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				else
-					autopickpercent = defAutopickPercent;//compatibility with previous projects
+
 			}
 			md.destroy();
 		} catch (Exception e) {
