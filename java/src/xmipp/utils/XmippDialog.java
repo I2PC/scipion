@@ -198,6 +198,7 @@ public class XmippDialog extends JDialog implements ActionListener {
 	public static boolean showInfo(JFrame parent, String message) {
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "INFO",
 				message, "info.gif");
+		dlg.btnCancel.setVisible(false);
 		return dlg.showDialog();
 	}
 

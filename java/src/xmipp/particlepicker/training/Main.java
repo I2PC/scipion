@@ -45,6 +45,7 @@ class Main
 					String outputdir = myargs[1];
 					FamilyState mode;
 					String fname = null;
+					//mode is the third argument except if family is specified, when is fourth
 					if(myargs.length >= 3 && FamilyState.getFamilyState(myargs[2]) != null)
 						mode = FamilyState.getFamilyState(myargs[2]);
 					else
@@ -67,8 +68,8 @@ class Main
 
 					else if (mode == FamilyState.Review)
 					{
-						String reviewfile = myargs[3];
-						ppicker = (fname == null)? new ReviewParticlePicker(selfile, outputdir, reviewfile): new ReviewParticlePicker(selfile, outputdir, fname, reviewfile);
+						String reviewfile = myargs[4];
+						ppicker = new ReviewParticlePicker(selfile, outputdir, fname, reviewfile);
 					}
 					else if (mode == FamilyState.ReadOnly)
 						ppicker = new ReadOnlyParticlePicker(selfile, outputdir);

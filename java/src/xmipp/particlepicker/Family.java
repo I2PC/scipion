@@ -1,11 +1,6 @@
 package xmipp.particlepicker;
 
-import ij.ImagePlus;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-
 import java.awt.Color;
-import java.io.File;
 import java.lang.reflect.Field;
 
 import xmipp.jni.ImageGeneric;
@@ -58,11 +53,13 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
-		this.templatesNumber = templatesNumber;
-		initTemplates();
+		setTemplatesNumber(templatesNumber);
 	}
 
+
 	public void initTemplates() {
+		if(templatesNumber == 0)
+			return;
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
@@ -144,6 +141,8 @@ public class Family {
 	}
 
 	public void setTemplatesNumber(int num) {
+		if(num <= 0)
+			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Should have at least one template"));
 		this.templatesNumber = num;
 		initTemplates();
 	}

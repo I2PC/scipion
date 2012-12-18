@@ -195,9 +195,9 @@ void ProgConvImg::preProcess()
             /* It is stack if extension is stack compatible, or if --oroot is not passed
              * and there are more than one image. Same for volumes.
              * Firstly, we must check extensions, then stack and volume sizes.*/
-            if (fn_out.hasStackExtension())
+            if (( mdInSize > 1 || zdimOut > 1 ) && fn_out.hasStackExtension())
                 type = "stk";
-            else if (fn_out.hasVolumeExtension()) // if it is volume
+            else if (( mdInSize > 1 || zdimOut > 1 ) && fn_out.hasVolumeExtension()) // if it is volume
                 type = "vol";
             else if (mdInSize > 1)
                 type = "stk";

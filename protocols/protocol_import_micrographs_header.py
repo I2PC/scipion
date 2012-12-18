@@ -54,26 +54,24 @@ to create this metadata.
 """
 PairDescr = ""
 
-# Preprocess micrographs?
-"""Perform some preprocessing operations on micrographs. 
-If set to yes a new section will appear in the protocol window 
-displaying the possible options"""
-DoPreprocess = False
 
 # {expert} Check image corners for problems
 """After doing all the preprocess check that image borders have similar variance"""
 DoCheckBorders = True
 
-# {condition}(not DoPreprocess) Copy micrographs?
+# {condition} Copy micrographs?
 """ 
 Set to <True> if you want to copy micrographs from input
 folder to the protocol working directory
+If you do preprocessing this option will be ignored.
 """
 CopyMicrographs = False
 
 #------------------------------------------------------------------------------------------------
-# {condition}(DoPreprocess and not DoMerge){section} Preprocessing
+# {condition}{has_question}{section} Preprocess
 #------------------------------------------------------------------------------------------------
+# Preprocess micrographs?
+DoPreprocess = False
 
 # Crop borders?
 """ Crop a given amount of pixels from each border. """
@@ -124,7 +122,7 @@ Voltage = 200
 SphericalAberration = 2.26
 
 # {list}(From image, From scanner) Sampling rate mode
-SamplingRateMode="From image"
+SamplingRateMode = "From image"
 
 # {condition}(SamplingRateMode=="From image"){validate}(IsFloat) Sampling rate (A/pixel)
 SamplingRate = ""
