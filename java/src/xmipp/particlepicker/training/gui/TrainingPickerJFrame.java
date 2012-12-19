@@ -524,7 +524,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				String psd = getMicrograph().getPSD();
 				String ctf = getMicrograph().getCTF();
 				if(psd != null && ctf != null)
-					ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTF(), getMicrograph().getPSD());
+					ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
 				
 			}
 		});
