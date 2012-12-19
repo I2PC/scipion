@@ -19,6 +19,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import xmipp.ij.commons.ImagePlusLoader;
+import xmipp.ij.commons.XmippImageWindow;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
@@ -26,7 +29,8 @@ import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.XmippMessage;
 
-public abstract class ParticlePicker {
+public abstract class ParticlePicker
+{
 
 	protected String familiesfile;
 	protected String macrosfile;
@@ -45,59 +49,69 @@ public abstract class ParticlePicker {
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
 
-	public int getSize() {
+	public int getSize()
+	{
 		return family.getSize();
 	}
 
-	public Color getColor() {
+	public Color getColor()
+	{
 		return family.getColor();
 	}
 
-	public void setColor(Color color) {
+	public void setColor(Color color)
+	{
 		family.setColor(color);
 		persistFamilies();
 	}
 
-	public void setSize(int size) {
+	public void setSize(int size)
+	{
 		family.setSize(size);
 		persistFamilies();
 	}
 
-	public Family getFamily() {
+	public Family getFamily()
+	{
 		return family;
 	}
 
-	public void setFamily(Family family) {
+	public void setFamily(Family family)
+	{
 		this.family = family;
 
 	}
 
-	public String getPosFileFromXmipp24Project(String projectdir, String mname) {
+	public String getPosFileFromXmipp24Project(String projectdir, String mname)
+	{
 		String suffix = ".raw.Common.pos";
 		return String.format("%1$s%2$sPreprocessing%2$s%3$s%2$s%3$s%4$s", projectdir, File.separator, mname, suffix);
 	}
 
-	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
+	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
+	{
 		this(selfile, outputdir, null, mode);
 
 	}
 
-	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
+	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
+	{
 		this.outputdir = outputdir;
 		this.familiesfile = getOutputPath("families.xmd");
 		configfile = getOutputPath("config.xmd");
 		this.families = new ArrayList<Family>();
 		loadFamilies();
-		if(fname == null)
+		if (fname == null)
 			family = families.get(0);
 		else
 			family = getFamily(fname);
-		if (family == null) throw new IllegalArgumentException("Invalid family " + fname);
+		if (family == null)
+			throw new IllegalArgumentException("Invalid family " + fname);
 
 		this.selfile = selfile;
 		this.outputdir = outputdir;
 		this.mode = mode;
-		
+
 		initializeFilters();
 		loadEmptyMicrographs();
 		loadConfig();
@@ -105,113 +119,142 @@ public abstract class ParticlePicker {
 
 	public abstract void loadEmptyMicrographs();
 
-	private void initializeFilters() {
+	private void initializeFilters()
+	{
 		this.macrosfile = getOutputPath("macros.xmd");
 		filters = new ArrayList<IJCommand>();
 		loadFilters();
 		Recorder.record = true;
 
 		// detecting if a command is thrown by ImageJ
-		Executer.addCommandListener(new CommandListener() {
-			public String commandExecuting(String command) {
+		Executer.addCommandListener(new CommandListener()
+		{
+			public String commandExecuting(String command)
+			{
 				ParticlePicker.this.command = command;
 				return command;
 
 			}
 		});
-		ImagePlus.addImageListener(new ImageListener() {
+		ImagePlus.addImageListener(new ImageListener()
+		{
 
 			@Override
-			public void imageUpdated(ImagePlus arg0) {
+			public void imageUpdated(ImagePlus arg0)
+			{
 				updateFilters();
 			}
 
 			@Override
-			public void imageOpened(ImagePlus arg0) {
+			public void imageOpened(ImagePlus arg0)
+			{
 
 			}
 
 			@Override
-			public void imageClosed(ImagePlus arg0) {
+			public void imageClosed(ImagePlus arg0)
+			{
 				// TODO Auto-generated method stub
 
 			}
 		});
 	}
 
-	private void updateFilters() {
-		if (command != null) {
+	private void updateFilters()
+	{
+		if (command != null)
+		{
 			String options = "";
-			if (Recorder.getCommandOptions() != null) options = Recorder.getCommandOptions();
+			if (Recorder.getCommandOptions() != null)
+				options = Recorder.getCommandOptions();
 			if (!isFilterSelected(command))
 				addFilter(command, options);
-			else if (!(options == null || options.equals(""))) for (IJCommand f : filters)
-				if (f.getCommand().equals(command)) f.setOptions(options);
+			else if (!(options == null || options.equals("")))
+				for (IJCommand f : filters)
+					if (f.getCommand().equals(command))
+						f.setOptions(options);
 			persistFilters();
 			command = null;
 
 		}
 	}
 
-	public String getMicrographsSelFile() {
+	public String getMicrographsSelFile()
+	{
 		return selfile;
 	}
 
-	public void addFilter(String command, String options) {
+	public void addFilter(String command, String options)
+	{
 		IJCommand f = new IJCommand(command, options);
 		filters.add(f);
 	}
 
-	public List<IJCommand> getFilters() {
+	public List<IJCommand> getFilters()
+	{
 		return filters;
 	}
 
-	public void setChanged(boolean changed) {
+	public void setChanged(boolean changed)
+	{
 		this.changed = changed;
 	}
 
-	public boolean isChanged() {
+	public boolean isChanged()
+	{
 		return changed;
 	}
 
-	public FamilyState getMode() {
+	public FamilyState getMode()
+	{
 		return mode;
 	}
 
-	public static Logger getLogger() {
-		try {
-			if (logger == null) {
+	public static Logger getLogger()
+	{
+		try
+		{
+			if (logger == null)
+			{
 				FileHandler fh = new FileHandler("PPicker.log", true);
 				fh.setFormatter(new SimpleFormatter());
 				logger = Logger.getLogger("PPickerLogger");
-//				logger.addHandler(fh);
+				// logger.addHandler(fh);
 			}
 			return logger;
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	public String getOutputPath(String file) {
+	public String getOutputPath(String file)
+	{
 		return outputdir + File.separator + file;
 	}
 
-	public String getOutputDir() {
+	public String getOutputDir()
+	{
 		return outputdir;
 	}
 
-	public List<Family> getFamilies() {
+	public List<Family> getFamilies()
+	{
 		return families;
 	}
 
-	public void persistFamilies() {
+	public void persistFamilies()
+	{
 		long id;
 		String file = familiesfile;
-		try {
+		try
+		{
 			MetaData md = new MetaData();
-			for (Family f : families) {
+			for (Family f : families)
+			{
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
 				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
@@ -223,23 +266,27 @@ public abstract class ParticlePicker {
 			}
 			md.write(file);
 			md.destroy();
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
 	public abstract List<? extends Micrograph> getMicrographs();
-	
+
 	public int getMicrographIndex()
 	{
 		return getMicrographs().indexOf(getMicrograph());
 	}
 
-	public void loadFamilies() {
+	public void loadFamilies()
+	{
 		families.clear();
 		String file = familiesfile;
-		if (!new File(file).exists()) {
+		if (!new File(file).exists())
+		{
 			families.add(Family.getDefaultFamily());
 			persistFamilies();
 			return;
@@ -247,45 +294,59 @@ public abstract class ParticlePicker {
 
 		Family family;
 		int rgb, size;
-		Integer templates = 1;
+		Integer templatesNumber = 1;
 		FamilyState state;
-		String name;
-		try {
+		String name, templatesfile;
+		ImageGeneric templates;
+
+		try
+		{
 			MetaData md = new MetaData(file);
 			long[] ids = md.findObjects();
-			for (long id : ids) {
+			for (long id : ids)
+			{
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
 
-				if(templates == null || templates <= 0)
-					templates = 1;//compatibility with previous projects
-				state = FamilyState.valueOf(md.getValueString(
-						MDLabel.MDL_PICKING_FAMILY_STATE, id));
+				if (templatesNumber == null || templatesNumber <= 0)
+					templatesNumber = 1;// compatibility with previous projects
+				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 
 				state = validateState(state);
-				// if (state == FamilyState.Supervised && this instanceof
-				// SupervisedParticlePicker)
-				// if (!new File(((SupervisedParticlePicker)
-				// this).getTrainingFile(name)).exists())
-				// throw new
-				// IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode",
-				// state));
-				family = new Family(name, new Color(rgb), size, state, templates, this);
+				templatesfile = getTemplatesFile(name);
+				if (new File(templatesfile).exists() )
+				{
+					templates = new ImageGeneric(templatesfile);
+					family = new Family(name, new Color(rgb), size, state, this, templates);
+					
+				}
+				else
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
 				families.add(family);
 			}
 			md.destroy();
-			if (families.size() == 0) throw new IllegalArgumentException(String.format("No families specified on %s", file));
-		} catch (Exception e) {
+			if (families.size() == 0)
+				throw new IllegalArgumentException(String.format("No families specified on %s", file));
+		}
+		catch (Exception e)
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
-	public FamilyState validateState(FamilyState state) {
+	public String getTemplatesFile(String f)
+	{
+		return getOutputPath(f + "_template.stk");
+	}
 
-		if (mode == FamilyState.Review && state != FamilyState.Review) {
+	public FamilyState validateState(FamilyState state)
+	{
+
+		if (mode == FamilyState.Review && state != FamilyState.Review)
+		{
 			setChanged(true);
 			return FamilyState.Review;
 		}
@@ -297,28 +358,36 @@ public abstract class ParticlePicker {
 
 	}// function validateState
 
-	public Family getFamily(String name) {
-		if(name == null)
+	public Family getFamily(String name)
+	{
+		if (name == null)
 			return null;
 		for (Family f : getFamilies())
-			if (f.getName().equalsIgnoreCase(name)) return f;
+			if (f.getName().equalsIgnoreCase(name))
+				return f;
 		return null;
 	}// function getFamily
 
-	public boolean existsFamilyName(String name) {
+	public boolean existsFamilyName(String name)
+	{
 		return getFamily(name) != null;
 	}// function existsFamilyName
 
-	protected boolean containsBlock(String file, String block) {
-		try {
+	protected boolean containsBlock(String file, String block)
+	{
+		try
+		{
 			return Arrays.asList(MetaData.getBlocksInMetaDataFile(file)).contains(block);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
 	}// function containsBlock
 
-	public void saveData() {
+	public void saveData()
+	{
 		persistFilters();
 		persistFamilies();
 	}// function saveData
@@ -327,17 +396,21 @@ public abstract class ParticlePicker {
 
 	public abstract int getManualParticlesNumber(Family f);
 
-	public void persistFilters() {
+	public void persistFilters()
+	{
 		long id;
 		String file = macrosfile;
-		if (filters.isEmpty()) {
+		if (filters.isEmpty())
+		{
 			new File(file).delete();
 			return;
 		}
 		String options;
-		try {
+		try
+		{
 			MetaData md = new MetaData();
-			for (IJCommand f : filters) {
+			for (IJCommand f : filters)
+			{
 				id = md.addObject();
 				md.setValueString(MDLabel.MDL_IMAGE1, f.getCommand().replace(' ', '_'), id);
 				options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
@@ -345,38 +418,49 @@ public abstract class ParticlePicker {
 			}
 			md.write(file);
 			md.destroy();
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}// function persistFilters
 
-	public void loadFilters() {
+	public void loadFilters()
+	{
 		filters.clear();
 		String file = macrosfile;
-		if (!new File(file).exists()) return;
+		if (!new File(file).exists())
+			return;
 
 		String command, options;
-		try {
+		try
+		{
 			MetaData md = new MetaData(file);
 			long[] ids = md.findObjects();
-			for (long id : ids) {
+			for (long id : ids)
+			{
 				command = md.getValueString(MDLabel.MDL_IMAGE1, id).replace('_', ' ');
 				options = md.getValueString(MDLabel.MDL_IMAGE2, id).replace('_', ' ');
-				if (options.equals("NULL")) options = "";
+				if (options.equals("NULL"))
+					options = "";
 				filters.add(new IJCommand(command, options));
 
 			}
 			md.destroy();
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}// function loadFilters
 
-	public Micrograph getMicrograph(String name) {
+	public Micrograph getMicrograph(String name)
+	{
 		for (Micrograph m : getMicrographs())
-			if (m.getName().equalsIgnoreCase(name)) return m;
+			if (m.getName().equalsIgnoreCase(name))
+				return m;
 		return null;
 	}
 
@@ -385,14 +469,16 @@ public abstract class ParticlePicker {
 		this.autopickpercent = autopickpercent;
 		System.out.println(autopickpercent);
 	}
-	
+
 	public int getAutopickpercent()
 	{
 		return autopickpercent;
 	}
-	
-	public void saveConfig() {
-		try {
+
+	public void saveConfig()
+	{
+		try
+		{
 			MetaData md;
 			String file = configfile;
 			md = new MetaData();
@@ -403,70 +489,86 @@ public abstract class ParticlePicker {
 			md.write(file);
 			md.destroy();
 
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
 
-	public void loadConfig() {
+	public void loadConfig()
+	{
 		String file = configfile;
-		if (!new File(file).exists()) {
+		if (!new File(file).exists())
+		{
 			family = families.get(0);
 			setMicrograph(getMicrographs().get(0));
-			
+
 			return;
 
 		}
 
 		String mname, fname;
-		try {
+		try
+		{
 			MetaData md = new MetaData(file);
 			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
-			for (long id : md.findObjects()) {
+			for (long id : md.findObjects())
+			{
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				family = getFamily(fname);
-				
+
 				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				setMicrograph(getMicrograph(mname));
-				if(hasautopercent)
+				if (hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
 
 			}
 			md.destroy();
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
 
-	void removeFilter(String filter) {
+	void removeFilter(String filter)
+	{
 		for (IJCommand f : filters)
-			if (f.getCommand().equals(filter)) {
+			if (f.getCommand().equals(filter))
+			{
 				filters.remove(f);
 				persistFilters();
 				break;
 			}
 	}// function removeFilter
 
-	public boolean isFilterSelected(String filter) {
+	public boolean isFilterSelected(String filter)
+	{
 		for (IJCommand f : filters)
-			if (f.getCommand().equals(filter)) return true;
+			if (f.getCommand().equals(filter))
+				return true;
 		return false;
 	}// function isFilterSelected
 
 	public abstract void exportParticles(String absolutePath);
 
-	public Format detectFormat(String path) {
+	public Format detectFormat(String path)
+	{
 		return Format.Unknown;
 	}
 
-	public Format detectFileFormat(String path) {
-		if (path.endsWith(".raw.Common.pos")) return Format.Xmipp24;
-		if (path.endsWith(".pos")) return Format.Xmipp30;
-		if (path.endsWith(".box")) return Format.Eman;
+	public Format detectFileFormat(String path)
+	{
+		if (path.endsWith(".raw.Common.pos"))
+			return Format.Xmipp24;
+		if (path.endsWith(".pos"))
+			return Format.Xmipp30;
+		if (path.endsWith(".box"))
+			return Format.Eman;
 		return Format.Unknown;
 	}
 
@@ -476,17 +578,21 @@ public abstract class ParticlePicker {
 	public abstract int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty);
 
 	/** Return the number of particles imported from a file */
-	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty) {
+	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty)
+	{
 
-		if (f == Format.Auto) f = detectFileFormat(path);
+		if (f == Format.Auto)
+			f = detectFileFormat(path);
 
-		switch (f) {
+		switch (f)
+		{
 		case Xmipp24:
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
-			if(!containsBlock(path, family.getName()))
-				throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
+			if (!containsBlock(path, family.getName()))
+				throw new IllegalArgumentException(
+						XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
 			md.read(String.format("%s@%s", family.getName(), path));
 			break;
 		case Eman:
@@ -497,23 +603,28 @@ public abstract class ParticlePicker {
 		}
 		int width = (int) (m.width / scale);// original width
 		int height = (int) (m.height / scale);// original height
-		if (invertx) md.operate(String.format("xcoor=%d-xcoor", width));
-		if (inverty) md.operate(String.format("ycoor=%d-ycoor", height));
-		if (scale != 1.f) md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
+		if (invertx)
+			md.operate(String.format("xcoor=%d-xcoor", width));
+		if (inverty)
+			md.operate(String.format("ycoor=%d-ycoor", height));
+		if (scale != 1.f)
+			md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
 
 	}// function importParticlesFromFile
-	
-	
 
-	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
+	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale)
+	{
 		String line = "";
 		// System.out.println("Importing from EMAN, file: " + file);
-		try {
+		try
+		{
 			BufferedReader reader = null;
 			reader = new BufferedReader(new FileReader(file));
 			line = reader.readLine();
 			reader.close();
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 		}
 		// inverty = true;
@@ -521,16 +632,21 @@ public abstract class ParticlePicker {
 
 		long fid = md.firstObject();
 		int size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, fid);
-		if (size > 0) family.setSize(Math.round(size * scale));
+		if (size > 0)
+			family.setSize(Math.round(size * scale));
 		int half = size / 2;
 		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
 
 	}// function fillParticlesMdFromEmanFile
 
-	public void runXmippProgram(String program, String args) {
-		try {
+	public void runXmippProgram(String program, String args)
+	{
+		try
+		{
 			Program.runByName(program, args);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
