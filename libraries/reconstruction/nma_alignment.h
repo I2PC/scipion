@@ -52,6 +52,9 @@ public:
     /// File zith a list of modes
     FileName fnModeList;
 
+    /// Output directory
+    FileName fnOutDir;
+
     /// Scaling factor to scale deformation amplitude
     double scale_defamp;
     
