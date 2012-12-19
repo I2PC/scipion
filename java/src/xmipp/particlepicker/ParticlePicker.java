@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
@@ -243,9 +244,10 @@ public abstract class ParticlePicker {
 
 		Family family;
 		int rgb, size;
-		Integer templates = 1;
+		Integer templatesNumber = 1;
 		FamilyState state;
-		String name;
+		String name, templatesfile;
+		ImageGeneric templates;
 		try {
 			MetaData md = new MetaData(file);
 			long[] ids = md.findObjects();
@@ -253,19 +255,21 @@ public abstract class ParticlePicker {
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
-				if( templates == null || templates == 0)
-					templates = 1;//for compatibility with previous projects
+				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				if( templatesNumber == null || templatesNumber == 0)
+					templatesNumber = 1;//for compatibility with previous projects
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
-				// if (state == FamilyState.Supervised && this instanceof
-				// SupervisedParticlePicker)
-				// if (!new File(((SupervisedParticlePicker)
-				// this).getTrainingFile(name)).exists())
-				// throw new
-				// IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode",
-				// state));
-				family = new Family(name, new Color(rgb), size, state, templates, this);
+				templatesfile = getTemplatesFile(name);
+				if (new File(templatesfile).exists() )
+				{
+					templates = new ImageGeneric(templatesfile);
+					family = new Family(name, new Color(rgb), size, state, this, templates);
+					
+				}
+				else
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
+				families.add(family);
 				families.add(family);
 			}
 			md.destroy();
@@ -274,6 +278,11 @@ public abstract class ParticlePicker {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+
+	private String getTemplatesFile(String name)
+	{
+		return getOutputPath(name + "_templates.stk");
 	}
 
 	public FamilyState validateState(FamilyState state) {
