@@ -24,6 +24,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.XmippMessage;
 
 public abstract class ParticlePicker {
 
@@ -39,8 +40,9 @@ public abstract class ParticlePicker {
 	protected String command;
 	protected Family family;
 	protected String configfile;
-	private int autopickpercent;
-
+	public static final int defAutoPickPercent = 90;
+	private int autopickpercent = defAutoPickPercent;
+	
 	public int getSize() {
 		return family.getSize();
 	}
@@ -93,6 +95,7 @@ public abstract class ParticlePicker {
 		this.selfile = selfile;
 		this.outputdir = outputdir;
 		this.mode = mode;
+		
 		initializeFilters();
 		loadEmptyMicrographs();
 		loadConfig();
@@ -234,6 +237,7 @@ public abstract class ParticlePicker {
 		String file = familiesfile;
 		if (!new File(file).exists()) {
 			families.add(Family.getDefaultFamily());
+			persistFamilies();
 			return;
 		}
 
@@ -420,8 +424,7 @@ public abstract class ParticlePicker {
 				setMicrograph(getMicrograph(mname));
 				if(hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				else
-					autopickpercent = 50;//compatibility with previous projects
+				
 			}
 			md.destroy();
 		} catch (Exception e) {
@@ -474,6 +477,8 @@ public abstract class ParticlePicker {
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
+			if(!containsBlock(path, family.getName()))
+				throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
 			md.read(String.format("%s@%s", family.getName(), path));
 			break;
 		case Eman:
