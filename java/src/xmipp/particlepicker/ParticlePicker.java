@@ -24,6 +24,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.XmippMessage;
 
 public abstract class ParticlePicker {
 
@@ -39,7 +40,9 @@ public abstract class ParticlePicker {
 	protected String command;
 	protected Family family;
 	protected String configfile;
-
+	public static final int defAutoPickPercent = 90;
+	private int autopickpercent = defAutoPickPercent;
+	
 	public int getSize() {
 		return family.getSize();
 	}
@@ -73,19 +76,8 @@ public abstract class ParticlePicker {
 	}
 
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
-		this.outputdir = outputdir;
-		this.familiesfile = getOutputPath("families.xmd");
-		configfile = getOutputPath("config.xmd");
+		this(selfile, outputdir, null, mode);
 
-		this.families = new ArrayList<Family>();
-		loadFamilies();
-		family = families.get(0);
-
-		this.selfile = selfile;
-		this.mode = mode;
-		initializeFilters();
-		loadEmptyMicrographs();
-		loadConfig();
 	}
 
 	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
@@ -94,12 +86,16 @@ public abstract class ParticlePicker {
 		configfile = getOutputPath("config.xmd");
 		this.families = new ArrayList<Family>();
 		loadFamilies();
-		family = getFamily(fname);
+		if(fname == null)
+			family = families.get(0);
+		else
+			family = getFamily(fname);
 		if (family == null) throw new IllegalArgumentException("Invalid family " + fname);
 
 		this.selfile = selfile;
 		this.outputdir = outputdir;
 		this.mode = mode;
+		
 		initializeFilters();
 		loadEmptyMicrographs();
 		loadConfig();
@@ -186,7 +182,7 @@ public abstract class ParticlePicker {
 				FileHandler fh = new FileHandler("PPicker.log", true);
 				fh.setFormatter(new SimpleFormatter());
 				logger = Logger.getLogger("PPickerLogger");
-				logger.addHandler(fh);
+//				logger.addHandler(fh);
 			}
 			return logger;
 		} catch (Exception e) {
@@ -218,8 +214,7 @@ public abstract class ParticlePicker {
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
 				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
-				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, 0, id);//saved for compatibility with future versions
-				//md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);//saved for compatibility with future versions
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
 			md.write(file);
@@ -242,11 +237,13 @@ public abstract class ParticlePicker {
 		String file = familiesfile;
 		if (!new File(file).exists()) {
 			families.add(Family.getDefaultFamily());
+			persistFamilies();
 			return;
 		}
 
 		Family family;
-		int rgb, size, templates = 1;
+		int rgb, size;
+		Integer templates = 1;
 		FamilyState state;
 		String name;
 		try {
@@ -256,8 +253,9 @@ public abstract class ParticlePicker {
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				// templates =
-				// md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				templates = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				if( templates == null || templates == 0)
+					templates = 1;//for compatibility with previous projects
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
 				// if (state == FamilyState.Supervised && this instanceof
@@ -293,6 +291,8 @@ public abstract class ParticlePicker {
 	}// function validateState
 
 	public Family getFamily(String name) {
+		if(name == null)
+			return null;
 		for (Family f : getFamilies())
 			if (f.getName().equalsIgnoreCase(name)) return f;
 		return null;
@@ -373,6 +373,17 @@ public abstract class ParticlePicker {
 		return null;
 	}
 
+	public void setAutopickpercent(int autopickpercent)
+	{
+		this.autopickpercent = autopickpercent;
+		System.out.println(autopickpercent);
+	}
+	
+	public int getAutopickpercent()
+	{
+		return autopickpercent;
+	}
+	
 	public void saveConfig() {
 		try {
 			MetaData md;
@@ -381,6 +392,7 @@ public abstract class ParticlePicker {
 			long id = md.addObject();
 			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
 			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 			md.write(file);
 			md.destroy();
 
@@ -402,6 +414,7 @@ public abstract class ParticlePicker {
 		String mname, fname;
 		try {
 			MetaData md = new MetaData(file);
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
 			for (long id : md.findObjects()) {
 
 				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
@@ -409,6 +422,9 @@ public abstract class ParticlePicker {
 				
 				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
 				setMicrograph(getMicrograph(mname));
+				if(hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+				
 			}
 			md.destroy();
 		} catch (Exception e) {
@@ -416,6 +432,7 @@ public abstract class ParticlePicker {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
 
 	void removeFilter(String filter) {
 		for (IJCommand f : filters)
@@ -460,6 +477,8 @@ public abstract class ParticlePicker {
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
+			if(!containsBlock(path, family.getName()))
+				throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
 			md.read(String.format("%s@%s", family.getName(), path));
 			break;
 		case Eman:
@@ -475,6 +494,8 @@ public abstract class ParticlePicker {
 		if (scale != 1.f) md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
 
 	}// function importParticlesFromFile
+	
+	
 
 	public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
 		String line = "";

@@ -25,10 +25,13 @@ import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.AutomaticParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.XmippWindowUtil;
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 
+	protected ImageWindow iw;
+	
 	private static boolean tongleSetSelected=false;
 	
 
@@ -78,6 +81,44 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		});
 	}
 	
+	public void display()
+	{
+		if(iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+			this.iw = new ImageWindow(getImage(), this);//if you dont provide iw, I init mine
+		iw.setTitle(getMicrograph().getName());
+		//iw.maximize();
+		iw.pack();
+	}
+	
+	public void display(float xlocation, float ylocation)
+	{
+		boolean relocate = (iw == null);
+			
+		display();
+		if(relocate)
+			XmippWindowUtil.setLocation(xlocation, ylocation, iw);
+	}
+	
+	
+	public ImageWindow getIw()
+	{
+		return iw;
+	}
+
+
+
+	public void setIw(ImageWindow iw)
+	{
+		this.iw = iw;
+	}
+
+
+
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
@@ -207,12 +248,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public void updateMicrographData()
 	{
 		Micrograph m = getMicrograph();
-		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
+		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());//for xmipp smooth filter
 		m.runImageJFilters(getFrame().getParticlePicker().getFilters());
-		ImageWindow iw = (ImageWindow) getParent();
-		iw.setImage(imp);
-		iw.updateImage(imp);
-		iw.setTitle(m.getName());
 	}
 
 	public abstract Micrograph getMicrograph();

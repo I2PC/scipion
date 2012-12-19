@@ -19,7 +19,7 @@
 #------------------------------------------------------------------------------------------------
 # {section} Rotational spectra parameters
 #------------------------------------------------------------------------------------------------
-# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Selfile with the input images:
+# {file}(images*.xmd){validate}(PathExists) Selfile with the input images:
 """ This selfile points to the stack or metadata containing your images 
 """
 InSelFile=''
@@ -48,20 +48,24 @@ SomXdim = 7
 # Y-dimension of the self-organizing map:
 SomYdim = 7
 # {expert} Initial regularization factor:
-""" The kerdenSOM algorithm anneals from an initial high regularization factor
-    to a final lower one, in a user-defined number of steps.
-    If the output map is too smooth, lower the regularization factors
-    If the output map is not organized, higher the regularization factors
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
+""" 
+The kerdenSOM algorithm anneals from an initial high regularization factor
+to a final lower one, in a user-defined number of steps.
+If the output map is too smooth, lower the regularization factors
+If the output map is not organized, higher the regularization factors
+See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/KerDenSOM]
 """
 SomReg0 = 1000
+
 # {expert} Final regularization factor:
 SomReg1 = 200
-# {expert} Number of steps to lower the regularization factor:
+
+# {expert} Steps to lower the regularization factor:
 SomSteps = 5
 # {expert} Additional kerdenSOM parameters:
-""" For a complete description 
-    See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/KerDenSOM
+""" 
+For a complete description 
+See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/KerDenSOM]
 """
 KerdensomExtraCommand = ''
 

@@ -34,10 +34,9 @@ sections = [
 ('Preprocessing', 
    [['Micrographs', 'import_micrographs','screen_micrographs','downsample_micrographs'], 
     ['Particle picking', 'particle_pick', 'particle_pick_supervised', 'particle_pick_auto'], 
-    ['Particles', 'extract_particles', 'import_particles', 'preprocess_particles', 'screen_particles']]),
+    ['Particles', 'extract_particles', 'import_particles', ['Other', 'preprocess_particles', 'screen_particles']]]),
 ('2D', 
-   [['Align+Classify', 'ml2d', 'cl2d', 'cl2d_align'], 
-    ['Tools', 'kerdensom', 'rotspectra']]),
+   [['Align+Classify', 'cl2d', 'ml2d', ['Other', 'cl2d_align', 'kerdensom', 'rotspectra']]]),
 ('3D', 
    [['Initial Model', 'rct'], 
     ['Model Refinement', 'projmatch', 'ml3d']])
@@ -64,7 +63,11 @@ class ProtocolDictionary(dict):
                 group = groupList[0]
                 protocolList = groupList[1:]
                 for protocol in protocolList:
-                    self.addProtocol(section, group, protocol)
+                    if type(protocol) != list:
+                        self.addProtocol(section, group, protocol)
+                    else:
+                        for p in protocol[1:]:
+                            self.addProtocol(section, group, p)
         # Add special 'xmipp_program'
         self.addProtocol(None, None, 'xmipp')
 

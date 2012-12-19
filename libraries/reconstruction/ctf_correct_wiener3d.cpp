@@ -100,7 +100,7 @@ void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, const doubl
     ctf.FilterBand = CTF;
     ctf.ctf.enable_CTFnoise = false;
     ctf.ctf.read(fnCTF);
-    ctf.ctf.Produce_Side_Info();
+    ctf.ctf.produceSideInfo();
 
     double maxres = ( 0.5 * sqrt(3.) ) / ctf.ctf.Tm;
     double stepsize = maxres / nr_steps;
@@ -113,7 +113,7 @@ void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, const doubl
         if ( (minFreq < 0) || (1./freq < minFreq) )
         {
             ctf.ctf.precomputeValues(freq, 0.0);
-            A1D_ELEM(CTF1D,step)=ctf.ctf.CTF_at();
+            A1D_ELEM(CTF1D,step)=ctf.ctf.getValueAt();
             if (isFlipped)
                 A1D_ELEM(CTF1D,step)=fabs(CTF1D(step));
         }

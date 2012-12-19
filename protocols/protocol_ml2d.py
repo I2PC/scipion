@@ -9,7 +9,7 @@
 
 from xmipp import MetaData, MDL_ITER, MDL_LL, MDL_REF, MDValueEQ, getBlocksInMetaDataFile, \
 MDL_PMAX, MDL_SIGNALCHANGE, AGGR_MAX, MDL_MAX, MDL_MIRRORFRAC, MDL_WEIGHT, MDL_CLASS_COUNT, MD_APPEND,\
-ImgSize, SingleImgSize, MDL_IMAGE
+ImgSize, SingleImgSize, MDL_IMAGE, MDL_SAMPLINGRATE
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 import os
@@ -17,7 +17,7 @@ from os.path import exists, join
 from protlib_utils import runShowJ
 from protlib_gui_ext import showWarning
 from protlib_xmipp import greenStr, redStr
-from protlib_filesystem import deleteFile, xmippExists, renameFile
+from protlib_filesystem import deleteFile, xmippExists, renameFile, findAcquisitionInfo
 
 def lastIteration(self, key='iter_logs'):
     ''' Find the last iteration number '''
@@ -32,11 +32,15 @@ class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.name, scriptname, project)
         self.Import = 'from protocol_ml2d import *'
+        acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
+        if not acquisionInfo is None: 
+            md = MetaData(acquisionInfo)
+            self.SamplingRate = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
         
     def createFilenameTemplates(self):
-        extra = self.workingDirPath(self.getId() + '2d_extra')
+        extra = self.workingDirPath('extra')
         extraIter = join(extra, 'iter%(iter)03d')
-        extraRefs = join(extraIter, "result_classes.xmd")
+        extraRefs = join(extraIter, "iter_classes.xmd")
         return {
                 'iter_logs': "info@" + extraRefs,
                 'iter_refs': "classes@" + extraRefs
@@ -100,7 +104,7 @@ class ProtML2D(XmippProtocol):
         return progId
         
     def defineSteps(self):
-        self.Db.insertStep("linkAcquisitionInfo",InputFile=self.ImgMd,dirDest=self.WorkingDir)
+        self.insertStep("linkAcquisitionInfo",InputFile=self.ImgMd,dirDest=self.WorkingDir)
         progId = self.getId()
         
         program = "xmipp_%s_align2d" % progId
@@ -114,7 +118,7 @@ class ProtML2D(XmippProtocol):
             
             prefix = '%s2d' % progId
             oroot = self.workingDirPath(prefix)
-            params = ' -i %s --oroot %s' % (self.ImgMd, oroot)
+            params = ' -i %s --oroot %s/' % (self.ImgMd, self.WorkingDir)
             # Number of references will be ignored if -ref is passed as expert option
             if self.DoGenerateReferences:
                 params += ' --nref %d' % self.NumberOfReferences
@@ -127,11 +131,12 @@ class ProtML2D(XmippProtocol):
                 params += ' --thr %i' % self.NumberOfThreads
             if (self.DoMlf):
                 if not self.DoCorrectAmplitudes:
-                    params += ' --no_ctf %f' % self.PixelSize
+                    params += ' --no_ctf'                    
                 if (not self.ImagesArePhaseFlipped):
                     params += ' --not_phase_flipped'
                 if (self.HighResLimit > 0):
                     params += ' --limit_resolution 0 %f' % self.HighResLimit
+                params += ' --sampling_rate %f' % self.SamplingRate
             if self.MaxIters != 100:
                 params += " --iter %d" % self.MaxIters
             #Add all boolean options if true
@@ -141,10 +146,11 @@ class ProtML2D(XmippProtocol):
             
             #Add extra options
             #params += ' ' + self.ExtraParams
-        self.insertRunJobStep(program, params)
+        self.insertRunJobStep(program, params, 
+                              [self.getFilename(k) for k in ['images', 'classes']])
 
-        self.Db.insertStep('collectResults', WorkingDir=self.WorkingDir, Prefix=prefix,
-                           verifyfiles=[self.workingDirPath('result_%s.xmd' % k) for k in ['images', 'classes']])
+#        self.insertStep('collectResults', WorkingDir=self.WorkingDir, Prefix=prefix,
+#                           verifyfiles=[self.getFilename(k) for k in ['images', 'classes']])
 
     def visualize(self):
         plots = [k for k in ['DoShowLL', 'DoShowPmax', 'DoShowSignalChange', 'DoShowMirror'] if self.ParamsDict[k]]

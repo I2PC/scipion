@@ -66,7 +66,14 @@ class ProtProjMatch(XmippProtocol):
         if not acquisionInfo is None: 
             md = MetaData(acquisionInfo)
             self.ResolSam = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
+        if self.MaskRadius == -1:
+           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           self.MaskRadius = Xdim/2
+
         
+        if self.MaskRadius == -1:
+           (Xdim, Ydim, Zdim, Ndim) = SingleImgSize(self.ReferenceFileNames[0])
+           self.MaskRadius = Xdim/2
     def validate(self):
         from protlib_xmipp import validateInputSize
         errors = []
@@ -229,24 +236,24 @@ data_
         ref3Ds = map(int, getListFromVector(self.DisplayRef3DNo))
         self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
-        
+        runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
         if doPlot('DisplayReference'):
-            VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
+            #VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
             for ref3d in ref3Ds:
-                file_name = VisualizationReferenceFileNames[ref3d]
-                #print 'ref3d: ',ref3d, ' | file_name:',file_name
-                if xmippExists(file_name):
-                    #Chimera
-                    if(self.DisplayVolumeSlicesAlong == 'surface'):
-                        runChimera(file_name)
-                    else:
-                    #Xmipp_showj (x,y and z shows the same)
-                        try:
-                            runShowJ(file_name, extraParams = ' --dont_wrap ')
-                        except Exception, e:
-                            showError("Error launching java app", str(e))
-                        
+                for it in iterations:
+#                file_name = VisualizationReferenceFileNames[ref3d]
+                    file_name = self.getFilename('MaskedFileNamesIters', iter=it, ref=ref3d)
+                    if xmippExists(file_name):
+                        #Chimera
+                        if(self.DisplayVolumeSlicesAlong == 'surface'):
+                            runChimera(file_name)
+                        else:
+                        #Xmipp_showj (x,y and z shows the same)
+                            try:
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
+                            except Exception, e:
+                                showError("Error launching java app", str(e))
             
         if doPlot('DisplayReconstruction'):
             for ref3d in ref3Ds:
@@ -260,7 +267,7 @@ data_
                         else:
                         #Xmipp_showj (x,y and z shows the same)
                             try:
-                                runShowJ(file_name, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                             
@@ -277,7 +284,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
                 
@@ -309,7 +316,7 @@ data_
                         #Xmipp_showj (x,y and z shows the same)
 
                             try:
-                                runShowJ(file_name_bfactor, extraParams = ' --dont_wrap ')
+                                runShowJ(file_name_bfactor, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -349,7 +356,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -364,7 +371,7 @@ data_
                             print "Empty metadata: ", file_name
                         else:
                             try:
-                                runShowJ(file_name,extraParams = ' --dont_wrap ')
+                                runShowJ(file_name, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
         
@@ -409,7 +416,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -428,7 +435,7 @@ data_
                     mdReferencesSize = mdReferences.size()
                     for id in mdReferences:
                         convert_refno_to_stack_position[mdReferences.getValue(MDL_NEIGHBOR,id)]=id
-                    file_nameImages = self.getFilename('DocfileInputAnglesIters', iter=it)
+                    file_nameImages = "ctfGroup[0-9][0-9][0-9][0-9][0-9][0-9]@"+self.getFilename('DocfileInputAnglesIters', iter=it)
                     if xmippExists(file_nameImages):
                         #print "OutClassesXmd", OutClassesXmd
                         MDtmp.read(file_nameImages)#query with ref3D
@@ -471,7 +478,7 @@ data_
                                 sfn   = createUniqueFileName(file_nameReferences)
                                 file_nameReferences = 'projectionDirections@'+sfn
                                 MDout.write( sfn )
-                                runShowJ(sfn, extraParams = ' --dont_wrap ')
+                                runShowJ(sfn, extraParams = runShowJExtraParameters)
                             except Exception, e:
                                 showError("Error launching java app", str(e))
 
@@ -487,7 +494,7 @@ data_
                         print "Empty metadata: ", file_name
                     else:
                         try:
-                            runShowJ(file_name, extraParams = ' --dont_wrap ')
+                            runShowJ(file_name, extraParams = runShowJExtraParameters)
                         except Exception, e:
                             showError("Error launching java app", str(e))
             
@@ -659,17 +666,18 @@ data_
                         _InnerRadius = getComponentFromVector(self.InnerRadius, it)
 
                         file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
-                        file_name_bild = file_name + '.bild'
-    
-                        parameters =  ' -i ' + file_name + \
-                            ' -o ' + file_name_bild + \
-                            ' chimera ' + str(float(_OuterRadius) * 1.1)
-                        runJob(_log,
-                               'xmipp_angular_distribution_show',
-                               parameters
-                               )
-                        file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
-                        runChimera(file_name_rec_filt,file_name_bild)
+                        if xmippExists(file_name):
+                            file_name_bild = file_name + '.bild'
+        
+                            parameters =  ' -i ' + file_name + \
+                                ' -o ' + file_name_bild + \
+                                ' chimera ' + str(float(_OuterRadius) * 1.1)
+                            runJob(_log,
+                                   'xmipp_angular_distribution_show',
+                                   parameters
+                                   )
+                            file_name_rec_filt = self.getFilename('ReconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
+                            runChimera(file_name_rec_filt,file_name_bild)
             else: #DisplayAngularDistributionWith == '2D'
                 for it in iterations:
                     if(len(ref3Ds) == 1):
@@ -683,9 +691,10 @@ data_
                     
                     for ref3d in ref3Ds:
                         file_name = self.getFilename('OutClassesXmd', iter=it, ref=ref3d)
-                        md = MetaData(file_name)
-                        plot_title = 'Ref3D_%d' % ref3d
-                        xplotter.plotAngularDistribution(plot_title, md)
+                        if xmippExists(file_name):
+                            md = MetaData(file_name)
+                            plot_title = 'Ref3D_%d' % ref3d
+                            xplotter.plotAngularDistribution(plot_title, md)
                     xplotter.draw()
                     
         if doPlot('DisplayResolutionPlots'):
@@ -706,13 +715,14 @@ data_
                 legendName=[]
                 for it in iterations:
                     file_name = self.getFilename('ResolutionXmdFile', iter=it, ref=ref3d)
-                    #print 'it: ',it, ' | file_name:',file_name
-                    md = MetaData(file_name)
-                    resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
-                    frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
-                    a.plot(resolution_inv, frc)
-                    legendName.append('Iter_'+str(it))
-                xplotter.showLegend(legendName)
+                    if xmippExists(file_name):
+                        #print 'it: ',it, ' | file_name:',file_name
+                        md = MetaData(file_name)
+                        resolution_inv = [md.getValue(MDL_RESOLUTION_FREQ, id) for id in md]
+                        frc = [md.getValue(MDL_RESOLUTION_FRC, id) for id in md]
+                        a.plot(resolution_inv, frc)
+                        legendName.append('Iter_'+str(it))
+                    xplotter.showLegend(legendName)
                 
                 if (self.ResolutionThreshold < max(frc)):
                     a.plot([min(resolution_inv), max(resolution_inv)], [self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')

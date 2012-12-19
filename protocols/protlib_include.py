@@ -118,3 +118,152 @@ is recommended to use 2Gb or more
 """
 Memory = 2
 '''
+    
+def expandParticlesPreprocess(allowFlip):
+    linesStr = '''
+#-----------------------------------------------------------------------------
+# {section} Preprocess
+#-----------------------------------------------------------------------------
+# Dust removal (Recommended)
+""" 
+Sets pixels with unusually large values to random values from a Gaussian
+with zero-mean and unity-standard deviation. 
+"""
+DoRemoveDust = True
+
+# {expert}{condition}(DoRemoveDust) Threshold for dust removal:
+""" 
+Pixels with a signal higher or lower than this value times the standard 
+deviation of the image will be affected. For cryo, 3.5 is a good value.
+For high-contrast negative stain, the signal itself may be affected so 
+that a higher value may be preferable.
+"""
+DustRemovalThreshold = 3.5
+'''
+    if allowFlip:
+        linesStr += '''
+# Phase flipping (Recommended)
+""" Use the information from the CTF to compensate for phase reversals."""
+DoFlip = True
+'''
+    linesStr += '''
+    
+# Invert contrast
+""" Invert the contrast if your particles are black over a white background. """
+DoInvert = False
+
+# Normalize (Recommended)
+""" 
+It subtract a ramp in the gray values and normalizes so that in the 
+background there is 0 mean and standard deviation 1 """
+DoNorm = True
+
+# {expert}{list_combo}(OldXmipp,NewXmipp,Ramp){condition}(DoNorm) Normalization type
+"""
+OldXmipp (mean(Image)=0, stddev(Image)=1). 
+NewXmipp (mean(background)=0, stddev(background)=1), 
+Ramp (subtract background+NewXmipp)"""
+NormType = "Ramp"
+
+# {expert}{condition}(DoNorm) Background radius
+"""
+Pixels outside this circle are assumed to be noise and their stddev 
+is set to 1. Radius for background circle definition (in pix.).
+If this value is 0, then half the box size is used. """
+BackGroundRadius = -1
+'''
+    return linesStr
+
+def expandFilter():
+    return '''
+#-----------------------------------------------------------------------------
+# {section}{has_question} Filter 
+#-----------------------------------------------------------------------------
+# Apply filters?
+DoFilter = False
+
+# Fourier bandpass filter
+""" 
+You may do a lowpass filter by setting Freq_low to 0. 
+You may do a high pass filter by setting Freq_high to 0.5."""
+DoFourier = False 
+
+#{condition}(DoFourier){wizard}(wizardChooseBandPassFilter) Freq_low (0<f<0.5)
+""" Set it to 0 for low pass filters """
+Freq_low = 0.02
+
+#{condition}(DoFourier) {wizard}(wizardChooseBandPassFilter) Freq_high (0<f<0.5)
+""" Set it to 0.5 for high pass filters """
+Freq_high = 0.35
+
+#{condition}(DoFourier){expert}{wizard}(wizardChooseBandPassFilter) Freq_decay (0<f<0.5)
+""" It describes the length of the amplitude decay in a raised cosine """
+Freq_decay = 0.02
+
+# Fourier Gaussian
+""" Gaussian filter defined in Fourier space"""
+DoGaussian = False
+
+#{condition}(DoGaussian){wizard}(wizardChooseGaussianFilter) Frequency sigma
+""" Remind that the Fourier frequency is normalized between 0 and 0.5"""
+Freq_sigma = 0.04
+'''
+    
+def expandMask():
+    return '''
+#-----------------------------------------------------------------------------
+# {section}{has_question} Mask
+#-----------------------------------------------------------------------------
+# Apply mask?
+""" Apply mask from file """
+DoMask = False
+
+# {condition}(DoMask){list_combo}(raised_cosine, circular, binary_file) Mask type
+MaskType = "raised_cosine"
+
+# {condition}(DoMask and MaskType!="binary_file"){wizard}(wizardSetBackgroundRadius) Mask radius
+MaskRadius = -1
+
+# {condition}(DoMask and MaskType=="raised_cosine") Mask radius outer
+MaskRadiusOuter = 2
+
+# {condition}(DoMask and MaskType=="binary_file"){wizard}(wizardDesignMask) Mask file
+MaskFile = ""
+
+# {condition}(DoMask){list_combo}(value, min, max, avg) Substitute with
+"""Valid values are a value, min, max and avg """
+Substitute = "value"
+
+# {condition}(DoMask and Substitute=="value") Substitute value
+"""Valid values are a number, min, max and avg """
+SubstituteValue = 0
+'''
+    
+def expandResize():
+    return '''
+#-----------------------------------------------------------------------------
+# {section} Resize
+#-----------------------------------------------------------------------------
+# Resize
+""" Change the dimensions of the input images """
+DoResize = False
+
+#{condition}(DoResize) New image size
+NewSize = 0
+
+# Crop
+"""
+This is the desired output size(in pixels) after cropping.
+"""
+DoCrop = False
+
+# {condition}(DoCrop) Output size:
+""" 
+In pixels
+"""
+CropSize = 0
+'''
+
+def expandPreprocessFilterMask(allowFlip):
+    return expandParticlesPreprocess(allowFlip) + \
+        expandFilter() + expandMask()

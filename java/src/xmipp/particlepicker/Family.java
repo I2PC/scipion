@@ -20,8 +20,8 @@ public class Family {
 	private Color color;
 	private int size;
 	private FamilyState state;
-//	private int templatesNumber;
-//	private ImageGeneric templates;
+	private int templatesNumber;
+	private ImageGeneric templates;
 
 	private static int sizemax = 1000;
 	private static Family dfamily = new Family("DefaultFamily", Color.green);
@@ -58,24 +58,25 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
-//		this.templatesNumber = templatesNumber;
-//		initTemplates();
+		setTemplatesNumber(templatesNumber);
 	}
 	
-//	public void initTemplates()
-//	{
-//		try {
-//			this.templates = new ImageGeneric(ImageGeneric.Float);
-//			templates.resize(size, size, 1, templatesNumber);
-//			System.out.println("NDim on initTemplates: " + templates.getNDim());
-//		} catch (Exception e) {
-//			throw new IllegalArgumentException(e.getMessage());
-//		}
-//	}
+	public void initTemplates()
+	{
+		if(templatesNumber == 0)
+			return;
+		try {
+			this.templates = new ImageGeneric(ImageGeneric.Float);
+			templates.resize(size, size, 1, templatesNumber);
+			System.out.println("NDim on initTemplates: " + templates.getNDim());
+		} catch (Exception e) {
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
-//	public ImageGeneric getTemplates() {
-//		return templates;
-//	}
+	public ImageGeneric getTemplates() {
+		return templates;
+	}
 
 	public Family(String name, Color color) {
 		this(name, color, getDefaultSize(), FamilyState.Manual, 1, null);
@@ -123,7 +124,7 @@ public class Family {
 			throw new IllegalArgumentException(String.format(
 					"Max size is %s, %s not allowed", sizemax, size));
 		this.size = size;
-//		initTemplates();
+		initTemplates();
 	}
 
 	public static Family getDefaultgp() {
@@ -141,14 +142,16 @@ public class Family {
 		this.name = name;
 	}
 
-//	public int getTemplatesNumber() {
-//		return templatesNumber;
-//	}
+	public int getTemplatesNumber() {
+		return templatesNumber;
+	}
 
-//	public void setTemplatesNumber(int num) {
-//		this.templatesNumber = num;
-//		initTemplates();
-//	}
+	public void setTemplatesNumber(int num) {
+		if(num <= 0)
+			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
+		this.templatesNumber = num;
+		initTemplates();
+	}
 
 	public Color getColor() {
 		return color;
@@ -194,17 +197,17 @@ public class Family {
 		return size / 2;
 	}
 
-//	public void setTemplate(int index, ImageGeneric ig) {
-//		float[] matrix;
-//		try {
-//			ig.printShape();
-//			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
-//					ImageGeneric.FIRST_SLICE);
-//			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
-////			templates.printShape();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			throw new IllegalArgumentException(e.getMessage());
-//		}
-//	}
+	public void setTemplate(int index, ImageGeneric ig) {
+		float[] matrix;
+		try {
+			ig.printShape();
+			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
+					ImageGeneric.FIRST_SLICE);
+			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
+//			templates.printShape();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 }

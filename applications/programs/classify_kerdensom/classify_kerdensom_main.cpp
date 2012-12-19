@@ -155,6 +155,10 @@ public:
     // Run
     void run()
     {
+        FileName fnClasses=fn_root+"_classes.xmd";
+        MetaData dummy;
+        dummy.write(formatString("classes@%s",fnClasses.c_str()));
+
         /* Open training vector ================================================= */
         ClassicTrainingVectors ts(0, true);
         std::cout << std::endl << "Reading input data file " << fn_in << "....." << std::endl;
@@ -174,7 +178,6 @@ public:
         TextualListener myListener;       // Define the listener class
         myListener.setVerbosity() = verbose;       // Set verbosity level
         thisSOM->setListener(&myListener);         // Set Listener
-        FileName fnClasses=fn_root+"_classes.xmd";
         thisSOM->train(*myMap, ts, fnClasses); // Train algorithm
 
         // Test algorithm

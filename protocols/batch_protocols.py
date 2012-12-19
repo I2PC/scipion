@@ -158,8 +158,9 @@ class XmippProjectGUI():
         return self.images[imgName]
               
     def addBindings(self):
-        self.root.bind('<FocusOut>', self.unpostMenu)
-        self.root.bind('<Button-1>', self.unpostMenu)
+        #self.root.bind('<FocusOut>', self.unpostMenu)
+        self.root.bind("<Key>", self.unpostMenu)
+        #self.root.bind('<Button-1>', self.unpostMenu)
         self.root.bind('<Return>', lambda e: self.runButtonClick(ACTION_DEFAULT))
         self.root.bind('<Control_L><Return>', lambda e: self.runButtonClick(ACTION_COPY))
         self.root.bind('<Alt_L><e>', lambda e: self.runButtonClick(ACTION_EDIT))
@@ -212,20 +213,30 @@ class XmippProjectGUI():
     def createToolbarMenu(self, parent, opts=[]):
         if len(opts) > 0:
             menu = tk.Menu(parent, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
-            prots = [protDict[o] for o in opts]
-            for p in prots:
+#            prots = [protDict[o] for o in opts]
+            for o in opts:
                 #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
                 # and menu items command setting
                 def item_command(prot): 
                     def new_command(): 
                         self.launchProtocolGUI(self.project.newProtocol(prot.name))
                     return new_command 
-                # Treat special case of "custom" protocol
-                if p.title == 'Custom':
-                    menu.add_command(label=p.title, command=self.selectCustomProtocol)
+                # If p is a list, means is a submenu
+                if type(o) == list:
+                    menu2 = tk.Menu(menu, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
+                    menu.add_cascade(label=o[0], menu=menu2)
+                    for o2 in o[1:]:
+                        p = protDict[o2]
+                        menu2.add_command(label=p.title, command=item_command(p))
+                    #menu2.bind("<Leave>", self.unpostMenu)
                 else:
-                    menu.add_command(label=p.title, command=item_command(p))
-            menu.bind("<Leave>", self.unpostMenu)
+                    p = protDict[o]                  
+                    # Treat special case of "custom" protocol
+                    if p.title == 'Custom':
+                        menu.add_command(label=p.title, command=self.selectCustomProtocol)
+                    else:
+                        menu.add_command(label=p.title, command=item_command(p))
+            #menu.bind("<Leave>", self.unpostMenu)
             return menu
         return None
 
@@ -390,7 +401,8 @@ class XmippProjectGUI():
                 for c in self.process_childs:
                     c.info['pname'] = pname = os.path.basename(c.args.split()[0])
                     if pname not in ['grep', 'python', 'sh', 'bash', 'xmipp_python', 'mpirun']:
-                        line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        #line = "%(pid)s\t %(pname)s\t %(pcpu)s\t %(pmem)s\n"
+                        
                         if c.host != lastHost:
                             #txt.insert(tk.END, "%s\n" % c.host, 'bold')
                             tree.insert('', 'end', c.host, text=c.host)
@@ -570,11 +582,14 @@ class XmippProjectGUI():
                 
     def clickToolbarButton(self, index, showMenu=True):
         key, btn, menu = self.ToolbarButtonsDict[index]
+        self.unpostMenu()
         if menu:
             # Post menu
             x, y, w = btn.winfo_x(), btn.winfo_y(), btn.winfo_width()
             xroot, yroot = self.root.winfo_x() + btn.master.winfo_x(), self.root.winfo_y()+ btn.master.winfo_y()
             menu.post(xroot + x + w + 10, yroot + y)
+            #if self.lastMenu:
+            #    self.lastMenu.unpost()
             self.lastMenu = menu
             
     def cbDisplayGroupChanged(self, e=None):
@@ -626,6 +641,8 @@ class XmippProjectGUI():
                           '\n<Comment>: ' + comment + '\n\n<Summary>:\n' + summary   
             except Exception, e:
                 labels = 'Error creating protocol: <%s>' % str(e)
+                import traceback
+                labels += '\n' + traceback.format_exc()
             self.detailsText.clear()
             self.detailsText.addText(labels)
             details.displayButtons(showButtons)
@@ -910,7 +927,6 @@ class ScriptProtocols(XmippScript):
         self.project = XmippProject(self.proj_dir)
         self.launch = True
 
-
         if self.checkParam('--list'):
             self.loadProjectFromCli()
             runs, stateList = self.project.getStateRunList(checkDead=True)
@@ -921,6 +937,7 @@ class ScriptProtocols(XmippScript):
                     print "%s | %s | %s " % (name.rjust(35), stateStr.rjust(15), modified)
             else:
                 print cyanStr("No runs found")
+                
         elif self.checkParam('--details'):
             self.loadProjectFromCli()
             runName = self.getParam('--details')
@@ -934,6 +951,7 @@ class ScriptProtocols(XmippScript):
                     print "   ", line
             except Exception, e:
                 print redStr("Run %s not found" % runName)
+                
         elif self.checkParam('--new_run'):
             protName = self.getParam('--new_run')
             self.loadProjectFromCli()
@@ -942,6 +960,7 @@ class ScriptProtocols(XmippScript):
             ProtocolParser(run['source']).save(run['script']) # Save the .py file
             print "Run %s was created" % greenStr(getExtendedRunName(run))
             print "Edit file %s and launch it" % greenStr(run['script'])
+            
         elif self.checkParam('--copy_run'):
             extRunName = self.getParam('--copy_run')
             self.loadProjectFromCli()
@@ -952,12 +971,14 @@ class ScriptProtocols(XmippScript):
             ProtocolParser(script).save(run['script']) # Save the .py file
             print "Run %s was created from %s" % (greenStr(getExtendedRunName(run)), greenStr(extRunName))
             print "Edit file %s and launch it" % greenStr(run['script'])
+            
         elif self.checkParam('--delete_run'):
             extRunName = self.getParam('--delete_run')
             self.loadProjectFromCli()
             protName, runName = splitExtendedRunName(extRunName)
             self.project.deleteRunByName(protName, runName)
             print "Run deleted"      
+            
         elif self.checkParam('--start_run'):
             self.loadProjectFromCli()
             extRunName = self.getParam('--start_run')
@@ -968,13 +989,15 @@ class ScriptProtocols(XmippScript):
             pe = ProtocolExecutor(protName, self.project, runName=runName)
             pe.setValue('Behavior', mode)
             pe.runProtocol()
+            
         elif self.checkParam('--clean'):
             self.printProjectName()
             self.launch = self.confirm('%s, are you sure to clean?' % cyanStr('ALL RESULTS will be DELETED'), False)
             if self.launch:
                 self.project.clean()
             else:
-                print cyanStr("CLEAN aborted.")        
+                print cyanStr("CLEAN aborted.") 
+                       
         else: #lauch project     
             if not self.project.exists():    
                 print 'You are in directory: %s' % greenStr(self.proj_dir)
@@ -986,6 +1009,7 @@ class ScriptProtocols(XmippScript):
                     print cyanStr("PROJECT CREATION aborted")
             else:
                 self.project.load()
+        
         if self.launch:
             try:
                 self.root = tk.Tk()
@@ -995,7 +1019,9 @@ class ScriptProtocols(XmippScript):
                 gui.launchGUI()
             except Exception, e:
                 print cyanStr("Could not create Tk GUI, disabled")
-                print e
+                import traceback
+                import sys
+                traceback.print_exc(file=sys.stderr)
 
 if __name__ == '__main__':
     ScriptProtocols().tryRun()
