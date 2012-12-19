@@ -358,7 +358,11 @@ enum MDLabel
     MDL_YSIZE, ///< Y size (int)
     MDL_Z, ///< Z component (double)
     MDL_ZCOOR, ///< Z component (int)
-    MDL_ZSCORE, ///< Z Score (double)
+    MDL_ZSCORE, ///< Global Z Score (double)
+    MDL_ZSCORE_SHAPE, ///< Z Score (double)
+    MDL_ZSCORE_SNR1, ///< Z Score (double)
+    MDL_ZSCORE_SNR2, ///< Z Score (double)
+    MDL_ZSCORE_HISTOGRAM, ///< Z Score (double)
     MDL_ZSIZE, ///< Z size (int)
 
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
@@ -1134,8 +1138,11 @@ private:
         MDL::addLabel(MDL_ZCOOR, LABEL_INT, "zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "zScore");
+        MDL::addLabel(MDL_ZSCORE_SHAPE, LABEL_DOUBLE, "zScoreShape");
+        MDL::addLabel(MDL_ZSCORE_SNR1, LABEL_DOUBLE, "zScoreSNR1");
+        MDL::addLabel(MDL_ZSCORE_SNR2, LABEL_DOUBLE, "zScoreSNR2");
+        MDL::addLabel(MDL_ZSCORE_HISTOGRAM, LABEL_DOUBLE, "zScoreHistogram");
         MDL::addLabel(MDL_ZSIZE, LABEL_INT, "zSize");
-
 
         MDL::addLabelAlias(MDL_XCOOR, "Xcoor");//3.0
         MDL::addLabelAlias(MDL_XCOOR, "<X position>");
