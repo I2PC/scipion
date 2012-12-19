@@ -384,20 +384,25 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 	public void saveData() {
-		System.out.println("Saving data...");
+		//System.out.println("Saving data...");
 		if (isChanged()) {
 
 			super.saveData();
 			persistMicrographs();
-			for (Family f : families) {
-				updateFamilyTemplates(f);
-				try {
-					f.getTemplates().write(
-							getOutputPath(f.getName() + "_template.stk"));
-				} catch (Exception e) {
-					getLogger().log(Level.SEVERE, e.getMessage(), e);
-					throw new IllegalArgumentException(e);
+			try
+			{
+				for (Family f : families)
+				{
+					updateFamilyTemplates(f);
+					f.getTemplates().write(getOutputPath(f.getName() + "_template.stk"));
+					
 				}
+			}
+			catch (Exception e)
+			{
+
+				getLogger().log(Level.SEVERE, e.getMessage(), e);
+				throw new IllegalArgumentException(e);
 			}
 		}
 	}
@@ -672,12 +677,13 @@ public abstract class TrainingPicker extends ParticlePicker
 	}
 
 
-
 	public void updateFamilyTemplates(Family f)
 	{
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
+		try
+		{
 		for (TrainingMicrograph m : micrographs)
 		{
 			mfd = m.getFamilyData(f);
@@ -688,20 +694,19 @@ public abstract class TrainingPicker extends ParticlePicker
 				if (i < f.getTemplatesNumber())
 					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 				else
-					try
-					{
+					
 						f.getTemplates().alignImages(igp);
 					}
-					catch (Exception e)
-					{
-						e.printStackTrace();
-						throw new IllegalArgumentException(e.getMessage());
-					}
+					
 			}
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
-	
+
 	public String getImportMicrographName(String path, String filename, Format f) {
 
 		String base = Filename.removeExtension(Filename.getBaseName(filename));
@@ -742,7 +747,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		else
 			micrographs.clear();
 		TrainingMicrograph micrograph;
-		String ctf = null, filename;
+		String psd = null, ctf = null, filename;
 		try
 		{
 			MetaData md = new MetaData(getMicrographsSelFile());
@@ -755,15 +760,18 @@ public abstract class TrainingPicker extends ParticlePicker
 				fileLabel = MDLabel.MDL_IMAGE;
 			else
 				throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
-			boolean existsctf = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
+			boolean existspsd = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
+			boolean existsctf = md.containsLabel(MDLabel.MDL_CTF_MODEL);
 			long[] ids = md.findObjects();
 			for (long id : ids)
 			{
 
 				filename = md.getValueString(fileLabel, id);
+				if (existspsd)
+					psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				if (existsctf)
-					ctf = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
-				micrograph = new TrainingMicrograph(filename, ctf, families, getMode());
+					ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
+				micrograph = new TrainingMicrograph(filename, psd, ctf, families, getMode());
 				micrographs.add(micrograph);
 			}
 			if (micrographs.size() == 0)
