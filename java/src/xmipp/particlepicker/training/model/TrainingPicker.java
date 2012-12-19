@@ -393,24 +393,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void saveTemplates()
-	{
-		
-		try
-		{
-			for (Family f : families)
-			{
-				updateFamilyTemplates(f);
-				f.getTemplates().write(getOutputPath(f.getName() + "_template.stk"));
-			}
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
+	
 
 	public int getAutomaticNumber(Family f, double threshold)
 	{
@@ -684,35 +667,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void updateFamilyTemplates(Family f)
-	{
-		if(family.getStep() != FamilyState.Manual)
-			return;//nothing to update
-		ImageGeneric igp;
-		List<TrainingParticle> particles;
-		MicrographFamilyData mfd;
-		for (TrainingMicrograph m : micrographs)
-		{
-			mfd = m.getFamilyData(f);
-			for (int i = 0; i < mfd.getManualParticles().size(); i++)
-			{
-				particles = mfd.getManualParticles();
-				igp = particles.get(i).getImageGeneric();
-				if (i < f.getTemplatesNumber())
-					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-				else
-					try
-					{
-						f.getTemplates().alignImages(igp);
-					}
-					catch (Exception e)
-					{
-						throw new IllegalArgumentException(e.getMessage());
-					}
-			}
-		}
-
-	}
+	
 
 	public String getImportMicrographName(String path, String filename, Format f)
 	{
@@ -820,4 +775,61 @@ public abstract class TrainingPicker extends ParticlePicker
 			return false;
 		}
 	}
+	
+	public void updateTemplates(Family f)
+	{
+		if(family.getStep() != FamilyState.Manual)
+			return;//nothing to update
+		f.initTemplates();
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		try
+		{
+		for (TrainingMicrograph m : micrographs)
+		{
+			mfd = m.getFamilyData(f);
+			for (int i = 0; i < mfd.getManualParticles().size(); i++)
+			{
+				particles = mfd.getManualParticles();
+				igp = particles.get(i).getImageGeneric();
+				if (i < f.getTemplatesNumber())
+					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+				else
+					
+						f.getTemplates().alignImages(igp);
+					}
+					
+			}
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
+
+	}
+	
+	
+	public void saveTemplates()
+	{
+		ImageGeneric templates;
+		try
+		{
+			for (Family f : families)
+			{
+
+				updateTemplates(f);
+				templates = f.getTemplates();
+				if (templates != null)
+					templates.write(getTemplatesFile(f.getName()));
+			}
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+
 }
