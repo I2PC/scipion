@@ -214,9 +214,8 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 
 	if (do_FilterPDBVol) {
 		program = "xmipp_transform_filter";
-		arguments =
-				formatString(
-						"-i deformedPDB_%s.vol --sampling %f --fourier low_pass %f raised_cosine 0.1 -v 0",
+		arguments = formatString(
+						"-i deformedPDB_%s.vol --sampling %f --fourier low_pass %f  -v 0",
 						randStr, sampling_rate, cutoff_LPfilter);
 		runSystem(program, arguments, false);
 	}
