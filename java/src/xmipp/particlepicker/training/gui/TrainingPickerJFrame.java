@@ -808,7 +808,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		getFamilyData().deleteBelowThreshold(getThreshold());
 		setState(MicrographFamilyState.ReadOnly);
-		ppicker.persistAutomaticParticles(getFamilyData());
+		ppicker.saveAutomaticParticles(getFamilyData());
 
 		try
 		{
