@@ -296,10 +296,16 @@ class ProcessManager():
             f = open(self.hostfile)
             for line in f:                
                 hosts[line.strip()] = True
+            f.close()
+            
+            def setHost(p, h):
+                p.host = h
+                print "setting host: ", h
+                
             for h in hosts.keys():
                 newProcs = self.__getProcessFromCmd("ssh %(h)s '%(cmd)s'" % locals() )
                 for p in newProcs:
-                    p.host = h
+                    setHost(p, h) # Python annoying looping problem
                 procs += newProcs
             return procs
         else:

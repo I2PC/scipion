@@ -75,4 +75,9 @@ public class XmippMessage {
 	public static String getIllegalStateForOperationMsg(String field, String value){
 		return String.format("Invalid operation for %s on state %s", field, value);
 	}
+
+	public static String getIllegalValueMsgWithInfo(String field, Object value, String message)
+	{
+		return String.format("%s=%s\n%s", field, value, message);
+	}
 }

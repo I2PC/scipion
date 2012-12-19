@@ -45,7 +45,7 @@
 
 //#define DEBUG
 //Macro to obtain the iteration base name
-#define FN_ITER(iter, suffix) formatString("%s_extra/iter%03d/%s",fn_root.c_str(), (iter), (suffix))
+#define FN_ITER(iter, suffix) formatString("%sextra/iter%03d/%s",fn_root.c_str(), (iter), (suffix))
 #define FN_ITER_BASE(iter) FN_ITER(iter, "vol")
 #define FN_INITIAL_BASE FN_ITER_BASE(0)
 #define FN_PROJECTIONS_MD FN_EXTRA("projections.xmd")
@@ -271,7 +271,7 @@ void ProgMLRefine3D::readParams()
         ml2d->psi_step = angular;
 
     ml2d->fn_img = fn_sel;
-    ml2d->fn_root = fn_root + "_" + ml2d->defaultRoot;
+    ml2d->fn_root = fn_root + ml2d->defaultRoot;
     ml2d->fn_ref = FN_PROJECTIONS_MD;
     ml2d->do_mirror = true;
 
@@ -286,7 +286,7 @@ void ProgMLRefine3D::readParams()
         reconsOutFnBase.push_back(FN_CREF_VOLBASE);
         reconsOutFnBase.push_back(FN_NOISE_VOLBASE);
         {//make fn_root local scope
-            String fn_root = this->fn_root + "_" + ml2d->defaultRoot; // this is need for the following macro
+            String fn_root = this->fn_root + ml2d->defaultRoot; // this is need for the following macro
             reconsMdFn.push_back(FN_CREF_IMG_MD);
         }
         reconsMdFn.push_back(FN_NOISE_IMG_MD);
@@ -367,9 +367,9 @@ void ProgMLRefine3D::produceSideInfo()
     // Project volumes and store projections in a metadata
     projectVolumes(ml2d->MDref);
 //    //FIXME: this is for concurrency problem...remove after that
-    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
-    MetaData(fn_sel).write(myImg);
-    ml2d->fn_img = myImg;
+//    FileName myImg = fn_root + formatString("images_node%02d.xmd", rank);
+//    MetaData(fn_sel).write(myImg);
+//    ml2d->fn_img = myImg;
     //2d initialization
     LOG("before ml2d->produceSideInfo");
     ml2d->produceSideInfo();

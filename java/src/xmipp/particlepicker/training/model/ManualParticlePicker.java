@@ -1,8 +1,5 @@
 package xmipp.particlepicker.training.model;
 
-import java.util.ArrayList;
-
-import xmipp.particlepicker.Family;
 import xmipp.particlepicker.IJCommand;
 
 public class ManualParticlePicker extends TrainingPicker {

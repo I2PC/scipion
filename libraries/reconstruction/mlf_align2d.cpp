@@ -2707,7 +2707,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         write_conv = false;
 
     fn_base = (outputType == OUT_ITER || outputType == OUT_REFS) ?
-              getIterExtraPath(fn_root, iter) : fn_root + "_";
+              getIterExtraPath(fn_root, iter) : fn_root;
     //    {
     //        fn_base = getIterExtraPath(fn_root, iter);
     //        fn_prefix = FN_ITER_PREFIX(iter);

@@ -17,7 +17,7 @@
 #-----------------------------------------------------------------------------
 # {section} Input
 #-----------------------------------------------------------------------------
-# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images:
+# {file}(images*.xmd){validate}(PathExists) Input images:
 """ 
 Provide a stack or metadata file with the input images.
 If you want perform <CTF> correction this file should contains a 

@@ -231,7 +231,7 @@ public class MetadataGallery extends ImageGallery {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			if (data.isImageFile(renderLabel)) {
-				new XmippImageWindow(new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel()));
+				new XmippImageWindow(data.window, new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel()));
 				return true;
 			}
 		} catch (Exception e) {

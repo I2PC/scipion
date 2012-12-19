@@ -1,13 +1,7 @@
 package xmipp.particlepicker.training.model;
 
-import ij.ImagePlus;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.jni.ImageGeneric;
-import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.utils.XmippMessage;
@@ -20,8 +14,11 @@ public class MicrographFamilyData
 	private List<AutomaticParticle> autoparticles;
 	private TrainingMicrograph micrograph;
 	private MicrographFamilyState state;
+	private int autopickpercent;
+	
+	
 
-	public MicrographFamilyData(TrainingMicrograph micrograph, Family family)
+	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state, int autopickpercent)
 	{
 		if (family == null)
 			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("family"));
@@ -29,13 +26,32 @@ public class MicrographFamilyData
 		this.manualparticles = new ArrayList<TrainingParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		this.micrograph = micrograph;
-		setState(MicrographFamilyState.Available);
+		this.autopickpercent = autopickpercent;
+		setState(state);
 	}
 
+	public MicrographFamilyData(TrainingMicrograph micrograph, Family family)
+	{
+		this(micrograph, family, MicrographFamilyState.Available);
+	}
+	
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state)
 	{
-		this(micrograph, family);
-		setState(state);
+		this(micrograph, family, state, ParticlePicker.defAutopickPercent);
+
+	}
+	
+	
+	
+
+	public int getAutopickpercent()
+	{
+		return autopickpercent;
+	}
+
+	public void setAutopickpercent(int autopickpercent)
+	{
+		this.autopickpercent = autopickpercent;
 	}
 
 	public MicrographFamilyState getState()
@@ -180,7 +196,7 @@ public class MicrographFamilyData
 		return false;
 	}
 
-	public boolean isActionVisible(double threshold)
+	public boolean isActionVisible()
 	{
 
 		if (family.getStep() != FamilyState.Supervised)
@@ -203,6 +219,8 @@ public class MicrographFamilyData
 
 	public String getAction()
 	{
+		if (family.getStep() != FamilyState.Supervised)
+			return null;
 		if (state == MicrographFamilyState.Manual)
 			return null;
 		if (state == MicrographFamilyState.Available)
@@ -274,13 +292,13 @@ public class MicrographFamilyData
 		return result;
 	}
 	
-	public TrainingParticle getLastAvailableParticle()
+	public TrainingParticle getLastAvailableParticle(double threshold)
 	{
 		AutomaticParticle ap;
 		for(int i = autoparticles.size() - 1; i >= 0; i --)
 		{
 			ap = autoparticles.get(i);
-			if(!ap.isDeleted())
+			if(!ap.isDeleted() && ap.getCost() >= threshold)
 				return ap;
 		}
 		if(!manualparticles.isEmpty())
