@@ -280,7 +280,7 @@ public abstract class ParticlePicker {
 		}
 	}
 
-	private String getTemplatesFile(String name)
+	public String getTemplatesFile(String name)
 	{
 		return getOutputPath(name + "_templates.stk");
 	}

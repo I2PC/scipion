@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
 
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.SupervisedParticlePicker;
@@ -24,7 +25,7 @@ public class Family {
 	private ImageGeneric templates;
 
 	private static int sizemax = 1000;
-	private static Family dfamily = new Family("DefaultFamily", Color.green);
+	private static Family dfamily = new Family("DefaultFamily", Color.green, sizemax/2, 1);
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
 			Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW };
 	private static int nextcolor;
@@ -106,9 +107,6 @@ public class Family {
 		return templates;
 	}
 
-	public Family(String name, Color color) {
-		this(name, color, getDefaultSize(), FamilyState.Manual, 1, null);
-	}
 
 	public FamilyState getStep() {
 		return state;
