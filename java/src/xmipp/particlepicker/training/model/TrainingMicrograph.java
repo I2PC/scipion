@@ -1,6 +1,8 @@
 package xmipp.particlepicker.training.model;
 
 
+import ij.ImagePlus;
+
 import java.awt.Image;
 import java.io.File;
 import java.util.ArrayList;
@@ -69,6 +71,15 @@ public class TrainingMicrograph extends Micrograph{
 	public String getAutoPosFile()
 	{
 		return autofilename;
+	}
+	
+	public ImagePlus getPSDImage()
+	{
+		if(psd == null || !(new File(psd).exists()))
+			return null;
+			
+		return XmippIJUtil.getImagePlus(psd);
+		
 	}
 	
 	public Icon getCTFIcon()
