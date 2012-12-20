@@ -13,6 +13,7 @@ import javax.swing.ImageIcon;
 
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.jni.Filename;
+import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
 
@@ -207,6 +208,30 @@ public class TrainingMicrograph extends Micrograph{
 		mfdatas.remove(getFamilyData(family));
 		
 	}
+
+
+	public void removeParticles(int x, int y, TrainingPicker ppicker)
+	{
+		List<TrainingParticle> particles = new ArrayList<TrainingParticle>();
+		for(MicrographFamilyData mfd: mfdatas)
+		{
+			for(TrainingParticle p: mfd.getManualParticles())
+				if (p.contains(x, y)) 
+					particles.add(p);
+			for(TrainingParticle p: particles)
+				removeParticle(p, ppicker);
+			particles.clear();
+			for(AutomaticParticle p: mfd.getAutomaticParticles())
+				if (p.contains(x, y)) 
+					particles.add(p);
+
+			for(TrainingParticle p: particles)
+				removeParticle(p, ppicker);
+		}
+		
+	}
+	
+	
 
 
 	

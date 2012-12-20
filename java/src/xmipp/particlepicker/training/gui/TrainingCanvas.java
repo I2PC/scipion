@@ -61,9 +61,9 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		this.micrograph = frame.getMicrograph();
 		updateMicrographData();
 		if(!frame.getFamilyData().getParticles().isEmpty())
-			setActive(getLastParticle());
+			refreshActive(getLastParticle());
 		else
-			active = null;
+			refreshActive(null);
 		
 	}
 	
@@ -76,12 +76,22 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+		
 		if (frame.isPickingAvailable(e))
 		{
-
-			int x = super.offScreenX(e.getX());
-			int y = super.offScreenY(e.getY());
+			if(frame.isEraserMode())
+			{
+				micrograph.removeParticles(x, y, ppicker);
+				active = getLastParticle();
+				refresh();
+				
+				return;
+			}
 			TrainingParticle p = micrograph.getParticle(x, y);
+			
+				
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null)
@@ -89,8 +99,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 				{
 					micrograph.removeParticle(p, ppicker);
-					frame.updateMicrographsModel();
-					active = frame.getFamilyData().getLastAvailableParticle(frame.getThreshold());
+					active = getLastParticle();
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
 					active = p;
@@ -100,11 +109,17 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
 				active = p;
-				frame.updateMicrographsModel();
 			}
-			frame.setChanged(true);
-			repaint();
+			refresh();
 		}
+	}
+	
+	private void refresh()
+	{
+		frame.updateMicrographsModel();
+		frame.setChanged(true);
+		repaint();
+	
 	}
 
 	/**
@@ -117,9 +132,15 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		super.mouseDragged(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-
 		if (frame.isPickingAvailable(e))
 		{
+			if(frame.isEraserMode())
+			{
+				micrograph.removeParticles(x, y, ppicker);
+				active = getLastParticle();
+				refresh();
+				return;
+			}
 			if (active == null)
 				return;
 
@@ -192,14 +213,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		}
 	}
 
-	@Override
-	public void setActive(TrainingParticle p)
-	{
-		active = p;
-		repaint();
-
-	}
-
+	
 	@Override
 	public ParticlePickerJFrame getFrame()
 	{
@@ -216,6 +230,16 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public TrainingParticle getActive()
 	{
 		return active;
+	}
+
+
+
+
+	@Override
+	public void refreshActive(TrainingParticle p)
+	{
+		active = p;
+		repaint();
 	}
 
 	

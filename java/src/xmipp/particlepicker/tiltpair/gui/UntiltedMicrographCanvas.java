@@ -85,9 +85,9 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.um = frame.getMicrograph();
 		updateMicrographData();
 		if (!um.getParticles().isEmpty())
-			setActive(um.getParticles().get(um.getParticles().size() - 1));
+			refreshActive(um.getParticles().get(um.getParticles().size() - 1));
 		else
-			setActive(null);
+			refreshActive(null);
 	}
 
 	/**
@@ -116,7 +116,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 					removeParticle(p);
 				else if (SwingUtilities.isLeftMouseButton(e))
-					setActive(p);
+					refreshActive(p);
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && um.fits(x, y, frame.getParticleSize()))
 				addParticle(x, y);
@@ -223,7 +223,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 			if (um.getAddedCount() >= 4)
 				um.setAlignerTiltedParticle(p);
-			setActive(p);
+			refreshActive(p);
 			frame.updateMicrographsModel();
 			frame.setChanged(true);
 		}
@@ -241,9 +241,9 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		if (active != null && active.equals(p))
 		{
 			if (!um.getParticles().isEmpty())
-				setActive(um.getParticles().get(um.getParticles().size() - 1));
+				refreshActive(um.getParticles().get(um.getParticles().size() - 1));
 			else
-				setActive(null);
+				refreshActive(null);
 		}
 
 		if (p.isAdded())
@@ -253,7 +253,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		frame.setChanged(true);
 	}
 
-	public void setActive(TrainingParticle up)
+	public void refreshActive(TrainingParticle up)
 	{
 		active = (UntiltedParticle) up;
 		if (active != null)

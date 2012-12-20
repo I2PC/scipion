@@ -108,6 +108,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public TemplatesJDialog templatesdialog;
 
+	private JToggleButton eraserbt;
+
 	public ParticlePickerJFrame(ParticlePicker picker) {
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -437,9 +439,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
+		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
+		usezoombt.setFocusable(false);
+		
 		JToolBar tb = new JToolBar();
+		
 		tb.setFloatable(false);
 		tb.add(usezoombt);
+		tb.add(eraserbt);
 		// usezoombt.setBorderPainted(false);
 		paintpn.add(tb);
 
@@ -469,7 +476,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	
+	public boolean isEraserMode()
+	{
+		return eraserbt.isSelected();
+	}
 	
 	
 	protected void displayZoom()
@@ -604,7 +614,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		saveChanges();
 		getCanvas().repaint();
 		updateMicrographsModel(true);
-		getCanvas().setActive(null);
+		getCanvas().refreshActive(null);
 	}
 
 	protected void showImportDialog() {

@@ -293,7 +293,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			tiltedcanvas = new TiltedMicrographCanvas(this);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
 			if(!particles.isEmpty())
-				canvas.setActive(particles.get(particles.size() - 1));//needs both canvas to be initialized
+				canvas.refreshActive(particles.get(particles.size() - 1));//needs both canvas to be initialized
 		}
 		else
 		{
@@ -367,7 +367,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	protected void resetMicrograph()
 	{
 		pppicker.resetMicrograph(getMicrograph());
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setChanged(true);
 		
@@ -427,7 +427,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void resetData(){
 		pppicker.resetAllMicrographs();		
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setChanged(true);
 	}
@@ -442,7 +442,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
 			updateSize(getFamily().getSize());
-			canvas.setActive(null);
+			canvas.refreshActive(null);
 	}
 	
 	@Override

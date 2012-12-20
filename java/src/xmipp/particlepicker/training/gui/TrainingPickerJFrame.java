@@ -511,6 +511,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		JPanel ctfpn = new JPanel();
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
 		iconbt = new JButton();
+		iconbt.setToolTipText("Load CTF Profile");
 		iconbt.setBorderPainted(false); 
 	    iconbt.setContentAreaFilled(false); 
 	    iconbt.setFocusPainted(false); 
@@ -594,7 +595,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	protected void resetMicrograph()
 	{
 		ppicker.resetFamilyData(getFamilyData());
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setState(MicrographFamilyState.Available);
 	}
@@ -928,7 +929,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		getCanvas().repaint();
 		updateMicrographsModel();
 		updateSize(family.getSize());
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 	}
 
 	public void importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)

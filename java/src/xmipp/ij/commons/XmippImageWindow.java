@@ -4,11 +4,16 @@ import ij.IJ;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
 
+import java.awt.Cursor;
+import java.awt.Rectangle;
 import java.awt.Window;
 
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
+
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
@@ -60,6 +65,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);		
+		
 
 
 	}
