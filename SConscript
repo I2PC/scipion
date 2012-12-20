@@ -953,7 +953,7 @@ if int(env['mpi']):
 
 #---- Tests
 if int(env['gtest']):
-     #AddXmippCTest('test_ctf')
+     AddXmippCTest('test_ctf')
      AddXmippCTest('test_euler')
      AddXmippCTest('test_fftw')
      AddXmippCTest('test_filters')
