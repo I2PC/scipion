@@ -98,8 +98,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     center.initZeros();
     FringeProcessing fp;
 
-    int sign = -1;
-    int numNorm = 3;
+    int sign = 1;
+    int numNorm = 2;
     int numDescriptors0=3;
     int numDescriptors1=4;
     int numDescriptors2=21;
