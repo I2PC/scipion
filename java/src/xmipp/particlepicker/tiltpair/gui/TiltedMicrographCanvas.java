@@ -83,12 +83,12 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	public void mouseWheelMoved(int x, int y, int rotation)
 	{
-
+		getIw().setSize(uc.getIw().getSize());
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-		//if (getMagnification() <= 1.0)
+		if (getMagnification() <= 1.0)
 			imp.repaintWindow();
 
 	}
