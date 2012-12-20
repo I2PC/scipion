@@ -55,8 +55,20 @@ public:
     /// Output directory
     FileName fnOutDir;
 
+    /// Maximum deformation amplitude
+    double maxdefamp;
+
+    /// Deformation sampling
+    double defampsampling;
+
     /// Scaling factor to scale deformation amplitude
     double scale_defamp;
+
+    /// Translation sampling
+    double translsampling;
+
+    /// Maximum translation
+    double maxtransl;
 
     /// Sampling rate
     double sampling_rate;
@@ -91,7 +103,15 @@ public:
     /// Fixed Gaussian standard deviation
     double sigmaGaussian;
 
+    /// Sigma
+    double sigma;
+
+    /// Max iteration number
+    int max_no_iter;
+
 public:
+    // List of modes
+    std::vector<std::string> modeList;
 
     // Random generator seed
     int rangen;
