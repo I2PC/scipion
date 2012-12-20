@@ -11,7 +11,7 @@ from os.path import exists
 from protlib_base import *
 from protlib_filesystem import createLink, deleteFiles, replaceFilenameExt
 from protlib_utils import runJob
-from protocol_particle_pick import launchParticlePickingGUI, PM_READONLY, \
+from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, \
     PM_REVIEW
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE, MDL_PICKING_FAMILY, \
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE, MDL_ENABLED, \
@@ -49,6 +49,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         self.computeFamilies()
         filesToImport = [self.Input[k] for k in self.keysToImport]
+        filesToImport += getTemplateFiles(self.PrevRun)
         for family in self.familiesForAuto:
             filesToImport.append(self.PrevRun.getFilename('training', family=family))
             filesToImport.append(self.PrevRun.getFilename('pca', family=family))
