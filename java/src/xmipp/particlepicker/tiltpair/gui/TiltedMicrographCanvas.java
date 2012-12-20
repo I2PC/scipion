@@ -88,7 +88,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
+		//if (getMagnification() <= 1.0)
 			imp.repaintWindow();
 
 	}
@@ -191,9 +191,9 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 
 	@Override
-	public void setActive(TrainingParticle p)
+	public void refreshActive(TrainingParticle p)
 	{
-		frame.getCanvas().setActive(((TiltedParticle) p).getUntiltedParticle());
+		frame.getCanvas().refreshActive(((TiltedParticle) p).getUntiltedParticle());
 	}
 
 	@Override

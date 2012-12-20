@@ -1,28 +1,19 @@
 package xmipp.particlepicker;
 
-import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.Stroke;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.util.logging.Level;
 
-import javax.swing.SwingUtilities;
-
-import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Program;
-import xmipp.particlepicker.training.model.AutomaticParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.XmippWindowUtil;
@@ -79,6 +70,39 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 			}
 		});
+//		addMouseMotionListener(new MouseMotionListener() {
+//		    @Override
+//		    public void mouseMoved(MouseEvent e) {
+//		    	if(!getFrame().isEraserMode())
+//		    		return;
+//		    	
+//		        final int x = e.getX();
+//		        final int y = e.getY();
+//		        // only display a hand if the cursor is over the items
+//		        final Rectangle cellBounds = getBounds();
+//		        Toolkit toolkit = Toolkit.getDefaultToolkit();
+//		        Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getImage("clean.gif"), new Point(5, 5), "Eraser");
+//		        if (cellBounds != null && cellBounds.contains(x, y)) {
+//		            setCursor(eraserCursor);
+//		        } else {
+//		            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+//		        }
+//		        
+//		    }
+//		    
+//
+//		    @Override
+//		    public void mouseDragged(MouseEvent e) {
+//		    }
+//		});
+	}
+	
+	protected void refresh()
+	{
+		getFrame().updateMicrographsModel();
+		getFrame().setChanged(true);
+		repaint();
+	
 	}
 	
 	public void display()
@@ -123,7 +147,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
 		super.mouseWheelMoved(e);
-		if(e.isShiftDown())//zoom change detected	
+		if(e.isShiftDown() )//zoom change detected	
 			getFrame().displayZoom();
 	}
 
@@ -161,7 +185,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		setCursor(crosshairCursor);
 	}
 
-	public abstract void setActive(TrainingParticle p);
+	public abstract void refreshActive(TrainingParticle p);
 
 	public abstract TrainingParticle getActive();
 
