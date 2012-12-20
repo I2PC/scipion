@@ -43,7 +43,7 @@ public:
     bool addToInput;
 
 public:
-    double cutoff;
+    double cutoff, per;
 
     std::vector<PCAMahalanobisAnalyzer> pcaAnalyzer;
     MetaData SF, SFtrain;
