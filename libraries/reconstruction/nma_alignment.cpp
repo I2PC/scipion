@@ -122,7 +122,7 @@ void ProgNmaAlignment::show() {
 }
 
 // Produce side information ================================================
-ProgNmaAlignment *global_NMA_prog;
+ProgNmaAlignment *global_nma_prog;
 
 void ProgNmaAlignment::createWorkFiles() {
 	MetaData *pmdIn = getInputMd();
@@ -157,7 +157,7 @@ void ProgNmaAlignment::preProcess() {
 	imgSize = xdimOut;
 	//getImageSize(mdIn, imgSize, ydim, zdim, ndim);
 	// Set the pointer of the program to this object
-	global_NMA_prog = this;
+	global_nma_prog = this;
 	//create some neededs files
 	createWorkFiles();
 }
@@ -165,22 +165,6 @@ void ProgNmaAlignment::preProcess() {
 void ProgNmaAlignment::finishProcessing() {
 	XmippMetadataProgram::finishProcessing();
 	rename((fnOutDir+"/nmaDone.xmd").c_str(), fn_out.c_str());
-}
-
-void runSystem(const String &program, const String &arguments, bool useSystem =
-		true) {
-	if (useSystem) {
-		String cmd = formatString("%s %s", program.c_str(), arguments.c_str());
-#ifdef DEBUG
-		std::cerr << std::endl << ">>> RUNNING EXTERNALLY: " << cmd << std::endl;
-#endif
-		system(cmd.c_str());
-	} else {
-#ifdef DEBUG
-		std::cerr << std::endl << ">>> RUNNING INTERNALLY: " << program << std::endl;
-#endif
-		runProgram(program, arguments);
-	}
 }
 
 // Create deformed PDB =====================================================
@@ -365,34 +349,34 @@ void ProgNmaAlignment::updateBestFit(double fitness, int dim) {
 
 // Compute fitness =========================================================
 double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
-	int dim = global_NMA_prog->numberOfModes;
+	int dim = global_nma_prog->numberOfModes;
 
 	for (int i = 0; i < dim; i++) {
-		global_NMA_prog->trial(i) = X[i];
+		global_nma_prog->trial(i) = X[i];
 	}
 
 	int pyramidLevelDisc = 1;
-	int pyramidLevelCont = (global_NMA_prog->currentStage == 1) ? 1 : 0;
+	int pyramidLevelCont = (global_nma_prog->currentStage == 1) ? 1 : 0;
 
-	FileName fnRandom = global_NMA_prog->createDeformedPDB(pyramidLevelCont);
+	FileName fnRandom = global_nma_prog->createDeformedPDB(pyramidLevelCont);
 	const char * randStr = fnRandom.c_str();
 
-	if (global_NMA_prog->currentStage == 1) {
-		global_NMA_prog->performCompleteSearch(fnRandom, pyramidLevelDisc);
+	if (global_nma_prog->currentStage == 1) {
+		global_nma_prog->performCompleteSearch(fnRandom, pyramidLevelDisc);
 	} else {
 		double rot, tilt, psi, xshift, yshift;
 		MetaData DF;
 
-		rot = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 5);
-		tilt = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 4);
-		psi = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 3);
-		xshift = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 2);
-		yshift = global_NMA_prog->bestStage1(
-				VEC_XSIZE(global_NMA_prog->bestStage1) - 1);
+		rot = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 5);
+		tilt = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 4);
+		psi = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 3);
+		xshift = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 2);
+		yshift = global_nma_prog->bestStage1(
+				VEC_XSIZE(global_nma_prog->bestStage1) - 1);
 
 		size_t objId = DF.addObject();
 		FileName fnDown = formatString("%s_downimg.xmp", randStr);
@@ -405,14 +389,14 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror) {
 		DF.setValue(MDL_SHIFT_Y, yshift, objId);
 
 		DF.write(formatString("%s_angledisc.xmd", randStr));
-		link(global_NMA_prog->currentImgName.c_str(), fnDown.c_str());
+		link(global_nma_prog->currentImgName.c_str(), fnDown.c_str());
 	}
-	double fitness = global_NMA_prog->performContinuousAssignment(fnRandom,
+	double fitness = global_nma_prog->performContinuousAssignment(fnRandom,
 			pyramidLevelCont);
 
 	runSystem("rm", formatString("-rf %s* &", randStr));
 
-	global_NMA_prog->updateBestFit(fitness, dim);
+	global_nma_prog->updateBestFit(fitness, dim);
 	return fitness;
 }
 
