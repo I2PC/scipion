@@ -114,13 +114,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		}
 	}
 	
-	private void refresh()
-	{
-		frame.updateMicrographsModel();
-		frame.setChanged(true);
-		repaint();
 	
-	}
 
 	/**
 	 * Updates particle position and repaints if onpick.

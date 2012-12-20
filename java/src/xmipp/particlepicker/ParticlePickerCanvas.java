@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.util.logging.Level;
+
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -101,6 +102,14 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		});
 	}
 	
+	protected void refresh()
+	{
+		getFrame().updateMicrographsModel();
+		getFrame().setChanged(true);
+		repaint();
+	
+	}
+	
 	public void display()
 	{
 		if(iw != null && iw.isVisible())
@@ -143,7 +152,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
 		super.mouseWheelMoved(e);
-		if(e.isShiftDown())//zoom change detected	
+		if(e.isShiftDown() )//zoom change detected	
 			getFrame().displayZoom();
 	}
 

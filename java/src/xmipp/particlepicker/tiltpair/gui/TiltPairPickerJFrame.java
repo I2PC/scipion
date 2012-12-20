@@ -72,7 +72,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JCheckBoxMenuItem anglesmi;
 	private JMenuItem importffilesmi;
 	private ImportParticlesFromFilesTiltPairJDialog importffilesjd;
-	private ImageWindow tw;
 
 	public TiltPairPicker getParticlePicker()
 	{
@@ -178,7 +177,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		particlespn.add(fieldspn, 0);
 		initImagePane();
-		particlespn.add(symbolpn, 1);
+		particlespn.add(imagepn, 1);
 
 		index = pppicker.getMicrographIndex();
 		System.out.println(index);
@@ -303,6 +302,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		}
 		canvas.display();
 		tiltedcanvas.display(0.7f, 0);
+		updateZoom();
+		
+		if(usezoombt.isSelected())
+			tiltedcanvas.setZoom(getZoom());
 	}
 
 	public ParticlePickerCanvas getCanvas()

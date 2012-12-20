@@ -657,17 +657,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			canvas.updateMicrograph();
 
 		canvas.display();
-		double zoom = Double.parseDouble(usezoombt.getText());
-		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))// setting
-																	// canvas
-																	// magnification
-		{
-			zoom = canvas.getMagnification();
-			usezoombt.setText(String.format("%.2f", zoom));
-		}
-		else if (usezoombt.isSelected())
-			canvas.setZoom(zoom);
+		updateZoom();
 	}
+	
+	
 
 	private void formatMicrographsTable()
 	{

@@ -475,6 +475,23 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		imagepn.add(paintpn);
 
 	}
+	
+	protected void updateZoom()
+	{
+		double zoom = getZoom();
+		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))
+		{
+			zoom = getCanvas().getMagnification();
+			usezoombt.setText(String.format("%.2f", zoom));
+		}
+		else if (usezoombt.isSelected())
+			getCanvas().setZoom(zoom);
+	}
+	
+	public double getZoom()
+	{
+		return Double.parseDouble(usezoombt.getText());
+	}
 
 	public boolean isEraserMode()
 	{
