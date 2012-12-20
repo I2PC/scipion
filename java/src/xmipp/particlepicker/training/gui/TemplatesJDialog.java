@@ -18,7 +18,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 
+import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.ImageGeneric;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -54,6 +56,7 @@ public class TemplatesJDialog extends JDialog {
 		try {
 			frame.updateTemplates();
 			ImageGeneric templates = frame.getFamily().getTemplates();
+			
 			int size = frame.getFamily().getSize();
 
 

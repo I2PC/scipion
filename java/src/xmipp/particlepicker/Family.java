@@ -3,6 +3,7 @@ package xmipp.particlepicker;
 import java.awt.Color;
 import java.lang.reflect.Field;
 
+import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.SupervisedParticlePicker;
@@ -33,15 +34,42 @@ public class Family {
 	}
 
 	public Family(String name, Color color, int size, int templatesNumber) {
-		this(name, color, size, FamilyState.Manual, templatesNumber, null);
-	}
-
-	public Family(String name, Color color, int size) {
-		this(name, color, size, FamilyState.Manual, 1, null);
+		this(name, color, size, FamilyState.Manual, null, templatesNumber);
 	}
 
 	public Family(String name, Color color, int size, FamilyState state,
-			int templatesNumber, ParticlePicker ppicker) {
+			ParticlePicker ppicker, ImageGeneric templates) {
+		if (size < 0 || size > sizemax)
+			throw new IllegalArgumentException(String.format(
+					"Size should be between 0 and %s, %s not allowed", sizemax,
+					size));
+		if (name == null || name.equals(""))
+			throw new IllegalArgumentException(
+					XmippMessage.getEmptyFieldMsg("name"));
+		this.name = name;
+		this.color = color;
+		this.size = size;
+		this.state = state;
+		if(templates != null)
+			try
+			{
+				templatesNumber = ((int)templates.getNDim());
+				this.templates = templates;
+				XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				throw new IllegalArgumentException();
+			}
+		else
+			setTemplatesNumber(1);
+		
+	}
+	
+
+	public Family(String name, Color color, int size, FamilyState state,
+			ParticlePicker ppicker, int templatesNumber) {
 		if (size < 0 || size > sizemax)
 			throw new IllegalArgumentException(String.format(
 					"Size should be between 0 and %s, %s not allowed", sizemax,
@@ -54,8 +82,13 @@ public class Family {
 		this.size = size;
 		this.state = state;
 		setTemplatesNumber(templatesNumber);
-
+	
 	}
+	
+	public Family(String name, Color color) {
+		this(name, color, getDefaultSize(), FamilyState.Manual, null, null);
+	}
+
 
 
 	public void initTemplates() {
@@ -74,10 +107,7 @@ public class Family {
 		return templates;
 	}
 
-	public Family(String name, Color color) {
-		this(name, color, getDefaultSize(), FamilyState.Manual, 1, null);
-	}
-
+	
 	public FamilyState getStep() {
 		return state;
 	}

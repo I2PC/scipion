@@ -190,7 +190,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 
 		templatesmi = new JMenuItem("Templates");
-		templatesmi.setEnabled(ppicker.getMode() == FamilyState.Manual);
 		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
@@ -221,44 +220,51 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 			}
 		});
-
-
 	}
 
 	public void loadTemplates()
 	{
-		try
+//		try
+//		{
+//			canvas.setEnabled(false);
+//			XmippWindowUtil.blockGUI(this, "Generating Templates...");
+//
+//			Thread t = new Thread(new Runnable()
+//			{
+//				public void run()
+//				{
+//					if (templatesdialog == null)
+//						templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+//					else
+//					{
+//
+//						templatesdialog.loadTemplates(true);
+//						templatesdialog.setVisible(true);
+//					}
+//					canvas.setEnabled(true);
+//					XmippWindowUtil.releaseGUI(getRootPane());
+//				}
+//			});
+//			t.start();
+//
+//		}
+//		catch (Exception e)
+//		{
+//			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+//
+//			if (templatesdialog != null)
+//				templatesdialog.close();
+//			templatesdialog = null;
+//			throw new IllegalArgumentException(e.getMessage());
+//		}
+		
+		if (templatesdialog == null)
+			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+		else
 		{
-			canvas.setEnabled(false);
-			XmippWindowUtil.blockGUI(this, "Generating Templates...");
 
-			Thread t = new Thread(new Runnable()
-			{
-				public void run()
-				{
-					if (templatesdialog == null)
-						templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-					else
-					{
-
-						templatesdialog.loadTemplates(true);
-						templatesdialog.setVisible(true);
-					}
-					canvas.setEnabled(true);
-					XmippWindowUtil.releaseGUI(getRootPane());
-				}
-			});
-			t.start();
-
-		}
-		catch (Exception e)
-		{
-			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-
-			if (templatesdialog != null)
-				templatesdialog.close();
-			templatesdialog = null;
-			throw new IllegalArgumentException(e.getMessage());
+			templatesdialog.loadTemplates(true);
+			templatesdialog.setVisible(true);
 		}
 	}
 
@@ -518,7 +524,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				String psd = getMicrograph().getPSD();
 				String ctf = getMicrograph().getCTF();
 				if(psd != null && ctf != null)
-					ImagesWindowFactory.openCTFWindow(getMicrograph().getImagePlus(), getMicrograph().getCTF(), getMicrograph().getPSD());
+					ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
 				
 			}
 		});
@@ -552,7 +558,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// is same micrograph??
 		if (index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())
 			return;
-		ppicker.saveData(getMicrograph());// Saving changes when switching
+		if(ppicker.isChanged())
+			ppicker.saveData(getMicrograph());// Saving changes when switching
 											// micrographs, by Coss suggestion
 
 
@@ -835,7 +842,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		getFamilyData().deleteBelowThreshold(getThreshold());
 		setState(MicrographFamilyState.ReadOnly);
-		ppicker.persistAutomaticParticles(getFamilyData());
+		ppicker.saveAutomaticParticles(getFamilyData());
 
 		try
 		{
@@ -965,7 +972,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void updateTemplates()
 	{
-		ppicker.updateFamilyTemplates(family);
+		ppicker.updateTemplates(family);
 
 	}
 
