@@ -57,7 +57,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		this.micrograph = frame.getMicrograph();
 		updateMicrographData();
 		if(!frame.getFamilyData().getParticles().isEmpty())
-			setActive(getLastParticle());
+			refreshActive(getLastParticle());
 		else
 			active = null;
 		
@@ -189,7 +189,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	}
 
 	@Override
-	public void setActive(TrainingParticle p)
+	public void refreshActive(TrainingParticle p)
 	{
 		active = p;
 		repaint();

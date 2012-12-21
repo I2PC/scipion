@@ -195,7 +195,7 @@ public class MicrographFamilyData
 		return false;
 	}
 
-	public boolean isActionVisible(double threshold)
+	public boolean isActionVisible()
 	{
 
 		if (family.getStep() != FamilyState.Supervised)
