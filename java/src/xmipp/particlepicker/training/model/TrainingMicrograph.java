@@ -1,6 +1,8 @@
 package xmipp.particlepicker.training.model;
 
 
+import ij.ImagePlus;
+
 import java.awt.Image;
 import java.io.File;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import javax.swing.ImageIcon;
 
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.jni.Filename;
+import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
 
@@ -69,6 +72,15 @@ public class TrainingMicrograph extends Micrograph{
 	public String getAutoPosFile()
 	{
 		return autofilename;
+	}
+	
+	public ImagePlus getPSDImage()
+	{
+		if(psd == null || !(new File(psd).exists()))
+			return null;
+			
+		return XmippIJUtil.getImagePlus(psd);
+		
 	}
 	
 	public Icon getCTFIcon()
@@ -196,6 +208,30 @@ public class TrainingMicrograph extends Micrograph{
 		mfdatas.remove(getFamilyData(family));
 		
 	}
+
+
+	public void removeParticles(int x, int y, TrainingPicker ppicker)
+	{
+		List<TrainingParticle> particles = new ArrayList<TrainingParticle>();
+		for(MicrographFamilyData mfd: mfdatas)
+		{
+			for(TrainingParticle p: mfd.getManualParticles())
+				if (p.contains(x, y)) 
+					particles.add(p);
+			for(TrainingParticle p: particles)
+				removeParticle(p, ppicker);
+			particles.clear();
+			for(AutomaticParticle p: mfd.getAutomaticParticles())
+				if (p.contains(x, y)) 
+					particles.add(p);
+
+			for(TrainingParticle p: particles)
+				removeParticle(p, ppicker);
+		}
+		
+	}
+	
+	
 
 
 	

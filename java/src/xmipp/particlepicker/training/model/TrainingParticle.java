@@ -77,12 +77,7 @@ public class TrainingParticle extends Particle{
 	
 	public boolean contains(int x2, int y2 )
 	{
-		int radius = family.getSize()/2;
-			if(x2 < x - radius || x2 > x + radius)
-				return false;
-			if(y2 < y - radius || y2 > y + radius)
-				return false;
-			return true;
+		return super.contains(x2, y2, family.getSize());
 	}
 
 	

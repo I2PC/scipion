@@ -83,7 +83,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	public void mouseWheelMoved(int x, int y, int rotation)
 	{
-
+		getIw().setSize(uc.getIw().getSize());
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
@@ -191,9 +191,9 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 
 	@Override
-	public void setActive(TrainingParticle p)
+	public void refreshActive(TrainingParticle p)
 	{
-		frame.getCanvas().setActive(((TiltedParticle) p).getUntiltedParticle());
+		frame.getCanvas().refreshActive(((TiltedParticle) p).getUntiltedParticle());
 	}
 
 	@Override

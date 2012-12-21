@@ -3,6 +3,7 @@ package xmipp.particlepicker.tiltpair.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.jni.Particle;
 import xmipp.particlepicker.Micrograph;
 
 public class TiltedMicrograph extends Micrograph
@@ -71,6 +72,16 @@ public class TiltedMicrograph extends Micrograph
 	public void setUntiltedMicrograph(UntiltedMicrograph untiltedmicrograph)
 	{
 		this.untiltedmicrograph = untiltedmicrograph;
+	}
+
+	public void removeParticles(int x, int y)
+	{
+		List<TiltedParticle> particles = new ArrayList<TiltedParticle>();
+		for(TiltedParticle p: getParticles())
+			if (p.contains(x, y, p.getFamily().getSize())) 
+				particles.add(p);
+		for(TiltedParticle p: particles)
+			removeParticle(p);
 	}
 
 	

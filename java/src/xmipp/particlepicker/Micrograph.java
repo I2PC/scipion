@@ -9,6 +9,7 @@ import java.util.logging.Level;
 
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 
 public abstract class Micrograph {
@@ -51,6 +52,8 @@ public abstract class Micrograph {
 		this.posfile = name + ext;
 
 	}
+	
+	
 
 	public boolean fits(int x, int y, int size) {
 		if (x < 0 || y < 0) return false;
