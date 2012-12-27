@@ -6,8 +6,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.util.List;
-
-import ij.ImagePlus;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Particle;
 import xmipp.particlepicker.Shape;
@@ -27,18 +25,18 @@ public class MicrographCanvas extends XmippImageCanvas
 		{
 			particles = pl.getParticles();
 			mc = new MicrographCanvas(pl, 30);
-		mc.display();
+			mc.display();
 		}
 	}
 
 	private List<Particle> particles;
 	private int size;
-	private MicrographData loader;
+	private MicrographData micdata;
 
 	public MicrographCanvas(MicrographData loader, int size)
 	{
 		super(loader.getMicrograph().getImagePlus());
-		this.loader = loader;
+		this.micdata = loader;
 		this.particles = loader.getParticles();
 		this.size = size;
 		// TODO Auto-generated constructor stub

@@ -43,6 +43,19 @@ public class MicrographData
 	{
 		return micrograph;
 	}
+	
+	public static void openMicrographs(String mdfile)
+	{
+		
+		
+		List<MicrographData> micdatas = MicrographData.getMicrographData(mdfile);
+		MicrographCanvas mc;
+		for(MicrographData pl: micdatas)
+		{
+			mc = new MicrographCanvas(pl, 30);
+			mc.display();
+		}
+	}
 
 	private void loadData()
 	{
