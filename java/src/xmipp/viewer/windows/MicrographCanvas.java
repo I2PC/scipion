@@ -19,20 +19,27 @@ public class MicrographCanvas extends XmippImageCanvas
 	{
 		
 		String mdfile = args[0];
-		String micfile = args[1];
-		ParticlesLoader pmd = new ParticlesLoader(mdfile, micfile);
-		List<Particle> particles = pmd.getParticles();
-		MicrographCanvas mc = new MicrographCanvas(pmd.getMicrograph().getImagePlus(), particles, 30);
+		
+		List<MicrographData> loaders = MicrographData.getMicrographData(mdfile);
+		List<Particle> particles;
+		MicrographCanvas mc;
+		for(MicrographData pl: loaders)
+		{
+			particles = pl.getParticles();
+			mc = new MicrographCanvas(pl, 30);
 		mc.display();
+		}
 	}
 
 	private List<Particle> particles;
 	private int size;
+	private MicrographData loader;
 
-	public MicrographCanvas(ImagePlus imp, List<Particle> particles, int size)
+	public MicrographCanvas(MicrographData loader, int size)
 	{
-		super(imp);
-		this.particles = particles;
+		super(loader.getMicrograph().getImagePlus());
+		this.loader = loader;
+		this.particles = loader.getParticles();
 		this.size = size;
 		// TODO Auto-generated constructor stub
 	}
@@ -62,7 +69,7 @@ public class MicrographCanvas extends XmippImageCanvas
 			g2.drawOval(x - radius, y - radius, size, size);
 		else if (shape == Shape.Center)
 		{
-			int distance = 10;
+			int distance = (int)(radius/5. * magnification);
 			g2.drawLine(x, y - distance, x, y + distance);
 			g2.drawLine(x + distance, y, x - distance, y);
 		}
@@ -75,6 +82,7 @@ public class MicrographCanvas extends XmippImageCanvas
 		for(Particle p: particles)
 		{
 			drawShape(g2, Shape.Rectangle, getXOnImage(p.getX()), getYOnImage(p.getY()), size);
+			drawShape(g2, Shape.Center, getXOnImage(p.getX()), getYOnImage(p.getY()), size);
 		}
 	}
 

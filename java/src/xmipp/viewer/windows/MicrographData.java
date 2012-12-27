@@ -8,28 +8,28 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.particlepicker.Micrograph;
 
-public class ParticlesLoader
+public class MicrographData
 {
 	private String mdfile;
 	private List<Particle> particles;
 	private Micrograph micrograph;
 	private String micfile;
 
-	public ParticlesLoader(String mdfile, String micfile)
+	public MicrographData(String mdfile, String micfile)
 	{
 		this.mdfile = mdfile;
 		this.particles = new ArrayList<Particle>();
 		this.micfile = micfile;
 		this.micrograph = new Micrograph(micfile)
 		{
-			
+
 			@Override
 			public void reset()
 			{
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public boolean hasData()
 			{
@@ -38,7 +38,7 @@ public class ParticlesLoader
 		};
 		loadData();
 	}
-	
+
 	public Micrograph getMicrograph()
 	{
 		return micrograph;
@@ -68,6 +68,52 @@ public class ParticlesLoader
 	public List<Particle> getParticles()
 	{
 		return particles;
+	}
+
+	public String getMicrographFile()
+	{
+		return micfile;
+	}
+
+	public static List<MicrographData> getMicrographData(String file)
+	{
+		List<MicrographData> loaders = new ArrayList<MicrographData>();
+		MetaData md = new MetaData(file);
+		Particle p;
+		int x, y;
+		String micfileiter;
+		boolean exists;
+		MicrographData data = null;
+		for (long id : md.findObjects())
+		{
+			exists = false;
+			micfileiter = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+			for (MicrographData dataiter : loaders)
+				if (dataiter.getMicrographFile().equals(micfileiter))
+				{
+					exists = true;
+					data = dataiter;
+					break;
+				}
+			if (!exists)
+			{
+				data = new MicrographData(file, micfileiter);
+				loaders.add(data);
+			}
+			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
+			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
+			p = new Particle(x, y);
+			data.addParticle(p);
+
+		}
+		return loaders;
+
+	}
+
+	private void addParticle(Particle p)
+	{
+		particles.add(p);
+
 	}
 
 }

@@ -190,7 +190,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int radius = (int) (p.getFamily().getSize() / 2 * magnification);
 		int x = getXOnImage(p.getX());
 		int y = getYOnImage(p.getY());
-		int distance = (int) (10 * magnification);
+		int distance = (int) (radius/5. * magnification);
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, size, size);
