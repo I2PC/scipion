@@ -18,9 +18,6 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -299,8 +296,8 @@ public abstract class ParticlePicker
 		String name, templatesfile;
 		ImageGeneric templates;
 
-		try
-		{
+		try {
+
 			MetaData md = new MetaData(file);
 			long[] ids = md.findObjects();
 			for (long id : ids)
@@ -309,9 +306,8 @@ public abstract class ParticlePicker
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
 				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
-
-				if (templatesNumber == null || templatesNumber <= 0)
-					templatesNumber = 1;// compatibility with previous projects
+				if( templatesNumber == null || templatesNumber == 0)
+					templatesNumber = 1;//for compatibility with previous projects
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 
 				state = validateState(state);
@@ -337,13 +333,16 @@ public abstract class ParticlePicker
 		}
 	}
 
-	public String getTemplatesFile(String f)
+
+
+
+	public String getTemplatesFile(String name)
 	{
-		return getOutputPath(f + "_template.stk");
+		return getOutputPath(name + "_templates.stk");
 	}
 
-	public FamilyState validateState(FamilyState state)
-	{
+	public FamilyState validateState(FamilyState state) {
+
 
 		if (mode == FamilyState.Review && state != FamilyState.Review)
 		{

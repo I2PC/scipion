@@ -2,7 +2,6 @@ package xmipp.particlepicker;
 
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -18,7 +17,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.util.logging.Level;
-
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.TrainingParticle;
@@ -82,7 +80,9 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 			}
 		});
+
 		addMouseMotionListener(this);
+
 	}
 
 	protected void setCustomCursor(MouseEvent e)

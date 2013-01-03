@@ -115,6 +115,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 				return;
 			}
+
 			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
 				um.addParticleToAligner(active, true);
 			UntiltedParticle p = um.getParticle(x, y, (int) (frame.getParticleSize()));
@@ -176,6 +177,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 				return;
 			}
+
 
 			if (active != null && um.fits(x, y, frame.getParticleSize()))
 

@@ -197,7 +197,15 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		}
 	}
 
-	
+	@Override
+	public void refreshActive(TrainingParticle p)
+	{
+		active = p;
+		repaint();
+
+	}
+
+
 	@Override
 	public ParticlePickerJFrame getFrame()
 	{
@@ -216,15 +224,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		return active;
 	}
 
-
-
-
-	@Override
-	public void refreshActive(TrainingParticle p)
-	{
-		active = p;
-		repaint();
-	}
 
 	
 

@@ -441,12 +441,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt.setFocusable(false);
 		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
 		usezoombt.setFocusable(false);
+
 		
 		JToolBar tb = new JToolBar();
 		
 		tb.setFloatable(false);
 		tb.add(usezoombt);
 		tb.add(eraserbt);
+
 		// usezoombt.setBorderPainted(false);
 		paintpn.add(tb);
 
@@ -493,10 +495,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return Double.parseDouble(usezoombt.getText());
 	}
 
+
 	public boolean isEraserMode()
 	{
 		return eraserbt.isSelected();
 	}
+
 	
 	
 	protected void displayZoom()

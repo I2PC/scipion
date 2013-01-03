@@ -384,17 +384,17 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	public void saveData() {
-		//System.out.println("Saving data...");
-		if (isChanged()) {
+	public void saveData()
+	{
+		// System.out.println("Saving data...");
+		if (isChanged())
+		{
 
 			super.saveData();
 			saveMicrographs();
 			saveTemplates();
 		}
 	}
-
-	
 
 	public int getAutomaticNumber(Family f, double threshold)
 	{
@@ -667,33 +667,31 @@ public abstract class TrainingPicker extends ParticlePicker
 			throw new IllegalArgumentException(e);
 		}
 	}
-	
-	
 
 	public void updateTemplates(Family f)
 	{
-		if(family.getStep() != FamilyState.Manual)
-			return;//nothing to update
+		if (family.getStep() != FamilyState.Manual)
+			return;// nothing to update
 		f.initTemplates();
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
 		try
 		{
-		for (TrainingMicrograph m : micrographs)
-		{
-			mfd = m.getFamilyData(f);
-			for (int i = 0; i < mfd.getManualParticles().size(); i++)
+			for (TrainingMicrograph m : micrographs)
 			{
-				particles = mfd.getManualParticles();
-				igp = particles.get(i).getImageGeneric();
-				if (i < f.getTemplatesNumber())
-					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-				else
-					
+				mfd = m.getFamilyData(f);
+				for (int i = 0; i < mfd.getManualParticles().size(); i++)
+				{
+					particles = mfd.getManualParticles();
+					igp = particles.get(i).getImageGeneric();
+					if (i < f.getTemplatesNumber())
+						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+					else
+
 						f.getTemplates().alignImages(igp);
-					}
-					
+				}
+
 			}
 		}
 		catch (Exception e)
@@ -702,8 +700,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
-	
-	
+
 	public void saveTemplates()
 	{
 		ImageGeneric templates;
@@ -726,8 +723,8 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-
-	public String getImportMicrographName(String path, String filename, Format f) {
+	public String getImportMicrographName(String path, String filename, Format f)
+	{
 
 		String base = Filename.removeExtension(Filename.getBaseName(filename));
 		switch (f)
@@ -745,14 +742,16 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	public boolean hasParticles() {
+	public boolean hasParticles()
+	{
 		System.out.println("Looking for particles");
-		for(TrainingMicrograph m: micrographs)
-			for(MicrographFamilyData mfd: m.getFamiliesData())
-				if(mfd.hasManualParticles())
+		for (TrainingMicrograph m : micrographs)
+			for (MicrographFamilyData mfd : m.getFamiliesData())
+				if (mfd.hasManualParticles())
 					return true;
 		return false;
-        }
+	}
+
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
@@ -842,4 +841,5 @@ public abstract class TrainingPicker extends ParticlePicker
 			return false;
 		}
 	}
+
 }
