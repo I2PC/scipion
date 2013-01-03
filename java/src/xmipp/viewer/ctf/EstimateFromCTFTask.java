@@ -27,6 +27,7 @@ public class EstimateFromCTFTask extends CommandTask {
                 + " --min_freq " + ellipseCTF.getLowFreq()
                 + " --max_freq " + ellipseCTF.getHighFreq()
                 + " --Q0 " + ellipseCTF.getQ0()
+                + " --defocus_range 5000"
                 
                 ,//+ " ; " + getSortCmd(sortFn),
                 row,
