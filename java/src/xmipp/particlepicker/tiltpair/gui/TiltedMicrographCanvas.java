@@ -93,35 +93,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	}
 
-	public void paint(Graphics g)
-	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
-		g2.setColor(frame.getColor());
-		int index = 0;
-		List<TiltedParticle> particles = um.getTiltedMicrograph().getParticles();
-		for (TiltedParticle p : particles)
-		{
-			drawShape(g2, p, index == (particles.size() - 1));
-			index++;
-		}
-		
-		if (uc.getActiveTiltedParticle() != null)
-		{
-			g2.setColor(Color.red);
-			drawShape(g2, uc.getActiveParticle().getTiltedParticle(), true);
-		}
-		if(frame.drawAngles())
-			drawLine(Math.toRadians(um.getTiltedAngle()), g2);
-		g.drawImage(offscreen, 0, 0, this);
-	}
+	
 
 	public void mousePressed(MouseEvent e)
 	{
@@ -212,6 +184,28 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	public TrainingParticle getActive()
 	{
 		return active;
+	}
+
+	@Override
+	protected void doCustomPaint(Graphics2D g2)
+	{
+		g2.setColor(frame.getColor());
+		int index = 0;
+		List<TiltedParticle> particles = um.getTiltedMicrograph().getParticles();
+		for (TiltedParticle p : particles)
+		{
+			drawShape(g2, p, index == (particles.size() - 1));
+			index++;
+		}
+		
+		if (uc.getActiveTiltedParticle() != null)
+		{
+			g2.setColor(Color.red);
+			drawShape(g2, uc.getActiveParticle().getTiltedParticle(), true);
+		}
+		if(frame.drawAngles())
+			drawLine(Math.toRadians(um.getTiltedAngle()), g2);
+		
 	}
 	
 

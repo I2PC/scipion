@@ -160,17 +160,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	
 	
 
-	public void paint(Graphics g)
+	protected void doCustomPaint(Graphics2D g2)
 	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
 		if (frame.getFamily().getStep() == FamilyState.Manual)
 			for (MicrographFamilyData mfdata : micrograph.getFamiliesData())
 				drawFamily(g2, mfdata);
@@ -183,7 +174,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			g2.setStroke(activest);
 			drawShape(g2, active, true);
 		}
-		g.drawImage(offscreen, 0, 0, this);
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)

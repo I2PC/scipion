@@ -176,7 +176,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 				return;
 			}
-			
+
 			if (active != null && um.fits(x, y, frame.getParticleSize()))
 
 			{
@@ -206,38 +206,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			zoomOut(x, y);
 		if (getMagnification() <= 1.0)
 			imp.repaintWindow();
-		
+
 		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
-	}
-
-	public void paint(Graphics g)
-	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
-		g2.setColor(frame.getColor());
-		int index = 0;
-
-		for (TrainingParticle p : um.getParticles())
-		{
-			drawShape(g2, p, index == (um.getParticles().size() - 1));
-			index++;
-		}
-		if (active != null)
-		{
-			g2.setColor(Color.red);
-			drawShape(g2, active, true);
-		}
-		if (frame.drawAngles())
-			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);
-		g.drawImage(offscreen, 0, 0, this);
 	}
 
 	private void addParticle(int x, int y)
@@ -267,7 +237,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	private void removeParticle(UntiltedParticle p)
 	{
 		um.removeParticle(p);
-		
+
 		if (active != null && active.equals(p))
 		{
 			if (!um.getParticles().isEmpty())
@@ -306,6 +276,29 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	public TrainingParticle getActive()
 	{
 		return active;
+	}
+
+	@Override
+	protected void doCustomPaint(Graphics2D g2)
+	{
+		g2.setColor(frame.getColor());
+		int index = 0;
+
+		for (TrainingParticle p : um.getParticles())
+		{
+			drawShape(g2, p, index == (um.getParticles().size() - 1));
+			index++;
+		}
+		if (active != null)
+		{
+			g2.setColor(Color.red);
+			drawShape(g2, active, true);
+		}
+		if (frame.drawAngles())
+			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);// TODO
+																// Auto-generated
+																// method stub
+
 	}
 
 }

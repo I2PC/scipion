@@ -171,6 +171,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String FILE = "File";
 	public final String FILE_OPEN = "File.Open_mi";
 	public final String FILE_OPENWITH_IJ = "File.OpenWithIJ_mi";
+	public final String FILE_OPENMICROGRAPHS = "File.OpenMicrographs_mi";
 	public final String FILE_OPENWITH_CHIMERA = "File.OpenWithChimera_mi";
 	public final String FILE_SAVE = "File.Save_mi";
 	public final String FILE_SAVEAS = "File.SaveAs_mi";
