@@ -63,6 +63,7 @@ import xmipp.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
+import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -204,6 +205,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		filemn.add(savemi);
 		importffmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
 		filemn.add(importffmi);
+		if (picker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
 		importffmi.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -211,26 +214,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 
-		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
-		filemn.add(exportmi);
-		exportmi.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				XmippFileChooser fc = new XmippFileChooser();
-				int returnVal = fc.showOpenDialog(ParticlePickerJFrame.this);
-
-				try {
-					if (returnVal == XmippFileChooser.APPROVE_OPTION) {
-						File file = fc.getSelectedFile();
-						getParticlePicker().exportParticles(file.getAbsolutePath());
-						showMessage("Export successful");
-					}
-				} catch (Exception ex) {
-					showException(ex);
-				}
-			}
-		});
+		
 		exitmi = new JMenuItem("Exit");
 		exitmi.addActionListener(new ActionListener() {
 
@@ -613,11 +597,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	/** Shortcut function to show messages */
-	private boolean showMessage(String message) {
+	public boolean showMessage(String message) {
 		return XmippDialog.showInfo(this, message);
 	}
 
-	private boolean showException(Exception e) {
+	public boolean showException(Exception e) {
 		return XmippDialog.showException(this, e);
 	}
 
@@ -631,12 +615,15 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		getParticlePicker().importParticlesFromFolder(dir, format, scale, invertx, inverty);
-		saveChanges();
+		
+		doImport(format, dir, scale, invertx, inverty);
 		getCanvas().repaint();
 		updateMicrographsModel(true);
 		getCanvas().refreshActive(null);
 	}
+
+	protected abstract void doImport(Format format, String dir, float scale, boolean invertx, boolean inverty);
+
 
 	protected void showImportDialog() {
 		if (importpjd == null) importpjd = new ImportParticlesJDialog(ParticlePickerJFrame.this);

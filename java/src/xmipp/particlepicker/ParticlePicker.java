@@ -43,8 +43,7 @@ public abstract class ParticlePicker
 	protected Family family;
 	protected String configfile;
 
-	public static final int defAutoPickPercent = 90;
-	private int autopickpercent = defAutoPickPercent;
+	
 
 	public int getSize()
 	{
@@ -393,7 +392,7 @@ public abstract class ParticlePicker
 
 	public abstract void saveData(Micrograph m);
 
-	public abstract int getManualParticlesNumber(Family f);
+	
 
 	public void persistFilters()
 	{
@@ -463,76 +462,12 @@ public abstract class ParticlePicker
 		return null;
 	}
 
-	public void setAutopickpercent(int autopickpercent)
-	{
-		this.autopickpercent = autopickpercent;
-		System.out.println(autopickpercent);
-	}
 
-	public int getAutopickpercent()
-	{
-		return autopickpercent;
-	}
 
-	public void saveConfig()
-	{
-		try
-		{
-			MetaData md;
-			String file = configfile;
-			md = new MetaData();
-			long id = md.addObject();
-			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
-			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
-			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
-			md.write(file);
-			md.destroy();
+	public abstract void saveConfig();
 
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
-
-	public void loadConfig()
-	{
-		String file = configfile;
-		if (!new File(file).exists())
-		{
-			family = families.get(0);
-			setMicrograph(getMicrographs().get(0));
-
-			return;
-
-		}
-
-		String mname, fname;
-		try
-		{
-			MetaData md = new MetaData(file);
-			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
-			for (long id : md.findObjects())
-			{
-
-				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
-				family = getFamily(fname);
-
-				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-				setMicrograph(getMicrograph(mname));
-				if (hasautopercent)
-					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-
-			}
-			md.destroy();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
+	public abstract void loadConfig();
+	
 
 	void removeFilter(String filter)
 	{
@@ -553,7 +488,7 @@ public abstract class ParticlePicker
 		return false;
 	}// function isFilterSelected
 
-	public abstract void exportParticles(String absolutePath);
+	
 
 	public Format detectFormat(String path)
 	{
@@ -570,12 +505,7 @@ public abstract class ParticlePicker
 			return Format.Eman;
 		return Format.Unknown;
 	}
-
-	public abstract String getImportMicrographName(String path, String filename, Format f);
-
-	/** Return the number of particles imported */
-	public abstract int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty);
-
+	
 	/** Return the number of particles imported from a file */
 	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty)
 	{
@@ -637,6 +567,9 @@ public abstract class ParticlePicker
 		md.operate(String.format("xcoor=xcoor+%d,ycoor=ycoor+%d", half, half));
 
 	}// function fillParticlesMdFromEmanFile
+
+
+	
 
 	public void runXmippProgram(String program, String args)
 	{

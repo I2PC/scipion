@@ -455,4 +455,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		importpjd.showDialog();
 	}
 
+	@Override
+	protected void doImport(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	{
+		pppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+	}
+
 }//class TiltPairPickerJFrame
