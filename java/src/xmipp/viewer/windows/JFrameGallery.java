@@ -60,6 +60,8 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+
+import xmipp.particlepicker.particles.ExtractParticlePicker;
 import xmipp.utils.XmippFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -1788,7 +1790,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 
 	public void openMicrographs()
 	{
-		MicrographData.openMicrographs(data.filename);
+		ExtractParticlePicker.open(data.filename);
 		
 	}
 
