@@ -43,9 +43,9 @@ double kaiser_value(double r, double a, double alpha, int m)
     double rda, rdas, arg, w;
 
     rda = r / a;
-    rdas = rda * rda;
-    if (rdas <= 1.0)
+    if (rda <= 1.0)
     {
+        rdas = rda * rda;
         arg = alpha * sqrt(1.0 - rdas);
         if (m == 0)
         {
