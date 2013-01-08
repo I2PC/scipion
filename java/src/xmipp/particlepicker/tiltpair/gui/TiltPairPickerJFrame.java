@@ -40,6 +40,7 @@ import xmipp.particlepicker.ImportParticlesJDialog;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
+import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -115,6 +116,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		mb = new JMenuBar();
 
+		filemn.add(importffmi);
+		if (pppicker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
 		importffilesmi = new JMenuItem("Import Particles From Files");
 		importffilesmi.addActionListener(new ActionListener() {
 			
@@ -186,30 +190,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	class ColorActionListener implements ActionListener
-	{
-		JColorChooser colorChooser;
-
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			// Set up the dialog that the button brings up.
-			colorChooser = new JColorChooser();
-			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
-					colorChooser, new ActionListener()
-					{
-
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							pppicker.setColor(colorChooser.getColor());
-						}
-					}, // OK button handler
-					null); // no CANCEL button handler
-			XmippWindowUtil.setLocation(position, 0.5f, dialog);
-			dialog.setVisible(true);
-		}
-	}
+	
 
 	private void initMicrographsPane()
 	{
@@ -435,7 +416,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		pppicker.resetAllMicrographs();		
 		canvas.refreshActive(null);
 		updateMicrographsModel();
-		setChanged(true);
 	}
 	
 	public void importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
@@ -460,6 +440,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		importParticlesFromFolder(format, dir, scale, invertx, inverty);
 		
+	}
+
+	@Override
+	public ParticlesJDialog initParticlesJDialog()
+	{
+		return new TiltPairParticlesJDialog(this);
 	}
 
 }//class TiltPairPickerJFrame

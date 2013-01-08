@@ -45,6 +45,41 @@ public abstract class ParticlePicker
 
 	
 
+	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
+	{
+		this(selfile, outputdir, null, mode);
+
+	}
+	
+	public ParticlePicker(String selfile, FamilyState mode)
+	{
+		this(selfile, ".", null, mode);
+
+	}
+
+	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
+	{
+		this.outputdir = outputdir;
+		this.familiesfile = getOutputPath("families.xmd");
+		configfile = getOutputPath("config.xmd");
+		this.families = new ArrayList<Family>();
+		loadFamilies();
+		if (fname == null)
+			family = families.get(0);
+		else
+			family = getFamily(fname);
+		if (family == null)
+			throw new IllegalArgumentException("Invalid family " + fname);
+
+		this.selfile = selfile;
+		this.outputdir = outputdir;
+		this.mode = mode;
+
+		initializeFilters();
+		loadEmptyMicrographs();
+		loadConfig();
+	}
+	
 	public int getSize()
 	{
 		return family.getSize();
@@ -82,35 +117,6 @@ public abstract class ParticlePicker
 	{
 		String suffix = ".raw.Common.pos";
 		return String.format("%1$s%2$sPreprocessing%2$s%3$s%2$s%3$s%4$s", projectdir, File.separator, mname, suffix);
-	}
-
-	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
-	{
-		this(selfile, outputdir, null, mode);
-
-	}
-
-	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
-	{
-		this.outputdir = outputdir;
-		this.familiesfile = getOutputPath("families.xmd");
-		configfile = getOutputPath("config.xmd");
-		this.families = new ArrayList<Family>();
-		loadFamilies();
-		if (fname == null)
-			family = families.get(0);
-		else
-			family = getFamily(fname);
-		if (family == null)
-			throw new IllegalArgumentException("Invalid family " + fname);
-
-		this.selfile = selfile;
-		this.outputdir = outputdir;
-		this.mode = mode;
-
-		initializeFilters();
-		loadEmptyMicrographs();
-		loadConfig();
 	}
 
 	public abstract void loadEmptyMicrographs();

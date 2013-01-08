@@ -1,4 +1,4 @@
-package xmipp.particlepicker.particles;
+package xmipp.particlepicker.extract;
 
 import java.awt.Color;
 import java.awt.Dimension;

@@ -22,6 +22,8 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -44,6 +46,7 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
+import xmipp.jni.Particle;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
@@ -188,9 +191,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 		filemn.add(savemi);
 		importffmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
-		filemn.add(importffmi);
-		if (picker.getFamily().getStep() != FamilyState.Manual)
-			importffmi.setEnabled(false);
+		
 		importffmi.addActionListener(new ActionListener()
 		{
 			@Override
@@ -356,14 +357,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	public abstract ParticlePickerCanvas getCanvas();
+	
+	public abstract ParticlesJDialog initParticlesJDialog();
 
 	public void loadParticles() {
 		try {
 			if (particlesdialog == null)
-				if (ParticlePickerJFrame.this instanceof TrainingPickerJFrame)
-					particlesdialog = new ParticlesJDialog(ParticlePickerJFrame.this);
-				else
-					particlesdialog = new TiltPairParticlesJDialog(ParticlePickerJFrame.this);
+				particlesdialog = initParticlesJDialog();
 			else {
 
 				particlesdialog.loadParticles(false);
@@ -394,7 +394,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract Micrograph getMicrograph();
 
-	public abstract List<? extends TrainingParticle> getAvailableParticles();
+	public abstract List<? extends PickerParticle> getAvailableParticles();
 
 	public boolean isPickingAvailable(MouseEvent e) {
 		if (getCanvas().getTool() != Tool.PICKER) return false;
@@ -402,10 +402,44 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (getParticlePicker().getMode() == FamilyState.ReadOnly) return false;
 		return true;
 	}
+	
+	public class ColorActionListener implements ActionListener
+	{
+		JColorChooser colorChooser;
+
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			// Set up the dialog that the button brings up.
+			colorChooser = new JColorChooser();
+			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
+					colorChooser, new ActionListener()
+					{
+
+						@Override
+						public void actionPerformed(ActionEvent e)
+						{
+							updateColor(colorChooser.getColor());
+							getParticlePicker().setColor(colorChooser.getColor());
+						}
+					}, // OK button handler
+					null); // no CANCEL button handler
+			XmippWindowUtil.setLocation(0.5f, 0.5f, dialog);
+			dialog.setVisible(true);
+		}
+	}
+	
+	public void updateColor(Color color)
+	{
+		colorbt.setIcon(new ColorIcon(color));
+		getParticlePicker().setColor(color);
+		getCanvas().repaint();
+		getParticlePicker().persistFamilies();
+	}
 
 	protected void initImagePane() {
 		imagepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		imagepn.setBorder(BorderFactory.createTitledBorder("Image"));
+		//imagepn.setBorder(BorderFactory.createTitledBorder("Image"));
 
 		JPanel paintpn = new JPanel();
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
@@ -577,7 +611,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().repaint();
 		getFamily().setSize(size);
 		if (particlesdialog != null) {
-			for (TrainingParticle p : getAvailableParticles())
+			for (PickerParticle p : getAvailableParticles())
 				p.resetParticleCanvas();
 			loadParticles();
 		}
@@ -604,7 +638,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 	
-
+	public Color getColor()
+	{
+		return getFamily().getColor();
+	}
 
 	
 }

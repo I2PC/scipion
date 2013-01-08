@@ -11,19 +11,20 @@ import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticleCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
+import xmipp.particlepicker.PickerParticle;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.utils.XmippMessage;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
 
-public class TrainingParticle extends Particle{
+public class TrainingParticle extends PickerParticle{
 	
 	protected Family family;
 	protected ImagePlus img;
 	protected double cost = 2;
-	protected Micrograph micrograph;
-	private ParticleCanvas canvas;
+	
+	
 	
 	
 
@@ -34,20 +35,12 @@ public class TrainingParticle extends Particle{
 	
 	public TrainingParticle(int x, int y, Family family, Micrograph micrograph, double cost)
 	{
-		super(x, y);
-		this.micrograph = micrograph;
+		super(x, y, micrograph);
+		
 		this.family = family;
 		this.cost = cost;
 	}
 	
-	public Micrograph getMicrograph() {
-		return micrograph;
-	}
-
-
-	public void setMicrograph(Micrograph micrograph) {
-		this.micrograph = micrograph;
-	}
 	
 	public double getCost()
 	{
@@ -114,17 +107,7 @@ public class TrainingParticle extends Particle{
 		return icon;
 	}
 	
-	public ParticleCanvas getParticleCanvas(ParticlePickerJFrame frame)
-	{
-		if(canvas == null)
-			canvas = new ParticleCanvas(this, frame);
-		return canvas; 
-	}
 	
-	public void resetParticleCanvas()
-	{
-		canvas = null;
-	}
 
 	public ImageGeneric getImageGeneric() {
 		try {

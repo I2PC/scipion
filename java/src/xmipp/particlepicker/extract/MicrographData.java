@@ -1,4 +1,4 @@
-package xmipp.particlepicker.particles;
+package xmipp.particlepicker.extract;
 
 import java.util.ArrayList;
 import java.util.List;

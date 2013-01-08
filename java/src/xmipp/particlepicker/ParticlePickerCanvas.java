@@ -18,6 +18,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.util.logging.Level;
 import xmipp.ij.commons.XmippImageCanvas;
+import xmipp.jni.Particle;
 import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.particlepicker.training.model.TrainingPicker;
@@ -142,7 +143,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			getFrame().displayZoom();
 	}
 
-	public void moveTo(TrainingParticle p)
+	public void moveTo(PickerParticle p)
 	{
 		int width = (int) getSrcRect().getWidth();
 		int height = (int) getSrcRect().getHeight();
@@ -176,7 +177,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		setCustomCursor(e);
 	}
 
-	public abstract void refreshActive(TrainingParticle p);
+	public abstract void refreshActive(Particle p);
 
 	public abstract TrainingParticle getActive();
 
@@ -184,18 +185,23 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all)
 	{
+		drawShape(g2, p.getX(), p.getY(), p.getFamily().getSize(), all);
+	}
+	
+	protected void drawShape(Graphics2D g2, int x, int y, int size, boolean all)
+	{
 
 		
-		int size = (int) (p.getFamily().getSize() * magnification);
-		int radius = (int) (p.getFamily().getSize() / 2 * magnification);
-		int x = getXOnImage(p.getX());
-		int y = getYOnImage(p.getY());
+		int length = (int) (size * magnification);
+		int radius = (int) (size / 2. * magnification);
+		x = getXOnImage(x);
+		y = getYOnImage(y);
 		int distance = (int) (radius/5. * magnification);
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
-			g2.drawRect(x - radius, y - radius, size, size);
+			g2.drawRect(x - radius, y - radius, length, length);
 		if (getFrame().isShapeSelected(Shape.Circle) || all)
-			g2.drawOval(x - radius, y - radius, size, size);
+			g2.drawOval(x - radius, y - radius, length, length);
 		if (getFrame().isShapeSelected(Shape.Center) || all)
 		{
 			g2.drawLine(x, y - distance, x, y + distance);
@@ -300,6 +306,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 	protected abstract void doCustomPaint(Graphics2D g2);
+	
+	public abstract void updateMicrograph();
 	
 
 }

@@ -16,15 +16,14 @@ import xmipp.jni.Filename;
 import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Micrograph;
+import xmipp.particlepicker.PickerParticle;
 
 public class TrainingMicrograph extends Micrograph{
 	
-	private String psd;
-	private ImageIcon ctficon;
 	private boolean autopicking = false;
 	private List<MicrographFamilyData> mfdatas;
 	private String autofilename;
-	private String ctf;
+	
 	
 	public TrainingMicrograph(String filename, String psd, String ctf, List<Family> families, FamilyState mode) {
 		this(filename, psd, ctf, families, new ArrayList<MicrographFamilyData>(), mode);
@@ -32,9 +31,8 @@ public class TrainingMicrograph extends Micrograph{
 	
 
 	public TrainingMicrograph(String file, String psd, String ctf, List<Family> families, List<MicrographFamilyData> mfd, FamilyState mode) {
-		super(file);
-		this.psd = psd;
-		this.ctf = ctf;
+		super(file, psd, ctf);
+		
 		mfdatas = mfd;
 		autofilename = getName() + "_auto" + ext;
 		MicrographFamilyState state = (mode == FamilyState.Review)? MicrographFamilyState.Review : MicrographFamilyState.Available;
@@ -76,40 +74,8 @@ public class TrainingMicrograph extends Micrograph{
 	
 
 	
-	public Icon getCTFIcon()
-	{
-		String file;
-		if(ctficon == null)
-		{
-			if(psd == null || !(new File(psd).exists()))
-				file = (Filename.getXmippPath("resources" + File.separator + "no-image.jpg"));
-			else
-				file = psd;
-			Image image = XmippIJUtil.getImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
-			ctficon = new ImageIcon(image);
-			
-		}
-		return ctficon;
-	}
 	
 
-	public ImagePlus getPSDImage()
-	{
-			if(psd == null || !(new File(psd).exists()))
-				return null;
-			return XmippIJUtil.getImagePlus(psd);
-			
-	}
-	
-	public String getPSD()
-	{
-		return psd;
-	}
-	
-	public String getCTF()
-	{
-		return ctf;
-	}
 	
 	
 	public List<MicrographFamilyData> getFamiliesData()
@@ -154,9 +120,10 @@ public class TrainingMicrograph extends Micrograph{
 	}
 	
 	
-	public void removeParticle(TrainingParticle p, TrainingPicker ppicker)
+	public void removeParticle(PickerParticle p, TrainingPicker ppicker)
 	{
-		getFamilyData(p.getFamily()).removeParticle(p, ppicker);
+		MicrographFamilyData mfd = getFamilyData(ppicker.getFamily());
+		mfd.removeParticle((TrainingParticle)p, ppicker);
 	}
 	
 	public void addAutomaticParticle(AutomaticParticle p)

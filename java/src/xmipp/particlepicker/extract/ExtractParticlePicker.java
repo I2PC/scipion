@@ -1,24 +1,33 @@
-package xmipp.particlepicker.particles;
+package xmipp.particlepicker.extract;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.particlepicker.IJCommand;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
+import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.model.FamilyState;
 
 public class ExtractParticlePicker extends ParticlePicker
 {
 
-	private ArrayList<ExtractMicrograph> micrographs;
-	private Micrograph micrograph;
-
-	public ExtractParticlePicker(String selfile, String outputdir, FamilyState mode)
+	public static void main(String[] args)
 	{
-		super(selfile, outputdir, mode);
+		ExtractParticlePicker.open(args[0]);
+	}
+	
+	private ArrayList<ExtractMicrograph> micrographs;
+	private ExtractMicrograph micrograph;
+
+	public ExtractParticlePicker(String selfile, FamilyState mode)
+	{
+		super(selfile, mode);
 		loadParticles();
+		if(filters.isEmpty())//user just started manual mode and has no filter, I select gaussian blur by default, will be applied when window opens
+			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 
 	@Override
@@ -27,10 +36,12 @@ public class ExtractParticlePicker extends ParticlePicker
 		micrographs = new ArrayList<ExtractMicrograph>();
 		MetaData md = new MetaData(selfile);
 		ExtractParticle p;
-		int x, y;
 		String fileiter;
-		boolean exists, enabled;
+		boolean exists;
 		ExtractMicrograph current = null;
+		boolean existspsd = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
+		boolean existsctf = md.containsLabel(MDLabel.MDL_CTF_MODEL);
+		String psd = null, ctf = null;
 		for (long id : md.findObjects())
 		{
 			exists = false;
@@ -44,7 +55,12 @@ public class ExtractParticlePicker extends ParticlePicker
 				}
 			if (!exists)
 			{
-				current = new ExtractMicrograph(fileiter);
+				if (existspsd)
+					psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+				if (existsctf)
+					ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
+				current = new ExtractMicrograph(fileiter, psd, ctf);
+				
 				micrographs.add(current);
 			}
 
@@ -73,8 +89,8 @@ public class ExtractParticlePicker extends ParticlePicker
 			
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-			enabled = md.getValueBoolean(MDLabel.MDL_ENABLED, id);
-			p = new ExtractParticle(x, y, enabled);
+			enabled = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1)? true: false;
+			p = new ExtractParticle(x, y, current, enabled);
 			current.addParticle(p);
 
 		}
@@ -97,7 +113,7 @@ public class ExtractParticlePicker extends ParticlePicker
 
 
 	@Override
-	public Micrograph getMicrograph()
+	public ExtractMicrograph getMicrograph()
 	{
 		return micrograph;
 	}
@@ -105,7 +121,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
-		micrograph = m;
+		micrograph = (ExtractMicrograph)m;
 
 	}
 
@@ -119,14 +135,30 @@ public class ExtractParticlePicker extends ParticlePicker
 	@Override
 	public void loadConfig()
 	{
-		// TODO Auto-generated method stub
-		
+		setMicrograph(micrographs.get(0));
 	}
 
 	public static void open(String filename)
 	{
-		// TODO Auto-generated method stub
-		
+		ExtractParticlePicker picker = new ExtractParticlePicker(filename,  FamilyState.Extract);
+		new ExtractPickerJFrame(picker);
 	}
 
+	public int getParticlesTotal()
+	{
+		int particles = 0;
+		for(ExtractMicrograph m: micrographs)
+			particles += m.getParticles().size();
+		return particles;
+	}
+
+	public void resetAllMicrographs()
+	{
+		for (ExtractMicrograph m : micrographs)
+			m.reset();
+		setChanged(true);
+		
+	}
+	
+	
 }

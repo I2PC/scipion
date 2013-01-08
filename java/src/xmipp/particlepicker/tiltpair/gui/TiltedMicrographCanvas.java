@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import xmipp.jni.Particle;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
@@ -157,7 +158,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 
 	@Override
-	public void refreshActive(TrainingParticle p)
+	public void refreshActive(Particle p)
 	{
 		frame.getCanvas().refreshActive(((TiltedParticle) p).getUntiltedParticle());
 	}

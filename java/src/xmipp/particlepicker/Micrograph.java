@@ -3,11 +3,17 @@ package xmipp.particlepicker;
 import ij.IJ;
 import ij.ImagePlus;
 
+import java.awt.Image;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
+import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
@@ -21,6 +27,8 @@ public abstract class Micrograph {
 	public static final String ext = ".pos";
 	public final int width, height;
 	private String posfile;
+	private String ctf, psd;
+	private Icon ctficon;
 
 	public void setPosFileFromXmipp24(String posfile) {
 		this.pos24file = posfile;
@@ -31,11 +39,21 @@ public abstract class Micrograph {
 	}
 
 	public Micrograph(String file) {
-		this(file, getName(file, 1));
+		this(file, getName(file, 1), null, null);
+	}
+	
+	public Micrograph(String file, String name) {
+		this(file, name, null, null);
+	}
+	
+	public Micrograph(String file, String psd, String ctf) {
+		this(file, getName(file, 1), psd, ctf);
 	}
 
-	public Micrograph(String file, String name) {
+	public Micrograph(String file, String name, String psd, String ctf) {
 		this.file = file;
+		this.psd = psd;
+		this.ctf = ctf;
 		if (!new File(file).exists()) throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
 		ImageGeneric ig;
 		try {
@@ -53,7 +71,42 @@ public abstract class Micrograph {
 
 	}
 	
+
+	public ImagePlus getPSDImage()
+	{
+			if(psd == null || !(new File(psd).exists()))
+				return null;
+			return XmippIJUtil.getImagePlus(psd);
+			
+	}
 	
+	public Icon getCTFIcon()
+	{
+		String file;
+		if(ctficon == null)
+		{
+			if(psd == null || !(new File(psd).exists()))
+				file = (Filename.getXmippPath("resources" + File.separator + "no-image.jpg"));
+			else
+				file = psd;
+			Image image = XmippIJUtil.getImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
+			ctficon = new ImageIcon(image);
+			
+		}
+		return ctficon;
+	}
+	
+	
+	
+	public String getPSD()
+	{
+		return psd;
+	}
+	
+	public String getCTF()
+	{
+		return ctf;
+	}
 
 	public boolean fits(int x, int y, int size) {
 		if (x < 0 || y < 0) return false;

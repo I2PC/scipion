@@ -40,6 +40,7 @@ import xmipp.particlepicker.ImportParticlesJDialog;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
+import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.ManualParticlePicker;
 import xmipp.particlepicker.training.model.MicrographFamilyData;
@@ -190,6 +191,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				}
 			}
 		});
+		filemn.add(importffmi);
+		if (ppicker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
 		filemn.add(exportmi);
 		JMenu windowmn = new JMenu("Window");
 		JMenu helpmn = new JMenu("Help");
@@ -415,32 +419,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	class ColorActionListener implements ActionListener
-	{
-		JColorChooser colorChooser;
-
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			// Set up the dialog that the button brings up.
-			colorChooser = new JColorChooser();
-			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
-					colorChooser, new ActionListener()
-					{
-
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							family.setColor(ColorActionListener.this.colorChooser.getColor());
-							updateFamilyColor();
-						}
-					}, // OK button handler
-					null); // no CANCEL button handler
-			XmippWindowUtil.setLocation(positionx, 0.25f, dialog);
-			dialog.setVisible(true);
-		}
-	}
-
+	
 	private void initThresholdPane()
 	{
 		thresholdpn = new JPanel();
@@ -570,9 +549,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			return;
 		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
-												// micrographs, by Coss
-												// suggestion
-
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
@@ -659,9 +635,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 
 		if (canvas == null)
-
 			canvas = new TrainingCanvas(this);
-
 		else
 			canvas.updateMicrograph();
 
@@ -689,13 +663,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 	}
 
-	void updateFamilyColor()
-	{
-		color = family.getColor();
-		colorbt.setIcon(new ColorIcon(color));
-		canvas.repaint();
-		ppicker.persistFamilies();
-	}
+	
 
 	void updateFamilyComboBox()
 	{
@@ -1003,5 +971,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			// only can choose file if TrainingPickerJFrame instance
 			importParticlesFromFile(format, dir, scale, invertx, inverty);
 
+	}
+
+	@Override
+	public ParticlesJDialog initParticlesJDialog()
+	{
+		return new ParticlesJDialog(this);
 	}
 }
