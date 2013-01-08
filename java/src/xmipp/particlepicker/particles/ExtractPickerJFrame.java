@@ -12,6 +12,12 @@ import xmipp.particlepicker.training.model.TrainingParticle;
 public class ExtractPickerJFrame extends ParticlePickerJFrame
 {
 
+	public ExtractPickerJFrame(ParticlePicker picker)
+	{
+		super(picker);
+		// TODO Auto-generated constructor stub
+	}
+
 	@Override
 	protected void loadMicrograph()
 	{
