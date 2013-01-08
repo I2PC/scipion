@@ -36,6 +36,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.Format;
+import xmipp.particlepicker.ImportParticlesJDialog;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
@@ -162,6 +163,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		// Setting menus
 
+		
 		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
 
 		exportmi.addActionListener(new ActionListener()
@@ -933,7 +935,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 
 		String filename = Micrograph.getName(file, 1);
-		// validating you want use this file for this micrograph with different name
+		// validating you want use this file for this micrograph with different
+		// name
 		if (!filename.equals(getMicrograph().getName()))
 		{
 			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
@@ -984,10 +987,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		getFamilyData().reset();
 	}
 
+
 	@Override
-	protected void doImport(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		((ManualParticlePicker) ppicker).importParticlesFromFolder(dir, format, scale, invertx, inverty);
+
+		if (new File(dir).isDirectory())
+		{
+			((ManualParticlePicker) ppicker).importParticlesFromFolder(dir, format, scale, invertx, inverty);
+			getCanvas().repaint();
+			updateMicrographsModel(true);
+			getCanvas().refreshActive(null);
+		}
+		else
+			// only can choose file if TrainingPickerJFrame instance
+			importParticlesFromFile(format, dir, scale, invertx, inverty);
 
 	}
 }

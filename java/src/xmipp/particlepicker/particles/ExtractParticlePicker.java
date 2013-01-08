@@ -18,7 +18,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	public ExtractParticlePicker(String selfile, String outputdir, FamilyState mode)
 	{
 		super(selfile, outputdir, mode);
-		// TODO Auto-generated constructor stub
+		loadParticles();
 	}
 
 	@Override
@@ -47,6 +47,30 @@ public class ExtractParticlePicker extends ParticlePicker
 				current = new ExtractMicrograph(fileiter);
 				micrographs.add(current);
 			}
+
+		}
+
+	}
+	
+	public void loadParticles()
+	{
+		MetaData md = new MetaData(selfile);
+		ExtractParticle p;
+		int x, y;
+		String fileiter;
+		boolean enabled;
+		ExtractMicrograph current = null;
+		for (long id : md.findObjects())
+		{
+			fileiter = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+			for (ExtractMicrograph iter : micrographs)
+				if (iter.getFile().equals(fileiter))
+				{
+			
+					current = iter;
+					break;
+				}
+			
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 			enabled = md.getValueBoolean(MDLabel.MDL_ENABLED, id);
@@ -54,7 +78,6 @@ public class ExtractParticlePicker extends ParticlePicker
 			current.addParticle(p);
 
 		}
-
 	}
 
 	@Override

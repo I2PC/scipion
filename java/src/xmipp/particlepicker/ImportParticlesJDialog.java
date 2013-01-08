@@ -132,7 +132,14 @@ public class ImportParticlesJDialog extends XmippDialog {
 	@Override
 	public void handleOk() {
 		try {
-			importParticles();
+			path = sourcetf.getText().trim();
+
+			if (path == null || path.equals(""))
+				showError(XmippMessage.getEmptyFieldMsg("source"));
+			else if (!existsSelectedPath())
+				showError(XmippMessage.getPathNotExistsMsg(path));
+			else			
+				parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		} catch (Exception e) {
 			XmippDialog.showException(parent, e);
 		}
@@ -145,21 +152,8 @@ public class ImportParticlesJDialog extends XmippDialog {
 			return Filename.exists(path);
 		
 	}//function existsSelectedPaths
-
-	protected void importParticles() {
-		path = sourcetf.getText().trim();
-
-		if (path == null || path.equals(""))
-			showError(XmippMessage.getEmptyFieldMsg("source"));
-		else if (!existsSelectedPath())
-			showError(XmippMessage.getPathNotExistsMsg(path));
-		else {			
-			if (new File(path).isDirectory()) 
-				parent.importParticlesFromFolder(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
-			else //only can choose file if TrainingPickerJFrame instance
-				((TrainingPickerJFrame)parent).importParticlesFromFile(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
-		}
-	}
 	
 	
+
+
 }

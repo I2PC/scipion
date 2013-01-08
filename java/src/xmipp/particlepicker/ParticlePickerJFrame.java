@@ -2,13 +2,9 @@ package xmipp.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
-import ij.gui.ImageCanvas;
-import ij.gui.ImageWindow;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -19,11 +15,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -50,23 +44,13 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
-import xmipp.particlepicker.Family;
-import xmipp.particlepicker.Format;
-import xmipp.particlepicker.ImportParticlesJDialog;
-import xmipp.particlepicker.Micrograph;
-import xmipp.particlepicker.ParticlePicker;
-import xmipp.particlepicker.ParticlePickerCanvas;
-import xmipp.particlepicker.ParticlesJDialog;
-import xmipp.particlepicker.Shape;
 import xmipp.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.particlepicker.training.model.TrainingPicker;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
@@ -207,10 +191,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		filemn.add(importffmi);
 		if (picker.getFamily().getStep() != FamilyState.Manual)
 			importffmi.setEnabled(false);
-		importffmi.addActionListener(new ActionListener() {
+		importffmi.addActionListener(new ActionListener()
+		{
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				showImportDialog();
+			public void actionPerformed(ActionEvent e)
+			{
+				if (importpjd == null)
+					importpjd = new ImportParticlesJDialog(ParticlePickerJFrame.this);
+				importpjd.showDialog();
 			}
 		});
 
@@ -613,21 +601,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	protected abstract void resetData();
 
-	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
-	{
-		
-		doImport(format, dir, scale, invertx, inverty);
-		getCanvas().repaint();
-		updateMicrographsModel(true);
-		getCanvas().refreshActive(null);
-	}
 
-	protected abstract void doImport(Format format, String dir, float scale, boolean invertx, boolean inverty);
+	public abstract void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
+	
 
 
-	protected void showImportDialog() {
-		if (importpjd == null) importpjd = new ImportParticlesJDialog(ParticlePickerJFrame.this);
-		importpjd.showDialog();
-	}
-
+	
 }

@@ -360,7 +360,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		super.importParticlesFromFolder(format, dir, scale, invertx, inverty);
+		pppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+		getCanvas().repaint();
+		updateMicrographsModel(true);
+		getCanvas().refreshActive(null);
 		tiltedcanvas.repaint();
 	}
 	
@@ -448,17 +451,15 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			canvas.refreshActive(null);
 	}
 	
-	@Override
-	protected void showImportDialog(){
-		if (importpjd == null)
-			importpjd = new ImportParticlesJDialog(this);
-		importpjd.showDialog();
-	}
+	
+
+	
 
 	@Override
-	protected void doImport(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		pppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+		importParticlesFromFolder(format, dir, scale, invertx, inverty);
+		
 	}
 
 }//class TiltPairPickerJFrame
