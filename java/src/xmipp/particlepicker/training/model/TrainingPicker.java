@@ -337,7 +337,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			saveAutomaticParticles(tm);
-			saveTemplates();
+			//saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -468,8 +468,8 @@ public abstract class TrainingPicker extends ParticlePicker
 
 			super.saveData();
 			saveMicrographs();
-			saveTemplates();
 		}
+		saveTemplates();
 	}
 
 	public int getAutomaticNumber(Family f, double threshold)
