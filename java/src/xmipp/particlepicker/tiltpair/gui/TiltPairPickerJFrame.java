@@ -72,7 +72,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JCheckBoxMenuItem anglesmi;
 	private JMenuItem importffilesmi;
 	private ImportParticlesFromFilesTiltPairJDialog importffilesjd;
-	private ImageWindow tw;
 
 	public TiltPairPicker getParticlePicker()
 	{
@@ -178,7 +177,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		particlespn.add(fieldspn, 0);
 		initImagePane();
-		particlespn.add(symbolpn, 1);
+		particlespn.add(imagepn, 1);
 
 		index = pppicker.getMicrographIndex();
 		System.out.println(index);
@@ -293,7 +292,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			tiltedcanvas = new TiltedMicrographCanvas(this);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
 			if(!particles.isEmpty())
-				canvas.setActive(particles.get(particles.size() - 1));//needs both canvas to be initialized
+				canvas.refreshActive(particles.get(particles.size() - 1));//needs both canvas to be initialized
 		}
 		else
 		{
@@ -303,6 +302,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		}
 		canvas.display();
 		tiltedcanvas.display(0.7f, 0);
+		updateZoom();
+		
+		if(usezoombt.isSelected())
+			tiltedcanvas.setZoom(getZoom());
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -367,7 +370,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	protected void resetMicrograph()
 	{
 		pppicker.resetMicrograph(getMicrograph());
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setChanged(true);
 		
@@ -427,7 +430,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void resetData(){
 		pppicker.resetAllMicrographs();		
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setChanged(true);
 	}
@@ -442,7 +445,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
 			updateSize(getFamily().getSize());
-			canvas.setActive(null);
+			canvas.refreshActive(null);
 	}
 	
 	@Override
