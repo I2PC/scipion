@@ -1,6 +1,6 @@
 package xmipp.particlepicker.training.model;
 public enum FamilyState {
-	Manual, Supervised, Available, Review, ReadOnly;
+	Manual, Supervised, Available, Review, ReadOnly, Extract;
 	
 	
 	public static FamilyState getFamilyState(String s)
@@ -15,6 +15,8 @@ public enum FamilyState {
 			return FamilyState.Available;
 		else if(s.equalsIgnoreCase(FamilyState.ReadOnly.toString()))
 			return FamilyState.ReadOnly;
+		else if(s.equalsIgnoreCase(FamilyState.ReadOnly.toString()))
+			return FamilyState.Extract;
 		return null;
 	}
 

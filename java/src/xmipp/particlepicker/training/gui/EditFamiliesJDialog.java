@@ -193,8 +193,8 @@ public class EditFamiliesJDialog extends JDialog {
 					f.setName(name);
 					frame.updateFamilyComboBox();
 				} else if (column == 1) {
-					f.setColor((Color) value);
-					frame.updateFamilyColor();
+					Color color = (Color) value; 
+					frame.updateColor(color);
 				} else if (column == 2) {
 					int size = (Integer) value;
 					f.setSize(size);

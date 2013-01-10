@@ -93,7 +93,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer3.clear();
 
-    Image<double> img;
     Matrix1D<double> center(2);
     center.initZeros();
     FringeProcessing fp;
@@ -126,19 +125,21 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     bool first=true;
 
     // We assume that at least there is one particle
-    img.readApplyGeo(SF,1);
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
 
     //Initialization:
     MultidimArray<double> nI, modI, tempI, tempM, ROI;
     MultidimArray<bool> mask;
-    nI.resizeNoCopy(img());
-    modI.resizeNoCopy(img());
-    tempI.resizeNoCopy(img());
-    tempM.resizeNoCopy(img());
-    mask.resizeNoCopy(img());
+    nI.resizeNoCopy(Ydim,Xdim);
+    modI.resizeNoCopy(Ydim,Xdim);
+    tempI.resizeNoCopy(Ydim,Xdim);
+    tempM.resizeNoCopy(Ydim,Xdim);
+    mask.resizeNoCopy(Ydim,Xdim);
     mask.initConstant(true);
 
-    MultidimArray<double> autoCorr(2*img().ydim,2*img().xdim);
+    MultidimArray<double> autoCorr(2*Ydim,2*Xdim);
     MultidimArray<double> smallAutoCorr;
 
     Histogram1D hist;
@@ -150,17 +151,18 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     v2.initZeros(numDescriptors2);
     v3.initZeros(numDescriptors3);
 
-    ROI.resizeNoCopy(img());
+    ROI.resizeNoCopy(Ydim,Xdim);
     ROI.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
     {
         double temp = std::sqrt(i*i+j*j);
-        if ( temp < ((img().xdim)/3))
+        if ( temp < (Xdim/3))
             A2D_ELEM(ROI,i,j)= 1;
         else
             A2D_ELEM(ROI,i,j)= 0;
     }
 
+    Image<double> img;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (thereIsEnable)

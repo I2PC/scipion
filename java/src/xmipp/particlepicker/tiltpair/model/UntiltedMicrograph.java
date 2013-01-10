@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xmipp.particlepicker.Micrograph;
+import xmipp.particlepicker.training.model.AutomaticParticle;
+import xmipp.particlepicker.training.model.MicrographFamilyData;
+import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.XmippMessage;
 import xmipp.jni.Particle;
 import xmipp.jni.TiltPairAligner;
@@ -143,6 +146,17 @@ public class UntiltedMicrograph extends Micrograph
 		TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
 		getTiltedMicrograph().addParticle(tp);
 		up.setTiltedParticle(tp);
+	}
+
+	public void removeParticles(int x, int y)
+	{
+		List<UntiltedParticle> particles = new ArrayList<UntiltedParticle>();
+		for(UntiltedParticle p: getParticles())
+			if (p.contains(x, y, p.getFamily().getSize())) 
+				particles.add(p);
+		for(UntiltedParticle p: particles)
+			removeParticle(p);
+			
 	}
 
 }

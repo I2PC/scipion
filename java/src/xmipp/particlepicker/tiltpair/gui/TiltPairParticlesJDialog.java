@@ -6,6 +6,7 @@ import java.util.List;
 import xmipp.particlepicker.ParticleCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
 import xmipp.particlepicker.ParticlesJDialog;
+import xmipp.particlepicker.PickerParticle;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.particlepicker.training.model.TrainingParticle;
 import xmipp.utils.XmippWindowUtil;
@@ -24,7 +25,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 	public void loadParticles(boolean resize)
 	{
 		int side, rows, columns, width = 0, height = 0;
-		List<? extends TrainingParticle> particles = frame.getAvailableParticles();
+		List<? extends PickerParticle> particles = frame.getAvailableParticles();
 		side = frame.getSide(frame.getFamily().getSize());
 
 		if (side == 0)
@@ -59,7 +60,7 @@ public class TiltPairParticlesJDialog extends ParticlesJDialog
 		particles = frame.getAvailableParticles();
 		int index = 0;
 		ParticleCanvas c;
-		TrainingParticle p;
+		PickerParticle p;
 		UntiltedParticle up;
 		columns =  columns * 2;
 		for (int i = 0; i < rows; i++)

@@ -50,7 +50,7 @@ public class ParticlesJDialog extends JDialog
 	public void loadParticles(boolean resize)
 	{
 		int side, rows, columns, width = 0, height = 0;
-		List<? extends TrainingParticle> particles = frame.getAvailableParticles();
+		List<? extends PickerParticle> particles = frame.getAvailableParticles();
 		side = frame.getSide(frame.getFamily().getSize());
 
 		if (side == 0)
@@ -85,7 +85,7 @@ public class ParticlesJDialog extends JDialog
 		particles = frame.getAvailableParticles();
 		int index = 0;
 		ParticleCanvas c;
-		TrainingParticle p;
+		PickerParticle p;
 		for (int i = 0; i < rows; i++)
 			for (int j = 0; j < columns; j++, index++)
 			{

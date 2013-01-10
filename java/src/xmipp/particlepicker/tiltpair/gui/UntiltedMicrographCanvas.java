@@ -74,7 +74,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.um = frame.getMicrograph();
 
 		this.frame = frame;
-		
+
 		this.pppicker = frame.getParticlePicker();
 		um.runImageJFilters(pppicker.getFilters());
 
@@ -85,9 +85,9 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		this.um = frame.getMicrograph();
 		updateMicrographData();
 		if (!um.getParticles().isEmpty())
-			setActive(um.getParticles().get(um.getParticles().size() - 1));
+			refreshActive(um.getParticles().get(um.getParticles().size() - 1));
 		else
-			setActive(null);
+			refreshActive(null);
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
-		
+
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
@@ -107,8 +107,17 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			frame.getTiltedCanvas().mousePressed(x, y);
 		else if (frame.isPickingAvailable(e))
 		{
+			if (frame.isEraserMode())
+			{
+				um.removeParticles(x, y);
+				active = getLastParticle();
+				refresh();
+
+				return;
+			}
+
 			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
-				um.addParticleToAligner(active,true);
+				um.addParticleToAligner(active, true);
 			UntiltedParticle p = um.getParticle(x, y, (int) (frame.getParticleSize()));
 
 			if (p != null)
@@ -116,11 +125,18 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 					removeParticle(p);
 				else if (SwingUtilities.isLeftMouseButton(e))
-					setActive(p);
+					refreshActive(p);
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && um.fits(x, y, frame.getParticleSize()))
 				addParticle(x, y);
 		}
+	}
+
+	private UntiltedParticle getLastParticle()
+	{
+		if (um.getParticles().isEmpty())
+			return null;
+		return um.getParticles().get(um.getParticles().size() - 1);
 	}
 
 	public void mouseReleased(MouseEvent e)
@@ -151,11 +167,25 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			frame.getTiltedCanvas().mouseDragged(e.getX(), e.getY());
 			return;
 		}
-		if (frame.isPickingAvailable(e) && active != null && um.fits(x, y, frame.getParticleSize()))
+		if (frame.isPickingAvailable(e))
 		{
-			moveActiveParticle(x, y);
-			if (active.isAdded())
-				reload = true;
+			if (frame.isEraserMode())
+			{
+				um.removeParticles(x, y);
+				active = getLastParticle();
+				refresh();
+
+				return;
+			}
+
+
+			if (active != null && um.fits(x, y, frame.getParticleSize()))
+
+			{
+				moveActiveParticle(x, y);
+				if (active.isAdded())
+					reload = true;
+			}
 		}
 		frame.setChanged(true);
 		repaint();
@@ -165,7 +195,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
-		if(!e.isShiftDown())
+		super.mouseWheelMoved(e);
+		if (!e.isShiftDown())
 			return;
 		int x = e.getX();
 		int y = e.getY();
@@ -177,37 +208,8 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			zoomOut(x, y);
 		if (getMagnification() <= 1.0)
 			imp.repaintWindow();
+
 		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
-	}
-
-	public void paint(Graphics g)
-	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-		
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
-		g2.setColor(frame.getColor());
-		int index = 0;
-
-		for (TrainingParticle p : um.getParticles())
-		{
-			drawShape(g2, p, index == (um.getParticles().size() - 1));
-			index++;
-		}
-		if (active != null)
-		{
-			g2.setColor(Color.red);
-			drawShape(g2, active, true);
-		}
-		if (frame.drawAngles())
-			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);
-		g.drawImage(offscreen, 0, 0, this);
 	}
 
 	private void addParticle(int x, int y)
@@ -223,7 +225,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 			if (um.getAddedCount() >= 4)
 				um.setAlignerTiltedParticle(p);
-			setActive(p);
+			refreshActive(p);
 			frame.updateMicrographsModel();
 			frame.setChanged(true);
 		}
@@ -237,23 +239,22 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	private void removeParticle(UntiltedParticle p)
 	{
 		um.removeParticle(p);
-		frame.updateMicrographsModel();
+
 		if (active != null && active.equals(p))
 		{
 			if (!um.getParticles().isEmpty())
-				setActive(um.getParticles().get(um.getParticles().size() - 1));
+				refreshActive(um.getParticles().get(um.getParticles().size() - 1));
 			else
-				setActive(null);
+				refreshActive(null);
 		}
 
 		if (p.isAdded())
 			um.initAligner();
-		repaint();
+		refresh();
 		frame.getTiltedCanvas().repaint();
-		frame.setChanged(true);
 	}
 
-	public void setActive(TrainingParticle up)
+	public void refreshActive(Particle up)
 	{
 		active = (UntiltedParticle) up;
 		if (active != null)
@@ -277,6 +278,29 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	public TrainingParticle getActive()
 	{
 		return active;
+	}
+
+	@Override
+	protected void doCustomPaint(Graphics2D g2)
+	{
+		g2.setColor(frame.getColor());
+		int index = 0;
+
+		for (TrainingParticle p : um.getParticles())
+		{
+			drawShape(g2, p, index == (um.getParticles().size() - 1));
+			index++;
+		}
+		if (active != null)
+		{
+			g2.setColor(Color.red);
+			drawShape(g2, active, true);
+		}
+		if (frame.drawAngles())
+			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);// TODO
+																// Auto-generated
+																// method stub
+
 	}
 
 }

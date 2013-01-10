@@ -232,21 +232,17 @@ public class TiltPairPicker extends ParticlePicker {
 
 	}
 
-	@Override
-	public int getManualParticlesNumber(Family f) {
+	
+	public int getManualParticlesNumber() {
 		int count = 0;
 		for (UntiltedMicrograph um : micrographs)
 			count += um.getParticles().size();
 		return count;
 	}
 
-	@Override
-	public void exportParticles(String path) {
-		throw new UnsupportedOperationException();
+	
 
-	}// function exportParticles
-
-	@Override
+	
 	public Format detectFormat(String path) {
 		Format[] formats = { Format.Xmipp24, Format.Xmipp30, Format.Eman };
 
@@ -257,7 +253,7 @@ public class TiltPairPicker extends ParticlePicker {
 		return Format.Unknown;
 	}// function detectFormat
 
-	@Override
+	
 	public int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty) {
 		if (f == Format.Auto) f = detectFormat(path);
 		if (f == Format.Unknown) return 0;
@@ -312,6 +308,53 @@ public class TiltPairPicker extends ParticlePicker {
 		
 	}
 
+	public void saveConfig()
+	{
+		try
+		{
+			MetaData md;
+			String file = configfile;
+			md = new MetaData();
+			long id = md.addObject();
+			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+			md.write(file);
+			md.destroy();
+
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
+
+	public void loadConfig()
+	{
+		String file = configfile;
+		if (!new File(file).exists())
+		{
+			setMicrograph(getMicrographs().get(0));
+			return;
+		}
+
+		String mname;
+		try
+		{
+			MetaData md = new MetaData(file);
+			for (long id : md.findObjects())
+			{
+
+				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				setMicrograph(getMicrograph(mname));
+			}
+			md.destroy();
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 	
 

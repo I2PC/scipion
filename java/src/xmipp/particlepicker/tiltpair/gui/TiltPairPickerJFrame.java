@@ -40,6 +40,7 @@ import xmipp.particlepicker.ImportParticlesJDialog;
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
+import xmipp.particlepicker.ParticlesJDialog;
 import xmipp.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
@@ -72,7 +73,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private JCheckBoxMenuItem anglesmi;
 	private JMenuItem importffilesmi;
 	private ImportParticlesFromFilesTiltPairJDialog importffilesjd;
-	private ImageWindow tw;
 
 	public TiltPairPicker getParticlePicker()
 	{
@@ -116,6 +116,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	{
 		mb = new JMenuBar();
 
+		filemn.add(importffmi);
+		if (pppicker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
 		importffilesmi = new JMenuItem("Import Particles From Files");
 		importffilesmi.addActionListener(new ActionListener() {
 			
@@ -178,7 +181,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 		particlespn.add(fieldspn, 0);
 		initImagePane();
-		particlespn.add(symbolpn, 1);
+		particlespn.add(imagepn, 1);
 
 		index = pppicker.getMicrographIndex();
 		System.out.println(index);
@@ -187,30 +190,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	class ColorActionListener implements ActionListener
-	{
-		JColorChooser colorChooser;
-
-		@Override
-		public void actionPerformed(ActionEvent e)
-		{
-			// Set up the dialog that the button brings up.
-			colorChooser = new JColorChooser();
-			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
-					colorChooser, new ActionListener()
-					{
-
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							pppicker.setColor(colorChooser.getColor());
-						}
-					}, // OK button handler
-					null); // no CANCEL button handler
-			XmippWindowUtil.setLocation(position, 0.5f, dialog);
-			dialog.setVisible(true);
-		}
-	}
+	
 
 	private void initMicrographsPane()
 	{
@@ -293,7 +273,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			tiltedcanvas = new TiltedMicrographCanvas(this);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
 			if(!particles.isEmpty())
-				canvas.setActive(particles.get(particles.size() - 1));//needs both canvas to be initialized
+				canvas.refreshActive(particles.get(particles.size() - 1));//needs both canvas to be initialized
 		}
 		else
 		{
@@ -303,6 +283,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		}
 		canvas.display();
 		tiltedcanvas.display(0.7f, 0);
+		updateZoom();
+		
+		if(usezoombt.isSelected())
+			tiltedcanvas.setZoom(getZoom());
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -357,7 +341,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 
 	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		super.importParticlesFromFolder(format, dir, scale, invertx, inverty);
+		pppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+		getCanvas().repaint();
+		updateMicrographsModel(true);
+		getCanvas().refreshActive(null);
 		tiltedcanvas.repaint();
 	}
 	
@@ -367,7 +354,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	protected void resetMicrograph()
 	{
 		pppicker.resetMicrograph(getMicrograph());
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 		updateMicrographsModel();
 		setChanged(true);
 		
@@ -427,9 +414,8 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void resetData(){
 		pppicker.resetAllMicrographs();		
-		canvas.setActive(null);
+		canvas.refreshActive(null);
 		updateMicrographsModel();
-		setChanged(true);
 	}
 	
 	public void importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
@@ -442,14 +428,24 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			tiltedcanvas.repaint();
 			updateMicrographsModel();
 			updateSize(getFamily().getSize());
-			canvas.setActive(null);
+			canvas.refreshActive(null);
 	}
 	
+	
+
+	
+
 	@Override
-	protected void showImportDialog(){
-		if (importpjd == null)
-			importpjd = new ImportParticlesJDialog(this);
-		importpjd.showDialog();
+	public void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	{
+		importParticlesFromFolder(format, dir, scale, invertx, inverty);
+		
+	}
+
+	@Override
+	public ParticlesJDialog initParticlesJDialog()
+	{
+		return new TiltPairParticlesJDialog(this);
 	}
 
 }//class TiltPairPickerJFrame

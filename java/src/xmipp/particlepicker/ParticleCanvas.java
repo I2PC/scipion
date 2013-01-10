@@ -26,7 +26,7 @@ import xmipp.particlepicker.training.model.TrainingParticle;
 public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, MouseListener
 {
 
-	private TrainingParticle particle;
+	private PickerParticle particle;
 	private int size;
 	private int lastx, lasty;
 	private boolean dragged;
@@ -34,12 +34,12 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 	private ParticlePickerCanvas canvas;
 	private int side;
 
-	public ParticleCanvas(TrainingParticle particle, ParticlePickerJFrame frame)
+	public ParticleCanvas(PickerParticle pickerParticle, ParticlePickerJFrame frame)
 	{
-		super(particle.getMicrograph().getImagePlus());
-		this.particle = particle;
+		super(pickerParticle.getMicrograph().getImagePlus());
+		this.particle = pickerParticle;
 		this.frame = frame;
-		this.canvas = (particle instanceof TiltedParticle) ? ((TiltPairPickerJFrame) frame).getTiltedCanvas() : frame.getCanvas();
+		this.canvas = (pickerParticle instanceof TiltedParticle) ? ((TiltPairPickerJFrame) frame).getTiltedCanvas() : frame.getCanvas();
 
 		this.size = (int) (frame.getFamily().getSize());
 		side = frame.getSide(size);
@@ -52,7 +52,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 	public void paint(Graphics g)
 	{
 		
-		Rectangle source = new Rectangle(particle.getX0(), particle.getY0(), size, size);
+		Rectangle source = new Rectangle(particle.getX0(size), particle.getY0(size), size, size);
 		setSourceRect(source);
 		super.paint(g);
 		g.setColor(Color.white);
@@ -114,7 +114,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			else
 			{
 				canvas.moveTo(particle);
-				canvas.setActive(particle);
+				canvas.refreshActive(particle);
 			}
 		}
 

@@ -51,6 +51,8 @@ public:
     double targetSNR;
     /// Estimate SNR
     bool estimateSNR;
+    /// CTFpresent
+    bool CTFpresent;
     /// CTF
     FourierFilter ctf;
     /// Low pass filter, if it is 0 no lowpass filter is applied
