@@ -73,10 +73,10 @@ void ProgSortByStatistics::defineParams()
 //majorAxis and minorAxis is the estimated particle size in px
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
-    //#define DEBUG
+    #define DEBUG
 
     //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
-    //String name = "000004@Images/Extracted/run_002/extra/KLH_Dataset_I_Training_0010.stk";
+    String name = "000008@Images/Extracted/run_002/extra/KLH_Dataset_I_Training_0008.stk";
     //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
 
     pcaAnalyzer[4];
@@ -98,8 +98,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     center.initZeros();
     FringeProcessing fp;
 
-    int sign = 1;
-    int numNorm = 2;
+    int sign = -1;
+    int numNorm = 10;
     int numDescriptors0=3;
     int numDescriptors1=4;
     int numDescriptors2=21;
@@ -181,7 +181,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mI.statisticsAdjust(0,1);
             mask.setXmippOrigin();
 
-            fp.normalize(mI,tempI,modI,0,1,mask);
+            double var = 1;
+            fp.normalize(mI,tempI,modI,0,var,mask);
             modI.setXmippOrigin();
             tempI.setXmippOrigin();
             nI = sign*tempI*(modI*modI);
@@ -189,7 +190,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
             A1D_ELEM(v0,0) = (tempM*ROI).sum();
             int index = 1;
-            double var = 5;
             while (index < numNorm)
             {
                 fp.normalize(mI,tempI,modI,0,var,mask);
@@ -199,13 +199,15 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
                 tempM += (modI*modI);
                 A1D_ELEM(v0,index) = (tempM*ROI).sum();
                 index++;
-                var+=5;
+                var++;
             }
 
             nI /= tempM;
             tempPcaAnalyzer0.addVector(v0);
 
 #ifdef DEBUG
+
+            std::cout << img.name() << std::endl;
 
             if (img.name()==name)
             {
