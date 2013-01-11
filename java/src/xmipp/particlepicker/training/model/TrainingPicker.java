@@ -308,7 +308,6 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void saveData(Micrograph m)
 	{
-		System.out.println("Saving data");
 		TrainingMicrograph tm = (TrainingMicrograph) m;
 		long id;
 		try

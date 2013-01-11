@@ -80,15 +80,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 	}
 
-	public void updateMicrograph()
-	{
-		this.um = frame.getMicrograph();
-		updateMicrographData();
-		if (!um.getParticles().isEmpty())
-			refreshActive(um.getParticles().get(um.getParticles().size() - 1));
-		else
-			refreshActive(null);
-	}
+	
 
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
@@ -132,7 +124,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 	}
 
-	private UntiltedParticle getLastParticle()
+	protected UntiltedParticle getLastParticle()
 	{
 		if (um.getParticles().isEmpty())
 			return null;
@@ -301,6 +293,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 																// Auto-generated
 																// method stub
 
+	}
+
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		um = (UntiltedMicrograph)m;
+		
 	}
 
 }

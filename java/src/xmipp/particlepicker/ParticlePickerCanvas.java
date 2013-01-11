@@ -2,6 +2,8 @@ package xmipp.particlepicker;
 
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
+
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -10,6 +12,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -27,18 +30,26 @@ import xmipp.utils.XmippWindowUtil;
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
-
+	public final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+	public final static BasicStroke continuousst = new BasicStroke();
+	public final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+	public final static BasicStroke activecst = new BasicStroke(2.0f);
+	
 	public void display()
 	{
 		super.display();
 		iw.setTitle(getMicrograph().getName());
 	}
+	
+	public abstract void setMicrograph(Micrograph m);
+	
 
 	private static boolean tongleSetSelected = false;
 
 	public ParticlePickerCanvas(ImagePlus imp)
 	{
 		super(imp);
+		
 		addKeyListener(new KeyListener()
 		{
 
@@ -56,7 +67,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			public void keyPressed(KeyEvent e)
 			{
 
-				TrainingParticle active = getActive();
+				PickerParticle active = getActive();
 				if (active == null)
 					return;
 				int step = 1;
@@ -85,7 +96,19 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		addMouseMotionListener(this);
 
 	}
+	
+	public void updateMicrograph()
+	{
+		Micrograph m = getFrame().getMicrograph();
+		setMicrograph(m);
+		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
+		m.runImageJFilters(getFrame().getParticlePicker().getFilters());
+		refreshActive(null);
+		
+	}
 
+	protected abstract Particle getLastParticle();
+	
 	protected void setCustomCursor(MouseEvent e)
 	{
 		if (!getFrame().isEraserMode())
@@ -179,19 +202,30 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	public abstract void refreshActive(Particle p);
 
-	public abstract TrainingParticle getActive();
+	public abstract PickerParticle getActive();
 
 	public abstract ParticlePickerJFrame getFrame();
 
+	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all, Stroke stroke)
+	{
+		drawShape(g2, p.getX(), p.getY(), p.getFamily().getSize(), all, stroke);
+	}
+	
 	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all)
 	{
-		drawShape(g2, p.getX(), p.getY(), p.getFamily().getSize(), all);
+		drawShape(g2, p, all, continuousst);
 	}
 	
 	protected void drawShape(Graphics2D g2, int x, int y, int size, boolean all)
 	{
+		drawShape(g2, x, y, size, all, continuousst);
+				
+	}
+	
+	protected void drawShape(Graphics2D g2, int x, int y, int size, boolean all, Stroke stroke)
+	{
 
-		
+		g2.setStroke(stroke);
 		int length = (int) (size * magnification);
 		int radius = (int) (size / 2. * magnification);
 		x = getXOnImage(x);
@@ -266,19 +300,13 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		return x / m + width / 2.f;
 	}
 
-	public void updateMicrographData()
-	{
-		Micrograph m = getMicrograph();
-		// for xmipp smooth filter
-		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
-		m.runImageJFilters(getFrame().getParticlePicker().getFilters());
-	}
+	
 
 	public abstract Micrograph getMicrograph();
 
 	protected void moveActiveParticle(int x, int y)
 	{
-		TrainingParticle active = getActive();
+		PickerParticle active = getActive();
 		if (active == null)
 			return;
 		active.setPosition(x, y);
@@ -307,7 +335,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected abstract void doCustomPaint(Graphics2D g2);
 	
-	public abstract void updateMicrograph();
+	
 	
 
 }

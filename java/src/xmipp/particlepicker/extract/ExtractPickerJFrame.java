@@ -181,13 +181,8 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
-
 		helpmn.add(hcontentsmi);
-
-		// Setting menu item listeners
-
-		
-		
+	
 	}
 
 
@@ -232,7 +227,9 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	@Override
 	protected void resetMicrograph()
 	{
-		// TODO Auto-generated method stub
+		picker.getMicrograph().reset();
+		canvas.refreshActive(null);
+		updateMicrographsModel();
 
 	}
 
@@ -243,12 +240,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	@Override
-	protected void saveChanges()
-	{
-		// TODO Auto-generated method stub
-
-	}
+	
 
 	@Override
 	public ParticlePickerCanvas getCanvas()
@@ -259,7 +251,16 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	@Override
 	public void updateMicrographsModel(boolean all)
 	{
-		// TODO Auto-generated method stub
+		if (particlesdialog != null)
+			loadParticles();
+
+		if (all)
+			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1);
+		else
+			micrographsmd.fireTableRowsUpdated(index, index);
+
+		micrographstb.setRowSelectionInterval(index, index);
+		particleslb.setText(Integer.toString(picker.getParticlesTotal()));
 
 	}
 
@@ -275,12 +276,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		return getMicrograph().getParticles();
 	}
 
-	@Override
-	public void changeShapes()
-	{
-		// TODO Auto-generated method stub
-
-	}
+	
 
 	@Override
 	public ExtractParticlePicker getParticlePicker()

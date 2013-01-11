@@ -7,16 +7,23 @@ import xmipp.particlepicker.PickerParticle;
 public class ExtractParticle extends PickerParticle
 {
 	private boolean enabled;
+	private long id;
 
-	public ExtractParticle(int x, int y, Micrograph m, boolean enabled)
+	public ExtractParticle(long id, int x, int y, Micrograph m, boolean enabled)
 	{
 		super(x, y, m);
 		this.enabled = enabled;
+		this.id = id;
 	}
 	
-	public ExtractParticle(int x, int y, Micrograph m)
+	public long getId()
 	{
-		this(x, y, m, true);
+		return id;
+	}
+
+	public ExtractParticle(long id, int x, int y, Micrograph m)
+	{
+		this(id, x, y, m, true);
 	}
 
 	public boolean isEnabled()

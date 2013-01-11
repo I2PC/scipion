@@ -33,10 +33,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
-	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke continuousst = new BasicStroke();
-	final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke activecst = new BasicStroke(2.0f);
+	
 	
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
@@ -47,29 +44,19 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		this.frame = frame;
 		this.ppicker = frame.getParticlePicker();
 		micrograph.runImageJFilters(ppicker.getFilters());
-		if(!frame.getFamilyData().getParticles().isEmpty())
-			active = getLastParticle();
-		else
-			active = null;
+		active = getLastParticle();
 
 	}
 	
 	
 
 
-	public void updateMicrograph()
-	{
-		this.micrograph = frame.getMicrograph();
-		updateMicrographData();
-		if(!frame.getFamilyData().getParticles().isEmpty())
-			refreshActive(getLastParticle());
-		else
-			refreshActive(null);
-		
-	}
 	
-	TrainingParticle getLastParticle()
+	
+	protected TrainingParticle getLastParticle()
 	{
+		if(frame.getFamilyData().getParticles().isEmpty())
+			return null;
 		return frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
 	}
 
@@ -172,8 +159,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		{
 			g2.setColor(Color.red);
 			BasicStroke activest = (active instanceof AutomaticParticle)? activedst: activecst;
-			g2.setStroke(activest);
-			drawShape(g2, active, true);
+			
+			drawShape(g2, active, true, activest);
 		}
 	}
 
@@ -187,21 +174,23 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			g2.setColor(mfdata.getFamily().getColor());
 
 			for (index = 0; index < particles.size(); index++)
-				drawShape(g2, particles.get(index), index == particles.size() - 1);
-			Stroke previous = g2.getStroke();
-			g2.setStroke(dashedst);
+				drawShape(g2, particles.get(index), index == particles.size() - 1, continuousst);
+			
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
-					drawShape(g2, autoparticles.get(i), false);
-			g2.setStroke(previous);
+					drawShape(g2, autoparticles.get(i), false, dashedst);
+			
 		}
 	}
 
 	@Override
 	public void refreshActive(Particle p)
 	{
-		active = (TrainingParticle)p;
+		if(p == null)
+			active = null;
+		else
+			active = (TrainingParticle)p;
 		repaint();
 
 	}
@@ -223,6 +212,18 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public TrainingParticle getActive()
 	{
 		return active;
+	}
+
+
+
+
+
+
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		micrograph = (TrainingMicrograph)m;
+		
 	}
 
 

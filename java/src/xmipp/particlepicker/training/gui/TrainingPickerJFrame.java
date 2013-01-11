@@ -656,13 +656,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			micrographstb.setRowSelectionInterval(index, index);
 	}
 
-	protected void saveChanges()
-	{
-
-		ppicker.saveData();
-		setChanged(false);
-	}
-
+	
 	
 
 	void updateFamilyComboBox()
@@ -716,7 +710,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionVisible());
-		System.out.println(getFamilyData().isActionVisible());
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -868,20 +861,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return getFamilyData().isPickingAvailable();
 	}
 
-	@Override
-	public void changeShapes()
-	{
-		canvas.repaint();
+	
 
-	}
-
-	@Override
-	protected void reloadImage()
-	{
-		getCanvas().getMicrograph().releaseImage();
-		getCanvas().updateMicrographData();
-		canvas.display();
-	}
+	
 
 	// Only on Manual Mode
 	public void importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)

@@ -1,7 +1,9 @@
 package xmipp.particlepicker.extract;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -10,6 +12,9 @@ import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.training.model.FamilyState;
+import xmipp.particlepicker.training.model.MicrographFamilyData;
+import xmipp.particlepicker.training.model.TrainingMicrograph;
+import xmipp.particlepicker.training.model.TrainingParticle;
 
 public class ExtractParticlePicker extends ParticlePicker
 {
@@ -18,7 +23,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	{
 		ExtractParticlePicker.open(args[0]);
 	}
-	
+
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
 
@@ -26,7 +31,9 @@ public class ExtractParticlePicker extends ParticlePicker
 	{
 		super(selfile, mode);
 		loadParticles();
-		if(filters.isEmpty())//user just started manual mode and has no filter, I select gaussian blur by default, will be applied when window opens
+		if (filters.isEmpty())// user just started manual mode and has no
+								// filter, I select gaussian blur by default,
+								// will be applied when window opens
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 
@@ -35,7 +42,6 @@ public class ExtractParticlePicker extends ParticlePicker
 	{
 		micrographs = new ArrayList<ExtractMicrograph>();
 		MetaData md = new MetaData(selfile);
-		ExtractParticle p;
 		String fileiter;
 		boolean exists;
 		ExtractMicrograph current = null;
@@ -60,7 +66,7 @@ public class ExtractParticlePicker extends ParticlePicker
 				if (existsctf)
 					ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
 				current = new ExtractMicrograph(fileiter, psd, ctf);
-				
+
 				micrographs.add(current);
 			}
 
@@ -68,6 +74,8 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	}
 	
+	
+
 	public void loadParticles()
 	{
 		MetaData md = new MetaData(selfile);
@@ -82,15 +90,14 @@ public class ExtractParticlePicker extends ParticlePicker
 			for (ExtractMicrograph iter : micrographs)
 				if (iter.getFile().equals(fileiter))
 				{
-			
 					current = iter;
 					break;
 				}
-			
+
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
-			enabled = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1)? true: false;
-			p = new ExtractParticle(x, y, current, enabled);
+			enabled = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? true : false;
+			p = new ExtractParticle(id, x, y, current, enabled);
 			current.addParticle(p);
 
 		}
@@ -102,15 +109,40 @@ public class ExtractParticlePicker extends ParticlePicker
 		return micrographs;
 	}
 
+	public void saveData()
+	{
+		if (isChanged())
+			for(ExtractMicrograph m: micrographs)
+				saveData(m);
+	}
+	
 	@Override
 	public void saveData(Micrograph m)
 	{
-	
+		long id;
+		micrograph = (ExtractMicrograph)m;
+		try
+		{
+			MetaData md = new MetaData(selfile);
+			
+			for (ExtractParticle p : micrograph.getParticles())
+			{
+				id = p.getId();
+				md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+				md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
+				md.setValueInt(MDLabel.MDL_ENABLED, p.isEnabled()? 1: -1, id);
+			}
+			md.write(selfile);
+			md.destroy();
+
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+
 	}
-
-	
-
-
 
 	@Override
 	public ExtractMicrograph getMicrograph()
@@ -121,7 +153,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
-		micrograph = (ExtractMicrograph)m;
+		micrograph = (ExtractMicrograph) m;
 
 	}
 
@@ -129,7 +161,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	public void saveConfig()
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -140,14 +172,14 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	public static void open(String filename)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(filename,  FamilyState.Extract);
+		ExtractParticlePicker picker = new ExtractParticlePicker(filename, FamilyState.Extract);
 		new ExtractPickerJFrame(picker);
 	}
 
 	public int getParticlesTotal()
 	{
 		int particles = 0;
-		for(ExtractMicrograph m: micrographs)
+		for (ExtractMicrograph m : micrographs)
 			particles += m.getParticles().size();
 		return particles;
 	}
@@ -157,8 +189,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		for (ExtractMicrograph m : micrographs)
 			m.reset();
 		setChanged(true);
-		
+
 	}
-	
-	
+
 }

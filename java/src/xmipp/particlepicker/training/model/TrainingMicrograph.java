@@ -65,18 +65,10 @@ public class TrainingMicrograph extends Micrograph{
 		return  tokens[tokens.length - 2];
 	}
 	
-
-	
 	public String getAutoPosFile()
 	{
 		return autofilename;
 	}
-	
-
-	
-	
-
-	
 	
 	public List<MicrographFamilyData> getFamiliesData()
 	{

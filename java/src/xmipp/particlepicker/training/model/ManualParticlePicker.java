@@ -12,8 +12,6 @@ public class ManualParticlePicker extends TrainingPicker {
 	public ManualParticlePicker(String selfile, String outputdir, FamilyState mode) {
 
 		this(selfile, outputdir, null, mode);
-		
-
 	}
 	
 	public ManualParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {

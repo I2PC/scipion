@@ -234,11 +234,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	}
 
 	
-	protected void saveChanges()
-	{
-		pppicker.saveData();
-		setChanged(false);
-	}
+	
 
 	public void updateSize(int size)
 	{
@@ -364,9 +360,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	protected void reloadImage()
 	{
 		getCanvas().getMicrograph().releaseImage();
-		getCanvas().updateMicrographData();
+		getCanvas().updateMicrograph();
 		getTiltedCanvas().getMicrograph().releaseImage();
-		getTiltedCanvas().updateMicrographData();
+		getTiltedCanvas().updateMicrograph();
 		canvas.display();
 		getTiltedCanvas().display();
 		

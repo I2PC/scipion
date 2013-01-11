@@ -344,9 +344,19 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	protected abstract void reloadImage();
 
-	protected abstract void saveChanges();
+	protected void reloadImage()
+	{
+		getCanvas().getMicrograph().releaseImage();
+		getCanvas().updateMicrograph();
+		getCanvas().display();
+	}
+
+	protected void saveChanges()
+	{
+		getParticlePicker().saveData();
+		setChanged(false);
+	}
 
 	public int getSide(int size) {
 		return 100;
@@ -523,7 +533,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 	}
 
-	public abstract void changeShapes();
+	public void changeShapes()
+	{
+		getCanvas().repaint();
+
+	}
 
 	public boolean isShapeSelected(Shape shape) {
 		switch (shape) {
