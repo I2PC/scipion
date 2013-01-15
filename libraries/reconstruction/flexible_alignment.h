@@ -103,6 +103,9 @@ public:
     /// Fixed Gaussian standard deviation
     double sigmaGaussian;
 
+    // value of cost function
+    double costfunctionvalue;
+
     /// Sigma
     double sigma;
 
@@ -118,6 +121,8 @@ public:
 
     // All estimated parameters (with the cost)
     Matrix1D<double> parameters;
+
+
 
     // Trial parameters
     Matrix1D<double> trial;

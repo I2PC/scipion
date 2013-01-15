@@ -25,6 +25,7 @@
 #include "flexible_alignment.h"
 #include "data/metadata_extension.h"
 #include "program_extension.h"
+#include "libraries/reconstruction/pdb_nma_deform.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -206,12 +207,12 @@ FileName ProgFlexibleAlignment::createDeformedPDB(int pyramidLevel) const
     FileName fnRandom;
     fnRandom.initUniqueName(nameTemplate,fnOutDir);
     const char * randStr = fnRandom.c_str();
-
+    std::cout << "210" << randStr << std::endl;
     program = "xmipp_pdb_nma_deform";
     arguments = formatString(
                     "--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
                     fnPDB.c_str(), randStr, fnModeList.c_str());
-    for (int i = 0; i < VEC_XSIZE(trial) - 5; ++i)
+    for (int i = 0; i < VEC_XSIZE( trial ) - 5; ++i)
         arguments += floatToString(trial(i) * scale_defamp) + " ";
     runSystem(program, arguments, false);
 
@@ -260,7 +261,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
                              double   *Tr,
                              MultidimArray<double>  &proj_help_test,
                              MultidimArray<double>  &P_esp_image,
-                             double   *S_mu,
+                             //double   *S_mu,
                              int      Xwidth,
                              int      Ywidth,
                              double   sigma)
@@ -277,95 +278,67 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     double centre_Xwidth, centre_Ywidth;
     double sum2,hlp;
 
-    //std::cout << "Xwidth = " << Xwidth << ", Ywidth = " << Ywidth << "sigma = " << sigma << std::endl;
-    //std::cout << "XSIZE(proj_help_test) = " << XSIZE(proj_help_test) <<  "XSIZE(P_esp_image) = " << XSIZE(P_esp_image) << std::endl;
-    /*ImageXmipp test;
-    test()=P_esp_image;
-    Matrix2D<double> mat_test;
-    mat_test=test();*/
-
-    /*std::cout << "mat_test_exp= "<<mat_test<<" " << std::endl;
-    test.write("testimg_exp.xmp");
-    std::cout << "mat_test_exp (0,0) = "<<mat_test(0,0)<<" " << std::endl;
-    */
-
-    //Matrix2D<double> proj_help_test;
-    //proj_help_test.resize(mat_test);
     proj_help_test.initZeros(Xwidth,Ywidth);
-
-
-    //proj_help = ksi_v    = (double*)malloc( (size_t) Xwidth*Ywidth * sizeof(double));
-    ksi_v    = (double*)malloc( (size_t) Xwidth*Ywidth * sizeof(double));
-
+    ksi_v    = (double*)malloc( (size_t) Xwidth*Ywidth * sizeof(double));//01
     for (int i=0; i<dim+5; i++)
     {
         global_flexible_prog->trial(i) = Parameters(i);
-        std::cout << "344Parameters("<<i<<") = " <<Parameters(i) << std::endl;
+        //std::cout << "344Parameters("<<i<<") = " <<Parameters(i) << std::endl;
     }
-    //std::cout << "346 = "   << std::endl;
-    //FileName fnRandom = global_flexible_prog->createDeformedPDB();
     std::string command;
+    String program;
+    String arguments;
     FileName fnRandom;
+    std::cout << 310<<Parameters<< std::endl;
+    fnRandom.initUniqueName(global_flexible_prog->nameTemplate,global_flexible_prog->fnOutDir);
+    const char * randStr = fnRandom.c_str();
+    //std::cout << 312 << randStr <<std::endl;
+    program = "xmipp_pdb_nma_deform";
+    arguments = formatString(
+                    "--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
+                    global_flexible_prog->fnPDB.c_str(), randStr, global_flexible_prog->fnModeList.c_str());
+    for (int i = 5; i < VEC_XSIZE(global_flexible_prog->trial) ; ++i)
+        arguments += floatToString(Parameters(i) * global_flexible_prog->scale_defamp) + " ";
+    runSystem(program, arguments, false);
+    std::cout << "304 arguments " << arguments << std::endl;
 
-    fnRandom.initRandom(19);
 
-    fnRandom=fnRandom+integerToString(global_flexible_prog->rangen);  //the last character is the rank
-
-    command=(std::string)"xmipp_move_along_NMAmode "+global_flexible_prog->fnPDB+" "+global_flexible_prog->modeList[0]+" "+
-            floatToString((float)global_flexible_prog->trial(0))+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
-            fnRandom+".pdb";
-    system(command.c_str());
-    //std::cout << "XSIZE(trial)" << XSIZE(trial) << std::endl;
-
-    for (int i=1; i<VEC_XSIZE(global_flexible_prog->trial)-5; ++i)
-    {
-        command=(std::string)"xmipp_move_along_NMAmode deformedPDB_"+fnRandom+".pdb "+global_flexible_prog->modeList[i]+" "+
-                floatToString((float)global_flexible_prog->trial(i+5))+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
-                fnRandom+".pdb";
-        //std::cout << "modeList[" << i << "]" << modeList[i] << std::endl;
-        system(command.c_str());
-    }
-
-    //std::cout << "347  fnRandom = " <<fnRandom  << std::endl;
+    String  deformed_pdb = formatString("%s_deformedPDB.pdb",randStr);
     centre_Xwidth = double(Xwidth-1)/2.0;
     centre_Ywidth = double(Ywidth-1)/2.0;
-    /* Atomic structure moved along the M modes with deformation amplitudes q1,...,qM
-    "deformedPDB_"+fnRandom+".pdb"*/
-    //    std::string command;
-
-    std::cout << "377  centre_Xwidth = " <<centre_Xwidth  << std::endl;
+    //std::cout << "377  centre_Xwidth = " <<centre_Xwidth  << std::endl;
     Matrix1D<double> limit0(3), limitF(3), centerOfMass(3);
     char *intensityColumn = " ";
     computePDBgeometry(global_flexible_prog->fnPDB, centerOfMass, limit0, limitF, intensityColumn);
     centerOfMass = (limit0 + limitF)/2;
-
-    std::cout << "c383enterOfMass = " <<centerOfMass  << std::endl;
+    //std::cout << "c383enterOfMass = " <<centerOfMass  << std::endl;
     std::ifstream fh_deformedPDB;
-    fh_deformedPDB.open(("deformedPDB_"+ fnRandom+".pdb").c_str());
+    fh_deformedPDB.open(deformed_pdb.c_str());
+
     if (!fh_deformedPDB)
         REPORT_ERROR(ERR_UNCLASSIFIED, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:"
-                     "Cannot open " + " deformedPDB_"+ fnRandom+".pdb" + " for reading");
+                     "Cannot open " + deformed_pdb + " for reading");
 
     // Process all lines of the filem+".pdb").c_str());
     if (!fh_deformedPDB)
         REPORT_ERROR(ERR_UNCLASSIFIED, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:"
-                     "Cannot open " + " deformedPDB_"+ fnRandom+".pdb" + " for reading");
+                     "Cannot open " + deformed_pdb + " for reading");
 
     int col=1;
-    ksi_v    = (double*)malloc( (size_t) 4L * sizeof(double));
-    ro_ksi_v    = (double*)malloc( (size_t) 4L * sizeof(double));
+    //ksi_v    = (double*)malloc( (size_t) 4L * sizeof(double));//02
+    ro_ksi_v    = (double*)malloc( (size_t) 4L * sizeof(double));//03
 
     ksi_v[0] = 0.0;
     ksi_v[1] = 0.0;
     ksi_v[3] = 1.0;
 
-    coord_gaussian = (double*)malloc( (size_t) 4L * sizeof(double));
-    ro_coord_gaussian = (double*)malloc( (size_t) 4L * sizeof(double));
+    coord_gaussian = (double*)malloc( (size_t) 4L * sizeof(double));//04
+    ro_coord_gaussian = (double*)malloc( (size_t) 4L * sizeof(double));//05
 
     coord_gaussian[3] = 1.0;
 
-    coord_img = (double*)malloc( (size_t) 4L * sizeof(double));
-    ro_coord_img = (double*)malloc( (size_t) 4L * sizeof(double));
+    coord_img = (double*)malloc( (size_t) 4L * sizeof(double));//06
+    ro_coord_img = (double*)malloc( (size_t) 4L * sizeof(double));//07
 
     coord_img[2] = 0.0;
     coord_img[3] = 1.0;
@@ -375,7 +348,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     std::string atom_type;
     int statu;
     int ttt =0;
-
+    std::cout << "351 Parameters " << Parameters <<std::endl;
 
     while (!fh_deformedPDB.eof())
     {
@@ -424,28 +397,15 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
         }
 
     }//std::cout << "465 TTT=  "<<ttt << std::endl;
-
+    std::cout << "400 Parameters " << Parameters <<std::endl;
     Image<double> test1;
     test1()=proj_help_test;
-    //std::cout << "469mat_test_comp= "<<proj_help_test<<" " << std::endl;
-    //std::cout << "mat_test_comp (0,0) = "<<proj_help_test(0,0)<<" " << std::endl;
-    //std::cout << "469 test1() = "<<test1()<<" " << std::endl;
-
-    //test1.write("testproj_comp.xmp");
-    //std::cout << "mat_test_comp (0,0) = "<<proj_help_test(0,0)<<" " << std::endl;
-
-    //command=(std::string)"xmipp_show -img testproj_comp.xmp&";
-    //system(command.c_str());
-
-
-    //std::cout << "centre_Ywidth "<< centre_Ywidth << std::endl;
-    //std::cout << "centre_Ywidth "<< centre_Ywidth << std::endl;
 
     // Close file
     fh_deformedPDB.close();
     command=(std::string)"rm -f deformedPDB_"+ fnRandom+".pdb";
     system(command.c_str());
-    std::cout << "488 *S_mu=" << *S_mu<<" S_mu=  "<<S_mu << std::endl;
+    std::cout << "409 Parameters " << Parameters <<std::endl;
     // To calculate the value of cost function
     for(sum2 = 0.0, kx=0;kx<Xwidth;kx++)
     {
@@ -455,22 +415,21 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
             hlp   = (double)hlp*hlp;
             sum2 += (double)hlp;
         }
-        //std::cout <<"sum2"<<sum2<<  std::endl;
     }
-
-    *S_mu = sum2;
+    std::cout << "420 Parameters " << Parameters <<std::endl;
+    global_flexible_prog->costfunctionvalue = (double)sum2;
     /* Calcule the real projection*/
-    std::cout << "503 *S_mu=" << *S_mu<<" S_mu=  "<<S_mu<< std::endl;
+    std::cout << "503 *costfunctionvalue=" << global_flexible_prog->costfunctionvalue<< std::endl;
+    std::cout << "424 Parameters " << Parameters <<std::endl;
+
+    free(ksi_v);               std::cout << "486" << std::endl;
+    free(ro_ksi_v);            std::cout << "486" << std::endl;
+    free(coord_gaussian);      std::cout << "487" << std::endl;
+    free(ro_coord_gaussian);   std::cout << "487" << std::endl;
+    free(coord_img);           std::cout << "488" << std::endl;
+    free(ro_coord_img);        std::cout << "488" << std::endl;
 
 
-    free(coord_img);           //std::cout << "488" << std::endl;
-    free(coord_gaussian);      //std::cout << "487" << std::endl;
-    free(ksi_v);               //std::cout << "486" << std::endl;
-    free(ro_coord_img);        //std::cout << "488" << std::endl;
-    free(ro_coord_gaussian);   //std::cout << "487" << std::endl;
-    free(ro_ksi_v);            //std::cout << "486" << std::endl;
-    //free(imagehelp);
-    //std::cout << "521 line" << std::endl;
     //return (!ERROR);
 }
 
@@ -490,7 +449,7 @@ int partialpfunction(Matrix1D<double>  &Parameters,
                      MultidimArray<double>  &DP_x,
                      MultidimArray<double>  &DP_y,
                      MultidimArray<double>  &DP_q,
-                     double            *cost,
+                     //double            *cost,
                      MultidimArray<double>  &P_mu_image,
                      MultidimArray<double>  &P_esp_image,
                      int               Xwidth,
@@ -528,7 +487,7 @@ int partialpfunction(Matrix1D<double>  &Parameters,
         Line_number++;
     }
     ModeFile.close();
-    ModeValues = (double*)malloc( (size_t) 3*Line_number*dim  * sizeof(double));
+    ModeValues = (double*)malloc( (size_t) 3*Line_number*dim  * sizeof(double));//08
     //std::string line;
     std::string x,y,z;
 
@@ -552,7 +511,7 @@ int partialpfunction(Matrix1D<double>  &Parameters,
         ModeFile.close();
     }
     //clear line;
-
+    
     for (int i=0; i<dim+5; i++)
     {
         global_flexible_prog->trial(i) = Parameters(i);
@@ -561,9 +520,9 @@ int partialpfunction(Matrix1D<double>  &Parameters,
 
     FileName fnRandom = global_flexible_prog->createDeformedPDB(0);
     std::ifstream fh_deformedPDB;
-    fh_deformedPDB.open(("deformedPDB_"+ fnRandom+".pdb").c_str());
+    fh_deformedPDB.open((fnRandom+ "_deformedPDB.pdb").c_str());
     if (!fh_deformedPDB)
-        REPORT_ERROR(ERR_UNCLASSIFIED, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:" "Cannot open " + " deformedPDB_"+ fnRandom+".pdb" + " for reading");
+        REPORT_ERROR(ERR_UNCLASSIFIED, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:" "Cannot open " + fnRandom+"_deformedPDB.pdb" + " for reading");
 
     // Process all lines of the file
     int col=1;
@@ -673,9 +632,6 @@ int partialpfunction(Matrix1D<double>  &Parameters,
                     }
 
                     DP_Rz1(kx,ky) += help * (a0*help_v[0]+a1*help_v[1]+a2*help_v[2]);
-                    //std::cout << " 710 DP_Rz1 = " << (a0*help_v[0]+a1*help_v[1]+a2*help_v[2]) ;
-                    //std::cout << a0<< "||"<<help_v[0]<< "||"<<a1<< "||"<<help_v[1]<< "||"<<a2<< "||"<<help_v[2]<<std::endl;
-                    //MatrixTimesVector( DR1, coord_img, help_v,4L, 4L);
                     if (MatrixTimesVector( DR1, coord_img, help_v,4L, 4L) == ERROR)
                     {
                         WRITE_ERROR(partialpfunction, "Error returned by MatrixMultiply");
@@ -685,8 +641,6 @@ int partialpfunction(Matrix1D<double>  &Parameters,
                         return(ERROR);
                     }
                     DP_Ry(kx,ky) += help * (a0*help_v[0]+a1*help_v[1]+a2*help_v[2]);
-                    //std::cout << " 710 DP_Ry = " << (a0*help_v[0]+a1*help_v[1]+a2*help_v[2]) ;
-                    //MatrixTimesVector( DR2, coord_img, help_v,4L, 4L);
                     if (MatrixTimesVector( DR2, coord_img, help_v,4L, 4L) == ERROR)
                     {
                         WRITE_ERROR(partialpfunction, "Error returned by MatrixMultiply");
@@ -698,15 +652,10 @@ int partialpfunction(Matrix1D<double>  &Parameters,
                     DP_Rz2(kx,ky) += help * (a0*help_v[0]+a1*help_v[1]+a2*help_v[2]);
                     DP_x(kx,ky)   += help * (a0*R[0]+a1*R[1]+a2*R[2]);
                     DP_y(kx,ky)   += help * (a0*R[4]+a1*R[5]+a2*R[6]);
-                    //std::cout << " 710 DP_Rz2 = " << (a0*help_v[0]+a1*help_v[1]+a2*help_v[2]) ;
-                    //std::cout << " 710 DP_x   = " << (a0*R[0]+a1*R[1]+a2*R[2]) ;
-                    //std::cout << " 710 DP_y   = " << (a0*R[4]+a1*R[5]+a2*R[6]) ;
                     for(int i = 0; i < dim; i++)
                     {
                         DP_q(i,kx,ky) += help * (a0*ModeValues[i*3*Line_number +  k*3] + a1*ModeValues[i*3*Line_number + k*3 + 1] + a2*ModeValues[i*3*Line_number + k*3 + 2]);
-                        //std::cout << " 710 DP_q   = " << (a0*ModeValues[i*3*Line_number +  k*3] + a1*ModeValues[i*3*Line_number + k*3 + 1] + a2*ModeValues[i*3*Line_number + k*3 + 2]) ;
                     }
-                    //std::cout << std::endl;
                 }
             }
         }
@@ -754,7 +703,6 @@ int return_gradhesscost(
               Matrix1D<double>  &centerOfMass,
               double *Gradient,
               double *Hessian,
-              double *cost,
               Matrix1D<double>  &Parameters,
               int     dim,
               MultidimArray<double>  &rg_projimage,
@@ -765,7 +713,6 @@ int return_gradhesscost(
               int     Status = !ERROR;
               double  phi,theta,psi,x0,y0;
               double  *defamp;
-              //double  *DP_q,*DP_y,*DP_x,*DP_Rz2,*DP_Ry,*DP_Rz1;
               double  *Rz1,*Ry,*Rz2,*R,*DRz1,*DRy,*DRz2,*DR0,*DR1,*DR2,*Tr;
               double  *hlp,*helpgr;
               int     i,j;
@@ -776,8 +723,11 @@ int return_gradhesscost(
               double  sigmalocal = global_flexible_prog->sigma;
               int     half_Xwidth = Xwidth/2;
               int     half_Ywidth = Ywidth/2;
+
+              global_flexible_prog->costfunctionvalue = 0.0;
+
+
               helpgr = (double *)malloc((size_t)(dim +5) * sizeof(double));
-              //    std::cout << "799 rg_projimage = "<< rg_projimage << std::endl;
               for (int i = 1; i < dim + 5; i++)
               {
                   global_flexible_prog->trial(i) = Parameters(i);
@@ -804,14 +754,10 @@ int return_gradhesscost(
               CosPsi   = cos(psi);
               SinTheta = sin(theta);
               CosTheta = cos(theta);
-              //    cost = ProjectionRefencePoint(dim,R,Tr,Q,P_esp_image,P_mu_image);
-              //    cost = ProjectionRefencePoint(dim,R,Tr,Q,P_esp_image,P_mu_image);
-
               Rz1 = (double *)malloc((size_t) 16L * sizeof(double));
               if (Rz1 == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for Rz1");
-                  //free(defamp);
                   return(ERROR);
               }
 
@@ -819,7 +765,6 @@ int return_gradhesscost(
               if (Ry == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for Ry");
-                  //free(defamp);
                   free(Rz1);
                   return(ERROR);
               }
@@ -828,7 +773,6 @@ int return_gradhesscost(
               if (Rz2 == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for Rz2");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   return(ERROR);
@@ -837,7 +781,6 @@ int return_gradhesscost(
               if (GetIdentitySquareMatrix(Rz2, 4L) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by GetIdentitySquareMatrix");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -854,7 +797,6 @@ int return_gradhesscost(
               if (GetIdentitySquareMatrix(Rz1, 4L) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by GetIdentitySquareMatrix");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -891,7 +833,6 @@ int return_gradhesscost(
               if (R == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for R");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -903,7 +844,6 @@ int return_gradhesscost(
               if (multiply_3Matrices(Rz2, Ry, Rz1, R, 4L, 4L, 4L, 4L) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by multiply_3Matrices");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -915,7 +855,6 @@ int return_gradhesscost(
               if (DRz1 == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DRz1");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -927,7 +866,6 @@ int return_gradhesscost(
               if (DRy == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DRy");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -940,7 +878,6 @@ int return_gradhesscost(
               if (DRz2 == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DRz2");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -990,7 +927,6 @@ int return_gradhesscost(
               if (DR0 == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR0");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1005,7 +941,6 @@ int return_gradhesscost(
               if (DR1 == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR1");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1021,7 +956,6 @@ int return_gradhesscost(
               if (DR2 == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR2");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1035,7 +969,6 @@ int return_gradhesscost(
               }
 
               std::cout << " 1024 phi = " << phi << std::endl;
-              //multiply_3Matrices(Rz2, Ry, DRz1, DR0, 4L, 4L, 4L, 4L);
               if (multiply_3Matrices(Rz2, Ry, DRz1, DR0, 4L, 4L, 4L, 4L) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by multiply_3Matrices");
@@ -1054,11 +987,9 @@ int return_gradhesscost(
               }
 
               std::cout << " 1043 phi = " << phi << std::endl;
-              //multiply_3Matrices(Rz2, DRy, Rz1, DR1, 4L, 4L, 4L, 4L);
               if (multiply_3Matrices(Rz2, DRy, Rz1, DR1, 4L, 4L, 4L, 4L) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by multiply_3Matrices");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1073,11 +1004,9 @@ int return_gradhesscost(
               }
 
 
-              //multiply_3Matrices(DRz2, Ry, Rz1, DR2, 4L, 4L, 4L, 4L);
               if (multiply_3Matrices(DRz2, Ry, Rz1, DR2, 4L, 4L, 4L, 4L) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by multiply_3Matrices");
-                  //free(defamp);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1090,144 +1019,11 @@ int return_gradhesscost(
                   free(DR2);
                   return(ERROR);
               }
-
-              /*    DP_Rz1 = (double *)malloc((size_t) Xwidth*Ywidth * sizeof(double));
-               if (DP_Rz1 == (double *)NULL)
-               {
-              WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR2");
-              //free(defamp);
-              free(Rz1);
-              free(Ry);
-              free(Rz2);
-              free(R);
-              free(DRz1);
-              free(DRy);
-              free(DRz2);
-              free(DR0);
-              free(DR1);
-              free(DR2);
-              return(ERROR);
-               }
-
-               DP_Ry = (double *)malloc((size_t) Xwidth*Ywidth * sizeof(double));
-               if (DP_Ry == (double *)NULL)
-               {
-              WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR2");
-              //free(defamp);
-              free(DP_Rz1);
-              free(Rz1);
-              free(Ry);
-              free(Rz2);
-              free(R);
-              free(DRz1);
-              free(DRy);
-              free(DRz2);
-              free(DR0);
-              free(DR1);
-              free(DR2);
-              return(ERROR);
-               }
-
-               DP_Rz2 = (double *)malloc((size_t) Xwidth*Ywidth * sizeof(double));
-               if (DP_Rz2 == (double *)NULL)
-               {
-              WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR2");
-              //free(defamp);
-              free(DP_Ry);
-              free(DP_Rz1);
-              free(Rz1);
-              free(Ry);
-              free(Rz2);
-              free(R);
-              free(DRz1);
-              free(DRy);
-              free(DRz2);
-              free(DR0);
-              free(DR1);
-              free(DR2);
-              return(ERROR);
-               }
-              std::cout << " 1137 phi = " << phi << std::endl;
-               DP_x = (double *)malloc((size_t) Xwidth*Ywidth * sizeof(double));
-               if (DP_x == (double *)NULL)
-               {
-              WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR2");
-              //free(defamp);
-              free(DP_Rz2);
-              free(DP_Ry);
-              free(DP_Rz1);
-              free(Rz1);
-              free(Ry);
-              free(Rz2);
-              free(R);
-              free(DRz1);
-              free(DRy);
-              free(DRz2);
-              free(DR0);
-              free(DR1);
-              free(DR2);
-              return(ERROR);
-               }
-
-               DP_y = (double *)malloc((size_t) Xwidth*Ywidth * sizeof(double));
-               if (DP_y == (double *)NULL)
-               {
-              WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR2");
-              //free(defamp);
-              free(DP_x);
-              free(DP_Rz2);
-              free(DP_Ry);
-              free(DP_Rz1);
-              free(Rz1);
-              free(Ry);
-              free(Rz2);
-              free(R);
-              free(DRz1);
-              free(DRy);
-              free(DRz2);
-              free(DR0);
-              free(DR1);
-              free(DR2);
-              return(ERROR);
-               }
-
-               DP_q = (double *)malloc((size_t) Xwidth*Ywidth*dim * sizeof(double));
-               if (DP_q == (double *)NULL)
-               {
-              WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for DR2");
-              //free(defamp);
-              free(DP_y);
-              free(DP_x);
-              free(DP_Rz2);
-              free(DP_Ry);
-              free(DP_Rz1);
-              free(Rz1);
-              free(Ry);
-              free(Rz2);
-              free(R);
-              free(DRz1);
-              free(DRy);
-              free(DRz2);
-              free(DR0);
-              free(DR1);
-              free(DR2);
-              return(ERROR);
-               }*/
-
-
 
               Tr = (double *)malloc((size_t) 16L * sizeof(double));
               if (Tr == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for Tr");
-                  //free(defamp);
-                  //free(DP_q);
-                  //free(DP_y);
-                  //free(DP_x);
-                  //free(DP_Rz2);
-                  //free(DP_Ry);
-                  //free(DP_Rz1);
-                  //free(Rz1);
                   free(Ry);
                   free(Rz2);
                   free(R);
@@ -1240,19 +1036,10 @@ int return_gradhesscost(
                   return(ERROR);
               }
 
-
-
-              //GetIdentitySquareMatrix(Tr, 4L);
               if (GetIdentitySquareMatrix(Tr, 4L) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by GetIdentitySquareMatrix");
-                  //free(defamp);
-                  //free(DP_q);
-                  //free(DP_y);
-                  //free(DP_x);
-                  //free(DP_Rz2);
-                  //free(DP_Ry);
-                  //free(DP_Rz1);
+
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1273,16 +1060,9 @@ int return_gradhesscost(
               *hlp =  - x0;
               hlp  += (std::ptrdiff_t)5L;
               *hlp =  - y0;
-              //std::cout << " 1262 phi = " << P_mu_image << P_esp_image << std::endl;
-              //std::cout << " 1268XSIZE(P_mu_image) = " << XSIZE(P_mu_image)  << std::endl;
-              //std::cout << " 1269YSIZE(P_mu_image) = " << YSIZE(P_mu_image)  << std::endl;
-
-              ProjectionRefencePoint(Parameters,dim,R,Tr,rg_projimage,P_esp_image,cost,Xwidth,Ywidth,sigmalocal);
-              //std::cout << " 1268 phi = " << phi << std::endl;
-              //std::cout << " 1269 rg_projimage = " << rg_projimage << std::endl;
-              //std::cout << " 1270 cost = " << cost << std::endl;
-              //std::cout << " 1271 sigmalocal = " << sigmalocal << std::endl;
-
+std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_prog->costfunctionvalue << std::endl;
+              ProjectionRefencePoint(Parameters,dim,R,Tr,rg_projimage,P_esp_image,Xwidth,Ywidth,sigmalocal);
+              std::cout << "1062 Parameters =" << Parameters << std::endl;
               /*if (ProjectionRefencePoint(dim,R,Tr,P_mu_image,cost,Xwidth,Ywidth,sigma) == ERROR)
           {
                WRITE_ERROR(return_gradhesscost, "ProjectionRefencePoint");
@@ -1306,30 +1086,13 @@ int return_gradhesscost(
                free(Tr);
                return(ERROR);global_flexible_prog->
                }*/
-              //std::cout << " 1291 phi = " << phi << std::endl;
-              //std::cout << " 1300XSIZE(P_mu_image) = " << XSIZE(P_mu_image)  << std::endl;
-              //std::cout << " 1300YSIZE(P_mu_image) = " << YSIZE(P_mu_image)  << std::endl;
 
-              /*for (i = 0L; i < 16L; i++)
-          {
-               std::cout << "Tr  ["<<i<<"] = " << Tr[i];
-               std::cout << "  DR0 ["<<i<<"] = " << DR0[i];
-               std::cout << "  DR1 ["<<i<<"] = " << DR1[i];
-               std::cout << "  DR2 ["<<i<<"] = " << DR2[i]  << std::endl;
-          }*/
               MultidimArray<double> DP_Rx(Xwidth,Ywidth),DP_Ry(Xwidth,Ywidth),DP_Rz2(Xwidth,Ywidth);
               MultidimArray<double> DP_x(Xwidth,Ywidth),DP_y(Xwidth,Ywidth);
               MultidimArray<double> DP_q(dim,Xwidth,Ywidth);
-              if (partialpfunction(Parameters,centerOfMass,R,Tr,DR0,DR1,DR2,DP_Rx,DP_Ry,DP_Rz2,DP_x,DP_y,DP_q,cost,rg_projimage,P_esp_image,Xwidth,Ywidth) == ERROR)
+              if (partialpfunction(Parameters,centerOfMass,R,Tr,DR0,DR1,DR2,DP_Rx,DP_Ry,DP_Rz2,DP_x,DP_y,DP_q,rg_projimage,P_esp_image,Xwidth,Ywidth) == ERROR)
               {
                   WRITE_ERROR(return_gradhesscost, "Error returned by partialpfunction");
-                  //free(defamp);
-                  //free(DP_q);
-                  //free(DP_y);
-                  //free(DP_x);
-                  //free(DP_Rz2);
-                  //free(DP_Ry);
-                  //free(DP_Rz1);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1344,22 +1107,10 @@ int return_gradhesscost(
                   return(ERROR);
               }
 
-
-              //std::cout << " 1389 DP_Rx = " << DP_Rx << std::endl;
-              //std::cout << " 1391 DP_Ry = " << DP_Ry << std::endl;
-              //std::cout << " 1326 trialSize = " << trialSize << std::endl;
-              //helpgr = (double *)malloc((size_t) 16L * sizeof(double));
               helpgr = (double *)malloc((size_t)trialSize * sizeof(double));
               if (helpgr == (double *)NULL)
               {
                   WRITE_ERROR(return_gradhesscost, "ERROR - Not enough memory for helpgr");
-                  //free(defamp);
-                  //free(DP_q);
-                  //free(DP_y);
-                  //free(DP_x);
-                  //free(DP_Rz2);
-                  //free(DP_Ry);
-                  //free(DP_Rz1);
                   free(Rz1);
                   free(Ry);
                   free(Rz2);
@@ -1398,10 +1149,7 @@ int return_gradhesscost(
                       {
                           helpgr[5+j] =DP_q(j,kx,ky);//std::cout << "||" << helpgr[5+j];
                       }
-                      //std::cout <<" 1450"<<std::endl;
-                      //int gradhesscost_atpixel(Gradient,Hessian,helpgr,difference);
                       gradhesscost_atpixel(Gradient,Hessian,helpgr,difference);
-                      //std::cout<< "Gradient= " << Gradient[0] << "||" << Gradient[1] << "||" << Gradient[2] << "||" << Gradient[3] << "||" << Gradient[4] << "||" << Gradient[5] << "||"<<Gradient[6]<< std::endl;
                       /*if (gradhesscost_atpixel(Gradient,Hessian,helpgr,difference) == ERROR)
                   {
                        WRITE_ERROR(return_gradhesscost, "Error returned by partialpfunction");
@@ -1458,14 +1206,7 @@ int return_gradhesscost(
 
 
               std::cout << " 1446 phi = " << phi << std::endl;
-              //free(defamp);
               free(helpgr);
-              //free(DP_q);std::cout << " 1448 phi = " << phi << std::endl;//ok
-              //free(DP_y);std::cout << " 1449 phi = " << phi << std::endl;//ok
-              //free(DP_x);std::cout << " 1450 phi = " << phi << std::endl;//ok
-              //free(DP_Rz2);std::cout << " 1451 phi = " << phi << std::endl;//ok
-              //free(DP_Ry);std::cout << " 1452 phi = " << phi << std::endl;//ok
-              //free(DP_Rz1);std::cout << " 1453 phi = " << phi << std::endl;
               free(Rz1);
               std::cout << " 1454 phi = " << phi << std::endl;
               free(Ry);
@@ -1500,7 +1241,7 @@ int return_gradhesscost(
               Matrix1D<double>  &centerOfMass,
               double *beta,
               double *alpha,
-              double *cost,
+              //double *cost,
               Matrix1D<double>  &Parameters,
               int    DoDesProj,
               double *OldCost,
@@ -1579,7 +1320,7 @@ int return_gradhesscost(
                   return(ERROR);
               }
 
-              std::cout << "1547 cost" << *cost << std::endl;
+              std::cout << "1547 cost" << global_flexible_prog->costfunctionvalue << std::endl;
               t = u;
               for (i = 0L; (i < ma); t += (std::ptrdiff_t)(ma + 1L), i++)
               {
@@ -1589,16 +1330,13 @@ int return_gradhesscost(
                   }
 
                   *t *= 1.0 + *lambda;
-                  //std::cout << "t=" << *t << std::endl;
               }
               u -= (std::ptrdiff_t)(ma * ma);
               alpha -= (std::ptrdiff_t)(ma * ma);
-              //std::cout << "1558 ma = " << ma<<std::endl;
               for(i=0L;(i<ma*ma);i++)
               {
                   std::cout <<",  u"<<i<< " = " << u[i] ;
               }
-              //int Status;std::cout << "1568" << SVDMAXITER<<std::endl;
               if (SingularValueDecomposition(u, ma, ma, w, v, SVDMAXITER, &Status) == ERROR)
               {
                   free(a);
@@ -1661,16 +1399,8 @@ int return_gradhesscost(
               //Matrix1D<double>  Parameters((int)ma);
               for(i=0;i<ma;i++)
                   Parameters(i) = v[i];
-              //std::cout << " 1581XSIZE(P_mu_image) = " << XSIZE(P_mu_image)  << std::endl;
-              /*std::cout << " 1629 centerOfMass     = " << centerOfMass  << std::endl;
-              std::cout << " 1630 costchanged      = " << costchanged  << std::endl;
-              std::cout << " 1631 Parameters       = " << Parameters  << std::endl;
-              std::cout << " 1632 dim              = " << dim  << std::endl;
-              std::cout << " 1633 lc_P_mu_image    = " << lc_P_mu_image  << std::endl;
-              std::cout << " 1634 P_esp_image      = " << P_esp_image  << std::endl;
-              std::cout << " 1635 Xwidth           = " << Xwidth  << std::endl;
-              std::cout << " 1636 Ywidth           = " << Ywidth  << std::endl;*/
-              if (return_gradhesscost(centerOfMass,w, u, costchanged, Parameters,dim,lc_P_mu_image,P_esp_image,Xwidth,Ywidth) == ERROR)
+
+              if (return_gradhesscost(centerOfMass,w, u,  Parameters,dim,lc_P_mu_image,P_esp_image,Xwidth,Ywidth) == ERROR)
               {
                   WRITE_ERROR(levenberg_cst2, "Error returned by total_gradhesscost");
                   free(a);
@@ -1712,28 +1442,7 @@ int return_gradhesscost(
                       }
                   }
               }
-              /*std::cout << "1733 cost" << cost<<std::endl;
-                  if(cost == -1.0)
-                  {std::cout << "1735 cost" << cost<<std::endl;
-                      if (costchanged < OldCost)
-                      {std::cout << "1737 cost" << cost<<std::endl;
-                          for (i = 0L; (i < ma); i++)
-                          {std::cout << "1739 cost" << cost<<std::endl;
-                              for (j = 0L; (j < ma); j++)
-                                  alpha[i * ma + j] = u[i * ma + j];
-                              beta[i] = w[i];
-                              a[i] = v[i];
-                          }
-                          cost = costchanged;
-                      }
-              std::cout << "1669" << std::endl;
-                      free(w);
-                      free(u);
-                      free(da);
-                      free(v);
-                      return(!ERROR);
-                  }
-              */
+
 
 
 
@@ -1744,7 +1453,7 @@ int return_gradhesscost(
                   beta[i] = w[i];
                   a[i] = v[i];
               }
-              *cost = *costchanged;
+              global_flexible_prog->costfunctionvalue = *costchanged;
 
 
 #ifndef DBL_MIN
@@ -1754,7 +1463,7 @@ int return_gradhesscost(
 #define DBL_MAX 1e+26
 #endif
 
-              std::cout << "1774 cost" << *cost<<std::endl;
+              std::cout << "1774 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
 
               if (*costchanged < *OldCost)
               {
@@ -1778,15 +1487,15 @@ int return_gradhesscost(
                       *IteratingStop = 1;
                   }
               }
-              std::cout << "1797 *cost" << *cost<<std::endl;
+              std::cout << "1797 *cost" << global_flexible_prog->costfunctionvalue<<std::endl;
               free(w);
-              std::cout << "1798 *cost" << *cost<<std::endl;
+              std::cout << "1798 *cost" << global_flexible_prog->costfunctionvalue<<std::endl;
               free(v);
-              std::cout << "1799 cost" << cost<<std::endl;
+              std::cout << "1799 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
               free(u);
-              std::cout << "1800 cost" << *cost<<std::endl;
+              std::cout << "1800 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
               free(da);
-              std::cout << "1801 cost" << cost<<std::endl;
+              std::cout << "1801 cost" << global_flexible_prog->costfunctionvalue<<std::endl;
               return(!ERROR);
           } /* End of levenberg_cst2 */
 
@@ -1796,7 +1505,7 @@ int return_gradhesscost(
           //cstregistrationcontinuous(centerOfMass,cost,Parameters,P_mu_image,P_esp_image,Xwidth,Ywidth);
           int  cstregistrationcontinuous(
               Matrix1D<double>  &centerOfMass,
-              double            *cost,
+              //double            *cost,
               Matrix1D<double>  &Parameters,
               MultidimArray<double>  &cst_P_mu_image,
               MultidimArray<double>  &P_esp_image,
@@ -1817,19 +1526,7 @@ int return_gradhesscost(
               double          *OutputParameters;
               long            nx_OutputParameters,ny_OutputParameters;
 
-              DoDesProj=0;
-
-              //std::cout   << "1732cst_P_mu_image = " << cst_P_mu_image << std::endl;
-
-              //std::cout << " 1723XSIZE(P_mu_image) = " << XSIZE(P_mu_image)  << std::endl;
-              //std::cout << " 1724YSIZE(P_mu_image) = " << YSIZE(P_mu_image)  << std::endl;
-
-
-              /*if (Data == (struct cstregistrationStruct_jin *)NULL)
-          {
-                  WRITE_ERROR(cstregistration_jin, "Invalid data pointer");
-                  return(ERROR);
-          }*/
+              DoDesProj        = 0;
               lambda           = 2000;
               ScaleLambda      = 2;
               LambdaInitial    = 1000;
@@ -1851,26 +1548,13 @@ int return_gradhesscost(
               nx_OutputParameters = MaxIter + 1;
               ny_OutputParameters = 5;
 
-              //Matrix1D<double> Cost(max_no_iter + 1), TimePerIter(MaxIter + 1),Failures(max_no_iter + 1);
               std::cout << "ny_OutputParameters = " << ny_OutputParameters << std::endl;
-
-
-
-              /*Parameters = (double *)malloc((size_t) 5L * sizeof(double));
-              if (Parameters == (double *)NULL)
-          {
-                  WRITE_ERROR(cstregistrationcontinuous, "ERROR - Not enough memory for Parameters");
-                  return(ERROR);
-          }*/
-
-
-              std::cout << "cost = " << cost << std::endl;
+              std::cout << "cost = " << global_flexible_prog->costfunctionvalue << std::endl;
 
               Gradient = (double *)malloc((size_t) (dim + 5L) * sizeof(double));
               if (Gradient == (double *)NULL)
               {
                   WRITE_ERROR(cstregistrationcontinuous, "ERROR - Not enough memory for Gradient");
-                  //free(Parameters);
                   return(ERROR);
               }
 
@@ -1878,37 +1562,15 @@ int return_gradhesscost(
               if (Hessian == (double *)NULL)
               {
                   WRITE_ERROR(cstregistrationcontinuous, "ERROR - Not enough memory for Hessian");
-                  //free(Parameters);
                   free(Gradient);
                   return(ERROR);
               }
 
 
-              /*pntr_par0 = OutputParameters;
-              pntr_par1 = pntr_par0 + (std::ptrdiff_t) MaxIter2;
-              pntr_par2 = pntr_par1 + (std::ptrdiff_t) MaxIter2;
-              pntr_par3 = pntr_par2 + (std::ptrdiff_t) MaxIter2;
-              pntr_par4 = pntr_par3 + (std::ptrdiff_t) MaxIter2;
-              pntr_cost = Data->Cost;
-              pntr_time = Data->TimePerIter;
-              pntr_FailureIter = Data->Failures;
-              for (indx = 0L; indx < MaxIter2; indx++)
-          {
-                  *pntr_par0++ = 0.0;
-                  *pntr_par1++ = 0.0;
-                  *pntr_par2++ = 0.0;
-                  *pntr_par3++ = 0.0;
-                  *pntr_par4++ = 0.0;
-                  *pntr_cost++ = 0.0;
-                  *pntr_time++ = 0.0;
-                  *pntr_FailureIter++ = 0.0;
-          }*/
-              //std::cout << " 1804XSIZE(P_mu_image) = " << XSIZE(P_mu_image)  << std::endl;
-              //std::cout << " 1805YSIZE(P_mu_image) = " << YSIZE(P_mu_image)  << std::endl;
               time1 = time(tp1);
 
               std::cout << "1819Parameters = " << Parameters << std::endl;
-              if (return_gradhesscost(centerOfMass,Gradient, Hessian, cost, Parameters,
+              if (return_gradhesscost(centerOfMass,Gradient, Hessian, Parameters,
                                       dim,cst_P_mu_image,P_esp_image,Xwidth,Ywidth) == ERROR)
               {
                   WRITE_ERROR(cstregistrationcontinuous, "Error returned by return_gradhesscost");
@@ -1917,66 +1579,39 @@ int return_gradhesscost(
                   free(Hessian);
                   return(ERROR);
               }
-              std::cout << "1935 cost = " << *cost << std::endl;
-              //std::cout   << "1830  cst_P_mu_image = " << cst_P_mu_image << std::endl;
-              //pntr_RedftCompProj = Data->dftProj;
+              std::cout << "1935 cost = " << global_flexible_prog->costfunctionvalue << std::endl;
               time2 = time(tp2);
               OneIterInSeconds = difftime(time2, time1);
-              //std::cout << "1856time2 = " << time2 << std::endl;
-              //std::cout << "1856DoDesProj = " << DoDesProj << std::endl;
               if (DoDesProj)
               {
-                  //free(Parameters);
                   free(Gradient);
                   free(Hessian);
                   return(!ERROR);
               }
               std::cout << "1864time2 = " << time2 << std::endl;
-              /*pntr_par0 = Parameters;
-              pntr_par1 = pntr_par0 + (std::ptrdiff_t) MaxIter2;
-              pntr_par2 = pntr_par1 + (std::ptrdiff_t) MaxIter2;
-              pntr_par3 = pntr_par2 + (std::ptrdiff_t) MaxIter2;
-              pntr_par4 = pntr_par3 + (std::ptrdiff_t) MaxIter2;
-
-              pntr_cost = Cost;*/
-              //pntr_time = Data->TimePerIter;
-
-              //pntr_FailureIter = Data->Failures;
-              /*
-                  *pntr_par0++ = Parameters[0];
-                  *pntr_par1++ = Parameters[1];
-                  *pntr_par2++ = Parameters[2];
-                  *pntr_par3++ = Parameters[3];
-                  *pntr_par4++ = Parameters[4];
-                  *pntr_cost++ = cost;*/
-              //*pntr_time++ = OneIterInSeconds;
-              //pntr_FailureIter++;
-              //std::cout << "1885MaxIter = " << MaxIter << std::endl;
               if ((MaxIter == 0L) && (!DoDesProj))
               {
-                  //free(Parameters);
                   free(Gradient);
                   free(Hessian);
                   return(!ERROR);
               }
-              //std::cout << "1892time2 = " << time2 << std::endl;
               nSuccess = 0L;
               nFailure = 0L;
-              *OldCost   = *cost;
+              *OldCost   = global_flexible_prog->costfunctionvalue;
               iter = - 1L;
               IteratingStop = 0;
               FlagMaxIter = (MaxIter != 1L);
               if (!FlagMaxIter)
-                  *cost = - 1.0;
-              std::cout << "1984 *cost = " << *cost << std::endl;
+            	  global_flexible_prog->costfunctionvalue = - 1.0;
+              std::cout << "1984 *cost = " << global_flexible_prog->costfunctionvalue << std::endl;
 
               do
               {
                   time1 = time(tp1);
 
-                  std::cout << "1992 *cost = " << *cost << " cost = " << cost << std::endl;
-                  std::cout << "cost = " << cost << std::endl;
-                  if (levenberg_cst2(cst_P_mu_image,P_esp_image,centerOfMass,Gradient, Hessian, cost, Parameters,DoDesProj,  OldCost, &lambda, LambdaScale, &iter, tol_angle, tol_shift, tol_defamp,&IteratingStop,Xwidth,Ywidth) == ERROR)
+                  std::cout << "1992 *cost = " << global_flexible_prog->costfunctionvalue << " cost = " << global_flexible_prog->costfunctionvalue << std::endl;
+                  std::cout << "cost = " << global_flexible_prog->costfunctionvalue << std::endl;
+                  if (levenberg_cst2(cst_P_mu_image,P_esp_image,centerOfMass,Gradient, Hessian,  Parameters,DoDesProj,  OldCost, &lambda, LambdaScale, &iter, tol_angle, tol_shift, tol_defamp,&IteratingStop,Xwidth,Ywidth) == ERROR)
                   {
                       WRITE_ERROR(cstregistrationcontinuous, "Error returned by levenberg_cst2");
                       //free(Parameters);
@@ -1984,21 +1619,12 @@ int return_gradhesscost(
                       free(Hessian);
                       return(ERROR);
                   }
-                  std::cout << "2002 *cost = " << *cost << " cost = " << cost << std::endl;
+                  std::cout << "2002 *cost = " << global_flexible_prog->costfunctionvalue  << " cost = " << global_flexible_prog->costfunctionvalue  << std::endl;
                   time2 = time(tp2);
-                  //OneIterInSeconds = difftime(time2, time1);
-                  //std::cout << "1919time2 = " << time2 << std::endl;
-                  /*/*pntr_par0++ = Parameters[0];
-                  *pntr_par1++ = Parameters[1];
-                  *pntr_par2++ = Parameters[2];
-                  *pntr_par3++ = Parameters[3];
-                  *pntr_par4++ = Parameters[4];
-                  *pntr_cost++ = cost;*/
-                  //*pntr_time++ = OneIterInSeconds;
 
-                  if (*cost < *OldCost)
+                  if (global_flexible_prog->costfunctionvalue < *OldCost)
                   {
-                      *OldCost = *cost;
+                      *OldCost = global_flexible_prog->costfunctionvalue;
                       nSuccess++;
                       pntr_FailureIter++;
                       if (nSuccess >= SatisfNumberOfSuccesses)
@@ -2019,11 +1645,7 @@ int return_gradhesscost(
               }
               while ((nFailure <= MaxNumberOfFailures) && (iter < MaxIter1) && FlagMaxIter);
               std::cout << "1950 *OldCost = " << *OldCost << std::endl;
-              //*(Data->NumberIterPerformed) = (iter + 1L);
-              //*(Data->NumberSuccPerformed) = nSuccess;
-              //*(Data->NumberFailPerformed) = nFailure;
 
-              //free(Parameters);
               free(Gradient);
               free(Hessian);
 
@@ -2040,46 +1662,35 @@ int return_gradhesscost(
               double    *Rz1,*Ry,*Rz2,*hlp;
               double    *P_esp_image;
               double    S_muMin = 1e30;
-              //double    sigma = 10;
 
               double    *R,*Tr;
               double    x0,y0;
-              double    cost;
-              //int       dim = modeList.size();
+              //double    *cost;
+              //costfunctionvalue = 0.0;
               Matrix1D<double> Parameters(dim+5);
               Matrix1D<double> limit0(3), limitF(3), centerOfMass(3);
               char *intensityColumn = "Bfactor";
-              //Matrix1D<double> test=global_flexible_prog->centerOfMass;
               computePDBgeometry(global_flexible_prog->fnPDB, centerOfMass, limit0, limitF, intensityColumn);
-
-
               centerOfMass = (limit0 + limitF)/2;
 
-
-              //FileName fnRandom = global_flexible_prog->createDeformedPDB();
               std::string command;
 
-              if (pyramidLevel==0)
-              {
-                  //Make links
-                  command=(std::string)"ln -sf "+
-                          currentImgName+" downimg_"+fnRandom+".xmp";
-                  system(command.c_str());
-              }
-              else
-              {
-                  //  Reduce the image
-                  command=(std::string)"xmipp_scale_pyramid -i "+
-                          currentImgName+" -o downimg_"+fnRandom+".xmp "+
-                          "-reduce -levels "+integerToString(pyramidLevel)+
-                          " -quiet";
+          	// Reduce the image
+          	FileName fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
+          	if (pyramidLevel != 0) {
+          		Image<double> I;
+          		I.read(currentImgName);
+          		selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
+          		I.write(fnDown);
+          	} else
+          		link(currentImgName.c_str(), fnDown.c_str());
 
-                  system(command.c_str());
-              }
-
+std::cout << "2074" << fnDown << std::endl;
 
               Image<double> imgtemp;
-              imgtemp.read("downimg_"+fnRandom+".xmp");
+              imgtemp.read(fnDown);
+
+
               imgtemp().setXmippOrigin();
               //P_esp_image(imgtemp);
               MultidimArray<double>  P_mu_image;
@@ -2089,45 +1700,11 @@ int return_gradhesscost(
               double    reduce_rate = 1;
               std::cout << "2116 reduce_rate = "<< reduce_rate << std::endl;
 
-              command=(std::string)"rm -f downimg_"+fnRandom+".xmp";
-              system(command.c_str());
-              //double P_mu_image[Xwidth*Ywidth];
-              /*for(int i = -Xwidth/2; i < Xwidth/2; i++)
-          {
-              for(int j = -Ywidth/2; j < Ywidth/2; j++)
-          {
-              std::cout << imgtemp(i,j)<< "**" ;
-          }
-              std::cout << std::endl;
-          }
-              std::cout << "------------------------------------------------------------------" << std::endl;*/
-              /* One image (original-big or small-rescaled)
-              "downimg_"+fnRandom+".xmp"
-              */
-
-              //Pixel:imgtemp(i,j)
-
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-
-              //FileName fnRandom;
-              //fnRandom.init_random(19);
-              //fnRandom=fnRandom+integerToString(rangen);  //the last character is the rank
+              //command=(std::string)"rm -f "+ fnDown;
+              //system(command.c_str());
 
               ModMaxdeDefamp = floor(maxdefamp/defampsampling) + 1;
               ModpowDim      = pow(ModMaxdeDefamp,dim);
-
-              //Q    = (double*)malloc( (size_t) dim * sizeof(double));
-              //if (Q == (double *)NULL)
-              //{
-              //    WRITE_ERROR(performComleteSearch, "ERROR - Not enough memory for Rz1");
-              //    return(ERROR);
-              //}
 
               Rz1 = (double *)malloc((size_t) 16L * sizeof(double));
               /*if (Rz1 == (double *)NULL)
@@ -2328,10 +1905,7 @@ int return_gradhesscost(
 
                                       }
 
-                                      //std::cout << Q[0]<<" "<< Q[1]<<" "<< Q[2]<<" " << std::endl;
-                                      //S_mu = ProjectionRefencePoint(dim,R,Tr,P_esp_image,P_mu_image,S_mu);
-
-                                      ProjectionRefencePoint(Parameters,dim,R,Tr,P_mu_image,imgtemp(),&cost,Xwidth,Ywidth,sigma);
+                                      ProjectionRefencePoint(Parameters,dim,R,Tr,P_mu_image,imgtemp(),Xwidth,Ywidth,sigma);
                                       /*if (ProjectionRefencePoint(Parameters,dim,R,Tr,P_mu_image,imgtemp(),cost,Xwidth,Ywidth,sigma) == ERROR)
                                   {
                                            WRITE_ERROR(return_gradhesscost, "Error returned by ProjectionRefencePoint");
@@ -2343,16 +1917,16 @@ int return_gradhesscost(
                                            return(ERROR);
                                   }*/
 
-                                      if (cost < S_muMin)
+                                      if (costfunctionvalue < S_muMin)
                                       {//2
-                                          S_muMin  =  cost;
+                                          S_muMin  =  costfunctionvalue;
                                           for(int k = 0; k< dim + 5 ; k++ )
                                           {
                                               trial_best(k) = trial(k);
                                           }
 
                                       }//2--2213
-                                      std::cout << "trial" << trial <<"  cost=" << cost <<std::endl;
+                                      std::cout << "trial" << trial <<"  cost=" << costfunctionvalue <<std::endl;
                                       std::cout << "trial_best" << trial_best <<"  cost_best=" <<S_muMin <<std::endl;
                                   }//3--
                               }
@@ -2362,42 +1936,19 @@ int return_gradhesscost(
 
               }
 
-              std::cout << "trial" << trial <<cost <<std::endl;
+              std::cout << "trial" << trial <<costfunctionvalue <<std::endl;
               std::cout << "trial_best" << trial_best <<S_muMin <<std::endl;
               for (int i=0; i<dim+5; i++)
               {
                   parameters(i)=trial_best(i);
               }
 
-              if (pyramidLevel!=0)
-              {
-                  std::string command=(std::string)"rm -f downimg_"+fnRandom+".xmp";
-                  system(command.c_str());
-              }
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
-              /* Insert code for discrete alignment */
+              //if (pyramidLevel!=0)
+              //{
+              //    std::string command=(std::string)"rm -f " + fnDown;
+              //   system(command.c_str());
+              //}
 
-              /* Fill in :
-              parameters
-
-              Example:
-
-                  for (int i=dim; i<dim+5; i++)
-                  {
-                      parameters(i-dim)=trial_best(i);
-                  }
-
-                  for (int i=0; i<dim; i++)
-                  {
-                      parameters(5+i)=trial_best(i);
-                  }
-
-              */
               MetaData DF_out_discrete;
               size_t id=DF_out_discrete.addObject();
               DF_out_discrete.setValue(MDL_IMAGE,currentImgName,id);
@@ -2407,19 +1958,18 @@ int return_gradhesscost(
               aux[i]=parameters(i);
               DF_out_discrete.setValue(MDL_NMA,aux,id);
               DF_out_discrete.write("result_angular_discrete.xmd");
-              command=(std::string)"rm -f downimg_"+fnRandom+".xmp";
-              system(command.c_str());
+              //command=(std::string)"rm -f "+ fnDown;
+              //system(command.c_str());
           }
 
           // Continuous assignment ===================================================
           double ProgFlexibleAlignment::performContinuousAssignment(const FileName &fnRandom, int pyramidLevel) const
           {
               int    dim=modeList.size();
-              double cost;
+              //double *cost;
               std::cout << "Bfactor001" << std::endl;
-              cost =0.0;
-              //Matrix1D<double>  Parameters(dim + 5);
-              std::cout << "cost = " << cost << std::endl;
+              //costfunctionvalue = 0.0;
+              std::cout << "cost = " << costfunctionvalue << std::endl;
 
               Matrix1D<double> Parameters;
               Parameters.initZeros(dim+5);
@@ -2431,18 +1981,24 @@ int return_gradhesscost(
                   std::cout << "performContinuousAssignment_Parameters(" << i << ")" << Parameters(i) << std::endl;
               }
 
+              FileName fnDown = formatString("%s_downimg.xmp", fnRandom.c_str());
               std::string command;
               if (pyramidLevel==0)
               {
                   // Make links
-                  command=(std::string)"ln -sf "+
-                          currentImgName+" downimg_"+fnRandom+".xmp";
+                  command=formatString(
+                		  "ln -sf %s %s",
+                		  currentImgName.c_str(), fnDown.c_str());
                   system(command.c_str());
               }
+              std::cout << "1986  " << fnDown <<"  "<<pyramidLevel<< std::endl;
 
-
+              //std::string arguments;
+              //arguments = formatString("%s_downimg.xmp",fnRandom.c_str());
               Image<double> imgtemp;
-              imgtemp.read("downimg_"+fnRandom+".xmp");
+              imgtemp.read(fnDown);
+              std::cout << "1991"<<command << std::endl;
+
               imgtemp().setXmippOrigin();
               MultidimArray<double>  P_mu_image,P_esp_image;
               P_esp_image = imgtemp();
@@ -2458,24 +2014,15 @@ int return_gradhesscost(
 
               std::cout << "Bfactor" << std::endl;
               centerOfMass = (limit0 + limitF)/2;
-              //std::cout << " 2350XSIZE(P_mu_image) = " << XSIZE(P_mu_image)  << std::endl;
-              //std::cout << " 2351YSIZE(P_mu_image) = " << YSIZE(P_mu_image)  << std::endl;
-              /* Insert code for continious alignment */
-              /*std::cout << "2399centerOfMass "<< centerOfMass <<  std::endl;
-              std::cout << "2400cost         "<< cost         <<  std::endl;
-              std::cout << "2401Parameters   "<< Parameters   <<  std::endl;
-              std::cout << "2402P_mu_image   "<< P_mu_image   <<  std::endl;
-              std::cout << "2403P_esp_image  "<< P_esp_image  <<  std::endl;
-              std::cout << "2404Xwidth       "<< Xwidth       <<  std::endl;
-              std::cout << "2405Ywidth       "<< Ywidth       <<  std::endl;*/
 
-              cstregistrationcontinuous(centerOfMass,&cost,Parameters,P_mu_image,P_esp_image,Xwidth,Ywidth);
+              cstregistrationcontinuous(centerOfMass,Parameters,P_mu_image,P_esp_image,Xwidth,Ywidth);
               std::cout << "centerOfMass_Bfactor003" << std::endl;
               /* Insert code for continious alignment */
 
-              command=(std::string)"rm -f downimg_"+fnRandom+".xmp";
+              command=(std::string)"rm -f "+fnRandom+"downimg.xmp";
               system(command.c_str());
-              return cost;
+              double outcost = costfunctionvalue;
+              return outcost;
           }
 
           void ProgFlexibleAlignment::updateBestFit(double fitness, int dim)
@@ -2487,7 +2034,7 @@ int return_gradhesscost(
               }
           }
 
-          // Compute fitness =========================================================
+// Compute fitness =========================================================
           double ObjFunc_flexible_alignment::eval(Vector X, int *nerror)
           {
               int dim = global_flexible_prog->numberOfModes;
