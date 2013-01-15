@@ -33,10 +33,18 @@ TEST_F( DimRedTest, generate_data)
 
 	// Twin peaks
 	generator.generateNewDataset("twinpeaks",1000,0);
-	//generator.X.write("dimred/twinpeaks.txt");
+	// generator.X.write("dimred/twinpeaks.txt");
 	// load twinpeaks.txt; plot3(twinpeaks(:,1),twinpeaks(:,2),twinpeaks(:,3),'.');
 	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/twinpeaks.txt");
+	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
+
+	// Clusters
+	generator.generateNewDataset("3d_clusters",1000,0);
+	// generator.X.write("dimred/clusters.txt");
+	// load clusters.txt; plot3(clusters(:,1),clusters(:,2),clusters(:,3),'.');
+	expectedX.resizeNoCopy(generator.X);
+	expectedX.read("dimred/clusters.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
 }
 

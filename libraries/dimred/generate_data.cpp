@@ -107,7 +107,39 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 	}
 	else if (method=="3d_clusters")
 	{
+		// Create centers
+		std::vector<Matrix1D<double> > centers;
+		Matrix1D<double> center(3);
+		const int Nclusters=5;
+		for (int i=0; i<Nclusters; i++)
+		{
+			FOR_ALL_ELEMENTS_IN_MATRIX1D(center)
+				VEC_ELEM(center,i)=10*rnd_unif();
+			centers.push_back(center);
+		}
 
+		// Measure the minimum distance between centers
+		Matrix1D<double> diff;
+		double minDistance=1e38;
+		for (int i=0; i<Nclusters-1; ++i)
+			for (int j=i+1; j<Nclusters; ++j)
+			{
+				diff=centers[i]-centers[j];
+				double distance=diff.module();
+				minDistance=std::min(minDistance,distance);
+			}
+
+		// Create clusters
+		t.initZeros();
+		double sigma=minDistance/sqrt(12);
+		for (int n=0; n<N; ++n)
+		{
+			int i=(Nclusters*n)/N;
+			const Matrix1D<double> &center=centers[i];
+			MAT_ELEM(X,n,0)=XX(center)+(rnd_unif()-0.5)*sigma+noise*rnd_gaus();
+			MAT_ELEM(X,n,1)=YY(center)+(rnd_unif()-0.5)*sigma+noise*rnd_gaus();
+			MAT_ELEM(X,n,2)=ZZ(center)+(rnd_unif()-0.5)*sigma+noise*rnd_gaus();
+		}
 	}
 	else if (method=="intersect")
 	{
@@ -122,16 +154,6 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 }
 
 /*
-        case 'twinpeaks'
-            inc = 1.5 / sqrt(n);
-            [xx2, yy2] = meshgrid(-1:inc:1);
-            xy = 1 - 2 * rand(2, n);
-            X = [xy; sin(pi * xy(1,:)) .* tanh(3 * xy(2,:))]' + noise * randn(n, 3);
-            X(:,3) = X(:,3) * 10;
-            t = xy';
-            %labels = uint8(X(:,3));
-            labels = rem(sum(round((X + repmat(min(X, [], 1), [size(X, 1) 1])) ./ 10), 2), 2);
-
         case '3d_clusters'
             numClusters = 5;
             centers = 10 * rand(numClusters, 3);
