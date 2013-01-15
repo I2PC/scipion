@@ -14,11 +14,17 @@ protected:
 
 TEST_F( DimRedTest, generate_data)
 {
-	Matrix2D<double> expectedX;
 	GenerateData generator;
-	generator.generateNewDataset("swiss",1000,0);
 
-    EXPECT_EQ(expectedX,generator.X) << "DimRedTest: generate_data failed";
+	// Swiss
+	generator.generateNewDataset("swiss",1000,0);
+	// generator.X.write("dimred/swiss.txt");
+	// load swiss.txt; plot3(swiss(:,1),swiss(:,2),swiss(:,3),'.');
+	Matrix2D<double> expectedX(1000,3);
+	expectedX.read("dimred/swiss.txt");
+	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
+
+	//
 }
 
 GTEST_API_ int main(int argc, char **argv)
