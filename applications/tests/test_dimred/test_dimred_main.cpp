@@ -20,7 +20,8 @@ TEST_F( DimRedTest, generate_data)
 	generator.generateNewDataset("swiss",1000,0);
 	// generator.X.write("dimred/swiss.txt");
 	// load swiss.txt; plot3(swiss(:,1),swiss(:,2),swiss(:,3),'.');
-	Matrix2D<double> expectedX(1000,3);
+	Matrix2D<double> expectedX;
+	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/swiss.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
 
@@ -28,6 +29,7 @@ TEST_F( DimRedTest, generate_data)
 	generator.generateNewDataset("helix",1000,0);
 	// generator.X.write("dimred/helix.txt");
 	// load helix.txt; plot3(helix(:,1),helix(:,2),helix(:,3),'.');
+	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/helix.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
 
@@ -45,6 +47,14 @@ TEST_F( DimRedTest, generate_data)
 	// load clusters.txt; plot3(clusters(:,1),clusters(:,2),clusters(:,3),'.');
 	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/clusters.txt");
+	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
+
+	// Intersect
+	generator.generateNewDataset("intersect",1000,0);
+	// generator.X.write("dimred/intersect.txt");
+	// load intersect.txt; plot3(intersect(:,1),intersect(:,2),intersect(:,3),'.');
+	expectedX.resizeNoCopy(generator.X);
+	expectedX.read("dimred/intersect.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
 }
 

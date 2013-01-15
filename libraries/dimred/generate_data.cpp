@@ -143,7 +143,25 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 	}
 	else if (method=="intersect")
 	{
+		double iN=1.0/N;
+		for (int i=0; i<N; ++i)
+		{
+			// Generate t
+			MAT_ELEM(t,i,0)=2 * PI * i*iN;
+			MAT_ELEM(t,i,1)=5*rnd_unif();
+			double localT=MAT_ELEM(t,i,0);
+			double height=MAT_ELEM(t,i,1);
 
+			// Generate X
+			double s,c;
+			sincos(localT,&s,&c);
+			MAT_ELEM(X,i,0)=c+noise*rnd_gaus();
+			MAT_ELEM(X,i,1)=c*s+noise*rnd_gaus();
+			MAT_ELEM(X,i,2)=height+noise*rnd_gaus();
+
+			// Generate label
+			VEC_ELEM(label,i)=(unsigned char)(round(localT *0.5)+round(height*0.5))%2;
+		}
 	}
 	else if (method=="difficult")
 	{
@@ -154,25 +172,6 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 }
 
 /*
-        case '3d_clusters'
-            numClusters = 5;
-            centers = 10 * rand(numClusters, 3);
-            D = L2_distance(centers', centers');
-            minDistance = min(D(D > 0));
-            k = 1;
-            n2 = n - (numClusters - 1) * 9;
-            X = repmat(0, [n 3]);
-            labels = repmat(0, [n 1]);
-            for i=1:numClusters
-                for j=1:ceil(n2 / numClusters)
-                   X(k, 1:3) = centers(i, 1:3) + (rand(1, 3) - 0.5) * minDistance / sqrt(12);
-                   labels(k) = i;
-                   k = k + 1;
-                end
-            end
-            X = X + noise * randn(size(X, 1), 3);
-            t = [];
-
         case 'intersect'
             t = [1:n]' ./ n .* (2 * pi);
             x = cos(t);
