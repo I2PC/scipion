@@ -1048,7 +1048,7 @@ public:
             return false;
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
-                if (ABS( (*this)(i,j) - op(i,j) ) > accuracy)
+                if (fabs( MAT_ELEM(*this,i,j) - MAT_ELEM(op,i,j) ) > accuracy)
                     return false;
         return true;
     }
