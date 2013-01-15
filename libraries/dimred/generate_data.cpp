@@ -78,7 +78,32 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 	}
 	else if (method=="twinpeaks")
 	{
+        int actualN=round(sqrt(N));
+    	X.resizeNoCopy(actualN*actualN,3);
+    	t.resizeNoCopy(actualN*actualN,2);
+    	label.resizeNoCopy(actualN*actualN);
+        for (int ii=0; ii<actualN; ii++)
+        {
+        	for (int jj=0; jj<actualN; jj++)
+        	{
+        		int i=ii*actualN+jj;
 
+            	// Generate t
+        		double x = 1 - 2 * rnd_unif();
+        		double y = 1 - 2 * rnd_unif();
+        		MAT_ELEM(t,i,0)=x;
+        		MAT_ELEM(t,i,1)=y;
+
+    			// Generate X
+    			MAT_ELEM(X,i,0)=x+noise*rnd_gaus();
+    			MAT_ELEM(X,i,1)=y+noise*rnd_gaus();
+    			double z=10*sin(PI * x) * tanh(3 * y);
+    			MAT_ELEM(X,i,2)=z+noise*rnd_gaus();
+
+    			// Generate label
+    			VEC_ELEM(label,i)=(unsigned char)(round(0.1*(x+y+z-3)))%2;
+        	}
+        }
 	}
 	else if (method=="3d_clusters")
 	{
@@ -97,13 +122,6 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 }
 
 /*
-        case 'helix'
-        	t = [1:n]' / n;
-        	t = t .^ (1.0) * 2 * pi;
-			X = [(2 + cos(8 * t)) .* cos(t) (2 + cos(8 * t)) .* sin(t) sin(8 * t)] + noise * randn(n, 3);
-        	%labels = uint8(t);
-            labels = rem(round(t * 1.5), 2);
-
         case 'twinpeaks'
             inc = 1.5 / sqrt(n);
             [xx2, yy2] = meshgrid(-1:inc:1);
