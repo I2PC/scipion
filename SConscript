@@ -222,7 +222,7 @@ def AddXmippTest(name, testprog, command):
 
 
 def AddXmippCTest(name):
-    testprog = AddXmippProgram(name, ['gtest', 'XmippRecons'], 'tests')
+    testprog = AddXmippProgram(name, ['gtest', 'XmippRecons','XmippDimred'], 'tests')
     AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
 
 def AddXmippPythonTest(name):
@@ -980,6 +980,7 @@ if int(env['gtest']):
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
+     AddXmippCTest('test_dimred')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
