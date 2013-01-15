@@ -24,7 +24,14 @@ TEST_F( DimRedTest, generate_data)
 	expectedX.read("dimred/swiss.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
 
-	//
+	// Helix
+	generator.generateNewDataset("helix",1000,0);
+	generator.X.write("dimred/helix.txt");
+	// load helix.txt; plot3(helix(:,1),helix(:,2),helix(:,3),'.');
+	expectedX.read("dimred/helix.txt");
+	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
+
+
 }
 
 GTEST_API_ int main(int argc, char **argv)
