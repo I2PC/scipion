@@ -640,6 +640,11 @@ ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
     ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
 
+# Dimensionality reduction
+DimRedSources = Glob('libraries/dimred', '*.cpp', [])
+AddLibrary('XmippDimred', 'libraries/dimred', DimRedSources,
+    ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
+
 # XmippParallel
 if int(env['mpi']):
     ParallelSources = Glob('libraries/parallel', '*.cpp', []);
