@@ -163,36 +163,6 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 			VEC_ELEM(label,i)=(unsigned char)(round(localT *0.5)+round(height*0.5))%2;
 		}
 	}
-	else if (method=="difficult")
-	{
-
-	}
 	else
 		REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect method passed to generate data");
 }
-
-/*
-        case 'intersect'
-            t = [1:n]' ./ n .* (2 * pi);
-            x = cos(t);
-            y = sin(t);
-            height = rand(length(x), 1) * 5;
-            X = [x x .* y height] + noise * randn(n, 3);
-            %labels = uint8(5 * t);
-            labels = rem(sum([round(t / 2) round(height / 2)], 2), 2);
-
-        case 'difficult'
-            % Generate underlying manifold
-            no_dims = 5;
-            no_points_per_dim = round(n ^ (1 / no_dims));
-            l = linspace(0, 1, no_points_per_dim);
-            t = combn(l, no_dims);
-
-            % Generate high-dimensional dataset
-            X = [cos(t(:,1)) tanh(3 * t(:,2)) t(:,1) + t(:,3) t(:,4) .* sin(t(:,2)) sin(t(:,1) + t(:,5)) t(:,5) .* cos(t(:,2)) t(:,5) + t(:,4) t(:,2) t(:,3) .* t(:,4) t(:,1)];
-            X = X + noise * randn(size(X));
-
-            % Generate labels for dataset (2x2x2x2x2 checkerboard pattern)
-            tt = 1 + round(t);
-            labels = rem(sum(tt, 2), 2);
- */
