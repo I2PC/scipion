@@ -9,8 +9,10 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -20,6 +22,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
+
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
@@ -28,9 +31,7 @@ import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
-import xmipp.viewer.particlepicker.training.gui.TrainingCanvas;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class ExtractPickerJFrame extends ParticlePickerJFrame
@@ -45,6 +46,8 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private JPanel particlespn;
 	private int index;
 	private ExtractCanvas canvas;
+	private String[] colorby;
+	private JComboBox scorescb;
 
 	public ExtractPickerJFrame(ParticlePicker picker)
 	{
@@ -89,6 +92,10 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
+		fieldspn.add(new JLabel("Color by:"));
+		colorby = new String[]{"ZScore", "ZScore-Shape", "ZScore-SNR1", "ZScore-SNR2", "ZScore-Hist"};
+		scorescb = new JComboBox(colorby);
+		fieldspn.add(scorescb);
 		// Setting color
 		initColorPane();
 		fieldspn.add(colorbt);
@@ -117,7 +124,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		JScrollPane sp = new JScrollPane();
 		JPanel ctfpn = new JPanel();
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
-		iconbt = new JButton();
+		iconbt = new JButton(Micrograph.getNoImageIcon());
 		iconbt.setToolTipText("Load CTF Profile");
 		iconbt.setBorderPainted(false);
 		iconbt.setContentAreaFilled(false);

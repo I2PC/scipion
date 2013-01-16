@@ -20,6 +20,7 @@ import xmipp.utils.XmippMessage;
 
 public abstract class Micrograph {
 
+	private static Icon noimageicon;
 	private String file;
 	private String name;
 	private ImagePlus imp;
@@ -89,7 +90,6 @@ public abstract class Micrograph {
 				file = (Filename.getXmippPath("resources" + File.separator + "no-image.jpg"));
 			else
 				file = psd;
-			System.out.println(file);
 			ImagePlus imp = XmippIJUtil.getImagePlus(file);
 			Image image = imp.getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(image);
@@ -98,7 +98,19 @@ public abstract class Micrograph {
 		return ctficon;
 	}
 	
-	
+	public static Icon getNoImageIcon()
+	{
+		String file;
+		if(noimageicon == null)
+		{
+			file = (Filename.getXmippPath("resources" + File.separator + "no-image.jpg"));
+			ImagePlus imp = XmippIJUtil.getImagePlus(file);
+			Image image = imp.getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
+			noimageicon = new ImageIcon(image);
+			
+		}
+		return noimageicon;
+	}
 	
 	public String getPSD()
 	{

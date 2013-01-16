@@ -84,6 +84,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		String fileiter;
 		boolean enabled;
 		ExtractMicrograph current = null;
+		double zscore, zscore_shape, zscore_snr1, zscore_snr2, zscore_hist;
 		for (long id : md.findObjects())
 		{
 			fileiter = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
@@ -97,7 +98,12 @@ public class ExtractParticlePicker extends ParticlePicker
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 			enabled = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? true : false;
-			p = new ExtractParticle(id, x, y, current, enabled);
+			zscore = md.getValueDouble(MDLabel.MDL_ZSCORE, id);
+			zscore_shape = md.getValueDouble(MDLabel.MDL_ZSCORE_SHAPE, id);
+			zscore_snr1 = md.getValueDouble(MDLabel.MDL_ZSCORE_SNR1, id);
+			zscore_snr2 = md.getValueDouble(MDLabel.MDL_ZSCORE_SNR2, id);
+			zscore_hist = md.getValueDouble(MDLabel.MDL_ZSCORE_HISTOGRAM, id);
+			p = new ExtractParticle(id, x, y, current, enabled, zscore, zscore_shape, zscore_snr1, zscore_snr2, zscore_hist);
 			current.addParticle(p);
 
 		}
