@@ -1,13 +1,7 @@
 package xmipp.particlepicker.training.model;
 
-import ij.ImagePlus;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.jni.ImageGeneric;
-import xmipp.jni.Particle;
 import xmipp.particlepicker.Family;
 import xmipp.particlepicker.ParticlePicker;
 import xmipp.utils.XmippMessage;
@@ -43,7 +37,7 @@ public class MicrographFamilyData
 	
 	public MicrographFamilyData(TrainingMicrograph micrograph, Family family, MicrographFamilyState state)
 	{
-		this(micrograph, family, state, 50);
+		this(micrograph, family, state, ParticlePicker.defAutoPickPercent);
 	}
 	
 	
@@ -201,7 +195,7 @@ public class MicrographFamilyData
 		return false;
 	}
 
-	public boolean isActionVisible(double threshold)
+	public boolean isActionVisible()
 	{
 
 		if (family.getStep() != FamilyState.Supervised)
@@ -224,6 +218,8 @@ public class MicrographFamilyData
 
 	public String getAction()
 	{
+		if (family.getStep() != FamilyState.Supervised)
+			return null;
 		if (state == MicrographFamilyState.Manual)
 			return null;
 		if (state == MicrographFamilyState.Available)

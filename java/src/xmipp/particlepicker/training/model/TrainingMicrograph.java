@@ -1,6 +1,8 @@
 package xmipp.particlepicker.training.model;
 
 
+import ij.ImagePlus;
+
 import java.awt.Image;
 import java.io.File;
 import java.util.ArrayList;
@@ -16,19 +18,21 @@ import xmipp.particlepicker.Micrograph;
 
 public class TrainingMicrograph extends Micrograph{
 	
-	private String ctf;
+	private String psd;
 	private ImageIcon ctficon;
 	private boolean autopicking = false;
 	private List<MicrographFamilyData> mfdatas;
 	private String autofilename;
+	private String ctf;
 	
-	public TrainingMicrograph(String filename, String ctf, List<Family> families, FamilyState mode) {
-		this(filename, ctf, families, new ArrayList<MicrographFamilyData>(), mode);
+	public TrainingMicrograph(String filename, String psd, String ctf, List<Family> families, FamilyState mode) {
+		this(filename, psd, ctf, families, new ArrayList<MicrographFamilyData>(), mode);
 	}
 	
 
-	public TrainingMicrograph(String file, String ctf, List<Family> families, List<MicrographFamilyData> mfd, FamilyState mode) {
+	public TrainingMicrograph(String file, String psd, String ctf, List<Family> families, List<MicrographFamilyData> mfd, FamilyState mode) {
 		super(file);
+		this.psd = psd;
 		this.ctf = ctf;
 		mfdatas = mfd;
 		autofilename = getName() + "_auto" + ext;
@@ -37,7 +41,6 @@ public class TrainingMicrograph extends Micrograph{
 			mfdatas.add(new MicrographFamilyData(this, f, state));
 	}
 
-	
 	
 	void setFamiliesState(List<MicrographFamilyData> mfdatas)
 	{
@@ -75,10 +78,10 @@ public class TrainingMicrograph extends Micrograph{
 		String file;
 		if(ctficon == null)
 		{
-			if(ctf == null || !(new File(ctf).exists()))
+			if(psd == null || !(new File(psd).exists()))
 				file = (Filename.getXmippPath("resources" + File.separator + "no-image.jpg"));
 			else
-				file = ctf;
+				file = psd;
 			Image image = XmippIJUtil.getImagePlus(file).getImage().getScaledInstance(120, 110, Image.SCALE_SMOOTH);
 			ctficon = new ImageIcon(image);
 			
@@ -86,6 +89,24 @@ public class TrainingMicrograph extends Micrograph{
 		return ctficon;
 	}
 	
+
+	public ImagePlus getPSDImage()
+	{
+			if(psd == null || !(new File(psd).exists()))
+				return null;
+			return XmippIJUtil.getImagePlus(psd);
+			
+	}
+	
+	public String getPSD()
+	{
+		return psd;
+	}
+	
+	public String getCTF()
+	{
+		return ctf;
+	}
 	
 	
 	public List<MicrographFamilyData> getFamiliesData()

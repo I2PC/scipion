@@ -114,7 +114,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			else
 			{
 				canvas.moveTo(particle);
-				canvas.setActive(particle);
+				canvas.refreshActive(particle);
 			}
 		}
 

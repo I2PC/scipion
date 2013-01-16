@@ -19,11 +19,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
 import xmipp.particlepicker.training.model.FamilyState;
 import xmipp.particlepicker.training.model.TrainingPicker;
+import xmipp.utils.XmippMessage;
 
 public abstract class ParticlePicker {
 
@@ -39,8 +41,9 @@ public abstract class ParticlePicker {
 	protected String command;
 	protected Family family;
 	protected String configfile;
-	private int autopickpercent;
-
+	public static final int defAutoPickPercent = 90;
+	private int autopickpercent = defAutoPickPercent;
+	
 	public int getSize() {
 		return family.getSize();
 	}
@@ -93,6 +96,7 @@ public abstract class ParticlePicker {
 		this.selfile = selfile;
 		this.outputdir = outputdir;
 		this.mode = mode;
+		
 		initializeFilters();
 		loadEmptyMicrographs();
 		loadConfig();
@@ -211,8 +215,7 @@ public abstract class ParticlePicker {
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY, f.getName(), id);
 				md.setValueInt(MDLabel.MDL_COLOR, f.getColor().getRGB(), id);
 				md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, f.getSize(), id);
-				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, 0, id);//saved for compatibility with future versions
-				//md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);
+				md.setValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, f.getTemplatesNumber(), id);//saved for compatibility with future versions
 				md.setValueString(MDLabel.MDL_PICKING_FAMILY_STATE, f.getStep().toString(), id);
 			}
 			md.write(file);
@@ -235,13 +238,16 @@ public abstract class ParticlePicker {
 		String file = familiesfile;
 		if (!new File(file).exists()) {
 			families.add(Family.getDefaultFamily());
+			persistFamilies();
 			return;
 		}
 
 		Family family;
-		int rgb, size, templates = 1;
+		int rgb, size;
+		Integer templatesNumber = 1;
 		FamilyState state;
-		String name;
+		String name, templatesfile;
+		ImageGeneric templates;
 		try {
 			MetaData md = new MetaData(file);
 			long[] ids = md.findObjects();
@@ -249,18 +255,21 @@ public abstract class ParticlePicker {
 				name = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
 				rgb = md.getValueInt(MDLabel.MDL_COLOR, id);
 				size = md.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, id);
-				// templates =
-				// md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				templatesNumber = md.getValueInt(MDLabel.MDL_PICKING_FAMILY_TEMPLATES, id);
+				if( templatesNumber == null || templatesNumber == 0)
+					templatesNumber = 1;//for compatibility with previous projects
 				state = FamilyState.valueOf(md.getValueString(MDLabel.MDL_PICKING_FAMILY_STATE, id));
 				state = validateState(state);
-				// if (state == FamilyState.Supervised && this instanceof
-				// SupervisedParticlePicker)
-				// if (!new File(((SupervisedParticlePicker)
-				// this).getTrainingFile(name)).exists())
-				// throw new
-				// IllegalArgumentException(String.format("Training file does not exist. Family cannot be in %s mode",
-				// state));
-				family = new Family(name, new Color(rgb), size, state, templates, this);
+				templatesfile = getTemplatesFile(name);
+				if (new File(templatesfile).exists() )
+				{
+					templates = new ImageGeneric(templatesfile);
+					family = new Family(name, new Color(rgb), size, state, this, templates);
+					
+				}
+				else
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
+				families.add(family);
 				families.add(family);
 			}
 			md.destroy();
@@ -269,6 +278,11 @@ public abstract class ParticlePicker {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+
+	public String getTemplatesFile(String name)
+	{
+		return getOutputPath(name + "_templates.stk");
 	}
 
 	public FamilyState validateState(FamilyState state) {
@@ -419,8 +433,7 @@ public abstract class ParticlePicker {
 				setMicrograph(getMicrograph(mname));
 				if(hasautopercent)
 					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				else
-					autopickpercent = 50;//compatibility with previous projects
+				
 			}
 			md.destroy();
 		} catch (Exception e) {
@@ -473,6 +486,8 @@ public abstract class ParticlePicker {
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
+			if(!containsBlock(path, family.getName()))
+				throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
 			md.read(String.format("%s@%s", family.getName(), path));
 			break;
 		case Eman:

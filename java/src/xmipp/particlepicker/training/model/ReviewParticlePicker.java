@@ -49,7 +49,7 @@ public class ReviewParticlePicker extends TrainingPicker
 	}
 
 	@Override
-	public void persistMicrographs()
+	public void saveMicrographs()
 	{
 		exportParticles(reviewfile);
 	}

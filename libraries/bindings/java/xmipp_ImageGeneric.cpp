@@ -794,6 +794,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
     {
         Matrix2D<double> M;
         MultidimArray<double>* I;
+        MultidimArray<double> tmpI;
+        MultidimArray<double> alignedI;
         MultidimArray<double>* Tp;
         MultidimArray<double> T;
         AlignmentAux aux;
@@ -810,20 +812,23 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
         templates->getDimensions(dim);
         double corr,max=0;
         int maxIndex=0;
+
         for (int i=0;i<dim.ndim;++i)
-    {
-        T.aliasImageInStack(*Tp,i);
-            corr = alignImages(T,*I,M,true,aux,aux2,aux3);
+        {
+        	T.aliasImageInStack(*Tp,i);
+            tmpI=*I;
+            T.setXmippOrigin();
+            tmpI.setXmippOrigin();
+            corr = alignImages(T,tmpI,M,true,aux,aux2,aux3);
             if (corr>max)
             {
                 max=corr;
                 maxIndex=i;
+                alignedI=tmpI;
             }
         }
         T.aliasImageInStack(*Tp,maxIndex);
-        T+=(*I);
-        img->convert2Datatype(DT_Float);
-        templates->convert2Datatype(DT_Float);
+        T+=alignedI;
     }
     XMIPP_JAVA_CATCH;
 }

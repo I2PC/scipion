@@ -136,7 +136,7 @@ public class EditFamiliesJDialog extends JDialog {
 
 	class FamiliesTableModel extends AbstractTableModel {
 
-		private String[] columns = new String[] { "Name", "Color", "Size" };//, "Templates" };
+		private String[] columns = new String[] { "Name", "Color", "Size", "Templates" };
 		private TrainingPickerJFrame frame;
 
 		public FamiliesTableModel(TrainingPickerJFrame frame) {
@@ -198,15 +198,16 @@ public class EditFamiliesJDialog extends JDialog {
 					int size = (Integer) value;
 					f.setSize(size);
 					frame.updateSize(size);
+				
+				} else if (column == 3) {
+					
+					int templates = (Integer)value;
+					if(templates  < 1)
+						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
+					f.setTemplatesNumber(templates);
 				}
-//				} else if (column == 3) {
-//					
-//					int templates = (Integer)value;
-//					if(templates  < 1)
-//						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
-//					f.setTemplatesNumber(templates);
-//				}
-				frame.setChanged(true);
+				frame.getParticlePicker().persistFamilies();
+				
 
 			} catch (IllegalArgumentException e) {
 				JOptionPane.showMessageDialog(EditFamiliesJDialog.this,
@@ -223,8 +224,8 @@ public class EditFamiliesJDialog extends JDialog {
 				return f.getColor();
 			if (column == 2)
 				return f.getSize();
-//			if (column == 3)
-//				return f.getTemplatesNumber();
+			if (column == 3)
+				return f.getTemplatesNumber();
 			return null;
 		}
 

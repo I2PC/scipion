@@ -1,28 +1,22 @@
 package xmipp.particlepicker.tiltpair.gui;
 
-import ij.gui.ImageWindow;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseWheelListener;
 import java.util.List;
+
 import javax.swing.SwingUtilities;
 
 import xmipp.particlepicker.Micrograph;
 import xmipp.particlepicker.ParticlePickerCanvas;
 import xmipp.particlepicker.ParticlePickerJFrame;
-import xmipp.particlepicker.tiltpair.model.TiltedMicrograph;
 import xmipp.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.particlepicker.training.model.TrainingMicrograph;
 import xmipp.particlepicker.training.model.TrainingParticle;
-import xmipp.utils.XmippWindowUtil;
-import xmipp.jni.Particle;
 
 public class TiltedMicrographCanvas extends ParticlePickerCanvas
 {
@@ -83,7 +77,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	public void mouseWheelMoved(int x, int y, int rotation)
 	{
-
+		getIw().setSize(uc.getIw().getSize());
 		if (rotation < 0)
 			zoomIn(x, y);
 		else
@@ -191,9 +185,9 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 
 	@Override
-	public void setActive(TrainingParticle p)
+	public void refreshActive(TrainingParticle p)
 	{
-		frame.getCanvas().setActive(((TiltedParticle) p).getUntiltedParticle());
+		frame.getCanvas().refreshActive(((TiltedParticle) p).getUntiltedParticle());
 	}
 
 	@Override
