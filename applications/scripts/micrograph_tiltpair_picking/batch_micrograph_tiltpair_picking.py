@@ -7,7 +7,7 @@ import xmipp
 
 class ScriptTiltPairPicking(ScriptAppIJ):
     def __init__(self):
-        ScriptAppIJ.__init__(self, 'xmipp.particlepicker.tiltpair.Main')
+        ScriptAppIJ.__init__(self, 'xmipp.viewer.particlepicker.tiltpair.Main')
         
     def defineOtherParams(self):
         self.addParamsLine(" -o <directory>                                       : Output directory for load/save session data without updating model.");
