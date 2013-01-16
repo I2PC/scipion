@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "generate_data.h"
+#include "dimred_tools.h"
 
 void GenerateData::generateNewDataset(const String& method, int N, double noise)
 {

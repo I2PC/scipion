@@ -1,4 +1,4 @@
-#include <dimred/generate_data.h>
+#include <dimred/dimred_tools.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
