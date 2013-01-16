@@ -746,7 +746,6 @@ if int(env['java']):
     env.Depends(javaJni, javaJniC)
     AddJavaLibrary('XmippUtils', 'utils', ['ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippIJ', 'ij/commons', ['XmippUtils'])
-    AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils', 'ij', 'XmippViewer'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
     AddJavaLibrary('XmippTest', 'test', ['XmippViewer', 'junit4-4.8.2', 'core-1.1'])
     AddJavaIJPlugin('XmippIJPlugin_MasksToolbar', 'ij/plugins/maskstoolbar', [])

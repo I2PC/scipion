@@ -83,7 +83,6 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.particlepicker.extract.ExtractParticlePicker;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippDialog;
@@ -103,6 +102,7 @@ import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGallery;
 import xmipp.viewer.models.MetadataGallery;
 import xmipp.viewer.models.MicrographsTable;
+import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 
 public class JFrameGallery extends JFrame implements iCTFGUI
 {
