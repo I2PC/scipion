@@ -166,3 +166,19 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 	else
 		REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect method passed to generate data");
 }
+
+double intrinsicDimensionalityMLE(const Matrix2D<double> &X)
+{
+	return 0;
+}
+
+double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool normalize)
+{
+	if (normalize)
+		normalizeColumns(X);
+
+	if (method=="MLE")
+		return intrinsicDimensionalityMLE(X);
+	else
+		REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown dimensionality estimate method");
+}

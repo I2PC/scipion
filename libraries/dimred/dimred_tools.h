@@ -22,13 +22,13 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _DIMRED_GENERATE_DATA
-#define _DIMRED_GENERATE_DATA
+#ifndef _DIMRED_TOOLS
+#define _DIMRED_TOOLS
 
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 
-/**@defgroup GenerateData Generate test data
+/**@defgroup DimRedTools Tools for dimensionality reduction
    @ingroup DimRedLibrary */
 //@{
 /** Generate test data.
@@ -66,5 +66,24 @@ public:
 	 */
 	void generateNewDataset(const String& method, int N=1000, double noise=0.05);
 };
+
+/** Estimate the intrinsic dimensionality.
+ * Performs an estimation of the intrinsic dimensionality of dataset X based
+ * on the method specified by method. Possible values for method are 'CorrDim'
+ * (based on correlation dimension), 'NearNbDim' (based on nearest neighbor
+ * dimension), 'GMST' (based on the analysis of the geodesic minimum spanning
+ * tree), 'PackingNumbers' (based on the analysis of data packing numbers),
+ * 'EigValue' (based on analysis of PCA eigenvalues), and 'MLE' (maximum
+ * likelihood estimator). The default method is 'MLE'. All methods are
+ * parameterless.
+ *
+ * Columns of the input matrix may be normalized to have zero mean and standard deviation 1.
+ *
+ * Translated from drtools/intrinsic_dimensionality.m
+ * http://homepage.tudelft.nl/19j49/Matlab_Toolbox_for_Dimensionality_Reduction.html
+ *
+ * Original code by Laurens van der Maaten, Delft University of Technology
+ */
+double intrinsicDimensionality(Matrix2D<double> &X, const String &method="MLE", bool normalize=true);
 //@}
 #endif
