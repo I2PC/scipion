@@ -217,13 +217,30 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 
 double intrinsicDimensionalityMLE(const Matrix2D<double> &X)
 {
+	int k1=5;
+	int k2=12;
 	Matrix2D<int> idx;
 	Matrix2D<double> distance;
-	kNearestNeighbours(X,12,idx,distance);
+	kNearestNeighbours(X,k2,idx,distance);
 
-	FOR_ALL_ELEMENTS_IN_MATRIX2D(distance)
-		MAT_ELEM(distance,i,j)=log(MAT_ELEM(distance,i,j));
-	return 0;
+	// Estimate d
+	double dsum=0;
+	for (int i=0; i<MAT_YSIZE(distance); ++i)
+	{
+		double dist=log(MAT_ELEM(distance,i,0));
+		double S=dist;
+	    for (int k=1; k<MAT_XSIZE(distance); ++k)
+	    {
+	    	dist=log(MAT_ELEM(distance,i,k));
+	    	S+=dist;
+	    	if (k>=k1)
+	    	{
+	    		double d=(k-1)/(S-dist*(k+1));
+	    		dsum+=d;
+	    	}
+	    }
+	}
+	return -dsum/((k2-k1)*MAT_YSIZE(distance));
 }
 
 double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool normalize)

@@ -19,7 +19,7 @@ TEST_F( DimRedTest, generate_data)
 	// Swiss
 	generator.generateNewDataset("swiss",1000,0);
 	// generator.X.write("dimred/swiss.txt");
-	// load swiss.txt; plot3(swiss(:,1),swiss(:,2),swiss(:,3),'.');
+	// MATLAB: load swiss.txt; plot3(swiss(:,1),swiss(:,2),swiss(:,3),'.');
 	Matrix2D<double> expectedX;
 	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/swiss.txt");
@@ -28,7 +28,7 @@ TEST_F( DimRedTest, generate_data)
 	// Helix
 	generator.generateNewDataset("helix",1000,0);
 	// generator.X.write("dimred/helix.txt");
-	// load helix.txt; plot3(helix(:,1),helix(:,2),helix(:,3),'.');
+	// MATLAB: load helix.txt; plot3(helix(:,1),helix(:,2),helix(:,3),'.');
 	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/helix.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
@@ -36,7 +36,7 @@ TEST_F( DimRedTest, generate_data)
 	// Twin peaks
 	generator.generateNewDataset("twinpeaks",1000,0);
 	// generator.X.write("dimred/twinpeaks.txt");
-	// load twinpeaks.txt; plot3(twinpeaks(:,1),twinpeaks(:,2),twinpeaks(:,3),'.');
+	// MATLAB: load twinpeaks.txt; plot3(twinpeaks(:,1),twinpeaks(:,2),twinpeaks(:,3),'.');
 	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/twinpeaks.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
@@ -44,7 +44,7 @@ TEST_F( DimRedTest, generate_data)
 	// Clusters
 	generator.generateNewDataset("3d_clusters",1000,0);
 	// generator.X.write("dimred/clusters.txt");
-	// load clusters.txt; plot3(clusters(:,1),clusters(:,2),clusters(:,3),'.');
+	// MATLAB: load clusters.txt; plot3(clusters(:,1),clusters(:,2),clusters(:,3),'.');
 	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/clusters.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
@@ -52,10 +52,23 @@ TEST_F( DimRedTest, generate_data)
 	// Intersect
 	generator.generateNewDataset("intersect",1000,0);
 	// generator.X.write("dimred/intersect.txt");
-	// load intersect.txt; plot3(intersect(:,1),intersect(:,2),intersect(:,3),'.');
+	// MATLAB: load intersect.txt; plot3(intersect(:,1),intersect(:,2),intersect(:,3),'.');
 	expectedX.resizeNoCopy(generator.X);
 	expectedX.read("dimred/intersect.txt");
 	ASSERT_TRUE(expectedX.equal(generator.X,1e-5));
+}
+
+TEST_F( DimRedTest, intrinsic_dimensionality)
+{
+	GenerateData generator;
+	generator.generateNewDataset("swiss",1000,0);
+	// generator.X.write("dimred/swiss.txt");
+	// MATLAB: load swiss.txt;
+	double dimMLE=intrinsicDimensionality(generator.X,"MLE");
+	// generator.X.write("dimred/swissNormalized.txt");
+	// MATLAB: load swissNormalized.txt; mean(swissNormalized); std(swissNormalized)
+	double expectedDim=1.927789055150985;
+	EXPECT_LT(fabs(dimMLE-expectedDim),1e-6);
 }
 
 GTEST_API_ int main(int argc, char **argv)
