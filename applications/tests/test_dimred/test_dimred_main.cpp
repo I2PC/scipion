@@ -74,10 +74,6 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	double dimCorrDim=intrinsicDimensionality(generator.X,"CorrDim",false);
 	expectedDim=1.9244901554639233;
 	EXPECT_LT(fabs(dimCorrDim-expectedDim),1e-6);
-
-	double dimNearNbDim=intrinsicDimensionality(generator.X,"NearNbDim",false);
-	expectedDim=0.54968474910643894;
-	EXPECT_LT(fabs(dimNearNbDim-expectedDim),1e-6);
 }
 
 GTEST_API_ int main(int argc, char **argv)
