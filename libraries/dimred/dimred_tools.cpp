@@ -167,8 +167,62 @@ void GenerateData::generateNewDataset(const String& method, int N, double noise)
 		REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect method passed to generate data");
 }
 
+void insertNeighbour(Matrix2D<int> &idx, Matrix2D<double> &distance, int i1, int i2, double d)
+{
+	int K=MAT_XSIZE(idx);
+	int kInsert=K;
+	for (int k=K-1; k>=0; --k)
+		if (MAT_ELEM(distance,i1,k)>d)
+			kInsert=k;
+		else
+			break;
+	if (kInsert<K)
+	{
+		for (int kp=K-1; kp>kInsert; --kp)
+		{
+			int kp_1=kp-1;
+			MAT_ELEM(distance,i1,kp)=MAT_ELEM(distance,i1,kp_1);
+			MAT_ELEM(idx,i1,kp)=MAT_ELEM(idx,i1,kp_1);
+		}
+		MAT_ELEM(distance,i1,kInsert)=d;
+		MAT_ELEM(idx,i1,kInsert)=i2;
+	}
+}
+
+void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2* f)
+{
+	idx.initConstant(MAT_YSIZE(X),K,-1);
+	distance.initConstant(MAT_YSIZE(X),K,1e38);
+	for (int i1=0; i1<MAT_YSIZE(X)-1; ++i1)
+		for (int i2=i1+1; i2<MAT_YSIZE(X); ++i2)
+		{
+			// Compute the distance between i1 and i2
+			double d=0;
+			if (f==NULL)
+				for (int j=0; j<MAT_XSIZE(X); ++j)
+				{
+					double diff=MAT_ELEM(X,i1,j)-MAT_ELEM(X,i2,j);
+					d+=diff*diff;
+				}
+			else
+				d=(*f)(X,i1,i2);
+
+			// Check if they are nearest neighbours
+			insertNeighbour(idx,distance,i1,i2,d);
+			insertNeighbour(idx,distance,i2,i1,d);
+		}
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(distance)
+		MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
+}
+
 double intrinsicDimensionalityMLE(const Matrix2D<double> &X)
 {
+	Matrix2D<int> idx;
+	Matrix2D<double> distance;
+	kNearestNeighbours(X,12,idx,distance);
+
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(distance)
+		MAT_ELEM(distance,i,j)=log(MAT_ELEM(distance,i,j));
 	return 0;
 }
 

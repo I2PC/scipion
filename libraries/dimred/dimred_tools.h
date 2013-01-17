@@ -85,5 +85,19 @@ public:
  * Original code by Laurens van der Maaten, Delft University of Technology
  */
 double intrinsicDimensionality(Matrix2D<double> &X, const String &method="MLE", bool normalize=true);
+
+/** Function type to compute the squared distance between individuals i1 and i2 of X */
+typedef double (*DimRedDistance2)  (const Matrix2D<double> &X, int i1, int i2);
+
+/** k-Nearest neighbours.
+ * Given a data matrix (each row is a sample, each column a variable), this function
+ * returns a matrix of the indexes of the K nearest neighbours to each one of the input samples sorted by distance.
+ * It also returns the corresponding distance.
+ *
+ * The element i,j of the output matrices is the index(distance) of the j-th nearest neighbor to the i-th sample.
+ *
+ * You can provide a distance function of your own. If not, Euclidean distance is used.
+ */
+void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2* f=NULL);
 //@}
 #endif
