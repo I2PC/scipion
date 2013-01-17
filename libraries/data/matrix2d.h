@@ -96,8 +96,8 @@ void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
-    for (int i=0; i<(m).mdimy; i++) \
-        for (int j=0; j<(m).mdimx; j++)
+    for (int i=0; i<(m).mdimy; ++i) \
+        for (int j=0; j<(m).mdimx; ++j)
 
 /** Access to a matrix element
  * v is the array, i and j define the element v_ij.
@@ -1631,7 +1631,6 @@ bool operator==(const Matrix2D<T>& op1, const Matrix2D<T>& op2)
     return op1.equal(op2);
 }
 
-
 /**@name Matrix Related functions
  * These functions are not methods of Matrix2D
  */
@@ -1773,6 +1772,11 @@ void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &resul
  */
 void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,
 		double tol, int Niter=10000, double outlierFraction=0.25, int Nthreads=1);
+
+/** Normalize columns.
+ * So that they have zero mean and unit variance.
+ */
+void normalizeColumns(Matrix2D<double> &A);
 
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
