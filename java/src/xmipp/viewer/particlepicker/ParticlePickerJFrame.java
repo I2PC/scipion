@@ -2,6 +2,7 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -18,7 +19,7 @@ import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.BorderFactory;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -46,18 +47,14 @@ import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
-import xmipp.jni.Particle;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairParticlesJDialog;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener {
 
@@ -413,6 +410,12 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return true;
 	}
 	
+	public boolean isPickingAvailable() {
+		if (getCanvas().getTool() != Tool.PICKER) return false;
+		if (getParticlePicker().getMode() == FamilyState.ReadOnly) return false;
+		return true;
+	}
+	
 	public class ColorActionListener implements ActionListener
 	{
 		JColorChooser colorChooser;
@@ -456,6 +459,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
 		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
+		
 		usezoombt.setFocusable(false);
 
 		

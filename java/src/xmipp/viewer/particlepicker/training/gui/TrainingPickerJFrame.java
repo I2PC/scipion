@@ -859,8 +859,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	
 
-	
-
 	// Only on Manual Mode
 	public void importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{

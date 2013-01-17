@@ -17,16 +17,12 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
-import java.util.logging.Level;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Particle;
-import xmipp.jni.Program;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
@@ -113,7 +109,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	{
 		if (!getFrame().isEraserMode())
 			setCursor(crosshairCursor);
-		else
+		else if (getFrame().isPickingAvailable(e))
 		{
 
 			final int x = e.getX();
