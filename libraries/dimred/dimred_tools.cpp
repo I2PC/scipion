@@ -215,13 +215,13 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 		MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
 }
 
-double intrinsicDimensionalityMLE(const Matrix2D<double> &X)
+double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2* f)
 {
 	int k1=5;
 	int k2=12;
 	Matrix2D<int> idx;
 	Matrix2D<double> distance;
-	kNearestNeighbours(X,k2,idx,distance);
+	kNearestNeighbours(X,k2,idx,distance,f);
 
 	// Estimate d
 	double dsum=0;
@@ -243,13 +243,66 @@ double intrinsicDimensionalityMLE(const Matrix2D<double> &X)
 	return -dsum/((k2-k1)*MAT_YSIZE(distance));
 }
 
-double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool normalize)
+// By correlation dimension
+double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2* f)
+{
+	int K=5;
+	Matrix2D<int> idx;
+	Matrix2D<double> distance;
+	kNearestNeighbours(X,K,idx,distance,f);
+
+	// Compute median and maximum
+	size_t N=MAT_XSIZE(distance)*MAT_YSIZE(distance);
+	std::sort(MATRIX2D_ARRAY(distance),MATRIX2D_ARRAY(distance)+N);
+	double median=MATRIX2D_ARRAY(distance)[N/2];
+	double maxVal=MATRIX2D_ARRAY(distance)[N-1];
+	median*=median; // Because we compute dist^2 instead of dist
+	maxVal*=maxVal;
+
+	// Compute the distance of all versus all
+	double countLessMedianK=0, countLessMaxK=0;
+	for (int i1=0; i1<MAT_YSIZE(X)-1; ++i1)
+		for (int i2=i1+1; i2<MAT_YSIZE(X); ++i2)
+		{
+			// Compute the distance between i1 and i2
+			double d=0;
+			if (f==NULL)
+				for (int j=0; j<MAT_XSIZE(X); ++j)
+				{
+					double diff=MAT_ELEM(X,i1,j)-MAT_ELEM(X,i2,j);
+					d+=diff*diff;
+				}
+			else
+				d=(*f)(X,i1,i2);
+
+			// Check d
+			if (d<=maxVal)
+			{
+				countLessMaxK+=1;
+				if (d<=median)
+					countLessMedianK+=1;
+			}
+		}
+	double iCombinations=2.0/(MAT_YSIZE(X)*(MAT_YSIZE(X)-1));
+	double probLessMedianK=countLessMedianK*iCombinations; // Probability of a distance being less than medianK
+	double probLessMaxK=countLessMaxK*iCombinations; // Probability of a distance being less than maxK
+	return 2*log(probLessMaxK/probLessMedianK)/log(maxVal/median);
+}
+
+double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool normalize, DimRedDistance2* f)
 {
 	if (normalize)
 		normalizeColumns(X);
 
 	if (method=="MLE")
-		return intrinsicDimensionalityMLE(X);
+		return intrinsicDimensionalityMLE(X,f);
+	else if (method=="CorrDim")
+		return intrinsicDimensionalityCorrDim(X,f);
 	else
 		REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown dimensionality estimate method");
+
+	// I do not implement NearNbDim because it gives a wrong answer on the swiss roll
+	// I do not implement PackingNumbers because it is too slow on the swiss roll and gives a wrong answer
+	// I do not implement EigValue because it only provides integer dimensions
+	// I do not implement GMST because it is slower than MLE and CorrDim
 }

@@ -64,11 +64,20 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	generator.generateNewDataset("swiss",1000,0);
 	// generator.X.write("dimred/swiss.txt");
 	// MATLAB: load swiss.txt;
+
 	double dimMLE=intrinsicDimensionality(generator.X,"MLE");
 	// generator.X.write("dimred/swissNormalized.txt");
-	// MATLAB: load swissNormalized.txt; mean(swissNormalized); std(swissNormalized)
+	// MATLAB: load swissNormalized.txt; mean(swissNormalized); std(swissNormalized); d=intrinsic_dimension(swissNormalized)
 	double expectedDim=1.927789055150985;
 	EXPECT_LT(fabs(dimMLE-expectedDim),1e-6);
+
+	double dimCorrDim=intrinsicDimensionality(generator.X,"CorrDim",false);
+	expectedDim=1.9244901554639233;
+	EXPECT_LT(fabs(dimCorrDim-expectedDim),1e-6);
+
+	double dimNearNbDim=intrinsicDimensionality(generator.X,"NearNbDim",false);
+	expectedDim=0.54968474910643894;
+	EXPECT_LT(fabs(dimNearNbDim-expectedDim),1e-6);
 }
 
 GTEST_API_ int main(int argc, char **argv)

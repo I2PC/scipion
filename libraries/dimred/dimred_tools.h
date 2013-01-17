@@ -67,6 +67,9 @@ public:
 	void generateNewDataset(const String& method, int N=1000, double noise=0.05);
 };
 
+/** Function type to compute the squared distance between individuals i1 and i2 of X */
+typedef double (*DimRedDistance2)  (const Matrix2D<double> &X, int i1, int i2);
+
 /** Estimate the intrinsic dimensionality.
  * Performs an estimation of the intrinsic dimensionality of dataset X based
  * on the method specified by method. Possible values for method are 'CorrDim'
@@ -84,10 +87,7 @@ public:
  *
  * Original code by Laurens van der Maaten, Delft University of Technology
  */
-double intrinsicDimensionality(Matrix2D<double> &X, const String &method="MLE", bool normalize=true);
-
-/** Function type to compute the squared distance between individuals i1 and i2 of X */
-typedef double (*DimRedDistance2)  (const Matrix2D<double> &X, int i1, int i2);
+double intrinsicDimensionality(Matrix2D<double> &X, const String &method="MLE", bool normalize=true, DimRedDistance2* f=NULL);
 
 /** k-Nearest neighbours.
  * Given a data matrix (each row is a sample, each column a variable), this function
