@@ -310,3 +310,36 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
     delete []th_ids;
     delete []th_args;
 }
+
+void normalizeColumns(Matrix2D<double> &A)
+{
+	if (MAT_YSIZE(A)<=1)
+		return;
+
+	// Compute the mean and standard deviation of each column
+	Matrix1D<double> avg, stddev;
+	avg.initZeros(MAT_XSIZE(A));
+	stddev.initZeros(MAT_XSIZE(A));
+
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+	{
+		double x=MAT_ELEM(A,i,j);
+		VEC_ELEM(avg,j)+=x;
+		VEC_ELEM(stddev,j)+=x*x;
+	}
+
+	double iN=1.0/MAT_YSIZE(A);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(avg)
+	{
+        VEC_ELEM(avg,i)*=iN;
+        VEC_ELEM(stddev,i)=sqrt(fabs(VEC_ELEM(stddev,i)*iN - VEC_ELEM(avg,i)*VEC_ELEM(avg,i)));
+        if (VEC_ELEM(stddev,i)>XMIPP_EQUAL_ACCURACY)
+        	VEC_ELEM(stddev,i)=1.0/VEC_ELEM(stddev,i);
+        else
+        	VEC_ELEM(stddev,i)=0.0;
+	}
+
+	// Now normalize
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		MAT_ELEM(A,i,j)=(MAT_ELEM(A,i,j)-VEC_ELEM(avg,j))*VEC_ELEM(stddev,j);
+}
