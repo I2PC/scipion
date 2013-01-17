@@ -64,18 +64,20 @@ public class ExtractCanvas extends ParticlePickerCanvas
 	@Override
 	protected void doCustomPaint(Graphics2D g2)
 	{
-		g2.setColor(frame.getColor());
-
+		Color color;
 		for (ExtractParticle p : micrograph.getParticles())
+		{
+			color = p.getColor(frame.getColorBy());
 			if(p.isEnabled())
-				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, continuousst);
+				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, continuousst, color);
 			else
-				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, dashedst);
+				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, dashedst, color);
+		}
 		if (active != null)
 		{
-			g2.setColor(Color.red);
+			
 			Stroke stroke = active.isEnabled() ? activecst: activedst;
-			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, stroke);
+			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, stroke, active.getColor(frame.getColorBy().getId(), Color.red));
 		}
 	}
 

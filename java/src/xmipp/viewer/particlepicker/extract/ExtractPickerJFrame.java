@@ -23,7 +23,10 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
+import xmipp.jni.MDLabel;
+import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.particlepicker.ColorBy;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -46,7 +49,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private JPanel particlespn;
 	private int index;
 	private ExtractCanvas canvas;
-	private String[] colorby;
+	private ColorBy[] colorby;
 	private JComboBox scorescb;
 
 	public ExtractPickerJFrame(ParticlePicker picker)
@@ -93,13 +96,36 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		fieldspn.add(new JLabel("Color by:"));
-		colorby = new String[]{"ZScore", "ZScore-Shape", "ZScore-SNR1", "ZScore-SNR2", "ZScore-Hist"};
+		colorby = picker.getColumns();
 		scorescb = new JComboBox(colorby);
+		scorescb.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				ColorBy colorby = getColorBy();
+				updateColor(colorby.getColor());
+				
+			}
+		});
 		fieldspn.add(scorescb);
+		picker.setColor(getColorBy().getColor());
 		// Setting color
 		initColorPane();
 		fieldspn.add(colorbt);
-
+		colorbt.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				ColorBy colorby = getColorBy();
+				colorby.setColor(getColor());
+				
+			}
+		});
+		
 		// Setting slider
 		initSizePane();
 		fieldspn.add(sizepn);
@@ -112,6 +138,11 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 		colorbt.addActionListener(new ColorActionListener());
 
+	}
+	
+	ColorBy getColorBy()
+	{
+		return (ColorBy)scorescb.getSelectedItem();
 	}
 	
 	private void initMicrographsPane()

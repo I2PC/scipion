@@ -221,7 +221,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		drawShape(g2, x, y, size, all, continuousst);
 				
 	}
-	
+	protected void drawShape(Graphics2D g2, int x, int y, int size, boolean all, Stroke stroke, Color color)
+	{
+		g2.setColor(color);
+		drawShape(g2, x, y, size, all, stroke);
+	}
 	protected void drawShape(Graphics2D g2, int x, int y, int size, boolean all, Stroke stroke)
 	{
 
