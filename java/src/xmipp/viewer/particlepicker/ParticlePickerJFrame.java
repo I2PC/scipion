@@ -56,6 +56,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 
+
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener {
 
 	protected ParticlesJDialog particlesdialog;

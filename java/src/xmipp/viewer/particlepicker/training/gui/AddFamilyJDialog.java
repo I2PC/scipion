@@ -21,7 +21,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import xmipp.utils.ColorIcon;
-import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ColorBy;

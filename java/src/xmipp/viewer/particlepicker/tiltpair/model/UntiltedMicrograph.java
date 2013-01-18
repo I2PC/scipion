@@ -1,16 +1,12 @@
 package xmipp.viewer.particlepicker.tiltpair.model;
 
-import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.List;
 
-import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.jni.Particle;
 import xmipp.jni.TiltPairAligner;
+import xmipp.utils.XmippMessage;
+import xmipp.viewer.particlepicker.Micrograph;
 
 public class UntiltedMicrograph extends Micrograph
 {

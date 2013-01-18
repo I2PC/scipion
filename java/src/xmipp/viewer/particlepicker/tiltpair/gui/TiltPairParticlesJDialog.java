@@ -3,14 +3,13 @@ package xmipp.viewer.particlepicker.tiltpair.gui;
 import java.awt.Dimension;
 import java.util.List;
 
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticleCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public class TiltPairParticlesJDialog extends ParticlesJDialog
 {

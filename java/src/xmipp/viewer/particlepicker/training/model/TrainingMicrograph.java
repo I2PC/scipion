@@ -1,19 +1,10 @@
 package xmipp.viewer.particlepicker.training.model;
 
 
-import ij.ImagePlus;
-
-import java.awt.Image;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
-import xmipp.ij.commons.XmippIJUtil;
-import xmipp.jni.Filename;
-import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.PickerParticle;

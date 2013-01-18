@@ -262,7 +262,7 @@ def findAcquisitionInfo(inputFile):
     '''Try to find acquision_info.xmd file from the location
       of inputFile and moving up'''
     d = removeFilenamePrefix(inputFile)
-    while len(d) > 0:
+    while len(d) > 0 and d != '/':
         d = dirname(d)
         ai = join(d, ACQUISITION_INFO)
         if exists(ai):

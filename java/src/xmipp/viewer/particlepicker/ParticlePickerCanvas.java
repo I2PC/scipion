@@ -24,6 +24,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
+
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 	public final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);

@@ -7,16 +7,12 @@ import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
+import xmipp.ij.commons.XmippImageConverter;
+import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticleCanvas;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.PickerParticle;
-import xmipp.viewer.particlepicker.training.gui.TrainingPickerJFrame;
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.jni.ImageGeneric;
-import xmipp.jni.Particle;
 
 public class TrainingParticle extends PickerParticle{
 	
