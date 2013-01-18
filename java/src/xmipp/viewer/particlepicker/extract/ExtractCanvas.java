@@ -119,6 +119,7 @@ public class ExtractCanvas extends ParticlePickerCanvas
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
 					active = p;
+				frame.refreshActiveOnGallery(active);
 			}
 			
 			refresh();

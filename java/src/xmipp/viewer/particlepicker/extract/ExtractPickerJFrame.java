@@ -424,4 +424,10 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		canvas.refreshActive(active);
 	}
 
+	public void refreshActiveOnGallery(ExtractParticle active)
+	{
+		galleryfr.refreshActive(active.getId());
+		
+	}
+
 }

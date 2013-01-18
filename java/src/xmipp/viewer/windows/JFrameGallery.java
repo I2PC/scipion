@@ -1819,4 +1819,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 	}
 
+	public void refreshActive(long id)
+	{
+		for(int i = 0; i < data.ids.length; i ++)
+			if(id == data.ids[i])
+				selectIndex(i);
+		
+	}
+
 }// class JFrameGallery
