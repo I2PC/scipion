@@ -159,5 +159,13 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		micrograph = (ExtractMicrograph)m;
 		
 	}
+
+	public void refreshActive(int id)
+	{
+		for(ExtractParticle p: micrograph.getParticles())
+			if(p.getId() == id)
+				refreshActive(p);
+		
+	}
 	
 }

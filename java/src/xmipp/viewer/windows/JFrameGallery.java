@@ -103,6 +103,7 @@ import xmipp.viewer.models.ImageGallery;
 import xmipp.viewer.models.MetadataGallery;
 import xmipp.viewer.models.MicrographsTable;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
+import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 
 public class JFrameGallery extends JFrame implements iCTFGUI
 {
@@ -176,6 +177,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	}
 	/** Store data about visualization */
 	GalleryData data;
+
+	private ExtractPickerJFrame extractframe;
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -1260,7 +1263,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
 		int col = table.columnAtPoint(p);
-
+		extractframe.setActive(gallery.getIndex(row, col));
 		if (evt.getButton() == MouseEvent.BUTTON1)
 		{ // Left click.
 			if (evt.getClickCount() > 1)
@@ -1781,7 +1784,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 
 	public void openMicrographs()
 	{
-		ExtractParticlePicker.open(data.filename);
+		extractframe = ExtractParticlePicker.open(data.filename, this);
 		
 	}
 

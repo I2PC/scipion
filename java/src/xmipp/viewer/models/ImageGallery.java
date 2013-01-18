@@ -354,7 +354,10 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 * @return index of the element
 	 */
 	public int getIndex(int row, int col) {
-		return row * cols + col;
+		int index = row * cols + col; 
+		System.out.println(index);
+		return index;
+		
 	}
 	
 	/** Check if the index is inside bounds */

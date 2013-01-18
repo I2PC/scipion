@@ -11,13 +11,14 @@ import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.windows.JFrameGallery;
 
 public class ExtractParticlePicker extends ParticlePicker
 {
 
 	public static void main(String[] args)
 	{
-		ExtractParticlePicker.open(args[0]);
+		ExtractParticlePicker.open(args[0], null);
 	}
 
 	private ArrayList<ExtractMicrograph> micrographs;
@@ -205,10 +206,10 @@ public class ExtractParticlePicker extends ParticlePicker
 		setMicrograph(micrographs.get(0));
 	}
 
-	public static void open(String filename)
+	public static ExtractPickerJFrame open(String filename, JFrameGallery galleryfr)
 	{
 		ExtractParticlePicker picker = new ExtractParticlePicker(filename, FamilyState.Extract);
-		new ExtractPickerJFrame(picker);
+		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 
 	public int getParticlesTotal()

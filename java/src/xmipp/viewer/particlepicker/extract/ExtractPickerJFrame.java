@@ -36,6 +36,7 @@ import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.windows.ImagesWindowFactory;
+import xmipp.viewer.windows.JFrameGallery;
 
 public class ExtractPickerJFrame extends ParticlePickerJFrame
 {
@@ -51,11 +52,13 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private ExtractCanvas canvas;
 	private ColorBy[] colorby;
 	private JComboBox scorescb;
+	private JFrameGallery galleryfr;
 
-	public ExtractPickerJFrame(ParticlePicker picker)
+	public ExtractPickerJFrame(ParticlePicker picker, JFrameGallery galleryfr)
 	{
 		super(picker);
 		this.picker = (ExtractParticlePicker)picker;
+		this.galleryfr = galleryfr;
 		initComponents();
 		// TODO Auto-generated constructor stub
 	}
@@ -400,6 +403,12 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	public ParticlesJDialog initParticlesJDialog()
 	{
 		return new ParticlesJDialog(this);
+	}
+
+	public void setActive(int id)
+	{
+		canvas.refreshActive(id);
+		
 	}
 
 }
