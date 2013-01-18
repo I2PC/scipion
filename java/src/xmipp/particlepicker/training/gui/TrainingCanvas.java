@@ -65,7 +65,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	
 	TrainingParticle getLastParticle()
 	{
-		return frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
+		return frame.getFamilyData().getLastAvailableParticle(frame.getThreshold());
 	}
 
 
