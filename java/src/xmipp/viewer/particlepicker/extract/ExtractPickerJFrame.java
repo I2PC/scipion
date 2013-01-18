@@ -405,10 +405,23 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		return new ParticlesJDialog(this);
 	}
 
-	public void setActive(int id)
+	public void refreshActive(long id)
 	{
-		canvas.refreshActive(id);
-		
+		int index = 0;
+		ExtractParticle active = null;
+		List<ExtractMicrograph> micrographs = picker.getMicrographs();
+		for(int i = 0; i < micrographs.size(); i ++)
+			for(ExtractParticle p: micrographs.get(i).getParticles())
+				if(p.getId() == id)
+				{
+					index = i;
+					active = p;
+					break;
+				
+				}
+		if(index != this.index)
+			micrographstb.setRowSelectionInterval(index, index);
+		canvas.refreshActive(active);
 	}
 
 }

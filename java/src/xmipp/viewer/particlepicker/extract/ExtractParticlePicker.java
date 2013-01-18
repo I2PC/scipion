@@ -140,7 +140,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	}
 
 	@Override
-	public List<? extends Micrograph> getMicrographs()
+	public List<ExtractMicrograph> getMicrographs()
 	{
 		return micrographs;
 	}

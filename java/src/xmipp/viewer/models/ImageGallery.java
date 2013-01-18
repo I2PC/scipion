@@ -355,8 +355,13 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 */
 	public int getIndex(int row, int col) {
 		int index = row * cols + col; 
-		System.out.println(index);
 		return index;
+		
+	}
+	
+	public long getId(int row, int col) {
+		int index = getIndex(row, col);
+		return data.ids[index];
 		
 	}
 	

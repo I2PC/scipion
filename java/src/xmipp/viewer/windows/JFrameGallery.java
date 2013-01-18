@@ -1263,7 +1263,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
 		int col = table.columnAtPoint(p);
-		extractframe.setActive(gallery.getIndex(row, col));
+		extractframe.refreshActive(gallery.getId(row, col));
 		if (evt.getButton() == MouseEvent.BUTTON1)
 		{ // Left click.
 			if (evt.getClickCount() > 1)
