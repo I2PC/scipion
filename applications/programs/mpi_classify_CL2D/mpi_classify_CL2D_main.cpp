@@ -81,6 +81,7 @@ CL2DClass::CL2DClass()
     P.initZeros(prm->Ydim, prm->Xdim);
     P.setXmippOrigin();
     Pupdate = P;
+    std::cout << "Creating an empty CL2D class: " << this << std::endl;
 }
 
 CL2DClass::CL2DClass(const CL2DClass &other)
@@ -97,11 +98,13 @@ CL2DClass::CL2DClass(const CL2DClass &other)
     histClass = other.histClass;
     histNonClass = other.histNonClass;
     neighboursIdx = other.neighboursIdx;
+    std::cout << "Creating a copy CL2D class: " << this << " from " << &other << std::endl;
 }
 
 CL2DClass::~CL2DClass()
 {
     delete plans;
+    std::cout << "Destroying a CL2D class: " << this << std::endl;
 }
 
 void CL2DClass::updateProjection(const MultidimArray<double> &I,
@@ -161,9 +164,9 @@ void CL2DClass::transferUpdate()
             DIRECT_A1D_ELEM(nonClassCorr,i) = nextNonClassCorr[i];
             nextNonClassCorr.clear();
 
-            double minC, maxC;
+            double minC=0., maxC=0.;
             classCorr.computeDoubleMinMax(minC, maxC);
-            double minN, maxN;
+            double minN=0., maxN=0.;
             nonClassCorr.computeDoubleMinMax(minN, maxN);
             double c0 = XMIPP_MIN(minC,minN);
             double cF = XMIPP_MAX(maxC,maxN);
