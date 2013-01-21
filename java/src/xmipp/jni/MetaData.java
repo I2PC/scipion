@@ -467,4 +467,16 @@ public class MetaData {
 	 * @param operateStr sql syntanx string of the operation 
 	 */
 	public native void operate(String operateStr);
+	
+	/** Returns Max and Min values from a column in metadata
+    * These functions can only be used for labels of type double
+	*/
+	public native double getColumnMin(int column);
+	
+	
+
+	public native double getColumnMax(int column);
+	
+	
+	
 }

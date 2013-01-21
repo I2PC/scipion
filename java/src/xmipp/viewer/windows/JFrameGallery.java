@@ -46,10 +46,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.File;
 import java.util.ArrayList;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -60,9 +57,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-
-import xmipp.particlepicker.particles.ExtractParticlePicker;
-import xmipp.utils.XmippFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -77,17 +71,13 @@ import javax.swing.LookAndFeel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageJ;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -95,13 +85,14 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
+import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
@@ -111,7 +102,8 @@ import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGallery;
 import xmipp.viewer.models.MetadataGallery;
 import xmipp.viewer.models.MicrographsTable;
-import xmipp.viewer.windows.ClassesJDialog;
+import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
+import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 
 public class JFrameGallery extends JFrame implements iCTFGUI
 {
@@ -185,6 +177,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	}
 	/** Store data about visualization */
 	GalleryData data;
+
+	private ExtractPickerJFrame extractframe;
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -1269,7 +1263,8 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
 		int col = table.columnAtPoint(p);
-
+		if(extractframe != null)
+			extractframe.refreshActive(gallery.getId(row, col));
 		if (evt.getButton() == MouseEvent.BUTTON1)
 		{ // Left click.
 			if (evt.getClickCount() > 1)
@@ -1790,7 +1785,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 
 	public void openMicrographs()
 	{
-		ExtractParticlePicker.open(data.filename);
+		extractframe = ExtractParticlePicker.open(data.filename, this);
 		
 	}
 
@@ -1823,6 +1818,14 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	public void done()
 	{
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
+	}
+
+	public void refreshActive(long id)
+	{
+		for(int i = 0; i < data.ids.length; i ++)
+			if(id == data.ids[i])
+				selectIndex(i);
+		
 	}
 
 }// class JFrameGallery

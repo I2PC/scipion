@@ -32,7 +32,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	public Tool getTool()
 	{
 
-		if (IJ.getInstance() == null)
+		if (IJ.getInstance() == null || !IJ.getInstance().isVisible())
 			return Tool.PICKER;
 		return Tool.getTool(IJ.getToolName());
 	}

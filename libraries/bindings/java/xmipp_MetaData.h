@@ -463,6 +463,12 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_operate
 (JNIEnv * , jobject , jstring );
 
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMax
+(JNIEnv * , jobject , jint );
+
+
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMin
+(JNIEnv * , jobject , jint );
 
 #ifdef __cplusplus
 }

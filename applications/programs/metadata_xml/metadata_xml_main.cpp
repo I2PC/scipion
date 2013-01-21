@@ -28,6 +28,7 @@
 class ProgTest: public XmippProgram
 {
     FileName fnIn,fnOut;
+    bool extracPart;
 
     void defineParams()
     {
@@ -35,6 +36,7 @@ class ProgTest: public XmippProgram
         addParamsLine("== Basic ==");
         addParamsLine(" -i <metadata> : metadata input for testing");
         addParamsLine(" -o <file> : output XML file");
+        addParamsLine(" [--extractParticlesMD] : If we want to process a MetaData that comes from ExtractParticles protocol");
         addExampleLine("Produce XML file from a metadata for benchmark",false);
         addExampleLine("xmipp_metadata_XML -i DefaultFamily_extract_list.xmd  -o XMLFile.xml");
 
@@ -43,33 +45,84 @@ class ProgTest: public XmippProgram
     {
         fnIn = getParam("-i");
         fnOut = getParam("-o");
+        extracPart = checkParam("--extractParticlesMD");
+
     }
 
     void run()
     {
 
-        MetaData MD;
+        MetaData MD, sortedMD;
         std::ofstream fhOut;
         StringVector blockList;
         fhOut.open(fnOut.c_str());
         fhOut<<"<particlepicking>"<<std::endl;
         int x,y;
         FileName micName,sTemp;
-        getBlocksInMetaDataFile(fnIn,blockList);
-        for (size_t i=0; i<blockList.size(); i++)
+
+        if (!extracPart)
         {
-           	MD.read(blockList[i]+"@"+fnIn);
-           	sTemp=blockList[i];
-           	micName=sTemp.removeUntilPrefix("_");
-            fhOut<<"<micrograph id=\""<<micName<<"\">"<<std::endl;
-            FOR_ALL_OBJECTS_IN_METADATA(MD)
+            getBlocksInMetaDataFile(fnIn,blockList);
+            for (size_t i=0; i<blockList.size(); i++)
             {
-                MD.getValue(MDL_XCOOR, x, __iter.objId);
-                MD.getValue(MDL_YCOOR, y, __iter.objId);
-                fhOut<<"<coordinate x=\""<<x<<"\" y=\""<<y<<"\"/>"<<std::endl;
+                MD.read(blockList[i]+"@"+fnIn);
+                sTemp=blockList[i];
+                micName=sTemp.removeUntilPrefix("_");
+                fhOut<<"<micrograph id=\""<<micName<<"\">"<<std::endl;
+                FOR_ALL_OBJECTS_IN_METADATA(MD)
+                {
+                    MD.getValue(MDL_XCOOR, x, __iter.objId);
+                    MD.getValue(MDL_YCOOR, y, __iter.objId);
+                    fhOut<<"<coordinate x=\""<<x<<"\" y=\""<<y<<"\"/>"<<std::endl;
+                }
+                fhOut<<"</micrograph>"<<std::endl;
             }
-            fhOut<<"</micrograph>"<<std::endl;
         }
+        else
+        {
+        	FileName name,newName,nodirName;
+            MD.read(fnIn);
+            MD.removeDisabled();
+
+            std::cout << fnIn << std::endl;
+            sortedMD.sort(MD,MDL_MICROGRAPH);
+
+            sortedMD.getValue(MDL_MICROGRAPH, name, MD.firstObject());
+            nodirName=name.removeDirectories();
+            fhOut<<"<micrograph id=\""<<nodirName<<"\">"<<std::endl;
+
+            sortedMD.getValue(MDL_XCOOR, x, sortedMD.firstObject());
+            sortedMD.getValue(MDL_YCOOR, y, sortedMD.firstObject());
+            fhOut<<"<coordinate x=\""<<x<<"\" y=\""<<y<<"\"/>"<<std::endl;
+
+            FOR_ALL_OBJECTS_IN_METADATA(sortedMD)
+            {
+
+            	if (__iter.objId == MD.firstObject())
+            		__iter.moveNext();
+
+            	sortedMD.getValue(MDL_MICROGRAPH, newName, __iter.objId);
+
+                if (name == newName)
+                {
+                	sortedMD.getValue(MDL_XCOOR, x, __iter.objId);
+                	sortedMD.getValue(MDL_YCOOR, y, __iter.objId);
+                    fhOut<<"<coordinate x=\""<<x<<"\" y=\""<<y<<"\"/>"<<std::endl;
+                }
+                else
+                {
+                    fhOut<<"</micrograph>"<<std::endl;
+                    name = newName;
+                    nodirName=name.removeDirectories();
+                    fhOut<<"<micrograph id=\""<<nodirName<<"\">"<<std::endl;
+                    sortedMD.getValue(MDL_XCOOR, x, __iter.objId);
+                    sortedMD.getValue(MDL_YCOOR, y, __iter.objId);
+                    fhOut<<"<coordinate x=\""<<x<<"\" y=\""<<y<<"\"/>"<<std::endl;
+                }
+            }
+
+        }
+
         fhOut<<"</particlepicking>"<<std::endl;
         fhOut.close();
     }
