@@ -417,6 +417,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		{
 			System.out.println("setting active");
 			canvas.refreshActive(active);
+			canvas.moveTo(active);
 			active = null;
 		}
 

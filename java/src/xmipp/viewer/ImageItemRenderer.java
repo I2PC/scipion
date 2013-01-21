@@ -42,7 +42,7 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 
 	public ImageItemRenderer(boolean hackBorders) {
 		this();
-		this.hackBorders = false;
+		this.hackBorders = false;//no use of parameter provided???
 	}
 
 	@Override
