@@ -1826,11 +1826,14 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	}
 
 
-	public void refreshActive(long id)
+	public void refreshActive(long id, boolean enabled)
 	{
 		for(int i = 0; i < data.ids.length; i ++)
 			if(id == data.ids[i])
+			{
 				goToImage(i);
+				gallery.setSelectionEnabled(enabled);
+			}
 		
 	}
 

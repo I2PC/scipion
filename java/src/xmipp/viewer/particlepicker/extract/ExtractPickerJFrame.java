@@ -425,7 +425,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 	public void refreshActiveOnGallery(ExtractParticle active)
 	{
-		galleryfr.refreshActive(active.getId());
+		galleryfr.refreshActive(active.getId(), active.isEnabled());
 		
 	}
 
