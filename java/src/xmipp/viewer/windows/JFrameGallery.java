@@ -1783,12 +1783,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		XmippDialog.showException(this, e);
 	}
 
-	public void openMicrographs()
-	{
-		extractframe = ExtractParticlePicker.open(data.filename, this);
-		
-	}
-
+	
 	@Override
 	public void setRunning(boolean running)
 	{
@@ -1819,12 +1814,26 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	{
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 	}
+	public void openMicrographs()
+	{
+		extractframe = ExtractParticlePicker.open(data.filename, this);
+		for(int i = 0; i < data.selection.length; i ++)
+			if(data.selection[i])
+			{
+				extractframe.refreshActive(data.ids[i]);
+				break;
+			}
+	}
 
-	public void refreshActive(long id)
+
+	public void refreshActive(long id, boolean enabled)
 	{
 		for(int i = 0; i < data.ids.length; i ++)
 			if(id == data.ids[i])
-				selectIndex(i);
+			{
+				goToImage(i);
+				gallery.setSelectionEnabled(enabled);
+			}
 		
 	}
 
