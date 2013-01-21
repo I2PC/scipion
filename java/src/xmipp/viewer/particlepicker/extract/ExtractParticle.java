@@ -3,7 +3,7 @@ package xmipp.viewer.particlepicker.extract;
 import java.awt.Color;
 
 import xmipp.jni.MDLabel;
-import xmipp.viewer.particlepicker.ColorBy;
+import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.PickerParticle;
 

@@ -23,7 +23,7 @@ import javax.swing.event.ChangeListener;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.ColorBy;
+import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Family;
 
 public class AddFamilyJDialog extends JDialog implements ActionListener {
@@ -61,7 +61,7 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		add(new JLabel("Color"),
 				XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
 		colorbt = new JButton();
-		color = ColorBy.getNextColor();
+		color = ColorHelper.getNextColor();
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
 		add(colorbt, XmippWindowUtil.getConstraints(constraints, 1, 1, 1));

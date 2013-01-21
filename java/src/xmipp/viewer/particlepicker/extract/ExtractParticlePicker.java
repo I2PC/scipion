@@ -6,7 +6,7 @@ import java.util.logging.Level;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.viewer.particlepicker.ColorBy;
+import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -23,7 +23,7 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
-	private ArrayList<ColorBy> colorby;
+	private ArrayList<ColorHelper> colorby;
 	private boolean containszscore;
 	private boolean containsshape;
 	private boolean containssnr1;
@@ -81,7 +81,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	
 	public void loadColumns(MetaData md)
 	{
-		colorby = new ArrayList<ColorBy>();
+		colorby = new ArrayList<ColorHelper>();
 		loadColumn(MDLabel.MDL_ZSCORE, "ZScore", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SHAPE, "ZScore-Shape", md);
 		loadColumn(MDLabel.MDL_ZSCORE_SNR1, "ZScore-SNR1", md);
@@ -96,7 +96,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		if(exists)
 		{
 			
-			colorby.add(new ColorBy(column, name, md));
+			colorby.add(new ColorHelper(column, name, md));
 		}
 	}
 	
@@ -225,9 +225,9 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	}
 
-	public ColorBy[] getColumns()
+	public ColorHelper[] getColumns()
 	{
-		return colorby.toArray(new ColorBy[]{});
+		return colorby.toArray(new ColorHelper[]{});
 	}
 
 }
