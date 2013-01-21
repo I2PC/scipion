@@ -248,6 +248,7 @@ MpiNode::~MpiNode()
 {
     active = 0;
     updateComm();
+    delete comm;
     MPI::Finalize();
 }
 
