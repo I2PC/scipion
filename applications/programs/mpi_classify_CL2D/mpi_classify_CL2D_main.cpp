@@ -272,7 +272,7 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
     }
 
     // Compute the correntropy
-    double corrRS, corrSR;
+    double corrRS=0.0, corrSR=0.0;
     const MultidimArray<int> &imask = prm->mask;
     if (prm->useCorrelation)
     {
@@ -636,6 +636,14 @@ void CL2D::shareSplitAssignments(Matrix1D<int> &assignment, CL2DClass *node1,
 
     node1->transferUpdate();
     node2->transferUpdate();
+}
+
+/* Destructor --------------------------------------------------------- */
+CL2D::~CL2D()
+{
+	int qmax=P.size();
+	for (int q=0; q<qmax; q++)
+		delete P[q];
 }
 
 /* Read image --------------------------------------------------------- */
