@@ -208,6 +208,16 @@ public class ColorHelper
 		}
 		return value;
 	}
+
+	public double getMin()
+	{
+		return min;
+	}
+	
+	public double getMax()
+	{
+		return max;
+	}
  
 	
 

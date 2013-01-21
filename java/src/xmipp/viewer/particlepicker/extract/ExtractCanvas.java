@@ -68,8 +68,8 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		double score;
 		for (ExtractParticle p : micrograph.getParticles())
 		{
-			score = p.getScore(frame.getColorBy().getId());
-			color = frame.getColorBy().getColor(score);
+			score = p.getScore(frame.getColorHelper().getId());
+			color = frame.getColorHelper().getColor(score);
 			if(p.isEnabled())
 				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, continuousst, color);
 			else
@@ -77,8 +77,8 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		}
 		if (active != null)
 		{
-			score = active.getScore(frame.getColorBy().getId());
-			color = frame.getColorBy().getColor(score);
+			score = active.getScore(frame.getColorHelper().getId());
+			color = frame.getColorHelper().getColor(score);
 			Stroke stroke = active.isEnabled() ? activecst: activedst;
 			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, stroke, color);
 		}

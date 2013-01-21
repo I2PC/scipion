@@ -53,6 +53,9 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private ColorHelper[] colorby;
 	private JComboBox scorescb;
 	private JFrameGallery galleryfr;
+	private JLabel minlb;
+	private JLabel maxlb;
+	private ExtractParticle active;
 
 	public ExtractPickerJFrame(ParticlePicker picker, JFrameGallery galleryfr)
 	{
@@ -108,11 +111,18 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			public void actionPerformed(ActionEvent arg0)
 			{
 				getCanvas().repaint();
-				
+				minlb.setText(String.format("%.2f", getColorHelper().getMin()));
+				maxlb.setText(String.format("%.2f", getColorHelper().getMax()));
 			}
 		});
 		fieldspn.add(scorescb);
+		minlb = new JLabel(String.format("%.2f", getColorHelper().getMin()));
+		maxlb = new JLabel(String.format("%.2f", getColorHelper().getMax()));
+		
+		
+		fieldspn.add(minlb);
 		fieldspn.add(ColorHelper.getColorMap());
+		fieldspn.add(maxlb);
 		
 		// Setting slider
 		initSizePane();
@@ -124,7 +134,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 	}
 	
-	ColorHelper getColorBy()
+	ColorHelper getColorHelper()
 	{
 		return (ColorHelper)scorescb.getSelectedItem();
 	}
@@ -224,6 +234,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(picker.getMicrograph().getCTFIcon());
+		
 		pack();
 	}
 
@@ -233,7 +244,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			canvas = new ExtractCanvas(this);
 		else
 			canvas.updateMicrograph();
-
+		
 		canvas.display();
 		updateZoom();
 		
@@ -389,7 +400,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	public void refreshActive(long id)
 	{
 		int index = 0;
-		ExtractParticle active = null;
+		active = null;
 		List<ExtractMicrograph> micrographs = picker.getMicrographs();
 		for(int i = 0; i < micrographs.size(); i ++)
 			for(ExtractParticle p: micrographs.get(i).getParticles())
@@ -402,7 +413,13 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 				}
 		if(index != this.index)
 			micrographstb.setRowSelectionInterval(index, index);
-		canvas.refreshActive(active);
+		if(active != null)
+		{
+			System.out.println("setting active");
+			canvas.refreshActive(active);
+			active = null;
+		}
+
 	}
 
 	public void refreshActiveOnGallery(ExtractParticle active)
