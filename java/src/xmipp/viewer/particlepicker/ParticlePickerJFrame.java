@@ -567,6 +567,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		color = getFamily().getColor();
 		colorpn.add(new JLabel("Color:"));
 		colorbt = new JButton();
+		colorbt.setContentAreaFilled(false);
+		colorbt.setFocusPainted(false);
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
 		colorpn.add(colorbt);

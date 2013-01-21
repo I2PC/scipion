@@ -81,15 +81,10 @@ public class ExtractParticle extends PickerParticle
 		
 	}
 
-	public Color getColor(ColorBy colorBy)
-	{
-		return getColor(colorBy.getId(), colorBy.getColor());
-		
-	}
 	
 	
 
-	private double getScore(int id)
+	public double getScore(int id)
 	{
 		if(id == MDLabel.MDL_ZSCORE)
 			return getZscore();
@@ -104,11 +99,7 @@ public class ExtractParticle extends PickerParticle
 		return 0;
 	}
 
-	public Color getColor(int id, Color color)
-	{
-		double score = getScore(id)/2 + 0.1 ; //scaled;
-		return ColorBy.getColor(score, color);
-	}
+	
 
 	
 	

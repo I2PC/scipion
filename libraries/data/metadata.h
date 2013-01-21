@@ -842,6 +842,16 @@ public:
     void aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
                               MDLabel aggregateLabel);
 
+
+
+    /** Returns Max and Min values from a column in metadata
+     * These functions can only be used for labels of type double
+     */
+    double getColumnMax(MDLabel column);
+
+    double getColumnMin(MDLabel column);
+
+
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object
      * union is a reserved word so I called this method unionDistinct

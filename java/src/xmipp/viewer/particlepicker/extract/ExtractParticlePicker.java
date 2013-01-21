@@ -82,25 +82,22 @@ public class ExtractParticlePicker extends ParticlePicker
 	public void loadColumns(MetaData md)
 	{
 		colorby = new ArrayList<ColorBy>();
-		containszscore = md.containsLabel(MDLabel.MDL_ZSCORE);
-		if(containszscore)
-			colorby.add(new ColorBy(MDLabel.MDL_ZSCORE, "ZScore"));
+		loadColumn(MDLabel.MDL_ZSCORE, "ZScore", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SHAPE, "ZScore-Shape", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SNR1, "ZScore-SNR1", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SNR2, "ZScore-SNR2", md);
+		loadColumn(MDLabel.MDL_ZSCORE_HISTOGRAM, "ZScore-Hist", md);
 		
-		containsshape = md.containsLabel(MDLabel.MDL_ZSCORE_SHAPE);
-		if(containsshape)
-			colorby.add(new ColorBy(MDLabel.MDL_ZSCORE_SHAPE, "ZScore-Shape"));
-		containssnr1 = md.containsLabel(MDLabel.MDL_ZSCORE_SNR1);
-		if(containssnr1)
-			colorby.add(new ColorBy(MDLabel.MDL_ZSCORE_SNR1, "ZScore-SNR1"));
-		
-		containssnr2 = md.containsLabel(MDLabel.MDL_ZSCORE_SNR2);
-		if(containssnr2)
-			colorby.add(new ColorBy(MDLabel.MDL_ZSCORE_SNR2, "ZScore-SNR2"));
-		
-		containshist = md.containsLabel(MDLabel.MDL_ZSCORE_HISTOGRAM);
-		if(containshist)
-			colorby.add(new ColorBy(MDLabel.MDL_ZSCORE_HISTOGRAM, "ZScore-Hist"));
-		
+	}
+	
+	public void loadColumn(int column, String name, MetaData md)
+	{
+		boolean exists = md.containsLabel(column);
+		if(exists)
+		{
+			
+			colorby.add(new ColorBy(column, name, md));
+		}
 	}
 	
 	

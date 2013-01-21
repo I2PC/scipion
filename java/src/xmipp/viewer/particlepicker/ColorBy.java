@@ -2,22 +2,32 @@ package xmipp.viewer.particlepicker;
 
 import java.awt.Color;
 
+import xmipp.jni.MetaData;
+
 public class ColorBy
 {
 	int id;
 	String name;
 	Color color;
+	private MetaData md;
+	private double max;
+	private double min;
+	private double range;
 
-	public ColorBy(int id, String name, Color color)
+	public ColorBy(int id, String name, Color color, MetaData md)
 	{
 		this.id = id;
 		this.name = name;
 		this.color = color;
+		this.md = md;
+		max = md.getColumnMax(id);
+		min = md.getColumnMin(id);
+		range = max - min;
 	}
 	
-	public ColorBy(int id, String name)
+	public ColorBy(int id, String name, MetaData md)
 	{
-		this(id, name, getNextColor());
+		this(id, name, getNextColor(), md);
 	}
 
 
@@ -62,9 +72,14 @@ public class ColorBy
 		return id;
 	}
 	
-	public static Color getColor(double score, Color color)
+	public Color getColor(double score)
 	{
-		Color scorecolor = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int)(Math.min(1, score) * 255));
+		
+		double percent = 1;
+		if(range > 0)
+			percent = (score - min)/range;
+		System.out.println(percent);
+		Color scorecolor = new Color(color.getRed(), color.getGreen(), color.getBlue(), (int)(percent * 255));
 		return scorecolor;
 	}
 
