@@ -1549,7 +1549,7 @@ public:
         size_t NZYXdim=ZYXdim*Ndim;
         FILE*    new_mFd;
 
-        T * new_data;
+        T * new_data=NULL;
 
         try
         {
@@ -3417,7 +3417,7 @@ public:
     // This function must be explictly implemented outside.
     void statisticsAdjust(double avgF, double stddevF)
     {
-        double avg0, stddev0;
+        double avg0=0.0, stddev0=0.0;
         double a, b;
 
         if (NZYXSIZE(*this) == 0)

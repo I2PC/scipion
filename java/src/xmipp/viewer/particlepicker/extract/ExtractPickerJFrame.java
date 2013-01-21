@@ -417,6 +417,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		{
 			System.out.println("setting active");
 			canvas.refreshActive(active);
+			canvas.moveTo(active);
 			active = null;
 		}
 
@@ -424,7 +425,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 	public void refreshActiveOnGallery(ExtractParticle active)
 	{
-		galleryfr.refreshActive(active.getId());
+		galleryfr.refreshActive(active.getId(), active.isEnabled());
 		
 	}
 

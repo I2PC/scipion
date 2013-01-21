@@ -231,7 +231,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int radius = (int) (size / 2. * magnification);
 		x = getXOnImage(x);
 		y = getYOnImage(y);
-		int distance = (int) (radius/5. * magnification);
+		int distance = (int) (radius/3. * magnification);
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, length, length);
