@@ -42,6 +42,7 @@ applications/programs/*
 !applications/programs/*.cpp
 applications/tests/*
 !applications/tests/*.cpp
+!applications/tests/*.py
 
 # Java compilation
 java/lib/Xmipp*.jar
