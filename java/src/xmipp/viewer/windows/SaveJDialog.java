@@ -86,14 +86,14 @@ public class SaveJDialog extends XmippDialog {
 	protected JPanel panelMd;
 	protected GalleryData data;	
 	
-	public SaveJDialog(JFrameGallery parent) {
+	public SaveJDialog(GalleryJFrame parent) {
 		super(parent, "Save", true);
 		initComponents();
 	}// constructor SaveJDialog
 
 	@Override
 	protected void createContent(JPanel panel){		
-		this.data =((JFrameGallery)parent).getData();
+		this.data =((GalleryJFrame)parent).getData();
 		setMinimumSize(new Dimension(500, 300));
 		setResizable(false);
 		panel.setLayout(new GridBagLayout());

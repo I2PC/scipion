@@ -99,13 +99,13 @@ import xmipp.viewer.ctf.iCTFGUI;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.MetadataGallery;
-import xmipp.viewer.models.MicrographsTable;
+import xmipp.viewer.models.ImageGalleryTableModel;
+import xmipp.viewer.models.MetadataGalleryTableModel;
+import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 
-public class JFrameGallery extends JFrame implements iCTFGUI
+public class GalleryJFrame extends JFrame implements iCTFGUI
 {
 	private static final long serialVersionUID = -8957336972082018823L;
 
@@ -114,7 +114,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	// The following counter will be used to keep track of how many
 	// windows are opened, the last one, should do System.exit
 	private static short windows_counter = 0;
-	public ImageGallery gallery;
+	public ImageGalleryTableModel gallery;
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
 	private JList rowHeader;
@@ -163,7 +163,10 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
+	/** Store data about visualization */
+	GalleryData data;
 
+	private ExtractPickerJFrame extractframe;
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -175,10 +178,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-	/** Store data about visualization */
-	GalleryData data;
-
-	private ExtractPickerJFrame extractframe;
+	
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -197,13 +197,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	}
 
 	/** Constructors */
-	public JFrameGallery(String filename, Param parameters)
+	public GalleryJFrame(String filename, Param parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, null));
 	}
 
-	public JFrameGallery(String filename, MetaData md, Param parameters)
+	public GalleryJFrame(String filename, MetaData md, Param parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, md));
@@ -224,7 +224,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		new JFrameGallery(null, md, new Param());
+		new GalleryJFrame(null, md, new Param());
 	}
 
 	/**
@@ -260,7 +260,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		boolean proceed = true;
 		if (data.hasMdChanges())
 		{
-			XmippQuestionDialog dlg = new XmippQuestionDialog(JFrameGallery.this, "Do you want to save metadata changes?");
+			XmippQuestionDialog dlg = new XmippQuestionDialog(GalleryJFrame.this, "Do you want to save metadata changes?");
 			if (dlg.showDialog())
 				try
 				{
@@ -291,7 +291,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		// Create file chooser and set current dir
 		setIconImage(XmippResource.getIcon("xmipp_logo.png").getImage());
 		fc = new XmippFileChooser();
-		ctfTasks = new TasksEngine(JFrameGallery.this);
+		ctfTasks = new TasksEngine(GalleryJFrame.this);
 
 		isUpdating = true; // avoid handling some changes events
 
@@ -487,6 +487,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 			public void tableChanged(TableModelEvent e)
 			{
 				updateTable();
+				System.out.println("table changed");
 			}
 		});
 
@@ -698,7 +699,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 			{
 				showException(e);
 			}
-			XmippWindowUtil.releaseGUI(JFrameGallery.this.getRootPane());
+			XmippWindowUtil.releaseGUI(GalleryJFrame.this.getRootPane());
 		}
 
 		public String getMessage()
@@ -777,7 +778,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	{
 		if (dlgClasses == null)
 		{
-			dlgClasses = new ClassesJDialog(JFrameGallery.this);
+			dlgClasses = new ClassesJDialog(GalleryJFrame.this);
 		}
 		boolean result = dlgClasses.showDialog();
 		dlgClasses.resetClasses();
@@ -876,6 +877,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 				dlgSave.setInitialValues();
 			saved = false;
 			setGalleryTitle();
+			
 		}
 		catch (Exception e)
 		{
@@ -1463,7 +1465,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 				{
 					if (data.containsGeometryInfo())
 					{
-						((MetadataGallery) gallery).setUseGeometry(getItemSelected(DISPLAY_APPLYGEO), getItemSelected(DISPLAY_WRAP));
+						((MetadataGalleryTableModel) gallery).setUseGeometry(getItemSelected(DISPLAY_APPLYGEO), getItemSelected(DISPLAY_WRAP));
 						setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo);
 					}
 				}
@@ -1478,13 +1480,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(DISPLAY_COLUMNS))
 				{
-					ColumnsJDialog dialog = new ColumnsJDialog(JFrameGallery.this);
+					ColumnsJDialog dialog = new ColumnsJDialog(GalleryJFrame.this);
 					boolean result = dialog.showDialog();
 					if (result)
 					{
 						ArrayList<ColumnInfo> columns = dialog.getColumnsResult();
 						isUpdating = true;
-						((MetadataGallery) gallery).updateColumnInfo(columns);
+						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
 						setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
 						// menu.enableRenderImages(data.globalRender);
@@ -1499,12 +1501,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 					runInBackground(Worker.FSC);
 				else if (cmd.equals(FILE_OPEN))
 				{
-					if (fc.showOpenDialog(JFrameGallery.this) != XmippFileChooser.CANCEL_OPTION)
+					if (fc.showOpenDialog(GalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
 					{
 						if (Filename.exists(fc.getSelectedFile().getPath()))
 							ImagesWindowFactory.openFileAsDefault(fc.getSelectedPath());
 						else
-							XmippDialog.showError(JFrameGallery.this, String.format("File: '%s' doesn't exist.", fc.getSelectedPath()));
+							XmippDialog.showError(GalleryJFrame.this, String.format("File: '%s' doesn't exist.", fc.getSelectedPath()));
 					}
 				}
 				else if (cmd.equals(FILE_SAVE))
@@ -1543,7 +1545,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 					try
 					{
 						ImagePlusLoader loader = gallery.getImageLoader();
-						ImagesWindowFactory.openXmippImageWindow(JFrameGallery.this, loader, true);
+						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, true);
 						XmippIJUtil.showImageJ(Tool.VIEWER);
 					}
 					catch (Exception e1)
@@ -1567,7 +1569,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(MD_PLOT))
 				{
-					PlotJDialog dlg = new PlotJDialog(JFrameGallery.this);
+					PlotJDialog dlg = new PlotJDialog(GalleryJFrame.this);
 					dlg.showDialog();
 				}
 				else if (cmd.equals(MD_CLASSES))
@@ -1576,7 +1578,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(MD_EDIT_COLS))
 				{
-					EditLabelsJDialog dlg = new EditLabelsJDialog(JFrameGallery.this);
+					EditLabelsJDialog dlg = new EditLabelsJDialog(GalleryJFrame.this);
 					dlg.showDialog();
 				}
 				else if (cmd.equals(MD_REMOVE_SELECTION))
@@ -1598,7 +1600,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(MD_ADD_OBJECT))
 				{
-					AddObjectJDialog dlg = new AddObjectJDialog(JFrameGallery.this);
+					AddObjectJDialog dlg = new AddObjectJDialog(GalleryJFrame.this);
 					if (dlg.showDialog())
 					{
 						data.md.unionAll(dlg.md);
@@ -1685,7 +1687,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 			}
 			catch (Exception e)
 			{
-				XmippDialog.showError(JFrameGallery.this, e.getMessage());
+				XmippDialog.showError(GalleryJFrame.this, e.getMessage());
 			}
 		}
 
@@ -1717,14 +1719,12 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(ENABLED))
 			{
-				System.out.println("enabled");
 				gallery.setSelectionEnabled(true);
 				//gallery.clearSelection();
 				refreshExtractFrame();
 			}
 			else if (cmd.equals(DISABLED))
 			{
-				System.out.println("disabled");
 				gallery.setSelectionEnabled(false);
 				//gallery.clearSelection();
 				refreshExtractFrame();
@@ -1735,7 +1735,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(OPEN))
 			{
-				MetadataGallery mg = (MetadataGallery) gallery;
+				MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
 				ColumnInfo ci = mg.visibleLabels.get(col);
 				if (ci.allowRender)
 					gallery.handleDoubleClick(row, col);
@@ -1775,7 +1775,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 				if (md != null)
 					openMetadata(md);
 				else
-					XmippDialog.showWarning(JFrameGallery.this, "This class has no images");
+					XmippDialog.showWarning(GalleryJFrame.this, "This class has no images");
 			}
 			initItems();
 			
@@ -1800,13 +1800,13 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	@Override
 	public void setRowBusy(int row)
 	{
-		((MicrographsTable) gallery).setRowBusy(row);
+		((MicrographsTableModel) gallery).setRowBusy(row);
 	}
 
 	@Override
 	public void setRowIdle(int row)
 	{
-		((MicrographsTable) gallery).setRowIdle(row);
+		((MicrographsTableModel) gallery).setRowIdle(row);
 	}
 
 	@Override

@@ -41,7 +41,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ClassInfo;
-import xmipp.viewer.windows.JFrameGallery;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -342,14 +342,14 @@ public class GalleryData {
 		readMd();
 	}
 
-	public ImageGallery createModel() {
+	public ImageGalleryTableModel createModel() {
 		try {
 			switch (mode) {
 			case GALLERY_VOL:
-				return new VolumeGallery(this);
+				return new VolumeGalleryTableModel(this);
 			case GALLERY_MD:
 				if (md.size() > 0 && hasRenderLabel())
-					return new MetadataGallery(this);
+					return new MetadataGalleryTableModel(this);
 				// else fall in the next case
 			case TABLE_MD:
 				mode = Mode.TABLE_MD; // this is necessary when coming from
@@ -357,8 +357,8 @@ public class GalleryData {
 				if (!md.isColumnFormat())
 					return new MetadataRow(this);
 				if (md.containsMicrographsInfo())
-					return new MicrographsTable(this);
-				return new MetadataTable(this);
+					return new MicrographsTableModel(this);
+				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:
 				return new RotSpectraGallery(this);
 			}

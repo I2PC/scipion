@@ -11,7 +11,7 @@ import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
-import xmipp.viewer.windows.JFrameGallery;
+import xmipp.viewer.windows.GalleryJFrame;
 
 public class ExtractParticlePicker extends ParticlePicker
 {
@@ -199,7 +199,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		setMicrograph(micrographs.get(0));
 	}
 
-	public static ExtractPickerJFrame open(String filename, JFrameGallery galleryfr)
+	public static ExtractPickerJFrame open(String filename, GalleryJFrame galleryfr)
 	{
 		ExtractParticlePicker picker = new ExtractParticlePicker(filename, FamilyState.Extract);
 		return new ExtractPickerJFrame(picker, galleryfr);

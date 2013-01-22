@@ -43,13 +43,13 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
 
-public class MetadataTable extends MetadataGallery {
+public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
 
 	int sortColumnIndex = -1;
 	boolean ascending = true;
 
-	public MetadataTable(GalleryData data) throws Exception {
+	public MetadataTableModel(GalleryData data) throws Exception {
 		super(data);
 		cols = visibleLabels.size();
 		rows = n;

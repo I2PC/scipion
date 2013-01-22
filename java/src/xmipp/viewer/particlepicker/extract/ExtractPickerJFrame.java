@@ -36,7 +36,7 @@ import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.windows.ImagesWindowFactory;
-import xmipp.viewer.windows.JFrameGallery;
+import xmipp.viewer.windows.GalleryJFrame;
 
 public class ExtractPickerJFrame extends ParticlePickerJFrame
 {
@@ -52,12 +52,12 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private ExtractCanvas canvas;
 	private ColorHelper[] colorby;
 	private JComboBox scorescb;
-	private JFrameGallery galleryfr;
+	private GalleryJFrame galleryfr;
 	private JLabel minlb;
 	private JLabel maxlb;
 	private ExtractParticle active;
 
-	public ExtractPickerJFrame(ParticlePicker picker, JFrameGallery galleryfr)
+	public ExtractPickerJFrame(ParticlePicker picker, GalleryJFrame galleryfr)
 	{
 		super(picker);
 		this.picker = (ExtractParticlePicker)picker;
@@ -409,7 +409,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 					index = i;
 					active = p;
 					active.setEnabled(b);
-					System.out.println(b);
 					break;
 				
 				}
@@ -417,7 +416,6 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			micrographstb.setRowSelectionInterval(index, index);
 		if(active != null)
 		{
-			System.out.println("setting active");
 			canvas.refreshActive(active);
 			canvas.moveTo(active);
 			active = null;

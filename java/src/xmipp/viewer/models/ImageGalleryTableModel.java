@@ -30,23 +30,19 @@ import ij.ImagePlus;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
-
-import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
-
-import xmipp.viewer.ImageDimension;
-import xmipp.viewer.ImageItemRenderer;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.jni.Filename;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.viewer.ImageDimension;
+import xmipp.viewer.ImageItemRenderer;
 
-public abstract class ImageGallery extends AbstractTableModel {
+public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
 	// Store the number of rows and columns
@@ -86,7 +82,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public GalleryData data; // information about the gallery
 
 	// Initiazation function
-	public ImageGallery(GalleryData data) throws Exception {
+	public ImageGalleryTableModel(GalleryData data) throws Exception {
 		filename = data.filename;
 		this.data = data;
 		cols = 0;
@@ -582,7 +578,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		 * First argument is the gallery to wich this item belongs Constructor
 		 * of ImageItem */
 		public ImageItem(int row, int col) {
-			index = ImageGallery.this.getIndex(row, col);
+			index = ImageGalleryTableModel.this.getIndex(row, col);
 		}
 
 		public ImageItem(int index) {
@@ -617,7 +613,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 		public String getLabel() {
 			int[] coords = getCoords(index);
-			return ImageGallery.this.getLabel(coords[0], coords[1]);
+			return ImageGalleryTableModel.this.getLabel(coords[0], coords[1]);
 		}
 
 		public String getKey() {
@@ -640,7 +636,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 		public boolean isBusy() {
 			// int[] coords = getCoords(index);
-			return ImageGallery.this.isBusy(index, 0);
+			return ImageGalleryTableModel.this.isBusy(index, 0);
 		}
 
 		public ClassInfo getClassInfo() {

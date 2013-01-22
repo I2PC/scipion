@@ -48,7 +48,7 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.viewer.ImageDimension;
 
-public class RotSpectraGallery extends MetadataGallery {
+public class RotSpectraGallery extends MetadataGalleryTableModel {
 
 	final static int DEFAULT_DIM = 128;
 	final static String blockKerDenSOM = "KerDenSOM_Layout"
