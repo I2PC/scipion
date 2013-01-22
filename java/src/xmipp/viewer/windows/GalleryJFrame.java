@@ -487,7 +487,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			public void tableChanged(TableModelEvent e)
 			{
 				updateTable();
-				System.out.println("table changed");
 			}
 		});
 
@@ -610,7 +609,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				gallery.updateTableSelection(table);
 			}
 		});
-
+		
 		// }
 	}// function updateTable
 
@@ -1426,7 +1425,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = data.isVolumeMode();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
-			setItemEnabled(FILE_OPENMICROGRAPHS, galMode);
+			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
 			setItemEnabled(FILE_SAVE, !volMode);
 			setItemEnabled(FILE_SAVEAS, !volMode);
 			setItemSelected(DISPLAY_NORMALIZE, gallery.getNormalized());

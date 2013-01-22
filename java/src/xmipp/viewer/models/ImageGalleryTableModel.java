@@ -399,8 +399,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Clear selection list */
 	public void clearSelection() {
-		for (int i = 0; i < n; ++i)
-			data.selection[i] = false;
+		data.clearSelection();
 	}
 	
 	public int getFirstSelectedIndex(){
