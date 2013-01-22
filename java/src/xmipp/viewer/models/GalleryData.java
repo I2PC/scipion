@@ -323,10 +323,18 @@ public class GalleryData {
 	public void sortMd(int col, boolean ascending) {
 		try {
 			md.sort(getLabelFromCol(col), ascending);
+			clearSelection();
 			hasMdChanges = true;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	void clearSelection()
+	{
+		for (int i = 0; i < selection.length; ++i)
+			selection[i] = false;
+		
 	}
 
 	/** Reload current metadata from file */
@@ -835,5 +843,10 @@ public class GalleryData {
 
 	public boolean hasClassesChanges() {
 		return hasClassesChanges;
+	}
+
+	public boolean hasMicrographParticles()
+	{
+		return md.containsMicrographParticles();
 	}
 }// class GalleryData

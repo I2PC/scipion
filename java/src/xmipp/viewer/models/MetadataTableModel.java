@@ -301,6 +301,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		table.clearSelection();
 		for (int i = 0; i < n; ++i)
 			if (data.selection[i]) {
+				System.out.println(i);
 				table.addRowSelectionInterval(i, i);
 			}
 	}
@@ -399,6 +400,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 
 		public void mouseClicked(MouseEvent e) {
+			
 			TableColumnModel colModel = table.getColumnModel();
 			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
 			int modelIndex = colModel.getColumn(columnModelIndex)
@@ -411,8 +413,13 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			else
 				sortColumnIndex = modelIndex;
 			data.sortMd(sortColumnIndex, ascending);
+			clearSelection();
+			updateTableSelection(table);
 			cache.clear();
-			fireTableDataChanged();
+			
+			//fireTableDataChanged();
+			
+					
 		}
 	}
 
