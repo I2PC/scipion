@@ -179,7 +179,7 @@ TEST_F( MatrixTest, initGaussian)
     Matrix2D<double> A;
     A.initGaussian(10,1);
 
-    std::cerr << "DEBUG_ROB, A:" << A << std::endl;is is OK
+    std::cerr << "DEBUG_ROB, A:" << A << std::endl; // is OK
     std::cerr << "DEBUG_ROB," << "ask coss I do not think th" << std::endl;
     ASSERT_TRUE( (dMij(A,5,5) - 1) < 1e-3);
     ASSERT_TRUE( (dMij(A,6,7) - 0.6065) < 1e-3);
