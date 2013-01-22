@@ -108,7 +108,7 @@ public class ExtractCanvas extends ParticlePickerCanvas
 				if (SwingUtilities.isLeftMouseButton(e))
 				{
 					if (e.isShiftDown())
-						micrograph.removeParticle(p);
+						p.setEnabled(!p.isEnabled());
 					active = p;
 				}
 				frame.refreshActiveOnGallery(active);
