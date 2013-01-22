@@ -1263,8 +1263,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		final Point p = evt.getPoint();
 		int row = table.rowAtPoint(p);
 		int col = table.columnAtPoint(p);
-		if(extractframe != null)
-			extractframe.refreshActive(gallery.getId(row, col));
+		
 		if (evt.getButton() == MouseEvent.BUTTON1)
 		{ // Left click.
 			if (evt.getClickCount() > 1)
@@ -1354,6 +1353,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 		}
 		table.invalidate();
 		table.repaint();
+		refreshExtractFrame();
 	}// function tableMouseClicked
 
 	private void autoAdjustColumns(boolean value)
@@ -1717,13 +1717,17 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(ENABLED))
 			{
+				System.out.println("enabled");
 				gallery.setSelectionEnabled(true);
-				gallery.clearSelection();
+				//gallery.clearSelection();
+				refreshExtractFrame();
 			}
 			else if (cmd.equals(DISABLED))
 			{
+				System.out.println("disabled");
 				gallery.setSelectionEnabled(false);
-				gallery.clearSelection();
+				//gallery.clearSelection();
+				refreshExtractFrame();
 			}
 			else if (cmd.equals(REFRESH))
 			{
@@ -1774,7 +1778,9 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 					XmippDialog.showWarning(JFrameGallery.this, "This class has no images");
 			}
 			initItems();
+			
 		}
+
 
 	}// class JPopUpMenuGallery
 
@@ -1816,13 +1822,21 @@ public class JFrameGallery extends JFrame implements iCTFGUI
 	}
 	public void openMicrographs()
 	{
-		extractframe = ExtractParticlePicker.open(data.filename, this);
+		if(extractframe == null || !extractframe.isVisible())
+			extractframe = ExtractParticlePicker.open(data.filename, this);
+		refreshExtractFrame();
+	}
+	
+
+	private void refreshExtractFrame()
+	{
+		
+		if(extractframe == null)
+			return;
 		for(int i = 0; i < data.selection.length; i ++)
 			if(data.selection[i])
-			{
-				extractframe.refreshActive(data.ids[i]);
-				break;
-			}
+				extractframe.refreshActive(data.ids[i], data.isEnabled(i));
+		
 	}
 
 

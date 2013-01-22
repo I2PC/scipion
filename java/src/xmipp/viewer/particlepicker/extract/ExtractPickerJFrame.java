@@ -397,7 +397,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		return new ParticlesJDialog(this);
 	}
 
-	public void refreshActive(long id)
+	public void refreshActive(long id, boolean b)
 	{
 		int index = 0;
 		active = null;
@@ -408,6 +408,8 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 				{
 					index = i;
 					active = p;
+					active.setEnabled(b);
+					System.out.println(b);
 					break;
 				
 				}

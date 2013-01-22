@@ -24,11 +24,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
 	private ArrayList<ColorHelper> colorby;
-	private boolean containszscore;
-	private boolean containsshape;
-	private boolean containssnr1;
-	private boolean containssnr2;
-	private boolean containshist;
+
 
 	public ExtractParticlePicker(String selfile, FamilyState mode)
 	{
