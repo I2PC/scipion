@@ -226,7 +226,6 @@ class TestXmippPythonInterface(unittest.TestCase):
         vol=Image(testFile('progVol.vol'))
         vol.convert2DataType(DT_DOUBLE)
         proj=vol.projectVolumeDouble(0.,0.,0.)
-        proj.write("/tmp/kk.spi") 
         self.assertEqual(1,1)
                 
     def test_Image_read(self):

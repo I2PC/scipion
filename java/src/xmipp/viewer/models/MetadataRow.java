@@ -36,7 +36,7 @@ import xmipp.utils.XmippPopupMenuCreator;
 
 /** This is a data model designed for Row metadatas */
 @SuppressWarnings("serial")
-public class MetadataRow extends MetadataTable {
+public class MetadataRow extends MetadataTableModel {
 	protected long id;
 	
 	/** Constructor using a metadata row */

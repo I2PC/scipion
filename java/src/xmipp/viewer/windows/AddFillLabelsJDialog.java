@@ -55,14 +55,14 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.MetadataGallery;
-import xmipp.viewer.models.MetadataTable;
+import xmipp.viewer.models.ImageGalleryTableModel;
+import xmipp.viewer.models.MetadataGalleryTableModel;
+import xmipp.viewer.models.MetadataTableModel;
 import xmipp.viewer.models.ClassInfo;
 
 public class AddFillLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
-	protected MetadataGallery gallery;
+	protected MetadataGalleryTableModel gallery;
 
 	protected boolean fillMode = false;
 	protected GridBagConstraints gbc = new GridBagConstraints();
@@ -78,16 +78,16 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	 * Constructor to add a new label the labels present in the metadata are
 	 * passed
 	 * */
-	public AddFillLabelsJDialog(JFrameGallery parent,
+	public AddFillLabelsJDialog(GalleryJFrame parent,
 			ArrayList<ColumnInfo> labels) {
 		super(parent, "Add new label", true);
-		this.gallery = (MetadataGallery) parent.gallery;
+		this.gallery = (MetadataGalleryTableModel) parent.gallery;
 		this.labels = labels;
 		initComponents();
 	}// constructor AddFillLabelsJDialog
 
 	/** Constructor to fill an existing label */
-	public AddFillLabelsJDialog(JFrameGallery parent, int label) {
+	public AddFillLabelsJDialog(GalleryJFrame parent, int label) {
 		super(parent, "Fill label values", true);
 		this.label = label;
 		initComponents();
