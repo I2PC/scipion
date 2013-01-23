@@ -81,7 +81,6 @@ CL2DClass::CL2DClass()
     P.initZeros(prm->Ydim, prm->Xdim);
     P.setXmippOrigin();
     Pupdate = P;
-    std::cout << "Creating an empty CL2D class: " << this << std::endl;
 }
 
 CL2DClass::CL2DClass(const CL2DClass &other)
@@ -98,13 +97,11 @@ CL2DClass::CL2DClass(const CL2DClass &other)
     histClass = other.histClass;
     histNonClass = other.histNonClass;
     neighboursIdx = other.neighboursIdx;
-    std::cout << "Creating a copy CL2D class: " << this << " from " << &other << std::endl;
 }
 
 CL2DClass::~CL2DClass()
 {
     delete plans;
-    std::cout << "Destroying a CL2D class: " << this << std::endl;
 }
 
 void CL2DClass::updateProjection(const MultidimArray<double> &I,
@@ -1141,7 +1138,7 @@ int CL2D::cleanEmptyNodes()
 }
 
 /* Split ------------------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                      std::vector<size_t> &splitAssignment) const
 {
@@ -1548,6 +1545,8 @@ void ProgClassifyCL2D::produceSideInfo()
 
     // Get image dimensions
     SF.read(fnSel);
+    SF.removeDisabled();
+
     int Zdim;
     size_t Ndim;
     getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
