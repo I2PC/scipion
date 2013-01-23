@@ -1162,7 +1162,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     do
     {
 #ifdef DEBUG
-	std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << " into " << node1 << " and " << node2 << std::endl;
+	std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << ") into " << node1 << " and " << node2 << std::endl;
 #endif
 
         finish = true;
@@ -1347,7 +1347,20 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                 break;
         }
 
-        if (node1->currentListImg.size() < minAllowedSize)
+        if (node1->currentListImg.size() < minAllowedSize && node2->currentListImg.size() < minAllowedSize)
+        {
+            if (prm->node->rank == 0 && prm->verbose >= 2)
+                std::cout << "Removing node1, it's too small "
+                << node1->currentListImg.size() << " "
+                << minAllowedSize << "...\n";
+            if (node1 != node)
+                delete node1;
+            if (node2 != node)
+                delete node2;
+            success = false;
+            finish = true;
+        }
+        else if (node1->currentListImg.size() < minAllowedSize)
         {
             if (prm->node->rank == 0 && prm->verbose >= 2)
                 std::cout << "Removing node1, it's too small "
