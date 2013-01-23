@@ -1145,6 +1145,7 @@ int CL2D::cleanEmptyNodes()
 void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                      std::vector<size_t> &splitAssignment) const
 {
+	const CL2DClass* firstNode=node;
     std::vector<CL2DClass *> toDelete;
     Matrix1D<int> newAssignment, oldAssignment, firstSplitAssignment;
     Image<double> I;
@@ -1174,6 +1175,10 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         {
             toDelete.push_back(node1);
             toDelete.push_back(node2);
+#ifdef DEBUG
+            std::cout << "Pushing to delete " << node1 << std::endl;
+            std::cout << "Pushing to delete " << node2 << std::endl;
+#endif
             success = false;
             break;
         }
@@ -1209,6 +1214,10 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
             {
                 toDelete.push_back(node1);
                 toDelete.push_back(node2);
+#ifdef DEBUG
+            std::cout << "Pushing to delete " << node1 << std::endl;
+            std::cout << "Pushing to delete " << node2 << std::endl;
+#endif
                 success = false;
                 break;
             }
@@ -1350,7 +1359,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         if (node1->currentListImg.size() < minAllowedSize && node2->currentListImg.size() < minAllowedSize)
         {
             if (prm->node->rank == 0 && prm->verbose >= 2)
-                std::cout << "Removing node1, it's too small "
+                std::cout << "Removing both nodes, they are too small "
                 << node1->currentListImg.size() << " "
                 << minAllowedSize << "...\n";
             if (node1 != node)
@@ -1370,6 +1379,9 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                 delete node1;
             node1 = new CL2DClass();
             toDelete.push_back(node2);
+#ifdef DEBUG
+            std::cout << "Pushing to delete " << node2 << std::endl;
+#endif
             node = node2;
             node2 = new CL2DClass();
             finish = false;
@@ -1384,6 +1396,9 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                 delete node2;
             node2 = new CL2DClass();
             toDelete.push_back(node1);
+#ifdef DEBUG
+            std::cout << "Pushing to delete " << node1 << std::endl;
+#endif
             node = node1;
             node1 = new CL2DClass();
             finish = false;
@@ -1391,8 +1406,13 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     }
     while (!finish);
     for (int i = 0; i < toDelete.size(); i++)
-        if (toDelete[i] != node)
+        if (toDelete[i] != firstNode)
+        {
+#ifdef DEBUG
+            std::cout << "deleting from list " << toDelete[i] << std::endl;
+#endif
             delete toDelete[i];
+        }
 
     if (success)
     {
