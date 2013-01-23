@@ -1141,7 +1141,7 @@ int CL2D::cleanEmptyNodes()
 }
 
 /* Split ------------------------------------------------------------------- */
-//#define DEBUG
+#define DEBUG
 void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                      std::vector<size_t> &splitAssignment) const
 {
@@ -1161,6 +1161,10 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     bool success = true;
     do
     {
+#ifdef DEBUG
+	std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << " into " << node1 << " and " << node2 << std::endl;
+#endif
+
         finish = true;
         node2->neighboursIdx = node1->neighboursIdx = node->neighboursIdx;
         node2->P = node1->P = node->P;
@@ -1264,9 +1268,16 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
             progress_bar(imax);
         shareSplitAssignments(newAssignment, node1, node2);
 
-        // Backup the first split in case it fails
+#ifdef DEBUG
+	std::cout << "After first split Node1: " << node1->currentListImg.size() << " Node2 " << node2->currentListImg.size() << std::endl;
+#endif
+
+	// Backup the first split in case it fails
         if (firstSplitNode1 == NULL)
         {
+#ifdef DEBUG
+	std::cout << "Creating backup\n";
+#endif
             firstSplitAssignment = newAssignment;
             firstSplitNode1 = new CL2DClass(*node1);
             firstSplitNode2 = new CL2DClass(*node2);
@@ -1317,7 +1328,11 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                 progress_bar(imax);
             shareSplitAssignments(newAssignment, node1, node2);
 
-            int Nchanges = 0;
+#ifdef DEBUG
+	std::cout << "After refinement iteration: " << it << " Node1: " << node1->currentListImg.size() << " Node2 " << node2->currentListImg.size() << std::endl;
+#endif
+
+	        int Nchanges = 0;
             FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
             if (newAssignment(i) != oldAssignment(i))
                 Nchanges++;
