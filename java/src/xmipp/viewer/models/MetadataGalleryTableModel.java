@@ -40,7 +40,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 
-public class MetadataGallery extends ImageGallery {
+public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	private static final long serialVersionUID = 1L;
 
 	// Label to be rendered
@@ -51,7 +51,7 @@ public class MetadataGallery extends ImageGallery {
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
-	public MetadataGallery(GalleryData data) throws Exception {
+	public MetadataGalleryTableModel(GalleryData data) throws Exception {
 		super(data);
 		data.normalize = false;
 	}
