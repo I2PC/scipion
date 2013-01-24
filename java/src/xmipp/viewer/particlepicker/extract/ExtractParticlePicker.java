@@ -91,7 +91,6 @@ public class ExtractParticlePicker extends ParticlePicker
 		boolean exists = md.containsLabel(column);
 		if(exists)
 		{
-			
 			colorby.add(new ColorHelper(column, name, md));
 		}
 	}

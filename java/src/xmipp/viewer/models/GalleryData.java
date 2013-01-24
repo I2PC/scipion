@@ -368,7 +368,7 @@ public class GalleryData {
 					return new MicrographsTableModel(this);
 				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:
-				return new RotSpectraGallery(this);
+				return new RotSpectraGalleryTableModel(this);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
