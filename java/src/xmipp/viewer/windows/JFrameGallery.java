@@ -106,8 +106,8 @@ import xmipp.viewer.ctf.iCTFGUI;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.MetadataGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
+import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTable;
 import xmipp.viewer.windows.ClassesJDialog;
 
@@ -119,7 +119,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 	// The following counter will be used to keep track of how many
 	// windows are opened, the last one, should do System.exit
 	private static short windows_counter = 0;
-	public ImageGallery gallery;
+	public ImageGalleryTableModel gallery;
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
 	private JList rowHeader;
@@ -1315,7 +1315,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 				} else if (cmd.equals(DISPLAY_APPLYGEO)
 						|| cmd.equals(DISPLAY_WRAP)) {
 					if (data.containsGeometryInfo()) {
-						((MetadataGallery) gallery).setUseGeometry(
+						((MetadataGalleryTableModel) gallery).setUseGeometry(
 								getItemSelected(DISPLAY_APPLYGEO),
 								getItemSelected(DISPLAY_WRAP));
 						setItemEnabled(DISPLAY_WRAP,
@@ -1334,7 +1334,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 						ArrayList<ColumnInfo> columns = dialog
 								.getColumnsResult();
 						isUpdating = true;
-						((MetadataGallery) gallery).updateColumnInfo(columns);
+						((MetadataGalleryTableModel) gallery).updateColumnInfo(columns);
 						gallery.fireTableDataChanged();
 						setItemEnabled(DISPLAY_RENDERIMAGES, data.globalRender);
 						// menu.enableRenderImages(data.globalRender);
@@ -1520,7 +1520,7 @@ public class JFrameGallery extends JFrame implements iCTFGUI {
 			} else if (cmd.equals(REFRESH)) {
 				gallery.refreshAt(row, col);
 			} else if (cmd.equals(OPEN)) {
-				MetadataGallery mg = (MetadataGallery)gallery;
+				MetadataGalleryTableModel mg = (MetadataGalleryTableModel)gallery;
 				ColumnInfo ci = mg.visibleLabels.get(col);				
 				if (ci.allowRender)
 					gallery.handleDoubleClick(row, col);
