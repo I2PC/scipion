@@ -35,7 +35,7 @@ bool findElementIn1DArray(MultidimArray<double> &inputArray,double element)
 void SVMClassifier::setParameters(double c,double gamma)
 {
     param.svm_type = C_SVC;
-    param.kernel_type = RBF;
+    param.kernel_type = LINEAR1;
     param.degree = 2;
     param.gamma = gamma;
     param.coef0 = 0;
@@ -68,8 +68,6 @@ SVMClassifier::~SVMClassifier()
 }
 void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &label)
 {
-//    std::ofstream fh_training;
-//    fh_training.open("data.txt");
 
     prob.l = YSIZE(trainSet);
     prob.y = new double[prob.l];
@@ -77,7 +75,6 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<doubl
     const char *error_msg;
     for (int i=0;i<YSIZE(trainSet);i++)
     {
-//        fh_training<<DIRECT_A1D_ELEM(label,i)<<" ";
         prob.x[i]=new svm_node[XSIZE(trainSet)+1];
         int cnt = 0;
         for (int j=0;j<XSIZE(trainSet);j++)
@@ -88,16 +85,13 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<doubl
             {
                 prob.x[i][cnt].value=DIRECT_A2D_ELEM(trainSet,i,j);
                 prob.x[i][cnt].index=j+1;
-//                fh_training<< prob.x[i][cnt].index<<":"<<prob.x[i][cnt].value<<" ";
                 cnt++;
             }
         }
         prob.x[i][cnt].index=-1;
         prob.x[i][cnt].value=2;
         prob.y[i] = DIRECT_A1D_ELEM(label,i);
-//        fh_training<<std::endl;
     }
-//    fh_training.close();
     error_msg = svm_check_parameter(&prob,&param);
     if(error_msg)
     {
