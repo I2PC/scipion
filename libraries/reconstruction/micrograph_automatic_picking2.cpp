@@ -165,11 +165,7 @@ void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
 }
 
 AutoParticlePicking2::~AutoParticlePicking2()
-{
-    // delete classifier;
-    // delete classifier2;
-    // std::cerr<<"We Are Here in des auto!";
-}
+{}
 
 void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,
         MultidimArray<double> &features)
@@ -315,11 +311,23 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     std::vector<Particle2> positionArray;
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
     buildSearchSpace(positionArray,fast);
-    int num=positionArray.size()*(90.0/100.0);
+#ifdef DEBUG_AUTO
+
+    std::ofstream fh_training;
+    fh_training.open("particles_cord1.txt");
+#endif
+
+    int num=positionArray.size()*(10.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
         int i=positionArray[k].y;
+#ifdef DEBUG_AUTO
+
+        fh_training << j * (1.0 / scaleRate) << " " << i * (1.0 / scaleRate)
+        << " " << positionArray[k].cost << std::endl;
+#endif
+
         buildInvariant(IpolarCorr,j,i);
         extractParticle(j,i,microImage(),pieceImage,false);
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
@@ -639,8 +647,18 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
     for (int i=0;i<YSIZE(dataSet);i++)
     {
         fhTrain<<classLabel(i)<< std::endl;
+#ifdef DEBUG_SAVETRAINSET
+
+        fhtest<<classLabel(i)<<" ";
+#endif
+
         for (int j=0;j<XSIZE(dataSet);j++)
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+#ifdef DEBUG_SAVETRAINSET
+
+        fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+#endif
+
         fhTrain<<std::endl;
     }
     fhTrain.close();
@@ -770,7 +788,9 @@ void AutoParticlePicking2::generateTrainSet()
             else
                 DIRECT_A1D_ELEM(classLabel1,cnt)=1;
             for (int j=0;j<XSIZE(dataSet);j++)
+            {
                 DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
+            }
             cnt++;
         }
     }
@@ -1083,6 +1103,7 @@ void ProgMicrographAutomaticPicking2::run()
     }
     if (mode=="train")
     {
+        // If PCA does not exist obtain the PCA basis and save them
         if (!fnPCAModel.exists())
             autoPicking->trainPCA(fn_model);
         if (!fnPCARotModel.exists())
@@ -1098,6 +1119,7 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
         if (fnRejectedVectors.exists())
         {
+            // Load the rejected vectors features as false positives
             autoPicking->loadAutoVectors(fnRejectedVectors);
             autoPicking->add2Dataset();
             fnRejectedVectors.deleteFile();
