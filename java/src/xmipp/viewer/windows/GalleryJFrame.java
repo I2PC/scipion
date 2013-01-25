@@ -1741,6 +1741,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				else
 				{
 					String file = data.getValueFromCol(row, ci);
+					
 					ImagesWindowFactory.openFileAsDefault(file);
 				}
 			}
