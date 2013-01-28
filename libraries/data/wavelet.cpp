@@ -36,6 +36,8 @@
 
 #include "xmipp_image.h"
 #include <external/bilib/headers/wavelet.h>
+#include "xmipp_fftw.h"
+
 
 /* Wavelet ----------------------------------------------------------------- */
 
@@ -845,4 +847,135 @@ void bayesian_wiener_filtering3D(MultidimArray<double> &WI,
         for (int k = 0; k < orientation.size(); k++)
             DWT_Bijaoui_denoise_LL3D(WI, scale(i), orientation[k], 0, S, N);
     }
+}
+
+void phaseCongMono(MultidimArray< double >& I,
+				   MultidimArray< double >& PC,
+				   MultidimArray< double >& FT,
+                                 int nScale,
+                                 double minWaveLength,
+                                 double mult,
+                                 double sigmaOnf)
+{
+
+//#define DEBUG;
+	//First we set the image origin in the image center
+    I.setXmippOrigin();
+    //Used to prevent division by zero
+	double epsilon = .0001;
+	//Image size
+	int NR, NC,NZ;
+    size_t NDim;
+    I.getDimensions(NC,NR,NZ,NDim);
+
+    if ( (NZ!=1) || (NDim!=1) )
+        REPORT_ERROR(ERR_MULTIDIM_DIM,(std::string)"ZDim and NDim has to be equals to one");
+
+    MultidimArray< std::complex <double> > fftIm;
+    // Fourier Transformer
+    FourierTransformer ftrans(FFTW_BACKWARD);
+    ftrans.FourierTransform(I, fftIm, false);
+    MultidimArray< std::complex <double> > H;
+    //Low pass filtering kernel
+    MultidimArray<double> lowPass,Radius;
+
+    H.resizeNoCopy(fftIm);
+    lowPass.resizeNoCopy(fftIm);
+    Radius.resizeNoCopy(fftIm);
+
+    double cutoff = .4;
+    double n = 10;
+    double wx,wy;
+
+    for (int i=STARTINGY(fftIm); i<=FINISHINGY(fftIm); ++i)
+    {
+        FFT_IDX2DIGFREQ(i,YSIZE(I),wy);
+        double wy2=wy*wy;
+        for (int j=STARTINGX(fftIm); j<=FINISHINGX(fftIm); ++j)
+        {
+        	FFT_IDX2DIGFREQ(j,XSIZE(I),wx);
+
+        	double wx2=wx*wx;
+        	double radius=sqrt(wy2+wx2);
+        	if (radius < 1e-10) radius=1;
+        	A2D_ELEM(Radius,i,j)=radius;
+        	double *ptr=(double*)&A2D_ELEM(H,i,j);
+        	//Ojo cambiado wy->wx y el signo de la parte real es distinto respecto a Matlab
+        	*ptr=wy/radius;
+        	*(ptr+1)=wx/radius;
+        	A2D_ELEM(lowPass,i,j)= 1.0/(1.0+std::pow(radius/cutoff,n));
+        }
+    }
+
+    MultidimArray<double> logGabor;
+    logGabor.resizeNoCopy(fftIm);
+    //Bandpassed image in the frequency domain and in the spatial domain.
+    //h is a Bandpassed monogenic filtering, real part of h contains
+    //convolution result with h1, imaginary part
+    //contains convolution result with h2.
+    MultidimArray< std::complex <double> > fftImF, f,Hc, h;
+    fftImF.resizeNoCopy(fftIm);
+    Hc.resizeNoCopy(fftIm);
+    f.resizeNoCopy(fftIm);
+    h.resizeNoCopy(fftIm);
+
+    MultidimArray<double> An;
+    An.resizeNoCopy(I);
+
+    for (int num = 0; num < nScale; ++num)
+    {
+    	double multAcum;
+    	double waveLength = minWaveLength;
+
+    	for(int numMult=0; numMult < num;numMult++)
+    		waveLength*=mult;
+
+    	double fo = 1.0/waveLength;
+    	FOR_ALL_ELEMENTS_IN_ARRAY2D(fftIm)
+    	{
+    		double temp1 =(std::log(A2D_ELEM(Radius,i,j)/fo));
+    		double temp2 = std::log(sigmaOnf);
+    		A2D_ELEM(logGabor,i,j) = std::exp(-(temp1*temp1) /(2 * temp2*temp2))*A2D_ELEM(lowPass,i,j);
+    		if (A2D_ELEM(Radius,i,j)<=1e-10) (A2D_ELEM(logGabor,i,j)=0);
+    		temp1 = A2D_ELEM(fftIm,i,j).real();
+    		temp2 = A2D_ELEM(fftIm,i,j).imag();
+    		double *ptr=(double*)&A2D_ELEM(fftImF,i,j);
+    		*ptr=temp1*A2D_ELEM(logGabor,i,j);
+    		*(ptr+1)=temp2*A2D_ELEM(logGabor,i,j);
+    	}
+
+    	Hc = fftImF*H;
+    	ftrans.inverseFourierTransform(fftImF,f);
+    	ftrans.inverseFourierTransform(Hc,h);
+    	//Amplitude of this scale component.
+    	MultidimArray<double> temp;
+    	An.resizeNoCopy(I);
+    	temp.resizeNoCopy(I);
+    	f.getReal(temp);
+    	An = temp*temp;
+    	h.getReal(temp);
+    	An = An+temp*temp;
+    	h.getImag(temp);
+    	An = An+temp*temp;
+    	An.selfSQRT();
+
+    }
+
+
+#ifdef DEBUG
+    //MultidimArray< double > testReal,testImag;
+    //f.getImag(testImag);
+    //f.getReal(testReal);
+    FileName fpName1    = "testReal.txt";
+    FileName fpName2    = "testImag.txt";
+    FileName fpName3    = "testLP.txt";
+    FileName fpName4    = "testRad.txt";
+    FileName fpName5    = "testH.txt";
+    An.write(fpName1);
+    //testImag.write(fpName2);
+    //lowPass.write(fpName3);
+    //Radius.write(fpName4);
+
+    //H.write(fpName5);
+#endif
 }
