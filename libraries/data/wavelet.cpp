@@ -853,6 +853,9 @@ void phaseCongMono(MultidimArray< double >& I,
 				   MultidimArray< double >& Ph,
 				   MultidimArray< double >& Or,
 				   MultidimArray< double >& Energy,
+				   MultidimArray<double>& lowPass,
+				   MultidimArray<double>& Radius,
+				   MultidimArray< std::complex <double> >& H,
                                  int nScale,
                                  double minWaveLength,
                                  double mult,
@@ -875,37 +878,40 @@ void phaseCongMono(MultidimArray< double >& I,
     // Fourier Transformer
     FourierTransformer ftrans(FFTW_BACKWARD);//, ftransh(FFTW_BACKWARD), ftransf(FFTW_BACKWARD);
     ftrans.FourierTransform(I, fftIm, false);
-    MultidimArray< std::complex <double> > H;
-    //Low pass filtering kernel
-    MultidimArray<double> lowPass,Radius;
 
-    H.resizeNoCopy(I);
-    lowPass.resizeNoCopy(I);
-    Radius.resizeNoCopy(I);
+    if ( (lowPass.xinit == 0) & (lowPass.yinit == 0) & (Radius.xinit == 0) & (Radius.yinit == 0)
+    	  & (H.xinit == 0) & (H.yinit == 0) )
+	{
 
-    double cutoff = .4;
-    double n = 10;
-    double wx,wy;
+    	H.resizeNoCopy(I);
+        lowPass.resizeNoCopy(I);
+        Radius.resizeNoCopy(I);
 
-    for (int i=STARTINGY(I); i<=FINISHINGY(I); ++i)
-    {
-        FFT_IDX2DIGFREQ(i,YSIZE(I),wy);
-        double wy2=wy*wy;
-        for (int j=STARTINGX(I); j<=FINISHINGX(I); ++j)
+        double cutoff = .4;
+        double n = 10;
+        double wx,wy;
+
+        for (int i=STARTINGY(I); i<=FINISHINGY(I); ++i)
         {
-        	FFT_IDX2DIGFREQ(j,XSIZE(I),wx);
+            FFT_IDX2DIGFREQ(i,YSIZE(I),wy);
+            double wy2=wy*wy;
+            for (int j=STARTINGX(I); j<=FINISHINGX(I); ++j)
+            {
+            	FFT_IDX2DIGFREQ(j,XSIZE(I),wx);
 
-        	double wx2=wx*wx;
-        	double radius=sqrt(wy2+wx2);
-        	if (radius < 1e-10) radius=1;
-        	A2D_ELEM(Radius,i,j)=radius;
-        	double *ptr=(double*)&A2D_ELEM(H,i,j);
-        	//Ojo cambiado wy->wx y el signo de la parte real es distinto respecto a Matlab
-        	*ptr=wy/radius;
-        	*(ptr+1)=wx/radius;
-        	A2D_ELEM(lowPass,i,j)= 1.0/(1.0+std::pow(radius/cutoff,n));
+            	double wx2=wx*wx;
+            	double radius=sqrt(wy2+wx2);
+            	if (radius < 1e-10) radius=1;
+            	A2D_ELEM(Radius,i,j)=radius;
+            	double *ptr=(double*)&A2D_ELEM(H,i,j);
+            	*ptr=wy/radius;
+            	*(ptr+1)=wx/radius;
+            	A2D_ELEM(lowPass,i,j)= 1.0/(1.0+std::pow(radius/cutoff,n));
+            }
+
         }
-    }
+
+	}
 
     MultidimArray<double> logGabor;
     logGabor.resizeNoCopy(I);
@@ -951,9 +957,11 @@ void phaseCongMono(MultidimArray< double >& I,
     		double temp2 = std::log(sigmaOnf);
     		A2D_ELEM(logGabor,i,j) = std::exp(-(temp1*temp1) /(2 * temp2*temp2))*A2D_ELEM(lowPass,i,j);
     		if (A2D_ELEM(Radius,i,j)<=1e-10) (A2D_ELEM(logGabor,i,j)=0);
-    		temp1 = A2D_ELEM(fullFftIm,i,j).real();
-    		temp2 = A2D_ELEM(fullFftIm,i,j).imag();
-    		double *ptr=(double*)&A2D_ELEM(fftImF,i,j);
+
+    		double *ptr= (double*)&A2D_ELEM(fullFftIm,i,j);
+    		temp1 = *ptr;
+    		temp2 = *(ptr+1);
+    		ptr= (double*)&A2D_ELEM(fftImF,i,j);
     		*ptr=temp1*A2D_ELEM(logGabor,i,j);
     		*(ptr+1)=temp2*A2D_ELEM(logGabor,i,j);
     	}
@@ -992,11 +1000,6 @@ void phaseCongMono(MultidimArray< double >& I,
 
 	Energy.resizeNoCopy(I);
 	Energy.setXmippOrigin();
-
-	//h1.setXmippOrigin();
-	//h2.setXmippOrigin();
-	//F.setXmippOrigin();
-
 
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
   	{
