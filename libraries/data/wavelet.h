@@ -336,6 +336,54 @@ Matrix1D< double > bayesian_wiener_filtering3D(MultidimArray< double >& WI,
 void bayesian_wiener_filtering3D(MultidimArray< double >& WI,
                                  int allowed_scale,
                                  Matrix1D< double >& estimatedS);
+
+/** Phase congruency filtering.
+ *
+ * Phase congruency of an image using monogenic filters.
+ *
+ * 	   I                     - Image to be processed
+ * 	   PC                    - Phase congruency indicating edge significance
+ * 	   FT                    - Local weighted mean phase angle at every point in the
+ * 	   						   image.  A value of pi/2 corresponds to a bright line, 0
+ *                              corresponds to a step and -pi/2 is a dark line.
+ *     nscale            5    - Number of wavelet scales, try values 3-6
+ *      minWaveLength    3    - Wavelength of smallest scale filter.
+ *      mult             2.1  - Scaling factor between successive filters.
+ *      sigmaOnf         0.55 - Ratio of the standard deviation of the Gaussian
+ *                              describing the log Gabor filter's transfer function
+ *                              in the frequency domain to the filter center frequency.
+ *
+ *
+ * References:
+ *
+ *    Peter Kovesi, "Image Features From Phase Congruency". Videre: A
+ *    Journal of Computer Vision Research. MIT Press. Volume 1, Number 3,
+ *    Summer 1999 http://mitpress.mit.edu/e-journals/Videre/001/v13.html
+ *
+ *    Michael Felsberg and Gerald Sommer, "A New Extension of Linear Signal
+ *    Processing for Estimating Local Properties and Detecting Features". DAGM
+ *    Symposium 2000, Kiel
+ *
+ *    Michael Felsberg and Gerald Sommer. "The Monogenic Signal" IEEE
+ *    Transactions on Signal Processing, 49(12):3136-3144, December 2001
+ *
+ *    Peter Kovesi, "Phase Congruency Detects Corners and Edges". Proceedings
+ *          DICTA 2003, Sydney Dec 10-12
+ *
+ */
+void phaseCongMono(MultidimArray< double >& I,
+				   MultidimArray< double >& PC,
+				   MultidimArray< double >& FT,
+				   MultidimArray< double >& Energy,
+				   MultidimArray< double >& lowPass,
+				   MultidimArray< double >& Radius,
+				   MultidimArray< std::complex <double> >& H,
+                                 int nScale,
+                                 double minWaveLength,
+                                 double mult,
+                                 double sigmaOnf
+                                 );
+
 //@}
 //@}
 #endif

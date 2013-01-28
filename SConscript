@@ -974,6 +974,7 @@ if int(env['gtest']):
      AddXmippCTest('test_sampling')
      AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
+     AddXmippCTest('test_wavelets')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
