@@ -26,6 +26,8 @@
 package xmipp.jni;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.logging.Level;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -152,6 +154,18 @@ public class MetaData {
 		}
 		return true;
 	}
+	
+	public static boolean containsBlock(String file, String block)
+	{
+		try
+		{
+			return Arrays.asList(MetaData.getBlocksInMetaDataFile(file)).contains(block);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+	}// function containsBlock
 
 	public static native String label2Str(int label);
 

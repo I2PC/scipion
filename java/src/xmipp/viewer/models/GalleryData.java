@@ -129,7 +129,7 @@ public class GalleryData {
 				}
 				mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
 
-				if (mdBlocks.length > 1 && selectedBlock.isEmpty())
+				if (mdBlocks.length >= 1 && selectedBlock.isEmpty())
 					selectedBlock = mdBlocks[0];
 			}
 

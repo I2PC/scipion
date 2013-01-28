@@ -292,7 +292,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 
 		@Override
 		protected ImagePlus loadImage() throws Exception {
-			System.out.println(wrap);
 			return XmippImageConverter.readMdRowToImagePlus(fileName, data.md, objId, useGeometry, wrap);
 		}
 

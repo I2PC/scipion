@@ -1,22 +1,18 @@
 package xmipp.viewer.particlepicker.training.model;
 
-import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
-import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
-import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 
 public abstract class TrainingPicker extends ParticlePicker
 {
@@ -223,7 +219,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		if (!new File(file).exists())
 			return;
 		Family family = mfd.getFamily();
-		if (!containsBlock(file, family.getName()))
+		if (!MetaData.containsBlock(file, family.getName()))
 			return;
 		int x, y;
 		TrainingParticle particle;
@@ -259,7 +255,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		if (!new File(file).exists())
 			return;
 		Family f = mfd.getFamily();
-		if (!containsBlock(file, f.getName()))
+		if (!MetaData.containsBlock(file, f.getName()))
 			return;
 		int x, y;
 		AutomaticParticle particle;

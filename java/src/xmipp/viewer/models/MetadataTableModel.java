@@ -301,7 +301,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		table.clearSelection();
 		for (int i = 0; i < n; ++i)
 			if (data.selection[i]) {
-				System.out.println(i);
 				table.addRowSelectionInterval(i, i);
 			}
 	}
