@@ -128,6 +128,18 @@ public class MetaData {
 		}
 		return false;
 	}
+	
+	public boolean containsMicrographParticles() {
+		try {
+			int[] labels = new int[]{MDLabel.MDL_MICROGRAPH, MDLabel.MDL_XCOOR, MDLabel.MDL_YCOOR, MDLabel.MDL_ENABLED};
+			for (int i = 0; i < labels.length; i++)
+				if (!containsLabel(labels[i]))
+					return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
 
 	public boolean containsMicrographsInfo() {
 		try {

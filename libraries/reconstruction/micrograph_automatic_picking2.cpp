@@ -167,9 +167,6 @@ void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
 
 AutoParticlePicking2::~AutoParticlePicking2()
 {
-    // delete classifier;
-    // delete classifier2;
-    // std::cerr<<"We Are Here in des auto!";
 }
 
 void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,
@@ -333,7 +330,8 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     std::ofstream fh_training;
     fh_training.open("particles_cord1.txt");
 #endif
-    int num=positionArray.size()*(90.0/100.0);
+
+    int num=positionArray.size()*(10.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
@@ -343,6 +341,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         fh_training << j * (1.0 / scaleRate) << " " << i * (1.0 / scaleRate)
         << " " << positionArray[k].cost << std::endl;
 #endif
+
         buildInvariant(IpolarCorr,j,i);
         extractParticle(j,i,microImage(),pieceImage,false);
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
@@ -687,6 +686,7 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
     {
         fhTrain<<classLabel(i)<< std::endl;
 #ifdef DEBUG_SAVETRAINSET
+
         fhtest<<classLabel(i)<<" ";
 #endif
 
@@ -694,7 +694,7 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
 #ifdef DEBUG_SAVETRAINSET
 
-            fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+        fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
 #endif
 
         fhTrain<<std::endl;
@@ -817,14 +817,6 @@ void AutoParticlePicking2::saveRejectedVectors(const FileName &fn)
 
 void AutoParticlePicking2::generateTrainSet()
 {
-
-#ifdef DEBUG_GENTRAINSET
-
-    std::ofstream a1,b1;
-    a1.open("dataset1.txt");
-    b1.open("dataset2.txt");
-#endif
-
     int cnt=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classLabel)
     if (DIRECT_A1D_ELEM(classLabel,i)==1 || DIRECT_A1D_ELEM(classLabel,i)==3)
@@ -843,38 +835,13 @@ void AutoParticlePicking2::generateTrainSet()
             }
             else
                 DIRECT_A1D_ELEM(classLabel1,cnt)=1;
-#ifdef DEBUG_GENTRAINSET
-
-            b1<<DIRECT_A1D_ELEM(classLabel1,cnt)<<" ";
-#endif
-
-
             for (int j=0;j<XSIZE(dataSet);j++)
+            {
                 DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
-#ifdef DEBUG_GENTRAINSET
-
-                b1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet1,cnt,j)<<" ";
-#endif
-
             }
-#ifdef DEBUG_GENTRAINSET
-
-            b1<<std::endl;
-#endif
-
             cnt++;
         }
-#ifdef DEBUG_GENTRAINSET
-        a1<<DIRECT_A1D_ELEM(classLabel,i)<<" ";
-        for (int j=0;j<XSIZE(dataSet);j++)
-            a1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
-        a1<<std::endl;
-#endif
-
-#ifdef DEBUG_GENTRAINSET
-    a1.close();
-    b1.close();
-#endif
+    }
 }
 
 void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
@@ -1196,7 +1163,7 @@ void ProgMicrographAutomaticPicking2::run()
     }
     if (mode=="train")
     {
-    	// If PCA does not exist obtain the PCA basis and save them
+        // If PCA does not exist obtain the PCA basis and save them
         if (!fnPCAModel.exists())
             autoPicking->trainPCA(fn_model);
         if (!fnPCARotModel.exists())
@@ -1215,7 +1182,7 @@ void ProgMicrographAutomaticPicking2::run()
         // If we have some false positives also add it
         if (fnRejectedVectors.exists())
         {
-        	// Load the rejected vectors features as false positives
+            // Load the rejected vectors features as false positives
             autoPicking->loadAutoVectors(fnRejectedVectors);
             autoPicking->add2Dataset();
             fnRejectedVectors.deleteFile();

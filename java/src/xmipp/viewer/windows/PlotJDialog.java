@@ -54,7 +54,7 @@ import xmipp.utils.ColorRenderer;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
 
 public class PlotJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
@@ -68,12 +68,12 @@ public class PlotJDialog extends XmippDialog {
 	// This will be used for check for results from the dialog
 	boolean fireEvent = true;
 	GridBagConstraints gbc = new GridBagConstraints();
-	ImageGallery gallery;
+	ImageGalleryTableModel gallery;
 	JPanel panelEntries;
 	String[] COLORS = { "0000CC", "009900", "CC0000", "000000", "FF6600",
 			"FFFF00", "00CCFF" };
 
-	public PlotJDialog(JFrameGallery parent) {
+	public PlotJDialog(GalleryJFrame parent) {
 		super(parent, "Plot options", true);
 
 		rows = new ArrayList<ColumnInfo>();

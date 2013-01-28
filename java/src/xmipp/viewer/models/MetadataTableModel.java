@@ -43,13 +43,13 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
 
-public class MetadataTable extends MetadataGallery {
+public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
 
 	int sortColumnIndex = -1;
 	boolean ascending = true;
 
-	public MetadataTable(GalleryData data) throws Exception {
+	public MetadataTableModel(GalleryData data) throws Exception {
 		super(data);
 		cols = visibleLabels.size();
 		rows = n;
@@ -301,6 +301,7 @@ public class MetadataTable extends MetadataGallery {
 		table.clearSelection();
 		for (int i = 0; i < n; ++i)
 			if (data.selection[i]) {
+				System.out.println(i);
 				table.addRowSelectionInterval(i, i);
 			}
 	}
@@ -399,6 +400,7 @@ public class MetadataTable extends MetadataGallery {
 		}
 
 		public void mouseClicked(MouseEvent e) {
+			
 			TableColumnModel colModel = table.getColumnModel();
 			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
 			int modelIndex = colModel.getColumn(columnModelIndex)
@@ -411,8 +413,13 @@ public class MetadataTable extends MetadataGallery {
 			else
 				sortColumnIndex = modelIndex;
 			data.sortMd(sortColumnIndex, ascending);
+			clearSelection();
+			updateTableSelection(table);
 			cache.clear();
-			fireTableDataChanged();
+			
+			//fireTableDataChanged();
+			
+					
 		}
 	}
 

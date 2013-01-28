@@ -9,11 +9,11 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 
 @SuppressWarnings("serial")
-public class MicrographsTable extends MetadataTable {
+public class MicrographsTableModel extends MetadataTableModel {
 
 	protected ArrayList<Integer> busyRows = new ArrayList<Integer>();
 	
-	public MicrographsTable(GalleryData data) throws Exception {
+	public MicrographsTableModel(GalleryData data) throws Exception {
 		super(data);
 	}
 	

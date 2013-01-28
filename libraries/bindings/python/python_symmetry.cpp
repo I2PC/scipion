@@ -79,7 +79,7 @@ SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs)
     PyObject *pyCheckMirrors = Py_False;
     PyObject *pyObjectRotation = Py_False;
 
-    if (PyArg_ParseTuple(args, "|OOO", &pyMd,
+    if (PyArg_ParseTuple(args, "O|OOO", &pyMd,
                          &pyProjdirMode,
                          &pyCheckMirrors,
                          &pyObjectRotation))

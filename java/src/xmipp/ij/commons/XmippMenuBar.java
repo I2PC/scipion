@@ -170,6 +170,7 @@ public class XmippMenuBar extends MenuBar
 		
 		ugmi = new CheckboxMenuItem("Use Geometry");
 		ugmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		ugmi.setState(xw.getImagePlusLoader().getUseGeometry());
 		ugmi.addItemListener(new ItemListener()
 		{
 
@@ -177,8 +178,7 @@ public class XmippMenuBar extends MenuBar
 			public void itemStateChanged(ItemEvent e)
 			{
 				boolean ug = ugmi.getState();
-				if (ug)
-					useGeometry();
+				useGeometry(ug);
 				
 			}
 		});
@@ -186,15 +186,14 @@ public class XmippMenuBar extends MenuBar
 		
 		wrapmi = new CheckboxMenuItem("Wrap");
 		wrapmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		wrapmi.setState(xw.getImagePlusLoader().isWrap());
 		wrapmi.addItemListener(new ItemListener()
 		{
 
 			@Override
 			public void itemStateChanged(ItemEvent e)
 			{
-				boolean wrap = wrapmi.getState();
-				if (wrap)
-					wrap();
+				wrap(wrapmi.getState());
 				
 			}
 		});
@@ -336,6 +335,12 @@ public class XmippMenuBar extends MenuBar
 
 	}
 	
+	protected void useGeometry(boolean ug)
+	{
+		xw.getImagePlusLoader().setUseGeometry(ug);
+		xw.loadData();
+	}
+
 	private void saveAs()
 	{
 		XmippFileChooser fc = new XmippFileChooser();
@@ -355,16 +360,12 @@ public class XmippMenuBar extends MenuBar
 		}
 	}
 	
-	protected void useGeometry()
-	{
-		xw.getImagePlusLoader().useGeometry();
-		
-	}
+	
 
-	protected void wrap()
+	protected void wrap(boolean value)
 	{
-		xw.getImagePlusLoader().wrap();
-		
+		xw.getImagePlusLoader().setWrap(value);
+		xw.loadData();
 	}
 
 	public static void openImagePlusAs3D(ImagePlus ip) {
