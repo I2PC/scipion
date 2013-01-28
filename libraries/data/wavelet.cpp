@@ -850,19 +850,19 @@ void bayesian_wiener_filtering3D(MultidimArray<double> &WI,
 }
 
 void phaseCongMono(MultidimArray< double >& I,
-				   MultidimArray< double >& PC,
-				   MultidimArray< double >& FT,
+				   MultidimArray< double >& Ph,
+				   MultidimArray< double >& Or,
+				   MultidimArray< double >& Energy,
                                  int nScale,
                                  double minWaveLength,
                                  double mult,
                                  double sigmaOnf)
 {
 
-//#define DEBUG;
+    #define DEBUG;
+	double epsilon= .0001; // Used to prevent division by zero.
 	//First we set the image origin in the image center
     I.setXmippOrigin();
-    //Used to prevent division by zero
-	double epsilon = .0001;
 	//Image size
 	int NR, NC,NZ;
     size_t NDim;
@@ -873,25 +873,25 @@ void phaseCongMono(MultidimArray< double >& I,
 
     MultidimArray< std::complex <double> > fftIm;
     // Fourier Transformer
-    FourierTransformer ftrans(FFTW_BACKWARD);
+    FourierTransformer ftrans(FFTW_BACKWARD);//, ftransh(FFTW_BACKWARD), ftransf(FFTW_BACKWARD);
     ftrans.FourierTransform(I, fftIm, false);
     MultidimArray< std::complex <double> > H;
     //Low pass filtering kernel
     MultidimArray<double> lowPass,Radius;
 
-    H.resizeNoCopy(fftIm);
-    lowPass.resizeNoCopy(fftIm);
-    Radius.resizeNoCopy(fftIm);
+    H.resizeNoCopy(I);
+    lowPass.resizeNoCopy(I);
+    Radius.resizeNoCopy(I);
 
     double cutoff = .4;
     double n = 10;
     double wx,wy;
 
-    for (int i=STARTINGY(fftIm); i<=FINISHINGY(fftIm); ++i)
+    for (int i=STARTINGY(I); i<=FINISHINGY(I); ++i)
     {
         FFT_IDX2DIGFREQ(i,YSIZE(I),wy);
         double wy2=wy*wy;
-        for (int j=STARTINGX(fftIm); j<=FINISHINGX(fftIm); ++j)
+        for (int j=STARTINGX(I); j<=FINISHINGX(I); ++j)
         {
         	FFT_IDX2DIGFREQ(j,XSIZE(I),wx);
 
@@ -908,19 +908,33 @@ void phaseCongMono(MultidimArray< double >& I,
     }
 
     MultidimArray<double> logGabor;
-    logGabor.resizeNoCopy(fftIm);
+    logGabor.resizeNoCopy(I);
     //Bandpassed image in the frequency domain and in the spatial domain.
     //h is a Bandpassed monogenic filtering, real part of h contains
     //convolution result with h1, imaginary part
     //contains convolution result with h2.
-    MultidimArray< std::complex <double> > fftImF, f,Hc, h;
-    fftImF.resizeNoCopy(fftIm);
-    Hc.resizeNoCopy(fftIm);
-    f.resizeNoCopy(fftIm);
-    h.resizeNoCopy(fftIm);
+    MultidimArray< std::complex <double> > fftImF, fullFftIm, f,Hc,h;
 
-    MultidimArray<double> An;
+    fftImF.resizeNoCopy(I);
+    Hc.resizeNoCopy(I);
+    f.resizeNoCopy(I);
+    h.resizeNoCopy(I);
+
+    MultidimArray<double> An,AnTemp;
+    MultidimArray<double> temp;
+    MultidimArray<double> F;
+    MultidimArray<double> h1;
+    MultidimArray<double> h2;
+    MultidimArray<double> tempMat;
+
+    temp.resizeNoCopy(I);
     An.resizeNoCopy(I);
+    F.resizeNoCopy(I);
+    h1.resizeNoCopy(I);
+    h2.resizeNoCopy(I);
+    AnTemp.resizeNoCopy(I);
+    ftrans.getCompleteFourier(fullFftIm);
+    CenterFFT(fullFftIm,false);
 
     for (int num = 0; num < nScale; ++num)
     {
@@ -931,51 +945,82 @@ void phaseCongMono(MultidimArray< double >& I,
     		waveLength*=mult;
 
     	double fo = 1.0/waveLength;
-    	FOR_ALL_ELEMENTS_IN_ARRAY2D(fftIm)
+    	FOR_ALL_ELEMENTS_IN_ARRAY2D(fullFftIm)
     	{
     		double temp1 =(std::log(A2D_ELEM(Radius,i,j)/fo));
     		double temp2 = std::log(sigmaOnf);
     		A2D_ELEM(logGabor,i,j) = std::exp(-(temp1*temp1) /(2 * temp2*temp2))*A2D_ELEM(lowPass,i,j);
     		if (A2D_ELEM(Radius,i,j)<=1e-10) (A2D_ELEM(logGabor,i,j)=0);
-    		temp1 = A2D_ELEM(fftIm,i,j).real();
-    		temp2 = A2D_ELEM(fftIm,i,j).imag();
+    		temp1 = A2D_ELEM(fullFftIm,i,j).real();
+    		temp2 = A2D_ELEM(fullFftIm,i,j).imag();
     		double *ptr=(double*)&A2D_ELEM(fftImF,i,j);
     		*ptr=temp1*A2D_ELEM(logGabor,i,j);
     		*(ptr+1)=temp2*A2D_ELEM(logGabor,i,j);
     	}
 
+    	CenterFFT(fftImF,true);
     	Hc = fftImF*H;
     	ftrans.inverseFourierTransform(fftImF,f);
     	ftrans.inverseFourierTransform(Hc,h);
-    	//Amplitude of this scale component.
-    	MultidimArray<double> temp;
-    	An.resizeNoCopy(I);
-    	temp.resizeNoCopy(I);
-    	f.getReal(temp);
-    	An = temp*temp;
-    	h.getReal(temp);
-    	An = An+temp*temp;
-    	h.getImag(temp);
-    	An = An+temp*temp;
-    	An.selfSQRT();
 
+    	//ftransf.setFourier(fftImF);
+    	//ftransf.inverseFourierTransform();
+    	//ftransh.setFourier(Hc);
+    	//ftransh.inverseFourierTransform();
+
+    	f.getReal(temp);
+    	F += temp;
+    	AnTemp = temp*temp;
+
+    	h.getReal(temp);
+    	h1 += temp;
+    	AnTemp += temp*temp;
+
+    	h.getImag(temp);
+    	h2 += temp;
+    	AnTemp += temp*temp;
+
+    	AnTemp.selfSQRT();
+    	An += AnTemp;
     }
 
+    Or.resizeNoCopy(I);
+	Or.setXmippOrigin();
+
+	Ph.resizeNoCopy(I);
+	Ph.setXmippOrigin();
+
+	Energy.resizeNoCopy(I);
+	Energy.setXmippOrigin();
+
+	//h1.setXmippOrigin();
+	//h2.setXmippOrigin();
+	//F.setXmippOrigin();
+
+
+	FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
+  	{
+   		double temph1 = A2D_ELEM(h1,i,j);
+   		double temph2 = A2D_ELEM(h2,i,j);
+   		double tempF =  A2D_ELEM(F,i,j);
+
+   		A2D_ELEM(Or,i,j) = std::atan2(temph1,temph2);
+   		A2D_ELEM(Ph,i,j)=  std::atan2(tempF, std::sqrt(temph1*temph1+
+   						   temph2*temph2));
+   		A2D_ELEM(Energy,i,j) = std::sqrt(tempF*tempF+temph1*temph1
+   							 + temph2*temph2)+epsilon;
+  	}
 
 #ifdef DEBUG
-    //MultidimArray< double > testReal,testImag;
-    //f.getImag(testImag);
-    //f.getReal(testReal);
-    FileName fpName1    = "testReal.txt";
-    FileName fpName2    = "testImag.txt";
-    FileName fpName3    = "testLP.txt";
-    FileName fpName4    = "testRad.txt";
-    FileName fpName5    = "testH.txt";
-    An.write(fpName1);
-    //testImag.write(fpName2);
-    //lowPass.write(fpName3);
-    //Radius.write(fpName4);
 
-    //H.write(fpName5);
-#endif
+    FileName fpName1    = "test1.txt";
+    FileName fpName2    = "test2.txt";
+    FileName fpName3    = "test3.txt";
+    FileName fpName4    = "test4.txt";
+
+    Or.write(fpName1);
+    Ph.write(fpName2);
+    Energy.write(fpName3);
+
+    #endif
 }

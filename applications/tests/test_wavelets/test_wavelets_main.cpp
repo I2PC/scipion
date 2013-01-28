@@ -53,12 +53,12 @@ protected:
 
 TEST_F(WaveletTests, phaseCongMono)
 {
-    MultidimArray< double > PC,FT;
+    MultidimArray< double > PC,FT,Energy;
     int nScale =2;
     double minWaveLength=100;
     double mult=1.12;
     double sigmaOnf=2;
-    phaseCongMono(im,PC,FT,nScale,minWaveLength,mult,sigmaOnf);
+    phaseCongMono(im,PC,FT,Energy,nScale,minWaveLength,mult,sigmaOnf);
 }
 
 GTEST_API_ int main(int argc, char **argv)
