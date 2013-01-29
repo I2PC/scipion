@@ -69,7 +69,7 @@ public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 	// Load initial dimensions
 	@Override
 	protected ImageDimension loadDimension() throws Exception {
-		fnClasses = data.filename;
+		fnClasses = data.getFileName();
 		fnVectors = fnClasses.replace("classes", "vectors");
 		fnVectorsData = fnVectors.replace(".xmd", ".vec");
 		load(fnClasses, fnVectors, fnVectorsData);

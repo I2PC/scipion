@@ -63,7 +63,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	// Cache class to reuse of already loaded items
 	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
 	// Filename
-	protected String filename;
 	// Hold gallery dimensions
 	protected ImageDimension dimension;
 	// Renderer to display images
@@ -83,7 +82,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	// Initiazation function
 	public ImageGalleryTableModel(GalleryData data) throws Exception {
-		filename = data.filename;
 		this.data = data;
 		cols = 0;
 		dimension = loadDimension();
@@ -103,11 +101,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		resizeCache();
 	}
 	
-	//Set filename
-	public void updateFilename(String filename){
-		this.filename = data.filename = Filename.getFilename(filename);
-	}
-
+	
 	// Load initial dimensions
 	protected abstract ImageDimension loadDimension() throws Exception;
 

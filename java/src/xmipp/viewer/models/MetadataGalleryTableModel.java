@@ -204,7 +204,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	@Override
 	public String getTitle() {
 		String title = "Metadata: "
-				+ (filename != null ? Filename.getBaseName(filename) : "");
+				+ (data.getFileName() != null ? Filename.getBaseName(data.getFileName()) : "");
 		if (n > 1)
 			title += String.format(" %d items", n);
 		if (data.hasRenderLabel())
@@ -302,7 +302,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		int label;
 
 		public MetadataImageLoader(int label) {
-			super(data.filename);
+			super(data.getFileName());
 			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
 			wrap = data.wrap;
