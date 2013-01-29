@@ -48,6 +48,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
+
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -75,6 +76,7 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
+
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
@@ -90,7 +92,6 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
@@ -863,7 +864,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void fsc() throws Exception
 	{
-		JFrameFSC frame = new JFrameFSC(data);
+		FSCJFrame frame = new FSCJFrame(data);
 		XmippWindowUtil.centerWindows(frame, this);
 		frame.setVisible(true);
 	}

@@ -219,7 +219,7 @@ public class ImagesWindowFactory {
 	}
 
 	public static void openFileAsText(String filename, Component parent) {
-		JFrameTextfile frameText = new JFrameTextfile(filename);
+		TextfileJFrame frameText = new TextfileJFrame(filename);
 		if (parent != null)
 			frameText.setLocationRelativeTo(null);
 		frameText.setVisible(true);

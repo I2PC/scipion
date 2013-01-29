@@ -363,7 +363,7 @@ public class GalleryData {
 				mode = Mode.TABLE_MD; // this is necessary when coming from
 				// previous case
 				if (!md.isColumnFormat())
-					return new MetadataRow(this);
+					return new MetadataRowTableModel(this);
 				if (md.containsMicrographsInfo())
 					return new MicrographsTableModel(this);
 				return new MetadataTableModel(this);
