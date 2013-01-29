@@ -18,7 +18,7 @@ import xmipp.utils.ColorIcon;
 import xmipp.utils.CompoundIcon;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippResource;
-import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.ClassInfo;
 
 /**
@@ -42,13 +42,13 @@ public class ImageItemRenderer extends DefaultTableCellRenderer {
 
 	public ImageItemRenderer(boolean hackBorders) {
 		this();
-		this.hackBorders = false;
+		this.hackBorders = false;//no use of parameter provided???
 	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object object,
 			boolean isSelected, boolean hasFocus, int row, int column) {
-		ImageGallery.ImageItem item = (ImageGallery.ImageItem) object;
+		ImageGalleryTableModel.ImageItem item = (ImageGalleryTableModel.ImageItem) object;
 		// DEBUG.printMessage("*** 1. Rendering: " + item.getLabel());
 		// DEBUG.printFormat("*** 1. Rendering: item: %s, index: %d, row: %d, col: %d", 
 		//		 item.getLabel(), item.getIndex(), row, column);

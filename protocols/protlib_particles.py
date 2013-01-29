@@ -43,9 +43,7 @@ class ProtParticlesBase(XmippProtocol):
         
     def visualize(self):
         fn = self.getFilename('images')        
-        if not exists(fn):
-            showError("Error", "There is no result 'images.xmd' yet")
-        else:
+        if exists(fn):
             from protlib_utils import runShowJ
             if getattr(self, 'TiltPairs', False):
                 runShowJ(fn,extraParams="--mode metadata --render first")
@@ -127,7 +125,7 @@ def doMask(log,stack,maskFile,substitute,Nproc):
 def sortImages(log, ImagesFn):    
     md = MetaData(ImagesFn)
     if not md.isEmpty():
-        runJob(log, "xmipp_image_sort_by_statistics","-i %(ImagesFn)s --multivariate --addToInput" % locals())
+        runJob(log, "xmipp_image_sort_by_statistics","-i %(ImagesFn)s --addToInput" % locals())
         md.read(ImagesFn) # Should have ZScore label after runJob
         md.sort(MDL_ZSCORE)
         md.write(ImagesFn)        

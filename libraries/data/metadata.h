@@ -54,7 +54,6 @@ static bool  falseb=false;
 #define BAD_INDEX -1
 
 #define FILENAME_XMIPP_STAR "# XMIPP_STAR_1"
-#define FILENAME_EMX "# EMX1.0"
 #define FILENAME_XMIPP_SQLITE "SQLite format 3"
 #define DEFAULT_BLOCK_NAME "noname"
 /** Write mode
@@ -842,6 +841,16 @@ public:
      */
     void aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
                               MDLabel aggregateLabel);
+
+
+
+    /** Returns Max and Min values from a column in metadata
+     * These functions can only be used for labels of type double
+     */
+    double getColumnMax(MDLabel column);
+
+    double getColumnMin(MDLabel column);
+
 
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object

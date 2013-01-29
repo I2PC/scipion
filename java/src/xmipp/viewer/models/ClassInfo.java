@@ -40,7 +40,7 @@ public class ClassInfo {
 	/** Constructor */
 	public ClassInfo(String name, Color c) {
 		comment = name;
-		icon = new ColorIcon(c, 16, 16, 3, true);
+		icon = new ColorIcon(c, 16, 16, 3, true, true);
 	}
 
 	public String getComment() {

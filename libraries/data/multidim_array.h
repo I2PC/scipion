@@ -1372,7 +1372,6 @@ public:
 
         return fMap;
 #else
-
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
 
@@ -1383,13 +1382,16 @@ public:
      */
     void coreDeallocate()
     {
-#ifdef XMIPP_MMAP
         if (data != NULL && destroyData)
         {
             if (mmapOn)
             {
+#ifdef XMIPP_MMAP
                 munmap(data,nzyxdimAlloc*sizeof(T));
                 fclose(mFd);
+#else
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
             }
             else
                 delete[] data;
@@ -1397,11 +1399,6 @@ public:
         data = NULL;
         destroyData = true;
         nzyxdimAlloc = 0;
-#else
-
-        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
-#endif
-
     }
 
     /** Alias a multidimarray.
@@ -1549,7 +1546,7 @@ public:
         size_t NZYXdim=ZYXdim*Ndim;
         FILE*    new_mFd;
 
-        T * new_data;
+        T * new_data=NULL;
 
         try
         {
@@ -3417,7 +3414,7 @@ public:
     // This function must be explictly implemented outside.
     void statisticsAdjust(double avgF, double stddevF)
     {
-        double avg0, stddev0;
+        double avg0=0.0, stddev0=0.0;
         double a, b;
 
         if (NZYXSIZE(*this) == 0)

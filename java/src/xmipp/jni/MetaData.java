@@ -26,6 +26,8 @@
 package xmipp.jni;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.logging.Level;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -128,6 +130,18 @@ public class MetaData {
 		}
 		return false;
 	}
+	
+	public boolean containsMicrographParticles() {
+		try {
+			int[] labels = new int[]{MDLabel.MDL_MICROGRAPH, MDLabel.MDL_XCOOR, MDLabel.MDL_YCOOR, MDLabel.MDL_ENABLED};
+			for (int i = 0; i < labels.length; i++)
+				if (!containsLabel(labels[i]))
+					return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
 
 	public boolean containsMicrographsInfo() {
 		try {
@@ -140,6 +154,18 @@ public class MetaData {
 		}
 		return true;
 	}
+	
+	public static boolean containsBlock(String file, String block)
+	{
+		try
+		{
+			return Arrays.asList(MetaData.getBlocksInMetaDataFile(file)).contains(block);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+	}// function containsBlock
 
 	public static native String label2Str(int label);
 
@@ -467,4 +493,16 @@ public class MetaData {
 	 * @param operateStr sql syntanx string of the operation 
 	 */
 	public native void operate(String operateStr);
+	
+	/** Returns Max and Min values from a column in metadata
+    * These functions can only be used for labels of type double
+	*/
+	public native double getColumnMin(int column);
+	
+	
+
+	public native double getColumnMax(int column);
+	
+	
+	
 }

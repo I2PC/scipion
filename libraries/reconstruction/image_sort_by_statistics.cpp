@@ -76,7 +76,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     //#define DEBUG
 
     //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
-    //String name = "000004@Images/Extracted/run_002/extra/KLH_Dataset_I_Training_0010.stk";
+    String name = "000010@Images/Extracted/run_001/extra/KLH_Dataset_I_Training_0028.stk";
     //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
 
     pcaAnalyzer[4];
@@ -93,16 +93,15 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer3.clear();
 
-    Image<double> img;
     Matrix1D<double> center(2);
     center.initZeros();
     FringeProcessing fp;
 
-    int sign = 1;
-    int numNorm = 2;
-    int numDescriptors0=3;
+    int sign = -1;
+    int numNorm = 5;
+    int numDescriptors0=numNorm;
     int numDescriptors1=4;
-    int numDescriptors2=21;
+    int numDescriptors2=11;
     int numDescriptors3 = 10;
 
     MultidimArray<float> v0(numDescriptors0);
@@ -126,19 +125,21 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     bool first=true;
 
     // We assume that at least there is one particle
-    img.readApplyGeo(SF,1);
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
 
     //Initialization:
     MultidimArray<double> nI, modI, tempI, tempM, ROI;
     MultidimArray<bool> mask;
-    nI.resizeNoCopy(img());
-    modI.resizeNoCopy(img());
-    tempI.resizeNoCopy(img());
-    tempM.resizeNoCopy(img());
-    mask.resizeNoCopy(img());
+    nI.resizeNoCopy(Ydim,Xdim);
+    modI.resizeNoCopy(Ydim,Xdim);
+    tempI.resizeNoCopy(Ydim,Xdim);
+    tempM.resizeNoCopy(Ydim,Xdim);
+    mask.resizeNoCopy(Ydim,Xdim);
     mask.initConstant(true);
 
-    MultidimArray<double> autoCorr(2*img().ydim,2*img().xdim);
+    MultidimArray<double> autoCorr(2*Ydim,2*Xdim);
     MultidimArray<double> smallAutoCorr;
 
     Histogram1D hist;
@@ -150,17 +151,18 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     v2.initZeros(numDescriptors2);
     v3.initZeros(numDescriptors3);
 
-    ROI.resizeNoCopy(img());
+    ROI.resizeNoCopy(Ydim,Xdim);
     ROI.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
     {
         double temp = std::sqrt(i*i+j*j);
-        if ( temp < ((img().xdim)/3))
+        if ( temp < (Xdim/2))
             A2D_ELEM(ROI,i,j)= 1;
         else
             A2D_ELEM(ROI,i,j)= 0;
     }
 
+    Image<double> img;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (thereIsEnable)
@@ -181,7 +183,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mI.statisticsAdjust(0,1);
             mask.setXmippOrigin();
 
-            fp.normalize(mI,tempI,modI,0,1,mask);
+            double var = 1;
+            fp.normalize(mI,tempI,modI,0,var,mask);
             modI.setXmippOrigin();
             tempI.setXmippOrigin();
             nI = sign*tempI*(modI*modI);
@@ -189,7 +192,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
             A1D_ELEM(v0,0) = (tempM*ROI).sum();
             int index = 1;
-            double var = 5;
             while (index < numNorm)
             {
                 fp.normalize(mI,tempI,modI,0,var,mask);
@@ -199,13 +201,16 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
                 tempM += (modI*modI);
                 A1D_ELEM(v0,index) = (tempM*ROI).sum();
                 index++;
-                var+=5;
+                var+=1;
             }
 
             nI /= tempM;
             tempPcaAnalyzer0.addVector(v0);
+            nI=(nI*ROI);
 
 #ifdef DEBUG
+
+            std::cout << img.name() << std::endl;
 
             if (img.name()==name)
             {
@@ -213,9 +218,12 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
                 nI.write(fpName);
                 fpName    = "test4.txt";
                 tempM.write(fpName);
+                fpName    = "test5.txt";
+                ROI.write(fpName);
+                exit(1);
             }
 #endif
-            nI.binarize(-0.1);
+            nI.binarize(0);
             int im = labelImage2D(nI,nI,8);
             compute_hist(nI, hist, 0, im, im+1);
             int l,k,i,j;
@@ -227,9 +235,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
             fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
 
-            // Build vector
-            A1D_ELEM(v1,0)=majorAxis/((img().xdim)/5 );
-            A1D_ELEM(v1,1)=minorAxis/((img().xdim)/5 );
+            A1D_ELEM(v1,0)=majorAxis/((img().xdim) );
+            A1D_ELEM(v1,1)=minorAxis/((img().xdim) );
             A1D_ELEM(v1,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
             A1D_ELEM(v1,3)=area/( ((img().xdim)/2)*((img().ydim)/2) );
 
@@ -242,7 +249,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
             mI.setXmippOrigin();
             auto_correlation_matrix(mI*ROI,autoCorr);
-            autoCorr.window(smallAutoCorr,-10,-10, 10, 10);
+            autoCorr.window(smallAutoCorr,-5,-5, 5, 5);
             smallAutoCorr.copy(temp);
             svdcmp(temp,U,D,V);
 
@@ -279,17 +286,16 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
         }
     }
 
-
     MultidimArray<double> vavg,vstddev;
     tempPcaAnalyzer0.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer1.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer2.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer3.computeStatistics(vavg,vstddev);
 
-    tempPcaAnalyzer0.evaluateZScore(1,20);
+    tempPcaAnalyzer0.evaluateZScore(2,20);
     tempPcaAnalyzer1.evaluateZScore(2,20);
-    tempPcaAnalyzer2.evaluateZScore(1,20);
-    tempPcaAnalyzer3.evaluateZScore(3,20);
+    tempPcaAnalyzer2.evaluateZScore(2,20);
+    tempPcaAnalyzer3.evaluateZScore(2,20);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);
