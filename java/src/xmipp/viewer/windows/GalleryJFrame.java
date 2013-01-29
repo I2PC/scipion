@@ -795,7 +795,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			MetaData frommd;
 			frommd = new MetaData();
 			if (dlgSave.isOverwrite())
-				new MetaData().write(to);// delete all previous blocks
+				new MetaData().write(getBlock() + "@" + to);// overwrite file with some block
 			for (String blockit : data.mdBlocks)
 			{
 				frommd.read(blockit + "@" + from);
