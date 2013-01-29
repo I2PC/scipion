@@ -53,7 +53,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
-import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
 
 public class ClassesJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
@@ -63,7 +63,7 @@ public class ClassesJDialog extends XmippDialog {
 	// This will be used for check for results from the dialog
 	private ArrayList<ClassInfo> classes;
 	GridBagConstraints gbc = new GridBagConstraints();
-	ImageGallery gallery;
+	ImageGalleryTableModel gallery;
 	JPanel panelButtons;
 
 	public ClassesJDialog(JFrameGallery parent) {

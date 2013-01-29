@@ -62,8 +62,8 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.MetadataGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
+import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MetadataTable;
 import xmipp.viewer.models.ClassInfo;
 

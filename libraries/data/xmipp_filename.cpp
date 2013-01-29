@@ -249,7 +249,7 @@ bool FileName::hasStackExtension() const
     String ext = getFileFormat();
     return (ext=="stk" || ext=="spi" || ext=="xmp" || ext=="mrcs" || ext=="mrc" ||
             ext=="img" || ext=="hed" || ext=="pif" || ext=="tif"  || ext=="dm3" ||
-            ext=="ser");
+            ext=="ser" || ext=="st");
 }
 
 // Has image extension .....................................................

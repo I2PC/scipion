@@ -41,7 +41,7 @@ public class Filename {
 	public final static String EXT_ERR = ".err";
 	public final static String EXT_PY = ".py";
 	public final static String EXT_TXT = ".txt";
-	public final static String EXT_BOX = ".txt";
+	public final static String EXT_BOX = ".box";
 
 	// Initialize library.
 	static {

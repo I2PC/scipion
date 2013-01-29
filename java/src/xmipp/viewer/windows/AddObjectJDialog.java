@@ -41,7 +41,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.models.GalleryRowHeaderModel;
-import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataRow;
 
 public class AddObjectJDialog extends XmippDialog {
@@ -51,7 +51,7 @@ public class AddObjectJDialog extends XmippDialog {
 	// This will be used for check for results from the dialog
 	public MetaData md;
 	GridBagConstraints gbc = new GridBagConstraints();
-	ImageGallery gallery;
+	ImageGalleryTableModel gallery;
 	
 	public AddObjectJDialog(JFrameGallery parent) {
 		super(parent, "Classes", true);

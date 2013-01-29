@@ -16,7 +16,7 @@
 #------------------------------------------------------------------------------------------------
 # {section} Alignment parameters
 #------------------------------------------------------------------------------------------------
-# {file}(images*.xmd){validate}(PathExists) Selfile with the input images:
+# {file}(images*.xmd){validate}(PathExists) Input images:
 """ This selfile points to the stack or metadata containing your images 
 """
 InSelFile=''

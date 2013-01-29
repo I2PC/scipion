@@ -342,14 +342,14 @@ public class GalleryData {
 		readMd();
 	}
 
-	public ImageGallery createModel() {
+	public ImageGalleryTableModel createModel() {
 		try {
 			switch (mode) {
 			case GALLERY_VOL:
 				return new VolumeGallery(this);
 			case GALLERY_MD:
 				if (md.size() > 0 && hasRenderLabel())
-					return new MetadataGallery(this);
+					return new MetadataGalleryTableModel(this);
 				// else fall in the next case
 			case TABLE_MD:
 				mode = Mode.TABLE_MD; // this is necessary when coming from
