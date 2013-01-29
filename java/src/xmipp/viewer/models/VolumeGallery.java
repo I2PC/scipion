@@ -37,7 +37,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 
-public class VolumeGallery extends ImageGallery {
+public class VolumeGallery extends ImageGalleryTableModel {
 	protected String volFn;
 	protected long volNumber;
 	ImageGeneric volume;

@@ -55,14 +55,14 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.MetadataGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
+import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MetadataTable;
 import xmipp.viewer.models.ClassInfo;
 
 public class AddFillLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
-	protected MetadataGallery gallery;
+	protected MetadataGalleryTableModel gallery;
 
 	protected boolean fillMode = false;
 	protected GridBagConstraints gbc = new GridBagConstraints();
@@ -81,7 +81,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	public AddFillLabelsJDialog(JFrameGallery parent,
 			ArrayList<ColumnInfo> labels) {
 		super(parent, "Add new label", true);
-		this.gallery = (MetadataGallery) parent.gallery;
+		this.gallery = (MetadataGalleryTableModel) parent.gallery;
 		this.labels = labels;
 		initComponents();
 	}// constructor AddFillLabelsJDialog

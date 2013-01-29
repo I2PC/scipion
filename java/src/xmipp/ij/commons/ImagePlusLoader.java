@@ -41,7 +41,8 @@ public class ImagePlusLoader
 	protected ImagePlus imp;
 	protected ImageGeneric ig;
 	protected long modified;
-
+	protected boolean wrap;
+	
 	public ImagePlusLoader()
 	{
 		this.imp = null;
@@ -75,7 +76,7 @@ public class ImagePlusLoader
 
 	public ImagePlus loadImagePlus()
 	{
-		// ImagePlus imp = null;
+		imp = null;
 		try
 		{
 			if (fileName != null && Filename.exists(fileName) && (hasChanged() || imp == null))
@@ -130,17 +131,23 @@ public class ImagePlusLoader
 		return useGeometry;
 	}
 
-	public void useGeometry()
+	public void setUseGeometry(boolean value)
 	{
-		setAllowsGeometry(true);
-		loadImagePlus();
+		useGeometry = value;
+		
 	}
 
-	public void wrap()
+	public void setWrap(boolean value)
 	{
-		// TODO Auto-generated method stub
+		wrap = value;
 
 	}
+
+	public boolean isWrap()
+	{
+		return wrap;
+	}
+
 
 	public boolean isVolume()
 	{

@@ -54,7 +54,6 @@ static bool  falseb=false;
 #define BAD_INDEX -1
 
 #define FILENAME_XMIPP_STAR "# XMIPP_STAR_1"
-#define FILENAME_EMX "# EMX1.0"
 #define FILENAME_XMIPP_SQLITE "SQLite format 3"
 #define DEFAULT_BLOCK_NAME "noname"
 /** Write mode

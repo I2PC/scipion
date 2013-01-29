@@ -44,7 +44,7 @@ import javax.swing.table.AbstractTableModel;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
+import xmipp.viewer.models.ImageGalleryTableModel;
 
 public class EditLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
@@ -55,7 +55,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	// This will be used for check for results from the dialog
 	boolean fireEvent = true;
 	GridBagConstraints gbc = new GridBagConstraints();
-	ImageGallery gallery;
+	ImageGalleryTableModel gallery;
 	JPanel panelButtons;
 
 	public EditLabelsJDialog(JFrameGallery parent) {
