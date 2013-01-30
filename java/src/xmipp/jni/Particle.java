@@ -48,7 +48,7 @@ public class Particle implements Comparable<Particle> {
 			return true;
 	}
 
-
+	
 	
 
 	public void setPosition(int x, int y) {

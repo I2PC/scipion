@@ -84,16 +84,24 @@ public class SaveJDialog extends XmippDialog {
 	protected JRadioButton rbMdAppend;	
 	protected JPanel panelImg;
 	protected JPanel panelMd;
-	protected GalleryData data;	
+	protected GalleryData data;
+	private String block;
+	private JCheckBox chbDiscard;
 	
-	public SaveJDialog(JFrameGallery parent) {
+	public SaveJDialog(GalleryJFrame parent, String file) {
 		super(parent, "Save", true);
 		initComponents();
+		block = file.substring(0, file.lastIndexOf("@"));
+		setMdFilename(file);
+	}// constructor SaveJDialog
+
+	public SaveJDialog(GalleryJFrame parent) {
+		this(parent, null);
 	}// constructor SaveJDialog
 
 	@Override
 	protected void createContent(JPanel panel){		
-		this.data =((JFrameGallery)parent).getData();
+		this.data =((GalleryJFrame)parent).getData();
 		setMinimumSize(new Dimension(500, 300));
 		setResizable(false);
 		panel.setLayout(new GridBagLayout());
@@ -115,11 +123,12 @@ public class SaveJDialog extends XmippDialog {
 		//Checkbox to save metadata
 		//chbMd = new JCheckBox("Save metadata", true);
 		//chbMd.addActionListener(this);
-		group.add(new JLabel("Metadata filename:"),  
+		group.add(new JLabel("Metadata file:"),  
 				XmippWindowUtil.getConstraints(gbc, 0, 0));
 		
 		createMdOptions();
 		group.add(panelMd, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
+		
 		
 		//Checkbox to save images
 		chbImg = new JCheckBox("Save images", false);
@@ -158,14 +167,22 @@ public class SaveJDialog extends XmippDialog {
 //		btnBrowseMd = WindowUtil.getIconButton("folderopen.gif", this);
 //		panelMd.add(btnBrowseMd,  WindowUtil.getConstraints(gbc, 2, 0));
 		panelMd.add(panelBrowse,  XmippWindowUtil.getConstraints(gbc, 0, 0, 3));
-		rbMdOverride = new JRadioButton("Ovewrite file");
-		panelMd.add(rbMdOverride, XmippWindowUtil.getConstraints(gbc, 0, 1));
+		chbDiscard = new JCheckBox("Save Active Block Only", false);
+		panelMd.add(chbDiscard,  XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
+		rbMdOverride = new JRadioButton("Overwrite file");
+		panelMd.add(rbMdOverride, XmippWindowUtil.getConstraints(gbc, 0, 2));
 		gbc.anchor = GridBagConstraints.WEST;	
-		rbMdAppend = new JRadioButton("Replace/Append block", true);
-		panelMd.add(rbMdAppend, XmippWindowUtil.getConstraints(gbc, 1, 1));
+		rbMdAppend = new JRadioButton("Replace/Append", true);
+		panelMd.add(rbMdAppend, XmippWindowUtil.getConstraints(gbc, 1, 2));
 		ButtonGroup group = new ButtonGroup();
 	    group.add(rbMdOverride);
 	    group.add(rbMdAppend);
+	   
+	}
+	
+	public boolean isOverwrite()
+	{
+		return rbMdOverride.isSelected();
 	}
 	
 	protected void createImageOptions(){
@@ -208,18 +225,7 @@ public class SaveJDialog extends XmippDialog {
 		
 	}
 	
-	/** Save the metadata using the path and setting from the dialog */
-	public void saveMd(MetaData md){
-		try {
-			String path = getMdFilename();
-			if (isAppendMode())
-				md.writeBlock(path);
-			else
-				md.write(path);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+	
 	
 	
 	@Override
@@ -242,7 +248,7 @@ public class SaveJDialog extends XmippDialog {
 
         if (returnVal == XmippFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
-            tb.setText(file.getPath());
+            tb.setText(block + "@" + file.getPath());
         }
 	}
 	
@@ -287,5 +293,10 @@ public class SaveJDialog extends XmippDialog {
 			e.printStackTrace();
 			return MDLabel.MDL_UNDEFINED;
 		}
+	}
+
+	public boolean saveActiveBlockOnly()
+	{
+		return chbDiscard.isSelected();
 	}
 }// class SaveJDialog

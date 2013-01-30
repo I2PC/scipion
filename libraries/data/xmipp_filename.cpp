@@ -249,7 +249,7 @@ bool FileName::hasStackExtension() const
     String ext = getFileFormat();
     return (ext=="stk" || ext=="spi" || ext=="xmp" || ext=="mrcs" || ext=="mrc" ||
             ext=="img" || ext=="hed" || ext=="pif" || ext=="tif"  || ext=="dm3" ||
-            ext=="ser");
+            ext=="ser" || ext=="st");
 }
 
 // Has image extension .....................................................
@@ -309,15 +309,18 @@ void FileName::initRandom(int length)
 }
 
 // Init Unique .............................................................
-void FileName::initUniqueName(const char *templateStr)
+void FileName::initUniqueName(const char *templateStr, const String &fnDir)
 {
 #ifndef __MINGW32__
     int fd;
-    int len = 256;
+    int len = 512;
     char filename[len];
-    strcpy(filename, templateStr);
+    if (fnDir!="")
+    	strcpy(filename,(fnDir+"/").c_str());
+    else
+    	filename[0]=0;
+    strcat(filename, templateStr);
     filename[len - 1] = 0;
-
     if ((fd = mkstemp(filename)) == -1)
     {
         perror("FileName::Error generating tmp lock file");
@@ -326,7 +329,6 @@ void FileName::initUniqueName(const char *templateStr)
     close(fd);
     *this = filename;
 #endif
-
 }
 
 // Add at beginning ........................................................

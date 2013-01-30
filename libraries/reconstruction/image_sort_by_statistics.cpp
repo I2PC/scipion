@@ -27,7 +27,7 @@
 
 void ProgSortByStatistics::clear()
 {
-	pcaAnalyzer.clear();
+    pcaAnalyzer.clear();
 }
 
 void ProgSortByStatistics::readParams()
@@ -37,22 +37,25 @@ void ProgSortByStatistics::readParams()
     addToInput = checkParam("--addToInput");
     fn_train = getParam("--train");
     cutoff = getDoubleParam("--zcut");
+    per = getDoubleParam("--percent");
 }
 
 void ProgSortByStatistics::defineParams()
 {
     addUsageLine("Sorts the input images for identifying junk particles");
-    addUsageLine("+The program associates to each image a vector composed by");
-    addUsageLine("+the histogram of the image (this accounts for factors such as");
-    addUsageLine("+min, max, avg, and standard deviation, plus a more complete");
-    addUsageLine("+description of the image gray levels) and the radial profile of");
-    addUsageLine("+the image squared.");
+    addUsageLine("+The program associates to each image four vectors.");
+    addUsageLine("+One vector is composed by descriptors that encodes the particle shape.");
+    addUsageLine("+Another two vectors give information about the SNR of the objects.");
+    addUsageLine("+Finally, the last vector provides information of the particle histogram");
     addUsageLine("+");
-    addUsageLine("+These vectors are then scored according to a multivariate Gaussian distribution");
+    addUsageLine("+These vector are then scored according to a multivariate Gaussian distribution");
     addUsageLine("+");
-    addUsageLine("+If you choose a threshold, you must take into account that it is a zscore.");
+    addUsageLine("+You can reject erroneous particles choosing a threshold, you must take into account");
+    addUsageLine("+that it is a zscore.");
     addUsageLine("+For univariate and mulivariate Gaussian distributions, 99% of the individuals");
-    addUsageLine("+have a Z-score below 3");
+    addUsageLine("+have a Z-score below 3.");
+    addUsageLine("+Additionally, you can discard bad particles selecting an inaccurate particle percentage");
+    addUsageLine("+typically around 10-20%.");
     addParamsLine(" -i <selfile>            : Selfile with input images");
     addParamsLine(" [-o <rootname=\"\">]    : Output rootname");
     addParamsLine("                         : rootname.xmd contains the list of sorted images with their Z-score");
@@ -61,6 +64,8 @@ void ProgSortByStatistics::defineParams()
     addParamsLine(" [--train <selfile=\"\">]: Train on selfile with good particles");
     addParamsLine(" [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) ");
     addParamsLine("                         : Images whose Z-score is larger than the cutoff are disabled");
+    addParamsLine(" [--percent <float=0>]   : Cut-off for particles (zero for no cut-off) ");
+    addParamsLine("                         : Percentage of images with larger Z-scores are disabled");
     addParamsLine(" [--addToInput]          : Add columns also to input MetaData");
 }
 
@@ -68,32 +73,41 @@ void ProgSortByStatistics::defineParams()
 //majorAxis and minorAxis is the estimated particle size in px
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
-//#define DEBUG
-    pcaAnalyzer[2];
+    //#define DEBUG
+
+    //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
+    String name = "000010@Images/Extracted/run_001/extra/KLH_Dataset_I_Training_0028.stk";
+    //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
+
+    pcaAnalyzer[4];
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
     PCAMahalanobisAnalyzer tempPcaAnalyzer1;
     PCAMahalanobisAnalyzer tempPcaAnalyzer2;
+    PCAMahalanobisAnalyzer tempPcaAnalyzer3;
 
     //Morphology
     tempPcaAnalyzer0.clear();
     //Signal to noise ratio
     tempPcaAnalyzer1.clear();
-    //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer2.clear();
+    //Histogram analysis, to detect black points and saturated parts
+    tempPcaAnalyzer3.clear();
 
-    Image<double> img;
-    MultidimArray<double> img2;
     Matrix1D<double> center(2);
     center.initZeros();
     FringeProcessing fp;
 
-    int numHistElem = 21;
-    int numDescriptors=4;
-    int numDescriptors2=3;
+    int sign = -1;
+    int numNorm = 5;
+    int numDescriptors0=numNorm;
+    int numDescriptors1=4;
+    int numDescriptors2=11;
+    int numDescriptors3 = 10;
 
-    MultidimArray<float> v(numDescriptors);
-    MultidimArray<float> v2(numHistElem);
-    MultidimArray<float> v3(numDescriptors2);
+    MultidimArray<float> v0(numDescriptors0);
+    MultidimArray<float> v1(numDescriptors1);
+    MultidimArray<float> v2(numDescriptors2);
+    MultidimArray<float> v3(numDescriptors3);
 
     if (verbose>0)
     {
@@ -111,61 +125,48 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     bool first=true;
 
     // We assume that at least there is one particle
-    img.readApplyGeo(SF,1);
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
 
-    MultidimArray<double> nI, modI, tempI, tempM, Imean;
+    //Initialization:
+    MultidimArray<double> nI, modI, tempI, tempM, ROI;
     MultidimArray<bool> mask;
-    nI.resizeNoCopy(img());
-    modI.resizeNoCopy(img());
-    Imean.resizeNoCopy(img());
-    tempI.resizeNoCopy(img());
-    tempM.resizeNoCopy(img());
-    mask.resizeNoCopy(img());
-
-    Imean.initConstant(0);
+    nI.resizeNoCopy(Ydim,Xdim);
+    modI.resizeNoCopy(Ydim,Xdim);
+    tempI.resizeNoCopy(Ydim,Xdim);
+    tempM.resizeNoCopy(Ydim,Xdim);
+    mask.resizeNoCopy(Ydim,Xdim);
     mask.initConstant(true);
 
-    MultidimArray<double> autoCorr(2*img().ydim,2*img().xdim);
+    MultidimArray<double> autoCorr(2*Ydim,2*Xdim);
     MultidimArray<double> smallAutoCorr;
 
     Histogram1D hist;
     Matrix2D<double> U,V,temp;
     Matrix1D<double> D;
-    v.initZeros(numDescriptors);
-    v2.initZeros(numHistElem);
-    v3.initZeros(numDescriptors2);
 
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    v0.initZeros(numDescriptors0);
+    v1.initZeros(numDescriptors1);
+    v2.initZeros(numDescriptors2);
+    v3.initZeros(numDescriptors3);
+
+    ROI.resizeNoCopy(Ydim,Xdim);
+    ROI.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
     {
-        if (thereIsEnable)
-        {
-            int enabled;
-            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-            if ( (enabled==-1)  )
-            {
-                continue;
-            }
-            img.readApplyGeo(SF,__iter.objId);
-            //
-            img().statisticsAdjust(0,1);
-            Imean += img();
-        }
+        double temp = std::sqrt(i*i+j*j);
+        if ( temp < (Xdim/2))
+            A2D_ELEM(ROI,i,j)= 1;
+        else
+            A2D_ELEM(ROI,i,j)= 0;
     }
 
-    Imean /= SF.size();
-    Imean.setXmippOrigin();
-
-#ifdef DEBUG
-
-    FileName fpName    = "test0.txt";
-    Imean.write(fpName);
-#endif
-
+    Image<double> img;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (thereIsEnable)
         {
-
             int enabled;
             SF.getValue(MDL_ENABLED,enabled,__iter.objId);
             if ( (enabled==-1)  )
@@ -182,39 +183,47 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mI.statisticsAdjust(0,1);
             mask.setXmippOrigin();
 
-            fp.normalize(mI,tempI,modI,1,5,mask);
+            double var = 1;
+            fp.normalize(mI,tempI,modI,0,var,mask);
             modI.setXmippOrigin();
             tempI.setXmippOrigin();
-            nI = tempI*(modI*modI);
+            nI = sign*tempI*(modI*modI);
             tempM = (modI*modI);
 
-            //fp.normalize(mI,tempI,modI,1,4,mask);
-            //tempI.setXmippOrigin();
-            //modI.setXmippOrigin();
-            //nI += (tempI*(modI*modI));
-            //tempM += (modI*modI);
-
-            //fp.normalize(mI,tempI,modI,1,6,mask);
-            //tempI.setXmippOrigin();
-            //modI.setXmippOrigin();
-            //nI += (tempI*(modI*modI));
-            //tempM += (modI*modI);
+            A1D_ELEM(v0,0) = (tempM*ROI).sum();
+            int index = 1;
+            while (index < numNorm)
+            {
+                fp.normalize(mI,tempI,modI,0,var,mask);
+                modI.setXmippOrigin();
+                tempI.setXmippOrigin();
+                nI += sign*tempI*(modI*modI);
+                tempM += (modI*modI);
+                A1D_ELEM(v0,index) = (tempM*ROI).sum();
+                index++;
+                var+=1;
+            }
 
             nI /= tempM;
+            tempPcaAnalyzer0.addVector(v0);
+            nI=(nI*ROI);
 
 #ifdef DEBUG
-            //fn = img.name().removeLastExtension().addExtension("spi");
-            //nI.write(fn);
-            //SF.setValue(MDL_IMAGE,fn,__iter.objId);
-            if (img.name()=="002870@Images/Extracted/run_001/DefaultFamily5")
+
+            std::cout << img.name() << std::endl;
+
+            if (img.name()==name)
             {
                 FileName fpName    = "test2.txt";
                 nI.write(fpName);
                 fpName    = "test4.txt";
                 tempM.write(fpName);
+                fpName    = "test5.txt";
+                ROI.write(fpName);
+                exit(1);
             }
 #endif
-            nI.binarize();
+            nI.binarize(0);
             int im = labelImage2D(nI,nI,8);
             compute_hist(nI, hist, 0, im, im+1);
             int l,k,i,j;
@@ -222,53 +231,47 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             A1D_ELEM(hist,j)=0;
             hist.maxIndex(l,k,i,j);
             nI.binarizeRange(j-1,j+1);
-            FringeProcessing fp;
+
             double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
             fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
-            // Build vector
-            v(0)=majorAxis;
-            v(1)=minorAxis;
-            v(2)= fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0) ;
-            v(3)=area;
 
-            for (int n=0 ; n < numDescriptors ; n++)
+            A1D_ELEM(v1,0)=majorAxis/((img().xdim) );
+            A1D_ELEM(v1,1)=minorAxis/((img().xdim) );
+            A1D_ELEM(v1,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
+            A1D_ELEM(v1,3)=area/( ((img().xdim)/2)*((img().ydim)/2) );
+
+            for (int n=0 ; n < numDescriptors1 ; n++)
             {
-                if ( std::isnan(v(n)) )
-                    v(n)=0;
+                if ( std::isnan(A1D_ELEM(v1,n)) )
+                    A1D_ELEM(v1,n)=0;
             }
-            tempPcaAnalyzer0.addVector(v);
+            tempPcaAnalyzer1.addVector(v1);
 
-
-            //tempI = (Imean*mI)/mI.sum();
-            //double val = tempI.sum();
-
-            mI-=Imean;
             mI.setXmippOrigin();
-            auto_correlation_matrix(mI,autoCorr);
-            autoCorr.window(smallAutoCorr,-10,-10, 10, 10);
+            auto_correlation_matrix(mI*ROI,autoCorr);
+            autoCorr.window(smallAutoCorr,-5,-5, 5, 5);
             smallAutoCorr.copy(temp);
             svdcmp(temp,U,D,V);
 
-            for (int n = 0; n < numHistElem; ++n)
-            	v2(n)=(float)VEC_ELEM(D,n);
-            tempPcaAnalyzer1.addVector(v2);
-
+            for (int n = 0; n < numDescriptors2; ++n)
+                A1D_ELEM(v2,n)=(float)VEC_ELEM(D,n)/VEC_ELEM(D,0);
+            tempPcaAnalyzer2.addVector(v2);
 
             double minVal;
             double maxVal;
             mI.computeDoubleMinMax(minVal,maxVal);
             compute_hist(mI, hist, minVal, maxVal, 100);
 
-            v3(0)= fabs(hist.percentil(5));
-            v3(1)= fabs(hist.percentil(95));
-            v3(2) = fabs(hist.percentil(50));
-            tempPcaAnalyzer2.addVector(v3);
+            for (int n=0 ; n <= numDescriptors3-1 ; n++)
+            {
+                A1D_ELEM(v3,n)= (hist.percentil((n+1)*10));
+            }
+            tempPcaAnalyzer3.addVector(v3);
 
 #ifdef DEBUG
 
-            if (img.name()=="002870@Images/Extracted/run_001/DefaultFamily5")
+            if (img.name()==name)
             {
-
                 FileName fpName    = "test.txt";
                 mI.write(fpName);
                 fpName    = "test3.txt";
@@ -283,20 +286,21 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
         }
     }
 
-
     MultidimArray<double> vavg,vstddev;
     tempPcaAnalyzer0.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer1.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer2.computeStatistics(vavg,vstddev);
+    tempPcaAnalyzer3.computeStatistics(vavg,vstddev);
 
     tempPcaAnalyzer0.evaluateZScore(2,20);
     tempPcaAnalyzer1.evaluateZScore(2,20);
     tempPcaAnalyzer2.evaluateZScore(2,20);
+    tempPcaAnalyzer3.evaluateZScore(2,20);
 
-    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer2);
-    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer1);
-    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer0);
-
+    pcaAnalyzer.push_back(tempPcaAnalyzer0);
+    pcaAnalyzer.push_back(tempPcaAnalyzer1);
+    pcaAnalyzer.push_back(tempPcaAnalyzer2);
+    pcaAnalyzer.push_back(tempPcaAnalyzer3);
 }
 
 void ProgSortByStatistics::processInputPrepare(MetaData &SF)
@@ -385,7 +389,7 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
 
 void ProgSortByStatistics::run()
 {
-	clear();
+    //clear();
 
     // Process input selfile ..............................................
     SF.read(fn);
@@ -399,24 +403,67 @@ void ProgSortByStatistics::run()
     int imgno = 0;
     int numPCAs = pcaAnalyzer.size();
 
-    MultidimArray<double> ZscoreMultivariate(SF.size());
-    MultidimArray<double> weights(numPCAs);
-    ZscoreMultivariate.initConstant(0);
-    weights.initConstant(1);
-    weights(0) = 0.3;
-    weights(1) = 0.5;
-    weights(2) = 0.2;
+    MultidimArray<double> finalZscore(SF.size());
+    MultidimArray<double> ZscoreShape(SF.size()), sortedZscoreShape;
+    MultidimArray<double> ZscoreSNR1(SF.size()), sortedZscoreSNR1;
+    MultidimArray<double> ZscoreSNR2(SF.size()), sortedZscoreSNR2;
+    MultidimArray<double> ZscoreHist(SF.size()), sortedZscoreHist;
 
+    finalZscore.initConstant(0);
+    ZscoreShape.resizeNoCopy(finalZscore);
+    ZscoreSNR1.resizeNoCopy(finalZscore);
+    ZscoreSNR2.resizeNoCopy(finalZscore);
+    ZscoreHist.resizeNoCopy(finalZscore);
+    sortedZscoreShape.resizeNoCopy(finalZscore);
+    sortedZscoreSNR1.resizeNoCopy(finalZscore);
+    sortedZscoreSNR2.resizeNoCopy(finalZscore);
+    sortedZscoreHist.resizeNoCopy(finalZscore);
+
+    double zScore=0;
     int enabled;
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        for (int num = 0; num < numPCAs; ++num)
+        SF.getValue(MDL_ENABLED,enabled,__iter.objId);
+        if ( (enabled==-1)  )
         {
-            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-            ZscoreMultivariate(imgno)+=(pcaAnalyzer[num].getZscore(imgno))*weights(num)*(pcaAnalyzer[num].getZscore(imgno));
+            A1D_ELEM(finalZscore,imgno) = 1e3;
+            A1D_ELEM(ZscoreShape,imgno) = 1e3;
+            A1D_ELEM(ZscoreSNR1,imgno) = 1e3;
+            A1D_ELEM(ZscoreSNR2,imgno) = 1e3;
+            A1D_ELEM(ZscoreHist,imgno) = 1e3;
+            imgno++;
+            enabled = 0;
         }
-        imgno++;
+        else
+        {
+            for (int num = 0; num < numPCAs; ++num)
+            {
+                if (num == 0)
+                {
+                    A1D_ELEM(ZscoreSNR1,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                }
+                else if (num == 1)
+                {
+                    A1D_ELEM(ZscoreShape,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                }
+                else if (num == 2)
+                {
+                    A1D_ELEM(ZscoreSNR2,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                }
+                else
+                {
+                    A1D_ELEM(ZscoreHist,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                }
+
+                if(zScore < pcaAnalyzer[num].getZscore(imgno))
+                    zScore = pcaAnalyzer[num].getZscore(imgno);
+            }
+
+            A1D_ELEM(finalZscore,imgno)=zScore;
+            imgno++;
+            zScore = 0;
+        }
     }
 
     // Produce output .....................................................
@@ -425,29 +472,18 @@ void ProgSortByStatistics::run()
 
     if (verbose==2 && !fn_out.empty())
         fh_zind.open((fn_out.withoutExtension() + "_vectors.xmd").c_str(), std::ios::out);
-    MultidimArray<double> finalZscore=ZscoreMultivariate;
-    double L=1;
-
-    finalZscore*=ZscoreMultivariate;
-    L++;
-
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(finalZscore)
-    DIRECT_A1D_ELEM(finalZscore,i)=pow(DIRECT_A1D_ELEM(finalZscore,i),1.0/L);
 
     MultidimArray<int> sorted;
     finalZscore.indexSort(sorted);
     int nr_imgs = SF.size();
     bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
-    FileName fnImg;
     MDRow row;
 
     for (int imgno = 0; imgno < nr_imgs; imgno++)
     {
         int isort_1 = DIRECT_A1D_ELEM(sorted,imgno);
         int isort = isort_1 - 1;
-        //SF.getValue(MDL_IMAGE,fnImg,isort+1);
         SF.getRow(row, isort_1);
-        row.getValue(MDL_IMAGE, fnImg);
 
         if (thereIsEnable)
         {
@@ -456,9 +492,18 @@ void ProgSortByStatistics::run()
             if (enabled==-1)
                 continue;
         }
-        //size_t objId = SFout.addObject();
-        row.setValue(MDL_IMAGE,fnImg);
+
         double zscore=DIRECT_A1D_ELEM(finalZscore,isort);
+        double zscoreShape=DIRECT_A1D_ELEM(ZscoreShape,isort);
+        double zscoreSNR1=DIRECT_A1D_ELEM(ZscoreSNR1,isort);
+        double zscoreSNR2=DIRECT_A1D_ELEM(ZscoreSNR2,isort);
+        double zscoreHist=DIRECT_A1D_ELEM(ZscoreHist,isort);
+
+        DIRECT_A1D_ELEM(sortedZscoreShape,imgno)=DIRECT_A1D_ELEM(ZscoreShape,isort);
+        DIRECT_A1D_ELEM(sortedZscoreSNR1,imgno)=DIRECT_A1D_ELEM(ZscoreSNR1,isort);
+        DIRECT_A1D_ELEM(sortedZscoreSNR2,imgno)=DIRECT_A1D_ELEM(ZscoreSNR2,isort);
+        DIRECT_A1D_ELEM(sortedZscoreHist,imgno)=DIRECT_A1D_ELEM(ZscoreHist,isort);
+
         if (zscore>cutoff && cutoff>0)
         {
             row.setValue(MDL_ENABLED,-1);
@@ -471,21 +516,104 @@ void ProgSortByStatistics::run()
             if (addToInput)
                 SF.setValue(MDL_ENABLED,1,isort_1);
         }
+
         row.setValue(MDL_ZSCORE,zscore);
+        row.setValue(MDL_ZSCORE_SHAPE,zscoreShape);
+        row.setValue(MDL_ZSCORE_SNR1,zscoreSNR1);
+        row.setValue(MDL_ZSCORE_SNR2,zscoreSNR2);
+        row.setValue(MDL_ZSCORE_HISTOGRAM,zscoreHist);
+
         if (addToInput)
-            SF.setValue(MDL_ZSCORE,zscore,isort_1);
-        if (verbose==2)
         {
-            fh_zind << fnImg << " : ";
-            //FOR_ALL_ELEMENTS_IN_ARRAY1D(tempPcaAnalyzer.v[isort])
-            //fh_zind << tempPcaAnalyzer.v[isort](i) << "\n";
+            SF.setValue(MDL_ZSCORE,zscore,isort_1);
+            SF.setValue(MDL_ZSCORE_SHAPE,zscoreShape,isort_1);
+            SF.setValue(MDL_ZSCORE_SNR1,zscoreSNR1,isort_1);
+            SF.setValue(MDL_ZSCORE_SNR2,zscoreSNR2,isort_1);
+            SF.setValue(MDL_ZSCORE_HISTOGRAM,zscoreHist,isort_1);
         }
+
         SFout.addRow(row);
     }
+
+    //Sorting taking into account a given percentage
+    if (per > 0)
+    {
+        MultidimArray<int> sortedShape,sortedSNR1,sortedSNR2,sortedHist,
+        					sortedShapeSF,sortedSNR1SF,sortedSNR2SF,sortedHistSF;
+
+        sortedZscoreShape.indexSort(sortedShape);
+        sortedZscoreSNR1.indexSort(sortedSNR1);
+        sortedZscoreSNR2.indexSort(sortedSNR2);
+        sortedZscoreHist.indexSort(sortedHist);
+        int numPartReject = std::floor((per/100)*SF.size());
+
+        for (int numPar = SF.size()-1; numPar > (SF.size()-numPartReject); --numPar)
+        {
+            int isort_1 = DIRECT_A1D_ELEM(sortedShape,numPar);
+            int isort = isort_1 - 1;
+            SFout.getRow(row, isort_1);
+            row.setValue(MDL_ENABLED,-1);
+            SFout.setRow(row,isort_1);
+
+            isort_1 = DIRECT_A1D_ELEM(sortedSNR1,numPar);
+            isort = isort_1 - 1;
+            SFout.getRow(row, isort_1);
+            row.setValue(MDL_ENABLED,-1);
+            SFout.setRow(row,isort_1);
+
+            isort_1 = DIRECT_A1D_ELEM(sortedSNR2,numPar);
+            isort = isort_1 - 1;
+            SFout.getRow(row, isort_1);
+            row.setValue(MDL_ENABLED,-1);
+            SFout.setRow(row,isort_1);
+
+            isort_1 = DIRECT_A1D_ELEM(sortedHist,numPar);
+            isort = isort_1 - 1;
+            SFout.getRow(row, isort_1);
+            row.setValue(MDL_ENABLED,-1);
+            SFout.setRow(row,isort_1);
+
+            if (addToInput)
+            {
+
+                ZscoreShape.indexSort(sortedShapeSF);
+                ZscoreSNR1.indexSort(sortedSNR1SF);
+                ZscoreSNR2.indexSort(sortedSNR2SF);
+                ZscoreHist.indexSort(sortedHistSF);
+
+                isort_1 = DIRECT_A1D_ELEM(sortedShapeSF,numPar);
+                isort = isort_1 - 1;
+                SF.getRow(row, isort_1);
+                row.setValue(MDL_ENABLED,-1);
+                SF.setRow(row,isort_1);
+
+                isort_1 = DIRECT_A1D_ELEM(sortedSNR1SF,numPar);
+                isort = isort_1 - 1;
+                SF.getRow(row, isort_1);
+                row.setValue(MDL_ENABLED,-1);
+                SF.setRow(row,isort_1);
+
+                isort_1 = DIRECT_A1D_ELEM(sortedSNR2SF,numPar);
+                isort = isort_1 - 1;
+                SF.getRow(row, isort_1);
+                row.setValue(MDL_ENABLED,-1);
+                SF.setRow(row,isort_1);
+
+                isort_1 = DIRECT_A1D_ELEM(sortedHistSF,numPar);
+                isort = isort_1 - 1;
+                SF.getRow(row, isort_1);
+                row.setValue(MDL_ENABLED,-1);
+                SF.setRow(row,isort_1);
+            }
+        }
+    }
+
     if (verbose==2)
         fh_zind.close();
     if (!fn_out.empty())
+    {
         SFout.write(fn_out,MD_OVERWRITE);
+    }
     if (addToInput)
         SF.write(fn,MD_APPEND);
 

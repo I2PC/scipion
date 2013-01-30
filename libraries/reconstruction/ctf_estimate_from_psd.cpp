@@ -2019,7 +2019,7 @@ void estimate_defoci()
                     error(i, j) = global_heavy_penalization;
                     continue;
                 }
-                for (double angle = 0; angle < 90; angle += 45)
+                for (double angle = 0; angle < 180; angle += 45)
                 {
                     int iter;
                     double fitness;
@@ -2295,12 +2295,17 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     int maxInd;
     arrayError.maxIndex(maxInd);
 
-    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 3000) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 50000) )
+    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 3000) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 50000) && VEC_ELEM(arrayError,maxInd)>-1e3 )
     {
         VEC_ELEM(arrayError,maxInd) = -1e3;
         VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
         VEC_ELEM(arrayDefocusDiff,maxInd) = global_prm->initial_ctfmodel.DeltafV;
         arrayError.maxIndex(maxInd);
+    }
+    if (VEC_ELEM(arrayError,maxInd)<=-1e3)
+    {
+    	estimate_defoci();
+    	return;
     }
 
     Matrix1D<double> arrayDefocusU(3);
@@ -2683,6 +2688,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
 
         saveIntermediateResults(fn_rootMODEL, false);
         global_ctfmodel.Tm /= prm.downsampleFactor;
+        global_ctfmodel.azimuthal_angle = std::fmod(global_ctfmodel.azimuthal_angle,360.);
         global_ctfmodel.write(fn_rootCTFPARAM + ".ctfparam_tmp");
         MetaData MD;
         MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");

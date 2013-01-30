@@ -175,47 +175,6 @@ enum MDLabel
     MDL_DM3_SIZE,
     MDL_DM3_VALUE,
 
-    //label related with EM exchange
-    MDL_EMX_MICROGRAPH_URL,   ///< micrograph name (string)
-    MDL_EMX_MICROGRAPH_SAMPLING,///< Angstroms / pixel (float)
-    MDL_EMX_MICROGRAPH_DEFOCUSU,///< defocusu in Angstroms (float)
-    MDL_EMX_MICROGRAPH_DEFOCUSV,///< defocusv in Angstroms (float)
-    MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE,/// <angle to main defoucs axis from axis x in degrees (float)
-    MDL_EMX_MICROGRAPH_VOLTAGE,///< voltage in KV (float)
-    MDL_EMX_MICROGRAPH_CS,///< spherical aberration mm (float)
-    MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,///< amplitud contrast range 0-1 (float)
-    MDL_EMX_MICROGRAPH_FOM,///< Quality index. 0 worst case, 1 best case
-    MDL_EMX_PARTICLE_COORDINATE_X, ///< particle coordinate X in micrograph (float)
-    MDL_EMX_PARTICLE_COORDINATE_Y, ///< particle coordinate Y in micrograph (float)
-    MDL_EMX_PARTICLE_URL,     ///< particle name (string)
-    MDL_EMX_PARTICLE_MICROGRAPH_URL,///<particle has been extracted from micrograph
-    MDL_EMX_PARTICLE_DEFOCUSU,///< defocusu in Angstroms (float)
-    MDL_EMX_PARTICLE_DEFOCUSV,///< defocusv in Angstroms (float)
-    MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE, ///< angle to main defoucs axis from axis x in degrees (float)
-    MDL_EMX_P_PARTICLE_CLASS_ID,///< class string
-    MDL_EMX_P_PARTICLE_ACTIVE_FLAG, ///< particle enable bool
-    MDL_EMX_P_PARTICLE_FOM, ///< particle fom (float)
-    MDL_EMX_P_PARTICLE_PARTICLE_URL, ///< particle url
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1,     ///< element 1_1 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1,     ///< element 2_1 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1,     ///< element 3_1 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1,     ///< element 4_1 of transformation matrix (float)
-
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2,     ///< element 1_2 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2,     ///< element 2_2 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2,     ///< element 3_2 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2,     ///< element 4_2 of transformation matrix (float)
-
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3,     ///< element 1_3 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3,     ///< element 2_3 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3,     ///< element 3_3 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3,     ///< element 4_3 of transformation matrix (float)
-
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_4,     ///< element 1_4 (x,y) of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_4,     ///< element 2_4 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_4,     ///< element 3_4 of transformation matrix (float)
-    MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_4,     ///< element 4_4 of transformation matrix (float)
-
     //End of labels
 
     MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
@@ -285,6 +244,7 @@ enum MDLabel
     MDL_PICKING_FAMILY_TEMPLATES, ///< Number of templates for the family
     MDL_PICKING_FAMILY_STATE, ///< Family state for particle picking
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, ///< Micrograph family state for particle picking
+    MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
     MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
@@ -358,7 +318,11 @@ enum MDLabel
     MDL_YSIZE, ///< Y size (int)
     MDL_Z, ///< Z component (double)
     MDL_ZCOOR, ///< Z component (int)
-    MDL_ZSCORE, ///< Z Score (double)
+    MDL_ZSCORE, ///< Global Z Score (double)
+    MDL_ZSCORE_SHAPE, ///< Z Score (double)
+    MDL_ZSCORE_SNR1, ///< Z Score (double)
+    MDL_ZSCORE_SNR2, ///< Z Score (double)
+    MDL_ZSCORE_HISTOGRAM, ///< Z Score (double)
     MDL_ZSIZE, ///< Z size (int)
 
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
@@ -907,45 +871,6 @@ private:
         MDL::addLabel(MDL_DM3_TAGNAME, LABEL_STRING, "dm3TagName");
         MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR_DOUBLE, "dm3Value");
 
-        MDL::addLabel(MDL_EMX_MICROGRAPH_AMPLITUDE_CONTRAST,LABEL_DOUBLE,"emx_micrograph____amplitude_contrast");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_micrograph____astigmatism_angle");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_CS, LABEL_DOUBLE,"emx_micrograph____Cs");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_DEFOCUSU, LABEL_DOUBLE, "emx_micrograph____defocus_U");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_DEFOCUSV, LABEL_DOUBLE, "emx_micrograph____defocus_V");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_FOM, LABEL_DOUBLE,      "emx_micrograph____FOM");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_SAMPLING, LABEL_DOUBLE, "emx_micrograph____samplingRate");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_URL, LABEL_STRING, "emx_micrograph____url");
-        MDL::addLabel(MDL_EMX_MICROGRAPH_VOLTAGE, LABEL_DOUBLE, "emx_micrograph____voltage");
-        MDL::addLabel(MDL_EMX_PARTICLE_ASTIGMATISM_ANGLE, LABEL_DOUBLE, "emx_particle____astigmatism_angle");
-        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_X, LABEL_DOUBLE, "emx_particle____coordinate_x");
-        MDL::addLabel(MDL_EMX_PARTICLE_COORDINATE_Y, LABEL_DOUBLE, "emx_particle____coordinate_y");
-        MDL::addLabel(MDL_EMX_PARTICLE_DEFOCUSU, LABEL_DOUBLE, "emx_particle____defocus_U");
-        MDL::addLabel(MDL_EMX_PARTICLE_DEFOCUSV, LABEL_DOUBLE, "emx_particle____defocus_V");
-        MDL::addLabel(MDL_EMX_PARTICLE_MICROGRAPH_URL, LABEL_STRING, "emx_particle____micrograph_url");
-        MDL::addLabelAlias(MDL_EMX_PARTICLE_MICROGRAPH_URL, "emx_micrograph.url");
-        MDL::addLabel(MDL_EMX_PARTICLE_URL, LABEL_STRING, "emx_particle____url");
-        MDL::addLabelAlias(MDL_EMX_PARTICLE_URL, "emx_particle.url");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_ACTIVE_FLAG, LABEL_BOOL, "emx_p_particle____active_flag");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_CLASS_ID, LABEL_STRING, "emx_p_particle____class_id");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_FOM, LABEL_DOUBLE, "emx_p_particle____fom");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_PARTICLE_URL, LABEL_STRING, "emx_p_particle____particle_url");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_1");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_2");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_3");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_1_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_1_4");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_1");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_2");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_3");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_2_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_2_4");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_1");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_2");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_3");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_3_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_3_4");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_1, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_x");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_2, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_y");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_3, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_offset_z");
-        MDL::addLabel(MDL_EMX_P_PARTICLE_TRANSFORMATION_MATRIX_4_4, LABEL_DOUBLE, "emx_p_particle____transformation_matrix_4_4");
-
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip");
         MDL::addLabelAlias(MDL_FLIP, "Flip");
@@ -1036,6 +961,7 @@ private:
         MDL::addLabel(MDL_PICKING_MICROGRAPH_FAMILY_STATE, LABEL_STRING, "pickingMicrographFamilyState");
         MDL::addLabelAlias(MDL_PICKING_MICROGRAPH_FAMILY_STATE, "micrograph_family_state");//3.0
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
+        MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
         MDL::addLabel(MDL_PICKING_FAMILY_TEMPLATES, LABEL_INT, "templatesNum");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
@@ -1134,8 +1060,11 @@ private:
         MDL::addLabel(MDL_ZCOOR, LABEL_INT, "zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "zScore");
+        MDL::addLabel(MDL_ZSCORE_SHAPE, LABEL_DOUBLE, "zScoreShape");
+        MDL::addLabel(MDL_ZSCORE_SNR1, LABEL_DOUBLE, "zScoreSNR1");
+        MDL::addLabel(MDL_ZSCORE_SNR2, LABEL_DOUBLE, "zScoreSNR2");
+        MDL::addLabel(MDL_ZSCORE_HISTOGRAM, LABEL_DOUBLE, "zScoreHistogram");
         MDL::addLabel(MDL_ZSIZE, LABEL_INT, "zSize");
-
 
         MDL::addLabelAlias(MDL_XCOOR, "Xcoor");//3.0
         MDL::addLabelAlias(MDL_XCOOR, "<X position>");

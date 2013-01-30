@@ -319,26 +319,20 @@ void applyGeometry(int SplineDegree,
     if (V1.getDim() == 2)
     {
         // 2D transformation
-        int m1, n1, m2, n2;
-        double x, y, xp, yp;
-        double minxp, minyp, maxxp, maxyp;
-        double cen_x, cen_y, cen_xp, cen_yp;
-        double wx, wy;
-        int Xdim, Ydim;
         double Aref00=MAT_ELEM(Aref,0,0);
         double Aref10=MAT_ELEM(Aref,1,0);
 
         // Find center and limits of image
-        cen_y  = (int)(YSIZE(V2) / 2);
-        cen_x  = (int)(XSIZE(V2) / 2);
-        cen_yp = (int)(YSIZE(V1) / 2);
-        cen_xp = (int)(XSIZE(V1) / 2);
-        minxp  = -cen_xp;
-        minyp  = -cen_yp;
-        maxxp  = XSIZE(V1) - cen_xp - 1;
-        maxyp  = YSIZE(V1) - cen_yp - 1;
-        Xdim   = XSIZE(V1);
-        Ydim   = YSIZE(V1);
+        double cen_y  = (int)(YSIZE(V2) / 2);
+        double cen_x  = (int)(XSIZE(V2) / 2);
+        double cen_yp = (int)(YSIZE(V1) / 2);
+        double cen_xp = (int)(XSIZE(V1) / 2);
+        double minxp  = -cen_xp;
+        double minyp  = -cen_yp;
+        double maxxp  = XSIZE(V1) - cen_xp - 1;
+        double maxyp  = YSIZE(V1) - cen_yp - 1;
+        int Xdim   = XSIZE(V1);
+        int Ydim   = YSIZE(V1);
 
         if (SplineDegree > 1)
         {
@@ -364,21 +358,18 @@ void applyGeometry(int SplineDegree,
         for (int i = 0; i < YSIZE(V2); i++)
         {
             // Calculate position of the beginning of the row in the output image
-            x = -cen_x;
-            y = i - cen_y;
+            double x = -cen_x;
+            double y = i - cen_y;
 
             // Calculate this position in the input image according to the
             // geometrical transformation
             // they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
-            yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
+            double xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
+            double yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
 
             for (int j = 0; j < XSIZE(V2); j++)
             {
-                bool interp;
-                double tmp;
-
 #ifdef DEBUG_APPLYGEO
 
                 std::cout << "Computing (" << i << "," << j << ")\n";
@@ -388,7 +379,7 @@ void applyGeometry(int SplineDegree,
 #endif
                 // If the point is outside the image, apply a periodic extension
                 // of the image, what exits by one side enters by the other
-                interp = true;
+                bool interp = true;
                 bool x_isOut = XMIPP_RANGE_OUTSIDE(xp, minxp, maxxp);
                 bool y_isOut = XMIPP_RANGE_OUTSIDE(yp, minyp, maxyp);
 
@@ -427,14 +418,14 @@ void applyGeometry(int SplineDegree,
                         // that it is not the nearest but the one at the top left corner
                         // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
                         // Calculate also weights for point m1+1,n1+1
-                        wx = xp + cen_xp;
-                        m1 = (int) wx;
+                        double wx = xp + cen_xp;
+                        int m1 = (int) wx;
                         wx = wx - m1;
-                        m2 = m1 + 1;
-                        wy = yp + cen_yp;
-                        n1 = (int) wy;
+                        int m2 = m1 + 1;
+                        double wy = yp + cen_yp;
+                        int n1 = (int) wy;
                         wy = wy - n1;
-                        n2 = n1 + 1;
+                        int n2 = n1 + 1;
 
                         // m2 and n2 can be out by 1 so wrap must be check here
                         if (wrap)
@@ -459,7 +450,7 @@ void applyGeometry(int SplineDegree,
                         double wy_1 = (1-wy);
                         double aux1=wy_1;
                         double aux2=aux1* wx_1 ;
-                        tmp  = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
+                        double tmp  = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
 
                         if (wx != 0 && m2 < V1.xdim)
                             tmp += (aux1-aux2) * DIRECT_A2D_ELEM(V1, n1, m2);

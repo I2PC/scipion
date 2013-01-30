@@ -34,7 +34,7 @@ If you have images outside the <ProjectDir> you should import them first.
 """
 TiltPairsMd = "tilted_pairs.xmd"
 
-# {file}(result*classes*.xmd){validate}(PathExists) 2D Classification metadata:
+# {file}(classes*.xmd){validate}(PathExists) 2D Classification metadata:
 """
 You should provide a metadata where all images in the dataset are
 grouped into 2D classes. For more details about this file, see:
