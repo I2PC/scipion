@@ -326,6 +326,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		// create the offscreen buffer and associated Graphics
 		offscreen = createImage(d.width, d.height);
 		offgc = offscreen.getGraphics();
+		
 		super.paint(offgc);//super paint in off screen
 		//my paint in offscreen
 		Graphics2D g2 = (Graphics2D) offgc;

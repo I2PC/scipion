@@ -236,42 +236,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-		// try
-		// {
-		// canvas.setEnabled(false);
-		// XmippWindowUtil.blockGUI(this, "Generating Templates...");
-		//
-		// Thread t = new Thread(new Runnable()
-		// {
-		// public void run()
-		// {
-		// if (templatesdialog == null)
-		// templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-		// else
-		// {
-		//
-		// templatesdialog.loadTemplates(true);
-		// templatesdialog.setVisible(true);
-		// }
-		// canvas.setEnabled(true);
-		// XmippWindowUtil.releaseGUI(getRootPane());
-		// }
-		// });
-		// t.start();
-		//
-		// }
-		// catch (Exception e)
-		// {
-		// TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-		//
-		// if (templatesdialog != null)
-		// templatesdialog.close();
-		// templatesdialog = null;
-		// throw new IllegalArgumentException(e.getMessage());
-		// }
-
+		
 		if (templatesdialog == null)
+		{
+			ppicker.updateTemplates();
 			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+		}
 		else
 		{
 
@@ -911,11 +881,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	public void updateTemplates()
-	{
-		ppicker.updateTemplates(family);
-
-	}
+	
 
 	public void updateSize(int size)
 	{
@@ -953,5 +919,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public ParticlesJDialog initParticlesJDialog()
 	{
 		return new ParticlesJDialog(this);
+	}
+
+	public void updateTemplates()
+	{
+		if(templatesdialog != null)
+			ppicker.updateTemplates();
+		else
+			ppicker.setUpdateTemplatesPending(true);
+		
+		
 	}
 }

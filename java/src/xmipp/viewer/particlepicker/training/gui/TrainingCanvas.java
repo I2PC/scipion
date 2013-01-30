@@ -65,15 +65,10 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		{
 			if(frame.isEraserMode())
 			{
-				micrograph.removeParticles(x, y, ppicker);
-				active = getLastParticle();
-				refresh();
-				
+				erase(x, y);
 				return;
 			}
 			TrainingParticle p = micrograph.getParticle(x, y);
-			
-				
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null)
@@ -82,20 +77,33 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				{
 					micrograph.removeParticle(p, ppicker);
 					active = getLastParticle();
+					refresh();
+					if(!(p instanceof AutomaticParticle))
+						frame.updateTemplates();
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
+				{
 					active = p;
+					repaint();
+				}
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getFamily().getSize()))
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
+				ppicker.addParticleToTemplates(p);
 				active = p;
+				refresh();
 			}
-			refresh();
 		}
 	}
 	
+	protected void erase(int x, int y)
+	{
+		micrograph.removeParticles(x, y, ppicker);
+		active = getLastParticle();
+		refresh();
+	}
 	
 
 	/**
@@ -112,9 +120,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		{
 			if(frame.isEraserMode())
 			{
-				micrograph.removeParticles(x, y, ppicker);
-				active = getLastParticle();
-				refresh();
+				erase(x, y);
 				return;
 			}
 			if (active == null)
@@ -127,18 +133,19 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				micrograph.removeParticle(active, ppicker);
 				active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
 				micrograph.addManualParticle(active);
+				ppicker.addParticleToTemplates(active);
+				repaint();
 			}
 			else
 			{
 				moveActiveParticle(x, y);
-				if(frame.templatesdialog != null)
-					frame.loadTemplates();
+				repaint();
+				frame.updateTemplates();
 			}
 			frame.setChanged(true);
-			repaint();
+			
 		}
 	}
-	
 	
 	
 
@@ -156,6 +163,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			
 			drawShape(g2, active, true, activest);
 		}
+		
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
