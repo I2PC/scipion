@@ -36,15 +36,15 @@ import xmipp.utils.XmippPopupMenuCreator;
 
 /** This is a data model designed for Row metadatas */
 @SuppressWarnings("serial")
-public class MetadataRow extends MetadataTableModel {
+public class MetadataRowTableModel extends MetadataTableModel {
 	protected long id;
 	
 	/** Constructor using a metadata row */
-	public MetadataRow(Window window, MetaData md) throws Exception {
+	public MetadataRowTableModel(Window window, MetaData md) throws Exception {
 		this(new GalleryData(window, null, new Param(), md));
 	}
 	
-	public MetadataRow(GalleryData data) throws Exception {
+	public MetadataRowTableModel(GalleryData data) throws Exception {
 		super(data);
 		cols = 1;
 		rows = visibleLabels.size();
