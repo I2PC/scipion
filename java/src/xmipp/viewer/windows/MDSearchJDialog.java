@@ -64,7 +64,11 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
+<<<<<<< HEAD
 import xmipp.viewer.models.MetadataTableModel;
+=======
+import xmipp.viewer.models.MetadataTable;
+>>>>>>> 3.0
 import xmipp.viewer.models.ClassInfo;
 
 /* This class will serve for find and replace values

@@ -37,11 +37,11 @@ public class ImagePlusLoader
 	protected boolean allowsPoll;
 	protected boolean allowsGeometry = false;
 	protected boolean useGeometry;
-	protected boolean wrap;
 	protected ImagePlus imp;
 	protected ImageGeneric ig;
 	protected long modified;
-
+	protected boolean wrap;
+	
 	public ImagePlusLoader()
 	{
 		this.imp = null;
@@ -146,6 +146,7 @@ public class ImagePlusLoader
 	{
 		return wrap;
 	}
+
 
 	public boolean isVolume()
 	{

@@ -108,6 +108,8 @@ import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 
+import xmipp.viewer.windows.ClassesJDialog;
+
 public class GalleryJFrame extends JFrame implements iCTFGUI
 {
 	private static final long serialVersionUID = -8957336972082018823L;
@@ -1443,6 +1445,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				if (cmd.equals(DISPLAY_NORMALIZE))
 				{
 					gallery.setNormalized(getItemSelected(DISPLAY_NORMALIZE));
+
 				}
 				else if (cmd.equals(DISPLAY_APPLYGEO) || cmd.equals(DISPLAY_WRAP))
 				{
@@ -1450,6 +1453,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					{
 						((MetadataGalleryTableModel) gallery).setUseGeometry(getItemSelected(DISPLAY_APPLYGEO), getItemSelected(DISPLAY_WRAP));
 						setItemEnabled(DISPLAY_WRAP, data.containsGeometryInfo() && data.useGeo);
+
 					}
 				}
 				else if (cmd.equals(DISPLAY_SHOWLABELS))
@@ -1716,11 +1720,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(REFRESH))
 			{
 				gallery.refreshAt(row, col);
+
 			}
 			else if (cmd.equals(OPEN))
 			{
 				MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
 				ColumnInfo ci = mg.visibleLabels.get(col);
+
 				if (ci.allowRender)
 					gallery.handleDoubleClick(row, col);
 				else
