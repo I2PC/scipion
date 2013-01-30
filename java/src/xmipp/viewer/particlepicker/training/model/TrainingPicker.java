@@ -21,7 +21,6 @@ public abstract class TrainingPicker extends ParticlePicker
 	private TrainingMicrograph micrograph;
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
-	private boolean updateTemplatesPending;
 
 	public TrainingPicker(String selfile, String outputdir, String fname, FamilyState mode)
 	{
@@ -856,12 +855,6 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	public void setUpdateTemplatesPending(boolean b)
-	{
-		updateTemplatesPending = b;
-
-	}
-	
 	
 
 	public void resetParticleImages()
