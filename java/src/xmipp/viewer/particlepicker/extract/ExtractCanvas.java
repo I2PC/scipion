@@ -1,19 +1,14 @@
 package xmipp.viewer.particlepicker.extract;
 
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
-
 import javax.swing.SwingUtilities;
-
 import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
 public class ExtractCanvas extends ParticlePickerCanvas
 {
@@ -36,9 +31,9 @@ public class ExtractCanvas extends ParticlePickerCanvas
 	@Override
 	public void refreshActive(Particle p)
 	{
-		active = (ExtractParticle)p;
+		active = (ExtractParticle) p;
 		repaint();
-		
+
 	}
 
 	@Override
@@ -58,71 +53,71 @@ public class ExtractCanvas extends ParticlePickerCanvas
 	{
 		return micrograph;
 	}
-	
-	
 
 	@Override
 	protected void doCustomPaint(Graphics2D g2)
 	{
-		g2.setColor(frame.getColor());
-
+		Color color;
+		double score;
 		for (ExtractParticle p : micrograph.getParticles())
-			if(p.isEnabled())
-				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, continuousst);
+		{
+			score = p.getScore(frame.getColorHelper().getId());
+			color = frame.getColorHelper().getColor(score);
+			if (p.isEnabled())
+				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, continuousst, color);
 			else
-				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, dashedst);
+				drawShape(g2, p.getX(), p.getY(), frame.getParticlePicker().getSize(), false, dashedst, color);
+		}
 		if (active != null)
 		{
-			g2.setColor(Color.red);
-			Stroke stroke = active.isEnabled() ? activecst: activedst;
-			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, stroke);
+			score = active.getScore(frame.getColorHelper().getId());
+			color = frame.getColorHelper().getColor(score);
+			Stroke stroke = active.isEnabled() ? activecst : activedst;
+			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, stroke, color);
 		}
 	}
 
 	@Override
 	protected ExtractParticle getLastParticle()
 	{
-		if(micrograph.getParticles().isEmpty())
+		if (micrograph.getParticles().isEmpty())
 			return null;
 		return micrograph.getParticles().get(micrograph.getParticles().size() - 1);
 	}
 
-	
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
-		
+
 		if (frame.isPickingAvailable(e))
 		{
-			if(frame.isEraserMode())
+			if (frame.isEraserMode())
 			{
 				micrograph.removeParticles(x, y, picker);
 				active = getLastParticle();
 				refresh();
-				
+
 				return;
 			}
-			ExtractParticle p =  micrograph.getParticle(x, y, picker.getSize());
-			
-				
-			
+			ExtractParticle p = micrograph.getParticle(x, y, picker.getSize());
+
 			if (p != null)
 			{
-				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
+				if (SwingUtilities.isLeftMouseButton(e))
 				{
-					micrograph.removeParticle(p);
-					active = getLastParticle();
-				}
-				else if (SwingUtilities.isLeftMouseButton(e))
+					if (e.isShiftDown())
+						p.setEnabled(!p.isEnabled());
 					active = p;
+				}
+				frame.refreshActiveOnGallery(active);
 			}
-			
+
 			refresh();
 		}
 	}
-	
+
 	@Override
 	public void mouseDragged(MouseEvent e)
 	{
@@ -132,7 +127,7 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		int y = super.offScreenY(e.getY());
 		if (frame.isPickingAvailable(e))
 		{
-			if(frame.isEraserMode())
+			if (frame.isEraserMode())
 			{
 				micrograph.removeParticles(x, y, picker);
 				active = getLastParticle();
@@ -145,7 +140,8 @@ public class ExtractCanvas extends ParticlePickerCanvas
 			if (!micrograph.fits(x, y, picker.getSize()))
 				return;
 			moveActiveParticle(x, y);
-			active.setEnabled(true);//if it was disabled gets enabled
+			active.setEnabled(true);// if it was disabled gets enabled
+			frame.refreshActiveOnGallery(active);// if enabled propagate info
 			frame.setChanged(true);
 			repaint();
 		}
@@ -154,8 +150,15 @@ public class ExtractCanvas extends ParticlePickerCanvas
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
-		micrograph = (ExtractMicrograph)m;
-		
+		micrograph = (ExtractMicrograph) m;
+
 	}
 	
+	protected void moveActiveParticle(int x, int y)
+	{
+		active.setEnabled(true);
+		super.moveActiveParticle(x, y);
+		frame.refreshActiveOnGallery(active);
+	}
+
 }

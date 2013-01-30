@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+
 import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;

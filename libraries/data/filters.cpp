@@ -901,7 +901,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
     I2.checkDimension(2);
 
     int imax, jmax, i_actual, j_actual;
-    double max, xmax, ymax, sumcorr, avecorr, stdcorr, dummy;
+    double xmax, ymax, avecorr, stdcorr, dummy;
     float xshift, yshift, shift;
     bool neighbourhood = true;
     MultidimArray<double> Mcorr;
@@ -938,7 +938,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
     else
         Mcorr.statisticsAdjust(0, 1);
     Mcorr.maxIndex(imax, jmax);
-    max = A2D_ELEM(Mcorr, imax, jmax);
+    double max = A2D_ELEM(Mcorr, imax, jmax);
 
     // Estimate n_max around the maximum
     int n_max = -1;
@@ -971,7 +971,8 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
     }
 
     // We have the neighbourhood => looking for the gravity centre
-    xmax = ymax = sumcorr = 0.;
+    xmax = ymax = 0.;
+    double sumcorr = 0.;
     if (imax-n_max<STARTINGY(Mcorr))
         n_max=std::min(imax-STARTINGY(Mcorr),n_max);
     if (imax+n_max>FINISHINGY(Mcorr))

@@ -36,7 +36,7 @@ class ProgTest: public XmippProgram
         addParamsLine("== Basic ==");
         addParamsLine(" -i <metadata> : metadata input for testing");
         addParamsLine(" -o <file> : output XML file");
-        addParamsLine(" [--extractParticlesMD] : If we want to process a MetaData that comes from ExtractParticles protocol");
+        addParamsLine(" [--extractParticlesMD] : If we want to process a MetaData that comes from ExtractParticles protocol and some of the particles have been rejected");
         addExampleLine("Produce XML file from a metadata for benchmark",false);
         addExampleLine("xmipp_metadata_XML -i DefaultFamily_extract_list.xmd  -o XMLFile.xml");
 
@@ -89,6 +89,7 @@ class ProgTest: public XmippProgram
 
             sortedMD.getValue(MDL_MICROGRAPH, name, MD.firstObject());
             nodirName=name.removeDirectories();
+            nodirName=nodirName.removeAllExtensions();
             fhOut<<"<micrograph id=\""<<nodirName<<"\">"<<std::endl;
 
             sortedMD.getValue(MDL_XCOOR, x, sortedMD.firstObject());
@@ -114,6 +115,7 @@ class ProgTest: public XmippProgram
                     fhOut<<"</micrograph>"<<std::endl;
                     name = newName;
                     nodirName=name.removeDirectories();
+                    nodirName=nodirName.removeAllExtensions();
                     fhOut<<"<micrograph id=\""<<nodirName<<"\">"<<std::endl;
                     sortedMD.getValue(MDL_XCOOR, x, __iter.objId);
                     sortedMD.getValue(MDL_YCOOR, y, __iter.objId);
@@ -122,7 +124,7 @@ class ProgTest: public XmippProgram
             }
 
         }
-
+        fhOut<<"</micrograph>"<<std::endl;
         fhOut<<"</particlepicking>"<<std::endl;
         fhOut.close();
     }

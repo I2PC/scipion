@@ -23,7 +23,10 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
+import xmipp.jni.MDLabel;
+import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -33,6 +36,7 @@ import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.windows.ImagesWindowFactory;
+import xmipp.viewer.windows.GalleryJFrame;
 
 public class ExtractPickerJFrame extends ParticlePickerJFrame
 {
@@ -46,13 +50,18 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private JPanel particlespn;
 	private int index;
 	private ExtractCanvas canvas;
-	private String[] colorby;
+	private ColorHelper[] colorby;
 	private JComboBox scorescb;
+	private GalleryJFrame galleryfr;
+	private JLabel minlb;
+	private JLabel maxlb;
+	private ExtractParticle active;
 
-	public ExtractPickerJFrame(ParticlePicker picker)
+	public ExtractPickerJFrame(ParticlePicker picker, GalleryJFrame galleryfr)
 	{
 		super(picker);
 		this.picker = (ExtractParticlePicker)picker;
+		this.galleryfr = galleryfr;
 		initComponents();
 		// TODO Auto-generated constructor stub
 	}
@@ -93,25 +102,41 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		fieldspn.add(new JLabel("Color by:"));
-		colorby = new String[]{"ZScore", "ZScore-Shape", "ZScore-SNR1", "ZScore-SNR2", "ZScore-Hist"};
+		colorby = picker.getColumns();
 		scorescb = new JComboBox(colorby);
+		scorescb.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				getCanvas().repaint();
+				minlb.setText(String.format("%.2f", getColorHelper().getMin()));
+				maxlb.setText(String.format("%.2f", getColorHelper().getMax()));
+			}
+		});
 		fieldspn.add(scorescb);
-		// Setting color
-		initColorPane();
-		fieldspn.add(colorbt);
-
+		minlb = new JLabel(String.format("%.2f", getColorHelper().getMin()));
+		maxlb = new JLabel(String.format("%.2f", getColorHelper().getMax()));
+		
+		
+		fieldspn.add(minlb);
+		fieldspn.add(ColorHelper.getColorMap());
+		fieldspn.add(maxlb);
+		
 		// Setting slider
 		initSizePane();
 		fieldspn.add(sizepn);
-
 		particlespn.add(fieldspn, 0);
 		initImagePane();
 		particlespn.add(imagepn, 1);
-
 		index = picker.getMicrographIndex();
 
-		colorbt.addActionListener(new ColorActionListener());
-
+	}
+	
+	ColorHelper getColorHelper()
+	{
+		return (ColorHelper)scorescb.getSelectedItem();
 	}
 	
 	private void initMicrographsPane()
@@ -209,6 +234,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		setChanged(false);
 		initializeCanvas();
 		iconbt.setIcon(picker.getMicrograph().getCTFIcon());
+		
 		pack();
 	}
 
@@ -218,7 +244,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 			canvas = new ExtractCanvas(this);
 		else
 			canvas.updateMicrograph();
-
+		
 		canvas.display();
 		updateZoom();
 		
@@ -369,6 +395,38 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	public ParticlesJDialog initParticlesJDialog()
 	{
 		return new ParticlesJDialog(this);
+	}
+
+	public void refreshActive(long id, boolean b)
+	{
+		int index = 0;
+		active = null;
+		List<ExtractMicrograph> micrographs = picker.getMicrographs();
+		for(int i = 0; i < micrographs.size(); i ++)
+			for(ExtractParticle p: micrographs.get(i).getParticles())
+				if(p.getId() == id)
+				{
+					index = i;
+					active = p;
+					active.setEnabled(b);
+					break;
+				
+				}
+		if(index != this.index)
+			micrographstb.setRowSelectionInterval(index, index);
+		if(active != null)
+		{
+			canvas.refreshActive(active);
+			canvas.moveTo(active);
+			active = null;
+		}
+
+	}
+
+	public void refreshActiveOnGallery(ExtractParticle active)
+	{
+		galleryfr.refreshActive(active.getId(), active.isEnabled());
+		
 	}
 
 }

@@ -377,18 +377,7 @@ public abstract class ParticlePicker
 		return getFamily(name) != null;
 	}// function existsFamilyName
 
-	protected boolean containsBlock(String file, String block)
-	{
-		try
-		{
-			return Arrays.asList(MetaData.getBlocksInMetaDataFile(file)).contains(block);
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-	}// function containsBlock
+	
 
 	public void saveData()
 	{
@@ -525,7 +514,7 @@ public abstract class ParticlePicker
 			md.readPlain(path, "xcoor ycoor");
 			break;
 		case Xmipp30:
-			if (!containsBlock(path, family.getName()))
+			if (!MetaData.containsBlock(path, family.getName()))
 				throw new IllegalArgumentException(
 						XmippMessage.getIllegalValueMsgWithInfo("family", family.getName(), "Particles for this family are not defined in file"));
 			md.read(String.format("%s@%s", family.getName(), path));

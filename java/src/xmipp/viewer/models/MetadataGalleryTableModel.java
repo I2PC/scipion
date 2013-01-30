@@ -40,7 +40,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 
-public class MetadataGallery extends ImageGallery {
+public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	private static final long serialVersionUID = 1L;
 
 	// Label to be rendered
@@ -51,7 +51,7 @@ public class MetadataGallery extends ImageGallery {
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
-	public MetadataGallery(GalleryData data) throws Exception {
+	public MetadataGalleryTableModel(GalleryData data) throws Exception {
 		super(data);
 		data.normalize = false;
 	}
@@ -204,7 +204,7 @@ public class MetadataGallery extends ImageGallery {
 	@Override
 	public String getTitle() {
 		String title = "Metadata: "
-				+ (filename != null ? Filename.getBaseName(filename) : "");
+				+ (data.getFileName() != null ? Filename.getBaseName(data.getFileName()) : "");
 		if (n > 1)
 			title += String.format(" %d items", n);
 		if (data.hasRenderLabel())
@@ -280,11 +280,12 @@ public class MetadataGallery extends ImageGallery {
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
 	public class MdRowImageLoader extends ImagePlusLoader {
 		long objId;
-		boolean wrap;
 
 		public MdRowImageLoader(int index, int label) {
 			super(getImageFilename(index, label));
+			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
+			
 			wrap = data.wrap;
 			objId = data.ids[index];
 		}
@@ -298,11 +299,11 @@ public class MetadataGallery extends ImageGallery {
 	
 	// Extension of the ImagePlusLoader, read an entire metadata as an ImagePlus
 	public class MetadataImageLoader extends ImagePlusLoader {
-		boolean wrap;
 		int label;
 
 		public MetadataImageLoader(int label) {
-			super(data.filename);
+			super(data.getFileName());
+			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
 			wrap = data.wrap;
 			this.label = label;
@@ -310,18 +311,14 @@ public class MetadataGallery extends ImageGallery {
 
 		@Override
 		protected ImagePlus loadImage() throws Exception {
-			return XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap);
+			return XmippImageConverter.readMetadataToImagePlus(label, data.md, useGeometry, wrap);
 		}
 		@Override
 		public boolean isVolume()
 		{
 			return false;
 		}
-		@Override
-		public boolean allowsGeometry()
-		{
-			return data.containsGeometryInfo();
-		}
+		
 	}//class MetadataImageLoader
 	
 	

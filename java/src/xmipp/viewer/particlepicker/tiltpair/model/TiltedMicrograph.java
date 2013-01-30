@@ -3,7 +3,6 @@ package xmipp.viewer.particlepicker.tiltpair.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 
 public class TiltedMicrograph extends Micrograph

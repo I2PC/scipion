@@ -177,12 +177,12 @@ TEST_F( MatrixTest, RANSAC)
 TEST_F( MatrixTest, initGaussian)
 {
     Matrix2D<double> A;
-    A.initGaussian(10,1);
-
-    ASSERT_TRUE( (dMij(A,5,5) - 1) < 1e-3);
-    ASSERT_TRUE( (dMij(A,6,7) - 0.6065) < 1e-3);
-    ASSERT_TRUE( (dMij(A,7,6) - 0.6065) < 1e-3);
-    ASSERT_TRUE( (dMij(A,5,6) - 0.6065) < 1e-3);
+    A.initGaussian(3,3,0,1);
+    init_random_generator(23);
+    ASSERT_TRUE( ABS((dMij(A,1,1) - 0.80144995)) < 1e-3);
+    ASSERT_TRUE( ABS((dMij(A,1,2) - 0.499181)) < 1e-3);
+    ASSERT_TRUE( ABS((dMij(A,0,1) + 2.42201)) < 1e-3);
+    ASSERT_TRUE( ABS((dMij(A,2,0) - 0.517636)) < 1e-3);
 }
 
 GTEST_API_ int main(int argc, char **argv)

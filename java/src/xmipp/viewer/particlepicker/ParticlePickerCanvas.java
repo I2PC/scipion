@@ -17,23 +17,20 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
-import java.util.logging.Level;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Particle;
-import xmipp.jni.Program;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
-import xmipp.viewer.particlepicker.training.model.TrainingPicker;
+
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
 	public final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke continuousst = new BasicStroke();
-	public final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	public final static BasicStroke activecst = new BasicStroke(2.0f);
+	public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+	public final static BasicStroke activecst = new BasicStroke(3.0f);
 	
 	public void display()
 	{
@@ -113,7 +110,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	{
 		if (!getFrame().isEraserMode())
 			setCursor(crosshairCursor);
-		else
+		else if (getFrame().isPickingAvailable(e))
 		{
 
 			final int x = e.getX();
@@ -221,7 +218,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		drawShape(g2, x, y, size, all, continuousst);
 				
 	}
-	
+	protected void drawShape(Graphics2D g2, int x, int y, int size, boolean all, Stroke stroke, Color color)
+	{
+		g2.setColor(color);
+		drawShape(g2, x, y, size, all, stroke);
+	}
 	protected void drawShape(Graphics2D g2, int x, int y, int size, boolean all, Stroke stroke)
 	{
 
@@ -230,7 +231,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		int radius = (int) (size / 2. * magnification);
 		x = getXOnImage(x);
 		y = getYOnImage(y);
-		int distance = (int) (radius/5. * magnification);
+		int distance = (int) (radius/3. * magnification);
 
 		if (getFrame().isShapeSelected(Shape.Rectangle) || all)
 			g2.drawRect(x - radius, y - radius, length, length);

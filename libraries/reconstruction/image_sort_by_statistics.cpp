@@ -73,10 +73,10 @@ void ProgSortByStatistics::defineParams()
 //majorAxis and minorAxis is the estimated particle size in px
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
-    #define DEBUG
+    //#define DEBUG
 
     //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
-    String name = "000008@Images/Extracted/run_002/extra/KLH_Dataset_I_Training_0008.stk";
+    String name = "000010@Images/Extracted/run_001/extra/KLH_Dataset_I_Training_0028.stk";
     //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
 
     pcaAnalyzer[4];
@@ -98,10 +98,10 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     FringeProcessing fp;
 
     int sign = -1;
-    int numNorm = 10;
-    int numDescriptors0=3;
+    int numNorm = 5;
+    int numDescriptors0=numNorm;
     int numDescriptors1=4;
-    int numDescriptors2=21;
+    int numDescriptors2=11;
     int numDescriptors3 = 10;
 
     MultidimArray<float> v0(numDescriptors0);
@@ -156,7 +156,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
     {
         double temp = std::sqrt(i*i+j*j);
-        if ( temp < (Xdim/3))
+        if ( temp < (Xdim/2))
             A2D_ELEM(ROI,i,j)= 1;
         else
             A2D_ELEM(ROI,i,j)= 0;
@@ -201,11 +201,12 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
                 tempM += (modI*modI);
                 A1D_ELEM(v0,index) = (tempM*ROI).sum();
                 index++;
-                var++;
+                var+=1;
             }
 
             nI /= tempM;
             tempPcaAnalyzer0.addVector(v0);
+            nI=(nI*ROI);
 
 #ifdef DEBUG
 
@@ -217,9 +218,12 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
                 nI.write(fpName);
                 fpName    = "test4.txt";
                 tempM.write(fpName);
+                fpName    = "test5.txt";
+                ROI.write(fpName);
+                exit(1);
             }
 #endif
-            nI.binarize(-0.1);
+            nI.binarize(0);
             int im = labelImage2D(nI,nI,8);
             compute_hist(nI, hist, 0, im, im+1);
             int l,k,i,j;
@@ -231,9 +235,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
             fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
 
-            // Build vector
-            A1D_ELEM(v1,0)=majorAxis/((img().xdim)/5 );
-            A1D_ELEM(v1,1)=minorAxis/((img().xdim)/5 );
+            A1D_ELEM(v1,0)=majorAxis/((img().xdim) );
+            A1D_ELEM(v1,1)=minorAxis/((img().xdim) );
             A1D_ELEM(v1,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
             A1D_ELEM(v1,3)=area/( ((img().xdim)/2)*((img().ydim)/2) );
 
@@ -246,7 +249,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
             mI.setXmippOrigin();
             auto_correlation_matrix(mI*ROI,autoCorr);
-            autoCorr.window(smallAutoCorr,-10,-10, 10, 10);
+            autoCorr.window(smallAutoCorr,-5,-5, 5, 5);
             smallAutoCorr.copy(temp);
             svdcmp(temp,U,D,V);
 
@@ -283,17 +286,16 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
         }
     }
 
-
     MultidimArray<double> vavg,vstddev;
     tempPcaAnalyzer0.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer1.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer2.computeStatistics(vavg,vstddev);
     tempPcaAnalyzer3.computeStatistics(vavg,vstddev);
 
-    tempPcaAnalyzer0.evaluateZScore(1,20);
+    tempPcaAnalyzer0.evaluateZScore(2,20);
     tempPcaAnalyzer1.evaluateZScore(2,20);
-    tempPcaAnalyzer2.evaluateZScore(1,20);
-    tempPcaAnalyzer3.evaluateZScore(3,20);
+    tempPcaAnalyzer2.evaluateZScore(2,20);
+    tempPcaAnalyzer3.evaluateZScore(2,20);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);

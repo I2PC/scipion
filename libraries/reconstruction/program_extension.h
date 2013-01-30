@@ -40,6 +40,9 @@
  * @{
  */
 
+/** Run a program either as a system call or as an internal call */
+void runSystem(const String &program, const String &arguments, bool useSystem=true);
+
 /** Run a program passing some arguments.
  * The program will be supplied as a pointer of XmippProgram
  * if destroy is true the program pointer will be freed */

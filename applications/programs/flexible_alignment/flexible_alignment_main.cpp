@@ -1,6 +1,7 @@
 /***************************************************************************
- * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
+ * Authors:     Jin Qiyu (qiyu@impmc.upmc.fr)
+ *              Slavica Jonic (Slavica.Jonic@impmc.jussieu.fr)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,43 +24,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-package xmipp.viewer.models;
+#include <reconstruction/flexible_alignment.h>
 
-import java.awt.Color;
-import javax.swing.Icon;
-import xmipp.utils.ColorIcon;
-
-/** Structure to store class info */
-public class ClassInfo {
-	private String comment;
-	private ColorIcon icon;
-	public int index; // index of the class
-	public int numberOfClasses; // Classes assigned to superclass
-	public long numberOfImages; // total images assigned to superclass
-
-	/** Constructor */
-	public ClassInfo(String name, Color c) {
-		comment = name;
-		icon = new ColorIcon(c, 16, 16, 3, true, true);
-	}
-
-	public String getComment() {
-		return comment;
-	}
-
-	public void setComment(String value) {
-		comment = value;
-	}
-
-	public Color getColor() {
-		return icon.getColor();
-	}
-
-	public void setColor(Color value) {
-		icon.setColor(value);
-	}
-
-	public Icon getIcon() {
-		return icon;
-	}
-}// class ClassInfo
+int main(int argc, char **argv)
+{
+    ProgFlexibleAlignment program;
+    program.read(argc, argv);
+    return program.tryRun();
+}

@@ -1,5 +1,9 @@
 package xmipp.viewer.particlepicker.extract;
 
+import java.awt.Color;
+
+import xmipp.jni.MDLabel;
+import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.PickerParticle;
 
@@ -76,6 +80,26 @@ public class ExtractParticle extends PickerParticle
 		enabled = b;
 		
 	}
+
+	
+	
+
+	public double getScore(int id)
+	{
+		if(id == MDLabel.MDL_ZSCORE)
+			return getZscore();
+		if(id == MDLabel.MDL_ZSCORE_SHAPE)
+			return getZscore_shape();
+		if(id == MDLabel.MDL_ZSCORE_SNR1)
+			return getZscore_snr1();
+		if(id == MDLabel.MDL_ZSCORE_SNR2)
+			return getZscore_snr2();
+		if(id == MDLabel.MDL_ZSCORE_HISTOGRAM)
+			return getZscore_hist();
+		return 0;
+	}
+
+	
 
 	
 	

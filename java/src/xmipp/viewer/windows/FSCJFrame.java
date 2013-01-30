@@ -36,9 +36,9 @@ import xmipp.jni.MetaData;
  *
  * @author Juanjo Vega
  */
-public class JFrameFSC extends JFrame {
+public class FSCJFrame extends JFrame {
 
-    public JFrameFSC(GalleryData data) {
+    public FSCJFrame(GalleryData data) {
         super(XmippLabel.TITLE_FSC + data.md.getFilename());
 
         try {

@@ -3,13 +3,7 @@ package xmipp.viewer.particlepicker.training.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Stroke;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
@@ -57,7 +51,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	{
 		if(frame.getFamilyData().getParticles().isEmpty())
 			return null;
-		return frame.getFamilyData().getParticles().get(frame.getFamilyData().getParticles().size() - 1);
+		return frame.getFamilyData().getLastAvailableParticle(frame.getThreshold());
 	}
 
 

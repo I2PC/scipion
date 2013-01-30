@@ -1,31 +1,30 @@
 package xmipp.viewer.particlepicker.extract;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.IJCommand;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
-import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
-import xmipp.viewer.particlepicker.training.model.TrainingMicrograph;
-import xmipp.viewer.particlepicker.training.model.TrainingParticle;
+import xmipp.viewer.windows.GalleryJFrame;
 
 public class ExtractParticlePicker extends ParticlePicker
 {
 
 	public static void main(String[] args)
 	{
-		ExtractParticlePicker.open(args[0]);
+		ExtractParticlePicker.open(args[0], null);
 	}
 
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
+	private ArrayList<ColorHelper> colorby;
+
 
 	public ExtractParticlePicker(String selfile, FamilyState mode)
 	{
@@ -71,7 +70,29 @@ public class ExtractParticlePicker extends ParticlePicker
 			}
 
 		}
+		loadColumns(md);
+		md.destroy();
 
+	}
+	
+	public void loadColumns(MetaData md)
+	{
+		colorby = new ArrayList<ColorHelper>();
+		loadColumn(MDLabel.MDL_ZSCORE, "ZScore", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SHAPE, "ZScore-Shape", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SNR1, "ZScore-SNR1", md);
+		loadColumn(MDLabel.MDL_ZSCORE_SNR2, "ZScore-SNR2", md);
+		loadColumn(MDLabel.MDL_ZSCORE_HISTOGRAM, "ZScore-Hist", md);
+		
+	}
+	
+	public void loadColumn(int column, String name, MetaData md)
+	{
+		boolean exists = md.containsLabel(column);
+		if(exists)
+		{
+			colorby.add(new ColorHelper(column, name, md));
+		}
 	}
 	
 	
@@ -94,7 +115,7 @@ public class ExtractParticlePicker extends ParticlePicker
 					current = iter;
 					break;
 				}
-
+			
 			x = md.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = md.getValueInt(MDLabel.MDL_YCOOR, id);
 			enabled = (md.getValueInt(MDLabel.MDL_ENABLED, id) == 1) ? true : false;
@@ -107,10 +128,11 @@ public class ExtractParticlePicker extends ParticlePicker
 			current.addParticle(p);
 
 		}
+		md.destroy();
 	}
 
 	@Override
-	public List<? extends Micrograph> getMicrographs()
+	public List<ExtractMicrograph> getMicrographs()
 	{
 		return micrographs;
 	}
@@ -176,10 +198,10 @@ public class ExtractParticlePicker extends ParticlePicker
 		setMicrograph(micrographs.get(0));
 	}
 
-	public static void open(String filename)
+	public static ExtractPickerJFrame open(String filename, GalleryJFrame galleryfr)
 	{
 		ExtractParticlePicker picker = new ExtractParticlePicker(filename, FamilyState.Extract);
-		new ExtractPickerJFrame(picker);
+		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 
 	public int getParticlesTotal()
@@ -196,6 +218,11 @@ public class ExtractParticlePicker extends ParticlePicker
 			m.reset();
 		setChanged(true);
 
+	}
+
+	public ColorHelper[] getColumns()
+	{
+		return colorby.toArray(new ColorHelper[]{});
 	}
 
 }

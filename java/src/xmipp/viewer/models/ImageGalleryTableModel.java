@@ -30,23 +30,19 @@ import ij.ImagePlus;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
-
-import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
-
-import xmipp.viewer.ImageDimension;
-import xmipp.viewer.ImageItemRenderer;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.jni.Filename;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.viewer.ImageDimension;
+import xmipp.viewer.ImageItemRenderer;
 
-public abstract class ImageGallery extends AbstractTableModel {
+public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
 	// Store the number of rows and columns
@@ -67,7 +63,6 @@ public abstract class ImageGallery extends AbstractTableModel {
 	// Cache class to reuse of already loaded items
 	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
 	// Filename
-	protected String filename;
 	// Hold gallery dimensions
 	protected ImageDimension dimension;
 	// Renderer to display images
@@ -86,8 +81,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 	public GalleryData data; // information about the gallery
 
 	// Initiazation function
-	public ImageGallery(GalleryData data) throws Exception {
-		filename = data.filename;
+	public ImageGalleryTableModel(GalleryData data) throws Exception {
 		this.data = data;
 		cols = 0;
 		dimension = loadDimension();
@@ -107,11 +101,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		resizeCache();
 	}
 	
-	//Set filename
-	public void updateFilename(String filename){
-		this.filename = data.filename = Filename.getFilename(filename);
-	}
-
+	
 	// Load initial dimensions
 	protected abstract ImageDimension loadDimension() throws Exception;
 
@@ -354,7 +344,15 @@ public abstract class ImageGallery extends AbstractTableModel {
 	 * @return index of the element
 	 */
 	public int getIndex(int row, int col) {
-		return row * cols + col;
+		int index = row * cols + col; 
+		return index;
+		
+	}
+	
+	public long getId(int row, int col) {
+		int index = getIndex(row, col);
+		return data.ids[index];
+		
 	}
 	
 	/** Check if the index is inside bounds */
@@ -395,8 +393,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 	/** Clear selection list */
 	public void clearSelection() {
-		for (int i = 0; i < n; ++i)
-			data.selection[i] = false;
+		data.clearSelection();
 	}
 	
 	public int getFirstSelectedIndex(){
@@ -574,7 +571,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 		 * First argument is the gallery to wich this item belongs Constructor
 		 * of ImageItem */
 		public ImageItem(int row, int col) {
-			index = ImageGallery.this.getIndex(row, col);
+			index = ImageGalleryTableModel.this.getIndex(row, col);
 		}
 
 		public ImageItem(int index) {
@@ -609,7 +606,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 		public String getLabel() {
 			int[] coords = getCoords(index);
-			return ImageGallery.this.getLabel(coords[0], coords[1]);
+			return ImageGalleryTableModel.this.getLabel(coords[0], coords[1]);
 		}
 
 		public String getKey() {
@@ -632,7 +629,7 @@ public abstract class ImageGallery extends AbstractTableModel {
 
 		public boolean isBusy() {
 			// int[] coords = getCoords(index);
-			return ImageGallery.this.isBusy(index, 0);
+			return ImageGalleryTableModel.this.isBusy(index, 0);
 		}
 
 		public ClassInfo getClassInfo() {
