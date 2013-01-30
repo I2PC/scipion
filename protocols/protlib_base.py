@@ -375,11 +375,7 @@ _baseProtocolNames = {
         'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
         'extract_list':  join('%(ExtraDir)s', "extract_list.xmd"),      
         'families':     join('%(ExtraDir)s', 'families.xmd'),
-<<<<<<< HEAD
         'family':       join('%(WorkingDir)s', '%(family)s.xmd'),
-=======
-        'family':     join('%(WorkingDir)s', '%(family)s.xmd'),
->>>>>>> 3.0
         'macros':       join('%(ExtraDir)s', 'macros.xmd'), 
         'micrographs':  join('%(WorkingDir)s','micrographs.xmd'),
         'microscope':   join('%(WorkingDir)s','microscope.xmd'),
