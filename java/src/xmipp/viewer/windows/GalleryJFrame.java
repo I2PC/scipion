@@ -1846,7 +1846,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void reloadFile(String file) throws Exception
 	{
-		System.out.println(file);
 		createModel();
 		reloadMd(false);
 		

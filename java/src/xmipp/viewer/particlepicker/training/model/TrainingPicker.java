@@ -22,7 +22,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
 	private boolean updateTemplatesPending;
-	
+
 	public TrainingPicker(String selfile, String outputdir, String fname, FamilyState mode)
 	{
 		super(selfile, outputdir, fname, mode);
@@ -102,8 +102,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-
-	
 
 	public void setAutopickpercent(int autopickpercent)
 	{
@@ -688,7 +686,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family family)
 	{
-		if(!updateTemplatesPending || family.getStep() != FamilyState.Manual)
+		if (!updateTemplatesPending || family.getStep() != FamilyState.Manual)
 			return;// nothing to update
 		family.initTemplates();
 		List<TrainingParticle> particles;
@@ -861,7 +859,21 @@ public abstract class TrainingPicker extends ParticlePicker
 	public void setUpdateTemplatesPending(boolean b)
 	{
 		updateTemplatesPending = b;
-		
+
+	}
+	
+	
+
+	public void resetParticleImages()
+	{
+		MicrographFamilyData mfd;
+		for (TrainingMicrograph m : micrographs)
+		{
+			mfd = m.getFamilyData(family);
+			for (TrainingParticle p : mfd.getManualParticles())
+				p.resetImagePlus();
+
+		}
 	}
 
 }
