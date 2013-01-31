@@ -103,6 +103,10 @@ public class TrainingParticle extends PickerParticle{
 		return icon;
 	}
 	
+	public void resetImagePlus()
+	{
+		img = null;
+	}
 	
 
 	public ImageGeneric getImageGeneric() {

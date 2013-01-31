@@ -302,7 +302,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		int label;
 
 		public MetadataImageLoader(int label) {
+
 			super(data.getFileName());
+
 			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
 			wrap = data.wrap;

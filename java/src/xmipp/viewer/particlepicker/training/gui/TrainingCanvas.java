@@ -27,6 +27,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
+	private boolean activemoved;
 	
 	
 
@@ -65,15 +66,10 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		{
 			if(frame.isEraserMode())
 			{
-				micrograph.removeParticles(x, y, ppicker);
-				active = getLastParticle();
-				refresh();
-				
+				erase(x, y);
 				return;
 			}
 			TrainingParticle p = micrograph.getParticle(x, y);
-			
-				
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
 			if (p != null)
@@ -82,20 +78,33 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				{
 					micrograph.removeParticle(p, ppicker);
 					active = getLastParticle();
+					refresh();
+					if(!(p instanceof AutomaticParticle))
+						frame.updateTemplates();
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
+				{
 					active = p;
+					repaint();
+				}
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getFamily().getSize()))
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
+				ppicker.addParticleToTemplates(p);
 				active = p;
+				refresh();
 			}
-			refresh();
 		}
 	}
 	
+	protected void erase(int x, int y)
+	{
+		micrograph.removeParticles(x, y, ppicker);
+		active = getLastParticle();
+		refresh();
+	}
 	
 
 	/**
@@ -112,34 +121,62 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		{
 			if(frame.isEraserMode())
 			{
-				micrograph.removeParticles(x, y, ppicker);
-				active = getLastParticle();
-				refresh();
+				erase(x, y);
 				return;
 			}
-			if (active == null)
-				return;
-
-			if (!micrograph.fits(x, y, active.getFamily().getSize()))
-				return;
-			if (active instanceof AutomaticParticle)
-			{
-				micrograph.removeParticle(active, ppicker);
-				active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
-				micrograph.addManualParticle(active);
-			}
-			else
-			{
-				moveActiveParticle(x, y);
-				if(frame.templatesdialog != null)
-					frame.loadTemplates();
-			}
-			frame.setChanged(true);
-			repaint();
+			manageActive(x, y);
+			
 		}
 	}
 	
+	public void manageActive(int x, int y)
+	{
+		if (active == null)
+			return;
+
+		if (!micrograph.fits(x, y, active.getFamily().getSize()))
+			return;
+		if (active instanceof AutomaticParticle)
+		{
+			micrograph.removeParticle(active, ppicker);
+			active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
+			micrograph.addManualParticle(active);
+			ppicker.addParticleToTemplates(active);
+			repaint();
+		}
+		else
+		{
+			moveActiveParticle(x, y);
+			activemoved = true;
+			repaint();
+			
+		}
+		frame.setChanged(true);
+	}
 	
+	@Override
+	public void mouseReleased(MouseEvent e)
+	{
+
+		super.mouseReleased(e);
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+		if (frame.isPickingAvailable(e))
+		{
+			if(frame.isEraserMode())
+			{
+				erase(x, y);
+				return;
+			}
+			manageActive(x, y);
+			if(activemoved)
+			{
+				frame.updateTemplates();
+				activemoved = false;
+			}
+			
+		}
+	}
 	
 
 	protected void doCustomPaint(Graphics2D g2)
@@ -156,6 +193,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			
 			drawShape(g2, active, true, activest);
 		}
+		
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)

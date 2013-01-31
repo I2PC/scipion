@@ -43,7 +43,9 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
 
+
 public class MetadataTableModel extends MetadataGalleryTableModel {
+
 	private static final long serialVersionUID = 1L;
 
 	int sortColumnIndex = -1;

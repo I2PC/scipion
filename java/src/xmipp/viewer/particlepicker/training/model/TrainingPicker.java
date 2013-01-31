@@ -22,6 +22,17 @@ public abstract class TrainingPicker extends ParticlePicker
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
 
+	public TrainingPicker(String selfile, String outputdir, String fname, FamilyState mode)
+	{
+		super(selfile, outputdir, fname, mode);
+
+	}
+
+	public TrainingPicker(String selfile, String outputdir, FamilyState mode)
+	{
+		super(selfile, outputdir, mode);
+	}
+
 	public static FamilyState previousStep(FamilyState step)
 	{
 		if (step == FamilyState.Manual)
@@ -30,9 +41,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			return FamilyState.Manual;
 		return null;
 	}
-	
-	
-	
+
 	public void saveConfig()
 	{
 		try
@@ -93,18 +102,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public TrainingPicker(String selfile, String outputdir, String fname, FamilyState mode)
-	{
-		super(selfile, outputdir, fname, mode);
-
-	}
-
-	public TrainingPicker(String selfile, String outputdir, FamilyState mode)
-	{
-		super(selfile, outputdir, mode);
-
-	}
-	
 	public void setAutopickpercent(int autopickpercent)
 	{
 		this.autopickpercent = autopickpercent;
@@ -332,7 +329,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			saveAutomaticParticles(tm);
-			//saveTemplates();
+			// saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -479,7 +476,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		return count;
 	}
 
-	
 	public int getManualParticlesNumber(Family f)
 	{
 		int count = 0;
@@ -526,10 +522,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			throw new IllegalArgumentException(e);
 		}
 	}
-
-	
-
-	
 
 	public void importAllParticles(String file)
 	{// Expected a file for all
@@ -686,31 +678,29 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void updateTemplates(Family f)
+	public void updateTemplates()
 	{
-		if (family.getStep() != FamilyState.Manual)
+		updateTemplates(family);
+	}
+
+	public void updateTemplates(Family family)
+	{
+		if (!updateTemplatesPending || family.getStep() != FamilyState.Manual)
 			return;// nothing to update
-		f.initTemplates();
-		ImageGeneric igp;
+		family.initTemplates();
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
 		try
 		{
 			for (TrainingMicrograph m : micrographs)
 			{
-				mfd = m.getFamilyData(f);
-				for (int i = 0; i < mfd.getManualParticles().size(); i++)
-				{
-					particles = mfd.getManualParticles();
-					igp = particles.get(i).getImageGeneric();
-					if (i < f.getTemplatesNumber())
-						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-					else
-
-						f.getTemplates().alignImages(igp);
-				}
-
+				mfd = m.getFamilyData(family);
+				particles = mfd.getManualParticles();
+				for (int i = 0; i < particles.size(); i++)
+					addParticleToTemplates(particles.get(i), i);
 			}
+			updateTemplatesPending = false;
+			System.out.println("templates updated");
 		}
 		catch (Exception e)
 		{
@@ -741,7 +731,6 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	
 	public boolean hasParticles()
 	{
 		System.out.println("Looking for particles");
@@ -839,6 +828,44 @@ public abstract class TrainingPicker extends ParticlePicker
 		catch (Exception e)
 		{
 			return false;
+		}
+	}
+
+	public void addParticleToTemplates(TrainingParticle particle)
+	{
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()));
+	}
+
+	public void addParticleToTemplates(TrainingParticle particle, int index)
+	{
+		try
+		{
+			Family family = particle.getFamily();
+			ImageGeneric igp = particle.getImageGeneric();
+			if (index < family.getTemplatesNumber())
+				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
+			else
+				family.getTemplates().alignImages(igp);
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+
+	
+
+	public void resetParticleImages()
+	{
+		MicrographFamilyData mfd;
+		for (TrainingMicrograph m : micrographs)
+		{
+			mfd = m.getFamilyData(family);
+			for (TrainingParticle p : mfd.getManualParticles())
+				p.resetImagePlus();
+
 		}
 	}
 
