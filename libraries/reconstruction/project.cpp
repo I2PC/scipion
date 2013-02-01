@@ -86,37 +86,10 @@ void ProgProject::readParams()
 /* Usage =================================================================== */
 void ProgProject::defineParams()
 {
-    addUsageLine("Generates projections from a volume xxx");
+    addUsageLine("This program is able to generate a set of projections from a volume. ");
+    addUsageLine("++The projection is done using the information directly or from a file.");
     addSeeAlsoLine("tomo_project, xray_project, phantom_create");
-    addExampleLine("Generating a set of projections using fourier method",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method fourier 3 0.25 bspline --params uniformProjection_xmd.param");
-    addExampleLine("Generating a set of projections using shears method",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method shears --params uniformProjection_xmd.param");
-    addExampleLine("Generating a top view from Z",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 0 0");
-    addExampleLine("Generating a side view from Y",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 90 90 0");
-    addExampleLine("Generating a side view from X",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
-    addExampleLine("+In the following links you can find some examples of projection parameter files",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/phantomProject.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection_xmd.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection_xmd.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("Creating a 2D crystal",false);
-    addExampleLine("In order to create a 2D crystal, you can pass --params as a projection file with a second block for crystal projection.: ",false);
-    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRCCrystalProj_xmd.param");
-    addExampleLine("+In the following links you can find some examples of projection parameter files",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRCCrystalProj_xmd.param",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
-    addExampleLine("+ ",false);
-    addExampleLine("+http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_crystal_projection_xmd.param",false);
-
+   
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   -o <image_file>                            : Output stack or image");
     addParamsLine("  [--sampling_rate <Ts=1>]                    : It is only used for PDB phantoms");
@@ -149,6 +122,46 @@ void ProgProject::defineParams()
     addParamsLine("  [--xdim <size=-1>]                     : Size of the projection");
     addParamsLine("                                         : For geometric descriptions and voxel volumes");
     addParamsLine("                                         : this parameter is not necessary");
+      addExampleLine("Generating a set of projections using fourier method",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method fourier 3 0.25 bspline --params uniformProjection_xmd.param");
+    addExampleLine("Generating a set of projections using shears method",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o images.stk --method shears --params uniformProjection_xmd.param");
+    addExampleLine("Generating a top view from Z",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 0 0");
+    addExampleLine("Generating a side view from Y",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 90 90 0");
+    addExampleLine("Generating a side view from X",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
+    addExampleLine("+++In the following links you can find some examples of projection parameter files",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/phantomProject.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++Creating a 2D crystal",false);
+    addExampleLine("+In order to create a 2D crystal, you can pass --params as a projection file with a second block for crystal projection.: ",false);
+    addExampleLine("+xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRCCrystalProj_xmd.param");
+    addExampleLine("+++In the following links you can find some examples of projection parameter files",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRCCrystalProj_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++ http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_crystal_projection_xmd.param",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++Figures (a) and (b) show the achievable resolution for different methods of projection. ",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++<img width='100%' alt='Test_Resolution_Small.jpg' src='%ATTACHURLPATH%/Test_Resolution_Small.jpg' height='100%' />");
+    addExampleLine("+++",false);
+    addExampleLine("+++(a) The achievable resolution for different methods for a volume of size 64*64",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++ <img width='100%' alt='Test_Resolution_Big.jpg' src='%ATTACHURLPATH%/Test_Resolution_Big.jpg' height='100%' />");
+    addExampleLine("+++",false);
+    addExampleLine("+++(b) The achievable resolution for different methods for a volume of size 400*400",false);
+    addExampleLine("+++",false);
+    addExampleLine("+++As it can be seen in these two figures, Fourier method with cubic B-Spline interpolation for both padding two and padding one provides the best resolution. However, there is a preference on padding one because of less memory and time complexity.",false);
 }
 
 /* Run ===================================================================== */
