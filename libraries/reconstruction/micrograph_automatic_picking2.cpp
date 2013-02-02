@@ -332,6 +332,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
 #endif
 
     int num=positionArray.size()*(90.0/100.0);
+
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
