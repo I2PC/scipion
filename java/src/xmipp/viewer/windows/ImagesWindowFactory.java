@@ -150,27 +150,27 @@ public class ImagesWindowFactory {
 	 * metadata with files to be shown, mode passed will be override in
 	 * parameters
 	 */
-	public static JFrameGallery openMetadata(String filename, MetaData md,
+	public static GalleryJFrame openMetadata(String filename, MetaData md,
 			Param parameters, String mode) {
 
 		if (parameters.mode.equalsIgnoreCase(Param.OPENING_MODE_DEFAULT))
 			parameters.mode = mode;
-		return new JFrameGallery(filename, md, parameters);
+		return new GalleryJFrame(filename, md, parameters);
 	}
 
-	public static JFrameGallery openMetadata(String filename, Param parameters,
+	public static GalleryJFrame openMetadata(String filename, Param parameters,
 			String mode) throws Exception {
 		return openMetadata(filename, new MetaData(filename), parameters, mode);
 	}
 
-	public static JFrameGallery openFilesAsGallery(String filenames[],
+	public static GalleryJFrame openFilesAsGallery(String filenames[],
 			boolean useSameTable) throws Exception {
 		return openFilesAsGallery(filenames, useSameTable, new Param());
 	}
 
-	public static JFrameGallery openFilesAsGallery(String filenames[],
+	public static GalleryJFrame openFilesAsGallery(String filenames[],
 			boolean useSameTable, Param parameters) throws Exception {
-		JFrameGallery gallery = null;
+		GalleryJFrame gallery = null;
 
 		if (useSameTable) {
 			MetaData md = new MetaData();

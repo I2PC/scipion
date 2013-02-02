@@ -58,7 +58,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	ImageGalleryTableModel gallery;
 	JPanel panelButtons;
 
-	public EditLabelsJDialog(JFrameGallery parent) {
+	public EditLabelsJDialog(GalleryJFrame parent) {
 		super(parent, "Edit labels", true);
 		this.rows = parent.getData().labels;
 		this.gallery = parent.gallery;
@@ -121,14 +121,14 @@ public class EditLabelsJDialog extends XmippDialog {
 	}// function enableUpDown
 
 	private void rowsChanged() {
-		this.rows = ((JFrameGallery) parent).getData().labels;
+		this.rows = ((GalleryJFrame) parent).getData().labels;
 		model.fireTableDataChanged();
 	}
 
 	private void showAddFillDialog(AddFillLabelsJDialog dlg) throws Exception {
 
 		if (dlg.showDialog()) {
-			((JFrameGallery) parent).fillLabel(dlg.getLabel(),
+			((GalleryJFrame) parent).fillLabel(dlg.getLabel(),
 					dlg.getFillMode(), dlg.getValues());
 			rowsChanged();
 		}
@@ -141,15 +141,15 @@ public class EditLabelsJDialog extends XmippDialog {
 			JButton btn = (JButton) evt.getSource();
 			if (btn == btnAdd) {
 				showAddFillDialog(new AddFillLabelsJDialog(
-						(JFrameGallery) parent, rows));
+						(GalleryJFrame) parent, rows));
 			} else if (btn == btnDelete) {
 				if (showWarning("Are you sure to remove this label?")) {
-					((JFrameGallery) parent).removeLabel(getSelectedLabel());
+					((GalleryJFrame) parent).removeLabel(getSelectedLabel());
 					rowsChanged();
 				}
 			} else if (btn == btnFill) {
 				showAddFillDialog(new AddFillLabelsJDialog(
-						(JFrameGallery) parent, getSelectedLabel()));
+						(GalleryJFrame) parent, getSelectedLabel()));
 			}
 		} catch (Exception e) {
 			showException(e);

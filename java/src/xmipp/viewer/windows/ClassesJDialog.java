@@ -66,7 +66,7 @@ public class ClassesJDialog extends XmippDialog {
 	ImageGalleryTableModel gallery;
 	JPanel panelButtons;
 
-	public ClassesJDialog(JFrameGallery parent) {
+	public ClassesJDialog(GalleryJFrame parent) {
 		super(parent, "Classes", true);
 		// this.classes = classes;
 		this.gallery = parent.gallery;

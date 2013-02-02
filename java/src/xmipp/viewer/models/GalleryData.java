@@ -41,7 +41,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ClassInfo;
-import xmipp.viewer.windows.JFrameGallery;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {

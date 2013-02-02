@@ -72,7 +72,7 @@ import xmipp.viewer.models.ClassInfo;
  */
 public class MDSearchJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
-	protected JFrameGallery parent;
+	protected GalleryJFrame parent;
 	protected MetaData md;
 	protected JTable table;
 	protected long[] ids;
@@ -100,7 +100,7 @@ public class MDSearchJDialog extends XmippDialog {
 	public MDSearchJDialog(JFrame parent, JTable table, MetaData md) {
 		super(parent, "Find and Replace", true);
 
-		this.parent = (JFrameGallery) parent;
+		this.parent = (GalleryJFrame) parent;
 		this.md = md;
 		this.table = table;
 		this.ids = md.findObjects();

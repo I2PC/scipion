@@ -53,7 +53,7 @@ public class AddObjectJDialog extends XmippDialog {
 	GridBagConstraints gbc = new GridBagConstraints();
 	ImageGalleryTableModel gallery;
 	
-	public AddObjectJDialog(JFrameGallery parent) {
+	public AddObjectJDialog(GalleryJFrame parent) {
 		super(parent, "Classes", true);
 		this.gallery = parent.gallery;
 		this.md = gallery.data.md.getMetaDataRow();

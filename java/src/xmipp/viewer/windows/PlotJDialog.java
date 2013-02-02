@@ -73,7 +73,7 @@ public class PlotJDialog extends XmippDialog {
 	String[] COLORS = { "0000CC", "009900", "CC0000", "000000", "FF6600",
 			"FFFF00", "00CCFF" };
 
-	public PlotJDialog(JFrameGallery parent) {
+	public PlotJDialog(GalleryJFrame parent) {
 		super(parent, "Plot options", true);
 
 		rows = new ArrayList<ColumnInfo>();
