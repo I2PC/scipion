@@ -753,8 +753,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 * @throws Exception
 	 */
 
-	
-
 	private boolean openClassesDialog()
 	{
 		if (dlgClasses == null)
@@ -831,7 +829,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			jlZoom.setEnabled(hasRender);
 			boolean isCol = data.isColumnFormat();
 			allowColsResize = false;
-			jsGoToImage.setEnabled(isCol);
+			jsGoToImage.setEnabled(isCol && gallery.getSize() > 0);
 			jlGoToImage.setEnabled(isCol);
 		}
 		jsColumns.setEnabled(allowColsResize);
@@ -865,7 +863,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void reloadMd() throws Exception
 	{
 		reloadMd(true);
@@ -1006,7 +1004,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jlGoToImage.setToolTipText(XmippLabel.LABEL_GOTO_ITEM);
 		toolBar.add(jlGoToImage);
 
-		jsGoToImage.setValue(1);
+		if(gallery.getSize() > 0)
+			jsGoToImage.setValue(1);
+		
 		jsGoToImage.addChangeListener(new javax.swing.event.ChangeListener()
 		{
 			public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -1058,9 +1058,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		toolBar.add(jsRows);
 
 		// Some settings of the spinners
-		jsRows.setModel(new SpinnerNumberModel(1, 1, gallery.getSize(), 1));
-		jsColumns.setModel(new SpinnerNumberModel(1, 1, gallery.getSize(), 1));
-		jsGoToImage.setModel(new SpinnerNumberModel(1, 1, gallery.getSize(), 1));
+		if (gallery.getSize() > 0)
+		{
+			jsRows.setModel(new SpinnerNumberModel(1, 1, gallery.getSize(), 1));
+			jsColumns.setModel(new SpinnerNumberModel(1, 1, gallery.getSize(), 1));
+			jsGoToImage.setModel(new SpinnerNumberModel(1, 1, gallery.getSize(), 1));
+		}
 
 		int TEXTWIDTH = 4;
 		((JSpinner.NumberEditor) jsZoom.getEditor()).getTextField().setColumns(TEXTWIDTH);
@@ -1848,11 +1851,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		createModel();
 		reloadMd(false);
-		
+
 		createCombos();
 
 	}
-	
+
 	private void saveMd() throws Exception
 	{
 		saveMd(dlgSave.getMdFilename());
@@ -1933,7 +1936,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				saveMd();
 			else
 				saveAll();
-			
+
 			setGalleryTitle();
 			if (dlgSave.doSaveImages())
 				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());

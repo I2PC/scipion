@@ -45,7 +45,8 @@ public class Family {
 			{
 				templatesNumber = ((int)templates.getNDim());
 				this.templates = templates;
-				XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
+				//XmippImageConverter.readToImagePlus(templates).show();//temporarily to avoid error
+				
 			}
 			catch (Exception e)
 			{

@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Micrograph;
@@ -313,7 +314,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				new File(file).delete();
 			else
 			{
-				persistMicrographState(tm);
+				saveMicrographState(tm);
 				for (MicrographFamilyData mfd : tm.getFamiliesData())
 				{
 					md = new MetaData();
@@ -380,7 +381,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void persistMicrographState(TrainingMicrograph m)
+	public void saveMicrographState(TrainingMicrograph m)
 	{
 		long id;
 		try
@@ -840,12 +841,16 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		try
 		{
+			Particle p = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
 			if (index < family.getTemplatesNumber())
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
-				family.getTemplates().alignImages(igp);
+				p = family.getTemplates().alignImage(igp);
+//			if(p  != null)
+//				System.out.println(p);
+			
 		}
 		catch (Exception e)
 		{

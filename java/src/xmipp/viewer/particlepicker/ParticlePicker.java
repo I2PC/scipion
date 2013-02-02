@@ -95,13 +95,13 @@ public abstract class ParticlePicker
 	public void setColor(Color color)
 	{
 		family.setColor(color);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	public void setSize(int size)
 	{
 		family.setSize(size);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	
@@ -178,7 +178,7 @@ public abstract class ParticlePicker
 				for (IJCommand f : filters)
 					if (f.getCommand().equals(command))
 						f.setOptions(options);
-			persistFilters();
+			saveFilters();
 			command = null;
 
 		}
@@ -251,7 +251,7 @@ public abstract class ParticlePicker
 		return families;
 	}
 
-	public void persistFamilies()
+	public void saveFamilies()
 	{
 		long id;
 		String file = familiesfile;
@@ -293,7 +293,7 @@ public abstract class ParticlePicker
 		if (!new File(file).exists())
 		{
 			families.add(Family.getDefaultFamily());
-			persistFamilies();
+			saveFamilies();
 			return;
 		}
 
@@ -384,15 +384,15 @@ public abstract class ParticlePicker
 
 	public void saveData()
 	{
-		persistFilters();
-		persistFamilies();
+		saveFilters();
+		saveFamilies();
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);
 
 	
 
-	public void persistFilters()
+	public void saveFilters()
 	{
 		long id;
 		String file = macrosfile;
@@ -473,7 +473,7 @@ public abstract class ParticlePicker
 			if (f.getCommand().equals(filter))
 			{
 				filters.remove(f);
-				persistFilters();
+				saveFilters();
 				break;
 			}
 	}// function removeFilter

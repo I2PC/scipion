@@ -25,7 +25,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 			if(filters.isEmpty())//user just started manual mode and has no filter, I select gaussian blur by default, will be applied when window opens
 			{
 				filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
-				persistFilters();
+				saveFilters();
 			}
 
 		}
