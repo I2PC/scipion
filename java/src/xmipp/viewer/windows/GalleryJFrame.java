@@ -844,8 +844,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jcbAutoAdjustColumns.setEnabled(allowColsResize);
 	}
 
-	/** Reload table data */
 	public void reloadTableData()
+	{
+		reloadTableData(false);
+	}
+	/** Reload table data */
+	public void reloadTableData(boolean changed)
 	{
 		try
 		{
@@ -857,9 +861,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			menu.update();
 			updateCombos();
-			if (dlgSave != null)
+			if (dlgSave != null && changed)
 				dlgSave.setInitialValues();
-			saved = false;
+			this.saved = !changed;
 			setGalleryTitle();
 
 		}
@@ -882,10 +886,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private void reloadMd(boolean changed) throws Exception
 	{
-		data.setMdChanges(changed);
-
 		data.loadMd();
-		reloadTableData();
+		reloadTableData(changed);
+		data.setMdChanges(changed);
 	}// function reloadMd
 
 	/**
@@ -1866,10 +1869,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		return (String) jcbBlocks.getSelectedItem();
 	}
 
-	public void reloadFile(String file) throws Exception
+	public void reloadFile(String file, boolean changed) throws Exception
 	{
 		createModel();
-		reloadMd(false);
+		reloadMd(changed);
 
 		createCombos();
 
@@ -1901,10 +1904,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			}
 
-			saved = true;
 			data.setMdChanges(false);
 			gallery.data.setFileName(file);
-			reloadFile(file);
+			reloadFile(file, false);
 		}
 		catch (Exception e)
 		{
