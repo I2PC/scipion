@@ -169,6 +169,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
+	/** Store data about visualization */
+	GalleryData data;
 
 	/** Some static initialization for fancy default dimensions */
 	static
@@ -181,8 +183,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-	/** Store data about visualization */
-	GalleryData data;
+	
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -739,43 +740,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
 		imgAvg.destroy();
 		imgStd.destroy();
-		XmippImageWindow winAvg = new XmippImageWindow(this, new ImagePlusLoader(impAvg), "AVG: " + data.filename);
+		XmippImageWindow winAvg = new XmippImageWindow(this, new ImagePlusLoader(impAvg), "AVG: " + data.getFileName());
 		XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
 		winAvg.setVisible(true);
-		XmippImageWindow winStd = new XmippImageWindow(this, new ImagePlusLoader(impStd), "STD: " + data.filename);
+		XmippImageWindow winStd = new XmippImageWindow(this, new ImagePlusLoader(impStd), "STD: " + data.getFileName());
 		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
 		winStd.setVisible(true);
 	}
 
-	private void saveMd() throws Exception
-	{
-		dlgSave.saveMd(data.md);
-		saved = true;
-		data.setMdChanges(false);
-	}// function saveMd
-
-	private void save() throws Exception
-	{
-		if (!saved)
-			saveAs();
-		else
-			saveMd();
-	}// function save
-
-	private void saveAs() throws Exception
-	{
-		if (dlgSave == null)
-			dlgSave = new SaveJDialog(this);
-		dlgSave.setMdFilename(data.getMdFilename());
-		if (dlgSave.showDialog())
-		{
-			saveMd();
-			gallery.updateFilename(dlgSave.getMdFilename());
-			setGalleryTitle();
-			if (dlgSave.doSaveImages())
-				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
-		}
-	}// function saveAs
 
 	private boolean openClassesDialog()
 	{
@@ -799,7 +771,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		ImageGeneric image = new ImageGeneric();
 		data.md.getPCAbasis(image, data.getRenderLabel());
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-		imp.setTitle("PCA: " + data.filename);
+		imp.setTitle("PCA: " + data.getFileName());
 		ImagesWindowFactory.openXmippImageWindow(this, imp, false);
 
 	}
@@ -894,7 +866,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 * */
 	private void reloadMd() throws Exception
 	{
-		data.setMdChanges(true);
+		reloadMd(true);
+	}
+
+	/**
+	 * Reload metadata info, rebuild the table This function is called whenever
+	 * a change is made on metadata, that's why changes are reported to
+	 * GalleryData
+	 * */
+
+	private void reloadMd(boolean changed) throws Exception
+	{
+		data.setMdChanges(changed);
+
 		data.loadMd();
 		reloadTableData();
 	}// function reloadMd
@@ -953,7 +937,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		SaveJDialog dlg = new SaveJDialog(this);
 		if (dlg.showDialog())
 		{
-			dlg.saveMd(data.getSelectionMd());
+			data.getSelectionMd().write(dlg.getMdFilename());
 		}
 	}
 
@@ -1209,7 +1193,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	protected void updateCombos()
 	{
-		boolean showBlocks = data.getNumberOfBlocks() > 1;
+		boolean showBlocks = data.getNumberOfBlocks() > 0;
 		boolean showVols = data.getNumberOfVols() > 1 && data.isVolumeMode();
 		jcbBlocks.setVisible(showBlocks);
 		jcbVolumes.setVisible(showVols);
@@ -1811,6 +1795,110 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void done()
 	{
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
+	}
+	
+	private void saveMd() throws Exception
+	{
+		saveMd(dlgSave.getMdFilename());
+	}
+
+	private void saveMd(String path) throws Exception
+	{
+		try
+		{
+			if (path == null)
+				throw new IllegalArgumentException();
+
+			boolean overwrite;
+			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			if (!new File(file).exists())
+				data.md.writeBlock(path);
+			else
+			{
+				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
+				if (overwrite)
+					data.md.write(path);
+				else
+					data.md.writeBlock(path);
+
+			}
+
+			saved = true;
+			data.setMdChanges(false);
+			gallery.data.setFileName(file);
+			reloadFile(file);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}// function saveMd
+
+	private void saveAll() throws Exception
+	{
+		String from = data.getFileName();
+		String to = dlgSave.getMdFilename();
+		to = to.substring(to.lastIndexOf('@') + 1, to.length());
+		if (!from.equals(to))
+		{// no sense in overwritting or appending
+			MetaData frommd;
+			frommd = new MetaData();
+			if (dlgSave.isOverwrite())
+				new MetaData().write(getBlock() + "@" + to);// overwrite file
+															// with some block
+			for (String blockit : data.mdBlocks)
+			{
+				frommd.read(blockit + "@" + from);
+				frommd.writeBlock(blockit + "@" + to);
+			}
+		}
+		saveMd(getBlock() + "@" + to);
+	}
+
+	public String getBlock()
+	{
+		return (String) jcbBlocks.getSelectedItem();
+	}
+	
+	
+	private void save() throws Exception
+	{
+		if (!saved)
+			saveAs();
+		else
+			saveMd(dlgSave.getMdFilename());
+	}// function save
+
+	private void saveAs() throws Exception
+	{
+		if (dlgSave == null)
+			dlgSave = new SaveJDialog(this, data.getMdFilename());
+		else
+			dlgSave.setMdFilename(data.getMdFilename());
+		boolean save = dlgSave.showDialog(); // displays dialog and waits until
+												// save or cancel clicked
+		if (save)
+		{
+			if (dlgSave.saveActiveBlockOnly())
+				saveMd();
+			else
+				saveAll();
+
+			setGalleryTitle();
+			if (dlgSave.doSaveImages())
+				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
+		}
+		
+		
+	}// function saveAs
+	
+	public void reloadFile(String file) throws Exception
+	{
+		createModel();
+		reloadMd(false);
+
+		createCombos();
+
 	}
 
 }// class JFrameGallery
