@@ -246,11 +246,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		return active;
 	}
 
-
-
-
-
-
 	@Override
 	public void setMicrograph(Micrograph m)
 	{

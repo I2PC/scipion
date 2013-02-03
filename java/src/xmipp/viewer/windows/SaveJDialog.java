@@ -88,7 +88,9 @@ public class SaveJDialog extends XmippDialog {
 	private String block;
 	private JCheckBox chbDiscard;
 	
+
 	public SaveJDialog(GalleryJFrame parent, String file) {
+
 		super(parent, "Save", true);
 		initComponents();
 		block = file.substring(0, file.lastIndexOf("@"));

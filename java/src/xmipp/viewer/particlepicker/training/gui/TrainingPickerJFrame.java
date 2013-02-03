@@ -634,7 +634,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		formatMicrographsTable();
 		pack();
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 	}
 
 	public void addFamily(Family g)
@@ -688,7 +688,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 		try
 		{
 			canvas.setEnabled(false);

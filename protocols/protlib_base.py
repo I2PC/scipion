@@ -373,7 +373,7 @@ class DepData():
         
 _baseProtocolNames = {
         'acquisition':  join('%(WorkingDir)s', 'acquisition_info.xmd'),     
-        'extract_list':  join('%(ExtraDir)s', "extract_list.xmd"),      
+        'extract_list':  join('%(ExtraDir)s', "extract_list.xmd"),    
         'families':     join('%(ExtraDir)s', 'families.xmd'),
         'family':       join('%(WorkingDir)s', '%(family)s.xmd'),
         'macros':       join('%(ExtraDir)s', 'macros.xmd'), 
