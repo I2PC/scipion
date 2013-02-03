@@ -87,7 +87,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	// Initiazation function
 	public ImageGalleryTableModel(GalleryData data) throws Exception {
-		filename = data.filename;
 		this.data = data;
 		cols = 0;
 		dimension = loadDimension();
@@ -107,11 +106,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		resizeCache();
 	}
 	
-	//Set filename
-	public void updateFilename(String filename){
-		this.filename = data.filename = Filename.getFilename(filename);
-	}
-
+	
 	// Load initial dimensions
 	protected abstract ImageDimension loadDimension() throws Exception;
 
@@ -395,8 +390,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Clear selection list */
 	public void clearSelection() {
-		for (int i = 0; i < n; ++i)
-			data.selection[i] = false;
+		data.clearSelection();
 	}
 	
 	public int getFirstSelectedIndex(){

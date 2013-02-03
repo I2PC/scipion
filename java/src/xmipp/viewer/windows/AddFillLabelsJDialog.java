@@ -78,7 +78,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	 * Constructor to add a new label the labels present in the metadata are
 	 * passed
 	 * */
-	public AddFillLabelsJDialog(JFrameGallery parent,
+	public AddFillLabelsJDialog(GalleryJFrame parent,
 			ArrayList<ColumnInfo> labels) {
 		super(parent, "Add new label", true);
 		this.gallery = (MetadataGalleryTableModel) parent.gallery;
@@ -87,7 +87,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	}// constructor AddFillLabelsJDialog
 
 	/** Constructor to fill an existing label */
-	public AddFillLabelsJDialog(JFrameGallery parent, int label) {
+	public AddFillLabelsJDialog(GalleryJFrame parent, int label) {
 		super(parent, "Fill label values", true);
 		this.label = label;
 		initComponents();

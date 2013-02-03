@@ -73,7 +73,7 @@ public class PlotJDialog extends XmippDialog {
 	String[] COLORS = { "0000CC", "009900", "CC0000", "000000", "FF6600",
 			"FFFF00", "00CCFF" };
 
-	public PlotJDialog(JFrameGallery parent) {
+	public PlotJDialog(GalleryJFrame parent) {
 		super(parent, "Plot options", true);
 
 		rows = new ArrayList<ColumnInfo>();
@@ -103,7 +103,7 @@ public class PlotJDialog extends XmippDialog {
 
 	protected void createEntries() {
 		tfTitle = new JTextField(20);
-		tfTitle.setText(gallery.data.filename);
+		tfTitle.setText(gallery.data.getFileName());
 		tfXLabel = new JTextField(20);
 		tfYLabel = new JTextField(20);
 		tfBins = new JTextField(10);
@@ -191,7 +191,7 @@ public class PlotJDialog extends XmippDialog {
 
 		try {
 			String[] argsBasic = { "xmipp_metadata_plot",
-					gallery.data.filename, "-y", labels, "--colors", colors,
+					gallery.data.getFileName(), "-y", labels, "--colors", colors,
 					"--style", styles, "--markers", markers, "--title",
 					tfTitle.getText().trim(), "--ytitle", ylabel, "--xtitle",
 					tfXLabel.getText().trim() };

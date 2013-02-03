@@ -317,11 +317,13 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
 
 /*
  * Class:     xmipp_ImageGeneric
- * Method:    reslice
+ * Method:    alignImages
  * Signature: (Z,Z,I)V
  */
-JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
+JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
   (JNIEnv *, jobject, jobject);
+
+
 
 #ifdef __cplusplus
 }
