@@ -846,7 +846,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void reloadTableData()
 	{
-		reloadTableData(false);
+		reloadTableData(true);
 	}
 	/** Reload table data */
 	public void reloadTableData(boolean changed)
