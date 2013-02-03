@@ -184,6 +184,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		MAX_WIDTH = Math.round(aux);
 	}
 
+
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
 	{
@@ -749,11 +750,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		winStd.setVisible(true);
 	}
 
-	/**
-	 * Save the metadata using the path and setting from the dialog
-	 * 
-	 * @throws Exception
-	 */
 
 
 	private boolean openClassesDialog()
@@ -843,8 +839,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jlRows.setEnabled(allowColsResize);
 		jcbAutoAdjustColumns.setEnabled(allowColsResize);
 	}
-
+	
 	public void reloadTableData()
+	{
+		reloadTableData(true);
+	}
+
+
 	{
 		reloadTableData(true);
 	}
@@ -863,7 +864,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			updateCombos();
 			if (dlgSave != null && changed)
 				dlgSave.setInitialValues();
+
 			this.saved = !changed;
+
 			setGalleryTitle();
 
 		}
@@ -889,6 +892,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		data.loadMd();
 		reloadTableData(changed);
 		data.setMdChanges(changed);
+
 	}// function reloadMd
 
 	/**
@@ -1208,7 +1212,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 
 		boolean showBlocks = data.getNumberOfBlocks() > 0;
-
 		boolean showVols = data.getNumberOfVols() > 1 && data.isVolumeMode();
 		jcbBlocks.setVisible(showBlocks);
 		jcbVolumes.setVisible(showVols);
@@ -1834,6 +1837,62 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 	}
+	
+
+
+
+	private void saveAll() throws Exception
+	{
+		String from = data.getFileName();
+		String to = dlgSave.getMdFilename();
+		to = to.substring(to.lastIndexOf('@') + 1, to.length());
+		if (!from.equals(to))
+		{// no sense in overwritting or appending
+			MetaData frommd;
+			frommd = new MetaData();
+			if (dlgSave.isOverwrite())
+				new MetaData().write(getBlock() + "@" + to);// overwrite file
+															// with some block
+			for (String blockit : data.mdBlocks)
+			{
+				frommd.read(blockit + "@" + from);
+				frommd.writeBlock(blockit + "@" + to);
+			}
+		}
+		saveMd(getBlock() + "@" + to);
+	}
+
+
+	
+	private void save() throws Exception
+	{
+		if (!saved)
+			saveAs();
+		else
+			saveMd(dlgSave.getMdFilename());
+	}// function save
+
+	private void saveAs() throws Exception
+	{
+		if (dlgSave == null)
+			dlgSave = new SaveJDialog(this, data.getMdFilename());
+		else
+			dlgSave.setMdFilename(data.getMdFilename());
+		boolean save = dlgSave.showDialog(); // displays dialog and waits until
+												// save or cancel clicked
+		if (save)
+		{
+			if (dlgSave.saveActiveBlockOnly())
+				saveMd();
+			else
+				saveAll();
+
+			setGalleryTitle();
+			if (dlgSave.doSaveImages())
+				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
+		}
+		
+	}
 
 	public void openMicrographs()
 	{
@@ -1914,54 +1973,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}// function saveMd
 
-	private void saveAll() throws Exception
-	{
-		String from = data.getFileName();
-		String to = dlgSave.getMdFilename();
-		to = to.substring(to.lastIndexOf('@') + 1, to.length());
-		if (!from.equals(to))
-		{// no sense in overwritting or appending
-			MetaData frommd;
-			frommd = new MetaData();
-			if (dlgSave.isOverwrite())
-				new MetaData().write(getBlock() + "@" + to);// overwrite file
-															// with some block
-			for (String blockit : data.mdBlocks)
-			{
-				frommd.read(blockit + "@" + from);
-				frommd.writeBlock(blockit + "@" + to);
-			}
-		}
-		saveMd(getBlock() + "@" + to);
-	}
 
-	private void save() throws Exception
-	{
-		if (!saved)
-			saveAs();
-		else
-			saveMd(dlgSave.getMdFilename());
-	}// function save
-
-	private void saveAs() throws Exception
-	{
-		if (dlgSave == null)
-			dlgSave = new SaveJDialog(this, data.getMdFilename());
-		else
-			dlgSave.setMdFilename(data.getMdFilename());
-		boolean save = dlgSave.showDialog(); // displays dialog and waits until
-												// save or cancel clicked
-		if (save)
-		{
-			if (dlgSave.saveActiveBlockOnly())
-				saveMd();
-			else
-				saveAll();
-
-			setGalleryTitle();
-			if (dlgSave.doSaveImages())
-				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
-		}
-	}// function saveAs
 
 }// class JFrameGallery

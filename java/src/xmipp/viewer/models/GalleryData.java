@@ -140,7 +140,7 @@ public class GalleryData {
 			return filename;
 		return String.format("%s@%s", selectedBlock, filename);
 	}// function getMdFilename
-
+	
 	public void setFileName(String file)
 	{
 		if(file == null)
@@ -162,6 +162,9 @@ public class GalleryData {
 		}
 
 	}
+	
+
+
 	
 	/** Load contents from a metadata already read */
 	public void loadMd() throws Exception {
@@ -853,13 +856,16 @@ public class GalleryData {
 		return hasClassesChanges;
 	}
 
+
 	public boolean hasMicrographParticles()
 	{
 		return md.containsMicrographParticles();
 	}
 
+
 	public String getFileName()
 	{
 		return filename;
 	}
+
 }// class GalleryData
