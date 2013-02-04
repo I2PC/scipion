@@ -117,11 +117,7 @@ public class TrainingParticle extends PickerParticle{
 		}
 	}
 
-	public void resetImagePlus()
-	{
-		img = null;
-		
-	}
+
 
 	
 }

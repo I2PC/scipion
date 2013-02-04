@@ -845,7 +845,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			Particle p = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
-			particle.getImagePlus().show();
+		//	particle.getImagePlus().show();
 			if (index < family.getTemplatesNumber())//index starts at one
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
