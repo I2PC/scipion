@@ -621,8 +621,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			micrographstb.setRowSelectionInterval(index, index);
 	}
 
-	
-	
+	protected void saveChanges()
+	{
+
+		ppicker.saveData();
+		setChanged(false);
+	}
+
+	void updateFamilyColor()
+	{
+		color = family.getColor();
+		colorbt.setIcon(new ColorIcon(color));
+		canvas.repaint();
+		ppicker.saveFamilies();
+	}
+
 
 	void updateFamilyComboBox()
 	{
