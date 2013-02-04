@@ -834,7 +834,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void addParticleToTemplates(TrainingParticle particle)
 	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()));
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1);
 	}
 
 	public void addParticleToTemplates(TrainingParticle particle, int index)
@@ -844,7 +844,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			Particle p = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
-			if (index < family.getTemplatesNumber())
+			if (index < family.getTemplatesNumber())//index starts at one
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
 				p = family.getTemplates().alignImage(igp);
