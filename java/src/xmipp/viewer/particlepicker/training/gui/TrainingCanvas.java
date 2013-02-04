@@ -150,7 +150,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				erase(x, y);
 				return;
 			}
-
+			//deleting when mouse released, takes less updates to templates and frame
 			if (active != null && SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 			{
 				micrograph.removeParticle(active, ppicker);
