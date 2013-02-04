@@ -880,7 +880,14 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	
+	public void updateTemplates()
+	{
+		ppicker.setUpdateTemplatesPending(true);
+		if(templatesdialog != null)
+			templatesdialog.loadTemplates(true);
+
+	}
+
 
 	public void updateSize(int size)
 	{
@@ -922,11 +929,5 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return new ParticlesJDialog(this);
 	}
 
-	public void updateTemplates()
-	{
-		ppicker.setUpdateTemplatesPending(true);
-		if(templatesdialog != null)
-			templatesdialog.loadTemplates(true);
-		
-	}
+
 }

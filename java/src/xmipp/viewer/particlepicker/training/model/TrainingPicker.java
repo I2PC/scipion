@@ -330,7 +330,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			saveAutomaticParticles(tm);
-			// saveTemplates();
+
 		}
 		catch (Exception e)
 		{
@@ -839,6 +839,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void addParticleToTemplates(TrainingParticle particle, int index)
 	{
+
 		try
 		{
 			Particle p = null;
@@ -851,7 +852,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				p = family.getTemplates().alignImage(igp);
 //			if(p  != null)
 //				System.out.println(p);
-			
+
 		}
 		catch (Exception e)
 		{
@@ -874,5 +875,9 @@ public abstract class TrainingPicker extends ParticlePicker
 
 		}
 	}
+	
+
+
+	
 
 }

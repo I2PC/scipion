@@ -28,6 +28,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingPicker ppicker;
 	private boolean activemoved;
 
+
+
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
@@ -53,6 +55,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
+
 		if (frame.isPickingAvailable(e))
 		{
 			if (frame.isEraserMode())
@@ -60,6 +63,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				erase(x, y);
 				return;
 			}
+
 			TrainingParticle p = micrograph.getParticle(x, y);
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
@@ -169,6 +173,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 		}
 	}
+
+
 
 	protected void doCustomPaint(Graphics2D g2)
 	{
