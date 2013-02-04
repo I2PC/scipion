@@ -605,7 +605,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				p.resetParticleCanvas();
 			loadParticles();
 		}
-		getParticlePicker().persistFamilies();
+		getParticlePicker().saveFamilies();
 	}
 
 	/** Shortcut function to show messages */

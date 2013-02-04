@@ -55,12 +55,12 @@ public abstract class ParticlePicker {
 
 	public void setColor(Color color) {
 		family.setColor(color);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	public void setSize(int size) {
 		family.setSize(size);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	public Family getFamily() {
@@ -206,7 +206,7 @@ public abstract class ParticlePicker {
 		return families;
 	}
 
-	public void persistFamilies() {
+	public void saveFamilies() {
 		long id;
 		String file = familiesfile;
 		try {
@@ -239,7 +239,7 @@ public abstract class ParticlePicker {
 		String file = familiesfile;
 		if (!new File(file).exists()) {
 			families.add(Family.getDefaultFamily());
-			persistFamilies();
+			saveFamilies();
 			return;
 		}
 
@@ -323,7 +323,7 @@ public abstract class ParticlePicker {
 
 	public void saveData() {
 		persistFilters();
-		persistFamilies();
+		saveFamilies();
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);

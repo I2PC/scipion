@@ -22,8 +22,6 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			return Tool.PICKER;
 		return Tool.getTool(IJ.getToolName());
 	}
-	
-	
 
 	public XmippImageCanvas(ImagePlus imp)
 	{
@@ -49,10 +47,10 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		}
 
 	}
-	
+
 	protected boolean isDragImage(MouseEvent e)
 	{
-		return SwingUtilities.isRightMouseButton(e)  || (SwingUtilities.isLeftMouseButton(e) && e.isControlDown());
+		return SwingUtilities.isRightMouseButton(e) || (SwingUtilities.isLeftMouseButton(e) && e.isControlDown());
 	}
 
 	public void mouseDragged(MouseEvent e)
@@ -69,10 +67,10 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			return;
 		}
 	}
-	
+
 	public void setZoom(double zoom)
 	{
-		if(Math.abs(getMagnification() - zoom) <= 0.025)
+		if (Math.abs(getMagnification() - zoom) <= 0.025)
 		{
 			if (getMagnification() <= 1.0)
 				imp.repaintWindow();
@@ -82,24 +80,25 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			zoomIn(0, 0);
 		else
 			zoomOut(0, 0);
-		
+
 		setZoom(zoom);
 	}
-	
+
 	public void mouseReleased(MouseEvent e)
 	{
-		if (getTool() == Tool.IMAGEJ)//do nothing for ImageJ tool is mine is selected
+		if (getTool() == Tool.IMAGEJ)// do nothing for ImageJ tool is mine is
+										// selected
 		{
 			super.mouseReleased(e);
 			return;
 		}
-		
+
 	}
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
-		if(!e.isShiftDown())
+		if (!e.isShiftDown())
 			return;
 		int x = e.getX();
 		int y = e.getY();
@@ -113,34 +112,35 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			imp.repaintWindow();
 
 	}
-	
+
 	public void mouseMoved(MouseEvent e)
 	{
 
 		if (getTool() == Tool.IMAGEJ)
+		{
 			super.mouseMoved(e);
+			return;
+		}
 		int x = offScreenX(e.getX());
 		int y = offScreenY(e.getY());
 		imp.mouseMoved(x, y);
 		imp.updateStatusbarValue();
 	}
 
-
-
-	public void loadData(XmippIJWindow iw) {
+	public void loadData(XmippIJWindow iw)
+	{
 		Rectangle rect = getSrcRect();
 		double magnification = getMagnification();
 		imp = iw.getImagePlusLoader().loadImagePlus();
-		int width = (int)getSize().getWidth();
-		int height = (int)getSize().getHeight();
-		((ImageWindow)iw).setImage(imp);
-		((ImageWindow)iw).updateImage(imp);
+		int width = (int) getSize().getWidth();
+		int height = (int) getSize().getHeight();
+		((ImageWindow) iw).setImage(imp);
+		((ImageWindow) iw).updateImage(imp);
 		setDrawingSize(width, height);
 		setMagnification(magnification);
 		setSourceRect(rect);
 		repaint();
-		((ImageWindow)iw).pack();
+		((ImageWindow) iw).pack();
 	}
-
 
 }
