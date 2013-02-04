@@ -591,6 +591,12 @@ class ProtocolGUI(BasicGUI):
             return False
         try:
             runName = self.getVarValue('RunName')
+            # Validate runName only contains letters, numbers or underscore:
+            import re
+            if re.match('\w+$', runName) is None:
+                self.showError("Invalid Run Name", 'RUN NAME should only contains letters, numbers or underscore')
+                return False
+            
             if runName != self.inRunName:
                 self.run['run_name'] = runName
                 self.run['script'] = self.project.getRunScriptFileName(self.run['protocol_name'], runName)
