@@ -355,7 +355,7 @@ public class GalleryData {
 		try {
 			switch (mode) {
 			case GALLERY_VOL:
-				return new VolumeGallery(this);
+				return new VolumeGalleryTableModel(this);
 			case GALLERY_MD:
 				if (md.size() > 0 && hasRenderLabel())
 					return new MetadataGalleryTableModel(this);
