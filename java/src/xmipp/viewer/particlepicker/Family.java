@@ -60,7 +60,7 @@ public class Family {
 			{
 				templatesNumber = ((int)templates.getNDim());
 				this.templates = templates;
-				XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
+				//XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
 			}
 			catch (Exception e)
 			{
@@ -97,7 +97,6 @@ public class Family {
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
-			System.out.println("NDim on initTemplates: " + templates.getNDim());
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -226,7 +225,6 @@ public class Family {
 	public void setTemplate(int index, ImageGeneric ig) {
 		float[] matrix;
 		try {
-			ig.printShape();
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
 					ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
