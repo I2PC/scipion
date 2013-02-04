@@ -10,6 +10,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Family;
 import xmipp.viewer.particlepicker.Format;
@@ -22,7 +23,6 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	protected List<TrainingMicrograph> micrographs;
 	private TrainingMicrograph micrograph;
-	private boolean updateTemplatesPending;
 
 	public static FamilyState previousStep(FamilyState step)
 	{
@@ -798,7 +798,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 				else
 					
-						f.getTemplates().alignImages(igp);
+						f.getTemplates().alignImage(igp);
 					}
 					
 			}
@@ -833,5 +833,55 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
+	
+	
+	public void addParticleToTemplates(TrainingParticle particle, int index)
+	{
+		try
+		{
+			Particle p = null;
+			Family family = particle.getFamily();
+			ImageGeneric igp = particle.getImageGeneric();
+			if (index < family.getTemplatesNumber())//index starts at one
+				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
+			else
+				p = family.getTemplates().alignImage(igp);
+//			if(p  != null)
+//				System.out.println(p);
+			
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+
+	public void addParticleToTemplates(TrainingParticle particle)
+	{
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1);
+	}
+
+
+	public void resetParticleImages()
+	{
+		MicrographFamilyData mfd;
+		for (TrainingMicrograph m : micrographs)
+		{
+			mfd = m.getFamilyData(family);
+			for (TrainingParticle p : mfd.getManualParticles())
+				p.resetImagePlus();
+
+		}
+	}
+
+	public void updateTemplates()
+	{
+		updateTemplates(family);
+		
+	}
+
+	
 
 }

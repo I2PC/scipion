@@ -43,6 +43,7 @@ public abstract class ParticlePicker {
 	protected String configfile;
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
+	protected boolean updateTemplatesPending;
 	
 	public int getSize() {
 		return family.getSize();
@@ -540,5 +541,11 @@ public abstract class ParticlePicker {
 	public abstract Micrograph getMicrograph();
 
 	public abstract void setMicrograph(Micrograph m);
+	
+	public void setUpdateTemplatesPending(boolean b)
+	{
+		updateTemplatesPending = b;
+
+	}
 
 }

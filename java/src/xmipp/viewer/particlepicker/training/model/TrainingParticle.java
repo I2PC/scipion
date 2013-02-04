@@ -139,5 +139,11 @@ public class TrainingParticle extends Particle{
 		}
 	}
 
+	public void resetImagePlus()
+	{
+		img = null;
+		
+	}
+
 	
 }
