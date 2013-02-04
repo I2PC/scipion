@@ -22,6 +22,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	protected List<TrainingMicrograph> micrographs;
 	private TrainingMicrograph micrograph;
+	private boolean updateTemplatesPending;
 
 	public static FamilyState previousStep(FamilyState step)
 	{
@@ -778,8 +779,8 @@ public abstract class TrainingPicker extends ParticlePicker
 	
 	public void updateTemplates(Family f)
 	{
-		if(family.getStep() != FamilyState.Manual)
-			return;//nothing to update
+		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
+			return;// nothing to update
 		f.initTemplates();
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
@@ -801,6 +802,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					}
 					
 			}
+		updateTemplatesPending = false;
 		}
 		catch (Exception e)
 		{
