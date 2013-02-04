@@ -225,10 +225,11 @@ public class Family {
 	public void setTemplate(int index, ImageGeneric ig) {
 		float[] matrix;
 		try {
+			
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
 					ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
-//			templates.printShape();
+			templates.printShape();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());
