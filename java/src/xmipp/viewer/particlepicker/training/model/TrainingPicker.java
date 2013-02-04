@@ -686,7 +686,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family family)
 	{
-		if (!updateTemplatesPending || family.getStep() != FamilyState.Manual)
+		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
 			return;// nothing to update
 		family.initTemplates();
 		List<TrainingParticle> particles;
@@ -844,6 +844,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			Particle p = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
+			particle.getImagePlus().show();
 			if (index < family.getTemplatesNumber())//index starts at one
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
