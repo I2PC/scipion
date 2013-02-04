@@ -364,10 +364,10 @@ public class GalleryData {
 				mode = Mode.TABLE_MD; // this is necessary when coming from
 				// previous case
 				if (!md.isColumnFormat())
-					return new MetadataRow(this);
+					return new MetadataRowTableModel(this);
 				if (md.containsMicrographsInfo())
-					return new MicrographsTable(this);
-				return new MetadataTable(this);
+					return new MicrographsTableModel(this);
+				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:
 				return new RotSpectraGallery(this);
 			}

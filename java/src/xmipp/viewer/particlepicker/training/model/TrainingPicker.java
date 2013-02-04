@@ -261,7 +261,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			saveAutomaticParticles(tm);
-			saveTemplates();
+			//saveTemplates();
 		}
 		catch (Exception e)
 		{
