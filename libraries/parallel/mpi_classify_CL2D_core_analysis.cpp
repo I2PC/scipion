@@ -77,7 +77,7 @@ void ProgClassifyCL2DCore::show()
     if (!verbose)
         return;
     std::cout << "CL2D rootname:        " << fnRoot << std::endl
-    		  << "CL2D output dir:      " << fnODir << std::endl;
+    << "CL2D output dir:      " << fnODir << std::endl;
     if (action==COMPUTE_CORE)
         std::cout
         << "Tolerance:            " << tolerance << std::endl
@@ -229,57 +229,60 @@ void ProgClassifyCL2DCore::computeStableCores()
             thisClassOrder.clear();
             FOR_ALL_OBJECTS_IN_METADATA(thisClass)
             {
-            	thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
-            	thisClassOrder[fnImg]=order++;
+                thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                thisClassOrder[fnImg]=order++;
             }
 
             // Calculate coocurrence within all blocks whose level is inferior to this
             size_t NthisClass=thisClass.size();
-            coocurrence.initZeros(NthisClass,NthisClass);
-            for (int n=0; n<Nblocks; n++)
+            thisClassCore.clear();
+            if (NthisClass>0)
             {
-                CL2DBlock &anotherBlock=blocks[n];
-                if (anotherBlock.level>=thisBlock.level)
-                    break;
-                anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
-                anotherClass.intersection(thisClass,MDL_IMAGE);
-                commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
-                commonIdx.resize(commonImages.size());
-                size_t idx=0;
-                FOR_ALL_OBJECTS_IN_METADATA(commonImages)
+                coocurrence.initZeros(NthisClass,NthisClass);
+                for (int n=0; n<Nblocks; n++)
                 {
-                	commonImages.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                	commonIdx[idx++]=thisClassOrder[fnImg];
-                }
-                size_t Ncommon=commonIdx.size();
-                for (size_t i=0; i<Ncommon; i++)
-                {
-                	size_t idx_i=commonIdx[i];
-                    for (size_t j=i+1; j<Ncommon; j++)
+                    CL2DBlock &anotherBlock=blocks[n];
+                    if (anotherBlock.level>=thisBlock.level)
+                        break;
+                    anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
+                    anotherClass.intersection(thisClass,MDL_IMAGE);
+                    commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
+                    commonIdx.resize(commonImages.size());
+                    size_t idx=0;
+                    FOR_ALL_OBJECTS_IN_METADATA(commonImages)
                     {
-                    	size_t idx_j=commonIdx[j];
-                        MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
+                        commonImages.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                        commonIdx[idx++]=thisClassOrder[fnImg];
+                    }
+                    size_t Ncommon=commonIdx.size();
+                    for (size_t i=0; i<Ncommon; i++)
+                    {
+                        size_t idx_i=commonIdx[i];
+                        for (size_t j=i+1; j<Ncommon; j++)
+                        {
+                            size_t idx_j=commonIdx[j];
+                            MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
+                        }
                     }
                 }
-            }
 
-            // Take only those elements whose coocurrence is maximal
-            maximalCoocurrence.initZeros(NthisClass);
-            int aimedCoocurrence=thisBlock.level-tolerance;
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(coocurrence)
-            if (MAT_ELEM(coocurrence,i,j)==aimedCoocurrence)
-                VEC_ELEM(maximalCoocurrence,i)=VEC_ELEM(maximalCoocurrence,j)=1;
+                // Take only those elements whose coocurrence is maximal
+                maximalCoocurrence.initZeros(NthisClass);
+                int aimedCoocurrence=thisBlock.level-tolerance;
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(coocurrence)
+                if (MAT_ELEM(coocurrence,i,j)==aimedCoocurrence)
+                    VEC_ELEM(maximalCoocurrence,i)=VEC_ELEM(maximalCoocurrence,j)=1;
 
-            // Now compute core
-            thisClassCore.clear();
-            FOR_ALL_OBJECTS_IN_METADATA(thisClass)
-            {
-                thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                size_t idx=thisClassOrder[fnImg];
-                if (VEC_ELEM(maximalCoocurrence,idx))
+                // Now compute core
+                FOR_ALL_OBJECTS_IN_METADATA(thisClass)
                 {
-                    thisClass.getRow(row,__iter.objId);
-                    thisClassCore.addRow(row);
+                    thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                    size_t idx=thisClassOrder[fnImg];
+                    if (VEC_ELEM(maximalCoocurrence,idx))
+                    {
+                        thisClass.getRow(row,__iter.objId);
+                        thisClassCore.addRow(row);
+                    }
                 }
             }
             thisClassCore.write(thisBlock.fnLevel.insertBeforeExtension((String)"_stable_core_"+thisBlock.block),MD_APPEND);
