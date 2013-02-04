@@ -360,14 +360,14 @@ public class XmippMenuBar extends MenuBar
 		}
 	}
 	
-	
+
 
 	protected void wrap(boolean value)
 	{
 		xw.getImagePlusLoader().setWrap(value);
 		xw.loadData();
 	}
-
+	
 	public static void openImagePlusAs3D(ImagePlus ip) {
 		try {
 			int UNIVERSE_W = 400, UNIVERSE_H = 400;

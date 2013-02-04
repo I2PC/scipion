@@ -42,6 +42,7 @@ public abstract class ParticlePicker
 	protected String command;
 	protected Family family;
 	protected String configfile;
+	protected boolean updateTemplatesPending;
 
 	
 
@@ -63,6 +64,9 @@ public abstract class ParticlePicker
 		this.familiesfile = getOutputPath("families.xmd");
 		configfile = getOutputPath("config.xmd");
 		this.families = new ArrayList<Family>();
+		this.selfile = selfile;
+		this.outputdir = outputdir;
+		this.mode = mode;
 		loadFamilies();
 		if (fname == null)
 			family = families.get(0);
@@ -71,9 +75,7 @@ public abstract class ParticlePicker
 		if (family == null)
 			throw new IllegalArgumentException("Invalid family " + fname);
 
-		this.selfile = selfile;
-		this.outputdir = outputdir;
-		this.mode = mode;
+		
 
 		initializeFilters();
 		loadEmptyMicrographs();
@@ -93,15 +95,16 @@ public abstract class ParticlePicker
 	public void setColor(Color color)
 	{
 		family.setColor(color);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	public void setSize(int size)
 	{
 		family.setSize(size);
-		persistFamilies();
+		saveFamilies();
 	}
 
+	
 	public Family getFamily()
 	{
 		return family;
@@ -175,7 +178,7 @@ public abstract class ParticlePicker
 				for (IJCommand f : filters)
 					if (f.getCommand().equals(command))
 						f.setOptions(options);
-			persistFilters();
+			saveFilters();
 			command = null;
 
 		}
@@ -248,7 +251,7 @@ public abstract class ParticlePicker
 		return families;
 	}
 
-	public void persistFamilies()
+	public void saveFamilies()
 	{
 		long id;
 		String file = familiesfile;
@@ -290,7 +293,7 @@ public abstract class ParticlePicker
 		if (!new File(file).exists())
 		{
 			families.add(Family.getDefaultFamily());
-			persistFamilies();
+			saveFamilies();
 			return;
 		}
 
@@ -317,14 +320,14 @@ public abstract class ParticlePicker
 
 				state = validateState(state);
 				templatesfile = getTemplatesFile(name);
-				if (new File(templatesfile).exists() )
+				if (getMode() != FamilyState.Manual && new File(templatesfile).exists() )
 				{
 					templates = new ImageGeneric(templatesfile);
 					family = new Family(name, new Color(rgb), size, state, this, templates);
 					
 				}
 				else
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber.intValue());
 				families.add(family);
 			}
 			md.destroy();
@@ -381,15 +384,15 @@ public abstract class ParticlePicker
 
 	public void saveData()
 	{
-		persistFilters();
-		persistFamilies();
+		saveFilters();
+		saveFamilies();
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);
 
 	
 
-	public void persistFilters()
+	public void saveFilters()
 	{
 		long id;
 		String file = macrosfile;
@@ -470,7 +473,7 @@ public abstract class ParticlePicker
 			if (f.getCommand().equals(filter))
 			{
 				filters.remove(f);
-				persistFilters();
+				saveFilters();
 				break;
 			}
 	}// function removeFilter
@@ -582,5 +585,13 @@ public abstract class ParticlePicker
 	public abstract Micrograph getMicrograph();
 
 	public abstract void setMicrograph(Micrograph m);
+	
+	public void setUpdateTemplatesPending(boolean b)
+	{
+		updateTemplatesPending = b;
+
+	}
+	
+	
 
 }

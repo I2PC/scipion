@@ -200,7 +200,7 @@ void ProgXrayProject::run()
     if (!projParam.singleProjection)
     {
         projMD.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
-        projMD.write(projParam.fnRoot + ".sel");
+        projMD.write(projParam.fnRoot + ".xmd");
     }
 
     postRun();

@@ -236,42 +236,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-		// try
-		// {
-		// canvas.setEnabled(false);
-		// XmippWindowUtil.blockGUI(this, "Generating Templates...");
-		//
-		// Thread t = new Thread(new Runnable()
-		// {
-		// public void run()
-		// {
-		// if (templatesdialog == null)
-		// templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-		// else
-		// {
-		//
-		// templatesdialog.loadTemplates(true);
-		// templatesdialog.setVisible(true);
-		// }
-		// canvas.setEnabled(true);
-		// XmippWindowUtil.releaseGUI(getRootPane());
-		// }
-		// });
-		// t.start();
-		//
-		// }
-		// catch (Exception e)
-		// {
-		// TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-		//
-		// if (templatesdialog != null)
-		// templatesdialog.close();
-		// templatesdialog = null;
-		// throw new IllegalArgumentException(e.getMessage());
-		// }
-
+		
 		if (templatesdialog == null)
+		{
 			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+		}
 		else
 		{
 
@@ -665,7 +634,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		formatMicrographsTable();
 		pack();
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 	}
 
 	public void addFamily(Family g)
@@ -719,7 +688,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 		try
 		{
 			canvas.setEnabled(false);
@@ -911,15 +880,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	public void updateTemplates()
-	{
-		ppicker.updateTemplates(family);
-
-	}
+	
 
 	public void updateSize(int size)
 	{
 		super.updateSize(size);
+		ppicker.resetParticleImages();
+		updateTemplates();
 		if (templatesdialog != null)
 			loadTemplates();
 
@@ -953,5 +920,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public ParticlesJDialog initParticlesJDialog()
 	{
 		return new ParticlesJDialog(this);
+	}
+
+	public void updateTemplates()
+	{
+		ppicker.setUpdateTemplatesPending(true);
+		if(templatesdialog != null)
+			templatesdialog.loadTemplates(true);
+		
 	}
 }
