@@ -545,9 +545,10 @@ class XmippProtocol(object):
         #check if there is a valid project, otherwise abort
         if not self.project.exists():
             errors.append("Not valid project available")
-        # Check if there is runname
-        if self.RunName == "":
-            errors.append("No run name given")
+        # Check if there is valid runname
+        import re
+        if re.match('\w+$', self.RunName) is None:
+            errors.append("Not a valid run name: it should only contain letters, numbers or underscore.")
             
         #Check that number of threads and mpi are int and greater than 0
         if getattr(self, 'NumberOfThreads', 2) < 1:
