@@ -44,7 +44,7 @@ void ProgProjectTomography::defineParams()
     //Example projection file
     addExampleLine("In the following link you can find an example of projection parameter file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/tomoProjection.param",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/tomoProjection.param",false);
 }
 
 void ProgProjectTomography::readParams()
