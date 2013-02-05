@@ -772,8 +772,14 @@ public abstract class TrainingPicker extends ParticlePicker
 			return false;
 		}
 	}
+	
+	public void updateTemplates()
+	{
+		updateTemplates(family);
 
-	public void updateTemplates(Family f, boolean centerpick)
+	}
+
+	public void updateTemplates(Family f)
 	{
 		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
 			return;// nothing to update
@@ -781,6 +787,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
+		TrainingParticle particle; 
+		Particle p;
 		try
 		{
 			for (TrainingMicrograph m : micrographs)
@@ -789,14 +797,13 @@ public abstract class TrainingPicker extends ParticlePicker
 				for (int i = 0; i < mfd.getManualParticles().size(); i++)
 				{
 					particles = mfd.getManualParticles();
-					igp = particles.get(i).getImageGeneric();
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-
-						f.getTemplates().alignImage(igp);
+						p = f.getTemplates().alignImage(igp);
 				}
-
 			}
 			updateTemplatesPending = false;
 		}
@@ -815,7 +822,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			for (Family f : families)
 			{
 
-				updateTemplates(f, false);
+				updateTemplates(f);
 				templates = f.getTemplates();
 				if (templates != null)
 					templates.write(getTemplatesFile(f.getName()));
@@ -843,8 +850,10 @@ public abstract class TrainingPicker extends ParticlePicker
 				p = family.getTemplates().alignImage(igp);
 				if (center)
 				{
+					System.out.println(particle);
 					particle.setX(particle.getX() + p.getX());
 					particle.setY(particle.getY() + p.getY());
+					System.out.println(particle);
 				}
 			}
 
@@ -856,6 +865,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
+	
+
 
 	public void addParticleToTemplates(TrainingParticle particle, boolean center)
 	{
@@ -874,10 +885,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void updateTemplates(boolean centerpick)
-	{
-		updateTemplates(family, centerpick);
-
-	}
+	
 
 }

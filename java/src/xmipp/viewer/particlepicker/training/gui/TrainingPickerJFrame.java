@@ -959,8 +959,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public void updateTemplates()
 	{
 		ppicker.setUpdateTemplatesPending(true);
-		if(isCenterPick())
-			ppicker.updateTemplates(true);
 		if(templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
@@ -971,7 +969,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		super.updateSize(size);
 		ppicker.resetParticleImages();
 		ppicker.setUpdateTemplatesPending(true);
-		ppicker.updateTemplates(centerpickchb.isSelected());
+		ppicker.updateTemplates();
 		if (templatesdialog != null)
 			loadTemplates();
 
