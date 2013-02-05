@@ -675,7 +675,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		color = family.getColor();
 		colorbt.setIcon(new ColorIcon(color));
 		canvas.repaint();
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 	}
 
 	void updateFamilyComboBox()
@@ -688,7 +688,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		formatMicrographsTable();
 		pack();
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 	}
 
 	public void addFamily(Family g)
@@ -743,7 +743,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 		try
 		{
 			canvas.setEnabled(false);
@@ -954,7 +954,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void updateTemplates()
 	{
-		ppicker.updateTemplates(family);
+		ppicker.setUpdateTemplatesPending(true);
+		if(templatesdialog != null)
+			templatesdialog.loadTemplates(true);
 
 	}
 

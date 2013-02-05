@@ -14,6 +14,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import xmipp.ij.commons.Tool;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
@@ -31,6 +32,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
+	private boolean activemoved;
 	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	final static BasicStroke continuousst = new BasicStroke();
 	final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
@@ -72,34 +74,28 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
 		if (frame.isPickingAvailable(e))
 		{
 
-			int x = super.offScreenX(e.getX());
-			int y = super.offScreenY(e.getY());
 			TrainingParticle p = micrograph.getParticle(x, y);
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
-			if (p != null)
+			if (p != null && SwingUtilities.isLeftMouseButton(e))
 			{
-				if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
-				{
-					micrograph.removeParticle(p, ppicker);
-					frame.updateMicrographsModel();
-					active = frame.getFamilyData().getLastAvailableParticle(frame.getThreshold());
-				}
-				else if (SwingUtilities.isLeftMouseButton(e))
-					active = p;
+				active = p;
+				repaint();
+
 			}
 			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getFamily().getSize()))
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
+				ppicker.addParticleToTemplates(p);
 				active = p;
-				frame.updateMicrographsModel();
+				refresh();
 			}
-			frame.setChanged(true);
-			repaint();
 		}
 	}
 
@@ -138,6 +134,62 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		}
 	}
 	
+	@Override
+	public void mouseReleased(MouseEvent e)
+	{
+
+		super.mouseReleased(e);
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+		if (frame.isPickingAvailable(e))
+		{
+			
+			//deleting when mouse released, takes less updates to templates and frame
+			if (active != null && SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
+			{
+				micrograph.removeParticle(active, ppicker);
+				active = getLastParticle();
+				refresh();
+				if (!(active instanceof AutomaticParticle))
+					frame.updateTemplates();
+			}
+			else
+				manageActive(x, y);
+			if (activemoved)
+			{
+				frame.updateTemplates();
+				activemoved = false;
+			}
+
+		}
+	}
+	
+	public void manageActive(int x, int y)
+	{
+		if (active == null)
+			return;
+
+		if (!micrograph.fits(x, y, active.getFamily().getSize()))
+			return;
+		activemoved = true;
+		if (active instanceof AutomaticParticle && !((AutomaticParticle)active).isDeleted())
+		{
+
+			micrograph.removeParticle(active, ppicker);
+			active = new TrainingParticle(active.getX(), active.getY(), active.getFamily(), micrograph);
+			micrograph.addManualParticle(active);
+			repaint();
+		}
+		else
+		{
+			moveActiveParticle(x, y);
+			
+			repaint();
+
+		}
+		frame.setChanged(true);
+	}
+
 	
 	
 

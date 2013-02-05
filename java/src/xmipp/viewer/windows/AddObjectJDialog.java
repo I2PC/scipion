@@ -42,12 +42,12 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
-import xmipp.viewer.models.MetadataRow;
+import xmipp.viewer.models.MetadataRowTableModel;
 
 public class AddObjectJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
 	private JTable table;
-	private MetadataRow model;
+	private MetadataRowTableModel model;
 	// This will be used for check for results from the dialog
 	public MetaData md;
 	GridBagConstraints gbc = new GridBagConstraints();
@@ -72,7 +72,7 @@ public class AddObjectJDialog extends XmippDialog {
 		groupstbpn.add(sp);
 		sp.setOpaque(true);
 		try {
-			model = new MetadataRow(this, md);
+			model = new MetadataRowTableModel(this, md);
 			JList rowHeader = new JList();
 			rowHeader.setModel(new GalleryRowHeaderModel(model.data));
 			LookAndFeel.installColorsAndFont(rowHeader, "TableHeader.background",
