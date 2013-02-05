@@ -21,7 +21,7 @@ import xmipp.jni.MetaData;
  *
  * @author Juanjo Vega
  */
-public class SimpleMetadataTable extends DefaultTableModel {
+public class SimpleMetadataTableModel extends DefaultTableModel {
 
     private int ENABLED_COLUMN_INDEX;
     private int MD_LABELS[];
@@ -34,7 +34,7 @@ public class SimpleMetadataTable extends DefaultTableModel {
     //protected boolean containsImageLabel = false;
     protected boolean containsImages = false;
 
-    public SimpleMetadataTable(String filename) {
+    public SimpleMetadataTableModel(String filename) {
         super();
         if(filename != null){
 	        this.filename = filename;

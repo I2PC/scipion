@@ -206,7 +206,7 @@ public class EditFamiliesJDialog extends JDialog {
 						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
 					f.setTemplatesNumber(templates);
 				}
-				frame.getParticlePicker().persistFamilies();
+				frame.getParticlePicker().saveFamilies();
 				
 
 			} catch (IllegalArgumentException e) {

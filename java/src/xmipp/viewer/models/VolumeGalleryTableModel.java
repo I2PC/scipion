@@ -37,12 +37,12 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 
-public class VolumeGallery extends ImageGalleryTableModel {
+public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	protected String volFn;
 	protected long volNumber;
 	ImageGeneric volume;
 
-	public VolumeGallery(GalleryData data) throws Exception {
+	public VolumeGalleryTableModel(GalleryData data) throws Exception {
 		super(data);
 		data.normalize = true; // volumes are displayed with global
 								// normalization by default

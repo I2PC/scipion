@@ -64,7 +64,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
-import xmipp.viewer.models.MetadataTable;
+import xmipp.viewer.models.MetadataTableModel;
 import xmipp.viewer.models.ClassInfo;
 
 /* This class will serve for find and replace values
@@ -256,7 +256,7 @@ public class MDSearchJDialog extends XmippDialog {
 			String newValue = value.replace(jtFind.getText().trim(), replaceStr);
 			// table.setValueAt(newValue, index, jcbLabel.getSelectedIndex());
 			md.setValueString(label, newValue, ids[index]);
-			((MetadataTable) table.getModel()).fireTableRowsUpdated(index,
+			((MetadataTableModel) table.getModel()).fireTableRowsUpdated(index,
 					index);
 		}
 	}
