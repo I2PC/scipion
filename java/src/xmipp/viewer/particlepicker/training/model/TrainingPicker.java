@@ -845,20 +845,20 @@ public abstract class TrainingPicker extends ParticlePicker
 
 		try
 		{
-			Particle p = null;
+			Particle shift = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
 			if (index < family.getTemplatesNumber())// index starts at one
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
 			{
-				p = family.getTemplates().alignImage(igp);
+				shift = family.getTemplates().alignImage(igp);
 				if (center)
 				{
-					System.out.println(particle);
-					particle.setX(particle.getX() + p.getX());
-					particle.setY(particle.getY() + p.getY());
-					System.out.println(particle);
+//					System.out.println(particle);
+					particle.setX(particle.getX() + shift.getX());
+					particle.setY(particle.getY() + shift.getY());
+//					System.out.println(particle);
 				}
 			}
 		}
