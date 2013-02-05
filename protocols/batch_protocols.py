@@ -211,7 +211,11 @@ class XmippProjectGUI():
             self.lbHist.selection_move_down()
         
     def createToolbarMenu(self, parent, opts=[]):
-        if len(opts) > 0:
+        import sys
+	if sys.platform  == 'darwin':
+	# This is needed because in Mac the bgcolor is not working properly
+		ButtonBgColor='black'
+	if len(opts) > 0:
             menu = tk.Menu(parent, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
 #            prots = [protDict[o] for o in opts]
             for o in opts:
