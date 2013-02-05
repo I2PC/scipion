@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -80,6 +81,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
+	private JCheckBox centerpickchb;
 
 
 	@Override
@@ -140,8 +142,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 				importffmi.setEnabled(false);
 
 			pack();
-			positionx = 0.995f;
-			XmippWindowUtil.setLocation(positionx, 0.25f, this);
+			positionx = 0.9f;
+			XmippWindowUtil.setLocation(positionx, 0.2f, this);
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -289,6 +291,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// Setting slider
 		initSizePane();
 		fieldspn.add(sizepn);
+		
+		centerpickchb = new JCheckBox("Center Pick");
+		fieldspn.add(centerpickchb);
 
 		familypn.add(fieldspn, 0);
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -729,7 +734,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber(family)));
 		autolb.setText(Integer.toString(ppicker.getAutomaticNumber(family, getThreshold())));
 		actionsbt.setVisible(getFamilyData().isActionVisible());
-		System.out.println(getFamilyData().isActionVisible());
 	}
 
 	public ParticlePickerCanvas getCanvas()
@@ -955,6 +959,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public void updateTemplates()
 	{
 		ppicker.setUpdateTemplatesPending(true);
+		if(isCenterPick())
+			ppicker.updateTemplates(true);
 		if(templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
@@ -965,7 +971,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		super.updateSize(size);
 		ppicker.resetParticleImages();
 		ppicker.setUpdateTemplatesPending(true);
-		ppicker.updateTemplates();
+		ppicker.updateTemplates(centerpickchb.isSelected());
 		if (templatesdialog != null)
 			loadTemplates();
 
@@ -975,5 +981,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	protected void resetData()
 	{
 		getFamilyData().reset();
+	}
+
+	public boolean isCenterPick()
+	{
+		return centerpickchb.isSelected();
 	}
 }

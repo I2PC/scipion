@@ -50,9 +50,8 @@ public class TemplatesJDialog extends JDialog {
 	}
 
 	public void loadTemplates(boolean resize) {
-		System.out.println("loading templates");
 		try {
-			frame.getParticlePicker().updateTemplates();
+			frame.getParticlePicker().updateTemplates(false);
 			ImageGeneric templates = frame.getFamily().getTemplates();
 			int size = frame.getFamily().getSize();
 

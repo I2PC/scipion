@@ -386,7 +386,6 @@ public abstract class ParticlePicker {
 	public void setAutopickpercent(int autopickpercent)
 	{
 		this.autopickpercent = autopickpercent;
-		System.out.println(autopickpercent);
 	}
 	
 	public int getAutopickpercent()

@@ -20,7 +20,7 @@ public class ManualParticlePicker extends TrainingPicker {
 		for (TrainingMicrograph m : micrographs)
 			loadMicrographData(m);
 		setUpdateTemplatesPending(true);
-		updateTemplates();
+		updateTemplates(false);
 		if(filters.isEmpty())//user just started manual mode and has no filter, I select gaussian blur by default, will be applied when window opens
 		{
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
