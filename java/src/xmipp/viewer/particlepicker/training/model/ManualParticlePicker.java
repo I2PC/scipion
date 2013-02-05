@@ -12,6 +12,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 		
 		public ManualParticlePicker(String selfile, String outputdir, FamilyState mode) {
 
+
 			this(selfile, outputdir, null, mode);
 		}
 		
@@ -31,6 +32,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 		}
 
 		
+
 
 		public String getImportMicrographName(String path, String filename, Format f)
 		{

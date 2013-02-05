@@ -330,7 +330,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			saveAutomaticParticles(tm);
-			// saveTemplates();
+
 		}
 		catch (Exception e)
 		{
@@ -686,7 +686,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family family)
 	{
-		if (!updateTemplatesPending || family.getStep() != FamilyState.Manual)
+		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
 			return;// nothing to update
 		family.initTemplates();
 		List<TrainingParticle> particles;
@@ -834,26 +834,28 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void addParticleToTemplates(TrainingParticle particle)
 	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()));
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1);
 	}
 
 	public void addParticleToTemplates(TrainingParticle particle, int index)
 	{
+
 		try
 		{
 			Particle p = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
-			if (index < family.getTemplatesNumber())
+		//	particle.getImagePlus().show();
+			if (index < family.getTemplatesNumber())//index starts at one
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
 				p = family.getTemplates().alignImage(igp);
 //			if(p  != null)
 //				System.out.println(p);
-			
+
 		}
 		catch (Exception e)
-		{
+		{ 
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
@@ -873,5 +875,9 @@ public abstract class TrainingPicker extends ParticlePicker
 
 		}
 	}
+	
+
+
+	
 
 }

@@ -838,7 +838,9 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
         T.aliasImageInStack(*Tp,maxIndex);
         T+=alignedI;
 
+
         int  x = 0, y = 0;
+
         int count = 0;
 
 //        for(int i = 0; i < XSIZE(aux.IauxRS); i ++)

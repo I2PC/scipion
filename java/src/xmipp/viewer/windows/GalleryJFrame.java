@@ -107,7 +107,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
-
 import xmipp.viewer.windows.ClassesJDialog;
 
 public class GalleryJFrame extends JFrame implements iCTFGUI
@@ -1816,7 +1815,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 
 		((MicrographsTableModel) gallery).setRowBusy(row);
-
 	}
 
 	@Override

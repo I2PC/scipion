@@ -228,8 +228,7 @@ public class ImageGeneric {
     public native void getPreview(ImageGeneric imgOut, int xdim, int ydim, 
     		int select_slice, long select_image) throws Exception;
     
-    
-    
+
     public native Particle alignImage(ImageGeneric img) throws Exception;
 
     //Check if two images have same values to some accuracy

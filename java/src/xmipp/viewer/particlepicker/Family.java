@@ -44,9 +44,7 @@ public class Family {
 			try
 			{
 				templatesNumber = ((int)templates.getNDim());
-				this.templates = templates;
-				//XmippImageConverter.readToImagePlus(templates).show();//temporarily to avoid error
-				
+				//this.templates = templates;		//XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
 			}
 			catch (Exception e)
 			{
@@ -219,7 +217,6 @@ public class Family {
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE,
 					ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, index, ImageGeneric.FIRST_SLICE);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getMessage());

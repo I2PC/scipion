@@ -591,7 +591,6 @@ public abstract class ParticlePicker
 		updateTemplatesPending = b;
 
 	}
-	
-	
+
 
 }

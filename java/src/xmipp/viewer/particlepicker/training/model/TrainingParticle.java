@@ -1,6 +1,7 @@
 package xmipp.viewer.particlepicker.training.model;
 
 import ij.ImagePlus;
+import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
@@ -78,9 +79,11 @@ public class TrainingParticle extends PickerParticle{
 			ImagePlus mimage = micrograph.getImagePlus();
 			int radius = size/2;
 			Rectangle r = new Rectangle(x - radius , y - radius, radius * 2, radius * 2);
+			Roi roi = mimage.getRoi();
 			mimage.setRoi(r);
 			ImageProcessor processor = mimage.getProcessor().crop();
 			img = new ImagePlus("", processor);
+			mimage.setRoi(roi);
 		}
 		return img;
 	}
@@ -116,6 +119,8 @@ public class TrainingParticle extends PickerParticle{
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+
+
 
 	
 }
