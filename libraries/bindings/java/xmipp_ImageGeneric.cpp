@@ -829,6 +829,8 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
         }
         T.aliasImageInStack(*Tp,maxIndex);
         T+=alignedI;
+        centerImage(T, aux2, aux3, 3);
+        
 
                 int  x = 0, y = 0;
         int count = 0;
