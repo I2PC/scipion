@@ -75,7 +75,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
-				ppicker.addParticleToTemplates(p);
+				ppicker.addParticleToTemplates(p, frame.isCenterPick());
 				active = p;
 				refresh();
 			}
@@ -105,6 +105,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			{
 				erase(x, y);
 				return;
+
 			}
 
 			manageActive(x, y);
