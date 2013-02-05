@@ -906,7 +906,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		super.updateSize(size);
 		ppicker.resetParticleImages();
-		updateTemplates();
+		ppicker.setUpdateTemplatesPending(true);
+		ppicker.updateTemplates();
 		if (templatesdialog != null)
 			loadTemplates();
 

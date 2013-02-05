@@ -48,7 +48,6 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.viewer.ImageDimension;
 
-
 public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 
 	final static int DEFAULT_DIM = 128;
