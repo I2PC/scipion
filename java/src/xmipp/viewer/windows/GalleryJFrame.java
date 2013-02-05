@@ -108,7 +108,7 @@ import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
-import xmipp.viewer.models.MicrographsTable;
+import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.windows.ClassesJDialog;
 
 public class GalleryJFrame extends JFrame implements iCTFGUI
@@ -1781,13 +1781,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	@Override
 	public void setRowBusy(int row)
 	{
-		((MicrographsTable) gallery).setRowBusy(row);
+		((MicrographsTableModel) gallery).setRowBusy(row);
 	}
 
 	@Override
 	public void setRowIdle(int row)
 	{
-		((MicrographsTable) gallery).setRowIdle(row);
+		((MicrographsTableModel) gallery).setRowIdle(row);
 	}
 
 	@Override

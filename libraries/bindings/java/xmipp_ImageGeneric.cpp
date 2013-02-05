@@ -787,7 +787,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
     XMIPP_JAVA_CATCH;
 }
 
-JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
+JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 (JNIEnv * env, jobject jobj, jobject jimg)
 {
     XMIPP_JAVA_TRY
@@ -829,6 +829,20 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImages
         }
         T.aliasImageInStack(*Tp,maxIndex);
         T+=alignedI;
+        centerImage(T, aux2, aux3, 3);
+        
+
+                int  x = 0, y = 0;
+        int count = 0;
+
+//        for(int i = 0; i < XSIZE(aux.IauxRS); i ++)
+//        	std::cout << aux.IauxRS(i) << std::endl;
+//        y = y/count;
+        jclass pclass = env->FindClass("xmipp/jni/Particle");
+        jmethodID constructor = env->GetMethodID(pclass, "<init>", "(II)V");
+        jobject particle = env->NewObject(pclass, constructor, x, y);
+
+        return particle;
     }
     XMIPP_JAVA_CATCH;
 }

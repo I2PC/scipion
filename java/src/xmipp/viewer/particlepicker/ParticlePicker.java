@@ -43,6 +43,7 @@ public abstract class ParticlePicker {
 	protected String configfile;
 	public static final int defAutoPickPercent = 90;
 	private int autopickpercent = defAutoPickPercent;
+	protected boolean updateTemplatesPending;
 	
 	public int getSize() {
 		return family.getSize();
@@ -54,12 +55,12 @@ public abstract class ParticlePicker {
 
 	public void setColor(Color color) {
 		family.setColor(color);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	public void setSize(int size) {
 		family.setSize(size);
-		persistFamilies();
+		saveFamilies();
 	}
 
 	public Family getFamily() {
@@ -205,7 +206,7 @@ public abstract class ParticlePicker {
 		return families;
 	}
 
-	public void persistFamilies() {
+	public void saveFamilies() {
 		long id;
 		String file = familiesfile;
 		try {
@@ -238,7 +239,7 @@ public abstract class ParticlePicker {
 		String file = familiesfile;
 		if (!new File(file).exists()) {
 			families.add(Family.getDefaultFamily());
-			persistFamilies();
+			saveFamilies();
 			return;
 		}
 
@@ -322,7 +323,7 @@ public abstract class ParticlePicker {
 
 	public void saveData() {
 		persistFilters();
-		persistFamilies();
+		saveFamilies();
 	}// function saveData
 
 	public abstract void saveData(Micrograph m);
@@ -540,5 +541,11 @@ public abstract class ParticlePicker {
 	public abstract Micrograph getMicrograph();
 
 	public abstract void setMicrograph(Micrograph m);
+	
+	public void setUpdateTemplatesPending(boolean b)
+	{
+		updateTemplatesPending = b;
+
+	}
 
 }
