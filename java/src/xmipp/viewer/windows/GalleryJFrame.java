@@ -1835,6 +1835,38 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 	
 
+	private void saveMd(String path) throws Exception
+	{
+		try
+		{
+			if (path == null)
+				throw new IllegalArgumentException();
+
+			boolean overwrite;
+			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			if (!new File(file).exists())
+				data.md.writeBlock(path);
+			else
+			{
+				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
+				if (overwrite)
+					data.md.write(path);
+				else
+					data.md.writeBlock(path);
+
+			}
+
+			data.setMdChanges(false);
+			gallery.data.setFileName(file);
+			gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+			reloadFile(file, false);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}// function saveMd
+
 
 
 	private void saveAll() throws Exception
@@ -1931,6 +1963,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		reloadMd(changed);
 		createCombos();
 		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
+
 	}
 
 	private void saveMd() throws Exception
@@ -1938,38 +1971,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		saveMd(dlgSave.getMdFilename());
 	}
 
-	private void saveMd(String path) throws Exception
-	{
-		try
-		{
-			if (path == null)
-				throw new IllegalArgumentException();
-
-			boolean overwrite;
-			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())
-				data.md.writeBlock(path);
-			else
-			{
-				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
-				if (overwrite)
-					data.md.write(path);
-				else
-					data.md.writeBlock(path);
-
-			}
-
-			data.setMdChanges(false);
-			gallery.data.setFileName(file);
-			gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
-			reloadFile(file, false);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	}// function saveMd
-
+	
 
 
 }// class JFrameGallery
