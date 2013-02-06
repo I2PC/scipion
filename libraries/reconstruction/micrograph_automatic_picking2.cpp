@@ -93,6 +93,7 @@ void correlationBetweenPolarChannels(int n1,int n2,int nF,
     imgPolar1.aliasImageInStack(mIpolar, n1);
     imgPolar2.aliasImageInStack(mIpolar, n2);
     imgPolarCorr.aliasImageInStack(mIpolarCorr,nF);
+    // The correlation between images n1 and n2 and put in nF
     correlation_matrix(imgPolar1,imgPolar2,corr2D,aux);
     imgPolarCorr=corr2D;
 }
@@ -166,7 +167,8 @@ void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
 }
 
 AutoParticlePicking2::~AutoParticlePicking2()
-{}
+{
+}
 
 void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,
         MultidimArray<double> &features)
@@ -176,6 +178,7 @@ void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,
     DIRECT_A1D_ELEM(features,0)=inputVec.computeAvg();
     DIRECT_A1D_ELEM(features,1)=inputVec.computeStddev();
     normalize_OldXmipp(inputVec);
+    // Sorting the image in order to find the quantiles
     inputVec.sort(sortedVec);
     int step=floor(XSIZE(sortedVec)*0.1);
     for (int i=2;i<12;i++)
@@ -193,6 +196,8 @@ void AutoParticlePicking2::buildVector(MultidimArray<double> &inputVec,
     MultidimArray<double> vec;
 
     featureVec.resize(1,1,1,num_correlation*NPCA+NRPCA+12);
+    // Read the polar correlation from the stack and project on
+    // PCA basis and put the value as the feature.
     for (int i=0;i<num_correlation;i++)
     {
         avg.aliasImageInStack(pcaModel,i*(NPCA + 1));
@@ -207,11 +212,13 @@ void AutoParticlePicking2::buildVector(MultidimArray<double> &inputVec,
             DIRECT_A1D_ELEM(featureVec,j+(i*NPCA))=PCAProject(pcaBase,vec);
         }
     }
+    // Extract the statics from the image
     for (int j=0;j<12;j++)
     {
         DIRECT_A1D_ELEM(featureVec,j+num_correlation*NPCA)=DIRECT_A1D_ELEM(staticVec,j);
     }
 
+    // Projecting the image on rotational PCA basis
     for (int j=0;j<NRPCA;j++)
     {
         pcaRBase.aliasImageInStack(pcaRotModel,j);
@@ -226,6 +233,7 @@ void AutoParticlePicking2::buildInvariant(MultidimArray<double> &invariantChanne
     MultidimArray<double> Ipolar;
     MultidimArray<double> mIpolar,filter;
     Ipolar.initZeros(filter_num,1,NangSteps,NRsteps);
+    // First put the polar channels in a stack
     for (int j=0;j<filter_num;++j)
     {
         filter.aliasImageInStack(micrographStack(),j);
@@ -233,6 +241,7 @@ void AutoParticlePicking2::buildInvariant(MultidimArray<double> &invariantChanne
         mIpolar.aliasImageInStack(Ipolar,j);
         convert2Polar(pieceImage,mIpolar);
     }
+    // Obtain the correlation between different channels
     polarCorrelation(Ipolar,invariantChannel);
 }
 
@@ -255,6 +264,7 @@ void AutoParticlePicking2::trainPCA(const FileName &fnPositiveFeat)
     positiveInvariant.read(fnPositiveInvariatn,HEADER);
     positiveInvariant.getDimensions(aDim);
     int steps=aDim.ndim/num_correlation;
+    // Read the channel correlation one by one and obtain the basis for them.
     for (int i=1;i<=num_correlation;i++)
     {
         for (int j=0;j<steps;j++)
@@ -273,6 +283,8 @@ void AutoParticlePicking2::trainPCA(const FileName &fnPositiveFeat)
 
 void AutoParticlePicking2::trainRotPCA(const FileName &fnAvgModel,const FileName &fnPCARotModel)
 {
+    // just set the parameters and call the run method of the object
+    // in order to obtain the rotational PCA basis.
     rotPcaAnalyzer.fnIn=fnAvgModel;
     rotPcaAnalyzer.fnRoot=fnPCARotModel;
     rotPcaAnalyzer.psi_step=2;
@@ -288,6 +300,7 @@ void AutoParticlePicking2::trainRotPCA(const FileName &fnAvgModel,const FileName
 void AutoParticlePicking2::trainSVM(const FileName &fnModel,
                                     int numClassifier)
 {
+
     if (numClassifier==1)
     {
         classifier.SVMTrain(dataSet,classLabel);
@@ -311,6 +324,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    // Obtain the positions in micrograph where there maybe particles
     buildSearchSpace(positionArray,fast);
 #ifdef DEBUG_AUTO
 
@@ -319,7 +333,6 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
 #endif
 
     int num=positionArray.size()*(proc_prec/100.0);
-    //int num=positionArray.size()*(10.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
@@ -335,6 +348,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
         extractStatics(pieceImage,staticVec);
         buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+        // Normalizing the feature vector according to the max and mean of the vector
         double max=featVec.computeMax();
         double min=featVec.computeMin();
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
@@ -344,6 +358,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         label=classifier.predict(featVec, score);
         if (label==1)
         {
+            // If it is a particle check if it is not a false positive
             if (use2Classifier==true)
             {
                 label=classifier2.predict(featVec,score);
@@ -421,10 +436,14 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
     positiveInvariant.read(fn_Invariant,HEADER);
     positiveInvariant.getDimensions(aDim);
     int steps=aDim.ndim/num_correlation;
+    // Resize the dataset for the new data
     dataSet.resize(1,1,yDataSet+steps,num_correlation*NPCA+NRPCA+12);
     classLabel.resize(1,1,1,YSIZE(dataSet));
     for (int n=yDataSet;n<XSIZE(classLabel);n++)
         classLabel(n)=label;
+    // Here we take each channel of the particle and try to project it
+    // on related PCA basis. So we first do it for first channel and obtain
+    // all the features for all particles and then move to the next channel.
     for (int i=0;i<num_correlation;i++)
     {
         avg.aliasImageInStack(pcaModel,i*(NPCA+1));
@@ -443,6 +462,7 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
             }
         }
     }
+    // Obtain the statics for each particle
     for (int i=0;i<steps;i++)
     {
         positiveInvariant.readMapped(fnParticles,i+1);
@@ -453,6 +473,7 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
         {
             DIRECT_A2D_ELEM(dataSet,i+yDataSet,j+num_correlation*NPCA)=DIRECT_A1D_ELEM(staticVec,j);
         }
+        // Project each particles on rotational PCA basis.
         for (int j=0;j<NRPCA;j++)
         {
             pcaRBase.aliasImageInStack(pcaRotModel,j);
@@ -466,6 +487,8 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
 
 void AutoParticlePicking2::add2Dataset()
 {
+    // Here we have the features and we just want to put them
+    // in the dataset.
     int yDataSet=YSIZE(dataSet);
     dataSet.resize(1,1,yDataSet+auto_candidates.size(),num_correlation*NPCA+NRPCA+12);
     classLabel.resize(1,1,1,YSIZE(dataSet));
@@ -507,6 +530,9 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
         extractParticle(x,y,microImage(),pieceImage,false);
         II()=pieceImage;
         II.write(fnPositiveParticles,ALL_IMAGES,true,WRITE_APPEND);
+        // Compute the average of the manually picked particles after doing aligning
+        // We just do it on manually picked particles and the flag show that if we
+        // are in this step.
         if (avgFlag==false)
         {
             pieceImage.setXmippOrigin();
@@ -542,14 +568,19 @@ void AutoParticlePicking2::extractNegativeInvariant(const FileName &fnInvariantF
     FileName fnNegativeInvariatn=fnInvariantFeat+"_Negative.stk";
     FileName fnNegativeParticles=fnParticles+"_Negative.stk";
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    // first we obtain all the places in which there could be
+    // a negative particles.
     extractNonParticle(negativeSamples);
-    // Choose some random non-particles
+    // Choose some random positions from the previous step.
     RandomUniformGenerator<double> randNum(0, 1);
     randomValues.resize(1,1,1,negativeSamples.size());
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(randomValues)
     DIRECT_A1D_ELEM(randomValues,i)=randNum();
     randomValues.indexSort(randomIndexes);
     int numNegatives;
+    // If the number of particles is lower than 15 then the
+    // number of the negatives is equal to 15 else it is equal
+    // to the number of particles times 2.
     if (num_part<15)
         numNegatives=15;
     else
@@ -626,12 +657,12 @@ void AutoParticlePicking2::convert2Polar(MultidimArray<double> &particleImage,
 void AutoParticlePicking2::loadTrainingSet(const FileName &fn)
 {
     int x,y;
-    String dummy;
     std::ifstream fhTrain;
     fhTrain.open(fn.c_str());
     fhTrain >>y>>x;
     dataSet.resize(1,1,y,x);
     classLabel.resize(1,1,1,y);
+    // Load the train set and put the values in training array
     for (int i=0;i<y;i++)
     {
         fhTrain >>classLabel(i);
@@ -644,6 +675,12 @@ void AutoParticlePicking2::loadTrainingSet(const FileName &fn)
 void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 {
     std::ofstream fhTrain;
+#ifdef DEBUG_SAVETRAINSET
+
+    std::ofstream fhtest;
+    fhtest.open("WNDataset.txt");
+#endif
+
     fhTrain.open(fn.c_str());
     fhTrain<<YSIZE(dataSet)<< " "<< XSIZE(dataSet)<< std::endl;
     for (int i=0;i<YSIZE(dataSet);i++)
@@ -662,8 +699,18 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 #endif
 
         fhTrain<<std::endl;
+#ifdef DEBUG_SAVETRAINSET
+
+        fhtest<<std::endl;
+#endif
+
     }
     fhTrain.close();
+#ifdef DEBUG_SAVETRAINSET
+
+    fhtest.close();
+#endif
+
 }
 
 void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
@@ -808,6 +855,7 @@ void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
     maxA.resize(1,1,1,YSIZE(dataSet));
     minA.resize(1,1,1,YSIZE(dataSet));
 
+    // Computing the maximum and minimum of each row
     for (int i=0;i<YSIZE(dataSet);i++)
     {
         max=min=DIRECT_A2D_ELEM(dataSet,i,0);
@@ -821,6 +869,7 @@ void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
         DIRECT_A1D_ELEM(maxA,i)=max;
         DIRECT_A1D_ELEM(minA,i)=min;
     }
+    // Normalizing the dataset according to the max and mean
     for (int i=0;i<YSIZE(dataSet);i++)
     {
         max=DIRECT_A1D_ELEM(maxA,i);
@@ -838,6 +887,7 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
     endX=XSIZE(microImage())-particle_radius;
     endY=YSIZE(microImage())-particle_radius;
     applyConvolution(fast);
+
     for (int i=particle_radius;i<endY;i++)
         for (int j=particle_radius;j<endX;j++)
         {
@@ -877,6 +927,7 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     BinaryCircularMask(mask, XSIZE(particleAvg)/2);
     normalize_NewXmipp(particleAvg,mask);
     particleAvg.setXmippOrigin();
+
     filter.raised_w=0.02;
     filter.FilterShape=RAISED_COSINE;
     filter.FilterBand=BANDPASS;
@@ -884,6 +935,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     filter.w2=1.0/(double(particle_size)/3);
     if (fast)
     {
+        // In fast mode we just do the convolution with the average of the
+        // rotated templates
         avgRotatedLarge=particleAvg;
         for (int deg=3;deg<360;deg+=3)
         {
@@ -913,6 +966,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
         int cnt=1;
         for (int deg=3;deg<360;deg+=3)
         {
+            // We first rotate the template and then put it in the big image in order to
+            // the convolution
             rotate(LINEAR,avgRotated,particleAvg,double(deg));
             avgRotatedLarge=avgRotated;
             avgRotatedLarge.setXmippOrigin();
@@ -1067,6 +1122,8 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->particleAvg.initZeros(autoPicking->particle_size+1,autoPicking->particle_size+1);
             autoPicking->particleAvg.setXmippOrigin();
         }
+        // If the PCA model exist then we have obtain the template and then we do not want
+        // to continue it anymore
         if (fnPCAModel.exists())
             autoPicking->extractInvariant(fnInvariant,fnParticles,true);
         else
@@ -1074,7 +1131,6 @@ void ProgMicrographAutomaticPicking2::run()
 
             autoPicking->extractInvariant(fnInvariant,fnParticles,false);
             Image<double> II;
-            //normalize_OldXmipp(autoPicking->particleAvg);
             II()=autoPicking->particleAvg;
             II.write(fnAvgModel);
         }
@@ -1087,6 +1143,7 @@ void ProgMicrographAutomaticPicking2::run()
         Image<double> II;
         II.read(fnPCAModel);
         autoPicking->pcaModel=II();
+        // Read rotational PCA model
         II.read(fnPCARotModel);
         autoPicking->pcaRotModel=II();
         // Read the average of the particles for convolution
@@ -1094,13 +1151,15 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->particleAvg=II();
         // Read the SVM model
         autoPicking->classifier.LoadModel(fnSVMModel);
+        // If we have generated the second SVM model then we use
+        // two classifiers.
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            int num=autoPicking->automaticallySelectParticles(true,true);
+            int num=autoPicking->automaticallySelectParticles(true,fast);
         }
         else
-            int num=autoPicking->automaticallySelectParticles(false,true);
+            int num=autoPicking->automaticallySelectParticles(false,fast);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
             autoPicking->saveAutoVectors(fnAutoVectors);
@@ -1112,6 +1171,8 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->trainPCA(fn_model);
         if (!fnPCARotModel.exists())
             autoPicking->trainRotPCA(fnAvgModel,fnPCARotModel.removeAllExtensions());
+
+        // If we have the models then we just load it
         Image<double> II;
         II.read(fnPCAModel);
         autoPicking->pcaModel=II();
@@ -1121,6 +1182,7 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->loadTrainingSet(fnVector);
         autoPicking->add2Dataset(fnInvariant+"_Positive.stk",fnParticles+"_Positive.stk",1);
         autoPicking->add2Dataset(fnInvariant+"_Negative.stk",fnParticles+"_Negative.stk",2);
+        // If we have some false positives also add it
         if (fnRejectedVectors.exists())
         {
             // Load the rejected vectors features as false positives
@@ -1128,8 +1190,10 @@ void ProgMicrographAutomaticPicking2::run()
             autoPicking->add2Dataset();
             fnRejectedVectors.deleteFile();
         }
+        // We just save the un normalized dataset
         autoPicking->saveTrainingSet(fnVector);
         autoPicking->normalizeDataset(0,1,fn_model);
+        // Generate two different dataset
         autoPicking->generateTrainSet();
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);

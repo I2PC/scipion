@@ -13,17 +13,25 @@
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_create(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = new ImageGeneric();
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = new ImageGeneric();
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
 Java_xmipp_jni_ImageGeneric_destroy(JNIEnv *env, jobject jobj)
 {
-    ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-    delete image;
-    image = NULL;
-    STORE_PEER_ID(jobj, (long)image);
+    XMIPP_JAVA_TRY
+    {
+        ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
+        delete image;
+        image = NULL;
+        STORE_PEER_ID(jobj, (long)image);
+    }
+    XMIPP_JAVA_CATCH;
 }
 
 JNIEXPORT void JNICALL
@@ -792,7 +800,6 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 {
     XMIPP_JAVA_TRY
     {
-        Matrix2D<double> M;
         MultidimArray<double>* I;
         MultidimArray<double> tmpI;
         MultidimArray<double> alignedI;
@@ -801,6 +808,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
         AlignmentAux aux;
         CorrelationAux aux2;
         RotationalCorrelationAux aux3;
+        Matrix2D<double> M;
         ArrayDim dim;
         ImageGeneric *templates = GET_INTERNAL_IMAGE_GENERIC(jobj);
         ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jimg);
@@ -830,7 +838,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
         T.aliasImageInStack(*Tp,maxIndex);
         T+=alignedI;
         centerImage(T, aux2, aux3, 3);
-        
+
         int x = MAT_ELEM(M, 0, 2);
         int y = MAT_ELEM(M, 1, 2);
 
@@ -842,5 +850,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
     }
     XMIPP_JAVA_CATCH;
 }
+
+
 
 
