@@ -845,16 +845,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 
-	{
-		reloadTableData(true);
-	}
 	/** Reload table data */
 	public void reloadTableData(boolean changed)
 	{
 		try
 		{
 			DEBUG.printMessage("reloadTableData...");
-			table.removeAll();
+			if(table != null)
+				table.removeAll();
 			createModel();
 			// gallery.setShowLabels(menu.getShowLabel());
 			createTable();
