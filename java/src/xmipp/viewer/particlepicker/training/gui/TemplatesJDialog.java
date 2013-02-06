@@ -67,14 +67,13 @@ public class TemplatesJDialog extends JDialog {
 				pack();
 				return;
 			}
-
+			//templates.write("templates.stk");
 			templatespn.removeAll();
 			ImagePlus template;
-
-			for (int index = 0; index < templates.getNDim(); index++) {
-				template = XmippImageConverter.convertToImagePlus(templates,
-						ImageGeneric.FIRST_IMAGE + index);
-
+			long end = ImageGeneric.FIRST_IMAGE + templates.getNDim();//should not change header, check!!
+			for (long index = ImageGeneric.FIRST_IMAGE; index < end; index++) {
+				templates.read(index);
+				template = XmippImageConverter.convertToImagePlus(templates);//selected image on read
 				templatespn.add(new ImageCanvas(template));
 
 			}
