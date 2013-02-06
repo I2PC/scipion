@@ -842,7 +842,8 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
 	{
-
+		if(getMode() != FamilyState.Manual)
+			return;
 		try
 		{
 			Particle shift = null;
