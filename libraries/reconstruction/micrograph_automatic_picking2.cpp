@@ -33,7 +33,7 @@
 #include <classification/uniform.h>
 
 AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
-        int size, int filterNum, int pcaNum, int corrNum)
+        int size, int filterNum, int pcaNum, int corrNum, int procprec)
 {
     __m=_m;
     fn_micrograph=fn;
@@ -45,6 +45,7 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
     NRsteps=particle_size/2-3;
     filter_num=filterNum;
     corr_num=corrNum;
+    proc_prec=procprec;
     NPCA=pcaNum;
     NRPCA=20;
     num_correlation=filter_num+((filter_num-corr_num)*corr_num);
@@ -317,7 +318,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     fh_training.open("particles_cord1.txt");
 #endif
 
-    int num=positionArray.size()*(90.0/100.0);
+    int num=positionArray.size()*(proc_prec/100.0);
     //int num=positionArray.size()*(10.0/100.0);
     for (int k=0;k<num;k++)
     {
@@ -947,6 +948,7 @@ void ProgMicrographAutomaticPicking2::readParams()
     fn_root = getParam("--outputRoot");
     fast = checkParam("--fast");
     incore = checkParam("--in_core");
+    procprec = getIntParam("--autoPercent");
 }
 
 void ProgMicrographAutomaticPicking2::defineParams()
@@ -972,6 +974,7 @@ void ProgMicrographAutomaticPicking2::defineParams()
     addParamsLine("  [--filter_num <n=6>]          : The number of filters in filter bank");
     addParamsLine("  [--NPCA <n=4>]               : The number of PCA components");
     addParamsLine("  [--NCORR <n=2>]               : The number of PCA components");
+    addParamsLine("  [--autoPercent <n=90>]               : The number of PCA components");
     addExampleLine("Automatically select particles during training:", false);
     addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode try ");
     addExampleLine("Training:", false);
@@ -999,8 +1002,8 @@ void ProgMicrographAutomaticPicking2::run()
     FileName fnRejectedVectors=fn_model+"_rejected_vector.txt";
     FileName fnAvgModel=fn_model+"_particle_avg.xmp";
 
-    AutoParticlePicking2 *autoPicking=new AutoParticlePicking2(fn_micrograph,&m,size,filter_num,NPCA,corr_num);
-
+    AutoParticlePicking2 *autoPicking=new AutoParticlePicking2(fn_micrograph,&m,size,filter_num,
+    		                                                   NPCA,corr_num,procprec);
     if (mode!="train")
     {
         // Resize the Micrograph
