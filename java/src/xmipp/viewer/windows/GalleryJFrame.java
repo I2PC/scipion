@@ -1929,9 +1929,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		createModel();
 		reloadMd(changed);
-
 		createCombos();
-
+		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
 	}
 
 	private void saveMd() throws Exception
@@ -1962,6 +1961,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			data.setMdChanges(false);
 			gallery.data.setFileName(file);
+			gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
 			reloadFile(file, false);
 		}
 		catch (Exception e)
