@@ -679,36 +679,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void updateTemplates()
-	{
-		updateTemplates(family);
-	}
 
-	public void updateTemplates(Family family)
-	{
-		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
-			return;// nothing to update
-		family.initTemplates();
-		List<TrainingParticle> particles;
-		MicrographFamilyData mfd;
-		try
-		{
-			for (TrainingMicrograph m : micrographs)
-			{
-				mfd = m.getFamilyData(family);
-				particles = mfd.getManualParticles();
-				for (int i = 0; i < particles.size(); i++)
-					addParticleToTemplates(particles.get(i), i);
-			}
-			updateTemplatesPending = false;
-			System.out.println("templates updated");
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
-
-	}
 
 	public void saveTemplates()
 	{
@@ -831,38 +802,81 @@ public abstract class TrainingPicker extends ParticlePicker
 			return false;
 		}
 	}
+	
 
-	public void addParticleToTemplates(TrainingParticle particle)
+	public void updateTemplates(Family f)
 	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1);
+		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
+			return;// nothing to update
+		f.initTemplates();
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		TrainingParticle particle; 
+		Particle p;
+		try
+		{
+			for (TrainingMicrograph m : micrographs)
+			{
+				mfd = m.getFamilyData(f);
+				for (int i = 0; i < mfd.getManualParticles().size(); i++)
+				{
+					particles = mfd.getManualParticles();
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
+					if (i < f.getTemplatesNumber())
+						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+					else
+						p = f.getTemplates().alignImage(igp);
+				}
+			}
+			updateTemplatesPending = false;
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
+
 	}
 
-	public void addParticleToTemplates(TrainingParticle particle, int index)
+
+	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
 	{
 
 		try
 		{
-			Particle p = null;
+			Particle shift = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
-		//	particle.getImagePlus().show();
-			if (index < family.getTemplatesNumber())//index starts at one
+			if (index < family.getTemplatesNumber())// index starts at one
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
-				p = family.getTemplates().alignImage(igp);
-//			if(p  != null)
-//				System.out.println(p);
-
+			{
+				shift = family.getTemplates().alignImage(igp);
+				if (center)
+				{
+//					System.out.println(particle);
+					particle.setX(particle.getX() + shift.getX());
+					particle.setY(particle.getY() + shift.getY());
+//					System.out.println(particle);
+				}
+			}
 		}
 		catch (Exception e)
-		{ 
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
 
 	}
-
 	
+
+
+	public void addParticleToTemplates(TrainingParticle particle, boolean center)
+	{
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
+	}
+
 
 	public void resetParticleImages()
 	{
@@ -875,9 +889,12 @@ public abstract class TrainingPicker extends ParticlePicker
 
 		}
 	}
-	
 
+	public void updateTemplates()
+	{
+		updateTemplates(family);
+		
+	}
 
-	
 
 }

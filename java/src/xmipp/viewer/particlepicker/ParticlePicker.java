@@ -327,7 +327,7 @@ public abstract class ParticlePicker
 					
 				}
 				else
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber.intValue());
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
 				families.add(family);
 			}
 			md.destroy();
@@ -459,6 +459,7 @@ public abstract class ParticlePicker
 				return m;
 		return null;
 	}
+
 
 
 

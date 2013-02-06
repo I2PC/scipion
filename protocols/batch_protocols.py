@@ -211,8 +211,13 @@ class XmippProjectGUI():
             self.lbHist.selection_move_down()
         
     def createToolbarMenu(self, parent, opts=[]):
+        bgColor = ButtonBgColor
+        import sys
+        if sys.platform  == 'darwin':
+            # This is needed because in Mac the bgcolor is not working properly
+            bgColor='black'
         if len(opts) > 0:
-            menu = tk.Menu(parent, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
+            menu = tk.Menu(parent, bg=bgColor, activebackground=bgColor, font=Fonts['button'], tearoff=0)
 #            prots = [protDict[o] for o in opts]
             for o in opts:
                 #Following is a bit tricky, its due Python notion of scope, a for does not define a new scope
@@ -223,7 +228,7 @@ class XmippProjectGUI():
                     return new_command 
                 # If p is a list, means is a submenu
                 if type(o) == list:
-                    menu2 = tk.Menu(menu, bg=ButtonBgColor, activebackground=ButtonBgColor, font=Fonts['button'], tearoff=0)
+                    menu2 = tk.Menu(menu, bg=bgColor, activebackground=bgColor, font=Fonts['button'], tearoff=0)
                     menu.add_cascade(label=o[0], menu=menu2)
                     for o2 in o[1:]:
                         p = protDict[o2]
