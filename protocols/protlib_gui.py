@@ -530,9 +530,9 @@ class ProtocolGUI(BasicGUI):
         self.citerow = self.getRow()        
             
     def scroll(self, event):
-        if event.num == 5 or event.delta == -120:
+        if event.num == 5 or event.delta < 0:
             count = 1
-        if event.num == 4 or event.delta == 120:
+        if event.num == 4 or event.delta > 0:
             count = -1
         self.canvas.yview("scroll", count, "units")
         

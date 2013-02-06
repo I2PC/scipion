@@ -261,7 +261,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			saveAutomaticParticles(tm);
-			//saveTemplates();
+			// saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -393,8 +393,6 @@ public abstract class TrainingPicker extends ParticlePicker
 			saveTemplates();
 		}
 	}
-
-	
 
 	public int getAutomaticNumber(Family f, double threshold)
 	{
@@ -668,8 +666,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	
-
 	public String getImportMicrographName(String path, String filename, Format f)
 	{
 		String base = Filename.removeExtension(Filename.getBaseName(filename));
@@ -777,6 +773,12 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 	
+	public void updateTemplates()
+	{
+		updateTemplates(family);
+
+	}
+
 	public void updateTemplates(Family f)
 	{
 		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
@@ -785,24 +787,25 @@ public abstract class TrainingPicker extends ParticlePicker
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
+		TrainingParticle particle; 
+		Particle p;
 		try
 		{
-		for (TrainingMicrograph m : micrographs)
-		{
-			mfd = m.getFamilyData(f);
-			for (int i = 0; i < mfd.getManualParticles().size(); i++)
+			for (TrainingMicrograph m : micrographs)
 			{
-				particles = mfd.getManualParticles();
-				igp = particles.get(i).getImageGeneric();
-				if (i < f.getTemplatesNumber())
-					f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
-				else
-					
-						f.getTemplates().alignImage(igp);
-					}
-					
+				mfd = m.getFamilyData(f);
+				for (int i = 0; i < mfd.getManualParticles().size(); i++)
+				{
+					particles = mfd.getManualParticles();
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
+					if (i < f.getTemplatesNumber())
+						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+					else
+						p = f.getTemplates().alignImage(igp);
+				}
 			}
-		updateTemplatesPending = false;
+			updateTemplatesPending = false;
 		}
 		catch (Exception e)
 		{
@@ -810,8 +813,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
-	
-	
+
 	public void saveTemplates()
 	{
 		ImageGeneric templates;
@@ -833,36 +835,43 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
-	
-	
-	public void addParticleToTemplates(TrainingParticle particle, int index)
+
+	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
 	{
 		try
 		{
-			Particle p = null;
+			Particle shift = null;
 			Family family = particle.getFamily();
 			ImageGeneric igp = particle.getImageGeneric();
-			if (index < family.getTemplatesNumber())//index starts at one
+			if (index < family.getTemplatesNumber())// index starts at one
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
-				p = family.getTemplates().alignImage(igp);
-//			if(p  != null)
-//				System.out.println(p);
-			
+			{
+				shift = family.getTemplates().alignImage(igp);
+				if (center)
+				{
+//					System.out.println(particle);
+					particle.setX(particle.getX() + shift.getX());
+					particle.setY(particle.getY() + shift.getY());
+//					System.out.println(particle);
+				}
+			}
+
 		}
 		catch (Exception e)
-		{ 
+		{
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
 
 	}
+	
 
-	public void addParticleToTemplates(TrainingParticle particle)
+
+	public void addParticleToTemplates(TrainingParticle particle, boolean center)
 	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1);
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
 	}
-
 
 	public void resetParticleImages()
 	{
@@ -874,12 +883,6 @@ public abstract class TrainingPicker extends ParticlePicker
 				p.resetImagePlus();
 
 		}
-	}
-
-	public void updateTemplates()
-	{
-		updateTemplates(family);
-		
 	}
 
 	
