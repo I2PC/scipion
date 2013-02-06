@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -80,6 +81,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
+	private JCheckBox centerpickchb;
 
 	@Override
 	public TrainingPicker getParticlePicker()
@@ -136,8 +138,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
 
 			pack();
-			positionx = 0.995f;
-			XmippWindowUtil.setLocation(positionx, 0.25f, this);
+			positionx = 0.9f;
+			XmippWindowUtil.setLocation(positionx, 0.2f, this);
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -279,6 +281,9 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// Setting slider
 		initSizePane();
 		fieldspn.add(sizepn);
+		
+		centerpickchb = new JCheckBox("Adjust Center");
+		fieldspn.add(centerpickchb);
 
 		familypn.add(fieldspn, 0);
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -621,8 +626,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			micrographstb.setRowSelectionInterval(index, index);
 	}
 
-	
-	
+	protected void saveChanges()
+	{
+
+		ppicker.saveData();
+		setChanged(false);
+	}
+
+	void updateFamilyColor()
+	{
+		color = family.getColor();
+		colorbt.setIcon(new ColorIcon(color));
+		canvas.repaint();
+		ppicker.saveFamilies();
+	}
+
 
 	void updateFamilyComboBox()
 	{
@@ -634,7 +652,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		formatMicrographsTable();
 		pack();
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 	}
 
 	public void addFamily(Family g)
@@ -688,7 +706,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 		try
 		{
 			canvas.setEnabled(false);
@@ -880,13 +898,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
-	
+	public void updateTemplates()
+	{
+		ppicker.setUpdateTemplatesPending(true);
+		if(templatesdialog != null)
+			templatesdialog.loadTemplates(true);
+
+	}
+
 
 	public void updateSize(int size)
 	{
 		super.updateSize(size);
 		ppicker.resetParticleImages();
-		updateTemplates();
+		ppicker.setUpdateTemplatesPending(true);
+		ppicker.updateTemplates();
 		if (templatesdialog != null)
 			loadTemplates();
 
@@ -897,7 +923,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		getFamilyData().reset();
 	}
-
 
 	@Override
 	public void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
@@ -922,11 +947,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return new ParticlesJDialog(this);
 	}
 
-	public void updateTemplates()
+	public boolean isCenterPick()
 	{
-		ppicker.setUpdateTemplatesPending(true);
-		if(templatesdialog != null)
-			templatesdialog.loadTemplates(true);
-		
+		return centerpickchb.isSelected();
 	}
 }

@@ -333,7 +333,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				reloadImage();
 			}
 
-			getParticlePicker().persistFilters();
+			getParticlePicker().saveFilters();
 		} catch (Exception ex) {
 
 			ex.printStackTrace();
@@ -449,7 +449,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			colorbt.setIcon(new ColorIcon(color));
 		getParticlePicker().setColor(color);
 		getCanvas().repaint();
-		getParticlePicker().persistFamilies();
+		getParticlePicker().saveFamilies();
 	}
 
 	protected void initImagePane() {
@@ -637,7 +637,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				p.resetParticleCanvas();
 			loadParticles();
 		}
-		getParticlePicker().persistFamilies();
+		getParticlePicker().saveFamilies();
 	}
 
 	/** Shortcut function to show messages */

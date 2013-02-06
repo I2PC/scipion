@@ -80,7 +80,8 @@ def getPosFiles(prot, pattern=''):
 
 def getTemplateFiles(prot, pattern=''):
     '''Return the .pos files of this picking protocol'''
-    return glob(os.path.join(prot.ExtraDir,'*%s_template.stk' % pattern))
+    return glob(os.path.join(prot.ExtraDir,'*%s_templates.stk' % pattern))
+
 
 def validateMicrographs(inputMicrographs, tiltPairs=False):
     ''' Validate the existence of input micrographs metadata file 

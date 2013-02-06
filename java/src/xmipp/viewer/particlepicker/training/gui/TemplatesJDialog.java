@@ -74,6 +74,7 @@ public class TemplatesJDialog extends JDialog {
 			for (int index = 0; index < templates.getNDim(); index++) {
 				template = XmippImageConverter.convertToImagePlus(templates,
 						ImageGeneric.FIRST_IMAGE + index);
+
 				templatespn.add(new ImageCanvas(template));
 
 			}
