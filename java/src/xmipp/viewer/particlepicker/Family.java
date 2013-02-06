@@ -1,11 +1,6 @@
 package xmipp.viewer.particlepicker;
 
-import ij.ImagePlus;
-import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
-
 import java.awt.Color;
-import java.io.File;
 import java.lang.reflect.Field;
 
 import xmipp.ij.commons.XmippImageConverter;
@@ -60,7 +55,7 @@ public class Family {
 			{
 				templatesNumber = ((int)templates.getNDim());
 				this.templates = templates;
-				XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
+				//XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
 			}
 			catch (Exception e)
 			{

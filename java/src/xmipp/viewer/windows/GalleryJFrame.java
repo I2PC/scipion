@@ -1841,22 +1841,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void saveAll() throws Exception
 	{
 		String from = data.getFileName();
-		String to = dlgSave.getMdFilename();
-		to = to.substring(to.lastIndexOf('@') + 1, to.length());
+		String blockto = dlgSave.getMdFilename();
+		String to = blockto.substring(blockto.lastIndexOf('@') + 1, blockto.length());
 		if (!from.equals(to))
 		{// no sense in overwritting or appending
 			MetaData frommd;
 			frommd = new MetaData();
 			if (dlgSave.isOverwrite())
-				new MetaData().write(getBlock() + "@" + to);// overwrite file
-															// with some block
+				new MetaData().write(blockto);// overwrite file with some block
 			for (String blockit : data.mdBlocks)
 			{
+				if(blockit.equals(getBlock()))
+					continue;
 				frommd.read(blockit + "@" + from);
 				frommd.writeBlock(blockit + "@" + to);
 			}
 		}
-		saveMd(getBlock() + "@" + to);
+		saveMd(blockto);
 	}
 
 	public String getBlock()
