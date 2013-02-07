@@ -661,9 +661,14 @@ void ProgSortByStatistics::run()
         fh_zind.close();
     if (!fn_out.empty())
     {
+    	MetaData SFsorted;
+    	SFsorted.sort(SFout,MDL_ZSCORE);
         SFout.write(fn_out,MD_OVERWRITE);
     }
     if (addToInput)
-        SF.write(fn,MD_APPEND);
-
+    {
+    	MetaData SFsorted;
+    	SFsorted.sort(SF,MDL_ZSCORE);
+        SFsorted.write(fn,MD_APPEND);
+    }
 }
