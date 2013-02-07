@@ -33,8 +33,8 @@ except ImportError:
     import xml.etree.ElementTree as ET
 from emx_data_model import emxDataTypes , EMX_SEP, FILENAME, INDEX
 class EmxWriter:
-    '''Base class to future implementations of how
-    to write EmxData to disk'''
+    '''Base class for writting EmxData to disk'''
+
 
     def __init__(self):
         self.version = 1.0

@@ -27,6 +27,7 @@ MODIFICATION ADVICE:
 Please,  do not  generate or  distribute 
 a modified version of this file under its original name. 
  '''
+ 
 VERSION='EMX_1.0'
 import sys
 try:
@@ -48,16 +49,27 @@ except ImportError:
 anything starting by the name of a class (i.e. micrographXXXX) 
  is a pointer to that class
 '''
+'''
+GLOSARY:
 
+ primary key: A primary key is a set of labels/attributes
+ that uniquely identify an object (i.e: a micrograph)
+ 
+ foreign key: Given two objects (i.e one micrograph an one particle) 
+ a foreign key is a set of labels/attributes in the first object 
+ that uniquely identify the second object 
+'''
 EMX_SEP = '__'
+#classes 
 MICROGRAPH = 'micrograph'
 PARTICLE   = 'particle'
-FILENAME = 'fileName'
-INDEX = 'index'
+#primary keys
+FILENAME   = 'fileName'
+INDEX      = 'index'
 
 class EmxLabel:
     '''auxiliary class to assign data type (i.e.: int, str, etc)
-    and unit to each attribute
+    and unit to each attribute/label
     '''
     def __init__(self, type, unit=None):
         self.type = type
@@ -107,23 +119,28 @@ emxDataTypes={
 }
 
 class EmxObject:
-    '''Base class for all emx objects
-    name is the class type so far micrograph or particles
+    '''Base class for all emx objects/classes
+       name is the class type so far micrograph or particles
     '''    
     def __init__(self,name):
         try:
-            #dictionaries with labels used as primary keys
-            #foreing keys and plain attributes
+            #dictionaries with labels used as 1) primary keys
+            #2)foreing keys and 3) plain attributes
             self.dictPrimaryKeys = collections.OrderedDict()
             self.dictForeignKeys = collections.OrderedDict()
             self.dictAttributes  = collections.OrderedDict()
         except ImportError:
+            #ordereddict was introduced in python 2.7
+            #use plain dictionaries if no available
             self.dictPrimaryKeys = {}
             self.dictForeignKeys = {}
             self.dictAttributes  = {}
+        #chlid class name
         self.name=name
     
-    def pprint_pk(self, printNone):
+    def pprint_pk(self, printNone=False):
+        '''Print primary keys
+        '''
         out = "fileName: %(fileName)s"
         if (self.get(INDEX) != None) or printNone:
             out += " (index=%(index)s)"
@@ -167,7 +184,8 @@ class EmxObject:
         self.dictPrimaryKeys[key] = value
         
     def get(self, key):
-        '''given a key (attribute name) returns the value assigned to it'''
+        '''given a key (attribute name) returns 
+           the value assigned to it'''
         if key in self.dictPrimaryKeys:
             return self.dictPrimaryKeys[key]
         if key in self.dictAttributes:
@@ -194,13 +212,13 @@ class EmxObject:
         return self.dictPrimaryKeys.iteritems()
 
     def __eq__(self, other):
-        ''' equality operator'''
+        '''equality operator'''
         return self.dictAttributes == other.dictAttributes\
                and self.dictPrimaryKeys == other.dictPrimaryKeys\
                and self.dictForeignKeys == other.dictForeignKeys
     
     def __str__(self):
-        ''' print operator'''
+        '''print operator'''
         return self.pprint_od()
     
     def comparePK(self, **args):
@@ -295,23 +313,7 @@ class EmxData():
             if obj.comparePK(**objPK):
                 return obj
         return None
-            
-#    def findMicrograph(self,fileName, index=None):
-#        for micrograph in self.listMicrographs:
-#            if micrograph.dictPrimaryKeys[FILENAME] == fileName\
-#               and\
-#               micrograph.dictPrimaryKeys[INDEX] == index:
-#                  return micrograph
-#        return None
-#
-#    def findParticle(self,fileName, index=None):
-#        for particle in self.listParticles:
-#            if particle.dictPrimaryKeys[FILENAME] == fileName\
-#               and\
-#               particle.dictPrimaryKeys[INDEX] == index:
-#                  return particle
-#        return None
-    
+
     def __str__(self):
         ''' print operator'''
         str = 'MICROGRAPH\n '

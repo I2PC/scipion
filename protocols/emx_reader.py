@@ -61,12 +61,15 @@ class EmxReader:
                 emxReadFunc(emxObject)
     
 class EmxXmlReader (EmxReader):
-    '''This read xml-emx format
+    '''This reads xml-emx format
+       Other class may be implemented for other formats
     '''
     def __init__(self,inFileName=None):
         EmxReader.__init__(self)
 
     def readData(self):
+        '''read all objects in file
+        '''
         self.tree = ET.parse(self.inFileName)
         self.root = self.tree.getroot()
         #micrograph must be read first
@@ -108,6 +111,8 @@ class EmxXmlReader (EmxReader):
                 #so far there are no other foreign keys
 
     def readObject(self,branch,object,tag=''):
+        ''' read a single object
+        '''
         children = list(branch)
         for child in children:
             #if foreign key skip it
