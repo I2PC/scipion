@@ -842,7 +842,8 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
 	{
-
+		if(getMode() != FamilyState.Manual)
+			return;
 		try
 		{
 			Particle shift = null;
@@ -855,10 +856,10 @@ public abstract class TrainingPicker extends ParticlePicker
 				shift = family.getTemplates().alignImage(igp);
 				if (center)
 				{
-//					System.out.println(particle);
+					System.out.println(particle);
 					particle.setX(particle.getX() + shift.getX());
 					particle.setY(particle.getY() + shift.getY());
-//					System.out.println(particle);
+					System.out.println(particle);
 				}
 			}
 		}

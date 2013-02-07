@@ -845,16 +845,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 
-	{
-		reloadTableData(true);
-	}
 	/** Reload table data */
 	public void reloadTableData(boolean changed)
 	{
 		try
 		{
 			DEBUG.printMessage("reloadTableData...");
-			table.removeAll();
+			if(table != null)
+				table.removeAll();
 			createModel();
 			// gallery.setShowLabels(menu.getShowLabel());
 			createTable();
@@ -1837,27 +1835,60 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 	
 
+	private void saveMd(String path) throws Exception
+	{
+		try
+		{
+			if (path == null)
+				throw new IllegalArgumentException();
+
+			boolean overwrite;
+			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			if (!new File(file).exists())
+				data.md.writeBlock(path);
+			else
+			{
+				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
+				if (overwrite)
+					data.md.write(path);
+				else
+					data.md.writeBlock(path);
+
+			}
+
+			data.setMdChanges(false);
+			gallery.data.setFileName(file);
+			gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+			reloadFile(file, false);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}// function saveMd
+
 
 
 	private void saveAll() throws Exception
 	{
 		String from = data.getFileName();
-		String to = dlgSave.getMdFilename();
-		to = to.substring(to.lastIndexOf('@') + 1, to.length());
+		String blockto = dlgSave.getMdFilename();
+		String to = blockto.substring(blockto.lastIndexOf('@') + 1, blockto.length());
 		if (!from.equals(to))
 		{// no sense in overwritting or appending
 			MetaData frommd;
 			frommd = new MetaData();
 			if (dlgSave.isOverwrite())
-				new MetaData().write(getBlock() + "@" + to);// overwrite file
-															// with some block
+				new MetaData().write(blockto);// overwrite file with some block
 			for (String blockit : data.mdBlocks)
 			{
+				if(blockit.equals(getBlock()))
+					continue;
 				frommd.read(blockit + "@" + from);
 				frommd.writeBlock(blockit + "@" + to);
 			}
 		}
-		saveMd(getBlock() + "@" + to);
+		saveMd(blockto);
 	}
 
 
@@ -1930,8 +1961,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		createModel();
 		reloadMd(changed);
-
 		createCombos();
+		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
 
 	}
 
@@ -1940,37 +1971,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		saveMd(dlgSave.getMdFilename());
 	}
 
-	private void saveMd(String path) throws Exception
-	{
-		try
-		{
-			if (path == null)
-				throw new IllegalArgumentException();
-
-			boolean overwrite;
-			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())
-				data.md.writeBlock(path);
-			else
-			{
-				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
-				if (overwrite)
-					data.md.write(path);
-				else
-					data.md.writeBlock(path);
-
-			}
-
-			data.setMdChanges(false);
-			gallery.data.setFileName(file);
-			reloadFile(file, false);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	}// function saveMd
-
+	
 
 
 }// class JFrameGallery

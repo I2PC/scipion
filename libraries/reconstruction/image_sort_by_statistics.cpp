@@ -74,36 +74,37 @@ void ProgSortByStatistics::defineParams()
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
     //#define DEBUG
-
-    pcaAnalyzer[4];
+    pcaAnalyzer[5];
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
     PCAMahalanobisAnalyzer tempPcaAnalyzer1;
     PCAMahalanobisAnalyzer tempPcaAnalyzer2;
     PCAMahalanobisAnalyzer tempPcaAnalyzer3;
+    PCAMahalanobisAnalyzer tempPcaAnalyzer4;
 
     //Morphology
     tempPcaAnalyzer0.clear();
     //Signal to noise ratio
     tempPcaAnalyzer1.clear();
     tempPcaAnalyzer2.clear();
-    //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer3.clear();
+    //Histogram analysis, to detect black points and saturated parts
+    tempPcaAnalyzer4.clear();
 
-    Matrix1D<double> center(2);
-    center.initZeros();
     FringeProcessing fp;
 
     int sign = -1;
-    int numNorm = 5;
+    int numNorm = 3;
     int numDescriptors0=numNorm;
-    int numDescriptors1=4;
-    int numDescriptors2=11;
-    int numDescriptors3 = 10;
+    int numDescriptors1=100;
+    int numDescriptors2=4;
+    int numDescriptors3=11;
+    int numDescriptors4 = 10;
 
     MultidimArray<float> v0(numDescriptors0);
     MultidimArray<float> v1(numDescriptors1);
     MultidimArray<float> v2(numDescriptors2);
     MultidimArray<float> v3(numDescriptors3);
+    MultidimArray<float> v4(numDescriptors4);
 
     if (verbose>0)
     {
@@ -142,10 +143,18 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     Matrix2D<double> U,V,temp;
     Matrix1D<double> D;
 
+    MultidimArray<int> radial_count;
+    MultidimArray<double> radial_avg;
+    Matrix1D<int> center(2);
+    MultidimArray<int> distance;
+    int dim;
+    center.initZeros();
+
     v0.initZeros(numDescriptors0);
     v1.initZeros(numDescriptors1);
     v2.initZeros(numDescriptors2);
     v3.initZeros(numDescriptors3);
+    v4.initZeros(numDescriptors4);
 
     ROI.resizeNoCopy(Ydim,Xdim);
     ROI.setXmippOrigin();
@@ -188,6 +197,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
             A1D_ELEM(v0,0) = (tempM*ROI).sum();
             int index = 1;
+            var+=2;
             while (index < numNorm)
             {
                 fp.normalize(mI,tempI,modI,0,var,mask);
@@ -197,12 +207,24 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
                 tempM += (modI*modI);
                 A1D_ELEM(v0,index) = (tempM*ROI).sum();
                 index++;
-                var+=1;
+                var+=2;
             }
 
             nI /= tempM;
             tempPcaAnalyzer0.addVector(v0);
             nI=(nI*ROI);
+
+            auto_correlation_matrix(mI,autoCorr);
+            if (first)
+            {
+                radialAveragePrecomputeDistance(autoCorr, center, distance, dim);
+                first=false;
+            }
+            fastRadialAverage(autoCorr, distance, dim, radial_avg, radial_count);
+
+            for (int n = 0; n < numDescriptors1; ++n)
+            	A1D_ELEM(v1,n)=(float)DIRECT_A1D_ELEM(radial_avg,n);
+            tempPcaAnalyzer1.addVector(v1);
 
 #ifdef DEBUG
 
@@ -212,15 +234,17 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
             std::cout << img.name() << std::endl;
 
-            if (img.name()==name)
+            if (img.name()==name2)
             {
-                FileName fpName    = "test2.txt";
+                FileName fpName    = "test_1.txt";
+                mI.write(fpName);
+                fpName    = "test_2.txt";
                 nI.write(fpName);
-                fpName    = "test4.txt";
+                fpName    = "test_3.txt";
                 tempM.write(fpName);
-                fpName    = "test5.txt";
+                fpName    = "test_4.txt";
                 ROI.write(fpName);
-                exit(1);
+                //exit(1);
             }
 #endif
             nI.binarize(0);
@@ -235,42 +259,45 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
             fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
 
-            A1D_ELEM(v1,0)=majorAxis/((img().xdim) );
-            A1D_ELEM(v1,1)=minorAxis/((img().xdim) );
-            A1D_ELEM(v1,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
-            A1D_ELEM(v1,3)=area/( ((img().xdim)/2)*((img().ydim)/2) );
+            A1D_ELEM(v2,0)=majorAxis/((img().xdim) );
+            A1D_ELEM(v2,1)=minorAxis/((img().xdim) );
+            A1D_ELEM(v2,2)= (fabs((img().xdim)/2-x0)+fabs((img().ydim)/2-y0))/((img().xdim)/2);
+            A1D_ELEM(v2,3)=area/( ((img().xdim)/2)*((img().ydim)/2) );
 
-            for (int n=0 ; n < numDescriptors1 ; n++)
+            for (int n=0 ; n < numDescriptors2 ; n++)
             {
-                if ( std::isnan(A1D_ELEM(v1,n)) )
-                    A1D_ELEM(v1,n)=0;
+                if ( std::isnan(A1D_ELEM(v2,n)) )
+                    A1D_ELEM(v2,n)=0;
             }
-            tempPcaAnalyzer1.addVector(v1);
+            tempPcaAnalyzer2.addVector(v2);
 
-            mI.setXmippOrigin();
-            auto_correlation_matrix(mI*ROI,autoCorr);
+            //mI.setXmippOrigin();
+            //auto_correlation_matrix(mI*ROI,autoCorr);
+            //auto_correlation_matrix(nI,autoCorr);
             autoCorr.window(smallAutoCorr,-5,-5, 5, 5);
             smallAutoCorr.copy(temp);
             svdcmp(temp,U,D,V);
 
-            for (int n = 0; n < numDescriptors2; ++n)
-                A1D_ELEM(v2,n)=(float)VEC_ELEM(D,n)/VEC_ELEM(D,0);
-            tempPcaAnalyzer2.addVector(v2);
+            for (int n = 0; n < numDescriptors3; ++n)
+                A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n); //A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n)/VEC_ELEM(D,0);
+
+            tempPcaAnalyzer3.addVector(v3);
+
 
             double minVal;
             double maxVal;
             mI.computeDoubleMinMax(minVal,maxVal);
             compute_hist(mI, hist, minVal, maxVal, 100);
 
-            for (int n=0 ; n <= numDescriptors3-1 ; n++)
+            for (int n=0 ; n <= numDescriptors4-1 ; n++)
             {
-                A1D_ELEM(v3,n)= (hist.percentil((n+1)*10));
+                A1D_ELEM(v4,n)= (hist.percentil((n+1)*10));
             }
-            tempPcaAnalyzer3.addVector(v3);
+            tempPcaAnalyzer4.addVector(v4);
 
 #ifdef DEBUG
 
-            if (img.name()==name)
+            if (img.name()==name1)
             {
                 FileName fpName    = "test.txt";
                 mI.write(fpName);
@@ -286,21 +313,18 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
         }
     }
 
-    MultidimArray<double> vavg,vstddev;
-    tempPcaAnalyzer0.computeStatistics(vavg,vstddev);
-    tempPcaAnalyzer1.computeStatistics(vavg,vstddev);
-    tempPcaAnalyzer2.computeStatistics(vavg,vstddev);
-    tempPcaAnalyzer3.computeStatistics(vavg,vstddev);
-
     tempPcaAnalyzer0.evaluateZScore(2,20);
     tempPcaAnalyzer1.evaluateZScore(2,20);
     tempPcaAnalyzer2.evaluateZScore(2,20);
     tempPcaAnalyzer3.evaluateZScore(2,20);
+    tempPcaAnalyzer4.evaluateZScore(2,20);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);
     pcaAnalyzer.push_back(tempPcaAnalyzer2);
     pcaAnalyzer.push_back(tempPcaAnalyzer3);
+    pcaAnalyzer.push_back(tempPcaAnalyzer4);
+
 }
 
 void ProgSortByStatistics::processInputPrepare(MetaData &SF)
@@ -389,7 +413,6 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
 
 void ProgSortByStatistics::run()
 {
-    //clear();
 
     // Process input selfile ..............................................
     SF.read(fn);
@@ -404,17 +427,20 @@ void ProgSortByStatistics::run()
     int numPCAs = pcaAnalyzer.size();
 
     MultidimArray<double> finalZscore(SF.size());
-    MultidimArray<double> ZscoreShape(SF.size()), sortedZscoreShape;
+    MultidimArray<double> ZscoreShape1(SF.size()), sortedZscoreShape1;
+    MultidimArray<double> ZscoreShape2(SF.size()), sortedZscoreShape2;
     MultidimArray<double> ZscoreSNR1(SF.size()), sortedZscoreSNR1;
     MultidimArray<double> ZscoreSNR2(SF.size()), sortedZscoreSNR2;
     MultidimArray<double> ZscoreHist(SF.size()), sortedZscoreHist;
 
     finalZscore.initConstant(0);
-    ZscoreShape.resizeNoCopy(finalZscore);
+    ZscoreShape1.resizeNoCopy(finalZscore);
+    ZscoreShape2.resizeNoCopy(finalZscore);
     ZscoreSNR1.resizeNoCopy(finalZscore);
     ZscoreSNR2.resizeNoCopy(finalZscore);
     ZscoreHist.resizeNoCopy(finalZscore);
-    sortedZscoreShape.resizeNoCopy(finalZscore);
+    sortedZscoreShape1.resizeNoCopy(finalZscore);
+    sortedZscoreShape2.resizeNoCopy(finalZscore);
     sortedZscoreSNR1.resizeNoCopy(finalZscore);
     sortedZscoreSNR2.resizeNoCopy(finalZscore);
     sortedZscoreHist.resizeNoCopy(finalZscore);
@@ -428,7 +454,8 @@ void ProgSortByStatistics::run()
         if ( (enabled==-1)  )
         {
             A1D_ELEM(finalZscore,imgno) = 1e3;
-            A1D_ELEM(ZscoreShape,imgno) = 1e3;
+            A1D_ELEM(ZscoreShape1,imgno) = 1e3;
+            A1D_ELEM(ZscoreShape2,imgno) = 1e3;
             A1D_ELEM(ZscoreSNR1,imgno) = 1e3;
             A1D_ELEM(ZscoreSNR2,imgno) = 1e3;
             A1D_ELEM(ZscoreHist,imgno) = 1e3;
@@ -445,15 +472,19 @@ void ProgSortByStatistics::run()
                 }
                 else if (num == 1)
                 {
-                    A1D_ELEM(ZscoreShape,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                    A1D_ELEM(ZscoreShape2,imgno) = pcaAnalyzer[num].getZscore(imgno);
                 }
                 else if (num == 2)
+                {
+                    A1D_ELEM(ZscoreShape1,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                }
+                else if (num == 3)
                 {
                     A1D_ELEM(ZscoreSNR2,imgno) = pcaAnalyzer[num].getZscore(imgno);
                 }
                 else
                 {
-                    A1D_ELEM(ZscoreHist,imgno) = pcaAnalyzer[num].getZscore(imgno);
+                	A1D_ELEM(ZscoreHist,imgno) = pcaAnalyzer[num].getZscore(imgno);
                 }
 
                 if(zScore < pcaAnalyzer[num].getZscore(imgno))
@@ -494,12 +525,14 @@ void ProgSortByStatistics::run()
         }
 
         double zscore=DIRECT_A1D_ELEM(finalZscore,isort);
-        double zscoreShape=DIRECT_A1D_ELEM(ZscoreShape,isort);
+        double zscoreShape1=DIRECT_A1D_ELEM(ZscoreShape1,isort);
+        double zscoreShape2=DIRECT_A1D_ELEM(ZscoreShape2,isort);
         double zscoreSNR1=DIRECT_A1D_ELEM(ZscoreSNR1,isort);
         double zscoreSNR2=DIRECT_A1D_ELEM(ZscoreSNR2,isort);
         double zscoreHist=DIRECT_A1D_ELEM(ZscoreHist,isort);
 
-        DIRECT_A1D_ELEM(sortedZscoreShape,imgno)=DIRECT_A1D_ELEM(ZscoreShape,isort);
+        DIRECT_A1D_ELEM(sortedZscoreShape1,imgno)=DIRECT_A1D_ELEM(ZscoreShape1,isort);
+        DIRECT_A1D_ELEM(sortedZscoreShape2,imgno)=DIRECT_A1D_ELEM(ZscoreShape2,isort);
         DIRECT_A1D_ELEM(sortedZscoreSNR1,imgno)=DIRECT_A1D_ELEM(ZscoreSNR1,isort);
         DIRECT_A1D_ELEM(sortedZscoreSNR2,imgno)=DIRECT_A1D_ELEM(ZscoreSNR2,isort);
         DIRECT_A1D_ELEM(sortedZscoreHist,imgno)=DIRECT_A1D_ELEM(ZscoreHist,isort);
@@ -518,7 +551,8 @@ void ProgSortByStatistics::run()
         }
 
         row.setValue(MDL_ZSCORE,zscore);
-        row.setValue(MDL_ZSCORE_SHAPE,zscoreShape);
+        row.setValue(MDL_ZSCORE_SHAPE1,zscoreShape1);
+        row.setValue(MDL_ZSCORE_SHAPE2,zscoreShape2);
         row.setValue(MDL_ZSCORE_SNR1,zscoreSNR1);
         row.setValue(MDL_ZSCORE_SNR2,zscoreSNR2);
         row.setValue(MDL_ZSCORE_HISTOGRAM,zscoreHist);
@@ -526,7 +560,8 @@ void ProgSortByStatistics::run()
         if (addToInput)
         {
             SF.setValue(MDL_ZSCORE,zscore,isort_1);
-            SF.setValue(MDL_ZSCORE_SHAPE,zscoreShape,isort_1);
+            SF.setValue(MDL_ZSCORE_SHAPE1,zscoreShape1,isort_1);
+            SF.setValue(MDL_ZSCORE_SHAPE2,zscoreShape2,isort_1);
             SF.setValue(MDL_ZSCORE_SNR1,zscoreSNR1,isort_1);
             SF.setValue(MDL_ZSCORE_SNR2,zscoreSNR2,isort_1);
             SF.setValue(MDL_ZSCORE_HISTOGRAM,zscoreHist,isort_1);
@@ -538,10 +573,11 @@ void ProgSortByStatistics::run()
     //Sorting taking into account a given percentage
     if (per > 0)
     {
-        MultidimArray<int> sortedShape,sortedSNR1,sortedSNR2,sortedHist,
-        					sortedShapeSF,sortedSNR1SF,sortedSNR2SF,sortedHistSF;
+        MultidimArray<int> sortedShape1,sortedShape2,sortedSNR1,sortedSNR2,sortedHist,
+        					sortedShapeSF1,sortedShapeSF2,sortedSNR1SF,sortedSNR2SF,sortedHistSF;
 
-        sortedZscoreShape.indexSort(sortedShape);
+        sortedZscoreShape1.indexSort(sortedShape1);
+        sortedZscoreShape2.indexSort(sortedShape2);
         sortedZscoreSNR1.indexSort(sortedSNR1);
         sortedZscoreSNR2.indexSort(sortedSNR2);
         sortedZscoreHist.indexSort(sortedHist);
@@ -549,8 +585,14 @@ void ProgSortByStatistics::run()
 
         for (int numPar = SF.size()-1; numPar > (SF.size()-numPartReject); --numPar)
         {
-            int isort_1 = DIRECT_A1D_ELEM(sortedShape,numPar);
+            int isort_1 = DIRECT_A1D_ELEM(sortedShape1,numPar);
             int isort = isort_1 - 1;
+            SFout.getRow(row, isort_1);
+            row.setValue(MDL_ENABLED,-1);
+            SFout.setRow(row,isort_1);
+
+            isort_1 = DIRECT_A1D_ELEM(sortedShape2,numPar);
+            isort = isort_1 - 1;
             SFout.getRow(row, isort_1);
             row.setValue(MDL_ENABLED,-1);
             SFout.setRow(row,isort_1);
@@ -576,12 +618,19 @@ void ProgSortByStatistics::run()
             if (addToInput)
             {
 
-                ZscoreShape.indexSort(sortedShapeSF);
+                ZscoreShape1.indexSort(sortedShapeSF1);
+                ZscoreShape2.indexSort(sortedShapeSF2);
                 ZscoreSNR1.indexSort(sortedSNR1SF);
                 ZscoreSNR2.indexSort(sortedSNR2SF);
                 ZscoreHist.indexSort(sortedHistSF);
 
-                isort_1 = DIRECT_A1D_ELEM(sortedShapeSF,numPar);
+                isort_1 = DIRECT_A1D_ELEM(sortedShapeSF1,numPar);
+                isort = isort_1 - 1;
+                SF.getRow(row, isort_1);
+                row.setValue(MDL_ENABLED,-1);
+                SF.setRow(row,isort_1);
+
+                isort_1 = DIRECT_A1D_ELEM(sortedShapeSF2,numPar);
                 isort = isort_1 - 1;
                 SF.getRow(row, isort_1);
                 row.setValue(MDL_ENABLED,-1);

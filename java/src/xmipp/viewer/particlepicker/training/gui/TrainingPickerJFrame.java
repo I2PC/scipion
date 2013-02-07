@@ -543,7 +543,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		boolean isautopick = isAutopick();
 		autopickpercentpn.setVisible(isautopick);
 		if (isautopick)
+		{
+			getFamilyData().setAutopickpercent(ppicker.getAutopickpercent());
 			autopickpercenttf.setValue(ppicker.getAutopickpercent());
+		}
 		actionsbt.setVisible(mfd.isActionVisible());
 	}
 
