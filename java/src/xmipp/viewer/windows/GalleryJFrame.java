@@ -46,10 +46,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.ArrayList;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -60,7 +58,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import xmipp.utils.XmippFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -75,17 +72,13 @@ import javax.swing.LookAndFeel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageJ;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -93,13 +86,14 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
+import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
@@ -109,7 +103,6 @@ import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTableModel;
-import xmipp.viewer.windows.ClassesJDialog;
 
 public class GalleryJFrame extends JFrame implements iCTFGUI
 {
@@ -778,7 +771,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void fsc() throws Exception
 	{
-		JFrameFSC frame = new JFrameFSC(data);
+		FSCJFrame frame = new FSCJFrame(data);
 		XmippWindowUtil.centerWindows(frame, this);
 		frame.setVisible(true);
 	}
