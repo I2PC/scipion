@@ -61,7 +61,6 @@ SVMClassifier::~SVMClassifier()
         delete [] prob.y;
     if (prob.x!=NULL)
     {
-    	std::cerr<<"we are about to del!!!"<<std::endl<<prob.l;
         for(int i=0;i<prob.l;i++)
             delete [] prob.x[i];
         delete [] prob.x;
@@ -69,6 +68,7 @@ SVMClassifier::~SVMClassifier()
 }
 void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<double> &label)
 {
+
     prob.l = YSIZE(trainSet);
     prob.y = new double[prob.l];
     prob.x = new svm_node *[prob.l+1];
