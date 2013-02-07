@@ -56,6 +56,7 @@ class ProtParticlePickingAuto(XmippProtocol):
             filesToImport.append(self.PrevRun.getFilename('rotpca', family=family))
             filesToImport.append(self.PrevRun.getFilename('svm', family=family))
             filesToImport.append(self.PrevRun.getFilename('average', family=family))
+            filesToImport.append(self.PrevRun.getFilename('config', family=family))
         self.insertImportOfFiles(filesToImport)
 
         md = MetaData(self.Input['micrographs'])
@@ -94,7 +95,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun,
                    "Input directory: [%s] " % self.pickingDir,
                    "Automatic picking of the following models: " + ",".join(self.familiesForAuto)]
-        autoFiles = glob.glob(self.workingDirPath("*auto.pos"))
+        autoFiles = glob.glob(self.workingDirPath("extra/*auto.pos"))
         if len(autoFiles) > 0:
             Nparticles = 0
             Nmicrographs = len(autoFiles)

@@ -332,7 +332,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     fh_training.open("particles_cord1.txt");
 #endif
 
-    int num=positionArray.size()*(proc_prec/100.0);
+    int num=positionArray.size()*(10.0/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
@@ -1138,6 +1138,12 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode=="try" || mode=="autoselect")
     {
+    	if (mode=="autoselect")
+    	{
+    		MetaData MD;
+    		MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
+    		MD.getValue( MDL_PICKING_AUTOPICKPERCENT,autoPicking->proc_prec,MD.firstObject());
+    	}
         autoPicking->micrographStack.read(fnFilterBank, DATA);
         // Read the PCA Model
         Image<double> II;
