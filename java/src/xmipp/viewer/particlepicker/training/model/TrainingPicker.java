@@ -781,7 +781,9 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family f)
 	{
-		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
+		if (family.getStep() != FamilyState.Manual)
+			return;
+		if (!updateTemplatesPending)
 			return;// nothing to update
 		f.initTemplates();
 		ImageGeneric igp;
@@ -802,7 +804,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-						p = f.getTemplates().alignImage(igp);
+						p = f.getTemplates().alignImage(igp, true);
 				}
 			}
 			updateTemplatesPending = false;
@@ -836,44 +838,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
-	{
-		if(getMode() != FamilyState.Manual)
-			return;
-		try
-		{
-			Particle shift = null;
-			Family family = particle.getFamily();
-			ImageGeneric igp = particle.getImageGeneric();
-			if (index < family.getTemplatesNumber())// index starts at one
-				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
-			else
-			{
-				shift = family.getTemplates().alignImage(igp);
-				if (center)
-				{
-					System.out.println(particle);
-					particle.setX(particle.getX() + shift.getX());
-					particle.setY(particle.getY() + shift.getY());
-					System.out.println(particle);
-				}
-			}
-
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
 	
-
-
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
-	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
-	}
 
 	public void resetParticleImages()
 	{
