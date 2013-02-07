@@ -771,7 +771,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void fsc() throws Exception
 	{
-		JFrameFSC frame = new JFrameFSC(data);
+		FSCJFrame frame = new FSCJFrame(data);
 		XmippWindowUtil.centerWindows(frame, this);
 		frame.setVisible(true);
 	}
