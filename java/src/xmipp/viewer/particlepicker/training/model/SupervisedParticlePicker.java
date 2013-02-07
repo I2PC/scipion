@@ -10,7 +10,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 
 public class SupervisedParticlePicker extends TrainingPicker {
 	
-	private static int mintraining = 70;
+	private static int mintraining = 15;
 	private static String trainingfn = "training.txt";
 	private static String trainingmaskfn = "mask.xmp";
 	private static String autofeaturesvectorfn = "auto_feature_vectors";
