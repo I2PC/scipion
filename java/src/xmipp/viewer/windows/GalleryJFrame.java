@@ -48,7 +48,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -76,7 +75,6 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
@@ -782,7 +780,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 
 		FSCJFrame frame = new FSCJFrame(data);
-
 		XmippWindowUtil.centerWindows(frame, this);
 		frame.setVisible(true);
 	}
