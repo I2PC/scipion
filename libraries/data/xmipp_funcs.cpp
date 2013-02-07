@@ -566,18 +566,6 @@ double rnd_log(double a, double b)
         return exp(rnd_unif(log(a), log(b)));
 }
 
-/* Log2 -------------------------------------------------------------------- */
-// Does not work with xlc compiler
-#ifndef __xlC__
-double log2(double value)
-{
-    return 3.32192809488736*log10(value);
-    // log10(value)/log10(2)
-}
-#endif
-
-
-
 /* Time managing ----------------------------------------------------------- */
 #ifdef _NO_TIME
 void time_config()
