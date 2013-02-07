@@ -11,7 +11,7 @@ from os.path import exists
 from protlib_base import *
 from protlib_filesystem import createLink, deleteFiles, replaceFilenameExt
 from protlib_utils import runJob
-from protocol_particle_pick import launchParticlePickingGUI, PM_READONLY, \
+from protocol_particle_pick import launchParticlePickingGUI, getTemplateFiles, PM_READONLY, \
     PM_REVIEW
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE, MDL_PICKING_FAMILY, \
     MDL_PICKING_MICROGRAPH_FAMILY_STATE, MDL_PICKING_PARTICLE_SIZE, MDL_ENABLED, \
@@ -29,6 +29,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         if xmippExists(self.PrevRun.getFilename('macros')):
             self.keysToImport.append('macros')
         self.inputFilename(*self.keysToImport)
+        self.inputProperty('TiltPairs', 'MicrographsMd', 'Fast')
         self.inputProperty('TiltPairs', 'MicrographsMd', 'Family')
         self.micrographs = self.getFilename('micrographs')
         self.families = self.getFilename('families')
@@ -48,12 +49,14 @@ class ProtParticlePickingAuto(XmippProtocol):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         self.computeFamilies()
         filesToImport = [self.Input[k] for k in self.keysToImport]
+        filesToImport += getTemplateFiles(self.PrevRun)
         for family in self.familiesForAuto:
             filesToImport.append(self.PrevRun.getFilename('training', family=family))
             filesToImport.append(self.PrevRun.getFilename('pca', family=family))
             filesToImport.append(self.PrevRun.getFilename('rotpca', family=family))
             filesToImport.append(self.PrevRun.getFilename('svm', family=family))
             filesToImport.append(self.PrevRun.getFilename('average', family=family))
+            filesToImport.append(self.PrevRun.getFilename('config', family=family))
         self.insertImportOfFiles(filesToImport)
 
         md = MetaData(self.Input['micrographs'])
@@ -78,6 +81,8 @@ class ProtParticlePickingAuto(XmippProtocol):
                 if proceed:
                     oroot = self.extraPath(micrographName)
                     cmd = "-i %(path)s --particleSize %(particleSize)d --model %(modelRoot)s --outputRoot %(oroot)s --mode autoselect" % locals()
+                    if self.Fast:
+                        cmd += " --fast "
                     self.insertParallelRunJobStep("xmipp_micrograph_automatic_picking", cmd)
                                              
         for family in self.familiesForAuto:
@@ -90,7 +95,7 @@ class ProtParticlePickingAuto(XmippProtocol):
         summary = ["Supervised picking RUN: <%s> " % self.SupervisedRun,
                    "Input directory: [%s] " % self.pickingDir,
                    "Automatic picking of the following models: " + ",".join(self.familiesForAuto)]
-        autoFiles = glob.glob(self.workingDirPath("*auto.pos"))
+        autoFiles = glob.glob(self.workingDirPath("extra/*auto.pos"))
         if len(autoFiles) > 0:
             Nparticles = 0
             Nmicrographs = len(autoFiles)
