@@ -133,7 +133,7 @@ public class SupervisedParticlePicker extends TrainingPicker {
 	{
 		Family family = mfd.getFamily();
 		Micrograph micrograph = mfd.getMicrograph();
-		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent", micrograph.getFile(),// -i
+		String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s --autoPercent %s", micrograph.getFile(),// -i
 		//String args = String.format("-i %s --particleSize %s --model %s --outputRoot %s --mode try --thr %s", micrograph.getFile(),// -i
 				family.getSize(), // --particleSize
 				getOutputPath(family.getName()),// --model
