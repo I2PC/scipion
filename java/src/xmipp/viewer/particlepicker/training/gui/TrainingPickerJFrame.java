@@ -238,7 +238,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-		
+
 		if (templatesdialog == null)
 		{
 			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
@@ -281,7 +281,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// Setting slider
 		initSizePane();
 		fieldspn.add(sizepn);
-		
+
 		centerpickchb = new JCheckBox("Adjust Center");
 		fieldspn.add(centerpickchb);
 
@@ -519,6 +519,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			return;
 		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
+
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
@@ -904,7 +905,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public void updateTemplates()
 	{
 		ppicker.setUpdateTemplatesPending(true);
-		if(templatesdialog != null)
+		if (templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
 	}
