@@ -14,7 +14,7 @@ import xmipp
 from glob import glob
 from os.path import exists, join
 
-from protocol_particle_pick import getPosFiles, validateMicrographs, \
+from protocol_particle_pick import getPosFiles, getTemplateFiles, validateMicrographs, \
     launchParticlePickingGUI, PM_READONLY, PM_SUPERVISED, countParticles
 
 # Create a GUI automatically from a selfile of micrographs
@@ -49,6 +49,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
         self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getPosFiles(self.PrevRun)
+        filesToImport += getTemplateFiles(self.PrevRun)
         self.insertImportOfFiles(filesToImport)
         modeWithArgs = PM_SUPERVISED + " %(NumberOfThreads)d %(Fast)s %(InCore)s" % self.ParamsDict
         self.insertStep('launchParticlePickingGUI', execution_mode=SqliteDb.EXEC_ALWAYS,

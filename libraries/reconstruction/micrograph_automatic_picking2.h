@@ -81,6 +81,7 @@ public:
     int                          particle_size;
     int                          particle_radius;
     int                          filter_num;
+    int                          proc_prec;
     int                          NPCA;
     int                          NRPCA;
     int                          corr_num;
@@ -107,7 +108,8 @@ public:
     /// Empty constructor
     AutoParticlePicking2(const FileName &fn, Micrograph *_m,
                          int size, int filterNum,
-                         int pcaNum,int corrNum);
+                         int pcaNum,int corrNum,
+                         int procprec);
 
     /// Destructor
     ~AutoParticlePicking2();
@@ -284,6 +286,8 @@ public:
     int NPCA;
     /// The number of correlation for a bank
     int corr_num;
+    /// The number of correlation for a bank
+    int procprec;
     /// Mode
     String mode;
     /// Number of threads
