@@ -20,7 +20,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Particle;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
+
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
@@ -111,6 +113,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		if (!getFrame().isEraserMode())
 			setCursor(crosshairCursor);
 		else if (getFrame().isPickingAvailable(e))
+
 		{
 
 			final int x = e.getX();
@@ -135,6 +138,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 	
+
 
 	public void display(float xlocation, float ylocation)
 	{
@@ -301,8 +305,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		return x / m + width / 2.f;
 	}
 
-	
-
 	public abstract Micrograph getMicrograph();
 
 	protected void moveActiveParticle(int x, int y)
@@ -310,7 +312,14 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		PickerParticle active = getActive();
 		if (active == null)
 			return;
-		active.setPosition(x, y);
+		try
+		{
+			active.setPosition(x, y);
+		}
+		catch (Exception e)
+		{
+			XmippDialog.showError(getFrame(), e.getMessage());
+		}
 		if (getFrame().getParticlesJDialog() != null)
 			active.getParticleCanvas(getFrame()).repaint();
 	}
@@ -336,8 +345,5 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 	protected abstract void doCustomPaint(Graphics2D g2);
-	
-	
-	
 
 }
