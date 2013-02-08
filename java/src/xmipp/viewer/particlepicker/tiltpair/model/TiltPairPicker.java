@@ -311,6 +311,44 @@ public class TiltPairPicker extends ParticlePicker {
 		this.micrograph = (UntiltedMicrograph)m;
 		
 	}
+
+	public void loadConfig() {
+		String file = configfile;
+		if (!new File(file).exists()) {
+			setMicrograph(getMicrographs().get(0));
+			return;
+
+		}
+
+		String mname;
+		try {
+			MetaData md = new MetaData(file);
+			for (long id : md.findObjects()) {
+				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				setMicrograph(getMicrograph(mname));
+			}
+			md.destroy();
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
+	
+	public void saveConfig() {
+		try {
+			MetaData md;
+			String file = configfile;
+			md = new MetaData();
+			long id = md.addObject();
+			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+			md.write(file);
+			md.destroy();
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 	
 
 

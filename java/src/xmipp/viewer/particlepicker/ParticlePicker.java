@@ -22,9 +22,11 @@ import java.util.logging.SimpleFormatter;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.jni.Particle;
 import xmipp.jni.Program;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 import xmipp.viewer.particlepicker.training.model.TrainingPicker;
 
 public abstract class ParticlePicker {
@@ -42,8 +44,34 @@ public abstract class ParticlePicker {
 	protected Family family;
 	protected String configfile;
 	public static final int defAutoPickPercent = 90;
-	private int autopickpercent = defAutoPickPercent;
+	protected int autopickpercent = defAutoPickPercent;
 	protected boolean updateTemplatesPending;
+	
+	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
+		this(selfile, outputdir, null, mode);
+
+	}
+
+	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
+		this.outputdir = outputdir;
+		this.familiesfile = getOutputPath("families.xmd");
+		configfile = getOutputPath("config.xmd");
+		this.families = new ArrayList<Family>();
+		loadFamilies();
+		if(fname == null)
+			family = families.get(0);
+		else
+			family = getFamily(fname);
+		if (family == null) throw new IllegalArgumentException("Invalid family " + fname);
+
+		this.selfile = selfile;
+		this.outputdir = outputdir;
+		this.mode = mode;
+		
+		initializeFilters();
+		loadEmptyMicrographs();
+		loadConfig();
+	}
 	
 	public int getSize() {
 		return family.getSize();
@@ -77,32 +105,7 @@ public abstract class ParticlePicker {
 		return String.format("%1$s%2$sPreprocessing%2$s%3$s%2$s%3$s%4$s", projectdir, File.separator, mname, suffix);
 	}
 
-	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
-		this(selfile, outputdir, null, mode);
-
-	}
-
-	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
-		this.outputdir = outputdir;
-		this.familiesfile = getOutputPath("families.xmd");
-		configfile = getOutputPath("config.xmd");
-		this.families = new ArrayList<Family>();
-		loadFamilies();
-		if(fname == null)
-			family = families.get(0);
-		else
-			family = getFamily(fname);
-		if (family == null) throw new IllegalArgumentException("Invalid family " + fname);
-
-		this.selfile = selfile;
-		this.outputdir = outputdir;
-		this.mode = mode;
-		
-		initializeFilters();
-		loadEmptyMicrographs();
-		loadConfig();
-	}
-
+	
 	public abstract void loadEmptyMicrographs();
 
 	private void initializeFilters() {
@@ -392,54 +395,11 @@ public abstract class ParticlePicker {
 		return autopickpercent;
 	}
 	
-	public void saveConfig() {
-		try {
-			MetaData md;
-			String file = configfile;
-			md = new MetaData();
-			long id = md.addObject();
-			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
-			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
-			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
-			md.write(file);
-			md.destroy();
+	
 
-		} catch (Exception e) {
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
-
-	public void loadConfig() {
-		String file = configfile;
-		if (!new File(file).exists()) {
-			family = families.get(0);
-			setMicrograph(getMicrographs().get(0));
-			return;
-
-		}
-
-		String mname, fname;
-		try {
-			MetaData md = new MetaData(file);
-			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
-			for (long id : md.findObjects()) {
-
-				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
-				family = getFamily(fname);
-				
-				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-				setMicrograph(getMicrograph(mname));
-				if(hasautopercent)
-					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
-				
-			}
-			md.destroy();
-		} catch (Exception e) {
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
+	public abstract void loadConfig();
+	
+	public abstract void saveConfig();
 	
 
 	void removeFilter(String filter) {
@@ -544,6 +504,45 @@ public abstract class ParticlePicker {
 	{
 		updateTemplatesPending = b;
 
+	}
+	
+	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
+	{
+		
+		try
+		{
+			Particle shift = null;
+			Family family = particle.getFamily();
+			ImageGeneric igp = particle.getImageGeneric();
+			//will happen only in manual mode
+			if (index < family.getTemplatesNumber())// index starts at one
+				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
+			else
+			{
+				shift = family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
+				if (center)
+				{
+					System.out.println(particle);
+					particle.setX(particle.getX() + shift.getX());
+					particle.setY(particle.getY() + shift.getY());
+					System.out.println(particle);
+				}
+			}
+
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
+
+	}
+	
+
+
+	public void addParticleToTemplates(TrainingParticle particle, boolean center)
+	{
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
 	}
 
 }

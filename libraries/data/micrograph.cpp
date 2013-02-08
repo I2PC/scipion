@@ -116,32 +116,32 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     {
     case DT_UChar:
         IUChar = new (Image<unsigned char> );
-        result = IUChar->read(fn_micrograph, DATA, FIRST_IMAGE, true);
+        result = IUChar->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case DT_UShort:
         IUShort = new (Image<unsigned short> );
-        result = IUShort->read(fn_micrograph, DATA, FIRST_IMAGE, true);
+        result = IUShort->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUShort->data, stdevFilter);
         break;
     case DT_Short:
         IShort = new (Image<short> );
-        result = IShort->read(fn_micrograph, DATA, FIRST_IMAGE, true);
+        result = IShort->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IShort->data, stdevFilter);
         break;
     case DT_Int:
         IInt = new (Image<int> );
-        result = IInt->read(fn_micrograph, DATA, FIRST_IMAGE, true);
+        result = IInt->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IInt->data, stdevFilter);
         break;
     case DT_UInt:
         IUInt = new (Image<unsigned int> );
-        result = IUInt->read(fn_micrograph, DATA, FIRST_IMAGE, true);
+        result = IUInt->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case DT_Float:
         IFloat = new (Image<float> );
-        result = IFloat->read(fn_micrograph, DATA, FIRST_IMAGE, true);
+        result = IFloat->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IFloat->data, stdevFilter);
         break;
     default:
@@ -315,7 +315,6 @@ int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
     if (X_window_size == -1 || Y_window_size == -1)
         REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "Micrograph::scissor: window size not set");
-
     if (datatype == DT_UChar)
         return templateScissor(*IUChar, P, result, Dmin, Dmax, scaleX, scaleY,
                                only_check);

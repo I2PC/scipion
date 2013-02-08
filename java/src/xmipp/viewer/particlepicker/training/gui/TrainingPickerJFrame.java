@@ -83,7 +83,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	TemplatesJDialog templatesdialog;
 	private JCheckBox centerpickchb;
 
-
 	@Override
 	public TrainingPicker getParticlePicker()
 	{
@@ -177,13 +176,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		windowmn.add(pmi);
 		windowmn.add(ijmi);
 
-
-
 		templatesmi = new JMenuItem("Templates");
 		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
-
 
 		helpmn.add(hcontentsmi);
 
@@ -214,40 +210,40 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-//		try
-//		{
-//			canvas.setEnabled(false);
-//			XmippWindowUtil.blockGUI(this, "Generating Templates...");
-//
-//			Thread t = new Thread(new Runnable()
-//			{
-//				public void run()
-//				{
-//					if (templatesdialog == null)
-//						templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-//					else
-//					{
-//
-//						templatesdialog.loadTemplates(true);
-//						templatesdialog.setVisible(true);
-//					}
-//					canvas.setEnabled(true);
-//					XmippWindowUtil.releaseGUI(getRootPane());
-//				}
-//			});
-//			t.start();
-//
-//		}
-//		catch (Exception e)
-//		{
-//			TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-//
-//			if (templatesdialog != null)
-//				templatesdialog.close();
-//			templatesdialog = null;
-//			throw new IllegalArgumentException(e.getMessage());
-//		}
-		
+		// try
+		// {
+		// canvas.setEnabled(false);
+		// XmippWindowUtil.blockGUI(this, "Generating Templates...");
+		//
+		// Thread t = new Thread(new Runnable()
+		// {
+		// public void run()
+		// {
+		// if (templatesdialog == null)
+		// templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+		// else
+		// {
+		//
+		// templatesdialog.loadTemplates(true);
+		// templatesdialog.setVisible(true);
+		// }
+		// canvas.setEnabled(true);
+		// XmippWindowUtil.releaseGUI(getRootPane());
+		// }
+		// });
+		// t.start();
+		//
+		// }
+		// catch (Exception e)
+		// {
+		// TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+		//
+		// if (templatesdialog != null)
+		// templatesdialog.close();
+		// templatesdialog = null;
+		// throw new IllegalArgumentException(e.getMessage());
+		// }
+
 		if (templatesdialog == null)
 			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
 		else
@@ -257,9 +253,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			templatesdialog.setVisible(true);
 		}
 	}
-
-
-
 
 	private void initFamilyPane()
 	{
@@ -285,13 +278,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(familiescb);
 
 		// Setting color
-		initColorPane();
+		initColorPane(family.getColor());
 		fieldspn.add(colorpn);
 
 		// Setting slider
 		initSizePane();
 		fieldspn.add(sizepn);
-		
+
 		centerpickchb = new JCheckBox("Adjust Center");
 		fieldspn.add(centerpickchb);
 
@@ -505,21 +498,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
 		iconbt = new JButton();
 		iconbt.setToolTipText("Load CTF Profile");
-		iconbt.setBorderPainted(false); 
-	    iconbt.setContentAreaFilled(false); 
-	    iconbt.setFocusPainted(false); 
-	    iconbt.setOpaque(false);
+		iconbt.setBorderPainted(false);
+		iconbt.setContentAreaFilled(false);
+		iconbt.setFocusPainted(false);
+		iconbt.setOpaque(false);
 		iconbt.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
 				String psd = getMicrograph().getPSD();
 				String ctf = getMicrograph().getCTF();
-				if(psd != null && ctf != null)
+				if (psd != null && ctf != null)
 					ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
-				
+
 			}
 		});
 		ctfpn.add(iconbt);
@@ -552,10 +545,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		// is same micrograph??
 		if (index == micrographstb.getSelectedRow() && canvas != null && canvas.getIw().isVisible())
 			return;
-		if(ppicker.isChanged())
+		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
-											// micrographs, by Coss suggestion
-
+												// micrographs, by Coss
+												// suggestion
 
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
@@ -581,7 +574,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		boolean isautopick = isAutopick();
 		autopickpercentpn.setVisible(isautopick);
 		if (isautopick)
+		{
+			getFamilyData().setAutopickpercent(ppicker.getAutopickpercent());
 			autopickpercenttf.setValue(ppicker.getAutopickpercent());
+		}
 		actionsbt.setVisible(mfd.isActionVisible());
 	}
 
@@ -652,8 +648,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		canvas.display();
 		updateZoom();
 	}
-	
-	
 
 	private void formatMicrographsTable()
 	{
@@ -953,13 +947,12 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
 
-
 	}
 
 	public void updateTemplates()
 	{
 		ppicker.setUpdateTemplatesPending(true);
-		if(templatesdialog != null)
+		if (templatesdialog != null)
 			templatesdialog.loadTemplates(true);
 
 	}

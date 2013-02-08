@@ -1,6 +1,7 @@
 package xmipp.viewer.particlepicker.training.gui;
 
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.ImageCanvas;
 
 import java.awt.Dimension;
@@ -53,6 +54,7 @@ public class TemplatesJDialog extends JDialog {
 		try {
 			frame.getParticlePicker().updateTemplates();
 			ImageGeneric templates = frame.getFamily().getTemplates();
+			
 			int size = frame.getFamily().getSize();
 
 			if (frame.getAvailableParticles().isEmpty()) {
@@ -65,10 +67,8 @@ public class TemplatesJDialog extends JDialog {
 			//templates.write("templates.stk");
 			templatespn.removeAll();
 			ImagePlus template;
-			long end = ImageGeneric.FIRST_IMAGE + templates.getNDim();//should not change header, check!!
-			for (long index = ImageGeneric.FIRST_IMAGE; index < end; index++) {
-				templates.read(index);
-				template = XmippImageConverter.convertToImagePlus(templates);//selected image on read
+			for (int i = 0; i < frame.getFamily().getTemplatesNumber(); i ++) {
+				template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
 				templatespn.add(new ImageCanvas(template));
 
 			}

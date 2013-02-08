@@ -781,7 +781,9 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void updateTemplates(Family f)
 	{
-		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
+		if (family.getStep() != FamilyState.Manual)
+			return;
+		if (!updateTemplatesPending)
 			return;// nothing to update
 		f.initTemplates();
 		ImageGeneric igp;
@@ -802,7 +804,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-						p = f.getTemplates().alignImage(igp);
+						p = f.getTemplates().alignImage(igp, true);
 				}
 			}
 			updateTemplatesPending = false;
@@ -836,44 +838,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}
 
-	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
-	{
-		if(getMode() != FamilyState.Manual)
-			return;
-		try
-		{
-			Particle shift = null;
-			Family family = particle.getFamily();
-			ImageGeneric igp = particle.getImageGeneric();
-			if (index < family.getTemplatesNumber())// index starts at one
-				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
-			else
-			{
-				shift = family.getTemplates().alignImage(igp);
-				if (center)
-				{
-					System.out.println(particle);
-					particle.setX(particle.getX() + shift.getX());
-					particle.setY(particle.getY() + shift.getY());
-					System.out.println(particle);
-				}
-			}
-
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
 	
-
-
-	public void addParticleToTemplates(TrainingParticle particle, boolean center)
-	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
-	}
 
 	public void resetParticleImages()
 	{
@@ -887,6 +852,53 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
+	public void loadConfig() {
+		String file = configfile;
+		if (!new File(file).exists()) {
+			family = families.get(0);
+			setMicrograph(getMicrographs().get(0));
+			return;
+
+		}
+
+		String mname, fname;
+		try {
+			MetaData md = new MetaData(file);
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
+			for (long id : md.findObjects()) {
+
+				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
+				family = getFamily(fname);
+				
+				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				setMicrograph(getMicrograph(mname));
+				if(hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+				
+			}
+			md.destroy();
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 	
+	public void saveConfig() {
+		try {
+			MetaData md;
+			String file = configfile;
+			md = new MetaData();
+			long id = md.addObject();
+			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
+			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
+			md.write(file);
+			md.destroy();
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 }

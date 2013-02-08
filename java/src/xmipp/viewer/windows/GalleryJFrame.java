@@ -41,15 +41,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.ArrayList;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -60,11 +59,12 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import xmipp.utils.XmippFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
@@ -75,17 +75,13 @@ import javax.swing.LookAndFeel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageJ;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -93,13 +89,14 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
+import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.RowHeaderRenderer;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.ctf.iCTFGUI;
@@ -109,7 +106,6 @@ import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTableModel;
-import xmipp.viewer.windows.ClassesJDialog;
 
 public class GalleryJFrame extends JFrame implements iCTFGUI
 {
@@ -778,7 +774,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void fsc() throws Exception
 	{
-		JFrameFSC frame = new JFrameFSC(data);
+		FSCJFrame frame = new FSCJFrame(data);
 		XmippWindowUtil.centerWindows(frame, this);
 		frame.setVisible(true);
 	}
@@ -1906,6 +1902,30 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		reloadMd(changed);
 		createCombos();
 		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
+	}
+	
+	
+	protected void initAxisButtonMenu()
+	{
+		//Create the popup menu.
+        final JPopupMenu popup = new JPopupMenu();
+        popup.add(new JMenuItem(new AbstractAction("Option 1") {
+            public void actionPerformed(ActionEvent e) {
+            }
+        }));
+        popup.add(new JMenuItem(new AbstractAction("Option 2") {
+            public void actionPerformed(ActionEvent e) {
+            }
+        }));
+
+        final JButton button = new JButton("Options");
+        button.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                popup.show(e.getComponent(), e.getX(), e.getY());
+            }
+        });
+        toolBar.add(button);
+
 	}
 
 }// class JFrameGallery

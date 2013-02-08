@@ -1,5 +1,8 @@
 package xmipp.viewer.particlepicker;
 
+import ij.ImagePlus;
+import ij.ImageStack;
+
 import java.awt.Color;
 import java.lang.reflect.Field;
 
@@ -50,20 +53,22 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
-		if(templates != null)
+		if(templates == null)
+			setTemplatesNumber(1);
+		else
 			try
 			{
 				templatesNumber = ((int)templates.getNDim());
 				this.templates = templates;
-				//XmippImageConverter.readToImagePlus(templates);//temporarily to avoid error
+				for(int i = 0; i < templatesNumber; i ++)//to initialize templates on c part
+					getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
 			}
 			catch (Exception e)
 			{
 				e.printStackTrace();
 				throw new IllegalArgumentException();
 			}
-		else
-			setTemplatesNumber(1);
+		
 		
 	}
 	
@@ -99,6 +104,18 @@ public class Family {
 
 	public ImageGeneric getTemplates() {
 		return templates;
+	}
+	
+	public ImagePlus getTemplatesImage(long i) {
+		try
+		{
+			ImagePlus imp = XmippImageConverter.readToImagePlus(templates, i);
+			return imp;
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 
