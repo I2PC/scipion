@@ -17,6 +17,7 @@
   <micrograph fileName="mic0017.mrc" index="1">
     <acceleratingVoltage unit="kV">100</acceleratingVoltage>
     <activeFlag>1</activeFlag>
+    <cs>2.2</cs>
     <pixelSpacing>
       <X unit="A/px">5.0</X>
       <Y unit="A/px">6.0</Y>
@@ -25,6 +26,7 @@
   <micrograph fileName="mic0018.mrc" index="100">
     <acceleratingVoltage unit="kV">101</acceleratingVoltage>
     <activeFlag>1</activeFlag>
+    <cs>2.2</cs>
     <pixelSpacing>
       <X unit="A/px">5.5</X>
       <Y unit="A/px">6.6</Y>

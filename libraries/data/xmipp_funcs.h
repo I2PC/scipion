@@ -408,13 +408,6 @@ void initConstant(std::vector<T> &V, T &value)
     for(size_t n=0; n<nmax; ++n, ++ptr)
     	*ptr=value;
 }
-
-/** Compute the logarithm in base 2
- */
-// Does not work with xlc compiler
-#ifndef __xlC__
-double log2(double value);
-#endif
 //@}
 
 /// @name Complex functions

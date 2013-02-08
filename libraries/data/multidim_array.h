@@ -1570,23 +1570,24 @@ public:
         // Copy needed elements, fill with 0 if necessary
         if (copy)
         {
+        	T zero=0; // Very useful for complex matrices
+            T *val=NULL;
             for (size_t l = 0; l < Ndim; l++)
                 for (int k = 0; k < Zdim; k++)
                     for (int i = 0; i < Ydim; i++)
                         for (int j = 0; j < Xdim; j++)
                         {
-                            T val;
                             if (l >= NSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else if (k >= ZSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else if (i >= YSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else if (j >= XSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else
-                                val = DIRECT_NZYX_ELEM(*this, l, k, i, j);
-                            new_data[l*ZYXdim + k*YXdim+i*Xdim+j] = val;
+                                val = &DIRECT_NZYX_ELEM(*this, l, k, i, j);
+                            new_data[l*ZYXdim + k*YXdim+i*Xdim+j] = *val;
                         }
         }
 

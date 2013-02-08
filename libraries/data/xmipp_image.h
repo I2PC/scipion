@@ -1126,10 +1126,16 @@ private:
         selectImgOffset = offset + IMG_INDEX(select_img) * (pagesize + pad);
 
         // Flag to know that data is not going to be mapped although mmapOn is true
-        if (mmapOnRead && !checkMmapT(datatype))
+        if (mmapOnRead && (!checkMmapT(datatype) || swap > 0))
         {
-            reportWarning("Image::readData: File datatype and image declaration not "
-                          "compatible with mmap. Loading into memory.");
+            String warnMessage;
+            if (swap > 0)
+                reportWarning("Image::readData: File endianess is swapped and not "
+                              "compatible with mmap. Loading into memory.");
+            else
+                reportWarning("Image::readData: File datatype and image declaration not "
+                              "compatible with mmap. Loading into memory.");
+
             mmapOnRead = false;
             mFd = -1;
         }

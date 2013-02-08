@@ -74,11 +74,6 @@ void ProgSortByStatistics::defineParams()
 void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 {
     //#define DEBUG
-    //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
-    //String name1 = "000006@Images/Extracted/run_001/extra/KLH_Dataset_I_Training_0003.stk";
-    //String name2 = "000005@Images/Extracted/run_001/extra/KLH_Dataset_I_Blind_Test_0049.stk";
-    //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
-
     pcaAnalyzer[5];
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
     PCAMahalanobisAnalyzer tempPcaAnalyzer1;
@@ -233,7 +228,11 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
 #ifdef DEBUG
 
-            //std::cout << img.name() << std::endl;
+            //String name = "000005@Images/Extracted/run_002/extra/BPV_1386.stk";
+            String name = "000010@Images/Extracted/run_001/extra/KLH_Dataset_I_Training_0028.stk";
+            //String name = "001160@Images/Extracted/run_001/DefaultFamily5";
+
+            std::cout << img.name() << std::endl;
 
             if (img.name()==name2)
             {
@@ -662,9 +661,14 @@ void ProgSortByStatistics::run()
         fh_zind.close();
     if (!fn_out.empty())
     {
+    	MetaData SFsorted;
+    	SFsorted.sort(SFout,MDL_ZSCORE);
         SFout.write(fn_out,MD_OVERWRITE);
     }
     if (addToInput)
-        SF.write(fn,MD_APPEND);
-
+    {
+    	MetaData SFsorted;
+    	SFsorted.sort(SF,MDL_ZSCORE);
+        SFsorted.write(fn,MD_APPEND);
+    }
 }

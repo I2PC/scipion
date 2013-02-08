@@ -1138,6 +1138,12 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode=="try" || mode=="autoselect")
     {
+    	if (mode=="autoselect")
+    	{
+    		MetaData MD;
+    		MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
+    		MD.getValue( MDL_PICKING_AUTOPICKPERCENT,autoPicking->proc_prec,MD.firstObject());
+    	}
         autoPicking->micrographStack.read(fnFilterBank, DATA);
         // Read the PCA Model
         Image<double> II;
