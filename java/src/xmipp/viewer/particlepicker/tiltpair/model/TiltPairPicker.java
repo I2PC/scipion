@@ -308,10 +308,34 @@ public class TiltPairPicker extends ParticlePicker {
 		
 	}
 
-	public void saveConfig()
-	{
-		try
-		{
+	
+
+	public void loadConfig() {
+		String file = configfile;
+		if (!new File(file).exists()) {
+			setMicrograph(getMicrographs().get(0));
+			return;
+
+		}
+
+		String mname;
+		try {
+			MetaData md = new MetaData(file);
+			for (long id : md.findObjects()) {
+				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				setMicrograph(getMicrograph(mname));
+			}
+			md.destroy();
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
+
+	
+	public void saveConfig() {
+		try {
 			MetaData md;
 			String file = configfile;
 			md = new MetaData();
@@ -320,42 +344,11 @@ public class TiltPairPicker extends ParticlePicker {
 			md.write(file);
 			md.destroy();
 
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-
-	public void loadConfig()
-	{
-		String file = configfile;
-		if (!new File(file).exists())
-		{
-			setMicrograph(getMicrographs().get(0));
-			return;
-		}
-
-		String mname;
-		try
-		{
-			MetaData md = new MetaData(file);
-			for (long id : md.findObjects())
-			{
-
-				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
-				setMicrograph(getMicrograph(mname));
-			}
-			md.destroy();
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
-	}
-
 	
 
 

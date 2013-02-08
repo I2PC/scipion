@@ -84,8 +84,9 @@ public abstract class ParticlePicker
 		loadConfig();
 	}
 	
-	public int getSize()
-	{
+
+	
+	public int getSize() {
 		return family.getSize();
 	}
 
@@ -465,9 +466,13 @@ public abstract class ParticlePicker
 
 
 
+
 	public abstract void saveConfig();
 
 	public abstract void loadConfig();
+
+
+	
 	
 
 	void removeFilter(String filter)

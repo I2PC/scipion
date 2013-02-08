@@ -42,6 +42,9 @@ public abstract class TrainingPicker extends ParticlePicker
 			return FamilyState.Manual;
 		return null;
 	}
+	
+	
+	
 
 	public void saveConfig()
 	{
@@ -863,8 +866,10 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		updateTemplates(family);
 		
+
 	}
 	
+
 
 	public void addParticleToTemplates(TrainingParticle particle, boolean center)
 	{
