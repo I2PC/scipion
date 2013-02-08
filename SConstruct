@@ -45,9 +45,9 @@ else:
         for k, v in checking.items():
             print u'{0}: {1}'.format(k, v)
         ans = "y"
-        if 'quiet' in ARGUMENTS:
-            if ARGUMENTS['quiet'] == 'yes':
-                print "Quiet compilation selected, proceeding with the compilation."
+        if 'unattended' in ARGUMENTS:
+            if ARGUMENTS['unattended'] == 'yes':
+                print "Unattended compilation selected, proceeding with the compilation."
             else:
                 ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
         else:
