@@ -71,9 +71,8 @@ public class TemplatesJDialog extends JDialog {
 			//templates.write("templates.stk");
 			templatespn.removeAll();
 			ImagePlus template;
-			long length = templates.getNDim();
-			for (long i = ImageGeneric.FIRST_IMAGE; i < ImageGeneric.FIRST_IMAGE + length; i ++) {
-				template = frame.getFamily().getTemplatesImage(i);
+			for (int i = 0; i < frame.getFamily().getTemplatesNumber(); i ++) {
+				template = frame.getFamily().getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
 				templatespn.add(new ImageCanvas(template));
 
 			}

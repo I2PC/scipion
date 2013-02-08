@@ -21,7 +21,6 @@ public class Family {
 	private FamilyState state;
 	private int templatesNumber;
 	private ImageGeneric templates;
-	private ImagePlus templatesimp;
 
 	private static int sizemax = 1000;
 	private static Family dfamily = new Family("DefaultFamily", Color.green, sizemax/2, 1);
@@ -44,20 +43,22 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
-		if(templates != null)
+		if(templates == null)
+			setTemplatesNumber(1);
+		else
 			try
 			{
 				templatesNumber = ((int)templates.getNDim());
 				this.templates = templates;
-				
+				for(int i = 0; i < templatesNumber; i ++)//to initialize templates on c part
+					getTemplatesImage(ImageGeneric.FIRST_IMAGE + i);
 			}
 			catch (Exception e)
 			{
 				e.printStackTrace();
 				throw new IllegalArgumentException();
 			}
-		else
-			setTemplatesNumber(1);
+		
 		
 	}
 	
@@ -109,7 +110,7 @@ public class Family {
 		}
 		catch (Exception e)
 		{
-			return null;
+			throw new IllegalArgumentException(e);
 		}
 	}
 
