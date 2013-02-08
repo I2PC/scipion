@@ -894,24 +894,25 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		canvas.display();
 	}
 
-	public void importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
-
+		String result = "";
 		if (ppicker.isReviewFile(file))
 		{
-			ppicker.importAllParticles(file, scale, invertx, inverty);
+			result = ppicker.importAllParticles(file, scale, invertx, inverty);
 			ppicker.saveData();
 		}
 		else
-			importMicrographParticles(format, file, scale, invertx, inverty);
+			result = importMicrographParticles(format, file, scale, invertx, inverty);
 		setChanged(false);
 		getCanvas().repaint();
 		updateMicrographsModel();
 		updateSize(family.getSize());
 		canvas.refreshActive(null);
+		return result;
 	}
 
-	public void importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
+	public String importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
 
 		String filename = Micrograph.getName(file, 1);
@@ -923,24 +924,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
 			int result = JOptionPane.showConfirmDialog(this, msg);
 			if (result != JOptionPane.YES_OPTION)
-				return;
+				return null;
 		}
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
-		ppicker.importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
+		String result = ppicker.importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
 		ppicker.saveData(getMicrograph());
-
+		return result;
 	}
 
-	@Override
-	public boolean isValidSize(int size)
-	{
-
-		for (TrainingParticle p : getFamilyData().getParticles())
-			if (!ppicker.getMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
-		return true;
-	}
+	
 
 	@Override
 	protected void openHelpURl()

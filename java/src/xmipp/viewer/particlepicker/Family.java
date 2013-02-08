@@ -22,8 +22,8 @@ public class Family {
 	private int templatesNumber;
 	private ImageGeneric templates;
 
-	private static int sizemax = 1000;
-	private static Family dfamily = new Family("DefaultFamily", Color.green, sizemax/2, 1);
+	private static int sizemax = 800;
+	private static Family dfamily = new Family("DefaultFamily", Color.green, sizemax/4, 1);
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
 			Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW };
 	private static int nextcolor;

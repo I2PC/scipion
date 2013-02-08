@@ -433,7 +433,7 @@ public abstract class ParticlePicker {
 	public abstract String getImportMicrographName(String path, String filename, Format f);
 
 	/** Return the number of particles imported */
-	public abstract int importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty);
+	public abstract String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty);
 
 	/** Return the number of particles imported from a file */
 	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty) {
@@ -545,4 +545,5 @@ public abstract class ParticlePicker {
 		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
 	}
 
+	public abstract boolean isValidSize(int size);
 }

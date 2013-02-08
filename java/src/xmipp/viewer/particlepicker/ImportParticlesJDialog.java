@@ -13,6 +13,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -147,6 +148,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 	}//function existsSelectedPaths
 
 	protected void importParticles() {
+		String result = null;
 		path = sourcetf.getText().trim();
 
 		if (path == null || path.equals(""))
@@ -155,10 +157,12 @@ public class ImportParticlesJDialog extends XmippDialog {
 			showError(XmippMessage.getPathNotExistsMsg(path));
 		else {			
 			if (new File(path).isDirectory()) 
-				parent.importParticlesFromFolder(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+				result = parent.importParticlesFromFolder(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 			else //only can choose file if TrainingPickerJFrame instance
-				((TrainingPickerJFrame)parent).importParticlesFromFile(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+				result = ((TrainingPickerJFrame)parent).importParticlesFromFile(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		}
+		if(result != null && !result.isEmpty())
+			JOptionPane.showMessageDialog(this, result);
 	}
 	
 	
