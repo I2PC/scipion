@@ -417,6 +417,8 @@ void ProgSortByStatistics::run()
     // Process input selfile ..............................................
     SF.read(fn);
     SF.removeDisabled();
+    MetaData SF2 = SF;
+    SF = SF2;
 
     if (fn_train != "")
         SFtrain.read(fn_train);
@@ -506,6 +508,7 @@ void ProgSortByStatistics::run()
 
     MultidimArray<int> sorted;
     finalZscore.indexSort(sorted);
+
     int nr_imgs = SF.size();
     bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
     MDRow row;

@@ -262,6 +262,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
         double norm=sqrt(PCAbasis[ii].sum2());
         PCAbasis[ii]/=norm;
     }
+
 }
 
 /** computes the orthonormal basis for a subspace
