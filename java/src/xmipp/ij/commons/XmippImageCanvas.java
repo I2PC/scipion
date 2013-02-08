@@ -146,10 +146,14 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	
 	private void adjustSize()
 	{
+		int min = 160;
 		int width = (int) getSize().getWidth();
-		if(width < 160)//to make menu visible always
-			width = 160;
 		int height = (int) getSize().getHeight();
+		if(width < min)//to make menu visible always
+			width = min;
+		if(height < min)
+			height = min;
+		
 		setDrawingSize(width, height);
 	}
 

@@ -126,8 +126,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				else if (SwingUtilities.isLeftMouseButton(e))
 					refreshActive(p);
 			}
-			else if (SwingUtilities.isLeftMouseButton(e) && um.fits(x, y, frame.getParticleSize()))
-				addParticle(x, y);
+			else if (SwingUtilities.isLeftMouseButton(e))
+			{
+				if( um.fits(x, y, frame.getParticleSize()))
+					addParticle(x, y);
+				else
+					JOptionPane.showMessageDialog(this, XmippMessage.getOutOfBoundsMsg(String.format("Particle centered at %s, %s with size %s", x, y, frame.getFamily().getSize())));
+			}
 		}
 	}
 
@@ -244,13 +249,13 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		try
 		{
 			Particle tp = um.getAlignerTiltedParticle(x, y);
-			if (!um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getFamily().getSize()))
+			if (um.getAddedCount() > UntiltedMicrograph.getAlignmentMin() && !um.getTiltedMicrograph().fits(tp.getX(), tp.getY(), pppicker.getFamily().getSize()))
 				throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("Tilted Pair Coordinates"));
 			UntiltedParticle p = new UntiltedParticle(x, y, um, pppicker.getFamily());
 
 			um.addParticle(p);
 
-			if (um.getAddedCount() >= 4)
+			if (um.getAddedCount() >= UntiltedMicrograph.getAlignmentMin())
 				um.setAlignerTiltedParticle(p);
 			refreshActive(p);
 			frame.updateMicrographsModel();

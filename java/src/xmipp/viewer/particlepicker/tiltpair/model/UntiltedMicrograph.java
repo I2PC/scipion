@@ -12,6 +12,7 @@ import xmipp.jni.TiltPairAligner;
 public class UntiltedMicrograph extends Micrograph
 {
 
+	private static int alignmentmin = 4;
 	private TiltedMicrograph tiltedmicrograph;
 	private List<UntiltedParticle> particles;
 	private TiltPairAligner tpa;
@@ -143,6 +144,11 @@ public class UntiltedMicrograph extends Micrograph
 		TiltedParticle tp = new TiltedParticle(p.getX(), p.getY(), up);
 		getTiltedMicrograph().addParticle(tp);
 		up.setTiltedParticle(tp);
+	}
+
+	public static int getAlignmentMin()
+	{
+		return alignmentmin ;
 	}
 
 }
