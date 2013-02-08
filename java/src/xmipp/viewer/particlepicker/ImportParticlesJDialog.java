@@ -13,6 +13,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -138,8 +139,12 @@ public class ImportParticlesJDialog extends XmippDialog {
 				showError(XmippMessage.getEmptyFieldMsg("source"));
 			else if (!existsSelectedPath())
 				showError(XmippMessage.getPathNotExistsMsg(path));
-			else			
-				parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+			else
+			{
+				String result = parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+				if(result != null && !result.isEmpty())
+					JOptionPane.showMessageDialog(this, result);
+			}
 		} catch (Exception e) {
 			XmippDialog.showException(parent, e);
 		}
@@ -152,6 +157,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 			return Filename.exists(path);
 		
 	}//function existsSelectedPaths
+
 	
 	
 

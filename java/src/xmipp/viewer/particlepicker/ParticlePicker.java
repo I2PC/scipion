@@ -511,7 +511,7 @@ public abstract class ParticlePicker
 			return Format.Eman;
 		return Format.Unknown;
 	}
-	
+
 	/** Return the number of particles imported from a file */
 	public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty)
 	{
@@ -636,4 +636,5 @@ public abstract class ParticlePicker
 
 
 
+	public abstract boolean isValidSize(int size);
 }

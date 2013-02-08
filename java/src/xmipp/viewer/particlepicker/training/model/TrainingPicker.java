@@ -527,6 +527,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
+
+
 	public void importAllParticles(String file)
 	{// Expected a file for all
 		// micrographs
@@ -558,7 +560,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}// function importAllParticles
 
-	public void importAllParticles(String file, float scale, boolean invertx, boolean inverty)
+	public String importAllParticles(String file, float scale, boolean invertx, boolean inverty)
 	{// Expected a file for all
 		// micrographs
 		try
@@ -596,6 +598,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
+		return null;
 
 	}// function importAllParticles
 
@@ -603,7 +606,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	 * Import particles from md, all method to import from files should create
 	 * an md and call this function
 	 */
-	public int importParticlesFromMd(Micrograph m, MetaData md)
+	public String importParticlesFromMd(Micrograph m, MetaData md)
 	{
 
 		m.reset();
@@ -612,7 +615,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		int x, y;
 		double cost;
 		boolean hasCost = md.containsLabel(MDLabel.MDL_COST);
-		int particles = 0;
+		String result = "";
 		int size = family.getSize();
 
 		for (long id : ids)
@@ -622,7 +625,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			if (!m.fits(x, y, size))// ignore out of
 			// bounds particle
 			{
-				System.out.println(XmippMessage.getOutOfBoundsMsg("Particle") + String.format(" on x:%s y:%s", x, y));
+				result += XmippMessage.getOutOfBoundsMsg("Particle") + String.format(" on x:%s y:%s", x, y);
 				continue;
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
@@ -630,9 +633,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost));
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
-			++particles;
 		}
-		return particles;
+		return result;
 	}// function importParticlesFromMd
 
 	public void removeFamily(Family family)
@@ -874,6 +876,15 @@ public abstract class TrainingPicker extends ParticlePicker
 	public void addParticleToTemplates(TrainingParticle particle, boolean center)
 	{
 		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
+	}
+	
+	@Override
+	public boolean isValidSize(int size)
+	{
+		for (TrainingParticle p : getFamilyData().getParticles())
+			if (!getMicrograph().fits(p.getX(), p.getY(), size))
+				return false;
+		return true;
 	}
 
 
