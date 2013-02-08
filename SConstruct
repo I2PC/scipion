@@ -44,7 +44,14 @@ else:
         print 'Some dependencies unsatisfied, please check the following list and install them all:'
         for k, v in checking.items():
             print u'{0}: {1}'.format(k, v)
-        ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        ans = "y"
+        if 'quiet' in ARGUMENTS:
+            if ARGUMENTS['quiet'] == 'yes':
+                print "Quiet compilation selected, proceeding with the compilation."
+            else:
+                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        else:
+            ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
         if ans == "n" or ans == "N":
             print "Aborting!"
             Exit(1)
