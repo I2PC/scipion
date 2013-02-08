@@ -229,7 +229,8 @@ public class ImageGeneric {
     		int select_slice, long select_image) throws Exception;
     
 
-    public native Particle alignImage(ImageGeneric img) throws Exception;
+    public native Particle alignImage(ImageGeneric img, boolean update) throws Exception;
+
 
     //Check if two images have same values to some accuracy
     public native boolean equal(ImageGeneric img, double accuracy) throws Exception;
