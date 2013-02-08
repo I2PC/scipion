@@ -6,8 +6,6 @@ package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.WindowManager;
-import ij.io.SaveDialog;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
@@ -19,17 +17,14 @@ import java.awt.MenuItem;
 import java.awt.MenuShortcut;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 
 import javax.swing.JOptionPane;
-import javax.swing.KeyStroke;
 import javax.vecmath.Color3f;
 
-import xmipp.jni.Filename;
 import xmipp.utils.XmippFileChooser;
 
 /**

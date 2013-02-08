@@ -852,6 +852,53 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
+	public void loadConfig() {
+		String file = configfile;
+		if (!new File(file).exists()) {
+			family = families.get(0);
+			setMicrograph(getMicrographs().get(0));
+			return;
+
+		}
+
+		String mname, fname;
+		try {
+			MetaData md = new MetaData(file);
+			boolean hasautopercent = md.containsLabel(MDLabel.MDL_PICKING_AUTOPICKPERCENT);
+			for (long id : md.findObjects()) {
+
+				fname = md.getValueString(MDLabel.MDL_PICKING_FAMILY, id);
+				family = getFamily(fname);
+				
+				mname = md.getValueString(MDLabel.MDL_MICROGRAPH, id);
+				setMicrograph(getMicrograph(mname));
+				if(hasautopercent)
+					autopickpercent = md.getValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, id);
+				
+			}
+			md.destroy();
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 	
+	public void saveConfig() {
+		try {
+			MetaData md;
+			String file = configfile;
+			md = new MetaData();
+			long id = md.addObject();
+			md.setValueString(MDLabel.MDL_PICKING_FAMILY, family.getName(), id);
+			md.setValueString(MDLabel.MDL_MICROGRAPH, getMicrograph().getName(), id);
+			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
+			md.write(file);
+			md.destroy();
+
+		} catch (Exception e) {
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 }

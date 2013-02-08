@@ -143,8 +143,8 @@ public class AddFamilyJDialog extends JDialog implements ActionListener {
 		sizesl.setPaintLabels(true);
 		sizepn.add(sizesl);
 		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
-		;
-		sizetf.setText(Integer.toString(size));
+		
+		sizetf.setValue(size);
 		sizepn.add(sizetf);
 		sizetf.addActionListener(new ActionListener() {
 

@@ -168,7 +168,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		// Setting color
-		initColorPane();
+		initColorPane(pppicker.getFamily().getColor());
 		fieldspn.add(colorbt);
 
 		// Setting slider

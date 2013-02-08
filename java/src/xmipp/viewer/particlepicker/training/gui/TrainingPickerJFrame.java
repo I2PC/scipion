@@ -278,7 +278,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(familiescb);
 
 		// Setting color
-		initColorPane();
+		initColorPane(family.getColor());
 		fieldspn.add(colorpn);
 
 		// Setting slider
