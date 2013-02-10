@@ -1,7 +1,7 @@
 '''
 /***************************************************************************
  * Authors:     RobertoMarabini (roberto@cnb.csic.es)
- *
+ *              Jose Miguel de la Rosa
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -111,11 +111,17 @@ class EmxXmlWriter (EmxWriter):
         same PK. We may need to specialize or use dictPrimaryKeys
         in the future
         '''
-        entity.set(FILENAME, object.get(FILENAME))
+        fileName = object.get(FILENAME)
+        if not fileName is None:
+            entity.set(FILENAME, str(fileName))
+
         index = object.get(INDEX)
         if not index is None:
             entity.set(INDEX, str(index))
-        
+
+        if fileName is None and index is None:
+            raise Exception("writeObjectPK: No fileName or index provided" )
+
     def writeObject(self, object):
         #primary key
         entity = ET.SubElement(self.root, object.name)

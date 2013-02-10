@@ -1,7 +1,7 @@
 '''
 /***************************************************************************
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
- *              Jose Miguel 
+ *              Jose Miguel de la Rosa
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -100,7 +100,6 @@ emxDataTypes={
               ,'defocusV':EmxLabel(float,'nm')
               ,'defocusUAngle':EmxLabel(float,'deg')
               ,'fom':EmxLabel(float)
-              ,INDEX:EmxLabel(int)
               ,'pixelSpacing__X':EmxLabel(float,'A/px')
               ,'pixelSpacing__Y':EmxLabel(float,'A/px')
               ,'pixelSpacing__Z':EmxLabel(float,'A/px')
@@ -140,7 +139,6 @@ class EmxObject:
     
     def pprint_pk(self, printNone=False):
         '''Print primary keys
-        '''
         out = "fileName: %(fileName)s"
         if (self.get(INDEX) != None) or printNone:
             out += " (index=%(index)s)"
@@ -148,7 +146,6 @@ class EmxObject:
         
     def pprint_od(self, printNone=False):
         '''print ordered dictionaries, default routine is ugly.
-        INPUT: ordered dictionary
         '''
         #primary key
         out = "\nObject type: %s\n"% self.name
@@ -203,12 +200,12 @@ class EmxObject:
 
     def iterAttributes(self):
         '''Returns list with valid keys (attribute names) 
-           for this class. Primary keys are ignored'''
+           and values for this class. Primary keys are ignored'''
         return self.dictAttributes.iteritems()
 
     def iterPrimaryKeys(self):
         '''Returns list with valid primary keys (attribute names) 
-        for this class'''
+        and values for this class'''
         return self.dictPrimaryKeys.iteritems()
 
     def __eq__(self, other):
@@ -231,7 +228,7 @@ class EmxMicrograph(EmxObject):
     def __init__(self,fileName,index=None,activeFlag=1):
         #init emx object
         EmxObject.__init__(self,MICROGRAPH)
-        #define primary keys
+        #define primary keys. At least one of this must be different from None
         self._initPrimaryKey_(FILENAME,fileName)
         self._initPrimaryKey_(INDEX, index)
         #define rest of attributes
@@ -249,13 +246,13 @@ class EmxMicrograph(EmxObject):
 class EmxParticle(EmxObject):
     '''Class for Particles
     '''    
-    def __init__(self,fileName,index=1,micrograph=None,activeFlag=1):
+    def __init__(self,fileName,index=None,micrograph=None,activeFlag=1):
         #init emx object
         EmxObject.__init__(self,PARTICLE)
         #define primary keys
         self._initPrimaryKey_(FILENAME, fileName)
         self._initPrimaryKey_(INDEX, index) # Index of an image in a multi-image 
-                                                     # file. Defaults to 1 if omitted.'''
+                                            # file. Defaults to 1 if omitted.'''
         #define foreign keys
         self.setMicrograph(micrograph)
         #define rest of attributes
@@ -282,11 +279,11 @@ class EmxData():
        No file format information here
     '''    
     def __init__(self):
-        self.version = 1.0
-        self.listParticles = []
+        self.version         = 1.0
+        self.listParticles   = []
         self.listMicrographs = []
-        self.dictLists = {MICROGRAPH: self.listMicrographs, 
-                          PARTICLE: self.listParticles}
+        self.dictLists = {MICROGRAPH : self.listMicrographs, 
+                          PARTICLE   : self.listParticles}
     
     def __eq__(self,other):
         ''' equality operator'''
@@ -309,11 +306,22 @@ class EmxData():
         self.listParticles.append(object)
     
     def findObject(self, objList, **objPK):
+        ''' given a primary key find corresponding object'''
         for obj in objList:
             if obj.comparePK(**objPK):
                 return obj
         return None
 
+    def findObjectType(self,fileName):
+        '''given a binary filename find kind of object associated to it.
+        That is, a binary file may containt only micrographs or 
+        only particles'''
+        for k, objList in self.dictLists.iteritems():
+            for obj in objList:
+                if  obj.dictPrimaryKeys[FILENAME] == fileName:
+                    return k
+        return None
+    
     def __str__(self):
         ''' print operator'''
         str = 'MICROGRAPH\n '
