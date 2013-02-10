@@ -12,7 +12,9 @@ if platform.system() == 'Windows':
 else:
     env = Environment(ENV=os.environ,
           tools=['default', 'disttar'],
-          toolpath=['external/scons/ToolsFromWiki'])
+	  toolpath=['external/scons/ToolsFromWiki'])
+    env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
+    env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
     conf = Configure(env)
     checking = {}
     #found = False
@@ -44,7 +46,14 @@ else:
         print 'Some dependencies unsatisfied, please check the following list and install them all:'
         for k, v in checking.items():
             print u'{0}: {1}'.format(k, v)
-        ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        ans = "y"
+        if 'unattended' in ARGUMENTS:
+            if ARGUMENTS['unattended'] == 'yes':
+                print "Unattended compilation selected, proceeding with the compilation."
+            else:
+                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        else:
+            ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
         if ans == "n" or ans == "N":
             print "Aborting!"
             Exit(1)
