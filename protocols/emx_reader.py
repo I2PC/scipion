@@ -1,7 +1,7 @@
 '''
 /***************************************************************************
  * Authors:     RobertoMarabini (roberto@cnb.csic.es)
- *
+ *              Jose Miguel de la Rosa
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -78,12 +78,18 @@ class EmxXmlReader (EmxReader):
         same PK. We may need to specialize or use dictPrimaryKeys
         in the future
         '''
+
         fileName = branch.get(FILENAME)
-        if fileName is None:
-            raise Exception("readObjectPK: No fileName" )
+        if not fileName is None:
+            fileName    = emxDataTypes[FILENAME].type (fileName)
+
         index = branch.get(INDEX)
         if not index is None:
             index    = emxDataTypes[INDEX].type (index)
+
+        if fileName is None and index is None:
+            raise Exception("readObjectPK: No fileName or index provided" )
+
         return {FILENAME:fileName, INDEX:index}
         
     def setObjectFK(self, branch, object):
