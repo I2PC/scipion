@@ -115,32 +115,32 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     {
     case DT_UChar:
         IUChar = new (Image<unsigned char> );
-        result = IUChar->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IUChar->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case DT_UShort:
         IUShort = new (Image<unsigned short> );
-        result = IUShort->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IUShort->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUShort->data, stdevFilter);
         break;
     case DT_Short:
         IShort = new (Image<short> );
-        result = IShort->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IShort->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IShort->data, stdevFilter);
         break;
     case DT_Int:
         IInt = new (Image<int> );
-        result = IInt->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IInt->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IInt->data, stdevFilter);
         break;
     case DT_UInt:
         IUInt = new (Image<unsigned int> );
-        result = IUInt->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IUInt->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case DT_Float:
         IFloat = new (Image<float> );
-        result = IFloat->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IFloat->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IFloat->data, stdevFilter);
         break;
     default:

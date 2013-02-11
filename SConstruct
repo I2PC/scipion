@@ -12,7 +12,52 @@ if platform.system() == 'Windows':
 else:
     env = Environment(ENV=os.environ,
           tools=['default', 'disttar'],
-          toolpath=['external/scons/ToolsFromWiki'])
+	  toolpath=['external/scons/ToolsFromWiki'])
+    env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
+    env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
+    conf = Configure(env)
+    checking = {}
+    #found = False
+    #mpipaths = ['openmpi/mpi.h']
+    #for trylib in mpipaths:
+    #    if conf.CheckLibWithHeader('mpi', trylib, 'cxx'):
+    #        found = True
+    #if found == False:
+    #    checking['mpi'] = "not found"
+    #else:
+    #    found = False
+    if not conf.CheckLib('mpi', None, None, 'cxx'):
+        checking['mpi'] = "not found"
+    if not conf.CheckLib('freetype', None, None, 'cxx'):
+        checking['freetype'] = "not found"
+    if not conf.CheckLib('X11', None, None, 'cxx'):
+        checking['X11'] = "not found"
+    if not conf.CheckLib('png', None, None, 'cxx'): 
+        checking['png'] = "not found"
+    if not conf.CheckLib('ncurses', None, None, 'cxx'): 
+        checking['ncurses'] = "not found"
+    if not conf.CheckLib('ssl', None, None, 'cxx'): 
+        checking['ssl'] = "not found"
+    if not conf.CheckLib('readline', None, None, 'cxx'): 
+        checking['readline'] = "not found"
+    if checking == {}:
+        print 'All dependencies satisfied, proceeding with compilation'
+    else:
+        print 'Some dependencies unsatisfied, please check the following list and install them all:'
+        for k, v in checking.items():
+            print u'{0}: {1}'.format(k, v)
+        ans = "y"
+        if 'unattended' in ARGUMENTS:
+            if ARGUMENTS['unattended'] == 'yes':
+                print "Unattended compilation selected, proceeding with the compilation."
+            else:
+                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        else:
+            ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        if ans == "n" or ans == "N":
+            print "Aborting!"
+            Exit(1)
+    env = conf.Finish()
 
 # avoid cruft in top dir
 base_dir = 'build'

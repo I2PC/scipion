@@ -803,7 +803,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
 }
 
 JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
-(JNIEnv * env, jobject jobj, jobject jimg)
+(JNIEnv * env, jobject jobj, jobject jimg, jboolean jupdate)
 {
     XMIPP_JAVA_TRY
     {
@@ -842,10 +842,13 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
                 alignedI=tmpI;
             }
         }
-        T.aliasImageInStack(*Tp,maxIndex);
-        T+=alignedI;
-        centerImage(T, aux2, aux3, 3);
-
+        bool update = jupdate;
+        if(update)
+        {
+			T.aliasImageInStack(*Tp,maxIndex);
+			T+=alignedI;
+			centerImage(T, aux2, aux3, 3);
+        }
         int x = MAT_ELEM(M, 0, 2);
         int y = MAT_ELEM(M, 1, 2);
 
