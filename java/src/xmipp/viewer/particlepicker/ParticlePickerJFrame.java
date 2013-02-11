@@ -28,6 +28,8 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -211,26 +213,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 
-		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
-		filemn.add(exportmi);
-		exportmi.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				XmippFileChooser fc = new XmippFileChooser();
-				int returnVal = fc.showOpenDialog(ParticlePickerJFrame.this);
-
-				try {
-					if (returnVal == XmippFileChooser.APPROVE_OPTION) {
-						File file = fc.getSelectedFile();
-						getParticlePicker().exportParticles(file.getAbsolutePath());
-						showMessage("Export successful");
-					}
-				} catch (Exception ex) {
-					showException(ex);
-				}
-			}
-		});
+		
 		exitmi = new JMenuItem("Exit");
 		exitmi.addActionListener(new ActionListener() {
 
@@ -383,6 +366,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return getParticlePicker().getFamily();
 	}
 
+	
+	public abstract ParticlesJDialog initParticlesJDialog();
+	
+	
 	public abstract ParticlePickerCanvas getCanvas();
 
 	public void loadParticles() {
@@ -429,6 +416,49 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (SwingUtilities.isRightMouseButton(e)) return false;
 		if (getParticlePicker().getMode() == FamilyState.ReadOnly) return false;
 		return true;
+	}
+
+	
+	
+	public boolean isPickingAvailable() {
+		if (getCanvas().getTool() != Tool.PICKER) return false;
+		if (getParticlePicker().getMode() == FamilyState.ReadOnly) return false;
+		return true;
+	}
+	
+	public class ColorActionListener implements ActionListener
+	{
+		JColorChooser colorChooser;
+
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			// Set up the dialog that the button brings up.
+			colorChooser = new JColorChooser();
+			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
+					colorChooser, new ActionListener()
+					{
+
+						@Override
+						public void actionPerformed(ActionEvent e)
+						{
+							updateColor(colorChooser.getColor());
+							getParticlePicker().setColor(colorChooser.getColor());
+						}
+					}, // OK button handler
+					null); // no CANCEL button handler
+			XmippWindowUtil.setLocation(0.5f, 0.5f, dialog);
+			dialog.setVisible(true);
+		}
+	}
+	
+	public void updateColor(Color color)
+	{
+		if(colorbt != null)
+			colorbt.setIcon(new ColorIcon(color));
+		getParticlePicker().setColor(color);
+		getCanvas().repaint();
+		getParticlePicker().saveFamilies();
 	}
 
 	protected void initImagePane() {
@@ -593,7 +623,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	
-
 	public void updateSize(int size) {
 
 		sizetf.setValue(size);
@@ -609,11 +638,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	/** Shortcut function to show messages */
-	private boolean showMessage(String message) {
+	public boolean showMessage(String message) {
 		return XmippDialog.showInfo(this, message);
 	}
 
-	private boolean showException(Exception e) {
+	public boolean showException(Exception e) {
 		return XmippDialog.showException(this, e);
 	}
 
@@ -625,15 +654,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	protected abstract void resetData();
 
-	public String importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
-	{
-		String result = getParticlePicker().importParticlesFromFolder(dir, format, scale, invertx, inverty);
-		saveChanges();
-		getCanvas().repaint();
-		updateMicrographsModel(true);
-		getCanvas().refreshActive(null);
-		return result;
-	}
+//	public String importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
+//	{
+//		String result = getParticlePicker().importParticlesFromFolder(dir, format, scale, invertx, inverty);
+//		saveChanges();
+//		getCanvas().repaint();
+//		updateMicrographsModel(true);
+//		getCanvas().refreshActive(null);
+//		return result;
+//	}
+	
+	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 
 	protected void showImportDialog() {
 		if (importpjd == null) importpjd = new ImportParticlesJDialog(ParticlePickerJFrame.this);

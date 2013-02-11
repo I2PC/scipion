@@ -9,6 +9,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.logging.Level;
@@ -36,6 +37,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import xmipp.utils.ColorIcon;
+import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
@@ -44,7 +46,9 @@ import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
+import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
+import xmipp.viewer.particlepicker.training.model.ManualParticlePicker;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyData;
 import xmipp.viewer.particlepicker.training.model.MicrographFamilyState;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
@@ -164,6 +168,37 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
+		
+		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
+
+		exportmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				XmippFileChooser fc = new XmippFileChooser();
+				int returnVal = fc.showOpenDialog(TrainingPickerJFrame.this);
+
+				try
+				{
+					if (returnVal == XmippFileChooser.APPROVE_OPTION)
+					{
+						File file = fc.getSelectedFile();
+						((TrainingPicker) getParticlePicker()).exportParticles(file.getAbsolutePath());
+						showMessage("Export successful");
+					}
+				}
+				catch (Exception ex)
+				{
+					showException(ex);
+				}
+			}
+		});
+		filemn.add(importffmi);
+		if (ppicker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
+		filemn.add(exportmi);
 
 		JMenu windowmn = new JMenu("Window");
 		JMenu helpmn = new JMenu("Help");
@@ -210,40 +245,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-		// try
-		// {
-		// canvas.setEnabled(false);
-		// XmippWindowUtil.blockGUI(this, "Generating Templates...");
-		//
-		// Thread t = new Thread(new Runnable()
-		// {
-		// public void run()
-		// {
-		// if (templatesdialog == null)
-		// templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-		// else
-		// {
-		//
-		// templatesdialog.loadTemplates(true);
-		// templatesdialog.setVisible(true);
-		// }
-		// canvas.setEnabled(true);
-		// XmippWindowUtil.releaseGUI(getRootPane());
-		// }
-		// });
-		// t.start();
-		//
-		// }
-		// catch (Exception e)
-		// {
-		// TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-		//
-		// if (templatesdialog != null)
-		// templatesdialog.close();
-		// templatesdialog = null;
-		// throw new IllegalArgumentException(e.getMessage());
-		// }
-
 		if (templatesdialog == null)
 			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
 		else
@@ -970,5 +971,30 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public boolean isCenterPick()
 	{
 		return centerpickchb.isSelected();
+	}
+	
+	@Override
+	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	{
+		String result = "";
+
+		if (new File(dir).isDirectory())
+		{
+			((ManualParticlePicker) ppicker).importParticlesFromFolder(dir, format, scale, invertx, inverty);
+			getCanvas().repaint();
+			updateMicrographsModel(true);
+			getCanvas().refreshActive(null);
+		}
+		else
+			// only can choose file if TrainingPickerJFrame instance
+			result = importParticlesFromFile(format, dir, scale, invertx, inverty);
+		return result;
+
+	}
+
+	@Override
+	public ParticlesJDialog initParticlesJDialog()
+	{
+		return new ParticlesJDialog(this);
 	}
 }
