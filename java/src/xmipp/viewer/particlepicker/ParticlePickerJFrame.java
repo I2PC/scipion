@@ -189,9 +189,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 		filemn.add(savemi);
 		importffmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
+		filemn.add(importffmi);
+		if (picker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
 		
-		importffmi.addActionListener(new ActionListener()
-		{
+		importffmi.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
@@ -657,9 +659,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	protected abstract void resetData();
-
-
-
 
 
 	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);

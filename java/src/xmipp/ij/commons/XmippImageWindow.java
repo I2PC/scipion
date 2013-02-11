@@ -65,8 +65,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);		
-		
-
+		((XmippImageCanvas)getCanvas()).loadData(this);
 
 	}
 	
