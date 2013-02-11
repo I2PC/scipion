@@ -141,8 +141,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			initMicrographsPane();
 			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
 
-			if (getFamily().getStep() != FamilyState.Manual)
-				importffmi.setEnabled(false);
+//			if (getFamily().getStep() != FamilyState.Manual)
+//				importffmi.setEnabled(false);
 
 			pack();
 			positionx = 0.9f;
