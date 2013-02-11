@@ -83,9 +83,8 @@ void ProgCommonLine::produceSideInfo()
     Nimg = SF.size();
 
 	// Compute the number of images in each block
-	int Ydim, Zdim;
-	size_t Ndim;
-	getImageSize(SF, Ydim, Xdim, Zdim, Ndim);
+	size_t Ydim, Zdim, Ndim;
+	getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
 	Nblock = FLOOR(sqrt(mem*pow(2.0,30.0)/(2*Ydim*(360/stepAng)*sizeof(double))));
 	Nblock = XMIPP_MIN(Nblock,CEIL(((float)Nimg)/Nmpi));
 
@@ -119,8 +118,7 @@ void * threadPrepareImages(void * args)
     ThreadPrepareImages * master = (ThreadPrepareImages *) args;
     ProgCommonLine * parent = master->parent;
     MetaData SFi = *(master->SFi);
-    int Ydim, Xdim, Zdim;
-    size_t Ndim;
+    size_t Ydim, Xdim, Zdim, Ndim;
     getImageSize(SFi, Xdim, Ydim, Zdim, Ndim);
 
     MultidimArray<int> mask;
@@ -149,7 +147,7 @@ void * threadPrepareImages(void * args)
     }
     Filter.raised_w = Filter.w1 / 3;
 
-	int i = 0;
+	int ii = 0;
 	bool first = true;
 	Image<double> I;
 	FileName fnImg;
@@ -160,7 +158,7 @@ void * threadPrepareImages(void * args)
 	MultidimArray<std::complex<double> > RTFourier;
 	FOR_ALL_OBJECTS_IN_METADATA(SFi)
 	{
-		if ((i + 1) % parent->Nthr == master->myThreadID) {
+		if ((ii + 1) % parent->Nthr == master->myThreadID) {
 			I.readApplyGeo(SFi, __iter.objId);
 			I().setXmippOrigin();
 			MultidimArray<double> &mI = I();
@@ -207,11 +205,12 @@ void * threadPrepareImages(void * args)
 				memcpy(&DIRECT_A2D_ELEM(RT,i,0),&(DIRECT_A1D_ELEM(linei,0)),XSIZE(linei)*sizeof(double));
 			}
 
-			(*(master->blockRTFs))[i] = RTFourier;
-			(*(master->blockRTs))[i] = RT;
+			(*(master->blockRTFs))[ii] = RTFourier;
+			(*(master->blockRTs))[ii] = RT;
 		}
-		i++;
+		ii++;
 	}
+	return NULL;
 }
 
 void ProgCommonLine::getAndPrepareBlock(int i,
@@ -274,7 +273,7 @@ void commonLineTwoImages(
 	MultidimArray<double> linei, linej;
 	MultidimArray<double> correlationFunction;
 	int jmax;
-	for (int ii = 0; ii < YSIZE(RTFi) / 2 + 1; ii++) {
+	for (size_t ii = 0; ii < YSIZE(RTFi) / 2 + 1; ii++) {
 		lineFi.aliasRow(RTFi,ii);
 		linei.aliasRow(RTi,ii);
 
@@ -350,6 +349,7 @@ void * threadCompareImages(void * args)
 			parent->CLmatrix[idx_ji].jmax = -parent->CLmatrix[idx_ij].jmax;
 		}
 	}
+	return NULL;
 }
 
 void ProgCommonLine::processBlock(int i, int j)
@@ -570,9 +570,7 @@ randomQuaternions(int k, DMatrix &quaternions)
     //quaternions.initRandom(0., 1.);
     saveMatrix("random_numbers.txt", quaternions);
 
-    double l2_norm;
     DVector q(4);
-    int s;
 
     for (int j = 0; j < k; ++j)
     {

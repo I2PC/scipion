@@ -85,13 +85,13 @@ void  ImageGeneric::copy(const ImageGeneric &img)
 
 }
 
-void ImageGeneric::getDimensions(int & Xdim, int & Ydim, int & Zdim) const
+void ImageGeneric::getDimensions(size_t & Xdim, size_t & Ydim, size_t & Zdim) const
 {
     size_t Ndim;
     image->getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
 
-void ImageGeneric::getDimensions(int & Xdim, int & Ydim, int & Zdim, size_t & Ndim) const
+void ImageGeneric::getDimensions(size_t & Xdim, size_t & Ydim, size_t & Zdim, size_t & Ndim) const
 {
     image->getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
@@ -225,13 +225,13 @@ int ImageGeneric::readOrReadMapped(const FileName &name, size_t select_img, int 
     }
 }
 
-int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)
+int ImageGeneric::readPreview(const FileName &name, size_t Xdim, size_t Ydim, int select_slice, size_t select_img)
 {
     setDatatype(name);
     return image->readPreview(name, Xdim, Ydim, select_slice, select_img);
 }
 
-int ImageGeneric::readOrReadPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img,
+int ImageGeneric::readOrReadPreview(const FileName &name, size_t Xdim, size_t Ydim, int select_slice, size_t select_img,
                                     bool mapData, bool wrap)
 {
     ImageInfo imInf;
@@ -376,7 +376,7 @@ void ImageGeneric::reslice(AxisView face, ImageGeneric &imgOut)
 
     int index;
 
-    for (int k = 0; k < aDimOut.zdim; k++)
+    for (size_t k = 0; k < aDimOut.zdim; k++)
     {
         imTemp.aliasSlice(MULTIDIM_ARRAY_GENERIC(imgOut), k);
         index = k + (aDimOut.zdim - 1 - 2*k) * (int)reverse;

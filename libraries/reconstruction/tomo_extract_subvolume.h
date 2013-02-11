@@ -89,8 +89,6 @@ public:
     Matrix2D<double> A, R, I;
     double rot, tilt, psi, rotp, tiltp, psip;
     int x0, xF;
-    SPEED_UP_temps;
-
 
 public:
 

@@ -51,7 +51,7 @@ public:
     bool isFlipped;
 public:
     /// Dimensions of the volumes
-    int Zdim, Ydim, Xdim;
+    size_t Zdim, Ydim, Xdim;
 	
     /// Side Info: CTF
     FourierFilter ctf;

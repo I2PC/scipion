@@ -56,7 +56,7 @@ void ProgMPIXrayProject::read(int argc, char** argv)
     node = new MpiNode(argc, argv);
     if (!node->isMaster())
         verbose = 0;
-    ProgXrayProject::read(argc, argv);
+    ProgXrayProject::read(argc, (const char **)argv);
 }
 
 void ProgMPIXrayProject::run()
@@ -64,10 +64,7 @@ void ProgMPIXrayProject::run()
     preRun();
 
     // Project
-
     projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
-    double tRot,tTilt,tPsi,rot,tilt,psi;
-
 
     //    // Assign mpi node information
     //    MpiNode & node = *node;

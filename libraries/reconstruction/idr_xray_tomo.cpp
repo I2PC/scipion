@@ -213,7 +213,7 @@ void ProgIDRXrayTomo::run()
         MULTIDIM_ARRAY(phantom.iniVol) *= factor;
 
         initProgress(projMD.size());
-        size_t n = 1; // Image number
+        size_t imgNo = 1; // Image number
         double meanError = 0.;
 
         FOR_ALL_OBJECTS_IN_METADATA(projMD)
@@ -233,28 +233,28 @@ void ProgIDRXrayTomo::run()
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
             dAi(mFixedProj, n) = (dAi(mFixedProj, n) - dAi(MULTIDIM_ARRAY(proj),n))*lambda +  dAi(MULTIDIM_ARRAY(stdProj),n);
 
-            prevFProj.read(fnInterProjs, DATA, n); // To calculate meanError
+            prevFProj.read(fnInterProjs, DATA, imgNo); // To calculate meanError
             mPrevFProj.alias(MULTIDIM_ARRAY(prevFProj));
 
             // Write the refined projection
-            fixedProj.write(fnInterProjs, n, true, WRITE_REPLACE);
+            fixedProj.write(fnInterProjs, imgNo, true, WRITE_REPLACE);
 
             // debug stuff //
             if (verbose > 5)
             {
-                proj.write(fnRootInter + "_debug_proj.stk", n , true, WRITE_REPLACE);
-                stdProj.write(fnRootInter + "_debug_std_proj.stk", n , true, WRITE_REPLACE);
+                proj.write(fnRootInter + "_debug_proj.stk", imgNo , true, WRITE_REPLACE);
+                stdProj.write(fnRootInter + "_debug_std_proj.stk", imgNo , true, WRITE_REPLACE);
 
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
                 dAi(mFixedProj, n) = dAi(MULTIDIM_ARRAY(stdProj),n) - dAi(MULTIDIM_ARRAY(proj),n)*lambda ;
 
-                fixedProj.write(fnRootInter + "_debug_diff_proj.stk", n , true, WRITE_REPLACE);
+                fixedProj.write(fnRootInter + "_debug_diff_proj.stk", imgNo , true, WRITE_REPLACE);
             }
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
             meanError += abs(dAi(mPrevFProj, n) - dAi(mFixedProj, n));
 
-            ++n;
+            ++imgNo;
             // Update progress bar
             setProgress();
         }

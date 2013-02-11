@@ -49,7 +49,7 @@ ProgMPIRecFourier::ProgMPIRecFourier(MpiNode * node)
 void ProgMPIRecFourier::read(int argc, char** argv)
 {
     XmippMpiProgram::read(argc, argv);
-    ProgRecFourier::read(argc, argv);
+    ProgRecFourier::read(argc, (const char **)argv);
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -152,9 +152,9 @@ void ProgMPIRecFourier::run()
         if ( verbose )
             init_progress_bar(numberOfJobs);
 
-        int FSC=numberOfJobs/2;
+        size_t FSC=numberOfJobs/2;
 
-        for (int i=0;i<numberOfJobs;i++)
+        for (size_t i=0;i<numberOfJobs;i++)
         {
 
             //#define DEBUG
@@ -187,7 +187,7 @@ void ProgMPIRecFourier::run()
             if( i == FSC && fn_fsc != "" )
             {
                 // sending every worker COLLECT_FOR_FSC
-                for ( int worker = 1 ; worker <= nProcs ; worker ++ )
+                for ( size_t worker = 1 ; worker <= nProcs ; worker ++ )
                 {
                     MPI_Recv(0,
                              0,
@@ -212,7 +212,7 @@ void ProgMPIRecFourier::run()
 
         // Wait for all processes to finish processing current jobs
         // so time statistics are correct
-        for ( int i = 1 ; i <= nProcs ; i ++ )
+        for ( size_t i = 1 ; i <= nProcs ; i ++ )
         {
             MPI_Recv(0,
                      0,
@@ -232,7 +232,7 @@ void ProgMPIRecFourier::run()
             std::cout << "\n\nProcessing time: " << total_time << " secs." << std::endl;
 
         // Start collecting results
-        for ( int i = 1 ; i <= nProcs ; i ++ )
+        for ( size_t i = 1 ; i <= nProcs ; i ++ )
         {
             MPI_Send(0,
                      0,
@@ -301,7 +301,7 @@ void ProgMPIRecFourier::run()
                     if ( nProcs > 2 )
                     {
                         // Receive from other workers
-                        for ( int i = 2 ; i <= nProcs ; i++)
+                        for ( size_t i = 2 ; i <= nProcs ; i++)
                         {
                             MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                                      *node->comm, &status);
@@ -581,7 +581,6 @@ void ProgMPIRecFourier::run()
                     gettimeofday(&start_time,NULL);
                     finishComputations(fn_out);
                     gettimeofday(&end_time,NULL);
-                    int i=0;
 
                     total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
                     total_time=(double)total_usecs/(double)1000000;
@@ -615,7 +614,7 @@ void ProgMPIRecFourier::run()
                 //(if jobNumber == -1) break;
                 threadOpCode=PROCESS_IMAGE;
 
-                int min_i, max_i;
+                size_t min_i, max_i;
 
                 min_i = jobNumber*mpi_job_size;
                 max_i = min_i + mpi_job_size - 1;

@@ -108,7 +108,7 @@ void MultidimArrayBase::setDimensions(ArrayDim &newDim)
  * V.getDimensions(Xdim, Ydim, Zdim, Ndim);
  * @endcode
  */
-void MultidimArrayBase::getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const
+void MultidimArrayBase::getDimensions(size_t& Xdim, size_t& Ydim, size_t& Zdim, size_t &Ndim) const
 {
     Xdim = xdim;
     Ydim = ydim;
@@ -436,7 +436,6 @@ void MultidimArray< std::complex< double > >::getReal(MultidimArray<double> & re
     }
 
     realImg.resizeNoCopy(*this);
-    double* ptr2 = MULTIDIM_ARRAY(realImg);
     double * ptr1 = (double*) MULTIDIM_ARRAY(*this);
 
     // Unroll the loop
@@ -472,7 +471,6 @@ void MultidimArray< std::complex< double > >::getImag(MultidimArray<double> & im
     }
 
     imagImg.resizeNoCopy(*this);
-    double* ptr2 = MULTIDIM_ARRAY(imagImg);
     double * ptr1 = (double*) MULTIDIM_ARRAY(*this);
 
     // Unroll the loop

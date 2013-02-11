@@ -38,8 +38,7 @@ FourierProjector::FourierProjector(const MultidimArray<double> &V, double paddFa
 
 void FourierProjector::project(double rot, double tilt, double psi)
 {
-    double freqz, freqy, freqx;
-    double kx,ky,arg;
+    double freqy, freqx;
     std::complex< double > f;
     Euler_angles2matrix(rot,tilt,psi,E);
 

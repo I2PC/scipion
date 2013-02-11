@@ -288,10 +288,12 @@ double detectability_error(const Histogram1D &h1, const Histogram1D &h2)
 #endif//;
 
         if (p1 != 0 && p2 != 0)
+        {
             if (p1 > p2)
                 error += p2;
             else
                 error += p1;
+        }
         v += step;
         N++;
     }

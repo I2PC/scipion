@@ -42,6 +42,9 @@ public abstract class TrainingPicker extends ParticlePicker
 			return FamilyState.Manual;
 		return null;
 	}
+	
+	
+	
 
 	public void saveConfig()
 	{
@@ -330,7 +333,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			saveAutomaticParticles(tm);
-			// saveTemplates();
+
 		}
 		catch (Exception e)
 		{
@@ -524,6 +527,8 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
+
+
 	public void importAllParticles(String file)
 	{// Expected a file for all
 		// micrographs
@@ -555,7 +560,7 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	}// function importAllParticles
 
-	public void importAllParticles(String file, float scale, boolean invertx, boolean inverty)
+	public String importAllParticles(String file, float scale, boolean invertx, boolean inverty)
 	{// Expected a file for all
 		// micrographs
 		try
@@ -593,6 +598,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			getLogger().log(Level.SEVERE, e.getMessage(), e);
 			throw new IllegalArgumentException(e);
 		}
+		return null;
 
 	}// function importAllParticles
 
@@ -600,7 +606,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	 * Import particles from md, all method to import from files should create
 	 * an md and call this function
 	 */
-	public int importParticlesFromMd(Micrograph m, MetaData md)
+	public String importParticlesFromMd(Micrograph m, MetaData md)
 	{
 
 		m.reset();
@@ -609,7 +615,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		int x, y;
 		double cost;
 		boolean hasCost = md.containsLabel(MDLabel.MDL_COST);
-		int particles = 0;
+		String result = "";
 		int size = family.getSize();
 
 		for (long id : ids)
@@ -619,7 +625,7 @@ public abstract class TrainingPicker extends ParticlePicker
 			if (!m.fits(x, y, size))// ignore out of
 			// bounds particle
 			{
-				System.out.println(XmippMessage.getOutOfBoundsMsg("Particle") + String.format(" on x:%s y:%s", x, y));
+				result += XmippMessage.getOutOfBoundsMsg("Particle") + String.format(" on x:%s y:%s", x, y);
 				continue;
 			}
 			cost = hasCost ? md.getValueDouble(MDLabel.MDL_COST, id) : 0;
@@ -627,9 +633,8 @@ public abstract class TrainingPicker extends ParticlePicker
 				tm.addManualParticle(new TrainingParticle(x, y, family, tm, cost));
 			else
 				tm.addAutomaticParticle(new AutomaticParticle(x, y, family, tm, cost, false), true);
-			++particles;
 		}
-		return particles;
+		return result;
 	}// function importParticlesFromMd
 
 	public void removeFamily(Family family)
@@ -679,36 +684,7 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 	}
 
-	public void updateTemplates()
-	{
-		updateTemplates(family);
-	}
 
-	public void updateTemplates(Family family)
-	{
-		if (!updateTemplatesPending && family.getStep() != FamilyState.Manual)
-			return;// nothing to update
-		family.initTemplates();
-		List<TrainingParticle> particles;
-		MicrographFamilyData mfd;
-		try
-		{
-			for (TrainingMicrograph m : micrographs)
-			{
-				mfd = m.getFamilyData(family);
-				particles = mfd.getManualParticles();
-				for (int i = 0; i < particles.size(); i++)
-					addParticleToTemplates(particles.get(i), i);
-			}
-			updateTemplatesPending = false;
-			System.out.println("templates updated");
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
-
-	}
 
 	public void saveTemplates()
 	{
@@ -831,37 +807,50 @@ public abstract class TrainingPicker extends ParticlePicker
 			return false;
 		}
 	}
+	
 
-	public void addParticleToTemplates(TrainingParticle particle)
+	public void updateTemplates(Family f)
 	{
-		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1);
-	}
-
-	public void addParticleToTemplates(TrainingParticle particle, int index)
-	{
+		if (family.getStep() != FamilyState.Manual)
+			return;
+		if (!updateTemplatesPending)
+			return;// nothing to update
+		f.initTemplates();
+		ImageGeneric igp;
+		List<TrainingParticle> particles;
+		MicrographFamilyData mfd;
+		TrainingParticle particle; 
+		Particle p;
 		try
 		{
-			Particle p = null;
-			Family family = particle.getFamily();
-			ImageGeneric igp = particle.getImageGeneric();
-			particle.getImagePlus().show();
-			if (index < family.getTemplatesNumber())//index starts at one
-				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
-			else
-				p = family.getTemplates().alignImage(igp);
-//			if(p  != null)
-//				System.out.println(p);
-			
+			for (TrainingMicrograph m : micrographs)
+			{
+				mfd = m.getFamilyData(f);
+				for (int i = 0; i < mfd.getManualParticles().size(); i++)
+				{
+					particles = mfd.getManualParticles();
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
+					if (i < f.getTemplatesNumber())
+						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
+					else
+						p = f.getTemplates().alignImage(igp, true);
+				}
+			}
+			updateTemplatesPending = false;
 		}
 		catch (Exception e)
 		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(e.getMessage());
 		}
 
 	}
 
-	
+
+
+
+
+
 
 	public void resetParticleImages()
 	{
@@ -874,5 +863,29 @@ public abstract class TrainingPicker extends ParticlePicker
 
 		}
 	}
+
+	public void updateTemplates()
+	{
+		updateTemplates(family);
+		
+
+	}
+	
+
+
+	public void addParticleToTemplates(TrainingParticle particle, boolean center)
+	{
+		addParticleToTemplates(particle, getManualParticlesNumber(particle.getFamily()) - 1, center);
+	}
+	
+	@Override
+	public boolean isValidSize(int size)
+	{
+		for (TrainingParticle p : getFamilyData().getParticles())
+			if (!getMicrograph().fits(p.getX(), p.getY(), size))
+				return false;
+		return true;
+	}
+
 
 }

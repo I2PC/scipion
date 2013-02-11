@@ -8,13 +8,12 @@ TEST( MultidimTest, Size)
 {
     MultidimArray<int> md;
     md.resize(2,3);
-    int x,y,z;
-    size_t n;
+    size_t x,y,z, n;
     md.getDimensions(x,y,z,n);
-    EXPECT_EQ(1, n) << "MultidimArray: wrong n size";
-    EXPECT_EQ(1, z) << "MultidimArray: wrong y size";
-    EXPECT_EQ(2, y) << "MultidimArray: wrong z size";
-    EXPECT_EQ(3, x) << "MultidimArray: wrong x size";
+    EXPECT_EQ((size_t)1, n) << "MultidimArray: wrong n size";
+    EXPECT_EQ((size_t)1, z) << "MultidimArray: wrong y size";
+    EXPECT_EQ((size_t)2, y) << "MultidimArray: wrong z size";
+    EXPECT_EQ((size_t)3, x) << "MultidimArray: wrong x size";
 }
 
 TEST( MultidimTest, Assign)

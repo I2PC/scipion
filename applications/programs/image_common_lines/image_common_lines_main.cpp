@@ -25,7 +25,7 @@
 
 #include <reconstruction/common_lines.h>
 
-RUN_XMIPP_PROGRAM(ProgCommonLine);
+RUN_XMIPP_PROGRAM(ProgCommonLine)
 #ifdef NEVERDEFINED
 int main(int argc, char *argv[])
 {

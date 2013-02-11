@@ -563,9 +563,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract void setChanged(boolean changed);
 
-	protected void initColorPane() {
+	protected void initColorPane(Color color) {
 		colorpn = new JPanel();
-		color = getFamily().getColor();
+		this.color = color;
 		colorpn.add(new JLabel("Color:"));
 		colorbt = new JButton();
 		colorbt.setContentAreaFilled(false);
@@ -590,14 +590,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		sizetf.setColumns(3);
-		sizetf.setText(Integer.toString(size));
+		sizetf.setValue(size);
 		sizepn.add(sizetf);
 		sizetf.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int size = ((Number) sizetf.getValue()).intValue();
-				if (!isValidSize(size)) {
+				if (!getParticlePicker().isValidSize(size)) {
 					int prevsize = getFamily().getSize();
 					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
 					sizetf.setText(Integer.toString(prevsize));
@@ -612,7 +612,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				int size = sizesl.getValue();
-				if (!isValidSize(size)) {
+				if (!getParticlePicker().isValidSize(size)) {
 					int prevsize = getFamily().getSize();
 					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
 					sizesl.setValue(prevsize);
@@ -624,11 +624,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	public abstract boolean isValidSize(int size);
+	
 
 	public void updateSize(int size) {
 
-		sizetf.setText(Integer.toString(size));
+		sizetf.setValue(size);
 		sizesl.setValue(size);
 		getCanvas().repaint();
 		getFamily().setSize(size);
@@ -658,7 +658,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected abstract void resetData();
 
 
-	public abstract void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
+
+	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 	
 	public Color getColor()
 	{

@@ -48,6 +48,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.MetadataGalleryTableModel;
 
+
 public class AddFillLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
 	protected MetadataGalleryTableModel gallery;

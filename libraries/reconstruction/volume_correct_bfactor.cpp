@@ -284,7 +284,7 @@ void  ProgVolumeCorrectBfactor::apply_allpoints(MultidimArray< std::complex< dou
         double R=f.module();
         if (R>0.5)
             continue;
-        long idx=lround(R*xsize);
+        size_t idx=lround(R*xsize);
         if (idx < guinier_diff.size() && guinier_diff[idx].w > 0.)
         {
             dAkij(FT1, k, i, j) *= exp( -guinier_diff[idx].y );
@@ -305,7 +305,7 @@ void  ProgVolumeCorrectBfactor::write_guinierfile(const FileName &fn_guinier,
         REPORT_ERROR(ERR_IO_NOWRITE, fn_guinier);
 
     fh << "# 1/d^2   lnF     weighted-lnF   corrected-lnF   (model)\n";
-    for (int i = 0; i < guinierin.size(); i++)
+    for (size_t i = 0; i < guinierin.size(); i++)
     {
         fh << (guinierin[i]).x << " " << (guinierin[i]).y << " " << (guinierweighted[i]).y << " " <<(guiniernew[i]).y;
         if (mode==BFACTOR_AUTO)
@@ -357,7 +357,7 @@ void ProgVolumeCorrectBfactor::bfactor_correction(MultidimArray< double > &m1,
         transformer.FourierTransform(ref(), FT2, true);
         make_guinier_plot(FT2,guinierref);
         guinierdiff = guinierweighted;
-        for (int i = 0; i < guinierdiff.size(); i++)
+        for (size_t i = 0; i < guinierdiff.size(); i++)
         {
             (guinierdiff[i]).y -= (guinierref[i]).y;
         }

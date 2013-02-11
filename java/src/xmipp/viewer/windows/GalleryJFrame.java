@@ -41,6 +41,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -48,7 +49,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -62,7 +62,9 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
@@ -76,7 +78,6 @@ import javax.swing.event.ListDataListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
@@ -107,7 +108,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
-
 import xmipp.viewer.windows.ClassesJDialog;
 
 public class GalleryJFrame extends JFrame implements iCTFGUI
@@ -783,7 +783,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 
 		FSCJFrame frame = new FSCJFrame(data);
-
 		XmippWindowUtil.centerWindows(frame, this);
 		frame.setVisible(true);
 	}
@@ -846,16 +845,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 
-	{
-		reloadTableData(true);
-	}
 	/** Reload table data */
 	public void reloadTableData(boolean changed)
 	{
 		try
 		{
 			DEBUG.printMessage("reloadTableData...");
-			table.removeAll();
+			if(table != null)
+				table.removeAll();
 			createModel();
 			// gallery.setShowLabels(menu.getShowLabel());
 			createTable();
@@ -1816,7 +1813,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 
 		((MicrographsTableModel) gallery).setRowBusy(row);
-
 	}
 
 	@Override
@@ -1839,27 +1835,60 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 	
 
+	private void saveMd(String path) throws Exception
+	{
+		try
+		{
+			if (path == null)
+				throw new IllegalArgumentException();
+
+			boolean overwrite;
+			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			if (!new File(file).exists())
+				data.md.writeBlock(path);
+			else
+			{
+				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
+				if (overwrite)
+					data.md.write(path);
+				else
+					data.md.writeBlock(path);
+
+			}
+
+			data.setMdChanges(false);
+			gallery.data.setFileName(file);
+			gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+			reloadFile(file, false);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}// function saveMd
+
 
 
 	private void saveAll() throws Exception
 	{
 		String from = data.getFileName();
-		String to = dlgSave.getMdFilename();
-		to = to.substring(to.lastIndexOf('@') + 1, to.length());
+		String blockto = dlgSave.getMdFilename();
+		String to = blockto.substring(blockto.lastIndexOf('@') + 1, blockto.length());
 		if (!from.equals(to))
 		{// no sense in overwritting or appending
 			MetaData frommd;
 			frommd = new MetaData();
 			if (dlgSave.isOverwrite())
-				new MetaData().write(getBlock() + "@" + to);// overwrite file
-															// with some block
+				new MetaData().write(blockto);// overwrite file with some block
 			for (String blockit : data.mdBlocks)
 			{
+				if(blockit.equals(getBlock()))
+					continue;
 				frommd.read(blockit + "@" + from);
 				frommd.writeBlock(blockit + "@" + to);
 			}
 		}
-		saveMd(getBlock() + "@" + to);
+		saveMd(blockto);
 	}
 
 
@@ -1932,8 +1961,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		createModel();
 		reloadMd(changed);
-
 		createCombos();
+		jcbBlocks.setSelectedItem(gallery.data.selectedBlock);
 
 	}
 
@@ -1941,38 +1970,32 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		saveMd(dlgSave.getMdFilename());
 	}
-
-	private void saveMd(String path) throws Exception
+	
+	
+	protected void initAxisButtonMenu()
 	{
-		try
-		{
-			if (path == null)
-				throw new IllegalArgumentException();
+		//Create the popup menu.
+        final JPopupMenu popup = new JPopupMenu();
+        popup.add(new JMenuItem(new AbstractAction("Option 1") {
+            public void actionPerformed(ActionEvent e) {
+            }
+        }));
+        popup.add(new JMenuItem(new AbstractAction("Option 2") {
+            public void actionPerformed(ActionEvent e) {
+            }
+        }));
 
-			boolean overwrite;
-			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())
-				data.md.writeBlock(path);
-			else
-			{
-				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
-				if (overwrite)
-					data.md.write(path);
-				else
-					data.md.writeBlock(path);
+        final JButton button = new JButton("Options");
+        button.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                popup.show(e.getComponent(), e.getX(), e.getY());
+            }
+        });
+        toolBar.add(button);
 
-			}
+	}
 
-			data.setMdChanges(false);
-			gallery.data.setFileName(file);
-			reloadFile(file, false);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	}// function saveMd
-
+	
 
 
 }// class JFrameGallery

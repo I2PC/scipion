@@ -107,7 +107,7 @@ public:
     double Xi2;
 
     //These are for refno work assigns to threads
-    int refno_index, refno_count, refno_load, refno_load_param;
+    size_t refno_index, refno_count, refno_load, refno_load_param;
     // Which group does this image belong to in iteration 0 (generation of K references)
     int mygroup;
     /// Read arguments from command line

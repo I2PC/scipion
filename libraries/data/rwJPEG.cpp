@@ -40,14 +40,13 @@ int ImageBase::readJPEG(size_t select_img)
     jpeg_stdio_src(&cinfo, fimg);
     jpeg_read_header(&cinfo, TRUE);
 
-
-    MDMainHeader.setValue(MDL_MIN,zeroD);
-    MDMainHeader.setValue(MDL_MAX,zeroD);
-    MDMainHeader.setValue(MDL_AVG,zeroD);
-    MDMainHeader.setValue(MDL_STDDEV,zeroD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,oneD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,oneD);
-    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,oneD);
+    MDMainHeader.setValue(MDL_MIN,0.);
+    MDMainHeader.setValue(MDL_MAX,0.);
+    MDMainHeader.setValue(MDL_AVG,0.);
+    MDMainHeader.setValue(MDL_STDDEV,0.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_X,1.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,1.);
+    MDMainHeader.setValue(MDL_SAMPLINGRATE_Z,1.);
     MDMainHeader.setValue(MDL_DATATYPE,(int) DT_UChar);
 
     ArrayDim aDim;
@@ -97,7 +96,7 @@ int ImageBase::readJPEG(size_t select_img)
     while( cinfo.output_scanline < cinfo.image_height )
     {
         jpeg_read_scanlines( &cinfo, row_pointer, 1 );
-        for( int i=0; i<cinfo.image_width;i++)
+        for(size_t i=0; i<cinfo.image_width;i++)
             buffer[i] = row_pointer[0][i*cinfo.num_components];
         setPage2T((cinfo.output_scanline - 1)*cinfo.image_width, buffer, DT_UChar, aDim.xdim);
     }

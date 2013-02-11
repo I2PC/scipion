@@ -25,13 +25,4 @@
 
 #include <data/normalize.h>
 
-
-int main(int argc, char *argv[])
-{
-    ProgNormalize program;
-    int errorCode;
-    errorCode = program.tryRead(argc, argv);
-    if (errorCode)
-        return (errorCode);
-    return program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgNormalize)

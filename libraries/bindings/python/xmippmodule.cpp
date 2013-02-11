@@ -107,8 +107,6 @@ xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    PyObject *pyValue1, *pyValue2; //Only used to skip label and value
-
     int Xdim,Ydim,Zdim;
     size_t Ndim;
     Zdim=1;
@@ -135,8 +133,7 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
 
             PyObject * pyStr = PyObject_Str(pyValue);
             char * str = PyString_AsString(pyStr);
-            int xdim, ydim, zdim;
-            size_t ndim;
+            size_t xdim, ydim, zdim, ndim;
             getImageSize(str, xdim, ydim, zdim, ndim);
             Py_DECREF(pyStr);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
@@ -177,8 +174,7 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
                 PyErr_SetString(PyXmippError, "Invalid argument: expected String, FileName or MetaData");
                 return NULL;
             }
-            int xdim, ydim, zdim;
-            size_t ndim;
+            size_t xdim, ydim, zdim, ndim;
             getImageSize(md, xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
@@ -489,8 +485,7 @@ ArrayDim idim;\
 data.getDimensions(idim);
 
 #define FILTER_CATCH()\
-int w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;\
-double ddim = dim;\
+size_t w = dim, h = dim, &x = idim.xdim, &y = idim.ydim;\
 if (x > y) h = y * (dim/x);\
 else if (y > x)\
   w = x * (dim/y);\
@@ -735,7 +730,8 @@ PyMODINIT_FUNC initxmipp(void)
     INIT_TYPE(SymList);
 
     //Add PyXmippError
-    PyXmippError = PyErr_NewException("xmipp.XmippError", NULL, NULL);
+    char message[32]="xmipp.XmippError";
+    PyXmippError = PyErr_NewException(message, NULL, NULL);
     Py_INCREF(PyXmippError);
     PyModule_AddObject(module, "XmippError", PyXmippError);
 

@@ -5,9 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
-
 import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
@@ -27,6 +25,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
 	private boolean activemoved;
+
+
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
@@ -53,6 +53,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		int x = super.offScreenX(e.getX());
 		int y = super.offScreenY(e.getY());
 
+
 		if (frame.isPickingAvailable(e))
 		{
 			if (frame.isEraserMode())
@@ -60,6 +61,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				erase(x, y);
 				return;
 			}
+
 			TrainingParticle p = micrograph.getParticle(x, y);
 			if (p == null)
 				p = micrograph.getAutomaticParticle(x, y, frame.getThreshold());
@@ -73,7 +75,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			{
 				p = new TrainingParticle(x, y, frame.getFamily(), micrograph);
 				micrograph.addManualParticle(p);
-				ppicker.addParticleToTemplates(p);
+				ppicker.addParticleToTemplates(p, frame.isCenterPick());
 				active = p;
 				refresh();
 			}
@@ -103,6 +105,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			{
 				erase(x, y);
 				return;
+
 			}
 
 			manageActive(x, y);
@@ -150,7 +153,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				erase(x, y);
 				return;
 			}
-
+			//deleting when mouse released, takes less updates to templates and frame
 			if (active != null && SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 			{
 				micrograph.removeParticle(active, ppicker);
@@ -169,6 +172,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 		}
 	}
+
+
 
 	protected void doCustomPaint(Graphics2D g2)
 	{

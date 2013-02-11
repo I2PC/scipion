@@ -150,8 +150,8 @@ int  ImageBase::readSPIDER(size_t select_img)
                      ". Error message: %s", filename.c_str() ,strerror(errno)));
 
     // Determine byte order and swap bytes if from different-endian machine
-    if ( swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > 1000 ) ||
-                 ( fabs(header->nslice) < 1 )) )
+    if ( (swap = (( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > 1000 ) ||
+                 ( fabs(header->nslice) < 1 ))) )
         swapPage((char *) header, SPIDERSIZE - 180, DT_Float);
 
     if(header->labbyt != header->labrec*header->lenbyt)
@@ -217,7 +217,6 @@ int  ImageBase::readSPIDER(size_t select_img)
     size_t   imgStart = IMG_INDEX(select_img);
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
     size_t   img_seek = header_size + imgStart * image_size;
-    char*   hend;
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
@@ -319,8 +318,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             dataMode = DATA;
     }
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     size_t datasize, datasize_n;

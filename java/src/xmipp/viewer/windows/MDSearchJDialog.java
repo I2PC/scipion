@@ -47,7 +47,10 @@ import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
+
 import xmipp.viewer.models.MetadataTableModel;
+
+
 
 /* This class will serve for find and replace values
  * in a MetadataGallery

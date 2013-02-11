@@ -164,4 +164,4 @@ public:
     }
 };
 
-RUN_XMIPP_PROGRAM(ProgMicrographScissor);
+RUN_XMIPP_PROGRAM(ProgMicrographScissor)

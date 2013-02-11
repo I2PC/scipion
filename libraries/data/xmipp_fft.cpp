@@ -286,7 +286,7 @@ void centerFFT2(MultidimArray<double> &v)
             double * posB = posA + xhalf;
             double * posC = posA + xsize * yhalf;
             double * posD = posC + xhalf;
-            double  buffer[xhalf];
+            double * buffer=new double[xhalf];
             size_t bytes = xhalf * sizeof(double);
 
             for (int i = 0; i < yhalf; ++i,
@@ -295,6 +295,7 @@ void centerFFT2(MultidimArray<double> &v)
                 SWAP_ARRAY(posA, posD, bytes);
                 SWAP_ARRAY(posB, posC, bytes);
             }
+            delete []buffer;
         }
         else
         {

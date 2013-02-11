@@ -2370,10 +2370,6 @@ cmache_;
 
 #define cmache_1 cmache_
 
-/* Table of constant values */
-
-static integer c__1 = 1;
-
 /* umd */
 /*
 ql0002_ is declared here to provide ANSI C compliance.
@@ -2423,21 +2419,8 @@ integer *lwar, *iwar, *liwar;
 doublereal *eps1;
 #endif
 {
-    /* Format strings */
-    static char fmt_1000[] = "(/8x,\002***QL: MATRIX G WAS ENLARGED\002,i3\
-                             ,\002-TIMES BY UNITMATRIX\002)";
-    static char fmt_1100[] = "(/8x,\002***QL: CONSTRAINT \002,i5,\002 NOT CO\
-                             NSISTENT TO \002,/,(10x,10i5))";
-    static char fmt_1200[] = "(/8x,\002***QL: LWAR TOO SMALL\002)";
-    static char fmt_1210[] = "(/8x,\002***QL: LIWAR TOO SMALL\002)";
-    static char fmt_1220[] = "(/8x,\002***QL: MNN TOO SMALL\002)";
-    static char fmt_1300[] = "(/8x,\002***QL: TOO MANY ITERATIONS (MORE THA\
-                             N\002,i6,\002)\002)";
-    static char fmt_1400[] = "(/8x,\002***QL: ACCURACY INSUFFICIENT TO ATTAI\
-                             N CONVERGENCE\002)";
-
     /* System generated locals */
-    integer c_dim1, c_offset, a_dim1, a_offset, i__1, i__2;
+    integer c_dim1, c_offset, a_dim1, a_offset, i__1;
 
     /* Builtin functions */
     /*    integer s_wsfe(), do_fio(), e_wsfe(); */
@@ -2447,46 +2430,11 @@ doublereal *eps1;
     /* extern int ql0002_(); */
     static integer nact, info;
     static doublereal zero;
-    static integer i, j, idiag, maxit;
+    static integer i, j, maxit;
     static doublereal qpeps;
     static integer in, mn, lw;
-    static doublereal ten;
     static logical lql;
     static integer inw1, inw2;
-
-    /* Fortran I/O blocks */
-    static cilist io___16 =
-        {
-            0, 0, 0, fmt_1000, 0
-        };
-    static cilist io___18 =
-        {
-            0, 0, 0, fmt_1100, 0
-        };
-    static cilist io___19 =
-        {
-            0, 0, 0, fmt_1200, 0
-        };
-    static cilist io___20 =
-        {
-            0, 0, 0, fmt_1210, 0
-        };
-    static cilist io___21 =
-        {
-            0, 0, 0, fmt_1220, 0
-        };
-    static cilist io___22 =
-        {
-            0, 0, 0, fmt_1300, 0
-        };
-    static cilist io___23 =
-        {
-            0, 0, 0, fmt_1400, 0
-        };
-
-
-
-
 
     /*     INTRINSIC FUNCTIONS:  DSQRT */
 
@@ -2531,7 +2479,6 @@ doublereal *eps1;
         lql = TRUE_;
     }
     zero = 0.;
-    ten = 10.;
     maxit = (*m + *n) * 40;
     qpeps = cmache_1.eps;
     inw1 = 1;
@@ -2584,19 +2531,6 @@ L20:
     {
         goto L90;
     }
-    idiag = 0;
-    if (diag > zero && diag < 1e3)
-    {
-        idiag = (integer) diag;
-    }
-    /*
-        if (*iprint > 0 && idiag > 0) {
-     io___16.ciunit = *iout;
-     s_wsfe(&io___16);
-     do_fio(&c__1, (char *)&idiag, (ftnlen)sizeof(integer));
-     e_wsfe();
-        }
-    */
     if (info < 0)
     {
         goto L70;
@@ -2755,14 +2689,14 @@ integer *lw;
     static doublereal ga, gb;
     static integer ia, id;
     static doublereal fdiffa;
-    static integer ii, il, kk, jl, ip, ir, nm, is, iu, iw, ju, ix, iz, nu, iy;
+    static integer ii, il, kk, jl, ir, nm, is, iu, iw, ju, ix, iz, nu, iy;
 
     static doublereal parinc, parnew;
     static integer ira, irb, iwa;
     static doublereal one;
     static integer iwd, iza;
     static doublereal res;
-    static integer ipp, iwr, iws;
+    static integer iwr, iws;
     static doublereal sum;
     static integer iww, iwx, iwy;
     static doublereal two;
@@ -3241,8 +3175,6 @@ L270:
 
 L280:
     ir = iwr;
-    ip = iww + 1;
-    ipp = iww + *n;
     il = iws + 1;
     iu = iws + *nact;
     i__2 = iu;
@@ -4106,8 +4038,6 @@ L770:
     /*     CALCULATE THE NEXT CONSTRAINT TO DROP. */
 
 L775:
-    ip = iww + 1;
-    ipp = iww + *nact;
     kdrop = 0;
     if (*nact == 0)
     {
@@ -4501,7 +4431,7 @@ ql0001_(int *, int *, int *, int *, int *, int *, double *, double *,
         double *, double *, double *, double *, double *, double *,
         int *, int *, int *, double *, int *, int *, int *, double *);
 static void  diagnl(int, double, double **);
-static void  error(char string[], int *);
+static void  error(const char string[], int *);
 static void
 estlam(int, int, int *, double, double **, double *, double *, double *,
        struct _constraint *, double *, double *, double *, double *);
@@ -4516,8 +4446,8 @@ static void  nullvc(int, double *);
 static void
 resign(int, int, double *, double *, double *, struct _constraint *,
        double *, int, int);
-static void  sbout1(FILE *, int, char *, double, double *, int, int);
-static void  sbout2(FILE *, int, int, char *, char *, double *);
+static void  sbout1(FILE *, int, const char *, double, double *, int, int);
+static void  sbout2(FILE *, int, int, const char *, const char *, double *);
 static void  shift(int, int, int *);
 static double
 slope(int, int, int, int, int, struct _objective *, double *, double *,
@@ -8649,10 +8579,10 @@ double **a, diag;
 /***********************************************************/
 
 #ifdef __STDC__
-static void error(char string[], int *inform)
+static void error(const char string[], int *inform)
 #else
 static void error(string, inform)
-char string[];
+const char string[];
 int *inform;
 #endif
 {
@@ -8951,13 +8881,13 @@ struct _constraint *cs;
 
 #ifdef __STDC__
 static void
-sbout1(FILE *io, int n, char *s1, double z, double *z1, int job, int level)
+sbout1(FILE *io, int n, const char *s1, double z, double *z1, int job, int level)
 #else
 static void sbout1(io, n, s1, z, z1, job, level)
 FILE *io;
 int n, job, level;
 double z, *z1;
-char *s1;
+const char *s1;
 #endif
 {
     int j;
@@ -8992,13 +8922,13 @@ char *s1;
 
 #ifdef __STDC__
 static void
-sbout2(FILE *io, int n, int i, char *s1, char *s2, double *z)
+sbout2(FILE *io, int n, int i, const char *s1, const char *s2, double *z)
 #else
 static void sbout2(io, n, i, s1, s2, z)
 FILE *io;
 int n, i;
 double *z;
-char *s1, *s2;
+const char *s1, *s2;
 #endif
 {
     int j;
@@ -9380,7 +9310,7 @@ void wtn(double a[], unsigned long nn[], int ndim, int isign,
 
 typedef struct
 {
-    int ncof, ioff, joff;
+    unsigned int ncof, ioff, joff;
     double *cc, *cr;
 }
 wavefilt;
@@ -9453,7 +9383,7 @@ void pwtset(int n)
 void pwt(double a[], unsigned long n, int isign)
 {
     double ai, ai1, *wksp;
-    unsigned long i, ii, j, jf, jr, k, n1, ni, nj, nh, nmod;
+    unsigned long i, ii, jf, jr, k, n1, ni, nj, nh, nmod;
 
     if (n < 4)
         return;

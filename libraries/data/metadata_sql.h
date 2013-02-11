@@ -225,7 +225,7 @@ private:
 
     ///Just call this function once, at static initialization
     static bool sqlBegin();
-    static bool sqlEnd();
+    static void sqlEnd();
     static bool sqlBeginTrans();
     static bool sqlCommitTrans();
     /** Return an unique id for each metadata
@@ -246,7 +246,7 @@ private:
     String tableName(const int tableId) const;
 
     int bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
-    int extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
+    void extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
 
     static char *errmsg;
     static const char *zLeftover;
@@ -382,6 +382,8 @@ public:
             return ">=";
         case LE:
             return "<=";
+        default:
+        	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown binary operator");
         }
     }
 
@@ -611,7 +613,7 @@ public:
         {
             std::stringstream ss;
             ss << "(" << queries[0]->queryStringFunc() << ") ";
-            for (int i = 1; i < queries.size(); i++)
+            for (size_t i = 1; i < queries.size(); i++)
                 ss << operations[i] << " (" << queries[i]->queryStringFunc() << ") ";
 
             return ss.str();

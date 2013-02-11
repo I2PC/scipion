@@ -575,10 +575,6 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
     y -= STARTINGY(vol);
     x -= STARTINGX(vol);
 
-    int lmax = XSIZE(vol);
-    int mmax = YSIZE(vol);
-    int nmax = ZSIZE(vol);
-
     int l1 = CEIL(x - SplineDegree_1);
     int l2 = l1 + SplineDegree;
 
@@ -728,10 +724,6 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
     z -= STARTINGZ(vol);
     y -= STARTINGY(vol);
     x -= STARTINGX(vol);
-
-    int lmax = XSIZE(vol);
-    int mmax = YSIZE(vol);
-    int nmax = ZSIZE(vol);
 
     int l1 = CEIL(x - SplineDegree_1);
     int l2 = l1 + SplineDegree;
@@ -883,10 +875,6 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
     z -= STARTINGZ(vol);
     y -= STARTINGY(vol);
     x -= STARTINGX(vol);
-
-    int lmax = XSIZE(vol);
-    int mmax = YSIZE(vol);
-    int nmax = ZSIZE(vol);
 
     int l1 = CEIL(x - SplineDegree_1);
     int l2 = l1 + SplineDegree;

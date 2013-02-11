@@ -82,7 +82,7 @@ void PolyZernikes::create(const Matrix1D<int> & coef)
 
         fMatV.push_back(*fMatT);
     }
-};
+}
 
 void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, MultidimArray<double> &weight,
                        MultidimArray<bool> & ROI, int verbose)
@@ -93,7 +93,6 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
     int ydim = YSIZE(im);
     int numZer = coef.sum();
 
-    int index = 0;
     //Actually polOrder corresponds to the polynomial order +1
     int polOrder=ZERNIKE_ORDER(coef.size());
 
@@ -144,8 +143,8 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
                     continue;
 
                 double temp = 0;
-                for (int px = 0; px < (*fMat).Xdim(); ++px)
-                    for (int py = 0; py < (*fMat).Ydim(); ++py)
+                for (size_t px = 0; px < (*fMat).Xdim(); ++px)
+                    for (size_t py = 0; py < (*fMat).Ydim(); ++py)
                         temp += dMij(*fMat,py,px)*dMij(polValue,py,px);
 
                 dMij(zerMat,pixel_idx,k) = temp;
@@ -240,8 +239,8 @@ void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> &
                 if ( (dMij(*fMat,0,0) == 0) && MAT_SIZE(*fMat) == 1 )
                     continue;
 
-                for (int px = 0; px < (*fMat).Xdim(); ++px)
-                    for (int py = 0; py < (*fMat).Ydim(); ++py)
+                for (size_t px = 0; px < (*fMat).Xdim(); ++px)
+                    for (size_t py = 0; py < (*fMat).Ydim(); ++py)
                         temp += dMij(*fMat,py,px)*dMij(polValue,py,px)*VEC_ELEM(coef,k);
             }
 

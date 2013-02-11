@@ -33,7 +33,7 @@
 #include <classification/uniform.h>
 
 AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
-        int size, int filterNum, int pcaNum, int corrNum)
+        int size, int filterNum, int pcaNum, int corrNum, int procprec)
 {
     __m=_m;
     fn_micrograph=fn;
@@ -45,6 +45,7 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
     NRsteps=particle_size/2-3;
     filter_num=filterNum;
     corr_num=corrNum;
+    proc_prec=procprec;
     NPCA=pcaNum;
     NRPCA=20;
     num_correlation=filter_num+((filter_num-corr_num)*corr_num);
@@ -331,8 +332,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     fh_training.open("particles_cord1.txt");
 #endif
 
-    int num=positionArray.size()*(90.0/100.0);
-
+    int num=positionArray.size()*(proc_prec/100.0);
     for (int k=0;k<num;k++)
     {
         int j=positionArray[k].x;
@@ -384,20 +384,20 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         }
     }
     // Remove the occluded particles
-    for (int i=0;i<auto_candidates.size();++i)
-        for (int j=0;j<auto_candidates.size()-i-1;j++)
+    for (size_t i=0;i<auto_candidates.size();++i)
+        for (size_t j=0;j<auto_candidates.size()-i-1;j++)
             if (auto_candidates[j].cost<auto_candidates[j+1].cost)
             {
                 p=auto_candidates[j+1];
                 auto_candidates[j+1]=auto_candidates[j];
                 auto_candidates[j]=p;
             }
-    for (int i=0;i<auto_candidates.size()-1;++i)
+    for (size_t i=0;i<auto_candidates.size()-1;++i)
     {
         if (auto_candidates[i].status==-1)
             continue;
         p=auto_candidates[i];
-        for (int j=i+1;j<auto_candidates.size();j++)
+        for (size_t j=i+1;j<auto_candidates.size();j++)
         {
             if (auto_candidates[j].x>p.x-particle_radius
                 && auto_candidates[j].x<p.x+particle_radius
@@ -492,15 +492,11 @@ void AutoParticlePicking2::add2Dataset()
     int yDataSet=YSIZE(dataSet);
     dataSet.resize(1,1,yDataSet+auto_candidates.size(),num_correlation*NPCA+NRPCA+12);
     classLabel.resize(1,1,1,YSIZE(dataSet));
-    for (int n=yDataSet;n<XSIZE(classLabel);n++)
+    for (size_t n=yDataSet;n<XSIZE(classLabel);n++)
         classLabel(n)=3;
-    for (int i=0;i<auto_candidates.size();i++)
-    {
-        for (int j=0;j<XSIZE(dataSet);j++)
-        {
+    for (size_t i=0;i<auto_candidates.size();i++)
+        for (size_t j=0;j<XSIZE(dataSet);j++)
             DIRECT_A2D_ELEM(dataSet,i+yDataSet,j)=DIRECT_A1D_ELEM(auto_candidates[i].vec,j);
-        }
-    }
 }
 
 void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantFeat,
@@ -900,8 +896,8 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
                 positionArray.push_back(p);
             }
         }
-    for (int i=0;i<positionArray.size();++i)
-        for (int j=0;j<positionArray.size()-i-1;j++)
+    for (size_t i=0;i<positionArray.size();++i)
+        for (size_t j=0;j<positionArray.size()-i-1;j++)
             if (positionArray[j].cost<positionArray[j + 1].cost)
             {
                 p=positionArray[j+1];
@@ -963,7 +959,6 @@ void AutoParticlePicking2::applyConvolution(bool fast)
         filter.generateMask(convolveRes);
         filter.applyMaskSpace(convolveRes);
 
-        int cnt=1;
         for (int deg=3;deg<360;deg+=3)
         {
             // We first rotate the template and then put it in the big image in order to
@@ -1003,6 +998,7 @@ void ProgMicrographAutomaticPicking2::readParams()
     fn_root = getParam("--outputRoot");
     fast = checkParam("--fast");
     incore = checkParam("--in_core");
+    procprec = getIntParam("--autoPercent");
 }
 
 void ProgMicrographAutomaticPicking2::defineParams()
@@ -1028,6 +1024,7 @@ void ProgMicrographAutomaticPicking2::defineParams()
     addParamsLine("  [--filter_num <n=6>]          : The number of filters in filter bank");
     addParamsLine("  [--NPCA <n=4>]               : The number of PCA components");
     addParamsLine("  [--NCORR <n=2>]               : The number of PCA components");
+    addParamsLine("  [--autoPercent <n=90>]               : The number of PCA components");
     addExampleLine("Automatically select particles during training:", false);
     addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode try ");
     addExampleLine("Training:", false);
@@ -1055,8 +1052,8 @@ void ProgMicrographAutomaticPicking2::run()
     FileName fnRejectedVectors=fn_model+"_rejected_vector.txt";
     FileName fnAvgModel=fn_model+"_particle_avg.xmp";
 
-    AutoParticlePicking2 *autoPicking=new AutoParticlePicking2(fn_micrograph,&m,size,filter_num,NPCA,corr_num);
-
+    AutoParticlePicking2 *autoPicking=new AutoParticlePicking2(fn_micrograph,&m,size,filter_num,
+    		                                                   NPCA,corr_num,procprec);
     if (mode!="train")
     {
         // Resize the Micrograph
@@ -1136,6 +1133,12 @@ void ProgMicrographAutomaticPicking2::run()
 
     if (mode=="try" || mode=="autoselect")
     {
+    	if (mode=="autoselect")
+    	{
+    		MetaData MD;
+    		MD.read(fn_model.beforeLastOf("/")+"/config.xmd");
+    		MD.getValue( MDL_PICKING_AUTOPICKPERCENT,autoPicking->proc_prec,MD.firstObject());
+    	}
         autoPicking->micrographStack.read(fnFilterBank, DATA);
         // Read the PCA Model
         Image<double> II;
@@ -1154,10 +1157,10 @@ void ProgMicrographAutomaticPicking2::run()
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            int num=autoPicking->automaticallySelectParticles(true,fast);
+            autoPicking->automaticallySelectParticles(true,fast);
         }
         else
-            int num=autoPicking->automaticallySelectParticles(false,fast);
+            autoPicking->automaticallySelectParticles(false,fast);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
             autoPicking->saveAutoVectors(fnAutoVectors);

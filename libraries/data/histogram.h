@@ -205,11 +205,11 @@ public:
 #define INSERT_VALUE(histogram,value) \
 {\
 	if (value == histogram.hmax) { \
-		int iii = XSIZE(histogram) - 1; \
+		size_t iii = XSIZE(histogram) - 1; \
 		++DIRECT_A1D_ELEM(histogram, iii); \
 		++histogram.no_samples; \
 	} else { \
-		int iii = (int) ((value - histogram.hmin) * histogram.istep_size); \
+		size_t iii = (size_t) ((value - histogram.hmin) * histogram.istep_size); \
 		if (iii >= 0 && iii < XSIZE(histogram)) \
 		{ \
 			++DIRECT_A1D_ELEM(histogram, iii); \

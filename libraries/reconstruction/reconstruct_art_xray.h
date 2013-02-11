@@ -31,7 +31,7 @@
 
 
 /**@defgroup Reconstruction Program ART
-   @ingroup ReconsLibrary
+   @ingroup ReconsLibrary */
 //@{
 
 /* The user interface program should make a call to the run routine.

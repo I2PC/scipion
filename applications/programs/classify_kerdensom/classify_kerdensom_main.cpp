@@ -23,9 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-// To avoid problems with long template names
-#pragma warning(disable:4786)
-
 #include <fstream>
 
 #include <data/xmipp_program.h>
@@ -224,7 +221,7 @@ public:
         for (unsigned i = 0; i < myMap->size(); i++)
         {
         	MetaData MD;
-            for (int j = 0; j < myMap->classifAt(i).size(); j++)
+            for (size_t j = 0; j < myMap->classifAt(i).size(); j++)
             {
             	size_t order=myMap->classifAt(i)[j];
             	vectorContentIn.getRow(row,objIds[order]);

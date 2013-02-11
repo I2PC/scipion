@@ -613,7 +613,7 @@ int return_gradhesscost(
               double   prv_re, prv_im, Difference_re, Difference_im, Weight;
               double   dp0_re, dp0_im, dp1_re, dp1_im, dp2_re, dp2_im, dp3_re, dp3_im, dp4_re, dp4_im;
               double   cost_re, cost_im, *R, *Q, *Q2, *dQ0, *dQ1, *dQ2, *dQ2_0, *dQ2_1, *dQ2_2;
-              double   sum_xx_re, sum_xx_im, sizeMask, sc_re, sc_im;
+              double   sum_xx_re, sum_xx_im, sc_re, sc_im;
               double  *DP_0, *DP_1, *DP_2, *DP_3, *DP_4, *pntr_ReOut, *pntr_ImOut;
               double  *pntr_DP_re, *pntr_DP_im, *pntr_DP_0_re, *pntr_DP_0_im, *pntr_DP_1_re, *pntr_DP_1_im;
               double  *pntr_DP_2_re, *pntr_DP_2_im, *pntr_DP_3_re, *pntr_DP_3_im;
@@ -2457,8 +2457,6 @@ int return_gradhesscost(
                           Hessian_im[i * 5L + j] = 0.0;
                       }
                   }
-
-                  sizeMask = (double)(Mx * My) - 1.0;
 
                   sc_re = 1.0 / sqrt(sum_xx_re + sum_xx_im);
                   sc_im = sc_re;

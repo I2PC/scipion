@@ -129,7 +129,7 @@ void ProgTomoAlignRefinement::produce_side_info()
 
 // Look for best angles -------------------------------------------------
 //#define DEBUG
-void ProgTomoAlignRefinement::predict_angles(int idx,
+void ProgTomoAlignRefinement::predict_angles(size_t idx,
         const FileName &fnImgOut)
 {
     AlignmentTomography newAlignment=list_of_assigned[idx];
@@ -261,7 +261,7 @@ void ProgTomoAlignRefinement::run()
     if (adjustGray)
       fn_tmp.deleteFile();
 
-    for (int i=0; i<list_of_assigned.size(); i++)
+    for (size_t i=0; i<list_of_assigned.size(); i++)
     {
         if (adjustGray || generateAligned)
             fnImgOut.compose(i+1,fn_out+".stk");

@@ -58,6 +58,9 @@ String Basis::basisName() const
     case Basis::splines:
         return "splines";
         break;
+    default:
+    	return "Unknown";
+    	break;
     }
 }
 

@@ -31,12 +31,12 @@
     </pixelSpacing>
   </micrograph>
   <particle fileName="par0017.mrc" index="1">
+    <micrograph fileName="mic0018.mrc" index="100" />
     <activeFlag>1</activeFlag>
     <boxSize>
       <X unit="px">11</X>
       <Y unit="px">22</Y>
     </boxSize>
-    <micrograph filename="mic0001.mrc" index="3" />
     <pixelSpacing>
       <X unit="A/px">6.6</X>
       <Y unit="A/px">66.6</Y>
