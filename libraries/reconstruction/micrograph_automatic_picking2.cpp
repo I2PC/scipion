@@ -156,14 +156,10 @@ void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
     CorrelationAux aux;
 
     for (int n=0; n<nF;++n)
-    {
         correlationBetweenPolarChannels(n,n,n,Ipolar,IpolarCorr,aux);
-    }
     for (int i=0; i<(filter_num-corr_num);i++)
         for (int j=1;j<=corr_num;j++)
-        {
             correlationBetweenPolarChannels(i,i+j,nF++,Ipolar,IpolarCorr,aux);
-        }
 }
 
 AutoParticlePicking2::~AutoParticlePicking2()
@@ -213,9 +209,7 @@ void AutoParticlePicking2::buildVector(MultidimArray<double> &inputVec,
     }
     // Extract the statics from the image
     for (int j=0;j<12;j++)
-    {
         DIRECT_A1D_ELEM(featureVec,j+num_correlation*NPCA)=DIRECT_A1D_ELEM(staticVec,j);
-    }
 
     // Projecting the image on rotational PCA basis
     for (int j=0;j<NRPCA;j++)
@@ -304,13 +298,11 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
     {
         classifier.SVMTrain(dataSet,classLabel);
         classifier.SaveModel(fnModel);
-    	std::cerr<<"Trainng classifier 1 is done"<<std::endl;
     }
     else
     {
         classifier2.SVMTrain(dataSet1,classLabel1);
         classifier2.SaveModel(fnModel);
-        std::cerr<<"Trainng classifier 2 is done"<<std::endl;
     }
 }
 
@@ -471,9 +463,7 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
         vec.resize(1,1,1,XSIZE(vec)*YSIZE(vec));
         extractStatics(vec,staticVec);
         for (int j=0;j<12;j++)
-        {
             DIRECT_A2D_ELEM(dataSet,i+yDataSet,j+num_correlation*NPCA)=DIRECT_A1D_ELEM(staticVec,j);
-        }
         // Project each particles on rotational PCA basis.
         for (int j=0;j<NRPCA;j++)
         {
@@ -492,7 +482,6 @@ void AutoParticlePicking2::add2Dataset()
     // in the dataset.
     int yDataSet=YSIZE(dataSet);
     int newSize=rejected_particles.size()+accepted_particles.size();
-    std::cerr<<"size is: "<<newSize<<std::endl;
     dataSet.resize(1,1,yDataSet+newSize,num_correlation*NPCA+NRPCA+12);
     classLabel.resize(1,1,1,YSIZE(dataSet));
     if (rejected_particles.size() > 0)
@@ -500,15 +489,9 @@ void AutoParticlePicking2::add2Dataset()
         int limit = rejected_particles.size() + yDataSet;
         for (int n=yDataSet;n<limit;n++)
             classLabel(n)=3;
-        std::cerr<<"the size of rejected is:"<<rejected_particles.size()<<std::endl;
         for (int i=0;i<rejected_particles.size();i++)
-        {
-        	std::cerr<<i<<std::endl;
             for (int j=0;j<XSIZE(dataSet);j++)
-            {
                 DIRECT_A2D_ELEM(dataSet,i+yDataSet,j)=DIRECT_A1D_ELEM(rejected_particles[i].vec,j);
-            }
-        }
     }
 
     if (accepted_particles.size() > 0)
@@ -517,16 +500,10 @@ void AutoParticlePicking2::add2Dataset()
         int size = yDataSet + rejected_particles.size();
         for (int n=size;n<limit;n++)
             classLabel(n)=1;
-        std::cerr<<"the size of accepted is:"<<accepted_particles.size()<<std::endl;
         for (int i=0;i<accepted_particles.size();i++)
-        {
             for (int j=0;j<XSIZE(dataSet);j++)
-            {
                 DIRECT_A2D_ELEM(dataSet,i+size,j)=DIRECT_A1D_ELEM(accepted_particles[i].vec,j);
-            }
-        }
     }
-	std::cerr<<"Adding to dataset is done"<<std::endl;
 }
 
 void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantFeat,
@@ -549,9 +526,9 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
 
     for (int i=0;i<num_part;i++)
     {
-    	double cost = __m->coord(i).cost;
-    	if (cost == 0)
-    		continue;
+        double cost = __m->coord(i).cost;
+        if (cost == 0)
+            continue;
         int x=(__m->coord(i).X)*scaleRate;
         int y=(__m->coord(i).Y)*scaleRate;
 
@@ -567,9 +544,7 @@ void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantF
             pieceImage.setXmippOrigin();
             particleAvg.setXmippOrigin();
             if (particleAvg.computeMax()==0)
-            {
                 particleAvg=particleAvg+pieceImage;
-            }
             else
             {
                 alignImages(particleAvg,pieceImage,M,true,aux,aux2,aux3);
@@ -796,9 +771,7 @@ void AutoParticlePicking2::saveAutoVectors(const FileName &fn)
         if (p.cost>0 && p.status==1)
         {
             for (int j=0;j<X;++j)
-            {
                 fhVectors<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            }
             fhVectors<<std::endl;
         }
     }
@@ -829,7 +802,7 @@ void AutoParticlePicking2::saveVectors(const FileName &fn)
 {
     if (rejected_particles.size()>0)
     {
-    	std::ofstream fhRejected;
+        std::ofstream fhRejected;
         FileName fnRejectedVectors=fn+"_rejected_vector.txt";
         fhRejected.open(fnRejectedVectors.c_str());
         int rejSize=XSIZE(rejected_particles[0].vec);
@@ -839,9 +812,7 @@ void AutoParticlePicking2::saveVectors(const FileName &fn)
         {
             const Particle2 &p=rejected_particles[n];
             for (int j=0;j<rejSize;++j)
-            {
                 fhRejected<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            }
             fhRejected <<std::endl;
         }
         fhRejected.close();
@@ -858,9 +829,7 @@ void AutoParticlePicking2::saveVectors(const FileName &fn)
         {
             const Particle2 &p=accepted_particles[n];
             for (int j=0;j<accSize;++j)
-            {
                 fhAccepted<<DIRECT_A1D_ELEM(p.vec,j)<<" ";
-            }
             fhAccepted <<std::endl;
         }
         fhAccepted.close();
@@ -877,7 +846,6 @@ void AutoParticlePicking2::loadVectors(const FileName &fn)
 
     if (fnRejectedVectors.exists())
     {
-    	std::cerr<<"Ware in rejected part"<<std::endl;
         std::ifstream fhRejected;
         fhRejected.open(fnRejectedVectors.c_str());
         fhRejected>>numVector>>numFeature;
@@ -894,7 +862,6 @@ void AutoParticlePicking2::loadVectors(const FileName &fn)
     }
     if (fnAcceptedVectors.exists())
     {
-    	std::cerr<<"Ware in accepted part"<<std::endl;
         std::ifstream fhAccepted;
         fhAccepted.open(fnAcceptedVectors.c_str());
         fhAccepted>>numVector>>numFeature;
@@ -909,9 +876,6 @@ void AutoParticlePicking2::loadVectors(const FileName &fn)
         fhAccepted.close();
         fnAcceptedVectors.deleteFile();
     }
-    std::cerr<<"Loading is done..."<<std::endl;
-    std::cerr<<rejected_particles.size()<<std::endl;
-    std::cerr<<accepted_particles.size()<<std::endl;
 }
 
 void AutoParticlePicking2::generateTrainSet()
@@ -935,9 +899,7 @@ void AutoParticlePicking2::generateTrainSet()
             else
                 DIRECT_A1D_ELEM(classLabel1,cnt)=1;
             for (int j=0;j<XSIZE(dataSet);j++)
-            {
                 DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
-            }
             cnt++;
         }
     }
@@ -988,7 +950,6 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
 
     for (int i=particle_radius;i<endY;i++)
         for (int j=particle_radius;j<endX;j++)
-        {
             if (isLocalMaxima(convolveRes,j,i))
             {
                 p.y=i;
@@ -997,9 +958,8 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
                 p.status=0;
                 positionArray.push_back(p);
             }
-        }
-    for (size_t i=0;i<positionArray.size();++i)
-        for (size_t j=0;j<positionArray.size()-i-1;j++)
+    for (int i=0;i<positionArray.size();++i)
+        for (int j=0;j<positionArray.size()-i-1;j++)
             if (positionArray[j].cost<positionArray[j + 1].cost)
             {
                 p=positionArray[j+1];
@@ -1210,12 +1170,10 @@ void ProgMicrographAutomaticPicking2::run()
                     }
                 }
                 autoPicking->saveVectors(fn_model);
-                std::cerr<<"vectors are saved successfully"<<std::endl;
             }
         }
         if (fnAvgModel.exists())
         {
-            std::cerr<<"Read Avg Model"<<std::endl;
             Image<double> II;
             II.read(fnAvgModel);
             autoPicking->particleAvg=II();
@@ -1294,7 +1252,7 @@ void ProgMicrographAutomaticPicking2::run()
         // Load the rejected vectors features as false positives
         autoPicking->loadVectors(fn_model);
         if (autoPicking->rejected_particles.size()!= 0 || autoPicking->accepted_particles.size()!= 0)
-        	autoPicking->add2Dataset();
+            autoPicking->add2Dataset();
         // We just save the un normalized dataset
         autoPicking->saveTrainingSet(fnVector);
         autoPicking->normalizeDataset(0,1,fn_model);
@@ -1306,6 +1264,5 @@ void ProgMicrographAutomaticPicking2::run()
     }
     if (mode!="train")
         fnFilterBank.deleteFile();
-    std::cerr<<"Files are deleted"<<std::endl;
     delete autoPicking;
 }
