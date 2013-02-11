@@ -178,7 +178,7 @@ class TestEMX(unittest.TestCase):
         io.write(outFileName,emxData)
 
         from filecmp import cmp
-        self.assertTrue(cmp(outFileName,join(self.testsPath,'EMX/emxTrivialFile.xml'),False))
+        self.assertTrue(cmp(outFileName,join(self.testsPath,'EMX/emxTrivialFileWrite.xml'),False))
         unlink(outFileName)
 
     def test_EMX_read(self):
