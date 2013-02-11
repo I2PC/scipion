@@ -848,11 +848,11 @@ public:
      *  If Image Object is read using readPreview method, movePointerTo only works when rescaling
      *  the image in X-Y plane only, but all slices must be read.
      */
-    void movePointerTo(size_t select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES)
+    void movePointerTo(int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES)
     {
         if (MULTIDIM_ARRAY(VOLMATRIX(*this)) == NULL)
             REPORT_ERROR(ERR_MULTIDIM_EMPTY, "Image::movePointerTo: Image is empty");
-        if (select_slice > aDimFile.zdim)
+        if (select_slice > (int)aDimFile.zdim)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerTo: Selected slice %4d cannot be higher than Z size %4d.",
                          select_slice,aDimFile.zdim));
         else if (select_img > aDimFile.ndim)
