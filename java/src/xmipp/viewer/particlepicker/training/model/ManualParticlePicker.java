@@ -27,6 +27,7 @@ import xmipp.viewer.particlepicker.Micrograph;
 			{
 				filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 				saveFilters();
+
 			}
 
 		}

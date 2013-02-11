@@ -364,6 +364,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return getParticlePicker().getFamily();
 	}
 
+	
 	public abstract ParticlePickerCanvas getCanvas();
 	
 	public abstract ParticlesJDialog initParticlesJDialog();
@@ -451,6 +452,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().repaint();
 		getParticlePicker().saveFamilies();
 	}
+
 
 	protected void initImagePane() {
 		imagepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -625,7 +627,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	
-
 	public void updateSize(int size) {
 
 		sizetf.setValue(size);
@@ -656,6 +657,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	}
 
 	protected abstract void resetData();
+
+
 
 
 

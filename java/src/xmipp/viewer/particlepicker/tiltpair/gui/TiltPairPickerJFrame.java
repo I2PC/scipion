@@ -102,7 +102,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		filemn.add(importffmi);
 		if (pppicker.getFamily().getStep() != FamilyState.Manual)
 			importffmi.setEnabled(false);
-		importffilesmi = new JMenuItem("Import Particles From Files");
+		importffilesmi = new JMenuItem("Import Particles From Micrograph");
 		importffilesmi.addActionListener(new ActionListener() {
 			
 			@Override
@@ -400,10 +400,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			canvas.refreshActive(null);
 	}
 	
-	
-
-	
-
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
