@@ -182,7 +182,7 @@ protected:
     void readParams()
     {
         fn_in = getParam("-i");
-        if (!checkParam("--file") || getParam("--file") != "import_txt")
+        if (!checkParam("--file") || strcmp(getParam("--file"),"import_txt")==0)
             mdIn.read(fn_in);
         doWrite = true;
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
@@ -237,7 +237,7 @@ protected:
         else if ( operation == "drop_column")
                {
                    MDL::str2LabelVector(getParam("--operate", 1), labels);
-                   for (int i = 0; i < labels.size(); ++i)
+                   for (size_t i = 0; i < labels.size(); ++i)
                        mdIn.removeLabel(labels[i]);
                }
         else if (operation == "modify_values")// modify_values
@@ -284,7 +284,7 @@ protected:
             generator = new MDLinealGenerator(getDoubleParam("--fill", 2), getDoubleParam("--fill", 3));
 
         //Fill columns
-        for (int i = 0; i < labels.size(); ++i)
+        for (size_t i = 0; i < labels.size(); ++i)
         {
             generator->label = labels[i];
             generator->fill(mdIn);
@@ -329,7 +329,7 @@ protected:
             StringVector blocks;
             std::cout << "Blocks in " << fn_in << ": " << std::endl;
             getBlocksInMetaDataFile(fn_in, blocks);
-            for (int i = 0; i < blocks.size(); ++i)
+            for (size_t i = 0; i < blocks.size(); ++i)
                 std::cout << blocks[i] << std::endl;
         }
     }//end of function doQuery
@@ -444,4 +444,4 @@ public:
 }
 ;//end of class ProgMetaDataUtilities
 
-RUN_XMIPP_PROGRAM(ProgMetadataUtilities);
+RUN_XMIPP_PROGRAM(ProgMetadataUtilities)

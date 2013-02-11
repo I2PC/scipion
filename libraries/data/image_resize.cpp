@@ -217,6 +217,8 @@ void ProgImageResize::processImage(const FileName &fnImg, const FileName &fnImgO
         selfScaleToSizeFourier(zdimOut, ydimOut, xdimOut, img(), fourier_threads);
         img.write(fnImgOut);
         return;
+    case RESIZE_NONE:
+    	break;
     }
     imgOut.write(fnImgOut);
 }

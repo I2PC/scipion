@@ -125,7 +125,6 @@ public:
         SF.read(fnSel);
         FileName fnImg;
         toClassify.reserve(SF.size());
-        size_t objId;
         FileName fnImageStack;
         CorrelationAux aux;
         RotationalCorrelationAux aux2;
@@ -253,7 +252,6 @@ public:
         centerImage(I(),aux2,aux3);
         bestImage()=I();
         lastImage()=bestImage();
-        size_t objId;
 
         if (rank==0)
         {

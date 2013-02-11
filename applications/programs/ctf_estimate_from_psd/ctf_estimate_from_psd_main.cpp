@@ -25,5 +25,5 @@
 
 #include <reconstruction/ctf_estimate_from_psd.h>
 
-RUN_XMIPP_PROGRAM(ProgCTFEstimateFromPSD);
+RUN_XMIPP_PROGRAM(ProgCTFEstimateFromPSD)
 

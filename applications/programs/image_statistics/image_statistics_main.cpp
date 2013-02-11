@@ -80,10 +80,10 @@ protected:
         XmippMetadataProgram::readParams();
         short_format = checkParam("--short_format");
 
-        if (save_mask = checkParam("--save_mask"))
+        if ((save_mask = checkParam("--save_mask")))
             maskFileName = getParam("--save_mask");
 
-        if (save_image_stats = checkParam("--save_image_stats"))
+        if ((save_image_stats = checkParam("--save_image_stats")))
             statsRoot = getParam("--save_image_stats");
 
         show_angles  = checkParam("--show_angles");
@@ -91,7 +91,7 @@ protected:
 
         mask.allowed_data_types = INT_MASK;
 
-        if (apply_mask = checkParam("--mask"))
+        if ((apply_mask = checkParam("--mask")))
             mask.readParams(this);
     }
 
@@ -249,5 +249,5 @@ protected:
     }
 };// end of class ProgStatistics
 
-RUN_XMIPP_PROGRAM(ProgStatistics);
+RUN_XMIPP_PROGRAM(ProgStatistics)
 

@@ -219,7 +219,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
     for (int ii=0;ii<NPCA;ii++)
     {
         MultidimArray<double> &C=PCAbasis[ii];
-        for (int jj=0;jj<v.size();jj++)
+        for (size_t jj=0;jj<v.size();jj++)
         {
             MultidimArray<float> &D=v[jj];
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(C)
@@ -278,7 +278,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
 void PCAMahalanobisAnalyzer::gramSchmidt()
 {
     MultidimArray<double> v,orthonormalBasis;
-    for (int ii=0;ii<PCAbasis.size();ii++)
+    for (size_t ii=0;ii<PCAbasis.size();ii++)
     {
         /// Take the current vector
         MultidimArray<double> &Iii=PCAbasis[ii];
@@ -292,7 +292,7 @@ void PCAMahalanobisAnalyzer::gramSchmidt()
         /// Take the previous vectors
         v.initZeros(XSIZE(Iii));
         orthonormalBasis.initZeros(XSIZE(Iii));
-        for (int jj=0;jj<ii;jj++)
+        for (size_t jj=0;jj<ii;jj++)
         {
             const MultidimArray<double> &Ijj=PCAbasis[jj];
             double dotProduct=Iii.dotProduct(Ijj);

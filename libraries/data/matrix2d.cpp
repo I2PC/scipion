@@ -275,6 +275,7 @@ void * threadRansacWeightedLeastSquares(void * args)
 	ThreadRansacArgs * master = (ThreadRansacArgs *) args;
 	master->error=ransacWeightedLeastSquaresBasic(*(master->h), master->result,
 			master->tol, master->Niter, master->outlierFraction);
+	return NULL;
 }
 
 void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &result,

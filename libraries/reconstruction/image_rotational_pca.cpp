@@ -138,8 +138,7 @@ void ProgImageRotationalPCA::produceSideInfo()
     selectPartFromMd(MDin);
 
     Nimg = MDin.size();
-    int Ydim, Zdim;
-    size_t Ndim;
+    size_t Ydim, Zdim, Ndim;
     getImageSize(MDin, Xdim, Ydim, Zdim, Ndim);
     Nangles = floor(360.0 / psi_step);
     Nshifts = (2 * max_shift_change + 1) / shift_step;
@@ -481,7 +480,7 @@ int ProgImageRotationalPCA::QR()
     // from numerical problems
     for (int it=0; it<2; it++)
     {
-      for (int j2=0; j2<jQ; j2++)
+      for (size_t j2=0; j2<jQ; j2++)
       {
         F.getRow(j2,qj2);
 

@@ -634,6 +634,8 @@ void ProgNormalize::preProcess()
         case CIRCLE:
             BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
             break;
+        case NOBACKGROUND:
+        	break;
         }
     }
     else
@@ -789,6 +791,8 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
         FOR_ALL_ELEMENTS_IN_ARRAY3D(img)
         A3D_ELEM(img, k, i, j) = a * A3D_ELEM(img, k, i, j) + b;
         break;
+    case NONE:
+    	break;
     }
 
     I.write(fnImgOut);

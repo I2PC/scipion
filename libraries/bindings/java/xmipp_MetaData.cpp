@@ -53,7 +53,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_read_1
     {
         MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-        const char * fn = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char * fn = env->GetStringUTFChars(filename, &aux);
         md->read(fn);
         env->ReleaseStringUTFChars(filename, fn);
     }
@@ -90,7 +91,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_write
     {
         MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-        const char * fn = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char * fn = env->GetStringUTFChars(filename, &aux);
         md->write(fn);
         env->ReleaseStringUTFChars(filename, fn);
     }
@@ -104,7 +106,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeBlock
     {
         MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-        const char * fn = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char * fn = env->GetStringUTFChars(filename, &aux);
         md->write(fn, MD_APPEND);
         env->ReleaseStringUTFChars(filename, fn);
     }
@@ -187,14 +190,15 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_str2Label
 {
     XMIPP_JAVA_TRY
     {
-        const char * labelName = env->GetStringUTFChars(jlabelName, false);
+        jboolean aux=false;
+        const char * labelName = env->GetStringUTFChars(jlabelName, &aux);
         MDLabel label = MDL::str2Label(labelName);
         env->ReleaseStringUTFChars(jlabelName, labelName);
         return (jint) label;
     }
     XMIPP_JAVA_CATCH;
 
-    return NULL;
+    return -1;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_MetaData_getBlocksInMetaDataFile(
@@ -204,7 +208,8 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_MetaData_getBlocksInMetaDataFile(
     {
         StringVector blocks;
 
-        const char * fn = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char * fn = env->GetStringUTFChars(filename, &aux);
 
         getBlocksInMetaDataFile(fn, blocks);
 
@@ -215,7 +220,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_MetaData_getBlocksInMetaDataFile(
         jobjectArray array = env->NewObjectArray(blocks.size(), env->FindClass(
                                  "java/lang/String"), NULL);
 
-        for (int i = 0; i < blocks.size(); i++)
+        for (size_t i = 0; i < blocks.size(); i++)
         {
             str = env->NewStringUTF(blocks[i].c_str());
             env->SetObjectArrayElement(array, i, str);
@@ -240,7 +245,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_jni_MetaData_getActiveLabels(JNIEnv *env,
         // Copies vector into array.
         size_t size = labels.size();
         jint *body = new jint[size];
-        for (int i = 0; i < size; i++)
+        for (size_t i = 0; i < size; i++)
         {
             body[i] = labels[i];
         }
@@ -550,7 +555,8 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueString(JNIEnv *env,
 
 //        std::cout <<  (MDLabel) label << ": " << MDL_IMAGE << " -> " << MDL::label2Str(MDL_IMAGE) << std::endl;
 
-        const char * strValue = env->GetStringUTFChars(value, false);
+        jboolean aux=false;
+        const char * strValue = env->GetStringUTFChars(value, &aux);
         bool result = md->setValueFromStr((MDLabel) label, strValue, objId);
 
         env->ReleaseStringUTFChars(value, strValue);
@@ -618,7 +624,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getColumnValues(JNIEnv *e
         // Copies vector into array.
         size_t size = values.size();
         jdouble *body = new jdouble[size];
-        for (int i = 0; i < size; i++)
+        for (size_t i = 0; i < size; i++)
         {
             body[i] = values[i];
         }
@@ -638,7 +644,7 @@ jlongArray createLongArray(JNIEnv *env, const std::vector<size_t> & ids){
     // Copies vector into array.
     size_t size = ids.size();
     jlong *body = new jlong[size];
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         body[i] = ids[i];
     }
@@ -860,8 +866,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillConstant
   {
       MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-
-      const char * strValue = env->GetStringUTFChars(value, false);
+      jboolean aux=false;
+      const char * strValue = env->GetStringUTFChars(value, &aux);
       md->fillConstant((MDLabel)label, strValue);
   }
   XMIPP_JAVA_CATCH;
@@ -887,8 +893,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_fillRandom
   {
       MetaData * md = GET_INTERNAL_METADATA(jobj);
 
-
-      const char * strMode = env->GetStringUTFChars(mode, false);
+      jboolean aux=false;
+      const char * strMode = env->GetStringUTFChars(mode, &aux);
       md->fillRandom((MDLabel)label, strMode, op1, op2);
   }
   XMIPP_JAVA_CATCH;
@@ -907,8 +913,10 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_readPlain
 {
     XMIPP_JAVA_TRY
     {
-        const char * nfile = env->GetStringUTFChars(jfile, false);
-        const char * ncolumns = env->GetStringUTFChars(jcolumns, false);
+        jboolean aux=false;
+        const char * nfile = env->GetStringUTFChars(jfile, &aux);
+        aux=false;
+        const char * ncolumns = env->GetStringUTFChars(jcolumns, &aux);
         MetaData * metadata = GET_INTERNAL_METADATA(jobj);
         metadata->readPlain(nfile, ncolumns);
         env->ReleaseStringUTFChars(jfile, nfile);
@@ -923,7 +931,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeImages
     XMIPP_JAVA_TRY
     {
         MetaData * md = GET_INTERNAL_METADATA(jobj);
-        const char * output = env->GetStringUTFChars(joutput, false);
+        jboolean aux=false;
+        const char * output = env->GetStringUTFChars(joutput, &aux);
         copyImages(*md, output, independent, (MDLabel) image_label);
         env->ReleaseStringUTFChars(joutput, output);
     }
@@ -935,7 +944,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_operate
 {
     XMIPP_JAVA_TRY
     {
-        const char * opStr = env->GetStringUTFChars(operateString, false);
+        jboolean aux=false;
+        const char * opStr = env->GetStringUTFChars(operateString, &aux);
         MetaData * md = GET_INTERNAL_METADATA(jobj);
         md->operate(opStr);
     }
@@ -951,6 +961,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMax
         return md->getColumnMax((MDLabel)column);
     }
     XMIPP_JAVA_CATCH;
+    return 0.;
 }
 
 JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMin
@@ -962,6 +973,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMin
         return md->getColumnMin((MDLabel)column);
     }
     XMIPP_JAVA_CATCH;
+    return 0.;
 }
 
 

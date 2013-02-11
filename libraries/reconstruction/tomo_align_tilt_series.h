@@ -96,14 +96,14 @@ public:
     bool useCriticalPoints;
 
     /// Number of critical points
-    int Ncritical;
+    size_t Ncritical;
 
     /// Sequence Length
-    int seqLength;
+    size_t seqLength;
 
     /** Add blind landmarks.
         Set to -1 for no blind landmarks */
-    int blindSeqLength;
+    size_t blindSeqLength;
 
     /// Grid samples
     int gridSamples;

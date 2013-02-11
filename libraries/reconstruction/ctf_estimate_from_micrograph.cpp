@@ -278,7 +278,7 @@ void ProgCTFEstimateFromMicrograph::run()
 
     // Open the micrograph --------------------------------------------------
     ImageGeneric M_in;
-    int Zdim, Ydim, Xdim; // Micrograph dimensions
+    size_t Zdim, Ydim, Xdim; // Micrograph dimensions
     M_in.read(fn_micrograph);
     M_in.getDimensions(Xdim, Ydim, Zdim);
 
@@ -344,7 +344,7 @@ void ProgCTFEstimateFromMicrograph::run()
     if (verbose)
         init_progress_bar(div_Number);
     int N = 1; // Index of current piece
-    int piecei = 0, piecej = 0; // top-left corner of the current piece
+    size_t piecei = 0, piecej = 0; // top-left corner of the current piece
     FourierTransformer transformer;
     int actualDiv_Number = 0;
     while (N <= div_Number)
@@ -486,8 +486,7 @@ void ProgCTFEstimateFromMicrograph::run()
                     ctfmodel.xF = (piecej + pieceDim-1);
                     ctfmodel.y0 = piecei;
                     ctfmodel.yF = (piecei + pieceDim-1);
-                    double fitting_error = ROUT_Adjust_CTF(
-                                               prmEstimateCTFFromPSD, ctfmodel, false);
+                    ROUT_Adjust_CTF(prmEstimateCTFFromPSD, ctfmodel, false);
 
                     int idxi=blocki-skipBorders;
                     int idxj=blockj-skipBorders;
@@ -588,8 +587,7 @@ void ProgCTFEstimateFromMicrograph::run()
                 ctfmodel.xF = (Xdim-1);
                 ctfmodel.y0 = 0;
                 ctfmodel.yF = (Ydim-1);
-                double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
-                                                       ctfmodel, false);
+                ROUT_Adjust_CTF(prmEstimateCTFFromPSD,ctfmodel, false);
 
                 // Evaluate PSD variance and write into the CTF
                 double stdQ = 0;
@@ -744,7 +742,7 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
     int id = thArg.thread_id;
     ImageGeneric &I = *(args->I);
     const MultidimArrayGeneric& mI = I();
-    int IXdim, IYdim, IZdim;
+    size_t IXdim, IYdim, IZdim;
     I.getDimensions(IXdim, IYdim, IZdim);
     MultidimArray<double> &pieceSmoother = *(args->pieceSmoother);
     MultidimArray<int> &pieceMask = *(args->pieceMask);
@@ -797,8 +795,7 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
 void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
                              MultidimArray<double> &enhancedPSD, int numberOfThreads)
 {
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getImageSizeFromFilename(fnMicrograph, Xdim, Ydim, Zdim, Ndim);
     int minSize = 2 * (std::max(Xdim, Ydim) / 10);
     minSize = std::min((double) std::min(Xdim, Ydim), NEXT_POWER_OF_2(minSize));

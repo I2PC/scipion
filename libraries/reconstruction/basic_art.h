@@ -327,10 +327,10 @@ public:
     SymList         SL;
 
     /// Projection X dimension
-    int             projXdim;
+    size_t          projXdim;
 
     /// Projection Y dimension
-    int             projYdim;
+    size_t          projYdim;
 
     /// File handler for the history file
     std::ofstream        *fh_hist;

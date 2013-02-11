@@ -136,7 +136,7 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
     MultidimArray<double> Irolled;
     Irolled.resizeNoCopy(shrinkI);
     Irolled.initConstant(-500);
-    for (int yb = -radius; yb < YSIZE(shrinkI) + radius; yb++)
+    for (int yb = -radius; yb < (int)YSIZE(shrinkI) + radius; yb++)
     {
         // Limits of the ball
         int y0 = yb - radius;
@@ -147,7 +147,7 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
         if (yF >= YSIZE(shrinkI))
             yF = YSIZE(shrinkI) - 1;
 
-        for (int xb = -radius; xb < XSIZE(shrinkI) + radius; xb++)
+        for (int xb = -radius; xb < (int)XSIZE(shrinkI) + radius; xb++)
         {
             // Limits of the ball
             int x0 = xb - radius;
@@ -199,9 +199,9 @@ void detectBackground(const MultidimArray<double> &vol,
     std::queue<int> list_for_compute; // Lista del modo [x1,y1,z1,...,xi,yi,zi]
     // que contiene los pixeles por procesar
     std::vector<double> bg_values; // Vector con los valores del background
-    int xdim = XSIZE(bg);
-    int ydim = YSIZE(bg);
-    int zdim = ZSIZE(bg);
+    size_t xdim = XSIZE(bg);
+    size_t ydim = YSIZE(bg);
+    size_t zdim = ZSIZE(bg);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(bg)
     {
         if (j == 0 || j == xdim - 1 || i == 0 || i == ydim - 1 || k == 0
@@ -553,7 +553,6 @@ int labelImage2D(const MultidimArray<double> &I, MultidimArray<double> &label,
 
     label = I;
     int colour = 32000;
-    bool found;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
     {
         if (label(i, j) != 1)
@@ -574,7 +573,6 @@ int labelImage3D(const MultidimArray<double> &V, MultidimArray<double> &label)
 
     label = V;
     int colour = 32000;
-    bool found;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(label)
     {
         if (label(k, i, j) != 1)
@@ -693,7 +691,7 @@ void OtsuSegmentation(MultidimArray<double> &V)
     // Maximize sigma2B
     double bestSigma2B = -1;
     int ibestSigma2B = -1;
-    for (int i = 0; i < XSIZE(hist) - 1; i++)
+    for (size_t i = 0; i < XSIZE(hist) - 1; i++)
     {
         double w1 = mom0(i);
         double w2 = 1 - mom0(i);
@@ -760,8 +758,8 @@ void EntropySegmentation(MultidimArray<double> &V)
 
     // Find histogram index with maximum entropy
     double Hmax = h1(0) + h2(0);
-    int iHmax = 0;
-    for (int i = 1; i < XSIZE(hist) - 1; i++)
+    size_t iHmax = 0;
+    for (size_t i = 1; i < XSIZE(hist) - 1; i++)
     {
         double H = h1(i) + h2(i);
         if (H > Hmax)
@@ -835,7 +833,7 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
     sigma2B.initZeros(XSIZE(hist) - 1);
     H.initZeros(XSIZE(hist) - 1);
     HSigma2B.initZeros(XSIZE(hist) - 1);
-    for (int i = 0; i < XSIZE(hist) - 1; i++)
+    for (size_t i = 0; i < XSIZE(hist) - 1; i++)
     {
         double w1 = mom0(i);
         double w2 = 1 - mom0(i);
@@ -902,7 +900,6 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
 
     int imax, jmax, i_actual, j_actual;
     double xmax, ymax, avecorr, stdcorr, dummy;
-    float xshift, yshift, shift;
     bool neighbourhood = true;
     MultidimArray<double> Mcorr;
 
@@ -1010,7 +1007,6 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
 
     int imax, jmax, kmax, i_actual, j_actual, k_actual;
     double max, xmax, ymax, zmax, sumcorr, avecorr, stdcorr, dummy;
-    float xshift, yshift, zshift, shift;
     bool neighbourhood = true;
     MultidimArray<double> Mcorr;
 
@@ -1311,7 +1307,6 @@ double alignImagesConsideringMirrors(const MultidimArray<double>& Iref,
 {
     MultidimArray<double> Imirror;
     Matrix2D<double> Mmirror;
-    AlignmentAux *auxToUse = NULL;
     Imirror = I;
     Imirror.selfReverseX();
     Imirror.setXmippOrigin();
@@ -1343,7 +1338,7 @@ void alignSetOfImages(MetaData &MD, MultidimArray<double>& Iavg, int Niter,
     RotationalCorrelationAux aux3;
     Matrix2D<double> M;
     size_t Nimgs;
-    int Xdim, Ydim, Zdim;
+    size_t Xdim, Ydim, Zdim;
     getImageSize(MD, Xdim, Ydim, Zdim, Nimgs);
     for (int n = 0; n < Niter; ++n)
     {
@@ -1607,39 +1602,20 @@ void fourierBesselDecomposition(const MultidimArray<double> &img_in,
         int k_1 = k - 1;
 
         // Compute h and a,b coefficients
-        double coefca = 0, coefcb = 0, coefsa = 0, coefsb = 0;
         double h = 0, my5 = 0;
         if (k_1 != 0)
         {
             double my = 1 + PI * r2 / 2 / k_1;
-            double my2 = 2 * my;
             double my4 = my * k_1;
-            double my5 = my4 - 1;
             double ntot = 4 * my4;
             h = 2 * PI / ntot;
-            double hdpi = h / PI;
-            double th = k_1 * h;
-            double ys = sin(th);
-            double zs = cos(th);
-            double ys2 = sin(2 * th);
-            double b1 = 2 / (th * th) * (1 + zs * zs - ys2 / th);
-            double g1 = 4 / (th * th) * (ys / th - zs);
-            double d1 = 2 * th / 45 * ys2;
-            double e1 = d1 * ys * 2;
-            coefca = (b1 + e1) * hdpi;
-            coefcb = (g1 - d1) * hdpi;
-            coefsa = (b1 - e1) * hdpi;
-            coefsb = (g1 + d1) * hdpi;
         }
         else
         {
             double my = 1 + PI * r2 / 2;
-            double my2 = 2 * my;
             double my4 = my;
-            double my5 = my4 - 1;
             double ntot = 4 * my4;
             h = 2 * PI / ntot;
-            coefca = h / PI / 2.;
         }
 
         MultidimArray<double> sine(CEIL(my5));
@@ -1726,19 +1702,17 @@ double Update_surface_Shah(MultidimArray<double> &img,
     img.checkDimension(2);
 
     double Diff = 0.0, Norm = 0.0;
-    int Ydim1 = YSIZE(img) - 1;
-    int Xdim1 = XSIZE(img) - 1;
+    size_t Ydim1 = YSIZE(img) - 1;
+    size_t Xdim1 = XSIZE(img) - 1;
 
     /* Update surface estimate */
     double w0 = VEC_ELEM(W,0);
     double w1 = VEC_ELEM(W,1);
-    double w2 = VEC_ELEM(W,2);
-    double w3 = VEC_ELEM(W,3);
-    for (int i = 1; i < Ydim1; i++)
+    for (size_t i = 1; i < Ydim1; i++)
     {
         int ip1 = i + 1;
         int im1 = i - 1;
-        for (int j = 1; j < Xdim1; j++)
+        for (size_t j = 1; j < Xdim1; j++)
         {
             int jp1 = j + 1;
             int jm1 = j - 1;
@@ -1807,20 +1781,19 @@ double Update_edge_Shah(MultidimArray<double> &img,
     img.checkDimension(2);
 
     double Diff = 0.0, Norm = 0.0;
-    int Ydim1 = YSIZE(img) - 1;
-    int Xdim1 = XSIZE(img) - 1;
+    size_t Ydim1 = YSIZE(img) - 1;
+    size_t Xdim1 = XSIZE(img) - 1;
     double Kinv = 1.0 / K;
 
     /* Update edge estimate */
-    double w0 = VEC_ELEM(W,0);
     double w1 = VEC_ELEM(W,1);
     double w2 = VEC_ELEM(W,2);
     double w3 = VEC_ELEM(W,3);
-    for (int i = 1; i < Ydim1; i++)
+    for (size_t i = 1; i < Ydim1; i++)
     {
         int ip1 = i + 1;
         int im1 = i - 1;
-        for (int j = 1; j < Xdim1; j++)
+        for (size_t j = 1; j < Xdim1; j++)
         {
             int jp1 = j + 1;
             int jm1 = j - 1;
@@ -1918,9 +1891,9 @@ double tomographicDiffusion(MultidimArray<double>& V,
 
     // Compute regularization error
     double regError = 0;
-    for (int z = 1; z < ZSIZE(V) - 1; z++)
-        for (int y = 1; y < YSIZE(V) - 1; y++)
-            for (int x = 1; x < XSIZE(V) - 1; x++)
+    for (size_t z = 1; z < ZSIZE(V) - 1; z++)
+        for (size_t y = 1; y < YSIZE(V) - 1; y++)
+            for (size_t x = 1; x < XSIZE(V) - 1; x++)
             {
                 diffx = DIRECT_A3D_ELEM(V,z,y,x+1) - DIRECT_A3D_ELEM(V,z,y,x-1);
                 diffy = DIRECT_A3D_ELEM(V,z,y+1,x) - DIRECT_A3D_ELEM(V,z,y-1,x);
@@ -1934,9 +1907,9 @@ double tomographicDiffusion(MultidimArray<double>& V,
     // Compute the gradient of the regularization error
     MultidimArray<double> gradient;
     gradient.initZeros(V);
-    for (int z = 2; z < ZSIZE(V) - 2; z++)
-        for (int y = 2; y < YSIZE(V) - 2; y++)
-            for (int x = 2; x < XSIZE(V) - 2; x++)
+    for (size_t z = 2; z < ZSIZE(V) - 2; z++)
+        for (size_t y = 2; y < YSIZE(V) - 2; y++)
+            for (size_t x = 2; x < XSIZE(V) - 2; x++)
             {
                 // First term
                 double V000 = DIRECT_A3D_ELEM(V,z,y,x);
@@ -2028,9 +2001,9 @@ double tomographicDiffusion(MultidimArray<double>& V,
 #endif
 
     // Update volume
-    for (int z = 2; z < ZSIZE(V) - 2; z++)
-        for (int y = 2; y < YSIZE(V) - 2; y++)
-            for (int x = 2; x < XSIZE(V) - 2; x++)
+    for (size_t z = 2; z < ZSIZE(V) - 2; z++)
+        for (size_t y = 2; y < YSIZE(V) - 2; y++)
+            for (size_t x = 2; x < XSIZE(V) - 2; x++)
                 DIRECT_A3D_ELEM(V,z,y,x) -= lambda
                                             * DIRECT_A3D_ELEM(gradient,z,y,x);
 

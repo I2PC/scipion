@@ -513,8 +513,9 @@ public:
     ~MDRow();
     /** True if this row contains this label */
     bool containsLabel(MDLabel label) const;
+
     /** Add a new label */
-    bool addLabel(MDLabel label);
+    void addLabel(MDLabel label);
 
     /** Clear elements of the row */
     void clear();

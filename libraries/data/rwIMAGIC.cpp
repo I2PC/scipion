@@ -130,7 +130,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
         REPORT_ERROR(ERR_IO_NOREAD,(String)"readIMAGIC: header file of " + filename + " cannot be read");
 
     // Determine byte order and swap bytes if from little-endian machine
-    if ( swap = (( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG )) )
+    if ( (swap = (( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG ))) )
         swapPage((char *) header, IMAGICSIZE - 916, DT_Float); // IMAGICSIZE - 916 is to exclude labels from swapping
 
     DataType datatype;
@@ -188,7 +188,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
     replaceNsize = _nDim;
     setDimensions(_xDim, _yDim, _zDim, _nDim );
 
-    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
+    if (dataMode == HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
     {
         delete header;
         return 0;
@@ -212,11 +212,11 @@ int  ImageBase::readIMAGIC(size_t select_img)
             {
                 MD[i].setValue(MDL_SHIFT_X,  (double)-1. * header->ixold);
                 MD[i].setValue(MDL_SHIFT_Y,  (double)-1. * header->iyold);
-                MD[i].setValue(MDL_SHIFT_Z,  zeroD);
+                MD[i].setValue(MDL_SHIFT_Z,  0.);
                 MD[i].setValue(MDL_ANGLE_ROT, (double)-1. * header->euler_alpha);
                 MD[i].setValue(MDL_ANGLE_TILT,(double)-1. * header->euler_beta);
                 MD[i].setValue(MDL_ANGLE_PSI, (double)-1. * header->euler_gamma);
-                MD[i].setValue(MDL_WEIGHT,   (double)oneD);
+                MD[i].setValue(MDL_WEIGHT,   1.);
                 MD[i].setValue(MDL_SCALE, daux);
             }
         }
@@ -333,8 +333,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
             dataMode = DATA;
     }
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     if (Zdim > 1)
@@ -381,7 +380,6 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
 
     header.ifn = replaceNsize - 1 ;
     header.imn = 1;
-    size_t firtIfn = 0;
 
     if ( mode == WRITE_APPEND )
     {
@@ -410,13 +408,13 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         }
         fwrite( &header, IMAGICSIZE, 1, fhed );
     }
-    else if( header.ifn + 1 > replaceNsize && imgStart > 0 ) // Update number of images when needed
+    else if( header.ifn + 1 > (int)replaceNsize && imgStart > 0 ) // Update number of images when needed
     {
         fseek( fhed, sizeof(int), SEEK_SET);
         if ( swapWrite )
         {
             int ifnswp = header.ifn;
-            swapPage((char *) ifnswp, SIZEOF_INT, DT_Int);
+            swapPage((char *) &ifnswp, SIZEOF_INT, DT_Int);
             fwrite(&(ifnswp),SIZEOF_INT,1,fhed);
         }
         else

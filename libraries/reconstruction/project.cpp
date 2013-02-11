@@ -860,10 +860,12 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         phantomDescr.read(prog_prm.fnPhantom);
         phantomMode = XMIPP;
         if (prog_prm.singleProjection)
+        {
             if (prog_prm.projSize==-1)
                 prm.proj_Xdim=prm.proj_Ydim=phantomDescr.xdim;
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+        }
     }
     else if (prog_prm.fnPhantom.getExtension()=="pdb")
     {
@@ -873,10 +875,12 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         interpolator.setup(M,prog_prm.samplingRate/M,true);
         phantomMode = PDB;
         if (prog_prm.singleProjection)
+        {
             if (prog_prm.projSize==-1)
                 REPORT_ERROR(ERR_ARG_MISSING,"--xdim");
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+        }
     }
     else
     {
@@ -884,10 +888,12 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
         phantomVol().setXmippOrigin();
         phantomMode = VOXEL;
         if (prog_prm.singleProjection)
+        {
             if (prog_prm.projSize==-1)
                 prm.proj_Xdim=prm.proj_Ydim=XSIZE(phantomVol());
             else
                 prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+        }
     }
     paddFactor = prog_prm.paddFactor;
     maxFrequency = prog_prm.maxFrequency;

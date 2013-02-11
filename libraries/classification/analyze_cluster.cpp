@@ -104,8 +104,7 @@ void ProgAnalyzeCluster::produceSideInfo(MDLabel image_label)
     }
 
     // Prepare mask
-    int Xdim,Ydim,Zdim;
-    size_t Ndim;
+    size_t Xdim,Ydim,Zdim, Ndim;
     getImageSize(SFin,Xdim,Ydim,Zdim,Ndim,image_label);
     mask.resize(Ydim,Xdim);
     mask.setXmippOrigin();
@@ -181,7 +180,7 @@ void ProgAnalyzeCluster::produceBasis(MultidimArray<double> &basis)
 {
     int iimax=pcaAnalyzer.PCAbasis.size();
     basis.initZeros(iimax,1,YSIZE(mask),XSIZE(mask));
-    for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
+    for (size_t ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
     {
         int idx=0;
         double *ptrBasis=&DIRECT_NZYX_ELEM(basis, ii, 0, 0, 0);
@@ -202,7 +201,6 @@ void ProgAnalyzeCluster::run()
 
     // Output
     size_t N=SFin.size();
-    double Ngood=0;
     SFout=SFin;
     for (size_t n=0; n<N; n++)
     {

@@ -230,19 +230,16 @@ void Rotational_Spectrum::compute_rotational_spectrum(
 {
     double *e[MAX_HARMONIC], *rv, *st, *ep[MAX_HARMONIC], *erp [MAX_HARMONIC],
     *rp1, *rp2, *sp, *c, *s;
-    int i1, n, m, i, j1, k, j, ir1, ir2, ndr, nr, ncol, nvez,
-    irk, k1, k2;
+    int n, m, i, j1, k, j, ir1, ir2, ndr, nr, ncol, nvez,
+    irk, k1;
 
     // Read the information from the Cylindrical Wave Decomposition .........
     if ((c = (double *) calloc(5191, sizeof(double))) == NULL ||
         (s = (double *) calloc(5191, sizeof(double))) == NULL)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "compute_rotational_spectrum::no memory");
 
-    int ir     = cwd.ir;
     int numin  = cwd.numin;
     int numax  = cwd.numax;
-    double xx0 = cwd.x0;
-    double yy0 = cwd.y0;
     double rl  = cwd.r1;
     double rh  = cwd.r2;
     double dr  = cwd.r3;
@@ -335,7 +332,6 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     for (k = 1; k <= nvez; k++)
     {
         k1 = 13 * (k - 1) + 1;
-        k2 = XMIPP_MIN(ncol, 13 * k);
         for (i = j1; i <= n; i++)
             rot_spectrum(i - j1) = erp[i][k1] / 10000;
     }

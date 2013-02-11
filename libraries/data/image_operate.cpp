@@ -127,7 +127,7 @@ void ge(Image<double> &op1, const Image<double> &op2)
 }
 
 
-double sqrt(Image<double> &op)
+void sqrt(Image<double> &op)
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
     {
@@ -135,7 +135,7 @@ double sqrt(Image<double> &op)
     }
 }
 
-double abs(Image<double> &op)
+void abs(Image<double> &op)
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
     {
@@ -143,7 +143,7 @@ double abs(Image<double> &op)
     }
 }
 
-double log10(Image<double> &op)
+void log10(Image<double> &op)
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
     {
@@ -152,7 +152,7 @@ double log10(Image<double> &op)
 }
 
 double powerExp = 2;
-double power(Image<double> &op)
+void power(Image<double> &op)
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
     {
@@ -162,7 +162,7 @@ double power(Image<double> &op)
 
 int nSlice;
 char axis;
-double getSlice(Image<double> &op)
+void getSlice(Image<double> &op)
 {
     MultidimArray<double> imAux;
 
@@ -172,7 +172,7 @@ double getSlice(Image<double> &op)
 
 
 FileName fnOut;
-double radialAvg(Image<double> &op)
+void radialAvg(Image<double> &op)
 {
     op().setXmippOrigin();
     Matrix1D<int> center(3);

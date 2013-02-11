@@ -301,7 +301,6 @@ void CTFDescription::clearPureCtf()
 void CTFDescription::produceSideInfo()
 {
     // Change units
-    double local_alpha = alpha / 1000;
     double local_Cs = Cs * 1e7;
     double local_Ca = Ca * 1e7;
     double local_kV = kV * 1e3;
