@@ -632,9 +632,6 @@ public abstract class ParticlePicker
 
 	}
 	
-
-
-
-
 	public abstract boolean isValidSize(int size);
+	
 }

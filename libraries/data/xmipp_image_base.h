@@ -436,7 +436,7 @@ public:
       *  If Image Object is read using readPreview method, movePointerTo only works when rescaling
       *  the image in X-Y plane only, but all slices must be read.
       */
-    virtual void movePointerTo(size_t select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES) = 0;
+    virtual void movePointerTo(int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES) = 0;
 
     /* Return the datatype of the current image object */
     virtual DataType myT() const = 0;
