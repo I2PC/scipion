@@ -1021,7 +1021,6 @@ void AutoParticlePicking2::applyConvolution(bool fast)
         filter.generateMask(convolveRes);
         filter.applyMaskSpace(convolveRes);
 
-        int cnt=1;
         for (int deg=3;deg<360;deg+=3)
         {
             // We first rotate the template and then put it in the big image in order to
@@ -1223,10 +1222,10 @@ void ProgMicrographAutomaticPicking2::run()
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            int num=autoPicking->automaticallySelectParticles(true,fast);
+            autoPicking->automaticallySelectParticles(true,fast);
         }
         else
-            int num=autoPicking->automaticallySelectParticles(false,fast);
+            autoPicking->automaticallySelectParticles(false,fast);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
             autoPicking->saveAutoVectors(fnAutoVectors);
