@@ -139,6 +139,7 @@ class EmxObject:
     
     def pprint_pk(self, printNone=False):
         '''Print primary keys
+        '''
         out = "fileName: %(fileName)s"
         if (self.get(INDEX) != None) or printNone:
             out += " (index=%(index)s)"

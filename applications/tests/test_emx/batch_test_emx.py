@@ -27,7 +27,7 @@ MODIFICATION ADVICE:
 Please, do not generate or distribute 
 a modified version of this file under its original name. 
  '''
- import unittest, os, sys
+import unittest, os, sys
 
 from unittest import TestResult, _TextTestResult
 from protlib_filesystem import getXmippPath
