@@ -159,6 +159,7 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
     ASSIGN_CTF_PARAM(19, sigmaU);
 
     if (ia <= 20 && l > 0)
+    {
         if (modelSimplification < 3)
         {
             ctfmodel.sigmaV = p[20];
@@ -169,7 +170,9 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
             ctfmodel.sigmaV = p[19];
             l--;
         }
+    }
     if (ia <= 21 && l > 0)
+    {
         if (modelSimplification < 3)
         {
             ctfmodel.gaussian_angle = p[21];
@@ -180,10 +183,12 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
             ctfmodel.gaussian_angle = 0;
             l--;
         }
+    }
 
     ASSIGN_CTF_PARAM(22, cU);
 
     if (ia <= 23 && l > 0)
+    {
         if (modelSimplification < 3)
         {
             ctfmodel.cV = p[23];
@@ -194,6 +199,7 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
             ctfmodel.cV = p[22];
             l--;
         }
+    }
 
     ASSIGN_CTF_PARAM(24, gaussian_K2);
     ASSIGN_CTF_PARAM(25, sigmaU2);
@@ -231,6 +237,7 @@ void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
     ASSIGN_PARAM_CTF(19, sigmaU);
 
     if (ia <= 20 && l > 0)
+    {
         if (modelSimplification < 3)
         {
             p[20] = ctfmodel.sigmaV;
@@ -241,7 +248,9 @@ void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
             p[20] = 0;
             l--;
         }
+    }
     if (ia <= 21 && l > 0)
+    {
         if (modelSimplification < 3)
         {
             p[21] = ctfmodel.gaussian_angle;
@@ -252,10 +261,12 @@ void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
             p[21] = 0;
             l--;
         }
+    }
 
     ASSIGN_PARAM_CTF(22, cU);
 
     if (ia <= 23 && l > 0)
+    {
         if (modelSimplification < 3)
         {
             p[23] = ctfmodel.cV;
@@ -266,6 +277,7 @@ void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
             p[23] = 0;
             l--;
         }
+    }
 
     ASSIGN_PARAM_CTF(24, gaussian_K2);
     ASSIGN_PARAM_CTF(25, sigmaU2);
@@ -624,7 +636,6 @@ void generateModelSoFar(Image<double> &I, bool apply_log = false)
         digfreq2contfreq(freq, freq, global_prm->Tm);
 
         // Decide what to save
-        double param;
         global_ctfmodel.precomputeValues(XX(freq), YY(freq));
         if (global_action <= 1)
             I()(i, j) = global_ctfmodel.getValueNoiseAt();
@@ -695,7 +706,6 @@ void saveIntermediateResults(const FileName &fn_root, bool generate_profiles =
     plotY << "# freq_dig freq_angstrom model psd enhanced\n";
     plot_radial << "# freq_dig freq_angstrom model psd enhanced\n";
 
-    double w;
     // Generate cut along X
     for (int i = STARTINGY(save()); i <= FINISHINGY(save()) / 2; i++)
     {
@@ -1481,7 +1491,7 @@ void estimate_background_gauss_parameters()
 
     // Compute the minimum radial error
     bool first = true, OK_to_proceed = false;
-    double error2_min = 0, wmin, fmin;
+    double error2_min = 0, wmin;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0)
@@ -1523,7 +1533,6 @@ void estimate_background_gauss_parameters()
 
     // Compute the frequency of the minimum error
     global_max_gauss_freq = wmin;
-    fmin = wmin / global_prm->Tm;
 #ifdef DEBUG
 
     std::cout << "Freq of the minimum error: " << wmin << " " << fmin << std::endl;
@@ -1679,8 +1688,6 @@ void estimate_background_gauss_parameters2()
 
     // Compute the frequency of the minimum error
     double wmin = 0.15;
-    double global_max_gauss_freq = wmin;
-    double fmin = wmin / global_prm->Tm;
 
     // Compute the maximum (negative) radial error
     double error_max = 0, wmax, fmax;
@@ -2104,12 +2111,14 @@ void estimate_defoci()
             for (int jj = STARTINGX(error); jj <= FINISHINGX(error); jj++)
             {
                 if (error(ii, jj) != global_heavy_penalization)
+                {
                     if (error(ii, jj) < errmin)
                         errmin = error(ii, jj);
                     else if (errmax == global_heavy_penalization)
                         errmax = error(ii, jj);
                     else if (error(ii, jj) > errmax)
                         errmax = error(ii, jj);
+                }
             }
         if (global_prm->show_optimization)
             std::cout << "Error matrix\n" << error << std::endl;
@@ -2295,7 +2304,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     int maxInd;
     arrayError.maxIndex(maxInd);
 
-    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 3000) || (VEC_ELEM(arrayDefocusAvg,maxInd) > 50000) && VEC_ELEM(arrayError,maxInd)>-1e3 )
+    while ( (VEC_ELEM(arrayDefocusAvg,maxInd) < 3000) || ((VEC_ELEM(arrayDefocusAvg,maxInd) > 50000) && VEC_ELEM(arrayError,maxInd)>-1e3 ))
     {
         VEC_ELEM(arrayError,maxInd) = -1e3;
         VEC_ELEM(arrayDefocusAvg,maxInd) = global_prm->initial_ctfmodel.DeltafU;
@@ -2439,7 +2448,6 @@ void estimate_defoci_Zernike()
     if (global_prm->show_optimization)
         std::cout << "Looking for first defoci ...\n";
 
-    double defocusU, defocusV, angle;
     DEBUG_TEXTFILE("Step 6.1");
     DEBUG_MODEL_TEXTFILE;
     estimate_defoci_Zernike(global_prm->enhanced_ctftomodel_fullsize(),
@@ -2487,9 +2495,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     double fitness;
     Matrix1D<double> steps;
 
-    /************************************************************************
-     STEPs 1, 2, 3 and 4:  Find background which best fits the CTF
-     /************************************************************************/
+    /************************************************************************/
+    /* STEPs 1, 2, 3 and 4:  Find background which best fits the CTF        */
+    /************************************************************************/
 
     global_ctfmodel.enable_CTFnoise = true;
     global_ctfmodel.enable_CTF = false;
@@ -2530,9 +2538,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     DEBUG_TEXTFILE(formatString("Step 4: CTF_fitness=%f",CTF_fitness));
     DEBUG_MODEL_TEXTFILE;
 
-    /************************************************************************
-     STEPs 5 and 6:  Find envelope which best fits the CTF
-     /************************************************************************/
+    /************************************************************************/
+    /* STEPs 5 and 6:  Find envelope which best fits the CTF                */
+    /************************************************************************/
     global_action = 2;
     global_ctfmodel.enable_CTF = true;
     if (prm.initial_ctfmodel.K == 0)
@@ -2562,9 +2570,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     }
     DEBUG_TEXTFILE(formatString("Step 6: espr=%f",global_ctfmodel.espr));
     DEBUG_MODEL_TEXTFILE;
-    /************************************************************************
-     STEP 7:  the defocus and angular parameters
-     /************************************************************************/
+    /************************************************************************/
+    /* STEP 7:  the defocus and angular parameters                          */
+    /************************************************************************/
 
     global_action = 3;
     global_evaluation_reduction = 1;
@@ -2581,9 +2589,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     //This line is to test the results obtained
     //exit(1);
 
-    /************************************************************************
-     STEPs 9, 10 and 11: all parameters included second Gaussian
-     /************************************************************************/
+    /************************************************************************/
+    /* STEPs 9, 10 and 11: all parameters included second Gaussian          */
+    /************************************************************************/
     global_action = 5;
     if (prm.modelSimplification < 2)
         estimate_background_gauss_parameters2();
@@ -2646,9 +2654,9 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         COPY_ctfmodel_TO_CURRENT_GUESS;
     }
 
-    /************************************************************************
-     STEP 12:  Produce output
-     /************************************************************************/
+    /************************************************************************/
+    /* STEP 12: Produce output                                              */
+    /************************************************************************/
     global_action = 6;
 
     if (prm.fn_psd != "")
@@ -2674,7 +2682,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
         FileName fn_rootCTFPARAM = prm.fn_psd.withoutExtension();
 
         FileName fn_rootMODEL = fn_rootCTFPARAM;
-        int atPosition=fn_rootCTFPARAM.find('@');
+        size_t atPosition=fn_rootCTFPARAM.find('@');
 
         if (atPosition!=std::string::npos)
         {

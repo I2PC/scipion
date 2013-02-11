@@ -122,7 +122,8 @@ Java_xmipp_jni_ImageGeneric_readHeader(JNIEnv * env, jobject jobj,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
         image->read(fnStr, HEADER);
     }
     XMIPP_JAVA_CATCH;
@@ -135,7 +136,8 @@ Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fn = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fn = env->GetStringUTFChars(filename, &aux);
         image->readOrReadPreview(fn, jx, jy, jz, jn, true);
     }
     XMIPP_JAVA_CATCH;
@@ -150,7 +152,8 @@ Java_xmipp_jni_ImageGeneric_readApplyGeo_1(JNIEnv *env, jobject jimage,
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jimage);
         MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
 
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
         ApplyGeoParams params;
         params.wrap = wrap;
         image->readApplyGeo(fnStr, *metadata, (size_t) id, params);
@@ -407,6 +410,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
             break;
         default:
                 {
+#undef CAST_PAGE
 #define CAST_PAGE(type) \
   type *mdarray; \
                 MULTIDIM_ARRAY_GENERIC(*image).getArrayPointer(mdarray); \
@@ -603,7 +607,8 @@ Java_xmipp_jni_ImageGeneric_mapFile2Write(JNIEnv *env, jobject jobj, jint w,
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
 
         image->mapFile2Write(w, h, z, fnStr, false, (size_t) n);
     }
@@ -616,7 +621,8 @@ Java_xmipp_jni_ImageGeneric_write(JNIEnv *env, jobject jobj, jstring filename)
     XMIPP_JAVA_TRY
     {
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
-        const char *fnStr = env->GetStringUTFChars(filename, false);
+        jboolean aux=false;
+        const char *fnStr = env->GetStringUTFChars(filename, &aux);
         image->write(fnStr);
     }
     XMIPP_JAVA_CATCH;
@@ -643,6 +649,7 @@ Java_xmipp_jni_ImageGeneric_equal(JNIEnv *env, jobject jobj1, jobject jobj2, jdo
         return image1->equal(*image2,accuracy);
     }
     XMIPP_JAVA_CATCH;
+    return false;
 }
 
 JNIEXPORT void JNICALL
@@ -796,7 +803,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
 }
 
 JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
-(JNIEnv * env, jobject jobj, jobject jimg)
+(JNIEnv * env, jobject jobj, jobject jimg, jboolean jupdate)
 {
     XMIPP_JAVA_TRY
     {
@@ -821,7 +828,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
         double corr,max=0;
         int maxIndex=0;
 
-        for (int i=0;i<dim.ndim;++i)
+        for (size_t i=0;i<dim.ndim;++i)
         {
         	T.aliasImageInStack(*Tp,i);
             tmpI=*I;
@@ -835,10 +842,13 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
                 alignedI=tmpI;
             }
         }
-        T.aliasImageInStack(*Tp,maxIndex);
-        T+=alignedI;
-        centerImage(T, aux2, aux3, 3);
-
+        bool update = jupdate;
+        if(update)
+        {
+			T.aliasImageInStack(*Tp,maxIndex);
+			T+=alignedI;
+			centerImage(T, aux2, aux3, 3);
+        }
         int x = MAT_ELEM(M, 0, 2);
         int y = MAT_ELEM(M, 1, 2);
 
@@ -849,6 +859,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
         return particle;
     }
     XMIPP_JAVA_CATCH;
+    return NULL;
 }
 
 

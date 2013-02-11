@@ -122,8 +122,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     bool first=true;
 
     // We assume that at least there is one particle
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
 
     //Initialization:
@@ -181,7 +180,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             }
 
             img.readApplyGeo(SF,__iter.objId);
-            bool debug=false;
 
             MultidimArray<double> &mI=img();
             mI.setXmippOrigin();
@@ -392,7 +390,7 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
         int idx=0;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
         v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
-        for (int i=0; i<XSIZE(img2)/2; i++)
+        for (size_t i=0; i<XSIZE(img2)/2; i++)
             v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
 
         tempPcaAnalyzer.addVector(v);
@@ -586,38 +584,32 @@ void ProgSortByStatistics::run()
         for (int numPar = SF.size()-1; numPar > (SF.size()-numPartReject); --numPar)
         {
             int isort_1 = DIRECT_A1D_ELEM(sortedShape1,numPar);
-            int isort = isort_1 - 1;
             SFout.getRow(row, isort_1);
             row.setValue(MDL_ENABLED,-1);
             SFout.setRow(row,isort_1);
 
             isort_1 = DIRECT_A1D_ELEM(sortedShape2,numPar);
-            isort = isort_1 - 1;
             SFout.getRow(row, isort_1);
             row.setValue(MDL_ENABLED,-1);
             SFout.setRow(row,isort_1);
 
             isort_1 = DIRECT_A1D_ELEM(sortedSNR1,numPar);
-            isort = isort_1 - 1;
             SFout.getRow(row, isort_1);
             row.setValue(MDL_ENABLED,-1);
             SFout.setRow(row,isort_1);
 
             isort_1 = DIRECT_A1D_ELEM(sortedSNR2,numPar);
-            isort = isort_1 - 1;
             SFout.getRow(row, isort_1);
             row.setValue(MDL_ENABLED,-1);
             SFout.setRow(row,isort_1);
 
             isort_1 = DIRECT_A1D_ELEM(sortedHist,numPar);
-            isort = isort_1 - 1;
             SFout.getRow(row, isort_1);
             row.setValue(MDL_ENABLED,-1);
             SFout.setRow(row,isort_1);
 
             if (addToInput)
             {
-
                 ZscoreShape1.indexSort(sortedShapeSF1);
                 ZscoreShape2.indexSort(sortedShapeSF2);
                 ZscoreSNR1.indexSort(sortedSNR1SF);
@@ -625,31 +617,26 @@ void ProgSortByStatistics::run()
                 ZscoreHist.indexSort(sortedHistSF);
 
                 isort_1 = DIRECT_A1D_ELEM(sortedShapeSF1,numPar);
-                isort = isort_1 - 1;
                 SF.getRow(row, isort_1);
                 row.setValue(MDL_ENABLED,-1);
                 SF.setRow(row,isort_1);
 
                 isort_1 = DIRECT_A1D_ELEM(sortedShapeSF2,numPar);
-                isort = isort_1 - 1;
                 SF.getRow(row, isort_1);
                 row.setValue(MDL_ENABLED,-1);
                 SF.setRow(row,isort_1);
 
                 isort_1 = DIRECT_A1D_ELEM(sortedSNR1SF,numPar);
-                isort = isort_1 - 1;
                 SF.getRow(row, isort_1);
                 row.setValue(MDL_ENABLED,-1);
                 SF.setRow(row,isort_1);
 
                 isort_1 = DIRECT_A1D_ELEM(sortedSNR2SF,numPar);
-                isort = isort_1 - 1;
                 SF.getRow(row, isort_1);
                 row.setValue(MDL_ENABLED,-1);
                 SF.setRow(row,isort_1);
 
                 isort_1 = DIRECT_A1D_ELEM(sortedHistSF,numPar);
-                isort = isort_1 - 1;
                 SF.getRow(row, isort_1);
                 row.setValue(MDL_ENABLED,-1);
                 SF.setRow(row,isort_1);

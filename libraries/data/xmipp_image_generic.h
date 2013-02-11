@@ -119,8 +119,8 @@ public:
 
     /** Get Image dimensions
     */
-    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const;
-    void getDimensions(int &Xdim, int &Ydim, int &Zdim) const;
+    void getDimensions(size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim) const;
+    void getDimensions(size_t &Xdim, size_t &Ydim, size_t &Zdim) const;
     void getDimensions(ArrayDim &aDim) const;
 
     /** Get number of elements in image
@@ -198,6 +198,8 @@ public:
             return 7;
         case DT_UChar:
             return 8;
+        default:
+        	REPORT_ERROR(ERR_TYPE_INCORRECT,"Do not know how to handle this type at this point");
         }
     }
 
@@ -243,14 +245,14 @@ public:
     * If Zdim parameter is not passed, then all slices are rescaled.
     * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
     */
-    int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
+    int readPreview(const FileName &name, size_t Xdim, size_t Ydim = 0, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
 
     /** This function allows to read the original image or a preview of it also allowing to select either
      *  a specific image from the stack or a slice from a volume.
      *
      *  In the case of reading images in its real dimensions it is also possible to image map from file.
      */
-    int readOrReadPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE,
+    int readOrReadPreview(const FileName &name, size_t Xdim, size_t Ydim = 0, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE,
                           bool mapData = false, bool wrap = true);
 
     /** Returns an image with a lower resolution as a preview image.
@@ -413,6 +415,7 @@ public:
     friend std::ostream& operator<<(std::ostream& o, const ImageGeneric& I)
     {
         o << I.image;
+        return o;
     }
 
     /** Addition of the passed image to the internal's

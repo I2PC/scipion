@@ -454,7 +454,7 @@ ArgumentDef::ArgumentDef(ArgLexer *lexer, ASTNode * parent) :
 
 ArgumentDef::~ArgumentDef()
 {
-    for (int i = 0; i < subParams.size(); ++i)
+    for (size_t i = 0; i < subParams.size(); ++i)
         delete subParams[i];
 }
 
@@ -555,7 +555,7 @@ ParamDef::ParamDef(ArgLexer *lexer, ASTNode * parent) :
 
 ParamDef::~ParamDef()
 {
-    for (int i = 0; i < arguments.size(); ++i)
+    for (size_t i = 0; i < arguments.size(); ++i)
         delete arguments[i];
     if (!orBefore)
         delete exclusiveGroup;
@@ -803,7 +803,7 @@ SectionDef::SectionDef(ArgLexer * lexer, ASTNode * parent) :
 
 SectionDef::~SectionDef()
 {
-    for (int i = 0; i < params.size(); ++i)
+    for (size_t i = 0; i < params.size(); ++i)
         delete params[i];
 }
 
@@ -845,7 +845,7 @@ ProgramDef::ProgramDef() :
 ProgramDef::~ProgramDef()
 {
     delete pLexer;
-    for (int i = 0; i < sections.size(); ++i)
+    for (size_t i = 0; i < sections.size(); ++i)
         delete sections[i];
 }
 /** Parse the program definition. */
@@ -910,7 +910,6 @@ void reportExclusiveErrors(std::stringstream & errors, std::vector<ParamDef*> &e
 void ProgramDef::check(std::stringstream & errors)
 {
     std::vector<ParamDef*> exclusive;
-    bool isAlias = false;
     SectionDef * section;
     ParamDef * param;
 
@@ -976,7 +975,7 @@ void ProgramDef::clear()
     }
 }
 
-void ProgramDef::read(int argc, char ** argv, bool reportErrors)
+void ProgramDef::read(int argc, const char ** argv, bool reportErrors)
 {
     clear();
     std::stringstream errors;
@@ -1062,7 +1061,7 @@ ParamDef* ProgramDef::findAndFillParam(const String &param)
     return paramDef;
 }
 
-const char * ProgramDef::getParam(const char * paramName, int argNumber)
+const char * ProgramDef::getParam(const char * paramName, size_t argNumber)
 {
     ParamDef * param = findAndFillParam(paramName);
     if (param == NULL)
@@ -1072,7 +1071,7 @@ const char * ProgramDef::getParam(const char * paramName, int argNumber)
     return param->cmdArguments.at(argNumber);
 }
 
-const char * ProgramDef::getParam(const char * paramName, const char * subParam, int argNumber)
+const char * ProgramDef::getParam(const char * paramName, const char * subParam, size_t argNumber)
 {
     ParamDef * param = findAndFillParam(paramName);
 

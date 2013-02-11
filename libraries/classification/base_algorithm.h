@@ -143,6 +143,6 @@ std::ostream& operator << (std::ostream& _os, const ClassificationAlgorithm<DS>&
 {
     _algo.printSelf(_os);
     return _os;
-};
+}
 //@}
 #endif//XMIPPBASEALGO_H

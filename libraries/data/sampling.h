@@ -73,7 +73,7 @@ public:
     double sampling_noise;
 
     /** number of samples */
-    int number_of_samples;
+    size_t number_of_samples;
 
     /** number of samples in the assymetric unit*/
     size_t numberSamplesAsymmetricUnit;

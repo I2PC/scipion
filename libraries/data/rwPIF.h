@@ -61,7 +61,7 @@ typedef struct
          3 = complex int*2
          4 = complex floatInt*4
          5 = Structure Factors
-         6 = Boxed data – unfloated with background value placed past radius of box.
+         6 = Boxed data unfloated with background value placed past radius of box.
          7 = floatInt*2
          8 = complex floatInt*2
          9 = float*4
@@ -90,7 +90,7 @@ typedef struct
          3 = complex int*2
          4 = complex floatInt*4
          5 = Structure Factors
-         6 = Boxed data – unfloated with background value placed past radius of box.
+         6 = Boxed data unfloated with background value placed past radius of box.
          7 = floatInt*2
     8 = complex floatInt*2
          9 = float*4

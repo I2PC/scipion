@@ -69,7 +69,7 @@ int ir, m, mu1, mu4, ntot,  mt, idz, ncic2, ntot4;
 
 void **imalloc(int row, int col, int format)
 {
-    int i, j, k;                    /* Counters                             */
+    size_t i, j, k;                 /* Counters                             */
     unsigned element_size;          /* Size of element to allocate          */
     unsigned pointer_size;          /* Id. of pointers                      */
     char **temp;                    /* Temporal value to work with          */
@@ -167,9 +167,8 @@ void **imalloc(int row, int col, int format)
 void imfree(char **image, int row, int  col, int format)
 
 {
-    int i;                          /* Counters                             */
+    size_t i;                       /* Counters                             */
     unsigned element_size;          /* Size of element to allocate          */
-    unsigned pointer_size;          /* Id. of pointers                      */
     unsigned no_blocks;             /* No. of ALLOC_SIZE blocks to allocate */
     long tot_size;                  /* Total allocation size                */
     unsigned row_alloc;             /* No. of rows to alloc at the same time*/
@@ -185,20 +184,16 @@ void imfree(char **image, int row, int  col, int format)
     {
     case NATURAL:
         element_size = sizeof(BYTE);
-        pointer_size = sizeof(BYTE *);
         break;
     case INTFMT:
         element_size = sizeof(UWORD);
-        pointer_size = sizeof(UWORD *);
         break;
     case LONGFMT:
         element_size = sizeof(ULONG);
-        pointer_size = sizeof(ULONG *);
         break;
     case FLOATFMT:
     case FOURIER:
         element_size = sizeof(float);
-        pointer_size = sizeof(float *);
         break;
     default:
         return;
@@ -405,7 +400,7 @@ void busca()
 {
     static float f[22][22];
     float pi = 3.141592653;
-    short n1, in1, mu5, i, mu3, ind, ind1, indice, iflag, j, ix, iy, k;
+    short in1, mu5, i, mu3, ind, ind1, indice, iflag, j, ix, iy, k;
     float h, th, costh, sinth, fi, anc, xk0, yk0, hpi, x, y, z, xx, yy;
     float b, g, d1, e1, ext;
     int count = 0;
@@ -695,8 +690,7 @@ public:
         else
         {
             I.read(fnIn, HEADER);
-            int Xdim, Ydim, Zdim;
-            size_t Ndim;
+            size_t Xdim, Ydim, Zdim, Ndim;
             I.getDimensions(Xdim, Ydim, Zdim, Ndim);
             I.clear();
             if (Ndim>1)

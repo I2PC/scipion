@@ -363,21 +363,35 @@
 /// @name Miscellaneous
 //@{
 
-/** Speed up temporary variables
- *
- * The following variables are provided:
- *
- * @code
- * float spduptmp0, spduptmp1, spduptmp2;
- * int ispduptmp0, ispduptmp1, ispduptmp2, ispduptmp3, ispduptmp4, ispduptmp5;
- * @endcode
- */
-#define SPEED_UP_temps \
-    double spduptmp0, spduptmp1, spduptmp2, \
-    spduptmp3, spduptmp4, spduptmp5, \
-    spduptmp6, spduptmp7, spduptmp8; \
+/** Speed up temporary variables */
+#define SPEED_UP_temps0 \
+    double spduptmp0;
+
+/** Speed up temporary variables */
+#define SPEED_UP_temps01 \
+	SPEED_UP_temps0; \
+    double spduptmp1;
+
+/** Speed up temporary variables */
+#define SPEED_UP_temps012 \
+	SPEED_UP_temps01; \
+    double spduptmp2;
+
+/** Speed up temporary variables */
+#define SPEED_UP_tempsInt \
     int   ispduptmp0, ispduptmp1, ispduptmp2, \
     ispduptmp3, ispduptmp4, ispduptmp5;
+
+/** Speed up temporary variables */
+#define SPEED_UP_tempsDouble \
+    SPEED_UP_temps012; \
+    double spduptmp3, spduptmp4, spduptmp5, \
+    spduptmp6, spduptmp7, spduptmp8; \
+
+/** Speed up temporary variables */
+#define SPEED_UP_temps \
+    SPEED_UP_tempsDouble; \
+    SPEED_UP_tempsInt
 
 /** Swap two values
  *

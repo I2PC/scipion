@@ -60,7 +60,7 @@ public:
     bool phase_flipped;
 
     // Size of the images and of the output CTFs
-    int dim, xpaddim, ypaddim,paddim,ctfxpaddim;
+    size_t dim, xpaddim, ypaddim,paddim,ctfxpaddim;
 
     // Padding factor
     double pad;

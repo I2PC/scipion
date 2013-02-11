@@ -167,7 +167,7 @@ XmippProgram::XmippProgram()
     errorCode = 0;
 }
 
-XmippProgram::XmippProgram(int argc, char ** argv)
+XmippProgram::XmippProgram(int argc, const char ** argv)
 {
     runWithoutArgs = doRun = false;
     errorCode = 0;
@@ -200,7 +200,7 @@ void XmippProgram::readParams()
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'readParams'");
 }
 
-int XmippMetadataProgram::tryRead(int argc, char ** argv, bool reportErrors )
+int XmippMetadataProgram::tryRead(int argc, const char ** argv, bool reportErrors )
 {
     try
     {
@@ -215,7 +215,7 @@ int XmippMetadataProgram::tryRead(int argc, char ** argv, bool reportErrors )
 }
 
 
-void XmippProgram::read(int argc, char ** argv, bool reportErrors)
+void XmippProgram::read(int argc, const char ** argv, bool reportErrors)
 {
     if (progDef == NULL)
         init();
@@ -267,6 +267,11 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
     }
 }
 
+void XmippProgram::read(int argc, char ** argv, bool reportErrors)
+{
+	read(argc,(const char **)argv,reportErrors);
+}
+
 void XmippProgram::read(const String &argumentsLine)
 {
     int argc;
@@ -274,8 +279,7 @@ void XmippProgram::read(const String &argumentsLine)
     char * copy=NULL;
 
     generateCommandLine(argumentsLine, argc, argv, copy);
-    read(argc, argv);
-
+    read(argc, (const char **)argv);
 }
 
 int XmippProgram::tryRun()
@@ -399,7 +403,7 @@ void XmippProgram::getListParam(const char * param, StringVector &list)
     if (paramDef == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
     list.clear();
-    for (int i = 0; i < paramDef->cmdArguments.size(); ++i)
+    for (size_t i = 0; i < paramDef->cmdArguments.size(); ++i)
         list.push_back(paramDef->cmdArguments[i]);
 }
 
@@ -721,7 +725,7 @@ void XmippMetadataProgram::setupRowOut(const MDRow &rowIn, const FileName &fnImg
 void XmippMetadataProgram::run()
 {
     FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
-    size_t objId , outId;
+    size_t objId;
     MDRow rowIn, rowOut;
     mdOut.clear(); //this allows multiple runs of the same Program object
 
@@ -839,7 +843,7 @@ void XmippProgramGeneric::endDefinition()
     progDef->parse();
 }
 
-void XmippProgramGeneric::read(int argc, char ** argv, bool reportErrors)
+void XmippProgramGeneric::read(int argc, const char ** argv, bool reportErrors)
 {
     if (!definitionComplete)
         endDefinition();

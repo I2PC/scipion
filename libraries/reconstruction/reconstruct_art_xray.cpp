@@ -115,8 +115,7 @@ double ProgReconsXrayART::singleStep(MultidimArray<double> &muVol, const Project
 {
     //    muVol.setXmippOrigin();
 
-    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
-    int zinit, zend, yinit, yend, xinit, xend;
+    size_t iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim;
 
     iniXdim = XSIZE(muVol);
     iniYdim = YSIZE(muVol);

@@ -41,6 +41,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -61,7 +62,9 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
@@ -1966,6 +1969,30 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void saveMd() throws Exception
 	{
 		saveMd(dlgSave.getMdFilename());
+	}
+	
+	
+	protected void initAxisButtonMenu()
+	{
+		//Create the popup menu.
+        final JPopupMenu popup = new JPopupMenu();
+        popup.add(new JMenuItem(new AbstractAction("Option 1") {
+            public void actionPerformed(ActionEvent e) {
+            }
+        }));
+        popup.add(new JMenuItem(new AbstractAction("Option 2") {
+            public void actionPerformed(ActionEvent e) {
+            }
+        }));
+
+        final JButton button = new JButton("Options");
+        button.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                popup.show(e.getComponent(), e.getX(), e.getY());
+            }
+        });
+        toolBar.add(button);
+
 	}
 
 	

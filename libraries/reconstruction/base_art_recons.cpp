@@ -64,7 +64,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
     //    preIterations(vol_basis);
 
     // Reconstruction results ...............................................
-    double          mean_error,mean_error_1stblock;
+    double          mean_error;
     double          global_mean_error,global_mean_error_1stblock;
 
     // Initialize residual image vector for wlsART ..........................
@@ -162,7 +162,6 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
         }
 
         // For each projection -----------------------------------------------
-        size_t id;
         for (int act_proj = 0; act_proj < artPrm.numIMG ; act_proj++)
         {
             POCS.newProjection();
@@ -253,6 +252,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
 
             //Skip if desired
             if (artPrm.tell&TELL_ONLY_SYM)
+            {
                 if( imgInfo.sym != -1)
                 {
                     std::cout << "Skipping Proj no: " << iact_proj
@@ -264,6 +264,7 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                     std::cout << "NO Skipping Proj no: " << iact_proj
                     << " with symmetry no: " << imgInfo.sym
                     <<  std::endl;
+            }
 
             // For wlsART: use alig_proj for residual image!!
             if (artPrm.WLS)
@@ -907,10 +908,10 @@ void SinPartARTRecons::singleStep(GridVolume &vol_in, GridVolume *vol_out,
     {
         std::cout << "Equation system (Ax=b) ----------------------\n";
         std::cout << "Size: "<< (*A).mdimx <<"x"<<(*A).mdimy<< std::endl;
-        for (int i = 0; i < (*A).mdimy; i++)
+        for (size_t i = 0; i < MAT_YSIZE(*A); i++)
         {
             bool null_row = true;
-            for (int j = 0; j < (*A).mdimy; j++)
+            for (size_t j = 0; j < MAT_XSIZE(*A); j++)
                 if (MAT_ELEM(*A, i, j) != 0)
                 {
                     null_row = false;
@@ -920,7 +921,7 @@ void SinPartARTRecons::singleStep(GridVolume &vol_in, GridVolume *vol_out,
             {
                 std::cout << "pixel=" << integerToString(i, 3) << " --> "
                 << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
-                for (int j = 0; j < (*A).mdimx; j++)
+                for (size_t j = 0; j < MAT_XSIZE(*A); j++)
                     std::cout << MAT_ELEM(*A, i, j) << " ";
                 std::cout << std::endl;
             }

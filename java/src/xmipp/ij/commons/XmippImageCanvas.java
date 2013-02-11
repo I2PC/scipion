@@ -41,6 +41,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		super(imp);
 		addMouseWheelListener(this);
+		adjustSize();
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -153,20 +154,33 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		imp.updateStatusbarValue();
 	}
 
-	public void loadData(XmippIJWindow iw)
+	public void loadData(XmippIJWindow xiw)
 	{
 		Rectangle rect = getSrcRect();
 		double magnification = getMagnification();
-		imp = iw.getImagePlusLoader().loadImagePlus();
-		int width = (int) getSize().getWidth();
-		int height = (int) getSize().getHeight();
-		((ImageWindow) iw).setImage(imp);
-		((ImageWindow) iw).updateImage(imp);
-		setDrawingSize(width, height);
+		imp = xiw.getImagePlusLoader().loadImagePlus();
+		ImageWindow iw = ((ImageWindow) xiw);
+		iw.setImage(imp);
+		iw.updateImage(imp);
+		adjustSize();
 		setMagnification(magnification);
 		setSourceRect(rect);
 		repaint();
-		((ImageWindow) iw).pack();
+		iw.pack();
+		
+	}
+	
+	private void adjustSize()
+	{
+		int min = 160;
+		int width = (int) getSize().getWidth();
+		int height = (int) getSize().getHeight();
+		if(width < min)//to make menu visible always
+			width = min;
+		if(height < min)
+			height = min;
+		
+		setDrawingSize(width, height);
 	}
 
 

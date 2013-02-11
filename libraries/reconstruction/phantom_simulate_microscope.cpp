@@ -140,7 +140,7 @@ void ProgSimulateMicroscope::estimateSigma()
 
     MultidimArray<double> proj_power(N_stats);
     MultidimArray<double> proj_area(N_stats);
-    double power_avg, power_stddev, area_avg, area_stddev, avg, stddev, dummy;
+    double power_avg, power_stddev, area_avg, area_stddev, avg, dummy;
     if (verbose!=0)
     {
         std::cerr << "Estimating noise power for target SNR=" << targetSNR << std::endl;
@@ -243,8 +243,7 @@ void ProgSimulateMicroscope::updateCtfs()
 /* Produce side information ------------------------------------------------ */
 void ProgSimulateMicroscope::preProcess()
 {
-    int dum;
-    size_t dum2;
+    size_t dum, dum2;
     getImageSize(*pmdIn, Xdim, Ydim, dum, dum2);
 
     if (low_pass_before_CTF < 0.5)
@@ -298,8 +297,6 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
 		// In that case generate a new mask with a random defocus
 		if (defocus_change != 0)
 		{
-			double old_DefocusU = ctf.ctf.DeltafU;
-			double old_DefocusV = ctf.ctf.DeltafV;
 			MultidimArray<double> aux;
 			ctf.ctf.DeltafU *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
 			ctf.ctf.DeltafV *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);

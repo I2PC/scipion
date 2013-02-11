@@ -79,8 +79,8 @@ typedef unsigned char byte;
 #include <string.h>
 #include "xmipp_error.h"
 
-byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh);
-void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h);
+byte *Smooth(byte *picSrc8, size_t swide, size_t shigh, size_t dwide, size_t dhigh);
+void DoColorDither(byte *picSmooth, byte *&picDithered, size_t w, size_t h);
 
 #ifdef __STDC__
 int SmoothXY(byte *, byte *, int, int, int, int);
@@ -90,7 +90,7 @@ int SmoothXY();
 
 #define xvbzero(s,l) memset(s, 0, l)
 /***************************************************/
-void SmoothResize(byte *picSrc8, byte *destpic8, int swide, int shigh, int dwide, int dhigh) {
+void SmoothResize(byte *picSrc8, byte *destpic8, size_t swide, size_t shigh, size_t dwide, size_t dhigh) {
 	/* generic interface to Smooth and ColorDither code.
 	 given an 8-bit-per, swide * shigh image with colormap rmap,gmap,bmap,
 	 will generate a new 8-bit-per, dwide * dhigh image, which is dithered
@@ -105,7 +105,7 @@ void SmoothResize(byte *picSrc8, byte *destpic8, int swide, int shigh, int dwide
 }
 
 /***************************************************/
-byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
+byte *Smooth(byte *picSrc8, size_t swide, size_t shigh, size_t dwide, size_t dhigh) {
 	/* does a SMOOTH resize from pic824 (which is either a swide*shigh, 8-bit
 	 pic, with colormap rmap,gmap,bmap OR a swide*shigh, 24-bit image, based
 	 on whether 'is24' is set) into a dwide * dhigh 24-bit image
@@ -177,8 +177,6 @@ byte *Smooth(byte *picSrc8, int swide, int shigh, int dwide, int dhigh) {
 			/*      if ((ey&15) == 0) WaitCursor(); */
 
 			for (ex = 0; ex < dwide; ex++) {
-				byte *pptr, rA, gA, bA, rB, gB, bB, rC, gC, bC, rD, gD, bD;
-
 				cx = cxtab[ex];
 				px = pxtab[ex];
 
@@ -296,7 +294,7 @@ int SmoothXY(byte *picSmooth, byte *picSrc8, int swide, int shigh, int dwide,
 }
 
 /********************************************/
-void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
+void DoColorDither(byte *picSmooth, byte *&picDithered, size_t w, size_t h) {
 	/* takes a 24 bit picture, of size w*h, dithers with the colors in
 	 rdisp, gdisp, bdisp (which have already been allocated),
 	 and generates an 8-bit w*h image, which it returns.
@@ -313,8 +311,9 @@ void DoColorDither(byte *picSmooth, byte *&picDithered, int w, int h) {
 	short *cache;
 	int r2;
 	int *thisline, *nextline, *thisptr, *nextptr, *tmpptr;
-	int i, j, rerr;
-	int imax, jmax;
+	size_t i, j;
+	int rerr;
+	size_t imax, jmax;
 	int key;
 	long cnt1, cnt2;
 

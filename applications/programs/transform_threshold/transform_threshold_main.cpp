@@ -25,4 +25,4 @@
 
 #include <reconstruction/threshold.h>
 
-RUN_XMIPP_PROGRAM(ProgThreshold);
+RUN_XMIPP_PROGRAM(ProgThreshold)

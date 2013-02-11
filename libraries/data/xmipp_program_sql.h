@@ -30,7 +30,7 @@
 #include "xmipp_program.h"
 #include "external/sqlite-3.6.23/sqlite3.h"
 
-typedef std::map<char*, String> DictDB;
+typedef std::map<const char*, String> DictDB;
 
 String& escapeSqliteStr(String & str);
 

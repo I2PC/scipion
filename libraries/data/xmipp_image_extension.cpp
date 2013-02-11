@@ -27,14 +27,14 @@
 #include "xmipp_error.h"
 
 
-void getImageSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
+void getImageSize(const FileName &filename, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim)
 {
     Image<char> img;
     img.read(filename, HEADER);
     img.getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
 
-void getImageInfo(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype)
+void getImageInfo(const FileName &filename, size_t &Xdim, size_t &Ydim, size_t &Zdim, size_t &Ndim, DataType &datatype)
 {
     Image<char> img;
     img.read(filename, HEADER);
@@ -107,11 +107,11 @@ bool checkImageCorners(const FileName &name)
     const int windowSize=11;
     const int windowSize_2=windowSize/2;
     const double Flower=0.4871; // MATLAB: N=11*11-1; finv(0.00005,N,N)
-    const double Fupper=2.0530; // MATLAB: N=11*11-1; finv(0.99995,N,N)
+    // const double Fupper=2.0530; // MATLAB: N=11*11-1; finv(0.99995,N,N)
 
     ImageGeneric I;
     I.readMapped(name);
-    int Xdim, Ydim, Zdim;
+    size_t Xdim, Ydim, Zdim;
     I.getDimensions(Xdim,Ydim,Zdim);
     if (Zdim>1)
         return true;
@@ -119,8 +119,8 @@ bool checkImageCorners(const FileName &name)
         return true;
 
     MultidimArray<double> window;
-    int i=Ydim/2;
-    int j=Xdim/2;
+    size_t i=Ydim/2;
+    size_t j=Xdim/2;
     I().window(window,0,0,i-windowSize_2,j-windowSize_2,0,0,i+windowSize_2,j+windowSize_2);
     double stddev0=window.computeStddev();
     double var0=stddev0*stddev0;

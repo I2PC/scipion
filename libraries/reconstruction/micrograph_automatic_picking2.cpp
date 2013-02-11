@@ -384,20 +384,20 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         }
     }
     // Remove the occluded particles
-    for (int i=0;i<auto_candidates.size();++i)
-        for (int j=0;j<auto_candidates.size()-i-1;j++)
+    for (size_t i=0;i<auto_candidates.size();++i)
+        for (size_t j=0;j<auto_candidates.size()-i-1;j++)
             if (auto_candidates[j].cost<auto_candidates[j+1].cost)
             {
                 p=auto_candidates[j+1];
                 auto_candidates[j+1]=auto_candidates[j];
                 auto_candidates[j]=p;
             }
-    for (int i=0;i<auto_candidates.size()-1;++i)
+    for (size_t i=0;i<auto_candidates.size()-1;++i)
     {
         if (auto_candidates[i].status==-1)
             continue;
         p=auto_candidates[i];
-        for (int j=i+1;j<auto_candidates.size();j++)
+        for (size_t j=i+1;j<auto_candidates.size();j++)
         {
             if (auto_candidates[j].x>p.x-particle_radius
                 && auto_candidates[j].x<p.x+particle_radius
@@ -492,15 +492,11 @@ void AutoParticlePicking2::add2Dataset()
     int yDataSet=YSIZE(dataSet);
     dataSet.resize(1,1,yDataSet+auto_candidates.size(),num_correlation*NPCA+NRPCA+12);
     classLabel.resize(1,1,1,YSIZE(dataSet));
-    for (int n=yDataSet;n<XSIZE(classLabel);n++)
+    for (size_t n=yDataSet;n<XSIZE(classLabel);n++)
         classLabel(n)=3;
-    for (int i=0;i<auto_candidates.size();i++)
-    {
-        for (int j=0;j<XSIZE(dataSet);j++)
-        {
+    for (size_t i=0;i<auto_candidates.size();i++)
+        for (size_t j=0;j<XSIZE(dataSet);j++)
             DIRECT_A2D_ELEM(dataSet,i+yDataSet,j)=DIRECT_A1D_ELEM(auto_candidates[i].vec,j);
-        }
-    }
 }
 
 void AutoParticlePicking2::extractPositiveInvariant(const FileName &fnInvariantFeat,
@@ -900,8 +896,8 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
                 positionArray.push_back(p);
             }
         }
-    for (int i=0;i<positionArray.size();++i)
-        for (int j=0;j<positionArray.size()-i-1;j++)
+    for (size_t i=0;i<positionArray.size();++i)
+        for (size_t j=0;j<positionArray.size()-i-1;j++)
             if (positionArray[j].cost<positionArray[j + 1].cost)
             {
                 p=positionArray[j+1];
@@ -963,7 +959,6 @@ void AutoParticlePicking2::applyConvolution(bool fast)
         filter.generateMask(convolveRes);
         filter.applyMaskSpace(convolveRes);
 
-        int cnt=1;
         for (int deg=3;deg<360;deg+=3)
         {
             // We first rotate the template and then put it in the big image in order to
@@ -1162,10 +1157,10 @@ void ProgMicrographAutomaticPicking2::run()
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            int num=autoPicking->automaticallySelectParticles(true,fast);
+            autoPicking->automaticallySelectParticles(true,fast);
         }
         else
-            int num=autoPicking->automaticallySelectParticles(false,fast);
+            autoPicking->automaticallySelectParticles(false,fast);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
             autoPicking->saveAutoVectors(fnAutoVectors);

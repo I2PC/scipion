@@ -303,8 +303,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 if ( threadParams->imageIndex >= 0 )
                 {
                     // Read input image
-                    double rot, tilt, psi, xoff,yoff,weight;
-                    bool flip;
+                    double rot, tilt, psi, weight;
                     Projection proj;
 
                     //Read projection from selfile, read also angles and shifts if present
@@ -507,7 +506,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     double iDeltaSqrt = parent->iDeltaSqrt;
                     Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
                     int xsize_1 = XSIZE(parent->VoutFourier) - 1;
-                    int ysize_1 = YSIZE(parent->VoutFourier) - 1;
                     int zsize_1 = ZSIZE(parent->VoutFourier) - 1;
                     MultidimArray< std::complex<double> > &VoutFourier=parent->VoutFourier;
                     MultidimArray<double> &fourierWeights = parent->FourierWeights;
@@ -527,7 +525,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 ZZ(freq)=0;
                                 if (XX(freq)*XX(freq)+YY(freq)*YY(freq)>parent->maxResolution2)
                                     continue;
-                                SPEED_UP_temps;
+                                SPEED_UP_temps012;
                                 M3x3_BY_V3x1(freq,*A_SL,freq);
 
                                 // Look for the corresponding index in the volume Fourier transform
@@ -687,9 +685,6 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
     bool processed;
     int imgno = 0;
     int imgIndex = firstImageIndex;
-    struct timeval start_time, end_time;
-    long int total_usecs;
-    double total_time;
 
     // This index tells when to save work for later FSC usage
     int FSCIndex = (firstImageIndex + lastImageIndex)/2;
@@ -769,11 +764,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                 // Determine how many rows of the fourier
                 // transform are of interest for us. This is because
                 // the user can avoid to explore at certain resolutions
-                int conserveRows= ceil((double)paddedFourier->ydim * maxResolution * 2.0);
+                size_t conserveRows= ceil((double)paddedFourier->ydim * maxResolution * 2.0);
                 conserveRows= ceil((double)conserveRows/2.0);
 
                 // Loop over all symmetries
-                for (int isym = 0; isym < R_repository.size(); isym++)
+                for (size_t isym = 0; isym < R_repository.size(); isym++)
                 {
                     rowsProcessed = 0;
 
@@ -790,7 +785,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                     }
 
                     // Init status array
-                    for (int i = 0 ; i < paddedFourier->ydim ; i ++ )
+                    for (size_t i = 0 ; i < paddedFourier->ydim ; i ++ )
                     {
                         if ( i >= conserveRows && i < (paddedFourier->ydim-conserveRows))
                         {

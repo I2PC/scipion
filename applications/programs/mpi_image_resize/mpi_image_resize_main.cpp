@@ -27,6 +27,6 @@
 #include <data/image_resize.h>
 #include <parallel/xmipp_mpi.h>
 
-CREATE_MPI_METADATA_PROGRAM(ProgImageResize, MpiProgImageResize);
+CREATE_MPI_METADATA_PROGRAM(ProgImageResize, MpiProgImageResize)
 
-RUN_XMIPP_PROGRAM(MpiProgImageResize);
+RUN_XMIPP_PROGRAM(MpiProgImageResize)

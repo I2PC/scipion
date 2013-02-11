@@ -12,7 +12,9 @@ if platform.system() == 'Windows':
 else:
     env = Environment(ENV=os.environ,
           tools=['default', 'disttar'],
-          toolpath=['external/scons/ToolsFromWiki'])
+	  toolpath=['external/scons/ToolsFromWiki'])
+    env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
+    env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
     conf = Configure(env)
     checking = {}
     #found = False
@@ -44,7 +46,14 @@ else:
         print 'Some dependencies unsatisfied, please check the following list and install them all:'
         for k, v in checking.items():
             print u'{0}: {1}'.format(k, v)
-        ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        ans = "y"
+        if 'unattended' in ARGUMENTS:
+            if ARGUMENTS['unattended'] == 'yes':
+                print "Unattended compilation selected, proceeding with the compilation."
+            else:
+                ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
+        else:
+            ans = raw_input("Do you still want to proceed with the compilation? (y/n):")
         if ans == "n" or ans == "N":
             print "Aborting!"
             Exit(1)
@@ -70,17 +79,15 @@ else:
 opts.Add('CC', 'The C compiler', 'gcc')
 opts.Add('CXX', 'The C++ compiler', 'g++')
 
-# Hack, some architectures required this (Coss?)
+# Hack, some architectures required this
 opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 
-# FIXME With ARGUMENTS these should be read... right?
-#hope is OK roberto
 if platform.system()=='Windows':
     opts.Add('CCFLAGS', 'The C compiler flags', '-fpermissive -I/c/MinGW/include')
     opts.Add('CXXFLAGS', 'The C++ compiler flags', '-fpermissive -I/c/MinGW/include')
     opts.Add(BoolVariable('release', 'Release mode', 'yes'))
 else:
-    opts.Add('CCFLAGS', 'The C compiler flags', None)
+    opts.Add('CCFLAGS', 'The C compiler flags', '-std=c99')
     opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
     opts.Add(BoolVariable('release', 'Release mode', 'yes'))
 
@@ -430,8 +437,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
     #env.Append(CCFLAGS=['-lpthread'])
 
     # warnings?
-    if int(env['warn']):
-        env.Append(CXXFLAGS=['-Wall'])
+    if int(env['warn']) or int(env['debug']):
+        env.Append(CXXFLAGS=['-Wall','-pedantic','-Wno-variadic-macros','-Wno-long-long','-Wno-deprecated'])
     else:
         env.Append(CXXFLAGS=['-w'])
         # TODO suppress linker warnings too... what's the flag?

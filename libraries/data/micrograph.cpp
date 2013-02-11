@@ -83,7 +83,6 @@ void Micrograph::clear()
 void Micrograph::open_micrograph(const FileName &_fn_micrograph)
 {
     clear();
-    struct stat info;
     // Micrograph name
     fn_micrograph = _fn_micrograph;
     // Look for micrograph dimensions
@@ -116,32 +115,32 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     {
     case DT_UChar:
         IUChar = new (Image<unsigned char> );
-        result = IUChar->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IUChar->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case DT_UShort:
         IUShort = new (Image<unsigned short> );
-        result = IUShort->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IUShort->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUShort->data, stdevFilter);
         break;
     case DT_Short:
         IShort = new (Image<short> );
-        result = IShort->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IShort->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IShort->data, stdevFilter);
         break;
     case DT_Int:
         IInt = new (Image<int> );
-        result = IInt->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IInt->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IInt->data, stdevFilter);
         break;
     case DT_UInt:
         IUInt = new (Image<unsigned int> );
-        result = IUInt->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IUInt->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case DT_Float:
         IFloat = new (Image<float> );
-        result = IFloat->readOrReadMapped(fn_micrograph, FIRST_IMAGE);
+        result = IFloat->readMapped(fn_micrograph, FIRST_IMAGE);
         pixelDesvFilter(IFloat->data, stdevFilter);
         break;
     default:
@@ -266,7 +265,6 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-        int x, y;
         MD.getValue(MDL_XCOOR, aux.X, __iter.objId); //aux.X=x;
         MD.getValue(MDL_YCOOR, aux.Y, __iter.objId); //aux.Y=y;
         coords.push_back(aux);
@@ -277,7 +275,7 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 void Micrograph::transform_coordinates(const Matrix2D<double> &M)
 {
     Matrix1D<double> m(3);
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     int imax = coords.size();
     for (int i = 0; i < imax; i++)
@@ -667,7 +665,7 @@ void TiltPairAligner::passToTilted(int _muX, int _muY, int &_mtX, int &_mtY)
 
     if (Nu > 3)
     {
-        SPEED_UP_temps;
+        SPEED_UP_temps012;
         VECTOR_R3(m, _muX, _muY, 1);
         M3x3_BY_V3x1(m, Put, m);
 
@@ -687,7 +685,7 @@ void TiltPairAligner::passToUntilted(int _mtX, int _mtY, int &_muX, int &_muY)
 {
     if (Nu > 3)
     {
-        SPEED_UP_temps;
+        SPEED_UP_temps012;
 
         VECTOR_R3(m, _mtX, _mtY, 1);
         M3x3_BY_V3x1(m, Ptu, m);
@@ -708,7 +706,6 @@ void TiltPairAligner::computeGamma()
 #define MIN_AREA       15
 #define MAX_AREA   250000
     gamma = 0;
-    int step = CEIL(pow((double)Nu *Nu *Nu / TRIANGLE_NO, 1.0 / 3));
     Matrix1D<int> iju(2), iku(2), ijt(2), ikt(2); // From i to j in untilted
     // From i to k in untilted
     // From i to j in tilted

@@ -164,7 +164,6 @@ void WaveletFilter::apply(MultidimArray<double> &img)
         if (ABS(size2 - ROUND(size2)) > 1e-6)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input image must be of a size power of 2");
         DWT(img, img);
-        double th;
         Histogram1D hist;
         switch (denoising_type)
         {
@@ -209,7 +208,6 @@ void WaveletFilter::apply(MultidimArray<double> &img)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input volume must be of a size power of 2");
 
         DWT(img, img);
-        double th;
         Histogram1D hist;
         switch (denoising_type)
         {

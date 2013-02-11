@@ -33,7 +33,6 @@
 #include "volume_from_pdb.h"
 #include "pdb_nma_deform.h"
 #include "angular_continuous_assign.h"
-#include "micrograph_automatic_picking.h"
 #include "micrograph_automatic_picking2.h"
 #include "program_filter.h"
 #include "data/mask.h"

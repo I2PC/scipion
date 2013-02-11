@@ -139,11 +139,11 @@ TEST_F( MetadataTest, Aggregate1)
 
     mdOut.aggregate(md, AGGR_COUNT, MDL_ORDER, MDL_ORDER, MDL_COUNT);
     mdOut.getValue(MDL_COUNT,count,mdOut.firstObject());
-    EXPECT_EQ(count, 2);
+    EXPECT_EQ(count, (size_t)2);
     mdOut.clear();
     mdOut.aggregate(md, AGGR_COUNT, MDL_Y, MDL_Y, MDL_COUNT);
     mdOut.getValue(MDL_COUNT,count,mdOut.firstObject());
-    EXPECT_EQ(count,1);
+    EXPECT_EQ(count,(size_t)1);
 
     MDObject mdValueOut(MDL_Y);
     double d;
@@ -169,7 +169,6 @@ TEST_F( MetadataTest, Aggregate2)
 {
     //multiple aggregarion
     MetaData md,mdOut;
-    size_t count;
 
     MDRow row;
     row.setValue(MDL_ORDER, (size_t)1);
@@ -226,7 +225,6 @@ TEST_F( MetadataTest, AggregateGroupBy)
 {
     //aggregation simple grouped by several attributes
     MetaData md,mdOut;
-    size_t count;
 
     MDRow row;
     row.setValue(MDL_ORDER, (size_t)1);
@@ -266,9 +264,9 @@ TEST_F( MetadataTest, AggregateGroupBy)
 TEST_F( MetadataTest, Clear)
 {
     MetaData auxMetadata = mDsource;
-    EXPECT_EQ(2,auxMetadata.size());
+    EXPECT_EQ((size_t)2,auxMetadata.size());
     auxMetadata.clear();
-    EXPECT_EQ(0,auxMetadata.size());
+    EXPECT_EQ((size_t)0,auxMetadata.size());
 }
 
 TEST_F( MetadataTest, Copy)
@@ -819,10 +817,10 @@ TEST_F( MetadataTest, ReadEmptyBlocks)
     auxMetadata.write((String)"block_000004@"+sfn,MD_APPEND);
 
     auxMetadata.read((String)"block_000002@"+sfn);
-    EXPECT_EQ(auxMetadata.size(),0);
+    EXPECT_EQ(auxMetadata.size(),(size_t)0);
 
     auxMetadata.read((String)"block_000004@"+sfn);
-    EXPECT_EQ(auxMetadata.size(),0);
+    EXPECT_EQ(auxMetadata.size(),(size_t)0);
 
     unlink(sfn);
 }
@@ -841,7 +839,7 @@ TEST_F( MetadataTest, ReadEmptyBlocksII)
     auxMetadata.write((String)"block_000002@"+sfn,MD_APPEND);
 
     auxMetadata.read((String)"block_000002@"+sfn);
-    EXPECT_EQ(auxMetadata.size(),0);
+    EXPECT_EQ(auxMetadata.size(),(size_t)0);
     unlink(sfn);
 }
 
@@ -909,6 +907,7 @@ TEST_F( MetadataTest, ExistsBlock)
     mkstemp(sfn);
     FileName tmpFileName((String) "kk@" + sfn);
     mDsource.write(tmpFileName);
+    std::cout << "Writing " << tmpFileName << std::endl;
     MetaData auxMetadata;
     bool result1 = auxMetadata.existsBlock(tmpFileName);
     EXPECT_EQ(result1,true);
@@ -976,7 +975,7 @@ TEST_F( MetadataTest, Select)
 
 TEST_F( MetadataTest, Size)
 {
-    EXPECT_EQ(2, mDsource.size());
+    EXPECT_EQ((size_t)2, mDsource.size());
 }
 
 TEST_F( MetadataTest, Sort)

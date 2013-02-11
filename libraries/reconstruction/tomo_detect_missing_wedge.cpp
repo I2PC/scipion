@@ -79,7 +79,7 @@ double evaluatePlane(double rot, double tilt,
                 ZZ(freq)=iz*df;
 
                 // Frequency in the coordinate system of the volume
-                SPEED_UP_temps;
+                SPEED_UP_temps012;
                 M3x3_BY_V3x1(freqp,Einv,freq);
                 bool inverted=false;
                 if (XX(freqp)<0)

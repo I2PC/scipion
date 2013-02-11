@@ -26,9 +26,20 @@
 
 #include "mean_shift.h"
 
+struct ThreadProcessPlaneArgs
+{
+    unsigned int myID;
+    unsigned int numThreads;
+    double sigma_s;
+    double sigma_r;
+    MultidimArray<double> *input;
+    MultidimArray<double> *output;
+    bool fast;
+};
+
 void * thread_process_plane( void * args )
 {
-    threadProcessPlaneArgs * thrParams = (threadProcessPlaneArgs *) args;
+    ThreadProcessPlaneArgs * thrParams = (ThreadProcessPlaneArgs *) args;
 
     unsigned int myID = thrParams->myID;
     unsigned int numThreads = thrParams->numThreads;
@@ -62,9 +73,8 @@ void * thread_process_plane( void * args )
     int z_min = input.startingZ();
     int z_max = input.finishingZ();
     int curr_x, curr_y, curr_z;
-    int prev_x, prev_y, prev_z, prev_I;
+    int prev_x, prev_y, prev_z;
     double error;
-    int plane=0;
 
     int myFirstY, myLastY;
 
@@ -88,10 +98,12 @@ void * thread_process_plane( void * args )
         for (int k=z_min; k<=z_max; k++)
         {
             if( myID == 0 )
+            {
                 if( z_min < 0 )
                     std::cerr << k - z_min << " ";
                 else
                     std::cerr << k + z_min << " ";
+            }
 
             for (int i=myFirstY; i<=myLastY; i++)
             {
@@ -106,7 +118,7 @@ void * thread_process_plane( void * args )
                     int zc = k;
 
                     int xcOld, ycOld, zcOld;
-                    double YcOld;
+                    double YcOld=0;
                     double Yc = A3D_ELEM( input, k, i, j);
                     int iters =0;
                     double shift;
@@ -252,7 +264,6 @@ void * thread_process_plane( void * args )
                         prev_x = round(curr_x);
                         prev_y = round(curr_y);
                         prev_z = round(curr_z);
-                        prev_I = curr_I;
 
                         double isum_denom=1.0/sum_denom;
                         curr_x = round(x_sum*isum_denom);
@@ -303,7 +314,7 @@ void MeanShiftFilter::apply(MultidimArray<double> &input)
     MultidimArray<double> output(input);
 
     pthread_t * th_ids = new pthread_t[numThreads];
-    threadProcessPlaneArgs * th_args = new threadProcessPlaneArgs[numThreads];
+    ThreadProcessPlaneArgs * th_args = new ThreadProcessPlaneArgs[numThreads];
 
     for( int iter = 0 ; iter < iters ; ++iter )
     {

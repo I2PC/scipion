@@ -127,7 +127,6 @@ void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, const doubl
 void ProgCtfCorrectAmplitude3D::generateWienerFilters()
 {
     MultidimArray<double> CTF1D, sumterm;
-    int nrimgs;
     std::ofstream  fh;
     double res;
     double tot_nr_imgs = 0;

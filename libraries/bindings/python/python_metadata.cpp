@@ -445,7 +445,6 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyObject *list = NULL;
         PyObject *input = NULL, *pyStr = NULL;
         char *str = NULL;
-        int number = -1;
         if (PyArg_ParseTuple(args, "O|O", &input,  &list))
         {
             try
@@ -503,8 +502,7 @@ MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL, *input2 = NULL;
         PyObject *pyStr = NULL, *pyLabels = NULL, *pySep = NULL;
-        char *str = NULL, *sep = NULL, *labels = NULL;
-        int number = -1;
+        char *str = NULL, *labels = NULL;
 
         if (PyArg_ParseTuple(args, "OO|O", &input, &input2, &pySep))
         {
@@ -542,7 +540,6 @@ MetaData_readBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyObject *input = NULL, *blockName = NULL, *pyStr = NULL, *pyStrBlock =
                                                  NULL;
         char *str = NULL, *strBlock = NULL;
-        int number = -1;
         if (PyArg_ParseTuple(args, "OO", &input, &blockName))
         {
             try
@@ -580,7 +577,6 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL, *pyStr = NULL;
         char *str = NULL;
-        int number = -1;
         if (PyArg_ParseTuple(args, "O|i", &input, &wmd))
         {
             try
@@ -612,9 +608,7 @@ MetaData_append(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (self != NULL)
     {
-        PyObject *input = NULL, *pyStr = NULL;
-        char *str = NULL;
-        int number = -1;
+        PyObject *input = NULL;
         if (PyArg_ParseTuple(args, "O", &input))
         {
             try
@@ -795,8 +789,6 @@ PyObject *
 MetaData_removeLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    PyObject *pyValue; //Only used to skip label and value
-
     if (PyArg_ParseTuple(args, "i", &label))
     {
         try
@@ -866,7 +858,7 @@ MetaData_getColumnValues(PyObject *obj, PyObject *args, PyObject *kwargs)
             size_t size=v.size();
             PyObject * list = PyList_New(size);
 
-            for (int i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
                 PyList_SetItem(list, i, getMDObjectValue(&(v[i])));
 
             return list;
@@ -927,8 +919,6 @@ MetaData_setColumnValues(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label;
-    PyObject *pyValue;
     try
     {
         MetaDataObject *self = (MetaDataObject*) obj;
@@ -952,7 +942,6 @@ MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 xmipp_getBlocksInMetaDataFile(PyObject *obj, PyObject *args)
 {
-    int label;
     PyObject *input;
     FileName fn;
     StringVector blocks;
@@ -991,7 +980,6 @@ PyObject *
 MetaData_getMaxStringLength(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    PyObject *pyValue;
     if (PyArg_ParseTuple(args, "i", &label))
     {
         try
@@ -1014,7 +1002,6 @@ PyObject *
 MetaData_containsLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    PyObject *pyValue;
     if (PyArg_ParseTuple(args, "i", &label))
     {
         try
@@ -1226,8 +1213,6 @@ MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_removeDisabled(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    PyObject *pyQuery = NULL;
-
     try
     {
         MetaDataObject *self = (MetaDataObject*) obj;
@@ -1409,7 +1394,6 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label;
     PyObject *pyMd = NULL;
     PyObject *pyQuery = NULL;
 
@@ -1538,9 +1522,7 @@ MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label;
     PyObject *pyMd = NULL;
-    PyObject *pyQuery = NULL;
 
     if (PyArg_ParseTuple(args, "O", &pyMd))
     {
@@ -1568,9 +1550,7 @@ MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label;
     PyObject *pyMd = NULL;
-    PyObject *pyQuery = NULL;
 
     if (PyArg_ParseTuple(args, "O", &pyMd))
     {
@@ -1598,7 +1578,7 @@ MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    char *str = "", *ext = "";
+    char str[1024] = "";
     if (PyArg_ParseTuple(args, "s", &str))
     {
         try
@@ -1651,7 +1631,6 @@ MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
     int labelRight;
     PyObject *pyMdLeft = NULL;
     PyObject *pyMdright = NULL;
-    PyObject *pyQuery = NULL;
     JoinType jt;
 
     if (PyArg_ParseTuple(args, "OOiii", &pyMdLeft, &pyMdright, &labelLeft,&labelRight, &jt))
@@ -1717,7 +1696,7 @@ MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    char *str = "";
+    char str[1024] = "";
     if (PyArg_ParseTuple(args, "s", &str))
     {
         try
@@ -1739,8 +1718,8 @@ PyObject *
 MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    char *oldStr = "";
-    char *newStr = "";
+    char oldStr[1024] = "";
+    char newStr[1024] = "";
     if (PyArg_ParseTuple(args, "iss", &label, &oldStr, &newStr))
     {
         try
@@ -1761,7 +1740,6 @@ MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_randomize(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label;
     PyObject *pyMd = NULL;
 
     if (PyArg_ParseTuple(args, "O", &pyMd))
@@ -1967,12 +1945,16 @@ getMDObjectValue(MDObject * obj)
     case LABEL_STRING:
         return PyString_FromString(obj->data.stringValue->c_str());
     case LABEL_VECTOR_DOUBLE:
+        {
         std::vector<double> & vector = *(obj->data.vectorValue);
         int size = vector.size();
         PyObject * list = PyList_New(size);
         for (int i = 0; i < size; ++i)
             PyList_SetItem(list, i, PyFloat_FromDouble(vector[i]));
         return list;
+        }
+    default:
+    	return NULL;
     }//close switch
     return NULL;
 }

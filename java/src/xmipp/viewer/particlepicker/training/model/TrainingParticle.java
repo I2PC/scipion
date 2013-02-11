@@ -92,8 +92,8 @@ public class TrainingParticle extends PickerParticle{
 	public void setPosition(int x, int y)
 	{
 		int radius = family.getSize()/2;
-		if(x - radius < 0 || y - radius < 0 || x + radius > micrograph.getImagePlus().getWidth() || y + radius > micrograph.getImagePlus().getHeight())
-			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format(" particle center: %s %s", x, y)));
+		if(!getMicrograph().fits(x, y, getFamily().getSize()))
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format("Particle centered at %s, %s with size %s", x, y, getFamily().getSize())));
 		super.setPosition(x, y);
 		
 		img = null;
