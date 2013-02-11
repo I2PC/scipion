@@ -133,7 +133,18 @@ public class ImportParticlesJDialog extends XmippDialog {
 	@Override
 	public void handleOk() {
 		try {
-			importParticles();
+			path = sourcetf.getText().trim();
+
+			if (path == null || path.equals(""))
+				showError(XmippMessage.getEmptyFieldMsg("source"));
+			else if (!existsSelectedPath())
+				showError(XmippMessage.getPathNotExistsMsg(path));
+			else
+			{
+				String result = parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+				if(result != null && !result.isEmpty())
+					JOptionPane.showMessageDialog(this, result);
+			}
 		} catch (Exception e) {
 			XmippDialog.showException(parent, e);
 		}
@@ -147,23 +158,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 		
 	}//function existsSelectedPaths
 
-	protected void importParticles() {
-		String result = null;
-		path = sourcetf.getText().trim();
-
-		if (path == null || path.equals(""))
-			showError(XmippMessage.getEmptyFieldMsg("source"));
-		else if (!existsSelectedPath())
-			showError(XmippMessage.getPathNotExistsMsg(path));
-		else {			
-			if (new File(path).isDirectory()) 
-				result = parent.importParticlesFromFolder(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
-			else //only can choose file if TrainingPickerJFrame instance
-				result = ((TrainingPickerJFrame)parent).importParticlesFromFile(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
-		}
-		if(result != null && !result.isEmpty())
-			JOptionPane.showMessageDialog(this, result);
-	}
+	
 	
 	
 }
