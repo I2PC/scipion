@@ -14,6 +14,8 @@ import javax.swing.SwingUtilities;
 
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
+	
+	ImageWindow iw;
 
 	public Tool getTool()
 	{
@@ -27,7 +29,6 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		super(imp);
 		addMouseWheelListener(this);
-		adjustSize();
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -133,28 +134,24 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		Rectangle rect = getSrcRect();
 		double magnification = getMagnification();
 		imp = xiw.getImagePlusLoader().loadImagePlus();
-		ImageWindow iw = ((ImageWindow) xiw);
+		iw = ((ImageWindow) xiw);
 		iw.setImage(imp);
 		iw.updateImage(imp);
-		adjustSize();
 		setMagnification(magnification);
 		setSourceRect(rect);
+		adjustMagnification();
 		repaint();
 		iw.pack();
-		
+
 	}
-	
-	private void adjustSize()
+
+	private void adjustMagnification()//for micrographs will not happen
 	{
-		int min = 160;
-		int width = (int) getSize().getWidth();
-		int height = (int) getSize().getHeight();
-		if(width < min)//to make menu visible always
-			width = min;
-		if(height < min)
-			height = min;
-		
-		setDrawingSize(width, height);
+		int min = 200;
+		while (getSize().getWidth() < min)
+		{
+			zoomIn(0, 0);
+		}
 	}
 
 }

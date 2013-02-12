@@ -101,6 +101,7 @@ public:
 
     std::vector<Particle2>       auto_candidates;
     std::vector<Particle2>       rejected_particles;
+    std::vector<Particle2>       accepted_particles;
     Image<double>                micrographStack;
 
 public:
@@ -247,8 +248,8 @@ public:
     /// Save the feature vectors of the particles
     void saveAutoVectors(const FileName &fn);
 
-    /// Save the feature vectors of the particles
-    void saveRejectedVectors(const FileName &fn);
+    /// Save the extracted features for both rejected and found features
+    void saveVectors(const FileName &fn);
 
     /// Save PCA model
     void savePCAModel(const FileName &fn_root);
@@ -261,6 +262,9 @@ public:
 
     /// Load training set
     void loadTrainingSet(const FileName &fn_root);
+
+    /// Load the features for particles and non-particles (from the supervised)
+    void loadVectors(const FileName &fn);
 
     /// Select particles from the micrograph in an automatic way
     int automaticallySelectParticles(bool use2Classifier,bool fast);
