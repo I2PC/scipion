@@ -58,7 +58,7 @@ public:
         fnIn = getParam("-i");
         fnOut = getParam("-o");
         mask.allowed_data_types = INT_MASK;
-        if (apply_mask = checkParam("--mask"))
+        if ((apply_mask = checkParam("--mask")))
             mask.readParams(this);
     }
 

@@ -200,7 +200,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     // Explore the CTF
     Matrix1D<double> u(2), freqZero1(2), freqZero2(2);
     double wmax=0.5/CTF1.Tm;
-    double maxModule=0, minModule=1e38, min;
+    double maxModule=0, minModule=1e38;
     double N=0;
     evaluation.maxDampingAtBorder=0;
     evaluation.firstZeroDisagreement=-1;

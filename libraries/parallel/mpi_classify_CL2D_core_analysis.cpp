@@ -126,7 +126,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
         block.level=level;
         block.fnLevel=fnLevel;
         block.fnLevelCore=fnLevel.insertBeforeExtension("_core");
-        for (int i=0; i<blocksAux.size(); i++)
+        for (size_t i=0; i<blocksAux.size(); i++)
         {
             if (blocksAux[i].find("class")!=std::string::npos && blocksAux[i].find("images")!=std::string::npos)
             {
@@ -143,8 +143,7 @@ void ProgClassifyCL2DCore::produceSideInfo()
     // Get image dimensions
     if (Nblocks>0)
     {
-        int Zdim;
-        size_t Ndim;
+        size_t Zdim, Ndim;
         getImageSizeFromFilename(blocks[0].block+"@"+blocks[0].fnLevel,Xdim,Ydim,Zdim,Ndim);
     }
 }

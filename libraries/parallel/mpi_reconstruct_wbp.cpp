@@ -25,7 +25,7 @@
 
 #include "mpi_reconstruct_wbp.h"
 
-ProgMPIRecWbp::ProgMPIRecWbp(int argc, char *argv[])
+ProgMPIRecWbp::ProgMPIRecWbp(int argc, char **argv)
 {
     this->read(argc, argv);
 }
@@ -46,7 +46,7 @@ void ProgMPIRecWbp::readParams()
 void ProgMPIRecWbp::read(int argc, char **argv)
 {
     MpiMetadataProgram::read(argc,argv);
-    ProgRecWbp::read(argc, argv);
+    ProgRecWbp::read(argc, (const char **)argv);
 }
 void ProgMPIRecWbp::produceSideInfo()
 {

@@ -1,11 +1,33 @@
 #!/usr/bin/env xmipp_python
-import unittest, os, sys
 '''
+/***************************************************************************
+ * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+ *
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
 MODIFICATION ADVICE:
 
-Please,  do not  generate or  distribute 
+Please, do not generate or distribute 
 a modified version of this file under its original name. 
-'''
+ '''
+import unittest, os, sys
 
 from unittest import TestResult, _TextTestResult
 from protlib_filesystem import getXmippPath
@@ -35,6 +57,17 @@ class TestEMX(unittest.TestCase):
         """
         os.chdir(self.testsPath)
         
+    def test_findObjectType(self):
+        inFileName = join(self.testsPath,'EMX/emxTrivialFileRead.xml')
+        io = EmxXmlReader()
+        emxData = EmxData()
+        io.read(inFileName,emxData)
+        self.assertTrue(emxData.findObjectType('mic0017.mrc'),MICROGRAPH)
+        self.assertTrue(emxData.findObjectType('mic0018.mrc'),MICROGRAPH)
+        self.assertTrue(emxData.findObjectType('par0017.mrc'),PARTICLE)
+        self.assertFalse(emxData.findObjectType('par0017w.mrc'),PARTICLE)
+        
+
     def test_findObject(self):
         emxData     = EmxData()
 
@@ -145,7 +178,7 @@ class TestEMX(unittest.TestCase):
         io.write(outFileName,emxData)
 
         from filecmp import cmp
-        self.assertTrue(cmp(outFileName,join(self.testsPath,'EMX/emxTrivialFile.xml'),False))
+        self.assertTrue(cmp(outFileName,join(self.testsPath,'EMX/emxTrivialFileWrite.xml'),False))
         unlink(outFileName)
 
     def test_EMX_read(self):

@@ -668,7 +668,6 @@ char* getXmippPath();
  */
 inline bool fileExists( const char *filename )
 {
-    Stat buffer ;
     // do not use stat since updates the atime flag. This may be dangerous
     // for mpi processes in which the same file is accessed many times
     // from different computers even if not writting is made 
@@ -741,7 +740,7 @@ public:
         fl.l_pid    = getpid(); /* our PID                      */
 
         islocked = false;
-        filenum = NULL;
+        filenum = 0;
 #endif
     }
 

@@ -227,4 +227,13 @@ public class ExtractParticlePicker extends ParticlePicker
 		return colorby.toArray(new ColorHelper[]{});
 	}
 
+	@Override
+	public boolean isValidSize(int size)
+	{
+		for (ExtractParticle p : getMicrograph().getParticles())
+			if (!getMicrograph().fits(p.getX(), p.getY(), size))
+				return false;
+		return true;
+	}
+
 }

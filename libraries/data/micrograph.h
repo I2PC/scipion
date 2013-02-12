@@ -82,8 +82,7 @@ public:
     FileName                 fn_inf;
     int                      X_window_size;
     int                      Y_window_size;
-    int                      Xdim,Ydim,Zdim;
-    size_t                   Ndim;
+    size_t                   Xdim,Ydim,Zdim,Ndim;
     int                      datatype;
     int                      swapbyte;
     int                      __offset;
@@ -240,10 +239,10 @@ public:
                         bool only_check)
     {
         result.initZeros(Y_window_size, X_window_size);
-        int i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
-        int iF = ROUND(scaleY * P.Y) + LAST_XMIPP_INDEX(Y_window_size);
-        int j0 = ROUND(scaleX * P.X) + FIRST_XMIPP_INDEX(X_window_size);
-        int jF = ROUND(scaleX * P.X) + LAST_XMIPP_INDEX(X_window_size);
+        size_t i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
+        size_t iF = ROUND(scaleY * P.Y) + LAST_XMIPP_INDEX(Y_window_size);
+        size_t j0 = ROUND(scaleX * P.X) + FIRST_XMIPP_INDEX(X_window_size);
+        size_t jF = ROUND(scaleX * P.X) + LAST_XMIPP_INDEX(X_window_size);
         int retval = 1;
         double irange=1.0/(Dmax - Dmin);
 
@@ -252,10 +251,10 @@ public:
         else
             if (!only_check)
             {
-                for (int i = i0; i <= iF; i++)
+                for (size_t i = i0; i <= iF; i++)
                 {
                     int i_i0=i-i0;
-                    for (int j = j0; j <= jF; j++)
+                    for (size_t j = j0; j <= jF; j++)
                     {
                         int j_j0=j-j0;
                         double val=IMGPIXEL(I,i,j);
@@ -381,7 +380,7 @@ public:
     /** Pixel access for reading.
         These coordinates follow the physical Xmipp convention
         {../../../Extra_Docs/Conventions.html} for coordinates */
-    double operator()(int y, int x) const
+    double operator()(size_t y, size_t x) const
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
             // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");

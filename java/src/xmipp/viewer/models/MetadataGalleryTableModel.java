@@ -209,6 +209,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 			title += String.format(" %d items", n);
 		if (data.hasRenderLabel())
 			title += String.format(" (%d x %d)", image_width, image_height);
+		
 		return title;
 	}// function getTitle
 

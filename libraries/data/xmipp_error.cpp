@@ -64,7 +64,7 @@ XmippError::~XmippError()
 // Show message
 std::ostream& operator << (std::ostream& o, XmippError& xe)
 {
-    String error = formatString("XMIPP_ERROR %d: %s", xe.__errno, xe.getDefaultMessage());
+    String error = formatString("XMIPP_ERROR %d: %s", xe.__errno, xe.getDefaultMessage().c_str());
     o << colorString(error.c_str(), RED) << std::endl;
     o << colorString(xe.msg.c_str(), RED) << std::endl;
     error = formatString("File: %s line: %ld", xe.file.c_str(), xe.line);
@@ -74,18 +74,18 @@ std::ostream& operator << (std::ostream& o, XmippError& xe)
 
 String XmippError::getMessage() const
 {
-      String error = formatString("XMIPP_ERROR %d: %s\n   ", __errno, getDefaultMessage());
+      String error = formatString("XMIPP_ERROR %d: %s\n   ", __errno, getDefaultMessage().c_str());
       error += msg;
       error += formatString("\n   File: %s line: %ld\n", file.c_str(), line);
       return error;
 }
 
-char * XmippError::getDefaultMessage() const
+String XmippError::getDefaultMessage() const
 {
     return getDefaultMessage(__errno);
 }
 
-char * XmippError::getDefaultMessage(ErrorType e)
+String XmippError::getDefaultMessage(ErrorType e)
 {
     switch (e)
     {

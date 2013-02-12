@@ -426,7 +426,6 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
     getBlocksInMetaDataFile(fn_groups,blockList);
     FileName fn_temp, fn_exp;
     FileName my_output_file_root;
-    int bmax=blockList.size();
     MetaData SFBlock;
 
     fn_exp = FnexperimentalImages.removeBlockName();

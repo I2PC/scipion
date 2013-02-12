@@ -639,7 +639,7 @@ public:
      * fn = sel.get_current_file();
      * @endcode
      */
-    const std::string& get_current_file();
+    const std::string get_current_file();
 
     /** Get current line.
      */
@@ -657,7 +657,7 @@ public:
      * fn = sel.get_file_number(i);
      * @endcode
      */
-    const std::string& get_file_number(int i);
+    const std::string get_file_number(int i);
     //@}
 
     /// @name Modifying the selection file

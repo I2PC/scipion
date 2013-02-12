@@ -74,8 +74,7 @@ void ProgAlign2d::alignPairs(MetaData &MDin, MetaData &MDout, int level)
     // Compute output stack size
     size_t imax=MDin.size()/2;
     size_t remaining=MDin.size()-2*imax;
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getImageSize(MDin,Xdim,Ydim,Zdim,Ndim);
     if (Zdim!=1 || Ndim!=1)
         REPORT_ERROR(ERR_MATRIX_DIM,"Files in metadata are not 2D images");
@@ -93,7 +92,7 @@ void ProgAlign2d::alignPairs(MetaData &MDin, MetaData &MDout, int level)
     RotationalCorrelationAux aux3;
     std::cerr << "Aligning level " << level << std::endl;
     init_progress_bar(imax);
-    for (int i=0; i<imax; i++)
+    for (size_t i=0; i<imax; i++)
     {
         // Read the two input images
         I1.readApplyGeo(MDin,mdIter.objId);
@@ -164,9 +163,7 @@ void ProgAlign2d::do_pspc()
 
 void ProgAlign2d::computeMean()
 {
-    int level=0;
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
     if (Zdim!=1 || Ndim!=1)
         REPORT_ERROR(ERR_MATRIX_DIM,"Files in metadata are not 2D images");

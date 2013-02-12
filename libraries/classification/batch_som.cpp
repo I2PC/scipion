@@ -37,9 +37,7 @@
 BatchSOM::BatchSOM(std::istream& _is): SOM(_is)
 {
     readSelf(_is);
-};
-
-
+}
 
 /**
  * Trains the SOM
@@ -97,7 +95,7 @@ void BatchSOM::train(ClassificationMap& _som, const ClassicTrainingVectors& _ts)
         if (verbosity >= 2)
         {
             char s[100];
-            sprintf(s, "Iteration %d of %d.\n", t + 1, somNSteps);
+            sprintf(s, "Iteration %d of %d.\n", (int)(t + 1), (int)somNSteps);
             listener->OnReportOperation((std::string) s);
         }
         t++;
@@ -106,7 +104,6 @@ void BatchSOM::train(ClassificationMap& _som, const ClassicTrainingVectors& _ts)
 
     if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(somNSteps);
-
-};
+}
 
 

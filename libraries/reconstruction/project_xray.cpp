@@ -212,8 +212,8 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
         int Ydim, int Xdim)
 {
 
-    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
-    int zinit, zend, yinit, yend, xinit, xend;
+    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotZdim;
+    int yinit, xinit;
 
     iniXdim = XSIZE(MULTIDIM_ARRAY(phantom.iniVol));
     iniYdim = YSIZE(MULTIDIM_ARRAY(phantom.iniVol));
@@ -253,7 +253,6 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
     //    else
     {
         rotXdim = iniXdim;
-        rotYdim = iniYdim;
         rotZdim = iniZdim;
     }
 
@@ -267,18 +266,13 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
 
     phantom.rotVol.setXmippOrigin();
 
-    zinit = STARTINGZ((phantom.rotVol));
-    zend = zinit + rotZdim - 1;
-
     yinit = STARTINGY((phantom.rotVol));
     if (YY(offsetNV) > 0)
         yinit -= 2 * YY(offsetNV);
-    yend = yinit + newYdim -1;
 
     xinit = STARTINGX((phantom.rotVol));
     if (XX(offsetNV) > 0)
         xinit -= 2 * XX(offsetNV);
-    xend = xinit + newXdim - 1;
 
     if (psf.verbose > 1)
     {
@@ -371,7 +365,7 @@ void projectXrayVolume(MultidimArray<double> &muVol,
 
     if (!XMIPP_EQUAL_ZERO(psf.slabThr))
     {
-        for (int kk = 0; kk < psf.slabIndex.size(); ++kk)
+        for (size_t kk = 0; kk < psf.slabIndex.size(); ++kk)
         {
             if (firstSlab < psf.slabIndex[kk])
             {
@@ -383,7 +377,7 @@ void projectXrayVolume(MultidimArray<double> &muVol,
         // Searching the equivalent index in rotvol for the indexes for the Slabs of PSFVol
         phantomSlabIdx.push_back(STARTINGZ(muVol));
 
-        for (int kk = firstSlab+1; kk < psf.slabIndex.size(); ++kk)
+        for (size_t kk = firstSlab+1; kk < psf.slabIndex.size(); ++kk)
         {
             int tempK = psf.slabIndex[kk] * psf.dzoPSF / psf.dzo;
 
@@ -614,6 +608,8 @@ void threadXrayProject(ThreadArgument &thArg)
         case PSFXR_ZPAD:
             MULTIDIM_ARRAY(imOutGlobal).selfWindow(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
             break;
+        default:
+        	REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type");
         }
 
         MULTIDIM_ARRAY(imOutGlobal).setXmippOrigin();
@@ -682,7 +678,7 @@ void calculateIgeoThread(ThreadArgument &thArg)
     {
         //        first--;
         //        last--;
-        for (int i = first; i <= last; ++i)
+        for (size_t i = first; i <= last; ++i)
         {
             //            for (int j=0; j<XSIZE(muVol); ++j)
             //                dAkij(IgeoVol,0,i,j) = dAij(IgeoZb,i,j)*exp(-dAkij(muVol,0,i,j)*sampling);
@@ -751,10 +747,6 @@ void projectXraySimpleGridThread(ThreadArgument &thArg)
     Projection *proj = (dataThread->projOut);
     MultidimArray<double> &projNorm = *(dataThread->projNorm);
     int forw = dataThread->forw;
-    std::vector<int> &phantomSlabIdx = *(dataThread->phantomSlabIdx);
-    std::vector<int> &psfSlicesIdx = *(dataThread->psfSlicesIdx);
-    ParallelTaskDistributor * td = dataThread->td;
-    Barrier * barrier = dataThread->barrier;
 
     projectXraySimpleGrid(muVol, psf, IgeoVol, proj, projNorm , forw,
                           threadId, thArg.threads);
@@ -800,7 +792,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     // (z0,y0,XX(lowest))
     double XX_footprint_size;                // The footprint is supposed
     double YY_footprint_size;                // to be defined between
-    double ZZ_footprint_size;
     // (-vmax,+vmax) in the Y axis,
     // and (-umax,+umax) in the X axis
     // This footprint size is the
@@ -809,25 +800,12 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     int XX_corner2, XX_corner1;              // Coord: Corners of the
     int YY_corner2, YY_corner1;              // footprint when it is projected
     // onto the projection plane
-    int           foot_V1, foot_U1;          // Img Coord: coordinate (in
-    // an image fashion, not in an
-    // oversampled image fashion)
-    // inside the blobprint of the
-    // corner1
-    int        foot_V, foot_U;            // Img Coord: coordinate
-    int        foot_W = 0;
-    // corresponding to the blobprint
-    // point which matches with this
-    // pixel position
-    int           Vsampling, Usampling;      // Sampling rate in Y and X
     // directions respectively
     // inside the blobprint
     double        vol_corr;                  // Correction for a volume element
     int           N_eq;                      // Number of equations in which
     // a blob is involved
     int           i, j, k;                   // volume element indexes
-    bool   isVolPSF = false;    // Blob footprint is VolumePSF
-
 
     // Project grid axis ....................................................
     // These vectors ((1,0,0),(0,1,0),...) are referred to the grid
@@ -857,7 +835,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     // stored as real ones to make easier operations with other vectors
     XX_footprint_size = FINISHINGX(psfVol) + XMIPP_EQUAL_ACCURACY;
     YY_footprint_size = FINISHINGY(psfVol) + XMIPP_EQUAL_ACCURACY;
-    ZZ_footprint_size = FINISHINGZ(psfVol) + XMIPP_EQUAL_ACCURACY;
 
     // Project the whole grid ...............................................
     // Corner of the plane defined by Z. These coordinates try to be within
@@ -915,8 +892,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
     }
 #endif
 
-    int number_of_basis = 0;
-
     for (k = ZZ_lowest; k <= ZZ_highest; k += numthreads)
     {
         // Corner of the row defined by Y
@@ -929,9 +904,6 @@ void projectXraySimpleGrid(MultidimArray<double> *vol, const XRayPSF &psf,
             {
                 // Ray length interesting
                 bool ray_length_interesting = true;
-                double zCenterDist;
-
-                double kPos = ZZ(actprj); // z = 0 standard value for non 3D blobprints
 
                 //                // Points out of 3DPSF
                 //                ray_length_interesting = (ABS(zCenterDist) <= ZZ_footprint_size);

@@ -251,7 +251,7 @@ void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 	}
 
 	Matrix1D<double> p(3), pc(3);
-	SPEED_UP_temps;
+	SPEED_UP_temps012;
 	for (int i = 0; i < NAngSteps; ++i) {
 		double s, c;
 		double angle = angMin + i * deltaAng;

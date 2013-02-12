@@ -189,9 +189,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 		filemn.add(savemi);
 		importffmi = new JMenuItem("Import Particles...", XmippResource.getIcon("import_wiz.gif"));
+		filemn.add(importffmi);
+		if (picker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
 		
-		importffmi.addActionListener(new ActionListener()
-		{
+		importffmi.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
@@ -364,6 +366,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return getParticlePicker().getFamily();
 	}
 
+	
 	public abstract ParticlePickerCanvas getCanvas();
 	
 	public abstract ParticlesJDialog initParticlesJDialog();
@@ -451,6 +454,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().repaint();
 		getParticlePicker().saveFamilies();
 	}
+
 
 	protected void initImagePane() {
 		imagepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -590,14 +594,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		sizetf.setColumns(3);
-		sizetf.setText(Integer.toString(size));
+		sizetf.setValue(size);
 		sizepn.add(sizetf);
 		sizetf.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int size = ((Number) sizetf.getValue()).intValue();
-				if (!isValidSize(size)) {
+				if (!getParticlePicker().isValidSize(size)) {
 					int prevsize = getFamily().getSize();
 					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
 					sizetf.setText(Integer.toString(prevsize));
@@ -612,7 +616,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				int size = sizesl.getValue();
-				if (!isValidSize(size)) {
+				if (!getParticlePicker().isValidSize(size)) {
 					int prevsize = getFamily().getSize();
 					JOptionPane.showMessageDialog(ParticlePickerJFrame.this, XmippMessage.getOutOfBoundsMsg("Family size " + size));
 					sizesl.setValue(prevsize);
@@ -624,11 +628,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	public abstract boolean isValidSize(int size);
-
+	
 	public void updateSize(int size) {
 
-		sizetf.setText(Integer.toString(size));
+		sizetf.setValue(size);
 		sizesl.setValue(size);
 		getCanvas().repaint();
 		getFamily().setSize(size);
@@ -658,7 +661,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected abstract void resetData();
 
 
-	public abstract void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
+	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
 	
 	public Color getColor()
 	{

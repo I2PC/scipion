@@ -27,6 +27,6 @@
 #include <reconstruction/tomo_extract_subvolume.h>
 #include <parallel/xmipp_mpi.h>
 
-CREATE_MPI_METADATA_PROGRAM(ProgTomoExtractSubvolume, MpiProgTomoExtractSubvolume);
+CREATE_MPI_METADATA_PROGRAM(ProgTomoExtractSubvolume, MpiProgTomoExtractSubvolume)
 
-RUN_XMIPP_PROGRAM(MpiProgTomoExtractSubvolume);
+RUN_XMIPP_PROGRAM(MpiProgTomoExtractSubvolume)

@@ -363,10 +363,15 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
         return ABS(ctf.getValueAt());
         break;
     case BFACTOR:
+        {
         double R = absw / w2;
         return exp( - (w1 / 4.)  * R * R);
+        }
         break;
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown mask type");
     }
+    return 0;
 }
 
 /* Generate mask ----------------------------------------------------------- */
@@ -509,6 +514,8 @@ double FourierFilter::maskPower()
         return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
     else if (XSIZE(maskFourierd) != 0)
         return maskFourierd.sum2()/MULTIDIM_SIZE(maskFourierd);
+    else
+    	return 0;
 }
 
 // Correct phase -----------------------------------------------------------

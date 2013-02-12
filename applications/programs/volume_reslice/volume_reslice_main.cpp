@@ -79,7 +79,7 @@ private:
 
         imgIn.read(fnImgIn);
 
-        int xDim, yDim, zDim, XdimOut, yDimOut, zDimOut;
+        size_t xDim, yDim, zDim, XdimOut, yDimOut, zDimOut;
         imgIn.getDimensions(xDim, yDim, zDim);
 
         char axis;
@@ -113,7 +113,7 @@ private:
 
         init_progress_bar(zDimOut);
 
-        for (int k = 0; k < zDimOut; k++)
+        for (size_t k = 0; k < zDimOut; k++)
         {
             imTemp.aliasSlice(imgOut(), k);
             index = k + (zDimOut - 1 - 2*k) * (int)flip;

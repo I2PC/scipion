@@ -163,7 +163,7 @@ void CrystalARTRecons::preProcess(GridVolume &vol_basis0, int level, int rank)
 
     // Resize the reconstructed volume
     Matrix1D<double> r1(3), r2(3);
-    for (int n = 0; n < vol_basis0.VolumesNo(); n++)
+    for (size_t n = 0; n < vol_basis0.VolumesNo(); n++)
     {
         Image<double> &V = vol_basis0(n);
         ZZ(r1) = XMIPP_MIN(ZZ(r1), STARTINGZ(V()));
@@ -206,12 +206,12 @@ void CrystalARTRecons::preProcess(GridVolume &vol_basis0, int level, int rank)
 
         // Now check if point is inside
         int inside_table[4][4] = {
-                                     1, 1, 1, 1,
-                                     0, 1, 1, 1,
-                                     1, 0, 1, 1,
+                                     {1, 1, 1, 1},
+                                     {0, 1, 1, 1},
+                                     {1, 0, 1, 1},
                                      // 1,1,0,1, Take this side out
                                      // 1,1,1,0, Take this side out
-                                     0, 0, 1, 1,
+                                     {0, 0, 1, 1}
                                      // 1,0,0,1, and their three Vertex
                                      // 1,1,0,0,
                                      // 0,1,1,0
@@ -533,7 +533,7 @@ void expandToFillSpace(const BasicARTParameters &prm,
 
     // Copy values ..........................................................
     Matrix1D<double> r(3);
-    for (int n = 0; n < vol.VolumesNo(); n++)
+    for (size_t n = 0; n < vol.VolumesNo(); n++)
     {
         Image<double> &V = vol(n);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(eprm.unit_cell_mask)

@@ -11,11 +11,14 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_Program_runByName
 {
      XMIPP_JAVA_TRY
      {
-        String progNameStr = env->GetStringUTFChars(progName, false);
-        String argsStr = env->GetStringUTFChars(args, false);
+    	jboolean aux=false;
+        String progNameStr = env->GetStringUTFChars(progName, &aux);
+        aux=false;
+        String argsStr = env->GetStringUTFChars(args, &aux);
 
         return runProgram(progNameStr,argsStr);
      }
      XMIPP_JAVA_CATCH;
+     return 1;
 }
 

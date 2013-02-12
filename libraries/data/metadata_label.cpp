@@ -52,7 +52,7 @@ void MDL::str2LabelVector(const String &labelsStr, std::vector<MDLabel> &labels)
     labels.clear();
     StringVector parts;
     splitString(labelsStr, " ", parts);
-    for (int i = 0; i < parts.size(); ++i)
+    for (size_t i = 0; i < parts.size(); ++i)
         if (MDL::isValidLabel(parts[i]))
             labels.push_back(MDL::str2Label(parts[i]));
         else
@@ -92,6 +92,9 @@ String MDL::label2SqlColumn(const MDLabel label)
     case LABEL_VECTOR_SIZET:
         ss << "TEXT";
         break;
+    case LABEL_NOTYPE:
+    	ss << "NO_TYPE";
+    	break;
     }
     return ss.str();
 }
@@ -114,6 +117,8 @@ String MDL::labelType2Str(MDLabelType type)
         return "SIZE_T";
     case LABEL_VECTOR_SIZET:
         return "VECTOR(SIZE_T)";
+    case LABEL_NOTYPE:
+    	return "NO_TYPE";
     }
     return "UNKNOWN";
 }
@@ -461,16 +466,6 @@ void MDObject::setValue(const char*  &charvalue)
     setValue(String(charvalue));
 }
 
-#define DOUBLE2STREAM(d) \
-    if (withFormat) {\
-            (os) << std::setw(12); \
-            (os) << (((d) != 0. && fabs(d) < 0.001) ? std::scientific : std::fixed);\
-        } os << d;
-
-#define INT2STREAM(i) \
-    if (withFormat) os << std::setw(10); \
-    os << i;
-
 void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql, bool escape) const
 {
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
@@ -536,7 +531,11 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql, bool esca
                     os << _QUOT;
             }
             break;
-
+        case LABEL_NOTYPE:
+        	if (escape) os << _QUOT;
+        	os << "No type";
+        	if (escape) os << _QUOT;
+        	break;
         }//close switch
 }//close function toStream
 
@@ -642,6 +641,8 @@ bool MDObject::fromStream(std::istream &is, bool fromString)
                 is.ignore(256, _QUOT); //ignore the ending ']'
             }
             break;
+        case LABEL_NOTYPE:
+        	break;
         }
     }
     return is.good();
@@ -658,7 +659,7 @@ bool MDObject::fromString(const String& str)
 bool MDObject::fromChar(const char * szChar)
 {
     std::stringstream ss(szChar);
-    fromStream(ss);
+    return fromStream(ss);
 }
 //MDObject & MDRow::operator [](MDLabel label)
 //{
@@ -714,7 +715,7 @@ bool MDRow::containsLabel(MDLabel label) const
 }
 
 
-bool MDRow::addLabel(MDLabel label)
+void MDRow::addLabel(MDLabel label)
 {
     if (objects[label] == NULL)
     {
@@ -768,11 +769,7 @@ MDRow::MDRow(const MDRow & row)
 {
     _size = 0;
     //Just initialize all pointers with NULL value
-    memset(objects, NULL, MDL_LAST_LABEL * sizeof(size_t));
-    //    FOR_ALL_LABELS()
-    //    {
-    //        objects[_label] = NULL;
-    //    }
+    memset(objects, 0, MDL_LAST_LABEL * sizeof(size_t));
     copy(row);
 }
 
@@ -780,12 +777,7 @@ MDRow::MDRow()
 {
     _size = 0;
     //Just initialize all pointers with NULL value
-    memset(objects, NULL, MDL_LAST_LABEL * sizeof(size_t));
-    //    FOR_ALL_LABELS()
-    //    {
-    //        objects[_label] = NULL;
-    //    }
-
+    memset(objects, 0, MDL_LAST_LABEL * sizeof(size_t));
 }
 
 MDRow& MDRow::operator = (const MDRow &row)

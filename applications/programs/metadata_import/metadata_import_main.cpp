@@ -82,4 +82,4 @@ public:
 }
 ;//end of class ProgMetadataImport
 
-RUN_XMIPP_PROGRAM(ProgMetadataImport);
+RUN_XMIPP_PROGRAM(ProgMetadataImport)

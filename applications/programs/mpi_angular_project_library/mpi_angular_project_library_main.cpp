@@ -494,7 +494,7 @@ public:
     }
 
     /* a short function to print a message and exit */
-    void error_exit(char * msg)
+    void error_exit(const char * msg)
     {
         fprintf(stderr, "%s", msg);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);

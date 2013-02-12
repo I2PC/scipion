@@ -73,7 +73,7 @@
  * coordinates, then an exception is thrown
  */
 template <typename T>
-void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
+void FFT_idx2digfreq(T& v, const Matrix1D< size_t >& idx, Matrix1D< double >& freq)
 {
     if (VEC_XSIZE(idx) < 1 || VEC_XSIZE(idx) > 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "FFT_idx2digfreq: Index is not of the correct size");
@@ -99,7 +99,7 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
  * coordinates, then an exception is thrown
  */
 template <typename T>
-void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
+void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< size_t >& idx)
 {
     if (VEC_XSIZE(freq) < 1 || VEC_XSIZE(freq) > 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "digfreq2FFT_idx: freq is not of the correct size");
@@ -289,7 +289,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
     {
         // 3D
         MultidimArray< T > aux;
-        int l, shift;
+        size_t l, shift;
 
         // Shift in the X direction
         if ((l = XSIZE(v)) > 1)
@@ -300,14 +300,14 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
             if (!forward)
                 shift = -shift;
 
-            for (int k = 0; k < ZSIZE(v); k++)
-                for (int i = 0; i < YSIZE(v); i++)
+            for (size_t k = 0; k < ZSIZE(v); k++)
+                for (size_t i = 0; i < YSIZE(v); i++)
                 {
                     // Shift the input in an auxiliar vector
                     T *ptr_vkij = &dAkij(v, k, i, 0);
-                    for (int j = 0; j < l; ++j, ++ptr_vkij)
+                    for (size_t j = 0; j < l; ++j, ++ptr_vkij)
                     {
-                        int jp = j + shift;
+                    	size_t jp = j + shift;
 
                         if (jp < 0)
                             jp += l;
@@ -331,14 +331,14 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
             if (!forward)
                 shift = -shift;
 
-            int lmax=(l/4)*4;
-            for (int k = 0; k < ZSIZE(v); k++)
-                for (int j = 0; j < XSIZE(v); j++)
+            size_t lmax=(l/4)*4;
+            for (size_t k = 0; k < ZSIZE(v); k++)
+                for (size_t j = 0; j < XSIZE(v); j++)
                 {
                     // Shift the input in an auxiliar vector
-                    for (int i = 0; i < l; i++)
+                    for (size_t i = 0; i < l; i++)
                     {
-                        int ip = i + shift;
+                    	size_t ip = i + shift;
 
                         if (ip < 0)
                             ip += l;
@@ -350,14 +350,14 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 
                     // Copy the vector
                     const T* ptrAux=&dAi(aux,0);
-                    for (int i = 0; i < lmax; i+=4,ptrAux+=4)
+                    for (size_t i = 0; i < lmax; i+=4,ptrAux+=4)
                     {
                         dAkij(v, k, i  , j) = *ptrAux;
                         dAkij(v, k, i+1, j) = *(ptrAux+1);
                         dAkij(v, k, i+2, j) = *(ptrAux+2);
                         dAkij(v, k, i+3, j) = *(ptrAux+3);
                     }
-                    for (int i = lmax; i < l; ++i, ++ptrAux)
+                    for (size_t i = lmax; i < l; ++i, ++ptrAux)
                         dAkij(v, k, i, j) = *ptrAux;
                 }
         }
@@ -370,14 +370,14 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 
             if (!forward)
                 shift = -shift;
-            int lmax=(l/4)*4;
-            for (int i = 0; i < YSIZE(v); i++)
-                for (int j = 0; j < XSIZE(v); j++)
+            size_t lmax=(l/4)*4;
+            for (size_t i = 0; i < YSIZE(v); i++)
+                for (size_t j = 0; j < XSIZE(v); j++)
                 {
                     // Shift the input in an auxiliar vector
-                    for (int k = 0; k < l; k++)
+                    for (size_t k = 0; k < l; k++)
                     {
-                        int kp = k + shift;
+                    	size_t kp = k + shift;
                         if (kp < 0)
                             kp += l;
                         else if (kp >= l)
@@ -388,14 +388,14 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 
                     // Copy the vector
                     const T* ptrAux=&dAi(aux,0);
-                    for (int k = 0; k < lmax; k+=4,ptrAux+=4)
+                    for (size_t k = 0; k < lmax; k+=4,ptrAux+=4)
                     {
                         dAkij(v, k,   i, j) = *ptrAux;
                         dAkij(v, k+1, i, j) = *(ptrAux+1);
                         dAkij(v, k+2, i, j) = *(ptrAux+2);
                         dAkij(v, k+3, i, j) = *(ptrAux+3);
                     }
-                    for (int k = lmax; k < l; ++k, ++ptrAux)
+                    for (size_t k = lmax; k < l; ++k, ++ptrAux)
                         dAkij(v, k, i, j) = *ptrAux;
                 }
         }

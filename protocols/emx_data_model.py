@@ -1,7 +1,7 @@
 '''
 /***************************************************************************
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
- *              Jose Miguel 
+ *              Jose Miguel de la Rosa
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@ MODIFICATION ADVICE:
 Please,  do not  generate or  distribute 
 a modified version of this file under its original name. 
  '''
+ 
 VERSION='EMX_1.0'
 import sys
 try:
@@ -48,16 +49,27 @@ except ImportError:
 anything starting by the name of a class (i.e. micrographXXXX) 
  is a pointer to that class
 '''
+'''
+GLOSARY:
 
+ primary key: A primary key is a set of labels/attributes
+ that uniquely identify an object (i.e: a micrograph)
+ 
+ foreign key: Given two objects (i.e one micrograph an one particle) 
+ a foreign key is a set of labels/attributes in the first object 
+ that uniquely identify the second object 
+'''
 EMX_SEP = '__'
+#classes 
 MICROGRAPH = 'micrograph'
 PARTICLE   = 'particle'
-FILENAME = 'fileName'
-INDEX = 'index'
+#primary keys
+FILENAME   = 'fileName'
+INDEX      = 'index'
 
 class EmxLabel:
     '''auxiliary class to assign data type (i.e.: int, str, etc)
-    and unit to each attribute
+    and unit to each attribute/label
     '''
     def __init__(self, type, unit=None):
         self.type = type
@@ -88,7 +100,6 @@ emxDataTypes={
               ,'defocusV':EmxLabel(float,'nm')
               ,'defocusUAngle':EmxLabel(float,'deg')
               ,'fom':EmxLabel(float)
-              ,INDEX:EmxLabel(int)
               ,'pixelSpacing__X':EmxLabel(float,'A/px')
               ,'pixelSpacing__Y':EmxLabel(float,'A/px')
               ,'pixelSpacing__Z':EmxLabel(float,'A/px')
@@ -107,23 +118,28 @@ emxDataTypes={
 }
 
 class EmxObject:
-    '''Base class for all emx objects
-    name is the class type so far micrograph or particles
+    '''Base class for all emx objects/classes
+       name is the class type so far micrograph or particles
     '''    
     def __init__(self,name):
         try:
-            #dictionaries with labels used as primary keys
-            #foreing keys and plain attributes
+            #dictionaries with labels used as 1) primary keys
+            #2)foreing keys and 3) plain attributes
             self.dictPrimaryKeys = collections.OrderedDict()
             self.dictForeignKeys = collections.OrderedDict()
             self.dictAttributes  = collections.OrderedDict()
         except ImportError:
+            #ordereddict was introduced in python 2.7
+            #use plain dictionaries if no available
             self.dictPrimaryKeys = {}
             self.dictForeignKeys = {}
             self.dictAttributes  = {}
+        #chlid class name
         self.name=name
     
-    def pprint_pk(self, printNone):
+    def pprint_pk(self, printNone=False):
+        '''Print primary keys
+        '''
         out = "fileName: %(fileName)s"
         if (self.get(INDEX) != None) or printNone:
             out += " (index=%(index)s)"
@@ -131,7 +147,6 @@ class EmxObject:
         
     def pprint_od(self, printNone=False):
         '''print ordered dictionaries, default routine is ugly.
-        INPUT: ordered dictionary
         '''
         #primary key
         out = "\nObject type: %s\n"% self.name
@@ -167,7 +182,8 @@ class EmxObject:
         self.dictPrimaryKeys[key] = value
         
     def get(self, key):
-        '''given a key (attribute name) returns the value assigned to it'''
+        '''given a key (attribute name) returns 
+           the value assigned to it'''
         if key in self.dictPrimaryKeys:
             return self.dictPrimaryKeys[key]
         if key in self.dictAttributes:
@@ -185,22 +201,22 @@ class EmxObject:
 
     def iterAttributes(self):
         '''Returns list with valid keys (attribute names) 
-           for this class. Primary keys are ignored'''
+           and values for this class. Primary keys are ignored'''
         return self.dictAttributes.iteritems()
 
     def iterPrimaryKeys(self):
         '''Returns list with valid primary keys (attribute names) 
-        for this class'''
+        and values for this class'''
         return self.dictPrimaryKeys.iteritems()
 
     def __eq__(self, other):
-        ''' equality operator'''
+        '''equality operator'''
         return self.dictAttributes == other.dictAttributes\
                and self.dictPrimaryKeys == other.dictPrimaryKeys\
                and self.dictForeignKeys == other.dictForeignKeys
     
     def __str__(self):
-        ''' print operator'''
+        '''print operator'''
         return self.pprint_od()
     
     def comparePK(self, **args):
@@ -213,7 +229,7 @@ class EmxMicrograph(EmxObject):
     def __init__(self,fileName,index=None,activeFlag=1):
         #init emx object
         EmxObject.__init__(self,MICROGRAPH)
-        #define primary keys
+        #define primary keys. At least one of this must be different from None
         self._initPrimaryKey_(FILENAME,fileName)
         self._initPrimaryKey_(INDEX, index)
         #define rest of attributes
@@ -231,13 +247,13 @@ class EmxMicrograph(EmxObject):
 class EmxParticle(EmxObject):
     '''Class for Particles
     '''    
-    def __init__(self,fileName,index=1,micrograph=None,activeFlag=1):
+    def __init__(self,fileName,index=None,micrograph=None,activeFlag=1):
         #init emx object
         EmxObject.__init__(self,PARTICLE)
         #define primary keys
         self._initPrimaryKey_(FILENAME, fileName)
         self._initPrimaryKey_(INDEX, index) # Index of an image in a multi-image 
-                                                     # file. Defaults to 1 if omitted.'''
+                                            # file. Defaults to 1 if omitted.'''
         #define foreign keys
         self.setMicrograph(micrograph)
         #define rest of attributes
@@ -264,11 +280,11 @@ class EmxData():
        No file format information here
     '''    
     def __init__(self):
-        self.version = 1.0
-        self.listParticles = []
+        self.version         = 1.0
+        self.listParticles   = []
         self.listMicrographs = []
-        self.dictLists = {MICROGRAPH: self.listMicrographs, 
-                          PARTICLE: self.listParticles}
+        self.dictLists = {MICROGRAPH : self.listMicrographs, 
+                          PARTICLE   : self.listParticles}
     
     def __eq__(self,other):
         ''' equality operator'''
@@ -291,26 +307,21 @@ class EmxData():
         self.listParticles.append(object)
     
     def findObject(self, objList, **objPK):
+        ''' given a primary key find corresponding object'''
         for obj in objList:
             if obj.comparePK(**objPK):
                 return obj
         return None
-            
-#    def findMicrograph(self,fileName, index=None):
-#        for micrograph in self.listMicrographs:
-#            if micrograph.dictPrimaryKeys[FILENAME] == fileName\
-#               and\
-#               micrograph.dictPrimaryKeys[INDEX] == index:
-#                  return micrograph
-#        return None
-#
-#    def findParticle(self,fileName, index=None):
-#        for particle in self.listParticles:
-#            if particle.dictPrimaryKeys[FILENAME] == fileName\
-#               and\
-#               particle.dictPrimaryKeys[INDEX] == index:
-#                  return particle
-#        return None
+
+    def findObjectType(self,fileName):
+        '''given a binary filename find kind of object associated to it.
+        That is, a binary file may containt only micrographs or 
+        only particles'''
+        for k, objList in self.dictLists.iteritems():
+            for obj in objList:
+                if  obj.dictPrimaryKeys[FILENAME] == fileName:
+                    return k
+        return None
     
     def __str__(self):
         ''' print operator'''

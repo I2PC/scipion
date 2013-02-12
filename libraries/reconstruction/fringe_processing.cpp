@@ -150,8 +150,7 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
 
 void FringeProcessing::orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, MultidimArray<double > & orModMap, int wSize, MultidimArray<bool > & ROI)
 {
-    int NR, NC,NZ;
-    size_t NDim;
+    size_t NR, NC,NZ, NDim;
     im.getDimensions(NC,NR,NZ,NDim);
 
     if ( (NZ!=1) || (NDim!=1) )
@@ -442,8 +441,6 @@ public:
 void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & dirMap, int x, int y)
 {
     //First we perform some setup stuff
-    int nx = XSIZE(orMap);
-    int ny = YSIZE(orMap);
     double minQuality = 0;
     int imax, jmax, max_levels=10;
 
@@ -557,8 +554,6 @@ void FringeProcessing::direction(const MultidimArray<double> & orMap, MultidimAr
 void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double> & qualityMap, double lambda, int size, MultidimArray<double> & unwrappedPhase)
 {
     //First we perform some setup stuff
-    int nx = XSIZE(wrappedPhase);
-    int ny = YSIZE(wrappedPhase);
     double minQuality = 0.05;
 
     int imax, jmax, i, j, max_levels=10;
@@ -594,7 +589,6 @@ void FringeProcessing::unwrapping(const MultidimArray<double> & wrappedPhase, Mu
     double cor = 0;
     double uw = 0;
     double wp = 0;
-    double q = 0;
     double g = 0;
     int n = 0;
     double t = 0;
@@ -711,7 +705,6 @@ void FringeProcessing::demodulate(MultidimArray<double> & im, double lambda, int
     //Normalized version of im and modulation map
     normalizeWB(im,In,mod, rmax, rmin, ROI);
 
-    double modThr = 0.05;
     int imax, jmax;
     mod.maxIndex(imax,jmax);
     mod = mod/A2D_ELEM(mod,imax,jmax);
@@ -1071,8 +1064,7 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
     //We perform the gradient of enhancedPSD to calculate the external force field (balloon force)
     //Calculation of the external force field normalized to maximum magnitude 1
 
-    int NR, NC,NZ;
-    size_t Ndim;
+    size_t NR, NC,NZ, Ndim;
     enhancedPSD.getDimensions(NR,NC,NZ,Ndim);
     MultidimArray<double > fx, fy;
     fx.resizeNoCopy(enhancedPSD);
@@ -1104,7 +1096,6 @@ void FringeProcessing::firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D
     convolutionFFT(fy,mask,fy);
 
     //From the derivatives we calculate kappa:
-    int imax,jmax;
     MultidimArray<double> absFx;
     absFx.resizeNoCopy(fx);
     //absFx= fx.selfABS();
@@ -1172,7 +1163,7 @@ void FringeProcessing::fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yP
 
     Matrix2D<double> Ainv(2,2), u, v;
     Matrix1D<double> w;
-    SPEED_UP_temps;
+    SPEED_UP_temps0;
     M2x2_INV(Ainv,A);
     svdcmp(A,u,w,v);
 

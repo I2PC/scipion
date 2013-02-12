@@ -731,7 +731,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                         {
                             OVER2IMG(basis->blobprint, (double)YY_corner1 - YY(actprj),
                                      (double)XX_corner1 - XX(actprj), foot_V1, foot_U1);
-                            if (isVolPSF != NULL)
+                            if (isVolPSF != false)
                                 OVER2IMG_Z(basis->blobprint, z, foot_W);
                         }
 
@@ -772,7 +772,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                         // This is the VSSNR case
                                         // Get the pixel position in the universal coordinate
                                         // system
-                                        SPEED_UP_temps;
+                                        SPEED_UP_temps012;
                                         VECTOR_R3(prjPix, x, y, z);
                                         M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
                                         V3_MINUS_V3(prjPix, prjPix, univ_position);
@@ -800,7 +800,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                             if (XX_footprint_size > 1.41)
                                             {
                                                 // Get the pixel in universal coordinates
-                                                SPEED_UP_temps;
+                                                SPEED_UP_temps012;
                                                 VECTOR_R3(prjPix, x, y, 0);
                                                 // Express the point in a local coordinate system
                                                 M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
@@ -848,7 +848,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                                             << jj << ") ";
 #endif
 
-                                                        SPEED_UP_temps;
+                                                        SPEED_UP_temps012;
                                                         // Get the pixel in universal coordinates
                                                         VECTOR_R3(prjPix, x + px, y + py, 0);
                                                         // Express the point in a local coordinate system
@@ -1094,7 +1094,7 @@ void project_GridVolume(
 #endif
 
     // Project each subvolume
-    for (int i = 0; i < vol.VolumesNo(); i++)
+    for (size_t i = 0; i < vol.VolumesNo(); i++)
     {
         Image<int> *VNeq;
         if (GVNeq != NULL)

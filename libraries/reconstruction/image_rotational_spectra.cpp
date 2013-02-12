@@ -96,8 +96,7 @@ void ProgMakeSpectra::run()
     fnOutRaw.deleteFile();
 
     // Convert the radii from percentages to actual pixels
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getImageSize(MD,Xdim,Ydim,Zdim,Ndim);
     rot_spt.rl=(int)((rot_spt.rl/100.0)*Xdim/2);
     rot_spt.rh=(int)((rot_spt.rh/100.0)*Xdim/2);

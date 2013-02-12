@@ -1,7 +1,7 @@
 '''
 /***************************************************************************
  * Authors:     RobertoMarabini (roberto@cnb.csic.es)
- *
+ *              Jose Miguel de la Rosa
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -61,12 +61,15 @@ class EmxReader:
                 emxReadFunc(emxObject)
     
 class EmxXmlReader (EmxReader):
-    '''This read xml-emx format
+    '''This reads xml-emx format
+       Other class may be implemented for other formats
     '''
     def __init__(self,inFileName=None):
         EmxReader.__init__(self)
 
     def readData(self):
+        '''read all objects in file
+        '''
         self.tree = ET.parse(self.inFileName)
         self.root = self.tree.getroot()
         #micrograph must be read first
@@ -78,12 +81,18 @@ class EmxXmlReader (EmxReader):
         same PK. We may need to specialize or use dictPrimaryKeys
         in the future
         '''
+
         fileName = branch.get(FILENAME)
-        if fileName is None:
-            raise Exception("readObjectPK: No fileName" )
+        if not fileName is None:
+            fileName    = emxDataTypes[FILENAME].type (fileName)
+
         index = branch.get(INDEX)
         if not index is None:
             index    = emxDataTypes[INDEX].type (index)
+
+        if fileName is None and index is None:
+            raise Exception("readObjectPK: No fileName or index provided" )
+
         return {FILENAME:fileName, INDEX:index}
         
     def setObjectFK(self, branch, object):
@@ -108,6 +117,8 @@ class EmxXmlReader (EmxReader):
                 #so far there are no other foreign keys
 
     def readObject(self,branch,object,tag=''):
+        ''' read a single object
+        '''
         children = list(branch)
         for child in children:
             #if foreign key skip it

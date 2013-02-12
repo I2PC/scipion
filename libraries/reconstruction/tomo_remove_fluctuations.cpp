@@ -56,8 +56,7 @@ void ProgTomoRemoveFluctuations::produceSideInfo()
 {
     // Read the selfile into a volume
     SF.read(fnIn);
-    int Zdim, dummy, Ydim, Xdim;
-    size_t Ndim;
+    size_t Zdim, dummy, Ydim, Xdim, Ndim;
     Zdim=SF.size();
     getImageSize(SF,Xdim,Ydim,dummy,Ndim);
     V().setMmap(true);

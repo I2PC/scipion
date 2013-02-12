@@ -153,20 +153,29 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		imp.updateStatusbarValue();
 	}
 
-	public void loadData(XmippIJWindow iw)
+	public void loadData(XmippIJWindow xiw)
 	{
 		Rectangle rect = getSrcRect();
 		double magnification = getMagnification();
-		imp = iw.getImagePlusLoader().loadImagePlus();
-		int width = (int) getSize().getWidth();
-		int height = (int) getSize().getHeight();
-		((ImageWindow) iw).setImage(imp);
-		((ImageWindow) iw).updateImage(imp);
-		setDrawingSize(width, height);
+		imp = xiw.getImagePlusLoader().loadImagePlus();
+		iw = ((ImageWindow) xiw);
+		iw.setImage(imp);
+		iw.updateImage(imp);
 		setMagnification(magnification);
 		setSourceRect(rect);
+		adjustMagnification();
 		repaint();
-		((ImageWindow) iw).pack();
+		iw.pack();
+
+	}
+
+	private void adjustMagnification()//for micrographs will not happen
+	{
+		int min = 200;
+		while (getSize().getWidth() < min)
+		{
+			zoomIn(0, 0);
+		}
 	}
 
 

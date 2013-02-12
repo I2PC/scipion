@@ -201,6 +201,8 @@ std::string Quadrant2D(int q)
     case 3:
         return "11";
         break;
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown quadrant");
     }
 }
 
@@ -232,6 +234,8 @@ std::string Quadrant3D(int q)
     case 7:
         return "111";
         break;
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown quadrant");
     }
 }
 
@@ -284,7 +288,6 @@ void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
 // Clean quadrant ----------------------------------------------------------
 void clean_quadrant2D(MultidimArray<double> &I, int scale, const std::string &quadrant)
 {
-    int x1, y1, x2, y2;
     Matrix1D<int> corner1(2), corner2(2);
     Matrix1D<double> r(2);
     SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2), YY(corner1), YY(corner2));
@@ -607,8 +610,7 @@ Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allo
     double powerI = WI.sum2();
 
     /*Number of pixels and some constraints on SNR*/
-    int Ydim = YSIZE(WI), Xdim = XSIZE(WI);
-    int Ncoef_total = Ydim * Xdim;
+    int Xdim = XSIZE(WI);
     int max_scale = ROUND(log(double(Xdim)) / log(2.0));
 
 #ifdef DEBUG
@@ -638,7 +640,7 @@ Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allo
     int jmax=scale.size();
     for (int j = 0;j < jmax;j++)
     {
-        for (int k = 0; k < orientation.size(); k++)
+        for (size_t k = 0; k < orientation.size(); k++)
         {
             SelectDWTBlock(scale(j), WI, orientation[k],
                            XX(x0), XX(xF), YY(x0), YY(xF));
@@ -714,11 +716,11 @@ void bayesian_wiener_filtering2D(MultidimArray<double> &WI,
     Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
-    for (int i = 0;i < scale.size();i++)
+    for (size_t i = 0;i < scale.size();i++)
     {
         double N = estimatedS(i);
         double S = estimatedS(i + scale.size());
-        for (int k = 0; k < orientation.size(); k++)
+        for (size_t k = 0; k < orientation.size(); k++)
             DWT_Bijaoui_denoise_LL2D(WI, scale(i), orientation[k], 0, S, N);
     }
 }
@@ -732,8 +734,7 @@ Matrix1D<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int allo
     double powerI = WI.sum2();
 
     /*Number of pixels and some constraints on SNR*/
-    int Zdim=ZSIZE(WI), Ydim=YSIZE(WI), Xdim=ZSIZE(WI);
-    int Ncoef_total = Zdim * Ydim * Xdim;
+    size_t Xdim=ZSIZE(WI);
     int max_scale = ROUND(log(double(Xdim)) / log(2.0));
 
 #ifdef DEBUG
@@ -763,9 +764,9 @@ Matrix1D<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int allo
     orientation.push_back("101");
     orientation.push_back("110");
     orientation.push_back("111");
-    for (int j = 0;j < scale.size();j++)
+    for (size_t j = 0;j < scale.size();j++)
     {
-        for (int k = 0; k < orientation.size(); k++)
+        for (size_t k = 0; k < orientation.size(); k++)
         {
             SelectDWTBlock(scale(j), WI, orientation[k],
                            XX(x0), XX(xF), YY(x0), YY(xF), ZZ(x0), ZZ(xF));
@@ -844,7 +845,7 @@ void bayesian_wiener_filtering3D(MultidimArray<double> &WI,
     {
         double N = estimatedS(i);
         double S = estimatedS(i + XSIZE(scale));
-        for (int k = 0; k < orientation.size(); k++)
+        for (size_t k = 0; k < orientation.size(); k++)
             DWT_Bijaoui_denoise_LL3D(WI, scale(i), orientation[k], 0, S, N);
     }
 }
@@ -862,13 +863,12 @@ void phaseCongMono(MultidimArray< double >& I,
                                  double sigmaOnf)
 {
 
-    #define DEBUG;
+    #define DEBUG
 	double epsilon= .0001; // Used to prevent division by zero.
 	//First we set the image origin in the image center
     I.setXmippOrigin();
 	//Image size
-	int NR, NC,NZ;
-    size_t NDim;
+    size_t NR, NC,NZ, NDim;
     I.getDimensions(NC,NR,NZ,NDim);
 
     if ( (NZ!=1) || (NDim!=1) )
@@ -944,7 +944,6 @@ void phaseCongMono(MultidimArray< double >& I,
 
     for (int num = 0; num < nScale; ++num)
     {
-    	double multAcum;
     	double waveLength = minWaveLength;
 
     	for(int numMult=0; numMult < num;numMult++)
