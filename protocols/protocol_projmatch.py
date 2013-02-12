@@ -975,8 +975,9 @@ data_
                 _VerifyFiles = [self.getFilename('ProjectLibrary' + e, iter=iterN, ref=refN)
                                      for e in ['Stk', 'Doc', 'Sampling']]
                 #Ask only for first and last, if we ask for all ctfgroup files the sql command max lenght is reached
-                _VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
-                                     for g in range (1, self.NumberOfCtfGroups+1)]
+                #do not ask for any since they are delete later
+                #_VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
+                #                     for g in range (1, self.NumberOfCtfGroups+1)]
                 projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
                    
 
@@ -1157,16 +1158,30 @@ data_
         #creating results files
         lastIteration   = self.NumberOfIterations
         inDocfile       = self.getFilename('DocfileInputAnglesIters', iter=lastIteration)
-        resultsImages   = self.workingDirPath("results_images.xmd")
-        resultsClasses  = self.workingDirPath("results_classes.xmd")
+        resultsImages   = self.workingDirPath("images.xmd")
+        resultsClasses3DRef          = self.workingDirPath("classes_ref3D.xmd")
+        resultsClasses3DRefDefGroup  = self.workingDirPath("classes_ref3D_defGroup.xmd")
+        
+        listWithResultVolume=[]
+        for refN in range(1, self.numberOfReferences + 1):
+            reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[lastIteration][refN]
+            listWithResultVolume.append(reconstructedFilteredVolume)
+        resultsVolumes   = self.workingDirPath("volumes.xmd")
+        _verifyfiles     = [resultsImages,\
+                         resultsClasses3DRef,\
+                         resultsClasses3DRefDefGroup,\
+                         resultsVolumes]
 
         _dataBase.insertStep('createResults'
-                            , verifyfiles     = [resultsImages,resultsClasses]
+                            , verifyfiles     = _verifyfiles
                             , CTFDatName      = self.CTFDatName
                             , DoCtfCorrection = self.DoCtfCorrection
                             , inDocfile       = inDocfile
+                            , listWithResultVolume = listWithResultVolume
                             , resultsImages   = resultsImages
-                            , resultsClasses  = resultsClasses
+                            , resultsClasses3DRef          = resultsClasses3DRef
+                            , resultsClasses3DRefDefGroup  = resultsClasses3DRefDefGroup
+                            , resultsVolumes = resultsVolumes
                             )
         _dataBase.connection.commit()
         
