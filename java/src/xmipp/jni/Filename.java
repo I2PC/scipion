@@ -396,7 +396,7 @@ public class Filename {
 	public static String getBaseName(String path) {
 		int index = path.lastIndexOf(File.separatorChar);
 		if (index != -1)
-			path = path.substring(index, path.length());
+			path = path.substring(index  + 1, path.length());
 		return path;
 	}
 	

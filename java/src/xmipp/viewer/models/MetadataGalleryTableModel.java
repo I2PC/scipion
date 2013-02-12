@@ -204,7 +204,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	@Override
 	public String getTitle() {
 		String title = "Metadata: "
-				+ (filename != null ? filename : "");
+				+ (data.getFileName() != null ? Filename.getBaseName(data.getFileName()) : "");
 		if (n > 1)
 			title += String.format(" %d items", n);
 		if (data.hasRenderLabel())
