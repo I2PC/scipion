@@ -155,7 +155,7 @@ public class GalleryData {
 					filename = Filename.getFilename(file);
 				}
 			}
-			mdBlocks = MetaData.getBlocksInMetaDataFile(file);
+			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
 
 			if (mdBlocks.length >= 1 && selectedBlock.isEmpty())
 				selectedBlock = mdBlocks[0];
