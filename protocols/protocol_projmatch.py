@@ -237,6 +237,7 @@ data_
         self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
         runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
+        self.DisplayVolumeSlicesAlong=self.parser.getTkValue('DisplayVolumeSlicesAlong')
         if doPlot('DisplayReference'):
             #VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
@@ -659,6 +660,7 @@ data_
             
             
         if doPlot('DisplayAngularDistribution'):
+            self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
                 for ref3d in ref3Ds:
                     for it in iterations:
@@ -698,6 +700,8 @@ data_
                     xplotter.draw()
                     
         if doPlot('DisplayResolutionPlots'):
+            self.ResolutionThreshold=float(self.parser.getTkValue('ResolutionThreshold'))
+
             if(len(ref3Ds) == 1):
                 gridsize1 = [1, 1]
             elif (len(ref3Ds) == 2):
@@ -723,10 +727,8 @@ data_
                         a.plot(resolution_inv, frc)
                         legendName.append('Iter_'+str(it))
                     xplotter.showLegend(legendName)
-                
                 if (self.ResolutionThreshold < max(frc)):
-                    a.plot([min(resolution_inv), max(resolution_inv)], [self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
-            
+                    a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
             xplotter.draw()
     
         if xplotter:
