@@ -25,40 +25,27 @@
 
 package xmipp.viewer.windows;
 
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import xmipp.utils.XmippFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
 
-import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippFileChooser;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
 
@@ -88,18 +75,20 @@ public class SaveJDialog extends XmippDialog
 	protected GalleryData data;
 	private String block;
 	private JCheckBox chbDiscard;
+	private boolean isselection;
 
-	public SaveJDialog(GalleryJFrame parent, String file)
+	public SaveJDialog(GalleryJFrame parent, String file, boolean isselection)
 	{
 
 		super(parent, "Save", true);
+		this.isselection = isselection;
 		initComponents();
 		setMdFilename(file);
 	}// constructor SaveJDialog
 
 	public SaveJDialog(GalleryJFrame parent)
 	{
-		this(parent, null);
+		this(parent, null, false);
 	}// constructor SaveJDialog
 
 	@Override
@@ -165,13 +154,10 @@ public class SaveJDialog extends XmippDialog
 		// panelMd.setBackground(Color.blue);
 		browseMd = new BrowseField();
 		JPanel panelBrowse = createBrowse(browseMd);
-		// tbMd = new JTextField(30);
-		// panelMd.add(tbMd, WindowUtil.getConstraints(gbc, 0, 0, 2));
-		// btnBrowseMd = WindowUtil.getIconButton("folderopen.gif", this);
-		// panelMd.add(btnBrowseMd, WindowUtil.getConstraints(gbc, 2, 0));
 		panelMd.add(panelBrowse, XmippWindowUtil.getConstraints(gbc, 0, 0, 3));
 		chbDiscard = new JCheckBox("Save Active Metadata Only", false);
-		panelMd.add(chbDiscard, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
+		if(!isselection)
+			panelMd.add(chbDiscard, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 		rbMdOverride = new JRadioButton("Overwrite file");
 		panelMd.add(rbMdOverride, XmippWindowUtil.getConstraints(gbc, 0, 2));
 		gbc.anchor = GridBagConstraints.WEST;

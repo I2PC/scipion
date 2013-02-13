@@ -933,11 +933,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/** Save selected items as a metadata */
 	public void saveSelection() throws Exception
 	{
-		SaveJDialog dlg = new SaveJDialog(this);
-		if (dlg.showDialog())
+		MetaData md = data.getSelectionMd();
+		SaveJDialog dlg = new SaveJDialog(this, "selection.xmd", true);
+		boolean save = dlg.showDialog();
+		if (save)
 		{
-			data.getSelectionMd().write(dlg.getMdFilename());
-		}
+			boolean overwrite;
+			String path = dlg.getMdFilename();
+			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			if (!new File(file).exists())//overwrite or append, save selection
+				md.write(path);
+			else
+			{
+				overwrite = dlg.isOverwrite();
+				if (overwrite)
+					md.write(path);//overwrite with active block only, other blocks were dismissed
+				else
+					md.writeBlock(path);//append selection
+
+			}
 	}
 
 	/** Find and replace in metadata */
