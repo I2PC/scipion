@@ -25,5 +25,5 @@
 
 #include <data/mask.h>
 
-RUN_XMIPP_PROGRAM(ProgMask);
+RUN_XMIPP_PROGRAM(ProgMask)
 

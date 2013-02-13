@@ -120,7 +120,7 @@ int ImageBase::readRAW(size_t select_img, bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATE_Y,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if (dataMode==HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
+    if (dataMode==HEADER || (dataMode == _HEADER_ALL && _nDim > 1)) // Stop reading if not necessary
         return 0;
 
     size_t   imgStart = IMG_INDEX(select_img);

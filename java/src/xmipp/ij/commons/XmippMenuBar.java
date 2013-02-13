@@ -6,8 +6,6 @@ package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.WindowManager;
-import ij.io.SaveDialog;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
@@ -19,17 +17,14 @@ import java.awt.MenuItem;
 import java.awt.MenuShortcut;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 
 import javax.swing.JOptionPane;
-import javax.swing.KeyStroke;
 import javax.vecmath.Color3f;
 
-import xmipp.jni.Filename;
 import xmipp.utils.XmippFileChooser;
 
 /**
@@ -170,6 +165,7 @@ public class XmippMenuBar extends MenuBar
 		
 		ugmi = new CheckboxMenuItem("Use Geometry");
 		ugmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		ugmi.setState(xw.getImagePlusLoader().getUseGeometry());
 		ugmi.addItemListener(new ItemListener()
 		{
 
@@ -177,8 +173,7 @@ public class XmippMenuBar extends MenuBar
 			public void itemStateChanged(ItemEvent e)
 			{
 				boolean ug = ugmi.getState();
-				if (ug)
-					useGeometry();
+				useGeometry(ug);
 				
 			}
 		});
@@ -186,15 +181,14 @@ public class XmippMenuBar extends MenuBar
 		
 		wrapmi = new CheckboxMenuItem("Wrap");
 		wrapmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		wrapmi.setState(xw.getImagePlusLoader().isWrap());
 		wrapmi.addItemListener(new ItemListener()
 		{
 
 			@Override
 			public void itemStateChanged(ItemEvent e)
 			{
-				boolean wrap = wrapmi.getState();
-				if (wrap)
-					wrap();
+				wrap(wrapmi.getState());
 				
 			}
 		});
@@ -336,6 +330,12 @@ public class XmippMenuBar extends MenuBar
 
 	}
 	
+	protected void useGeometry(boolean ug)
+	{
+		xw.getImagePlusLoader().setUseGeometry(ug);
+		xw.loadData();
+	}
+
 	private void saveAs()
 	{
 		XmippFileChooser fc = new XmippFileChooser();
@@ -355,18 +355,14 @@ public class XmippMenuBar extends MenuBar
 		}
 	}
 	
-	protected void useGeometry()
-	{
-		xw.getImagePlusLoader().useGeometry();
-		
-	}
 
-	protected void wrap()
-	{
-		xw.getImagePlusLoader().wrap();
-		
-	}
 
+	protected void wrap(boolean value)
+	{
+		xw.getImagePlusLoader().setWrap(value);
+		xw.loadData();
+	}
+	
 	public static void openImagePlusAs3D(ImagePlus ip) {
 		try {
 			int UNIVERSE_W = 400, UNIVERSE_H = 400;

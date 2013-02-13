@@ -48,7 +48,7 @@ import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.viewer.ImageDimension;
 
-public class RotSpectraGallery extends MetadataGalleryTableModel {
+public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 
 	final static int DEFAULT_DIM = 128;
 	final static String blockKerDenSOM = "KerDenSOM_Layout"
@@ -61,7 +61,7 @@ public class RotSpectraGallery extends MetadataGalleryTableModel {
 	String fnClasses, fnVectors, fnVectorsData;
 	boolean showLabels;
 
-	public RotSpectraGallery(GalleryData data) throws Exception {
+	public RotSpectraGalleryTableModel(GalleryData data) throws Exception {
 		super(data);
 		DEBUG.printMessage("creating rotspectra.....");
 	}
@@ -69,7 +69,7 @@ public class RotSpectraGallery extends MetadataGalleryTableModel {
 	// Load initial dimensions
 	@Override
 	protected ImageDimension loadDimension() throws Exception {
-		fnClasses = data.filename;
+		fnClasses = data.getFileName();
 		fnVectors = fnClasses.replace("classes", "vectors");
 		fnVectorsData = fnVectors.replace(".xmd", ".vec");
 		load(fnClasses, fnVectors, fnVectorsData);

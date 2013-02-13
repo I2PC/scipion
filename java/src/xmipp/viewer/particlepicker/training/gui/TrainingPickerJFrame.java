@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -80,6 +81,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	private JMenuItem templatesmi;
 	TemplatesJDialog templatesdialog;
+	private JCheckBox centerpickchb;
 
 	@Override
 	public TrainingPicker getParticlePicker()
@@ -136,8 +138,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
 
 			pack();
-			positionx = 0.995f;
-			XmippWindowUtil.setLocation(positionx, 0.25f, this);
+			positionx = 0.9f;
+			XmippWindowUtil.setLocation(positionx, 0.2f, this);
 			setVisible(true);
 		}
 		catch (Exception e)
@@ -159,6 +161,37 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
+		
+		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
+
+		exportmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				XmippFileChooser fc = new XmippFileChooser();
+				int returnVal = fc.showOpenDialog(TrainingPickerJFrame.this);
+
+				try
+				{
+					if (returnVal == XmippFileChooser.APPROVE_OPTION)
+					{
+						File file = fc.getSelectedFile();
+						((TrainingPicker) getParticlePicker()).exportParticles(file.getAbsolutePath());
+						showMessage("Export successful");
+					}
+				}
+				catch (Exception ex)
+				{
+					showException(ex);
+				}
+			}
+		});
+		filemn.add(importffmi);
+		if (ppicker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
+		filemn.add(exportmi);
 
 		
 		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
@@ -236,42 +269,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-		// try
-		// {
-		// canvas.setEnabled(false);
-		// XmippWindowUtil.blockGUI(this, "Generating Templates...");
-		//
-		// Thread t = new Thread(new Runnable()
-		// {
-		// public void run()
-		// {
-		// if (templatesdialog == null)
-		// templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
-		// else
-		// {
-		//
-		// templatesdialog.loadTemplates(true);
-		// templatesdialog.setVisible(true);
-		// }
-		// canvas.setEnabled(true);
-		// XmippWindowUtil.releaseGUI(getRootPane());
-		// }
-		// });
-		// t.start();
-		//
-		// }
-		// catch (Exception e)
-		// {
-		// TrainingPicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-		//
-		// if (templatesdialog != null)
-		// templatesdialog.close();
-		// templatesdialog = null;
-		// throw new IllegalArgumentException(e.getMessage());
-		// }
-
 		if (templatesdialog == null)
+		{
 			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
+		}
 		else
 		{
 
@@ -304,12 +305,15 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		fieldspn.add(familiescb);
 
 		// Setting color
-		initColorPane();
+		initColorPane(family.getColor());
 		fieldspn.add(colorpn);
 
 		// Setting slider
 		initSizePane();
 		fieldspn.add(sizepn);
+
+		centerpickchb = new JCheckBox("Adjust Center");
+		fieldspn.add(centerpickchb);
 
 		familypn.add(fieldspn, 0);
 		JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -545,6 +549,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			return;
 		if (ppicker.isChanged())
 			ppicker.saveData(getMicrograph());// Saving changes when switching
+
 		index = micrographstb.getSelectedRow();
 		ppicker.getMicrograph().releaseImage();
 		ppicker.setMicrograph(ppicker.getMicrographs().get(index));
@@ -569,7 +574,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		boolean isautopick = isAutopick();
 		autopickpercentpn.setVisible(isautopick);
 		if (isautopick)
+		{
+			getFamilyData().setAutopickpercent(ppicker.getAutopickpercent());
 			autopickpercenttf.setValue(ppicker.getAutopickpercent());
+		}
 		actionsbt.setVisible(mfd.isActionVisible());
 	}
 
@@ -652,8 +660,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			micrographstb.setRowSelectionInterval(index, index);
 	}
 
-	
-	
+	protected void saveChanges()
+	{
+
+		ppicker.saveData();
+		setChanged(false);
+	}
+
+	void updateFamilyColor()
+	{
+		color = family.getColor();
+		colorbt.setIcon(new ColorIcon(color));
+		canvas.repaint();
+		ppicker.saveFamilies();
+	}
+
 
 	void updateFamilyComboBox()
 	{
@@ -665,7 +686,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 		formatMicrographsTable();
 		pack();
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 	}
 
 	public void addFamily(Family g)
@@ -719,7 +740,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		family.goToNextStep(ppicker);// validate and change state if posible
 		// setChanged(true);
 		setStep(FamilyState.Supervised);// change visual appearance
-		ppicker.persistFamilies();
+		ppicker.saveFamilies();
 		try
 		{
 			canvas.setEnabled(false);
@@ -859,23 +880,27 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	
 
-	// Only on Manual Mode
-	public void importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
-	{
 
+	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
+	{
+		String result = "";
 		if (ppicker.isReviewFile(file))
-			ppicker.importAllParticles(file, scale, invertx, inverty);
+		{
+			result = ppicker.importAllParticles(file, scale, invertx, inverty);
+			ppicker.saveData();
+		}
 		else
-			importMicrographParticles(format, file, scale, invertx, inverty);
+			result = importMicrographParticles(format, file, scale, invertx, inverty);
 		setChanged(false);
 		getCanvas().repaint();
 		updateMicrographsModel();
 		updateSize(family.getSize());
 		canvas.refreshActive(null);
+		return result;
 	}
 
-	// Only on manual mode
-	public void importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
+
+	public String importMicrographParticles(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
 
 		String filename = Micrograph.getName(file, 1);
@@ -886,23 +911,16 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
 			int result = JOptionPane.showConfirmDialog(this, msg);
 			if (result != JOptionPane.YES_OPTION)
-				return;
+				return null;
 		}
 		MicrographFamilyData mfd = getFamilyData();
 		mfd.reset();
-		((ManualParticlePicker) ppicker).importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
-
+		String result = ((ManualParticlePicker) ppicker).importParticlesFromFile(file, format, mfd.getMicrograph(), scale, invertx, inverty);
+		ppicker.saveData(getMicrograph());
+		return result;
 	}
 
-	@Override
-	public boolean isValidSize(int size)
-	{
-
-		for (TrainingParticle p : getFamilyData().getParticles())
-			if (!ppicker.getMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
-		return true;
-	}
+	
 
 	@Override
 	protected void openHelpURl()
@@ -913,13 +931,19 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void updateTemplates()
 	{
-		ppicker.updateTemplates(family);
+		ppicker.setUpdateTemplatesPending(true);
+		if (templatesdialog != null)
+			templatesdialog.loadTemplates(true);
 
 	}
+
 
 	public void updateSize(int size)
 	{
 		super.updateSize(size);
+		ppicker.resetParticleImages();
+		ppicker.setUpdateTemplatesPending(true);
+		ppicker.updateTemplates();
 		if (templatesdialog != null)
 			loadTemplates();
 
@@ -931,10 +955,10 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		getFamilyData().reset();
 	}
 
-
 	@Override
-	public void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
+		String result = "";
 
 		if (new File(dir).isDirectory())
 		{
@@ -945,9 +969,18 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		}
 		else
 			// only can choose file if TrainingPickerJFrame instance
-			importParticlesFromFile(format, dir, scale, invertx, inverty);
+			result = importParticlesFromFile(format, dir, scale, invertx, inverty);
+		return result;
 
 	}
+
+	
+	public boolean isCenterPick()
+	{
+		return centerpickchb.isSelected();
+	}
+	
+	
 
 	@Override
 	public ParticlesJDialog initParticlesJDialog()

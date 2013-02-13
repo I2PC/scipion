@@ -546,8 +546,6 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     int ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
     int zhalf = XMIPP_MIN((ZSIZE(MpmemFourier)/2+1),(ZSIZE(MmemFourier)/2+1));
     int xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
-    int ysize = XMIPP_MIN((YSIZE(MmemFourier)),(YSIZE(MpmemFourier)));
-    int zsize = XMIPP_MIN((ZSIZE(MmemFourier)),(ZSIZE(MpmemFourier)));
     //Init with zero
     MpmemFourier.initZeros();
 

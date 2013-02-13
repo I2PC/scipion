@@ -319,7 +319,8 @@ enum MDLabel
     MDL_Z, ///< Z component (double)
     MDL_ZCOOR, ///< Z component (int)
     MDL_ZSCORE, ///< Global Z Score (double)
-    MDL_ZSCORE_SHAPE, ///< Z Score (double)
+    MDL_ZSCORE_SHAPE1, ///< Z Score (double)
+    MDL_ZSCORE_SHAPE2, ///< Z Score (double)
     MDL_ZSCORE_SNR1, ///< Z Score (double)
     MDL_ZSCORE_SNR2, ///< Z Score (double)
     MDL_ZSCORE_HISTOGRAM, ///< Z Score (double)
@@ -512,8 +513,9 @@ public:
     ~MDRow();
     /** True if this row contains this label */
     bool containsLabel(MDLabel label) const;
+
     /** Add a new label */
-    bool addLabel(MDLabel label);
+    void addLabel(MDLabel label);
 
     /** Clear elements of the row */
     void clear();
@@ -1060,7 +1062,8 @@ private:
         MDL::addLabel(MDL_ZCOOR, LABEL_INT, "zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "zScore");
-        MDL::addLabel(MDL_ZSCORE_SHAPE, LABEL_DOUBLE, "zScoreShape");
+        MDL::addLabel(MDL_ZSCORE_SHAPE1, LABEL_DOUBLE, "zScoreShape1");
+        MDL::addLabel(MDL_ZSCORE_SHAPE2, LABEL_DOUBLE, "zScoreShape2");
         MDL::addLabel(MDL_ZSCORE_SNR1, LABEL_DOUBLE, "zScoreSNR1");
         MDL::addLabel(MDL_ZSCORE_SNR2, LABEL_DOUBLE, "zScoreSNR2");
         MDL::addLabel(MDL_ZSCORE_HISTOGRAM, LABEL_DOUBLE, "zScoreHistogram");

@@ -52,13 +52,13 @@ void MpiProgAngularProjectionMatching::read(int argc, char** argv)
     node = new MpiNode(argc, argv);
     // Master should read first
     if (node->isMaster())
-        ProgAngularProjectionMatching::read(argc, argv);
+        ProgAngularProjectionMatching::read(argc, (const char **)argv);
     node->barrierWait();
     if (!node->isMaster())
     {
 
         verbose = 0;//disable verbose for slaves
-        ProgAngularProjectionMatching::read(argc, argv);
+        ProgAngularProjectionMatching::read(argc, (const char **)argv);
     }
 }
 
@@ -94,7 +94,7 @@ void MpiProgAngularProjectionMatching::processAllImages()
     if (node->isMaster())//master distribute jobs
     {
 
-        int finishingWorkers = 0;
+        size_t finishingWorkers = 0;
         size_t processedImages = 0, finishedImages = 0, totalImages = DFexp.size();
         MPI_Status status;
 
@@ -177,7 +177,7 @@ bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent, int
 
     //    std::cerr << formatString("DEBUG: master: assigned %lu images to node %d", assigned_images, node);
 
-    for (int i = 1; i <= assigned_images; ++i)
+    for (size_t i = 1; i <= assigned_images; ++i)
     {
         imagesToSent[i] = chunk_mysampling.my_exp_img_per_sampling_point[node_index].back() + FIRST_IMAGE;
         //        std::cerr << " " << imagesToSent[i];
@@ -204,7 +204,7 @@ bool MpiProgAngularProjectionMatching::requestJobs(std::vector<size_t> &imagesTo
         return false;
 
     imagesToProcess.clear();
-    for (int i = 1; i <= numberOfImages; ++i)
+    for (size_t i = 1; i <= numberOfImages; ++i)
         imagesToProcess.push_back(imagesBuffer[i]);
     return true;
 }
@@ -228,7 +228,7 @@ void MpiProgAngularProjectionMatching::produceSideInfo()
 
 void MpiProgAngularProjectionMatching::computeChunks()
 {
-    int max_number_of_images_in_around_a_sampling_point = 0;
+	size_t max_number_of_images_in_around_a_sampling_point = 0;
     //process the symmetry file
     if (!chunk_mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
         REPORT_ERROR(ERR_NUMERICAL, (String)"mpi_angular_proj_match::prerun Invalid symmetry: " +  fn_sym);
@@ -291,7 +291,7 @@ void MpiProgAngularProjectionMatching::computeChunks()
     //Distribution related variables
     chunk_index = 0;
     last_chunk = new int[node->size];
-    for (int i = 1; i < node->size; ++i)
+    for (size_t i = 1; i < node->size; ++i)
         last_chunk[i] = -1;//by default no chunk assigned yet
 }
 

@@ -136,10 +136,10 @@ public:
             // Compute minimum distance table
             MultidimArray<double> dist;
             dist.initZeros(AngleNo);
-            for (int i = 0; i < AngleNo; i++)
+            for (size_t i = 0; i < AngleNo; i++)
             {
                 const Matrix1D<double> &vi=v[i];
-                for (int j = i + 1; j < AngleNo; j++)
+                for (size_t j = i + 1; j < AngleNo; j++)
                 {
                     const Matrix1D<double> &vj=v[j];
                     // Since the two vectors are in the unit sphere, the spherical distance

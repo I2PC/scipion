@@ -56,7 +56,7 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
     tmpV.resize(dim, 0.);
     tmpDens.resize(numNeurons, 0.);
     tmpMap.resize(numNeurons);
-    for (int i = 0; i < numNeurons; i++)
+    for (size_t i = 0; i < numNeurons; i++)
         tmpMap[i].resize(dim, 0.);
     tmpD.resize(numNeurons);
     tmpD1.resize(numNeurons);
@@ -94,7 +94,7 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
 
     if (annSteps == 0)
         annSteps = 1;
-    for (int iter = 0; iter < annSteps; iter++)
+    for (size_t iter = 0; iter < annSteps; iter++)
     {
 
         if (verbosity)
@@ -102,7 +102,7 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
             if (annSteps > 1)
             {
                 char s[100];
-                sprintf(s, "\nTraining Deterministic Annealing step %d of %d....\n", iter + 1, annSteps);
+                sprintf(s, "\nTraining Deterministic Annealing step %d of %d....\n", (int)(iter + 1), (int)annSteps);
                 listener->OnReportOperation((std::string) s);
             }
             else
@@ -182,7 +182,7 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
                 tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".vs";
                 std::ofstream vsStream(tmpN.c_str());
                 vsStream << _examples.theItems[0].size() << " " << _som.layout() << " " << _som.width() << " " << _som.height() << " gaussian" << std::endl;
-                for (int i = 0; i < _examples.size(); i++)
+                for (size_t i = 0; i < _examples.size(); i++)
                 {
                     int j = _som.fuzzyWinner(i);
                     vsStream << _som.indexToPos(j).first << " " << _som.indexToPos(j).second << " " << _som.memb[i][j] << " " << _examples.theTargets[i] << std::endl;
@@ -235,7 +235,7 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
     tmpD.clear();
     tmpD1.clear();
 
-};
+}
 
 //-----------------------------------------------------------------------------
 /**
@@ -245,8 +245,7 @@ double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples,
 		                          const double& _sigma, double& _alpha)
 {
     // Create auxiliar stuff
-    double var = 0;
-    double auxDist, auxProd;
+    double auxDist;
     double rr2, max1, d1, tmp, r1;
 
     double irr1 =1.0/( 2.0 * _sigma);
@@ -258,14 +257,13 @@ double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples,
     double idim=1.0/dim;
     for (size_t k = 0; k < numVectors; k++)
     {
-        auxProd = 0;
         max1 = -MAXFLOAT;
         const floatFeature *ptrExample=&(_examples->theItems[k][0]);
         for (size_t i = 0; i < numNeurons; i ++)
         {
             auxDist = 0;
             const floatFeature *ptrCodeVector=&(_som->theItems[i][0]);
-            for (int j = 0; j < dim; j++)
+            for (size_t j = 0; j < dim; j++)
             {
                 double tmp=((double)ptrExample[j] - (double)ptrCodeVector[j]);
                 auxDist += tmp * tmp;
@@ -306,7 +304,7 @@ double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples,
 // Estimate Sigma part II
 double GaussianKerDenSOM::updateSigmaII(FuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha)
 {
-    int cc, j;
+    size_t cc, j;
 
     if (_reg == 0)
         return(_alpha / (double)(numVectors*dim));
@@ -338,7 +336,7 @@ double GaussianKerDenSOM::codeDens(const FuzzyMap* _som, const FeatureVector* _e
     {
         double t = 0;
         const floatFeature *ptrCodeVector=&(_som->theItems[cc][0]);
-        for (int j = 0; j < dim; j++)
+        for (size_t j = 0; j < dim; j++)
         {
             double diff=(double)(ptrExample[j]) - (double)(ptrCodeVector[j]);
             t += diff*diff;

@@ -304,7 +304,7 @@ public:
     GaussianInterpolator gaussianInterpolator;
 
     // Image dimensions
-    int Zdim, Ydim, Xdim;
+    size_t Zdim, Ydim, Xdim;
 
 	/// Noise in the images
     double sigma;

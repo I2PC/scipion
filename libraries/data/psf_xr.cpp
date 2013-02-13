@@ -529,7 +529,6 @@ void XRayPSF::generatePSF()
 
     init_progress_bar(ZSIZE(mPsfVol));
 
-    int k2;
     for (int k = STARTINGZ(mPsfVol), k2 = 0; k <= FINISHINGZ(mPsfVol); k++, k2++)
     {
         /* We keep sign of Z, Zo and DeltaZo positives in object space for the sake of simplicity in calculations,

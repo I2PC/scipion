@@ -27,5 +27,5 @@
 
 #include "data/image_resize.h"
 
-RUN_XMIPP_PROGRAM(ProgImageResize);
+RUN_XMIPP_PROGRAM(ProgImageResize)
 

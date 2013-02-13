@@ -39,6 +39,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -58,7 +59,7 @@ public class GalleryData {
 	// First label that can be rendered
 	ColumnInfo ciFirstRender = null;
 	public int zoom;
-	public String filename;
+	private String filename;
 	public int resliceView;
 
 	public enum Mode {
@@ -117,22 +118,7 @@ public class GalleryData {
 			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
 
-			filename = fn;
-			if (fn != null) {
-				if (Filename.hasPrefix(fn)) {
-					if (Filename.isMetadata(fn)) {
-						selectedBlock = Filename.getPrefix(fn); // FIXME:
-																// validate
-																// block exists
-						filename = Filename.getFilename(fn);
-					}
-				}
-				mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
-
-				if (mdBlocks.length > 1 && selectedBlock.isEmpty())
-					selectedBlock = mdBlocks[0];
-			}
-
+			setFileName(fn);
 			if (md == null) {
 				this.md = new MetaData();
 				readMetadata(fn);
@@ -154,7 +140,32 @@ public class GalleryData {
 			return filename;
 		return String.format("%s@%s", selectedBlock, filename);
 	}// function getMdFilename
+	
+	public void setFileName(String file)
+	{
+		if(file == null)
+			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("file"));
+		filename = file;
+		if (file != null) {
+			if (Filename.hasPrefix(file)) {
+				if (Filename.isMetadata(file)) {
+					selectedBlock = Filename.getPrefix(file); // FIXME:
+															// validate
+															// block exists
+					filename = Filename.getFilename(file);
+				}
+			}
+			mdBlocks = MetaData.getBlocksInMetaDataFile(file);
 
+			if (mdBlocks.length >= 1 && selectedBlock.isEmpty())
+				selectedBlock = mdBlocks[0];
+		}
+
+	}
+	
+
+
+	
 	/** Load contents from a metadata already read */
 	public void loadMd() throws Exception {
 		ids = md.findObjects();
@@ -363,12 +374,12 @@ public class GalleryData {
 				mode = Mode.TABLE_MD; // this is necessary when coming from
 				// previous case
 				if (!md.isColumnFormat())
-					return new MetadataRow(this);
+					return new MetadataRowTableModel(this);
 				if (md.containsMicrographsInfo())
 					return new MicrographsTableModel(this);
 				return new MetadataTableModel(this);
 			case GALLERY_ROTSPECTRA:
-				return new RotSpectraGallery(this);
+				return new RotSpectraGalleryTableModel(this);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -845,8 +856,16 @@ public class GalleryData {
 		return hasClassesChanges;
 	}
 
+
 	public boolean hasMicrographParticles()
 	{
 		return md.containsMicrographParticles();
 	}
+
+
+	public String getFileName()
+	{
+		return filename;
+	}
+
 }// class GalleryData

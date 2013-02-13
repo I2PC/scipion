@@ -59,7 +59,7 @@ extern String floatToString(float F, int _width, int _prec);
 
 /** Returns the last X valid logical index
  */
-#define FINISHINGX(v) ((v).xinit + (v).xdim - 1)
+#define FINISHINGX(v) ((v).xinit + (int)(v).xdim - 1)
 
 /** Returns the first Y valid logical index
  */
@@ -67,7 +67,7 @@ extern String floatToString(float F, int _width, int _prec);
 
 /** Returns the last Y valid logical index
  */
-#define FINISHINGY(v) ((v).yinit + (v).ydim - 1)
+#define FINISHINGY(v) ((v).yinit + (int)(v).ydim - 1)
 
 /** Returns the first Z valid logical index
  */
@@ -75,7 +75,7 @@ extern String floatToString(float F, int _width, int _prec);
 
 /** Returns the last Z valid logical index
  */
-#define FINISHINGZ(v) ((v).zinit + (v).zdim - 1)
+#define FINISHINGZ(v) ((v).zinit + (int)(v).zdim - 1)
 
 /** Check if x is inside logical bounds
  */
@@ -198,9 +198,9 @@ extern String floatToString(float F, int _width, int _prec);
  */
 #define FOR_ALL_DIRECT_NZYX_ELEMENTS_IN_MULTIDIMARRAY(V) \
     for (size_t l=0; l<NSIZE(V); ++l) \
-        for (int k=0; k<ZSIZE(V); ++k) \
-            for (int i=0; i<YSIZE(V); ++i)      \
-                for (int j=0; j<XSIZE(V); ++j)
+        for (size_t k=0; k<ZSIZE(V); ++k) \
+            for (size_t i=0; i<YSIZE(V); ++i)      \
+                for (size_t j=0; j<XSIZE(V); ++j)
 
 /** For all direct elements in the array
  *
@@ -327,9 +327,9 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V) \
-    for (int k=0; k<ZSIZE(V); ++k) \
-        for (int i=0; i<YSIZE(V); ++i) \
-            for (int j=0; j<XSIZE(V); ++j)
+    for (size_t k=0; k<ZSIZE(V); ++k) \
+        for (size_t i=0; i<YSIZE(V); ++i) \
+            for (size_t j=0; j<XSIZE(V); ++j)
 
 /** Access to a direct element of a matrix.
  * v is the array, i and j define the element v_ij.
@@ -514,8 +514,8 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(m) \
-    for (int i=0; i<YSIZE(m); ++i) \
-        for (int j=0; j<XSIZE(m); ++j)
+    for (size_t i=0; i<YSIZE(m); ++i) \
+        for (size_t j=0; j<XSIZE(m); ++j)
 
 /** Vector element: Physical access
  *
@@ -598,7 +598,7 @@ extern String floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
-    for (int i=0; i<v.xdim; ++i)
+    for (size_t i=0; i<v.xdim; ++i)
 
 /** Macro to check whether a point is inside or outside a given matrix. */
 #define OUTSIDE(i,j) \
@@ -636,11 +636,11 @@ struct ArrayDim
     // Number of images
     size_t ndim;
     // Number of elements in Z
-    int zdim;
+    size_t zdim;
     // Number of elements in Y
-    int ydim;
+    size_t ydim;
     // Number of elements in X
-    int xdim;
+    size_t xdim;
     // Number of elements in YX
     size_t yxdim;
     // Number of elements in ZYX
@@ -699,13 +699,13 @@ public:
     size_t ndim;
 
     // Number of elements in Z
-    int zdim;
+    size_t zdim;
 
     // Number of elements in Y
-    int ydim;
+    size_t ydim;
 
     // Number of elements in X
-    int xdim;
+    size_t xdim;
 
     // Number of elements in YX
     size_t yxdim;
@@ -788,7 +788,7 @@ public:
 
     /** Get the array dimensions.
      */
-    void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const;
+    void getDimensions(size_t& Xdim, size_t& Ydim, size_t& Zdim, size_t &Ndim) const;
     void getDimensions(ArrayDim &idim) const;
     ArrayDim getDimensions() const;
 
@@ -822,7 +822,7 @@ public:
       * V1.resize(3, 3, 2);
       * @endcode
       */
-    virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true) = 0;
+    virtual void resize(size_t Ndim, size_t Zdim, size_t Ydim, size_t Xdim, bool copy=true) = 0;
 
     /** Resize a single 3D image
      *
@@ -831,7 +831,7 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
-    void resize(int Zdim, int Ydim, int Xdim)
+    void resize(size_t Zdim, size_t Ydim, size_t Xdim)
     {
         resize(1, Zdim, Ydim, Xdim);
     }
@@ -843,7 +843,7 @@ public:
      * V1.resize(3, 2);
      * @endcode
      */
-    void resize(int Ydim, int Xdim)
+    void resize(size_t Ydim, size_t Xdim)
     {
         resize(1, 1, Ydim, Xdim);
     }
@@ -855,7 +855,7 @@ public:
      * V1.resize(2);
      * @endcode
      */
-    void resize(int Xdim)
+    void resize(size_t Xdim)
     {
         resize(1, 1, 1, Xdim);
     }
@@ -867,35 +867,35 @@ public:
 
     /** Resize with no copy a single 3D image
         */
-    void resizeNoCopy(int Zdim, int Ydim, int Xdim)
+    void resizeNoCopy(size_t Zdim, size_t Ydim, size_t Xdim)
     {
         resize(1, Zdim, Ydim, Xdim, false);
     }
 
     /** Resize a single 2D image with no copy
      */
-    void resizeNoCopy(int Ydim, int Xdim)
+    void resizeNoCopy(size_t Ydim, size_t Xdim)
     {
         resize(1, 1, Ydim, Xdim, false);
     }
 
     /** Resize a single 1D image with no copy
      */
-    void resizeNoCopy(int Xdim)
+    void resizeNoCopy(size_t Xdim)
     {
         resize(1, 1, 1, Xdim, false);
     }
 
     /** Returns Y dimension.
        */
-    inline int rowNumber() const
+    inline size_t rowNumber() const
     {
         return ydim;
     }
 
     /** Returns X dimension.
      */
-    inline int colNumber() const
+    inline size_t colNumber() const
     {
         return xdim;
     }
@@ -920,7 +920,6 @@ public:
                 STARTINGY(*this) == STARTINGY(op) &&
                 STARTINGZ(*this) == STARTINGZ(op));
     }
-
 
     /** Set logical origin in Xmipp fashion.
       *
@@ -1227,7 +1226,7 @@ public:
     {
         coreInit();
         coreAllocate(1, 1, 1, V.size());
-        for (int i = 0; i < V.size(); i++)
+        for (size_t i = 0; i < V.size(); i++)
             DIRECT_A1D_ELEM(*this,i) = VEC_ELEM(V,i);
     }
 
@@ -1240,7 +1239,7 @@ public:
     {
         coreInit();
         coreAllocate(1, 1, 1, vector.size());
-        for (int i = 0; i < vector.size(); i++)
+        for (size_t i = 0; i < vector.size(); i++)
             DIRECT_A1D_ELEM(*this,i) = vector[i];
     }
 
@@ -1425,7 +1424,7 @@ public:
          * memory locations are changed.
          * Select_slice starts at 0 towards Zsize.
          */
-    void aliasRow(const MultidimArray<T> &m, int select_row)
+    void aliasRow(const MultidimArray<T> &m, size_t select_row)
     {
         if (select_row >= YSIZE(m))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasRow: Selected row cannot be higher than Y size.");
@@ -1445,7 +1444,7 @@ public:
          * memory locations are changed.
          * Select_slice starts at 0 towards Zsize.
          */
-    void aliasSlice(const MultidimArray<T> &m, int select_slice)
+    void aliasSlice(const MultidimArray<T> &m, size_t select_slice)
     {
         if (select_slice >= ZSIZE(m))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasSlice: Selected slice cannot be higher than Z size.");
@@ -1501,7 +1500,7 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
-    void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)
+    void resize(size_t Ndim, size_t Zdim, size_t Ydim, size_t Xdim, bool copy=true)
     {
         if (Ndim*Zdim*Ydim*Xdim == nzyxdimAlloc && data != NULL)
         {
@@ -1570,23 +1569,24 @@ public:
         // Copy needed elements, fill with 0 if necessary
         if (copy)
         {
+        	T zero=0; // Very useful for complex matrices
+            T *val=NULL;
             for (size_t l = 0; l < Ndim; l++)
-                for (int k = 0; k < Zdim; k++)
-                    for (int i = 0; i < Ydim; i++)
-                        for (int j = 0; j < Xdim; j++)
+                for (size_t k = 0; k < Zdim; k++)
+                    for (size_t i = 0; i < Ydim; i++)
+                        for (size_t j = 0; j < Xdim; j++)
                         {
-                            T val;
                             if (l >= NSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else if (k >= ZSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else if (i >= YSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else if (j >= XSIZE(*this))
-                                val = 0;
+                                val = &zero;
                             else
-                                val = DIRECT_NZYX_ELEM(*this, l, k, i, j);
-                            new_data[l*ZYXdim + k*YXdim+i*Xdim+j] = val;
+                                val = &DIRECT_NZYX_ELEM(*this, l, k, i, j);
+                            new_data[l*ZYXdim + k*YXdim+i*Xdim+j] = *val;
                         }
         }
 
@@ -1860,7 +1860,7 @@ public:
     {
         int n = XSIZE(patchArray)*sizeof(T);
 
-        for (int i=0, y2 = 0; i < YSIZE(patchArray); ++i)
+        for (size_t i=0; i < YSIZE(patchArray); ++i)
             memcpy(&dAij(*this, y+i, x), &dAij(patchArray, i, 0), n);
     }
 
@@ -1894,6 +1894,8 @@ public:
             return A2D_ELEM((*this), ROUND(YY(v)), ROUND(XX(v)));
         case 3:
             return A3D_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
+        default:
+        	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot handle indexes with dimension larger than 3");
         }
     }
 
@@ -1909,6 +1911,8 @@ public:
             return A2D_ELEM((*this), YY(v), XX(v));
         case 3:
             return A3D_ELEM((*this), ZZ(v), YY(v), XX(v));
+        default:
+        	REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot handle indexes with dimension larger than 3");
         }
     }
 
@@ -2181,13 +2185,12 @@ public:
 
         int index;
 
-        for (int k = 0; k < aDimOut.zdim; k++)
+        for (size_t k = 0; k < aDimOut.zdim; k++)
         {
             imTemp.aliasSlice(out, k);
             index = k + (aDimOut.zdim - 1 - 2*k) * (int)flip;
             this->getSlice(index, imTemp, axis, !reverse);
         }
-
     }
 
     /** Reslice the current volume
@@ -2213,7 +2216,7 @@ public:
      * m.getCol(-1, v);
      * @endcode
      */
-    void getCol(int j, MultidimArray<T>& v) const
+    void getCol(size_t j, MultidimArray<T>& v) const
     {
         if (xdim == 0 || ydim == 0)
         {
@@ -2225,7 +2228,7 @@ public:
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"getCol: Matrix subscript (j) greater than matrix dimension");
 
         v.resizeNoCopy(ydim);
-        for (int i = 0; i < ydim; i++)
+        for (size_t i = 0; i < ydim; i++)
             DIRECT_A1D_ELEM(v,i) = DIRECT_A2D_ELEM(*this,i, j);
     }
 
@@ -2238,7 +2241,7 @@ public:
      * m.setCol(0, (m.row(1)).transpose()); // Copies row 1 in column 0
      * @endcode
      */
-    void setCol(int j, const MultidimArray<T>& v)
+    void setCol(size_t j, const MultidimArray<T>& v)
     {
         if (xdim == 0 || ydim == 0)
             REPORT_ERROR(ERR_MULTIDIM_EMPTY, "setCol: Target matrix is empty");
@@ -2250,8 +2253,8 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "setCol: Vector dimension different from matrix one");
 
-        for (int i = 0; i < ydim; i++)
-            (*this)(i, j) = v(i);
+        for (size_t i = 0; i < ydim; i++)
+            DIRECT_A2D_ELEM(*this,i, j) = DIRECT_A1D_ELEM(v,i);
     }
 
     /** Get row
@@ -2265,7 +2268,7 @@ public:
      * m.getRow(-2, v);
      * @endcode
      */
-    void getRow(int i, MultidimArray<T>& v) const
+    void getRow(size_t i, MultidimArray<T>& v) const
     {
         if (xdim == 0 || ydim == 0)
         {
@@ -2277,7 +2280,7 @@ public:
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "getRow: Matrix subscript (i) greater than matrix dimension");
 
         v.resizeNoCopy(xdim);
-        for (int j = 0; j < xdim; j++)
+        for (size_t j = 0; j < xdim; j++)
             DIRECT_A1D_ELEM(v,j) = DIRECT_A2D_ELEM(*this,i, j);
     }
 
@@ -2500,21 +2503,24 @@ public:
 
         double zyxsum = 0.0;
         double aux;
+        int Xdim=(int)XSIZE(*this);
+        int Ydim=(int)YSIZE(*this);
+        int Zdim=(int)ZSIZE(*this);
         for (int nn = n1; nn <= n2; nn++)
         {
             int equivalent_nn=nn;
             if      (nn<0)
                 equivalent_nn=-nn-1;
-            else if (nn>=ZSIZE(*this))
-                equivalent_nn=2*ZSIZE(*this)-nn-1;
+            else if (nn>=Zdim)
+                equivalent_nn=2*Zdim-nn-1;
             double yxsum = 0.0;
             for (int m = m1; m <= m2; m++)
             {
                 int equivalent_m=m;
                 if      (m<0)
                     equivalent_m=-m-1;
-                else if (m>=YSIZE(*this))
-                    equivalent_m=2*YSIZE(*this)-m-1;
+                else if (m>=Ydim)
+                    equivalent_m=2*Ydim-m-1;
                 double xsum = 0.0;
                 for (int l = l1; l <= l2; l++)
                 {
@@ -2522,8 +2528,8 @@ public:
                     int equivalent_l=l;
                     if      (l<0)
                         equivalent_l=-l-1;
-                    else if (l>=XSIZE(*this))
-                        equivalent_l=2*XSIZE(*this)-l-1;
+                    else if (l>=Xdim)
+                        equivalent_l=2*Xdim-l-1;
                     double Coeff = (double) DIRECT_A3D_ELEM(*this,
                                                             equivalent_nn,equivalent_m,equivalent_l);
                     switch (SplineDegree)
@@ -2652,13 +2658,15 @@ public:
 
         double columns = 0.0;
         double aux;
+        int Ydim=(int)YSIZE(*this);
+        int Xdim=(int)XSIZE(*this);
         for (int m = m1; m <= m2; m++)
         {
             int equivalent_m=m;
             if      (m<0)
                 equivalent_m=-m-1;
-            else if (m>=YSIZE(*this))
-                equivalent_m=2*YSIZE(*this)-m-1;
+            else if (m>=Ydim)
+                equivalent_m=2*Ydim-m-1;
             double rows = 0.0;
             for (int l = l1; l <= l2; l++)
             {
@@ -2666,8 +2674,8 @@ public:
                 int equivalent_l=l;
                 if      (l<0)
                     equivalent_l=-l-1;
-                else if (l>=XSIZE(*this))
-                    equivalent_l=2*XSIZE(*this)-l-1;
+                else if (l>=Xdim)
+                    equivalent_l=2*Xdim-l-1;
                 double Coeff = DIRECT_A2D_ELEM(*this, equivalent_m,equivalent_l);
                 switch (SplineDegree)
                 {
@@ -2770,7 +2778,7 @@ public:
 
         int l1 = ceil(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
-
+        int Xdim=(int)XSIZE(*this);
         double sum = 0.0;
         for (int l = l1; l <= l2; l++)
         {
@@ -2778,8 +2786,8 @@ public:
             int equivalent_l=l;
             if      (l<0)
                 equivalent_l=-l-1;
-            else if (l>=XSIZE(*this))
-                equivalent_l=2*XSIZE(*this)-l-1;
+            else if (l>=Xdim)
+                equivalent_l=2*Xdim-l-1;
             double Coeff = (double) DIRECT_A1D_ELEM(*this, equivalent_l);
             double aux;
             switch (SplineDegree)
@@ -3957,7 +3965,7 @@ public:
 
     /** Initialize to zeros with a given size.
      */
-    inline void initZeros(size_t Ndim, int Zdim, int Ydim, int Xdim)
+    inline void initZeros(size_t Ndim, size_t Zdim, size_t Ydim, size_t Xdim)
     {
         if (xdim!=Xdim || ydim!=Ydim || zdim!=Zdim || ndim!=Ndim)
             resize(Ndim, Zdim,Ydim,Xdim,false);
@@ -4528,10 +4536,12 @@ public:
         size_t n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+        {
             if (*ptr <= val + accuracy)
                 *ptr = 0;
             else
                 *ptr = 1;
+        }
     }
 
     /** Binarize using a range
@@ -4546,10 +4556,12 @@ public:
         size_t n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+        {
             if ( (*ptr < valMax) &&  (*ptr > valMin) )
                 *ptr = 1;
             else
                 *ptr = 0;
+        }
     }
 
     /** ROUND
@@ -4747,12 +4759,12 @@ public:
      */
     void selfReverseX()
     {
-        int xsize=XSIZE(*this);
-        int halfSizeX = (xsize-2)/2;
-        int xsize_1=xsize-1;
-        for (int k = 0; k < ZSIZE(*this); k++)
-            for (int i = 0; i < YSIZE(*this); i++)
-                for (int j = 0; j <=halfSizeX; j++)
+    	size_t xsize=XSIZE(*this);
+        size_t halfSizeX = (xsize-2)/2;
+        size_t xsize_1=xsize-1;
+        for (size_t k = 0; k < ZSIZE(*this); k++)
+            for (size_t i = 0; i < YSIZE(*this); i++)
+                for (size_t j = 0; j <=halfSizeX; j++)
                 {
                     T aux;
                     T& d1=DIRECT_ZYX_ELEM(*this, k, i, j);
@@ -4777,12 +4789,12 @@ public:
      */
     void selfReverseY()
     {
-        int ysize=YSIZE(*this);
+    	size_t ysize=YSIZE(*this);
         size_t halfSizeY = (ysize-2)/2;
-        int ysize_1=ysize-1;
-        for (int k = 0; k < ZSIZE(*this); k++)
-            for (int i = 0; i <= halfSizeY; i++)
-                for (int j = 0; j < XSIZE(*this); j++)
+        size_t ysize_1=ysize-1;
+        for (size_t k = 0; k < ZSIZE(*this); k++)
+            for (size_t i = 0; i <= halfSizeY; i++)
+                for (size_t j = 0; j < XSIZE(*this); j++)
                 {
                     T aux;
                     T& d1=DIRECT_ZYX_ELEM(*this, k, i, j);
@@ -4799,12 +4811,12 @@ public:
      */
     void selfReverseZ()
     {
-        int zsize=ZSIZE(*this);
-        int halfSizeZ = (zsize-2)/2;
-        int zsize_1=zsize-1;
-        for (int k = 0; k <= halfSizeZ; k++)
-            for (int i = 0; i <YSIZE(*this); i++)
-                for (int j = 0; j < XSIZE(*this); j++)
+    	size_t zsize=ZSIZE(*this);
+    	size_t halfSizeZ = (zsize-2)/2;
+    	size_t zsize_1=zsize-1;
+        for (size_t k = 0; k <= halfSizeZ; k++)
+            for (size_t i = 0; i <YSIZE(*this); i++)
+                for (size_t j = 0; j < XSIZE(*this); j++)
                 {
                     T aux;
                     T& d1=DIRECT_ZYX_ELEM(*this, k, i, j);
@@ -5048,7 +5060,7 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2)
 }
 
 template<typename T1>
-void typeCast(const MultidimArray<T1>& v1,  MultidimArray<std::complex<double> >& v2)
+void typeCastComplex(const MultidimArray<T1>& v1,  MultidimArray<std::complex<double> >& v2)
 {
     if (NZYXSIZE(v1) == 0)
     {
@@ -5212,7 +5224,7 @@ std::ostream& operator<< (std::ostream& ostrm, const MultidimArray<T>& v)
     }
     else
     {
-        for (int l = 0; l < NSIZE(v); l++)
+        for (size_t l = 0; l < NSIZE(v); l++)
         {
             if (NSIZE(v)>1)
                 ostrm << "Image No. " << l << std::endl;

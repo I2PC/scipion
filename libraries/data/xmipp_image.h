@@ -187,7 +187,7 @@ public:
                 else
                 {
                     unsigned char * ptr = (unsigned char *) page;
-                    for (int i = 0; i < pageSize; ++i, ++ptr)
+                    for (size_t i = 0; i < pageSize; ++i, ++ptr)
                         ptrDest[i] = (T) *ptr;
                 }
                 break;
@@ -201,7 +201,7 @@ public:
                     else
                     {
                         signed char * ptr = (signed char *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -215,7 +215,7 @@ public:
                     else
                     {
                         unsigned short * ptr = (unsigned short *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -229,7 +229,7 @@ public:
                     else
                     {
                         short * ptr = (short *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -243,7 +243,7 @@ public:
                     else
                     {
                         unsigned int * ptr = (unsigned int *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -257,7 +257,7 @@ public:
                     else
                     {
                         int * ptr = (int *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -271,7 +271,7 @@ public:
                     else
                     {
                         long * ptr = (long *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -285,7 +285,7 @@ public:
                     else
                     {
                         float * ptr = (float *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -299,7 +299,7 @@ public:
                     else
                     {
                         double * ptr = (double *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             ptrDest[i] = (T) *ptr;
                     }
                 break;
@@ -332,7 +332,7 @@ public:
                 else
                 {
                     float * ptr = (float *) page;
-                    for (int i = 0; i < pageSize; ++i, ++ptr)
+                    for (size_t i = 0; i < pageSize; ++i, ++ptr)
                         *ptr = (float) srcPtr[i];
                 }
                 break;
@@ -346,7 +346,7 @@ public:
                     else
                     {
                         double * ptr = (double *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             *ptr = (double) srcPtr[i];
                     }
                 break;
@@ -360,7 +360,7 @@ public:
                     else
                     {
                         unsigned short * ptr = (unsigned short *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             *ptr = (unsigned short) srcPtr[i];
                     }
                 break;
@@ -374,7 +374,7 @@ public:
                     else
                     {
                         short * ptr = (short *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             *ptr = (short) srcPtr[i];
                     }
                 break;
@@ -388,7 +388,7 @@ public:
                     else
                     {
                         unsigned char * ptr = (unsigned char *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             *ptr = (unsigned char) srcPtr[i];
                     }
                 break;
@@ -402,7 +402,7 @@ public:
                     else
                     {
                         char * ptr = (char *) page;
-                        for (int i = 0; i < pageSize; ++i, ++ptr)
+                        for (size_t i = 0; i < pageSize; ++i, ++ptr)
                             *ptr = (char) srcPtr[i];
                     }
                 break;
@@ -720,12 +720,12 @@ public:
      * If Zdim parameter is not passed, then all slices are rescaled.
      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
      */
-    int readPreview(const FileName &name, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
+    int readPreview(const FileName &name, size_t Xdim, size_t Ydim=0, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
     {
         // Zdim is used to choose the slices: -1 = CENTRAL_SLICE, 0 = ALL_SLICES, else This Slice
 
         ImageGeneric im;
-        int imXdim, imYdim, imZdim, Zdim;
+        size_t imXdim, imYdim, imZdim, Zdim;
         int err;
         err = im.readMapped(name, select_img);
         im.getDimensions(imXdim, imYdim, imZdim);
@@ -742,7 +742,7 @@ public:
         double scale;
 
         // If only Xdim is passed, it is the higher allowable size, for any dimension
-        if (Ydim == -1 && imXdim < imYdim)
+        if (Ydim == 0 && imXdim < imYdim)
         {
             Ydim = Xdim;
             scale = ((double) Ydim)/((double) imYdim);
@@ -751,7 +751,7 @@ public:
         else
         {
             scale = ((double) Xdim)/((double) imXdim);
-            if (Ydim == -1)
+            if (Ydim == 0)
                 Ydim = (int)(scale*imYdim);
         }
 
@@ -778,11 +778,11 @@ public:
      * If Zdim parameter is not passed, then all slices are rescaled.
      * If Ydim is not passed, then Ydim is rescaled same factor as Xdim.
      */
-    void getPreview(ImageBase *imgBOut, int Xdim, int Ydim = -1, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
+    void getPreview(ImageBase *imgBOut, size_t Xdim, size_t Ydim = 0, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
     {
         // Zdim is used to choose the slices: -1 = CENTRAL_SLICE, 0 = ALL_SLICES, else This Slice
 
-        int Zdim;
+        size_t Zdim;
         ArrayDim imAdim;
         MULTIDIM_ARRAY(*this).getDimensions(imAdim);
         MULTIDIM_ARRAY(*this).setXmippOrigin();
@@ -790,7 +790,7 @@ public:
         double scale;
 
         // If only Xdim is passed, it is the higher allowable size, for any dimension
-        if (Ydim == -1 && imAdim.xdim < imAdim.ydim)
+        if (Ydim == 0 && imAdim.xdim < imAdim.ydim)
         {
             Ydim = Xdim;
             scale = ((double) Ydim)/((double) imAdim.ydim);
@@ -799,7 +799,7 @@ public:
         else
         {
             scale = ((double) Xdim)/((double) imAdim.xdim);
-            if (Ydim == -1)
+            if (Ydim == 0)
                 Ydim = (int)(scale*imAdim.ydim);
         }
 
@@ -852,7 +852,7 @@ public:
     {
         if (MULTIDIM_ARRAY(VOLMATRIX(*this)) == NULL)
             REPORT_ERROR(ERR_MULTIDIM_EMPTY, "Image::movePointerTo: Image is empty");
-        if (select_slice > aDimFile.zdim)
+        if (select_slice > (int)aDimFile.zdim)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, formatString("movePointerTo: Selected slice %4d cannot be higher than Z size %4d.",
                          select_slice,aDimFile.zdim));
         else if (select_img > aDimFile.ndim)
@@ -1126,10 +1126,16 @@ private:
         selectImgOffset = offset + IMG_INDEX(select_img) * (pagesize + pad);
 
         // Flag to know that data is not going to be mapped although mmapOn is true
-        if (mmapOnRead && !checkMmapT(datatype))
+        if (mmapOnRead && (!checkMmapT(datatype) || swap > 0))
         {
-            reportWarning("Image::readData: File datatype and image declaration not "
-                          "compatible with mmap. Loading into memory.");
+            String warnMessage;
+            if (swap > 0)
+                reportWarning("Image::readData: File endianess is swapped and not "
+                              "compatible with mmap. Loading into memory.");
+            else
+                reportWarning("Image::readData: File datatype and image declaration not "
+                              "compatible with mmap. Loading into memory.");
+
             mmapOnRead = false;
             mFd = -1;
         }

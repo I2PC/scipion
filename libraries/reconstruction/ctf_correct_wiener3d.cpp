@@ -72,7 +72,7 @@ void ProgCtfCorrectAmplitude3D::defineParams()
     addExampleLine("xmipp_ctf_correct_wiener3d -i ctf_correct3d.xmd --oroot volumeCorrected");
     addExampleLine("In the following link you can find an example of input file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/ctf_correct3d.xmd",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/ctf_correct3d.xmd",false);
 }
 
 /* Produce Side information ------------------------------------------------ */
@@ -127,7 +127,6 @@ void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, const doubl
 void ProgCtfCorrectAmplitude3D::generateWienerFilters()
 {
     MultidimArray<double> CTF1D, sumterm;
-    int nrimgs;
     std::ofstream  fh;
     double res;
     double tot_nr_imgs = 0;

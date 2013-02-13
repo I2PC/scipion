@@ -79,7 +79,6 @@ void calculate_and_find_correlation_max_mat(MultidimArray<T> const &mat1,
     window.setXmippOrigin();
 
     T temp_max = -100000000;
-    SPEED_UP_temps;//speedup temporal variables
 
     //******* search for the maximun with pixel acuraccy **************/
     FOR_ALL_ELEMENTS_IN_ARRAY2D(window)

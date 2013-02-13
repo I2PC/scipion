@@ -62,7 +62,7 @@
 //@{
 class ProgRecFourier;
 
-static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
+// static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
 
 struct ImageThreadParams
 {

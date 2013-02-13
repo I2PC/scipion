@@ -53,9 +53,9 @@ public:
     // Metadata with reference volumes
     MetaData mdVol;
     // Number of volumes to refine
-    int Nvols;
+    size_t Nvols;
     // Iteration numbers
-    int iter, istart, Niter;
+    size_t iter, istart, Niter;
     // Convergence check
     double eps;
     // Angular sampling interval (degree)
@@ -94,7 +94,7 @@ public:
     int nr_projections;
 
     //MPI related stuff
-    int rank, size;
+    size_t rank, size;
 
     //This is the list of output filename base for
     //reconstruction of volumes

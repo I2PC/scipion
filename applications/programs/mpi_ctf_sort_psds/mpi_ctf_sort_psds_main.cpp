@@ -26,6 +26,6 @@
 #include <parallel/xmipp_mpi.h>
 #include <reconstruction/ctf_sort_psds.h>
 
-CREATE_MPI_METADATA_PROGRAM(ProgPSDSort, MpiProgPSDSort);
+CREATE_MPI_METADATA_PROGRAM(ProgPSDSort, MpiProgPSDSort)
 
-RUN_XMIPP_PROGRAM(MpiProgPSDSort);
+RUN_XMIPP_PROGRAM(MpiProgPSDSort)

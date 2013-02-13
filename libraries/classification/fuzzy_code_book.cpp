@@ -54,7 +54,7 @@ FuzzyCodeBook::FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data,
         memb[k] = v;
     } // for k
 
-};
+}
 
 
 /**
@@ -85,7 +85,7 @@ FuzzyCodeBook::FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data, double
         memb[k] = v;
     } // for k
 
-};
+}
 
 /**
  * Constructor.
@@ -116,7 +116,7 @@ FuzzyCodeBook::FuzzyCodeBook(unsigned _n, const ClassicTrainingVectors& _ts,
     {
         memb[k] = v;
     } // for k
-};
+}
 
 /**
  * Constructs a fuzzy code book given a stream
@@ -139,7 +139,7 @@ FuzzyCodeBook::FuzzyCodeBook(std::istream& _is, const unsigned _size)
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
-};
+}
 
 
 /** Fuctions to access the Fuzzy Membership Matrix
@@ -161,7 +161,7 @@ floatFeature FuzzyCodeBook::membAt(unsigned _di, unsigned _ci) const
     }
 
     return memb[_di][_ci];
-};
+}
 
 /**
  * Returns a  reference to the specified item
@@ -179,7 +179,7 @@ floatFeature& FuzzyCodeBook::membAt(unsigned _di, unsigned _ci)
     }
 
     return memb[_di][_ci];
-};
+}
 
 
 /**
@@ -219,7 +219,7 @@ FeatureVector& FuzzyCodeBook::fuzzyTest(unsigned _in) const
     } // for i
 
     return (FeatureVector&) theItems[best];
-};
+}
 
 /**
  * Returns the index to the code vector that represents the input in the codebook
@@ -243,7 +243,7 @@ unsigned FuzzyCodeBook::fuzzyTestIndex(unsigned _in) const
     } // for i
 
     return best;
-};
+}
 
 /**
  * Returns the label associated to an input
@@ -252,7 +252,7 @@ unsigned FuzzyCodeBook::fuzzyTestIndex(unsigned _in) const
 Label FuzzyCodeBook::fuzzyApply(unsigned _in) const
 {
     return theTargets[fuzzyTestIndex(_in)];
-};
+}
 
 /**
  * Calibrates the code book
@@ -275,7 +275,7 @@ void FuzzyCodeBook::fuzzyCalibrate(ClassicTrainingVectors& _ts, Label _def)
     }
     else
         calibrated(false);
-};
+}
 
 /**
  * Returns the index of the codevector closest to an input.
@@ -285,7 +285,7 @@ void FuzzyCodeBook::fuzzyCalibrate(ClassicTrainingVectors& _ts, Label _def)
 unsigned FuzzyCodeBook::fuzzyWinner(unsigned _in) const
 {
     return fuzzyTestIndex(_in);
-};
+}
 
 /**
 * Returns the index of the codevector closest to an input.
@@ -295,7 +295,7 @@ unsigned FuzzyCodeBook::fuzzyWinner(unsigned _in) const
 unsigned FuzzyCodeBook::fuzzyOutput(unsigned _in) const
 {
     return fuzzyTestIndex(_in);
-};
+}
 
 
 /**
@@ -323,7 +323,7 @@ void FuzzyCodeBook::classify(const ClassicTrainingVectors* _ts)
         aveDistances[i] = (double) aveDist;
     }
 
-};
+}
 
 
 /**
@@ -418,7 +418,7 @@ void FuzzyCodeBook::writeMembership(std::ostream& _os) const
     _os << membVectors() << std::endl;
     for (unsigned k = 0; k < numVectors; k++)   // Number of input vectors
         _os << memb[k] << std::endl;
-};
+}
 
 
 /**
@@ -432,7 +432,7 @@ void FuzzyCodeBook::readMembership(std::istream& _is)
     for (unsigned k = 0; k < numVectors; k++)    // Number of input vectors
         _is >> memb[k];
     numClusters = memb[0].size();
-};
+}
 
 
 /**
@@ -444,7 +444,7 @@ void FuzzyCodeBook::saveObject(std::ostream& _os) const
 {
     writeMembership(_os);
     CodeBook::saveObject(_os);
-};
+}
 
 
 /**
@@ -461,13 +461,13 @@ void FuzzyCodeBook::readSelf(std::istream& _is, const unsigned _size)
     numVectors = _size;
     memb.clear();
     memb.resize(numVectors);
-    for (int k = 0; k < numVectors; k++)
+    for (size_t k = 0; k < numVectors; k++)
     {
         std::vector <floatFeature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
-};
+}
 
 
 
@@ -481,7 +481,7 @@ void FuzzyCodeBook::loadObject(std::istream& _is)
     clear();
     readMembership(_is);
     CodeBook::loadObject(_is);
-};
+}
 
 
 /**
@@ -491,15 +491,14 @@ void FuzzyCodeBook::loadObject(std::istream& _is)
 void FuzzyCodeBook::printDensity(std::ostream& _os) const
 {
     _os << "1" << std::endl;
-    for (int j = 0; j < numClusters; j++)
+    for (size_t j = 0; j < numClusters; j++)
     {
         double sumDens = 0;
-        for (int i = 0; i < numVectors; i++)
+        for (size_t i = 0; i < numVectors; i++)
             sumDens += (double) memb[i][j];
         _os << j << " " << sumDens << std::endl;
     }
-};
-
+}
 
 //-----------------------------------------------------------------------------
 

@@ -43,7 +43,11 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
 
+
+
 public class MetadataTableModel extends MetadataGalleryTableModel {
+
+
 	private static final long serialVersionUID = 1L;
 
 	int sortColumnIndex = -1;
@@ -301,7 +305,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		table.clearSelection();
 		for (int i = 0; i < n; ++i)
 			if (data.selection[i]) {
-				System.out.println(i);
 				table.addRowSelectionInterval(i, i);
 			}
 	}

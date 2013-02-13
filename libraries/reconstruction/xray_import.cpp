@@ -186,7 +186,7 @@ void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark
     fnDir.getFiles(listDir);
     bool found = false;
 
-    for (int i=0; i<listDir.size(); i++)
+    for (size_t i=0; i<listDir.size(); i++)
         if (listDir[i]=="darkfields")
         {
             found=true;
@@ -194,7 +194,7 @@ void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark
             FileName(fnDir+"/darkfields").getFiles(listDirDark);
             int N = 0;
 
-            for (int j=0; j<listDirDark.size(); j++)
+            for (size_t j=0; j<listDirDark.size(); j++)
             {
                 if (!listDirDark[j].hasImageExtension())
                     continue;
@@ -231,7 +231,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
     fnDir.getFiles(listDir);
     int N=0;
     Image<double> Iaux;
-    for (int i=0; i<listDir.size(); i++)
+    for (size_t i=0; i<listDir.size(); i++)
     {
         if (!listDir[i].hasImageExtension())
             continue;
@@ -271,12 +271,12 @@ void runThread(ThreadArgument &thArg)
     MetaData localMD;
     Image<double> Iaux;
     FileName fnImg;
-    size_t first = -1, last = -1;
+    size_t first = 0, last = 0;
     MultidimArray<char> mask;
 
     while (ptrProg->td->getTasks(first, last))
     {
-        for (int i=first; i<=last; i++)
+        for (size_t i=first; i<=last; i++)
         {
             ptrProg->readAndCrop(ptrProg->filenames[i],Iaux);
             if (XSIZE(ptrProg->IavgDark())!=0)
@@ -350,7 +350,7 @@ void ProgXrayImport::run()
     std::vector<FileName> listDir;
     fnDirData.getFiles(listDir);
     int N=0;
-    for (int i=0; i<listDir.size(); i++)
+    for (size_t i=0; i<listDir.size(); i++)
     {
         if (!listDir[i].hasImageExtension())
             continue;
@@ -360,8 +360,7 @@ void ProgXrayImport::run()
     }
 
     // Create empty output stack file
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getImageSizeFromFilename(filenames[0], Xdim, Ydim, Zdim, Ndim);
     createEmptyFile(fnOut, Xdim-2*cropSize, Ydim-2*cropSize, 1, filenames.size());
 

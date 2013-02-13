@@ -89,13 +89,13 @@ public:
 
     ~AffineFitness()
     {
-        for (int i=0; i<I1.size();    i++)
+        for (size_t i=0; i<I1.size();    i++)
             delete I1[i];
-        for (int i=0; i<I2.size();    i++)
+        for (size_t i=0; i<I2.size();    i++)
             delete I2[i];
-        for (int i=0; i<Mask1.size(); i++)
+        for (size_t i=0; i<Mask1.size(); i++)
             delete Mask1[i];
-        for (int i=0; i<Mask2.size(); i++)
+        for (size_t i=0; i<Mask2.size(); i++)
             delete Mask2[i];
     }
 
@@ -161,7 +161,7 @@ public:
         double dist=0;
         Matrix2D<double> A12level=A12;
         Matrix2D<double> A21level=A21;
-        for (int level=0; level<I1.size(); level++)
+        for (size_t level=0; level<I1.size(); level++)
         {
             const MultidimArray<double> &Mask1_level=*(Mask1[level]);
             const MultidimArray<double> &Mask2_level=*(Mask2[level]);
@@ -372,7 +372,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
             if (globalAffine)
             {
                 // Exhaustive search
-                double bestShiftX=0, bestShiftY=0, bestCost=2;
+                double bestCost=2;
                 double stepX=(affy.maxAllowed(4)-affy.minAllowed(4))/40.0;
                 double stepY=(affy.maxAllowed(5)-affy.minAllowed(5))/40.0;
                 for (double shiftY=affy.minAllowed(5); shiftY<=affy.maxAllowed(5); shiftY+=stepY)
@@ -382,11 +382,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
                         A(5)=shiftY;
                         double cost=affy.affine_fitness_individual(MATRIX1D_ARRAY(A));
                         if (cost<bestCost)
-                        {
-                            bestShiftX=shiftX;
-                            bestShiftY=shiftY;
                             bestCost=cost;
-                        }
                     }
             }
             else
@@ -769,7 +765,7 @@ void ProgTomographAlignment::produceSideInfo()
         // Clear the list of images if not empty
         if (!img.empty())
         {
-            for (int i=0; i<img.size(); i++)
+            for (size_t i=0; i<img.size(); i++)
                 delete img[i];
             img.clear();
         }
@@ -777,7 +773,7 @@ void ProgTomographAlignment::produceSideInfo()
         // Clear the list of masks if not empty
         if (!maskImg.empty())
         {
-            for (int i=0; i<maskImg.size(); i++)
+            for (size_t i=0; i<maskImg.size(); i++)
                 delete maskImg[i];
             maskImg.clear();
         }
@@ -899,7 +895,7 @@ void ProgTomographAlignment::produceSideInfo()
         fhIn.open(fn_tmp.c_str());
         if (!fhIn)
             REPORT_ERROR(ERR_IO_NOTEXIST,(String)"Cannot open "+ fn_tmp);
-        int linesRead=0;
+        size_t linesRead=0;
         while (!fhIn.eof())
         {
             std::string line;
@@ -1042,7 +1038,6 @@ void ProgTomographAlignment::produceSideInfo()
 
 /* Generate landmark set --------------------------------------------------- */
 //#define DEBUG
-static pthread_mutex_t chainRefineMutex = PTHREAD_MUTEX_INITIALIZER;
 struct ThreadGenerateLandmarkSetParams
 {
     int myThreadID;
@@ -1070,7 +1065,6 @@ void * threadgenerateLandmarkSetGrid( void * args )
     ZZ(rjj)=1;
     if (thread_id==0)
         init_progress_bar(gridSamples);
-    int totalPoints=0;
     int includedPoints=0;
     Matrix1D<int> visited(Nimg);
     for (int nx=thread_id; nx<gridSamples; nx+=numThreads)
@@ -1099,7 +1093,7 @@ void * threadgenerateLandmarkSetGrid( void * args )
 
                 // Follow this landmark backwards
                 bool acceptLandmark=true;
-                int jjleft=ii, jj;
+                int jj;
                 if (parent->isCapillar)
                     jj=intWRAP(ii-1,0,Nimg-1);
                 else
@@ -1128,7 +1122,6 @@ void * threadgenerateLandmarkSetGrid( void * args )
                         l.y=YY(rjj);
                         l.imgIdx=jj;
                         chain.push_back(l);
-                        jjleft=jj;
                         if (parent->isCapillar)
                             jj=intWRAP(jj-1,0,Nimg-1);
                         else
@@ -1144,7 +1137,6 @@ void * threadgenerateLandmarkSetGrid( void * args )
                 else
                     jj=ii+1;
                 rcurrent=rii;
-                int jjright=ii;
                 while (jj<Nimg && acceptLandmark && !visited(jj) &&
                        !parent->isOutlier(jj))
                 {
@@ -1167,7 +1159,6 @@ void * threadgenerateLandmarkSetGrid( void * args )
                         l.y=YY(rjj);
                         l.imgIdx=jj;
                         chain.push_back(l);
-                        jjright=jj;
                         if (parent->isCapillar)
                             jj=intWRAP(jj+1,0,Nimg-1);
                         else
@@ -1221,6 +1212,7 @@ void * threadgenerateLandmarkSetGrid( void * args )
     }
     if (thread_id==0)
         progress_bar(gridSamples);
+    return NULL;
 }
 
 void * threadgenerateLandmarkSetBlind( void * args )
@@ -1242,7 +1234,6 @@ void * threadgenerateLandmarkSetBlind( void * args )
     ZZ(rjj)=1;
     if (thread_id==0)
         init_progress_bar(gridSamples);
-    int totalPoints=0;
     int includedPoints=0;
     int maxSideLength=(parent->blindSeqLength-1)/2;
     for (int nx=thread_id; nx<gridSamples; nx+=numThreads)
@@ -1269,7 +1260,7 @@ void * threadgenerateLandmarkSetBlind( void * args )
 
                 // Follow this landmark backwards
                 bool acceptLandmark=true;
-                int jjleft=ii, jj;
+                int jj;
                 int sideLength=0;
                 if (parent->isCapillar)
                     jj=intWRAP(ii-1,0,Nimg-1);
@@ -1301,7 +1292,6 @@ void * threadgenerateLandmarkSetBlind( void * args )
                         l.y=YY(rjj);
                         l.imgIdx=jj;
                         chain.push_back(l);
-                        jjleft=jj;
                         if (parent->isCapillar)
                             jj=intWRAP(jj-1,0,Nimg-1);
                         else
@@ -1318,7 +1308,6 @@ void * threadgenerateLandmarkSetBlind( void * args )
                 else
                     jj=ii+1;
                 rcurrent=rii;
-                int jjright=ii;
                 sideLength=0;
                 while (jj<Nimg && acceptLandmark && sideLength<maxSideLength &&
                        !parent->isOutlier(jj))
@@ -1344,7 +1333,6 @@ void * threadgenerateLandmarkSetBlind( void * args )
                         l.y=YY(rjj);
                         l.imgIdx=jj;
                         chain.push_back(l);
-                        jjright=jj;
                         if (parent->isCapillar)
                             jj=intWRAP(jj+1,0,Nimg-1);
                         else
@@ -1378,6 +1366,7 @@ void * threadgenerateLandmarkSetBlind( void * args )
     }
     if (thread_id==0)
         progress_bar(gridSamples);
+    return NULL;
 }
 
 //#define DEBUG
@@ -1558,7 +1547,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             }
 
             // Refine chain
-            bool accepted=parent->refineChain(chain,corrQ(q));
+            parent->refineChain(chain,corrQ(q));
             candidateChainList.push_back(chain);
         }
         if (thread_id==0)
@@ -1627,6 +1616,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
     }
     if (thread_id==0)
         progress_bar(Nimg);
+    return NULL;
 }
 #undef DEBUG
 
@@ -1635,14 +1625,14 @@ ProgTomographAlignment::~ProgTomographAlignment()
     // Clear the list of images if not empty
     if (!img.empty())
     {
-        for (int i=0; i<img.size(); i++)
+        for (size_t i=0; i<img.size(); i++)
             delete img[i];
         img.clear();
     }
 
     if (!maskImg.empty())
     {
-        for (int i=0; i<maskImg.size(); i++)
+        for (size_t i=0; i<maskImg.size(); i++)
             delete maskImg[i];
         maskImg.clear();
     }
@@ -1714,9 +1704,9 @@ void ProgTomographAlignment::generateLandmarkSet()
         allLandmarksY.resize(chainList.size(),Nimg);
         allLandmarksX.initConstant(XSIZE(*img[0]));
         allLandmarksY.initConstant(YSIZE(*img[0]));
-        for (int i=0; i<chainList.size(); i++)
+        for (size_t i=0; i<chainList.size(); i++)
         {
-            for (int j=0; j<chainList[i].size(); j++)
+            for (size_t j=0; j<chainList[i].size(); j++)
             {
                 int idx=chainList[i][j].imgIdx;
                 allLandmarksX(i,idx)=chainList[i][j].x;
@@ -1782,12 +1772,14 @@ bool ProgTomographAlignment::refineLandmark(int ii, int jj,
     // Choose threshold
     double actualCorrThreshold=corrThreshold;
     if (actualCorrThreshold<0 && VEC_XSIZE(avgForwardPatchCorr)>0)
+    {
         if (ii<jj)
             actualCorrThreshold=XMIPP_MIN(avgForwardPatchCorr(ii),
                                           avgBackwardPatchCorr(jj));
         else
             actualCorrThreshold=XMIPP_MIN(avgBackwardPatchCorr(ii),
                                           avgForwardPatchCorr(jj));
+    }
     if (showRefinement)
         std::cout << "actualCorrThreshold=" << actualCorrThreshold << std::endl;
 
@@ -2305,17 +2297,17 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
     Matrix2D<double> M, M1, M2, M3;
     FileName fn_corrected;
 
-    for (int i=0;i<Nimg; i++)
+    for (int n=0;n<Nimg; n++)
     {
         // Align the normal image
-        I.read(name_list[i]);
+        I.read(name_list[n]);
         mask.initZeros(I());
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
         if (I(i,j)!=0)
             mask(i,j)=1;
-        translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0),M1);
-        rotation2DMatrix(90-alignment.rot+alignment.psi(i),M2);
-        translation2DMatrix(-(alignment.di[i]+alignment.diaxis[i]),M3);
+        translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[n])),0),M1);
+        rotation2DMatrix(90-alignment.rot+alignment.psi(n),M2);
+        translation2DMatrix(-(alignment.di[n]+alignment.diaxis[n]),M3);
         M=M1*M2*M3;
         selfApplyGeometry(BSPLINE3,I(),M,IS_NOT_INV,DONT_WRAP);
         selfApplyGeometry(LINEAR,mask,M,IS_NOT_INV,DONT_WRAP);
@@ -2329,10 +2321,10 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
         else if (!dontNormalize)
             I(i,j)-=avg;
         double rot=0;
-        double tilt=tiltList[i];
+        double tilt=tiltList[n];
         double psi=0;
         I.setEulerAngles(rot, tilt, psi);
-        fn_corrected.compose(i+1, fnRoot+"_corrected_", "stk");
+        fn_corrected.compose(n+1, fnRoot+"_corrected_", "stk");
         I.write(fn_corrected);
 
         // Align the original image
@@ -2348,10 +2340,10 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
             FOR_ALL_ELEMENTS_IN_ARRAY2D(Iorig())
             if (Iorig(i,j)!=0)
                 mask(i,j)=1;
-            translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i]))*
+            translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[n]))*
                                          (((double)XSIZE(Iorig()))/XSIZE(I())),0),M1);
-            rotation2DMatrix(90-alignment.rot+alignment.psi(i),M2);
-            translation2DMatrix(-(alignment.di[i]+alignment.diaxis[i])*
+            rotation2DMatrix(90-alignment.rot+alignment.psi(n),M2);
+            translation2DMatrix(-(alignment.di[n]+alignment.diaxis[n])*
                                 (((double)XSIZE(Iorig()))/XSIZE(I())),M3);
             M=M1*M2*M3;
             selfApplyGeometry(BSPLINE3,Iorig(),M,IS_NOT_INV,DONT_WRAP);
@@ -2366,16 +2358,16 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
             else if (!dontNormalize)
                 Iorig(i,j)-=avg;
             Iorig.setEulerAngles(rot, tilt, psi);
-            fn_corrected.compose(i+1, fnRoot+"_corrected_originalsize_", "stk");
+            fn_corrected.compose(n+1, fnRoot+"_corrected_originalsize_", "stk");
             Iorig.write(fn_corrected);
         }
 
         // Prepare data for the docfile
         size_t id = DF.addObject();
         DF.setValue(MDL_IMAGE, fn_corrected, id);
-        DF.setValue(MDL_ANGLE_PSI, 90.-alignment.rot+alignment.psi(i), id);
-        DF.setValue(MDL_SHIFT_X, XX(alignment.di[i]+alignment.diaxis[i]), id);
-        DF.setValue(MDL_SHIFT_Y, YY(alignment.di[i]+alignment.diaxis[i]), id);
+        DF.setValue(MDL_ANGLE_PSI, 90.-alignment.rot+alignment.psi(n), id);
+        DF.setValue(MDL_SHIFT_X, XX(alignment.di[n]+alignment.diaxis[n]), id);
+        DF.setValue(MDL_SHIFT_Y, YY(alignment.di[n]+alignment.diaxis[n]), id);
     }
     DF.write(fnRoot+"_correction_parameters.txt");
     delete iter;
@@ -2471,7 +2463,7 @@ void ProgTomographAlignment::removeOutlierLandmarks(
     // Compute threshold for outliers
     Histogram1D hist;
     compute_hist(alignment.errorLandmark, hist, 100);
-    double threshold0=hist.percentil(10);
+    // double threshold0=hist.percentil(10);
     double thresholdF=hist.percentil(90);
 
     // Identify outliers

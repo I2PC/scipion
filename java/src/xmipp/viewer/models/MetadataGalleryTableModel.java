@@ -204,11 +204,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	@Override
 	public String getTitle() {
 		String title = "Metadata: "
-				+ (filename != null ? Filename.getBaseName(filename) : "");
+				+ (data.getFileName() != null ? Filename.getBaseName(data.getFileName()) : "");
 		if (n > 1)
 			title += String.format(" %d items", n);
 		if (data.hasRenderLabel())
 			title += String.format(" (%d x %d)", image_width, image_height);
+		
 		return title;
 	}// function getTitle
 
@@ -280,11 +281,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
 	public class MdRowImageLoader extends ImagePlusLoader {
 		long objId;
-		boolean wrap;
 
 		public MdRowImageLoader(int index, int label) {
 			super(getImageFilename(index, label));
+			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
+			
 			wrap = data.wrap;
 			objId = data.ids[index];
 		}
@@ -298,11 +300,13 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	
 	// Extension of the ImagePlusLoader, read an entire metadata as an ImagePlus
 	public class MetadataImageLoader extends ImagePlusLoader {
-		boolean wrap;
 		int label;
 
 		public MetadataImageLoader(int label) {
-			super(data.filename);
+
+			super(data.getFileName());
+
+			allowsGeometry = data.md.containsGeometryInfo();
 			useGeometry = data.useGeo;
 			wrap = data.wrap;
 			this.label = label;
@@ -310,18 +314,14 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 
 		@Override
 		protected ImagePlus loadImage() throws Exception {
-			return XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap);
+			return XmippImageConverter.readMetadataToImagePlus(label, data.md, useGeometry, wrap);
 		}
 		@Override
 		public boolean isVolume()
 		{
 			return false;
 		}
-		@Override
-		public boolean allowsGeometry()
-		{
-			return data.containsGeometryInfo();
-		}
+		
 	}//class MetadataImageLoader
 	
 	

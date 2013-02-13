@@ -57,6 +57,7 @@ double integrateNewtonCotes(double(*f)(double),
         return 4.0 / 14175.0*h*(989*(fx(0) + fx(8)) + 5888*(fx(1) + fx(7)) +
                                 -928*(fx(2) + fx(6)) + 10496*(fx(3) + fx(5)) - 4540*fx(4));
     }
+    REPORT_ERROR(ERR_ARG_INCORRECT,"Number of points is too high");
 }
 
 //**********************************************************

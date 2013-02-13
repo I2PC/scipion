@@ -81,6 +81,7 @@ public:
     int                          particle_size;
     int                          particle_radius;
     int                          filter_num;
+    int                          proc_prec;
     int                          NPCA;
     int                          NRPCA;
     int                          corr_num;
@@ -100,6 +101,7 @@ public:
 
     std::vector<Particle2>       auto_candidates;
     std::vector<Particle2>       rejected_particles;
+    std::vector<Particle2>       accepted_particles;
     Image<double>                micrographStack;
 
 public:
@@ -107,7 +109,8 @@ public:
     /// Empty constructor
     AutoParticlePicking2(const FileName &fn, Micrograph *_m,
                          int size, int filterNum,
-                         int pcaNum,int corrNum);
+                         int pcaNum,int corrNum,
+                         int procprec);
 
     /// Destructor
     ~AutoParticlePicking2();
@@ -254,8 +257,8 @@ public:
      */
     void saveAutoVectors(const FileName &fn);
 
-    /// Save the feature vectors of the false positives
-    void saveRejectedVectors(const FileName &fn);
+    /// Save the extracted features for both rejected and found features
+    void saveVectors(const FileName &fn);
 
     /// Save the PCA basis and average for each channel
     void savePCAModel(const FileName &fn_root);
@@ -273,9 +276,10 @@ public:
     /// Load training set into the related array.
     void loadTrainingSet(const FileName &fn_root);
 
-    /* Select particles from the micrograph in an automatic way.
-     * This is the main method for automatic picking.
-     */
+    /// Load the features for particles and non-particles (from the supervised)
+    void loadVectors(const FileName &fn);
+
+    /// Select particles from the micrograph in an automatic way
     int automaticallySelectParticles(bool use2Classifier,bool fast);
 
     /*
@@ -303,6 +307,8 @@ public:
     int NPCA;
     /// The number of correlation for a bank
     int corr_num;
+    /// The number of correlation for a bank
+    int procprec;
     /// Mode
     String mode;
     /// Number of threads
