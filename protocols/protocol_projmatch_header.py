@@ -663,8 +663,10 @@ DisplayIterationsNo='1 2 3'
 
 # Show results for reference 3D volumes
 """ 
+   If you want two see the reference volume 2 and 5 write
+   2 5
 """
-DisplayRef3DNo='1 2'
+DisplayRef3DNo='1'
 
 # {expert} Width of projection galleries
 """ 

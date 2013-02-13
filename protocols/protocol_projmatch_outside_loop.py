@@ -112,17 +112,26 @@ def initAngularReferenceFile(_log, BlockWithAllExpImages, CtfGroupDirectory, Ctf
         #MDctf.intersection(MD, MDL_IMAGE)
         block_name = block + '@' + DocFileWithOriginalAngles
         MDctf.write(block_name, MD_APPEND)
-        
+
 def createResults(log
                  , CTFDatName
                  , DoCtfCorrection
                  , inDocfile
+                 , listWithResultVolume
                  , resultsImages
-                 , resultsClasses
+                 , resultsClasses3DRef
+                 , resultsClasses3DRefDefGroup
+                 , resultsVolumes
                   ):
     ''' Create standard output results_images, result_classes'''
     from os import remove
     from os.path import exists
+    #create metadata file with volume names
+    mdVolume = MetaData()
+    for resultVolume in listWithResultVolume:
+        objId = mdVolume.addObject()
+        mdVolume.setValue(MDL_IMAGE,resultVolume,objId)
+    mdVolume.write(resultsVolumes)
     #read file with results
     allExpImagesinDocfile = FileName()
     all_exp_images="all_exp_images"
@@ -139,7 +148,7 @@ def createResults(log
         mdCTF.addIndex(MDL_IMAGE)
         mdOut.join (md, mdCTF, MDL_IMAGE, MDL_IMAGE, NATURAL_JOIN)
     else:
-        mdOut = MetaData(md)#becarefull with copy metadata since it only copies pointers
+        mdOut = MetaData(md)#becareful with copy metadata since it only copies pointers
     mdref3D = MetaData()
     mdrefCTFgroup = MetaData()
     mdref3D.aggregate(mdOut, AGGR_COUNT, MDL_REF3D, MDL_REF3D, MDL_COUNT)
@@ -159,12 +168,11 @@ def createResults(log
     comment += " numberRef3D=%d........................................................."%numberRef3D
     mdOut.setComment(comment)
     mdOut.write(fnResultImages)
-    
     #make query and store ref3d with all
     for id in mdref3D:
         ref3D = mdref3D.getValue(MDL_REF3D, id)
         md.importObjects(mdOut, MDValueEQ(MDL_REF3D, ref3D))
-        fnResultClasses.compose(("images_ref3d%06d"%ref3D),resultsClasses)
+        fnResultClasses.compose(("images_ref3d%06d"%ref3D),resultsClasses3DRef)
         md.write(fnResultClasses,MD_APPEND)
     
     md2=MetaData()
@@ -175,5 +183,5 @@ def createResults(log
         for id in mdrefCTFgroup:
             defocusGroup = mdrefCTFgroup.getValue(MDL_DEFGROUP, id)
             md2.importObjects(md, MDValueEQ(MDL_DEFGROUP, defocusGroup))
-            fnResultClasses.compose(("images_ref3d%06d_defocusGroup%06d"%(ref3D,defocusGroup)),resultsClasses)
+            fnResultClasses.compose(("images_ref3d%06d_defocusGroup%06d"%(ref3D,defocusGroup)),resultsClasses3DRefDefGroup)
             md2.write(fnResultClasses,MD_APPEND)
