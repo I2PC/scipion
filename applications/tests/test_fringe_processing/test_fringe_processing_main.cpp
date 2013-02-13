@@ -112,8 +112,12 @@ TEST_F( FringeProcessingTests, SPTH)
     imProc.resizeNoCopy(im);
     fp.SPTH(im, imProc);
 
-    imProc.getReal(imProcReal);
-    imProc.getImag(imProcImag);
+    //imProc.getReal(imProcReal);
+    //imProc.getImag(imProcImag);
+
+    //im.write(fpName);
+    //imProcReal.write(imProcRealName);
+    //imProcImag.write(imProcImagName);
 
     ASSERT_TRUE( (A2D_ELEM(imProcReal,10,10)  -  0)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(imProcReal,10,20)  -  0)  < 1e-3);
@@ -125,9 +129,6 @@ TEST_F( FringeProcessingTests, SPTH)
     ASSERT_TRUE( (A2D_ELEM(imProcImag,20,10)  -  0.954154)  < 1e-3);
     ASSERT_TRUE( (A2D_ELEM(imProcImag,20,20)  -  0.536937)  < 1e-3);
 
-    //im.write(fpName);
-    //imProcReal.write(imProcRealName);
-    //imProcImag.write(imProcImagName);
 }
 
 

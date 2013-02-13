@@ -124,14 +124,14 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
     //std::complex<double> compTemp(0, 0);
     //i -> for exterior filas o Y
     //j -> for interior columns o X
-    for (int i=STARTINGY(im); i<=FINISHINGY(im); i++)
+    for (int i=STARTINGY(H); i<=FINISHINGY(H); i++)
     {
     	double i2=((double)i)*i;
-    	for (int j=STARTINGX(im); j<=FINISHINGX(im); j++)
+    	for (int j=STARTINGX(H); j<=FINISHINGX(H); j++)
     	{
 			double j2=((double)j)*j;
 			double iR;
-			if (i!=0 || j!=0)
+			if ( (i!=0) || (j!=0))
 				iR=1.0/std::sqrt(i2+j2);
 			else
 				iR=0.;
@@ -141,7 +141,6 @@ void FringeProcessing::SPTH(MultidimArray<double> & im, MultidimArray< std::comp
     	}
     }
 
-    CenterFFT(H,false);
     fftIm *= H;
     ftrans.inverseFourierTransform();
     //Here in the Matlab code there is a complex conjugate s
@@ -328,7 +327,7 @@ void FringeProcessing::normalizeWB(MultidimArray<double> & im, MultidimArray<dou
         A2D_ELEM(H,i,j) = std::complex<double>(temp,temp);
     }
 
-    CenterFFT(H,false);
+    //CenterFFT(H,false);
     fftIm *= H;
     ftrans.inverseFourierTransform();
 
