@@ -620,7 +620,8 @@ def runChimera(inputFile,extraParams=""):
         if hasSpiderExt(inputFile):
             inputFile = 'spider:%s' % inputFile
         os.system("chimera %s %s&" % (inputFile,extraParams))
-    
+    else:
+        print "Error Chimera not available or inputFile %s does not exits."%inputFile
 """ Return the machine name """
 def getHostname():
     import socket

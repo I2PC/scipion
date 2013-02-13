@@ -221,45 +221,48 @@ void ProgClassifyCL2DCore::computeStableCores()
             if (thisBlock.level<=tolerance)
                 continue;
             thisClass.read(thisBlock.block+"@"+thisBlock.fnLevelCore);
+            thisClassCore.clear();
 
             // Add MDL_ORDER
-            size_t order=0;
-            thisClassOrder.clear();
-            FOR_ALL_OBJECTS_IN_METADATA(thisClass)
+            if (thisClass.size()>0)
             {
-                thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                thisClassOrder[fnImg]=order++;
-            }
-
-            // Calculate coocurrence within all blocks whose level is inferior to this
-            size_t NthisClass=thisClass.size();
-            thisClassCore.clear();
-            if (NthisClass>0)
-            {
-                coocurrence.initZeros(NthisClass,NthisClass);
-                for (int n=0; n<Nblocks; n++)
+                size_t order=0;
+                thisClassOrder.clear();
+                FOR_ALL_OBJECTS_IN_METADATA(thisClass)
                 {
-                    CL2DBlock &anotherBlock=blocks[n];
-                    if (anotherBlock.level>=thisBlock.level)
-                        break;
-                    anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
-                    anotherClass.intersection(thisClass,MDL_IMAGE);
-                    commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
-                    commonIdx.resize(commonImages.size());
-                    size_t idx=0;
-                    FOR_ALL_OBJECTS_IN_METADATA(commonImages)
+                    thisClass.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                    thisClassOrder[fnImg]=order++;
+                }
+
+                // Calculate coocurrence within all blocks whose level is inferior to this
+                size_t NthisClass=thisClass.size();
+                if (NthisClass>0)
+                {
+                    coocurrence.initZeros(NthisClass,NthisClass);
+                    for (int n=0; n<Nblocks; n++)
                     {
-                        commonImages.getValue(MDL_IMAGE,fnImg,__iter.objId);
-                        commonIdx[idx++]=thisClassOrder[fnImg];
-                    }
-                    size_t Ncommon=commonIdx.size();
-                    for (size_t i=0; i<Ncommon; i++)
-                    {
-                        size_t idx_i=commonIdx[i];
-                        for (size_t j=i+1; j<Ncommon; j++)
+                        CL2DBlock &anotherBlock=blocks[n];
+                        if (anotherBlock.level>=thisBlock.level)
+                            break;
+                        anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
+                        anotherClass.intersection(thisClass,MDL_IMAGE);
+                        commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
+                        commonIdx.resize(commonImages.size());
+                        size_t idx=0;
+                        FOR_ALL_OBJECTS_IN_METADATA(commonImages)
                         {
-                            size_t idx_j=commonIdx[j];
-                            MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
+                            commonImages.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                            commonIdx[idx++]=thisClassOrder[fnImg];
+                        }
+                        size_t Ncommon=commonIdx.size();
+                        for (size_t i=0; i<Ncommon; i++)
+                        {
+                            size_t idx_i=commonIdx[i];
+                            for (size_t j=i+1; j<Ncommon; j++)
+                            {
+                                size_t idx_j=commonIdx[j];
+                                MAT_ELEM(coocurrence,idx_i,idx_j)+=1;
+                            }
                         }
                     }
                 }
