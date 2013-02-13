@@ -2200,8 +2200,6 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     CenterFFT(centeredEnhancedPSD,true);
 
     // Estimate phase, modulation and Zernikes
-    FringeProcessing fp;
-
     MultidimArray<double> mod, phase;
     Matrix1D<double> coefs(13);
     coefs.initConstant(0);
@@ -2258,7 +2256,7 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
     {
         if ( ( ((fmax - min_freq)/min_freq) > 0.5))
         {
-            fp.demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
+            demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
                           x,x,
                           min_freq*XSIZE(centeredEnhancedPSD),
                           fmax*XSIZE(centeredEnhancedPSD),

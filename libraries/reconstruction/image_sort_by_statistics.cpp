@@ -90,8 +90,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer4.clear();
 
-    FringeProcessing fp;
-
     int sign = -1;
     int numNorm = 3;
     int numDescriptors0=numNorm;
@@ -167,6 +165,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     }
 
     Image<double> img;
+    FourierTransformer transformer(FFTW_BACKWARD), transformer2(FFTW_BACKWARD);
+
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (thereIsEnable)
@@ -187,7 +187,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mask.setXmippOrigin();
 
             double var = 1;
-            fp.normalize(mI,tempI,modI,0,var,mask);
+            normalize(transformer,transformer2,mI,tempI,modI,0,var,mask);
             modI.setXmippOrigin();
             tempI.setXmippOrigin();
             nI = sign*tempI*(modI*modI);
@@ -198,7 +198,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             var+=2;
             while (index < numNorm)
             {
-                fp.normalize(mI,tempI,modI,0,var,mask);
+                normalize(transformer,transformer2,mI,tempI,modI,0,var,mask);
                 modI.setXmippOrigin();
                 tempI.setXmippOrigin();
                 nI += sign*tempI*(modI*modI);
@@ -255,7 +255,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             nI.binarizeRange(j-1,j+1);
 
             double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
-            fp.fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
+            fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
 
             A1D_ELEM(v2,0)=majorAxis/((img().xdim) );
             A1D_ELEM(v2,1)=minorAxis/((img().xdim) );
@@ -411,7 +411,6 @@ void ProgSortByStatistics::processInputPrepare(MetaData &SF)
 
 void ProgSortByStatistics::run()
 {
-
     // Process input selfile ..............................................
     SF.read(fn);
     SF.removeDisabled();

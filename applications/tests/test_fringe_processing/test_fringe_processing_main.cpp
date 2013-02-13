@@ -59,8 +59,7 @@ TEST_F( FringeProcessingTests, simulPattern)
     VEC_ELEM(coefs,1)=0;
     VEC_ELEM(coefs,6)=5;
 
-    FringeProcessing fp;
-    fp.simulPattern(im,fp.SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
 
     ASSERT_TRUE(XSIZE(im) == nx);
     ASSERT_TRUE(YSIZE(im) == ny);
@@ -70,7 +69,7 @@ TEST_F( FringeProcessingTests, simulPattern)
 
     //im.write(imageName);
     freq = 1;
-    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
 
     ASSERT_TRUE(XSIZE(im) == nx);
     ASSERT_TRUE(YSIZE(im) == ny);
@@ -79,7 +78,7 @@ TEST_F( FringeProcessingTests, simulPattern)
     ASSERT_TRUE( std::abs(A2D_ELEM(im,1,0) - 0.976113)<0.01);
 
     freq = 20;
-    fp.simulPattern(im,fp.COMPLEX_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,COMPLEX_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
 
     ASSERT_TRUE(XSIZE(im) == nx);
     ASSERT_TRUE(YSIZE(im) == ny);
@@ -92,11 +91,10 @@ TEST_F( FringeProcessingTests, simulPattern)
 TEST_F( FringeProcessingTests, SPTH)
 {
     //FileName fpName, imProcRealName, imProcImagName;
-    //fpName = "fp.txt";
+    //fpName = "txt";
     //imProcRealName  = "IpReal.txt";
     //imProcImagName  = "IpImag.txt";
 
-    FringeProcessing fp;
     MultidimArray< std::complex <double> > imProc;
     MultidimArray< double > imProcReal;
     MultidimArray< double > imProcImag;
@@ -108,12 +106,13 @@ TEST_F( FringeProcessingTests, SPTH)
     double freq = 20;
     Matrix1D<int> coefs(10);
 
-    fp.simulPattern(im,fp.SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_OPEN_FRINGES,nx,ny, noiseLevel,freq, coefs);
     imProc.resizeNoCopy(im);
-    fp.SPTH(im, imProc);
+    FourierTransformer ftrans(FFTW_BACKWARD);
+    SPTH(ftrans, im, imProc);
 
-    //imProc.getReal(imProcReal);
-    //imProc.getImag(imProcImag);
+    imProc.getReal(imProcReal);
+    imProc.getImag(imProcImag);
 
     //im.write(fpName);
     //imProcReal.write(imProcRealName);
@@ -137,12 +136,11 @@ TEST_F( FringeProcessingTests, orMinDer)
 
 #ifdef DEBUG
     FileName fpName, orName, orMapName;
-    fpName   = "fp.txt";
+    fpName   = "txt";
     orName   = "or.txt";
     orMapName= "orMap.txt";
 #endif
 
-    FringeProcessing fp;
     MultidimArray<double> im, orMap, orModMap;
     MultidimArray<bool> ROI;
 
@@ -152,7 +150,7 @@ TEST_F( FringeProcessingTests, orMinDer)
     double freq = 1;
     Matrix1D<int> coefs(10);
 
-    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
     orMap.resizeNoCopy(im);
     ROI.resizeNoCopy(im);
 
@@ -170,7 +168,7 @@ TEST_F( FringeProcessingTests, orMinDer)
     }
 
     int wSize = 2;
-    fp.orMinDer(im,orMap,orModMap, wSize, ROI);
+    orMinDer(im,orMap,orModMap, wSize, ROI);
 
     ASSERT_TRUE(XSIZE(im) == XSIZE(orMap));
     ASSERT_TRUE(YSIZE(im) == YSIZE(orMap));
@@ -197,12 +195,11 @@ TEST_F( FringeProcessingTests, normalize)
 
 #ifdef DEBUG
     FileName fpName, Iname, ModName;
-    fpName = "fp.txt";
+    fpName = "txt";
     Iname  = "IN.txt";
     ModName= "Mod.txt";
 #endif
 
-    FringeProcessing fp;
     MultidimArray<double> im, In, Mod;
     MultidimArray<bool> ROI;
 
@@ -212,7 +209,7 @@ TEST_F( FringeProcessingTests, normalize)
     double freq = 1;
     Matrix1D<int> coefs(10);
 
-    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
 
     In.resizeNoCopy(im);
     Mod.resizeNoCopy(im);
@@ -234,8 +231,8 @@ TEST_F( FringeProcessingTests, normalize)
     //aprox there are 5 fringe in the image
     double R = 5;
     double S = 10;
-
-    fp.normalize(im,In,Mod, R, S, ROI);
+    FourierTransformer ftrans(FFTW_BACKWARD), ftrans2(FFTW_BACKWARD);
+    normalize(ftrans,ftrans2,im,In,Mod, R, S, ROI);
 
     //We test some values comparing with the values recovered with Matlab
     ASSERT_TRUE( (A2D_ELEM(In,10,10)  -  0.924569)  < 1e-1);
@@ -259,12 +256,11 @@ TEST_F( FringeProcessingTests, normalizeWB)
 
 #ifdef DEBUG
     FileName fpName, Iname, ModName;
-    fpName = "fp.txt";
+    fpName = "txt";
     Iname  = "IN.txt";
     ModName= "Mod.txt";
 #endif
 
-    FringeProcessing fp;
     MultidimArray<double> im, In, Mod;
     MultidimArray<bool> ROI;
 
@@ -274,7 +270,7 @@ TEST_F( FringeProcessingTests, normalizeWB)
     double freq = 1;
     Matrix1D<int> coefs(10);
 
-    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
 
     In.resizeNoCopy(im);
     Mod.resizeNoCopy(im);
@@ -292,7 +288,7 @@ TEST_F( FringeProcessingTests, normalizeWB)
             A2D_ELEM(ROI,i,j)= false;
     }
 
-    fp.normalizeWB(im,In,Mod, rmin, rmax, ROI);
+    normalizeWB(im,In,Mod, rmin, rmax, ROI);
 
     //We test some values comparing with the values recovered with Matlab
     ASSERT_TRUE( (A2D_ELEM(In,100,100)  -  0.99979)    < 1e-1);
@@ -323,7 +319,6 @@ TEST_F( FringeProcessingTests, unwrapping)
     int ny = 311;
     double noiseLevel = 0;
 
-    FringeProcessing fp;
     MultidimArray<double> refPhase(nx,ny), wphase, comPhase, im, orMap, orModMap;
     MultidimArray<bool> ROI;
 
@@ -366,11 +361,11 @@ TEST_F( FringeProcessingTests, unwrapping)
     }
 
     int wSize = 2;
-    fp.orMinDer(im, orMap,orModMap, wSize, ROI);
+    orMinDer(im, orMap,orModMap, wSize, ROI);
 
     double lambda = 0.4;
     int size = 4;
-    fp.unwrapping(wphase, orModMap, lambda, size, comPhase);
+    unwrapping(wphase, orModMap, lambda, size, comPhase);
 
     //Comparing with Matlab results
     ASSERT_TRUE( (A2D_ELEM(comPhase,9,19)  -  -2.87779)   < 1e-1);
@@ -394,11 +389,10 @@ TEST_F( FringeProcessingTests, demodulate)
 
 #ifdef DEBUG
     FileName ModName = "Mod.txt";
-    FileName fpName = "fp.txt";
+    FileName fpName = "txt";
     FileName phaseName = "Phase.txt";
 #endif
 
-    FringeProcessing fp;
     MultidimArray<double> im, mod, phase;
 
     int nx = 311;
@@ -409,7 +403,7 @@ TEST_F( FringeProcessingTests, demodulate)
     double freq = 2;
     Matrix1D<double> coefs(13);
 
-    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
     mod.resizeNoCopy(im);
     phase.resizeNoCopy(im);
 
@@ -428,7 +422,7 @@ TEST_F( FringeProcessingTests, demodulate)
     VEC_ELEM(coefs,8) = 1;
     VEC_ELEM(coefs,12) = 1;
 
-    fp.demodulate(im, lambda,size, x, y, rmin, rmax,phase,mod, coefs, verbose);
+    demodulate(im, lambda,size, x, y, rmin, rmax,phase,mod, coefs, verbose);
 
     //Comparing with Matlab results
     ASSERT_TRUE( (A2D_ELEM(phase,30,30)  - 10.5929)  < 1e-2);
@@ -454,7 +448,6 @@ TEST_F( FringeProcessingTests, firsPSDZero)
     FileName PName3 = "pY.txt";
 #endif
 
-    FringeProcessing fp;
     int nx = 311;
     int ny = 311;
 
@@ -466,7 +459,7 @@ TEST_F( FringeProcessingTests, firsPSDZero)
     double freq = 1;
     Matrix1D<double> coefs(13);
 
-    fp.simulPattern(im,fp.SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
+    simulPattern(im,SIMPLY_CLOSED_FRINGES_MOD,nx,ny, noiseLevel,freq, coefs);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
@@ -475,7 +468,7 @@ TEST_F( FringeProcessingTests, firsPSDZero)
 
     int numPts = 100;
     Matrix1D<double> ptsX(numPts), ptsY(numPts);
-    //fp.firsPSDZero(im,ptsX,ptsY,0.05*XSIZE(im),0.8*XSIZE(im),numPts,1);
+    //firsPSDZero(im,ptsX,ptsY,0.05*XSIZE(im),0.8*XSIZE(im),numPts,1);
 
     //////////////////////
     //Comparing the results
@@ -530,10 +523,9 @@ TEST_F( FringeProcessingTests, fitEllipse)
     }
 
     double x0,y0,majorAxis, minorAxis, ellipseAngle;
-    FringeProcessing fp;
     Matrix1D<double> ptsX2 = ptsX;
     Matrix1D<double> ptsY2 = ptsY;
-    fp.fitEllipse(ptsX2, ptsY2, x0, y0, majorAxis, minorAxis, ellipseAngle);
+    fitEllipse(ptsX2, ptsY2, x0, y0, majorAxis, minorAxis, ellipseAngle);
 
     ASSERT_TRUE( (x0  - 20)   < 1e-2);
     ASSERT_TRUE( (y0  - 50)  < 1e-2);
@@ -567,7 +559,6 @@ TEST_F( FringeProcessingTests, testVahid)
     Iname  = "IN.txt";
     ModName= "Mod.txt";
 
-    FringeProcessing fp;
     MultidimArray<double> im, In, Mod;
     MultidimArray<bool> ROI;
 
@@ -588,12 +579,12 @@ TEST_F( FringeProcessingTests, testVahid)
 
     double R = 50;
     double S = 15;
-    fp.normalize(im,In,Mod, R, S, ROI);
+    normalize(im,In,Mod, R, S, ROI);
 
     //aprox there are 5 fringe in the image
     //double R = 1;
     //double S = 20;
-    //fp.normalize(im,In,Mod, R, S, ROI);
+    //normalize(im,In,Mod, R, S, ROI);
 
     In.write(fpName);
 
