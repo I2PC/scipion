@@ -750,8 +750,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		winStd.setVisible(true);
 	}
 
-
-
 	private boolean openClassesDialog()
 	{
 		if (dlgClasses == null)
@@ -838,7 +836,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jlRows.setEnabled(allowColsResize);
 		jcbAutoAdjustColumns.setEnabled(allowColsResize);
 	}
-	
+
 	public void reloadTableData()
 	{
 		reloadTableData(true);
@@ -943,10 +941,26 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/** Save selected items as a metadata */
 	public void saveSelection() throws Exception
 	{
-		SaveJDialog dlg = new SaveJDialog(this);
-		if (dlg.showDialog())
-			data.getSelectionMd().write(dlg.getMdFilename());
+		MetaData md = data.getSelectionMd();
+		SaveJDialog dlg = new SaveJDialog(this, "selection.xmd", true);
+		boolean save = dlg.showDialog();
+		if (save)
+		{
+			boolean overwrite;
+			String path = dlg.getMdFilename();
+			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			if (!new File(file).exists())//overwrite or append, save selection
+				md.write(path);
+			else
+			{
+				overwrite = dlg.isOverwrite();
+				if (overwrite)
+					md.write(path);//overwrite with active block only, other blocks were dismissed
+				else
+					md.writeBlock(path);//append selection
 
+			}
+		}
 	}
 
 	/** Find and replace in metadata */
@@ -1095,62 +1109,66 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		// Add blocks selector combo
 		jlBlocks = new JLabel(XmippLabel.LABEL_BLOCK);
-		cbPanel.add(jlBlocks);
 		jcbBlocks = new JComboBox();
-		jcbBlocks.setModel(new ComboBoxModel()
+		if (data.getNumberOfBlocks() > 0)
 		{
-
-			@Override
-			public int getSize()
-			{
-				return data.mdBlocks.length;
-			}
-
-			@Override
-			public Object getElementAt(int index)
+			cbPanel.add(jlBlocks);
+			jcbBlocks.setModel(new ComboBoxModel()
 			{
 
-				return data.mdBlocks[index];
-			}
 
-			@Override
-			public void setSelectedItem(Object item)
-			{
-				if (proceedWithChanges())
+				@Override
+				public int getSize()
 				{
-					data.selectBlock((String) item);
-					jcbVolumes.invalidate();
-					try
+					return data.getNumberOfBlocks();
+				}
+
+				@Override
+				public Object getElementAt(int index)
+				{
+					return data.getBlock(index);
+				}
+
+				@Override
+				public void setSelectedItem(Object item)
+				{
+					if (proceedWithChanges())
 					{
-						data.loadMd();
-						reloadTableData();
-					}
-					catch (Exception e)
-					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						data.selectBlock((String) item);
+						jcbVolumes.invalidate();
+						try
+						{
+							data.loadMd();
+							reloadTableData();
+						}
+						catch (Exception e)
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				}
-			}
 
-			@Override
-			public Object getSelectedItem()
-			{
-				return data.selectedBlock;
-			}
+				@Override
+				public Object getSelectedItem()
+				{
+					return data.selectedBlock;
+				}
 
-			@Override
-			public void removeListDataListener(ListDataListener arg0)
-			{
-			}
+				@Override
+				public void removeListDataListener(ListDataListener arg0)
+				{
+				}
 
-			@Override
-			public void addListDataListener(ListDataListener arg0)
-			{
-				// TODO Auto-generated method stub
-			}
-		});
-		cbPanel.add(jcbBlocks);
+				@Override
+				public void addListDataListener(ListDataListener arg0)
+				{
+					// TODO Auto-generated method stub
+				}
+			});
+
+			cbPanel.add(jcbBlocks);
+		}
 		// Add volumes selector combo
 		jlVolumes = new JLabel(XmippLabel.LABEL_VOLUME);
 		cbPanel.add(jlVolumes);
@@ -1833,7 +1851,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		XmippDialog.showInfo(this, String.format("Calculating ctf: DONE"));
 	}
-	
+
+
+	private void saveMd() throws Exception
+	{
+		saveMd(dlgSave.getMdFilename());
+	}
 
 	private void saveMd(String path) throws Exception
 	{
@@ -1844,21 +1867,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			boolean overwrite;
 			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())
-				data.md.writeBlock(path);
+			if (!new File(file).exists())//overwrite or append, save active metadata
+				data.md.write(path);
 			else
 			{
-				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
+				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveMetadataOnly();
 				if (overwrite)
-					data.md.write(path);
+					data.md.write(path);//overwrite with active block only, other blocks were dismissed
 				else
-					data.md.writeBlock(path);
+					data.md.writeBlock(path);//either if save active block or all, save active, other blocks where already managed
 
 			}
 
 			data.setMdChanges(false);
 			gallery.data.setFileName(file);
-			gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+			if(path.contains("@"))
+				gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
 			reloadFile(file, false);
 		}
 		catch (Exception e)
@@ -1868,31 +1892,30 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}// function saveMd
 
 
-
 	private void saveAll() throws Exception
 	{
 		String from = data.getFileName();
 		String blockto = dlgSave.getMdFilename();
 		String to = blockto.substring(blockto.lastIndexOf('@') + 1, blockto.length());
-		if (!from.equals(to))
+		if (from != null && !from.equals(to))
 		{// no sense in overwritting or appending
 			MetaData frommd;
 			frommd = new MetaData();
 			if (dlgSave.isOverwrite())
-				new MetaData().write(blockto);// overwrite file with some block
+				new File(to).delete();
 			for (String blockit : data.mdBlocks)
 			{
-				if(blockit.equals(getBlock()))
-					continue;
 				frommd.read(blockit + "@" + from);
-				frommd.writeBlock(blockit + "@" + to);
+				if(blockit.equals(getBlock()))
+					frommd.writeBlock(blockto);//might save active metadata with other name, updated later
+				else
+					frommd.writeBlock(blockit + "@" + to);
 			}
 		}
 		saveMd(blockto);
 	}
 
 
-	
 	private void save() throws Exception
 	{
 		if (!saved)
@@ -1904,14 +1927,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void saveAs() throws Exception
 	{
 		if (dlgSave == null)
-			dlgSave = new SaveJDialog(this, data.getMdFilename());
+			dlgSave = new SaveJDialog(this, data.getMdFilename(), false);
 		else
 			dlgSave.setMdFilename(data.getMdFilename());
 		boolean save = dlgSave.showDialog(); // displays dialog and waits until
 												// save or cancel clicked
 		if (save)
 		{
-			if (dlgSave.saveActiveBlockOnly())
+			if (dlgSave.saveActiveMetadataOnly())
 				saveMd();
 			else
 				saveAll();
@@ -1920,6 +1943,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			if (dlgSave.doSaveImages())
 				data.md.writeImages(dlgSave.getOutput(), dlgSave.isOutputIndependent(), dlgSave.getImageLabel());
 		}
+
 		
 	}
 
@@ -1957,6 +1981,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		return (String) jcbBlocks.getSelectedItem();
 	}
 
+
 	public void reloadFile(String file, boolean changed) throws Exception
 	{
 		createModel();
@@ -1966,32 +1991,32 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	private void saveMd() throws Exception
-	{
-		saveMd(dlgSave.getMdFilename());
-	}
-	
-	
 	protected void initAxisButtonMenu()
 	{
-		//Create the popup menu.
-        final JPopupMenu popup = new JPopupMenu();
-        popup.add(new JMenuItem(new AbstractAction("Option 1") {
-            public void actionPerformed(ActionEvent e) {
-            }
-        }));
-        popup.add(new JMenuItem(new AbstractAction("Option 2") {
-            public void actionPerformed(ActionEvent e) {
-            }
-        }));
+		// Create the popup menu.
+		final JPopupMenu popup = new JPopupMenu();
+		popup.add(new JMenuItem(new AbstractAction("Option 1")
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+			}
+		}));
+		popup.add(new JMenuItem(new AbstractAction("Option 2")
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+			}
+		}));
 
-        final JButton button = new JButton("Options");
-        button.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                popup.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });
-        toolBar.add(button);
+		final JButton button = new JButton("Options");
+		button.addMouseListener(new MouseAdapter()
+		{
+			public void mousePressed(MouseEvent e)
+			{
+				popup.show(e.getComponent(), e.getX(), e.getY());
+			}
+		});
+		toolBar.add(button);
 
 	}
 
