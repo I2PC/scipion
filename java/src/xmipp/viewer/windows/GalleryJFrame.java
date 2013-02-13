@@ -952,6 +952,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					md.writeBlock(path);//append selection
 
 			}
+		}
 	}
 
 	/** Find and replace in metadata */
@@ -1891,7 +1892,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void saveAs() throws Exception
 	{
 		if (dlgSave == null)
-			dlgSave = new SaveJDialog(this, data.getMdFilename());
+			dlgSave = new SaveJDialog(this, data.getMdFilename(), false);
 		else
 			dlgSave.setMdFilename(data.getMdFilename());
 		boolean save = dlgSave.showDialog(); // displays dialog and waits until
