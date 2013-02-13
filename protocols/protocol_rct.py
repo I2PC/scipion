@@ -155,7 +155,23 @@ def reconstructClass(log,WorkingDir,ExtraDir,ClassNameIn,ClassNameOut,ClassImage
     params = "-i %(ClassNameOut)s -o %(ClassVolumeOut)s %(ReconstructAdditionalParams)s" % locals()
     runJob(log, "xmipp_reconstruct_fourier", params)
     
-    if DoLowPassFilter and exists(ClassVolumeOut):
+    if exists(ClassVolumeOut):
+        mdFn = join(WorkingDir, 'volumes.xmd')
+        print "mdFn", mdFn
+        md = MetaData()
+        
+        if exists(mdFn):
+            md.read(mdFn)
+        objId = md.addObject()
+        md.setValue(MDL_IMAGE, ClassVolumeOut, objId)
+                    
+        if DoLowPassFilter:
             filteredVolume = ClassVolumeOut.replace('.vol','_filtered.vol')
             params = "-i %(ClassVolumeOut)s -o %(filteredVolume)s --fourier low_pass %(LowPassFilter)f" % locals()
             runJob(log,"xmipp_transform_filter", params)
+            objId = md.addObject()
+            md.setValue(MDL_IMAGE, filteredVolume, objId)
+            
+        print md
+        md.write(mdFn)
+            

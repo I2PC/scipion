@@ -157,7 +157,8 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL, *pyStr = NULL;
         PyObject *input2 = NULL, *pyStr2 = NULL;
-        char str[1024] = "", ext[32] = "";
+        char str[1024] = "";
+        char * ext = NULL;
         char str2[1024] = "";
         int number = -1;
         size_t n = PyTuple_Size(args);
