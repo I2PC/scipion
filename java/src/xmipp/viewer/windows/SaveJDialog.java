@@ -170,7 +170,7 @@ public class SaveJDialog extends XmippDialog
 		// btnBrowseMd = WindowUtil.getIconButton("folderopen.gif", this);
 		// panelMd.add(btnBrowseMd, WindowUtil.getConstraints(gbc, 2, 0));
 		panelMd.add(panelBrowse, XmippWindowUtil.getConstraints(gbc, 0, 0, 3));
-		chbDiscard = new JCheckBox("Save Active Block Only", false);
+		chbDiscard = new JCheckBox("Save Active Metadata Only", false);
 		panelMd.add(chbDiscard, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 		rbMdOverride = new JRadioButton("Overwrite file");
 		panelMd.add(rbMdOverride, XmippWindowUtil.getConstraints(gbc, 0, 2));
@@ -323,7 +323,7 @@ public class SaveJDialog extends XmippDialog
 		}
 	}
 
-	public boolean saveActiveBlockOnly()
+	public boolean saveActiveMetadataOnly()
 	{
 		return chbDiscard.isSelected();
 	}

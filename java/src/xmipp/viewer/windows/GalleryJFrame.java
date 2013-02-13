@@ -1814,15 +1814,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			boolean overwrite;
 			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())
-				data.md.writeBlock(path);
+			if (!new File(file).exists())//overwrite or append, save active metadata
+				data.md.write(path);
 			else
 			{
-				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveBlockOnly();
+				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveMetadataOnly();
 				if (overwrite)
-					data.md.write(path);
+					data.md.write(path);//overwrite with active block only, other blocks were dismissed
 				else
-					data.md.writeBlock(path);
+					data.md.writeBlock(path);//either if save active block or all, save active, other blocks where already managed
 
 			}
 
@@ -1848,13 +1848,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			MetaData frommd;
 			frommd = new MetaData();
 			if (dlgSave.isOverwrite())
-				new MetaData().write(blockto);// overwrite file with some block
+				new File(to).delete();
 			for (String blockit : data.mdBlocks)
 			{
-				if (blockit.equals(getBlock()))
-					continue;
 				frommd.read(blockit + "@" + from);
-				frommd.writeBlock(blockit + "@" + to);
+				if(blockit.equals(getBlock()))
+					frommd.writeBlock(blockto);//might save active metadata with other name, updated later
+				else
+					frommd.writeBlock(blockit + "@" + to);
 			}
 		}
 		saveMd(blockto);
@@ -1883,7 +1884,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 												// save or cancel clicked
 		if (save)
 		{
-			if (dlgSave.saveActiveBlockOnly())
+			if (dlgSave.saveActiveMetadataOnly())
 				saveMd();
 			else
 				saveAll();
