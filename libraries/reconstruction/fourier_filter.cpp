@@ -430,8 +430,6 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
         MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
         maskFourierd.initZeros(Fourier);
-        maskFourierd.setXmippOrigin();
-
         w.resizeNoCopy(3);
         for (int k=0; k<ZSIZE(Fourier); k++)
         {
