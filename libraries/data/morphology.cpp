@@ -464,9 +464,9 @@ void dilate3D(const MultidimArray<double> &in,
 {
     out.initZeros(in);
     double maxval=in.computeMax();
-    for (int kk=0; kk<ZSIZE(out); kk++)
-        for (int ii=0; ii<YSIZE(out); ii++)
-            for (int jj=0; jj<XSIZE(out); jj++)
+    for (size_t kk=0; kk<ZSIZE(out); kk++)
+        for (size_t ii=0; ii<YSIZE(out); ii++)
+            for (size_t jj=0; jj<XSIZE(out); jj++)
             {
                 double maxLocal=DIRECT_A3D_ELEM(in,kk,ii,jj)+
                     A3D_ELEM(structuringElement,0,0,0);
@@ -495,9 +495,9 @@ void erode3D(const MultidimArray<double> &in,
 {
     out.initZeros(in);
     double minval=in.computeMin();
-    for (int kk=0; kk<ZSIZE(out); kk++)
-        for (int ii=0; ii<YSIZE(out); ii++)
-            for (int jj=0; jj<XSIZE(out); jj++)
+    for (size_t kk=0; kk<ZSIZE(out); kk++)
+        for (size_t ii=0; ii<YSIZE(out); ii++)
+            for (size_t jj=0; jj<XSIZE(out); jj++)
             {
                 double minLocal=DIRECT_A3D_ELEM(in,kk,ii,jj)-
                     A3D_ELEM(structuringElement,0,0,0);
