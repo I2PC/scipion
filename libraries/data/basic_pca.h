@@ -121,7 +121,7 @@ public:
     void standardarizeVariables();
 
     /// Learn basis
-    void learnPCABasis(int NPCA, int Niter);
+    void learnPCABasis(size_t NPCA, size_t Niter);
 
     /// Project on basis
     void projectOnPCABasis(Matrix2D<double> &CtY);
