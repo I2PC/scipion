@@ -729,6 +729,7 @@ data_
                     xplotter.showLegend(legendName)
                 if (self.ResolutionThreshold < max(frc)):
                     a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
+                    a.grid(True)
             xplotter.draw()
     
         if xplotter:
