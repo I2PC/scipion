@@ -54,7 +54,7 @@ public:
     /** Constructor, it will create the Sqlite db. */
     ProgramDb(const FileName &dbName);
     /** Destructor */
-    virtual ~ProgramDB() {}
+    virtual ~ProgramDb() {}
     /** Begin and end transaction */
     bool execStmt(const String &stmt, const String &error="");
     bool beginTrans();
