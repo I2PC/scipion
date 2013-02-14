@@ -1039,6 +1039,9 @@ class MDValueGenerator
 {
 public:
     MDLabel label; //label to which generate values
+    
+    /* Destructor*/
+    virtual ~MDValueGenerator() {}
 
     /* Method to be implemented in concrete generators */
     virtual void fillValue(MetaData &md, size_t objId) = 0;

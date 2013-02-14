@@ -101,8 +101,8 @@ inline size_t fact(int num)
 
 inline double binom(int n, int k)
 {
-    size_t factor=1;
-    for (size_t i = n; i > (n-k); --i)
+    int factor=1;
+    for (int i = n; i > (n-k); --i)
         factor *= i;
     return double(factor)/double(fact(k));
 }
