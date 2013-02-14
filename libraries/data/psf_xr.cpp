@@ -111,9 +111,9 @@ void XRayPSF::read(const FileName &fn, bool readVolume)
             std::vector<double> dimV;
             if (!MD.getValue(MDL_CTF_DIMENSIONS,dimV, id))
                 REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_DIMENSIONS) + " argument not present.");
-            Nox = dimV[0];
-            Noy = dimV[1];
-            Noz = dimV[2];
+            Nox = (int)dimV[0];
+            Noy = (int)dimV[1];
+            Noz = (int)dimV[2];
         }
         String typeS;
         if (!MD.getValue(MDL_CTF_XRAY_LENS_TYPE, typeS, id))
@@ -164,7 +164,7 @@ void XRayPSF::read(const FileName &fn, bool readVolume)
                 dzoPSF = dxoPSF;
             DeltaZo = textToFloat(getParameter(fh_param, "z_axis_shift", 0, "0")) *1e-6;
 
-            Nox = textToFloat(getParameter(fh_param, "x_dim", 0, "0"));
+            Nox = textToInteger(getParameter(fh_param, "x_dim", 0, "0"));
 
         }
         catch (XmippError &XE)
@@ -305,9 +305,9 @@ void XRayPSF::calculateParams(double _dxo, double _dzo, double threshold)
 
         MultidimArray<double> &mdaPsfVol = psfVol();
 
-        mdaPsfVol.resize(1, Noz/scaleFactorZ,
-                         Noy/scaleFactor,
-                         Nox/scaleFactor, false);
+        mdaPsfVol.resize(1, (size_t)(Noz/scaleFactorZ),
+                         (size_t)(Noy/scaleFactor),
+                         (size_t)(Nox/scaleFactor), false);
 
         mdaPsfVol.setXmippOrigin();
 
@@ -807,12 +807,12 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 
     double K = (-PI / (lambda * Flens));
 
-    for (int i=0; i < YSIZE(Im); ++i)
+    for (size_t i=0; i < YSIZE(Im); ++i)
     {
         y = (double) i * dy + (dy - Ly0) * 0.5;
         double y2 =  y * y;
 
-        for (int j=0; j < XSIZE(Im); ++j)
+        for (size_t j=0; j < XSIZE(Im); ++j)
         {
             /// For indices in standard fashion
             x = (double) j * dx + (dx - Lx0) *0.5;
