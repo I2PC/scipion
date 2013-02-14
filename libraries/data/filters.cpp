@@ -793,7 +793,7 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
     mom0(0) = hist(0);
     hist.index2val(0, x);
     mom1(0) = hist(0) * x;
-    for (int i = 1; i < XSIZE(mom0); i++)
+    for (size_t i = 1; i < XSIZE(mom0); i++)
     {
         mom0(i) = mom0(i - 1) + hist(i);
         hist.index2val(i, x);
@@ -805,12 +805,12 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
     MultidimArray<double> h1, h2;
     h1.initZeros(XSIZE(hist));
     h2.initZeros(XSIZE(hist));
-    for (int i = 0; i < XSIZE(hist); i++)
+    for (size_t i = 0; i < XSIZE(hist); i++)
     {
         // Entropy h1
         double w1 = mom0(i);
         if (w1 > epsilon)
-            for (int ii = 0; ii <= i; ii++)
+            for (size_t ii = 0; ii <= i; ii++)
                 if (hist(ii) > epsilon)
                 {
                     double aux = hist(ii) / w1;
@@ -820,7 +820,7 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
         // Entropy h2
         double w2 = 1 - mom0(i);
         if (w2 > epsilon)
-            for (int ii = i + 1; ii < XSIZE(hist); ii++)
+            for (size_t ii = i + 1; ii < XSIZE(hist); ii++)
                 if (hist(ii) > epsilon)
                 {
                     double aux = hist(ii) / w2;

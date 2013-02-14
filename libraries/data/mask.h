@@ -430,7 +430,10 @@ public:
     /** Blob parameters
      * For blob_circular and blob_crown masks.
      */
-    double blob_order, blob_radius, blob_alpha;
+    int blob_order;
+    
+    /** Blob parameters */
+    double blob_radius, blob_alpha;
 
     /** Height
      * Height for cylinders.
