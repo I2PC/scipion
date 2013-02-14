@@ -225,7 +225,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			importffmi.setEnabled(false);
 		filemn.add(exportmi);
 		JMenu windowmn = new JMenu("Window");
-		JMenu helpmn = new JMenu("Help");
+		
 		mb.add(filemn);
 		mb.add(filtersmn);
 		mb.add(windowmn);
@@ -240,7 +240,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
 
-		helpmn.add(hcontentsmi);
+		
 
 		// Setting menu item listeners
 
