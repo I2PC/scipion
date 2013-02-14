@@ -49,6 +49,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -162,7 +167,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private JToolBar toolBar;
 	private int width = -1;
 	private JButton reslicebt;
-	private String[] reslices = new String[] { "Z Negative (Front)", "Y Negative (Top)", "X Negative (Left)", "Y Positive (Bottom)", "X Positive (Right)" };;
+	private String[] reslices = new String[] { "Z Negative (Front)", "Y Negative (Top)", "X Negative (Left)", "Y Positive (Bottom)",
+			"X Positive (Right)" };;
 
 	protected static final float MAX_HEIGHT_RATE = 2.0f / 3.0f;
 	// this rate is width/height
@@ -1389,7 +1395,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	class GalleryMenu extends XmippMenuBarCreator
 	{
 
-		
+		private QuickHelpJDialog quickhelpdlg;
 
 		@Override
 		protected void createItems() throws Exception
@@ -1438,6 +1444,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
+			addItem(KEY_ASSIST, "Key Assist...");
 		}// function createItems
 
 		public void update()
@@ -1633,6 +1640,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				else if (cmd.equals(HELP_ONLINE))
 				{
 					XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome");
+				}
+				else if (cmd.equals(KEY_ASSIST))
+				{
+						if (quickhelpdlg == null)
+							quickhelpdlg = new QuickHelpJDialog(GalleryJFrame.this, false, "Key Assist", getKeyAssist());
+						quickhelpdlg.setVisible(true);
+					
 				}
 
 			}
@@ -2002,17 +2016,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		final JPopupMenu popup = new JPopupMenu();
 		JRadioButtonMenuItem mi;
 		reslicegroup = new ButtonGroup();
-		for (int i = 0; i < reslices.length; i ++)
+		for (int i = 0; i < reslices.length; i++)
 		{
 			reslice = reslices[i];
 			mi = new JRadioButtonMenuItem(reslice);
 			reslicegroup.add(mi);
-			if(i == 0)
+			if (i == 0)
 				reslicegroup.setSelected(mi.getModel(), true);
 			mi.setActionCommand(String.valueOf(ImageGeneric.VIEWS[i]));
 			popup.add(mi);
 			mi.addActionListener(new ResliceActionListener());
-			
+
 		}
 		reslicebt = new JButton(XmippResource.getIcon("topview.png"));
 		reslicebt.setToolTipText("Reslice");
@@ -2029,19 +2043,26 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		});
 
 	}
-	
+
 	class ResliceActionListener implements ActionListener
 	{
 
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
+			JRadioButtonMenuItem mi = (JRadioButtonMenuItem) e.getSource();
 			int view = Integer.parseInt(mi.getActionCommand());
 			setResliceView(view);
 			reslicegroup.setSelected(mi.getModel(), true);
 		}
-		
+
+	}
+
+	public Map<String, String> getKeyAssist()
+	{
+		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+
+		return map;
 	}
 
 	
