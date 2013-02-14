@@ -6,7 +6,6 @@ package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.ImageWindow;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
@@ -23,7 +22,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.Collections;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
