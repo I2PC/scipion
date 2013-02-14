@@ -51,29 +51,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	 * point. Sets dragged if onpick
 	 */
 
-	public void mousePressed(int x, int y)
-	{
-		setupScroll(x, y);
-	}
-
-	/**
-	 * Updates particle position and repaints. Sets dragged to null at the end
-	 */
-	public void mouseReleased(MouseEvent e)
-	{
-		super.mouseReleased(e);
-		if (reload)
-			um.initAligner();
-		reload = false;
-	}
-
-	/**
-	 * Updates particle position and repaints if onpick.
-	 */
-	public void mouseDragged(int x, int y)
-	{
-		scroll(x, y);
-	}
+	
 
 	public void mouseWheelMoved(int x, int y, int rotation)
 	{
@@ -160,6 +138,21 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	}
 	
+	public void mousePressed(int x, int y)
+	{
+		setupScroll(x, y);
+	}
+
+	
+
+	/**
+	 * Updates particle position and repaints if onpick.
+	 */
+	public void mouseDragged(int x, int y)
+	{
+		scroll(x, y);
+	}
+	
 	
 
 	@Override
@@ -174,14 +167,21 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 		if (active != null && um.fits(x, y, frame.getParticleSize()))
 		{
+			setActiveMoved(true);
 			moveActiveParticle(x, y);
-			if (active.getUntiltedParticle().isAdded())
-				reload = true;
+			
 		}
 		frame.setChanged(true);
 		repaint();
 	}
 
+	public void mouseReleased(MouseEvent e)
+	{
+		super.mouseReleased(e);
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+		manageActive(x, y);
+	}
 
 
 	@Override
@@ -206,6 +206,16 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	public TrainingParticle getActive()
 	{
 		return active;
+	}
+
+	@Override
+	protected void manageActive(int x, int y)
+	{
+		if(!activemoved)
+			return;
+		if (active.getUntiltedParticle().isAdded())
+			um.initAligner();
+		setActiveMoved(false);
 	}
 	
 

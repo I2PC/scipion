@@ -26,6 +26,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	protected ImageWindow iw;
 
+	protected boolean activemoved;
+
 	private static boolean tongleSetSelected = false;
 
 	public ParticlePickerCanvas(ImagePlus imp)
@@ -54,13 +56,25 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 				int step = 1;
 				int code = e.getKeyCode();
 				if (code == KeyEvent.VK_UP)
-					moveActiveParticle(active.getX(), active.getY() - step);
+				{
+					setActiveMoved(true);
+					manageActive(active.getX(), active.getY() - step);
+				}
 				else if (code == KeyEvent.VK_DOWN)
-					moveActiveParticle(active.getX(), active.getY() + step);
+				{
+					setActiveMoved(true);
+					manageActive(active.getX(), active.getY() + step);
+				}
 				else if (code == KeyEvent.VK_LEFT)
-					moveActiveParticle(active.getX() - step, active.getY());
+				{
+					setActiveMoved(true);
+					manageActive(active.getX() - step, active.getY());
+				}
 				else if (code == KeyEvent.VK_RIGHT)
-					moveActiveParticle(active.getX() + step, active.getY());
+				{
+					setActiveMoved(true);
+					manageActive(active.getX() + step, active.getY());
+				}
 				else if (code == KeyEvent.VK_SPACE)
 				{
 					getFrame().circlechb.setSelected(tongleSetSelected);
@@ -100,6 +114,14 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		// public void mouseDragged(MouseEvent e) {
 		// }
 		// });
+	}
+
+	protected abstract void manageActive(int x, int y);
+
+	protected void setActiveMoved(boolean b)
+	{
+		activemoved = b;
+		
 	}
 
 	protected void refresh()

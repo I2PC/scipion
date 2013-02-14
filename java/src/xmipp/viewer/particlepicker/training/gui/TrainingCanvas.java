@@ -32,7 +32,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
-	private boolean activemoved;
 	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	final static BasicStroke continuousst = new BasicStroke();
 	final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
@@ -125,6 +124,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			}
 			else
 			{
+				setActiveMoved(true);
 				moveActiveParticle(x, y);
 			}
 			frame.setChanged(true);
@@ -156,7 +156,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			if (activemoved)
 			{
 				frame.updateTemplates();
-				activemoved = false;
+				setActiveMoved(false);
 			}
 
 		}
@@ -164,12 +164,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	
 	public void manageActive(int x, int y)
 	{
-		if (active == null)
+		if (!activemoved)
 			return;
 
 		if (!micrograph.fits(x, y, active.getFamily().getSize()))
 			return;
-		activemoved = true;
+		
 		if (active instanceof AutomaticParticle && !((AutomaticParticle)active).isDeleted())
 		{
 
@@ -181,11 +181,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		else
 		{
 			moveActiveParticle(x, y);
-			
 			repaint();
 
 		}
 		frame.setChanged(true);
+		setActiveMoved(false);
 	}
 
 	
