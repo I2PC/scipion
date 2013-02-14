@@ -465,7 +465,8 @@ public abstract class TrainingPicker extends ParticlePicker
 			super.saveData();
 			saveMicrographs();
 		}
-		saveTemplates();
+		if(getMode() == FamilyState.Manual)//only changed in manual mode
+			saveTemplates();
 	}
 
 	public int getAutomaticNumber(Family f, double threshold)
