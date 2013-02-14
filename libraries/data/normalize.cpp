@@ -80,9 +80,9 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     I.setXmippOrigin();
     MultidimArray<int> mask;
     mask.initZeros(I);
-    int Xdimtilt=XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
+    int Xdimtilt=(int)XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
                            0.5*(XSIZE(I)-(2*L+1)));
-    double N=0;
+    int N=0;
     for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
         for (int j=-Xdimtilt; j<=Xdimtilt;j++)
         {
@@ -259,7 +259,7 @@ void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask)
     // Only 2D ramps implemented
     I.checkDimension(2);
 
-    int Npoints=bg_mask.sum();
+    int Npoints=(int)bg_mask.sum();
     if (Npoints<=1)
         return;
     FitPoint *allpoints=new FitPoint[Npoints];
@@ -322,7 +322,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     I.checkDimension(2);
 
     // Fit a least squares plane through the background pixels
-    int Npoints=bg_mask.sum();
+    int Npoints=(int)bg_mask.sum();
     FitPoint *allpoints=new FitPoint[Npoints];
     I.setXmippOrigin();
 
@@ -721,7 +721,7 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
         selfApplyGeometry(BSPLINE3, tmp, A, IS_NOT_INV, DONT_WRAP, outside);
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(bg_mask)
-        dAi(bg_mask,n)=round(dAi(tmp,n));
+        dAi(bg_mask,n)=(int)round(dAi(tmp,n));
     }
 
     double a, b;

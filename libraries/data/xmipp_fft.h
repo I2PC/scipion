@@ -154,7 +154,7 @@ void Whole2Half(const MultidimArray< std::complex < double > > & in,
  */
 void Half2Whole(const MultidimArray< std::complex < double > > & in,
                 MultidimArray< std::complex< double > > & out,
-                int oridim);
+                size_t oridim);
 
 /** Conversion from complex -> real,imag
  */

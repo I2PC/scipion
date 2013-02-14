@@ -2776,7 +2776,7 @@ public:
         // Logical to physical
         x -= STARTINGX(*this);
 
-        int l1 = ceil(x - SplineDegree_1);
+        int l1 = (int)ceil(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
         int Xdim=(int)XSIZE(*this);
         double sum = 0.0;
