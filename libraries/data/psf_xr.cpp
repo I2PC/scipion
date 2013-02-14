@@ -695,8 +695,8 @@ void XRayPSF::adjustParam()
 
                 if (dxi>dxiMax) /// Lens Radius in pixels higher than image
                 {
-                    Nix = ceil(Nox * dxi/dxiMax);
-                    Niy = ceil(Noy * dxi/dxiMax);
+                    Nix = (size_t)ceil(Nox * dxi/dxiMax);
+                    Niy = (size_t)ceil(Noy * dxi/dxiMax);
 
                     dxi *= Nox/Nix;
 
@@ -710,32 +710,32 @@ void XRayPSF::adjustParam()
                 {
                     if (dxi < pupileSizeMin/Nox * dxiMax)
                     {
-                        Nix = ceil(pupileSizeMin * dxiMax/dxi);
+                        Nix = (size_t)ceil(pupileSizeMin * dxiMax/dxi);
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (dxi < pupileSizeMin/Noy * dxiMax)
                     {
-                        Niy = ceil(pupileSizeMin * dxiMax/dxi);
+                        Niy = (size_t)ceil(pupileSizeMin * dxiMax/dxi);
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (DeltaZo + Noz/2*dzo > deltaZMaxX)
                     {
-                        Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
+                        Nix = std::max(Nix,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (DeltaZo - Noz/2*dzo < deltaZMinX)
                     {
-                        Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
+                        Nix = std::max(Nix,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                     if (DeltaZo + Noz/2*dzo > deltaZMaxY)
                     {
-                        Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
+                        Niy = std::max(Niy,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                     if ( DeltaZo - Noz/2*dzo < deltaZMinY)
                     {
-                        Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
+                        Niy = std::max(Niy,(size_t)ceil(Zi*Rlens*2*fabs(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
                         AdjustType = PSFXR_ZPAD;
                     }
                 }
@@ -765,11 +765,11 @@ void XRayPSF::adjustParam()
                 double auxY = dyl*(1 - Niy);
                 double auxX = dxl*(1 - Nix);
 
-                for (int i=0; i<YSIZE(*mask); i++)
+                for (size_t i=0; i<YSIZE(*mask); i++)
                 {
                     double y = (double) i * dyl + auxY * 0.5;
                     double y2 = y * y;
-                    for (int j=0; j<XSIZE(*mask); j++)// Circular mask
+                    for (size_t j=0; j<XSIZE(*mask); j++)// Circular mask
                     {
                         /// For indices in standard fashion
                         double x = (double) j * dxl + auxX * 0.5;
