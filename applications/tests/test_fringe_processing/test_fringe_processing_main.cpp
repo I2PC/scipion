@@ -49,8 +49,8 @@ protected:
 
 TEST_F( FringeProcessingTests, simulPattern)
 {
-    int nx = 311;
-    int ny = 312;
+    size_t nx = 311;
+    size_t ny = 312;
     double noiseLevel = 0.0;
     double freq = 20;
     Matrix1D<int> coefs(10);
