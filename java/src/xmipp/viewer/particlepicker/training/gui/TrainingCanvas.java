@@ -11,6 +11,8 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.SwingUtilities;
+
+import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
@@ -49,7 +51,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	public void updateMicrograph()
 	{
 		this.micrograph = frame.getMicrograph();
-		updateMicrographData();
+		updateMicrograph();
 		if(!frame.getFamilyData().getParticles().isEmpty())
 			refreshActive(getLastParticle());
 		else
@@ -70,6 +72,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		int y = super.offScreenY(e.getY());
 		if (frame.isPickingAvailable(e))
 		{
+			if (frame.isEraserMode())
+			{
+				erase(x, y);
+				return;
+			}
+
 
 			TrainingParticle p = micrograph.getParticle(x, y);
 			if (p == null)
@@ -91,6 +99,13 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		}
 	}
 
+	protected void erase(int x, int y)
+	{
+		micrograph.removeParticles(x, y, ppicker);
+		active = getLastParticle();
+		refresh();
+	}
+	
 	/**
 	 * Updates particle position and repaints if onpick.
 	 */
@@ -104,6 +119,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 		if (frame.isPickingAvailable(e))
 		{
+			if (frame.isEraserMode())
+			{
+				erase(x, y);
+				return;
+			}
 			if (active == null)
 				return;
 
@@ -224,11 +244,14 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	@Override
 	public void refreshActive(TrainingParticle p)
 	{
-		active = p;
+		if (p == null)
+			active = null;
+		else
+			active = (TrainingParticle) p;
 		repaint();
 
 	}
-
+	
 	@Override
 	public ParticlePickerJFrame getFrame()
 	{
@@ -247,6 +270,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		return active;
 	}
 
-	
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		micrograph = (TrainingMicrograph) m;
+
+	}
 
 }

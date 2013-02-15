@@ -83,7 +83,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 	public void updateMicrograph()
 	{
 		this.um = frame.getMicrograph();
-		updateMicrographData();
+		updateMicrograph();
 		if (!um.getParticles().isEmpty())
 			refreshActive(um.getParticles().get(um.getParticles().size() - 1));
 		else
@@ -107,14 +107,14 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			frame.getTiltedCanvas().mousePressed(x, y);
 		else if (frame.isPickingAvailable(e))
 		{
-			// if (frame.isEraserMode())
-			// {
-			// um.removeParticles(x, y);
-			// active = getLastParticle();
-			// refresh();
-			//
-			// return;
-			// }
+			 if (frame.isEraserMode())
+			 {
+			 um.removeParticles(x, y);
+			 active = getLastParticle();
+			 refresh();
+			
+			 return;
+			 }
 			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
 				um.addParticleToAligner(active, true);
 			UntiltedParticle p = um.getParticle(x, y, (int) (frame.getParticleSize()));
@@ -209,18 +209,10 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
 	}
 
-	public void paint(Graphics g)
+
+	@Override
+	protected void doCustomPaint(Graphics2D g2)
 	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
 		g2.setColor(frame.getColor());
 		int index = 0;
 
@@ -235,9 +227,18 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			drawShape(g2, active, true);
 		}
 		if (frame.drawAngles())
-			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);
-		g.drawImage(offscreen, 0, 0, this);
+			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);// TODO
+																// Auto-generated
+																// method stub
+
 	}
+
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		um = (UntiltedMicrograph)m;
+	}
+	
 
 	private void addParticle(int x, int y)
 	{

@@ -296,7 +296,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		helpmn.add(hcontentsmi);
-		
+
 		keyassistmi = new JMenuItem("Key Assist...");
 		keyassistmi.addActionListener(new ActionListener()
 		{
@@ -313,7 +313,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		helpmn.add(keyassistmi);
-		
+
 		pmi = new JMenuItem("Particles", XmippResource.getIcon("table_view.gif"));
 		pmi.addActionListener(new ActionListener()
 		{
@@ -376,7 +376,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Invert LUT", true, picker);
 	}
 
-	
 	protected abstract void openHelpURl();
 
 	protected abstract void resetMicrograph();
@@ -573,15 +572,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
-		// eraserbt = new JToggleButton("Eraser",
-		// XmippResource.getIcon("clean.gif"));
-		// eraserbt.setFocusable(false);
+		eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
 
 		JToolBar tb = new JToolBar();
 
 		tb.setFloatable(false);
 		tb.add(usezoombt);
-		// tb.add(eraserbt);
+		tb.add(eraserbt);
 		// usezoombt.setBorderPainted(false);
 		paintpn.add(tb);
 
@@ -628,10 +625,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return Double.parseDouble(usezoombt.getText());
 	}
 
-	 public boolean isEraserMode()
-	 {
-	 return eraserbt.isSelected();
-	 }
+	public boolean isEraserMode()
+	{
+		return eraserbt.isSelected();
+	}
 
 	protected void displayZoom()
 	{
@@ -786,7 +783,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			importpjd = new ImportParticlesJDialog(ParticlePickerJFrame.this);
 		importpjd.showDialog();
 	}
-	
+
 	public Map<String, String> getKeyAssist()
 	{
 		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
@@ -803,6 +800,5 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		map.put("Down", "Moves selected particle down");
 		return map;
 	}
-
 
 }

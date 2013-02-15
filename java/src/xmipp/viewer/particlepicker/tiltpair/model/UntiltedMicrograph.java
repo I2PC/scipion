@@ -150,5 +150,15 @@ public class UntiltedMicrograph extends Micrograph
 	{
 		return alignmentmin ;
 	}
+	
+	public void removeParticles(int x, int y)
+	{
+		List<UntiltedParticle> particles = new ArrayList<UntiltedParticle>();
+		for(UntiltedParticle p: getParticles())
+			if (p.contains(x, y, p.getFamily().getSize())) 
+				particles.add(p);
+		for(UntiltedParticle p: particles)
+			removeParticle(p);
+	}
 
 }
