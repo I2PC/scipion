@@ -149,6 +149,72 @@ bool isLocalMaxima(MultidimArray<double> &inputArray, int x, int y)
         return false;
 }
 
+void * autoPickThread(void * args)
+{
+    AutoPickThreadParams *prm=(AutoPickThreadParams *) args;
+    double label, score;
+    int idThread = prm->idThread;
+    int Nthreads=prm->Nthreads;
+    int num_correlation=prm->autoPicking->num_correlation;
+    int NangSteps=prm->autoPicking->NangSteps;
+    int NRsteps=prm->autoPicking->NRsteps;
+    int procprec=prm->autoPicking->proc_prec;
+    double scaleRate=prm->autoPicking->scaleRate;
+    bool use2Classifier=prm->use2Classifier;
+    Particle2 p;
+    MultidimArray<double> IpolarCorr;
+    MultidimArray<double> featVec;
+    MultidimArray<double> pieceImage;
+    MultidimArray<double> staticVec, dilatedVec;
+    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
+    int num=prm->positionArray.size()*(procprec/100.0);
+    for (int k=0;k<num;k++)
+    {
+        if (k%Nthreads==idThread)
+        {
+            int j=prm->positionArray[k].x;
+            int i=prm->positionArray[k].y;
+            prm->autoPicking->buildInvariant(IpolarCorr,j,i);
+            prm->autoPicking->extractParticle(j,i,prm->autoPicking->microImage(),pieceImage,false);
+            pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
+            prm->autoPicking->extractStatics(pieceImage,staticVec);
+            prm->autoPicking->buildVector(IpolarCorr,staticVec,featVec,pieceImage);
+            double max=featVec.computeMax();
+            double min=featVec.computeMin();
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
+            {
+                DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
+            }
+            label= prm->autoPicking->classifier.predict(featVec, score);
+            if (label==1)
+            {
+                if (use2Classifier==true)
+                {
+                    label=prm->autoPicking->classifier2.predict(featVec,score);
+                    if (label==1)
+                    {
+                        p.x=j;
+                        p.y=i;
+                        p.status=1;
+                        p.cost=score;
+                        p.vec=featVec;
+                        prm->autoPicking->auto_candidates.push_back(p);
+                    }
+                }
+                else
+                {
+                    p.x=j;
+                    p.y=i;
+                    p.status=1;
+                    p.cost=score;
+                    p.vec=featVec;
+                    prm->autoPicking->auto_candidates.push_back(p);
+                }
+            }
+        }
+    }
+}
+
 void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
         MultidimArray<double> &IpolarCorr)
 {
@@ -306,76 +372,33 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
     }
 }
 
-int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool fast)
+int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool fast,int Nthreads)
 {
 
     double label, score;
     Particle2 p;
-    MultidimArray<double> IpolarCorr;
-    MultidimArray<double> featVec;
-    MultidimArray<double> pieceImage;
-    MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
-    IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    // Obtain the positions in micrograph where there maybe particles
+
     buildSearchSpace(positionArray,fast);
-#ifdef DEBUG_AUTO
-
-    std::ofstream fh_training;
-    fh_training.open("particles_cord1.txt");
-#endif
-
-    int num=positionArray.size()*(proc_prec/100.0);
-    for (int k=0;k<num;k++)
+    pthread_t * th_ids = new pthread_t[Nthreads];
+    AutoPickThreadParams * th_args =
+        new AutoPickThreadParams[Nthreads];
+    for (int nt=0;nt<Nthreads;nt++)
     {
-        int j=positionArray[k].x;
-        int i=positionArray[k].y;
-#ifdef DEBUG_AUTO
-
-        fh_training << j * (1.0 / scaleRate) << " " << i * (1.0 / scaleRate)
-        << " " << positionArray[k].cost << std::endl;
-#endif
-
-        buildInvariant(IpolarCorr,j,i);
-        extractParticle(j,i,microImage(),pieceImage,false);
-        pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
-        extractStatics(pieceImage,staticVec);
-        buildVector(IpolarCorr,staticVec,featVec,pieceImage);
-        // Normalizing the feature vector according to the max and mean of the vector
-        double max=featVec.computeMax();
-        double min=featVec.computeMin();
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
-        {
-            DIRECT_A1D_ELEM(featVec,i)=0+((1)*((DIRECT_A1D_ELEM(featVec,i)-min)/(max-min)));
-        }
-        label=classifier.predict(featVec, score);
-        if (label==1)
-        {
-            // If it is a particle check if it is not a false positive
-            if (use2Classifier==true)
-            {
-                label=classifier2.predict(featVec,score);
-                if (label==1)
-                {
-                    p.x=j;
-                    p.y=i;
-                    p.status=1;
-                    p.cost=score;
-                    p.vec=featVec;
-                    auto_candidates.push_back(p);
-                }
-            }
-            else
-            {
-                p.x=j;
-                p.y=i;
-                p.status=1;
-                p.cost=score;
-                p.vec=featVec;
-                auto_candidates.push_back(p);
-            }
-        }
+        th_args[nt].autoPicking=this;
+        th_args[nt].positionArray=positionArray;
+        th_args[nt].idThread=nt;
+        th_args[nt].use2Classifier=use2Classifier;
+        th_args[nt].Nthreads=Nthreads;
+        pthread_create(&th_ids[nt],NULL,autoPickThread,
+                       &th_args[nt]);
     }
+
+    for (int nt=0;nt<Nthreads;nt++)
+        pthread_join(th_ids[nt],NULL);
+
+    if (auto_candidates.size() == 0)
+    	return 0;
     // Remove the occluded particles
     for (size_t i=0;i<auto_candidates.size();++i)
         for (size_t j=0;j<auto_candidates.size()-i-1;j++)
@@ -426,6 +449,7 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
     ArrayDim aDim;
     int yDataSet=YSIZE(dataSet);
 
+    if (!fn_Invariant.exists()) return;
     positiveInvariant.read(fn_Invariant,HEADER);
     positiveInvariant.getDimensions(aDim);
     int steps=aDim.ndim/num_correlation;
@@ -1222,12 +1246,13 @@ void ProgMicrographAutomaticPicking2::run()
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            autoPicking->automaticallySelectParticles(true,fast);
+            autoPicking->automaticallySelectParticles(true,fast,Nthreads);
         }
         else
-            autoPicking->automaticallySelectParticles(false,fast);
+            autoPicking->automaticallySelectParticles(false,fast,Nthreads);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
+        	if (autoPicking->auto_candidates.size()!=0)
             autoPicking->saveAutoVectors(fnAutoVectors);
     }
     if (mode=="train")

@@ -90,10 +90,10 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer4.clear();
 
-    int sign = -1;
+    int sign = 1;//;-1;
     int numNorm = 3;
     int numDescriptors0=numNorm;
-    int numDescriptors1=100;
+    int numDescriptors1;//=100;
     int numDescriptors2=4;
     int numDescriptors3=11;
     int numDescriptors4 = 10;
@@ -148,7 +148,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     center.initZeros();
 
     v0.initZeros(numDescriptors0);
-    v1.initZeros(numDescriptors1);
     v2.initZeros(numDescriptors2);
     v3.initZeros(numDescriptors3);
     v4.initZeros(numDescriptors4);
@@ -165,7 +164,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     }
 
     Image<double> img;
-    FourierTransformer transformer(FFTW_BACKWARD), transformer2(FFTW_BACKWARD);
+    FourierTransformer transformer(FFTW_BACKWARD);
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -185,9 +184,12 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mI.setXmippOrigin();
             mI.statisticsAdjust(0,1);
             mask.setXmippOrigin();
+            //The size of v1 depends on the image size and must be declared here
+            numDescriptors1 = XSIZE(mI)/2;
+            v1.initZeros(numDescriptors1);
 
             double var = 1;
-            normalize(transformer,transformer2,mI,tempI,modI,0,var,mask);
+            normalize(transformer,mI,tempI,modI,0,var,mask);
             modI.setXmippOrigin();
             tempI.setXmippOrigin();
             nI = sign*tempI*(modI*modI);
@@ -198,7 +200,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             var+=2;
             while (index < numNorm)
             {
-                normalize(transformer,transformer2,mI,tempI,modI,0,var,mask);
+                normalize(transformer,mI,tempI,modI,0,var,mask);
                 modI.setXmippOrigin();
                 tempI.setXmippOrigin();
                 nI += sign*tempI*(modI*modI);
@@ -222,6 +224,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
 
             for (int n = 0; n < numDescriptors1; ++n)
             	A1D_ELEM(v1,n)=(float)DIRECT_A1D_ELEM(radial_avg,n);
+
             tempPcaAnalyzer1.addVector(v1);
 
 #ifdef DEBUG

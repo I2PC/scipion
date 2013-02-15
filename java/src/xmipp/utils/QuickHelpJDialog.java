@@ -1,4 +1,4 @@
-package xmipp.viewer.windows;
+package xmipp.utils;
 
 
 import java.awt.Frame;
@@ -14,7 +14,6 @@ import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 
-import xmipp.utils.XmippWindowUtil;
 
 
 public class QuickHelpJDialog extends JDialog
