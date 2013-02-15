@@ -275,7 +275,7 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
     no_mats = 0;
     for (size_t i = 0; i < NN; i++)
     {
-        int count_i = count_imgs[i];
+        int count_i = (int)count_imgs[i];
         if (count_i > 0)
         {
             Euler_angles2matrix(rotList[i], -tiltList[i], 0.0, A);

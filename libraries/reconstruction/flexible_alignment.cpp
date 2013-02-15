@@ -292,7 +292,7 @@ void  ProjectionRefencePoint(Matrix1D<double>  &Parameters,
     arguments = formatString(
                     "--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
                     global_flexible_prog->fnPDB.c_str(), randStr, global_flexible_prog->fnModeList.c_str());
-    for (int i = 5; i < VEC_XSIZE(global_flexible_prog->trial) ; ++i)
+    for (size_t i = 5; i < VEC_XSIZE(global_flexible_prog->trial) ; ++i)
         arguments += floatToString(Parameters(i) * global_flexible_prog->scale_defamp) + " ";
     runSystem(program, arguments, false);
     std::cout << "304 arguments " << arguments << std::endl;
@@ -448,7 +448,7 @@ int partialpfunction(Matrix1D<double>  &Parameters,
                      int               Xwidth,
                      int               Ywidth)
 {
-    int     psi_max = (int)sqrt(3)*128/(global_flexible_prog->sampling_rate);
+    int     psi_max = (int)(sqrt(3)*128/(global_flexible_prog->sampling_rate));
     double  help, a0,a1,a2;
     double  *help_v,*coord_gaussian,*coord_img;
     double  *ModeValues;
@@ -1238,8 +1238,8 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               double tol_shift,
               double tol_defamp,
               int    *IteratingStop,
-              int    Xwidth,
-              int    Ywidth)
+              size_t Xwidth,
+              size_t Ywidth)
           {
 
 #ifndef DBL_EPSILON
@@ -1495,8 +1495,8 @@ std::cout << "1060 Parameters =" << Parameters << "*cost = "<< global_flexible_p
               Matrix1D<double>  &Parameters,
               MultidimArray<double>  &cst_P_mu_image,
               MultidimArray<double>  &P_esp_image,
-              double            Xwidth,
-              double            Ywidth)
+              size_t            Xwidth,
+              size_t            Ywidth)
           {
               int             DoDesProj, IteratingStop, FlagMaxIter;
               long            MaxIter, MaxIter1, iter;
@@ -1674,8 +1674,8 @@ std::cout << "2074" << fnDown << std::endl;
               //command=(std::string)"rm -f "+ fnDown;
               //system(command.c_str());
 
-              ModMaxdeDefamp = floor(maxdefamp/defampsampling) + 1;
-              ModpowDim      = pow(ModMaxdeDefamp,dim);
+              ModMaxdeDefamp = (int)floor(maxdefamp/defampsampling) + 1;
+              ModpowDim      = (int)pow(ModMaxdeDefamp,dim);
 
               Rz1 = (double *)malloc((size_t) 16L * sizeof(double));
               /*if (Rz1 == (double *)NULL)
@@ -1870,7 +1870,7 @@ std::cout << "2074" << fnDown << std::endl;
                                       {
                                           Parameters(j+5) = (double) (help % ModMaxdeDefamp) * defampsampling;
                                           trial(j+5) = (double) (help % ModMaxdeDefamp) * defampsampling;
-                                          help = floor(help/ModMaxdeDefamp);
+                                          help = (int)floor(help/ModMaxdeDefamp);
 
                                       }
 
