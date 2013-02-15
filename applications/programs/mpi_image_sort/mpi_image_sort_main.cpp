@@ -241,7 +241,7 @@ public:
         else
         {
             MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            bestIdx=buffer[0];
+            bestIdx=(int)buffer[0];
         }
 
         // All compute the best image

@@ -235,13 +235,13 @@ DocFile& DocFile::operator=(const Matrix2D< double >& A)
     clear();
     DocLine temp;
 
-    for (int i = 0; i <MAT_YSIZE(A); i++)
+    for (size_t i = 0; i <MAT_YSIZE(A); i++)
     {
         temp.clear();
         temp.line_type = DocLine::DATALINE;
         temp.data.resize(MAT_XSIZE(A));
 
-        for (int j = 0; j < MAT_XSIZE(A); j++)
+        for (size_t j = 0; j < MAT_XSIZE(A); j++)
             temp.data[j] = MAT_ELEM(A, i, j);
 
         m.push_back(temp);
@@ -1395,7 +1395,7 @@ Matrix1D< double > DocFile::row(int k)
     result.resize(it->data.size());
     result.setRow();
 
-    for (int i = 0; i < VEC_XSIZE(result); i++)
+    for (size_t i = 0; i < VEC_XSIZE(result); i++)
         VEC_ELEM(result, i) = it->data[i];
 
     return result;
@@ -1405,7 +1405,7 @@ void DocFile::setCol(int c, Matrix1D< double >& v)
 {
     go_first_data_line();
 
-    for (int i = 0; i <VEC_XSIZE(v); i++)
+    for (size_t i = 0; i <VEC_XSIZE(v); i++)
     {
         set(c, VEC_ELEM(v, i));
         next_data_line();

@@ -716,7 +716,7 @@ public:
         if ((imagen = (unsigned char **)imalloc(YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL)) == NULL)
             REPORT_ERROR(ERR_MEM_NOTENOUGH,"");
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
-        imagen[i+1][j+1]=IMGPIXEL(I,i,j);
+        imagen[i+1][j+1]=(unsigned char)IMGPIXEL(I,i,j);
         if (x0>=0)
             xc0=(float)x0+1; //+1 because of Fortran indexing
         else

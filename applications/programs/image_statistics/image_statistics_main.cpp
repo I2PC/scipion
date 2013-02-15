@@ -227,7 +227,7 @@ protected:
                     DIRECT_MULTIDIM_ELEM(stdArray,n) = sqrt(fabs(DIRECT_MULTIDIM_ELEM(stdArray,n)));
                 }
                 else
-                    stdArray = 0.;
+                    stdArray.initZeros();
             }
         }
 

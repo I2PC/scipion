@@ -135,7 +135,7 @@ void CL3DClass::transferUpdate()
     	double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
     	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
 		{
-    		int maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
+    		int maskVal=(int)DIRECT_MULTIDIM_ELEM(PupdateMask,n);
     		if (maskVal>0)
     		{
     			double iMask=1./maskVal;
@@ -1092,7 +1092,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     CL3DAssignment assignment, assignment1, assignment2;
     CL3DClass *firstSplitNode1 = NULL;
     CL3DClass *firstSplitNode2 = NULL;
-    size_t minAllowedSize = prm->PminSize * 0.01 * node->currentListImg.size();
+    size_t minAllowedSize = (size_t)(prm->PminSize * 0.01 * node->currentListImg.size());
 
     bool finish;
     bool success = true;
