@@ -795,7 +795,7 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
             YY(idx) = i;
             FFT_idx2digfreq(model, idx, freq);
             if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
-                mask(i,j)=global_mask(i,j);
+                mask(i,j)=(int)global_mask(i,j);
             digfreq2contfreq(freq, freq, global_prm->Tm);
 
             global_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -847,7 +847,7 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
         YY(idx) = i;
         FFT_idx2digfreq(model, idx, freq);
         if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
-            mask(i,j)=global_mask(i,j);
+            mask(i,j)=(int)global_mask(i,j);
         digfreq2contfreq(freq, freq, global_prm->Tm);
 
         global_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -1006,9 +1006,11 @@ double CTF_fitness(double *p, void *)
     const MultidimArray<double>& local_enhanced_ctf =
         global_prm->enhanced_ctftomodel();
     global_psd_exp_radial.initZeros();
-    for (int i = 0; i < YSIZE(global_w_digfreq); i +=
+    int XdimW=XSIZE(global_w_digfreq);
+    int YdimW=YSIZE(global_w_digfreq);
+    for (int i = 0; i < YdimW; i +=
              global_evaluation_reduction)
-        for (int j = 0; j < XSIZE(global_w_digfreq); j +=
+        for (int j = 0; j < XdimW; j +=
                  global_evaluation_reduction)
         {
             if (DIRECT_A2D_ELEM(global_mask, i, j) <= 0)
@@ -2192,7 +2194,7 @@ void estimate_defoci()
 
 // Estimate defoci with Zernike and SPTH transform---------------------------------------------
 void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double min_freq, double max_freq, double Tm,
-                             double kV, double lambdaPhase, double sizeWindowPhase,
+                             double kV, double lambdaPhase, int sizeWindowPhase,
                              double &defocusU, double &defocusV, double &ellipseAngle, int verbose)
 {
 	// Center enhanced PSD
@@ -2258,8 +2260,8 @@ void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double m
         {
             demodulate(centeredEnhancedPSD,lambdaPhase,sizeWindowPhase,
                           x,x,
-                          min_freq*XSIZE(centeredEnhancedPSD),
-                          fmax*XSIZE(centeredEnhancedPSD),
+                          (int)(min_freq*XSIZE(centeredEnhancedPSD)),
+                          (int)(fmax*XSIZE(centeredEnhancedPSD)),
                           phase, mod, coefs, 0);
 
             Z8=VEC_ELEM(coefs,4);

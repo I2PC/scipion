@@ -149,15 +149,15 @@ void  ProgVolumeCorrectBfactor::make_guinier_plot(MultidimArray< std::complex< d
     fit_point2D      onepoint;
 
     lnF.initZeros();
-    for (int k=0; k<ZSIZE(FT1); k++)
+    for (size_t k=0; k<ZSIZE(FT1); k++)
     {
         FFT_IDX2DIGFREQ(k,ZSIZE(FT1),ZZ(f));
         double z2=ZZ(f)*ZZ(f);
-        for (int i=0; i<YSIZE(FT1); i++)
+        for (size_t i=0; i<YSIZE(FT1); i++)
         {
             FFT_IDX2DIGFREQ(i,YSIZE(FT1),YY(f));
             double y2z2=z2+YY(f)*YY(f);
-            for (int j=0; j<XSIZE(FT1); j++)
+            for (size_t j=0; j<XSIZE(FT1); j++)
             {
                 FFT_IDX2DIGFREQ(j,xsize,XX(f));
                 double R2=y2z2+XX(f)*XX(f);
@@ -172,7 +172,7 @@ void  ProgVolumeCorrectBfactor::make_guinier_plot(MultidimArray< std::complex< d
     }
 
     guinier.clear();
-    for (int i = 0; i < XSIZE(radial_count); i++)
+    for (size_t i = 0; i < XSIZE(radial_count); i++)
     {
         double res = (xsize * sampling_rate)/(double)i;
         if (res >= apply_maxres)
