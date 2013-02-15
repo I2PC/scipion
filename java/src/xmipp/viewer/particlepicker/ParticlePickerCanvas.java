@@ -265,6 +265,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		}
 
 	}
+	
+	
 
 	protected void drawLine(double alpha, Graphics2D g2)
 	{
@@ -282,17 +284,17 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			if (Math.abs(x) > width / 2.f)// cuts in image sides
 			{
 				x1 = width;// on image
-				y1 = getYOnImage(m, width / 2.f);
+				y1 = getYCutOnImage(m, width / 2.f);
 				x2 = 0;
-				y2 = getYOnImage(m, -width / 2.f);
+				y2 = getYCutOnImage(m, -width / 2.f);
 			}
 			else
 			// cuts in image top and bottom
 			{
 				y1 = 0;
-				x1 = getXOnImage(m, height / 2.f);
+				x1 = getXCutOnImage(m, height / 2.f);
 				y2 = height;
-				x2 = getXOnImage(m, -height / 2.f);
+				x2 = getXCutOnImage(m, -height / 2.f);
 			}
 		}
 		else
@@ -307,14 +309,27 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		g2.drawLine((int) (x1 * magnification), (int) (y1 * magnification), (int) (x2 * magnification), (int) (y2 * magnification));
 		g2.setColor(ccolor);
 	}
+	
+	
+	public int getXOnImage(int x)
+	{
+		int x0 = (int) getSrcRect().getX();
+		return (int) ((x - x0) * magnification);
+	}
+	
+	public int getYOnImage(int y)
+	{
+		int y0 = (int) getSrcRect().getY();
+		return (int) ((y - y0) * magnification);
+	}
 
-	private double getYOnImage(double m, double x)
+	private double getYCutOnImage(double m, double x)
 	{
 		int height = imp.getHeight();
 		return height / 2.f - m * x;
 	}
 
-	private double getXOnImage(double m, double y)
+	private double getXCutOnImage(double m, double y)
 	{
 		int width = imp.getWidth();
 		return y / m + width / 2.f;
@@ -322,10 +337,15 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	public void updateMicrographData()
 	{
-		Micrograph m = getMicrograph();
+		Micrograph m = getFrame().getMicrograph();
+		setMicrograph(m);
 		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
 		m.runImageJFilters(getFrame().getParticlePicker().getFilters());
+		refreshActive(null);
+		
 	}
+	
+	public abstract void setMicrograph(Micrograph m);
 
 	public abstract Micrograph getMicrograph();
 

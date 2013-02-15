@@ -439,9 +439,18 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	protected abstract void reloadImage();
+	protected void reloadImage()
+	{
+		getCanvas().getMicrograph().releaseImage();
+		getCanvas().updateMicrograph();
+		getCanvas().display();
+	}
 
-	protected abstract void saveChanges();
+	protected void saveChanges()
+	{
+		getParticlePicker().saveData();
+		setChanged(false);
+	}
 
 	public int getSide(int size)
 	{
@@ -619,10 +628,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return Double.parseDouble(usezoombt.getText());
 	}
 
-	// public boolean isEraserMode()
-	// {
-	// return eraserbt.isSelected();
-	// }
+	 public boolean isEraserMode()
+	 {
+	 return eraserbt.isSelected();
+	 }
 
 	protected void displayZoom()
 	{
@@ -640,7 +649,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		}
 	}
 
-	public abstract void changeShapes();
+	public void changeShapes()
+	{
+		getCanvas().repaint();
+
+	}
 
 	public boolean isShapeSelected(Shape shape)
 	{

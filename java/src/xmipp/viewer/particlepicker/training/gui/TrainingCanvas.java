@@ -184,17 +184,8 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	
 	
 
-	public void paint(Graphics g)
+	protected void doCustomPaint(Graphics2D g2)
 	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
 		if (frame.getFamily().getStep() == FamilyState.Manual)
 			for (MicrographFamilyData mfdata : micrograph.getFamiliesData())
 				drawFamily(g2, mfdata);
@@ -203,11 +194,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		if (active != null)
 		{
 			g2.setColor(Color.red);
-			BasicStroke activest = (active instanceof AutomaticParticle)? activedst: activecst;
-			g2.setStroke(activest);
-			drawShape(g2, active, true);
+			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
+
+			drawShape(g2, active, true, activest);
 		}
-		g.drawImage(offscreen, 0, 0, this);
+
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
@@ -220,14 +211,13 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			g2.setColor(mfdata.getFamily().getColor());
 
 			for (index = 0; index < particles.size(); index++)
-				drawShape(g2, particles.get(index), index == particles.size() - 1);
-			Stroke previous = g2.getStroke();
-			g2.setStroke(dashedst);
+				drawShape(g2, particles.get(index), index == particles.size() - 1, continuousst);
+
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
-					drawShape(g2, autoparticles.get(i), false);
-			g2.setStroke(previous);
+					drawShape(g2, autoparticles.get(i), false, dashedst);
+
 		}
 	}
 
