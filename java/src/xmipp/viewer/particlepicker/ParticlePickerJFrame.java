@@ -52,6 +52,7 @@ import javax.swing.event.MenuListener;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippQuestionDialog;
@@ -60,7 +61,6 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.gui.TemplatesJDialog;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
-import xmipp.viewer.windows.QuickHelpJDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {

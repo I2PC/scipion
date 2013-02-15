@@ -1,4 +1,4 @@
-package xmipp.viewer.windows;
+package xmipp.utils;
 
 
 
@@ -27,9 +27,6 @@ import javax.swing.table.AbstractTableModel;
 
 
 
-import xmipp.utils.MultilineCellRenderer;
-import xmipp.utils.XmippMessage;
-import xmipp.utils.XmippWindowUtil;
 
 public class QuickHelpPane extends JPanel
 {
