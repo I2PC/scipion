@@ -159,7 +159,6 @@ void * autoPickThread(void * args)
     int NangSteps=prm->autoPicking->NangSteps;
     int NRsteps=prm->autoPicking->NRsteps;
     int procprec=prm->autoPicking->proc_prec;
-    double scaleRate=prm->autoPicking->scaleRate;
     bool use2Classifier=prm->use2Classifier;
     Particle2 p;
     MultidimArray<double> IpolarCorr;
@@ -167,7 +166,7 @@ void * autoPickThread(void * args)
     MultidimArray<double> pieceImage;
     MultidimArray<double> staticVec, dilatedVec;
     IpolarCorr.initZeros(num_correlation,1,NangSteps,NRsteps);
-    int num=prm->positionArray.size()*(procprec/100.0);
+    int num=(int)(prm->positionArray.size()*(procprec/100.0));
     for (int k=0;k<num;k++)
     {
         if (k%Nthreads==idThread)
@@ -213,6 +212,7 @@ void * autoPickThread(void * args)
             }
         }
     }
+    return NULL;
 }
 
 void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
@@ -374,8 +374,6 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
 
 int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool fast,int Nthreads)
 {
-
-    double label, score;
     Particle2 p;
     std::vector<Particle2> positionArray;
 
