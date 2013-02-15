@@ -73,11 +73,11 @@ void SVMClassifier::SVMTrain(MultidimArray<double> &trainSet,MultidimArray<doubl
     prob.y = new double[prob.l];
     prob.x = new svm_node *[prob.l+1];
     const char *error_msg;
-    for (int i=0;i<YSIZE(trainSet);i++)
+    for (size_t i=0;i<YSIZE(trainSet);i++)
     {
         prob.x[i]=new svm_node[XSIZE(trainSet)+1];
         int cnt = 0;
-        for (int j=0;j<XSIZE(trainSet);j++)
+        for (size_t j=0;j<XSIZE(trainSet);j++)
         {
             if (trainSet(i,j)==0)
                 continue;
@@ -108,7 +108,7 @@ double SVMClassifier::predict(MultidimArray<double> &featVec,double &score)
     double *prob_estimates=new double[nr_class];
     x_space=new svm_node[XSIZE(featVec)+1];
 
-    for (int i=0;i<XSIZE(featVec);i++)
+    for (size_t i=0;i<XSIZE(featVec);i++)
     {
         if (DIRECT_A1D_ELEM(featVec,i)==0)
             continue;
