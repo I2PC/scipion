@@ -23,6 +23,7 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
+		((XmippImageCanvas)getCanvas()).adjustMagnification();
 	}
 	
 	public XmippStackWindow(ImagePlusLoader ipl)
@@ -46,7 +47,7 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	{
 		XmippImageCanvas canvas = (XmippImageCanvas)getCanvas();
 		canvas.loadData(this);
-		
+		canvas.adjustMagnification();
 	}
 
 	public void openMaskToolbar(){

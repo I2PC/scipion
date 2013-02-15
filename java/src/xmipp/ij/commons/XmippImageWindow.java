@@ -33,7 +33,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);		
-		((XmippImageCanvas)getCanvas()).loadData(this);
+		((XmippImageCanvas)getCanvas()).adjustMagnification();
 
 
 	}
@@ -49,6 +49,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 				((XmippImageCanvas)getCanvas()).loadData(this);
+				((XmippImageCanvas)getCanvas()).adjustMagnification();
 		}
 		catch (Exception e)
 		{

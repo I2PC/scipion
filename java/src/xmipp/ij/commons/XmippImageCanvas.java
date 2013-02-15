@@ -139,13 +139,12 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		iw.updateImage(imp);
 		setMagnification(magnification);
 		setSourceRect(rect);
-		adjustMagnification();
 		repaint();
 		iw.pack();
 
 	}
 
-	private void adjustMagnification()//for micrographs will not happen
+	void adjustMagnification()//for micrographs will not happen
 	{
 		int min = 200;
 		while (getSize().getWidth() < min)
