@@ -621,13 +621,11 @@ public abstract class ParticlePicker
 				shift = family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
 				if (center)
 				{
-					System.out.println(particle);
 					particle.setX(particle.getX() + shift.getX());
 					particle.setY(particle.getY() + shift.getY());
-					System.out.println(particle);
 				}
 			}
-			particle.getFamily().getTemplates().write(particle.getFamily().getTemplatesFile());
+			family.getTemplates().write(family.getTemplatesFile());
 
 		}
 		catch (Exception e)
