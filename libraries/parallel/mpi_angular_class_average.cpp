@@ -263,7 +263,7 @@ void MpiProgAngularClassAverage::run()
                 MPI_Recv(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, MPI_ANY_SOURCE, TAG_I_FINISH_WRITTING,
                          MPI_COMM_WORLD, &status);
 
-                lockIndex = lockWeightIndexes[index_lockIndex];
+                lockIndex = (int)lockWeightIndexes[index_lockIndex];
                 //#define DEBUG_MPI
 #ifdef DEBUG_MPI
 

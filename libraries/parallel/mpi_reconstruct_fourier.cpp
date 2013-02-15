@@ -90,7 +90,7 @@ void ProgMPIRecFourier::preRun()
     }
 
     //leer sel file / dividir por mpi_job_size
-    numberOfJobs=ceil((double)SF.size()/mpi_job_size);
+    numberOfJobs=(size_t)ceil((double)SF.size()/mpi_job_size);
 
     //only one node will write in the console
     if (node->rank == 1 )
@@ -437,7 +437,7 @@ void ProgMPIRecFourier::run()
                     {
                         // Receive from other workers
 
-                        for ( int i = 0 ; i <= (nProcs-2) ; i++)
+                        for (size_t i = 0 ; i <= (nProcs-2) ; i++)
                         {
                             MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                                      *node->comm, &status);
@@ -650,7 +650,7 @@ int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalS
 {
     double * localPointer = pointer;
 
-    int numChunks = ceil((double)totalSize/(double)buffSize);
+    int numChunks =(int)ceil((double)totalSize/(double)buffSize);
     int packetSize;
     int err=0;
 
