@@ -280,7 +280,7 @@ public:
     void loadVectors(const FileName &fn);
 
     /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier,bool fast);
+    int automaticallySelectParticles(bool use2Classifier,bool fast,int Nthreads);
 
     /*
      * This method generates two different datasets. One for the
@@ -288,6 +288,15 @@ public:
      * particles and the false positives.
      */
     void generateTrainSet();
+};
+
+struct AutoPickThreadParams
+{
+	AutoParticlePicking2 *autoPicking;
+	std::vector<Particle2> positionArray;
+	bool use2Classifier;
+	int idThread;
+	int Nthreads;
 };
 
 class ProgMicrographAutomaticPicking2: public XmippProgram
