@@ -627,6 +627,7 @@ public abstract class ParticlePicker
 					System.out.println(particle);
 				}
 			}
+			particle.getFamily().getTemplates().write(particle.getFamily().getTemplatesFile());
 
 		}
 		catch (Exception e)
