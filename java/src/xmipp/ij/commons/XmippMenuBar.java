@@ -30,9 +30,9 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.vecmath.Color3f;
 
+import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
-import xmipp.viewer.windows.QuickHelpJDialog;
 
 /**
  * 
