@@ -675,7 +675,7 @@ FileName SelFile::FileExtension()
 int SelFile::MaxFileNameLength()
 {
     std::vector<SelLine>::iterator aux = current_line;
-    int max_length = 0;
+    size_t max_length = 0;
     go_first_ACTIVE();
     while (!eof())
     {

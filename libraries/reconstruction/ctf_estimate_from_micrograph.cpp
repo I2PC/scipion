@@ -707,8 +707,8 @@ void ProgCTFEstimateFromMicrograph::run()
                 posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
                 posFile.getValue(MDL_X, X, __iter.objId);
                 posFile.getValue(MDL_Y, Y, __iter.objId);
-                int idx_X = floor((double) X / pieceDim);
-                int idx_Y = floor((double) Y / pieceDim);
+                int idx_X = (int)floor((double) X / pieceDim);
+                int idx_Y = (int)floor((double) Y / pieceDim);
                 int N = idx_Y * div_NumberX + idx_X + 1;
 
                 fn_psd_piece.compose(N, fn_psd);
@@ -757,16 +757,16 @@ void threadFastEstimateEnhancedPSD(ThreadArgument &thArg)
     int pieceNumber = 0;
     int Nprocessed = 0;
     double pieceDim2 = XSIZE(piece) * XSIZE(piece);
-    for (int i = 0; i < (IYdim - YSIZE(piece)); i+=YSIZE(piece))
-        for (int j = 0; j < (IXdim - XSIZE(piece)); j+=XSIZE(piece), pieceNumber++)
+    for (size_t i = 0; i < (IYdim - YSIZE(piece)); i+=YSIZE(piece))
+        for (size_t j = 0; j < (IXdim - XSIZE(piece)); j+=XSIZE(piece), pieceNumber++)
         {
             if ((pieceNumber + 1) % Nthreads != id)
                 continue;
             Nprocessed++;
 
             // Extract micrograph piece ..........................................
-            for (int k = 0; k < YSIZE(piece); k++)
-                for (int l = 0; l < XSIZE(piece); l++)
+            for (size_t k = 0; k < YSIZE(piece); k++)
+                for (size_t l = 0; l < XSIZE(piece); l++)
                     DIRECT_A2D_ELEM(piece, k, l)= mI(i+k, j+l);
             piece.statisticsAdjust(0, 1);
             normalize_ramp(piece, pieceMask);
@@ -798,7 +798,7 @@ void fastEstimateEnhancedPSD(const FileName &fnMicrograph, double downsampling,
     size_t Xdim, Ydim, Zdim, Ndim;
     getImageSizeFromFilename(fnMicrograph, Xdim, Ydim, Zdim, Ndim);
     int minSize = 2 * (std::max(Xdim, Ydim) / 10);
-    minSize = std::min((double) std::min(Xdim, Ydim), NEXT_POWER_OF_2(minSize));
+    minSize = (int)std::min((double) std::min(Xdim, Ydim), NEXT_POWER_OF_2(minSize));
     minSize = std::min(1024, minSize);
 
     /*

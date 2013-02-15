@@ -212,7 +212,7 @@ public:
      * IO.img2over(iv, iu, v, u);
      * @endcode
      */
-    void img2over(int iv, int iu, double & v, double & u) const
+    void img2over(size_t iv, size_t iu, double & v, double & u) const
     {
         if (iu < 0 || iu > XSIZE(data))
             REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageOver::img2over: iu out of range");

@@ -252,7 +252,7 @@ void ProgIDRXrayTomo::run()
             }
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mFixedProj)
-            meanError += abs(dAi(mPrevFProj, n) - dAi(mFixedProj, n));
+            meanError += fabs(dAi(mPrevFProj, n) - dAi(mFixedProj, n));
 
             ++imgNo;
             // Update progress bar

@@ -370,9 +370,9 @@ void BasicARTParameters::readParams(XmippProgram * program)
 
     R = program->getDoubleParam("-R");
     proj_ext = program->getIntParam("--ext");
-    Xoutput_volume_size = program->getDoubleParam("--output_size", 0);
-    Youtput_volume_size = program->getDoubleParam("--output_size", 1);
-    Zoutput_volume_size = program->getDoubleParam("--output_size", 2);
+    Xoutput_volume_size = program->getIntParam("--output_size", 0);
+    Youtput_volume_size = program->getIntParam("--output_size", 1);
+    Zoutput_volume_size = program->getIntParam("--output_size", 2);
     sampling = program->getDoubleParam("--sampling_rate");
 
     // Parallel parameters

@@ -265,12 +265,12 @@ public:
 
         if (mpi_job_size != -1)
         {
-            numberOfJobs = ceil((double)(mysampling.no_redundant_sampling_points_angles.size())/mpi_job_size);
+            numberOfJobs = (int)ceil((double)(mysampling.no_redundant_sampling_points_angles.size())/mpi_job_size);
         }
         else
         {
             numberOfJobs=nProcs-1;//one node is the master
-            mpi_job_size=ceil((double)mysampling.no_redundant_sampling_points_angles.size()/numberOfJobs);
+            mpi_job_size=(int)ceil((double)mysampling.no_redundant_sampling_points_angles.size()/numberOfJobs);
         }
 
         verbose=false;
@@ -291,7 +291,7 @@ public:
         if (rank == 1)
         {
             int  numberProjections=0;
-            for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+            for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
             {
                     ++numberProjections;
             }
@@ -387,7 +387,7 @@ public:
                 size_t myCounter = 0;
                 size_t id;
 
-                for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+                for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
                     //for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
                     FOR_ALL_OBJECTS_IN_METADATA(mySFin)
                 {
@@ -473,7 +473,7 @@ public:
 #undef DEBUG
                     // Process all images
                     project_angle_vector(jobNumber*mpi_job_size,
-                                         XMIPP_MIN((jobNumber+1)* mpi_job_size -1 ,
+                                         std::min((size_t)((jobNumber+1)* mpi_job_size -1),
                                                    mysampling.no_redundant_sampling_points_angles.size()-1),
                                          verbose);
                     //get yor next task

@@ -59,7 +59,7 @@ public:
 	double fmax;
 
 	/// Maximum frequency in pixels
-	double Rmax;
+	size_t Rmax;
 
 	/// Zoom factor for polar conversion
 	double zoom;

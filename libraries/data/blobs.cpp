@@ -446,7 +446,7 @@ void * blobs2voxels_SimpleGrid( void * data )
 
     int min_separation = thread_data->min_separation;
 
-    int z_planes = (ZZ(grid->highest) - ZZ(grid->lowest) + 1);
+    int z_planes = (int)(ZZ(grid->highest) - ZZ(grid->lowest) + 1);
 
     Matrix2D<double> Dinv;                   // Inverse of D
     Matrix1D<double> act_coord(3);           // Coord: Actual position inside
@@ -564,7 +564,7 @@ void * blobs2voxels_SimpleGrid( void * data )
         // Corner of the plane defined by Z. These coordinates are in the
         // universal coord. system
         Matrix1D<double> aux( grid->lowest );
-        k = assigned_slice + ZZ( grid->lowest );
+        k = (int)(assigned_slice + ZZ( grid->lowest ));
         ZZ(aux) = k;
         grid->grid2universe(aux, beginZ);
 
@@ -931,10 +931,10 @@ void blobs2voxels(const GridVolume &vol_blobs,
     // Convert each subvolume ...............................................
     for (size_t i = 0; i < vol_blobs.VolumesNo(); i++)
     {
-        int min_distance = ceil((2*(vol_blobs.grid(i)).relative_size ) / blob.radius ) + 1;
+        int min_distance = (int)ceil((2*(vol_blobs.grid(i)).relative_size ) / blob.radius ) + 1;
 
-        slices_status = (int *)malloc(sizeof(int)*(ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1));
-        memset(slices_status,0,sizeof(int)*(ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1));
+        slices_status = (int *)malloc(sizeof(int)*(int)((ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1)));
+        memset(slices_status,0,sizeof(int)*(int)((ZZ((&(vol_blobs.grid(i)))->highest)-ZZ((&(vol_blobs.grid(i)))->lowest)+1)));
         slices_processed = 0;
 
         for( int c = 0 ; c < threads ; c++ )
@@ -1112,10 +1112,10 @@ void ART_voxels2blobs_single_step(
     // Translate actual blob volume to voxels ...............................
     for (size_t i = 0; i < vol_in.VolumesNo(); i++)
     {
-        int min_distance = ceil((2*(vol_in.grid(i)).relative_size ) / blob.radius ) + 1;
+        int min_distance = (int)ceil((2*(vol_in.grid(i)).relative_size ) / blob.radius ) + 1;
 
-        slices_status = (int *)malloc(sizeof(int)*(ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1));
-        memset(slices_status,0,sizeof(int)*(ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1));
+        slices_status = (int *)malloc(sizeof(int)*(int)((ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1)));
+        memset(slices_status,0,sizeof(int)*(int)((ZZ((&(vol_in.grid(i)))->highest)-ZZ((&(vol_in.grid(i)))->lowest)+1)));
         slices_processed = 0;
 
         for( int c = 0 ; c < threads ; c++ )
@@ -1245,8 +1245,8 @@ void ART_voxels2blobs_single_step(
     // Backprojection of correction volume ..................................
     for (size_t i = 0; i < vol_in.VolumesNo(); i++)
     {
-        slices_status = (int *)malloc(sizeof(int)*(ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1));
-        memset(slices_status,0,sizeof(int)*(ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1));
+        slices_status = (int *)malloc(sizeof(int)*(int)((ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1)));
+        memset(slices_status,0,sizeof(int)*(int)((ZZ((&(vol_out->grid(i)))->highest)-ZZ((&(vol_out->grid(i)))->lowest)+1)));
         slices_processed = 0;
 
         for( int c = 0 ; c < threads ; c++ )

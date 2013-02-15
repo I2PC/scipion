@@ -80,7 +80,7 @@ public:
     /** Docfile with results */
     MetaData DFo;
     /** dimension of the images and padded images */
-    int dim, paddim;
+    size_t dim, paddim;
     /** Padding factor (only for applying CTF to references) */
     double pad;
     /** Maximum allowed shift */

@@ -125,7 +125,7 @@ void * threadPrepareImages(void * args)
     mask.resize(Ydim, Xdim);
     mask.setXmippOrigin();
     BinaryCircularMask(mask, Xdim / 2, OUTSIDE_MASK);
-    int NInsideMask = XSIZE(mask) * YSIZE(mask) - mask.sum();
+    int NInsideMask = (int)(XSIZE(mask) * YSIZE(mask) - mask.sum());
 
     FourierFilter Filter;
     Filter.w1 = -1;
@@ -194,7 +194,7 @@ void * threadPrepareImages(void * args)
 			// Normalize each line in the Radon Transform so that the
 			// multiplication of any two lines is actually their correlation index
 			RTFourier.resize(YSIZE(RT), XSIZE(mlineiFourier));
-			for (int i = 0; i < YSIZE(RT); i++) {
+			for (size_t i = 0; i < YSIZE(RT); i++) {
 				memcpy(&(DIRECT_A1D_ELEM(linei,0)),&DIRECT_A2D_ELEM(RT,i,0),XSIZE(linei)*sizeof(double));
 				linei.statisticsAdjust(0,1);
 				transformer.FourierTransform();
@@ -277,7 +277,7 @@ void commonLineTwoImages(
 		lineFi.aliasRow(RTFi,ii);
 		linei.aliasRow(RTi,ii);
 
-		for (int jj=0; jj<YSIZE(RTFj); jj++)
+		for (size_t jj=0; jj<YSIZE(RTFj); jj++)
 		{
 			lineFj.aliasRow(RTFj,jj);
 			linej.aliasRow(RTj,jj);
@@ -446,8 +446,8 @@ void ProgCommonLine::writeResults()
 		for (int j = 1; j < Nimg; j++)
 			for (int i = 0; i < j; i++) {
 				int ii = i * Nimg + j;
-				MAT_ELEM(CL,i,j)= round(CLmatrix[ii].angi/stepAng);
-				MAT_ELEM(CL,j,i)= round(CLmatrix[ii].angj/stepAng);
+				MAT_ELEM(CL,i,j)= (int)round(CLmatrix[ii].angi/stepAng);
+				MAT_ELEM(CL,j,i)= (int)round(CLmatrix[ii].angj/stepAng);
 			}
 		CL.write(fn_out);
 	} else {
@@ -590,9 +590,9 @@ void saveMatrix(const char *fn, DMatrix &matrix)
     fs.open(fn, std::fstream::trunc | std::fstream::out);
     fs.precision(16);
 
-    for (int j = 0; j < MAT_YSIZE(matrix); ++j)
+    for (size_t j = 0; j < MAT_YSIZE(matrix); ++j)
     {
-        for (int i = 0; i < MAT_XSIZE(matrix); ++i)
+        for (size_t i = 0; i < MAT_XSIZE(matrix); ++i)
         {
             fs << std::scientific << dMij(matrix, j, i) << "\t";
             //std::cerr << dAij(matrix, j, i) << " ";
@@ -870,8 +870,8 @@ int tripletRotationMatrix(const DMatrix &clMatrix, size_t nRays,
     Q23.setCol();
 
     DMatrix R1, R2;
-    anglesRotationMatrix(clMatrix, nRays, cl(1, 2), cl(1, 3), Q12, Q13, R1);
-    anglesRotationMatrix(clMatrix, nRays, cl(2, 1), cl(2, 3), Q12, Q23, R2);
+    anglesRotationMatrix(clMatrix, nRays, (int)cl(1, 2), (int)cl(1, 3), Q12, Q13, R1);
+    anglesRotationMatrix(clMatrix, nRays, (int)cl(2, 1), (int)cl(2, 3), Q12, Q23, R2);
     // Compute rotation matrix according to (4.6)
     R = R1.transpose() * R2;
 

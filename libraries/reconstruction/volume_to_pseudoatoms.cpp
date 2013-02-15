@@ -492,12 +492,12 @@ void ProgVolumeToPseudoatoms::drawApproximation()
 double ProgVolumeToPseudoatoms::computeAverage(int k, int i, int j,
         MultidimArray<double> &V)
 {
-    int k0=XMIPP_MAX(STARTINGZ(V),k-sigma3);
-    int i0=XMIPP_MAX(STARTINGY(V),i-sigma3);
-    int j0=XMIPP_MAX(STARTINGX(V),j-sigma3);
-    int kF=XMIPP_MIN(FINISHINGZ(V),k+sigma3);
-    int iF=XMIPP_MIN(FINISHINGY(V),i+sigma3);
-    int jF=XMIPP_MIN(FINISHINGX(V),j+sigma3);
+    int k0=std::max(STARTINGZ(V),(int)floor(k-sigma3));
+    int i0=std::max(STARTINGY(V),(int)floor(i-sigma3));
+    int j0=std::max(STARTINGX(V),(int)floor(j-sigma3));
+    int kF=std::min(FINISHINGZ(V),(int)ceil(k+sigma3));
+    int iF=std::min(FINISHINGY(V),(int)ceil(i+sigma3));
+    int jF=std::min(FINISHINGX(V),(int)ceil(j+sigma3));
     double sum=0;
     for (int kk=k0; kk<=kF; kk++)
         for (int ii=i0; ii<=iF; ii++)

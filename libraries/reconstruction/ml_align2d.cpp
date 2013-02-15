@@ -399,7 +399,7 @@ void ProgML2D::produceSideInfo2()
     initSamplingStuff();
 
     // Set sigdim, i.e. the number of pixels that will be considered in the translations
-    sigdim = 2 * CEIL(model.sigma_offset * (save_mem2 ? 3 : 6));
+    sigdim = 2 * (size_t)ceil(model.sigma_offset * (save_mem2 ? 3 : 6));
     ++sigdim; // (to get uneven number)
     sigdim = XMIPP_MIN(dim, sigdim);
 
@@ -1277,7 +1277,7 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
                 for (size_t iflip = 0; iflip < nr_nomirror_flips; iflip++)
                     for (size_t ipsi = 0; ipsi < nr_psi; ipsi++)
                         if (!MSIGNIFICANT)
-                            MSIGNIFICANT = (WEIGHT >= C_fast * MAX_WEIGHT) ? 1. : 0.;
+                            MSIGNIFICANT = (WEIGHT >= C_fast * MAX_WEIGHT) ? 1 : 0;
             }//close for imirror
         } //endif limit_rot and pdf_directions
     } //end for_all refno
@@ -1353,7 +1353,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                     refnoipsi = refno * nr_psi + ipsi;
                     output_refnoipsi = output_refno * nr_psi + ipsi;
                     irot = iflip * nr_psi + ipsi;
-                    output_irefmir  = FLOOR(iflip / nr_nomirror_flips)
+                    output_irefmir  = (int)floor(iflip / nr_nomirror_flips)
                                       * factor_nref * model.n_ref + refno;
 
                     //#define DEBUG_JM2

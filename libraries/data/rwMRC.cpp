@@ -451,8 +451,10 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             SET_HEADER_CELL_DIM(c, MDL_SAMPLINGRATE_Z, Zdim);
         }
         else
-            header->nxStart = header->xOrigin = header->nyStart = \
-                                                header->yOrigin = header->nzStart = header->zOrigin = 0;
+        {
+            header->nxStart = header->nyStart = header->nzStart = 0;
+            header->xOrigin = header->yOrigin = header->zOrigin = 0;
+        }
     }
 
     header->nsymbt = 0;

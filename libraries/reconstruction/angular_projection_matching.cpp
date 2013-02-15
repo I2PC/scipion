@@ -683,7 +683,7 @@ void * threadRotationallyAlignOneImage( void * data )
                                       prm->fP_ref[refno],
                                       ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
-                for (int k = 0; k < XSIZE(corr); k++)
+                for (size_t k = 0; k < XSIZE(corr); k++)
                 {
                     if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
                     {
@@ -698,7 +698,7 @@ void * threadRotationallyAlignOneImage( void * data )
                 // B. Check mirrored image
                 rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
-                for (int k = 0; k < XSIZE(corr); k++)
+                for (size_t k = 0; k < XSIZE(corr); k++)
                 {
                     if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
                     {

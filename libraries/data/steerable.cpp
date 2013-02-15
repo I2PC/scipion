@@ -158,10 +158,10 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
         	   
     transformer2.setReal(aux);		   
 		   
-    for (int k=0; k<ZSIZE(Vin); k++)
-        for (int i=0; i<YSIZE(Vin); i++)
+    for (size_t k=0; k<ZSIZE(Vin); k++)
+        for (size_t i=0; i<YSIZE(Vin); i++)
         {
-            for (int j=0; j<XSIZE(Vin); j++)
+            for (size_t j=0; j<XSIZE(Vin); j++)
                 DIRECT_A1D_ELEM(aux,j)=DIRECT_A3D_ELEM(Vin,k,i,j);
 			    
 	    transformer2.FourierTransform( );	    
@@ -169,7 +169,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 	    Aux*=H;
 	    transformer2.inverseFourierTransform( );
             	    
-	    for (int j=0; j<XSIZE(Vin); j++)
+	    for (size_t j=0; j<XSIZE(Vin); j++)
                 DIRECT_A3D_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_A1D_ELEM(aux,j);
         }
 
@@ -182,10 +182,10 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
     aux.initZeros(YSIZE(Vin));
     transformer2.setReal(aux);		   
     
-    for (int k=0; k<ZSIZE(Vin); k++)
-        for (int j=0; j<XSIZE(Vin); j++)
+    for (size_t k=0; k<ZSIZE(Vin); k++)
+        for (size_t j=0; j<XSIZE(Vin); j++)
         {
-            for (int i=0; i<YSIZE(Vin); i++)
+            for (size_t i=0; i<YSIZE(Vin); i++)
                 DIRECT_A1D_ELEM(aux,i)=DIRECT_A3D_ELEM(Vout,k,i,j);
 
 	    transformer2.FourierTransform( );	    
@@ -193,7 +193,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 	    Aux*=H;
 	    transformer2.inverseFourierTransform( );
             
-	    for (int i=0; i<YSIZE(Vin); i++)
+	    for (size_t i=0; i<YSIZE(Vin); i++)
                 DIRECT_A3D_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_A1D_ELEM(aux,i);
         }
 
@@ -207,10 +207,10 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
     aux.initZeros(ZSIZE(Vin));    
     transformer2.setReal(aux);		   
 
-    for (int i=0; i<YSIZE(Vin); i++)
-        for (int j=0; j<XSIZE(Vin); j++)
+    for (size_t i=0; i<YSIZE(Vin); i++)
+        for (size_t j=0; j<XSIZE(Vin); j++)
         {
-            for (int k=0; k<ZSIZE(Vin); k++)
+            for (size_t k=0; k<ZSIZE(Vin); k++)
                 DIRECT_A1D_ELEM(aux,k)=DIRECT_A3D_ELEM(Vout,k,i,j);
 
 	    transformer2.FourierTransform( );	    
@@ -218,7 +218,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 	    Aux*=H;
 	    transformer2.inverseFourierTransform( );
 
-            for (int k=0; k<ZSIZE(Vin); k++)
+            for (size_t k=0; k<ZSIZE(Vin); k++)
                 DIRECT_A3D_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_A1D_ELEM(aux,k);
         }
     

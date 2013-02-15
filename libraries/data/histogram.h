@@ -278,7 +278,7 @@ public:
             i = (int) FLOOR(aux);
         }
 
-        if (i < 0 || i >= XSIZE(*this))
+        if (i < 0 || i >= (int)XSIZE(*this))
             i = -1;
     }
 

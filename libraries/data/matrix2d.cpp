@@ -103,7 +103,7 @@ void weightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> &resul
 	{
 		double wii=sqrt(VEC_ELEM(w,i));
 		VEC_ELEM(b,i)*=wii;
-		for (int j=0; j<MAT_XSIZE(A); ++j)
+		for (size_t j=0; j<MAT_XSIZE(A); ++j)
 			MAT_ELEM(A,i,j)*=wii;
 	}
 	solveLinearSystem(h,result);

@@ -172,7 +172,7 @@ bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent, int
         }
     }
 
-    size_t assigned_images = XMIPP_MIN(mpi_job_size, chunk_mysampling.my_exp_img_per_sampling_point[node_index].size());
+    size_t assigned_images = std::min((size_t)mpi_job_size, chunk_mysampling.my_exp_img_per_sampling_point[node_index].size());
     imagesToSent[0] = assigned_images;
 
     //    std::cerr << formatString("DEBUG: master: assigned %lu images to node %d", assigned_images, node);
@@ -286,7 +286,7 @@ void MpiProgAngularProjectionMatching::computeChunks()
     }
     //alloc memory for buffer
     if (mpi_job_size == -1)
-        mpi_job_size = ceil((double)DFexp.size()/(node->size - 1));
+        mpi_job_size = (int)ceil((double)DFexp.size()/(node->size - 1));
 
     //Distribution related variables
     chunk_index = 0;
@@ -327,7 +327,7 @@ void MpiProgAngularProjectionMatching::computeChunkAngularDistance(int symmetry,
         double areaVoronoiRegionReferenceLibrary = 2 *( 3 *(  acos(
                     //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
                     cos(mysampling.sampling_rate_rad)/(1+cos(mysampling.sampling_rate_rad)) )  ) - PI);
-        int number_of_images_that_fit_in_a_chunck_neigh =
+        int number_of_images_that_fit_in_a_chunck_neigh =(int)
             ceil(area_chunck_neigh / areaVoronoiRegionReferenceLibrary);
         //#define DEBUG
 #ifdef DEBUG

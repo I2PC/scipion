@@ -63,7 +63,7 @@ ProgPdbConverter::ProgPdbConverter()
     periodicTable(6, 1) = atomCharge("Fe");
 
     // Correct the atom weights by the blob weight
-    for (int i = 0; i < MAT_YSIZE(periodicTable); i++)
+    for (size_t i = 0; i < MAT_YSIZE(periodicTable); i++)
     {
         periodicTable(i, 1) /=
             basvolume(periodicTable(i, 0) / highTs, blob.alpha, blob.order, 3);

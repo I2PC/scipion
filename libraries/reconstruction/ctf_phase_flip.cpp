@@ -82,11 +82,11 @@ void ProgCTFPhaseFlipping::run()
     int yDim=YSIZE(M_in());
     int xDim=XSIZE(M_in());
     double iTm=1.0/ctf.Tm;
-    for (int i=0; i<YSIZE(M_inFourier); ++i)
+    for (size_t i=0; i<YSIZE(M_inFourier); ++i)
     {
     	FFT_IDX2DIGFREQ(i, yDim, YY(freq));
     	YY(freq) *= iTm;
-        for (int j=0; j<XSIZE(M_inFourier); ++j)
+        for (size_t j=0; j<XSIZE(M_inFourier); ++j)
         {
         	FFT_IDX2DIGFREQ(j, xDim, XX(freq));
         	XX(freq) *= iTm;

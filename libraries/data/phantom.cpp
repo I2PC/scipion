@@ -350,7 +350,7 @@ void Blob::read_specific(const std::vector<double> &vect)
         REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a blob");
     radius = vect[0];
     alpha = vect[1];
-    m = vect[2];
+    m = (int)vect[2];
     prepare();
 }
 
@@ -2192,9 +2192,9 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
         MD1.getValue(MDL_DIMENSIONS_3D, TempVec, objId);
         if (TempVec.size()<3)
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_DIMENSIONS_3D) + " problems with project dimensions");
-        xdim = TempVec[0];
-        ydim = TempVec[1];
-        zdim = TempVec[2];
+        xdim = (int)TempVec[0];
+        ydim = (int)TempVec[1];
+        zdim = (int)TempVec[2];
         if (!MD1.getValue(MDL_PHANTOM_BGDENSITY, Background_Density, objId))
             Background_Density = 0;
         if (!MD1.getValue(MDL_SCALE, scale, objId))

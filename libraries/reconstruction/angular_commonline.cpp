@@ -429,7 +429,7 @@ void Prog_Angular_CommonLine::produceSideInfo()
         Radon_Transform(img[n],deltaRot,RT);
 
         // Separate each projection line and compute derivative
-        for (int i=0; i<YSIZE(RT); i++)
+        for (size_t i=0; i<YSIZE(RT); i++)
         {
             RT.getRow(i,projection);
             radon[n].push_back(projection);
@@ -580,7 +580,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         // For each image try different pairs and get different alignments
         std::cout << "Aligning image pairs, "
         << Nimg-assigned.sum() << " images remaining ...\n";
-        init_progress_bar(Nimg-assigned.sum());
+        init_progress_bar((int)(Nimg-assigned.sum()));
         for (size_t i=0; i<Nimg; i++)
         {
             if (assigned(i) || tabuPenalization(i)>0)
@@ -610,7 +610,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
             progress_bar(i);
         }
-        progress_bar(Nimg-assigned.sum());
+        progress_bar((int)(Nimg-assigned.sum()));
 
         // Compute for each image the variance in the top assignment
         size_t Nsym=SL.symsNo();
@@ -620,7 +620,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         for (size_t i=0; i<Nimg; i++)
             if (eulerAngles[i].size()<2*topN && !assigned(i) &&
                 tabuPenalization(i)==0)
-                topN=CEIL(eulerAngles[i].size()/2);
+                topN=(size_t)ceil(eulerAngles[i].size()/2);
         for (size_t i=0; i<Nimg; i++)
         {
             // If the particle has  already been assigned skip it
@@ -856,7 +856,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
 
             // Cleaning of the "garbage"
-            int totalAssigned=assigned.sum();
+            int totalAssigned=(int)assigned.sum();
             std::cout << "removal=" << removalCounter
             << " totalAssigned=" << totalAssigned
             << std::endl;
@@ -1009,8 +1009,8 @@ double Prog_Angular_CommonLine::computeClusters(
         // Look for the two closest clusters
     	size_t besti=0, bestj=0;
         double bestCorr=-1;
-        for (int i=0; i<YSIZE(worseCorrelationMatrix); i++)
-            for (int j=i+1; j<XSIZE(worseCorrelationMatrix); j++)
+        for (size_t i=0; i<YSIZE(worseCorrelationMatrix); i++)
+            for (size_t j=i+1; j<XSIZE(worseCorrelationMatrix); j++)
                 if (worseCorrelationMatrix(i,j)>bestCorr)
                 {
                     bestCorr=worseCorrelationMatrix(i,j);
@@ -1192,7 +1192,7 @@ double Prog_Angular_CommonLine::realignCurrentSolution()
     FOR_ALL_ELEMENTS_IN_MATRIX1D(alreadyOptimized)
     if (alreadyOptimized(i)==2)
         alreadyOptimized(i)=1;
-    int NToSolve=alreadyOptimized.sum();
+    int NToSolve=(int)alreadyOptimized.sum();
     Matrix1D<int> imgIdx(NToSolve);
     int idx=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(alreadyOptimized)

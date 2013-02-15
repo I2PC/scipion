@@ -93,13 +93,11 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     int sign = 1;//;-1;
     int numNorm = 3;
     int numDescriptors0=numNorm;
-    int numDescriptors1;//=100;
     int numDescriptors2=4;
     int numDescriptors3=11;
     int numDescriptors4 = 10;
 
     MultidimArray<float> v0(numDescriptors0);
-    MultidimArray<float> v1(numDescriptors1);
     MultidimArray<float> v2(numDescriptors2);
     MultidimArray<float> v3(numDescriptors3);
     MultidimArray<float> v4(numDescriptors4);
@@ -185,7 +183,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mI.statisticsAdjust(0,1);
             mask.setXmippOrigin();
             //The size of v1 depends on the image size and must be declared here
-            numDescriptors1 = XSIZE(mI)/2;
+            int numDescriptors1 = XSIZE(mI)/2; //=100;
+            MultidimArray<float> v1(numDescriptors1);
             v1.initZeros(numDescriptors1);
 
             double var = 1;
@@ -257,7 +256,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             hist.maxIndex(l,k,i,j);
             nI.binarizeRange(j-1,j+1);
 
-            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
+            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0;
+            size_t area=0;
             fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
 
             A1D_ELEM(v2,0)=majorAxis/((img().xdim) );
@@ -584,9 +584,9 @@ void ProgSortByStatistics::run()
         sortedZscoreSNR1.indexSort(sortedSNR1);
         sortedZscoreSNR2.indexSort(sortedSNR2);
         sortedZscoreHist.indexSort(sortedHist);
-        int numPartReject = std::floor((per/100)*SF.size());
+        size_t numPartReject = (size_t)std::floor((per/100)*SF.size());
 
-        for (int numPar = SF.size()-1; numPar > (SF.size()-numPartReject); --numPar)
+        for (size_t numPar = SF.size()-1; numPar > (SF.size()-numPartReject); --numPar)
         {
             int isort_1 = DIRECT_A1D_ELEM(sortedShape1,numPar);
             SFout.getRow(row, isort_1);

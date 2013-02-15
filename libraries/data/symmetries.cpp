@@ -435,13 +435,13 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
                      int true_symNo)
 {
     i = j = 0;
-    int n = 0;
+    size_t n = 0;
     while (n != MAT_YSIZE(tried))
     {
         //       if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
         if (dMij(tried,i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
             return true;
-        if (i != n)
+        if (i != (int)n)
         {
             // Move downwards
             i++;

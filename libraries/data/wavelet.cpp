@@ -841,7 +841,7 @@ void bayesian_wiener_filtering3D(MultidimArray<double> &WI,
     MultidimArray<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_ARRAY1D(scale) scale(i) = i;
 
-    for (int i = 0;i < XSIZE(scale);i++)
+    for (size_t i = 0;i < XSIZE(scale);i++)
     {
         double N = estimatedS(i);
         double S = estimatedS(i + XSIZE(scale));

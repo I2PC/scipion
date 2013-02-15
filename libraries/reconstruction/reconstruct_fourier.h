@@ -120,7 +120,7 @@ public:
     int threadOpCode;
 
     /// Number of rows already processed on an image
-    int rowsProcessed;
+    size_t rowsProcessed;
 
     /// Defines what a thread should do
     static void * processImageThread( void * threadArgs );

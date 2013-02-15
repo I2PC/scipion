@@ -181,8 +181,8 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
         //        MD.getValue(MDL_PRJ_VOL, fnPhantom, objId);
         std::vector<double> vecD;
         MD.getValue(MDL_PRJ_DIMENSIONS, vecD, objId);
-        proj_Xdim = vecD[0];
-        proj_Ydim = vecD[1];
+        proj_Xdim = (int)vecD[0];
+        proj_Ydim = (int)vecD[1];
         MD.getValue(MDL_ANGLE_ROT, axisRot, objId);
         MD.getValue(MDL_ANGLE_TILT, axisTilt, objId);
 

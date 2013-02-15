@@ -93,7 +93,7 @@ void Basis::readParams(XmippProgram * program)
     if (basisType == "blobs")
     {
         blob.radius = program->getDoubleParam("--basis", "blobs", 0);
-        blob.order  = program->getDoubleParam("--basis", "blobs", 1);
+        blob.order  = program->getIntParam("--basis", "blobs", 1);
         blob.alpha  = program->getDoubleParam("--basis", "blobs", 2);
     }
     if (!program->checkParam("--basis")) // Default is for small blobs
