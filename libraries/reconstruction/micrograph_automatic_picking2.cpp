@@ -312,7 +312,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
     double label, score;
     Particle2 p;
     MultidimArray<double> IpolarCorr;
-    MultidimArray<double> featVec;
+    MultidimArray<double> featVec, featVecNNorm;
     MultidimArray<double> pieceImage;
     MultidimArray<double> staticVec, dilatedVec;
     std::vector<Particle2> positionArray;
@@ -342,6 +342,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         extractStatics(pieceImage,staticVec);
         buildVector(IpolarCorr,staticVec,featVec,pieceImage);
         // Normalizing the feature vector according to the max and mean of the vector
+        featVecNNorm=featVec;
         double max=featVec.computeMax();
         double min=featVec.computeMin();
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(featVec)
@@ -361,7 +362,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
                     p.y=i;
                     p.status=1;
                     p.cost=score;
-                    p.vec=featVec;
+                    p.vec=featVecNNorm;
                     auto_candidates.push_back(p);
                 }
             }
@@ -371,11 +372,13 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
                 p.y=i;
                 p.status=1;
                 p.cost=score;
-                p.vec=featVec;
+                p.vec=featVecNNorm;
                 auto_candidates.push_back(p);
             }
         }
     }
+    if (auto_candidates.size() == 0)
+    	return 0;
     // Remove the occluded particles
     for (size_t i=0;i<auto_candidates.size();++i)
         for (size_t j=0;j<auto_candidates.size()-i-1;j++)
@@ -426,6 +429,7 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
     ArrayDim aDim;
     int yDataSet=YSIZE(dataSet);
 
+    if (!fn_Invariant.exists()) return;
     positiveInvariant.read(fn_Invariant,HEADER);
     positiveInvariant.getDimensions(aDim);
     int steps=aDim.ndim/num_correlation;
