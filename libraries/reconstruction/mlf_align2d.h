@@ -78,7 +78,7 @@ public:
     /** Vector containing estimated fraction for mirror of each model */
     std::vector<double> mirror_fraction;
     /** Number of steps to sample in-plane rotation in 90 degrees */
-    int max_nr_psi;
+    size_t max_nr_psi;
     /** Vary psi and translational sampling with resolution */
     bool do_variable_psi, do_variable_trans;
     /** Vector for images to hold references (new & old) */

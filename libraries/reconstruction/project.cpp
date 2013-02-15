@@ -249,7 +249,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
                 rot_range.angF = ParamVec[1];
-                rot_range.samples = ParamVec[2];
+                rot_range.samples = (int)ParamVec[2];
                 if (rot_range.ang0 == rot_range.angF)
                     rot_range.samples = 1;
             }
@@ -271,7 +271,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
                 tilt_range.angF = ParamVec[1];
-                tilt_range.samples = ParamVec[2];
+                tilt_range.samples = (int)ParamVec[2];
                 if (tilt_range.ang0 == tilt_range.angF)
                     tilt_range.samples = 1;
             }
@@ -293,7 +293,7 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
                 psi_range.angF = ParamVec[1];
-                psi_range.samples = ParamVec[2];
+                psi_range.samples = (int)ParamVec[2];
                 if (psi_range.ang0 == psi_range.angF)
                     psi_range.samples = 1;
             }

@@ -112,7 +112,7 @@ void fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, d
 		double & ellipseAngle);
 
 void fitEllipse(MultidimArray<double> & normImag, double & x0, double & y0, double & majorAxis, double & minorAxis,
-		double & ellipseAngle, double & area);
+		double & ellipseAngle, size_t & area);
 
 void calculateDefocus(double & defocusU,double & defocusV, double majorAxis, double minorAxis,  double Q0, double lambda, double Cs,
 						double imgSize, double Ts);

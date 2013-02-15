@@ -256,8 +256,8 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
         rotZdim = iniZdim;
     }
 
-    newXdim = rotXdim + 2*ABS(XX(offsetNV));
-    newYdim = iniYdim + 2*ABS(YY(offsetNV));
+    newXdim = (int)(rotXdim + 2*fabs(XX(offsetNV)));
+    newYdim = (int)(iniYdim + 2*fabs(YY(offsetNV)));
     newZdim = rotZdim;
 
     // We set the dimensions only to obtain the values of starting X,Y,Z
@@ -268,11 +268,11 @@ void XrayRotateAndProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &ps
 
     yinit = STARTINGY((phantom.rotVol));
     if (YY(offsetNV) > 0)
-        yinit -= 2 * YY(offsetNV);
+        yinit -= (int)(2 * YY(offsetNV));
 
     xinit = STARTINGX((phantom.rotVol));
     if (XX(offsetNV) > 0)
-        xinit -= 2 * XX(offsetNV);
+        xinit -= (int)(2 * XX(offsetNV));
 
     if (psf.verbose > 1)
     {
@@ -361,7 +361,7 @@ void projectXrayVolume(MultidimArray<double> &muVol,
     std::vector<int> phantomSlabIdx, psfSlicesIdx;
 
     // Search for the PSFslab of the beginning of the volume
-    int firstSlab = STARTINGZ(muVol)*psf.dzo/psf.dzoPSF;
+    int firstSlab = (int)(STARTINGZ(muVol)*psf.dzo/psf.dzoPSF);
 
     if (!XMIPP_EQUAL_ZERO(psf.slabThr))
     {
@@ -379,19 +379,19 @@ void projectXrayVolume(MultidimArray<double> &muVol,
 
         for (size_t kk = firstSlab+1; kk < psf.slabIndex.size(); ++kk)
         {
-            int tempK = psf.slabIndex[kk] * psf.dzoPSF / psf.dzo;
+            int tempK = (int)(psf.slabIndex[kk] * psf.dzoPSF / psf.dzo);
 
             if (tempK <= FINISHINGZ(muVol))
             {
                 phantomSlabIdx.push_back(tempK);
                 int tempKK = psf.slabIndex[kk-1];
-                int psfMeanSlice = (tempK + tempKK)*0.5 * psf.dzoPSF / psf.dzo;
+                int psfMeanSlice = (int)((tempK + tempKK)*0.5 * psf.dzoPSF / psf.dzo);
                 psfSlicesIdx.push_back(psfMeanSlice);
             }
             else
             {
                 phantomSlabIdx.push_back(FINISHINGZ(muVol));
-                int psfMeanSlice = (tempK + phantomSlabIdx[kk-1])*0.5;
+                int psfMeanSlice = (tempK + phantomSlabIdx[kk-1])/2;
                 psfSlicesIdx.push_back(psfMeanSlice);
                 continue;
             }
@@ -687,8 +687,8 @@ void calculateIgeoThread(ThreadArgument &thArg)
             //                for (int j=0; j<XSIZE(muVol); ++j)
             //                    dAkij(IgeoVol,k,i,j) = dAkij(IgeoVol,k-1,i,j)*exp(-dAkij(muVol,k,i,j)*sampling);
 
-            for (int k = 0; k < ZSIZE(muVol); ++k)
-                for (int j=0; j<XSIZE(muVol); ++j)
+            for (size_t k = 0; k < ZSIZE(muVol); ++k)
+                for (size_t j=0; j<XSIZE(muVol); ++j)
                 {
                     dAij(cumMu,i,j) += dAkij(muVol,k,i,j)*sampling;
                     dAkij(IgeoVol,k,i,j) = dAij(IgeoZb,i,j)*exp(-dAij(cumMu,i,j));

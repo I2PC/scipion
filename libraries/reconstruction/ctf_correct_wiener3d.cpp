@@ -185,7 +185,7 @@ void ProgCtfCorrectAmplitude3D::generateWienerFilters()
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
                 REPORT_ERROR(ERR_IO_NOWRITE, fn_tmp);
-            for (int step = 0; step < nr_steps; step++)
+            for (size_t step = 0; step < nr_steps; step++)
             {
                 res = (step * sqrt(3.) ) /
                       (OVERSAMPLE * sqrt( (double) (Zdim*Zdim + Ydim*Ydim + Xdim*Xdim) ) );

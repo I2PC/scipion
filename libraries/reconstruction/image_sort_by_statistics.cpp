@@ -254,7 +254,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             hist.maxIndex(l,k,i,j);
             nI.binarizeRange(j-1,j+1);
 
-            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0,area=0;
+            double x0=0,y0=0,majorAxis=0,minorAxis=0,ellipAng=0;
+            size_t area=0;
             fitEllipse(nI,x0,y0,majorAxis,minorAxis,ellipAng,area);
 
             A1D_ELEM(v2,0)=majorAxis/((img().xdim) );

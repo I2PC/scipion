@@ -870,7 +870,7 @@ void ProgMLF2D::updateWienerFilters(const MultidimArray<double> &spectral_signal
     FileName                   fn_base, fn_tmp;
 
     // integer resolution limits (in shells)
-    int_lowres_limit  = sampling * dim / lowres_limit;
+    int_lowres_limit  = (size_t)(sampling * dim / lowres_limit);
     int_highres_limit = (highres_limit > 0.) ? ROUND(sampling * dim / highres_limit) : hdim;
     int_ini_highres_limit =  (ini_highres_limit > 0.) ? ROUND(sampling * dim / ini_highres_limit) : hdim;
 
@@ -1670,9 +1670,9 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
-                ix = ROUND(opt_offsets_ref[2*irefmir]);
-                iy = ROUND(opt_offsets_ref[2*irefmir+1]);
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                ix = (int)round(opt_offsets_ref[2*irefmir]);
+                iy = (int)round(opt_offsets_ref[2*irefmir+1]);
                 Pmax_refmir[irefmir] = 0.;
                 point_trans = (iflip < nr_nomirror_flips) ? A2D_ELEM(Moffsets, iy, ix) : A2D_ELEM(Moffsets_mirror, iy, ix);
                 if (point_trans < 0 || point_trans > dim2)
@@ -1750,9 +1750,9 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
-                ix = ROUND(opt_offsets_ref[2*irefmir]);
-                iy = ROUND(opt_offsets_ref[2*irefmir+1]);
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                ix = (int)round(opt_offsets_ref[2*irefmir]);
+                iy = (int)round(opt_offsets_ref[2*irefmir+1]);
                 fracpdf = (iflip < nr_nomirror_flips) ? 1. - mirror_fraction[refno] : mirror_fraction[refno];
                 pdf =  alpha_k[refno] * fracpdf * A2D_ELEM(P_phi, iy, ix);
                 // get the starting point in the Fimg_trans vector
@@ -1862,7 +1862,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 ref_scale = opt_scale / refs_avgscale[refno];
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 fracpdf = (iflip < nr_nomirror_flips) ? 1. - mirror_fraction[refno] : mirror_fraction[refno];
 
                 FOR_ALL_ROTATIONS()
@@ -1880,8 +1880,8 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                         {
                             if (itrans != zero_trans)
                             { // zero_trans has already been calculated!
-                                ix = round(opt_offsets_ref[2*irefmir] + Vtrans[itrans](0));
-                                iy = round(opt_offsets_ref[2*irefmir+1] + Vtrans[itrans](1));
+                                ix = (int)round(opt_offsets_ref[2*irefmir] + Vtrans[itrans](0));
+                                iy = (int)round(opt_offsets_ref[2*irefmir+1] + Vtrans[itrans](1));
                                 ix = intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
                                 iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
                                 if (iflip < nr_nomirror_flips)
@@ -2159,7 +2159,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
+                irefmir = (int)floor(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 FOR_ALL_ROTATIONS()
                 {
                     irot = iflip * nr_psi + ipsi;

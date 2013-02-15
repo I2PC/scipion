@@ -71,9 +71,9 @@ void ProgReconsXrayART::readParams()
     fnStart = getParam("--start");
     sampling = getDoubleParam("--sampling_rate");
     lambdaART = getDoubleParam("-l");
-    Nit = getDoubleParam("-n");
+    Nit = getIntParam("-n");
     psfThr = getDoubleParam("--threshold");
-    nThreads = getDoubleParam("--thr");
+    nThreads = getIntParam("--thr");
 
     // Basis parameters
     //    basis.readParams(this);

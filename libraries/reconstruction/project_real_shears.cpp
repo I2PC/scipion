@@ -145,7 +145,7 @@ void convertAngles(double &phi, double &theta, double &psi)
         ax = atan2(-A21, A22);
         az = atan2(-A10, A00);
 
-        if(abs(cos(ax)) == 0.0)
+        if(fabs(cos(ax)) == 0.0)
             sign_cosay = SGN(-A21/sin(ax));
         else
         {
@@ -217,9 +217,9 @@ void projectionRealShears2(MultidimArray<double> &CoefVolume,
                 double g = Arg[arr[1]];
                 double h = Arg[arr[2]];
 
-                int l1 = ceil(g-2.0);
+                int l1 = (int)ceil(g-2.0);
                 int l2 = l1 + 3;
-                int m1 = ceil(h-2.0);
+                int m1 = (int)ceil(h-2.0);
                 int m2 = m1 + 3;
                 double columns = 0.0;
                 double aux;

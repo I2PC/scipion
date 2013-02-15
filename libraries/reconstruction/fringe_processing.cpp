@@ -165,23 +165,23 @@ void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, 
     orn.resizeNoCopy(im);
     ornMod.resizeNoCopy(im);
 
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(im)
     {
         A2D_ELEM(mask,i,j)  = 0;
 
         if ( (i==0) || (i== (NR-1)) || (j == 0) || (j== (NC-1)) )
         {
-            A2D_ELEM(d0,i,j)  = 0;
-            A2D_ELEM(d45,i,j) = 0;
-            A2D_ELEM(d90,i,j) = 0;
-            A2D_ELEM(d135,i,j)= 0;
+            DIRECT_A2D_ELEM(d0,i,j)  = 0;
+            DIRECT_A2D_ELEM(d45,i,j) = 0;
+            DIRECT_A2D_ELEM(d90,i,j) = 0;
+            DIRECT_A2D_ELEM(d135,i,j)= 0;
         }
         else
         {
-            A2D_ELEM(d0,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(im,i+1,j)-A2D_ELEM(im,i-1,j));
-            A2D_ELEM(d45,i,j) = std::abs(A2D_ELEM(im,i+1,j-1)-A2D_ELEM(im,i-1,j+1));
-            A2D_ELEM(d90,i,j) = std::sqrt(2)*std::abs(A2D_ELEM(im,i,j+1)-A2D_ELEM(im,i,j-1));
-            A2D_ELEM(d135,i,j)= std::abs(A2D_ELEM(im,i+1,j+1)-A2D_ELEM(im,i-1,j-1));
+            DIRECT_A2D_ELEM(d0,i,j)  = std::sqrt(2)*std::abs(A2D_ELEM(im,i+1,j)-A2D_ELEM(im,i-1,j));
+            DIRECT_A2D_ELEM(d45,i,j) = std::abs(A2D_ELEM(im,i+1,j-1)-A2D_ELEM(im,i-1,j+1));
+            DIRECT_A2D_ELEM(d90,i,j) = std::sqrt(2)*std::abs(A2D_ELEM(im,i,j+1)-A2D_ELEM(im,i,j-1));
+            DIRECT_A2D_ELEM(d135,i,j)= std::abs(A2D_ELEM(im,i+1,j+1)-A2D_ELEM(im,i-1,j-1));
         }
     }
 
@@ -462,8 +462,8 @@ void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qual
     processed.initZeros(orMap);
 
     // Process the first point
-    int i=x;
-    int j=y;
+    size_t i=x;
+    size_t j=y;
 
     A2D_ELEM(dirMap,i,j) = std::atan2(A2D_ELEM(ds,i,j),A2D_ELEM(dc,i,j));
     A2D_ELEM(processed,i,j) = true;
@@ -484,26 +484,29 @@ void direction(const MultidimArray<double> & orMap, MultidimArray<double> & qual
         j=p.j;
         queueToProcess.pop();
 
-        int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
-        int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
+        size_t indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
+        size_t indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
 
         for(int k = 0; k< 8 ; k++)
         {
 
-            int ni=indi[k];
-            int nj=indj[k];
+            size_t ni=indi[k];
+            size_t nj=indj[k];
 
-            if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
-                 && ((nj+size)<XSIZE(processed)-1) )
+            if ( (!A2D_ELEM(processed,ni,nj)) && 
+                  (A2D_ELEM(qualityMap,ni,nj) > minQuality) && 
+                  ((ni-size)>0) && ((nj-size)>0) && 
+                  ((ni+size)<YSIZE(processed)-1) && 
+                  ((nj+size)<XSIZE(processed)-1) )
             {
                 double G11=0, G12=0, G22=0, b1=0, b2=0;
 
                 for (int li=-size; li <= size; li++)
                 {
-                    int nli=ni+li;
+                    size_t nli=ni+li;
                     for (int lj=-size; lj <= size; lj++)
                     {
-                        int nlj=nj+lj;
+                        size_t nlj=nj+lj;
                         if (A2D_ELEM(processed,nli,nlj))
                         {
                             double tempx = A2D_ELEM(ds,nli,nlj);
@@ -597,13 +600,13 @@ void unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double
         j=p.j;
         queueToProcess.pop();
 
-        int indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
-        int indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
+        size_t indi[8] = {i-1,i-1,i-1,i,i,i+1,i+1,i+1};
+        size_t indj[8] = {j-1,j,j+1,j-1,j+1,j-1,j,j+1};
 
         for(int k = 0; k< 8 ; k++)
         {
-            int ni=indi[k];
-            int nj=indj[k];
+            size_t ni=indi[k];
+            size_t nj=indj[k];
             if ( (!A2D_ELEM(processed,ni,nj)) && (A2D_ELEM(qualityMap,ni,nj) > minQuality) && ((ni-size)>0) && ((nj-size)>0) && ((ni+size)<YSIZE(processed)-1)
                  && ((nj+size)<XSIZE(processed)-1))
             {
@@ -611,10 +614,10 @@ void unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double
 
                 for (int li=-size; li <= size; li++)
                 {
-                    int nli=ni+li;
+                    size_t nli=ni+li;
                     for (int lj=-size; lj <= size; lj++)
                     {
-                        int nlj=nj+lj;
+                        size_t nlj=nj+lj;
                         if (A2D_ELEM(processed,nli,nlj))
                         {
                             uw =  A2D_ELEM(unwrappedPhase,nli,nlj);
@@ -624,9 +627,9 @@ void unwrapping(const MultidimArray<double> & wrappedPhase, MultidimArray<double
                             t = (wp - uw);
 
                             if ( t > 0 )
-                                n = std::floor(t+3.14159265)/(2*3.14159265);
+                                n = (int)(std::floor(t+3.14159265)/(2*3.14159265));
                             else
-                                n = std::ceil(t-3.14159265)/(2*3.14159265);
+                                n = (int)(std::ceil(t-3.14159265)/(2*3.14159265));
 
                             up = t - (2*3.14159265)*n;
 
@@ -788,7 +791,7 @@ void demodulate(MultidimArray<double> & im, double lambda, int size, int x, int 
     mod.setXmippOrigin();
     Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
 
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
         VEC_ELEM(coefsInit,i) = (int)VEC_ELEM(coeffs,i);
 
     PolyZernikes polynom;
@@ -799,7 +802,7 @@ void demodulate(MultidimArray<double> & im, double lambda, int size, int x, int 
     polynom.fit(coefsInit,phase,mod2,ROI,verbose);
 
     int index = 0;
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
     {
         if ( VEC_ELEM(coeffs,i) != 0)
         {
@@ -957,7 +960,7 @@ void demodulate2(MultidimArray<double> & im, double lambda, int size, int x, int
     mod.setXmippOrigin();
     Matrix1D<int> coefsInit(VEC_XSIZE(coeffs));
 
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
         VEC_ELEM(coefsInit,i) = (int)VEC_ELEM(coeffs,i);
 
     PolyZernikes polynom;
@@ -968,7 +971,7 @@ void demodulate2(MultidimArray<double> & im, double lambda, int size, int x, int
     polynom.fit(coefsInit,phase,onesMatrix,ROI,verbose);
 
     int index = 0;
-    for (int i=0; i<VEC_XSIZE(coeffs); i++)
+    for (size_t i=0; i<VEC_XSIZE(coeffs); i++)
     {
         if ( VEC_ELEM(coeffs,i) != 0)
         {
@@ -1131,7 +1134,7 @@ void fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, d
     Matrix2D<double> B(VEC_XSIZE(xPts),5), A(2,2);
     Matrix1D<double> V(5), squareXPts(VEC_XSIZE(xPts));
 
-    for (int nRow = 0; nRow < VEC_XSIZE(xPts); nRow++)
+    for (size_t nRow = 0; nRow < VEC_XSIZE(xPts); nRow++)
     {
         double tempX = VEC_ELEM(xPts,nRow);
         double tempY = VEC_ELEM(yPts,nRow);
@@ -1178,7 +1181,7 @@ void fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, d
     sincos(-ellipseAngle,&sEllipseAngle,&cEllipseAngle);
 
     double angle = 0, deltaAngle=(2*PI)/VEC_XSIZE(xPts);
-    for (int nPoint = 0; nPoint < VEC_XSIZE(xPts); nPoint++)
+    for (size_t nPoint = 0; nPoint < VEC_XSIZE(xPts); nPoint++)
     {
     	double sAngle, cAngle;
         sincos(angle,&sAngle,&cAngle);
@@ -1192,9 +1195,9 @@ void fitEllipse(Matrix1D<double> & xPts, Matrix1D<double> & yPts, double & x0, d
 }
 
 void fitEllipse(MultidimArray<double> & normImag, double & x0, double & y0, double & majorAxis,
-                                  double & minorAxis, double & ellipseAngle, double & area)
+                                  double & minorAxis, double & ellipseAngle, size_t & area)
 {
-    area = normImag.sum();
+    area = (size_t)normImag.sum();
     Matrix1D<double> xPts(area);
     Matrix1D<double> yPts(area);
     int index = 0;

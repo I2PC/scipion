@@ -491,7 +491,7 @@ void ProgSSNR::radialAverage(Matrix2D<double> &output)
 
     // Produce output .......................................................
     output.resize(VEC_XSIZE(VSSNR_avg), 3);
-    for (int i = 0; i < VEC_XSIZE(VSSNR_avg); i++)
+    for (size_t i = 0; i < VEC_XSIZE(VSSNR_avg); i++)
     {
         double w;
         FFT_IDX2DIGFREQ(i, XSIZE(VSSNR()), w);
