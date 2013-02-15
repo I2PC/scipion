@@ -525,9 +525,9 @@ void ARTReconsBase::iterations(GridVolume &vol_basis, int rank)
                 artPrm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                                             Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
                 selfScaleToSize(BSPLINE3,vol_voxels(),
-                                NEXT_POWER_OF_2(XSIZE(vol_voxels())),
-                                NEXT_POWER_OF_2(YSIZE(vol_voxels())),
-                                NEXT_POWER_OF_2(ZSIZE(vol_voxels())));
+                                (size_t)NEXT_POWER_OF_2(XSIZE(vol_voxels())),
+                                (size_t)NEXT_POWER_OF_2(YSIZE(vol_voxels())),
+                                (size_t)NEXT_POWER_OF_2(ZSIZE(vol_voxels())));
                 Image<double> vol_wavelets, vol_wavelets_abs;
                 set_DWT_type(DAUB12);
                 DWT(vol_voxels(),vol_wavelets());

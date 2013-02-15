@@ -581,9 +581,9 @@ void ProgSortByStatistics::run()
         sortedZscoreSNR1.indexSort(sortedSNR1);
         sortedZscoreSNR2.indexSort(sortedSNR2);
         sortedZscoreHist.indexSort(sortedHist);
-        int numPartReject = std::floor((per/100)*SF.size());
+        size_t numPartReject = (size_t)std::floor((per/100)*SF.size());
 
-        for (int numPar = SF.size()-1; numPar > (SF.size()-numPartReject); --numPar)
+        for (size_t numPar = SF.size()-1; numPar > (SF.size()-numPartReject); --numPar)
         {
             int isort_1 = DIRECT_A1D_ELEM(sortedShape1,numPar);
             SFout.getRow(row, isort_1);
