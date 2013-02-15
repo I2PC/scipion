@@ -93,13 +93,11 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     int sign = 1;//;-1;
     int numNorm = 3;
     int numDescriptors0=numNorm;
-    int numDescriptors1;//=100;
     int numDescriptors2=4;
     int numDescriptors3=11;
     int numDescriptors4 = 10;
 
     MultidimArray<float> v0(numDescriptors0);
-    MultidimArray<float> v1(numDescriptors1);
     MultidimArray<float> v2(numDescriptors2);
     MultidimArray<float> v3(numDescriptors3);
     MultidimArray<float> v4(numDescriptors4);
@@ -185,7 +183,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
             mI.statisticsAdjust(0,1);
             mask.setXmippOrigin();
             //The size of v1 depends on the image size and must be declared here
-            numDescriptors1 = XSIZE(mI)/2;
+            int numDescriptors1 = XSIZE(mI)/2; //=100;
+            MultidimArray<float> v1(numDescriptors1);
             v1.initZeros(numDescriptors1);
 
             double var = 1;

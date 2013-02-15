@@ -45,6 +45,8 @@ public abstract class ParticlePicker
 	protected Family family;
 	protected String configfile;
 	protected boolean updateTemplatesPending;
+	public static final int fsizemax = 800;
+	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
 
 	
 
@@ -295,7 +297,7 @@ public abstract class ParticlePicker
 		String file = familiesfile;
 		if (!new File(file).exists())
 		{
-			families.add(Family.getDefaultFamily());
+			families.add(dfamily);
 			saveFamilies();
 			return;
 		}
@@ -330,7 +332,10 @@ public abstract class ParticlePicker
 					
 				}
 				else
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
+				{
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);
+					setUpdateTemplatesPending(true);
+				}
 				families.add(family);
 			}
 			md.destroy();
@@ -622,6 +627,7 @@ public abstract class ParticlePicker
 					System.out.println(particle);
 				}
 			}
+			particle.getFamily().getTemplates().write(particle.getFamily().getTemplatesFile());
 
 		}
 		catch (Exception e)
