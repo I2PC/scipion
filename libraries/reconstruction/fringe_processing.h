@@ -67,8 +67,7 @@ void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, 
 //that filter the frequency of the fringes
 //Ref: Juan Antonio Quiroga, Manuel Servin, "Isotropic n-dimensional fringe
 //pattern normalization", Optics Communications, 224, Pages 221-227 (2003)
-void normalize(FourierTransformer &ftrans, FourierTransformer &ftrans2,
-		MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap,
+void normalize(FourierTransformer &ftrans, MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap,
 		double R, double S, MultidimArray<bool> & ROI);
 
 //This method is similar to the method normalize but it uses a different Fourier Filter H.

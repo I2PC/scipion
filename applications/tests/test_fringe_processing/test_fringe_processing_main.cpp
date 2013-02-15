@@ -231,8 +231,8 @@ TEST_F( FringeProcessingTests, normalize)
     //aprox there are 5 fringe in the image
     double R = 5;
     double S = 10;
-    FourierTransformer ftrans(FFTW_BACKWARD), ftrans2(FFTW_BACKWARD);
-    normalize(ftrans,ftrans2,im,In,Mod, R, S, ROI);
+    FourierTransformer ftrans(FFTW_BACKWARD);
+    normalize(ftrans,im,In,Mod, R, S, ROI);
 
     //We test some values comparing with the values recovered with Matlab
     ASSERT_TRUE( (A2D_ELEM(In,10,10)  -  0.924569)  < 1e-1);

@@ -15,6 +15,19 @@ else:
 	  toolpath=['external/scons/ToolsFromWiki'])
     env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
     env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
+
+# avoid cruft in top dir
+base_dir = 'build'
+if not os.path.exists(base_dir):
+    Execute(Mkdir(base_dir))
+base_dir += '/'
+
+# use only one signature file
+env.SConsignFile(base_dir + 'SCons.dblite')
+
+# read -or not- the cached -non default- options
+if (ARGUMENTS['mode'] == 'configure'):
+    opts = Variables(None, ARGUMENTS)
     conf = Configure(env)
     checking = {}
     #found = False
@@ -59,18 +72,6 @@ else:
             Exit(1)
     env = conf.Finish()
 
-# avoid cruft in top dir
-base_dir = 'build'
-if not os.path.exists(base_dir):
-    Execute(Mkdir(base_dir))
-base_dir += '/'
-
-# use only one signature file
-env.SConsignFile(base_dir + 'SCons.dblite')
-
-# read -or not- the cached -non default- options
-if (ARGUMENTS['mode'] == 'configure'):
-    opts = Variables(None, ARGUMENTS)
 else:
     opts = Variables('.xmipp_scons.options', ARGUMENTS)
 

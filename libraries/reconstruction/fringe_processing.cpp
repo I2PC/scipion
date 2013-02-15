@@ -230,7 +230,7 @@ void orMinDer(const MultidimArray<double> & im, MultidimArray<double > & orMap, 
     orModMap = ornMod;
 }
 
-void normalize(FourierTransformer &ftrans, FourierTransformer &ftrans2, MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap,
+void normalize(FourierTransformer &ftrans, MultidimArray<double> & im, MultidimArray<double > & imN,  MultidimArray<double > & imModMap,
 		double R, double S, MultidimArray<bool> & ROI)
 {
     // H is an Annular filter with radius=R and sigma=S and a Gaussian DC filter with sigma=1
@@ -275,7 +275,7 @@ void normalize(FourierTransformer &ftrans, FourierTransformer &ftrans2, Multidim
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
         A2D_ELEM(imN,i,j) = A2D_ELEM(imComplex,i,j).real();
 
-    SPTH(ftrans2,imN,H);
+    SPTH(ftrans,imN,H);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
     {
