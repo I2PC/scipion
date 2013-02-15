@@ -48,6 +48,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		refreshActive(null);
 	}
 
+
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
 	 * particle. Considers owner for selection to the first particle containing
@@ -68,7 +69,6 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	}
 
-	
 
 	public void mousePressed(MouseEvent e)
 	{
@@ -212,11 +212,6 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		return uc.getLastParticle().getTiltedParticle();
 	}
 
-	@Override
-	public void setMicrograph(Micrograph m)
-	{
-		um = (UntiltedMicrograph)m;
-	}
 	
 	protected void manageActive(int x, int y)
 	{
@@ -226,6 +221,13 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 			um.initAligner();
 		setActiveMoved(false);
 	}
+	
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		um = (UntiltedMicrograph)m;
+	}
+	
 	
 
 

@@ -26,8 +26,6 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingPicker ppicker;
 
 
-
-
 	public TrainingCanvas(TrainingPickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
@@ -106,6 +104,9 @@ public class TrainingCanvas extends ParticlePickerCanvas
 				erase(x, y);
 				return;
 			}
+			if (active == null)
+				return;
+			
 			if (!micrograph.fits(x, y, active.getFamily().getSize()))
 				return;
 			if (active instanceof AutomaticParticle)
@@ -231,11 +232,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		if (p == null)
 			active = null;
 		else
-			active = (TrainingParticle) p;
+			active =  (TrainingParticle)p;
 		repaint();
 
 	}
-
+	
 	@Override
 	public ParticlePickerJFrame getFrame()
 	{

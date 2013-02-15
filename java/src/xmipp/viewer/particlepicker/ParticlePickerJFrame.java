@@ -283,7 +283,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		helpmn.add(hcontentsmi);
-		
+
 		keyassistmi = new JMenuItem("Key Assist...");
 		keyassistmi.addActionListener(new ActionListener()
 		{
@@ -300,7 +300,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		helpmn.add(keyassistmi);
-		
+
 		pmi = new JMenuItem("Particles", XmippResource.getIcon("table_view.gif"));
 		pmi.addActionListener(new ActionListener()
 		{
@@ -363,7 +363,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Invert LUT", true, picker);
 	}
 
-	
 	protected abstract void openHelpURl();
 
 	protected abstract void resetMicrograph();
@@ -617,7 +616,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return eraserbt.isSelected();
 	}
 
-	
 
 	protected void displayZoom()
 	{
@@ -774,7 +772,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return getFamily().getColor();
 
 	}
-	
+
 	public Map<String, String> getKeyAssist()
 	{
 		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
@@ -792,6 +790,4 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		return map;
 	}
 
-
-	
 }
