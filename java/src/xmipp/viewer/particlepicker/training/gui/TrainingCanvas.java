@@ -4,17 +4,13 @@ package xmipp.viewer.particlepicker.training.gui;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
-
-import xmipp.ij.commons.Tool;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
@@ -32,10 +28,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
-	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke continuousst = new BasicStroke();
-	final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke activecst = new BasicStroke(2.0f);
+
 	
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
