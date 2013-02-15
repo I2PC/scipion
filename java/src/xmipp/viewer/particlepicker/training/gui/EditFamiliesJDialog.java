@@ -237,4 +237,9 @@ public class EditFamiliesJDialog extends JDialog {
 		model.fireTableStructureChanged();
 	}
 
+	public TrainingPickerJFrame getFrame()
+	{
+		return parent;
+	}
+
 }

@@ -21,9 +21,9 @@ public class Family {
 	private FamilyState state;
 	private int templatesNumber;
 	private ImageGeneric templates;
+	private String templatesfile;
 
-	private static int sizemax = 800;
-	private static Family dfamily = new Family("DefaultFamily", Color.green, sizemax/4, 1);
+	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
 			Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW };
 	private static int nextcolor;
@@ -36,15 +36,15 @@ public class Family {
 		return next;
 	}
 
-	public Family(String name, Color color, int size, int templatesNumber) {
-		this(name, color, size, FamilyState.Manual, null, templatesNumber);
+	public Family(String name, Color color, int size, int templatesNumber, String templatesfile) {
+		this(name, color, size, FamilyState.Manual, null, templatesNumber, templatesfile);
 	}
 
 	public Family(String name, Color color, int size, FamilyState state,
 			ParticlePicker ppicker, ImageGeneric templates) {
-		if (size < 0 || size > sizemax)
+		if (size < 0 || size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format(
-					"Size should be between 0 and %s, %s not allowed", sizemax,
+					"Size should be between 0 and %s, %s not allowed", ParticlePicker.fsizemax,
 					size));
 		if (name == null || name.equals(""))
 			throw new IllegalArgumentException(
@@ -74,10 +74,10 @@ public class Family {
 	
 
 	public Family(String name, Color color, int size, FamilyState state,
-			ParticlePicker ppicker, int templatesNumber) {
-		if (size < 0 || size > sizemax)
+			ParticlePicker ppicker, int templatesNumber, String templatesfile) {
+		if (size < 0 || size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format(
-					"Size should be between 0 and %s, %s not allowed", sizemax,
+					"Size should be between 0 and %s, %s not allowed", ParticlePicker.fsizemax,
 					size));
 		if (name == null || name.equals(""))
 			throw new IllegalArgumentException(
@@ -86,8 +86,14 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
+		this.templatesfile = templatesfile;
 		setTemplatesNumber(templatesNumber);
 	
+	}
+	
+	public String getTemplatesFile()
+	{
+		return templatesfile;
 	}
 	
 	public void initTemplates()
@@ -157,15 +163,11 @@ public class Family {
 	}
 
 	public void setSize(int size) {
-		if (size > sizemax)
+		if (size > ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format(
-					"Max size is %s, %s not allowed", sizemax, size));
+					"Max size is %s, %s not allowed", ParticlePicker.fsizemax, size));
 		this.size = size;
 		initTemplates();
-	}
-
-	public static Family getDefaultgp() {
-		return dfamily;
 	}
 
 	public String getName() {
@@ -197,11 +199,7 @@ public class Family {
 	public void setColor(Color color) {
 		this.color = color;
 	}
-
-	public static Family getDefaultFamily() {
-		return dfamily;
-	}
-
+	
 	public String toString() {
 		return name;
 	}

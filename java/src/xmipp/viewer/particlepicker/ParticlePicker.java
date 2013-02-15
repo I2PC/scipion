@@ -46,6 +46,8 @@ public abstract class ParticlePicker {
 	public static final int defAutoPickPercent = 90;
 	protected int autopickpercent = defAutoPickPercent;
 	protected boolean updateTemplatesPending;
+	public static final int fsizemax = 800;
+	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
 	
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
 		this(selfile, outputdir, null, mode);
@@ -241,7 +243,7 @@ public abstract class ParticlePicker {
 		families.clear();
 		String file = familiesfile;
 		if (!new File(file).exists()) {
-			families.add(Family.getDefaultFamily());
+			families.add(dfamily);
 			saveFamilies();
 			return;
 		}
@@ -272,7 +274,7 @@ public abstract class ParticlePicker {
 					
 				}
 				else
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber);
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);			
 				families.add(family);
 			}
 			md.destroy();
@@ -522,13 +524,11 @@ public abstract class ParticlePicker {
 				shift = family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
 				if (center)
 				{
-					System.out.println(particle);
 					particle.setX(particle.getX() + shift.getX());
 					particle.setY(particle.getY() + shift.getY());
-					System.out.println(particle);
 				}
 			}
-
+			family.getTemplates().write(family.getTemplatesFile());
 		}
 		catch (Exception e)
 		{
