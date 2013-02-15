@@ -53,6 +53,7 @@ public class Family {
 		this.color = color;
 		this.size = size;
 		this.state = state;
+		this.templatesfile = templates.getFilename();
 		if(templates == null)
 			setTemplatesNumber(1);
 		else
@@ -103,6 +104,8 @@ public class Family {
 		try {
 			this.templates = new ImageGeneric(ImageGeneric.Float);
 			templates.resize(size, size, 1, templatesNumber);
+			templates.write(templatesfile);
+			templates.setFilename(templatesfile);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}

@@ -274,7 +274,10 @@ public abstract class ParticlePicker {
 					
 				}
 				else
-					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);			
+				{
+					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);
+					setUpdateTemplatesPending(true);
+				}
 				families.add(family);
 			}
 			md.destroy();
