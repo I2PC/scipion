@@ -297,6 +297,7 @@ public abstract class ParticlePicker
 		String file = familiesfile;
 		if (!new File(file).exists())
 		{
+
 			families.add(dfamily);
 			saveFamilies();
 			return;
@@ -626,7 +627,6 @@ public abstract class ParticlePicker
 				}
 			}
 			family.getTemplates().write(family.getTemplatesFile());
-
 		}
 		catch (Exception e)
 		{

@@ -23,8 +23,6 @@ public class Family {
 	private ImageGeneric templates;
 	private String templatesfile;
 
-
-	
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
 			Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW };
@@ -82,6 +80,7 @@ public class Family {
 		if (size < 0 || size >  ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format(
 					"Size should be between 0 and %s, %s not allowed",  ParticlePicker.fsizemax,
+
 					size));
 		if (name == null || name.equals(""))
 			throw new IllegalArgumentException(
@@ -102,6 +101,7 @@ public class Family {
 
 
 	public void initTemplates() {
+
 		if(templatesNumber == 0)
 			return;
 		try {
@@ -109,7 +109,7 @@ public class Family {
 			templates.resize(size, size, 1, templatesNumber);
 			templates.write(templatesfile);
 			templates.setFilename(templatesfile);
-			
+
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
@@ -174,6 +174,7 @@ public class Family {
 		if (size >  ParticlePicker.fsizemax)
 			throw new IllegalArgumentException(String.format(
 					"Max size is %s, %s not allowed",  ParticlePicker.fsizemax, size));
+
 		this.size = size;
 		initTemplates();
 	}
@@ -209,8 +210,6 @@ public class Family {
 	public void setColor(Color color) {
 		this.color = color;
 	}
-
-	
 
 	public String toString() {
 		return name;
