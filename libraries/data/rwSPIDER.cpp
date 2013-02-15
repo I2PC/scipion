@@ -175,7 +175,7 @@ int  ImageBase::readSPIDER(size_t select_img)
     _xDim = (int) header->nsam;
     _yDim = (int) header->nrow;
     _zDim = (int) header->nslice;
-    _nDim = (isStack)? header->maxim : 1;
+    _nDim = (isStack)? (size_t)(header->maxim) : 1;
 
     if (_xDim < 1 || _yDim < 1 || _zDim < 1 || _nDim < 1)
         REPORT_ERROR(ERR_IO_NOTFILE,formatString("Invalid Spider file:  %s", filename.c_str()));
@@ -349,7 +349,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     size_t xstore  = Xdim;
     if ( transform == Hermitian )
     {
-        xstore = Xdim * 0.5 + 1;
+        xstore = (size_t)(Xdim * 0.5 + 1);
         header->nsam = 2*xstore;
     }
 

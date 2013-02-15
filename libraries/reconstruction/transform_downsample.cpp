@@ -91,8 +91,8 @@ void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName
         REPORT_ERROR(ERR_MULTIDIM_DIM,"This program is not intended for volumes");
 
     // Open output data, mapped file
-    int Xpdim = floor(Xdim/step);
-    int Ypdim = floor(Ydim/step);
+    int Xpdim = (int)floor(Xdim/step);
+    int Ypdim = (int)floor(Ydim/step);
     ImageGeneric M_out;
     if (method==SMOOTH)
         M_out.setDatatype(DT_UChar);
@@ -228,12 +228,12 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
 
     int ihalf=YSIZE(MpmemFourier)/2+1;
     for (int i=0; i<ihalf; i++)
-        for (int j=0; j<XSIZE(MpmemFourier); j++)
+        for (size_t j=0; j<XSIZE(MpmemFourier); j++)
             A2D_ELEM(MpmemFourier,i,j)=A2D_ELEM(MmemFourier,i,j);
-    for (int i=ihalf; i<YSIZE(MpmemFourier); i++)
+    for (size_t i=ihalf; i<YSIZE(MpmemFourier); i++)
     {
-        int ip=YSIZE(MmemFourier)-YSIZE(MpmemFourier)+i;
-        for (int j=0; j<XSIZE(MpmemFourier); j++)
+        size_t ip=YSIZE(MmemFourier)-YSIZE(MpmemFourier)+i;
+        for (size_t j=0; j<XSIZE(MpmemFourier); j++)
             A2D_ELEM(MpmemFourier,i,j)=A2D_ELEM(MmemFourier,ip,j);
     }
 

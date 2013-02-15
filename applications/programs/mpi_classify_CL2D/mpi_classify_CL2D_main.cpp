@@ -138,7 +138,7 @@ void CL2DClass::transferUpdate()
         // Compute the polar Fourier transform of the full image
         normalizedPolarFourierTransform(P, polarFourierP, false, XSIZE(P) / 5,
                                         XSIZE(P) / 2-2, plans, 1);
-        int finalSize = 2 * polarFourierP.getSampleNoOuterRing() - 1;
+        size_t finalSize = 2 * polarFourierP.getSampleNoOuterRing() - 1;
         if (XSIZE(rotationalCorr) != finalSize)
             rotationalCorr.resize(finalSize);
         rotAux.local_transformer.setReal(rotationalCorr);
@@ -957,7 +957,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
             init_progress_bar(Nimgs);
         }
 
-        int K = XMIPP_MIN(prm->Nneighbours+1,Q);
+        size_t K = std::min((size_t)prm->Nneighbours+1,Q);
         if (K == 0)
             K = Q;
         for (size_t q = 0; q < Q; q++)
@@ -1032,7 +1032,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 
             std::cout << "Number of assignment changes=" << Nchanges
             << std::endl;
-            MDChanges.setValue(MDL_CL2D_CHANGES, Nchanges, idMdChanges);
+            MDChanges.setValue(MDL_CL2D_CHANGES, (int)Nchanges, idMdChanges);
             MDChanges.write(formatString("info@%s",fnClasses.c_str()),MD_APPEND);
         }
 
@@ -1151,7 +1151,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     CL2DAssignment assignment, assignment1, assignment2;
     CL2DClass *firstSplitNode1 = NULL;
     CL2DClass *firstSplitNode2 = NULL;
-    size_t minAllowedSize = prm->PminSize * 0.01 * node->currentListImg.size();
+    size_t minAllowedSize = (size_t)(prm->PminSize * 0.01 * node->currentListImg.size());
 
     bool oldclassicalMultiref = prm->classicalMultiref;
     prm->classicalMultiref = false;

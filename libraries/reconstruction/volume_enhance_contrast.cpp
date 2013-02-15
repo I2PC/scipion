@@ -193,7 +193,7 @@ void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
     // We use gaussian because we have a T-Student with more than 100
     float z=icdf_gauss(1-(0.01/2));  // degrees of freedom
     // We create a volume with the neighbor sizes
-    MultidimArray<double> vol_tam;
+    MultidimArray<int> vol_tam;
     vol_tam.resize(vol);
     vol_tam.initConstant(4);
 
@@ -202,9 +202,9 @@ void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
         if (A3D_ELEM(mask,k,i,j)==1)
         {
             // only compute if the pixel is not background
-            double cubeDim=1; // 3x3x3
-            double newCubeDim=1; // 3x3x3
-            double max_tam=4; // 9x9x9
+            int cubeDim=1; // 3x3x3
+            int newCubeDim=1; // 3x3x3
+            int max_tam=4; // 9x9x9
             double avgSmall, stddevSmall, NSmall;
             COMPUTE_STATISTICS(vol,cubeDim,k,i,j,avgSmall,stddevSmall,NSmall);
             bool found=false;
@@ -286,7 +286,8 @@ void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
 
     MultidimArray<double> Vol_E;
     Vol_E=vol;
-    double tam, pixel;
+    int tam;
+    double pixel;
     // We compute the MEGV for all the volume
     FOR_ALL_ELEMENTS_IN_ARRAY3D(vol)
     { // Only compute if no background

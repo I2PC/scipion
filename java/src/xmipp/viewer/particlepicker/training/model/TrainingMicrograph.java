@@ -162,6 +162,7 @@ public class TrainingMicrograph extends Micrograph{
 	}
 
 
+
 	public void removeParticles(int x, int y, TrainingPicker ppicker)
 	{
 		List<TrainingParticle> particles = new ArrayList<TrainingParticle>();

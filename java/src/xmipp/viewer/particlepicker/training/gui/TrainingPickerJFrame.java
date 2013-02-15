@@ -161,6 +161,37 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
+		
+		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
+
+		exportmi.addActionListener(new ActionListener()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				XmippFileChooser fc = new XmippFileChooser();
+				int returnVal = fc.showOpenDialog(TrainingPickerJFrame.this);
+
+				try
+				{
+					if (returnVal == XmippFileChooser.APPROVE_OPTION)
+					{
+						File file = fc.getSelectedFile();
+						((TrainingPicker) getParticlePicker()).exportParticles(file.getAbsolutePath());
+						showMessage("Export successful");
+					}
+				}
+				catch (Exception ex)
+				{
+					showException(ex);
+				}
+			}
+		});
+		filemn.add(importffmi);
+		if (ppicker.getFamily().getStep() != FamilyState.Manual)
+			importffmi.setEnabled(false);
+		filemn.add(exportmi);
 
 		
 		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
@@ -194,7 +225,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			importffmi.setEnabled(false);
 		filemn.add(exportmi);
 		JMenu windowmn = new JMenu("Window");
-		JMenu helpmn = new JMenu("Help");
+		
 		mb.add(filemn);
 		mb.add(filtersmn);
 		mb.add(windowmn);
@@ -209,7 +240,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
 
-		helpmn.add(hcontentsmi);
+		
 
 		// Setting menu item listeners
 
@@ -238,7 +269,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void loadTemplates()
 	{
-
 		if (templatesdialog == null)
 		{
 			templatesdialog = new TemplatesJDialog(TrainingPickerJFrame.this);
@@ -851,6 +881,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	
 
 
+
 	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
 		String result = "";
@@ -944,14 +975,17 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	}
 
+	
+	public boolean isCenterPick()
+	{
+		return centerpickchb.isSelected();
+	}
+	
+	
+
 	@Override
 	public ParticlesJDialog initParticlesJDialog()
 	{
 		return new ParticlesJDialog(this);
-	}
-
-	public boolean isCenterPick()
-	{
-		return centerpickchb.isSelected();
 	}
 }

@@ -172,7 +172,7 @@ void ProgCtfGroup::produceSideInfo()
     if(do1Dctf)
     {
         ypaddim=1;
-        ctfxpaddim =  sqrt(2.) *  xpaddim + 1;
+        ctfxpaddim =  (size_t)(sqrt(2.) *  xpaddim + 1);
     }
     else
     {
@@ -180,7 +180,7 @@ void ProgCtfGroup::produceSideInfo()
         //This is ready for the day in which we use anisotropic ctf
         ypaddim=1;
         //ctfxpaddim = xpaddim;
-        ctfxpaddim =  sqrt(2.) *  xpaddim + 1;
+        ctfxpaddim =  (size_t)(sqrt(2.) *  xpaddim + 1);
     }
     Mctf.resize(ypaddim,ctfxpaddim);
 

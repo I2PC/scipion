@@ -119,9 +119,9 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
         {
             double minVal = 1e38;
             for (int j = 0, y = shrinkFactor * ySmall;
-                 j < shrinkFactor && y < YSIZE(I); j++, y++)
+                 j < shrinkFactor && y < (int)YSIZE(I); j++, y++)
                 for (int k = 0, x = shrinkFactor * xSmall;
-                     k < shrinkFactor && x < XSIZE(I); k++, x++)
+                     k < shrinkFactor && x < (int)XSIZE(I); k++, x++)
                 {
                     double thispixel = DIRECT_A2D_ELEM(I,y,x);
                     if (thispixel < minVal)
@@ -144,8 +144,8 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
             y0 = 0;
         int y0b = y0 - yb + radius; //y coordinate in the ball corresponding to y0
         int yF = yb + radius;
-        if (yF >= YSIZE(shrinkI))
-            yF = YSIZE(shrinkI) - 1;
+        if (yF >= (int)YSIZE(shrinkI))
+            yF = (int)YSIZE(shrinkI) - 1;
 
         for (int xb = -radius; xb < (int)XSIZE(shrinkI) + radius; xb++)
         {
@@ -155,8 +155,8 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
                 x0 = 0;
             int x0b = x0 - xb + radius;
             int xF = xb + radius;
-            if (xF >= XSIZE(shrinkI))
-                xF = XSIZE(shrinkI) - 1;
+            if (xF >= (int)XSIZE(shrinkI))
+                xF = (int)XSIZE(shrinkI) - 1;
 
             double z = 1e38;
             for (int yp = y0, ybp = y0b; yp <= yF; yp++, ybp++)
@@ -681,7 +681,7 @@ void OtsuSegmentation(MultidimArray<double> &V)
     mom0(0) = hist(0);
     hist.index2val(0, x);
     mom1(0) = hist(0) * x;
-    for (int i = 1; i < XSIZE(mom0); i++)
+    for (size_t i = 1; i < XSIZE(mom0); i++)
     {
         mom0(i) = mom0(i - 1) + hist(i);
         hist.index2val(i, x);
@@ -725,7 +725,7 @@ void EntropySegmentation(MultidimArray<double> &V)
     MultidimArray<double> mom0;
     mom0.initZeros(XSIZE(hist));
     mom0(0) = hist(0);
-    for (int i = 1; i < XSIZE(mom0); i++)
+    for (size_t i = 1; i < XSIZE(mom0); i++)
         mom0(i) = mom0(i - 1) + hist(i);
 
     // Entropy for black and white parts of the histogram
@@ -733,12 +733,12 @@ void EntropySegmentation(MultidimArray<double> &V)
     MultidimArray<double> h1, h2;
     h1.initZeros(XSIZE(hist));
     h2.initZeros(XSIZE(hist));
-    for (int i = 0; i < XSIZE(hist); i++)
+    for (size_t i = 0; i < XSIZE(hist); i++)
     {
         // Entropy h1
         double w1 = mom0(i);
         if (w1 > epsilon)
-            for (int ii = 0; ii <= i; ii++)
+            for (size_t ii = 0; ii <= i; ii++)
                 if (hist(ii) > epsilon)
                 {
                     double aux = hist(ii) / w1;
@@ -748,7 +748,7 @@ void EntropySegmentation(MultidimArray<double> &V)
         // Entropy h2
         double w2 = 1 - mom0(i);
         if (w2 > epsilon)
-            for (int ii = i + 1; ii < XSIZE(hist); ii++)
+            for (size_t ii = i + 1; ii < XSIZE(hist); ii++)
                 if (hist(ii) > epsilon)
                 {
                     double aux = hist(ii) / w2;
@@ -793,7 +793,7 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
     mom0(0) = hist(0);
     hist.index2val(0, x);
     mom1(0) = hist(0) * x;
-    for (int i = 1; i < XSIZE(mom0); i++)
+    for (size_t i = 1; i < XSIZE(mom0); i++)
     {
         mom0(i) = mom0(i - 1) + hist(i);
         hist.index2val(i, x);
@@ -805,12 +805,12 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
     MultidimArray<double> h1, h2;
     h1.initZeros(XSIZE(hist));
     h2.initZeros(XSIZE(hist));
-    for (int i = 0; i < XSIZE(hist); i++)
+    for (size_t i = 0; i < XSIZE(hist); i++)
     {
         // Entropy h1
         double w1 = mom0(i);
         if (w1 > epsilon)
-            for (int ii = 0; ii <= i; ii++)
+            for (size_t ii = 0; ii <= i; ii++)
                 if (hist(ii) > epsilon)
                 {
                     double aux = hist(ii) / w1;
@@ -820,7 +820,7 @@ double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
         // Entropy h2
         double w2 = 1 - mom0(i);
         if (w2 > epsilon)
-            for (int ii = i + 1; ii < XSIZE(hist); ii++)
+            for (size_t ii = i + 1; ii < XSIZE(hist); ii++)
                 if (hist(ii) > epsilon)
                 {
                     double aux = hist(ii) / w2;
@@ -2626,7 +2626,7 @@ void computeEdges(const MultidimArray<double>& vol,
 void forceDWTSparsity(MultidimArray<double> &V, double eps)
 {
 	int size0=XSIZE(V);
-	int sizeF=NEXT_POWER_OF_2(size0);
+	int sizeF=(int)NEXT_POWER_OF_2(size0);
     selfScaleToSize(BSPLINE3,V,sizeF,sizeF,sizeF);
     MultidimArray<double> vol_wavelets, vol_wavelets_abs;
     set_DWT_type(DAUB12);
@@ -2884,7 +2884,7 @@ void BasisFilter::apply(MultidimArray<double> &img)
 
     MultidimArray<double> result;
     result.initZeros(img);
-    for (int nn = 0; nn < NSIZE(mBasis); ++nn)
+    for (size_t nn = 0; nn < NSIZE(mBasis); ++nn)
     {
         double cnn = 0;
         double *ptrBasis = &NZYX_ELEM(mBasis,nn,0,0,0);

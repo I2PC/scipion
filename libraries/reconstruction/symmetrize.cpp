@@ -85,7 +85,7 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
         MultidimArray<int> mask;
         mask.resizeNoCopy(V_in);
         mask.setXmippOrigin();
-        int rad = XMIPP_MIN(XSIZE(V_in), YSIZE(V_in));
+        size_t rad = XMIPP_MIN(XSIZE(V_in), YSIZE(V_in));
         rad = XMIPP_MIN(rad, ZSIZE(V_in));
         BinaryCircularMask(mask, rad / 2, OUTSIDE_MASK);
         double dum;

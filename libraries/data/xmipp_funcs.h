@@ -1022,6 +1022,9 @@ public :
     /** Default constructor */
     BaseListener(): verbosity(0), cancel(false)
     {}
+    
+    /** Destructor */
+    virtual ~BaseListener() {}
 
     /** Initialize progress bar.
      *

@@ -81,16 +81,24 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
     {
     case DT_CShort:
         {
-            std::complex<short> * ptr = (std::complex<short> *) page;
+            short  * ptr = (short *) page;
+            double * srcPtrd = (double *)srcPtr;
             for(size_t i=0; i<pageSize;i++)
-                ptr[i] = (std::complex<short>)srcPtr[i];
+            {
+                *ptr=(short) *srcPtrd; ptr++; srcPtrd++;
+                *ptr=(short) *srcPtrd; ptr++; srcPtrd++;
+            }
         }
         break;
     case DT_CInt:
 		{
-			std::complex<int> * ptr = (std::complex<int> *) page;
+                        int  * ptr = (int *) page;
+                        double * srcPtrd = (double *)srcPtr;
 			for(size_t i=0; i<pageSize;i++)
-			ptr[i] = (std::complex<int>)srcPtr[i];
+                        {
+                            *ptr=(int) *srcPtrd; ptr++; srcPtrd++;
+                            *ptr=(int) *srcPtrd; ptr++; srcPtrd++;
+                        }
 		}
 		break;
 	case DT_CFloat:

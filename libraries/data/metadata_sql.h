@@ -289,6 +289,9 @@ public:
         this->orderLabel = orderLabel;
         this->asc=asc;
     }
+    
+    /** Destructor */
+    virtual ~MDQuery() {}
 
     /** Return the ORDER BY string to be used in SQL query */
     String orderByString() const

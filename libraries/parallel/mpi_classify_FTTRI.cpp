@@ -125,7 +125,7 @@ void ProgClassifyFTTRI::produceSideInfo()
             REPORT_ERROR(ERR_MULTIDIM_DIM,"This program is only intended for squared images");
     }
     padXdim=(int)(pad*xdim);
-    Rmax=floor(fmax*padXdim);
+    Rmax=(size_t)floor(fmax*padXdim);
 
     size_t blockSize=mdIn.size()/(5*node->size);
     if (blockSize==0)
@@ -209,8 +209,11 @@ void ProgClassifyFTTRI::produceFTTRI()
             transformer1.completeFourierTransform(padI,FTI);
             FFT_magnitude(FTI,magFTI);
             CenterFFT(magFTI,true);
-            magFTI.window(filteredMagFTI,FIRST_XMIPP_INDEX(Rmax),FIRST_XMIPP_INDEX(Rmax),
-                          LAST_XMIPP_INDEX(Rmax),LAST_XMIPP_INDEX(Rmax));
+            magFTI.window(filteredMagFTI,
+                          FIRST_XMIPP_INDEX(Rmax),
+                          FIRST_XMIPP_INDEX(Rmax),
+                          LAST_XMIPP_INDEX(Rmax),
+                          LAST_XMIPP_INDEX(Rmax));
 
             // Now express it in polar coordinates and apply weight
             image_convertCartesianToPolar_ZoomAtCenter(filteredMagFTI, polarFilteredMagFTI, R, zoom, 3, Rmax/2, Rmax, 0, PI, Rmax);
@@ -363,7 +366,7 @@ void ProgClassifyFTTRI::epsilonClassification(double epsilon)
 {
     epsilonClasses.clear();
     notAssigned=notAssigned0;
-    size_t remaining=notAssigned.sum();
+    size_t remaining=(size_t)notAssigned.sum();
     size_t currentPointer=0;
     EpsilonClass newClass;
     FileName fnSeed, fnCandidate;
@@ -414,7 +417,7 @@ void ProgClassifyFTTRI::epsilonClassification(double epsilon)
         size_t imax=inNewClass.size();
         for (size_t i=0; i<imax; ++i)
             VEC_ELEM(notAssigned,inNewClass[i])=0;
-        remaining=notAssigned.sum();
+        remaining=(size_t)notAssigned.sum();
         if (node->isMaster())
         {
             newClass.memberIdx=inNewClass;

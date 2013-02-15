@@ -554,7 +554,7 @@ void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
         const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi + 1, tmpj)))[0]);
@@ -568,7 +568,7 @@ void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
         	ptrAveVector[j] += codevector[j];
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
         const floatFeature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj+1)))[0]);
@@ -596,7 +596,7 @@ double RECTLayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
     }
@@ -604,7 +604,7 @@ double RECTLayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
     }
@@ -667,7 +667,7 @@ void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
             _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj)))[j]);
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
         for (j = 0; j < dim; j++)
@@ -679,7 +679,7 @@ void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
             _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj - 1)))[j]);
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
         for (j = 0; j < dim; j++)
@@ -691,7 +691,7 @@ void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
         for (j = 0; j < dim; j++)
             _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj - 1)))[j]);
     }
-    if (((tmpj + 1) < _som->height()) && ((tmpi - 1) >= 0))
+    if (((tmpj + 1) < (int)_som->height()) && ((tmpi - 1) >= 0))
     {
         kk++;
         for (j = 0; j < dim; j++)
@@ -721,7 +721,7 @@ double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpi + 1) < _som->width())
+    if ((tmpi + 1) < (int)_som->width())
     {
         kk++;
     }
@@ -729,7 +729,7 @@ double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if ((tmpj + 1) < _som->height())
+    if ((tmpj + 1) < (int)_som->height())
     {
         kk++;
     }
@@ -737,7 +737,7 @@ double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
     {
         kk++;
     }
-    if (((tmpj + 1) < _som->height()) && ((tmpi - 1) >= 0))
+    if (((tmpj + 1) < (int)_som->height()) && ((tmpi - 1) >= 0))
     {
         kk++;
     }

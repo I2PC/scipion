@@ -1578,7 +1578,7 @@ MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    char str[1024] = "";
+    char * str = NULL;
     if (PyArg_ParseTuple(args, "s", &str))
     {
         try
@@ -1696,13 +1696,15 @@ MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    char str[1024] = "";
+    char * str = NULL;
+
     if (PyArg_ParseTuple(args, "s", &str))
     {
         try
         {
             MetaDataObject *self = (MetaDataObject*) obj;
             self->metadata->operate(str);
+            //free(str);
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)
@@ -1710,6 +1712,7 @@ MetaData_operate(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
+   // free(str);
     return NULL;
 }
 
@@ -1718,14 +1721,16 @@ PyObject *
 MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    char oldStr[1024] = "";
-    char newStr[1024] = "";
+    char * oldStr = NULL;
+    char * newStr = NULL;
     if (PyArg_ParseTuple(args, "iss", &label, &oldStr, &newStr))
     {
         try
         {
             MetaDataObject *self = (MetaDataObject*) obj;
             self->metadata->replace((MDLabel)label, oldStr, newStr);
+            //free(oldStr);
+            //free(newStr);
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)
@@ -1733,6 +1738,8 @@ MetaData_replace(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
+    //free(oldStr);
+    //free(newStr);
     return NULL;
 }
 

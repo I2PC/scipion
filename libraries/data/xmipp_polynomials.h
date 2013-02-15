@@ -36,6 +36,8 @@ class Polynomials
 #define COEFFICIENTS(poly) (poly.fittedCoeffs)
 
 public :
+        // Destructor
+        virtual ~Polynomials() {}
 
 	//Fitted coefficients
 	Matrix1D<double> fittedCoeffs;
@@ -60,7 +62,7 @@ class PolyZernikes: public Polynomials
 {
 
 private:
-	std::vector<Matrix2D<int> > fMatV;
+	std::vector<Matrix2D<size_t> > fMatV;
 
 public:
 	//Create not really the polynomials, This function creates a set of coefficient matrix that are efficient

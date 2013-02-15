@@ -87,7 +87,7 @@ void ProgPdbNmaDeform::run()
 
 		// Apply mode
 		double lambda=A1D_ELEM(deformations,i);
-		for (int i=0; i<YSIZE(mode); ++i)
+		for (size_t i=0; i<YSIZE(mode); ++i)
 		{
 			RichAtom& atom_i=pdb.atomList[i];
 			atom_i.x+=lambda*DIRECT_A2D_ELEM(mode,i,0);

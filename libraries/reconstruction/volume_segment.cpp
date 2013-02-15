@@ -64,7 +64,7 @@ void ProgVolumeSegment::readParams()
     else if (method=="prob")
     {
         do_prob = true;
-        wang_radius = getDoubleParam("--method", 1);
+        wang_radius = getIntParam("--method", 1);
     }
 }
 

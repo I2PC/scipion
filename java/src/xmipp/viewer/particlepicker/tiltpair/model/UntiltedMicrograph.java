@@ -159,5 +159,7 @@ public class UntiltedMicrograph extends Micrograph
 	{
 		return alignmentmin ;
 	}
+	
+	
 
 }

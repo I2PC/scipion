@@ -41,7 +41,7 @@ bool debugging = true;
 // Split several histograms within the indexes l0 and lF so that
 // the entropy after division is maximized
 int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
-                                int l0, int lF)
+                                size_t l0, size_t lF)
 {
     // Number of classes
     int K = hist.size();
@@ -51,7 +51,7 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
     for (int k = 0; k < K; k++)
     {
         Histogram1D histaux = hist[k];
-        for (int l = 0; l < XSIZE(histaux); l++)
+        for (size_t l = 0; l < XSIZE(histaux); l++)
             if (l < l0 || l > lF)
                 DIRECT_A1D_ELEM(histaux,l) = 0;
         histaux *= 1.0/histaux.sum();
@@ -65,14 +65,14 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
         const Histogram1D& histogram=histNorm[k];
         DIRECT_A2D_ELEM(p,k, 0) = DIRECT_A1D_ELEM(histogram,l0);
         DIRECT_A2D_ELEM(p,k, 1) = 0;
-        for (int l = l0 + 1; l <= lF; l++)
+        for (size_t l = l0 + 1; l <= lF; l++)
             DIRECT_A2D_ELEM(p,k, 1) += DIRECT_A1D_ELEM(histogram,l);
     }
 
     // Compute the splitting l giving maximum entropy
     double maxEntropy = 0;
     int lmaxEntropy = -1;
-    int l = l0;
+    size_t l = l0;
     while (l < lF)
     {
         // Compute the entropy of the classes if we split by l
@@ -117,7 +117,7 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
 
     // If the point giving the maximum entropy is too much on the extreme,
     // substitute it by the middle point
-    if (lmaxEntropy<=2 || lmaxEntropy>=lF-2)
+    if (lmaxEntropy<=2 || lmaxEntropy>=(int)lF-2)
         lmaxEntropy = (int)ceil((lF + l0)/2.0);
 
     return lmaxEntropy;
@@ -340,7 +340,8 @@ NaiveBayes::~NaiveBayes()
 /* Set cost matrix --------------------------------------------------------- */
 void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 {
-    if (MAT_XSIZE(cost)!=K || MAT_YSIZE(cost)!=K)
+    size_t iK=(size_t) K;
+    if (MAT_XSIZE(cost)!=iK || MAT_YSIZE(cost)!=iK)
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"Cost matrix does not have the apropriate size");
     __cost=cost;
 }

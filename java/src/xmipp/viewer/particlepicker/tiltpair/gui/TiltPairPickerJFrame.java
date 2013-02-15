@@ -102,7 +102,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		filemn.add(importffmi);
 		if (pppicker.getFamily().getStep() != FamilyState.Manual)
 			importffmi.setEnabled(false);
-		importffilesmi = new JMenuItem("Import Particles From Files");
+		importffilesmi = new JMenuItem("Import Particles From Micrograph");
 		importffilesmi.addActionListener(new ActionListener() {
 			
 			@Override
@@ -114,7 +114,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		filemn.add(importffilesmi, 1);
 		// Setting menus
 		JMenu viewmn = new JMenu("View");
-		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
 		mb.add(filtersmn);
 		mb.add(viewmn);
@@ -135,7 +134,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		viewmn.add(anglesmi);
 		viewmn.add(pmi);
 		viewmn.add(ijmi);
-		helpmn.add(hcontentsmi);
 	}
 	
 	protected void showImportFromFilesDialog(){
@@ -400,10 +398,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			canvas.refreshActive(null);
 	}
 	
-	
-
-	
-
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{

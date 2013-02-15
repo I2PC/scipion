@@ -298,8 +298,8 @@ void Micrograph::scale_coordinates(const double &c)
     {
         if (coords[i].valid)
         {
-            coords[i].X = (int) coords[i].X * c;
-            coords[i].Y = (int) coords[i].Y * c;
+            coords[i].X = (int) (coords[i].X * c);
+            coords[i].Y = (int) (coords[i].Y * c);
         }
     }
 
@@ -719,9 +719,9 @@ void TiltPairAligner::computeGamma()
     while (triang < TRIANGLE_NO && counter1 < noCombinations)
     {
         counter1++;
-        i = round(rnd_unif(0, Nu - 1));
-        j = round(rnd_unif(0, Nu - 1));
-        k = round(rnd_unif(0, Nu - 1));
+        i = (int)round(rnd_unif(0, Nu - 1));
+        j = (int)round(rnd_unif(0, Nu - 1));
+        k = (int)round(rnd_unif(0, Nu - 1));
 
         // Compute area of triangle in untilted micrograph
         VECTOR_R2(iju, coordU[j] - coordU[i], coordU[j+1] - coordU[i+1]);

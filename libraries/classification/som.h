@@ -58,6 +58,9 @@ public:
     {}
     ;
 
+    /** Destructor */
+    virtual ~Descent() {}
+
     /**
      * Returns the function value associated a step if the transition from
      * the initial value to the final value es made in _nSteps steps

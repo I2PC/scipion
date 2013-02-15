@@ -89,7 +89,7 @@ void PCAMahalanobisAnalyzer::standardarizeVariables()
     // Divide by stddev
     MultidimArray<float> istddevF;
     istddevF.resize(stddev);
-    int NoInformation=0;
+    size_t NoInformation=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(stddev)
     if (DIRECT_A1D_ELEM(stddev,i)>XMIPP_EQUAL_ACCURACY)
     	DIRECT_A1D_ELEM(istddevF,i)=(float)(1.0/DIRECT_A1D_ELEM(stddev,i));
@@ -142,27 +142,27 @@ void PCAMahalanobisAnalyzer::projectOnPCABasis(Matrix2D<double> &CtY)
     }
 }
 
-void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
+void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 {
     // Take the first vectors for the PCA basis
     MultidimArray<double> vPCA;
     NPCA=XMIPP_MIN(NPCA,v.size());
-    for (int n=0; n<NPCA; n++)
+    for (size_t n=0; n<NPCA; n++)
     {
         typeCast(v[n],vPCA);
         PCAbasis.push_back(vPCA);
     }
 
-    int N=v.size();
-    for (int n=0; n<Niter; n++)
+    size_t N=v.size();
+    for (size_t n=0; n<Niter; n++)
     {
         // E-step ..........................................................
         // Compute C^t*C
         Matrix2D<double> CtC(NPCA,NPCA);
-        for (int ii=0; ii<NPCA; ii++)
+        for (size_t ii=0; ii<NPCA; ii++)
         {
             const MultidimArray<double> &Iii=PCAbasis[ii];
-            for (int jj=ii; jj<NPCA; jj++)
+            for (size_t jj=ii; jj<NPCA; jj++)
             {
                 const MultidimArray<double> &Ijj=PCAbasis[jj];
                 CtC(ii,jj)=0;
@@ -181,13 +181,13 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
 
         // M-step ..........................................................
         Matrix2D<double> XtXXtinv=X.transpose()*(X*X.transpose()).inv();
-        for (int ii=0;ii<NPCA;ii++)
+        for (size_t ii=0;ii<NPCA;ii++)
         {
             MultidimArray<double> &Ipca=PCAbasis[ii];
             const size_t unroll=4;
             size_t nmax=unroll*(MULTIDIM_SIZE(Ipca)/unroll);
             Ipca.initZeros();
-            for (int jj=0; jj<N; jj++)
+            for (size_t jj=0; jj<N; jj++)
             {
                 const MultidimArray<float> &I=v[jj];
                 const float *ptrI=MULTIDIM_ARRAY(I);
@@ -216,7 +216,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
     MultidimArray<double> average;
     data.initZeros(NPCA,v.size());
     average.initZeros(NPCA);
-    for (int ii=0;ii<NPCA;ii++)
+    for (size_t ii=0;ii<NPCA;ii++)
     {
         MultidimArray<double> &C=PCAbasis[ii];
         for (size_t jj=0;jj<v.size();jj++)
@@ -238,18 +238,18 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
     svdcmp(covarMatrix,u,w,v);
 
     /// Do the PCAbasis*v
-    int xsize=XSIZE(PCAbasis[0]);
+    size_t xsize=XSIZE(PCAbasis[0]);
     MultidimArray<double> temp;
-    for (int i=0;i<xsize;i++)
+    for (size_t i=0;i<xsize;i++)
     {
         temp.initZeros(1,NPCA);
-        for (int j=0;j<NPCA;j++)
-            for (int k=0;k<NPCA;k++)
+        for (size_t j=0;j<NPCA;j++)
+            for (size_t k=0;k<NPCA;k++)
             {
                 const MultidimArray<double> &Iii=PCAbasis[k];
                 DIRECT_A1D_ELEM(temp,j)+=DIRECT_A1D_ELEM(Iii,i)* MAT_ELEM(v,k,j);
             }
-        for (int k=0;k<NPCA;k++)
+        for (size_t k=0;k<NPCA;k++)
         {
             const MultidimArray<double> &Iii=PCAbasis[k];
             DIRECT_A1D_ELEM(Iii,i)=DIRECT_A1D_ELEM(temp,k);
@@ -257,11 +257,12 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
     }
 
     // Normalize output vectors
-    for (int ii=0;ii<NPCA;ii++)
+    for (size_t ii=0;ii<NPCA;ii++)
     {
         double norm=sqrt(PCAbasis[ii].sum2());
         PCAbasis[ii]/=norm;
     }
+
 }
 
 /** computes the orthonormal basis for a subspace
@@ -285,7 +286,7 @@ void PCAMahalanobisAnalyzer::gramSchmidt()
         if (ii==0)
         {
             double inorm=1.0/sqrt(Iii.sum2());
-            for (int i=0;i<XSIZE(Iii);i++)
+            for (size_t i=0;i<XSIZE(Iii);i++)
                 DIRECT_A1D_ELEM(Iii,i)=DIRECT_A1D_ELEM(Iii,i)*inorm;
             continue;
         }
@@ -302,7 +303,7 @@ void PCAMahalanobisAnalyzer::gramSchmidt()
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(orthonormalBasis)
         DIRECT_A1D_ELEM(orthonormalBasis,i)= DIRECT_A1D_ELEM(Iii,i)+ DIRECT_A1D_ELEM(v,i);
         double inorm=1.0/sqrt(orthonormalBasis.sum2());
-        for (int i=0;i<XSIZE(Iii);i++)
+        for (size_t i=0;i<XSIZE(Iii);i++)
             DIRECT_A1D_ELEM(Iii,i)=DIRECT_A1D_ELEM(orthonormalBasis,i)*inorm;
     }
 }

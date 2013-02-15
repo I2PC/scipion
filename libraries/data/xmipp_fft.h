@@ -44,7 +44,7 @@
  * digital frequency (-1/2 to 1/2)
  */
 #define FFT_IDX2DIGFREQ(idx, size, freq) \
-    freq = (size<=1)? 0:(((double) ((idx) <= ((size) >> 1)) ? (idx) : -(size) + (idx)) / \
+    freq = (size<=1)? 0:(( (((int)idx) <= (((int)(size)) >> 1)) ? ((int)(idx)) : -((int)(size)) + ((int)(idx))) / \
            (double)(size));
 
 #define FFT_IDX2DIGFREQ_FAST(idx, size, size_2, isize, freq) \
@@ -73,7 +73,7 @@
  * coordinates, then an exception is thrown
  */
 template <typename T>
-void FFT_idx2digfreq(T& v, const Matrix1D< size_t >& idx, Matrix1D< double >& freq)
+void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 {
     if (VEC_XSIZE(idx) < 1 || VEC_XSIZE(idx) > 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "FFT_idx2digfreq: Index is not of the correct size");
@@ -99,7 +99,7 @@ void FFT_idx2digfreq(T& v, const Matrix1D< size_t >& idx, Matrix1D< double >& fr
  * coordinates, then an exception is thrown
  */
 template <typename T>
-void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< size_t >& idx)
+void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
 {
     if (VEC_XSIZE(freq) < 1 || VEC_XSIZE(freq) > 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "digfreq2FFT_idx: freq is not of the correct size");
@@ -154,7 +154,7 @@ void Whole2Half(const MultidimArray< std::complex < double > > & in,
  */
 void Half2Whole(const MultidimArray< std::complex < double > > & in,
                 MultidimArray< std::complex< double > > & out,
-                int oridim);
+                size_t oridim);
 
 /** Conversion from complex -> real,imag
  */
@@ -289,13 +289,14 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
     {
         // 3D
         MultidimArray< T > aux;
-        size_t l, shift;
+        size_t l;
+        long int shift;
 
         // Shift in the X direction
         if ((l = XSIZE(v)) > 1)
         {
             aux.resizeNoCopy(l);
-            shift = (int)(l / 2);
+            shift = (long int)(l / 2);
 
             if (!forward)
                 shift = -shift;
@@ -307,10 +308,10 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     T *ptr_vkij = &dAkij(v, k, i, 0);
                     for (size_t j = 0; j < l; ++j, ++ptr_vkij)
                     {
-                    	size_t jp = j + shift;
+                        size_t jp = j + shift;
 
-                        if (jp < 0)
-                            jp += l;
+                        if (-shift > (long int)j)
+                            jp = j + shift + l;
                         else if (jp >= l)
                             jp -= l;
 
@@ -326,7 +327,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         if ((l = YSIZE(v)) > 1)
         {
             aux.resizeNoCopy(l);
-            shift = (int)(l / 2);
+            shift = (long int)(l / 2);
 
             if (!forward)
                 shift = -shift;
@@ -340,7 +341,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     {
                     	size_t ip = i + shift;
 
-                        if (ip < 0)
+                        if (-shift > (long int)i)
                             ip += l;
                         else if (ip >= l)
                             ip -= l;
@@ -366,7 +367,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         if ((l = ZSIZE(v)) > 1)
         {
             aux.resizeNoCopy(l);
-            shift = (int)(l / 2);
+            shift = (long int)(l / 2);
 
             if (!forward)
                 shift = -shift;
@@ -378,7 +379,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     for (size_t k = 0; k < l; k++)
                     {
                     	size_t kp = k + shift;
-                        if (kp < 0)
+                        if (-shift > (long int)k)
                             kp += l;
                         else if (kp >= l)
                             kp -= l;

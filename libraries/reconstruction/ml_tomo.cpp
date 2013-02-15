@@ -771,7 +771,7 @@ ProgMLTomo::produceSideInfo()
     cosine_mask.setXmippOrigin();
     fourier_mask.resize(dim, dim, hdim + 1);
     fourier_imask.resize(dim, dim, hdim + 1);
-    int r_maxres = XMIPP_MIN(hdim, FLOOR(maxres * dim));
+    int r_maxres = std::min(hdim, (size_t)floor(maxres * dim));
     RaisedCosineMask(cosine_mask, r_maxres - 2, r_maxres, INNER_MASK);
     size_t yy, zz;
     size_t dimb = (dim - 1) / 2;
@@ -789,7 +789,7 @@ ProgMLTomo::produceSideInfo()
                 yy = y;
             for (size_t xx = 0; xx < hdim + 1; xx++, ii++)
             {
-                if (xx <= FINISHINGX(cosine_mask))
+                if ((int)xx <= FINISHINGX(cosine_mask))
                 {
                     DIRECT_MULTIDIM_ELEM(fourier_mask,ii) = A3D_ELEM(cosine_mask,xx,yy,zz);
                     if (A3D_ELEM(cosine_mask,xx,yy,zz) > 0.)
@@ -1085,8 +1085,8 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
 
     setNumberOfLocalImages();
     // Store tomogram angles, offset vectors and missing wedge parameters
-    imgs_optrefno.assign(nr_images_local, 0.);
-    imgs_optangno.assign(nr_images_local, 0.);
+    imgs_optrefno.assign(nr_images_local, 0);
+    imgs_optangno.assign(nr_images_local, 0);
     imgs_optpsi.assign(nr_images_local, 0.);
     imgs_trymindiff.assign(nr_images_local, -1.);
     Matrix1D<double> dum(3);
@@ -2026,7 +2026,7 @@ ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno,
     double my_sumweight, weight;
     double wsum_sc, wsum_sc2, wsum_offset;
     double wsum_corr, sum_refw, maxweight, my_maxweight;
-    int sigdim;
+    size_t sigdim;
     int ioptx = 0, iopty = 0, ioptz = 0;
     bool is_ok_trymindiff = false;
     int my_nr_ang, old_optangno = opt_angno, old_optrefno = opt_refno;
@@ -3187,7 +3187,7 @@ ProgMLTomo::calculateFsc(MultidimArray<double> &M1, MultidimArray<double> &M2,
     }
 
     // Find resolution limit acc. to FSC=0.5 criterion
-    int idx;
+    size_t idx;
     for (idx = 1; idx < XSIZE(freq); idx++)
         if (fsc(idx) < 0.5)
             break;

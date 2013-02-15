@@ -429,18 +429,20 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
 
     for (size_t i = 0; i < Ndim; ++i, ++it)
     {
-        header.iyold=header.ixold=header.euler_alpha=header.euler_beta=header.euler_gamma=0.;
+        header.iyold=header.ixold=0;
+        header.euler_alpha=header.euler_beta=header.euler_gamma=0.;
 
         // Write the individual image header
         if (it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
-#define SET_HEADER_VALUE(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
+#define SET_HEADER_VALUEInt(field, label)  it->getValueOrDefault((label), (aux), 0); header.field = -(int)(aux)
+#define SET_HEADER_VALUEDouble(field, label)  it->getValueOrDefault((label), (aux), 0.); header.field = -(float)(aux)
 
-            SET_HEADER_VALUE(ixold, MDL_SHIFT_X);
-            SET_HEADER_VALUE(iyold, MDL_SHIFT_Y);
-            SET_HEADER_VALUE(euler_alpha, MDL_ANGLE_ROT);
-            SET_HEADER_VALUE(euler_beta, MDL_ANGLE_TILT);
-            SET_HEADER_VALUE(euler_gamma, MDL_ANGLE_PSI);
+            SET_HEADER_VALUEInt(ixold, MDL_SHIFT_X);
+            SET_HEADER_VALUEInt(iyold, MDL_SHIFT_Y);
+            SET_HEADER_VALUEDouble(euler_alpha, MDL_ANGLE_ROT);
+            SET_HEADER_VALUEDouble(euler_beta, MDL_ANGLE_TILT);
+            SET_HEADER_VALUEDouble(euler_gamma, MDL_ANGLE_PSI);
         }
         // Update index number of image
         header.imn = imgStart + i + 1;
