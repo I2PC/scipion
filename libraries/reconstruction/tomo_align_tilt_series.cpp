@@ -180,7 +180,7 @@ public:
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
             {
                 if (A2D_ELEM(maskAux,i,j)>0.5)
-                    A2D_ELEM(maskInTheSpaceOf2,i,j)=A2D_ELEM(Mask2_level,i,j);
+                    A2D_ELEM(maskInTheSpaceOf2,i,j)=(int)A2D_ELEM(Mask2_level,i,j);
             }
 
             maskAux.initZeros();
@@ -190,7 +190,7 @@ public:
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
             {
                 if (A2D_ELEM(maskAux,i,j)>0.5)
-                    A2D_ELEM(maskInTheSpaceOf1,i,j)=A2D_ELEM(Mask1_level,i,j);
+                    A2D_ELEM(maskInTheSpaceOf1,i,j)=(int)A2D_ELEM(Mask1_level,i,j);
             }
 
             // Compare the two images
@@ -717,7 +717,7 @@ void ProgTomographAlignment::identifyOutliers(bool mark)
     << madCorr << std::endl;
 
     double thresholdCorr=medianCorr-identifyOutliersZ*madCorr;
-    for (int i=1; i<VEC_XSIZE(isOutlier); i++)
+    for (size_t i=1; i<VEC_XSIZE(isOutlier); i++)
     {
         bool potentialOutlier=(correlationListAux(i)<thresholdCorr);
         if (potentialOutlier)
@@ -966,10 +966,10 @@ void ProgTomographAlignment::produceSideInfo()
     // Check which is the distribution of correlation
     if (!useCriticalPoints)
     {
-        int X0=STARTINGX(*(img[0]))+2*localSize*XSIZE(*(img[0]));
-        int XF=FINISHINGX(*(img[0]))-2*localSize*XSIZE(*(img[0]));
-        int Y0=STARTINGY(*(img[0]))+2*localSize*YSIZE(*(img[0]));
-        int YF=FINISHINGY(*(img[0]))-2*localSize*YSIZE(*(img[0]));
+        int X0=(int)(STARTINGX(*(img[0]))+2*localSize*XSIZE(*(img[0])));
+        int XF=(int)(FINISHINGX(*(img[0]))-2*localSize*XSIZE(*(img[0])));
+        int Y0=(int)(STARTINGY(*(img[0]))+2*localSize*YSIZE(*(img[0])));
+        int YF=(int)(FINISHINGY(*(img[0]))-2*localSize*YSIZE(*(img[0])));
         avgForwardPatchCorr.initZeros(Nimg);
         avgBackwardPatchCorr.initZeros(Nimg);
         avgForwardPatchCorr.initConstant(1);
@@ -1058,7 +1058,7 @@ void * threadgenerateLandmarkSetGrid( void * args )
         parent->affineTransformations;
     int gridSamples=parent->gridSamples;
 
-    int deltaShift=FLOOR(XSIZE(*(parent->img)[0])/gridSamples);
+    int deltaShift=(int)floor(XSIZE(*(parent->img)[0])/gridSamples);
     master->chainList=new std::vector<LandmarkChain>;
     Matrix1D<double> rii(3), rjj(3);
     ZZ(rii)=1;
@@ -1227,7 +1227,7 @@ void * threadgenerateLandmarkSetBlind( void * args )
         parent->affineTransformations;
     int gridSamples=parent->gridSamples;
 
-    int deltaShift=FLOOR(XSIZE(*(parent->img)[0])/gridSamples);
+    int deltaShift=(int)floor(XSIZE(*(parent->img)[0])/gridSamples);
     master->chainList=new std::vector<LandmarkChain>;
     Matrix1D<double> rii(3), rjj(3);
     ZZ(rii)=1;
@@ -1454,12 +1454,12 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         // Check that the list is not too long
         if (Q.size()>10*parent->Ncritical)
         {
-            int qmax=Q.size();
+            size_t qmax=Q.size();
             MultidimArray<double> minDistance;
             minDistance.resize(qmax);
             minDistance.initConstant(1e20);
-            for (int q1=0; q1<qmax; q1++)
-                for (int q2=q1+1; q2< qmax; q2++)
+            for (size_t q1=0; q1<qmax; q1++)
+                for (size_t q2=q1+1; q2< qmax; q2++)
                 {
                     double diffX=XX(Q[q1])-XX(Q[q2]);
                     double diffY=YY(Q[q1])-YY(Q[q2]);
@@ -2153,10 +2153,10 @@ void ProgTomographAlignment::writeLandmarkSet(const FileName &fnLandmark) const
         REPORT_ERROR(ERR_IO_NOWRITE,(std::string)"Cannot open "+fnLandmark+" for output");
     fhOut << "Point     x       y       slice   color "
     << MAT_YSIZE(allLandmarksX) << " " << MAT_XSIZE(allLandmarksX) << std::endl;
-    for (int i=0; i<MAT_XSIZE(allLandmarksX); i++)
+    for (size_t i=0; i<MAT_XSIZE(allLandmarksX); i++)
     {
         int counter=0;
-        for (int j=0; j<MAT_YSIZE(allLandmarksX); j++)
+        for (size_t j=0; j<MAT_YSIZE(allLandmarksX); j++)
             if (allLandmarksX(j,i)!=XSIZE(*img[0]))
             {
                 fhOut << counter << " \t"
@@ -2248,11 +2248,11 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
 {
     // Correct all landmarks
     Matrix1D<double> r(2);
-    for (int i=0; i<MAT_XSIZE(allLandmarksX); i++)
+    for (size_t i=0; i<MAT_XSIZE(allLandmarksX); i++)
     {
         Matrix2D<double> R;
         rotation2DMatrix(90-alignment.rot+alignment.psi(i),R,false);
-        for (int j=0; j<MAT_YSIZE(allLandmarksX); j++)
+        for (size_t j=0; j<MAT_YSIZE(allLandmarksX); j++)
             if (allLandmarksX(j,i)!=XSIZE(*img[0]))
             {
                 VECTOR_R2(r,allLandmarksX(j,i),allLandmarksY(j,i));
@@ -2266,7 +2266,7 @@ void ProgTomographAlignment::alignImages(const Alignment &alignment)
     Matrix1D<double> axis;
     Euler_direction(alignment.rot, alignment.tilt, 0, axis);
     double z0=0, z0N=0;
-    for (int j=0; j<MAT_YSIZE(allLandmarksX); j++)
+    for (size_t j=0; j<MAT_YSIZE(allLandmarksX); j++)
         if (allLandmarksX(j,iMinTilt)!=XSIZE(*img[0]))
         {
             Matrix2D<double> Raxismin, Rmin, RtiltYmin;
@@ -2420,15 +2420,15 @@ void ProgTomographAlignment::produceInformationFromLandmarks()
     std::vector<int> emptyVector;
 
     Vseti.clear();
-    for (int i=0; i<MAT_XSIZE(allLandmarksX); i++)
+    for (size_t i=0; i<MAT_XSIZE(allLandmarksX); i++)
         Vseti.push_back(emptyVector);
 
     Vsetj.clear();
-    for (int j=0; j<MAT_YSIZE(allLandmarksX); j++)
+    for (size_t j=0; j<MAT_YSIZE(allLandmarksX); j++)
         Vsetj.push_back(emptyVector);
 
-    for (int j=0; j<MAT_YSIZE(allLandmarksX); j++)
-        for (int i=0; i<MAT_XSIZE(allLandmarksX); i++)
+    for (size_t j=0; j<MAT_YSIZE(allLandmarksX); j++)
+        for (size_t i=0; i<MAT_XSIZE(allLandmarksX); i++)
             if (allLandmarksX(j,i)!=XSIZE(*img[0]))
             {
                 Vseti[i].push_back(j);

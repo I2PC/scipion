@@ -92,7 +92,7 @@ public:
     double wsum_corr, sum_refw, sum_refw2, maxweight;
     double wsum_sc, wsum_sc2, wsum_offset, old_bgmean;
     double mindiff;
-    int sigdim;
+    size_t sigdim;
     int ioptx, iopty;
     std::vector<int> ioptx_ref, iopty_ref, ioptflip_ref;
     /** Taken from PreselectFastSignificant. */
