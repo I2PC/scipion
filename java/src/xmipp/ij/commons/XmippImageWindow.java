@@ -35,6 +35,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);		
 		((XmippImageCanvas)getCanvas()).adjustMagnification();
+
 		XmippApplication.addInstance();
 		addWindowListener(new WindowAdapter()
 		{
@@ -44,6 +45,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 				XmippApplication.removeInstance();
 			}
 		});
+
 
 	}
 	
