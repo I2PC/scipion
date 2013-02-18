@@ -42,6 +42,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 			@Override
 			public void windowClosing(WindowEvent arg0)
 			{
+				
 				XmippApplication.removeInstance();
 			}
 		});
