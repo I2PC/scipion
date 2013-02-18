@@ -14,8 +14,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
 
 	protected XmippMenuBar menu;
-
-	
 	private ImagePlusLoader ipl;
 	private Window window;
 

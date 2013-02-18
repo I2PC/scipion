@@ -119,10 +119,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 
 		if (getTool() == Tool.IMAGEJ)
-		{
 			super.mouseMoved(e);
-			return;
-		}
 		int x = offScreenX(e.getX());
 		int y = offScreenY(e.getY());
 		imp.mouseMoved(x, y);
