@@ -134,15 +134,55 @@ TEST_F( MatrixTest, solveLinearSystem)
     EXPECT_EQ(auxX,X) << "MatrixTest_solveLinearSystem failed";
 }
 
+TEST_F( MatrixTest, RANSAC)
+{
+	 WeightedLeastSquaresHelper h;
+	 Matrix2D<double> &A = h.A;
+	 Matrix1D<double> &b = h.b;
+	 Matrix1D<double> &w = h.w;
+	 A.resizeNoCopy(100,2);
+	 b.resizeNoCopy(100);
+	 w.resizeNoCopy(100);
+
+	 int Nsteps=60;
+	 double iNsteps=1.0/Nsteps;
+	 for (int i=0; i<Nsteps; i++)
+	 {
+		 double x=i*iNsteps;
+		 A(i,0)=x;
+		 A(i,1)=1;
+		 b(i)=0.5*x+1;
+		 w(i)=1;
+	 }
+	 for (int i=Nsteps; i<VEC_XSIZE(b); i++)
+	 {
+		 double x=rnd_unif(0,1);
+		 A(i,0)=x;
+		 A(i,1)=1;
+		 b(i)=rnd_unif(1,1.5);
+		 w(i)=1;
+	 }
+
+    Matrix1D<double> auxX(2), X(2);
+
+    auxX(0) =  0.5;
+    auxX(1) =  1;
+
+    ransacWeightedLeastSquares(h, X, 0.1, 10000, 0.5);
+
+    EXPECT_NEAR(auxX(0),X(0),1e-2) << "MatrixTest_ransacWeightedLeastSquares failed";
+    EXPECT_NEAR(auxX(1),X(1),1e-2) << "MatrixTest_ransacWeightedLeastSquares failed";
+}
+
 TEST_F( MatrixTest, initGaussian)
 {
     Matrix2D<double> A;
-    A.initGaussian(10,1);
-
-    ASSERT_TRUE( (dMij(A,5,5) - 1) < 1e-3);
-    ASSERT_TRUE( (dMij(A,6,7) - 0.6065) < 1e-3);
-    ASSERT_TRUE( (dMij(A,7,6) - 0.6065) < 1e-3);
-    ASSERT_TRUE( (dMij(A,5,6) - 0.6065) < 1e-3);
+    A.initGaussian(3,3,0,1);
+    init_random_generator(23);
+    ASSERT_TRUE( ABS((dMij(A,1,1) - 0.80144995)) < 1e-3);
+    ASSERT_TRUE( ABS((dMij(A,1,2) - 0.499181)) < 1e-3);
+    ASSERT_TRUE( ABS((dMij(A,0,1) + 2.42201)) < 1e-3);
+    ASSERT_TRUE( ABS((dMij(A,2,0) - 0.517636)) < 1e-3);
 }
 
 GTEST_API_ int main(int argc, char **argv)

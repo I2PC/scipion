@@ -44,8 +44,7 @@ import javax.swing.table.AbstractTableModel;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.ClassInfo;
+import xmipp.viewer.models.ImageGalleryTableModel;
 
 public class EditLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
@@ -56,10 +55,10 @@ public class EditLabelsJDialog extends XmippDialog {
 	// This will be used for check for results from the dialog
 	boolean fireEvent = true;
 	GridBagConstraints gbc = new GridBagConstraints();
-	ImageGallery gallery;
+	ImageGalleryTableModel gallery;
 	JPanel panelButtons;
 
-	public EditLabelsJDialog(JFrameGallery parent) {
+	public EditLabelsJDialog(GalleryJFrame parent) {
 		super(parent, "Edit labels", true);
 		this.rows = parent.getData().labels;
 		this.gallery = parent.gallery;
@@ -122,14 +121,14 @@ public class EditLabelsJDialog extends XmippDialog {
 	}// function enableUpDown
 
 	private void rowsChanged() {
-		this.rows = ((JFrameGallery) parent).getData().labels;
+		this.rows = ((GalleryJFrame) parent).getData().labels;
 		model.fireTableDataChanged();
 	}
 
 	private void showAddFillDialog(AddFillLabelsJDialog dlg) throws Exception {
 
 		if (dlg.showDialog()) {
-			((JFrameGallery) parent).fillLabel(dlg.getLabel(),
+			((GalleryJFrame) parent).fillLabel(dlg.getLabel(),
 					dlg.getFillMode(), dlg.getValues());
 			rowsChanged();
 		}
@@ -142,15 +141,15 @@ public class EditLabelsJDialog extends XmippDialog {
 			JButton btn = (JButton) evt.getSource();
 			if (btn == btnAdd) {
 				showAddFillDialog(new AddFillLabelsJDialog(
-						(JFrameGallery) parent, rows));
+						(GalleryJFrame) parent, rows));
 			} else if (btn == btnDelete) {
 				if (showWarning("Are you sure to remove this label?")) {
-					((JFrameGallery) parent).removeLabel(getSelectedLabel());
+					((GalleryJFrame) parent).removeLabel(getSelectedLabel());
 					rowsChanged();
 				}
 			} else if (btn == btnFill) {
 				showAddFillDialog(new AddFillLabelsJDialog(
-						(JFrameGallery) parent, getSelectedLabel()));
+						(GalleryJFrame) parent, getSelectedLabel()));
 			}
 		} catch (Exception e) {
 			showException(e);

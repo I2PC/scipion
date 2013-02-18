@@ -40,15 +40,17 @@ class ProgSortByStatistics: public XmippProgram
 {
 public:
     FileName fn, fn_out, fn_train;
-    bool multivariate,addToInput;
+    bool addToInput;
 
 public:
-    double cutoff;
+    double cutoff, per;
 
     std::vector<PCAMahalanobisAnalyzer> pcaAnalyzer;
     MetaData SF, SFtrain;
 
 public:
+    void clear();
+
     void readParams();
 
     void defineParams();

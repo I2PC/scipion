@@ -42,7 +42,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_read_1
 
             ctfDescription->enable_CTF = ctfDescription->enable_CTFnoise = true;
             ctfDescription->read(fnStr);
-            ctfDescription->Produce_Side_Info();
+            ctfDescription->produceSideInfo();
         }
         catch (XmippError xe)
         {

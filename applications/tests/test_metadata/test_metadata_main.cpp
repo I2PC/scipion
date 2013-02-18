@@ -672,7 +672,7 @@ TEST_F( MetadataTest, OperateExt)
 {
     MetaData auxMetadata = mDunion;
     MetaData auxMetadata2 = mDunion;
-	MDSql::activateMathExtensions();
+    MDSql::activateMathExtensions();
     auxMetadata.operate((String)"X=sqrt(X)");
     double x;
     FOR_ALL_OBJECTS_IN_METADATA(auxMetadata2)
@@ -1213,6 +1213,7 @@ TEST_F( MetadataTest, copyImages)
     out.initUniqueName("/tmp/smallStackVol_XXXXXX");
     out = out + ":mrc";
     conv.setup(&md, out);
+    conv.setType("vol");
     conv.tryRun();
     Image<float> imgStk, imgVol;
     imgStk.read(fn);

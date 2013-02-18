@@ -4,12 +4,16 @@
  */
 package xmipp.utils;
 
+import java.awt.Image;
 import java.io.File;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Dictionary;
 
 import ij.ImagePlus;
 import xmipp.jni.Filename;
+
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 /**
@@ -80,4 +84,32 @@ public class XmippResource {
     	}
     	return ii;
     }
+    
+    public static String getPath(String resource)
+    {
+    	try
+		{
+			return String.format("%s%sresources%s%s", Filename.getXmippPath(), File.separator, File.separator, resource);
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new IllegalArgumentException(e);
+		}
+    }
+
+	public static Image getImage(String name)
+	{
+		try
+		{
+			return ImageIO.read(new File(getPath(name)));
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new IllegalArgumentException(e);
+		}
+	}
 }

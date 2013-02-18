@@ -167,9 +167,6 @@ void AutoParticlePicking2::polarCorrelation(MultidimArray<double> &Ipolar,
 
 AutoParticlePicking2::~AutoParticlePicking2()
 {
-    // delete classifier;
-    // delete classifier2;
-    // std::cerr<<"We Are Here in des auto!";
 }
 
 void AutoParticlePicking2::extractStatics(MultidimArray<double> &inputVec,
@@ -694,14 +691,12 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 #endif
 
         for (int j=0;j<XSIZE(dataSet);j++)
-        {
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
 #ifdef DEBUG_SAVETRAINSET
 
-            fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
+        fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
 #endif
 
-        }
         fhTrain<<std::endl;
 #ifdef DEBUG_SAVETRAINSET
 
@@ -714,6 +709,7 @@ void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 
     fhtest.close();
 #endif
+
 }
 
 void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
@@ -821,14 +817,6 @@ void AutoParticlePicking2::saveRejectedVectors(const FileName &fn)
 
 void AutoParticlePicking2::generateTrainSet()
 {
-
-#ifdef DEBUG_GENTRAINSET
-
-    std::ofstream a1,b1;
-    a1.open("dataset1.txt");
-    b1.open("dataset2.txt");
-#endif
-
     int cnt=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classLabel)
     if (DIRECT_A1D_ELEM(classLabel,i)==1 || DIRECT_A1D_ELEM(classLabel,i)==3)
@@ -847,39 +835,13 @@ void AutoParticlePicking2::generateTrainSet()
             }
             else
                 DIRECT_A1D_ELEM(classLabel1,cnt)=1;
-#ifdef DEBUG_GENTRAINSET
-
-            b1<<DIRECT_A1D_ELEM(classLabel1,cnt)<<" ";
-#endif
-
             for (int j=0;j<XSIZE(dataSet);j++)
             {
                 DIRECT_A2D_ELEM(dataSet1,cnt,j)=DIRECT_A2D_ELEM(dataSet,i,j);
-#ifdef DEBUG_GENTRAINSET
-
-                b1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet1,cnt,j)<<" ";
-#endif
-
             }
-#ifdef DEBUG_GENTRAINSET
-
-            b1<<std::endl;
-#endif
-
             cnt++;
         }
-#ifdef DEBUG_GENTRAINSET
-        a1<<DIRECT_A1D_ELEM(classLabel,i)<<" ";
-        for (int j=0;j<XSIZE(dataSet);j++)
-            a1<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
-        a1<<std::endl;
-#endif
-
     }
-#ifdef DEBUG_GENTRAINSET
-    a1.close();
-    b1.close();
-#endif
 }
 
 void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
@@ -955,7 +917,9 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     MultidimArray<int> mask;
     CorrelationAux aux;
     FourierFilter filter;
-    int size = XSIZE(microImage());
+    int sizeX = XSIZE(microImage());
+    int sizeY = YSIZE(microImage());
+
     //Generating Mask
     mask.resize(particleAvg);
     mask.setXmippOrigin();
@@ -981,8 +945,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
             avgRotatedLarge+=avgRotated;
         }
         avgRotatedLarge/=120;
-        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                   LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
         correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
         filter.do_generate_3dmask=true;
         filter.generateMask(convolveRes);
@@ -991,8 +955,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
     else
     {
         avgRotatedLarge=particleAvg;
-        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                   LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+        avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                   LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
         correlation_matrix(microImage(),avgRotatedLarge,convolveRes,aux,false);
         filter.do_generate_3dmask=true;
         filter.generateMask(convolveRes);
@@ -1006,8 +970,8 @@ void AutoParticlePicking2::applyConvolution(bool fast)
             rotate(LINEAR,avgRotated,particleAvg,double(deg));
             avgRotatedLarge=avgRotated;
             avgRotatedLarge.setXmippOrigin();
-            avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(size),FIRST_XMIPP_INDEX(size),
-                                       LAST_XMIPP_INDEX(size),LAST_XMIPP_INDEX(size));
+            avgRotatedLarge.selfWindow(FIRST_XMIPP_INDEX(sizeY),FIRST_XMIPP_INDEX(sizeX),
+                                       LAST_XMIPP_INDEX(sizeY),LAST_XMIPP_INDEX(sizeX));
             correlation_matrix(aux.FFT1,avgRotatedLarge,tempConvolve,aux,false);
             filter.applyMaskSpace(tempConvolve);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(convolveRes)
@@ -1199,7 +1163,7 @@ void ProgMicrographAutomaticPicking2::run()
     }
     if (mode=="train")
     {
-    	// If PCA does not exist obtain the PCA basis and save them
+        // If PCA does not exist obtain the PCA basis and save them
         if (!fnPCAModel.exists())
             autoPicking->trainPCA(fn_model);
         if (!fnPCARotModel.exists())
@@ -1218,7 +1182,7 @@ void ProgMicrographAutomaticPicking2::run()
         // If we have some false positives also add it
         if (fnRejectedVectors.exists())
         {
-        	// Load the rejected vectors features as false positives
+            // Load the rejected vectors features as false positives
             autoPicking->loadAutoVectors(fnRejectedVectors);
             autoPicking->add2Dataset();
             fnRejectedVectors.deleteFile();
@@ -1231,5 +1195,7 @@ void ProgMicrographAutomaticPicking2::run()
         autoPicking->trainSVM(fnSVMModel,1);
         autoPicking->trainSVM(fnSVMModel2,2);
     }
+    if (mode!="train")
+        fnFilterBank.deleteFile();
     delete autoPicking;
 }

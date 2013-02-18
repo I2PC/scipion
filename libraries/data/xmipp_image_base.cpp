@@ -696,9 +696,9 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         fseek(fhed, 0, SEEK_SET);
 
     if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
-        ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
+        ext_name.contains("stk") || ext_name.contains("vol"))
         err = readSPIDER(select_img);
-    else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
+    else if (ext_name.contains("mrcs")||ext_name.contains("st"))//mrc stack MUST go BEFORE plain MRC
         err = readMRC(select_img,true);
     else if (ext_name.contains("mrc")||ext_name.contains("map"))//mrc
         err = readMRC(select_img,false);
@@ -764,20 +764,14 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     if (select_img == ALL_IMAGES)
         select_img = aux;
 
+    /// Datatype info must be from filename after "%" symbol
     size_t found = filNamePlusExt.find_first_of("%");
-
     String imParam = "";
-
     if (found!=String::npos)
     {
         imParam =  filNamePlusExt.substr(found+1).c_str();
         filNamePlusExt = filNamePlusExt.substr(0, found) ;
     }
-
-    found = filNamePlusExt.find_first_of(":");
-    if ( found!=String::npos)
-        filNamePlusExt   = filNamePlusExt.substr(0, found);
-
 
     //#define DEBUG
 #ifdef DEBUG
@@ -855,7 +849,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         err = writeSPIDER(select_img,true,mode);
     //    else if (ext_name.contains("mrcs"))
     //        writeMRC(select_img,true,mode,imParam,castMode);
-    else if (ext_name.contains("mrc")||ext_name.contains("map")||ext_name.contains("mrcs"))
+    else if (ext_name.contains("mrc")||ext_name.contains("map")
+    		 ||ext_name.contains("mrcs")||ext_name.contains("st"))
         writeMRC(select_img,isStack,mode,imParam,castMode);
     else if (ext_name.contains("img") || ext_name.contains("hed"))
         writeIMAGIC(select_img,mode,imParam,castMode);

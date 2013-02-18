@@ -171,6 +171,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String FILE = "File";
 	public final String FILE_OPEN = "File.Open_mi";
 	public final String FILE_OPENWITH_IJ = "File.OpenWithIJ_mi";
+	public final String FILE_OPENMICROGRAPHS = "File.OpenMicrographs_mi";
 	public final String FILE_OPENWITH_CHIMERA = "File.OpenWithChimera_mi";
 	public final String FILE_SAVE = "File.Save_mi";
 	public final String FILE_SAVEAS = "File.SaveAs_mi";
@@ -203,6 +204,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String STATS_AVGSTD = "Metadata.Stats.AvgStd_mi";
 	public final String STATS_PCA = "Metadata.Stats.Pca_mi";
 	public final String STATS_FSC = "Metadata.Stats.Fsc_mi";
+	public final String MD_PLOT = "Metadata.Plot_mi";
 	
 	public final String HELP = "Help";
 	public final String HELP_ONLINE = "Help.Online_mi";

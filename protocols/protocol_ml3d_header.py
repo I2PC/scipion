@@ -22,7 +22,7 @@ for MLF3D: Scheres et al. (2007) Structure, 15, 1167-1177
 #------------------------------------------------------------------------------------------
 # {section} Input
 #------------------------------------------------------------------------------------------
-# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images:
+# {file}(images*.xmd){validate}(PathExists) Input images:
 """ 
 Provide a list of images from a stack or metadata file that make up your data set.
 The filenames should be relative to the <ProjectDir> where you are running the <Protocols>
@@ -56,7 +56,7 @@ Angular sampling for a quick projection matching to obtain right grey scale.
 As the resolution of the intial reference should be low, this sampling can
 be relatively crude, e.g. 15
 """
-ProjMatchSampling = 15
+ProjMatchSampling = 15.0
 
 # Low-pass filter initial references?
 """ 
@@ -68,14 +68,9 @@ DoLowPassFilterReference = True
 # {condition}(DoLowPassFilterReference) Resolution of the low-pass filter (Ang):
 LowPassFilter = 50
 
-# {condition}(DoLowPassFilterReference) Pixel size (Ang):
-PixelSize = 5.6
-
 #------------------------------------------------------------------------------------------------
-# {section}{has_question} ML3D classification
+# {section} ML3D classification
 #------------------------------------------------------------------------------------------------
-# Perform ML(F)3D classification
-DoML3DClassification = True
 
 # Angular sampling for classification:
 """ 

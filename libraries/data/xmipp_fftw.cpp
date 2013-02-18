@@ -202,7 +202,7 @@ void FourierTransformer::setReal(MultidimArray<std::complex<double> > &input)
     }
 }
 
-void FourierTransformer::setFourier(MultidimArray<std::complex<double> > &inputFourier)
+void FourierTransformer::setFourier(const MultidimArray<std::complex<double> > &inputFourier)
 {
     memcpy(MULTIDIM_ARRAY(fFourier),MULTIDIM_ARRAY(inputFourier),
            MULTIDIM_SIZE(inputFourier)*2*sizeof(double));
@@ -525,9 +525,9 @@ void frc_dpr(MultidimArray< double > & m1,
     }
 }
 
-void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)
-{
 
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nThreads)
+{
     //Mmem = *this
     //memory for fourier transform output
     MultidimArray<std::complex<double> > MmemFourier;
@@ -537,36 +537,69 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int
     transformerM.FourierTransform(Mpmem, MmemFourier, false);
 
     // Create space for the downsampled image and its Fourier transform
-    Mpmem.resizeNoCopy(Ydim, Xdim);
+    Mpmem.resizeNoCopy(Zdim, Ydim, Xdim);
     MultidimArray<std::complex<double> > MpmemFourier;
     FourierTransformer transformerMp;
     transformerMp.setReal(Mpmem);
     transformerMp.getFourierAlias(MpmemFourier);
 
     int ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
+    int zhalf = XMIPP_MIN((ZSIZE(MpmemFourier)/2+1),(ZSIZE(MmemFourier)/2+1));
     int xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
     int ysize = XMIPP_MIN((YSIZE(MmemFourier)),(YSIZE(MpmemFourier)));
+    int zsize = XMIPP_MIN((ZSIZE(MmemFourier)),(ZSIZE(MpmemFourier)));
     //Init with zero
     MpmemFourier.initZeros();
-    for (int i=0; i<ihalf; i++)
-        for (int j=0; j<xsize; j++)
-            MpmemFourier(i,j)=MmemFourier(i,j);
-    for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
-    {
-        int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
-        for (int j=0; j<XSIZE(MpmemFourier); j++)
-            MpmemFourier(i,j)=MmemFourier(ip,j);
-    }
 
+    for (int k = 0; k < zhalf; ++k)
+    {
+        for (int i=0; i<ihalf; i++)
+            for (int j=0; j<xsize; j++)
+                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,k,i,j);
+        for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+        {
+            int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
+            for (int j=0; j<XSIZE(MpmemFourier); j++)
+                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,k,ip,j);
+        }
+    }
+    for (int k = ZSIZE(MpmemFourier)-1; k >= zhalf; --k)
+    {
+        int kp = k + ZSIZE(MmemFourier)-ZSIZE(MpmemFourier) ;
+        for (int i=0; i<ihalf; i++)
+            for (int j=0; j<xsize; j++)
+                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,kp,i,j);
+        for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+        {
+            int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
+            for (int j=0; j<XSIZE(MpmemFourier); j++)
+                dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,kp,ip,j);
+        }
+    }
     // Transform data
     transformerMp.inverseFourierTransform();
+
 }
+
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)
+{
+    selfScaleToSizeFourier(1, Ydim, Xdim, Mpmem, nThreads);
+}
+
+void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nThreads)
+{
+    MultidimArray<double> aux;
+    Mpmem.getImage(aux);
+    selfScaleToSizeFourier(Zdim, Ydim, Xdim, aux, nThreads);
+    Mpmem.setImage(aux);
+}
+
 
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nThreads)
 {
     MultidimArray<double> aux;
     Mpmem.getImage(aux);
-    selfScaleToSizeFourier(Ydim, Xdim, aux, nThreads);
+    selfScaleToSizeFourier(1, Ydim, Xdim, aux, nThreads);
     Mpmem.setImage(aux);
 }
 
@@ -686,6 +719,7 @@ void adaptSpectrum(MultidimArray<double> &Min,
     multiplyBySpectrum(Mout,spectrum,leave_origin_intact);
 
 }
+
 void correlation_matrix(const MultidimArray<double> & m1,
                         const MultidimArray<double> & m2,
                         MultidimArray< double >& R,
@@ -729,4 +763,35 @@ void correlation_matrix(const MultidimArray< std::complex< double > > & FF1,
     // Center the resulting image to obtain a centered autocorrelation
     if (center)
         CenterFFT(R, true);
+}
+
+
+void fast_correlation_vector(const MultidimArray< std::complex<double> > & FFT1,
+                        const MultidimArray< std::complex<double> > & FFT2,
+                        MultidimArray< double >& R,
+                        FourierTransformer &transformer)
+{
+	transformer.setFourier(FFT1);
+
+    // Multiply FFT1 * FFT2'
+    double a, b, c, d; // a+bi, c+di
+    double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
+    double *ptrFFT1=(double*)&(A1D_ELEM(transformer.fFourier,0));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
+    {
+        a=*ptrFFT1;
+        b=*(ptrFFT1+1);
+        c=(*ptrFFT2++);
+        d=(*ptrFFT2++)*(-1);
+        *ptrFFT1++ = a*c-b*d;
+        *ptrFFT1++ = b*c+a*d;
+    }
+
+    // Invert the product, in order to obtain the correlation image
+    transformer.inverseFourierTransform();
+
+    // Center the resulting image to obtain a centered autocorrelation
+    R=*transformer.fReal;
+    CenterFFT(R, true);
+    R.setXmippOrigin();
 }

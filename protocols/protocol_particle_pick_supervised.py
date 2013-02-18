@@ -9,12 +9,12 @@
 from config_protocols import protDict
 from protlib_base import *
 from protlib_utils import runJob
-from protlib_filesystem import createLink, copyFile
+from protlib_filesystem import createLink, copyFile, deleteDir
 import xmipp
 from glob import glob
 from os.path import exists, join
 
-from protocol_particle_pick import getPosFiles, validateMicrographs, \
+from protocol_particle_pick import getPosFiles, getTemplateFiles, validateMicrographs, \
     launchParticlePickingGUI, PM_READONLY, PM_SUPERVISED, countParticles
 
 # Create a GUI automatically from a selfile of micrographs
@@ -34,23 +34,26 @@ class ProtParticlePickingSupervised(XmippProtocol):
         
     def createFilenameTemplates(self):
         return {
-                'training': join('%(WorkingDir)s', '%(family)s_training.txt'),
-                     'pos': join('%(WorkingDir)s', '%(micrograph)s.pos'),
-#                    'mask': join('%(WorkingDir)s', '%(family)s_mask.xmp'),
-                    'pca': join('%(WorkingDir)s', '%(family)s_pca_model.stk'),
-                    'rotpca': join('%(WorkingDir)s', '%(family)s_rotpca_model.stk'),
-                    'svm': join('%(WorkingDir)s', '%(family)s_svm.txt'),
-                    'svm2': join('%(WorkingDir)s', '%(family)s_svm2.txt'),
-                    'average': join('%(WorkingDir)s', '%(family)s_particle_avg.xmp')
+                'training': join('%(ExtraDir)s', '%(family)s_training.txt'),
+                     'pos': join('%(ExtraDir)s', '%(micrograph)s.pos'),
+#                    'mask': join('%(ExtraDir)s', '%(family)s_mask.xmp'),
+                    'pca': join('%(ExtraDir)s', '%(family)s_pca_model.stk'),
+                    'rotpca': join('%(ExtraDir)s', '%(family)s_rotpca_model.stk'),
+                    'svm': join('%(ExtraDir)s', '%(family)s_svm.txt'),
+                    'average': join('%(ExtraDir)s', '%(family)s_particle_avg.xmp')
                 }
 
     def defineSteps(self):
+        if not os.path.exists(self.getFilename('svm',family=self.Family)) and os.path.exists(self.ExtraDir):
+            self.insertStep('deleteDir',path=self.ExtraDir)
+        self.insertStep("createDir",verifyfiles=[self.ExtraDir],path=self.ExtraDir)
         filesToImport = [self.Input[k] for k in self.keysToImport]
         filesToImport += getPosFiles(self.PrevRun)
+        filesToImport += getTemplateFiles(self.PrevRun)
         self.insertImportOfFiles(filesToImport)
         modeWithArgs = PM_SUPERVISED + " %(NumberOfThreads)d %(Fast)s %(InCore)s" % self.ParamsDict
         self.insertStep('launchParticlePickingGUI', execution_mode=SqliteDb.EXEC_ALWAYS,
-                           InputMicrographs=self.micrographsMd, WorkingDir=self.WorkingDir,
+                           InputMicrographs=self.micrographsMd, ExtraDir=self.ExtraDir,
                            PickingMode=modeWithArgs, Memory=self.Memory, Family=self.Family)       
         
     def summary(self):
@@ -68,7 +71,7 @@ class ProtParticlePickingSupervised(XmippProtocol):
         return validateMicrographs(self.Input['micrographs'])
     
     def visualize(self):
-        launchParticlePickingGUI(None, self.micrographsMd, self.WorkingDir, PM_READONLY)
+        launchParticlePickingGUI(None, self.micrographsMd, self.ExtraDir, PM_READONLY)
 
 # Main
 #     

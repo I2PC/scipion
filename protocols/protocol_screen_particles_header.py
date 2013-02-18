@@ -13,13 +13,12 @@
 #-----------------------------------------------------------------------------
 # {section} Screening parameters
 #-----------------------------------------------------------------------------
-# {file}(*.xmd *.stk *.sel *.ctfdat){validate}(PathExists) Input images
+# {file}(images*.xmd){validate}(PathExists) Input images
 """ Stack file or metadata file with a selection file"""
 InputFile=''
 
 # {eval} expandParallel(mpi=0, threads=0, hours=4)
 # {eval} expandExpert()
-
 
 #
 #------------------------------------------------------------------------------------------------

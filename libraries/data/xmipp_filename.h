@@ -45,11 +45,9 @@ typedef struct stat Stat;
 
 //extern variable with magic Word  used to define metadata version
 // xmipp XMIPP_STAR_1
-// emx EMX1.0
 // sqlite SQLite format 3
 
 #define METADATA_XMIPP_STAR "# XMIPP_STAR_1"
-#define METADATA_EMX "# EMX1.0"
 #define METADATA_XMIPP_SQLITE "SQLite format 3"
 
 //@{
@@ -350,7 +348,7 @@ public:
      * the portable filename character set. The characters are chosen such
      * that the resulting name does not duplicate the name of an existing file.
      */
-    void initUniqueName(const char * templateStr = "xmippTemp_XXXXXX");
+    void initUniqueName(const char * templateStr = "xmippTemp_XXXXXX", const String &fnDir="");
     //@}
 
     ///@name Filename utilities
@@ -671,7 +669,12 @@ char* getXmippPath();
 inline bool fileExists( const char *filename )
 {
     Stat buffer ;
-    return ( stat(filename, &buffer) == 0 ? true : false );
+    // do not use stat since updates the atime flag. This may be dangerous
+    // for mpi processes in which the same file is accessed many times
+    // from different computers even if not writting is made 
+    //return ( stat(filename, &buffer) == 0 ? true : false );
+    return ( access (filename, F_OK)  == 0 ? true : false);
+
 }
 
 /** Check if the file exists using the stat function

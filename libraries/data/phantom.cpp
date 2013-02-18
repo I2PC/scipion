@@ -88,7 +88,8 @@ void Cone::prepare()
 /* ------------------------------------------------------------------------- */
 Feature & Feature::operator = (const Feature &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Type         = F.Type;
     Add_Assign   = F.Add_Assign;
     Density      = F.Density;
@@ -104,7 +105,8 @@ void Feature::assign(const Feature &F)
 
 Oriented_Feature & Oriented_Feature::operator = (const Oriented_Feature &OF)
 {
-    if (this == &OF) return *this;
+    if (this == &OF)
+        return *this;
     rot    = OF.rot;
     tilt   = OF.tilt;
     psi    = OF.psi;
@@ -121,7 +123,8 @@ void Oriented_Feature::assign(const Oriented_Feature &OF)
 
 Sphere & Sphere::operator = (const Sphere &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Feature::operator = (F);
     radius = F.radius;
     return *this;
@@ -134,7 +137,8 @@ void Sphere::assign(const Sphere &F)
 
 Blob & Blob::operator = (const Blob &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Feature::operator = (F);
     radius = F.radius;
     alpha  = F.alpha;
@@ -149,7 +153,8 @@ void Blob::assign(const Blob &F)
 
 Gaussian & Gaussian::operator = (const Gaussian &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Feature::operator = (F);
     sigma = F.sigma;
     return *this;
@@ -162,7 +167,8 @@ void Gaussian::assign(const Gaussian &F)
 
 Cylinder & Cylinder::operator = (const Cylinder &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Oriented_Feature::operator = (F);
     xradius = F.xradius;
     yradius = F.yradius;
@@ -177,7 +183,8 @@ void Cylinder::assign(const Cylinder &F)
 
 DCylinder & DCylinder::operator = (const DCylinder &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Oriented_Feature::operator = (F);
     radius     = F.radius;
     height     = F.height;
@@ -192,7 +199,8 @@ void DCylinder::assign(const DCylinder &F)
 
 Cube & Cube::operator = (const Cube &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Oriented_Feature::operator = (F);
     xdim = F.xdim;
     ydim = F.ydim;
@@ -207,7 +215,8 @@ void Cube::assign(const Cube &F)
 
 Ellipsoid & Ellipsoid::operator = (const Ellipsoid &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Oriented_Feature::operator = (F);
     xradius = F.xradius;
     yradius = F.yradius;
@@ -222,7 +231,8 @@ void Ellipsoid::assign(const Ellipsoid &F)
 
 Cone & Cone::operator = (const Cone &F)
 {
-    if (this == &F) return *this;
+    if (this == &F)
+        return *this;
     Oriented_Feature::operator = (F);
     radius     = F.radius;
     height     = F.height;
@@ -285,26 +295,26 @@ void Feature::readCommon(char *line)
 void Feature::readCommon(MDRow & row)
 {
     Center.resize(3);
-	std::vector <double> VecFeatureCenter;  // Keep the center of the feature
-	std::string s_op;  // As no label for char in MD_TYPE  (for add/assign)
-	if (!row.getValue(MDL_PHANTOM_FEATURE_TYPE,Type) ||
-		      !row.getValue(MDL_PHANTOM_FEATURE_OPERATION,s_op) ||
-		      !row.getValue(MDL_PHANTOM_FEATURE_DENSITY,Density) ||
-		      !row.getValue(MDL_PHANTOM_FEATURE_CENTER,VecFeatureCenter))
-		 REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Error when reading common part of feature");
-	XX(Center) = VecFeatureCenter[0];
-	YY(Center) = VecFeatureCenter[1];
-	ZZ(Center) = VecFeatureCenter[2];
-	Add_Assign = s_op[0];
+    std::vector <double> VecFeatureCenter;  // Keep the center of the feature
+    std::string s_op;  // As no label for char in MD_TYPE  (for add/assign)
+    if (!row.getValue(MDL_PHANTOM_FEATURE_TYPE,Type) ||
+        !row.getValue(MDL_PHANTOM_FEATURE_OPERATION,s_op) ||
+        !row.getValue(MDL_PHANTOM_FEATURE_DENSITY,Density) ||
+        !row.getValue(MDL_PHANTOM_FEATURE_CENTER,VecFeatureCenter))
+        REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Error when reading common part of feature");
+    XX(Center) = VecFeatureCenter[0];
+    YY(Center) = VecFeatureCenter[1];
+    ZZ(Center) = VecFeatureCenter[2];
+    Add_Assign = s_op[0];
 }
 
 // Read all the related parameters of the feature
 void Feature::read(MDRow & row)
 {
-	readCommon(row);
-	std::vector<double> VectSpecific;  // Vector for specific parameters of feature
-	row.getValue(MDL_PHANTOM_FEATURE_SPECIFIC, VectSpecific);
-	read_specific(VectSpecific);
+    readCommon(row);
+    std::vector<double> VectSpecific;  // Vector for specific parameters of feature
+    row.getValue(MDL_PHANTOM_FEATURE_SPECIFIC, VectSpecific);
+    read_specific(VectSpecific);
 }
 
 /* Read a sphere ----------------------------------------------------------- */
@@ -319,8 +329,8 @@ void Sphere::read_specific(char *line)
 /* Read a sphere from MetaData -------------------------------------------- */
 void Sphere::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 1)
-	        REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a sphere: empty Feature vector");
+    if (vect.size() != 1)
+        REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a sphere: empty Feature vector");
     radius = vect[0];
     prepare();
 }
@@ -336,8 +346,8 @@ void Blob::read_specific(char *line)
 /* Read a Blob from MetaData --------------------------------------------- */
 void Blob::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 3)
-		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a blob");
+    if (vect.size() != 3)
+        REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a blob");
     radius = vect[0];
     alpha = vect[1];
     m = vect[2];
@@ -357,9 +367,9 @@ void Gaussian::read_specific(char *line)
 /* Read a Gaussian from MetaData --------------------------------------------- */
 void Gaussian::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 1)
-		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a Gaussian");
-	sigma = vect[0];
+    if (vect.size() != 1)
+        REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a Gaussian");
+    sigma = vect[0];
     prepare();
 }
 
@@ -377,14 +387,14 @@ void Cylinder::read_specific(char *line)
 /* Read a Cylinder from MetaData --------------------------------------------- */
 void Cylinder::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 6)
-		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a cylinder");
-	xradius = vect[0];
-	yradius = vect[1];
-	height = vect[2];
-	rot = vect[3];
-	tilt = vect[4];
-	psi =  vect[5];
+    if (vect.size() != 6)
+        REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a cylinder");
+    xradius = vect[0];
+    yradius = vect[1];
+    height = vect[2];
+    rot = vect[3];
+    tilt = vect[4];
+    psi =  vect[5];
     prepare();
 }
 
@@ -402,14 +412,14 @@ void DCylinder::read_specific(char *line)
 /* Read a DCylinder from MetaData ------------------------------------------- */
 void DCylinder::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 6)
-		REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a double cylinder");
-	radius = vect[0];
-	height = vect[1];
-	separation = vect[2];
-	rot = vect[3];
-	tilt = vect[4];
-	psi =  vect[5];
+    if (vect.size() != 6)
+        REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_SPECIFIC) + "Error when reading a double cylinder");
+    radius = vect[0];
+    height = vect[1];
+    separation = vect[2];
+    rot = vect[3];
+    tilt = vect[4];
+    psi =  vect[5];
     prepare();
 }
 /* Read a Cube ------------------------------------------------------------- */
@@ -426,14 +436,14 @@ void Cube::read_specific(char *line)
 /* Read a Cube from MetaData ---------------------------------------------- */
 void Cube::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 6)
-		REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cube");
-	xdim = vect[0];
-	ydim = vect[1];
-	zdim = vect[2];
-	rot = vect[3];
-	tilt = vect[4];
-	psi =  vect[5];
+    if (vect.size() != 6)
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cube");
+    xdim = vect[0];
+    ydim = vect[1];
+    zdim = vect[2];
+    rot = vect[3];
+    tilt = vect[4];
+    psi =  vect[5];
     prepare();
 }
 
@@ -451,14 +461,14 @@ void Ellipsoid::read_specific(char *line)
 /* Read a Ellipsoid from MetaData ---------------------------------------------- */
 void Ellipsoid::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 6)
-		REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a ellipsoid");
-	xradius = vect[0];
-	yradius = vect[1];
-	zradius = vect[2];
-	rot = vect[3];
-	tilt = vect[4];
-	psi =  vect[5];
+    if (vect.size() != 6)
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a ellipsoid");
+    xradius = vect[0];
+    yradius = vect[1];
+    zradius = vect[2];
+    rot = vect[3];
+    tilt = vect[4];
+    psi =  vect[5];
     prepare();
 }
 
@@ -476,14 +486,14 @@ void Cone::read_specific(char *line)
 /* Read a Cone from MetaData ---------------------------------------------- */
 void Cone::read_specific(const std::vector<double> &vect)
 {
-	if (vect.size() != 5)
-		REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cone");
-	radius = vect[0];
-	height = vect[1];
-	rot = vect[2];
-	tilt = vect[3];
-	psi = vect[4];
-	prepare();
+    if (vect.size() != 5)
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cone");
+    radius = vect[0];
+    height = vect[1];
+    rot = vect[2];
+    tilt = vect[3];
+    psi = vect[4];
+    prepare();
 }
 /* Show an sphere ---------------------------------------------------------- */
 void  Sphere::feat_printf(FILE *fh) const
@@ -496,8 +506,8 @@ void  Sphere::feat_printf(FILE *fh) const
 /* Write specific parameters of a Sphere in MetaData ---------------------- */
 void  Sphere::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(radius);
+    std::vector<double> FSVect;
+    FSVect.push_back(radius);
     MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect, id);
 }
 
@@ -513,11 +523,11 @@ void  Blob::feat_printf(FILE *fh) const
 /* Write specific parameters of a Blob in MetaData ---------------------- */
 void  Blob::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(radius);
-	FSVect.push_back(alpha);
-	FSVect.push_back(m);
-	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+    std::vector<double> FSVect;
+    FSVect.push_back(radius);
+    FSVect.push_back(alpha);
+    FSVect.push_back(m);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 
 /* Show a Gaussian --------------------------------------------------------- */
@@ -531,9 +541,9 @@ void  Gaussian::feat_printf(FILE *fh) const
 /* Write specific parameters of a Gaussian in MetaData ---------------------- */
 void  Gaussian::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(sigma);
-	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+    std::vector<double> FSVect;
+    FSVect.push_back(sigma);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 
 /* Show a cylinder --------------------------------------------------------- */
@@ -549,14 +559,14 @@ void  Cylinder::feat_printf(FILE *fh) const
 /* Write specific parameters of a Cylinder in MetaData ---------------------- */
 void  Cylinder::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(xradius);
-	FSVect.push_back(yradius);
-	FSVect.push_back(height);
-	FSVect.push_back(rot);
-	FSVect.push_back(tilt);
-	FSVect.push_back(psi);
-	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+    std::vector<double> FSVect;
+    FSVect.push_back(xradius);
+    FSVect.push_back(yradius);
+    FSVect.push_back(height);
+    FSVect.push_back(rot);
+    FSVect.push_back(tilt);
+    FSVect.push_back(psi);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 /* Show a double cylinder -------------------------------------------------- */
 void  DCylinder::feat_printf(FILE *fh) const
@@ -571,14 +581,14 @@ void  DCylinder::feat_printf(FILE *fh) const
 /* Write specific parameters of a DCylinder in MetaData ---------------------- */
 void  DCylinder::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(radius);
-	FSVect.push_back(height);
-	FSVect.push_back(separation);
-	FSVect.push_back(rot);
-	FSVect.push_back(tilt);
-	FSVect.push_back(psi);
-	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+    std::vector<double> FSVect;
+    FSVect.push_back(radius);
+    FSVect.push_back(height);
+    FSVect.push_back(separation);
+    FSVect.push_back(rot);
+    FSVect.push_back(tilt);
+    FSVect.push_back(psi);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 /* Show a cube ------------------------------------------------------------- */
 void  Cube::feat_printf(FILE *fh) const
@@ -593,14 +603,14 @@ void  Cube::feat_printf(FILE *fh) const
 /* Write specific parameters of a Cube in MetaData ---------------------- */
 void  Cube::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(xdim);
-	FSVect.push_back(ydim);
-	FSVect.push_back(zdim);
-	FSVect.push_back(rot);
-	FSVect.push_back(tilt);
-	FSVect.push_back(psi);
-	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+    std::vector<double> FSVect;
+    FSVect.push_back(xdim);
+    FSVect.push_back(ydim);
+    FSVect.push_back(zdim);
+    FSVect.push_back(rot);
+    FSVect.push_back(tilt);
+    FSVect.push_back(psi);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 
 /* Show an ellipsoid ------------------------------------------------------- */
@@ -616,14 +626,14 @@ void  Ellipsoid::feat_printf(FILE *fh) const
 /* Write specific parameters of a Ellipsoid in MetaData ---------------------- */
 void  Ellipsoid::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(xradius);
-	FSVect.push_back(yradius);
-	FSVect.push_back(zradius);
-	FSVect.push_back(rot);
-	FSVect.push_back(tilt);
-	FSVect.push_back(psi);
-	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+    std::vector<double> FSVect;
+    FSVect.push_back(xradius);
+    FSVect.push_back(yradius);
+    FSVect.push_back(zradius);
+    FSVect.push_back(rot);
+    FSVect.push_back(tilt);
+    FSVect.push_back(psi);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 
 /* Show a cone ------------------------------------------------------------- */
@@ -639,13 +649,13 @@ void  Cone::feat_printf(FILE *fh) const
 /* Write specific parameters of a Cone in MetaData ---------------------- */
 void  Cone::feat_printm(MetaData &MD, size_t id)
 {
-	std::vector<double> FSVect;
-	FSVect.push_back(radius);
-	FSVect.push_back(height);
-	FSVect.push_back(rot);
-	FSVect.push_back(tilt);
-	FSVect.push_back(psi);
-	MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
+    std::vector<double> FSVect;
+    FSVect.push_back(radius);
+    FSVect.push_back(height);
+    FSVect.push_back(rot);
+    FSVect.push_back(tilt);
+    FSVect.push_back(psi);
+    MD.setValue(MDL_PHANTOM_FEATURE_SPECIFIC,FSVect,id);
 }
 
 
@@ -659,14 +669,22 @@ std::ostream& operator << (std::ostream &o, const Feature *F)
         o << "   Add_Assign:  " << F->Add_Assign << std::endl;
         o << "   Density:     " << F->Density << std::endl;
         o << "   Center:      " << F->Center.transpose() << std::endl;
-        if (F->Type == "sph") o << *((Sphere *) F);
-        else if (F->Type == "blo") o << *((Blob *) F);
-        else if (F->Type == "gau") o << *((Gaussian *) F);
-        else if (F->Type == "cyl") o << *((Cylinder *) F);
-        else if (F->Type == "dcy") o << *((DCylinder *) F);
-        else if (F->Type == "cub") o << *((Cube *) F);
-        else if (F->Type == "ell") o << *((Ellipsoid *) F);
-        else if (F->Type == "con") o << *((Cone *) F);
+        if (F->Type == "sph")
+            o << *((Sphere *) F);
+        else if (F->Type == "blo")
+            o << *((Blob *) F);
+        else if (F->Type == "gau")
+            o << *((Gaussian *) F);
+        else if (F->Type == "cyl")
+            o << *((Cylinder *) F);
+        else if (F->Type == "dcy")
+            o << *((DCylinder *) F);
+        else if (F->Type == "cub")
+            o << *((Cube *) F);
+        else if (F->Type == "ell")
+            o << *((Ellipsoid *) F);
+        else if (F->Type == "con")
+            o << *((Cone *) F);
     }
     return o;
 }
@@ -792,10 +810,10 @@ double Blob::density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) co
 /* Point inside a Gaussian ------------------------------------------------- */
 int Gaussian::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
-        V3_MINUS_V3(aux,r,Center);
-        if (XX(aux)*XX(aux) + YY(aux)*YY(aux) +ZZ(aux)*ZZ(aux) <= 16*sigma*sigma)
-            return 1;
-        return 0;
+    V3_MINUS_V3(aux,r,Center);
+    if (XX(aux)*XX(aux) + YY(aux)*YY(aux) +ZZ(aux)*ZZ(aux) <= 16*sigma*sigma)
+        return 1;
+    return 0;
 }
 
 /* Density inside a Gaussian ----------------------------------------------- */
@@ -824,7 +842,8 @@ int Cylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) con
     tx = XX(aux) / xradius;
     ty = YY(aux) / yradius;
     if (tx*tx + ty*ty <= 1.0
-        && ABS(ZZ(aux)) <= height / 2) return 1;
+        && ABS(ZZ(aux)) <= height / 2)
+        return 1;
     return 0;
 }
 
@@ -841,8 +860,10 @@ int DCylinder::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) co
     if (XX(aux)*XX(aux) + YY(aux)*YY(aux) <= radius*radius)
     {
         double cyl_center = separation / 2 + height / 2;
-        if (ABS(ZZ(aux) - cyl_center) <= height / 2) return 1;
-        else if (ABS(ZZ(aux) + cyl_center) <= height / 2) return 1;
+        if (ABS(ZZ(aux) - cyl_center) <= height / 2)
+            return 1;
+        else if (ABS(ZZ(aux) + cyl_center) <= height / 2)
+            return 1;
     }
     return 0;
 }
@@ -858,7 +879,8 @@ int Cube::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 
     // Check if inside
     if (ABS(XX(aux)) <= xdim / 2 && ABS(YY(aux)) <= ydim / 2 &&
-        ABS(ZZ(aux)) <= zdim / 2) return 1;
+        ABS(ZZ(aux)) <= zdim / 2)
+        return 1;
     return 0;
 }
 
@@ -876,7 +898,8 @@ int Ellipsoid::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) co
     tx = XX(aux) / xradius;
     ty = YY(aux) / yradius;
     tz = ZZ(aux) / zradius;
-    if (tx*tx + ty*ty + tz*tz <= 1.0) return 1;
+    if (tx*tx + ty*ty + tz*tz <= 1.0)
+        return 1;
     return 0;
 }
 
@@ -894,7 +917,8 @@ int Cone::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
     if (ABS(ZZ(aux)) <= height / 2)
     {
         Zradius = radius * (1 - (ZZ(aux) + height / 2) / height);
-        if (XX(aux)*XX(aux) + YY(aux)*YY(aux) <= Zradius*Zradius) return 1;
+        if (XX(aux)*XX(aux) + YY(aux)*YY(aux) <= Zradius*Zradius)
+            return 1;
     }
     return 0;
 }
@@ -1012,7 +1036,8 @@ const
             for (double j = FLOOR(XX(r) - radius); j <= CEIL(XX(r) + radius) && !intersects; j++)
             {
                 if ((k - ZZ(r))*(k - ZZ(r)) + (i - YY(r))*(i - YY(r)) + (j - XX(r))*(j - XX(r)) >
-                    radius2) continue;
+                    radius2)
+                    continue;
                 VECTOR_R3(aux3, j, i, k);
                 intersects = voxel_inside(aux3, aux1, aux2);
             }
@@ -1059,6 +1084,7 @@ void Feature::draw_in(MultidimArray<double> &V, int colour_mode, double colour)
 
     corners(V, corner1, corner2);
 #ifdef DEBUG
+
     std::cout << "Drawing \n";
     std::cout << this;
     std::cout << "colour_mode=" << colour_mode << std::endl;
@@ -1067,6 +1093,7 @@ void Feature::draw_in(MultidimArray<double> &V, int colour_mode, double colour)
     std::cout << "   Corner 1" << corner1.transpose() << std::endl;
     std::cout << "   Corner 2" << corner2.transpose() << std::endl;
 #endif
+
     FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(corner1, corner2)
     {
         inside = voxel_inside_by_normalized_density(r, aux1, aux2);
@@ -1076,20 +1103,26 @@ void Feature::draw_in(MultidimArray<double> &V, int colour_mode, double colour)
         if (condition)
             std::cout << "   r=" << r.transpose() << " inside= " << inside;
 #endif
+
         if (inside != 0)
         {
             double drawing_colour = final_colour * inside / 8;
-            if (add) Vr += drawing_colour;
-            else     Vr  = XMIPP_MAX(drawing_colour, Vr);
+            if (add)
+                Vr += drawing_colour;
+            else
+                Vr  = XMIPP_MAX(drawing_colour, Vr);
 #ifdef DEBUG
+
             if (condition)
                 std::cout << "   V(r)=" << VOLVOXEL(V, (int)ZZ(r), (int)YY(r), (int)XX(r));
 #endif
+
         }
 #ifdef DEBUG
         if (condition)
             std::cout << std::endl;
 #endif
+
     }
 }
 #undef DEBUG
@@ -1208,6 +1241,7 @@ double Cylinder::intersection(
     ZZ(u) /= height;
 
 #ifdef DEBUG
+
     std::cout << "Intersecting .-.-.-.-.-.-.\n";
     std::cout << *this;
     std::cout << "   direction(Univ) = " << direction.transpose() << std::endl;
@@ -1353,11 +1387,12 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     //          universal coord system
     M3x3_BY_V3x1(origin, VP, Center);
 
-//   Matrix1D<double> origin_debug(3);
-//   Uproject_to_plane(Center,P.direction,0,origin_debug);
+    //   Matrix1D<double> origin_debug(3);
+    //   Uproject_to_plane(Center,P.direction,0,origin_debug);
 
-//#define DEBUG_LITTLE
+    //#define DEBUG_LITTLE
 #ifdef DEBUG_LITTLE
+
     std::cout << "Actual feature\n"     << this << std::endl;
     std::cout << "Center              " << Center.transpose() << std::endl;
     std::cout << "VP matrix\n"          << VP << std::endl;
@@ -1366,7 +1401,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     std::cout << "P.euler matrix      " << P.euler << std::endl;
     std::cout << "max_distance        " << max_distance << std::endl;
     std::cout << "origin              " << origin.transpose() << std::endl;
-//      std::cout << "origin_debug (Univ.coord) " << origin_debug.transpose() << std::endl;
+    //      std::cout << "origin_debug (Univ.coord) " << origin_debug.transpose() << std::endl;
 #endif
     /*
        // Step 2). Express this projected center in the projection coord system
@@ -1383,22 +1418,25 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     VECTOR_R3(corner1, max_distance, max_distance, max_distance);
     VECTOR_R3(corner2, -max_distance, -max_distance, -max_distance);
 #ifdef DEBUG_LITTLE
+
     std::cout << "Corner1 : " << corner1.transpose() << std::endl
     << "Corner2 : " << corner2.transpose() << std::endl;
 #endif
 
     box_enclosing(corner1, corner2, VP, corner1, corner2);
-//   if (A!=NULL) {
-//      rectangle_enclosing(corner1,corner2,*A,corner1,corner2);
+    //   if (A!=NULL) {
+    //      rectangle_enclosing(corner1,corner2,*A,corner1,corner2);
 #ifdef DEBUG_LITTLE
+
     std::cout << "Corner1 moves to : " << corner1.transpose() << std::endl
     << "Corner2 moves to : " << corner2.transpose() << std::endl;
 #endif
-//   }
+    //   }
 
     V3_PLUS_V3(corner1, origin, corner1);
     V3_PLUS_V3(corner2, origin, corner2);
 #ifdef DEBUG_LITTLE
+
     std::cout << "Corner1 finally is : " << corner1.transpose() << std::endl
     << "Corner2 finally is : " << corner2.transpose() << std::endl;
 #endif
@@ -1429,14 +1467,17 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     YY(corner2) = CLIP(ROUND(YY(corner2)), STARTINGY(P()), FINISHINGY(P()));
 
 #ifdef DEBUG_LITTLE
+
     std::cout << "corner1      " << corner1.transpose() << std::endl;
     std::cout << "corner2      " << corner2.transpose() << std::endl;
     std::cout.flush();
 #endif
 
     // Check if there is something to project
-    if (XX(corner1) == XX(corner2)) return;
-    if (YY(corner1) == YY(corner2)) return;
+    if (XX(corner1) == XX(corner2))
+        return;
+    if (YY(corner1) == YY(corner2))
+        return;
 
     // Study the projection for each point in the projection plane ..........
     // (u,v) are in the deformed projection plane (if any deformation)
@@ -1445,6 +1486,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
         {
             double length = 0;
 #ifdef DEBUG_EVEN_MORE
+
             std::cout << "Studying point (" << u << "," << v << ")\n";
             std::cout.flush();
 #endif
@@ -1463,17 +1505,19 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
                     XX(act) = actu;
                     YY(act) = actv;
                     ZZ(act) = 0;
-//               if (Ainv!=NULL) M2x2_BY_V2x1(act,*Ainv,act);
-//               M3x3_BY_V3x1(act,P.eulert,act);
+                    //               if (Ainv!=NULL) M2x2_BY_V2x1(act,*Ainv,act);
+                    //               M3x3_BY_V3x1(act,P.eulert,act);
                     M3x3_BY_V3x1(act, PV, act);
 
                     // Compute the intersection of a ray which passes through
                     // this point and its direction is perpendicular to the
                     // projection plane
                     double possible_length = intersection(direction, act);
-                    if (possible_length > 0) length += possible_length;
+                    if (possible_length > 0)
+                        length += possible_length;
 
 #ifdef DEBUG_EVEN_MORE
+
                     std::cout << "Averaging at (" << actu << "," << actv << ")\n";
                     std::cout << "   which in univ. coords is " << act.transpose() << std::endl;
                     std::cout << "   intersection there " << possible_length << std::endl;
@@ -1485,6 +1529,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
             }
             length /= (SUBSAMPLING * SUBSAMPLING);
 #ifdef DEBUG
+
             std::cout << "Final value added at position (" << u << "," << v << ")="
             << length << std::endl;
 #endif
@@ -1676,7 +1721,8 @@ Feature *Feature::encircle(double radius) const
     Sphere *f;
     f = new Sphere;
 
-    if (radius == 0) radius = 1.5 * max_distance;
+    if (radius == 0)
+        radius = 1.5 * max_distance;
 
     f->Type         = "sph";
     f->Add_Assign   = Add_Assign;
@@ -1860,10 +1906,14 @@ void Cube::init_rnd(
     YY(Center)     = rnd_unif(miny0, maxy0);
     ZZ(Center)     = rnd_unif(minz0, maxz0);
 
-    if (minYdim == 0) minYdim = minXdim;
-    if (minZdim == 0) minZdim = minXdim;
-    if (maxYdim == 0) maxYdim = maxXdim;
-    if (maxZdim == 0) maxZdim = maxXdim;
+    if (minYdim == 0)
+        minYdim = minXdim;
+    if (minZdim == 0)
+        minZdim = minXdim;
+    if (maxYdim == 0)
+        maxYdim = maxXdim;
+    if (maxZdim == 0)
+        maxZdim = maxXdim;
     xdim           = rnd_unif(minXdim, maxXdim);
     ydim           = rnd_unif(minYdim, maxYdim);
     zdim           = rnd_unif(minZdim, maxZdim);
@@ -1897,10 +1947,14 @@ void Ellipsoid::init_rnd(
     YY(Center)     = rnd_unif(miny0, maxy0);
     ZZ(Center)     = rnd_unif(minz0, maxz0);
 
-    if (minYradius == 0) minYradius = minXradius;
-    if (minZradius == 0) minZradius = minXradius;
-    if (maxYradius == 0) maxYradius = maxXradius;
-    if (maxZradius == 0) maxZradius = maxXradius;
+    if (minYradius == 0)
+        minYradius = minXradius;
+    if (minZradius == 0)
+        minZradius = minXradius;
+    if (maxYradius == 0)
+        maxYradius = maxXradius;
+    if (maxZradius == 0)
+        maxZradius = maxXradius;
     xradius        = rnd_unif(minXradius, maxXradius);
     yradius        = rnd_unif(minYradius, maxYradius);
     zradius        = rnd_unif(minZradius, maxZradius);
@@ -1957,7 +2011,8 @@ void Feature::mean_variance_in_plane(Image<double> *V, double z, double &mean,
 
     mean = 0;
     var = 0;
-    if (z < STARTINGZ(VOLMATRIX(*V)) || z > FINISHINGZ(VOLMATRIX(*V))) return;
+    if (z < STARTINGZ(VOLMATRIX(*V)) || z > FINISHINGZ(VOLMATRIX(*V)))
+        return;
 
     ZZ(r) = z;
     for (YY(r) = STARTINGY(VOLMATRIX(*V)); YY(r) <= FINISHINGY(VOLMATRIX(*V)); YY(r)++)
@@ -1996,13 +2051,15 @@ void Phantom::clear()
     xdim = ydim = zdim = 0;
     Background_Density = 0;
     fn = "";
-    for (int i = 0; i < VF.size(); i++) delete VF[i];
+    for (int i = 0; i < VF.size(); i++)
+        delete VF[i];
     VF.clear();
 }
 
 Phantom & Phantom::operator = (const Phantom &P)
 {
-    if (&P == this) return *this;
+    if (&P == this)
+        return *this;
     clear();
     fn = P.fn;
     xdim = P.xdim;
@@ -2073,7 +2130,8 @@ Phantom & Phantom::operator = (const Phantom &P)
 /* Prepare for work -------------------------------------------------------- */
 void Phantom::prepare()
 {
-    for (int i = 0; i < VF.size(); i++) VF[i]->prepare();
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->prepare();
 }
 
 /* Maximum distance -------------------------------------------------------- */
@@ -2116,227 +2174,237 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
     double     scale;          // The scale factor is not stored
     char       straux[6];
 
-// Clear actual phantom
+    // Clear actual phantom
     clear();
 
     if (fn_phantom.isMetaData())
     {
-    	 MetaData MD1;  //MetaData for the first block (phantom parameters)
-    	 MetaData MD2;	//MetaData for the second block (phantom parameters)
-    	 std::vector <double> TempVec; // A temporary vector for reading vector data
-    	 size_t objId;
+        MetaData MD1;  //MetaData for the first block (phantom parameters)
+        MetaData MD2; //MetaData for the second block (phantom parameters)
+        std::vector <double> TempVec; // A temporary vector for reading vector data
+        size_t objId;
 
-    // Assign different blocks to different MetaDatas
-    	 MD1.read((std::string)"block1@"+fn_phantom.c_str());
-    	 MD2.read((std::string)"block2@"+fn_phantom.c_str());
+        // Assign different blocks to different MetaDatas
+        MD1.read((std::string)"block1@"+fn_phantom.c_str());
+        MD2.read((std::string)"block2@"+fn_phantom.c_str());
 
-   // Read the first block containing parameters of phantom
-    	 objId = MD1.firstObject();
-    	 MD1.getValue(MDL_DIMENSIONS_3D, TempVec, objId);
-    	 if (TempVec.size()<3)
-    		 REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_DIMENSIONS_3D) + " problems with project dimensions");
-    	 xdim = TempVec[0]; ydim = TempVec[1]; zdim = TempVec[2];
-    	 if (!MD1.getValue(MDL_PHANTOM_BGDENSITY, Background_Density, objId))
-    		 Background_Density = 0;
-    	 if (!MD1.getValue(MDL_SCALE, scale, objId))
-    		 scale = 1;
-    	 if (apply_scale)
-    	 {
-    		 xdim = (int) CEIL(scale * xdim);
-    		 ydim = (int) CEIL(scale * ydim);
-    		 zdim = (int) CEIL(scale * zdim);
-    		 current_scale = 1;
-    	 }
-		 else current_scale = scale;
+        // Read the first block containing parameters of phantom
+        objId = MD1.firstObject();
+        MD1.getValue(MDL_DIMENSIONS_3D, TempVec, objId);
+        if (TempVec.size()<3)
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_DIMENSIONS_3D) + " problems with project dimensions");
+        xdim = TempVec[0];
+        ydim = TempVec[1];
+        zdim = TempVec[2];
+        if (!MD1.getValue(MDL_PHANTOM_BGDENSITY, Background_Density, objId))
+            Background_Density = 0;
+        if (!MD1.getValue(MDL_SCALE, scale, objId))
+            scale = 1;
+        if (apply_scale)
+        {
+            xdim = (int) CEIL(scale * xdim);
+            ydim = (int) CEIL(scale * ydim);
+            zdim = (int) CEIL(scale * zdim);
+            current_scale = 1;
+        }
+        else
+            current_scale = scale;
 
-    // Read the second block
-    	 MDRow FeatureRow;
-    	 FOR_ALL_OBJECTS_IN_METADATA(MD2)
-		 {
-    		MD2.getRow(FeatureRow, __iter.objId);
-    		if(!FeatureRow.getValue(MDL_PHANTOM_FEATURE_TYPE, feat_type))
-    			REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_TYPE) + " feature type not present");
-    		if (feat_type == "sph")
-			{
-				sph = new Sphere;
-				feat = sph;
-				sph->read(FeatureRow);
-			}
-			else if (feat_type == "blo")
-			{
-				blo = new Blob;
-				feat = blo;
-				blo->read(FeatureRow);
-			}
-			else if (feat_type == "gau")
-			{
-				gau = new Gaussian;
-				feat = gau;
-				gau->read(FeatureRow);
-			}
-			else if (feat_type == "cyl")
-			{
-				cyl = new Cylinder;
-				feat = cyl;
-				cyl->read(FeatureRow);
-			}
-			else if (feat_type == "dcy")
-			{
-				dcy = new DCylinder;
-				feat = dcy;
-				dcy->read(FeatureRow);
-			}
-			else if (feat_type == "cub")
-			{
-				cub = new Cube;
-				feat = cub;
-				cub->read(FeatureRow);
-			}
-			else if (feat_type == "ell")
-			{
-				ell = new Ellipsoid;
-				feat = ell;
-				ell->read(FeatureRow);
-			}
-			else if (feat_type == "con")
-			{
-				con = new Cone;
-				feat = con;
-				con->read(FeatureRow);
-			}
-			else
-				REPORT_ERROR(ERR_ARG_INCORRECT, MDL::label2Str(MDL_PHANTOM_FEATURE_TYPE) + "Unknown feature type");
-    		if (apply_scale)
-			{
-				scaled_feat = feat->scale(scale);
-				scaled_feat->Center = scaled_feat->Center * scale;
-				delete feat;
+        // Read the second block
+        MDRow FeatureRow;
+        FOR_ALL_OBJECTS_IN_METADATA(MD2)
+        {
+            MD2.getRow(FeatureRow, __iter.objId);
+            if(!FeatureRow.getValue(MDL_PHANTOM_FEATURE_TYPE, feat_type))
+                REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_PHANTOM_FEATURE_TYPE) + " feature type not present");
+            if (feat_type == "sph")
+            {
+                sph = new Sphere;
+                feat = sph;
+                sph->read(FeatureRow);
+            }
+            else if (feat_type == "blo")
+            {
+                blo = new Blob;
+                feat = blo;
+                blo->read(FeatureRow);
+            }
+            else if (feat_type == "gau")
+            {
+                gau = new Gaussian;
+                feat = gau;
+                gau->read(FeatureRow);
+            }
+            else if (feat_type == "cyl")
+            {
+                cyl = new Cylinder;
+                feat = cyl;
+                cyl->read(FeatureRow);
+            }
+            else if (feat_type == "dcy")
+            {
+                dcy = new DCylinder;
+                feat = dcy;
+                dcy->read(FeatureRow);
+            }
+            else if (feat_type == "cub")
+            {
+                cub = new Cube;
+                feat = cub;
+                cub->read(FeatureRow);
+            }
+            else if (feat_type == "ell")
+            {
+                ell = new Ellipsoid;
+                feat = ell;
+                ell->read(FeatureRow);
+            }
+            else if (feat_type == "con")
+            {
+                con = new Cone;
+                feat = con;
+                con->read(FeatureRow);
+            }
+            else
+                REPORT_ERROR(ERR_ARG_INCORRECT, MDL::label2Str(MDL_PHANTOM_FEATURE_TYPE) + "Unknown feature type");
+            if (apply_scale)
+            {
+                scaled_feat = feat->scale(scale);
+                scaled_feat->Center = scaled_feat->Center * scale;
+                delete feat;
 
-				// Store feature
-				VF.push_back(scaled_feat);
-			}
-			else
-				VF.push_back(feat);
-		 }
+                // Store feature
+                VF.push_back(scaled_feat);
+            }
+            else
+                VF.push_back(feat);
+        }
     }
     else
     {
-	// Open Volume Description File
-		if ((fh_phantom = fopen(fn_phantom.c_str(), "r")) == NULL)
-			REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::read: Cannot open the phantom file: "
-						 + fn_phantom);
-		fn = fn_phantom;
+        // Open Volume Description File
+        if ((fh_phantom = fopen(fn_phantom.c_str(), "r")) == NULL)
+            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::read: Cannot open the phantom file: "
+                         + fn_phantom);
+        fn = fn_phantom;
 
-	// Read the file
-		while (fgets(line, 200, fh_phantom) != NULL)
-		{
-			if (line[0] == 0) continue;
-			if (line[0] == '#') continue;
-			if (line[0] == '\n') continue;
+        size_t lineNumber = 0;
+        // Read the file
+        while (fgets(line, 256, fh_phantom) != NULL)
+        {
+            ++lineNumber;
+            if (line[0] == 0)
+                continue;
+            if (line[0] == '#')
+                continue;
+            if (line[0] == '\n')
+                continue;
 
-			// Read volume dimensions and global density .........................
-			if (Global_Feature_Read == 0)
-			{
-				Global_Feature_Read = 1;
-				stat = sscanf(line, "%d %d %d %lf %lf", &xdim, &ydim, &zdim,
-							  &Background_Density, &scale);
-				if (stat < 3)
-					REPORT_ERROR(ERR_IO_NOREAD, "Phantom::read: check the volume"
-								 " dimensions and global density in volume description file");
-				if (stat <= 3) Background_Density = 0;
-				if (stat <= 4) scale = 1;
-				if (apply_scale)
-				{
-					xdim = (int) CEIL(scale * xdim);
-					ydim = (int) CEIL(scale * ydim);
-					zdim = (int) CEIL(scale * zdim);
-					current_scale = 1;
-				}
-				else current_scale = scale;
-				continue;
-			}
+            // Read volume dimensions and global density .........................
+            if (Global_Feature_Read == 0)
+            {
+                Global_Feature_Read = 1;
+                stat = sscanf(line, "%d %d %d %lf %lf", &xdim, &ydim, &zdim,
+                              &Background_Density, &scale);
+                if (stat < 3)
+                    REPORT_ERROR(ERR_IO_NOREAD, "Phantom::read: check the volume"
+                                 " dimensions and global density in volume description file");
+                if (stat <= 3)
+                    Background_Density = 0;
+                if (stat <= 4)
+                    scale = 1;
+                if (apply_scale)
+                {
+                    xdim = (int) CEIL(scale * xdim);
+                    ydim = (int) CEIL(scale * ydim);
+                    zdim = (int) CEIL(scale * zdim);
+                    current_scale = 1;
+                }
+                else
+                    current_scale = scale;
+                continue;
+            }
 
-			// Read feature description ..........................................
-			stat = sscanf(line, "%s", straux);
-			feat_type = straux;
-			if (stat != 1)
-				REPORT_ERROR(ERR_IO_NOREAD,
-							 (std::string)"Phantom::read: Not correct feature type" + line);
+            // Read feature description ..........................................
+            stat = sscanf(line, "%s", straux);
+            feat_type = straux;
+            if (stat != 1)
+                REPORT_ERROR(ERR_IO_NOREAD, formatString("Phantom::read: Not correct feature type in line number %ld : \n%s",lineNumber, line));
 
-			if (feat_type == "sph")
-			{
-				sph = new Sphere;
-				feat = sph;
-				sph->readCommon(line);
-				sph->read_specific(line);
-			}
-			else if (feat_type == "blo")
-			{
-				blo = new Blob;
-				feat = blo;
-				blo->readCommon(line);
-				blo->read_specific(line);
-			}
-			else if (feat_type == "gau")
-			{
-				gau = new Gaussian;
-				feat = gau;
-				gau->readCommon(line);
-				gau->read_specific(line);
-			}
-			else if (feat_type == "cyl")
-			{
-				cyl = new Cylinder;
-				feat = cyl;
-				cyl->readCommon(line);
-				cyl->read_specific(line);
-			}
-			else if (feat_type == "dcy")
-			{
-				dcy = new DCylinder;
-				feat = dcy;
-				dcy->readCommon(line);
-				dcy->read_specific(line);
-			}
-			else if (feat_type == "cub")
-			{
-				cub = new Cube;
-				feat = cub;
-				cub->readCommon(line);
-				cub->read_specific(line);
-			}
-			else if (feat_type == "ell")
-			{
-				ell = new Ellipsoid;
-				feat = ell;
-				ell->readCommon(line);
-				ell->read_specific(line);
-			}
-			else if (feat_type == "con")
-			{
-				con = new Cone;
-				feat = con;
-				con->readCommon(line);
-				con->read_specific(line);
-			}
-			else
-				REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Phantom::read: Unknown feature type: " + line);
+            if (feat_type == "sph")
+            {
+                sph = new Sphere;
+                feat = sph;
+                sph->readCommon(line);
+                sph->read_specific(line);
+            }
+            else if (feat_type == "blo")
+            {
+                blo = new Blob;
+                feat = blo;
+                blo->readCommon(line);
+                blo->read_specific(line);
+            }
+            else if (feat_type == "gau")
+            {
+                gau = new Gaussian;
+                feat = gau;
+                gau->readCommon(line);
+                gau->read_specific(line);
+            }
+            else if (feat_type == "cyl")
+            {
+                cyl = new Cylinder;
+                feat = cyl;
+                cyl->readCommon(line);
+                cyl->read_specific(line);
+            }
+            else if (feat_type == "dcy")
+            {
+                dcy = new DCylinder;
+                feat = dcy;
+                dcy->readCommon(line);
+                dcy->read_specific(line);
+            }
+            else if (feat_type == "cub")
+            {
+                cub = new Cube;
+                feat = cub;
+                cub->readCommon(line);
+                cub->read_specific(line);
+            }
+            else if (feat_type == "ell")
+            {
+                ell = new Ellipsoid;
+                feat = ell;
+                ell->readCommon(line);
+                ell->read_specific(line);
+            }
+            else if (feat_type == "con")
+            {
+                con = new Cone;
+                feat = con;
+                con->readCommon(line);
+                con->read_specific(line);
+            }
+            else
+                REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Phantom::read: Unknown feature type: " + line);
 
-			// Scale and Store feature
-			if (apply_scale)
-			{
-				scaled_feat = feat->scale(scale);
-				scaled_feat->Center = scaled_feat->Center * scale;
-				delete feat;
+            // Scale and Store feature
+            if (apply_scale)
+            {
+                scaled_feat = feat->scale(scale);
+                scaled_feat->Center = scaled_feat->Center * scale;
+                delete feat;
 
-				// Store feature
-				VF.push_back(scaled_feat);
-			}
-			else
-				VF.push_back(feat);
-		}
-		fclose(fh_phantom);
-		phantom_scale = scale;
+                // Store feature
+                VF.push_back(scaled_feat);
+            }
+            else
+                VF.push_back(feat);
+        }
+        fclose(fh_phantom);
+        phantom_scale = scale;
     }
 }
 
@@ -2347,48 +2415,49 @@ std::ostream& operator << (std::ostream &o, const Phantom &P)
     std::cout << "Dimensions: " << P.xdim << " x " << P.ydim << " x " << P.zdim << std::endl;
     std::cout << "Background density: " << P.Background_Density << std::endl;
     std::cout << "phantom_scale : " << P.phantom_scale << std::endl;
-    for (int i = 0; i < P.VF.size(); i++) o << P.VF[i];
+    for (int i = 0; i < P.VF.size(); i++)
+        o << P.VF[i];
     return o;
 }
 
 /* Write Volume Description ------------------------------------------------ */
 void Phantom::write(const FileName &fn_phantom)
 {
-	MetaData MD1;  //MetaData for phanto global parameters
-	MetaData MD2;  //MetaData for Feature parameters
-	std::vector<double> FCVect(3);  //For the center of feature
-	size_t id;
-	// Write global parameters to the first block
-	std::vector<double> PCVector;  //For the center of Phantom
-	MD1.setColumnFormat(false);
-	id = MD1.addObject();
-	PCVector.push_back(xdim);
-	PCVector.push_back(ydim);
-	PCVector.push_back(zdim);
-	MD1.setValue(MDL_DIMENSIONS_3D, PCVector, id);
-	MD1.setValue(MDL_PHANTOM_BGDENSITY, Background_Density, id);
-	if (current_scale != 1)
-		MD1.setValue(MDL_SCALE, current_scale, id);
-	else
-		MD1.setValue(MDL_SCALE, 1.0, id);
-	MD1.write((std::string)"block1@"+fn_phantom.c_str(), MD_OVERWRITE);
+    MetaData MD1;  //MetaData for phanto global parameters
+    MetaData MD2;  //MetaData for Feature parameters
+    std::vector<double> FCVect(3);  //For the center of feature
+    size_t id;
+    // Write global parameters to the first block
+    std::vector<double> PCVector;  //For the center of Phantom
+    MD1.setColumnFormat(false);
+    id = MD1.addObject();
+    PCVector.push_back(xdim);
+    PCVector.push_back(ydim);
+    PCVector.push_back(zdim);
+    MD1.setValue(MDL_DIMENSIONS_3D, PCVector, id);
+    MD1.setValue(MDL_PHANTOM_BGDENSITY, Background_Density, id);
+    if (current_scale != 1)
+        MD1.setValue(MDL_SCALE, current_scale, id);
+    else
+        MD1.setValue(MDL_SCALE, 1.0, id);
+    MD1.write((std::string)"block1@"+fn_phantom.c_str(), MD_OVERWRITE);
 
-	// Write specific parameters
-	std::string SAddAssign;  // string variab for feature operation (+/=)
-	for (int i = 0; i < VF.size(); i++)
-	{
-		id = MD2.addObject();
-		SAddAssign = VF[i]->Add_Assign;
-		MD2.setValue(MDL_PHANTOM_FEATURE_TYPE,VF[i]->Type, id);
-		MD2.setValue(MDL_PHANTOM_FEATURE_OPERATION, SAddAssign, id);
-		MD2.setValue(MDL_PHANTOM_FEATURE_DENSITY, VF[i]->Density, id);
-		FCVect[0] = XX(VF[i]->Center);
-		FCVect[1] = YY(VF[i]->Center);
-		FCVect[2] = ZZ(VF[i]->Center);
-		MD2.setValue(MDL_PHANTOM_FEATURE_CENTER, FCVect, id);
-		VF[i]->feat_printm(MD2, id);
-	}
-	MD2.write((std::string)"block2@"+fn_phantom.c_str(), MD_APPEND);
+    // Write specific parameters
+    std::string SAddAssign;  // string variab for feature operation (+/=)
+    for (int i = 0; i < VF.size(); i++)
+    {
+        id = MD2.addObject();
+        SAddAssign = VF[i]->Add_Assign;
+        MD2.setValue(MDL_PHANTOM_FEATURE_TYPE,VF[i]->Type, id);
+        MD2.setValue(MDL_PHANTOM_FEATURE_OPERATION, SAddAssign, id);
+        MD2.setValue(MDL_PHANTOM_FEATURE_DENSITY, VF[i]->Density, id);
+        FCVect[0] = XX(VF[i]->Center);
+        FCVect[1] = YY(VF[i]->Center);
+        FCVect[2] = ZZ(VF[i]->Center);
+        MD2.setValue(MDL_PHANTOM_FEATURE_CENTER, FCVect, id);
+        VF[i]->feat_printm(MD2, id);
+    }
+    MD2.write((std::string)"block2@"+fn_phantom.c_str(), MD_APPEND);
 }
 
 /* Voxel Inside any feature ------------------------------------------------ */
@@ -2420,7 +2489,8 @@ int Phantom::any_feature_intersects_sphere(const Matrix1D<double> &r,
     for (int i = 0; i < VF.size(); i++)
     {
         intersects = VF[i]->intersects_sphere(r, radius, aux1, aux2, aux3);
-        if (intersects) return i + 1;
+        if (intersects)
+            return i + 1;
     }
     return 0;
 }
@@ -2432,7 +2502,8 @@ void Phantom::draw_in(MultidimArray<double> &V)
     V.resize(zdim, ydim, xdim);
     V.setXmippOrigin();
     V.initConstant(Background_Density);
-    for (int i = 0; i < VF.size(); i++) VF[i]->draw_in(V);
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->draw_in(V);
 }
 
 /* Label a Phantom --------------------------------------------------------- */
@@ -2451,7 +2522,8 @@ void Phantom::label(MultidimArray<double> &V)
         // If it is not in the background, check that it is completely
         // inside the feature, if not set it to border.
         if (sel_feat != 0)
-            if (VF[sel_feat-1]->voxel_inside(r, aux1, aux2) != 8) sel_feat = -sel_feat;
+            if (VF[sel_feat-1]->voxel_inside(r, aux1, aux2) != 8)
+                sel_feat = -sel_feat;
         A3D_ELEM(V, k, i, j) = sel_feat;
     }
 }
@@ -2465,19 +2537,22 @@ void Phantom::sketch_in(MultidimArray<double> &V, int clean, double colour)
         V.resize(zdim, ydim, xdim);
         V.setXmippOrigin();
     }
-    for (int i = 0; i < VF.size(); i++) VF[i]->sketch_in(V, colour);
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->sketch_in(V, colour);
 }
 
 /* Shift a phantom --------------------------------------------------------- */
 void Phantom::shift(double shiftX, double shiftY, double shiftZ)
 {
-    for (int i = 0; i < VF.size(); i++) VF[i]->shift(shiftX, shiftY, shiftZ);
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->shift(shiftX, shiftY, shiftZ);
 }
 
 /* Rotate a phantom -------------------------------------------------------- */
 void Phantom::rotate(const Matrix2D<double> &E)
 {
-    for (int i = 0; i < VF.size(); i++) VF[i]->rotate(E);
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->rotate(E);
 }
 
 /* Apply geometrical transformatio to a phantom ---------------------------- */
@@ -2485,12 +2560,16 @@ void Phantom::selfApplyGeometry(const Matrix2D<double> &A, int inv)
 {
     if ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4))
         REPORT_ERROR(ERR_MATRIX_SIZE, "Apply_geom3D: geometrical transformation is not 4x4");
-    if (A.isIdentity()) return;
+    if (A.isIdentity())
+        return;
     Matrix2D<double> T;
-    if (inv == IS_INV) T = A.inv();
-    else             T = A;
+    if (inv == IS_INV)
+        T = A.inv();
+    else
+        T = A;
 
-    for (int i = 0; i < VF.size(); i++) VF[i]->selfApplyGeometry(T);
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->selfApplyGeometry(T);
 }
 
 /* Projecting a phantom ---------------------------------------------------- */
@@ -2510,10 +2589,12 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
 
     // Compute volume to Projection matrix
     Matrix2D<double> VP = P.euler;
-    if (A != NULL) VP = (*A) * VP;
+    if (A != NULL)
+        VP = (*A) * VP;
     Matrix2D<double> PV = VP.inv();
     // Project all features
-    for (int i = 0; i < VF.size(); i++) VF[i]->project_to(P, VP, PV);
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->project_to(P, VP, PV);
 }
 #undef DEBUG
 
@@ -2524,11 +2605,13 @@ void Phantom::project_to(Projection &P,
 
     // Compute volume to Projection matrix
     Matrix2D<double> VP = P.euler;
-    if (A != NULL) VP = (*A) * VP;
+    if (A != NULL)
+        VP = (*A) * VP;
     Matrix2D<double> PV = VP.inv();
 
     // Project all features
-    for (int i = 0; i < VF.size(); i++) VF[i]->project_to(P, VP, PV);
+    for (int i = 0; i < VF.size(); i++)
+        VF[i]->project_to(P, VP, PV);
 }
 
 void Phantom::project_to(Projection &P, const Matrix2D<double> &VP, double    disappearing_th) const
@@ -2552,6 +2635,7 @@ const
         if (z0 < FIRST_XMIPP_INDEX(zdim) || z0 > LAST_XMIPP_INDEX(zdim))
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Phantom::surface: z0 outside phantom");
 #ifdef DEBUG
+
     std::cout << "Direction: " << direction << std::endl;
     std::cout << "z0:        " << z0        << std::endl;
     std::cout << "zdim:      " << zdim      << std::endl;
@@ -2570,12 +2654,15 @@ const
 #endif
         // Init ray
         int k;
-        if (direction == POS_NEG) k = LAST_XMIPP_INDEX(zdim) + 1;
-        else                    k = FIRST_XMIPP_INDEX(zdim) - 1;
+        if (direction == POS_NEG)
+            k = LAST_XMIPP_INDEX(zdim) + 1;
+        else
+            k = FIRST_XMIPP_INDEX(zdim) - 1;
         bool finished;
         finished = false;
 
 #ifdef DEBUG
+
         std::cout << "Initial k=" << k << std::endl;
 #endif
         // Check that it is not inside and move ray
@@ -2584,14 +2671,17 @@ const
         {
             VECTOR_R3(r, j, i, k);
 #ifdef DEBUG
+
             std::cout << "Checking " << r.transpose() << std::endl;
 #endif
             // If it is inside move a step backward and finish
             if (any_feature_intersects_sphere(r, radius, aux1, aux2, aux3))
             {
                 finished = true;
-                if (direction == POS_NEG) k++;
-                else k--;
+                if (direction == POS_NEG)
+                    k++;
+                else
+                    k--;
             }
             else
             {

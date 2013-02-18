@@ -27,7 +27,6 @@ package xmipp.viewer.windows;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -37,32 +36,21 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
 
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.MetadataGallery;
-import xmipp.viewer.models.MetadataTable;
-import xmipp.viewer.models.ClassInfo;
+import xmipp.viewer.models.MetadataGalleryTableModel;
 
 public class AddFillLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
-	protected MetadataGallery gallery;
+	protected MetadataGalleryTableModel gallery;
 
 	protected boolean fillMode = false;
 	protected GridBagConstraints gbc = new GridBagConstraints();
@@ -78,16 +66,16 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	 * Constructor to add a new label the labels present in the metadata are
 	 * passed
 	 * */
-	public AddFillLabelsJDialog(JFrameGallery parent,
+	public AddFillLabelsJDialog(GalleryJFrame parent,
 			ArrayList<ColumnInfo> labels) {
 		super(parent, "Add new label", true);
-		this.gallery = (MetadataGallery) parent.gallery;
+		this.gallery = (MetadataGalleryTableModel) parent.gallery;
 		this.labels = labels;
 		initComponents();
 	}// constructor AddFillLabelsJDialog
 
 	/** Constructor to fill an existing label */
-	public AddFillLabelsJDialog(JFrameGallery parent, int label) {
+	public AddFillLabelsJDialog(GalleryJFrame parent, int label) {
 		super(parent, "Fill label values", true);
 		this.label = label;
 		initComponents();

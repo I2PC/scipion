@@ -941,3 +941,27 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_operate
     }
     XMIPP_JAVA_CATCH;
 }
+
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMax
+(JNIEnv * env, jobject jobj, jint column)
+{
+    XMIPP_JAVA_TRY
+    {
+        MetaData * md = GET_INTERNAL_METADATA(jobj);
+        return md->getColumnMax((MDLabel)column);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT jdouble JNICALL Java_xmipp_jni_MetaData_getColumnMin
+(JNIEnv * env, jobject jobj, jint column)
+{
+    XMIPP_JAVA_TRY
+    {
+        MetaData * md = GET_INTERNAL_METADATA(jobj);
+        return md->getColumnMin((MDLabel)column);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+

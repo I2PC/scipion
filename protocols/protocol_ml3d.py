@@ -11,12 +11,12 @@ from os.path import join, exists
 from protlib_base import XmippProtocol, protocolMain
 from config_protocols import protDict
 from xmipp import MetaData, Image, MDL_IMAGE, MDL_ITER, MDL_LL, AGGR_SUM, MDL_REF3D, MDL_WEIGHT, \
-getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ
+getBlocksInMetaDataFile, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDValueEQ, MDL_SAMPLINGRATE
 from protlib_utils import runShowJ, getListFromVector, getListFromRangeString
 from protlib_parser import ProtocolParser
 from protlib_xmipp import redStr, cyanStr
 from protlib_gui_ext import showWarning
-from protlib_filesystem import xmippExists
+from protlib_filesystem import xmippExists, findAcquisitionInfo, moveFile
 from protocol_ml2d import lastIteration
 
 class ProtML3D(XmippProtocol):
@@ -29,21 +29,26 @@ class ProtML3D(XmippProtocol):
         else:
             self.progId = 'ml'
         self.ParamsDict['ProgId'] = self.progId
-        self.ORoot = self.ParamsDict['ORoot'] = self.workingDirPath('%s3d' % self.progId)
-        self.Extra = self.ParamsDict['Extra'] = self.ORoot + "_extra/"
-        self.Extra2D = self.ParamsDict['Extra2D'] = "%s_%s2d_extra/" % (self.ORoot, self.progId)
+        
+        self.addParam('ORoot', self.WorkingDir + '/')
+        self.addParam('Extra2D', self.workingDirPath("%s2dextra" % self.progId))
+        acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
+
+        if not acquisionInfo is None: 
+            md = MetaData(acquisionInfo)
+            self.addParam('SamplingRate', md.getValue(MDL_SAMPLINGRATE, md.firstObject()))
                         
     def createFilenameTemplates(self):
-        extraRefs = '%(Extra2D)siter%(iter)03d/result_classes.xmd'
+        extraRefs = '%(Extra2D)s/iter%(iter)03d/iter_classes.xmd'
         return {
                 'iter_logs': "info@" + extraRefs,
                 'iter_refs': "classes@" + extraRefs,
-                'iter_vols': '%(Extra)siter%(iter)03d/volumes.xmd',
+                'iter_vols': '%(ExtraDir)s/iter%(iter)03d/iter_volumes.xmd',
                 #'refs': 'iter%(iter)06d@' + extraRefs,
-                'initial_vols':  '%(Extra)sinitial_volumes.stk',
-                'corrected_vols': '%(Extra)scorrected_volumes.stk',
-                'filtered_vols': '%(Extra)sfiltered_volumes.stk',
-                'generated_vols': '%(Extra)sgenerated_volumes.stk'
+                'initial_vols':  '%(ExtraDir)s/initial_volumes.stk',
+                'corrected_vols': '%(ExtraDir)s/corrected_volumes.stk',
+                'filtered_vols': '%(ExtraDir)s/filtered_volumes.stk',
+                'generated_vols': '%(ExtraDir)s/generated_volumes.stk'
                 }
         
     def summary(self):
@@ -115,7 +120,7 @@ class ProtML3D(XmippProtocol):
             self.mdVols = MetaData(self.RefMd)
             
             
-            self.insertStep('createDir', [self.Extra], path=self.Extra)
+            self.insertStep('createDir', [self.ExtraDir], path=self.ExtraDir)
             
             self.insertStep('copyVolumes', [initVols], 
                                inputMd=self.RefMd, outputStack=initVols)
@@ -129,9 +134,11 @@ class ProtML3D(XmippProtocol):
             if self.NumberOfReferences > 1:
                 self.insertGenerateRefSteps()
                 
-            if self.DoML3DClassification:
-                self.insertML3DStep(self.ImgMd, self.ORoot, self.ParamsDict['InitialVols'], 
+            
+            self.insertML3DStep(self.ImgMd, self.ORoot, self.ParamsDict['InitialVols'], 
                                     self.NumberOfIterations, self.SeedsAreAmplitudeCorrected)
+            
+            self.insertStep('renameOutput', WorkingDir=self.WorkingDir, ProgId=self.progId)
             
     # Insert the step of launch some program
     def insertRunJob(self, prog, vf=[], files=None, useProcs=True):
@@ -175,7 +182,7 @@ class ProtML3D(XmippProtocol):
                 })
             self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
             self.ParamsStr = ' -i %(inputVol)s --experimental_images %(ImgMd)s -o %(projRefs)s' + \
-                    ' --sampling_rate %(ProjMatchSampling)d --sym %(Symmetry)s' + \
+                    ' --sampling_rate %(ProjMatchSampling)f --sym %(Symmetry)s' + \
                     'h --compute_neighbors --angular_distance -1' 
                        
             self.insertRunJob('xmipp_angular_project_library', ['projRefs', 'docRefs'])
@@ -199,7 +206,7 @@ class ProtML3D(XmippProtocol):
             outputVol = "%(index)d@%(volStack)s" % locals()
             self.mdVols.setValue(MDL_IMAGE, outputVol, idx)
             index += 1
-        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter) --sampling %(PixelSize)s'
+        self.ParamsStr = '-i %(InitialVols)s -o %(FilteredVols)s --fourier low_pass %(LowPassFilter) --sampling %(SamplingRate)f'
         self.insertRunJob('xmipp_transform_filter', ['FilteredVols'], useProcs=False)
         self.ParamsDict['InitialVols'] = self.ParamsDict['FilteredVols']
             
@@ -256,13 +263,14 @@ class ProtML3D(XmippProtocol):
         
         if self.DoMlf:
             if not self.DoCorrectAmplitudes:
-                self.ParamsStr += " --no_ctf %(PixelSize)f"
+                self.ParamsStr += " --no_ctf"
             if not self.ImagesArePhaseFlipped:
                 self.ParamsStr += " --not_phase_flipped"
             if not amplitudCorrected:
                 self.ParamsStr += " --ctf_affected_refs"
             if self.HighResLimit > 0:
-                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"            
+                self.ParamsStr += " --limit_resolution 0 %(HighResLimit)f"
+            self.ParamsStr += ' --sampling_rate %(SamplingRate)f'
 
         self.ParamsStr += " --recons %(ReconstructionMethod)s "
         
@@ -400,3 +408,12 @@ def copyVolumes(log, inputMd, outputStack):
     for i, idx in enumerate(md):
         img.read(md.getValue(MDL_IMAGE, idx))
         img.write('%d@%s' % (i + 1, outputStack))
+        
+def renameOutput(log, WorkingDir, ProgId):
+    ''' Remove ml2d prefix from:
+        ml2dclasses.stk, ml2dclasses.xmd and ml2dimages.xmd'''
+    prefix = '%s2d' % ProgId
+    for f in ['%sclasses.stk', '%sclasses.xmd', '%simages.xmd']:
+        f = join(WorkingDir, f % prefix)
+        nf = f.replace(prefix, '')
+        moveFile(log, f, nf)

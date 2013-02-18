@@ -296,10 +296,16 @@ class ProcessManager():
             f = open(self.hostfile)
             for line in f:                
                 hosts[line.strip()] = True
+            f.close()
+            
+            def setHost(p, h):
+                p.host = h
+                print "setting host: ", h
+                
             for h in hosts.keys():
                 newProcs = self.__getProcessFromCmd("ssh %(h)s '%(cmd)s'" % locals() )
                 for p in newProcs:
-                    p.host = h
+                    setHost(p, h) # Python annoying looping problem
                 procs += newProcs
             return procs
         else:
@@ -338,6 +344,10 @@ class ProcessManager():
         return self.getProcessFromCmd('ps -A -o pid,ppid,cputime,etime,state,pcpu,pmem,args| grep "%(script)s" | grep -v grep ' % locals())
 
     def stopProcessGroup(self, project=None):
+        if project != None:
+            from protlib_sql import SqliteDb
+            project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, self.run['run_id'])
+            
         if self.isBatch:
             launch = loadLaunchModule()
             cmd = launch.StopCommand + " " + launch.StopArgsTemplate
@@ -347,9 +357,7 @@ class ProcessManager():
             childs = self.getProcessGroup()
             for c in childs:
                 c.terminate()
-	if project != None:
-	    from protlib_sql import SqliteDb
-	    project.projectDb.updateRunState(SqliteDb.RUN_ABORTED, self.run['run_id'])
+        
                 
     def isAlive(self):
         if self.isBatch:
@@ -393,7 +401,7 @@ def runJob(log,
         if log:
             printLog("Process returned with code %d" % retcode,log)
             if retcode != 0:
-                raise Exception("Process returned with code %d snd command %s" % (retcode,command))
+                raise Exception("Process returned with code %d, command: %s" % (retcode,command))
     except OSError, e:
         raise Exception("Execution failed %s, command: %s" % (e, command))
 

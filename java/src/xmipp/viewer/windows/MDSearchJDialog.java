@@ -26,20 +26,13 @@
 package xmipp.viewer.windows;
 
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -47,32 +40,21 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
 
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.models.ImageGallery;
-import xmipp.viewer.models.MetadataGallery;
-import xmipp.viewer.models.MetadataTable;
-import xmipp.viewer.models.ClassInfo;
+import xmipp.viewer.models.MetadataTableModel;
 
 /* This class will serve for find and replace values
  * in a MetadataGallery
  */
 public class MDSearchJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
-	protected JFrameGallery parent;
+	protected GalleryJFrame parent;
 	protected MetaData md;
 	protected JTable table;
 	protected long[] ids;
@@ -100,7 +82,7 @@ public class MDSearchJDialog extends XmippDialog {
 	public MDSearchJDialog(JFrame parent, JTable table, MetaData md) {
 		super(parent, "Find and Replace", true);
 
-		this.parent = (JFrameGallery) parent;
+		this.parent = (GalleryJFrame) parent;
 		this.md = md;
 		this.table = table;
 		this.ids = md.findObjects();
@@ -256,7 +238,7 @@ public class MDSearchJDialog extends XmippDialog {
 			String newValue = value.replace(jtFind.getText().trim(), replaceStr);
 			// table.setValueAt(newValue, index, jcbLabel.getSelectedIndex());
 			md.setValueString(label, newValue, ids[index]);
-			((MetadataTable) table.getModel()).fireTableRowsUpdated(index,
+			((MetadataTableModel) table.getModel()).fireTableRowsUpdated(index,
 					index);
 		}
 	}

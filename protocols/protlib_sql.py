@@ -62,7 +62,7 @@ class SqliteDb:
     NO_JOBID = -1
     UNKNOWN_JOBID = 0
     
-    StateNames = ['Saved', 'Launched', 'Running', 'Finish', 'Failed', 'Aborted']
+    StateNames = ['Saved', 'Launched', 'Running', 'Finished', 'Failed', 'Aborted']
     
     def execSqlCommand(self, sqlCmd, errMsg):
         """Helper function to execute sqlite commands"""
@@ -412,6 +412,12 @@ class XmippProtocolDb(SqliteDb):
 
     def checkRunOk(self, cursor):
         return self.getRunState(cursor) == SqliteDb.RUN_STARTED 
+    
+    def runAborted(self):
+        ''' Return true if the run has been aborted '''
+        state = self.getRunState(self.cur)
+        print "CHECKING RUN ABORTED, STATE: %d", state
+        return state == SqliteDb.RUN_ABORTED 
         
     def differentParams(self, Parameters, RowParameters):
         coreParameters=dict(Parameters)
@@ -535,6 +541,8 @@ class XmippProtocolDb(SqliteDb):
         printLog(msg, self.Log, out=True, err=True)
         
         i = 0
+        final_status = (SqliteDb.RUN_FINISHED, 'FINISHED')
+        
         while i < n:
             #Execute the step
             try:
@@ -554,13 +562,19 @@ class XmippProtocolDb(SqliteDb):
                     self.runSingleStep(self.connection, self.cur, steps[i])
                 i += 1
             except Exception as e:
-                msg = "Stopping batch execution since one of the steps could not be performed: %s" % e
+                msg = "Stopping batch execution"
+                if self.runAborted():
+                    msg += " ABORTED by user request"
+                    final_status = (SqliteDb.RUN_ABORTED, 'ABORTED')
+                else:
+                    msg += " since one of the steps could not be performed: %s" % str(e)
+                    final_status = (SqliteDb.RUN_FAILED, 'FAILED')                    
                 printLog(msg, self.Log, out=True, err=True, isError=True)
-                self.updateRunState(SqliteDb.RUN_FAILED)
-                raise
-        msg = '***************************** Protocol FINISHED'
+                break
+        
+        self.updateRunState(final_status[0])
+        msg = '***************************** Protocol %s' % final_status[1]
         printLog(msg, self.Log, out=True, err=True)
-        self.updateRunState(SqliteDb.RUN_FINISHED)
         
     def runParallelSteps(self, fromStep, toStep, mpiForParallelSteps):
         '''This should run in parallel steps from fromStep and to toStep-1'''
@@ -586,7 +600,7 @@ class XmippProtocolDb(SqliteDb):
         try:
             self._execSingleStep(stepRow, info)
         except Exception as e:
-            err = "         Step finish with error: %s: %s" % (info.stepStr, e)
+            err = "         Step finished with error: %s: %s" % (info.stepStr, e)
             printLog(err, self.Log, out=True, err=True, isError=True)
             raise
         self._endSingleStep(_connection, _cursor, stepRow, info)
@@ -641,7 +655,7 @@ class XmippProtocolDb(SqliteDb):
         
     def _endSingleStep(self, _connection, _cursor, stepRow, info):  
         # Report step finish and update database
-        msg = greenStr("         Step finish: %s" % info.stepStr)
+        msg = greenStr("         Step finished: %s" % info.stepStr)
         printLog(msg, self.Log, out=True, err=True)
         sqlCommand = """UPDATE %(TableSteps)s SET finish = CURRENT_TIMESTAMP 
                         WHERE step_id=%(step_id)d

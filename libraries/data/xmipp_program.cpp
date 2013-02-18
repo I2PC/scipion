@@ -61,6 +61,7 @@ void XmippProgram::defineCommons()
     addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program to sqlite database");
     addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
     addParamsLine("[--xmipp_write_protocol* <scriptfile>] : Generate protocol header file");
+    addParamsLine("[--xmipp_write_autocomplete* <scriptfile>] : Add program autocomplete bash options to script file");
     addParamsLine("[--xmipp_protocol_script <script>] : This is only meanful when execute throught protocols");
     addParamsLine("[--xmipp_validate_params] : Validate input params");
 }
@@ -111,6 +112,8 @@ bool XmippProgram::checkBuiltIns()
         createWiki();
     else if (checkParam("--xmipp_write_protocol"))
         writeToProtocol();
+    else if (checkParam("--xmipp_write_autocomplete"))
+      writeToAutocomplete();
     else if (checkParam("--gui"))
         createGUI();
     else
@@ -129,6 +132,13 @@ void XmippProgram::writeToProtocol( )
     String scriptfile = getParam("--xmipp_write_protocol");
     ProtPrinter pp(scriptfile.c_str());
     pp.printProgram(*progDef);
+}
+
+void XmippProgram::writeToAutocomplete( )
+{
+    String scriptfile = getParam("--xmipp_write_autocomplete");
+    AutocompletePrinter ap(scriptfile.c_str());
+    ap.printProgram(*progDef, 3);
 }
 
 void XmippProgram::createGUI()
@@ -531,7 +541,7 @@ void XmippMetadataProgram::defineParams()
 
     if (allow_apply_geo)
     {
-        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
+        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in metadata");
     }
 }//function defineParams
 

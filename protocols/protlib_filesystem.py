@@ -29,7 +29,7 @@
 # Filesystem utilities
 #---------------------------------------------------------------------------
 import os
-from os.path import join, exists, dirname, basename
+from os.path import join, exists, dirname, basename, relpath, split, splitext, isabs, isfile, abspath
 from protlib_utils import printLog 
 from shutil import copyfile
 #from xmipp import *
@@ -106,23 +106,23 @@ def deleteFiles(log, filelist, verbose):
 
 def createLink(log, source, dest):
     try:
-        if os.path.exists(dest):
+        if exists(dest):
             os.remove(dest)
-        destDir=os.path.split(dest)[0]
-        os.symlink(os.path.relpath(source,destDir),dest)
+        destDir = split(dest)[0]
+        os.symlink(relpath(source,destDir),dest)
         printLog("Linked '%s' to '%s'" % (source, dest))
     except Exception, e:
         printLog("Could not link '%s' to '%s'. Error: %s" % (source, dest, str(e)), log, err=True, isError=True)
 
 def createLink2(log, filename, dirSrc, dirDest):
-    createLink(log,os.path.join(dirSrc,filename),os.path.join(dirDest,filename))
+    createLink(log, join(dirSrc,filename), join(dirDest,filename))
 
 def uniqueFilename(file_name):
     ''' Create a unique filename (not file handler)
        this approach is insecure but good enough for most purposes'''
     counter = 1
-    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
-    while os.path.isfile(file_name):
+    file_name_parts = splitext(file_name) # returns ('/path/file', '.ext')
+    while isfile(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
     return file_name 
@@ -138,9 +138,9 @@ def uniqueRandomFilename(file_name,randomLength=5):
     ''' Create a unique filename (not file handler)
        this approach is insecure but good enough for most purposes'''
     counter = 1
-    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    file_name_parts = splitext(file_name) # returns ('/path/file', '.ext')
     file_name = file_name_parts[0] + '_' + random_alphanumeric(randomLength) + file_name_parts[1]
-    while os.path.isfile(file_name):
+    while isfile(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
     return file_name 
@@ -164,7 +164,7 @@ def removeFilenamePrefix(filename):
 
 def replaceFilenameExt(filename, new_ext):
     ''' Replace the current filename extension by a new one'''
-    return os.path.splitext(filename)[0] + new_ext
+    return splitext(filename)[0] + new_ext
 
 def splitFilename(filename):
     ''' Split filename separating by @ 
@@ -207,7 +207,7 @@ def getProtocolTemplate(prot):
 
 def findProjectInPathTree(filename):
     found=False
-    filename = os.path.abspath(filename)
+    filename = abspath(filename)
     while filename!="/" and not found:
         if exists(join(filename,".project.sqlite")):
             found=True
@@ -217,15 +217,6 @@ def findProjectInPathTree(filename):
         return filename
     else:
         return None
-
-def fixPath(filename, *pathList):
-    if os.path.isabs(filename):
-        return filename
-    for path in pathList:
-        filepath = join(path, filename)
-        if exists(filepath):
-            return filepath
-    return None
 
 def findRealFile(path, recursive=True):
     '''This function behaves like readlink with -f in shell'''
@@ -241,6 +232,22 @@ def xmippExists(path):
     from xmipp import FileName
     return FileName(path).exists()
 
+def fixPath(filename, *pathList):
+    if isabs(filename):
+        return filename
+    for path in pathList:
+        filepath = join(path, filename)
+        if xmippExists(filepath):
+            return filepath
+    return None
+
+def xmippRelpath(path, *args):
+    ''' As os.relpath but taking into account names containing @ '''
+    if '@' in path:
+        block, base = splitFilename(path)
+        return '%s@%s' % (block, relpath(base, *args))
+    return relpath(path)
+        
 def hasSpiderExt(filename):
     '''check if the file has Spider extension '''
     spiderExt = ['xmp', 'vol', 'stk', 'spi']
@@ -249,28 +256,28 @@ def hasSpiderExt(filename):
             return True
     return False
 
-acquisitionInfoFileName="acquisition_info.xmd"
-def linkAcquisitionInfoIfPresent(log,InputFile,dirDest):
-    dirSrc=os.path.dirname(InputFile)
-    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
-    if os.path.exists(fnAcquisitionIn):
-        createLink2(log, acquisitionInfoFileName, dirSrc, dirDest)
+ACQUISITION_INFO = "acquisition_info.xmd"
+
+def findAcquisitionInfo(inputFile):
+    '''Try to find acquision_info.xmd file from the location
+      of inputFile and moving up'''
+    d = removeFilenamePrefix(inputFile)
+    while len(d) > 0 and d != '/':
+        d = dirname(d)
+        ai = join(d, ACQUISITION_INFO)
+        if exists(ai):
+            return ai
+    return None
+
+def linkAcquisitionInfo(log, InputFile, dirDest):
+    ''' Search for the acquisition info file and if 
+    exists create a link in the specified folder'''
+    acquisitionInfo = findAcquisitionInfo(InputFile)
+    if acquisitionInfo is None:
+        printLog("Couldn't find acquisition_info.xmd from file path: '%(InputFile)s'" % locals(), 
+                 log, err=True, isError=True)
+    else:        
+        createLink(log, acquisitionInfo, join(dirDest, ACQUISITION_INFO))
         
-def AcquisitionInfoExists(InputFile):
-    dirSrc=os.path.dirname(removeFilenamePrefix(InputFile))
-    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
-    if os.path.exists(fnAcquisitionIn):
-        return True
-    else:
-        return False
+
     
-def AcquisitionInfoGetSamplingRate(InputFile):
-    from xmipp import MetaData,MDL_SAMPLINGRATE
-    dirSrc=os.path.dirname(removeFilenamePrefix(InputFile))
-    fnAcquisitionIn=os.path.join(dirSrc,acquisitionInfoFileName)
-    if os.path.exists(fnAcquisitionIn):
-        mD =MetaData(fnAcquisitionIn)
-        id = mD.firstObject()
-        return(mD.getValue(MDL_SAMPLINGRATE,id))
-    else:
-        return -1.

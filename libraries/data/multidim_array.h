@@ -686,15 +686,6 @@ typedef enum
     VIEW_X_POS   // Align X axis to Z axis, rotating 90 degrees around Y axis");
 } AxisView;
 
-/**
- *  Structure to define random generation mode
- */
-typedef enum
-{
-    RND_UNIFORM = 0,
-    RND_GAUSSIAN = 1
-} RandomMode;
-
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
 */
@@ -1381,7 +1372,6 @@ public:
 
         return fMap;
 #else
-
         REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
 #endif
 
@@ -1392,13 +1382,16 @@ public:
      */
     void coreDeallocate()
     {
-#ifdef XMIPP_MMAP
         if (data != NULL && destroyData)
         {
             if (mmapOn)
             {
+#ifdef XMIPP_MMAP
                 munmap(data,nzyxdimAlloc*sizeof(T));
                 fclose(mFd);
+#else
+        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
+#endif
             }
             else
                 delete[] data;
@@ -1406,11 +1399,6 @@ public:
         data = NULL;
         destroyData = true;
         nzyxdimAlloc = 0;
-#else
-
-        REPORT_ERROR(ERR_MMAP,"Mapping not supported in Windows");
-#endif
-
     }
 
     /** Alias a multidimarray.
@@ -1425,6 +1413,26 @@ public:
         coreDeallocate();
         copyShape(m);
         this->data=m.data;
+        this->nzyxdimAlloc = this->nzyxdim;
+        this->destroyData = false;
+    }
+
+    /** Alias a row in an image.
+         *
+         * Treat the multidimarray as if it were a single slice. The data is not copied
+         * into new memory, but a pointer to the selected slice in the multidimarray is copied.
+         * You should not make any operation on this volume such that the
+         * memory locations are changed.
+         * Select_slice starts at 0 towards Zsize.
+         */
+    void aliasRow(const MultidimArray<T> &m, int select_row)
+    {
+        if (select_row >= YSIZE(m))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasRow: Selected row cannot be higher than Y size.");
+
+        coreDeallocate();
+        setDimensions(XSIZE(m),1, 1, 1);
+        this->data = m.data + XSIZE(m)*select_row;
         this->nzyxdimAlloc = this->nzyxdim;
         this->destroyData = false;
     }
@@ -1538,7 +1546,7 @@ public:
         size_t NZYXdim=ZYXdim*Ndim;
         FILE*    new_mFd;
 
-        T * new_data;
+        T * new_data=NULL;
 
         try
         {
@@ -1845,6 +1853,15 @@ public:
         MultidimArray<T> result;
         window(result,x0,xF,init_value);
         *this=result;
+    }
+
+    /** Make a patch with the input array in the given positions */
+    void patch(MultidimArray<T> patchArray, int x, int y)
+    {
+        int n = XSIZE(patchArray)*sizeof(T);
+
+        for (int i=0, y2 = 0; i < YSIZE(patchArray); ++i)
+            memcpy(&dAij(*this, y+i, x), &dAij(patchArray, i, 0), n);
     }
 
     //@}
@@ -2865,6 +2882,16 @@ public:
         return maxval;
     }
 
+    /** 1D Indices for the maximum element.
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& jmax) const
+    {
+        int zeroInt=0;
+        maxIndex(zeroInt,zeroInt,zeroInt,jmax);
+    }
+
     /** Minimum of the values in the array.
      *
      * The returned value is of the same type as the type of the array.
@@ -3387,7 +3414,7 @@ public:
     // This function must be explictly implemented outside.
     void statisticsAdjust(double avgF, double stddevF)
     {
-        double avg0, stddev0;
+        double avg0=0.0, stddev0=0.0;
         double a, b;
 
         if (NZYXSIZE(*this) == 0)

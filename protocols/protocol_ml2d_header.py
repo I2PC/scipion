@@ -25,7 +25,7 @@ for MLF2D: Scheres et al. (2007) Structure 15, 1167-1177
 # {section} Input
 #------------------------------------------------------------------------------------------
 
-# {file}(*.xmd){validate}(PathExists) Input images:
+# {file}(images*.xmd){validate}(PathExists) Input images:
 """ 
 Provide a list of images from a stack or metadata file that make up 
 your data set. The filenames should be relative to the <ProjectDir> 
@@ -64,9 +64,6 @@ the CTF information for each image.
 If set to <No>, provide the images pixel size in Angstrom
 """
 DoCorrectAmplitudes = True
-
-# {condition}(not DoCorrectAmplitudes)Image pixel size (in Angstroms)
-PixelSize = 5.6
 
 # Are the images CTF phase flipped?
 """ You can run MLF with or without having phase flipped the images.

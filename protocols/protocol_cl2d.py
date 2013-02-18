@@ -9,7 +9,7 @@ import glob,os,re,sys,shutil,time
 from protlib_base import *
 from config_protocols import protDict
 from protlib_utils import runJob, getListFromRangeString
-from protlib_filesystem import createLink, deleteFile, linkAcquisitionInfoIfPresent
+from protlib_filesystem import createLink, deleteFile, linkAcquisitionInfo
 from xmipp import MetaData, MD_APPEND, MDL_IMAGE
 
 class ProtCL2D(XmippProtocol):
@@ -17,30 +17,37 @@ class ProtCL2D(XmippProtocol):
         XmippProtocol.__init__(self, protDict.cl2d.name, scriptname, project)
         self.Import = 'from protocol_cl2d import *'    
 
+    def createFilenameTemplates(self):
+        return {
+            'hierarchy': "%(ExtraDir)s/classes%(subset)s_hierarchy.txt"
+            }
+
     def defineSteps(self):
-        self.Db.insertStep("linkAcquisitionInfoIfPresent",InputFile=self.InSelFile,dirDest=self.WorkingDir)
+        self.insertStep('createDir',path=self.ExtraDir)
+        self.Db.insertStep("linkAcquisitionInfo",InputFile=self.InSelFile,dirDest=self.WorkingDir)
         self.insertCl2dStep()
-        self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="")
+        self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="")
         if self.NumberOfReferences > self.NumberOfInitialReferences:
             # core analysis
-            params= "--dir %(WorkingDir)s --root results --computeCore %(thZscore)f %(thPCAZscore)f" % self.ParamsDict
+            params= "--dir %(WorkingDir)s --root level --computeCore %(thZscore)f %(thPCAZscore)f" % self.ParamsDict
             self.insertRunJobStep("xmipp_classify_CL2D_core_analysis",params,
-                      [self.workingDirPath("level_00/results_classes_core.xmd")])
+                      [self.workingDirPath("level_00/level_classes_core.xmd")])
             # evaluate classes 
-            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="_core")
+            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="_core")
             # stable core analysis
-            params= "--dir %(WorkingDir)s --root results --computeStableCore %(Tolerance)d" % self.ParamsDict
+            params= "--dir %(WorkingDir)s --root level --computeStableCore %(Tolerance)d" % self.ParamsDict
             self.insertRunJobStep("xmipp_classify_CL2D_core_analysis", params)
             # evaluate classes again
-            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,subset="_stable_core")
+            self.Db.insertStep('evaluateClasses',WorkingDir=self.WorkingDir,ExtraDir=self.ExtraDir,subset="_stable_core")
         self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="")
         self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="_core")
         self.Db.insertStep('sortClasses',WorkingDir=self.WorkingDir,Nproc=self.NumberOfMpi,suffix="_stable_core")
+        self.Db.insertStep("postEvaluation",WorkingDir=self.WorkingDir)
     
     def summary(self):
         message=[]
         message.append(("Classification of [%s]"%self.InSelFile)+" into "+str(self.NumberOfReferences)+" classes")
-        levelFiles=glob.glob(self.WorkingDir+"/level_??/results_classes.xmd")
+        levelFiles=glob.glob(self.WorkingDir+"/level_??/level_classes.xmd")
         if not levelFiles:
             message.append("No class file has been generated")
         else:
@@ -78,7 +85,7 @@ class ProtCL2D(XmippProtocol):
             fnSubset="_core"
         elif self.WhatToShow=="Class Stable Cores":
             fnSubset="_stable_core"
-        levelFiles=glob.glob(os.path.join(self.WorkingDir,"level_??/results_classes%s.xmd"%fnSubset))
+        levelFiles=glob.glob(os.path.join(self.WorkingDir,"level_??/level_classes%s.xmd"%fnSubset))
         if levelFiles:
             levelFiles.sort()
             lastLevelFile=levelFiles[-1]
@@ -90,19 +97,19 @@ class ProtCL2D(XmippProtocol):
                 if max(listOfLevels)<=lastLevel:
                     files = "";
                     for level in listOfLevels:
-                        fn=os.path.join(self.WorkingDir,"level_%02d/results_classes%s.xmd"%(level,fnSubset))
+                        fn=os.path.join(self.WorkingDir,"level_%02d/level_classes%s.xmd"%(level,fnSubset))
                         if os.path.exists(fn):
                             files+="classes_sorted@"+fn+" "
                     if files!="":
                         runShowJ(files)
         if self.DoShowHierarchy:
-            fnHierarchy=self.workingDirPath("results_classes"+fnSubset+"_hierarchy.txt")
+            fnHierarchy=self.getFilename("hierarchy",subset=fnSubset)
             if os.path.exists(fnHierarchy):
                 from protlib_gui_ext import showTextfileViewer
                 showTextfileViewer(fnHierarchy,[fnHierarchy])
                 
     def insertCl2dStep(self):
-        params= '-i %(InSelFile)s --odir %(WorkingDir)s --oroot results '+\
+        params= '-i %(InSelFile)s --odir %(WorkingDir)s --oroot level '+\
                 ' --nref %(NumberOfReferences)d'+\
                 ' --iter %(NumberOfIterations)d'+\
                 ' %(AdditionalParameters)s'
@@ -114,7 +121,7 @@ class ProtCL2D(XmippProtocol):
             params+=' --nref0 %(NumberOfInitialReferences)d'
     
         self.insertRunJobStep("xmipp_classify_CL2D", params % self.ParamsDict, 
-                              [self.workingDirPath("results_images.xmd")])
+                              [self.workingDirPath("images.xmd")])
         self.insertStep('postCl2d', WorkingDir=self.WorkingDir, 
                         NumberOfReferences=self.NumberOfReferences)
     
@@ -123,34 +130,46 @@ def postCl2d(log, WorkingDir, NumberOfReferences):
     if levelDirs:
         levelDirs.sort()
         lastLevelDir=levelDirs[-1]
-        fnLastLevelFile=os.path.join(lastLevelDir,"results_classes.xmd")
+        fnLastLevelFile=os.path.join(lastLevelDir,"level_classes.xmd")
         mD = MetaData("classes@"+fnLastLevelFile)
         if mD.size()==NumberOfReferences:
-            createLink(log, fnLastLevelFile, os.path.join(WorkingDir,"results_classes.xmd"))
+            createLink(log, fnLastLevelFile, os.path.join(WorkingDir,"classes.xmd"))
 
 def sortClasses(log,WorkingDir,Nproc,suffix):
     if Nproc==1:
         Nproc=2
-    for filename in glob.glob(os.path.join(WorkingDir,"level_??/results_classes%s.xmd"%suffix)):
+    for filename in glob.glob(os.path.join(WorkingDir,"level_??/level_classes%s.xmd"%suffix)):
         level=int(re.search('level_(\d\d)',filename).group(1))
-        fnRoot=os.path.join(WorkingDir,"level_%02d/results_classes%s_sorted"%(level,suffix))
+        fnRoot=os.path.join(WorkingDir,"level_%02d/level_classes%s_sorted"%(level,suffix))
         params= "-i classes@"+filename+" --oroot "+fnRoot
         runJob(log,"xmipp_image_sort",params,Nproc)
         mD=MetaData(fnRoot+".xmd")
         mD.write("classes_sorted@"+filename,MD_APPEND)
         deleteFile(log,fnRoot+".xmd")
 
-def evaluateClasses(log,WorkingDir,subset):
-    levelFiles=glob.glob(os.path.join(WorkingDir,"level_??/results_classes%s.xmd"%subset))
+def evaluateClasses(log,WorkingDir,ExtraDir,subset):
+    levelFiles=glob.glob(os.path.join(WorkingDir,"level_??/level_classes%s.xmd"%subset))
     levelFiles.sort()
     for filename in levelFiles:
         runJob(log,"xmipp_classify_evaluate_classes","-i "+filename)
         level=int(re.search('level_(\d\d)',filename).group(1))
         if level>0:
-            previousFile=os.path.join(WorkingDir,"level_%02d/results_classes%s.xmd"%(level-1,subset))
+            previousFile=os.path.join(WorkingDir,"level_%02d/level_classes%s.xmd"%(level-1,subset))
             if os.path.exists(previousFile):
-                fnOut=os.path.join(WorkingDir,"results_classes"+subset+"_hierarchy.txt")
+                fnOut=getProtocolFilename("hierarchy",ExtraDir=ExtraDir,subset=subset)
                 args="--i1 %s --i2 %s -o %s"%(previousFile,filename,fnOut)
                 if os.path.exists(fnOut):
                     args+=" --append"
                 runJob(log,"xmipp_classify_compare_classes",args)
+
+def postEvaluation(log,WorkingDir):
+        levelFiles=glob.glob(os.path.join(WorkingDir,"level_??/level_classes_core.xmd"))
+        if levelFiles:
+            levelFiles.sort()
+            lastLevelFile=levelFiles[-1]
+            createLink(log,lastLevelFile,os.path.join(WorkingDir,'classes_core.xmd'))
+        levelFiles=glob.glob(os.path.join(WorkingDir,"level_??/level_classes_stable_core.xmd"))
+        if levelFiles:
+            levelFiles.sort()
+            lastLevelFile=levelFiles[-1]
+            createLink(log,lastLevelFile,os.path.join(WorkingDir,'classes_stable_core.xmd'))

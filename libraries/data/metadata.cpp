@@ -1,3 +1,4 @@
+
 /**************************************************************************
  *
  * Authors:      J.R. Bilbao-Castro (jrbcast@ace.ual.es)
@@ -1424,6 +1425,28 @@ void MetaData::aggregateSingleSizeT(MDObject &mdValueOut, AggregateOperation op,
 {
     mdValueOut.setValue(myMDSql->aggregateSingleSizeT(op,aggregateLabel));
 }
+
+
+double MetaData::getColumnMax(MDLabel column)
+{
+	double max;
+	MDObject result(column);
+	aggregateSingle(result, AGGR_MAX, column);
+	result.getValue(max);
+	return max;
+
+}
+
+double MetaData::getColumnMin(MDLabel column)
+{
+	double min;
+	MDObject result(column);
+	aggregateSingle(result, AGGR_MIN, column);
+	result.getValue(min);
+	return min;
+
+}
+
 
 void MetaData::aggregateSingleInt(MDObject &mdValueOut, AggregateOperation op,
                                   MDLabel aggregateLabel)

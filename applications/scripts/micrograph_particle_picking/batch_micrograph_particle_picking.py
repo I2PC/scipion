@@ -7,7 +7,7 @@ import xmipp
 #512 is too low memory, should be 1024 the default.
 class ScriptTrainingPicking(ScriptAppIJ):
     def __init__(self):
-        ScriptAppIJ.__init__(self, 'xmipp.particlepicker.training.Main')
+        ScriptAppIJ.__init__(self, 'xmipp.viewer.particlepicker.training.Main')
         
     def defineOtherParams(self):
         self.addParamsLine(" -o <directory>                                       : Output directory for load/save session data without updating model.");

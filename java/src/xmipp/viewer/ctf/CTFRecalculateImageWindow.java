@@ -161,7 +161,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
                 // Store values for later use.
                 fitted = true;
                 ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
-                IJ.showStatus(String.format("Defocus=%f Angstroms", ellipseCTF.getDefocusU()));
+                IJ.showStatus(String.format("Defocus(U,V)=%f,%f Angstroms", ellipseCTF.getDefocusU(),ellipseCTF.getDefocusV()));
             }
         }
 

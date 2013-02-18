@@ -160,6 +160,9 @@ public:
     std::vector<CL2DClass *> P;
     
 public:
+    /** Destructor */
+    ~CL2D();
+
     /// Read Image
     void readImage(Image<double> &I, size_t objId, bool applyGeo) const;
 

@@ -576,6 +576,12 @@ AddLibrary('XmippExternal', 'external',
    INRIASources + BilibSources + CondorSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
+# sqliteExt
+SqliteExtSources = Glob('external/sqliteExt', '*.c', [])
+AddLibrary('XmippSqliteExt', 'external',
+   SqliteExtSources,
+   ['#'],[''],['-lm'],'lib','.so')
+
 # XmippData
 DataSources = Glob('libraries/data', '*.cpp', [])
 
@@ -735,7 +741,6 @@ if int(env['java']):
     env.Depends(javaJni, javaJniC)
     AddJavaLibrary('XmippUtils', 'utils', ['ij', 'commons-cli-1.1'])
     AddJavaLibrary('XmippIJ', 'ij/commons', ['XmippUtils'])
-    AddJavaLibrary('XmippPPicker', 'particlepicker', ['XmippIJ', 'XmippUtils', 'ij'])
     AddJavaLibrary('XmippViewer', 'viewer', ['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'])
     AddJavaLibrary('XmippTest', 'test', ['XmippViewer', 'junit4-4.8.2', 'core-1.1'])
     AddJavaIJPlugin('XmippIJPlugin_MasksToolbar', 'ij/plugins/maskstoolbar', [])
@@ -785,12 +790,13 @@ if not int(env['release']):
     AddXmippProgram('idr_xray_tomo', ['XmippRecons'])
 AddXmippProgram('image_align', ['XmippRecons'])
 AddXmippProgram('image_align_tilt_pairs', ['XmippRecons'])
+AddXmippProgram('image_common_lines', ['XmippRecons'])
 AddXmippProgram('image_convert')
 AddXmippProgram('image_find_center')
 AddXmippProgram('image_header')
 AddXmippProgram('image_histogram')
 AddXmippProgram('image_operate')
-AddXmippMPIProgram('image_rotational_pca', ['XmippRecons'])
+AddXmippProgram('image_rotational_pca', ['XmippRecons'])
 AddXmippProgram('image_resize', ['XmippRecons'])
 AddXmippProgram('image_rotational_spectra', ['XmippRecons'])
 AddXmippProgram('image_sort_by_statistics', ['XmippRecons'])
@@ -799,11 +805,11 @@ AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
 #AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_convert_to_spider', ['XmippInterface'])
-AddXmippProgram('metadata_convert_22_emx')
 AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_import')
 AddXmippProgram('metadata_split')
 AddXmippProgram('metadata_utilities')
+AddXmippProgram('metadata_xml')
 AddXmippProgram('micrograph_scissor'),
 AddXmippProgram('micrograph_automatic_picking', ['XmippRecons'])
 AddXmippProgram('ml_align2d', ['XmippRecons'])
@@ -813,6 +819,7 @@ AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('mrc_create_metadata')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
+AddXmippProgram('flexible_alignment', ['XmippRecons'])
 AddXmippProgram('pdb_nma_deform', ['XmippRecons'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
 AddXmippProgram('phantom_project', ['XmippRecons', 'XmippInterface'])
@@ -921,7 +928,9 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_ctf_sort_psds', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_operate')
     AddXmippMPIProgram('mpi_image_rotational_pca', ['XmippRecons'])
+    # AddXmippMPIProgram('mpi_image_common_lines', ['XmippRecons'])
     AddXmippMPIProgram('mpi_performance_test', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_image_resize', ['XmippRecons'])
     AddXmippMPIProgram('mpi_image_sort', ['XmippRecons'])
     AddProgramLink('image_sort', 'mpi_image_sort')
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
@@ -948,6 +957,7 @@ if int(env['mpi']):
 
 #---- Tests
 if int(env['gtest']):
+     AddXmippCTest('test_ctf')
      AddXmippCTest('test_euler')
      AddXmippCTest('test_fftw')
      AddXmippCTest('test_filters')
@@ -962,12 +972,15 @@ if int(env['gtest']):
      AddXmippCTest('test_polar')
      AddXmippCTest('test_polynomials')          
      AddXmippCTest('test_sampling')
+     AddXmippCTest('test_symmetries')
      AddXmippCTest('test_transformation')
+     AddXmippCTest('test_wavelets')
      #env.Depends('run_tests', [fftw, tiff, sqlite])
      #python tests
      test = AddXmippPythonTest('test_pythoninterface')
      #AddXmippPythonTest('test_projectionmatching')
      AddXmippPythonTest('test_pysqlite')
+     AddXmippPythonTest('test_emx')
      env.Depends(test, pythonbinding)
      env.Depends('run_tests', 'xmipp_programs')
      #env.Default('run_tests'     )

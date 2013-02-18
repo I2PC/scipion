@@ -35,8 +35,18 @@
 #include "angular_continuous_assign.h"
 #include "micrograph_automatic_picking.h"
 #include "micrograph_automatic_picking2.h"
+#include "program_filter.h"
 #include "data/mask.h"
 #include <classification/analyze_cluster.h>
+
+void runSystem(const String &program, const String &arguments, bool useSystem) {
+	if (useSystem) {
+		String cmd = formatString("%s %s", program.c_str(), arguments.c_str());
+		system(cmd.c_str());
+	} else {
+		runProgram(program, arguments);
+	}
+}
 
 int runProgram(XmippProgram * program, const String &arguments, bool destroy)
 {
@@ -86,6 +96,9 @@ XmippProgram * getProgramByName(const String &programName)
 
     if (programName == "xmipp_classify_analyze_cluster")
         return new ProgAnalyzeCluster();
+
+    if (programName == "xmipp_transform_filter")
+        return new ProgFilter();
 
     return NULL;
 }
