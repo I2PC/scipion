@@ -232,11 +232,17 @@ public class EditFamiliesJDialog extends JDialog {
 		}
 
 	}
+	
+	public TrainingPickerJFrame getFrame()
+	{
+		return parent;
+	}
 
 	public void addFamily(Family g) {
 
 		parent.addFamily(g);
 		model.fireTableStructureChanged();
 	}
+
 
 }

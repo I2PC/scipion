@@ -80,8 +80,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 	}
 
-	
-
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
 	 * particle. Considers owner for selection to the first particle containing
@@ -107,7 +105,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 				return;
 			}
-
 
 			if (active != null && !active.isAdded() && active.getTiltedParticle() != null)
 				um.addParticleToAligner(active, true);
@@ -161,7 +158,6 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 				return;
 			}
 
-
 			if (active != null && um.fits(x, y, frame.getParticleSize()))
 
 			{
@@ -203,6 +199,35 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 			imp.repaintWindow();
 
 		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
+	}
+
+	@Override
+	protected void doCustomPaint(Graphics2D g2)
+	{
+		g2.setColor(frame.getColor());
+		int index = 0;
+
+		for (TrainingParticle p : um.getParticles())
+		{
+			drawShape(g2, p, index == (um.getParticles().size() - 1));
+			index++;
+		}
+		if (active != null)
+		{
+			g2.setColor(Color.red);
+			drawShape(g2, active, true);
+		}
+		if (frame.drawAngles())
+			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);// TODO
+																// Auto-generated
+																// method stub
+
+	}
+
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		um = (UntiltedMicrograph) m;
 	}
 
 	private void addParticle(int x, int y)
@@ -248,6 +273,16 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		frame.getTiltedCanvas().repaint();
 	}
 
+	public void updateMicrograph()
+	{
+		this.um = frame.getMicrograph();
+		updateMicrograph();
+		if (!um.getParticles().isEmpty())
+			refreshActive(um.getParticles().get(um.getParticles().size() - 1));
+		else
+			refreshActive(null);
+	}
+
 	public void refreshActive(Particle up)
 	{
 		active = (UntiltedParticle) up;
@@ -274,48 +309,20 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		return active;
 	}
 
-	@Override
-	protected void doCustomPaint(Graphics2D g2)
-	{
-		g2.setColor(frame.getColor());
-		int index = 0;
-
-		for (TrainingParticle p : um.getParticles())
-		{
-			drawShape(g2, p, index == (um.getParticles().size() - 1));
-			index++;
-		}
-		if (active != null)
-		{
-			g2.setColor(Color.red);
-			drawShape(g2, active, true);
-		}
-		if (frame.drawAngles())
-			drawLine(Math.toRadians(um.getUntiltedAngle()), g2);// TODO
-																// Auto-generated
-																// method stub
-
-	}
-
-	@Override
-	public void setMicrograph(Micrograph m)
-	{
-		um = (UntiltedMicrograph)m;
-	}
-	
 	protected void manageActive(int x, int y)
 	{
-		if(!activemoved)
+		if (!activemoved)
 			return;
 		if (um.fits(x, y, frame.getParticleSize()))
 		{
 			moveActiveParticle(x, y);
 			um.getTiltedMicrograph().removeParticle(active.getTiltedParticle());
 		}
-		if (active.isAdded())// added particle on matrix has been moved. Matrix changed
+		if (active.isAdded())// added particle on matrix has been moved. Matrix
+								// changed
 		// and tilted particle has to be recalculated
 		{
-			
+
 			active.setAdded(false);
 			um.initAligner();
 		}

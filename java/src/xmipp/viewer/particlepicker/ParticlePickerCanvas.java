@@ -22,7 +22,6 @@ import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
-
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.TrainingParticle;
 
@@ -42,6 +41,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	
 	public abstract void setMicrograph(Micrograph m);
 	
+
 
 	protected boolean activemoved;
 
@@ -110,38 +110,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	}
 	
-	public void updateMicrograph()
-	{
-		Micrograph m = getFrame().getMicrograph();
-		setMicrograph(m);
-		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
-		m.runImageJFilters(getFrame().getParticlePicker().getFilters());
-		refreshActive(null);
-		
-	}
+
 
 	protected abstract Particle getLastParticle();
 	
-	protected void setCustomCursor(MouseEvent e)
-	{
-		if (!getFrame().isEraserMode())
-			setCursor(crosshairCursor);
-		else if (getFrame().isPickingAvailable(e))
 
-		{
-
-			final int x = e.getX();
-			final int y = e.getY();
-			// only display a hand if the cursor is over the items
-			final Rectangle cellBounds = getBounds();
-			Toolkit toolkit = Toolkit.getDefaultToolkit();
-			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("clean.gif").getImage(), new Point(0, 0), "Eraser");
-			if (cellBounds != null && cellBounds.contains(x, y))
-				setCursor(eraserCursor);
-			else
-				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-		}
-	}
 
 	protected abstract void manageActive(int x, int y);
 
@@ -159,8 +132,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	}
 
-	
-
 
 	public void display(float xlocation, float ylocation)
 	{
@@ -176,11 +147,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		return iw;
 	}
 
-	public void setIw(ImageWindow iw)
-	{
-		this.iw = iw;
-	}
-
+	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{
@@ -221,13 +188,39 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	{
 		super.mouseMoved(e);
 		setCustomCursor(e);
+
+	}
+	
+	
+	protected void setCustomCursor(MouseEvent e)
+	{
+		if (!getFrame().isEraserMode())
+			setCursor(crosshairCursor);
+		else if (getFrame().isPickingAvailable(e))
+
+		{
+
+			final int x = e.getX();
+			final int y = e.getY();
+			// only display a hand if the cursor is over the items
+			final Rectangle cellBounds = iw.getBounds();
+			Toolkit toolkit = Toolkit.getDefaultToolkit();
+			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("clean.gif").getImage(), new Point(0, 0), "Eraser");
+			if (cellBounds != null && cellBounds.contains(x, y))
+				setCursor(eraserCursor);
+			else
+				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+		}
 	}
 
 	public abstract void refreshActive(Particle p);
+	
 
 	public abstract PickerParticle getActive();
 
+	
 	public abstract ParticlePickerJFrame getFrame();
+
 
 	protected void drawShape(Graphics2D g2, TrainingParticle p, boolean all, Stroke stroke)
 	{
@@ -270,7 +263,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		}
 
 	}
-	
 
 
 	protected void drawLine(double alpha, Graphics2D g2)
@@ -314,6 +306,19 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		g2.drawLine((int) (x1 * magnification), (int) (y1 * magnification), (int) (x2 * magnification), (int) (y2 * magnification));
 		g2.setColor(ccolor);
 	}
+	
+	
+	public int getXOnImage(int x)
+	{
+		int x0 = (int) getSrcRect().getX();
+		return (int) ((x - x0) * magnification);
+	}
+	
+	public int getYOnImage(int y)
+	{
+		int y0 = (int) getSrcRect().getY();
+		return (int) ((y - y0) * magnification);
+	}
 
 	private double getYCutOnImage(double m, double x)
 	{
@@ -321,11 +326,23 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		return height / 2.f - m * x;
 	}
 
-	private double getXCutOnImage(double m, double x)
+
+	private double getXCutOnImage(double m, double y)
 	{
 		int width = imp.getWidth();
-		return x / m + width / 2.f;
+		return y / m + width / 2.f;
 	}
+
+	public void updateMicrograph()
+	{
+		Micrograph m = getFrame().getMicrograph();
+		setMicrograph(m);
+		imp = m.getImagePlus(getFrame().getParticlePicker().getFilters());
+		m.runImageJFilters(getFrame().getParticlePicker().getFilters());
+		refreshActive(null);
+		
+	}
+	
 
 	public abstract Micrograph getMicrograph();
 
@@ -365,6 +382,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		//drawing offscreen image
 		g.drawImage(offscreen, 0, 0, this);
 	}
+	
 
 	protected abstract void doCustomPaint(Graphics2D g2);
 

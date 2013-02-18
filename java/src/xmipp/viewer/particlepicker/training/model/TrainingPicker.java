@@ -687,27 +687,6 @@ public abstract class TrainingPicker extends ParticlePicker
 
 
 
-	public void saveTemplates()
-	{
-		ImageGeneric templates;
-		try
-		{
-			for (Family f : families)
-			{
-
-				updateTemplates(f);
-				templates = f.getTemplates();
-				if (templates != null)
-					templates.write(getTemplatesFile(f.getName()));
-			}
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
 
 	public boolean hasParticles()
 	{
@@ -838,6 +817,7 @@ public abstract class TrainingPicker extends ParticlePicker
 						p = f.getTemplates().alignImage(igp, true);
 				}
 			}
+			f.getTemplates().write(f.getTemplatesFile());
 			updateTemplatesPending = false;
 		}
 		catch (Exception e)
@@ -846,12 +826,22 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
+	public void saveTemplates()
+	{
+		try
+		{
+			for (Family f : families)
+				updateTemplates(f);
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
 
 
 
-
-
-
+	}
 
 	public void resetParticleImages()
 	{

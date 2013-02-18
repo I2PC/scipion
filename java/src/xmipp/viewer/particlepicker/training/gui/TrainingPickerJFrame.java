@@ -881,6 +881,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	
 
 
+
 	public String importParticlesFromFile(Format format, String file, float scale, boolean invertx, boolean inverty)
 	{
 		String result = "";
