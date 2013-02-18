@@ -16,6 +16,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
 	protected ImageWindow iw;
 	
+<<<<<<< HEAD
 	public void display()
 	{
 		if (iw != null && iw.isVisible())
@@ -29,6 +30,10 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		// iw.maximize();
 		iw.pack();
 	}
+=======
+	protected ImageWindow iw;
+
+>>>>>>> 3.0
 	public Tool getTool()
 	{
 
@@ -177,5 +182,21 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		}
 	}
 
+<<<<<<< HEAD
+=======
+	public void display()
+	{
+		if (iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+		{
+			this.iw = new ImageWindow(getImage(), this);
+		}				
+		
+	}
+>>>>>>> 3.0
 
 }

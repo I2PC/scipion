@@ -80,7 +80,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		saveDataAs(imp.getTitle());
 	}
 	
-	
+
 	
 	public ImagePlusLoader getImagePlusLoader()
 	{
