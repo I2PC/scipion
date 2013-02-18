@@ -326,6 +326,14 @@ if options.hasOption('configure'):
         if len(parts) == 2:
             assign = '%s = "%s"' % (parts[0], parts[1])
             exec(assign) # Take options from command line, override options file, be carefull with exec
+
+    scons = os.path.join("external", "scons", "scons.py")
+    pid = os.fork()
+    if not pid:
+        print "*** CHECKING EXTERNAL DEPENDENCIES..."
+        os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
+    os.wait()[0]
+    
     
 GUI = options.hasOption('gui')
 # Check if Tkinter is available
