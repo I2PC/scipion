@@ -28,17 +28,12 @@ env.SConsignFile(base_dir + 'SCons.dblite')
 # read -or not- the cached -non default- options
 if (ARGUMENTS['mode'] == 'configure'):
     opts = Variables(None, ARGUMENTS)
+else:
+    opts = Variables('.xmipp_scons.options', ARGUMENTS)
+
+if (ARGUMENTS['mode'] == 'dependencies'):
     conf = Configure(env)
     checking = {}
-    #found = False
-    #mpipaths = ['openmpi/mpi.h']
-    #for trylib in mpipaths:
-    #    if conf.CheckLibWithHeader('mpi', trylib, 'cxx'):
-    #        found = True
-    #if found == False:
-    #    checking['mpi'] = "not found"
-    #else:
-    #    found = False
     if not conf.CheckLib('mpi', None, None, 'cxx'):
         checking['mpi'] = "not found"
     if not conf.CheckLib('freetype', None, None, 'cxx'):
@@ -72,8 +67,6 @@ if (ARGUMENTS['mode'] == 'configure'):
             Exit(1)
     env = conf.Finish()
 
-else:
-    opts = Variables('.xmipp_scons.options', ARGUMENTS)
 
 #print 'en opts', opts['MPI_LINKERFORPROGRAMS']
 
