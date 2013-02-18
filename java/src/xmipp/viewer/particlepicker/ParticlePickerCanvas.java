@@ -133,7 +133,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	}
 
 
-
 	public void display(float xlocation, float ylocation)
 	{
 		boolean relocate = (iw == null);
