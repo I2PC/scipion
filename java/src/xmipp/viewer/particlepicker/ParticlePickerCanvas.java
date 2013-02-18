@@ -124,7 +124,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	{
 		super.display();								
 		iw.setTitle(getMicrograph().getName());
-		iw.pack();
+		
 	}
 
 	public void display(float xlocation, float ylocation)

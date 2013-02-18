@@ -164,7 +164,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		{
 			this.iw = new ImageWindow(getImage(), this);
 		}				
-		
+		iw.pack();
 	}
 
 }
