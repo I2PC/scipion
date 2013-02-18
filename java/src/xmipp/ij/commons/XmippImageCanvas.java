@@ -15,7 +15,7 @@ import javax.swing.SwingUtilities;
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
 	
-	ImageWindow iw;
+	protected ImageWindow iw;
 
 	public Tool getTool()
 	{
@@ -151,6 +151,20 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		{
 			zoomIn(0, 0);
 		}
+	}
+
+	public void display()
+	{
+		if (iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+		{
+			this.iw = new ImageWindow(getImage(), this);
+		}				
+		
 	}
 
 }

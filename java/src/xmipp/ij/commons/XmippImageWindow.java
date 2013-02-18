@@ -78,14 +78,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		saveDataAs(imp.getTitle());
 	}
 	
-	@Override
-	public void windowClosing(WindowEvent e) {
-		if(window == null)//if I am the main process I can close java
-			System.exit(0);
-		super.windowClosing(e);
-		if(XmippIJUtil.getXmippImageJ() != null)
-			XmippIJUtil.getXmippImageJ().close();
-	}
 	
 	public ImagePlusLoader getImagePlusLoader()
 	{

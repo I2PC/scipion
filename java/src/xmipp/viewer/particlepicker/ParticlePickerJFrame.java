@@ -773,6 +773,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		setVisible(false);
 		dispose();
+		if(getCanvas() != null)
+			getCanvas().getIw().close();
 		XmippApplication.removeInstance();
 	}
 
