@@ -4,6 +4,7 @@ import ij.IJ;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
 import java.awt.Window;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
@@ -34,7 +35,14 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);		
 		((XmippImageCanvas)getCanvas()).adjustMagnification();
-
+		addWindowListener(new WindowAdapter()
+		{
+			@Override
+			public void windowClosing(WindowEvent arg0)
+			{
+				
+			}
+		});
 
 	}
 	
