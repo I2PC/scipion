@@ -55,6 +55,7 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import xmipp.ij.commons.Tool;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.QuickHelpJDialog;
@@ -124,6 +125,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
+		XmippApplication.addInstance();
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter()
 		{
@@ -140,8 +142,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 						return;
 				}
 				close();
-				if (getParticlePicker().getMode() == FamilyState.Supervised)
-					System.exit(0);// temporarily
+//				if (getParticlePicker().getMode() == FamilyState.Supervised)
+//					System.exit(0);// temporarily
+				
 			}
 		});
 
@@ -770,7 +773,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	{
 		setVisible(false);
 		dispose();
-		System.exit(0);
+		if(getCanvas() != null)
+			getCanvas().getIw().close();
+		XmippApplication.removeInstance();
 	}
 
 	protected abstract void resetData();

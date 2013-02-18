@@ -18,10 +18,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.logging.Level;
 
-import javax.swing.JOptionPane;
-
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.jni.Program;
 import xmipp.utils.XmippDialog;
@@ -38,7 +39,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke activecst = new BasicStroke(3.0f);
 
-	protected ImageWindow iw;
 
 	protected boolean activemoved;
 
@@ -122,16 +122,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	public void display()
 	{
-		if (iw != null && iw.isVisible())
-		{
-			iw.setImage(getImage());
-			iw.updateImage(getImage());
-		}
-		else
-			this.iw = new ImageWindow(getImage(), this);// if you dont provide
-														// iw, I init mine
+		super.display();								
 		iw.setTitle(getMicrograph().getName());
-		// iw.maximize();
 		iw.pack();
 	}
 
@@ -149,11 +141,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		return iw;
 	}
 
-	public void setIw(ImageWindow iw)
-	{
-		this.iw = iw;
-	}
-
+	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{

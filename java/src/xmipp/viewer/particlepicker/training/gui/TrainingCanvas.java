@@ -3,16 +3,10 @@ package xmipp.viewer.particlepicker.training.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.SwingUtilities;
-
-import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;

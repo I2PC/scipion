@@ -6,6 +6,7 @@ import ij.gui.StackWindow;
 import java.awt.Frame;
 import java.awt.Rectangle;
 import java.awt.Window;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 
@@ -24,6 +25,15 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
 		((XmippImageCanvas)getCanvas()).adjustMagnification();
+		XmippApplication.addInstance();
+		addWindowListener(new WindowAdapter()
+		{
+			@Override
+			public void windowClosing(WindowEvent arg0)
+			{
+				XmippApplication.removeInstance();
+			}
+		});
 	}
 	
 	public XmippStackWindow(ImagePlusLoader ipl)

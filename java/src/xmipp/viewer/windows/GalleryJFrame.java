@@ -87,6 +87,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippIJUtil;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
@@ -123,7 +124,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private static int update_counter = 0;
 	// The following counter will be used to keep track of how many
 	// windows are opened, the last one, should do System.exit
-	private static short windows_counter = 0;
+	//private static short windows_counter = 0;
 	public ImageGalleryTableModel gallery;
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
@@ -176,6 +177,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
+
 	/** Store data about visualization */
 	GalleryData data;
 
@@ -201,13 +203,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			this.data = data;
 			createModel();
 			createGUI();
-			++windows_counter;
+			XmippApplication.addInstance();
 		}
 		catch (Exception e)
 		{
 			DEBUG.printException(e);
 		}
 	}
+	
+	
 
 	/** Constructors */
 	public GalleryJFrame(String filename, Param parameters)
@@ -252,8 +256,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
 			setVisible(false);
 			dispose();
-			if (--windows_counter == 0)
-				System.exit(0);
+			XmippApplication.removeInstance();
+			
 		}
 	}// function close
 
