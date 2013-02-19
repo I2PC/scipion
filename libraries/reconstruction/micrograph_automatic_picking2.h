@@ -86,6 +86,7 @@ public:
     int                          NRPCA;
     int                          corr_num;
     int                          num_correlation;
+    int                          num_features;
     double                       scaleRate;
     int                          NRsteps;
 
@@ -101,6 +102,7 @@ public:
 
     std::vector<Particle2>       auto_candidates;
     std::vector<Particle2>       rejected_particles;
+    std::vector<Particle2>       accepted_particles;
     Image<double>                micrographStack;
 
 public:
@@ -120,7 +122,10 @@ public:
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
 
-    /// Extract statistical features
+    /*
+     * This method extracts statics features such as
+     * average, variance and quantiles of a particle.
+     */
     void extractStatics(MultidimArray<double> &inputVec,
                         MultidimArray<double> &features);
 
@@ -238,35 +243,61 @@ public:
      */
     void add2Dataset();
 
-    /// Normalize the dataset
+    /* Normalize the data of a dataset according to
+     * a and b.
+     */
     void normalizeDataset(int a,int b,const FileName &fn);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;
 
-    /// Save the feature vectors of the particles
+    /*
+     * In Semi-Automatic step, we save all the feature
+     * vectors in order to have them to retrain the
+     * classifier.
+     */
     void saveAutoVectors(const FileName &fn);
 
-    /// Save the feature vectors of the particles
-    void saveRejectedVectors(const FileName &fn);
+    /// Save the extracted features for both rejected and found features
+    void saveVectors(const FileName &fn);
 
-    /// Save PCA model
+    /// Save the PCA basis and average for each channel
     void savePCAModel(const FileName &fn_root);
 
-    /// Save training set
+    /// Save training set into memory
     void saveTrainingSet(const FileName &fn_root);
 
-    /// Load the feature vectors of the particles
+    /*
+     * In Semi-Automatic step, we save all the feature
+     * vectors in order to have them to retrain the
+     * classifier.
+     */
     void loadAutoVectors(const FileName &fn);
 
-    /// Load training set
+    /// Load training set into the related array.
     void loadTrainingSet(const FileName &fn_root);
 
-    /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier,bool fast);
+    /// Load the features for particles and non-particles (from the supervised)
+    void loadVectors(const FileName &fn);
 
-    /// Generate two different trainsets for two SVMs.
+    /// Select particles from the micrograph in an automatic way
+    int automaticallySelectParticles(bool use2Classifier,bool fast,int Nthreads);
+
+    /*
+     * This method generates two different datasets. One for the
+     * particles and non particles and the other one for the
+     * particles and the false positives.
+     */
     void generateTrainSet();
+};
+
+struct AutoPickThreadParams
+{
+	AutoParticlePicking2 *autoPicking;
+	std::vector<Particle2> positionArray;
+	bool use2Classifier;
+	int idThread;
+	int Nthreads;
 };
 
 class ProgMicrographAutomaticPicking2: public XmippProgram

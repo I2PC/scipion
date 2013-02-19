@@ -67,7 +67,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	// Cache class to reuse of already loaded items
 	protected Cache<String, ImageItem> cache = new Cache<String, ImageItem>();
 	// Filename
-	protected String filename;
 	// Hold gallery dimensions
 	protected ImageDimension dimension;
 	// Renderer to display images

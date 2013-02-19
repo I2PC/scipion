@@ -65,6 +65,8 @@ public class ImagePlusLoader
 	{
 		this.ig = ig;
 		allowsPoll = existsFile();
+		if(existsFile())
+			fileName = ig.getFilename();
 	}
 
 	public ImagePlus getImagePlus()

@@ -319,12 +319,10 @@ void ProgClassifyCL2DCore::gatherResults(int firstLevel, const String &suffix)
                     size_t classSize=MD.size();
                     fnClass.compose(classNo,fnSummary,"stk");
                     if (classSize>0)
-                    {
                         getAverageApplyGeo(MD, classAverage());
-                        classAverage.write(fnClass);
-                    }
                     else
                         classAverage().initZeros(Ydim,Xdim);
+                    classAverage.write(fnClass);
 
                     size_t id=classes.addObject();
                     classes.setValue(MDL_REF,classNo,id);

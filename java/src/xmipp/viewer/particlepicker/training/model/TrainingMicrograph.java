@@ -208,6 +208,29 @@ public class TrainingMicrograph extends Micrograph{
 		
 	}
 
+	public void removeParticles(int x, int y, TrainingPicker ppicker)
+	{
+		List<TrainingParticle> particles = new ArrayList<TrainingParticle>();
+		for(MicrographFamilyData mfd: mfdatas)
+		{
+			for(TrainingParticle p: mfd.getManualParticles())
+				if (p.contains(x, y)) 
+					particles.add(p);
+			for(TrainingParticle p: particles)
+				removeParticle(p, ppicker);
+			particles.clear();
+			for(AutomaticParticle p: mfd.getAutomaticParticles())
+				if (p.contains(x, y)) 
+					particles.add(p);
+
+			for(TrainingParticle p: particles)
+				removeParticle(p, ppicker);
+		}
+		
+	}
+	
+	
+
 
 	
 	

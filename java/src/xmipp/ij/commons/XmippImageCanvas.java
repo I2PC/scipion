@@ -14,6 +14,8 @@ import javax.swing.SwingUtilities;
 
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
+	
+	protected ImageWindow iw;
 
 	public Tool getTool()
 	{
@@ -117,30 +119,49 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 
 		if (getTool() == Tool.IMAGEJ)
-		{
 			super.mouseMoved(e);
-			return;
-		}
 		int x = offScreenX(e.getX());
 		int y = offScreenY(e.getY());
 		imp.mouseMoved(x, y);
 		imp.updateStatusbarValue();
 	}
 
-	public void loadData(XmippIJWindow iw)
+	public void loadData(XmippIJWindow xiw)
 	{
 		Rectangle rect = getSrcRect();
 		double magnification = getMagnification();
-		imp = iw.getImagePlusLoader().loadImagePlus();
-		int width = (int) getSize().getWidth();
-		int height = (int) getSize().getHeight();
-		((ImageWindow) iw).setImage(imp);
-		((ImageWindow) iw).updateImage(imp);
-		setDrawingSize(width, height);
+		imp = xiw.getImagePlusLoader().loadImagePlus();
+		iw = ((ImageWindow) xiw);
+		iw.setImage(imp);
+		iw.updateImage(imp);
 		setMagnification(magnification);
 		setSourceRect(rect);
 		repaint();
-		((ImageWindow) iw).pack();
+		iw.pack();
+
+	}
+
+	void adjustMagnification()//for micrographs will not happen
+	{
+		int min = 200;
+		while (getSize().getWidth() < min)
+		{
+			zoomIn(0, 0);
+		}
+	}
+
+	public void display()
+	{
+		if (iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+		{
+			this.iw = new ImageWindow(getImage(), this);
+		}				
+		iw.pack();
 	}
 
 }
