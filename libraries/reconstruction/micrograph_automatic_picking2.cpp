@@ -49,6 +49,7 @@ AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
     NPCA=pcaNum;
     NRPCA=20;
     num_correlation=filter_num+((filter_num-corr_num)*corr_num);
+    num_features=num_correlation*NPCA+NRPCA+12;
     classifier.setParameters(8.0, 0.125);
     classifier2.setParameters(1.0, 0.25);//(2.0, 0.5);
 }
@@ -256,7 +257,7 @@ void AutoParticlePicking2::buildVector(MultidimArray<double> &inputVec,
     MultidimArray<double> pcaRBase;
     MultidimArray<double> vec;
 
-    featureVec.resize(1,1,1,num_correlation*NPCA+NRPCA+12);
+    featureVec.resize(1,1,1,num_features);
     // Read the polar correlation from the stack and project on
     // PCA basis and put the value as the feature.
     for (int i=0;i<num_correlation;i++)
@@ -452,7 +453,7 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
     positiveInvariant.getDimensions(aDim);
     int steps=aDim.ndim/num_correlation;
     // Resize the dataset for the new data
-    dataSet.resize(1,1,yDataSet+steps,num_correlation*NPCA+NRPCA+12);
+    dataSet.resize(1,1,yDataSet+steps,num_features);
     classLabel.resize(1,1,1,YSIZE(dataSet));
     for (size_t n=yDataSet;n<XSIZE(classLabel);n++)
         classLabel(n)=label;
@@ -504,7 +505,7 @@ void AutoParticlePicking2::add2Dataset()
     // in the dataset.
     int yDataSet=YSIZE(dataSet);
     int newSize=rejected_particles.size()+accepted_particles.size();
-    dataSet.resize(1,1,yDataSet+newSize,num_correlation*NPCA+NRPCA+12);
+    dataSet.resize(1,1,yDataSet+newSize,num_features);
     classLabel.resize(1,1,1,YSIZE(dataSet));
     if (rejected_particles.size() > 0)
     {

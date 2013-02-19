@@ -86,6 +86,7 @@ public:
     int                          NRPCA;
     int                          corr_num;
     int                          num_correlation;
+    int                          num_features;
     double                       scaleRate;
     int                          NRsteps;
 
