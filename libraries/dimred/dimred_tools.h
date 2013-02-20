@@ -99,5 +99,31 @@ double intrinsicDimensionality(Matrix2D<double> &X, const String &method="MLE", 
  * You can provide a distance function of your own. If not, Euclidean distance is used.
  */
 void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2* f=NULL);
+
+/** Generic class for dimensionality reduction */
+class DimRedAlgorithm
+{
+public:
+	/// Pointer to input data
+	const Matrix2D<double> *X;
+
+	/// Output dim
+	size_t outputDim;
+
+	/// Output data
+	Matrix2D<double> Y;
+public:
+	/// Set input data
+	void setInputData(const Matrix2D<double> &X);
+
+	/// Set output dimensionality
+	void setOutputDimensionality(size_t outputDim);
+
+	/// Reduce dimensionality
+	virtual void reduceDimensionality()=0;
+
+	/// Get reduced data
+	const Matrix2D<double> &getReducedData();
+};
 //@}
 #endif

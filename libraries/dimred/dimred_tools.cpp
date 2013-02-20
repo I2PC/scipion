@@ -306,3 +306,18 @@ double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool n
 	// I do not implement EigValue because it only provides integer dimensions
 	// I do not implement GMST because it is slower than MLE and CorrDim
 }
+
+void DimRedAlgorithm::setInputData(const Matrix2D<double> &X)
+{
+	this->X=&X;
+}
+
+void DimRedAlgorithm::setOutputDimensionality(size_t outputDim)
+{
+	this->outputDim=outputDim;
+}
+
+const Matrix2D<double> &DimRedAlgorithm::getReducedData()
+{
+	return Y;
+}

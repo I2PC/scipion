@@ -1,4 +1,5 @@
 #include <dimred/dimred_tools.h>
+#include <dimred/kernelPCA.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
@@ -74,6 +75,25 @@ TEST_F( DimRedTest, intrinsic_dimensionality)
 	double dimCorrDim=intrinsicDimensionality(generator.X,"CorrDim",false);
 	expectedDim=1.9244901554639233;
 	EXPECT_LT(fabs(dimCorrDim-expectedDim),1e-6);
+}
+
+TEST_F( DimRedTest, kernelPCA)
+{
+	GenerateData generator;
+	generator.generateNewDataset("swiss",1000,0);
+	generator.X.write("dimred/swiss.txt");
+	// MATLAB: load swiss.txt;
+
+	KernelPCA kernelPCA;
+	kernelPCA.setInputData(generator.X);
+	kernelPCA.setOutputDimensionality(2);
+	kernelPCA.setSpecificParameters(0.1);
+	kernelPCA.reduceDimensionality();
+	const Matrix2D<double> &Y=kernelPCA.getReducedData();
+
+	// Compare C output with Matlab output
+	// ***
+	Y.write("dimred/kernelPCA.txt");
 }
 
 GTEST_API_ int main(int argc, char **argv)
