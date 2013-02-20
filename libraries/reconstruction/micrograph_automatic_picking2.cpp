@@ -32,27 +32,6 @@
 #include <algorithm>
 #include <classification/uniform.h>
 
-AutoParticlePicking2::AutoParticlePicking2(const FileName &fn, Micrograph *_m,
-        int size, int filterNum, int pcaNum, int corrNum, int procprec)
-{
-    __m=_m;
-    fn_micrograph=fn;
-    microImage.read(fn_micrograph);
-    double t=std::max(0.25,50.0/size);
-    scaleRate=std::min(1.0,t);
-    particle_radius=(int)((size*scaleRate)*0.5);
-    particle_size=particle_radius * 2;
-    NRsteps=particle_size/2-3;
-    filter_num=filterNum;
-    corr_num=corrNum;
-    proc_prec=procprec;
-    NPCA=pcaNum;
-    NRPCA=20;
-    num_correlation=filter_num+((filter_num-corr_num)*corr_num);
-    classifier.setParameters(8.0, 0.125);
-    classifier2.setParameters(1.0, 0.25);//(2.0, 0.5);
-}
-
 //Generate filter bank from the micrograph image
 void filterBankGenerator(MultidimArray<double> &inputMicrograph,
                          const FileName &fnFilterBankStack,
@@ -256,7 +235,7 @@ void AutoParticlePicking2::buildVector(MultidimArray<double> &inputVec,
     MultidimArray<double> pcaRBase;
     MultidimArray<double> vec;
 
-    featureVec.resize(1,1,1,num_correlation*NPCA+NRPCA+12);
+    featureVec.resize(1,1,1,num_features);
     // Read the polar correlation from the stack and project on
     // PCA basis and put the value as the feature.
     for (int i=0;i<num_correlation;i++)
@@ -372,7 +351,7 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
     }
 }
 
-int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool fast,int Nthreads)
+int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
 {
     Particle2 p;
     std::vector<Particle2> positionArray;
@@ -396,7 +375,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier,bool 
         pthread_join(th_ids[nt],NULL);
 
     if (auto_candidates.size() == 0)
-    	return 0;
+        return 0;
     // Remove the occluded particles
     for (size_t i=0;i<auto_candidates.size();++i)
         for (size_t j=0;j<auto_candidates.size()-i-1;j++)
@@ -447,12 +426,13 @@ void AutoParticlePicking2::add2Dataset(const FileName &fn_Invariant,
     ArrayDim aDim;
     int yDataSet=YSIZE(dataSet);
 
-    if (!fn_Invariant.exists()) return;
+    if (!fn_Invariant.exists())
+        return;
     positiveInvariant.read(fn_Invariant,HEADER);
     positiveInvariant.getDimensions(aDim);
     int steps=aDim.ndim/num_correlation;
     // Resize the dataset for the new data
-    dataSet.resize(1,1,yDataSet+steps,num_correlation*NPCA+NRPCA+12);
+    dataSet.resize(1,1,yDataSet+steps,num_features);
     classLabel.resize(1,1,1,YSIZE(dataSet));
     for (size_t n=yDataSet;n<XSIZE(classLabel);n++)
         classLabel(n)=label;
@@ -504,7 +484,7 @@ void AutoParticlePicking2::add2Dataset()
     // in the dataset.
     int yDataSet=YSIZE(dataSet);
     int newSize=rejected_particles.size()+accepted_particles.size();
-    dataSet.resize(1,1,yDataSet+newSize,num_correlation*NPCA+NRPCA+12);
+    dataSet.resize(1,1,yDataSet+newSize,num_features);
     classLabel.resize(1,1,1,YSIZE(dataSet));
     if (rejected_particles.size() > 0)
     {
@@ -700,42 +680,16 @@ void AutoParticlePicking2::loadTrainingSet(const FileName &fn)
 void AutoParticlePicking2::saveTrainingSet(const FileName &fn)
 {
     std::ofstream fhTrain;
-#ifdef DEBUG_SAVETRAINSET
-
-    std::ofstream fhtest;
-    fhtest.open("WNDataset.txt");
-#endif
-
     fhTrain.open(fn.c_str());
     fhTrain<<YSIZE(dataSet)<< " "<< XSIZE(dataSet)<< std::endl;
     for (size_t i=0;i<YSIZE(dataSet);i++)
     {
         fhTrain<<classLabel(i)<< std::endl;
-#ifdef DEBUG_SAVETRAINSET
-
-        fhtest<<classLabel(i)<<" ";
-#endif
-
         for (size_t j=0;j<XSIZE(dataSet);j++)
             fhTrain<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
-#ifdef DEBUG_SAVETRAINSET
-
-        fhtest<<j+1<<":"<<DIRECT_A2D_ELEM(dataSet,i,j)<<" ";
-#endif
-
         fhTrain<<std::endl;
-#ifdef DEBUG_SAVETRAINSET
-
-        fhtest<<std::endl;
-#endif
-
     }
     fhTrain.close();
-#ifdef DEBUG_SAVETRAINSET
-
-    fhtest.close();
-#endif
-
 }
 
 void AutoParticlePicking2::savePCAModel(const FileName &fn_root)
@@ -1069,52 +1023,78 @@ void ProgMicrographAutomaticPicking2::readParams()
 {
     fn_micrograph = getParam("-i");
     fn_model = getParam("--model");
-    size = getIntParam("--particleSize");
     mode = getParam("--mode");
     if (mode == "buildinv")
     {
         fn_train = getParam("--mode", 1);
     }
-    NPCA = getIntParam("--NPCA");
-    filter_num = getIntParam("--filter_num");
-    corr_num = getIntParam("--NCORR");
-    Nthreads = getIntParam("--thr");
     fn_root = getParam("--outputRoot");
-    fast = checkParam("--fast");
-    incore = checkParam("--in_core");
-    procprec = getIntParam("--autoPercent");
+    autoPicking=new AutoParticlePicking2();
+    autoPicking->readParams(this);
 }
 
+void AutoParticlePicking2::readParams(XmippProgram * program)
+{
+    fn_micrograph = program->getParam("-i");
+    particle_size = program->getIntParam("--particleSize");
+    NPCA = program->getIntParam("--NPCA");
+    filter_num = program->getIntParam("--filter_num");
+    corr_num = program->getIntParam("--NCORR");
+    Nthreads = program->getIntParam("--thr");
+    fast = program->checkParam("--fast");
+    proc_prec = program->getIntParam("--autoPercent");
+}
+
+void AutoParticlePicking2::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("  -i <micrograph>               : Micrograph image");
+    program->addParamsLine("  --outputRoot <rootname>       : Output rootname");
+    program->addParamsLine("  --mode <mode>                 : Operation mode");
+    program->addParamsLine("         where <mode>");
+    program->addParamsLine("                    try              : Try to autoselect within the training phase.");
+    program->addParamsLine("                    train            : Train the classifier using the invariants features.");
+    program->addParamsLine("                                     : <rootname>_auto_feature_vectors.txt contains the particle structure created by this program when used in automatic selection mode");
+    program->addParamsLine("                                     : <rootname>_false_positives.xmd contains the list of false positives among the automatically picked particles");
+    program->addParamsLine("                    autoselect  : Autoselect");
+    program->addParamsLine("                    buildinv <posfile=\"\"> : posfile contains the coordinates of manually picked particles");
+    program->addParamsLine("  --model <model_rootname>      : Bayesian model of the particles to pick");
+    program->addParamsLine("  --particleSize <size>         : Particle size in pixels");
+    program->addParamsLine("  [--thr <p=1>]                 : Number of threads for automatic picking");
+    program->addParamsLine("  [--fast]                      : Perform a fast preprocessing of the micrograph (Fourier filter instead of Wavelet filter)");
+    program->addParamsLine("  [--in_core]                   : Read the micrograph in memory");
+    program->addParamsLine("  [--filter_num <n=6>]          : The number of filters in filter bank");
+    program->addParamsLine("  [--NPCA <n=4>]               : The number of PCA components");
+    program->addParamsLine("  [--NCORR <n=2>]               : The number of PCA components");
+    program->addParamsLine("  [--autoPercent <n=90>]               : The number of PCA components");
+    program->addExampleLine("Automatically select particles during training:", false);
+    program->addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode try ");
+    program->addExampleLine("Training:", false);
+    program->addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode train manual.pos");
+    program->addExampleLine("Automatically select particles after training:", false);
+    program->addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode autoselect");
+}
 void ProgMicrographAutomaticPicking2::defineParams()
 {
     addUsageLine("Automatic particle picking for micrographs");
     addUsageLine("+The algorithm is designed to learn the particles from the user, as well as from its own errors.");
     addUsageLine("+The algorithm is fully described in [[http://www.ncbi.nlm.nih.gov/pubmed/19555764][this paper]].");
-    addParamsLine("  -i <micrograph>               : Micrograph image");
-    addParamsLine("  --outputRoot <rootname>       : Output rootname");
-    addParamsLine("  --mode <mode>                 : Operation mode");
-    addParamsLine("         where <mode>");
-    addParamsLine("                    try              : Try to autoselect within the training phase.");
-    addParamsLine("                    train            : Train the classifier using the invariants features.");
-    addParamsLine("                                     : <rootname>_auto_feature_vectors.txt contains the particle structure created by this program when used in automatic selection mode");
-    addParamsLine("                                     : <rootname>_false_positives.xmd contains the list of false positives among the automatically picked particles");
-    addParamsLine("                    autoselect  : Autoselect");
-    addParamsLine("                    buildinv <posfile=\"\"> : posfile contains the coordinates of manually picked particles");
-    addParamsLine("  --model <model_rootname>      : Bayesian model of the particles to pick");
-    addParamsLine("  --particleSize <size>         : Particle size in pixels");
-    addParamsLine("  [--thr <p=1>]                 : Number of threads for automatic picking");
-    addParamsLine("  [--fast]                      : Perform a fast preprocessing of the micrograph (Fourier filter instead of Wavelet filter)");
-    addParamsLine("  [--in_core]                   : Read the micrograph in memory");
-    addParamsLine("  [--filter_num <n=6>]          : The number of filters in filter bank");
-    addParamsLine("  [--NPCA <n=4>]               : The number of PCA components");
-    addParamsLine("  [--NCORR <n=2>]               : The number of PCA components");
-    addParamsLine("  [--autoPercent <n=90>]               : The number of PCA components");
-    addExampleLine("Automatically select particles during training:", false);
-    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode try ");
-    addExampleLine("Training:", false);
-    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode train manual.pos");
-    addExampleLine("Automatically select particles after training:", false);
-    addExampleLine("xmipp_micrograph_automatic_picking -i micrograph.tif --particleSize 100 --model model --thr 4 --outputRoot micrograph --mode autoselect");
+    AutoParticlePicking2::defineParams(this);
+}
+
+void AutoParticlePicking2::produceSideInfo(Micrograph *_m)
+{
+    __m=_m;
+    microImage.read(fn_micrograph);
+    double t=std::max(0.25,50.0/particle_size);
+    scaleRate=std::min(1.0,t);
+    particle_radius=(int)((particle_size*scaleRate)*0.5);
+    particle_size=particle_radius * 2;
+    NRsteps=particle_size/2-3;
+    NRPCA=20;
+    num_correlation=filter_num+((filter_num-corr_num)*corr_num);
+    num_features=num_correlation*NPCA+NRPCA+12;
+    classifier.setParameters(8.0, 0.125);
+    classifier2.setParameters(1.0, 0.25);
 }
 
 void ProgMicrographAutomaticPicking2::run()
@@ -1136,8 +1116,7 @@ void ProgMicrographAutomaticPicking2::run()
     FileName fnRejectedVectors=fn_model+"_rejected_vector.txt";
     FileName fnAvgModel=fn_model+"_particle_avg.xmp";
 
-    AutoParticlePicking2 *autoPicking=new AutoParticlePicking2(fn_micrograph,&m,size,filter_num,
-                                      NPCA,corr_num,procprec);
+    autoPicking->produceSideInfo(&m);
     if (mode!="train")
     {
         // Resize the Micrograph
@@ -1145,7 +1124,7 @@ void ProgMicrographAutomaticPicking2::run()
                                (int)((m.Xdim)*autoPicking->scaleRate),
                                autoPicking->microImage(),2);
         // Generating the filter bank
-        filterBankGenerator(autoPicking->microImage(),fnFilterBank,filter_num);
+        filterBankGenerator(autoPicking->microImage(),fnFilterBank,autoPicking->filter_num);
         autoPicking->micrographStack.read(fnFilterBank,DATA);
     }
 
@@ -1245,14 +1224,14 @@ void ProgMicrographAutomaticPicking2::run()
         if (fnSVMModel2.exists())
         {
             autoPicking->classifier2.LoadModel(fnSVMModel2);
-            autoPicking->automaticallySelectParticles(true,fast,Nthreads);
+            autoPicking->automaticallySelectParticles(true);
         }
         else
-            autoPicking->automaticallySelectParticles(false,fast,Nthreads);
+            autoPicking->automaticallySelectParticles(false);
         autoPicking->saveAutoParticles(fnAutoParticles);
         if (mode=="try")
-        	if (autoPicking->auto_candidates.size()!=0)
-            autoPicking->saveAutoVectors(fnAutoVectors);
+            if (autoPicking->auto_candidates.size()!=0)
+                autoPicking->saveAutoVectors(fnAutoVectors);
     }
     if (mode=="train")
     {

@@ -86,6 +86,9 @@ public:
     int                          NRPCA;
     int                          corr_num;
     int                          num_correlation;
+    int                          num_features;
+    int 					     Nthreads;
+    int 						 fast;
     double                       scaleRate;
     int                          NRsteps;
 
@@ -107,16 +110,20 @@ public:
 public:
 
     /// Empty constructor
-    AutoParticlePicking2(const FileName &fn, Micrograph *_m,
-                         int size, int filterNum,
-                         int pcaNum,int corrNum,
-                         int procprec);
 
     /// Destructor
     ~AutoParticlePicking2();
 
+    /// Define the parameters of the main program
+    static void defineParams(XmippProgram * program);
+
+    /// Read the parmaeters of the main program
+    void readParams(XmippProgram * program);
+
     /// Read the micrograph in memory
     void readMicrograph();
+
+    void produceSideInfo(Micrograph *m);
 
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
@@ -280,7 +287,7 @@ public:
     void loadVectors(const FileName &fn);
 
     /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier,bool fast,int Nthreads);
+    int automaticallySelectParticles(bool use2Classifier);
 
     /*
      * This method generates two different datasets. One for the
@@ -308,26 +315,12 @@ public:
     FileName fn_model;
     /// Training coordinates
     FileName fn_train;
-    /// Particle size
-    int size;
-    /// The number of filters
-    int filter_num;
-    /// The number of PCA components
-    int NPCA;
-    /// The number of correlation for a bank
-    int corr_num;
-    /// The number of correlation for a bank
-    int procprec;
     /// Mode
     String mode;
     /// Number of threads
-    int Nthreads;
     /// Output rootname
     FileName fn_root;
-    /// Fast
-    bool fast;
-    /// In core
-    bool incore;
+	AutoParticlePicking2 *autoPicking;
 public:
     /// Read parameters
     void readParams();

@@ -331,7 +331,10 @@ if options.hasOption('configure'):
     pid = os.fork()
     if not pid:
         print "*** CHECKING EXTERNAL DEPENDENCIES..."
-        os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
+        if options.hasOption('unattended'):
+            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies","unattended=yes"))
+        else:
+            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
     os.wait()[0]
     
     

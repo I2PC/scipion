@@ -300,7 +300,6 @@ class ProcessManager():
             
             def setHost(p, h):
                 p.host = h
-                print "setting host: ", h
                 
             for h in hosts.keys():
                 newProcs = self.__getProcessFromCmd("ssh %(h)s '%(cmd)s'" % locals() )
