@@ -1779,6 +1779,11 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
  */
 void normalizeColumns(Matrix2D<double> &A);
 
+/** Subtract mean of columns.
+ * So that they have zero mean.
+ */
+void subtractColumnMeans(Matrix2D<double> &A);
+
 /** Sparse element.
  *  This class is used to create the SparseMatrices. */
 class SparseElement

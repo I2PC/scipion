@@ -344,3 +344,24 @@ void normalizeColumns(Matrix2D<double> &A)
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
 		MAT_ELEM(A,i,j)=(MAT_ELEM(A,i,j)-VEC_ELEM(avg,j))*VEC_ELEM(stddev,j);
 }
+
+void subtractColumnMeans(Matrix2D<double> &A)
+{
+	if (MAT_YSIZE(A)<1)
+		return;
+
+	// Compute the mean and standard deviation of each column
+	Matrix1D<double> avg;
+	avg.initZeros(MAT_XSIZE(A));
+
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		VEC_ELEM(avg,j)+=MAT_ELEM(A,i,j);
+
+	double iN=1.0/MAT_YSIZE(A);
+	FOR_ALL_ELEMENTS_IN_MATRIX1D(avg)
+        VEC_ELEM(avg,i)*=iN;
+
+	// Now normalize
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+		MAT_ELEM(A,i,j)=MAT_ELEM(A,i,j)-VEC_ELEM(avg,j);
+}
