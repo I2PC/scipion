@@ -164,6 +164,8 @@ public:
                 }
             }
         }
+        if (toClassify.size()==0)
+            return;
         stillToDo.resizeNoCopy(toClassify.size());
         stillToDo.initConstant(1);
         VEC_ELEM(stillToDo,0)=0;
