@@ -42,16 +42,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 	}
 
-	public void updateMicrograph()
-	{
-		this.micrograph = frame.getMicrograph();
-		updateMicrograph();
-		if(!frame.getFamilyData().getParticles().isEmpty())
-			refreshActive(getLastParticle());
-		else
-			active = null;
-		
-	}
+	
 	
 	TrainingParticle getLastParticle()
 	{
