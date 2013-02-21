@@ -150,8 +150,8 @@ void * autoPickThread(void * args)
     {
         if (k%Nthreads==idThread)
         {
-            int j=prm->positionArray[k].x;
-            int i=prm->positionArray[k].y;
+            int j=prm->positionArray[k]->x;
+            int i=prm->positionArray[k]->y;
             prm->autoPicking->buildInvariant(IpolarCorr,j,i);
             prm->autoPicking->extractParticle(j,i,prm->autoPicking->microImage(),pieceImage,false);
             pieceImage.resize(1,1,1,XSIZE(pieceImage)*YSIZE(pieceImage));
@@ -287,8 +287,18 @@ double AutoParticlePicking2::PCAProject(MultidimArray<double> &pcaBasis,
                                         MultidimArray<double> &vec)
 {
     double dotProduct=0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(pcaBasis)
-    dotProduct+=DIRECT_A1D_ELEM(pcaBasis,i)*DIRECT_A1D_ELEM(vec,i);
+    const double *ptr2 = &DIRECT_A1D_ELEM(pcaBasis,0);
+    const double *ptr3 = &DIRECT_A1D_ELEM(vec,0);
+    size_t iBlockMax = XSIZE(pcaBasis) / 4;
+    for (size_t i = 0; i < iBlockMax; i++)
+    {
+        dotProduct += (*ptr2++) * (*ptr3++);
+        dotProduct += (*ptr2++) * (*ptr3++);
+        dotProduct += (*ptr2++) * (*ptr3++);
+        dotProduct += (*ptr2++) * (*ptr3++);
+    }
+    for (size_t i = iBlockMax * 4; i < XSIZE(pcaBasis); ++i)
+        dotProduct += (*ptr2++) * (*ptr3++);
     return dotProduct;
 }
 
@@ -354,7 +364,7 @@ void AutoParticlePicking2::trainSVM(const FileName &fnModel,
 int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
 {
     Particle2 p;
-    std::vector<Particle2> positionArray;
+    std::vector<Particle2*> positionArray;
 
     buildSearchSpace(positionArray,fast);
     pthread_t * th_ids = new pthread_t[Nthreads];
@@ -373,6 +383,9 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
 
     for (int nt=0;nt<Nthreads;nt++)
         pthread_join(th_ids[nt],NULL);
+
+    for (size_t n=0; n<positionArray.size(); ++n)
+    	delete positionArray[n];
 
     if (auto_candidates.size() == 0)
         return 0;
@@ -915,10 +928,10 @@ void AutoParticlePicking2::normalizeDataset(int a,int b,const FileName &fn)
     }
 }
 
-void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArray,bool fast)
+void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2 *> &positionArray,bool fast)
 {
     int endX,endY;
-    Particle2 p;
+    Particle2 *p=NULL;
 
     endX=XSIZE(microImage())-particle_radius;
     endY=YSIZE(microImage())-particle_radius;
@@ -928,20 +941,29 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2> &positionArra
         for (int j=particle_radius;j<endX;j++)
             if (isLocalMaxima(convolveRes,j,i))
             {
-                p.y=i;
-                p.x=j;
-                p.cost=DIRECT_A2D_ELEM(convolveRes,i,j);
-                p.status=0;
+            	p=new Particle2();
+                p->y=i;
+                p->x=j;
+                p->cost=DIRECT_A2D_ELEM(convolveRes,i,j);
+                p->status=0;
                 positionArray.push_back(p);
             }
-    for (size_t i=0;i<positionArray.size();++i)
-        for (size_t j=0;j<positionArray.size()-i-1;j++)
-            if (positionArray[j].cost<positionArray[j + 1].cost)
+    size_t imax=positionArray.size();
+    if (imax==0)
+    	return;
+    Particle2 *ptr=(Particle2 *)&(positionArray[0]);
+    for (size_t i=0;i<imax;++i)
+        for (size_t j=0;j<imax-i-1;j++)
+        {
+        	Particle2 *ptrj=ptr+j;
+        	Particle2 *ptrj_1=ptrj+1;
+            if (ptrj->cost<ptrj_1->cost)
             {
-                p=positionArray[j+1];
-                positionArray[j+1]=positionArray[j];
-                positionArray[j]=p;
+                p=ptrj_1;
+                ptrj_1=ptrj;
+                ptrj=p;
             }
+        }
 }
 
 void AutoParticlePicking2::applyConvolution(bool fast)

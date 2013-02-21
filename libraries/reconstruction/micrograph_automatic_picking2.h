@@ -52,7 +52,7 @@ public:
     FileName micrograph;       // Micrograph
     int x, y;                  // position in micrograph
     char status;               // rejected=0, selected=1 or moved=2
-    MultidimArray<double> vec;      // vector of that particle
+    MultidimArray<double> vec; // vector of that particle
     double cost;               // Associated cost
 
     // Print
@@ -212,7 +212,7 @@ public:
      * This method does a convolution in order to find an approximation
      * about the place of the particles.
      */
-    void buildSearchSpace(std::vector<Particle2> &positionArray,bool fast);
+    void buildSearchSpace(std::vector<Particle2 *> &positionArray,bool fast);
 
     /*
      * This method is used in order to train an support vector
@@ -300,7 +300,7 @@ public:
 struct AutoPickThreadParams
 {
 	AutoParticlePicking2 *autoPicking;
-	std::vector<Particle2> positionArray;
+	std::vector<Particle2*> positionArray;
 	bool use2Classifier;
 	int idThread;
 	int Nthreads;
