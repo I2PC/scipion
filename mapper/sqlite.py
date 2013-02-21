@@ -70,6 +70,9 @@ class SqliteMapper(Mapper):
         childs = self.db.selectObjectsByParent(obj.id)
         for childRow in childs:
             childObj = getattr(obj, childRow['name'])
+            if childObj is None:
+                childObj = buildObject(childRow['classname'])
+                setattr(obj, childRow['name'], childObj)
             self.fillObject(childObj, childRow)
             
     def select(self, **args):

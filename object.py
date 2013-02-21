@@ -90,11 +90,25 @@ class Boolean(Object):
         return bool(value)    
        
 
-class List(Object):
-    '''Class for holding list of other objects'''
-    def __init__(self, **args):
-        Object.__init__(self, **args)
-        self.values = []
+class Array(Object):
+    '''Class for holding fixed len array'''
+    def __init__(self, size=10, **args):
+        Object.__init__(self, size, **args)
+        
+    def set(self, size):
+        '''Set the array size'''
+        self.value = size  
+        for i in range(int(size)):
+            self.__setitem__(i, None)                 
+        
+    def strIndex(self, i):
+        return 'item_%04d' % i
+    
+    def __setitem__(self, index, value):
+        self.__dict__[self.strIndex(index)] = value
+        
+    def __getitem__(self, index):
+        return self.__dict__[self.strIndex(index)]
 
     
 class Coordinate(Object):
@@ -102,6 +116,7 @@ class Coordinate(Object):
         Object.__init__(self, **args)
         self.x = Integer(x)
         self.y = Integer(y)
+        
         
     def __str__(self):
         return "(%d, %d)" % (self.x.get(), self.y.get())
