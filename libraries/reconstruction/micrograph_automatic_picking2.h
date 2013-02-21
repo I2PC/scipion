@@ -86,6 +86,9 @@ public:
     int                          NRPCA;
     int                          corr_num;
     int                          num_correlation;
+    int                          num_features;
+    int 					     Nthreads;
+    int 						 fast;
     double                       scaleRate;
     int                          NRsteps;
 
@@ -107,21 +110,28 @@ public:
 public:
 
     /// Empty constructor
-    AutoParticlePicking2(const FileName &fn, Micrograph *_m,
-                         int size, int filterNum,
-                         int pcaNum,int corrNum,
-                         int procprec);
 
     /// Destructor
     ~AutoParticlePicking2();
 
+    /// Define the parameters of the main program
+    static void defineParams(XmippProgram * program);
+
+    /// Read the parmaeters of the main program
+    void readParams(XmippProgram * program);
+
     /// Read the micrograph in memory
     void readMicrograph();
+
+    void produceSideInfo(Micrograph *m);
 
     //Check the distance between a point and positive samples in micrograph
     bool checkDist(Particle2 &p);
 
-    /// Extract statistical features
+    /*
+     * This method extracts statics features such as
+     * average, variance and quantiles of a particle.
+     */
     void extractStatics(MultidimArray<double> &inputVec,
                         MultidimArray<double> &features);
 
@@ -239,38 +249,61 @@ public:
      */
     void add2Dataset();
 
-    /// Normalize the dataset
+    /* Normalize the data of a dataset according to
+     * a and b.
+     */
     void normalizeDataset(int a,int b,const FileName &fn);
 
     /// Save automatically selected particles
     int saveAutoParticles(const FileName &fn) const;
 
-    /// Save the feature vectors of the particles
+    /*
+     * In Semi-Automatic step, we save all the feature
+     * vectors in order to have them to retrain the
+     * classifier.
+     */
     void saveAutoVectors(const FileName &fn);
 
     /// Save the extracted features for both rejected and found features
     void saveVectors(const FileName &fn);
 
-    /// Save PCA model
+    /// Save the PCA basis and average for each channel
     void savePCAModel(const FileName &fn_root);
 
-    /// Save training set
+    /// Save training set into memory
     void saveTrainingSet(const FileName &fn_root);
 
-    /// Load the feature vectors of the particles
+    /*
+     * In Semi-Automatic step, we save all the feature
+     * vectors in order to have them to retrain the
+     * classifier.
+     */
     void loadAutoVectors(const FileName &fn);
 
-    /// Load training set
+    /// Load training set into the related array.
     void loadTrainingSet(const FileName &fn_root);
 
     /// Load the features for particles and non-particles (from the supervised)
     void loadVectors(const FileName &fn);
 
     /// Select particles from the micrograph in an automatic way
-    int automaticallySelectParticles(bool use2Classifier,bool fast);
+    int automaticallySelectParticles(bool use2Classifier);
 
-    /// Generate two different trainsets for two SVMs.
+    /*
+     * This method generates two different datasets. One for the
+     * particles and non particles and the other one for the
+     * particles and the false positives.
+     */
     void generateTrainSet();
+};
+
+struct AutoPickThreadParams
+{
+	AutoParticlePicking2 *autoPicking;
+	std::vector<Particle2> positionArray;
+	bool use2Classifier;
+	int idThread;
+	int Nthreads;
 };
 
 class ProgMicrographAutomaticPicking2: public XmippProgram
@@ -282,26 +315,12 @@ public:
     FileName fn_model;
     /// Training coordinates
     FileName fn_train;
-    /// Particle size
-    int size;
-    /// The number of filters
-    int filter_num;
-    /// The number of PCA components
-    int NPCA;
-    /// The number of correlation for a bank
-    int corr_num;
-    /// The number of correlation for a bank
-    int procprec;
     /// Mode
     String mode;
     /// Number of threads
-    int Nthreads;
     /// Output rootname
     FileName fn_root;
-    /// Fast
-    bool fast;
-    /// In core
-    bool incore;
+	AutoParticlePicking2 *autoPicking;
 public:
     /// Read parameters
     void readParams();

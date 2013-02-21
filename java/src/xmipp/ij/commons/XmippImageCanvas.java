@@ -15,7 +15,7 @@ import javax.swing.SwingUtilities;
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
 	
-	ImageWindow iw;
+	protected ImageWindow iw;
 
 	public Tool getTool()
 	{
@@ -119,10 +119,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 
 		if (getTool() == Tool.IMAGEJ)
-		{
 			super.mouseMoved(e);
-			return;
-		}
 		int x = offScreenX(e.getX());
 		int y = offScreenY(e.getY());
 		imp.mouseMoved(x, y);
@@ -139,19 +136,32 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		iw.updateImage(imp);
 		setMagnification(magnification);
 		setSourceRect(rect);
-		adjustMagnification();
 		repaint();
 		iw.pack();
 
 	}
 
-	private void adjustMagnification()//for micrographs will not happen
+	void adjustMagnification()//for micrographs will not happen
 	{
 		int min = 200;
 		while (getSize().getWidth() < min)
 		{
 			zoomIn(0, 0);
 		}
+	}
+
+	public void display()
+	{
+		if (iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+		{
+			this.iw = new ImageWindow(getImage(), this);
+		}				
+		iw.pack();
 	}
 
 }

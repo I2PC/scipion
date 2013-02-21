@@ -138,7 +138,7 @@ void CL2DClass::transferUpdate()
         // Compute the polar Fourier transform of the full image
         normalizedPolarFourierTransform(P, polarFourierP, false, XSIZE(P) / 5,
                                         XSIZE(P) / 2-2, plans, 1);
-        int finalSize = 2 * polarFourierP.getSampleNoOuterRing() - 1;
+        size_t finalSize = 2 * polarFourierP.getSampleNoOuterRing() - 1;
         if (XSIZE(rotationalCorr) != finalSize)
             rotationalCorr.resize(finalSize);
         rotAux.local_transformer.setReal(rotationalCorr);
@@ -501,7 +501,7 @@ void CL2D::shareAssignments(bool shareAssignment, bool shareUpdates,
             std::vector<double> receivedNonClassCorr;
             std::vector<CL2DAssignment> receivedNextListImage;
             int listSize;
-            for (int rank = 0; rank < prm->node->size; rank++)
+            for (size_t rank = 0; rank < prm->node->size; rank++)
             {
                 if (rank == prm->node->rank)
                 {
@@ -584,7 +584,7 @@ void CL2D::shareSplitAssignments(Matrix1D<int> &assignment, CL2DClass *node1,
         std::vector<double> receivedNonClassCorr;
         std::vector<CL2DAssignment> receivedNextListImage;
         int listSize;
-        for (int rank = 0; rank < prm->node->size; rank++)
+        for (size_t rank = 0; rank < prm->node->size; rank++)
         {
             if (rank == prm->node->rank)
             {
@@ -896,8 +896,8 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 			Iaux = I;
 			P[q]->fit(Iaux, assignment);
 			VEC_ELEM(corrList,q) = assignment.corr;
-			if (!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood ||
-				 prm->classicalMultiref && assignment.corr > bestAssignment.corr ||
+			if ((!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood) ||
+				(prm->classicalMultiref && assignment.corr > bestAssignment.corr) ||
 				 prm->classifyAllImages) {
 				bestq = q;
 				bestImg = Iaux;
@@ -933,7 +933,7 @@ void CL2D::transferUpdates()
 //#define DEBUG
 void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 {
-    int Q = P.size();
+	size_t Q = P.size();
 
     if (prm->node->rank == 0)
         std::cout << "Quantizing with " << Q << " codes...\n";
@@ -957,10 +957,10 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
             init_progress_bar(Nimgs);
         }
 
-        int K = XMIPP_MIN(prm->Nneighbours+1,Q);
+        size_t K = std::min((size_t)prm->Nneighbours+1,Q);
         if (K == 0)
             K = Q;
-        for (int q = 0; q < Q; q++)
+        for (size_t q = 0; q < Q; q++)
             P[q]->lookForNeighbours(P, K);
 
         int node;
@@ -1012,7 +1012,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
         int *ptrNew = &(newAssignment[0]);
         for (size_t n = 0; n < Nimgs; ++n, ++ptrNew)
             *ptrNew -= 1;
-        int Nchanges = 0;
+        size_t Nchanges = 0;
         if (iter > 1)
         {
             int *ptrNew = &(newAssignment[0]);
@@ -1032,7 +1032,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 
             std::cout << "Number of assignment changes=" << Nchanges
             << std::endl;
-            MDChanges.setValue(MDL_CL2D_CHANGES, Nchanges, idMdChanges);
+            MDChanges.setValue(MDL_CL2D_CHANGES, (int)Nchanges, idMdChanges);
             MDChanges.write(formatString("info@%s",fnClasses.c_str()),MD_APPEND);
         }
 
@@ -1043,9 +1043,9 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
             do
             {
                 smallNodes = false;
-                int largestNode = -1, sizeLargestNode = -1, smallNode = -1,
-                                                        sizeSmallestNode = Nimgs + 1;
-                for (int q = 0; q < Q; q++)
+                int largestNode = -1, sizeLargestNode = -1, smallNode = -1;
+                size_t sizeSmallestNode = Nimgs + 1;
+                for (size_t q = 0; q < Q; q++)
                 {
                     if (P[q]->currentListImg.size() < sizeSmallestNode)
                     {
@@ -1113,7 +1113,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
         if (prm->node->rank == 0)
             write(fnODir,fnOut,level);
 
-        if (iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1 || iter >= prm->Niter)
+        if ((iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1) || iter >= prm->Niter)
             goOn = false;
         iter++;
     }
@@ -1151,7 +1151,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     CL2DAssignment assignment, assignment1, assignment2;
     CL2DClass *firstSplitNode1 = NULL;
     CL2DClass *firstSplitNode2 = NULL;
-    int minAllowedSize = prm->PminSize * 0.01 * node->currentListImg.size();
+    size_t minAllowedSize = (size_t)(prm->PminSize * 0.01 * node->currentListImg.size());
 
     bool oldclassicalMultiref = prm->classicalMultiref;
     prm->classicalMultiref = false;
@@ -1167,7 +1167,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         node2->neighboursIdx = node1->neighboursIdx = node->neighboursIdx;
         node2->P = node1->P = node->P;
 
-        int imax = node->currentListImg.size();
+        size_t imax = node->currentListImg.size();
         if (imax < minAllowedSize)
         {
             toDelete.push_back(node1);
@@ -1185,7 +1185,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
             std::cerr << "Calculating corr distribution at split ..."
             << std::endl;
         corrList.initZeros(imax);
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             if ((i + 1) % (prm->node->size) == prm->node->rank)
             {
@@ -1221,7 +1221,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
             else
             {
                 // Split at random
-                for (int i = 0; i < imax; i++)
+                for (size_t i = 0; i < imax; i++)
                 {
                     assignment.objId = node->currentListImg[i].objId;
                     readImage(I, assignment.objId, false);
@@ -1247,7 +1247,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         // Split according to corr
         if (prm->node->rank == 0 && prm->verbose >= 2)
             std::cerr << "Splitting by corr threshold ..." << std::endl;
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             if ((i + 1) % (prm->node->size) == prm->node->rank)
             {
@@ -1300,7 +1300,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
 
             oldAssignment = newAssignment;
             newAssignment.initZeros();
-            for (int i = 0; i < imax; i++)
+            for (size_t i = 0; i < imax; i++)
             {
                 if ((i + 1) % (prm->node->size) == prm->node->rank)
                 {
@@ -1402,7 +1402,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         }
     }
     while (!finish);
-    for (int i = 0; i < toDelete.size(); i++)
+    for (size_t i = 0; i < toDelete.size(); i++)
         if (toDelete[i] != firstNode)
         {
 #ifdef DEBUG
@@ -1413,12 +1413,12 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
 
     if (success)
     {
-        for (int i = 0; i < node1->currentListImg.size(); i++)
+        for (size_t i = 0; i < node1->currentListImg.size(); i++)
         {
             splitAssignment.push_back(node1->currentListImg[i].objId);
             splitAssignment.push_back(1);
         }
-        for (int i = 0; i < node2->currentListImg.size(); i++)
+        for (size_t i = 0; i < node2->currentListImg.size(); i++)
         {
             splitAssignment.push_back(node2->currentListImg[i].objId);
             splitAssignment.push_back(2);

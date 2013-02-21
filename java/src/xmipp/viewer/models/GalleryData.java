@@ -119,6 +119,7 @@ public class GalleryData {
 				mode = Mode.GALLERY_ROTSPECTRA;
 
 			setFileName(fn);
+				
 			if (md == null) {
 				this.md = new MetaData();
 				readMetadata(fn);
@@ -143,9 +144,8 @@ public class GalleryData {
 	
 	public void setFileName(String file)
 	{
-		if(file == null)
-			throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("file"));
 		filename = file;
+		
 		if (file != null) {
 			if (Filename.hasPrefix(file)) {
 				if (Filename.isMetadata(file)) {
@@ -155,7 +155,7 @@ public class GalleryData {
 					filename = Filename.getFilename(file);
 				}
 			}
-			mdBlocks = MetaData.getBlocksInMetaDataFile(file);
+			mdBlocks = MetaData.getBlocksInMetaDataFile(filename);
 
 			if (mdBlocks.length >= 1 && selectedBlock.isEmpty())
 				selectedBlock = mdBlocks[0];
@@ -378,7 +378,7 @@ public class GalleryData {
 	}
 
 	public int getNumberOfBlocks() {
-		return mdBlocks != null ? mdBlocks.length : 1;
+		return mdBlocks != null ? mdBlocks.length : 0;
 	}
 
 	public int getNumberOfVols() {
@@ -858,5 +858,13 @@ public class GalleryData {
 		for (int i = 0; i < selection.length; ++i)
 			selection[i] = false;
 		
+	}
+
+	public String getBlock(int index)
+	{
+		int size = getNumberOfBlocks();
+		if(size > 0 && index >= 0 && index < size)
+			return mdBlocks[index];
+		return null;
 	}
 }// class GalleryData

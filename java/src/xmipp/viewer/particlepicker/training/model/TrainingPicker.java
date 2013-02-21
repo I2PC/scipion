@@ -390,8 +390,9 @@ public abstract class TrainingPicker extends ParticlePicker
 		{
 			super.saveData();
 			saveMicrographs();
-			saveTemplates();
 		}
+		if(getMode() == FamilyState.Manual)//only changed in manual mode
+			saveTemplates();
 	}
 
 	public int getAutomaticNumber(Family f, double threshold)
@@ -796,6 +797,7 @@ public abstract class TrainingPicker extends ParticlePicker
 						p = f.getTemplates().alignImage(igp, true);
 				}
 			}
+			f.getTemplates().write(f.getTemplatesFile());
 			updateTemplatesPending = false;
 		}
 		catch (Exception e)
@@ -807,17 +809,10 @@ public abstract class TrainingPicker extends ParticlePicker
 
 	public void saveTemplates()
 	{
-		ImageGeneric templates;
 		try
 		{
 			for (Family f : families)
-			{
-
 				updateTemplates(f);
-				templates = f.getTemplates();
-				if (templates != null)
-					templates.write(getTemplatesFile(f.getName()));
-			}
 		}
 		catch (Exception e)
 		{
