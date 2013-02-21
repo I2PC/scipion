@@ -34,13 +34,16 @@ class SqliteMapper(Mapper):
         self.commit = self.db.commit
     
     def insert(self, obj):
-        '''Insert a new object into the system, the id will be set'''        
+        '''Insert a new object into the system, the id will be set'''
         obj.id = self.db.insertObject(obj.name, obj.getClassName(), obj.value, obj.parent_id)
+        self.insertObjectWithChilds(obj, str(obj.id))
         
+    def insertObjectWithChilds(self, obj, namePrefix):
         for key, attr in obj.getAttributesToStore():
+            attr.name = '%s.%s' % (namePrefix, key)
             attr.parent_id = obj.id
-            attr.name = key
-            self.insert(attr)
+            attr.id = self.db.insertObject(attr.name, attr.getClassName(), attr.value, attr.parent_id)
+            self.insertObjectWithChilds(attr, '%s.%d' % (namePrefix, attr.id))
         #self.db.commit()        
     
     def updateTo(self, obj):
@@ -60,21 +63,45 @@ class SqliteMapper(Mapper):
         self.fillObject(obj, objRow)
         return obj
     
-    def fillObject(self, obj, objRow):
+    def fillObjectWithRow(self, obj, objRow):
         '''Fill the object with row data'''
         obj.id = objRow['id']
-        obj.name = objRow['name']
+        if len(objRow['name']):
+            obj.name = objRow['name']
+        else:
+            obj.name = str(obj.id)
         obj.set(objRow['value'])
         obj.parent_id = objRow['parent_id']
-    
-        childs = self.db.selectObjectsByParent(obj.id)
+        
+    def fillObject(self, obj, objRow):
+        self.fillObjectWithRow(obj, objRow)
+        
+        childs = self.db.selectObjectsByAncestor(obj.name)
+        childsDict = {obj.id: obj}
+        
         for childRow in childs:
-            childObj = getattr(obj, childRow['name'])
+            childParts = childRow['name'].split('.')
+            childName = childParts[-1]
+            parentId = int(childParts[-2])
+            # Here we are assuming that always the parent have
+            # been processed first, so it will be in the dictiorary
+            # Now it is working with the SQLITE resutls
+            parentObj = childsDict[parentId]
+            childObj = getattr(parentObj, childName)
             if childObj is None:
                 childObj = buildObject(childRow['classname'])
-                setattr(obj, childRow['name'], childObj)
-            self.fillObject(childObj, childRow)
-            
+                setattr(parentObj, childName, childObj)
+            self.fillObjectWithRow(childObj, childRow)  
+            childsDict[childObj.id] = childObj  
+        
+#        childs = self.db.selectObjectsByParent(obj.id)
+#        for childRow in childs:
+#            childName = childRow['name'].split('.')[-1]
+#            childObj = getattr(obj, childName)
+#            self.fillObject(childObj, childRow)
+
+    
+              
     def select(self, **args):
         '''Select object meetings some criterias'''
         objRows = self.db.selectObjectsBy(**args)
@@ -144,6 +171,11 @@ class SqliteDb():
         '''Select an object give its id'''
         self.executeCommand(self.SELECT + "parent_id=?", (parent_id,))
         return self.cursor.fetchall()  
+    
+    def selectObjectsByAncestor(self, ancestor_namePrefix):
+        '''Select all objects in the hierachy of ancestor_id'''
+        self.executeCommand(self.SELECT + "name LIKE '%s.%%'" % ancestor_namePrefix)
+        return self.cursor.fetchall()          
     
     def selectObjectsBy(self, **args):     
         '''More flexible select where the constrains can be passed

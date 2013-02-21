@@ -97,7 +97,7 @@ class Array(Object):
         
     def set(self, size):
         '''Set the array size'''
-        self.value = size  
+        self.value = int(size)  
         for i in range(int(size)):
             self.__setitem__(i, None)                 
         
@@ -109,15 +109,26 @@ class Array(Object):
         
     def __getitem__(self, index):
         return self.__dict__[self.strIndex(index)]
+    
+    def __len__(self):
+        return self.value
 
     
 class Coordinate(Object):
     def __init__(self, x=0, y=0, **args):
         Object.__init__(self, **args)
         self.x = Integer(x)
-        self.y = Integer(y)
-        
+        self.y = Integer(y)        
         
     def __str__(self):
         return "(%d, %d)" % (self.x.get(), self.y.get())
-             
+    
+class Micrograph(Object):
+    def __init__(self, **args):
+        Object.__init__(self, **args)
+        self.Particles = Array()
+        self.N = Integer(0)
+        self.Path = String('') 
+
+    def __str__(self):
+        return "File %s\n Particles: %d" % (self.Path.get(), self.N.get())             
