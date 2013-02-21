@@ -266,7 +266,7 @@ class ArgDict():
         self.setOption('default')
         
         for arg in argv:
-            if arg in ['configure', 'compile', 'update', 'clean', 'gui', 'install', '-j']:
+            if arg in ['configure', 'unattended', 'compile', 'update', 'clean', 'gui', 'install', '-j']:
                 self.setOption(arg)
             else:
                 self.addArgument(arg)
