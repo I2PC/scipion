@@ -266,7 +266,7 @@ class ArgDict():
         self.setOption('default')
         
         for arg in argv:
-            if arg in ['configure', 'compile', 'update', 'clean', 'gui', 'install', '-j']:
+            if arg in ['configure', 'unattended', 'compile', 'update', 'clean', 'gui', 'install', '-j']:
                 self.setOption(arg)
             else:
                 self.addArgument(arg)
@@ -326,6 +326,17 @@ if options.hasOption('configure'):
         if len(parts) == 2:
             assign = '%s = "%s"' % (parts[0], parts[1])
             exec(assign) # Take options from command line, override options file, be carefull with exec
+
+    scons = os.path.join("external", "scons", "scons.py")
+    pid = os.fork()
+    if not pid:
+        print "*** CHECKING EXTERNAL DEPENDENCIES..."
+        if options.hasOption('unattended'):
+            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies","unattended=yes"))
+        else:
+            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
+    os.wait()[0]
+    
     
 GUI = options.hasOption('gui')
 # Check if Tkinter is available

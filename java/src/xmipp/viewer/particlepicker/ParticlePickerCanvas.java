@@ -132,8 +132,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
 	}
 
-	
-
 
 	public void display(float xlocation, float ylocation)
 	{
@@ -149,11 +147,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		return iw;
 	}
 
-	public void setIw(ImageWindow iw)
-	{
-		this.iw = iw;
-	}
-
+	
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{

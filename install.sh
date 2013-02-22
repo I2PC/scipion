@@ -17,6 +17,7 @@ DO_STATIC=false
 DO_UPDATE=false
 DO_SETUP=true
 DO_GUI=true
+DO_UNATTENDED=false
 
 export NUMBER_OF_CPU=1
 
@@ -51,7 +52,6 @@ case "$OS_TYPE" in
     IS_LINUX=true
     ;;
 esac
-
 
 for param in $@; do
  if $TAKE_CPU; then
@@ -106,10 +106,16 @@ for param in $@; do
                      TAKE_COMPILE=false;;
         "compile")   TAKE_CONFIGURE=false;
                      TAKE_COMPILE=true;;
+        "unattended=true")  DO_UNATTENDED=true;;
+        "unattended=false") DO_UNATTENDED=false;;
          *)          echo "Unrecognized option $param, exiting..."; exit 1
     esac
  fi 
 done
+
+if $DO_UNATTENDED; then
+  CONFIGURE_ARGS="$CONFIGURE_ARGS unattended"
+fi
 
 #Some path variables
 export XMIPP_HOME=$PWD
@@ -125,9 +131,9 @@ echo "export XMIPP_HOME=$PWD" > $INC_FILE
 echo 'export PATH=$XMIPP_HOME/bin:$PATH' >> $INC_FILE
 echo 'export LD_LIBRARY_PATH=$XMIPP_HOME/lib:$LD_LIBRARY_PATH' >> $INC_FILE
 echo '# Load global autocomplete file ' >> $INC_FILE
-echo "test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true" >> $INC_FILE
+echo 'test -s $XMIPP_HOME/.xmipp.autocomplete && . $XMIPP_HOME/.xmipp.autocomplete || true' >> $INC_FILE
 echo '# Load programs autocomplete file ' >> $INC_FILE
-echo "test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true" >> $INC_FILE
+echo 'test -s $XMIPP_HOME/.xmipp_programs.autocomplete && . $XMIPP_HOME/.xmipp_programs.autocomplete || true' >> $INC_FILE
 
 if $IS_MAC; then
 	echo 'export DYLD_FALLBACK_LIBRARY_PATH=$XMIPP_HOME/lib:$DYLD_FALLBACK_LIBRARY_PATH' >> $INC_FILE

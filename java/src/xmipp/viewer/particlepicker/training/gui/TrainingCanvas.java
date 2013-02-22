@@ -38,7 +38,9 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 	}
 
+
 	protected TrainingParticle getLastParticle()
+
 	{
 		if (frame.getFamilyData().getParticles().isEmpty())
 			return null;

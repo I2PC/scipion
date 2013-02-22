@@ -687,20 +687,6 @@ public abstract class TrainingPicker extends ParticlePicker
 
 
 
-	public void saveTemplates()
-	{
-		try
-		{
-			for (Family f : families)
-				updateTemplates(f);
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e);
-		}
-
-	}
 
 	public boolean hasParticles()
 	{
@@ -840,12 +826,22 @@ public abstract class TrainingPicker extends ParticlePicker
 		}
 
 	}
+	public void saveTemplates()
+	{
+		try
+		{
+			for (Family f : families)
+				updateTemplates(f);
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e);
+		}
 
 
 
-
-
-
+	}
 
 	public void resetParticleImages()
 	{
