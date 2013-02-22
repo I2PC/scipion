@@ -273,16 +273,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		frame.getTiltedCanvas().repaint();
 	}
 
-	public void updateMicrograph()
-	{
-		this.um = frame.getMicrograph();
-		updateMicrograph();
-		if (!um.getParticles().isEmpty())
-			refreshActive(um.getParticles().get(um.getParticles().size() - 1));
-		else
-			refreshActive(null);
-	}
-
+	
 	public void refreshActive(Particle up)
 	{
 		active = (UntiltedParticle) up;
