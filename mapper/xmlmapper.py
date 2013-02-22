@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Roberto Marabini       (roberto@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
