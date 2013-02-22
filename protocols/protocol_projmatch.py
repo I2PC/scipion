@@ -448,16 +448,22 @@ data_
 #                            MDout.setValue(MDL_ANGLE_ROT, MDin.getValue(MDL_ANGLE_ROT,i),id1)
 #                            MDout.setValue(MDL_ANGLE_TILT,MDin.getValue(MDL_ANGLE_TILT,i),id1)
                             psi =-1.*MDin.getValue(MDL_ANGLE_PSI,i)
+                            flip = MDin.getValue(MDL_FLIP,i)
+                            if(flip):
+                                psi =-psi
                             eulerMatrix = Euler_angles2matrix(0.,0.,psi)
                             x = MDin.getValue(MDL_SHIFT_X,i)
                             y = MDin.getValue(MDL_SHIFT_Y,i)
-                            
                             shift       = array([x, y, 0])
                             shiftOut    = dot(eulerMatrix, shift)
                             [x,y,z]= shiftOut
+                            if flip:
+                                x = -x
                             MDout.setValue(MDL_ANGLE_PSI, psi,id1)
                             MDout.setValue(MDL_SHIFT_X, x,id1)
                             MDout.setValue(MDL_SHIFT_Y, y,id1)
+                            MDout.setValue(MDL_FLIP,flip,id1)
+
                             
                             ref2D = MDin.getValue(MDL_REF,i)
                             file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
@@ -468,6 +474,7 @@ data_
 #                            MDout.setValue(MDL_ANGLE_ROT,0.,id2)
 #                            MDout.setValue(MDL_ANGLE_TILT,0.,id2)
                             MDout.setValue(MDL_ANGLE_PSI,0.,id2)
+                            #MDout.setValue(MDL_FLIP,flip,id2)
 #                            MDout.setValue(MDL_SHIFT_X,   0.,id1)
 #                            MDout.setValue(MDL_SHIFT_Y,   0.,id1)
 
@@ -729,6 +736,7 @@ data_
                     xplotter.showLegend(legendName)
                 if (self.ResolutionThreshold < max(frc)):
                     a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
+                    a.grid(True)
             xplotter.draw()
     
         if xplotter:
@@ -790,7 +798,8 @@ data_
                 'DocfileInputAnglesIters': join(IterDir, '%(Docfile_with_current_angles)s.doc'),
                 'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
                 'ProjectLibraryRootNames': ProjLibRootNames,
-                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.doc'),
+#                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.doc'),
+                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.sqlite'),
                 'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
                 'OutClasses': join(ProjMatchDirs, '%(ProjMatchName)s'),
                 'OutClassesXmd': _OutClassesXmd,

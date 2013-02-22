@@ -70,9 +70,9 @@ void ProgMPIRecWbp::finishProcessing()
     MultidimArray<double> aux;
     aux.resizeNoCopy(reconstructedVolume());
     MPI_Allreduce(MULTIDIM_ARRAY(reconstructedVolume()), MULTIDIM_ARRAY(aux),
-                  MULTIDIM_SIZE(aux), MPI_DOUBLE, MPI_SUM, *node->comm);
+                  MULTIDIM_SIZE(aux), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     int iaux;
-    MPI_Allreduce(&count_thr, &iaux, 1, MPI_INT, MPI_SUM, *node->comm);
+    MPI_Allreduce(&count_thr, &iaux, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     if (node->isMaster())
     {

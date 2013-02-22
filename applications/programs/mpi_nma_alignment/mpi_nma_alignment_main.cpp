@@ -38,11 +38,20 @@ private:
     MpiFileMutex *fileMutex;
 
 public:
+    /** Empty Constructor */
+    MpiProgNMA()
+    {
+    	node=NULL;
+    	distributor=NULL;
+    	fileMutex=NULL;
+    }
+
     /** Destructor */
     ~MpiProgNMA()
     {
         delete node;
         delete fileMutex;
+        delete distributor;
     }
 
     /** Redefine read to initialize MPI environment */
@@ -105,8 +114,6 @@ public:
     void finishProcessing()
     {
         //All nodes wait for each other
-        std::cerr << std::endl << "DEBUG: ===== Node: " << node->rank
-        <<" not more images to process, waiting..." << std::endl;
         node->barrierWait();
         if (node->isMaster())
             ProgNmaAlignment::finishProcessing();
