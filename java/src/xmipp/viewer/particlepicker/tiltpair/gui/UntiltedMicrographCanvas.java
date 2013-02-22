@@ -80,15 +80,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
 	}
 
-	public void updateMicrograph()
-	{
-		this.um = frame.getMicrograph();
-		updateMicrograph();
-		if (!um.getParticles().isEmpty())
-			refreshActive(um.getParticles().get(um.getParticles().size() - 1));
-		else
-			refreshActive(null);
-	}
+	
 
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
