@@ -1,4 +1,4 @@
-/***************************************************************************
+ /*
  * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  *
@@ -47,8 +47,8 @@ class MpiNode
 {
 public:
 
-    MPI_Comm *comm;
-    size_t rank, size, active, activeNodes;
+    //MPI_Comm *comm;
+    int rank, size, active;//, activeNodes;
     MpiNode(int &argc, char ** argv);
     ~MpiNode();
 
@@ -63,7 +63,7 @@ public:
                          MDLabel sortLabel=MDL_IMAGE);
 
     /** Update the MPI communicator to connect the currently active nodes */
-    void updateComm();
+//    void updateComm();
 
 protected:
     /** Calculate the number of still active nodes */
