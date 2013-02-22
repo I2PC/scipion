@@ -92,7 +92,7 @@ void ProgMPIReconsArt::run()
 
         // ordered list must be the same in all nodes
         aux_comm_t = MPI_Wtime();
-        MPI_Bcast(MULTIDIM_ARRAY(artPrm.ordered_list), MULTIDIM_SIZE(artPrm.ordered_list), MPI_INT, 0, *node->comm);
+        MPI_Bcast(MULTIDIM_ARRAY(artPrm.ordered_list), MULTIDIM_SIZE(artPrm.ordered_list), MPI_INT, 0, MPI_COMM_WORLD);
         comms_t += MPI_Wtime() - aux_comm_t;
     }
     else
@@ -109,7 +109,7 @@ void ProgMPIReconsArt::run()
 
         // ordered list must be the same in all nodes
         MPI_Bcast(MULTIDIM_ARRAY(artPrm.ordered_list),
-                  MULTIDIM_SIZE(artPrm.ordered_list), MPI_INT, 0, *node->comm);
+                  MULTIDIM_SIZE(artPrm.ordered_list), MPI_INT, 0, MPI_COMM_WORLD);
     }
 
     // How many images processes each node. It is done in such a way that every node receives the
@@ -187,13 +187,13 @@ void ProgMPIReconsArt::run()
         artPrm.computeCAVWeights(vol_basis, num_img_node, verbose-1);
         GVNeq_aux = *(artPrm.GVNeq);
 
-        MPI_Barrier(*node->comm); // Actually, this isn't necessary.
+        MPI_Barrier(MPI_COMM_WORLD); // Actually, this isn't necessary.
         for (int n = 0 ; n < (artPrm.GVNeq)->VolumesNo(); n++)
         {
             aux_comm_t = MPI_Wtime();
             MPI_Allreduce(MULTIDIM_ARRAY((*(artPrm.GVNeq))(n)()),
                           MULTIDIM_ARRAY(GVNeq_aux(n)()),
-                          MULTIDIM_SIZE((*(artPrm.GVNeq))(n)()), MPI_INT, MPI_SUM, *node->comm);
+                          MULTIDIM_SIZE((*(artPrm.GVNeq))(n)()), MPI_INT, MPI_SUM, MPI_COMM_WORLD);
             comms_t += MPI_Wtime() - aux_comm_t;
             (*(artPrm.GVNeq))(n)() = GVNeq_aux(n)();
         }
@@ -251,7 +251,7 @@ void ProgMPIReconsArt::run()
 
                 STARTINGX(artPrm.ordered_list) -= artPrm.numIMG;
 
-                node->updateComm();//Update communicator to avoid already finished nodes
+//                node->updateComm();//Update communicator to avoid already finished nodes
 
                 // All processors send their result and get the other's so all of them
                 // have the same volume for the next step.
@@ -262,7 +262,7 @@ void ProgMPIReconsArt::run()
                     MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(j)()),
                                   MULTIDIM_ARRAY(vol_basis_aux(j)()),
                                   MULTIDIM_SIZE(vol_basis(j)()),
-                                  MPI_DOUBLE, MPI_SUM, *node->comm);
+                                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     aux_t = MPI_Wtime() - aux_comm_t;
                     comms_t += aux_t;
                     comms_t_it += aux_t;
@@ -304,7 +304,7 @@ void ProgMPIReconsArt::run()
                 artPrm.computeCAVWeights(vol_basis, artPrm.numIMG, verbose-1);
                 GVNeq_aux = *(artPrm.GVNeq);
 
-                node->updateComm();
+//                node->updateComm();
                 // All processors send their result and get the other's so all of them
                 // have the weights.
 
@@ -313,7 +313,7 @@ void ProgMPIReconsArt::run()
                     aux_comm_t = MPI_Wtime();
                     MPI_Allreduce(MULTIDIM_ARRAY((*(artPrm.GVNeq))(n)()),
                                   MULTIDIM_ARRAY(GVNeq_aux(n)()),
-                                  MULTIDIM_SIZE((*(artPrm.GVNeq))(n)()), MPI_INT, MPI_SUM, *node->comm);
+                                  MULTIDIM_SIZE((*(artPrm.GVNeq))(n)()), MPI_INT, MPI_SUM, MPI_COMM_WORLD);
                     aux_t = MPI_Wtime() - aux_comm_t;
                     comms_t += aux_t;
                     comms_t_it += aux_t;
@@ -342,7 +342,7 @@ void ProgMPIReconsArt::run()
                     MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
                                   MULTIDIM_ARRAY(vol_basis_aux(jj)()),
                                   MULTIDIM_SIZE(vol_basis(jj)()),
-                                  MPI_DOUBLE, MPI_SUM, *node->comm);
+                                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     aux_t = MPI_Wtime() - aux_comm_t;
                     comms_t += aux_t;
                     comms_t_it += aux_t;
@@ -380,7 +380,7 @@ void ProgMPIReconsArt::run()
 
             // All processors send their result and get the other's so all of them
             // have the same volume for the next step.
-            MPI_Barrier(*node->comm);
+            MPI_Barrier(MPI_COMM_WORLD);
             for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
             {
                 vol_basis(jj)() = vol_basis(jj)() - vol_aux2(jj)(); // Adapt result to parallel ennvironment from sequential routine
@@ -388,7 +388,7 @@ void ProgMPIReconsArt::run()
                 MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
                               MULTIDIM_ARRAY(vol_basis_aux(jj)()),
                               MULTIDIM_SIZE(vol_basis(jj)()),
-                              MPI_DOUBLE, MPI_SUM, *node->comm);
+                              MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 aux_t = MPI_Wtime() - aux_comm_t;
                 comms_t += aux_t;
                 comms_t_it += aux_t;
@@ -428,7 +428,7 @@ void ProgMPIReconsArt::run()
 
             // All processors send their result and get the other's so all of them
             // have the same volume for the next step.
-            MPI_Barrier(*node->comm);
+            MPI_Barrier(MPI_COMM_WORLD);
             for (int jj = 0 ; jj < vol_basis.VolumesNo() ; jj++)
             {
                 // SIRT Alg. needs to store previous results but AVSP doesn't
@@ -441,7 +441,7 @@ void ProgMPIReconsArt::run()
                 MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
                               MULTIDIM_ARRAY(vol_basis_aux(jj)()),
                               MULTIDIM_SIZE(vol_basis(jj)()),
-                              MPI_DOUBLE, MPI_SUM, *node->comm);
+                              MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
                 aux_t = MPI_Wtime() - aux_comm_t;
                 comms_t += aux_t;
