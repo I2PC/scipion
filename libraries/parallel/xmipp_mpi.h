@@ -48,7 +48,7 @@ class MpiNode
 public:
 
     //MPI_Comm *comm;
-    int rank, size, active;//, activeNodes;
+    size_t rank, size, active;//, activeNodes;
     MpiNode(int &argc, char ** argv);
     ~MpiNode();
 
