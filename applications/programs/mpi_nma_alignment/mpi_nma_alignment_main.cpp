@@ -38,11 +38,20 @@ private:
     MpiFileMutex *fileMutex;
 
 public:
+    /** Empty Constructor */
+    MpiProgNMA()
+    {
+    	node=NULL;
+    	distributor=NULL;
+    	fileMutex=NULL;
+    }
+
     /** Destructor */
     ~MpiProgNMA()
     {
         delete node;
         delete fileMutex;
+        delete distributor;
     }
 
     /** Redefine read to initialize MPI environment */
@@ -63,10 +72,10 @@ public:
         if (node->isMaster())
         {
             ProgNmaAlignment::createWorkFiles();
-            mdIn.write("nmaTodo.xmd");
+            mdIn.write(fnOutDir+"/nmaTodo.xmd");
         }
         node->barrierWait();//Sync all before start working
-        mdIn.read("nmaTodo.xmd");
+        mdIn.read(fnOutDir+"/nmaTodo.xmd");
         mdIn.findObjects(imgsId);//get objects ids
         rangen = node->rank;
         distributor = new FileTaskDistributor(mdIn.size(), 1, node);
@@ -105,8 +114,6 @@ public:
     void finishProcessing()
     {
         //All nodes wait for each other
-        std::cerr << std::endl << "DEBUG: ===== Node: " << node->rank
-        <<" not more images to process, waiting..." << std::endl;
         node->barrierWait();
         if (node->isMaster())
             ProgNmaAlignment::finishProcessing();

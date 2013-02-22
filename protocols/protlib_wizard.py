@@ -254,24 +254,28 @@ def wizardTiltPairs(self, var):
     resultFilename = var.getTkValue()
     uList = []
     tList = []
+    from os.path import basename, dirname
     from xmipp import MDL_MICROGRAPH, MDL_MICROGRAPH_TILTED
     
     if exists(resultFilename):
         md = MetaData(resultFilename)
         for id in md:
             tList.append(md.getValue(MDL_MICROGRAPH_TILTED, id))
-            uList.append(md.getValue(MDL_MICROGRAPH, id))                
+            path = md.getValue(MDL_MICROGRAPH, id)
+            uList.append(basename(path))
+            prefix = dirname(path) # This assumes that all micrograph are in the same folder         
     else:
         if len(resultFilename) == 0:
             resultFilename = "tilted_pairs.xmd"
         micrographs = glob(join(dirMicrographs, extMicrographs))
         micrographs.sort()
         for i, m in enumerate(micrographs):
-            m = os.path.basename(m)
+            m = basename(m)
             if i % 2 == 0:
                 tList.append(m)
             else:
                 uList.append(m)
+        prefix = dirMicrographs
     
     from protlib_gui_ext import showTiltPairsDialog
     results = showTiltPairsDialog((uList, tList), self.master)
@@ -281,8 +285,8 @@ def wizardTiltPairs(self, var):
         md = MetaData()
         for u, t in zip(uList, tList):
             id = md.addObject()
-            md.setValue(MDL_MICROGRAPH, join(dirMicrographs,u), id)
-            md.setValue(MDL_MICROGRAPH_TILTED, join(dirMicrographs,t), id)
+            md.setValue(MDL_MICROGRAPH, join(prefix,u), id)
+            md.setValue(MDL_MICROGRAPH_TILTED, join(prefix,t), id)
         md.write(resultFilename)
 
 #Select family from extraction run

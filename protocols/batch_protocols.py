@@ -370,7 +370,12 @@ class XmippProjectGUI():
         root.columnconfigure(1, weight=1)
         #root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
+	
         
+	def onClose():
+	    self.process_check = False 
+	    root.destroy()
+	    
         def updateAndClose():
             root.destroy()
             self.historyRefreshRate = 1
@@ -419,6 +424,7 @@ class XmippProjectGUI():
             else:
                 updateAndClose()
                 
+		
         detailsSection = ProjectSection(root, 'Process monitor')
         detailsSection.addButton("Stop run", command=stopRun)
         cols = ('pid', '%cpu', '%mem', 'command')
@@ -440,6 +446,9 @@ class XmippProjectGUI():
         tree.grid(row=2, column=0, sticky='nsew', columnspan=2)
         detailsSection.grid(row=1, column=1, sticky='nsew', padx=5, pady=5)
 
+	# Handle close event
+	root.protocol("WM_DELETE_WINDOW", onClose)
+	
         # First time load in GUI thread        
         self.process = pm.getProcessFromPid()
         self.process_childs = pm.getProcessGroup()

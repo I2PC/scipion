@@ -247,6 +247,15 @@ def run(notebook):
             print cmd2
 
     if options.hasOption('install'):
+        CONFIG = '.xmipp_scons.options'
+        if os.path.exists(CONFIG):
+            for line in open(CONFIG):
+                parts = line.split('=')
+                if len(parts) == 2:
+                    assign = '%s = "%s"' % (parts[0], parts[1])
+                    if parts[0].strip() == 'MPI_LIBDIR':
+                        parts[1] = parts[1].replace("'","").strip()
+                        os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]        
         cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
         
     proc = Popen(cmd % locals(), shell=True)    
@@ -266,7 +275,7 @@ class ArgDict():
         self.setOption('default')
         
         for arg in argv:
-            if arg in ['configure', 'compile', 'update', 'clean', 'gui', 'install', '-j']:
+            if arg in ['configure', 'unattended', 'compile', 'update', 'clean', 'gui', 'install', '-j']:
                 self.setOption(arg)
             else:
                 self.addArgument(arg)
@@ -326,6 +335,17 @@ if options.hasOption('configure'):
         if len(parts) == 2:
             assign = '%s = "%s"' % (parts[0], parts[1])
             exec(assign) # Take options from command line, override options file, be carefull with exec
+
+    scons = os.path.join("external", "scons", "scons.py")
+    pid = os.fork()
+    if not pid:
+        print "*** CHECKING EXTERNAL DEPENDENCIES..."
+        if options.hasOption('unattended'):
+            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies","unattended=yes"))
+        else:
+            os.execvp('xmipp_python',('xmipp_python', "%(scons)s" % locals(), "mode=dependencies"))
+    os.wait()[0]
+    
     
 GUI = options.hasOption('gui')
 # Check if Tkinter is available

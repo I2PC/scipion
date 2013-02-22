@@ -40,10 +40,12 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	public void updateMicrograph()
 	{
-		this.um = frame.getMicrograph();
-		updateMicrographData();
-		active = null;
+		setMicrograph(frame.getMicrograph());
+		imp = um.getTiltedMicrograph().getImagePlus(getFrame().getParticlePicker().getFilters());
+		um.getTiltedMicrograph().runImageJFilters(getFrame().getParticlePicker().getFilters());
+		refreshActive(null);
 	}
+
 
 	/**
 	 * Adds particle or updates its position if onpick. If ondeletepick removes
@@ -51,29 +53,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	 * point. Sets dragged if onpick
 	 */
 
-	public void mousePressed(int x, int y)
-	{
-		setupScroll(x, y);
-	}
-
-	/**
-	 * Updates particle position and repaints. Sets dragged to null at the end
-	 */
-	public void mouseReleased(MouseEvent e)
-	{
-		super.mouseReleased(e);
-		if (reload)
-			um.initAligner();
-		reload = false;
-	}
-
-	/**
-	 * Updates particle position and repaints if onpick.
-	 */
-	public void mouseDragged(int x, int y)
-	{
-		scroll(x, y);
-	}
+	
 
 	public void mouseWheelMoved(int x, int y, int rotation)
 	{
@@ -86,18 +66,9 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 			imp.repaintWindow();
 
 	}
-
-	public void paint(Graphics g)
+	@Override
+	protected void doCustomPaint(Graphics2D g2)
 	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
 		g2.setColor(frame.getColor());
 		int index = 0;
 		List<TiltedParticle> particles = um.getTiltedMicrograph().getParticles();
@@ -114,7 +85,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 		}
 		if(frame.drawAngles())
 			drawLine(Math.toRadians(um.getTiltedAngle()), g2);
-		g.drawImage(offscreen, 0, 0, this);
+		
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -160,6 +131,21 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 	}
 	
+	public void mousePressed(int x, int y)
+	{
+		setupScroll(x, y);
+	}
+
+	
+
+	/**
+	 * Updates particle position and repaints if onpick.
+	 */
+	public void mouseDragged(int x, int y)
+	{
+		scroll(x, y);
+	}
+	
 	
 
 	@Override
@@ -174,14 +160,21 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 
 		if (active != null && um.fits(x, y, frame.getParticleSize()))
 		{
+			setActiveMoved(true);
 			moveActiveParticle(x, y);
-			if (active.getUntiltedParticle().isAdded())
-				reload = true;
+			
 		}
 		frame.setChanged(true);
 		repaint();
 	}
 
+	public void mouseReleased(MouseEvent e)
+	{
+		super.mouseReleased(e);
+		int x = super.offScreenX(e.getX());
+		int y = super.offScreenY(e.getY());
+		manageActive(x, y);
+	}
 
 
 	@Override
@@ -207,6 +200,23 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	{
 		return active;
 	}
+
+	@Override
+	protected void manageActive(int x, int y)
+	{
+		if(!activemoved)
+			return;
+		if (active.getUntiltedParticle().isAdded())
+			um.initAligner();
+		setActiveMoved(false);
+	}
+	
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		um = (UntiltedMicrograph)m;
+	}
+	
 	
 
 

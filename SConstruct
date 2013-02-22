@@ -15,17 +15,25 @@ else:
 	  toolpath=['external/scons/ToolsFromWiki'])
     env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
     env.AppendUnique(LIBPATH=['/usr/lib64/openmpi/lib','/usr/lib64/mpi/gcc/openmpi/lib64','/usr/lib/openmpi'])
+
+# avoid cruft in top dir
+base_dir = 'build'
+if not os.path.exists(base_dir):
+    Execute(Mkdir(base_dir))
+base_dir += '/'
+
+# use only one signature file
+env.SConsignFile(base_dir + 'SCons.dblite')
+
+# read -or not- the cached -non default- options
+if (ARGUMENTS['mode'] == 'configure'):
+    opts = Variables(None, ARGUMENTS)
+else:
+    opts = Variables('.xmipp_scons.options', ARGUMENTS)
+
+if (ARGUMENTS['mode'] == 'dependencies'):
     conf = Configure(env)
     checking = {}
-    #found = False
-    #mpipaths = ['openmpi/mpi.h']
-    #for trylib in mpipaths:
-    #    if conf.CheckLibWithHeader('mpi', trylib, 'cxx'):
-    #        found = True
-    #if found == False:
-    #    checking['mpi'] = "not found"
-    #else:
-    #    found = False
     if not conf.CheckLib('mpi', None, None, 'cxx'):
         checking['mpi'] = "not found"
     if not conf.CheckLib('freetype', None, None, 'cxx'):
@@ -59,20 +67,6 @@ else:
             Exit(1)
     env = conf.Finish()
 
-# avoid cruft in top dir
-base_dir = 'build'
-if not os.path.exists(base_dir):
-    Execute(Mkdir(base_dir))
-base_dir += '/'
-
-# use only one signature file
-env.SConsignFile(base_dir + 'SCons.dblite')
-
-# read -or not- the cached -non default- options
-if (ARGUMENTS['mode'] == 'configure'):
-    opts = Variables(None, ARGUMENTS)
-else:
-    opts = Variables('.xmipp_scons.options', ARGUMENTS)
 
 #print 'en opts', opts['MPI_LINKERFORPROGRAMS']
 

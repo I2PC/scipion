@@ -229,7 +229,7 @@ class ProtML3D(XmippProtocol):
         for idx in self.mdVols:
             for i in range(self.NumberOfReferences):
                 outputVol = "%d@%s" % (index, volStack)
-                generatedVol = join(grDir, "vol%03d_extra/iter%03d/vol%06d.vol" % (index, 1, 1))
+                generatedVol = join(grDir, "vol%03dextra/iter%03d/vol%06d.vol" % (index, 1, 1))
                 copyVols.append((outputVol, generatedVol))
                 self.insertML3DStep(files[index-1], join(grDir, 'vol%03d' % index), self.mdVols.getValue(MDL_IMAGE, idx), 1, 
                                     self.InitialMapIsAmplitudeCorrected)

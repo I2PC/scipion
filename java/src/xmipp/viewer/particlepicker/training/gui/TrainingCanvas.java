@@ -3,18 +3,10 @@ package xmipp.viewer.particlepicker.training.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
-
-import xmipp.ij.commons.Tool;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
 import xmipp.viewer.particlepicker.ParticlePickerJFrame;
@@ -32,11 +24,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	private TrainingMicrograph micrograph;
 	private TrainingParticle active;
 	private TrainingPicker ppicker;
-	private boolean activemoved;
-	final static BasicStroke dashedst = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke continuousst = new BasicStroke();
-	final static BasicStroke activedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
-	final static BasicStroke activecst = new BasicStroke(2.0f);
+
 	
 
 	public TrainingCanvas(TrainingPickerJFrame frame)
@@ -54,16 +42,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 	}
 
-	public void updateMicrograph()
-	{
-		this.micrograph = frame.getMicrograph();
-		updateMicrographData();
-		if(!frame.getFamilyData().getParticles().isEmpty())
-			refreshActive(getLastParticle());
-		else
-			active = null;
-		
-	}
+	
 	
 	TrainingParticle getLastParticle()
 	{
@@ -78,6 +57,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		int y = super.offScreenY(e.getY());
 		if (frame.isPickingAvailable(e))
 		{
+			if (frame.isEraserMode())
+			{
+				erase(x, y);
+				return;
+			}
+
 
 			TrainingParticle p = micrograph.getParticle(x, y);
 			if (p == null)
@@ -99,6 +84,13 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		}
 	}
 
+	protected void erase(int x, int y)
+	{
+		micrograph.removeParticles(x, y, ppicker);
+		active = getLastParticle();
+		refresh();
+	}
+	
 	/**
 	 * Updates particle position and repaints if onpick.
 	 */
@@ -112,6 +104,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 
 		if (frame.isPickingAvailable(e))
 		{
+			if (frame.isEraserMode())
+			{
+				erase(x, y);
+				return;
+			}
 			if (active == null)
 				return;
 
@@ -125,6 +122,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			}
 			else
 			{
+				setActiveMoved(true);
 				moveActiveParticle(x, y);
 			}
 			frame.setChanged(true);
@@ -156,7 +154,7 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			if (activemoved)
 			{
 				frame.updateTemplates();
-				activemoved = false;
+				setActiveMoved(false);
 			}
 
 		}
@@ -164,12 +162,12 @@ public class TrainingCanvas extends ParticlePickerCanvas
 	
 	public void manageActive(int x, int y)
 	{
-		if (active == null)
+		if (!activemoved)
 			return;
 
 		if (!micrograph.fits(x, y, active.getFamily().getSize()))
 			return;
-		activemoved = true;
+		
 		if (active instanceof AutomaticParticle && !((AutomaticParticle)active).isDeleted())
 		{
 
@@ -181,27 +179,18 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		else
 		{
 			moveActiveParticle(x, y);
-			
 			repaint();
 
 		}
 		frame.setChanged(true);
+		setActiveMoved(false);
 	}
 
 	
 	
 
-	public void paint(Graphics g)
+	protected void doCustomPaint(Graphics2D g2)
 	{
-		Graphics offgc;
-		Image offscreen = null;
-		Dimension d = getSize();
-
-		// create the offscreen buffer and associated Graphics
-		offscreen = createImage(d.width, d.height);
-		offgc = offscreen.getGraphics();
-		super.paint(offgc);
-		Graphics2D g2 = (Graphics2D) offgc;
 		if (frame.getFamily().getStep() == FamilyState.Manual)
 			for (MicrographFamilyData mfdata : micrograph.getFamiliesData())
 				drawFamily(g2, mfdata);
@@ -210,11 +199,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		if (active != null)
 		{
 			g2.setColor(Color.red);
-			BasicStroke activest = (active instanceof AutomaticParticle)? activedst: activecst;
-			g2.setStroke(activest);
-			drawShape(g2, active, true);
+			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
+
+			drawShape(g2, active, true, activest);
 		}
-		g.drawImage(offscreen, 0, 0, this);
+
 	}
 
 	private void drawFamily(Graphics2D g2, MicrographFamilyData mfdata)
@@ -227,25 +216,27 @@ public class TrainingCanvas extends ParticlePickerCanvas
 			g2.setColor(mfdata.getFamily().getColor());
 
 			for (index = 0; index < particles.size(); index++)
-				drawShape(g2, particles.get(index), index == particles.size() - 1);
-			Stroke previous = g2.getStroke();
-			g2.setStroke(dashedst);
+				drawShape(g2, particles.get(index), index == particles.size() - 1, continuousst);
+
 			List<AutomaticParticle> autoparticles = mfdata.getAutomaticParticles();
 			for (int i = 0; i < autoparticles.size(); i++)
 				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= frame.getThreshold())
-					drawShape(g2, autoparticles.get(i), false);
-			g2.setStroke(previous);
+					drawShape(g2, autoparticles.get(i), false, dashedst);
+
 		}
 	}
 
 	@Override
 	public void refreshActive(TrainingParticle p)
 	{
-		active = p;
+		if (p == null)
+			active = null;
+		else
+			active = (TrainingParticle) p;
 		repaint();
 
 	}
-
+	
 	@Override
 	public ParticlePickerJFrame getFrame()
 	{
@@ -264,6 +255,11 @@ public class TrainingCanvas extends ParticlePickerCanvas
 		return active;
 	}
 
-	
+	@Override
+	public void setMicrograph(Micrograph m)
+	{
+		micrograph = (TrainingMicrograph) m;
+
+	}
 
 }
