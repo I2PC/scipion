@@ -236,18 +236,19 @@ MpiNode::MpiNode(int &argc, char ** argv)
 {
     //MPI Initialization
     MPI::Init(argc, argv);
-    comm = new MPI_Comm;
-    MPI_Comm_dup(MPI_COMM_WORLD, comm);
-    MPI_Comm_rank(*comm, &rank);
-    MPI_Comm_size(*comm, &size);
+    //comm = new MPI_Comm;
+    //MPI_Comm_dup(MPI_COMM_WORLD, comm);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
     active = 1;
-    activeNodes = size;
+    //activeNodes = size;
 }
 
 MpiNode::~MpiNode()
 {
-    active = 0;
-    updateComm();
+    //active = 0;
+    //updateComm();
+    //std::cerr << "Send Finalize to: " << rank;
     MPI::Finalize();
 }
 
@@ -258,30 +259,30 @@ bool MpiNode::isMaster() const
 
 void MpiNode::barrierWait()
 {
-    MPI_Barrier(*comm);
+    MPI_Barrier(MPI_COMM_WORLD);
 }
-
+#ifdef NEVERDEFINED
 void MpiNode::updateComm()
 {
-    int nodes = getActiveNodes();
-    if (nodes < activeNodes)
-    {
-        MPI_Comm *newComm = new MPI_Comm;
-        MPI_Comm_split(*comm, active, rank, newComm);
-        MPI_Comm_disconnect(comm);
-        delete comm;
-        comm = newComm;
-        activeNodes = nodes;
-    }
+//    int nodes = getActiveNodes();
+//    if (nodes < activeNodes)
+//    {
+//        MPI_Comm *newComm = new MPI_Comm;
+//        MPI_Comm_split(MPI_COMM_WORLD, active, rank, newComm);
+//        MPI_Comm_disconnect(comm);
+//        delete comm;
+//        comm = newComm;
+//        activeNodes = nodes;
+//    }
 }
-
 int MpiNode::getActiveNodes()
 {
     int activeNodes = 0;
-    MPI_Allreduce(&active, &activeNodes, 1, MPI_INT, MPI_SUM, *comm);
+    MPI_Allreduce(&active, &activeNodes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     return activeNodes;
 }
 
+#endif
 void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
                               MDLabel sortLabel)
 {
