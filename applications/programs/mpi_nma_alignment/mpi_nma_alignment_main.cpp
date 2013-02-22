@@ -72,10 +72,10 @@ public:
         if (node->isMaster())
         {
             ProgNmaAlignment::createWorkFiles();
-            mdIn.write(fnOutDir+"/nmaTodo.xmd");
+            mdIn.write("nmaTodo.xmd");
         }
         node->barrierWait();//Sync all before start working
-        mdIn.read(fnOutDir+"/nmaTodo.xmd");
+        mdIn.read("nmaTodo.xmd");
         mdIn.findObjects(imgsId);//get objects ids
         rangen = node->rank;
         distributor = new FileTaskDistributor(mdIn.size(), 1, node);
