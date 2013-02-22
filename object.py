@@ -32,7 +32,7 @@ class Object():
         self.id = args.get('id', None)
         self.parent_id = args.get('parent_id', None)
         self.name = args.get('name', '')
-        self.input = args.get('input', False) # True if the object serves as input to his parent
+        self.tag = args.get('tag', None) # True if the object serves as input to his parent
         self.store = args.get('store', True) # True if this object will be stored from his parent
         self.reference = args.get('reference', False) # True if will be treated as a reference for storage
         
@@ -114,21 +114,35 @@ class Array(Object):
         return self.value
 
     
-class Coordinate(Object):
-    def __init__(self, x=0, y=0, **args):
+class Vector3D(Object):
+    def __init__(self, ElemType=Float, x=None, y=None, z=None, **args):
         Object.__init__(self, **args)
-        self.x = Integer(x)
-        self.y = Integer(y)        
+        self.X = ElemType(x)
+        self.Y = ElemType(y)     
+        self.Z = ElemType(z)
+            
+    def setUnit(self, varname, unit):
+        getattr(self, varname).id = {'unit': unit}     
         
     def __str__(self):
         return "(%d, %d)" % (self.x.get(), self.y.get())
     
+class PixelSpacing(Vector3D):
+    def __init__(self, x=None, y=None, z=None, **args):
+        Vector3D.__init__(self, Float, x, y, z, **args)
+        self.setUnit('X', 'A/px')
+        self.setUnit('Y', 'A/px')
+        self.setUnit('Z', 'A/px')
+        
+    
 class Micrograph(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
-        self.Particles = Array()
-        self.N = Integer(0)
-        self.Path = String('') 
+        self.acceleratingVoltage = Float(id={'unit':'kV'})
+        self.activeFlag = Integer(1)
+        self.cs = Float(id={'unit', 'mm'})
+        self.pixelSpacing = PixelSpacing()
+
 
     def __str__(self):
         return "File %s\n Particles: %d" % (self.Path.get(), self.N.get())             

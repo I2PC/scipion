@@ -32,6 +32,10 @@ class Mapper():
     def __init__(self):
         pass
     
+    def commit(self):
+        '''Commit changes made to the storage'''
+        pass
+    
     def insert(self, obj):
         '''Insert a new object into the system, the id will be set'''
         pass

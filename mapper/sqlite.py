@@ -31,8 +31,10 @@ class SqliteMapper(Mapper):
     def __init__(self, dbName):
         Mapper.__init__(self)
         self.db = SqliteDb(dbName)
-        self.commit = self.db.commit
     
+    def commit(self):
+        self.db.commit()
+        
     def insert(self, obj):
         '''Insert a new object into the system, the id will be set'''
         obj.id = self.db.insertObject(obj.name, obj.getClassName(), obj.value, obj.parent_id)
@@ -93,14 +95,7 @@ class SqliteMapper(Mapper):
                 setattr(parentObj, childName, childObj)
             self.fillObjectWithRow(childObj, childRow)  
             childsDict[childObj.id] = childObj  
-        
-#        childs = self.db.selectObjectsByParent(obj.id)
-#        for childRow in childs:
-#            childName = childRow['name'].split('.')[-1]
-#            childObj = getattr(obj, childName)
-#            self.fillObject(childObj, childRow)
-
-    
+   
               
     def select(self, **args):
         '''Select object meetings some criterias'''
