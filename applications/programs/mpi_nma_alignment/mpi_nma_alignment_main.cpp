@@ -38,6 +38,14 @@ private:
     MpiFileMutex *fileMutex;
 
 public:
+    /** Empty Constructor */
+    MpiProgNMA()
+    {
+    	node=NULL;
+    	distributor=NULL;
+    	fileMutex=NULL;
+    }
+
     /** Destructor */
     ~MpiProgNMA()
     {
