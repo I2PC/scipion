@@ -34,7 +34,7 @@ class Object():
         self.name = args.get('name', '')
         self.tag = args.get('tag', None) # True if the object serves as input to his parent
         self.store = args.get('store', True) # True if this object will be stored from his parent
-        self.reference = args.get('reference', False) # True if will be treated as a reference for storage
+        self.pointer = args.get('pointer', False) # True if will be treated as a reference for storage
         
     def getClassName(self):
         return self.__class__.__name__
@@ -45,17 +45,17 @@ class Object():
         for key, attr in self.__dict__.iteritems():
             if issubclass(attr.__class__, Object) and attr.store:
                 yield (key, attr)
+                
+    def isPointer(self):
+        '''If this is true, the value field is a pointer 
+        to anothor object'''
+        return self.pointer
     
     def convert(self, value):
         '''Convert a value to desired scalar type'''
+        print "convert from ", type(value)
         return value
     
-    def setId(self,obj):
-        print "kkkk", obj.id,
-        self.id=obj.id
-        print self.id
-        
-        
     def set(self, value):
         '''Set the internal value, if it is different from None
         call the convert function in subclasses'''
@@ -71,7 +71,7 @@ class Object():
         '''String representation of the scalar value'''
         return str(self.value)
         
-    def hasValue(self):
+    def hasValue(self):        
         return not self.value is None
     
         
@@ -97,6 +97,11 @@ class Boolean(Object):
     '''Boolean object'''
     def convert(self, value):
         return bool(value)    
+    
+class Pointer(Object):
+    '''Reference object to other one'''
+    def __init__(self, value=None, **args):
+        Object.__init__(self, value, pointer=True, **args)    
        
 
 class Array(Object):

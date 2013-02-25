@@ -1,6 +1,7 @@
 #!/usr/bin/env xmipp_python
 
 from pyworkflow.object import *
+from pyworkflow.emx import *
 from pyworkflow.mapper.xmlmapper import XmlMapper
 from random import randint
 import os
@@ -35,7 +36,6 @@ m1.acceleratingVoltage.set(100)
 m1.pixelSpacing.X.set(5.6)
 m1.pixelSpacing.Y.set(5.7)
 m1.defocusU.set(1000.)
-print "ww",m1
 
 m2 = Micrograph(id={'filename': 'mic', 'index': '2'})
 m2.acceleratingVoltage.set(200)
@@ -49,8 +49,9 @@ p1.boxSize.Y.set(3)
 p1.pixelSpacing.X.set(55.6)
 p1.pixelSpacing.Y.set(55.7)
 p1.defocusU.set(1000.)
-p1.micrographFK.setId(m1) 
-print "eeeeeeeeeeeeeeeee", p1.micrographFK.id
+p1.micrograph.set(m1)
+
+#print "eeeeeeeeeeeeeeeee", p1.micrographFK.id
 
 mapper.insert(m1)
 mapper.insert(m2)

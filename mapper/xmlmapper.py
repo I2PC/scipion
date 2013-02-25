@@ -34,14 +34,10 @@ from pyworkflow.mapper import Mapper, buildObject
 class XmlMapper(Mapper):
     '''Mapper for XML'''
     def __init__(self, filename=None, rootName='ROOT', version=None, header=''):
-        #self.indent = 2
         Mapper.__init__(self)
         self.filename = filename
-        
         self.root = ET.Element(rootName)
-        #self.root.text = '\n' #header i its own line
         comment = ET.Comment(header)
-        #comment.tail = '\n' + self.indent * " "   #indent first element 1
         self.root.append(comment)
         self.root.set("version", str(version))
         
@@ -70,49 +66,43 @@ class XmlMapper(Mapper):
         tree = ET.ElementTree(self.root)
         tree.write(self.filename)
 
-    def insert(self, obj):
-        '''Insert a new object into the system'''
-        objElem = self.addSubElement(self.root, obj.getClassName(), obj.value, self.indent) 
+    def setObjectId(self, objElem, obj):
         # Set attributes of this object element
         # The id is assumed to be a dictionary
-        for k, v in obj.id.iteritems():
-            objElem.set(k, str(v))
-        # Insert object childs
-        indent_level = 2
-        self.insertObjectWithChilds(obj, objElem, indent_level,0)
+        if obj.id:
+            for k, v in obj.id.iteritems():
+                objElem.set(k, str(v))
         
-    def addSubElement(self, parentElem, name, value, indent):
+    def insert(self, obj):
+        '''Insert a new object into the system'''
+        objElem = self.addSubElement(self.root, obj.getClassName(), obj.value) 
+        self.setObjectId(objElem, obj)
+        # Insert object childs
+        self.insertObjectWithChilds(obj, objElem )
+        
+    def addSubElement(self, parentElem, name, value=None):
         childElem = ET.SubElement(parentElem, name)
         if value != None:
             childElem.text = str(value)
-#        childElem.tail = '\n' + indent * self.indent * " "
         return childElem
     
     def getNonNullObjectsToStoreXML(self):
         pass
 
             
-    def insertObjectWithChilds(self, obj, parentElem, indent,grandParentElemSize):
+    def insertObjectWithChilds(self, obj, parentElem):
         for key, attr in obj.getAttributesToStore():
-            print key
-            if not attr.hasValue():
-                continue
-            print key, attr
-            childElem = self.addSubElement(parentElem, key, attr.value, indent)
-#            if not parentElem.text :
-#                print "HERE", key
-#                parentElem.text = '\n' +  indent * self.indent * " "
-#                parentElem.tail = '\n' + (indent - 2 )* self.indent * " "
-#            print "aaaa", key, attr, grandParentElemSize, len(parentElem)
-            if attr.id:
-                if attr.id.get('unit')  :
-                    childElem.set('unit', attr.id['unit'])
-            self.insertObjectWithChilds(attr, childElem, indent + 1,len(parentElem))
+            if attr.hasValue():
+                if attr.tag == 'attribute':
+                    parentElem.set(key, str(attr))
+                else:
+                    if attr.isPointer():
+                        childElem = self.addSubElement(parentElem, key)
+                        self.setObjectId(childElem, attr.get())
+                    else:
+                        childElem = self.addSubElement(parentElem, key, attr.value)
+                        self.insertObjectWithChilds(attr, childElem)
             
-#        parentElem.tail += self.indent * " "
-#            if not elem.tail or not elem.tail.strip():
-#                elem.tail = i
-
     def updateFrom(self, obj):
         '''Update object data with storage info'''
         pass

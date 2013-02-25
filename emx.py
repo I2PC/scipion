@@ -25,8 +25,27 @@
 # *
 # **************************************************************************
 
-from object import Object, Float, Integer
+from object import Object, Float, Integer, String, Pointer
    
+class EmxScalar(Object):
+    '''Store a value and units'''
+    def __init__(self, ElemType=Float, unit=None, value=None, **args):
+        self.value = ElemType(store=False)
+        Object.__init__(self, value, **args)        
+        self.unit = String(unit, tag='attribute')
+        
+    def setUnit(self, unit):
+        self.unit.set(unit)
+        
+    def getUnit(self):
+        return self.unit.get()
+        
+    def hasValue(self):    
+        return self.value.hasValue()
+    
+    def set(self, value):
+        self.value.set(value)
+    
 class EmxVector(Object):
     '''This class will implement a list of named elements.
     It will serve for vectors or matrices.
@@ -37,17 +56,13 @@ class EmxVector(Object):
         self.keys = getattr(self, 'keys', ['X', 'Y', 'Z'])
         # Build items
         for k in self.keys:
-            setattr(self, k, ElemType(args.get(k, None)))
+            setattr(self, k, EmxScalar(ElemType, args.get(k, None)))
         # Set unit for all items if comes as argument
         if 'unit' in args:
             self.setUnits(args.get('unit'))
             
     def setUnit(self, varname, unit):
-        item = getattr(self, varname)
-        if item.id:
-            item.id.update({'unit': unit})
-        else:
-            item.id = {'unit': unit}
+        getattr(self, varname).setUnit(unit)
         
     def setUnits(self, unit):
         for k in self.keys:
@@ -72,8 +87,8 @@ class EmxMatrix(EmxVector):
     '''Class based on vector but arranges items in a Matrix'''
     def __init__(self, ElemType=Float, xdim=3, **args):
         prefix = args.get('prefix', 't')
-        self.xdim = args.get('xdim')
-        self.ydim = args.get('ydim', self.xdim)
+        self.xdim = xdim
+        self.ydim = args.get('ydim', xdim)
         self.keys = []
         for i in range(1, self.ydim+1):
             for j in range(1, self.xdim+1):
@@ -81,13 +96,16 @@ class EmxMatrix(EmxVector):
         EmxVector.__init__(self, ElemType, **args)  
                     
     def __str__(self):
-        matrixStr = EmxVector.__str__(self)
+        vectorStr = EmxVector.__str__(self)
+        matrixStr = ""
         counter = 0
-        for i, c in enumerate(matrixStr):
+        for c in vectorStr:
             if c == ',':
                 counter += 1
-            if counter % self.xdim == self.xdim - 1:
-                matrixStr[i] = '\n'
+                if counter % self.xdim == self.xdim - 1:
+                    counter = 0
+                    c = '\n'
+            matrixStr += c
         return matrixStr 
             
                     
@@ -117,13 +135,13 @@ class CenterCoord(EmxVector):
 class Micrograph(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
-        self.acceleratingVoltage = Float(id={'unit':'kV'})
+        self.acceleratingVoltage = EmxScalar(Float, 'kV')
         self.activeFlag = Integer(1)
-        self.cs = Float(id={'unit': 'mm'})
+        self.cs = EmxScalar(Float, 'mm')
         self.pixelSpacing = PixelSpacing()
-        self.defocusU = Float(id={'unit':'nn'})
-        self.defocusV = Float(id={'unit':'nn'})
-        self.defocusUAngle = Float(id={'unit':'deg'})
+        self.defocusU = EmxScalar(Float,'nn')
+        self.defocusV = EmxScalar(Float,'nn')
+        self.defocusUAngle = EmxScalar(Float,'deg')
         self.amplitudeContrast = Float()
         self.fom = Float()
 
@@ -141,14 +159,14 @@ class Particle(Object):
         self.activeFlag = Integer(1)
         self.boxSize = BoxSize()
         self.centerCoord = CenterCoord()
-        self.defocusU = Float(id={'unit':'nn'})
-        self.defocusV = Float(id={'unit':'nn'})
-        self.defocusUAngle = Float(id={'unit':'deg'})
+        self.defocusU = EmxScalar(Float,'nn')
+        self.defocusV = EmxScalar(Float,'nn')
+        self.defocusUAngle = EmxScalar(Float,'deg')
         self.fom = Float()
         self.pixelSpacing = PixelSpacing()
         self.transformationMatrix=TransformationMatrix()
         #define foreign keys
-        self.micrographFK = Micrograph()
+        self.micrograph = Pointer()
             
 #    def __str__(self):
 #        return "File %s\n Particles: %d" % (self.Path.get(), self.N.get())             
