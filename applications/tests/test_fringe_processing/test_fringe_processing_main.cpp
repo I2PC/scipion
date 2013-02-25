@@ -77,17 +77,6 @@ TEST_F( FringeProcessingTests, simulPattern)
     ASSERT_TRUE( std::abs(A2D_ELEM(im,0,1) - 0.975946)<0.01);
     ASSERT_TRUE( std::abs(A2D_ELEM(im,1,0) - 0.976113)<0.01);
 
-    freq = 20;
-    simulPattern(im,COMPLEX_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
-
-    //FileName f1 = "test.xmd";
-    //im.write(f1);
-    //ASSERT_TRUE(XSIZE(im) == nx);
-    //ASSERT_TRUE(YSIZE(im) == ny);
-    //ASSERT_TRUE( std::abs(A2D_ELEM(im,0,0) + 0.972063)<0.01);
-    //ASSERT_TRUE( std::abs(A2D_ELEM(im,0,1) + 0.938343)<0.01);
-    //ASSERT_TRUE( std::abs(A2D_ELEM(im,1,0) + 0.986396)<0.01);
-
 }
 
 TEST_F( FringeProcessingTests, SPTH)
