@@ -53,7 +53,6 @@ class Object():
     
     def convert(self, value):
         '''Convert a value to desired scalar type'''
-        print "convert from ", type(value)
         return value
     
     def set(self, value):

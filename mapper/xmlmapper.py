@@ -31,15 +31,21 @@ except ImportError:
     import xml.etree.ElementTree as ET
 from pyworkflow.mapper import Mapper, buildObject
 
+from os.path import exists
+
 class XmlMapper(Mapper):
     '''Mapper for XML'''
     def __init__(self, filename=None, rootName='ROOT', version=None, header=''):
         Mapper.__init__(self)
-        self.filename = filename
-        self.root = ET.Element(rootName)
-        comment = ET.Comment(header)
-        self.root.append(comment)
-        self.root.set("version", str(version))
+        if filename and exists(filename):
+            self.read(filename)
+        else:
+            self.filename = filename
+            #Create empty tree
+            self.root = ET.Element(rootName)
+            comment = ET.Comment(header)
+            self.root.append(comment)
+            self.root.set("version", str(version))
         
     def indent(self, elem, level=0):
         i = "\n" + level*"  "
@@ -60,7 +66,33 @@ class XmlMapper(Mapper):
                 elem.tail = i
 #        if elem.tag=='EMX':
 #            elem.text='\n'
-
+    def read(self, filename):
+        self.filename = filename
+        self.tree = ET.parse(filename)
+        self.root = self.tree.getroot()
+    
+    def select(self, **args):
+        '''Select object meetings some criterias'''
+        objList = []
+        for child in self.root:
+            obj = buildObject(child.tag, id=child.attrib)
+            objList.append(obj)
+            self.fillObject(obj, child)
+        return objList
+    
+    def fillObject(self, obj, objElem):
+        for child in objElem:
+            childObj = getattr(obj, child.tag)
+            if child.text and len(child.text.strip()):
+                childObj.set(child.text)
+            else:
+                print "non-text: ", child.tag
+                self.fillObject(childObj, child)
+        
+    def write(self, filename):
+        self.filename = filename
+        self.commit()
+        
     def commit(self):
         self.indent(self.root)
         tree = ET.ElementTree(self.root)
@@ -114,9 +146,6 @@ class XmlMapper(Mapper):
     def get(self, objId):
         '''Return the object which id is objId'''
         pass
-    
-    def select(self, **args):
-        '''Select object meetings some criterias'''
-        pass 
+
             
     

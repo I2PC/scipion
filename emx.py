@@ -148,10 +148,14 @@ class Micrograph(Object):
     def hasValue(self):
         ''' A micrograph must have always PK'''
         return True
+    
+    def __str__(self):
+        partStr = "Micrograph id = (%s)" % str(self.id)
+        for key, attr in self.getAttributesToStore():
+            if attr.hasValue():
+                partStr += '\n %s: %s' % (key, attr)
+        return partStr
 
-#    def set(self,micrographFK):
-#        '''assign Primary Key to Foreign Key'''
-#        self.id=micrographFK.id
         
 class Particle(Object):
     def __init__(self, **args):
@@ -168,5 +172,10 @@ class Particle(Object):
         #define foreign keys
         self.micrograph = Pointer()
             
-#    def __str__(self):
-#        return "File %s\n Particles: %d" % (self.Path.get(), self.N.get())             
+    def __str__(self):
+        partStr = "Particle id = (%s)" % str(self.id)
+        for key, attr in self.getAttributesToStore():
+            if attr.hasValue():
+                partStr += '\n %s: %s' % (key, attr)
+        return partStr
+                     
