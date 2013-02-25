@@ -50,6 +50,12 @@ class Object():
         '''Convert a value to desired scalar type'''
         return value
     
+    def setId(self,obj):
+        print "kkkk", obj.id,
+        self.id=obj.id
+        print self.id
+        
+        
     def set(self, value):
         '''Set the internal value, if it is different from None
         call the convert function in subclasses'''
@@ -65,7 +71,10 @@ class Object():
         '''String representation of the scalar value'''
         return str(self.value)
         
+    def hasValue(self):
+        return not self.value is None
     
+        
 class Integer(Object):
     '''Integer object'''
     def convert(self, value):
@@ -125,8 +134,65 @@ class Vector3D(Object):
         getattr(self, varname).id = {'unit': unit}     
         
     def __str__(self):
-        return "(%d, %d)" % (self.x.get(), self.y.get())
-    
+        slots = ['']*3
+        for i, v in enumerate([self.X, self.Y, self.Z]):
+            if v.hasValue():
+                slots[i] = '%f' % v.get()
+        return '(%s)' % ','.join(slots)
+
+    def hasValue(self):
+        return \
+               self.X.hasValue() \
+            or self.Y.hasValue() \
+            or self.Z.hasValue()
+            
+class TransformationMatrix(Object):
+    def __init__(self, ElemType=Float, t11=None, t12=None, t13=None, t14=None,\
+                                       t21=None, t22=None, t23=None, t24=None,\
+                                       t31=None, t32=None, t33=None, t34=None, **args):
+        Object.__init__(self, **args)
+        self.t11 = ElemType(t11)
+        self.t12 = ElemType(t12)     
+        self.t13 = ElemType(t13)
+        self.t14 = ElemType(t14)
+        self.setUnit('t14', 'A')
+
+        self.t21 = ElemType(t21)
+        self.t22 = ElemType(t22)     
+        self.t23 = ElemType(t23)
+        self.t24 = ElemType(t24)
+        self.setUnit('t24', 'A')
+
+        self.t31 = ElemType(t31)
+        self.t32 = ElemType(t32)     
+        self.t33 = ElemType(t33)
+        self.t34 = ElemType(t34)
+        self.setUnit('t34', 'A')
+
+    def setUnit(self, varname, unit):
+        getattr(self, varname).id = {'unit': unit}     
+        
+    def __str__(self):
+        return (('%f %f %f %f\n%f %f %f %f\n%f %f %f %f') % \
+        (self.t11.get(), self.t12.get(), self.t13.get(), self.t14.get(),\
+         self.t21.get(), self.t22.get(), self.t23.get(), self.t24.get(),\
+         self.t31.get(), self.t32.get(), self.t33.get(), self.t34.get()))
+
+    def hasValue(self):
+        return \
+               self.t11.hasValue() \
+            or self.t12.hasValue() \
+            or self.t13.hasValue() \
+            or self.t14.hasValue() \
+            or self.t21.hasValue() \
+            or self.t22.hasValue() \
+            or self.t23.hasValue() \
+            or self.t24.hasValue() \
+            or self.t31.hasValue() \
+            or self.t32.hasValue() \
+            or self.t33.hasValue() \
+            or self.t34.hasValue() 
+
 class PixelSpacing(Vector3D):
     def __init__(self, x=None, y=None, z=None, **args):
         Vector3D.__init__(self, Float, x, y, z, **args)
@@ -134,15 +200,56 @@ class PixelSpacing(Vector3D):
         self.setUnit('Y', 'A/px')
         self.setUnit('Z', 'A/px')
         
+class BoxSize(Vector3D):
+    def __init__(self, x=None, y=None, z=None, **args):
+        Vector3D.__init__(self, Integer, x, y, z, **args)
+        self.setUnit('X', 'px')
+        self.setUnit('Y', 'px')
+        self.setUnit('Z', 'px')
+        
+class CenterCoord(Vector3D):
+    def __init__(self, x=None, y=None, z=None, **args):
+        Vector3D.__init__(self, Float, x, y, z, **args)
+        self.setUnit('X', 'px')
+        self.setUnit('Y', 'px')
+        self.setUnit('Z', 'px')
+        
     
 class Micrograph(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
         self.acceleratingVoltage = Float(id={'unit':'kV'})
         self.activeFlag = Integer(1)
-        self.cs = Float(id={'unit', 'mm'})
+        self.cs = Float(id={'unit': 'mm'})
         self.pixelSpacing = PixelSpacing()
+        self.defocusU = Float(id={'unit':'nn'})
+        self.defocusV = Float(id={'unit':'nn'})
+        self.defocusUAngle = Float(id={'unit':'deg'})
+        self.amplitudeContrast = Float()
+        self.fom = Float()
 
+    def hasValue(self):
+        ''' A micrograph must have always PK'''
+        return True
 
-    def __str__(self):
-        return "File %s\n Particles: %d" % (self.Path.get(), self.N.get())             
+#    def set(self,micrographFK):
+#        '''assign Primary Key to Foreign Key'''
+#        self.id=micrographFK.id
+        
+class Particle(Object):
+    def __init__(self, **args):
+        Object.__init__(self, **args)
+        self.activeFlag = Integer(1)
+        self.boxSize = BoxSize()
+        self.centerCoord = CenterCoord()
+        self.defocusU = Float(id={'unit':'nn'})
+        self.defocusV = Float(id={'unit':'nn'})
+        self.defocusUAngle = Float(id={'unit':'deg'})
+        self.fom = Float()
+        self.pixelSpacing = PixelSpacing()
+        self.transformationMatrix=TransformationMatrix()
+        #define foreign keys
+        self.micrographFK = Micrograph()
+            
+#    def __str__(self):
+#        return "File %s\n Particles: %d" % (self.Path.get(), self.N.get())             

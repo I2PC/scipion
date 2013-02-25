@@ -34,50 +34,85 @@ from pyworkflow.mapper import Mapper, buildObject
 class XmlMapper(Mapper):
     '''Mapper for XML'''
     def __init__(self, filename=None, rootName='ROOT', version=None, header=''):
+        #self.indent = 2
         Mapper.__init__(self)
         self.filename = filename
         
         self.root = ET.Element(rootName)
+        #self.root.text = '\n' #header i its own line
         comment = ET.Comment(header)
-        comment.tail = '\n '
-        self.root.append(comment)        
+        #comment.tail = '\n' + self.indent * " "   #indent first element 1
+        self.root.append(comment)
         self.root.set("version", str(version))
         
-        
+    def indent(self, elem, level=0):
+        i = "\n" + level*"  "
+        if len(elem):
+            if not elem.text or not elem.text.strip():
+                elem.text = i + "  "
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+            for _elem in elem:
+                self.indent(_elem, level+1)
+            if not _elem.tail or not _elem.tail.strip():
+                _elem.tail = i
+        else:
+            if level and (not elem.tail or not elem.tail.strip()):
+                if elem.tag == 'm11':
+                        elem.tail = " "
+                        return
+                elem.tail = i
+#        if elem.tag=='EMX':
+#            elem.text='\n'
+
     def commit(self):
-        #self.indent(self.root)
+        self.indent(self.root)
         tree = ET.ElementTree(self.root)
         tree.write(self.filename)
-    
+
     def insert(self, obj):
         '''Insert a new object into the system'''
-        objElem = self.addSubElement(self.root, obj.getClassName(), obj.value, "   ") 
+        objElem = self.addSubElement(self.root, obj.getClassName(), obj.value, self.indent) 
         # Set attributes of this object element
         # The id is assumed to be a dictionary
         for k, v in obj.id.iteritems():
             objElem.set(k, str(v))
-        # Insert object childs            
-        self.insertObjectWithChilds(obj, objElem, "   ")
+        # Insert object childs
+        indent_level = 2
+        self.insertObjectWithChilds(obj, objElem, indent_level,0)
         
     def addSubElement(self, parentElem, name, value, indent):
         childElem = ET.SubElement(parentElem, name)
-        if value:
+        if value != None:
             childElem.text = str(value)
-        #childElem.tail = '\n' + indent
+#        childElem.tail = '\n' + indent * self.indent * " "
         return childElem
-        
-    def insertObjectWithChilds(self, obj, parentElem, indent):
-        for key, attr in obj.getAttributesToStore():
-            if attr.tag == 'attribute':
-                parentElem.set(key, str(attr))
-            else:
-                if parentElem.text:
-                    parentElem.text += '\n' + indent
-                else: 
-                    parentElem.text = '\n' + indent
-                childElem = self.addSubElement(parentElem, key, attr.value, indent)
-                self.insertObjectWithChilds(attr, childElem, indent+"  ")
     
+    def getNonNullObjectsToStoreXML(self):
+        pass
+
+            
+    def insertObjectWithChilds(self, obj, parentElem, indent,grandParentElemSize):
+        for key, attr in obj.getAttributesToStore():
+            print key
+            if not attr.hasValue():
+                continue
+            print key, attr
+            childElem = self.addSubElement(parentElem, key, attr.value, indent)
+#            if not parentElem.text :
+#                print "HERE", key
+#                parentElem.text = '\n' +  indent * self.indent * " "
+#                parentElem.tail = '\n' + (indent - 2 )* self.indent * " "
+#            print "aaaa", key, attr, grandParentElemSize, len(parentElem)
+            if attr.id:
+                if attr.id.get('unit')  :
+                    childElem.set('unit', attr.id['unit'])
+            self.insertObjectWithChilds(attr, childElem, indent + 1,len(parentElem))
+            
+#        parentElem.tail += self.indent * " "
+#            if not elem.tail or not elem.tail.strip():
+#                elem.tail = i
+
     def updateFrom(self, obj):
         '''Update object data with storage info'''
         pass
