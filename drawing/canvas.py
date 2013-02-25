@@ -125,7 +125,7 @@ class Edge():
             self.canvas.delete(self.id)
         self.id = self.canvas.create_line(self.posSrc[0], self.posSrc[1], 
                                           self.posDst[0], self.posDst[1],
-                                          width=2, splinesteps=25)
+                                          width=2)
         self.canvas.tag_lower(self.id)
         
     def updateSrc(self, x, y):
@@ -174,10 +174,12 @@ canvas.grid(row=0, column=0, sticky='nsew')
 root.grid_columnconfigure(0, weight=1)
 root.grid_rowconfigure(0, weight=1)
 
-tb1 = canvas.createTextbox("aqui", 100, 100, "blue")
+tb1 = canvas.createTextbox("Project", 100, 100, "blue")
 tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
-
-e = canvas.createEdge(tb1, tb2)
+tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
+, smooth=True, splinesteps=20
+e1 = canvas.createEdge(tb1, tb2)
+e2 = canvas.createEdge(tb1, tb3)
 
 #canvas.create_oval(10, 10, 110, 60, fill="grey")
 #canvas.create_text(60, 35, text="Oval")
