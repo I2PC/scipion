@@ -29,12 +29,12 @@ class Object():
     that will contains all base properties'''
     def __init__(self, value=None, **args):
         self.set(value)
-        self.id = args.get('id', None)
+        self.id        = args.get('id', None)
         self.parent_id = args.get('parent_id', None)
-        self.name = args.get('name', '')
-        self.tag = args.get('tag', None) # True if the object serves as input to his parent
-        self.store = args.get('store', True) # True if this object will be stored from his parent
-        self.pointer = args.get('pointer', False) # True if will be treated as a reference for storage
+        self.name      = args.get('name', '')
+        self.tag       = args.get('tag', None) # True if the object serves as input to his parent
+        self.store     = args.get('store', True) # True if this object will be stored from his parent
+        self.pointer   = args.get('pointer', False) # True if will be treated as a reference for storage
         
     def getClassName(self):
         return self.__class__.__name__

@@ -24,6 +24,7 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
+from inspect import Attribute
 
 try:
     import xml.etree.cElementTree as ET
@@ -86,7 +87,12 @@ class XmlMapper(Mapper):
             if child.text and len(child.text.strip()):
                 childObj.set(child.text)
             else:
-                print "non-text: ", child.tag
+                #does have attributes?
+                attributes = child.attrib
+                if (attributes and childObj.isPointer):
+                    childObj.id = attributes
+                #else: this should never happend
+                    #childObj.pointer = True
                 self.fillObject(childObj, child)
         
     def write(self, filename):

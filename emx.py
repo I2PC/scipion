@@ -132,7 +132,7 @@ class CenterCoord(EmxVector):
         EmxVector.__init__(self, Float, unit='px', **args)
         
     
-class Micrograph(Object):
+class micrograph(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
         self.acceleratingVoltage = EmxScalar(Float, 'kV')
@@ -150,14 +150,14 @@ class Micrograph(Object):
         return True
     
     def __str__(self):
-        partStr = "Micrograph id = (%s)" % str(self.id)
+        partStr = "Micrograph id = %s" % str(self.id)
         for key, attr in self.getAttributesToStore():
             if attr.hasValue():
                 partStr += '\n %s: %s' % (key, attr)
         return partStr
 
         
-class Particle(Object):
+class particle(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
         self.activeFlag = Integer(1)
@@ -173,9 +173,11 @@ class Particle(Object):
         self.micrograph = Pointer()
             
     def __str__(self):
-        partStr = "Particle id = (%s)" % str(self.id)
+        partStr = "Particle id = %s" % str(self.id)
         for key, attr in self.getAttributesToStore():
             if attr.hasValue():
                 partStr += '\n %s: %s' % (key, attr)
+            if attr.pointer:
+                partStr += '\n %s %s' % (key, str(attr.id))
         return partStr
                      
