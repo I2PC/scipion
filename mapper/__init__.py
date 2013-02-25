@@ -20,13 +20,14 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 
 from mapper import Mapper
 #from sqlite import SqliteMapper
 from pyworkflow.object import *
+from pyworkflow.emx import *
 
 def buildObject(className, **args):
     '''Instance the object give the className'''
