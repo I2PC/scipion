@@ -34,7 +34,7 @@
 #include <iostream>
 #include <data/xmipp_threads.h>
 #include <data/xmipp_program.h>
-
+#define XMIPP_MPI_SIZE_T MPI_UNSIGNED_LONG
 /** @defgroup MPI MPI
  *  @ingroup ParallelLibrary
  * @{
@@ -48,7 +48,7 @@ class MpiNode
 public:
 
     //MPI_Comm *comm;
-    int rank, size, active;//, activeNodes;
+    size_t rank, size, active;//, activeNodes;
     MpiNode(int &argc, char ** argv);
     ~MpiNode();
 

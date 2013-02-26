@@ -117,7 +117,7 @@ void MpiProgAngularProjectionMatching::processAllImages()
         {
             //Receive a request of job from a worker
             //the number of images processed should be sent in imagesBuffer[0]
-            MPI_Recv(&processedImages, 1, MPI_UNSIGNED_LONG, MPI_ANY_SOURCE,
+            MPI_Recv(&processedImages, 1, XMIPP_MPI_SIZE_T, MPI_ANY_SOURCE,
                      TAG_JOB_REQUEST, MPI_COMM_WORLD, &status);
             finishedImages += processedImages;
 
@@ -125,7 +125,7 @@ void MpiProgAngularProjectionMatching::processAllImages()
             {
                 ++finishingWorkers;
             }
-            MPI_Send(imagesBuffer, imagesBuffer[0] + 1, MPI_UNSIGNED_LONG,
+            MPI_Send(imagesBuffer, imagesBuffer[0] + 1, XMIPP_MPI_SIZE_T,
                      status.MPI_SOURCE, TAG_JOB_REPLY, MPI_COMM_WORLD);
 
             if (verbose && processedImages > 0)
@@ -204,10 +204,10 @@ bool MpiProgAngularProjectionMatching::requestJobs(
     MPI_Status status;
 
     //Sent last receveiced numberOfImages, which should be processed by this worker
-    MPI_Send(&numberOfImages, 1, MPI_UNSIGNED_LONG, 0, TAG_JOB_REQUEST,
+    MPI_Send(&numberOfImages, 1, XMIPP_MPI_SIZE_T, 0, TAG_JOB_REQUEST,
              MPI_COMM_WORLD);
     //Get new job to do
-    MPI_Recv(imagesBuffer, mpi_job_size + 1, MPI_UNSIGNED_LONG, 0,
+    MPI_Recv(imagesBuffer, mpi_job_size + 1, XMIPP_MPI_SIZE_T, 0,
              TAG_JOB_REPLY, MPI_COMM_WORLD, &status);
     numberOfImages = imagesBuffer[0];
 

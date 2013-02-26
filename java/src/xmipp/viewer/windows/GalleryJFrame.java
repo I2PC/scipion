@@ -1949,7 +1949,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void saveAs() throws Exception
 	{
 		if (dlgSave == null)
-			dlgSave = new SaveJDialog(this, data.getMdFilename(), false);
+			dlgSave = new SaveJDialog(this, data.getMdSaveFileName(), false);
 		else
 			dlgSave.setMdFilename(data.getMdFilename());
 		boolean save = dlgSave.showDialog(); // displays dialog and waits until

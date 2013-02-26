@@ -234,11 +234,10 @@ void FileTaskDistributor::unlock()
 //------------ MPI ---------------------------
 MpiNode::MpiNode(int &argc, char ** argv)
 {
-    //MPI Initialization
     MPI::Init(argc, argv);
     int irank, isize;
-    MPI_Comm_rank(*comm, &irank);
-    MPI_Comm_size(*comm, &isize);
+    MPI_Comm_rank(MPI_COMM_WORLD, &irank);
+    MPI_Comm_size(MPI_COMM_WORLD, &isize);
     rank=irank;
     size=isize;
     //comm = new MPI_Comm;

@@ -702,10 +702,13 @@ void MpiProgAngularClassAverage::mpi_writeFile(
 
 void MpiProgAngularClassAverage::mpi_produceSideInfo()
 {
+    node->barrierWait();
 
     //init with 0 by default through memset
+
     Iempty().resizeNoCopy(Xdim, Ydim);
     Iempty().setXmippOrigin();
+    node->barrierWait();
 
     // Randomization
     if (do_split)
@@ -763,14 +766,14 @@ void MpiProgAngularClassAverage::mpi_preprocess()
         initOutputFiles();
     }
 
-    MPI_Bcast(&Xdim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&Ydim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&Zdim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&Ndim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&numberOfJobs,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&ref3dNum,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Xdim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Ydim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Zdim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Ndim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&numberOfJobs,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&ref3dNum,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
     MPI_Bcast(&ctfNum,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&paddim,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&paddim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
 
     mpi_produceSideInfo();
 
