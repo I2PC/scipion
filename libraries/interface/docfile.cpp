@@ -121,7 +121,7 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
                     // Print a data line
                     sprintf(aux, "%5d ", line.key);
         o << aux;
-        sprintf(aux, "%-2ld", line.data.size());
+        sprintf(aux, "%-2lu", (unsigned long int)(line.data.size()));
         o << aux;
 
         int imax;

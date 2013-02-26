@@ -1006,13 +1006,13 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
 	result.text_line.push_back(temp);
 	temp.text = "";
 	result.text_line.push_back(temp);
-	sprintf(str, "%6ld", in_both.size());
+	sprintf(str, "%6lu", (unsigned long int)in_both.size());
 	temp.text = (std::string)"# Matching Files: " + str;
 	result.text_line.push_back(temp);
-	sprintf(str, "%6ld", only_in_SF1.size());
+	sprintf(str, "%6lu", (unsigned long int)only_in_SF1.size());
 	temp.text = (std::string)"# Only in file 1: " + str;
 	result.text_line.push_back(temp);
-	sprintf(str, "%6ld", only_in_SF2.size());
+	sprintf(str, "%6lu", (unsigned long int)only_in_SF2.size());
 	temp.text = (std::string)"# Only in file 2: " + str;
 	result.text_line.push_back(temp);
 	temp.text = "# -------------------------------------------------------------";

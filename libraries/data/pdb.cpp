@@ -362,7 +362,8 @@ void PDBRichPhantom::write(const FileName &fnPDB)
     {
     	const RichAtom &atom=atomList[i];
     	fprintf (fh_out,"ATOM  %5lu %4s%c%-4s%c%4d%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %4s\n",
-    			i,atom.name.c_str(),atom.altloc,atom.resname.c_str(),atom.chainid,
+    			(unsigned long int)i,atom.name.c_str(),
+    			atom.altloc,atom.resname.c_str(),atom.chainid,
     			atom.resseq,atom.icode,atom.x,atom.y,atom.z,atom.occupancy,atom.bfactor,
     			atom.name.c_str());
     }
