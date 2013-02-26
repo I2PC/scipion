@@ -23,9 +23,13 @@ class Canvas(tk.Frame):
         self.lastItem = None # Track last item selected
         self.lastPos = (0, 0) # Track last clicked position
         self.items = {} # Keep a dictionary with high-level items
+        self.onClickCallback = None
+        self.onDoubleClickCallback = None
+        self.onRightClickCallback = None
         
         # Add bindings
         self.canvas.bind("<Button-1>", self.onClick)
+        self.canvas.bind("<Button-3>", self.onRightClick)
         self.canvas.bind("<Double-Button-1>", self.onDoubleClick)
         self.canvas.bind("<B1-Motion>", self.onDrag)
     
@@ -39,13 +43,36 @@ class Canvas(tk.Frame):
     def onClick(self, event):
         xc, yc = self.getCoordinates(event)
         items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
-        self.lastItem = None
+        if self.lastItem:
+            self.lastItem.setSelected(False)
+            self.lastItem = None
         self.lastPos = (0, 0)
         for i in items:
             if i in self.items:
                 self.lastItem = self.items[i]
+                self.lastItem.setSelected(True)
+                if self.onClickCallback:
+                    self.onClickCallback(self.lastItem.text)
                 self.lastPos = (xc, yc)
                 break
+            
+    def onRightClick(self, event):
+        xc, yc = self.getCoordinates(event)
+        items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
+        if self.lastItem:
+            self.lastItem.setSelected(False)
+            self.lastItem = None
+        self.lastPos = (0, 0)
+        for i in items:
+            if i in self.items:
+                self.lastItem = self.items[i]
+                self.lastItem.setSelected(True)
+                if self.onRightClickCallback:
+                    event.text = self.lastItem.text
+                    self.onRightClickCallback(event)
+                self.lastPos = (xc, yc)
+                break
+    
     def onDoubleClick(self, event):
         xc, yc = self.getCoordinates(event)
         items = self.canvas.find_overlapping(xc - 1, yc - 1,  xc + 1, yc + 1)
@@ -54,7 +81,8 @@ class Canvas(tk.Frame):
         for i in items:
             if i in self.items:
                 self.lastItem = self.items[i]
-                print self.lastItem.text
+                if self.onDoubleClickCallback:
+                    self.onDoubleClickCallback(self.lastItem.text)
                 self.lastPos = (xc, yc)
                 break
 
@@ -62,11 +90,10 @@ class Canvas(tk.Frame):
         if self.lastItem:
             xc, yc = self.getCoordinates(event)
             self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
-            self.lastPos = (xc, yc)
-            
+            self.lastPos = (xc, yc)            
         
-    def createTextbox(self, text, x, y, bgColor="#99DAE8"):
-        tb = TextBox(self.canvas, text, x, y, bgColor)
+    def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
+        tb = TextBox(self.canvas, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
         return tb
     
@@ -79,41 +106,64 @@ class Canvas(tk.Frame):
 class TextBox():
     '''This class will serve to paint and store
     rectange boxes with some text'''
-    def __init__(self, canvas, text, x, y, bgColor):
+    def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
         self.bgColor = bgColor
+        self.textColor = textColor
         self.text = text
         self.margin = 3
         self.canvas = canvas
-        self.pos = (x, y)
+        self.x = x
+        self.y = y
         self.paint()
         self.listeners = []
         
     def paint(self):
         '''Paint the object in a specific position.'''
-        self.id_text = self.canvas.create_text(self.pos[0], self.pos[1], text=self.text)
+        self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
+                                               justify=tk.CENTER, fill=self.textColor)
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
         xr -= m
         yr -= m
-        self.id = self.canvas.create_rectangle(xr, yr, w+2*m, h+2*m, fill=self.bgColor)
+
+        self.id = self.canvas.create_rectangle(xr, yr, w+m, h+m, 
+                                               fill=self.bgColor)
         self.canvas.tag_raise(self.id_text)
         
-    def move(self, x, y):
-        '''Move TextBox to new position'''
-        self.canvas.move(self.id_text, x, y)
-        self.canvas.move(self.id, x, y)
+    def getDimensions(self):
+        x, y, x2, y2 = self.canvas.bbox(self.id)
+        return (x2-x, y2-y)
+        
+    def move(self, dx, dy):
+        '''Move TextBox to new position
+        dx and y are differences to current position'''
+        self.canvas.move(self.id_text, dx, dy)
+        self.canvas.move(self.id, dx, dy)
+        self.x += dx
+        self.y += dy
         for listenerFunc in self.listeners:
-            listenerFunc(x, y)
+            listenerFunc(dx, dy)
+            
+    def moveTo(self, x, y):
+        '''Move TextBox to new position
+        dx and dy are the new position'''
+        self.move(x-self.x, y-self.y)
         
     def addPositionListener(self, listenerFunc):
         self.listeners.append(listenerFunc)
+        
+    def setSelected(self, value):
+        bw = 1
+        if value:
+            bw = 2
+        self.canvas.itemconfig(self.id, width=bw)
         
 
 class Edge():
     '''Edge between two objects'''
     def __init__(self, canvas, source, dest):
-        self.posSrc = source.pos
-        self.posDst = dest.pos
+        self.srcX, self.srcY = source.x, source.y
+        self.dstX, self.dstY = dest.x, dest.y
         self.canvas = canvas
         source.addPositionListener(self.updateSrc)
         dest.addPositionListener(self.updateDst)
@@ -123,17 +173,19 @@ class Edge():
     def paint(self):
         if self.id:
             self.canvas.delete(self.id)
-        self.id = self.canvas.create_line(self.posSrc[0], self.posSrc[1], 
-                                          self.posDst[0], self.posDst[1],
+        self.id = self.canvas.create_line(self.srcX, self.srcY, 
+                                          self.dstX, self.dstY,
                                           width=2)
         self.canvas.tag_lower(self.id)
         
-    def updateSrc(self, x, y):
-        self.posSrc = (self.posSrc[0]+x, self.posSrc[1]+y)
+    def updateSrc(self, dx, dy):
+        self.srcX += dx
+        self.srcY += dy
         self.paint()
         
-    def updateDst(self, x, y):
-        self.posDst = (self.posDst[0]+x, self.posDst[1]+y)
+    def updateDst(self, dx, dy):
+        self.dstX += dx
+        self.dstY += dy
         self.paint()
         
 #class MouseMover():
@@ -167,29 +219,19 @@ class Edge():
 #      canvas.move(self.item, xc-self.previous[0], yc-self.previous[1])
 #      self.previous = (xc, yc)
  
+if __name__ == '__main__':
+    root = tk.Tk()
+    canvas = Canvas(root, width=400, height=400)
+    canvas.grid(row=0, column=0, sticky='nsew')
+    root.grid_columnconfigure(0, weight=1)
+    root.grid_rowconfigure(0, weight=1)
+    
+    tb1 = canvas.createTextbox("Project", 100, 100, "blue")
+    tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
+    tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
+    e1 = canvas.createEdge(tb1, tb2)
+    e2 = canvas.createEdge(tb1, tb3)
+    
+    tb3.moveTo(100, 300)
 
-root = tk.Tk()
-canvas = Canvas(root, width=400, height=200)
-canvas.grid(row=0, column=0, sticky='nsew')
-root.grid_columnconfigure(0, weight=1)
-root.grid_rowconfigure(0, weight=1)
-
-tb1 = canvas.createTextbox("Project", 100, 100, "blue")
-tb2 = canvas.createTextbox("aqui estoy yo\ny tu tb", 200, 200)
-tb3 = canvas.createTextbox("otro mas\n", 100, 200, "red")
-, smooth=True, splinesteps=20
-e1 = canvas.createEdge(tb1, tb2)
-e2 = canvas.createEdge(tb1, tb3)
-
-#canvas.create_oval(10, 10, 110, 60, fill="grey")
-#canvas.create_text(60, 35, text="Oval")
-#canvas.create_rectangle(10, 100, 110, 150, outline="blue", fill="green")
-#canvas.create_text(60, 125, text="Rectangle")
-#canvas.create_line(60, 60, 60, 100, width=3)
-## Get an instance of the MouseMover object
-#mm = MouseMover()
-# 
-## Bind mouse events to methods (could also be in the constructor)
-#canvas.bind("<Button-1>", mm.select)
-#canvas.bind("<B1-Motion>", mm.drag)
-root.mainloop()
+    root.mainloop()
