@@ -397,6 +397,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     multi.addAndQuery(eq3);
 
     _DF.importObjects(DF, multi);
+
     //std::cerr << "DEBUG_JM: AFTER MDValueEQ" <<std::endl;
 
     if (_DF.size() == 0)
@@ -413,6 +414,9 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg = Iempty;
     avg1 = Iempty;
     avg2 = Iempty;
+
+    PCAMahalanobisAnalyzer pcaAnalyzer;
+    pcaAnalyzer.clear();
 
     // Loop over all images in the input docfile
     FOR_ALL_OBJECTS_IN_METADATA(_DF)
@@ -452,6 +456,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         if (!A.isIdentity())
             selfApplyGeometry(BSPLINE3, img(), A, IS_INV, DONT_WRAP);
 
+        MultidimArray<float> auxImg;
+        auxImg.resizeNoCopy(img());
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img())
+        	DIRECT_MULTIDIM_ELEM(auxImg,n)=(float)DIRECT_MULTIDIM_ELEM(img(),n);
+        pcaAnalyzer.addVector(auxImg);
+
         // Add to average
         if (isplit == 0)
         {
@@ -465,6 +475,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass1.setValue(MDL_REF3D, ref3d, id);
             SFclass1.setValue(MDL_DEFGROUP, defGroup, id);
             SFclass1.setValue(MDL_ORDER, order_number, id);
+
         }
         else
         {
@@ -503,6 +514,12 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 #undef DEBUG
 
     }
+
+    //pcaAnalyzer.learnPCABasis(2,20);
+    std::cout << pcaAnalyzer.v.size() << std::endl;
+    pcaAnalyzer.evaluateZScore(1,20);
+    std::cout << pcaAnalyzer.Zscore << std::endl;
+
     // Re-alignment of the class
     if (nr_iter > 0)
     {
@@ -1323,6 +1340,18 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
                               SFclass2.addObject());
         }
     }
+}
+
+void MpiProgAngularClassAverage::pcaAnalysis(PCAMahalanobisAnalyzer &pcaAnalyzer,
+		Image<double> &pca1,Image<double> &pca2, MetaData &SFclass1, MetaData &SFclass2,
+        std::vector<Image<double> > imgs, std::vector<int> splits,
+        std::vector<int> numbers, size_t dirno, double * my_output)
+{
+
+	pcaAnalyzer.clear();
+
+
+
 }
 
 void MpiProgAngularClassAverage::applyWienerFilter(MultidimArray<double> &img)

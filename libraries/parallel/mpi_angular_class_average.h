@@ -38,6 +38,7 @@
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
+#include <data/basic_pca.h>
 
 //Tags already defined in xmipp
 //#define TAG_WORK                     0
@@ -262,6 +263,18 @@ public:
     void reAlignClass(
     		Image<double> &avg1,
     		Image<double> &avg2,
+    		MetaData &SFclass1,
+    		MetaData &SFclass2,
+    		std::vector<Image<double> > imgs,
+    		std::vector<int> splits,
+    		std::vector<int> numbers,
+    		size_t dirno,
+    		double * my_output);
+
+    void pcaAnalysis(
+    		PCAMahalanobisAnalyzer &pcaAnalyzer,
+    		Image<double> &pca1,
+    		Image<double> &pca2,
     		MetaData &SFclass1,
     		MetaData &SFclass2,
     		std::vector<Image<double> > imgs,
