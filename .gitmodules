@@ -1,0 +1,3 @@
+[submodule "protocols/pyworkflow"]
+	path = protocols/pyworkflow
+	url =  http://git.code.sf.net/p/pyworkflow/code
