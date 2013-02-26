@@ -607,7 +607,9 @@ void ProgCtfGroup::writeOutputToDisc()
     FileName imagesInDefoculGroup;
     auxMetaData.clear();
     auxMetaData.setComment("images (particles) per defocus group, block name is defocusgroup No");
-    for(size_t i=1;i<= ctfInfo.size(); i++)
+    int ctfInfoSize;
+    ctfInfoSize = (int) ctfInfo.size();
+    for(int i=1;i<= ctfInfoSize; i++)
     {
         auxMetaData.importObjects(ctfImagesGroup,MDValueEQ(MDL_DEFGROUP,i));
         imagesInDefoculGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );

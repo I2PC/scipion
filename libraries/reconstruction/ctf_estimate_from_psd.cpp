@@ -321,6 +321,8 @@ void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program)
 
     initial_ctfmodel.enable_CTF = initial_ctfmodel.enable_CTFnoise = true;
     initial_ctfmodel.readParams(program);
+    if (initial_ctfmodel.DeltafU>100e3 || initial_ctfmodel.DeltafV>100e3)
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Defocus cannot be larger than 10 microns (100,000 Angstroms)");
     Tm = initial_ctfmodel.Tm;
 }
 
@@ -2109,11 +2111,13 @@ void estimate_defoci()
 
         // Compute the range of the errors
         double errmin = error(0, 0), errmax = error(0, 0);
+        bool aValidErrorHasBeenFound=false;
         for (int ii = STARTINGY(error); ii <= FINISHINGY(error); ii++)
             for (int jj = STARTINGX(error); jj <= FINISHINGX(error); jj++)
             {
                 if (error(ii, jj) != global_heavy_penalization)
                 {
+                	aValidErrorHasBeenFound=true;
                     if (error(ii, jj) < errmin)
                         errmin = error(ii, jj);
                     else if (errmax == global_heavy_penalization)
@@ -2124,6 +2128,8 @@ void estimate_defoci()
             }
         if (global_prm->show_optimization)
             std::cout << "Error matrix\n" << error << std::endl;
+        if (!aValidErrorHasBeenFound)
+        	REPORT_ERROR(ERR_NUMERICAL,"Cannot find any good defocus within the given range");
 
         // Find those defoci which are within a 10% of the maximum
         if (global_show >= 2)

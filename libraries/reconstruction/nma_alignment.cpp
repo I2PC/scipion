@@ -415,7 +415,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 
 	parameters.initZeros(dim + 5);
 	currentImgName = fnImg;
-	sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, imageCounter);
+	sprintf(nameTemplate, "_node%d_img%lu_XXXXXX", rangen, (long unsigned int)imageCounter);
 
 	trial.initZeros(dim + 5);
 	trial_best.initZeros(dim + 5);

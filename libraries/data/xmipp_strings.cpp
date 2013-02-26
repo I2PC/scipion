@@ -156,7 +156,7 @@ size_t textToSizeT(const char * str)
     if (str == NULL)
         REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into int");
 
-    size_t retval;
+    long unsigned int retval;
     int ok = sscanf(str, "%lu", &retval);
 
     if (ok)

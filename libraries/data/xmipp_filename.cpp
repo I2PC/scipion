@@ -111,7 +111,9 @@ bool FileName::isInStack() const
 void FileName::decompose(size_t &no, String &str) const
 {
     char buffer[1024];
-    int ok = sscanf(c_str(), "%lu@%s", &no, buffer);
+    unsigned long int auxNo;
+    int ok = sscanf(c_str(), "%lu@%s", &auxNo, buffer);
+    no=auxNo;
     if (ok != 2)
     {
         no = ALL_IMAGES;
