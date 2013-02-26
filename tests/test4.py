@@ -11,6 +11,6 @@ emxData   = EmxData()
 mapper    = XmlMapper(emxData)
 mapper.read(fileName)
 mapper.convertToEmxData(emxData)
-#testing
+#testing2
 print emxData
 
