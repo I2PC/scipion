@@ -26,6 +26,7 @@
 # **************************************************************************
 
 from object import Object, Float, Integer, String, Pointer
+from pydoc import classname
    
 class EmxScalar(Object):
     '''Store a value and units'''
@@ -131,10 +132,28 @@ class CenterCoord(EmxVector):
     def __init__(self, **args):
         EmxVector.__init__(self, Float, unit='px', **args)
         
-    
-class Micrograph(Object):
+class Entity(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
+        self.fom = Float()
+
+    def hasValue(self):
+        ''' An Entity must have always PK'''
+        return True
+    def __str__(self):
+        className                = self.getClassName()
+        partStr = "%s id = %s" % (className,str(self.id))
+        for key, attr in self.getAttributesToStore():
+            if attr.hasValue():
+                partStr += '\n %s: %s' % (key, attr)
+            if attr.pointer:
+#                partStr += '\n %s %s' % (key, str(attr.id))
+                partStr += '\n %s %s' % (key, str(attr.get().id))
+        return partStr
+
+class micrograph(Entity):
+    def __init__(self, **args):
+        Entity.__init__(self, **args)
         self.acceleratingVoltage = EmxScalar(Float, 'kV')
         self.activeFlag = Integer(1)
         self.cs = EmxScalar(Float, 'mm')
@@ -143,39 +162,51 @@ class Micrograph(Object):
         self.defocusV = EmxScalar(Float,'nn')
         self.defocusUAngle = EmxScalar(Float,'deg')
         self.amplitudeContrast = Float()
-        self.fom = Float()
-
-    def hasValue(self):
-        ''' A micrograph must have always PK'''
-        return True
-    
-    def __str__(self):
-        partStr = "Micrograph id = (%s)" % str(self.id)
-        for key, attr in self.getAttributesToStore():
-            if attr.hasValue():
-                partStr += '\n %s: %s' % (key, attr)
-        return partStr
-
         
-class Particle(Object):
+class particle(Entity):
     def __init__(self, **args):
-        Object.__init__(self, **args)
+        Entity.__init__(self, **args)
         self.activeFlag = Integer(1)
         self.boxSize = BoxSize()
         self.centerCoord = CenterCoord()
         self.defocusU = EmxScalar(Float,'nn')
         self.defocusV = EmxScalar(Float,'nn')
         self.defocusUAngle = EmxScalar(Float,'deg')
-        self.fom = Float()
         self.pixelSpacing = PixelSpacing()
         self.transformationMatrix=TransformationMatrix()
         #define foreign keys
         self.micrograph = Pointer()
-            
+
+    def getMicrograph(self):
+        return self.micrograph.get()
+
+    def setMicrograph(self, mic):
+        self.micrograph.set(mic)
+
+class EmxData():
+    ''' Class to group EMX objects'''
+    def __init__(self):
+        self.objLists = {'micrograph' : [], 
+                          'particle'  : []}
+
+    def addObject(self,obj):
+        className                = obj.getClassName()
+        self.objLists[className].append(obj)
+        
+    def getObjectwithID(self, className,id):
+        for obj in self.objLists[className]:
+            if (obj.id == id):
+                return obj
+
+    def clean(self):
+        for list in self.objLists:
+            objLists[list]=[]
+
     def __str__(self):
-        partStr = "Particle id = (%s)" % str(self.id)
-        for key, attr in self.getAttributesToStore():
-            if attr.hasValue():
-                partStr += '\n %s: %s' % (key, attr)
+        partStr=""
+        for k,v in self.objLists.iteritems():
+            if len(v):
+                partStr += "\n****\n%sS\n****\n"% k.upper()
+            for obj in v:
+                partStr += obj.__str__()+"\n"
         return partStr
-                     

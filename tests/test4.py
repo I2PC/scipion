@@ -6,12 +6,11 @@ from pyworkflow.mapper.xmlmapper import XmlMapper
 from random import randint
 import os
 
-dbName = 'db.xml'
-
-mapper = XmlMapper(dbName)
-
-objList = mapper.select()
-
-for o in objList:
-    print o
+fileName = 'db.xml'
+emxData   = EmxData()
+mapper    = XmlMapper(emxData)
+mapper.read(fileName)
+mapper.convertToEmxData(emxData)
+#testing2
+print emxData
 
