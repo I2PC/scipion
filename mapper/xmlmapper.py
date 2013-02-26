@@ -25,29 +25,52 @@
 # *
 # **************************************************************************
 from inspect import Attribute
+VERSION=1.0
+ROOTNAME = 'EMX'
+HEADER = '''
+  ##########################################################################
+  #               EMX Exchange file 
+  #               Produced by the prolib_emx module
+  # 
+  #  This is a EMX file.
+  #
+  #  Information on this file format is available at 
+  #  http://i2pc.cnb.csic.es/emx
+  ##########################################################################
+  #  One of the best ways you can help us to improve this software
+  #  is to let us know about any problems you find with it.
+  #  Please report bugs to: emx@cnb.csic.es
+  ##########################################################################
+  '''
 
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
 from pyworkflow.mapper import Mapper, buildObject
+from pyworkflow.emx import EmxData
 
 from os.path import exists
 
 class XmlMapper(Mapper):
     '''Mapper for XML'''
-    def __init__(self, filename=None, rootName='ROOT', version=None, header=''):
+    def __init__(self,emxData,rootName=ROOTNAME):
         Mapper.__init__(self)
-        if filename and exists(filename):
-            self.read(filename)
-        else:
-            self.filename = filename
-            #Create empty tree
-            self.root = ET.Element(rootName)
-            comment = ET.Comment(header)
-            self.root.append(comment)
-            self.root.set("version", str(version))
-        
+        self.emxData = emxData
+        self.foreignKeyAuxList=[]
+
+    def emxDataToXML(self, header=HEADER, 
+                           rootName=ROOTNAME, 
+                           version = VERSION):
+        self.root = ET.Element(rootName)
+        comment = ET.Comment(header)
+        self.root.append(comment)
+        #Create empty tree
+        self.root.set("version", str(version))
+        for k,v in self.emxData.objLists.iteritems():
+            for obj in v:
+                self.insert(obj)
+            
     def indent(self, elem, level=0):
         i = "\n" + level*"  "
         if len(elem):
@@ -72,15 +95,19 @@ class XmlMapper(Mapper):
         self.tree = ET.parse(filename)
         self.root = self.tree.getroot()
     
-    def select(self, **args):
+    def convertToEmxData(self, emxData):
         '''Select object meetings some criterias'''
-        objList = []
         for child in self.root:
             obj = buildObject(child.tag, id=child.attrib)
-            objList.append(obj)
+            #objList.append(obj)
+            emxData.addObject(obj)
             self.fillObject(obj, child)
-        return objList
-    
+        #set properlly primary keys
+        for object in self.foreignKeyAuxList:
+            for key, attr in object.getAttributesToStore():
+                if attr.isPointer():
+                    attr.set(self.emxData.getObjectwithID(key, attr.id))
+
     def fillObject(self, obj, objElem):
         for child in objElem:
             childObj = getattr(obj, child.tag)
@@ -89,12 +116,11 @@ class XmlMapper(Mapper):
             else:
                 #does have attributes?
                 attributes = child.attrib
-                if (attributes and childObj.isPointer):
+                if (attributes and childObj.isPointer()):
                     childObj.id = attributes
-                #else: this should never happend
-                    #childObj.pointer = True
+                    #save obj in auxiliary file
+                    self.foreignKeyAuxList.append(obj)
                 self.fillObject(childObj, child)
-        
     def write(self, filename):
         self.filename = filename
         self.commit()
