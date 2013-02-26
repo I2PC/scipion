@@ -385,7 +385,7 @@ int AutoParticlePicking2::automaticallySelectParticles(bool use2Classifier)
         pthread_join(th_ids[nt],NULL);
 
     for (size_t n=0; n<positionArray.size(); ++n)
-    	delete positionArray[n];
+        delete positionArray[n];
 
     if (auto_candidates.size() == 0)
         return 0;
@@ -941,7 +941,7 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2 *> &positionAr
         for (int j=particle_radius;j<endX;j++)
             if (isLocalMaxima(convolveRes,j,i))
             {
-            	p=new Particle2();
+                p=new Particle2();
                 p->y=i;
                 p->x=j;
                 p->cost=DIRECT_A2D_ELEM(convolveRes,i,j);
@@ -950,15 +950,17 @@ void AutoParticlePicking2::buildSearchSpace(std::vector<Particle2 *> &positionAr
             }
     size_t imax=positionArray.size();
     if (imax==0)
-    	return;
-    Particle2 *ptr=(Particle2 *)&(positionArray[0]);
+        return;
+    Particle2 *ptr= positionArray.front();
     for (size_t i=0;i<imax;++i)
         for (size_t j=0;j<imax-i-1;j++)
         {
-        	Particle2 *ptrj=ptr+j;
-        	Particle2 *ptrj_1=ptrj+1;
-            if (ptrj->cost<ptrj_1->cost)
+            Particle2 **ptrj=&positionArray[j];
+            Particle2 **ptrj_1=&positionArray[j+1];
+            Particle2 **p=NULL;
+            if ((*ptrj)->cost<(*ptrj_1)->cost)
             {
+                p=new Particle2*;
                 p=ptrj_1;
                 ptrj_1=ptrj;
                 ptrj=p;
