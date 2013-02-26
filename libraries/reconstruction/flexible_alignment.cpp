@@ -2080,7 +2080,7 @@ std::cout << "2074" << fnDown << std::endl;
 
               parameters.initZeros(dim + 5);
               currentImgName = fnImg;
-              sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, imageCounter);
+              sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, (long int)imageCounter);
 
               trial.initZeros(dim + 5);
               trial_best.initZeros(dim + 5);

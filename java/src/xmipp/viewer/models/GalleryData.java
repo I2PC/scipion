@@ -142,6 +142,28 @@ public class GalleryData {
 		return String.format("%s@%s", selectedBlock, filename);
 	}// function getMdFilename
 	
+	public String getMdSaveFileName()
+	{
+		if(filename == null)
+			return null;
+		
+		String savefn;
+		if (selectedBlock.isEmpty())
+			savefn = filename;
+		else 
+			savefn = String.format("%s@%s", selectedBlock, filename);
+		String ext;
+		if(savefn.contains("."))
+		{
+			ext = savefn.substring(savefn.lastIndexOf("."));
+			if(ext.equals(".stk"))
+				return savefn.replace(ext, ".xmd");
+		}
+		else
+			savefn = savefn + ".xmd";
+		return savefn;
+	}
+	
 	public void setFileName(String file)
 	{
 		filename = file;

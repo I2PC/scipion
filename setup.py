@@ -247,6 +247,15 @@ def run(notebook):
             print cmd2
 
     if options.hasOption('install'):
+        CONFIG = '.xmipp_scons.options'
+        if os.path.exists(CONFIG):
+            for line in open(CONFIG):
+                parts = line.split('=')
+                if len(parts) == 2:
+                    assign = '%s = "%s"' % (parts[0], parts[1])
+                    if parts[0].strip() == 'MPI_LIBDIR':
+                        parts[1] = parts[1].replace("'","").strip()
+                        os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]        
         cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
         
     proc = Popen(cmd % locals(), shell=True)    
