@@ -29,9 +29,9 @@
 #include <vector>
 #include <sys/stat.h>
 
-#ifdef HAVE_UNISTD_H
+//#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
+//#endif /* HAVE_UNISTD_H */
 
 #include "xmipp_strings.h"
 
