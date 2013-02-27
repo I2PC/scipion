@@ -19,7 +19,7 @@ m1.pixelSpacing.Y.set(5.7)
 
 m2 = micrograph(id={'filename': 'mic', 'index': '2'})
 m2.acceleratingVoltage.set(200)
-m2.activeFlag.set(None)
+#m2.activeFlag.set(None)
 m2.defocusUAngle.set(135)
 
 p1 = particle(id={'filename': 'parti', 'index': '1'})

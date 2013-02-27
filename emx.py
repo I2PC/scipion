@@ -152,6 +152,7 @@ class CenterCoord(EmxVector):
 class Entity(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
+        self.activeFlag = Integer()
         self.fom = Float()
 
     def hasValue(self):
@@ -172,7 +173,6 @@ class micrograph(Entity):
     def __init__(self, **args):
         Entity.__init__(self, **args)
         self.acceleratingVoltage = EmxScalar(Float, 'kV')
-        self.activeFlag = Integer(1)
         self.cs = EmxScalar(Float, 'mm')
         self.pixelSpacing = PixelSpacing()
         self.defocusU = EmxScalar(Float,'nn')
@@ -183,7 +183,6 @@ class micrograph(Entity):
 class particle(Entity):
     def __init__(self, **args):
         Entity.__init__(self, **args)
-        self.activeFlag = Integer(1)
         self.boxSize = BoxSize()
         self.centerCoord = CenterCoord()
         self.defocusU = EmxScalar(Float,'nn')
