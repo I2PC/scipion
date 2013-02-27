@@ -28,6 +28,12 @@ p1.boxSize.Y.set(3)
 p1.pixelSpacing.X.set(55.6)
 p1.pixelSpacing.Y.set(55.7)
 p1.defocusU.set(1000.)
+#p1.setTransformationMatrix.t11.set(11.)
+mat = {'t11':11.1,'t12':12.1,'t13':13.1,'t14':14.1,
+       't21':21.1,'t24':24.1,
+       't31':31.1,'t32':32.1,'t33':33.1,'t34':34.1,
+       }
+p1.transformationMatrix.setValue(**mat)
 p1.setMicrograph(m1)
 
 

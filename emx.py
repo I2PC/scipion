@@ -55,6 +55,7 @@ class EmxVector(Object):
         Object.__init__(self, **args)
         # Get the named list if exists, by default X,Y and Z
         self.keys = getattr(self, 'keys', ['X', 'Y', 'Z'])
+        print "EmxVector",self.keys
         # Build items
         for k in self.keys:
             setattr(self, k, EmxScalar(ElemType, args.get(k, None)))
@@ -107,7 +108,18 @@ class EmxMatrix(EmxVector):
                     counter = 0
                     c = '\n'
             matrixStr += c
-        return matrixStr 
+        return matrixStr
+    
+    def setValue(self, **args):
+        '''Set values of different items'''
+        for k, v in args.iteritems():
+            if k in self.keys:
+                getattr(self, k).set(v)
+                
+    def setAllValues(self, value):
+        '''Set all items to the same value'''
+        for k in self.keys:
+            getattr(self, k).set(value)
             
                     
 class TransformationMatrix(EmxMatrix):
