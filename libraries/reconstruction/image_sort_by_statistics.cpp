@@ -90,7 +90,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF)
     //Histogram analysis, to detect black points and saturated parts
     tempPcaAnalyzer4.clear();
 
-    int sign = 1;//;-1;
+    double sign = 1;//;-1;
     int numNorm = 3;
     int numDescriptors0=numNorm;
     int numDescriptors2=4;
