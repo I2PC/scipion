@@ -88,7 +88,7 @@ class XmlMapper(Mapper):
                 for ii in ['t11','t12','t13','t21','t22','t23','t31','t32','t33']:
                     if elem.tag == ii:
                         elem.tail = " "
-                            return
+                        return
                 elem.tail = i
 #        if elem.tag=='EMX':
 #            elem.text='\n'
