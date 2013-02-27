@@ -55,7 +55,6 @@ class EmxVector(Object):
         Object.__init__(self, **args)
         # Get the named list if exists, by default X,Y and Z
         self.keys = getattr(self, 'keys', ['X', 'Y', 'Z'])
-        print "EmxVector",self.keys
         # Build items
         for k in self.keys:
             setattr(self, k, EmxScalar(ElemType, args.get(k, None)))
@@ -77,7 +76,13 @@ class EmxVector(Object):
             if item.hasValue():
                 slots[i] = '%s' % str(item.get())
         return '(%s)' % ','.join(slots)
-
+    
+    def getAttributesToStore(self):
+        '''Return the list of attributes than are
+        subclasses of Object and will be stored'''
+        for key in self.keys:
+            yield (key, getattr(self, key))
+    
     def hasValue(self):
         for k in self.keys:
             if getattr(self, k).hasValue():
