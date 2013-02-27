@@ -474,6 +474,7 @@ class XmippProjectGUI():
             show = self.graphHist
             hide = self.treeHist
             iconPath = "columns.gif"
+        self.updateRunHistory(self.lastDisplayGroup)
         self.runButtonsDict[ACTION_TREE].setImage(iconPath)
         show.grid(row=0, column=0, sticky='nsew')
         hide.grid_remove()
@@ -554,30 +555,36 @@ class XmippProjectGUI():
     def updateRunHistory(self, protGroup, selectFirst=True, checkDead=False):
         #Cancel if there are pending refresh
         tree = self.treeHist
+        graph = self.graphHist
+        
         if self.historyRefresh:
             tree.after_cancel(self.historyRefresh)
             self.historyRefresh = None
         runName = None
         
-        if not selectFirst:
-            item = tree.selection_first()
-            runName = tree.item(item, 'text')
+        if not selectFirst and not self.graphView:
+            runName = tree.item(tree.selection_first(), 'text')
         
         tree.clear()
+        graph.clear()
 
         self.runs, stateList = self.project.getStateRunList(protGroup, checkDead)
         
         if len(stateList) > 0:
-            for name, state, stateStr, modified in stateList:
-                tree.insert('', 'end', text = name, 
-                            image=self.getStateImage(state),
-                            values=(stateStr, modified)) 
-            
-            for c in tree.get_children(''):
-                if selectFirst or tree.item(c, 'text') == runName:
-                    tree.selection_set(c)
-                    self.updateRunSelection(tree.index(c))
-                    break
+            if not self.graphView:
+                # Update runs tree
+                for name, state, stateStr, modified in stateList:
+                    tree.insert('', 'end', text = name, 
+                                image=self.getStateImage(state),
+                                values=(stateStr, modified)) 
+                
+                for c in tree.get_children(''):
+                    if selectFirst or tree.item(c, 'text') == runName:
+                        tree.selection_set(c)
+                        self.updateRunSelection(tree.index(c))
+                        break
+            else:
+                self.updateHistoryGraph()
             #Generate an automatic refresh after x ms, with x been 1, 2, 4 increasing until 32
             self.historyRefresh = tree.after(self.historyRefreshRate*1000, self.updateRunHistory, protGroup, False)
             self.historyRefreshRate = min(2*self.historyRefreshRate, 32)
@@ -838,8 +845,8 @@ class XmippProjectGUI():
         for k, v in aList:
             setupButton(k, ActionIcons[k], v)
         
-        self.treeHist = self.createHistoryTree(history.frameContent)
-        self.graphHist = self.createHistoryGraph(history.frameContent)
+        self.createHistoryTree(history.frameContent)  # set self.treeHist
+        self.createHistoryGraph(history.frameContent) # set self.graphHist
         
         show = self.treeHist
         if self.graphView:
@@ -861,14 +868,22 @@ class XmippProjectGUI():
         tree.bind('<<TreeviewSelect>>', self.selectTreeRun)
         tree.bind('<Double-1>', lambda e:self.runButtonClick(ACTION_DEFAULT))
         tree.bind("<Button-3>", self.onRightClick)
-        return tree
+        self.treeHist = tree
         
     def createHistoryGraph(self, parent):
+        from protlib_gui_graph import Canvas
+        canvas = Canvas(parent)
+        canvas.onClickCallback = self.selectGraphRun
+        canvas.onDoubleClickCallback = self.doubleClickGraph
+        canvas.onRightClickCallback = self.rightClickGraph
+        self.graphHist = canvas
+        self.updateHistoryGraph()
+        
+    def updateHistoryGraph(self):
         runsDict = self.project.getRunsDependencies()
         #from protlib_gui_figure import showDependencyTree
         from protlib_gui_graph import showDependencyTree
-        return showDependencyTree(runsDict, self.project.getName(), parent, 
-                                  self.selectGraphRun, self.doubleClickGraph, self.rightClickGraph)   
+        showDependencyTree(self.graphHist, runsDict, self.project.getName())
         
     def createDetailsFrame(self, parent):
         details = ProjectSection(parent, 'Details')

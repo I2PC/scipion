@@ -139,6 +139,10 @@ class Canvas(tk.Frame):
         edge = Edge(self.canvas, src, dst)
         #self.items[edge.id] = edge
         return edge
+    
+    def clear(self):
+        '''Clear all items from the canvas'''
+        self.canvas.delete(tk.ALL)
        
         
 class TextBox():
@@ -226,7 +230,7 @@ class Edge():
         self.dstY += dy
         self.paint()
 
-def showDependencyTree(runsDict, rootName, parent, onClick, onDoubleClick, onRightClick):
+def showDependencyTree(canvas, runsDict, rootName):
     ''' This function will create a Canvas to display
     the protocols dependency tree''' 
 
@@ -243,10 +247,7 @@ def showDependencyTree(runsDict, rootName, parent, onClick, onDoubleClick, onRig
 #    root.rowconfigure(0, weight=1, minsize=500)
 #    
 #    parent = root
-    canvas = Canvas(parent)
-    canvas.onClickCallback = onClick
-    canvas.onDoubleClickCallback = onDoubleClick
-    canvas.onRightClickCallback = onRightClick
+    canvas.clear()
     #canvas.grid(row=0, column=0, sticky='nsew')
     
     def showNode(dd, y):
