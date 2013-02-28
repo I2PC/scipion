@@ -1,11 +1,11 @@
 #!/usr/bin/env xmipp_python
 
 import sys
-
+from pyworkflow.emx import *
 from pyworkflow.object import *
 from pyworkflow.mapper.sqlite import SqliteMapper
 
-mapper = SqliteMapper('db.sqlite')
+mapper = SqliteMapper('db.sqlite', globals())
 
 #c = mapper.get(2)
 #print c.name
@@ -18,7 +18,7 @@ mapper = SqliteMapper('db.sqlite')
 
 #mapper.commit()
 
-l = mapper.select(classname='Micrograph')[0]
+l = mapper.select(classname='Array')[0]
 
 #n = len(l)
 #for i in range(n):
@@ -30,9 +30,8 @@ l = mapper.select(classname='Micrograph')[0]
 #c.x.set(999)
 #c.y.set(999)
 
-print l.Particles[0]
-print l.Particles[1]
-print l
+print l[0]
+print l[1]
 
 #mapper.store(c)
 #mapper.commit()
