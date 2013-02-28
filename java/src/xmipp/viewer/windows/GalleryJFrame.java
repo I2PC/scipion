@@ -1848,10 +1848,21 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				throw new IllegalArgumentException();
 
 			boolean overwrite;
-			String file = path.substring(path.lastIndexOf("@") + 1, path.length());
-			if (!new File(file).exists())// overwrite or append, save active
-											// metadata
+			String file;
+			if(path.contains("@"))
+				file = path.substring(path.lastIndexOf("@") + 1, path.length());
+			else
+			{
+				file = path;
+				path = getBlock() + "@" + file;
+			}
+			
+			File iofile = new File(file);
+			if (!iofile.exists())// overwrite or append, save active
+			{	
+				iofile.getParentFile().mkdirs();
 				data.md.write(path);
+			}
 			else
 			{
 				overwrite = dlgSave.isOverwrite() && dlgSave.saveActiveMetadataOnly();
@@ -1881,13 +1892,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		String from = data.getFileName();
 		String blockto = dlgSave.getMdFilename();
-		String to = blockto.substring(blockto.lastIndexOf('@') + 1, blockto.length());
+		String to;
+		if(blockto.contains("@"))
+			to = blockto.substring(blockto.lastIndexOf("@") + 1, blockto.length());
+		else
+		{
+			to = blockto;
+			blockto = getBlock() + "@" + blockto;
+		}
 		if (from != null && !from.equals(to))
 		{// no sense in overwritting or appending
 			MetaData frommd;
 			frommd = new MetaData();
+			File file = new File(to); 
 			if (dlgSave.isOverwrite())
-				new File(to).delete();
+				file.delete();
+			if(!file.exists())
+				file.getParentFile().mkdirs();
 			for (String blockit : data.mdBlocks)
 			{
 				frommd.read(blockit + "@" + from);
