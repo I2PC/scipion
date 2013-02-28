@@ -470,7 +470,7 @@ void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &OTF, double Zpos
 
             if (zIndexPSF < STARTINGZ(mPsfVol) ||
                 zIndexPSF > FINISHINGZ(mPsfVol))
-                PSFi.initZeros();
+                PSFi.initConstant(1/YXSIZE(PSFi));
             else
             {   /* Actually T transform matrix is set to identity, as sampling is the same for both psfVol and phantom
                                  * It is only missing to set Z shift to select the slice */
