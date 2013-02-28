@@ -53,6 +53,9 @@ void MpiProgAngularClassAverage::readParams()
 
     inFile = getParam("-i");
 
+    do_pcaSorting = false;
+    do_pcaSorting= checkParam("--pcaSorting");
+
     do_limitRFclass = false;
     do_limitR0class = false;
     do_limitR0per = false;
@@ -133,6 +136,7 @@ void MpiProgAngularClassAverage::defineParams()
     addParamsLine("                           : if (lRc<0 && lR>-100): discard highest <lRc> % in each class");
     addParamsLine("   [--limitRper <lRp>]         : if (lRp>0 && lRp< 100): discard lowest  <lRa> %");
     addParamsLine("                           : if (lRp<0 && lRp>-100): discard highest <lRa> %");
+    addParamsLine("   [--pcaSorting ]         : Perform PCA sorting to obtain the average classes");
 
     addParamsLine("==+ REALIGNMENT OF CLASSES ==");
     addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
@@ -335,7 +339,7 @@ void MpiProgAngularClassAverage::mpi_process_loop(double * Def_3Dref_2Dref_JobNo
 
 void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 {
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     std::cerr<<"["<<node->rank<<"]"
     << " 3DRef:    "  << ROUND(Def_3Dref_2Dref_JobNo[index_3DRef])
@@ -415,8 +419,10 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     avg1 = Iempty;
     avg2 = Iempty;
 
-    PCAMahalanobisAnalyzer pcaAnalyzer;
+    PCAMahalanobisAnalyzer pcaAnalyzerSplit1,pcaAnalyzerSplit2,pcaAnalyzer;
     pcaAnalyzer.clear();
+    pcaAnalyzerSplit1.clear();
+    pcaAnalyzerSplit2.clear();
 
     // Loop over all images in the input docfile
     FOR_ALL_OBJECTS_IN_METADATA(_DF)
@@ -456,11 +462,13 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         if (!A.isIdentity())
             selfApplyGeometry(BSPLINE3, img(), A, IS_INV, DONT_WRAP);
 
-        MultidimArray<float> auxImg;
-        auxImg.resizeNoCopy(img());
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img())
-        	DIRECT_MULTIDIM_ELEM(auxImg,n)=(float)DIRECT_MULTIDIM_ELEM(img(),n);
-        pcaAnalyzer.addVector(auxImg);
+        MultidimArray<float> auxImg(img().nzyxdim);
+        const MultidimArray<double> &mImg=img();
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mImg)
+        DIRECT_MULTIDIM_ELEM(auxImg,n)=(float)DIRECT_MULTIDIM_ELEM(mImg,n);
+
+        if (do_pcaSorting)
+            pcaAnalyzer.addVector(auxImg);
 
         // Add to average
         if (isplit == 0)
@@ -475,6 +483,8 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass1.setValue(MDL_REF3D, ref3d, id);
             SFclass1.setValue(MDL_DEFGROUP, defGroup, id);
             SFclass1.setValue(MDL_ORDER, order_number, id);
+            if (do_pcaSorting)
+                pcaAnalyzerSplit1.addVector(auxImg);
 
         }
         else
@@ -489,9 +499,11 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
             SFclass2.setValue(MDL_REF3D, ref3d, id);
             SFclass2.setValue(MDL_DEFGROUP, defGroup, id);
             SFclass2.setValue(MDL_ORDER, order_number, id);
+            if (do_pcaSorting)
+                pcaAnalyzerSplit2.addVector(auxImg);
         }
 
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
         //WRITE IMAGES TO AVERAGE
         FileName fn_tmp1;
@@ -502,8 +514,8 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
         formatStringFast(fn_tmp1, "test_avg_%06d.spi", static_i);
         avg1.write(fn_tmp1);
         std::cout << fn_img
-        		  << psi
-        		  << A <<std::endl;
+        << psi
+        << A <<std::endl;
         if (static_i> 25)
         {
             std::cerr << "static_i:" << static_i << std::endl;
@@ -515,10 +527,19 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
     }
 
-    //pcaAnalyzer.learnPCABasis(2,20);
-    std::cout << pcaAnalyzer.v.size() << std::endl;
-    pcaAnalyzer.evaluateZScore(1,20);
-    std::cout << pcaAnalyzer.Zscore << std::endl;
+    if (do_pcaSorting)
+    {
+        if (isplit == 0)
+        {
+            pcaAnalyzer.evaluateZScore(2,20);
+        }
+        else
+        {
+            pcaAnalyzerSplit1.evaluateZScore(2,20);
+            pcaAnalyzerSplit2.evaluateZScore(2,20);
+            pcaAnalyzer.evaluateZScore(2,20);
+        }
+    }
 
     // Re-alignment of the class
     if (nr_iter > 0)
@@ -694,8 +715,8 @@ void MpiProgAngularClassAverage::mpi_writeFile(
         if (fileNameStk.exists())
         {
 
-          //std::cerr << "DEBUG_JM: Composing" <<std::endl;
-          //std::cerr << "DEBUG_JM: dirno: " << dirno << std::endl;
+            //std::cerr << "DEBUG_JM: Composing" <<std::endl;
+            //std::cerr << "DEBUG_JM: dirno: " << dirno << std::endl;
             fn_tmp.compose(dirno, fileNameStk);
             //std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
             old.read(fn_tmp);
@@ -771,7 +792,7 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     if (node->rank==0)
     {
-      //std::cerr << "DEBUG_JM: saveDiscardedImages" <<std::endl;
+        //std::cerr << "DEBUG_JM: saveDiscardedImages" <<std::endl;
         saveDiscardedImages();
         //std::cerr << "DEBUG_JM: createJobList" <<std::endl;
         createJobList();
@@ -794,10 +815,10 @@ void MpiProgAngularClassAverage::mpi_preprocess()
 
     mpi_produceSideInfo();
 
-//    if (node->rank == 0)
-//    {
-//      std::cerr << "DEBUG_JM: end of mpi_preprocess" <<std::endl;
-//    }
+    //    if (node->rank == 0)
+    //    {
+    //      std::cerr << "DEBUG_JM: end of mpi_preprocess" <<std::endl;
+    //    }
 
     node->barrierWait();
 }
@@ -824,16 +845,16 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     //std::cerr << "DEBUG_JM: inFile: " << inFile << std::endl;
     auxDF.read(inFile);
     if (!auxDF.containsLabel(MDL_REF3D))
-      auxDF.fillConstant(MDL_REF3D, "1");
+        auxDF.fillConstant(MDL_REF3D, "1");
     if (!auxDF.containsLabel(MDL_DEFGROUP))
-      auxDF.fillConstant(MDL_DEFGROUP, "1");
+        auxDF.fillConstant(MDL_DEFGROUP, "1");
     if (!auxDF.containsLabel(MDL_ORDER))
     {
 
-      String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
-          MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
-      auxDF.addLabel(MDL_ORDER);
-      auxDF.operate(cmd);
+        String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
+                                  MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
+        auxDF.addLabel(MDL_ORDER);
+        auxDF.operate(cmd);
     }
     //std::cerr << "DEBUG_JM: Read inFile" <<std::endl;
 
@@ -1343,12 +1364,12 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 }
 
 void MpiProgAngularClassAverage::pcaAnalysis(PCAMahalanobisAnalyzer &pcaAnalyzer,
-		Image<double> &pca1,Image<double> &pca2, MetaData &SFclass1, MetaData &SFclass2,
+        Image<double> &pca1,Image<double> &pca2, MetaData &SFclass1, MetaData &SFclass2,
         std::vector<Image<double> > imgs, std::vector<int> splits,
         std::vector<int> numbers, size_t dirno, double * my_output)
 {
 
-	pcaAnalyzer.clear();
+    pcaAnalyzer.clear();
 
 
 

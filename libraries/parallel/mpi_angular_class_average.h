@@ -107,6 +107,8 @@ public:
     bool             do_save_images_assigned_to_classes;
     /** Add output to existing files */
     bool             do_add;
+    /** Perform PCA sorting to obtain the average classes */
+    bool             do_pcaSorting;
     /** Wiener filter image */
     MultidimArray<double> Mwien;
     /** Selfiles containing all class averages */
