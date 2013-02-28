@@ -24,12 +24,12 @@
 # *
 # **************************************************************************
 
-from pyworkflow.mapper import Mapper, buildObject
+from pyworkflow.mapper import Mapper
 
 class SqliteMapper(Mapper):
     '''Specific Mapper implementation using Sqlite database'''
-    def __init__(self, dbName):
-        Mapper.__init__(self)
+    def __init__(self, dbName, dictClasses=None):
+        Mapper.__init__(self, dictClasses)
         self.db = SqliteDb(dbName)
     
     def commit(self):
@@ -61,7 +61,7 @@ class SqliteMapper(Mapper):
     def get(self, objId):
         '''Build the object which id is objId'''
         objRow = self.db.selectObjectById(objId)
-        obj = buildObject(objRow['classname'])
+        obj = self.buildObject(objRow['classname'])
         self.fillObject(obj, objRow)
         return obj
     
@@ -91,7 +91,7 @@ class SqliteMapper(Mapper):
             parentObj = childsDict[parentId]
             childObj = getattr(parentObj, childName)
             if childObj is None:
-                childObj = buildObject(childRow['classname'])
+                childObj = self.buildObject(childRow['classname'])
                 setattr(parentObj, childName, childObj)
             self.fillObjectWithRow(childObj, childRow)  
             childsDict[childObj.id] = childObj  
@@ -102,7 +102,7 @@ class SqliteMapper(Mapper):
         objRows = self.db.selectObjectsBy(**args)
         objs = []
         for objRow in objRows:
-            obj = buildObject(objRow['classname'])
+            obj = self.buildObject(objRow['classname'])
             self.fillObject(obj, objRow)
             objs.append(obj)
         return objs
@@ -143,6 +143,7 @@ class SqliteDb():
         self.commit()
         
     def insertObject(self, name, classname, value, parent_id):
+        print (parent_id, name, classname, value)
         '''Execute command to insert a new object. Return the inserted object id'''
         self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value) VALUES (?, ?, ?, ?)", \
                             (parent_id, name, classname, value))

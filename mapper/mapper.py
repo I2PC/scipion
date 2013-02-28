@@ -24,13 +24,27 @@
 # *
 # **************************************************************************
 
+from pyworkflow.object import *
 
 class Mapper():
     '''This class will serves as a Data Mapper pattern.
     It will store/retrieve objects from some storage enviroment.
-    (like SQL, XML or others)'''
-    def __init__(self):
-        pass
+    (like SQL, XML or others)
+    The mapper should have access to class dictionary
+    in order to build any give class by name'''
+    def __init__(self, dictClasses=None):
+        if dictClasses:
+            self.dictClasses = dictClasses 
+        else:
+            self.dictClasses = globals()
+    
+    def buildObject(self, className, **args):
+        '''Build an instance of an object
+        given the class name, it should be in 
+        the classes dictionary'''
+        if className in self.dictClasses:
+            return self.dictClasses[className](**args)
+        raise Exception('Mapper.buildObject: Unknown class: %s' % className)
     
     def commit(self):
         '''Commit changes made to the storage'''

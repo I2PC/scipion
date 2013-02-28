@@ -26,10 +26,7 @@
 
 from mapper import Mapper
 #from sqlite import SqliteMapper
-from pyworkflow.object import *
-from pyworkflow.emx import *
 
-def buildObject(className, **args):
-    '''Instance the object give the className'''
-    return globals()[className](**args)
+
+
 

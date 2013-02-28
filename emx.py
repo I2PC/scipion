@@ -29,9 +29,11 @@ from object import Object, Float, Integer, String, Pointer
 from pydoc import classname
    
 class EmxScalar(Object):
-    '''Store a value and units'''
+    '''Store a value and units.
+    This class will behave like a simple type(Integer,Float,String)
+    but can set units and hold any of these types as value'''
     def __init__(self, ElemType=Float, unit=None, value=None, **args):
-        self.value = ElemType(store=False)
+        self.converter = ElemType(store=False)        
         Object.__init__(self, value, **args)        
         self.unit = String(unit, tag='attribute')
         
@@ -40,12 +42,13 @@ class EmxScalar(Object):
         
     def getUnit(self):
         return self.unit.get()
-        
-    def hasValue(self):    
-        return self.value.hasValue()
     
     def set(self, value):
-        self.value.set(value)
+        self.converter.set(value)
+        self.value = self.converter.value
+        
+    def convert(self, value):
+        return self.converter.convert(value)
     
 class EmxVector(Object):
     '''This class will implement a list of named elements.
@@ -57,7 +60,7 @@ class EmxVector(Object):
         self.keys = getattr(self, 'keys', ['X', 'Y', 'Z'])
         # Build items
         for k in self.keys:
-            setattr(self, k, EmxScalar(ElemType, args.get(k, None)))
+            setattr(self, k, EmxScalar(ElemType, value=args.get(k, None)))
         # Set unit for all items if comes as argument
         if 'unit' in args:
             self.setUnits(args.get('unit'))

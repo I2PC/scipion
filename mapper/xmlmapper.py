@@ -24,7 +24,7 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-from inspect import Attribute
+
 VERSION=1.0
 ROOTNAME = 'EMX'
 HEADER = '''
@@ -47,7 +47,7 @@ try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-from pyworkflow.mapper import Mapper, buildObject
+from pyworkflow.mapper import Mapper
 from pyworkflow.emx import EmxData
 
 from os.path import exists
@@ -98,13 +98,13 @@ class XmlMapper(Mapper):
     def convertToEmxData(self, emxData):
         '''Select object meetings some criterias'''
         for child in self.root:
-            obj = buildObject(child.tag, id=child.attrib)
+            obj = self.buildObject(child.tag, id=child.attrib)
             #objList.append(obj)
             emxData.addObject(obj)
             self.fillObject(obj, child)
         #set properlly primary keys
-        for object in self.foreignKeyAuxList:
-            for key, attr in object.getAttributesToStore():
+        for obj in self.foreignKeyAuxList:
+            for key, attr in obj.getAttributesToStore():
                 if attr.isPointer():
                     attr.set(self.emxData.getObjectwithID(key, attr.id))
 
@@ -149,10 +149,6 @@ class XmlMapper(Mapper):
         if value != None:
             childElem.text = str(value)
         return childElem
-    
-    def getNonNullObjectsToStoreXML(self):
-        pass
-
             
     def insertObjectWithChilds(self, obj, parentElem):
         for key, attr in obj.getAttributesToStore():
