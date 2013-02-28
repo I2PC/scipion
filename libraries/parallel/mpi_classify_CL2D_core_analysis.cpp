@@ -128,7 +128,8 @@ void ProgClassifyCL2DCore::produceSideInfo()
         block.fnLevelCore=fnLevel.insertBeforeExtension("_core");
         for (size_t i=0; i<blocksAux.size(); i++)
         {
-            if (blocksAux[i].find("class")!=std::string::npos && blocksAux[i].find("images")!=std::string::npos)
+            if (blocksAux[i].find("class")!=std::string::npos && 
+                blocksAux[i].find("images")!=std::string::npos)
             {
                 block.block=blocksAux[i];
                 blocks.push_back(block);
@@ -220,6 +221,8 @@ void ProgClassifyCL2DCore::computeStableCores()
             CL2DBlock &thisBlock=blocks[idx];
             if (thisBlock.level<=tolerance)
                 continue;
+            if (!existsBlockInMetaDataFile(thisBlock.fnLevelCore, thisBlock.block))
+                continue;
             thisClass.read(thisBlock.block+"@"+thisBlock.fnLevelCore);
             thisClassCore.clear();
 
@@ -244,6 +247,8 @@ void ProgClassifyCL2DCore::computeStableCores()
                         CL2DBlock &anotherBlock=blocks[n];
                         if (anotherBlock.level>=thisBlock.level)
                             break;
+                        if (!existsBlockInMetaDataFile(anotherBlock.fnLevelCore, anotherBlock.block))
+                            continue;
                         anotherClass.read(anotherBlock.block+"@"+anotherBlock.fnLevelCore);
                         anotherClass.intersection(thisClass,MDL_IMAGE);
                         commonImages.join(anotherClass,thisClass,MDL_IMAGE,LEFT);
