@@ -25,4 +25,4 @@
 
 #include <reconstruction/align_tilt_pairs.h>
 
-RUN_XMIPP_PROGRAM(ProgAlignTiltPairs);
+RUN_XMIPP_PROGRAM(ProgAlignTiltPairs)

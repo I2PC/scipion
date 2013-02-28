@@ -3,13 +3,8 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
-
-import java.awt.Cursor;
-import java.awt.Rectangle;
 import java.awt.Window;
-
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
@@ -19,43 +14,15 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
 
 	protected XmippMenuBar menu;
-
-	public static void main(String[] args)
-	{
-		try
-		{
-			// openImageJ(Tool.VIEWER);
-			//XmippStackWindow w = new XmippStackWindow(new ImagePlusLoader("/home/airen/hand.vol"));
-			XmippImageWindow w = new XmippImageWindow(null, new ImagePlusLoader("/home/airen/coss/PPPIauxRS_afterRotation.xmp"));
-			// IJ.open( "/home/airen/Coss/Xmipp/BPV_2/InputData/BPV_1386.mrc");
-
-		}
-		catch (Exception e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
 	private ImagePlusLoader ipl;
 	private Window window;
 
 
-//	public XmippImageWindow(ImagePlusLoader ipl)
-//	{
-//		this(null, ipl, ipl.getFileName());
-//	}
-//
 	public XmippImageWindow(Window window, ImagePlusLoader ipl)
 	{
 		this(window, ipl, ipl.getFileName());
 	}
-//
-//
-//	public XmippImageWindow(ImagePlusLoader ipl, String title)
-//	{
-//		this(null, ipl,title);
-//	}
+
 
 	public XmippImageWindow(Window window, ImagePlusLoader ipl, String title)
 	{
@@ -65,7 +32,18 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);		
-		
+		((XmippImageCanvas)getCanvas()).adjustMagnification();
+
+		XmippApplication.addInstance();
+		addWindowListener(new WindowAdapter()
+		{
+			@Override
+			public void windowClosing(WindowEvent arg0)
+			{
+				
+				XmippApplication.removeInstance();
+			}
+		});
 
 
 	}
@@ -81,6 +59,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 				((XmippImageCanvas)getCanvas()).loadData(this);
+				((XmippImageCanvas)getCanvas()).adjustMagnification();
 		}
 		catch (Exception e)
 		{
@@ -100,14 +79,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		saveDataAs(imp.getTitle());
 	}
 	
-	@Override
-	public void windowClosing(WindowEvent e) {
-		if(window == null)//if I am the main process I can close java
-			System.exit(0);
-		super.windowClosing(e);
-		if(XmippIJUtil.getXmippImageJ() != null)
-			XmippIJUtil.getXmippImageJ().close();
-	}
+
 	
 	public ImagePlusLoader getImagePlusLoader()
 	{

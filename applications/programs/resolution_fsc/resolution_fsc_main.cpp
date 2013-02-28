@@ -184,6 +184,7 @@ public:
         getFourierStatistics(MD, sam, MDout, do_dpr, max_sam);
         FileName fnRoot=(fn_root.empty())?fn_sel:fn_root;
         MDout.write(fnRoot+".frc");
+        return true;
     }
 
     void run()

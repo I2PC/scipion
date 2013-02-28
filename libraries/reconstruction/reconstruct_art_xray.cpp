@@ -71,9 +71,9 @@ void ProgReconsXrayART::readParams()
     fnStart = getParam("--start");
     sampling = getDoubleParam("--sampling_rate");
     lambdaART = getDoubleParam("-l");
-    Nit = getDoubleParam("-n");
+    Nit = getIntParam("-n");
     psfThr = getDoubleParam("--threshold");
-    nThreads = getDoubleParam("--thr");
+    nThreads = getIntParam("--thr");
 
     // Basis parameters
     //    basis.readParams(this);
@@ -115,8 +115,7 @@ double ProgReconsXrayART::singleStep(MultidimArray<double> &muVol, const Project
 {
     //    muVol.setXmippOrigin();
 
-    int iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim, rotXdim, rotYdim, rotZdim;
-    int zinit, zend, yinit, yend, xinit, xend;
+    size_t iniXdim, iniYdim, iniZdim, newXdim, newYdim, newZdim;
 
     iniXdim = XSIZE(muVol);
     iniYdim = YSIZE(muVol);

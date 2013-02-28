@@ -102,7 +102,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		filemn.add(importffmi);
 		if (pppicker.getFamily().getStep() != FamilyState.Manual)
 			importffmi.setEnabled(false);
-		importffilesmi = new JMenuItem("Import Particles From Files");
+		importffilesmi = new JMenuItem("Import Particles From Micrograph");
 		importffilesmi.addActionListener(new ActionListener() {
 			
 			@Override
@@ -114,7 +114,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		filemn.add(importffilesmi, 1);
 		// Setting menus
 		JMenu viewmn = new JMenu("View");
-		JMenu helpmn = new JMenu("Help");
 		mb.add(filemn);
 		mb.add(filtersmn);
 		mb.add(viewmn);
@@ -135,7 +134,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		viewmn.add(anglesmi);
 		viewmn.add(pmi);
 		viewmn.add(ijmi);
-		helpmn.add(hcontentsmi);
 	}
 	
 	protected void showImportFromFilesDialog(){
@@ -155,7 +153,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		JPanel fieldspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		// Setting color
-		initColorPane();
+		initColorPane(pppicker.getFamily().getColor());
 		fieldspn.add(colorbt);
 
 		// Setting slider
@@ -205,11 +203,11 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	private void formatMicrographsTable() {
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(120);
-		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(120);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(220);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(220);
 		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
 		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(60);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(395, 304));
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(595, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		System.out.println(index);
 		if(index != -1)
@@ -318,13 +316,14 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 		tiltedcanvas.repaint();
 	}
 
-	public void importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFolder(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		pppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+		String result = pppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
 		getCanvas().repaint();
 		updateMicrographsModel(true);
 		getCanvas().refreshActive(null);
 		tiltedcanvas.repaint();
+		return result;
 	}
 	
 
@@ -373,18 +372,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			loadParticles();
 	}
 
-	@Override
-	public boolean isValidSize(int size) {
-		UntiltedMicrograph um = pppicker.getMicrograph();
-		for(UntiltedParticle p: um.getParticles())
-			if(!pppicker.getMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
-		for(TiltedParticle p: um.getTiltedMicrograph().getParticles())
-			if(!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
-		return true;
-	}
-
+	
 	@Override
 	protected void openHelpURl() {
 		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph__picking_v3");
@@ -400,7 +388,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 	public void importParticlesFromFiles(Format format, String file1, String file2, float scale, boolean invertx, boolean inverty){
 			
 			getMicrograph().reset();
-			pppicker.importParticlesFromFiles(file1, file2, format, getMicrograph(), scale, invertx, inverty);
+			String result = pppicker.importParticlesFromFiles(file1, file2, format, getMicrograph(), scale, invertx, inverty);
 			pppicker.saveData(getMicrograph());
 			setChanged(false);
 			getCanvas().repaint();
@@ -410,14 +398,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame
 			canvas.refreshActive(null);
 	}
 	
-	
-
-	
-
 	@Override
-	public void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		importParticlesFromFolder(format, dir, scale, invertx, inverty);
+		return importParticlesFromFolder(format, dir, scale, invertx, inverty);
 		
 	}
 

@@ -13,6 +13,7 @@
 #include "xmipp_InternalData.h"
 #include <iostream>
 
+static jfieldID TiltPairAligner_peerId;
 
 JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_storeIds(JNIEnv *env,
 		jclass cls) {
@@ -88,6 +89,7 @@ JNIEXPORT jobject JNICALL Java_xmipp_jni_TiltPairAligner_getTiltedParticle(
 	if (!msg.empty()) {
 		handleXmippException(env, msg);
 	}
+	return NULL;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_TiltPairAligner_clear(JNIEnv *env,
@@ -145,5 +147,6 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_TiltPairAligner_computeAngles(JNIE
 	if (!msg.empty()) {
 		handleXmippException(env, msg);
 	}
+	return NULL;
 }
 

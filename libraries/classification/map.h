@@ -221,6 +221,7 @@ public:
     friend std::ostream& operator << (std::ostream& _os, const ClassificationMap& _som)
     {
         _som.printSelf(_os);
+        return _os;
     };
 
     /*
@@ -232,8 +233,8 @@ public:
     friend std::istream& operator >> (std::istream& _is, ClassificationMap& _som)
     {
         _som.readSelf(_is);
+        return _is;
     };
-
 
     /**
     * Operator "="
@@ -475,6 +476,7 @@ public:
     friend std::ostream& operator << (std::ostream& _os, const FuzzyMap& _fsom)
     {
         _fsom.printSelf(_os);
+        return _os;
     };
 
     /*
@@ -486,6 +488,7 @@ public:
     friend std::istream& operator >> (std::istream& _is, FuzzyMap& _fsom)
     {
         _fsom.readSelf(_is);
+        return _is;
     };
 
 

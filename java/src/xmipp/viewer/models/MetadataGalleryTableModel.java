@@ -209,12 +209,17 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 			title += String.format(" %d items", n);
 		if (data.hasRenderLabel())
 			title += String.format(" (%d x %d)", image_width, image_height);
+		
 		return title;
 	}// function getTitle
 
 	public String getImageFilename(int index, int label) {
 		try {
-			return data.getValueFromLabel(index, label);
+			String file = data.getValueFromLabel(index, label);
+			String mddir = data.md.getBaseDir();
+			file = Filename.fixPath(file, mddir, true);
+			System.out.println(file);
+			return file;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

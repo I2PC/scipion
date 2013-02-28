@@ -115,7 +115,7 @@ DataType ImageBase::datatypeTIFF(TIFFDirHead dHead)
         //                 dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP ) //Don't know why
         //            datatype = DT_UShort;
         //        //        else if (dHead.imageSampleFormat == 0     ||
-        //        //                 dHead.imageSampleFormat == 32767 ) // Format 0 and 32767 are not declared in TIFF 6.0 specifications ¿?
+        //        //                 dHead.imageSampleFormat == 32767 ) // Format 0 and 32767 are not declared in TIFF 6.0 specifications
         //        else
         //        datatype = DT_UShort;
         break;
@@ -193,8 +193,8 @@ int ImageBase::readTIFF(size_t select_img, bool isStack)
             if (dirHead[0].imageLength != dirHead[i].imageLength || \
                 dirHead[0].imageWidth != dirHead[i].imageWidth)
                 dirHead.resize(i);
-            //REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
-            //             " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));
+            /*REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
+                          " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));*/
         }
     }
 

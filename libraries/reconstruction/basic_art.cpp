@@ -370,9 +370,9 @@ void BasicARTParameters::readParams(XmippProgram * program)
 
     R = program->getDoubleParam("-R");
     proj_ext = program->getIntParam("--ext");
-    Xoutput_volume_size = program->getDoubleParam("--output_size", 0);
-    Youtput_volume_size = program->getDoubleParam("--output_size", 1);
-    Zoutput_volume_size = program->getDoubleParam("--output_size", 2);
+    Xoutput_volume_size = program->getIntParam("--output_size", 0);
+    Youtput_volume_size = program->getIntParam("--output_size", 1);
+    Zoutput_volume_size = program->getIntParam("--output_size", 2);
     sampling = program->getDoubleParam("--sampling_rate");
 
     // Parallel parameters
@@ -488,7 +488,6 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
         if (WLS)
         {
             MetaData SF_aux;
-            double weight=0.;
             SF_aux.read(fn_sel);
             if (SF_aux.containsLabel(MDL_ENABLED))
                 SF_aux.removeObjects(MDValueEQ(MDL_ENABLED, -1));
@@ -506,8 +505,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
         trueIMG = selfile.size();
         if (trueIMG == 0)
             REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Produce_Basic_ART_Side_Info: No images !!");
-        int idum;
-        size_t idumLong;
+        size_t idum, idumLong;
         getImageSize(selfile, projXdim, projYdim, idum, idumLong);
     }
 
@@ -541,6 +539,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
                         do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))
+        {
             if (parallel_mode == SIRT ||
                 parallel_mode == pSIRT ||
                 parallel_mode == pfSIRT ||
@@ -555,6 +554,7 @@ void BasicARTParameters::produceSideInfo(GridVolume &vol_basis0, int level,
                                   sort_last_N);
             else
                 noSort(numIMG, ordered_list);
+        }
     }
 
     /* In case of weighted least-squares, find average weight & write residual images ------ */
@@ -725,7 +725,7 @@ void BasicARTParameters::computeCAVWeights(GridVolume &vol_basis0,
     {
         progress_bar(numIMG);
         long int Neq = 0, Nunk = 0;
-        for (int n = 0; n < GVNeq->VolumesNo(); n++)
+        for (size_t n = 0; n < GVNeq->VolumesNo(); n++)
             FOR_ALL_ELEMENTS_IN_ARRAY3D((*GVNeq)(n)())
         {
             Neq += (*GVNeq)(n)(k, i, j);

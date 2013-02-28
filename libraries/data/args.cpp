@@ -27,7 +27,7 @@
 #include "matrix1d.h"
 
 // Get parameters from the command line ====================================
-char *getParameter(int argc, char **argv, const char *param, const char *option)
+const char *getParameter(int argc, const char **argv, const char *param, const char *option)
 {
     int i = 0;
 
@@ -43,7 +43,7 @@ char *getParameter(int argc, char **argv, const char *param, const char *option)
 }
 
 // Get 2 parameters ========================================================
-bool getTwoDoubleParams(int argc, char **argv, const char *param,
+bool getTwoDoubleParams(int argc, const char **argv, const char *param,
                         double &v1, double &v2, double v1_def, double v2_def)
 {
     bool retval;
@@ -67,7 +67,7 @@ bool getTwoDoubleParams(int argc, char **argv, const char *param,
 }
 
 // Get 3 parameters ========================================================
-bool getThreeDoubleParams(int argc, char **argv, const char *param,
+bool getThreeDoubleParams(int argc, const char **argv, const char *param,
                           double &v1, double &v2, double &v3,
                           double v1_def, double v2_def, double v3_def)
 {
@@ -94,7 +94,7 @@ bool getThreeDoubleParams(int argc, char **argv, const char *param,
 }
 
 // Checks if a boolean parameter was included the command line =============
-bool checkParameter(int argc, char **argv, const char *param)
+bool checkParameter(int argc, const char **argv, const char *param)
 {
     int i = 0;
 
@@ -108,7 +108,7 @@ bool checkParameter(int argc, char **argv, const char *param)
 }
 
 // Position of a parameter in the command line =============================
-int paremeterPosition(int argc, char **argv, const char *param)
+int paremeterPosition(int argc, const char **argv, const char *param)
 {
     int i = 0;
 
@@ -135,18 +135,20 @@ int numComponents(const std::string &str)
 }
 
 // Get float vector ========================================================
-Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param, int dim)
+Matrix1D<double> getVectorParameter(int argc, const char **argv, const char *param, int dim)
 {
     Matrix1D<double> aux;
     bool count_dimensionality = (dim == -1);
 
     // Find and form vector
     int pos = paremeterPosition(argc, argv, param);
-    if (pos == -1 || pos + 1 == argc)
+    if (pos == -1 || (pos + 1 == argc))
+    {
         if (count_dimensionality)
             return aux;
         else
             REPORT_ERROR(ERR_ARG_MISSING, param);
+    }
     pos++;
     if (*(argv[pos]) != '[')
     {
@@ -224,7 +226,7 @@ Matrix1D<double> getVectorParameter(FILE *fh, const char *param, int dim)
             REPORT_ERROR(ERR_ARG_MISSING, param);
     else
     {
-        retval = getVectorParameter(argcp, argvp, ((std::string)"-" + param).c_str(), dim);
+        retval = getVectorParameter(argcp, (const char **)argvp, ((std::string)"-" + param).c_str(), dim);
         delete copy;
         return retval;
     }

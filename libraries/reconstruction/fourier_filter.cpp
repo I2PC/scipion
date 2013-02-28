@@ -363,10 +363,15 @@ double FourierFilter::maskValue(const Matrix1D<double> &w)
         return ABS(ctf.getValueAt());
         break;
     case BFACTOR:
+        {
         double R = absw / w2;
         return exp( - (w1 / 4.)  * R * R);
+        }
         break;
+    default:
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown mask type");
     }
+    return 0;
 }
 
 /* Generate mask ----------------------------------------------------------- */
@@ -404,13 +409,13 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
             maskFourierd.setXmippOrigin();
 
             w.resizeNoCopy(3);
-            for (int k=0; k<ZSIZE(Fourier); k++)
+            for (size_t k=0; k<ZSIZE(Fourier); k++)
             {
                 FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
-                for (int i=0; i<YSIZE(Fourier); i++)
+                for (size_t i=0; i<YSIZE(Fourier); i++)
                 {
                     FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
-                    for (int j=0; j<XSIZE(Fourier); j++)
+                    for (size_t j=0; j<XSIZE(Fourier); j++)
                     {
                         FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
                         DIRECT_A3D_ELEM(maskFourierd,k,i,j)=maskValue(w);
@@ -425,16 +430,14 @@ void FourierFilter::generateMask(MultidimArray<double> &v)
         MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
         maskFourierd.initZeros(Fourier);
-        maskFourierd.setXmippOrigin();
-
         w.resizeNoCopy(3);
-        for (int k=0; k<ZSIZE(Fourier); k++)
+        for (size_t k=0; k<ZSIZE(Fourier); k++)
         {
             FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
-            for (int i=0; i<YSIZE(Fourier); i++)
+            for (size_t i=0; i<YSIZE(Fourier); i++)
             {
                 FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
-                for (int j=0; j<XSIZE(Fourier); j++)
+                for (size_t j=0; j<XSIZE(Fourier); j++)
                 {
                     FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
                     DIRECT_A3D_ELEM(maskFourierd,k,i,j)=maskValue(w);
@@ -486,13 +489,13 @@ void FourierFilter::applyMaskFourierSpace(const MultidimArray<double> &v, Multid
     else
     {
         w.resizeNoCopy(3);
-        for (int k=0; k<ZSIZE(V); k++)
+        for (size_t k=0; k<ZSIZE(V); k++)
         {
             FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
-            for (int i=0; i<YSIZE(V); i++)
+            for (size_t i=0; i<YSIZE(V); i++)
             {
                 FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
-                for (int j=0; j<XSIZE(V); j++)
+                for (size_t j=0; j<XSIZE(V); j++)
                 {
                     FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
                     DIRECT_A3D_ELEM(V,k,i,j)*=maskValue(w);
@@ -509,6 +512,8 @@ double FourierFilter::maskPower()
         return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
     else if (XSIZE(maskFourierd) != 0)
         return maskFourierd.sum2()/MULTIDIM_SIZE(maskFourierd);
+    else
+    	return 0;
 }
 
 // Correct phase -----------------------------------------------------------

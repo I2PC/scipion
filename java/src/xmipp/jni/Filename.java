@@ -182,11 +182,12 @@ public class Filename {
 	// Auxiliary methods.
 	public static String fixPath(String filename, String MDdir,
 			boolean shouldExist) {
-		MDdir += !MDdir.endsWith(File.separator) ? File.separator : "";
+		if(!MDdir.endsWith(File.separator))
+			MDdir += File.separator;
 		String fixed = filename;
 
-		if (!filename.startsWith(File.separator)) { // Absolute path?
-			String name = Filename.getFilename(filename);
+		if (!new File(filename).isAbsolute()) { // Absolute path?
+			String imagefile = Filename.getFilename(filename);
 			String strprefix = "";
 
 			if (filename.contains(Filename.SEPARATOR)) { // Has #image?
@@ -195,16 +196,16 @@ public class Filename {
 			}
 
 			// Checks if path is absolute...
-			if (!name.startsWith(File.separator)) {
+			if (!new File(imagefile).isAbsolute()) {
 				// ...if not: tries to build the absolute path:
 				// 1st case: Relative to metadata file (metadata_path + file)
-				String aux = URI.create(MDdir + name).normalize().getPath();
+				String aux = URI.create(MDdir + imagefile).normalize().getPath();
 				File f = new File(aux);
 				if (shouldExist && !f.exists()) {
 					// 2nd case: Relative to current dir.
 					aux = URI
 							.create(System.getProperty("user.dir")
-									+ File.separatorChar + name).normalize()
+									+ File.separatorChar + imagefile).normalize()
 							.getPath();
 					f = new File(aux);
 					if (!f.exists()) {
@@ -213,7 +214,7 @@ public class Filename {
 						String projectdir = findProjectDir(MDdir,
 								Filename.PROJECT_FILE);
 						if (projectdir != null) {
-							aux = URI.create(projectdir + name).normalize()
+							aux = URI.create(projectdir + imagefile).normalize()
 									.getPath();
 						}
 					}
@@ -396,7 +397,7 @@ public class Filename {
 	public static String getBaseName(String path) {
 		int index = path.lastIndexOf(File.separatorChar);
 		if (index != -1)
-			path = path.substring(index, path.length());
+			path = path.substring(index  + 1, path.length());
 		return path;
 	}
 	

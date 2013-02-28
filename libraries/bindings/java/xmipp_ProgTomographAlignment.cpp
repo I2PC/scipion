@@ -10,6 +10,8 @@
 
 #define MAXPATHLEN 1024
 
+static jfieldID ProgTomographAlignment_peerId ;
+
 JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_storeIds
   (JNIEnv *env, jclass cl){
   	ProgTomographAlignment_peerId = env->GetFieldID(cl, "peer", "J");
@@ -30,15 +32,17 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_create
 JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_setInputFilename
   (JNIEnv *env, jobject jobj, jstring inputFileName){
   ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
-const char * fnStr = env->GetStringUTFChars(inputFileName, false);
+  jboolean aux=false;
+  const char * fnStr = env->GetStringUTFChars(inputFileName, &aux);
   program->fnSel=fnStr;
   }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_setRoot
   (JNIEnv *env, jobject jobj, jstring root){
 	  ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
-const char * fnStr = env->GetStringUTFChars(root, false);
-program->fnRoot=fnStr;
+	  jboolean aux=false;
+	  const char * fnStr = env->GetStringUTFChars(root, &aux);
+	  program->fnRoot=fnStr;
 }
 
 std::string get_working_path() {
@@ -72,7 +76,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_writeTransformation
   (JNIEnv *env, jobject jobj, jstring fileName){
 	std::string msg = "";
   	try{
-  	  const char * fnStr = env->GetStringUTFChars(fileName, false);
+  	  jboolean aux=false;
+  	  const char * fnStr = env->GetStringUTFChars(fileName, &aux);
   	  ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
 program->writeTransformations(fnStr);
 } catch (XmippError xe) {
@@ -110,7 +115,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ProgTomographAlignment_run
 std::string msg = "";
 try {
 	ProgTomographAlignment *program = GET_INTERNAL_PTA(jobj);
-	std::vector<char*> args;
+	std::vector<const char*> args;
 	args.push_back("xmipp_tomo_align_tilt_series");
 	args.push_back("-i");
 	std::string input=std::string(program->fnSel);

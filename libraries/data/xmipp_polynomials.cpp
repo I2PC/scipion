@@ -38,39 +38,39 @@
 void PolyZernikes::create(const Matrix1D<int> & coef)
 {
 
-    Matrix2D<int> * fMatT;
+    Matrix2D<size_t> * fMatT;
 
-    for (int nZ = 0; nZ < VEC_XSIZE(coef); ++nZ)
+    for (size_t nZ = 0; nZ < VEC_XSIZE(coef); ++nZ)
     {
         if (VEC_ELEM(coef,nZ) == 0)
         {
-            fMatT = new Matrix2D<int>(1,1);
+            fMatT = new Matrix2D<size_t>(1,1);
             dMij(*fMatT,0,0)=0;
             //*fMatT = 0;
         }
         else
         {
             // Note that the paper starts in n=1 and we start in n=0
-            int n = ZERNIKE_ORDER(nZ);
-            int l = 2*nZ-n*(n+2);
-            int m = (n-l)/2;
+            size_t n = (size_t)ZERNIKE_ORDER(nZ);
+            size_t l = 2*nZ-n*(n+2);
+            size_t m = (n-l)/2;
 
-            Matrix2D<int> testM(n+1,n+1);
-            fMatT = new Matrix2D<int>(n+1,n+1);
+            Matrix2D<size_t> testM(n+1,n+1);
+            fMatT = new Matrix2D<size_t>(n+1,n+1);
 
-            int p = (l>0);
-            int q = ((n % 2 != 0) ? (abs(l)-1)/2 : (( l > 0 ) ? abs(l)/2-1 : abs(l)/2 ) );
+            size_t p = (l>0);
+            size_t q = ((n % 2 != 0) ? (abs(l)-1)/2 : (( l > 0 ) ? abs(l)/2-1 : abs(l)/2 ) );
             l = abs(l); //We want the positive value of l
             m = (n-l)/2;
 
-            for (int i = 0; i <= q; ++i)
+            for (size_t i = 0; i <= q; ++i)
             {
-                double K1=binom(l,2*i+p);
-                for (int j = 0; j <= m; ++j)
+                size_t K1=binom(l,2*i+p);
+                for (size_t j = 0; j <= m; ++j)
                 {
-                    double factor = ( (i+j)%2 ==0 ) ? 1 : -1 ;
-                    double K2=factor * K1 * fact(n-j)/(fact(j)*fact(m-j)*fact(n-m-j));
-                    for (int k = 0; k <= (m-j); ++k)
+                    size_t factor = ( (i+j)%2 ==0 ) ? 1 : -1 ;
+                    size_t K2=factor * K1 * fact(n-j)/(fact(j)*fact(m-j)*fact(n-m-j));
+                    for (size_t k = 0; k <= (m-j); ++k)
                     {
                         int ypow = 2 * (i+k) + p;
                         int xpow = n - 2 * (i+j+k) - p;
@@ -82,20 +82,19 @@ void PolyZernikes::create(const Matrix1D<int> & coef)
 
         fMatV.push_back(*fMatT);
     }
-};
+}
 
 void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, MultidimArray<double> &weight,
                        MultidimArray<bool> & ROI, int verbose)
 {
     this->create(coef);
 
-    int xdim = XSIZE(im);
-    int ydim = YSIZE(im);
-    int numZer = coef.sum();
+    size_t xdim = XSIZE(im);
+    size_t ydim = YSIZE(im);
+    int numZer = (size_t)coef.sum();
 
-    int index = 0;
     //Actually polOrder corresponds to the polynomial order +1
-    int polOrder=ZERNIKE_ORDER(coef.size());
+    int polOrder=(int)ZERNIKE_ORDER(coef.size());
 
     im.setXmippOrigin();
 
@@ -105,12 +104,12 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
     //Second argument means number of pixels
     WeightedLeastSquaresHelper weightedLeastSquaresHelper;
     Matrix2D<double>& zerMat=weightedLeastSquaresHelper.A;
-    zerMat.resizeNoCopy(ROI.sum(), numZer);
+    zerMat.resizeNoCopy((size_t)ROI.sum(), numZer);
     double iMaxDim2 = 2./std::max(xdim,ydim);
 
     size_t pixel_idx=0;
 
-    weightedLeastSquaresHelper.b.resizeNoCopy(ROI.sum());
+    weightedLeastSquaresHelper.b.resizeNoCopy((size_t)ROI.sum());
     weightedLeastSquaresHelper.w.resizeNoCopy(weightedLeastSquaresHelper.b);
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(im)
@@ -133,7 +132,7 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
                     dMij(polValue,px,py) = ypy*std::pow(x,px);
             }
 
-            Matrix2D<int> *fMat;
+            Matrix2D<size_t> *fMat;
 
             //We generate the representation of the Zernike polynomials
             for (int k=0; k < numZer; ++k)
@@ -144,15 +143,15 @@ void PolyZernikes::fit(const Matrix1D<int> & coef, MultidimArray<double> & im, M
                     continue;
 
                 double temp = 0;
-                for (int px = 0; px < (*fMat).Xdim(); ++px)
-                    for (int py = 0; py < (*fMat).Ydim(); ++py)
+                for (size_t px = 0; px < (*fMat).Xdim(); ++px)
+                    for (size_t py = 0; py < (*fMat).Ydim(); ++py)
                         temp += dMij(*fMat,py,px)*dMij(polValue,py,px);
 
                 dMij(zerMat,pixel_idx,k) = temp;
             }
 
             VEC_ELEM(weightedLeastSquaresHelper.b,pixel_idx)=A2D_ELEM(im,i,j);
-            VEC_ELEM(weightedLeastSquaresHelper.w,pixel_idx)=abs(A2D_ELEM(weight,i,j));
+            VEC_ELEM(weightedLeastSquaresHelper.w,pixel_idx)=std::abs(A2D_ELEM(weight,i,j));
             ++pixel_idx;
         }
     }
@@ -199,7 +198,7 @@ void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> &
 
     this->create(coef);
 
-    int polOrder=ZERNIKE_ORDER(coef.size());
+    int polOrder=(int)ZERNIKE_ORDER(coef.size());
     int numZer = coef.size();
 
     int xdim = XSIZE(im);
@@ -230,7 +229,7 @@ void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> &
                     dMij(polValue,px,py) = ypy*std::pow(x,px);
             }
 
-            Matrix2D<int> *fMat;
+            Matrix2D<size_t> *fMat;
             //We generate the representation of the Zernike polynomials
 
             for (int k=0; k < numZer; ++k)
@@ -240,8 +239,8 @@ void PolyZernikes::zernikePols(const Matrix1D<int> coef, MultidimArray<double> &
                 if ( (dMij(*fMat,0,0) == 0) && MAT_SIZE(*fMat) == 1 )
                     continue;
 
-                for (int px = 0; px < (*fMat).Xdim(); ++px)
-                    for (int py = 0; py < (*fMat).Ydim(); ++py)
+                for (size_t px = 0; px < (*fMat).Xdim(); ++px)
+                    for (size_t py = 0; py < (*fMat).Ydim(); ++py)
                         temp += dMij(*fMat,py,px)*dMij(polValue,py,px)*VEC_ELEM(coef,k);
             }
 

@@ -1,6 +1,7 @@
 package xmipp.viewer.particlepicker.training.model;
 
 import ij.ImagePlus;
+import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
@@ -78,9 +79,11 @@ public class TrainingParticle extends PickerParticle{
 			ImagePlus mimage = micrograph.getImagePlus();
 			int radius = size/2;
 			Rectangle r = new Rectangle(x - radius , y - radius, radius * 2, radius * 2);
+			Roi roi = mimage.getRoi();
 			mimage.setRoi(r);
 			ImageProcessor processor = mimage.getProcessor().crop();
 			img = new ImagePlus("", processor);
+			mimage.setRoi(roi);
 		}
 		return img;
 	}
@@ -89,8 +92,8 @@ public class TrainingParticle extends PickerParticle{
 	public void setPosition(int x, int y)
 	{
 		int radius = family.getSize()/2;
-		if(x - radius < 0 || y - radius < 0 || x + radius > micrograph.getImagePlus().getWidth() || y + radius > micrograph.getImagePlus().getHeight())
-			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format(" particle center: %s %s", x, y)));
+		if(!getMicrograph().fits(x, y, getFamily().getSize()))
+			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format("Particle centered at %s, %s with size %s", x, y, getFamily().getSize())));
 		super.setPosition(x, y);
 		
 		img = null;
@@ -103,6 +106,10 @@ public class TrainingParticle extends PickerParticle{
 		return icon;
 	}
 	
+	public void resetImagePlus()
+	{
+		img = null;
+	}
 	
 
 	public ImageGeneric getImageGeneric() {
@@ -112,6 +119,8 @@ public class TrainingParticle extends PickerParticle{
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+
+
 
 	
 }

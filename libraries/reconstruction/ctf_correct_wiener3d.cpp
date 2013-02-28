@@ -72,7 +72,7 @@ void ProgCtfCorrectAmplitude3D::defineParams()
     addExampleLine("xmipp_ctf_correct_wiener3d -i ctf_correct3d.xmd --oroot volumeCorrected");
     addExampleLine("In the following link you can find an example of input file:",false);
     addExampleLine(" ",false);
-    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/ctf_correct3d.xmd",false);
+    addExampleLine("http://sourceforge.net/p/testxmipp/code/ci/3.0/tree/input/ctf_correct3d.xmd",false);
 }
 
 /* Produce Side information ------------------------------------------------ */
@@ -93,7 +93,7 @@ void ProgCtfCorrectAmplitude3D::produceSideInfo()
 }
 
 /* Make 3D CTF ------------------------------------------------------------- */
-void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, const double nr_steps,
+void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, size_t nr_steps,
         MultidimArray<double> &CTF1D)
 {
     // Read the CTF
@@ -103,12 +103,12 @@ void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, const doubl
     ctf.ctf.produceSideInfo();
 
     double maxres = ( 0.5 * sqrt(3.) ) / ctf.ctf.Tm;
-    double stepsize = maxres / nr_steps;
+    double stepsize = maxres / (double)nr_steps;
     CTF1D.resizeNoCopy(nr_steps);
     double freq = 0.;
 
     freq=0.;
-    for (int step=0; step < nr_steps; step++)
+    for (size_t step=0; step < nr_steps; step++)
     {
         if ( (minFreq < 0) || (1./freq < minFreq) )
         {
@@ -127,13 +127,12 @@ void ProgCtfCorrectAmplitude3D::generateCTF1D(const FileName &fnCTF, const doubl
 void ProgCtfCorrectAmplitude3D::generateWienerFilters()
 {
     MultidimArray<double> CTF1D, sumterm;
-    int nrimgs;
     std::ofstream  fh;
     double res;
     double tot_nr_imgs = 0;
     // Oversample the 1D CTF and Wiener filter vectors OVERSAMPLE times
     // Use 0.55*sqrt(3) to make sure all pixels fit in...
-    double nr_steps= CEIL(OVERSAMPLE * 0.55 * sqrt((double)(Zdim*Zdim + Ydim*Ydim + Xdim*Xdim)));
+    size_t nr_steps= (size_t)ceil(OVERSAMPLE * 0.55 * sqrt((double)(Zdim*Zdim + Ydim*Ydim + Xdim*Xdim)));
 
     Vctfs1D.clear();
     Vwien1D.clear();
@@ -186,7 +185,7 @@ void ProgCtfCorrectAmplitude3D::generateWienerFilters()
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
                 REPORT_ERROR(ERR_IO_NOWRITE, fn_tmp);
-            for (int step = 0; step < nr_steps; step++)
+            for (size_t step = 0; step < nr_steps; step++)
             {
                 res = (step * sqrt(3.) ) /
                       (OVERSAMPLE * sqrt( (double) (Zdim*Zdim + Ydim*Ydim + Xdim*Xdim) ) );
@@ -236,9 +235,9 @@ void ProgCtfCorrectAmplitude3D::generateVolumes()
             YY(idx) = i;
             ZZ(idx) = k;
             FFT_idx2digfreq(fft, idx, freq);
-            int ires= round(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim2+
-                                            YY(freq)*YY(freq)*Ydim2+
-                                            ZZ(freq)*ZZ(freq)*Zdim2));
+            int ires= (int)round(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim2+
+                                                 YY(freq)*YY(freq)*Ydim2+
+                                                 ZZ(freq)*ZZ(freq)*Zdim2));
             A3D_ELEM(fft_out,k,i,j)+=A1D_ELEM(Vwien1D_ii,ires)*A3D_ELEM(fft,k,i,j);
         }
         ii++;
@@ -262,9 +261,9 @@ void ProgCtfCorrectAmplitude3D::generateVolumes()
             YY(idx) = i;
             ZZ(idx) = k;
             FFT_idx2digfreq(fft, idx, freq);
-            int ires= round(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim2+
-                                            YY(freq)*YY(freq)*Ydim2+
-                                            ZZ(freq)*ZZ(freq)*Zdim2));
+            int ires= (int)round(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim2+
+                                                 YY(freq)*YY(freq)*Ydim2+
+                                                 ZZ(freq)*ZZ(freq)*Zdim2));
             A3D_ELEM(fft,k,i,j)+=A1D_ELEM(Vwien1D_ii,ires)*A3D_ELEM(fft_out,k,i,j);
         }
         ii++;

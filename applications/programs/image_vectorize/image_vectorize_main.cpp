@@ -58,7 +58,7 @@ public:
         fnIn = getParam("-i");
         fnOut = getParam("-o");
         mask.allowed_data_types = INT_MASK;
-        if (apply_mask = checkParam("--mask"))
+        if ((apply_mask = checkParam("--mask")))
             mask.readParams(this);
     }
 
@@ -111,7 +111,7 @@ public:
                     if (apply_mask)
                     {
                         mask.generate_mask(ZSIZE(img()),YSIZE(img()),XSIZE(img()));
-                        vectorSize=mask.get_binary_mask().sum();
+                        vectorSize=(int)mask.get_binary_mask().sum();
                     }
                     else
                         vectorSize=MULTIDIM_SIZE(img());

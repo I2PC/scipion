@@ -56,7 +56,7 @@ void ProgMPIXrayProject::read(int argc, char** argv)
     node = new MpiNode(argc, argv);
     if (!node->isMaster())
         verbose = 0;
-    ProgXrayProject::read(argc, argv);
+    ProgXrayProject::read(argc, (const char **)argv);
 }
 
 void ProgMPIXrayProject::run()
@@ -64,10 +64,7 @@ void ProgMPIXrayProject::run()
     preRun();
 
     // Project
-
     projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
-    double tRot,tTilt,tPsi,rot,tilt,psi;
-
 
     //    // Assign mpi node information
     //    MpiNode & node = *node;
@@ -142,8 +139,8 @@ void ProgMPIXrayProject::run()
 
         // Creation of output file to reserve space
         createEmptyFile(mpiData[mpiData.size()-1].fn_proj,
-                        XMIPP_MIN(XSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Xdim),
-                        XMIPP_MIN(YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Ydim));
+                        XMIPP_MIN(XSIZE(MULTIDIM_ARRAY(phantom.iniVol)),(size_t)projParam.proj_Xdim),
+                        XMIPP_MIN(YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),(size_t)projParam.proj_Ydim));
 
         std::cout << "Projecting ...\n";
     }

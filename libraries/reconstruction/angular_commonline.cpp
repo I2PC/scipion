@@ -340,7 +340,7 @@ double wrapperSolverEnergy(double trial[], void *prm)
 }
 
 /* Parameters -------------------------------------------------------------- */
-void Prog_Angular_CommonLine::read(int argc, char **argv)
+void Prog_Angular_CommonLine::read(int argc, const char **argv)
 {
     fnSel = getParameter(argc,argv,"-i");
     fnOut = getParameter(argc,argv,"-oang");
@@ -429,7 +429,7 @@ void Prog_Angular_CommonLine::produceSideInfo()
         Radon_Transform(img[n],deltaRot,RT);
 
         // Separate each projection line and compute derivative
-        for (int i=0; i<YSIZE(RT); i++)
+        for (size_t i=0; i<YSIZE(RT); i++)
         {
             RT.getRow(i,projection);
             radon[n].push_back(projection);
@@ -478,7 +478,6 @@ double Prog_Angular_CommonLine::optimizeGroup(const Matrix1D<int> &imgIdx,
     double previous_energy = 2;
     double first_energy = 2;
     int    NGenStep=NGen/100;
-    int    Nimg=SF.size();
     int    NToSolve=VEC_XSIZE(imgIdx);
 
     // Optimize with Differential Evolution
@@ -526,7 +525,7 @@ double Prog_Angular_CommonLine::optimizeGroup(const Matrix1D<int> &imgIdx,
 
 
         // Stopping criterion
-        if (count_repetitions>=10 && count>=50 || count==100)
+        if (count_repetitions>=10 && (count>=50 || count==100))
             done=true;
 
         previous_energy = current_energy;
@@ -551,7 +550,7 @@ double Prog_Angular_CommonLine::optimizeGroup(const Matrix1D<int> &imgIdx,
 /* Optimize ---------------------------------------------------------------- */
 void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 {
-    int Nimg = SF.size();
+    size_t Nimg = SF.size();
     solution.initZeros(3*Nimg);
     Matrix1D<int> assigned, tabuPenalization;
     assigned.initZeros(Nimg);
@@ -570,7 +569,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         std::vector < std::vector< double > > correlations;
         eulerAngles.clear();
         correlations.clear();
-        for (int i=0; i<Nimg; i++)
+        for (size_t i=0; i<Nimg; i++)
         {
             std::vector< Matrix1D<double> > dummy1;
             std::vector< double > dummy2;
@@ -581,8 +580,8 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
         // For each image try different pairs and get different alignments
         std::cout << "Aligning image pairs, "
         << Nimg-assigned.sum() << " images remaining ...\n";
-        init_progress_bar(Nimg-assigned.sum());
-        for (int i=0; i<Nimg; i++)
+        init_progress_bar((int)(Nimg-assigned.sum()));
+        for (size_t i=0; i<Nimg; i++)
         {
             if (assigned(i) || tabuPenalization(i)>0)
                 continue;
@@ -611,18 +610,18 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
             progress_bar(i);
         }
-        progress_bar(Nimg-assigned.sum());
+        progress_bar((int)(Nimg-assigned.sum()));
 
         // Compute for each image the variance in the top assignment
-        int Nsym=SL.symsNo();
+        size_t Nsym=SL.symsNo();
         double bestDistance=-2;
         int besti=-1;
-        int topN=NGroup;
-        for (int i=0; i<Nimg; i++)
+        size_t topN=NGroup;
+        for (size_t i=0; i<Nimg; i++)
             if (eulerAngles[i].size()<2*topN && !assigned(i) &&
                 tabuPenalization(i)==0)
-                topN=CEIL(eulerAngles[i].size()/2);
-        for (int i=0; i<Nimg; i++)
+                topN=(size_t)ceil(eulerAngles[i].size()/2);
+        for (size_t i=0; i<Nimg; i++)
         {
             // If the particle has  already been assigned skip it
             if (assigned(i) || tabuPenalization(i)>0)
@@ -631,7 +630,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             // Sort the images by ascending correlation
             MultidimArray<double> aux;
             aux.initZeros(eulerAngles[i].size());
-            for (int n=0; n<eulerAngles[i].size(); n++)
+            for (size_t n=0; n<eulerAngles[i].size(); n++)
                 aux(n)=correlations[i][n];
             MultidimArray<int> idx;
             aux.indexSort(idx);
@@ -693,7 +692,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             // Sort the images by ascending correlation in the best cluster
         	MultidimArray<double> aux;
             aux.initZeros(eulerAngles[besti].size());
-            for (int n=0; n<eulerAngles[besti].size(); n++)
+            for (size_t n=0; n<eulerAngles[besti].size(); n++)
                 aux(n)=correlations[besti][n];
             MultidimArray<int> idx;
             aux.indexSort(idx);
@@ -701,7 +700,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             // Keep only the topN
             std::vector< Matrix1D<double> > bestEulerAngles;
             std::vector< double > bestCorrelations;
-            for (int n=XSIZE(idx)-topN; n<XSIZE(idx); n++)
+            for (size_t n=XSIZE(idx)-topN; n<XSIZE(idx); n++)
             {
                 bestEulerAngles.push_back(eulerAngles[besti][idx(n)-1]);
                 bestCorrelations.push_back(correlations[besti][idx(n)-1]);
@@ -710,7 +709,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             // Show best resolved image
             std::cout << "Candidates for image " << besti << " distance="
             << bestDistance << std::endl;
-            for (int n=0; n<bestEulerAngles.size(); n++)
+            for (size_t n=0; n<bestEulerAngles.size(); n++)
             {
                 Matrix1D<double> direction;
                 Euler_direction(bestEulerAngles[n](0),
@@ -726,7 +725,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             std::vector< double > clusterBestCorrelation;
             Matrix1D<int> alreadyClustered;
             alreadyClustered.initZeros(topN);
-            for (int j1=0; j1<topN; j1++)
+            for (size_t j1=0; j1<topN; j1++)
             {
                 if (!alreadyClustered(j1))
                 {
@@ -738,7 +737,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                                         E1);
                     double bestCorrelation=bestCorrelations[j1];
                     int bestAssignment=j1;
-                    for (int j2=j1+1; j2<topN; j2++)
+                    for (size_t j2=j1+1; j2<topN; j2++)
                     {
                         if (!alreadyClustered(j2))
                         {
@@ -748,7 +747,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                                                 bestEulerAngles[j2](2),E2);
                             double bestCorrE1E2=
                                 Euler_distanceBetweenMatrices(E1,E2);
-                            for (int sym=0; sym<Nsym; sym++)
+                            for (size_t sym=0; sym<Nsym; sym++)
                             {
                                 double otherrot, othertilt, otherpsi;
                                 Euler_apply_transf(L[sym],R[sym],
@@ -804,7 +803,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                 {
                     Matrix1D<double> backupCurrentSolution;
                     backupCurrentSolution=currentSolution;
-                    for (int n=0; n<clusterBestAssignment.size(); n++)
+                    for (size_t n=0; n<clusterBestAssignment.size(); n++)
                     {
                         std::cout << "Trying solution of cluster " << n << std::endl;
                         currentSolution(3*besti)   = bestEulerAngles[
@@ -857,7 +856,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             }
 
             // Cleaning of the "garbage"
-            int totalAssigned=assigned.sum();
+            int totalAssigned=(int)assigned.sum();
             std::cout << "removal=" << removalCounter
             << " totalAssigned=" << totalAssigned
             << std::endl;
@@ -917,7 +916,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
 
                 if (imgsToRemove.size()!=0)
                 {
-                    for (int n=0; n<imgsToRemove.size(); n++)
+                    for (size_t n=0; n<imgsToRemove.size(); n++)
                     {
                         int imin=imgsToRemove[n];
                         std::cout << "Image " << imin << " removed from the "
@@ -930,7 +929,7 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
                                                     currentSolution(3*imin+2)=0;
                         currentImgAvgCorrelation(imin)=0;
                         currentImgMinCorrelation(imin)=2;
-                        for (int i=0; i<XSIZE(currentCorrelationMatrix); i++)
+                        for (size_t i=0; i<XSIZE(currentCorrelationMatrix); i++)
                             currentCorrelationMatrix(i,imin)=
                                 currentCorrelationMatrix(imin,i)=0;
                         tabuPenalization(imin)+=10;
@@ -1008,10 +1007,10 @@ double Prog_Angular_CommonLine::computeClusters(
     while (clusters.size()>2)
     {
         // Look for the two closest clusters
-        int besti=-1, bestj=-1;
+    	size_t besti=0, bestj=0;
         double bestCorr=-1;
-        for (int i=0; i<YSIZE(worseCorrelationMatrix); i++)
-            for (int j=i+1; j<XSIZE(worseCorrelationMatrix); j++)
+        for (size_t i=0; i<YSIZE(worseCorrelationMatrix); i++)
+            for (size_t j=i+1; j<XSIZE(worseCorrelationMatrix); j++)
                 if (worseCorrelationMatrix(i,j)>bestCorr)
                 {
                     bestCorr=worseCorrelationMatrix(i,j);
@@ -1024,13 +1023,13 @@ double Prog_Angular_CommonLine::computeClusters(
         // std::cout << "Best Correlation Matrix:\n" << bestCorrelationMatrix << std::endl;
 
         // Join them in the list
-        for (int n=0; n<clusters[bestj].size(); n++)
+        for (size_t n=0; n<clusters[bestj].size(); n++)
             clusters[besti].push_back(clusters[bestj][n]);
         clusters.erase(clusters.begin()+bestj);
 
         // Readjust the distance between this new cluster and the rest
         // of the existing
-        for (int i=0; i<YSIZE(worseCorrelationMatrix); i++)
+        for (size_t i=0; i<YSIZE(worseCorrelationMatrix); i++)
         {
             if (i!=besti)
             {
@@ -1055,16 +1054,16 @@ double Prog_Angular_CommonLine::computeClusters(
         }
 
         // Move everything from bestj to the left
-        for (int i=0; i<YSIZE(worseCorrelationMatrix); i++)
-            for (int j=bestj; j<XSIZE(worseCorrelationMatrix)-1; j++)
+        for (size_t i=0; i<YSIZE(worseCorrelationMatrix); i++)
+            for (size_t j=bestj; j<XSIZE(worseCorrelationMatrix)-1; j++)
             {
                 worseCorrelationMatrix(i,j)=worseCorrelationMatrix(i,j+1);
                 bestCorrelationMatrix(i,j)=bestCorrelationMatrix(i,j+1);
             }
 
         // Move everything from bestj to the top
-        for (int i=bestj; i<YSIZE(worseCorrelationMatrix)-1; i++)
-            for (int j=0; j<XSIZE(worseCorrelationMatrix); j++)
+        for (size_t i=bestj; i<YSIZE(worseCorrelationMatrix)-1; i++)
+            for (size_t j=0; j<XSIZE(worseCorrelationMatrix); j++)
             {
                 worseCorrelationMatrix(i,j)=worseCorrelationMatrix(i+1,j);
                 bestCorrelationMatrix(i,j)=bestCorrelationMatrix(i+1,j);
@@ -1078,17 +1077,17 @@ double Prog_Angular_CommonLine::computeClusters(
     }
 
     // Substitute the cluster indexes by image indexes
-    for (int n=0; n<2; n++)
-        for (int i=0;i<clusters[n].size(); i++)
+    for (size_t n=0; n<2; n++)
+        for (size_t i=0;i<clusters[n].size(); i++)
             clusters[n][i]=idxImgs[clusters[n][i]];
 
     // Compute the separability
     Matrix1D<double> avgDistancek;
     avgDistancek.initZeros(2);
-    for (int n=0; n<2; n++)
+    for (size_t n=0; n<2; n++)
     {
-        for (int i=0;i<clusters[n].size(); i++)
-            for (int j=0;j<clusters[n].size(); j++)
+        for (size_t i=0;i<clusters[n].size(); i++)
+            for (size_t j=0;j<clusters[n].size(); j++)
                 if (i!=j)
                     avgDistancek(n)+=correlationMatrix(
                                          clusters[n][i],clusters[n][j]);
@@ -1109,7 +1108,7 @@ double Prog_Angular_CommonLine::computeClusters(
         for (int n=0; n<2; n++)
         {
             std::cout << "Cluster " << n << ": ";
-            for (int i=0;i<clusters[n].size(); i++)
+            for (size_t i=0;i<clusters[n].size(); i++)
                 std::cout << clusters[n][i] << " ";
             std::cout << std::endl;
         }
@@ -1134,8 +1133,8 @@ std::vector<int> Prog_Angular_CommonLine::removeViaClusters(
     std::vector< std::vector<int> > clusters;
     MultidimArray<double> worseCorrelationMatrix;
     MultidimArray<double> bestCorrelationMatrix;
-    double mergeDistance=computeClusters(correlationMatrix,clusters,
-                                         worseCorrelationMatrix, bestCorrelationMatrix, true);
+    computeClusters(correlationMatrix,clusters,
+                    worseCorrelationMatrix, bestCorrelationMatrix, true);
     if (clusters[0].size()+clusters[1].size()<=4)
         return retval;
 
@@ -1148,11 +1147,6 @@ std::vector<int> Prog_Angular_CommonLine::removeViaClusters(
         nmax=0;
     }
 
-    // Find the more loose cluster
-    int nloose=0;
-    if (worseCorrelationMatrix(0,0)>worseCorrelationMatrix(1,1))
-        nloose=1;
-
     // Choose the element or elements to remove
     double diameter0=(bestCorrelationMatrix(0,0)-worseCorrelationMatrix(0,0));
     double diameter1=(bestCorrelationMatrix(1,1)-worseCorrelationMatrix(1,1));
@@ -1161,7 +1155,7 @@ std::vector<int> Prog_Angular_CommonLine::removeViaClusters(
 
     if (separated && clusters[nmin].size()<=3 && clusters[nmax].size()>=6)
     {
-        for (int i=0;i<clusters[nmin].size(); i++)
+        for (size_t i=0;i<clusters[nmin].size(); i++)
         {
             int imin=clusters[nmin][i];
             retval.push_back(imin);
@@ -1172,7 +1166,7 @@ std::vector<int> Prog_Angular_CommonLine::removeViaClusters(
         // Look for the worse image within this cluster
         int imin=-1;
         double worseCorrelation=2;
-        for (int i=0;i<clusters[nmin].size(); i++)
+        for (size_t i=0;i<clusters[nmin].size(); i++)
         {
             int imgIndex=clusters[nmin][i];
             if (currentImgAvgCorrelation(imgIndex)<worseCorrelation)
@@ -1186,7 +1180,7 @@ std::vector<int> Prog_Angular_CommonLine::removeViaClusters(
 
     // Return which image to remove
     std::cout << "Remove images: ";
-    for (int i=0; i< retval.size(); i++)
+    for (size_t i=0; i< retval.size(); i++)
         std::cout << retval[i] << " ";
     std::cout << std::endl;
     return retval;
@@ -1198,7 +1192,7 @@ double Prog_Angular_CommonLine::realignCurrentSolution()
     FOR_ALL_ELEMENTS_IN_MATRIX1D(alreadyOptimized)
     if (alreadyOptimized(i)==2)
         alreadyOptimized(i)=1;
-    int NToSolve=alreadyOptimized.sum();
+    int NToSolve=(int)alreadyOptimized.sum();
     Matrix1D<int> imgIdx(NToSolve);
     int idx=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(alreadyOptimized)

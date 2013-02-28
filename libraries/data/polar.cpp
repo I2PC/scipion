@@ -37,7 +37,7 @@ void fourierTransformRings(Polar<double> & in,
 		if (conjugated) {
 			double *ptrFring_i = (double*) &DIRECT_A1D_ELEM(Fring,0);
 			++ptrFring_i;
-			for (int i = 0; i < XSIZE(Fring); ++i, ptrFring_i += 2)
+			for (size_t i = 0; i < XSIZE(Fring); ++i, ptrFring_i += 2)
 				(*ptrFring_i) *= -1;
 		}
 		out.rings.push_back(Fring);
@@ -105,7 +105,7 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 
 	angles.resize(XSIZE(aux.local_transformer.getReal()));
 	double Kaux = 360. / XSIZE(angles);
-	for (int i = 0; i < XSIZE(angles); i++)
+	for (size_t i = 0; i < XSIZE(angles); i++)
 		DIRECT_A1D_ELEM(angles,i) = (double) i * Kaux;
 }
 
@@ -181,14 +181,14 @@ void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
 void image_convertCartesianToPolar(MultidimArray<double> &in,
 		MultidimArray<double> &out, double Rmin, double Rmax, double deltaR,
 		double angMin, double angMax, double deltaAng) {
-	int NAngSteps = floor((angMax - angMin) / deltaAng);
-	int NRSteps = floor((Rmax - Rmin) / deltaR);
+	size_t NAngSteps = (size_t)floor((angMax - angMin) / deltaAng);
+	size_t NRSteps = (size_t)floor((Rmax - Rmin) / deltaR);
 	out.initZeros(NAngSteps, NRSteps);
-	for (int i = 0; i < NAngSteps; ++i) {
+	for (size_t i = 0; i < NAngSteps; ++i) {
 		double s, c;
 		double angle = angMin + i * deltaAng;
 		sincos(angle, &s, &c);
-		for (int j = 0; j < NRSteps; ++j) {
+		for (size_t j = 0; j < NRSteps; ++j) {
 			double R = Rmin + j * deltaR;
 			A2D_ELEM(out,i,j) = in.interpolatedElement2D(R * c, R * s);
 		}
@@ -228,8 +228,8 @@ void image_convertCartesianToPolar_ZoomAtCenter(const MultidimArray<double> &in,
 void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 		MultidimArray<double> &out, double Rmin, double Rmax, double deltaR,
 		double angMin, double angMax, double deltaAng, Matrix1D<double> &axis) {
-	int NAngSteps = floor((angMax - angMin) / deltaAng);
-	int NRSteps = floor((Rmax - Rmin) / deltaR);
+	size_t NAngSteps = (size_t)floor((angMax - angMin) / deltaAng);
+	size_t NRSteps = (size_t)floor((Rmax - Rmin) / deltaR);
 	out.initZeros(ZSIZE(in), NAngSteps, NRSteps);
 	STARTINGZ(out) = STARTINGZ(in);
 	STARTINGY(out) = STARTINGX(out) = 0;
@@ -251,14 +251,14 @@ void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 	}
 
 	Matrix1D<double> p(3), pc(3);
-	SPEED_UP_temps;
-	for (int i = 0; i < NAngSteps; ++i) {
+	SPEED_UP_temps012;
+	for (size_t i = 0; i < NAngSteps; ++i) {
 		double s, c;
 		double angle = angMin + i * deltaAng;
 		sincos(angle, &s, &c);
 		for (int k = STARTINGZ(in); k <= FINISHINGZ(in); ++k) {
 			ZZ(p)=k;
-			for (int j = 0; j < NRSteps; ++j) {
+			for (size_t j = 0; j < NRSteps; ++j) {
 				double R = Rmin + j * deltaR;
 				YY(p)=R*s;
 				XX(p)=R*c;
@@ -278,24 +278,24 @@ void volume_convertCartesianToCylindrical(const MultidimArray<double> &in,
 void volume_convertCartesianToSpherical(const MultidimArray<double> &in,
 		MultidimArray<double> &out, double Rmin, double Rmax, double deltaR,
 		double deltaRot, double deltaTilt) {
-	int NRotSteps = floor(2*PI / deltaRot);
-	int NTiltSteps = floor(PI / deltaRot);
-	int NRSteps = floor((Rmax - Rmin) / deltaR);
+	size_t NRotSteps = (size_t)floor(2*PI / deltaRot);
+	size_t NTiltSteps = (size_t)floor(PI / deltaRot);
+	size_t NRSteps = (size_t)floor((Rmax - Rmin) / deltaR);
 	out.initZeros(NRSteps, NRotSteps, NTiltSteps);
 	STARTINGZ(out) = STARTINGY(out) = STARTINGX(out) = 0;
 
 	Matrix1D<double> p(3);
-	for (int i = 0; i < NRotSteps; ++i) {
+	for (size_t i = 0; i < NRotSteps; ++i) {
 		double srot, crot;
 		double rot = i * deltaRot;
 		sincos(rot, &srot, &crot);
-		for (int j = 0; j < NRotSteps; ++j) {
+		for (size_t j = 0; j < NRotSteps; ++j) {
 			double stilt, ctilt;
 			double tilt = j * deltaTilt;
 			sincos(tilt, &stilt, &ctilt);
 			double sc=stilt*crot;
 			double ss=stilt*srot;
-			for (int k = 0; k<NRSteps; ++k) {
+			for (size_t k = 0; k<NRSteps; ++k) {
 				double R = Rmin + k * deltaR;
 				ZZ(p)=R*ctilt;
 				YY(p)=R*ss;

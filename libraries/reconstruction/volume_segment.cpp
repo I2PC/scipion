@@ -64,7 +64,7 @@ void ProgVolumeSegment::readParams()
     else if (method=="prob")
     {
         do_prob = true;
-        wang_radius = getDoubleParam("--method", 1);
+        wang_radius = getIntParam("--method", 1);
     }
 }
 
@@ -297,8 +297,6 @@ void ProgVolumeSegment::segment(Image<double> &mask)
     V().computeDoubleMinMax(val_min, val_max);
     th_min = val_min;
     th_max = val_max;
-    double mass_min = MULTIDIM_SIZE(V());
-    double mass_max = 1;
 
     bool ok = false;
     if (!otsu)
@@ -323,12 +321,10 @@ void ProgVolumeSegment::segment(Image<double> &mask)
                 if (mass_med < voxel_mass)
                 {
                     th_max = th_med;
-                    mass_max = mass_med;
                 }
                 else
                 {
                     th_min = th_med;
-                    mass_min = mass_med;
                 }
             }
             while (true);

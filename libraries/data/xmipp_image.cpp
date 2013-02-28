@@ -43,36 +43,32 @@ void Image< std::complex< double > >::castPage2T(char * page,
     case DT_CShort:
         {
             std::complex<short> * ptr = (std::complex<short> *) page;
-            for(int i=0; i<pageSize;i++)
+            for(size_t i=0; i<pageSize;i++)
                 ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
-            break;
         }
+        break;
     case DT_CInt:
-            {
-                std::complex<int> * ptr = (std::complex<int> *) page;
-                for(int i=0; i<pageSize;i++)
-                ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
-                break;
-            }
-        case DT_CFloat:
-                {
-                    std::complex<float> * ptr = (std::complex<float> *) page;
-                    for(int i=0; i<pageSize;i++)
-                        ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
-                        break;
-                    }
-                case DT_CDouble:
-                        {
-                            memcpy(ptrDest, page, pageSize*sizeof(std::complex<double>));
-                            break;
-                        }
-                    default:
-                            {
-                                std::cerr<<"Datatype= "<<datatype<<std::endl;
-                                REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to std::complex<double>");
-                                break;
-                            }
-                        }
+		{
+			std::complex<int> * ptr = (std::complex<int> *) page;
+			for(size_t i=0; i<pageSize;i++)
+			ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
+		}
+		break;
+    case DT_CFloat:
+        {
+			std::complex<float> * ptr = (std::complex<float> *) page;
+			for(size_t i=0; i<pageSize;i++)
+				ptrDest[i]= std::complex<double> (real(ptr[i]),imag(ptr[i]));
+		}
+		break;
+    case DT_CDouble:
+            memcpy(ptrDest, page, pageSize*sizeof(std::complex<double>));
+        break;
+    default:
+		std::cerr<<"Datatype= "<<datatype<<std::endl;
+		REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to std::complex<double>");
+        break;
+    }
 }
 
 template<>
@@ -85,37 +81,40 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
     {
     case DT_CShort:
         {
-            std::complex<short> * ptr = (std::complex<short> *) page;
-            for(int i=0; i<pageSize;i++)
-                ptr[i] = (std::complex<short>)srcPtr[i];
-            break;
-        }
-    case DT_CInt:
+            short  * ptr = (short *) page;
+            double * srcPtrd = (double *)srcPtr;
+            for(size_t i=0; i<pageSize;i++)
             {
-                std::complex<int> * ptr = (std::complex<int> *) page;
-                for(int i=0; i<pageSize;i++)
-                ptr[i] = (std::complex<int>)srcPtr[i];
-                break;
+                *ptr=(short) *srcPtrd; ptr++; srcPtrd++;
+                *ptr=(short) *srcPtrd; ptr++; srcPtrd++;
             }
-        case DT_CFloat:
-                {
-                    std::complex<float> * ptr = (std::complex<float> *) page;
-                    for(int i=0; i<pageSize;i++)
-                        ptr[i] = (std::complex<float>)srcPtr[i];
-                        break;
-                    }
-                case DT_CDouble:
+        }
+        break;
+    case DT_CInt:
+		{
+                        int  * ptr = (int *) page;
+                        double * srcPtrd = (double *)srcPtr;
+			for(size_t i=0; i<pageSize;i++)
                         {
-                            memcpy(page, srcPtr, pageSize*sizeof(std::complex<double>));
-                            break;
+                            *ptr=(int) *srcPtrd; ptr++; srcPtrd++;
+                            *ptr=(int) *srcPtrd; ptr++; srcPtrd++;
                         }
-                    default:
-                            {
-                                std::cerr<<"Datatype= "<<datatype<<std::endl;
-                                REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to complex<double>");
-                                break;
-                            }
-                        }
+		}
+		break;
+	case DT_CFloat:
+		{
+			std::complex<float> * ptr = (std::complex<float> *) page;
+			for(size_t i=0; i<pageSize;i++)
+				ptr[i] = (std::complex<float>)srcPtr[i];
+		}
+		break;
+	case DT_CDouble:
+		memcpy(page, srcPtr, pageSize*sizeof(std::complex<double>));
+		break;
+	default:
+		REPORT_ERROR(ERR_TYPE_INCORRECT,formatString("ERROR: cannot cast type number %d to complex<double>",datatype));
+		break;
+	}
 }
 
 template<>
@@ -128,17 +127,14 @@ void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< dou
     case DT_CFloat:
         {
             std::complex<float> * ptr = (std::complex<float> *) page;
-            for(int i=0; i<pageSize;i++)
+            for(size_t i=0; i<pageSize;i++)
                 ptr[i] = (std::complex<float>)srcPtr[i];
-            break;
         }
+        break;
     default:
-            {
-                std::cerr<<"Datatype= "<<datatype<<std::endl;
-                REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast&convert datatype to complex<double>");
-                break;
-            }
-        }
+		REPORT_ERROR(ERR_TYPE_INCORRECT,formatString("ERROR: cannot cast&convert type number %d to complex<double>",datatype));
+		break;
+    }
 }
 
 

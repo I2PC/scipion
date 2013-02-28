@@ -111,7 +111,9 @@ bool FileName::isInStack() const
 void FileName::decompose(size_t &no, String &str) const
 {
     char buffer[1024];
-    int ok = sscanf(c_str(), "%lu@%s", &no, &buffer);
+    unsigned long int auxNo;
+    int ok = sscanf(c_str(), "%lu@%s", &auxNo, buffer);
+    no=auxNo;
     if (ok != 2)
     {
         no = ALL_IMAGES;
@@ -277,7 +279,7 @@ int FileName::getNumber() const
     size_t point = find_first_of(".", skip_directories);
     if (point == npos)
         point = length();
-    int root_end = find_last_not_of("0123456789", point - 1);
+    size_t root_end = find_last_not_of("0123456789", point - 1);
     if (root_end + 1 != point)
     {
         if (point - root_end > FILENAMENUMBERLENGTH)
@@ -313,7 +315,7 @@ void FileName::initUniqueName(const char *templateStr, const String &fnDir)
 {
 #ifndef __MINGW32__
     int fd;
-    int len = 512;
+    const int len=512;
     char filename[len];
     if (fnDir!="")
     	strcpy(filename,(fnDir+"/").c_str());
@@ -594,7 +596,6 @@ void FileName::deleteFile() const
 /* Check if a file exists remove leading @ and tailing : */
 bool FileName::existsTrim() const
 {
-    FILE *aux;
     FileName auxF(*this);
     size_t found = find_first_of("@");
 
@@ -790,7 +791,7 @@ void FileLock::lock(int _fileno)
     if (islocked)
         unlock();
 
-    if (_fileno != NULL)
+    if (_fileno != 0)
         filenum = _fileno;
 
     fl.l_type = F_WRLCK;

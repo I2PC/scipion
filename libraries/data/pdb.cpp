@@ -362,7 +362,8 @@ void PDBRichPhantom::write(const FileName &fnPDB)
     {
     	const RichAtom &atom=atomList[i];
     	fprintf (fh_out,"ATOM  %5lu %4s%c%-4s%c%4d%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %4s\n",
-    			i,atom.name.c_str(),atom.altloc,atom.resname.c_str(),atom.chainid,
+    			(unsigned long int)i,atom.name.c_str(),
+    			atom.altloc,atom.resname.c_str(),atom.chainid,
     			atom.resseq,atom.icode,atom.x,atom.y,atom.z,atom.occupancy,atom.bfactor,
     			atom.name.c_str());
     }
@@ -846,7 +847,7 @@ void projectAtom(const Atom &atom, Projection &P,
     direction.selfTranspose();
     Matrix1D<double> corner1(3), corner2(3);
     Matrix1D<double> act(3);
-    SPEED_UP_temps;
+    SPEED_UP_temps012;
 
     // Find center of the feature in the projection plane ...................
     // Step 1). Project the center to the plane, the result is in the
@@ -1001,7 +1002,7 @@ void projectPDB(const PDBPhantom &phantomPDB,
     Matrix2D<double> PV = VP.inv();
 
     // Project all elements
-    for (int i = 0; i < phantomPDB.getNumberOfAtoms(); i++)
+    for (size_t i = 0; i < phantomPDB.getNumberOfAtoms(); i++)
     {
         try
         {

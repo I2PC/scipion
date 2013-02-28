@@ -152,10 +152,7 @@ void ProgNmaAlignment::preProcess() {
 	MetaData SF(fnModeList);
 	numberOfModes = SF.size();
 	// Get the size of the images in the selfile
-	int ydim, zdim;
-	size_t ndim;
 	imgSize = xdimOut;
-	//getImageSize(mdIn, imgSize, ydim, zdim, ndim);
 	// Set the pointer of the program to this object
 	global_nma_prog = this;
 	//create some neededs files
@@ -179,7 +176,7 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const {
 	arguments = formatString(
 			"--pdb %s -o %s_deformedPDB.pdb --nma %s --deformations ",
 			fnPDB.c_str(), randStr, fnModeList.c_str());
-	for (int i = 0; i < VEC_XSIZE(trial) - 5; ++i)
+	for (size_t i = 0; i < VEC_XSIZE(trial) - 5; ++i)
 		arguments += floatToString(trial(i) * scale_defamp) + " ";
 	runSystem(program, arguments, false);
 
@@ -418,7 +415,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 
 	parameters.initZeros(dim + 5);
 	currentImgName = fnImg;
-	sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, imageCounter);
+	sprintf(nameTemplate, "_node%d_img%lu_XXXXXX", rangen, (long unsigned int)imageCounter);
 
 	trial.initZeros(dim + 5);
 	trial_best.initZeros(dim + 5);
@@ -450,9 +447,6 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	fprintf(ff,"%s & %i & %i & (%i) & %e \\\\\n", of->name, of->dim(), of->getNFE(), of->getNFE2(), of->valueBest);
 	fclose(ff);
 #endif
-
-	double fitness = of->valueBest;
-	double *dd = of->xBest;
 
 	bestStage1 = trial = parameters = trial_best;
 
@@ -486,8 +480,6 @@ void ProgNmaAlignment::processImage(const FileName &fnImg,
 	fclose(ff);
 #endif
 
-	fitness = of->valueBest;
-	dd = of->xBest;
 #ifdef DEBUG
 	std::cout << "Best fitness = " << fitness << std::endl;
 	for (int i=0; i<dim; i++)

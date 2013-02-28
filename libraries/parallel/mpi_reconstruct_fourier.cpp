@@ -49,7 +49,7 @@ ProgMPIRecFourier::ProgMPIRecFourier(MpiNode * node)
 void ProgMPIRecFourier::read(int argc, char** argv)
 {
     XmippMpiProgram::read(argc, argv);
-    ProgRecFourier::read(argc, argv);
+    ProgRecFourier::read(argc, (const char **)argv);
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -81,7 +81,7 @@ void ProgMPIRecFourier::preRun()
         SF.read(fn_sel);
 
         //Send verbose level to node 1
-        MPI_Send(&verbose, 1, MPI_INT, 1, TAG_SETVERBOSE, *node->comm);
+        MPI_Send(&verbose, 1, MPI_INT, 1, TAG_SETVERBOSE, MPI_COMM_WORLD);
     }
     else
     {
@@ -90,13 +90,13 @@ void ProgMPIRecFourier::preRun()
     }
 
     //leer sel file / dividir por mpi_job_size
-    numberOfJobs=ceil((double)SF.size()/mpi_job_size);
+    numberOfJobs=(size_t)ceil((double)SF.size()/mpi_job_size);
 
     //only one node will write in the console
     if (node->rank == 1 )
     {
         // Get verbose status
-        MPI_Recv(&verbose, 1, MPI_INT, 0, TAG_SETVERBOSE, *node->comm, &status);
+        MPI_Recv(&verbose, 1, MPI_INT, 0, TAG_SETVERBOSE, MPI_COMM_WORLD, &status);
 
         //use threads for volume inverse fourier transform, plan is created in setReal()
         //only rank=1 makes inverse Fourier trnasform
@@ -141,7 +141,7 @@ void ProgMPIRecFourier::run()
 
         // Unused nodes are removed from the MPI communicator
         node->active = (node->rank <= numberOfJobs);
-        node->updateComm();
+        ////////////////////ROB node->updateComm();
     }
 
     if (node->isMaster())
@@ -152,9 +152,9 @@ void ProgMPIRecFourier::run()
         if ( verbose )
             init_progress_bar(numberOfJobs);
 
-        int FSC=numberOfJobs/2;
+        size_t FSC=numberOfJobs/2;
 
-        for (int i=0;i<numberOfJobs;i++)
+        for (size_t i=0;i<numberOfJobs;i++)
         {
 
             //#define DEBUG
@@ -165,7 +165,7 @@ void ProgMPIRecFourier::run()
 #undef DEBUG
 
             MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                     *node->comm, &status);
+                     MPI_COMM_WORLD, &status);
 
             if ( status.MPI_TAG != TAG_FREEWORKER )
                 REPORT_ERROR(ERR_ARG_INCORRECT,"Unexpected TAG, please contact developers");
@@ -182,19 +182,19 @@ void ProgMPIRecFourier::run()
                      MPI_INT,
                      status.MPI_SOURCE,
                      TAG_WORKFORWORKER,
-                     *node->comm);
+                     MPI_COMM_WORLD);
 
             if( i == FSC && fn_fsc != "" )
             {
                 // sending every worker COLLECT_FOR_FSC
-                for ( int worker = 1 ; worker <= nProcs ; worker ++ )
+                for ( size_t worker = 1 ; worker <= nProcs ; worker ++ )
                 {
                     MPI_Recv(0,
                              0,
                              MPI_INT,
                              MPI_ANY_SOURCE,
                              TAG_FREEWORKER,
-                             *node->comm,
+                             MPI_COMM_WORLD,
                              &status);
 
                     MPI_Send( 0,
@@ -202,24 +202,30 @@ void ProgMPIRecFourier::run()
                               MPI_INT,
                               status.MPI_SOURCE,
                               TAG_COLLECT_FOR_FSC,
-                              *node->comm);
+                              MPI_COMM_WORLD);
                 }
             }
 
             if (verbose)
                 progress_bar(i);
         }
-
+//        for (int i=numberOfJobssize;i<node->size;i++)
+//        {
+//            MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
+//                     MPI_COMM_WORLD, &status);
+//
+//
+//        }
         // Wait for all processes to finish processing current jobs
         // so time statistics are correct
-        for ( int i = 1 ; i <= nProcs ; i ++ )
+        for ( size_t i = 1 ; i <= nProcs ; i ++ )
         {
             MPI_Recv(0,
                      0,
                      MPI_INT,
                      MPI_ANY_SOURCE,
                      TAG_FREEWORKER,
-                     *node->comm,
+                     MPI_COMM_WORLD,
                      &status);
         }
 
@@ -232,14 +238,14 @@ void ProgMPIRecFourier::run()
             std::cout << "\n\nProcessing time: " << total_time << " secs." << std::endl;
 
         // Start collecting results
-        for ( int i = 1 ; i <= nProcs ; i ++ )
+        for ( size_t i = 1 ; i <= nProcs ; i ++ )
         {
             MPI_Send(0,
                      0,
                      MPI_INT,
                      i,
                      TAG_TRANSFER,
-                     *node->comm );
+                     MPI_COMM_WORLD );
         }
 
     }
@@ -279,15 +285,15 @@ void ProgMPIRecFourier::run()
 #endif
      #undef DEBUG
             //I am free
-            MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, *node->comm);
-            MPI_Probe(0, MPI_ANY_TAG, *node->comm, &status);
+            MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
+            MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
             if (status.MPI_TAG == TAG_COLLECT_FOR_FSC)
             {
                 //If I  do not read this tag
                 //master will no further process
                 //a posibility is a non-blocking send
-                MPI_Recv(0, 0, MPI_INT, 0, TAG_COLLECT_FOR_FSC, *node->comm, &status);
+                MPI_Recv(0, 0, MPI_INT, 0, TAG_COLLECT_FOR_FSC, MPI_COMM_WORLD, &status);
 
                 if( node->rank == 1 )
                 {
@@ -301,10 +307,10 @@ void ProgMPIRecFourier::run()
                     if ( nProcs > 2 )
                     {
                         // Receive from other workers
-                        for ( int i = 2 ; i <= nProcs ; i++)
+                        for ( size_t i = 2 ; i <= nProcs ; i++)
                         {
                             MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                                     *node->comm, &status);
+                                     MPI_COMM_WORLD, &status);
 
                             currentSource = status.MPI_SOURCE;
 
@@ -312,11 +318,11 @@ void ProgMPIRecFourier::run()
 
                             while (1)
                             {
-                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
+                                MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 
                                 if ( status.MPI_TAG == TAG_FREEWORKER )
                                 {
-                                    MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, *node->comm, &status );
+                                    MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, MPI_COMM_WORLD, &status );
                                     break;
                                 }
 
@@ -325,7 +331,7 @@ void ProgMPIRecFourier::run()
                                           MPI_DOUBLE,
                                           currentSource,
                                           MPI_ANY_TAG,
-                                          *node->comm,
+                                          MPI_COMM_WORLD,
                                           &status );
 
                                 MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
@@ -342,11 +348,11 @@ void ProgMPIRecFourier::run()
 
                             while (1)
                             {
-                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
+                                MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 
                                 if ( status.MPI_TAG == TAG_FREEWORKER )
                                 {
-                                    MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, *node->comm,&status );
+                                    MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, MPI_COMM_WORLD,&status );
 
                                     break;
                                 }
@@ -356,7 +362,7 @@ void ProgMPIRecFourier::run()
                                           MPI_DOUBLE,
                                           currentSource,
                                           MPI_ANY_TAG,
-                                          *node->comm,
+                                          MPI_COMM_WORLD,
                                           &status );
 
                                 MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
@@ -394,15 +400,15 @@ void ProgMPIRecFourier::run()
                 }
                 else
                 {
-                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
 
-                    sendDataInChunks( fourierVolume, 1, 2*sizeout, BUFFSIZE, *node->comm );
+                    sendDataInChunks( fourierVolume, 1, 2*sizeout, BUFFSIZE, MPI_COMM_WORLD );
 
-                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
 
-                    sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, *node->comm);
+                    sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, MPI_COMM_WORLD);
 
-                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER,*node->comm);
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER,MPI_COMM_WORLD);
 
                     Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
                     transformerVol.setReal(Vout());
@@ -416,7 +422,7 @@ void ProgMPIRecFourier::run()
             {
                 //If I  do not read this tag
                 //master will no further process
-                MPI_Recv(0, 0, MPI_INT, 0, TAG_TRANSFER, *node->comm, &status);
+                MPI_Recv(0, 0, MPI_INT, 0, TAG_TRANSFER, MPI_COMM_WORLD, &status);
 #ifdef DEBUG
 
                 std::cerr << "Wr" << node->rank << " " << "TAG_STOP" << std::endl;
@@ -437,10 +443,10 @@ void ProgMPIRecFourier::run()
                     {
                         // Receive from other workers
 
-                        for ( int i = 0 ; i <= (nProcs-2) ; i++)
+                        for (size_t i = 0 ; i <= (nProcs-2) ; i++)
                         {
                             MPI_Recv(0,0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                                     *node->comm, &status);
+                                     MPI_COMM_WORLD, &status);
 
                             currentSource = status.MPI_SOURCE;
 
@@ -448,11 +454,11 @@ void ProgMPIRecFourier::run()
 
                             while (1)
                             {
-                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
+                                MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 
                                 if ( status.MPI_TAG == TAG_FREEWORKER )
                                 {
-                                    MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, *node->comm, &status );
+                                    MPI_Recv(0,0, MPI_INT, currentSource, TAG_FREEWORKER, MPI_COMM_WORLD, &status );
 
                                     break;
                                 }
@@ -462,7 +468,7 @@ void ProgMPIRecFourier::run()
                                           MPI_DOUBLE,
                                           currentSource,
                                           MPI_ANY_TAG,
-                                          *node->comm,
+                                          MPI_COMM_WORLD,
                                           &status );
 
                                 MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
@@ -479,11 +485,11 @@ void ProgMPIRecFourier::run()
 
                             while (1)
                             {
-                                MPI_Probe( currentSource, MPI_ANY_TAG, *node->comm, &status );
+                                MPI_Probe( currentSource, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 
                                 if ( status.MPI_TAG == TAG_FREEWORKER )
                                 {
-                                    MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, *node->comm,&status );
+                                    MPI_Recv( 0,0,MPI_INT,currentSource,TAG_FREEWORKER, MPI_COMM_WORLD,&status );
 
                                     break;
                                 }
@@ -493,7 +499,7 @@ void ProgMPIRecFourier::run()
                                           MPI_DOUBLE,
                                           currentSource,
                                           MPI_ANY_TAG,
-                                          *node->comm,
+                                          MPI_COMM_WORLD,
                                           &status );
 
                                 MPI_Get_count( &status, MPI_DOUBLE, &receivedSize );
@@ -581,7 +587,6 @@ void ProgMPIRecFourier::run()
                     gettimeofday(&start_time,NULL);
                     finishComputations(fn_out);
                     gettimeofday(&end_time,NULL);
-                    int i=0;
 
                     total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
                     total_time=(double)total_usecs/(double)1000000;
@@ -594,15 +599,15 @@ void ProgMPIRecFourier::run()
                 }
                 else
                 {
-                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
 
-                    sendDataInChunks( fourierVolume, 1, 2 * sizeout, BUFFSIZE, *node->comm);
+                    sendDataInChunks( fourierVolume, 1, 2 * sizeout, BUFFSIZE, MPI_COMM_WORLD);
 
-                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm );
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
 
-                    sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, *node->comm);
+                    sendDataInChunks( fourierWeights, 1, sizeout, BUFFSIZE, MPI_COMM_WORLD);
 
-                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, *node->comm);
+                    MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD);
 
                     break;
                 }
@@ -610,12 +615,12 @@ void ProgMPIRecFourier::run()
             else if (status.MPI_TAG == TAG_WORKFORWORKER)
             {
                 //get the job number
-                MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, *node->comm, &status);
+                MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
                 //LABEL
                 //(if jobNumber == -1) break;
                 threadOpCode=PROCESS_IMAGE;
 
-                int min_i, max_i;
+                size_t min_i, max_i;
 
                 min_i = jobNumber*mpi_job_size;
                 max_i = min_i + mpi_job_size - 1;
@@ -651,7 +656,7 @@ int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalS
 {
     double * localPointer = pointer;
 
-    int numChunks = ceil((double)totalSize/(double)buffSize);
+    int numChunks =(int)ceil((double)totalSize/(double)buffSize);
     int packetSize;
     int err=0;
 
@@ -663,7 +668,7 @@ int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalS
             packetSize = buffSize;
 
         if ( (err = MPI_Send( localPointer, packetSize,
-                              MPI_DOUBLE, dest, 0, comm ))
+                              MPI_DOUBLE, dest, 0, MPI_COMM_WORLD ))
              != MPI_SUCCESS )
         {
             break;

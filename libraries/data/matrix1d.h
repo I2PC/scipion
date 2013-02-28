@@ -71,7 +71,7 @@ class Matrix2D;
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=0; i<v.vdim; i++)
+    for (size_t i=0; i<v.vdim; i++)
 
 /** X dimension of the matrix
  */
@@ -446,7 +446,7 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
-    inline void resize(int Xdim, bool copy = true)
+    inline void resize(size_t Xdim, bool copy = true)
     {
         if (Xdim == vdim)
             return;
@@ -471,14 +471,15 @@ public:
         // Copy needed elements, fill with 0 if necessary
         if (copy)
         {
-            for (int j = 0; j < Xdim; j++)
+        	T zero=0; // Useful for complexes
+            for (size_t j = 0; j < Xdim; j++)
             {
-                T val;
+                T *val=NULL;
                 if (j >= vdim)
-                    val = 0;
+                    val = &zero;
                 else
-                    val = vdata[j];
-                new_vdata[j] = val;
+                    val = &vdata[j];
+                new_vdata[j] = *val;
             }
         }
 
@@ -543,7 +544,7 @@ public:
      * int nn = a.size();
      * @endcode
      */
-    inline int size() const
+    inline size_t size() const
     {
         return vdim;
     }
@@ -609,7 +610,7 @@ public:
      */
     void initConstant(T val)
     {
-        for (int j = 0; j < vdim; j++)
+        for (size_t j = 0; j < vdim; j++)
             vdata[j] = val;
     }
 
@@ -626,7 +627,7 @@ public:
      */
     void enumerate()
     {
-      for (int j = 0; j < vdim; j++)
+      for (size_t j = 0; j < vdim; j++)
           vdata[j] = j;
     }
 
@@ -675,7 +676,7 @@ public:
      */
     bool isAnyNaN()
     {
-        for (int j = 0; j < vdim; j++)
+        for (size_t j = 0; j < vdim; j++)
             if (ISNAN(vdata[j]))
                 return true;
         return false;
@@ -690,15 +691,15 @@ public:
         Matrix1D<T> tmp(*this);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) * op1;
             (*ptr1++) = (*ptr2++) * op1;
             (*ptr1++) = (*ptr2++) * op1;
             (*ptr1++) = (*ptr2++) * op1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) * op1;
         return tmp;
     }
@@ -711,15 +712,15 @@ public:
         T iop1 = 1 / op1;
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) * iop1;
             (*ptr1++) = (*ptr2++) * iop1;
             (*ptr1++) = (*ptr2++) * iop1;
             (*ptr1++) = (*ptr2++) * iop1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) * iop1;
         return tmp;
     }
@@ -731,15 +732,15 @@ public:
         Matrix1D<T> tmp(*this);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) + op1;
             (*ptr1++) = (*ptr2++) + op1;
             (*ptr1++) = (*ptr2++) + op1;
             (*ptr1++) = (*ptr2++) + op1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) + op1;
         return tmp;
     }
@@ -751,15 +752,15 @@ public:
         Matrix1D<T> tmp(*this);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) - op1;
             (*ptr1++) = (*ptr2++) - op1;
             (*ptr1++) = (*ptr2++) - op1;
             (*ptr1++) = (*ptr2++) - op1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) - op1;
         return tmp;
     }
@@ -771,15 +772,15 @@ public:
         Matrix1D<T> tmp(op2);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(op2,0);
-        int iBlockMax = op2.vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = op2.vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) * op1;
             (*ptr1++) = (*ptr2++) * op1;
             (*ptr1++) = (*ptr2++) * op1;
             (*ptr1++) = (*ptr2++) * op1;
         }
-        for (int i = iBlockMax * 4; i < op2.vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < op2.vdim; ++i)
             (*ptr1++) = (*ptr2++) * op1;
         return tmp;
     }
@@ -791,15 +792,15 @@ public:
         Matrix1D<T> tmp(op2);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(op2,0);
-        int iBlockMax = op2.vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = op2.vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = op1 / (*ptr2++);
             (*ptr1++) = op1 / (*ptr2++);
             (*ptr1++) = op1 / (*ptr2++);
             (*ptr1++) = op1 / (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < op2.vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < op2.vdim; ++i)
             (*ptr1++) = op1 / (*ptr2++);
         return tmp;
     }
@@ -811,15 +812,15 @@ public:
         Matrix1D<T> tmp(op2);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(op2,0);
-        int iBlockMax = op2.vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = op2.vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) + op1;
             (*ptr1++) = (*ptr2++) + op1;
             (*ptr1++) = (*ptr2++) + op1;
             (*ptr1++) = (*ptr2++) + op1;
         }
-        for (int i = iBlockMax * 4; i < op2.vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < op2.vdim; ++i)
             (*ptr1++) = (*ptr2++) + op1;
         return tmp;
     }
@@ -831,15 +832,15 @@ public:
         Matrix1D<T> tmp(op2);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(op2,0);
-        int iBlockMax = op2.vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = op2.vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = op1 - (*ptr2++);
             (*ptr1++) = op1 - (*ptr2++);
             (*ptr1++) = op1 - (*ptr2++);
             (*ptr1++) = op1 - (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < op2.vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < op2.vdim; ++i)
             (*ptr1++) = op1 - (*ptr2++);
         return tmp;
     }
@@ -857,15 +858,15 @@ public:
 
         T *ptr1 = &VEC_ELEM(*this,0);
         const T *ptr2 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) += (*ptr2++);
             (*ptr1++) += (*ptr2++);
             (*ptr1++) += (*ptr2++);
             (*ptr1++) += (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) += (*ptr2++);
     }
 
@@ -882,15 +883,15 @@ public:
 
         T *ptr1 = &VEC_ELEM(*this,0);
         const T *ptr2 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) -= (*ptr2++);
             (*ptr1++) -= (*ptr2++);
             (*ptr1++) -= (*ptr2++);
             (*ptr1++) -= (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) -= (*ptr2++);
     }
 
@@ -899,15 +900,15 @@ public:
     void operator*=(T op1)
     {
         T *ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) *= op1;
             (*ptr1++) *= op1;
             (*ptr1++) *= op1;
             (*ptr1++) *= op1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) *= op1;
     }
 
@@ -917,15 +918,15 @@ public:
     {
         T iop1 = 1 / op1;
         T * ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) *= iop1;
             (*ptr1++) *= iop1;
             (*ptr1++) *= iop1;
             (*ptr1++) *= iop1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) *= iop1;
     }
 
@@ -934,15 +935,15 @@ public:
     void operator+=(T op1)
     {
         T *ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) += op1;
             (*ptr1++) += op1;
             (*ptr1++) += op1;
             (*ptr1++) += op1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) += op1;
     }
 
@@ -951,15 +952,15 @@ public:
     void operator-=(T op1)
     {
         T *ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) -= op1;
             (*ptr1++) -= op1;
             (*ptr1++) -= op1;
             (*ptr1++) -= op1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) -= op1;
     }
 
@@ -971,15 +972,15 @@ public:
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
         const T *ptr3 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) * (*ptr3++);
             (*ptr1++) = (*ptr2++) * (*ptr3++);
             (*ptr1++) = (*ptr2++) * (*ptr3++);
             (*ptr1++) = (*ptr2++) * (*ptr3++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) * (*ptr3++);
         return tmp;
     }
@@ -992,15 +993,15 @@ public:
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
         const T *ptr3 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) / (*ptr3++);
             (*ptr1++) = (*ptr2++) / (*ptr3++);
             (*ptr1++) = (*ptr2++) / (*ptr3++);
             (*ptr1++) = (*ptr2++) / (*ptr3++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) / (*ptr3++);
         return tmp;
     }
@@ -1012,15 +1013,15 @@ public:
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
         const T *ptr3 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) + (*ptr3++);
             (*ptr1++) = (*ptr2++) + (*ptr3++);
             (*ptr1++) = (*ptr2++) + (*ptr3++);
             (*ptr1++) = (*ptr2++) + (*ptr3++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) + (*ptr3++);
         return tmp;
     }
@@ -1033,15 +1034,15 @@ public:
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
         const T *ptr3 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = (*ptr2++) - (*ptr3++);
             (*ptr1++) = (*ptr2++) - (*ptr3++);
             (*ptr1++) = (*ptr2++) - (*ptr3++);
             (*ptr1++) = (*ptr2++) - (*ptr3++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = (*ptr2++) - (*ptr3++);
         return tmp;
     }
@@ -1052,15 +1053,15 @@ public:
     {
         T *ptr1 = &VEC_ELEM(*this,0);
         const T *ptr2 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) *= (*ptr2++);
             (*ptr1++) *= (*ptr2++);
             (*ptr1++) *= (*ptr2++);
             (*ptr1++) *= (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) *= (*ptr2++);
     }
 
@@ -1070,15 +1071,15 @@ public:
     {
         T *ptr1 = &VEC_ELEM(*this,0);
         const T *ptr2 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) /= (*ptr2++);
             (*ptr1++) /= (*ptr2++);
             (*ptr1++) /= (*ptr2++);
             (*ptr1++) /= (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) /= (*ptr2++);
     }
 
@@ -1088,15 +1089,15 @@ public:
     {
         T *ptr1 = &VEC_ELEM(*this,0);
         const T *ptr2 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) += (*ptr2++);
             (*ptr1++) += (*ptr2++);
             (*ptr1++) += (*ptr2++);
             (*ptr1++) += (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) += (*ptr2++);
     }
 
@@ -1106,15 +1107,15 @@ public:
     {
         T *ptr1 = &VEC_ELEM(*this,0);
         const T *ptr2 = &VEC_ELEM(op1,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) -= (*ptr2++);
             (*ptr1++) -= (*ptr2++);
             (*ptr1++) -= (*ptr2++);
             (*ptr1++) -= (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) -= (*ptr2++);
     }
 
@@ -1133,15 +1134,15 @@ public:
         Matrix1D<T> tmp(*this);
         T *ptr1 = &VEC_ELEM(tmp,0);
         const T *ptr2 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             (*ptr1++) = -(*ptr2++);
             (*ptr1++) = -(*ptr2++);
             (*ptr1++) = -(*ptr2++);
             (*ptr1++) = -(*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             (*ptr1++) = -(*ptr2++);
         return tmp;
     }
@@ -1204,8 +1205,8 @@ public:
     void selfCEIL()
     {
         T *ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             *ptr1 = ceil(*ptr1);
             ++ptr1;
@@ -1216,7 +1217,7 @@ public:
             *ptr1 = ceil(*ptr1);
             ++ptr1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
         {
             *ptr1 = ceil(*ptr1);
             ++ptr1;
@@ -1231,8 +1232,8 @@ public:
     void selfFLOOR()
     {
         T *ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             *ptr1 = floor(*ptr1);
             ++ptr1;
@@ -1243,7 +1244,7 @@ public:
             *ptr1 = floor(*ptr1);
             ++ptr1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
         {
             *ptr1 = floor(*ptr1);
             ++ptr1;
@@ -1258,8 +1259,8 @@ public:
     void selfROUND()
     {
         T *ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             *ptr1 = round(*ptr1);
             ++ptr1;
@@ -1270,7 +1271,7 @@ public:
             *ptr1 = round(*ptr1);
             ++ptr1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
         {
             *ptr1 = round(*ptr1);
             ++ptr1;
@@ -1312,7 +1313,7 @@ public:
             return 0;
 
         T maxval = VEC_ELEM(*this,0);
-        for (int j = 0; j < vdim; ++j)
+        for (size_t j = 0; j < vdim; ++j)
             if (VEC_ELEM(*this,j) > maxval)
                 maxval = VEC_ELEM(*this,j);
         return maxval;
@@ -1333,7 +1334,7 @@ public:
 
         jmax = 0;
         T maxval = VEC_ELEM(*this, 0);
-        for (int j = 0; j < vdim; ++j)
+        for (size_t j = 0; j < vdim; ++j)
             if (VEC_ELEM(*this,j) > maxval)
             {
                 jmax = j;
@@ -1356,7 +1357,7 @@ public:
 
         jmin = 0;
         T minval = VEC_ELEM(*this, 0);
-        for (int j = 0; j < vdim; ++j)
+        for (size_t j = 0; j < vdim; ++j)
             if (VEC_ELEM(*this,j) < minval)
             {
                 jmin = j;
@@ -1401,15 +1402,15 @@ public:
     {
         double sum = 0;
         const T *ptr1 = &VEC_ELEM(*this,0);
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             sum += (*ptr1++);
             sum += (*ptr1++);
             sum += (*ptr1++);
             sum += (*ptr1++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             sum += (*ptr1++);
         if (average)
             return sum / (double) vdim;
@@ -1431,8 +1432,8 @@ public:
         double sum = 0;
         const T *ptr1 = &VEC_ELEM(*this,0);
         double val;
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             val = *ptr1;
             sum += val * val;
@@ -1447,7 +1448,7 @@ public:
             sum += val * val;
             ++ptr1;
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
         {
             val = *ptr1;
             sum += val * val;
@@ -1463,16 +1464,15 @@ public:
         double sum = 0;
         const T *ptr1 = &VEC_ELEM(*this,0);
         const T *ptr2 = &VEC_ELEM(op1,0);
-        double val;
-        int iBlockMax = vdim / 4;
-        for (int i = 0; i < iBlockMax; i++)
+        size_t iBlockMax = vdim / 4;
+        for (size_t i = 0; i < iBlockMax; i++)
         {
             sum += (*ptr1++) * (*ptr2++);
             sum += (*ptr1++) * (*ptr2++);
             sum += (*ptr1++) * (*ptr2++);
             sum += (*ptr1++) * (*ptr2++);
         }
-        for (int i = iBlockMax * 4; i < vdim; ++i)
+        for (size_t i = iBlockMax * 4; i < vdim; ++i)
             sum += (*ptr1++) * (*ptr2++);
         return sum;
     }
@@ -1620,7 +1620,7 @@ public:
 
         double max_val = ABS(v.vdata[0]);
 
-        for (int j = 0; j < v.vdim; j++)
+        for (size_t j = 0; j < v.vdim; j++)
         {
             max_val = XMIPP_MAX(max_val, v.vdata[j]);
         }
@@ -1628,13 +1628,13 @@ public:
         int prec = bestPrecision(max_val, 10);
 
         if (v.row)
-            for (int j = 0; j < v.vdim; j++)
+            for (size_t j = 0; j < v.vdim; j++)
             {
                 ostrm << floatToString((double) v.vdata[j], 10, prec)
                 << std::endl;
             }
         else
-            for (int j = 0; j < v.vdim; j++)
+            for (size_t j = 0; j < v.vdim; j++)
             {
                 ostrm << floatToString((double) v.vdata[j], 10, prec) << " ";
             }
@@ -1732,10 +1732,8 @@ T dotProduct(const Matrix1D<T>& v1, const Matrix1D<T>& v2)
                      "Dot product: vectors of different size or shape");
 
     T accumulate = 0;
-    for (int j = 0; j < v1.vdim; j++)
-    {
+    for (size_t j = 0; j < v1.vdim; j++)
         accumulate += v1.vdata[j] * v2.vdata[j];
-    }
     return accumulate;
 }
 
@@ -1800,7 +1798,7 @@ void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
         REPORT_ERROR(ERR_MATRIX_SIZE,
                      "sortTwoVectors: vectors are not of the same shape");
 
-    for (int j = 0; j < v1.vdim; j++)
+    for (size_t j = 0; j < v1.vdim; j++)
     {
         temp = XMIPP_MIN(v1.vdata[j], v2.vdata[j]);
         v2.vdata[j] = XMIPP_MAX(v1.vdata[j], v2.vdata[j]);
@@ -1823,10 +1821,8 @@ void typeCast(const Matrix1D<T1>& v1, Matrix1D<T2>& v2)
     }
 
     v2.resizeNoCopy(v1.vdim);
-    for (int j = 0; j < v1.vdim; j++)
-    {
+    for (size_t j = 0; j < v1.vdim; j++)
         v2.vdata[j] = static_cast<T2>(v1.vdata[j]);
-    }
 }
 
 /** Conversion from one type to another.

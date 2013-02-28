@@ -30,7 +30,7 @@
 #include "xmipp_program.h"
 #include "external/sqlite-3.6.23/sqlite3.h"
 
-typedef std::map<char*, String> DictDB;
+typedef std::map<const char*, String> DictDB;
 
 String& escapeSqliteStr(String & str);
 
@@ -53,6 +53,8 @@ public:
     ProgramDb();
     /** Constructor, it will create the Sqlite db. */
     ProgramDb(const FileName &dbName);
+    /** Destructor */
+    virtual ~ProgramDb() {}
     /** Begin and end transaction */
     bool execStmt(const String &stmt, const String &error="");
     bool beginTrans();

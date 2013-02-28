@@ -301,7 +301,6 @@ void CTFDescription::clearPureCtf()
 void CTFDescription::produceSideInfo()
 {
     // Change units
-    double local_alpha = alpha / 1000;
     double local_Cs = Cs * 1e7;
     double local_Ca = Ca * 1e7;
     double local_kV = kV * 1e3;
@@ -440,7 +439,7 @@ void CTFDescription::getProfile(double angle, double fmax, int nsamples,
 	double sinus = sin(angle);
 	double cosinus = cos(angle);
 	double f;
-	int i;
+	size_t i;
 
 	for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step) {
 		double fx = f * cosinus;
@@ -472,7 +471,7 @@ void CTFDescription::getAverageProfile(double fmax, int nsamples,
 		double sinus = sin(angle);
 		double cosinus = cos(angle);
 		double f;
-		int i;
+		size_t i;
 		for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step) {
 			double fx = f * cosinus;
 			double fy = f * sinus;

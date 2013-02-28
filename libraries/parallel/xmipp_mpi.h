@@ -1,4 +1,4 @@
-/***************************************************************************
+ /*
  * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  *
@@ -34,7 +34,7 @@
 #include <iostream>
 #include <data/xmipp_threads.h>
 #include <data/xmipp_program.h>
-
+#define XMIPP_MPI_SIZE_T MPI_UNSIGNED_LONG
 /** @defgroup MPI MPI
  *  @ingroup ParallelLibrary
  * @{
@@ -47,8 +47,8 @@ class MpiNode
 {
 public:
 
-    MPI_Comm *comm;
-    int rank, size, active, activeNodes;
+    //MPI_Comm *comm;
+    size_t rank, size, active;//, activeNodes;
     MpiNode(int &argc, char ** argv);
     ~MpiNode();
 
@@ -63,11 +63,11 @@ public:
                          MDLabel sortLabel=MDL_IMAGE);
 
     /** Update the MPI communicator to connect the currently active nodes */
-    void updateComm();
+//    void updateComm();
 
 protected:
     /** Calculate the number of still active nodes */
-    int getActiveNodes();
+    size_t getActiveNodes();
 
 };
 
@@ -177,9 +177,9 @@ protected:
     MpiNode * node;
     bool created_node;
     /** Number of Processors **/
-    int nProcs;
+    size_t nProcs;
     /** Number of independent MPI jobs **/
-    int numberOfJobs;
+    size_t numberOfJobs;
     /** status after an MPI call */
     MPI_Status status;
 
@@ -191,7 +191,7 @@ protected:
 
 public:
     /** Read MPI params from command line */
-    void read(int argc, char *argv[]);
+    void read(int argc, char **argv);
     /** Call the run function inside a try/catch block
     * sending an abort signal to the rest of mpi nodes.
     * */
@@ -219,7 +219,7 @@ public:
     void defineParams();
     void readParams();
     /** Create task distributor */
-    void createTaskDistributor(const MetaData &mdIn, int blockSize = 0);
+    void createTaskDistributor(const MetaData &mdIn, size_t blockSize = 0);
     /** Get task to process */
     bool getTaskToProcess(size_t &objId, size_t &objIndex);
 };

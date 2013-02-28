@@ -23,8 +23,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
-import xmipp.jni.MDLabel;
-import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
@@ -35,8 +33,8 @@ import xmipp.viewer.particlepicker.ParticlePickerJFrame;
 import xmipp.viewer.particlepicker.ParticlesJDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.FamilyState;
-import xmipp.viewer.windows.ImagesWindowFactory;
 import xmipp.viewer.windows.GalleryJFrame;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class ExtractPickerJFrame extends ParticlePickerJFrame
 {
@@ -323,15 +321,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		picker.setChanged(changed);
 	}
 
-	@Override
-	public boolean isValidSize(int size)
-	{
-
-		for (ExtractParticle p : getMicrograph().getParticles())
-			if (!getMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
-		return true;
-	}
+	
 
 	@Override
 	protected void resetData()
@@ -344,9 +334,9 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	}
 
 	@Override
-	public void importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
-		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
 
 	}
 	
@@ -425,7 +415,8 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 	public void refreshActiveOnGallery(ExtractParticle active)
 	{
-		galleryfr.refreshActive(active.getId(), active.isEnabled());
+		if(galleryfr != null)
+			galleryfr.refreshActive(active.getId(), active.isEnabled());
 		
 	}
 

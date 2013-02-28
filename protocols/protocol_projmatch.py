@@ -237,6 +237,7 @@ data_
         self.DisplayIterationsNo = self.parser.getTkValue('DisplayIterationsNo')
         iterations = map(int, getListFromVector(self.DisplayIterationsNo))
         runShowJExtraParameters = ' --dont_wrap --view '+ self.parser.getTkValue('DisplayVolumeSlicesAlong') + ' --columns ' + str(self.parser.getTkValue('MatrixWidth'))
+        self.DisplayVolumeSlicesAlong=self.parser.getTkValue('DisplayVolumeSlicesAlong')
         if doPlot('DisplayReference'):
             #VisualizationReferenceFileNames = [None] + self.ReferenceFileNames
             #print 'VisualizationReferenceFileNames: ',VisualizationReferenceFileNames
@@ -447,16 +448,22 @@ data_
 #                            MDout.setValue(MDL_ANGLE_ROT, MDin.getValue(MDL_ANGLE_ROT,i),id1)
 #                            MDout.setValue(MDL_ANGLE_TILT,MDin.getValue(MDL_ANGLE_TILT,i),id1)
                             psi =-1.*MDin.getValue(MDL_ANGLE_PSI,i)
+                            flip = MDin.getValue(MDL_FLIP,i)
+                            if(flip):
+                                psi =-psi
                             eulerMatrix = Euler_angles2matrix(0.,0.,psi)
                             x = MDin.getValue(MDL_SHIFT_X,i)
                             y = MDin.getValue(MDL_SHIFT_Y,i)
-                            
                             shift       = array([x, y, 0])
                             shiftOut    = dot(eulerMatrix, shift)
                             [x,y,z]= shiftOut
+                            if flip:
+                                x = -x
                             MDout.setValue(MDL_ANGLE_PSI, psi,id1)
                             MDout.setValue(MDL_SHIFT_X, x,id1)
                             MDout.setValue(MDL_SHIFT_Y, y,id1)
+                            MDout.setValue(MDL_FLIP,flip,id1)
+
                             
                             ref2D = MDin.getValue(MDL_REF,i)
                             file_references = self.getFilename('ProjectLibraryStk', iter=it, ref=ref3d)
@@ -467,6 +474,7 @@ data_
 #                            MDout.setValue(MDL_ANGLE_ROT,0.,id2)
 #                            MDout.setValue(MDL_ANGLE_TILT,0.,id2)
                             MDout.setValue(MDL_ANGLE_PSI,0.,id2)
+                            #MDout.setValue(MDL_FLIP,flip,id2)
 #                            MDout.setValue(MDL_SHIFT_X,   0.,id1)
 #                            MDout.setValue(MDL_SHIFT_Y,   0.,id1)
 
@@ -659,6 +667,7 @@ data_
             
             
         if doPlot('DisplayAngularDistribution'):
+            self.DisplayAngularDistributionWith = self.parser.getTkValue('DisplayAngularDistributionWith')
             if(self.DisplayAngularDistributionWith == '3D'):
                 for ref3d in ref3Ds:
                     for it in iterations:
@@ -698,6 +707,8 @@ data_
                     xplotter.draw()
                     
         if doPlot('DisplayResolutionPlots'):
+            self.ResolutionThreshold=float(self.parser.getTkValue('ResolutionThreshold'))
+
             if(len(ref3Ds) == 1):
                 gridsize1 = [1, 1]
             elif (len(ref3Ds) == 2):
@@ -723,10 +734,9 @@ data_
                         a.plot(resolution_inv, frc)
                         legendName.append('Iter_'+str(it))
                     xplotter.showLegend(legendName)
-                
                 if (self.ResolutionThreshold < max(frc)):
-                    a.plot([min(resolution_inv), max(resolution_inv)], [self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
-            
+                    a.plot([min(resolution_inv), max(resolution_inv)],[self.ResolutionThreshold, self.ResolutionThreshold], color='black', linestyle='--')
+                    a.grid(True)
             xplotter.draw()
     
         if xplotter:
@@ -788,7 +798,8 @@ data_
                 'DocfileInputAnglesIters': join(IterDir, '%(Docfile_with_current_angles)s.doc'),
                 'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
                 'ProjectLibraryRootNames': ProjLibRootNames,
-                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.doc'),
+#                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.doc'),
+                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.sqlite'),
                 'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
                 'OutClasses': join(ProjMatchDirs, '%(ProjMatchName)s'),
                 'OutClassesXmd': _OutClassesXmd,
@@ -975,8 +986,9 @@ data_
                 _VerifyFiles = [self.getFilename('ProjectLibrary' + e, iter=iterN, ref=refN)
                                      for e in ['Stk', 'Doc', 'Sampling']]
                 #Ask only for first and last, if we ask for all ctfgroup files the sql command max lenght is reached
-                _VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
-                                     for g in range (1, self.NumberOfCtfGroups+1)]
+                #do not ask for any since they are delete later
+                #_VerifyFiles = _VerifyFiles + [self.getFilename('ProjectLibraryGroupSampling', iter=iterN, ref=refN, group=g) \
+                #                     for g in range (1, self.NumberOfCtfGroups+1)]
                 projLibFn =  self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)  
                    
 
@@ -1157,16 +1169,30 @@ data_
         #creating results files
         lastIteration   = self.NumberOfIterations
         inDocfile       = self.getFilename('DocfileInputAnglesIters', iter=lastIteration)
-        resultsImages   = self.workingDirPath("results_images.xmd")
-        resultsClasses  = self.workingDirPath("results_classes.xmd")
+        resultsImages   = self.workingDirPath("images.xmd")
+        resultsClasses3DRef          = self.workingDirPath("classes_ref3D.xmd")
+        resultsClasses3DRefDefGroup  = self.workingDirPath("classes_ref3D_defGroup.xmd")
+        
+        listWithResultVolume=[]
+        for refN in range(1, self.numberOfReferences + 1):
+            reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[lastIteration][refN]
+            listWithResultVolume.append(reconstructedFilteredVolume)
+        resultsVolumes   = self.workingDirPath("volumes.xmd")
+        _verifyfiles     = [resultsImages,\
+                         resultsClasses3DRef,\
+                         resultsClasses3DRefDefGroup,\
+                         resultsVolumes]
 
         _dataBase.insertStep('createResults'
-                            , verifyfiles     = [resultsImages,resultsClasses]
+                            , verifyfiles     = _verifyfiles
                             , CTFDatName      = self.CTFDatName
                             , DoCtfCorrection = self.DoCtfCorrection
                             , inDocfile       = inDocfile
+                            , listWithResultVolume = listWithResultVolume
                             , resultsImages   = resultsImages
-                            , resultsClasses  = resultsClasses
+                            , resultsClasses3DRef          = resultsClasses3DRef
+                            , resultsClasses3DRefDefGroup  = resultsClasses3DRefDefGroup
+                            , resultsVolumes = resultsVolumes
                             )
         _dataBase.connection.commit()
         

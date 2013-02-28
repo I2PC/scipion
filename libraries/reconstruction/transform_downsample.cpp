@@ -85,14 +85,14 @@ void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName
     // Open input data
     ImageGeneric M_in;
     M_in.readOrReadMapped(fnImg);
-    int Zdim, Ydim, Xdim;
+    size_t Zdim, Ydim, Xdim;
     M_in.getDimensions(Xdim,Ydim,Zdim);
     if (Zdim!=1)
         REPORT_ERROR(ERR_MULTIDIM_DIM,"This program is not intended for volumes");
 
     // Open output data, mapped file
-    int Xpdim = floor(Xdim/step);
-    int Ypdim = floor(Ydim/step);
+    int Xpdim = (int)floor(Xdim/step);
+    int Ypdim = (int)floor(Ydim/step);
     ImageGeneric M_out;
     if (method==SMOOTH)
         M_out.setDatatype(DT_UChar);
@@ -119,7 +119,7 @@ void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
     kernel.resizeNoCopy(istep,istep);
     kernel.initConstant(1.0/MULTIDIM_SIZE(kernel));
 
-    int Ydim, Xdim, Ypdim, Xpdim;
+    size_t Ydim, Xdim, Ypdim, Xpdim;
     M().getDimensions(Xdim, Ydim);
     Mp().getDimensions(Xpdim, Ypdim);
 
@@ -127,7 +127,7 @@ void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
     double a = 1;
     double b = 0;
     double scale = 1;
-    int ii, jj, i2, j2, i, j, y, x;
+    size_t ii, jj, i2, j2, i, j, y, x;
     if (Mp.getDatatype() != DT_Float)
     {
         double imin, imax;
@@ -191,16 +191,18 @@ void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
                 for (j=0, j2=x; j<XSIZE(kernel)&& j2<Xdim; ++j, ++j2)
                     pixval += A2D_ELEM(kernel,i, j) * M.getPixel(i2, j2);
             if (ii < Ypdim && jj < Xpdim)
+            {
                 if (Mp.datatype != DT_Float)
                     Mp.setPixel(ii, jj, floor(a*(pixval*scale + b)));
                 else
                     Mp.setPixel(ii, jj, pixval);
+            }
         }
 }
 
 void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int nThreads)
 {
-    int Ydim, Xdim, Ypdim, Xpdim;
+    size_t Ydim, Xdim, Ypdim, Xpdim;
     M().getDimensions(Xdim, Ydim);
     Mp().getDimensions(Xpdim, Ypdim);
 
@@ -226,12 +228,12 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
 
     int ihalf=YSIZE(MpmemFourier)/2+1;
     for (int i=0; i<ihalf; i++)
-        for (int j=0; j<XSIZE(MpmemFourier); j++)
+        for (size_t j=0; j<XSIZE(MpmemFourier); j++)
             A2D_ELEM(MpmemFourier,i,j)=A2D_ELEM(MmemFourier,i,j);
-    for (int i=ihalf; i<YSIZE(MpmemFourier); i++)
+    for (size_t i=ihalf; i<YSIZE(MpmemFourier); i++)
     {
-        int ip=YSIZE(MmemFourier)-YSIZE(MpmemFourier)+i;
-        for (int j=0; j<XSIZE(MpmemFourier); j++)
+        size_t ip=YSIZE(MmemFourier)-YSIZE(MpmemFourier)+i;
+        for (size_t j=0; j<XSIZE(MpmemFourier); j++)
             A2D_ELEM(MpmemFourier,i,j)=A2D_ELEM(MmemFourier,ip,j);
     }
 
@@ -266,7 +268,7 @@ void downsampleSmooth(const ImageGeneric &M, ImageGeneric &Mp)
         REPORT_ERROR(ERR_ARG_INCORRECT,formatString("Smooth downsampling is only valid for 8 bit images. \n"
         		"Choose a supporting 8bit file format different from %s",Mp.image->name().c_str()));
 
-    int Ydim, Xdim, Ypdim, Xpdim;
+    size_t Ydim, Xdim, Ypdim, Xpdim;
     M().getDimensions(Xdim, Ydim);
     Mp().getDimensions(Xpdim, Ypdim);
     byte *inputImage=NULL;

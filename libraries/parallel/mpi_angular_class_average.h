@@ -97,7 +97,7 @@ public:
     /** Flag whether also to write out class averages of random halves of the data */
     bool             do_split;
     /** Image dimensions before and after padding (only for Wiener correction) */
-    int               paddim;
+    size_t           paddim;
     /** Padding factor */
     double           pad;
     /** One empty image with correct dimensions */
@@ -134,13 +134,11 @@ public:
     int ctfNum;
     /** Number of 3D references */
     int ref3dNum;
-    /** Image dimentions */
-    int Xdim, Ydim, Zdim;
-    /** Number of valid projection directions */
-    size_t Ndim;
+    /** Image dimensions */
+    size_t Xdim, Ydim, Zdim, Ndim;
 
-    /** Dvide the job in this number block with this number of images */
-    int mpi_job_size;
+    /** Divide the job in this number block with this number of images */
+    size_t mpi_job_size;
 
     //Lock structure
     MultidimArray<bool> lockArray;

@@ -68,13 +68,15 @@
         case DT_UChar:\
             {OP(unsigned char)};\
             break;\
+        default:\
+			REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type at this point");\
         }
 
 /// @addtogroup MultidimensionalArrays
 
 //@{
 
-/** @name MultidimArrayGenericSpeedUp Speed up macros
+/** @name MultidimArrayGenericSpeedUp Speed up macros */
 /** Array access.
  *
  * This macros gives you access to the array (T **)
@@ -312,21 +314,20 @@ public:
     /**
      * Get the dimensions of the linked array.
      */
-    void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const
+    void getDimensions(size_t& Xdim, size_t& Ydim, size_t& Zdim, size_t &Ndim) const
     {
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
-    void getDimensions(int& Xdim, int& Ydim, int& Zdim) const
+    void getDimensions(size_t& Xdim, size_t& Ydim, size_t& Zdim) const
     {
         size_t Ndim;
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
-    void getDimensions(int& Xdim, int& Ydim) const
+    void getDimensions(size_t& Xdim, size_t& Ydim) const
     {
-        size_t Ndim;
-        int Zdim;
+        size_t Zdim, Ndim;
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
@@ -338,7 +339,7 @@ public:
     /**
       * Set Xmipp origin.
       */
-    inline   void setXmippOrigin()
+    inline void setXmippOrigin()
     {
         im->setXmippOrigin();
     }

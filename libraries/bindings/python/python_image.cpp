@@ -275,7 +275,7 @@ Image_equal(PyObject *obj, PyObject *args, PyObject *kwargs)
     if (self != NULL)
     {
         double precision = 1.e-3;
-        PyObject *image2 = NULL, *pyStr = NULL;
+        PyObject *image2 = NULL;
         if (PyArg_ParseTuple(args, "O|d", &image2, &precision))
         {
             try
@@ -302,7 +302,7 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     ImageObject *self = (ImageObject*) obj;
     if (self != NULL)
     {
-        PyObject *input = NULL, *pyStr = NULL;
+        PyObject *input = NULL;
         if (PyArg_ParseTuple(args, "O", &input))
         {
             try
@@ -818,8 +818,7 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-            int xdim, ydim, zdim;
-            size_t ndim;
+            size_t xdim, ydim, zdim, ndim;
             MULTIDIM_ARRAY_GENERIC(*self->image).getDimensions(xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
         }
@@ -1028,7 +1027,7 @@ Image_iadd(PyObject *obj1, PyObject *obj2)
     try
     {
         Image_Value(obj1).add(Image_Value(obj2));
-        if (result = PyObject_New(ImageObject, &ImageType))
+        if ((result = PyObject_New(ImageObject, &ImageType)))
             result->image = new ImageGeneric(Image_Value(obj1));
         //return obj1;
     }
@@ -1067,7 +1066,7 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
     try
     {
         Image_Value(obj1).subtract(Image_Value(obj2));
-        if (result = PyObject_New(ImageObject, &ImageType))
+        if ((result = PyObject_New(ImageObject, &ImageType)))
             result->image = new ImageGeneric(Image_Value(obj1));
     }
     catch (XmippError &xe)

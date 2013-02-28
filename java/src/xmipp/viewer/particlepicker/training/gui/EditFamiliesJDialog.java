@@ -206,8 +206,9 @@ public class EditFamiliesJDialog extends JDialog {
 					if(templates  < 1)
 						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
 					f.setTemplatesNumber(templates);
+					parent.updateTemplates();
 				}
-				frame.getParticlePicker().persistFamilies();
+				frame.getParticlePicker().saveFamilies();
 				
 
 			} catch (IllegalArgumentException e) {
@@ -231,11 +232,17 @@ public class EditFamiliesJDialog extends JDialog {
 		}
 
 	}
+	
+	public TrainingPickerJFrame getFrame()
+	{
+		return parent;
+	}
 
 	public void addFamily(Family g) {
 
 		parent.addFamily(g);
 		model.fireTableStructureChanged();
 	}
+
 
 }

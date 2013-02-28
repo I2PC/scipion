@@ -234,20 +234,23 @@ void FileTaskDistributor::unlock()
 //------------ MPI ---------------------------
 MpiNode::MpiNode(int &argc, char ** argv)
 {
-    //MPI Initialization
     MPI::Init(argc, argv);
-    comm = new MPI_Comm;
-    MPI_Comm_dup(MPI_COMM_WORLD, comm);
-    MPI_Comm_rank(*comm, &rank);
-    MPI_Comm_size(*comm, &size);
+    int irank, isize;
+    MPI_Comm_rank(MPI_COMM_WORLD, &irank);
+    MPI_Comm_size(MPI_COMM_WORLD, &isize);
+    rank=irank;
+    size=isize;
+    //comm = new MPI_Comm;
+    //MPI_Comm_dup(MPI_COMM_WORLD, comm);
     active = 1;
-    activeNodes = size;
+    //activeNodes = size;
 }
 
 MpiNode::~MpiNode()
 {
-    active = 0;
-    updateComm();
+    //active = 0;
+    //updateComm();
+    //std::cerr << "Send Finalize to: " << rank;
     MPI::Finalize();
 }
 
@@ -258,16 +261,16 @@ bool MpiNode::isMaster() const
 
 void MpiNode::barrierWait()
 {
-    MPI_Barrier(*comm);
+    MPI_Barrier(MPI_COMM_WORLD);
 }
-
+#ifdef NEVERDEFINED
 void MpiNode::updateComm()
 {
-    int nodes = getActiveNodes();
+    size_t nodes = getActiveNodes();
     if (nodes < activeNodes)
     {
         MPI_Comm *newComm = new MPI_Comm;
-        MPI_Comm_split(*comm, active, rank, newComm);
+        MPI_Comm_split(*comm, (int)active, (int)rank, newComm);
         MPI_Comm_disconnect(comm);
         delete comm;
         comm = newComm;
@@ -275,13 +278,14 @@ void MpiNode::updateComm()
     }
 }
 
-int MpiNode::getActiveNodes()
+size_t MpiNode::getActiveNodes()
 {
     int activeNodes = 0;
-    MPI_Allreduce(&active, &activeNodes, 1, MPI_INT, MPI_SUM, *comm);
+    MPI_Allreduce(&active, &activeNodes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     return activeNodes;
 }
 
+#endif
 void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
                               MDLabel sortLabel)
 {
@@ -300,7 +304,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
     if (isMaster()) //master should collect and join workers results
     {
         MetaData mdAll(MD), mdSlave;
-        for (int nodeRank = 1; nodeRank < size; nodeRank++)
+        for (size_t nodeRank = 1; nodeRank < size; nodeRank++)
         {
             fn = formatString("%s_node%d.xmd", rootname.c_str(), nodeRank);
             mdSlave.read(fn);
@@ -333,7 +337,7 @@ XmippMpiProgram::~XmippMpiProgram()
         delete node;
 }
 
-void XmippMpiProgram::read(int argc, char *argv[])
+void XmippMpiProgram::read(int argc, char **argv)
 {
     errorCode = 0; //suppose no errors
 
@@ -347,7 +351,7 @@ void XmippMpiProgram::read(int argc, char *argv[])
             verbose = false;
     }
 
-    XmippProgram::read(argc, argv);
+    XmippProgram::read(argc, (const char **)argv);
 }
 
 void XmippMpiProgram::setNode(MpiNode *node)
@@ -407,7 +411,7 @@ void MpiMetadataProgram::readParams()
 }
 
 void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn,
-        int blockSize)
+		size_t blockSize)
 {
     size_t size = mdIn.size();
 

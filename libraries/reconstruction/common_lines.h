@@ -133,7 +133,7 @@ public:
     int Nimg;
 
     // Xdim size of the images
-    int Xdim;
+    size_t Xdim;
 
     // Common line matrix
     std::vector<CommonLine> CLmatrix;

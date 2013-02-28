@@ -291,24 +291,26 @@ void FourierTransformer::inverseFourierTransform()
 void FourierTransformer::enforceHermitianSymmetry()
 {
     int ndim=3;
-    if (ZSIZE(*fReal)==1)
+    int Zdim=ZSIZE(*fReal);
+    int Ydim=YSIZE(*fReal);
+    if (Zdim==1)
     {
         ndim=2;
-        if (YSIZE(*fReal)==1)
+        if (Ydim==1)
             ndim=1;
     }
-    int yHalf=YSIZE(*fReal)/2;
-    if (YSIZE(*fReal)%2==0)
+    int yHalf=Ydim/2;
+    if (Ydim%2==0)
         yHalf--;
-    int zHalf=ZSIZE(*fReal)/2;
-    if (ZSIZE(*fReal)%2==0)
+    int zHalf=Zdim/2;
+    if (Zdim%2==0)
         zHalf--;
     switch (ndim)
     {
     case 2:
         for (int i=1; i<=yHalf; i++)
         {
-            int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
+            int isym=intWRAP(-i,0,Ydim-1);
             std::complex<double> mean=0.5*(
                                           DIRECT_A2D_ELEM(fFourier,i,0)+
                                           conj(DIRECT_A2D_ELEM(fFourier,isym,0)));
@@ -317,12 +319,12 @@ void FourierTransformer::enforceHermitianSymmetry()
         }
         break;
     case 3:
-        for (int k=0; k<ZSIZE(*fReal); k++)
+        for (int k=0; k<Zdim; k++)
         {
-            int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
+            int ksym=intWRAP(-k,0,Zdim-1);
             for (int i=1; i<=yHalf; i++)
             {
-                int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
+                int isym=intWRAP(-i,0,Ydim-1);
                 std::complex<double> mean=0.5*(
                                               DIRECT_A3D_ELEM(fFourier,k,i,0)+
                                               conj(DIRECT_A3D_ELEM(fFourier,ksym,isym,0)));
@@ -332,7 +334,7 @@ void FourierTransformer::enforceHermitianSymmetry()
         }
         for (int k=1; k<=zHalf; k++)
         {
-            int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
+            int ksym=intWRAP(-k,0,Zdim-1);
             std::complex<double> mean=0.5*(
                                           DIRECT_A3D_ELEM(fFourier,k,0,0)+
                                           conj(DIRECT_A3D_ELEM(fFourier,ksym,0,0)));
@@ -381,7 +383,7 @@ void convolutionFFT(const MultidimArray<double> &img,
 
     transformer2.FourierTransform((MultidimArray<double> &)kernel, FFTK, false);
 
-    for (int n = 0; n < ZSIZE(result); n++)
+    for (size_t n = 0; n < ZSIZE(result); n++)
     {
         imgTemp.aliasSlice(result, n);
         transformer1.FourierTransform(imgTemp, FFTIm, false);
@@ -458,15 +460,18 @@ void frc_dpr(MultidimArray< double > & m1,
     int sizeX_2 = m1sizeX/2;
     double ixsize = 1.0/m1sizeX;
 
-    for (int k=0; k<ZSIZE(FT1); k++)
+    int ZdimFT1=(int)ZSIZE(FT1);
+    int YdimFT1=(int)YSIZE(FT1);
+    int XdimFT1=(int)XSIZE(FT1);
+    for (int k=0; k<ZdimFT1; k++)
     {
         FFT_IDX2DIGFREQ_FAST(k,m1sizeZ,sizeZ_2,isizeZ,ZZ(f));
         double fz2=ZZ(f)*ZZ(f);
-        for (int i=0; i<YSIZE(FT1); i++)
+        for (int i=0; i<YdimFT1; i++)
         {
             FFT_IDX2DIGFREQ_FAST(i,YSIZE(m1),sizeY_2, iysize, YY(f));
             double fz2_fy2=fz2 + YY(f)*YY(f);
-            for (int j=0; j<XSIZE(FT1); j++)
+            for (int j=0; j<XdimFT1; j++)
             {
                 FFT_IDX2DIGFREQ_FAST(j,m1sizeX, sizeX_2, ixsize, XX(f));
 
@@ -476,7 +481,7 @@ void frc_dpr(MultidimArray< double > & m1,
                     continue;
 
                 double R = sqrt(R2);
-                int idx = round(R * m1sizeX);
+                int idx = (int)round(R * m1sizeX);
                 std::complex<double> &z1 = dAkij(FT1, k, i, j);
                 std::complex<double> &z2 = dAkij(FT2, k, i, j);
                 double absz1 = abs(z1);
@@ -543,42 +548,39 @@ void selfScaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> 
     transformerMp.setReal(Mpmem);
     transformerMp.getFourierAlias(MpmemFourier);
 
-    int ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
-    int zhalf = XMIPP_MIN((ZSIZE(MpmemFourier)/2+1),(ZSIZE(MmemFourier)/2+1));
-    int xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
-    int ysize = XMIPP_MIN((YSIZE(MmemFourier)),(YSIZE(MpmemFourier)));
-    int zsize = XMIPP_MIN((ZSIZE(MmemFourier)),(ZSIZE(MpmemFourier)));
+    size_t ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
+    size_t zhalf = XMIPP_MIN((ZSIZE(MpmemFourier)/2+1),(ZSIZE(MmemFourier)/2+1));
+    size_t xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
     //Init with zero
     MpmemFourier.initZeros();
 
-    for (int k = 0; k < zhalf; ++k)
+    for (size_t k = 0; k < zhalf; ++k)
     {
-        for (int i=0; i<ihalf; i++)
-            for (int j=0; j<xsize; j++)
+        for (size_t i=0; i<ihalf; i++)
+            for (size_t j=0; j<xsize; j++)
                 dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,k,i,j);
-        for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+        for (size_t i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
         {
-            int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
-            for (int j=0; j<XSIZE(MpmemFourier); j++)
+            size_t ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
+            for (size_t j=0; j<XSIZE(MpmemFourier); j++)
                 dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,k,ip,j);
         }
     }
-    for (int k = ZSIZE(MpmemFourier)-1; k >= zhalf; --k)
+    for (size_t k = ZSIZE(MpmemFourier)-1; k >= zhalf; --k)
     {
-        int kp = k + ZSIZE(MmemFourier)-ZSIZE(MpmemFourier) ;
-        for (int i=0; i<ihalf; i++)
-            for (int j=0; j<xsize; j++)
+        size_t kp = k + ZSIZE(MmemFourier)-ZSIZE(MpmemFourier) ;
+        for (size_t i=0; i<ihalf; i++)
+            for (size_t j=0; j<xsize; j++)
                 dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,kp,i,j);
-        for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+        for (size_t i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
         {
-            int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
-            for (int j=0; j<XSIZE(MpmemFourier); j++)
+            size_t ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
+            for (size_t j=0; j<XSIZE(MpmemFourier); j++)
                 dAkij(MpmemFourier,k,i,j) = dAkij(MmemFourier,kp,ip,j);
         }
     }
     // Transform data
     transformerMp.inverseFourierTransform();
-
 }
 
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)

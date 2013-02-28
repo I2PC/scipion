@@ -51,7 +51,7 @@ DocLine& DocLine::operator=(const DocLine& line)
     return *this;
 }
 
-double& DocLine::operator[](int i)
+double& DocLine::operator[](size_t i)
 {
     if (i+1 > data.size())
     {
@@ -63,7 +63,7 @@ double& DocLine::operator[](int i)
     return data[i];
 }
 
-double DocLine::operator[](int i) const
+double DocLine::operator[](size_t i) const
 {
     if (i+1 > data.size())
     {
@@ -75,7 +75,7 @@ double DocLine::operator[](int i) const
     return data[i];
 }
 
-void DocLine::set(int i, double val)
+void DocLine::set(size_t i, double val)
 {
     // Make sure there is enough memory
     if (i + 1 > data.size())
@@ -121,7 +121,7 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
                     // Print a data line
                     sprintf(aux, "%5d ", line.key);
         o << aux;
-        sprintf(aux, "%-2d", line.data.size());
+        sprintf(aux, "%-2lu", (unsigned long int)(line.data.size()));
         o << aux;
 
         int imax;
@@ -139,6 +139,8 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
                     // Print a comment
                     o << line.text << std::endl;
         break;
+    default:
+    	break;
     }
 
     return o;
@@ -147,7 +149,7 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
 void DocLine::read(std::istream& in)
 {
     std::string line;
-    int key, param_no;
+    int param_no;
 
     // Get line
     getline(in, line);
@@ -172,7 +174,7 @@ void DocLine::read(std::istream& in)
     {
         line_type = DocLine::DATALINE;
         text = "";
-        int i = 0;
+        size_t i = 0;
 
         key = textToInteger(nextToken(line, i));
         param_no = textToInteger(nextToken(line, i));
@@ -233,13 +235,13 @@ DocFile& DocFile::operator=(const Matrix2D< double >& A)
     clear();
     DocLine temp;
 
-    for (int i = 0; i <MAT_YSIZE(A); i++)
+    for (size_t i = 0; i <MAT_YSIZE(A); i++)
     {
         temp.clear();
         temp.line_type = DocLine::DATALINE;
         temp.data.resize(MAT_XSIZE(A));
 
-        for (int j = 0; j < MAT_XSIZE(A); j++)
+        for (size_t j = 0; j < MAT_XSIZE(A); j++)
             temp.data[j] = MAT_ELEM(A, i, j);
 
         m.push_back(temp);
@@ -309,7 +311,7 @@ void DocFile::debug()
             std::cout << "  Key:  " << (*current).key << std::endl;
             std::cout << "  Text: " << (*current).text << std::endl;
             std::cout << "  Data: ";
-            for (int i = 0; i < (*current).data.size(); i++)
+            for (size_t i = 0; i < (*current).data.size(); i++)
             {
                 sprintf(aux, " % 11.5f", (*current).data[i]);
                 str += aux;
@@ -408,6 +410,8 @@ void DocFile::read(const FileName& name, int overriding)
         case (DocLine::COMMENT):
                         m.push_back(temp);
             break;
+        default:
+        	break;
         }
 
         line_no++;
@@ -563,7 +567,7 @@ int DocFile::getColNumberFromHeader(const char * pattern)
         {
             std::vector<std::string> tokens;
             tokenize(header,tokens," \t()");
-            for (int i = 0; i < tokens.size(); i++)
+            for (size_t i = 0; i < tokens.size(); i++)
             {
                 if (strstr(tokens[i].c_str(), pattern) != NULL)
                 {
@@ -1236,7 +1240,7 @@ void DocFile::clean_comments()
 DocFile DocFile::randomize()
 {
     DocFile result, aux;
-    int i, j;
+    int i;
     int rnd_indx;
 
     randomize_random_generator();
@@ -1343,7 +1347,7 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
 DocFile DocFile::random_discard(int n)
 {
     DocFile result;
-    int i, j, rnd_indx;
+    int i, rnd_indx;
 
     result = *this;
     randomize_random_generator();
@@ -1391,7 +1395,7 @@ Matrix1D< double > DocFile::row(int k)
     result.resize(it->data.size());
     result.setRow();
 
-    for (int i = 0; i < VEC_XSIZE(result); i++)
+    for (size_t i = 0; i < VEC_XSIZE(result); i++)
         VEC_ELEM(result, i) = it->data[i];
 
     return result;
@@ -1401,7 +1405,7 @@ void DocFile::setCol(int c, Matrix1D< double >& v)
 {
     go_first_data_line();
 
-    for (int i = 0; i <VEC_XSIZE(v); i++)
+    for (size_t i = 0; i <VEC_XSIZE(v); i++)
     {
         set(c, VEC_ELEM(v, i));
         next_data_line();
@@ -1469,7 +1473,7 @@ void select_images(DocFile& doc, MetaData& sel, int col, bool en_limit0,
         sel.getValue(MDL_ENABLED,enabled, __iter.objId);
         if (enabled == 1)
         {
-            if (en_limit0 && doc(col) < limit0 || en_limitF && doc(col) > limitF)
+            if ((en_limit0 && doc(col) < limit0) || (en_limitF && doc(col) > limitF))
                 sel.setValue(MDL_ENABLED, -1, __iter.objId);
         }
 

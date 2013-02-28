@@ -132,7 +132,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         return(-2);
 
     // Determine byte order and swap bytes if from little-endian machine
-    if ( swap = (( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG )) )
+    if ( (swap = (( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG ))) )
     {
 #ifdef DEBUG
         fprintf(stderr, "Warning: Swapping header byte order for 4-byte types\n");
@@ -144,7 +144,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
         REPORT_ERROR(ERR_UNCLASSIFIED,"readMRC: amin > max: VAX floating point conversion unsupported");
-    int _xDim,_yDim,_zDim;
+    size_t _xDim,_yDim,_zDim;
     size_t _nDim;
     _xDim = header->nx;
     _yDim = header->ny;
@@ -388,8 +388,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     //                        machine_stamp[1] = 65;
     //                        break;
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     /* header->a,b,c info is related to sampling rate, so it is
@@ -452,8 +451,10 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             SET_HEADER_CELL_DIM(c, MDL_SAMPLINGRATE_Z, Zdim);
         }
         else
-            header->nxStart = header->xOrigin = header->nyStart = \
-                                                header->yOrigin = header->nzStart = header->zOrigin = 0;
+        {
+            header->nxStart = header->nyStart = header->nzStart = 0;
+            header->xOrigin = header->yOrigin = header->zOrigin = 0;
+        }
     }
 
     header->nsymbt = 0;
@@ -504,7 +505,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
     flock.lock(fimg);
 
     // Write header when needed
-    if(!isStack || replaceNsize < header->nz)
+    if(!isStack || replaceNsize < (size_t)header->nz)
     {
         if ( swapWrite )
             swapPage((char *) header, MRCSIZE - 800, DT_Float);

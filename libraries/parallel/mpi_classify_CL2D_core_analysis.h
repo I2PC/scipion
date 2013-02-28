@@ -76,7 +76,7 @@ public:
     // MaxLevel
     int maxLevel;
     // Projection size
-    int Ydim, Xdim;
+    size_t Ydim, Xdim;
 public:
     /// Empty constructor
     ProgClassifyCL2DCore(int argc, char **argv);

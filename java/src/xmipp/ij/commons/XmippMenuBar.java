@@ -6,8 +6,6 @@ package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.WindowManager;
-import ij.io.SaveDialog;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
@@ -19,17 +17,19 @@ import java.awt.MenuItem;
 import java.awt.MenuShortcut;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
-import javax.swing.KeyStroke;
 import javax.vecmath.Color3f;
 
-import xmipp.jni.Filename;
+import xmipp.utils.QuickHelpJDialog;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 
 /**
@@ -63,6 +63,9 @@ public class XmippMenuBar extends MenuBar
 	private CheckboxMenuItem wrapmi;
 	private CheckboxMenuItem ugmi;
 	private MenuItem exitmi;
+	private Menu helpmn;
+	private MenuItem keyassistmi;
+	private QuickHelpJDialog keyassistdlg;
 
 	enum IJRequirement
 	{
@@ -77,10 +80,12 @@ public class XmippMenuBar extends MenuBar
 		filemn = new Menu("File");
 		imagemn = new Menu("Image");
 		advancedmn = new Menu("Advanced");
+		helpmn = new Menu("Help");
 
 		add(filemn);
 		add(imagemn);
 		add(advancedmn);
+		add(helpmn);
 
 		// menubar file menu
 		savemi = new MenuItem("Save");
@@ -275,6 +280,31 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(processmn);
 		advancedmn.add(drawmn);
 		advancedmn.add(profilemn);
+		
+		
+		keyassistmi = new MenuItem("Key Assist");
+		keyassistmi.addActionListener(new ActionListener()
+		{
+			
+			
+
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				try
+				{
+				if(keyassistdlg == null)
+					keyassistdlg = new QuickHelpJDialog(null, false, "Key Assist...", getKeyAssist());
+				keyassistdlg.setVisible(true);
+				}
+				catch(Exception e)
+				{
+					XmippDialog.showInfo(null, e.getMessage());
+				}
+			}
+		});
+		helpmn.add(keyassistmi);
+		
 
 		// advanced threshold menu
 		addIJMenuItem(thresholdingmn, "Threshold", "Threshold...");
@@ -469,5 +499,14 @@ public class XmippMenuBar extends MenuBar
 				}
 		IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
 	}//function runCommand
+	
+	public Map<String, String> getKeyAssist()
+	{
+		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+		map.put("Shift + Scroll Up", "Zoom in");
+		map.put("Shift + Scroll Down", "Zoom out");
+		map.put("Right click + Mouse move", "Moves image previously expanded");
+		return map;
+	}
 
 }

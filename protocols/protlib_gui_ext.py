@@ -412,7 +412,11 @@ class XmippButton(tk.Button):
             
         if tooltip:
             ToolTip(self, tooltip, 500)
-
+            
+    def setImage(self, imagePath):
+        self.image = getXmippImage(imagePath)
+        self.config(image=self.image)
+        
 '''Implement a Listbox Dialog, it will return
 the index selected in the lisbox or -1 on Cancel'''
 class ListboxDialog(Dialog):

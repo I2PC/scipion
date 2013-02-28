@@ -51,7 +51,7 @@ void KNN::KNearestNeighbors(MultidimArray<double> &sample)
     }
     maximumIndex=findMaxIndex(maxDist);
     maximum=DIRECT_A1D_ELEM(maxDist,maximumIndex);
-    for (int i=K;i<YSIZE(__dataset);i++)
+    for (size_t i=K;i<YSIZE(__dataset);i++)
     {
         distance=euclideanDistance(sample,i,maximum);
         if (distance==-1)
@@ -75,16 +75,16 @@ int KNN::predict(MultidimArray<double> &sample,double &score)
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(neighborsIndex)
     {
         index=DIRECT_A1D_ELEM(neighborsIndex,i);
-        for (int j=0;j<XSIZE(__labelSet);++j)
+        for (size_t j=0;j<XSIZE(__labelSet);++j)
             if (DIRECT_A1D_ELEM(__labelSet,j)==DIRECT_A1D_ELEM(__dataLabel,index))
                 DIRECT_A1D_ELEM(voteArray,j)+=1;
     }
     index=findMaxIndex(voteArray);
     score=DIRECT_A1D_ELEM(voteArray,index)/double(K);
     if (DIRECT_A1D_ELEM(voteArray,index)>(K*0.5))
-        return DIRECT_A1D_ELEM(__labelSet,index);
+        return (int)DIRECT_A1D_ELEM(__labelSet,index);
     index=findMinIndex(maxDist);
-    return DIRECT_A1D_ELEM(__dataLabel,DIRECT_A1D_ELEM(neighborsIndex,index));
+    return (int)DIRECT_A1D_ELEM(__dataLabel,DIRECT_A1D_ELEM(neighborsIndex,index));
 }
 
 int KNN::findMaxIndex(MultidimArray<double> &inputArray)
@@ -93,7 +93,7 @@ int KNN::findMaxIndex(MultidimArray<double> &inputArray)
     int maximumIndex;
     maximum=DIRECT_A1D_ELEM(inputArray,0);
     maximumIndex=0;
-    for (int i=1;i<XSIZE(inputArray);i++)
+    for (size_t i=1;i<XSIZE(inputArray);i++)
         if (maximum<DIRECT_A1D_ELEM(inputArray,i))
         {
             maximum=DIRECT_A1D_ELEM(inputArray,i);
@@ -108,7 +108,7 @@ int KNN::findMinIndex(MultidimArray<double> &inputArray)
     int minimumIndex;
     minimum=DIRECT_A1D_ELEM(inputArray,0);
     minimumIndex=0;
-    for (int i=1;i<XSIZE(inputArray);i++)
+    for (size_t i=1;i<XSIZE(inputArray);i++)
         if (minimum>DIRECT_A1D_ELEM(inputArray,i))
         {
             minimum=DIRECT_A1D_ELEM(inputArray,i);
@@ -135,7 +135,7 @@ double KNN::cityBlockDistance(MultidimArray<double> &sample,int index,double max
     double dist=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(sample)
     {
-        double tmp=abs(DIRECT_A1D_ELEM(sample,i)-DIRECT_A2D_ELEM(__dataset,index,i));
+        double tmp=fabs(DIRECT_A1D_ELEM(sample,i)-DIRECT_A2D_ELEM(__dataset,index,i));
         dist+=tmp;
         if (maximumDist>0 && dist>maximumDist)
             return -1.0;
@@ -152,10 +152,10 @@ void KNN::saveModel(const FileName &fn)
     fh<<DIRECT_A1D_ELEM(__labelSet,i)<<" ";
     fh<<std::endl;
     fh<<YSIZE(__dataset)<<" "<<XSIZE(__dataset)<<std::endl;
-    for (int i=0;i<YSIZE(__dataset);++i)
+    for (size_t i=0;i<YSIZE(__dataset);++i)
     {
         fh<<DIRECT_A1D_ELEM(__dataLabel,i)<<" ";
-        for (int j=0;j<XSIZE(__dataset);++j)
+        for (size_t j=0;j<XSIZE(__dataset);++j)
         {
             fh<<DIRECT_A2D_ELEM(__dataset,i,j)<<" ";
         }
@@ -176,10 +176,10 @@ void KNN::loadModel(const FileName &fn)
     fh>>y>>x;
     __dataset.resize(1,1,y,x);
     __dataLabel.resize(1,1,1,y);
-    for (int i=0;i<YSIZE(__dataset);++i)
+    for (size_t i=0;i<YSIZE(__dataset);++i)
     {
         fh>>DIRECT_A1D_ELEM(__dataLabel,i);
-        for (int j=0;j<XSIZE(__dataset);++j)
+        for (size_t j=0;j<XSIZE(__dataset);++j)
         {
             fh>>DIRECT_A2D_ELEM(__dataset,i,j);
         }

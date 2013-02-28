@@ -63,15 +63,11 @@ TEST_F(GeometryTest, angles2Matrix2Angles)
 }
 TEST_F(GeometryTest, rotateAngleAroundAxis)
 {
-    double xrad, yrad, zrad;
-
-    double ang, rot, tilt, psi;
-
     Matrix1D<double> axis(3);
     Matrix2D<double> matrix, rMatrix;
 
 
-    ang = 90;
+    double ang = 90;
     // Around X
     XX(axis) = 1;
     YY(axis) = 0;

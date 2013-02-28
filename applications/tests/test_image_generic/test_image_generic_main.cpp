@@ -129,13 +129,12 @@ TEST_F( ImageGenericTest, createEmptyFile)
     FileName tempFn;
     tempFn.initUniqueName("/tmp/emptyFile_XXXXXX");
     tempFn = tempFn + ":stk";
-    const int size = 16;
+    const size_t size = 16;
     createEmptyFile(tempFn,size,size,size,size);
 
     ImageGeneric Img(tempFn);
 
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
+    size_t Xdim, Ydim, Zdim, Ndim;
     Img.getDimensions(Xdim, Ydim, Zdim, Ndim);
     EXPECT_TRUE( Xdim == size && Ydim == size && Zdim == size && Ndim == size);
     double std, avg, min, max;
@@ -376,7 +375,7 @@ TEST_F( ImageGenericTest, movePointerTo)
     {
         img2.read(auxFn, DATA, n);
 
-        for (int k = 1; k <= aDim.zdim; ++k)
+        for (size_t k = 1; k <= aDim.zdim; ++k)
         {
             img1.movePointerTo(k, n);
             img2.movePointerTo(k);
@@ -417,7 +416,7 @@ TEST_F( ImageGenericTest, MovePointerToCheckDimensions)
         img1().getDimensions(newADim);
         EXPECT_TRUE(aDim == newADim);
 
-        for (int k = 1; k <= aDim.zdim; ++k)
+        for (size_t k = 1; k <= aDim.zdim; ++k)
         {
             img1.movePointerTo(k, n);
             img1().getDimensions(newADim);

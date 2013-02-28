@@ -44,7 +44,9 @@ import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
 
 
+
 public class MetadataTableModel extends MetadataGalleryTableModel {
+
 
 	private static final long serialVersionUID = 1L;
 
@@ -130,6 +132,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			case MetaData.LABEL_SIZET:
 				return md.getValueLong(label, id);
 			case MetaData.LABEL_STRING:
+				return md.getValueString(ci.getLabel(), data.ids[row]);
 			case MetaData.LABEL_VECTOR_DOUBLE:
 			case MetaData.LABEL_VECTOR_SIZET:
 				return md.getValueString(ci.getLabel(), data.ids[row]);

@@ -209,7 +209,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
     int myCounter=0;
 
 
-    for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+    for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
         for (int i=0;i<my_init;i++)
             myCounter++;
 
@@ -223,7 +223,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
         		                      maxFrequency,
         		                      BSplineDeg);
 
-    for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+    for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
         for (int i=my_init;i<=my_end;i++)
         {
@@ -370,7 +370,7 @@ void ProgAngularProjectLibrary::run()
     size_t myCounter=0;
     size_t id;
 
-    for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
+    for (double mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
         FOR_ALL_OBJECTS_IN_METADATA(mySFin)
         {
@@ -426,7 +426,6 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
     getBlocksInMetaDataFile(fn_groups,blockList);
     FileName fn_temp, fn_exp;
     FileName my_output_file_root;
-    int bmax=blockList.size();
     MetaData SFBlock;
 
     fn_exp = FnexperimentalImages.removeBlockName();

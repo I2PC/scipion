@@ -209,6 +209,6 @@ protected:
 }
 ;// end of class ProgHeader
 
-RUN_XMIPP_PROGRAM(ProgHeader);
+RUN_XMIPP_PROGRAM(ProgHeader)
 
 

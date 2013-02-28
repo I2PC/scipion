@@ -150,11 +150,11 @@ public:
 
     /* Digital Parameters */
     /// X size of the input image (object plane size)
-    int Nox;
+    size_t Nox;
     /// Y size of the input image (object plane size)
-    int Noy;
+    size_t Noy;
     /// Z size of the input image (object plane size)
-    int Noz;
+    size_t Noz;
     /* Maximum pixel size in image plane (Minimum resolution condition).
      The same for both axis x-y, due to the symmetry of the lens aperture */
     double dxiMax;
@@ -198,7 +198,7 @@ public:
     /// object space Z sampling rate
     double dzo;
     /// Size of the image in image plane, to be rescaled if needed
-    double Nix, Niy;
+    size_t Nix, Niy;
 
     /// object space XY-plane sampling rate of the PSF Volume
     double dxoPSF;

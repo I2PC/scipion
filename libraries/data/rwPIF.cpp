@@ -86,7 +86,7 @@ int  ImageBase::readPIF(size_t select_img)
 
 
     // Check selected image
-    if (select_img > mainHeader.numImages)
+    if (select_img > (size_t)mainHeader.numImages)
         REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readPIF (%s): Image number %lu exceeds stack size %lu" ,filename.c_str(),select_img, mainHeader.numImages));
 
     // Setting image dimensions
@@ -117,7 +117,6 @@ int  ImageBase::readPIF(size_t select_img)
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
-    double daux;
 
     PIFDataHeader dataHeader;
 

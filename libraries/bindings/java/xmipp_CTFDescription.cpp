@@ -38,7 +38,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_CTFDescription_read_1
     {
         try
         {
-            const char *fnStr = env->GetStringUTFChars(filename, false);
+        	jboolean aux=false;
+            const char *fnStr = env->GetStringUTFChars(filename, &aux);
 
             ctfDescription->enable_CTF = ctfDescription->enable_CTFnoise = true;
             ctfDescription->read(fnStr);
@@ -130,9 +131,9 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFProfile(
             jobjectArray profilesArray = env->NewObjectArray(nprofiles,
                                          env->GetObjectClass(row), 0);
 
-            for (int i = 0; i < nprofiles; i++)
+            double *aux=new double[samples];
+            for (size_t i = 0; i < nprofiles; i++)
             {
-                double aux[samples];
                 for (int j = 0; j < samples; j++)
                 {
                     aux[j] = A2D_ELEM(profiles, j, i);
@@ -146,6 +147,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFProfile(
                 // Assings the row to the result array object.
                 env->SetObjectArrayElement(profilesArray, i, row);
             }
+            delete []aux;
 
             return profilesArray;
         }
@@ -196,9 +198,9 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFAverageProfile(
             jobjectArray profilesArray = env->NewObjectArray(nprofiles,
                                          env->GetObjectClass(row), 0);
 
-            for (int i = 0; i < nprofiles; i++)
+            double *aux=new double[samples];
+            for (size_t i = 0; i < nprofiles; i++)
             {
-                double aux[samples];
                 for (int j = 0; j < samples; j++)
                 {
                     aux[j] = A2D_ELEM(profiles, j, i);
@@ -212,6 +214,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_CTFDescription_CTFAverageProfile(
                 // Assings the row to the result array object.
                 env->SetObjectArrayElement(profilesArray, i, row);
             }
+            delete []aux;
 
             return profilesArray;
         }

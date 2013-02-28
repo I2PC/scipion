@@ -203,10 +203,8 @@ void ProgAngularProjectionMatching::produceSideInfo()
     MetaData         SFr,emptySF;
     SymList          SL;
     FileName         fn_img;
-    double           mean,stddev,psi=0.;
     MultidimArray<double> Maux;
     MultidimArray<double> dataline(3);
-    int              nl;
     Polar<double>    P;
     Polar<std::complex <double> > fP;
 
@@ -294,7 +292,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
 #undef DEBUG
 
     convert_refno_to_stack_position.resize(mysampling.numberSamplesAsymmetricUnit, -1);
-    for (int i = 0; i < mysampling.no_redundant_sampling_points_index.size(); i++)
+    for (size_t i = 0; i < mysampling.no_redundant_sampling_points_index.size(); i++)
         convert_refno_to_stack_position[mysampling.no_redundant_sampling_points_index[i]] = i;
 
     // Don't reserve more memory than necessary
@@ -394,7 +392,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     DFexp.findObjects(ids);
 }
 
-int ProgAngularProjectionMatching::getCurrentReference(int refno,
+void ProgAngularProjectionMatching::getCurrentReference(int refno,
         Polar_fftw_plans &local_plans)
 {
     FileName                      fnt;
@@ -404,7 +402,6 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     Polar<double>                 P;
     Polar<std::complex <double> > fP;
     FourierTransformer                     local_transformer;
-    size_t _pointer;
 
     // Image was not stored yet: read it from disc and store
     //    std::vector<size_t>::const_iterator found =
@@ -522,9 +519,9 @@ void * threadRotationallyAlignOneImage( void * data )
     structThreadRotationallyAlignOneImage * thread_data = (structThreadRotationallyAlignOneImage *) data;
 
     // Variables from above
-    int thread_id = thread_data->thread_id;
+    size_t thread_id = thread_data->thread_id;
     ProgAngularProjectionMatching *prm = thread_data->prm;
-    int thread_num = prm->threads;
+    size_t thread_num = prm->threads;
     MultidimArray<double> *img = thread_data->img;
     size_t &this_image = thread_data->this_image;
     int &opt_refno = thread_data->opt_refno;
@@ -536,7 +533,8 @@ void * threadRotationallyAlignOneImage( void * data )
     // Local variables
     MultidimArray<double>       Maux;
     MultidimArray<double>       ang, corr;
-    int                         max_index, refno, myinit, myfinal, myincr;
+    size_t                      myinit, myfinal, myincr;
+    int                         refno;
     bool                        done_once=false;
     double                      mean, stddev;
     Polar<double>               P;
@@ -559,7 +557,7 @@ void * threadRotationallyAlignOneImage( void * data )
     // This loop is also threaded
     myinit = thread_id;
     myincr = thread_num;
-    for (int itrans = myinit; itrans < prm->nr_trans; itrans+=myincr)
+    for (size_t itrans = myinit; itrans < prm->nr_trans; itrans+=myincr)
     {
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3,
                                        (double)prm->search5d_xoff[itrans],
@@ -672,7 +670,7 @@ void * threadRotationallyAlignOneImage( void * data )
 #endif
 
             // Loop over all 5D-search translations
-            for (int itrans = 0; itrans < prm->nr_trans; itrans++)
+            for (size_t itrans = 0; itrans < prm->nr_trans; itrans++)
             {
 #ifdef DEBUG
 
@@ -685,7 +683,7 @@ void * threadRotationallyAlignOneImage( void * data )
                                       prm->fP_ref[refno],
                                       ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
-                for (int k = 0; k < XSIZE(corr); k++)
+                for (size_t k = 0; k < XSIZE(corr); k++)
                 {
                     if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
                     {
@@ -700,7 +698,7 @@ void * threadRotationallyAlignOneImage( void * data )
                 // B. Check mirrored image
                 rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,rotAux);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
-                for (int k = 0; k < XSIZE(corr); k++)
+                for (size_t k = 0; k < XSIZE(corr); k++)
                 {
                     if (DIRECT_A1D_ELEM(corr,k)> maxcorr)
                     {
@@ -745,6 +743,7 @@ void * threadRotationallyAlignOneImage( void * data )
 #endif
     //pthread_mutex_unlock(  &debug_mutex );
     //std::cerr << "DEBUG_JM: threadRotationallyAlignOneImage END" <<std::endl;
+    return NULL;
 }
 
 void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<double> &img,
@@ -990,7 +989,6 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     {
         imgid = imagesToProcess[imgno];
         /**/
-        double kk;
         FileName pp;
         DFexp.getValue(MDL_IMAGE,pp, imgid);
 

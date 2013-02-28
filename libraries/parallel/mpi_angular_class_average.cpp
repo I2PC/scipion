@@ -156,7 +156,6 @@ void MpiProgAngularClassAverage::run()
     int lockIndex;
     size_t order_index;
     int ref3d_index;
-    double weight,weights1,weights2;
 
     double lockWeightIndexes[lockWeightIndexesSize];
 
@@ -165,13 +164,12 @@ void MpiProgAngularClassAverage::run()
     if (node->rank == 0)
     {
         //for (int iCounter = 0; iCounter < nJobs; )//increase counter after I am free
-        int jobId = 0, size;
-        int finishedNodes = 1;
+        size_t jobId = 0, size;
+        size_t finishedNodes = 1;
         bool whileLoop = true;
 
-        size_t id, order, count;
+        size_t order, count;
         int ctfGroup, ref3d, ref2d;
-        id = mdJobList.firstObject();
         MDIterator __iterJobs(mdJobList);
         while (whileLoop)
         {
@@ -182,7 +180,7 @@ void MpiProgAngularClassAverage::run()
             case TAG_I_AM_FREE:
 
                 size = 0;
-                for (int i=0;i<mpi_job_size && jobId < numberOfJobs;i++,size++,jobId++)
+                for (size_t i=0;i<mpi_job_size && jobId < numberOfJobs;i++,size++,jobId++)
                 {
                     //Some test values for defocus, 3D reference and projection direction
                     mdJobList.getValue(MDL_REF3D, ref3d,  __iterJobs.objId);
@@ -265,7 +263,7 @@ void MpiProgAngularClassAverage::run()
                 MPI_Recv(lockWeightIndexes, lockWeightIndexesSize, MPI_DOUBLE, MPI_ANY_SOURCE, TAG_I_FINISH_WRITTING,
                          MPI_COMM_WORLD, &status);
 
-                lockIndex = lockWeightIndexes[index_lockIndex];
+                lockIndex = (int)lockWeightIndexes[index_lockIndex];
                 //#define DEBUG_MPI
 #ifdef DEBUG_MPI
 
@@ -357,7 +355,7 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
     FileName fn_img, fn_tmp;
     MetaData SFclass, SFclass1, SFclass2;
     MetaData SFclassDiscarded;
-    double rot, tilt, psi, xshift, yshift, val, w, w1, w2, my_limitR, scale;
+    double psi, xshift, yshift, w, w1, w2, scale;
     bool mirror;
     int ref_number, this_image, ref3d, defGroup;
     static int defGroup_last = 0;
@@ -516,12 +514,13 @@ void MpiProgAngularClassAverage::mpi_process(double * Def_3Dref_2Dref_JobNo)
 
         // Reserve memory for output from class realignment
         int reserve = DF.size();
-        double my_output[AVG_OUPUT_SIZE * reserve + 1];
+        double *my_output=new double[AVG_OUPUT_SIZE * reserve + 1];
 
         reAlignClass(avg1, avg2, SFclass1, SFclass2, exp_imgs, exp_split,
                      exp_number, order_number, my_output);
         w1 = avg1.weight();
         w2 = avg2.weight();
+        delete []my_output;
     }
 
     // Apply Wiener filters
@@ -602,7 +601,6 @@ void MpiProgAngularClassAverage::mpi_writeController(
     double w2,
     int lockIndex)
 {
-    double weight, weights1, weights2;
     double weight_old, weights1_old, weights2_old;
     double lockWeightIndexes[lockWeightIndexesSize];
     int ref3dIndex;
@@ -704,10 +702,13 @@ void MpiProgAngularClassAverage::mpi_writeFile(
 
 void MpiProgAngularClassAverage::mpi_produceSideInfo()
 {
+    node->barrierWait();
 
     //init with 0 by default through memset
+
     Iempty().resizeNoCopy(Xdim, Ydim);
     Iempty().setXmippOrigin();
+    node->barrierWait();
 
     // Randomization
     if (do_split)
@@ -765,14 +766,14 @@ void MpiProgAngularClassAverage::mpi_preprocess()
         initOutputFiles();
     }
 
-    MPI_Bcast(&Xdim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&Ydim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&Zdim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&Ndim,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&numberOfJobs,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&ref3dNum,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Xdim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Ydim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Zdim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&Ndim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&numberOfJobs,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
+    MPI_Bcast(&ref3dNum,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
     MPI_Bcast(&ctfNum,1,MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&paddim,1,MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&paddim,1,XMIPP_MPI_SIZE_T,0,MPI_COMM_WORLD);
 
     mpi_produceSideInfo();
 
@@ -979,8 +980,7 @@ void MpiProgAngularClassAverage::initDimentions()
     //Check Wiener filter image has correct size
     if (fn_wien != "")
     {
-        int x,y,z;
-        size_t n;
+        size_t x,y,z, n;
         getImageSize(fn_wien,x,y,z,n);
 
         // Get and check padding dimensions
@@ -1183,8 +1183,8 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
     std::vector<double> ccfs(splits.size());
     MultidimArray<double> ang;
     MultidimArray<double> Mimg, Mref, Maux;
-    double maxcorr, diff_psi, diff_shift, new_xoff, new_yoff;
-    double w1, w2, opt_flip = 0., opt_psi = 0., opt_xoff = 0., opt_yoff = 0.;
+    double maxcorr, new_xoff=0., new_yoff=0.;
+    double w1, w2, opt_flip = 0., opt_psi = 0.;
     bool do_discard;
 
     SFclass1.clear();
@@ -1212,7 +1212,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
         std::cerr<<" entering iter "<<iter<<std::endl;
 #endif
 
-        for (int imgno = 0; imgno < imgs.size(); imgno++)
+        for (size_t imgno = 0; imgno < imgs.size(); imgno++)
         {
             do_discard = false;
             maxcorr = -99.e99;
@@ -1221,7 +1221,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
                      (float) -imgs[imgno].Yoff());
             // A. Check straight image
             rotationalCorrelation(fPimg, fPref, ang, rotAux);
-            for (int k = 0; k < XSIZE(corr); k++)
+            for (size_t k = 0; k < XSIZE(corr); k++)
             {
                 if (corr(k) > maxcorr)
                 {
@@ -1233,7 +1233,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 
             // B. Check mirrored image
             rotationalCorrelation(fPimg, fPrefm, ang, rotAux);
-            for (int k = 0; k < XSIZE(corr); k++)
+            for (size_t k = 0; k < XSIZE(corr); k++)
             {
                 if (corr(k) > maxcorr)
                 {
@@ -1297,7 +1297,7 @@ void MpiProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 
     // Report the new angles, offsets and selfiles
     my_output[4] = imgs.size() * AVG_OUPUT_SIZE;
-    for (int imgno = 0; imgno < imgs.size(); imgno++)
+    for (size_t imgno = 0; imgno < imgs.size(); imgno++)
     {
         if (splits[imgno] < 0)
             my_output[imgno * AVG_OUPUT_SIZE + 5] = -numbers[imgno];

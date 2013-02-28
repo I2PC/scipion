@@ -104,7 +104,7 @@ void CL3DClass::updateProjection(MultidimArray<double> &I,
                                  const CL3DAssignment &assigned,
                                  bool force)
 {
-    if (assigned.score < 1e37 && assigned.objId != BAD_OBJID || force)
+    if ((assigned.score < 1e37 && assigned.objId != BAD_OBJID) || force)
     {
     	transformer.FourierTransform(I,Ifourier,false);
 
@@ -135,7 +135,7 @@ void CL3DClass::transferUpdate()
     	double *ptrPupdate=(double*)&DIRECT_MULTIDIM_ELEM(Pupdate,0);
     	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PupdateMask)
 		{
-    		int maskVal=DIRECT_MULTIDIM_ELEM(PupdateMask,n);
+    		int maskVal=(int)DIRECT_MULTIDIM_ELEM(PupdateMask,n);
     		if (maskVal>0)
     		{
     			double iMask=1./maskVal;
@@ -312,7 +312,7 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 
 		// Align the image with the node
 		for (int i = 0; i < 3; i++) {
-			double shiftX, shiftY, shiftZ, bestRot;
+			double shiftX, shiftY, shiftZ;
 
 			// Shift then rotate
 			bestShift(P, IauxSR, shiftX, shiftY, shiftZ, corrAux);
@@ -344,8 +344,8 @@ void CL3DClass::fitBasic(MultidimArray<double> &I, CL3DAssignment &result)
 		sparseDistanceToCentroid(IauxRS,avgKRS, stdKRS, L1RS);
 		sparseDistanceToCentroid(IauxSR,avgKSR, stdKSR, L1SR);
 
-		double corrRS=correlationIndex(P,IauxRS);
-		double corrSR=correlationIndex(P,IauxSR);
+		correlationIndex(P,IauxRS);
+		correlationIndex(P,IauxSR);
 		double scoreRS=L1RS; // stdKRS*(1-corrRS);
 		double scoreSR=L1SR; // stdKSR*(1-corrSR);
 
@@ -508,7 +508,7 @@ void CL3D::shareAssignments(bool shareAssignment, bool shareUpdates)
             std::vector<double> receivedNonClassCorr;
             std::vector<CL3DAssignment> receivedNextListImage;
             int listSize;
-            for (int rank = 0; rank < prm->node->size; rank++)
+            for (size_t rank = 0; rank < prm->node->size; rank++)
             {
                 if (rank == prm->node->rank)
                 {
@@ -567,7 +567,7 @@ void CL3D::shareSplitAssignments(Matrix1D<int> &assignment, CL3DClass *node1,
         std::vector<double> receivedNonClassCorr;
         std::vector<CL3DAssignment> receivedNextListImage;
         int listSize;
-        for (int rank = 0; rank < prm->node->size; rank++)
+        for (size_t rank = 0; rank < prm->node->size; rank++)
         {
             if (rank == prm->node->rank)
             {
@@ -929,7 +929,7 @@ void CL3D::run(const FileName &fnOut, int level)
         FileName fnAux;
         for (int q=0; q<Q; q++)
         {
-        	for (int n=0; n<P[q]->currentListImg.size(); n++)
+        	for (size_t n=0; n<P[q]->currentListImg.size(); n++)
         	{
         		SF->getValue(MDL_IMAGE,fnAux,P[q]->currentListImg[n].objId);
         		LOG(formatString("In node %d (%d): %s",q,n,fnAux.c_str()));
@@ -984,8 +984,8 @@ void CL3D::run(const FileName &fnOut, int level)
             do
             {
                 smallNodes = false;
-                int largestNode = -1, sizeLargestNode = -1, smallNode = -1,
-                                                        sizeSmallestNode = Nimgs + 1;
+                int largestNode = -1, sizeLargestNode = -1, smallNode = -1;
+                size_t sizeSmallestNode = Nimgs + 1;
                 for (int q = 0; q < Q; q++)
                 {
                     if (P[q]->currentListImg.size() < sizeSmallestNode)
@@ -1054,7 +1054,7 @@ void CL3D::run(const FileName &fnOut, int level)
         if (prm->node->rank == 0)
             write(fnOut,level);
 
-        if (iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1 || iter >= prm->Niter)
+        if ((iter > 1 && Nchanges < 0.005 * Nimgs && Q > 1) || iter >= prm->Niter)
             goOn = false;
         iter++;
     }
@@ -1092,7 +1092,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
     CL3DAssignment assignment, assignment1, assignment2;
     CL3DClass *firstSplitNode1 = NULL;
     CL3DClass *firstSplitNode2 = NULL;
-    int minAllowedSize = prm->PminSize * 0.01 * node->currentListImg.size();
+    size_t minAllowedSize = (size_t)(prm->PminSize * 0.01 * node->currentListImg.size());
 
     bool finish;
     bool success = true;
@@ -1103,7 +1103,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         node1->P = node->P;
         node2->P = node->P;
 
-        int imax = node->currentListImg.size();
+        size_t imax = node->currentListImg.size();
         if (imax < minAllowedSize)
         {
             toDelete.push_back(node1);
@@ -1117,7 +1117,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             std::cerr << "Calculating score distribution at split ..."
             << std::endl;
         corrList.initZeros(imax);
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             if ((i + 1) % (prm->node->size) == prm->node->rank)
             {
@@ -1151,7 +1151,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
             {
                 LOG(((String)"Splitting at random"));
                 // Split at random
-                for (int i = 0; i < imax; i++)
+                for (size_t i = 0; i < imax; i++)
                 {
                     assignment.objId = node->currentListImg[i].objId;
                     readImage(I, assignment.objId, false);
@@ -1176,7 +1176,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         if (prm->node->rank == 0 && prm->verbose >= 2)
             std::cerr << "Splitting by score threshold ..." << std::endl;
         LOG(((String)"Splitting by threshold"));
-        for (int i = 0; i < imax; i++)
+        for (size_t i = 0; i < imax; i++)
         {
             if ((i + 1) % (prm->node->size) == prm->node->rank)
             {
@@ -1223,7 +1223,7 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
 
             oldAssignment = newAssignment;
             newAssignment.initZeros();
-            for (int i = 0; i < imax; i++)
+            for (size_t i = 0; i < imax; i++)
             {
                 if ((i + 1) % (prm->node->size) == prm->node->rank)
                 {
@@ -1303,18 +1303,18 @@ void CL3D::splitNode(CL3DClass *node, CL3DClass *&node1, CL3DClass *&node2,
         }
     }
     while (!finish);
-    for (int i = 0; i < toDelete.size(); i++)
+    for (size_t i = 0; i < toDelete.size(); i++)
         if (toDelete[i] != node)
             delete toDelete[i];
 
     if (success)
     {
-        for (int i = 0; i < node1->currentListImg.size(); i++)
+        for (size_t i = 0; i < node1->currentListImg.size(); i++)
         {
             splitAssignment.push_back(node1->currentListImg[i].objId);
             splitAssignment.push_back(1);
         }
-        for (int i = 0; i < node2->currentListImg.size(); i++)
+        for (size_t i = 0; i < node2->currentListImg.size(); i++)
         {
             splitAssignment.push_back(node2->currentListImg[i].objId);
             splitAssignment.push_back(2);

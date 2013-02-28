@@ -29,10 +29,8 @@
 #include "parallel/xmipp_mpi.h"
 #include "reconstruction/angular_projection_matching.h"
 
-//TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
-
 /**@defgroup MpiProgAngularProjectionMatching  MpiProgAngularProjectionMatching
-   @ingroup Programs 
+   @ingroup Programs */
 //@{
 /** Program to parallelize the ML 2D alignment program */
 class MpiProgAngularProjectionMatching: public ProgAngularProjectionMatching

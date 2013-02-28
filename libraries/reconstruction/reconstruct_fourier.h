@@ -62,7 +62,7 @@
 //@{
 class ProgRecFourier;
 
-static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
+// static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
 
 struct ImageThreadParams
 {
@@ -120,7 +120,7 @@ public:
     int threadOpCode;
 
     /// Number of rows already processed on an image
-    int rowsProcessed;
+    size_t rowsProcessed;
 
     /// Defines what a thread should do
     static void * processImageThread( void * threadArgs );

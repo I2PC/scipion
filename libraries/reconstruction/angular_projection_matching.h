@@ -54,7 +54,7 @@ void * threadRotationallyAlignOneImage( void * data );
 
 // This structure is needed to pass parameters to threadRotationallyAlignOneImage
 typedef struct{
-    int thread_id;
+    size_t thread_id;
     ProgAngularProjectionMatching *prm;
     MultidimArray<double> *img;
     size_t this_image;
@@ -80,7 +80,7 @@ public:
     /** Docfile with results */
     MetaData DFo;
     /** dimension of the images and padded images */
-    int dim, paddim;
+    size_t dim, paddim;
     /** Padding factor (only for applying CTF to references) */
     double pad;
     /** Maximum allowed shift */
@@ -133,7 +133,7 @@ public:
     /** Threads */
     int threads;
     /** Number of translations in 5D search */
-    int nr_trans;
+    size_t nr_trans;
     /** Thread barrier */
     barrier_t thread_barrier;
 
@@ -185,7 +185,7 @@ public:
     /** Get pointer to the current reference image
       If this image wasn't stored in memory yet, read it from disc and
       store FT of the polar transform as well as the original image */
-    int getCurrentReference(int refno, Polar_fftw_plans &local_plans);
+    void getCurrentReference(int refno, Polar_fftw_plans &local_plans);
 
     /** Get images to process.
      * This function will return the id's of images to process.

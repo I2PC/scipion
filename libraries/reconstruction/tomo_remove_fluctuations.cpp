@@ -56,8 +56,7 @@ void ProgTomoRemoveFluctuations::produceSideInfo()
 {
     // Read the selfile into a volume
     SF.read(fnIn);
-    int Zdim, dummy, Ydim, Xdim;
-    size_t Ndim;
+    size_t Zdim, dummy, Ydim, Xdim, Ndim;
     Zdim=SF.size();
     getImageSize(SF,Xdim,Ydim,dummy,Ndim);
     V().setMmap(true);
@@ -101,12 +100,12 @@ void ProgTomoRemoveFluctuations::run()
     MultidimArray< std::complex<double> > lineFourier;
     std::complex<double> zero=0;
     line.initZeros(ZSIZE(mV));
-    for (int i=0; i<YSIZE(mV); i++)
+    for (size_t i=0; i<YSIZE(mV); i++)
     {
-        for (int j=0; j<XSIZE(mV); j++)
+        for (size_t j=0; j<XSIZE(mV); j++)
         {
             // Get line
-            for (int k=0; k<ZSIZE(mV); k++)
+            for (size_t k=0; k<ZSIZE(mV); k++)
                 DIRECT_A1D_ELEM(line,k)=DIRECT_A3D_ELEM(mV,k,i,j);
 
             // Fourier transform
@@ -115,12 +114,12 @@ void ProgTomoRemoveFluctuations::run()
 
             // Filter
             transformer.getFourierAlias(lineFourier);
-            for (int k=maxPixel; k<XSIZE(lineFourier); k++)
+            for (size_t k=maxPixel; k<XSIZE(lineFourier); k++)
             	DIRECT_A1D_ELEM(lineFourier,k)=zero;
 
             // Inverse Fourier transform and back to the volume
             transformer.inverseFourierTransform();
-            for (int k=0; k<ZSIZE(mV); k++)
+            for (size_t k=0; k<ZSIZE(mV); k++)
             	DIRECT_A3D_ELEM(mV,k,i,j)=DIRECT_A1D_ELEM(line,k);
         }
         if (verbose>=1)

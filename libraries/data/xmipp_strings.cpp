@@ -156,7 +156,7 @@ size_t textToSizeT(const char * str)
     if (str == NULL)
         REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into int");
 
-    size_t retval;
+    long unsigned int retval;
     int ok = sscanf(str, "%lu", &retval);
 
     if (ok)
@@ -313,7 +313,7 @@ int charToInt(const char* str)
     return 0;
 }
 
-String stringToString(const String& str, int _width)
+String stringToString(const String& str, size_t _width)
 {
     if (_width == 0)
         return str;
@@ -347,7 +347,6 @@ String removeSpaces(const String& _str)
     int first = _str.find_first_not_of("\n \t");
     int last = _str.find_last_not_of("\n \t");
     bool after_blank = false;
-    int imax = _str.length();
 
     for (int i = first; i <= last; i++)
     {
@@ -442,7 +441,7 @@ void toLower(String &_str)
 }
 
 // Next token ==============================================================
-String nextToken(const String &str, int &i)
+String nextToken(const String &str, size_t &i)
 {
     String retval;
     if (i >= str.length())
