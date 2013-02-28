@@ -1,16 +1,10 @@
 package xmipp.viewer.particlepicker.tiltpair.gui;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.event.MouseEvent;
 import java.util.List;
-
 import javax.swing.SwingUtilities;
-
-
 import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
@@ -27,8 +21,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	private UntiltedMicrograph um;
 	private UntiltedMicrographCanvas uc;
 	private TiltedParticle active;
-	private boolean reload;
-	private boolean drawalpha;
+
 
 	public TiltedMicrographCanvas(TiltPairPickerJFrame frame)
 	{
@@ -83,8 +76,6 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 				{
 					um.removeParticle(p.getUntiltedParticle());
 					frame.updateMicrographsModel();
-					if (p.getUntiltedParticle().isAdded())
-						reload = true;
 					frame.getCanvas().repaint();
 				}
 				else if (SwingUtilities.isLeftMouseButton(e))
