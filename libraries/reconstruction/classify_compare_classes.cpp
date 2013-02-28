@@ -61,6 +61,18 @@ void ProgCompareClass::run()
 {
 	MetaData MD1(formatString("classes@%s",fnClass1.c_str()));
 	MetaData MD2(formatString("classes@%s",fnClass2.c_str()));
+        std::vector<int> ref1, ref2;
+        int aux;
+        FOR_ALL_OBJECTS_IN_METADATA(MD1)
+        {
+            MD1.getValue(MDL_REF,aux,__iter.objId);
+            ref1.push_back(aux);
+        }
+        FOR_ALL_OBJECTS_IN_METADATA(MD2)
+        {
+            MD2.getValue(MDL_REF,aux,__iter.objId);
+            ref2.push_back(aux);
+        }
 
 	Matrix2D<int> comparisonMatrix(MD1.size(),MD2.size());
 	Matrix1D<int> MD1classSize(MAT_YSIZE(comparisonMatrix)), MD2classSize(MAT_XSIZE(comparisonMatrix));
@@ -69,23 +81,23 @@ void ProgCompareClass::run()
 	MetaData MDclass1, MDclass2;
 	FOR_ALL_ELEMENTS_IN_MATRIX1D(MD1classSize)
 	{
-		MDclass1.read(formatString("class%06d_images@%s",i+1,fnClass1.c_str()));
+		MDclass1.read(formatString("class%06d_images@%s",ref1[i],fnClass1.c_str()));
 		VEC_ELEM(MD1classSize,i)=MDclass1.size();
 	}
 
 	FOR_ALL_ELEMENTS_IN_MATRIX1D(MD2classSize)
 	{
-		MDclass2.read(formatString("class%06d_images@%s",i+1,fnClass2.c_str()));
+		MDclass2.read(formatString("class%06d_images@%s",ref2[i],fnClass2.c_str()));
 		VEC_ELEM(MD2classSize,i)=MDclass2.size();
 	}
 
 	// Now compare the two classifications
-	for (int i=0; i<MAT_YSIZE(comparisonMatrix); i++)
+	for (size_t i=0; i<MAT_YSIZE(comparisonMatrix); i++)
 	{
-		MDclass1.read(formatString("class%06d_images@%s",i+1,fnClass1.c_str()));
-		for (int j=0; j<MAT_XSIZE(comparisonMatrix); j++)
+		MDclass1.read(formatString("class%06d_images@%s",ref1[i],fnClass1.c_str()));
+		for (size_t j=0; j<MAT_XSIZE(comparisonMatrix); j++)
 		{
-			MDclass2.read(formatString("class%06d_images@%s",j+1,fnClass2.c_str()));
+			MDclass2.read(formatString("class%06d_images@%s",ref2[j],fnClass2.c_str()));
 			MDclass2.intersection(MDclass1,MDL_IMAGE);
 			MAT_ELEM(comparisonMatrix,i,j)=MDclass2.size();
 		}
@@ -104,18 +116,18 @@ void ProgCompareClass::run()
 		REPORT_ERROR(ERR_IO_NOWRITE,fnOut);
 	fhOut << "Comparison of " << fnClass1 << " and " << fnClass2 << std::endl;
 	fhOut << "Analysis of " << fnClass1 << " =======================\n";
-	for (int i=0; i<MAT_YSIZE(comparisonMatrix); i++)
+	for (size_t i=0; i<MAT_YSIZE(comparisonMatrix); i++)
 	{
-		fhOut << "Class " << formatString("class%06d_images@%s",i+1,fnClass1.c_str()) << ": " << VEC_ELEM(MD1classSize,i) << " images\n";
-		for (int j=0; j<MAT_XSIZE(comparisonMatrix); j++)
+		fhOut << "Class " << formatString("class%06d_images@%s",ref1[i],fnClass1.c_str()) << ": " << VEC_ELEM(MD1classSize,i) << " images\n";
+		for (size_t j=0; j<MAT_XSIZE(comparisonMatrix); j++)
 			if (MAT_ELEM(comparisonMatrix,i,j)>0)
 				fhOut << "   " << 100.0*MAT_ELEM(comparisonMatrix,i,j)/VEC_ELEM(MD1classSize,i) << "% are in class " << formatString("class%06d_images@%s",j+1,fnClass2.c_str()) << std::endl;
 	}
 	fhOut << "\n\nAnalysis of " << fnClass2 << " =======================\n";
-	for (int j=0; j<MAT_XSIZE(comparisonMatrix); j++)
+	for (size_t j=0; j<MAT_XSIZE(comparisonMatrix); j++)
 	{
-		fhOut << "Class " << formatString("class%06d_images@%s",j+1,fnClass2.c_str()) << ": " << VEC_ELEM(MD2classSize,j) << " images\n";
-		for (int i=0; i<MAT_YSIZE(comparisonMatrix); i++)
+		fhOut << "Class " << formatString("class%06d_images@%s",ref2[j],fnClass2.c_str()) << ": " << VEC_ELEM(MD2classSize,j) << " images\n";
+		for (size_t i=0; i<MAT_YSIZE(comparisonMatrix); i++)
 			if (MAT_ELEM(comparisonMatrix,i,j)>0)
 				fhOut << "   " << 100.0*MAT_ELEM(comparisonMatrix,i,j)/VEC_ELEM(MD2classSize,j) << "% are in class " << formatString("class%06d_images@%s",i+1,fnClass1.c_str()) << std::endl;
 	}
