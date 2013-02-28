@@ -57,7 +57,7 @@ public class SaveJDialog extends XmippDialog
 
 	protected XmippFileChooser fc;
 	protected JCheckBox chbMd;
-	protected JCheckBox chbImg;
+//	protected JCheckBox chbImg;
 	// protected JButton btnBrowseMd;
 	// protected JTextField tbMd;
 	// protected JTextField tbImg;
@@ -66,11 +66,11 @@ public class SaveJDialog extends XmippDialog
 	protected BrowseField browseImg;
 	protected JComboBox cbExtension;
 	protected JComboBox cbLabel;
-	protected JRadioButton rbStack;
+//	protected JRadioButton rbStack;
 	protected JRadioButton rbIndependent;
 	protected JRadioButton rbMdOverride;
 	protected JRadioButton rbMdAppend;
-	protected JPanel panelImg;
+//	protected JPanel panelImg;
 	protected JPanel panelMd;
 	protected GalleryData data;
 	private String block;
@@ -174,35 +174,35 @@ public class SaveJDialog extends XmippDialog
 		return rbMdOverride.isSelected();
 	}
 
-	protected void createImageOptions()
-	{
-		GridBagConstraints gbc = new GridBagConstraints();
-		// gbc.insets = new Insets(0, 0, 0, 5);
-		// Image options panel
-		panelImg = new JPanel(new GridBagLayout());
-		// panelImg.setBackground(Color.red);
-		panelImg.setVisible(false);
-		gbc.anchor = GridBagConstraints.EAST;
-		panelImg.add(new JLabel("Label  "), XmippWindowUtil.getConstraints(gbc, 0, 0));
-		cbLabel = new JComboBox();
-		for (ColumnInfo ci : data.labels)
-			if (ci.allowRender)
-				cbLabel.addItem(ci.labelName);
-		gbc.anchor = GridBagConstraints.WEST;
-		panelImg.add(cbLabel, XmippWindowUtil.getConstraints(gbc, 1, 0));
-		browseImg = new BrowseField();
-		JPanel panelBrowse = createBrowse(browseImg);
-		panelImg.add(new JLabel("Output stack filename:"), XmippWindowUtil.getConstraints(gbc, 0, 1, 5));
-		panelImg.add(panelBrowse, XmippWindowUtil.getConstraints(gbc, 0, 2, 5));
-		rbStack = new JRadioButton("Stack", true);
-		panelImg.add(rbStack, XmippWindowUtil.getConstraints(gbc, 2, 0));
-		rbIndependent = new JRadioButton("Separate images");
-		// gbc.anchor = GridBagConstraints.WEST;
-		panelImg.add(rbIndependent, XmippWindowUtil.getConstraints(gbc, 3, 0));
-		ButtonGroup group = new ButtonGroup();
-		group.add(rbStack);
-		group.add(rbIndependent);
-	}// function createImageOptions
+//	protected void createImageOptions()
+//	{
+//		GridBagConstraints gbc = new GridBagConstraints();
+//		// gbc.insets = new Insets(0, 0, 0, 5);
+//		// Image options panel
+//		panelImg = new JPanel(new GridBagLayout());
+//		// panelImg.setBackground(Color.red);
+//		panelImg.setVisible(false);
+//		gbc.anchor = GridBagConstraints.EAST;
+//		panelImg.add(new JLabel("Label  "), XmippWindowUtil.getConstraints(gbc, 0, 0));
+//		cbLabel = new JComboBox();
+//		for (ColumnInfo ci : data.labels)
+//			if (ci.allowRender)
+//				cbLabel.addItem(ci.labelName);
+//		gbc.anchor = GridBagConstraints.WEST;
+//		panelImg.add(cbLabel, XmippWindowUtil.getConstraints(gbc, 1, 0));
+//		browseImg = new BrowseField();
+//		JPanel panelBrowse = createBrowse(browseImg);
+//		panelImg.add(new JLabel("Output stack filename:"), XmippWindowUtil.getConstraints(gbc, 0, 1, 5));
+//		panelImg.add(panelBrowse, XmippWindowUtil.getConstraints(gbc, 0, 2, 5));
+//		rbStack = new JRadioButton("Stack", true);
+//		panelImg.add(rbStack, XmippWindowUtil.getConstraints(gbc, 2, 0));
+//		rbIndependent = new JRadioButton("Separate images");
+//		// gbc.anchor = GridBagConstraints.WEST;
+//		panelImg.add(rbIndependent, XmippWindowUtil.getConstraints(gbc, 3, 0));
+//		ButtonGroup group = new ButtonGroup();
+//		group.add(rbStack);
+//		group.add(rbIndependent);
+//	}// function createImageOptions
 
 	/** Reset all controls values to initial values */
 	public void setInitialValues()
@@ -210,8 +210,8 @@ public class SaveJDialog extends XmippDialog
 		browseMd.tb.setText("");
 		browseImg.tb.setText("");
 		rbMdAppend.setSelected(true);
-		chbImg.setSelected(false);
-		rbStack.setSelected(true);
+//		chbImg.setSelected(false);
+//		rbStack.setSelected(true);
 
 	}
 
@@ -224,8 +224,8 @@ public class SaveJDialog extends XmippDialog
 			browseFile(browseMd.tb);
 		else if (obj == browseImg.btn)
 			browseFile(browseImg.tb);
-		else if (obj == chbImg)
-			panelImg.setVisible(chbImg.isSelected());
+//		else if (obj == chbImg)
+//			panelImg.setVisible(chbImg.isSelected());
 		else if (obj == chbMd)
 			panelMd.setVisible(chbMd.isSelected());
 
