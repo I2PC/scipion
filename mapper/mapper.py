@@ -86,6 +86,10 @@ class Mapper():
         '''Return the object which id is objId'''
         pass
     
+    def getAll(self):
+        '''Return all object from storage'''
+        pass
+    
     def select(self, **args):
         '''Select object meetings some criterias'''
         pass 

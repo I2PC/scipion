@@ -21,56 +21,30 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-
-VERSION=1.0
-ROOTNAME = 'EMX'
-HEADER = '''
-  ##########################################################################
-  #               EMX Exchange file 
-  #               Produced by the prolib_emx module
-  # 
-  #  This is a EMX file.
-  #
-  #  Information on this file format is available at 
-  #  http://i2pc.cnb.csic.es/emx
-  ##########################################################################
-  #  One of the best ways you can help us to improve this software
-  #  is to let us know about any problems you find with it.
-  #  Please report bugs to: emx@cnb.csic.es
-  ##########################################################################
-  '''
 
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
 from pyworkflow.mapper import Mapper
-from pyworkflow.emx import EmxData
+
 
 from os.path import exists
 
 class XmlMapper(Mapper):
     '''Mapper for XML'''
-    def __init__(self,emxData,rootName=ROOTNAME):
-        Mapper.__init__(self)
-        self.emxData = emxData
-        self.foreignKeyAuxList=[]
-
-    def emxDataToXML(self, header=HEADER, 
-                           rootName=ROOTNAME, 
-                           version = VERSION):
+    def __init__(self, dictClasses=None, rootName='ALL', **args):
         self.root = ET.Element(rootName)
-        comment = ET.Comment(header)
-        self.root.append(comment)
-        #Create empty tree
-        self.root.set("version", str(version))
-        for k,v in self.emxData.objLists.iteritems():
-            for obj in v:
-                self.insert(obj)
-            
+        if 'header' in args:
+            self.root.append(ET.Comment(args.get('header')))
+        if 'version' in args:
+            self.root.set("version", str(args.get('version')))
+        Mapper.__init__(self, dictClasses)        
+        self.pointerList=[]
+
     def indent(self, elem, level=0):
         i = "\n" + level*"  "
         if len(elem):
@@ -83,33 +57,42 @@ class XmlMapper(Mapper):
             if not _elem.tail or not _elem.tail.strip():
                 _elem.tail = i
         else:
+            # TODO: generalize the matching of consecutive items
             if level and (not elem.tail or not elem.tail.strip()):
-                print elem.tag
                 for ii in ['t11','t12','t13','t21','t22','t23','t31','t32','t33']:
                     if elem.tag == ii:
                         elem.tail = " "
                         return
                 elem.tail = i
-#        if elem.tag=='EMX':
-#            elem.text='\n'
+
     def read(self, filename):
         self.filename = filename
         self.tree = ET.parse(filename)
         self.root = self.tree.getroot()
-    
-    def convertToEmxData(self, emxData):
-        '''Select object meetings some criterias'''
+
+    def get(self, objId):
+        for obj in self.objList:
+            if obj.id == objId:
+                return obj
+        return None
+        
+    def getAll(self):
+        '''Select object from storage'''
+        self.objList = []
+        
         for child in self.root:
             obj = self.buildObject(child.tag, id=child.attrib)
             #objList.append(obj)
-            emxData.addObject(obj)
+            self.objList.append(obj)
             self.fillObject(obj, child)
         #set properlly primary keys
-        for obj in self.foreignKeyAuxList:
+        for obj in self.pointerList:
             for key, attr in obj.getAttributesToStore():
                 if attr.isPointer():
-                    attr.set(self.emxData.getObjectwithID(key, attr.id))
-
+                    attr.set(self.get(attr.id))
+        return self.objList
+                    
+        
     def fillObject(self, obj, objElem):
         for child in objElem:
             childObj = getattr(obj, child.tag)
@@ -121,7 +104,7 @@ class XmlMapper(Mapper):
                 if (attributes and childObj.isPointer()):
                     childObj.id = attributes
                     #save obj in auxiliary file
-                    self.foreignKeyAuxList.append(obj)
+                    self.pointerList.append(obj)
                 self.fillObject(childObj, child)
     def write(self, filename):
         self.filename = filename
@@ -171,10 +154,6 @@ class XmlMapper(Mapper):
     
     def updateTo(self, obj):
         '''Update storage with object info'''
-        pass
-            
-    def get(self, objId):
-        '''Return the object which id is objId'''
         pass
 
             

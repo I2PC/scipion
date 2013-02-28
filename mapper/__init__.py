@@ -25,7 +25,8 @@
 # **************************************************************************
 
 from mapper import Mapper
-#from sqlite import SqliteMapper
+from sqlite import SqliteMapper
+from xmlmapper import XmlMapper
 
 
 
