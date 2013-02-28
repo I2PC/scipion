@@ -27,7 +27,7 @@
  '''
  
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, basename
 import sys
 import shutil
 import ConfigParser
@@ -58,7 +58,10 @@ class XmippProject():
             if not exists(filename):
                 print "Not exists: ", filename
                 return False
-        return True        
+        return True
+    
+    def getName(self):
+        return "Project: %s" % basename(self.projectDir)
     
     def create(self):
         os.chdir(self.projectDir)
@@ -341,7 +344,7 @@ class XmippProject():
         
         #Create special node ROOT
         roots = [k for k, v in runsDict.iteritems() if v.isRoot]
-        ddRoot = DepData(runsDict, 'PROJECT', None)
+        ddRoot = DepData(runsDict, self.getName(), None)
         ddRoot.state = 6
         ddRoot.deps = roots        
 
