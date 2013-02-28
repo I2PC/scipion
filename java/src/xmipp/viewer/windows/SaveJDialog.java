@@ -283,7 +283,8 @@ public class SaveJDialog extends XmippDialog
 
 	public boolean doSaveImages()
 	{
-		return chbImg.isSelected();
+		return false;
+		//return chbImg.isSelected();
 	}
 
 	public boolean isOutputIndependent()
