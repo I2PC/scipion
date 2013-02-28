@@ -273,6 +273,8 @@ public class GalleryData {
 				}
 				image.destroy();
 			}
+			else 
+				zoom = 100; //Render missing image icon at zoom 100
 		} else {
 			// force this mode when there aren't render label
 			mode = Mode.TABLE_MD;
