@@ -38,6 +38,7 @@
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
+#include <data/basic_pca.h>
 
 //Tags already defined in xmipp
 //#define TAG_WORK                     0
@@ -106,6 +107,8 @@ public:
     bool             do_save_images_assigned_to_classes;
     /** Add output to existing files */
     bool             do_add;
+    /** Perform PCA sorting to obtain the average classes */
+    bool             do_pcaSorting;
     /** Wiener filter image */
     MultidimArray<double> Mwien;
     /** Selfiles containing all class averages */
@@ -262,6 +265,18 @@ public:
     void reAlignClass(
     		Image<double> &avg1,
     		Image<double> &avg2,
+    		MetaData &SFclass1,
+    		MetaData &SFclass2,
+    		std::vector<Image<double> > imgs,
+    		std::vector<int> splits,
+    		std::vector<int> numbers,
+    		size_t dirno,
+    		double * my_output);
+
+    void pcaAnalysis(
+    		PCAMahalanobisAnalyzer &pcaAnalyzer,
+    		Image<double> &pca1,
+    		Image<double> &pca2,
     		MetaData &SFclass1,
     		MetaData &SFclass2,
     		std::vector<Image<double> > imgs,
