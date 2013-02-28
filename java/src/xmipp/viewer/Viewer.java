@@ -46,7 +46,6 @@ public class Viewer
 
 	static void openFiles(Param parameters) throws Exception
 	{
-		DEBUG.printMessage(String.format("Viewer.openFiles"));
 		ImagesWindowFactory.openFilesAsDefault(parameters.files, parameters);
 	}
 

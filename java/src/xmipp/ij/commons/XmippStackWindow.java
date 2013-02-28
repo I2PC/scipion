@@ -9,6 +9,7 @@ import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
+import xmipp.utils.DEBUG;
 
 public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	
