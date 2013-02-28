@@ -166,7 +166,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 
 	}
 
-	void adjustMagnification()//for micrographs will not happen
+	public void adjustMagnification()//for micrographs will not happen
 	{
 		int min = 200;
 		while (getSize().getWidth() < min)
