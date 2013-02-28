@@ -327,8 +327,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		data.zoom = z;
 		if(z > 0)
 			scale = (float) (data.zoom / 100.0);
-		else
-			scale = 4.f;//no image icon
+		
 		
 		calculateCellSize();
 	}
