@@ -169,14 +169,13 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		ImageItem item = new ImageItem(index);
 		ImagePlus imp = null;
 		if (imageFn != null && Filename.exists(imageFn)) {
-//			if (data.useGeo)
-//				image.readApplyGeo(imageFn, data.md, objId, thumb_width,
-//						thumb_height, data.wrap);
-//			else
-//				image.read(imageFn, thumb_width, thumb_height);
-//			imp = XmippImageConverter.convertToImagePlus(image);
+			try {
 			imp = XmippImageConverter.readMdRowToImagePlus(imageFn, data.md, objId, 
 					thumb_width, thumb_height, data.useGeo, data.wrap);
+			}
+			catch (Exception ex){
+				imp = null;
+			}
 		}
 		item.setImagePlus(imp);
 		return item;
