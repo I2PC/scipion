@@ -79,7 +79,13 @@ class EmxVector(Object):
             if item.hasValue():
                 slots[i] = '%s' % str(item.get())
         return '(%s)' % ','.join(slots)
-
+    
+    def getAttributesToStore(self):
+        '''Return the list of attributes than are
+        subclasses of Object and will be stored'''
+        for key in self.keys:
+            yield (key, getattr(self, key))
+    
     def hasValue(self):
         for k in self.keys:
             if getattr(self, k).hasValue():
@@ -110,7 +116,18 @@ class EmxMatrix(EmxVector):
                     counter = 0
                     c = '\n'
             matrixStr += c
-        return matrixStr 
+        return matrixStr
+    
+    def setValue(self, **args):
+        '''Set values of different items'''
+        for k, v in args.iteritems():
+            if k in self.keys:
+                getattr(self, k).set(v)
+                
+    def setAllValues(self, value):
+        '''Set all items to the same value'''
+        for k in self.keys:
+            getattr(self, k).set(value)
             
                     
 class TransformationMatrix(EmxMatrix):
@@ -138,6 +155,7 @@ class CenterCoord(EmxVector):
 class Entity(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
+        self.activeFlag = Integer()
         self.fom = Float()
 
     def hasValue(self):
@@ -158,7 +176,6 @@ class micrograph(Entity):
     def __init__(self, **args):
         Entity.__init__(self, **args)
         self.acceleratingVoltage = EmxScalar(Float, 'kV')
-        self.activeFlag = Integer(1)
         self.cs = EmxScalar(Float, 'mm')
         self.pixelSpacing = PixelSpacing()
         self.defocusU = EmxScalar(Float,'nn')
@@ -169,7 +186,6 @@ class micrograph(Entity):
 class particle(Entity):
     def __init__(self, **args):
         Entity.__init__(self, **args)
-        self.activeFlag = Integer(1)
         self.boxSize = BoxSize()
         self.centerCoord = CenterCoord()
         self.defocusU = EmxScalar(Float,'nn')

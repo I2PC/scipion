@@ -84,7 +84,9 @@ class XmlMapper(Mapper):
                 _elem.tail = i
         else:
             if level and (not elem.tail or not elem.tail.strip()):
-                if elem.tag == 'm11':
+                print elem.tag
+                for ii in ['t11','t12','t13','t21','t22','t23','t31','t32','t33']:
+                    if elem.tag == ii:
                         elem.tail = " "
                         return
                 elem.tail = i
