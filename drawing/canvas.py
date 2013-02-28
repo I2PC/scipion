@@ -32,12 +32,13 @@ class Canvas(tk.Frame):
         self.canvas.bind("<Button-3>", self.onRightClick)
         self.canvas.bind("<Double-Button-1>", self.onDoubleClick)
         self.canvas.bind("<B1-Motion>", self.onDrag)
+        #self.canvas.bind("<MouseWheel>", self.onScroll)
     
     def getCoordinates(self, event):
         '''Converts the events coordinates to canvas coordinates'''
         # Convert screen coordinates to canvas coordinates
         xc = self.canvas.canvasx(event.x)
-        yc = self.canvas.canvasx(event.y)
+        yc = self.canvas.canvasy(event.y)
         return (xc, yc)
     
     def onClick(self, event):
@@ -90,7 +91,15 @@ class Canvas(tk.Frame):
         if self.lastItem:
             xc, yc = self.getCoordinates(event)
             self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
-            self.lastPos = (xc, yc)            
+            self.lastPos = (xc, yc)  
+            
+    def onScroll(self, event):
+        print "scrolling"
+        if event.num == 5 or event.delta < 0:
+            count = 1
+        if event.num == 4 or event.delta > 0:
+            count = -1
+        self.canvas.yview("scroll", count, "units")          
         
     def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
         tb = TextBox(self.canvas, text, x, y, bgColor, textColor)
