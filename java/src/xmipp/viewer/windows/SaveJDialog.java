@@ -95,7 +95,7 @@ public class SaveJDialog extends XmippDialog
 	protected void createContent(JPanel panel)
 	{
 		this.data = ((GalleryJFrame) parent).getData();
-		setMinimumSize(new Dimension(500, 300));
+		//setMinimumSize(new Dimension(500, 300));
 		setResizable(false);
 		panel.setLayout(new GridBagLayout());
 		gbc = new GridBagConstraints();
@@ -122,18 +122,18 @@ public class SaveJDialog extends XmippDialog
 		group.add(panelMd, XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 
 		// Checkbox to save images
-		chbImg = new JCheckBox("Save images", false);
-		chbImg.addActionListener(this);
-		group.add(chbImg, XmippWindowUtil.getConstraints(gbc, 0, 2));
+//		chbImg = new JCheckBox("Save images", false);
+//		chbImg.addActionListener(this);
+//		group.add(chbImg, XmippWindowUtil.getConstraints(gbc, 0, 2));
 
-		createImageOptions();
-		group.add(panelImg, XmippWindowUtil.getConstraints(gbc, 0, 3, 2));
+		//createImageOptions();
+		//group.add(panelImg, XmippWindowUtil.getConstraints(gbc, 0, 3, 2));
 
 		gbc.anchor = GridBagConstraints.PAGE_START;
 		panel.add(group, XmippWindowUtil.getConstraints(gbc, 0, 0, 2));
 		// Change default Ok text button
 		btnOkText = "Save";
-
+		pack();
 	}// function initComponents
 
 	protected JPanel createBrowse(BrowseField browse)
