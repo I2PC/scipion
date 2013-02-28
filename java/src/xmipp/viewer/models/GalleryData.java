@@ -224,15 +224,22 @@ public class GalleryData {
 			int renderLabel = ciFirstRender.getLabel();
 			ImageGeneric image = null;
 			String imageFn;
+			//Try to find at least one image to render 
+			//and take dimensions from that
 			for (int i = 0; i < ids.length && image == null; ++i) {
-				imageFn = md.getValueString(renderLabel, ids[i]);
-				if (Filename.exists(imageFn)) {
+				imageFn = Filename.findImagePath(md.getValueString(renderLabel, ids[i]), filename, true);
+				DEBUG.printFormat("imageFn1: %s", imageFn);
+				//imageFn = Filename.fixPath(md.getValueString(renderLabel, ids[i]), filename, false);
+				//DEBUG.printFormat("imageFn2: %s", imageFn);
+				//if (imageFn != null){
+				if (imageFn != null) {
 					try {
 						image = new ImageGeneric(imageFn);
 					} catch (Exception e) {
 						image = null;
 					}
 				}
+				break;
 			}
 			if (image != null) { // Image file was found to render
 				if (zoom == 0) { // if default value, calculate zoom
@@ -252,12 +259,9 @@ public class GalleryData {
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
 
-					DEBUG.printMessage("Volumes:\n");
-					
 					for (int i = 0; i < numberOfVols; ++i){
 						volumes[i] = md.getValueString(
 								ciFirstRender.getLabel(), ids[i]);
-						DEBUG.printMessage("  volume: " + volumes[i] + "\n");
 					}
 					commonVolPrefix = XmippStringUtils.commonPathPrefix(volumes);
 
