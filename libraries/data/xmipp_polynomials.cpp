@@ -39,7 +39,8 @@ void PolyZernikes::create(const Matrix1D<int> & coef)
 {
     Matrix2D<int> * fMatT;
 
-    for (int nZ = 0; nZ < VEC_XSIZE(coef); ++nZ)
+    int nMax=(int)VEC_XSIZE(coef);
+    for (int nZ = 0; nZ < nMax; ++nZ)
     {
         if (VEC_ELEM(coef,nZ) == 0)
         {
