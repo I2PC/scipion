@@ -152,7 +152,7 @@ public abstract class ParticlePicker {
 				addFilter(command, options);
 			else if (!(options == null || options.equals(""))) for (IJCommand f : filters)
 				if (f.getCommand().equals(command)) f.setOptions(options);
-			persistFilters();
+			saveFilters();
 			command = null;
 
 		}
@@ -329,7 +329,7 @@ public abstract class ParticlePicker {
 	}// function containsBlock
 
 	public void saveData() {
-		persistFilters();
+		saveFilters();
 		saveFamilies();
 	}// function saveData
 
@@ -337,7 +337,7 @@ public abstract class ParticlePicker {
 
 	public abstract int getManualParticlesNumber(Family f);
 
-	public void persistFilters() {
+	public void saveFilters() {
 		long id;
 		String file = macrosfile;
 		if (filters.isEmpty()) {
@@ -411,7 +411,7 @@ public abstract class ParticlePicker {
 		for (IJCommand f : filters)
 			if (f.getCommand().equals(filter)) {
 				filters.remove(f);
-				persistFilters();
+				saveFilters();
 				break;
 			}
 	}// function removeFilter

@@ -29,9 +29,6 @@ import java.awt.Color;
 import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Hashtable;
-
-import javax.swing.JFrame;
 
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -39,10 +36,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippStringUtils;
-import xmipp.viewer.models.ClassInfo;
-import xmipp.viewer.windows.GalleryJFrame;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -895,4 +889,24 @@ public class GalleryData {
 			return mdBlocks[index];
 		return null;
 	}
-}// class GalleryData
+
+	public MetaData getImagesMd(int idlabel)
+	{
+		if(!md.containsLabel(idlabel))
+			return null;
+		MetaData imagesmd = new MetaData();
+		int index = 0;
+		String imagepath;
+		for(long id: ids)
+		{
+			if(isEnabled(index))
+			{
+				imagepath = md.getValueString(idlabel, id, true);
+				if(imagepath != null && ImageGeneric.exists(imagepath))
+					imagesmd.setValueString(idlabel, imagepath, imagesmd.addObject());
+			}
+			index ++;
+		}
+		return imagesmd;
+	}
+}// class GalleryDaa

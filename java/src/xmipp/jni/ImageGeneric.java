@@ -1,5 +1,7 @@
 package xmipp.jni;
 
+import java.io.File;
+
 public class ImageGeneric {
 
     //Constants to image selection indexes
@@ -266,5 +268,30 @@ public class ImageGeneric {
         super.finalize();
         destroy();
     }
+
+	public static boolean exists(String imagepath)
+	{
+		if(imagepath == null || imagepath.isEmpty())
+			return false;
+		String prefix = Filename.getPrefix(imagepath);
+		if(prefix == null)
+			return new File(imagepath).exists();
+		try
+		{
+		
+			int index = Integer.parseInt(prefix);
+			String file = Filename.getSuffix(imagepath);
+			ImageGeneric ig = new ImageGeneric(file);
+			ig.readHeader(file);
+			if(index < 0 || index > ig.getNDim())
+				return false;
+			return true;
+						
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
     
 }
