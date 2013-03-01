@@ -143,7 +143,6 @@ class SqliteDb():
         self.commit()
         
     def insertObject(self, name, classname, value, parent_id):
-        print (parent_id, name, classname, value)
         '''Execute command to insert a new object. Return the inserted object id'''
         self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value) VALUES (?, ?, ?, ?)", \
                             (parent_id, name, classname, value))
