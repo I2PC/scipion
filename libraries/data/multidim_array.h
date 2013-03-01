@@ -1317,9 +1317,19 @@ public:
             mFd = mmapFile(data, nzyxdim);
         else
         {
-            data = new T [nzyxdim];
-            if (data == NULL)
-                REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
+        	try {
+				data = new T [nzyxdim];
+				if (data == NULL)
+				{
+					setMmap(true);
+					mFd = mmapFile(data, nzyxdim);
+				}
+        	}
+        	catch (std::bad_alloc &)
+        	{
+        		setMmap(true);
+        		mFd = mmapFile(data, nzyxdim);
+        	}
         }
         memset(data,0,nzyxdim*sizeof(T));
         nzyxdimAlloc = nzyxdim;
@@ -1543,7 +1553,7 @@ public:
         size_t YXdim=(size_t)Ydim*Xdim;
         size_t ZYXdim=YXdim*Zdim;
         size_t NZYXdim=ZYXdim*Ndim;
-        FILE*    new_mFd;
+        FILE*  new_mFd=NULL;
 
         T * new_data=NULL;
 
@@ -1555,17 +1565,24 @@ public:
                 new_data = new T [NZYXdim];
 
             memset(new_data,0,NZYXdim*sizeof(T));
-
         }
         catch (std::bad_alloc &)
         {
-            std::ostringstream sstream;
-            sstream << "Allocate: No space left to alloc ";
-            sstream << (NZYXdim * sizeof(T)/1024/1024/1024) ;
-            sstream << "Gb." ;
-            REPORT_ERROR(ERR_MEM_NOTENOUGH, sstream.str());
+        	if (!mmapOn)
+        	{
+				setMmap(true);
+				resize(Ndim, Zdim, Ydim, Xdim, copy);
+				return;
+        	}
+        	else
+        	{
+				std::ostringstream sstream;
+				sstream << "Allocate: No space left to allocate ";
+				sstream << (NZYXdim * sizeof(T)/1024/1024/1024) ;
+				sstream << "Gb." ;
+				REPORT_ERROR(ERR_MEM_NOTENOUGH, sstream.str());
+        	}
         }
-
         // Copy needed elements, fill with 0 if necessary
         if (copy)
         {
