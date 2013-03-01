@@ -76,6 +76,7 @@ struct ImageThreadParams
     int imageIndex;
     double weight;
     double localweight;
+    bool reprocessFlag;
     MetaData * selFile;
 };
 
@@ -177,6 +178,9 @@ public: // Internal members
     // Volume of Fourier weights
     MultidimArray<double> FourierWeights;
 
+    // Volume for keeping the weights for different iterations
+    MultidimArray<double> preFourierWeights;
+
     // Volume of Fourier weights convolved with the kernel
     MultidimArray<double> FourierWeightsConvolved;
 
@@ -209,10 +213,13 @@ public:
     void finishComputations( const FileName &out_name );
 
     /// Process one image
-    void processImages( int firstImageIndex, int lastImageIndex, bool saveFSC=false ); //const FileName &fn_img);
+    void processImages( int firstImageIndex, int lastImageIndex, bool saveFSC=false, bool reprocessFlag=false);
 
-    /// Correct weight
+    /// Method for the correction of the fourier coefficients
     void correctWeight();
+	
+	/// Force the weights to be symmetrized
+    void forceWeightSymmetry(MultidimArray<double> &FourierWeights);
 
     ///Functions of common reconstruction interface
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);
