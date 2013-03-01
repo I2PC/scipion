@@ -741,7 +741,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		ImageGeneric imgAvg = new ImageGeneric();
 		ImageGeneric imgStd = new ImageGeneric();
-		data.md.getStatsImages(imgAvg, imgStd, data.useGeo, data.getRenderLabel());
+		MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
+		imagesmd.getStatsImages(imgAvg, imgStd, data.useGeo, data.getRenderLabel());
 		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
 		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
 		imgAvg.destroy();

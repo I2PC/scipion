@@ -167,16 +167,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
-		ImagePlus imp = null;
-		if (imageFn != null && Filename.exists(imageFn)) {
-			try {
-			imp = XmippImageConverter.readMdRowToImagePlus(imageFn, data.md, objId, 
-					thumb_width, thumb_height, data.useGeo, data.wrap);
-			}
-			catch (Exception ex){
-				imp = null;
-			}
-		}
+		ImagePlus imp = data.md.getImage(objId, imageFn, thumb_width, thumb_height, data.useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;
 	}
