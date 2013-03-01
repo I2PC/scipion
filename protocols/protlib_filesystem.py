@@ -32,6 +32,8 @@ import os
 from os.path import join, exists, dirname, basename, relpath, split, splitext, isabs, isfile, abspath
 from protlib_utils import printLog 
 from shutil import copyfile
+from config_protocols import PROJECT_DB
+from xmipp import FileName
 #from xmipp import *
 
 # The following are Wrappers to be used from Protocols
@@ -205,19 +207,29 @@ def getProtocolTemplate(prot):
     srcProtAbsPath = join(protDir, srcProtName)
     return srcProtAbsPath
 
-def findProjectInPathTree(filename):
-    found=False
+def findProjectPath(filename):
+    '''Find the posible path of the Xmipp project.
+    Starting the moving up from an specific filename'''
+    found = False
     filename = abspath(filename)
-    while filename!="/" and not found:
-        if exists(join(filename,".project.sqlite")):
-            found=True
+    
+    while filename != "/" and not found:
+        if exists(join(filename, PROJECT_DB)):
+            found = True
         else:
             filename = dirname(filename)
     if found:
         return filename
-    else:
-        return None
+    return None
 
+def findImagePath(imageFn, currentDir):
+    '''Find if the imageFn exists, or is relative 
+    to currentDir, or is inside a project folder
+    This function is useful for images paths stored 
+    in metadatas'''
+    fn = FileName(imageFn)
+    
+    
 def findRealFile(path, recursive=True):
     '''This function behaves like readlink with -f in shell'''
     from os import readlink
@@ -229,7 +241,6 @@ def findRealFile(path, recursive=True):
     return path
 
 def xmippExists(path):
-    from xmipp import FileName
     return FileName(path).exists()
 
 def fixPath(filename, *pathList):
