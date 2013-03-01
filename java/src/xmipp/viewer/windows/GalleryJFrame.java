@@ -124,7 +124,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private static int update_counter = 0;
 	// The following counter will be used to keep track of how many
 	// windows are opened, the last one, should do System.exit
-	//private static short windows_counter = 0;
+	// private static short windows_counter = 0;
 	public ImageGalleryTableModel gallery;
 	private GalleryRowHeaderModel rowHeaderModel;
 	private int previousSelectedRow, previousSelectedCol;
@@ -210,8 +210,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			DEBUG.printException(e);
 		}
 	}
-	
-	
 
 	/** Constructors */
 	public GalleryJFrame(String filename, Param parameters)
@@ -257,7 +255,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setVisible(false);
 			dispose();
 			XmippApplication.removeInstance();
-			
+
 		}
 	}// function close
 
@@ -703,7 +701,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			catch (Exception e)
 			{
+				XmippWindowUtil.releaseGUI(GalleryJFrame.this.getRootPane());
 				showException(e);
+				return;
+
 			}
 			XmippWindowUtil.releaseGUI(GalleryJFrame.this.getRootPane());
 		}
@@ -1625,10 +1626,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(KEY_ASSIST))
 				{
-						if (quickhelpdlg == null)
-							quickhelpdlg = new QuickHelpJDialog(GalleryJFrame.this, false, "Key Assist", getKeyAssist());
-						quickhelpdlg.setVisible(true);
-					
+					if (quickhelpdlg == null)
+						quickhelpdlg = new QuickHelpJDialog(GalleryJFrame.this, false, "Key Assist", getKeyAssist());
+					quickhelpdlg.setVisible(true);
+
 				}
 
 			}
@@ -1849,17 +1850,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			boolean overwrite;
 			String file;
-			if(path.contains("@"))
+			if (path.contains("@"))
 				file = path.substring(path.lastIndexOf("@") + 1, path.length());
 			else
 			{
 				file = path;
 				path = getBlock() + "@" + file;
 			}
-			
+
 			File iofile = new File(file);
 			if (!iofile.exists())// overwrite or append, save active
-			{	
+			{
 				iofile.getParentFile().mkdirs();
 				data.md.write(path);
 			}
@@ -1893,7 +1894,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		String from = data.getFileName();
 		String blockto = dlgSave.getMdFilename();
 		String to;
-		if(blockto.contains("@"))
+		if (blockto.contains("@"))
 			to = blockto.substring(blockto.lastIndexOf("@") + 1, blockto.length());
 		else
 		{
@@ -1904,10 +1905,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{// no sense in overwritting or appending
 			MetaData frommd;
 			frommd = new MetaData();
-			File file = new File(to); 
+			File file = new File(to);
 			if (dlgSave.isOverwrite())
 				file.delete();
-			if(!file.exists())
+			if (!file.exists())
 				file.getParentFile().mkdirs();
 			for (String blockit : data.mdBlocks)
 			{
