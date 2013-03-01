@@ -83,9 +83,11 @@ protDict = ProtocolDictionary()
 #--------------------------------------------------------------------------------
 # Project default settings
 #--------------------------------------------------------------------------------
+PROJECT_DB = '.project.sqlite'
+
 projectDefaults = {
                    'Cfg': '.project.cfg',
-                   'Db': '.project.sqlite',
+                   'Db': PROJECT_DB,
                    'LogsDir': 'Logs',
                    'RunsDir': 'Runs',
                    'TmpDir': 'Tmp',

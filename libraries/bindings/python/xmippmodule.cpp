@@ -85,6 +85,64 @@ xmipp_labelType(PyObject *obj, PyObject *args)
     return NULL;
 }
 
+PyObject *
+xmipp_labelHasTag(PyObject *obj, PyObject *args)
+{
+    PyObject * input;
+    int tag;
+
+    if (PyArg_ParseTuple(args, "Oi", &input, &tag))
+    {
+        MDLabel label = MDL_UNDEFINED;
+
+        if (PyString_Check(input))
+          label = MDL::str2Label(PyString_AsString(input));
+        else if (PyInt_Check(input))
+          label = (MDLabel) PyInt_AsLong(input);
+
+        if (label != MDL_UNDEFINED)
+        {
+          if (MDL::hasTag(label, tag))
+            Py_RETURN_TRUE;
+          else
+            Py_RETURN_FALSE;
+        }
+
+        PyErr_SetString(PyExc_TypeError,
+                            "labelHasTag: Input label should be int or string");
+    }
+    return NULL;
+}
+
+PyObject *
+xmipp_labelIsImage(PyObject *obj, PyObject *args)
+{
+    PyObject * input;
+    int tag = TAGLABEL_IMAGE;
+
+    if (PyArg_ParseTuple(args, "O", &input))
+    {
+        MDLabel label = MDL_UNDEFINED;
+
+        if (PyString_Check(input))
+          label = MDL::str2Label(PyString_AsString(input));
+        else if (PyInt_Check(input))
+          label = (MDLabel) PyInt_AsLong(input);
+
+        if (label != MDL_UNDEFINED)
+        {
+          if (MDL::hasTag(label, tag))
+            Py_RETURN_TRUE;
+          else
+            Py_RETURN_FALSE;
+        }
+
+        PyErr_SetString(PyExc_TypeError,
+                            "labelIsImage: Input label should be int or string");
+    }
+    return NULL;
+}
+
 /* isInStack */
 PyObject *
 xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -634,6 +692,10 @@ xmipp_methods[] =
           "Create a string with color characters sequence for print in console" },
         { "labelType", xmipp_labelType, METH_VARARGS,
           "Return the type of a label" },
+        { "labelHasTag", xmipp_labelHasTag, METH_VARARGS,
+          "Return the if the label has a specific tag" },
+        { "labelIsImage", xmipp_labelIsImage, METH_VARARGS,
+            "Return if the label has the TAGLABEL_IMAGE tag" },
         { "str2Label", xmipp_str2Label, METH_VARARGS,
           "Convert an string to MDLabel" },
         { "isValidLabel", (PyCFunction) xmipp_isValidLabel,
