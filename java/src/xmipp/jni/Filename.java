@@ -307,6 +307,14 @@ public class Filename {
 
 		return null;
 	}
+	
+	public static String getSuffix(String filename) {
+		String prefix = getPrefix(filename);
+		if(prefix == null)
+			return filename;
+		else
+			return filename.replace(prefix + "@", "");
+	}
 
 	/**
 	 * Return the name of the block associated with class 'ref' in a

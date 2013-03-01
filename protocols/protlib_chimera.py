@@ -34,7 +34,7 @@ from pickle import dumps, loads
 from threading import Thread
 from os import system
 from numpy import array, ndarray, flipud
-from time import sleep
+from time import gmtime, strftime
 
 class ChimeraClient:
     
@@ -76,8 +76,11 @@ class ChimeraClient:
                 print msg 
                 if msg == 'motion_stop':
                     data = loads(self.client.recv())#wait for data
+                    printCmd('reading motion')
                     self.motion = array(data)
-                    rot1, tilt1, psi1 = xmipp.Euler_matrix2angles(self.motion)  
+                    printCmd('getting euler angles')
+                    rot1, tilt1, psi1 = xmipp.Euler_matrix2angles(self.motion)
+                    printCmd('calling rotate')  
                     self.projexplorer.rotate(rot1, tilt1, psi1)
                     
                 elif msg == 'exit_server':
@@ -119,10 +122,13 @@ class XmippProjectionExplorer:
         
 
     def rotate(self, rot, tilt, psi):
+        printCmd('image.projectVolumeDouble')
         self.projection = self.image.projectVolumeDouble(rot, tilt, psi)
+        printCmd('flipud')
         Z = flipud(getImageData(self.projection))
+        printCmd('iw.updateData')
         self.iw.updateData(Z)
-        
+        printCmd('end rotate')
     
     def getVolumeData(self):
         xdim, ydim, zdim, n = self.image.getDimensions()
@@ -133,4 +139,9 @@ class XmippProjectionExplorer:
     def destroy(self):
         if not (self.iw is None):
             self.iw.root.destroy()
+            
+def printCmd(cmd):
+        timeformat = "%H:%M:%S" 
+        print strftime(timeformat, gmtime())
+        print cmd
 

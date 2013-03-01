@@ -35,6 +35,8 @@ public class ExtractParticlePicker extends ParticlePicker
 								// will be applied when window opens
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
+	
+	
 
 	@Override
 	public void loadEmptyMicrographs()

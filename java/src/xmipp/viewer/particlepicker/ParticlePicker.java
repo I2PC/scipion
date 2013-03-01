@@ -183,6 +183,7 @@ public abstract class ParticlePicker
 				for (IJCommand f : filters)
 					if (f.getCommand().equals(command))
 						f.setOptions(options);
+
 			saveFilters();
 			command = null;
 
@@ -401,8 +402,8 @@ public abstract class ParticlePicker
 
 	
 
-	public void saveFilters()
-	{
+
+	public void saveFilters() {
 		long id;
 		String file = macrosfile;
 		if (filters.isEmpty())
