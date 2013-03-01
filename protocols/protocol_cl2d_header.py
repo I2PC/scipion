@@ -32,7 +32,7 @@ NumberOfInitialReferences=4
 # {expert} Number of iterations
 """ Maximum number of iterations within each level
 """
-NumberOfIterations=15
+NumberOfIterations=10
 
 # {expert}{list_combo}(correlation, correntropy) Comparison method
 """ Use correlation or correntropy """
