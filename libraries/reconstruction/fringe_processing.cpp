@@ -325,7 +325,7 @@ void normalizeWB(MultidimArray<double> & im, MultidimArray<double > & imN,  Mult
         A2D_ELEM(H,i,j) = std::complex<double>(temp,temp);
     }
 
-    //CenterFFT(H,false);
+    CenterFFT(H,false);
     fftIm *= H;
     ftrans.inverseFourierTransform();
 
@@ -757,8 +757,8 @@ void demodulate(MultidimArray<double> & im, double lambda, int size, int x, int 
             A2D_ELEM(wphase,i,j) = std::atan2(temp.real(),A2D_ELEM(In,i,j));
             A2D_ELEM(orModMap,i,j) = std::sqrt( temp.real()*temp.real() + A2D_ELEM(In,i,j)*A2D_ELEM(In,i,j));
 
-            tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
-
+            //tempTheta = std::atan2(j-(int)((float) (XSIZE(ROI)) / 2.0), i-(int)((float) (XSIZE(ROI)) / 2.0));
+            tempTheta = A2D_ELEM(dir,i,j);
             if (  !(((tempTheta > val) | (tempTheta < -val)) && !((tempTheta > PI-val) || (tempTheta < -PI+val)) &&
                     !( !(tempTheta > PI/2+val) && (tempTheta > PI/2-val)) && !( !(tempTheta > -PI/2+val) && (tempTheta > -PI/2-val))) )
             {
@@ -776,6 +776,9 @@ void demodulate(MultidimArray<double> & im, double lambda, int size, int x, int 
     {
         save()=wphase;
         save.write("PPP3.xmp");
+        Image<bool> saveROI;
+        saveROI() = ROI;
+        saveROI.write("PPP_roi.xmp");
     }
 
     //unwrapping(wphase, orModMap, lambda, size, phase);

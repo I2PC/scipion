@@ -329,11 +329,11 @@ public class MetaData {
 	// return Arrays.binarySearch(PATHS_FIELDS, label) >= 0;
 	// }
 	public String fixPath(String value) {
-		return Filename.fixPath(value, getBaseDir(), true);
+		return Filename.findImagePath(value, getBaseDir(), true);
 	}
 
 	public String fixPath(String value, String baseDir) {
-		return Filename.fixPath(value, baseDir, false);
+		return Filename.findImagePath(value, baseDir, false);
 	}
 
 	public native boolean getValueBoolean(int label, long objId);

@@ -159,7 +159,7 @@ void ProgXrayProject::run()
         size_t objId = projMD.addObject();
         if (!projParam.only_create_angles)
         {
-            // Here we subtract the differences to the background illumination (at this moment normalized to 1)
+            // Here we subtract the differences to the background illumination (at this moment normalized to 1) //TODO
             MULTIDIM_ARRAY(proj) = 1.0 - MULTIDIM_ARRAY(proj);
             proj.write(fn_proj, ALL_IMAGES, !projParam.singleProjection, WRITE_REPLACE);
 
@@ -602,14 +602,15 @@ void threadXrayProject(ThreadArgument &thArg)
 
         switch (psf.AdjustType)
         {
+        case PSFXR_STD:
+            // Do nothing;
+            break;
         case PSFXR_INT:
             selfScaleToSize(LINEAR,imOutGlobal(), psf.Nox, psf.Noy);
             break;
         case PSFXR_ZPAD:
             MULTIDIM_ARRAY(imOutGlobal).selfWindow(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
             break;
-        default:
-        	REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to handle this type");
         }
 
         MULTIDIM_ARRAY(imOutGlobal).setXmippOrigin();
