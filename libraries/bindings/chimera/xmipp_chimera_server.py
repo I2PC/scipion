@@ -11,7 +11,7 @@ from time import sleep
 from threading import Thread
 from os import system
 from chimera import runCommand
-
+from time import gmtime, strftime
 
 class ChimeraServer:
     
@@ -77,9 +77,10 @@ class ChimeraServer:
         print "Motion stop"
         rx, ry , rz, t = self.volume.openState.xform.getCoordFrame()
         self.motion = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
-        #print self.motion
+        printCmd('sending motion')
         self.remote_conn.send('motion_stop')
         self.remote_conn.send(dumps(self.motion))#send serialized motion
+        printCmd('sended motion')
             
             
             
@@ -88,5 +89,11 @@ class ChimeraServer:
 
         self.remote_conn.send('exit_server')
         self.listener.close()
+        
+            
+def printCmd(cmd):
+        timeformat = "%H:%M:%S" 
+        print strftime(timeformat, gmtime())
+        print cmd
 
 ChimeraServer()
