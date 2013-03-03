@@ -25,6 +25,8 @@
 
 #include <algorithm>
 #include "matrix2d.h"
+#include "../../external/alglib/src/ap.h"
+#include "../../external/alglib/src/linalg.h"
 
 /* Cholesky decomposition -------------------------------------------------- */
 void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L)
@@ -310,4 +312,20 @@ void ransacWeightedLeastSquares(WeightedLeastSquaresHelper &h, Matrix1D<double> 
     // Threads structures are not needed any more
     delete []th_ids;
     delete []th_args;
+}
+
+void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T)
+{
+	alglib::real_2d_array a, s;
+	a.setcontent(MAT_YSIZE(M),MAT_XSIZE(M),MATRIX2D_ARRAY(M));
+	bool ok=rmatrixschur(a, MAT_YSIZE(M), s);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform Schur decomposition");
+	O.resizeNoCopy(M);
+	T.resizeNoCopy(M);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
+	{
+		MAT_ELEM(O,i,j)=s(i,j);
+		MAT_ELEM(T,i,j)=a(i,j);
+	}
 }

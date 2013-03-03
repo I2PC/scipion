@@ -69,6 +69,11 @@ void svbksb(Matrix2D< double >& u,
  */
 void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
 
+/** Schur decomposition.
+ * Given M, this function decomposes M as M = O*T*O' where O is an orthogonal matrix.
+ */
+void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
+
 /** @defgroup Matrices Matrix2D Matrices
  * @ingroup DataLibrary
  */
