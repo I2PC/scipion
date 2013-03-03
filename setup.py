@@ -217,7 +217,13 @@ def run(notebook):
         os.remove(out)
     
     if options.hasOption('update'):
-        cmd += 'echo "*** RUNNING GIT PULL..." >> %(out)s 2>&1\n git pull >> %(out)s 2>&1\n'
+        cmd += 'echo "*** RUNNING GIT PULL xmipp..." >> %(out)s 2>&1\n git pull >> %(out)s 2>&1\n'
+	pyworkflowPath = os.path.join('protocols','pyworkflow')
+	if os.path.exists(pyworkflowPath):
+	        cmd += 'echo "*** RUNNING GIT PULL pyworkflow..." >> %(out)s 2>&1 \ncd ' + pyworkflowPath + ' >> %(out)s 2>&1 \n git pull >> %(out)s 2>&1\n cd ../.. >> %(out)s 2>&1\n'
+	emxPath = os.path.join('protocols','emx')
+	if os.path.exists(emxPath):
+	        cmd += 'echo "*** RUNNING GIT PULL emx..." >> %(out)s 2>&1 \ncd ' + emxPath + ' >> %(out)s 2>&1 \n git pull >> %(out)s 2>&1\n cd ../.. >> %(out)s 2>&1\n'
     
     if options.hasOption('configure'):        
         opts = notebook.getConfigOptions()
