@@ -205,6 +205,26 @@ TEST_F( MatrixTest, schurDecomposition)
     EXPECT_EQ(expectedT,T) << "schurDecomposition failed";
 }
 
+TEST_F( MatrixTest, generalizedEigsTest)
+{
+    Matrix2D<double> A(2,2), B(2,2), P;
+    Matrix1D<double> D;
+    A(0,0)=1; A(0,1)=1;
+    A(1,0)=1; A(1,1)=0;
+    B(0,0)=2; B(0,1)=0;
+    B(1,0)=0; B(1,1)=1;
+
+    generalizedEigs(A,B,D,P);
+
+    Matrix1D<double> expectedD(2);
+    Matrix2D<double> expectedP(2,2);
+    expectedD(0)=-0.5; expectedD(1)=1;
+    expectedP(0,0)= 0.408248290463863; expectedP(0,1)=-0.57735026918962;
+    expectedP(1,0)=-0.816496580927726; expectedP(1,1)=-0.57735026918962;
+    EXPECT_EQ(expectedD,D) << "generalizedEigs failed";
+    EXPECT_EQ(expectedP,P) << "generalizedEigs failed";
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

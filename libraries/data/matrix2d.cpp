@@ -329,3 +329,20 @@ void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T)
 		MAT_ELEM(T,i,j)=a(i,j);
 	}
 }
+
+void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matrix1D<double> &D, Matrix2D<double> &P)
+{
+	int N=(int)MAT_YSIZE(A);
+	alglib::real_2d_array a, b, z;
+	a.setcontent(N,N,MATRIX2D_ARRAY(A));
+	b.setcontent(N,N,MATRIX2D_ARRAY(B));
+	alglib::real_1d_array d;
+	bool ok=smatrixgevd(a, N, true, b, true, true, 1, d, z);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
+	D.resizeNoCopy(N);
+	memcpy(&VEC_ELEM(D,0),d.getcontent(),N*sizeof(double));
+	P.resizeNoCopy(A);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+		MAT_ELEM(P,i,j)=z(i,j);
+}
