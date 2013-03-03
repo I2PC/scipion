@@ -573,8 +573,11 @@ INRIASources = Glob('external/inria', '*.cc', [])
 # Condor
 CondorSources = Glob('external/condor', '*.cpp', [])
 
+# AlgLib
+AlglibSources = Glob('external/alglib/src', '*.cpp', [])
+
 AddLibrary('XmippExternal', 'external',
-   INRIASources + BilibSources + CondorSources,
+   INRIASources + BilibSources + CondorSources + AlglibSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
 # sqliteExt
