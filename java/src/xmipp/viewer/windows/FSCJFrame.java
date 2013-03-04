@@ -47,6 +47,8 @@ public class FSCJFrame extends JFrame {
 
             MetaData mdout = new MetaData();
             MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
+            if(imagesmd.findObjects().length == 0)
+    			throw new IllegalArgumentException("No images available");
             mdout.computeFourierStatistics(imagesmd, data.getRenderLabel());
 
             double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);

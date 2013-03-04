@@ -36,6 +36,8 @@ import xmipp.jni.ImageGeneric;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
+import xmipp.viewer.models.MetadataGalleryTableModel.MdRowImageLoader;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	protected String volFn;
@@ -115,9 +117,9 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			int index = getIndex(row, col);
-			ImagePlus imp = XmippImageConverter.convertToImagePlus(volume,
-					ImageGeneric.FIRST_IMAGE, index + 1);
-			new XmippImageWindow(data.window, new ImagePlusLoader(imp), getLabel(row, col));
+			//ImagePlus imp = XmippImageConverter.convertToImagePlus(volume, ImageGeneric.FIRST_IMAGE, index + 1);
+			ImagePlusLoader loader = new ImagePlusLoader(index + 1, volume);
+			ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -157,7 +159,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		}
 
 		@Override
-		protected ImagePlus loadImage() throws Exception {
+		protected ImagePlus loadSingleImageFromFile() throws Exception {
 			ImagePlus imp = XmippImageConverter.convertToImagePlus(volume);
 			if (normalize) {
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
