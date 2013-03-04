@@ -46,16 +46,17 @@ TEST_F( PolynomialsTest, ZernikeFit)
     xmippCoeffs.resizeNoCopy(10);
     xmippCoeffs.initConstant(1);
     matlabCoeffs.resizeNoCopy(10);
-    VEC_ELEM(matlabCoeffs,0) =   1.2366;
-    VEC_ELEM(matlabCoeffs,1) =  -0.00002;
-    VEC_ELEM(matlabCoeffs,2) =  -0.00002;
-    VEC_ELEM(matlabCoeffs,3) =  -0.1813;
-    VEC_ELEM(matlabCoeffs,4) =  -2.0455;
-    VEC_ELEM(matlabCoeffs,5) =  -0.0383;
-    VEC_ELEM(matlabCoeffs,6) =  -0.00005;
-    VEC_ELEM(matlabCoeffs,7) =  -0.00005;
-    VEC_ELEM(matlabCoeffs,8) =  -0.00005;
-    VEC_ELEM(matlabCoeffs,9) =   0.00005;
+
+    VEC_ELEM(matlabCoeffs,0) =   1.24429e-18;
+    VEC_ELEM(matlabCoeffs,1) =  -1.36005e-19;
+    VEC_ELEM(matlabCoeffs,2) =   9.16062e-19;
+    VEC_ELEM(matlabCoeffs,3) =  -5.33021e-19;
+    VEC_ELEM(matlabCoeffs,4) =   5.32969e-19;
+    VEC_ELEM(matlabCoeffs,5) =  -1.58317e-19;
+    VEC_ELEM(matlabCoeffs,6) =   7.30143e-11;
+    VEC_ELEM(matlabCoeffs,7) =  -3.39904e-20;
+    VEC_ELEM(matlabCoeffs,8) =   2.28636e-19;
+    VEC_ELEM(matlabCoeffs,9) =   -8.19429e-10;
 
     int rmin = -1;
     int rmax = XSIZE(MULTIDIM_ARRAY(im))/2;
@@ -85,10 +86,10 @@ TEST_F( PolynomialsTest, ZernikeFit)
 
     Matrix1D<double> error = xmippCoeffs - matlabCoeffs;
 
-    //for(int i =0; i<  VEC_XSIZE(error); i++)
-    //{
-    //    ASSERT_TRUE(std::abs(VEC_ELEM(error,i))<0.01) << "Zernike fit: no correspondence between matlab and xmipp zernike coefficients";
-    //}
+    for(int i =0; i<  VEC_XSIZE(error); i++)
+    {
+        ASSERT_TRUE(std::abs(VEC_ELEM(error,i))<0.01) << "Zernike fit: no correspondence between matlab and xmipp zernike coefficients";
+    }
 }
 
 TEST_F( PolynomialsTest, ZernikePols)
@@ -97,8 +98,8 @@ TEST_F( PolynomialsTest, ZernikePols)
     Matrix1D<int> coefs(8);
     coefs.initConstant(0);
 
-    VEC_ELEM(coefs,1)=1;
-    VEC_ELEM(coefs,2)=0;
+    VEC_ELEM(coefs,3)=1;
+
 
     PolyZernikes polynom;
 
@@ -120,10 +121,12 @@ TEST_F( PolynomialsTest, ZernikePols)
     im().initZeros();
     polynom.zernikePols(coefs,MULTIDIM_ARRAY(im),ROI);
 
-    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,0)+       1)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
-    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,1)+0.996094)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
-    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),1,0)+1)       <0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
-    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),1,1)+0.996094)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
+    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,0)+       0)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
+    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),0,1)+0.00779724)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
+    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),1,0)-0.00779724)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
+    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),250,10)-0.922852)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
+    ASSERT_TRUE(std::abs(A2D_ELEM(MULTIDIM_ARRAY(im),10, 250)+0.922852)<0.01) << "Zernike Pols: no correspondence between matlab and xmipp zernike coefficients";
+
 }
 
 GTEST_API_ int main(int argc, char **argv)

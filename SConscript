@@ -573,8 +573,11 @@ INRIASources = Glob('external/inria', '*.cc', [])
 # Condor
 CondorSources = Glob('external/condor', '*.cpp', [])
 
+# AlgLib
+AlglibSources = Glob('external/alglib/src', '*.cpp', [])
+
 AddLibrary('XmippExternal', 'external',
-   INRIASources + BilibSources + CondorSources,
+   INRIASources + BilibSources + CondorSources + AlglibSources,
    ['bilib', 'bilib/headers', 'bilib/types'])
 
 # sqliteExt
@@ -905,6 +908,7 @@ env.Alias('protocols', protocols_main)
 AddBatch('browser', 'applications/scripts/browser', '.py')
 #AddBatch('browserj', 'applications/scripts/browserj', '.py')
 AddBatch('micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking', '.py')
+AddBatch('projection_explorer', 'applications/scripts/projection_explorer', '.py')
 #AddBatch('metadata_showj', 'applications/scripts/metadata_showj', '.py')
 AddBatch('micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking', '.py')
 AddBatch('mpi_steps_runner', 'protocols', '.py')

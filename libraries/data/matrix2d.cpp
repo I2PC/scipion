@@ -25,6 +25,8 @@
 
 #include <algorithm>
 #include "matrix2d.h"
+#include "../../external/alglib/src/ap.h"
+#include "../../external/alglib/src/linalg.h"
 
 /* Cholesky decomposition -------------------------------------------------- */
 void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L)
@@ -364,4 +366,36 @@ void subtractColumnMeans(Matrix2D<double> &A)
 	// Now normalize
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
 		MAT_ELEM(A,i,j)=MAT_ELEM(A,i,j)-VEC_ELEM(avg,j);
+
+void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T)
+{
+	alglib::real_2d_array a, s;
+	a.setcontent(MAT_YSIZE(M),MAT_XSIZE(M),MATRIX2D_ARRAY(M));
+	bool ok=rmatrixschur(a, MAT_YSIZE(M), s);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform Schur decomposition");
+	O.resizeNoCopy(M);
+	T.resizeNoCopy(M);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(M)
+	{
+		MAT_ELEM(O,i,j)=s(i,j);
+		MAT_ELEM(T,i,j)=a(i,j);
+	}
+}
+
+void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matrix1D<double> &D, Matrix2D<double> &P)
+{
+	int N=(int)MAT_YSIZE(A);
+	alglib::real_2d_array a, b, z;
+	a.setcontent(N,N,MATRIX2D_ARRAY(A));
+	b.setcontent(N,N,MATRIX2D_ARRAY(B));
+	alglib::real_1d_array d;
+	bool ok=smatrixgevd(a, N, true, b, true, true, 1, d, z);
+	if (!ok)
+		REPORT_ERROR(ERR_NUMERICAL,"Could not perform eigenvector decomposition");
+	D.resizeNoCopy(N);
+	memcpy(&VEC_ELEM(D,0),d.getcontent(),N*sizeof(double));
+	P.resizeNoCopy(A);
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(P)
+		MAT_ELEM(P,i,j)=z(i,j);
 }

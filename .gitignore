@@ -51,6 +51,16 @@ java/lib/ij.jar
 java/src/xmipp/jni/MDLabel.java
 java/src/xmipp/jni/XmippError.java
 
+# Scons
+.sconf_temp/
+.sconsign.dblite
+config.log
+
+#never update emx or pyworkflow from xmipp
+protocols/pyworkflow
+protocols/emx
+
+
 # Other
 bin/
 build/

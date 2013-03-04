@@ -247,7 +247,7 @@ TEST_F( FringeProcessingTests, normalizeWB)
 
 #ifdef DEBUG
     FileName fpName, Iname, ModName;
-    fpName = "txt";
+    fpName = "I.txt";
     Iname  = "IN.txt";
     ModName= "Mod.txt";
 #endif

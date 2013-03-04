@@ -67,6 +67,12 @@ xmipp_colorStr(PyObject *obj, PyObject *args);
 PyObject *
 xmipp_labelType(PyObject *obj, PyObject *args);
 
+PyObject *
+xmipp_labelHasTag(PyObject *obj, PyObject *args);
+
+PyObject *
+xmipp_labelIsImage(PyObject *obj, PyObject *args);
+
 /* isInStack */
 PyObject *
 xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs);

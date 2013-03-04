@@ -185,6 +185,46 @@ TEST_F( MatrixTest, initGaussian)
     ASSERT_TRUE( ABS((dMij(A,2,0) - 0.517636)) < 1e-3);
 }
 
+TEST_F( MatrixTest, schurDecomposition)
+{
+    Matrix2D<double> A(3,3), O, T;
+    A(0,0)=1; A(0,1)=2; A(0,2)=3;
+    A(1,0)=4; A(1,1)=5; A(1,2)=6;
+    A(2,0)=7; A(2,1)=8; A(2,2)=9;
+
+    schur(A,O,T);
+
+    Matrix2D<double> expectedO(3,3), expectedT(3,3);
+    expectedO(0,0)=-0.231970687246286; expectedO(0,1)=-0.882905959653586; expectedO(0,2)= 0.408248290463863;
+    expectedO(1,0)=-0.525322093301233; expectedO(1,1)=-0.239520420054206; expectedO(1,2)=-0.816496580927726;
+    expectedO(2,0)=-0.818673499356181; expectedO(2,1)= 0.403865119545174; expectedO(2,2)= 0.408248290463863;
+    expectedT(0,0)=16.116843969807043; expectedT(0,1)= 4.898979485566353; expectedT(0,2)= 0;
+    expectedT(1,0)=0;                  expectedT(1,1)=-1.116843969807043; expectedT(1,2)= 0;
+    expectedT(2,0)=0;                  expectedT(2,1)= 0;                 expectedT(2,2)= 0;
+    EXPECT_EQ(expectedO,O) << "schurDecomposition failed";
+    EXPECT_EQ(expectedT,T) << "schurDecomposition failed";
+}
+
+TEST_F( MatrixTest, generalizedEigsTest)
+{
+    Matrix2D<double> A(2,2), B(2,2), P;
+    Matrix1D<double> D;
+    A(0,0)=1; A(0,1)=1;
+    A(1,0)=1; A(1,1)=0;
+    B(0,0)=2; B(0,1)=0;
+    B(1,0)=0; B(1,1)=1;
+
+    generalizedEigs(A,B,D,P);
+
+    Matrix1D<double> expectedD(2);
+    Matrix2D<double> expectedP(2,2);
+    expectedD(0)=-0.5; expectedD(1)=1;
+    expectedP(0,0)= 0.408248290463863; expectedP(0,1)=-0.57735026918962;
+    expectedP(1,0)=-0.816496580927726; expectedP(1,1)=-0.57735026918962;
+    EXPECT_EQ(expectedD,D) << "generalizedEigs failed";
+    EXPECT_EQ(expectedP,P) << "generalizedEigs failed";
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

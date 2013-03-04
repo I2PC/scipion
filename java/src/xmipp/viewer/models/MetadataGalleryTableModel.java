@@ -167,17 +167,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
-		ImagePlus imp = null;
-		if (imageFn != null && Filename.exists(imageFn)) {
-//			if (data.useGeo)
-//				image.readApplyGeo(imageFn, data.md, objId, thumb_width,
-//						thumb_height, data.wrap);
-//			else
-//				image.read(imageFn, thumb_width, thumb_height);
-//			imp = XmippImageConverter.convertToImagePlus(image);
-			imp = XmippImageConverter.readMdRowToImagePlus(imageFn, data.md, objId, 
-					thumb_width, thumb_height, data.useGeo, data.wrap);
-		}
+		ImagePlus imp = data.md.getImage(objId, imageFn, thumb_width, thumb_height, data.useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;
 	}
@@ -215,7 +205,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 
 	public String getImageFilename(int index, int label) {
 		try {
-			return data.getValueFromLabel(index, label);
+			String file = data.getValueFromLabel(index, label);
+			String mddir = data.md.getBaseDir();
+			file = Filename.findImagePath(file, mddir, true);
+			//System.out.println(file);
+			return file;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

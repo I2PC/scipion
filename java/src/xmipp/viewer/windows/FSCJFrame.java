@@ -46,7 +46,8 @@ public class FSCJFrame extends JFrame {
             setLayout(new BorderLayout());
 
             MetaData mdout = new MetaData();
-            mdout.computeFourierStatistics(data.md, data.getRenderLabel());
+            MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
+            mdout.computeFourierStatistics(imagesmd, data.getRenderLabel());
 
             double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);
             double y1s[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FRC);

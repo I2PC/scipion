@@ -29,9 +29,6 @@ import java.awt.Color;
 import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Hashtable;
-
-import javax.swing.JFrame;
 
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -39,10 +36,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Param;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippStringUtils;
-import xmipp.viewer.models.ClassInfo;
-import xmipp.viewer.windows.GalleryJFrame;
 
 /** This class will serve to store important data about the gallery */
 public class GalleryData {
@@ -226,15 +220,22 @@ public class GalleryData {
 			int renderLabel = ciFirstRender.getLabel();
 			ImageGeneric image = null;
 			String imageFn;
+			//Try to find at least one image to render 
+			//and take dimensions from that
 			for (int i = 0; i < ids.length && image == null; ++i) {
-				imageFn = md.getValueString(renderLabel, ids[i]);
-				if (Filename.exists(imageFn)) {
+				imageFn = Filename.findImagePath(md.getValueString(renderLabel, ids[i]), filename, true);
+				DEBUG.printFormat("imageFn1: %s", imageFn);
+				//imageFn = Filename.fixPath(md.getValueString(renderLabel, ids[i]), filename, false);
+				//DEBUG.printFormat("imageFn2: %s", imageFn);
+				//if (imageFn != null){
+				if (imageFn != null) {
 					try {
 						image = new ImageGeneric(imageFn);
 					} catch (Exception e) {
 						image = null;
 					}
 				}
+				break;
 			}
 			if (image != null) { // Image file was found to render
 				if (zoom == 0) { // if default value, calculate zoom
@@ -254,12 +255,9 @@ public class GalleryData {
 					numberOfVols = md.size();
 					volumes = new String[numberOfVols];
 
-					DEBUG.printMessage("Volumes:\n");
-					
 					for (int i = 0; i < numberOfVols; ++i){
 						volumes[i] = md.getValueString(
 								ciFirstRender.getLabel(), ids[i]);
-						DEBUG.printMessage("  volume: " + volumes[i] + "\n");
 					}
 					commonVolPrefix = XmippStringUtils.commonPathPrefix(volumes);
 
@@ -269,6 +267,8 @@ public class GalleryData {
 				}
 				image.destroy();
 			}
+			else 
+				zoom = 100; //Render missing image icon at zoom 100
 		} else {
 			// force this mode when there aren't render label
 			mode = Mode.TABLE_MD;
@@ -896,4 +896,24 @@ public class GalleryData {
 			return mdBlocks[index];
 		return null;
 	}
-}// class GalleryData
+
+	public MetaData getImagesMd(int idlabel)
+	{
+		if(!md.containsLabel(idlabel))
+			return null;
+		MetaData imagesmd = new MetaData();
+		int index = 0;
+		String imagepath;
+		for(long id: ids)
+		{
+			if(isEnabled(index))
+			{
+				imagepath = md.getValueString(idlabel, id, true);
+				if(imagepath != null && ImageGeneric.exists(imagepath))
+					imagesmd.setValueString(idlabel, imagepath, imagesmd.addObject());
+			}
+			index ++;
+		}
+		return imagesmd;
+	}
+}// class GalleryDaa

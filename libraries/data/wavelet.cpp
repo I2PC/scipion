@@ -863,7 +863,7 @@ void phaseCongMono(MultidimArray< double >& I,
                                  double sigmaOnf)
 {
 
-    #define DEBUG
+//    #define DEBUG
 	double epsilon= .0001; // Used to prevent division by zero.
 	//First we set the image origin in the image center
     I.setXmippOrigin();
