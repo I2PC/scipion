@@ -2001,7 +2001,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void openMicrographs()
 	{
 		if (extractframe == null || !extractframe.isVisible())
-			extractframe = ExtractParticlePicker.open(data.getFileName(), this);
+			extractframe = ExtractParticlePicker.open(getBlock(), data.getFileName(), this);
 		refreshExtractFrame();
 	}
 

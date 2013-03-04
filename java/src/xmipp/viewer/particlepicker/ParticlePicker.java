@@ -47,23 +47,30 @@ public abstract class ParticlePicker
 	protected boolean updateTemplatesPending;
 	public static final int fsizemax = 800;
 	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
+	protected String block;
 
 	
 
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode)
 	{
-		this(selfile, outputdir, null, mode);
+		this(null, selfile, outputdir, null, mode);
 
 	}
 	
 	public ParticlePicker(String selfile, FamilyState mode)
 	{
-		this(selfile, ".", null, mode);
+		this(null, selfile, ".", null, mode);
 
 	}
-
+	
 	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
 	{
+		this(null, selfile, outputdir, fname, mode);
+	}
+
+	public ParticlePicker(String block, String selfile, String outputdir, String fname, FamilyState mode)
+	{
+		this.block = block;
 		this.outputdir = outputdir;
 		this.selfile = selfile;
 		this.outputdir = outputdir;

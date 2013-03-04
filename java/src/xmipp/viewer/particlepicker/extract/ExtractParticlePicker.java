@@ -16,31 +16,27 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ExtractParticlePicker extends ParticlePicker
 {
 
-	public static void main(String[] args)
-	{
-		ExtractParticlePicker.open(args[0], null);
-	}
+	
 
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
 	private ArrayList<ColorHelper> colorby;
-	private String block;
 
 
 	public ExtractParticlePicker(String selfile, FamilyState mode)
 	{
 		super(selfile, mode);
 		loadParticles();
-		if (filters.isEmpty())// user just started manual mode and has no
-								// filter, I select gaussian blur by default,
-								// will be applied when window opens
+		if (filters.isEmpty())
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 	
 	public ExtractParticlePicker(String block, String selfile, FamilyState mode)
 	{
-		this(selfile, mode);
-		this.block = block;
+		super(block, selfile, ".", null, mode);
+		loadParticles();
+		if (filters.isEmpty())
+			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 	
 	
@@ -164,7 +160,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		micrograph = (ExtractMicrograph)m;
 		try
 		{
-			MetaData md = new MetaData(selfile);
+			MetaData md = new MetaData();
 			
 			for (ExtractParticle p : micrograph.getParticles())
 			{
@@ -173,7 +169,8 @@ public class ExtractParticlePicker extends ParticlePicker
 				md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
 				md.setValueInt(MDLabel.MDL_ENABLED, p.isEnabled()? 1: -1, id);
 			}
-			md.write(selfile);
+			String path = (block == null)? selfile: block + "@" + selfile;
+			md.write(path);
 			md.destroy();
 
 		}
@@ -211,9 +208,9 @@ public class ExtractParticlePicker extends ParticlePicker
 		setMicrograph(micrographs.get(0));
 	}
 
-	public static ExtractPickerJFrame open(String filename, GalleryJFrame galleryfr)
+	public static ExtractPickerJFrame open(String block, String filename, GalleryJFrame galleryfr)
 	{
-		ExtractParticlePicker picker = new ExtractParticlePicker(filename, FamilyState.Extract);
+		ExtractParticlePicker picker = new ExtractParticlePicker(block, filename, FamilyState.Extract);
 		return new ExtractPickerJFrame(picker, galleryfr);
 	}
 
