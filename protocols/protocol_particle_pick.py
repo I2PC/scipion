@@ -144,7 +144,7 @@ def launchParticlePickingGUI(log, InputMicrographs, ExtraDir, PickingMode=PM_MAN
         program = "xmipp_micrograph_tiltpair_picking"
     else:
         program = "xmipp_micrograph_particle_picking"
-    runJob(log, program, args % locals(), RunInBackground=True)
+    runJob(log, program, args % locals(), RunInBackground=False)
 #		
 # Main
 #     
