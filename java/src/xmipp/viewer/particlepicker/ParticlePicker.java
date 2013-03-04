@@ -48,31 +48,48 @@ public abstract class ParticlePicker {
 	protected boolean updateTemplatesPending;
 	public static final int fsizemax = 800;
 	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
+	protected String block;
 	
 	public ParticlePicker(String selfile, String outputdir, FamilyState mode) {
 		this(selfile, outputdir, null, mode);
 
 	}
 
-	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode) {
-		this.outputdir = outputdir;
-		this.familiesfile = getOutputPath("families.xmd");
-		configfile = getOutputPath("config.xmd");
-		this.families = new ArrayList<Family>();
-		loadFamilies();
-		if(fname == null)
-			family = families.get(0);
-		else
-			family = getFamily(fname);
-		if (family == null) throw new IllegalArgumentException("Invalid family " + fname);
+	public ParticlePicker(String selfile, String outputdir, String fname, FamilyState mode)
+	{
+		this(null, selfile, outputdir, fname, mode);
+	}
 
+	public ParticlePicker(String block, String selfile, String outputdir, String fname, FamilyState mode)
+	{
+		this.block = block;
+		this.outputdir = outputdir;
 		this.selfile = selfile;
 		this.outputdir = outputdir;
 		this.mode = mode;
-		
-		initializeFilters();
+		this.configfile = getOutputPath("config.xmd");
+		initFamilies(fname);
+		initFilters();
 		loadEmptyMicrographs();
 		loadConfig();
+	}
+	
+	
+	
+	protected void initFamilies(String fname)
+	{
+		this.familiesfile = getOutputPath("families.xmd");
+		
+		this.families = new ArrayList<Family>();
+		
+		loadFamilies();
+		if (fname == null)
+			family = families.get(0);
+		else
+			family = getFamily(fname);
+		if (family == null)
+			throw new IllegalArgumentException("Invalid family " + fname);
+
 	}
 	
 	public int getSize() {
@@ -110,7 +127,7 @@ public abstract class ParticlePicker {
 	
 	public abstract void loadEmptyMicrographs();
 
-	private void initializeFilters() {
+	private void initFilters() {
 		this.macrosfile = getOutputPath("macros.xmd");
 		filters = new ArrayList<IJCommand>();
 		loadFilters();
