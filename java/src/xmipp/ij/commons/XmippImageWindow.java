@@ -109,5 +109,10 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 			WindowManager.setCurrentWindow(this);
 		}
 	}
+	
+	public XmippImageCanvas getCanvas()
+	{
+		return ((XmippImageCanvas)super.getCanvas());
+	}
 
 }// class XmippImageWindow

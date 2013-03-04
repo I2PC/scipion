@@ -25,7 +25,7 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 		setTitle(title);
 		menu = new XmippMenuBar(this);
 		setMenuBar(menu);
-		((XmippImageCanvas)getCanvas()).adjustMagnification();
+		//getCanvas().adjustMagnification();
 		XmippApplication.addInstance();
 		addWindowListener(new WindowAdapter()
 		{
@@ -77,6 +77,11 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	{
 		saveDataAs(imp.getTitle());
 		
+	}
+	
+	public XmippImageCanvas getCanvas()
+	{
+		return ((XmippImageCanvas)super.getCanvas());
 	}
 	
 	@Override

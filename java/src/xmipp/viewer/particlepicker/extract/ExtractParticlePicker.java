@@ -24,6 +24,7 @@ public class ExtractParticlePicker extends ParticlePicker
 	private ArrayList<ExtractMicrograph> micrographs;
 	private ExtractMicrograph micrograph;
 	private ArrayList<ColorHelper> colorby;
+	private String block;
 
 
 	public ExtractParticlePicker(String selfile, FamilyState mode)
@@ -36,13 +37,20 @@ public class ExtractParticlePicker extends ParticlePicker
 			filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
 	}
 	
+	public ExtractParticlePicker(String block, String selfile, FamilyState mode)
+	{
+		this(selfile, mode);
+		this.block = block;
+	}
+	
 	
 
 	@Override
 	public void loadEmptyMicrographs()
 	{
 		micrographs = new ArrayList<ExtractMicrograph>();
-		MetaData md = new MetaData(selfile);
+		String path = (block == null)? selfile: block + "@" + selfile;
+		MetaData md = new MetaData(path);
 		String fileiter;
 		boolean exists;
 		ExtractMicrograph current = null;
@@ -102,7 +110,8 @@ public class ExtractParticlePicker extends ParticlePicker
 
 	public void loadParticles()
 	{
-		MetaData md = new MetaData(selfile);
+		String path = (block == null)? selfile: block + "@" + selfile;
+		MetaData md = new MetaData(path);
 		ExtractParticle p;
 		int x, y;
 		String fileiter;

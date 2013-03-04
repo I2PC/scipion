@@ -69,6 +69,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -742,6 +743,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		ImageGeneric imgAvg = new ImageGeneric();
 		ImageGeneric imgStd = new ImageGeneric();
 		MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
+		if(imagesmd.findObjects().length == 0)
+			throw new IllegalArgumentException("No images available");
 		imagesmd.getStatsImages(imgAvg, imgStd, data.useGeo, data.getRenderLabel());
 		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
 		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
@@ -778,6 +781,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		ImageGeneric image = new ImageGeneric();
 		MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
+		if(imagesmd.findObjects().length == 0)
+			throw new IllegalArgumentException("No images available");
 		imagesmd.getPCAbasis(image, data.getRenderLabel());
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
 		imp.setTitle("PCA: " + data.getFileName());

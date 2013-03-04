@@ -899,6 +899,8 @@ public class GalleryData {
 
 	public MetaData getImagesMd(int idlabel)
 	{
+		if(md == null)
+			return null;
 		if(!md.containsLabel(idlabel))
 			return null;
 		MetaData imagesmd = new MetaData();
