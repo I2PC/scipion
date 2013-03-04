@@ -105,7 +105,7 @@ class DimRedAlgorithm
 {
 public:
 	/// Pointer to input data
-	const Matrix2D<double> *X;
+	Matrix2D<double> *X;
 
 	/// Output dim
 	size_t outputDim;
@@ -114,7 +114,7 @@ public:
 	Matrix2D<double> Y;
 public:
 	/// Set input data
-	void setInputData(const Matrix2D<double> &X);
+	void setInputData(Matrix2D<double> &X);
 
 	/// Set output dimensionality
 	void setOutputDimensionality(size_t outputDim);

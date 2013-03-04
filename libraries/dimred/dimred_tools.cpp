@@ -193,8 +193,8 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 {
 	idx.initConstant(MAT_YSIZE(X),K,-1);
 	distance.initConstant(MAT_YSIZE(X),K,1e38);
-	for (int i1=0; i1<MAT_YSIZE(X)-1; ++i1)
-		for (int i2=i1+1; i2<MAT_YSIZE(X); ++i2)
+	for (size_t i1=0; i1<MAT_YSIZE(X)-1; ++i1)
+		for (size_t i2=i1+1; i2<MAT_YSIZE(X); ++i2)
 		{
 			// Compute the distance between i1 and i2
 			double d=0;
@@ -261,8 +261,8 @@ double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2
 
 	// Compute the distance of all versus all
 	double countLessMedianK=0, countLessMaxK=0;
-	for (int i1=0; i1<MAT_YSIZE(X)-1; ++i1)
-		for (int i2=i1+1; i2<MAT_YSIZE(X); ++i2)
+	for (size_t i1=0; i1<MAT_YSIZE(X)-1; ++i1)
+		for (size_t i2=i1+1; i2<MAT_YSIZE(X); ++i2)
 		{
 			// Compute the distance between i1 and i2
 			double d=0;
@@ -307,7 +307,7 @@ double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool n
 	// I do not implement GMST because it is slower than MLE and CorrDim
 }
 
-void DimRedAlgorithm::setInputData(const Matrix2D<double> &X)
+void DimRedAlgorithm::setInputData(Matrix2D<double> &X)
 {
 	this->X=&X;
 }
