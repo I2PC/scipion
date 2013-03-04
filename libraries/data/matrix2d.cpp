@@ -366,6 +366,7 @@ void subtractColumnMeans(Matrix2D<double> &A)
 	// Now normalize
 	FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
 		MAT_ELEM(A,i,j)=MAT_ELEM(A,i,j)-VEC_ELEM(avg,j);
+}
 
 void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T)
 {
