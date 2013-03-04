@@ -39,6 +39,7 @@ import xmipp.jni.MDLabel;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	private static final long serialVersionUID = 1L;
@@ -225,7 +226,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			if (data.isImageFile(renderLabel)) {
-				new XmippImageWindow(data.window, new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel()));
+				//new XmippImageWindow(data.window, new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel()));
+				ImagePlusLoader loader = new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel());
+				ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
 				return true;
 			}
 		} catch (Exception e) {
@@ -284,7 +287,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		}
 
 		@Override
-		protected ImagePlus loadImage() throws Exception {
+		protected ImagePlus loadSingleImageFromFile() throws Exception {
 			return XmippImageConverter.readMdRowToImagePlus(fileName, data.md, objId, useGeometry, wrap);
 		}
 
@@ -303,7 +306,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		}
 
 		@Override
-		protected ImagePlus loadImage() throws Exception {
+		protected ImagePlus loadSingleImageFromFile() throws Exception {
 			return XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap);
 		}
 		@Override

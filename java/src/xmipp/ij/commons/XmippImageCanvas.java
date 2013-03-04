@@ -5,6 +5,7 @@ import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -14,8 +15,9 @@ import javax.swing.SwingUtilities;
 
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
-	
+
 	protected ImageWindow iw;
+	private Dimension size;
 
 	public Tool getTool()
 	{
@@ -141,9 +143,10 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 
 	}
 
-	public void adjustMagnification()//for micrographs will not happen
+	public void adjustMagnification()// for micrographs will not happen
 	{
 		int min = 200;
+		zoom100Percent();
 		while (getSize().getWidth() < min)
 		{
 			zoomIn(0, 0);
@@ -160,7 +163,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		else
 		{
 			this.iw = new ImageWindow(getImage(), this);
-		}				
+		}
 		iw.pack();
 	}
 

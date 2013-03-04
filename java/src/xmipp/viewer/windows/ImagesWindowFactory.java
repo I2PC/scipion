@@ -14,6 +14,7 @@ import ij3d.Image3DUniverse;
 import java.awt.Component;
 import java.awt.FontMetrics;
 import java.awt.Frame;
+import java.awt.Window;
 
 import javax.swing.SwingUtilities;
 import javax.vecmath.Color3f;
@@ -126,19 +127,25 @@ public class ImagesWindowFactory {
 		return imp;
 	}
 
-	public static XmippIJWindow openXmippImageWindow(Frame pframe,
+	public static XmippIJWindow openXmippImageWindow(Window window,
 			ImagePlus imp, boolean poll) {
-		return openXmippImageWindow(pframe, new ImagePlusLoader(imp), poll);
+		return openXmippImageWindow(window, new ImagePlusLoader(imp), poll);
 	}
 
-	public static XmippIJWindow openXmippImageWindow(Frame pframe,
+	public static XmippIJWindow openXmippImageWindow(Window window,
 			ImagePlusLoader impLoader, boolean poll) {
+		return openXmippImageWindow(window, impLoader, null, poll);
+		
+	}
+	public static XmippIJWindow openXmippImageWindow(Window window,
+			ImagePlusLoader impLoader, String title, boolean poll) {
 		ImagePlus imp = impLoader.getImagePlus();
 		XmippIJWindow iw;
+		
 		if (imp.getStackSize() > 1)
-			iw = new XmippStackWindow(pframe, impLoader);
+			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
 		else
-			iw = new XmippImageWindow(pframe, impLoader);
+			iw = (title != null )? new XmippImageWindow(window, impLoader, title): new XmippImageWindow(window, impLoader);
 		SwingUtilities.invokeLater(new Worker(iw));
 		return iw;
 	}
@@ -153,8 +160,7 @@ public class ImagesWindowFactory {
 
 		@Override
 		public void run() {
-			((XmippImageCanvas) (((XmippImageWindow) iw).getCanvas()))
-					.adjustMagnification();
+			((XmippImageCanvas)  iw.getCanvas()).adjustMagnification();
 			((ImageWindow) iw).setVisible(true);
 		}
 	}

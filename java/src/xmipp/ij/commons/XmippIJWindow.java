@@ -16,5 +16,7 @@ public interface XmippIJWindow
 	public boolean isStack();
 	
 	public void openMaskToolbar();
+
+	public XmippImageCanvas getCanvas();
 	
 }
