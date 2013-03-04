@@ -50,7 +50,6 @@ class ScriptImportEMX(XmippScript):
         self.addParamsLine("     alias -m;");
         self.addParamsLine(' --amplitudeContrast <double>   : amplitudeContrast');
         self.addParamsLine("     alias -a;");
-        #self.addKeyWords("import emx");
         self.addExampleLine("Export information from Metadata XmippFile file to EMX", False);
         self.addExampleLine("xmipp_export_emx -i microgaph.xmd -a 0.1");
         self.addExampleLine("input is the file micrograph.xmd created by screen micrograph protocol");

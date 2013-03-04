@@ -26,11 +26,12 @@
 
 from os.path import basename, splitext
 from protlib_xmipp import XmippScript
-from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE
-from protlib_import import convertCtfparam
-from emx_data_model import MICROGRAPH, PARTICLE, EmxData
-from emx_reader import EmxXmlReader
-from lib_emx import ctfMicXmippFromEmx
+from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
+from emxLib.emxLib import ctfMicXmippToEmx
+from pyworkflow.object import *
+from emx.emxmapper import EmxMapper
+from emx.emx import *
+from emxLib.emxLib import ctfMicEMXToXmipp
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):
@@ -39,32 +40,26 @@ class ScriptImportEMX(XmippScript):
     def defineParams(self):
         self.addUsageLine("Convert  from EMX metadata files");
         self.addParamsLine(' -i <text_file_emx>              : Input metadata file ');
-        self.addParamsLine(" [--binaryFile <fileName_mrc>]   : One input binary file ");
-        self.addParamsLine("     alias -b;");
-#        self.addParamsLine(' [--path <val=emxImport>]       : directory for output files')
-#        self.addParamsLine("     alias -p;");
         self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
         self.addParamsLine("         where <mode>");
         self.addParamsLine("             micCTF              : extract micrograph ctf");
         self.addParamsLine("     alias -m;");
-        #self.addKeyWords("import emx");
         self.addExampleLine("Import information from EMX file to Xmipp", False);
-        self.addExampleLine("xmipp_import_emx -i particlePicking.emx -b mic.ctf ");
+        self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
       
     def run(self):
         emxFileName  = self.getParam('-i')
-        binFileName  = self.getParam('-b')
         mode         = self.getParam('-m')
-        
-        #emx class to store emx data
-        emxData = EmxData()
-        #emx class for reading emx data
-        reader       = EmxXmlReader()
-        reader.read(emxFileName,emxData)
-        
+        #object to store emx data
+        emxData   = EmxData()
+        #object to read/write emxData
+        mapper    = EmxMapper(emxData, globals())
+        #read file
+        mapper.read(emxFileName)
+        mapper.convertToEmxData(emxData)
         #create xmd files with mic CTF information and auxiliary files
         if mode == 'micCTF':
-            ctfMicXmippFromEmx(emxData,emxFileName,oroot)
+            ctfMicEMXToXmipp(emxData,'micrograph')
 
         #detect binary data type micrograph/particle
         #type =emxData.findObjectType(binFileName)
