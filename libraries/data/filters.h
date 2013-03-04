@@ -434,14 +434,18 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
  * will be sought where the mask is 1).
  *
  * To apply these results you must shift I1 by (-shiftX,-shiftY) or
- * I2 by (shiftX, shiftY)
+ * I2 by (shiftX, shiftY).
+ *
+ * You can limit the maximum achievable shift by using maxShift. If it is set to -1,
+ * any shift is valid.
  */
 void bestShift(const MultidimArray< double >& I1,
                const MultidimArray< double >& I2,
                double& shiftX,
                double& shiftY,
                CorrelationAux &aux,
-               const MultidimArray< int >* mask = NULL);
+               const MultidimArray< int >* mask = NULL,
+               int maxShift=-1);
 
 /** Translational search (3D)
  * @ingroup Filters
