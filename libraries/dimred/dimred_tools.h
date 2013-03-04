@@ -112,7 +112,13 @@ public:
 
 	/// Output data
 	Matrix2D<double> Y;
+
+	/// Distance function
+	DimRedDistance2 *distance;
 public:
+	/// Empty constructor
+	DimRedAlgorithm();
+
 	/// Set input data
 	void setInputData(Matrix2D<double> &X);
 

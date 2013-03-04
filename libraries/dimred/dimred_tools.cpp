@@ -307,6 +307,12 @@ double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool n
 	// I do not implement GMST because it is slower than MLE and CorrDim
 }
 
+DimRedAlgorithm::DimRedAlgorithm()
+{
+	X=NULL;
+	distance=NULL;
+}
+
 void DimRedAlgorithm::setInputData(Matrix2D<double> &X)
 {
 	this->X=&X;
