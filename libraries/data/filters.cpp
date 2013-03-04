@@ -891,7 +891,7 @@ double fastCorrentropy(const MultidimArray<double> &x,
 }
 
 /* Best shift -------------------------------------------------------------- */
-void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+double bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                double &shiftX, double &shiftY, CorrelationAux &aux,
                const MultidimArray<int> *mask, int maxShift)
 {
@@ -916,7 +916,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
         if ((*mask).sum() < 2)
         {
             shiftX = shiftY = 0.;
-            return;
+            return -1;
         }
         else
         {
@@ -947,7 +947,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
     		{
     			if (i*i+j*j>maxShift2)
     				continue;
-    			else if (A2D_ELEM(Mcorr, imax, jmax)>bestCorr)
+    			else if (A2D_ELEM(Mcorr, i, j)>bestCorr)
     			{
     				imax=i;
     				jmax=j;
@@ -1015,6 +1015,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
         shiftX = xmax / sumcorr;
         shiftY = ymax / sumcorr;
     }
+    return max;
 }
 
 /* Best shift -------------------------------------------------------------- */
