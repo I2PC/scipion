@@ -68,6 +68,8 @@ public abstract class ParticlePicker
 		this(null, selfile, outputdir, fname, mode);
 	}
 
+
+
 	public ParticlePicker(String block, String selfile, String outputdir, String fname, FamilyState mode)
 	{
 		this.block = block;
@@ -145,6 +147,7 @@ public abstract class ParticlePicker
 
 	private void initFilters()
 	{
+
 		this.macrosfile = getOutputPath("macros.xmd");
 		filters = new ArrayList<IJCommand>();
 		loadFilters();
