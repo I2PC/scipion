@@ -208,7 +208,7 @@ public class SaveJDialog extends XmippDialog
 	public void setInitialValues()
 	{
 		browseMd.tb.setText("");
-		browseImg.tb.setText("");
+//		browseImg.tb.setText("");
 		rbMdAppend.setSelected(true);
 //		chbImg.setSelected(false);
 //		rbStack.setSelected(true);
