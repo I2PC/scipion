@@ -56,7 +56,6 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		try
 		{
 				((XmippImageCanvas)getCanvas()).loadData(this);
-				((XmippImageCanvas)getCanvas()).adjustMagnification();
 		}
 		catch (Exception e)
 		{
@@ -111,5 +110,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		return ((XmippImageCanvas)super.getCanvas());
 	}
+	
+	
 
 }// class XmippImageWindow
