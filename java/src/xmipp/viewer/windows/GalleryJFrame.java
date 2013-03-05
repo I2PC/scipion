@@ -181,6 +181,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
+	private Integer rows, columns;
 
 	/** Store data about visualization */
 	GalleryData data;
@@ -743,7 +744,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		ImageGeneric imgAvg = new ImageGeneric();
 		ImageGeneric imgStd = new ImageGeneric();
 		MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
-		if(imagesmd.findObjects().length == 0)
+		if (imagesmd.findObjects().length == 0)
 			throw new IllegalArgumentException("No images available");
 		imagesmd.getStatsImages(imgAvg, imgStd, data.useGeo, data.getRenderLabel());
 		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
@@ -781,7 +782,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		ImageGeneric image = new ImageGeneric();
 		MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
-		if(imagesmd.findObjects().length == 0)
+		if (imagesmd.findObjects().length == 0)
 			throw new IllegalArgumentException("No images available");
 		imagesmd.getPCAbasis(image, data.getRenderLabel());
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
@@ -876,6 +877,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			this.saved = !changed;
 
 			setGalleryTitle();
+
+			if(rows != null)
+				gallery.setRows(rows);
+			if(columns != null)
+				gallery.setColumns(columns);
 
 		}
 		catch (Exception e)
@@ -1254,7 +1260,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{// GEN-FIRST:event_jsRowsStateChanged
 		if (!isUpdating)
 		{
-			gallery.setRows((Integer) jsRows.getValue());
+			rows = (Integer) jsRows.getValue();
+			columns = null;
+			gallery.setRows(rows);
 		}
 	}
 
@@ -1262,8 +1270,21 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{// GEN-FIRST:event_jsColumnsStateChanged
 		if (!isUpdating)
 		{
-			gallery.setColumns((Integer) jsColumns.getValue());
+			columns = (Integer) jsColumns.getValue();
+			rows = null;
+			gallery.setColumns(getLastColums());
+			
 		}
+	}
+
+	public int getLastRows()
+	{
+		return rows;
+	}
+
+	public int getLastColums()
+	{
+		return columns;
 	}
 
 	private void jsGoToImageStateChanged(javax.swing.event.ChangeEvent evt)
