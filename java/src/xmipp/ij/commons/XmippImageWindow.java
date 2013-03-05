@@ -55,14 +55,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	@Override
 	public void loadData()
 	{
-		try
-		{
-				((XmippImageCanvas)getCanvas()).loadData(this);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+		getCanvas().loadData(this);
 	}
 
 	@Override
