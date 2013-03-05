@@ -39,6 +39,7 @@ import xmipp.jni.MDLabel;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	private static final long serialVersionUID = 1L;
@@ -167,17 +168,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
-		ImagePlus imp = null;
-		if (imageFn != null && Filename.exists(imageFn)) {
-//			if (data.useGeo)
-//				image.readApplyGeo(imageFn, data.md, objId, thumb_width,
-//						thumb_height, data.wrap);
-//			else
-//				image.read(imageFn, thumb_width, thumb_height);
-//			imp = XmippImageConverter.convertToImagePlus(image);
-			imp = XmippImageConverter.readMdRowToImagePlus(imageFn, data.md, objId, 
-					thumb_width, thumb_height, data.useGeo, data.wrap);
-		}
+		ImagePlus imp = data.md.getImage(objId, imageFn, thumb_width, thumb_height, data.useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;
 	}
@@ -217,8 +208,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		try {
 			String file = data.getValueFromLabel(index, label);
 			String mddir = data.md.getBaseDir();
-			file = Filename.fixPath(file, mddir, true);
-			System.out.println(file);
+			file = Filename.findImagePath(file, mddir, true);
+			//System.out.println(file);
 			return file;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -236,7 +227,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			if (data.isImageFile(renderLabel)) {
-				new XmippImageWindow(data.window, new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel()));
+				//new XmippImageWindow(data.window, new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel()));
+				ImagePlusLoader loader = new MdRowImageLoader(getIndex(row, col), renderLabel.getLabel());
+				ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
 				return true;
 			}
 		} catch (Exception e) {
@@ -296,7 +289,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		}
 
 		@Override
-		protected ImagePlus loadImage() throws Exception {
+		protected ImagePlus loadSingleImageFromFile() throws Exception {
 			return XmippImageConverter.readMdRowToImagePlus(fileName, data.md, objId, useGeometry, wrap);
 		}
 
@@ -317,8 +310,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		}
 
 		@Override
-		protected ImagePlus loadImage() throws Exception {
-			return XmippImageConverter.readMetadataToImagePlus(label, data.md, useGeometry, wrap);
+
+		protected ImagePlus loadSingleImageFromFile() throws Exception {
+			return XmippImageConverter.readMetadataToImagePlus(label, data.md, data.useGeo, data.wrap);
 		}
 		@Override
 		public boolean isVolume()

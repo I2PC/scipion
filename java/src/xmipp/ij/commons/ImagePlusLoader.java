@@ -41,6 +41,7 @@ public class ImagePlusLoader
 	protected ImageGeneric ig;
 	protected long modified;
 	protected boolean wrap;
+	private int index = -1;
 	
 	public ImagePlusLoader()
 	{
@@ -51,6 +52,13 @@ public class ImagePlusLoader
 	{
 		this.imp = imp;
 		allowsPoll = existsFile();
+	}
+	
+	public ImagePlusLoader(int index, ImageGeneric ig)
+	{
+		this(ig);
+		this.index  = index;
+		
 	}
 
 	public ImagePlusLoader(String fileName)
@@ -64,7 +72,7 @@ public class ImagePlusLoader
 	{
 		this.ig = ig;
 		allowsPoll = existsFile();
-		if(existsFile())
+		if(allowsPoll)
 			fileName = ig.getFilename();
 	}
 
@@ -80,10 +88,15 @@ public class ImagePlusLoader
 		imp = null;
 		try
 		{
-			if (fileName != null && Filename.exists(fileName) && (hasChanged() || imp == null))
-				imp = loadImage();
+			if (fileName != null && Filename.exists(fileName) && ig == null && (hasChanged() || imp == null))
+				imp = loadSingleImageFromFile();
 			else if (ig != null)
-				imp = XmippImageConverter.readToImagePlus(ig);
+			{
+				if(index != -1)
+					imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, index);
+				else
+					imp = XmippImageConverter.readToImagePlus(ig);
+			}
 			return imp;
 		}
 		catch (Exception e)
@@ -93,7 +106,7 @@ public class ImagePlusLoader
 		return imp;
 	}
 
-	protected ImagePlus loadImage() throws Exception
+	protected ImagePlus loadSingleImageFromFile() throws Exception
 	{
 		ig = new ImageGeneric(fileName);
 		long select_image = Filename.getNimage(fileName);
@@ -180,5 +193,7 @@ public class ImagePlusLoader
 			return false;
 		return true;
 	}
+	
+	
 
 }

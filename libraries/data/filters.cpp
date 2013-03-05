@@ -891,9 +891,9 @@ double fastCorrentropy(const MultidimArray<double> &x,
 }
 
 /* Best shift -------------------------------------------------------------- */
-void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+double bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                double &shiftX, double &shiftY, CorrelationAux &aux,
-               const MultidimArray<int> *mask)
+               const MultidimArray<int> *mask, int maxShift)
 {
     I1.checkDimension(2);
     I2.checkDimension(2);
@@ -916,7 +916,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
         if ((*mask).sum() < 2)
         {
             shiftX = shiftY = 0.;
-            return;
+            return -1;
         }
         else
         {
@@ -934,7 +934,27 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
     }
     else
         Mcorr.statisticsAdjust(0, 1);
-    Mcorr.maxIndex(imax, jmax);
+
+    // Look for maximum shift
+    if (maxShift==-1)
+    	Mcorr.maxIndex(imax, jmax);
+    else
+    {
+    	int maxShift2=maxShift*maxShift;
+    	double bestCorr=-1e38;
+    	for (int i=-maxShift; i<=maxShift; i++)
+    		for (int j=-maxShift; j<=maxShift; j++)
+    		{
+    			if (i*i+j*j>maxShift2)
+    				continue;
+    			else if (A2D_ELEM(Mcorr, i, j)>bestCorr)
+    			{
+    				imax=i;
+    				jmax=j;
+    				bestCorr=A2D_ELEM(Mcorr, imax, jmax);
+    			}
+    		}
+    }
     double max = A2D_ELEM(Mcorr, imax, jmax);
 
     // Estimate n_max around the maximum
@@ -995,6 +1015,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
         shiftX = xmax / sumcorr;
         shiftY = ymax / sumcorr;
     }
+    return max;
 }
 
 /* Best shift -------------------------------------------------------------- */

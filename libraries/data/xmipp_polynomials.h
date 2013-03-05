@@ -62,7 +62,7 @@ class PolyZernikes: public Polynomials
 {
 
 private:
-	std::vector<Matrix2D<size_t> > fMatV;
+	std::vector<Matrix2D<int> > fMatV;
 
 public:
 	//Create not really the polynomials, This function creates a set of coefficient matrix that are efficient

@@ -69,6 +69,11 @@ void svbksb(Matrix2D< double >& u,
  */
 void cholesky(const Matrix2D<double> &M, Matrix2D<double> &L);
 
+/** Schur decomposition.
+ * Given M, this function decomposes M as M = O*T*O' where O is an orthogonal matrix.
+ */
+void schur(const Matrix2D<double> &M, Matrix2D<double> &O, Matrix2D<double> &T);
+
 /** @defgroup Matrices Matrix2D Matrices
  * @ingroup DataLibrary
  */
@@ -1706,6 +1711,12 @@ void svdcmp(const Matrix2D< T >& a,
 }
 #undef VIA_NR
 #undef VIA_BILIB
+
+/** Generalized eigenvector decomposition.
+ * Solves the problem Av=dBv.
+ * The decomposition is such that A=B P D P^-1. A and B must be square matrices of the same size.
+ */
+void generalizedEigs(const Matrix2D<double> &A, const Matrix2D<double> &B, Matrix1D<double> &D, Matrix2D<double> &P);
 
 /** Conversion from one type to another.
  *
