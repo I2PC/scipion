@@ -58,7 +58,6 @@ public class XmippStackWindow extends StackWindow implements XmippIJWindow{
 	{
 		XmippImageCanvas canvas = (XmippImageCanvas)getCanvas();
 		canvas.loadData(this);
-		canvas.adjustMagnification();
 	}
 
 	public void openMaskToolbar(){
