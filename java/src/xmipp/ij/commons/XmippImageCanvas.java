@@ -13,8 +13,6 @@ import java.awt.event.MouseWheelListener;
 
 import javax.swing.SwingUtilities;
 
-import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
-
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {
 
