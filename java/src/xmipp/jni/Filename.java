@@ -1,12 +1,6 @@
 package xmipp.jni;
 
-import ij.plugin.Concatenator;
-
 import java.io.File;
-import java.io.FilenameFilter;
-import java.net.URI;
-
-import xmipp.utils.DEBUG;
 
 public class Filename {
 
