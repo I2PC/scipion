@@ -236,6 +236,19 @@ void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimR
 		}
 }
 
+void computeDistanceToNeighbours(const Matrix2D<double> &X, int K, Matrix2D<double> &distance, DimRedDistance2* f)
+{
+	Matrix2D<int> idx;
+	Matrix2D<double> kDistance;
+	kNearestNeighbours(X, K, idx, kDistance, f);
+	distance.initZeros(MAT_YSIZE(X),MAT_YSIZE(X));
+	FOR_ALL_ELEMENTS_IN_MATRIX2D(kDistance)
+	{
+		int idx_ij=MAT_ELEM(idx,i,j);
+		MAT_ELEM(distance,idx_ij,i)=MAT_ELEM(distance,i,idx_ij)=MAT_ELEM(kDistance,i,j);
+	}
+}
+
 double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2* f)
 {
 	int k1=5;

@@ -75,6 +75,12 @@ typedef double (*DimRedDistance2)  (const Matrix2D<double> &X, int i1, int i2);
  */
 void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2* f=NULL);
 
+/** Compute the distance of each observation to its K nearest neighbours.
+ * Each observation is a row of the matrix X.
+ * If there are N observations, the size of distance is NxN.
+ */
+void computeDistanceToNeighbours(const Matrix2D<double> &X, int K, Matrix2D<double> &distance, DimRedDistance2* f=NULL);
+
 /** Estimate the intrinsic dimensionality.
  * Performs an estimation of the intrinsic dimensionality of dataset X based
  * on the method specified by method. Possible values for method are 'CorrDim'
