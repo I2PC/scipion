@@ -255,7 +255,7 @@ public class Filename {
 	 * Remove from the filename the Xmipp special characters
 	 */
 	public static String getFilename(String filename) {
-
+		
 		if (filename.contains(SEPARATOR))
 			filename = filename.split(SEPARATOR)[1];
 

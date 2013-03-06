@@ -899,13 +899,17 @@ public class GalleryData {
 		MetaData imagesmd = new MetaData();
 		int index = 0;
 		String imagepath;
-		for(long id: ids)
+		long id2;
+		for(long id: md.findObjects())
 		{
 			if(isEnabled(index))
 			{
 				imagepath = md.getValueString(idlabel, id, true);
 				if(imagepath != null && ImageGeneric.exists(imagepath))
-					imagesmd.setValueString(idlabel, imagepath, imagesmd.addObject());
+				{
+					id2 = imagesmd.addObject();
+					imagesmd.setValueString(idlabel, imagepath, id2);
+				}
 			}
 			index ++;
 		}

@@ -30,6 +30,7 @@ import ij.ImagePlus;
 import java.io.File;
 
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.utils.DEBUG;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -238,6 +239,8 @@ public class MetaData {
 	public String getValueString(int label, long objId, boolean fixPaths) {
 		String value = getValueString(label, objId);
 
+		if(value == null)
+			DEBUG.printFormat("label: %d, id: %d", label, objId);
 		// Try to fix paths.
 		if (fixPaths && filename != null && isPathField(label)) {
 			value = fixPath(value);
