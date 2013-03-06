@@ -30,6 +30,8 @@
 from protlib_base import *
 from xmipp import MetaData, ImgSize, MDL_ZSCORE
 from protlib_utils import runJob, runShowJ
+from protlib_filesystem import moveFile
+
 #MDL_CTF_SAMPLING_RATE, MDL_CTF_VOLTAGE, MDL_CTF_DEFOCUSU, MDL_CTF_DEFOCUSV, \
 #MDL_CTF_DEFOCUS_ANGLE, MDL_CTF_CS, MDL_CTF_CA, MDL_CTF_Q0, MDL_CTF_K, label2Str, MetaData,\
 #MDL_XCOOR, MDL_YCOOR, MDL_PICKING_FAMILY, MDL_PICKING_MICROGRAPH_FAMILY_STATE, MD_APPEND
