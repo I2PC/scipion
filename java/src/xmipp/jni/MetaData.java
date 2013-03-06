@@ -25,11 +25,7 @@
 
 package xmipp.jni;
 
-import ij.ImagePlus;
-
 import java.io.File;
-
-import xmipp.ij.commons.XmippImageConverter;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -474,18 +470,5 @@ public class MetaData {
 	 */
 	public native void operate(String operateStr);
 	
-	public ImagePlus getImage(long id, String imagepath, int width, int height, boolean useGeo, boolean wrap)
-	{
-		ImagePlus imp = null;
-		if (imagepath != null && Filename.exists(imagepath)) {
-			try {
-			imp = XmippImageConverter.readMdRowToImagePlus(imagepath, this, id, 
-					width, height, useGeo, wrap);
-			}
-			catch (Exception ex){
-				imp = null;
-			}
-		}
-		return imp;
-	}
+
 }
