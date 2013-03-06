@@ -903,10 +903,12 @@ public class GalleryData {
 			return null;
 		if(!md.containsLabel(idlabel))
 			return null;
+
 		MetaData imagesmd = new MetaData();
 		int index = 0;
 		String imagepath;
 		long id2;
+		//md.print();
 		for(long id: md.findObjects())
 		{
 			if(isEnabled(index))
@@ -920,6 +922,7 @@ public class GalleryData {
 			}
 			index ++;
 		}
+		imagesmd.print();
 		return imagesmd;
 	}
 }// class GalleryDaa
