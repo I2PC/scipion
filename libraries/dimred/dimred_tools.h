@@ -70,6 +70,11 @@ public:
 /** Function type to compute the squared distance between individuals i1 and i2 of X */
 typedef double (*DimRedDistance2)  (const Matrix2D<double> &X, int i1, int i2);
 
+/** Compute the distance of all vs all elements in a matrix of observations.
+ * Each observation is a row of the matrix X.
+ */
+void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2* f=NULL);
+
 /** Estimate the intrinsic dimensionality.
  * Performs an estimation of the intrinsic dimensionality of dataset X based
  * on the method specified by method. Possible values for method are 'CorrDim'

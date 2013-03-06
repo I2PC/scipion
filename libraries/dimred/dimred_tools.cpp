@@ -215,6 +215,27 @@ void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Ma
 		MAT_ELEM(distance,i,j)=sqrt(MAT_ELEM(distance,i,j));
 }
 
+void computeDistance(const Matrix2D<double> &X, Matrix2D<double> &distance, DimRedDistance2* f)
+{
+	distance.initZeros(MAT_YSIZE(X),MAT_YSIZE(X));
+	for (size_t i1=0; i1<MAT_YSIZE(X)-1; ++i1)
+		for (size_t i2=i1+1; i2<MAT_YSIZE(X); ++i2)
+		{
+			// Compute the distance between i1 and i2
+			double d=0;
+			if (f==NULL)
+				for (int j=0; j<MAT_XSIZE(X); ++j)
+				{
+					double diff=MAT_ELEM(X,i1,j)-MAT_ELEM(X,i2,j);
+					d+=diff*diff;
+				}
+			else
+				d=(*f)(X,i1,i2);
+
+			MAT_ELEM(distance,i2,i1)=MAT_ELEM(distance,i1,i2)=sqrt(d);
+		}
+}
+
 double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2* f)
 {
 	int k1=5;
