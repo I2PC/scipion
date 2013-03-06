@@ -754,6 +754,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		XmippImageWindow winStd = new XmippImageWindow(this, new ImagePlusLoader(impStd), "STD: " + data.getFileName());
 		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
 		winStd.setVisible(true);
+		imagesmd.destroy();
 	}
 
 	private boolean openClassesDialog()
@@ -783,6 +784,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
 		imp.setTitle("PCA: " + data.getFileName());
 		ImagesWindowFactory.openXmippImageWindow(this, imp, false);
+		imagesmd.destroy();
 
 	}
 
