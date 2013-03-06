@@ -289,7 +289,7 @@ public class MetadataTest
 			System.out.println("read runtime md...");
 			int idlabel = MDLabel.MDL_IMAGE;
 			MetaData md = new MetaData(XmippTest.getTestFilename("images.stk"));
-
+			md.print();
 			if (!md.containsLabel(idlabel))
 				return;
 			MetaData imagesmd = new MetaData();
@@ -307,11 +307,11 @@ public class MetadataTest
 			for (long id : imagesmd.findObjects())
 			{
 				imagepath = md.getValueString(idlabel, id, true);
-				System.out.println(imagepath);
+				//System.out.printf("%d %s\n", id, imagepath);
 			}
 			md.destroy();
 			imagesmd.destroy();
-			
+			System.out.println("read runtime md ended...");
 		}
 		catch (Exception ex)
 		{
