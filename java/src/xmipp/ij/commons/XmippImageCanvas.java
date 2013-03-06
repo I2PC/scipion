@@ -4,7 +4,6 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
-
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -30,6 +29,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		iw.pack();
 	}
 
+
 	public Tool getTool()
 	{
 
@@ -42,6 +42,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		super(imp);
 		addMouseWheelListener(this);
+
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -153,25 +154,50 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 
 	public void loadData(XmippIJWindow xiw)
 	{
+		double currmagnif = getMagnification();
 		Rectangle rect = getSrcRect();
-		double magnification = getMagnification();
 		imp = xiw.getImagePlusLoader().loadImagePlus();
-		iw = ((ImageWindow) xiw);
-		iw.setImage(imp);
-		iw.updateImage(imp);
-		setMagnification(magnification);
+		ImageWindow iw = (ImageWindow) xiw;
+		iw.setImage(getImage());
+		iw.updateImage(getImage());
 		setSourceRect(rect);
+		double prefmagnif = getPreferredMagnification();
+		if (currmagnif < prefmagnif)
+			setMagnification(prefmagnif);
+		else
+			setMagnification(currmagnif);
+		setDrawingSize((int) (rect.getWidth() * magnification), (int) (rect.getHeight() * magnification));
+
 		repaint();
 		iw.pack();
 
 	}
 
-	public void adjustMagnification()//for micrographs will not happen
+	public double getPreferredMagnification()
 	{
+		double magnification = getMagnification();
 		int min = 200;
-		while (getSize().getWidth() < min)
+		while (getSrcRect().getWidth() * magnification < min)
 		{
-			zoomIn(0, 0);
+			magnification = 2 * magnification;
+		}
+		return magnification;
+	}
+
+	public void adjustMagnification()// for micrographs will not happen
+	{
+		double currmagnif = getMagnification();
+		double prefmagnif = getPreferredMagnification();
+		if (currmagnif < prefmagnif)
+		{
+			setMagnification(prefmagnif);
+			setDrawingSize((int) (getSrcRect().getWidth() * magnification), (int) (getSrcRect().getHeight() * magnification));
+			repaint();
+			if (getParent() != null)
+			{
+				ImageWindow iw = (ImageWindow) getParent();
+				iw.pack();
+			}
 		}
 	}
 

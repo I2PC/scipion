@@ -325,6 +325,8 @@ protected:
     bool delete_output_stack; // Default true
     /// Save the associated output metadata when output file is a stack
     bool save_metadata_stack; // Default false
+    /// Include the original input image filename in the output stack
+    bool track_origin; // Default false
     /// Keep input metadata columns
     bool keep_input_columns; // Default false
     /// Remove disabled images from the input selfile
@@ -408,7 +410,7 @@ public:
     }
 
     /// Prepare rowout
-    void setupRowOut(const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const;
+    void setupRowOut(const FileName &fnImgIn, const MDRow &rowIn, const FileName &fnImgOut, MDRow &rowOut) const;
 
     virtual void run();
 }

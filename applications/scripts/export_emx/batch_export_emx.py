@@ -27,39 +27,50 @@
 from os.path import basename, splitext
 from protlib_xmipp import XmippScript
 from xmipp import MetaData, MDL_CTF_MODEL, MD_APPEND, MD_OVERWRITE, FileName
-from emxLib.emxLib import ctfMicXmippToEmx
+#from protlib_import import convertCtfparam
+from lib_emx import ctfMicXmippFromEmx
 from pyworkflow.object import *
 from emx.emxmapper import EmxMapper
 from emx.emx import *
-from emxLib.emxLib import ctfMicEMXToXmipp
+from emxLib.emxLib import ctfMicXmippToEmx
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):
         XmippScript.__init__(self)
         
     def defineParams(self):
-        self.addUsageLine("Convert  from EMX metadata files");
-        self.addParamsLine(' -i <text_file_emx>              : Input metadata file ');
-        self.addParamsLine(' [--mode <mode=micCTF>]          : information to extract')
+        self.addUsageLine("Convert  TO emx metadata files");
+        self.addParamsLine(' -i <metadataXMIPP>             : Input xmipp metadata file ');
+        self.addParamsLine(' [-o <metadataEMX>]               : Output emx  metadata file ');
+#        self.addParamsLine(" [--binaryFile <fileName_mrc>]   : One input binary file ");
+#        self.addParamsLine("     alias -b;");
+        self.addParamsLine(' [--mode <mode=micCTF>]         : information to extract')
         self.addParamsLine("         where <mode>");
-        self.addParamsLine("             micCTF              : extract micrograph ctf");
+        self.addParamsLine("             micCTF             : extract micrograph ctf");
         self.addParamsLine("     alias -m;");
-        self.addExampleLine("Import information from EMX file to Xmipp", False);
-        self.addExampleLine("xmipp_import_emx -i particlePicking.emx -m micCTF ");
+        self.addParamsLine(' --amplitudeContrast <double>   : amplitudeContrast');
+        self.addParamsLine("     alias -a;");
+        self.addExampleLine("Export information from Metadata XmippFile file to EMX", False);
+        self.addExampleLine("xmipp_export_emx -i microgaph.xmd -a 0.1");
+        self.addExampleLine("input is the file micrograph.xmd created by screen micrograph protocol");
       
     def run(self):
-        emxFileName  = self.getParam('-i')
+        xmdFileName = FileName(self.getParam('-i'))
+        emxFileName = self.getParam('-o')
+        if (emxFileName=='metadataXMIPP.emx'):
+            emxFileName = xmdFileName.withoutExtension()+'.emx'
         mode         = self.getParam('-m')
-        #object to store emx data
-        emxData   = EmxData()
-        #object to read/write emxData
-        mapper    = EmxMapper(emxData, globals())
-        #read file
-        mapper.read(emxFileName)
-        mapper.convertToEmxData(emxData)
-        #create xmd files with mic CTF information and auxiliary files
+        amplitudeContrast = self.getParam('-a')
+
+        emxData      = EmxData()
+        mapper       = EmxMapper(emxData, globals())
+        #create emx files with mic CTF information
         if mode == 'micCTF':
-            ctfMicEMXToXmipp(emxData,'micrograph')
+            ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast)
+            mapper.emxDataToXML()
+            mapper.write(emxFileName)
+        
+        
 
         #detect binary data type micrograph/particle
         #type =emxData.findObjectType(binFileName)

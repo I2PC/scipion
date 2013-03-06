@@ -899,21 +899,30 @@ public class GalleryData {
 
 	public MetaData getImagesMd(int idlabel)
 	{
+		if(md == null)
+			return null;
 		if(!md.containsLabel(idlabel))
 			return null;
+
 		MetaData imagesmd = new MetaData();
 		int index = 0;
 		String imagepath;
-		for(long id: ids)
+		long id2;
+		//md.print();
+		for(long id: md.findObjects())
 		{
 			if(isEnabled(index))
 			{
 				imagepath = md.getValueString(idlabel, id, true);
 				if(imagepath != null && ImageGeneric.exists(imagepath))
-					imagesmd.setValueString(idlabel, imagepath, imagesmd.addObject());
+				{
+					id2 = imagesmd.addObject();
+					imagesmd.setValueString(idlabel, imagepath, id2);
+				}
 			}
 			index ++;
 		}
+		imagesmd.print();
 		return imagesmd;
 	}
 }// class GalleryDaa

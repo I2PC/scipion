@@ -1,12 +1,6 @@
 package xmipp.jni;
 
-import ij.plugin.Concatenator;
-
 import java.io.File;
-import java.io.FilenameFilter;
-import java.net.URI;
-
-import xmipp.utils.DEBUG;
 
 public class Filename {
 
@@ -255,7 +249,7 @@ public class Filename {
 	 * Remove from the filename the Xmipp special characters
 	 */
 	public static String getFilename(String filename) {
-
+		
 		if (filename.contains(SEPARATOR))
 			filename = filename.split(SEPARATOR)[1];
 

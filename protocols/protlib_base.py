@@ -387,6 +387,8 @@ _baseProtocolNames = {
         'images_stk':       join('%(WorkingDir)s', 'images.stk'),
         'images_tilted': join("%(WorkingDir)s", 'images_tilted.xmd'),
         'images_untilted': join("%(WorkingDir)s", 'images_untilted.xmd'),
+        'images_tilted_stk': join("%(WorkingDir)s", 'images_tilted.stk'),
+        'images_untilted_stk': join("%(WorkingDir)s", 'images_untilted.stk'),
         'classes':      join('%(WorkingDir)s', 'classes.xmd'),
         'class_block':  'class%(ClassNo)06d_images@%(ClassMd)s'
      }

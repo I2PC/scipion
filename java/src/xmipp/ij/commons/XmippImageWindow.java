@@ -55,15 +55,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	@Override
 	public void loadData()
 	{
-		try
-		{
-				((XmippImageCanvas)getCanvas()).loadData(this);
-				((XmippImageCanvas)getCanvas()).adjustMagnification();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+		getCanvas().loadData(this);
 	}
 
 	@Override
@@ -109,5 +101,12 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 			WindowManager.setCurrentWindow(this);
 		}
 	}
+	
+	public XmippImageCanvas getCanvas()
+	{
+		return ((XmippImageCanvas)super.getCanvas());
+	}
+	
+	
 
 }// class XmippImageWindow
