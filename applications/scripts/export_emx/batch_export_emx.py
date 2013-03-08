@@ -32,7 +32,8 @@ from lib_emx import ctfMicXmippFromEmx
 from pyworkflow.object import *
 from emx.emxmapper import EmxMapper
 from emx.emx import *
-from emxLib.emxLib import ctfMicXmippToEmx
+from emxLib.emxLib import ctfMicXmippToEmx, coorrXmippToEmx
+
 
 class ScriptImportEMX(XmippScript):
     def __init__(self):
@@ -46,9 +47,10 @@ class ScriptImportEMX(XmippScript):
 #        self.addParamsLine("     alias -b;");
         self.addParamsLine(' [--mode <mode=micCTF>]         : information to extract')
         self.addParamsLine("         where <mode>");
-        self.addParamsLine("             micCTF             : extract micrograph ctf");
+        self.addParamsLine("             micCTF             : export micrograph ctf");
+        self.addParamsLine("             Coordinates        : export particle coordinates (so far only works for a single image)");
         self.addParamsLine("     alias -m;");
-        self.addParamsLine(' --amplitudeContrast <double>   : amplitudeContrast');
+        self.addParamsLine(' [--amplitudeContrast <Q=0.1>]   : amplitudeContrast, mandatory when mode=micCTF');
         self.addParamsLine("     alias -a;");
         self.addExampleLine("Export information from Metadata XmippFile file to EMX", False);
         self.addExampleLine("xmipp_export_emx -i microgaph.xmd -a 0.1");
@@ -67,9 +69,10 @@ class ScriptImportEMX(XmippScript):
         #create emx files with mic CTF information
         if mode == 'micCTF':
             ctfMicXmippToEmx(emxData,xmdFileName,amplitudeContrast)
-            mapper.emxDataToXML()
-            mapper.write(emxFileName)
-        
+        elif mode == 'Coordinates':
+            coorrXmippToEmx(emxData,xmdFileName)
+        mapper.emxDataToXML()
+        mapper.write(emxFileName)
         
 
         #detect binary data type micrograph/particle
