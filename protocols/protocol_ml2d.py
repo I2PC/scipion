@@ -32,8 +32,8 @@ class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.name, scriptname, project)
         self.Import = 'from protocol_ml2d import *'
-        acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
-        if not acquisionInfo is None: 
+        self.acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
+        if self.acquisionInfo is None: 
             md = MetaData(acquisionInfo)
             self.SamplingRate = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
         

@@ -642,4 +642,15 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 	}// class ImageItem
 
+	public int getRows()
+	{
+		return rows;
+	}
+
+
+	public int getColumns()
+	{
+		return cols;
+	}
+
 }

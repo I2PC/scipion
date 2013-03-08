@@ -1631,9 +1631,9 @@ MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
     int labelRight;
     PyObject *pyMdLeft = NULL;
     PyObject *pyMdright = NULL;
-    JoinType jt;
+    JoinType jt=LEFT;
 
-    if (PyArg_ParseTuple(args, "OOiii", &pyMdLeft, &pyMdright, &labelLeft,&labelRight, &jt))
+    if (PyArg_ParseTuple(args, "OOii|i", &pyMdLeft, &pyMdright, &labelLeft,&labelRight, &jt))
     {
         try
         {

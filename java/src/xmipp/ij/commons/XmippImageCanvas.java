@@ -42,6 +42,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		super(imp);
 		addMouseWheelListener(this);
+
 	}
 
 	public void mousePressed(MouseEvent e)
@@ -153,26 +154,50 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 
 	public void loadData(XmippIJWindow xiw)
 	{
+		double currmagnif = getMagnification();
 		Rectangle rect = getSrcRect();
-		double magnification = getMagnification();
 		imp = xiw.getImagePlusLoader().loadImagePlus();
-		iw = ((ImageWindow) xiw);
-		iw.setImage(imp);
-		iw.updateImage(imp);
-		setMagnification(magnification);
+		ImageWindow iw = (ImageWindow) xiw;
+		iw.setImage(getImage());
+		iw.updateImage(getImage());
 		setSourceRect(rect);
+		double prefmagnif = getPreferredMagnification();
+		if (currmagnif < prefmagnif)
+			setMagnification(prefmagnif);
+		else
+			setMagnification(currmagnif);
+		setDrawingSize((int) (rect.getWidth() * magnification), (int) (rect.getHeight() * magnification));
+
 		repaint();
 		iw.pack();
 
 	}
 
+	public double getPreferredMagnification()
+	{
+		double magnification = getMagnification();
+		int min = 200;
+		while (getSrcRect().getWidth() * magnification < min)
+		{
+			magnification = 2 * magnification;
+		}
+		return magnification;
+	}
+
 	public void adjustMagnification()// for micrographs will not happen
 	{
-		int min = 200;
-		zoom100Percent();
-		while (getSize().getWidth() < min)
+		double currmagnif = getMagnification();
+		double prefmagnif = getPreferredMagnification();
+		if (currmagnif < prefmagnif)
 		{
-			zoomIn(0, 0);
+			setMagnification(prefmagnif);
+			setDrawingSize((int) (getSrcRect().getWidth() * magnification), (int) (getSrcRect().getHeight() * magnification));
+			repaint();
+			if (getParent() != null)
+			{
+				ImageWindow iw = (ImageWindow) getParent();
+				iw.pack();
+			}
 		}
 	}
 

@@ -33,7 +33,6 @@ from os.path import join, exists, dirname, basename, relpath, split, splitext, i
 from protlib_utils import printLog 
 from shutil import copyfile
 from config_protocols import PROJECT_DB
-from xmipp import FileName
 #from xmipp import *
 
 # The following are Wrappers to be used from Protocols
@@ -223,6 +222,7 @@ def findProjectPath(filename):
     return None
 
 def findImagePath(imageFn, currentDir):
+    from xmipp import FileName
     '''Find if the imageFn exists, or is relative 
     to currentDir, or is inside a project folder
     This function is useful for images paths stored 
@@ -241,6 +241,7 @@ def findRealFile(path, recursive=True):
     return path
 
 def xmippExists(path):
+    from xmipp import FileName
     return FileName(path).exists()
 
 def fixPath(filename, *pathList):
