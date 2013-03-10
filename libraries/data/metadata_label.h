@@ -705,7 +705,7 @@ private:
         MDL::addLabelAlias(MDL_CLASS_COUNT, "class_count"); //3.0
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR_DOUBLE, "classificationData");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DATA, "ClassificationData");
-        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "classificationDatasize");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_SIZET, "classificationDatasize");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DATA_SIZE, "ClassificationDataSize");
         MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "classificationDPR05");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DPR_05, "ClassificationDPR05");
