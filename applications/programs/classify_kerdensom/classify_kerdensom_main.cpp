@@ -39,8 +39,8 @@ public:
     double         eps;          // Stopping criteria
     unsigned       iter;         // Iteration number
     bool           norm;         // Normalize?
-    int            xdim;         // X-dimension (-->)
-    int            ydim;         // Y-dimension
+    size_t         xdim;         // X-dimension (-->)
+    size_t         ydim;         // Y-dimension
     double         reg0;         // Initial reg
     double         reg1;         // Final reg
     std::string    layout;       // layout (Topology)
