@@ -113,7 +113,9 @@ class XmlMapper(Mapper):
     def commit(self):
         self.indent(self.root)
         tree = ET.ElementTree(self.root)
-        tree.write(self.filename,xml_declaration=True)
+        tree.write(self.filename,
+                   xml_declaration=True,
+                   encoding='utf-8')
 
     def setObjectId(self, objElem, obj):
         # Set attributes of this object element
