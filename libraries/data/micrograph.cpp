@@ -389,12 +389,10 @@ void Micrograph::produce_all_images(int label, double minCost,
     FileName _ext = fn_rootIn.getFileFormat();
     FileName fn_out;
     FileName fn_root = fn_rootIn.removeFileFormat().removeLastExtension();
-    if (_ext.empty())
-        fn_out=fn_root.addExtension("stk");
-    else if (_ext!=".stk")
-    	fn_out=fn_rootIn.addExtension("stk");
-    else
+    if (fn_rootIn.hasStackExtension())
         fn_out=fn_root.addExtension(_ext);
+    else
+    	fn_out=fn_rootIn.addExtension("stk");
 
     if (rmStack)
         fn_out.deleteFile();

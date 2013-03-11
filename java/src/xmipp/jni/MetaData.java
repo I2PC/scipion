@@ -25,13 +25,9 @@
 
 package xmipp.jni;
 
-import ij.ImagePlus;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.logging.Level;
-
-import xmipp.ij.commons.XmippImageConverter;
 
 /**
  * Protocol for integrating native C++ code - @see ImageDouble.java
@@ -264,6 +260,8 @@ public class MetaData {
 	public String getValueString(int label, long objId, boolean fixPaths) {
 		String value = getValueString(label, objId);
 
+//		if(value == null)
+//			DEBUG.printFormat("label: %d, id: %d", label, objId);
 		// Try to fix paths.
 		if (fixPaths && filename != null && isPathField(label)) {
 			value = fixPath(value);
@@ -509,18 +507,5 @@ public class MetaData {
 	
 	
 	
-	public ImagePlus getImage(long id, String imagepath, int width, int height, boolean useGeo, boolean wrap)
-	{
-		ImagePlus imp = null;
-		if (imagepath != null && Filename.exists(imagepath)) {
-			try {
-			imp = XmippImageConverter.readMdRowToImagePlus(imagepath, this, id, 
-					width, height, useGeo, wrap);
-			}
-			catch (Exception ex){
-				imp = null;
-			}
-		}
-		return imp;
-	}
+
 }

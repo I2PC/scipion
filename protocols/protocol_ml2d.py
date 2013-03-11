@@ -32,9 +32,9 @@ class ProtML2D(XmippProtocol):
     def __init__(self, scriptname, project):
         XmippProtocol.__init__(self, protDict.ml2d.name, scriptname, project)
         self.Import = 'from protocol_ml2d import *'
-        acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
-        if not acquisionInfo is None: 
-            md = MetaData(acquisionInfo)
+        self.acquisionInfo = self.findAcquisitionInfo(self.ImgMd)
+        if not self.acquisionInfo is None: 
+            md = MetaData(self.acquisionInfo)
             self.SamplingRate = md.getValue(MDL_SAMPLINGRATE, md.firstObject())
         
     def createFilenameTemplates(self):
@@ -94,6 +94,9 @@ class ProtML2D(XmippProtocol):
                 validateInputSize(references, self.ImgMd, errors)
         else:
             errors.append("Input metadata <%s> doesn't contains image label" % self.ImgMd)
+
+        if self.acquisionInfo is None:
+            errors.append("Acquisition info was not found relative to image location")
             
         return errors 
     

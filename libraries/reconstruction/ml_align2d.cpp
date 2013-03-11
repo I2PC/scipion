@@ -2130,7 +2130,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
         MDimg.setValue(MDL_ANGLE_PSI, psi, id);
         MDimg.setValue(MDL_SHIFT_X, dAij(data, index, 3), id);
         MDimg.setValue(MDL_SHIFT_Y, dAij(data, index, 4), id);
-        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), id);
+        MDimg.setValue(MDL_REF, (int)round(dAij(data, index, 5)), id);
         if (do_mirror)
         {
             MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., id);
@@ -2311,7 +2311,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             size_t n = MDref.size();
             for (size_t ref = 1; ref <= n; ++ref)
             {
-                mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, ref));
+                mdImgs.importObjects(MDimg, MDValueEQ(MDL_REF, (int)ref));
                 mdImgs.write(FN_CLASS_IMAGES_MD(fn_base, ref), MD_APPEND);
             }
         }

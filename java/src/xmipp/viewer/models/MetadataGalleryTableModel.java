@@ -42,6 +42,8 @@ import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataGalleryTableModel extends ImageGalleryTableModel {
+	
+	
 	private static final long serialVersionUID = 1L;
 
 	// Label to be rendered
@@ -95,6 +97,21 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 			// fireTableDataChanged();
 			fireTableStructureChanged();
 		}
+	}
+	
+	public ImagePlus getImage(long id, String imagepath, int width, int height, boolean useGeo, boolean wrap)
+	{
+		ImagePlus imp = null;
+		if (imagepath != null && Filename.exists(imagepath)) {
+			try {
+			imp = XmippImageConverter.readMdRowToImagePlus(imagepath, data.md, id, 
+					width, height, useGeo, wrap);
+			}
+			catch (Exception ex){
+				imp = null;
+			}
+		}
+		return imp;
 	}
 
 	// Load initial dimensions
@@ -168,7 +185,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel {
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
-		ImagePlus imp = data.md.getImage(objId, imageFn, thumb_width, thumb_height, data.useGeo, data.wrap);
+		ImagePlus imp = getImage(objId, imageFn, thumb_width, thumb_height, data.useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;
 	}

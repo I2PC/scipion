@@ -705,7 +705,7 @@ private:
         MDL::addLabelAlias(MDL_CLASS_COUNT, "class_count"); //3.0
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR_DOUBLE, "classificationData");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DATA, "ClassificationData");
-        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "classificationDatasize");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_SIZET, "classificationDatasize");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DATA_SIZE, "ClassificationDataSize");
         MDL::addLabel(MDL_CLASSIFICATION_DPR_05, LABEL_DOUBLE, "classificationDPR05");
         MDL::addLabelAlias(MDL_CLASSIFICATION_DPR_05, "ClassificationDPR05");
@@ -1054,11 +1054,11 @@ private:
         MDL::addLabel(MDL_XCOOR_TILT, LABEL_INT, "xcoorTilt");
 
         MDL::addLabel(MDL_X, LABEL_DOUBLE, "x");
-        MDL::addLabel(MDL_XSIZE, LABEL_INT, "xSize");
+        MDL::addLabel(MDL_XSIZE, LABEL_SIZET, "xSize");
         MDL::addLabel(MDL_YCOOR, LABEL_INT, "ycoor");
         MDL::addLabel(MDL_YCOOR_TILT, LABEL_INT, "ycoorTilt");
         MDL::addLabel(MDL_Y, LABEL_DOUBLE, "y");
-        MDL::addLabel(MDL_YSIZE, LABEL_INT, "ySize");
+        MDL::addLabel(MDL_YSIZE, LABEL_SIZET, "ySize");
         MDL::addLabel(MDL_ZCOOR, LABEL_INT, "zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "zScore");
@@ -1067,7 +1067,7 @@ private:
         MDL::addLabel(MDL_ZSCORE_SNR1, LABEL_DOUBLE, "zScoreSNR1");
         MDL::addLabel(MDL_ZSCORE_SNR2, LABEL_DOUBLE, "zScoreSNR2");
         MDL::addLabel(MDL_ZSCORE_HISTOGRAM, LABEL_DOUBLE, "zScoreHistogram");
-        MDL::addLabel(MDL_ZSIZE, LABEL_INT, "zSize");
+        MDL::addLabel(MDL_ZSIZE, LABEL_SIZET, "zSize");
 
         MDL::addLabelAlias(MDL_XCOOR, "Xcoor");//3.0
         MDL::addLabelAlias(MDL_XCOOR, "<X position>");
