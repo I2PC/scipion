@@ -205,7 +205,7 @@ public:
     /**
      * Returns the number of items in the training set
      */
-    unsigned size() const
+    size_t size() const
     {
         return theItems.size();
     };

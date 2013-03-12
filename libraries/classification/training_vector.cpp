@@ -183,7 +183,7 @@ void ClassicTrainingVectors::read(const FileName& fnIn)
     MetaData vectorHeader(formatString("vectorHeader@%s",fnIn.c_str()));
     MetaData vectorContent(formatString("vectorContent@%s",fnIn.c_str()));
     size_t Nvectors;
-    int vectorSize;
+    size_t vectorSize;
     size_t id=vectorHeader.firstObject();
     vectorHeader.getValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,id);
     vectorHeader.getValue(MDL_COUNT,Nvectors,id);
@@ -212,7 +212,7 @@ void ClassicTrainingVectors::read(const FileName& fnIn)
             REPORT_ERROR(ERR_IO_NOREAD,
                          formatString("Could not read image %lu from %s",
                                       order,fnInRaw.c_str()));
-        for (int i=0; i<vectorSize; ++i)
+        for (size_t i=0; i<vectorSize; ++i)
         	v[i]=buffer[i];
         theTargets.push_back(fnImg);
         theItems.push_back(v);
