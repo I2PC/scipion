@@ -1000,18 +1000,21 @@ void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
 
 void ProgRecFourier::forceWeightSymmetry(MultidimArray<double> &FourierWeights)
 {
-    size_t yHalf=YSIZE(FourierWeights)/2;
+    int yHalf=YSIZE(FourierWeights)/2;
     if (YSIZE(FourierWeights)%2==0)
         yHalf--;
-    size_t zHalf=ZSIZE(FourierWeights)/2;
+    int zHalf=ZSIZE(FourierWeights)/2;
     if (ZSIZE(FourierWeights)%2==0)
         zHalf--;
-    for (size_t k=0; k<ZSIZE(FourierWeights); k++)
+    int zsize=(int)ZSIZE(FourierWeights);
+    int zsize_1=zsize-1;
+    int ysize_1=(int)YSIZE(FourierWeights)-1;
+    for (int k=0; k<zsize; k++)
     {
-        int ksym=intWRAP(-k,0,ZSIZE(FourierWeights)-1);
-        for (size_t i=1; i<=yHalf; i++)
+        int ksym=intWRAP(-k,0,zsize_1);
+        for (int i=1; i<=yHalf; i++)
         {
-            int isym=intWRAP(-i,0,YSIZE(FourierWeights)-1);
+            int isym=intWRAP(-i,0,ysize_1);
             double mean=0.5*(
                             DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
                             DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
@@ -1019,9 +1022,9 @@ void ProgRecFourier::forceWeightSymmetry(MultidimArray<double> &FourierWeights)
                 DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
         }
     }
-    for (size_t k=1; k<=zHalf; k++)
+    for (int k=1; k<=zHalf; k++)
     {
-        int ksym=intWRAP(-k,0,ZSIZE(FourierWeights)-1);
+        int ksym=intWRAP(-k,0,zsize_1);
         double mean=0.5*(
                         DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
                         DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
