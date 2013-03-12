@@ -111,6 +111,11 @@ double intrinsicDimensionality(Matrix2D<double> &X, const String &method="MLE", 
  */
 void kNearestNeighbours(const Matrix2D<double> &X, int K, Matrix2D<int> &idx, Matrix2D<double> &distance, DimRedDistance2* f=NULL);
 
+/** Extract k-nearest neighbours.
+ * This function extracts from the matrix X, the neighbours given by idx for the i-th observation.
+ */
+void extractNearestNeighbours(const Matrix2D<double> &X, Matrix2D<int> &idx, int i, Matrix2D<double> &Xi);
+
 /** Generic class for dimensionality reduction */
 class DimRedAlgorithm
 {

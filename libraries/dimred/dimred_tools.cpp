@@ -341,6 +341,17 @@ double intrinsicDimensionality(Matrix2D<double> &X, const String &method, bool n
 	// I do not implement GMST because it is slower than MLE and CorrDim
 }
 
+void extractNearestNeighbours(const Matrix2D<double> &X, Matrix2D<int> &idx, int i,
+	Matrix2D<double> &Xi)
+{
+	Xi.resizeNoCopy(MAT_XSIZE(idx),MAT_XSIZE(X));
+	for (int j=0; j<MAT_XSIZE(idx); ++j)
+	{
+		int jNeighbour=MAT_ELEM(idx,i,j);
+		memcpy(&MAT_ELEM(Xi,j,0),&MAT_ELEM(X,jNeighbour,0),MAT_XSIZE(X)*sizeof(double));
+	}
+}
+
 DimRedAlgorithm::DimRedAlgorithm()
 {
 	X=NULL;
