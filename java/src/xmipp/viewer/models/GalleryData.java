@@ -918,4 +918,9 @@ public class GalleryData {
 		imagesmd.print();
 		return imagesmd;
 	}
+
+	public String getFileInfo()
+	{
+		return getFileName();
+	}
 }// class GalleryDaa
