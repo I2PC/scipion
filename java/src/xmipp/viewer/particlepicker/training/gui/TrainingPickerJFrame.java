@@ -951,7 +951,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		catch (Exception e)
 		{
 			String msg = (e.getMessage() != null)? e.getMessage(): XmippMessage.getUnexpectedErrorMsg();
-				
 			XmippDialog.showError(this, msg);
 		}
 	}

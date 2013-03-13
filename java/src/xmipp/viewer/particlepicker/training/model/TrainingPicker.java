@@ -800,7 +800,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
 		TrainingParticle particle; 
-		Particle p;
 		try
 		{
 			for (TrainingMicrograph m : micrographs)
@@ -814,7 +813,7 @@ public abstract class TrainingPicker extends ParticlePicker
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-						p = f.getTemplates().alignImage(igp, true);
+						f.getTemplates().alignImage(igp, true);
 				}
 			}
 			f.getTemplates().write(f.getTemplatesFile());
