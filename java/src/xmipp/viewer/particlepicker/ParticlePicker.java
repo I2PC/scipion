@@ -541,7 +541,8 @@ public abstract class ParticlePicker {
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
 			{
-				shift = family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
+				family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
+				shift = family.getTemplates().bestShift(igp);
 				if (center)
 				{
 					particle.setX(particle.getX() + shift.getX());
