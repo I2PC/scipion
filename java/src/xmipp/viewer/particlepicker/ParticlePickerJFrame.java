@@ -699,6 +699,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
+				if(sizesl.getValue() ==((Number)sizetf.getValue()).intValue())//event from sizesl
+					return;
+				
 				int size = ((Number) sizetf.getValue()).intValue();
 				if (!getParticlePicker().isValidSize(size))
 				{
@@ -717,6 +720,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void stateChanged(ChangeEvent e)
 			{
+				if(sizesl.getValue() ==((Number)sizetf.getValue()).intValue())//event from sizetf
+					return;
+				
 				int size = sizesl.getValue();
 				if (!getParticlePicker().isValidSize(size))
 				{
