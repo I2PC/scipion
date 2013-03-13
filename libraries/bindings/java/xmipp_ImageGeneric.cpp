@@ -525,22 +525,21 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
 
         // Go to slice.
         image->movePointerTo(nslice, select_image);
-
         size_t size = image->getSize();
+
         //jfloatArray array = env->NewFloatArray(size);
         switch (image->getDatatype())
     {
     case DT_Float:
-        {
-            float *mdarray;
+        	{
+				float *mdarray;
 
-            // Get slice array.
-            MULTIDIM_ARRAY_GENERIC(*image).getArrayPointer(mdarray);
-
-                env->GetFloatArrayRegion(data, 0, size, mdarray);
-            }
-            break;
-        case DT_Double:
+				// Get slice array.
+				MULTIDIM_ARRAY_GENERIC(*image).getArrayPointer(mdarray);
+				env->GetFloatArrayRegion(data, 0, size, mdarray);
+			}
+			break;
+    case DT_Double:
             {
                 // Get slice array.
                 Image<double> *imageAux = (Image<double> *) image->image;
@@ -557,7 +556,7 @@ Java_xmipp_jni_ImageGeneric_setArrayFloat(JNIEnv *env, jobject jobj,
                 delete [] buffer;
             }
             break;
-        default:
+    default:
             {
                 REPORT_ERROR(
                     ERR_IO_NOWRITE,
