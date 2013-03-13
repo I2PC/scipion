@@ -94,7 +94,7 @@ public class TrainingParticle extends Particle{
 			int size = family.getSize();
 			ImagePlus mimage = micrograph.getImagePlus();
 			int radius = size/2;
-			Rectangle r = new Rectangle(x - radius , y - radius, radius * 2, radius * 2);
+			Rectangle r = new Rectangle(x - radius , y - radius, size, size);
 			Roi roi = mimage.getRoi();
 			mimage.setRoi(r);
 			ImageProcessor processor = mimage.getProcessor().crop();

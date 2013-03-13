@@ -36,7 +36,9 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import xmipp.jni.XmippError;
 import xmipp.utils.ColorIcon;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippResource;
@@ -141,8 +143,8 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 			initMicrographsPane();
 			add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 3, 3));
 
-//			if (getFamily().getStep() != FamilyState.Manual)
-//				importffmi.setEnabled(false);
+			// if (getFamily().getStep() != FamilyState.Manual)
+			// importffmi.setEnabled(false);
 
 			pack();
 			positionx = 0.9f;
@@ -168,7 +170,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		mb = new JMenuBar();
 
 		// Setting menus
-		
+
 		exportmi = new JMenuItem("Export Particles...", XmippResource.getIcon("export_wiz.gif"));
 
 		exportmi.addActionListener(new ActionListener()
@@ -201,7 +203,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		filemn.add(exportmi);
 
 		JMenu windowmn = new JMenu("Window");
-		
+
 		mb.add(filemn);
 		mb.add(filtersmn);
 		mb.add(windowmn);
@@ -215,8 +217,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		editfamiliesmi = new JMenuItem("Edit Families", XmippResource.getIcon("edit.gif"));
 		windowmn.add(editfamiliesmi);
 		windowmn.add(templatesmi);
-
-		
 
 		// Setting menu item listeners
 
@@ -934,8 +934,6 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		return result;
 	}
 
-	
-
 	@Override
 	protected void openHelpURl()
 	{
@@ -953,13 +951,21 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 
 	public void updateSize(int size)
 	{
-		super.updateSize(size);
-		ppicker.resetParticleImages();
-		ppicker.setUpdateTemplatesPending(true);
-		ppicker.updateTemplates();
-		if (templatesdialog != null)
-			loadTemplates();
-
+		try
+		{
+			super.updateSize(size);
+			ppicker.resetParticleImages();
+			ppicker.setUpdateTemplatesPending(true);
+			ppicker.updateTemplates();
+			if (templatesdialog != null)
+				loadTemplates();
+		}
+		catch (Exception e)
+		{
+			String msg = (e.getMessage() != null)? e.getMessage(): XmippMessage.getUnexpectedErrorMsg();
+				
+			XmippDialog.showError(this, e.getMessage());
+		}
 	}
 
 	@Override
@@ -972,7 +978,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		return centerpickchb.isSelected();
 	}
-	
+
 	@Override
 	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
 	{
