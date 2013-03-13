@@ -901,7 +901,7 @@ void PROJECT_Side_Info::produce_Side_Info(ParametersProjection &prm,
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_Effectively_project(const String &fnOut,
+int PROJECT_Effectively_project(const FileName &fnOut,
                                 bool singleProjection,
                                 projectionType projType,
                                 const ParametersProjection &prm,
@@ -911,7 +911,8 @@ int PROJECT_Effectively_project(const String &fnOut,
 {
     int NumProjs = 0;
     SF.clear();
-    FileName(fnOut).deleteFile();
+    if (!fnOut.isInStack())
+    	fnOut.deleteFile();
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
