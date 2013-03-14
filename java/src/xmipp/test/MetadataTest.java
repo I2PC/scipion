@@ -38,6 +38,8 @@ import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.windows.GalleryJFrame;
 import static org.junit.Assert.*;
 
 /**
@@ -281,19 +283,22 @@ public class MetadataTest
 		}
 	}
 
-	@Test
-	public void readRuntimeMd() throws Exception
+	public class Worker implements Runnable
 	{
-		try
+		MetaData imagesmd;
+		MetaData md;
+		
+		public Worker(MetaData md,MetaData imagesmd)
 		{
-			System.out.println("read runtime md...");
-			int idlabel = MDLabel.MDL_IMAGE;
-			MetaData md = new MetaData(XmippTest.getTestFilename("images.stk"));
-			md.print();
-			if (!md.containsLabel(idlabel))
-				return;
-			MetaData imagesmd = new MetaData();
+			this.imagesmd = imagesmd;
+			this.md = md;
+		}
+
+		public void run()
+		{
 			String imagepath;
+			int idlabel = MDLabel.MDL_IMAGE;
+			
 			long id2;
 			for (long id : md.findObjects())
 			{
@@ -304,13 +309,38 @@ public class MetadataTest
 					imagesmd.setValueString(idlabel, imagepath, id2);
 				}
 			}
+			
 			for (long id : imagesmd.findObjects())
 			{
-				imagepath = md.getValueString(idlabel, id, true);
-				//System.out.printf("%d %s\n", id, imagepath);
+				imagepath = imagesmd.getValueString(idlabel, id, true);
+				System.out.printf("%d %s\n", id, imagepath);
 			}
-			md.destroy();
+			
 			imagesmd.destroy();
+		}
+	}
+	@Test
+	public void readRuntimeMd() throws Exception
+	{
+		try
+		{
+			System.out.println("read runtime md...");
+			
+			MetaData md = new MetaData(XmippTest.getTestFilename("images.stk"));
+			MetaData imagesmd = new MetaData();
+			String imagepath;
+			int idlabel = MDLabel.MDL_IMAGE;
+			
+
+			
+			Worker w = new Worker(md, imagesmd);
+			//w.run();
+			
+			Thread th = new Thread(w);
+			th.start();
+
+			md.destroy();
+			
 			System.out.println("read runtime md ended...");
 		}
 		catch (Exception ex)

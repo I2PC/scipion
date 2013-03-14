@@ -327,6 +327,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImage
 JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
   (JNIEnv *, jobject, jobject);
 
+
 #ifdef __cplusplus
 }
 #endif
