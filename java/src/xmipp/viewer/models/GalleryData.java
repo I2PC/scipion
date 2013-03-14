@@ -923,7 +923,6 @@ public class GalleryData {
 			}
 			index ++;
 		}
-		imagesmd.print();
 		return imagesmd;
 	}
 
