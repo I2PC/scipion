@@ -994,4 +994,11 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	{
 		return new ParticlesJDialog(this);
 	}
+
+	public void setTemplatesNumber(Family f, int templates)
+	{
+		f.setTemplatesNumber(templates);
+		updateTemplates();
+		
+	}
 }
