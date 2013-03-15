@@ -245,43 +245,43 @@ public class MetadataTest
 	// }
 	// }
 
-	@Test
-	public void readBigMetadata() throws Exception
-	{
-		try
-		{
-
-			DEBUG.tic();
-			System.out.println("Creating big md....");
-			MetaData md = new MetaData("javaMdTest/big_md.xmd");
-			// MetaData md = new MetaData();
-			// createBigMetadata(md, 1000000);
-			DEBUG.toc();
-			System.out.println("Finding objects big md....");
-			long[] ids = md.findObjects();
-			DEBUG.toc();
-			long counter = 0, total = ids.length;
-			String image;
-			double angle = 0, x = 0, y = 0;
-
-			System.out.println("Looping objects big md....");
-			for (long id : ids)
-			{
-				image = md.getValueString(MDLabel.MDL_IMAGE, id);
-				angle += md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
-				x += md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
-				y += md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
-				if (++counter % 10000 == 0)
-					System.out.format("%d of %d\n", counter, total);
-			}
-			System.out.format("sums angle: %f x: %f y: %f %n", angle, x, y);
-			md.destroy();
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-		}
-	}
+//	@Test
+//	public void readBigMetadata() throws Exception
+//	{
+//		try
+//		{
+//
+//			DEBUG.tic();
+//			System.out.println("Creating big md....");
+//			MetaData md = new MetaData("javaMdTest/big_md.xmd");
+//			// MetaData md = new MetaData();
+//			// createBigMetadata(md, 1000000);
+//			DEBUG.toc();
+//			System.out.println("Finding objects big md....");
+//			long[] ids = md.findObjects();
+//			DEBUG.toc();
+//			long counter = 0, total = ids.length;
+//			String image;
+//			double angle = 0, x = 0, y = 0;
+//
+//			System.out.println("Looping objects big md....");
+//			for (long id : ids)
+//			{
+//				image = md.getValueString(MDLabel.MDL_IMAGE, id);
+//				angle += md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
+//				x += md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
+//				y += md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
+//				if (++counter % 10000 == 0)
+//					System.out.format("%d of %d\n", counter, total);
+//			}
+//			System.out.format("sums angle: %f x: %f y: %f %n", angle, x, y);
+//			md.destroy();
+//		}
+//		catch (Exception ex)
+//		{
+//			ex.printStackTrace();
+//		}
+//	}
 
 	public class Worker implements Runnable
 	{
@@ -348,43 +348,82 @@ public class MetadataTest
 			ex.printStackTrace();
 		}
 	}
-
+	
 	@Test
-	public void readTinyMetadatas() throws Exception
+	public void updateMetaDataRowWithRow() throws Exception
 	{
 		try
 		{
-			MetaData md = new MetaData("javaMdTest/all_tiny.xmd");
-			MetaData md2 = new MetaData();
-
-			long[] ids = md.findObjects();
-			long[] ids2;
-			String tinyFn;
-			double angle, x, y;
-
-			for (long id : ids)
+			System.out.println("updateMetaDataRowWithRow");
+			
+			MetaData md = new MetaData(XmippTest.getTestFilename("images.stk"));
+			MetaData imagesmd = new MetaData();
+			String imagepath;
+			int idlabel = MDLabel.MDL_IMAGE;
+			MetaData row;
+			
+			long id2;
+			for (long id : md.findObjects())
 			{
-				tinyFn = md.getValueString(MDLabel.MDL_IMAGE, id);
-				md2.read(tinyFn);
-				System.out.println("Tiny md: " + tinyFn);
-				ids2 = md2.findObjects();
-				for (long id2 : ids2)
+				imagepath = md.getValueString(idlabel, id, true);
+				if (imagepath != null && ImageGeneric.exists(imagepath))
 				{
-					angle = md2.getValueDouble(MDLabel.MDL_ANGLE_PSI, id2);
-					x = md2.getValueDouble(MDLabel.MDL_SHIFT_X, id2);
-					y = md2.getValueDouble(MDLabel.MDL_SHIFT_Y, id2);
-					// System.out.format("    image: %s, angle: %f x: %f y: %f %n",
-					// tinyFn, angle, x, y);
+					id2 = imagesmd.addObject();
+					row = md.getRow(id);
+					row.setValueString(idlabel, imagepath, row.firstObject());
+					imagesmd.setRow(row, id2);
 				}
 			}
+			
+			imagesmd.print();
+			
+			imagesmd.destroy();
 			md.destroy();
-			md2.destroy();
+			
+			System.out.println("updateMetaDataRowWithRow ended...");
 		}
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
 		}
 	}
+
+//	@Test
+//	public void readTinyMetadatas() throws Exception
+//	{
+//		try
+//		{
+//			MetaData md = new MetaData("javaMdTest/all_tiny.xmd");
+//			MetaData md2 = new MetaData();
+//
+//			long[] ids = md.findObjects();
+//			long[] ids2;
+//			String tinyFn;
+//			double angle, x, y;
+//
+//			for (long id : ids)
+//			{
+//				tinyFn = md.getValueString(MDLabel.MDL_IMAGE, id);
+//				md2.read(tinyFn);
+//				System.out.println("Tiny md: " + tinyFn);
+//				ids2 = md2.findObjects();
+//				for (long id2 : ids2)
+//				{
+//					angle = md2.getValueDouble(MDLabel.MDL_ANGLE_PSI, id2);
+//					x = md2.getValueDouble(MDLabel.MDL_SHIFT_X, id2);
+//					y = md2.getValueDouble(MDLabel.MDL_SHIFT_Y, id2);
+//					// System.out.format("    image: %s, angle: %f x: %f y: %f %n",
+//					// tinyFn, angle, x, y);
+//				}
+//			}
+//			md.destroy();
+//			md2.destroy();
+//		}
+//		catch (Exception ex)
+//		{
+//			ex.printStackTrace();
+//		}
+//	}
 
 	@Test
 	public void testOperate() throws Exception
