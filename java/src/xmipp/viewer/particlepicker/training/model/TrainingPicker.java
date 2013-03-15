@@ -893,4 +893,11 @@ public abstract class TrainingPicker extends ParticlePicker
 		return true;
 	}
 
+	public void setTemplatesNumber(Family f, int templates)
+	{
+		family.setTemplatesNumber(templates);
+		setUpdateTemplatesPending(true);
+		
+	}
+
 }

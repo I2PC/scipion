@@ -204,7 +204,7 @@ public class EditFamiliesJDialog extends JDialog {
 					int templates = (Integer)value;
 					if(templates  < 1)
 						throw new IllegalArgumentException(XmippMessage.getIllegalValueMsg("Templates", templates));
-					f.setTemplatesNumber(templates);
+					frame.getParticlePicker().setTemplatesNumber(f, templates);
 				}
 				frame.getParticlePicker().saveFamilies();
 				
