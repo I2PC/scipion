@@ -918,6 +918,22 @@ public class GalleryData
 					return true;
 		return false;
 	}
+	
+	/** Take an index counting only visible columns
+	 * and translate into the general column index
+	 * @param col column index in visible counting
+	 * @return column index in general counting
+	 */
+	public int getVisibleColumnIndex(int col){
+		int visibleIndex = 0;
+		for (int i=0; i < labels.size(); i++)
+			if (labels.get(i).visible){
+				if (col == visibleIndex)
+					return i;
+				visibleIndex++;
+			}
+		return -1;
+	}
 
 	public int getLabelFromCol(int col)
 	{
