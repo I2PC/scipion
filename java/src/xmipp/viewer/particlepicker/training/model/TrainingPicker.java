@@ -773,7 +773,7 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		if (family.getStep() != FamilyState.Manual)
 			return;
-		if (!updateTemplatesPending)
+		if (!f.getUpdateTemplatesPending())
 			return;// nothing to update
 		f.initTemplates();
 		ImageGeneric igp;
@@ -797,7 +797,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				}
 			}
 			f.getTemplates().write(f.getTemplatesFile());
-			updateTemplatesPending = false;
+			f.setUpdateTemplatesPending(false);
 		}
 		catch (Exception e)
 		{
@@ -892,5 +892,7 @@ public abstract class TrainingPicker extends ParticlePicker
 				return false;
 		return true;
 	}
+
+	
 
 }
