@@ -47,7 +47,7 @@ class ProtCL2D(XmippProtocol):
     def summary(self):
         message=[]
         message.append(("Classification of [%s]"%self.InSelFile)+" into "+str(self.NumberOfReferences)+" classes")
-        levelFiles=glob.glob(self.WorkingDir+"/level_??/level_classes.xmd")
+        levelFiles=glob.glob(self.WorkingDir+"/extra/level_??/level_classes.xmd")
         if not levelFiles:
             message.append("No class file has been generated")
         else:
