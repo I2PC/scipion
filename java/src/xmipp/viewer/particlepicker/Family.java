@@ -22,6 +22,7 @@ public class Family {
 	private int templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
+	protected boolean updateTemplatesPending;
 
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
@@ -193,6 +194,7 @@ public class Family {
 			throw new IllegalArgumentException(XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Family must have at least one template"));
 		this.templatesNumber = num;
 		initTemplates();
+		setUpdateTemplatesPending(true);
 	}
 
 	public Color getColor() {
@@ -247,4 +249,16 @@ public class Family {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	public void setUpdateTemplatesPending(boolean b)
+	{
+		updateTemplatesPending = b;
+
+	}
+
+	public boolean getUpdateTemplatesPending()
+	{
+		return updateTemplatesPending;
+	}
+
 }

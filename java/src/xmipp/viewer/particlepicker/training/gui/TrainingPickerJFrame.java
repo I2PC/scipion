@@ -940,13 +940,18 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		XmippWindowUtil.openURI("http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Micrograph_particle_picking_v3");
 
 	}
+	
+	public void updateTemplates(Family f)
+	{
+		f.setUpdateTemplatesPending(true);
+		if (f.equals(family) && templatesdialog != null)
+			templatesdialog.loadTemplates(true);
+
+	}
 
 	public void updateTemplates()
 	{
-		ppicker.setUpdateTemplatesPending(true);
-		if (templatesdialog != null)
-			templatesdialog.loadTemplates(true);
-
+		updateTemplates(family);
 	}
 
 	public void updateSize(int size)
@@ -955,7 +960,7 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 		{
 			super.updateSize(size);
 			ppicker.resetParticleImages();
-			ppicker.setUpdateTemplatesPending(true);
+			family.setUpdateTemplatesPending(true);
 			ppicker.updateTemplates();
 			if (templatesdialog != null)
 				loadTemplates();
@@ -1001,5 +1006,13 @@ public class TrainingPickerJFrame extends ParticlePickerJFrame
 	public ParticlesJDialog initParticlesJDialog()
 	{
 		return new ParticlesJDialog(this);
+	}
+
+	public void setTemplatesNumber(Family f, int templates)
+	{
+		f.setTemplatesNumber(templates);
+		if (f.equals(family) && templatesdialog != null)
+			templatesdialog.loadTemplates(true);
+		
 	}
 }
