@@ -22,6 +22,7 @@ public class Family {
 	private int templatesNumber;
 	private ImageGeneric templates;
 	private String templatesfile;
+	protected boolean updateTemplatesPending;
 
 	
 	private static Color[] colors = new Color[] { Color.BLUE, Color.CYAN,
@@ -201,6 +202,7 @@ public class Family {
 
 		this.templatesNumber = num;
 		initTemplates();
+		setUpdateTemplatesPending(true);
 	}
 
 	public Color getColor() {
@@ -258,4 +260,16 @@ public class Family {
 	{
 		return templatesfile;
 	}
+	
+	public void setUpdateTemplatesPending(boolean b)
+	{
+		updateTemplatesPending = b;
+
+	}
+
+	public boolean getUpdateTemplatesPending()
+	{
+		return updateTemplatesPending;
+	}
+
 }

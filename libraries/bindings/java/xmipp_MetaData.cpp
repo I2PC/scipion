@@ -817,7 +817,9 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
         program.dontMask=false;
         program.SFin=*mdIn;
         program.produceSideInfo((MDLabel)label);
+        std::cout << "evaluateZScore" <<std::endl;
         program.pcaAnalyzer.evaluateZScore(program.NPCA, program.Niter);
+        std::cout << "produceBasis" <<std::endl;
         program.produceBasis(*mdArray);
         //Notify the real dimensions to image generic
         ArrayDim adim;

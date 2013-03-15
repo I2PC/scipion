@@ -897,8 +897,9 @@ public class GalleryData {
 		return null;
 	}
 
-	public MetaData getImagesMd(int idlabel)
+	public MetaData getImagesMd()
 	{
+		int idlabel = getRenderLabel();
 		if(md == null)
 			return null;
 		if(!md.containsLabel(idlabel))
@@ -922,7 +923,6 @@ public class GalleryData {
 			}
 			index ++;
 		}
-		imagesmd.print();
 		return imagesmd;
 	}
 

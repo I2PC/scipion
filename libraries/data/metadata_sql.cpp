@@ -1136,6 +1136,7 @@ void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &value
     case LABEL_STRING:
         ss << sqlite3_column_text(stmt, position);
         valueOut.data.stringValue->assign(ss.str());
+
         break;
     case LABEL_VECTOR_DOUBLE:
     case LABEL_VECTOR_SIZET:
