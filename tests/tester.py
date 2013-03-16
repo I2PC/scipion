@@ -1,36 +1,63 @@
 #!/usr/bin/env python
 
-import random
-import unittest
-from pyworkflow.mapper.sqlite import SqliteMapper
-from pyworkflow.object import Integer, Float, String
-from random import randint
 import os
-from pyworkflow.object import Object
-from pyworkflow.mapper.xmlmapper import XmlMapper
+from os.path import join, dirname, exists
+import unittest
 import filecmp
 
-class ComplexObject(Object):
+from pyworkflow.mapper.sqlite import SqliteMapper
+from pyworkflow.object import Integer, Float, String
+from pyworkflow.object import Object
+from pyworkflow.mapper.xmlmapper import XmlMapper
+
+class Complex(Object):
     def __init__(self, **args):
         Object.__init__(self, **args)
-        self.a1 = Float()
-        self.a2 = Integer()
+        self.imag = Float()
+        self.real = Float()
+        
     def __str__(self):
-        className                = self.getClassName()
-        partStr = "%s id = %s" % (className,str(self.id))
-        for key, attr in self.getAttributesToStore():
-            if attr.hasValue():
-                partStr += '\n %s: %s' % (key, attr)
-            if attr.pointer:
-#                partStr += '\n %s %s' % (key, str(attr.id))
-                partStr += '\n %s %s' % (key, str(attr.get().id))
-        return partStr
+        return '(%s, %s)' % (self.imag, self.real)
+    
+    def __eq__(self, other):
+        return self.imag == other.imag and \
+            self.real == other.real
 
 class TestPyworkflow(unittest.TestCase):
 
     def setUp(self):
+        #Get the tester.py path
+        self.path = dirname(__file__)
+        
         self.seq = range(10)
+        # Create reference complex values
+        self.cGold = complex(1.0, 1.0)
+        # Some filenames:
+        self.sqliteFile = 'SQLMapper.sqlite'
+        self.xmlFile = 'XMLMapper.xml'
+        
+    def getTestPath(self, filename):
+        """Return the path to the pyworkflow/tests dir
+        joined with filename"""
+        return join(self.path, filename)
+    
+    def getTmpPath(self, filename):
+        """Return the filename in /tmp/ folder.
+        If the file exists, it will be deleted"""
+        path = join('/tmp', filename)
+        if exists(path):
+            os.remove(path)        
+        return path
 
+    def createComplex(self):
+        """Create a Complex object and set
+        values with self.cGold standard"""
+        c = Complex() # Create Complex object and set values
+        c.imag.set(self.cGold.imag)
+        c.real.set(self.cGold.real)
+        
+        return c
+            
     def test_Object(self):
         value = 2
         i = Integer(value)
@@ -46,66 +73,51 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(s.hasValue(), True)
         a = Integer()
         self.assertEqual(a.hasValue(), False)
-        complexObject = ComplexObject()
-        goldStandard = {'a1':1.0,'a2':1}
-        complexObject.a1.set(goldStandard['a1'])
-        complexObject.a2.set(goldStandard['a2'])
-        for key, attr in complexObject.getAttributesToStore():
-            self.assertEqual(attr.get(),goldStandard[key])
-            #self.assertTrue(element in self.seq)
-    def test_SqliteMapper(self):
-        import sys, os
-        baseFilename = 'SQLMapper.sqlite'
-        fileName = os.path.join('/tmp/',baseFilename)
-        if os.path.exists(fileName):
-            os.remove(fileName)
+        c = self.createComplex()
+        # Check values are correct
+        self.assertTrue(c.imag.get(), self.cGold.imag)
+        self.assertTrue(c.real.get(), self.cGold.real)
         
-        complexObject = ComplexObject()
-        goldStandard = {'a1':1.0,'a2':1}
-        complexObject.a1.set(goldStandard['a1'])
-        complexObject.a2.set(goldStandard['a2'])
-        mapper = SqliteMapper(fileName)
-        mapper.insert(complexObject)
+    def test_SqliteMapper(self):
+        fn = self.getTmpPath(self.sqliteFile)
+        c = self.createComplex()
+        mapper = SqliteMapper(fn)
+        mapper.insert(c)
+        cid = c.id
         i = Integer(1)
         mapper.insert(i)
         #write file
         mapper.commit()
 
-        scriptDir = os.path.dirname(__file__)
-        goldStandard = os.path.join(scriptDir,baseFilename)
-        #print goldStandard, fileName
-        self.assertTrue(filecmp.cmp(goldStandard, fileName) )
+        fnGold = self.getTestPath(self.sqliteFile)
+
+        #self.assertTrue(filecmp.cmp(fnGold, fn))
         #read file
         #TODO
-#        mapper2 = SqliteMapper('goldStandard', globals())
-#        l = mapper2.select(classname='Integer')[0]
-#        print l
-#        self.assertEqual(l.get(),1)
-#        if os.path.exists(fileName):
-#            os.remove(fileName)
+        mapper2 = SqliteMapper(fnGold, globals())
+        l = mapper2.select(classname='Integer')[0]
+        self.assertTrue(l.get(), 1)
+        
+        c2 = mapper2.get(cid)
+        self.assertTrue(c, c2)
+
         
     def test_XML(self):
-        import sys, os
-        baseFilename = 'XMLMapper.xml'
-        fileName = os.path.join('/tmp/',baseFilename)
-        if os.path.exists(fileName):
-            os.remove(fileName)
-        
-        complexObject = ComplexObject()
-        goldStandard = {'a1':1.0,'a2':1}
-        complexObject.a1.set(goldStandard['a1'])
-        complexObject.a2.set(goldStandard['a2'])
+        fn = self.getTmpPath(self.xmlFile)
+        c = self.createComplex()
         mapper = XmlMapper(None)
-        mapper.insert(complexObject)
+        mapper.insert(c)
         #write file
-        mapper.write(fileName)
+        mapper.write(fn)
 
-        scriptDir = os.path.dirname(__file__)
-        goldStandard = os.path.join(scriptDir,baseFilename)
+        fnGold = self.getTestPath(self.xmlFile)
         #print goldStandard, fileName
-        self.assertTrue(filecmp.cmp(goldStandard, fileName) )
+        #self.assertTrue(filecmp.cmp(fnGold, fn))
         #read file
-        mapper2 = XmlMapper('goldStandard', globals())
+        mapper2 = XmlMapper(globals())
+        mapper2.read(fnGold)
+        c2 = mapper2.getAll()[0]
+        self.assertTrue(c.imag.get(), c2.imag.get())
         #TODO
 #        l = mapper2.select(classname='Integer')[0]
 #        self.assertEqual(l.get(),1)

@@ -23,10 +23,15 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This modules holds the base classes for the ORM implementation.
+The Object class is the root in the hierarchy and some other
+basic classes.
+"""
 
-class Object():
-    ''' All objects in our Domain should inherit from this class
-    that will contains all base properties'''
+class Object(object):
+    """ All objects in our Domain should inherit from this class
+    that will contains all base properties"""
     def __init__(self, value=None, **args):
         self.set(value)
         self.id        = args.get('id', None)
@@ -40,34 +45,34 @@ class Object():
         return self.__class__.__name__
     
     def getAttributesToStore(self):
-        '''Return the list of attributes than are
-        subclasses of Object and will be stored'''
+        """Return the list of attributes than are
+        subclasses of Object and will be stored"""
         for key, attr in self.__dict__.iteritems():
             if issubclass(attr.__class__, Object) and attr.store:
                 yield (key, attr)
                 
     def isPointer(self):
-        '''If this is true, the value field is a pointer 
-        to anothor object'''
+        """If this is true, the value field is a pointer 
+        to anothor object"""
         return self.pointer
     
     def convert(self, value):
-        '''Convert a value to desired scalar type'''
+        """Convert a value to desired scalar type"""
         return value
     
     def set(self, value):
-        '''Set the internal value, if it is different from None
-        call the convert function in subclasses'''
+        """Set the internal value, if it is different from None
+        call the convert function in subclasses"""
         if not value is None:
             value = self.convert(value)            
         self.value = value
     
     def get(self):
-        '''Return internal value'''
+        """Return internal value"""
         return self.value
     
     def __str__(self):
-        '''String representation of the scalar value'''
+        """String representation of the scalar value"""
         return str(self.value)
         
     def hasValue(self):        
@@ -75,41 +80,42 @@ class Object():
     
         
 class Integer(Object):
-    '''Integer object'''
+    """Integer object"""
     def convert(self, value):
         return int(value)
     
         
 class String(Object):
-    '''String object'''
+    """String object"""
     def convert(self, value):
         return str(value)
     
         
 class Float(Object):
-    '''Float object'''
+    """Float object"""
     def convert(self, value):
         return float(value)
     
     
 class Boolean(Object):
-    '''Boolean object'''
+    """Boolean object"""
     def convert(self, value):
         return bool(value)    
     
+    
 class Pointer(Object):
-    '''Reference object to other one'''
+    """Reference object to other one"""
     def __init__(self, value=None, **args):
         Object.__init__(self, value, pointer=True, **args)    
        
 
 class Array(Object):
-    '''Class for holding fixed len array'''
+    """Class for holding fixed len array"""
     def __init__(self, size=10, **args):
         Object.__init__(self, size, **args)
         
     def set(self, size):
-        '''Set the array size'''
+        """Set the array size"""
         self.value = int(size)  
         for i in range(int(size)):
             self.__setitem__(i, None)                 

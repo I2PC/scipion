@@ -27,8 +27,10 @@
 from pyworkflow.mapper import Mapper
 
 class SqliteMapper(Mapper):
-    '''Specific Mapper implementation using Sqlite database'''
+    """Specific Mapper implementation using Sqlite database"""
     def __init__(self, dbName, dictClasses=None):
+        #print "FILENAME: ", dbName
+        #print "---------> ", dictClasses
         Mapper.__init__(self, dictClasses)
         self.db = SqliteDb(dbName)
     
@@ -36,7 +38,7 @@ class SqliteMapper(Mapper):
         self.db.commit()
         
     def insert(self, obj):
-        '''Insert a new object into the system, the id will be set'''
+        """Insert a new object into the system, the id will be set"""
         obj.id = self.db.insertObject(obj.name, obj.getClassName(), obj.value, obj.parent_id)
         self.insertObjectWithChilds(obj, str(obj.id))
         
@@ -59,14 +61,14 @@ class SqliteMapper(Mapper):
         self.fillObject(obj, objRow)
             
     def get(self, objId):
-        '''Build the object which id is objId'''
+        """Build the object which id is objId"""
         objRow = self.db.selectObjectById(objId)
         obj = self.buildObject(objRow['classname'])
         self.fillObject(obj, objRow)
         return obj
     
     def fillObjectWithRow(self, obj, objRow):
-        '''Fill the object with row data'''
+        """Fill the object with row data"""
         obj.id = objRow['id']
         if len(objRow['name']):
             obj.name = objRow['name']
@@ -98,7 +100,7 @@ class SqliteMapper(Mapper):
    
               
     def select(self, **args):
-        '''Select object meetings some criterias'''
+        """Select object meetings some criterias"""
         objRows = self.db.selectObjectsBy(**args)
         objs = []
         for objRow in objRows:
@@ -109,8 +111,8 @@ class SqliteMapper(Mapper):
 
 
 class SqliteDb():
-    '''Class to handle a Sqlite database.
-    It will create connection, execute queries and commands'''
+    """Class to handle a Sqlite database.
+    It will create connection, execute queries and commands"""
     
     SELECT = "SELECT id, parent_id, name, classname, value FROM Objects WHERE "
     
@@ -119,7 +121,7 @@ class SqliteDb():
         self.createTables()
 
     def createConnection(self, dbName, timeout):
-        '''Establish db connection'''
+        """Establish db connection"""
         from sqlite3 import dbapi2 as sqlite
         self.connection = sqlite.Connection(dbName, timeout)
         self.connection.row_factory = sqlite.Row
@@ -129,7 +131,7 @@ class SqliteDb():
         self.commit = self.connection.commit
         
     def createTables(self):
-        '''Create requiered tables if don't exists'''
+        """Create requiered tables if don't exists"""
         # Enable foreings keys
         self.executeCommand("PRAGMA foreign_keys=ON")
     
@@ -143,38 +145,38 @@ class SqliteDb():
         self.commit()
         
     def insertObject(self, name, classname, value, parent_id):
-        '''Execute command to insert a new object. Return the inserted object id'''
+        """Execute command to insert a new object. Return the inserted object id"""
         self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value) VALUES (?, ?, ?, ?)", \
                             (parent_id, name, classname, value))
         return self.cursor.lastrowid
     
     def updateObject(self, objId, name, classname, value, parent_id):
-        '''Update object data '''
+        """Update object data """
         self.executeCommand("UPDATE Objects SET parent_id=?, name=?,classname=?, value=? WHERE id=?", \
                             (parent_id, name, classname, value, objId))
         
     def deleteObject(self, objId):
-        '''Delete an existing object'''
+        """Delete an existing object"""
         self.executeCommand("DELETE FROM Objects WHERE id=?", (objId,))
         
     def selectObjectById(self, objId):
-        '''Select an object give its id'''
+        """Select an object give its id"""
         self.executeCommand(self.SELECT + "id=?", (objId,))  
         return self.cursor.fetchone()
     
     def selectObjectsByParent(self, parent_id):
-        '''Select an object give its id'''
+        """Select an object give its id"""
         self.executeCommand(self.SELECT + "parent_id=?", (parent_id,))
         return self.cursor.fetchall()  
     
     def selectObjectsByAncestor(self, ancestor_namePrefix):
-        '''Select all objects in the hierachy of ancestor_id'''
+        """Select all objects in the hierachy of ancestor_id"""
         self.executeCommand(self.SELECT + "name LIKE '%s.%%'" % ancestor_namePrefix)
         return self.cursor.fetchall()          
     
     def selectObjectsBy(self, **args):     
-        '''More flexible select where the constrains can be passed
-        as a dictionary, the concatenation is done by an AND'''
+        """More flexible select where the constrains can be passed
+        as a dictionary, the concatenation is done by an AND"""
         whereList = ['%s=?' % k for k in args.keys()]
         whereStr = ' AND '.join(whereList)
         whereTuple = tuple(args.values())
