@@ -78,6 +78,13 @@ class Object(object):
     def hasValue(self):        
         return not self.value is None
     
+    def __eq__(self, other):
+        """Comparison for scalars should be by value
+        and for other objects by reference"""
+        if self.value is None:
+            return object.__eq__(other)
+        return self.value == other.value
+    
         
 class Integer(Object):
     """Integer object"""

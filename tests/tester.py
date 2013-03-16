@@ -63,6 +63,10 @@ class TestPyworkflow(unittest.TestCase):
         i = Integer(value)
         # make sure the shuffled sequence does not lose any elements
         self.assertEqual(value, i.get())
+        # compare objects
+        i2 = Integer(value)
+        self.assertEqual(i, i2)
+        
         value = 2.
         f = Float(value)
         # make sure the shuffled sequence does not lose any elements
@@ -75,8 +79,8 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(a.hasValue(), False)
         c = self.createComplex()
         # Check values are correct
-        self.assertTrue(c.imag.get(), self.cGold.imag)
-        self.assertTrue(c.real.get(), self.cGold.real)
+        self.assertEqual(c.imag.get(), self.cGold.imag)
+        self.assertEqual(c.real.get(), self.cGold.real)
         
     def test_SqliteMapper(self):
         fn = self.getTmpPath(self.sqliteFile)
@@ -90,17 +94,21 @@ class TestPyworkflow(unittest.TestCase):
         mapper.commit()
 
         fnGold = self.getTestPath(self.sqliteFile)
-
-        #self.assertTrue(filecmp.cmp(fnGold, fn))
-        #read file
-        #TODO
         mapper2 = SqliteMapper(fnGold, globals())
         l = mapper2.select(classname='Integer')[0]
-        self.assertTrue(l.get(), 1)
+        self.assertEqual(l.get(), 1)
         
         c2 = mapper2.get(cid)
-        self.assertTrue(c, c2)
-
+        print c == c2
+        self.assertEqual(c, c2)
+        
+        c2.imag.set(2.0)
+        c3 = mapper2.get(cid)
+        self.assertNotEqual(c2, c3)
+        mapper2.updateTo(c2)
+        mapper2.commit()
+        mapper2.updateFrom(c3)
+        self.assertEqual(c2, c3)
         
     def test_XML(self):
         fn = self.getTmpPath(self.xmlFile)
