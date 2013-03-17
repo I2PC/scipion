@@ -33,10 +33,8 @@ import Tkinter as tk
 Some GUI CONFIGURATION parameters
 """
 cfgFontName = "Verdana"
-cfgFontSize = 12    
-#Font
-FontName = "Verdana"
-FontSize = 10
+cfgFontSize = 10  
+
 #TextColor
 cfgCitationTextColor = "dark olive green"
 cfgLabelTextColor = "black"
@@ -134,4 +132,32 @@ def getImage(imageName):
         image = tk.PhotoImage(file=imagePath)
         _images[imageName] = image
     return image
+
+"""
+Windows geometry utilities
+"""
+def getGeometry(win):
+    ''' Return the geometry information of the windows
+    It will be a tuple (width, height, x, y)
+    '''
+    return win.winfo_reqwidth(), win.winfo_reqheight(), win.winfo_x(), win.winfo_y()
+
+def centerWindows(root, dim=None, refWindows=None):
+    """Center a windows in the middle of the screen 
+    or in the middle of other windows(refWindows param)"""
+    root.update_idletasks()
+    gw, gh, gx, gy = getGeometry(root)
+    if refWindows:
+        rw, rh, rx, ry = getGeometry(refWindows)
+        x = rx + (rw - gw) / 2
+        y = ry + (rh - gh) / 2 
+    else:
+        w = root.winfo_screenwidth()
+        h = root.winfo_screenheight()
+        if not dim is None:
+            gw, gh = dim
+        x = (w - gw) / 2
+        y = (h - gh) / 2
+        
+    root.geometry("%dx%d+%d+%d" % (gw, gh, x, y))
         

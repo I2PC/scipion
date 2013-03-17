@@ -29,3 +29,5 @@ import os.path
 HOME = os.path.dirname(__file__)
 RESOURCES = [os.path.join(HOME, 'resources')]
 
+from utils.path import findResource
+

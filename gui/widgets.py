@@ -73,7 +73,7 @@ class Scrollable(object):
     If it is enabled, it will wrap the widget with a frame
     and will add vertical and horizontal AutoScrollbar"""
     
-    def __init__(self, master, frame=True, WidgetClass, **opts):
+    def __init__(self, master, WidgetClass, frame=True, **opts):
         if frame:
             self.frame = tk.Frame(master)
             self.frame.rowconfigure(0, weight=1)
@@ -85,6 +85,8 @@ class Scrollable(object):
             WidgetClass.__init__(self, self.frame, 
                                  yscrollcommand=self.vscroll.set,
                                  xscrollcommand=self.hscroll.set, **opts)
+            self.vscroll.config(command=self.yview)
+            self.hscroll.config(command=self.xview)
             self.grid(row=0, column=0, sticky='news')
             self.grid = self.frame.grid
             self.grid_remove = self.frame.grid_remove
@@ -92,13 +94,13 @@ class Scrollable(object):
             WidgetClass.__init__(self, master, **opts)
         
         
-class Tree(ttk.Treeview):
+class Tree(ttk.Treeview, Scrollable):
     """ This widget acts as a wrapper around the ttk.Treeview"""
     
     def __init__(self, master, frame=True, **opts):
         """Create a new Tree, if frame=True, a container
         frame will be created and an scrollbar will be added"""
-        ttk.Treeview.__init__(self, master, **opts)
+        Scrollable.__init__(self, master, ttk.Treeview, frame, **opts)
         
     def getFirst(self):
         ''' Return first selected item or None if selection empty'''
@@ -143,3 +145,21 @@ class Tree(ttk.Treeview):
         childs = self.get_children('')
         for c in childs:
             self.delete(c)
+            
+class LabelSlider(ttk.Frame):
+    """ Create a personalized frame that contains label, slider and label value
+        it also keeps a variable with the value """
+
+    def __init__(self, master, label, from_=0, to=100, value=50, callback=None, step=0.01):
+        self.var = tk.DoubleVar()
+        self.var.set(float(value))
+        ttk.Frame.__init__(self, master)
+        ttk.Label(self, text=label).pack(side=tk.LEFT, padx=2, pady=2, anchor='s')
+        self.slider = tk.Scale(self, from_=from_, to=to, variable=self.var, 
+                                bigincrement=step, resolution=step, orient=tk.HORIZONTAL)
+        if callback:
+            self.var.trace('w', callback)
+        self.slider.pack(side=tk.LEFT, padx=2)
+        
+    def getValue(self):
+        return self.var.get()

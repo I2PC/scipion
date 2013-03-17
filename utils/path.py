@@ -35,10 +35,11 @@ def findFile(filename, *paths):
     """Search if the file is present in
     some path in the *paths provided.
     Return None if not found"""
-    for p in paths:
-        fn = join(p, filename)
-        if exists(fn):
-            return fn
+    if filename:
+        for p in paths:
+            fn = join(p, filename)
+            if exists(fn):
+                return fn
     return None
 
 def findResource(filename):
