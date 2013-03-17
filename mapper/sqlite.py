@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.mapper import Mapper
+from mapper import Mapper
 
 class SqliteMapper(Mapper):
     """Specific Mapper implementation using Sqlite database"""

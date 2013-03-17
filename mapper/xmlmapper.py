@@ -29,13 +29,11 @@ try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-from pyworkflow.mapper import Mapper
+from mapper import Mapper
 
-
-from os.path import exists
 
 class XmlMapper(Mapper):
-    '''Mapper for XML'''
+    """Mapper for XML"""
     def __init__(self, dictClasses=None, rootName='ALL', **args):
         self.root = ET.Element(rootName)
         if 'header' in args:
@@ -77,7 +75,7 @@ class XmlMapper(Mapper):
         return None
         
     def getAll(self):
-        '''Select object from storage'''
+        """Select object from storage"""
         self.objList = []
         
         for child in self.root:
@@ -125,7 +123,7 @@ class XmlMapper(Mapper):
                 objElem.set(k, str(v))
         
     def insert(self, obj):
-        '''Insert a new object into the system'''
+        """Insert a new object into the system"""
         objElem = self.addSubElement(self.root, obj.getClassName(), obj.value) 
         self.setObjectId(objElem, obj)
         # Insert object childs
@@ -151,11 +149,11 @@ class XmlMapper(Mapper):
                         self.insertObjectWithChilds(attr, childElem)
             
     def updateFrom(self, obj):
-        '''Update object data with storage info'''
+        """Update object data with storage info"""
         pass
     
     def updateTo(self, obj):
-        '''Update storage with object info'''
+        """Update storage with object info"""
         pass
 
             

@@ -7,8 +7,7 @@ import filecmp
 
 from pyworkflow.object import *
 from pyworkflow.protocol import Step
-from pyworkflow.mapper.sqlite import SqliteMapper
-from pyworkflow.mapper.xmlmapper import XmlMapper
+from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 class Complex(Object):
     def __init__(self, **args):
