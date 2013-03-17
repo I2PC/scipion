@@ -5,9 +5,9 @@ from os.path import join, dirname, exists
 import unittest
 import filecmp
 
+from pyworkflow.object import *
+from pyworkflow.protocol import Step
 from pyworkflow.mapper.sqlite import SqliteMapper
-from pyworkflow.object import Integer, Float, String
-from pyworkflow.object import Object
 from pyworkflow.mapper.xmlmapper import XmlMapper
 
 class Complex(Object):
@@ -23,6 +23,13 @@ class Complex(Object):
         return self.imag == other.imag and \
             self.real == other.real
 
+class MyStep(Step):
+    def __init__(self):
+        Step.__init__(self)
+        self.defineInputs(x=Integer(), y=Float(), z=String("abc"))
+        
+    
+    
 class TestPyworkflow(unittest.TestCase):
 
     def setUp(self):
@@ -99,16 +106,16 @@ class TestPyworkflow(unittest.TestCase):
         self.assertEqual(l.get(), 1)
         
         c2 = mapper2.get(cid)
-        print c == c2
         self.assertEqual(c, c2)
         
-        c2.imag.set(2.0)
-        c3 = mapper2.get(cid)
-        self.assertNotEqual(c2, c3)
-        mapper2.updateTo(c2)
-        mapper2.commit()
-        mapper2.updateFrom(c3)
-        self.assertEqual(c2, c3)
+        #TODO: TESTS FOR UPDATE
+#        c2.imag.set(2.0)
+#        c3 = mapper2.get(cid)
+#        self.assertNotEqual(c2, c3)
+#        mapper2.updateTo(c2)
+#        mapper2.commit()
+#        mapper2.updateFrom(c3)
+#        self.assertEqual(c2, c3)
         
     def test_XML(self):
         fn = self.getTmpPath(self.xmlFile)
@@ -126,11 +133,18 @@ class TestPyworkflow(unittest.TestCase):
         mapper2.read(fnGold)
         c2 = mapper2.getAll()[0]
         self.assertTrue(c.imag.get(), c2.imag.get())
-        #TODO
-#        l = mapper2.select(classname='Integer')[0]
-#        self.assertEqual(l.get(),1)
-#        if os.path.exists(fileName):
-#            pass#os.remove(fileName)
+        
+    def test_Step(self):
+        print "running test_Step"
+        fn = self.getTmpPath(self.sqliteFile)
+        s = MyStep()
+        s.x.set(7)
+        s.y.set(3.0)
+        mapper = SqliteMapper(fn, globals())
+        mapper.insert(s)
+        #write file
+        mapper.commit()
+
         
 if __name__ == '__main__':
     unittest.main()
