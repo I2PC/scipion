@@ -119,8 +119,8 @@ the %s file
 
 EXAMPLE:
 # XMIPP_STAR_1 *
-# chage XXXXX by the sapling rate
-data_
+# change XXXXX by the sampling rate
+data_noname
  _sampling_rate XXXXX
 """ %(self.SelFileName,self.SelFileName))
             
