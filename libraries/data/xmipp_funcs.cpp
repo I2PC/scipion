@@ -578,15 +578,17 @@ void progress_bar(long rlen)
 {}
 #else
 #if defined __MINGW32__ || defined __APPLE__
-struct tm* localtime_r (const time_t *clock, struct tm *result) {
-       if (!clock || !result) return NULL;
-       memcpy(result,localtime(clock),sizeof(*result));
-       return result;
+struct tm* localtime_r (const time_t *clock, struct tm *result)
+{
+    if (!clock || !result)
+        return NULL;
+    memcpy(result,localtime(clock),sizeof(*result));
+    return result;
 }
 void sincos(double angle, double * sine, double * cosine)
 {
-	*sine = sin(angle);
-	*cosine = cos(angle);
+    *sine = sin(angle);
+    *cosine = cos(angle);
 }
 #endif
 
@@ -600,6 +602,7 @@ void time_config()
 #ifndef __MINGW32__
     XmippTICKS = sysconf(_SC_CLK_TCK);
 #else
+
     XmippTICKS = CLK_TCK;
 #endif
 }
@@ -846,9 +849,10 @@ size_t xmippFREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool rever
         retval = 0;
         for (size_t n = 0; n < nitems; n++)
         {
-            for (size_t i = size - 1; i >= 0; i--)
+            char * ptrp = ptr + size - 1;
+            for (size_t i = 0; i < size; ++i, --ptrp)
             {
-                if (fread(ptr + i, 1, 1, fp) != 1)
+                if (fread(ptrp, 1, 1, fp) != 1)
                 {
                     end = true;
                     break;
@@ -881,9 +885,10 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
         retval = 0;
         for (size_t n = 0; n < nitems; n++)
         {
-            for (size_t i = size - 1; i >= 0; i--)
+        	char * ptrp = ptr + size - 1;
+            for (size_t i = 0; i < size; ++i, --ptrp)
             {
-                if (fwrite(ptr + i, 1, 1, fp) != 1)
+                if (fwrite(ptrp, 1, 1, fp) != 1)
                 {
                     end = true;
                     break;
@@ -902,13 +907,13 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 /* Map file */
 void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescriptor, bool readOnly)
 {
-	if (size<0)
-	{
-	   struct stat file_status;
-       if(stat(filename.c_str(), &file_status) != 0)
-           REPORT_ERROR(ERR_IO_NOPATH,"Cannot get filesize for file "+filename);
-       size = file_status.st_size;
-	}
+    if (size<0)
+    {
+        struct stat file_status;
+        if(stat(filename.c_str(), &file_status) != 0)
+            REPORT_ERROR(ERR_IO_NOPATH,"Cannot get filesize for file "+filename);
+        size = file_status.st_size;
+    }
 #ifdef XMIPP_MMAP
     struct stat file_status;
     if(stat(filename.c_str(), &file_status) != 0)
@@ -931,13 +936,14 @@ void mapFile(const FileName &filename, char*&map, size_t &size, int &fileDescrip
     if (map == MAP_FAILED)
         REPORT_ERROR(ERR_MEM_BADREQUEST,"Write can not map memory ");
 #else
+
     map = new char[size];
     fileDescriptor = open(filename.data(), O_RDONLY);
     if (fileDescriptor == -1)
         REPORT_ERROR(ERR_IO_NOPATH,(String)"Cannot open file named "+filename);
     int ok=read(fileDescriptor,map,size);
     if (ok==-1)
-    	REPORT_ERROR(ERR_IO_NOREAD,(String)"Cannot read from file named"+filename);
+        REPORT_ERROR(ERR_IO_NOREAD,(String)"Cannot read from file named"+filename);
 #endif
 }
 
@@ -948,9 +954,11 @@ void unmapFile(char *&map, size_t &size, int& fileDescriptor)
     if (munmap(map, size) == -1)
         REPORT_ERROR(ERR_MEM_NOTDEALLOC,"Cannot unmap memory");
 #else
+
     delete []map;
     map=NULL;
 #endif
+
     close(fileDescriptor);
 }
 

@@ -320,9 +320,12 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPreview
  * Method:    alignImages
  * Signature: (Z,Z,I)V
  */
-JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_alignImage
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_alignImage
   (JNIEnv *, jobject, jobject, jboolean);
 
+
+JNIEXPORT jobject JNICALL Java_xmipp_jni_ImageGeneric_bestShift
+  (JNIEnv *, jobject, jobject);
 
 
 #ifdef __cplusplus

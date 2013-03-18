@@ -110,8 +110,8 @@ void ProgAngularProjectLibrary::defineParams()
     addParamsLine("  [--sym_neigh <symmetry>]      : symmetry used to define neighbors, by default");
     addParamsLine("                                : same as sym");
     addParamsLine("  [--psi_sampling <psi=360>]    : sampling in psi, 360 -> no sampling in psi");
-    addParamsLine("  [--max_tilt_angle <tmax=91>]  : maximum tilt angle in degrees");
-    addParamsLine("  [--min_tilt_angle <tmin=-91>] : minimum tilt angle in degrees");
+    addParamsLine("  [--max_tilt_angle <tmax=180>] : maximum tilt angle in degrees");
+    addParamsLine("  [--min_tilt_angle <tmin=0>]   : minimum tilt angle in degrees");
     addParamsLine("  [--experimental_images <docfile=\"\">] : doc file with experimental data");
     addParamsLine("  [--angular_distance <ang=20>]     : Do not search a distance larger than...");
     addParamsLine("  requires --experimental_images;");

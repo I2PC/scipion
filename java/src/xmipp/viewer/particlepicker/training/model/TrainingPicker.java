@@ -793,14 +793,13 @@ public abstract class TrainingPicker extends ParticlePicker
 	{
 		if (family.getStep() != FamilyState.Manual)
 			return;
-		if (!updateTemplatesPending)
+		if (!f.getUpdateTemplatesPending())
 			return;// nothing to update
 		f.initTemplates();
 		ImageGeneric igp;
 		List<TrainingParticle> particles;
 		MicrographFamilyData mfd;
 		TrainingParticle particle; 
-		Particle p;
 		try
 		{
 			for (TrainingMicrograph m : micrographs)
@@ -814,11 +813,11 @@ public abstract class TrainingPicker extends ParticlePicker
 					if (i < f.getTemplatesNumber())
 						f.setTemplate((int) (ImageGeneric.FIRST_IMAGE + i), igp);
 					else
-						p = f.getTemplates().alignImage(igp, true);
+						f.getTemplates().alignImage(igp, true);
 				}
 			}
 			f.getTemplates().write(f.getTemplatesFile());
-			updateTemplatesPending = false;
+			f.setUpdateTemplatesPending(false);
 		}
 		catch (Exception e)
 		{
@@ -878,5 +877,6 @@ public abstract class TrainingPicker extends ParticlePicker
 		return true;
 	}
 
+	
 
 }

@@ -261,7 +261,7 @@ int PROJECT_Assign_angles(MetaData &DF, const ParametersProjection &prm);
     to project only one image, although it is also written to disk.
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
-int PROJECT_Effectively_project(const std::string &fnOut,
+int PROJECT_Effectively_project(const FileName &fnOut,
                                 bool singleProjection,
                                 int projType,
                                 const ParametersProjection &prm,

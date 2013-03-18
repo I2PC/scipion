@@ -1029,9 +1029,9 @@ double intersection_unit_cube(
     int found_t = 0;
 
 #define ASSIGN_IF_GOOD_ONE \
-    if (ABS(XX(r)+t*XX(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
-        ABS(YY(r)+t*YY(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
-        ABS(ZZ(r)+t*ZZ(u))-XMIPP_EQUAL_ACCURACY<=0.5) {\
+    if (fabs(XX(r)+t*XX(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
+        fabs(YY(r)+t*YY(u))-XMIPP_EQUAL_ACCURACY<=0.5 && \
+        fabs(ZZ(r)+t*ZZ(u))-XMIPP_EQUAL_ACCURACY<=0.5) {\
         if      (found_t==0) {found_t++; t1=t;} \
         else if (found_t==1) {found_t++; t2=t;} \
     }
@@ -1064,7 +1064,7 @@ double intersection_unit_cube(
     }
 
     if (found_t == 2)
-        return ABS(t1 -t2);
+        return fabs(t1 -t2);
     else
         return 0;
 }

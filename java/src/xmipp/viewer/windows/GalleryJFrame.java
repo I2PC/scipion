@@ -103,6 +103,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
@@ -681,10 +682,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		public String message;
 		/** Constructor selecting operation */
 		private int op; // store operation
+		private MetaData imagesmd;
 
-		public Worker(int operation)
+		public Worker(int operation, MetaData imagesmd)
 		{
 			op = operation;
+			this.imagesmd = imagesmd;
+			if (imagesmd.findObjects().length == 0)
+				throw new IllegalArgumentException("No images available");
 		}
 
 		public void run()
@@ -694,15 +699,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				switch (op)
 				{
 				case STATS:
-					computeStatsImages();
+					computeStatsImages(imagesmd);
 					break;
 				case PCA:
-					pca();
+					pca(imagesmd);
 					break;
 				case FSC:
-					fsc();
+					fsc(imagesmd);
 					break;
 				}
+				imagesmd.destroy();
 			}
 			catch (Exception e)
 			{
@@ -733,19 +739,20 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/** Function to create and launch the worker, blocking the gui */
 	public void runInBackground(int operation)
 	{
-		Worker w = new Worker(operation);
+		
+		MetaData imagesmd = data.getImagesMd();
+		Worker w = new Worker(operation, imagesmd);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
+		
 	}
 
-	private void computeStatsImages() throws Exception
+	private void computeStatsImages(MetaData imagesmd) throws Exception
 	{
 		ImageGeneric imgAvg = new ImageGeneric();
 		ImageGeneric imgStd = new ImageGeneric();
-		MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
-		if (imagesmd.findObjects().length == 0)
-			throw new IllegalArgumentException("No images available");
+		
 		imagesmd.getStatsImages(imgAvg, imgStd, data.useGeo, data.getRenderLabel());
 		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
 		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
@@ -779,12 +786,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		return filename.substring(0, dot) + ext;
 	}
 
-	public void pca() throws Exception
+	public void pca(MetaData imagesmd) throws Exception
 	{
 		ImageGeneric image = new ImageGeneric();
-		MetaData imagesmd = data.getImagesMd(data.getRenderLabel());
-		if (imagesmd.findObjects().length == 0)
-			throw new IllegalArgumentException("No images available");
 		imagesmd.getPCAbasis(image, data.getRenderLabel());
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
 		imp.setTitle("PCA: " + data.getFileName());
@@ -793,10 +797,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	public void fsc() throws Exception
+	public void fsc(MetaData imagesmd) throws Exception
 	{
-
-		FSCJFrame frame = new FSCJFrame(data);
+		FSCJFrame frame = new FSCJFrame(data, imagesmd);
 		XmippWindowUtil.centerWindows(frame, this);
 		frame.setVisible(true);
 	}
@@ -1441,8 +1444,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_OPEN, "Open ...", null, "control released O");
 			addItem(FILE_OPENWITH_IJ, "Open with ImageJ", "ij.gif", "control released J");
 			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
-
 			addItem(FILE_OPENMICROGRAPHS, "Open Particle Micrographs");
+			addItem(FILE_INFO, "File info ...");
 
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
@@ -1603,6 +1606,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				else if (cmd.equals(FILE_OPENMICROGRAPHS))
 				{
 					openMicrographs();
+				}
+
+
+				else if (cmd.equals(FILE_INFO))
+				{
+					XmippDialog.showInfo(GalleryJFrame.this, data.getFileInfo());
 				}
 
 				else if (cmd.equals(FILE_OPENWITH_IJ))

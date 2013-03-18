@@ -44,7 +44,10 @@ public abstract class ParticlePicker
 	protected String command;
 	protected Family family;
 	protected String configfile;
-	protected boolean updateTemplatesPending;
+	public static final int defAutoPickPercent = 90;
+	protected int autopickpercent = defAutoPickPercent;
+	
+
 	public static final int fsizemax = 800;
 	private Family dfamily = new Family("DefaultFamily", Color.green, fsizemax/4, 1, getTemplatesFile("DefaultFamily"));
 	protected String block;
@@ -353,7 +356,7 @@ public abstract class ParticlePicker
 				else
 				{
 					family = new Family(name, new Color(rgb), size, state, this, templatesNumber, templatesfile);
-					setUpdateTemplatesPending(true);
+					family.setUpdateTemplatesPending(true);
 				}
 				families.add(family);
 			}
@@ -618,12 +621,7 @@ public abstract class ParticlePicker
 
 	public abstract void setMicrograph(Micrograph m);
 	
-	public void setUpdateTemplatesPending(boolean b)
-	{
-		updateTemplatesPending = b;
-
-	}
-	
+		
 	public void addParticleToTemplates(TrainingParticle particle, int index, boolean center)
 	{
 		
@@ -637,7 +635,8 @@ public abstract class ParticlePicker
 				family.setTemplate((int) (ImageGeneric.FIRST_IMAGE + index), igp);
 			else
 			{
-				shift = family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
+				family.getTemplates().alignImage(igp, getMode() == FamilyState.Manual);
+				shift = family.getTemplates().bestShift(igp);
 				if (center)
 				{
 					particle.setX(particle.getX() + shift.getX());
