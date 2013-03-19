@@ -59,7 +59,7 @@ class ProtSymmetric(XmippProtocol):
                         ExtraDir=self.ExtraDir,Symmetry=self.SymmetryGroup,Nproc=self.NumberOfMpi)
                 
         # Now align all side views with respect to this volume
-        for i in range(2,4):
+        for i in range(2,6):
             self.insertStepsAlignment(i)
 
     def insertStepsAlignment(self,i):
@@ -237,11 +237,11 @@ def constructFirstVolume(log,avgSideView,avgTopView,fnMask,ExtraDir,Symmetry,Npr
     MD.setValue(MDL_ANGLE_PSI,bestPsi,objId)
     MD.write(fnInitial)
 
-    #runJob(log,"xmipp_reconstruct_art","-i %s -o %s -n 25 --sym %s --thr %d --surface %s"\
-    #       %(fnInitial,fnVolume,Symmetry,Nproc,fnSurface ))
-    # deleteFile(log,fnHist)
+    runJob(log,"xmipp_reconstruct_art","-i %s -o %s -n 25 --sym %s --thr %d --surface %s"\
+           %(fnInitial,fnVolume,Symmetry,Nproc,fnSurface ))
+    deleteFile(log,fnHist)
     deleteFile(log,fnInitial)
-    runJob(log,"cp","3D/Symmetric/firstReconstruction.vol %s"%ExtraDir)
+    #runJob(log,"cp","3D/Symmetric/firstReconstruction.vol %s"%ExtraDir)
 
     runJob(log,"xmipp_transform_mask","-i %s -o 1@%s/volume.stk --mask binary_file %s"%(fnVolume,ExtraDir,fnMask))
     deleteFile(log,fnVolume)
