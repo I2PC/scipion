@@ -1968,7 +1968,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			File file = new File(to);
 			if (dlgSave.isOverwrite())
 				file.delete();
-			if (!file.exists())
+			if (!file.exists() && file.getParentFile() != null)
 				file.getParentFile().mkdirs();
 			for (String blockit : data.mdBlocks)
 			{
