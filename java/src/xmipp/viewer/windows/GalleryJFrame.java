@@ -174,7 +174,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static final float MAX_HEIGHT_RATE = 2.0f / 3.0f;
 	// this rate is width/height
 	protected static final float DIM_RATE = 4.0f / 3.0f;
-	protected static final int MIN_WIDTH = 600;
+	protected static final int MIN_WIDTH = 650;
 	protected static int MIN_HEIGHT;
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
@@ -535,7 +535,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void keyPressed(KeyEvent arg0)
 			{
-				int dir = 0;
+				int vdir = 0, hdir = 0;
 
 				switch (arg0.getKeyCode())
 				{
@@ -543,17 +543,26 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					removeObjects(true);
 					break;
 				case KeyEvent.VK_UP:
-					dir = -1;
+					vdir = -1;
 					break;
 				case KeyEvent.VK_DOWN:
-					dir = 1;
+					vdir = 1;
+					break;
+				case KeyEvent.VK_LEFT:
+					hdir = -1;
+					break;
+				case KeyEvent.VK_RIGHT:
+					hdir = 1;
 					break;
 				}
-				if (dir != 0)
+				if (vdir != 0 || hdir != 0)
 				{
-					int newRow = table.getSelectedRow() + dir;
-					if (newRow >= 0 && newRow <= table.getRowCount() - 1)
-						selectIndex(newRow);
+					int newRow = table.getSelectedRow() + vdir;
+					int col = table.getSelectedColumn() + hdir;
+					if (newRow < 0 || newRow > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
+						return;
+					selectItem(newRow, col);
+						
 				}
 			}// function keyPressed
 		});
@@ -1310,6 +1319,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		gallery.touchItem(index, 0);
 		makeVisible(index);
 	}
+	
+	public void selectItem(int row, int col)
+	{
+		gallery.clearSelection();
+		gallery.touchItem(row, col);
+		makeVisible(row);
+	}
 
 	private void tableMouseClicked(MouseEvent evt)
 	{
@@ -2059,7 +2075,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public Map<String, String> getKeyAssist()
 	{
 		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
-
+		map.put("Shift + Scroll Up", "Zoom in gallery mode");
+		map.put("Shift + Scroll Down", "Zoom out in gallery mode");
+		map.put("Left click", "Selects a cell in gallery mode and a row in table mode");
+		map.put("Right click", "Selects a row in table mode and displays row menu");
+		map.put("Supr", "Delete selected cell in gallery mode and row in table mode");
+		map.put("Up", "Select  previous row in table mode and cell in previous row in gallery mode");
+		map.put("Down", "Select next row in table mode and cell in next row in gallery mode");
 		return map;
 	}
 
