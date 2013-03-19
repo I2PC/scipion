@@ -559,8 +559,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					int newRow = table.getSelectedRow() + vdir;
 					int col = table.getSelectedColumn() + hdir;
-					if (newRow < 0 || newRow > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
-						return;
+					
 					selectItem(newRow, col);
 						
 				}
@@ -1313,18 +1312,24 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 	}
 
-	public void selectIndex(int index)
-	{
-		gallery.clearSelection();
-		gallery.touchItem(index, 0);
-		makeVisible(index);
-	}
+	
 	
 	public void selectItem(int row, int col)
 	{
+		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount() - 1)
+			return;
+		if(row * table.getColumnCount() + col + 1 > gallery.getSize())
+		{
+			int[] coords = gallery.getCoords(gallery.getSize() - 1);
+			row = coords[0];
+			col = coords[1];
+			
+		}
+		
 		gallery.clearSelection();
 		gallery.touchItem(row, col);
 		makeVisible(row);
+		
 	}
 
 	private void tableMouseClicked(MouseEvent evt)
@@ -2075,13 +2080,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public Map<String, String> getKeyAssist()
 	{
 		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
-		map.put("Shift + Scroll Up", "Zoom in gallery mode");
-		map.put("Shift + Scroll Down", "Zoom out in gallery mode");
+		map.put("Shift + Scroll Up", "Zoom in if images displayed");
+		map.put("Shift + Scroll Down", "Zoom out if images displayed");
 		map.put("Left click", "Selects a cell in gallery mode and a row in table mode");
 		map.put("Right click", "Selects a row in table mode and displays row menu");
 		map.put("Supr", "Delete selected cell in gallery mode and row in table mode");
 		map.put("Up", "Select  previous row in table mode and cell in previous row in gallery mode");
 		map.put("Down", "Select next row in table mode and cell in next row in gallery mode");
+		map.put("Left", "Select  previous cell in gallery mode");
+		map.put("Right", "Select next cell in gallery mode");
 		return map;
 	}
 
