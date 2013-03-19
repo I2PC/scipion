@@ -1921,7 +1921,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			File iofile = new File(file);
 			if (!iofile.exists())// overwrite or append, save active
 			{
-				iofile.getParentFile().mkdirs();
+				if(iofile.getParentFile() != null)
+					iofile.getParentFile().mkdirs();
 				data.md.write(path);
 			}
 			else
