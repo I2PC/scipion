@@ -1955,7 +1955,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			File iofile = new File(file);
 			if (!iofile.exists())// overwrite or append, save active
 			{
-				iofile.getParentFile().mkdirs();
+				if(iofile.getParentFile() != null)
+					iofile.getParentFile().mkdirs();
 				data.md.write(path);
 			}
 			else
@@ -2003,7 +2004,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			File file = new File(to);
 			if (dlgSave.isOverwrite())
 				file.delete();
-			if (!file.exists())
+			if (!file.exists() && file.getParentFile() != null)
 				file.getParentFile().mkdirs();
 			for (String blockit : data.mdBlocks)
 			{
